@@ -7,9 +7,8 @@
    OBPRMLIB_DIR = .
    OBPRMLIB     = -L${OBPRMLIB_DIR} -lobprm
 
-   Graph_DIR   = ../stapl/include/graph
-   STAPL_DIR   = ../stapl/include 
-   Graph_INCL  = -I${Graph_DIR} -I${STAPL_DIR}/common
+   STAPL_DIR   = ${PWD}/../stapl/include
+   Graph_INCL  = -I${STAPL_DIR}/graph -I${STAPL_DIR}/common
 
 #------------------------------------------------------
 # Basic defns; do not change
@@ -20,7 +19,7 @@
 #------------------------------------------------------
 # collision detection packages available
 #------------------------------------------------------
- CD_DIR = /dsmft/CD-libs/sgi
+ CD_DIR = /export/research/moriarty/dsmft/CD-libs/sgi
 
  CSTK_DIR      = ${CD_DIR}/CSTK/CSTK-1.22/cstk
  CSTKLIB_DIR   = ${CSTK_DIR}/lib
@@ -182,6 +181,8 @@ reallyclean::
 	rm -R -f ii_files
 	rm -f *.o
 	rm -f so_locations
+	rm -f Dependencies
+	touch Dependencies
 
 #-----------------------------------------------------------------------------
 # Build and update depent
