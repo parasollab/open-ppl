@@ -1291,7 +1291,7 @@ ConnectNodes_modifiedLM(
              Cfg CCcenter; // sum initialized to 0 by constructor.
              int i;
              for(i=0; i<CC.size(); ++i) {
-                double centerWeight = float(i)/CC.size();
+                double centerWeight = float(i)/(i+1);
                 CCcenter = Cfg::WeightedSum(CC[i], CCcenter, centerWeight);
              }
 
