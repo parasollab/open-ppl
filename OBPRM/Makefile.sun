@@ -58,13 +58,14 @@ showdefs ::
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
 #--------------------------------------------------------------------------
- CC = /share/gnu/bin/g++ 
+ CC = /share/gnu/bin/g++ -ftemplate-depth-25
 #CC = /pub/gnu_sgi/bin/g++
 
-CXX = /share/gnu/bin/g++
+CXX = /share/gnu/bin/g++ -ftemplate-depth-25
 
 # -- for development on TERMINATOR (can't seem to use it better due to cstk)
-  OPTS = -g -O2 -fexceptions 
+  OPTS = -O2 -fexceptions 
+#  OPTS = -g -O2 -fexceptions 
 #  OPTS = -o32 -O1 -show -ptv 
 # -- optimized (our O2's) (slow_compile/good_code) --
 #  OPTS =  -o32 -O2 -OPT:Olimit=0 -show

@@ -61,7 +61,8 @@ CC = /opt/bin/g++
 CXX = /opt/bin/g++
 
 # -- for development on TERMINATOR (can't seem to use it better due to cstk)
-   OPTS = -g -O2 -fexceptions 
+OPTS = -fexceptions
+#   OPTS = -g -O2 -fexceptions 
 #  OPTS = -o32 -O1 -show -ptv 
 # -- optimized (our O2's) (slow_compile/good_code) --
 #  OPTS =  -o32 -O2 -OPT:Olimit=0 -show
@@ -127,10 +128,7 @@ OBJS = \
 	MultiBody.o \
         Parameters.o \
 	Input.o \
-        Haptic.o \
-        Push.o \
 	Cfg.o \
-	CfgManager.o \
 	Cfg_free.o \
 	Cfg_fixed_PRR.o \
 	Cfg_free_tree.o \
@@ -139,18 +137,16 @@ OBJS = \
 	util.o \
 	Clock_Class.o \
 	Stat_Class.o \
-	LocalPlanners.o \
 	DistanceMetrics.o \
 	CollisionDetection.o \
-	GenerateMapNodes.o \
-	ConnectMapNodes.o \
-	Roadmap.o \
 	QueryCmds.o \
-	Query.o \
-	Weight.o \
-	BasicMAPRM.o
+	Weight.o
 
 objs:: $(OBJS)
+
+#        Haptic.o \
+#        Push.o \
+
 
 #--------------------------------------------------------------------
 runclean::
