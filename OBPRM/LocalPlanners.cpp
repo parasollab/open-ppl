@@ -146,6 +146,8 @@ IsConnected(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cfg _c1,
        info->path.erase(info->path.begin(),info->path.end());
        //LPF lpfcn = lpset[lpcnt].GetPlanner();
 
+       info->edge.first.Weight() = 0;
+       info->edge.second.Weight() = 0;
        if ( IsConnected(lpset[lpcnt].GetName(), _env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
           fedge = fedge | lpset[lpcnt].GetFEdgeMask();
           bedge = bedge | lpset[lpcnt].GetBEdgeMask();
@@ -159,11 +161,9 @@ IsConnected(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cfg _c1,
   if ( !connected && !info->saveFailedPath ) { 
        info->path.erase(info->path.begin(),info->path.end());
   }
-  int n_ticks;
-  n_ticks = info->nTicks;
-  WEIGHT Fedge(fedge,n_ticks);
-  WEIGHT Bedge(bedge,n_ticks);
-  info->edge = pair<WEIGHT,WEIGHT>(Fedge,Bedge);
+  info->edge.first.LP() = fedge;
+  info->edge.second.LP() = bedge;
+
   return connected;
 }
 
@@ -195,6 +195,8 @@ LPInfo *info) {
        info->path.erase(info->path.begin(),info->path.end());
        //LPF lpfcn = lpset[lpcnt].GetPlanner();
 
+       info->edge.first.Weight() = 0;
+       info->edge.second.Weight() = 0;
        if ( IsConnected(lpset[lpcnt].GetName(),_env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
           fedge = fedge | lpset[lpcnt].GetFEdgeMask();
           bedge = bedge | lpset[lpcnt].GetBEdgeMask();
@@ -208,11 +210,10 @@ LPInfo *info) {
   if ( !connected && !info->saveFailedPath ) {
        info->path.erase(info->path.begin(),info->path.end());
   }
-  int n_ticks;
-  n_ticks = info->nTicks;
-  WEIGHT Fedge(fedge,n_ticks);
-  WEIGHT Bedge(bedge,n_ticks);
-  info->edge = pair<WEIGHT,WEIGHT>(Fedge,Bedge);
+
+  info->edge.first.LP() = fedge;
+  info->edge.second.LP() = bedge;
+
   return connected;
 }
 
@@ -235,6 +236,9 @@ IsConnectedFindAll(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,C
     while (lp < lpset.size() ) {
        info->path.erase(info->path.begin(),info->path.end());
        //LPF lpfcn = lpset[lp].GetPlanner();
+
+       info->edge.first.Weight() = 0;
+       info->edge.second.Weight() = 0;
        if ( IsConnected(lpset[lp].GetName(),_env,cd,dm,_c1,_c2,lpset[lp],info) == true ) {
           fedge = fedge | lpset[lp].GetFEdgeMask();
           bedge = bedge | lpset[lp].GetBEdgeMask();
@@ -247,11 +251,9 @@ IsConnectedFindAll(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,C
   if ( !connected && !info->saveFailedPath ) { 
        info->path.erase(info->path.begin(),info->path.end());
   }
-  int n_ticks;
-  n_ticks = info->nTicks;
-  WEIGHT Fedge(fedge,n_ticks);
-  WEIGHT Bedge(bedge,n_ticks);
-  info->edge = pair<WEIGHT,WEIGHT>(Fedge,Bedge);
+  info->edge.first.LP() = fedge;
+  info->edge.second.LP() = bedge;
+
   return connected;
 }
 
@@ -408,8 +410,7 @@ IsConnected_straightline_simple(Environment *_env,CollisionDetection *cd,Distanc
     Cfg tick=_c1;
     Cfg incr=_c1.FindIncrement(_c2,&n_ticks,info->positionRes,info->orientationRes);
 
-    int nTicks;
-    nTicks = 0;
+    int nTicks = 0;
     for(int i = 0; i < n_ticks ; i++){
         tick.Increment(incr);
 
@@ -418,7 +419,8 @@ IsConnected_straightline_simple(Environment *_env,CollisionDetection *cd,Distanc
             if(tick.isCollision(_env,cd, info->cdsetid)){
 		tick.Increment(-incr);
 		info->savedEdge = pair<Cfg,Cfg>(_c1, tick);
-		info->nTicks = nTicks;
+		info->edge.first.Weight() += nTicks;
+    		info->edge.second.Weight() += nTicks;
                 return false;
             }
         }
@@ -427,7 +429,8 @@ IsConnected_straightline_simple(Environment *_env,CollisionDetection *cd,Distanc
         }
 	nTicks++;
     }
-    info->nTicks = nTicks;
+    info->edge.first.Weight() += nTicks;
+    info->edge.second.Weight() += nTicks;
     return true;
 
 };
@@ -437,9 +440,6 @@ bool
 LocalPlanners::
 IsConnected_rotate_at_s(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info) {
 
-
-    int nTicks;
-    nTicks = 0;
 
     char RatS[20] = "Rotate_at_s";
     sprintf(RatS,"%s=%3.1f",RatS,_lp.GetS());
@@ -456,7 +456,6 @@ IsConnected_rotate_at_s(Environment *_env,CollisionDetection *cd,DistanceMetric 
     for(int i=0; i<sequence.size()-1; ++i) {
 	bool flag;
 	flag = IsConnected_straightline_simple(_env,cd,dm, sequence[i], sequence[i+1], _lp, info);
-	nTicks += info->nTicks;
 	if(!flag) {
 	     connected = false;
 	     break;
@@ -466,7 +465,6 @@ IsConnected_rotate_at_s(Environment *_env,CollisionDetection *cd,DistanceMetric 
         Stats.IncLPConnections( RatS );
 
     Stats.IncLPCollDetCalls( RatS, info->cd_cntr );
-    info->nTicks = nTicks;
     return connected;
 
 };
@@ -548,7 +546,8 @@ IsConnected_astar(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cf
 
   } while(!p.AlmostEqual(_c2));
 
-  info->nTicks = nTicks;
+  info->edge.first.Weight() += nTicks;
+  info->edge.second.Weight() += nTicks;
 
   Stats.IncLPCollDetCalls("AStar", info->cd_cntr );
   if(connected)
