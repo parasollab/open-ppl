@@ -24,7 +24,7 @@ public:
    void PrintValues(ostream& _os);
 
    str_param<char*> nodeValidationFlag;
-   str_param<char*> edgeValidationFlag;
+   n_str_param edgeValidationFlag;
 };
 
 #endif

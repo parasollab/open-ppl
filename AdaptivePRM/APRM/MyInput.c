@@ -19,11 +19,12 @@ MyInput::MyInput():
 			     "\n\t\t\t   none         all nodes are added to roadmap"
 			     "\n\t\t\t   approximate  only approx. valid nodes are added to roadmap"
 			     "\n\t\t\t   complete     only valid nodes are added to roadmap");
-  edgeValidationFlag.PutDesc("STRING ",
+  edgeValidationFlag.PutDesc("STRING FLOAT",
 			     "\n\t\t\t Type of edge validation: default complete"
-			     "\n\t\t\t   none         all edges are added to roadmap"
-			     "\n\t\t\t   approximate  only approx. valid edges are added to roadmap"
-			     "\n\t\t\t   complete     only valid edges are added to roadmap");
+			     "\n\t\t\t   none              all edges are added to roadmap"
+			     "\n\t\t\t   approximate FLOAT only approx. valid edges are added to roadmap"
+			     "\n\t\t\t                     (FLOAT is level of resolution validated)"
+			     "\n\t\t\t   complete          only valid edges are added to roadmap");
 }
 
 
