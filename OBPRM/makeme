@@ -1,0 +1,30 @@
+#!/bin/sh
+
+args=$*
+if test -z "$args"
+then
+  args="obprm query"
+fi
+system=`uname -s`
+if  [ $system = "Linux" ]
+then
+make -f Makefile.linux $args
+fi
+if  [ $system = "IRIX" ]
+then
+make -f Makefile.sgi $args
+fi  
+if  [ $system = "IRIX64" ]
+then
+make -f Makefile.sgi $args
+fi    
+if  [ $system = "SunOS" ]
+then
+make -f Makefile.sun $args
+fi    
+
+if  [ $system = "HP-UX" ]
+then
+make -f Makefile.hp $args
+fi    
+
