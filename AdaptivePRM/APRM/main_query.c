@@ -12,7 +12,8 @@
 #include "MyInput.h"
 #include "PriorityQuery.h"
 #include "PriorityLocalPlanners.h"
-//#include "PriorityWeight.h"
+#include "PriorityWeight.h"
+#include "LocalPlanners.h"
 
 MyInput input;
 MyQueryCmds Qinput;
@@ -37,6 +38,9 @@ int main(int argc, char** argv)
   //----------------------------------------------------
   Qinput.ReadCommandLine(&argc,argv);
   input.ReadCommandLine(argc,argv);
+
+  PriorityWeightFactory* fact = new PriorityWeightFactory();
+  WeightObject::SetWeightFactory(fact);
 
   enum {SEQUENTIAL, PRIORITY} pathValidateType = SEQUENTIAL;
   if(!strncmp(Qinput.pathValidationFlag.GetValue(),"priority",8))

@@ -17,7 +17,9 @@
 #include "CollisionDetection.h"
 #include "NoopCollisionDetection.h"
 #include "NoopLocalPlanners.h"
+#include "LocalPlanners.h"
 #include "ConnectMapNodes.h"
+#include "PriorityWeight.h"
 
 MyInput input;
 Stat_Class Stats; 
@@ -45,6 +47,9 @@ int main(int argc, char** argv)
   // Get information from the user via the command line
   //----------------------------------------------------
   input.ReadCommandLine(argc,argv);
+
+  PriorityWeightFactory* fact = new PriorityWeightFactory();
+  WeightObject::SetWeightFactory(fact);
 
 
   // do not seed for now while developing code... ADD SEEDING LATER
