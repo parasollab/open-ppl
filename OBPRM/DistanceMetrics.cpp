@@ -11,7 +11,6 @@
 /////////////////////////////////////////////////////////////////////
 #include "DistanceMetrics.h"
 
-#include "LocalPlanners.h"
 #include "GenerateMapNodes.h"
 #include "Environment.h"
 #include "util.h"
@@ -59,26 +58,10 @@ DefaultInit() {
 	distanceMetrics.MakeDMSet("com");
 }
 
-//-----------------------------------------------
-// initialize distance metrics with data on command line
-//  CAUTION:  DO NOT CHANGE ORDER OF SET DEFN's
-//           w/o CHANGING ENUM ORDER in "OBPRM.h"
-//-----------------------------------------------
-void
-DistanceMetric::
-UserInit(Input *input, GenerateMapNodes* gn, LocalPlanners* lp) {
-	if ( input->numDMs == 0 ) {           // use default DM sets
-	} else {                             // make user-defined sets
-		gn->gnInfo.dmsetid=DM_USER1;
-		for (int i = 0; i < input->numDMs; i++) {
-			distanceMetrics.MakeDMSet(input->DMstrings[i]->GetValue());
-		}
-	}
-}
 
 double
 DistanceMetric::
-Distance(Environment *env, Cfg _c1, Cfg _c2, SID _dmsetid){
+Distance(Environment *env, const Cfg& _c1, const Cfg& _c2, SID _dmsetid){
 	
     MultiBody* robot;
     robot = env->GetMultiBody(env->GetRobotIndex());
@@ -95,17 +78,42 @@ Distance(Environment *env, Cfg _c1, Cfg _c2, SID _dmsetid){
     return dist;
 };
 
-double ScaledDistance(Cfg& _c1, Cfg& _c2, double sValue){
+double
+DistanceMetric::
+Distance(Environment *env, const Cfg* _c1, const Cfg* _c2, SID _dmsetid) {
 	
-    Cfg tmp=_c1-_c2;
-    return  sqrt(  sValue*sqr(tmp.PositionMagnitude()) + 
-		(1.0 - sValue)*sqr(tmp.OrientationMagnitude()) );
+    MultiBody* robot;
+    robot = env->GetMultiBody(env->GetRobotIndex());
+    double dist;
+	
+    vector<DM> dmset = distanceMetrics.GetDMSet(_dmsetid); 
+    for(int dm = 0 ; dm < dmset.size() ; dm++){
+		
+		DMF dmfcn = dmset[dm].GetDistanceMetric();
+        int tp = dmset[dm].GetType();
+		dist = dmfcn(robot,*_c1,*_c2,dmset[dm]);
+		
+    }
+    return dist;
+};
+
+double ScaledDistance(const Cfg& _c1, const Cfg& _c2, double sValue){
+	
+  //+++++    
+
+    //  Cfg tmp=_c1-_c2;
+  Cfg *pTmp = _c1.CreateNewCfg();
+  pTmp->subtract(_c1,_c2);
+  double dReturn = sqrt(  sValue*sqr(pTmp->PositionMagnitude()) + 
+			  (1.0 - sValue)*sqr(pTmp->OrientationMagnitude()) );
+  delete pTmp;
+  return dReturn;
 }
 
 
 double 
 DistanceMetric::
-EuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
+EuclideanDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
 	
     double dist;
     dist = sqrt(2.0)*ScaledDistance(_c1, _c2, 0.5); 
@@ -114,7 +122,7 @@ EuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
 
 double
 DistanceMetric::
-ScaledEuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
+ScaledEuclideanDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
 	
     double dist;
     dist = ScaledDistance(_c1, _c2, _dm.GetS()); 
@@ -122,12 +130,16 @@ ScaledEuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
 }
 double
 DistanceMetric::
-MinkowskiDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
+MinkowskiDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
 	
     double dist,pos=0,orient=0/*,d*/;
-    Cfg c=_c1-_c2;
-    vector<double> p=c.GetPosition(); // position values
-    vector<double> o=c.GetOrientation(); //orientation values
+    //+++++
+    //    Cfg c=_c1-_c2;
+    Cfg *pC = _c1.CreateNewCfg();
+    pC->subtract(_c1,_c2);
+
+    vector<double> p=pC->GetPosition(); // position values
+    vector<double> o=pC->GetOrientation(); //orientation values
 	
 	
 	
@@ -142,16 +154,21 @@ MinkowskiDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
     }
 	
 	dist=pow(pos+orient,_dm.GetR3());
+	delete pC;
+
 	return dist;
 }                           
 
 double
 DistanceMetric::
-ManhattanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
+ManhattanDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
 	
     double dist=0;
-    Cfg c=_c1-_c2;
-    vector<double> dt=c.GetData(); // position values
+    //++++
+    //    Cfg c=_c1-_c2;
+    Cfg *pC = _c1.CreateNewCfg();
+
+    vector<double> dt=pC->GetData(); // position values
 	
 	
 	
@@ -162,11 +179,12 @@ ManhattanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
 			dist+=dt[i];
     }
 	
-	return dist;
+  delete pC;
+  return dist;
 }                                                                               
 
 double DistanceMetric::
-CenterOfMassDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
+CenterOfMassDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
 	
     Vector3D d=_c1.GetRobotCenterPosition()-_c2.GetRobotCenterPosition();
     return d.magnitude();

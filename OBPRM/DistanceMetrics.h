@@ -25,12 +25,16 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 
-#include "OBPRM.h"
+#include "OBPRMDef.h"
 #include "Sets.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
-class LocalPlanners;
-class GenerateMapNodes;
+
+//class GenerateMapNodes;
+template <class CFG, class WEIGHT> class LocalPlanners;
+template <class CFG> class GenerateMapNodes;
+template <class CFG, class WEIGHT> class ConnectMap;
+
 class Cfg;
 class DM;
 class DMSets;
@@ -70,7 +74,7 @@ enum dm_predefined
 /**Pointer to dm function.
   *@note need to update when params known
   */
-typedef double (*DMF) (MultiBody*,Cfg&,Cfg&,DM&);
+typedef double (*DMF) (MultiBody*,const Cfg&,const Cfg&,DM&);
 
 
 const int CS = 0;   ///< Type CS: Configuration space distance metric
@@ -501,7 +505,12 @@ public:
         *(one string for one set)
         *@see DMSets::MakeDMSet(istream&)
         */
-      virtual void UserInit(Input *,  GenerateMapNodes*, LocalPlanners*);
+      //      template <class LOCALPLANNER>
+      //virtual 
+      template <class CFG, class WEIGHT>
+      void UserInit(Input *,  GenerateMapNodes<CFG>*, 
+		    ConnectMap<CFG,WEIGHT>*);
+/*        void UserInit(Input *,  GenerateMapNodes*, LOCALPLANNER*); */
 
   //@}
 
@@ -535,7 +544,8 @@ public:
        *values from previous calls are just ...forget?
        *
        */
-     virtual double Distance(Environment *env, Cfg _c1, Cfg _c2, SID _dmsetid);
+     virtual double Distance(Environment *env, const Cfg& _c1, const Cfg& _c2, SID _dmsetid);
+     virtual double Distance(Environment *env, const Cfg* _c1, const Cfg* _c2, SID _dmsetid);
 
   //@}
 
@@ -559,7 +569,7 @@ public:
     *
     *@see Cfg::PositionMagnitude and OrientationMagnitude
     */
-  static double EuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
+  static double EuclideanDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm);
 
   /**This method calculates 
     *sqrt(s*(Position Magnitude)^ + (1-s)*(Orientation Magnitude)^2)
@@ -572,7 +582,7 @@ public:
     *@param _dm this parameter contains SValue, which is the scale, s, above.
     *@see Cfg::PositionMagnitude and OrientationMagnitude
     */
-  static double ScaledEuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
+  static double ScaledEuclideanDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm);
 
   /**This method calculates 
     *pow( (c11-c21)^r1+(c12-c22)^r1+(c13-c23)^r1+(c14-c24)^r2....+(c1n-c2n)^r2 , r3)
@@ -585,21 +595,21 @@ public:
     *
     *@param _dm This parameter contains r1, r2 and r3 needed in above equation.
     */
-  static double MinkowskiDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
+  static double MinkowskiDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm);
 
   /**This method calculates 
     *( |c11-c21|+|c12-c22|+...+|c1n-c2n| ).
     *
     *Here |A| is absolute value of A.
     */
-  static double ManhattanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
+  static double ManhattanDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm);
 
   /**This method calculates
     *sqrt((c11-c21)^2+(c12-c22)^2+(c13-c23)^2).
     *This method only Euclidean Distance of position part and 
     *assumed that the first 3 dimension of Cfg are for position.
     */
-  static double CenterOfMassDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
+  static double CenterOfMassDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm);
 
   //@}
 
@@ -630,6 +640,23 @@ protected:
   //////////////////////////////////////////////////////////////////////////////////////////
 private:
 };
+
+template <class CFG, class WEIGHT>
+void
+DistanceMetric::
+UserInit(Input *input, 
+	 GenerateMapNodes<CFG>* gn, 
+	 ConnectMap<CFG,WEIGHT>* cm) {
+	if ( input->numDMs == 0 ) {           // use default DM sets
+	} else {                             // make user-defined sets
+		gn->dmsetid=DM_USER1;
+                cm->dmsetid=DM_USER1;
+		for (int i = 0; i < input->numDMs; i++) {
+			distanceMetrics.MakeDMSet(input->DMstrings[i]->GetValue());
+		}
+	}
+}
+
 
 #endif
 
