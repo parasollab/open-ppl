@@ -124,7 +124,7 @@ void CfgManager::IncrementTowardsGoal(
             c.v[i]=goal.v[i];
          } else {
             c.v[i] += increment.v[i];
-            c.v[i]=Normalize_wrt_b(c.v[i],1);
+	    c.v[i] = c.v[i] - floor(c.v[i]);
          }
       }
    }
