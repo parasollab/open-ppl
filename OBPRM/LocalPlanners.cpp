@@ -842,9 +842,9 @@ MakeLPSet(istream& _myistream) {
        strcpy(lp1.name,lpname);
        //lp1.planner = &(lpPtr->IsConnected_astar);
        if( !strcmp(lpname,"a_star_clearance") ) 
-       	   lp1.planner = ASTAR_DISTANCE;
-       else
 	   lp1.planner = ASTAR_CLEARANCE;
+       else
+       	   lp1.planner = ASTAR_DISTANCE;
 
        if ( _myistream >> lp1.tries
          && _myistream >> lp1.neighbors ) {
