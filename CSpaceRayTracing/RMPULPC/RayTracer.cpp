@@ -45,37 +45,40 @@ void RayTracer::setOptions(string bouncing_mode, int max_rays, int max_bounces, 
 }
 
 void RayTracer::connectCCs() {
-//    //the following lines are to be replaced with a clever
-//    //way to pick a pair of configurations in two different connected components
-//    //to try to connect. This is to be called afterwards
-//    Cfg source = Cfg::GetFreeRandomCfg(environment, cd, cdsetid, cd->cdInfo);
-//    Cfg target = Cfg::GetFreeRandomCfg(environment, cd, cdsetid, cd->cdInfo);
-//    findPath(source, target);
+  bool path_found = false;
 
-//    vector< pair<int,VID> > ccs;
-//    GetCCStats(*(rdmp->m_pRoadmap), ccs);//get the CCs
+  vector< pair<int,VID> > ccs; //list of CCs in the roadmap
+  GetCCStats(*(rdmp->m_pRoadmap), ccs);//get the CCs
 
-//    vector< pair<int,VID> >::iterator cci = ccs.begin();
-//    Roadmap submap1 = Roadmap::Roadmap();
-//    submap1.environment = rdmp->GetEnvironment();
+  vector< pair<int,VID> >::iterator cci = ccs.begin(); //cci is the i'th cc
+  Roadmap rdmp_cci = Roadmap::Roadmap();
+  rdmp_cci.environment = rdmp->GetEnvironment();
 
-//    vector<VID> cc; // a vector with the configs of cci
-//    GetCC(*(rdmp->m_pRoadmap), cci->second, cc);
-//    ModifyRoadMap(&submap, rdmp, cc);
-//    vector< pair<int,VID> >::iterator ccj = cci+1;
+  vector<VID> cci_cfgs; // a vector with the configs of cci
+  GetCC(*(rdmp->m_pRoadmap), cci->second, cci_cfgs); //cci_cfgs = cfgs in cci
+  ConnectMapNodes::ModifyRoadMap(&rdmp_cci, rdmp, cci_cfgs);//rdmp_cci: submap of rdmp for cci
 
+  unsigned int k = 10;
+
+  vector<Cfg> rep_cci_cfgs;
+  getBoundaryCfgs(rdmp_cci, cci_cfgs, rep_cci_cfgs, k);
+
+  vector< pair<int,VID> >::iterator ccj = cci+1; //ccj is the cc after cci
+//    Roadmap rdmp_ccj = Roadmap::Roadmap();
+//    rdmp_ccj.environment = rdmp->GetEnvironment();
 //    //Order CCs to attempt to connect them
-//    OrderCCByCloseness(rdmp, dm, info, ccvec);
+//    OrderCCByCloseness(rdmp, dm, info, ccs);
+  
+  while (ccj <= ccs.end() && !path_found) {
+    Roadmap rdmp_ccj = Roadmap::Roadmap();
+    rdmp_ccj.environment = rdmp->GetEnvironment();
 
-//    VID cciid = cci->second;//maybe the VID of the "flag" Cfg of the CC?
-//    while (ccj <= ccvec.end()) {
-//      Roadmap submap2 = Roadmap::Roadmap();
-//      submap2.environment = rdmp->GetEnvironment();
+    vector<VID> ccj_cfgs;
+    GetCC(*(rdmp->m_pRoadmap), ccj->second, ccj_cfgs);//copy nodes in ccj to ccj_cfgs
+    ConnectMapNodes::ModifyRoadMap(&rdmp_ccj, rdmp, ccj_cfgs);//rdmp_ccj nodes (and incident edges) = nodes ccj_cfgs from rdmp
+    vector<Cfg> rep_ccj_cfgs;
+    getBoundaryCfgs(rdmp_ccj, ccj_cfgs, rep_ccj_cfgs, k);
 
-//      vector<VID> cctj;
-//      GetCC(*(rdmp->m_pRoadmap), ccj->second, cctj);//copy the nodes in ccj->second to cct2
-//      ModifyRoadMap(&submap2, rdmp, cct2);//submap2nodes (and incident edges) = nodes cct2 from rdmp
-//      VID ccjid = ccj->second;
 //      int d = 0;
 //      GetCCcount(*(rdmp->m_pRoadmap));
 
@@ -84,41 +87,85 @@ void RayTracer::connectCCs() {
 //      if (cct3.size()>= MAX_SMALL_CC_SIZE)
 //        while ( !IsSameCC(*(rdmp->m_pRoadmap),  cciid, ccjid) && d < MAX_D && i < MAX_ITERATIONS) {
 //  	//	 go through each configuration of submap1 and try to connect to submap2
-//  	Roadmap * ray_rdmp = connectCCs(submap1, submap2);
-//  	// put the ray obtained into the roadmap
-//  	if (ray_rdmp != NULL){
-//  	  vector<VID> ray_vertices;
-//  	  ray_rdmp->m_pRoadmap->GetVerticesVID(ray_vertices);
-//  	  ModifyRoadMap(rdmp, &ray_rdmp, ray_vertices);
-//  	}
+    if (connectCCs(rdmp_cci, cci->second, rep_cci_cfgs, rdmp_ccj, ccj->second, rep_ccj_cfgs)) {
+      // put the ray obtained into the roadmap	
+      vector<VID> ray_vertices;
+      rdmp_cci.m_pRoadmap->GetVerticesVID(ray_vertices);
+      ConnectMapNodes::ModifyRoadMap(rdmp, &rdmp_cci, ray_vertices);
+      path_found = true;
+    }
 //  	d++;
 //        }
-//      ccj++; d=0;
-//      submap2.environment = NULL;
-//      submap2.m_pRoadmap = NULL;
-//    }
-//    submap1.environment = NULL;
-//    submap1.m_pRoadmap = NULL; 
+    ccj++; 
+    //d=0;
+    rdmp_ccj.environment = NULL;
+    rdmp_ccj.m_pRoadmap = NULL;
+  }
+  rdmp_cci.environment = NULL;
+  rdmp_cci.m_pRoadmap = NULL; 
 }
 
-//  Roadmap * RayTracer::connectCCs(roadmap &ccA, roadmap &ccB) {
+bool RayTracer::connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, Roadmap &ccj, VID ccj_id, vector<Cfg> &rep_ccj_cfgs) {
 //    //first approach (to be replaced by a better one):
 //    // findPath(config from ccA, config from ccB)
 //    // return ray.roadmap();
-//  }
+  bool path_found = false;
 
-bool RayTracer::findPath(Cfg &source, Cfg &target) {
+  cout << "connecting CC " << cci_id << " To CC " << ccj_id << endl;
+
+  //first get cfgs representative of cci and ccj
+  cout << "\trep_cci_cfgs size: " << rep_cci_cfgs.size();
+  cout << "\trep_ccj_cfgs size: " << rep_ccj_cfgs.size() << endl;
+
+  //find paths from cci to ccj
+  for (unsigned int i = 0; i < rep_cci_cfgs.size(); ++i) {
+    Roadmap ray_rdmp = Roadmap::Roadmap();
+    ray_rdmp.environment = rdmp->GetEnvironment();
+  
+    if (findPath(rep_cci_cfgs[i],  rep_ccj_cfgs[0], &rep_ccj_cfgs, ray_rdmp)) {
+      cout << "A path was found" << endl;
+      vector<VID> ray_vertices;
+      ray_rdmp.m_pRoadmap->GetVerticesVID(ray_vertices);
+      ConnectMapNodes::ModifyRoadMap(&cci, &ray_rdmp, ray_vertices);
+      path_found = true;
+      break;
+    }
+    else
+      cout << "No path was found"<< endl;
+    ray_rdmp.environment = NULL;
+    ray_rdmp.m_pRoadmap = NULL;
+  }
+
+  //now from ccj to cci
+//    for (unsigned int i = 0; i < rep_ccj_cfgs.size(); ++i)
+//      if (findPath(rep_ccj_cfgs[i],  rep_cci_cfgs[0], &rep_cci_cfgs))
+//        break;
+
+
+//    Cfg source = cci.m_pRoadmap->GetData(cci_id);
+//    Cfg target = ccj.m_pRoadmap->GetData(ccj_id);
+
+//    findPath(source,target);
+  return path_found;
+}
+
+bool RayTracer::findPath(Cfg &source, Cfg &target, vector<Cfg> *target_cfgs, Roadmap &ray_rdmp) {
+  setTargetCfgs(target_cfgs);
+  return findPath(source,target, ray_rdmp);
+}
+
+bool RayTracer::findPath(Cfg &source, Cfg &target, Roadmap &ray_rdmp) {
   bool path_found = false;
   setSource(source);
   setTarget(target);  
   setInitialDirection();
   
-  while (!path_found && !exhausted()) {
+  do {
     //Trace the ray
-    cout<< "Trying new direction for ray"<<endl;
-    path_found= trace();
+    //cout<< "Trying new direction for ray"<<endl;
+    path_found= trace(ray_rdmp);
     newDirection();
-  }
+  } while (!path_found && !exhausted());
   if (path_found)
     return true;
   return false;
@@ -126,14 +173,19 @@ bool RayTracer::findPath(Cfg &source, Cfg &target) {
 
 // Set source of the ray (it is a configuration)
 void RayTracer::setSource(Cfg configuration) {
-  cout << "Setting the source of the ray\n";
+  //cout << "Setting the source of the ray\n";
   source = configuration;
 }
 
 // Set target of the ray (it is a configuration)
 void  RayTracer::setTarget(Cfg configuration) {
-  cout << "Setting the target (goal)\n";
+  //cout << "Setting the target (goal)\n";
   target = configuration;
+}
+
+void RayTracer::setTargetCfgs(vector<Cfg> *target_cfgs) {
+  using_target_vector = true;
+  this->target_cfgs = target_cfgs;
 }
 
 // Set environment
@@ -150,10 +202,10 @@ void  RayTracer::setTarget(Cfg configuration) {
 // bounce in a random direction from it (of course this has to
 // change if I want to have a coherent tracer).
 void RayTracer::setInitialDirection() {
-  cout << "Setting direction of the first ray: ";
+  //  cout << "Setting direction of the first ray: ";
   switch (bouncing_policy) {
   case TARGET_ORIENTED: direction = target;
-    cout << "Direction of the target\n";
+    //    cout << "Direction of the target\n";
     break;
   case HEURISTIC:
     cout << "Heuristic method.\n";
@@ -168,57 +220,65 @@ void RayTracer::setInitialDirection() {
     cout << "Direction of the target\n";
     break;
   }
+  all_explored = false;
+  rays_tested = 0;
+  
 }
 
 //  bool RayTracer::trace(CollisionDetection *cd, SID cdsetid, CDInfo& cdinfo, 
 //  		      DistanceMetric * dm, SID dmsetid) {
-bool RayTracer::trace() {
+bool RayTracer::trace(Roadmap &ray_rdmp) {
   bool path_found = false; //true if a path has been found, false otherwise
   long number_bouncings = 0; //number of bouncings of the ray
   double ray_length = 0; //length of the ray (depending on metrics, I suppose)
 
   ray.init(source, direction, target); //initialize the ray
+  if (using_target_vector)
+    ray.setTargetVector(target_cfgs);
+  //cout << "looking for a path with " << max_bounces << " max_bounces and " << max_ray_length << " max_ray_length " << endl;
   while (!path_found && number_bouncings < max_bounces &&
 	 ray.length() < max_ray_length) {
     if (ray.connectTarget(environment, cd, cdsetid, cd->cdInfo, dm, dmsetid)) {
       ray.finish();
       path_found = true;
     }
-    else
-    if (ray.collide(environment, cd, cdsetid, cd->cdInfo, dm, dmsetid,max_ray_length)) { // if there is a collision
+    else if (ray.collide(environment, cd, cdsetid, cd->cdInfo, dm, dmsetid,max_ray_length)) { // if there is a collision
       //cout<< "\tif the collided object is the target's screen\n";
       //cout << "\t\tpath_found=true;\n";
       //cout << "\telse\n";
       //cout << "\t\tray.bounce(collisionPoint, newdirection);\n";
-      cout << "there was a collision, the ray is going to bounce \n";
+      //cout << "there was a collision, the ray is going to bounce \n";
       ray.bounce(Cfg::GetRandomCfg(environment));//consider the two cases commented out
-      cout << "the ray has bounced \n";
+      //cout << "the ray has bounced \n";
       ++number_bouncings;
     }
-    //    cout << "Bouncings: "<< number_bouncings << ", Length of the ray so far: " << ray.length() << "\n";
-    //cout << "MaxBouncings: " << max_bounces << ", MaxRayLength: " << max_ray_length;
+    else { //the ray has gone further than the max_ray_length without colliding;
+      path_found = false;
+    }
   }
-  if (path_found) {
-    ray.save(environment);
-    ray.writePath(environment);
+  if (path_found) {    
+    //ray.save(environment);
+    ray.addRoadmapNodes(ray_rdmp);
+    //ray.writePath(environment);
   }
+  //ray.addRoadmapNodes(rdmp);
   return path_found;
 }
 
 //This function sets a direction to trace a new ray. This direction
 //is not related with bouncings at all!.
 void RayTracer::newDirection() {
-  cout << "sets a new Direction according to the policy defined in setDirection\n";
+  //cout << "sets a new Direction according to the policy defined in setDirection\n";
   rays_tested++;
   if (rays_tested>=max_rays)
     all_explored = true;
   //by the momment this is going to be just a random direction
   direction = direction.GetRandomCfg(environment);
-  cout << "new direction set" << endl;
+  //cout << "new direction set" << endl;
 }
 
 bool RayTracer::exhausted() {
-  cout << "all_explored status:" << all_explored << endl;
+  //  cout << "all_explored status:" << all_explored << endl;
   return all_explored;
 }
 
@@ -226,6 +286,38 @@ void RayTracer::printPath() {
   cout << "print the path found, remember that it is stored in the roadmap"<<endl;
 }
 
+void RayTracer::getBoundaryCfgs(Roadmap &input_rdmp, const vector<VID> &input, vector<Cfg> &output, unsigned int k) {
+  //get center of mass of all Cfgs in input
+  Cfg center_mass;
+  int i=0;
+  for (i = 1, center_mass = input_rdmp.m_pRoadmap->GetData(input[0]); i < input.size(); ++i) {
+    center_mass = center_mass + input_rdmp.m_pRoadmap->GetData(input[i]);
+  }
+  center_mass = center_mass / i;
+
+//    cout << "Number of cfgs processed: " << i << ", center of mass: " << center_mass << endl;
+  //copy input to distances (pair of distances to center of mass, VID)
+  vector <VE_DIST_TYPE> distances;
+  for (i = 0; i < input.size(); ++i) {
+    double dist = dm->Distance(input_rdmp.GetEnvironment(), center_mass, input_rdmp.m_pRoadmap->GetData(input[i]), dmsetid);
+    Cfg current_cfg = input_rdmp.m_pRoadmap->GetData(input[i]);
+    distances.push_back(VE_DIST_TYPE(Cfg_VE_Type(center_mass, current_cfg), dist));
+  }
+
+  //order distances by distance to center of mass (first field of pair)
+  sort(distances.begin(), distances.end(), ptr_fun(ConnectMapNodes::VE_DIST_Compare));
+
+  //clear output
+  output.clear();
+  int lim_inf = distances.size() - 1 - k;
+
+//    cout << "for (i="<< distances.size()-1<<";i>"<<lim_inf<< " && i>=0; --i) k: "<< k <<" liminf:"<<lim_inf<<endl;
 
 
-
+  //copy the first k to output
+  for (i = distances.size() - 1; (i > lim_inf) && (i >= 0) ; --i) {
+    output.push_back(distances[i].first.cfg2);
+//      cout << "processing distances["<<i<<"]"<<endl;
+  }
+  
+}

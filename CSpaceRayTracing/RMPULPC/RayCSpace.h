@@ -15,21 +15,6 @@
 
 
 class RayCSpace {
- private:
-  Cfg direction; //direction to shoot a ray
-
-  Cfg origin; //origin of the ray
-
-  Cfg collisionConfiguration;
-  double rayLength;
-  int numberOfBounces;
-  double collisionDistance;
-  Cfg target;
-
-  vector<Cfg> path;
-  Roadmap trace;
-
-  //list of points contained in the ray
  public:
   void init(Cfg origin, Cfg direction, Cfg target); //initialize the ray
   void finish();
@@ -41,12 +26,31 @@ class RayCSpace {
 			SID dmsetid, double maxLength);//Check for collision in the environment
   bool connectTarget (Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+		      SID dmsetid, Cfg &dir);
+  bool connectTarget (Environment *env, CollisionDetection *cd,
+			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
 		      SID dmsetid);
   double length(void); //Length of the ray, I still have to figure out the units
   void writePath(Environment *env);
   void writePathConfigurations(char output_file[80],
 			       vector<Cfg> path, Environment *env);
-  void save(Environment *env);
+  void addRoadmapNodes(Roadmap &rdmp);
+
+  void setTargetVector(vector<Cfg> *target_vector);
+ private:
+  Cfg direction; //direction to shoot a ray
+  Cfg origin; //origin of the ray
+  Cfg collisionConfiguration;
+  Cfg lastFreeConfiguration;
+  double rayLength;
+  int numberOfBounces;
+  double collisionDistance;
+  double traveledDistance;
+  Cfg target;
+  vector<Cfg> *target_vector;
+  bool using_target_vector;
+  vector<Cfg> path;
+  //Roadmap trace;
 };
 #endif /*_RAYCSPACE_H_INCLUDED*/
 

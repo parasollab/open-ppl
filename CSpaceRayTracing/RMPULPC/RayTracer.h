@@ -9,6 +9,7 @@
 #include "RayCSpace.h"
 #include <Environment.h>
 #include <CollisionDetection.h>
+#include <GraphAlgo.h>
 
 #include <string>
 
@@ -19,19 +20,26 @@ class RayTracer {
   RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid);
   void setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length);
   void connectCCs();
-  bool findPath(Cfg &source, Cfg &target);
+  bool connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, Roadmap &ccj, VID ccj_id, vector<Cfg> &rep_ccj_cfgs);
+  bool findPath(Cfg &source, Cfg &target, Roadmap &ray_rdmp);
+  bool findPath(Cfg &source, Cfg &target, vector<Cfg> *target_cfgs, Roadmap &ray_rdmp);
   void setSource(Cfg configuration);
   void setTarget(Cfg configuration);
+  void setTargetCfgs(vector<Cfg> *target_cfgs);
 /*    void setEnvironment(Environment *environment); */
   void setInitialDirection();//set direction of the ray to trace
-  bool trace();//trace a ray in the established direction
+  bool trace(Roadmap &ray_rdmp);//trace a ray in the established direction
   void newDirection(/*policy*/);//set a new direction according to some policy
   bool exhausted(); //returns true if all the possibilities have been explored
   void printPath ();//print the path found
 
  private:
+  void getBoundaryCfgs(Roadmap &input_rdmp, const vector<VID> &input, vector<Cfg> &output, unsigned int k);
+
   RayCSpace ray; // Ray to be traced
   Cfg source, target;
+  vector<Cfg> *target_cfgs;
+  bool using_target_vector;
   Cfg direction; //
   Environment *environment;
   int max_rays; // Maximum number of rays to test when finding a path

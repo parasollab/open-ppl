@@ -1215,8 +1215,9 @@ protected:
         *@param vids Source, vertex information will be retrived from here.
         *Usually, in this list, elements are Cfgs in same connected component.
         */
+ public:
       static void ModifyRoadMap(Roadmap *toMap, Roadmap *fromMap, vector<VID> vids);
-
+ protected:
       /**Implements Rapidly-Exploring Random Tree (RRT) algm.
         *initial tree - "Roadmap", input parameter
         *
@@ -1511,8 +1512,10 @@ protected:
       /**Compare two distances in VE_DIST_TYPE instances.
         *return (_cc1.second < _cc2.second)
         */
+ public:
+      /*declaring this public in OBPRM might be better*/
       static bool VE_DIST_Compare (const VE_DIST_TYPE &_cc1, const VE_DIST_TYPE &_cc2);
-
+ protected:
       /**Compare InfoCfg::obst between two given Cfgs.
         *@return (_cc1.info.obst < _cc2.info.obst )
         *@note this is used to "sort" Cfg's by obst generation number
