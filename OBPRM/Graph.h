@@ -1164,10 +1164,11 @@ public:
        virtual vector< pair<pair<VERTEX,VERTEX>, WEIGHT> > GetEdgesVData() const;
 
        /**Get user data associated with given VID.
-         *If this vid is nit found in graph, then Invalide data 
+         *If this vid is not found in graph, then Invalide data 
          *provided by VERTEX::InvalidData() will be returned.
          */
        inline VERTEX  GetData(VID) const;
+
        /**Get user data associated with VIDs, from _v1id to _v2id.
          *if _v1id and/or _v2id are not found in graph, then
          *an empty vector will be returned.
@@ -3318,9 +3319,12 @@ GetData(VID _v1id) const {
     CVI v1;
     if ( IsVertex(_v1id,&v1) ) {
         return v1->data;
-    } else {
+    }
+#ifndef _ASCI_
+    else { 
         return VERTEX::InvalidData(); 
     }
+#endif
 }
 
 template<class VERTEX, class WEIGHT>
