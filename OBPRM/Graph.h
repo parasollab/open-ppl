@@ -1621,7 +1621,13 @@ public:
        /**Is _v1's VID smaller than _v2's VID?.
          *@return (_v1.vid < _v2.vid )
          */
+
+#ifdef __HP_aCC
        static bool VID_Compare (const Vertex _v1, const Vertex _v2); 
+#else 
+       static bool VID_Compare (const Vertex& _v1, const Vertex& _v2); 
+#endif
+
    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1657,7 +1663,11 @@ public:
          *@return (_firstpair.second > _secondpair.second)
          *@see TopologicalSort
          */
+#ifdef __HP_aCC
        static bool FinishLate(const pair<VID,int>,const pair<VID,int>); 
+#else 
+       static bool FinishLate(const pair<VID,int>&,const pair<VID,int>&); 
+#endif
 
        //////////////////////////////////////////////////////////////////////////////////////////
        //
@@ -1678,7 +1688,11 @@ public:
        /**Comparing distances.
          *@return _d1.dist > _d2.dist
          */
+#ifdef __HP_aCC
        static bool dkinfo_Compare (const dkinfo _d1, const dkinfo _d2); 
+#else 
+       static bool dkinfo_Compare (const dkinfo& _d1, const dkinfo& _d2); 
+#endif
 
        //NMA: the following predictates work with stl/sun/g++ but not stl/sgi/CC
        //class VID_eq; 
@@ -2138,7 +2152,11 @@ public:
          *@return (_cc1.first>_cc2.first)
          *@see GetCCStats
          */
+#ifdef __HP_aCC
        static bool CCVID_Compare (const pair<int,VID> _cc1, const pair<int,VID> _cc2); 
+#else
+       static bool CCVID_Compare (const pair<int,VID>& _cc1, const pair<int,VID>& _cc2); 
+#endif
 
        /**Transform DAG to undirected graph.
          *@note This given WeightedMultiDiGraph should not have both v1->v2 and v2->v1
@@ -3517,7 +3535,11 @@ TopologicalSort () const {
 template<class VERTEX, class WEIGHT>
 bool
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
+#ifdef __HP_aCC
 FinishLate(const pair<VID,int> _x, const pair<VID,int> _y) {
+#else 
+FinishLate(const pair<VID,int>& _x, const pair<VID,int>& _y) {
+#endif
     return _x.second > _y.second;
 }; 
 
@@ -3747,7 +3769,11 @@ FindVIDPathBFS (VID _startVid, VID _endVid) const {
 template<class VERTEX, class WEIGHT>
 bool 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
+#ifdef __HP_aCC
 dkinfo_Compare ( const dkinfo _d1, const dkinfo _d2) {
+#else 
+dkinfo_Compare ( const dkinfo& _d1, const dkinfo& _d2) {
+#endif
     return ( _d1.dist > _d2.dist );
 };
 
@@ -4158,7 +4184,11 @@ my_find_VDATA_eq(const VERTEX& _v) const {
 template<class VERTEX, class WEIGHT>
 bool 
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
+#ifdef __HP_aCC
 VID_Compare (const Vertex _v1, const Vertex _v2){
+#else 
+VID_Compare (const Vertex& _v1, const Vertex& _v2){
+#endif
     return (_v1.vid < _v2.vid ) ; 
 };
 
@@ -4835,7 +4865,11 @@ DisplayCCStats(int _maxCCprint) const {
 //==================================
 template<class VERTEX, class WEIGHT>
 bool
+#ifdef __HP_aCC
 WeightedGraph<VERTEX,WEIGHT>::CCVID_Compare(const pair<int,VID> _cc1, const pair<int,VID> _cc2)
+#else 
+WeightedGraph<VERTEX,WEIGHT>::CCVID_Compare(const pair<int,VID>& _cc1, const pair<int,VID>& _cc2)
+#endif
 {
     return (_cc1.first > _cc2.first ) ;
 };
