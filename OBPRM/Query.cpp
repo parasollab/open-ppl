@@ -79,9 +79,11 @@ Query::
 PerformQuery(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm) {
 
   for (int i=0; i < query.size()-1; i++ ){
-     cout << "\nquery is ...     "<<query[i]
-          << "\n                 "<<query[i+1]
-          << "\nworking  ...     "
+     cout << "\nquery is ...     ";
+                                   query[i].Write(cout);
+     cout << "\n                 ";
+                                   query[i+1].Write(cout);
+     cout << "\nworking  ...     "
           << endl;
 
      if ( !PerformQuery(query[i],query[i+1],cd,cn,lp,dm,lpsetid,&path) ) {
