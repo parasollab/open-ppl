@@ -93,7 +93,7 @@ int main(int argc, char** argv)
   enum APPROX_OBJECTS {ALL, ROBOT};
 
   VALIDATE nodeValidateType = COMPLETE;
-  APPROX_TYPE nodeApproximationType = SPHERE;
+  APPROX_TYPE nodeApproximationType = BOX;
   APPROX_OBJECTS approximateObjects = ALL;
 
   if(!strncmp(input.nodeValidationFlag.GetValue(),"none",4)) {
