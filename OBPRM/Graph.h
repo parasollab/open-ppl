@@ -1097,7 +1097,7 @@ public:
          *error message will be output to standard output.
          */
        virtual vector<VID> GetSuccessors(VID) const;
-       virtual vector<VERTEX> GetSuccecessorsDATA(VID) const;
+       virtual vector<VERTEX> GetSuccessorsDATA(VID) const;
 
        /**Get VIDs which are connected to by edges going out from
          *specied v.
@@ -1107,7 +1107,7 @@ public:
          *error message will be output to standard output.
          */
        virtual vector<VID> GetSuccessors(VERTEX&) const;
-       virtual vector<VERTEX> GetSuccecessorsDATA(VERTEX&) const;
+       virtual vector<VERTEX> GetSuccessorsDATA(VERTEX&) const;
 
        /**Initialize predecessors in the data field of Vertex.
          *Predecessors tells client where the edges that 
