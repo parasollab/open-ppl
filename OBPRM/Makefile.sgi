@@ -16,11 +16,12 @@
 #------------------------------------------------------
 # collision detection packages available
 #------------------------------------------------------
- CD_DIR = /pub/dsmft/CD-libs/sgi
+ CD_DIR = /dsmft/CD-libs/sgi
 
- CSTKLIB_DIR   = ${CD_DIR}/CSTK/CSTK-1.22/cstk
- CSTKLIB       = -L${CSTKLIB_DIR}/lib -lcstk
- CSTK_INCL     = -I${CSTKLIB_DIR}/src/include
+ CSTK_DIR      = ${CD_DIR}/CSTK/CSTK-1.22/cstk
+ CSTKLIB_DIR   = ${CSTK_DIR}/lib
+ CSTKLIB       = -L${CSTKLIB_DIR} -lcstk
+ CSTK_INCL     = -I${CSTK_DIR}/src/include
 
  VCLIP_DIR     = ${CD_DIR}/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
