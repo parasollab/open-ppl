@@ -169,6 +169,8 @@ reallyclean::
 	rm -R -f ii_files
 	rm -f *.o
 	rm -f so_locations
+	rm -f Dependencies
+	touch Dependencies
 
 #-----------------------------------------------------------------------------
 # Build and update dependencies
