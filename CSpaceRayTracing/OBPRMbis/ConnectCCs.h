@@ -57,7 +57,7 @@ public:
           *@see Roadmap::InitRoadmap
           */
         ConnectCCs
-        (Input *, ConnectCCsCmds*, CollisionDetection*, DistanceMetric*, LocalPlanners*,ConnectMapNodes*);  
+        (Input *,Roadmap *, ConnectCCsCmds*, CollisionDetection*, DistanceMetric*, LocalPlanners*,ConnectMapNodes*);  
 
         ///Destructor. Free memory.
         ~ConnectCCs();
@@ -154,7 +154,7 @@ public:
           *@note path will be stored in #path.
           */
         virtual bool PerformConnectCCs
-        (CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm);
+        (Roadmap * rdmp,CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm);
 
         /**ConnectCCs path for two given Cfgs.
           *Algorithm:

@@ -40,19 +40,24 @@ int main(int argc, char** argv)
   //    parse command line and init roadmap, lps, read in environment, etc
   //----------------------------------------------------
   connect_CCs_input.ReadCommandLine(&argc,argv);
+cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
   input.ReadCommandLine(argc,argv);
 
   //Query query(&input,&connect_CCs_input, &cd, &dm, &lp,&cn);
-  ConnectCCs connect_ccs(&input,&connect_CCs_input, &cd, &dm, &lp,&cn);
+  Roadmap rdmp(&input,  &cd, &dm, &lp);
+  ConnectCCs connect_ccs(&input,&rdmp,&connect_CCs_input, &cd, &dm, &lp,&cn);
 
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
   dm.UserInit(&input,   &gn, &lp );
 //    gn.UserInit(&input, query.rdmp.GetEnvironment() );
 //    cn.UserInit(&input, query.rdmp.GetEnvironment() );
-  gn.UserInit(&input, connect_ccs.rdmp.GetEnvironment() );
-  cn.UserInit(&input, connect_ccs.rdmp.GetEnvironment() );
+  gn.UserInit(&input, rdmp.GetEnvironment() );
+  cn.UserInit(&input, rdmp.GetEnvironment() );
 
+
+  //ConnectCCs connect_ccs(&input,&rdmp,&connect_CCs_input, &cd, &dm, &lp,&cn);
+  rdmp.ReadRoadmapGRAPHONLY( (& connect_CCs_input)->mapFile.GetValue() );
   
   /** set up set ids for query stage. And this has been 
       done after cn has been set up */
@@ -62,6 +67,7 @@ int main(int argc, char** argv)
   connect_CCs_input.PrintValues(cout);
 
   connect_CCs_input.ReadCommandLine(&argc,argv); 
+cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
   //---------------------------
   // Print out some useful info
   //---------------------------
@@ -69,7 +75,7 @@ int main(int argc, char** argv)
   cout << endl;
   lp.planners.DisplayLPSets();
   cout << endl;
-  DisplayCCStats(*(connect_ccs.rdmp.m_pRoadmap),10);
+  DisplayCCStats(*(rdmp.m_pRoadmap),10);
   cout << endl;
 
   //----------------------------------------------------
@@ -83,7 +89,7 @@ int main(int argc, char** argv)
 //    } else {
 //      cout << endl << "UNSUCCESSFUL query";
 //    }
-  connect_ccs.PerformConnectCCs(&cd,&cn,&lp,&dm);
+  connect_ccs.PerformConnectCCs(&rdmp,&cd,&cn,&lp,&dm);
   clock.StopClock();
 
   //---------------------------
@@ -116,8 +122,8 @@ int main(int argc, char** argv)
     clock.PrintName();
     cout << ": " << clock.GetClock_SEC()
          << " sec"
-         << ", "<<connect_ccs.rdmp.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
-    Stats.PrintAllStats(&(connect_ccs.rdmp));
+         << ", "<<rdmp.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
+    Stats.PrintAllStats(rdmp);
   #endif
 
   //------------------------

@@ -34,12 +34,15 @@ ConnectCCs()
 }
 
 ConnectCCs::
-ConnectCCs(Input *input,ConnectCCsCmds *connect_CCs_input,
+ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
 	   CollisionDetection *cd, DistanceMetric *dm, LocalPlanners *lp,
 	   ConnectMapNodes    *cn) {
-  rdmp.InitRoadmap(input,cd,dm,lp,connect_CCs_input->mapFile.GetValue() );
+  //rdmp.InitRoadmap(input,cd,dm,lp,connect_CCs_input->mapFile.GetValue() );
+  cout << "here1";
+  //rdmp.ReadRoadmap(input,cd,dm,lp,connect_CCs_input->mapFile.GetValue() );
+  cout << "here2";
   istrstream input_stream(connect_CCs_input->option_str.GetValue());
-  string cnname;
+  string cnname; cout << "cnname: " << cnname << "." << endl;
   while (input_stream >> cnname) {
     if (cnname == string("RayTracer")) {
       method_name = cnname;
@@ -174,7 +177,7 @@ initDefaultSetIDs(ConnectMapNodes    *cn) {
 
 bool 
 ConnectCCs::
-PerformConnectCCs(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm) 
+PerformConnectCCs(Roadmap * rdmp,CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm) 
 {
 
   //here is where we will call the proper method from (RRT or RayTracer
@@ -191,13 +194,13 @@ PerformConnectCCs(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * l
 
     vector<CN> cns = (*cnSets).GetCNs();
     cn1 = cns.begin();
-    ConnectMapNodes::ConnectNodes_RRTConnect(&rdmp, &*cd, &*lp, &*dm,
+    ConnectMapNodes::ConnectNodes_RRTConnect(rdmp, &*cd, &*lp, &*dm,
     						(*cn1),(*cn).cnInfo);
   }
   else if (method_name == string("RayTracer")) {
     cout << "using RayTracer to attempt to connect CCs" << endl;
     //The call to RayTracer from ConnectMapNodes goes here	
-    RayTracer tracer(&rdmp, cd, cdsetid, cd->cdInfo, dm, dmsetid);
+    RayTracer tracer(rdmp, cd, cdsetid, cd->cdInfo, dm, dmsetid);
     tracer.connectCCs();
   }
   else {
