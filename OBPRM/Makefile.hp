@@ -15,7 +15,6 @@
 # Basic defns; do not change
 #------------------------------------------------------
  MATHLIB   = -lm
- STL_INCL  = -I/pub/dsmft/STL
 
 #-----------------------------------------------------------------------------
 # collision detection packages available
@@ -52,7 +51,7 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. ${STL_INCL} ${Graph_INCL}  ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
+ AFLAGS    = -I. ${Graph_INCL}  ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
 
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
