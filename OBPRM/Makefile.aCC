@@ -44,7 +44,7 @@
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=1 -DUSE_PQP -DUSE_RAPID 
+ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=0 -DUSE_PQP -DUSE_RAPID 
 DEFS = ${ADEFS} -DQUIET
 
 showdefs :: 
@@ -62,10 +62,13 @@ CXX = aCC
 # -- for development on TERMINATOR (can't seem to use it better due to cstk)
 OPTS = +O2
 
+# Dependencies
+DEPS = +md 
+
 # -- warnings (default, full, none) --
 CWARNS = -w
 
-CFLAGS     = $(OPTS) $(AFLAGS) $(CWARNS)
+CFLAGS     = $(OPTS) $(AFLAGS) $(CWARNS) $(DEPS)
 CXXFLAGS   = $(CFLAGS) +z
 DSOFLAGS   = $(CFLAGS) -b
 
