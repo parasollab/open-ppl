@@ -219,7 +219,7 @@ public:
 	SID _cdsetid, CDInfo& _cdInfo);
 
   /// printing methods.
-  void print_vizmo_format_to_file(Environment *env, FILE *_fp);
+  void printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs);
   static void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
   /// return a configuration(conformation)'s potential.

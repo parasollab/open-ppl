@@ -108,8 +108,7 @@ public:
 	CDInfo& _cdInfo) = 0; // NORMAL
 
   // printing methods.
-  virtual void writeTransformation(FILE *_fp, Transformation & tmp);
-  virtual void print_vizmo_format_to_file(const Cfg &c, Environment *env, FILE *_fp);
+  virtual void printLinkConfigurations(const Cfg &c, Environment *env, vector<Vector6D>&);
   virtual void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
 

@@ -486,10 +486,10 @@ void Cfg::print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg) {
 
 }
 
-void Cfg::print_vizmo_format_to_file(Environment *env, FILE *_fp) {
+void Cfg::printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs) {
 // Environment *env is not used here. But needed for other Cfg class
 // to interpret what an 'abstract' Cfg means.
-     CfgHelper->print_vizmo_format_to_file(*this, env, _fp);
+     CfgHelper->printLinkConfigurations(*this, env, cfigs);
 }
 
 

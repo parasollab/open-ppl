@@ -370,23 +370,22 @@ vector<Cfg> CfgManager::GetMovingSequenceNodes(const Cfg &c1, const Cfg &c2, dou
     return result;
 }
 
-void CfgManager::writeTransformation(FILE *_fp, Transformation & tmp) {
-        Orientation ori = tmp.orientation;
-        ori.ConvertType(Orientation::FixedXYZ);
-        fprintf(_fp,"\n%f %f %f %f %f %f",
-               tmp.position[0], tmp.position[1], tmp.position[2],
-               ori.gamma/6.2832, ori.beta/6.2832, ori.alpha/6.2832);
-}
 
-
-void CfgManager::print_vizmo_format_to_file(const Cfg &c, Environment *env, FILE *_fp) {
+void CfgManager::printLinkConfigurations(const Cfg &c, Environment *env, 
+vector<Vector6D> & cfigs) {
   ConfigEnvironment(c, env);
   int robot = env->GetRobotIndex();
   int numofLink = env->GetMultiBody(robot)->GetFreeBodyCount();
+
+  cfigs.erase(cfigs.begin(), cfigs.end());
   for(int i=0; i<numofLink; i++) {
      Transformation tmp = env->GetMultiBody(robot)->GetFreeBody(i)
                           ->WorldTransformation();
-     writeTransformation(_fp, tmp);
+     Orientation ori = tmp.orientation;
+     ori.ConvertType(Orientation::FixedXYZ);
+     Vector6D v6 = Vector6D(tmp.position[0], tmp.position[1], tmp.position[2],
+                    ori.gamma/6.2832, ori.beta/6.2832, ori.alpha/6.2832);
+     cfigs.push_back(v6);		    
   }
 
 }
