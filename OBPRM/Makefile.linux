@@ -37,7 +37,7 @@
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=1  -DUSE_RAPID -DUSE_VCLIP -DUSE_PQP
+   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=0  -DUSE_RAPID -DUSE_VCLIP -DUSE_PQP
 
 ### DEFS = ${ADEFS} -DQUIETGRAPH -DQUIET
     DEFS = ${ADEFS} 
@@ -72,6 +72,7 @@ CXX = ${CC}
    CWARNS = -w
 
 CFLAGS     = $(OPTS) $(AFLAGS) $(DEPS) $(CWARNS)
+CFLAGS2    = $(OPTS) $(AFLAGS) $(CWARNS)
 CXXFLAGS   = $(CFLAGS) 
 DSOFLAGS   = $(CFLAGS) -shared #-no_unresolved
 
@@ -93,14 +94,14 @@ libobprm.so:: $(OBJS)
 
 #--------------------------------------------------------------------
 obprm:: main_obprm.cpp libs
-	$(CXX) $(CXXFLAGS) -o obprm \
+	$(CXX) $(CFLAGS2) -o obprm \
                 main_obprm.cpp \
 		$(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_obprm.o main_obprm.d
 
 #--------------------------------------------------------------------
 query:: main_query.cpp libs
-	$(CXX) $(CXXFLAGS) -o query \
+	$(CXX) $(CFLAGS2) -o query \
                 main_query.cpp \
                 $(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_query.o main_query.d
