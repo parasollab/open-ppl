@@ -399,8 +399,7 @@ void Input::ReadCommandLine(int argc, char** argv){
 
     istrstream cfgstr(CFGstrings[0]->GetValue());
     if(cfgstr) {
-        char cfgName[100];
-        int numofJoints = 3;
+        numofJoints = 3;
         cfgstr >> cfgName;
         if(cfgstr) {
 	    cfgstr >> numofJoints;
