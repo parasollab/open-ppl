@@ -3875,8 +3875,8 @@ void
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
 WriteGraph(ostream& _myostream) const {
 
-      //_myostream << endl << "#####GRAPHSTART#####";
-      _myostream << endl << "GRAPHSTART";
+      _myostream << endl << "#####GRAPHSTART#####";
+      //_myostream << endl << "GRAPHSTART";
       _myostream << endl << this->numVerts << " " << this->numEdges << " " << this->vertIDs; 
 
       //format: VID VERTEX #edges VID WEIGHT VID WEIGHT ... 
@@ -3885,8 +3885,8 @@ WriteGraph(ostream& _myostream) const {
           vi->WriteEdgelist(_myostream);
       } 
 
-      //_myostream << endl << "#####GRAPHSTOP#####";
-      _myostream << endl << "GRAPHSTOP";
+      _myostream << endl << "#####GRAPHSTOP#####";
+      //_myostream << endl << "GRAPHSTOP";
       _myostream << endl; 
 };
 
