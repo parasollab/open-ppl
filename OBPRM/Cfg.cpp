@@ -56,6 +56,11 @@ void InfoCfg::Read(istream &s) {
    
 
 CfgManager * Cfg::CfgHelper = new Cfg_free();
+const char* Cfg::GetName() {
+   //return CfgHelper->GetName();
+   return "Cfg_free_rigid";
+}   
+
 
 // Normalize the orientation to the some range.
 void Cfg::Normalize_orientation() {
