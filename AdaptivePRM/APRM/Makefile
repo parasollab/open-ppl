@@ -131,8 +131,7 @@ OBJS = \
 	MyInput.o \
 	PriorityWeight.o \
 	PriorityLocalPlanners.o \
-	PriorityQuery.o \
-	ApproxNodeValidation.o
+	PriorityQuery.o 
 
 objs:: $(OBJS)
 

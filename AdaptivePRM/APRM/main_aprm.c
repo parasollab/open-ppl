@@ -16,7 +16,6 @@
 #include "Stat_Class.h"
 #include "CollisionDetection.h"
 #include "NoopCollisionDetection.h"
-#include "ApproxNodeValidation.h"
 #include "NoopLocalPlanners.h"
 #include "ConnectMapNodes.h"
 
@@ -38,7 +37,7 @@ int main(int argc, char** argv)
   DistanceMetric     dm;
   CollisionDetection cd;
   NoopCollisionDetection noop_cd;
-  ApproxNodeValidation approx_cd;
+  CollisionDetection approx_cd;
   Clock_Class        NodeGenClock;
   Clock_Class        ConnectionClock;
 
