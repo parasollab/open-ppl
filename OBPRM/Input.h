@@ -107,6 +107,8 @@ public:
     void ReadEnvFile(istream& _myistream);
     void WriteEnvFile(ostream& _myostream);
 
+    void ReadCfgType(istream &is);
+
     void PrintBodyNames();
     void PrintUsage(ostream& _os,char *executablename);
     void PrintValues(ostream& _os);

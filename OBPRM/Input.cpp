@@ -23,6 +23,7 @@
 #include "Cfg_free.h"
 #include "Cfg_fixed_PRR.h"
 #include "Cfg_free_serial.h"
+#include "Cfg_fixed_tree.h"
 
 
 // Need for retreiving default parameters of each
@@ -174,6 +175,7 @@ Input::Input():
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_rigid");
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_PRR");
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_serial");
+    strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_tree");
 
     CFGstrings[0]->PutDesc("STRING", Cfg_string_1);
 
@@ -209,6 +211,40 @@ Input::Input():
 Input::~Input() {
   return;
 }
+
+
+//===================================================================
+//  Input class
+//  ReadCfgType(istream &)
+//  Guang 12/14/00
+//===================================================================
+void Input::ReadCfgType(istream &is) {
+    if(is) {
+        numofJoints = 3;
+        is >> cfgName;
+        if(is) {
+        is >> numofJoints;
+        if(numofJoints < 0 || numofJoints > 1000) {
+            cerr << "Error in Input.c, wrong input for numofJoints !" << endl;
+            exit(2);
+        }
+        }
+        if (!(strncmp(cfgName,"Cfg_free_rigid",14))) {
+            Cfg::CfgHelper = new Cfg_free();
+            cfgSet=true;
+        }else if (!(strncmp(cfgName,"Cfg_fixed_PRR",13))) {
+            Cfg::CfgHelper = new Cfg_fixed_PRR();
+            cfgSet=true;
+        }else if (!(strncmp(cfgName,"Cfg_free_serial",15))) {
+            Cfg::CfgHelper = new Cfg_free_serial(numofJoints);
+            cfgSet=true;
+	} else if (!(strncmp(cfgName,"Cfg_fixed_tree", 14))) {
+	    Cfg::CfgHelper = new Cfg_fixed_tree(numofJoints);
+	    cfgSet = true;
+        }
+    } // default is Cfg_free().
+}
+
 
 
 //===================================================================
@@ -319,29 +355,7 @@ void Input::ReadCommandLine(int argc, char** argv){
     } //endfor i
 
     istrstream cfgstr(CFGstrings[0]->GetValue());
-    if(cfgstr) {
-        numofJoints = 3;
-        cfgstr >> cfgName;
-        if(cfgstr) {
-        cfgstr >> numofJoints;
-        if(numofJoints < 0 || numofJoints > 1000) {
-            cerr << "Error in Input.c, wrong input for numofJoints !" << endl;
-            exit(2);
-        }
-        }
-        if (!(strncmp(cfgName,"Cfg_free_rigid",14))) {
-            Cfg::CfgHelper = new Cfg_free();
-            cfgSet=true;
-        }else if (!(strncmp(cfgName,"Cfg_fixed_PRR",13))) {
-            Cfg::CfgHelper = new Cfg_fixed_PRR();
-            cfgSet=true;
-        }else if (!(strncmp(cfgName,"Cfg_free_serial",15))) {
-            Cfg::CfgHelper = new Cfg_free_serial(numofJoints);
-            cfgSet=true;
-            // to be done later, parameter for Cfg_free_serial.
-        }
-    } // default is Cfg_free().
-
+    ReadCfgType(cfgstr);
 
     //-- Do some clean up and final checking
 
@@ -583,25 +597,12 @@ void Input::Read(int action) {
                    exit(-1);
                }
         } 
-       else    
-         if (   strstr(line, "Cfg") ){
-                  if (!(strncmp(&line[1],"Cfg_free_rigid",14))) {      
-                         if(!cfgSet)
-                             Cfg::CfgHelper = new Cfg_free();
-                             cfgSet=true;
-                      }else if (!(strncmp(&line[1],"Cfg_fixed_PRR",13))) {
-                         if(!cfgSet)
-                              Cfg::CfgHelper = new Cfg_fixed_PRR();
-                             cfgSet=true;
-                      }else if (!(strncmp(&line[1],"Cfg_free_serial",15))) {
-                         if(!cfgSet) {
-                              int numofJoints;
-                               sscanf(&line[1],"%s %d",string2,& numofJoints);
-                              Cfg::CfgHelper = new Cfg_free_serial(numofJoints);
-                              cfgSet=true;
-                            }
-                      }    
-         }
+       else if (strstr(line, "Cfg")  && !cfgSet){
+       // if Environment has Cfg info and Cfg type is not set through command 
+       // line, we use this string from Environment instead to setup Cfg type.
+           istrstream cfgstr(&line[1]);
+	   ReadCfgType(cfgstr);
+       }
  
   }
   Read(is,envFormatVersion,action);
