@@ -25,6 +25,7 @@
 #include "VectorConstantSize.h"
 #include "Vectors.h"
 #include "CollisionDetection.h"
+//#include "DistanceMetrics.h"
 // brc changes below
 #include "Input.h"
 #include <stdio.h>
@@ -36,6 +37,9 @@ class Body;
 class AttEnvironment;
 class CollisionDetection;
 class CfgManager;
+
+
+class DistanceMetric;
 
 
 //
@@ -166,6 +170,10 @@ public:
 
   // methods for Cfg generation and collision checking.
   double Clearance(AttEnvironment *env,CollisionDetection* cd);
+
+  //Approximate C-Space Clearance 
+  double ApproxCSpaceClearance(AttEnvironment *env, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, int n);
+
   bool ConfigEnvironment(AttEnvironment *env);
   bool isCollision(AttEnvironment *env,CollisionDetection* cd, SID _cdsetid);
   bool isCollision(AttEnvironment *env, CollisionDetection *cd,int robot, int obs, SID _cdsetid);
