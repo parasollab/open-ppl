@@ -44,16 +44,30 @@ double DirectedAngularDistance(double a,double b)
 }
 
 
+// read cfgs from a file into a vector.
+void ReadCfgs(char * filename,  vector<Cfg> &cfgs) {
+  ifstream  is(filename);
+  if (!is) {
+         cout << endl << "In ReadQuery: can't open infile: " << queryFile << endl;
+         return;
+  }
+
+  Cfg tempCfg;
+  while (1) {
+      tempCfg.Read(is);
+      if(!is) break;
+      cfgs.push_back(tempCfg);
+  }
+}
+
+
+
 /////////////////////////////////////////////////////////////////////
-//
-// Output to a file the sequence of cfgs in matrix form
-// after to be transformed using the original center of gravity
-// of the robot.
-//
-//////////////////////////////////////////////////////////////////////
+// Output to a file the sequence of cfgs.
+/////////////////////////////////////////////////////////////////////
 void
 WritePathTranformationMatrices( char output_file[80],
-                                vector<Cfg> path,
+                                const vector<Cfg>& path,
                                 Environment *env ) { 
     FILE *fp;
 

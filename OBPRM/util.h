@@ -49,6 +49,7 @@ inline double sqr(double a)
 
 
 void
-WritePathTranformationMatrices(char output_file[80], vector<Cfg> path, Environment *env);
+WritePathTranformationMatrices(char output_file[80], const vector<Cfg> &path, Environment *env);
 
+void ReadCfgs(char *filename, vector<Cfg> &cfgs);
 #endif
