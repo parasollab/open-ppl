@@ -1,0 +1,1878 @@
+// $Id$
+/////////////////////////////////////////////////////////////////////
+//
+//  ConnectMapNodes.c
+//
+//  General Description
+//     This set of classes supports a "Connection Strategy Algobase".
+//     This file contains the definitions of the prototypes
+//     declared in "ConnectMapNodes.h".
+//
+//  Created
+//      8/27/98  Daniel Vallejo 
+//
+//  Last Modified By:
+//      8/30/98  Daniel Vallejo
+//      8/21/99  Lucia K. Dale   implementing obstBased connection
+//
+/////////////////////////////////////////////////////////////////////
+
+#include "ConnectMapNodes.h"
+#include "Roadmap.h"
+#include "Clock_Class.h"
+
+#define K_OTHER    10                  // default for obst-other connections
+#define K_SELF      3                  // default for obst-self  connections
+#define STEP_FACTOR 3                  // default for rrt stepFactor
+#define ITERATIONS 10                  // default for rrt iterations
+#define MAX_NUM 20                     // default for modifiedLM maxNum
+
+/////////////////////////////////////////////////////////////////////
+//
+//  METHODS for class ConnectMapNodes
+//      
+/////////////////////////////////////////////////////////////////////
+
+ConnectMapNodes::
+ConnectMapNodes(){
+   DefaultInit(); 
+};
+
+ConnectMapNodes::
+~ConnectMapNodes(){
+};
+
+
+
+void 
+ConnectMapNodes::
+DefaultInit(){
+    //-----------------------------------------------
+    // The default algorithms are specified
+    //-----------------------------------------------
+    cnInfo.cnsetid = CLOSEST10;
+    cnInfo.lpsetid = SL_R5;
+#ifdef USE_CSTK
+    cnInfo.cdsetid = CSTK;
+#else
+    cnInfo.cdsetid = RAPID;
+#endif
+
+    cnInfo.dmsetid = S_EUCLID9;
+};
+
+
+void
+ConnectMapNodes::
+UserInit(Input * input){
+   //-----------------------------------------------
+   // User Initialize Node Connectors
+   //-----------------------------------------------
+
+   // Initialize cn Sets
+   connectors.MakeCNSet("random");           // enum RANDOM
+   connectors.MakeCNSet("closest 10");       // enum CLOSEST10
+   connectors.MakeCNSet("closest 20");       // enum CLOSEST20
+
+   if ( input->numCNs == 0 ) { //use default CN sets
+   } else {
+     cnInfo.cnsetid=CN_USER1;
+     for (int i = 0; i < input->numCNs; i++) {
+       connectors.MakeCNSet(input->CNstrings[i]->GetValue());
+     }
+   }
+
+   cnInfo.numEdges = input->numEdges.GetValue();
+   cnInfo.addPartialEdge = input->addPartialEdge.GetValue();
+   cnInfo.dupeEdges = cnInfo.dupeNodes = 0;
+};
+
+
+//------------------------------------------------------
+// Driver,driver
+// Connect nodes according to all CN's in the set
+//------------------------------------------------------
+void
+ConnectMapNodes::
+ConnectNodes(Roadmap * rdmp,
+             CollisionDetection *cd,LocalPlanners* lp, DistanceMetric * dm, 
+             SID _cnsetid, CNInfo &info) {
+
+  vector<CN> cnset = connectors.GetCNSet(_cnsetid);
+
+  for (int cn=0; cn < cnset.size(); ++cn) {
+
+       // newly generated edges to the roadmap go here
+       info.edges.erase(info.edges.begin(),info.edges.end());
+
+       #ifndef QUIET
+       Clock_Class clock;
+       clock.StartClock(cnset[cn].GetName());
+       cout<<"\n ";
+       clock.PrintName();
+       cout << flush;
+       #endif
+
+       CNF cnfcn = cnset[cn].GetConnector();
+       cnfcn(rdmp,cd,lp,dm,cnset[cn], info);
+
+       // add newly generated edges to the roadmap
+       rdmp->roadmap.AddEdges(info.edges);
+       // move this part to the inside of each function.
+
+       #ifndef QUIET
+       clock.StopClock();
+       cout << clock.GetClock_SEC() << " sec, "
+		<< rdmp->roadmap.GetCCcount() 
+		<< " connected components\n"<< flush;
+       #endif
+  }
+};
+
+
+//------------------------------------------------------
+// Another Driver,driver
+//
+// ConnectNodes
+//------------------------------------------------------
+void
+ConnectMapNodes::
+ConnectNodes(Environment * environment, RoadmapGraph<Cfg,WEIGHT>& roadmap,
+             CollisionDetection *cd,LocalPlanners* lp,
+             DistanceMetric * dm, SID _cnsetid, CNInfo &info) {
+  Roadmap rdmp;
+  rdmp.environment = environment;
+  rdmp.roadmap = roadmap;
+
+  ConnectNodes(&rdmp, cd, lp, dm, _cnsetid, info);
+  roadmap = rdmp.roadmap;
+};
+
+
+// ------------------------------------------------------------------
+// some info needs to be set up for check connection between cfg's
+// ------------------------------------------------------------------
+LPInfo
+ConnectMapNodes::
+Initialize_LPinfo(Roadmap * _rm,CNInfo& info){
+
+  LPInfo lpInfo(_rm,info);
+
+  lpInfo.positionRes    = _rm->GetEnvironment()->GetPositionRes();
+  lpInfo.checkCollision = true;
+  lpInfo.savePath       = false;
+  lpInfo.cdsetid        = info.cdsetid;
+  lpInfo.dmsetid        = info.dmsetid;
+
+  return lpInfo;
+
+}
+
+
+// ------------------------------------------------------------------
+// Connect nodes in a random way.
+// ------------------------------------------------------------------
+void
+ConnectMapNodes::
+ConnectNodes_Random(
+        Roadmap * _rm,CollisionDetection* cd,
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info){
+
+    //-- initialize information needed to check connection between cfg's
+    LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+
+    vector<Cfg> vertices = _rm->roadmap.GetVerticesData();
+    vector<pair<SID,vector<LP> > > sets = lp->planners.GetLPSets();
+
+    for (int i=0; i < info.numEdges ; i++) {
+
+      	int c1id = (int)(lrand48()%_rm->roadmap.GetVertexCount());
+      	int c2id = (int)(lrand48()%_rm->roadmap.GetVertexCount());
+      	Cfg c1 = vertices[c1id];
+      	Cfg c2 = vertices[c2id];
+
+      	int thisset = (int)(lrand48()%sets.size());
+      	SID setid = sets[thisset].first;
+
+      	if ( lp->IsConnected(_rm,cd,dm,c1,c2,setid,&lpInfo) ) {
+	    _rm->roadmap.AddEdge(c1id, c2id, lpInfo.edge);
+      	}
+     }
+};
+
+
+// ------------------------------------------------------------------
+// ConnectNodes_Closest: 
+//
+// For each cfg find the k closest CFG 
+// and try to connect with them.
+//
+// ------------------------------------------------------------------
+void
+ConnectMapNodes::
+ConnectNodes_Closest(
+        Roadmap * _rm,CollisionDetection* cd,
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info){
+
+  //-- initialize information needed to check connection between cfg's
+  LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+
+  #ifndef QUIET
+  cout << "(k="<<_cn.GetKClosest()<<"): "<<flush;
+  #endif
+
+  vector<Cfg> vertices = _rm->roadmap.GetVerticesData();
+  const int verticeSize = vertices.size();
+  const int kclosest = min(_cn.GetKClosest(),verticeSize);
+
+  vector< pair<Cfg,Cfg> > kp;
+  // Find k closest cfgs to each cfg in the roadmap
+  if(kclosest < verticeSize  - 1) {
+     kp = FindKClosestPairs(_rm->GetEnvironment(), dm, info, vertices, kclosest);
+  } else { // all the pairs
+     for(int i=0; i<verticeSize-1; ++i) 
+	for(int j=i+1; j<verticeSize; ++j) 
+	   kp.push_back(pair<Cfg,Cfg>(vertices[i], vertices[j]));
+  } 
+
+  // for each pair identified
+  for (int j=0; j < kp.size(); j++) {
+     #if CHECKIFSAMECC
+     if(_rm->roadmap.IsSameCC(kp[j].first,kp[j].second)) continue;
+     #endif
+
+     if (lp->IsConnected(_rm,cd,dm,
+                         kp[j].first,kp[j].second,
+                         info.lpsetid,&lpInfo)) 
+		_rm->roadmap.AddEdge(kp[j].first, kp[j].second, lpInfo.edge);
+
+  } //endfor j
+
+};
+
+
+// ------------------------------------------------------------------
+// Cfg_VE_Type is a private class used by ConnectMapNodes class
+// to store information about connecting to what may either be
+// another Cfg _OR_ a new Cfg generated in the "middle" of an existing
+// edge in the map.  
+//
+// In order to keep the same structure (for sorting by distance) and 
+// yet not allocate space for endpoints when they are not needed
+// (ie, connecting to another existing map node--aka,Cfg), endpoints
+// are stored as a vector.
+// ------------------------------------------------------------------
+Cfg_VE_Type::~Cfg_VE_Type(){
+};
+Cfg_VE_Type::
+Cfg_VE_Type(){
+        cfg1 = Cfg::InvalidData();
+        cfg2 = Cfg::InvalidData();
+        cfg2_IsOnEdge = false;
+};
+Cfg_VE_Type::
+Cfg_VE_Type(Cfg& _cfg1,Cfg& _cfg2){
+        cfg1 = _cfg1;
+        cfg2 = _cfg2;
+        cfg2_IsOnEdge = false;
+};
+Cfg_VE_Type::
+Cfg_VE_Type(Cfg& _cfg1,Cfg& _cfg2,  Cfg& _endpt1,Cfg& _endpt2){
+        cfg1   = _cfg1;
+        cfg2   = _cfg2;
+        cfg2_IsOnEdge = true;
+        endpt.push_back(_endpt1);
+        endpt.push_back(_endpt2);
+};
+// ------------------------------------------------------------------
+// ClosestVE:
+//
+// For each cfg find the k closest CFG or PT_on_EDGE 
+// and try to connect with them.
+//
+// ------------------------------------------------------------------
+void
+ConnectMapNodes::
+ConnectNodes_ClosestVE(
+        Roadmap * _rm,CollisionDetection* cd,
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info){
+
+  #ifndef QUIET
+  cout << "(k="<<_cn.GetKClosest()<<"): "<<flush;
+  #endif
+
+  //-- initialize information needed to check connection between cfg's
+  LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+
+  if (lp->UsesPlannerOtherThan("straightline",info.lpsetid)){
+        cout <<"\n\nWARNING: Skipping call to ClosestVE."
+             <<  "\n         'straightline' ONLY local planner "
+             <<"for which ClosestVE works.\n\n";
+        return;
+  }
+
+
+  vector<Cfg> oldV,newV,verts= _rm->roadmap.GetVerticesData();
+  // if separation of vertices into two sets is desired
+  if (info.tag != InfoCfg::NULL_INFO){
+        // separate on tag values
+	for (vector<Cfg>::iterator v=verts.begin();v<verts.end();++v){
+		if (v->info.tag == info.tag) oldV.push_back(*v);
+		else                         newV.push_back(*v);
+	}
+  } else {
+        // only one set desired
+        oldV = newV = verts;
+  }
+
+  ClosestVE(_rm,cd,lp,dm,_cn,info,oldV,newV);
+
+};
+
+// ------------------------------------------------------------------
+// ClosestVE:
+//
+// For each cfg find the k closest CFG or PT_on_EDGE 
+// and try to connect with them.
+//
+// ------------------------------------------------------------------
+void
+ConnectMapNodes::
+ClosestVE(
+        Roadmap * _rm,CollisionDetection* cd,
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info, vector<Cfg>& oldV, vector<Cfg>& newV){
+
+  //-- initialize information needed to check connection between cfg's
+  LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+
+  // Get edges 
+  // reserve extra space ...will update local copy for efficiency
+  vector< pair<pair<VID,VID>,WEIGHT> > edges;
+  edges.reserve(_rm->roadmap.GetEdgeCount() + newV.size()*_cn.GetKClosest());
+  edges = _rm->roadmap.GetEdges();
+
+  // May have to adjust user's desired k wrt what is actually possible
+  int k = min(_cn.GetKClosest(), oldV.size()+edges.size());
+
+  // for each "real" cfg in roadmap
+  for (vector<Cfg>::iterator v=newV.begin();v<newV.end();++v){
+
+      // Find k closest cfgs in the roadmap
+      bool midpt_approx_of_closestPt = false;
+      vector<Cfg_VE_Type> KP = FindKClosestPairs(_rm,dm,info,
+                                                 *v,oldV,edges,
+                                                 k,
+						 midpt_approx_of_closestPt);
+      // for each pair identified
+      for (vector<Cfg_VE_Type>::iterator kp=KP.begin();kp<KP.end();++kp){
+
+         #if CHECKIFSAMECC
+         if(_rm->roadmap.IsSameCC(kp->cfg1,kp->cfg2)) continue;
+         #endif
+
+         //-- if new edge is collision free
+         if (lp->IsConnected(_rm,cd,dm,
+                         kp->cfg1,kp->cfg2,
+                         info.lpsetid,&lpInfo)){
+
+              //-- may have to add a new node in "middle" of existing edge
+              if ( kp->cfg2_IsOnEdge ) {
+
+                _rm->roadmap.AddVertex(kp->cfg2);
+
+                ++info.dupeNodes;  // keep count of duplicated nodes
+
+              }//endif cfg2_IsOnEdge
+
+              //-- add new edge to map
+              _rm->roadmap.AddEdge(kp->cfg1, kp->cfg2, lpInfo.edge);
+
+              //-- if did add an explicit interior node to edge(endpt0,endpt1)
+              if ( kp->cfg2_IsOnEdge ) {
+
+                        _rm->roadmap.AddEdge(kp->endpt[0],kp->cfg2,lpInfo.edge);
+                        _rm->roadmap.AddEdge(kp->cfg2,kp->endpt[1],lpInfo.edge);
+
+                        info.dupeEdges += 2;  // keep count of duplicated edges
+
+              }//endif cfg2_IsOnEdge
+
+         } //endif lp->IsConnected
+
+      } //endfor kp
+
+  } //endfor v
+};
+
+// ------------------------------------------------------------------
+// ConnectNodes_ConnectCCs: 
+//
+// Try to connect different connected components of the roadmap.
+// We try to connect all pairs of connected components. If both
+// components are small (less than "smallcc" nodes), then we try to 
+// connect all pairs of nodes.  If at least one of the components is 
+// large, we try to connect the "kpairs" closest pairs of nodes.
+// ------------------------------------------------------------------
+void
+ConnectMapNodes::
+ConnectNodes_ConnectCCs(
+        Roadmap * _rm,CollisionDetection* cd,
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info){
+
+  if(info.addPartialEdge) { 
+      if(lp->planners.GetLPSets().size()-1 > info.lpsetid) 
+	  ++info.lpsetid;
+      else {
+	  cerr << "Error: have to provide another LPset if wanting to addPartialEdge.\n";
+	  exit(100);
+      }
+  }
+  vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
+  int smallcc = _cn.GetSmallCCSize();
+
+  #ifndef QUIET
+  cout << "(kpairs=" << _cn.GetKPairs();
+  cout << ", smallcc=" << _cn.GetSmallCCSize() << "): "<<flush;
+  #endif
+
+  // process components from smallest to biggest  
+  for (int cc1 = ccvec.size()-1 ; cc1 >= 0 ; cc1--) {
+    for (int cc2 = cc1 - 1 ; cc2 >= 0 ; cc2--){
+         
+      VID cc1id = ccvec[cc1].second;
+      VID cc2id = ccvec[cc2].second;
+        
+      // if cc1 & cc2 not already connected, try to connect them 
+      if ( !_rm->roadmap.IsSameCC(cc1id,cc2id) ) {
+         //if ( (ccvec[cc1].first < smallcc) && (ccvec[cc2].first < smallcc) ){
+	 if(_rm->roadmap.GetCC(cc1id).size() < smallcc &&
+	    _rm->roadmap.GetCC(cc2id).size() < smallcc ) {
+               ConnectSmallCCs(_rm,cd,lp,dm,_cn,info,cc1id,cc2id);
+         } else {
+               ConnectBigCCs(_rm,cd,lp,dm,_cn,info,cc1id,cc2id);
+         }
+      } 
+
+    }/*endfor cc2*/ 
+  }/*endfor cc1*/ 
+
+}
+
+//
+// try to connect all pairs of cfgs in the two CCs
+//
+void
+ConnectMapNodes::
+ConnectSmallCCs(Roadmap* _rm,CollisionDetection *cd, LocalPlanners* lp,DistanceMetric * dm,CN& _cn, CNInfo& info, VID _cc1id, VID _cc2id) {
+
+  //-- initialize information needed to check connection between cfg's
+  LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+
+  // created a temporary variable since GetCC requires &
+
+  Cfg t;
+/*
+  vector<Cfg> cc1vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc1id));
+  vector<Cfg> cc2vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc2id));
+*/
+  t=_rm->roadmap.GetData(_cc1id);
+  vector<Cfg> cc1vec = _rm->roadmap.GetCC(t);
+  t=_rm->roadmap.GetData(_cc2id);
+  vector<Cfg> cc2vec = _rm->roadmap.GetCC(t);
+  bool connected = false;
+
+  for (int c1 = 0; c1 < cc1vec.size(); c1++) {
+    for (int c2 = 0; c2 < cc2vec.size(); c2++) {
+
+       if (lp->IsConnected(_rm,cd,dm,
+			cc1vec[c1],cc2vec[c2],info.lpsetid,&lpInfo)) {
+	   _rm->roadmap.AddEdge(cc1vec[c1], cc2vec[c2], lpInfo.edge);
+           connected = true;
+           break;
+       } else if(info.addPartialEdge) {
+	   Cfg &tmp = lpInfo.savedEdge.second;
+	   if(!tmp.AlmostEqual(cc1vec[c1])) {
+	      _rm->roadmap.AddVertex(tmp);
+	      _rm->roadmap.AddEdge(cc1vec[c1], tmp, lpInfo.edge);
+	   }
+       }
+    }
+
+    if (connected) break;
+  }
+
+}
+
+//
+// try to connect kclosest pairs of cfgs in the two CCs
+//
+void
+ConnectMapNodes::
+ConnectBigCCs(
+        Roadmap* _rm,CollisionDetection *cd, 
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info, 
+        VID _cc1id, VID _cc2id) {
+
+  //-- initialize information needed to check connection between cfg's
+  LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+
+  int kpairs = _cn.GetKPairs();
+
+  // brc added temporary variable t 
+  /*vector<Cfg> cc1vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc1id));
+  vector<Cfg> cc2vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc2id)); */
+  Cfg t;
+  t=_rm->roadmap.GetData(_cc1id);
+  vector<Cfg> cc1vec = _rm->roadmap.GetCC(t);
+  t=_rm->roadmap.GetData(_cc2id);
+  vector<Cfg> cc2vec = _rm->roadmap.GetCC(t);
+
+  kpairs = min(kpairs, cc2vec.size());
+
+  vector< pair<Cfg,Cfg> > kp = FindKClosestPairs(_rm->GetEnvironment(),
+	dm,info,cc1vec,cc2vec,kpairs);
+
+  for (int i = 0; i < kp.size(); i++) {
+      if (lp->IsConnected(_rm,cd,dm,kp[i].first,
+		kp[i].second,info.lpsetid,&lpInfo)) {
+	   _rm->roadmap.AddEdge(kp[i].first, kp[i].second, lpInfo.edge); 
+           break;
+      } else if(info.addPartialEdge) {
+           Cfg &tmp = lpInfo.savedEdge.second;
+	   if(!tmp.AlmostEqual(kp[i].first)) {
+             _rm->roadmap.AddVertex(tmp);
+             _rm->roadmap.AddEdge(kp[i].first, tmp, lpInfo.edge);
+	   }
+      }
+  }
+}
+
+//
+// used to "sort" Cfg's by obst generation number
+//
+bool
+ConnectMapNodes::
+info_Compare (const Cfg &_cc1, const Cfg &_cc2) {
+        return (_cc1.info.obst < _cc2.info.obst ) ;
+};
+
+//
+// used to sort cfgs by distance (CfgDistType is single cfg & distance)
+//
+bool
+ConnectMapNodes::
+CfgDist_Compare (const CfgDistType &_cc1, const CfgDistType &_cc2) {
+        return (_cc1.second < _cc2.second ) ;
+};
+
+//
+// used by "findKClosestPairs" for sort (DIST_TYPE is pair of cfgs & distance)
+//
+bool
+ConnectMapNodes::
+DIST_Compare (const DIST_TYPE &_cc1, const DIST_TYPE &_cc2) {
+        return (_cc1.second < _cc2.second ) ;
+};
+
+//
+// used to "sort" by distance
+//
+bool
+ConnectMapNodes::
+VE_DIST_Compare (const VE_DIST_TYPE &_cc1, const VE_DIST_TYPE &_cc2) {
+        return (_cc1.second < _cc2.second ) ;
+};
+
+//----------------------------------------------------------------------
+// SortByDistFromCfg
+//
+// Given: ONE cfg1  and ONE vector of cfgs
+// Do:    sort cfgs by distance from cfg1 (modifies cfgs)
+//----------------------------------------------------------------------
+void
+ConnectMapNodes::
+SortByDistFromCfg(Environment *_env,DistanceMetric * dm, CNInfo& info,
+   const Cfg& _cfg1, vector<Cfg>&  _cfgs) {
+
+   // compute distances from _cfg1 for all cfgs in _cfgs
+   vector<CfgDistType> distances;
+   for (int i=0; i < _cfgs.size(); i++) {
+        double dist = dm->Distance(_env, _cfg1,_cfgs[i],info.dmsetid);
+        distances.push_back(CfgDistType(_cfgs[i],dist));
+   }
+
+   sort (distances.begin(), distances.end(), ptr_fun(CfgDist_Compare) );
+
+   // now reconstruct _cfgs vector, sorted by distances 
+   for (int j=0; j < _cfgs.size(); j++) 
+        _cfgs[j] = distances[j].first;
+  
+   return;
+
+};
+
+
+//----------------------------------------------------------------------
+// Given: k and ONE cfg and ONE vector
+// Find : find k pairs of closest cfg from "cfg" to "vector"
+//----------------------------------------------------------------------
+vector< CfgPairType >
+ConnectMapNodes::
+FindKClosestPairs(Environment *_env,DistanceMetric * dm, CNInfo& info,
+        Cfg& cfg1,vector<Cfg>& vec1, int k) {
+
+  vector<Cfg> cfg;
+  cfg.push_back(cfg1);
+
+  // find kclosest cfgs to cfg in vertices
+  return FindKClosestPairs( _env, dm, info, cfg, vec1, k);
+}
+
+
+//----------------------------------------------------------------------
+// Given: k and ONE vector
+// Find : find k pairs of closest cfg from vector to each cfg in vector
+//----------------------------------------------------------------------
+vector< CfgPairType >
+ConnectMapNodes::
+FindKClosestPairs(Environment *_env,DistanceMetric * dm, CNInfo& info,
+        vector<Cfg>& vec1, int k) {
+
+  vector< pair<Cfg,Cfg> > pairs;
+
+  // if valid number of pairs requested
+  if (k>0){
+
+    vector<Cfg> vec_of_cfgs = vec1;
+
+    for (vector<Cfg>::reverse_iterator cfg=vec1.rbegin();cfg<vec1.rend()-1;++cfg){
+
+       // find k closest cfgs between the two vectors 
+       vector< pair<Cfg,Cfg> > kp = FindKClosestPairs(
+                                                _env,
+                                                dm,
+                                                info,
+                                                *cfg,
+                                                vec_of_cfgs,
+                                                k
+                                          );
+
+       // save pairs
+       pairs.insert(pairs.end(),kp.begin(),kp.end());
+
+    }//endfor cfg
+
+  }//endif k>0
+
+  return pairs;
+}
+
+//----------------------------------------------------------------------
+// Given: k and a TWO vectors
+// Find : k pairs of closest cfgs between the two input vectors of cfgs
+// -- if k don't exist, return as many as do
+//----------------------------------------------------------------------
+vector< CfgPairType > 
+ConnectMapNodes::
+FindKClosestPairs(Environment *_env,DistanceMetric * dm, CNInfo& info, 
+	vector<Cfg>& vec1, vector<Cfg>& vec2, int k) {
+
+  vector< CfgPairType > pairs;
+
+  // if valid number of pairs requested
+  if (k>0){
+
+    if (vec1 == vec2){
+       return FindKClosestPairs(_env, dm, info, vec1, k);
+    } else {
+
+       // initialize w/ k elements each with huge distance...
+       vector<DIST_TYPE> kp;
+       for (int i=0; i < k; i++) 
+          kp.push_back(DIST_TYPE(
+                CfgPairType(Cfg::InvalidData(),Cfg::InvalidData()),
+                MAX_DIST));
+
+       // now go through all kp and find closest k
+       for (int c1 = 0; c1 < vec1.size(); c1++) {
+          for (int c2 = 0; c2 < vec2.size(); c2++) {
+            double dist = dm->Distance(_env, vec1[c1],vec2[c2],info.dmsetid);
+            if ( dist < kp[k-1].second) {
+               kp[k-1] = DIST_TYPE(CfgPairType(vec1[c1],vec2[c2]),dist);
+               sort (kp.begin(), kp.end(), ptr_fun(DIST_Compare) );
+            }
+          }
+       }//endfor c1
+
+
+       // now construct vector of k pairs to return (don't need distances...)
+       for (int p=0; p < k && p<kp.size(); p++)
+          if (kp[p].first.first != Cfg::InvalidData() && 
+              kp[p].first.second != Cfg::InvalidData())
+                pairs.push_back( kp[p].first );
+
+     }//endif vec1 == vec2
+
+   }//endif k>0
+
+   return pairs;
+
+};
+
+//----------------------------------------------------------------------
+// Given: k, ONE Cfg and ONE vector of vertices and ONE vector of edges
+// Find : find k pairs of closest cfg from "cfg" to "vector"
+//----------------------------------------------------------------------
+vector< Cfg_VE_Type > 
+ConnectMapNodes::
+FindKClosestPairs(Roadmap *_rm,DistanceMetric * dm, CNInfo& info,
+        Cfg&                              cfg, 
+        vector<Cfg>&                      verts, 
+        vector< pair<pair<VID,VID>,WEIGHT> >& edges, 
+        int                                   k,
+	bool                              midpoint) {
+
+  vector< Cfg_VE_Type > pairs;
+
+  // if valid number of pairs requested
+  if (k>0){
+
+     // initialize w/ k elements each with huge distance...
+     vector<VE_DIST_TYPE> kp;
+     for (int i=0; i < k; i++)
+          kp.push_back(  VE_DIST_TYPE( Cfg_VE_Type(), MAX_DIST)  );
+
+
+     //-- VERTICES:
+     //   Note: need to keep the distances so can't just call one of 
+     //         the other versions of vertices compatable FindKClosestPairs
+
+     // now go through all kp and find closest k
+     for (int c1 = 0; c1 < verts.size(); c1++) {
+          if (cfg != verts[c1] ) { 
+
+             double dist = dm->Distance(_rm->GetEnvironment(), 
+                                     cfg,
+                                     verts[c1],
+                                     info.dmsetid);
+
+             if ( dist < kp[k-1].second) {
+                kp[k-1] = VE_DIST_TYPE(Cfg_VE_Type(cfg,verts[c1]),dist);
+                sort (kp.begin(), kp.end(), ptr_fun(VE_DIST_Compare) );
+             }
+
+          }// if (cfg != verts[c1])
+     }//endfor c1
+
+     //-- EDGES:
+     for (int e1 = 0; e1 < edges.size(); e1++) {
+
+          Cfg endpt1 = _rm->roadmap.GetData(edges[e1].first.first);
+          Cfg endpt2 = _rm->roadmap.GetData(edges[e1].first.second);
+          Cfg tmp = cfg.ClosestPtOnLineSegment(endpt1,endpt2);
+
+          if (tmp != endpt1 && tmp != endpt2){
+             double dist = dm->Distance(_rm->GetEnvironment(), 
+                                     cfg,
+                                     tmp,
+                                     info.dmsetid);
+
+
+             if ( dist < kp[k-1].second) {
+                kp[k-1] = VE_DIST_TYPE(Cfg_VE_Type(cfg,
+						tmp,
+						endpt1,endpt2),
+				    dist);
+                sort (kp.begin(), kp.end(), ptr_fun(VE_DIST_Compare) );
+             } //endif dist
+
+          } // endif (tmp != endpt1 && tmp != endpt2)
+     } //endfor e1
+
+     // now construct vector of k pairs to return (don't need distances...)
+     for (int p=0; p < k && p<kp.size(); p++)
+          if (kp[p].first.cfg1 != Cfg::InvalidData() && 
+              kp[p].first.cfg2 != Cfg::InvalidData())
+                  pairs.push_back( kp[p].first );
+
+   }//endif k>0
+
+   return pairs;
+
+};
+
+/*---------------------------------------------------------------
+Vertices are stored as generated but they may have been originally
+generated with respect to some obstacle.  This proceedure
+will return a vector where every element is a vector of cfg's
+corresponding to a unique (& valid) id value.
+---------------------------------------------------------------*/
+vec_vec_CfgType
+ConnectMapNodes::
+Get_Cfgs_By_Obst(Roadmap * _rm){
+
+  //-- get all vertices
+  vector<Cfg> vert= _rm->roadmap.GetVerticesData();
+
+  //-- sort by info
+  sort (vert.begin(), vert.end(), ptr_fun(info_Compare) );
+
+  //-- declare value to return
+  vec_vec_CfgType byInfo;
+
+  //-- build up a separate vector for each unique & valid id
+  vector < Cfg >  tmp;
+
+  int  id, prev= -505;
+  bool firstList=true;
+  for (int i=0;i<vert.size();++i){
+     id= vert[i].info.obst;
+     if (id != prev)
+        if (prev == -1) {
+            tmp.erase(tmp.begin(),tmp.end());
+        } else { // valid body
+            if (firstList){
+                firstList=false;
+            } else {
+                byInfo.push_back(tmp);
+                tmp.erase(tmp.begin(),tmp.end());
+            }
+        }
+     tmp.push_back(vert[i]);
+     prev=id;
+  }//endfor
+
+  //-- last list wouldn't've been added in loop
+  if (  prev != -1  &&  tmp.size()>0  )
+     byInfo.push_back(tmp);
+
+  //-- return vector of vectors of vertices
+  return byInfo;
+
+}
+
+/*---------------------------------------------------------------
+  Implements Rapidly-Exploring Random Tree (RRT) algm
+
+     initial tree - "Roadmap", input parameter
+     K iterations - input parameter
+     delta T      - input parameter
+     set U        - input "direction" set
+
+     note: assumes HOLONOMIC robot
+     note: add'l parameters are used in calls to various algobase 
+           functions
+
+  Algm explores starting from initial tree input and adds whatever 
+  nodes and edges it explores as vertices and edges to roadmap.
+---------------------------------------------------------------*/
+void 
+ConnectMapNodes::
+RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
+        CollisionDetection* cd, LocalPlanners* lp, DistanceMetric * dm,
+        CNInfo& info, LPInfo lpInfo){
+
+  // get a local copy for brevity of notation
+  Environment *env = rm->GetEnvironment();
+
+  for (int k=0;k<K;++k){
+
+      // brc - porting required adding these extra local variables
+      Cfg tmp = Cfg::GetRandomCfg(env);
+      Cfg x_rand = Cfg(tmp);
+
+      vector<Cfg> verticesData;
+                  verticesData = rm->roadmap.GetVerticesData();
+
+      vector<  CfgPairType > kp = FindKClosestPairs(
+                                           env,
+                                           dm,
+                                           info,
+                                           x_rand,
+                                           verticesData,
+                                           1
+                                          );
+      if (kp.size()>0) {
+
+         Cfg x_near = kp[0].second;
+
+         Cfg u;
+
+         if ( U.size() > 0 ) {
+             // select u at random from input set U
+             u = U[(int)(lrand48()%U.size())];
+         } else {
+             // holonomic robot assumption in purely random selection of u
+             u = x_rand;
+         }//endif U.size()
+
+         Cfg x_new = Cfg::c1_towards_c2(x_near,u,deltaT);
+
+         //if x_new in bbox AND x_new in freespace AND x_new connectable to x_near
+         if (x_new.InBoundingBox(env)
+          && !x_new.isCollision(env,cd,info.cdsetid)
+          && lp->IsConnected(rm,cd,dm,x_near,x_new,info.lpsetid,&lpInfo)){
+
+             // add x_new and connecting edge to x_near into roadmap
+             // brc added a temporary variable t
+             Cfg t=Cfg(x_new);
+             rm->roadmap.AddVertex(t);
+             rm->roadmap.AddEdge(x_near, x_new, lpInfo.edge);
+         }
+      } //endif (kp.size()>0) 
+
+  }//endfor k
+
+}
+
+/*---------------------------------------------------------------
+Copy vertices and all incident edges associated with "vids" 
+from one roadmap to another
+---------------------------------------------------------------*/
+void
+ConnectMapNodes::
+ModifyRoadMap(
+        Roadmap *toMap,
+        Roadmap *fromMap,
+        vector<VID> vids){
+
+  // brc added tmp t
+  Cfg t;
+  int i;
+  for (i=0;i<vids.size();++i) {
+    t=fromMap->roadmap.GetData(vids[i]);
+    
+    //toMap->roadmap.AddVertex(fromMap->roadmap.GetData(vids[i]));
+    toMap->roadmap.AddVertex(t);
+  } //endfor i
+
+
+  //-- get edges from _rm connected component and add to submap
+  for (i=0;i<vids.size();++i) {
+     vector< pair<pair<VID,VID>,WEIGHT> > edges =
+                           fromMap->roadmap.GetIncidentEdges(vids[i]);
+     for (int j=0;j<edges.size();++j) {
+       //brc tmp variables t1,t2
+       Cfg t1=fromMap->roadmap.GetData(edges[j].first.first),
+           t2=fromMap->roadmap.GetData(edges[j].first.second);
+/*
+       toMap->roadmap.AddEdge(fromMap->roadmap.GetData(edges[j].first.first),
+                           fromMap->roadmap.GetData(edges[j].first.second),
+                           edges[j].second);
+*/
+
+       toMap->roadmap.AddEdge(t1,t2, edges[j].second);
+     } //endfor j
+
+  } //endfor i
+
+};
+
+/*---------------------------------------------------------------
+Takes existing connected components of size less than or equal to
+SmallCC and expands them randomly (or twds connected components).
+---------------------------------------------------------------*/
+void
+ConnectMapNodes::
+ConnectNodes_ExpandRRT(
+        Roadmap * _rm,CollisionDetection* cd,
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info){
+
+  // display information specific to method
+  #ifndef QUIET
+  cout << "(iterations = "<<_cn.GetIterations()
+       << ", stepFactor= "<<_cn.GetStepFactor()
+       << ", smallcc   = "<<_cn.GetSmallCCSize()<<"): "<<flush;
+  #endif
+
+  // initialize information needed to check connection between cfg's
+  LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+
+  // process components from smallest to biggest
+  vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
+  for (vector< pair<int,VID> >::reverse_iterator cc1=ccvec.rbegin();
+       cc1->first <= _cn.GetSmallCCSize() && cc1<ccvec.rend();
+       ++cc1){
+
+      //-- submap = vertices & edges of current (cc1) connected component
+      Roadmap submap;
+      submap.environment = _rm->GetEnvironment();
+      ModifyRoadMap(&submap,_rm,
+                    _rm->roadmap.GetCC(cc1->second));
+
+      if ( !strcmp(_cn.GetName(),"RRTexpand") ){
+
+          // use random U
+          vector<Cfg> dummyU;
+          RRT(&submap, 
+              _cn.GetIterations(),
+              _cn.GetStepFactor() * lpInfo.positionRes,
+              dummyU,
+              cd, lp, dm, info, lpInfo);
+          //-- map = map + submap
+          ModifyRoadMap(_rm,&submap,
+                        submap.roadmap.GetVerticesVID());
+
+      }else{  //"RRTcomponents"
+
+	  // use each connected component cfg's as U
+          for (vector< pair<int,VID> >::iterator cc2=ccvec.begin();
+               cc2<ccvec.end();++cc2){
+
+             VID cc1id = cc1->second;
+             VID cc2id = cc2->second;
+
+             if ( !_rm->roadmap.IsSameCC(cc1id,cc2id) ) {
+
+                //lkd added tmp & separated decl from init for SUN compiler
+                Cfg tmp;
+		tmp = _rm->roadmap.GetData(cc2id);
+                vector<Cfg> U = _rm->roadmap.GetCC(tmp);
+                RRT(&submap,
+                    _cn.GetIterations(),
+                    _cn.GetStepFactor() * lpInfo.positionRes,
+                    U,
+                    cd, lp, dm, info, lpInfo);
+
+                //-- map = map + submap
+                ModifyRoadMap(_rm,&submap,
+                        submap.roadmap.GetVerticesVID());
+
+             }// endif !_rm
+
+          } // endfor cc2
+
+      }
+
+
+  } //endfor cc1 
+
+
+};
+
+/*---------------------------------------------------------------
+Obst to Obst connections are attempted for the "k" closest nodes.
+Each "body" of a multibody is considered an obstacle.  Obstacles
+have id's.  The k-closest cfg's, one of which was generated wrt the
+"first" obstacle (body_i) and the other of which was generated wrt
+the "second" (body_j), will have a connection attempted between them.
+This continues for all unique id pairings.
+
+For example:
+  Given obstacle id's 2,3,4 & 5,
+  connection is attempted for the k-closest in each obst-obst
+  (i,j) pairing below:
+        2-2  2-3  2-4  2-5
+             3-3  3-4  3-5
+                  4-4  4-5
+                       5-5
+  When i=j, the "k" value may be different than otherwise
+---------------------------------------------------------------*/
+void
+ConnectMapNodes::
+ConnectNodes_ObstBased(
+        Roadmap * _rm,CollisionDetection* cd,
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info){
+
+  // display information specific to method 
+  #ifndef QUIET
+  cout << "(k_other="<<_cn.GetKOther()
+       << ", k_self="<<_cn.GetKSelf()<<"): "<<flush;
+  #endif
+
+  // initialize information needed to check connection between cfg's
+  LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+
+
+  //-- get cfg's
+  vec_vec_CfgType body = Get_Cfgs_By_Obst(_rm);
+
+  // Each "body" of a multibody is considered an obstacle.
+  // for i, each body id
+  for (int i=0; i<body.size(); i++){
+
+    // for j, each body id starting with i
+    for (int j=i; j<body.size(); j++) {
+
+        int k;
+        if (j==i) k = min(_cn.GetKSelf(),body[i].size());
+        else      k = min(_cn.GetKOther(),min(body[i].size(),body[j].size()));
+
+        // if no pairs to find, continue to next set of bodies
+	if (k==0) continue;
+
+        // get closest pairs of nodes on obst to (possibly) another obstacle
+        vector< pair<Cfg,Cfg> > kp = FindKClosestPairs(
+                                    _rm->GetEnvironment(),
+                                    dm,
+                                    info,
+                                    body[i],
+                                    body[j],
+                                    k
+                                    );
+
+        //-- check connections between pairs
+        for (int m=0;m<kp.size();++m){
+                #if CHECKIFSAMECC
+                if(_rm->roadmap.IsSameCC(kp[m].first,kp[m].second)) continue;
+                #endif
+
+                if (lp->IsConnected(_rm,cd,dm,
+                        kp[m].first,kp[m].second,info.lpsetid,&lpInfo)){
+                               _rm->roadmap.AddEdge(kp[m].first,kp[m].second,lpInfo.edge);
+                }//endif IsConnected
+        }//endfor m
+
+      } //endfor j
+  } //endfor i
+
+
+};
+
+
+//////////////////////////////////////////////////////////////////////
+//
+//   "modifiedLM" -- modified Laumond's method. During connection phase,
+//   nodes are randomly generated, they are kept if they can be connected
+//   to no CCs or more than one CCs, otherwise it will be tossed away(only
+//   connected to one CC) if its 'distance' from the 'center' of that CC
+//   not larger than 2 times the radius of that CC, i.e, it will be kept
+//   only if it 'expand' that CC.
+//   note:  parameters are:
+//   1) kclosest: num of closest nodes in each CC that this node is
+//                going to try connection.
+//   2) maxNum: the maximum numbers of nodes that are going to be
+//              added into the roadmap during this.
+//////////////////////////////////////////////////////////////////////
+void
+ConnectMapNodes::
+ConnectNodes_modifiedLM(
+        Roadmap * _rm,CollisionDetection* cd,
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info){
+
+  LPInfo lpInfo(_rm, info);
+
+  vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
+  const int kclosest = _cn.GetKClosest();
+  const int maxNum = _cn.GetMaxNum();
+
+  #ifndef QUIET
+  cout << "(kclosest=" << _cn.GetKClosest();
+  cout << ", maxNum=" << _cn.GetMaxNum() << "): "<<flush;
+  #endif
+
+  int numCfgAdded = 0;
+  while(_rm->roadmap.GetCCStats().size() > 1 && numCfgAdded < maxNum) {
+     Environment * env = _rm->GetEnvironment();
+     int numMultiBody = env->GetMultiBodyCount();
+     int robot        = env->GetRobotIndex();
+     int obstIndex = (robot+rand()%(numMultiBody-1)+1)%numMultiBody;
+     int numofConnection = 0;
+
+     //vector<Cfg> vc = Cfg::GenSurfaceCfgs4ObstNORMAL(env,
+     //                cd, obstIndex, 1, info.cdsetid);
+     Cfg vc = Cfg::GetRandomCfg(env);
+     Cfg me = Cfg(vc);
+     me.info.obst=obstIndex;
+
+     vector< pair<Cfg, Cfg> > edges;
+     vector< pair<WEIGHT,WEIGHT> > edgelpinfos;
+     int i;
+     for(i=0; i<ccvec.size(); ++i) {
+        // brc added tmp variable t;
+       Cfg t=_rm->roadmap.GetData(ccvec[i].second);
+        //vector<Cfg> ccvc =  _rm->roadmap.GetCC(_rm->roadmap.GetData(ccvec[i].second));
+        vector<Cfg> ccvc =  _rm->roadmap.GetCC(t);
+        vector< pair<Cfg, Cfg> > kp = FindKClosestPairs(
+                env, dm, info, me, ccvc, kclosest);
+        for(int j=0; j<kp.size(); ++j) {
+           if (lp->IsConnected(_rm,cd,dm, kp[j].first,kp[j].second,
+              info.lpsetid,&lpInfo))  {
+              ++numofConnection;
+              edges.push_back(kp[j]);
+	      edgelpinfos.push_back(lpInfo.edge);
+              break;
+           }
+        }
+     }
+     bool add = false;
+     if(numofConnection == 1) {
+        vector<Cfg> ccvc = _rm->roadmap.GetCC(edges[0].second);
+        Cfg center; // sum is assigned to 0 by constructor.
+        for(int i=0; i<ccvc.size(); ++i) {
+           double centerWeight = float(i)/ccvc.size();
+           center = Cfg::WeightedSum(ccvc[i], center, centerWeight);
+        }
+        double radius = 0.0;
+        for(i=0; i<ccvc.size(); ++i) {
+           radius += dm->Distance(env, center, ccvc[i], info.dmsetid);
+        }
+        radius /= ccvc.size();
+        double meFromCenter = dm->Distance(env, center, edges[0].first, info.dmsetid);
+        if(meFromCenter >= 2.0 * radius)
+                add = true;
+     }
+     if(add || numofConnection != 1) {
+         ++numCfgAdded;
+         _rm->roadmap.WeightedGraph<Cfg,WEIGHT>::AddVertex(me);
+         for(int i=0; i<edges.size(); ++i) {
+             _rm->roadmap.AddEdge(edges[i].first, edges[i].second, edgelpinfos[i]);
+         }
+     }
+  }
+}
+
+/////////////////////////////////////////////////////////////////////
+//
+//  METHODS for class CN
+//      
+/////////////////////////////////////////////////////////////////////
+
+CN::
+CN() {
+  strcpy(name,"");
+  connector = 0; 
+  cnid = INVALID_EID;
+};
+
+CN::
+~CN() {
+};
+
+bool 
+CN::
+operator==(const CN& _cn) const
+{
+  if(strcmp(name,_cn.name) != 0 ) {
+     return false;
+  } else if ( !strcmp(name,"random") ) {
+    return (numEdges == _cn.numEdges ); 
+  } else if ( !strcmp(name,"closest") ) {
+     return (kclosest == _cn.kclosest );
+  } else if ( !strcmp(name,"obstBased") ) {
+     return ( (k_other == _cn.k_other) && (k_self == _cn.k_self ) );
+  } else if ( !strcmp(name,"RRTexpand") || !strcmp(name,"RRTcomponents") ) {
+     return ( (iterations == _cn.iterations) 
+             && (stepFactor == _cn.stepFactor)
+             && (smallcc == _cn.smallcc) );
+  } else if ( !strcmp(name,"components") ) {
+     return ( (kpairs == _cn.kpairs) && (smallcc == _cn.smallcc) );
+  } else if ( !strcmp(name,"modifiedLM") ) {
+     return ( (kclosest == _cn.kclosest) && (maxNum == _cn.maxNum) );
+  } else {  
+     return false;
+  }
+};
+
+
+char* 
+CN::
+GetName() const {
+  return const_cast<char*>(name);
+};
+
+CNF 
+CN::
+GetConnector(){
+  return connector;
+};
+
+EID 
+CN::
+GetID() const {
+  return cnid;
+};
+
+int
+CN::
+GetNumEdges() const {
+    return numEdges;
+};
+
+
+int
+CN::
+GetKClosest() const {
+    return kclosest;
+};
+
+int
+CN::
+GetSmallCCSize() const {
+    return smallcc;
+};
+
+int
+CN::
+GetKPairs() const {
+    return kpairs;
+};
+
+int
+CN::
+GetKOther() const {
+    return k_other;
+};
+
+int
+CN::
+GetKSelf() const {
+    return k_self;
+};
+
+int
+CN::
+GetIterations() const {
+    return iterations;
+};
+
+int
+CN::
+GetStepFactor() const {
+    return stepFactor;
+};
+
+int
+CN::
+GetMaxNum() const {
+    return maxNum;
+};
+
+
+
+ostream& operator<< (ostream& _os, const CN& cn) {
+        _os<< cn.GetName();
+        if ( !strcmp(cn.GetName(),"random") ){
+           _os<< ", numEdges = " << cn.GetNumEdges(); 
+        }
+        if ( strstr(cn.GetName(),"closest") ){
+           _os<< ", kclosest = " << cn.GetKClosest();  
+        }
+        if ( strstr(cn.GetName(),"obstBased") ){
+           _os<< ", k_other = " << cn.GetKOther() << ", k_self = " << cn.GetKSelf();  
+        }
+        if ( strstr(cn.GetName(),"RRTexpand") || strstr(cn.GetName(),"RRTcomponents") ){
+           _os<< ", iterations = " << cn.GetIterations() 
+              << ", stepFactor = " << cn.GetStepFactor()
+              << ", smallcc = " << cn.GetSmallCCSize();  
+        }
+        if ( strstr(cn.GetName(),"modifiedLM") ){
+           _os<< ", kclosest = " << cn.GetKClosest()
+              << ", maxNum = " << cn.GetMaxNum();
+        }
+        if ( strstr(cn.GetName(),"components") ){
+           _os<< ", kpairs = " << cn.GetKPairs() << ", smallcc = " << cn.GetSmallCCSize();  
+        }
+        return _os;
+};
+
+/////////////////////////////////////////////////////////////////////
+//
+//  METHODS for class CNSets
+//      
+/////////////////////////////////////////////////////////////////////
+
+  //==================================
+  // CNSets class Methods: Constructors and Destructor
+  //==================================
+  // CNSets();
+  // ~CNSets();
+
+CNSets::
+CNSets(){
+};
+
+CNSets::
+~CNSets(){
+};
+
+  //===================================================================
+  // CNSets class Methods: Adding CNs, Making & Modifying CN sets
+  //===================================================================
+  // EID AddCN(const char* _cninfo); 
+  // int AddCNToSet(const SID _sid, const EID _cnid); 
+  // int DeleteCNFromSet(const SID _sid, const EID _cnid); 
+  // SID MakeCNSet(const char* cnlist);  // make an ordered set of cns, 
+  // SID MakeCNSet(istream& _myistream); //  - add cn to universe if not there
+  // SID MakeCNSet(const EID _eid);
+  // SID MakeCNSet(const vector<EID> _eidvector);
+  // int DeleteCNSet(const SID _sid);
+
+int 
+CNSets::
+AddCN(const char* _cninfo) {
+  SID sid = MakeCNSet(_cninfo); 
+  SetIDs--;
+  return DeleteOSet(sid);        // delete the set, but not elements
+};
+
+
+int 
+CNSets::
+AddCNToSet(const SID _sid, const EID _cnid) {
+  return AddElementToOSet(_sid,_cnid);
+};
+
+int 
+CNSets::
+DeleteCNFromSet(const SID _sid, const EID _cnid) {
+  return DeleteElementFromOSet(_sid,_cnid);
+};
+
+SID 
+CNSets::
+MakeCNSet(const char* _cnlist){
+  istrstream  is(_cnlist);
+  if (!is) {
+         cout << endl << "In MakeCNSet: can't open instring: " << _cnlist ;
+         return INVALID_SID;
+  }
+  return MakeCNSet(is);  
+};
+
+SID
+CNSets::
+MakeCNSet(const EID _eid) {
+  return MakeOSet(_eid);
+}
+
+SID
+CNSets::
+MakeCNSet(const vector<EID> _eidvector) {
+  return MakeOSet(_eidvector);
+}
+
+int
+CNSets::
+DeleteCNSet(const SID _sid) { 
+  return DeleteOSet(_sid);
+}
+
+
+SID 
+CNSets:: 
+MakeCNSet(istream& _myistream) { 
+  char cnname[100]; 
+  int kclosest;
+  int numEdges;
+  int smallcc, kpairs;         // parameters for ConnectCCs
+  int k_other, k_self;         // parameters for ObstBased
+  int iterations, stepFactor;  // parameters for RRTexpand,RRTcomponents
+  int maxNum;                  // parameters for modifiedLM
+
+  vector<EID> cnvec;  // vector of cnids for this set 
+
+  while ( _myistream >> cnname ) { 			// while cns to process...  
+    if (!strcmp(cnname,"random")) {              // Random 
+       CN cn1; 
+       strcpy(cn1.name,cnname);
+       cn1.connector = &ConnectMapNodes::ConnectNodes_Random;
+       cn1.numEdges = 0;
+        while( _myistream >> numEdges) { //get numEdges value
+          if ( numEdges < 0 ) {
+            cout << endl << "INVALID: numEdges = " << numEdges;
+            exit(-1);
+          } else {
+            cn1.numEdges = numEdges;
+            cn1.cnid = AddElementToUniverse(cn1);
+            if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+                cout << endl << "In MakeSet: couldn't change element info";
+                exit(-1);
+            }
+            cnvec.push_back( cn1.cnid );
+          }
+        }
+       if(cn1.numEdges == 0) {  //if no numEdges value given, use default 5
+            cn1.numEdges = 5;
+            cn1.cnid = AddElementToUniverse(cn1);
+            if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+                cout << endl << "In MakeSet: couldn't change element info";
+                exit(-1);
+            }
+            cnvec.push_back( cn1.cnid );
+       }
+       _myistream.clear(); // clear failure to read in last s value
+
+    } else if ( !strcmp(cnname,"closest") || !strcmp(cnname,"closestVE") ) { // closest 
+       CN cn1;
+       strcpy(cn1.name,cnname);
+       if (!strcmp(cnname,"closest"))
+           cn1.connector = &ConnectMapNodes::ConnectNodes_Closest;
+       else
+           cn1.connector = &ConnectMapNodes::ConnectNodes_ClosestVE;
+       cn1.kclosest = 0;
+        while( _myistream >> kclosest) { //get kclosest value
+          if ( kclosest < 0 ) {
+            cout << endl << "INVALID: kclosest = " << kclosest;
+            exit(-1);
+          } else {
+            cn1.kclosest = kclosest;
+            cn1.cnid = AddElementToUniverse(cn1);
+            if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+                cout << endl << "In MakeSet: couldn't change element info";
+                exit(-1);
+            }
+            cnvec.push_back( cn1.cnid );
+          }
+        }
+       if(cn1.kclosest == 0) {  //if no kclosest value given, use default 5
+            cn1.kclosest = 5;
+            cn1.cnid = AddElementToUniverse(cn1);
+            if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+                cout << endl << "In MakeSet: couldn't change element info";
+                exit(-1);
+            }
+            cnvec.push_back( cn1.cnid );
+       }
+       _myistream.clear(); // clear failure to read in last s value
+
+    } else if (!strcmp(cnname,"components")) {          // components
+       CN cn1;
+       strcpy(cn1.name,cnname);
+       cn1.connector = &ConnectMapNodes::ConnectNodes_ConnectCCs;
+       cn1.kpairs = 0;
+       if ( _myistream >> kpairs) { //get kpairs value
+          if ( kpairs < 0 ) {
+            cout << endl << "INVALID: kpairs = " << kpairs;
+            exit(-1);
+          } else {
+            if (_myistream >> smallcc) { //get smallcc value, if any
+               if ( smallcc < 0 ) { 
+                  cout << endl << "INVALID: smallcc = " << smallcc;
+                  exit(-1);
+               } 
+            } else {
+               smallcc = SMALL_CC;  // default
+            }
+            cn1.smallcc = smallcc;
+            cn1.kpairs = kpairs;
+            cn1.cnid = AddElementToUniverse(cn1);
+            if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+                cout << endl << "In MakeSet: couldn't change element info";
+                exit(-1);
+            }
+            cnvec.push_back( cn1.cnid );
+          }
+       }
+       if(cn1.kpairs == 0) {  //use defaults if no kpairs: kpairs=4,smallcc=SMALL_CC
+            cn1.smallcc = SMALL_CC;
+            cn1.kpairs = 4;
+            cn1.cnid = AddElementToUniverse(cn1);
+            if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+                cout << endl << "In MakeSet: couldn't change element info";
+                exit(-1);
+            }
+            cnvec.push_back( cn1.cnid );
+       }
+       _myistream.clear(); // clear failure to read in last value
+
+    } else if (!strcmp(cnname,"obstBased")) {          // obstBased
+       CN cn1;
+       strcpy(cn1.name,cnname);
+       cn1.connector = &ConnectMapNodes::ConnectNodes_ObstBased;
+       cn1.k_other = 0;
+       if ( _myistream >> k_other) { //get value, if any
+          if ( k_other < 0 ) {
+            cout << endl << "INVALID: k_other = " << k_other;
+            exit(-1);
+          } else {
+            if (_myistream >> k_self) { //get value, if any
+               if ( k_self < 0 ) {
+                  cout << endl << "INVALID: k_self = " << k_self;
+                  exit(-1);
+               }
+            } else {
+               k_self = K_SELF;  // default
+            }
+            cn1.k_self = k_self;
+            cn1.k_other = k_other;
+            cn1.cnid = AddElementToUniverse(cn1);
+            if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+                cout << endl << "In MakeSet: couldn't change element info";
+                exit(-1);
+            }
+            cnvec.push_back( cn1.cnid );
+          }
+       }
+       if(cn1.k_other == 0) {  //use defaults if no k_other
+            cn1.k_other = K_OTHER;
+            cn1.k_self  = K_SELF;
+            cn1.cnid = AddElementToUniverse(cn1);
+            if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+                cout << endl << "In MakeSet: couldn't change element info";
+                exit(-1);
+            }
+            cnvec.push_back( cn1.cnid );
+       }
+       _myistream.clear(); // clear failure to read in last value
+
+    } else if (!strcmp(cnname,"RRTexpand") || !strcmp(cnname,"RRTcomponents") ) {
+       CN cn1;
+       strcpy(cn1.name,cnname);
+       cn1.connector = &ConnectMapNodes::ConnectNodes_ExpandRRT;
+
+       if ( _myistream >> iterations) { //get value, if any
+          if ( iterations < 0 ) {
+            cout << endl << "INVALID: iterations = " << iterations;
+            exit(-1);
+          } else {
+            if (_myistream >> stepFactor) { //get value, if any
+               if ( stepFactor < 0 ) {
+                  cout << endl << "INVALID: stepFactor = " << stepFactor;
+                  exit(-1);
+               } else {
+                 if (_myistream >> smallcc) { //get value, if any
+                    if ( smallcc < 0 ) {
+                       cout << endl << "INVALID: smallcc = " << smallcc;
+                       exit(-1);
+                    }
+                 } else {
+                       smallcc = SMALL_CC;  // default
+                 }
+               }
+            } else {
+               stepFactor = STEP_FACTOR;  // default
+               smallcc    = SMALL_CC;  // default
+            }
+          }
+       } else {
+          iterations = ITERATIONS;  // default
+          stepFactor = STEP_FACTOR;  // default
+          smallcc    = SMALL_CC;  // default
+       }
+       cn1.iterations = iterations;
+       cn1.stepFactor = stepFactor;
+       cn1.smallcc    = smallcc;
+
+       cn1.cnid = AddElementToUniverse(cn1);
+       if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+          cout << endl << "In MakeSet: couldn't change element info";
+          exit(-1);
+       }
+       cnvec.push_back( cn1.cnid );
+
+       _myistream.clear(); // clear failure to read in last value
+
+
+    } else if (!strcmp(cnname,"modifiedLM")) {          // modifiedLM
+       CN cn1;
+       strcpy(cn1.name,cnname);
+       cn1.connector = &ConnectMapNodes::ConnectNodes_modifiedLM;
+       if ( _myistream >> kclosest) { //get value, if any
+          if (  kclosest < 0 ) {
+            cout << endl << "INVALID: kclosest = " << kclosest;
+            exit(-1);
+          } else {
+            if (_myistream >> maxNum) { //get value, if any
+               if ( maxNum < 0 ) {
+                  cout << endl << "INVALID: maxNum = " << maxNum;
+                  exit(-1);
+               }
+            } else {
+               maxNum = MAX_NUM;  // default
+            }
+          }
+       } else {
+          kclosest = 5;  // default
+          maxNum = MAX_NUM;  // default
+       }
+       cn1.kclosest = kclosest;
+       cn1.maxNum = maxNum;
+
+       cn1.cnid = AddElementToUniverse(cn1);
+       if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+          cout << endl << "In MakeSet: couldn't change element info";
+          exit(-1);
+       }
+       cnvec.push_back( cn1.cnid );
+
+       _myistream.clear(); // clear failure to read in last value
+
+
+    } else {
+       cout << "INVALID: connection method name = " << cnname;
+       exit(-1);
+    }
+  } // end while 
+
+  return MakeOSet(cnvec);
+}
+
+  //===================================================================
+  // CNSets class Methods: Getting Data & Statistics
+  //===================================================================
+  // CN GetCN(const EID _cnid) const;
+  // vector<CN> GetCNs() const;
+  // vector<CN> GetCNSet(const SID _sid) const;
+  // vector<pair<SID,vector<CN> > > GetCNSets() const;
+
+CN
+CNSets::
+GetCN(const EID _cnid) const {
+   return GetElement(_cnid);
+};
+
+vector<CN> 
+CNSets::
+GetCNs() const {
+  vector<CN> elts2; 
+  vector<pair<EID,CN> > elts1 = GetElements(); 
+  for (int i=0; i < elts1.size(); i++) 
+     elts2.push_back( elts1[i].second );
+  return elts2; 
+};
+
+vector<CN> 
+CNSets::
+GetCNSet(const SID _sid) const {
+  vector<CN> elts2; 
+  vector<pair<EID,CN> > elts1 = GetOSet(_sid); 
+  for (int i=0; i < elts1.size(); i++) 
+     elts2.push_back( elts1[i].second );
+  return elts2; 
+};
+
+
+vector<pair<SID,vector<CN> > > 
+CNSets::
+GetCNSets() const {
+
+  vector<pair<SID,vector<CN> > > s2;
+  vector<CN> thesecns;
+
+  vector<pair<SID,vector<pair<EID,CN> > > > s1 = GetOSets(); 
+
+  for (int i=0; i < s1.size(); i++)  {
+    thesecns.erase(thesecns.begin(),thesecns.end());
+    for (int j=0; j < s1[i].second.size(); j++ ) 
+       thesecns.push_back (s1[i].second[j].second);
+    s2.push_back( pair<SID,vector<CN> > (s1[i].first,thesecns) );
+  }
+  return s2; 
+};
+
+
+
+  //===================================================================
+  // CNSets class Methods: Display, Input, Output
+  //===================================================================
+  // void DisplayCNs() const;    
+  // void DisplayCN(const EID _cnid) const;    
+  // void DisplayCNSets() const; 
+  // void DisplayCNSet(const SID _sid) const; 
+  // void WriteCNs(const char* _fname) const;
+  // void WriteCNs(ostream& _myostream) const;
+  // void ReadCNs(const char* _fname) const;
+  // void ReadCNs(istream& _myistream) const;
+
+
+
+void 
+CNSets::
+DisplayCNs() const{
+   DisplayElements();
+};
+
+void 
+CNSets::
+DisplayCN(const EID _cnid) const{
+   DisplayElement(_cnid);
+};
+
+void 
+CNSets::
+DisplayCNSets() const{
+   DisplayOSets();
+};
+
+void 
+CNSets::
+DisplayCNSet(const SID _sid) const{
+   DisplayOSet(_sid);
+};
+
+void
+CNSets::
+WriteCNs(const char* _fname) const {
+
+      ofstream  myofstream(_fname);
+      if (!myofstream) {
+         cout << endl << "In WriteCNS: can't open outfile: " << _fname ;
+      }
+      WriteCNs(myofstream);
+      myofstream.close();
+};
+
+void
+CNSets::
+WriteCNs(ostream& _myostream) const {
+
+      vector<CN> cns = GetCNs();
+
+      _myostream << endl << "#####CNSTART#####";
+      _myostream << endl << cns.size();  // number of cns
+
+      //format: CN_NAME (a string) CN_PARMS (double, int, etc)
+      for (int i = 0; i < cns.size() ; i++) {
+          _myostream << endl;
+          _myostream << cns[i].name << " ";
+          if ( !strcmp(cns[i].name,"random") ) {
+             _myostream << " ";
+          }
+          if ( strstr(cns[i].name,"closest") ) {
+             _myostream << " ";
+          }
+      }
+      _myostream << endl << "#####CNSTOP#####";
+};
+
+void
+CNSets::
+ReadCNs(const char* _fname) {
+
+      ifstream  myifstream(_fname);
+      if (!myifstream) {
+         cout << endl << "In ReadCNs: can't open infile: " << _fname ;
+         return;
+      }
+      ReadCNs(myifstream);
+      myifstream.close();
+};
+
+void
+CNSets::
+ReadCNs(istream& _myistream) {
+
+      char tagstring[100];
+      char cndesc[100];
+      int  numCNs;
+
+      _myistream >> tagstring;
+      if ( !strstr(tagstring,"CNSTART") ) {
+         cout << endl << "In ReadCNs: didn't read CNSTART tag right";
+         return;
+      }
+
+      _myistream >> numCNs;
+      _myistream.getline(cndesc,100,'\n');  // throw out rest of this line
+      for (int i = 0; i < numCNs; i++) {
+        _myistream.getline(cndesc,100,'\n');
+        AddCN(cndesc);
+      }
+
+      _myistream >> tagstring;
+      if ( !strstr(tagstring,"CNSTOP") ) {
+         cout << endl << "In ReadCNs: didn't read CNSTOP tag right";
+         return;
+      }
+};
+
