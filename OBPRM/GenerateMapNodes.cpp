@@ -545,7 +545,7 @@ CSpaceMAPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *dm,
        path.push_back(cfg);
          #endif
       } else { 
-        cout << "cfg in collision!\n" << flush; 
+        //cout << "cfg in collision!\n" << flush; 
       }
    }
 
