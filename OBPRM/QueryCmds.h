@@ -1,9 +1,9 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
-//  QueryCmds.h
-//
-//  Created  10/19/98 Lucia K. Dale 
-/////////////////////////////////////////////////////////////////////
+
+/**@file QueryCmds.h
+   @date 10/19/98
+   @author Lucia K. Dale
+*/
 
 #ifndef QueryCmds_h
 #define QueryCmds_h
@@ -33,9 +33,12 @@ public:
 
     str_param<char*> defaultFile;
 
-    str_param<char*> mapFile;      // INPUT  filename
-    str_param<char*> queryFile;    // INPUT  filename
-    str_param<char*> pathFile;     // OUTPUT filename
+    /// INPUT  filename
+    str_param<char*> mapFile;
+    /// INPUT  filename
+    str_param<char*> queryFile;
+    /// OUTPUT filename
+    str_param<char*> pathFile;
 
 protected:
 private:

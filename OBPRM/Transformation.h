@@ -1,9 +1,9 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
-//  Transformation.h
-//
-//  Created   2/25/98 Aaron Michalk
-/////////////////////////////////////////////////////////////////////
+
+/**@file Transformation.h
+   @author Aaron Michalk
+   @date 2/25/98
+*/
 
 #ifndef Transformation_h
 #define Transformation_h
@@ -48,7 +48,7 @@ public:
     //-----------------------------------------------------------
     //  Data
     //-----------------------------------------------------------
-    Vector3D position;	
+    Vector3D position;
     Orientation orientation;
 protected:
 private:

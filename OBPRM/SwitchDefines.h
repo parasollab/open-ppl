@@ -1,5 +1,10 @@
 // $Id$
 
+/**@file SwitchDefines.h
+   @author Lucia K. Dale
+*/
+
+
 #ifndef SwitchDefines_h
 #define SwitchDefines_h
 

@@ -1,11 +1,9 @@
 // $Id$
-/////////////////////////////////////////////////////
-//
-//	util.h
-//
-//      Created 7/17/98         Daniel Vallejo
-//
-////////////////////////////////////////////////////
+
+/**@file util.h
+   @date 7/17/98
+   @author Daniel Vallejo
+*/
 
 #ifndef util_h
 #define util_h
@@ -27,8 +25,10 @@ const double BETA_EPSILON = 1.0e-30;
 typedef double t44[4][4];
 
 
-// Calculate the minimum DIRECTED angular distance between two angles
-// normalized to 1.0
+/**
+Calculate the minimum DIRECTED angular distance between two angles
+normalized to 1.0
+*/
 
 double DirectedAngularDistance(double a,double b);
 
@@ -41,7 +41,7 @@ inline double max(double a, double b){
     return a > b ? a : b;
 }
 
-// Return the square of a.
+/// Return the square of a.
 inline double sqr(double a)
 {
     return a*a;

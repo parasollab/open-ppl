@@ -1,9 +1,9 @@
 // $Id$
-////////////////////////////////////////////////////////////////////////////
-//  LinearSystem.h
-//
-//  Created   6/ 4/98  Wookho Son
-////////////////////////////////////////////////////////////////////////////
+
+/**@file LinearSystem.h
+   @date 6/4/98
+   @author Wookho Son
+*/
 
 #ifndef LinearSystem_h
 #define LinearSystem_h
@@ -15,6 +15,10 @@
 #include "Matrix.h"
 
 
+/**
+Note that class, "LinearSystem", is a friend of the class, "Matrix"
+Friend class allows this class an access to all the data members of "Matrix" class
+*/
 class LinearSystem {
 public:
     //----------------------------------------------------------------------
@@ -24,6 +28,7 @@ public:
     LinearSystem(Matrix & _m, double *_rhs);
     ~LinearSystem();
 
+
     //----------------------------------------------------------------------
     //  Methods
     //----------------------------------------------------------------------
@@ -32,12 +37,14 @@ public:
     double * GetSolution();
 
 protected:
-    // Note that class, "LinearSystem", is a friend of the class, "Matrix"
-    // Friend class allows this class an access to all the data members of "Matrix" class
-    Matrix  lhs;  // left-hand-side is the matrix "m" itself
-    double  *rhs; // right-hand-side
-    double  *s;   // Singular values, if needed
-    double  *x;   // Solution
+    /// left-hand-side is the matrix "m" itself
+    Matrix  lhs;
+    /// right-hand-side
+    double  *rhs;
+    /// Singular values, if needed
+    double  *s;
+    /// Solution
+    double  *x;
 
 };
 

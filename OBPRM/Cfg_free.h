@@ -1,17 +1,11 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
-//
-//  Cfg_free.h
-//
-//  General Description
-//      A derived class from CfgManager. It provides some specific
-//      implementation for a 6-dof rigid-body moving in a 3-D
-//      work space.
-//
-//  Created
-//      08/31/99        Guang Song
-//
-/////////////////////////////////////////////////////////////////////
+
+/**@file Cfg_free.h
+   A derived class from CfgManager. It provides some specific
+   implementation for a 6-dof rigid-body moving in a 3-D work space.
+   @date 08/31/99
+   @author Guang Song
+*/
 
 #ifndef Cfg_free_h
 #define Cfg_free_h
@@ -37,27 +31,29 @@ public:
   virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
   virtual Cfg GetRandomRay(double incr);
 
-  // methods for Cfg generation and collision checking.
+  /// methods for Cfg generation and collision checking.
   virtual bool ConfigEnvironment(const Cfg &c, Environment *env);
 
-  // Node Generation methods
+  /// Node Generation methods: OBPRM
   virtual bool GenerateOverlapCfg(Environment *env, int robot,
-         Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg); // OBPRM
+         Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg);
+
+  /// Node Generation methods: NORMAL
   virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
-         CollisionDetection *,int obstacle, int nCfgs, 
-	SID _cdsetid,CDInfo& _cdInfo); // NORMAL
+         CollisionDetection *,int obstacle, int nCfgs,
+    SID _cdsetid,CDInfo& _cdInfo);
 
   virtual vector<Cfg> GetCfgByOverlappingNormal(
-	Environment * env, CollisionDetection* cd, 
-	const GMSPolyhedron &polyRobot, const GMSPolyhedron &polyObst, 
-	int robTri, int obsTri, 
-	SID _cdsetid, CDInfo& _cdInfo,
-	MultiBody *);
+    Environment * env, CollisionDetection* cd,
+    const GMSPolyhedron &polyRobot, const GMSPolyhedron &polyObst,
+    int robTri, int obsTri,
+    SID _cdsetid, CDInfo& _cdInfo,
+    MultiBody *);
 
   virtual bool InNarrowPassage(
-	const Cfg& c, Environment * env,CollisionDetection* cd,
-	SID _cdsetid, CDInfo& _cdInfo,
-	MultiBody * onflyRobot);
+    const Cfg& c, Environment * env,CollisionDetection* cd,
+    SID _cdsetid, CDInfo& _cdInfo,
+    MultiBody * onflyRobot);
 
   protected:
 

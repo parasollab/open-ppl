@@ -1,16 +1,12 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
-//
-//  BasicDefns.h
-//
-//  General Description
-//      This is a set of VERY BASIC useful definitions.
-//	They shouldn't be particularly specific to any application.
-//
-//  Created
-//      8/25/98  Lucia K. Dale
-//
-/////////////////////////////////////////////////////////////////////
+
+/**@file BasicDefns.h.
+   This is a set of VERY BASIC useful definitions.
+   They shouldn't be particularly specific to any application.
+   @date 8/25/98
+   @author Lucia K. Dale
+*/
+
 
 #ifndef BasicDefns_h
 #define BasicDefns_h
@@ -32,28 +28,40 @@
 #define OK  0
 #endif
 
-#ifndef MAXFLOAT 
+#ifndef MAXFLOAT
 #define MAXFLOAT 99999999999999999.99999
 #endif
 #ifndef ERROR
 #define ERROR 1
 #endif
 
-//---------------------------------------------------------------
-// Legal types of collision detection data structures
-//---------------------------------------------------------------
-                        // Collision Detecters
-enum cd_predefined {    //--------------------
+
+/// Lega Types of Collision Detecters
+enum cd_predefined {
+
+/// c-space toolkit
 #ifdef USE_CSTK
-        CSTK,           // c-space toolkit
+        CSTK,    
 #endif
+/**< enum CSTK */
+
+
+/// voronoi clip
 #ifdef USE_VCLIP
-        VCLIP,          // voronoi clip 
+        VCLIP, 
 #endif
+/**< enum VCLIP */
+
+
+/// Robust and Accurate Polygon Interference Detection
 #ifdef USE_RAPID
-	RAPID,		// Robust and Accurate Polygon Interference Detection
+    RAPID,
 #endif
-        CD_USER1};      // first user defined cd set, if any
+/**< enum RAPID */
+
+/// first user defined cd set, if any
+        CD_USER1};    
+/**< enum CD_USER1 */
 
 
 #endif

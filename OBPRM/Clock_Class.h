@@ -6,18 +6,15 @@
 #endif
 #include <sys/resource.h>
 
+/**@file Clock_Class.h
+   This class provides methods to handle clocks to time events.
+   @date 1/27/99
+   @author Chris Jones
+*/
 
-/////////////////////////////////////////////////////////////////////
-//
-//  Clock_Class.h
-//
-//  General Description
-//	This class provides methods to handle clocks to time events.
-//
-//  Created
-//	1/27/99	Chris Jones
-//
-///////////////////////////////////////////////////////////////////// 
+
+
+
 class Clock_Class {
 public:
   Clock_Class();
@@ -33,7 +30,7 @@ public:
   void PrintName();
   double GetClock_SEC();
   int GetClock_USEC();
- 
+
 private:
   int s_time, u_time;
   int s_utime, u_utime;

@@ -1,19 +1,14 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
-//
-//  Cfg_free_serial.h
-//
-//  General Description
-//      A derived template class from CfgManager. It provides some
-//      specific implementation directly related to a multiple joints
-//      serial robot.
-//
-//  Created
-//      08/31/99        Guang Song
-//
-//  Last Modified By:
-//
-/////////////////////////////////////////////////////////////////////
+
+/**@file Cfg_free_serial.h
+   A derived template class from CfgManager. It provides some
+   specific implementation directly related to a multiple joints
+   serial robot.
+   @author Guang Song
+   @date 08/31/99
+*/
+
+
 
 #ifndef Cfg_free_serial_h
 #define Cfg_free_serial_h
@@ -39,15 +34,17 @@ public:
   virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
   virtual Cfg GetRandomRay(double incr);
 
-  // methods for Cfg generation and collision checking.
+  /// methods for Cfg generation and collision checking.
   virtual bool ConfigEnvironment(const Cfg &c, Environment *env);
 
-  // Node Generation methods
+  /// Node Generation methods: OBPRM
   virtual bool GenerateOverlapCfg(Environment *env, int robot,
-         Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg); // OBPRM
+         Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg);
+
+  /// Node Generation methods: NORMAL
   virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
-         CollisionDetection *,int obstacle, int nCfgs, 
-	SID _cdsetid, CDInfo& _cdInfo); // NORMAL
+         CollisionDetection *,int obstacle, int nCfgs,
+    SID _cdsetid, CDInfo& _cdInfo);
 
 
   protected:

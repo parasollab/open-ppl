@@ -1,9 +1,9 @@
 // $Id$
-///////////////////////////////////////////////////////////////////////////
-//  GMSPolyhedron.h
-//
-//  Created   3/ 6/98 Aaron Michalk
-///////////////////////////////////////////////////////////////////////////
+
+/**@file GMSPolyhedron.h
+   @date 3/6/98
+   @author Aaron Michalk
+*/
 
 #ifndef GMSPolyhedron_h
 #define GMSPolyhedron_h
@@ -16,7 +16,7 @@ public:
     //---------------------------------------------------------------------
     //  Constructor(s) and Destructor
     //---------------------------------------------------------------------
-    ~GMSPolygon() { delete[] vertexList; } 
+    ~GMSPolygon() { delete[] vertexList; }
 
     //---------------------------------------------------------------------
     //  Data
@@ -25,13 +25,14 @@ public:
     int    numVertices;
     Vector3D normal;
     double   area;
-	/*It is slow but otherwis if any function 
-	   use a local 
-	 polygon which is assigned to another polygon variable, the
-	 descructor would free not only the local variables vertexlist 
-	 but the vertexlist of the original polygon as well. so with
-	 a = operator each polygon will have its own vertex list */
-	 GMSPolygon    &operator=(GMSPolygon  _p);
+
+     /**It is slow but otherwis if any function use a local
+     polygon which is assigned to another polygon variable, the
+     descructor would free not only the local variables vertexlist
+     but the vertexlist of the original polygon as well. so with
+     a = operator each polygon will have its own vertex list
+     */
+     GMSPolygon    &operator=(GMSPolygon  _p);
      GMSPolygon getCopy();
 };
 
@@ -45,13 +46,15 @@ public:
     GMSPolygon * polygonList;
     int       numPolygons;
     double    area;
-    double    maxRadius; // the maximum distance from a vertex to com.
+    /// the maximum distance from a vertex to com.
+    double    maxRadius;
 
     //---------------------------------------------------------------------
     //  Constructor(s) and Destructor
     //---------------------------------------------------------------------
     GMSPolyhedron();
-    GMSPolyhedron(GMSPolyhedron & _p); // copy constructor
+    /// copy constructor
+    GMSPolyhedron(GMSPolyhedron & _p);
     ~GMSPolyhedron();
 
     //---------------------------------------------------------------------
@@ -62,9 +65,12 @@ public:
     //  Methods
     //---------------------------------------------------------------------
     void ComputeNormals();
-    Vector3D Read(char* fileName);          // distuishes format
-    Vector3D Read(istream & _is);           // read GMS format
-    Vector3D ReadBYU(istream & _is);        // read BYU format
+    /// distuishes format
+    Vector3D Read(char* fileName);
+    /// read GMS format
+    Vector3D Read(istream & _is);
+    /// read BYU format
+    Vector3D ReadBYU(istream & _is);
     void Write(ostream & _os);
 };
 
