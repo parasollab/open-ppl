@@ -24,7 +24,6 @@
 
 typedef Cfg_free_tree CfgType;
 typedef DefaultWeight WeightType;
-#include "ExplicitInstantiation.h"
 
 Input input;
 Stat_Class Stats; 
