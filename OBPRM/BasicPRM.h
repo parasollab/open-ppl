@@ -177,6 +177,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
            collision = false;
          }
        }
+       if (j == default_maxTries)
+	 cerr << "Can't generate enought nodes! " << endl;
     }
   } else { //we want to try numNodess attempts (either free or in collision)
     CFG tmp;
