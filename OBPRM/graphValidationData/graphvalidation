@@ -40,7 +40,6 @@ $fileName2 = $dataPath."/valid_graph_test_results";
 
   print "Making file\n";
  system("cp ../Graph.h .");
-# system("./cpG");
  system("make -f Makefile.$OS");
  system("./gexe");
  system("rm Graph.h");
@@ -49,7 +48,7 @@ $fileName2 = $dataPath."/valid_graph_test_results";
   if( compare("$fileName2","$fileName1")) {
     errorMsg( "$fileName1 differ from  the validation file $fileName2\n");
 	system("rm graph_test_results");
-	system("rm /graphtest.exe"); 
+	system("rm graphtest.exe"); 
  }
    
 
