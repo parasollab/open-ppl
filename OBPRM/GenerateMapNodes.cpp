@@ -209,7 +209,11 @@ GaussPRM(
       if (cfg2.InBoundingBox(_env)){
 
         bool cfg1_free = !cfg1.isCollision(_env,cd,_info.cdsetid,_info.cdInfo);
+        cfg1.info.obst = _info.cdInfo.colliding_obst_index;
+
         bool cfg2_free = !cfg2.isCollision(_env,cd,_info.cdsetid,_info.cdInfo);
+        cfg2.info.obst = _info.cdInfo.colliding_obst_index;
+
 
         if (cfg1_free && !cfg2_free) {
          _info.nodes.push_back(Cfg(cfg1));

@@ -135,25 +135,25 @@ public:
   int 	 GetIterations () const;
   int 	 GetStepFactor () const;
   int    GetMaxNum     () const;
-  int    GetRFactor    () const;
+  double GetRFactor    () const;
 
 protected:
   //===================================================================
   // Data
   //===================================================================
-  char  name[80];
-  CNF   connector;          // ptr to connection strategy code
-  EID   cnid;
-  int 	numEdges;          // used by random algm 
-  int   kclosest;          // used by closest algm & modifiedLM
-  int   maxNum;            // used by modifiedLM
-  int   rfactor;           // used by modifiedLM
-  int 	kpairs;            // used by components algm
-  int 	smallcc;           // used by components & rrt algm
-  int 	stepFactor;        // used by rrt algm
-  int 	iterations;        // used by rrt algm
-  int 	k_other;           // used by obstBased algm
-  int 	k_self;            // used by obstBased algm
+  char   name[80];
+  CNF    connector;          // ptr to connection strategy code
+  EID    cnid;
+  int 	 numEdges;          // used by random algm 
+  int    kclosest;          // used by closest algm & modifiedLM
+  int    maxNum;            // used by modifiedLM
+  double rfactor;           // used by modifiedLM
+  int 	 kpairs;            // used by components algm
+  int 	 smallcc;           // used by components & rrt algm
+  int 	 stepFactor;        // used by rrt algm
+  int 	 iterations;        // used by rrt algm
+  int 	 k_other;           // used by obstBased algm
+  int 	 k_self;            // used by obstBased algm
  
 private:
 };

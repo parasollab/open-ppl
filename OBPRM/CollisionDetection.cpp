@@ -138,7 +138,7 @@ SetLineTransformation(const Transformation& trans, double linTrans[12]) {
 
 bool
 CollisionDetection::
-IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cnInfo, MultiBody* lineRobot){
+IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot){
     int nmulti, robot;
     nmulti = env->GetMultiBodyCount();
     robot = env->GetRobotIndex();
@@ -149,12 +149,13 @@ IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cnInfo, MultiBody* lineRo
 
     for(int i = 0 ; i < nmulti ; i++){
         if(i != robot ){
-            if(IsInCollision(env, _cdsetid, _cnInfo, rob, env->GetMultiBody(i))){
+            if(IsInCollision(env, _cdsetid, _cdInfo, rob, env->GetMultiBody(i))){
+                _cdInfo.colliding_obst_index = i;
                 return true;
             }
         } else {
         // robot self checking. Warning: rob and env->GetMultiBody(robot) may NOT be the same.
-	    if(rob->GetBodyCount() > 1 && IsInCollision(env, _cdsetid, _cnInfo, rob, rob))
+	    if(rob->GetBodyCount() > 1 && IsInCollision(env, _cdsetid, _cdInfo, rob, rob))
 	        return true;
 	}
     }
@@ -196,19 +197,19 @@ Clearance(Environment * env){
 
 bool
 CollisionDetection::
-IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cnInfo, int robot, int obstacle) {
+IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cdInfo, int robot, int obstacle) {
 
     MultiBody *rob, *obst;
     rob = env->GetMultiBody(robot);
     obst = env->GetMultiBody(obstacle);
 
-    return IsInCollision(env, _cdsetid, _cnInfo, rob, obst);
+    return IsInCollision(env, _cdsetid, _cdInfo, rob, obst);
 }
 
 
 bool
 CollisionDetection::
-IsInCollision(Environment * env, SID _cdsetid, CDInfo& _cnInfo, 
+IsInCollision(Environment * env, SID _cdsetid, CDInfo& _cdInfo, 
 	MultiBody* rob, MultiBody* obst) {
 
     int nFreeRobot;
@@ -221,18 +222,18 @@ IsInCollision(Environment * env, SID _cdsetid, CDInfo& _cnInfo,
 	int tp = cdset[cd].GetType();
 
 	// Type Out: no collision sure; collision unsure.
-	if((tp == Out) && (cdfcn(rob,obst,cdset[cd],_cnInfo) == false)){
+	if((tp == Out) && (cdfcn(rob,obst,cdset[cd],_cdInfo) == false)){
 	    return false;
 	}
 
 	// Type In: no collision unsure; collision sure.
-	if((tp == In) && (cdfcn(rob,obst,cdset[cd],_cnInfo) == true)){
+	if((tp == In) && (cdfcn(rob,obst,cdset[cd],_cdInfo) == true)){
 	    return true;
 	}
 
 	// Type Exact: no collision sure; collision sure.
 	if(tp == Exact){
-	    if(cdfcn(rob,obst,cdset[cd],_cnInfo) == true){
+	    if(cdfcn(rob,obst,cdset[cd],_cdInfo) == true){
 	    	return true;
 	    }
 	    else{
@@ -247,7 +248,7 @@ IsInCollision(Environment * env, SID _cdsetid, CDInfo& _cnInfo,
 bool
 CollisionDetection::
 IsInCollision_boundingSpheres
-(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo){
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
  	cout << endl << "boundingSpheres Collision Check invocation";
    Stats.IncNumCollDetCalls( "boundingSpheres" );
    return true;
@@ -256,7 +257,7 @@ IsInCollision_boundingSpheres
 bool
 CollisionDetection::
 IsInCollision_insideSpheres
-(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo){
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
  	cout << endl << "insideSpheres Collision Check invocation";
    Stats.IncNumCollDetCalls( "insideSpheres" );
    return false;
@@ -265,7 +266,7 @@ IsInCollision_insideSpheres
 bool
 CollisionDetection::
 IsInCollision_naive
-(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo){
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
  	cout << endl << "naive Collision Check invocation";
    Stats.IncNumCollDetCalls( "naive" );
    return false;
@@ -274,7 +275,7 @@ IsInCollision_naive
 bool
 CollisionDetection::
 IsInCollision_quinlan
-(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo){
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
  	cout << endl << "Quinlan Collision Check invocation";
    Stats.IncNumCollDetCalls( "quinlan" );
    return false;
@@ -288,7 +289,7 @@ ClosestFeaturesHT closestFeaturesHT(3000);
 bool
 CollisionDetection::
 IsInCollision_vclip
-(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo){
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
    Stats.IncNumCollDetCalls( "vclip" );
 
     Real dist;
@@ -327,7 +328,7 @@ IsInCollision_vclip
 bool
 CollisionDetection::
 IsInCollision_RAPID
-(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo){
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
    Stats.IncNumCollDetCalls( "RAPID" );
 
     RAPID_model *rob, *obst;
@@ -360,8 +361,9 @@ IsInCollision_RAPID
 		<< RAPID_Collide(t1.orientation.matrix, p1, rob, t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT) << endl;
 		exit(1);
 	    }
-	    if(RAPID_num_contacts)
+	    if(RAPID_num_contacts) {
 		return true;
+            }
 
          }
     }
@@ -373,7 +375,7 @@ IsInCollision_RAPID
 bool
 CollisionDetection::
 IsInCollision_cstk
-(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo){
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
 
     Stats.IncNumCollDetCalls( "cstk" );
 

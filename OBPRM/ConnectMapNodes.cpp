@@ -1156,6 +1156,23 @@ ConnectNodes_ObstBased(
 //		added into the roadmap during this.
 //   3) rfactor: multiplier for 'radius' of CC, w/in which thrown out, 
 //		outside of which kept.
+// Pseudo-code
+//------------
+//   while (more than one CC remains *AND* added fewer new Cfgs than requested)
+//      generate a random configuration, cfg
+//      get current connected components from roadmap
+//      for each connected component, CC
+//           if possible to connect cfg to CC
+//                 increment count of connections, #connections
+//           endif
+//      endfor
+//      if (#connections is zero *OR* #connections greater than one )
+//         *OR*
+//         (#connections is one *AND* cfg distance to CCcenter > rfactor * CCradius)
+//                increment count of new Cfgs added
+//                add cfg & all edges
+//      endif
+//   endwhile
 // ------------------------------------------------------------------
 void
 ConnectMapNodes::
@@ -1164,77 +1181,128 @@ ConnectNodes_modifiedLM(
         LocalPlanners* lp,DistanceMetric * dm,
         CN& _cn, CNInfo& info){
 
-  LPInfo lpInfo(_rm, info);
-
-  vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
-  const int kclosest = _cn.GetKClosest();
-  const int maxNum = _cn.GetMaxNum();
-  const int rfactor = _cn.GetRFactor();
-
   #ifndef QUIET
-  cout << "(kclosest=" << _cn.GetKClosest();
-  cout << ", maxNum=" << _cn.GetMaxNum();
-  cout << ", rfactor=" << _cn.GetRFactor()<< "): "<<flush;
+    // display information specific to method
+    cout << "(kclosest=" << _cn.GetKClosest();
+    cout << ", maxNum=" << _cn.GetMaxNum();
+    cout << ", rfactor=" << _cn.GetRFactor()<< "): "<<flush;
   #endif
 
-  int numCfgAdded = 0;
-  while(_rm->roadmap.GetCCStats().size() > 1 && numCfgAdded < maxNum) {
-     Environment * env = _rm->GetEnvironment();
-     int numMultiBody = env->GetMultiBodyCount();
-     int robot        = env->GetRobotIndex();
-     int obstIndex = (robot+rand()%(numMultiBody-1)+1)%numMultiBody;
-     int numofConnection = 0;
+  const int    kclosest = _cn.GetKClosest();
+  const int    requested = _cn.GetMaxNum();
+  const double rfactor = _cn.GetRFactor();
 
-     //vector<Cfg> vc = Cfg::GenSurfaceCfgs4ObstNORMAL(env,
-     //                cd, obstIndex, 1, info.cdsetid);
-     Cfg vc = Cfg::GetRandomCfg(env);
-     Cfg me = Cfg(vc);
-     me.info.obst=obstIndex;
+  // initialize information needed to check connection between cfg's
+  LPInfo lpInfo(_rm, info);
 
+  // get local copies of necessary data
+  Environment *env = _rm->GetEnvironment();
+  int numMultiBody = env->GetMultiBodyCount();
+  int robot        = env->GetRobotIndex();
+
+  // init counter
+  int numCfgAdded  = 0;
+
+  //-- while (more than one CC remains *AND* added fewer new Cfgs than requested)
+  while(_rm->roadmap.GetCCStats().size()>1 && numCfgAdded<requested) {
+
+     //-- generate a random configuration, cfg
+     Cfg vc  = Cfg::GetRandomCfg(env);
+     Cfg cfg = Cfg(vc);
+
+     // declare data structures necessary to return connection info
      vector< pair<Cfg, Cfg> > edges;
      vector< pair<WEIGHT,WEIGHT> > edgelpinfos;
-     int i;
-     for(i=0; i<ccvec.size(); ++i) {
-        // brc added tmp variable t;
-       Cfg t=_rm->roadmap.GetData(ccvec[i].second);
-        //vector<Cfg> ccvc =  _rm->roadmap.GetCC(_rm->roadmap.GetData(ccvec[i].second));
-        vector<Cfg> ccvc =  _rm->roadmap.GetCC(t);
+
+     // init counter
+     int i, numofConnection=0;
+
+     //-- get current connected components from roadmap
+     vector< pair<int,VID> > allCC = _rm->roadmap.GetCCStats();
+
+     //-- for each connected component, CC
+     for(i=0; i<allCC.size(); ++i) {
+
+        Cfg          tmp = _rm->roadmap.GetData(allCC[i].second);
+        vector<Cfg>   CC = _rm->roadmap.GetCC(tmp);
+
         vector< pair<Cfg, Cfg> > kp = FindKClosestPairs(
-                env, dm, info, me, ccvc, kclosest);
+                                      env,dm,info,cfg,CC,kclosest);
+ 
+        //-- if possible to connect cfg to CC
         for(int j=0; j<kp.size(); ++j) {
+
            if (lp->IsConnected(_rm,cd,dm, kp[j].first,kp[j].second,
-              info.lpsetid,&lpInfo))  {
-              ++numofConnection;
-              edges.push_back(kp[j]);
-	      edgelpinfos.push_back(lpInfo.edge);
-              break;
-           } //endif (lp-> ...
+                               info.lpsetid,&lpInfo))  {
+                //-- increment count of connections, #connections
+                ++numofConnection;
+
+                // record edge in case we decide to add it later 
+                edges.push_back(kp[j]);
+                edgelpinfos.push_back(lpInfo.edge);
+
+                // only need one connection per CC so exit for j loop
+                break;
+
+           } //endif (lp-> ...)
         } //endfor j
+
      } //endfor i
-     bool add = false;
+
+     // default decision is to not add cfg
+     bool addExpandingCfg = false;
+
+     // if only connected to one CC 
      if(numofConnection == 1) {
-        vector<Cfg> ccvc = _rm->roadmap.GetCC(edges[0].second);
-        Cfg center; // sum is assigned to 0 by constructor.
-        for(int i=0; i<ccvc.size(); ++i) {
-           double centerWeight = float(i)/ccvc.size();
-           center = Cfg::WeightedSum(ccvc[i], center, centerWeight);
+
+        // get all cfg's in CC
+        vector<Cfg> CC = _rm->roadmap.GetCC(edges[0].second);
+
+        // calculate CC's center (of mass), CCcenter
+        Cfg CCcenter; // sum initialized to 0 by constructor.
+        for(int i=0; i<CC.size(); ++i) {
+           double centerWeight = float(i)/CC.size();
+           CCcenter = Cfg::WeightedSum(CC[i], CCcenter, centerWeight);
         }
-        double radius = 0.0;
-        for(i=0; i<ccvc.size(); ++i) {
-           radius += dm->Distance(env, center, ccvc[i], info.dmsetid);
+
+        // calculate CCradius 
+        double CCradius = 0.0;
+        for(i=0; i<CC.size(); ++i) {
+           CCradius += dm->Distance(env, CCcenter, CC[i], info.dmsetid);
         }
-        radius /= ccvc.size();
-        double meFromCenter = dm->Distance(env, center, edges[0].first, info.dmsetid);
-        if(meFromCenter >= rfactor * radius)
-                add = true;
-     }
-     if(add || numofConnection != 1) {
-         ++numCfgAdded;
-         _rm->roadmap.WeightedGraph<Cfg,WEIGHT>::AddVertex(me);
-         for(int i=0; i<edges.size(); ++i) {
-             _rm->roadmap.AddEdge(edges[i].first, edges[i].second, edgelpinfos[i]);
+        CCradius /= CC.size();
+
+        // calculate distance of cfg to CCcenter 
+        double distFromCenter = dm->Distance(env, 
+                                             CCcenter, 
+                                             cfg,
+                                             info.dmsetid);
+
+        // if cfg distance to CCcenter > rfactor * CCradius
+        if(distFromCenter > rfactor * CCradius) {
+                // adding cfg 'expands' CC sufficiently so decide to add cfg
+                addExpandingCfg = true;
+        }
+
+     }//endif(numofConnection == 1)
+
+
+     //-- if (#connections is zero *OR* #connections greater than one )
+        //-- *OR*
+        //-- (#connections is one *AND* cfg distance to CCcenter > rfactor * CCradius)
+     if ( numofConnection != 1  ||  addExpandingCfg ) {
+
+               //-- increment count of new Cfgs added
+               ++numCfgAdded;
+
+               //-- add cfg & all edges
+               _rm->roadmap.WeightedGraph<Cfg,WEIGHT>::AddVertex(cfg);
+               for(int i=0; i<edges.size(); ++i) {
+                         _rm->roadmap.AddEdge(edges[i].first,  // always 'cfg'
+                                              edges[i].second, // cfg in CC
+                                              edgelpinfos[i]); 
          }//endfor i
-     } //endif (add || ...
+     } //endif (add || ...)
 
   } //endwhile
 
@@ -1357,7 +1425,7 @@ CN::
 GetMaxNum() const {
     return maxNum;
 };
-int
+double
 CN::
 GetRFactor() const {
     return rfactor;
@@ -1484,7 +1552,8 @@ MakeCNSet(istream& _myistream) {
   int smallcc, kpairs;         // parameters for ConnectCCs
   int k_other, k_self;         // parameters for ObstBased
   int iterations, stepFactor;  // parameters for RRTexpand,RRTcomponents
-  int maxNum,rfactor;          // parameters for modifiedLM
+  int maxNum;                  // parameter  for modifiedLM
+  double rfactor;              // parameter  for modifiedLM
 
   vector<EID> cnvec;  // vector of cnids for this set 
 

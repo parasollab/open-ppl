@@ -202,33 +202,33 @@ public:
 
   // Drivers
   bool IsInCollision
-	(Environment* env, SID _cdsetid, CDInfo& _cnInfo, MultiBody* lineRobot = NULL);
+	(Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot = NULL);
   bool IsInCollision
-	(Environment* env, SID _cdsetid, CDInfo& _cnInfo, MultiBody* rob, MultiBody* obstacle);
+	(Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* rob, MultiBody* obstacle);
   bool IsInCollision
-	(Environment* env, SID _cdsetid, CDInfo& _cnInfo, int robot, int obstacle);
+	(Environment* env, SID _cdsetid, CDInfo& _cdInfo, int robot, int obstacle);
 
   // Individual Static Methods
   static bool IsInCollision_boundingSpheres
-	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
   static bool IsInCollision_insideSpheres
-	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
   static bool IsInCollision_naive
-	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
   static bool IsInCollision_quinlan
-	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
 #ifdef USE_CSTK
   static bool IsInCollision_cstk
-	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
 #endif
 #ifdef USE_VCLIP
   static bool IsInCollision_vclip
-	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
   static VclipPose GetVclipPose(const Transformation&, const Transformation&);
 #endif
 #ifdef USE_RAPID
   static bool IsInCollision_RAPID
-	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
 #endif
 
   // for cstk
