@@ -1,5 +1,4 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
 //  Environment.h
 //
 //  Created   2/25/98 Aaron Michalk
@@ -13,7 +12,12 @@
 //  the membership functions here. Otherwise, just the inclusion of 
 //  the class definition is ok.
 //
-/////////////////////////////////////////////////////////////////////
+
+/**
+ * @file Environment.h
+ * @date 2/25/1998
+ * @author Aaron Michalk
+ */
 
 #ifndef Environment_h
 #define Environment_h
@@ -24,19 +28,22 @@
 #include "Matrix.h"
 #include "Contact.h"
 
-// Format version for path files
-//      The number breaks down as YearMonthDay so numerical
-//      comparisons can be more easily made.
-// Warning: Be consistent.  It should be YYYYMMDD
-//      Inconsistent conversions can be misleading.  
-//      For example, comparing 200083  to 20000604.
+/**
+ * Format version for path files
+ *      The number breaks down as YearMonthDay so numerical
+ *      comparisons can be more easily made.
+ * Warning: Be consistent.  It should be YYYYMMDD
+ *      Inconsistent conversions can be misleading.  
+ *      For example, comparing 200083  to 20000604.
+ */
+
 #define PATHVER_LEGACY                     20001022
 #define PATHVER_20001022                   20001022
 
 class Environment {
 public:
     //-----------------------------------------------------------
-    //  Enumerations
+    /// @name  Enumerations
     //-----------------------------------------------------------
     enum DirectionType {
          GMS_NORMAL = 0,
@@ -45,14 +52,14 @@ public:
     };
 
     //---------------------------------------------------------------
-    //  Constructors and Destructor
+    /// @name  Constructors and Destructor */
     //---------------------------------------------------------------
     Environment();
     Environment(int index);
 
     ~Environment();
     //---------------------------------------------------------------
-    //  Methods
+    /// @name  Methods
     //---------------------------------------------------------------
     int GetPathVersion();
     int GetMultiBodyCount();
@@ -82,9 +89,9 @@ public:
 protected:
 private:
     //---------------------------------------------------------------
-    //  Data
+    /// @name  Data
     //---------------------------------------------------------------
-    int pathVersion;           // Format version for path files
+    int pathVersion;           /// Format version for path files
     int multibodyCount;
     MultiBody **multibody;
     int robotIndex;
@@ -96,26 +103,25 @@ private:
 };
 
 //===================================================================
-//  Inline functions
+///  Inline functions
 //===================================================================
 
-// Format version for path files
+/// Format version for path files
 inline int Environment::GetPathVersion() {
     return pathVersion;
 }
 
 //-------------------------------------------------------------------
-//  GetMultiBodyCount
-//
-//  Output: the number of MultiBody's in the environment
+///  GetMultiBodyCount
+///  Output: the number of MultiBody's in the environment
 //-------------------------------------------------------------------
 inline int Environment::GetMultiBodyCount() {
     return multibodyCount;
 }
 
 //-------------------------------------------------------------------
-//  GetMultiBody
-//  Output: A pointer to a MultiBody in the environment
+///  GetMultiBody
+///  Output: A pointer to a MultiBody in the environment
 //-------------------------------------------------------------------
 inline MultiBody * Environment::GetMultiBody(int _index) {
     if (_index < multibodyCount)

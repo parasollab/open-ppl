@@ -1,5 +1,4 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
 //
 //  DistanceMetrics.h
 //
@@ -10,8 +9,13 @@
 //
 //  Last Modified By:
 //      08/24/98  Daniel Vallejo
-//
-/////////////////////////////////////////////////////////////////////
+
+/**
+ * @file DistanceMetrics.h
+ *
+ * @author Daniel Vallejo
+ * @date 8/21/1998
+ */
 
 #ifndef DistanceMetrics_h
 #define DistanceMetrics_h
@@ -36,9 +40,9 @@ class LocalPlanners;
 
 
 //---------------------------------------------------------------
-//  Pre-defined Algobase Sets
-//  CAUTION:  DO NOT CHANGE THE ENUMERATION ORDERS w/o CHANGING
-//              SET DEFN's in "Roadmap.c"
+///  Pre-defined Algobase Sets
+///  CAUTION:  DO NOT CHANGE THE ENUMERATION ORDERS w/o CHANGING
+///              SET DEFN's in "Roadmap.c"
 //---------------------------------------------------------------
 enum dm_predefined {    //-----------------
         S_EUCLID9,      // Scaled Euclidean s=0.9
@@ -49,7 +53,7 @@ enum dm_predefined {    //-----------------
         DM_USER1};      // first user defined dm set, if any
 
 //---------------------------------------------------------------
-// Algo base information data structures
+/// Algo base information data structures
 //---------------------------------------------------------------
 
 class DM;
@@ -60,37 +64,34 @@ class Roadmap;
 class MultiBody;
 class Input;
 
-typedef double (*DMF) (MultiBody*,Cfg&,Cfg&,DM&);     	// pointer to dm function
-                                    			// *NOTE* need to update
-                                    			//  when params known
+typedef double (*DMF) (MultiBody*,Cfg&,Cfg&,DM&);     	/// pointer to dm function
+/// *NOTE* need to update when params known
 
 
-const int CS = 0;	// Type CS: Configuration space distance metric
-const int WS = 1;	// Type WS: Workspace distance metric 
+const int CS = 0;	/// Type CS: Configuration space distance metric
+const int WS = 1;	/// Type WS: Workspace distance metric 
 
-/////////////////////////////////////////////////////////////////////
-//  class DM
-//
-//  General Description
-//
-/////////////////////////////////////////////////////////////////////
+///  class DM
+///
+///  General Description
+
 class DM {
   friend class DMSets;
 public:
   //===================================================================
-  // Constructors and Destructor
+  /// Constructors and Destructor
   //===================================================================
   DM();
   ~DM();
 
   //===================================================================
-  // Operators
+  /// Operators
   //===================================================================
   DM&  operator=(const DM & _dm);
   bool operator==(const DM & _dm) const;
 
   //===================================================================
-  // Other Methods
+  /// Other Methods
   //===================================================================
   char* GetName() const;
   DMF   GetDistanceMetric();
@@ -103,10 +104,10 @@ public:
 protected:
 
   //===================================================================
-  // Data
+  /// Data
   //===================================================================
   char  name[80];
-  DMF   distanceMetric;          // ptr to distance metric code
+  DMF   distanceMetric;          /// ptr to distance metric code
   EID	dmid;
   int  	type;
   double sValue;
@@ -120,39 +121,36 @@ private:
 
 ostream& operator<< (ostream& _os, const DM& dm);
 
+///  class DMSets
+///
+///  General Description
 
-/////////////////////////////////////////////////////////////////////
-//  class DMSets
-//
-//  General Description
-//
-/////////////////////////////////////////////////////////////////////
 class DMSets : public BasicSets<DM> {
 public:
   //===================================================================
-  //  Constructors and Destructor
+  ///  Constructors and Destructor
   //===================================================================
     DMSets();
     ~DMSets();
 
   //===================================================================
-  //  Other Methods
+  ///  Other Methods
   //===================================================================
 
-   // Adding DMs, Making & Modifying DM sets
+   /// Adding DMs, Making & Modifying DM sets
 
-   int AddDM(const char* _dminfo);     // add dm(s) to universe
+   int AddDM(const char* _dminfo);     /// add dm(s) to universe
    int AddDMToSet(const SID _sid, const EID _dmid);
    int DeleteDMFromSet(const SID _sid, const EID _dmid);
 
-   SID MakeDMSet(const char* dmlist);  // make an ordered set of dms,
-   SID MakeDMSet(istream& _myistream); //  - add dm to universe if not there
+   SID MakeDMSet(const char* dmlist);  /// make an ordered set of dms,
+   SID MakeDMSet(istream& _myistream); /// add dm to universe if not there
    SID MakeDMSet(const EID _eid);
    SID MakeDMSet(const vector<EID> _eidvector);
 
    int DeleteDMSet(const SID _sid);
 
-   // Getting Data & Statistics
+   /// Getting Data & Statistics
 
    DM GetDM(const EID _dmid) const;
    vector<DM> GetDMs() const;
@@ -160,7 +158,7 @@ public:
    vector<pair<SID,vector<DM> > > GetDMSets() const;
 
 
-   // Display, Input, Output
+   /// Display, Input, Output
 
    void DisplayDMs() const;
    void DisplayDM(const EID _dmid) const;
@@ -174,28 +172,26 @@ public:
 
 
   //===================================================================
-  //  Data
+  ///  Data
   //===================================================================
 protected:
 private:
 };
 
-/////////////////////////////////////////////////////////////////////
-//  class DistanceMetric
-//
-//  General Description
-//
-/////////////////////////////////////////////////////////////////////
+///  class DistanceMetric
+///
+///  General Description
+
 class DistanceMetric {
 public:
   //===================================================================
-  // Constructors and Destructor
+  /// Constructors and Destructor
   //===================================================================
   DistanceMetric();
   ~DistanceMetric();
 
   //===================================================================
-  // Other Methods
+  /// Other Methods
   //===================================================================
   virtual void DefaultInit();
   virtual void UserInit(Input *,  GenerateMapNodes*, LocalPlanners*);
@@ -209,7 +205,7 @@ public:
   static double CenterOfMassDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
 
   //===================================================================
-  // Data
+  /// Data
   //===================================================================
   DMSets distanceMetrics;
 

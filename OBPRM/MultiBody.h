@@ -1,9 +1,13 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
 //  MultiBody.h
 //
 //  Created   2/25/98 Aaron Michalk
-/////////////////////////////////////////////////////////////////////
+
+/**
+ * @file MultiBody.h
+ * @date 2/25/98
+ * @author Aaron Michalk
+ */
 
 #ifndef MultiBody_h
 #define MultiBody_h
@@ -31,16 +35,16 @@ class Contact;
 class MultiBody {
 public:
     //-----------------------------------------------------------
-    //  Static Methods
+    ///  Static Methods
     //-----------------------------------------------------------
     static void ComputePUMAInverseKinematics(Transformation & _t, double _a2, double _d3, double _a3, double _d4, double theta[8][6]);
     //-----------------------------------------------------------
-    //  Constructors and Destructor
+    ///  Constructors and Destructor
     //-----------------------------------------------------------
     MultiBody(Environment * _owner);
     ~MultiBody();
     //-----------------------------------------------------------
-    //  Methods
+    ///  Methods
     //-----------------------------------------------------------
     FreeBody * GetFreeBody(int _index);
     FixedBody * GetFixedBody(int _index);
@@ -62,10 +66,10 @@ public:
 
     void ConfigureJoint(double * _s, int _dof);
 
-    // These two functions work in the same way as those in Body.h
-    // If GetCenterOfMass() is called for the first time, then
-    // ComputeCenterOfMass() is called automatically, and the
-    // computed value is stored in this class for the next time.
+    /// These two functions work in the same way as those in Body.h
+    /// If GetCenterOfMass() is called for the first time, then
+    /// ComputeCenterOfMass() is called automatically, and the
+    /// computed value is stored in this class for the next time.
 
     void ComputeCenterOfMass();
     Vector3D GetCenterOfMass();
@@ -74,10 +78,10 @@ public:
     double * GetBoundingBox();
     double GetMaxAxisRange();
 
-    // the maximum size of this multibody
+    /// the maximum size of this multibody
     double GetBoundingSphereRadius();
 
-    // Area Methods
+    /// Area Methods
     int GetNumBodies();
     double GetFixArea();
     double GetFreeArea();
@@ -88,7 +92,7 @@ public:
 protected:
 private:
     //-----------------------------------------------------------
-    //  Data
+    ///  Data
     //-----------------------------------------------------------
     Environment * environment;
     int FixedBodyCount;
@@ -105,17 +109,17 @@ private:
 
 
     // Area Stuff
-    int numBodies;              // Total number of Bodies
-    double fixArea;             // Area of FixedBodies
-    double freeArea;            // Area of FreeBodies
-    double area;                // Total Area of Bodies
-    vector<double> fixAreas;    // Vector of Areas of FixedBodies
-    vector<double> freeAreas;   // Vector of Areas of FreeBodies
+    int numBodies;              /// Total number of Bodies
+    double fixArea;             /// Area of FixedBodies
+    double freeArea;            /// Area of FreeBodies
+    double area;                /// Total Area of Bodies
+    vector<double> fixAreas;    /// Vector of Areas of FixedBodies
+    vector<double> freeAreas;   /// Vector of Areas of FreeBodies
 
 };
 
 //===================================================================
-//  Inline Functions
+///  Inline Functions
 //===================================================================
 
 //-------------------------------------------------------------------
@@ -207,11 +211,11 @@ inline int MultiBody::GetFixedBodyIndex(FixedBody * _b) {
 
 //-------------------------------------------------------------------
 //  IsManipulator
-//  Function: Determine if the MultiBody at hand is a manipulator.
-//            If there is no free body attached to it,
-//            it is considered to be a manipulator
-//
-//  Output:   True/False
+///  Function: Determine if the MultiBody at hand is a manipulator.
+///            If there is no free body attached to it,
+///            it is considered to be a manipulator
+///
+///  Output:   True/False
 //-------------------------------------------------------------------
 inline int MultiBody::IsManipulator() {
     return (FreeBodyCount > 0) ? 1 : 0;

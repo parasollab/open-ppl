@@ -1,5 +1,4 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
 //
 //  Cfg.h
 //
@@ -11,8 +10,12 @@
 //
 //  Created
 //	08/31/99	Guang Song
-//
-/////////////////////////////////////////////////////////////////////
+
+/**
+ * @file Cfg.h
+ * @date 8/31/1999
+ * @author Guang Song
+ */
 
 #ifndef Cfg_h
 #define Cfg_h
@@ -40,11 +43,11 @@ struct CDInfo;
 
 
 //
-// Information about the cfg, for example the obstacle info.
+/// Information about the cfg, for example the obstacle info.
 //
 class  InfoCfg {
 public:
-   // Constructors and Destructor
+   /// Constructors and Destructor
    InfoCfg():obst(NULL_INFO),tag(NULL_INFO),clearance(NULL_INFO){};
    InfoCfg(int _obst):obst(_obst),tag(NULL_INFO),clearance(NULL_INFO){};
    InfoCfg(int _obst,int _tag):obst(_obst),tag(_tag),clearance(NULL_INFO){};
@@ -53,7 +56,7 @@ public:
    bool operator== (const InfoCfg&tmp) const{return obst==tmp.obst && tag==tmp.tag && clearance==tmp.clearance;};
    bool operator!= (const InfoCfg&tmp) const{return obst!=tmp.obst || tag!=tmp.tag || clearance!=tmp.clearance;};
 
-   // Methods
+   /// Methods
    void SetObst(int _obst){obst = _obst;};
    int GetObst() const {return obst;};
    void SetClearance(double _cl){clearance = _cl;};
@@ -62,14 +65,14 @@ public:
    void Write(ostream &os) const;
    void Read(istream &is);
 
-   // Data
+   /// Data
    static const int NULL_INFO =-1;
    int obst;
    int tag;
    double clearance;
 };
 //---------------------------------------------
-// Input/Output operators for InfoCfg
+/// Input/Output operators for InfoCfg
 //---------------------------------------------
 istream& operator>> (istream&s, InfoCfg &_c);
 ostream& operator<< (ostream&s, const InfoCfg &_c);
@@ -79,7 +82,7 @@ class Cfg {
 public:
 
   //===================================================================
-  //  Constructors and Destructor
+  ///  Constructors and Destructor
   //===================================================================
 
   Cfg();
@@ -90,7 +93,7 @@ public:
   ~Cfg();
 
   //===================================================================
-  //  operators
+  ///  operators
   //===================================================================
 
     bool operator== (const Cfg&) const;
@@ -108,36 +111,36 @@ public:
     bool isWithinResolution(const Cfg &c, double positionRes, double orientationRes);
 
   //===================================================================
-  //  Other Methods
+  ///  Other Methods
   //===================================================================
   void Write(ostream &os) const;
   void Read(istream  &is);
   vector<double> GetData() const;
   Vector3D GetRobotCenterPosition();
 
-  // Return the number of degrees of freedom for the configuration class
+  /// Return the number of degrees of freedom for the configuration class
   static int DOFs();
 
-  // Return the range of a single parameter of the configuration (i.e., range of x)
-  // param = the parameter to get the range for
-  // In the future, this function should get the range for x,y,z by the bounding box
-  // Currently it assumes the range for a position parameter to be -10000 to 10000
-  // and the range for an orientation parameter to be 0 to 1, which should
-  // also be changed to reflect any self collision in a linked robot
+  /// Return the range of a single parameter of the configuration (i.e., range of x)
+  /// param = the parameter to get the range for
+  /// In the future, this function should get the range for x,y,z by the bounding box
+  /// Currently it assumes the range for a position parameter to be -10000 to 10000
+  /// and the range for an orientation parameter to be 0 to 1, which should
+  /// also be changed to reflect any self collision in a linked robot
   pair<double,double> SingleParamRange(int param);
 
-  // Set a single parameter in the configuration (i.e., x,y,z,roll...)
-  // param = the parameter number to set
-  // value = the value to set the parameter as
+  /// Set a single parameter in the configuration (i.e., x,y,z,roll...)
+  /// param = the parameter number to set
+  /// value = the value to set the parameter as
   int SetSingleParam(int param, double value);
 
-  // Increment a single parameter in the configuration (i.e., x,y,z,roll...)
-  // param = the parameter number to set
-  // value = the value to increment the parameter by
+  /// Increment a single parameter in the configuration (i.e., x,y,z,roll...)
+  /// param = the parameter number to set
+  /// value = the value to increment the parameter by
   int IncSingleParam(int param, double value);
 
-  // Retreive a single parameter in the configuration (i.e., x,y,z,roll...)
-  // param = the parameter number to retreive
+  /// Retreive a single parameter in the configuration (i.e., x,y,z,roll...)
+  /// param = the parameter number to retreive
   double GetSingleParam(int param);
 
   Cfg ClosestPtOnLineSegment(const Cfg&, const Cfg&) const;
@@ -145,10 +148,10 @@ public:
   static Cfg c1_towards_c2(Cfg cfg1, Cfg cfg2, double d);
   static Cfg GetRandomRay(double incr);
 
-  // for rotate-at-s Local Planner.
+  /// for rotate-at-s Local Planner.
   vector<Cfg> GetMovingSequenceNodes(const Cfg& other, double s) const;
 
-  // methods for nodes connection.
+  /// methods for nodes connection.
   vector<Cfg> FindNeighbors(
 	Environment *env, const Cfg& increment,
 	CollisionDetection *,
@@ -169,38 +172,38 @@ public:
 
   vector<double>  GetPosition();
   vector<double>  GetOrientation();
-  // methods for Distance Metric.
+  /// methods for Distance Metric.
   double  OrientationMagnitude();
   double  PositionMagnitude();
   
 
 
-  // generates a random configuration without consideration of bounding box restrictions
+  /// generates a random configuration without consideration of bounding box restrictions
   static Cfg GetRandomCfg(double R, double rStep);
 
-  // generates random configuration where workspace robot's CENTER OF MASS
-  // is guaranteed to lie within the environment specified bounding box
+  /// generates random configuration where workspace robot's CENTER OF MASS
+  /// is guaranteed to lie within the environment specified bounding box
   static Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
 
-  // generates random configuration where workspace robot's EVERY VERTEX
-  // is guaranteed to lie within the environment specified bounding box
+  /// generates random configuration where workspace robot's EVERY VERTEX
+  /// is guaranteed to lie within the environment specified bounding box
   static Cfg GetRandomCfg(Environment *env, int maxTries);
 
-  // ditto, but with a default number of tries (10)
+  /// ditto, but with a default number of tries (10)
   static Cfg GetRandomCfg(Environment *env);
 
   static Cfg GetFreeRandomCfg(Environment *env,CollisionDetection* cd,
         SID _cdsetid, CDInfo& _cdInfo);
 
-  // tests whether or not robot in this configuration has every vertex inside
-  // the environment specified bounding box
+  /// tests whether or not robot in this configuration has every vertex inside
+  /// the environment specified bounding box
   bool InBoundingBox(Environment *env);
 
 
-  // methods for Cfg generation and collision checking.
+  /// methods for Cfg generation and collision checking.
   double Clearance(Environment *env,CollisionDetection* cd);
 
-  //Approximate C-Space Clearance
+  /// Approximate C-Space Clearance
   double ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, 
 	SID cdsetid, CDInfo& cdInfo, 
 	DistanceMetric * dm, SID dmsetid, int n);
@@ -215,14 +218,14 @@ public:
          CollisionDetection *,int obstacle, int nCfgs, 
 	SID _cdsetid, CDInfo& _cdInfo);
 
-  // new: printing methods.
+  /// printing methods.
   void print_vizmo_format_to_file(Environment *env, FILE *_fp);
   static void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
-  // return a configuration(conformation)'s potential.
+  /// return a configuration(conformation)'s potential.
   double Potential(Environment *env) const;
   //===================================================================
-  //  Data
+  ///  Data
   //===================================================================
   protected:
     Cfg operator/ (double);
