@@ -1,14 +1,12 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
-//  Body.h
-//
-//  Created   2/25/98 Aaron Michalk
-//  Modified  4/15/98 Aaron Michalk
-//  Added     4/16/98 Wookho Son
-//  Added     5/14/98 Wookho Son
-//  Added     6/4/98 Wookho Son
-//  Modified  7/31/98 Wookho Son
-/////////////////////////////////////////////////////////////////////
+/**@file Body.h
+
+  @author Aaron Michalk, Wookho Son
+  @date 2/25/98
+  Created   2/25/98 Aaron Michalk
+  Modified  7/31/98 Wookho Son
+*/  
 
 #ifndef Body_h
 #define Body_h
@@ -38,30 +36,24 @@ class Contact;
 
 class Body {
 public:
-    //===============================================================
-    //  Constructors and Destructor
-    //===============================================================
+    ///  Constructors and Destructor
     Body(MultiBody * _owner);
     Body(MultiBody * _owner, GMSPolyhedron & _polyhedron);
     ~Body();
-    //===============================================================
-    //  Pure Virtual Methods
-    //  pure virtual fuction can never be called directly
-    //===============================================================
+
+    
+    /**  Pure Virtual Methods */
     virtual int IsFixedBody() = 0;
     virtual Transformation & GetWorldTransformation() = 0;
-    //===============================================================
-    //  Virtual Methods
-    //===============================================================
+    
+    /**  Virtual Methods */
     virtual GMSPolyhedron & GetWorldPolyhedron();
     virtual void ChangeWorldPolyhedron();
     virtual GMSPolyhedron & GetPolyhedron();
     virtual void Write(ostream & _os);
 
 
-    //===============================================================
-    //  Methods
-    //===============================================================
+    ///  Methods
     void Read(char * _fileName);
     void Read(Input*, char * _fileName);
 
@@ -89,21 +81,20 @@ public:
     RAPID_model * GetRapidBody();
 #endif
 
-    // if GetCenterOfMass() is called for the first time,
-    // this function calculates it and set 'available' flag
+    /** if GetCenterOfMass() is called for the first time,
+        this function calculates it and set 'available' flag */
     void ComputeCenterOfMass();  
 
-    // to get center of mass, you don't need to additionally call
-    // the above: ComputeCenterOfMass()
+    /** to get center of mass, you don't need to additionally call
+       the above: ComputeCenterOfMass() */
     Vector3D GetCenterOfMass();
 
 
-    //facilitate robot self collision checking.
+    /// facilitate robot self collision checking.
     bool isAdjacent(Body *);
     Transformation & WorldTransformation();
-    //---------------------------------------------------------------
-    //  Connection methods
-    //---------------------------------------------------------------
+    /**@name  Connection methods */
+    //@{
     int ForwardConnectionCount();
     int BackwardConnectionCount();
     Connection * GetForwardConnection(int _index);
@@ -115,10 +106,10 @@ public:
     void Link(Body * _otherBody, const Transformation & _transformationToBody2,
      const DHparameters & _dhparameters, const Transformation &_transformationToDHFrame);
     void Link(Connection * _c);
+    //@}
 protected:
-    //===============================================================
-    //  Data
-    //===============================================================
+    /**@name member Data */
+    //@{
     MultiBody * multibody;
     Transformation worldTransformation;
     GMSPolyhedron polyhedron;
@@ -147,6 +138,7 @@ protected:
 #ifdef USE_RAPID
     RAPID_model *rapidBody;
 #endif
+     //@}
 
 private:
 friend class MultiBody;
@@ -157,10 +149,8 @@ friend class Connection;
 //  Inline functions
 //===================================================================
 
-//-------------------------------------------------------------------
-// isAdjacent
-// to check if two Body share same joint(adjacent) for a robot.
-//-------------------------------------------------------------------
+/** isAdjacent:
+ to check if two Body share same joint(adjacent) for a robot. */
 inline bool Body::isAdjacent(Body * otherBody) {
     for(int i=0; i < forwardConnectionCount; i++)
         if(forwardConnection[i]->GetNextBody() == otherBody)
@@ -172,27 +162,22 @@ inline bool Body::isAdjacent(Body * otherBody) {
     return (this == otherBody); // if the two are the same, return true too.
 }
 
-//-------------------------------------------------------------------
-// WorldTransformation
-//
-// If worldTransformation has been calculated(updated), this method should be used
-// to avoid redundant calculation.
-//-------------------------------------------------------------------
+/** WorldTransformation
+
+ If worldTransformation has been calculated(updated), this method should be used
+ to avoid redundant calculation.
+*/ 
 inline Transformation & Body::WorldTransformation() {
     return worldTransformation;
 }
 
 
-//-------------------------------------------------------------------
-//  GetBoundingBox
-//-------------------------------------------------------------------
+///  GetBoundingBox
 inline double * Body::GetBoundingBox(){
     return boundingBox;
 }
 
-//-------------------------------------------------------------------
-//  GetCenterOfMass
-//-------------------------------------------------------------------
+///  GetCenterOfMass
 inline Vector3D Body::GetCenterOfMass(){
     if (!CenterOfMassAvailable) {
         ComputeCenterOfMass();
@@ -200,37 +185,27 @@ inline Vector3D Body::GetCenterOfMass(){
     return CenterOfMass;
 }
 
-//-------------------------------------------------------------------
-//  GetMultiBody
-//-------------------------------------------------------------------
+///  GetMultiBody
 inline MultiBody * Body::GetMultiBody() {
     return multibody;
 }
 
-//-------------------------------------------------------------------
 //  ContactCount
-//-------------------------------------------------------------------
 //inline int Body::GetContactCount() {
 //    return contactCount;
 //}
 
-//-------------------------------------------------------------------
-//  ForwardConnectionCount
-//-------------------------------------------------------------------
+///  ForwardConnectionCount
 inline int Body::ForwardConnectionCount() {
     return forwardConnectionCount;
 }
 
-//-------------------------------------------------------------------
-//  BackwardConnectionCount
-//-------------------------------------------------------------------
+///  BackwardConnectionCount
 inline int Body::BackwardConnectionCount() {
     return backwardConnectionCount;
 }
 
-//-------------------------------------------------------------------
 //  GetContact
-//-------------------------------------------------------------------
 //inline Contact * Body::GetContact(int _index) {
 //    if (_index < contactCount)
 //        return contact[_index];
@@ -238,9 +213,7 @@ inline int Body::BackwardConnectionCount() {
 //        return 0;
 //}
 
-//-------------------------------------------------------------------
-//  GetForwardConnection
-//-------------------------------------------------------------------
+///  GetForwardConnection
 inline Connection * Body::GetForwardConnection(int _index) {
     if (_index < forwardConnectionCount)
         return forwardConnection[_index];
@@ -248,9 +221,7 @@ inline Connection * Body::GetForwardConnection(int _index) {
         return 0;
 }
 
-//-------------------------------------------------------------------
-//  GetBackwardConnection
-//-------------------------------------------------------------------
+///  GetBackwardConnection
 inline Connection * Body::GetBackwardConnection(int _index) {
     if (_index < backwardConnectionCount)
         return backwardConnection[_index];
@@ -258,20 +229,19 @@ inline Connection * Body::GetBackwardConnection(int _index) {
         return 0;
 }
 
-//-------------------------------------------------------------------
-//  AddContactCount
-//  Function: Increment the contact count
-//-------------------------------------------------------------------
+/**  AddContactCount
+  Function: Increment the contact count
+*/  
 inline void Body::AddContactCount() {
   contactCount++;
 }
 
-//-------------------------------------------------------------------
-//  PutWorldTransformation
-//
-//  Function: Assign the given transformation as a transformation
-//            w.r.t the world for "this" body
-//-------------------------------------------------------------------
+/**
+  PutWorldTransformation
+
+  Function: Assign the given transformation as a transformation
+            w.r.t the world for "this" body
+*/
 inline void Body::PutWorldTransformation(Transformation & _worldTransformation){
   worldTransformation = _worldTransformation;
 }

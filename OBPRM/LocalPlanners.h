@@ -1,30 +1,28 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
-//
-//  LocalPlanners.h
-//
-//  General Description
-//      This set of classes supports a "Local Planning Algobase".
-//
-//      The classes in the set are:
-//        o LP            -- info related to an individual local planner 
-//        o LPSets        -- contains 'master' list of all local planners
-//                           and maintains sets of local planners
-//                           (derived from BasicSets<LP>)
-//        o LocalPlanners -- has LPSets as data element, and its methods
-//                           include the actual local planning algorithms.
-//                           A 'wrapper' method cycles thru sets of lps.
-//
-//       Each LP element is given a unique id, which is used to compose
-//       labels encoding which local planners succeeded in connection.A
-//       (e.g., for storing as edges in a roadmap).
-//
-//       NOTE: Assumes that the configuration type is known (e.g, typedef'd)
-//             as "Cfg" -- this must be provided.
-//
-//  Created
-//      8/7/98  Nancy Amato
-/////////////////////////////////////////////////////////////////////
+/**@file  LocalPlanners.h
+
+      This set of classes supports a "Local Planning Algobase".
+
+      The classes in the set are:
+        o LP            -- info related to an individual local planner 
+        o LPSets        -- contains 'master' list of all local planners
+                           and maintains sets of local planners
+                           (derived from BasicSets<LP>)
+        o LocalPlanners -- has LPSets as data element, and its methods
+                           include the actual local planning algorithms.
+                           A 'wrapper' method cycles thru sets of lps.
+
+       Each LP element is given a unique id, which is used to compose
+       labels encoding which local planners succeeded in connection.A
+       (e.g., for storing as edges in a roadmap).
+
+       NOTE: Assumes that the configuration type is known (e.g, typedef'd)
+             as "Cfg" -- this must be provided.
+
+   @author Nancy Amato
+   @date 8/7/98
+*/
 
 #ifndef LocalPlanners_h
 #define LocalPlanners_h
@@ -46,11 +44,11 @@
 #include <vector.h>
 
 
-//---------------------------------------------------------------
-//  Pre-defined Algobase Sets
-//  CAUTION:  DO NOT CHANGE THE ENUMERATION ORDERS w/o CHANGING
-//              SET DEFN's in "Roadmap.c"
-//---------------------------------------------------------------
+/**
+  Pre-defined Algobase Sets
+  CAUTION:  DO NOT CHANGE THE ENUMERATION ORDERS w/o CHANGING
+              SET DEFN's in "Roadmap.c"
+*/
 enum lp_predefined {    //---------------
         SL,             // straightline
         R5,             // rotate at s=0.5
@@ -68,9 +66,10 @@ enum PLANNER {
 	APPROX_SPHERES,
 	INVALID_PLANNER};
 
-//---------------------------------------------------------------
-// Algo base information data structures
-//---------------------------------------------------------------                        
+/**
+ Algo base information data structures
+*/
+
 struct CNInfo;
 class Roadmap;
 class DistanceMetric;
@@ -103,32 +102,25 @@ class Roadmap;
 
 
 /////////////////////////////////////////////////////////////////////
-//  class LP
-//
-//  General Description
-//     This class contains information relevant to a particular 
-//     local planner (e.g., name, ptr to function, etc).
-//     
-//
-/////////////////////////////////////////////////////////////////////
+/** class LP
+
+    This class contains information relevant to a particular 
+    local planner (e.g., name, ptr to function, etc).
+    
+*/    
 class LP {
   friend class LPSets;
 public:
 
-  //===================================================================
-  // Constructors and Destructor
-  //===================================================================
+  /// Constructors and Destructor
   LP();
   ~LP();
 
-  //===================================================================
-  // Operators
-  //===================================================================
+  /// Operators
   bool operator==(const LP & _lp) const;
 
-  //===================================================================
-  // Other Methods
-  //===================================================================
+  /**@name  Other Methods */
+  //@{
   char*  GetName() const;
   PLANNER GetPlanner();
   double GetS() const;
@@ -138,12 +130,10 @@ public:
   int    GetFEdgeMask() const;
   int    GetBEdgeMask() const;
   int    GetN() const;
+  //@}
 
 
 protected:
-  //===================================================================
-  // Data
-  //===================================================================
   char   name[80];
   PLANNER planner;
   double sValue;
@@ -161,34 +151,30 @@ ostream& operator<< (ostream& _os, const LP& lp);
 
 
 /////////////////////////////////////////////////////////////////////
-//  class LPSets
-//
-//  General Description
-//     This class is derived from BasicSets<LP>.
-//
-//     This class manages/contains:
-//        o a 'master' list of all local planners, and
-//        o sets of local planners
-//
-//     Each local planner and set is given a unique id. The lp ids (EIDs)
-//     are used to compose labels encoding local planner sets (used, e.g.,
-//     to record which local planners succeed when connecting a pair of
-//     configurations).
-//
-/////////////////////////////////////////////////////////////////////
+/**  class LPSets
+
+  General Description
+     This class is derived from BasicSets<LP>.
+
+     This class manages/contains:
+        - a 'master' list of all local planners, and
+        - sets of local planners
+
+     Each local planner and set is given a unique id. The lp ids (EIDs)
+     are used to compose labels encoding local planner sets (used, e.g.,
+     to record which local planners succeed when connecting a pair of
+     configurations).
+*/
+
 class LPSets : public BasicSets<LP> {
 public:
-  //===================================================================
-  //  Constructors and Destructor
-  //===================================================================
+  ///  Constructors and Destructor
     LPSets();
     ~LPSets();
 
-  //===================================================================
-  //  Other Methods
-  //===================================================================
 
-        // Adding LPs, Making & Modifying LP sets
+   /**@name Adding LPs, Making & Modifying LP sets */
+   //@{
    int AddLP(const char* _lpinfo);     // add lp(s) to universe
    int AddLPToSet(const SID _sid, const EID _lpid);
 
@@ -198,14 +184,18 @@ public:
    SID MakeLPSet(const vector<EID> _eidvector);
 
    int DeleteLPSet(const SID _sid);
+   //@}
 
-        // Getting Data & Statistics
+   /**@name Getting Data & Statistics */
+   //@{
    LP GetLP(const EID _lpid) const;
    vector<LP> GetLPs() const;
    vector<LP> GetLPSet(const SID _sid) const;
    vector<pair<SID,vector<LP> > > GetLPSets() const;
+   //@}
 
-        // Display, Input, Output
+   /**name Display, Input, Output */
+   //@{
    void DisplayLPs() const;
    void DisplayLP(const EID _lpid) const;
    void DisplayLPSets() const;
@@ -215,43 +205,38 @@ public:
    void WriteLPs(ostream& _myostream) const;
    void ReadLPs(const char* _fname);
    void ReadLPs(istream& _myistream);
+   //@}
 
-  //===================================================================
-  //  Data
-  //===================================================================
+   ///  Data
 protected:
 private:
 };
 
 /////////////////////////////////////////////////////////////////////
-//  class LocalPlanners
-//
-//  General Description
-//     This is the main local planner class. It has an LPSets object
-//     as a data element (list of lps and lp sets), and its methods
-//     include the actual local planning algorithms:
-//        o straightline
-//        o rotate_at_s, 0 <= s <= 1
-//        o a_star_distance and a_star_clearance, 
-//            1 <= tries <= 20
-//            neighbors = 3, 9, or 15
-//
-//     'Wrapper' methods cycle thru sets of lps, stopping upon 1st
-//     success or trying all.
-//
-/////////////////////////////////////////////////////////////////////
+/**  class LocalPlanners
+
+  General Description
+     This is the main local planner class. It has an LPSets object
+     as a data element (list of lps and lp sets), and its methods
+     include the actual local planning algorithms:
+        - straightline
+        - rotate_at_s, 0 <= s <= 1
+        - a_star_distance and a_star_clearance, 
+            1 <= tries <= 20
+            neighbors = 3, 9, or 15
+
+     'Wrapper' methods cycle thru sets of lps, stopping upon 1st
+     success or trying all.
+
+*/
+
 class LocalPlanners {
    friend SID MakeLPSet(istream&); 
 public:
-  //===================================================================
-  // Constructors and Destructor
-  //===================================================================
+  /// Constructors and Destructor
   LocalPlanners();
   ~LocalPlanners();
 
-  //===================================================================
-  // Other Methods
-  //===================================================================
   virtual void DefaultInit();
   virtual void UserInit(Input *input,  ConnectMapNodes*);
   virtual bool IsConnected(Environment *env,CollisionDetection *,DistanceMetric *,
@@ -261,8 +246,8 @@ public:
   virtual bool IsConnectedFindAll(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
 
-  // Generalized form of LP functions, replace 'pointer to function' way doing this,
-  // but fulfill the same purpose. In addition, it eases deriving classes
+  /** Generalized form of LP functions, replace 'pointer to function' way doing this,
+      but fulfill the same purpose. In addition, it eases deriving classes */
   virtual bool IsConnected(PLANNER lpName, Environment *env,CollisionDetection *,DistanceMetric *,
                                 Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
 
@@ -284,13 +269,13 @@ public:
  
   virtual bool UsesPlannerOtherThan(char plannerName[], SID lpsetid=0);
 
-  //===================================================================
-  // Data
-  //===================================================================
+  /**@name Data */
+  //@{
   LPSets planners;
   static cd_predefined cdtype; // used for building line segment.
   static int lineSegmentLength;
   static bool usingClearance;
+  //@}
 protected:
 private:
 };

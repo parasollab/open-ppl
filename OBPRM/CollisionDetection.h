@@ -1,12 +1,10 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
-//
-//  CollisionDetection.h
-//
-//  General Description
-//
-//  Created
-//      8/11/98  Daniel Vallejo 
+/**@file CollisionDetection.h
+  
+   @author Daniel Vallejo
+   @date   8/11/98
+*/   
 /////////////////////////////////////////////////////////////////////
 
 #ifndef CollisionDetection_h
@@ -28,7 +26,7 @@
 
 #include <vector.h>
 
-//CD libraries
+///CD libraries
 #ifdef USE_CSTK
 #include <cstkSmallAPI.h>
 #include <cstk_global.h>
@@ -53,13 +51,15 @@ class CD;
 class CDSets;
 class CollisionDetection;
 
-//---------------------------------------------------------------
-// Algo base information data structures
-//
-// This was made into a class so I knew everything was
-// initialized properly. I got tired of trying to track
-// down where all the CDInfo variables were created - BD July 2000
-//---------------------------------------------------------------
+/**
+Algo base information data structures
+
+This was made into a class so I knew everything was
+initialized properly. I got tired of trying to track
+down where all the CDInfo variables were created - BD July 2000
+@author BD
+@date 07/01/00
+*/
 class CDInfo {
 
 public:
@@ -79,7 +79,7 @@ private:
 
 };
 
-// pointer to cd function
+/// pointer to cd function
 typedef bool (*CDF) (MultiBody*,MultiBody*,CD&,CDInfo&);     
 
 const int Out = 0;	// Type Out: no collision sure; collision unsure.
@@ -87,39 +87,29 @@ const int In = 1;	// Type In: no collision unsure; collision sure.
 const int Exact = 2;	// Type Exact: no collision sure; collision sure.
 
 
-/////////////////////////////////////////////////////////////////////
-//  class CD
-//
-//  General Description
-//
-/////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+/**
+  class CD
+*/
 class CD {
   friend class CDSets;
 public:
-  //===================================================================
-  // Constructors and Destructor
-  //===================================================================
+  /// Constructors and Destructor
   CD();
   ~CD();
 
-  //===================================================================
-  // Operators
-  //===================================================================
+  /// Operators
   CD&  operator=(const CD & _cd);
   bool operator==(const CD & _cd) const;
 
-  //===================================================================
-  // Other Methods
-  //===================================================================
+  /// Other Methods
   char* GetName() const;
   CDF   GetCollisionDetection();
   int 	GetType() const; 
 
 protected:
 
-  //===================================================================
-  // Data
-  //===================================================================
+  /// Data
   char  name[80];
   CDF   collision_detection;          // ptr to collision detection code
   EID	cdid;
@@ -132,25 +122,17 @@ ostream& operator<< (ostream& _os, const CD& cd);
 
 
 /////////////////////////////////////////////////////////////////////
-//  class CDSets
-//
-//  General Description
-//
-/////////////////////////////////////////////////////////////////////
+///  CDSets
 class CDSets : public BasicSets<CD> {
 public:
-  //===================================================================
-  //  Constructors and Destructor
-  //===================================================================
+  ///  Constructors and Destructor
     CDSets();
     ~CDSets();
 
-  //===================================================================
-  //  Other Methods
-  //===================================================================
+  ///  Other Methods
 
-   // Adding LPs, Making & Modifying LP sets
-
+   /**@name Adding LPs, Making & Modifying LP setsi */
+   //@{
    int AddCD(const char* _cdinfo);     // add cd(s) to universe
    int AddCDToSet(const SID _sid, const EID _cdid);
    int DeleteCDFromSet(const SID _sid, const EID _cdid);
@@ -161,18 +143,19 @@ public:
    SID MakeCDSet(const vector<EID> _eidvector);
 
    int DeleteCDSet(const SID _sid);
+   //@}
 
-   // Getting Data & Statistics
-
+   /**@name Getting Data & Statistics */
+   //@{
    CD GetCD(const EID _cdid) const;
    vector<CD> GetCDs() const;
    vector<CD> GetCDSet(const SID _sid) const;
    vector<pair<SID,vector<CD> > > GetCDSets() const;
+   //@}
 
 
-
-   // Display, Input, Output
-
+   /**@name Display, Input, Output */
+   //@{
    void DisplayCDs() const;
    void DisplayCD(const EID _cdid) const;
    void DisplayCDSets() const;
@@ -182,6 +165,7 @@ public:
    void WriteCDs(ostream& _myostream) const;
    void ReadCDs(const char* _fname);
    void ReadCDs(istream& _myistream);
+   //@}
 
 
   //===================================================================
@@ -192,22 +176,15 @@ private:
 };
 
 /////////////////////////////////////////////////////////////////////
-//  class CollisionDetection
-//
-//  General Description
-//
-/////////////////////////////////////////////////////////////////////
+/**  class CollisionDetection
+*/
 class CollisionDetection {
 public:
-  //===================================================================
-  // Constructors and Destructor
-  //===================================================================
+  /// Constructors and Destructor
   CollisionDetection();
   ~CollisionDetection();
 
-  //===================================================================
-  // Other Methods
-  //===================================================================
+  /// Other Methods
 
   void DefaultInit();
   void UserInit(Input * input,  GenerateMapNodes*, ConnectMapNodes*);
@@ -217,7 +194,7 @@ public:
 #endif
   double Clearance(Environment * env);
 
-  // Drivers
+  /// Drivers
   bool IsInCollision
 	(Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot = NULL);
   bool IsInCollision
@@ -225,7 +202,8 @@ public:
   bool IsInCollision
 	(Environment* env, SID _cdsetid, CDInfo& _cdInfo, int robot, int obstacle);
 
-  // Individual Static Methods
+  /**@name Individual Static Methods */
+  //@{
   static bool IsInCollision_boundingSpheres
 	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
   static bool IsInCollision_insideSpheres
@@ -252,8 +230,9 @@ public:
 	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
 #endif
 
-  // for cstk
+  /// for cstk
   static void SetLineTransformation(const Transformation&, double linTrans[12]); 
+  //@}
 
   //===================================================================
   // Data
