@@ -53,13 +53,19 @@ libobprm.a: objs
 	$(AR) libobprm.a $(OBJS)
 
 libobprm.so: objs
-	$(CC) -shared $(OPTS) $(INCLUDES) $(DEFS) $(OBJS) -o libobprm.so
+	$(LD) $(OBJS) -o libobprm.so
+
+libobprm.dylib: objs
+	$(LD) $(OBJS) -o libobprm.dylib -lc -lgcc -lstdc++ $(CD_LIB)
 
 %: main_%.cpp libs
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_$@.cpp $(LIBS) -o $@
 	rm -f $@.d
 
 %.o: %.cpp
+ifeq ($(platform2), SUN_CC)
+	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -xM1 -c $< > $*.d
+endif
 	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -c $<
 	touch $*.d
 	cat $*.d >> Dependencies
@@ -107,8 +113,9 @@ clean:
 reallyclean:
 	rm -f obprm
 	rm -f query
-	rm -f *.a *.so *.o
+	rm -f *.a *.so *.o *.dylib
 	rm -R -f ii_files
+	rm -R -f SunWS_cache
 	rm -f so_locations
 	rm -f Dependencies
 	touch Dependencies

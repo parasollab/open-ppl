@@ -7,38 +7,55 @@ ifneq ($(FOUND),0)
   $(error library $library) is not one of $(LIBRARY))
 endif
 
-#check platform/library combination
-ifeq ($(library), static)
-  ifeq ($(platform), SGI_CC)
-    $(error $(library) libraries are not currently supported on $(platform))
-  endif
-endif
-ifeq ($(library), dynamic)
-  ifeq ($(platform2), SUN_gcc)
-    $(error $(library) libraries are not currently supported on $(platform2))
-  endif
-endif
+##check platform/library combination
+#ifeq ($(library), static)
+#  ifeq ($(platform), SGI_CC)
+#    $(error $(library) libraries are not currently supported on $(platform))
+#  endif
+#endif
+#ifeq ($(library), dynamic)
+#  ifeq ($(platform2), SUN_gcc)
+#    $(error $(library) libraries are not currently supported on $(platform2))
+#  endif
+#endif
 
 #set platform specific variables
 ifeq ($(platform), LINUX_gcc) 	#linux/gcc
   CC = g++ 	#for now until mpiCC is on all the machines
   CD_DIR = /research/sunburn/dsmft/CD-libs/linux
-  NO_DEBUG_OPT = -O2 -w -fexceptions
-  DEBUG_OPT = -g -fexceptions
+  NO_DEBUG_OPT = -fPIC -O2 -w -fexceptions
+  DEBUG_OPT = -fPIC -g -fexceptions
   CD_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP
   CD_INCL = $(VCLIP_INCL) $(RAPID_INCL) $(PQP_INCL)
   CD_LIB = $(VCLIPLIB) $(RAPIDLIB) $(PQPLIB)
   DEPS = -MMD
+  AR = ar rcs
+  LD = $(CC) -shared -fPIC $(DEPS)
+  STATICLIB = -static
 endif
 
-#set platform specific variables
 ifeq ($(platform2), SUN_gcc) 	#linux/gcc on compute
+  #non-specifed vars defined in LINUX_gcc
   CC = /usr/local/bin/g++ -ftemplate-depth-25
-  CD_DIR = /user/sthomas/dsmft/CD-libs/solaris
+  CD_DIR = /user/sthomas/dsmft/CD-libs/solaris-gcc
   CD_DEF = -DUSE_RAPID -DUSE_PQP -DSOLARIS
   CD_INCL = $(RAPID_INCL) $(PQP_INCL)
   CD_LIB = $(RAPIDLIB) $(PQPLIB)
-  DEPS = -MMD
+  LD = $(CC) -shared -fPIC $(DEPS)
+endif
+
+ifeq ($(platform2), SUN_CC) #native sun compiler on compute
+  CC = CC
+  CD_DIR = /user/sthomas/dsmft/CD-libs/solaris-native
+  NO_DEBUG_OPT = -KPIC -O2 -w
+  DEBUG_OPT = -KPIC -g
+  CD_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP
+  CD_INCL = $(RAPID_INCL) $(PQP_INCL)
+  CD_LIB = $(RAPIDLIB) $(PQPLIB) -L/usr/local/lib
+  DEPS =
+  AR = ar rcs
+  LD = $(CC) -G -KPIC
+  STATICLIB = 
 endif
 
 ifeq ($(platform), BLRTS_gcc)	#gcc on bluegene
@@ -63,12 +80,27 @@ endif
 
 ifeq ($(platform), SGI_CC) 	#native compiler on K2
   CD_DIR = /home/shawnat/CD-libs/sgi
-  NO_DEBUG_OPT = -64 -O2 -mips4 -w -exceptions
-  DEBUG_OPT = -64 -mips4 -exceptions -g
+  NO_DEBUG_OPT = -64 -O2 -mips4 -ptused -prelink -w -exceptions
+  DEBUG_OPT = -64 -mips4 -ptused -prelink -exceptions -g
   CD_DEF = -DUSE_PQP -DUSE_RAPID -D__sgi -D__K2
   CD_INCL = $(PQP_INCL) $(RAPID_INCL)
   CD_LIB = $(PQPLIB) $(RAPIDLIB) -lm
   DEPS = -MDupdate Dependencies
+  AR = ar rcs
+  LD = $(CC) -shared -64 -mips4 $(DEPS)
+endif
+
+ifeq ($(platform), MACOSX_gcc)  #macosx/gcc
+  CC = g++
+  CD_DIR = /Users/sthomas/research/CD-libs/macosx
+  NO_DEBUG_OPT = -fPIC -O2 -w -fexceptions
+  DEBUG_OPT = -fPIC -g -fexceptions
+  CD_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP
+  CD_INCL = $(VCLIP_INCL) $(RAPID_INCL) $(PQP_INCL)
+  CD_LIB = $(VCLIPLIB) $(RAPIDLIB) $(PQPLIB)
+  DEPS = -MMD
+  AR = libtool -static -o
+  LD = libtool -dynamic
 endif
 
 #ifeq ($(platform), HP_gcc) 	#linux on sunburn
@@ -86,10 +118,13 @@ endif
 OBPRMLIB = -L$(OBPRM) -lobprm
 ifeq ($(library), static)
   OBPRM_LIBFILE = libobprm.a
-  LIBFLAGS = -static
+  LIBFLAGS = $(STATICLIB)
 endif
 ifeq ($(library), dynamic)
   OBPRM_LIBFILE = libobprm.so
+  ifeq ($(platform), MACOSX_gcc)
+    OBPRM_LIBFILE = libobprm.dylib
+  endif
 endif
 
 #set debug specific variables
