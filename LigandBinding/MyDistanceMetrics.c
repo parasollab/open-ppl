@@ -18,44 +18,10 @@ MyDistanceMetrics::~MyDistanceMetrics() {}
 double 
 MyDistanceMetrics::Distance(Environment *env, Cfg _c1, Cfg _c2, SID _dmsetid) {
     //_dmsetid = -1; // this is very temporary.
-#if 0
-tmp.push_back(Vector3D(-9.5834,-1.1208,-0.5844));
-tmp.push_back(Vector3D(-8.9474,-1.5598,-1.6694));
-tmp.push_back(Vector3D(-10.8614,-1.1188,-0.5884));
-tmp.push_back(Vector3D(-8.8034,-0.6598,0.5976));
-tmp.push_back(Vector3D(-8.2054,-1.4978,1.3336));
-tmp.push_back(Vector3D(-8.7194,0.573196,0.8866));
-#endif
-#if 0
-tmp.push_back(Vector3D(-3.9252,-3.20191,-7.28318));
-tmp.push_back(Vector3D(-1.3812,-4.73091,-5.54118));
-tmp.push_back(Vector3D(-3.3352,-4.55291,-6.81518));
-tmp.push_back(Vector3D(-3.7062,-4.83092,-5.36218));
-tmp.push_back(Vector3D(-4.5492,-3.66791,-4.84818));
-tmp.push_back(Vector3D(-3.9642,-2.18491,-5.75018));
-tmp.push_back(Vector3D(-2.4052,-4.91891,-4.70118));
-tmp.push_back(Vector3D(-1.8742,-4.52491,-6.78318));
-tmp.push_back(Vector3D(-0.156204,-4.73391,-5.29318));
-tmp.push_back(Vector3D(-3.2212,-2.72991,-8.49018));
-tmp.push_back(Vector3D(-3.3612,-1.31591,-9.05217));
-tmp.push_back(Vector3D(-4.6332,-1.04091,-9.74618));
-tmp.push_back(Vector3D(-4.5272,0.125094,-10.7902));
-tmp.push_back(Vector3D(-5.79719,0.288091,-11.5472));
-tmp.push_back(Vector3D(-6.15119,-0.789905,-12.2202));
-tmp.push_back(Vector3D(-6.70119,1.08509,-11.2602));
-#endif
-vector<Vector3D> tmp;
-tmp.push_back(Vector3D(2.0852,8.0409,-6.0771));
-tmp.push_back(Vector3D(1.41921,9.1449,-6.2581));
-tmp.push_back(Vector3D(2.9602,7.8549,-5.1931));
-tmp.push_back(Vector3D(2.06019,7.0249,-7.2761));
-tmp.push_back(Vector3D(1.21119,7.2269,-8.1981));
-tmp.push_back(Vector3D(3.23319,6.56989,-7.4331));
 
     if(_dmsetid == -1) { 
        vector<Vector3D> x = BioPotentials::GetCoordinatesLigandBinding(_c1, env);
-       //vector<Vector3D> y = BioPotentials::GetCoordinatesLigandBinding(_c2, env);
-       vector<Vector3D> y = tmp;
+       vector<Vector3D> y = BioPotentials::GetCoordinatesLigandBinding(_c2, env);
        return RMSD(x,y,x.size());
     } else if(_dmsetid == -2) 
        return WeightedEuclidianDistance(_c1,_c2);

@@ -4,7 +4,7 @@
 #------------------------------------------------------
 
 # -- for dynamic shared object library libobprm.so
-   OBPRMLIB_DIR = /pub/dsmft/users/gsong/cvs/OBPRM
+   OBPRMLIB_DIR = /pub/dsmft/users/gsong/OBPRM
    OBPRMLIB     = -L${OBPRMLIB_DIR} -lobprm
 
 #------------------------------------------------------
@@ -165,6 +165,7 @@ reallyclean::
 	rm -f *.o
 	rm -f Dependencies
 	rm -f so_locations
+	touch Dependencies
 
 #-----------------------------------------------------------------------------
 # Build and update depent

@@ -28,6 +28,9 @@ MyInput input;
 Stat_Class Stats; 
 void PrintRawLine( ostream& _os, Roadmap *rmap, 
                    Clock_Class *NodeGenClock, Clock_Class *ConnectionClock );
+bool score_Compare(const pair<int, double>& c1, const pair<int, double>& c2);
+double calScore(const Cfg &c, Environment *env);
+
 
 num_param<int>    numNodes("-nodes",             10,  1,50000);
 str_param<char *> mapFile          ("-outmapFile");
@@ -66,8 +69,8 @@ int main(int argc, char** argv)
   Roadmap rmap(&input,  &cd, &dm, &lp);
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
-  gn.UserInit(&input,                  rmap.GetEnvironment() );
-  cn.UserInit(&input);
+  gn.UserInit(&input,   rmap.GetEnvironment() );
+  cn.UserInit(&input,   rmap.GetEnvironment() );
   dm.UserInit(&input,   &gn, &lp );
 
 
@@ -76,6 +79,22 @@ int main(int argc, char** argv)
     input.PrintValues(cout);
   #endif
 
+  // the .query provides the *goal* binding site from PDB file.
+  // the .haptic file provides configurations collected thru haptic.
+  char queryFile[80], hapticInputFile[80];
+  vector<Cfg> query, haptic;
+  sprintf(queryFile, "%s%s", input.defaultFile.GetValue(), ".query");
+  sprintf(hapticInputFile, "%s%s", input.defaultFile.GetValue(), ".haptic");
+  ReadCfgs(queryFile, query);
+  ReadCfgs(hapticInputFile, haptic);
+
+  if(query.empty()) {
+     cout << "could not find *goal* binding site in .query file.\n"
+          << "quitting ... " << endl;
+     exit(2);
+  }
+
+  // OBPRM node generation
   if ( input.inmapFile.IsActivated() ){
     //---------------------------
     // Read roadmap nodes
@@ -91,53 +110,34 @@ int main(int argc, char** argv)
   }
 
 
-  Cfg tempCfg;
-  char queryFile[80];
-  vector<Cfg> query;
-  sprintf(queryFile, "%s%s", input.defaultFile.GetValue(), ".query");
-  ifstream  myifstream(queryFile);
-  if (!myifstream) {
-         cout << endl << "In ReadQuery: can't open infile: " << queryFile << endl;
-         return;
-  }
-  while (1) {
-      tempCfg.Read(myifstream);
-      if(!myifstream) break;
-      query.push_back(tempCfg);
-  }
-
-  vector<Cfg> possibleBindingSite;
-  Environment *env = rmap.GetEnvironment();
-  vector<Cfg> trace;
-  vector<Cfg> vertices;
-  if(query.size() <= 2) {
-      vertices = rmap.roadmap.GetVerticesData();
-  } else {
-     for(int m = 0; m<query.size(); ++m)
-        vertices = query;
-  }
+  vector<Cfg> vertices = rmap.roadmap.GetVerticesData(); // Node from OBPRM
+  if(! haptic.empty()) // Nodes from Haptic
+      vertices.insert(vertices.end(), haptic.begin(), haptic.end());
       
-  ofstream o1("pot1.m"), o2("pot2.m");
+  // perform gradient descent for all the nodes.
+  ofstream o1("pot_bf_gradDescent.m"), o2("pot_aft_gradDescent.m");
+  vector<Cfg> trace, possibleBindingSite;
+  Environment *env = rmap.GetEnvironment();
 
   for(int m=0; m<vertices.size(); ++m) {
      o1 << BioPotentials::GetPotential(vertices[m], env) << "\n";
      trace.push_back(vertices[m]);
      bool success = GradientDecent::findingLocalMin(env, trace);
-     o2 << BioPotentials::GetPotential(trace[trace.size()-1], env) << "\n";
+     o2 << BioPotentials::GetPotential(trace.back(), env) << "\n";
      if(success)
-        possibleBindingSite.push_back(trace[trace.size()-1]);
+        possibleBindingSite.push_back(trace.back());
   }
-  WritePathTranformationMatrices("bindingsites.path", possibleBindingSite,
-                 env);
 
+  // add these nodes to roadmap if they pass the first criterion: > 50. 
+  // *goal* binding site added to roadmap too only for RMSD calc. purpose.
   vector<Cfg> pbs;
   for(m=0; m<possibleBindingSite.size(); ++m) {
      if(BioPotentials::GetPotential(possibleBindingSite[m], env) > 50.0) continue;
      rmap.roadmap.AddVertex(possibleBindingSite[m]);
      pbs.push_back(possibleBindingSite[m]);
   }
-  rmap.roadmap.AddVertex(query[0]); 
-  pbs.push_back(query[0]); // query[0] by itself is the binding site.
+  rmap.roadmap.AddVertex(query.front()); 
+  pbs.push_back(query.front()); // query[0] by itself is the binding site.
 
   #ifdef QUIET
   #else
@@ -181,30 +181,30 @@ int main(int argc, char** argv)
   #endif
 
 
+  // now, evaluate all the pbs nodes with second criterion: 
+  // connected the largest CC (I. accessable) and II. having 
+  // a good weight.
   vector< pair<int,VID> > ccstats = rmap.roadmap.GetCCStats();
   Cfg tmpC =  rmap.roadmap.GetData(ccstats[0].second);
-  ofstream op("index_weight");
-  int neb = 500;
+  vector< pair<int, double> > cfgScore;
   for(m=0; m<pbs.size(); ++m) {
      // check if it is accessable, ie. in the biggest CC.
      if(!rmap.roadmap.IsSameCC(tmpC, pbs[m])) continue;
-     double totalPot = 0;
-     for(int i=0; i<neb; ++i) {
-        Cfg incr = Cfg::GetRandomCfg(9.0*pow(drand48(), 1.0/3), 1.0);
-        Cfg tmp = pbs[m] + incr;
-        double tmpPotential = BioPotentials::GetPotential(tmp, env);
-        totalPot += tmpPotential > 5000 ? 5000 : tmpPotential;
-        //double pathweights = 0.0;
-        //if(tmpPotential < BioPotentials::ConnectionThreshold() ) {
-          // if(lp.IsConnected(&rmap,cd,dm,possibleBindingSite[m],
-        //      tmp, lpsid, &ci) {
-        //      rmap.roadmap.AddVertex(tmp);
-        //      rmap.roadmap.AddEdge(possibleBindingSite[m],tmp, ci.edge);
-        //}
-     }
-     double dis = dm.Distance(rmap.GetEnvironment(), pbs[m], query[0], -1);
-     op << m << "    " << dis  << "    "  << totalPot/neb << "  "
-        << BioPotentials::GetPotential(pbs[m], env) << ";\n";
+     double score = calScore(pbs[m], env);
+     cfgScore.push_back(pair<int,double>(m, score));
+  }
+  sort(cfgScore.begin(), cfgScore.end(), ptr_fun(score_Compare));
+
+  // output the result
+  WritePathTranformationMatrices("possibleBindingSites.path", pbs, env);
+  ofstream op("weight_RMSD_potential.dat");
+  for(m=0; m<cfgScore.size(); ++m) {
+     int index = cfgScore[m].first;
+     double score = cfgScore[m].second;
+     double disToGoal = dm.Distance(env, pbs[index], query.front(), -1);
+     double potential = BioPotentials::GetPotential(pbs[index], env);
+     op << score     << "  " << disToGoal << "  " 
+        << potential << "  " << index+1   << ";\n";
   }
 
 
@@ -247,3 +247,27 @@ void PrintRawLine( ostream& _os, Roadmap *rmap,
   Stats.PrintDataLine(_os,rmap,1);
   _os << "\n\n";
 }
+
+bool score_Compare(const pair<int, double>& c1, const pair<int, double>& c2) {
+     return c1.second < c2.second;
+}
+
+double calScore(const Cfg &c, Environment *env) {
+     static const int neb = 500;
+     double totalPot = 0;
+     for(int i=0; i<neb; ++i) {
+        Cfg incr = Cfg::GetRandomCfg(9.0*pow(drand48(), 1.0/3), 1.0);
+        Cfg tmp = c + incr;
+        double tmpPotential = BioPotentials::GetPotential(tmp, env);
+        totalPot += tmpPotential > 5000 ? 5000 : tmpPotential;
+        //double pathweights = 0.0;
+        //if(tmpPotential < BioPotentials::ConnectionThreshold() ) {
+          // if(lp.IsConnected(&rmap,cd,dm,possibleBindingSite[m],
+        //      tmp, lpsid, &ci) {
+        //      rmap.roadmap.AddVertex(tmp);
+        //      rmap.roadmap.AddEdge(possibleBindingSite[m],tmp, ci.edge);
+        //}
+     }
+     return totalPot/neb;
+}
+

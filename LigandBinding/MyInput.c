@@ -13,6 +13,7 @@
 //#include"CfgProtein.h"
 #include"CfgLigand.h"
 #include"BioPotentials.h"
+#include"util.h"
 
 void MyInput::ReadCommandLine(int argc, char** argv) {
   Input::ReadCommandLine(argc, argv);
@@ -122,7 +123,7 @@ void MyInput::ReadPotentialParameters(istream &is) {
 	BioPotentials::atomCoord.push_back(v);
 	v.erase(v.begin(), v.end());
      }
-cout << "finish setting up stuff .... " << endl << endl;
+     cout << "finish setting up stuff .... " << endl << endl;
      return;
   }
 	
