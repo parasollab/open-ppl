@@ -279,7 +279,6 @@ private:
 //     success or trying all.
 //
 /////////////////////////////////////////////////////////////////////
-//brc moved this from ConnectMapNodes:private
   class Cfg_VE_Type {
   public:
     // destructor
@@ -298,7 +297,6 @@ private:
   typedef pair   <Cfg,Cfg>    CfgPairType;
   typedef pair   <CfgPairType,double> DIST_TYPE;
   typedef pair   <Cfg_VE_Type,double> VE_DIST_TYPE;
-// end of brc mvoed part
 
 class ConnectMapNodes {
    friend SID MakeCNSet(istream&); 

@@ -50,52 +50,26 @@ private:
     Vector3D orthogonal[2];
 };
 
-
-//===================================================================
-//  Added 5/21/98  Wookho Son
-//===================================================================
-//inline MultiBody * Contact::GetMultiBody(){
-//  return multibody;
-//}
-
-//===================================================================
-//  Added 5/16/98  Wookho Son
-//===================================================================
 inline Body * Contact::GetBody(int _index){
   return body[_index];
 }
 
-//===================================================================
-//  Added 5/21/98  Wookho Son
-//===================================================================
 inline Transformation & Contact::GetUtransformToContact(int _index){
   return UtransformToContact[_index];
 }
 
-//===================================================================
-//  Added 5/16/98  Wookho Son
-//===================================================================
 inline Vector3D & Contact::GetPosition(){
   return position;
 }
 
-//===================================================================
-//  Added 5/16/98  Wookho Son
-//===================================================================
 inline Vector3D & Contact::GetNormal(int _index){
   return normal[_index];
 }
 
-//===================================================================
-//  Added 5/16/98  Wookho Son
-//===================================================================
 inline Vector3D & Contact::GetTangential(int _index){
   return tangential[_index];
 }
 
-//===================================================================
-//  Added 5/16/98  Wookho Son
-//===================================================================
 inline Vector3D & Contact::GetOrthogonal(int _index){
   return orthogonal[_index];
 }

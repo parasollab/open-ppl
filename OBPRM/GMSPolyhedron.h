@@ -27,7 +27,7 @@ public:
     int    numVertices;
     Vector3D normal;
     double   area;
-	/* burchan added operator=. It is slow but otherwis if any function 
+	/*It is slow but otherwis if any function 
 	   use a local 
 	 polygon which is assigned to another polygon variable, the
 	 descructor would free not only the local variables vertexlist 

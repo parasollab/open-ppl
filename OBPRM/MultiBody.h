@@ -149,14 +149,12 @@ inline int MultiBody::GetFreeBodyCount() {
 
 //-------------------------------------------------------------------
 //  GetBodyCount
-//  02/23/99 Guang Song
 //-------------------------------------------------------------------
 inline int MultiBody::GetBodyCount() {
     return FreeBodyCount+FixedBodyCount;
 }
 //-------------------------------------------------------------------
 //  GetBody
-//  02/23/99 Guang Song
 //-------------------------------------------------------------------
 inline Body * MultiBody::GetBody(int _index) {
     if(_index < 0 || _index >= FreeBodyCount+FixedBodyCount) {
@@ -219,8 +217,6 @@ inline int MultiBody::GetFixedBodyIndex(FixedBody * _b) {
 //            it is considered to be a manipulator
 //
 //  Output:   True/False
-//
-//  Added  5/21/98  Wookho Son
 //-------------------------------------------------------------------
 inline int MultiBody::IsManipulator() {
     return (FreeBodyCount > 0) ? 1 : 0;

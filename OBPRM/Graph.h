@@ -100,10 +100,6 @@ template<class VERTEX, class WEIGHT> class WtVertexType;
 //            first endpoint is implicit due to the adjacency list rep) 
 //        --  the edge WEIGHT
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 template<class VERTEX, class WEIGHT>
 class WtEdgeType {   
@@ -142,10 +138,6 @@ private:
 //      Its data includes an edgelist for the vertex, and its methods 
 //      are responsible for adding/removing edges and weights. 
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 template<class VERTEX, class WEIGHT>
 class WtVertexType {  
@@ -229,10 +221,6 @@ private:
 //      representing various types of graphs (e.g., undirected,
 //      directed, unweighted, weighted, or multigraphs).
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 template<class VERTEX> 
 class AbstractGraph {
@@ -295,10 +283,6 @@ private:
 //
 //      The graph is represented by an adjacency list structure.
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      1/15/98  Nancy Amato
 /////////////////////////////////////////////////////////////////////
 
 template<class VERTEX, class WEIGHT>
@@ -485,10 +469,6 @@ private:
 //
 //      The graph is represented by an adjacency list structure.
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 template<class VERTEX, class WEIGHT>
 class WeightedGraph : public WeightedMultiDiGraph<VERTEX,WEIGHT> {
@@ -2196,14 +2176,6 @@ WeightedGraph(int _sz, int _edgelistsz)
  : WeightedMultiDiGraph<VERTEX,WEIGHT>(_sz,_edgelistsz) 
 {
 };
-
-// Function removed for Vizmo - bmd 8 - 22 - 00
-//template<class VERTEX, class WEIGHT>
-//WeightedGraph<VERTEX,WEIGHT>::
-//WeightedGraph( WeightedMultiDiGraph<VERTEX,WEIGHT> _base)
-// : WeightedMultiDiGraph<VERTEX,WEIGHT>(_base) 
-//{
-//};
 
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::

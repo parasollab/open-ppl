@@ -35,7 +35,6 @@ public:
   //===================================================================
   // methods
   //===================================================================
-  //brc added the voids
    void init(Roadmap *rm, char * tmp[5], CollisionDetection *_cd, LocalPlanners *_lp,
 	DistanceMetric *_dm, GNInfo gnInfo, CNInfo cnInfo);
    void AddHapticPath(vector <Cfg> cfgs,int mask, int nodesPerSeed,
@@ -69,7 +68,6 @@ private:
 
    //----------------------------------------------------------------------------
    // these three methods are from GenerateMapNodes class, so go back there later.
-   // 07/23/99 (G)
    Cfg GenerateSurfaceCfg(Environment *, CollisionDetection *cd, DistanceMetric *, 
                           Cfg , Cfg ,  GNInfo& );
    Cfg GenerateOutsideCfg(Environment *, CollisionDetection *cd, Cfg , Cfg , GNInfo &);

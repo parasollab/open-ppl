@@ -27,23 +27,12 @@
 #endif
 #define TWOPI           (PI*2.0)
 
-/*
-#ifndef bool
- typedef int bool;
- #define true 1
- #define false 0
-#endif
-brc
-*/ 
-//added true false brc
 #define TRUE 1
 #define FALSE 0
 
 #ifndef OK
 #define OK  0
 #endif
-
-/* brc look for maxfloat */
 
 #ifndef MAXFLOAT 
 #define MAXFLOAT 99999999999999999.99999

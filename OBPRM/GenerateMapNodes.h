@@ -396,7 +396,6 @@ public:
   GNInfo gnInfo;
 
 protected:
-//brc added
   static const int MAX_CONVERGE = 20;
 
 private:

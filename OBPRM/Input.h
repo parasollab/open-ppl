@@ -22,8 +22,6 @@
 //
 /////////////////////////////////////////////////////////////////////
 
- //???
-
 #ifndef Input_h
 #define Input_h
 
@@ -224,7 +222,7 @@ public:
     num_param<int>    numShells;
     num_param<int>    numNodesPerObst;
     num_param<double> proportionSurface;
-    num_param<int>    lineSegment;        // used for LocalPlanner. 09/02/99
+    num_param<int>    lineSegment;        // used for LocalPlanner.
     num_param<int>    usingClearance;
     num_param<int>    addPartialEdge;
 
@@ -253,7 +251,7 @@ public:
     int numCFGs;
 
     char cfgName[100];
-    int numofJoints; // Guang 06/09/00 the joints number for articulated robots.
+    int numofJoints; // the joints number for articulated robots.
                      // stored so as to be easily used by derived class.
 
     //
@@ -280,7 +278,6 @@ public:
 
     // these two arrays are not used elsewhere, only to read in something.
     // so that the previous version of .env files could still be used. 
-    // Guang 10/15/99
     Vector3D freebodyPosition[MAX_MULTIBODY];
     Orientation freebodyOrientation[MAX_MULTIBODY];
 

@@ -274,7 +274,7 @@ public:
 				Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
 
   // Generalized form of LP functions, replace 'pointer to function' way doing this,
-  // but fulfill the same purpose. In addition, it eases deriving classes. 06/10/00 GS
+  // but fulfill the same purpose. In addition, it eases deriving classes
   virtual bool IsConnected(PLANNER lpName, Environment *env,CollisionDetection *,DistanceMetric *,
                                 Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
 

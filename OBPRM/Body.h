@@ -65,7 +65,6 @@ public:
     void Read(char * _fileName);
     void Read(Input*, char * _fileName);
 
-    // added on 06/01/99. G.S.
     void ReadBYU(cd_predefined cdtype, istream & _is);
     void buildCDstructure(cd_predefined cdtype, int nprocs = 1);
 
@@ -99,9 +98,9 @@ public:
     Vector3D GetCenterOfMass();
 
 
-    //added on 02/23/99 by Guang to facilitate robot self collision checking.
+    //facilitate robot self collision checking.
     bool isAdjacent(Body *);
-    Transformation & WorldTransformation();  // added by Guang Song on 03/02/99
+    Transformation & WorldTransformation();
     //---------------------------------------------------------------
     //  Connection methods
     //---------------------------------------------------------------
@@ -160,7 +159,6 @@ friend class Connection;
 
 //-------------------------------------------------------------------
 // isAdjacent
-// 02/23/99 Guang Song
 // to check if two Body share same joint(adjacent) for a robot.
 //-------------------------------------------------------------------
 inline bool Body::isAdjacent(Body * otherBody) {
@@ -176,7 +174,6 @@ inline bool Body::isAdjacent(Body * otherBody) {
 
 //-------------------------------------------------------------------
 // WorldTransformation
-// Guang Song 1/20/99
 //
 // If worldTransformation has been calculated(updated), this method should be used
 // to avoid redundant calculation.
@@ -188,7 +185,6 @@ inline Transformation & Body::WorldTransformation() {
 
 //-------------------------------------------------------------------
 //  GetBoundingBox
-//  8/19/98  Daniel Vallejo
 //-------------------------------------------------------------------
 inline double * Body::GetBoundingBox(){
     return boundingBox;
@@ -196,7 +192,6 @@ inline double * Body::GetBoundingBox(){
 
 //-------------------------------------------------------------------
 //  GetCenterOfMass
-//  8/31/98  Lucia K. Dale
 //-------------------------------------------------------------------
 inline Vector3D Body::GetCenterOfMass(){
     if (!CenterOfMassAvailable) {
@@ -266,8 +261,6 @@ inline Connection * Body::GetBackwardConnection(int _index) {
 //-------------------------------------------------------------------
 //  AddContactCount
 //  Function: Increment the contact count
-//
-//  4/12/98 Wookho Son
 //-------------------------------------------------------------------
 inline void Body::AddContactCount() {
   contactCount++;
@@ -278,8 +271,6 @@ inline void Body::AddContactCount() {
 //
 //  Function: Assign the given transformation as a transformation
 //            w.r.t the world for "this" body
-//
-//  5/ 4/98 Wookho Son
 //-------------------------------------------------------------------
 inline void Body::PutWorldTransformation(Transformation & _worldTransformation){
   worldTransformation = _worldTransformation;

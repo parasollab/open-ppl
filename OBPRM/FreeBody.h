@@ -32,7 +32,6 @@ public:
 
     //-----------------------------------------------------------
     //  Methods
-    //  Added  7/14/98  Wookho Son
     //-----------------------------------------------------------
     void Get(Input * _input, int _multibodyIndex, int _bodyIndex);
     void Configure(Transformation & _transformation);

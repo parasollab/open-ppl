@@ -33,7 +33,6 @@ public:
   //===================================================================
   // methods
   //===================================================================
-  //brc added the voids
    bool CheckConnection(Cfg c1,Cfg c2);
 
    // written by Burchan (method 1 & 3)
@@ -70,7 +69,6 @@ private:
 
    //----------------------------------------------------------------------------
    // these three methods are from GenerateMapNodes class, so go back there later.
-   // 07/23/99 (G)
    Cfg GenerateSurfaceCfg(Environment *, CollisionDetection *cd, DistanceMetric *, 
                           Cfg , Cfg ,  GNInfo& );
    Cfg GenerateOutsideCfg(Environment *, CollisionDetection *cd, Cfg , Cfg , GNInfo &);

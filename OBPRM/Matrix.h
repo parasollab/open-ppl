@@ -42,7 +42,6 @@ public:
     double * GetArray();
     virtual Matrix Inverse();
     Matrix Transpose();
-    // Added Wookh Son
     void RowColumnCouple(Matrix & _m);
     void RowCouple(Matrix & _m);
     void ColumnCouple(Matrix & _m);
@@ -58,7 +57,7 @@ public:
     double *m;
     int ncol;
     int nrow;
-protected: //brc need to define Linewar System and Matrix so that they are friend
+protected:
 };
 
 //==========================================================================
@@ -70,7 +69,6 @@ inline double & Matrix::operator()(int _i, int _j) {
 
 //==========================================================================
 // Inline functions
-// Added  6/6/98  Wookho Son
 //==========================================================================
 inline int Matrix::GetNrows() {
     return  nrow;
@@ -78,7 +76,6 @@ inline int Matrix::GetNrows() {
 
 //==========================================================================
 // Inline functions
-// Added  6/6/98  Wookho Son
 //==========================================================================
 inline int Matrix::GetNcols() {
     return  ncol;
@@ -86,7 +83,6 @@ inline int Matrix::GetNcols() {
 
 //==========================================================================
 // Inline functions
-// Added  6/6/98  Wookho Son
 //==========================================================================
 inline double * Matrix::GetArray() {
     return  m;
