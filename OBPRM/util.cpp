@@ -20,18 +20,27 @@
 // normalized to 1.0
 double DirectedAngularDistance(double a,double b)
 {
-    //float a = aa;
-    //float b = bb;
 
     // normalize both a and b to [0, 1)
     a = a - floor(a);
     b = b - floor(b);
 
     // shorten the distance between a and b by shifting a or b by 1.
-    if( b-a > 0.500001 )
-        ++a;
-    else if( a-b > 0.500001)
-        ++b;
+    // have to do ROUND-UP INTEGER comparision to avoid subtle numerical errors.
+    int intA = rint(a*1000000);
+    int intB = rint(b*1000000);
+
+    if( intB - intA  > 500000 ) 
+	++a;
+    else if ( intA - intB > 500000 )
+	++b;
+
+    // this would cause error. assume a = 0, b = 0.50000001 at mkmp stage
+    // and b = 0.5 (rounded-up after printed to the map) at query stage.
+    //if( b-a > 0.500000 )
+    //    ++a;
+    //else if( a-b > 0.500000 )
+    //    ++b;
 
     return b-a;
 
