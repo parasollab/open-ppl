@@ -1,0 +1,135 @@
+#library types
+LIBRARY="dynamic static"
+
+#check for valid library
+FOUND=$(shell echo $(LIBRARY) | grep $(library) > /dev/null ; echo $$?)
+ifneq ($(FOUND),0)
+  $(error library $library) is not one of $(LIBRARY))
+endif
+
+#check platform/library combination
+ifeq ($(library), static)
+  ifeq ($(platform), SGI_CC)
+    $(error $(library) libraries are not currently supported on $(platform))
+  endif
+endif
+ifeq ($(library), dynamic)
+  ifeq ($(platform2), SUN_gcc)
+    $(error $(library) libraries are not currently supported on $(platform2))
+  endif
+endif
+
+#set platform specific variables
+ifeq ($(platform), LINUX_gcc) 	#linux/gcc
+  CC = g++ 	#for now until mpiCC is on all the machines
+  CD_DIR = /research/sunburn/dsmft/CD-libs/linux
+  NO_DEBUG_OPT = -O2 -w -fexceptions
+  DEBUG_OPT = -g -fexceptions
+  CD_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP
+  CD_INCL = $(VCLIP_INCL) $(RAPID_INCL) $(PQP_INCL)
+  CD_LIB = $(VCLIPLIB) $(RAPIDLIB) $(PQPLIB)
+endif
+
+#set platform specific variables
+ifeq ($(platform2), SUN_gcc) 	#linux/gcc on compute
+  CC = /usr/local/bin/g++ -ftemplate-depth-25
+  CD_DIR = /user/sthomas/dsmft/CD-libs/solaris
+  CD_DEF = -DUSE_RAPID -DUSE_PQP -DSOLARIS
+  CD_INCL = $(RAPID_INCL) $(PQP_INCL)
+  CD_LIB = $(RAPIDLIB) $(PQPLIB)
+endif
+
+ifeq ($(platform), BLRTS_gcc)	#gcc on bluegene
+  CD_DIR = /u/sthomas/CD-libs/linux-stapl
+  NO_DEBUG_OPT = -O2 -w -fexceptions
+  DEBUG_OPT = -g -fexceptions
+  CD_DEF = -DUSE_RAPID -DUSE_PQP
+  CD_INCL = $(RAPID_INCL) $(PQP_INCL)
+  CD_LIB = $(RAPIDLIB) $(PQPLIB)
+endif
+
+ifeq ($(platform), IRIX_gcc) 	#gcc on cosmos
+  CD_DIR = /scratch/shawnat/CD-libs/linux-stapl
+  NO_DEBUG_OPT = -fPIC -O2 -w -fexceptions
+  DEBUG_OPT = -fPIC -g -fexceptions
+  CD_DEF = -DUSE_RAPID -DUSE_PQP
+  CD_INCL = $(RAPID_INCL) $(PQP_INCL)
+  CD_LIB = $(RAPIDLIB) $(PQPLIB)
+endif
+
+ifeq ($(platform), SGI_CC) 	#native compiler on K2
+  CD_DIR = /home/shawnat/CD-libs/sgi
+  NO_DEBUG_OPT = -64 -O2 -mips4 -w -exceptions
+  DEBUG_OPT = -64 -mips4 -exceptions -g
+  CD_DEF = -DUSE_PQP -DUSE_RAPID -D__sgi -D__K2
+  CD_INCL = $(PQP_INCL) $(RAPID_INCL)
+  CD_LIB = $(PQPLIB) $(RAPIDLIB) -lm
+endif
+
+#ifeq ($(platform), HP_gcc) 	#linux on sunburn
+#  CD_DIR = /research/sunburn/dsmft/CD-libs/hp
+#  NO_DEBUG_OPT = -fPIC -w -fexceptions
+#  DEBUG_OPT = -fPIC -g -fexceptions
+#  CD_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -Dhppa -D__cplusplus
+#  CD_INCL = $(VCLIP_INCL) $(RAPID_INCL) $(PQP_INCL)
+#  CD_LIB = $(VCLIPLIB) $(RAPIDLIB) $(PQPLIB)
+#  OBPRMLIB = $(OBPRM_LIBFILE)
+#  LIBFLAGS =
+#endif
+
+#set library specific variables
+OBPRMLIB = -L$(OBPRM) -lobprm
+ifeq ($(library), static)
+  OBPRM_LIBFILE = libobprm.a
+  LIBFLAGS = -static
+endif
+ifeq ($(library), dynamic)
+  OBPRM_LIBFILE = libobprm.so
+endif
+
+#set debug specific variables
+ifeq ($(debug), 0)
+  OPTS = $(NO_DEBUG_OPT)
+  DEBUG_DEF = -DINTERMEDIATE_FILES=0
+endif
+ifeq ($(debug), 1)
+  OPTS = $(DEBUG_OPT)
+  DEBUG_DEF = -DINTERMEDIATE_FILES=1
+endif
+
+#stapl includes
+Graph_DIR = $(STAPL)/include/graph
+Graph_INCL  = -I${Graph_DIR} -I$(STAPL)/include/common
+
+#PVECTOR = ${STAPL}/include/pContainers/pvector
+#RUNTIME = ${STAPL}/include
+#STL     = $(STLINCLUDEPATH)
+#BASE    = ${STAPL}/include/pContainers/base
+#DIST    = ${STAPL}/include/pContainers/distribution
+#GRAPH   = ${STAPL}/include/graph
+#STAPL_INCL = -I${PVECTOR} ${STL} -I${RUNTIME} -I${BASE} -I${DIST} -I${GRAPH}
+#STAPLLIB = $(LIB)
+#STAPLFLAGS = -D_STAPL -D_STAPL_MPI -DVECTOR -DCOMPLETE_LOCATION_MAP -DPARALLEL -D_PGRAPH -DDYNAMIC_GRAPH
+STAPL_INCL = $(Graph_INCL)
+
+#Collision Detection includes
+CSTK_DIR = $(CD_DIR)/CSTK
+CSTKLIB_DIR = $(CSTK_DIR)/lib
+CSTKLIB = -L$(CSTKLIB_DIR) -lcstk
+CSTK_INCL = -I$(CSTK_DIR)/include
+
+VCLIP_DIR     = ${CD_DIR}/VCLIP
+VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
+VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
+VCLIP_INCL    = -I${VCLIP_DIR}/include
+
+RAPID_DIR     = ${CD_DIR}/RAPID
+RAPIDLIB_DIR  = ${RAPID_DIR}
+RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
+RAPID_INCL    = -I${RAPID_DIR}
+
+PQP_DIR     = ${CD_DIR}/PQP
+PQPLIB_DIR  = ${PQP_DIR}/lib
+PQPLIB      = -L${PQPLIB_DIR} -lPQP
+PQP_INCL    = -I${PQP_DIR}/include
+

@@ -1,0 +1,107 @@
+STAPL=../stapl_release
+OBPRM=.
+
+#set default platform
+ifndef platform
+  platform=LINUX_gcc
+endif
+
+#set default rts
+ifndef rts
+  rts=MPI
+endif
+
+#set default stl
+ifndef stl
+  stl=STLport/stlport
+endif
+
+#set default library type
+ifndef library
+  library=dynamic
+endif
+
+#set default debug
+ifndef debug
+  debug=0
+endif
+
+#set default CHECKIFSAMECC
+ifndef CHECKIFSAMECC
+  CHECKIFSAMECC=1
+endif
+
+include $(STAPL)/GNUmakefile.STAPLdefaults
+include $(OBPRM)/GNUmakefile.OBPRMdefaults
+
+#common misc.
+DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS)
+INCLUDES = -I. $(STAPL_INCL) $(CD_INCL)
+LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB)
+
+#compile targest
+default: libs
+
+libs: objs $(OBPRM_LIBFILE)
+
+libobprm.a: $(OBJS)
+	$(AR) libobprm.a $(OBJS)
+
+libobprm.so: $(OBJS)
+	$(CC) -shared $(OPTS) $(INCLUDES) $(DEFS) $(OBJS) -o libobprm.so
+
+obprm: main_obprm.cpp libs
+	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_obprm.cpp $(LIBS) -o obprm
+
+query: main_query.cpp libs
+	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_query.cpp $(LIBS) -o query
+
+%.o: %.cpp
+	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -c $<
+
+OBJS = \
+	Environment.o \
+	FreeBody.o \
+	FixedBody.o \
+	Connection.o \
+	Contact.o \
+	DHparameters.o \
+	Transformation.o \
+	Orientation.o \
+	GMSPolyhedron.o \
+	Matrix.o \
+	Vectors.o \
+	Body.o \
+	MultiBody.o \
+	Parameters.o \
+	Input.o \
+	Cfg.o \
+	Cfg_free.o \
+	Cfg_fixed_PRR.o \
+	Cfg_free_tree.o \
+	Cfg_fixed_tree.o \
+	Cfg_2D.o \
+	util.o \
+	Clock_Class.o \
+	Clock_Elapsed.o \
+	Stat_Class.o \
+	DistanceMetrics.o \
+	CollisionDetection.o \
+	QueryCmds.o \
+	Weight.o
+#	Haptic.o \
+#	Push.o \
+
+objs: $(OBJS)
+
+clean:
+	rm -f obprm
+	rm -f query
+
+reallyclean:
+	rm -f obprm
+	rm -f query
+	rm -f *.a *.so *.o
+	rm -R -f ii_files
+	rm -f so_locations
+
