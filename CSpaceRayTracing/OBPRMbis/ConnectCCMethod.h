@@ -2,35 +2,33 @@
  *     	Base class for all the methods to connect CCs
  *	@date 01/21/03*/
 
-/*Called from the main function to create the connection methods from the command line and defaults*/
+/*Called from the main function to create the connection methods from
+  the command line and defaults*/
 
 #include "Parameters.h"
 #include "Roadmap.h"
 #include "util.h"
 #include <string>
 
-////////////////////////////////////////////////////////////////////////////
-class ConnectCCMethod { //interface only
+
+// Interface for component connection methods
+class ComponentConnectionMethod { //interface only
  public:
-  ConnectCCMethod() {
+  ComponentConnectionMethod() {
   }
-  ConnectCCMethod(Input *,Roadmap *, CollisionDetection*, DistanceMetric*, LocalPlanners*,ConnectMapNodes*);
-  ~ConnectCCMethod();
+  ComponentConnectionMethod(Input *,Roadmap *, CollisionDetection*, DistanceMetric*, LocalPlanners*,ConnectMapNodes*);
+  ~ComponentConnectionMethod();
 
-/*    virtual int ParseCommandLine(int *argc, char **argv) = 0; */
-/*    virtual void SetDefault() = 0; */
-/*    virtual void ConnectCCs(parameters for CC connection) = 0; */
-  int ParseCommandLine(int *argc, char **argv){}
-  void SetDefault(){}
-  void ConnectCCs(/*parameters for CC connection*/){}
-
+  virtual int ParseCommandLine(int *argc, char **argv) = 0;
+  virtual void SetDefault() = 0;
+  virtual void ConnectComponents(/*parameters for CC connection*/) = 0;
  private:
 };
 
-///////////////////////////////////////////////////////////////////////////
-class TestConnectionMethod: public ConnectCCMethod {
+// One particular component connection method: Test
+class TestConnectionMethod: public ComponentConnectionMethod {
  public:
-  TestConnectionMethod(): ConnectCCMethod() { 
+  TestConnectionMethod(): ComponentConnectionMethod() { 
     //set defaults
     is_default = false;
     //parse to overwrite the defaults
@@ -41,34 +39,35 @@ class TestConnectionMethod: public ConnectCCMethod {
   void SetDefault() {
     is_default = true;
   }
-  void ConnectCCs(/*parameters for CC connection*/) {
-
+  void ConnectComponents(/*parameters for CC connection*/) {
+    cout << "Connecting CCs with method Test" << endl;
   }
  private:
   bool is_default;
 };
 
-////////////////////////////////////////////////////////////////////////////
-class ConnectCCMethodCaller {
+
+// A collection of component connection methods
+class ConnectMapComponents {
  public:
-  ConnectCCMethodCaller() {
+  ConnectMapComponents() {
     selected.clear();
     all.clear();
     //need to fill out the vector of connection_methods 
 
-    TestConnectionMethod test;
-    all.push_back( (ConnectCCMethod) test);    
+    TestConnectionMethod* test= new TestConnectionMethod();
+    all.push_back(test);    
   }
-  ~ConnectCCMethodCaller() {
+  ~ConnectMapComponents() {
     selected.clear();
     all.clear();
   }
 
-  static vector<ConnectCCMethod> GetDefault() {
-    vector<ConnectCCMethod> tmp;
+  static vector<ComponentConnectionMethod *> GetDefault() {
+    vector<ComponentConnectionMethod *> tmp;
     
-    TestConnectionMethod test;
-    test.SetDefault();
+    TestConnectionMethod* test = new TestConnectionMethod();
+    test->SetDefault();
     tmp.push_back(test);
     return tmp;
   }
@@ -76,25 +75,28 @@ class ConnectCCMethodCaller {
   //Fill connectCC_command_line_options with (tag options) from the command line
   int ReadCommandLine(int *argc, char **argv) {
     selected.clear();
-    vector<ConnectCCMethod>::iterator current;
-    for ( current = all.begin(); current != all.end(); current++ ) {
-      if ( current->ParseCommandLine(argc, argv) )
-	selected.push_back(*current);
-    }
+    vector<ComponentConnectionMethod *>::iterator itr;
+    for ( itr = all.begin(); itr != all.end(); itr++ )
+      if ( (*itr)->ParseCommandLine(argc, argv) )
+	selected.push_back(*itr);
     if ( selected.size() == 0 )
-      selected = ConnectCCMethodCaller::GetDefault();
+      selected = ConnectMapComponents::GetDefault();
   }
 
-  void CreateConnectionMethods();
+  void ConnectComponents(/**/) {
+    vector<ComponentConnectionMethod *>::iterator itr;
+    for ( itr = selected.begin(); itr != selected.end(); itr++ )
+      (*itr)->ConnectComponents();
+  }
 
  private:
-  vector<ConnectCCMethod> all;
-  vector<ConnectCCMethod> selected;
-  //we may want to get rid of connectCC_command_line_options
-  vector<string> connectCC_command_line_options;
+  vector<ComponentConnectionMethod *> all;
+  vector<ComponentConnectionMethod *> selected;
+
+  vector<string> component_connection_command_line_options;//double check whether we want this
 
   //input string options are put in the following variables
   str_param<char*> defaultFile;
   str_param<char*> mapFile; //roadmap
-  n_str_param option_str; //connectCC options
+  n_str_param option_str; //component connection options
 };
