@@ -1132,15 +1132,17 @@ ConnectNodes_ExpandRRT(
       GetCC(*(_rm->m_pRoadmap),(*cc1).second ,cc);
       ModifyRoadMap(&submap1,_rm,cc);
       vector<Cfg> dummyU;
-      RRT(&submap1,
+      if (cc.size()<= _cn.GetSmallCCSize()) {
+        RRT(&submap1,
            _cn.GetIterations(),
            _cn.GetStepFactor() * lpInfo.positionRes,
            dummyU,
            cd, lp, dm, info, lpInfo);
-      vector<VID> verts;
-      (&submap1)->m_pRoadmap->GetVerticesVID(verts);
+        vector<VID> verts;
+        (&submap1)->m_pRoadmap->GetVerticesVID(verts);
       //-- map = map + submap
-      ModifyRoadMap(_rm,&submap1,verts);
+        ModifyRoadMap(_rm,&submap1,verts);
+	}
     cc1++;   submap1.environment = NULL;
     }
 

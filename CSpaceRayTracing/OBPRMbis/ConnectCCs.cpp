@@ -91,7 +91,7 @@ ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
 	RayTmaxBounces = MAX_BOUNCES;
 	RayTmaxRayLength = MAX_RAY_LENGTH;
       }
-    } else if (cnname == string("RRTcomponents")) {
+    } else if ((cnname == string("RRTcomponents")) || (cnname == string("RRTexpand"))) {
       method_name = cnname;
       istrstream input_stream2(connect_CCs_input->option_str.GetValue());
       //CNSets * cnSets = new CNSets();
@@ -181,7 +181,7 @@ PerformConnectCCs(Roadmap * rdmp,CollisionDetection *cd, ConnectMapNodes *cn, Lo
 {
 
   //here is where we will call the proper method from (RRT or RayTracer
-  if (method_name == string("RRTcomponents")) {
+  if ((method_name == string("RRTcomponents")) || (method_name == string("RRTexpand"))) {
     cout << "using RRT to attempt to connect CCs" << endl;
     //The call to RRT from ConnectMapNodes goes here
     CN * cn1;
@@ -194,7 +194,10 @@ PerformConnectCCs(Roadmap * rdmp,CollisionDetection *cd, ConnectMapNodes *cn, Lo
 
     vector<CN> cns = (*cnSets).GetCNs();
     cn1 = cns.begin();
-    ConnectMapNodes::ConnectNodes_RRTConnect(rdmp, &*cd, &*lp, &*dm,
+    if (method_name == string("RRTcomponents"))
+      ConnectMapNodes::ConnectNodes_RRTConnect(rdmp, &*cd, &*lp, &*dm,
+    						(*cn1),(*cn).cnInfo);
+    else ConnectMapNodes::ConnectNodes_ExpandRRT(rdmp, &*cd, &*lp, &*dm,
     						(*cn1),(*cn).cnInfo);
   }
   else if (method_name == string("RayTracer")) {
