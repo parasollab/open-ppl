@@ -30,11 +30,12 @@ then
    os="hp"
 fi
 
-if test  $host = "dove"
+if test  $host = "joefriday"
 then
    m=/usr/local/bin/elm
    dir=/pub/dsmft3/OBPRM/graphValidationData
-   PATH=/pub/dsmft1/Software/sun/bin/:/usr/local/bin:/share/gnu/bin:/share/SUNWspro/bin:/usr/ccs/bin:/usr/bin:/sbin:/usr/sbin
+
+PATH=/pub/dsmft1/Software/sun/bin/:/usr/local/bin:/share/gnu/bin:/share/SUNWspro/bin:/usr/ccs/bin:/usr/bin:/sbin:/usr/sbin::/share/gnu/lib
   export PATH
   TMPDIR=/tmp
   export TMPDIR
