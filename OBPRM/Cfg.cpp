@@ -92,8 +92,7 @@ ClearanceInfo::~ClearanceInfo() {
     
 }
 
-
-CfgManager * Cfg::CfgHelper = new Cfg_free();
+CfgManager * Cfg::cfgType = new Cfg_free();
 
 const char* Cfg::GetName() {
     //return CfgHelper->GetName();
@@ -106,19 +105,27 @@ void Cfg::Normalize_orientation(int index) {
     CfgHelper->Normalize_orientation(*this, index);
 }
 
+void Cfg::createCfgHelper() {
+   CfgHelper = cfgType->create();
+   assert(CfgHelper);
+}
+
 Cfg::Cfg() {
+    createCfgHelper();
     for(int i=0; i<CfgHelper->GetDOF(); ++i)
         v.push_back(0.0);
 }
 
 Cfg::Cfg(const vector<double> &v2)
 {
+    createCfgHelper();
     v = v2;
     Normalize_orientation();
 }
 
 Cfg::Cfg(const Vector6<double> &v2)
 {
+    createCfgHelper();
     for(int i=0; i<6; ++i)
         v.push_back(v2[i]);
     Normalize_orientation();
@@ -129,6 +136,7 @@ Cfg::Cfg(
          double x,double y,double z,
          double roll,double pitch,double yaw) {
     
+    createCfgHelper();
     Vector6<double> tmp(x,y,z,roll,pitch,yaw);
     for(int i=0; i<6; ++i)
         v.push_back(tmp[i]);
@@ -137,13 +145,31 @@ Cfg::Cfg(
 
 Cfg::Cfg(double x,double y,double z) {
     
+    createCfgHelper();
     Vector3D tmp(x,y,z);
     for(int i=0; i<3; ++i)
         v.push_back(tmp[i]);
     Normalize_orientation();
 }
 
+Cfg::Cfg(const Cfg &c) {
+    CfgHelper = c.CfgHelper->clone();
+    v = c.v;
+    info = c.info;
+}
+
 Cfg::~Cfg(){
+    delete CfgHelper;
+}
+
+Cfg & Cfg::operator= (const Cfg&c) {
+    if( this != &c) { // avoid self assignment
+       delete CfgHelper;
+       CfgHelper = c.CfgHelper->clone();
+       v = c.v;
+       info = c.info;
+    } 
+    return *this;
 }
 
 Cfg Cfg::operator+(const Cfg &tmp) const{
@@ -212,7 +238,7 @@ bool Cfg::isWithinResolution(const Cfg&c, double positionRes,double orientationR
 }
 
 Cfg Cfg::InvalidData(){
-    return CfgHelper->InvalidData();
+    return cfgType->InvalidData();
 }
 
 const vector<double>& Cfg::GetData() const {
@@ -226,7 +252,7 @@ Vector3D Cfg::GetRobotCenterPosition(){
 
 // Return the number of degrees of freedom for the configuration class
 int Cfg::DOFs() {
-    return CfgHelper->GetDOF();
+    return cfgType->GetDOF();
 }
 
 // Return the range of a single parameter of the configuration (i.e., range of x)
@@ -322,13 +348,13 @@ Cfg Cfg::c1_towards_c2(Cfg cfg1, Cfg cfg2, double d){
 
 // generates a random configuration without consideration of bounding box restrictions
 Cfg Cfg::GetRandomCfg(double R, double rStep) {
-    return CfgHelper->GetRandomCfg(R,rStep);
+    return cfgType->GetRandomCfg(R,rStep);
 }
 
 // generates random configuration where workspace robot's CENTER OF MASS
 // is guaranteed to lie within the environment specified bounding box
 Cfg Cfg::GetRandomCfg_CenterOfMass(double *boundingBox) {
-    return CfgHelper->GetRandomCfg_CenterOfMass(boundingBox);
+    return cfgType->GetRandomCfg_CenterOfMass(boundingBox);
 }
 
 // generates random configuration where workspace robot's EVERY VERTEX
@@ -473,13 +499,13 @@ Cfg Cfg::MAPRMcollision(Cfg cfg, Environment *_env, CollisionDetection *cd,
 
 Cfg Cfg::GetFreeRandomCfg(Environment *env, CollisionDetection *cd, SID _cdsetid,
                           CDInfo& _cdInfo){
-    return CfgHelper->GetFreeRandomCfg(env, cd, _cdsetid, _cdInfo);
+    return cfgType->GetFreeRandomCfg(env, cd, _cdsetid, _cdInfo);
 }
 
 
 void Cfg::GetNFreeRandomCfgs(vector<Cfg> &nodes, Environment *env,
                  CollisionDetection* cd,SID _cdsetid, CDInfo& _cdInfo, int num) {
-      CfgHelper->GetNFreeRandomCfgs(nodes, env, cd, _cdsetid, _cdInfo, num);
+      cfgType->GetNFreeRandomCfgs(nodes, env, cd, _cdsetid, _cdInfo, num);
 };
 
 
@@ -524,7 +550,7 @@ bool Cfg::InBoundingBox(Environment *env) {
 
 
 Cfg Cfg::GetRandomRay(double incr) {
-    return CfgHelper->GetRandomRay(incr);
+    return cfgType->GetRandomRay(incr);
 }
 
 
@@ -644,7 +670,7 @@ void Cfg::Read(istream &is) {
 }
 
 void Cfg::print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg) {
-    CfgHelper->print_preamble_to_file(env, _fp, numofCfg);
+    cfgType->print_preamble_to_file(env, _fp, numofCfg);
     
 }
 
@@ -791,7 +817,7 @@ bool Cfg::GenerateOverlapCfg(Environment *env,  // although env and robot is not
                              Vector3D robot_goal,
                              Cfg *resultCfg)
 {
-    return CfgHelper->GenerateOverlapCfg(env, robot, robot_start, robot_goal, resultCfg);
+    return cfgType->GenerateOverlapCfg(env, robot, robot_start, robot_goal, resultCfg);
 }
 
 
@@ -806,7 +832,7 @@ Cfg::GenSurfaceCfgs4ObstNORMAL
  int obstacle, int nCfgs, SID _cdsetid, CDInfo& _cdInfo)
 {
     
-    return CfgHelper->GenSurfaceCfgs4ObstNORMAL(env, cd, obstacle, nCfgs, _cdsetid,_cdInfo);
+    return cfgType->GenSurfaceCfgs4ObstNORMAL(env, cd, obstacle, nCfgs, _cdsetid,_cdInfo);
 }
 
 // return a configuration(conformation)'s potential.
