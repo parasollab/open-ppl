@@ -26,6 +26,7 @@
 
 typedef Cfg_fixed_tree CfgType;
 typedef DefaultWeight WeightType;
+#include "ExplicitInstantiation.h"
 
 Input input;
 Stat_Class Stats; 
@@ -51,7 +52,7 @@ int main(int argc, char** argv)
   //----------------------------------------------------
   input.ReadCommandLine(argc,argv);
 
-  CfgType::setNumofJoints(input.numofJoints);
+  CfgType::setNumofJoints(input.numofJoints.GetValue());
   cout << "Cfg_fixed_tree::NumofJoints = " 
        << CfgType::getNumofJoints() << endl;
 
