@@ -140,6 +140,10 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
       for (int i=0; i < info.nodes.size(); i++) {
            info.nodes[i].info.clearance = info.nodes[i].ApproxCSpaceClearance(_rm->environment, cd, info.cdsetid, info.cdInfo, dm, info.dmsetid, 7);
       }
+  } else {
+    for (int i=0; i < info.nodes.size(); i++) {
+      info.nodes[i].info.clearance = -1;
+    }
   }
 
   // if that's what the user wants
