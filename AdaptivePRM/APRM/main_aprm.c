@@ -24,6 +24,15 @@
 #include "GMSPolyhedron.h"
 #include "MultiBody.h"
 
+extern "C"{
+#include <stdio.h>
+#include "qhull.h"
+#include "poly.h"
+#include "qset.h"
+
+char qh_version[] = "Hull";
+}
+
 MyInput input;
 Stat_Class Stats; 
 void PrintRawLine( ostream& _os,
@@ -145,6 +154,13 @@ int main(int argc, char** argv)
 	P = *(createHullPolyhedron(realMB));
 	break;
       }
+
+      /*
+      char filename[100];
+      sprintf(filename,"shape%d.g",i);
+      ofstream os(filename);
+      P.WriteBYU(os);
+      */
 
       if( realMB->GetFreeBodyCount() ) {
 	FreeBody* freeBody = new FreeBody(approxMB,P);
@@ -305,7 +321,7 @@ GMSPolyhedron* createBBoxPolyhedron(MultiBody* mb) {
 
   //create polyhedron file in BYU format
   char polyhedron[1000];
-  sprintf(polyhedron,"1 8 6 1 1 1\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n5 6 -8\n1 3 -4\n2 6 -8\n1 3 -7\n7 8 -4\n1 2 -6\n",minx,miny,minz,minx,miny,maxz,minx,maxy,minz,minx,maxy,maxz,maxx,miny,minz,maxx,miny,maxz,maxx,maxy,minz,maxx,maxy,maxz);
+  sprintf(polyhedron,"1 8 12 1 1 1\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n8 4 -2\n8 2 -6\n8 7 -3\n8 3 -4\n8 6 -5\n8 5 -7\n4 3 -1\n4 1 -2\n7 5 -1\n7 1 -3\n6 2 -1\n6 1 -5\n",minx,miny,minz,minx,miny,maxz,minx,maxy,minz,minx,maxy,maxz,maxx,miny,minz,maxx,miny,maxz,maxx,maxy,minz,maxx,maxy,maxz);
 
   //init polyhedron
   istrstream is(polyhedron);
@@ -324,10 +340,8 @@ GMSPolyhedron* createBSpherePolyhedron(MultiBody* mb) {
 
 GMSPolyhedron* createHullPolyhedron(MultiBody* mb) {
   GMSPolyhedron* p = new GMSPolyhedron();
-  GMSPolyhedron* real_p = &(mb->GetBody(0)->GetPolyhedron());
 
-  /*
-  //set up variables
+  //set up qhull variables
   int curlong, totlong, exitcode;
   static char* options="qhull Qs Qx QJ i Tcv C-0";
   facetT *facet;
@@ -336,12 +350,17 @@ GMSPolyhedron* createHullPolyhedron(MultiBody* mb) {
   setT *vertices;
   
   //put points in qhullData array
-  int size=real_p->numvertices;
+  int size = 0;
+  for (int i=0; i<mb->GetBodyCount(); i++)
+    size += mb->GetBody(i)->GetPolyhedron().numVertices;
   coordT* qhullData = new coordT[size*3];
-  for(int i=0; i<size; i++) {
-    qhullData[i*3+0] = real_p->vertexList[i].getX();
-    qhullData[i*3+1] = real_p->vertexList[i].getY();
-    qhullData[i*3+2] = real_p->vertexList[i].getZ();
+  for(int i=0; i<mb->GetBodyCount(); i++) {
+    GMSPolyhedron* real_p = &(mb->GetBody(i)->GetPolyhedron());
+    for(int j=0; j<real_p->numVertices; j++) {
+      qhullData[j*3+0] = real_p->vertexList[j].getX();
+      qhullData[j*3+1] = real_p->vertexList[j].getY();
+      qhullData[j*3+2] = real_p->vertexList[j].getZ();
+    }
   }
   
   //initialize qh
@@ -349,7 +368,7 @@ GMSPolyhedron* createHullPolyhedron(MultiBody* mb) {
   exitcode = setjmp(qh errexit);
   if(exitcode) {
     cerr << "error building convex hull of Polyhedron \a" << endl;
-    cerror << "exitcode: " << exitcode << endl;
+    cerr << "exitcode: " << exitcode << endl;
     delete qhullData;
     qh NOerrexit = True;
     qh_freeqhull(!qh_ALL);
@@ -360,7 +379,7 @@ GMSPolyhedron* createHullPolyhedron(MultiBody* mb) {
   qh_init_B(qhullData, size, 3, false);
   
   //run
-  qh_hull();
+  qh_qhull();
   qh_check_output();
   
   //copy points into vertex list
@@ -369,50 +388,58 @@ GMSPolyhedron* createHullPolyhedron(MultiBody* mb) {
     Vector3D tmp(vertex->point[0], vertex->point[1], vertex->point[2]);
     polyVertices.push_back(tmp);
   }
-  
+    
   //copy polygon surfaces
   vector<vector<int> > polyFacets;
   int count = 0;
   FORALLfacets {
+    vector<int> tmpFacetList;
     vertices = qh_facet3vertex(facet);
     FOREACHvertex_(vertices) {
       Vector3D tmp(vertex->point[0], vertex->point[1], vertex->point[2]);
       //find index
       int index = -1;
       for (int i=0; i<polyVertices.size(); i++) {
-	if(polyVerticies[i] == tmp) {
+	if(polyVertices[i] == tmp) {
 	  index = i;
 	  break;
 	}
       }
-      polyFacets[count].push_back(index);
+      if(index == -1) {
+	cout << "\n\nERROR: in createHullPolyhedron, didn't find vertex in list\n";
+	exit(-1);
+      }
+      tmpFacetList.push_back(index);
     }
+    polyFacets.push_back(tmpFacetList);
     count++;
   }
-  
-  //create polyhedron file in BYU format
-  char polyhedron[1000], tmp[100];
 
-  sprintf(polyhedron, "1 %d %d 1 1 1\n", polyVertices.size(), polyFacets.size());
+  //create polyhedron file in BYU format
+  char polyhedron[10000];
+  char tmp[100];
+
+  sprintf(tmp, "1 %d %d 1 1 1\n", polyVertices.size(), polyFacets.size());
+  strcpy(polyhedron,tmp);
 
   for(int i=0; i<polyVertices.size(); i++) {
     sprintf(tmp, "%f %f %f\n", polyVertices[i].getX(), polyVertices[i].getY(), polyVertices[i].getZ());
-    polyhedron = strcat(polyhedron, tmp);
+    strcat(polyhedron, tmp);
   }
 
   for(int i=0; i<polyFacets.size(); i++)
     for(int j=0; j<polyFacets[i].size(); j++) {
       if(j == polyFacets[i].size()-1) { //last one
-        sprintf(tmp, "-%d\n", polyFacets[i][j]);
+        sprintf(tmp, "-%d\n", polyFacets[i][j]+1);
       } else {
-        sprintf(tmp, "%d ", polyFacets[i][j]);
+        sprintf(tmp, "%d ", polyFacets[i][j]+1);
       }
-      polyhedron = strcat(polyhedron, tmp);
+      strcat(polyhedron, tmp);
     }
   
   //init polyhedron
   istrstream is(polyhedron);
-  p->Read(is);
+  p->ReadBYU(is);
   //p->Write(cout);
 
   //release qhull data
@@ -420,7 +447,6 @@ GMSPolyhedron* createHullPolyhedron(MultiBody* mb) {
   qh NOerrexit = True;
   qh_freeqhull(!qh_ALL);
   qh_memfreeshort(&curlong, &totlong);
-  */
 
   return p;
 }
