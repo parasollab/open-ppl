@@ -1,4 +1,4 @@
-// $Id$
+// $Iwd: Input.cpp,v 1.8 2000/06/16 01:56:26 obprm Exp $
 /////////////////////////////////////////////////////////////////////
 //  Input.c
 //
@@ -25,13 +25,17 @@
 #include "Cfg_free_serial.h"
 
 
-// J Kim, need for retreiving default parameters
+// Need for retreiving default parameters of each
 // in executing the parameter "-defaults"
 #include "LocalPlanners.h"
 #include "DistanceMetrics.h"
 #include "ConnectMapNodes.h"
 #include "GenerateMapNodes.h"
 #include "CollisionDetection.h"
+// default of Cfg is set in Cfg.cpp and seems the information cannot be
+// retreived in Input.cpp. So, if the default is changed in Cfg.cpp,
+// it must be changed here also for correct information display
+char Cfg_default_string[] = "Cfg_free_rigid";
 
 //----------------------------------------
 //  string (mostly) parameter ( n fields acknowledged from argv )
@@ -113,21 +117,21 @@ Input::Input():
         envFile          ("-envFile"),
         mapFile          ("-outmapFile"),
         inmapFile        ("-inmapFile"),
-				       //  default   min,max
+                       //  default   min,max
         numEdges         ("-edges",              5,  1, 5000),
         numShells        ("-nshells",            3,  1,   50),
         numNodes         ("-nodes",             10,  1,50000),
         numNodesPerObst  ("-nodesPerObst",      10,  1, 5000),
         lineSegment      ("-lineSegment",        0,  0, 5000),
         usingClearance   ("-clearance",          0,  0,    1),
-	addPartialEdge   ("-addPartialEdge",     0,  0,    1),
+    addPartialEdge   ("-addPartialEdge",     0,  0,    1),
         proportionSurface("-proportionSurface",1.0,  0,  1.0),
         posres           ("-posres",          0.05, -1000, 1000),
         orires           ("-orires", ORIENTATION_RES, -1000, 1000),
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
         bbox             ("-bbox",""),
-        collPair         ("-collPair","cM rT "),	// center of Mass
-        freePair         ("-freePair","cM rV ")  	// center of Mass
+        collPair         ("-collPair","cM rT "),    // center of Mass
+        freePair         ("-freePair","cM rV ")     // center of Mass
         {
     // brc added
 /*
@@ -175,7 +179,7 @@ Input::Input():
         "\n\t\t\t  cM_rV \"cg/random vertex\""
         "\n\t\t\t  rV_rT \"random vertex/point in random          triangle\""
         "\n\t\t\t  rV_rW \"random vertex/point in random weighted triangle\""
-	"\n\t\t\t  N_rT  \"normal of random triangle\""
+    "\n\t\t\t  N_rT  \"normal of random triangle\""
         "\n\t\t\t  all   \"all of the above\""
         );
     freePair.PutDesc   ("STRING STRING","\n\t\t\tSame as above"
@@ -203,7 +207,7 @@ Input::Input():
         CDstrings[i]=new n_str_param("-cd");
     numCFGs = 0;
     for (i=0;i<MAX_CFG;++i)
-	CFGstrings[i] = new n_str_param("-cfg");
+    CFGstrings[i] = new n_str_param("-cfg");
     numDMs = 0;
     for (i=0;i<MAX_DM;++i)
         DMstrings[i]=new n_str_param("-dm");
@@ -239,18 +243,28 @@ Input::Input():
         "\n\t\t\t  cstk"
 #endif
 #ifdef USE_RAPID
-	"\n\t\t\t  RAPID"
+    "\n\t\t\t  RAPID"
 #endif
 #ifdef USE_VCLIP
         "\n\t\t\t  vclip"
 #endif
         );
-    CFGstrings[0]->PutDesc("STRING",
-        "\n\t\t\tPick one: default Cfg_free_rigid(i.e. Cfg_free)"
-	"\n\t\t\t  Cfg_free_rigid"
-        "\n\t\t\t  Cfg_fixed_PRR"
-        "\n\t\t\t  Cfg_free_serial"
-        );
+
+    char Cfg_string_1[300];
+
+    strcpy(Cfg_string_1, "\n\t\t\tPick one: default ");
+    // Cfg_default_string was defined in line 38, and used in line 604 again.
+    // If default Cfg in Cfg.cpp is changed, then the initialization of
+    // Cfg_default_string in line 38 must be changed accordingly.
+    strcat(Cfg_string_1, Cfg_default_string);
+    if (!strcmp(Cfg_default_string, "Cfg_free_rigid"))
+      strcat(Cfg_string_1, " (i.e. Cfg_free)");
+    strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_rigid");
+    strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_PRR");
+    strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_serial");
+
+    CFGstrings[0]->PutDesc("STRING", Cfg_string_1);
+
     DMstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick one: default scaledEuclidean 0.9"
         "\n\t\t\t  euclidean"
@@ -282,7 +296,7 @@ Input::~Input() {
     for (int m=0; m<MAX_MULTIBODY; m++){
         fprintf(stderr,"%d\n",m);
         delete []fixedbodyFileName[m];
-	delete []freebodyFileName[m];
+    delete []freebodyFileName[m];
     }
 }
 
@@ -302,8 +316,8 @@ void Input::ReadCommandLine(int argc, char** argv){
   //-- Initialize error message
   char ERROR_MutualExclusive[300];
   sprintf(ERROR_MutualExclusive,"\nERROR: \"%s\" & \"%s\" options are "
-	"mutually exclusive on the command line.\n",
-	numNodes.GetFlag(),numNodesPerObst.GetFlag());
+    "mutually exclusive on the command line.\n",
+    numNodes.GetFlag(),numNodesPerObst.GetFlag());
 
 #ifdef USE_VCLIP
    cdtype= VCLIP;
@@ -321,7 +335,7 @@ void Input::ReadCommandLine(int argc, char** argv){
   try {
 
     if (argc == 1)
-	throw BadUsage();
+    throw BadUsage();
 
     // process input parameter "-defaults"
     else if ((argc == 2) && (!strcmp(argv[1], "-defaults"))) {
@@ -331,10 +345,10 @@ void Input::ReadCommandLine(int argc, char** argv){
 
     for (int i=1;i<argc; ++i) {
         if ( defaultFile.AckCmdLine(&i, argc, argv) ){
-	  char tmp[80];
-	  strcpy(tmp, defaultFile.GetValue() ); strcat(tmp,".env");
+      char tmp[80];
+      strcpy(tmp, defaultFile.GetValue() ); strcat(tmp,".env");
           envFile.PutValue(tmp);
-	  strcpy(tmp, defaultFile.GetValue() ); strcat(tmp,".map");
+      strcpy(tmp, defaultFile.GetValue() ); strcat(tmp,".map");
           mapFile.PutValue(tmp);
         } else if ( descDir.AckCmdLine(&i, argc, argv) ) {
         } else if ( envFile.AckCmdLine(&i, argc, argv) ) {
@@ -346,7 +360,7 @@ void Input::ReadCommandLine(int argc, char** argv){
         } else if ( numShells.AckCmdLine(&i, argc, argv) ) {
         } else if ( lineSegment.AckCmdLine(&i, argc, argv) ) {
         } else if ( usingClearance.AckCmdLine(&i, argc, argv) ) {
-	} else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
+    } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
         } else if ( collPair.AckCmdLine(&i, argc, argv) ) {
         } else if ( freePair.AckCmdLine(&i, argc, argv) ) {
         } else if ( proportionSurface.AckCmdLine(&i, argc, argv) ) {
@@ -362,25 +376,25 @@ void Input::ReadCommandLine(int argc, char** argv){
         } else if ( LPstrings[numLPs]->AckCmdLine(&i, argc, argv) ) {
                 numLPs++;
         } else if ( CDstrings[numCDs]->AckCmdLine(&i, argc, argv) ) {
-		if (!(strncmp(CDstrings[numCDs]->GetValue(),"cstk",4))) {
+        if (!(strncmp(CDstrings[numCDs]->GetValue(),"cstk",4))) {
 #ifdef USE_CSTK
-			cdtype = CSTK;
+            cdtype = CSTK;
 #else
      cout << "CSTK is not supported by current collision detection library. \n Please recompile with  CSTK .\n";
     exit(5);
 
 #endif
 
-		}else if (!(strncmp(CDstrings[numCDs]->GetValue(),"vclip",5))) {
+        }else if (!(strncmp(CDstrings[numCDs]->GetValue(),"vclip",5))) {
 
 #ifdef USE_VCLIP
-			cdtype = VCLIP;
+            cdtype = VCLIP;
 #else
      cout << "VCLIP is not supported by current collision detection library. \n Please recompile with   VCLIP .\n";
     exit(5);
 #endif
 
-		}else if (!(strncmp(CDstrings[numCDs]->GetValue(),"RAPID",5))) {
+        }else if (!(strncmp(CDstrings[numCDs]->GetValue(),"RAPID",5))) {
 #ifdef USE_RAPID
 
                         cdtype = RAPID;
@@ -391,7 +405,7 @@ void Input::ReadCommandLine(int argc, char** argv){
 
                 }
                 numCDs++;
-	} else if ( CFGstrings[numCFGs]->AckCmdLine(&i, argc, argv) ) {
+    } else if ( CFGstrings[numCFGs]->AckCmdLine(&i, argc, argv) ) {
                 numCFGs++;
         } else if ( DMstrings[numDMs]->AckCmdLine(&i, argc, argv) ) {
                 numDMs++;
@@ -406,11 +420,11 @@ void Input::ReadCommandLine(int argc, char** argv){
         numofJoints = 3;
         cfgstr >> cfgName;
         if(cfgstr) {
-	    cfgstr >> numofJoints;
-	    if(numofJoints < 0 || numofJoints > 1000) {
-	        cerr << "Error in Input.c, wrong input for numofJoints !" << endl;
-	        exit(2);
-	    }
+        cfgstr >> numofJoints;
+        if(numofJoints < 0 || numofJoints > 1000) {
+            cerr << "Error in Input.c, wrong input for numofJoints !" << endl;
+            exit(2);
+        }
         }
         if (!(strncmp(cfgName,"Cfg_free_rigid",14))) {
             Cfg::CfgHelper = new Cfg_free();
@@ -426,8 +440,8 @@ void Input::ReadCommandLine(int argc, char** argv){
     //-- Do some clean up and final checking
 
     if ( !defaultFile.IsActivated() &&
-	 !( envFile.IsActivated() && mapFile.IsActivated() )){
-    	throw BadUsage();
+     !( envFile.IsActivated() && mapFile.IsActivated() )){
+        throw BadUsage();
     }
 
     if ( inmapFile.IsActivated() ){
@@ -435,8 +449,8 @@ void Input::ReadCommandLine(int argc, char** argv){
     }
 
     if ( numNodesPerObst.IsActivated() && numNodes.IsActivated() ) {
-	cout << ERROR_MutualExclusive;
-	throw BadUsage();
+    cout << ERROR_MutualExclusive;
+    throw BadUsage();
     }
 
     descDir.VerifyValidDirName();
@@ -484,7 +498,7 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; freePair.PrintUsage(_os);
         _os << "\n  "; lineSegment.PrintUsage(_os);
         _os << "\n  "; usingClearance.PrintUsage(_os);
-	_os << "\n  "; addPartialEdge.PrintUsage(_os);
+    _os << "\n  "; addPartialEdge.PrintUsage(_os);
         _os << "\n  "; bbox.PrintUsage(_os);
         _os << "\n  "; bbox_scale.PrintUsage(_os);
         _os << "\n  "; posres.PrintUsage(_os);
@@ -494,8 +508,10 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; CNstrings[0]->PrintUsage(_os);
         _os << "\n  "; LPstrings[0]->PrintUsage(_os);
         _os << "\n  "; CDstrings[0]->PrintUsage(_os);
-	_os << "\n  "; CFGstrings[0]->PrintUsage(_os);
+    _os << "\n  "; CFGstrings[0]->PrintUsage(_os);
         _os << "\n  "; DMstrings[0]->PrintUsage(_os);
+
+        _os << "\n\n  to see default values only, type \"obprm -defaults\" ";
 
     cout.setf(ios::right,ios::adjustfield);
 
@@ -555,61 +571,85 @@ PrintValues(ostream& _os){
 };
 
 
-// added by J Kim
+// if the input parameter is "-defaults", print defaults and exit program
 void
 Input::PrintDefaults(){
 
-   cout << "defaultFile : no default string for this parameter" << endl;
-   cout << " (the parameters not listed here have no default value)" << endl;
-   cout << "numEdges : " << numEdges.GetDefault() << endl;
-   cout << "numShells : " << numShells.GetDefault() << endl;
-   cout << "numNodes : " << numNodes.GetDefault() << endl;
-   cout << "numNodesPerObst : " << numNodesPerObst.GetDefault() << endl;
-   cout << "lineSegment : " << lineSegment.GetDefault() << endl;
-   cout << "usingClearance : " << usingClearance.GetDefault() << endl;
-   cout << "addPartialEdge : " << addPartialEdge.GetDefault() << endl;
-   cout << "proportionSurface : " << proportionSurface.GetDefault() << endl;
-   cout << "posres : " << posres.GetDefault() << endl;
-   cout << "orires : " << orires.GetDefault() << endl;
-   cout << "bbox_scale : " << bbox_scale.GetDefault() << endl;
-   cout << "bbox : " << bbox.GetDefault() << endl;
-   cout << "collPair : " << collPair.GetDefault() << endl;
-   cout << "freePair : " << freePair.GetDefault() << endl;
-   cout << "orires : " << orires.GetDefault() << endl;
-   cout << "Cfg : Cfg_free_rigid" << endl;
+   int FW  = 30;
+   int F   =  8;
 
-   // get default parameter by initializing each class and
-   // looking into each Info classes. 
-   GenerateMapNodes gn;
-   cout << "gn : " << endl;
-   if (gn.gnInfo.gnsetid == BASICPRM)
-     cout << "Basic PRM" << endl;
-   else if (gn.gnInfo.gnsetid == BASICOBPRM)
-     cout << "Basic OBPRM" << endl;
+   cout << setw(FW) << "defaultFile : no default string for this parameter" << endl;
+   cout << setw(FW) << " (those parameters not listed here have no default value)" << endl << endl;
+   cout << setw(FW) << "number of edges" << " (" << numEdges.GetFlag() << "): " <<
+            numEdges.GetDefault() << endl << endl;
+   cout << setw(FW) << "number of shells" << " (" << numShells.GetFlag() << ") : " <<
+            numShells.GetDefault() << endl << endl;
+   cout << setw(FW) << "number of nodes" << " (" << numNodes.GetFlag() << ") : " <<
+            numNodes.GetDefault() << endl << endl;
+   cout << setw(FW) << "number of nodes per obstacle" << " (" << numNodesPerObst.GetFlag() <<
+           ") : " << numNodesPerObst.GetDefault() << endl << endl;
+   cout << setw(FW) << "line segment" << " (" << lineSegment.GetFlag() << ") : " <<
+            lineSegment.GetDefault() << endl << endl;
+   cout << setw(FW) << "using clearance" << " (" << usingClearance.GetFlag() << ") : " <<
+            usingClearance.GetDefault() << endl << endl;
+   cout << setw(FW) << "add partial edge" << " (" << addPartialEdge.GetFlag() << ") : " <<
+            addPartialEdge.GetDefault() << endl << endl;
+   cout << setw(FW) << "proportion surface" << " (" << proportionSurface.GetFlag() << ") : " <<
+            proportionSurface.GetDefault() << endl << endl;
+   cout << setw(FW) << "position resolution" << " (" << posres.GetFlag() << ") : " <<
+            posres.GetDefault() << endl << endl;
+   cout << setw(FW) << "orientation resolution" << " (" << orires.GetFlag() << ") : " <<
+            orires.GetDefault() << endl << endl;
+   cout << setw(FW) << "bounding box scale" << " (" << bbox_scale.GetFlag() << ") : " <<
+            bbox_scale.GetDefault() << endl << endl;
+   cout << setw(FW) << "collision pair" << " (" << collPair.GetFlag() << ") : " <<
+            collPair.GetValue() << endl << endl;
+   cout << setw(FW) << "free pair" << " (" << freePair.GetFlag() << ") : " <<
+            freePair.GetValue() << endl << endl;
+   cout << setw(FW) << "Cfg" << " (" << CFGstrings[0]->GetFlag() << ") : " << Cfg_default_string << endl << endl;
 
-   ConnectMapNodes cn;
-   cout << "cn  : " << endl;
-   if (cn.cnInfo.cnsetid == CLOSEST10)
-     cout << "closest 10" << endl;
-   else if (cn.cnInfo.cnsetid == CLOSEST20)
-     cout << "closest 20" << endl;
-   else if (cn.cnInfo.cnsetid == RANDOM)
-     cout << "random" << endl;
+   // get default parameters by initializing each class
+   // for some, need to call UserInit() to add sets so that we can display
 
+   // there are possibly many sets available and the particular one
+   // "selected" is recognized by the setid number.
 
+   // Generate Map Nodes
+   GenerateMapNodes gn;         // default value of gnInfo.gnsetid is set
+   Environment env;
+   cout << setw(FW) << "Generate Map Nodes" << " (" << GNstrings[0]->GetFlag() <<
+      ") : default set id = " << gn.gnInfo.gnsetid;
+   gn.UserInit(this, &env);      // to dsiplay, add GN sets
+   gn.generators.DisplayGNSet(gn.gnInfo.gnsetid);
+
+   // Connect Map Nodes
+   ConnectMapNodes cn;          // default value of cnInfo.cnsetid is set
+   cout << setw(FW) << endl << endl << "Connect Map Nodes" << " (" << CNstrings[0]->GetFlag() <<
+      ") : default set id = " << cn.cnInfo.cnsetid;
+   cn.UserInit(this);           // to dsiplay, add CN sets
+   cn.connectors.DisplayCNSet(cn.cnInfo.cnsetid);
+
+   // Local Planners
    LocalPlanners lp;
-   cout << endl << "lp : " << endl;
-   lp.planners.DisplayLPSets();
+   // this defulat is already set in ConnectMapNodes::DefaultInit()
+   cout << setw(FW) << endl << endl << "Local Planners" << " (" << LPstrings[0]->GetFlag() <<
+      ") : default set id = " << cn.cnInfo.lpsetid;
+   lp.planners.DisplayLPSet(cn.cnInfo.lpsetid); // LP set was already added
 
+   // Distance Metric
    DistanceMetric dm;
-   cout << endl << endl << "dm : " << endl;
-   dm.distanceMetrics.DisplayDMSets();
+   // this defulat is already set in ConnectMapNodes::DefaultInit()
+   cout << setw(FW) << endl << endl << "Distance Metric" << " (" << DMstrings[0]->GetFlag() <<
+      ") : default set id = " << cn.cnInfo.dmsetid;
+   dm.distanceMetrics.DisplayDMSet(cn.cnInfo.dmsetid); // DM set was already added
 
-   // without UserInit, no information is printed
+   // Collision Detection
    CollisionDetection cd;
-   cout << endl << endl << "cd : " << endl;
-   cd.UserInit(this,   &gn, &cn );
-   cd.collisionCheckers.DisplayCDSets();
+   // this defulat is already set in ConnectMapNodes::DefaultInit()
+   cout << setw(FW) << endl << endl << "Collision Detection" << " (" << CDstrings[0]->GetFlag() <<
+      ") : default set id = " << cn.cnInfo.cdsetid;
+   cd.UserInit(this, &gn, &cn);
+   cd.collisionCheckers.DisplayCDSet(cn.cnInfo.cdsetid);
 
    cout << endl << flush;
 }
@@ -689,19 +729,19 @@ void Input::Read(istream & _is) {
                // Data file name for fixed body
                _is >> tmpFilename;
                strcpy(fixedbodyFileName[m][FixedBodyCount[m]-1],
-			descDir.GetValue());
+            descDir.GetValue());
                strcat(fixedbodyFileName[m][FixedBodyCount[m]-1],
-			tmpFilename);
+            tmpFilename);
                VerifyFileExists(fixedbodyFileName[m][FixedBodyCount[m]-1]);
                strcpy(tmpFilename,"");
 
                //if (i==0){  // for the very first body
- 	       // Now for every fixed body 10/15/99
+           // Now for every fixed body 10/15/99
 
                fixedbodyPosition[m][FixedBodyCount[m]-1] = Vector3D(_is);
                Vector3D angles = Vector3D(_is);
                fixedbodyOrientation[m][FixedBodyCount[m]-1] = Orientation(Orientation::FixedXYZ,
-	                 angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
+                     angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
 
                //}
             }
@@ -713,20 +753,20 @@ void Input::Read(istream & _is) {
                BodyIndex[m][i] = FreeBodyCount[m] - 1;
                _is >> tmpFilename;
                strcpy(freebodyFileName[m][FreeBodyCount[m]-1],
-			descDir.GetValue());
+            descDir.GetValue());
                strcat(freebodyFileName[m][FreeBodyCount[m]-1],
-			tmpFilename);
+            tmpFilename);
                VerifyFileExists(freebodyFileName[m][FreeBodyCount[m]-1]);
                strcpy(tmpFilename,"");
 
                if (i==0){  // for the very first body
-	       // this whole 'if' statements should be got rid of later. not in use.
-	       // the only purpose here is to be able to use old environment file. Guang 10/15/99
+           // this whole 'if' statements should be got rid of later. not in use.
+           // the only purpose here is to be able to use old environment file. Guang 10/15/99
                    freebodyPosition[m] = Vector3D(_is);
 
-	           Vector3D angles = Vector3D(_is);
-	           freebodyOrientation[m] = Orientation(Orientation::FixedXYZ,
-	           angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
+               Vector3D angles = Vector3D(_is);
+               freebodyOrientation[m] = Orientation(Orientation::FixedXYZ,
+               angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
                }
             }
 
@@ -747,7 +787,7 @@ void Input::Read(istream & _is) {
                 transformPosition[m][i] = Vector3D(_is);
                 Vector3D angles = Vector3D(_is);
                 transformOrientation[m][i] = Orientation(Orientation::FixedXYZ,
-		   angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
+           angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
 
                 _is >> dhparameters[m][i].alpha;          // DH parameter, alpha
                 _is >> dhparameters[m][i].a;              // DH parameter, a
@@ -760,9 +800,9 @@ void Input::Read(istream & _is) {
                 else
                    connectionType[m][i] = 1;              // Prismatic type
 
-		positionToDHFrame[m][i] = Vector3D(_is);
-		angles = Vector3D(_is);
-		orientationToDHFrame[m][i] = Orientation(Orientation::FixedXYZ,
+        positionToDHFrame[m][i] = Vector3D(_is);
+        angles = Vector3D(_is);
+        orientationToDHFrame[m][i] = Orientation(Orientation::FixedXYZ,
                    angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
         }
 
@@ -845,12 +885,12 @@ void Input::ReadEnvFile(istream& _myistream) {
 //===================================================================
 void Input::PrintBodyNames() {
   for (int m=0; m<MAX_MULTIBODY; m++){
-	if (strcmp(*fixedbodyFileName[m], "") ||
-		strcmp(*freebodyFileName[m], "") ) {
+    if (strcmp(*fixedbodyFileName[m], "") ||
+        strcmp(*freebodyFileName[m], "") ) {
            cout << "\n fixedbodyFileName["<<m<<"] = ("
                 << *fixedbodyFileName[m] << ")  ";
            cout << " freebodyFileName["<<m<<"] = ("
                 << *freebodyFileName[m] << ")  ";
-	}
+    }
   }
 };
