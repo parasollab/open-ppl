@@ -126,6 +126,17 @@ public:
   /** Helper Methods*/
   //===================================================================
   //@{
+	
+	/**
+	 *set vector value by arrary, this array should have size "SIZE".
+     *This method will NOT check the length of given array, if
+	 *the actural size of given array is different from Size of this instance
+	 *, memory access violation might occur.
+	 *@param pElem A array of length "SIZE"
+	 *@postcondition #v will contain values in pElem
+	 */
+	virtual void setValue( const ELEMENT * pElem );
+
 	/// Query for dimension(ie, size) of vector
     inline int size() const;
 
@@ -300,6 +311,21 @@ VectorConstantSize<SIZE,ELEMENT>::operator!=(const VectorConstantSize & aa)const
 // Helper functions
 //
 //=====================================================================
+
+template<int SIZE,class ELEMENT>
+void VectorConstantSize<SIZE,ELEMENT>::setValue( const ELEMENT * pElem )
+{
+	if( pElem==NULL ) return; //huh.. given value is null, give up
+
+	//clean elements in v
+	v.clear();
+
+	for( int i=0;i<SIZE;i++ )
+	{
+		v.push_back(pElem[i]);
+	}
+}
+
 template<int SIZE,class ELEMENT>
 int VectorConstantSize<SIZE,ELEMENT>::size()const{
 	return SIZE;
