@@ -48,17 +48,12 @@ int main(int argc, char** argv)
 
   Query<CfgType, WeightType> query(&input,&Qinput, &cd, &dm, &lp,&cm);
 
-  cd.UserInit(&input,   &gn, &cm );
-  lp.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype, cm.cdsetid, true);
-  dm.UserInit(&input,   &gn, &cm );
+  cd.ReadCommandLine(input.CDstrings, input.numCDs);
+  lp.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype, true);
+  dm.ReadCommandLine(input.DMstrings, input.numDMs);
   gn.ReadCommandLine(input.GNstrings, input.numGNs);
   cm.ReadCommandLine(&input, query.rdmp.GetEnvironment());
   
-  /** set up set ids for query stage. And this has been 
-      done after cm has been set up */
-  query.initDefaultSetIDs(&cm);
-
-
   Qinput.PrintValues(cout);
 
   //---------------------------
