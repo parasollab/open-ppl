@@ -176,14 +176,15 @@ BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GN
 
    // PRM style node generation -- generate in expanded bounding box
    for (int i=0; i < _gn.numNOdes.GetValue(); i++ ) {
-      Cfg cfg = Cfg::GetRandomCfg(_env);
+      Cfg cfg = Cfg::GetFreeRandomCfg(_env,cd,_info.cdsetid,_info.cdInfo);
+      //Cfg cfg = Cfg::GetRandomCfg(_env);
 
-      if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) {
-         _info.nodes.push_back(Cfg(cfg));
-         #if INTERMEDIATE_FILES
-       path.push_back(cfg);
-         #endif
-      }
+      //if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) {
+      _info.nodes.push_back(cfg);
+      #if INTERMEDIATE_FILES
+         path.push_back(cfg);
+      #endif
+      //}
    }
 
    #if INTERMEDIATE_FILES
