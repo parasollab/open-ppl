@@ -37,20 +37,16 @@ LPInfo::LPInfo(Roadmap *rm, const CNInfo& cnInfo) {
 int LocalPlanners::lineSegmentLength = 0;  // default value
 bool LocalPlanners::usingClearance = 0;
 
-#ifdef USE_CSTK
-cd_predefined LocalPlanners::cdtype = CSTK;
-#endif
-
-#ifndef USE_CSTK
-#ifdef USE_RAPID
-cd_predefined LocalPlanners::cdtype = RAPID;
-#endif
-#endif
-
-#ifndef USE_CSTK
-#ifndef USE_RAPID
-#cd_predefined LocalPlanners::cdtype = VCLIP
-#endif
+#if defined USE_CSTK
+    cd_predefined LocalPlanners::cdtype = CSTK;
+#elif defined USE_RAPID
+    cd_predefined LocalPlanners::cdtype = RAPID;
+#elif defined USE_PQP
+    cd_predefined LocalPlanners::cdtype = PQP;
+#elif defined USE_VCLIP
+    cd_predefined LocalPlanners::cdtype = VCLIP;
+#else
+    #error You have to specify at least one collision detection library.
 #endif
 
 /////////////////////////////////////////////////////////////////////

@@ -43,10 +43,10 @@ ConnectMapNodes(){
    DefaultInit(); 
 };
 
+
 ConnectMapNodes::
 ~ConnectMapNodes(){
 };
-
 
 
 void 
@@ -58,17 +58,21 @@ DefaultInit(){
     cnInfo.cnsetid = CLOSEST10;
     cnInfo.lpsetid = SL_R5;
     cnInfo.dmsetid = S_EUCLID9;
-#ifdef USE_CSTK
-    cnInfo.cdsetid = CSTK;
-#else
-    cnInfo.cdsetid = RAPID;
-#endif
 
+#if defined USE_CSTK
+    cnInfo.cdsetid = CSTK;
+#elif defined USE_RAPID
+    cnInfo.cdsetid = RAPID;
+#elif defined USE_PQP
+    cnInfo.cdsetid = PQP;
+#elif defined USE_VCLIP
+    cnInfo.cdsetid = VCLIP;
+#else
+    #error You have to specify at least one collision detection library.
+#endif
 
     cnInfo.dupeEdges = cnInfo.dupeNodes = 0;
     cnInfo.gn.gnInfo.gnsetid = -1;
-
-
 };
 
 

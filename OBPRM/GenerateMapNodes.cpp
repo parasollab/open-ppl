@@ -65,10 +65,16 @@ DefaultInit()
     // The default algorithms are specified
     //-----------------------------------------------
     gnInfo.gnsetid = BASICPRM;
-#ifdef USE_CSTK
+#if defined USE_CSTK
     gnInfo.cdsetid = CSTK;
-#else
+#elif defined USE_RAPID
     gnInfo.cdsetid = RAPID;
+#elif defined USE_PQP
+    gnInfo.cdsetid = PQP;
+#elif defined USE_VCLIP
+    gnInfo.cdsetid = VCLIP;
+#else
+    #error You have to specify at least one collision detection library.
 #endif
     gnInfo.dmsetid = S_EUCLID9;
 };

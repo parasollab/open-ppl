@@ -599,8 +599,8 @@ IsInCollision_PQP
 			
 			if(PQP_Collide(&result, t1.orientation.matrix, p1, rob,
 				t2.orientation.matrix, p2, obst, PQP_FIRST_CONTACT)) {
-				cout << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY"
-					<< PQP_Collide(&result, t1.orientation.matrix, p1, rob, t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT) << endl;
+				cout << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"
+					<< PQP_Collide(&result, t1.orientation.matrix, p1, rob, t2.orientation.matrix, p2, obst, PQP_FIRST_CONTACT) << endl;
 				exit(1);
 			}
 			if(result.Colliding()) {

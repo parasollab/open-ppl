@@ -262,21 +262,16 @@ void Input::ReadCommandLine(int argc, char** argv){
     strcat(commandLine," ");
   }
 
-
-#ifdef USE_VCLIP
-   cdtype= VCLIP;
-#endif
-
-#ifdef USE_RAPID
-   cdtype = RAPID;
-#endif
-
-#ifdef USE_CSTK
+#if defined USE_CSTK
     cdtype = CSTK;
-#endif
-
-#ifdef USE_PQP
-   cdtype = PQP;
+#elif defined USE_RAPID
+    cdtype = RAPID;
+#elif defined USE_PQP
+    cdtype = PQP;
+#elif defined USE_VCLIP
+    cdtype = VCLIP;
+#else
+    #error You have to specify at least one collision detection library.
 #endif
 
   //-- evaluate command line
