@@ -190,7 +190,7 @@ public:
 
     void Read();
     void Read(istream & _is);
-    void ReadCommandLine(int argc, char** argv);
+    virtual void ReadCommandLine(int argc, char** argv);
 
     void ReadPreamble(istream& _myistream);
     void WritePreamble(ostream& _myostream) const;
@@ -259,6 +259,10 @@ public:
     int numDMs;
     n_str_param      *CFGstrings[MAX_CFG];  // Cfg type
     int numCFGs;
+
+    char cfgName[100];
+    int numofJoints; // Guang 06/09/00 the joints number for articulated robots.
+                     // stored so as to be easily used by derived class.
 
     //
     // data fields from 'init' file (given as command line argument)
