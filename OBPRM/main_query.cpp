@@ -32,14 +32,17 @@ int main(int argc, char** argv)
   Qinput.ReadCommandLine(&argc,argv);
   input.ReadCommandLine(argc,argv);
 
+  Query query(&input,&Qinput, &cd, &dm, &lp,&cn);
+
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
   dm.UserInit(&input,   &gn, &lp );
-
-  Query query(&input,&Qinput, &cd, &dm, &lp,&cn);
-
   gn.UserInit(&input, query.rdmp.GetEnvironment() );
   cn.UserInit(&input, query.rdmp.GetEnvironment() );
+  
+  /** set up set ids for query stage. And this has been 
+      done after cn has been set up */
+  query.initDefaultSetIDs(&cn);
 
 
   Qinput.PrintValues(cout);
