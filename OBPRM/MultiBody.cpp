@@ -260,7 +260,7 @@ void MultiBody::GetBodyInfoFromInput(Input * _input, int _multibodyIndex)
 
     double fixSum = 0;
     double freeSum = 0;
-
+    this->bInternal =  _input->bBodyInternal[_multibodyIndex];
     for(int i=0; i < _input->BodyCount[_multibodyIndex]; i++) 
 	{
 		if (!_input->isFree[_multibodyIndex][i])

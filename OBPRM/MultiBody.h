@@ -86,6 +86,10 @@ public:
     //  Get/Set Free Body info
     //
     //////////////////////////////////////////////////////////////////////////////////////////
+    
+    //added by Xinyu Tang
+    //To say whether this multibody is external (fake obstacle);
+    bool IsInternal(){return bInternal;}; 
 
     ///Return a free body accroding to the given index. the index should be in [0,GetFreeBodyCount())
     FreeBody * GetFreeBody(int _index);
@@ -329,6 +333,10 @@ private:
     //-----------------------------------------------------------
     ///  Data
     //-----------------------------------------------------------
+  //added by Xinyu Tang
+  // to say whether this multibody is Internal(fake obsbacle);
+  bool bInternal;
+
     Environment * environment;  ///Owner
 
     int FixedBodyCount;
