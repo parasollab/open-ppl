@@ -1,0 +1,1 @@
+../query -cd RAPID -f branchs -cfg Cfg_free_serial 5

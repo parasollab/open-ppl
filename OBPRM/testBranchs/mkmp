@@ -1,0 +1,7 @@
+../obprm -cd RAPID -f branchs -cfg Cfg_free_serial 5 \
+	-gNodes OBPRM \
+		-nshells 3 \
+		-bbox_scale 20 \
+		-nodes 500 -collPair cM rT \
+		         -freePair cM rV  \
+	-cNodes closest 5 components 5 5 
