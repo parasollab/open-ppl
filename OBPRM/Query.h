@@ -88,14 +88,14 @@ public:
           *@see ConnectMap::SortByDistFromCfg
           */
         virtual 
-	bool CanConnectToCC(CFG _cfg, 
-                                    CollisionDetection *cd,
-                                    ConnectMap<CFG, WEIGHT> *cn, 
-                                    LocalPlanners<CFG,WEIGHT> *lp,
-                                    DistanceMetric *dm,
-                                    vector<CFG> _cc, 
-                                    VID *_vid,
-                                    LPOutput<CFG,WEIGHT> *_ci);
+	  bool CanConnectToCC(CFG _cfg, Stat_Class& Stats,
+			      CollisionDetection *cd,
+			      ConnectMap<CFG, WEIGHT> *cn, 
+			      LocalPlanners<CFG,WEIGHT> *lp,
+			      DistanceMetric *dm,
+			      vector<CFG> _cc, 
+			      VID *_vid,
+			      LPOutput<CFG,WEIGHT> *_ci);
     //@}
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +119,7 @@ public:
           */
         virtual 
 	bool PerformQuery
-        (CollisionDetection *cd, ConnectMap<CFG, WEIGHT> *cn, LocalPlanners<CFG,WEIGHT> * lp,DistanceMetric * dm);
+        (Stat_Class& Stats, CollisionDetection *cd, ConnectMap<CFG, WEIGHT> *cn, LocalPlanners<CFG,WEIGHT> * lp,DistanceMetric * dm);
 
         /**Query path for two given Cfgs.
           *Algorithm:
@@ -149,7 +149,8 @@ public:
           */
         virtual 
 	bool PerformQuery(CFG _start, 
-			  CFG _goal, 
+			  CFG _goal,
+			  Stat_Class& Stats,
 			  CollisionDetection*,
 			  ConnectMap<CFG, WEIGHT>*, 
 			  LocalPlanners<CFG,WEIGHT>*, 
@@ -250,7 +251,7 @@ Query<CFG, WEIGHT>::
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
-PerformQuery(CollisionDetection* cd, ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm) 
+PerformQuery(Stat_Class& Stats, CollisionDetection* cd, ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm) 
 {
   for (int i=0; i < query.size()-1; i++ ){
     cout << "\nquery is ...     ";
@@ -260,7 +261,7 @@ PerformQuery(CollisionDetection* cd, ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<
     cout << "\nworking  ...     "
 	 << endl;
     
-    if ( !PerformQuery(query[i],query[i+1],cd,cn,lp,dm,&path) ) {
+    if ( !PerformQuery(query[i],query[i+1],Stats,cd,cn,lp,dm,&path) ) {
       cout << endl << "In PerformQuery(): didn't connect";
       return false;
     } 
@@ -272,7 +273,7 @@ PerformQuery(CollisionDetection* cd, ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
-PerformQuery(CFG _start, CFG _goal, CollisionDetection* cd,
+PerformQuery(CFG _start, CFG _goal, Stat_Class& Stats, CollisionDetection* cd,
 	     ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm, vector<CFG>* _path) {
 
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
@@ -292,8 +293,8 @@ PerformQuery(CFG _start, CFG _goal, CollisionDetection* cd,
     vector<CFG> cc;
     GetCC(*(rdmp.m_pRoadmap) , t,cc);
     //connect start and goal to cc
-    if ( CanConnectToCC(_start,cd,cn,lp,dm,cc,&scvid,&sci) && 
-         CanConnectToCC(_goal, cd,cn,lp,dm,cc,&gcvid,&gci) ) {
+    if ( CanConnectToCC(_start, Stats, cd,cn,lp,dm,cc,&scvid,&sci) && 
+         CanConnectToCC(_goal,  Stats, cd,cn,lp,dm,cc,&gcvid,&gci) ) {
       
       cout << endl << "Start("
 	   << scvid
@@ -334,7 +335,7 @@ PerformQuery(CFG _start, CFG _goal, CollisionDetection* cd,
 #endif
 	 
 	 for (i=0; i<rp.size()-1; i++) {
-	   if (!(lp->GetPathSegment(rdmp.GetEnvironment(), cd, dm, rp[i].first, rp[i+1].first, rp[i].second, &ci, rdmp.GetEnvironment()->GetPositionRes(), rdmp.GetEnvironment()->GetOrientationRes(), true, true)) ) {
+	   if (!(lp->GetPathSegment(rdmp.GetEnvironment(), Stats, cd, dm, rp[i].first, rp[i+1].first, rp[i].second, &ci, rdmp.GetEnvironment()->GetPositionRes(), rdmp.GetEnvironment()->GetOrientationRes(), true, true)) ) {
 	     cout << endl << "In PerformQuery: can't recreate path" << endl;
 	   } else {
 	     // Add to Path rdmp cfg's & "tick"s: [ rdmp.rdmp ]
@@ -376,7 +377,7 @@ PerformQuery(CFG _start, CFG _goal, CollisionDetection* cd,
 template <class CFG, class WEIGHT>
 bool
 Query<CFG, WEIGHT>::
-CanConnectToCC(CFG _cfg, CollisionDetection* cd,
+CanConnectToCC(CFG _cfg, Stat_Class& Stats, CollisionDetection* cd,
 	       ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm,
 	       vector<CFG> _cc, VID* _vid, LPOutput<CFG,WEIGHT>*_ci) {
 
@@ -397,7 +398,7 @@ CanConnectToCC(CFG _cfg, CollisionDetection* cd,
    // (now try all, later only k closest)
    for (int i=0; i < _cc.size(); i++ ) {
      if (!rdmp.m_pRoadmap->IsEdge(_cfg,_cc[i])
-	 && lp->IsConnected(rdmp.GetEnvironment(), cd, dm, _cfg, _cc[i], _ci,rdmp.GetEnvironment()->GetPositionRes(), rdmp.GetEnvironment()->GetOrientationRes(), true, true) ) {
+	 && lp->IsConnected(rdmp.GetEnvironment(), Stats, cd, dm, _cfg, _cc[i], _ci,rdmp.GetEnvironment()->GetPositionRes(), rdmp.GetEnvironment()->GetOrientationRes(), true, true) ) {
        *_vid = rdmp.m_pRoadmap->GetVID(_cc[i]);
        return true;
      } else {

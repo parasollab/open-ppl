@@ -49,7 +49,8 @@ class ApproxSpheres: public LocalPlannerMethod<CFG, WEIGHT> {
         *@see Cfg::ApproxCSpaceClearance and Cfg::Clearance
         */
   virtual 
-    bool IsConnected(Environment *_env, CollisionDetection *cd,
+    bool IsConnected(Environment *_env, Stat_Class& Stats,
+		     CollisionDetection *cd,
 		     DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
 		     LPOutput<CFG, WEIGHT>* lpOutput,
 		     double positionRes, double orientationRes,
@@ -171,7 +172,8 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 bool
 ApproxSpheres<CFG,WEIGHT>::
-IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
+IsConnected(Environment *_env, Stat_Class& Stats,
+	    CollisionDetection *cd, DistanceMetric *dm,
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
 	    bool checkCollision, 
@@ -187,12 +189,12 @@ IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
   if (_c1.clearance != -1)
     c1_clearance = _c1.clearance;
   else
-    c1_clearance = _c1.ApproxCSpaceClearance(_env,cd,*cdInfo,
+    c1_clearance = _c1.ApproxCSpaceClearance(_env,Stats,cd,*cdInfo,
 					     dm,n.GetValue());
   if (_c2.clearance != -1)
     c2_clearance = _c2.clearance;
   else
-    c2_clearance = _c2.ApproxCSpaceClearance(_env,cd,*cdInfo,
+    c2_clearance = _c2.ApproxCSpaceClearance(_env,Stats,cd,*cdInfo,
 					     dm,n.GetValue());
   
   Stats.IncLPCollDetCalls("ApproxSpheres", cd_cntr);

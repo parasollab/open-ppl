@@ -176,7 +176,7 @@ class CollisionDetection {
    *@note if self collision of Robot is found, _cdInfo will be set to odd value.
    *@see IsInCollision(Environment* , SID , CDInfo& , MultiBody* , MultiBody*)
    */
-  bool IsInCollision(Environment* env, CDInfo& _cdInfo, 
+  bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 		     MultiBody* lineRobot = NULL, bool enablePenetration=true);
 
   /**Check collision by index of robot and obstacle.
@@ -185,7 +185,7 @@ class CollisionDetection {
    *to detect collision.
    *@see IsInCollision(Environment* , SID , CDInfo& , MultiBody* , MultiBody*)
    */
-  bool IsInCollision(Environment* env, CDInfo& _cdInfo, 
+  bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 		     int robot, int obstacle);
 
   /**Check collision between MultiBody of robot and obstacle.
@@ -203,14 +203,14 @@ class CollisionDetection {
    *@see Collision detection core functions, CDInfo::GetType, and 
    *CDInfo::GetCollisionDetection
    */
-  bool IsInCollision(Environment* env, CDInfo& _cdInfo, 
+  bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 		     MultiBody* rob, MultiBody* obstacle);
   
   /**Get minimum distance from Robot to Obstacles in environment.
    *@note This method could be invoked iff USE_CSTK is defined.
    *if USE_CSTK is undefined, then process will be terminiated.
    */
-  double Clearance(Environment* env);
+  double Clearance(Environment* env, Stat_Class& Stats);
 
   bool clearanceAvailable();
 
@@ -225,8 +225,8 @@ class CollisionDetection {
   /** Check if there is a collision but it is in permissible range,
    * i.e., the penetration is within the penetration range
    */
-  bool AcceptablePenetration(Cfg& c, Environment* env, CollisionDetection* cd, 
-			     CDInfo& cdInfo);
+  bool AcceptablePenetration(Cfg& c, Environment* env, Stat_Class& Stats,
+			     CollisionDetection* cd, CDInfo& cdInfo);
   
   /** Initialize n direction vectors  with the penetration length*/
   template <class CFG>
@@ -267,7 +267,7 @@ class CollisionDetectionMethod {
    *@note This method could be invoked iff USE_CSTK is defined.
    *if USE_CSTK is undefined, then process will be terminiated.
    */
-  virtual double Clearance(Environment* env);
+  virtual double Clearance(Environment* env, Stat_Class& Stats);
   
   /**
    * Check if robot in given cfg is complete inside or outside obstacle.
@@ -285,7 +285,7 @@ class CollisionDetectionMethod {
 
   /**Check collision between MultiBody of robot and obstacle.
    */
-  virtual bool IsInCollision(MultiBody* rob, MultiBody* obstacle, CDInfo& _cdInfo) = 0;
+  virtual bool IsInCollision(MultiBody* rob, MultiBody* obstacle, Stat_Class& Stats, CDInfo& _cdInfo) = 0;
 
   CDInfo cdInfo;            ///<No one use this??!!
 
@@ -305,11 +305,12 @@ class Cstk : public CollisionDetectionMethod {
 
   virtual CollisionDetectionMethod* CreateCopy();
 
-  virtual double Clearance(Environment* env);
+  virtual double Clearance(Environment* env, Stat_Class& Stats);
 
   virtual bool clearanceAvailable();
 
-  double cstkDistance(MultiBody* robot, MultiBody* obstacle);
+  double cstkDistance(Stat_Class& Stats, 
+		      MultiBody* robot, MultiBody* obstacle);
 
   /**Using CSTK to check collision between two MultiBodys.
    *Collision is checked in Body level between two MultiBodys,
@@ -324,7 +325,7 @@ class Cstk : public CollisionDetectionMethod {
    *@see Body::GetCstkBody
    */
   virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-			     CDInfo& _cdInfo);
+			     Stat_Class& Stats, CDInfo& _cdInfo);
 	
   /// for cstk, used by IsInCollision
   void SetLineTransformation(const Transformation&, double linTrans[12]); 
@@ -357,7 +358,7 @@ class Vclip : public CollisionDetectionMethod {
    *@see IsInColl_AllInfo_vclip for get all info. 
    */
   virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-			     CDInfo& _cdInfo);
+			     Stat_Class& Stats, CDInfo& _cdInfo);
   
   /**Get VclipPose.
    *@todo I don't really know what this is....
@@ -408,7 +409,7 @@ class Rapid: public CollisionDetectionMethod {
    *@see Body::GetRapidBody
    */
   virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-			     CDInfo& _cdInfo);
+			     Stat_Class& Stats, CDInfo& _cdInfo);
 };
 #endif
 
@@ -425,7 +426,7 @@ class Pqp : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-			     CDInfo& _cdInfo);
+			     Stat_Class& Stats, CDInfo& _cdInfo);
   
   /**
    * For given cfg, check if robot is completely inside obstacles.
@@ -451,7 +452,7 @@ class BoundingSpheres : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
   
   virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-			     CDInfo& _cdInfo);
+			     Stat_Class& Stats, CDInfo& _cdInfo);
 };
 
 
@@ -466,7 +467,7 @@ class InsideSpheres : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-			     CDInfo& _cdInfo);
+			     Stat_Class& Stats, CDInfo& _cdInfo);
 };
 
 
@@ -481,7 +482,7 @@ class Naive : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-			     CDInfo& _cdInfo);
+			     Stat_Class& Stats, CDInfo& _cdInfo);
 };
 
 
@@ -496,7 +497,7 @@ class Quinlan : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-                             CDInfo& _cdInfo);
+                             Stat_Class& Stats, CDInfo& _cdInfo);
 };
 
 

@@ -50,13 +50,13 @@ class Closest: public ConnectionMethod<CFG,WEIGHT> {
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
   // Core: Connection method
-  void ConnectNodes_Closest(Roadmap<CFG, WEIGHT>* _rm,
+  void ConnectNodes_Closest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                             CollisionDetection* cd, LocalPlanners<CFG,WEIGHT>* lp,
                             DistanceMetric* dm, vector<CFG>& vec1,
                             vector<CFG>& vec2, const int kclosest,
 			    bool addPartialEdge, bool addAllEdges);
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
@@ -153,7 +153,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 void
 Closest<CFG, WEIGHT>::
-ConnectNodes_Closest(Roadmap<CFG, WEIGHT>* _rm, 
+ConnectNodes_Closest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                      CollisionDetection* cd, LocalPlanners<CFG,WEIGHT>* lp, 
                      DistanceMetric* dm, vector<CFG>& vec1, 
                      vector<CFG>& vec2, const int k,
@@ -181,7 +181,7 @@ ConnectNodes_Closest(Roadmap<CFG, WEIGHT>* _rm,
     if(IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
 #endif
 
-    if (lp->IsConnected(_rm->GetEnvironment(),cd,dm,
+    if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
                         _rm->m_pRoadmap->GetData(kp[j].first),
                         _rm->m_pRoadmap->GetData(kp[j].second),
                         &lpOutput,
@@ -203,7 +203,7 @@ ConnectComponents() {
 
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, 
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                   CollisionDetection* cd , 
                   DistanceMetric * dm,
                   LocalPlanners<CFG,WEIGHT>* lp,
@@ -219,7 +219,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
   const int verticeSize = vertices.size();
   const int k = min(kclosest,verticeSize);
 
-  ConnectNodes_Closest(_rm, cd, lp, dm, vertices, vertices, k, addPartialEdge, addAllEdges);  
+  ConnectNodes_Closest(_rm, Stats, cd, lp, dm, vertices, vertices, k, addPartialEdge, addAllEdges);  
 }
 
 #endif

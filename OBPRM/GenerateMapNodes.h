@@ -104,7 +104,8 @@ class GenerateMapNodes {
    *@param nodes New created nodes are stored here.
    */
   template <class WEIGHT>
-  void GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, CollisionDetection* cd, 
+  void GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+		     CollisionDetection* cd, 
 		     DistanceMetric* dm, vector<CFG>& nodes);
 
  private:
@@ -315,7 +316,8 @@ template <class CFG>
 template <class WEIGHT>
 void
 GenerateMapNodes<CFG>::
-GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, CollisionDetection* cd, 
+GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+	      CollisionDetection* cd, 
 	      DistanceMetric* dm, vector<CFG>& nodes) {
   // clear generated nodes space
   nodes.erase(nodes.begin(),nodes.end());
@@ -328,7 +330,7 @@ GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, CollisionDetection* cd,
     cout<<"\n  "; clock.PrintName(); cout << " " << flush;
 #endif	
     
-    (*itr)->GenerateNodes(_rm->GetEnvironment(), cd, dm, nodes);
+    (*itr)->GenerateNodes(_rm->GetEnvironment(), Stats, cd, dm, nodes);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec  \n" << flush;

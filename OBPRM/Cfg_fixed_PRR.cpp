@@ -240,7 +240,9 @@ bool Cfg_fixed_PRR::GenerateOverlapCfg(Environment *env,  // although env and ro
 // GenSurfaceCfgs4ObstNORMAL
 //      generate nodes by overlapping two triangles' normal.
 //===================================================================
-void Cfg_fixed_PRR::GenSurfaceCfgs4ObstNORMAL(Environment * env,CollisionDetection* cd, 
+void Cfg_fixed_PRR::GenSurfaceCfgs4ObstNORMAL(Environment * env, 
+					      Stat_Class& Stats, 
+					      CollisionDetection* cd, 
 					      int obstacle, int nCfgs, 
 					      CDInfo& _cdInfo, 
 					      vector<Cfg*>& surface) const {

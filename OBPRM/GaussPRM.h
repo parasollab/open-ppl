@@ -66,7 +66,8 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
    *@note If INTERMEDIATE_FILES is defined WritePathConfigurations will be
    *called.
    */
-  virtual void GenerateNodes(Environment* _env, CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class&,
+			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +176,8 @@ CreateCopy() {
 template <class CFG>
 void
 GaussPRM<CFG>::
-GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric *,
+GenerateNodes(Environment* _env, Stat_Class& Stats,
+	      CollisionDetection* cd, DistanceMetric *,
 	      vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ") ";
@@ -201,10 +203,10 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric *,
     
     // because cfg2 is modified it must be checked again
     if (cfg2.InBoundingBox(_env)) {    
-      bool cfg1_free = !cfg1.isCollision(_env,cd,*cdInfo);
+      bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo);
       cfg1.obst = cdInfo->colliding_obst_index;
       
-      bool cfg2_free = !cfg2.isCollision(_env,cd,*cdInfo);
+      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*cdInfo);
       cfg2.obst = cdInfo->colliding_obst_index;
       
       if (cfg1_free && !cfg2_free) {

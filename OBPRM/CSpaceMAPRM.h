@@ -50,7 +50,8 @@ class CSpaceMAPRM : public NodeGenerationMethod<CFG> {
    *axis of the C-Space. It considers both free nodes and nodes in
    *collision.
    */
-  virtual void GenerateNodes(Environment* _env, CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
+			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +173,7 @@ CreateCopy() {
 template <class CFG>
 void 
 CSpaceMAPRM<CFG>::
-GenerateNodes(Environment* _env, CollisionDetection* cd, 
+GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd, 
 	      DistanceMetric *dm, vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes="      << numNodes.GetValue()       << ", ";
@@ -188,10 +189,10 @@ GenerateNodes(Environment* _env, CollisionDetection* cd,
   // MAPRM style node generation using clearances in the CSpace
   for (int i=0; i < numNodes.GetValue(); i++) {
     CFG cfg;
-    cfg.GetMedialAxisCfg(_env,cd,*cdInfo,dm,
+    cfg.GetMedialAxisCfg(_env,Stats,cd,*cdInfo,dm,
 			 clearanceNum.GetValue(),penetrationNum.GetValue());
     
-    if ( !cfg.isCollision(_env,cd,*cdInfo) ) {
+    if ( !cfg.isCollision(_env,Stats,cd,*cdInfo) ) {
       nodes.push_back(CFG(cfg));
 #if INTERMEDIATE_FILES
       path.push_back(cfg);

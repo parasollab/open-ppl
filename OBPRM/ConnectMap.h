@@ -52,7 +52,7 @@ class ConnectMap {
 
   //////////////////////
   // Core: Connection methods
-  void ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 			 CollisionDetection* cd , 
 			 DistanceMetric * dm,
 			 LocalPlanners<CFG,WEIGHT>* lp,
@@ -252,7 +252,7 @@ void ConnectMap<CFG,WEIGHT>::PrintDefaults(ostream& _os) {
 
 template <class CFG, class WEIGHT>
 void ConnectMap<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, 
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
@@ -268,7 +268,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
     //clock.PrintName();
     cout << flush;
 #endif
-    (*itr)->ConnectComponents(_rm,cd,dm,lp,addPartialEdge,addAllEdges);
+    (*itr)->ConnectComponents(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges);
 #ifndef QUIET
         clock.StopClock();
     cout << clock.GetClock_SEC() << " sec, "

@@ -8,7 +8,7 @@
 #include "Environment.h"
 #include "MultiBody.h"
 #include "Input.h"
-
+#include "Stat_Class.h"
 
 template <class CFG, class WEIGHT> struct LPOutput;
 
@@ -53,7 +53,8 @@ class LocalPlannerMethod {
   /**Determine whether two cfgs are connected according to method type, abstract.
    *@param LPOutput.
    */
-  virtual bool IsConnected(Environment* _env, CollisionDetection* cd, 
+  virtual bool IsConnected(Environment* _env, Stat_Class& Stats,
+			   CollisionDetection* cd, 
 			   DistanceMetric *, const CFG &_c1, const CFG &_c2, 
 			   LPOutput<CFG, WEIGHT>* lpOutput,
 			   double positionRes, double orientationRes,

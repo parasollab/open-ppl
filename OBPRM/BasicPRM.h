@@ -54,7 +54,8 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
    *@note If INTERMEDIATE_FILES is defined WritePathConfigurations will be
    *called.
    */
-  virtual void GenerateNodes(Environment* _env, CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
+			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
 };
 
@@ -138,7 +139,8 @@ CreateCopy() {
 template <class CFG>
 void
 BasicPRM<CFG>::
-GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric *,
+GenerateNodes(Environment* _env, Stat_Class& Stats,
+	      CollisionDetection* cd, DistanceMetric *,
 	      vector<CFG>& nodes) {
 	
 #ifndef QUIET
@@ -150,7 +152,7 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric *,
   vector<Cfg*> path;
 
   CFG tmp;
-  tmp.GetNFreeRandomCfgs(path, _env,cd,
+  tmp.GetNFreeRandomCfgs(path, _env, Stats, cd,
 			 *cdInfo, numNodes.GetValue());
 
   int i;

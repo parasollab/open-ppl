@@ -27,16 +27,20 @@ class BasicMAPRM : public NodeGenerationMethod<CFG> {
 
   //////////////////////
   // Core: Connection methods 
-  virtual void GenerateNodes(Environment* _env, CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
+			     CollisionDetection* cd, 
 			     DistanceMetric *, vector<CFG>& nodes);
 
-  void MoveOutObstacle(CFG & cfg, Environment *_env, CollisionDetection* cd);
-  void MoveOutObstacle(CFG & cfg, Vector3D & dir, Environment *_env, CollisionDetection* cd);
+  void MoveOutObstacle(CFG & cfg, Environment *_env, Stat_Class& Stats,
+		       CollisionDetection* cd);
+  void MoveOutObstacle(CFG & cfg, Vector3D & dir, Environment *_env, 
+		       Stat_Class& Stats, CollisionDetection* cd);
 
-  void MoveToMedialAxis(CFG &cfg, vector<CFG> *path, Environment *_env, CollisionDetection* cd, 
+  void MoveToMedialAxis(CFG &cfg, vector<CFG> *path, Environment *_env, 
+			Stat_Class& Stats, CollisionDetection* cd, 
 			DistanceMetric *dm, vector<CFG>& nodes, int l=0);
 
-  static bool getCollisionInfo(CFG& cfg, Environment* _env, CollisionDetection* cd, CDInfo& cdInfo);
+  static bool getCollisionInfo(CFG& cfg, Environment* _env, Stat_Class& Stats, CollisionDetection* cd, CDInfo& cdInfo);
 
 #ifdef USE_VCLIP
   void BuildVCLIP(Environment* env);
@@ -157,7 +161,7 @@ NodeGenerationMethod<CFG>* BasicMAPRM<CFG>::CreateCopy() {
 template <class CFG>
 void 
 BasicMAPRM<CFG>::
-GenerateNodes(Environment* _env, CollisionDetection* cd, 
+GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd, 
 	      DistanceMetric* dm, vector<CFG>& nodes) {
   bool collided;
   CFG cfg;
@@ -192,17 +196,17 @@ GenerateNodes(Environment* _env, CollisionDetection* cd,
     //use approximate computation for moving out robot from obs
     if( m_bApprox.GetValue() ){
       cdInfo->ret_all_info = false;
-      collided = cfg.isCollision(_env, cd, *cdInfo);
+      collided = cfg.isCollision(_env, Stats, cd, *cdInfo);
       if( collided ){
-	MoveOutObstacle(cfg,_env,cd);
-	collided = cfg.isCollision(_env, cd, *cdInfo);
+	MoveOutObstacle(cfg,_env, Stats, cd);
+	collided = cfg.isCollision(_env, Stats, cd, *cdInfo);
       }
       if(cd->isInsideObstacle(cfg,_env,*cdInfo)){
 	cdInfo->ret_all_info = true;
-	cfg.isCollision(_env, cd, *cdInfo);
+	cfg.isCollision(_env, Stats, cd, *cdInfo);
 	Vector3D trans_dir=(cdInfo->object_point-cdInfo->robot_point)*1.00001;
 	cdInfo->ret_all_info = false;
-	MoveOutObstacle(cfg,trans_dir,_env,cd);
+	MoveOutObstacle(cfg,trans_dir,_env,Stats,cd);
 	collided=!cfg.InBoundingBox(_env); //out of box
       }
     }
@@ -214,14 +218,14 @@ GenerateNodes(Environment* _env, CollisionDetection* cd,
       Vclip vclip;
       cd_selected.push_back(&vclip);
       CollisionDetection cd_vclip(cd_selected);
-      cfg.isCollision(_env, &cd_vclip, *cdInfo); //use vclip
+      cfg.isCollision(_env, Stats, &cd_vclip, *cdInfo); //use vclip
       cdInfo->ret_all_info = false;
       if( collided ){
 	Vector3D dir=(cdInfo->object_point-cdInfo->robot_point)*1.00001;
 	cfg.SetSingleParam(0, cfg.GetData()[0]+dir[0]);
 	cfg.SetSingleParam(1, cfg.GetData()[1]+dir[1]);
 	cfg.SetSingleParam(2, cfg.GetData()[2]+dir[2]);
-	collided = cfg.isCollision(_env, cd, *cdInfo);
+	collided = cfg.isCollision(_env, Stats, cd, *cdInfo);
       }
     }
 #endif
@@ -230,10 +234,10 @@ GenerateNodes(Environment* _env, CollisionDetection* cd,
     // so we can move cfg toward Medial Axis
     if (!collided) {
 #if INTERMEDIATE_FILES
-      MoveToMedialAxis(cfg, &path, _env, cd, dm, nodes);
+      MoveToMedialAxis(cfg, &path, _env, Stats, cd, dm, nodes);
       //nodes.push_back(cfg);
 #else
-      MoveToMedialAxis(cfg, NULL, _env, cd, dm, nodes);
+      MoveToMedialAxis(cfg, NULL, _env, Stats, cd, dm, nodes);
       //nodes.push_back(cfg);
 #endif
     } else {
@@ -284,7 +288,8 @@ BuildVCLIP(Environment* env) {
 template <class CFG>
 void 
 BasicMAPRM<CFG>::
-MoveOutObstacle(CFG& cfg, Environment* _env, CollisionDetection* cd) {
+MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
+		CollisionDetection* cd) {
   // Set _info so we do NOT get all info (for speed)
   cdInfo->ResetVars();
   
@@ -310,7 +315,7 @@ MoveOutObstacle(CFG& cfg, Environment* _env, CollisionDetection* cd) {
       pos[iR].add(pos[iR], rays[iR]);
       if( !pos[iR].InBoundingBox(_env) ) continue; //out of bounding box
       allOutBBX=false;
-      if( !pos[iR].isCollision(_env, cd, *cdInfo) ){
+      if( !pos[iR].isCollision(_env, Stats, cd, *cdInfo) ){
 	bCollide=false; //not in collision any more
 	cfg=pos[iR];
       }
@@ -323,7 +328,7 @@ MoveOutObstacle(CFG& cfg, Environment* _env, CollisionDetection* cd) {
 template <class CFG>
 void 
 BasicMAPRM<CFG>::
-MoveOutObstacle(CFG& cfg, Vector3D& dir, Environment* _env, 
+MoveOutObstacle(CFG& cfg, Vector3D& dir, Environment* _env, Stat_Class& Stats, 
 		CollisionDetection* cd) {
   // Store cfg in its "original" state
   cfg.SetSingleParam(0, cfg.GetData()[0]+dir[0]);
@@ -342,14 +347,14 @@ MoveOutObstacle(CFG& cfg, Vector3D& dir, Environment* _env,
   do{
     cfg.add(cfg, trans_cfg);
   }
-  while(cfg.isCollision(_env, cd, *cdInfo));
+  while(cfg.isCollision(_env, Stats, cd, *cdInfo));
 }
 
 
 template <class CFG>
 void 
 BasicMAPRM<CFG>::
-MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, 
+MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Stats,
                  CollisionDetection* cd, DistanceMetric *dm,
 		 vector<CFG>& nodes, int l) {
   //if(l>3){ nodes.push_back(cfg); return;}
@@ -367,7 +372,7 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env,
   cdInfo->ret_all_info = true;
   
   // find closest obstacle -- and collided better come back false!
-  getCollisionInfo(cfg,_env,cd,*cdInfo);
+  getCollisionInfo(cfg,_env,Stats,cd,*cdInfo);
   trans_dir=cdInfo->robot_point-cdInfo->object_point;	
   trans_dir.normalize();
   
@@ -393,7 +398,7 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env,
       oldInfo = *cdInfo;   // oldInfo used in loop termination check
       cdInfo->ResetVars();
       cdInfo->ret_all_info = true;
-      getCollisionInfo(newcfg,_env,cd,*cdInfo);
+      getCollisionInfo(newcfg,_env,Stats,cd,*cdInfo);
       diff=cdInfo->object_point-oldInfo.object_point;
     } while ( diff.normsqr()<1e-2 );
   
@@ -401,7 +406,7 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env,
   //make sure newcfg is collision free
   cdInfo->ResetVars();
   while( true ){
-    if( newcfg.isCollision(_env, cd, *cdInfo)==false ) 
+    if( newcfg.isCollision(_env, Stats, cd, *cdInfo)==false ) 
       break;
     CFG tmp;
     tmp.subtract(oldcfg, newcfg);
@@ -425,13 +430,13 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env,
 template <class CFG>
 bool 
 BasicMAPRM<CFG>::
-getCollisionInfo(CFG& cfg, Environment* _env, CollisionDetection* cd, 
-		 CDInfo& cdInfo){
+getCollisionInfo(CFG& cfg, Environment* _env, Stat_Class& Stats, 
+		 CollisionDetection* cd, CDInfo& cdInfo){
   //cout<<cfg<<endl;
   //if( !cfg.InBoundingBox(_env) ) 
   //cout<<"Ho...Shit"<<endl;
   
-  if( cfg.isCollision(_env, cd, cdInfo) ) return true;
+  if( cfg.isCollision(_env, Stats, cd, cdInfo) ) return true;
   const static double * bbx = _env->GetBoundingBox();
   MultiBody *robot = _env->GetMultiBody(_env->GetRobotIndex());
   

@@ -41,7 +41,7 @@ class RRTexpand: public ConnectionMethod<CFG,WEIGHT> {
   static void ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap, 
 			    Roadmap<CFG, WEIGHT>* fromMap, 
 			    vector<VID> vids);
-  void RRT(Roadmap<CFG, WEIGHT>* rm, 
+  void RRT(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats,
 	   int K, double deltaT, int o_clearance, 
 	   int clearance_from_node,vector<CFG>& U,
 	   CollisionDetection*, LocalPlanners<CFG,WEIGHT>*,
@@ -50,7 +50,7 @@ class RRTexpand: public ConnectionMethod<CFG,WEIGHT> {
 	   bool addPartialEdge, bool addAllEdges);
 
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
@@ -264,7 +264,7 @@ ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,
 template<class CFG, class WEIGHT>
 void 
 RRTexpand<CFG,WEIGHT>::
-RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
+RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
      int o_clearance, int clearance_from_node, vector<CFG>&U,
      CollisionDetection* cd, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric * dm,
      bool & toConnect,bool connecting,
@@ -356,7 +356,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
                }
             tick.Increment(incr); //next configuration to check
             cout << "here" << tk ;
-            if( (tick.isCollision(env,cd,*cdInfo)) || !(tick.InBoundingBox(env)) ) {
+            if( (tick.isCollision(env,Stats,cd,*cdInfo)) || !(tick.InBoundingBox(env)) ) {
                collisionDistance = dm->Distance(env, cfg, tick);
                collision = true;
                }
@@ -392,9 +392,9 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
 
 	 LPOutput<CFG,WEIGHT> lpOutput;
 	 if (x_new.InBoundingBox(env) && attemptConnection
-	     && !x_new.isCollision(env,cd,*cdInfo)
+	     && !x_new.isCollision(env,Stats,cd,*cdInfo)
 	     && !rm->m_pRoadmap->IsEdge(x_near,x_new)
-	     && lp->IsConnected(rm->GetEnvironment(),cd,dm,x_near,x_new,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))) {
+	     && lp->IsConnected(rm->GetEnvironment(),Stats,cd,dm,x_near,x_new,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))) {
 	        //xnew = x_new;
                 bool settoConnect = FALSE;
                 // add x_new and connecting edge to x_near into roadmap
@@ -403,9 +403,9 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
                    x_new = u; 
                    settoConnect = TRUE;
                    if (x_new.InBoundingBox(env) && attemptConnection
-                       && !x_new.isCollision(env,cd,*cdInfo)
+                       && !x_new.isCollision(env,Stats,cd,*cdInfo)
 		       && !rm->m_pRoadmap->IsEdge(x_near,x_new)
-		       && lp->IsConnected(rm->GetEnvironment(),cd,dm,x_near,x_new,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))) {
+		       && lp->IsConnected(rm->GetEnvironment(),Stats,cd,dm,x_near,x_new,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))) {
                          cout << "configurations equal==";
                          CFG t=CFG(x_new);
                          rm->m_pRoadmap->AddVertex(t);
@@ -459,7 +459,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
 
 template <class CFG, class WEIGHT>
 void RRTexpand<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, 
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
@@ -495,7 +495,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
     vector<CFG> dummyU;
     if (cc.size()<= smallcc) {
       bool toConnect = FALSE;
-      RRT(&submap1,
+      RRT(&submap1, Stats,
 	  iterations,
 	  stepFactor * connectionPosRes,
 	  o_clearance, clearance_from_node,

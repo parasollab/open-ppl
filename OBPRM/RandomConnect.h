@@ -50,7 +50,7 @@ class RandomConnect: public ConnectionMethod<CFG,WEIGHT> {
   // Core: Connection method
 
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
@@ -155,7 +155,7 @@ ConnectComponents() {
 
 template <class CFG, class WEIGHT>
 void RandomConnect<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, 
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
@@ -179,7 +179,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
     //int random_lp = (int)(lrand48()%(lp->GetCounter())) + 1;
   
     if (!_rm->m_pRoadmap->IsEdge(c1,c2) && 
-	lp->IsConnected(_rm->GetEnvironment(),
+	lp->IsConnected(_rm->GetEnvironment(), Stats,
 			cd,dm,c1,c2,&lpOutput, connectionPosRes, 
 			connectionOriRes, (!addAllEdges)) ) {
       _rm->m_pRoadmap->AddEdge(c1id, c2id, lpOutput.edge);

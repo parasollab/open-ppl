@@ -25,7 +25,7 @@ typedef DefaultWeight WeightType;
 
 Input input;
 QueryCmds Qinput;
-extern Stat_Class Stats;
+Stat_Class Stats;
 
 //========================================================================
 //  main
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
   // if successful, write path to a file
   //----------------------------------------------------
   QueryClock.StartClock("Query");
-  if ( query.PerformQuery(&cd,&cm,&lp,&dm) ) {
+  if ( query.PerformQuery(Stats,&cd,&cm,&lp,&dm) ) {
     query.WritePath();
     cout << endl << "SUCCESSFUL query";
   } else {

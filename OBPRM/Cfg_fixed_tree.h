@@ -112,7 +112,8 @@ class Cfg_fixed_tree : public Cfg {
 				  Cfg *resultCfg); // OBPRM 
 
   ///Not implemented yet.
-  virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, CollisionDetection *,
+  virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats, 
+					 CollisionDetection *,
 					 int obstacle, int nCfgs,  
 					 CDInfo& _cdInfo, vector<Cfg*>&) const; // NORMAL
 

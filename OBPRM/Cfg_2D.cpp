@@ -235,7 +235,8 @@ bool Cfg_2D::GenerateOverlapCfg(Environment *env,  // although env and robot is 
 }
 
 void
-Cfg_2D::GetCfgByOverlappingNormal(Environment* env,CollisionDetection* cd, 
+Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
+				  CollisionDetection* cd, 
 				  const GMSPolyhedron &polyRobot, 
 				  const GMSPolyhedron &polyObst, 
 				  int robTri, int obsTri, 
@@ -314,13 +315,13 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env,CollisionDetection* cd,
 					  gamma/TWOPI, beta/TWOPI, alpha/TWOPI));
     cfgIn.Increment(displacement);
     
-    if(! cfgIn.isCollision(env,cd,_cdInfo, onflyRobot) ) {
+    if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
       direction = obstNormal;
     } else {
       cfgIn.subtract(cfgIn,displacement);
       cfgIn.subtract(cfgIn,displacement);
       
-      if(! cfgIn.isCollision(env,cd,_cdInfo, onflyRobot) ) {
+      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
 	direction = -obstNormal;
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
@@ -328,12 +329,12 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env,CollisionDetection* cd,
 	cfgIn = Cfg_2D(Vector6<double>(robotCMS[0], robotCMS[1], robotCMS[2],
 				       gamma/TWOPI, (beta+PI)/TWOPI, (alpha+PI)/TWOPI));
 	cfgIn.Increment(displacement);
-	if(! cfgIn.isCollision(env,cd, _cdInfo, onflyRobot) ) {
+	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
 	  direction = obstNormal;
 	} else {
 	  cfgIn.subtract(cfgIn,displacement);
 	  cfgIn.subtract(cfgIn,displacement);
-	  if(! cfgIn.isCollision(env,cd, _cdInfo, onflyRobot) ) {
+	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
 	    direction = -obstNormal;
 	  }
 	}
@@ -351,7 +352,8 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env,CollisionDetection* cd,
 
 
 
-void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env,CollisionDetection* cd, 
+void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
+				       CollisionDetection* cd, 
 				       int obstacle, int nCfgs, 
 				       CDInfo& _cdInfo,
 				       vector<Cfg*>& surface){
@@ -369,7 +371,7 @@ void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env,CollisionDetection* cd,
     int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
     
     vector<Cfg*> tmp;
-    GetCfgByOverlappingNormal(env, cd, 
+    GetCfgByOverlappingNormal(env, Stats, cd, 
 			      polyRobot, polyObst,
 			      robotTriIndex, obstTriIndex, 
 			      _cdInfo,

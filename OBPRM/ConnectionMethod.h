@@ -63,7 +63,7 @@ class ConnectionMethod {
   //////////////////////
   // Core: Connection methods 
   virtual void ConnectComponents() = 0;
-  virtual void ConnectComponents(Roadmap<CFG, WEIGHT>*, 
+  virtual void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
 				 CollisionDetection*, 
 				 DistanceMetric *,
 				 LocalPlanners<CFG,WEIGHT>*,

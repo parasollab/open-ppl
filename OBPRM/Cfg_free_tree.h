@@ -63,7 +63,8 @@ class Cfg_free_tree : public Cfg_free {
 				  Cfg *resultCfg);
 
   /// Node Generation methods: NORMAL
-  virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, CollisionDetection *,
+  virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
+					 CollisionDetection *,
 					 int obstacle, int nCfgs,
 					 CDInfo& _cdInfo, 
 					 vector<Cfg*>&surface);

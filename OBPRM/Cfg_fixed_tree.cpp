@@ -246,7 +246,9 @@ bool Cfg_fixed_tree::GenerateOverlapCfg(Environment *env,  // although env and r
 //      generate nodes by overlapping two triangles' normal.
 // Guang Song 08/24/99
 //===================================================================
-void Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL(Environment * env,CollisionDetection* cd, 
+void Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL(Environment * env,
+					       Stat_Class& Stats,
+					       CollisionDetection* cd, 
 					       int obstacle, int nCfgs, 
 					       CDInfo& _cdInfo, 
 					       vector<Cfg*>& surface) const {

@@ -49,7 +49,8 @@ class OBMAPRM : public OBPRM<CFG> {
   
   /*OBPRM-CSpaceMAPRM Hybrid.
    */
-  virtual void GenerateNodes(Environment* _env, CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class& Stats, 
+			     CollisionDetection* cd, 
 			     DistanceMetric *, vector<CFG>& nodes);
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -201,7 +202,8 @@ CreateCopy() {
 template <class CFG>
 void
 OBMAPRM<CFG>::
-GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric* dm,
+GenerateNodes(Environment* _env, Stat_Class& Stats, 
+	      CollisionDetection* cd, DistanceMetric* dm,
 	      vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes="          << numNodes.GetValue()          << ", ";
@@ -220,7 +222,7 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric* dm,
 #endif
   
   //generate obprm nodes   
-  OBPRM<CFG>::GenerateNodes(_env,cd,dm,nodes);
+  OBPRM<CFG>::GenerateNodes(_env,Stats,cd,dm,nodes);
   
   //copy nodes to obprmCfgs and erase nodes vector
   vector<CFG> obprmCfgs;
@@ -236,11 +238,11 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric* dm,
   for (i=0; i < obprmCfgs.size(); i++) {
     CFG cfg = obprmCfgs[i];
     
-    cfg.PushToMedialAxis(_env, cd, *cdInfo, 
+    cfg.PushToMedialAxis(_env, Stats, cd, *cdInfo, 
 			 dm, clearanceNum.GetValue(), 
 			 penetrationNum.GetValue());
     
-    if ( !cfg.isCollision(_env, cd, *cdInfo) ) {
+    if ( !cfg.isCollision(_env, Stats, cd, *cdInfo) ) {
       nodes.push_back(CFG(cfg));
 #if INTERMEDIATE_FILES
       path.push_back(cfg);

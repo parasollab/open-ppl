@@ -26,7 +26,7 @@ typedef Cfg_free_tree CfgType;
 typedef DefaultWeight WeightType;
 
 Input input;
-extern Stat_Class Stats; 
+Stat_Class Stats; 
 void PrintRawLine( ostream& _os,
         Roadmap<CfgType, WeightType> *rmap, Clock_Class *NodeGenClock, Clock_Class *ConnectionClock,
         int printHeaders);
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
     //---------------------------
     NodeGenClock.StartClock("Node Generation");
     vector<CfgType> nodes;
-    gn.GenerateNodes<WeightType>(&rmap,&cd,&dm,nodes);
+    gn.GenerateNodes<WeightType>(&rmap,Stats,&cd,&dm,nodes);
     NodeGenClock.StopClock();
   }
 
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
   // Connect roadmap nodes
   //---------------------------
   ConnectionClock.StartClock("Node Connection");
-  cm.ConnectComponents(&rmap, &cd, &dm, &lp,
+  cm.ConnectComponents(&rmap, Stats, &cd, &dm, &lp,
 		       input.addPartialEdge.GetValue(), input.addAllEdges.GetValue());
   ConnectionClock.StopClock();
 

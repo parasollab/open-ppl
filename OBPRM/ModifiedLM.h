@@ -69,7 +69,7 @@ class ModifiedLM: public ConnectionMethod<CFG,WEIGHT> {
   // Core: Connection method
 
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
@@ -210,7 +210,7 @@ ConnectComponents() {
  
 template <class CFG, class WEIGHT>
 void ModifiedLM<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, 
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
@@ -248,7 +248,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
       nodes.erase(nodes.begin(), nodes.end());
       
       //-- generate new 'cfg'
-      gn.GenerateNodes(env,cd,dm,nodes);
+      gn.GenerateNodes(env,Stats,cd,dm,nodes);
       
       // if a cfg node generated exit loop else keep trying...
       if ( nodes.size() > 0 ) 
@@ -287,7 +287,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
 	//-- if possible to connect cfg to CC
 	for(int j=0; j<kp.size(); ++j) {
           if (!_rm->m_pRoadmap->IsEdge(kp[j].first,kp[j].second)
-              && lp->IsConnected(_rm->GetEnvironment(),cd,dm, kp[j].first,kp[j].second,&lpOutput, _rm->GetEnvironment()->GetPositionRes(), _rm->GetEnvironment()->GetOrientationRes(), (!addAllEdges) ))  {
+              && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm, kp[j].first,kp[j].second,&lpOutput, _rm->GetEnvironment()->GetPositionRes(), _rm->GetEnvironment()->GetOrientationRes(), (!addAllEdges) ))  {
 	    //-- increment count of connections, #connections
 	    ++numofConnection;
 	    

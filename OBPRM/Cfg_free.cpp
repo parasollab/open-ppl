@@ -207,7 +207,8 @@ bool Cfg_free::GenerateOverlapCfg(Environment *env,  // although env and robot i
 // GenSurfaceCfgs4ObstNORMAL
 //      generate nodes by overlapping two triangles' normal.
 //===================================================================
-void Cfg_free::GenSurfaceCfgs4ObstNORMAL(Environment* env, CollisionDetection* cd, 
+void Cfg_free::GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats,
+					 CollisionDetection* cd, 
 					 int obstacle, int nCfgs, 
 					 CDInfo& _cdInfo, 
 					 vector<Cfg*>& surface) const {
@@ -224,7 +225,7 @@ void Cfg_free::GenSurfaceCfgs4ObstNORMAL(Environment* env, CollisionDetection* c
     int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
   
     vector<Cfg*> tmp;  
-    GetCfgByOverlappingNormal(env, cd, polyRobot, polyObst,
+    GetCfgByOverlappingNormal(env, Stats, cd, polyRobot, polyObst,
 			      robotTriIndex, obstTriIndex, 
 			      _cdInfo, env->GetMultiBody(robot), 
 			      tmp);
@@ -239,7 +240,8 @@ void Cfg_free::GenSurfaceCfgs4ObstNORMAL(Environment* env, CollisionDetection* c
 }
 
 
-void Cfg_free::GetCfgByOverlappingNormal(Environment* env, CollisionDetection* cd, 
+void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
+					 CollisionDetection* cd, 
 					 const GMSPolyhedron &polyRobot, 
 					 const GMSPolyhedron &polyObst, 
 					 int robTri, int obsTri, 
@@ -317,13 +319,13 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, CollisionDetection* c
 			      gamma/TWOPI, beta/TWOPI, alpha/TWOPI);
     cfgIn.Increment(displacement);
     
-    if(! cfgIn.isCollision(env, cd,_cdInfo, onflyRobot) ) {
+    if(! cfgIn.isCollision(env, Stats, cd,_cdInfo, onflyRobot) ) {
       direction = obstNormal;
     } else {
       //cfgIn = cfgIn - displacement - displacement;
       cfgIn.subtract(cfgIn, displacement);
       cfgIn.subtract(cfgIn, displacement);  
-      if(! cfgIn.isCollision(env, cd, _cdInfo, onflyRobot) ) {
+      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
 	direction = -obstNormal;
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
@@ -331,13 +333,13 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, CollisionDetection* c
 	cfgIn = Cfg_free(robotCMS[0], robotCMS[1], robotCMS[2],
 			 gamma/TWOPI, (beta+PI)/TWOPI, (alpha+PI)/TWOPI);
 	cfgIn.Increment(displacement);
-	if(! cfgIn.isCollision(env, cd, _cdInfo, onflyRobot) ) {
+	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
 	  direction = obstNormal;
 	} else {
 	  //cfgIn = cfgIn - displacement - displacement;
 	  cfgIn.subtract(cfgIn, displacement);
 	  cfgIn.subtract(cfgIn, displacement);
-	  if(! cfgIn.isCollision(env, cd, _cdInfo, onflyRobot) ) {
+	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
 	    direction = -obstNormal;
 	  }
 	}
@@ -353,7 +355,8 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, CollisionDetection* c
 }
 
 
-bool Cfg_free::InNarrowPassage(Environment* env, CollisionDetection* cd,
+bool Cfg_free::InNarrowPassage(Environment* env, Stat_Class& Stats,
+			       CollisionDetection* cd,
 			       CDInfo& _cdInfo, 
 			       MultiBody* onflyRobot) const {
   if(v.size() != 6) {
@@ -375,8 +378,8 @@ bool Cfg_free::InNarrowPassage(Environment* env, CollisionDetection* cd,
     Cfg_free shiftR;
     shiftR.add(*this, incr);
     tmp[i] = 0.0;
-    if(shiftL.isCollision(env, cd, _cdInfo, onflyRobot) &&
-       shiftR.isCollision(env, cd, _cdInfo, onflyRobot) ) { // Inside Narrow Passage !
+    if(shiftL.isCollision(env, Stats, cd, _cdInfo, onflyRobot) &&
+       shiftR.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) { // Inside Narrow Passage !
       narrowpassageWeight++;
     }
   }

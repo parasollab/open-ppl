@@ -50,7 +50,7 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
 				 DistanceMetric * dm,
 				 vector< pair<int,VID> >& ccvec);
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
@@ -177,7 +177,7 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 
 template <class CFG, class WEIGHT>
 void RRTcomponents<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, 
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
@@ -258,7 +258,7 @@ for ( int z = 0; z <=1; z++) {
 	 	  ModifyRoadMap(&submap3,_rm,cct);
 		  bool toConnect = FALSE;
                   cout << "problem here 12atrue";
-		  RRT(&submap3,
+		  RRT(&submap3, Stats,
               		  iterations/2,
                       stepFactor * _rm->GetEnvironment()->GetPositionRes(),
                       o_clearance,clearance_from_node,
@@ -369,7 +369,7 @@ for ( int z = 0; z <=1; z++) {
                 
     		toConnect = FALSE;            
                 //cout << "problem here 12btrue\n";
-		RRT(&submap1,
+		RRT(&submap1, Stats,
 		    1,
 		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
 		    o_clearance,clearance_from_node,
@@ -380,7 +380,7 @@ for ( int z = 0; z <=1; z++) {
                 else cout << "between RRTcalls random config\n";
                 toConnect = TRUE;
                 //cout << "start of problem\n";
-		RRT(&submap2,
+		RRT(&submap2, Stats,
 		    1,
 		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
 		    o_clearance,clearance_from_node,
@@ -393,7 +393,7 @@ for ( int z = 0; z <=1; z++) {
 		//U.push_back(x_rand);
 		toConnect = FALSE;
                 cout << "problem here 12ctrue\n";
-		RRT(&submap2,
+		RRT(&submap2, Stats,
 		    1,
 		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
 		    o_clearance,clearance_from_node,
@@ -404,7 +404,7 @@ for ( int z = 0; z <=1; z++) {
                 else cout << "between RRTcalls random config\n";
                 toConnect = TRUE;
                 //cout << "start of problem\n";
-		RRT(&submap1,
+		RRT(&submap1, Stats,
 		    1,
 		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
 		    o_clearance,clearance_from_node,

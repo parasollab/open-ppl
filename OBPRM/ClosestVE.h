@@ -170,7 +170,7 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT> {
    */
   //@}
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
@@ -369,7 +369,7 @@ ConnectComponents() {
 // ------------------------------------------------------------------
 template <class CFG, class WEIGHT>
 void ClosestVE<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, 
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
 		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
@@ -432,7 +432,8 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
 #endif
       //-- if new edge is collision free
       if (!_rm->m_pRoadmap->IsEdge(kp->cfg1,kp->cfg2) 
-          && lp->IsConnected(_rm->GetEnvironment(),cd,dm, kp->cfg1,kp->cfg2,
+          && lp->IsConnected(_rm->GetEnvironment(),Stats, cd,dm, 
+			     kp->cfg1,kp->cfg2,
 	  	             &lpOutput,
 			     connectionPosRes, connectionOriRes, 
 			     (!addAllEdges) )) {

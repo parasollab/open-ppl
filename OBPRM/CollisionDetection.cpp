@@ -18,13 +18,10 @@
 #include "MultiBody.h"
 #include "GenerateMapNodes.h"
 #include "ConnectMap.h"
-#include "Stat_Class.h"
 #include <string.h>
 #include "util.h"
 #include "Transformation.h"
 #include "DistanceMetrics.h"
-
-extern Stat_Class Stats;
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -417,13 +414,13 @@ ReadCDs(istream& _myistream) {
 
 bool
 CollisionDetection::
-IsInCollision(Environment* env, CDInfo& _cdInfo, 
+IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 	      int robot, int obstacle) {
   MultiBody *rob, *obst;
   rob = env->GetMultiBody(robot);
   obst = env->GetMultiBody(obstacle);
   
-  return IsInCollision(env, _cdInfo, rob, obst);
+  return IsInCollision(env, Stats, _cdInfo, rob, obst);
 }
 
 
@@ -450,7 +447,7 @@ IsInCollision(Environment* env, CDInfo& _cdInfo,
 //////////////////////////////////////////////////////////////////////////
 bool
 CollisionDetection::
-IsInCollision(Environment* env, CDInfo& _cdInfo, 
+IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 	      MultiBody* lineRobot, bool enablePenetration) {
   int nmulti, robot;
   bool ret_val, collision_found; // needed to go thru ALL obstacles to get ALL info
@@ -470,7 +467,7 @@ IsInCollision(Environment* env, CDInfo& _cdInfo,
   for (int i = 0; i < nmulti; i++) {
     if ( i != robot ) {
       // Note that the below call sets _cdInfo as needed
-      collision_found = IsInCollision(env, _cdInfo, rob, env->GetMultiBody(i));
+      collision_found = IsInCollision(env, Stats, _cdInfo, rob, env->GetMultiBody(i));
       
       if ( (collision_found) && ( ! _cdInfo.ret_all_info) ) {
 	_cdInfo.colliding_obst_index = i;
@@ -496,7 +493,7 @@ IsInCollision(Environment* env, CDInfo& _cdInfo,
     } else {
       // robot self checking. Warning: rob and env->GetMultiBody(robot) may NOT be the same.
       if ( (rob->GetBodyCount() > 1) && 
-	   (IsInCollision(env, _cdInfo, rob, rob)) ) {
+	   (IsInCollision(env, Stats, _cdInfo, rob, rob)) ) {
 	if (_cdInfo.ret_all_info) {
 	  // set stuff to indicate odd happenning
 	  _cdInfo.colliding_obst_index = -1;
@@ -524,7 +521,7 @@ IsInCollision(Environment* env, CDInfo& _cdInfo,
 
 bool
 CollisionDetection::
-IsInCollision(Environment* env, CDInfo& _cdInfo, 
+IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 	      MultiBody* rob, MultiBody* obst) {
   int nFreeRobot;
   nFreeRobot = rob->GetFreeBodyCount();
@@ -534,18 +531,18 @@ IsInCollision(Environment* env, CDInfo& _cdInfo,
     int tp = (*I)->GetType();
     
     // Type Out: no collision sure; collision unsure.
-    if((tp == Out) && ((*I)->IsInCollision(rob, obst, _cdInfo) == false)) {
+    if((tp == Out) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo) == false)) {
       return false;
     }
 
     // Type In: no collision unsure; collision sure.
-    if ((tp == In) && ((*I)->IsInCollision(rob, obst, _cdInfo) == true)) {
+    if ((tp == In) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo) == true)) {
       return true;
     }
 
     // Type Exact: no collision sure; collision sure.
     if(tp == Exact) {
-      return (*I)->IsInCollision(rob, obst, _cdInfo);
+      return (*I)->IsInCollision(rob, obst, Stats, _cdInfo);
     }
   }
       
@@ -555,8 +552,8 @@ IsInCollision(Environment* env, CDInfo& _cdInfo,
 
 double
 CollisionDetection::
-Clearance(Environment* env) {
-  return selected[0]->Clearance(env);
+Clearance(Environment* env, Stat_Class& Stats) {
+  return selected[0]->Clearance(env, Stats);
 }
 
 
@@ -593,7 +590,8 @@ vector<Cfg*> acceptable;
 /////////////////////////////////////////////
 bool 
 CollisionDetection::
-AcceptablePenetration(Cfg& c, Environment* env, CollisionDetection* cd, 
+AcceptablePenetration(Cfg& c, Environment* env, Stat_Class& Stats,
+		      CollisionDetection* cd, 
 		      CDInfo& cdInfo) {
   int numOkCfgs=0;
   
@@ -602,7 +600,7 @@ AcceptablePenetration(Cfg& c, Environment* env, CollisionDetection* cd,
     Cfg* next = c.CreateNewCfg();
     next->add(c, *directions[i]);
     
-    if (!next->isCollision(env, cd, cdInfo, false)) {
+    if (!next->isCollision(env, Stats, cd, cdInfo, false)) {
       numOkCfgs++;
       if ((numOkCfgs*1.0/directions.size()) > acceptableRatio) {
 #ifdef DEBUG
@@ -651,7 +649,7 @@ GetType() {
 
 double
 CollisionDetectionMethod::
-Clearance(Environment* env) {
+Clearance(Environment* env, Stat_Class& Stats) {
   cout << "Clearance function is not supported by "
        << "current collision detection library." << endl
        << "Please recompile with a supporting library.\n";
@@ -706,7 +704,7 @@ CreateCopy() {
 
 double
 Cstk::
-Clearance(Environment* env) {
+Clearance(Environment* env, Stat_Class& Stats) {
   int nmulti, robot;
   nmulti = env->GetMultiBodyCount();
   robot = env->GetRobotIndex();
@@ -718,7 +716,7 @@ Clearance(Environment* env) {
   for(int i = 0 ; i < nmulti ; i++) {
     if(i != robot) {
       obst = env->GetMultiBody(i);
-      tmp = cstkDistance(rob, obst);
+      tmp = cstkDistance(Stats, rob, obst);
       if(tmp < dist) {
 	dist = tmp;
       }
@@ -755,7 +753,8 @@ clearanceAvailable() {
 
 bool
 Cstk::
-IsInCollision(MultiBody* robot, MultiBody* obstacle, CDInfo& _cdInfo){
+IsInCollision(MultiBody* robot, MultiBody* obstacle, 
+	      Stat_Class& Stats, CDInfo& _cdInfo){
   Stats.IncNumCollDetCalls( "cstk" );
   
   // Identity in row-major order
@@ -796,7 +795,7 @@ IsInCollision(MultiBody* robot, MultiBody* obstacle, CDInfo& _cdInfo){
 
 double
 Cstk::
-cstkDistance(MultiBody* robot, MultiBody* obstacle){
+cstkDistance(Stat_Class& Stats, MultiBody* robot, MultiBody* obstacle){
   Stats.IncNumCollDetCalls( "cstkDistance" );
   
   double linTrans[12] = {1,0,0,0, 0,1,0,0, 0,0,1,0};  // Identity in row-major order
@@ -856,7 +855,7 @@ ClosestFeaturesHT closestFeaturesHT(3000);
 bool
 Vclip::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo) {
   Stats.IncNumCollDetCalls( "vclip" );
   
   Real dist;
@@ -1035,7 +1034,7 @@ CreateCopy() {
 bool
 Rapid::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo) {
     Stats.IncNumCollDetCalls( "RAPID" );
 	
     RAPID_model *rob, *obst;
@@ -1206,7 +1205,7 @@ BuildPQPSegment(PQP_REAL dX, PQP_REAL dY, PQP_REAL dZ) const {
 bool
 Pqp::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo) {
     Stats.IncNumCollDetCalls( "PQP" );
 	
     PQP_Model *rob, *obst;
@@ -1356,7 +1355,7 @@ CreateCopy() {
 bool
 BoundingSpheres::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo) {
   //cout << endl << "boundingSpheres Collision Check invocation" << flush;
   Stats.IncNumCollDetCalls( "boundingSpheres" );
   
@@ -1413,7 +1412,7 @@ CreateCopy() {
 bool
 InsideSpheres::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo) {
   //cout << endl << "insideSpheres Collision Check invocation";
   Stats.IncNumCollDetCalls( "insideSpheres" );
   
@@ -1471,7 +1470,7 @@ CreateCopy() {
 bool
 Naive::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo) {
   cout << endl << "naive Collision Check invocation";
   Stats.IncNumCollDetCalls( "naive" );
   return false;
@@ -1510,7 +1509,7 @@ CreateCopy() {
 bool
 Quinlan::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo) {
   cout << endl << "Quinlan Collision Check invocation";
   Stats.IncNumCollDetCalls( "quinlan" );
   return false;

@@ -96,7 +96,7 @@ class ObstBased: public ConnectionMethod<CFG,WEIGHT> {
   static vector<vector<CFG> > Get_Cfgs_By_Obst(Roadmap<CFG, WEIGHT>* _rm);
 
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
@@ -294,7 +294,7 @@ For example:
 ---------------------------------------------------------------*/ 
 template <class CFG, class WEIGHT>
 void ObstBased<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, 
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
@@ -335,7 +335,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
         #endif
 
         if (!_rm->m_pRoadmap->IsEdge(kp[m].first,kp[m].second)
-            && lp->IsConnected(_rm->GetEnvironment(),cd,dm,kp[m].first,kp[m].second,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))){
+            && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,kp[m].first,kp[m].second,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))){
 	  _rm->m_pRoadmap->AddEdge(kp[m].first,kp[m].second,lpOutput.edge);
 	}//endif IsConnected
       }//endfor m

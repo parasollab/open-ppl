@@ -102,14 +102,16 @@ public:
   /**Node Generation methods: NORMAL
     *generate nodes by overlapping two triangles' normal.
     */
-  virtual void GenSurfaceCfgs4ObstNORMAL(Environment* env, CollisionDetection *,
+  virtual void GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats, 
+					 CollisionDetection *,
 					 int obstacle, int nCfgs,
 					 CDInfo& _cdInfo,
 					 vector<Cfg*>&) const;
   
   /**@todo Document this
     */
-  virtual void GetCfgByOverlappingNormal(Environment* env, CollisionDetection* cd,
+  virtual void GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
+					 CollisionDetection* cd,
 					 const GMSPolyhedron &polyRobot, 
 					 const GMSPolyhedron &polyObst,
 					 int robTri, int obsTri,
@@ -132,8 +134,8 @@ public:
     *This is done by moving c a little bit and check for collision.
     *return true if inside narrow passage.
     */
-  virtual bool InNarrowPassage(Environment* env, CollisionDetection* cd,
-			       CDInfo& _cdInfo,
+  virtual bool InNarrowPassage(Environment* env, Stat_Class& Stats,
+			       CollisionDetection* cd, CDInfo& _cdInfo,
 			       MultiBody* onflyRobot) const;
   //@}
 

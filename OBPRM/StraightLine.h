@@ -48,7 +48,8 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    *@return See description above.
    *@see lineSegmentInCollision and IsConnected_straightline_simple
    */
-  virtual bool IsConnected(Environment *env,CollisionDetection *cd,
+  virtual bool IsConnected(Environment *env, Stat_Class& Stats,
+			   CollisionDetection *cd,
 			   DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
 			   LPOutput<CFG, WEIGHT>* lpOutput,
 			   double positionRes, double orientationRes,
@@ -77,7 +78,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    *@see IsConnected_straightline and Cfg::FindIncrement.
    */
   virtual bool 
-    IsConnectedSLSequential(Environment *env,
+    IsConnectedSLSequential(Environment *env, Stat_Class& Stats,
 			    CollisionDetection *cd, DistanceMetric * dm, 
 			    const CFG &_c1, const CFG &_c2, 
 			    LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
@@ -96,7 +97,8 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    *@see CollisionDetection::IsInCollision
    */
   virtual bool 
-    lineSegmentInCollision(Environment *env,CollisionDetection *cd,
+    lineSegmentInCollision(Environment *env, Stat_Class& Stats, 
+			   CollisionDetection *cd,
 			   DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
 			   LPOutput<CFG,WEIGHT>* lpOutput, 
 			   int &cd_cntr, double positionRes);
@@ -108,7 +110,8 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    *@return true if no Cfg whose cleanrance is less than 0.001. Otherwise, false will be returned.
    */
   virtual bool 
-    IsConnectedSLBinary(Environment *env,CollisionDetection *cd,
+    IsConnectedSLBinary(Environment *env, Stat_Class& Stats, 
+			CollisionDetection *cd,
 			DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
 			LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
 			double positionRes, double orientationRes,  
@@ -243,7 +246,8 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
-IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm, 
+IsConnected(Environment *_env, Stat_Class& Stats,
+	    CollisionDetection *cd, DistanceMetric *dm, 
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
 	    bool checkCollision, 
@@ -252,16 +256,16 @@ IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
   Stats.IncLPAttempts( "Straightline" );
   int cd_cntr = 0; 
  
-  if(lineSegmentLength.GetValue() && lineSegmentInCollision(_env, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
+  if(lineSegmentLength.GetValue() && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
     Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
     return false;	//not connected
   }
 
   bool connected;
   if(binarySearch.GetValue()) 
-    connected = IsConnectedSLBinary(_env, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+    connected = IsConnectedSLBinary(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   else
-    connected = IsConnectedSLSequential(_env, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+    connected = IsConnectedSLSequential(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
 
   if(connected)
     Stats.IncLPConnections( "Straightline" );
@@ -274,7 +278,7 @@ IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
 template <class CFG, class WEIGHT>
 bool
 StraightLine<CFG, WEIGHT>::
-IsConnectedSLSequential(Environment *_env, 
+       IsConnectedSLSequential(Environment *_env, Stat_Class& Stats,
 			CollisionDetection *cd, DistanceMetric * dm, 
 			const CFG &_c1, const CFG &_c2, 
 			LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
@@ -294,7 +298,7 @@ IsConnectedSLSequential(Environment *_env,
     
     cd_cntr ++;
     if(checkCollision){
-      if(tick.isCollision(_env,cd, *cdInfo)){
+      if(tick.isCollision(_env,Stats,cd, *cdInfo)){
         CFG neg_incr;
 	neg_incr = incr; 
 	neg_incr.negative(incr);
@@ -325,7 +329,8 @@ IsConnectedSLSequential(Environment *_env,
 template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
-lineSegmentInCollision(Environment *_env, CollisionDetection *cd, 
+lineSegmentInCollision(Environment *_env, Stat_Class& Stats, 
+		       CollisionDetection *cd, 
 		       DistanceMetric* dm, const CFG &_c1, const CFG &_c2, 
 		       LPOutput<CFG,WEIGHT> *lpOutput, 
 		       int &cd_cntr, double positionRes) {
@@ -370,7 +375,7 @@ lineSegmentInCollision(Environment *_env, CollisionDetection *cd,
     cd_cntr ++; //?
     
     //Check collision
-    if( cd->IsInCollision(_env, *cdInfo, lineSegment) )
+    if( cd->IsInCollision(_env, Stats, *cdInfo, lineSegment) )
       return true;	//Collide
     return false;	//No collision
 }
@@ -379,7 +384,8 @@ lineSegmentInCollision(Environment *_env, CollisionDetection *cd,
 template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
-IsConnectedSLBinary(Environment *_env, CollisionDetection *cd, 
+IsConnectedSLBinary(Environment *_env, Stat_Class& Stats, 
+		    CollisionDetection *cd, 
 		    DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
 		    LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
 		    double positionRes, double orientationRes,  
@@ -411,7 +417,7 @@ IsConnectedSLBinary(Environment *_env, CollisionDetection *cd,
       
       if(cd->clearanceAvailable()) { //&& binarySearch
 	//get clearance when robot's cfg is mid
-	if((clr = mid.Clearance(_env,cd)) <= 0.001) // 0.001 tolerance.
+	if((clr = mid.Clearance(_env,Stats,cd)) <= 0.001) // 0.001 tolerance.
 	  return false;	///too close to obstacle, failed
 
 	if(!sameOrientation) { //if have different orientation
@@ -419,7 +425,7 @@ IsConnectedSLBinary(Environment *_env, CollisionDetection *cd,
 	  if(clr < 0) clr = 0.0;
 	}
       } else {
-	if(mid.isCollision(_env,cd,*cdInfo))
+	if(mid.isCollision(_env,Stats,cd,*cdInfo))
 	  return false;
       }
 

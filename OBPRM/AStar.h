@@ -49,7 +49,8 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
         *@see Cfg::ApproxCSpaceClearance and Cfg::Clearance
         */
   virtual 
-    bool IsConnected(Environment *env,CollisionDetection *cd,
+    bool IsConnected(Environment *env, Stat_Class& Stats,
+		     CollisionDetection *cd,
 		     DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
 		     LPOutput<CFG, WEIGHT>* lpOutput,
 		     double positionRes, double orientationRes,
@@ -57,14 +58,15 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
 		     bool savePath=false, bool saveFailedPath=false);
  protected:
   virtual 
-    bool IsConnectedOneWay(Environment *env,CollisionDetection *cd,
-		     DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
-		     LPOutput<CFG, WEIGHT>* lpOutput,
-		     double positionRes, double orientationRes,
-		     bool checkCollision=true, 
-		     bool savePath=false, bool saveFailedPath=false);
+    bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
+			   CollisionDetection *cd,
+			   DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+			   LPOutput<CFG, WEIGHT>* lpOutput,
+			   double positionRes, double orientationRes,
+			   bool checkCollision=true, 
+			   bool savePath=false, bool saveFailedPath=false);
 
-  virtual int ChooseOptimalNeighbor(Environment *_env, CollisionDetection *cd, DistanceMetric *dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) = 0;
+  virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, DistanceMetric *dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) = 0;
   //@}
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -180,15 +182,16 @@ PrintValues(ostream& _os) {
 template <class CFG, class WEIGHT>
 bool
 AStar<CFG,WEIGHT>::
-IsConnected(Environment *_env,CollisionDetection *cd, DistanceMetric *dm, 
+IsConnected(Environment *_env, Stat_Class& Stats, 
+	    CollisionDetection *cd, DistanceMetric *dm, 
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
 	    bool checkCollision, 
 	    bool savePath, bool saveFailedPath) {
   bool connected = false;
-  connected = IsConnectedOneWay(_env, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+  connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   if (!connected) { //try the other way
-    connected = IsConnectedOneWay(_env, cd, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+    connected = IsConnectedOneWay(_env, Stats, cd, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
     if (savePath)
       reverse(lpOutput->path.begin(), lpOutput->path.end());
   }
@@ -199,8 +202,8 @@ IsConnected(Environment *_env,CollisionDetection *cd, DistanceMetric *dm,
 template <class CFG, class WEIGHT>
 bool
 AStar<CFG,WEIGHT>::
-IsConnectedOneWay(Environment *_env,CollisionDetection *cd, 
-		  DistanceMetric *dm, 
+IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
+		  CollisionDetection *cd, DistanceMetric *dm, 
 		  const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 		  double positionRes, double orientationRes,
 		  bool checkCollision, 
@@ -230,11 +233,11 @@ IsConnectedOneWay(Environment *_env,CollisionDetection *cd,
     
     cd_cntr++;
 
-    if(!diagonal.isCollision(_env,cd, *cdInfo)){
+    if(!diagonal.isCollision(_env,Stats,cd, *cdInfo)){
       p = diagonal;
     } else {
       neighbors.clear();
-      p.FindNeighbors(_env, _c2, incr, cd, n_neighbors.GetValue(),
+      p.FindNeighbors(_env, Stats,  _c2, incr, cd, n_neighbors.GetValue(),
 		       *cdInfo, neighbors);
       if (neighbors.size()==0) { 
 	connected = false;
@@ -246,7 +249,7 @@ IsConnectedOneWay(Environment *_env,CollisionDetection *cd,
 	lpOutput->savedEdge.push_back(tmp);
 	break;
       }
-      p = *(neighbors[ ChooseOptimalNeighbor(_env, cd, dm, _c1, _c2, neighbors) ]);
+      p = *(neighbors[ ChooseOptimalNeighbor(_env, Stats, cd, dm, _c1, _c2, neighbors) ]);
     }
     nTicks++;   
     
@@ -294,8 +297,8 @@ class AStarDistance: public AStar<CFG, WEIGHT> {
   virtual char* GetName() const;
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-  virtual int ChooseOptimalNeighbor(Environment *_env, CollisionDetection *cd,
-				    DistanceMetric *dm, 
+  virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
+				    CollisionDetection *cd, DistanceMetric *dm,
 				    const CFG &_c1, const CFG &_c2,
 				    vector<Cfg*> &neighbors); 
 };
@@ -331,7 +334,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 int
 AStarDistance<CFG, WEIGHT>::
-ChooseOptimalNeighbor(Environment *_env, CollisionDetection *cd, DistanceMetric *dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
+ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, DistanceMetric *dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
   double minDistance=MAXFLOAT;
   int retPosition=0;
   double value = 0;
@@ -358,7 +361,8 @@ class AStarClearance: public AStar<CFG, WEIGHT> {
   virtual char* GetName() const;
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-  virtual int ChooseOptimalNeighbor(Environment *_env, CollisionDetection *cd,
+  virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
+				    CollisionDetection *cd,
 				    DistanceMetric *dm, 
 				    const CFG &_c1, const CFG &_c2,
 				    vector<Cfg*> &neighbors); 
@@ -395,12 +399,12 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 int
 AStarClearance<CFG, WEIGHT>::
-ChooseOptimalNeighbor(Environment *_env, CollisionDetection *cd, DistanceMetric *dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
+ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, DistanceMetric *dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
   double maxClearance=-MAXFLOAT;
   int retPosition=0;
   double value = 0;
   for(int i=0;i<neighbors.size();i++) {
-    value=neighbors[i]->Clearance(_env,cd);
+    value=neighbors[i]->Clearance(_env,Stats,cd);
     if (value>maxClearance) {
       retPosition=i;
       maxClearance=value;
