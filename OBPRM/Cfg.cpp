@@ -457,23 +457,12 @@ bool Cfg::ConfigEnvironment(Environment *env) {
 
 
 bool Cfg::isCollision(Environment *env,CollisionDetection *cd, SID _cdsetid){
-     if(!ConfigEnvironment(env))
-	 return true;
-
-     // after updating the environment(multibodies), Ask ENVIRONMENT
-     // to check collision! (this is more nature.)
-     bool answerFromEnvironment = cd->IsInCollision(env, _cdsetid);
-     return answerFromEnvironment;
+     return CfgHelper->isCollision(*this, env, cd, _cdsetid);
 }
 
 bool Cfg::isCollision(Environment *env, CollisionDetection *cd,
 		int robot, int obs, SID _cdsetid){
-     if(!ConfigEnvironment(env))
-	  return true;
-
-     // ask CollisionDetection class directly.
-     bool answerFromCD = cd->IsInCollision(env, robot, obs, _cdsetid);
-     return answerFromCD;
+     return CfgHelper->isCollision(*this, env, cd, robot, obs, _cdsetid);
 }
 
 double Cfg::Clearance(Environment *env,CollisionDetection *cd ){
