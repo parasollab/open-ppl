@@ -119,7 +119,8 @@ int main(int argc, char** argv)
   vector<Cfg> trace, possibleBindingSite;
   Environment *env = rmap.GetEnvironment();
 
-  for(int m=0; m<vertices.size(); ++m) {
+  int m;
+  for(m=0; m<vertices.size(); ++m) {
      o1 << BioPotentials::GetPotential(vertices[m], env) << "\n";
      trace.push_back(vertices[m]);
      bool success = GradientDecent::findingLocalMin(env, trace);
