@@ -46,7 +46,7 @@ class RayCSpace {
   int numberOfBounces;
   double collisionDistance;
   double traveledDistance;
-  Cfg target;
+  Cfg target, reached_target;
   vector<Cfg> *target_vector;
   bool using_target_vector;
   vector<Cfg> path;

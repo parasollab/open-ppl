@@ -23,7 +23,7 @@ void RayCSpace::init(Cfg origin, Cfg direction, Cfg target) {
 
 void RayCSpace::finish(void) {
   rayLength += traveledDistance;
-  path.push_back(target);
+  path.push_back(reached_target);
 }
 
 void RayCSpace::bounce(Cfg direction) {
@@ -119,6 +119,8 @@ bool RayCSpace::connectTarget(Environment *env, CollisionDetection *cd,
   }
   else
     traveledDistance += dm->Distance(env, cfg, tick, dmsetid);
+  if (!collision)
+    reached_target = dir;
   return !collision;
 }
 
