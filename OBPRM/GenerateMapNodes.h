@@ -817,7 +817,7 @@ public:
         *@param _gnsetid Which set of GN will be used in node generation time.
         *@param info Record node generation process infomation.
         */
-      void GenerateNodes(Roadmap* _rm, CollisionDetection*,DistanceMetric*, SID, GNInfo&);
+      virtual void GenerateNodes(Roadmap* _rm, CollisionDetection*,DistanceMetric*, SID, GNInfo&);
 
   //@}
 
