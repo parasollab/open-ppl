@@ -24,7 +24,7 @@
 #include "Matrix.h"
 #include "Contact.h"
 
-extern Input input;
+//extern Input input;
 
 class Environment {
 public:
