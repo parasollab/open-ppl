@@ -67,6 +67,11 @@ public:
 
     void ConfigureJoint(double * _s, int _dof);
 
+    // These two functions work in the same way as those in Body.h
+    // If GetCenterOfMass() is called for the first time, then
+    // ComputeCenterOfMass() is called automatically, and the
+    // computed value is stored in this class for the next time.
+
     void ComputeCenterOfMass();
     Vector3D GetCenterOfMass();
 
