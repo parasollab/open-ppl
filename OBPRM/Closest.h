@@ -52,11 +52,20 @@ class Closest: public ConnectionMethod<CFG,WEIGHT> {
   // Core: Connection method
   void ConnectComponents();
   void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-			 CollisionDetection*, 
-			 DistanceMetric *,
+			 CollisionDetection*, DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge,
-			 bool addAllEdges);
+			 bool addPartialEdge, bool addAllEdges);  
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+			 CollisionDetection*, DistanceMetric*,
+			 LocalPlanners<CFG,WEIGHT>*,
+			 bool addPartialEdge, bool addAllEdges,
+			 vector<vector<CFG> >& verticesList);
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+			 CollisionDetection*, DistanceMetric *,
+			 LocalPlanners<CFG,WEIGHT>*,
+			 bool addPartialEdge, bool addAllEdges,
+			 vector<CFG>& v1, vector<CFG>& v2);
+
 
  private:
   //////////////////////
@@ -205,5 +214,79 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     }
   } //endfor j
 }
+
+
+template <class CFG, class WEIGHT>
+void Closest<CFG,WEIGHT>::
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+                  CollisionDetection* cd , 
+                  DistanceMetric * dm,
+                  LocalPlanners<CFG,WEIGHT>* lp,
+		  bool addPartialEdge,
+		  bool addAllEdges,
+		  vector<vector<CFG> >& verticesList) {
+  for(int i=0; i<verticesList.size()-1; ++i)
+    for(int j=i+1; j<verticesList.size(); ++j)
+      ConnectComponents(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,
+			verticesList[i], verticesList[j]);
+}
+
+
+template <class CFG, class WEIGHT>
+void Closest<CFG,WEIGHT>::
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+                  CollisionDetection* cd , 
+                  DistanceMetric * dm,
+                  LocalPlanners<CFG,WEIGHT>* lp,
+		  bool addPartialEdge,
+		  bool addAllEdges,
+		  vector<CFG>& v1, vector<CFG>& v2) {
+  //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
+#ifndef QUIET
+  cout << "closest*(k="<< kclosest <<"): "<<flush;
+#endif
+  
+  //vector<CFG> vec1;
+  //_rm->m_pRoadmap->GetVerticesData(vec1);
+  const int verticeSize = v1.size();//vec1.size();
+  const int k = min(kclosest,verticeSize);
+  //vector<CFG> vec2 = vec1;
+
+  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
+  
+  vector< pair<VID,VID> > kp;
+  // Find k closest cfgs to each cfg in the roadmap
+  if(k < v2.size() - 1) {
+    kp = dm->FindKClosestPairs(_rm, v1, v2, k); 
+    kp = dm->FindKClosestPairs(_rm, v2, v1, k);
+  } 
+  else { // all the pairs
+    for(int i=0; i<v1.size(); ++i)
+      for(int j=0; j<v2.size(); ++j){
+        if( v1[i]==v2[j] ) continue;
+        kp.push_back(pair<VID,VID>(pMap->GetVID(v1[i]), pMap->GetVID(v2[j])));
+      }
+  }
+  
+  // for each pair identified
+  LPOutput<CFG,WEIGHT> lpOutput;
+  for (int j=0; j < kp.size(); j++) {
+    if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
+#if CHECKIFSAMECC
+    if(IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
+#endif
+
+    if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
+                        _rm->m_pRoadmap->GetData(kp[j].first),
+                        _rm->m_pRoadmap->GetData(kp[j].second),
+                        &lpOutput,
+                        connectionPosRes, connectionOriRes, 
+                        (!addAllEdges) )) {
+      _rm->m_pRoadmap->AddEdge(kp[j].first, kp[j].second, lpOutput.edge);
+    }
+  } //endfor j
+}
+
+
 
 #endif

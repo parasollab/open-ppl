@@ -50,7 +50,15 @@ class ConnectMap {
 			 DistanceMetric * dm,
 			 LocalPlanners<CFG,WEIGHT>* lp,
 			 bool addPartialEdge,
-			 bool addAllEdges);
+			 bool addAllEdges);  
+  void ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+			 CollisionDetection* cd , 
+			 DistanceMetric * dm,
+			 LocalPlanners<CFG,WEIGHT>* lp,
+			 bool addPartialEdge,
+			 bool addAllEdges,
+			 vector<vector<CFG> >& verticesList);
+
 
  private:
 
@@ -272,6 +280,39 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	 << " connected components\n"<< flush;
 #endif
   }
+}template <class CFG, class WEIGHT>
+void ConnectMap<CFG,WEIGHT>::
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+		  CollisionDetection* cd , 
+		  DistanceMetric * dm,
+		  LocalPlanners<CFG,WEIGHT>* lp,
+		  bool addPartialEdge,
+		  bool addAllEdges,
+		  vector<vector<CFG> >& verticesList) {
+  if(verticesList.size() == 0)
+    return;
+
+  typename vector<ConnectionMethod<CFG,WEIGHT> *>::iterator itr;
+  for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
+#ifndef QUIET
+    Clock_Class clock;
+    char* name = " ";
+    clock.StartClock(name);
+    cout<<"\n ";
+    //clock.PrintName();
+    cout << flush;
+#endif
+    (*itr)->ConnectComponents(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,verticesList);
+#ifndef QUIET
+    clock.StopClock();
+    cout << clock.GetClock_SEC() << " sec, "
+	 << GetCCcount(*(_rm->m_pRoadmap)) 
+	 << " connected components\n"<< flush;
+#endif
+  }
 }
+
+
+
 
 #endif /*_ConnectMap_h_*/

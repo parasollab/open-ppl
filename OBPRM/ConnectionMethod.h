@@ -56,11 +56,18 @@ class ConnectionMethod {
   // Core: Connection methods 
   virtual void ConnectComponents() = 0;
   virtual void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-				 CollisionDetection*, 
-				 DistanceMetric *,
+				 CollisionDetection*, DistanceMetric *,
 				 LocalPlanners<CFG,WEIGHT>*,
-				 bool addPartialEdge,
-				 bool addAllEdges) = 0;
+				 bool addPartialEdge, bool addAllEdges) = 0;  
+  virtual void ConnectComponents(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats, 
+				 CollisionDetection* cd, DistanceMetric * dm,
+				 LocalPlanners<CFG,WEIGHT>* lp,
+				 bool addPartialEdge, bool addAllEdges,
+				 vector<vector<CFG> >& verticesList) {
+    return ConnectComponents(rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges);
+  }
+
+
  protected:
   //////////////////////
   // Data
