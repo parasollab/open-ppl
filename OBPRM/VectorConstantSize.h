@@ -460,6 +460,9 @@ public:
     inline ELEMENT getX()const; ///<Get the first element in vector
     inline ELEMENT getY()const; ///<Get the second element in vector
     inline ELEMENT getZ()const; ///<Get the third element in vector
+
+    // InvalidData: required to be used with Graph.h
+    Vector3 InvalidData() {return Vector3();}
   //@}
 };
 
