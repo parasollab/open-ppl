@@ -1,3 +1,4 @@
+// $Id:
 
 /**@file Haptic.h
    This class reads in a 'haptic' path as input and calls the
