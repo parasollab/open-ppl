@@ -77,15 +77,14 @@ public:
   friend istream& operator>> (istream& _is, IntWeight& w);        // in util.c
 
   static IntWeight InvalidWeight() { return IntWeight(INVALID_LP); };
-  static int MaxWeight() { return MAX_INT; }; // for Dijkstra's Alg
-  int& Weight() { return nticks; };
+  static double MaxWeight() { return MAX_DBL; }; // for Dijkstra's Alg
+  double& Weight() { return nticks; };
 
   int& LP() { return lp; };
-  int& NTicks() { return nticks; };
 
 private:
   int lp;
-  int nticks;
+  double nticks;
 };
 
 // "special" edges, e.g., for protein folding
