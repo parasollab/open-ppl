@@ -36,7 +36,7 @@
 #include "CollisionDetection.h"
 
 
-#include <iostream>
+#include <iostream.h>
 //===================================================================
 //  Input class
 //  Constructors and Destructor
