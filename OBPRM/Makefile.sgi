@@ -139,6 +139,7 @@ OBJS = \
 	Cfg_free.o \
 	Cfg_fixed_PRR.o \
 	Cfg_free_serial.o \
+	Cfg_fixed_tree.o \
 	util.o \
 	Clock_Class.o \
 	Stat_Class.o \
