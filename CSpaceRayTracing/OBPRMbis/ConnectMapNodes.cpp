@@ -1057,21 +1057,22 @@ ConnectMapNodes::OrderCCByCloseness(Roadmap * rm,
 	DistanceMetric * dm,
 	CNInfo& info,
 	vector< pair<int,VID> >& ccvec) 
-{
+{   cout << "\nOrderCCByCloseness\n";
     Environment *env = rm->GetEnvironment();   
     //rm->m_pRoadmap->DisplayCCStats(-1); 
     vector< pair<int,VID> >::iterator cc2=ccvec.begin();
     //vector<VID> vidvec = rm->m_pRoadmap->GetCC((*cc2).second);
     vector<VID> vidvec;
-    cout << "cc2.second in order cc:" << (*cc2).second;
+    //cout << "cc2.second in order cc:" << (*cc2).second;
     GetCC(*(rm->m_pRoadmap),(*cc2).second ,vidvec);
     int i = 0; int index = 0;
     Cfg vtemp;
     vector<Cfg> centervec;
     while(cc2<ccvec.end()) {
+
         while( i < vidvec.size() ) {
 	    vtemp=rm->m_pRoadmap->GetData(vidvec[i]);
-	    cout << vtemp << endl;
+	    //cout << vtemp << endl;
 	    if (i==0)
 		centervec.push_back(vtemp);
 	    else{
@@ -1080,6 +1081,7 @@ ConnectMapNodes::OrderCCByCloseness(Roadmap * rm,
 		}
 	    i++;
 	    } //while i<vidvec.size()
+        DisplayCC((*rm->m_pRoadmap),(*cc2).second);
 	centervec[index] = centervec[index] / i;
 	cout << "centervec=" << centervec[index] << endl;
         ++cc2; i = 0; index++;     cout << "cc2.second in order cc:" << (*cc2).second;
@@ -1194,7 +1196,9 @@ ConnectNodes_RRTConnect(
 #endif
        ;++cc1){ 
 */
- vector< pair<int,VID> >::iterator cc1=ccvec.begin();
+      vector< pair<int,VID> >::iterator cc1=ccvec.begin();
+for ( int z = 0; z <=1; z++) {
+
 
 
       //-- submap = vertices & edges of current (cc1) connected component
@@ -1218,7 +1222,7 @@ ConnectNodes_RRTConnect(
       ModifyRoadMap(&submap1,_rm,cc);
       vector<Cfg> dummyU;
 
-      if ( !strcmp(_cn.GetName(),"RRTexpand") ){
+      /*if ( !strcmp(_cn.GetName(),"RRTexpand") ){
 //cout << "RRTexpand***" << _rm->m_pRoadmap->GetData((*cc1).second) << "***\n";	  
           // use random U
 
@@ -1233,7 +1237,8 @@ ConnectNodes_RRTConnect(
  ModifyRoadMap(_rm,&submap1,verts);
      
 	  
-      }else{  //"RRTcomponents"
+      }else{  */
+	//"RRTcomponents"
 	//submap1.m_pRoadmap = _rm->m_pRoadmap;
 
           vector< pair<int,VID> >::iterator cc2=cc1+1;
@@ -1241,7 +1246,7 @@ ConnectNodes_RRTConnect(
 	  //_rm->m_pRoadmap->DisplayCCStats(-1);
 	  vector< pair<int,VID> >::iterator cctemp=ccvec.begin();
           int b =0;
-	  
+	  if (z == 0)
 	  while(cctemp<=ccvec.end()) {
 		vector<VID> cc;
       		GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cc);
@@ -1268,6 +1273,21 @@ ConnectNodes_RRTConnect(
 	  } //cctemp<=ccvec.end()
 
 
+	if ( z == 1) {
+	   GetCCStats(*(_rm->m_pRoadmap),ccvec);  
+	   vector< pair<int,VID> >::iterator startIterator = ccvec.begin();
+ 	   vector< pair<int,VID> >::iterator ccswitch=ccvec.begin();
+	   ccswitch++; 
+	   pair<int,VID> ins = ccvec[0];
+	   ccvec.push_back(ins);
+	   startIterator = ccvec.begin();
+	   ccvec.erase(startIterator);
+	   cc1 = ccvec.begin();
+	   cc2 = cc1 + 1; 
+	   //pair<int,VID>  first = ccvec[0];
+	   //ccvec[1] = ccvec[0];
+	   //cc
+	  }
 	  OrderCCByCloseness(_rm,dm,info,ccvec);
 
 	  VID cc1id = (*cc1).second;
@@ -1352,39 +1372,12 @@ ConnectNodes_RRTConnect(
       submap2.environment = NULL;
       submap2.m_pRoadmap = NULL;
       } //end while cc2 != ccvec.end()
-/*		  // use each connected component cfg's as U
-          for (vector< pair<int,VID> >::iterator cc2=ccvec.begin();
-		  cc2<ccvec.end();++cc2){
-			  
-			  VID cc1id = (*cc1).second;
-			  VID cc2id = (*cc2).second;
-			  
-			  if ( !_rm->m_pRoadmap->IsSameCC(cc1id,cc2id) ) {
-				  
-				  //added tmp & separated decl from init for SUN compiler
-				  Cfg tmp;
-				  tmp = _rm->m_pRoadmap->GetData(cc2id);
-				  vector<Cfg> U = _rm->m_pRoadmap->GetCC(tmp);
-				  RRT(&submap1,
-					  _cn.GetIterations(),
-					  _cn.GetStepFactor() * lpInfo.positionRes,
-					  U,
-					  cd, lp, dm, info, lpInfo);
-				  
-				  //-- map = map + submap
-				  ModifyRoadMap(_rm,&submap1,
-					  submap1.m_pRoadmap->GetVerticesVID());
-				  
-			  }// endif !_rm
-			  
-          } // endfor cc2
-*/		  
-//      }
-	  
-	  
-	   } //endfor cc1 
+
 submap1.environment = NULL;
-submap1.m_pRoadmap = NULL;
+submap1.m_pRoadmap = NULL;	  
+	  
+	 } //endfor cc1 and cc1.next 
+
 
 
 }
