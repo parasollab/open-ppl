@@ -101,6 +101,15 @@ Cfg CfgManager::GetRandomCfg(
 }
 #endif
 
+Cfg CfgManager::GetFreeRandomCfg(Environment *env, CollisionDetection *cd,
+                           SID _cdsetid, CDInfo& _cdInfo) {
+   Cfg tmp;
+   do {
+      tmp = Cfg::GetRandomCfg(env);
+   } while ( tmp.isCollision(env, cd, _cdsetid, _cdInfo) );
+
+   return tmp;
+}
 
 
 void CfgManager::IncrementTowardsGoal(

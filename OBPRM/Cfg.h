@@ -189,6 +189,9 @@ public:
   // ditto, but with a default number of tries (10)
   static Cfg GetRandomCfg(Environment *env);
 
+  static Cfg GetFreeRandomCfg(Environment *env,CollisionDetection* cd,
+        SID _cdsetid, CDInfo& _cdInfo);
+
   // tests whether or not robot in this configuration has every vertex inside
   // the environment specified bounding box
   bool InBoundingBox(Environment *env);

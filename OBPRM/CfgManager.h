@@ -67,6 +67,8 @@ public:
   virtual Cfg GetRandomCfg(double R, double rStep) = 0;
   virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox) = 0;
   virtual Cfg GetRandomRay(double incr) = 0;
+  virtual Cfg GetFreeRandomCfg(Environment *env, CollisionDetection *cd,
+                           SID _cdsetid, CDInfo& _cdInfo);
   virtual Cfg GetPositionOrientationFrom2Cfg(
 	const Cfg& c1, const Cfg& c2);  // rotate-at-s helper
   virtual vector<Cfg> GetMovingSequenceNodes(const Cfg& c1, const Cfg& c2,

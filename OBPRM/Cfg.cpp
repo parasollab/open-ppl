@@ -318,6 +318,11 @@ Cfg Cfg::GetRandomCfg(Environment *env) {
   return Cfg::GetRandomCfg(env, default_maxTries);
 }
 
+Cfg Cfg::GetFreeRandomCfg(Environment *env, CollisionDetection *cd, SID _cdsetid,
+CDInfo& _cdInfo){
+     return CfgHelper->GetFreeRandomCfg(env, cd, _cdsetid, _cdInfo);
+}
+
 // tests whether or not robot in this configuration has every vertex inside
 // the environment specified bounding box
 bool Cfg::InBoundingBox(Environment *env) {
