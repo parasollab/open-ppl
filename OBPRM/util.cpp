@@ -118,7 +118,7 @@ WritePathConfigurations( char output_file[80],
    //Cfg::print_preamble_to_file(env, fp, path.size());        
    fprintf(fp,"VIZMO_PATH_FILE   Path Version %d\n", PATHVER_20001125);
    fprintf(fp,"%d\n", 1);
-   fprintf(fp,"%d\n", path.size());
+   fprintf(fp,"%d \n", path.size());
 
     for(int i = 0 ; i < path.size() ; i++){
        vector<double> tmp=path[i].GetData();
