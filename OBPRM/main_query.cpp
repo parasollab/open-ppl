@@ -7,6 +7,7 @@
 #include <iostream.h>
 #include "Query.h"
 #include "Stat_Class.h"
+#include "Clock_Class.h"
 
 Input input;
 QueryCmds Qinput;
@@ -22,6 +23,7 @@ int main(int argc, char** argv)
   LocalPlanners      lp;
   DistanceMetric     dm;
   CollisionDetection cd;
+  Clock_Class        QueryClock;
 
   //----------------------------------------------------
   // instantiate query/roadmap object
@@ -32,7 +34,6 @@ int main(int argc, char** argv)
 
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
-  //cn.UserInit(&input);
   dm.UserInit(&input,   &gn, &lp );
 
   Query query(&input,&Qinput, &cd, &dm, &lp,&cn);
@@ -57,12 +58,21 @@ int main(int argc, char** argv)
   // perform the query
   // if successful, write path to a file
   //----------------------------------------------------
+  QueryClock.StartClock("Query");
   if ( query.PerformQuery(&cd,&cn,&lp,&dm) ) {
     query.WritePath();
     cout << endl << "SUCCESSFUL query";
   } else {
     cout << endl << "UNSUCCESSFUL query";
   }
+  QueryClock.StopClock();
+
+  #if QUIET
+  #else
+    cout << ": " << QueryClock.GetClock_SEC()
+         << " sec (ie, " << QueryClock.GetClock_USEC() << " usec)";
+  #endif
+
 
   //------------------------
   // Done
