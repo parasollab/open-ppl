@@ -20,9 +20,9 @@
 #ifndef CfgLigand_h
 #define CfgLigand_h
 
-#include "Cfg_free_serial.h"
+#include "Cfg_free_tree.h"
 
-class CfgLigand : public Cfg_free_serial {
+class CfgLigand : public Cfg_free_tree {
 public:
 
   //===================================================================
