@@ -8,7 +8,7 @@
   */
 ////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef _scheduling_mode_
-#def _scheduling_mode_
+#define _scheduling_mode_
 //This enum should go inside the ConnectMapComponent collection
 enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTHEST, FARTHEST_TO_CLOSEST};
 #endif
