@@ -146,6 +146,10 @@ public:
     */
   virtual Cfg GetFreeRandomCfg(Environment *env, CollisionDetection *cd, SID _cdsetid, CDInfo& _cdInfo);
 
+  /// Get N free random Cfgs.
+  virtual void GetNFreeRandomCfgs(vector<Cfg> &nodes, Environment *env, 
+  	CollisionDetection *cd, SID _cdsetid, CDInfo& _cdInfo, int num);
+
   ///Create Cfg whose poisiton part is from c1 and orientation part is from c2
   virtual Cfg GetPositionOrientationFrom2Cfg(const Cfg& c1, const Cfg& c2);  // rotate-at-s helper
 

@@ -164,8 +164,8 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
 	if (info.addNodes2Map) {
 		
 		// tag all nodes generated as user indicates
-		for (int i=0;i<info.nodes.size();++i)
-			info.nodes[i].info.tag = info.tag;
+		//for (int i=0;i<info.nodes.size();++i)
+	        //		info.nodes[i].info.tag = info.tag;
 		
 		
 		// then add generated nodes
@@ -186,22 +186,16 @@ BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GN
 	cout << "(numNodes=" << _gn.numNodes.GetValue() << ") ";
 #endif
 	
-#if INTERMEDIATE_FILES
-	vector<Cfg> path; path.reserve(_gn.numNodes.GetValue());
-#endif
 	
 	// PRM style node generation -- generate in expanded bounding box
-	for (int i=0; i < _gn.numNodes.GetValue(); i++ ) {
-		Cfg cfg = Cfg::GetFreeRandomCfg(_env,cd,_info.cdsetid,_info.cdInfo);
-		//Cfg cfg = Cfg::GetRandomCfg(_env);
-		
-		//if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) {
-		_info.nodes.push_back(cfg);
-#if INTERMEDIATE_FILES
-		path.push_back(cfg);
-#endif
-		//}
-	}
+	vector<Cfg> path;
+	//for(int i=0; i< _gn.numNodes.GetValue(); ++i) {
+	//  Cfg tmp = Cfg::GetFreeRandomCfg(_env,cd,_info.cdsetid,_info.cdInfo);
+	//  path.push_back(tmp);
+	//}
+	Cfg::GetNFreeRandomCfgs(path, _env,cd,_info.cdsetid,
+        				_info.cdInfo, _gn.numNodes.GetValue());
+	_info.nodes.insert(_info.nodes.end(), path.begin(), path.end());
 	
 #if INTERMEDIATE_FILES
 	//in util.h

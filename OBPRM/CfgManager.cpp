@@ -113,6 +113,19 @@ Cfg CfgManager::GetFreeRandomCfg(Environment *env, CollisionDetection *cd,
    return tmp;
 }
 
+void CfgManager::GetNFreeRandomCfgs(vector<Cfg> &nodes, Environment *env, 
+        CollisionDetection *cd, SID _cdsetid, CDInfo& _cdInfo, int num) {
+
+   Cfg tmp;
+   for(int i=0; i<num; ++i) {
+      do {
+         tmp = Cfg::GetRandomCfg(env);
+      } while ( tmp.isCollision(env, cd, _cdsetid, _cdInfo) );
+      nodes.push_back(tmp);
+   }
+}
+
+
 
 void CfgManager::IncrementTowardsGoal(
 	Cfg &c, 
