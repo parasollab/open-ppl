@@ -126,8 +126,10 @@ ParseCommandLine(int argc, char **argv) {
     }
     else if ( gauss_d.AckCmdLine(&i, argc, argv) ) {
     } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	   << argv <<"\"\n\n";
+      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
+      for(int j=0; j<argc; j++)
+        cerr << argv[j] << " ";
+      cerr << "\"\n\n";
       PrintUsage(cerr);
       cerr << endl;
       exit (-1);
