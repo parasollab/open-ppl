@@ -35,6 +35,7 @@ class Closest: public ConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   Closest();
+  Closest(int k);
   ~Closest();
  
   //////////////////////
@@ -80,6 +81,13 @@ Closest<CFG,WEIGHT>::Closest():ConnectionMethod<CFG,WEIGHT>() {
   element_name = "closest"; 
 
   SetDefault();
+}
+
+
+template <class CFG, class WEIGHT>
+Closest<CFG,WEIGHT>::Closest(int k):ConnectionMethod<CFG,WEIGHT>() { 
+  element_name = "closest"; 
+  kclosest = k;
 }
 
 
@@ -244,45 +252,48 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   cout << "closest*(k="<< kclosest <<"): "<<flush;
 #endif
   
-  //vector<CFG> vec1;
-  //_rm->m_pRoadmap->GetVerticesData(vec1);
-  const int verticeSize = v1.size();//vec1.size();
-  const int k = min(kclosest,verticeSize);
-  //vector<CFG> vec2 = vec1;
-
-  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  
+  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;  
   vector< pair<VID,VID> > kp;
-  // Find k closest cfgs to each cfg in the roadmap
-  if(k < v2.size() - 1) {
-    kp = dm->FindKClosestPairs(_rm, v1, v2, k); 
-    kp = dm->FindKClosestPairs(_rm, v2, v1, k);
-  } 
-  else { // all the pairs
-    for(int i=0; i<v1.size(); ++i)
-      for(int j=0; j<v2.size(); ++j){
-        if( v1[i]==v2[j] ) continue;
-        kp.push_back(pair<VID,VID>(pMap->GetVID(v1[i]), pMap->GetVID(v2[j])));
-      }
+
+  if((v1.size() < kclosest) && (v2.size() < kclosest)) {//all pairs
+    for(typename vector<CFG>::iterator I = v1.begin(); I != v1.end(); ++I)
+      for(typename vector<CFG>::iterator J = v2.begin(); J != v2.end(); ++J)
+	if(*I != *J)
+	  kp.push_back(make_pair<VID,VID>(pMap->GetVID(*I), pMap->GetVID(*J)));
   }
-  
+
+  if((v1.size() >= kclosest) && (v2.size() >= kclosest)) { //k closest each way
+    vector<pair<VID,VID> > kp2;
+    kp = dm->FindKClosestPairs(_rm, v1, v2, kclosest);
+    kp2 = dm->FindKClosestPairs(_rm, v2, v1, kclosest);
+    kp.insert(kp.end(), kp2.begin(), kp2.end());
+  } 
+
+  if((v1.size() < kclosest) && (v2.size() >= kclosest)) { //k closest in v2
+    kp = dm->FindKClosestPairs(_rm, v1, v2, kclosest);
+  }
+
+  if((v1.size() >= kclosest) && (v2.size() < kclosest)) { //k closest in v1
+    kp = dm->FindKClosestPairs(_rm, v2, v1, kclosest);
+  }
+
   // for each pair identified
   LPOutput<CFG,WEIGHT> lpOutput;
-  for (int j=0; j < kp.size(); j++) {
-    if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
+  for(vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
+    if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) 
+      continue;
 #if CHECKIFSAMECC
-    if(IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
+    if(IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) 
+      continue;
 #endif
-
-    if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
-                        _rm->m_pRoadmap->GetData(kp[j].first),
-                        _rm->m_pRoadmap->GetData(kp[j].second),
-                        &lpOutput,
-                        connectionPosRes, connectionOriRes, 
-                        (!addAllEdges) )) {
-      _rm->m_pRoadmap->AddEdge(kp[j].first, kp[j].second, lpOutput.edge);
+    if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm,
+		       _rm->m_pRoadmap->GetData(KP->first),
+		       _rm->m_pRoadmap->GetData(KP->second),
+		       &lpOutput, connectionPosRes, connectionOriRes, 
+		       (!addAllEdges) )) {
+      _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
     }
-  } //endfor j
+  } 
 }
 
 
