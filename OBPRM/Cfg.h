@@ -462,12 +462,12 @@ public:
         /// free c-space
         static Cfg GetMedialAxisCfg(Environment *_env, CollisionDetection *_cd,
             SID _cdsetid, CDInfo &_cdInfo, DistanceMetric *_dm,
-            SID _dmsetid, int n);
+            SID _dmsetid, int clearnce_n, int penetration_n);
 
 	/// pushes a node towards the medial axis
 	void PushToMedialAxis(Environment *_env, CollisionDetection *cd,
 	    SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-            SID dmsetid, int n);
+            SID dmsetid, int clearance_n, int penetration_n);
     
         /// pushes a free node towards the medial axis
         void MAPRMfree(Environment *_env, CollisionDetection *cd,
