@@ -28,6 +28,10 @@
 #define MAX_NUM      20        // default for modifiedLM maxNum
 #define RFACTOR       2        // default for modifiedLM 'radius' factor
 
+// added on 09/11/00 GS
+double ConnectMapNodes::connectionPosRes = 0.05;
+double ConnectMapNodes::connectionOriRes = 0.05;
+
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class ConnectMapNodes
@@ -63,12 +67,14 @@ DefaultInit(){
 
     cnInfo.dupeEdges = cnInfo.dupeNodes = 0;
     cnInfo.gn.gnInfo.gnsetid = -1;
+
+
 };
 
 
 void
 ConnectMapNodes::
-UserInit(Input * input){
+UserInit(Input * input, Environment * env){
    //-----------------------------------------------
    // User Initialize Node Connectors
    //-----------------------------------------------
@@ -88,6 +94,10 @@ UserInit(Input * input){
 
    cnInfo.numEdges = input->numEdges.GetValue();
    cnInfo.addPartialEdge = input->addPartialEdge.GetValue();
+
+   // added on 09/11/00 GS
+   connectionPosRes = env->GetPositionRes();
+   connectionOriRes = env->GetOrientationRes();
 };
 
 
@@ -151,6 +161,16 @@ ConnectNodes(Environment * environment, RoadmapGraph<Cfg,WEIGHT>& roadmap,
   roadmap = rdmp.roadmap;
 };
 
+// ------------------------------------------------------------------
+// set connection resolutions, since it might be different from global values.
+// ------------------------------------------------------------------
+void ConnectMapNodes::setConnectionResolution(double _posRes, double _oriRes) {
+    if(_posRes > 0) // make sure it is positive.
+	connectionPosRes = _posRes;
+    if(_oriRes > 0)
+	connectionOriRes = _oriRes;
+}
+
 
 // ------------------------------------------------------------------
 // some info needs to be set up for check connection between cfg's
@@ -161,7 +181,9 @@ Initialize_LPinfo(Roadmap * _rm,CNInfo& info){
 
   LPInfo lpInfo(_rm,info);
 
-  lpInfo.positionRes    = _rm->GetEnvironment()->GetPositionRes();
+  //lpInfo.positionRes    = _rm->GetEnvironment()->GetPositionRes();
+  lpInfo.positionRes    = connectionPosRes;
+  lpInfo.orientationRes = connectionOriRes;
   lpInfo.checkCollision = true;
   lpInfo.savePath       = false;
   lpInfo.cdsetid        = info.cdsetid;

@@ -314,7 +314,7 @@ public:
   //===================================================================
 
   void DefaultInit();
-  void UserInit(Input * input);
+  void UserInit(Input * input, Environment * env);
 
   void ConnectNodes(Roadmap*, CollisionDetection *,LocalPlanners* ,
 		DistanceMetric *,SID, CNInfo&); 
@@ -356,6 +356,7 @@ public:
   static void SortByDistFromCfg (Environment *_env,DistanceMetric *dm, 
 				CNInfo& info, const Cfg& _cfg1, vector<Cfg>&  _cfgs);
 
+  static void setConnectionResolution(double _posRes, double _oriRes);
 
 private:
 
@@ -414,6 +415,7 @@ public:
   CNInfo cnInfo;
 
 protected:
+  static double connectionPosRes, connectionOriRes;
 private:
 };
 
