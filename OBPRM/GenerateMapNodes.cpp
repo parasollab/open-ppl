@@ -150,8 +150,6 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
 	
 	if (info.calcClearance) {
 		// go through info.nodes and calculate their clearances...
-		//cout << "Calculating Clearances...\n";
-		cout<<info.nodes.size()<<endl;
 		for (int i=0; i < info.nodes.size(); i++) {
 			info.nodes[i].info.clearance = 
 				info.nodes[i].ApproxCSpaceClearance
