@@ -404,4 +404,21 @@ protected:
 private:
 };
 
+
+//---------------------------------------------------------------
+// Ran3 -- "Global" UNIFORM Random number function
+// This ought to be placed elsewhere, but at the moment
+// it - along with Medial Axis is "in development"
+// so it is stuck here - do NOT count on it remaining here !!!
+//---------------------------------------------------------------
+// The code comes from Numerical Recipes in C, pages 274 - 285
+//---------------------------------------------------------------
+#define MBIG    1000000000
+#define MSEED    161803398
+#define MZ      0
+#define FAC ((float)1.0 / MBIG)
+
+float Ran3(long *idum);
+//---------------------------------------------------------------
+
 #endif
