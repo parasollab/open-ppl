@@ -11,7 +11,10 @@
 #include <string>
 #include "ConnectMapNodes.h"
 
-
+#define STEP_FACTOR  50        // default for rrt stepFactor
+#define ITERATIONS   50        // default for rrt iterations
+#define SMALL_CC      5        // default for rrt and connectCCs: smallcc size
+#define KPAIRS        5        // default for connectCCs
 // Interface for component connection methods
 class ComponentConnectionMethod { //interface only
  public:
@@ -173,74 +176,55 @@ class RayTracerConnectionMethod: public ComponentConnectionMethod {
 
 
 };
-
-/*class CNdata:public CN{
-   CNdata():CN(){
-
-   }
-   ~CNdata();
-   void setStepFactor(int step){ stepFactor = step;}
-   void setIterations(int iter){ iterations = iter;}
-   void setSmallCCSize(int small){ smallcc = small; }
-   void setName(char* nm) { name = nm; }
-};
-*/
+//RRTConnectionMethod
 class RRTConnectionMethod: public ComponentConnectionMethod {
  public:
-  RRTConnectionMethod(): ComponentConnectionMethod() { 
-    element_name = string ("RRTcomponents"); //in ConnectCCs there is RRTexpand
-    //set defaults
-    is_default = false;
-    //parse to overwrite the defaults
-    //ParseCommandLine(0, "");
-  }
+  RRTConnectionMethod();
   RRTConnectionMethod(Input * input,Roadmap * rmp, CollisionDetection* colldetect, 
                                DistanceMetric* distmet, LocalPlanners* localp, 
-                               ConnectMapNodes* cmn):ComponentConnectionMethod(){
-    element_name = string ("RRTcomponents"); //in ConnectCCs there is RRTexpand
-  rdmp = rmp; cd = colldetect; 
-  dm = distmet; lp = localp; 
-  cn = cmn;
-  cn1 = new CN(0,1,100,200);
+                               ConnectMapNodes* cmn);
+  ~RRTConnectionMethod();
+ 
+  int ParseCommandLine(int *argc, char **argv, istrstream &input_stream);
+  void SetDefault();
+  void ConnectComponents();
 
-//  strcpy(cn1.name,cnname);
-//  cn1.connector = &ConnectMapNodes::ConnectNodes_RRTConnect;
-//  cn1.iterations = 10;
-//  cn1.stepFactor = 10;
-//  cn1.smallcc    = 10;
-//       cn1.cnid = AddElementToUniverse(cn1);
-//       if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
-//          cout << endl << "In MakeSet: couldn't change element info";
-//          exit(-1);
-//       }
-
-
-
-  }
-  ~RRTConnectionMethod() { }
-  int ParseCommandLine(int *argc, char **argv, istrstream &input_stream) { }
-
-  void SetDefault() {
-    is_default = true;
-  }
-  void ConnectComponents(/*parameters for CC connection*/) {
-        //Roadmap * _rm,CollisionDetection* cd,
-        //LocalPlanners* lp,DistanceMetric * dm,
-        //CN& _cn, CNInfo& info
-    cout << "Connecting CCs with method: RRT" << endl;
-    ConnectMapNodes::ConnectNodes_RRTConnect(rdmp, &*cd, &*lp, &*dm,
-    						(*cn1),(*cn).cnInfo);
-  }
  private:
   bool is_default;
-CN * cn1;
-Roadmap * rdmp; 
-CollisionDetection* cd; 
-DistanceMetric* dm; 
-LocalPlanners* lp; 
-ConnectMapNodes* cn;
+  CN * cn1;
+  Roadmap * rdmp; 
+  CollisionDetection* cd; 
+  DistanceMetric* dm; 
+  LocalPlanners* lp; 
+  ConnectMapNodes* cn;
+  int iterations;  // default
+  int stepFactor;  // default
+  int smallcc; 
 };
+//ConnectCCsConnectionMethod
+class ConnectCCsConnectionMethod: public ComponentConnectionMethod {
+ public:
+  ConnectCCsConnectionMethod();
+  ConnectCCsConnectionMethod(Input * input,Roadmap * rmp, CollisionDetection* colldetect, 
+                               DistanceMetric* distmet, LocalPlanners* localp, 
+                               ConnectMapNodes* cmn);
+  ~ConnectCCsConnectionMethod();
+ 
+  int ParseCommandLine(int *argc, char **argv, istrstream &input_stream);
+  void SetDefault();
+  void ConnectComponents();
 
+ private:
+  bool is_default;
+  CN * cn1;
+  Roadmap * rdmp; 
+  CollisionDetection* cd; 
+  DistanceMetric* dm; 
+  LocalPlanners* lp; 
+  ConnectMapNodes* cn;
+  int kpairs;
+  int smallcc; 
+};
 
 // A collection of component connection methods
 class ConnectMapComponents {
@@ -261,6 +245,11 @@ class ConnectMapComponents {
     RRTConnectionMethod* rrt = new RRTConnectionMethod();
     rrt->SetDefault();
     tmp.push_back(rrt);
+
+
+    ConnectCCsConnectionMethod* connectCCs = new ConnectCCsConnectionMethod();
+    connectCCs->SetDefault();
+    tmp.push_back(connectCCs);    
 
     RayTracerConnectionMethod* rt = new RayTracerConnectionMethod();
     rt->SetDefault();

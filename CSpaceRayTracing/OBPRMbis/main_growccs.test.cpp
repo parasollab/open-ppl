@@ -94,7 +94,7 @@ int main(int argc, char** argv)
   component_connector.ConnectComponents();
   //    connect_ccs.PerformConnectCCs(&rdmp,&cd,&cn,&lp,&dm);
   clock.StopClock();
-
+cout << ": " << clock.GetClock_SEC() << " sec\n";
   //---------------------------
   // Write roadmap
   //---------------------------
@@ -118,7 +118,8 @@ int main(int argc, char** argv)
 //         << ", "<< rdmp.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
 //    Stats.PrintAllStats(&rdmp);
 #endif
-  
+    DisplayCCStats(*(rdmp.m_pRoadmap),10);
+    cout << endl;
   //------------------------
   // Done
   //------------------------

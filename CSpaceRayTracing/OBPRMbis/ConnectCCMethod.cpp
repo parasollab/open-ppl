@@ -16,6 +16,9 @@ ConnectMapComponents::ConnectMapComponents():
   
   RRTConnectionMethod* rrt = new RRTConnectionMethod();
   all.push_back(rrt);
+
+  ConnectCCsConnectionMethod* connectccs = new ConnectCCsConnectionMethod();
+  all.push_back(connectccs);
   
   RayTracerConnectionMethod* rt = new RayTracerConnectionMethod();
   all.push_back(rt);
@@ -40,6 +43,9 @@ ConnectMapComponents::ConnectMapComponents(Input * input,Roadmap * rdmp, Collisi
   
   RRTConnectionMethod* rrt = new RRTConnectionMethod(input,rdmp,cd,dm,lp,cn);
   all.push_back(rrt);
+
+  ConnectCCsConnectionMethod* connectccs = new ConnectCCsConnectionMethod(input,rdmp,cd,dm,lp,cn);
+  all.push_back(connectccs);
 
   RayTracerConnectionMethod* rt = new RayTracerConnectionMethod();
   all.push_back(rt);
@@ -171,3 +177,134 @@ void ConnectMapComponents::PrintDefaults() {
 
   //add printing the default values for the default method
 }
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+//   ComponentConnectionMethod: method definitions
+
+//   Connection Method:  RRTConnectionMethod
+
+ RRTConnectionMethod::RRTConnectionMethod() { 
+    element_name = string ("RRTcomponents"); //in ConnectCCs there is RRTexpand
+    //set defaults
+    is_default = false;
+    //parse to overwrite the defaults
+    //ParseCommandLine(0, "");
+ }
+
+ RRTConnectionMethod::RRTConnectionMethod(Input * input,Roadmap * rmp, 
+                               CollisionDetection* colldetect, 
+                               DistanceMetric* distmet, LocalPlanners* localp, 
+                               ConnectMapNodes* cmn){
+    element_name = string ("RRTcomponents"); //in ConnectCCs there is RRTexpand
+  rdmp = rmp; cd = colldetect; 
+  dm = distmet; lp = localp; 
+  cn = cmn;
+  cn1 = new CN(0,SMALL_CC,STEP_FACTOR,ITERATIONS);
+  }
+ RRTConnectionMethod::~RRTConnectionMethod() { }
+//../growccs.test -f narrow  -outmapFile RRTa.map \
+//        -cComponents RRTcomponents 200 2000 1  
+ int RRTConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstream &input_stream) { 
+
+       if ( input_stream >> iterations) { //get value, if any
+          if ( iterations < 0 ) {
+            cout << endl << "INVALID: iterations = " << iterations;
+            exit(-1);
+          } else {
+            if ( input_stream >> stepFactor) { //get value, if any
+               if ( stepFactor < 0 ) {
+                  cout << endl << "INVALID: stepFactor = " << stepFactor;
+                  exit(-1);
+               } else {
+                 if (input_stream >> smallcc) { //get value, if any
+                    if ( smallcc < 0 ) {
+                       cout << endl << "INVALID: smallcc = " << smallcc;
+                       exit(-1);
+                    }
+                 } else {
+                       smallcc = SMALL_CC;  // default
+                 }
+               }
+            } else {
+               stepFactor = STEP_FACTOR;  // default
+               smallcc    = SMALL_CC;  // default
+            }
+          }
+       } else {
+          iterations = ITERATIONS;  // default
+          stepFactor = STEP_FACTOR;  // default
+          smallcc    = SMALL_CC;  // default
+       }
+
+       cn1 = new CN(0,smallcc,stepFactor,iterations);
+
+ }
+
+ void RRTConnectionMethod::SetDefault() {
+    is_default = true;
+ }
+ void RRTConnectionMethod::ConnectComponents(/*parameters for CC connection*/) {
+        //Roadmap * _rm,CollisionDetection* cd,
+        //LocalPlanners* lp,DistanceMetric * dm,
+        //CN& _cn, CNInfo& info
+    cout << "Connecting CCs with method: RRT" << endl;
+    ConnectMapNodes::ConnectNodes_RRTConnect(rdmp, &*cd, &*lp, &*dm,
+    						(*cn1),(*cn).cnInfo);
+ }
+
+//   Connection Method:  ConnectCCsConnectionMethod
+
+ ConnectCCsConnectionMethod::ConnectCCsConnectionMethod() { 
+    element_name = string ("components"); //in ConnectCCs
+    //set defaults
+    is_default = false;
+    //parse to overwrite the defaults
+    //ParseCommandLine(0, "");
+ }
+
+ ConnectCCsConnectionMethod::ConnectCCsConnectionMethod(Input * input,Roadmap * rmp, 
+                               CollisionDetection* colldetect, 
+                               DistanceMetric* distmet, LocalPlanners* localp, 
+                               ConnectMapNodes* cmn){
+    element_name = string ("components"); //in ConnectCCs
+  rdmp = rmp; cd = colldetect; 
+  dm = distmet; lp = localp; 
+  cn = cmn;
+  cn1 = new CN(KPAIRS,SMALL_CC,0,0);
+  }
+ ConnectCCsConnectionMethod::~ConnectCCsConnectionMethod() { }
+ 
+ int ConnectCCsConnectionMethod::ParseCommandLine(int *argc,char **argv,istrstream &input_stream){ 
+    if ( input_stream >> kpairs) { //get kpairs value
+       if ( kpairs < 0 ) {
+         cout << endl << "INVALID: kpairs = " << kpairs;
+         exit(-1);
+       } else {
+         if (input_stream >> smallcc) { //get smallcc value, if any
+            if ( smallcc < 0 ) { 
+               cout << endl << "INVALID: smallcc = " << smallcc;
+               exit(-1);
+            } 
+          } else {
+            smallcc = SMALL_CC;  // default
+         }
+       }
+    }
+    if(kpairs == 0) {  //use defaults if no kpairs: kpairs=4,smallcc=SMALL_CC
+         smallcc = SMALL_CC;
+         kpairs = 4;
+         }
+    cn1 = new CN(kpairs,smallcc,0,0);
+}//end ParseCommandLine
+ void ConnectCCsConnectionMethod::SetDefault() {
+    is_default = true;
+ }
+ void ConnectCCsConnectionMethod::ConnectComponents(/*parameters for CC connection*/) {
+
+    cout << "Connecting CCs with method: ConnectCCs" << endl;
+    ConnectMapNodes::ConnectNodes_ConnectCCs(rdmp, &*cd, &*lp, &*dm,
+    						(*cn1),(*cn).cnInfo);
+ }
+
