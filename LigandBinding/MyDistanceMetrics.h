@@ -11,6 +11,7 @@
 
 
 #include"DistanceMetrics.h"
+#include"Vectors.h"
 
 class MyDistanceMetrics : public DistanceMetric {
 

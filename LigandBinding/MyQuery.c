@@ -10,6 +10,8 @@
 
 #include"MyQuery.h"
 #include"BioPotentials.h"
+#include"DistanceMetrics.h"
+#include"Environment.h"
 
 
 MyQuery::MyQuery() : Query() {};

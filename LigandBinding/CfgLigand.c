@@ -6,7 +6,7 @@
 //  General Description
 //	A derived template class from CfgManager. It provides some 
 //	specific implementation directly related to a multiple joints
-//	serial robot.
+//	tree robot.
 //
 //  Created
 //	08/31/99	Guang Song
@@ -22,7 +22,7 @@
 
 
 
-CfgLigand::CfgLigand(int _numofJoints) : Cfg_free_serial(_numofJoints) {}
+CfgLigand::CfgLigand(int _numofJoints) : Cfg_free_tree(_numofJoints) {}
 
 CfgLigand::~CfgLigand() {}
 

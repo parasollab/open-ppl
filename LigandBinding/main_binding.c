@@ -23,6 +23,7 @@
 #include "GradientDecent.h"
 #include "BioPotentials.h"
 #include "MyDistanceMetrics.h"
+#include "util.h"
 
 MyInput input;
 Stat_Class Stats; 

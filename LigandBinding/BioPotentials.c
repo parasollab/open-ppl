@@ -23,6 +23,7 @@
 #include"Environment.h"
 #include"Cfg.h"
 #include"CfgManager.h"
+#include"MultiBody.h"
 
 #define MAXPOTENTIAL 9999999.9
 
