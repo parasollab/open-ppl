@@ -14,6 +14,7 @@
 #include <fstream.h>
 #include <string.h>
 
+#include "RayTracer.h"
 #include "ConnectCCs.h"
 #include "Environment.h"
 #include "GraphAlgo.h"
@@ -88,10 +89,27 @@ PerformConnectCCs(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * l
   if (connect_cc_method == string("RRT")) {
     cout << "using RRT to attempt to connect CCs" << endl;
     //The call to RRT from ConnectMapNodes goes here
+    (*cn).ConnectNodes(&rdmp,cd,lp,dm, (*cn).cnInfo.cnsetid, (*cn).cnInfo);
   }
   else if (connect_cc_method == string("RayTracer")) {
+    
+    bool path_found=false;
     cout << "usint RayTracer to attempt to connect CCs" << endl;
     //The call to RayTracer from ConnectMapNodes goes here
+      Environment * environment = rdmp.GetEnvironment();
+      CDInfo info;
+      Cfg source = Cfg::GetFreeRandomCfg(environment, cd, cdsetid,info);
+      Cfg target = Cfg::GetFreeRandomCfg(environment, cd, cdsetid,info);
+      RayTracer tracer(environment, source, target);
+      tracer.setDirection(RT_TARGET_ORIENTED);
+  
+      while (!path_found && !tracer.exhausted()) {
+         //Trace the ray
+         cout<< "Trying new direction for ray"<<endl;
+         path_found=tracer.trace(cd, cdsetid, info, dm, dmsetid);
+         tracer.newDirection();
+         }
+    
   }
   else {
     cout << "Unknown choice, doing nothing" << endl;

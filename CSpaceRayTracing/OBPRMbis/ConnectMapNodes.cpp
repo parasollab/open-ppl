@@ -955,10 +955,7 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
 
          Cfg x_new = Cfg::c1_towards_c2(x_near,u,deltaT);
 	 //if ( x_near.isWithinResolution(u,connectionPosRes,connectionOriRes) )
-/*	 if ( x_near.ApproxCSpaceClearance(env,cd,
-			info.cdsetid,info.cdInfo,
-			dm,info.dmsetid,x_near.DOFs(),TRUE) 
-				< deltaT ) */
+
 	 if ((dm->Distance(env,u,x_near,info.dmsetid)<deltaT)
 	      && (U.size()>0))
 	 { x_new = u; close = TRUE; cout << "CLOSE";  }
@@ -987,7 +984,7 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
 	             xnew = Cfg(t1);
 		   }          
       } //endif (kp.size()>0) 
-      else { cout << "no closest pair ";
+      else { cout << "no closest pair " << verticesData.size();
 	     Cfg t = Cfg::GetRandomCfg(env);
 	     xnew = Cfg(t);
 	   }
@@ -1056,6 +1053,7 @@ ConnectMapNodes::OrderCCByCloseness(Roadmap * rm,
     vector< pair<int,VID> >::iterator cc2=ccvec.begin();
     //vector<VID> vidvec = rm->m_pRoadmap->GetCC((*cc2).second);
     vector<VID> vidvec;
+    cout << "cc2.second in order cc:" << (*cc2).second;
     GetCC(*(rm->m_pRoadmap),(*cc2).second ,vidvec);
     int i = 0; int index = 0;
     Cfg vtemp;
@@ -1074,7 +1072,7 @@ ConnectMapNodes::OrderCCByCloseness(Roadmap * rm,
 	    } //while i<vidvec.size()
 	centervec[index] = centervec[index] / i;
 	cout << "centervec=" << centervec[index] << endl;
-        ++cc2; i = 0; index++;
+        ++cc2; i = 0; index++;     cout << "cc2.second in order cc:" << (*cc2).second;
 	//vidvec=rm->m_pRoadmap->GetCC((*cc2).second);
         GetCC(*(rm->m_pRoadmap),(*cc2).second ,vidvec);
     } //while cc2<ccvec.end()
@@ -1328,11 +1326,12 @@ ConnectNodes_RRTConnect(
 		U.erase(U.begin());
 	  } //end while !_rm
 	      //if(!IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id)) {
+		cout << "Modifying map\n";
       		vector<VID> vertsa;
       		(&submap1)->m_pRoadmap->GetVerticesVID(vertsa);
                 ModifyRoadMap(_rm,&submap1, vertsa);
       		vector<VID> vertsb;  //not sure here if cc2 should be cc2 or vice versa
-      	        (&submap1)->m_pRoadmap->GetVerticesVID(vertsb);
+      	        (&submap2)->m_pRoadmap->GetVerticesVID(vertsb);
                 ModifyRoadMap(_rm,&submap2, vertsb);
 		//}
 		d++;
@@ -2029,7 +2028,10 @@ MakeCNSet(istream& _myistream) {
     } else if (!strcmp(cnname,"RRTexpand") || !strcmp(cnname,"RRTcomponents") ) {
        CN cn1;
        strcpy(cn1.name,cnname);
-       cn1.connector = &ConnectMapNodes::ConnectNodes_ExpandRRT;
+       if (!strcmp(cnname,"RRTexpand"))
+          cn1.connector = &ConnectMapNodes::ConnectNodes_ExpandRRT;
+       else 
+	  cn1.connector = &ConnectMapNodes::ConnectNodes_RRTConnect;
 
        if ( _myistream >> iterations) { //get value, if any
           if ( iterations < 0 ) {

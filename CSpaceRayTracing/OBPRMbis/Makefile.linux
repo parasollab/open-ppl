@@ -167,7 +167,10 @@ OBJS = \
 	Weight.o \
 	BasicMAPRM.o \
 	ConnectCCsCmds.o \
-	ConnectCCs.o
+	ConnectCCs.o \
+	RayTracer.o \
+	RayCSpace.o
+	
 
 
 objs:: $(OBJS)
