@@ -6,18 +6,56 @@
 #include "RayTracer.h"
 #include <iostream.h>
 
-RayTracer::RayTracer(Environment *environment, Cfg source, Cfg target) {
-  this->environment = environment;
-  this->source = source;
-  this->target = target;
-  all_explored = false; //Used by this->exhausted to decide if there are no more rays to trace
+//  RayTracer::RayTracer(Environment *environment, Cfg source, Cfg target) {
+//    this->environment = environment;
+//    this->source = source;
+//    this->target = target;
+//    all_explored = false; //Used by this->exhausted to decide if there are no more rays to trace
+//    rays_tested = 0;
+//  }
+
+RayTracer::RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, CDInfo cdinfo, DistanceMetric * dm, SID dmsetid) {
+  this->rdmp = rdmp;
+  this->cd = cd;
+  this->cdsetid = cdsetid;
+  this->cdinfo = cdinfo;
+  this->dm = dm;
+  this->dmsetid = dmsetid;
+  environment = rdmp->GetEnvironment();
+  all_explored = false;
   rays_tested = 0;
 }
+
+void RayTracer::connectCCs() {
+  //the following lines are to be replaced with a clever
+  //way to pick a pair of configurations in two different connected components
+  //to try to connect. This is to be called afterwards
+  Cfg source = Cfg::GetFreeRandomCfg(environment, cd, cdsetid, cdinfo);
+  Cfg target = Cfg::GetFreeRandomCfg(environment, cd, cdsetid, cdinfo);
+  findPath(source, target);
+}
+
+bool RayTracer::findPath(Cfg &source, Cfg &target) {
+  bool path_found = false;
+  setSource(source);
+  setTarget(target);  
+  setDirection(RT_TARGET_ORIENTED);
+  
+  while (!path_found && !exhausted()) {
+    //Trace the ray
+    cout<< "Trying new direction for ray"<<endl;
+    path_found= trace();
+    newDirection();
+  }
+  if (path_found)
+    return true;
+  return false;
+}
+
 // Set source of the ray (it is a configuration)
 void RayTracer::setSource(Cfg configuration) {
   cout << "Setting the source of the ray\n";
   source = configuration;
-  
 }
 
 // Set target of the ray (it is a configuration)
@@ -27,10 +65,10 @@ void  RayTracer::setTarget(Cfg configuration) {
 }
 
 // Set environment
-void  RayTracer::setEnvironment(Environment *environment) {
-  cout << "Setting the environment\n";
-  this->environment = environment;
-}
+//  void  RayTracer::setEnvironment(Environment *environment) {
+//    cout << "Setting the environment\n";
+//    this->environment = environment;
+//  }
 
 // Set direction in which the ray to be traced is going to be
 // shot for the first time, a policy can be defined to select
@@ -58,23 +96,22 @@ void RayTracer::setDirection(const int policy) {
   }
 }
 
-bool RayTracer::trace(CollisionDetection *cd, SID cdsetid/*CD set ID I'm using don't worry */, 
-		      CDInfo& cdInfo/*returns cdinfo depending on the library used*/, 
-		      DistanceMetric * dm, SID dmsetid/*don't worry*/) {
+//  bool RayTracer::trace(CollisionDetection *cd, SID cdsetid, CDInfo& cdinfo, 
+//  		      DistanceMetric * dm, SID dmsetid) {
+bool RayTracer::trace() {
   bool path_found = false; //true if a path has been found, false otherwise
-
   long number_bouncings = 0; //number of bouncings of the ray
   double ray_length = 0; //length of the ray (depending on metrics, I suppose)
 
   ray.init(source, direction, target); //initialize the ray
   while (!path_found && number_bouncings < MAX_BOUNCINGS &&
 	 ray.length() < MAX_RAY_LENGTH) {
-    if (ray.connectTarget(environment, cd, cdsetid, cdInfo, dm, dmsetid)) {
+    if (ray.connectTarget(environment, cd, cdsetid, cdinfo, dm, dmsetid)) {
       ray.finish();
       path_found = true;
     }
     else
-    if (ray.collide(environment, cd, cdsetid, cdInfo, dm, dmsetid,MAX_RAY_LENGTH)) { // if there is a collision
+    if (ray.collide(environment, cd, cdsetid, cdinfo, dm, dmsetid,MAX_RAY_LENGTH)) { // if there is a collision
       //cout<< "\tif the collided object is the target's screen\n";
       //cout << "\t\tpath_found=true;\n";
       //cout << "\telse\n";

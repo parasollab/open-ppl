@@ -179,23 +179,10 @@ PerformConnectCCs(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * l
     (*cn).ConnectNodes(&rdmp,cd,lp,dm, (*cn).cnInfo.cnsetid, (*cn).cnInfo);
   }
   else if (method_name == string("RayTracer")) {
-    cout << "usint RayTracer to attempt to connect CCs" << endl;
-    //The call to RayTracer from ConnectMapNodes goes here
-    bool path_found=false;
-      Environment * environment = rdmp.GetEnvironment();
-      CDInfo info;
-      Cfg source = Cfg::GetFreeRandomCfg(environment, cd, cdsetid,info);
-      Cfg target = Cfg::GetFreeRandomCfg(environment, cd, cdsetid,info);
-      RayTracer tracer(environment, source, target);
-      tracer.setDirection(RT_TARGET_ORIENTED);
-  
-      while (!path_found && !tracer.exhausted()) {
-         //Trace the ray
-         cout<< "Trying new direction for ray"<<endl;
-         path_found=tracer.trace(cd, cdsetid, info, dm, dmsetid);
-         tracer.newDirection();
-         }
-
+    cout << "using RayTracer to attempt to connect CCs" << endl;
+    //The call to RayTracer from ConnectMapNodes goes here	
+    RayTracer tracer(&rdmp, cd, cdsetid, cd->cdInfo, dm, dmsetid);
+    tracer.connectCCs();
   }
   else {
     cout << "Unknown choice, doing nothing" << endl;

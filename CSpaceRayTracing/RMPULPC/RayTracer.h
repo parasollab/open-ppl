@@ -22,6 +22,20 @@
 #define RT_NORMAL 3
 
 class RayTracer {
+ public:
+/*    RayTracer(Environment *environment, Cfg source, Cfg target); */
+  RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, CDInfo cdinfo, DistanceMetric * dm, SID dmsetid);
+  void connectCCs();
+  bool findPath(Cfg &source, Cfg &target);
+  void setSource(Cfg configuration);
+  void setTarget(Cfg configuration);
+/*    void setEnvironment(Environment *environment); */
+  void setDirection(const int policy);//set direction of the ray to trace
+  bool trace();//trace a ray in the established direction
+  void newDirection(/*policy*/);//set a new direction according to some policy
+  bool exhausted(); //returns true if all the possibilities have been explored
+  void printPath ();//print the path found
+
  private:
   RayCSpace ray; // Ray to be traced
   Cfg source, target;
@@ -30,17 +44,14 @@ class RayTracer {
   int rays_tested; // Number of rays tested so far
   bool all_explored; // True if all possible rays have been traced
   int policy; // Policy to shoot rays, possible values in setDirection
- public:
-  RayTracer(Environment *environment, Cfg source, Cfg target);
-  void setSource(Cfg configuration);
-  void setTarget(Cfg configuration);
-  void setEnvironment(Environment *environment);
-  void setDirection(const int policy);//set direction of the ray to trace
-  bool trace(CollisionDetection *cd, SID cdsetid, CDInfo& cdInfo, 
-            DistanceMetric * dm, SID dmsetid);//trace a ray in the established direction
-  void newDirection(/*policy*/);//set a new direction according to some policy
-  bool exhausted(); //returns true if all the possibilities have been explored
-  void printPath ();//print the path found
+
+  Roadmap *rdmp;
+  CollisionDetection *cd;
+  SID cdsetid;
+  CDInfo cdinfo;
+  DistanceMetric *dm;
+  SID dmsetid;
+  
 };
 
 #endif /*_RAYTRACER_H_INCLUDED*/
