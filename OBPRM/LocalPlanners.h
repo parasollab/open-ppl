@@ -84,7 +84,7 @@ public:
     SID dmsetid;
     vector<Cfg> path;
     pair<Cfg,Cfg> savedEdge;
-    int nTicks;
+    //int nTicks;
     
 };
     
