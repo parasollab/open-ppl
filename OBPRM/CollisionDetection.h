@@ -41,7 +41,11 @@
 #include "OBPRM.h"
 #include "Sets.h"
 #include "Transformation.h"
+#include "Environment.h"
+#include "DistanceMetrics.h"
+#include "Cfg.h"
 
+#include <vector.h>
 //////////////////////////////////////////////////////////////////////////////
 class Input;
 class Environment;
@@ -495,6 +499,25 @@ public:
         */
       void UserInit(Input * input,  GenerateMapNodes*, ConnectMapNodes*);
 
+      /**Set penetration depth  
+        * The parameter depth defines how many times the resolution 
+        * Default value is -1, no penetration
+       */
+
+      void SetPenetration(double times);
+
+      /** Check if there is a collision but it is in permissible range,
+       * i.e., the penetration is within the penetration range
+       */
+      bool AcceptablePenetration(Cfg c,Environment *env,CollisionDetection *cd, 
+		SID cdsetid, CDInfo& cdInfo);
+
+      /** Initialize n direction vectors  with the penetration length*/
+
+      void InitializePenetration(double times,int nCfgs,  Environment *env,
+		        DistanceMetric * dm, SID dmsetid,double ratio=0.5);
+  
+   double penetration; // Penetration distance
 #ifdef USE_CSTK
       double cstkDistance(MultiBody* robot, MultiBody* obstacle);
 #endif
@@ -537,7 +560,7 @@ public:
         *@see IsInCollision(Environment* , SID , CDInfo& , MultiBody* , MultiBody*)
         */
       bool IsInCollision
-        (Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot = NULL);
+        (Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot = NULL,bool enablePenetration=true);
 
       /**Check collision between MultiBody of robot and obstacle.
         *This method using collision detection information in _cdInfo to
@@ -739,7 +762,8 @@ protected:
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 private:
-
+   vector <Cfg> directions;
+   double acceptableRatio;
 };
 
 #endif

@@ -331,6 +331,7 @@ Cfg Cfg::GetRandomCfg_CenterOfMass(double *boundingBox) {
     return CfgHelper->GetRandomCfg_CenterOfMass(boundingBox);
 }
 
+
 // generates random configuration where workspace robot's EVERY VERTEX
 // is guaranteed to lie within the environment specified bounding box
 Cfg Cfg::GetRandomCfg(Environment *env, int maxTries) {
@@ -366,6 +367,42 @@ Cfg Cfg::GetRandomCfg(Environment *env) {
     return Cfg::GetRandomCfg(env, default_maxTries);
 }
 
+// generates a random cfg with a given length 
+Cfg Cfg::GetRandomCfg(Environment *env,DistanceMetric *dm,
+            SID dmsetid,double length)
+{
+	Cfg origin;
+	Cfg outsideCfg= GetRandomCfg(env,1000);
+	
+	// first find an outsite configuration with sufficient size
+
+	for(;dm->Distance(env,origin,outsideCfg,dmsetid)<2*length;
+			outsideCfg=outsideCfg*2); 
+	
+
+	// now, using binary search  find a configuration with the approximate
+	// length
+	
+	Cfg aboveCfg=outsideCfg;
+	Cfg belowCfg=origin;
+	Cfg currentCfg;
+	while  (1) {
+	  currentCfg=(aboveCfg+belowCfg)*0.5;
+	  /*cout <<"Above " << aboveCfg << endl;
+	  cout <<"Current " << currentCfg << endl;
+	  cout <<"Below " << belowCfg << endl; */
+	  double magnitude=dm->Distance(env,origin,currentCfg,dmsetid);
+	  double diff=dm->Distance(env,aboveCfg,belowCfg,dmsetid);
+	   cout << "Current magnitude is \n" << magnitude << " " << length<<
+		  " " <<diff<< endl;
+	  if( (magnitude >=length*0.9) && (magnitude <=length*1.1))
+		  break;
+          if(magnitude>length) aboveCfg=currentCfg ;
+	  else belowCfg=currentCfg; 
+          
+	}
+	return currentCfg;
+}
 // generates random configuration and then pushes it to the medial axis of
 // the free c-space
 Cfg Cfg::GetMedialAxisCfg(Environment *_env, CollisionDetection *_cd,
@@ -590,6 +627,20 @@ void Cfg::Increment(const Cfg &_increment)
 }
 
 
+Cfg Cfg::GetResolutionCfg(Environment *env)
+{
+	vector <double> tmp;
+	double posRes=env->GetPositionRes();
+	double oriRes=env->GetOrientationRes();
+	int posDof=CfgHelper->PosDOF();
+	int dof=CfgHelper->GetDOF();
+	
+	for(int i=0;i<dof;i++)
+		if(i<posDof) tmp.push_back(posRes);
+		else tmp.push_back(oriRes);
+
+	return Cfg(tmp);
+}
 vector <double> Cfg::GetOrientation()
 {
     return CfgHelper->GetOrientation(*this);
@@ -659,13 +710,15 @@ bool Cfg::ConfigEnvironment(Environment *env) {
 
 
 bool Cfg::isCollision(Environment *env,CollisionDetection *cd, SID _cdsetid,
-                      CDInfo& _cdInfo){
-    return CfgHelper->isCollision(*this, env, cd, _cdsetid, _cdInfo);
+                      CDInfo& _cdInfo,bool enablePenetration){
+    return CfgHelper->isCollision(*this, env, cd, _cdsetid, _cdInfo,enablePenetration);
 }
 
 bool Cfg::isCollision(Environment *env, CollisionDetection *cd,
-                      int robot, int obs, SID _cdsetid, CDInfo& _cdInfo){
-    return CfgHelper->isCollision(*this, env, cd, robot, obs, _cdsetid, _cdInfo);
+                      int robot, int obs, SID _cdsetid, CDInfo& _cdInfo,
+		      bool enablePenetration){
+    return CfgHelper->isCollision(*this, env, cd, robot, obs, _cdsetid, _cdInfo,
+		     enablePenetration);
 }
 
 double Cfg::Clearance(Environment *env,CollisionDetection *cd ){

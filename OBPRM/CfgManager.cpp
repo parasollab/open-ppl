@@ -457,31 +457,49 @@ void CfgManager::print_preamble_to_file(Environment *env, FILE *_fp, int numofCf
     fprintf(_fp,"%d ",numofCfg);
 }
 
+
 bool CfgManager::isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
-                           SID _cdsetid, CDInfo& _cdInfo, MultiBody * onflyRobot) {
-	ConfigEnvironment(c, env);
+                          SID _cdsetid, CDInfo& _cdInfo, MultiBody * onflyRobot,
+			  bool enablePenetration){
+	 
+
+    ConfigEnvironment(c, env);
     bool result = cd->IsInCollision(env, _cdsetid, _cdInfo, onflyRobot);
+    if ( (result) && enablePenetration && (cd->penetration>=0)) {
+ 		 return !cd->AcceptablePenetration(c,env, cd, _cdsetid, _cdInfo);
+		}
     return result;
 }
 
 bool CfgManager::isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
-                             SID _cdsetid, CDInfo& _cdInfo){
+                             SID _cdsetid, CDInfo& _cdInfo,
+			     bool enablePenetration) {
      if(!ConfigEnvironment(c, env))
          return true;
 
      // after updating the environment(multibodies), Ask ENVIRONMENT
      // to check collision! (this is more nature.)
      bool answerFromEnvironment = cd->IsInCollision(env, _cdsetid, _cdInfo);
+     if ( (answerFromEnvironment) && enablePenetration &&
+		            (cd->penetration>=0)) {
+		 return !cd->AcceptablePenetration(c,env, cd, _cdsetid, _cdInfo);
+		}
      return answerFromEnvironment;
 }
 
 bool CfgManager::isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
-                int robot, int obs, SID _cdsetid, CDInfo& _cdInfo){
+                int robot, int obs, SID _cdsetid, CDInfo& _cdInfo,
+		bool enablePenetration) {
+
      if(!ConfigEnvironment(c, env))
           return true;
 
      // ask CollisionDetection class directly.
      bool answerFromCD = cd->IsInCollision(env, _cdsetid, _cdInfo, robot, obs);
+     if ( (answerFromCD) && enablePenetration &&
+		            (cd->penetration>=0)) {
+		 return !cd->AcceptablePenetration(c,env, cd, _cdsetid, _cdInfo);
+		}
      return answerFromCD;
 }
 

@@ -96,6 +96,7 @@ libobprm.so:: $(OBJS)
 obprm:: main_obprm.cpp libs
 	$(CXX) $(CFLAGS2) -o obprm \
                 main_obprm.cpp \
+		-Wl,-R${PWD}  \
 		$(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_obprm.o main_obprm.d
 
@@ -103,6 +104,7 @@ obprm:: main_obprm.cpp libs
 query:: main_query.cpp libs
 	$(CXX) $(CFLAGS2) -o query \
                 main_query.cpp \
+		-Wl,-R${PWD}  \
                 $(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_query.o main_query.d
 

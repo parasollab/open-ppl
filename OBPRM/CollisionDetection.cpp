@@ -19,6 +19,8 @@
 #include "GenerateMapNodes.h"
 #include "ConnectMapNodes.h"
 #include "Stat_Class.h"
+#include <string.h>
+#include "util.h"
 
 extern Stat_Class Stats;
 
@@ -48,9 +50,15 @@ void
 CollisionDetection::
 DefaultInit()
 {
-	
+  penetration=-1;	
 };
 
+
+void CollisionDetection::
+SetPenetration(double times)
+{
+  penetration=times;
+}
 
 void
 CollisionDetection::
@@ -137,6 +145,88 @@ SetLineTransformation(const Transformation& trans, double linTrans[12]) {
     }
 }
 
+
+
+#ifdef DEBUG
+vector<Cfg> acceptable;
+#endif 
+//////////////////////////////////////////
+// AcceptablePenetration
+//
+// If there is a collision, check whether it is in acceptable range
+//
+//
+/////////////////////////////////////////////
+bool CollisionDetection::
+AcceptablePenetration(Cfg c,Environment *env,CollisionDetection *cd, 
+		SID cdsetid, CDInfo& cdInfo)
+{
+ int numOkCfgs=0;
+
+ for(int i=0;i<directions.size();i++)
+ {
+   Cfg next=c+directions[i];
+
+   if (!next.isCollision(env,cd,cdsetid,cdInfo,false)) {
+	   numOkCfgs++;
+	   if ((numOkCfgs*1.0/directions.size())>acceptableRatio){
+#ifdef DEBUG
+	     acceptable.push_back(c);
+#endif
+	     return true;
+	   }
+   }
+   
+ }
+ if((numOkCfgs*1.0/directions.size())>acceptableRatio)  {
+
+	 return true; }
+ else
+	 return false;	
+}
+
+////////////////////////////////////////////
+// InitializePenetration
+//
+// Set the penetrationdepth and find n direction vectors
+//
+//
+/////////////////////////////////////////////
+
+void CollisionDetection::
+InitializePenetration(double times,int nCfgs, Environment *env,
+		        DistanceMetric * dm, SID dmsetid,double ratio)
+{
+	
+  Cfg origin;
+   acceptableRatio=ratio; 
+  // first find the environment resolution
+  Cfg res=Cfg::GetResolutionCfg(env);
+
+  // now find the length of that resolution
+  double length=dm->Distance(env,res,origin,dmsetid);
+
+  // penetration is length*times
+  penetration=times*length;
+
+  cout << "Penetration is " << penetration << endl;
+
+  for(int i=0;i<nCfgs;i++) {
+     /*Cfg randomCfg=;
+     while(1) {
+       randomCfg=Cfg::GetRandomCfg(env,1000);
+       double dist=dm->Distance(env,randomCfg,origin,dmsetid);
+       cout << "Found a dist of" << dist <<" \n";
+       if(dist<penetration) break;
+       }
+     cout <<"Adding Cfg " << randomCfg << endl;  */
+
+     directions.push_back(Cfg::GetRandomCfg(env,dm,dmsetid,penetration*drand48()));
+     cout <<"Added Cfg\n"<<flush;
+   }
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // IsInCollision
 //
@@ -160,7 +250,7 @@ SetLineTransformation(const Transformation& trans, double linTrans[12]) {
 //////////////////////////////////////////////////////////////////////////
 bool
 CollisionDetection::
-IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot)
+IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot,bool enablePenetration)
 {
 	int nmulti, robot;
 	bool ret_val, collision_found; // needed to go thru ALL obstacles to get ALL info

@@ -266,19 +266,22 @@ public:
     *@see CollisionDetection:IsInCollision
     */
   virtual bool isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
-                           int robot, int obs, SID _cdsetid, CDInfo& _cdInfo);
+                           int robot, int obs, SID _cdsetid, CDInfo& _cdInfo,
+			   bool enablePenetration=true);
 
   /**updating the environment(multibodies), then ask CollisionDetection to check collision 
     *@see CollisionDetection:IsInCollision
     */
   virtual bool isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
-                           SID _cdsetid, CDInfo& _cdInfo);
+                           SID _cdsetid, CDInfo& _cdInfo,
+			   bool enablePenetration=true);
 
   /**updating the environment(multibodies), then ask CollisionDetection to check collision 
     *@see CollisionDetection:IsInCollision
     */
   virtual bool isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
-                           SID _cdsetid, CDInfo& _cdInfo, MultiBody * onflyRobot);
+                           SID _cdsetid, CDInfo& _cdInfo, MultiBody *onflyRobot,
+			   bool enablePenetration=true);
 
 
   /// Return a configuration(conformation)'s potential. default value is 0.

@@ -421,6 +421,8 @@ public:
         ///Call CfgManager::FindIncrement
         Cfg  FindIncrement(const Cfg& _goal, int  n_ticks);
     //@}
+	static Cfg GetResolutionCfg(Environment *env);
+
     
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -455,6 +457,11 @@ public:
     
         /// ditto, but with a default number of tries (10).
         static Cfg GetRandomCfg(Environment *env);
+	//
+	//
+	/// Generates a random configuration with approximate length
+        static Cfg GetRandomCfg(Environment *env,DistanceMetric *_dm,
+            SID _dmsetid,double length);
     
         /// generates random configuration and pushes it to the medial axis of the
         /// free c-space
@@ -536,10 +543,10 @@ public:
         bool ConfigEnvironment(Environment *env);
     
         ///Call CfgManager::isCollision
-        bool isCollision(Environment *env,CollisionDetection* cd, SID _cdsetid, CDInfo& _cdInfo);
+        bool isCollision(Environment *env,CollisionDetection* cd, SID _cdsetid, CDInfo& _cdInfo,bool enablePenetration=true);
     
         ///Call CfgManager::isCollision
-        bool isCollision(Environment *env, CollisionDetection *cd,int robot, int obs, SID _cdsetid, CDInfo& _cdInfo);
+        bool isCollision(Environment *env, CollisionDetection *cd,int robot, int obs, SID _cdsetid, CDInfo& _cdInfo,bool enablePenetration=true);
     
         ///Call CfgManager::GenerateOverlapCfg
         static bool GenerateOverlapCfg(Environment *env, int robot,
