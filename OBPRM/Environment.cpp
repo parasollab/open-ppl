@@ -12,7 +12,7 @@
 ///////////////////////////////////////////////////////////////////////////
 #include "MultiBody.h"
 #include "Input.h"
-#include "OBPRM.h"	//For POSITION_RES_FACTOR , which is used in this file
+#include "OBPRMDef.h"	//For POSITION_RES_FACTOR , which is used in this file
 
 #define DOF   6
 

@@ -49,7 +49,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include OBPRM headers
 #include "BasicDefns.h"
-#include "OBPRM.h"
+#include "OBPRMDef.h"
 
 
 template <class ELEMENT>
