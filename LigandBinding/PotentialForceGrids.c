@@ -125,7 +125,8 @@ vector<AtomType> &atomtype) {
             atomtype.push_back(Sulfar);
          else {
            cout << "error: unknown atom type:" << atomName << endl;
-           exit(1);
+	   continue;
+           //exit(1);
          }
          coord.push_back(Vector3D(point[0], point[1], point[2]));
      }
