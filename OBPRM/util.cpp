@@ -76,7 +76,11 @@ WritePathLinkConfigurations( char output_file[80],
         exit(1);
     }
 
-    Cfg::print_preamble_to_file(env, fp, path.size());
+    //Cfg::print_preamble_to_file(env, fp, path.size());
+    fprintf(fp,"VIZMO_PATH_FILE   Path Version %d\n", PATHVER_20001022);
+    int numofLink = env->GetMultiBody(env->GetRobotIndex())->GetFreeBodyCount();
+    fprintf(fp,"%d\n", numofLink);
+    fprintf(fp,"%d",path.size());
 
     char cfgFile[100];
     sprintf(cfgFile, "%s%s", output_file, ".cfg");
@@ -111,8 +115,11 @@ WritePathConfigurations( char output_file[80],
         exit(1);
     }
  
-   Cfg::print_preamble_to_file(env, fp, path.size());        
-         fprintf(fp,"\n");
+   //Cfg::print_preamble_to_file(env, fp, path.size());        
+   fprintf(fp,"VIZMO_PATH_FILE   Path Version %d\n", PATHVER_20001125);
+   fprintf(fp,"%d\n", 1);
+   fprintf(fp,"%d\n", path.size());
+
     for(int i = 0 ; i < path.size() ; i++){
        vector<double> tmp=path[i].GetData();
         // Translate all path configurations such that their resulting
