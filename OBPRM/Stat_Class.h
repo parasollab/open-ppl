@@ -138,7 +138,7 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
     total+=iter->second;
     cout << i << ") " << iter->second << " ";
     cout << flush;
-    printf("%s\n", iter->first); //K2 does not have the << operator defined for string
+    printf("%s\n", iter->first.data()); //K2 does not have the << operator defined for string
     fflush(stdout);
     }
 
