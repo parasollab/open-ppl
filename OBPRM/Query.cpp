@@ -173,7 +173,6 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
                   // Add to Path rdmp cfg's & "tick"s: [ rdmp->rdmp ]
                   _path->insert(_path->end(),
 			ci.path.begin(),ci.path.end());
-                  ci.path.erase(ci.path.begin(),ci.path.end());
             }
 
           } // for i
@@ -238,6 +237,8 @@ bool
 Query::
 GetPathSegment(Cfg _c1, Cfg _c2, CollisionDetection *cd,
                LocalPlanners * lp,DistanceMetric * dm,WEIGHT _weight, LPInfo* _ci){
+
+   _ci.path.erase(_ci.path.begin(), _ci.path.end());
 
    vector<pair<SID,vector<LP> > > sets = lp->planners.GetLPSets();
 
