@@ -28,6 +28,7 @@ ifeq ($(platform), LINUX_gcc) 	#linux/gcc
   CD_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP
   CD_INCL = $(VCLIP_INCL) $(RAPID_INCL) $(PQP_INCL)
   CD_LIB = $(VCLIPLIB) $(RAPIDLIB) $(PQPLIB)
+  DEPS = -MMD
 endif
 
 #set platform specific variables
@@ -37,6 +38,7 @@ ifeq ($(platform2), SUN_gcc) 	#linux/gcc on compute
   CD_DEF = -DUSE_RAPID -DUSE_PQP -DSOLARIS
   CD_INCL = $(RAPID_INCL) $(PQP_INCL)
   CD_LIB = $(RAPIDLIB) $(PQPLIB)
+  DEPS = -MMD
 endif
 
 ifeq ($(platform), BLRTS_gcc)	#gcc on bluegene
@@ -46,6 +48,7 @@ ifeq ($(platform), BLRTS_gcc)	#gcc on bluegene
   CD_DEF = -DUSE_RAPID -DUSE_PQP
   CD_INCL = $(RAPID_INCL) $(PQP_INCL)
   CD_LIB = $(RAPIDLIB) $(PQPLIB)
+  DEPS = -MMD
 endif
 
 ifeq ($(platform), IRIX_gcc) 	#gcc on cosmos
@@ -55,6 +58,7 @@ ifeq ($(platform), IRIX_gcc) 	#gcc on cosmos
   CD_DEF = -DUSE_RAPID -DUSE_PQP
   CD_INCL = $(RAPID_INCL) $(PQP_INCL)
   CD_LIB = $(RAPIDLIB) $(PQPLIB)
+  DEPS = -MMD
 endif
 
 ifeq ($(platform), SGI_CC) 	#native compiler on K2
@@ -64,6 +68,7 @@ ifeq ($(platform), SGI_CC) 	#native compiler on K2
   CD_DEF = -DUSE_PQP -DUSE_RAPID -D__sgi -D__K2
   CD_INCL = $(PQP_INCL) $(RAPID_INCL)
   CD_LIB = $(PQPLIB) $(RAPIDLIB) -lm
+  DEPS = -MDupdate Dependencies
 endif
 
 #ifeq ($(platform), HP_gcc) 	#linux on sunburn

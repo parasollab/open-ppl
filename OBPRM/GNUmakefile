@@ -40,7 +40,7 @@ include $(STAPL)/GNUmakefile.STAPLdefaults
 include $(OBPRM)/GNUmakefile.OBPRMdefaults
 
 #common misc.
-DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS)
+DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS)
 INCLUDES = -I. $(STAPL_INCL) $(CD_INCL)
 LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB)
 
@@ -57,12 +57,16 @@ libobprm.so: $(OBJS)
 
 obprm: main_obprm.cpp libs
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_obprm.cpp $(LIBS) -o obprm
+	rm -f obprm.d
 
 query: main_query.cpp libs
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_query.cpp $(LIBS) -o query
+	rm -f query.d
 
 %.o: %.cpp
 	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -c $<
+	cat $*.d >> Dependencies
+	rm -f $*.d
 
 OBJS = \
 	Environment.o \
@@ -109,4 +113,9 @@ reallyclean:
 	rm -f *.a *.so *.o
 	rm -R -f ii_files
 	rm -f so_locations
+	rm -f Dependencies
+	touch Dependencies
+
+
+include Dependencies
 
