@@ -36,7 +36,7 @@ class RayCSpace {
   void writePath(Environment *env);
   void writePathConfigurations(char output_file[80],
 			       vector<Cfg> path, Environment *env);
-  void addRoadmapNodes(Roadmap &rdmp);
+  void addRoadmapNodes(Roadmap &rdmp, CNInfo &cnInfo);
 
   void setTargetVector(vector<Cfg> *target_vector);
  private:

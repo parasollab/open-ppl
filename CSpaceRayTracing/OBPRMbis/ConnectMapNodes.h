@@ -1498,8 +1498,9 @@ protected:
         *   -# LPInfo::cdsetid = info.cdsetid
         *   -# LPInfo::dmsetid = info.dmsetid
         */
+ public:
       static LPInfo Initialize_LPinfo(Roadmap * _rm,CNInfo& info);
-
+ protected:
       /**Classify Cfgs by from which obstacles these Cfg are generated.
         *Vertices are stored as generated but they may have been originally
         *generated with respect to some obstacle. This proceedure

@@ -297,7 +297,7 @@ bool RayTracer::trace(Roadmap &ray_rdmp) {
     //ray.addRoadmapNodes(ray_rdmp);
     //ray.writePath(environment);
   }
-  ray.addRoadmapNodes(ray_rdmp);
+  ray.addRoadmapNodes(ray_rdmp, (*cn).cnInfo);
   return path_found;
 }
 

@@ -165,13 +165,14 @@ void RayCSpace::writePathConfigurations(char output_file[80],
 }
 
 //This works assuming that the ray is a single thread that can be stretched
-void RayCSpace::addRoadmapNodes(Roadmap &rdmp) {
+void RayCSpace::addRoadmapNodes(Roadmap &rdmp, CNInfo &cnInfo) {
   VID current, previous;
 
+  LPInfo lpInfo = ConnectMapNodes::Initialize_LPinfo(&rdmp, cnInfo);
   for (int i= 1, previous = rdmp.m_pRoadmap->AddVertex(path[0]); i < path.size(); i++, previous = current) {
     current = rdmp.m_pRoadmap->AddVertex(path[i]);
     //    cout << endl << "Adding edge from " << previous << " to " << current<< endl;
-    rdmp.m_pRoadmap->AddEdge(previous, current);
+    rdmp.m_pRoadmap->AddEdge(previous, current, lpInfo.edge);
   }
 }
 void RayCSpace::setTargetVector(vector<Cfg> *target_vector) {
