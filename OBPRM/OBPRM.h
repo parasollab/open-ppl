@@ -469,8 +469,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   if (NSEED < 1) NSEED = 1;
   int nNodesGap = numNodes.GetValue() - nodes.size();  
   int nNumTries = 0;
+  
   do{
-    vector<CFG> obstSurface, obstFree, surface;  
+    vector<CFG> obstSurface, obstFree, surface, nodesBuffer;  
     for(int obstacle = 0 ; obstacle < numExternalBody ; obstacle++) {
     
       if(obstacle != robot) {
@@ -486,11 +487,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 	int i;
 	for (i = 0; i < obstSurface.size(); i++) {
 	  obstSurface[i].obst = obstacle;
-/* 	  nodes.push_back(obstSurface[i]); */
+ 	  nodesBuffer.push_back(obstSurface[i]); 
 	}
 	for (i = 0; i < obstFree.size(); i++) {
 	  obstFree[i].obst = obstacle;
-/* 	  nodes.push_back(obstFree[i]); */
+ 	  nodesBuffer.push_back(obstFree[i]); 
 	}
 
 #if INTERMEDIATE_FILES
@@ -500,8 +501,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 		       obstFree.begin(),obstFree.end());
 #endif
       
-/* 	obstSurface.erase(obstSurface.begin(),obstSurface.end()); */
-/* 	obstFree.erase(obstFree.begin(), obstFree.end()); */
+ 	obstSurface.erase(obstSurface.begin(),obstSurface.end()); 
+ 	obstFree.erase(obstFree.begin(), obstFree.end()); 
       
       } // if(obstacle != robot)
       else 
@@ -511,7 +512,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 						    numNodes.GetValue());
 	  for(int i=0; i<CobstNodes.size(); ++i){
 	    CobstNodes[i].obst = obstacle;
-/* 	    nodes.push_back(CobstNodes[i]); */
+ 	    nodesBuffer.push_back(CobstNodes[i]); 
 	  }
 #if INTERMEDIATE_FILES
 	  surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
@@ -521,23 +522,19 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     } // for(obstacle)
 
     if (bExact){ //exact nodes
-      int nActualNodes = obstSurface.size() + obstFree.size();
-      int nSurfaceNodes = obstSurface.size();
+      int nActualNodes = nodesBuffer.size();
       if ( nActualNodes < nNodesGap){
-	nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 	
-	nodes.insert(nodes.end(), obstFree.begin(), obstFree.end());
+	nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 	
 	nNodesGap = nNodesGap - nActualNodes;
-	obstSurface.erase(obstSurface.begin(),obstSurface.end());
- 	obstFree.erase(obstFree.begin(), obstFree.end()); 
+	numNodes.PutValue(nNodesGap);
+ 	nodesBuffer.erase(nodesBuffer.begin(), nodesBuffer.end()); 
 	
-	NSEED = (int)(P * numNodes.GetValue()/(numExternalBody-1)/numShells.GetValue());
-	NFREE = (int)((1.0-P) * numNodes.GetValue()/(numExternalBody-1));
+	NSEED = (int)(P * nNodesGap/(numExternalBody-1)/numShells.GetValue());
+	NFREE = (int)((1.0-P) * nNodesGap/(numExternalBody-1));
 	if (NSEED < 1) NSEED = 1;
       }else if (nActualNodes == nNodesGap){//Generated exact number of nodes
-	nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 	
-	nodes.insert(nodes.end(), obstFree.begin(), obstFree.end());
-	obstSurface.erase(obstSurface.begin(),obstSurface.end());
- 	obstFree.erase(obstFree.begin(), obstFree.end()); 
+	nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 	
+	nodesBuffer.erase(nodesBuffer.begin(),nodesBuffer.end());
 	nNodesGap = 0;
 	NSEED = 0;	
       }else{ // nActualNodes > nNodesGap ;
@@ -550,33 +547,26 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 	    indices[iSelect] = true;
 	  }
 
-	for (int j = 0; j < nSurfaceNodes; j++) //push those selected one in to nodes
+	for (int j = 0; j < nActualNodes; j++) //push those selected one in to nodes
 	  if (indices[j])
-	    nodes.push_back(obstSurface[j]);
+	    nodes.push_back(nodesBuffer[j]);
 
-	for (int j = nSurfaceNodes; j < nActualNodes; j++) //push those selected one in to nodes
-	  if (indices[j])
-	    nodes.push_back(obstFree[j-nSurfaceNodes]);
-
-	obstSurface.erase(obstSurface.begin(),obstSurface.end());
-	obstFree.erase(obstFree.begin(), obstFree.end()); 
+	nodesBuffer.erase(nodesBuffer.begin(),nodesBuffer.end());
 	nNodesGap = 0;
 	NSEED = 0;
       }
     }else { // not asked for exact nodes
-      nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 
-      nodes.insert(nodes.end(), obstFree.begin(), obstFree.end());
-      obstSurface.erase(obstSurface.begin(),obstSurface.end());
-      obstFree.erase(obstFree.begin(), obstFree.end()); 
-
-      NSEED = 0;
+      nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 
+      nodesBuffer.erase(nodesBuffer.begin(),nodesBuffer.end());
+      nNodesGap=0;
+/*       NSEED = 0; */
     }
     
-    nNumTries++;
-  }while(NSEED>0 && nNumTries < MAX_NUM_NODES_TRIES) ;
+    nNumTries++; // make sure the loop will end when no enough nodes can be generated;
+  }while(nNodesGap>0 && nNumTries < MAX_NUM_NODES_TRIES) ;
 
   if (nNumTries >= MAX_NUM_NODES_TRIES)
-    cerr << GetName() << ": Can\'t generate engough nodes! " << endl;
+    cerr << GetName() << ": Tried "<< nNumTries << " times, can\'t generate engough nodes! " << endl;
 
 #if INTERMEDIATE_FILES
   WritePathConfigurations("surface.path", surface, _env);

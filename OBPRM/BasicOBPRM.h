@@ -495,7 +495,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   vector<CFG> surface;
 #endif
   
-  vector<CFG> preshells, shells, tmp, obstSurface;
+  vector<CFG> preshells, shells, tmp, obstSurface, nodesBuffer;
   int numMultiBody = _env->GetMultiBodyCount();
   int numExternalBody = _env->GetExternalBodyCount();
 
@@ -574,7 +574,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	// Collect the generated surface nodes
 	for (int i=0;i<obstSurface.size();i++){
 	  obstSurface[i].obst = obstacle;
-/* 	  nodes.push_back(obstSurface[i]); */
+/*  	  nodes.push_back(obstSurface[i]);  */
+ 	  nodesBuffer.push_back(obstSurface[i]); 
 	}
       
 #if INTERMEDIATE_FILES
@@ -582,7 +583,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 		       obstSurface.begin(),obstSurface.end());
 #endif
       
-/* 	obstSurface.erase   (obstSurface.begin(),obstSurface.end()); */
+ 	obstSurface.erase(obstSurface.begin(),obstSurface.end()); 
       
       } // endif (obstacle != robot)
       else
@@ -594,7 +595,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	  for(i=0; i<CobstNodes.size(); ++i) {
 	    CobstNodes[i].obst = obstacle;
 /* 	    nodes.push_back(CobstNodes[i]); */
-	    obstSurface.push_back(CobstNodes[i]);
+	    nodesBuffer.push_back(CobstNodes[i]);
 	  }
 #if INTERMEDIATE_FILES
 	  surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
@@ -605,11 +606,12 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
 
     if (bExact){ //exact nodes
-      int nActualNodes = obstSurface.size();
+      int nActualNodes = nodesBuffer.size();
       if ( nActualNodes < nNodesGap){
-	nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 	
+	nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 	
 	nNodesGap = nNodesGap - nActualNodes;
-	obstSurface.erase(obstSurface.begin(),obstSurface.end());
+	numNodes.PutValue(nNodesGap);
+	nodesBuffer.erase(nodesBuffer.begin(),nodesBuffer.end());
 
 	if (numExternalBody > 1) //more objects besides the robot
 	  N = nNodesGap / (numExternalBody-1)  // -1 for the robot
@@ -620,8 +622,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	if (N < 1) 
 	  N = 1; 
       }else if (nActualNodes == nNodesGap){//Generated exact number of nodes
-	nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 	
-	obstSurface.erase(obstSurface.begin(),obstSurface.end());
+	nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 	
+	nodesBuffer.erase(nodesBuffer.begin(),nodesBuffer.end());
 	nNodesGap = 0;
 	N = 0;	
       }else{ // nActualNodes > nNodesGap ;
@@ -636,19 +638,20 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
 	for (int j = 0; j < nActualNodes; j++) //push those selected one in to nodes
 	  if (indices[j])
-	    nodes.push_back(obstSurface[j]);
+	    nodes.push_back(nodesBuffer[j]);
 
-	obstSurface.erase(obstSurface.begin(),obstSurface.end());
+	nodesBuffer.erase(nodesBuffer.begin(),nodesBuffer.end());
 	nNodesGap = 0;
 	N = 0;
       }
     }else { // not asked for exact nodes
-      nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 
-      obstSurface.erase(obstSurface.begin(),obstSurface.end());
-      N = 0;
+      nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 
+      nodesBuffer.erase(nodesBuffer.begin(),nodesBuffer.end());
+      nNodesGap=0;
+/*       N = 0; */
     }
     nNumTries++;
-  }while (N>0 && nNumTries < MAX_NUM_NODES_TRIES); // while not enough nodes generated. 
+  }while (nNodesGap>0 && nNumTries < MAX_NUM_NODES_TRIES); // while not enough nodes generated. 
   
   if (nNumTries >= MAX_NUM_NODES_TRIES)
     cerr << GetName() << ": Can\'t generate engough nodes! " << endl;
