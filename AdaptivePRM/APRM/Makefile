@@ -128,7 +128,8 @@ OBJS = \
         AdaptiveQuery.o \
 	QueryRequirements.o \
 	NoopLocalPlanners.o \
-	NoopCollisionDetection.o
+	NoopCollisionDetection.o \
+	MyQueryCmds.o
 
 objs:: $(OBJS)
 
