@@ -299,6 +299,8 @@ ParseCommandLine(int argc, char **argv) {
 	break;
       } 
     }
+    if(!found)
+      break;
     cmd_begin = cmd_begin + cmd_argc;
   } while (cmd_begin < argc);
   return found;

@@ -249,6 +249,8 @@ ReadCommandLine(n_str_param* GNstrings[MAX_GN], int numGNs) {
 	    break;
 	  } 
 	}
+	if(!found)
+	  break;
 	cmd_begin = cmd_begin + cmd_argc;
       } while (cmd_begin < argc);
       if (!found)

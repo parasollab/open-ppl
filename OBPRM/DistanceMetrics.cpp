@@ -90,6 +90,8 @@ ParseCommandLine(int argc, char** argv) {
 	break;
       }
     }
+    if(!found)
+      break;
     cmd_begin = cmd_begin + cmd_argc;
   } while(cmd_begin < argc);
 
@@ -310,8 +312,10 @@ void
 EuclideanDistance::
 ParseCommandLine(int argc, char** argv) {
   if(argc > 1) {
-    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	 << argv << "\"\n\n";
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
+    for(int i=0; i<argc; i++)
+      cerr << argv[i] << " ";
+    cerr << "\"\n\n";
     PrintUsage(cerr);
     cerr << endl;
     exit(-1);
@@ -418,8 +422,10 @@ void
 ScaledEuclideanDistance::
 ParseCommandLine(int argc, char** argv) {
   if(argc > 2) {
-    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	 << argv << "\"\n\n";
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
+    for(int i=0; i<argc; i++)
+      cerr << argv[i] << " ";
+    cerr << "\"\n\n";
     PrintUsage(cerr);
     cerr << endl;
     exit(-1);
@@ -428,8 +434,10 @@ ParseCommandLine(int argc, char** argv) {
   if(argc == 2) { //read in sValue
     istrstream is(argv[1]);
     if(!(is >> sValue)) {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand\""
-	   << argv << "\"\n\n";
+      cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
+      for(int i=0; i<argc; i++)
+	cerr << argv[i] << " ";
+      cerr << "\"\n\n";
       PrintUsage(cerr);
       cerr << endl;
       exit(-1);
@@ -528,8 +536,10 @@ void
 MinkowskiDistance::
 ParseCommandLine(int argc, char** argv) {
   if(argc > 4) {
-    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	 << argv << "\"\n\n";
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
+    for(int i=0; i<argc; i++)
+      cerr << argv[i] << " ";
+    cerr << "\"\n\n";
     PrintUsage(cerr);
     cerr << endl;
     exit(-1);
@@ -538,8 +548,10 @@ ParseCommandLine(int argc, char** argv) {
   if(argc > 1) { //read in r1
     istrstream is1(argv[1]);
     if(!(is1 >> r1)) {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand\""
-	   << argv << "\"\n\n";
+      cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
+      for(int i=0; i<argc; i++)
+	cerr << argv[i] << " ";
+      cerr << "\"\n\n";
       PrintUsage(cerr);
       cerr << endl;
       exit(-1);
@@ -555,8 +567,10 @@ ParseCommandLine(int argc, char** argv) {
 
     istrstream is2(argv[2]);
     if(!(is2 >> r2)) {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand\""
-	   << argv << "\"\n\n";
+      cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
+      for(int i=0; i<argc; i++)
+	cerr << argv[i] << " ";
+      cerr << "\"\n\n";
       PrintUsage(cerr);
       cerr << endl;
       exit(-1);
@@ -564,8 +578,10 @@ ParseCommandLine(int argc, char** argv) {
 
     istrstream is3(argv[3]); 
     if(!(is3 >> r3)) {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand\""
-	   << argv << "\"\n\n";
+      cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
+      for(int i=0; i<argc; i++)
+	cerr << argv[i] << " ";
+      cerr << "\"\n\n";
       PrintUsage(cerr);
       cerr << endl;
       exit(-1);
@@ -661,8 +677,10 @@ void
 ManhattanDistance::
 ParseCommandLine(int argc, char** argv) {
   if(argc > 1) {
-    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	 << argv << "\"\n\n";
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
+    for(int i=0; i<argc; i++)
+      cerr << argv[i] << " ";
+    cerr << "\"\n\n";
     PrintUsage(cerr);
     cerr << endl;
     exit(-1);
@@ -747,8 +765,10 @@ void
 CenterOfMassDistance::
 ParseCommandLine(int argc, char** argv) {
   if(argc > 1) {
-    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	 << argv << "\"\n\n";
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
+    for(int i=0; i<argc; i++)
+      cerr << argv[i] << " ";
+    cerr << "\"\n\n";
     PrintUsage(cerr);
     cerr << endl;
     exit(-1);
