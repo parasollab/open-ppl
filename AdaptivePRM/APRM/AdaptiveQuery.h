@@ -11,12 +11,13 @@
 
 #include"Query.h"
 #include"QueryRequirements.h"
+#include"MyQueryCmds.h"
 
 class AdaptiveQuery : public Query {
 
 public:
    //AdaptiveQuery();
-   AdaptiveQuery(Input *, QueryCmds*, CollisionDetection*, DistanceMetric*, 
+   AdaptiveQuery(Input *, MyQueryCmds*, CollisionDetection*, DistanceMetric*, 
 		 LocalPlanners*,ConnectMapNodes*);
    ~AdaptiveQuery();
 
@@ -29,13 +30,14 @@ public:
    virtual bool GetPathSegment(Cfg, Cfg, CollisionDetection*, LocalPlanners*,
 			       DistanceMetric*, WEIGHT, LPInfo*);
 
-   virtual void removeBadNodes(vector <Cfg>& cfgs, Environment *env,
+   virtual bool removeBadNodes(vector <Cfg>& cfgs, Environment *env,
 			       CollisionDetection *cd, SID cdsetid);
 
    /////////////////////////////////////////////////////////
    //  data 
    /////////////////////////////////////////////////////////
    QueryRequirementsObject queryReq;
+   int checkAllNodes;
 
 };
 

@@ -11,7 +11,7 @@
 #include"GraphAlgo.h"
 
 
-AdaptiveQuery::AdaptiveQuery(Input *input, QueryCmds *Qinput, CollisionDetection* cd, 
+AdaptiveQuery::AdaptiveQuery(Input *input, MyQueryCmds *Qinput, CollisionDetection* cd, 
 		 DistanceMetric* dm, LocalPlanners* lp,ConnectMapNodes* cn) :
 	 Query(input, Qinput, cd, dm, lp, cn) {
 
@@ -20,7 +20,7 @@ AdaptiveQuery::AdaptiveQuery(Input *input, QueryCmds *Qinput, CollisionDetection
    strcat(tmp, ".requirement"); 
 
    queryReq = QueryRequirementsObject(tmp);
-
+   checkAllNodes = Qinput->checkAllNodes.GetValue();
 }
 
 
@@ -91,10 +91,9 @@ AdaptiveQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 	return false;
 
   // check to see if bad nodes need to be thrown away
-  vector<Cfg> allnodes;
-  rdmp.m_pRoadmap->GetVerticesData(allnodes);
-  bool throwAwayBadNodes = true;
-  if(throwAwayBadNodes) {
+  if(checkAllNodes) {
+    vector<Cfg> allnodes;
+    rdmp.m_pRoadmap->GetVerticesData(allnodes);
     removeBadNodes(allnodes, env, cd, cdsetid);
   }
 
@@ -135,7 +134,17 @@ AdaptiveQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
       int i;
       _path->push_back(_start);
       bool failedToRecreatePath = false;
-      for (i=0; i<rp.size()-1; i++) {
+      bool badNodeFound = false;
+
+      if (!checkAllNodes) { //remove bad nodes in path first
+        vector<Cfg> pathnodes;
+        for (i=0; i<rp.size(); i++)
+          pathnodes.push_back(rp[i].first);
+        badNodeFound = removeBadNodes(pathnodes, env, cd, cdsetid);
+      }
+
+      if (!badNodeFound) { //didn't remove a bad node, so check edges
+        for (i=0; i<rp.size()-1; i++) {
           if ( !(GetPathSegment(rp[i].first,rp[i+1].first,cd,lp,dm,rp[i].second,&ci) )) {
                cout << endl << "In PerformQuery: can't recreate path" << endl;
 	       rdmp.m_pRoadmap->DeleteEdge(rp[i].first,rp[i+1].first);
@@ -154,7 +163,12 @@ AdaptiveQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
                   _path->insert(_path->end(), ci.path.begin(),ci.path.end());
 	       }
           }
+        }
+      } else { //removed a bad node, so couldn't recreate path
+        cout << endl << "In PerformQuery: can't meet query requirements!" << endl;
+        failedToRecreatePath = true;
       }
+
       if(failedToRecreatePath) continue;
 
 
@@ -182,16 +196,30 @@ AdaptiveQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 
 // This method removes all nodes that don't meet requirements in the given
 // vector of cfgs.
-void AdaptiveQuery::removeBadNodes(vector <Cfg>& cfgs, Environment *env,
+// returns true if a node was removed, false if no nodes were removed
+bool AdaptiveQuery::removeBadNodes(vector <Cfg>& cfgs, Environment *env,
 				   CollisionDetection *_cd, SID _cdsetid) {
-    for(int i=0; i<cfgs.size(); ++i) {
-       if (!queryReq.isNodeValid(cfgs[i], env, _cd, _cdsetid)) { //if node is bad, remove it
-	 rdmp.m_pRoadmap->DeleteVertex(cfgs[i]);
+  bool removed_a_node = false;
+
+  for(int i=0; i<cfgs.size(); ++i) {
+    if (!queryReq.isNodeValid(cfgs[i], env, _cd, _cdsetid)) { //if node is bad, remove it
+      rdmp.m_pRoadmap->DeleteVertex(cfgs[i]);
+      removed_a_node = true;
     }
   }
+
+//remove later
+  CDInfo info;
+  for(int i=0; i<cfgs.size(); ++i) {
+    if(cfgs[i].isCollision(env, _cd, _cdsetid, info)) {
+      rdmp.m_pRoadmap->DeleteVertex(cfgs[i]);
+      removed_a_node = true;
+    }
+  }
+//endremove
+  
+  return removed_a_node;
 };
-
-
 
 
 bool
