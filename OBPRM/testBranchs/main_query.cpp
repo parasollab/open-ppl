@@ -4,7 +4,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream.h>
 #include "Query.h"
 #include "GenerateMapNodes.h"
 #include "ConnectMap.h"
