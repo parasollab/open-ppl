@@ -26,6 +26,7 @@ public:
   void PrintValues(ostream& _os);
 
   num_param<int> checkAllNodes;
+  str_param<char*> pathValidationFlag;
 
 protected:
 

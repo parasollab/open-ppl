@@ -13,7 +13,9 @@
 #include "util.h"
 
 
-MyQueryCmds::MyQueryCmds() : QueryCmds(), checkAllNodes("-checkAllNodes", 1, 0, 1) {}
+MyQueryCmds::MyQueryCmds() : QueryCmds(), 
+                             checkAllNodes("-checkAllNodes", 1, 0, 1), 
+                             pathValidationFlag("-validatePaths","sequential") {}
 
 
 MyQueryCmds::~MyQueryCmds() {}
@@ -36,6 +38,7 @@ ReadCommandLine(int *argc, char **argv){
       //-- if present then record & remove from command line
 
         if ( checkAllNodes.AckCmdLine(&i, *argc, argv) ) {
+	} else if ( pathValidationFlag.AckCmdLine(&i, *argc, argv) ) {
 
       //-- if unrecognized keep
 
@@ -72,6 +75,7 @@ PrintUsage(ostream& _os,char *executablename){
 
   _os << "\n    OPTIONAL:\n";
   _os << "\n\t"; checkAllNodes.PrintUsage(_os);
+  _os << "\n\t"; pathValidationFlag.PrintUsage(_os);
 
   cout.setf(ios::right,ios::adjustfield);
 
@@ -84,5 +88,6 @@ MyQueryCmds::
 PrintValues(ostream& _os){
   QueryCmds::PrintValues(_os);
   _os <<"\n"<<setw(20)<<"checkAllNodes"<<"\t"<<checkAllNodes.GetValue();
+  _os <<"\n"<<setw(20)<<"validatePaths"<<"\t"<<pathValidationFlag.GetValue();
   _os <<"\n\n";
 }
