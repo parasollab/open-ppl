@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include "Push.h"
 
-// ***
+// *** not sure if this is needed, or should go in Haptic.cpp
 #define EXPANSION_FACTOR 100
 #define MAX_PATH_NUM 20
 typedef struct _cfig {
@@ -37,6 +37,12 @@ static int path_num = 0;
 //
 ///////////////////////////////////////////////////////
 
+
+//-----------------------------------------------------
+// Constructor. This insures that everything gets
+// initialized properly. It must be instanciated in
+// order to call any pushing methods.
+//-----------------------------------------------------
 Push::Push(Roadmap *rm, CollisionDetection *_cd, 
 		  LocalPlanners *_lp, DistanceMetric *_dm, GNInfo gnInfo, CNInfo cnInfo) {
    rdmp = rm;
@@ -48,9 +54,14 @@ Push::Push(Roadmap *rm, CollisionDetection *_cd,
    dm = _dm;
 }
 
+
 Push::~Push() {
 }
 
+
+//----------------------------------------------------
+// Used only by ShortestPush().
+//----------------------------------------------------
 vector<Cfg> Push::GenerateClosestOutsideNode(bool &directionKnown, Vector3D &direct,
 double &jumpSize, Cfg inside, double incrCoord) {
      static Vector3D savedDirection;
@@ -107,7 +118,13 @@ double &jumpSize, Cfg inside, double incrCoord) {
 }
 	   
 	  
-    
+//----------------------------------------------------
+// This method finds the shortest distance between
+// colliding configurations and the free space and
+// pushes in that direction. This method requires that
+// the first configuration in the vector nodes is  
+// free. (It does not check this.)
+//----------------------------------------------------
 void Push::ShortestPush(vector <Cfg> nodes)
 {
   cout << " Push::ShortestPush " << endl;
@@ -211,8 +228,10 @@ void Push::ShortestPush(vector <Cfg> nodes)
 }
 
 
-
-//----------------------------------------------------------------------------
+//----------------------------------------------------
+// This method is used internally by AddFreeNodes in
+// the Haptic class and should be moved there.
+//----------------------------------------------------
 bool Push::CheckConnection(Cfg c1,Cfg c2)
 {
 vector<LP> mylpset = lp->planners.GetLPSet(SL);
@@ -233,9 +252,11 @@ vector<LP> mylpset = lp->planners.GetLPSet(SL);
   return lp->IsConnected(env,cd,dm, c1,c2,connectionInfo.lpsetid,&lpInfo);
 
 }
-//-----------------------------------------------------------------------------
+
+
+//----------------------------------------------------
 //  closestKvertex: copy from util.c (Burchan)
-//-----------------------------------------------------------------------------
+//----------------------------------------------------
 //brc changed this to void *
 //static int Compare3D(Vector3D *a,Vector3D *b)
 static int Compare3D(const void *c,const void  *d)
@@ -250,6 +271,7 @@ static int Compare3D(const void *c,const void  *d)
    else return 0;
 }
 
+
 ///////////////////////////////////////////////////////////////////////
 // Get the direction vectores for the "k" closest pairs of vertices
 // between the robot and the obstacle in the environment belonging
@@ -258,6 +280,8 @@ static int Compare3D(const void *c,const void  *d)
 // 
 // We have assume that there are one robot and one obstacle in the
 // environment.
+//
+// This method is used by WorkspaceAssistedPush().
 ////////////////////////////////////////////////////////////////////////
 vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
 {
@@ -326,6 +350,13 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
 }
 
 
+//----------------------------------------------------
+// This method uses the workspace to select a 
+// direction to translate the robot. This method works 
+// best when the colliding path is close to a free 
+// path. This method will fail in cases where rotation
+// is required to reach a free configuration.
+//----------------------------------------------------
 void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
 {
   vector <Cfg> nodes;
@@ -362,6 +393,15 @@ void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
     //Connect_MapNodes();
 }
 
+
+//----------------------------------------------------
+// This method uses connects a straight line between
+// the first and last configurations of the vector. It
+// then pushes the colliding configurations towards 
+// the line and out into the free space. This method
+// requires that the first and last configurations in
+// the vector nodes are free. (It does not check this.)
+//----------------------------------------------------
 void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
 {
   vector <Cfg> surface;
@@ -466,7 +506,44 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
 
 
 //written by Sujay and Shawna
-vector <Cfg> Push::GenerateIntermediateCfgs(Cfg cfg_start, Cfg cfg_end) {
+//----------------------------------------------------
+// This method generates intermediate configurations
+// between cfg_start and cfg_end. The pushing methods
+// require that there be a high frequency of 
+// configurations. It is useful when generating 
+// intermediate configurations along an edge.
+//----------------------------------------------------
+vector <Cfg> Push::GenerateIntermediateCfgs(Cfg cfg_start, Cfg cfg_end, 
+             double stepSize) {
+  vector <Cfg> intermediateNodes;
+  Cfg temp = cfg_start;
+  Cfg original_dir = cfg_end - temp;
+
+  //original_dir = original_dir / original_dir.PositionMagnitude();
+  original_dir.SetSingleParam(0,
+	    original_dir.GetSingleParam(0) / original_dir.PositionMagnitude());
+  original_dir.SetSingleParam(1,
+            original_dir.GetSingleParam(1) / original_dir.PositionMagnitude());
+  original_dir.SetSingleParam(2,
+            original_dir.GetSingleParam(2) / original_dir.PositionMagnitude());
+
+  Cfg dir = original_dir;
+  
+  //while (original_dir == dir) {
+  while ((original_dir.GetSingleParam(0) == dir.GetSingleParam(0)) &&
+         (original_dir.GetSingleParam(1) == dir.GetSingleParam(1)) &&
+         (original_dir.GetSingleParam(2) == dir.GetSingleParam(2))) {
+    intermediateNodes.push_back(temp);
+    temp = Cfg:: c1_towards_c2(temp,cfg_end,stepSize);
+    dir = cfg_end - temp;
+
+    //dir = dir / dir.PositionMagnitude();
+    dir.SetSingleParam(0, dir.GetSingleParam(0) / dir.PositionMagnitude());
+    dir.SetSingleParam(1, dir.GetSingleParam(1) / dir.PositionMagnitude());
+    dir.SetSingleParam(2, dir.GetSingleParam(2) / dir.PositionMagnitude());    
+  }
+
+  return intermediateNodes;
 }
 
 
@@ -496,9 +573,11 @@ bool Push::isPathGood(vector <Cfg> cfgs) {
 }
 
 
-
-// the following three methods were in GenerateMapNodes Class, should go
-// back there later. 07/23/99 (G)
+//----------------------------------------------------
+// the following three methods were in 
+// GenerateMapNodes Class, should go back there later. 
+// 07/23/99 (G)
+//----------------------------------------------------
 Cfg
 GenerateSurfaceCfg(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
 		   Cfg insideCfg, Cfg outsideCfg, GNInfo& _gnInfo){
@@ -553,6 +632,7 @@ cout <<" returning high" << flush;
      else return surface;
 }
 
+
 Cfg
 GenerateOutsideCfg(Environment *env, CollisionDetection *cd, 
                    Cfg InsideNode, Cfg incrCfg, GNInfo &_gnInfo){
@@ -564,6 +644,7 @@ GenerateOutsideCfg(Environment *env, CollisionDetection *cd,
     }
     return OutsideNode;
 }
+
 
 vector <Cfg>
 GenerateOBPRMNodes(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
@@ -591,5 +672,16 @@ GenerateOBPRMNodes(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
     }
   return SurfaceNodes;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
