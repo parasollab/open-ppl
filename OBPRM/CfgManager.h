@@ -90,6 +90,10 @@ public:
   // methods for Cfg generation and collision checking.
   virtual bool ConfigEnvironment(const Cfg &c, Environment *env) = 0;
   virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+                           int robot, int obs, SID _cdsetid);
+  virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+                           SID _cdsetid);
+  virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
                            SID _cdsetid, MultiBody * onflyRobot);
 
   // Node Generation methods
