@@ -23,6 +23,7 @@
 #include "Cfg_fixed_PRR.h"
 #include "Cfg_free_tree.h"
 #include "Cfg_fixed_tree.h"
+#include "Cfg_2D.h"
 
 #include "util.h"
 
@@ -181,6 +182,7 @@ Input::Input():
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_PRR");
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_tree");
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_tree");
+    strcat(Cfg_string_1,"\n\t\t\t  Cfg_2D");
 
     CFGstrings[0]->PutDesc("STRING", Cfg_string_1);
 
@@ -245,6 +247,9 @@ void Input::ReadCfgType(istream &is) {
             cfgSet=true;
 	} else if (!(strncmp(cfgName,"Cfg_fixed_tree", 14))) {
 	    Cfg::CfgHelper = new Cfg_fixed_tree(numofJoints);
+	    cfgSet = true;
+	} else if (!(strncmp(cfgName,"Cfg_2D", 6))) {
+	    Cfg::CfgHelper = new Cfg_2D();
 	    cfgSet = true;
         }
     } // default is Cfg_free().

@@ -134,6 +134,7 @@ OBJS = \
 	Cfg_fixed_PRR.o \
 	Cfg_free_tree.o \
 	Cfg_fixed_tree.o \
+	Cfg_2D.o \
 	util.o \
 	Clock_Class.o \
 	Stat_Class.o \
