@@ -16,20 +16,13 @@
 #include "Body.h"
 #include "OBPRM.h"
 #include <vector.h>
+#include <ctype.h>
 
 class Environment;
 
-const double Pi = 3.1415927;
-const double BETA_EPSILON = 1.0e-30;
 
-typedef double t44[4][4];
-
-
-/**
-Calculate the minimum DIRECTED angular distance between two angles
-normalized to 1.0
-*/
-
+/** Calculate the minimum DIRECTED angular distance between two angles
+normalized to 1.0 */
 double DirectedAngularDistance(double a,double b);
 
 
@@ -53,7 +46,35 @@ void WritePathTranformationMatrices(char output_file[80],
 void ReadCfgs(char *filename, vector<Cfg> &cfgs);
 
 // general functions.
-template <class T> bool readfield (istream &_is, T *element);
 bool VerifyFileExists(char *_fname);
+template <class T> bool readfield (istream &_is, T *element);
+
+
+
+//-----------------------------------------------------------
+// implementation for the template function.
+//-----------------------------------------------------------
+#define COMMENT_DELIMITER '#'
+#define LINEMAX 256
+template <class T> bool readfield (istream &_is, T *element) {
+
+  char c;
+  char ThrowAwayLine[LINEMAX];
+
+  while ( _is.get(c) ) {
+    if (c == '#')
+        _is.getline(ThrowAwayLine,LINEMAX,'\n');
+    else if (! isspace(c) ) {
+        _is.putback(c);
+        if (_is >> *element) return true;
+        else               break;
+    }
+  }
+  
+  // could not read correctly ...
+  cout << "Error in reading!!! at util::readfield. " << endl;
+  return false;
+}
+
 
 #endif

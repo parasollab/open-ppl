@@ -11,7 +11,6 @@
 
 #include "util.h"
 #include "Roadmap.h"
-#include<ctype.h>
 
 
 // Calculate the minimum DIRECTED angular distance between two angles
@@ -109,28 +108,6 @@ ostream& operator<< (ostream& _os, const DblWeight& w) {
   _os<< w.lp << " " << w.weight ;
 }; 
 
-
-#define COMMENT_DELIMITER '#'
-#define LINEMAX 256
-template <class T> bool readfield (istream &_is, T *element) {
-
-  char c;
-  char ThrowAwayLine[LINEMAX];
-
-  while ( _is.get(c) ) {
-    if (c == '#')
-        _is.getline(ThrowAwayLine,LINEMAX,'\n');
-    else if (! isspace(c) ) {
-        _is.putback(c);
-        if (_is >> *element) return true;
-        else               break;
-    }
-  }
-  
-  // could not read correctly ...
-  cout << "Error in reading!!! at util::readfield. " << endl;
-  return false;
-}
 
 
 bool
