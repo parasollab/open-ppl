@@ -17,13 +17,14 @@
 # collision detection packages available
 #--------------------------------------------------------------------------
 
+ CD_DIR	= /export/research/parasol/dsmft/CD-libs
 
- VCLIP_DIR     = /research/dsmft/CD-libs/VCLIP
+ VCLIP_DIR     = ${CD_DIR}/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
  VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
  VCLIP_INCL    = -I${VCLIP_DIR}/include
 
- RAPID_DIR     = /research/dsmft/CD-libs/RAPID
+ RAPID_DIR     = ${CD_DIR}/RAPID
  RAPIDLIB_DIR  = ${RAPID_DIR}
  RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
  RAPID_INCL    = -I${RAPID_DIR}
@@ -89,14 +90,14 @@ libobprm.a:: $(OBJS)
 obprm:: main_obprm.cpp libs
 	$(CXX) $(CXXFLAGS)  -o obprm \
 	main_obprm.cpp \
-	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/research/dsmft/CD-libs/qhull -lqhull
+	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L${CD_DIR}/qhull -lqhull
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
 query:: main_query.cpp libs
 	$(CXX) $(CXXFLAGS)  -o query \
 	main_query.cpp \
-	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/research/dsmft/CD-libs/qhull -lqhull
+	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L${CD_DIR}/qhull -lqhull
 	rm -f main_query.o
 
 #--------------------------------------------------------------------
