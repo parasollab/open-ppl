@@ -230,14 +230,15 @@ ConnectNodes_Closest(
   const int verticeSize = vertices.size();
   const int kclosest = min(_cn.GetKClosest(),verticeSize);
 
-  vector< pair<Cfg,Cfg> > kp;
+  //vector< pair<Cfg,Cfg> > kp;
+  vector< pair<VID,VID> > kp;
   // Find k closest cfgs to each cfg in the roadmap
   if(kclosest < verticeSize  - 1) {
-     kp = FindKClosestPairs(_rm->GetEnvironment(), dm, info, vertices, kclosest);
+     kp = FindKClosestPairs(_rm, dm, info, vertices, kclosest);
   } else { // all the pairs
      for(int i=0; i<verticeSize-1; ++i) 
 	for(int j=i+1; j<verticeSize; ++j) 
-	   kp.push_back(pair<Cfg,Cfg>(vertices[i], vertices[j]));
+	   kp.push_back(pair<VID,VID>(i, j));
   } 
 
   // for each pair identified
@@ -247,7 +248,8 @@ ConnectNodes_Closest(
      #endif
 
      if (lp->IsConnected(_rm,cd,dm,
-                         kp[j].first,kp[j].second,
+                         _rm->roadmap.GetData(kp[j].first),
+			 _rm->roadmap.GetData(kp[j].second),
                          info.lpsetid,&lpInfo)) 
 		_rm->roadmap.AddEdge(kp[j].first, kp[j].second, lpInfo.edge);
 
@@ -674,6 +676,47 @@ FindKClosestPairs(Environment *_env,DistanceMetric * dm, CNInfo& info,
 
   return pairs;
 }
+
+
+vector< pair<VID, VID> >
+ConnectMapNodes::
+FindKClosestPairs(Roadmap *rm, DistanceMetric * dm, CNInfo& info,
+        vector<Cfg>& vec1, int k) {
+
+  Environment *_env = rm->GetEnvironment();
+  vector< pair<VID, VID> > pairs;
+
+  // if valid number of pairs requested
+  if (k>0){
+
+    vector<Cfg> vec_of_cfgs = vec1;
+
+    for (vector<Cfg>::reverse_iterator cfg=vec1.rbegin();cfg<vec1.rend()-1;++cfg){
+
+       // find k closest cfgs between the two vectors
+       vector< pair<Cfg,Cfg> > kp = FindKClosestPairs(
+                                                _env,
+                                                dm,
+                                                info,
+                                                *cfg,
+                                                vec_of_cfgs,
+                                                k
+                                          );
+
+       // save pairs
+       //pairs.insert(pairs.end(),kp.begin(),kp.end());
+       for(int i=0; i<kp.size(); ++i) {
+	  pairs.push_back(pair<VID, VID>(rm->roadmap.GetVID(kp[i].first), 
+					 rm->roadmap.GetVID(kp[i].second)));
+       }
+
+    }//endfor cfg
+
+  }//endif k>0
+
+  return pairs;
+}
+
 
 //----------------------------------------------------------------------
 // Given: k and a TWO vectors

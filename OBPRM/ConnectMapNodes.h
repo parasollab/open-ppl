@@ -375,6 +375,9 @@ private:
   static void ConnectBigCCs(Roadmap*,CollisionDetection*,LocalPlanners*,
 				DistanceMetric *, CN&, CNInfo&, VID, VID);
 
+  static vector< pair<VID, VID> > FindKClosestPairs(
+		Roadmap *rm, DistanceMetric * dm, CNInfo& info,
+        	vector<Cfg>& vec1, int k);
   static vector< CfgPairType > FindKClosestPairs(
                 Environment*, DistanceMetric *, CNInfo&, 
                 vector<Cfg>&, vector<Cfg>&, int);
