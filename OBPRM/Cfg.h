@@ -415,15 +415,15 @@ class Cfg {
   
   virtual bool isCollision(Environment* env, Stat_Class& Stats,
 			   CollisionDetection* cd, CDInfo& _cdInfo,
-			   bool enablePenetration=true);
+			   bool enablePenetration=true, std::string *pCallName = NULL);
   virtual bool isCollision(Environment* env, Stat_Class& Stats,
 			   CollisionDetection* cd,
 			   int robot, int obs, 
 			   CDInfo& _cdInfo,
-			   bool enablePenetration=true);
+			   bool enablePenetration=true, std::string *pCallName = NULL);
   virtual bool isCollision(Environment* env, Stat_Class& Stats,
 			   CollisionDetection* cd, CDInfo& _cdInfo,
-			   MultiBody*, bool enablePenetration=true);
+			   MultiBody*, bool enablePenetration=true, std::string *pCallName = NULL);
     
   //@}
 

@@ -291,6 +291,8 @@ StraightLine<CFG, WEIGHT>::
   tick = _c1; 
   CFG incr;
   incr.FindIncrement(_c1,_c2,&n_ticks,positionRes,orientationRes);
+  std::string Callee(GetName());
+  {std::string Method("-straightline::IsConnectedSLSequential");Callee=Callee+Method;}
   
   int nTicks = 0;
   for(int i = 0; i < n_ticks ; i++){
@@ -298,7 +300,7 @@ StraightLine<CFG, WEIGHT>::
     
     cd_cntr ++;
     if(checkCollision){
-      if(tick.isCollision(_env,Stats,cd, *cdInfo)){
+      if(tick.isCollision(_env,Stats,cd, *cdInfo,true,&(Callee))){
         CFG neg_incr;
 	neg_incr = incr; 
 	neg_incr.negative(incr);
@@ -375,7 +377,10 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     cd_cntr ++; //?
     
     //Check collision
-    if( cd->IsInCollision(_env, Stats, *cdInfo, lineSegment) )
+    //if( cd->IsInCollision(_env, Stats, *cdInfo, lineSegment) )
+    std::string Callee(GetName()),Method("-StraightLine::lineSegmentInCollision");
+    Callee+=Method;
+    if( cd->IsInCollision(_env, Stats, *cdInfo, lineSegment, true, &Callee) )
       return true;	//Collide
     return false;	//No collision
 }
@@ -391,6 +396,10 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 		    double positionRes, double orientationRes,  
 		    bool checkCollision, 
 		    bool savePath, bool saveFailedPath) {
+
+  std::string Callee(GetName());
+  {std::string Method("-straightline::IsConnectedSLBinary");Callee=Callee+Method;}
+  
   if(checkCollision) {
     double clr = 0;
 
@@ -425,7 +434,7 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 	  if(clr < 0) clr = 0.0;
 	}
       } else {
-	if(mid.isCollision(_env,Stats,cd,*cdInfo))
+	if(mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee)))
 	  return false;
       }
 

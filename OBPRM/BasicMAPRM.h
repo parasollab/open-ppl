@@ -166,6 +166,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   bool collided;
   CFG cfg;
   
+  std::string Callee(GetName()), 
+              Method("::GenerateNodes"),
+	      CallCnt("1");
 #ifndef QUIET
   cout << endl << "\t- Begin BasicMAPRM...\n";
   if( m_bApprox.GetValue()==0 ){
@@ -196,14 +199,16 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     //use approximate computation for moving out robot from obs
     if( m_bApprox.GetValue() ){
       cdInfo->ret_all_info = false;
-      collided = cfg.isCollision(_env, Stats, cd, *cdInfo);
+      collided = cfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method+CallCnt));
       if( collided ){
 	MoveOutObstacle(cfg,_env, Stats, cd);
-	collided = cfg.isCollision(_env, Stats, cd, *cdInfo);
+	CallCnt="2";
+	collided = cfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method+CallCnt));
       }
       if(cd->isInsideObstacle(cfg,_env,*cdInfo)){
 	cdInfo->ret_all_info = true;
-	cfg.isCollision(_env, Stats, cd, *cdInfo);
+	CallCnt="3";
+	cfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method+CallCnt));
 	Vector3D trans_dir=(cdInfo->object_point-cdInfo->robot_point)*1.00001;
 	cdInfo->ret_all_info = false;
 	MoveOutObstacle(cfg,trans_dir,_env,Stats,cd);
@@ -218,14 +223,16 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
       Vclip vclip;
       cd_selected.push_back(&vclip);
       CollisionDetection cd_vclip(cd_selected);
-      cfg.isCollision(_env, Stats, &cd_vclip, *cdInfo); //use vclip
+      CallCnt="vclip1";
+      cfg.isCollision(_env, Stats, &cd_vclip, *cdInfo, true, &(Callee+Method+CallCnt)); //use vclip
       cdInfo->ret_all_info = false;
       if( collided ){
 	Vector3D dir=(cdInfo->object_point-cdInfo->robot_point)*1.00001;
 	cfg.SetSingleParam(0, cfg.GetData()[0]+dir[0]);
 	cfg.SetSingleParam(1, cfg.GetData()[1]+dir[1]);
 	cfg.SetSingleParam(2, cfg.GetData()[2]+dir[2]);
-	collided = cfg.isCollision(_env, Stats, cd, *cdInfo);
+        CallCnt="vclip2";
+	collided = cfg.isCollision(_env, Stats, cd, *cdInfo,true, &(Callee+Method+CallCnt));
       }
     }
 #endif
@@ -290,6 +297,11 @@ void
 BasicMAPRM<CFG>::
 MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
 		CollisionDetection* cd) {
+
+  std::string Callee(GetName()), 
+              Method("::MoveOutObstacle"),
+	      CallCnt("1");
+
   // Set _info so we do NOT get all info (for speed)
   cdInfo->ResetVars();
   
@@ -315,7 +327,7 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
       pos[iR].add(pos[iR], rays[iR]);
       if( !pos[iR].InBoundingBox(_env) ) continue; //out of bounding box
       allOutBBX=false;
-      if( !pos[iR].isCollision(_env, Stats, cd, *cdInfo) ){
+      if( !pos[iR].isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method+CallCnt)) ){
 	bCollide=false; //not in collision any more
 	cfg=pos[iR];
       }
@@ -330,6 +342,10 @@ void
 BasicMAPRM<CFG>::
 MoveOutObstacle(CFG& cfg, Vector3D& dir, Environment* _env, Stat_Class& Stats, 
 		CollisionDetection* cd) {
+
+  std::string Callee(GetName()), 
+              Method("::MoveOutObstacle(,v)");
+
   // Store cfg in its "original" state
   cfg.SetSingleParam(0, cfg.GetData()[0]+dir[0]);
   cfg.SetSingleParam(1, cfg.GetData()[1]+dir[1]);
@@ -347,7 +363,7 @@ MoveOutObstacle(CFG& cfg, Vector3D& dir, Environment* _env, Stat_Class& Stats,
   do{
     cfg.add(cfg, trans_cfg);
   }
-  while(cfg.isCollision(_env, Stats, cd, *cdInfo));
+  while(cfg.isCollision(_env, Stats, cd, *cdInfo, &(Callee+Method)));
 }
 
 
@@ -362,6 +378,9 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Sta
   Vector3D trans_dir;
   CFG      trans_cfg(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   CDInfo   oldInfo;
+  std::string Callee(GetName()), 
+              Method("::MoveToMedialAxis(,v)");
+
   
   // Set flag in _info.cdInfo to cause isCollision 
   // to return "all info" such as witness pairs and min dist 
@@ -406,7 +425,7 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Sta
   //make sure newcfg is collision free
   cdInfo->ResetVars();
   while( true ){
-    if( newcfg.isCollision(_env, Stats, cd, *cdInfo)==false ) 
+    if( newcfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method))==false ) 
       break;
     CFG tmp;
     tmp.subtract(oldcfg, newcfg);
@@ -435,8 +454,10 @@ getCollisionInfo(CFG& cfg, Environment* _env, Stat_Class& Stats,
   //cout<<cfg<<endl;
   //if( !cfg.InBoundingBox(_env) ) 
   //cout<<"Ho...Shit"<<endl;
-  
-  if( cfg.isCollision(_env, Stats, cd, cdInfo) ) return true;
+  std::string Callee(cfg.GetName()), 
+              Method("-BasicMAPRM::getCollisionInfo"); 
+
+  if( cfg.isCollision(_env, Stats, cd, cdInfo, &(Callee+Method)) ) return true;
   const static double * bbx = _env->GetBoundingBox();
   MultiBody *robot = _env->GetMultiBody(_env->GetRobotIndex());
   

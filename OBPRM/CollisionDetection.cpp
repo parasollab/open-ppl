@@ -415,12 +415,12 @@ ReadCDs(istream& _myistream) {
 bool
 CollisionDetection::
 IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
-	      int robot, int obstacle) {
+	      int robot, int obstacle, std::string *pCallName) {
   MultiBody *rob, *obst;
   rob = env->GetMultiBody(robot);
   obst = env->GetMultiBody(obstacle);
   
-  return IsInCollision(env, Stats, _cdInfo, rob, obst);
+  return IsInCollision(env, Stats, _cdInfo, rob, obst, pCallName);
 }
 
 
@@ -448,7 +448,7 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 bool
 CollisionDetection::
 IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
-	      MultiBody* lineRobot, bool enablePenetration) {
+	      MultiBody* lineRobot, bool enablePenetration, std::string *pCallName) {
   int nmulti, robot;
   bool ret_val, collision_found; // needed to go thru ALL obstacles to get ALL info
   CDInfo local_cd_info;
@@ -467,7 +467,7 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
   for (int i = 0; i < nmulti; i++) {
     if ( i != robot ) {
       // Note that the below call sets _cdInfo as needed
-      collision_found = IsInCollision(env, Stats, _cdInfo, rob, env->GetMultiBody(i));
+      collision_found = IsInCollision(env, Stats, _cdInfo, rob, env->GetMultiBody(i), pCallName);
       
       if ( (collision_found) && ( ! _cdInfo.ret_all_info) ) {
 	_cdInfo.colliding_obst_index = i;
@@ -493,7 +493,7 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
     } else {
       // robot self checking. Warning: rob and env->GetMultiBody(robot) may NOT be the same.
       if ( (rob->GetBodyCount() > 1) && 
-	   (IsInCollision(env, Stats, _cdInfo, rob, rob)) ) {
+	   (IsInCollision(env, Stats, _cdInfo, rob, rob, pCallName)) ) {
 	if (_cdInfo.ret_all_info) {
 	  // set stuff to indicate odd happenning
 	  _cdInfo.colliding_obst_index = -1;
@@ -522,7 +522,7 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 bool
 CollisionDetection::
 IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
-	      MultiBody* rob, MultiBody* obst) {
+	      MultiBody* rob, MultiBody* obst, std::string *pCallName) {
   int nFreeRobot;
   nFreeRobot = rob->GetFreeBodyCount();
 
@@ -531,18 +531,18 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
     int tp = (*I)->GetType();
     
     // Type Out: no collision sure; collision unsure.
-    if((tp == Out) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo) == false)) {
+    if((tp == Out) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName) == false)) {
       return false;
     }
 
     // Type In: no collision unsure; collision sure.
-    if ((tp == In) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo) == true)) {
+    if ((tp == In) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName) == true)) {
       return true;
     }
 
     // Type Exact: no collision sure; collision sure.
     if(tp == Exact) {
-      return (*I)->IsInCollision(rob, obst, Stats, _cdInfo);
+      return (*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName);
     }
   }
       
@@ -594,6 +594,8 @@ AcceptablePenetration(Cfg& c, Environment* env, Stat_Class& Stats,
 		      CollisionDetection* cd, 
 		      CDInfo& cdInfo) {
   int numOkCfgs=0;
+  std::string Callee(c.GetName());
+  {std::string Method("-collisiondetection::AcceptablePenetration"); Callee = Callee+Method; }
   
   for(int i=0;i<directions.size();i++) {
     //Cfg next=c+directions[i];
@@ -754,8 +756,8 @@ clearanceAvailable() {
 bool
 Cstk::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo){
-  Stats.IncNumCollDetCalls( "cstk" );
+	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName){
+  Stats.IncNumCollDetCalls( "cstk", pCallName);
   
   // Identity in row-major order
   double linTrans[12] = {1,0,0,0, 0,1,0,0, 0,0,1,0};
@@ -795,8 +797,8 @@ IsInCollision(MultiBody* robot, MultiBody* obstacle,
 
 double
 Cstk::
-cstkDistance(Stat_Class& Stats, MultiBody* robot, MultiBody* obstacle){
-  Stats.IncNumCollDetCalls( "cstkDistance" );
+cstkDistance(Stat_Class& Stats, MultiBody* robot, MultiBody* obstacle, std::string *pCallName){
+  Stats.IncNumCollDetCalls( "cstkDistance", pCallName );
   
   double linTrans[12] = {1,0,0,0, 0,1,0,0, 0,0,1,0};  // Identity in row-major order
   
@@ -855,8 +857,8 @@ ClosestFeaturesHT closestFeaturesHT(3000);
 bool
 Vclip::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo) {
-  Stats.IncNumCollDetCalls( "vclip" );
+	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
+  Stats.IncNumCollDetCalls( "vclip", pCallName);
   
   Real dist;
   VclipPose X12;
@@ -1034,8 +1036,8 @@ CreateCopy() {
 bool
 Rapid::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo) {
-    Stats.IncNumCollDetCalls( "RAPID" );
+	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
+    Stats.IncNumCollDetCalls( "RAPID", pCallName);
 	
     RAPID_model *rob, *obst;
 	
@@ -1205,8 +1207,8 @@ BuildPQPSegment(PQP_REAL dX, PQP_REAL dY, PQP_REAL dZ) const {
 bool
 Pqp::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo) {
-    Stats.IncNumCollDetCalls( "PQP" );
+	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
+    Stats.IncNumCollDetCalls( "PQP", pCallName);
 	
     PQP_Model *rob, *obst;
     PQP_CollideResult result;
@@ -1355,9 +1357,9 @@ CreateCopy() {
 bool
 BoundingSpheres::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
   //cout << endl << "boundingSpheres Collision Check invocation" << flush;
-  Stats.IncNumCollDetCalls( "boundingSpheres" );
+  Stats.IncNumCollDetCalls( "boundingSpheres", pCallName );
   
   Vector3D robot_com = robot->GetCenterOfMass();
   Vector3D obst_com  = obstacle->GetCenterOfMass();
@@ -1412,9 +1414,9 @@ CreateCopy() {
 bool
 InsideSpheres::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
   //cout << endl << "insideSpheres Collision Check invocation";
-  Stats.IncNumCollDetCalls( "insideSpheres" );
+  Stats.IncNumCollDetCalls( "insideSpheres",pCallName );
   
   Vector3D robot_com = robot->GetCenterOfMass();
   Vector3D obst_com  = obstacle->GetCenterOfMass();
@@ -1470,9 +1472,9 @@ CreateCopy() {
 bool
 Naive::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
   cout << endl << "naive Collision Check invocation";
-  Stats.IncNumCollDetCalls( "naive" );
+  Stats.IncNumCollDetCalls( "naive", pCallName );
   return false;
 }
 
@@ -1509,9 +1511,9 @@ CreateCopy() {
 bool
 Quinlan::
 IsInCollision(MultiBody* robot, MultiBody* obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo) {
+	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
   cout << endl << "Quinlan Collision Check invocation";
-  Stats.IncNumCollDetCalls( "quinlan" );
+  Stats.IncNumCollDetCalls( "quinlan", pCallName );
   return false;
 }
 

@@ -310,7 +310,9 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
   static const int SIZE = 1;
   //static double jointAngles[SIZE][3] = {{0.0, 0.0, 0.0}, {0.25, 0.25, 0.25}, {0.0, 0.4, 0.0},
   //                                      {0.4, 0.6, 0.4},};
-  
+  std::string Callee(GetName());
+  {std::string Method("-cfg_free_tree::GenSurfaceCfg4ObstNORMAL");  Callee = Callee+Method;}
+
   int robot = env->GetRobotIndex();
   GMSPolyhedron &polyRobot = env->GetMultiBody(robot)->GetFreeBody(0)->GetPolyhedron();
   GMSPolyhedron &polyObst = env->GetMultiBody(obstacle)->GetFixedBody(0)

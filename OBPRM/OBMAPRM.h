@@ -220,6 +220,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   vector<CFG> path; 
   path.reserve(numNodes.GetValue());
 #endif
+
+  std::string Callee(GetName());
+  {std::string Method("OBMAPRM::GenerateNodes");Callee=Callee+Method;}
   
   //generate obprm nodes   
   OBPRM<CFG>::GenerateNodes(_env,Stats,cd,dm,nodes);
@@ -242,7 +245,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 			 dm, clearanceNum.GetValue(), 
 			 penetrationNum.GetValue());
     
-    if ( !cfg.isCollision(_env, Stats, cd, *cdInfo) ) {
+    if ( !cfg.isCollision(_env, Stats, cd, *cdInfo,true, &Callee) ) {
       nodes.push_back(CFG(cfg));
 #if INTERMEDIATE_FILES
       path.push_back(cfg);

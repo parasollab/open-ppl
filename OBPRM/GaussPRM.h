@@ -188,6 +188,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   path.reserve(numNodes.GetValue());
 #endif
   
+  std::string Callee(GetName()), CallCnt;
+  {std::string Method("-GaussPRM::GenerateNodes"); Callee = Callee+Method;}
+
   if (gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from env
     gauss_d.PutValue(_env->Getminmax_BodyAxisRange());
   }
@@ -203,10 +206,12 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     
     // because cfg2 is modified it must be checked again
     if (cfg2.InBoundingBox(_env)) {    
-      bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo);
+      CallCnt="1"; 
+      bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo,true, &(Callee+CallCnt));
       cfg1.obst = cdInfo->colliding_obst_index;
       
-      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*cdInfo);
+      CallCnt="2"; 
+      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*cdInfo,true, &(Callee+CallCnt));
       cfg2.obst = cdInfo->colliding_obst_index;
       
       if (cfg1_free && !cfg2_free) {

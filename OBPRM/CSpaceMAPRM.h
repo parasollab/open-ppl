@@ -185,6 +185,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   vector<CFG> path; 
   path.reserve(numNodes.GetValue());
 #endif
+
+  std::string Callee(GetName());
+  {std::string Method("-cspaceMAPRM::GenerateNodes"); Callee = Callee+Method;}
   
   // MAPRM style node generation using clearances in the CSpace
   for (int i=0; i < numNodes.GetValue(); i++) {

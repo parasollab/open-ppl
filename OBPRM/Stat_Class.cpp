@@ -203,11 +203,19 @@ FindCD( char *CDName ) {
 //----------------------------------------
 int
 Stat_Class::
-IncNumCollDetCalls( char *CDName ) {
+IncNumCollDetCalls( char *CDName, std::string *pCallName){
   int CD;
 
   CD=FindCD( CDName );
   NumCollDetCalls[CD]++;
+  
+  // If a caller's name was provided
+  //  then increment the verification counter
+  //  with that name.
+  //
+  if( pCallName )
+  { CollDetCountByName[*pCallName]++; }
+
   return(NumCollDetCalls[CD]);
 };
 

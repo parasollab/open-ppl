@@ -251,6 +251,9 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
   static const double posRes = env->GetPositionRes();
   Vector3D robotVertex[3], obstVertex[3], robotPoint, obstPoint, robotNormal, obstNormal;
 
+  std::string Callee(GetName()), CallCnt("1");
+  { std::string Method("-cfg_free::GetCfgByOverlappingNormal"); Callee = Callee+Method; }
+
   /////////////////////////////////////////////////////////////////////////////////////////////
   //Check if robTri and obsTri are in side the range
   if(robTri < 0 || robTri >= polyRobot.numPolygons ||
@@ -319,13 +322,15 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 			      gamma/TWOPI, beta/TWOPI, alpha/TWOPI);
     cfgIn.Increment(displacement);
     
-    if(! cfgIn.isCollision(env, Stats, cd,_cdInfo, onflyRobot) ) {
+    CallCnt="1";
+    if(! cfgIn.isCollision(env, Stats, cd,_cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
       direction = obstNormal;
     } else {
       //cfgIn = cfgIn - displacement - displacement;
       cfgIn.subtract(cfgIn, displacement);
       cfgIn.subtract(cfgIn, displacement);  
-      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
+      CallCnt="2";
+      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
 	direction = -obstNormal;
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
@@ -333,13 +338,15 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 	cfgIn = Cfg_free(robotCMS[0], robotCMS[1], robotCMS[2],
 			 gamma/TWOPI, (beta+PI)/TWOPI, (alpha+PI)/TWOPI);
 	cfgIn.Increment(displacement);
-	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
+	CallCnt="3";
+	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
 	  direction = obstNormal;
 	} else {
 	  //cfgIn = cfgIn - displacement - displacement;
 	  cfgIn.subtract(cfgIn, displacement);
 	  cfgIn.subtract(cfgIn, displacement);
-	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
+	  CallCnt="4";
+	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
 	    direction = -obstNormal;
 	  }
 	}
@@ -370,6 +377,9 @@ bool Cfg_free::InNarrowPassage(Environment* env, Stat_Class& Stats,
   int narrowpassageWeight = 0;
   Vector6<double> tmp(0,0,0,0,0,0);
   
+  std::string Callee(GetName()), CallL("(L)"), CallR("(R)");
+  {std::string Method("-cfg_free::InNarrowPassage"); Callee = Callee+Method;}
+
   for(int i=0; i<3; i++) {
     tmp[i] = width;
     Cfg_free incr(tmp);
@@ -378,8 +388,8 @@ bool Cfg_free::InNarrowPassage(Environment* env, Stat_Class& Stats,
     Cfg_free shiftR;
     shiftR.add(*this, incr);
     tmp[i] = 0.0;
-    if(shiftL.isCollision(env, Stats, cd, _cdInfo, onflyRobot) &&
-       shiftR.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) { // Inside Narrow Passage !
+    if(shiftL.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&(Callee+CallL)) &&
+       shiftR.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&(Callee+CallR)) ) { // Inside Narrow Passage !
       narrowpassageWeight++;
     }
   }

@@ -219,6 +219,10 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
   diagonal = _c1;
   vector<Cfg*> neighbors;
   int n_ticks;
+
+  
+  std::string Callee, Method("-AStar::IsConnectedOneWay()");
+  
   
   incr.FindIncrement(_c1,_c2,&n_ticks,positionRes,orientationRes);
   
@@ -233,7 +237,8 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     
     cd_cntr++;
 
-    if(!diagonal.isCollision(_env,Stats,cd, *cdInfo)){
+    Callee=diagonal.GetName();
+    if(!diagonal.isCollision(_env,Stats,cd, *cdInfo , &(Callee+Method))){
       p = diagonal;
     } else {
       neighbors.clear();

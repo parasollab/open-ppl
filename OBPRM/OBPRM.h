@@ -714,6 +714,9 @@ GenFreeCfgs4Obst(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
   att.reserve(nCfgs);
 #endif
   
+  std::string Callee(GetName());
+  {std::string Method("-OBPRM::GenFreeCfgs2Obst");Callee=Callee+Method;}
+
   CFG cfg;
   vector<CFG> free; 
   free.reserve(nCfgs);
@@ -721,7 +724,7 @@ GenFreeCfgs4Obst(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
     if( cfg.GenerateOverlapCfg(env, robot, ptsRobot[i], ptsObstacle[i], &cfg) ) {
       // check if it is possible to generate a Cfg with this pose.
       //if(!cfg.isCollision(env, *cdInfo) && CfgInsideBB(env,cfg)) {
-      if(!cfg.isCollision(env, Stats, cd, *cdInfo)) {
+      if(!cfg.isCollision(env, Stats, cd, *cdInfo,true, &Callee)) {
 	free.push_back(cfg);
       }
     }
@@ -749,6 +752,9 @@ GenerateSeeds(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
               vector<CFG>* seeds) {
   int rob = env->GetRobotIndex();
   
+  std::string Callee(GetName());
+  {std::string Method("-OBPRM::GenerateSeeds");Callee=Callee+Method;}
+
   vector<Vector3D> ptsRobot, ptsObstacle;
   ptsRobot = PointsOnMultiBody(env->GetMultiBody(rob), nseeds, selectRobot);
   
@@ -758,7 +764,7 @@ GenerateSeeds(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
   for(int i = 0 ; i < nseeds ; i++){
     if(cfg.GenerateOverlapCfg(env, rob, ptsRobot[i], ptsObstacle[i], &cfg)){
       // check if it is possible to generate a Cfg with this pose.
-      if(cfg.isCollision(env, Stats, cd, *cdInfo)) {
+      if(cfg.isCollision(env, Stats, cd, *cdInfo,true,&Callee)) {
 	seeds->push_back(cfg);
       }
     }

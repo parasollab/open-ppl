@@ -245,6 +245,8 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 				  vector<Cfg*> surface) {
   surface.clear();
   static const double posRes = env->GetPositionRes();
+  std::string Callee(GetName()), CallCnt("1");
+  {std::string Method("-cfg_2d::GetCfgByOverlappingNormal"), Callee = Callee + Method;}
  
   Vector3D robotVertex[3], obstVertex[3], robotPoint, obstPoint, robotNormal, obstNormal;
   
@@ -315,13 +317,14 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 					  gamma/TWOPI, beta/TWOPI, alpha/TWOPI));
     cfgIn.Increment(displacement);
     
-    if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
+    if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
       direction = obstNormal;
     } else {
       cfgIn.subtract(cfgIn,displacement);
       cfgIn.subtract(cfgIn,displacement);
       
-      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
+      CallCnt="2";
+      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
 	direction = -obstNormal;
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
@@ -329,12 +332,14 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 	cfgIn = Cfg_2D(Vector6<double>(robotCMS[0], robotCMS[1], robotCMS[2],
 				       gamma/TWOPI, (beta+PI)/TWOPI, (alpha+PI)/TWOPI));
 	cfgIn.Increment(displacement);
-	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
+	CallCnt="3";
+	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot, true, &(Callee+CallCnt)) ) {
 	  direction = obstNormal;
 	} else {
 	  cfgIn.subtract(cfgIn,displacement);
 	  cfgIn.subtract(cfgIn,displacement);
-	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot) ) {
+	  CallCnt="4";
+	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
 	    direction = -obstNormal;
 	  }
 	}

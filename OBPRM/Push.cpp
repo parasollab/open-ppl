@@ -73,7 +73,6 @@ double &jumpSize, Cfg inside, double incrCoord) {
      jumpSize *= 0.8;
      vector<Cfg> randomRay;
      vector<Cfg> startCfg;
-
      Vector3D Zaxis = direct;
      Zaxis.normalize(); // Zaxis is Zaxis
      Vector3D Xaxis = Vector3D(0.0, -Zaxis.getZ(), Zaxis.getY()); // this makes Xaxis*Zaxis = 0.
@@ -102,7 +101,8 @@ double &jumpSize, Cfg inside, double incrCoord) {
      for(int l=0; l<loopSize; l++) {
         for(int i=0; i < testSize; i++) {
 	   startCfg[i] = startCfg[i] + randomRay[i];
-	   if(!startCfg[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)) {
+	   if(!startCfg[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,
+	                               true, &Callee)) {
                 cout << " loop counter is " << l << "step Size is " << stepSize << endl;
 		jumpSize += stepSize * (l+1);
 		direct = randomRay[i].GetRobotCenterPosition();
@@ -143,6 +143,9 @@ void Push::ShortestPush(vector <Cfg> nodes)
 	  nodes = mycfgs;
           WritePathConfigurations("mycfgs.path", nodes, env);
 #endif
+     std::string Callee(GetName()),CallCnt;
+     {std::string Method("-Push::ShortestPush");Callee=Calle+Method;}
+
 
   vector <Cfg> fixed;
   vector <Cfg> pushed;
@@ -157,7 +160,10 @@ void Push::ShortestPush(vector <Cfg> nodes)
   for(i=0;i<nodes.size();i++) {
     cout << "At node " << nodes[i] << endl << flush;
    
-    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo) && i<(nodes.size()-1) ) {
+    CallCnt="1";
+    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt)) && 
+       i<(nodes.size()-1) ) {
+
        prevFound=false;
        inside.push_back(nodes[i]);
     } else {
@@ -198,7 +204,8 @@ void Push::ShortestPush(vector <Cfg> nodes)
        prevFound=true;
        prevFreeCfg=nodes[i];
        // skip the last one, it may be in collision.
-       if(i < nodes.size()-1 || !nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))  
+       CallCnt="2";
+       if(i < nodes.size()-1 || !nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt)))  
 	  fixed.push_back(nodes[i]);
       
     } //else
@@ -393,11 +400,15 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
   Cfg zero(Vector6<double>(0,0,0,0,0,0));
   cout << "incord= " <<incrCoord << endl;
   cout << "Adding using as surface: " << numIntermediate <<" intermediate nodes\n";
+  std::string Callee(GetName()),CallCnt;
+  {std::string Method("-push::SimplePush");Callee=Calle+Method;}
+
   for(i=0;i<nodes.size();i++)
   {
     cout << "At node " << nodes[i] << endl << flush;
    
-    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)) {
+    CallCnt="1";
+    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt))) {
        cout << "It is in  collision " << endl << flush;
        prevFound=false;
        inside.push_back(nodes[i]);
@@ -415,7 +426,8 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
 	     inter.Increment(incr);
              intermediate.push_back(inter); 
              InterList.push_back(inter);
-             if(!inter.isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)) {
+	     CallCnt="2";
+             if(!inter.isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt))) {
                   surface.push_back(inter);
                   cout << "Intermediate " << inter << " is added to surface list\n" << flush;
              }
@@ -424,7 +436,8 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
           for(j=0;j< inside.size(); j++) {
             Cfg ccc;
             for(k=0;k<numIntermediate;k++) {
-              if(intermediate[k].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)) {
+	      CallCnt="3";
+              if(intermediate[k].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt))) {
                  cout << "GenerateSurfaceCfg\n";
                  inter=GenerateOutsideCfg(env,cd, inside[j], 
 			(intermediate[k]-inside[j]),
@@ -519,8 +532,11 @@ vector <Cfg> Push::GenerateIntermediateCfgs(Cfg cfg_start, Cfg cfg_end,
 // that are in collision.
 vector <Cfg> Push::findCollidedCfgs(vector<Cfg> cfgs) {
   vector <Cfg> collidedCfgs;
+  std::string Callee(GetName());
+  {std::string Method("-push::findCollidedCfgs");Callee=Calle+Method;}
+
   for (int i = 0; i < cfgs.size(); i++) {
-    if (cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
+    if (cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true, &(Callee)))
       collidedCfgs.push_back(cfgs[i]);
   }
   return collidedCfgs;  
@@ -531,8 +547,11 @@ vector <Cfg> Push::findCollidedCfgs(vector<Cfg> cfgs) {
 // and checks if the path is collison free.
 bool Push::isPathGood(vector <Cfg> cfgs) {
   bool goodpath = true;
+  std::string Callee(GetName());
+  {std::string Method("-push::isPathGood");Callee=Calle+Method;}
+
   for (int i = 0; i < cfgs.size(); i++) {
-    if (cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)){
+    if (cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee))){
       goodpath = false;
       break;
     }
@@ -557,12 +576,17 @@ GenerateSurfaceCfg(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
     Cfg low, high, mid,prev;
     double delta;
     int cnt;
+    std::string Callee(GetName()),CallH("high"),CallL("low"),CallCnt("1"),
+                CallWH("high-while"),CallM("mid"),CallS("surface");
+    {std::string Method("-Push::ShortestPush");Callee=Calle+Method;}
+
 
     low = insideCfg; high = outsideCfg;
-    if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo))
+    if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallH+CallCnt))
        cout << "Ebesinin ki  sicmis ya " << "\n" <<flush;
-if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo) ||
-   !low.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo) ) {
+CallCnt="2";
+if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallH+CallCnt) ||
+   !low.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallL) ) {
   cout << " **************************** " << endl;
 }
 
@@ -575,13 +599,13 @@ if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo) ||
 
     cout << "Ebesinin ki " << mid << "\n" <<flush;
     while((delta >= PositionRes) &&
-                !high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo)) {
+                !high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallWH))) {
             prev=high;
          cout << "Ebesinin ki hi " << high << "\n" <<flush;
          cout << "Ebesinin ki mid" << mid << "\n" <<flush;
          cout << "Ebesinin ki low " << low << "\n" <<flush;
          cout << "delta =   " << delta << "\n" <<flush;
-        if(mid.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo)){
+        if(mid.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallM)){
             low = mid;
         } else {
             high = mid;
@@ -591,8 +615,9 @@ if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo) ||
         delta = dm->Distance(env, low, high);
         cnt++;
     }
-    if(surface.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo)) {
-           if(high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo))
+    if(surface.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallS))) {
+           CallCnt="3";
+           if(high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallH+CallCnt)))
                 cout <<" Anlamiyorum abi " << flush;
 cout <<" returning high" << flush;
            return prev;
@@ -607,7 +632,9 @@ GenerateOutsideCfg(Environment *env, CollisionDetection *cd,
 
     Cfg OutsideNode;
     OutsideNode = InsideNode + incrCfg;
-    while(OutsideNode.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo)){
+    std::string Callee(GetName());
+    { std::string Method("-(push):-GenerateOutsideCfg");Callee=Calle+Method;}
+    while(OutsideNode.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee))){
         OutsideNode = OutsideNode + incrCfg;
     }
     return OutsideNode;

@@ -107,6 +107,9 @@ Haptic::~Haptic() {
 void Haptic::init(Roadmap *rm, char * tmp[5], CollisionDetection *_cd, 
 		  LocalPlanners *_lp, DistanceMetric *_dm, GNInfo gnInfo, CNInfo cnInfo) {
 
+   std::string Callee(GetName());
+   {std::string Method("-haptic::init");Callee=Callee+Method;}
+
    Push pushObject(rm, _cd, _lp, _dm, gnInfo, cnInfo);
    
    rdmp = rm;
@@ -137,7 +140,8 @@ void Haptic::init(Roadmap *rm, char * tmp[5], CollisionDetection *_cd,
      fprintf(stderr,"size=%d\n",cfgs.size());
      for(j=0;j<cfgs.size();j++)
      {
-       if(cfgs[j].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
+       if(cfgs[j].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,
+                              true, &Callee ))
        {
          collided.push_back(cfgs[j]);
        }
@@ -185,6 +189,8 @@ void Haptic::AddFreeNodes(vector <Cfg>cfgs,bool checkConnection)
   prev=INVALID_VID;
   Cfg prevCfg;
   int i;
+  std::string Callee(GetName());
+  {std::string Method("-haptic::AddFreeNodes");Callee=Callee+Method;}
 
   LPInfo lpInfo;
   lpInfo.positionRes = rdmp->GetEnvironment()->GetPositionRes();
@@ -195,7 +201,8 @@ void Haptic::AddFreeNodes(vector <Cfg>cfgs,bool checkConnection)
   for(i=0;i<cfgs.size();i++)
   {
      cout << "Trying " << cfgs[i] << endl << flush;
-     if(cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
+     if(cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,
+                            true, &Callee))
           {prev=INVALID_VID; prevCfg=cfgs[i]; continue;}
   
      current=rdmp->m_pRoadmap->AddVertex(cfgs[i]);
@@ -228,12 +235,16 @@ void Haptic::AddFreeNodes(vector <Cfg>cfgs,bool checkConnection)
 void Haptic::AddUsingSeed(vector <Cfg> seeds,int nodesPerSeed)
 {
   vector <Cfg> nodes;
+   std::string Callee(GetName());
+   {std::string Method("-haptic::AddUsingSeed");Callee=Callee+Method;}
+
   
   cout << "Adding using as seed with " << nodesPerSeed << "\n";
   nodes=GenerateOBPRMNodes(env,cd, dm, seeds,nodesPerSeed,generationInfo);
   for(int i=0;i<nodes.size();i++)
   {
-    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
+    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,
+                            true, &Callee))
     {
       cout << "Error: The surface node is in collision\n";
     }

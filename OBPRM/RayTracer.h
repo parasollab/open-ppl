@@ -139,10 +139,13 @@ bool RayCSpace<CFG>::collide(Environment *env, Stat_Class& Stats,
   incr.FindIncrement(cfg,dir,&n_ticks,positionRes,orientationRes);
   int tk = 0; // controls the number of ticks generated
 
+  std::string Callee, Method("-RayCSpace::collide");
+
   while(!collision && (dm->Distance(env,cfg,tick) < maxLength) ) {
     lastFreeConfiguration = tick;
     tick.Increment(incr); //next configuration to check
-    if( (tick.isCollision(env,Stats,cd,cdInfo)) || 
+    Callee= tick.GetName();
+    if( (tick.isCollision(env,Stats,cd,cdInfo,true,&(Callee+Method))) || 
 	!(tick.InBoundingBox(env)) ) {
       collisionConfiguration = tick;
       collisionDistance = dm->Distance(env, cfg, tick);
@@ -195,10 +198,13 @@ bool RayCSpace<CFG>::connectTarget(Environment *env, Stat_Class& Stats,
   incr.FindIncrement(cfg,dir,&n_ticks,positionRes,orientationRes);
   int tk = 0; // controls the number of ticks generated
   
+  std::string Callee, Method("-RayCSpace::connectTarget");
+
   while(tk < n_ticks && !collision) {
     lastFreeConfiguration = tick;
     tick.Increment(incr); //next configuration to check
-    if( (tick.isCollision(env,Stats,cd,cdInfo)) || 
+    Callee = tick.GetName();
+    if( (tick.isCollision(env,Stats,cd,cdInfo,true,&(Callee+Method))) || 
 	!(tick.InBoundingBox(env)) ) {
       tmpDist = dm->Distance(env, cfg, tick);//distance % the ticks
       collisionConfiguration = tick;

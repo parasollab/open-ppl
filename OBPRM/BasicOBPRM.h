@@ -463,6 +463,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   vector<CFG> preshells, shells, tmp, obstSurface;
   int numMultiBody = _env->GetMultiBodyCount();
   int numExternalBody = _env->GetExternalBodyCount();
+
+  std::string Callee(GetName());
+  {std::string Method("-BasicOBPRM::GenerateNodes");Callee = Callee+Method;}
   
   int robot = _env->GetRobotIndex();
   
@@ -491,7 +494,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	  cout << "\nError: cannot overlap COMs of robot & obstacle\n";
 	  continue;
 	}
-	if(!InsideNode.isCollision(_env,Stats,cd,robot,obstacle,*cdInfo)){
+	if(!InsideNode.isCollision(_env,Stats,cd,robot,obstacle,*cdInfo, 
+	                           true, &(Callee))){
 	  cout << "\nError: Seed not in collision w/"
 	    " obstacle[index="<<obstacle<<"]\n" << flush;
 	  continue;
@@ -565,6 +569,9 @@ GenerateInsideCfg(Environment* _env, Stat_Class& Stats,
 		  CollisionDetection* _cd,
 		  int rob, int obst, CFG* insideNode) {
   
+  std::string Callee(GetName());
+  {std::string Method("-BasicOBPRM::GenerateInsideCfg");Callee=Callee+Method;}
+
   bool tmp = insideNode->GenerateOverlapCfg(_env, rob,
 					    _env->GetMultiBody(rob)->GetCenterOfMass(),
 					    _env->GetMultiBody(obst)->GetCenterOfMass(),
@@ -572,7 +579,7 @@ GenerateInsideCfg(Environment* _env, Stat_Class& Stats,
   
   // check the cfg obtained by center of mass overlapping if valid
   if (!insideNode->isCollision(_env, Stats, _cd, rob, obst,
-			       *cdInfo)) {
+			       *cdInfo, true, &(Callee))) {
     
     // if center of mass does not work in getting the cfg in collision,
     // use random vertex of an obstacle (J Kim)
@@ -602,8 +609,12 @@ GenerateOutsideCfg(Environment* env, Stat_Class& Stats,
   
   int count = 0;
   CFG OutsideNode;
+  std::string Callee(GetName());
+  {std::string Method("-BasicOBPRM::GenerateOutsideCfg");Callee=Callee+Method;}
+
   OutsideNode.add(InsideNode, incrCfg);
-  while(OutsideNode.isCollision(env, Stats, cd, rob, obst, *cdInfo) ) {
+  while(OutsideNode.isCollision(env, Stats, cd, rob, obst, *cdInfo, 
+                                true, &(Callee)) ) {
     OutsideNode.add(OutsideNode, incrCfg);
     if(count++ > 500)
       return InsideNode;
@@ -630,6 +641,9 @@ GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
   double delta;
   int cnt;
   
+  std::string Callee(GetName()), CallM("(mid)"),CallH("(High)");
+  {std::string Method("-BasicOBPRM::GenerateSurfaceCfg"); Callee = Callee+Method;}
+
   low = insideCfg; 
   high = outsideCfg;
   mid.WeightedSum(low, high, 0.5);
@@ -639,7 +653,8 @@ GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
   // Do the Binary Search
   tmp.push_back(high);
   while((delta >= clearanceFactor*PositionRes) && (cnt < MAX_CONVERGE)){
-    if(mid.isCollision(env, Stats, cd , rob, obst, *cdInfo) ) {
+    if(mid.isCollision(env, Stats, cd , rob, obst, *cdInfo,
+                       true, &(Callee+CallM)) ) {
       low = mid;
     } else {
       high = mid;
@@ -652,7 +667,7 @@ GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
   
   // if converged save the cfgs that don't collide with the environment
   if(cnt < MAX_CONVERGE) {
-    if(!high.isCollision(env, Stats, cd, *cdInfo)) {
+    if(!high.isCollision(env, Stats, cd, *cdInfo, true, &(Callee+CallH))) {
       surface = FirstFreeCfgs(env, Stats, cd,tmp);
     }
   }
@@ -672,12 +687,15 @@ GenCfgsFromCObst(Environment* env, Stat_Class& Stats,
   Vector3D voidA, voidB;
   CFG gen;
   int i;
+  std::string Callee(GetName());
+  {std::string Method("-BasicOBPRM::GenCfgsFromCObst"); Callee=Callee+Method;}
+
   for(i=0; i<nCfgs; ++i) {
     ///random orientation....?
     gen.GenerateOverlapCfg(env, robot, voidA, voidB, &gen);  // voidA, voidB is not used.
     
     ///check collision
-    if(gen.isCollision(env, Stats, cd, *cdInfo))
+    if(gen.isCollision(env, Stats, cd, *cdInfo,true, &(Callee)))
       obstSeeds.push_back(gen);
     else
       surface.push_back(gen);
@@ -976,12 +994,14 @@ FirstFreeCfgs(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
   
   int size = cfgs.size();
   n = min(n,size);
+  std::string Callee(GetName());
+  {std::string Method("-BasicOBPRM::FirstFreeCfgs"); Callee = Callee+Method;}
   
   vector<CFG> free;
   free.reserve(size);
   int i = 0; int cnt = 0;
   for (i = 0, cnt = 0; i < size && cnt < n; i++){
-    if(!cfgs[i].isCollision(env, Stats, cd, *cdInfo)){
+    if(!cfgs[i].isCollision(env, Stats, cd, *cdInfo,true,&(Callee))){
       free.push_back(cfgs[i]);
       cnt++;
     }

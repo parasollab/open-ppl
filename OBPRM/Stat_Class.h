@@ -39,7 +39,7 @@ public:
   int IncSizeCC( int CC );
   int SetSizeCC( int CC, int Size );
 
-  int IncNumCollDetCalls( char *CDName );
+  int IncNumCollDetCalls( char *CDName , std::string *pCallName = NULL);
   int FindCD( char *CDName );
 
   int FindLP( char *LPName );
@@ -84,6 +84,9 @@ protected:
   int LPConnections[MaxLP];
   int LPAttempts[MaxLP];
   int LPCollDetCalls[MaxLP];
+
+  std::map<std::string, int> CollDetCountByName;
+
 };
 
 //definitions of templated functions
@@ -92,6 +95,8 @@ void
 Stat_Class::
 PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
   int i;
+  std::map<std::string, int>::const_iterator iter;
+  int total=0;
 
   cout << endl << endl << "Local Planners:" << endl;
   cout << setw(20) << "Name"
@@ -126,6 +131,15 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
   if (numCCs==ALL)    {DisplayCCStats(*(rmap->m_pRoadmap));      }
   else if (numCCs==0) {DisplayCCStats(*(rmap->m_pRoadmap),0);     }
   else                {DisplayCCStats(*(rmap->m_pRoadmap),numCCs);}
+
+  cout << endl << endl << "Collision Detection Exact Counts:" << endl;
+  for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++) 
+  {
+    total+=iter->second;
+    cout << i << ") " << iter->second << " " << iter->first << endl;
+    }
+
+  cout << "total " << total << endl;
 
 }
 
