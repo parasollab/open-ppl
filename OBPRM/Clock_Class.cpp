@@ -127,8 +127,7 @@ StopPrintClock() {
 void
 Clock_Class::
 PrintClock() {
-    cout << ClockName << ": " << u_time << " sec" <<
- endl;
+    cout << ClockName << ": " << GetClock_SEC() << " sec" <<endl;
 };
 
 //----------------------------------------
