@@ -45,9 +45,10 @@ Roadmap(Input *input,
 
 Roadmap::
 ~Roadmap(){
-	if( m_pRoadmap != NULL )
-		delete m_pRoadmap;
+	if( m_pRoadmap != NULL ) delete m_pRoadmap;
+	if( environment != NULL ) delete environment;
 	m_pRoadmap = NULL;
+	environment = NULL;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -294,6 +295,7 @@ ConvertToCurrentVersion(const char* _fname, int thisVersion)
 {
 	
 	char infile[200], outfile[200];
+	
 	// copy current file _fname to "_fname.XXX"  where XXX=thisVersion
 	// construct infile=_fname.XXX  and outfile=_fname names
 	SaveCurrentVersion(_fname, thisVersion, infile, outfile);
