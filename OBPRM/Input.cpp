@@ -24,6 +24,9 @@
 #include "Cfg_fixed_PRR.h"
 #include "Cfg_free_serial.h"
 
+
+// J Kim, need for retreiving default parameters
+// in executing the parameter "-defaults"
 #include "LocalPlanners.h"
 #include "DistanceMetrics.h"
 #include "ConnectMapNodes.h"
@@ -320,9 +323,10 @@ void Input::ReadCommandLine(int argc, char** argv){
     if (argc == 1)
 	throw BadUsage();
 
-	else if ((argc == 2) && (!strcmp(argv[1], "-defaults"))) {
-	  PrintDefaults();
-	  exit(-1);
+    // process input parameter "-defaults"
+    else if ((argc == 2) && (!strcmp(argv[1], "-defaults"))) {
+        PrintDefaults();
+        exit(-1);
     }
 
     for (int i=1;i<argc; ++i) {
@@ -574,7 +578,8 @@ Input::PrintDefaults(){
    cout << "orires : " << orires.GetDefault() << endl;
    cout << "Cfg : Cfg_free_rigid" << endl;
 
-
+   // get default parameter by initializing each class and
+   // looking into each Info classes. 
    GenerateMapNodes gn;
    cout << "gn : " << endl;
    if (gn.gnInfo.gnsetid == BASICPRM)
@@ -600,6 +605,7 @@ Input::PrintDefaults(){
    cout << endl << endl << "dm : " << endl;
    dm.distanceMetrics.DisplayDMSets();
 
+   // without UserInit, no information is printed
    CollisionDetection cd;
    cout << endl << endl << "cd : " << endl;
    cd.UserInit(this,   &gn, &cn );

@@ -200,7 +200,7 @@ public:
     void PrintBodyNames();
     void PrintUsage(ostream& _os,char *executablename);
     void PrintValues(ostream& _os);
-    void PrintDefaults();
+    void PrintDefaults();	// for the parameter "-defaults"
 
     //-----------------------------------------------------------
     //  Data
