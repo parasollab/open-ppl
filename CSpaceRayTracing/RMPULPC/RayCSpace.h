@@ -25,13 +25,13 @@ class RayCSpace {
   //This function has to call a collision detection routine (throug cfg)
   bool collide(Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			SID dmsetid, double maxLength);//Check for collision in the environment
+			SID dmsetid, double maxLength, int &cd_counts);//Check for collision in the environment
   bool connectTarget (Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-		      SID dmsetid, Cfg &dir);
+		      SID dmsetid, Cfg &dir, int &cd_counts);
   bool connectTarget (Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-		      SID dmsetid);
+		      SID dmsetid, int &cd_counts);
   double length(void); //Length of the ray, I still have to figure out the units
   void writePath(Environment *env);
   void writePathConfigurations(char output_file[80],

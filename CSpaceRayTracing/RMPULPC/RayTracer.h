@@ -16,13 +16,14 @@
 class RayTracer {
  public:
   enum BouncingMode {TARGET_ORIENTED, RANDOM, HEURISTIC, NORMAL}; 
+  enum SchedulingMode {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTHEST, FARTHEST_TO_CLOSEST};
 /*    RayTracer(Environment *environment, Cfg source, Cfg target); */
-  RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid);
+  RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, ConnectMapNodes *cn);
   ~RayTracer();
   void setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length);
   void connectCCs();
 /*    bool connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, Roadmap &ccj, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp); */
-  bool connectCCs(VID cci_id, vector<Cfg> &rep_cci_cfgs, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp);
+  bool connectCCs(VID cci_id, vector<Cfg> &rep_cci_cfgs, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp, bool try_backwards=false);
   bool findPath(Cfg &source, Cfg &target, Roadmap &ray_rdmp);
   bool findPath(Cfg &source, Cfg &target, vector<Cfg> *target_cfgs, Roadmap &ray_rdmp);
   void setSource(Cfg configuration);
@@ -55,6 +56,9 @@ class RayTracer {
   SID cdsetid;
   DistanceMetric *dm;
   SID dmsetid;
+  ConnectMapNodes *cn;
+
+  int cd_counts;
   
 };
 

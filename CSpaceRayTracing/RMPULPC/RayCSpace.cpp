@@ -45,7 +45,7 @@ void RayCSpace::bounce(Cfg direction) {
 //Based on code by Shawna (Cfg::cAproxCspaceClearance:
 bool RayCSpace::collide(Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			SID dmsetid, double maxLength) {
+			SID dmsetid, double maxLength, int &cd_counts) {
   bool collision=false; 
   
   Cfg cfg = origin; //Cfg of first collision
@@ -74,27 +74,28 @@ bool RayCSpace::collide(Environment *env, CollisionDetection *cd,
   }
   else
     traveledDistance += dm->Distance(env, cfg, tick, dmsetid);
+  cd_counts += tk;
   return collision;
 }
 
 bool RayCSpace::connectTarget(Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			      SID dmsetid) {
+			      SID dmsetid, int &cd_counts) {
   if (using_target_vector && target_vector != NULL) {
     //    cout << "looking for connections with " << target_vector->size() << " confs" << endl;
     for (unsigned int i = 0; i < target_vector->size(); ++i)
-      if (connectTarget(env, cd, cdsetid, cdInfo, dm, dmsetid, (*target_vector)[i]))
+      if (connectTarget(env, cd, cdsetid, cdInfo, dm, dmsetid, (*target_vector)[i], cd_counts))
 	return true;
     return false;
   }
   else
-    return connectTarget(env, cd, cdsetid, cdInfo, dm, dmsetid, target);
+    return connectTarget(env, cd, cdsetid, cdInfo, dm, dmsetid, target, cd_counts);
   return false;
 }
 //Based on code by Shawna (Cfg::cAproxCspaceClearance:
 bool RayCSpace::connectTarget(Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			SID dmsetid, Cfg &dir) {
+			SID dmsetid, Cfg &dir, int &cd_counts) {
   bool collision=false; 
   
   Cfg cfg = origin; //Cfg of first collision
@@ -126,6 +127,7 @@ bool RayCSpace::connectTarget(Environment *env, CollisionDetection *cd,
     traveledDistance += dm->Distance(env, cfg, tick, dmsetid);
   if (!collision)
     reached_target = dir;
+  cd_counts += tk;
   return !collision;
 }
 

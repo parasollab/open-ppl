@@ -284,7 +284,7 @@ while (method_name<methods.end()) {
     clock.StartClock("RayTracer:" );
     cout << "using RayTracer to attempt to connect CCs" << endl;
     //The call to RayTracer from ConnectMapNodes goes here	
-    RayTracer tracer(rdmp, cd, cdsetid, dm, dmsetid);
+    RayTracer tracer(rdmp, cd, cdsetid, dm, dmsetid, cn);
     tracer.setOptions(RayTbouncingMode, RayTmaxRays, RayTmaxBounces, RayTmaxRayLength);
     tracer.connectCCs();
   }

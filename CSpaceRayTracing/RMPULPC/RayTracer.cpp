@@ -14,12 +14,13 @@
 //    rays_tested = 0;
 //  }
 
-RayTracer::RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid) {
+RayTracer::RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, ConnectMapNodes *cn) {
   this->rdmp = rdmp;
   this->cd = cd;
   this->cdsetid = cdsetid;
   this->dm = dm;
   this->dmsetid = dmsetid;
+  this->cn = cn;
   environment = rdmp->GetEnvironment();
   all_explored = false;
   rays_tested = 0;
@@ -52,21 +53,48 @@ void RayTracer::setOptions(string bouncing_mode, int max_rays, int max_bounces, 
 }
 
 void RayTracer::connectCCs() {
+
+  cd_counts = 0;
+
   vector< pair<int,VID> > ccs; //list of CCs in the roadmap
   GetCCStats(*(rdmp->m_pRoadmap), ccs);//get the CCs
   
   bool path_found = false;
   
-  unsigned int k = 10; //number of representative elements of each cc
+
   
   vector< pair<VID,VID> > cc_trl_schdl;
   cc_trl_schdl.clear();
-  for (vector< pair<int,VID> >::iterator cci = ccs.begin(); cci+1 < ccs.end(); ++cci) 
-    for (vector< pair<int,VID> >::iterator ccj = cci+1; ccj < ccs.end(); ++ccj) {
-      cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
-    }
+
+  //variables to set from the command line
+  unsigned int k = 10; //number of representative elements of each cc
+  unsigned int schedule_max_size = 20;
+  SchedulingMode ordering=LARGEST_TO_SMALLEST;
+  bool try_backwards = false;
+
+  //scheduling the order to try to connect pairs
+  switch (ordering) {
+  case FARTHEST_TO_CLOSEST:
+    ConnectMapNodes::OrderCCByCloseness(rdmp, dm, cn->cnInfo, ccs);
+  case SMALLEST_TO_LARGEST:
+    for (vector< pair<int,VID> >::iterator cci = ccs.end()-1; cci > ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --cci) 
+      for (vector< pair<int,VID> >::iterator ccj = cci-1; ccj >= ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --ccj) {
+	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
+      }
+    break;
+  case CLOSEST_TO_FARTHEST:
+    ConnectMapNodes::OrderCCByCloseness(rdmp, dm, cn->cnInfo, ccs);
+  default:
+  case LARGEST_TO_SMALLEST:
+    for (vector< pair<int,VID> >::iterator cci = ccs.begin(); cci+1 < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++cci) 
+      for (vector< pair<int,VID> >::iterator ccj = cci+1; ccj < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++ccj) {
+	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
+      }
+    break;
+  }
   cout << "Size of schedule: " << cc_trl_schdl.size() << endl;
-  
+
+  //trying to connect ccs in order defined by scheduling process  
   for (vector< pair<VID,VID> >::iterator cc_itrtr =cc_trl_schdl.begin(); cc_itrtr < cc_trl_schdl.end(); ++cc_itrtr) {
     if (!IsSameCC(*(rdmp->m_pRoadmap),cc_itrtr->first, cc_itrtr->second)) {
       
@@ -85,7 +113,7 @@ void RayTracer::connectCCs() {
       vector<Cfg> rep_ccj_cfgs;
       getBoundaryCfgs(ccj_cfgs, rep_ccj_cfgs, k);      
       
-      connectCCs(cc_itrtr->first, rep_cci_cfgs, cc_itrtr->second, rep_ccj_cfgs, target_rdmp);
+      connectCCs(cc_itrtr->first, rep_cci_cfgs, cc_itrtr->second, rep_ccj_cfgs, target_rdmp, try_backwards);
       
       vector<VID> target_rdmp_vertices;
       target_rdmp.m_pRoadmap->GetVerticesVID(target_rdmp_vertices);
@@ -94,12 +122,13 @@ void RayTracer::connectCCs() {
       target_rdmp.m_pRoadmap = NULL;
     }
   }
+  cout << endl << "RayTracer: Number of CD tests: " << cd_counts << endl;
 }
 
-bool RayTracer::connectCCs(VID cci_id, vector<Cfg> &rep_cci_cfgs, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp) {
+bool RayTracer::connectCCs(VID cci_id, vector<Cfg> &rep_cci_cfgs, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp, bool try_backwards=false) {
   bool path_found = false;
 
-  cout << "connecting CC " << cci_id << " To CC " << ccj_id << endl;
+  cout << endl << "!!!connecting CC " << cci_id << " To CC " << ccj_id << endl;
   //first get cfgs representative of cci and ccj
   cout << "\trep_cci_cfgs size: " << rep_cci_cfgs.size();
   cout << "\trep_ccj_cfgs size: " << rep_ccj_cfgs.size() << endl;
@@ -120,13 +149,13 @@ bool RayTracer::connectCCs(VID cci_id, vector<Cfg> &rep_cci_cfgs, VID ccj_id, ve
       break;
     }
     else
-      cout << endl << "No path was found: trying the other way"<< endl;
+      cout << endl << "No path was found"<< endl;
     ray_rdmp.environment = NULL;
     ray_rdmp.m_pRoadmap = NULL;
   }
 
   //now from ccj to cci
-  if (!path_found)
+  if (!path_found && try_backwards)
     for (unsigned int i = 0; i < rep_ccj_cfgs.size(); ++i) {
       Roadmap ray_rdmp = Roadmap::Roadmap();
       ray_rdmp.environment = rdmp->GetEnvironment();
@@ -239,11 +268,11 @@ bool RayTracer::trace(Roadmap &ray_rdmp) {
   //cout << "looking for a path with " << max_bounces << " max_bounces and " << max_ray_length << " max_ray_length " << endl;
   while (!path_found && number_bouncings < max_bounces &&
 	 ray.length() < max_ray_length) {
-    if (ray.connectTarget(ray_rdmp.GetEnvironment(), cd, cdsetid, cd->cdInfo, dm, dmsetid)) {
+    if (ray.connectTarget(ray_rdmp.GetEnvironment(), cd, cdsetid, cd->cdInfo, dm, dmsetid, cd_counts)) {
       ray.finish();
       path_found = true;
     }
-    else if (ray.collide(ray_rdmp.GetEnvironment(), cd, cdsetid, cd->cdInfo, dm, dmsetid,max_ray_length)) { // if there is a collision
+    else if (ray.collide(ray_rdmp.GetEnvironment(), cd, cdsetid, cd->cdInfo, dm, dmsetid,max_ray_length, cd_counts)) { // if there is a collision
       //cout<< "\tif the collided object is the target's screen\n";
       //cout << "\t\tpath_found=true;\n";
       //cout << "\telse\n";
