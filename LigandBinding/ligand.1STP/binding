@@ -1,0 +1,15 @@
+../binding -cd RAPID -cfg CfgLigand 5 \
+	-descDir /research/sunburn/dsmft/OBPRM/Environments/DOCKING/1STP.flexiable \
+	-f /research/sunburn/dsmft/OBPRM/Environments/DOCKING/1STP.flexiable/1STP.pdb \
+	-outmapFile ./1STP.pdb.map \
+        -gNodes OBPRM nodes 2000 \
+	        shells 3 \
+		collPair N_rT N_rT \
+		freePair cM rV  \
+	-bbox [-100,100,-100,100,-100,100] \
+	-bbox_scale 6 \
+	-orires 0.05 \
+	-posres 3 \
+	-lp straightline \
+	-cNodes closest 30
+
