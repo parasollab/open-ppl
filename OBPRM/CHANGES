@@ -1,0 +1,100 @@
+Cfg.h
+In Vector3D Cfg::GetRobotCenterPosition() removed const keyword
+
+Cfg_fixed_PRR.c
+In Cfg_fixed_PRR::GetRobotCenterPosition changed  &tmp to tmp
+Cfg_free.c
+In Cfg_free::GetRobotCenterPosition(const Cfg &c)  changed  &tmp to tmp
+In Cfg_free::GenSurfaceCfgs4ObstNORMAL
+  changed vector<Cfg> &tmp to vector<Cfg> 
+
+
+Cfg_free_serial.c:
+In Cfg_free_serial::GetRobotCenterPosition
+ changed  &tmp to tmp
+In Cfg_free_serial::GenSurfaceCfgs4ObstNORMAL
+   changed vector<Cfg> &tmp to vector<Cfg> 
+   changed vector<double> &basePose to basePose
+
+Clock_Class.c:
+In Clock_Class::StartClock
+ getrusage((int) 0, &buf changed to getrusage(RUSAGE_SELF, &buf);
+In Clock_Class:: StopClock
+ getrusage((int) 0, &buf changed to getrusage(RUSAGE_SELF, &buf);
+
+In ConnectMapNodes.c:
+The globals
+int dupeNodes=0;
+int dupeEdges=0;
+ moved from the header file to this file.
+
+In the following modifications, graph class requires ( variable &)
+and g++ does not let function returned values to be passed as pointers.
+So some temporary variables added in the following cases.
+
+In ConnectMapNodes:: ConnectBigCCs a temporary variable t has been added
+to satisfy the compilero
+In RRT:   a temporary variable t has been added
+In ModifyRoadmap some temporary variables t has been added
+
+
+
+HapticInput.c
+In HapticInput::AddUsingSurface2
+inside.clear() changed to inside.erase
+
+In Compare3D function definition
+static int Compare3D(Vector3D *a,Vector3D *b)
+changed to static int Compare3D(const void *c,const void  *d)
+
+In AddUsingSurface Vector3D &tmp changed to Vector3D tmp
+
+LocalPlanners.c:
+cd_predefined LocalPlanners::cdtype set to CSTK or RAPID or VCLIP in this
+order depending on the existence of the library.
+
+& removed from some variable definitions 
+
+LocalPlanners::lineSegmentInCollision
+a Temporary matrix has been added to satisfy the compiler
+ since Configure(Matrix variable &) and a function return value is 
+not passed in g++ as variable &
+
+util.c:
+
+Output streams for Weight classes moved here since they can't be
+stored in header files.
+
+ dkinfo_Compare and dkinfo << operator moved from Graph.h since
+they can't stay in headers
+
+BasicDefns.h
+
+Added a statement to stop if no library is defined in the compilation
+bool definition is removed  since g++ does have them
+MAXFLOAT is undefined I set it to some big value 99999999999999999.99999
+it would be nice to find different definitions for different systems
+
+Clock_Class.h
+rusage buf definition moved to related c file
+
+ConnectMapNodes.h
+int   dupeNodes ;  // I hacked these in as global's
+int   dupeEdges ; // good for you. would you please don't do these nex time
+definitions moved to ConnectMapNodes.c
+Definition of class Cfg_VE_Type moved to outside of ConnectMapNodes
+static keyword added to MAX_CONVERGE definition
+
+Graph.h
+dkinfo& << operator and dkinfo_Compare moved to util.c
+
+HapticInput.h
+some void definitions are added
+
+Input.h
+ static keyword has been added to constants
+ Two new templates defined explicity since g++ complained
+
+OBPRM.h
+ 
+some >> operators moved to util.c
