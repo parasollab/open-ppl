@@ -48,7 +48,7 @@ double DirectedAngularDistance(double a,double b)
 void ReadCfgs(char * filename,  vector<Cfg> &cfgs) {
   ifstream  is(filename);
   if (!is) {
-         cout << endl << "In ReadQuery: can't open infile: " << queryFile << endl;
+         cout << endl << "In ReadQuery: can't open infile: " << filename << endl;
          return;
   }
 
