@@ -479,7 +479,7 @@ Cfg Cfg::GetFreeRandomCfg(Environment *env, CollisionDetection *cd, SID _cdsetid
 
 void Cfg::GetNFreeRandomCfgs(vector<Cfg> &nodes, Environment *env,
                  CollisionDetection* cd,SID _cdsetid, CDInfo& _cdInfo, int num) {
-      return CfgHelper->GetNFreeRandomCfgs(nodes, env, cd, _cdsetid, _cdInfo, num);
+      CfgHelper->GetNFreeRandomCfgs(nodes, env, cd, _cdsetid, _cdInfo, num);
 };
 
 
