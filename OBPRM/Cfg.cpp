@@ -102,7 +102,7 @@ const char* Cfg::GetName() {
 
 // Normalize the orientation to the some range.
 void Cfg::Normalize_orientation(int index) {
-    CfgHelper->Normalize_orientation(*this, index);
+    cfgType->Normalize_orientation(*this, index);
 }
 
 void Cfg::createCfgHelper() {
@@ -112,7 +112,7 @@ void Cfg::createCfgHelper() {
 
 Cfg::Cfg() {
     createCfgHelper();
-    for(int i=0; i<CfgHelper->GetDOF(); ++i)
+    for(int i=0; i<cfgType->GetDOF(); ++i)
         v.push_back(0.0);
 }
 
@@ -211,7 +211,7 @@ bool Cfg::operator==(const Cfg &tmp) const{
 
     //return v.size() == tmp.v.size() &&
     //    equal(v.begin(), v.end(), tmp.v.begin());
-    return CfgHelper->AlmostEqual(*this, tmp);
+    return cfgType->AlmostEqual(*this, tmp);
 }
 
 bool Cfg::operator!=( const Cfg &tmp) const{
@@ -230,11 +230,11 @@ Cfg Cfg::WeightedSum(const Cfg& first,
 
 bool Cfg::AlmostEqual(const Cfg &_c)
 {
-    return CfgHelper->AlmostEqual(*this, _c);
+    return cfgType->AlmostEqual(*this, _c);
 }
 
 bool Cfg::isWithinResolution(const Cfg&c, double positionRes,double orientationRes){
-    return CfgHelper->isWithinResolution(*this, c, positionRes, orientationRes);
+    return cfgType->isWithinResolution(*this, c, positionRes, orientationRes);
 }
 
 Cfg Cfg::InvalidData(){
@@ -246,7 +246,7 @@ const vector<double>& Cfg::GetData() const {
 }
 
 Vector3D Cfg::GetRobotCenterPosition(){
-    return CfgHelper->GetRobotCenterPosition(*this);
+    return cfgType->GetRobotCenterPosition(*this);
 }
 
 
@@ -262,7 +262,7 @@ int Cfg::DOFs() {
 // and the range for an orientation parameter to be 0 to 1, which should
 // also be changed to reflect any self collision in a linked robot
 pair<double,double> Cfg::SingleParamRange(int param) {
-    return CfgHelper->SingleParamRange(param);
+    return cfgType->SingleParamRange(param);
 }
 
 // Set a single parameter in the configuration (i.e., x,y,z,roll...)
@@ -559,7 +559,7 @@ void Cfg::IncrementTowardsGoal(
                                const Cfg &goal,
                                const Cfg &increment)
 {
-    CfgHelper->IncrementTowardsGoal(*this, goal, increment);
+    cfgType->IncrementTowardsGoal(*this, goal, increment);
 }
 
 
@@ -569,7 +569,7 @@ vector<Cfg> Cfg::FindNeighbors(
                                int noNeighbors,
                                SID  _cdsetid, CDInfo& _cdInfo){
     
-    return CfgHelper->FindNeighbors(*this, 
+    return cfgType->FindNeighbors(*this, 
         _env, increment, 
         cd, 
         noNeighbors, 
@@ -583,7 +583,7 @@ vector<Cfg> Cfg::FindNeighbors(
                                int noNeighbors,
                                SID  _cdsetid, CDInfo& _cdInfo) {
     
-    return CfgHelper->FindNeighbors(*this, 
+    return cfgTypecfgTypecfgType->FindNeighbors(*this, 
         _env, goal, increment, 
         cd, 
         noNeighbors, 
@@ -596,14 +596,14 @@ Cfg Cfg::FindIncrement(
                        double positionRes,
                        double orientationRes)
 {
-    return CfgHelper->FindIncrement(*this, _goal, n_ticks, positionRes, orientationRes);
+    return cfgType->FindIncrement(*this, _goal, n_ticks, positionRes, orientationRes);
 }
 
 Cfg Cfg::FindIncrement(
                        const Cfg& _goal,
                        int  n_ticks)
 {
-    return CfgHelper->FindIncrement(*this, _goal, n_ticks);
+    return cfgType->FindIncrement(*this, _goal, n_ticks);
 }
 
 
@@ -618,28 +618,28 @@ void Cfg::Increment(const Cfg &_increment)
 
 vector <double> Cfg::GetOrientation()
 {
-    return CfgHelper->GetOrientation(*this);
+    return cfgType->GetOrientation(*this);
 }
 
 vector <double> Cfg::GetPosition()
 {
-    return CfgHelper->GetPosition(*this);
+    return cfgType->GetPosition(*this);
 }
 
 double  Cfg::OrientationMagnitude()
 {
-    return CfgHelper->OrientationMagnitude(*this);
+    return cfgType->OrientationMagnitude(*this);
 }
 
 
 double  Cfg::PositionMagnitude()
 {
-    return CfgHelper->PositionMagnitude(*this);
+    return cfgType->PositionMagnitude(*this);
 }
 
 
 vector<Cfg> Cfg::GetMovingSequenceNodes(const Cfg &other, double s) const {
-    return CfgHelper->GetMovingSequenceNodes(*this, other, s);
+    return cfgType->GetMovingSequenceNodes(*this, other, s);
 }
 
 
@@ -675,23 +675,23 @@ void Cfg::print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg) {
 }
 
 void Cfg::printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs) const {
-    CfgHelper->printLinkConfigurations(*this, env, cfigs);
+    cfgType->printLinkConfigurations(*this, env, cfigs);
 }
 
 
 bool Cfg::ConfigEnvironment(Environment *env) {
-    return CfgHelper->ConfigEnvironment(*this, env);
+    return cfgType->ConfigEnvironment(*this, env);
 }
 
 
 bool Cfg::isCollision(Environment *env,CollisionDetection *cd, SID _cdsetid,
                       CDInfo& _cdInfo){
-    return CfgHelper->isCollision(*this, env, cd, _cdsetid, _cdInfo);
+    return cfgType->isCollision(*this, env, cd, _cdsetid, _cdInfo);
 }
 
 bool Cfg::isCollision(Environment *env, CollisionDetection *cd,
                       int robot, int obs, SID _cdsetid, CDInfo& _cdInfo){
-    return CfgHelper->isCollision(*this, env, cd, robot, obs, _cdsetid, _cdInfo);
+    return cfgType->isCollision(*this, env, cd, robot, obs, _cdsetid, _cdInfo);
 }
 
 double Cfg::Clearance(Environment *env,CollisionDetection *cd ){
@@ -838,5 +838,5 @@ Cfg::GenSurfaceCfgs4ObstNORMAL
 // return a configuration(conformation)'s potential.
 double Cfg::Potential(Environment * env) const 
 {
-    return CfgHelper->GetPotential(*this, env);
+    return cfgType->GetPotential(*this, env);
 }
