@@ -86,8 +86,8 @@ ReadCommandLine(int *argc, char **argv){
 
     //-- Verify INPUT files exist
 
-    VerifyFileExists(mapFile.GetValue());
-    VerifyFileExists(queryFile.GetValue());
+    VerifyFileExists(mapFile.GetValue(),EXIT);
+    VerifyFileExists(queryFile.GetValue(),EXIT);
 
   } //endtry
   catch (BadUsage ) {

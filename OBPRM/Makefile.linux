@@ -14,7 +14,6 @@
 #-----------------------------------------------------------------------------
 # collision detection packages available
 #--------------------------------------------------------------------------
-
  CD_DIR = /research/sunburn/dsmft/CD-libs/linux
 
  VCLIP_DIR     = ${CD_DIR}/VCLIP
@@ -84,7 +83,7 @@ libs:: objs libobprm.so
 #libobprm.a:: $(OBJS)
 #	ar  -rc libobprm.a $(OBJS) 
 libobprm.so:: $(OBJS)
-	$(CXX) -o libobprm.so $(DSOFLAGS) $(OBJS)
+	$(CXX)  -o libobprm.so $(DSOFLAGS) $(OBJS)
 
 
 #--------------------------------------------------------------------

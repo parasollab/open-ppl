@@ -171,7 +171,7 @@ void Haptic::init(Roadmap *rm, char * tmp[5], CollisionDetection *_cd,
     nodes.reserve(vertices.size());
     for(int k=0; k<vertices.size(); ++k)
 	nodes.push_back(vertices[k]);
-    WritePathTranformationMatrices("hapticNodes.path", nodes, env);
+    WritePathConfigurations("hapticNodes.path", nodes, env);
   #endif
 
 }

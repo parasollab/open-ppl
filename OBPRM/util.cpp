@@ -66,7 +66,7 @@ void ReadCfgs(char * filename,  vector<Cfg> &cfgs) {
 // Output to a file the sequence of cfgs.
 /////////////////////////////////////////////////////////////////////
 void
-WritePathTranformationMatrices( char output_file[80],
+WritePathLinkConfigurations( char output_file[80],
                                 const vector<Cfg>& path,
                                 Environment *env ) { 
     FILE *fp;
@@ -100,6 +100,36 @@ WritePathTranformationMatrices( char output_file[80],
     fprintf(fp,"\n");
     fclose(fp);
 }
+void
+WritePathConfigurations( char output_file[80],
+                                vector<Cfg> path,
+                                Environment *env ) {
+   WritePathLinkConfigurations(output_file,path,env);
+   return;
+    FILE *fp;
+ 
+    if((fp = fopen(output_file,"w")) == NULL){
+        printf("\n\t Can't open file %s \n",output_file);
+        exit(1);
+    }
+ 
+   Cfg::print_preamble_to_file(env, fp, path.size());        
+         fprintf(fp,"\n");
+    for(int i = 0 ; i < path.size() ; i++){
+       vector<double> tmp=path[i].GetData();
+        // Translate all path configurations such that their resulting
+        // center of gravity is what was saved (ie, the rover original)
+        for(int j=0; j<tmp.size(); ++j) {
+            fprintf(fp,"%f ",tmp[j]);
+         }
+         if(i!=(path.size()-1))fprintf(fp,"\n");
+                    
+    }
+    fprintf(fp,"\n");
+    fclose(fp);
+}
+ 
+                                                                                
 
 ostream& operator<< (ostream& _os, const IntWeight& w) {
   _os<< w.lp << " " << w.nticks ;
@@ -117,16 +147,17 @@ ostream& operator<< (ostream& _os, const DblWeight& w) {
 
 
 bool
-VerifyFileExists(char *_fname){
+VerifyFileExists(char *_fname,int action){
 
   ifstream is(_fname);
 
   char ch;
   if (!is.get(ch)) {
      cout << "\nERROR: Can't open \"" << _fname << "\"" << endl;
-     exit(1);
-  }
-
+      if(action==EXIT)
+       exit(1);
+      else return false;
+  }                                                                             
   is.close();
   return true;
 }

@@ -39,6 +39,7 @@
 
 #define PATHVER_LEGACY                     20001022
 #define PATHVER_20001022                   20001022
+#define PATHVER_20001125                   20001125
 
 class Environment {
 public:

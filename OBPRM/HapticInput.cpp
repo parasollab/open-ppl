@@ -1,20 +1,19 @@
 /////////////////////////////////////////////////////////////////////
-//   Push.cpp
+//
+//   HapticInput.h
 //
 //   General Description
-//      This class contains pushing methods based on the 
-//      HapticInput class written by O.B. Bayazit and Guang Song.
-//      This class takes a bad path and attempts to push it to the 
-//      free space.
+//      Based on HRoadmap class written by O.B. Bayazit, this class
+//      read in a 'haptic' path as input and process it and return 
+//      free nodes in the roadmap.
 //  Created
 //      09/29/98  O.B. Bayazit (HRoadmap class)
 /////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "Push.h"
+#include "HapticInput.h"
 
-// *** not sure if this is needed, or should go in Haptic.cpp
 #define EXPANSION_FACTOR 100
 #define MAX_PATH_NUM 20
 typedef struct _cfig {
@@ -24,23 +23,90 @@ typedef struct _cfig {
 } cfig;
 
 static cfig* critical_cfigs = NULL;   // list of critical configurations.
+static cfig* path_head[MAX_PATH_NUM]; // the head of each prong of "road map".
 static int path_num = 0;
-// ***
+
+/////////////////////////////////////////////////////
+//
+//  Local function:
+//     1 read_prong()
+//     2 create_list(,,)
+//
+/////////////////////////////////////////////////////
+void read_prong(char fileName[80])
+{
+  int i;
+  FILE *in;
+  int timeStep;
+  cfig *prev;
+  char line[256];
+  cout << "Reading from the approx. path file\n" << fileName << endl;
+  if ( (in=fopen(fileName,"rt"))==NULL) { 
+   fprintf(stderr,"Failed to open file %s\n",fileName);
+   exit (5);
+  }
+  path_num=-0;
+  while(fgets(line,255,in))
+  {
+   if( strstr(line,"segment # := "))
+     {
+       path_head[path_num]=new(cfig);
+       prev=path_head[path_num];
+       path_num++;
+     }
+   else
+   {
+    cfig *t=new(cfig);
+    sscanf(line,"%lf%lf%lf%lf%lf%lf",
+     &t->position[0],&t->position[1],&t->position[2],
+     &t->rotation[0],&t->rotation[1],&t->rotation[2]);
+    printf("Read : %f %f %f %f %f %f \n",
+     t->position[0],t->position[1],t->position[2],
+     t->rotation[0],t->rotation[1],t->rotation[2]);
+    
+     t->next=NULL;
+     prev->next=t;
+     prev=t;
+   }
+  }
+}
+vector <vector <Cfg> > create_list(cfig **c,int size)
+{
+  vector <vector <Cfg> > l;
+  int i;
+  cfig *head;
+  for(i=0;i<size;i++) {
+     vector <Cfg> v;
+     head=c[i]->next;
+     while(head!=NULL)
+     {
+      
+        v.push_back(Cfg(Vector6<double>(head->position[0],head->position[1],head->position[2],
+		      head->rotation[0],head->rotation[1],head->rotation[2])));
+        head=head->next; 
+     }
+     l.push_back(v);
+   } 
+  return(l);
+ 
+}
+
 
 ////////////////////////////////////////////////////////
 //
-// Push Class methods
+// HapticInput Class methods
 //
 ///////////////////////////////////////////////////////
 
+HapticInput::HapticInput() {
+}
+HapticInput::~HapticInput() {
+}
 
-//-----------------------------------------------------
-// Constructor. This insures that everything gets
-// initialized properly. It must be instanciated in
-// order to call any pushing methods.
-//-----------------------------------------------------
-Push::Push(Roadmap *rm, CollisionDetection *_cd, 
+
+void HapticInput::init(Roadmap *rm, char * tmp[5], CollisionDetection *_cd, 
 		  LocalPlanners *_lp, DistanceMetric *_dm, GNInfo gnInfo, CNInfo cnInfo) {
+
    rdmp = rm;
    generationInfo = gnInfo;
    connectionInfo = cnInfo;
@@ -48,17 +114,70 @@ Push::Push(Roadmap *rm, CollisionDetection *_cd,
    cd = _cd;
    lp = _lp;
    dm = _dm;
+
+
+   int n=1,m=10, closest;
+   int mask;
+   read_prong(tmp[0]);
+   sscanf(tmp[1],"%d",&n);
+   sscanf(tmp[2],"%d",&m);
+   sscanf(tmp[3],"%d",&closest);
+   sscanf(tmp[4],"%d",&mask);
+   cout << "n & m are " << n << " " << m << endl;
+   vector <vector <Cfg> > list;
+   list=create_list(path_head,path_num);
+   for(int i=0; i<list.size(); i++) {
+	AddHapticPath(list[i], mask, n,m,closest,true);
+   }
+  #if INTERMEDIATE_FILES
+    vector<Cfg> vertices = rm->roadmap.GetVerticesData();
+    vector<Cfg> nodes;
+    nodes.reserve(vertices.size());
+    for(int k=0; k<vertices.size(); ++k)
+	nodes.push_back(vertices[k]);
+    WritePathConfigurations("hapticNodes.path", nodes, env);
+  #endif
+
+}
+
+void HapticInput::AddHapticPath(vector <Cfg> cfgs, int mask,
+                        int nodesPerSeed, int intermediate,
+			int closest, bool checkConnection)
+{
+  vector <Cfg> free;
+  vector <Cfg> collided;
+  int i;
+  fprintf(stderr,"size=%d\n",cfgs.size());
+  for(i=0;i<cfgs.size();i++)
+  {
+   if(cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
+   {
+     collided.push_back(cfgs[i]);
+   }
+   else free.push_back(cfgs[i]);
+
+  }
+
+  cout << " Total number of Cfgs in Haptic Path : " << cfgs.size() << endl;
+  cout << " Number of Free  Cfgs in Haptic Path : " << free.size() << endl;
+  cout << " Number of Colld Cfgs in Haptic Path : " << collided.size() << endl;
+  cout << " mask  =  " << mask << endl;
+
+  if(mask&ADD_FREE) AddFreeNodes(cfgs,checkConnection);
+  if(mask&USE_AS_SEED)
+    AddUsingSeed(collided,nodesPerSeed);
+  if(mask&USE_SURFACE)
+    AddUsingSurface(cfgs,intermediate);
+  if(mask&CLOSESTWORKSPACEPOINTS)
+    AddUsingClosestWorkspacePoints(collided,closest);
+
+  if(mask&USE_SURFACE2)
+    AddUsingSurface2(cfgs);
 }
 
 
-Push::~Push() {
-}
-
-
-//----------------------------------------------------
-// Used only by ShortestPush().
-//----------------------------------------------------
-vector<Cfg> Push::GenerateClosestOutsideNode(bool &directionKnown, Vector3D &direct,
+   
+vector<Cfg> HapticInput::GenerateClosestOutsideNode(bool &directionKnown, Vector3D &direct,
 double &jumpSize, Cfg inside, double incrCoord) {
      static Vector3D savedDirection;
      if(!directionKnown)
@@ -83,9 +202,6 @@ double &jumpSize, Cfg inside, double incrCoord) {
 	    if(directionKnown) phi *= 0.05;
             double tmpx=direction[0], tmpy=direction[1],tmpz= direction[2];
 	    direction = Zaxis*cos(phi) + direction*sin(phi);
-	    //Cfg ray(Vector6<double>(0,0,0,0,0,0));
-//ray=Vector6<double>(direction[0], direction[1], direction[2], 0, 0, 0);
-	    //Cfg ray(Vector6<double>(direction[0], direction[1], direction[2], 0, 0, 0));
 	    Cfg ray(Vector6<double>(tmpx,tmpy,tmpz, 0, 0, 0));
 	    randomRay.push_back(ray*stepSize);
 	    startCfg.push_back(inside+ray*jumpSize);
@@ -114,25 +230,16 @@ double &jumpSize, Cfg inside, double incrCoord) {
 }
 	   
 	  
-//----------------------------------------------------
-// This method finds the shortest distance between
-// colliding configurations and the free space and
-// pushes in that direction. This method requires that
-// the first configuration in the vector nodes is  
-// free. (It does not check this.)
-//----------------------------------------------------
-void Push::ShortestPush(vector <Cfg> nodes)
+    
+void HapticInput::AddUsingSurface2(vector <Cfg> nodes)
 {
-  cout << " Push::ShortestPush " << endl;
+  cout << " HapticInput::AddUsingSurface2 " << endl;
 #if 1
 	  vector<Cfg> mycfgs; 
 	  int steps = 2;
 	  for(int m=0; m<nodes.size()-1; m++) {
-	      //Cfg &incr = nodes[m].FindIncrement(nodes[m+1], steps);
-	      //Cfg tmp = nodes[m];
 	      for(int n=0; n < steps; n++) {
 		 mycfgs.push_back(Cfg::WeightedSum(nodes[m], nodes[m+1], 1./steps*n));
-		 //tmp.Increment(incr);
               }
 	  }
 	  nodes = mycfgs;
@@ -207,6 +314,7 @@ void Push::ShortestPush(vector <Cfg> nodes)
     cout << "Add as fixed : " << fixed.size() << " nodes added\n";
     for(i=0;i<fixed.size();i++)
        cout << "VID : "<< rdmp->roadmap.AddVertex(fixed[i]) << " " <<fixed[i] << " added in fixed\n";
+    //Connect_MapNodes();
     LPInfo lpInfo(rdmp, connectionInfo);
     for(i=1;i<fixed.size();i++) {
        if(lp->IsConnected(env,cd,dm,fixed[i-1],fixed[i],connectionInfo.lpsetid,&lpInfo)) {
@@ -220,11 +328,55 @@ void Push::ShortestPush(vector <Cfg> nodes)
 }
 
 
-//----------------------------------------------------
-// This method is used internally by AddFreeNodes in
-// the Haptic class and should be moved there.
-//----------------------------------------------------
-bool Push::CheckConnection(Cfg c1,Cfg c2)
+
+//----------------------------------------------------------------------------
+void HapticInput::AddFreeNodes(vector <Cfg>cfgs,bool checkConnection)
+{
+  VID prev,current;
+  prev=INVALID_VID;
+  Cfg prevCfg;
+  int i;
+
+  LPInfo lpInfo;
+  lpInfo.positionRes = rdmp->GetEnvironment()->GetPositionRes();
+  lpInfo.checkCollision = true;
+  lpInfo.savePath = false;
+  lpInfo.cdsetid = connectionInfo.cdsetid;
+  lpInfo.dmsetid = connectionInfo.dmsetid;
+    
+
+
+  for(i=0;i<cfgs.size();i++)
+  {
+     cout << "Trying " << cfgs[i] << endl << flush;
+     if(cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
+          {prev=INVALID_VID; prevCfg=cfgs[i]; continue;}
+  
+     current=rdmp->roadmap.AddVertex(cfgs[i]);
+     cout << "VID : "<< current << " " <<cfgs[i] << " added in Free\n";
+     if(prev==INVALID_VID) {prev=current; prevCfg=cfgs[i];continue; } 
+    
+     
+     if(!checkConnection) {
+        if(prev!=INVALID_VID) {
+	   rdmp->roadmap.AddEdge(prev,current,lpInfo.edge);
+	   cout << "Edge between (without check)" << prev << "-"<<current<<endl<<flush; 
+	}
+     } else { 
+       if(prev!=INVALID_VID &&
+	  lp->IsConnected(env,cd,dm,prevCfg,cfgs[i],connectionInfo.lpsetid,&lpInfo)) {
+             rdmp->roadmap.AddEdge(prev,current,lpInfo.edge );
+       }
+       else  cout << "Warning:  Could not connect the successive haptic nodes\n";
+     }
+     prevCfg=cfgs[i];
+     prev=current;
+  }
+  
+
+
+}
+bool HapticInput::CheckConnection(Cfg c1,Cfg c2)
 {
 vector<LP> mylpset = lp->planners.GetLPSet(SL);
   LP bsl = mylpset[0];
@@ -244,24 +396,40 @@ vector<LP> mylpset = lp->planners.GetLPSet(SL);
   return lp->IsConnected(env,cd,dm, c1,c2,connectionInfo.lpsetid,&lpInfo);
 
 }
+void HapticInput::AddUsingSeed(vector <Cfg> seeds,int nodesPerSeed)
+{
+  vector <Cfg> nodes;
+  
+  cout << "Adding using as seed with " << nodesPerSeed << "\n";
+  nodes=GenerateOBPRMNodes(env,cd, dm, seeds,nodesPerSeed,generationInfo);
+  for(int i=0;i<nodes.size();i++)
+  {
+    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
+    {
+      cout << "Error: The surface node is in collision\n";
+    }
+   cout << "VID : "<< rdmp->roadmap.AddVertex(nodes[i]) << " " <<nodes[i] << " added in seed\n";
+  }
+       cout << "Added " << nodes.size() << endl;
+  if (nodes.size()) {  
+       cout << "Added " << nodes.size() << endl;
+  }
 
-
-//----------------------------------------------------
+}
+//-----------------------------------------------------------------------------
 //  closestKvertex: copy from util.c (Burchan)
-//----------------------------------------------------
+//-----------------------------------------------------------------------------
 //static int Compare3D(Vector3D *a,Vector3D *b)
 static int Compare3D(const void *c,const void  *d)
 {
    double aval,bval;
    Vector3D *a=(Vector3D *) c,*b=(Vector3D *) d;
-   //aptal++;
    aval= a->magnitude();
    bval= b->magnitude();
    if (aval<bval) return -1;
    else if (aval>bval) return 1;
    else return 0;
 }
-
 
 ///////////////////////////////////////////////////////////////////////
 // Get the direction vectores for the "k" closest pairs of vertices
@@ -271,8 +439,6 @@ static int Compare3D(const void *c,const void  *d)
 // 
 // We have assume that there are one robot and one obstacle in the
 // environment.
-//
-// This method is used by WorkspaceAssistedPush().
 ////////////////////////////////////////////////////////////////////////
 vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
 {
@@ -287,6 +453,17 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
     _roadmap->GetEnvironment()->GetMultiBody(robot_index)->GetFirstBody()->GetPolyhedron();
   
   // Get the transformation matrix corresponding to the given robot's configuration
+/*
+  t44 robotT;
+  double Q[6];
+  Q[0] = _robotCfg.GetPositionVector().getX();
+  Q[1] = _robotCfg.GetPositionVector().getY();
+  Q[2] = _robotCfg.GetPositionVector().getZ();
+  Q[3] = _robotCfg.GetOrientationVector().getX();
+  Q[4] = _robotCfg.GetOrientationVector().getY();
+  Q[5] = _robotCfg.GetOrientationVector().getZ();
+  RPY_Config_To_Transform(Q, robotT);
+*/
 
   // How to get the obstacle index???
   int obstacle_index = 1;  // for now, let's assume it as being "1", the 2nd body
@@ -324,14 +501,7 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
 }
 
 
-//----------------------------------------------------
-// This method uses the workspace to select a 
-// direction to translate the robot. This method works 
-// best when the colliding path is close to a free 
-// path. This method will fail in cases where rotation
-// is required to reach a free configuration.
-//----------------------------------------------------
-void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
+void HapticInput::AddUsingClosestWorkspacePoints(vector <Cfg> seeds,int totalNodes)
 {
   vector <Cfg> nodes;
 
@@ -364,16 +534,7 @@ void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
  WritePathConfigurations("closestWorkspacePoints.path", surface, env);
 }
 
-
-//----------------------------------------------------
-// This method uses connects a straight line between
-// the first and last configurations of the vector. It
-// then pushes the colliding configurations towards 
-// the line and out into the free space. This method
-// requires that the first and last configurations in
-// the vector nodes are free. (It does not check this.)
-//----------------------------------------------------
-void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
+void HapticInput::AddUsingSurface(vector <Cfg> nodes,int numIntermediate)
 {
   vector <Cfg> surface;
   vector <Cfg> intermediate;
@@ -472,77 +633,8 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
 }
 
 
-//written by Sujay and Shawna
-//----------------------------------------------------
-// This method generates intermediate configurations
-// between cfg_start and cfg_end. The pushing methods
-// require that there be a high frequency of 
-// configurations. It is useful when generating 
-// intermediate configurations along an edge.
-//----------------------------------------------------
-vector <Cfg> Push::GenerateIntermediateCfgs(Cfg cfg_start, Cfg cfg_end, 
-             double stepSize) {
-  vector <Cfg> intermediateNodes;
-  Cfg temp = cfg_start;
-  Cfg original_dir = cfg_end - temp;
-
-  //original_dir = original_dir / original_dir.PositionMagnitude();
-  original_dir.SetSingleParam(0,
-	    original_dir.GetSingleParam(0) / original_dir.PositionMagnitude());
-  original_dir.SetSingleParam(1,
-            original_dir.GetSingleParam(1) / original_dir.PositionMagnitude());
-  original_dir.SetSingleParam(2,
-            original_dir.GetSingleParam(2) / original_dir.PositionMagnitude());
-
-  Cfg dir = original_dir;
-  
-  while ((original_dir.GetSingleParam(0) == dir.GetSingleParam(0)) &&
-         (original_dir.GetSingleParam(1) == dir.GetSingleParam(1)) &&
-         (original_dir.GetSingleParam(2) == dir.GetSingleParam(2))) {
-    intermediateNodes.push_back(temp);
-    temp = Cfg:: c1_towards_c2(temp,cfg_end,stepSize);
-    dir = cfg_end - temp;
-
-    dir.SetSingleParam(0, dir.GetSingleParam(0) / dir.PositionMagnitude());
-    dir.SetSingleParam(1, dir.GetSingleParam(1) / dir.PositionMagnitude());
-    dir.SetSingleParam(2, dir.GetSingleParam(2) / dir.PositionMagnitude());    
-  }
-
-  return intermediateNodes;
-}
-
-
-// This method takes in a set of Cfgs and returns the configurations
-// that are in collision.
-vector <Cfg> Push::findCollidedCfgs(vector<Cfg> cfgs) {
-  vector <Cfg> collidedCfgs;
-  for (int i = 0; i < cfgs.size(); i++) {
-    if (cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
-      collidedCfgs.push_back(cfgs[i]);
-  }
-  return collidedCfgs;  
-}
-
-
-// This method takes in a path (generated by one of pushing methods)
-// and checks if the path is collison free.
-bool Push::isPathGood(vector <Cfg> cfgs) {
-  bool goodpath = true;
-  for (int i = 0; i < cfgs.size(); i++) {
-    if (cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)){
-      goodpath = false;
-      break;
-    }
-  }
-  return goodpath;
-}
-
-
-//----------------------------------------------------
-// the following three methods were in 
-// GenerateMapNodes Class, should go back there later. 
-// 07/23/99 (G)
-//----------------------------------------------------
+// the following three methods were in GenerateMapNodes Class, should go
+// back there later.
 Cfg
 GenerateSurfaceCfg(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
 		   Cfg insideCfg, Cfg outsideCfg, GNInfo& _gnInfo){
@@ -597,7 +689,6 @@ cout <<" returning high" << flush;
      else return surface;
 }
 
-
 Cfg
 GenerateOutsideCfg(Environment *env, CollisionDetection *cd, 
                    Cfg InsideNode, Cfg incrCfg, GNInfo &_gnInfo){
@@ -609,7 +700,6 @@ GenerateOutsideCfg(Environment *env, CollisionDetection *cd,
     }
     return OutsideNode;
 }
-
 
 vector <Cfg>
 GenerateOBPRMNodes(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
@@ -637,3 +727,4 @@ GenerateOBPRMNodes(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
     }
   return SurfaceNodes;
 }
+

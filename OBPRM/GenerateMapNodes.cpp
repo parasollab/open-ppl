@@ -188,7 +188,7 @@ BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GN
    }
 
    #if INTERMEDIATE_FILES
-     WritePathTranformationMatrices("prm.path", path, _env);
+     WritePathConfigurations("prm.path", path, _env);
    #endif
 };
 
@@ -261,7 +261,7 @@ GaussPRM(
    } // endfor
 
    #if INTERMEDIATE_FILES
-     WritePathTranformationMatrices("GaussPRM.path", path, _env);
+     WritePathConfigurations("GaussPRM.path", path, _env);
    #endif
 
 };
@@ -368,7 +368,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
   } // endfor: obstacle
 
   #if INTERMEDIATE_FILES
-    WritePathTranformationMatrices("surface.path", surface, _env);
+    WritePathConfigurations("surface.path", surface, _env);
   #endif
 
 };
@@ -462,7 +462,7 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
     } // for(obstacle)
 
     #if INTERMEDIATE_FILES
-      WritePathTranformationMatrices("surface.path", surface, _env);
+      WritePathConfigurations("surface.path", surface, _env);
     #endif
 };
 
@@ -658,7 +658,7 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
    } // end for i = 1 to _gn.numNOdes.GetValue()
 
    #if INTERMEDIATE_FILES
-      WritePathTranformationMatrices("maprm.path", path, _env);
+      WritePathConfigurations("maprm.path", path, _env);
    #endif
 
    #ifndef QUIET
@@ -1152,7 +1152,7 @@ GenFreeCfgs4Obst(Environment * env, CollisionDetection *cd, int obstacle, int nC
     ptsObstacle.erase(ptsObstacle.begin(),ptsObstacle.end());
 
     #if INTERMEDIATE_FILES
-      WritePathTranformationMatrices("att.path", att, env);
+      WritePathConfigurations("att.path", att, env);
     #endif
 
     return free;

@@ -18,6 +18,10 @@
 #include <vector.h>
 #include <ctype.h>
 
+ 
+// Actions for VerifyFileExists
+#define EXIT 1
+#define RETURN 2  
 class Environment;
 
 
@@ -41,12 +45,13 @@ inline double sqr(double a)
 }
 
 // Cfgs input & output from/to files.
-void WritePathTranformationMatrices(char output_file[80], 
+void WritePathLinkConfigurations(char output_file[80], 
      const vector<Cfg> &path, Environment *env);
+void WritePathConfigurations(char output_file[80], vector<Cfg> path, Environment *env);
 void ReadCfgs(char *filename, vector<Cfg> &cfgs);
 
 // general functions.
-bool VerifyFileExists(char *_fname);
+  bool VerifyFileExists(char *_fname,int action);
 template <class T> bool readfield (istream &_is, T *element);
 
 
@@ -56,14 +61,16 @@ template <class T> bool readfield (istream &_is, T *element);
 //-----------------------------------------------------------
 #define COMMENT_DELIMITER '#'
 #define LINEMAX 256
-template <class T> bool readfield (istream &_is, T *element) {
+template <class T> bool readfield (istream &_is, T *element,vector <char *> comment) {
 
   char c;
   char ThrowAwayLine[LINEMAX];
 
   while ( _is.get(c) ) {
-    if (c == '#')
+    if (c == '#') {
         _is.getline(ThrowAwayLine,LINEMAX,'\n');
+        comment.push_back(strdup(ThrowAwayLine));
+    }
     else if (! isspace(c) ) {
         _is.putback(c);
         if (_is >> *element) return true;
@@ -74,6 +81,12 @@ template <class T> bool readfield (istream &_is, T *element) {
   // could not read correctly ...
   cout << "Error in reading!!! at util::readfield. " << endl;
   return false;
+}
+template <class T> bool readfield (istream &_is, T *element) {
+  vector <char  *> comment;
+  bool ret=readfield(_is,element,comment);
+  comment.clear();
+  return ret;
 }
 
 

@@ -52,6 +52,7 @@
 #define ENV_VER_20001022                   20001022
 #define ENV_VER_LEGACY                     0
 
+
 class Environment;
 
 //---------------------------
@@ -96,8 +97,9 @@ public:
     //-----------------------------------------------------------
     //  Methods
     //-----------------------------------------------------------
-    void Read();
-    void Read(istream & _is, int envFormatVersion);
+
+    void Read(int action);
+    void Read(istream & _is, int envFormatVersion,int action);
     virtual void ReadCommandLine(int argc, char** argv);
 
     void ReadPreamble(istream& _myistream);
@@ -193,6 +195,9 @@ public:
     Vector3D fixedbodyPosition[MAX_MULTIBODY][MAX_CONNECTION];
     Orientation fixedbodyOrientation[MAX_MULTIBODY][MAX_CONNECTION];
 
+
+    Vector3D bodyOrientation[MAX_MULTIBODY][MAX_CONNECTION];
+
     // these two arrays are not used elsewhere, only to read in something.
     // so that the previous version of .env files could still be used. 
     Vector3D freebodyPosition[MAX_MULTIBODY];
@@ -204,6 +209,7 @@ public:
     DHparameters dhparameters[MAX_MULTIBODY][MAX_CONNECTION];
     Vector3D positionToDHFrame[MAX_MULTIBODY][MAX_CONNECTION];
     Orientation orientationToDHFrame[MAX_MULTIBODY][MAX_CONNECTION];
+    vector <char *> comments[MAX_MULTIBODY][MAX_CONNECTION];
 private:
 
 };

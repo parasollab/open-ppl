@@ -88,7 +88,7 @@ Roadmap::
 InitEnvironment(Input *input){
 
   // open 'init' file, read it into Input object, & close it
-  input->Read();
+  input->Read(EXIT);
   // read environment files & put them in Environment object
   environment->Get(input);
 

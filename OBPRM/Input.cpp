@@ -346,13 +346,13 @@ void Input::ReadCommandLine(int argc, char** argv){
     }
 
     if ( inmapFile.IsActivated() ){
-        VerifyFileExists(inmapFile.GetValue());
+        VerifyFileExists(inmapFile.GetValue(),EXIT);
     }
 
     descDir.VerifyValidDirName();
 
     //-- Verify INPUT file exists
-    VerifyFileExists(envFile.GetValue());
+    VerifyFileExists(envFile.GetValue(),EXIT);
 
 
   } //endtry
@@ -548,9 +548,9 @@ Input::PrintDefaults(){
 //  Input class
 //  Read
 //===================================================================
-void Input::Read() {
+void Input::Read(int action) {
 
-  VerifyFileExists(envFile.GetValue());
+  VerifyFileExists(envFile.GetValue(),action);
 
   // open file and read first field
   ifstream is(envFile.GetValue());
@@ -567,7 +567,7 @@ void Input::Read() {
         if (   strstr(string2, "Environment")
             && strstr(string3, "Version")      ){
                  is >> envFormatVersion;
-                 Read(is,envFormatVersion);
+                 Read(is,envFormatVersion,action);
                  is.close();
         } else {
             cerr << "\nREAD ERROR: bad file format in \""
@@ -575,6 +575,7 @@ void Input::Read() {
             cerr << "\n            something is wrong w/ the following\n"
                  << "\n            "<<string1<<" "<<string2<<" "<<string3
                  <<"\n\n";
+            if(action==EXIT)
             exit(-1);
         }
   // else first field is NOT a comment delimiter
@@ -587,7 +588,7 @@ void Input::Read() {
 
         // ...  and start over.
         ifstream is(envFile.GetValue());
-        Read(is,ENV_VER_LEGACY);
+        Read(is,ENV_VER_LEGACY,action);
 
         is.close();
 
@@ -596,7 +597,7 @@ void Input::Read() {
 };
 
 
-void Input::Read(istream & _is, int envFormatVersion) {
+void Input::Read(istream & _is, int envFormatVersion,int action) {
 
     int  i;
     char string[32];
@@ -619,6 +620,7 @@ void Input::Read(istream & _is, int envFormatVersion) {
     }
 
     _is >> multibodyCount;      // # of MultiBodys'
+    cout <<"OBPRM body count= "<< multibodyCount;
 
     for (int m=0; m<multibodyCount; m++){
         //---------------------------------------------------------------
@@ -628,9 +630,31 @@ void Input::Read(istream & _is, int envFormatVersion) {
         readfield(_is, &string);              // Tag, "Active/Passive"
 
         readfield(_is, &BodyCount[m]);        // number of bodies
+        cout << "Num of active bodies " << BodyCount[m] << endl;
         for (i=0; i<BodyCount[m]; i++){
-            readfield(_is, &string);          // Tag (FixedBody or FreeBody)
-
+           readfield(_is, &string,comments[m][i]);// Tag (FixedBody or FreeBody)
+           cout <<"String = " <<string<<"\n";
+/*
+            while(string[0]=='#')  {
+                 char comment_line[1000]="";
+                 strcat(comment_line,&string[1]);
+                 strcat(comment_line," ");
+                 _is >> string;
+                 while ( strncmp(string,"FreeBody",9) && 
+                         strncmp(string,"FixedBody",10) && string[0]!='#'){
+                   strcat(comment_line,string);
+                   strcat(comment_line," ");
+                  _is >> string;
+                  
+                 }
+                    comments[m][i].push_back(strdup(comment_line));
+                    cout << comment_line << endl;
+            }
+  */
+           for(int j=0;j<comments[m][i].size();j++)
+           {
+              cout <<comments[m][i][j];
+           }
             if (!strncmp(string, "FixedBody", 10)){
                isFree[m][i] = 0;
                FixedBodyCount[m]++;
@@ -644,16 +668,16 @@ void Input::Read(istream & _is, int envFormatVersion) {
                                                 descDir.GetValue());
                strcat(fixedbodyFileName[m][FixedBodyCount[m]-1],
                                                 tmpFilename);
-               VerifyFileExists(fixedbodyFileName[m][FixedBodyCount[m]-1]);
+               VerifyFileExists(fixedbodyFileName[m][FixedBodyCount[m]-1],action);
                strcpy(tmpFilename,"");
 
                fixedbodyPosition[m][FixedBodyCount[m]-1] = Vector3D(_is);
-               Vector3D angles = Vector3D(_is);
+               bodyOrientation[m][i] = Vector3D(_is);
                fixedbodyOrientation[m][FixedBodyCount[m]-1] = 
                                Orientation(Orientation::FixedXYZ,
-                               angles[2]*TWOPI/360.0, 
-                               angles[1]*TWOPI/360.0, 
-                               angles[0]*TWOPI/360.0);
+                               bodyOrientation[m][i][2]*TWOPI/360.0, 
+                               bodyOrientation[m][i][1]*TWOPI/360.0, 
+                               bodyOrientation[m][i][0]*TWOPI/360.0);
             } else { // FreeBody
                isFree[m][i] = 1;
                FreeBodyCount[m]++;
@@ -665,7 +689,7 @@ void Input::Read(istream & _is, int envFormatVersion) {
                                                 descDir.GetValue());
                strcat(freebodyFileName[m][FreeBodyCount[m]-1],
                                                 tmpFilename);
-               VerifyFileExists(freebodyFileName[m][FreeBodyCount[m]-1]);
+               VerifyFileExists(freebodyFileName[m][FreeBodyCount[m]-1],action);
                strcpy(tmpFilename,"");
 
                if (i==0){  // for the very first body
@@ -674,11 +698,11 @@ void Input::Read(istream & _is, int envFormatVersion) {
                    // old environment file.
                    freebodyPosition[m] = Vector3D(_is);
 
-                   Vector3D angles = Vector3D(_is);
+                   bodyOrientation[m][i] = Vector3D(_is);
                    freebodyOrientation[m] = Orientation(Orientation::FixedXYZ,
-                               angles[2]*TWOPI/360.0, 
-                               angles[1]*TWOPI/360.0, 
-                               angles[0]*TWOPI/360.0);
+                               bodyOrientation[m][i][2]*TWOPI/360.0, 
+                               bodyOrientation[m][i][1]*TWOPI/360.0, 
+                               bodyOrientation[m][i][0]*TWOPI/360.0);
                }
             } // endelse FreeBody
 

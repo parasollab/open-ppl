@@ -160,7 +160,7 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
           // ie, *NO* "ticks" from local planners
           //-----------------------------------------------------
           vector<Cfg> _mapcfgs;
-          WritePathTranformationMatrices("mapnodes.path", 
+          WritePathConfigurations("mapnodes.path", 
                                          _mapcfgs, 
                                          rdmp.GetEnvironment());
       #endif
@@ -329,6 +329,6 @@ WritePath() {
 void 
 Query::
 WritePath(char* _filename ) {
-   WritePathTranformationMatrices(_filename, path, rdmp.GetEnvironment());
+   WritePathConfigurations(_filename, path, rdmp.GetEnvironment());
 }
 
