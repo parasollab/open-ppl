@@ -14,11 +14,7 @@
 //Include standard headers
 
 //Modified for VC
-#if defined(_WIN32)
-#include <strstrea.h>
-#else
-#include <strstream.h>
-#endif
+#include <sstream>
 
 ///////////////////////////////////////////////////////////////////////////////
 ///CD libraries

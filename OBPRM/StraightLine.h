@@ -362,13 +362,13 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     sprintf(str, "%s%f%s%f%s%f%s%f%s%f%s%f%s%f%s%f%s%f%s", "1 3 1 3 \n 1 3\n", v1[0], "  ", v1[1], 
 	    "  ", v1[2], "\n", v2[0], "  ", v2[1], "  ", v2[2], "\n", v3[0], "  ", v3[1], 
 	    "  ", v3[2], "\n1 2 -3 ");
-    istrstream istr(str);
+    std::istringstream istr(str);
     
     //Creat a MultiBody for this triangle
     MultiBody * lineSegment = new MultiBody(_env);
     //Creat a FreeBody  for this triangle
     FreeBody fb(lineSegment);
-    fb.ReadBYU(cdtype, istr);
+    fb.ReadBYU(cdtype, *((istream*)(&istr)));
     Transformation t=Transformation(Orientation(IdentityMatrix), center);
     fb.Configure(t);	//Transform it from (0,0,0) to center
     

@@ -110,7 +110,7 @@ ReadCommandLine(n_str_param* DMstrings[MAX_DM], int numDMs) {
   selected.clear();
 
   for(int i=0; i<numDMs; i++) {
-    istrstream _myistream(DMstrings[i]->GetValue());
+    std::istringstream _myistream(DMstrings[i]->GetValue());
 
     int argc = 0;
     char* argv[50];
@@ -198,7 +198,7 @@ ReadDMs(istream& _myistream) {
   _myistream.getline(dmdesc,100,'\n');  // throw out rest of this line
   for (int i = 0; i < numDMs; i++) {
     _myistream.getline(dmdesc,100,'\n');
-    istrstream _dmstream(dmdesc);
+    std::istringstream _dmstream(dmdesc);
     int argc = 0;
     char* argv[50];
     char cmdFields[50][100];
@@ -434,7 +434,7 @@ ParseCommandLine(int argc, char** argv) {
   }
 
   if(argc == 2) { //read in sValue
-    istrstream is(argv[1]);
+    std::istringstream is(argv[1]);
     if(!(is >> sValue)) {
       cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
       for(int i=0; i<argc; i++)
@@ -548,7 +548,7 @@ ParseCommandLine(int argc, char** argv) {
   }
 
   if(argc > 1) { //read in r1
-    istrstream is1(argv[1]);
+    std::istringstream is1(argv[1]);
     if(!(is1 >> r1)) {
       cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
       for(int i=0; i<argc; i++)
@@ -567,7 +567,7 @@ ParseCommandLine(int argc, char** argv) {
       exit(-1);
     }
 
-    istrstream is2(argv[2]);
+    std::istringstream is2(argv[2]);
     if(!(is2 >> r2)) {
       cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
       for(int i=0; i<argc; i++)
@@ -578,7 +578,7 @@ ParseCommandLine(int argc, char** argv) {
       exit(-1);
     }
 
-    istrstream is3(argv[3]); 
+    std::istringstream is3(argv[3]); 
     if(!(is3 >> r3)) {
       cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
       for(int i=0; i<argc; i++)

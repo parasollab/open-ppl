@@ -6,15 +6,8 @@
 #include "DistanceMetrics.h"
 #include "Clock_Class.h"
 #include "util.h"
-#ifdef __K2
-  #include <strstream.h>
-#else
-#ifdef __HP_aCC
-  #include <strstream.h>
-#else
-  #include <strstream>
-#endif
-#endif
+
+#include <sstream>
 
 #include "RayTracer.h"
 #include "RRTexpand.h"
@@ -179,7 +172,7 @@ int ConnectMap<CFG,WEIGHT>::ReadCommandLine(Input* input, Environment* env) {
 
   //go through the command line looking for method names
   for(int i=0; i< input->numCNs; i++) {
-    istrstream _myistream(input->CNstrings[i]->GetValue());
+    std::istringstream _myistream(input->CNstrings[i]->GetValue());
     char cnname[100];
 
     while (_myistream >> cnname) {

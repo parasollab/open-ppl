@@ -26,16 +26,7 @@
 #define Parameters_h
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef _WIN32
-  #include <iostream.h>
-#endif
-
-#ifdef _WIN32
-  #include <strstrea.h>
-#else
-  #include <strstream.h>
-#endif
-
+#include <sstream>
 #include "Defines.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -552,7 +543,7 @@ AckCmdLine(int *i, int argc, char** argv,bool nfields){
 
           if (++(*i) < argc) {
 
-                istrstream  is(argv[*i]);
+                std::istringstream  is(argv[*i]);
                 is >> tvalue;
 
                 if (VerifyValidValue(tvalue)){

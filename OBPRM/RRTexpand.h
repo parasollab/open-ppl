@@ -24,7 +24,7 @@ class RRTexpand: public ConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // I/O methods
 
-  void ParseCommandLine(istrstream& is);
+  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);   
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -84,7 +84,7 @@ RRTexpand<CFG,WEIGHT>::~RRTexpand() {
 
 template <class CFG, class WEIGHT>
 void RRTexpand<CFG,WEIGHT>::
-ParseCommandLine(istrstream &is) { 
+ParseCommandLine(std::istringstream &is) { 
   char c;
   SetDefault();
   try {

@@ -5,13 +5,6 @@
 //  11/27/00 Lucia K. Dale
 /////////////////////////////////////////////////////////////////////
 
-///Modified for VC
-#if defined(_WIN32)
-#include <strstrea.h>
-#else
-#include <strstream.h>
-#endif
-
 #include "Parameters.h"
 
 //----------------------------------------

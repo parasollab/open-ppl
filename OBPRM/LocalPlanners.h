@@ -216,7 +216,7 @@ ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtyp
 
   for(int i=0; i<numLPs; i++) {
 
-    istrstream _myistream(LPstrings[i]->GetValue());
+    std::istringstream _myistream(LPstrings[i]->GetValue());
 
     int argc = 0;
     char* argv[50];
@@ -370,7 +370,7 @@ ReadLPs(istream& _is) {
 
   for (int i = 0; i < numLPs; i++) {
     _is.getline(lpdesc,100,'\n');
-    istrstream _lpstream(lpdesc);
+    std::istringstream _lpstream(lpdesc);
     int argc = 0;
     char* argv[50];
     char cmdFields[50][100];

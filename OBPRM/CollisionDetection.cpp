@@ -275,7 +275,7 @@ ReadCommandLine(n_str_param* CDstrings[MAX_CD], int numCDs) {
   selected.clear();
 
   for(int i=0; i<numCDs; i++) {
-    istrstream _myistream(CDstrings[i]->GetValue());
+    std::istringstream _myistream(CDstrings[i]->GetValue());
 
     int argc = 0;
     char* argv[50];
@@ -384,7 +384,7 @@ ReadCDs(istream& _myistream) {
   _myistream.getline(cddesc,100,'\n');  // throw out rest of this line
   for (int i = 0; i < numCDs; i++) {
     _myistream.getline(cddesc,100,'\n');
-    istrstream _cdstream(cddesc);
+    std::istringstream _cdstream(cddesc);
     int argc = 0;
     char* argv[50];
     char cmdFields[50][100];

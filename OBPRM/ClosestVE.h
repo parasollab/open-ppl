@@ -98,7 +98,7 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // I/O methods
 
-  void ParseCommandLine(istrstream& is);
+  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os); 
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -201,7 +201,7 @@ ClosestVE<CFG,WEIGHT>::~ClosestVE() {
 
 template <class CFG, class WEIGHT>
 void ClosestVE<CFG,WEIGHT>::
-ParseCommandLine(istrstream& is) {
+ParseCommandLine(std::istringstream& is) {
   char c;
   SetDefault();
   try {

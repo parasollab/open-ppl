@@ -38,7 +38,7 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // I/O methods
 
-  void ParseCommandLine(istrstream& is);
+  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -148,7 +148,7 @@ ConnectCCs<CFG,WEIGHT>::~ConnectCCs() {
 
 template <class CFG, class WEIGHT>
 void ConnectCCs<CFG,WEIGHT>::
-ParseCommandLine(istrstream& is) {
+ParseCommandLine(std::istringstream& is) {
   char c;
   SetDefault();
   try {

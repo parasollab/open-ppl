@@ -25,10 +25,10 @@
  CD_DIR = /user/sthomas/dsmft/CD-libs/solaris
 # CD_DIR = /home2/CD-libs/solaris #for joefriday
 
- VCLIP_DIR     = ${CD_DIR}/VCLIP
- VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
- VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
- VCLIP_INCL    = -I${VCLIP_DIR}/include
+# VCLIP_DIR     = ${CD_DIR}/VCLIP
+# VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
+# VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
+# VCLIP_INCL    = -I${VCLIP_DIR}/include
 
  RAPID_DIR     = ${CD_DIR}/RAPID
  RAPIDLIB_DIR  = ${RAPID_DIR}
@@ -111,7 +111,7 @@ obprm:: main_obprm.cpp libs
 query:: main_query.cpp
 	$(CXX) $(CXXFLAGS)  -o query \
 	main_query.cpp \
-	libobprm.a ${VCLIP_DIR}/vclip.o $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
+	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_query.o
 #--------------------------------------------------------------------
 .SUFFIXES: .cpp

@@ -34,15 +34,7 @@
 #include "OBPRM.h"
 #include "OBMAPRM.h"
 
-#ifdef __K2
-  #include <strstream.h>
-#else
-#ifdef __HP_aCC
-  #include <strstream.h>
-#else
-  #include <strstream>
-#endif
-#endif
+#include <sstream>
 
 //////////////////////////////////////////////////////////////////////////////////////////
 class Body;
@@ -208,7 +200,7 @@ ReadCommandLine(n_str_param* GNstrings[MAX_GN], int numGNs) {
   //go through the command line looking for method names
   for(int i=0; i<numGNs; i++) {
 
-    istrstream _myistream(GNstrings[i]->GetValue());
+    std::istringstream _myistream(GNstrings[i]->GetValue());
 
     int argc = 0;
     char* argv[50];

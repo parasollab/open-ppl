@@ -3,15 +3,7 @@
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
 
-#ifdef __K2
-  #include <strstream.h>
-#else
-#ifdef __HP_aCC
-  #include <strstream.h>
-#else
-  #include <strstream>
-#endif
-#endif
+#include <sstream>
 
 // Abstract Interface Class for connection methods
 template <class CFG, class WEIGHT>
@@ -32,7 +24,7 @@ class ConnectionMethod {
   //////////////////////
   // I/O methods
 
-  virtual void ParseCommandLine(istrstream& is) = 0;
+  virtual void ParseCommandLine(std::istringstream& is) = 0;
   virtual void PrintUsage(ostream& _os) = 0;
   virtual void PrintValues(ostream& _os) = 0;   
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy() =0;

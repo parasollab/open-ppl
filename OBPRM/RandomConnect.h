@@ -42,7 +42,7 @@ class RandomConnect: public ConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-  void ParseCommandLine(istrstream& is);
+  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -81,7 +81,7 @@ RandomConnect<CFG,WEIGHT>::~RandomConnect() {
 
 template <class CFG, class WEIGHT>
 void RandomConnect<CFG,WEIGHT>::
-ParseCommandLine(istrstream& is) {
+ParseCommandLine(std::istringstream& is) {
   char c;
   SetDefault();
   try {
