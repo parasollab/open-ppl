@@ -32,10 +32,7 @@
 #include "ConnectMapNodes.h"
 #include "GenerateMapNodes.h"
 #include "CollisionDetection.h"
-// default of Cfg is set in Cfg.cpp and seems the information cannot be
-// retreived in Input.cpp. So, if the default is changed in Cfg.cpp,
-// it must be changed here also for correct information display
-char Cfg_default_string[] = "Cfg_free_rigid";
+
 
 //----------------------------------------
 //  string (mostly) parameter ( n fields acknowledged from argv )
@@ -243,11 +240,8 @@ Input::Input():
     char Cfg_string_1[300];
 
     strcpy(Cfg_string_1, "\n\t\t\tPick one: default ");
-    // Cfg_default_string was defined in line 38, and used in line 604 again.
-    // If default Cfg in Cfg.cpp is changed, then the initialization of
-    // Cfg_default_string in line 38 must be changed accordingly.
-    strcat(Cfg_string_1, Cfg_default_string);
-    if (!strcmp(Cfg_default_string, "Cfg_free_rigid"))
+    strcat(Cfg_string_1, Cfg::GetName());
+    if (!strcmp(Cfg::GetName(), "Cfg_free_rigid"))
       strcat(Cfg_string_1, " (i.e. Cfg_free)");
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_rigid");
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_PRR");
@@ -574,7 +568,7 @@ Input::PrintDefaults(){
             freePair.GetValue() << endl << endl;
    cout << setw(FW) << "calculate clearance" << " (" << calcClearance.GetFlag() << ") : " << 
             calcClearance.GetDefault() << endl << endl;
-   cout << setw(FW) << "Cfg" << " (" << CFGstrings[0]->GetFlag() << ") : " << Cfg_default_string << endl << endl;
+   cout << setw(FW) << "Cfg" << " (" << CFGstrings[0]->GetFlag() << ") : " << Cfg::GetName() << endl << endl;
 
    // get default parameters by initializing each class
    // for some, need to call UserInit() to add sets so that we can display
