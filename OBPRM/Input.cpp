@@ -222,6 +222,7 @@ Input::Input():
         "\n\t\t\t  BasicOBPRM"
         "\n\t\t\t  OBPRM    DOUBLE  (clearanceFactor:1.0)"
         "\n\t\t\t  GaussPRM INTEGER (default,based on environment)"
+        "\n\t\t\t  BasicMAPRM"
         );
     CNstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default closest 10"

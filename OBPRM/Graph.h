@@ -491,7 +491,7 @@ public:
    WeightedGraph();
    WeightedGraph(int);       // 'reserve' space for vertices
    WeightedGraph(int,int);   // 'reserve' space for verts & edges
-   WeightedGraph(WeightedMultiDiGraph<VERTEX,WEIGHT>); // construct from base  
+//   WeightedGraph(WeightedMultiDiGraph<VERTEX,WEIGHT>); // construct from base  
    ~WeightedGraph();
 
   //===================================================================
@@ -2318,12 +2318,13 @@ WeightedGraph(int _sz, int _edgelistsz)
 {
 };
 
-template<class VERTEX, class WEIGHT>
-WeightedGraph<VERTEX,WEIGHT>::
-WeightedGraph( WeightedMultiDiGraph<VERTEX,WEIGHT> _base)
- : WeightedMultiDiGraph<VERTEX,WEIGHT>(_base) 
-{
-};
+// Function removed for Vizmo - bmd 8 - 22 - 00
+//template<class VERTEX, class WEIGHT>
+//WeightedGraph<VERTEX,WEIGHT>::
+//WeightedGraph( WeightedMultiDiGraph<VERTEX,WEIGHT> _base)
+// : WeightedMultiDiGraph<VERTEX,WEIGHT>(_base) 
+//{
+//};
 
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::

@@ -193,10 +193,12 @@ IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRo
             if ((collision_found) && (!ret_val))
             {
                // colliding_obst_index is always the FIRST obstacle found in collision
+			   // nearest_obst_index is 'nearest' obstacle (colliding or not)
                local_cd_info.colliding_obst_index = i;
                ret_val = true;
             }
 
+			// Be certain that IsInCollision set _cdInfo.min_dist
             // Check new mins against old, reset *_points if needed
             // Store everything in local_cd_info, copy back to _cdInfo at end of function
             if (_cdInfo.min_dist < local_cd_info.min_dist)
@@ -468,9 +470,10 @@ IsInColl_AllInfo_vclip
 
          if (dist < min_dist_so_far)
          {
+            min_dist_so_far = dist;
             // _cdInfo.nearest_obst_index =  is set by IsInCollision()
             // which called this function - look there for more info
-            _cdInfo.min_dist = min_dist_so_far;
+            _cdInfo.min_dist = dist;
 
             // change a 3 elmt array to Vector3D class
             robot_pt[0] = cp1[0];
@@ -481,10 +484,17 @@ IsInColl_AllInfo_vclip
             obs_pt[1] = cp2[1];
             obs_pt[2] = cp2[2];
 
+			//cout << "CD method, robot pt = " << robot_pt << endl;
+			//cout << "CD method, obs_pt = " << obs_pt << endl;
+
             // transform points to world coords
             // using *_pt vars in case overloaded * was not done well.
             _cdInfo.robot_point = robot->GetFreeBody(i)->WorldTransformation() * robot_pt;
             _cdInfo.object_point = obstacle->GetBody(j)->WorldTransformation() * obs_pt;
+
+			//cout << "CD method _cdInfo.rob_pt = " << _cdInfo.robot_point << endl;
+			//cout << "CD method _cdInfo.obj_pt = " << _cdInfo.object_point << endl;
+			//cout << "CD method _cdInfo.min_dist = " << _cdInfo.min_dist << endl;
          }
       } // end for j
    } // end for i
@@ -503,6 +513,13 @@ IsInCollision_RAPID
    Stats.IncNumCollDetCalls( "RAPID" );
 
     RAPID_model *rob, *obst;
+   
+    if (_cdInfo.ret_all_info == true)
+    {
+	   cout << endl;
+       cout << "Currently unable to return ALL info using RAPID cd." << endl;
+       cout << "Defaulting to minimal information." << endl;
+	}
 
     for(int i=0 ; i<robot->GetFreeBodyCount(); i++){
 

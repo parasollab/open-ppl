@@ -263,10 +263,12 @@ public:
 	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
 
   static
-  void
-  BasicMAPRM(Environment *_env, CollisionDetection* cd, 
-             DistanceMetric *,GN& _gn, GNInfo &_info);
+  void BasicMAPRM
+  (Environment *_env, CollisionDetection* cd, DistanceMetric *dm, GN& _gn, GNInfo &_info);
 
+  static
+  void MoveToMedialAxis
+  (Cfg &cfg, vector<Cfg> *path, Environment *_env, CollisionDetection* cd, DistanceMetric *dm, GN& _gn, GNInfo &_info);
 
   static
   bool ValidateParameters(Input*);
