@@ -33,15 +33,25 @@ bool CurveWeightFactory::Create( IWeight ** ppIWeight /*in/out*/ ) const {
 //
 ///////////////////////////////////////////////////////
 
-CurveWeight::CurveWeight(){
-  lp = INVALID_LP;
-  weight = INVALID_DBL;
-}
+CurveWeight::CurveWeight() : PriorityWeight() {}
 
 CurveWeight::CurveWeight(int _lp, double _weight, const Cfg& _midpoint, const Vector3D& _center, 
 	      double _radius, double _rotateAngle, int _direction){
   lp = _lp;
   weight = _weight;
+  level = 0;
+  midpoint = _midpoint;
+  center = _center;
+  radius = _radius;
+  rotateAngle = _rotateAngle;
+  direction = _direction;
+}
+
+CurveWeight::CurveWeight(int _lp, double _weight, int _level, const Cfg& _midpoint, const Vector3D& _center,
+	      double _radius, double _rotateAngle, int _direction){
+  lp = _lp;
+  weight = _weight;
+  level = _level;
   midpoint = _midpoint;
   center = _center;
   radius = _radius;
@@ -55,6 +65,7 @@ CurveWeight::clone() const {
 
   pTmp->Weight() = weight;
   pTmp->LP() = lp;
+  pTmp->Level() = level;
   pTmp->Midpoint() = midpoint;
   pTmp->Center() = center;
   pTmp->Radius() = radius;
@@ -66,22 +77,22 @@ CurveWeight::clone() const {
 
 void
 CurveWeight::Input(istream& in) {
-  in >> lp >> weight;
+  in >> lp >> weight >> level;
   midpoint.Read(in);
   in >> center >> radius >> rotateAngle >> direction;
 }
 
 void
 CurveWeight::Output(ostream& out) const {
-  out << lp << " " << weight << " ";
+  out << lp << " " << weight << " " << level << " ";
   midpoint.Write(out);
   out << " " << center << " " << radius << " " << rotateAngle << " " << direction << " ";
 }
 
 bool 
 CurveWeight::operator== (const CurveWeight& tmp) const {
-  return (lp == tmp.lp && weight == tmp.weight && midpoint == tmp.midpoint && 
-	  center == tmp.center && radius == tmp.radius && 
+  return (lp == tmp.lp && weight == tmp.weight && level == tmp.level && 
+	  midpoint == tmp.midpoint && center == tmp.center && radius == tmp.radius && 
 	  rotateAngle == tmp.rotateAngle && direction == tmp.direction);
 }
 
@@ -89,6 +100,7 @@ const CurveWeight&
 CurveWeight::operator= (const CurveWeight& tmp){
   lp = tmp.lp;
   weight = tmp.weight;
+  level = tmp.level;
   midpoint = tmp.midpoint;
   center = tmp.center;
   radius = tmp.radius;
@@ -109,19 +121,3 @@ operator>> (istream& _is, CurveWeight& w) {
   w.Input(_is);
   return _is;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

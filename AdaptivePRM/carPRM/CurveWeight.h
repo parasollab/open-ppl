@@ -13,7 +13,7 @@
 
 #include <iostream.h>
 #include <vector.h>
-#include "Weight.h"
+#include "PriorityWeight.h"
 #include "Vectors.h"
 #include "Cfg.h"
 
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////
 
-class CurveWeightFactory : public DefaulWeightFactory {
+class CurveWeightFactory : public PriorityWeightFactory {
   friend class CurveWeight;
 
  protected:
@@ -38,7 +38,7 @@ class CurveWeightFactory : public DefaulWeightFactory {
 //
 ///////////////////////////////////////////////////////
 
-class CurveWeight : public IWeight {
+class CurveWeight : public PriorityWeight {
 
 public:
 
@@ -56,6 +56,9 @@ public:
   CurveWeight();
 
   CurveWeight(int _lp, double _weight, const Cfg& _midpoint, const Vector3D& _center, 
+	      double _radius, double _rotateAngle, int _direction);
+
+  CurveWeight(int _lp, double _weight, int _level, const Cfg& _minpoint, const Vector3D& _center,
 	      double _radius, double _rotateAngle, int _direction);
 
   //@}
