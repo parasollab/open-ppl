@@ -48,8 +48,8 @@ class  InfoCfg {
   
   InfoCfg():obst(NULL_INFO),tag(NULL_INFO),clearance(NULL_INFO){};
   InfoCfg(int _obst):obst(_obst),tag(NULL_INFO),clearance(NULL_INFO){};
-  InfoCfg(int _obst,int _tag):obst(_obst),tag(_tag),clearance(NULL_INFO){};
-  InfoCfg(int _obst,int _tag,double _cl):obst(_obst),tag(_tag),clearance(_cl){};
+  InfoCfg(int _obst,double _tag):obst(_obst),tag(_tag),clearance(NULL_INFO){};
+  InfoCfg(int _obst,double _tag,double _cl):obst(_obst),tag(_tag),clearance(_cl){};
   
   //@}
   
@@ -102,7 +102,7 @@ class  InfoCfg {
    *GenerateMapNodes::OBPRM
    */
   int obst;
-  int tag;
+  double tag;
   
   /**Cleanance of this Cfg.
    *Closet distance from this Cfg to any Obstacle in Environment.s
