@@ -67,7 +67,13 @@ WritePathTranformationMatrices( char output_file[80],
     for(int i = 0 ; i < path.size() ; i++){
         // Translate all path configurations such that their resulting
         // center of gravity is what was saved (ie, the rover original)
-	path[i].print_vizmo_format_to_file(env,fp);
+	//path[i].print_vizmo_format_to_file(env,fp);
+	vector<Vector6D> tmp;
+	path[i].printLinkConfigurations(env, tmp);
+	for(int j=0; j<tmp.size(); ++j) {
+	    fprintf(fp,"\n%f %f %f %f %f %f", tmp[j][0], tmp[j][1], tmp[j][2],
+	            tmp[j][3], tmp[j][4], tmp[j][5]);
+	}	    
 	// Cfg class need Environment Info to interprete 'abstract' Cfg.
 
     }
