@@ -1,0 +1,4 @@
+../obprm -cd RAPID -f PRR \
+	-gNodes BasicPRM \
+		nodes 100 \
+	-cNodes closest components 5 5 
