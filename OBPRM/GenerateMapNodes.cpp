@@ -94,6 +94,7 @@ UserInit(Input * input, Environment *_env)
     gnInfo.proportionSurface = input->proportionSurface.GetValue();
     gnInfo.collPair = input->collPair;
     gnInfo.freePair = input->freePair;
+    gnInfo.calcClearance = input->calcClearance.GetValue();
     gnInfo.addNodes2Map = true;
 };
 
@@ -130,6 +131,14 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
        cout << clock.GetClock_SEC() << " sec  \n" << flush;
        #endif
 
+  }
+
+  if (info.calcClearance) {
+      // go through info.nodes and calculate their clearances...
+      //cout << "Calculating Clearances...\n";
+      for (int i=0; i < info.nodes.size(); i++) {
+           info.nodes[i].info.clearance = info.nodes[i].ApproxCSpaceClearance(_rm->environment, cd, info.cdsetid, info.cdInfo, dm, info.dmsetid, 7);
+      }
   }
 
   // if that's what the user wants
