@@ -2,11 +2,8 @@
 
 #include <iostream.h>
 #include <iomanip.h>
-#include "Roadmap.h"
 #include "Stat_Class.h"
 #include "GraphAlgo.h"
-#include "Weight.h"
-#include "Cfg.h"
 /////////////////////////////////////////////////////////////////////
 //
 //  Stat_Class.c
@@ -438,100 +435,6 @@ DecLPCollDetCalls( char *LPName, int decr ) {
   return(LPCollDetCalls[LP]);
 };
 
-//----------------------------------------
-// Print out all the statistics
-//----------------------------------------
-void
-Stat_Class::
-PrintAllStats( Roadmap *rmap, int numCCs) {
-  int i;
-
-#if VERBOSE
-  rmap->lp.planners.DisplayLPs();
-  rmap->lp.planners.DisplayLPSets();
-#endif
-
-  cout << endl << endl << "Local Planners:" << endl;
-  cout << setw(20) << "Name"
-	<<setw(15) << "Connections"
-	<<setw(15) << "Attempts"
-	<<setw(15) << "Coll Det Calls" << endl;
- 
-  for(i=0;i<MaxLP;i++)
-    if (strcmp(LPNameList[i],"empty")!=0) {
-      cout << setw(20) << LPNameList[i];
-      cout << setw(15) << LPConnections[i];
-      cout << setw(15) << LPAttempts[i];
-      cout << setw(15) << LPCollDetCalls[i] << endl;
-  }
-
-  cout << endl << endl;
-  cout << "Number of Nodes: " << rmap->m_pRoadmap->GetVertexCount() << endl;
-  cout << "Number of Edges: " << rmap->m_pRoadmap->GetEdgeCount() << endl;
-
-  cout << "Number of Collision Detection Calls: " << endl;
-  for(i=0;i<MaxCD;i++)
-    if (strcmp(CDNameList[i],"empty")!=0)
-      cout << setw(20) << CDNameList[i] 
-	   << setw(15) << NumCollDetCalls[i] << endl;
-
-
-  #if VERBOSE
-  #endif
-
-  cout << endl;
-
-  if (numCCs==ALL)    {DisplayCCStats(*(rmap->m_pRoadmap));      }
-  else if (numCCs==0) {DisplayCCStats(*(rmap->m_pRoadmap),0);     }
-  else                {DisplayCCStats(*(rmap->m_pRoadmap),numCCs);}
-
-}
-
-void
-Stat_Class::
-PrintDataLine(ostream& _myostream, Roadmap *rmap, int show_column_headers) {
-
-   // Default is to NOT print out column headers
-   if (show_column_headers){
-        _myostream <<"\nV  E #CC 1 2 3 4 5 6 7 8 9 10 #iso CD  LPattSum LPcdSum\n";
-   }//endif
-
-   _myostream << rmap->m_pRoadmap->GetVertexCount() << " ";
-   _myostream << rmap->m_pRoadmap->GetEdgeCount()   << " ";
-
-   vector< pair<int,VID> > ccstats;
-   GetCCStats(*(rmap->m_pRoadmap),ccstats);
-   _myostream << ccstats.size() << "  ";
-   int i;
-   for (i=0;i<10;++i)
-      if (ccstats.size() > i)
-        _myostream << ccstats[i].first << " ";
-      else
-        _myostream << 0                << " ";
-
-   int sumIsolatedNodes=0;
-   for (i=0;i<ccstats.size();++i)
-      if (ccstats[i].first == 1) ++sumIsolatedNodes;
-   _myostream << sumIsolatedNodes << " ";
-
-   int sumCDcalls=0;
-   for(i=0;i<MaxCD;i++)
-     if (strcmp(CDNameList[i],"empty")!=0)
-        sumCDcalls += NumCollDetCalls[i];
-   _myostream << sumCDcalls << " ";
-
-   int sumAtt=0;
-   int sumCD =0;
-   for(i=0;i<MaxLP;i++){
-     if (strcmp(LPNameList[i],"empty")!=0) {
-       sumAtt += LPAttempts[i];
-       sumCD  += LPCollDetCalls[i];
-     }//endif
-   }//endfor
-   _myostream << sumAtt << " ";
-   _myostream << sumCD  << " ";
-   ccstats.clear();
-}
 
 void
 Stat_Class::
