@@ -971,6 +971,10 @@ public:
                                          DistanceMetric * dm,
                                          CN& _cn, CNInfo& info);
 
+      static void ConnectMapNodes::OrderCCByCloseness(Roadmap * rm,
+								  		DistanceMetric * dm,
+										CNInfo& info,
+										vector< pair<int,VID> >& ccvec);
       /**Using RRT to expand or connect connected compnents.
         *This method handles both RRTexpand and RRTcomponents.
         *Follow algorithm is for RRTexpand:
@@ -1003,6 +1007,23 @@ public:
                                          LocalPlanners* lp,
                                          DistanceMetric * dm,
                                          CN& _cn, CNInfo& info);
+
+      /**Connects connected components using "center of mass"
+	*of each CC and connected the closest connected components
+	*to each other.
+	*    -#Find Center of Mass for each Connected Component
+	*	-#Find two closest CCs and try to connect them 
+	*	  to each other
+	*	   -#If they connect update connected components proximity list
+	*	-#If CC is larger than SmallCC size connect nodes between 
+	*	  CCs that are close to each other
+	*/
+      static void ConnectNodes_RRTConnect(Roadmap * _rm,
+                                         CollisionDetection* cd,
+                                         LocalPlanners* lp,
+                                         DistanceMetric * dm,
+                                         CN& _cn, CNInfo& info);
+ 
 
       /**"modifiedLM" -- modified Laumond's method. 
         *During connection 
