@@ -51,7 +51,7 @@
 
 //g++ in SUN or CC in SGI
 ///Modified for VC
-#if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32)
+#if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32) || defined(__HP_aCC)
 #include <algo.h>   
 #include <list.h>   
 #include <vector.h>
@@ -67,6 +67,7 @@
 #include <stack.h>  
 #endif
 
+/*
 //aCC in parasol
 #ifdef __HP_aCC  
 #include <algorithm>    
@@ -74,6 +75,12 @@
 #include <vector>       
 #include <deque>        
 #include <stack>        
+#endif
+*/
+
+// Some compilers need explicit reference to namespace std.
+#ifdef _EXPLICIT_USE_NAMESPACE_STD
+using namespace std;
 #endif
 
 #ifndef VID
