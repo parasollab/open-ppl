@@ -212,6 +212,31 @@ class DistanceMetric {
 					   vector<CFG>& vec1,
 					   vector<CFG>& vec2, int k);
 
+  template <class CFG>
+    vector<pair<CFG,CFG> > KClosest(Environment* env,
+				    vector<CFG>& v1,
+				    vector<CFG>& v2,
+				    unsigned int k);
+  template <class CFG>
+    vector<pair<CFG,CFG> > KClosest(Environment* env,
+				    CFG& cc,
+				    vector<CFG>& v,
+				    unsigned int k);
+  template <class CFG, class WEIGHT>
+    vector<pair<VID,VID> > KClosest(Roadmap<CFG,WEIGHT>* rdmp,
+				    vector<CFG>& v1,
+				    vector<CFG>& v2,
+				    unsigned int k);
+  template <class CFG, class WEIGHT>
+    vector<pair<VID,VID> > KClosest(Roadmap<CFG,WEIGHT>* rdmp,
+				    CFG& cc,
+				    vector<CFG>& v2,
+				    unsigned int k);
+  template <class CFG, class WEIGHT>
+    vector<pair<VID,VID> > KUnconnectedClosest(Roadmap<CFG,WEIGHT>* rdmp,
+				    CFG& cc,
+				    vector<CFG>& v,
+				    unsigned int k);
  protected:
   bool ParseCommandLine(int argc, char** argv);
 
@@ -231,6 +256,18 @@ class DIST_Compare : public binary_function<const pair<pair<CFG,CFG>,double>,
 		  const pair<pair<CFG,CFG>,double> _cc2) {
     return (_cc1.second < _cc2.second);
   }
+
+};
+
+template <class CFG>
+class CFG_DIST_COMPARE : public binary_function<const pair<CFG,double>, 
+					    const pair<CFG,double>, bool> {
+ public:
+  bool operator()(const pair<CFG,double> _cc1,
+		  const pair<CFG,double> _cc2) {
+    return (_cc1.second < _cc2.second);
+  }
+  
 };
 
 /**This is the interface for all distance metric methods(euclidean, 
@@ -510,16 +547,16 @@ FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
 
 
 //----------------------------------------------------------------------
-// Given: k and a TWO vectors
+// Given: k and TWO vectors
 // Find : k pairs of closest cfgs between the two input vectors of cfgs
 // -- if k don't exist, return as many as do
 //----------------------------------------------------------------------
 template <class CFG>
-vector<pair<CFG,CFG> > 
+vector<pair<CFG,CFG> >
 DistanceMetric::
-FindKClosestPairs(Environment* _env, 
+FindKClosestPairs(Environment* _env,
 		  vector<CFG>& vec1, vector<CFG>& vec2, int k) {
-  vector<pair<CFG,CFG> > pairs;	
+  vector<pair<CFG,CFG> > pairs;
   CFG invalid;
   invalid.InvalidData();
   pair<pair<CFG,CFG>,double> tmp;
@@ -538,30 +575,220 @@ FindKClosestPairs(Environment* _env,
       tmp.second = MAX_DIST;
       kp.push_back(tmp);
     }
+    int max_index = 0;
+    double max_value = MAX_DIST;
     
     // now go through all kp and find closest k
     for (int c1 = 0; c1 < vec1.size(); c1++) {
       for (int c2 = 0; c2 < vec2.size(); c2++) {
-	//if( vec1[c1]==vec2[c2] ) continue; //don't connect same
-
+	//marcom/08nov03 check if results in other functions is same
+	if( vec1[c1]==vec2[c2] ) continue; //don't connect same
+	
 	double dist = Distance(_env, vec1[c1],vec2[c2]);
-	if ( dist < kp[k-1].second) {
+	if ( dist < kp[max_index].second) { 
 	  tmp.first.first = vec1[c1];
 	  tmp.first.second = vec2[c2];
 	  tmp.second = dist;
-	  kp[k-1] = tmp;
-	  sort (kp.begin(), kp.end(), DIST_Compare<CFG>());
+	  kp[max_index] = tmp;
+	  max_value = dist;
+
+	  //search for new max_index (faster O(k) than sort O(k log k) )
+	  for (int p = 0; p < kp.size(); p++) {
+	    if (max_value < kp[p].second) {
+	      max_value = kp[p].second;
+	      max_index = p;
+	    }
+	  }
+
 	}
       }//endfor c2
     }//endfor c1
+
+    sort (kp.begin(), kp.end(), DIST_Compare<CFG>());
     
     // now construct vector of k pairs to return (don't need distances...)
-    for (int p=0; p < k && p < kp.size(); p++)
+    for (int p = 0; p < k && p < kp.size(); p++)
       if (kp[p].first.first != invalid && kp[p].first.second != invalid)
-	pairs.push_back( kp[p].first );		
-  }//endif vec1 == vec2
+	pairs.push_back( kp[p].first );
+  }//endif vec1 == vec2	
   
   return pairs;
+}
+
+
+//-----------------------------------------------------------------------
+// Input: vectors of CFG (v1, v2) and k
+// Process: for each cfg cc1 in v1, finds the k closest cfgs in v2 to cc1
+// Output: vector closest of pairs of k closest
+//-----------------------------------------------------------------------
+template <class CFG>
+vector< pair<CFG,CFG> >
+DistanceMetric::
+KClosest(Environment *env, 
+	 vector<CFG>& v1, vector<CFG>& v2, unsigned int k) {
+  vector< pair<CFG,CFG> > kpairs;
+  vector< pair<CFG,CFG> > kpairs_i;
+  vector<CFG>::iterator v1_i;
+  for (v1_i = v1.begin(); v1_i < v1.end(); v1_i++) {
+    kpairs_i = KClosest(env,(*v1_i),v2,k);
+    kpairs.insert(kpairs.end(),kpairs_i.begin(),kpairs_i.end());
+  }
+  return kpairs;
+}
+
+//-----------------------------------------------------------------------
+// Input: CFG cc, vector of CFG v, and k
+// Process: finds the k closest cfgs in v to cc (cfg_v)
+// Output: vector of pairs (cc, cfgv) of k closest
+//-----------------------------------------------------------------------
+template <class CFG>
+vector< pair<CFG,CFG> >
+DistanceMetric::
+KClosest(Environment *env, 
+	 CFG &cc, vector<CFG>& v, unsigned int k) {
+  vector<pair<CFG,CFG> > kpairs;
+  kpairs.reserve(k); //it won't grow bigger than k
+  if (k<=0) //no valid number of pairs requested
+    return kpairs;
+
+  CFG invalid;
+  invalid.InvalidData(); //make an invalid all kpairs initially
+  double max_value = MAX_DIST;
+  vector<pair<CFG,double> > kpairs_dist(k,pair<CFG,double>(invalid,max_value));
+  kpairs_dist.reserve(k);//it won't grow more than k
+
+  int max_index = 0;
+  double dist;
+  vector<CFG>::iterator vi;
+  for (vi = v.begin(); vi < v.end(); vi++) {
+    if (cc == (*vi))
+      continue; //don't check distance to same
+    dist = Distance(env, cc, *vi);
+    if (dist < kpairs_dist[max_index].second) {
+      kpairs_dist[max_index] = pair<CFG,double>((*vi),dist);
+      max_value = dist;
+      //search for new max_index (faster O(k) than sort O(klogk))
+      for (int i = 0; i < kpairs_dist.size(); i++)
+	if (max_value < kpairs_dist[i].second) {
+	  max_value = kpairs_dist[i].second;
+	  max_index = i;
+	}
+    }
+  }
+  sort (kpairs_dist.begin(), kpairs_dist.end(), CFG_DIST_COMPARE<CFG>());
+  // return only cfgs
+  vector<pair<CFG,double> >::iterator c_iter;
+  for (c_iter = kpairs_dist.begin(); c_iter < kpairs_dist.end(); c_iter++) 
+    if (c_iter->first !=invalid)
+      kpairs.push_back(pair<CFG,CFG>(cc,c_iter->first));
+ 
+  return kpairs; //by construction kpairs is never larger than k  
+}
+
+//-----------------------------------------------------------------------
+// Input: vectors of CFG (v1, v2) and k
+// Process: for each cfg cc1 in v1, finds the k closest cfgs in v2 to cc1
+// Output: vector closest of pairs of k closest
+//-----------------------------------------------------------------------
+template <class CFG, class WEIGHT>
+vector< pair<VID,VID> >
+DistanceMetric::
+KClosest(Roadmap<CFG,WEIGHT>* rdmp, 
+	 vector<CFG>& v1, vector<CFG>& v2, unsigned int k) {
+  vector< pair<VID,VID> > kpairs;
+  vector< pair<VID,VID> > kpairs_i;
+  vector<CFG>::iterator v1_i;
+  //  for (v1_i = v1.begin(); v1_i < v1.end(); v1_i++) {
+  for (v1_i = v1.end()-1; v1_i >= v1.begin(); v1_i--) {
+    kpairs_i = KClosest(rdmp,(*v1_i),v2,k);
+    kpairs.insert(kpairs.end(),kpairs_i.begin(),kpairs_i.end());
+  }
+  return kpairs;
+}
+
+//-----------------------------------------------------------------------
+// Input: CFG cc, vector of CFG v, and k
+// Process: finds the k closest cfgs in v to cc (cfg_v)
+// Output: vector of pairs (cc, cfgv) of k closest
+//-----------------------------------------------------------------------
+template <class CFG, class WEIGHT>
+vector< pair<VID,VID> >
+DistanceMetric::
+KClosest(Roadmap<CFG,WEIGHT> *rdmp, 
+	 CFG &cc, vector<CFG>& v, unsigned int k) {
+  vector<pair<VID,VID> > kpairs;
+  kpairs.reserve(k); //it won't grow bigger than k
+  if (k<=0) //no valid number of pairs requested
+    return kpairs;
+
+  VID cc_id = rdmp->m_pRoadmap->GetVID(cc);
+  vector<pair<CFG,CFG> > kpairs_cfg = KClosest(rdmp->GetEnvironment(),
+					       cc, v, k);
+  vector<pair<CFG,CFG> >::iterator pairs_i;
+  for (pairs_i = kpairs_cfg.begin(); pairs_i < kpairs_cfg.end(); pairs_i++)
+    kpairs.push_back(pair<VID,VID>(cc_id, //same as GetVID(pairs_i->first
+				   rdmp->m_pRoadmap->GetVID(pairs_i->second)));
+
+  return kpairs;
+}
+
+
+//-----------------------------------------------------------------------
+// Input: CFG cc, vector of CFG v, and k
+// Process: finds the k closest cfgs in v to cc (cfg_v)
+// Output: vector of pairs (cc, cfgv) of k closest
+//-----------------------------------------------------------------------
+template <class CFG, class WEIGHT>
+vector< pair<VID,VID> >
+DistanceMetric::
+KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp, 
+	 CFG &cc, vector<CFG>& v, unsigned int k) {
+  vector<pair<VID,VID> > kpairs;
+  kpairs.reserve(k); //it won't grow bigger than k
+  if (k<=0) //no valid number of pairs requested
+    return kpairs;
+
+  CFG invalid;
+  invalid.InvalidData(); //make an invalid all kpairs initially
+  double max_value = MAX_DIST;
+  vector<pair<CFG,double> > kpairs_dist(k,pair<CFG,double>(invalid,max_value));
+  kpairs_dist.reserve(k);//it won't grow more than k
+
+  int max_index = 0;
+  double dist;
+  Environment *env = rdmp->GetEnvironment();
+  vector<CFG>::iterator vi;
+  for (vi = v.begin(); vi < v.end(); vi++) {
+    if (cc == (*vi))
+      continue; //don't check distance to same
+    dist = Distance(env, cc, *vi);
+    if (dist < kpairs_dist[max_index].second) {
+#if CHECKIFSAMECC
+      if (!IsSameCC(*(rdmp->m_pRoadmap), cc,(*vi))) {
+#endif
+	kpairs_dist[max_index] = pair<CFG,double>((*vi),dist);
+	max_value = dist;
+	//search for new max_index (faster O(k) than sort O(klogk))
+	for (int i = 0; i < kpairs_dist.size(); i++)
+	  if (max_value < kpairs_dist[i].second) {
+	    max_value = kpairs_dist[i].second;
+	    max_index = i;
+	  }
+#if CHECKIFSAMECC
+      }
+#endif
+    }
+  }
+  sort (kpairs_dist.begin(), kpairs_dist.end(), CFG_DIST_COMPARE<CFG>());
+  // return only cfgs
+  vector<pair<CFG,double> >::iterator c_iter;
+  VID cc_vid = rdmp->m_pRoadmap->GetVID(cc);
+  for (c_iter = kpairs_dist.begin(); c_iter < kpairs_dist.end(); c_iter++) 
+    if (c_iter->first !=invalid)
+      kpairs.push_back(pair<VID,VID>(cc_vid,
+				     rdmp->m_pRoadmap->GetVID(c_iter->first)));
+ 
+  return kpairs; //by construction kpairs is never larger than k  
 }
 
 #endif

@@ -153,7 +153,6 @@ CreateCopy() {
   return _copy;
 }
 
-
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::
 ConnectComponents() {
@@ -175,24 +174,22 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   cout << "closest(k="<< kclosest <<"): "<<flush;
 #endif
   
-  vector<CFG> vec1;
-  _rm->m_pRoadmap->GetVerticesData(vec1);
-  const int verticeSize = vec1.size();
-  const int k = min(kclosest,verticeSize);
-  vector<CFG> vec2 = vec1;
-
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
+  vector<CFG> vertices;
+  pMap->GetVerticesData(vertices);
+  const int k = min(kclosest,vertices.size());
   
   vector< pair<VID,VID> > kp;
   // Find k closest cfgs to each cfg in the roadmap
-  if(k < vec2.size() - 1) {
-    kp = dm->FindKClosestPairs(_rm, vec1, vec2, k); 
+  if(k < vertices.size()) {// - 1) {
+    //kp = dm->KClosest(_rm, vertices, vertices, k);
+    kp = dm->FindKClosestPairs(_rm, vertices, vertices, k);     
   } 
   else { // all the pairs
-    for(int i=0; i<vec1.size(); ++i)
-      for(int j=0; j<vec2.size(); ++j){
-        if( vec1[i]==vec2[j] ) continue;
-        kp.push_back(pair<VID,VID>(pMap->GetVID(vec1[i]), pMap->GetVID(vec2[j])));
+    for(int i=0; i<vertices.size(); ++i)
+      for(int j=0; j<vertices.size(); ++j){
+        if( vertices[i]==vertices[j] ) continue;
+        kp.push_back(pair<VID,VID>(pMap->GetVID(vertices[i]), pMap->GetVID(vertices[j])));
       }
   }
   
@@ -203,7 +200,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 #if CHECKIFSAMECC
     if(IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
 #endif
-
+    Stats.IncConnections_Attempted();
     if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
                         _rm->m_pRoadmap->GetData(kp[j].first),
                         _rm->m_pRoadmap->GetData(kp[j].second),
@@ -211,6 +208,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                         connectionPosRes, connectionOriRes, 
                         (!addAllEdges) )) {
       _rm->m_pRoadmap->AddEdge(kp[j].first, kp[j].second, lpOutput.edge);
+      Stats.IncConnections_Made();
     }
   } //endfor j
 }
