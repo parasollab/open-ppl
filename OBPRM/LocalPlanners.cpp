@@ -34,7 +34,6 @@ LPInfo::LPInfo(Roadmap *rm, const CNInfo& cnInfo) {
    dmsetid = cnInfo.dmsetid;
 }
 
-// change this in obprm too brc
 int LocalPlanners::lineSegmentLength = 0;  // default value
 bool LocalPlanners::usingClearance = 0;
 #ifdef USE_CSTK
@@ -296,8 +295,6 @@ bool LocalPlanners::IsConnected_SLclearance(Environment *_env,CollisionDetection
 
 	while(! pairQ.empty() ) {
 	   cfgPair &tmp = pairQ.front();
-           // brc removed &
-	   //Cfg &mid = Cfg::WeightedSum(tmp.first, tmp.second, 0.5);
 	   Cfg mid = Cfg::WeightedSum(tmp.first, tmp.second, 0.5);
 	   info->cd_cntr ++;
 	   if((clr = mid.Clearance(_env,cd)) <= 0.001) { // 0.001 tolerance.
@@ -307,17 +304,11 @@ bool LocalPlanners::IsConnected_SLclearance(Environment *_env,CollisionDetection
 		  clr -= rmax;
 		  if(clr < 0) clr = 0.0;
 	      }
-	      // brc removed &
-              //Cfg& diff = tmp.first - tmp.second;
 	      Cfg diff = tmp.first - tmp.second;
               halfDist = diff.PositionMagnitude()/2;
 	      if(clr < halfDist) { 
-		 // if(Cfg::isWithinResolution(tmp.first, tmp.second)) 
 		 halfOriDist = diff.OrientationMagnitude()/2;
 		 if(info->positionRes < halfDist || info->orientationRes < halfOriDist ) {
-                    // brc removed &
-		    //Cfg& tmp1 = Cfg::WeightedSum(tmp.first, mid, 1.0-clr/halfDist);
-		    //Cfg& tmp2 = Cfg::WeightedSum(mid, tmp.second, clr/halfDist);
 		    Cfg tmp1 = Cfg::WeightedSum(tmp.first, mid, 1.0-clr/halfDist);
 		    Cfg tmp2 = Cfg::WeightedSum(mid, tmp.second, clr/halfDist);
 		    pairQ.push_back(cfgPair(tmp.first, tmp1));
@@ -330,8 +321,6 @@ bool LocalPlanners::IsConnected_SLclearance(Environment *_env,CollisionDetection
      }
      if(info->savePath || info->saveFailedPath){
 	int steps;
-        // brc removed &
-        //Cfg& incr = _c1.FindIncrement(_c2,&steps,info->positionRes,info->orientationRes);
         Cfg incr = _c1.FindIncrement(_c2,&steps,info->positionRes,info->orientationRes);
 	Cfg tick = _c1;
 	for(int i=0; i<steps; i++) {
@@ -373,7 +362,6 @@ bool LocalPlanners::lineSegmentInCollision(Environment *_env,CollisionDetection 
     MultiBody * lineSegment = new MultiBody(_env);
     FreeBody fb(lineSegment);
     fb.ReadBYU(cdtype, istr);
-    // brc added temp. matrix t;
     Transformation t=Transformation(Orientation(IdentityMatrix), center);
     fb.Configure(t);
     lineSegment->AddBody(&fb);

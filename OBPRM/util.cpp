@@ -8,7 +8,6 @@
 //  Last Modified By:
 //      08/24/98  Daniel Vallejo
 //
-//
 ////////////////////////////////////////////////////
 
 #include <math.h>
@@ -79,7 +78,6 @@ WritePathTranformationMatrices( char output_file[80],
     fclose(fp);
 }
 
-// brc moved the followings from  OBPRM.h
 ostream& operator<< (ostream& _os, const IntWeight& w) {
   _os<< w.lp << " " << w.nticks ;
 };

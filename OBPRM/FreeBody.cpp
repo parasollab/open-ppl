@@ -1,12 +1,6 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
 //  FreeBody.c
-//
-//  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Added/Modified  7/31/98 Wookho Son
-//  1/13/99 Guang Song GetWorldTransformation method is modified.
-//  2/27/99 add WorldTransformation() method.
 /////////////////////////////////////////////////////////////////////
 
 //#include "Input.h"
@@ -50,8 +44,6 @@ GMSPolyhedron & FreeBody::GetWorldPolyhedron() {
 //
 //  For a single free body, there is only one transformation that need to be 
 //  taken care of
-//
-//  Added  6/4/98    Wookho Son
 //===================================================================
 void FreeBody::Configure(Transformation & _transformation){
     // new transformation (position and orientation) for the reconfiguration
@@ -74,7 +66,7 @@ void FreeBody::Configure(Transformation & _transformation){
 //
 //===================================================================
 Transformation & FreeBody::GetWorldTransformation() {
-    // added by Guang Song on 12/16/98, for the case when the base is a freebody.
+    //for the case when the base is a freebody.
     if(backwardConnectionCount == 0)  // base link
 	return worldTransformation;
     
@@ -111,12 +103,6 @@ Transformation & FreeBody::GetWorldTransformation() {
 void FreeBody::Get(Input * _input, int _multibodyIndex, int _index) {
     int bodyIndex = _input->BodyIndex[_multibodyIndex][_index];
 
-    // commented out on 10/15/99, consistant with that in Input.c. Guang
-    //if (_index==0){  // the very first body
-       // 6 parameters for world transformation (position and orientation)
-       //worldTransformation.orientation = _input->freebodyOrientation[_multibodyIndex];
-       //worldTransformation.position = _input->freebodyPosition[_multibodyIndex];
-    //}
     Body::Read(_input,_input->freebodyFileName[_multibodyIndex][bodyIndex]);
 }
 

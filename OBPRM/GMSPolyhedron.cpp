@@ -239,7 +239,7 @@ Vector3D GMSPolyhedron::ReadBYU(istream & _is) {
 	if(vertexList[i].magnitude() > maxRadius) 
 		maxRadius = vertexList[i].magnitude();
     }
-    com = Vector3D(0.0, 0.0, 0.0); // added on 09/03/99: Guang
+    com = Vector3D(0.0, 0.0, 0.0);
 
     
 

@@ -27,8 +27,6 @@ Cfg_free::Cfg_free() : CfgManager(6, 3) {}
 Cfg_free::~Cfg_free() {}
 
 Vector3D Cfg_free::GetRobotCenterPosition(const Cfg &c) const {
-  // brc removed &
-   //vector<double> &tmp = c.GetData();
    vector<double> tmp = c.GetData();
    return Vector3D(tmp[0], tmp[1], tmp[2]);
 }
@@ -215,7 +213,7 @@ bool Cfg_free::InNarrowPassage(
 		cout << "Error in Cfg_free::InNarrowPassage, Cfg must be rigidbody type. " << endl;
 		exit(1);
 	    }
-            // add filter here 06/14/99
+            // add filter here
 	    static const double posRes = env->GetPositionRes();
             double width = 2.0*posRes;
             int narrowpassageWeight = 0;
@@ -242,7 +240,6 @@ bool Cfg_free::InNarrowPassage(
 //===================================================================
 // GenSurfaceCfgs4ObstNORMAL
 //      generate nodes by overlapping two triangles' normal.
-// Guang Song 08/24/99
 //===================================================================
 vector<Cfg>
 Cfg_free::GenSurfaceCfgs4ObstNORMAL
@@ -261,8 +258,6 @@ SID _cdsetid,CDInfo& _cdInfo){
       while(num < nCfgs) {
 	  int robotTriIndex = (int)(drand48()*polyRobot.numPolygons);
 	  int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
-          // brc removed &
-	  //vector<Cfg> &tmp = GetCfgByOverlappingNormal(env, cd, polyRobot, polyObst,
 	  vector<Cfg> tmp = GetCfgByOverlappingNormal(env, cd, 
 				polyRobot, polyObst,
 				robotTriIndex, obstTriIndex, 

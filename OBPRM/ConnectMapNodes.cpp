@@ -28,7 +28,6 @@
 #define MAX_NUM      20        // default for modifiedLM maxNum
 #define RFACTOR       2        // default for modifiedLM 'radius' factor
 
-// added on 09/11/00 GS
 double ConnectMapNodes::connectionPosRes = 0.05;
 double ConnectMapNodes::connectionOriRes = 0.05;
 
@@ -95,7 +94,6 @@ UserInit(Input * input, Environment * env){
    cnInfo.numEdges = input->numEdges.GetValue();
    cnInfo.addPartialEdge = input->addPartialEdge.GetValue();
 
-   // added on 09/11/00 GS
    connectionPosRes = env->GetPositionRes();
    connectionOriRes = env->GetOrientationRes();
 };
@@ -549,8 +547,7 @@ ConnectBigCCs(
   LPInfo lpInfo=Initialize_LPinfo(_rm,info);
 
   int kpairs = _cn.GetKPairs();
-
-  // brc added temporary variable t 
+  
   /*vector<Cfg> cc1vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc1id));
   vector<Cfg> cc2vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc2id)); */
   Cfg t;
@@ -948,8 +945,6 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
   Environment *env = rm->GetEnvironment();
 
   for (int k=0;k<K;++k){
-
-      // brc - porting required adding these extra local variables
       Cfg tmp = Cfg::GetRandomCfg(env);
       Cfg x_rand = Cfg(tmp);
 
@@ -986,7 +981,6 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
           && lp->IsConnected(rm,cd,dm,x_near,x_new,info.lpsetid,&lpInfo)){
 
              // add x_new and connecting edge to x_near into roadmap
-             // brc added a temporary variable t
              Cfg t=Cfg(x_new);
              rm->roadmap.AddVertex(t);
              rm->roadmap.AddEdge(x_near, x_new, lpInfo.edge);
@@ -1008,7 +1002,6 @@ ModifyRoadMap(
         Roadmap *fromMap,
         vector<VID> vids){
 
-  // brc added tmp t
   Cfg t;
   int i;
   for (i=0;i<vids.size();++i) {
@@ -1024,14 +1017,8 @@ ModifyRoadMap(
      vector< pair<pair<VID,VID>,WEIGHT> > edges =
                            fromMap->roadmap.GetIncidentEdges(vids[i]);
      for (int j=0;j<edges.size();++j) {
-       //brc tmp variables t1,t2
        Cfg t1=fromMap->roadmap.GetData(edges[j].first.first),
            t2=fromMap->roadmap.GetData(edges[j].first.second);
-/*
-       toMap->roadmap.AddEdge(fromMap->roadmap.GetData(edges[j].first.first),
-                           fromMap->roadmap.GetData(edges[j].first.second),
-                           edges[j].second);
-*/
 
        toMap->roadmap.AddEdge(t1,t2, edges[j].second);
      } //endfor j

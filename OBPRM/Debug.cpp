@@ -5,13 +5,6 @@
 //
 //  General Description
 //      Procedures used for debugging purposes
-//
-//  Created
-//      xx/xx/xx Daniel Vallejo
-//
-//  Last Modified By:
-//      8/21/99  Lucia K. Dale - added header 
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "Debug.h"

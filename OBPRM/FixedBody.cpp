@@ -1,11 +1,6 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
 //  FixedBody.c
-//
-//  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Added/Modified  6/ 4/98 Wookho Son
-//  Added/Modified  7/31/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
 #include "FixedBody.h"
@@ -32,7 +27,6 @@ FixedBody::~FixedBody() {
 //  GetWorldPolyhedron
 //
 //  Need a mechanism to distinguish between an obstacle and an object
-//  Modified  6/4/98
 //===================================================================
 GMSPolyhedron & FixedBody::GetWorldPolyhedron() {
  GMSPolyhedron a;
@@ -63,8 +57,6 @@ Transformation & FixedBody::GetWorldTransformation() {
 //
 //  For a fixed body, there is only one transformation that need to be 
 //  taken care of
-//
-//  Added  6/4/98    Wookho Son
 //===================================================================
 void FixedBody::Configure(Transformation & _transformation){
     // new transformation (position and orientation) for the reconfiguration
@@ -74,7 +66,6 @@ void FixedBody::Configure(Transformation & _transformation){
 
 //===================================================================
 //  Get
-//  Modified  7/22/98  Wookho Son
 //===================================================================
 void FixedBody::Get(Input * _input, int _multibodyIndex, int _index) {
     // Invoke the "Read" of the parent class
@@ -83,7 +74,7 @@ void FixedBody::Get(Input * _input, int _multibodyIndex, int _index) {
 
     //if (_index==0){  // the very first body
     // 6 parameters for world transformation (position and orientation)
-    // Now for every fixedbody, see Input.c for corresponding changes. 10/15/99 Guang
+    // Now for every fixedbody, see Input.c for corresponding changes. 
     worldTransformation.orientation = _input->fixedbodyOrientation[_multibodyIndex][bodyIndex];
     worldTransformation.position = _input->fixedbodyPosition[_multibodyIndex][bodyIndex];
     //}

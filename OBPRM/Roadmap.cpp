@@ -257,7 +257,6 @@ WriteEnvironment(ostream & _os){
 
 //////////////////////////////////////////////////////////////////////
 // Roadmap Version Check and Convertors
-// 6/11/00 Nancy 
 //////////////////////////////////////////////////////////////////////
 bool 
 Roadmap::
@@ -292,7 +291,6 @@ CheckVersion(const char* _fname)
 
 //
 // Convert To Current Roadmap Version 
-// 6/11/00 Nancy 
 //
 bool 
 Roadmap::

@@ -29,8 +29,6 @@ Cfg_free_serial::Cfg_free_serial(int _numofJoints) : CfgManager(6+_numofJoints, 
 Cfg_free_serial::~Cfg_free_serial() {}
 
 Vector3D Cfg_free_serial::GetRobotCenterPosition(const Cfg &c) const {
-   // brc removed &
-   //vector<double> &tmp = c.GetData();
    vector<double> tmp = c.GetData();
    return Vector3D(tmp[0], tmp[1], tmp[2]);
 }
@@ -172,7 +170,6 @@ bool Cfg_free_serial::GenerateOverlapCfg(
 //===================================================================
 // GenSurfaceCfgs4ObstNORMAL
 //      generate nodes by overlapping two triangles' normal.
-// Guang Song 08/24/99
 //===================================================================
 vector<Cfg> Cfg_free_serial::GenSurfaceCfgs4ObstNORMAL
 (Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, 
@@ -192,8 +189,6 @@ SID _cdsetid,CDInfo& _cdInfo){
     while(num < nCfgs) {
           int robotTriIndex = (int)(drand48()*polyRobot.numPolygons);
           int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
-          // brc removed &
-          //vector<Cfg> &cfgFree = cfgFreeManager.GetCfgByOverlappingNormal(env, cd, polyRobot,
           vector<Cfg> cfgFree = cfgFreeManager.GetCfgByOverlappingNormal(
 				env, cd, 
 				polyRobot, polyObst, 
@@ -201,13 +196,11 @@ SID _cdsetid,CDInfo& _cdInfo){
 				_cdsetid, _cdInfo,
 				base);
           if(!cfgFree.empty()) {
-             // brc removed &
-             //vector<double> &basePose = cfgFree[0].GetData();
+
              vector<double> basePose = cfgFree[0].GetData();
              for(int j=0; j<SIZE; ++j) {
                 vector<double> serialData = basePose;  // for clearness, have basePose tmp variable.
                 for(int i=0; i<NumofJoints; ++i) {  // now add joint angles.
-                   //serialData.push_back(jointAngles[j][i]);
 		   serialData.push_back(drand48());
                 }
                 Cfg serial(serialData);

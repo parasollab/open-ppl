@@ -62,8 +62,6 @@ int
 Clock_Class::
 
 StartClock(char *Name) {
-   // brc changed to RUSAGE 
-  //getrusage((int) 0, &buf);
   getrusage(RUSAGE_SELF, &buf);
   s_utime = buf.ru_utime.tv_usec;
   s_time = buf.ru_utime.tv_sec;
@@ -77,8 +75,6 @@ StartClock(char *Name) {
 int
 Clock_Class::
 StopClock() {
-  // brc changed to RUSAGE_SELF
-  //getrusage(0, &buf);
   getrusage(RUSAGE_SELF, &buf);
   u_utime = buf.ru_utime.tv_usec - s_utime;
   u_time = buf.ru_utime.tv_sec - s_time;

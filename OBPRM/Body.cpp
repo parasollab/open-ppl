@@ -320,7 +320,6 @@ void Body::Write(ostream & _os) {
 
 //===================================================================
 //  InitializeContact
-//  4/16/98  Wookho Son
 //===================================================================
 void Body::InitializeContact() {
   // Reinitialize the contact count
@@ -329,7 +328,6 @@ void Body::InitializeContact() {
 
 //===================================================================
 //  ComputeCenterOfMass
-//  8/31/98  Lucia K. Dale
 //  
 //  This function is automatically caeed by GetCenterOfMass()
 //  if it has never been computed. After computing it,
@@ -357,7 +355,6 @@ void Body::ComputeCenterOfMass(){
 
 //===================================================================
 //  FindBoundingBox
-//  8/19/98  Daniel Vallejo
 //===================================================================
 void Body::FindBoundingBox(){
 
@@ -400,7 +397,6 @@ RAPID_model * Body::GetRapidBody() {
 
 //===================================================================
 //  GetCstkBody
-//  8/26/98  Daniel Vallejo
 //===================================================================
 #ifdef USE_CSTK
 void * Body::GetCstkBody(){

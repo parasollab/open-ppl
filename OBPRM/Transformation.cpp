@@ -63,8 +63,6 @@ Transformation::~Transformation() {
 
 //===================================================================
 //  Operators
-//
-// Added 6/4/98  Wookho Son
 //===================================================================
 Transformation & Transformation::operator+(const Transformation & _transformation) {
     orientation = orientation + _transformation.orientation;
@@ -73,9 +71,6 @@ Transformation & Transformation::operator+(const Transformation & _transformatio
     return *this;
 }
 
-//
-// Added 6/4/98  Wookho Son
-//
 Transformation Transformation::operator-(const Transformation & _transformation) {
     orientation = orientation - _transformation.orientation;
     position = position - _transformation.position;

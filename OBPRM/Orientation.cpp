@@ -1,12 +1,6 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
 //  Orientation.c
-//
-//  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Added     6/ 4/98 Wookho Son
-//  Added     1/13/99 Guang Song add EulerZYX in ConvertType method to 
-// 	      convert it to or from Matrix type or EulerXYZ type. 
 /////////////////////////////////////////////////////////////////////
 
 #include "Orientation.h"
@@ -73,9 +67,6 @@ Orientation::Orientation(OrientationType _type, double _alpha, double _beta, dou
 //    ConvertType(Matrix); // Convert to matrix representation
 }
 
-//
-// Added 7/22/98 Wookho Son
-//
 Orientation::Orientation(double _rotationAngle, const Vector3D &_rotationAxis) {
     type  = Quaternion;
 
@@ -87,7 +78,6 @@ Orientation::Orientation(double _rotationAngle, const Vector3D &_rotationAxis) {
 
 //-------------------------------------------------------------------
 // If no argument is assumed, it is considered as having Euler angles
-// Added  7/28/98  Wookho Son
 //-------------------------------------------------------------------
 Orientation::Orientation() {
     type  = EulerXYZ;
@@ -119,7 +109,7 @@ Vector3D Orientation::operator*(const Vector3D & _v) {
 Orientation Orientation::operator*(const Orientation & _changed) {
     ConvertType(Matrix);
     Orientation _o(_changed);
-    _o.ConvertType(Matrix); // added by Guang Song on 12/21/98
+    _o.ConvertType(Matrix);
     
     Orientation result(Matrix);
     for (int i=0; i < 3; i++)
@@ -131,9 +121,6 @@ Orientation Orientation::operator*(const Orientation & _changed) {
     return result;
 }
 
-//
-// Added 6/4/98  Wookho Son
-//
 Orientation Orientation::operator+(const Orientation & _o) {
     ConvertType(EulerXYZ);
     Orientation newO = _o;
@@ -148,9 +135,6 @@ Orientation Orientation::operator+(const Orientation & _o) {
     return *this;
 }
 
-//
-// Added 6/4/98  Wookho Son
-//
 Orientation Orientation::operator-(const Orientation & _o) {
     ConvertType(EulerXYZ);
     Orientation newO = _o;
@@ -223,8 +207,6 @@ void Orientation::Invert() {
 
 //===================================================================
 //  ConvertType
-//  
-//  Added  Wookho Son
 //===================================================================
 void Orientation::ConvertType(OrientationType _newType) {
     // Don't do the conversion, if there is no need
@@ -286,7 +268,7 @@ void Orientation::ConvertType(OrientationType _newType) {
 		gamma = atan2(matrix[0][1], -matrix[0][0]);
 	    }		    
 	    break;
-	  case EulerZYX: // FixedXYZ: add on 2/10/99 Guang Song
+	  case EulerZYX: // FixedXYZ:
             beta = atan2(-matrix[2][0], sqrt(matrix[2][1]*matrix[2][1] + matrix[2][2]*matrix[2][2]));
 	    if(cos(beta) > 0) {
 	    	alpha = atan2(matrix[1][0], matrix[0][0]);
@@ -370,7 +352,7 @@ void Orientation::ConvertType(OrientationType _newType) {
 		matrix[2][1] = ca*sb*sg + sa*cg;
 		matrix[2][2] = ca*cb;
 		break;
-	      case EulerZYX: // or FixedXYZ. added by Guang Song 12/17/98
+	      case EulerZYX: // or FixedXYZ
 		matrix[0][0] = ca*cb;
 		matrix[0][1] = ca*sb*sg - sa*cg;
 		matrix[0][2] = ca*sb*cg + sa*sg;
@@ -423,8 +405,6 @@ void Orientation::ConvertType(OrientationType _newType) {
 
 //===================================================================
 //  Read
-//  
-//  Modified 6/1/98   Wookho Son
 //===================================================================
 void Orientation::Read(istream & _is) {
     type = EulerXYZ;

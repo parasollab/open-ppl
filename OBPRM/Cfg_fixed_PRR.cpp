@@ -27,8 +27,6 @@ Cfg_fixed_PRR::Cfg_fixed_PRR() : CfgManager(3, 1) {}
 Cfg_fixed_PRR::~Cfg_fixed_PRR() {}
 
 Vector3D Cfg_fixed_PRR::GetRobotCenterPosition(const Cfg &c) const {
-   // brc removed &
-   //vector<double> &tmp = c.GetData();
    vector<double> tmp = c.GetData();
    return Vector3D(0, 0, tmp[0]);
 }
@@ -133,7 +131,6 @@ bool Cfg_fixed_PRR::GenerateOverlapCfg(
 //===================================================================
 // GenSurfaceCfgs4ObstNORMAL
 //      generate nodes by overlapping two triangles' normal.
-// Guang Song 08/24/99
 //===================================================================
 vector<Cfg>
 Cfg_fixed_PRR::GenSurfaceCfgs4ObstNORMAL

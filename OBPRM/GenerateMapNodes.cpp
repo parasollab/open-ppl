@@ -8,13 +8,6 @@
 //     This file contains the definitions of the prototypes
 //     declared in "GenerateMapNodes.h".
 //
-//  Created
-//      8/27/98  Lucia K. Dale
-//
-//  Last Modified
-//      8/21/99  Lucia K. Dale  added GaussPRM
-//      8/31/99  Lucia K. Dale  invoked method name change
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "GenerateMapNodes.h"
@@ -348,7 +341,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
         obstSurface.erase   (obstSurface.begin(),obstSurface.end());
 
     } // endif (obstacle != robot)
-    else  // obst = robot : Guang 10/13/99
+    else
     if(numMultiBody == 1) {
             vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _info.numNodes, _info);
             int i;
@@ -439,7 +432,7 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
             obstFree.erase(obstFree.begin(), obstFree.end());
 
         } // if(obstacle != robot)
-    else  // obst = robot : Guang 10/13/99
+    else 
     if(numMultiBody == 1) {
         vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _info.numNodes, _info);
         for(int i=0; i<CobstNodes.size(); ++i){
@@ -798,7 +791,6 @@ int obstacle, int nCfgs, GNInfo &info,double clearanceFactor){
 //===================================================================
 // GenCfgsFromCObst
 //      generate nodes by collecting free nodes and emitting rays from nodes in collision.
-//  Guang Song 10/13/99
 //===================================================================
 vector<Cfg>
 GenerateMapNodes::
@@ -971,7 +963,6 @@ ValidatePairs(char *msg, n_str_param params, pair<int,int> * results){
 
 //====================================================================
 //  GenerateSeeds
-//  9/3/98  Daniel Vallejo
 //===================================================================
 void
 GenerateMapNodes::
@@ -1416,7 +1407,6 @@ ChooseRandomTriangleOnBody(Body *body, bool isFreeBody)
 
 //===================================================================
 //  ChooseRandomWeightedTriangleOnBody
-//  2/2/98  Daniel Vallejo
 //===================================================================
 Vector3D
 GenerateMapNodes::

@@ -5,13 +5,6 @@
 //
 //  General Description
 //
-//  Created
-//      8/11/98  Daniel Vallejo
-//  Last Modified By:
-//      1/13/99  Guang Song 'cfg' is removed from argument list.
-//               Vclip collision detection is fixed so that
-//	         Both Vclip and cstk give the SAME results for collision checking!
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "CollisionDetection.h"
@@ -120,7 +113,6 @@ VclipPose CollisionDetection::GetVclipPose(const Transformation &myT,
 #endif
 //----------------------------------------------------------------------
 // SetLineTransformation
-// Guang Song 03/02/99
 // set linTrans[12], which is used by cstk collision checker.
 //----------------------------------------------------------------------
 void CollisionDetection::

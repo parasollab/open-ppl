@@ -1,11 +1,6 @@
 // $Id$
 ////////////////////////////////////////////////////////////////////////////
 //  Matrix.c
-//
-//  Created   4/24/98 Aaron Michalk
-//  Added     5/16/98 Wookho Son
-//  Added     5/27/98 Wookho Son
-//  Added     6/ 5/98 Wookho Son
 ////////////////////////////////////////////////////////////////////////////
 
 // This is a test
@@ -37,7 +32,6 @@ Matrix::Matrix(double *_m, int _nrow, int _ncol) {
 }
 
 #if 0
-// Added  6/ 5/98  Wookho Son
 Matrix::Matrix(double *_m, int _n) {
     int  i, j;
 
@@ -156,7 +150,6 @@ Matrix Matrix::Transpose() {
 
 //==========================================================================
 //  RowColumnCouple
-//  Added   Wookho Son
 //==========================================================================
 void Matrix::RowColumnCouple(Matrix & _m) {
     // Reallocate the memory by the amount increased
@@ -179,7 +172,6 @@ void Matrix::RowColumnCouple(Matrix & _m) {
 
 //==========================================================================
 //  Couple
-//  Added   Wookho Son
 //==========================================================================
 void Matrix::RowCouple(Matrix & _m) {
     int  i, j;
@@ -208,7 +200,6 @@ void Matrix::RowCouple(Matrix & _m) {
 
 //==========================================================================
 //  Couple
-//  Added   Wookho Son
 //==========================================================================
 void Matrix::ColumnCouple(Matrix & _m) {
     int  i, j;
@@ -238,7 +229,6 @@ void Matrix::ColumnCouple(Matrix & _m) {
 
 //==========================================================================
 //  Couple
-//  Added   Wookho Son
 //==========================================================================
 Matrix Matrix::Extract(int _startRow, int _endRow, int _startCol, int _endCol) {
     int  i, j;
@@ -287,8 +277,6 @@ void Matrix::Write(ostream & _os) {
 
 //==========================================================================
 //  Print
-//
-//  Added  5/27/98   Wookho Son
 //==========================================================================
 void Matrix::Print() {
     int  i, j;

@@ -1,8 +1,6 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
 //  Input.c
-//
-//  Created  7/22/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
 #include "Input.h"
@@ -243,10 +241,6 @@ Input::Input():
         "\n\t\t\tPick one: default scaledEuclidean 0.9"
         "\n\t\t\t  euclidean"
         "\n\t\t\t  scaledEuclidean FLOAT (default,0.5)"
-        "\n\t\t\t  minkowski FLOAT FLOAT FLOAT (default 3 3 0.333)"
-        "\n\t\t\t  manhattan"
-        "\n\t\t\t  com"
-
         );
 
     strcpy(commandLine,"");
@@ -718,7 +712,7 @@ void Input::Read(istream & _is) {
                if (i==0){  // for the very first body
                    // this whole 'if' statements should be got rid of later. 
                    // not in use. the only purpose here is to be able to use 
-                   // old environment file.  Guang 10/15/99
+                   // old environment file.
                    freebodyPosition[m] = Vector3D(_is);
 
                    Vector3D angles = Vector3D(_is);

@@ -1,15 +1,6 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
 //  MultiBody.c
-//
-//  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/15/98 Aaron Michalk
-//  Added     5/ 1/98 Wookho Son
-//  Added     5/15/98 Wookho Son
-//  Added     5/25/98 Wookho Son
-//  Modified  7/14/98 Wookho Son
-//  Modified  7/31/98 Wookho Son
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "MultiBody.h"
@@ -164,7 +155,6 @@ MultiBody::~MultiBody() {
 //
 //  Function: Configure the joint by the given amount of displacement
 //
-//  Added  6/5/98   Wookho Son
 //===================================================================
 void MultiBody::ConfigureJoint(double * _s, int _dof) {
    int  i;
@@ -347,7 +337,6 @@ void MultiBody::Write(ostream & _os) {
 
 //===================================================================
 //  ComputeCenterOfMass
-//  8/31/98  Lucia K. Dale
 //
 //  The degree of approximation in calculating center of mass is
 //  the same as in Body.cpp. To be more accurate, we need to
@@ -378,7 +367,6 @@ void MultiBody::ComputeCenterOfMass(){
 
 //===================================================================
 //  FindBoundingBox
-//  8/19/98  Daniel Vallejo
 //===================================================================
 void MultiBody::FindBoundingBox(){
 
@@ -437,7 +425,6 @@ void MultiBody::FindBoundingBox(){
 
 //===================================================================
 //  GetBoundingBox
-//  8/19/98  Daniel Vallejo
 //===================================================================
 double * MultiBody::GetBoundingBox(){
     return boundingBox;
@@ -445,7 +432,6 @@ double * MultiBody::GetBoundingBox(){
 
 //===================================================================
 //  GetMaxAxisRange
-//  8/20/98  Daniel Vallejo
 //===================================================================
 double MultiBody::GetMaxAxisRange(){
     return maxAxisRange;
@@ -458,7 +444,6 @@ double MultiBody::GetMaxAxisRange(){
 
 //===================================================================
 //  GetNumBodies
-//  2/12/98  Daniel Vallejo
 //===================================================================
 int MultiBody::GetNumBodies(){
     return numBodies;
@@ -467,7 +452,6 @@ int MultiBody::GetNumBodies(){
 
 //===================================================================
 //  GetFixArea
-//  2/12/98  Daniel Vallejo
 //===================================================================
 double MultiBody::GetFixArea(){
     return fixArea;
@@ -476,7 +460,6 @@ double MultiBody::GetFixArea(){
 
 //===================================================================
 //  GetFreeArea
-//  2/12/98  Daniel Vallejo
 //===================================================================
 double MultiBody::GetFreeArea(){
     return freeArea;
@@ -485,7 +468,6 @@ double MultiBody::GetFreeArea(){
 
 //===================================================================
 //  GetArea
-//  2/12/98  Daniel Vallejo
 //===================================================================
 double MultiBody::GetArea(){
     return area;
@@ -494,7 +476,6 @@ double MultiBody::GetArea(){
 
 //===================================================================
 //  GetFixAreas
-//  2/12/98  Daniel Vallejo
 //===================================================================
 vector<double> MultiBody::GetFixAreas(){
     return fixAreas;
@@ -503,7 +484,6 @@ vector<double> MultiBody::GetFixAreas(){
 
 //===================================================================
 //  GetFreeAreas
-//  2/12/98  Daniel Vallejo
 //===================================================================
 vector<double> MultiBody::GetFreeAreas(){
     return freeAreas;

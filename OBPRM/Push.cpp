@@ -191,11 +191,8 @@ void Push::ShortestPush(vector <Cfg> nodes)
                  surface.push_back(free[n]);
  	      }
           }
-          // brc changed erase to clear
           inside.erase(inside.begin(),inside.end());
 	  modifiedInside.erase(modifiedInside.begin(), modifiedInside.end());
-          //inside.clear();
-	  //modifiedInside.
        }  // if
        prevFound=true;
        prevFreeCfg=nodes[i];
@@ -257,7 +254,6 @@ vector<LP> mylpset = lp->planners.GetLPSet(SL);
 //----------------------------------------------------
 //  closestKvertex: copy from util.c (Burchan)
 //----------------------------------------------------
-//brc changed this to void *
 //static int Compare3D(Vector3D *a,Vector3D *b)
 static int Compare3D(const void *c,const void  *d)
 {
@@ -375,7 +371,6 @@ void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
   for(i=0;i<seeds.size();i++) {
     for(j=0;j<closestNodes.size();j++) {
             double tmpx=closestNodes[j].getX(), tmpy=closestNodes[j].getY(),tmpz= closestNodes[j].getZ();
-//brc
         Cfg ccc(Vector6<double>(tmpx,tmpy,tmpz,0,0,0));
 
         inter=GenerateOutsideCfg(env,cd, seeds[i],
@@ -465,14 +460,11 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
               cout << "\nBetween " << inside[j]  << endl <<intermediate[k] << flush;
               cout << "\n inter " << inter << endl << flush;
               surface.push_back(inter);
-              // brc removed & sign
- 	      //Vector3D &tmp = (intermediate[k]-inside[j]).GetRobotCenterPosition();
  	      Vector3D tmp = (intermediate[k]-inside[j]).GetRobotCenterPosition();
 	      ccc = Cfg(Vector6<double>(tmp[0], tmp[1], tmp[2], 0.0, 0.0, 0.0));
               if(!ccc.AlmostEqual(zero)) {
                   cout << "\n Calling Generate outside for " << ccc << endl << flush;
                   inter=GenerateOutsideCfg(env,cd,inside[j],
-                    //  (ccc)/incrCoord,
 			ccc,
                           generationInfo);
                   cout << "\n Positional inter " << inter << endl << flush;

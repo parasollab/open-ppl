@@ -34,9 +34,6 @@ Contact::Contact(Body *_body1,  Body * _body2, Vector3D & _position, Vector3D & 
 Contact::~Contact() {
 }
 
-//===================================================================
-//  4/16/98  Wookho Son
-//===================================================================
 void Contact::ComputeTangential(){
   Vector3D direction;
   double mat[3][3];
@@ -52,7 +49,6 @@ void Contact::ComputeTangential(){
 }
 
 //===================================================================
-//  5/6/98  Wookho Son
 //  Alternatively, we can take a cross-product of normal and tangential
 //  to get the orthogonal
 //===================================================================
@@ -72,8 +68,6 @@ void Contact::ComputeOrthogonal(){
 
 
 //===================================================================
-//  4/16/98  Wookho Son
-//
 //  Check for the correct semantics
 //===================================================================
 void Contact::ComputeTransform(){
