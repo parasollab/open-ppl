@@ -225,6 +225,14 @@ Input::Input():
 };
 
 Input::~Input() {
+  for(int i=0; i<MAX_MULTIBODY; i++)
+    for(int j=0; j<MAX_CONNECTION; j++) {
+      // comments[i][j].clear();
+      vector<char*>::iterator k;
+      for(k=comments[i][j].begin(); k!=comments[i][j].end(); k++) {
+	free(*k);
+      }
+    }
   return;
 }
 
@@ -737,7 +745,7 @@ void Input::Read(istream & _is, int envFormatVersion,int action) {
                                bodyOrientation[m][i][0]*TWOPI/360.0);
                }
             } // endelse FreeBody
-
+	    
         } //endfor i
 
         readfield(_is, &string);     // Tag, "Connection"
