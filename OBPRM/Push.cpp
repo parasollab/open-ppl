@@ -465,6 +465,21 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
 }
 
 
+//written by Sujay and Shawna
+vector <Cfg> Push::GenerateIntermediateCfgs(Cfg cfg_start, Cfg cfg_end) {
+}
+
+
+vector <Cfg> Push::findCollidedCfgs(vector<Cfg> cfgs) {
+}
+
+
+bool Push::isPathGood(vector <Cfg> cfgs) {
+}
+
+
+
+
 // the following three methods were in GenerateMapNodes Class, should go
 // back there later. 07/23/99 (G)
 Cfg

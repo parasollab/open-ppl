@@ -49,6 +49,11 @@ public:
 
    vector<Cfg> GenerateClosestOutsideNode(bool&, Vector3D&, double&, Cfg inter, double incrCoord);
 
+   //written by Sujay and Shawna
+   vector <Cfg> GenerateIntermediateCfgs(Cfg cfg_start, Cfg cfg_end);
+   static vector <Cfg> findCollidedCfgs(vector<Cfg> cfgs);
+   static bool isPathGood(vector <Cfg> cfgs);   
+
 protected:
 private:
    Roadmap *rdmp;
