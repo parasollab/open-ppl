@@ -285,8 +285,11 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
     } else
 #endif
     {
+#ifndef NO_CD_USE
 	cout <<"\n\n\tERROR: all other cd type's undefined\n\n";
 	cout <<"\n  you gave me <" << cdtype << ">";
+#endif
+
 #ifdef USE_VCLIP
 	cout <<"\n\nbut VCLIP = " << VCLIP;
 #endif
@@ -299,8 +302,10 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 #ifdef USE_PQP
 	cout <<"\n\nbut RAPID = " << PQP;
 #endif
-	cout <<"\n\n\tERROR: all other cd type's undefined\n\n";
+
+#ifndef NO_CD_USE
 	exit(-1);
+#endif
     }
 }
 

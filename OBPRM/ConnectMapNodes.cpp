@@ -68,7 +68,11 @@ DefaultInit(){
 #elif defined USE_VCLIP
     cnInfo.cdsetid = VCLIP;
 #else
-    #error You have to specify at least one collision detection library.
+    #ifdef NO_CD_USE
+       cnInfo.cdsetid = -1;
+    #else
+       #error You have to specify at least one collision detection library.
+    #endif
 #endif
 
     cnInfo.dupeEdges = cnInfo.dupeNodes = 0;

@@ -21,7 +21,9 @@
 #ifndef USE_VCLIP
 #ifndef USE_RAPID
 #ifndef USE_PQP
-#error You have to specify at least one collision detection library.
+  #ifndef NO_CD_USE
+    #error You have to specify at least one collision detection library.
+  #endif
 #endif
 #endif
 #endif

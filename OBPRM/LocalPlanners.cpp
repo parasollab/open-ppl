@@ -46,7 +46,11 @@ bool LocalPlanners::usingClearance = 0;
 #elif defined USE_VCLIP
     cd_predefined LocalPlanners::cdtype = VCLIP;
 #else
-    #error You have to specify at least one collision detection library.
+    #ifdef NO_CD_USE
+       cd_predefined LocalPlanners::cdtype = CD_USER1;
+    #else
+       #error You have to specify at least one collision detection library.
+    #endif
 #endif
 
 /////////////////////////////////////////////////////////////////////

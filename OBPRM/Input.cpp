@@ -273,7 +273,11 @@ void Input::ReadCommandLine(int argc, char** argv){
 #elif defined USE_VCLIP
     cdtype = VCLIP;
 #else
-    #error You have to specify at least one collision detection library.
+    #ifdef NO_CD_USE
+       cdtype = CD_USER1;
+    #else
+       #error You have to specify at least one collision detection library.
+    #endif
 #endif
 
   //-- evaluate command line

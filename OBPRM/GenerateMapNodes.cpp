@@ -74,7 +74,11 @@ DefaultInit()
 #elif defined USE_VCLIP
     gnInfo.cdsetid = VCLIP;
 #else
-    #error You have to specify at least one collision detection library.
+    #ifdef NO_CD_USE
+       gnInfo.cdsetid = -1;
+    #else
+      #error You have to specify at least one collision detection library.
+    #endif
 #endif
     gnInfo.dmsetid = S_EUCLID9;
 };
