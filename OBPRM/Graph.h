@@ -3481,6 +3481,10 @@ GetBackedge() const {
     return dfs.backedge_vector;
 };
 
+static bool MyFinishLate(const pair<VID,int> _x, const pair<VID,int> _y) {
+    return _x.second > _y.second;
+}; 
+
 template<class VERTEX, class WEIGHT>
 vector<VID>
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
@@ -3495,20 +3499,22 @@ TopologicalSort () const {
     dfsinfo dfs(n);
     aux_DFS(dfs);
     
-    for(i=1;i<=n;i++) {
+    for(i=0;i<n;i++) {
         pair<VID,int> newpair(i,dfs.finish_time[i]);
         tmp.push_back(newpair);
     }   
     
-    stable_sort(tmp.begin(),tmp.end(),ptr_fun(FinishLate));
+    stable_sort(tmp.begin(),tmp.end(),ptr_fun(MyFinishLate));
     
     for(i=0; i<n;i++) {
         tps.push_back(tmp[i].first);
-#if DEBUG
-	cout<<"\nTopological Sort results: "<<endl;
-        cout<<tmp[i].first<<" ";
-#endif
     }
+#if DEBUG
+    cout<<"\nTopological Sort results: "<<endl;
+    for(i=0; i<n;i++) {
+        cout<<tmp[i].first<<" ";
+    }
+#endif
     return tps;            
 };
 
