@@ -29,39 +29,6 @@ CarAdaptiveQuery::PerformQuery(CollisionDetection* cd, ConnectMapNodes* cn,
 }
 
 
-typedef pair<Cfg, Cfg> CfgPairType;
-typedef pair<CfgPairType, double> DIS_TYPE;
-bool DIST_Compare(const DIST_TYPE &_cc1, const DIST_TYPE &_cc2) {
-        return (_cc1.second < _cc2.second ) ;
-}
-
-
-void
-FindKClosestPairs(vector<CfgPairType> &kp, Environment *_env,DistanceMetric * dm,
-                  const int kclosest, const Cfg& c, const vector<Cfg> &vertices, SID dmsid){
-  if(kclosest > vertices.size()) {
-     for(int i=0; i<vertices.size(); ++i)
-        kp.push_back(CfgPairType(c,vertices[i]));
-     return;
-  }
-
-  vector<DIS_TYPE> tmp;
-  int i;
-  for(i=0; i<kclosest; ++i)
-        tmp.push_back(DIS_TYPE(CfgPairType(), MAX_DIST));
-  for(i=0; i<vertices.size(); ++i) {
-     double dist = dm->Distance(_env, c, vertices[i], dmsid);
-     if(dist < tmp[kclosest-1].second ) {
-        tmp[kclosest-1] = DIST_TYPE(CfgPairType(c, vertices[i]), dist);
-        sort(tmp.begin(), tmp.end(), ptr_fun(DIST_Compare));
-     }
-  }
- 
-  for(i=0; i<kclosest; ++i)
-     kp.push_back(tmp[i].first);
-}
-
-
 bool 
 CarAdaptiveQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
      ConnectMapNodes*cn, LocalPlanners *lp, DistanceMetric* dm, SID _lpsid, vector<Cfg>* _path) {
