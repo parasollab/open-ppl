@@ -128,7 +128,7 @@ public:
 class WeightObject;
 class DefaulWeightFactory{
 
-	friend WeightObject;
+	friend class WeightObject;
 
 protected:
 	virtual bool Create( IWeight ** ppIWeight /*in/out*/ ) const;

@@ -14,13 +14,13 @@
 //      08/18/98  Nancy Amato
 /////////////////////////////////////////////////////////////////////
 
-
+#include "Defines.h"
 #include <fstream.h>
 #include <string.h>
 
 #include "Query.h"
 #include "Environment.h"
-
+#include "GraphAlgo.h"
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class Query
@@ -116,7 +116,8 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
   sci.dmsetid = gci.dmsetid = dmsetid;
 
 
-  vector< pair<int,VID> > ccs = rdmp.m_pRoadmap->GetCCStats();  
+  vector< pair<int,VID> > ccs;
+  GetCCStats(*(rdmp.m_pRoadmap),ccs);  
 
   bool connected = false;
   int  i, thiscc = 0;
@@ -126,8 +127,9 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 
     //get cc
     Cfg t=rdmp.m_pRoadmap->GetData(ccs[thiscc].second);
-    vector<Cfg> cc = rdmp.m_pRoadmap->GetCC(t);
-
+    //-gti vector<Cfg> cc = rdmp.m_pRoadmap->GetCC(t);
+    vector<Cfg> cc;
+    GetCC(*(rdmp.m_pRoadmap) , t,cc);
     //connect start and goal to cc
     if ( CanConnectToCC(_start,cd,cn,lp,dm,cc,_lpsid,&scvid,&sci) && 
          CanConnectToCC(_goal, cd,cn,lp,dm,cc,_lpsid,&gcvid,&gci) ) {
@@ -161,7 +163,9 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
        if ( scvid != gcvid ) {
 
           vector< pair<Cfg,WEIGHT> > rp;
-      rp = rdmp.m_pRoadmap->FindPathDijkstra(scvid,gcvid);
+	  //-gti rp = rdmp.m_pRoadmap->FindPathDijkstra(scvid,gcvid);
+	  FindPathDijkstra(*(rdmp.m_pRoadmap),scvid,gcvid,rp);
+	  //cout<<rp.size()<<endl;
 
       #if INTERMEDIATE_FILES
           //-----------------------------------------------------

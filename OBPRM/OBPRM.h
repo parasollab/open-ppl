@@ -18,9 +18,9 @@
 #ifdef HPUX
 #include <sys/io.h>
 #endif
-
-#include <vector.h> //for bool definition in CC
-#include <iostream.h>
+#include "Defines.h"
+//#include <vector.h> //for bool definition in CC
+//#include <iostream.h>
 #include <assert.h>
 
 

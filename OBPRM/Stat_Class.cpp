@@ -4,7 +4,7 @@
 #include <iomanip.h>
 #include "Roadmap.h"
 #include "Stat_Class.h"
-
+#include "GraphAlgo.h"
 /////////////////////////////////////////////////////////////////////
 //
 //  Stat_Class.c
@@ -479,9 +479,9 @@ PrintAllStats( Roadmap *rmap, int numCCs) {
 
   cout << endl;
 
-  if (numCCs==ALL)    {rmap->m_pRoadmap->DisplayCCStats();      }
-  else if (numCCs==0) {rmap->m_pRoadmap->DisplayCCStats(0);     }
-  else                {rmap->m_pRoadmap->DisplayCCStats(numCCs);}
+  if (numCCs==ALL)    {DisplayCCStats(*(rmap->m_pRoadmap));      }
+  else if (numCCs==0) {DisplayCCStats(*(rmap->m_pRoadmap),0);     }
+  else                {DisplayCCStats(*(rmap->m_pRoadmap),numCCs);}
 
 }
 
@@ -497,7 +497,8 @@ PrintDataLine(ostream& _myostream, Roadmap *rmap, int show_column_headers) {
    _myostream << rmap->m_pRoadmap->GetVertexCount() << " ";
    _myostream << rmap->m_pRoadmap->GetEdgeCount()   << " ";
 
-   vector< pair<int,VID> > ccstats = rmap->m_pRoadmap->GetCCStats();
+   vector< pair<int,VID> > ccstats;
+   GetCCStats(*(rmap->m_pRoadmap),ccstats);
    _myostream << ccstats.size() << "  ";
    int i;
    for (i=0;i<10;++i)
@@ -527,7 +528,7 @@ PrintDataLine(ostream& _myostream, Roadmap *rmap, int show_column_headers) {
    }//endfor
    _myostream << sumAtt << " ";
    _myostream << sumCD  << " ";
-
+   ccstats.clear();
 }
 
 void

@@ -100,10 +100,16 @@ public:
   *@date7/25/98  
   *@author Nancy Amato
   */
+
+
+
 template<class VERTEX, class WEIGHT>
-class RoadmapGraph : public WeightedGraph<VERTEX,WEIGHT> {
+class RoadmapGraph : 
+public Graph<UG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,WEIGHT> {
 
 public:
+
+typedef Graph<UG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,WEIGHT> GRAPH;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -245,14 +251,14 @@ RoadmapGraph() {
 template<class VERTEX, class WEIGHT>
 RoadmapGraph<VERTEX,WEIGHT>::
 RoadmapGraph(int _sz) 
- : WeightedGraph<VERTEX,WEIGHT>(_sz,DEFAULT_EDGES_PER_VERTEX)
+ : GRAPH(_sz,DEFAULT_EDGES_PER_VERTEX)
 {
 };
 
 template<class VERTEX, class WEIGHT>
 RoadmapGraph<VERTEX,WEIGHT>::
 RoadmapGraph(int _sz, int _edgelistsz) 
- : WeightedGraph<VERTEX,WEIGHT>(_sz,_edgelistsz)
+ : GRAPH(_sz,_edgelistsz)
 {
 };
 
@@ -269,8 +275,8 @@ template<class VERTEX, class WEIGHT>
 void
 RoadmapGraph<VERTEX,WEIGHT>::
 Init(const int _numNodes, const int _numEdges) {
-    v.reserve(_numNodes);
-    reserveEdgesPerVertex = _numEdges;
+    this->v.reserve(_numNodes);
+    this->reserveEdgesPerVertex = _numEdges;
 }
 
   //==================================
@@ -284,7 +290,7 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddVertex(VERTEX& _v1) {
     CVI v1;
     if ( !IsVertex(_v1,&v1) ) {
-        return WeightedGraph<VERTEX,WEIGHT>::AddVertex(_v1);
+        return GRAPH::AddVertex(_v1);
     } else {
 #ifndef QUIETGRAPH
         cout << "\nIn AddVertex: vertex already in graph, not added";
@@ -299,11 +305,11 @@ VID
 RoadmapGraph<VERTEX,WEIGHT>::
 AddVertex(vector<VERTEX>& _v) {
     bool added=false;
-    VID vertex_id=GetNextVID();
+    VID vertex_id=this->GetNextVID();
     for (int i = 0; i < _v.size(); i++){
         if (!IsVertex(_v[i])){
-            WeightedGraph<VERTEX,WEIGHT>::AddVertex(_v[i]);
-            added=true;
+	  GRAPH::AddVertex(_v[i]);
+	  added=true;
         } else {
 #ifndef QUIETGRAPH
             cout << "\nIn AddVertex: vertex already in graph, not added";
@@ -319,7 +325,7 @@ int
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdges( vector<EdgeInfo<WEIGHT> >& _e) {
     for (int i=0; i < _e.size(); i++){
-        WeightedGraph<VERTEX,WEIGHT>::AddEdge(_e[i].v1, _e[i].v2, _e[i].edgewts);
+        GRAPH::AddEdge(_e[i].v1, _e[i].v2, _e[i].edgewts);
     }
     return OK;
 }

@@ -36,10 +36,11 @@
   #include <strstream.h>
 #endif
 
-#include <iomanip.h>
-#include <string.h>
-#include <vector.h>
-#include <stdlib.h>
+#include "Defines.h"
+//#include <iomanip.h>
+//#include <string.h>
+//#include <vector.h>
+//#include <stdlib.h>
 #include <math.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////

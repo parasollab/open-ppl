@@ -53,11 +53,8 @@ showdefs ::
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
 #--------------------------------------------------------------------------
- CC = g++
-#CC = /pub/gnu_sgi/bin/g++
-#CC = /usr/local/gcc-2.95.1/bin/g++
-
-CXX = g++
+CC = /opt/bin/g++
+CXX = /opt/bin/g++
 
 # -- for development on TERMINATOR (can't seem to use it better due to cstk)
    OPTS = -g -O2 -fexceptions 

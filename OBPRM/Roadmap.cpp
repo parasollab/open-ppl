@@ -14,8 +14,8 @@
 //      07/16/98  Lucia K. Dale
 /////////////////////////////////////////////////////////////////////
 
+#include "Defines.h"
 #include <string.h>
-
 #include "BasicDefns.h"
 #include "Roadmap.h"
 #include "Environment.h"

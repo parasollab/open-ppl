@@ -21,6 +21,7 @@
 
 /////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
+//#include "Defines.h"
 #include "OBPRM.h"              // Cfg type defined here
 #include "RoadmapGraph.h"       // graph class
 #include "ConnectMapNodes.h"    // Map Node Connectors Algobase

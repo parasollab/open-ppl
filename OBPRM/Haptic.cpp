@@ -168,7 +168,9 @@ void Haptic::init(Roadmap *rm, char * tmp[5], CollisionDetection *_cd,
        pushObject.ShortestPush(cfgs);
    }
   #if INTERMEDIATE_FILES
-    vector<Cfg> vertices = rm->m_pRoadmap->GetVerticesData();
+    vector<Cfg> vertices;
+    rm->m_pRoadmap->GetVerticesData(vertices);
+
     vector<Cfg> nodes;
     nodes.reserve(vertices.size());
     for(int k=0; k<vertices.size(); ++k)

@@ -9,10 +9,11 @@
 #include "Environment.h"
 #include "FreeBody.h"
 #include "FixedBody.h"
+#include "Defines.h"
 
-#include <string.h>
-#include <vector.h>
-#include <stdlib.h>
+//#include <string>
+//#include <vector>
+//#include <stdlib.h>
 #include <math.h>
 
 //#include <strstream.h>

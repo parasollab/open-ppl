@@ -15,6 +15,7 @@
 #include "Query.h"
 #include "Stat_Class.h"
 #include "Clock_Class.h"
+#include "GraphAlgo.h"
 
 Input input;
 QueryCmds Qinput;
@@ -61,7 +62,7 @@ int main(int argc, char** argv)
   cout << endl;
   lp.planners.DisplayLPSets();
   cout << endl;
-  query.rdmp.m_pRoadmap->DisplayCCStats(10);
+  DisplayCCStats(*(query.rdmp.m_pRoadmap),10);
   cout << endl;
 
   //----------------------------------------------------

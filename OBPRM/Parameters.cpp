@@ -5,10 +5,10 @@
 //  11/27/00 Lucia K. Dale
 /////////////////////////////////////////////////////////////////////
 
-#include <string.h>
-#include <vector.h>
-#include <stdlib.h>
-
+//#include <string.h>
+//#include <vector.h>
+//#include <stdlib.h>
+#include "Defines.h"
 ///Modified for VC
 #if defined(_WIN32)
 #include <strstrea.h>
