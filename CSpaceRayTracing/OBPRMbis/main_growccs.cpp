@@ -86,6 +86,11 @@ int main(int argc, char** argv)
   connect_ccs.PerformConnectCCs(&cd,&cn,&lp,&dm);
   clock.StopClock();
 
+  //---------------------------
+  // Write roadmap
+  //---------------------------
+  connect_ccs.rdmp.WriteRoadmap(&input,&cd,&dm,&lp);
+
 /*  #if QUIET
   #else
     cout << ": " << clock.GetClock_SEC()
