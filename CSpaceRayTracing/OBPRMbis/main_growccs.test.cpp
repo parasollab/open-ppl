@@ -20,19 +20,16 @@ Input input;
 extern Stat_Class Stats;
 
 //========================================================================
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   GenerateMapNodes   gn;
   ConnectMapNodes    cn;
   LocalPlanners      lp;
   DistanceMetric     dm;
   CollisionDetection cd;
   Clock_Class        clock;
-
   Roadmap rdmp;
-  //Testing the use of the ConnectCCMethodCaller
-  //ConnectMapComponents component_connector;
-  ConnectMapComponents component_connector =  ConnectMapComponents(&input,&rdmp,&cd,&dm, &lp,&cn);
+
+  ConnectMapComponents component_connector =  ConnectMapComponents(&rdmp,&cd,&dm, &lp,&cn);
   component_connector.ReadCommandLine(&argc, argv);
 
   //----------------------------------------------------
@@ -40,7 +37,6 @@ int main(int argc, char** argv)
   //    parse command line and init roadmap, lps, read in environment, etc
 
   input.ReadCommandLine(argc,argv);
-  //Roadmap rdmp(&input,  &cd, &dm, &lp);
   rdmp.InitRoadmap(&input, &cd, &dm, &lp);
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
@@ -49,24 +45,19 @@ int main(int argc, char** argv)
   cn.UserInit(&input, rdmp.GetEnvironment() );
 
 
-  if ( input.inmapFile.IsActivated() ){
-    //---------------------------
-    // Read roadmap 
-    //---------------------------
+  if ( input.inmapFile.IsActivated() ) { // Read roadmap 
     cout << "branch 1 :" << (&input)->inmapFile.GetValue();
     rdmp.ReadRoadmap(&input,&cd,&dm,&lp,(&input)->inmapFile.GetValue());
-  } else {
-    //---------------------------
-    // Use default file to read in roadmap
-    //---------------------------
-	char tmp[80];
-	strcpy(tmp, (&input)->defaultFile.GetValue() ); 
-	strcat(tmp,".map");
-        cout << "branch 2 :" << tmp;
-	//mapFile.PutValue(&input,&cd,&dm,&lp,(&tmp));
+  } 
+  else { // Use default file to read in roadmap
+    char tmp[80];
+    strcpy(tmp, (&input)->defaultFile.GetValue() );
+    strcat(tmp,".map");
+    cout << "branch 2 :" << tmp;
+    //mapFile.PutValue(&input,&cd,&dm,&lp,(&tmp));
     rdmp.ReadRoadmap(&input,&cd,&dm,&lp,tmp);
   }
-  //We need to move the commented code below to the ConnectCCMethods
+//    We need to move the commented code below to the ConnectCCMethods
 //    cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
 //    ConnectCCs connect_ccs(&input,&rdmp,&connect_CCs_input, &cd, &dm, &lp,&cn);
   /** set up set ids for query stage after cn has been set up */
@@ -76,15 +67,14 @@ int main(int argc, char** argv)
 
   //---------------------------
   // Print out some useful info
-  //---------------------------
 //  cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
 
 //    lp.planners.DisplayLPs();
 //    cout << endl;
 //    lp.planners.DisplayLPSets();
 //    cout << endl;
-    DisplayCCStats(*(rdmp.m_pRoadmap),10);
-    cout << endl;
+  DisplayCCStats(*(rdmp.m_pRoadmap),10);
+  cout << endl;
 
   //----------------------------------------------------
   // The cc_connector (an instance of ConnectCCMethodCaller attempts 
@@ -92,9 +82,8 @@ int main(int argc, char** argv)
   //----------------------------------------------------
   clock.StartClock("Connection of CCs");
   component_connector.ConnectComponents();
-  //    connect_ccs.PerformConnectCCs(&rdmp,&cd,&cn,&lp,&dm);
   clock.StopClock();
-cout << ": " << clock.GetClock_SEC() << " sec\n";
+  cout << ": " << clock.GetClock_SEC() << " sec\n";
   //---------------------------
   // Write roadmap
   //---------------------------
