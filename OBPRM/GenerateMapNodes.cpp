@@ -2131,7 +2131,6 @@ MakeGNSet(istream& _myistream) {
 				} else if (gn1.proportionSurface.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.freePair.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.collPair.AckCmdLine(&j,(int)stop,(char**)(&argv))){
-					cout << "\n\t\t\t collPair=" << gn1.collPair.GetValue() << flush;
 				} else if (gn1.clearanceFactor.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else {
 					cout << "\nERROR MakeGNSet: Don\'t understand \""
