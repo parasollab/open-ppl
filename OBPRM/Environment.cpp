@@ -116,7 +116,7 @@ void Environment::Get(Input * _input) {
     // orientational resolution may be user supplied but at this time
     // is not calculated
     orientationRes = _input->orires.GetValue(); 
-	
+    DeleteObstaclesOutsideBoundingBox();	
 }
 
 
