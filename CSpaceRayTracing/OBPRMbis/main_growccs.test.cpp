@@ -16,7 +16,7 @@
 #include "Stat_Class.h"
 #include "Clock_Class.h"
 #include "GraphAlgo.h"
-#include "ConnectCCsMethod.h"
+#include "ConnectCCMethod.h"
 
 Input input; Input envinput;
 //QueryCmds Qinput;
