@@ -16,6 +16,7 @@
 #include "Stat_Class.h"
 #include "CollisionDetection.h"
 #include "NoopCollisionDetection.h"
+#include "ApproxNodeValidation.h"
 #include "NoopLocalPlanners.h"
 #include "ConnectMapNodes.h"
 
@@ -37,6 +38,7 @@ int main(int argc, char** argv)
   DistanceMetric     dm;
   CollisionDetection cd;
   NoopCollisionDetection noop_cd;
+  ApproxNodeValidation approx_cd;
   Clock_Class        NodeGenClock;
   Clock_Class        ConnectionClock;
 
@@ -60,6 +62,7 @@ int main(int argc, char** argv)
   Roadmap rmap(&input, &cd, &dm, &lp);
   cd.UserInit(&input, &gn, &cn);
   noop_cd.UserInit(&input, &gn, &cn);
+  approx_cd.UserInit(&input, &gn, &cn);
   lp.UserInit(&input, &cn);
   noop_lp.UserInit(&input, &cn);
   gn.UserInit(&input, rmap.GetEnvironment());
@@ -115,6 +118,8 @@ int main(int argc, char** argv)
       gn.GenerateNodes(&rmap,&noop_cd,&dm, gn.gnInfo.gnsetid, gn.gnInfo);
       break;
     case APPROXIMATE:
+      gn.GenerateNodes(&rmap,&approx_cd,&dm, gn.gnInfo.gnsetid, gn.gnInfo);
+      break;
     case COMPLETE:
       gn.GenerateNodes(&rmap,&cd,&dm, gn.gnInfo.gnsetid, gn.gnInfo);
       break;
