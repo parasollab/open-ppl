@@ -135,10 +135,7 @@ OBJS = \
 	MultiBody.o \
         Parameters.o \
 	Input.o \
-        Haptic.o \
-        Push.o \
 	Cfg.o \
-	CfgManager.o \
 	Cfg_free.o \
 	Cfg_fixed_PRR.o \
 	Cfg_free_tree.o \
@@ -147,18 +144,15 @@ OBJS = \
 	util.o \
 	Clock_Class.o \
 	Stat_Class.o \
-	LocalPlanners.o \
 	DistanceMetrics.o \
 	CollisionDetection.o \
-	GenerateMapNodes.o \
-	ConnectMapNodes.o \
-	Roadmap.o \
 	QueryCmds.o \
-	Query.o \
-	Weight.o \
-	BasicMAPRM.o
+	Weight.o
 
 objs:: $(OBJS)
+
+#        Haptic.o \
+#        Push.o \
 
 #--------------------------------------------------------------------
 runclean::
