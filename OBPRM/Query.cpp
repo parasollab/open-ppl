@@ -42,7 +42,7 @@ Query(Input *input,QueryCmds *Qinput,
 
   ReadQuery( Qinput->queryFile.GetValue() );
 
-  initDefaultSetIDs(cn);
+  //initDefaultSetIDs(cn);
 
   outputPathFile = new char[strlen(Qinput->pathFile.GetValue())+1];
   strcpy(outputPathFile,Qinput->pathFile.GetValue());
