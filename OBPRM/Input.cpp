@@ -543,20 +543,6 @@ Input::PrintDefaults(){
 }
 
 
-bool
-Input::VerifyFileExists(char *_fname){
-
-  ifstream is(_fname);
-
-  char ch;
-  if (!is.get(ch)) {
-     cout << "\nERROR: Can't open \"" << _fname << "\"" << endl;
-     exit(1);
-  }
-
-  is.close();
-  return true;
-}
 
 //===================================================================
 //  Input class
@@ -638,12 +624,12 @@ void Input::Read(istream & _is, int envFormatVersion) {
         //---------------------------------------------------------------
         // Read tag
         //---------------------------------------------------------------
-        _is >> string;                        // Tag, "MultiBody"
-        _is >> string;                        // Tag, "Active/Passive"
+        readfield(_is, &string);              // Tag, "MultiBody"
+        readfield(_is, &string);              // Tag, "Active/Passive"
 
-        _is >> BodyCount[m];                  // number of bodies
+        readfield(_is, &BodyCount[m]);        // number of bodies
         for (i=0; i<BodyCount[m]; i++){
-            _is >> string;                    // Tag (FixedBody or FreeBody)
+            readfield(_is, &string);          // Tag (FixedBody or FreeBody)
 
             if (!strncmp(string, "FixedBody", 10)){
                isFree[m][i] = 0;
@@ -698,7 +684,7 @@ void Input::Read(istream & _is, int envFormatVersion) {
 
         } //endfor i
 
-        _is >> string;               // Tag, "Connection"
+        readfield(_is, &string);     // Tag, "Connection"
         _is >> connectionCount[m];   // # of connections
 
         /////////////////////////////////////////////////////////////////
@@ -708,7 +694,7 @@ void Input::Read(istream & _is, int envFormatVersion) {
                 _is >> previousBodyIndex[m][i];              // first body
                 _is >> nextBodyIndex[m][i];                  // second body
 
-                _is >> string;             // Tag, "Actuated/NonActuated"
+                readfield(_is, &string);             // Tag, "Actuated/NonActuated"
 
                 transformPosition[m][i] = Vector3D(_is);
                 Vector3D angles = Vector3D(_is);
@@ -722,7 +708,7 @@ void Input::Read(istream & _is, int envFormatVersion) {
                 _is >> dhparameters[m][i].d;              // DH parameter, d
                 _is >> dhparameters[m][i].theta;          // DH parameter, theta
 
-                _is >> string;             // Tag, "Revolute" or "Prismatic"
+                readfield(_is, &string);   // Tag, "Revolute" or "Prismatic"
                 if (!strncmp(string, "Revolute", 9))
                    connectionType[m][i] = 0;              // Revolute type
                 else

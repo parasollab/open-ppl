@@ -47,9 +47,13 @@ inline double sqr(double a)
     return a*a;
 }
 
-
-void
-WritePathTranformationMatrices(char output_file[80], const vector<Cfg> &path, Environment *env);
-
+// Cfgs input & output from/to files.
+void WritePathTranformationMatrices(char output_file[80], 
+     const vector<Cfg> &path, Environment *env);
 void ReadCfgs(char *filename, vector<Cfg> &cfgs);
+
+// general functions.
+template <class T> bool readfield (istream &_is, T *element);
+bool VerifyFileExists(char *_fname);
+
 #endif

@@ -96,8 +96,6 @@ public:
     //-----------------------------------------------------------
     //  Methods
     //-----------------------------------------------------------
-    static bool VerifyFileExists(char *_fname);
-
     void Read();
     void Read(istream & _is, int envFormatVersion);
     virtual void ReadCommandLine(int argc, char** argv);
