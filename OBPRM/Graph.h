@@ -52,8 +52,7 @@
 
 //g++ in SUN or CC in SGI
 ///Modified for VC
-#if defined(sun) || defined(__sgi) || defined(__linux__) ||
-defined(_WIN32) || defined(__HP_aCC)
+#if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32) || defined(__HP_aCC)
 #include <algo.h>   
 #include <list.h>   
 #include <vector.h>
@@ -4070,8 +4069,11 @@ void
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
 WriteGraph(ostream& _myostream) const {
 
+#ifdef _ASCI_
+      _myostream << endl << "GRAPHSTART";
+#else
       _myostream << endl << "#####GRAPHSTART#####";
-//      _myostream << endl << "GRAPHSTART";
+#endif
       _myostream << endl << this->numVerts << " " << this->numEdges << " " << this->vertIDs; 
 
       //format: VID VERTEX #edges VID WEIGHT VID WEIGHT ... 
@@ -4080,8 +4082,11 @@ WriteGraph(ostream& _myostream) const {
           vi->WriteEdgelist(_myostream);
       } 
 
+#ifdef _ASCI_
+      _myostream << endl << "GRAPHSTOP";
+#else
       _myostream << endl << "#####GRAPHSTOP#####";
-//      _myostream << endl << "GRAPHSTOP";
+#endif
       _myostream << endl; 
 }
 
