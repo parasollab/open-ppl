@@ -25,8 +25,13 @@
 #include "Contact.h"
 
 // Format version for path files
-#define PATHVER_LEGACY                     102200
-#define PATHVER_102200                     102200
+//      The number breaks down as YearMonthDay so numerical
+//      comparisons can be more easily made.
+// Warning: Be consistent.  It should be YYYYMMDD
+//      Inconsistent conversions can be misleading.  
+//      For example, comparing 200083  to 20000604.
+#define PATHVER_LEGACY                     20001022
+#define PATHVER_20001022                   20001022
 
 class Environment {
 public:

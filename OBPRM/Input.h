@@ -45,6 +45,11 @@
 #include <math.h>
 
 // Format version for environment (*.env) files
+//      The number breaks down as YearMonthDay so numerical
+//      comparisons can be more easily made.
+// Warning: Be consistent.  It should be YYYYMMDD
+//      Inconsistent conversions can be misleading.
+//      For example, comparing 200083  to 20000604.
 #define ENV_VER_LEGACY                     0
 #define ENV_VER_20001022                   20001022
 
