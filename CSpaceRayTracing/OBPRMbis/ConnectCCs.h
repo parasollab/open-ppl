@@ -246,6 +246,12 @@ public:
     int RRTsmallcc;
     CNSets * cnSets;
     SID sid;
+
+    //Scheduling options (now bound to RayTracer)
+    enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTHEST, FARTHEST_TO_CLOSEST};
+    unsigned int SampleMaxSize;
+    unsigned int ScheduleMaxSize;
+    SCHEDULING_MODE SchedulingMode;
 };
 
 #endif

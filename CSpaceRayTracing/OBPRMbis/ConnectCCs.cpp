@@ -51,7 +51,17 @@ ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
     if (cnname == string("RayTracer")) {
       method_name = cnname;
       methods.push_back(method_name);
-	cout << "SETTING UP" << method_name;
+      cout << "SETTING UP" << method_name;
+      //setting the defaults in case they are not input
+      RayTbouncingMode = string("targetOriented");
+      RayTmaxRays = MAX_RAYS;
+      RayTmaxBounces = MAX_BOUNCES;
+      RayTmaxRayLength = MAX_RAY_LENGTH;
+      SchedulingMode = LARGEST_TO_SMALLEST;
+      ScheduleMaxSize = 20;
+      SampleMaxSize = 10;
+      string SchedulingModeStr;
+
       if (input_stream >> RayTbouncingMode) {
 	if (RayTbouncingMode != string("targetOriented") && 
 	    RayTbouncingMode != string("random") && 
@@ -75,28 +85,50 @@ ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
 		      cout << endl << "INVALID: maxRayLength = " << RayTmaxRayLength;
 		      exit(-1);
 		    }
-		  } else {
-		    RayTmaxRayLength = MAX_RAY_LENGTH;
+		    else {
+		      if (input_stream >> SchedulingModeStr) {
+			if (SchedulingModeStr != string("largestToSmallest") &&
+			    SchedulingModeStr != string("smallestToLargest") &&
+			    SchedulingModeStr != string("closestToFarthest") &&
+			    SchedulingModeStr != string("farthestToClosest")) {
+			  cout << endl << "INVALID: schedulingMode = " << SchedulingMode;
+			  exit(-1);		      
+			} else {
+			  if (SchedulingModeStr == string("largestToSmallest"))
+			    SchedulingMode = LARGEST_TO_SMALLEST;
+			  else if (SchedulingModeStr == string("smallestToLargest"))
+			    SchedulingMode = SMALLEST_TO_LARGEST;
+			  else if (SchedulingModeStr == string("closestToFarthest"))
+			    SchedulingMode = CLOSEST_TO_FARTHEST;
+			  else if (SchedulingModeStr == string("farthestToClosest"))
+			    SchedulingMode = FARTHEST_TO_CLOSEST;
+			  else 
+			    SchedulingMode = LARGEST_TO_SMALLEST;
+			  if (input_stream >> ScheduleMaxSize) {
+			    if (ScheduleMaxSize < 1) {
+			      cout << endl << "INVALID: scheduleMaxSize = " << ScheduleMaxSize;
+			      exit(-1);
+			    } else
+			      if (input_stream >> SampleMaxSize) {
+				if (SampleMaxSize < 1) {
+				  cout << endl << "INVALID:sampleMaxSize = " << SampleMaxSize;
+				  exit(-1);
+				}
+				cout << "!!!!!read SAMPLEMAXSIZE"<< SampleMaxSize<<endl;
+			      }
+			    cout << "!!!!!read SCHEDULEMAXSIZE"<< ScheduleMaxSize<<endl;
+			  }
+			}
+		      } 
+		    }
 		  }
 		}
-	      } else {
-		RayTmaxBounces = MAX_BOUNCES;
-		RayTmaxRayLength = MAX_RAY_LENGTH;
 	      }
 	    }
 	  }
-	  else {
-	    RayTmaxRays = MAX_RAYS;
-	    RayTmaxBounces = MAX_BOUNCES;
-	    RayTmaxRayLength = MAX_RAY_LENGTH;
-	  }
 	}
-      } else {
-	RayTbouncingMode = string("targetOriented");
-	RayTmaxRays = MAX_RAYS;
-	RayTmaxBounces = MAX_BOUNCES;
-	RayTmaxRayLength = MAX_RAY_LENGTH;
       }
+      
     } else if ( (cnname == string("RRTcomponents")) || (cnname == string("RRTexpand")) ) {
       method_name = cnname; //the following lines should initialize the proper cnSets and when called
       methods.push_back(method_name);  // in performconnectCCs the proper set will be searched for
@@ -198,6 +230,8 @@ ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
 //        cnvec.push_back( cn1.cnid );       
     }
   } //end while
+
+
   initDefaultSetIDs(cn);
 }
 
@@ -286,7 +320,7 @@ while (method_name<methods.end()) {
     //The call to RayTracer from ConnectMapNodes goes here	
     RayTracer tracer(rdmp, cd, cdsetid, dm, dmsetid, cn);
     tracer.setOptions(RayTbouncingMode, RayTmaxRays, RayTmaxBounces, RayTmaxRayLength);
-    tracer.connectCCs();
+    tracer.connectCCs(SchedulingMode, ScheduleMaxSize, SampleMaxSize);
   }
   else if ( (*method_name) == string("components")  ) {
     clock.StartClock("components:" );

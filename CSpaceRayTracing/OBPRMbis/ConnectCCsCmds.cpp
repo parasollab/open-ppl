@@ -19,13 +19,13 @@ ConnectCCsCmds::ConnectCCsCmds():
   defaultFile    ("-f"),
   mapFile        ("-inmapFile"),
   //pathFile	       ("-pathFile"),
-  //queryF	ile      ("-queryFile")
+  //queryFile      ("-queryFile")
   option_str("-connectCCsMethod") {
   option_str.PutDesc("STRING",
       "\n\t\t\tPick any combo: default RayTracer targetOriented 1 10000 10000"
-      "\n\t\t\t  RayTracer	STRING	INT	INT	INT	(bouncingMode:targetOriented maxRays:1 maxBounces:10000 maxRayLength:10000)"
+		     "\n\t\t\t  RayTracer	STRING	INT	INT	INT	STRING INT INT (bouncingMode:targetOriented maxRays:1 maxBounces:10000 maxRayLength:10000	schedulingMode:largestToSmallest scheduleMaxSize:20 sampleMaxSize:10)"
       "\n\t\t\t  RRTcomponents  INT INT INT (iter:10 factor:3 cc:3)"
-			     );
+		     );
 }
 
 ConnectCCsCmds::~ConnectCCsCmds() {

@@ -52,7 +52,9 @@ void RayTracer::setOptions(string bouncing_mode, int max_rays, int max_bounces, 
 
 }
 
-void RayTracer::connectCCs() {
+void RayTracer::connectCCs(ConnectCCs::SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size) {
+
+  cout << "RayTracer: (scheduling_mode: " << scheduling_mode << "; schedule_max_size: " << schedule_max_size << "; sample_max_size: " << sample_max_size << ")"<<endl;
 
   cd_counts = 0;
 
@@ -66,26 +68,30 @@ void RayTracer::connectCCs() {
   vector< pair<VID,VID> > cc_trl_schdl;
   cc_trl_schdl.clear();
 
-  //variables to set from the command line
-  unsigned int k = 10; //number of representative elements of each cc
-  unsigned int schedule_max_size = 20;
-  SchedulingMode ordering=LARGEST_TO_SMALLEST;
+//    //variables to set from the command line
+//    //connectCCs option
+//    unsigned int sample_max_size = 10; //number of representative elements of each cc
+//    //scheduler options
+//    unsigned int schedule_max_size = 20;
+//    SchedulingMode scheduling_mode=LARGEST_TO_SMALLEST;
+
+  //aditional options (not really an option, just in the back of my mind)
   bool try_backwards = false;
 
   //scheduling the order to try to connect pairs
-  switch (ordering) {
-  case FARTHEST_TO_CLOSEST:
+  switch (scheduling_mode) {
+  case ConnectCCs::FARTHEST_TO_CLOSEST:
     ConnectMapNodes::OrderCCByCloseness(rdmp, dm, cn->cnInfo, ccs);
-  case SMALLEST_TO_LARGEST:
+  case ConnectCCs::SMALLEST_TO_LARGEST:
     for (vector< pair<int,VID> >::iterator cci = ccs.end()-1; cci > ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --cci) 
       for (vector< pair<int,VID> >::iterator ccj = cci-1; ccj >= ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --ccj) {
 	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
       }
     break;
-  case CLOSEST_TO_FARTHEST:
+  case ConnectCCs::CLOSEST_TO_FARTHEST:
     ConnectMapNodes::OrderCCByCloseness(rdmp, dm, cn->cnInfo, ccs);
   default:
-  case LARGEST_TO_SMALLEST:
+  case ConnectCCs::LARGEST_TO_SMALLEST:
     for (vector< pair<int,VID> >::iterator cci = ccs.begin(); cci+1 < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++cci) 
       for (vector< pair<int,VID> >::iterator ccj = cci+1; ccj < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++ccj) {
 	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
@@ -105,13 +111,13 @@ void RayTracer::connectCCs() {
       Cfg cci_tmp = rdmp->m_pRoadmap->GetData(cc_itrtr->first);
       GetCC(*(rdmp->m_pRoadmap), cci_tmp, cci_cfgs);
       vector<Cfg> rep_cci_cfgs;
-      getBoundaryCfgs(cci_cfgs, rep_cci_cfgs, k);
+      getBoundaryCfgs(cci_cfgs, rep_cci_cfgs, sample_max_size);
       
       vector<Cfg> ccj_cfgs;
       Cfg ccj_tmp = rdmp->m_pRoadmap->GetData(cc_itrtr->second);
       GetCC(*(rdmp->m_pRoadmap), ccj_tmp, ccj_cfgs);
       vector<Cfg> rep_ccj_cfgs;
-      getBoundaryCfgs(ccj_cfgs, rep_ccj_cfgs, k);      
+      getBoundaryCfgs(ccj_cfgs, rep_ccj_cfgs, sample_max_size);      
       
       connectCCs(cc_itrtr->first, rep_cci_cfgs, cc_itrtr->second, rep_ccj_cfgs, target_rdmp, try_backwards);
       
@@ -316,7 +322,7 @@ void RayTracer::printPath() {
   cout << "print the path found, remember that it is stored in the roadmap"<<endl;
 }
 
-void RayTracer::getBoundaryCfgs(const vector<Cfg> &input, vector<Cfg> &output, unsigned int k) {
+void RayTracer::getBoundaryCfgs(const vector<Cfg> &input, vector<Cfg> &output, unsigned int sample_max_size) {
   //get center of mass of all Cfgs in input
   Cfg center_mass;
   int i=0;
@@ -334,9 +340,9 @@ void RayTracer::getBoundaryCfgs(const vector<Cfg> &input, vector<Cfg> &output, u
   //order distances by distance to center of mass (first field of pair)
   sort(distances.begin(), distances.end(), ptr_fun(ConnectMapNodes::CfgDist_Compare));
 
-  //copy the first k to output
+  //copy the first sample_max_size to output
   output.clear();
-  int lim_inf = distances.size() - 1 - k;
+  int lim_inf = distances.size() - 1 - sample_max_size;
   for (i = distances.size() - 1; (i > lim_inf) && (i >= 0) ; --i)
     output.push_back(distances[i].first);
 }

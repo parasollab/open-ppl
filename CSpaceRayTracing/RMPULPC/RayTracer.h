@@ -10,18 +10,19 @@
 #include <Environment.h>
 #include <CollisionDetection.h>
 #include <GraphAlgo.h>
+#include "ConnectCCs.h"
 
 #include <string>
 
+class ConnectCCs;
 class RayTracer {
  public:
   enum BouncingMode {TARGET_ORIENTED, RANDOM, HEURISTIC, NORMAL}; 
-  enum SchedulingMode {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTHEST, FARTHEST_TO_CLOSEST};
 /*    RayTracer(Environment *environment, Cfg source, Cfg target); */
   RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, ConnectMapNodes *cn);
   ~RayTracer();
   void setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length);
-  void connectCCs();
+  void connectCCs(ConnectCCs::SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size);
 /*    bool connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, Roadmap &ccj, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp); */
   bool connectCCs(VID cci_id, vector<Cfg> &rep_cci_cfgs, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp, bool try_backwards=false);
   bool findPath(Cfg &source, Cfg &target, Roadmap &ray_rdmp);
