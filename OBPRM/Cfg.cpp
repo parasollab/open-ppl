@@ -342,6 +342,7 @@ double Cfg::OrientationMagnitude() const {
 
 
 void Cfg::InvalidData() {
+  v.clear();
   for(int i=0; i<dof; ++i) {
     if(i<posDof)
       v.push_back(MAXFLOAT);
