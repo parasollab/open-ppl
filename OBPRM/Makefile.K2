@@ -15,22 +15,27 @@
 # Basic defns; do not change
 #------------------------------------------------------
  MATHLIB   = -lm
- STL_INCL  = -I/pub/dsmft/STL
+# STL_INCL  = -I/pub/dsmft/STL
 
 #------------------------------------------------------
 # collision detection packages available
 #------------------------------------------------------
- CD_DIR = /home/g0s4525/ParallelCode/CD-libs/
+ CD_DIR = /home/shawnat/CD-libs/sgi
 
- CSTK_DIR  = /home/g0s4525/ParallelCode/CD-libs/CSTK/
- CSTKLIB_DIR  = /home/g0s4525/ParallelCode/CD-libs/CSTK/lib
+ CSTK_DIR  = ${CD_DIR}/CSTK
+ CSTKLIB_DIR  = ${CSTK_DIR}/lib
  CSTKLIB      = -L${CSTKLIB_DIR} -lcstk
  CSTK_INCL    = -I${CSTK_DIR}/include
 
- VCLIP_DIR     = /home/g0s4525/ParallelCode/CD-libs/VCLIP
+ VCLIP_DIR     = ${CD_DIR}/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
  VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
  VCLIP_INCL    = -I${VCLIP_DIR}/include
+
+ RAPID_DIR     = ${CD_DIR}/RAPID/RAPID_v2_01
+ RAPIDLIB_DIR  = ${RAPID_DIR}
+ RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
+ RAPID_INCL    = -I${RAPID_DIR}
 
  PQP_DIR     = ${CD_DIR}/PQP
  PQPLIB_DIR  = ${PQP_DIR}/lib
@@ -43,10 +48,11 @@
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=0 -DUSE_PQP #-DUSE_CSTK -DUSE_VCLIP 
+   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=0 -DUSE_PQP 
+#-DUSE_CSTK -DUSE_VCLIP -DUSE_RAPID
 
 ### DEFS = ${ADEFS} -DQUIETGRAPH -DQUIET
-    DEFS = ${ADEFS} -D QUIET
+    DEFS = ${ADEFS} -D__sgi -D__K2
 
 showdefs :: 
 	echo "${DEFS}";
@@ -78,7 +84,8 @@ CXX = CC
 
 CFLAGS     = $(OPTS) $(AFLAGS) $(DEPS) $(CWARNS)
 CXXFLAGS   = $(CFLAGS) 
-DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
+DSOFLAGS   = $(CFLAGS) -shared 
+#-no_unresolved
 
 
 #-----------------------------------------------------------------------------
@@ -145,10 +152,7 @@ OBJS = \
 	MultiBody.o  \
         Parameters.o \
 	Input.o \
-        Haptic.o \
-        Push.o \
 	Cfg.o \
-	CfgManager.o \
 	Cfg_free.o \
 	Cfg_fixed_PRR.o \
 	Cfg_free_tree.o \
@@ -157,16 +161,10 @@ OBJS = \
 	util.o \
 	Clock_Class.o \
 	Stat_Class.o \
-	LocalPlanners.o \
 	DistanceMetrics.o \
 	CollisionDetection.o \
-	GenerateMapNodes.o \
-	ConnectMapNodes.o \
-	Roadmap.o \
 	QueryCmds.o \
-	Query.o \
-	Weight.o \
-	BasicMAPRM.o
+	Weight.o
 
 objs: $(OBJS)
 
@@ -187,6 +185,8 @@ reallyclean::
 	rm -R -f ii_files
 	rm -f *.o
 	rm -f so_locations
+	rm -f Dependencies
+	touch Dependencies
 
 #-----------------------------------------------------------------------------
 # Build and update depent
