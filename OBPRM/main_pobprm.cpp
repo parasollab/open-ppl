@@ -132,7 +132,6 @@ bool pGenerateMapNodes::CheckStatus(){
 ///////////////////////////////////////////////////////////////////
 //  Parallel Node Connection class : Constructor
 ///////////////////////////////////////////////////////////////////
-Stapl_Lock<short> pConnectMapNodes::m_Lock;
 pConnectMapNodes::pConnectMapNodes( CPOBPRM_MPComponents & rMPC )
 :ConnectMapNodes(), m_rMPC(rMPC){}
 
