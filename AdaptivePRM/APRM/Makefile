@@ -15,6 +15,10 @@
    GRAPH_DIR   = ${obprm_dir}/stapl/include/graph
    GRAPH_INCL  = -I${GRAPH_DIR}/
 
+   QHULL_DIR   = ../qhull
+   QHULL_LIB   = -L${QHULL_DIR} -lqhull
+   QHULL_INCL  = -I${QHULL_DIR}/include/
+
 #------------------------------------------------------
 # Basic defns; do not change
 #------------------------------------------------------
@@ -53,7 +57,7 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. ${OBPRM_INCL} ${GRAPH_INCL} ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
+ AFLAGS    = -I. ${QHULL_INCL} ${OBPRM_INCL} ${GRAPH_INCL} ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
 
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
@@ -100,7 +104,7 @@ libadaptive.so:: $(OBJS)
 aprm:: main_aprm.c libs
 	$(CXX) $(CFLAGS2) -o aprm \
                 main_aprm.c \
-		$(OBJS) $(ADAPT_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
+		$(OBJS) $(ADAPT_LIB) $(QHULL_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_aprm.o aprm.d
 
 #--------------------------------------------------------------------
@@ -109,13 +113,6 @@ query:: main_query.c libs
                 main_query.c \
                 $(OBJS) $(ADAPT_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_query.o query.d
-
-#--------------------------------------------------------------------
-checkpath:: check_path.c libs
-	$(CXX) $(CFLAGS2) -o checkpath \
-		check_path.c \
-		$(OBJS) $(ADAPT_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
-	rm -f check_path.o checkpath.d
 
 #--------------------------------------------------------------------
 .SUFFIXES: .c
