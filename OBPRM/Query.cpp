@@ -31,28 +31,41 @@
 //==================================================================
 
 Query::
-Query() {
-};
+Query() 
+{
+    outputPathFile=NULL;
+	pRdmp=NULL;
+}
 
 Query::
 Query(Input *input,QueryCmds *Qinput,
-	CollisionDetection *cd, DistanceMetric *dm, LocalPlanners *lp,
-		ConnectMapNodes    *cn){
+    CollisionDetection *cd, DistanceMetric *dm, LocalPlanners *lp,
+        ConnectMapNodes    *cn)
+{
+	pRdmp=new Roadmap;
+    pRdmp->InitRoadmap(input,cd,dm,lp,Qinput->mapFile.GetValue() );
 
-  rdmp.InitRoadmap(input,cd,dm,lp,Qinput->mapFile.GetValue() );
+    ReadQuery( Qinput->queryFile.GetValue() );
 
-  ReadQuery( Qinput->queryFile.GetValue() );
+    //initDefaultSetIDs(cn);
 
-  //initDefaultSetIDs(cn);
-
-  outputPathFile = new char[strlen(Qinput->pathFile.GetValue())+1];
-  strcpy(outputPathFile,Qinput->pathFile.GetValue());
-
-};  
+    outputPathFile = new char[strlen(Qinput->pathFile.GetValue())+1];
+    strcpy(outputPathFile,Qinput->pathFile.GetValue());
+}
 
 Query::
-~Query(){
-};
+~Query()
+{
+    //fre file name memory
+    if( outputPathFile!=NULL )
+        delete [] outputPathFile;
+    outputPathFile=NULL;
+
+    //free roadmap
+    if( pRdmp!=NULL )
+        delete pRdmp;
+    pRdmp=NULL;
+}
 
 //==================================================================
 // Query class Methods: Other Methods
@@ -77,7 +90,10 @@ initDefaultSetIDs(ConnectMapNodes    *cn) {
 
 bool 
 Query::
-PerformQuery(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm) {
+PerformQuery(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm) 
+{
+  if( pRdmp==NULL ) //not init.... sorry
+	  return false;
 
   for (int i=0; i < query.size()-1; i++ ){
      cout << "\nquery is ...     ";
@@ -94,7 +110,6 @@ PerformQuery(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,Dis
   }
 
   return true;
-
 };
 
 bool 
@@ -102,16 +117,19 @@ Query::
 PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 		 ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm,SID _lpsid, vector<Cfg>* _path) {
 
+  if( pRdmp==NULL ) //not init.... sorry
+	  return false;
+
   LPInfo sci, gci;   // connection info for start, goal nodes
-  sci.positionRes =gci.positionRes = rdmp.GetEnvironment()->GetPositionRes();
-  sci.orientationRes =gci.orientationRes = rdmp.GetEnvironment()->GetOrientationRes(); 
+  sci.positionRes =gci.positionRes = pRdmp->GetEnvironment()->GetPositionRes();
+  sci.orientationRes =gci.orientationRes = pRdmp->GetEnvironment()->GetOrientationRes(); 
   sci.checkCollision = gci.checkCollision = true;
   sci.savePath = gci.savePath = true;
   sci.cdsetid = gci.cdsetid = cdsetid;
   sci.dmsetid = gci.dmsetid = dmsetid;
 
 
-  vector< pair<int,VID> > ccs = rdmp.roadmap.GetCCStats();  
+  vector< pair<int,VID> > ccs = pRdmp->roadmap.GetCCStats();  
 
   bool connected = false;
   int  i, thiscc = 0;
@@ -120,8 +138,8 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
   while ( !connected && thiscc < ccs.size() ) {
 
 	//get cc
-    Cfg t=rdmp.roadmap.GetData(ccs[thiscc].second);
-    vector<Cfg> cc = rdmp.roadmap.GetCC(t);
+    Cfg t=pRdmp->roadmap.GetData(ccs[thiscc].second);
+    vector<Cfg> cc = pRdmp->roadmap.GetCC(t);
 
 	//connect start and goal to cc
     if ( CanConnectToCC(_start,cd,cn,lp,dm,cc,_lpsid,&scvid,&sci) && 
@@ -146,8 +164,8 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 		sci.path.begin(),sci.path.end());
 
        LPInfo ci;
-         ci.positionRes = rdmp.GetEnvironment()->GetPositionRes();
-         ci.orientationRes = rdmp.GetEnvironment()->GetOrientationRes();
+         ci.positionRes = pRdmp->GetEnvironment()->GetPositionRes();
+         ci.orientationRes = pRdmp->GetEnvironment()->GetOrientationRes();
          ci.checkCollision = true;
          ci.savePath = true;
          ci.cdsetid = cdsetid;
@@ -156,7 +174,7 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
        if ( scvid != gcvid ) {
 
           vector< pair<Cfg,WEIGHT> > rp;
-	  rp = rdmp.roadmap.FindPathDijkstra(scvid,gcvid);
+	  rp = pRdmp->roadmap.FindPathDijkstra(scvid,gcvid);
 
       #if INTERMEDIATE_FILES
           //-----------------------------------------------------
@@ -166,7 +184,7 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
           vector<Cfg> _mapcfgs;
           WritePathConfigurations("mapnodes.path", 
                                          _mapcfgs, 
-                                         rdmp.GetEnvironment());
+                                         pRdmp->GetEnvironment());
       #endif
 
           for (i=0; i<rp.size()-1; i++) {
@@ -197,10 +215,10 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
   if(connected) {
      // add start and goal to the roadmap
      // to extend current roadmap if successful query.
-     rdmp.roadmap.AddVertex(_start);
-     rdmp.roadmap.AddVertex(_goal);
-     rdmp.roadmap.AddEdge(rdmp.roadmap.GetVID(_start), scvid, sci.edge);
-     rdmp.roadmap.AddEdge(rdmp.roadmap.GetVID(_goal), gcvid, gci.edge);
+     pRdmp->roadmap.AddVertex(_start);
+     pRdmp->roadmap.AddVertex(_goal);
+     pRdmp->roadmap.AddEdge(pRdmp->roadmap.GetVID(_start), scvid, sci.edge);
+     pRdmp->roadmap.AddEdge(pRdmp->roadmap.GetVID(_goal), gcvid, gci.edge);
   }
 
   return connected;
@@ -213,18 +231,21 @@ CanConnectToCC(Cfg _cfg, CollisionDetection *cd,
 		ConnectMapNodes *cn, LocalPlanners *lp, DistanceMetric *dm,
 		vector<Cfg> _cc, SID _lpsid, VID *_vid,LPInfo *_ci) {
 
+   if( pRdmp==NULL ) //not init.... sorry
+	  return false;
+
    // erase previous connection attempt. 
    // (when start or goal connection is sucessful.
    _ci->path.erase( _ci->path.begin(),_ci->path.end() );
 
    // sort the cfgs in _cc by distance from _cfg
-   cn->SortByDistFromCfg(rdmp.GetEnvironment(),dm,cn->cnInfo,_cfg,_cc);
+   cn->SortByDistFromCfg(pRdmp->GetEnvironment(),dm,cn->cnInfo,_cfg,_cc);
 
    // try to connect _cfg to (closest) config in _cc 
    // (now try all, later only k closest)
    for (int i=0; i < _cc.size(); i++ ) {
-      if ( lp->IsConnected(&rdmp,cd, dm,_cfg,_cc[i],_lpsid,_ci) ) {
-          *_vid = rdmp.roadmap.GetVID(_cc[i]);
+      if ( lp->IsConnected(pRdmp,cd, dm,_cfg,_cc[i],_lpsid,_ci) ) {
+          *_vid = pRdmp->roadmap.GetVID(_cc[i]);
           return true;
       } else {
           // clear out previous (ie, "old") connection attempt
@@ -240,6 +261,10 @@ bool
 Query::
 GetPathSegment(Cfg _c1, Cfg _c2, CollisionDetection *cd,
                LocalPlanners * lp,DistanceMetric * dm,WEIGHT _weight, LPInfo* _ci){
+
+   if( pRdmp==NULL ) //not init.... sorry
+	  return false;
+
    // clear possible old storage.
    _ci->path.erase(_ci->path.begin(), _ci->path.end());
 
@@ -264,14 +289,14 @@ GetPathSegment(Cfg _c1, Cfg _c2, CollisionDetection *cd,
 	info.dmsetid       =info_rev.dmsetid       = _ci->dmsetid;
 
      // FORWARD
-     if ( lp->IsConnected(Lp.GetPlanner(), rdmp.GetEnvironment(),cd,dm,_c1, _c2, Lp, &info) ) {
+     if ( lp->IsConnected(Lp.GetPlanner(), pRdmp->GetEnvironment(),cd,dm,_c1, _c2, Lp, &info) ) {
 	_ci->path.insert(_ci->path.end(),
 		info.path.begin(),info.path.end());
 	info.path.erase(info.path.begin(),info.path.end());
         return true;
 
      // BACKWARD
-     } else if ( lp->IsConnected(Lp.GetPlanner(), rdmp.GetEnvironment(),cd,dm,_c2, _c1, Lp, &info_rev) ){
+     } else if ( lp->IsConnected(Lp.GetPlanner(), pRdmp->GetEnvironment(),cd,dm,_c2, _c1, Lp, &info_rev) ){
 	reverse(info_rev.path.begin(),info_rev.path.end());
 	_ci->path.insert(_ci->path.end(),
 		info_rev.path.begin(),info_rev.path.end());
@@ -286,7 +311,7 @@ GetPathSegment(Cfg _c1, Cfg _c2, CollisionDetection *cd,
    } else { ///not found
 
      // LKD: should have a method 
-     //		rdmp.lp->planners.IsPlanner(FoundInBitPosition)
+     //		pRdmp->lp->planners.IsPlanner(FoundInBitPosition)
      //      but this check'll do for now...
      cout << "\nERROR: _weight(" << _weight 
           << ") is out of bounds (1,2^numLPs)" 
@@ -333,6 +358,6 @@ WritePath() {
 void 
 Query::
 WritePath(char* _filename ) {
-   WritePathConfigurations(_filename, path, rdmp.GetEnvironment());
+   WritePathConfigurations(_filename, path, pRdmp->GetEnvironment());
 }
 

@@ -37,18 +37,24 @@ public:
 	/**@name Constructors and Destructor */
 	//@{
 
-		///Default Constructor. Do nothing.
+		/**
+		 *Default Constructor. Set Every thing to NULL.
+		 *This is useful when client needs to init data member by themself
+		 *for example instead of read map from file, client could set roadmap
+		 *directly.
+		 */
 		Query();
 
-		/** *Preferred*, fills input & inits.
-		  * Initialize roadmap (#rdmp). 
-		  * Read roadmap data from file.
-		  * @see Roadmap::InitRoadmap
+		/**
+		  *Preferred*, fills input & inits.
+		  *Initialize roadmap (#rdmp). 
+		  *Read roadmap data from file.
+		  *@see Roadmap::InitRoadmap
 		  */
 		Query
 		(Input *, QueryCmds*, CollisionDetection*, DistanceMetric*, LocalPlanners*,ConnectMapNodes*);  
 
-		///Destructor Do nothing.
+		///Destructor. Free memory.
 		~Query();
 
 	//@}
@@ -211,7 +217,7 @@ public:
 	//
 	//////////////////////////////////////////////////////////////////////////////////////////
 
-	Roadmap rdmp;
+	Roadmap * pRdmp;
 
 	vector<Cfg> query;                  ///< start,[intermediate nodes],goal 
 	vector<Cfg> path;                   ///< output paths
