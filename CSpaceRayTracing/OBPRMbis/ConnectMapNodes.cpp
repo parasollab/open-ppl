@@ -964,6 +964,7 @@ RRT( Roadmap * rm,int K, double deltaT,int o_clearance, int clearance_from_node,
          Cfg cfg = Cfg(x_near); //Cfg of first collision
          double positionRes = env->GetPositionRes();
          double orientationRes = env->GetOrientationRes();
+         cout << "positionRes = " << positionRes << " orientationRes " << orientationRes << endl;
          int n_ticks;
          double tmpDist;
          double collisionDistance;
@@ -981,7 +982,6 @@ RRT( Roadmap * rm,int K, double deltaT,int o_clearance, int clearance_from_node,
          vector<Cfg>::iterator startIterator;
          while(!collision && (tk<=n_ticks)&& (dm->Distance(env,cfg,tick,info.dmsetid) < maxLength) ) {
             lastFreeConfiguration = tick;
-            clearance_cfgs.push_back( Cfg(lastFreeConfiguration) );
             if ( clearance_cfgs.size() <= o_clearance )
                clearance_cfgs.push_back( Cfg(lastFreeConfiguration) );
             else {
@@ -1043,16 +1043,16 @@ DisplayCCStats(*(rm->m_pRoadmap),-1);
                          cout << "configurations equal==";
                          Cfg t=Cfg(x_new);
                          rm->m_pRoadmap->AddVertex(t);
-                         //rm->m_pRoadmap->AddEdge(x_near, x_new, lpInfo.edge);
-                         rm->m_pRoadmap->AddEdge(x_near, x_new);
+                         rm->m_pRoadmap->AddEdge(x_near, x_new, lpInfo.edge);
+                         //rm->m_pRoadmap->AddEdge(x_near, x_new);
                          //cout << "VID" << x_new.first
                        }   
                    }
                 else { Cfg t=Cfg(x_new);
                    settoConnect = FALSE;
                    rm->m_pRoadmap->AddVertex(t);
-                   //rm->m_pRoadmap->AddEdge(x_near, x_new, lpInfo.edge);
-                   rm->m_pRoadmap->AddEdge(x_near, x_new);
+                   rm->m_pRoadmap->AddEdge(x_near, x_new, lpInfo.edge);
+                   //rm->m_pRoadmap->AddEdge(x_near, x_new);
                    }
                 cout << "GetCCcount" << GetCCcount(*(rm->m_pRoadmap)) << "\n";
                 cout <<"\nfrom    " << x_near;
@@ -2273,8 +2273,8 @@ MakeCNSet(istream& _myistream) {
           iterations = ITERATIONS;  // default
           stepFactor = STEP_FACTOR;  // default
           smallcc    = SMALL_CC;  // default
-          o_clearance = 3; //default
-          clearance_from_node = 4; //default
+          o_clearance = 1; //default
+          clearance_from_node = 3; //default
        }
        cn1.iterations = iterations;
        cn1.stepFactor = stepFactor;
