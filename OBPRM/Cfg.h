@@ -25,12 +25,11 @@
 #include "VectorConstantSize.h"
 #include "Vectors.h"
 #include "CollisionDetection.h"
-//#include "DistanceMetrics.h"
-// brc changes below
 #include "Input.h"
 #include <stdio.h>
+
 #ifdef HPUX
-#include <sys/io.h>
+  #include <sys/io.h>
 #endif
 
 class Body;
@@ -65,6 +64,11 @@ public:
    int tag;
    //double clearance;
 };
+//---------------------------------------------
+// Input/Output operators for InfoCfg
+//---------------------------------------------
+istream& operator>> (istream&s, InfoCfg &_c);
+ostream& operator<< (ostream&s, const InfoCfg &_c);
 
 
 class Cfg {

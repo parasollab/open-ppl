@@ -15,7 +15,6 @@
 //      8/31/98  O.B. Bayazit     added the Cfg class
 //      03/03/99 Guang Song       add Cfg_fixed_PRR
 //	                          add Cfg_free_serial & its iostream.
-//      8/21/99  Lucia K. Dale    added InfoCfg wrapper for Cfg (typedef) class
 //
 /////////////////////////////////////////////////////////////////////
 

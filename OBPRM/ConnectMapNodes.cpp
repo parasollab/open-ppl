@@ -1031,7 +1031,7 @@ ConnectNodes_ExpandRRT(
 
              if ( !_rm->roadmap.IsSameCC(cc1id,cc2id) ) {
 
-                //lkd added tmp & separated decl from init for SUN compiler
+                //added tmp & separated decl from init for SUN compiler
                 Cfg tmp;
 		tmp = _rm->roadmap.GetData(cc2id);
                 vector<Cfg> U = _rm->roadmap.GetCC(tmp);

@@ -89,14 +89,14 @@ libobprm.a:: $(OBJS)
 obprm:: main_obprm.cpp libs
 	$(CXX) $(CXXFLAGS)  -o obprm \
 	main_obprm.cpp \
-	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
+	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/research/dsmft/CD-libs/qhull -lqhull
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
 query:: main_query.cpp libs
 	$(CXX) $(CXXFLAGS)  -o query \
 	main_query.cpp \
-	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/research/dsmft/qhull -lqhull
+	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/research/dsmft/CD-libs/qhull -lqhull
 	rm -f main_query.o
 
 #--------------------------------------------------------------------
@@ -156,7 +156,6 @@ reallyclean::
 	rm -f *.a *.so
 	rm -R -f ii_files
 	rm -f *.o
-	rm -f Dependencies
 	rm -f so_locations
 
 #-----------------------------------------------------------------------------

@@ -153,7 +153,6 @@ reallyclean::
 	rm -f obprm
 	rm -f *.a *.so *.o
 	rm -R -f ii_files
-	rm -f Dependencies
 	rm -f so_locations
 
 #-----------------------------------------------------------------------------

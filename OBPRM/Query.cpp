@@ -79,6 +79,11 @@ Query::
 PerformQuery(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm) {
 
   for (int i=0; i < query.size()-1; i++ ){
+     cout << "\nquery is ...     "<<query[i]
+          << "\n                 "<<query[i+1]
+          << "\nworking  ...     "
+          << endl;
+
      if ( !PerformQuery(query[i],query[i+1],cd,cn,lp,dm,lpsetid,&path) ) {
         cout << endl << "In PerformQuery(): didn't connect";
         return false;
@@ -121,15 +126,18 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 		    << scvid
 		    << ") & Goal("
 		    << gcvid
-		    << ") Connected to same CC!" 
+		    << ") Connected to same CC["
+                    << thiscc+1
+                    << "]!" 
 		    << endl;
 
        connected = true;
 
-       // added by Guang on 04/11/99: add Start Cfg to path.
+       // Add to Path: [ start cfg ]
        _path->push_back(_start);
 
-       _path->insert(_path->end(),                   // start->rdmp path
+       // Add to Path "tick" cfg's: [ start->rdmp ]
+       _path->insert(_path->end(),                   
 		sci.path.begin(),sci.path.end());
 
        LPInfo ci;
@@ -147,40 +155,21 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 
       #if INTERMEDIATE_FILES
           //-----------------------------------------------------
-          // Print out all cfg's both in human & pv readable form
+          // Print out all start, all graph nodes, goal
+          // ie, *NO* "ticks" from local planners
           //-----------------------------------------------------
-          vector<Cfg> _mapcfgs;				// pv (.path)
-
-          ofstream  myofstream("mapnodes.cfgs");	// human (.cfgs)
-          if (!myofstream) {
-	    cout << "Can't open <mapnodes.cfgs> !\n";
-	    exit(-1);
-          }
-
-	  myofstream << _start << endl;
-          int kk;
-	  for (kk=0;kk<20;++kk)
-	    _mapcfgs.push_back(_start);
-
-          for (i=0;i<rp.size();++i){
-	    myofstream << rp[i].first << endl;
-
-            for (kk=0;kk<20;++kk)
-              _mapcfgs.push_back(rp[i].first);
-          }
-          myofstream << _goal;
-	  for (kk=0;kk<20;++kk)
-            _mapcfgs.push_back(_goal);
-
-          myofstream.close();
-          WritePathTranformationMatrices("mapnodes.path", _mapcfgs, rdmp.GetEnvironment());
+          vector<Cfg> _mapcfgs;
+          WritePathTranformationMatrices("mapnodes.path", 
+                                         _mapcfgs, 
+                                         rdmp.GetEnvironment());
       #endif
 
           for (i=0; i<rp.size()-1; i++) {
             if ( !(GetPathSegment(rp[i].first,rp[i+1].first,cd,lp,dm,rp[i].second,&ci) )) {
                   cout << endl << "In PerformQuery: can't recreate path" << endl;
             } else {
-                  _path->insert(_path->end(),                 // rdmp->rdmp
+                  // Add to Path rdmp cfg's & "tick"s: [ rdmp->rdmp ]
+                  _path->insert(_path->end(),
 			ci.path.begin(),ci.path.end());
                   ci.path.erase(ci.path.begin(),ci.path.end());
             }
@@ -189,11 +178,12 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 
        } //if ( scvid != gcvid )
            
+       // Add to Path "tick" cfg's: [ rdmp->goal ]
        reverse(gci.path.begin(),gci.path.end());
-       _path->insert(_path->end(),                    // rdmp->goal path
+       _path->insert(_path->end(),
 		gci.path.begin(),gci.path.end());
 
-       // added by Guang on 04/11/99: add Goal Cfg to path.
+       // Add to Path: [ goal cfg ]
        _path->push_back(_goal);
 
     }
@@ -201,7 +191,7 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
   }
 
   if(connected) {
-     // add start and goal to the roadmap: Guang 06/19/99
+     // add start and goal to the roadmap
      // to extend current roadmap if successful query.
      rdmp.roadmap.AddVertex(_start);
      rdmp.roadmap.AddVertex(_goal);
@@ -318,6 +308,7 @@ ReadQuery(const char* _filename) {
          cout << endl << "In ReadQuery: can't open infile: " << _filename ;
          return;
    }
+
 
    while ( myifstream >> tempCfg) {
       query.push_back(tempCfg);

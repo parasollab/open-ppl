@@ -27,6 +27,20 @@
 
 #include "DistanceMetrics.h"
 
+//---------------------------------------------
+// Input/Output operators for InfoCfg
+//---------------------------------------------
+istream& operator>> (istream&s, InfoCfg &_c){
+    s >> _c.obst;
+    s >> _c.tag;
+    return s;
+};
+ostream& operator<< (ostream&s, const InfoCfg &_c){
+    s << _c.obst << " ";
+    s << _c.tag  << " ";
+    return s;
+};
+
 CfgManager * Cfg::CfgHelper = new Cfg_free();
 
 // Normalize the orientation to the some range.
@@ -410,15 +424,17 @@ vector<Cfg> Cfg::GetMovingSequenceNodes(const Cfg &other, double s) const {
 // Input/Output operators for Cfg
 //---------------------------------------------
 istream& operator>> (istream&s, Cfg &pt){
-	for(int i=0; i<pt.v.size(); ++i) {
-	   s >> pt.v[i];
-	}
-        return s;
+    for(int i=0; i<pt.v.size(); ++i) {
+	s >> pt.v[i];
+    }
+    s >> pt.info;
+    return s;
 };
 ostream& operator<< (ostream&s, const Cfg &pt){
     for(int i=0; i<pt.v.size(); ++i) {
 	s << setw(4)<<pt.v[i]<<' ';
     }
+    s << pt.info;
     return s;
 };
 

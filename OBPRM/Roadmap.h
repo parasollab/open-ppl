@@ -96,7 +96,6 @@ public:
                              LocalPlanners *lp,
                              const char* _filename = 0);
     void ReadRoadmapGRAPHONLY(const char* _filename);
-    void ReadExtraCfgInfo(istream& _myistream);
 
 
 
@@ -113,6 +112,8 @@ public:
    Environment * environment;
 
    RoadmapGraph<Cfg,WEIGHT> roadmap;   // Roadmap built for environment
+
+   int RoadmapVersionNumber;
 
 protected:
 private:

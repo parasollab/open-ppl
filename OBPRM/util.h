@@ -15,7 +15,6 @@
 #define util_h
 
 
-//#include <cstkSmallAPI.h>
 #ifdef HPUX
 #include <sys/io.h>
 #endif

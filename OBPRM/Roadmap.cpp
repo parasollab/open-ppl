@@ -17,6 +17,7 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "Roadmap.h"
+#include <string.h>
 
 //===================================================================
 //  Roadmap class Methods: Constructors and Destructor
@@ -33,6 +34,7 @@ Roadmap(Input *input,
 	Environment * env)
 {
     InitRoadmap(input,cd,dm,lp,NULL,env); 
+    RoadmapVersionNumber = 62000;
 };
 
 Roadmap::
@@ -161,27 +163,10 @@ ReadRoadmapGRAPHONLY(const char* _fname){
   }
 
   roadmap.ReadGraph(myifstream);           // reads verts & adj lists
-  ReadExtraCfgInfo(myifstream);            // appends extra "info" to each vert
 
   myifstream.close();
 
 }
-
-//
-// Due to "enhanced" InfoCfg's and not wanting to change Vizmo this is
-// a bit of a hack...  It would be better to change Vizmo ... Lucia 7/7/99
-//
-void 
-Roadmap::
-ReadExtraCfgInfo(istream& _myistream) {
-                                            // appends extra "info" to each vert
-  vector<Cfg> v=roadmap.GetVerticesData();
-  int vid,obst;
-  for (int i=0; i<v.size(); ++i){
-       _myistream >> vid >> v[i].info.obst;
-       roadmap.PutData(vid,v[i]);
-  };
-};
 
 
 //
@@ -203,6 +188,13 @@ const char* _fname
          return;
    }
 
+
+   // Read throwaway tag strings..."Roadmap Version Number"
+   char tagstring[30];
+   myifstream  >>tagstring >>tagstring >>tagstring; 
+
+   myifstream >> RoadmapVersionNumber;
+
    input->ReadPreamble(myifstream); // do nothing now (could init defaults)
    input->ReadEnvFile(myifstream);    
    lp->planners.ReadLPs(myifstream);
@@ -210,7 +202,6 @@ const char* _fname
    dm->distanceMetrics.ReadDMs(myifstream);
 
    roadmap.ReadGraph(myifstream);           // reads verts & adj lists
-   ReadExtraCfgInfo(myifstream);            // appends extra "info" to each vert
 
    myifstream.close();
 
@@ -241,23 +232,15 @@ const char* _fname
       cout << endl << "In WriteRoadmap: can't open outfile: " << outfile ;
    }
    
+   myofstream << "Roadmap Version Number " << RoadmapVersionNumber;
+
    input->WritePreamble(myofstream); // for now just write commandline
    input->WriteEnvFile(myofstream);
    lp->planners.WriteLPs(myofstream);
    cd->collisionCheckers.WriteCDs(myofstream);
    dm->distanceMetrics.WriteDMs(myofstream);
 
-   // Due to "enhanced" InfoCfg's and not wanting to change Vizmo this is
-   // a bit of a hack...  It would be better to change Vizmo ... Lucia 7/7/99
    roadmap.WriteGraph(myofstream);         // writes verts & adj lists
-   vector<VID> v=roadmap.GetVerticesVID(); // appends extra "info" from each vert
-   for (int vid=0; vid < v.size(); ++vid){
-	myofstream << v[vid];
-        myofstream << " ";
-        myofstream << roadmap.GetData(v[vid]).info.obst;
-        myofstream << endl;
-   };
-
    myofstream.close();
 };
 
