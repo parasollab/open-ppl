@@ -7,8 +7,8 @@
    OBPRMLIB_DIR = .
    OBPRMLIB     = -L${OBPRMLIB_DIR} -lobprm
 
-   Graph_DIR   = ../stapl/include/graph
-   STAPL_DIR   = ../stapl/include
+   Graph_DIR   = ../stapl_release/include/graph
+   STAPL_DIR   = ../stapl_release/include
    Graph_INCL  = -I${Graph_DIR} -I${STAPL_DIR}/common
 
 #------------------------------------------------------
