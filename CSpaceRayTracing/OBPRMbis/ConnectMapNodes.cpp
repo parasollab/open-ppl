@@ -962,7 +962,7 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
          int times = 1;
          //xnew = x_new;
          //if x_new in bbox AND x_new in freespace AND x_new connectable to x_near
-         while (cont || (times==1)) 
+         while ((cont && (times <=20)) || (times==1)) 
              if (x_new.InBoundingBox(env)
               && !x_new.isCollision(env,cd,info.cdsetid,info.cdInfo)
               && lp->IsConnected(rm,cd,dm,x_near,x_new,info.lpsetid,&lpInfo)){
@@ -976,7 +976,7 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
 			x_near=Cfg(x_new);
          		Cfg x_new = Cfg::c1_towards_c2(x_near,u,deltaT);
 		    }
-		  if (close) {U.push_back(xnew);U.push_back(xnew);U.push_back(xnew);
+		  if (close && !greedy) {U.push_back(xnew);U.push_back(xnew);U.push_back(xnew);
 				cout<< "adding close xnew";}
 		  if ((dm->Distance(env,u,x_near,info.dmsetid)<deltaT)
 	      			&& (U.size()>0))
