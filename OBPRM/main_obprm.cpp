@@ -24,9 +24,6 @@ void PrintRawLine( ostream& _os,
         Roadmap *rmap, Clock_Class *NodeGenClock, Clock_Class *ConnectionClock,
         ConnectMapNodes cn, int printHeaders);
 
-num_param<int>    numNodes("-nodes",             10,  1,50000);
-str_param<char *> mapFile          ("-outmapFile");
-
 //========================================================================
 //  main
 //========================================================================
