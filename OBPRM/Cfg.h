@@ -39,6 +39,9 @@ class CollisionDetection;
 class CfgManager;
 class DistanceMetric;
 class CDInfo;
+class Cfg;
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 //
@@ -124,6 +127,61 @@ public:
 //---------------------------------------------
 istream& operator>> (istream&s, InfoCfg &_c);
 ostream& operator<< (ostream&s, const InfoCfg &_c);
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+//
+/// Information about the clearance of a cfg.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////
+class ClearanceInfo {
+private:
+
+    /////////////////////////////////////////////////////////////////////////////
+    //
+    // Data
+    //
+    /////////////////////////////////////////////////////////////////////////////
+    /**Cleanance of this Cfg.
+     * Closet distance from this Cfg to any Obstacle in C-Space
+     */
+    double clearance;
+
+    /**Direction of clearance, or "witness pair".
+     *This Cfg is closest to the c-obst.
+     */
+    Cfg * direction;
+
+public:
+
+    /////////////////////////////////////////////////////////////////////////////
+    //
+    // Constructors and Destructor
+    //
+    /////////////////////////////////////////////////////////////////////////////  
+    /**@name Constructors and Destructor*/
+    //@{  
+    ClearanceInfo();
+    ClearanceInfo(double _clearance, Cfg * _direction);
+    ~ClearanceInfo();
+    //@}
+
+    /////////////////////////////////////////////////////////////////////////////
+    //
+    // Access Methods
+    //
+    /////////////////////////////////////////////////////////////////////////////
+    /**@name Access Method*/
+    //@{
+    double getClearance() {return clearance;};
+    void setClearance(double _clearance){clearance = _clearance;};
+
+    Cfg * getDirection() {return direction;};
+    void setDirection(Cfg * _direction){direction = _direction;};
+    //@}
+
+};
+
 
 /**This class provides storage, tools, and operators for representing configuration.
   *
@@ -423,12 +481,11 @@ public:
         SID cdsetid, CDInfo& cdInfo, 
         DistanceMetric * dm, SID dmsetid, int n);
 
-          /// returns the clearance and also the direction of the clearance 
-          /// via Cfg *direction
-          double ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, 
-            SID cdsetid, CDInfo& cdInfo, 
-            DistanceMetric * dm, SID dmsetid, int n, Cfg *direction);
-       
+      /// returns the clearance and the direction via ClearanceInfo
+      ClearanceInfo ApproxCSpaceClearance2(Environment *env, CollisionDetection *cd,
+        SID cdsetid, CDInfo& cdInfo,
+	DistanceMetric * dm, SID dmsetid, int n);  
+ 
       ///Call CfgManager::ConfigEnvironment
       bool ConfigEnvironment(Environment *env);
       ///Call CfgManager::isCollision

@@ -61,7 +61,21 @@ void InfoCfg::Read(istream &s) {
     s >> tag;
     s >> clearance;
 }
-   
+
+
+ClearanceInfo::ClearanceInfo() {
+    clearance = 1e10;
+    direction = NULL;
+}
+
+ClearanceInfo::ClearanceInfo(double _clearance, Cfg * _direction){
+    clearance = _clearance;
+    direction = _direction;
+}
+
+ClearanceInfo::~ClearanceInfo() {
+}
+
 
 CfgManager * Cfg::CfgHelper = new Cfg_free();
 
@@ -356,8 +370,12 @@ Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
                    SID cdsetid, CDInfo &cdInfo, DistanceMetric *dm,
                    SID dmsetid, int n) {
   Cfg newCfg, oldCfg, dir;
-  
-  cfg.info.clearance = cfg.ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,&dir);
+
+  ClearanceInfo clearInfo;
+  clearInfo = cfg.ApproxCSpaceClearance2(_env,cd,cdsetid,cdInfo,dm,dmsetid,n);
+  cfg.info.clearance = clearInfo.getClearance();
+  dir = *(clearInfo.getDirection());
+
   double stepSize = cfg.info.clearance;
   int maxNumSteps = 200;
 
@@ -677,9 +695,10 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 }
 
 //Approximate C-Space Clearance
-double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, CDInfo& cdInfo,DistanceMetric * dm, SID dmsetid, int n, Cfg *direction)
+ClearanceInfo Cfg::ApproxCSpaceClearance2(Environment *env, CollisionDetection *cd, SID cdsetid, CDInfo& cdInfo,DistanceMetric * dm, SID dmsetid, int n)
 {
   Cfg cfg = *this;
+  ClearanceInfo clearInfo;
  
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
@@ -701,12 +720,13 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
       tick.Increment(incr);
 
       if( (tick.isCollision(env,cd,cdsetid,cdInfo)) || !(tick.InBoundingBox(env)) ){
-
 	
 	tmpDist = dm->Distance(env, cfg, tick, dmsetid);
-	if(tmpDist < clear){
-	  clear = tmpDist;
-          direction = &dir;
+
+        if(tmpDist < clearInfo.getClearance()){
+          clearInfo.setClearance( tmpDist );
+          Cfg tmpDir = tick-incr;
+          clearInfo.setDirection( &tmpDir );
         }
 	collisionFlag = true;
       }
@@ -715,15 +735,15 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 
 	tmpDist = dm->Distance(env, cfg, tick, dmsetid);
 	
-	if(tmpDist < clear){
-	  clear = tmpDist;
-          direction = &dir;
+        if(tmpDist < clearInfo.getClearance()){
+          clearInfo.setClearance( tmpDist );
+          clearInfo.setDirection( &tick );
 	}
       }
       tk++;
     }
   }
-  return clear;
+  return clearInfo;
 }
 
 bool Cfg::GenerateOverlapCfg(
