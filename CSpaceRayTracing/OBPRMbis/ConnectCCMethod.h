@@ -8,6 +8,8 @@
 #include "Roadmap.h"
 #include "util.h"
 #include <string>
+#include<strstream>
+#include <sstream>
 
 #include "ConnectMapNodes.h"
 #include "RayTracer.h"
@@ -37,7 +39,7 @@ class ComponentConnectionMethod { //interface only
     lp = NULL;
     cn = NULL;
   }
-  virtual int ParseCommandLine(int *argc, char **argv, istrstream &input_stream) = 0;
+  virtual int ParseCommandLine(int *argc, char **argv, istringstream &input_stream) = 0;
   virtual void SetDefault() = 0;
   virtual void ConnectComponents() = 0;
   string GetName() { return element_name; }
@@ -62,7 +64,7 @@ class RayTracerConnectionMethod: public ComponentConnectionMethod {
   RayTracerConnectionMethod(Roadmap*, CollisionDetection*, DistanceMetric*, LocalPlanners*, ConnectMapNodes*);
   ~RayTracerConnectionMethod();
 
-  int ParseCommandLine(int *argc, char **argv, istrstream &input_stream);
+  int ParseCommandLine(int *argc, char **argv, istringstream &input_stream);
   void SetDefault();
   void ConnectComponents();
 
@@ -88,13 +90,15 @@ class RayTracerConnectionMethod: public ComponentConnectionMethod {
 #define ITERATIONS   50        // default for rrt iterations
 #define SMALL_CC      5        // default for rrt and connectCCs: smallcc size
 #define KPAIRS        5        // default for connectCCs
+#define O_CLEARANCE   2
+#define CLEARANCE_FROM_NODE 4 
 class RRTConnectionMethod: public ComponentConnectionMethod {
  public:
   RRTConnectionMethod();
   RRTConnectionMethod(Roadmap*, CollisionDetection*, DistanceMetric*, LocalPlanners*, ConnectMapNodes*);
   ~RRTConnectionMethod();
  
-  int ParseCommandLine(int *argc, char **argv, istrstream &input_stream);
+  int ParseCommandLine(int *argc, char **argv, istringstream &input_stream);
   void SetDefault();
   void ConnectComponents();
 
@@ -103,6 +107,8 @@ class RRTConnectionMethod: public ComponentConnectionMethod {
   int iterations;  // default
   int stepFactor;  // default
   int smallcc; 
+  int o_clearance;
+  int clearance_from_node;
 };
 
 //-----------
@@ -113,7 +119,7 @@ class ConnectCCsConnectionMethod: public ComponentConnectionMethod {
   ConnectCCsConnectionMethod(Roadmap*, CollisionDetection*, DistanceMetric*, LocalPlanners*, ConnectMapNodes*);
   ~ConnectCCsConnectionMethod();
  
-  int ParseCommandLine(int *argc, char **argv, istrstream &input_stream);
+  int ParseCommandLine(int *argc, char **argv, istringstream &input_stream);
   void SetDefault();
   void ConnectComponents();
 

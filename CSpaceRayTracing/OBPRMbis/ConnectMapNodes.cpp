@@ -913,8 +913,8 @@ Get_Cfgs_By_Obst(Roadmap * _rm){
 ---------------------------------------------------------------*/
 void 
 ConnectMapNodes::
-RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
-        CollisionDetection* cd, LocalPlanners* lp, DistanceMetric * dm,
+RRT( Roadmap * rm,int K, double deltaT,int o_clearance, int clearance_from_node,
+        vector<Cfg>&U, CollisionDetection* cd, LocalPlanners* lp, DistanceMetric * dm,
         CNInfo& info, LPInfo lpInfo,bool & toConnect,bool connecting){
 
   // get a local copy for brevity of notation
@@ -975,8 +975,20 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
          //SID dmsetid = lpInfo.dmsetid;
          //cdsetid = cn->cnInfo.cdsetid;  
          cout << "# of ticks: "<< n_ticks << " ";
+         //clearance_cfgs will be a vector containing last n_clearance cfgs
+         //int o_clearance = 5;
+         vector<Cfg> clearance_cfgs;
+         vector<Cfg>::iterator startIterator;
          while(!collision && (tk<=n_ticks)&& (dm->Distance(env,cfg,tick,info.dmsetid) < maxLength) ) {
             lastFreeConfiguration = tick;
+            clearance_cfgs.push_back( Cfg(lastFreeConfiguration) );
+            if ( clearance_cfgs.size() <= o_clearance )
+               clearance_cfgs.push_back( Cfg(lastFreeConfiguration) );
+            else {
+               clearance_cfgs.push_back( Cfg(lastFreeConfiguration) );
+               startIterator = clearance_cfgs.begin();
+               clearance_cfgs.erase( startIterator );
+               }
             tick.Increment(incr); //next configuration to check
             cout << "here" << tk ;
             if( (tick.isCollision(env,cd,info.cdsetid,info.cdInfo)) || 
@@ -987,19 +999,32 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
             tk++;// increases the tick
             } // end_while
          bool attemptConnection = TRUE;
-         if (tk < 10) {
+         //int clearance_from_node = 5;
+         Cfg x_new;
+         if ( tk < (clearance_from_node + o_clearance) ) {
             if (toConnect && ( lastFreeConfiguration == u ) && connecting) {
-               cout << "tk small but still want to connect!!!\n";
-               attemptConnection = TRUE;
+               cout << "\ntk small but still want to connect!!!\n";
+               x_new = clearance_cfgs[clearance_cfgs.size()-1];
                }
             else {
-               cout << "tk too small! donot connect!\n";
+               cout << "\ntk " <<tk<< " too small! donot connect!\n";
                attemptConnection = FALSE;
                toConnect = FALSE;
+               x_new = lastFreeConfiguration;
                } 
             }
+         else {
+            if (toConnect && ( lastFreeConfiguration == u )){
+               cout << "\nfound configuration to connect " <<lastFreeConfiguration<< "\n";
+               x_new = lastFreeConfiguration;
+               }
+            else {
+       	       cout << "\nadding: " << clearance_cfgs[0] << "\n";
+               x_new = clearance_cfgs[0];
+               }
+            }
          //Cfg x_new = lastFreeConfiguration;
-         Cfg x_new = lastFreeConfiguration;
+         //Cfg x_new = lastFreeConfiguration;
 cout << "GetCCcount" << GetCCcount(*(rm->m_pRoadmap));
 DisplayCCStats(*(rm->m_pRoadmap),-1);
          if (x_new.InBoundingBox(env) && attemptConnection
@@ -1173,7 +1198,7 @@ void
 ConnectMapNodes::OrderCCByCloseness(Roadmap * rm,
 	DistanceMetric * dm,
 	CNInfo& info,
-	vector< pair<int,VID> >& ccvec) 
+	vector< pair<int,VID> > & ccvec) 
 {   cout << "\nOrderCCByCloseness\n";
     Environment *env = rm->GetEnvironment();   
     //rm->m_pRoadmap->DisplayCCStats(-1); 
@@ -1190,7 +1215,7 @@ ConnectMapNodes::OrderCCByCloseness(Roadmap * rm,
 
         while( i < vidvec.size() ) {
 	    vtemp=rm->m_pRoadmap->GetData(vidvec[i]);
-	    //cout << vtemp << endl;
+	    //cout << i << " " << vtemp << endl;
 	    if (i==0)
 		centervec.push_back(vtemp);
 	    else{
@@ -1199,13 +1224,17 @@ ConnectMapNodes::OrderCCByCloseness(Roadmap * rm,
 		}
 	    i++;
 	    } //while i<vidvec.size()
-        cout << "orderccs problem0";
+        cout << i << endl;
         DisplayCC((*rm->m_pRoadmap),(*cc2).second);
+        cout << "centervec=" << centervec[index] << endl;
 	centervec[index] = centervec[index] / i;
 	cout << "centervec=" << centervec[index] << endl;
-        ++cc2; i = 0; index++;     cout << "cc2.second in order cc:" << (*cc2).second;
+        cc2++; i = 0; index++;     
+        cout << "cc2.second in order cc:" << (*cc2).second;
 	//vidvec=rm->m_pRoadmap->GetCC((*cc2).second);
+        vidvec.clear();
         GetCC(*(rm->m_pRoadmap),(*cc2).second ,vidvec);
+    
     } //while cc2<ccvec.end()
     vector<Cfg> centvec; 
     for(i=1; i<centervec.size();i++) {
@@ -1216,18 +1245,26 @@ ConnectMapNodes::OrderCCByCloseness(Roadmap * rm,
 							centervec[0],
 							centvec,
 							centervec.size()-1);
+    vector< pair<int,VID> > ccvec_tmp;
+    ccvec_tmp.push_back( *ccvec.begin() );
     for(i=0; i<kp.size(); i++) {
         int j=0;
-    cout << "orderccs problem2";
 	while ( (kp[i].second != centervec[j]) && (j<centervec.size()) )
 	    j++;
 	if ( j < centervec.size() ) {
-	    pair<int,VID> tmp = ccvec[i+1];
-	    ccvec[i+1] = ccvec[j];
-	    ccvec[j] = tmp;
+            cout << "putting centervec "<<j<<"at position "<<i+1<<"\n";
+	    //pair<int,VID> tmp = ccvec[i+1];
+	    //ccvec[i+1] = ccvec[j];
+	    //ccvec[j] = tmp;
+            pair<int,VID>& tmp = ccvec[j];
+            ccvec_tmp.push_back( tmp );
 	    }
    	else cout << "ERROR in OrderCCByCloseness" << endl; 
 	}// end for
+        ccvec.swap(ccvec_tmp);
+          for(int b=0;b<ccvec.size();b++)
+             cout << "ccvec["<<b<<"] "<<ccvec[b].second;
+          cout << endl;
 }
 /*---------------------------------------------------------------
 Will either create basic RRTs from existing nodes or call 
@@ -1269,6 +1306,7 @@ ConnectNodes_ExpandRRT(
         RRT(&submap1,
            _cn.GetIterations(),
            _cn.GetStepFactor() * lpInfo.positionRes,
+           _cn.GetOClearance(),_cn.GetClearanceFromNode(),
            dummyU,
            cd, lp, dm, info, lpInfo,toConnect,FALSE);
         vector<VID> verts;
@@ -1292,7 +1330,10 @@ ConnectNodes_RRTConnect(
   #ifndef QUIET
   cout << "(iterations = "<<_cn.GetIterations()
        << ", stepFactor= "<<_cn.GetStepFactor()
-       << ", smallcc   = "<<_cn.GetSmallCCSize()<<"): "<<flush;
+       << ", smallcc   = "<<_cn.GetSmallCCSize()
+       << ", o_clearance = "<<_cn.GetOClearance()
+       << ", node_clearance = "<<_cn.GetClearanceFromNode()
+       << "): "<<flush;
   #endif
 
   // initialize information needed to check connection between cfg's
@@ -1367,6 +1408,7 @@ for ( int z = 0; z <=1; z++) {
 		  RRT(&submap3,
               		  _cn.GetIterations()/2,
                       _cn.GetStepFactor() * lpInfo.positionRes,
+                      _cn.GetOClearance(),_cn.GetClearanceFromNode(),
                       dummyU,
                       cd, lp, dm, info, lpInfo,toConnect,FALSE);
       		  vector<VID> verts1;
@@ -1397,7 +1439,12 @@ for ( int z = 0; z <=1; z++) {
 	   //cc
 	   }
           
-	  OrderCCByCloseness(_rm,dm,info,ccvec);
+	  OrderCCByCloseness(_rm,dm,info,ccvec); cout<<"\n";
+          for(int b=0;b<ccvec.size();b++)
+             cout << "ccvec["<<b<<"] "<<ccvec[b].second;
+          cout<<endl;
+          cc1= ccvec.begin();
+          cc2 = ccvec.begin(); cc2++;
           cout << "outside orderccsbycloseness\n";
 	  VID cc1id = (*cc1).second;
           cout << "cc1: " << (*cc1).second << " cc2: " << (*cc2).second << "\n";
@@ -1459,6 +1506,7 @@ for ( int z = 0; z <=1; z++) {
 		RRT(&submap1,
 		    	1,
 		    	_cn.GetStepFactor() * lpInfo.positionRes,
+			    _cn.GetOClearance(),_cn.GetClearanceFromNode(),
 		    	U,cd,lp,dm,info,lpInfo,toConnect,TRUE);
                 if (U.size() > 0)
 		  cout << "between RRT calls " << U[0] << "\n";
@@ -1468,6 +1516,7 @@ for ( int z = 0; z <=1; z++) {
 		RRT(&submap2,
 			1,
 			_cn.GetStepFactor() * lpInfo.positionRes,
+			_cn.GetOClearance(),_cn.GetClearanceFromNode(),
 			U,cd,lp,dm,info,lpInfo,toConnect,TRUE);
 		}
 		else {
@@ -1479,6 +1528,7 @@ for ( int z = 0; z <=1; z++) {
 		RRT(&submap2,
 		    	1,
 		    	_cn.GetStepFactor() * lpInfo.positionRes,
+				_cn.GetOClearance(),_cn.GetClearanceFromNode(),
 		    	U,cd,lp,dm,info,lpInfo,toConnect,TRUE);
 		if (U.size() > 0)
                   cout << "between RRT calls " << U[0] << "\n";
@@ -1488,6 +1538,7 @@ for ( int z = 0; z <=1; z++) {
 		RRT(&submap1,
 		    	1,
 		    	_cn.GetStepFactor() * lpInfo.positionRes,
+				_cn.GetOClearance(),_cn.GetClearanceFromNode(),
 		    	U,cd,lp,dm,info,lpInfo,toConnect,TRUE);
 		}
 		//U.erase(U.begin());
@@ -1822,13 +1873,15 @@ CN() {
   cnid = INVALID_EID;
 }
 CN::
-CN(int kp, int small, int step, int iter) {
+CN(int kp, int small, int step, int iter, int obst_clr, int clr_fr_node) {
   strcpy(name,"");
   connector = 0; 
   kpairs = kp;
   smallcc = small;
   stepFactor = step;
   iterations = iter;
+  o_clearance = obst_clr;
+  clearance_from_node = clr_fr_node;
   cnid = INVALID_EID;
 }
 CN::
@@ -1907,6 +1960,12 @@ int CN::GetStepFactor() const {
     return stepFactor;
 }
 
+int CN::GetOClearance() const {
+    return o_clearance;
+}
+int CN::GetClearanceFromNode() const {
+    return clearance_from_node;
+}
 int CN::GetMaxNum() const {
     return maxNum;
 }
@@ -1928,7 +1987,9 @@ ostream& operator<< (ostream& _os, const CN& cn) {
         if ( strstr(cn.GetName(),"RRTexpand") || strstr(cn.GetName(),"RRTcomponents") ){
            _os<< ", iterations = " << cn.GetIterations() 
               << ", stepFactor = " << cn.GetStepFactor()
-              << ", smallcc = " << cn.GetSmallCCSize();  
+              << ", smallcc = " << cn.GetSmallCCSize()  
+              << ", o_clearance = " << cn.GetOClearance()
+              << ", clearance_from_node = " << cn.GetClearanceFromNode();
         }
         if ( strstr(cn.GetName(),"modifiedLM") ){
            _os<< ", kclosest = " << cn.GetKClosest()
@@ -2028,7 +2089,8 @@ MakeCNSet(istream& _myistream) {
   int iterations, stepFactor;  // parameters for RRTexpand,RRTcomponents
   int maxNum;                  // parameter  for modifiedLM
   double rfactor;              // parameter  for modifiedLM
-
+  int o_clearance; //default
+  int clearance_from_node;
   vector<EID> cnvec;  // vector of cnids for this set 
 
   while ( _myistream >> cnname ) { 			// while cns to process...  
@@ -2211,10 +2273,14 @@ MakeCNSet(istream& _myistream) {
           iterations = ITERATIONS;  // default
           stepFactor = STEP_FACTOR;  // default
           smallcc    = SMALL_CC;  // default
+          o_clearance = 3; //default
+          clearance_from_node = 4; //default
        }
        cn1.iterations = iterations;
        cn1.stepFactor = stepFactor;
        cn1.smallcc    = smallcc;
+       cn1.o_clearance = 3; // default
+       cn1.clearance_from_node = 4; // default
 
        cn1.cnid = AddElementToUniverse(cn1);
        if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {

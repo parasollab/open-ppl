@@ -27,7 +27,7 @@ ConnectMapComponents::ConnectMapComponents(): options("-cComponents") {
   options.PutDesc("STRING",
    "\n\t\t\tPick any combo: default RayTracer targetOriented 1 10000 10000"
    "\n\t\t\t\tRayTracer \tSTRING \tINT \tINT \tINT \tSTRING \tINT \tINT (bouncingMode:targetOriented maxRays:1 maxBounces:10000 maxRayLength:10000 \tschedulingMode:largestToSmallest scheduleMaxSize:20 sampleMaxSize:10)"
-   "\n\t\t\t  RRTcomponents  INT INT INT (iter:10 factor:3 cc:3)" );
+   "\n\t\t\t  RRTcomponents  INT INT INT INT INT (iter:10 factor:3 cc:3 o_clr:2 node_clr:4)" );
 }
 
 ConnectMapComponents::ConnectMapComponents(Roadmap * rdmp, CollisionDetection* cd, DistanceMetric* dm, LocalPlanners* lp, ConnectMapNodes* cn) : 
@@ -49,7 +49,7 @@ ConnectMapComponents::ConnectMapComponents(Roadmap * rdmp, CollisionDetection* c
   options.PutDesc("STRING",
    "\n\t\t\tPick any combo: default RayTracer targetOriented 1 10000 10000"
    "\n\t\t\t\tRayTracer \tSTRING \tINT \tINT \tINT \tSTRING \tINT \tINT (bouncingMode:targetOriented maxRays:1 maxBounces:10000 maxRayLength:10000 \tschedulingMode:largestToSmallest scheduleMaxSize:20 sampleMaxSize:10)"
-   "\n\t\t\t  RRTcomponents  INT INT INT (iter:10 factor:3 cc:3)" );
+   "\n\t\t\t  RRTcomponents  INT INT INT INT INT (iter:10 factor:3 cc:3 o_clr:2 node_clr:4)" );
 }
 
 
@@ -66,15 +66,26 @@ int ConnectMapComponents::ReadCommandLine(int *argc, char **argv) {
   vector<ComponentConnectionMethod *>::iterator itr;
   
   //go through each parameter in the command line looking for method names
-  istrstream input_stream(options.GetValue());
+  istringstream input_stream(options.GetValue());
+  bool found = FALSE;
   string method_name;
   while (input_stream >> method_name) {
-      cout << method_name << "\n";
-      for (itr = all.begin(); itr != all.end(); itr++)
-        if (method_name == (*itr)->GetName()) {
-	  //here we'll need to change this to clone (*itr)
-	  (*itr)->ParseCommandLine(argc, argv, input_stream);
-	  selected.push_back(*itr);
+      found = FALSE;
+      try {
+        cout << "Read command line" << method_name << "\n";
+        for (itr = all.begin(); itr != all.end(); itr++)
+          if (method_name == (*itr)->GetName()) {
+	    //here we'll need to change this to clone (*itr)
+	    (*itr)->ParseCommandLine(argc, argv, input_stream);
+	    selected.push_back(*itr);
+            found = TRUE;
+          }
+        if (!found) 
+          throw BadUsage();
+      }
+      catch (BadUsage) {
+        cerr << "Error in " << method_name << " connection method"  << endl;
+        exit(-1);
         }
  
   }
@@ -163,30 +174,44 @@ RRTConnectionMethod::~RRTConnectionMethod() {
     delete cn1;
 }
 
-int RRTConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstream &input_stream) { 
+int RRTConnectionMethod::ParseCommandLine(int *argc, char **argv, istringstream &input_stream) { 
   int int_rd; //to parse integers
   try {
     if (input_stream >> int_rd) {
       if (int_rd < 0)
 	throw BadUsage();
       iterations = int_rd;
-
+      
       if (input_stream >> int_rd) {
 	if (int_rd < 0)
 	  throw BadUsage();
 	stepFactor = int_rd;
-
+        
 	if (input_stream >> int_rd) {
 	  if (int_rd < 0)
 	    throw BadUsage();
 	  smallcc = int_rd;
+          
+          if (input_stream >> int_rd) {
+	    if (int_rd < 0)
+	       throw BadUsage();
+	    o_clearance = int_rd;
 
+  	    if (input_stream >> int_rd) {
+	      if (int_rd < 0)
+	        throw BadUsage();
+	      clearance_from_node = int_rd;
+
+	    }
+            else throw BadUsage();
+	  }
+          else throw BadUsage();
 	}
         else throw BadUsage();
       }
       else throw BadUsage();
     }
-    else throw BadUsage();
+    else input_stream.clear();
   } catch (BadUsage) {
     cerr << "Error in RRT parameters" << endl;//PrintUsage(cout,...);
     exit(-1);
@@ -195,16 +220,18 @@ int RRTConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstream &in
   //update cn1 according to the current values  
   if (cn1 != NULL)
     delete cn1;
-  cn1 = new CN(0,smallcc,stepFactor,iterations);
+  cn1 = new CN(0,smallcc,stepFactor,iterations,clearance_from_node,o_clearance);
 }
 
 void RRTConnectionMethod::SetDefault() {
   iterations = ITERATIONS;
   stepFactor = STEP_FACTOR;
   smallcc    = SMALL_CC;
+  o_clearance = O_CLEARANCE;
+  clearance_from_node = CLEARANCE_FROM_NODE;
   if (cn1 != NULL)
     delete cn1;
-  cn1 = new CN(0,smallcc,stepFactor,iterations);
+  cn1 = new CN(0,smallcc,stepFactor,iterations,clearance_from_node,o_clearance);
 }
  
 void RRTConnectionMethod::ConnectComponents() {
@@ -232,7 +259,7 @@ ConnectCCsConnectionMethod::~ConnectCCsConnectionMethod() {
     delete cn1;
 }
  
-int ConnectCCsConnectionMethod::ParseCommandLine(int *argc,char **argv,istrstream &input_stream){ 
+int ConnectCCsConnectionMethod::ParseCommandLine(int *argc,char **argv,istringstream &input_stream){ 
   int int_rd; //to parse integers
   try {
     if (input_stream >> int_rd) {
@@ -247,7 +274,7 @@ int ConnectCCsConnectionMethod::ParseCommandLine(int *argc,char **argv,istrstrea
       }
       else throw BadUsage();
     }
-    else throw BadUsage();
+    else input_stream.clear();
   } catch (BadUsage) {
     cerr << "Error in ConnectCCs parameters" << endl;//PrintUsage(cout,...);
     exit(-1);
@@ -259,7 +286,7 @@ int ConnectCCsConnectionMethod::ParseCommandLine(int *argc,char **argv,istrstrea
   else { //update cn1
     if (cn1 !=NULL)
       delete cn1;
-    cn1 = new CN(kpairs,smallcc,0,0);
+    cn1 = new CN(kpairs,smallcc,0,0,0,0);
   }
 }
  
@@ -268,7 +295,7 @@ void ConnectCCsConnectionMethod::SetDefault() {
   kpairs = KPAIRS;
   if (cn1 !=NULL)
     delete cn1;
-  cn1 = new CN(kpairs,smallcc,0,0);
+  cn1 = new CN(kpairs,smallcc,0,0,0,0);
 
 }
 
@@ -293,21 +320,32 @@ RayTracerConnectionMethod::RayTracerConnectionMethod(Roadmap *rdmp, CollisionDet
 
 RayTracerConnectionMethod::~RayTracerConnectionMethod() { }
 
-int RayTracerConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstream &input_stream) { 
+int RayTracerConnectionMethod::ParseCommandLine(int *argc, char **argv, istringstream &input_stream) { 
   string str_rd; //to parse strings
   int int_rd; //to parse integers
+  int point = input_stream.tellg();
+  //istringstream input_stream_tmp(input_stream.str(),istringstream::in);
   try {
     if (input_stream >> str_rd) {
       if (str_rd != string("targetOriented") && str_rd != string("random") && 
-	  str_rd != string("heuristic") && str_rd != string("normal"))
-	throw BadUsage();
+	  str_rd != string("heuristic") && str_rd != string("normal")) {
+	  //throw BadUsage();
+          //cout << input_stream_tmp.str()<<endl;
+          //istringstream input_stream( input_stream_tmp );
+          cout << point << "\n";
+          input_stream.seekg(point);
+          cout << input_stream.str()<<endl;
+          //input_stream.clear();
+          //input_stream; 
+        }
+    else {
       RayTbouncingMode = str_rd;
-
+      
       if (input_stream >> int_rd) {
 	if (int_rd < 1)
 	  throw BadUsage();
 	RayTmaxRays = int_rd;
-      
+        
 	if (input_stream >> int_rd) {
 	  if (int_rd < 1)
 	    throw BadUsage();
@@ -356,8 +394,11 @@ int RayTracerConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstre
         else throw BadUsage();
       }
       else throw BadUsage();
+    } //else paired with if checking targetOriented, heuristic, random etc...
     }
-    else throw BadUsage();
+    else 
+       if ( !input_stream.eof() )
+         throw BadUsage();
   } catch (BadUsage) {
     cerr << "Error in RayTracer parameters" << endl;//PrintUsage(cout,...);
     exit(-1);

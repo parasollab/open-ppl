@@ -118,7 +118,7 @@ public:
 
       ///Default constructor. Initialize its data member to invalid values.
       CN();
-      CN(int kp, int small, int step, int iter);
+      CN(int kp, int small, int step, int iter, int obst_clr, int clr_fr_node);
       ///Destructor. Currently do nothing.
       ~CN();
 
@@ -181,6 +181,8 @@ public:
       int    GetKSelf      () const;///<Get #k_self
       int    GetIterations () const;///<Get #iterations
       int    GetStepFactor () const;///<Get #stepFactor
+      int    GetOClearance () const;///<Get #o_clearance
+      int    GetClearanceFromNode () const;///<Get #clearance_from_node
       int    GetMaxNum     () const;///<Get #maxNum
       double GetRFactor    () const;///<Get #rfactor
 
@@ -212,6 +214,8 @@ protected:
 
   int    stepFactor;        ///< used by rrt algm
   int    iterations;        ///< used by rrt algm
+  int	 o_clearance;
+  int 	 clearance_from_node;
 
   int    k_other;           ///< used by obstBased algm
   int    k_self;            ///< used by obstBased algm
@@ -1249,8 +1253,9 @@ protected:
         *@note add'l parameters are used in calls to various algobase 
         *       functions.
         */
-      static void RRT(Roadmap* rm, int K, double deltaT, vector<Cfg>& U,
-                                    CollisionDetection*,LocalPlanners*,
+      static void RRT(Roadmap* rm, int K, double deltaT, 
+                                    int o_clearance, int clearance_from_node,
+                                    vector<Cfg>& U, CollisionDetection*,LocalPlanners*,
                                     DistanceMetric *, CNInfo&, LPInfo,
 							bool & toConnect, bool connecting);
 
