@@ -108,7 +108,7 @@ class GenerateMapNodes {
 		     CollisionDetection* cd, 
 		     DistanceMetric* dm, vector<CFG>& nodes);
 
- private:
+ protected:
   //////////////////////
   // Data
   vector<NodeGenerationMethod<CFG>*> all;
