@@ -62,6 +62,9 @@ public:
         ///Ouput values of parameters of query command.
         void PrintValues(ostream& _os);
 
+	///Output default values of connectCCs command
+	void PrintDefaults();
+
     //@}
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +86,7 @@ public:
     //str_param<char*> pathFile;
 
     // Connection method to connect CCs
-    str_param<char*> connect_cc_method;
+    n_str_param option_str;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

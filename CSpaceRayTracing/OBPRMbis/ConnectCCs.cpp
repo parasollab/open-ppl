@@ -14,7 +14,6 @@
 #include <fstream.h>
 #include <string.h>
 
-#include "RayTracer.h"
 #include "ConnectCCs.h"
 #include "Environment.h"
 #include "GraphAlgo.h"
@@ -35,20 +34,107 @@ ConnectCCs()
 
 ConnectCCs::
 ConnectCCs(Input *input,ConnectCCsCmds *connect_CCs_input,
-    CollisionDetection *cd, DistanceMetric *dm, LocalPlanners *lp,
-        ConnectMapNodes    *cn)
-{
-    rdmp.InitRoadmap(input,cd,dm,lp,connect_CCs_input->mapFile.GetValue() );
-
-    connect_cc_method = string(connect_CCs_input->connect_cc_method.GetValue());
-    
-//      ReadConnectCCs( connect_CCs_input->queryFile.GetValue() );
-
-    initDefaultSetIDs(cn);
-
-//      outputPathFile = new char[strlen(connect_CCs_input->pathFile.GetValue())+1];
-//      strcpy(outputPathFile,connect_CCs_input->pathFile.GetValue());
+	   CollisionDetection *cd, DistanceMetric *dm, LocalPlanners *lp,
+	   ConnectMapNodes    *cn) {
+  rdmp.InitRoadmap(input,cd,dm,lp,connect_CCs_input->mapFile.GetValue() );
+  istrstream input_stream(connect_CCs_input->option_str.GetValue());
+  string cnname;
+  while (input_stream >> cnname) {
+    if (cnname == string("RayTracer")) {
+      method_name = cnname;
+      if (input_stream >> RayTbouncingMode) {
+	if (RayTbouncingMode != string("targetOriented") && 
+	    RayTbouncingMode != string("random") && 
+	    RayTbouncingMode != string("heuristic") && 
+	    RayTbouncingMode != string("normal")) {
+	  cout << endl << "INVALID: bouncingMode = " << RayTbouncingMode;
+	  exit(-1);
+	} else {
+	  if (input_stream >> RayTmaxRays) {
+	    if (RayTmaxRays < 1) {
+	      cout << endl << "INVALID: maxRays = " << RayTmaxRays;
+	      exit(-1);
+	    } else {
+	      if (input_stream >> RayTmaxBounces) {
+		if (RayTmaxBounces < 1) {
+		  cout << endl << "INVALID: maxBounces = " << RayTmaxBounces;
+		  exit(-1);
+		} else {
+		  if (input_stream >> RayTmaxRayLength) {
+		    if (RayTmaxRayLength < 1) {
+		      cout << endl << "INVALID: maxRayLength = " << RayTmaxRayLength;
+		      exit(-1);
+		    }
+		  } else {
+		    RayTmaxRayLength = MAX_RAY_LENGTH;
+		  }
+		}
+	      } else {
+		RayTmaxBounces = MAX_BOUNCES;
+		RayTmaxRayLength = MAX_RAY_LENGTH;
+	      }
+	    }
+	  }
+	  else {
+	    RayTmaxRays = MAX_RAYS;
+	    RayTmaxBounces = MAX_BOUNCES;
+	    RayTmaxRayLength = MAX_RAY_LENGTH;
+	  }
+	}
+      } else {
+	RayTbouncingMode = string("targetOriented");
+	RayTmaxRays = MAX_RAYS;
+	RayTmaxBounces = MAX_BOUNCES;
+	RayTmaxRayLength = MAX_RAY_LENGTH;
+      }
+    } else if (cnname == string("RRTcomponents")) {
+      method_name = cnname;
+      if (input_stream >> RRTiterations) {
+	if (RRTiterations < 0) {
+	  cout << endl << "INVALID: iterations = " << RRTiterations;
+	  exit(-1);
+	} else {
+	  if (input_stream >> RRTstepFactor) {
+	    if (RRTstepFactor < 0) {
+	      cout << endl << "INVALID: step_factor = " << RRTstepFactor;
+	      exit(-1);
+	    } else {
+	      if (input_stream >> RRTsmallcc) {
+		if (RRTsmallcc < 0) {
+		  cout << endl << "INVALID: smallcc = " << RRTsmallcc;
+		  exit(-1);
+		}
+	      } else
+		RRTsmallcc = SMALL_CC; //default
+	    }
+	  } else {
+	    RRTstepFactor = STEP_FACTOR; //default
+	    RRTsmallcc = SMALL_CC; //default
+	  }
+	}
+      } else {
+	RRTiterations = ITERATIONS;  // default
+	RRTstepFactor = STEP_FACTOR;  // default
+	RRTsmallcc    = SMALL_CC;  // default
+      }
+//        vector<EID> cnvec;
+//        CN cn1;
+//        strcpy(cn1.name,cnname);
+//        cn1.connector = &ConnectMapNodes::ConnectNodes_ExpandRRT;
+//        cn1.iterations = iterations;
+//        cn1.stepFactor = stepFactor;
+//        cn1.smallcc    = smallcc;
+//        cn1.cnid = AddElementToUniverse(cn1);
+//        if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
+//  	cout << endl << "In MakeSet: couldn't change element info";
+//  	exit(-1);
+//        }
+//        cnvec.push_back( cn1.cnid );       
+    }
+  } //end while
+  initDefaultSetIDs(cn);
 }
+
 
 ConnectCCs::
 ~ConnectCCs()
@@ -86,30 +172,13 @@ PerformConnectCCs(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * l
 {
 
   //here is where we will call the proper method from (RRT or RayTracer
-  if (connect_cc_method == string("RRT")) {
+  if (method_name == string("RRTcomponents")) {
     cout << "using RRT to attempt to connect CCs" << endl;
     //The call to RRT from ConnectMapNodes goes here
-    (*cn).ConnectNodes(&rdmp,cd,lp,dm, (*cn).cnInfo.cnsetid, (*cn).cnInfo);
   }
-  else if (connect_cc_method == string("RayTracer")) {
-    
-    bool path_found=false;
+  else if (method_name == string("RayTracer")) {
     cout << "usint RayTracer to attempt to connect CCs" << endl;
     //The call to RayTracer from ConnectMapNodes goes here
-      Environment * environment = rdmp.GetEnvironment();
-      CDInfo info;
-      Cfg source = Cfg::GetFreeRandomCfg(environment, cd, cdsetid,info);
-      Cfg target = Cfg::GetFreeRandomCfg(environment, cd, cdsetid,info);
-      RayTracer tracer(environment, source, target);
-      tracer.setDirection(RT_TARGET_ORIENTED);
-  
-      while (!path_found && !tracer.exhausted()) {
-         //Trace the ray
-         cout<< "Trying new direction for ray"<<endl;
-         path_found=tracer.trace(cd, cdsetid, info, dm, dmsetid);
-         tracer.newDirection();
-         }
-    
   }
   else {
     cout << "Unknown choice, doing nothing" << endl;

@@ -16,13 +16,16 @@
 //  Constructors and Destructor
 //===================================================================
 ConnectCCsCmds::ConnectCCsCmds():
-        defaultFile    ("-f"),
-
-        mapFile        ("-inmapFile"),
-        //pathFile       ("-pathFile"),
-        //queryFile      ("-queryFile")
-	connect_cc_method("-connectCCsMethod")
-	{
+  defaultFile    ("-f"),
+  mapFile        ("-inmapFile"),
+  //pathFile	       ("-pathFile"),
+  //queryF	ile      ("-queryFile")
+  option_str("-connectCCsMethod") {
+  option_str.PutDesc("STRING",
+      "\n\t\t\tPick any combo: default RayTracer targetOriented 1 10000 10000"
+      "\n\t\t\t  RayTracer	STRING	INT	INT	INT	(bouncingMode:targetOriented maxRays:1 maxBounces:10000 maxRayLength:10000)"
+      "\n\t\t\t  RRTcomponents  INT INT INT (iter:10 factor:3 cc:3)"
+			     );
 }
 
 ConnectCCsCmds::~ConnectCCsCmds() {
@@ -66,7 +69,7 @@ ReadCommandLine(int *argc, char **argv){
 	//    	      } else if ( pathFile.AckCmdLine(&i, *argc, argv) ) {
 	//          } else if ( queryFile.AckCmdLine(&i, *argc, argv) ) {
       } 
-      else if ( connect_cc_method.AckCmdLine(&i, *argc, argv)) {
+      else if ( option_str.AckCmdLine(&i, *argc, argv)) {
 	//-- if unrecognized keep	
 	;
       } 
@@ -85,7 +88,7 @@ ReadCommandLine(int *argc, char **argv){
 	    //  		pathFile.IsActiv	ated() &&
 	    //  		queryFile.IsActivated()  )	
 	    )
-	 && !connect_cc_method.IsActivated()
+	 && !option_str.IsActivated()
 	 )
       throw BadUsage();
     
@@ -128,7 +131,7 @@ PrintUsage(ostream& _os,char *executablename){
 //          _os << "\n\t"; queryFile.PrintUsage(_os);
 
         _os << "\n\t\t _ADDITIONAL_ ";
-	_os << "\n\t"; connect_cc_method.PrintUsage(_os);
+	_os << "\n\t"; option_str.PrintUsage(_os);
 
     cout.setf(ios::right,ios::adjustfield);
 
@@ -144,6 +147,13 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(20)<<"mapFile"<<"\t"<<mapFile.GetValue();
 //    _os <<"\n"<<setw(20)<<"pathFile"<<"\t"<<pathFile.GetValue();
 //    _os <<"\n"<<setw(20)<<"queryFile"<<"\t"<<queryFile.GetValue();
-  _os <<"\n"<<setw(20)<<"connect_cc_method"<<"\t"<<connect_cc_method.GetValue();
+  _os <<"\n"<<setw(20)<<"connectCCsMethod"<<"\t"<<option_str.GetValue();
   _os << "\n\n";
 };
+
+void ConnectCCsCmds::PrintDefaults() {
+  cout <<"\n"<<setw(20)<<"defaultFile : no default string for this parameter"<<"\t"<< endl;
+  cout <<"\n"<<setw(20)<<"connectCCsMethod"<<"\t"<<option_str.GetFlag()<<endl;
+  cout << "\n\n";
+
+}

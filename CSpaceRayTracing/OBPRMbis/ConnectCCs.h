@@ -19,6 +19,14 @@
 
 #include <string>
 
+#define MAX_BOUNCES 10000
+#define MAX_RAY_LENGTH 10000
+#define MAX_RAYS 1
+
+#define ITERATIONS 10
+#define STEP_FACTOR 10
+#define SMALL_CC 3
+
 class ConnectCCs
 {
 
@@ -225,7 +233,16 @@ public:
     SID cdsetid;                        ///< Collision Detection set id for query
     SID dmsetid;                        ///< Distance Metrics set id for query
 
-    string connect_cc_method;
+    string method_name;
+    //RayTracer options
+    string RayTbouncingMode;
+    int RayTmaxRays;
+    int RayTmaxBounces;
+    int RayTmaxRayLength;
+    //RRT options
+    int RRTiterations;
+    int RRTstepFactor;
+    int RRTsmallcc;
 };
 
 #endif

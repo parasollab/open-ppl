@@ -19,6 +19,7 @@
 #define RT_RANDOMLY 0
 #define RT_HEURISTIC 1
 #define RT_TARGET_ORIENTED 2
+#define RT_NORMAL 3
 
 class RayTracer {
  private:
