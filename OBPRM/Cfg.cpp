@@ -762,7 +762,8 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
     Cfg cfg = *this;
 
     vector <Cfg> directions;
-    for (int i=0; i<n; i++) {
+    int i;
+    for (i=0; i<n; i++) {
         directions.push_back( GetRandomCfg( env ) );
     }
     if (directions.size() == 0) { //unable to generate random directions
@@ -791,7 +792,7 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
     int num_ignored = 0;
     int n_ticks;
 
-    for (int i=0; i<directions.size(); i++) {
+    for (i=0; i<directions.size(); i++) {
         tick.push_back(cfg);
         incr.push_back(cfg.FindIncrement(directions[i], &n_ticks, positionRes, orientationRes));
         incrSize.push_back(incr[i].OrientationMagnitude() + incr[i].PositionMagnitude());
@@ -887,7 +888,8 @@ vector<Cfg> Cfg::ApproxCSpaceContactPoints(vector<Cfg> directions,
   vector<Cfg> contact_points;
 
   //initialize:
-  for(int i=0; i<directions.size(); i++) {
+  int i;
+  for(i=0; i<directions.size(); i++) {
     contact_points.push_back(origin);
   }
   double positionRes = env->GetPositionRes();
@@ -899,7 +901,7 @@ vector<Cfg> Cfg::ApproxCSpaceContactPoints(vector<Cfg> directions,
   double incrBound = env->GetMultiBody(iRobot)->GetMaxAxisRange();
 
   //step out along each ray and record first cfg in collision:
-  for(int i=0; i<contact_points.size(); i++) {
+  for(i=0; i<contact_points.size(); i++) {
 
         int n_ticks;
 	Cfg tick = origin;
