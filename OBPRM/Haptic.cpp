@@ -29,11 +29,11 @@ static int path_num = 0;
 /////////////////////////////////////////////////////
 //
 //  Local function:
-//     1 read_prong()
+//     1 read_segment()
 //     2 create_list(,,)
 //
 /////////////////////////////////////////////////////
-void read_prong(char fileName[80])
+void read_segment(char fileName[80])
 {
   int i;
   FILE *in;
@@ -119,7 +119,7 @@ void Haptic::init(Roadmap *rm, char * tmp[5], CollisionDetection *_cd,
    
    int n=1,m=10, closest;
    int mask;
-   read_prong(tmp[0]);
+   read_segment(tmp[0]);
    sscanf(tmp[1],"%d",&n);
    sscanf(tmp[2],"%d",&m);
    sscanf(tmp[3],"%d",&closest);
