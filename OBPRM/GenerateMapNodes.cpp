@@ -456,6 +456,85 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
 };
 
 
+/////////////////////////////////////////////////////////////////////
+// Basic MAPRM
+// written by Brent, June 2000
+//
+// Medial Axis version - take 1
+// Find points NOT in collision and push them to medial axis
+// throw out pts in collision (for now)
+/////////////////////////////////////////////////////////////////////
+void
+GenerateMapNodes::
+BasicMAPRM(Environment *_env, CollisionDetection* cd, 
+           DistanceMetric *,GN& _gn, GNInfo &_info)
+{
+   Vector3D trans_dir;
+   CDInfo   oldInfo;
+   bool     collided;
+
+   #ifndef QUIET
+     cout << "(numNodes=" << _info.numNodes << ") ";
+   #endif
+
+   #if INTERMEDIATE_FILES
+     vector<Cfg> path; path.reserve(_info.numNodes);
+   #endif
+
+   // Set flag in _info.cdInfo to cause isCollision 
+   // to return "all info" such as witness pairs and min dist 
+   // and collision object index
+   //    would make more sense if it was in cd->cdInfo
+   //    but not confident the member var will stick around
+   //    nor how it might be used elsewhere
+   // NEW info currently always put in _info.cdInfo
+   // note we do NOTHING with cd->stuff
+   _info.cdInfo.ResetVars();
+   _info.cdInfo.ret_all_info = true;
+
+   for (int i=0; i < _info.numNodes; i++) 
+   {
+      Cfg cfg = Cfg::GetRandomCfg(_env);
+
+      if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) 
+      {
+         // so not in collision thus move cfg towards medial axis.
+         // stop when nearest object changes (assume space bounded with objects)
+         do
+         {
+            trans_dir = _info.cdInfo.robot_point - _info.cdInfo.object_point;
+
+            // Test if all this stuff compiles then do following
+            //cfg.Translate(trans_dir);
+
+            oldInfo = _info.cdInfo;
+
+            collided = cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo);
+
+         } while ( (!collided) &&
+                   (_info.cdInfo.nearest_obst_index == oldInfo.nearest_obst_index) );
+
+         // while we should never move into a collision state, we check anyway
+         if (!collided)
+         {
+            _info.nodes.push_back(Cfg(cfg));
+
+            #if INTERMEDIATE_FILES
+               path.push_back(cfg);
+            #endif
+         }
+         // else if we did push into collision we don't keep it.
+      
+      } // end if Random cfg was NOT in collision
+
+   } // end for i
+
+   #if INTERMEDIATE_FILES
+     WritePathTranformationMatrices("prm.path", path, _env);
+   #endif
+}
+
+
 //===================================================================
 // Validate Parameters
 //===================================================================

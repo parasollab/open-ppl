@@ -263,6 +263,12 @@ public:
 	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
 
   static
+  void
+  BasicMAPRM(Environment *_env, CollisionDetection* cd, 
+             DistanceMetric *,GN& _gn, GNInfo &_info);
+
+
+  static
   bool ValidateParameters(Input*);
 
   static

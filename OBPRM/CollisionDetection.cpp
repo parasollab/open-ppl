@@ -135,33 +135,113 @@ SetLineTransformation(const Transformation& trans, double linTrans[12]) {
     }
 }
 
-
+//////////////////////////////////////////////////////////////////////////
+// IsInCollision
+//
+// modified by Brent, June 2000
+// Added option to "get all info"
+//
+// Behavior is as follows:
+// lineRobot parameter defaults to NULL if not sent
+//
+// if we DON'T want all info we 
+//    will exit on the first collision detected
+//    _cdInfo.colliding_obst_index is set
+//    or loop through all objects and return no collision
+//
+// else 
+//    we will ALWAYS go examine every obstacle
+//    we still return if there is a collision
+//    all of _cdInfo will be set to correspond to the closest obstacle
+//    Notice if the robot self-collides, NOT all info is gotten
+//
+//////////////////////////////////////////////////////////////////////////
 bool
 CollisionDetection::
-IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot){
-    int nmulti, robot;
-    nmulti = env->GetMultiBodyCount();
-    robot = env->GetRobotIndex();
+IsInCollision(Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot)
+{
+   int nmulti, robot;
+   bool ret_val, collision_found; // needed to go thru ALL obstacles to get ALL info
+   CDInfo local_cd_info;
+   nmulti = env->GetMultiBodyCount();
+   robot = env->GetRobotIndex();
 
-    MultiBody * rob = env->GetMultiBody(robot);
-    if(lineRobot) // A line Segment generated on the fly, to check if 'seemingly connectable'.
-        rob = lineRobot;
+   MultiBody * rob = env->GetMultiBody(robot);
 
-    for(int i = 0 ; i < nmulti ; i++){
-        if(i != robot ){
-            if(IsInCollision(env, _cdsetid, _cdInfo, rob, env->GetMultiBody(i))){
-                _cdInfo.colliding_obst_index = i;
-                return true;
+   // A line Segment generated on the fly, to check if 'seemingly connectable'.
+   if (lineRobot) 
+   {
+      rob = lineRobot;
+   }
+
+   ret_val = false;
+
+   for (int i = 0; i < nmulti; i++)
+   {
+      if ( i != robot )
+      {
+         // Note that the below call sets _cdInfo as needed
+         collision_found = IsInCollision(env, _cdsetid, _cdInfo, rob, env->GetMultiBody(i));
+         
+         if ( (collision_found) && ( ! _cdInfo.ret_all_info) )
+         {
+            _cdInfo.colliding_obst_index = i;
+            return true;
+         }
+         else  if (_cdInfo.ret_all_info)   // store more info
+         {
+            if ((collision_found) && (!ret_val))
+            {
+               // colliding_obst_index is always the FIRST obstacle found in collision
+               local_cd_info.colliding_obst_index = i;
+               ret_val = true;
             }
-        } else {
-        // robot self checking. Warning: rob and env->GetMultiBody(robot) may NOT be the same.
-	    if(rob->GetBodyCount() > 1 && IsInCollision(env, _cdsetid, _cdInfo, rob, rob))
-	        return true;
-	}
-    }
-    return false;
-};
 
+            // Check new mins against old, reset *_points if needed
+            // Store everything in local_cd_info, copy back to _cdInfo at end of function
+            if (_cdInfo.min_dist < local_cd_info.min_dist)
+            {
+               local_cd_info.nearest_obst_index = i;
+               local_cd_info.min_dist = _cdInfo.min_dist;
+               local_cd_info.robot_point = _cdInfo.robot_point;
+               local_cd_info.object_point = _cdInfo.object_point;
+            } // end updating local_cd_info
+         }
+      } 
+      else 
+      {
+         // robot self checking. Warning: rob and env->GetMultiBody(robot) may NOT be the same.
+	      if ( (rob->GetBodyCount() > 1) && 
+              (IsInCollision(env, _cdsetid, _cdInfo, rob, rob)) )
+         {
+            if (_cdInfo.ret_all_info)
+            {
+               // set stuff to indicate odd happenning
+               _cdInfo.colliding_obst_index = -1;
+               _cdInfo.min_dist = MaxDist;
+               _cdInfo.nearest_obst_index = -1;
+               _cdInfo.robot_point[0] = _cdInfo.robot_point[1] = _cdInfo.robot_point[2] = 0;
+               _cdInfo.object_point[0] = _cdInfo.object_point[1] = _cdInfo.object_point[2] = 0;
+            }
+
+	         return true;
+         }
+      } // end  if-else i == robot
+
+   } // end for i
+
+   if (_cdInfo.ret_all_info)
+   {
+      // local_cd_info should contain "all the info" across all objects
+      // _cdInfo only contains info for the last one processed above
+      _cdInfo = local_cd_info;
+   }
+   
+   return ret_val;
+} // end IsInCollision ( 4 params, 4th defaults to NULL)
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 double
 CollisionDetection::
@@ -282,6 +362,7 @@ IsInCollision_quinlan
 }
 
 
+////////////////////////////////////////////////////////// VCLIP BEGIN
 // hash table used by "vclip"
 
 #ifdef USE_VCLIP
@@ -289,41 +370,131 @@ ClosestFeaturesHT closestFeaturesHT(3000);
 bool
 CollisionDetection::
 IsInCollision_vclip
-(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo)
+{
    Stats.IncNumCollDetCalls( "vclip" );
 
-    Real dist;
-    VclipPose X12;
-    PolyTree *rob, *obst;
-    Vect3 cp1, cp2;   // closest points between bodies, in local frame
+   Real dist;
+   VclipPose X12;
+   PolyTree *rob, *obst;
+   Vect3 cp1, cp2;   // closest points between bodies, in local frame
                       // we're throwing this info away for now
 
-    for(int i=0 ; i<robot->GetFreeBodyCount(); i++){
+   if (_cdInfo.ret_all_info == true)
+   {
+      bool ret_val;
+      ret_val = IsInColl_AllInfo_vclip(robot, obstacle, _cd, _cdInfo);
+      return ret_val;
+   }
 
-         rob = robot->GetFreeBody(i)->GetVclipBody();
+   for(int i=0 ; i<robot->GetFreeBodyCount(); i++)
+   {
 
-         for(int j=0; j<obstacle->GetBodyCount(); j++){
+      rob = robot->GetFreeBody(i)->GetVclipBody();
 
-            // if robot check self collision, skip adjacent links.
-            if(robot == obstacle &&
-               robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(j)) )
-                   continue;
+      for(int j=0; j<obstacle->GetBodyCount(); j++)
+      {
 
-            obst = obstacle->GetBody(j)->GetVclipBody();
-            X12 = GetVclipPose(robot->GetFreeBody(i)->WorldTransformation(),
-                  obstacle->GetBody(j)->WorldTransformation());
-            dist = PolyTree::vclip(rob,obst,X12,closestFeaturesHT, cp1, cp2);
-
-            //if(dist < 0.001) {
-	    if(dist < 0.0) {
-                return (true);
-            }
+         // if robot check self collision, skip adjacent links.
+         if(robot == obstacle &&
+            robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(j)) )
+         {
+            continue;
          }
-    }
-    return false;
-}
 
+         obst = obstacle->GetBody(j)->GetVclipBody();
+         X12 = GetVclipPose(robot->GetFreeBody(i)->WorldTransformation(),
+                            obstacle->GetBody(j)->WorldTransformation());
+         dist = PolyTree::vclip(rob,obst,X12,closestFeaturesHT, cp1, cp2);
+
+	      if(dist < 0.0)   // once was < 0.001 ????
+         {
+            return true;
+         }
+      } // end for j
+   } // end for i
+
+   return false;
+} // end IsInCollision_vclip()
+
+//////////////////////////////////////////////////////////////////////////
+// IsInColl_AllInfo_vclip
+// written by Brent, June 2000
+//
+// This function will fill in as much of _cdInfo as possible
+// w.r.t. the robot and obstacle sent
+// Notice each obstacle could change the results in _cdInfo
+// Trace back to general IsInCollision call to see how it all
+// gets updated correctly.
+//////////////////////////////////////////////////////////////////////////
+bool
+CollisionDetection::
+IsInColl_AllInfo_vclip
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo)
+{
+   Real dist, min_dist_so_far;
+   VclipPose X12;
+   PolyTree *rob, *obst;
+   Vect3 cp1, cp2;   // closest points between bodies, in local frame
+   Vector3D robot_pt, obs_pt;
+   bool ret_val;
+
+   ret_val = false;
+   min_dist_so_far = MaxDist;  // =  1e10 by CollisionDetection.h
+
+   for(int i=0 ; i<robot->GetFreeBodyCount(); i++)
+   {
+      rob = robot->GetFreeBody(i)->GetVclipBody();
+
+      for(int j=0; j<obstacle->GetBodyCount(); j++)
+      {
+
+         // if robot check self collision, skip adjacent links.
+         if(robot == obstacle &&
+            robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(j)) )
+         {
+            continue;
+         }
+
+         obst = obstacle->GetBody(j)->GetVclipBody();
+         X12 = GetVclipPose(robot->GetFreeBody(i)->WorldTransformation(),
+                            obstacle->GetBody(j)->WorldTransformation());
+         dist = PolyTree::vclip(rob,obst,X12,closestFeaturesHT, cp1, cp2);
+
+	      if ( dist < 0.0 )  
+         {
+            ret_val = true;
+         }
+
+         if (dist < min_dist_so_far)
+         {
+            // _cdInfo.nearest_obst_index =  is set by IsInCollision()
+            // which called this function - look there for more info
+            _cdInfo.min_dist = min_dist_so_far;
+
+            // change a 3 elmt array to Vector3D class
+            robot_pt[0] = cp1[0];
+            robot_pt[1] = cp1[1];
+            robot_pt[2] = cp1[2];
+
+            obs_pt[0] = cp2[0];
+            obs_pt[1] = cp2[1];
+            obs_pt[2] = cp2[2];
+
+            // transform points to world coords
+            // using *_pt vars in case overloaded * was not done well.
+            _cdInfo.robot_point = robot->GetFreeBody(i)->WorldTransformation() * robot_pt;
+            _cdInfo.object_point = obstacle->GetBody(j)->WorldTransformation() * obs_pt;
+         }
+      } // end for j
+   } // end for i
+
+   return ret_val;
+} // end IsInColl_AllInfo_vclip()
+
+////////////////////////////////////////////////////////// VCLIP END
 #endif
+
 #ifdef USE_RAPID
 bool
 CollisionDetection::
@@ -934,3 +1105,48 @@ ReadCDs(istream& _myistream) {
 
 
 
+/////////////////////////////////////////////////////////////////////////
+// BEGIN CLASS CDInfo
+/////////////////////////////////////////////////////////////////////////
+// Constructor
+/////////////////////////////////////////////////////////////////////////
+CDInfo::CDInfo()
+{
+   colliding_obst_index = -1;
+
+   ret_all_info = false;
+   nearest_obst_index = -1;
+   min_dist = MaxDist;      // =  1e10 by CollisionDetection.h
+   robot_point = 0;         // hope Vector3D class defined well
+   object_point = 0;
+
+} // end constructor
+
+/////////////////////////////////////////////////////////////////////////
+// Destructor
+/////////////////////////////////////////////////////////////////////////
+CDInfo::~CDInfo()
+{
+   // do nothing
+}
+
+/////////////////////////////////////////////////////////////////////////
+// ResetVars
+// 
+// Re-Init vars as done by constructor
+/////////////////////////////////////////////////////////////////////////
+void CDInfo::ResetVars()
+{
+   colliding_obst_index = -1;
+
+   ret_all_info = false;
+   nearest_obst_index = -1;
+   min_dist = MaxDist;      // =  1e10 by CollisionDetection.h
+   robot_point = 0;         // hope Vector3D class defined well
+   object_point = 0;
+
+} // end ResetVars
+
+/////////////////////////////////////////////////////////////////////////
+// END CLASS CDInfo
+/////////////////////////////////////////////////////////////////////////

@@ -57,9 +57,28 @@ class CollisionDetection;
 
 //---------------------------------------------------------------
 // Algo base information data structures
+//
+// This was made into a class so I knew everything was
+// initialized properly. I got tired of trying to track
+// down where all the CDInfo variables were created - BD July 2000
 //---------------------------------------------------------------
-struct CDInfo {
-    int colliding_obst_index;
+class CDInfo {
+
+public:
+   CDInfo();
+   ~CDInfo();
+   void ResetVars();
+
+    int    colliding_obst_index;
+
+    bool     ret_all_info;
+    int      nearest_obst_index;
+    double   min_dist;
+    Vector3D robot_point;  // robot_point and object_point
+    Vector3D object_point; // should by closest points in world coords
+
+private:
+
 };
 
 // pointer to cd function
@@ -221,11 +240,15 @@ public:
   static bool IsInCollision_cstk
 	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
 #endif
+
 #ifdef USE_VCLIP
   static bool IsInCollision_vclip
 	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
   static VclipPose GetVclipPose(const Transformation&, const Transformation&);
+  static bool IsInColl_AllInfo_vclip
+  (MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
 #endif
+
 #ifdef USE_RAPID
   static bool IsInCollision_RAPID
 	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
