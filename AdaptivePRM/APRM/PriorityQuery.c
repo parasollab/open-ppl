@@ -113,7 +113,7 @@ PriorityQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
   sci.savePath = false;
   ci.savePath = true;
 
-  //add priority weights to edges in roadmap:
+  //Calculate priority weights for edges in roadmap:
   vector<pair<pair<VID,VID>,WEIGHT> > edges;
   rdmp.m_pRoadmap->GetEdges(edges);
   for (int i=0; i<edges.size(); i++) {
