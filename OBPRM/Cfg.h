@@ -220,7 +220,7 @@ public:
 	SID _cdsetid, CDInfo& _cdInfo);
 
   /// printing methods.
-  void printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs);
+  void printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs) const;
   static void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
   /// return a configuration(conformation)'s potential.

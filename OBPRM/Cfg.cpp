@@ -491,9 +491,7 @@ void Cfg::print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg) {
 
 }
 
-void Cfg::printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs) {
-// Environment *env is not used here. But needed for other Cfg class
-// to interpret what an 'abstract' Cfg means.
+void Cfg::printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs) const {
      CfgHelper->printLinkConfigurations(*this, env, cfigs);
 }
 
