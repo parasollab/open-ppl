@@ -11,6 +11,7 @@
 #include <iomanip.h>
 #include <string.h>
 #include <vector.h>
+#include "util.h"
 
 //===================================================================
 //  Constructors and Destructor
@@ -85,8 +86,8 @@ ReadCommandLine(int *argc, char **argv){
 
     //-- Verify INPUT files exist
 
-    Input::VerifyFileExists(mapFile.GetValue());
-    Input::VerifyFileExists(queryFile.GetValue());
+    VerifyFileExists(mapFile.GetValue());
+    VerifyFileExists(queryFile.GetValue());
 
   } //endtry
   catch (BadUsage ) {
