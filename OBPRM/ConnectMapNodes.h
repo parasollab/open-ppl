@@ -22,10 +22,6 @@
 //  Created
 //      8/27/98  Daniel Vallejo
 //
-//  Last Modified By:
-//      8/21/99  Lucia K. Dale   add ObstBased connection & aux methods
-//                               changed to work w/ InfoCfg
-//
 /////////////////////////////////////////////////////////////////////
 
 #ifndef ConnectMapNodes_h

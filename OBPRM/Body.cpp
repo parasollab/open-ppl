@@ -3,11 +3,6 @@
 //  Body.c
 //
 //  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/15/98 Aaron Michalk
-//  Modified  4/16/98 Wookho Son
-//  Modified  5/16/98 Wookho Son
-//  Modified  7/14/98 Wookho Son
-//  Modified  7/31/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
 #include "Body.h"
@@ -62,9 +57,6 @@ Body::~Body() {
 //===================================================================
 GMSPolyhedron & Body::GetWorldPolyhedron() {
 
-//    cout << endl << "Inside GetWorldPolyhedron " << endl;
-//    worldTransformation.Write(cout);
-//    cout << endl;
 
     worldPolyhedron = polyhedron;
     int i;
@@ -127,8 +119,6 @@ void Body::Link(Connection * _c) {
     // Establish a backward connectionship for the next body
     _c->GetNextBody()->AddBackwardConnection(_c);
 
-//    if (_c->GetNextBody()->forwardConnectionCount==0)
-//       cout << "forwardConnectionCount for next body = " << _c->GetNextBody()->forwardConnectionCount << endl;
 }
 
 //===================================================================
@@ -245,7 +235,6 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 	}
 
 	vpoly->buildHull();
-///home/user/burchanb/dsmft/obprm/Body.c:277: undefined reference to `Polyhedron::buildHull(voi
 	vclipBody = new PolyTree;
 	vclipBody->setPoly(vpoly);
     } else
@@ -360,7 +349,6 @@ void Body::FindBoundingBox(){
 
     GMSPolyhedron poly;
     poly = GetWorldPolyhedron();
-    //poly.Write(cout);
 
     double minx, miny, minz, maxx, maxy, maxz;
     minx = maxx = poly.vertexList[0].getX();

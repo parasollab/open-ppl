@@ -11,8 +11,6 @@
 //  Created
 //	08/31/99	Guang Song
 //
-//  Last Modified By:
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "util.h"
@@ -58,7 +56,6 @@ Cfg Cfg_free::GetRandomRay(double incr) {
 
    return Cfg(z1*cos(alpha),z1*sin(alpha),z,0.0,0.0,0.0);
 
-   // return GetRandomCfg(incr, 0.0);
    // this implementation is only true for this kind of Cfgs.
 
 }
@@ -151,8 +148,6 @@ Cfg_free::GetCfgByOverlappingNormal(
 	   vertical.normalize();
 	   orient = Orientation(cV, vertical*sV);
 	}
-	//double randomAngle = drand48()*3.14159*2.0;
-	//orient = orient*Orientation(cos(randomAngle/2.0), obstNormal*sin(randomAngle/2.0));
 	orient.ConvertType(Orientation::FixedXYZ);
 	double alpha = orient.alpha, beta = orient.beta, gamma = orient.gamma;
 
@@ -164,7 +159,6 @@ Cfg_free::GetCfgByOverlappingNormal(
 	   double ran2 = drand48();
 	   robotPoint = robotVertex[rand()%3]*ran1 + robotVertex[rand()%3]*(1.-ran1);
 	   obstPoint = obstVertex[rand()%3]*ran2 + obstVertex[rand()%3]*(1.-ran2);
-	   //obstPoint = obstVertex[rand()%3];
 
 	   Vector3D robotCMS = obstPoint - ( orient * robotPoint);
 	   Vector3D direction(0,0,0);
@@ -265,7 +259,6 @@ SID _cdsetid,CDInfo& _cdInfo){
 				env->GetMultiBody(robot));
 
 	  if(!tmp.empty() && tmp[0].InBoundingBox(env)) {
-		//if(! InNarrowPassage(tmp[0],env,cd,_cdsetid, env->GetMultiBody(robot))) continue;
 		surface.push_back(tmp[0]);
 		++num;
 	  }

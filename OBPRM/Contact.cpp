@@ -3,7 +3,6 @@
 //  Contact.c
 //
 //  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/16/98 Wookho Son
 //===================================================================
 
 #include "Contact.h"
@@ -18,7 +17,6 @@ Contact::Contact() {
 }
 
 Contact::Contact(Body *_body1,  Body * _body2, Vector3D & _position, Vector3D & _normal1, Vector3D & _normal2) {
-//  multibody = _multibody;
   body[0] = _body1;
   body[1] = _body2;
   position = _position;

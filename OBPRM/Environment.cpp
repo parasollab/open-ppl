@@ -3,12 +3,6 @@
 //  Environment.c
 //
 //  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Modified  4/16/98 Wookho Son
-//  Added     4/21/98 Wookho Son
-//  Added     5/15/98 Wookho Son
-//  Modified  7/14/98 Wookho Son
-//  Added/Modified  7/31/98 Wookho Son
 //
 /////////////////////////////////////////////////////////////////////
 

@@ -3,9 +3,6 @@
 //  Contact.h
 //
 //  Created   2/25/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Modified  4/16/98 Wookho Son
-//  Added     5/16/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Contact_h
@@ -23,7 +20,6 @@ public:
     Contact(Body * _body1,  Body * _body2, Vector3D & _position, Vector3D & _normal1, Vector3D & _normal2);
     ~Contact();
     Body *GetBody(int _index);
-//    MultiBody *GetMultiBody(); //Define this?
     Transformation & GetUtransformToContact(int _index);
     Vector3D & GetPosition();
     Vector3D & GetNormal(int _index);
@@ -32,7 +28,6 @@ public:
     void ComputeTangential();
     void ComputeOrthogonal();
     void ComputeTransform();
-//    void Highlight();
 protected:
 private:
     //-----------------------------------------------------------
@@ -41,7 +36,6 @@ private:
     //       body1 - belonging to manipulator (free body)
     //       body2 - belonging to obstacle (fixed body)
     //-----------------------------------------------------------
-//    MultiBody  *multibody;    // MultiBody identity
     Body *body[2];	// Body identities
     Transformation UtransformToContact[2];
     Vector3D position;

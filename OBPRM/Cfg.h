@@ -12,9 +12,6 @@
 //  Created
 //	08/31/99	Guang Song
 //
-//  Last Modified By:
-//      08/31/99        Lucia K. Dale - name change for a method
-//
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Cfg_h
@@ -240,7 +237,6 @@ public:
     static CfgManager * CfgHelper;
     InfoCfg info;
 
-    //friend Input;
     friend CfgManager;
 
 

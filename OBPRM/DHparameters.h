@@ -3,7 +3,6 @@
 //  DHparameters.h
 //
 //  Created   2/25/98 Aaron Michalk
-//  Modified  4/15/98 Aaron Michalk
 /////////////////////////////////////////////////////////////////////
 
 #ifndef DHparameters_h

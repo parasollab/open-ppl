@@ -7,8 +7,6 @@
 //
 //  Created
 //      8/11/98  Daniel Vallejo 
-//  Last Modified By:
-//      1/13/98 Guang Song, cfg is no longer an argument for many methods here.
 /////////////////////////////////////////////////////////////////////
 
 #ifndef CollisionDetection_h

@@ -8,9 +8,6 @@
 //  Created
 //      8/21/98  Daniel Vallejo
 //
-//  Last Modified By:
-//      08/24/98  <Name>
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "DistanceMetrics.h"
@@ -24,8 +21,6 @@
   //==================================
   // DistanceMetric class Methods: Constructors and Destructor
   //==================================
-  // DistanceMetric();
-  // ~DistanceMetric();
 
 DistanceMetric::
 DistanceMetric() {
@@ -71,7 +66,6 @@ UserInit(Input *input, GenerateMapNodes* gn, LocalPlanners* lp) {
    if ( input->numDMs == 0 ) {           // use default DM sets
    } else {                             // make user-defined sets
      gn->gnInfo.dmsetid=DM_USER1;
-     //lp->lpInfo.dmsetid=DM_USER1;
      for (int i = 0; i < input->numDMs; i++) {
        distanceMetrics.MakeDMSet(input->DMstrings[i]->GetValue());
      }
@@ -427,7 +421,6 @@ MakeDMSet(istream& _myistream) {
       double r1,r2,r3;
        strcpy(dm1.name,dmname);
        dm1.distanceMetric = &DistanceMetric::MinkowskiDistance;
-       //dm1.distanceMetric = &DistanceMetric::EuclideanDistance;
        dm1.type = CS;
        r1 = 3;
        r2 = 3;

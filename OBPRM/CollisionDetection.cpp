@@ -7,10 +7,6 @@
 //
 //  Created
 //      8/11/98  Daniel Vallejo
-//  Last Modified By:
-//      1/13/99  Guang Song 'cfg' is removed from argument list.
-//               Vclip collision detection is fixed so that
-//	         Both Vclip and cstk give the SAME results for collision checking!
 //
 /////////////////////////////////////////////////////////////////////
 
@@ -28,8 +24,6 @@ extern Stat_Class Stats;
   //==================================
   // CollisionDetection class Methods: Constructors and Destructor
   //==================================
-  // CollisionDetection();
-  // ~CollisionDetection();
 
 CollisionDetection::
 CollisionDetection() {
@@ -92,7 +86,6 @@ UserInit(Input * input,  GenerateMapNodes* gn, ConnectMapNodes* cn)
 VclipPose CollisionDetection::GetVclipPose(const Transformation &myT,
 		const Transformation &obstT) {
 
-  //Transformation diff2 = Transformation(myT) - obstT;
   Transformation diff = Transformation(obstT).Inverse() * myT;
 
   diff.orientation.ConvertType(Orientation::EulerXYZ);
@@ -491,9 +484,6 @@ IsInColl_AllInfo_vclip
             _cdInfo.robot_point = robot->GetFreeBody(i)->WorldTransformation() * robot_pt;
             _cdInfo.object_point = obstacle->GetBody(j)->WorldTransformation() * obs_pt;
 
-			//cout << "CD method _cdInfo.rob_pt = " << _cdInfo.robot_point << endl;
-			//cout << "CD method _cdInfo.obj_pt = " << _cdInfo.object_point << endl;
-			//cout << "CD method _cdInfo.min_dist = " << _cdInfo.min_dist << endl;
          }
       } // end for j
    } // end for i
@@ -594,7 +584,6 @@ IsInCollision_cstk
 
             dist = cstkBodyBodyDist(rob, obst, 500, 0, NULL, 0, NULL);
             if(dist < tolerance){
-		//free (wits);
                 return (true);
             }
         }
@@ -619,15 +608,12 @@ cstkDistance(MultiBody* robot, MultiBody* obstacle){
         cstkUpdateLMovableBody(rob, linTrans);
         for(int k = 0 ; k < obstacle->GetFixedBodyCount(); k++){
             obst = obstacle->GetFixedBody(k)->GetCstkBody();
-            // tmp = cstkBodyBodyDist(rob, obst, 500, 0, NULL, 0, wits);
             tmp = cstkBodyBodyDist(rob, obst, 500, 0, NULL, 0, NULL);
             if(tmp < dist){
-                //free (wits);
                 dist = tmp;
             }
         }
     }
-    //free (wits);
     return dist;
 }
 

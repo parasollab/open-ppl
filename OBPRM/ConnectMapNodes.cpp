@@ -11,10 +11,6 @@
 //  Created
 //      8/27/98  Daniel Vallejo 
 //
-//  Last Modified By:
-//      8/30/98  Daniel Vallejo
-//      8/21/99  Lucia K. Dale   implementing obstBased connection
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "ConnectMapNodes.h"
@@ -178,7 +174,6 @@ Initialize_LPinfo(Roadmap * _rm,CNInfo& info){
 
   LPInfo lpInfo(_rm,info);
 
-  //lpInfo.positionRes    = _rm->GetEnvironment()->GetPositionRes();
   lpInfo.positionRes    = connectionPosRes;
   lpInfo.orientationRes = connectionOriRes;
   lpInfo.checkCollision = true;
@@ -249,7 +244,6 @@ ConnectNodes_Closest(
   const int verticeSize = vertices.size();
   const int kclosest = min(_cn.GetKClosest(),verticeSize);
 
-  //vector< pair<Cfg,Cfg> > kp;
   vector< pair<VID,VID> > kp;
   // Find k closest cfgs to each cfg in the roadmap
   if(kclosest < verticeSize  - 1) {
@@ -472,7 +466,6 @@ ConnectNodes_ConnectCCs(
         
       // if cc1 & cc2 not already connected, try to connect them 
       if ( !_rm->roadmap.IsSameCC(cc1id,cc2id) ) {
-         //if ( (ccvec[cc1].first < smallcc) && (ccvec[cc2].first < smallcc) ){
 	 if(_rm->roadmap.GetCC(cc1id).size() < smallcc &&
 	    _rm->roadmap.GetCC(cc2id).size() < smallcc ) {
                ConnectSmallCCs(_rm,cd,lp,dm,_cn,info,cc1id,cc2id);
@@ -499,10 +492,6 @@ ConnectSmallCCs(Roadmap* _rm,CollisionDetection *cd, LocalPlanners* lp,DistanceM
   // created a temporary variable since GetCC requires &
 
   Cfg t;
-/*
-  vector<Cfg> cc1vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc1id));
-  vector<Cfg> cc2vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc2id));
-*/
   t=_rm->roadmap.GetData(_cc1id);
   vector<Cfg> cc1vec = _rm->roadmap.GetCC(t);
   t=_rm->roadmap.GetData(_cc2id);
@@ -547,8 +536,6 @@ ConnectBigCCs(
 
   int kpairs = _cn.GetKPairs();
   
-  /*vector<Cfg> cc1vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc1id));
-  vector<Cfg> cc2vec = _rm->roadmap.GetCC(_rm->roadmap.GetData(_cc2id)); */
   Cfg t;
   t=_rm->roadmap.GetData(_cc1id);
   vector<Cfg> cc1vec = _rm->roadmap.GetCC(t);
@@ -1006,7 +993,6 @@ ModifyRoadMap(
   for (i=0;i<vids.size();++i) {
     t=fromMap->roadmap.GetData(vids[i]);
     
-    //toMap->roadmap.AddVertex(fromMap->roadmap.GetData(vids[i]));
     toMap->roadmap.AddVertex(t);
   } //endfor i
 
@@ -1553,8 +1539,6 @@ ostream& operator<< (ostream& _os, const CN& cn) {
   //==================================
   // CNSets class Methods: Constructors and Destructor
   //==================================
-  // CNSets();
-  // ~CNSets();
 
 CNSets::
 CNSets(){
@@ -1567,14 +1551,6 @@ CNSets::
   //===================================================================
   // CNSets class Methods: Adding CNs, Making & Modifying CN sets
   //===================================================================
-  // EID AddCN(const char* _cninfo); 
-  // int AddCNToSet(const SID _sid, const EID _cnid); 
-  // int DeleteCNFromSet(const SID _sid, const EID _cnid); 
-  // SID MakeCNSet(const char* cnlist);  // make an ordered set of cns, 
-  // SID MakeCNSet(istream& _myistream); //  - add cn to universe if not there
-  // SID MakeCNSet(const EID _eid);
-  // SID MakeCNSet(const vector<EID> _eidvector);
-  // int DeleteCNSet(const SID _sid);
 
 int 
 CNSets::
@@ -1892,10 +1868,6 @@ MakeCNSet(istream& _myistream) {
   //===================================================================
   // CNSets class Methods: Getting Data & Statistics
   //===================================================================
-  // CN GetCN(const EID _cnid) const;
-  // vector<CN> GetCNs() const;
-  // vector<CN> GetCNSet(const SID _sid) const;
-  // vector<pair<SID,vector<CN> > > GetCNSets() const;
 
 CN
 CNSets::
@@ -1947,15 +1919,6 @@ GetCNSets() const {
   //===================================================================
   // CNSets class Methods: Display, Input, Output
   //===================================================================
-  // void DisplayCNs() const;    
-  // void DisplayCN(const EID _cnid) const;    
-  // void DisplayCNSets() const; 
-  // void DisplayCNSet(const SID _sid) const; 
-  // void WriteCNs(const char* _fname) const;
-  // void WriteCNs(ostream& _myostream) const;
-  // void ReadCNs(const char* _fname) const;
-  // void ReadCNs(istream& _myistream) const;
-
 
 
 void 

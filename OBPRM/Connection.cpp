@@ -3,8 +3,6 @@
 //  Connection.c
 //
 //  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/15/98 Aaron Michalk
-//  Modified  7/31/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
 #include "Connection.h"

@@ -24,8 +24,6 @@
 //  Created
 //      08/31/99        Guang Song
 //
-//  Last Modified By:
-//
 /////////////////////////////////////////////////////////////////////
 #include "util.h"
 #include "Vectors.h"
@@ -406,7 +404,6 @@ void CfgManager::print_preamble_to_file(Environment *env, FILE *_fp, int numofCf
 
 bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
                            SID _cdsetid, CDInfo& _cdInfo, MultiBody * onflyRobot) {
-        //ConfigEnvironment(c, onflyRobot);
 	ConfigEnvironment(c, env);
         bool result = cd->IsInCollision(env, _cdsetid, _cdInfo, onflyRobot);
         return result;

@@ -12,9 +12,6 @@
 //  Created
 //      08/31/99        Guang Song
 //
-//  Last Modified By:
-//      08/31/99        Lucia K. Dale - name change for a method
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "util.h"
@@ -452,10 +449,6 @@ double  Cfg::PositionMagnitude()
 }
 
 
-//Cfg Cfg::GetPositionOrientationFrom2Cfg(const Cfg &c1, const Cfg &c2) {
-//  return CfgHelper->GetPositionOrientationFrom2Cfg(c1, c2);
-//}
-
 vector<Cfg> Cfg::GetMovingSequenceNodes(const Cfg &other, double s) const {
    return CfgHelper->GetMovingSequenceNodes(*this, other, s);
 }
@@ -525,9 +518,7 @@ double Cfg::Clearance(Environment *env,CollisionDetection *cd ){
 //Approximate C-Space Clearance
 double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, CDInfo& cdInfo,DistanceMetric * dm, SID dmsetid, int n)
 {
-  //cout << endl << endl << "Inside ApproxCSpaceClearance: " << flush;
   Cfg cfg = *this;
-  //cout << endl << "cfg = " << cfg;
 
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
@@ -538,11 +529,9 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
   Cfg dir;
   for(int i = 0 ; i < n ; i++){
     dir = GetRandomCfg(env);
-    //cout << endl << "dir = " << dir;
 
     Cfg tick = cfg;
     Cfg incr = cfg.FindIncrement(dir,&n_ticks,positionRes,orientationRes);
-    //cout << endl << "n_ticks = " << n_ticks;
 
     int tk = 0;
     int collisionFlag = false;
@@ -552,11 +541,8 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 
       if(tick.isCollision(env,cd,cdsetid,cdInfo)){
 
-	//cout << endl << "Inside Collision!" << flush;
-	//cout << endl << "tick = " << tick;
 
 	tmpDist = dm->Distance(env, cfg, tick, dmsetid);
-	//cout << endl << "tmpDist = " << tmpDist;
 	if(tmpDist < clear){
 	  clear = tmpDist;
         }
@@ -565,11 +551,7 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 
       if(tk == n_ticks-1 && !collisionFlag){
 
-	//cout << endl << "Inside No Collision!" << flush;
-	//cout << endl << "tick = " << tick;
-
 	tmpDist = dm->Distance(env, cfg, tick, dmsetid);
-	//cout << endl << "tmpDist = " << tmpDist;
 
 	if(tmpDist < clear){
 	  clear = tmpDist;
@@ -578,7 +560,6 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
       tk++;
     }
   }
-  //cout << endl << "clear = " << clear;
   return clear;
 }
 
