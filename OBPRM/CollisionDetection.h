@@ -566,7 +566,7 @@ public:
 	*@note if self collision of Robot is found, _cdInfo will be set to odd value.
 	*@see IsInCollision(Environment* , SID , CDInfo& , MultiBody* , MultiBody*)
 	*/
-	bool IsInCollision
+	virtual bool IsInCollision
         (Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* lineRobot = NULL,bool enablePenetration=true);
 	
 		/**Check collision between MultiBody of robot and obstacle.
@@ -584,7 +584,7 @@ public:
         *@see Collision detection core functions, CDInfo::GetType, and 
         *CDInfo::GetCollisionDetection
 	*/
-	bool IsInCollision
+	virtual bool IsInCollision
         (Environment* env, SID _cdsetid, CDInfo& _cdInfo, MultiBody* rob, MultiBody* obstacle);
 	
 		/**Check collision by index of robot and obstacle.
@@ -593,7 +593,7 @@ public:
         *to detect collision.
         *@see IsInCollision(Environment* , SID , CDInfo& , MultiBody* , MultiBody*)
 	*/
-	bool IsInCollision
+	virtual bool IsInCollision
         (Environment* env, SID _cdsetid, CDInfo& _cdInfo, int robot, int obstacle);
 	
 	//@}
