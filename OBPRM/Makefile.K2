@@ -7,6 +7,9 @@
    OBPRMLIB_DIR = .
    OBPRMLIB     = -L${OBPRMLIB_DIR} -lobprm
 
+   Graph_DIR   = ../stapl/include/graph
+   Graph_INCL  = -I${Graph_DIR}
+
 #------------------------------------------------------
 # Basic defns; do not change
 #------------------------------------------------------
@@ -48,7 +51,7 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
+ AFLAGS    = -I. ${STL_INCL} ${Graph_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
 
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
