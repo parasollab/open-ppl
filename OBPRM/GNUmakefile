@@ -55,13 +55,9 @@ libobprm.a: $(OBJS)
 libobprm.so: $(OBJS)
 	$(CC) -shared $(OPTS) $(INCLUDES) $(DEFS) $(OBJS) -o libobprm.so
 
-obprm: main_obprm.cpp libs
-	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_obprm.cpp $(LIBS) -o obprm
-	rm -f obprm.d
-
-query: main_query.cpp libs
-	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_query.cpp $(LIBS) -o query
-	rm -f query.d
+%: main_%.cpp libs
+	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_$@.cpp $(LIBS) -o $@
+	rm -f $@.d
 
 %.o: %.cpp
 	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -c $<
