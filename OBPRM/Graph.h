@@ -275,7 +275,12 @@ public:
         *this new edge.
         */
       void AddEdge(VID, WEIGHT); 
-     
+
+      /**Adding a edge by given id for the second endpoint and the weight of 
+        *this new edge. Check if the edge is already added, if yes, do nothing.
+        */
+      void AddEdgewCheck(VID, WEIGHT); 
+
       /**Adding a predecessor edge by given id for the first endpoint and the weight of 
         *this new edge.
         */
@@ -4918,6 +4923,21 @@ WtVertexType<VERTEX,WEIGHT>::
 AddEdge(VID _v2id, WEIGHT _weight) {
      WtEdge newEdge(_v2id, _weight);
      edgelist.push_back(newEdge);
+};
+
+template<class VERTEX, class WEIGHT>
+void 
+WtVertexType<VERTEX,WEIGHT>:: 
+AddEdgewCheck(VID _v2id, WEIGHT _weight) {
+  bool found = false;
+  for(EI ei=edgelist.begin(); ei!=edgelist.end(); ei++) {
+    if(_v2id == ei->vertex2id) found=true;
+  }
+  if(!found) {
+     WtEdge newEdge(_v2id, _weight);
+     edgelist.push_back(newEdge);
+  }
+
 };
 
 template<class VERTEX, class WEIGHT>
