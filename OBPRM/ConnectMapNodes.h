@@ -68,6 +68,7 @@ struct CNInfo {
 
     vector <EdgeInfo<WEIGHT> > edges;   ///< This seems deprecated?!
     bool addPartialEdge;                ///< Add failed path to roadmap or not.
+    bool addAllEdges;                   ///< Add all edges to roadmap or not.
     int tag;                            ///< Nodes can be marked by user
     int dupeNodes,dupeEdges;            ///< used for acct'ing w/ closestVE
     GenerateMapNodes gn;                ///< how new cfg's should be generated
@@ -704,6 +705,7 @@ public:
         *
         *CNInfo instance are also initailized here as following:
         *   -# CNInfo::addPartialEdge = Input::addPartialEdge
+	*   -# CNInfo::addAllEdges = Input::addAllEdges
         *
         *Data member initialized as following:
         *   -# #connectionPosRes= Environment::GetPositionRes

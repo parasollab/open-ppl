@@ -24,7 +24,7 @@
 extern Stat_Class Stats;
 
 LPInfo::LPInfo(Roadmap *rm, const CNInfo& cnInfo) {
-	checkCollision = true;
+        checkCollision = !(cnInfo.addAllEdges); //true;
 	savePath = false;
 	saveFailedPath = false;
 	positionRes = rm->GetEnvironment()->GetPositionRes(); 

@@ -101,6 +101,7 @@ UserInit(Input * input, Environment * env){
    }
 
    cnInfo.addPartialEdge = input->addPartialEdge.GetValue();
+   cnInfo.addAllEdges = input->addAllEdges.GetValue();
 
    connectionPosRes = env->GetPositionRes();
    connectionOriRes = env->GetOrientationRes();
@@ -189,7 +190,7 @@ Initialize_LPinfo(Roadmap * _rm,CNInfo& info){
 
   lpInfo.positionRes    = connectionPosRes;
   lpInfo.orientationRes = connectionOriRes;
-  lpInfo.checkCollision = true;
+  //lpInfo.checkCollision = true; taken care of in constructor
   lpInfo.savePath       = false;
   lpInfo.cdsetid        = info.cdsetid;
   lpInfo.dmsetid        = info.dmsetid;
