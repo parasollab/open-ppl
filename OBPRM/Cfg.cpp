@@ -539,7 +539,7 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 
       tick.Increment(incr);
 
-      if(tick.isCollision(env,cd,cdsetid,cdInfo)){
+      if( (tick.isCollision(env,cd,cdsetid,cdInfo)) || !(tick.InBoundingBox(env)) ){
 
 
 	tmpDist = dm->Distance(env, cfg, tick, dmsetid);
