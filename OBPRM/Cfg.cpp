@@ -65,7 +65,7 @@ void InfoCfg::Read(istream &s) {
 /////////////////////////////////////////////////////////////////////
 
 ClearanceInfo::ClearanceInfo() {
-    clearance = 1e10;
+    clearance = -1e10;
     direction = NULL;
     checkOneDirection = 0;
 }
@@ -83,7 +83,7 @@ ClearanceInfo::ClearanceInfo(double _clearance, Cfg * _direction, int _checkOneD
 }
 
 ClearanceInfo::ClearanceInfo(Cfg * _direction, int _checkOneDirection){
-    clearance = 1e10;
+    clearance = -1e10;
     direction = _direction;
     checkOneDirection = _checkOneDirection;
 }
@@ -403,33 +403,42 @@ Cfg Cfg::GetRandomCfg(Environment *env,DistanceMetric *dm,
 	}
 	return currentCfg;
 }
+
 // generates random configuration and then pushes it to the medial axis of
 // the free c-space
 Cfg Cfg::GetMedialAxisCfg(Environment *_env, CollisionDetection *_cd,
                           SID _cdsetid, CDInfo &_cdInfo, DistanceMetric *_dm,
                           SID _dmsetid, int n) {
     Cfg maprmCfg = GetRandomCfg(_env);
-    
-    if (maprmCfg.isCollision(_env, _cd, _cdsetid, _cdInfo)) {
-        //maprmCfg = MAPRMcollision(maprmCfg,_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
- 
-	ClearanceInfo clearInfo;
-	maprmCfg.ApproxCSpaceClearance2(_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n,clearInfo,1);
-        maprmCfg = *clearInfo.getDirection();
-	delete clearInfo.getDirection();
-    }
-
-    if (!(maprmCfg.isCollision(_env,_cd,_cdsetid,_cdInfo))) {
-        maprmCfg = MAPRMfree(maprmCfg,_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
-    }
-
+    maprmCfg.PushToMedialAxis(_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
     return maprmCfg;
 }
 
-// pushes free node towards medial axis
-Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
+// pushes node towards c-space medial axis
+void Cfg::PushToMedialAxis(Environment *_env, CollisionDetection *cd,
+			     SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+			     SID dmsetid, int n) {
+    Cfg cfg = *this;
+
+    if (cfg.isCollision(_env,cd,cdsetid,cdInfo)) {
+        ClearanceInfo clearInfo;
+        cfg.ApproxCSpaceClearance2(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,clearInfo,1);
+	cfg = *clearInfo.getDirection();
+	delete clearInfo.getDirection();
+    }
+
+    if (!(cfg.isCollision(_env,cd,cdsetid,cdInfo))) {
+        cfg.MAPRMfree(_env,cd,cdsetid,cdInfo,dm,dmsetid,n);
+    }
+
+    *this = cfg;
+}
+
+// pushes free node towards c-space medial axis
+void Cfg::MAPRMfree(Environment *_env, CollisionDetection *cd,
                    SID cdsetid, CDInfo &cdInfo, DistanceMetric *dm,
                    SID dmsetid, int n) {
+    Cfg cfg = *this;
     Cfg newCfg, oldCfg, dir;
     
     ClearanceInfo clearInfo;
@@ -443,7 +452,7 @@ Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
     
     oldCfg = cfg;
     newCfg = oldCfg;
-    
+
     /// find max. clearance point by stepping out:
     while ((newCfg.info.clearance >= oldCfg.info.clearance) && (newCfg.InBoundingBox(_env))) {
         oldCfg = newCfg;
@@ -453,7 +462,7 @@ Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
         stepSize = newCfg.info.clearance;
         i++;
     }
-    
+
     if (newCfg.InBoundingBox(_env)) {
         /// binary search betwen oldCfg and newCfg to find max clearance:
         Cfg midCfg;
@@ -475,12 +484,13 @@ Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
         
     }
     
-    return oldCfg;
+    *this = oldCfg;
 }
 
 // pushes colliding node towards free space
-Cfg Cfg::MAPRMcollision(Cfg cfg, Environment *_env, CollisionDetection *cd,
+void Cfg::MAPRMcollision(Environment *_env, CollisionDetection *cd,
                         SID cdsetid, CDInfo& cdInfo, int n) {
+    Cfg cfg = *this;
     double stepSize = 0.5;
     
     ///pick n random directions:
@@ -492,7 +502,7 @@ Cfg Cfg::MAPRMcollision(Cfg cfg, Environment *_env, CollisionDetection *cd,
     }  
     
     if (directions.size()==0)
-        return cfg;
+        *this = cfg;
     
     ///step out along each direction:
     int found = -1;
@@ -507,7 +517,7 @@ Cfg Cfg::MAPRMcollision(Cfg cfg, Environment *_env, CollisionDetection *cd,
         stepSize = stepSize * 2;
     }
     
-    return steps[found];
+    *this = steps[found];
 }
 
 Cfg Cfg::GetFreeRandomCfg(Environment *env, CollisionDetection *cd, SID _cdsetid,
@@ -747,7 +757,7 @@ double Cfg::ApproxCSpaceClearance(Environment *env,
 
 
 //Approximate C-Space Clearance
-void 
+void
 Cfg::ApproxCSpaceClearance2(Environment *env, 
                             CollisionDetection *cd, 
                             SID cdsetid, 
@@ -846,20 +856,6 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
 	    if (stateChangedFlag) {
 	        break; //exit for loop
 	    }
-
-	    /*
-            //if state was changed or this cfg is out of bounding box	    
-            if ( ((tick[i].isCollision(env, cd, cdsetid, cdInfo)) != bInitState) || !(tick[i].InBoundingBox(env)) ) {
-                clearInfo.setClearance(dm->Distance(env, tick[i], cfg, dmsetid));
-
-                Cfg * tmp = new Cfg();
-                *tmp = tick[i];
-                clearInfo.setDirection(tmp);
-
-                stateChangedFlag = true;
-                break; //exit for loop
-	    }
-            */
  
             //if increment still less than a max bound
             if (incrSize[i] < incrBound) {
@@ -874,7 +870,6 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
     // if this cfg is not free (state = true) then return -smallestDistance (penetration)
     // clearInfo.setClearance((bInitState==false)?clearInfo.getClearance():-clearInfo.getClearance());
     clearInfo.setClearance(clearInfo.getClearance());
-
     return;
 }
 
