@@ -26,6 +26,7 @@ GMSPolyhedron::GMSPolyhedron() {
 	numPolygons = 0;
 	area = 0.0;
 	maxRadius = 0.0;
+	minRadius = 0.0;
 }
 
 GMSPolyhedron::GMSPolyhedron(GMSPolyhedron & _p) {
@@ -57,6 +58,7 @@ GMSPolyhedron::GMSPolyhedron(GMSPolyhedron & _p) {
 	//copy other info
     area = _p.area;
     maxRadius = _p.maxRadius;
+    minRadius = _p.minRadius;
 }
 
 GMSPolyhedron::~GMSPolyhedron() {
@@ -115,6 +117,7 @@ GMSPolyhedron & GMSPolyhedron::operator=(GMSPolyhedron & _p) {
 	//Copy other info
     area = _p.area;
     maxRadius = _p.maxRadius;
+    minRadius = _p.minRadius;
   }
 
   aptal++; //<--What is this??
@@ -213,7 +216,7 @@ Vector3D GMSPolyhedron::Read(istream & _is) {
     for (i = 0; i < numVertices; i++) {
   	vertexList[i] = vertexList[i] - com;
         if(vertexList[i].magnitude() > maxRadius) 
-                maxRadius = vertexList[i].magnitude();
+	  maxRadius = vertexList[i].magnitude();
     }
 
     _is >> numPolygons;
@@ -257,11 +260,10 @@ Vector3D GMSPolyhedron::ReadBYU(istream & _is) {
     com = sum/numVertices;
 
     maxRadius = 0.0; // shift center to origin and find maximum radius.
-    for (i = 0; i < numVertices; i++) 
-	{
-		vertexList[i] = vertexList[i] - com;
-		if(vertexList[i].magnitude() > maxRadius) 
-			maxRadius = vertexList[i].magnitude();
+    for (i = 0; i < numVertices; i++) {
+        vertexList[i] = vertexList[i] - com;
+        if(vertexList[i].magnitude() > maxRadius) 
+	    maxRadius = vertexList[i].magnitude();
     }
     com = Vector3D(0.0, 0.0, 0.0);
 

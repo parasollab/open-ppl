@@ -538,6 +538,17 @@ double MultiBody::GetBoundingSphereRadius() {
    return result;
 }
 
+
+//the minimum size of the multibody
+double MultiBody::GetInsideSphereRadius() {
+  double result = GetBody(0)->GetPolyhedron().minRadius;
+  for(int i=1; i<GetBodyCount(); i++)
+    if (GetBody(i)->GetPolyhedron().minRadius > result)
+      result = GetBody(i)->GetPolyhedron().minRadius;
+
+  return result;
+}
+
 //===================================================================
 // CalculateArea
 //===================================================================

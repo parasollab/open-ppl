@@ -175,6 +175,11 @@ public:
       */
     double GetBoundingSphereRadius();
 
+    /**Compute and return the minimum size of the multibody.
+     *@see GMSPolyhedron::minRadius
+     */
+    double GetInsideSphereRadius();
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //  Get/Set Area info.

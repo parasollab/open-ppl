@@ -560,6 +560,7 @@ IsInCollision(Environment * env, SID _cdsetid, CDInfo& _cdInfo,
 			}
 		}
     }
+   
     return true;
 }
 
@@ -568,18 +569,56 @@ bool
 CollisionDetection::
 IsInCollision_boundingSpheres
 (MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
-	cout << endl << "boundingSpheres Collision Check invocation";
-	Stats.IncNumCollDetCalls( "boundingSpheres" );
-	return true;
+  //cout << endl << "boundingSpheres Collision Check invocation" << flush;
+  Stats.IncNumCollDetCalls( "boundingSpheres" );
+
+  Vector3D robot_com = robot->GetCenterOfMass();
+  Vector3D obst_com  = obstacle->GetCenterOfMass();
+
+  if(robot->GetFreeBodyCount())
+    robot_com = robot->GetFreeBody(0)->GetWorldTransformation() * robot_com;
+  if(obstacle->GetFreeBodyCount())
+    obst_com  = obstacle->GetFreeBody(0)->GetWorldTransformation() * obst_com;
+
+  double robot_radius = robot->GetBoundingSphereRadius();
+  double obst_radius  = obstacle->GetBoundingSphereRadius();
+
+  double dist = sqrt(sqr(robot_com.getX() - obst_com.getX()) +
+		     sqr(robot_com.getY() - obst_com.getY()) +
+		     sqr(robot_com.getZ() - obst_com.getZ()));
+  
+  if (dist > robot_radius+obst_radius)
+    return false;
+  else
+    return true;
 }
 
 bool
 CollisionDetection::
 IsInCollision_insideSpheres
 (MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
-	cout << endl << "insideSpheres Collision Check invocation";
-	Stats.IncNumCollDetCalls( "insideSpheres" );
-	return false;
+  //cout << endl << "insideSpheres Collision Check invocation";
+  Stats.IncNumCollDetCalls( "insideSpheres" );
+  
+  Vector3D robot_com = robot->GetCenterOfMass();
+  Vector3D obst_com  = obstacle->GetCenterOfMass();
+
+  if(robot->GetFreeBodyCount())
+    robot_com = robot->GetFreeBody(0)->GetWorldTransformation() * robot_com;
+  if(obstacle->GetFreeBodyCount())
+    obst_com  = obstacle->GetFreeBody(0)->GetWorldTransformation() * obst_com;
+
+  double robot_radius = robot->GetInsideSphereRadius();
+  double obst_radius  = obstacle->GetInsideSphereRadius();
+
+  double dist = sqrt(sqr(robot_com.getX() - obst_com.getX()) +
+		     sqr(robot_com.getY() - obst_com.getY()) +
+		     sqr(robot_com.getZ() - obst_com.getZ()));
+  
+  if (dist > robot_radius+obst_radius)
+    return false;
+  else
+    return true;
 }
 
 bool
@@ -1227,7 +1266,7 @@ MakeCDSet(istream& _myistream) {
 			CD cd1;
 			strcpy(cd1.name,cdname);
 			cd1.collision_detection = &CollisionDetection::IsInCollision_boundingSpheres;
-			cd1.type = Out;
+		        cd1.type = Out;
 			cd1.cdid = AddElementToUniverse(cd1);
 			if ( ChangeElementInfo(cd1.cdid,cd1) != OK ) {
 				cout << endl << "In MakeSet: couldn't change element info";

@@ -204,10 +204,10 @@ public:
       */
     Vector3D Read(char* fileName);
 
-    /// read GMS format and caluate maxRadius
+    /// read GMS format and caluate maxRadius and minRadius
     Vector3D Read(istream & _is);
 
-    /// read BYU format and caluate maxRadius
+    /// read BYU format and caluate maxRadius and minRadius
     Vector3D ReadBYU(istream & _is);
 
     /// Write in "original" GMS format
@@ -233,6 +233,8 @@ public:
     double    area; ///<The summation of all area of polygons in this polyhedron.
     /// the maximum distance from a vertex to com.
     double    maxRadius;
+    /// the minimum distance from a vertex to com.
+    double minRadius;
 };
 
 #endif
