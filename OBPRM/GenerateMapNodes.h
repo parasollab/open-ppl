@@ -39,8 +39,6 @@
 #include "Input.h"
 #include "CollisionDetection.h"
 
-#include "Debug.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 

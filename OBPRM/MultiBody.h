@@ -21,7 +21,6 @@
 #include "Matrix.h"
 #include "FixedBody.h"
 #include "FreeBody.h"
-#include "Debug.h"
 
 #ifndef VID
 	#include "Graph.h"
