@@ -142,6 +142,7 @@ int main(int argc, char* argv[]) {
 
 	typedef WeightedGraph<Task,Weight> WtGraph;
 	typedef vector<WtVertexType<Task,Weight> >::iterator VI;
+	typedef vector<WtVertexType<Task,Weight> >::const_iterator CVI;
 	typedef vector<WtEdgeType<Task,Weight> >::iterator EGI;
 
 	WtGraph graph;		//the undirected graph
@@ -201,6 +202,19 @@ int main(int argc, char* argv[]) {
 	tt->taskwt = 1000;
 
 	graph.DisplayGraph(); 
+
+	CVI v1=graph.v.begin();
+	CVI v2=graph.v.begin()+1;
+	
+	pair<int,VID> p1(1,1);
+	pair<int,VID> p2(2,2);
+	pair<VID,int> pp1(1,1);
+	pair<VID,int> pp2(2,2);
+
+	graph.VID_Compare(*v1,*v2);
+	graph.CCVID_Compare(p1,p2); 
+	graph. FinishLate(pp1,pp2);
+
 }
 
 
