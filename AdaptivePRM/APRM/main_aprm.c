@@ -40,7 +40,6 @@ void PrintRawLine( ostream& _os,
         ConnectMapNodes cn, int printHeaders);
 
 GMSPolyhedron* createBBoxPolyhedron(MultiBody* mb);
-GMSPolyhedron* createBSpherePolyhedron(MultiBody* mb);
 GMSPolyhedron* createHullPolyhedron(MultiBody* mb);
 
 //========================================================================
@@ -135,56 +134,60 @@ int main(int argc, char** argv)
   //if approximating node validation, calculate new environment
   if(nodeValidateType == APPROXIMATE) {
     ApproxEnvClock.StartClock("Approximate Env Setup");
-    Environment* realEnv = rmap.GetEnvironment();
-    Environment* approxEnv = new Environment();
-
-    for(int i=0; i<realEnv->GetMultiBodyCount(); i++) {
-      MultiBody* realMB = realEnv->GetMultiBody(i);
-      MultiBody* approxMB = new MultiBody(approxEnv);
-      GMSPolyhedron P;
-
-      switch(nodeApproximationType) {
-      case BOX:
-	P = *(createBBoxPolyhedron(realMB));
-	break;
-      case SPHERE:
-	P = *(createBSpherePolyhedron(realMB));
-	break;
-      case HULL:
-	P = *(createHullPolyhedron(realMB));
-	break;
+    if(nodeApproximationType != SPHERE) {
+      Environment* realEnv = rmap.GetEnvironment();
+      Environment* approxEnv = new Environment();
+      
+      for(int i=0; i<realEnv->GetMultiBodyCount(); i++) {
+	MultiBody* realMB = realEnv->GetMultiBody(i);
+	MultiBody* approxMB = new MultiBody(approxEnv);
+	GMSPolyhedron P;
+	
+	switch(nodeApproximationType) {
+	case BOX:
+	  P = *(createBBoxPolyhedron(realMB));
+	  break;
+	case SPHERE:
+	  break;
+	case HULL:
+	  P = *(createHullPolyhedron(realMB));
+	  break;
+	}
+	
+	/*
+	  char filename[100];
+	  sprintf(filename,"shape%d.g",i);
+	  ofstream os(filename);
+	  P.WriteBYU(os);
+	*/
+	
+	if( realMB->GetFreeBodyCount() ) {
+	  FreeBody* freeBody = new FreeBody(approxMB,P);
+	  freeBody->buildCDstructure(input.cdtype);
+	  approxMB->AddBody(freeBody);
+	} else {
+	  FixedBody* fixedBody = new FixedBody(approxMB,P);
+	  fixedBody->buildCDstructure(input.cdtype);
+	  approxMB->AddBody(fixedBody);
+	}
+	approxMB->CalculateArea();
+	approxEnv->AddMultiBody(approxMB);
       }
+      
+      approxEnv->SetRobotIndex( realEnv->GetRobotIndex() );
+      
+      approxEnv->FindBoundingBox();
+      approxEnv->UpdateBoundingBox(&input);
+      if ( input.posres.IsActivated() )
+	approxEnv->SetPositionRes( input.posres.GetValue() );
+      approxEnv->SetOrientationRes( input.orires.GetValue() ); 
+      
+      rmap.InitEnvironment(approxEnv);
 
-      /*
-      char filename[100];
-      sprintf(filename,"shape%d.g",i);
-      ofstream os(filename);
-      P.WriteBYU(os);
-      */
-
-      if( realMB->GetFreeBodyCount() ) {
-	FreeBody* freeBody = new FreeBody(approxMB,P);
-	freeBody->buildCDstructure(input.cdtype);
-	approxMB->AddBody(freeBody);
-      } else {
-	FixedBody* fixedBody = new FixedBody(approxMB,P);
-	fixedBody->buildCDstructure(input.cdtype);
-	approxMB->AddBody(fixedBody);
-      }
-      approxMB->CalculateArea();
-      approxEnv->AddMultiBody(approxMB);
+    } else {
+      cout << "\n\nWARNING: -cd flag should be set to \"boundingSpheres\"\n\n";     
     }
-
-    approxEnv->SetRobotIndex( realEnv->GetRobotIndex() );
-
-    approxEnv->FindBoundingBox();
-    approxEnv->UpdateBoundingBox(&input);
-    if ( input.posres.IsActivated() )
-      approxEnv->SetPositionRes( input.posres.GetValue() );
-    approxEnv->SetOrientationRes( input.orires.GetValue() ); 
-
-    rmap.InitEnvironment(approxEnv);
-
+    
     ApproxEnvClock.StopClock();
 
     #if QUIET
@@ -328,12 +331,6 @@ GMSPolyhedron* createBBoxPolyhedron(MultiBody* mb) {
   p->ReadBYU(is);
   //p->Write(cout); 
   
-  return p;
-}
-
-
-GMSPolyhedron* createBSpherePolyhedron(MultiBody* mb) {
-  GMSPolyhedron* p = new GMSPolyhedron();
   return p;
 }
 
