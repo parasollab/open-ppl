@@ -543,25 +543,29 @@ protected:
      *@return Pointer to this element if one exists. Otherwise, element.end()
      *will be returned.
      */
-   pair<EID,ELEMENT>* my_find_ELEM_eq(const ELEMENT& _e) const;
+   CEI my_find_ELEM_eq(const ELEMENT& _e) const;
+   EI my_find_ELEM_eq(const ELEMENT& _e);
 
    /**Find element using _eid, in universe.
      *@return Pointer to this element if one exists. Otherwise, element.end()
      *will be returned.
      */
-   pair<EID,ELEMENT>* my_find_EID_eq(const EID _eid) const;
+   CEI my_find_EID_eq(const EID _eid) const;
+   EI my_find_EID_eq(const EID _eid);
 
    /**Find unordered using _sid, in universe.
      *@return Pointer to this unordered set if one exists. 
      *Otherwise, sets.end() will be returned.
      */
-   pair<SID,bit_vector>* my_find_SID_eq(const SID _sid) const;
+   CSI my_find_SID_eq(const SID _sid) const;
+   SI my_find_SID_eq(const SID _sid);
 
    /**Find ordered using _sid, in universe.
      *@return Pointer to this ordered set if one exists. 
      *Otherwise, sets.end() will be returned.
      */
-   pair<SID,vector<EID> >* my_find_OSID_eq(const SID _sid) const;
+   COSI my_find_OSID_eq(const SID _sid) const;
+   OSI my_find_OSID_eq(const SID _sid);
    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1283,7 +1287,7 @@ DisplayOSet(const SID _sid) const {
 //===================================================================
 
 template<class ELEMENT>
-pair<EID,ELEMENT>*
+vector<pair<EID, ELEMENT> >::const_iterator
 BasicSets<ELEMENT>::
 my_find_ELEM_eq(const ELEMENT& _e) const {
     CEI ei = elements.begin();
@@ -1295,11 +1299,27 @@ my_find_ELEM_eq(const ELEMENT& _e) const {
             ei++;
         } 
     }
-    return const_cast<pair<EID,ELEMENT>*>(ei);
+    return ei;
 }
 
 template<class ELEMENT>
-pair<EID,ELEMENT>*
+vector<pair<EID, ELEMENT> >::iterator
+BasicSets<ELEMENT>::
+my_find_ELEM_eq(const ELEMENT& _e) {
+    EI ei = elements.begin();
+    bool found = false;
+    while (ei != elements.end() && !found) {
+        if ( ei->second == _e) {
+            found = true;
+        } else {
+            ei++;
+        } 
+    }
+    return ei;
+}
+
+template<class ELEMENT>
+vector<pair<EID, ELEMENT> >::const_iterator
 BasicSets<ELEMENT>::
 my_find_EID_eq(const EID _eid) const {
     CEI ei = elements.begin();
@@ -1311,11 +1331,27 @@ my_find_EID_eq(const EID _eid) const {
             ei++;
         }
     }
-    return const_cast<pair<EID,ELEMENT>*>(ei);
+    return ei;
 }
 
 template<class ELEMENT>
-pair<SID,bit_vector>*
+vector<pair<EID, ELEMENT> >::iterator
+BasicSets<ELEMENT>::
+my_find_EID_eq(const EID _eid) {
+    EI ei = elements.begin();
+    bool found = false;
+    while (ei != elements.end() && !found) {
+        if ( ei->first == _eid) {
+            found = true;
+        } else {
+            ei++;
+        }
+    }
+    return ei;
+}
+
+template<class ELEMENT>
+vector<pair<SID, bit_vector> >::const_iterator
 BasicSets<ELEMENT>::
 my_find_SID_eq(const SID _sid) const {
     CSI si = sets.begin();
@@ -1327,11 +1363,27 @@ my_find_SID_eq(const SID _sid) const {
             si++;
         }
     }
-    return const_cast<pair<SID,bit_vector>*>(si);
+    return si;
 }
 
 template<class ELEMENT>
-pair<SID,vector<EID> >*
+vector<pair<SID, bit_vector> >::iterator
+BasicSets<ELEMENT>::
+my_find_SID_eq(const SID _sid) {
+    SI si = sets.begin();
+    bool found = false;
+    while (si != sets.end() && !found) {
+        if ( si->first == _sid) {
+            found = true;
+        } else {
+            si++;
+        }
+    }
+    return si;
+}
+
+template<class ELEMENT>
+vector<pair<SID, vector<EID> > >::const_iterator
 BasicSets<ELEMENT>::
 my_find_OSID_eq(const SID _sid) const {
     COSI si = osets.begin();
@@ -1343,7 +1395,23 @@ my_find_OSID_eq(const SID _sid) const {
             si++;
         }
     }
-    return const_cast<pair<SID,vector<EID> >*>(si);
+    return si;
+}
+
+template<class ELEMENT>
+vector<pair<SID,vector<EID> > >::iterator
+BasicSets<ELEMENT>::
+my_find_OSID_eq(const SID _sid) {
+    OSI si = osets.begin();
+    bool found = false;
+    while (si != osets.end() && !found) {
+        if ( si->first == _sid) {
+            found = true;
+        } else {
+            si++;
+        }
+    }
+    return si;
 }
 
 #endif
