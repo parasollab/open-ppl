@@ -90,20 +90,54 @@ int main(int argc, char** argv)
   //read in validate flags
   enum VALIDATE {NONE, APPROXIMATE, COMPLETE};
   enum APPROX_TYPE {BOX, SPHERE, HULL};
+  enum APPROX_OBJECTS {ALL, ROBOT};
 
   VALIDATE nodeValidateType = COMPLETE;
   APPROX_TYPE nodeApproximationType = SPHERE;
+  APPROX_OBJECTS approximateObjects = ALL;
 
   if(!strncmp(input.nodeValidationFlag.GetValue(),"none",4)) {
     nodeValidateType = NONE;
+
   } else if(!strncmp(input.nodeValidationFlag.GetValue(),"approximate",11)) {
     nodeValidateType = APPROXIMATE;
 
+    istrstream is(input.nodeValidationFlag.GetValue());
+    char str[100];
+    is >> str; //read in "approximate"
+    while(is >> str) {
+      if(!strncmp(str,"box",3)) {
+	nodeApproximationType = BOX;
+      } else if(!strncmp(str,"hull",4)) {
+	nodeApproximationType = HULL;
+      } else if(!strncmp(str,"sphere",6)) {
+	nodeApproximationType = SPHERE;
+
+      } else if(!strncmp(str,"robot",5)) {
+	approximateObjects = ROBOT;
+      } else if(!strncmp(str,"all",3)) {
+	approximateObjects = ALL;
+
+      } else {
+	cout << "\n\nERROR: Don't understand \"" << str << "\"\n";
+	exit(-1);
+      }
+    }
+
+    /*
     if(!strncmp(input.nodeValidationFlag.GetValue(),"approximate box",15)) {
       nodeApproximationType = BOX;
     } else if(!strncmp(input.nodeValidationFlag.GetValue(),"approximate hull",16)) {
       nodeApproximationType = HULL;
     }
+    */
+
+  } else if(!strncmp(input.nodeValidationFlag.GetValue(),"complete",8)) {
+    nodeValidateType = COMPLETE;
+
+  } else {
+    cout << "\n\nERROR: Don't understand \"" << input.nodeValidationFlag.GetValue() << "\"\n";
+    exit(-1);
   }
 
   double resolution;
@@ -142,36 +176,45 @@ int main(int argc, char** argv)
 	MultiBody* realMB = realEnv->GetMultiBody(i);
 	MultiBody* approxMB = new MultiBody(approxEnv);
 	GMSPolyhedron P;
-	
-	switch(nodeApproximationType) {
-	case BOX:
-	  P = *(createBBoxPolyhedron(realMB));
-	  break;
-	case SPHERE:
-	  break;
-	case HULL:
-	  P = *(createHullPolyhedron(realMB));
-	  break;
+
+	if(approximateObjects == ALL || i==realEnv->GetRobotIndex()) {	  
+	  switch(nodeApproximationType) {
+	  case BOX:
+	    P = *(createBBoxPolyhedron(realMB));
+	    break;
+	  case SPHERE:
+	    break;
+	  case HULL:
+	    P = *(createHullPolyhedron(realMB));
+	    break;
+	  }
+	  
+	  if(nodeApproximationType == SPHERE) {
+	    approxEnv->AddMultiBody(realMB);
+	  } else {
+	    if( realMB->GetFreeBodyCount() ) {
+	      FreeBody* freeBody = new FreeBody(approxMB,P);
+	      freeBody->buildCDstructure(input.cdtype);
+	      approxMB->AddBody(freeBody);
+	    } else {
+	      FixedBody* fixedBody = new FixedBody(approxMB,P);
+	      fixedBody->buildCDstructure(input.cdtype);
+	      approxMB->AddBody(fixedBody);
+	    }
+	    approxMB->CalculateArea();
+	    approxEnv->AddMultiBody(approxMB);
+	  }
+
+	} else {
+	  approxEnv->AddMultiBody(realMB);
 	}
-	
+
 	/*
 	  char filename[100];
 	  sprintf(filename,"shape%d.g",i);
 	  ofstream os(filename);
 	  P.WriteBYU(os);
 	*/
-	
-	if( realMB->GetFreeBodyCount() ) {
-	  FreeBody* freeBody = new FreeBody(approxMB,P);
-	  freeBody->buildCDstructure(input.cdtype);
-	  approxMB->AddBody(freeBody);
-	} else {
-	  FixedBody* fixedBody = new FixedBody(approxMB,P);
-	  fixedBody->buildCDstructure(input.cdtype);
-	  approxMB->AddBody(fixedBody);
-	}
-	approxMB->CalculateArea();
-	approxEnv->AddMultiBody(approxMB);
       }
       
       approxEnv->SetRobotIndex( realEnv->GetRobotIndex() );
