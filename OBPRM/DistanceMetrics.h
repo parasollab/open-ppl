@@ -188,10 +188,10 @@ public:
   //===================================================================
   // Other Methods
   //===================================================================
-  void DefaultInit();
-  void UserInit(Input *,  GenerateMapNodes*, LocalPlanners*);
+  virtual void DefaultInit();
+  virtual void UserInit(Input *,  GenerateMapNodes*, LocalPlanners*);
 
-  double Distance(Environment *env, Cfg _c1, Cfg _c2, SID _dmsetid);
+  virtual double Distance(Environment *env, Cfg _c1, Cfg _c2, SID _dmsetid);
 
   static double EuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
   static double ScaledEuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
