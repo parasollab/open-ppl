@@ -31,6 +31,14 @@
 #include "DistanceMetrics.h"    // Distance Metrics    Algobase
 #include "CollisionDetection.h" // Collision Detection Algobase
 
+// Format version for roadmap (*.map) files
+//      The number breaks down as MonthDayYear (mmddyy).
+//      For future versions, name them according to
+//      YearMonthDay(yyyymmdd) so numerical
+//      comparisons can be more easily made.
+// Warning: Be consistent.  It should be YYYYMMDD
+//      Inconsistent conversions can be misleading.
+//      For example, comparing 200083  to 20000604.
 #define RDMPVER_LEGACY                      0
 #define RDMPVER_LEGACY_CFG_FIELDS           0            // none
 #define RDMPVER_LEGACY_EDGEWT_FIELDS        1            // lp
