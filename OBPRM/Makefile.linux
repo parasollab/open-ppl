@@ -15,7 +15,7 @@
 # collision detection packages available
 #--------------------------------------------------------------------------
 
- CD_DIR = /research/sunburn/dsmft/linux/CD-libs
+ CD_DIR = /research/sunburn/dsmft/CD-libs/linux
 
  VCLIP_DIR     = ${CD_DIR}/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
