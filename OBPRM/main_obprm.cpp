@@ -20,7 +20,7 @@
 #include "DistanceMetrics.h"
 
 Input input;
-Stat_Class Stats; 
+extern Stat_Class Stats; 
 void PrintRawLine( ostream& _os,
         Roadmap *rmap, Clock_Class *NodeGenClock, Clock_Class *ConnectionClock,
         ConnectMapNodes cn, int printHeaders);

@@ -320,7 +320,7 @@ CPOBPRM_MPComponents::doInit(unsigned int PID){
 //  Main Function and other help sub functions
 //
 ///////////////////////////////////////////////////////////////////
-Stat_Class Stats;
+extern Stat_Class Stats;
 #define ARGV_1 "number_of_processors"
 
 void Init(Roadmap& ,Input & ,pvector<CPOBPRM_MPComponents> &);

@@ -18,7 +18,7 @@
 
 Input input;
 QueryCmds Qinput;
-Stat_Class Stats;
+extern Stat_Class Stats;
 
 //========================================================================
 //  main
