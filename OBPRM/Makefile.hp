@@ -17,16 +17,13 @@
 # collision detection packages available
 #--------------------------------------------------------------------------
 
- #CSTKLIB_DIR  = /pub/dsmft/CSTK/CSTK-1.22/cstk
- #CSTKLIB      = -L${CSTKLIB_DIR}/lib -lcstk
- #CSTK_INCL    = -I${CSTKLIB_DIR}/src/include
 
- VCLIP_DIR     = /research/dsmft/VCLIP
+ VCLIP_DIR     = /research/dsmft/CD-libs/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
  VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
  VCLIP_INCL    = -I${VCLIP_DIR}/include
 
- RAPID_DIR     = /research/dsmft/RAPID_v2_01
+ RAPID_DIR     = /research/dsmft/CD-libs/RAPID
  RAPIDLIB_DIR  = ${RAPID_DIR}
  RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
  RAPID_INCL    = -I${RAPID_DIR}
@@ -89,16 +86,16 @@ libobprm.a:: $(OBJS)
 	ar  -rc libobprm.a $(OBJS) 
 
 #--------------------------------------------------------------------
-obprm:: main_obprm.c libs
+obprm:: main_obprm.cpp libs
 	$(CXX) $(CXXFLAGS)  -o obprm \
-	main_obprm.c \
-	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/research/dsmft/qhull -lqhull
+	main_obprm.cpp \
+	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
-query:: main_query.c libs
+query:: main_query.cpp libs
 	$(CXX) $(CXXFLAGS)  -o query \
-	main_query.c \
+	main_query.cpp \
 	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/research/dsmft/qhull -lqhull
 	rm -f main_query.o
 
