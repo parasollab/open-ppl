@@ -1632,7 +1632,7 @@ CNSets::
 MakeCNSet(istream& _myistream) { 
   char cnname[100]; 
   int kclosest;
-  int numEdges;
+  int numEdges;                // parameter for random alg
   int smallcc, kpairs;         // parameters for ConnectCCs
   int k_other, k_self;         // parameters for ObstBased
   int iterations, stepFactor;  // parameters for RRTexpand,RRTcomponents
@@ -1662,7 +1662,7 @@ MakeCNSet(istream& _myistream) {
           }
         }
        if(cn1.numEdges == 0) {  //if no numEdges value given, use default 5
-            cn1.numEdges = 5;
+            cn1.numEdges = DEFAULT_numEdges;
             cn1.cnid = AddElementToUniverse(cn1);
             if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {
                 cout << endl << "In MakeSet: couldn't change element info";

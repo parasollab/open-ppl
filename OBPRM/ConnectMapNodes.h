@@ -93,6 +93,8 @@ class Environment;
 
 const double MAX_DIST =  1e10;
 
+# define DEFAULT_numEdges 5
+
 // pointer to cn function
 typedef void (*CNF) (Roadmap* rm, CollisionDetection *,
 			 LocalPlanners* ,DistanceMetric *, CN&, CNInfo&); 
