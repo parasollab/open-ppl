@@ -68,7 +68,51 @@ public:
   void PrintParams();
 
   template <class CFG, class WEIGHT>
-  void ComputeIntraCCStats(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
+  void ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
+
+  template <class CFG, class WEIGHT>
+  void ComputeInterCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
+  void PrintFeatures();
+  void IncNodes_Generated();
+  void IncNodes_Attempted();
+  void IncConnections_Attempted();
+  void IncConnections_Made();
+
+
+  //features
+  int Connections_Attempted;
+  int Connections_Made;
+  int Nodes_Attempted;
+  int Nodes_Generated;
+  int cc_number;
+
+  //Intra-CC features:
+  double avg_min_intracc_dist;
+  double avg_max_intracc_dist;
+  double avg_mean_intracc_dist;
+  double avg_sigma_intracc_dist;
+
+  double avg_min_intracc_edge_s;
+  double avg_max_intracc_edge_s;
+  double avg_mean_intracc_edge_s;
+  double avg_sigma_intracc_edge_s;
+
+  double avg_max_intracc_dist_to_cm;
+  double avg_min_intracc_dist_to_cm;
+  double avg_mean_intracc_dist_to_cm;
+  double avg_sigma_intracc_dist_to_cm;
+
+  //Inter-CC features:
+  double max_intercc_dist;
+  double avg_intercc_dist; 
+  double sigma_intercc_dist;
+  double min_intercc_dist;
+
+  double max_cc_size;
+  double min_cc_size;
+  double avg_cc_size;
+  double sigma_cc_size;
+
 
 protected:
   int NumNodes;
@@ -198,62 +242,295 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *rmap, int show_column_h
 template <class CFG, class WEIGHT>
 void
 Stat_Class::
-ComputeIntraCCStats(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
-  vector< pair<int,VID> > ccs; //connected components in the roadmap
-  GetCCStats(*(rdmp->m_pRoadmap), ccs);//fill ccs
+ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
+  avg_min_intracc_dist = 0;
+  avg_max_intracc_dist = 0;
+  avg_mean_intracc_dist = 0;
+  avg_sigma_intracc_dist = 0;
+
+  avg_min_intracc_edge_s = 0;
+  avg_max_intracc_edge_s = 0;
+  avg_mean_intracc_edge_s = 0;
+  avg_sigma_intracc_edge_s = 0;
+
+  avg_mean_intracc_dist_to_cm = 0;
+
+  vector< pair<int,VID> > ccs; //vector of connected components in the roadmap
+  GetCCStats(*(rdmp->m_pRoadmap), ccs);//fill ccs from the roadmap
+  cout << "in intra ccs portion" << endl;
 
   vector< pair<int,VID> >::iterator cci; // cci is CC[i] hereafter
   for (cci = ccs.begin(); cci < ccs.end(); cci++) {
-    
     vector<CFG> cci_cfgs; //configurations in cci
     CFG cci_tmp = rdmp->m_pRoadmap->GetData(cci->second);//cci->second: vertex ID of first node in cci
     GetCC(*(rdmp->m_pRoadmap), cci_tmp, cci_cfgs); //fill cci_cfgs
 
-    //compute shortest, longest, mean, and std-dev distances between
-    //nodes
+    if (cci_cfgs.size() > 1) {
+      //compute shortest, longest, mean, and std-dev (sigma) distances 
+      //between nodes for cci
     
-    cout << "Distance Metric will get the closest pairs of nodes to use later" << endl;
-    //vector< pair<VID,VID> > pairs;
-    //pairs = dm->FindKClosestPairs<CFG,WEIGHT>(rdmp, cci_cfgs,
-    //cci_cfgs.size()*cci_cfgs.size());
-    vector< pair<CFG,CFG> > pairs;
-/*     pairs = ((DistanceMetric)*dm).FindKClosestPairs<CFG>(rdmp->GetEnvironment(), cci_cfgs, (int)(cci_cfgs.size()*cci_cfgs.size()));  */
-    pairs = dm->FindKClosestPairs(rdmp->GetEnvironment(), cci_cfgs, (int)(cci_cfgs.size()*cci_cfgs.size())); 
+      double cci_min_intracc_dist = 0;
+      double cci_max_intracc_dist = 0;
+      double cci_mean_intracc_dist = 0;
+      double n_pairs = 0;
+      vector<CFG>::iterator cci_i;
+      vector<CFG>::iterator cci_j;
+      for (cci_i=cci_cfgs.begin(); cci_i < cci_cfgs.end(); cci_i++) {
+	for (cci_j = cci_i+1; cci_j < cci_cfgs.end(); cci_j++) {
+	  double c_dist = dm->Distance(rdmp->GetEnvironment(), *cci_i, *cci_j);
+	  if (c_dist > cci_max_intracc_dist)
+	    cci_max_intracc_dist = c_dist;
+	  if (cci_min_intracc_dist == 0 || c_dist < cci_min_intracc_dist)
+	    cci_min_intracc_dist = c_dist;
+	  cci_mean_intracc_dist += c_dist;
+	  n_pairs++;
+	}
+      }
+      if (n_pairs > 0)
+	cci_mean_intracc_dist /= n_pairs;
 
-/*     for each pair of nodes (na, nb) in CC[i]{ */
-/*       compute distance between na and nb */
-/* 	keep Max, Min, Mean, and Std-dev */
-/* 	} */
-    
-/*     //compute length of longest edge in the component */
-/*     cci_length = 0; */
-/*     for each edge (na,nb) in CC[i] { */
-/*       keep longest edge */
-/* 	cci_length += length of edge (na,nb); */
-/*     } */
+      double cci_sigma_intracc_dist = 0;
+      for (cci_i=cci_cfgs.begin(); cci_i < cci_cfgs.end(); cci_i++) {
+	for (cci_j = cci_i+1; cci_j < cci_cfgs.end(); cci_j++) {
+	  cci_sigma_intracc_dist += power(dm->Distance(rdmp->GetEnvironment(),
+		     *cci_i, *cci_j)-cci_mean_intracc_dist, 2);
+	}
+      }
+      if (n_pairs > 1)
+	cci_sigma_intracc_dist /= (n_pairs-1);
+      cci_sigma_intracc_dist = sqrt(cci_sigma_intracc_dist);
 
-    cout << "Computing center of mass" << endl;
-    //get center of mass of all Cfgs in current CC
-    CFG center_of_mass = cci_cfgs[0];
-    for (int j =1; j < cci_cfgs.size(); ++j)
-      center_of_mass.add(center_of_mass, cci_cfgs[j]);
-    center_of_mass.divide(center_of_mass, cci_cfgs.size());
-    cout << "the center of mass is: " << center_of_mass << endl;
+      //compute shortest, longest, mean and std-dev (sigma) edge sizes 
+      //in the component
+      vector<pair<VID,VID> > cci_edges;
+      GetCCEdges(*(rdmp->m_pRoadmap), cci_edges, cci->second);
+      double cci_max_intracc_edge_s = 0;
+      double cci_min_intracc_edge_s = 0;
+      double cci_mean_intracc_edge_s = 0;
+      double cci_sigma_intracc_edge_s = 0;
+      for (vector< pair<VID,VID> >::iterator e_iter = cci_edges.begin();
+	   e_iter < cci_edges.end(); e_iter++) {
+	CFG e_v1 = rdmp->m_pRoadmap->GetData(e_iter->first);
+	CFG e_v2 = rdmp->m_pRoadmap->GetData(e_iter->second);
+	double e_dist = dm->Distance(rdmp->GetEnvironment(), e_v1, e_v2);
+	if (e_dist > cci_max_intracc_edge_s)
+	  cci_max_intracc_edge_s = e_dist;
+	if (cci_min_intracc_edge_s == 0 || e_dist < cci_min_intracc_edge_s)
+	  cci_min_intracc_edge_s = e_dist;
+	cci_mean_intracc_edge_s += e_dist;
+      }
+      if (cci_edges.size() > 0)
+	cci_mean_intracc_edge_s /= cci_edges.size();
+      for (vector< pair<VID,VID> >::iterator e_iter = cci_edges.begin();
+	   e_iter < cci_edges.end(); e_iter++) {
+	CFG e_v1 = rdmp->m_pRoadmap->GetData(e_iter->first);
+	CFG e_v2 = rdmp->m_pRoadmap->GetData(e_iter->second);
+	double e_dist = dm->Distance(rdmp->GetEnvironment(), e_v1, e_v2);
+	cci_sigma_intracc_edge_s += power(e_dist-cci_mean_intracc_edge_s, 2);
+      }
+      if (cci_edges.size() > 1)
+	cci_sigma_intracc_edge_s /= cci_edges.size() - 1;
+      cci_sigma_intracc_edge_s = sqrt(cci_sigma_intracc_edge_s);
+
+      //get center of mass of all Cfgs in current CC
+      CFG center_of_mass = cci_cfgs[0];
+      for (int j = 1; j < cci_cfgs.size(); ++j)
+	center_of_mass.add(center_of_mass, cci_cfgs[j]);
+      center_of_mass.divide(center_of_mass, cci_cfgs.size());
     
-    cout << "Computing the average distance of " << cci_cfgs.size() << " cfgs to the center of mass" << endl;
-    //compute average distance of the nodes to the center of mass
-    double average_distance_to_cm = 0;
-    for (int j = 0; j < cci_cfgs.size(); ++j) {
-      CFG tmp = cci_cfgs[j];
-      cout << "* Compute distance between: " << endl << tmp << "* And: " << center_of_mass << endl;
-      average_distance_to_cm += dm->Distance(rdmp->GetEnvironment(), center_of_mass, tmp);
+      //compute average distance of the nodes to the center of mass
+      double cci_min_intracc_dist_to_cm = 0;
+      double cci_max_intracc_dist_to_cm = 0;
+      double cci_mean_intracc_dist_to_cm = 0;
+      double cci_sigma_intracc_dist_to_cm = 0;
+      for (int j = 0; j < cci_cfgs.size(); ++j) {
+	CFG tmp = cci_cfgs[j];
+	double e_dist = dm->Distance(rdmp->GetEnvironment(), 
+				     center_of_mass, tmp);
+	if (e_dist > cci_max_intracc_dist_to_cm)
+	  cci_max_intracc_dist_to_cm = e_dist;
+	if (cci_min_intracc_dist_to_cm == 0 || e_dist < cci_min_intracc_dist_to_cm)
+	  cci_min_intracc_dist_to_cm = e_dist;
+	cci_mean_intracc_dist_to_cm += e_dist;
+      }
+      if (cci_cfgs.size() > 0 )
+	cci_mean_intracc_dist_to_cm /= cci_cfgs.size();
+      for (int j = 0; j < cci_cfgs.size(); ++j) {
+	CFG tmp = cci_cfgs[j];
+	double e_dist = dm->Distance(rdmp->GetEnvironment(), 
+				     center_of_mass, tmp);
+	cci_sigma_intracc_dist_to_cm += power(e_dist-cci_mean_intracc_dist_to_cm, 2);
+      }
+      if (cci_cfgs.size() > 1)
+	cci_sigma_intracc_dist_to_cm /= cci_cfgs.size() - 1;
+      cci_sigma_intracc_dist_to_cm = sqrt(cci_sigma_intracc_dist_to_cm);
+
+      avg_min_intracc_dist += cci_min_intracc_dist;
+      avg_max_intracc_dist += cci_max_intracc_dist;
+      avg_mean_intracc_dist += cci_mean_intracc_dist;
+      avg_sigma_intracc_dist += cci_sigma_intracc_dist;
+    
+      avg_min_intracc_edge_s += cci_min_intracc_edge_s;
+      avg_max_intracc_edge_s += cci_max_intracc_edge_s;
+      avg_mean_intracc_edge_s += cci_mean_intracc_edge_s;
+      avg_sigma_intracc_edge_s += cci_sigma_intracc_edge_s;
+
+      avg_max_intracc_dist_to_cm += cci_max_intracc_dist_to_cm;
+      avg_min_intracc_dist_to_cm += cci_min_intracc_dist_to_cm;
+      avg_mean_intracc_dist_to_cm += cci_mean_intracc_dist_to_cm;
+      avg_sigma_intracc_dist_to_cm += cci_sigma_intracc_dist_to_cm;
     }
-    cout << "Now averaging for " << cci_cfgs.size() << " configurations" << endl;
-    if (cci_cfgs.size() > 0 )
-      average_distance_to_cm /= cci_cfgs.size();
-    cout << "The average distance to the center of mass is " << average_distance_to_cm << endl;
   }
+  if (ccs.size() > 0) {
+    //cout << "averaging" << endl;
+    avg_min_intracc_dist /= ccs.size();
+    avg_max_intracc_dist /= ccs.size();
+    avg_mean_intracc_dist /= ccs.size();
+    avg_sigma_intracc_dist /= ccs.size();
+    
+    avg_min_intracc_edge_s /= ccs.size();
+    avg_max_intracc_edge_s /= ccs.size();
+    avg_mean_intracc_edge_s /= ccs.size();
+    avg_sigma_intracc_edge_s /= ccs.size(); 
+
+    avg_max_intracc_dist_to_cm /= ccs.size();
+    avg_min_intracc_dist_to_cm /= ccs.size();
+    avg_mean_intracc_dist_to_cm /= ccs.size();
+    avg_sigma_intracc_dist_to_cm /= ccs.size();
+
+  }
+  CFG tcfg;
+  double norm = rdmp->GetEnvironment()->Getminmax_BodyAxisRange()*tcfg.DOF();
+  avg_min_intracc_dist /= norm;
+  avg_max_intracc_dist /= norm;
+  avg_mean_intracc_dist /= norm;
+  avg_sigma_intracc_dist /= norm;
+  
+  avg_min_intracc_edge_s /= norm;
+  avg_max_intracc_edge_s /= norm;
+  avg_mean_intracc_edge_s /= norm;
+  avg_sigma_intracc_edge_s /= norm;
+  
+  avg_max_intracc_dist_to_cm /= norm;
+  avg_min_intracc_dist_to_cm /= norm;
+  avg_mean_intracc_dist_to_cm /= norm;
+  avg_sigma_intracc_dist_to_cm /= norm;
 }
 
+
+// Compute inter-connected-component statistics
+// Find Closest nodes between two ccs and find distance 
+// between the closest pairs of ccs
+template <class CFG, class WEIGHT>
+void
+Stat_Class::
+ComputeInterCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
+  vector< pair<int,VID> > ccs; //connected components in the roadmap
+  cout << "in inter ccs portion" << endl;
+  GetCCStats(*(rdmp->m_pRoadmap), ccs);//fill ccs
+
+  max_intercc_dist = 0.0;
+  avg_intercc_dist = 0.0; 
+  sigma_intercc_dist = 0.0;
+  min_intercc_dist = 0.0;
+
+  int pairs_checked = 0;
+  vector<double> min_cc_distance_between_closest_pairs;
+  vector<pair<VID,VID> > ccedges;
+  vector<double> ccsizes;
+
+  max_cc_size = 0;
+  min_cc_size = 0;
+  avg_cc_size = 0;
+  sigma_cc_size = 0;
+
+  cc_number = ccs.size();
+
+  double total_components_dist = 0;
+  for(vector< pair<int,VID> >::iterator cce=ccs.begin(); cce < ccs.end(); cce++){
+    GetCCEdges(*(rdmp->m_pRoadmap),ccedges,cce->second);
+    double total_size = 0.0;
+    cout << "size of edge list for cc:" << cce->second 
+	 << " "<< ccedges.size() << endl;
+    for(vector< pair<VID,VID> >::iterator cciter=ccedges.begin(); cciter<ccedges.end();cciter++) {
+      CFG cciter_a = rdmp->m_pRoadmap->GetData(cciter->first);
+      CFG cciter_b = rdmp->m_pRoadmap->GetData(cciter->second);
+      double dist =dm->Distance(rdmp->GetEnvironment(),
+				cciter_a, cciter_b);
+      total_size += dist;
+    }     
+    ccedges.clear();
+    total_size /= 2;
+    ccsizes.push_back(total_size);
+    if(total_size > max_cc_size) 
+      max_cc_size=total_size;
+    if(min_cc_size == 0 || total_size < min_cc_size) 
+      min_cc_size=total_size;
+    avg_cc_size+=total_size;
+    total_components_dist+=total_size;
+  }
+  avg_cc_size /= ccs.size();
+
+  sigma_cc_size = 0;
+  for (int j = 0; j < ccsizes.size(); j++)
+    sigma_cc_size  += power(ccsizes[j]-avg_cc_size, 2);
+  if (ccsizes.size() > 1)
+    sigma_cc_size /= (ccsizes.size()-1);
+  sigma_cc_size = sqrt(sigma_cc_size);
+  if (total_components_dist>0) {
+    min_cc_size/=total_components_dist;
+    max_cc_size/=total_components_dist;
+    avg_cc_size/=total_components_dist;
+    sigma_cc_size/=total_components_dist;
+  }
+
+
+  vector< pair<int,VID> >::iterator cci; // cci is CC[i] hereafter
+  if(ccs.size()>1)
+    for (cci = ccs.begin(); cci < ccs.end(); cci++) {
+      vector< pair<int,VID> >::iterator ccj;//ccj will be the rest of the ccs that cci has not
+      //checked against
+      ccj = cci;
+      //ccj++;
+      for(ccj++;ccj<ccs.end();ccj++) {
+	
+	vector<CFG> cci_cfgs; //configurations in cci
+	vector<CFG> ccj_cfgs; //configurations in ccj
+	CFG cci_tmp = rdmp->m_pRoadmap->GetData(cci->second);//cci->second: vertex ID of first node in cci
+	CFG ccj_tmp = rdmp->m_pRoadmap->GetData(ccj->second);//ccj->second: vertex ID of first node in ccj
+
+	GetCC(*(rdmp->m_pRoadmap), cci_tmp, cci_cfgs); //fill cci_cfgs
+	GetCC(*(rdmp->m_pRoadmap), ccj_tmp, ccj_cfgs); //fill ccj_cfgs
+	
+	vector< pair<CFG,CFG> > pairs;
+	pairs = dm->FindKClosestPairs(rdmp->GetEnvironment(), 
+				      cci_cfgs, ccj_cfgs, 1); 
+	double tmp_dist = dm->Distance(rdmp->GetEnvironment(),
+				       pairs[0].first, pairs[0].second);
+	if(tmp_dist > max_intercc_dist) 
+	  max_intercc_dist = tmp_dist;
+	if(min_intercc_dist == 0.0 || tmp_dist < min_intercc_dist) 
+	  min_intercc_dist = tmp_dist;
+	avg_intercc_dist += tmp_dist;
+	min_cc_distance_between_closest_pairs.push_back( tmp_dist );
+	pairs_checked++;
+      }
+    }
+  if (pairs_checked > 0)
+    avg_intercc_dist /= pairs_checked;
+  for (int j = 0; j < min_cc_distance_between_closest_pairs.size(); j++)
+    sigma_intercc_dist += power(min_cc_distance_between_closest_pairs[j]-
+				avg_intercc_dist , 2);
+  if (min_cc_distance_between_closest_pairs.size() > 1)
+    sigma_intercc_dist /= min_cc_distance_between_closest_pairs.size() - 1;
+  sigma_intercc_dist = sqrt(sigma_intercc_dist);
+
+  CFG tcfg;
+  double norm = rdmp->GetEnvironment()->Getminmax_BodyAxisRange()*tcfg.DOF();
+  max_intercc_dist /= norm;
+  min_intercc_dist /= norm;
+  avg_intercc_dist /= norm;
+  sigma_intercc_dist /= norm;
+}
 #endif
 

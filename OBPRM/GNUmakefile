@@ -1,5 +1,10 @@
-STAPL=../stapl_release
-OBPRM=.
+ifndef STAPL
+  STAPL=../stapl_release
+endif
+
+ifndef OBPRM
+  OBPRM=.
+endif
 
 #set default platform
 ifndef platform

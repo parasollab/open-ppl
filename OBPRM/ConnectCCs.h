@@ -240,12 +240,14 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int c1 = 0; c1 < cc1vec.size(); c1++){
     for (int c2 = 0; c2 < cc2vec.size(); c2++){
+      Stats.IncConnections_Attempted();
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
           && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
 			     cc1vec[c1],cc2vec[c2],
 			     &lpOutput, 
 			     connectionPosRes, connectionOriRes, 
 			     (!addAllEdges)) ) {
+	Stats.IncConnections_Made();
 	pMap->AddEdge(cc1vec[c1], cc2vec[c2], lpOutput.edge);
 	return;
       }
@@ -284,9 +286,11 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int i = 0; i < kp.size(); i++) {
+    Stats.IncConnections_Attempted();
     if (!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
 	&& lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,kp[i].first,kp[i].second,&lpOutput, connectionPosRes, connectionOriRes, (!addAllEdges)) ) {
       pMap->AddEdge(kp[i].first, kp[i].second, lpOutput.edge); 
+      Stats.IncConnections_Made();
       return;
     }
     else if(addPartialEdge) {

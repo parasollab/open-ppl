@@ -468,11 +468,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
       
       // Collect free & surface nodes for return
       int i;
-      for (i=0;i<obstSurface.size();i++) {
+      for (i = 0; i < obstSurface.size(); i++) {
 	obstSurface[i].obst = obstacle;
 	nodes.push_back(obstSurface[i]);
       }
-      for (i=0;i<obstFree.size();i++) {
+      for (i = 0; i < obstFree.size(); i++) {
 	obstFree[i].obst = obstacle;
 	nodes.push_back(obstFree[i]);
       }
@@ -640,10 +640,10 @@ GenSurfaceCfgs4Obst(Environment* env, Stat_Class& Stats,
 				  *cdInfo, pResult);
     vector<CFG> result;
     int i;
-    for(i=0; i<pResult.size(); i++)
+    for(i = 0; i < pResult.size(); i++)
       result.push_back((CFG)*pResult[i]);
 
-    for(i=0; i<pResult.size(); i++)
+    for(i = 0; i < pResult.size(); i++)
       delete pResult[i];
 
     return result;
@@ -665,21 +665,31 @@ GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
   
   vector<CFG> obstSeeds;
   
-  GenerateSeeds(env,Stats,cd,obstacle,nCfgs,seedSelect.first,seedSelect.second,&obstSeeds);
+  GenerateSeeds(env, Stats, cd, obstacle, nCfgs,
+		seedSelect.first, seedSelect.second, &obstSeeds);
   
   int robot = env->GetRobotIndex();
   vector<CFG> tmp, preshells, shells, surface;
   for(int i = 0 ; i < obstSeeds.size() ; i++) {
+    //Generate Random direction
+    CFG incrCfg = GenerateRandomDirection(env,obstSeeds[i]);     
+    // Generate outside cfg
+    CFG OutsideNode = GenerateOutsideCfg(env,Stats,cd,robot,obstacle,
+					 obstSeeds[i],incrCfg);
+    //move inside node to the bounding box if required
+    bool inBB = PushCfgToBoundingBox(env,obstSeeds[i],OutsideNode);
+    if (inBB) {
+      if (OutsideNode.AlmostEqual(obstSeeds[i]) ||
+	  !obstSeeds[i].isCollision(env,Stats,cd,robot,obstacle,*cdInfo))
+	continue; //no valid outside or inside node was found
+    }
+    else
+      continue; //no valid inside node was found
     
-    CFG incrCfg;
-    incrCfg.GetRandomRay(EXPANSION_FACTOR*env->GetPositionRes());
-    
-    CFG OutsideNode =
-      GenerateOutsideCfg(env,Stats,cd,robot,obstacle,obstSeeds[i],incrCfg);
-    if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
-    
-    tmp =
-      GenerateSurfaceCfg(env,Stats,cd,dm,robot,obstacle,obstSeeds[i],OutsideNode,clearanceFactor);
+    // Generate surface cfgs
+    tmp = GenerateSurfaceCfg(env,Stats,cd,dm,
+			     robot,obstacle,obstSeeds[i],OutsideNode,
+			     clearanceFactor);
     
     // Choose as many as nshells
     preshells = Shells(tmp, numShells.GetValue());

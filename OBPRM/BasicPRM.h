@@ -91,7 +91,8 @@ BasicPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   int i;
   for (i =1; i < argc; ++i) {
-    if( numNodes.AckCmdLine(&i, argc, argv) ) {
+    if( numNodes.AckCmdLine(&i, argc, argv) || 
+        numAttempts.AckCmdLine(&i, argc, argv) ) {
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
       for(int j=0; j<argc; j++)
@@ -112,8 +113,9 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; numNodes.PrintUsage(_os);
-  
+  _os << "\n\t"; numNodes.PrintUsage(_os); _os << " ";
+  _os << "\n\t"; numAttempts.PrintUsage(_os);
+
   _os.setf(ios::right,ios::adjustfield);
 }
 
@@ -122,7 +124,8 @@ void
 BasicPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
-  _os << numNodes.GetFlag() << " " << numNodes.GetValue();
+  _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << numAttempts.GetFlag() << " " << numAttempts.GetValue();
   _os << endl;
 }
 
@@ -144,28 +147,57 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      vector<CFG>& nodes) {
 	
 #ifndef QUIET
-  cout << "(numNodes=" << numNodes.GetValue() << ") ";
+  if (numAttempts.GetValue()==0)
+     cout << "(numNodes=" << numNodes.GetValue() << ") ";
+  else
+     cout << "(numAttempts=" << numAttempts.GetValue() << ") ";
 #endif
   
-  
-  // PRM style node generation -- generate in expanded bounding box
+  //int attempts = 0; //numNodes is the number of desired free nodes
+  int attempts = numAttempts.GetValue();  //numNodes is the number of attempted nodes
+  //PRM style node generation -- generate in expanded bounding box
   vector<Cfg*> path;
-
-  CFG tmp;
-  tmp.GetNFreeRandomCfgs(path, _env, Stats, cd,
-			 *cdInfo, numNodes.GetValue());
-
-  int i;
-  for(i=0; i<path.size(); i++)
-    nodes.push_back((CFG)*path[i]);
+  
+  if (attempts == 0) { // we want to obtain numNodes free nodes 
+    CFG tmp;
+    int default_maxTries = 100;
+    for (int i=0; i < numNodes.GetValue(); ++i) {
+       bool collision = true;
+       int j=0;
+       while (collision && (j<default_maxTries)) {
+         j++;
+         Stats.IncNodes_Attempted();
+         tmp.GetRandomCfg(_env);
+         if (!tmp.isCollision(_env, Stats, cd, *cdInfo)) {
+	   nodes.push_back( CFG(tmp));
+	   path.push_back ( (Cfg*)tmp.CreateNewCfg() );
+	   Stats.IncNodes_Generated();
+           collision = false;
+         }
+       }
+    }
+  }
+  else { //we want to try numAttempts nodes (either free or in collision)
+    CFG tmp;
+    for (int i=0; i < attempts; ++i) {
+      Stats.IncNodes_Attempted();
+      tmp.GetRandomCfg(_env);
+      if (!tmp.isCollision(_env, Stats, cd, *cdInfo)) {
+	nodes.push_back( CFG(tmp));
+	path.push_back ( (Cfg*)tmp.CreateNewCfg() );
+	Stats.IncNodes_Generated();
+      }
+    }
+  }
   
 #if INTERMEDIATE_FILES
   //in util.h
   WritePathConfigurations("prm.path", path, _env);
-#endif
-
+#endif	
+  int i;
   for(i=0; i<path.size(); i++)
-    delete path[i];
+    if (path[i]!=NULL)
+      delete path[i];
 };
 
 #endif

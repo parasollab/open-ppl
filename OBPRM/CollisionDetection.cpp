@@ -1050,37 +1050,37 @@ IsInCollision(MultiBody* robot, MultiBody* obstacle,
 	
     for(int i=0 ; i<robot->GetFreeBodyCount(); i++){
 		
-		rob = robot->GetFreeBody(i)->GetRapidBody();
-		
-		for(int j=0; j<obstacle->GetBodyCount(); j++){
-			
-            // if robot check self collision, skip adjacent links.
-            if(robot == obstacle &&
-				robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(j)) )
-				continue;
-			
-            obst = obstacle->GetBody(j)->GetRapidBody();
-			Transformation &t1 = robot->GetFreeBody(i)->WorldTransformation();
-			Transformation &t2 = obstacle->GetBody(j)->WorldTransformation();
-			t1.orientation.ConvertType(Orientation::Matrix);
-			t2.orientation.ConvertType(Orientation::Matrix);
-			double p1[3], p2[3];
-			for(int p=0; p<3; p++) {
-				p1[p] = t1.position[p];
-				p2[p] = t2.position[p];
-			}
-			
-			if(RAPID_Collide(t1.orientation.matrix, p1, rob,
-				t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT)) {
-				cout << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY"
-					<< RAPID_Collide(t1.orientation.matrix, p1, rob, t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT) << endl;
-				exit(1);
-			}
-			if(RAPID_num_contacts) {
-				return true;
-            }
-			
-		}
+      rob = robot->GetFreeBody(i)->GetRapidBody();
+      
+      for(int j=0; j<obstacle->GetBodyCount(); j++){
+	
+	// if robot check self collision, skip adjacent links.
+	if(robot == obstacle &&
+	   robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(j)) )
+	  continue;
+	
+	obst = obstacle->GetBody(j)->GetRapidBody();
+	Transformation &t1 = robot->GetFreeBody(i)->WorldTransformation();
+	Transformation &t2 = obstacle->GetBody(j)->WorldTransformation();
+	t1.orientation.ConvertType(Orientation::Matrix);
+	t2.orientation.ConvertType(Orientation::Matrix);
+	double p1[3], p2[3];
+	for(int p=0; p<3; p++) {
+	  p1[p] = t1.position[p];
+	  p2[p] = t2.position[p];
+	}
+	
+	if(RAPID_Collide(t1.orientation.matrix, p1, rob,
+			 t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT)) {
+	  cout << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY"
+	       << RAPID_Collide(t1.orientation.matrix, p1, rob, t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT) << endl;
+	  exit(1);
+	}
+	if(RAPID_num_contacts) {
+	  return true;
+	}
+	
+      }
     }
     return false;
 }

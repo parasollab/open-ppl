@@ -14,6 +14,7 @@
 #include "RRTcomponents.h"
 #include "ConnectCCs.h"
 #include "Closest.h"
+#include "UnconnectedClosest.h"
 #include "ClosestVE.h"
 #include "RandomConnect.h"
 #include "ObstBased.h"
@@ -93,6 +94,9 @@ ConnectMap<CFG,WEIGHT>::ConnectMap() {
 
   Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>();
   all.push_back(closest);
+
+  UnconnectedClosest<CFG,WEIGHT>* unconnectedclosest = new UnconnectedClosest<CFG,WEIGHT>();
+  all.push_back(unconnectedclosest);
 
   RandomConnect<CFG,WEIGHT>* random = new RandomConnect<CFG,WEIGHT>();
   all.push_back(random);
@@ -280,7 +284,10 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	 << " connected components\n"<< flush;
 #endif
   }
-}template <class CFG, class WEIGHT>
+}
+
+
+template <class CFG, class WEIGHT>
 void ConnectMap<CFG,WEIGHT>::
 ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  CollisionDetection* cd , 

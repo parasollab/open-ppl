@@ -67,7 +67,7 @@ class NodeGenerationMethod {
   //////////////////////////////////////////////////////////////////////////////////////////
   ///Number of nodes to generate.
   num_param<int> numNodes;
-
+  num_param<int> numAttempts;
   CDInfo* cdInfo;
 };
 
@@ -80,9 +80,10 @@ class NodeGenerationMethod {
 template <class CFG>
 NodeGenerationMethod<CFG>::
 NodeGenerationMethod():
-  numNodes         ("nodes",            10,  1,   5000000) {
+  numNodes         ("nodes",            10,  1,   5000000),
+  numAttempts      ("attempts",            0,  0,   5000000) {
   numNodes.PutDesc("INTEGER","(number of nodes, default 10)");
-
+  numAttempts.PutDesc("INTEGER","(number of nodes to attempt, default 0 so nodes will be used)");
   SetDefault();
 }
 
@@ -97,6 +98,7 @@ template <class CFG>
 void NodeGenerationMethod<CFG>::
 SetDefault() {
   numNodes.PutValue(10);
+  numAttempts.PutValue(0);
 }
 
 #endif

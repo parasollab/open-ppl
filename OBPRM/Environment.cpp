@@ -119,6 +119,62 @@ void Environment::Get(Input * _input) {
 	
 }
 
+
+
+//Get rid of obstacles outside the bounding box
+void Environment::DeleteObstaclesOutsideBoundingBox() {
+    double minx, miny, minz, maxx, maxy, maxz;
+    minx = miny = minz = maxx = maxy = maxz = 0;
+
+    minx=boundingBox[0]; maxx=boundingBox[1];
+    miny=boundingBox[2]; maxy=boundingBox[3];
+    minz=boundingBox[4]; maxz=boundingBox[5];
+
+    vector< MultiBody* > in_obstacles;
+    double * obb;
+    int new_rob_index;
+    int rob = this->GetRobotIndex();
+    GetMultiBody(rob)->FindBoundingBox();
+
+    for (int i = 0; i < this->GetMultiBodyCount(); i++) {
+      //see if bounding box of multibody overlaps BB
+      GetMultiBody(i)->FindBoundingBox();
+      if (i == rob) {
+	in_obstacles.push_back(GetMultiBody(i));
+	new_rob_index = in_obstacles.size()-1;
+      } else {
+
+	obb = GetMultiBody(i)->GetBoundingBox();
+	
+	//	if obstacle not in collision with the bounding box
+	if (((obb[0] <= maxx && obb[0] >= minx) || 
+	     (obb[1] <= maxx && obb[1] >= minx)) &&
+	    ((obb[2] <= maxy && obb[2] >= miny) || 
+	     (obb[3] <= maxy && obb[3] >= miny)) &&
+	    ((obb[4] <= maxz && obb[4] >= minz) || 
+	     (obb[5] <= maxz && obb[5] >= minz))) 
+	  in_obstacles.push_back(GetMultiBody(i));
+	else {
+	  //if bounding boxes cross each other	
+	  if (obb[0] > maxx || obb[1] < minx || 
+	      obb[2] > maxy || obb[3] < miny || 
+	      obb[4] > maxz || obb[5] < minz) { 
+	    cout << "Deleting obstacle " << i << endl;
+	    delete GetMultiBody(i);
+	  } else {
+	    in_obstacles.push_back(GetMultiBody(i));
+	  }
+	}
+      }
+    }
+    for (int i=0; i <in_obstacles.size(); i++) {
+      multibody[i] = in_obstacles[i];
+    }
+    SetRobotIndex(new_rob_index);
+    multibodyCount = in_obstacles.size();
+    externalbodyCount = multibodyCount;
+}
+
 void Environment::UpdateBoundingBox(Input * _input) {
 	
 	

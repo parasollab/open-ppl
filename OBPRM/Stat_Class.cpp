@@ -30,6 +30,24 @@ Stat_Class() {
   NumNodes=0;
   NumEdges=0;
 
+  Nodes_Generated = 0;
+  Nodes_Attempted = 0;
+  Connections_Attempted = 0;
+  Connections_Made = 0;
+  avg_min_intracc_dist = 0;
+  avg_max_intracc_dist = 0;
+  avg_mean_intracc_dist = 0;
+  avg_sigma_intracc_dist = 0;
+  avg_min_intracc_edge_s = 0;
+  avg_max_intracc_edge_s = 0;
+  avg_mean_intracc_edge_s = 0;
+  avg_sigma_intracc_edge_s = 0;
+  avg_mean_intracc_dist_to_cm = 0;
+  max_intercc_dist = 0.0;
+  avg_intercc_dist = 0.0; 
+  sigma_intercc_dist = 0.0;
+  min_intercc_dist = 100000.0;
+
   // initialize the size of each connected component to 0
   NumCC=0;
   for(i=0;i<MaxCC;i++)
@@ -446,3 +464,67 @@ void
 Stat_Class::
 PrintParams() {
 };
+
+void
+Stat_Class::
+PrintFeatures() {
+  cout << "General features:" << endl;
+  cout << "\tNodes_Attempted: " << Nodes_Attempted << endl;
+  cout << "\tNodes_Generated: " << Nodes_Generated << endl;
+  cout << "\tpct_free_nodes: " << ((double)Nodes_Generated)/Nodes_Attempted << endl;
+  cout << "\tcc_number: " << cc_number << endl;
+  cout << "\tConnections_Attempted: " << Connections_Attempted << endl;
+  cout << "\tConnections_Made: " << Connections_Made << endl;
+  cout << "\tpct_succesful_connections: " << ((double)Connections_Made)/Connections_Attempted << endl;
+
+  cout << "Intra-cc features:" << endl;
+  cout << "\tavg_min_intracc_dist: " << avg_min_intracc_dist << endl;
+  cout << "\tavg_max_intracc_dist: " << avg_max_intracc_dist << endl;
+  cout << "\tavg_mean_intracc_dist: " << avg_mean_intracc_dist << endl;
+  cout << "\tavg_sigma_intracc_dist: " << avg_sigma_intracc_dist << endl;
+  cout << "\tavg_min_intracc_edge_s: " << avg_min_intracc_edge_s << endl;
+  cout << "\tavg_max_intracc_edge_s: " << avg_max_intracc_edge_s << endl;
+  cout << "\tavg_mean_intracc_edge_s: " << avg_mean_intracc_edge_s << endl;
+  cout << "\tavg_sigma_intracc_edge_s: " << avg_sigma_intracc_edge_s << endl;
+
+  cout << "\tavg_max_intracc_dist_to_cm: " << avg_max_intracc_dist_to_cm << endl;
+  cout << "\tavg_min_intracc_dist_to_cm: " << avg_min_intracc_dist_to_cm << endl;
+  cout << "\tavg_mean_intracc_dist_to_cm: " << avg_mean_intracc_dist_to_cm << endl;
+  cout << "\tavg_sigma_intracc_dist_to_cm: " << avg_sigma_intracc_dist_to_cm << endl;
+
+  cout << "Inter-cc features:" << endl;
+  cout << "\tmax_intercc_dist: " << max_intercc_dist << endl;
+  cout << "\tmin_intercc_dist: " << min_intercc_dist << endl;
+  cout << "\tavg_intercc_dist: " << avg_intercc_dist << endl;
+  cout << "\tsigma_intercc_dist: " << sigma_intercc_dist <<endl<<endl;
+
+  cout << "\tmin_cc_size: " << min_cc_size << endl;
+  cout << "\tmax_cc_size: " << max_cc_size << endl;
+  cout << "\tavg_cc_size: " << avg_cc_size << endl;
+  cout << "\tsigma_cc_size: " << sigma_cc_size << endl;
+}
+
+void
+Stat_Class::
+IncNodes_Generated(){
+  Nodes_Generated++;
+};
+
+void
+Stat_Class::
+IncNodes_Attempted(){
+  Nodes_Attempted++;
+};
+void
+Stat_Class::
+IncConnections_Attempted(){
+  Connections_Attempted++;
+};
+                                                                                
+void
+Stat_Class::
+IncConnections_Made(){
+  Connections_Made++;
+};
+                                                                                
+

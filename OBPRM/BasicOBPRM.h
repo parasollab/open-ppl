@@ -156,6 +156,34 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
    *given direction.
    *@see GenerateInsideCfg
    */
+  
+  CFG GenerateRandomDirection(Environment *env, const CFG &InsideNode);
+
+  /**Returns a configuration representing a vector in a random 
+   *direction for Obstacle Based node sampling.
+   *
+   *@param InsideNode is a configuration obtained with GenerateInsideCfg
+   *@return randomDir is a configuration representing a vector starting
+   *from InsideNode. If InsideNode is inside the bounding box, randomDir
+   *is just a random ray, otherwise it goes toward a random configuration 
+   *inside the bounding box. In any case it is normalized and scaled by 
+   *EXPANSION_FACTOR.
+   *@see GenerateRandomDirection
+   */
+
+
+  bool PushCfgToBoundingBox(Environment *env, CFG& FromCfg, const CFG& ToCfg);
+
+  /**Moves FromCfg toward ToCfg until it is inside the Bounding Box
+   *if FromCfg is already inside the BoundingBox, it leaves it where 
+   *it already is
+   *
+   *@param FromCfg is the configuration to move
+   *@param ToCfg is the configuration to move toward
+   *@return true when FromCfg is left inside the bounding box, false
+   *otherwise.
+   */
+
   CFG GenerateOutsideCfg(Environment* env, Stat_Class& Stats,
 			 CollisionDetection* cd, 
 			 int rob, int obst,
@@ -483,7 +511,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
       / (numExternalBody)
       / numShells.GetValue();
   
-  if (N < 1) N = max(numNodes.GetValue(),numShells.GetValue());
+  if (N < 1) N = 1; //max(numNodes.GetValue(),numShells.GetValue());
   
   for (int obstacle = 0 ; obstacle < numExternalBody ; obstacle++) {
     if (obstacle != robot) {  // && obstacle is "Passive" not "Active" robot
@@ -501,17 +529,23 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	  cout << "\nError: Seed not in collision w/"
 	    " obstacle[index="<<obstacle<<"]\n" << flush;
 	  continue;
-	}
-	
+	}	
 	// Generate Random direction
-	CFG incrCfg;
-	incrCfg.GetRandomRay( EXPANSION_FACTOR * _env->GetPositionRes() );
-	
+	CFG incrCfg = GenerateRandomDirection(_env, InsideNode);
 	// Generate outside cfg
 	CFG OutsideNode = GenerateOutsideCfg(_env,Stats,cd,robot,obstacle,
 					     InsideNode,incrCfg);
-	if(OutsideNode.AlmostEqual(InsideNode)) continue; // can not find outside node.
-	
+	//move inside node to the bounding box if required
+	bool inBBox = PushCfgToBoundingBox(_env, InsideNode, OutsideNode);
+	if (inBBox) {
+	  if (OutsideNode.AlmostEqual(InsideNode) ||
+	      !InsideNode.isCollision(_env,Stats,cd,robot,obstacle,*cdInfo))
+	    continue; //no valid outside or inside node was found	
+	}
+	else
+	  continue; // no valid inside node was found
+
+	 
 	// Generate surface cfgs
 	tmp = GenerateSurfaceCfg(_env,Stats,cd,dm,
 				 robot,obstacle, InsideNode,OutsideNode);
@@ -600,6 +634,22 @@ GenerateInsideCfg(Environment* _env, Stat_Class& Stats,
   return tmp;
 }
 
+template <class CFG>
+CFG
+BasicOBPRM<CFG>::
+GenerateRandomDirection(Environment* env, const CFG &InsideNode) {
+  CFG randomDir;
+  if (InsideNode.InBoundingBox(env))
+    randomDir.GetRandomRay(EXPANSION_FACTOR * env->GetPositionRes());
+  else { //ensure randomDir goes toward BBox
+    CFG insideTmp;
+    insideTmp.GetRandomCfg(env);
+    randomDir.subtract(insideTmp, InsideNode); //vctr to add to InsideNode 
+    randomDir.divide(randomDir, randomDir.PositionMagnitude());//normalize
+    randomDir.multiply(randomDir, EXPANSION_FACTOR * env->GetPositionRes());
+  }
+  return randomDir;
+}
 
 template <class CFG>
 CFG
@@ -624,6 +674,35 @@ GenerateOutsideCfg(Environment* env, Stat_Class& Stats,
   return OutsideNode;
 }
 
+template <class CFG>
+bool
+BasicOBPRM<CFG>::
+PushCfgToBoundingBox(Environment *env, CFG& FromCfg, const CFG& ToCfg) {
+  //cout << "Moving 1" << endl;
+  if (FromCfg.InBoundingBox(env))
+    return true;
+  //cout << "Moving 2" << endl;
+  //move inside node to the bounding box,
+  //assumes that the line between (insideCfg,outsideCfg) crosses the BBox
+  //can be reimplemented with binary search
+  CFG tick = FromCfg;
+  CFG incr;
+  int n_ticks;
+  incr.FindIncrement(FromCfg, ToCfg, &n_ticks, env->GetPositionRes(), env->GetOrientationRes());
+  int tk = 0;
+  while (!tick.InBoundingBox(env) && tk < n_ticks && tick != ToCfg) {
+    tick.Increment(incr);
+    tk++;
+  }
+  if (tick.InBoundingBox(env))
+    FromCfg = tick;
+
+  //check if move was succesful
+  if (!FromCfg.InBoundingBox(env))
+    return false;
+  else
+    return true;
+}
 
 template <class CFG>
 vector<CFG>

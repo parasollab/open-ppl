@@ -119,7 +119,7 @@ void RayCSpace<CFG>::bounce(CFG direction) {
   numberOfBounces++;
 }
 
-//Based on code by Shawna (Cfg::cAproxCspaceClearance:
+//Based on Cfg::ApproxCspaceClearance:
 template <class CFG>
 bool RayCSpace<CFG>::collide(Environment *env, Stat_Class& Stats,
 			     CollisionDetection *cd,
