@@ -200,6 +200,13 @@ typedef Graph<UG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,W
          *@see WeightedGraph::AddEdge(VID, VID, pair<WEIGHT,WEIGHT>)
          */
        virtual int  AddEdges( vector<EdgeInfo<WEIGHT> >& );
+       
+       virtual int  AddEdge(VID, VID, WEIGHT);
+       virtual int  AddEdge(VERTEX&, VERTEX&, WEIGHT); 
+       virtual int  AddEdge(VID, VID, pair<WEIGHT,WEIGHT>&);
+       virtual int  AddEdge(VERTEX&, VERTEX&, pair<WEIGHT,WEIGHT>&);
+       virtual int  AddEdge(VID, VID, pair<WEIGHT*,WEIGHT*>&);
+       virtual int  AddEdge(VERTEX&, VERTEX&, pair<WEIGHT*,WEIGHT*>&);
 
     //@}
 
@@ -328,6 +335,54 @@ AddEdges( vector<EdgeInfo<WEIGHT> >& _e) {
         GRAPH::AddEdge(_e[i].v1, _e[i].v2, _e[i].edgewts);
     }
     return OK;
+}
+
+template <class VERTEX, class WEIGHT>
+int  
+RoadmapGraph<VERTEX,WEIGHT>::
+AddEdge(VID _v1, VID _v2, WEIGHT _w) {
+  GRAPH::AddEdge(_v1,_v2,_w);
+}
+
+template <class VERTEX, class WEIGHT>
+int  
+RoadmapGraph<VERTEX,WEIGHT>::
+AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _w) {
+  GRAPH::AddEdge(_v1,_v2,_w);
+}
+
+template <class VERTEX, class WEIGHT>
+int  
+RoadmapGraph<VERTEX,WEIGHT>::
+AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w) {
+  GRAPH::AddEdge(_v1,_v2,_w);
+}
+
+template <class VERTEX, class WEIGHT>
+int  
+RoadmapGraph<VERTEX,WEIGHT>::
+AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT>& _w) {
+  GRAPH::AddEdge(_v1,_v2,_w);
+}
+
+template <class VERTEX, class WEIGHT>
+int
+RoadmapGraph<VERTEX,WEIGHT>::
+AddEdge(VID _v1, VID _v2, pair<WEIGHT*,WEIGHT*>& _w) {
+  pair<WEIGHT,WEIGHT> tmp;
+  tmp.first = *_w.first;
+  tmp.second = *_w.second;
+  return AddEdge(_v1,_v2,tmp);
+}
+
+template <class VERTEX, class WEIGHT>
+int
+RoadmapGraph<VERTEX,WEIGHT>::
+AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT*,WEIGHT*>& _w) {
+  pair<WEIGHT,WEIGHT> tmp;
+  tmp.first = *_w.first;
+  tmp.second = *_w.second;
+  return AddEdge(_v1,_v2,tmp);
 }
 
 #endif
