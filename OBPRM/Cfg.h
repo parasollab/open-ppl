@@ -48,19 +48,21 @@ class DistanceMetric;
 class  InfoCfg {
 public:
    // Constructors and Destructor
-   InfoCfg():obst(NULL_INFO){};
-   InfoCfg(int i):obst(i){};
+   InfoCfg():obst(NULL_INFO),tag(NULL_INFO){};
+   InfoCfg(int _obst):obst(_obst),tag(NULL_INFO){};
+   InfoCfg(int _obst,int _tag):obst(_obst),tag(_tag){};
 
-   bool operator== (const InfoCfg&tmp) const{return obst==tmp.obst;};
-   bool operator!= (const InfoCfg&tmp) const{return obst!=tmp.obst;};
+   bool operator== (const InfoCfg&tmp) const{return obst==tmp.obst && tag==tmp.tag;};
+   bool operator!= (const InfoCfg&tmp) const{return obst!=tmp.obst || tag!=tmp.tag;};
 
    // Methods
-   void SetObst(int i){obst = i;};
+   void SetObst(int _obst){obst = _obst;};
    int GetObst() const {return obst;};
 
    // Data
    static const int NULL_INFO =-1;//= -1;
    int obst;
+   int tag;
 };
 
 

@@ -73,6 +73,7 @@ struct CNInfo {
     int numEdges;
     vector <EdgeInfo<WEIGHT> > edges;
     bool addPartialEdge;
+    int tag;            // nodes can be marked by user
     int dupeNodes,dupeEdges;  // used for acct'ing w/ closestVE
 
 };
@@ -244,7 +245,7 @@ private:
 //
 //           sample command line "-cNodes closest components [kpairs] [smallcc]"
 //
-//        * "expandRRT" -- try to grow small connected components into larger ones
+//        * "RRTexpand" -- try to grow small connected components into larger ones
 //           note1: should be used after some other method
 //           note2: parameters are 1) iterations (of RRT algm)
 //                                 2) stepFactor (mult of environment determined 
@@ -337,18 +338,18 @@ public:
                                 LocalPlanners* ,DistanceMetric *,
                                 CN&, CNInfo&);
 
-  static void ConnectNodes_RRTcomponents(Roadmap*, CollisionDetection *,
-                                LocalPlanners* ,DistanceMetric *,
-                                CN&, CNInfo&);
-
   typedef pair <Cfg,double> CfgDistType;
   static bool CfgDist_Compare (const CfgDistType&, const CfgDistType&);
   static void SortByDistFromCfg (Environment *_env,DistanceMetric *dm, 
 				CNInfo& info, const Cfg& _cfg1, vector<Cfg>&  _cfgs);
 
+
 private:
 
-
+  static void ClosestVE(
+        Roadmap * _rm,CollisionDetection* cd,
+        LocalPlanners* lp,DistanceMetric * dm,
+        CN& _cn, CNInfo& info, vector<Cfg>& oldV, vector<Cfg>& newV);
 
   static void ModifyRoadMap(Roadmap *toMap, Roadmap *fromMap, vector<VID> vids);
 
