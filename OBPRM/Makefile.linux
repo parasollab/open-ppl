@@ -96,7 +96,6 @@ CXX = ${CC}
 #  OPTS = -r5000 -mips4 -Ofast -o32 -OPT:Olimit=0
 
 # -- for development on TERMINATOR (can't seem to use it better due to cstk)
-#lkdlkd
   OPTS = -g -O2 -fexceptions
 #  OPTS = -o32 -O1 -show -ptv 
 # -- optimized (our O2's) (slow_compile/good_code) --

@@ -344,7 +344,6 @@ public:
    virtual int  DeleteWtEdge(VERTEX&,VERTEX&,WEIGHT, int n=-1); //default, delete all
    void DeleteAllEdges(VERTEX&);                       
 
-//lkd
         // Modifying Vertices
   void PutData(VID, VERTEX);
 
@@ -765,7 +764,7 @@ EraseGraph() {
 template<class VERTEX, class WEIGHT>
 void
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
-PutData(VID _vid, VERTEX _v){ // lkd: 7-7-99
+PutData(VID _vid, VERTEX _v){ 
      CVI cv1;
      VI v1;
      if ( IsVertex(_vid,&cv1) ) {
