@@ -494,17 +494,17 @@ class Cfg {
   void ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* _env,
 				 CollisionDetection* cd, SID cdsetid, CDInfo &cdInfo,
 				 vector<Cfg*>& contact_points) const;    
-    
+  
   virtual bool isCollision(Environment* env, CollisionDetection* cd, 
 			   SID _cdsetid, CDInfo& _cdInfo,
-			   bool enablePenetration=true) const;
+			   bool enablePenetration=true);
   virtual bool isCollision(Environment* env, CollisionDetection* cd,
 			   int robot, int obs, 
 			   SID _cdsetid, CDInfo& _cdInfo,
-			   bool enablePenetration=true) const;
+			   bool enablePenetration=true);
   virtual bool isCollision(Environment* env, CollisionDetection* cd,
 			   SID _cdsetid, CDInfo& _cdInfo,
-			   MultiBody*, bool enablePenetration=true) const;
+			   MultiBody*, bool enablePenetration=true);
     
   //@}
 

@@ -1182,7 +1182,7 @@ void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
 
 bool Cfg::isCollision(Environment* env,CollisionDetection* cd, 
 		      SID _cdsetid, CDInfo& _cdInfo, 
-		      bool enablePenetration) const {
+		      bool enablePenetration) {
   if(!this->ConfigEnvironment(env))
     return true;
   
@@ -1202,7 +1202,7 @@ bool Cfg::isCollision(Environment* env,CollisionDetection* cd,
 
 bool Cfg::isCollision(Environment* env, CollisionDetection* cd,
                       int robot, int obs, SID _cdsetid, CDInfo& _cdInfo,
-		      bool enablePenetration) const {
+		      bool enablePenetration) {
   if(!this->ConfigEnvironment(env))
     return true;
   
@@ -1221,7 +1221,7 @@ bool Cfg::isCollision(Environment* env, CollisionDetection* cd,
 
 bool Cfg::isCollision(Environment* env, CollisionDetection* cd,
 		      SID _cdsetid, CDInfo& _cdInfo, MultiBody* onflyRobot,
-		      bool enablePenetration) const {
+		      bool enablePenetration) {
     this->ConfigEnvironment(env);
     bool answer = cd->IsInCollision(env, _cdsetid, _cdInfo, onflyRobot);
     if ( (answer) && enablePenetration && (cd->penetration>=0)) {
