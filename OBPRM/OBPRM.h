@@ -435,9 +435,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   cout << "clearanceFactor="    << clearanceFactor.GetValue()   << ") ";
 #endif
   
-  if  (exactNodes.GetValue() == 1){
-    cerr << "\nFunction to generate exact numbers for OBPRM not implemented yet." << endl;
-  } 
+  bool bExact = exactNodes.GetValue() == 1? true: false;
+
+/*   if  (exactNodes.GetValue() == 1){ */
+/*     cerr << "\nFunction to generate exact numbers for OBPRM not implemented yet." << endl; */
+/*   }  */
 
   pair<int,int> seedSelect,freeSelect;
 	
@@ -457,65 +459,117 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   // int NFREE = (int)((1.0-P) * numNodes.GetValue()/(numMultiBody-1));
   
   // Subtract # of robots (ie, numExternalBody-1)
+  
+
   int NSEED = (int)(P * numNodes.GetValue()/(numExternalBody-1)/numShells.GetValue());
   int NFREE = (int)((1.0-P) * numNodes.GetValue()/(numExternalBody-1));
   
   if (NSEED < 1) NSEED = 1;
-  
-  vector<CFG> obstSurface, obstFree, surface;
-  for(int obstacle = 0 ; obstacle < numExternalBody ; obstacle++) {
+  int nNodesGap = numNodes.GetValue() - nodes.size();  
+  do{
+    vector<CFG> obstSurface, obstFree, surface;  
+    for(int obstacle = 0 ; obstacle < numExternalBody ; obstacle++) {
     
-    if(obstacle != robot) {
+      if(obstacle != robot) {
       
-      // Generate Surface Cfgs using Binary Search Procedure
-      obstSurface = GenSurfaceCfgs4Obst(_env, Stats, cd,dm, obstacle, NSEED,
-					clearanceFactor.GetValue());
+	// Generate Surface Cfgs using Binary Search Procedure
+	obstSurface = GenSurfaceCfgs4Obst(_env, Stats, cd,dm, obstacle, NSEED,
+					  clearanceFactor.GetValue());
       
-      // Generate Free Cfgs using Ad Hoc procedure
-      obstFree = GenFreeCfgs4Obst(_env, Stats, cd, obstacle, NFREE);
+	// Generate Free Cfgs using Ad Hoc procedure
+	obstFree = GenFreeCfgs4Obst(_env, Stats, cd, obstacle, NFREE);
       
-      // Collect free & surface nodes for return
-      int i;
-      for (i = 0; i < obstSurface.size(); i++) {
-	obstSurface[i].obst = obstacle;
-	nodes.push_back(obstSurface[i]);
-      }
-      for (i = 0; i < obstFree.size(); i++) {
-	obstFree[i].obst = obstacle;
-	nodes.push_back(obstFree[i]);
-      }
-      
-
-
-
-#if INTERMEDIATE_FILES
-      surface.insert(surface.end(),
-		     obstSurface.begin(),obstSurface.end());
-      surface.insert(surface.end(),
-		     obstFree.begin(),obstFree.end());
-#endif
-      
-      obstSurface.erase(obstSurface.begin(),obstSurface.end());
-      obstFree.erase(obstFree.begin(), obstFree.end());
-      
-    } // if(obstacle != robot)
-    else 
-      //if(numMultiBody == 1) { //if robot is the only object
-      if(numExternalBody == 1) { //if robot is the only object
-	vector<CFG> CobstNodes = GenCfgsFromCObst(_env, Stats, cd, dm, obstacle,
-						  numNodes.GetValue());
-	for(int i=0; i<CobstNodes.size(); ++i){
-	  CobstNodes[i].obst = obstacle;
-	  nodes.push_back(CobstNodes[i]);
+	// Collect free & surface nodes for return
+	int i;
+	for (i = 0; i < obstSurface.size(); i++) {
+	  obstSurface[i].obst = obstacle;
+/* 	  nodes.push_back(obstSurface[i]); */
 	}
-#if INTERMEDIATE_FILES
-	surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
-#endif
-      }
-    
-  } // for(obstacle)
+	for (i = 0; i < obstFree.size(); i++) {
+	  obstFree[i].obst = obstacle;
+/* 	  nodes.push_back(obstFree[i]); */
+	}
 
-  
+#if INTERMEDIATE_FILES
+	surface.insert(surface.end(),
+		       obstSurface.begin(),obstSurface.end());
+	surface.insert(surface.end(),
+		       obstFree.begin(),obstFree.end());
+#endif
+      
+/* 	obstSurface.erase(obstSurface.begin(),obstSurface.end()); */
+/* 	obstFree.erase(obstFree.begin(), obstFree.end()); */
+      
+      } // if(obstacle != robot)
+      else 
+	//if(numMultiBody == 1) { //if robot is the only object
+	if(numExternalBody == 1) { //if robot is the only object
+	  vector<CFG> CobstNodes = GenCfgsFromCObst(_env, Stats, cd, dm, obstacle,
+						    numNodes.GetValue());
+	  for(int i=0; i<CobstNodes.size(); ++i){
+	    CobstNodes[i].obst = obstacle;
+/* 	    nodes.push_back(CobstNodes[i]); */
+	  }
+#if INTERMEDIATE_FILES
+	  surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
+#endif
+	}
+    
+    } // for(obstacle)
+
+    if (bExact){ //exact nodes
+      int nActualNodes = obstSurface.size() + obstFree.size();
+      int nSurfaceNodes = obstSurface.size();
+      if ( nActualNodes < nNodesGap){
+	nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 	
+	nodes.insert(nodes.end(), obstFree.begin(), obstFree.end());
+	nNodesGap = nNodesGap - nActualNodes;
+	obstSurface.erase(obstSurface.begin(),obstSurface.end());
+ 	obstFree.erase(obstFree.begin(), obstFree.end()); 
+	
+	NSEED = (int)(P * numNodes.GetValue()/(numExternalBody-1)/numShells.GetValue());
+	NFREE = (int)((1.0-P) * numNodes.GetValue()/(numExternalBody-1));
+	if (NSEED < 1) NSEED = 1;
+      }else if (nActualNodes == nNodesGap){//Generated exact number of nodes
+	nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 	
+	nodes.insert(nodes.end(), obstFree.begin(), obstFree.end());
+	obstSurface.erase(obstSurface.begin(),obstSurface.end());
+ 	obstFree.erase(obstFree.begin(), obstFree.end()); 
+	nNodesGap = 0;
+	NSEED = 0;	
+      }else{ // nActualNodes > nNodesGap ;
+	//+++++++++++Need to sample here	
+	vector <bool> indices(nActualNodes);
+	int iSelect;
+	for (int j = 0; j < nNodesGap; j++) //randomly sample #nNodesGap 
+	  {
+	    do { iSelect = rand() % nActualNodes; } while (indices[iSelect] == true);
+	    indices[iSelect] = true;
+	  }
+
+	for (int j = 0; j < nSurfaceNodes; j++) //push those selected one in to nodes
+	  if (indices[j])
+	    nodes.push_back(obstSurface[j]);
+
+	for (int j = nSurfaceNodes; j < nActualNodes; j++) //push those selected one in to nodes
+	  if (indices[j])
+	    nodes.push_back(obstFree[j-nSurfaceNodes]);
+
+	obstSurface.erase(obstSurface.begin(),obstSurface.end());
+	obstFree.erase(obstFree.begin(), obstFree.end()); 
+	nNodesGap = 0;
+	NSEED = 0;
+      }
+    }else { // not asked for exact nodes
+      nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 
+      nodes.insert(nodes.end(), obstFree.begin(), obstFree.end());
+      obstSurface.erase(obstSurface.begin(),obstSurface.end());
+      obstFree.erase(obstFree.begin(), obstFree.end()); 
+
+      NSEED = 0;
+    }
+    
+  }while(NSEED>0) ;
 #if INTERMEDIATE_FILES
   WritePathConfigurations("surface.path", surface, _env);
 #endif

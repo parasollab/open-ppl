@@ -124,8 +124,8 @@ GaussPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
-    }
-    else if ( gauss_d.AckCmdLine(&i, argc, argv) ) {
+    } else if ( exactNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if ( gauss_d.AckCmdLine(&i, argc, argv) ) {
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
       for(int j=0; j<argc; j++)
@@ -147,6 +147,7 @@ PrintUsage(ostream& _os){
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
+  _os << "\n\t"; exactNodes.PrintUsage(_os);
   _os << "\n\t"; gauss_d.PrintUsage(_os);
   
   _os.setf(ios::right,ios::adjustfield);
@@ -159,6 +160,7 @@ GaussPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
   _os << gauss_d.GetFlag() << " " << gauss_d.GetValue() << " ";
   _os << endl;
 }
@@ -181,12 +183,15 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ") ";
+  cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
 #endif
-  
+
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
   path.reserve(numNodes.GetValue());
 #endif
+  bool bExact = exactNodes.GetValue() == 1? true: false;
+
   
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-GaussPRM::GenerateNodes"); Callee = Callee+Method;}
@@ -194,6 +199,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   if (gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from env
     gauss_d.PutValue(_env->Getminmax_BodyAxisRange());
   }
+  
   
   // generate in bounding box
   for (int i=0,newNodes=0; i < numNodes.GetValue() || newNodes<1 ; i++) {
@@ -230,9 +236,15 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	path.push_back(cfg2);
 #endif
 	
-      } // endif push nodes
+      } else if (bExact){
+	i--; // in this case, keep trying to generate the ith node;
+	continue;
+      }// endif push nodes
       
+    } else if (bExact){ //outside of BBxz
+	i--; // in this case, keep trying to generate the ith node;
     } // endif BB
+    
   } // endfor
 	
 #if INTERMEDIATE_FILES

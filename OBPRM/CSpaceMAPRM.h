@@ -187,6 +187,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   vector<CFG> path; 
   path.reserve(numNodes.GetValue());
 #endif
+  bool bExact = exactNodes.GetValue() == 1? true: false;
 
   std::string Callee(GetName());
   {std::string Method("-cspaceMAPRM::GenerateNodes"); Callee = Callee+Method;}
@@ -203,7 +204,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 #if INTERMEDIATE_FILES
       path.push_back(cfg);
 #endif
-    }else if (exactNodes.GetValue() == 1){ // keep generating the ith node
+    }else if (bExact){ // keep generating the ith node
       i --;
     }
   }

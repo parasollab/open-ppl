@@ -488,10 +488,6 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   cout << "numShells=" << numShells.GetValue() << ") "<<flush;
 #endif
   
-  if  (exactNodes.GetValue() == 1){
-    cerr << "\nFunction to generate exact numbers for BasicOBPRM not implemented yet." << endl;
-  } 
-
 #if INTERMEDIATE_FILES
   vector<CFG> surface;
 #endif
@@ -507,96 +503,147 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   
   CFG InsideNode, OutsideNode, low, high, mid;	
   
-  int N;
+  int N; // # of nodes per each shell;
+; // just to make sure its default behavior is the same as the original node generation method;
+  bool bExact = exactNodes.GetValue() ? true : false;
+
   if (numExternalBody > 1) //more objects besides the robot
-    N = numNodes.GetValue()
-      / (numExternalBody-1)  // -1 for the robot
-      / numShells.GetValue();
+    N = numNodes.GetValue() / (numExternalBody-1)  // -1 for the robot
+                  / numShells.GetValue();
   else //the only obstacle is the robot		
-    N = numNodes.GetValue()
-      / (numExternalBody)
-      / numShells.GetValue();
+    N = numNodes.GetValue() / (numExternalBody)
+                  / numShells.GetValue();
+
   
   if (N < 1) N = 1; //max(numNodes.GetValue(),numShells.GetValue());
-  
-  for (int obstacle = 0 ; obstacle < numExternalBody ; obstacle++) {
-    if (obstacle != robot) {  // && obstacle is "Passive" not "Active" robot
+
+  int nNodesGap = numNodes.GetValue() - nodes.size(); 
+  do{ // while not enough nodes are generated
+    for (int obstacle = 0 ; obstacle < numExternalBody ; obstacle++) {
+      if (obstacle != robot) {  // && obstacle is "Passive" not "Active" robot
       
-      for(int n = 0 ; n < N; n++) {
+	for(int n = 0 ; n < N; n++) {
 	
-	// Generate Inside cfg
-	CFG InsideNode;
-	if(!GenerateInsideCfg(_env, Stats, cd, robot, obstacle, &InsideNode)) {
-	  cout << "\nError: cannot overlap COMs of robot & obstacle\n";
-	  continue;
-	}
-	if(!InsideNode.isCollision(_env,Stats,cd,robot,obstacle,*cdInfo, 
-	                           true, &(Callee))){
-	  cout << "\nError: Seed not in collision w/"
-	    " obstacle[index="<<obstacle<<"]\n" << flush;
-	  continue;
-	}	
-	// Generate Random direction
-	CFG incrCfg = GenerateRandomDirection(_env, InsideNode);
-	// Generate outside cfg
-	CFG OutsideNode = GenerateOutsideCfg(_env,Stats,cd,robot,obstacle,
-					     InsideNode,incrCfg);
-	//move inside node to the bounding box if required
-	bool inBBox = PushCfgToBoundingBox(_env, InsideNode, OutsideNode);
-	if (inBBox) {
-	  if (OutsideNode.AlmostEqual(InsideNode) ||
-	      !InsideNode.isCollision(_env,Stats,cd,robot,obstacle,*cdInfo))
-	    continue; //no valid outside or inside node was found	
-	}
-	else
-	  continue; // no valid inside node was found
+	  // Generate Inside cfg
+	  CFG InsideNode;
+	  if(!GenerateInsideCfg(_env, Stats, cd, robot, obstacle, &InsideNode)) {
+	    cout << "\nError: cannot overlap COMs of robot & obstacle\n";
+	    continue;
+	  }
+	  if(!InsideNode.isCollision(_env,Stats,cd,robot,obstacle,*cdInfo, 
+				     true, &(Callee))){
+	    cout << "\nError: Seed not in collision w/"
+	      " obstacle[index="<<obstacle<<"]\n" << flush;
+	    continue;
+	  }	
+	  // Generate Random direction
+	  CFG incrCfg = GenerateRandomDirection(_env, InsideNode);
+	  // Generate outside cfg
+	  CFG OutsideNode = GenerateOutsideCfg(_env,Stats,cd,robot,obstacle,
+					       InsideNode,incrCfg);
+	  //move inside node to the bounding box if required
+	  bool inBBox = PushCfgToBoundingBox(_env, InsideNode, OutsideNode);
+	  if (inBBox) {
+	    if (OutsideNode.AlmostEqual(InsideNode) ||
+		!InsideNode.isCollision(_env,Stats,cd,robot,obstacle,*cdInfo))
+	      continue; //no valid outside or inside node was found	
+	  }
+	  else
+	    continue; // no valid inside node was found
 
 	 
-	// Generate surface cfgs
-	tmp = GenerateSurfaceCfg(_env,Stats,cd,dm,
-				 robot,obstacle, InsideNode,OutsideNode);
+	  // Generate surface cfgs
+	  tmp = GenerateSurfaceCfg(_env,Stats,cd,dm,
+				   robot,obstacle, InsideNode,OutsideNode);
 	
-	// Choose as many as nshells
-	preshells = Shells(tmp, numShells.GetValue());
-	shells = InsideBoundingBox(_env, preshells);
-	preshells.erase(preshells.begin(), preshells.end());
+	  // Choose as many as nshells
+	  preshells = Shells(tmp, numShells.GetValue());
+	  shells = InsideBoundingBox(_env, preshells);
+	  preshells.erase(preshells.begin(), preshells.end());
 	
-	// Collect the cfgs for this obstacle
-	obstSurface.insert(obstSurface.end(),
-			   shells.begin(),shells.end());
+	  // Collect the cfgs for this obstacle
+	  obstSurface.insert(obstSurface.end(),
+			     shells.begin(),shells.end());
 	
-      } // endfor: n
+	} // endfor: n
       
-      // Collect the generated surface nodes
-      for (int i=0;i<obstSurface.size();i++){
-	obstSurface[i].obst = obstacle;
-	nodes.push_back(obstSurface[i]);
-      }
-      
-#if INTERMEDIATE_FILES
-      surface.insert(surface.end(),
-		     obstSurface.begin(),obstSurface.end());
-#endif
-      
-      obstSurface.erase   (obstSurface.begin(),obstSurface.end());
-      
-    } // endif (obstacle != robot)
-    else
-      if(numExternalBody == 1) { //if robot is the only object
-	//		  if(numMultiBody == 1) {
-	vector<CFG> CobstNodes = GenCfgsFromCObst(_env, Stats, cd, dm, obstacle, 
-						  numNodes.GetValue());
-	int i;
-	for(i=0; i<CobstNodes.size(); ++i) {
-	  CobstNodes[i].obst = obstacle;
-	  nodes.push_back(CobstNodes[i]);
+	// Collect the generated surface nodes
+	for (int i=0;i<obstSurface.size();i++){
+	  obstSurface[i].obst = obstacle;
+/* 	  nodes.push_back(obstSurface[i]); */
 	}
+      
 #if INTERMEDIATE_FILES
-	surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
+	surface.insert(surface.end(),
+		       obstSurface.begin(),obstSurface.end());
 #endif
-      }
+      
+/* 	obstSurface.erase   (obstSurface.begin(),obstSurface.end()); */
+      
+      } // endif (obstacle != robot)
+      else
+	if(numExternalBody == 1) { //if robot is the only object
+	  //		  if(numMultiBody == 1) {
+	  vector<CFG> CobstNodes = GenCfgsFromCObst(_env, Stats, cd, dm, obstacle, 
+						    numNodes.GetValue());
+	  int i;
+	  for(i=0; i<CobstNodes.size(); ++i) {
+	    CobstNodes[i].obst = obstacle;
+/* 	    nodes.push_back(CobstNodes[i]); */
+	    obstSurface.push_back(CobstNodes[i]);
+	  }
+#if INTERMEDIATE_FILES
+	  surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
+#endif
+	}
     
-  } // endfor: obstacle
+    } // endfor: obstacle
+
+
+    if (bExact){ //exact nodes
+      int nActualNodes = obstSurface.size();
+      if ( nActualNodes < nNodesGap){
+	nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 	
+	nNodesGap = nNodesGap - nActualNodes;
+	obstSurface.erase(obstSurface.begin(),obstSurface.end());
+
+	if (numExternalBody > 1) //more objects besides the robot
+	  N = nNodesGap / (numExternalBody-1)  // -1 for the robot
+	    / numShells.GetValue();
+	else //t		he only obstacle is the robot		
+	  N = nNodesGap / (numExternalBody)
+	    / numShells.GetValue();
+	if (N < 1) 
+	  N = 1; 
+      }else if (nActualNodes == nNodesGap){//Generated exact number of nodes
+	nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 	
+	obstSurface.erase(obstSurface.begin(),obstSurface.end());
+	nNodesGap = 0;
+	N = 0;	
+      }else{ // nActualNodes > nNodesGap ;
+	//+++++++++++Need to sample here	
+	vector <bool> indices(nActualNodes);
+	int iSelect;
+	for (int j = 0; j < nNodesGap; j++) //randomly sample #nNodesGap 
+	  {
+	    do { iSelect = rand() % nActualNodes; } while (indices[iSelect] == true);
+	    indices[iSelect] = true;
+	  }
+
+	for (int j = 0; j < nActualNodes; j++) //push those selected one in to nodes
+	  if (indices[j])
+	    nodes.push_back(obstSurface[j]);
+
+	obstSurface.erase(obstSurface.begin(),obstSurface.end());
+	nNodesGap = 0;
+	N = 0;
+      }
+    }else { // not asked for exact nodes
+      nodes.insert(nodes.end(), obstSurface.begin(), obstSurface.end()); 
+      obstSurface.erase(obstSurface.begin(),obstSurface.end());
+      N = 0;
+    }
+  }while (N>0);
   
 #if INTERMEDIATE_FILES
   WritePathConfigurations("surface.path", surface, _env);

@@ -117,6 +117,7 @@ ParseCommandLine(int argc, char **argv) {
   int i;
   for (i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
     } else if (numShells.AckCmdLine(&i, argc, argv) ) {
     } else if (proportionSurface.AckCmdLine(&i, argc, argv) ) {
     } else if (collPair.AckCmdLine(&i, argc, argv) ) {
@@ -159,9 +160,9 @@ PrintUsage(ostream& _os) {
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
+  _os << "\n\t"; exactNodes.PrintUsage(_os);
   _os << "\n\t"; clearanceNum.PrintUsage(_os);
   _os << "\n\t"; penetrationNum.PrintUsage(_os);
-  _os << "\n\t"; numShells.PrintUsage(_os);
   _os << "\n\t"; proportionSurface.PrintUsage(_os);
   _os << "\n\t"; numShells.PrintUsage(_os);
   _os << "\n\t"; collPair.PrintUsage(_os);
@@ -178,6 +179,7 @@ OBMAPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
   _os << clearanceNum.GetFlag() << " " << clearanceNum.GetValue() << " ";
   _os << penetrationNum.GetFlag() << " " << penetrationNum.GetValue() << " ";
   _os << numShells.GetFlag() << " " << numShells.GetValue() << " ";
@@ -207,6 +209,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes="          << numNodes.GetValue()          << ", ";
+  cout << "exactNodes="        << exactNodes.GetValue()         << ", ";
   cout << "clearanceNum="       << clearanceNum.GetValue()      << ", ";
   cout << "penetrationNum="     << penetrationNum.GetValue()    << ", ";
   cout << "\nproportionSurface="<< proportionSurface.GetValue() << ", ";
@@ -215,6 +218,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   cout << "freePair="           << freePair.GetValue()          << ", ";
   cout << "clearanceFactor="    << clearanceFactor.GetValue()   << ") ";
 #endif
+
+  bool bExact = exactNodes.GetValue() == 1? true: false;
   
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
@@ -224,35 +229,42 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   std::string Callee(GetName());
   {std::string Method("OBMAPRM::GenerateNodes");Callee=Callee+Method;}
   
+  int nNodesGoal = numNodes.GetValue();
+  int nNodesGap = bExact ? nNodesGoal - nodes.size() : nNodesGoal;
   //generate obprm nodes   
-  OBPRM<CFG>::GenerateNodes(_env,Stats,cd,dm,nodes);
-  
-  //copy nodes to obprmCfgs and erase nodes vector
-  vector<CFG> obprmCfgs;
-  int i;
-  for (i=0; i < nodes.size(); i++) {
-    obprmCfgs.push_back(nodes[i]);
-  }
-  nodes.clear();
-  
-  cout << "\nobprmnodes = " << obprmCfgs.size() << "\n";
+  while (nNodesGap >0){
+    vector<CFG> obprmCfgs;
+    numNodes.PutValue(nNodesGap);
+    OBPRM<CFG>::GenerateNodes(_env,Stats,cd,dm,obprmCfgs);
+    
+/*   //copy nodes to obprmCfgs and erase nodes vector */
+/*   int i; */
+/*   for (i=0; i < nodes.size(); i++) { */
+/*     obprmCfgs.push_back(nodes[i]); */
+/*   } */
+/*   nodes.clear(); */
+    cout << "\nobprmnodes = " << obprmCfgs.size() << "\n";
   
   //push nodes to medial axis
-  for (i=0; i < obprmCfgs.size(); i++) {
-    CFG cfg = obprmCfgs[i];
+    for (int i=0; i < obprmCfgs.size(); i++) {
+      CFG cfg = obprmCfgs[i];
     
-    cfg.PushToMedialAxis(_env, Stats, cd, *cdInfo, 
-			 dm, clearanceNum.GetValue(), 
-			 penetrationNum.GetValue());
+      cfg.PushToMedialAxis(_env, Stats, cd, *cdInfo, 
+			   dm, clearanceNum.GetValue(), 
+			   penetrationNum.GetValue());
     
-    if ( !cfg.isCollision(_env, Stats, cd, *cdInfo,true, &Callee) ) {
-      nodes.push_back(CFG(cfg));
-#if INTERMEDIATE_FILES
-      path.push_back(cfg);
-#endif
+      if ( !cfg.isCollision(_env, Stats, cd, *cdInfo,true, &Callee) ) {
+	nodes.push_back(CFG(cfg));
+#if INTERMEDIATE_FILES	
+	path.push_back(cfg);
+#endif	
+      }
     }
-  }
   
+    nNodesGap = bExact? nNodesGoal - nodes.size() : 0;
+  } // while (nNodesGap >0)
+
+  numNodes.PutValue(nNodesGoal);//restore the original value - not sure if necessary.
 #if INTERMEDIATE_FILES
   //in util.h
   WritePathConfigurations("obmaprm.path", path, _env);

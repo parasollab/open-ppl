@@ -178,8 +178,10 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     cout<<"\t\t- Use approximate penetration\n";
     cout<<"\t\t- " << m_iRays.GetValue() << " rays will be used to approximate penetration.\n";
   }
+
   cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
 #endif
+  bool bExact = exactNodes.GetValue() == 1? true: false;
 
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
@@ -248,6 +250,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     // So we "should" be out of collision and INSIDE bounding box 
     // so we can move cfg toward Medial Axis
     if (!collided) {
+      int nPrevNodes = nodes.size();
 #if INTERMEDIATE_FILES
       MoveToMedialAxis(cfg, &path, _env, Stats, cd, dm, nodes);
       //nodes.push_back(cfg);
@@ -255,6 +258,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
       MoveToMedialAxis(cfg, NULL, _env, Stats, cd, dm, nodes);
       //nodes.push_back(cfg);
 #endif
+      
+      if (bExact && nodes.size() ==  nPrevNodes) 
+	i--; // To make sure the exact number of nodes
     } else {
       //cout << "BasicMAPRM unable to move random cfg out of collision." << endl;
       //cout<<"?"<<flush;
