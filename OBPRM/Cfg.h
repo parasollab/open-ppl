@@ -536,7 +536,7 @@ public:
 	/// given an origin Cfg and a vector of directions
 	/// returns the obstacle contact point for each direction from origin
 	/// (contact points are in-collision)
-	vector<Cfg> Cfg::ApproxCSpaceContactPoints(vector<Cfg> directions,
+	vector<Cfg> ApproxCSpaceContactPoints(vector<Cfg> directions,
 						   Environment *_env,
 						   CollisionDetection *cd,
 						   SID cdsetid,
