@@ -90,7 +90,12 @@ public:
     RAPID_model * GetRapidBody();
 #endif
 
-    void ComputeCenterOfMass();
+    // if GetCenterOfMass() is called for the first time,
+    // this function calculates it and set 'available' flag
+    void ComputeCenterOfMass();  
+
+    // to get center of mass, you don't need to additionally call
+    // the above: ComputeCenterOfMass()
     Vector3D GetCenterOfMass();
 
 

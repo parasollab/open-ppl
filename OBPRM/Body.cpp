@@ -330,6 +330,16 @@ void Body::InitializeContact() {
 //===================================================================
 //  ComputeCenterOfMass
 //  8/31/98  Lucia K. Dale
+//  
+//  This function is automatically caeed by GetCenterOfMass()
+//  if it has never been computed. After computing it,
+//  this function will not be called again: rigid body.
+//
+//  This way of computing center of mass is physically not true.
+//  This assumes that each vertex carries the same mass, and
+//  edges are weightless. To be more accurate, we need to
+//  be modify this to consider the length of edges, which is
+//  still an approximation. (J Kim)
 //===================================================================
 void Body::ComputeCenterOfMass(){
   GMSPolyhedron poly = GetWorldPolyhedron();
