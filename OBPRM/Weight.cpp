@@ -1,198 +1,84 @@
-// Weight.cpp: implementation of the Weight class.
+// $Id$
+// Weight.cpp: implementation for the Weight class.
 //
 //////////////////////////////////////////////////////////////////////
+/*********************************************************************
+ *@file Weight.cpp
+ *@author Shawna Thomas
+ *
+ * Weight class for edge weights.  Other weight classes should be 
+ * derived off of this class.
+ *@date   12/28/02
+ *********************************************************************/
 
-#include "Weight.h"
-#include "OBPRM.h"
-
-bool IWeight::equal( const IWeight * tmp ) const 
-{ 
-	return ((lp==(tmp)->lp)&&(weight==(tmp)->weight)); 
-}
-
-void IWeight::Input( istream& in )
-{ 
-	in>> lp >> weight; 
-}
-
-void IWeight::Output( ostream& out ) const 
-{ 
-	out<< lp << " " << weight; 
-}
-
-double& IWeight::Weight() { return weight; }
-int& IWeight::LP() { return lp; }
+#include <Weight.h>
+#include <OBPRMDef.h>
 
 /////////////////////////////////////////////////////////////
-//
-//	IntWeight : pub IWeight
-//
+//	Weight
 /////////////////////////////////////////////////////////////
 
-IntWeight::IntWeight(){ lp = INVALID_LP; weight=1; }
+double DefaultWeight::MAX_WEIGHT = MAX_DBL;
 
-IWeight* IntWeight::clone() const{
-	IntWeight *pTmp=new IntWeight();
-	pTmp->Weight()=weight;
-	pTmp->LP()=lp;
-	return pTmp;
+DefaultWeight::DefaultWeight(){
+  lp = INVALID_LP;
+  //weight = INVALID_DBL;
+  weight = 1;
 }
 
-/////////////////////////////////////////////////////////////
-//
-//	DblWeight : pub IWeight
-//
-/////////////////////////////////////////////////////////////
-
-/**Represention for edge weights in roadmap graph.
-*"special" edges, for example, for protein folding.
-*/
-DblWeight::DblWeight(){ lp=INVALID_LP; weight = INVALID_DBL; }
-
-IWeight* DblWeight::clone() const{
-	DblWeight *pTmp=new DblWeight();
-	pTmp->Weight()=weight;
-	pTmp->LP()=lp;
-	return pTmp;
+DefaultWeight::DefaultWeight(int lpID){
+  lp = lpID;
+  //weight = INVALID_DBL;
+  weight = 1;
 }
 
-/////////////////////////////////////////////////////////////
-//
-//	WeightFactory
-//
-/////////////////////////////////////////////////////////////
-bool DefaulWeightFactory::Create( IWeight ** ppIWeight /*in/out*/ ) const
-{
-	//check input
-	if( ppIWeight==NULL ) return false;
-	*ppIWeight = new IntWeight();
-	if( *ppIWeight==NULL ) return false; //not enough memory
-	return true;
+DefaultWeight::DefaultWeight(int lpID, double w){
+  lp = lpID;
+  weight = w;
 }
 
-/////////////////////////////////////////////////////////////
-//
-//	WeightObject
-//
-/////////////////////////////////////////////////////////////
+DefaultWeight::~DefaultWeight(){}
 
-DefaulWeightFactory * WeightObject::m_pFactory = new DefaulWeightFactory();
-double WeightObject::WO_MAX_WEIGHT=MAX_DBL;
-int    WeightObject::WO_INVALID_LP=INVALID_LP;
-
-/////////////////////////////////////////////////////////////
-//
-//	Constructors and Destructor
-//	These functions create default IWeight if on clients
-//	speicifed their own IWeight.
-//
-/////////////////////////////////////////////////////////////
-
-WeightObject::WeightObject(){
-	assert(m_pFactory!=NULL);
-	bool bResult = m_pFactory->Create( &m_pIWeight );
-	assert(bResult);
+double
+DefaultWeight::InvalidWeight(){
+  return INVALID_DBL;
 }
 
-WeightObject::WeightObject( int lpID ){
-	
-	assert(m_pFactory!=NULL);
-	bool bResult = m_pFactory->Create( &m_pIWeight );
-	assert(bResult);
-	m_pIWeight->LP() = lpID;
+double&
+DefaultWeight::MaxWeight(){
+  return MAX_WEIGHT;
 }
 
-WeightObject::WeightObject( int lpID, double weight ){
-	
-	assert(m_pFactory!=NULL);
-	bool bResult = m_pFactory->Create( &m_pIWeight );
-	assert(bResult);
-	m_pIWeight->LP() = lpID;
-	m_pIWeight->Weight() = weight;	
+bool 
+DefaultWeight::operator== (const DefaultWeight& tmp) const{
+  return ( (lp==tmp.GetLP()) && (weight==tmp.GetWeight()) );
 }
 
-WeightObject::WeightObject( const WeightObject & WeightObj ){
-
-	*this=WeightObj;
+const DefaultWeight& 
+DefaultWeight::operator= (const DefaultWeight& w){
+  lp = w.GetLP();
+  weight = w.GetWeight();
+  return *this;
 }
 
-WeightObject::WeightObject( IWeight * pIWeight ){
-	m_pIWeight=pIWeight;
+ostream& operator<< (ostream& _os, const DefaultWeight& w){
+  w.Output(_os);
+  return _os;
 }
 
-WeightObject::~WeightObject(){ 
-	delete m_pIWeight; 
+void
+DefaultWeight::Output(ostream& out) const {
+  out << lp << " " << weight;
 }
 
-/////////////////////////////////////////////////////////////
-//
-//	Graph.h Interface
-//
-/////////////////////////////////////////////////////////////
-
-//A static function returns invalid weight
-WeightObject WeightObject::InvalidWeight() { return WeightObject((IWeight *)NULL); }
-double & WeightObject::MaxWeight() { return WO_MAX_WEIGHT; }; ///< For Dijkstra's Alg
-
-///Copy values from antoher given IntWeight instance.
-bool WeightObject::operator==(const WeightObject &tmp) const
-{
-	//if both are invalid weight
-	if( tmp.m_pIWeight==NULL && m_pIWeight==NULL )
-		return true;
-	//if one of them are invlid
-	if( tmp.m_pIWeight==NULL || m_pIWeight==NULL )
-		return false;
-	return m_pIWeight->equal(tmp.m_pIWeight);
+istream& operator>> (istream& _is, DefaultWeight& w){
+  w.Input(_is);
+  return _is;
 }
 
-const WeightObject & WeightObject::operator=(const WeightObject & WeightObj)
-{
-	if( WeightObj.m_pIWeight==NULL){
-		m_pIWeight=NULL;
-	}
-	else{
-		m_pIWeight=WeightObj.m_pIWeight->clone();
-	}
-
-	return *this;
+void
+DefaultWeight::Input(istream& in){
+  in >> lp >> weight;
 }
 
-/////////////////////////////////////////////////////////////
-//
-//	Access Methods
-//
-/////////////////////////////////////////////////////////////
 
-IWeight * WeightObject::GetIWeight(){ return m_pIWeight; }
-const IWeight * WeightObject::GetIWeight() const{ return m_pIWeight; }
-
-const DefaulWeightFactory * 
-WeightObject::GetWeightFactory(){
-	return m_pFactory;
-}
-
-void WeightObject::SetWeightFactory(DefaulWeightFactory * fact)
-{
-	if( m_pFactory!=NULL )
-		delete m_pFactory;
-	m_pFactory = fact;
-}
-
-/////////////////////////////////////////////////////////////
-//
-//	Global Methods
-//
-/////////////////////////////////////////////////////////////
-
-ostream& operator<< (ostream& _os, const WeightObject& w) {
-	if( w.m_pIWeight==NULL) return _os;
-	w.m_pIWeight->Output(_os);
-	return _os;
-}
-
-istream& operator>> (istream& _is, WeightObject& w) {
-	if( w.m_pIWeight==NULL) return _is;
-	w.m_pIWeight->Input(_is);
-	return _is;
-}
