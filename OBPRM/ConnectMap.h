@@ -66,11 +66,14 @@ class ConnectMap {
          connectionOriRes; ///< Orientation resolution for node connection
 };
 
+/* //moved to main_obprm.cpp/main_query.cpp 
+   //because hp needs explicit instantiation of static members
 template <class CFG, class WEIGHT>
 double ConnectMap<CFG, WEIGHT>::connectionPosRes = 0.05;
 
 template <class CFG, class WEIGHT>
 double ConnectMap<CFG, WEIGHT>::connectionOriRes = 0.05;
+*/
 
 ////////////////////////////////////////////////////////////////////////////
 // ConnectMap: Methods

@@ -355,9 +355,11 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
 //  definitions for class BasicOBPRM declarations
 //
 /////////////////////////////////////////////////////////////////////
+/* //moved to main_obprm.cpp/main_query.cpp 
+   //because hp needs explicit instantiation of static members
 template <class CFG>
 const int BasicOBPRM<CFG>::MAX_CONVERGE = 20;  
-
+*/
 
 template <class CFG>
 BasicOBPRM<CFG>::
