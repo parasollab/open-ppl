@@ -427,14 +427,13 @@ ConnectNodes_ConnectCCs(
         LocalPlanners* lp,DistanceMetric * dm,
         CN& _cn, CNInfo& info){
 
-  if(info.addPartialEdge) { 
-      if(lp->planners.GetLPSets().size()-1 > info.lpsetid) 
-	  ++info.lpsetid;
-      else {
-	  cerr << "Error: have to provide another LPset if wanting to addPartialEdge.\n";
-	  exit(100);
-      }
+  // a user doesn't need to provide another lp set.(If 
+  // the user does provide, it should be used). 
+  if(info.addPartialEdge &&
+     lp->planners.GetLPSets().size()-1 > info.lpsetid) {
+          ++info.lpsetid;
   }
+
   vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
   int smallcc = _cn.GetSmallCCSize();
 
