@@ -72,11 +72,11 @@ public:
   ~IntWeight(){};
 
   bool operator== (const IntWeight &tmp) const{return ((lp==tmp.lp)&&(nticks==tmp.nticks)) ;};
-  friend ostream& operator<< (ostream& _os, const IntWeight& w);
-  friend istream& operator>> (istream& _is, IntWeight& w);
+  friend ostream& operator<< (ostream& _os, const IntWeight& w);  // in util.c
+  friend istream& operator>> (istream& _is, IntWeight& w);        // in util.c
 
-  static IntWeight InvalidWeight() /*const */{ return IntWeight(INVALID_LP); };
-  static int MaxWeight() /*const */{ return MAX_INT; }; // for Dijkstra's Alg
+  static IntWeight InvalidWeight() { return IntWeight(INVALID_LP); };
+  static int MaxWeight() { return MAX_INT; }; // for Dijkstra's Alg
   int& Weight() { return nticks; };
 
   int& LP() { return lp; };
@@ -87,15 +87,6 @@ private:
   int nticks;
 };
 
-/*
-ostream& operator<< (ostream& _os, const IntWeight& w) {
-  _os<< w.lp ;
-};
-istream& operator>> (istream& _is, IntWeight& w) {
-  _is>> w.lp ;
-};
-*/
-
 // "special" edges, e.g., for protein folding
 class DblWeight {
 public:
@@ -105,12 +96,11 @@ public:
   ~DblWeight(){};
 
   bool operator== (const DblWeight &tmp) const{return ((lp==tmp.lp)&&(weight==tmp.weight)); };
-  friend ostream& operator<< (ostream& _os, const DblWeight& w);
-  friend istream& operator>> (istream& _is, DblWeight& w);
-
+  friend ostream& operator<< (ostream& _os, const DblWeight& w);  // in util.c
+  friend istream& operator>> (istream& _is, DblWeight& w);        // in util.c  
 
   static DblWeight InvalidWeight() { return DblWeight(INVALID_LP); };
-  static double MaxWeight() /*const */{ return MAX_DBL; }; // for Dijkstra's Alg
+  static double MaxWeight() { return MAX_DBL; }; // for Dijkstra's Alg
   double& Weight() { return weight; };
   int& LP() { return lp; };
 
@@ -120,15 +110,6 @@ private:
 };
 
 
-/*
-brc
-istream& operator>> (istream& _is, DblWeight& w) {
-  _is>> w.lp >> w.weight ;
-};
-ostream& operator<< (ostream& _os, const DblWeight& w) {
-  _os<< w.lp << " " << w.weight ;
-};
-*/
 //-----------------------------------
 // now, actually choose weight type 
 //-----------------------------------
