@@ -125,13 +125,6 @@ void
 GenerateMapNodes::
 GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnsetid, GNInfo &info) {
 	
-	vector< pair<EID,GN> > haha=generators.GetElements();
-
-	for(int iE=0; iE<haha.size(); iE++ )
-	{
-		cout<<"GN "<<haha[iE].second<<endl;
-	}
-
 	vector<GN> gnset = generators.GetGNSet(_gnsetid);
 	
 	// clear generated nodes space
