@@ -40,9 +40,10 @@
 //Include OBPRM headers
 #include "OBPRMDef.h"
 #include "Cfg.h"
-#include "DistanceMetrics.h"
 
 //////////////////////////////////////////////////////////////////////////////
+
+class DistanceMetric;
 class Input;
 class Environment;
 template <class CFG> class GenerateMapNodes;
@@ -498,6 +499,8 @@ class Quinlan : public CollisionDetectionMethod {
                              CDInfo& _cdInfo);
 };
 
+
+#include "DistanceMetrics.h"
 
 //////////////////////////////////////////////////////////////////////////
 // InitializePenetration

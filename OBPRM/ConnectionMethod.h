@@ -13,9 +13,6 @@
 #endif
 #endif
 
-//#define MAX_CN 10
-const double MAX_DIST =  1e10;
-
 // Abstract Interface Class for connection methods
 template <class CFG, class WEIGHT>
 class ConnectionMethod { 

@@ -18,9 +18,14 @@
 #include <functional>
 
 #include "OBPRMDef.h"
-#include "Roadmap.h"
+#ifndef VID //from BaseGraph.h
+///ID for every vertex in graph.
+typedef int VID;
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
+
+const double MAX_DIST =  1e10;
 
 class Cfg;
 class MultiBody;
@@ -28,8 +33,7 @@ class Input;
 class Environment;
 class n_str_param;
 
-template <class CFG, class WEIGHT>
-class Roadmap;
+template <class CFG, class WEIGHT> class Roadmap;
 
 class DistanceMetricMethod;
 class EuclideanDistance;
@@ -414,6 +418,8 @@ class CenterOfMassDistance : public DistanceMetricMethod {
     */
   virtual double Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2);
 };
+
+#include "Roadmap.h"
 
 //----------------------------------------------------------------------
 // Given: k and ONE cfg and ONE vector
