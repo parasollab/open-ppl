@@ -219,9 +219,15 @@ class DistanceMetric {
  *return (_cc1.second < _cc2.second)
  */
 template <class CFG>
-bool DIST_Compare(const pair<pair<CFG,CFG>,double> _cc1,
-		  const pair<pair<CFG,CFG>,double> _cc2);
-
+class DIST_Compare : public binary_function<const pair<pair<CFG,CFG>,double>,
+					    const pair<pair<CFG,CFG>,double>,
+					    bool> {
+ public:
+  bool operator()(const pair<pair<CFG,CFG>,double> _cc1,
+		  const pair<pair<CFG,CFG>,double> _cc2) {
+    return (_cc1.second < _cc2.second);
+  }
+};
 
 /**This is the interface for all distance metric methods(euclidean, 
   *scaledEuclidean, minkowski, manhattan, com, etc.).
@@ -409,17 +415,6 @@ class CenterOfMassDistance : public DistanceMetricMethod {
   virtual double Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2);
 };
 
-
-//
-// used by "findKClosestPairs" for sort (DIST_TYPE is pair of cfgs & distance)
-//
-template <class CFG>
-bool
-DIST_Compare (const pair<pair<CFG,CFG>,double> _cc1, const pair<pair<CFG,CFG>,double> _cc2) {
-  return (_cc1.second < _cc2.second ) ;
-}
-
-
 //----------------------------------------------------------------------
 // Given: k and ONE cfg and ONE vector
 // Find : find k pairs of closest cfg from "cfg" to "vector"
@@ -549,7 +544,7 @@ FindKClosestPairs(Environment* _env,
 	  tmp.first.second = vec2[c2];
 	  tmp.second = dist;
 	  kp[k-1] = tmp;
-	  sort (kp.begin(), kp.end(), ptr_fun(DIST_Compare<CFG>));
+	  sort (kp.begin(), kp.end(), DIST_Compare<CFG>());
 	}
       }//endfor c2
     }//endfor c1
