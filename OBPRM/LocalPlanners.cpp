@@ -148,7 +148,7 @@ IsConnected(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cfg _c1,
 
        info->edge.first.Weight() = 0;
        info->edge.second.Weight() = 0;
-       if ( IsConnected(lpset[lpcnt].GetName(), _env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
+       if ( IsConnected(lpset[lpcnt].GetPlanner(), _env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
           fedge = fedge | lpset[lpcnt].GetFEdgeMask();
           bedge = bedge | lpset[lpcnt].GetBEdgeMask();
 
@@ -197,7 +197,7 @@ LPInfo *info) {
 
        info->edge.first.Weight() = 0;
        info->edge.second.Weight() = 0;
-       if ( IsConnected(lpset[lpcnt].GetName(),_env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
+       if ( IsConnected(lpset[lpcnt].GetPlanner(),_env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
           fedge = fedge | lpset[lpcnt].GetFEdgeMask();
           bedge = bedge | lpset[lpcnt].GetBEdgeMask();
 
@@ -239,7 +239,7 @@ IsConnectedFindAll(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,C
 
        info->edge.first.Weight() = 0;
        info->edge.second.Weight() = 0;
-       if ( IsConnected(lpset[lp].GetName(),_env,cd,dm,_c1,_c2,lpset[lp],info) == true ) {
+       if ( IsConnected(lpset[lp].GetPlanner(),_env,cd,dm,_c1,_c2,lpset[lp],info) == true ) {
           fedge = fedge | lpset[lp].GetFEdgeMask();
           bedge = bedge | lpset[lp].GetBEdgeMask();
           connected = true;
@@ -258,20 +258,24 @@ IsConnectedFindAll(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,C
 }
 
 // Generalized form of LP functions.
-bool LocalPlanners::IsConnected(char *lpName, Environment *_env,CollisionDetection *cd,
+bool LocalPlanners::IsConnected(PLANNER lpName, Environment *_env,CollisionDetection *cd,
      DistanceMetric*dm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info) {
 
-  if (!strcmp(lpName,"straightline")) {
-	return IsConnected_straightline(_env,cd,dm,_c1,_c2,_lp,info);
-  } else if(!strcmp(lpName,"rotate_at_s")) {
-	return IsConnected_rotate_at_s(_env,cd,dm,_c1,_c2,_lp,info);
-  } else if(!strcmp(lpName,"a_star_clearance") || !strcmp(lpName,"a_star_distance")) { // A_star
-	return IsConnected_astar(_env,cd,dm,_c1,_c2,_lp,info);
-  } else {
-	cout << "Error: in LocalPlanners::IsConnected(char *lpName, ...), invalid lp option!" << endl;
-	exit(1);
+  switch(lpName) {
+      case STRAIGHTLINE:
+	 return IsConnected_straightline(_env,cd,dm,_c1,_c2,_lp,info);
+	 break;
+      case ROTATE_AT_S:
+	 return IsConnected_rotate_at_s(_env,cd,dm,_c1,_c2,_lp,info);
+	 break;
+      case ASTAR_DISTANCE:
+      case ASTAR_CLEARANCE:
+	 return IsConnected_astar(_env,cd,dm,_c1,_c2,_lp,info);
+	 break;
   }
-
+  cout << "Error: in LocalPlanners::IsConnected(PLANNER lpName, ...), invalid lp option!" << endl;
+  exit(1);
+  
 
 }
 
@@ -488,7 +492,8 @@ IsConnected_astar(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cf
     int retPosition,noNeighbors=3,i;
     int typeLP=0;
     double value;
-    if( !strcmp(_lp.GetName(),"a_star_distance")) typeLP=1;
+    //if( !strcmp(_lp.GetName(),"a_star_distance")) typeLP=1;
+    if(_lp.GetPlanner() == ASTAR_DISTANCE) typeLP=1;
 
     incr=_c1.FindIncrement(_c2,&n_ticks,info->positionRes,info->orientationRes);
 
@@ -582,7 +587,7 @@ UsesPlannerOtherThan(char plannerName[], SID lpsetid){
 LP::
 LP() {
   strcpy(name,"");
-  planner = 0; 
+  planner = INVALID_PLANNER; 
   sValue = tries = neighbors = 0;
   lpid = INVALID_EID;
   forwardEdge = backEdge = 0;
@@ -615,7 +620,7 @@ GetName() const {
   return const_cast<char*>(name);
 };
 
-LPF 
+PLANNER
 LP::
 GetPlanner(){
   return planner;
@@ -732,11 +737,13 @@ AddLPToSet(const SID _sid, const EID _lpid) {
   return AddElementToOSet(_sid,_lpid);
 };
 
+/*
 int 
 LPSets::
 DeleteLPFromSet(const SID _sid, const EID _lpid) {
   return DeleteElementFromOSet(_sid,_lpid);
 };
+*/
 
 SID 
 LPSets::
@@ -780,6 +787,7 @@ MakeLPSet(istream& _myistream) {
        LP lp1; 
        strcpy(lp1.name,lpname);
        //lp1.planner = &(lpPtr->IsConnected_straightline);
+       lp1.planner = STRAIGHTLINE;
        lp1.lpid = AddElementToUniverse(lp1); 
        lp1.forwardEdge = lp1.backEdge = 1 << lp1.lpid;
        if ( ChangeElementInfo(lp1.lpid,lp1) != OK ) {
@@ -793,6 +801,7 @@ MakeLPSet(istream& _myistream) {
        LP lp1, lp2;
        strcpy(lp1.name,lpname);
        //lp1.planner = &(lpPtr->IsConnected_rotate_at_s);
+       lp1.planner = ROTATE_AT_S;
        lp1.sValue = 2.0; 
        lp2 = lp1;
        while ( _myistream >> sValue ) { //get s values 
@@ -832,6 +841,10 @@ MakeLPSet(istream& _myistream) {
        LP lp1; 
        strcpy(lp1.name,lpname);
        //lp1.planner = &(lpPtr->IsConnected_astar);
+       if( !strcmp(lpname,"a_star_clearance") ) 
+       	   lp1.planner = ASTAR_DISTANCE;
+       else
+	   lp1.planner = ASTAR_CLEARANCE;
 
        if ( _myistream >> lp1.tries
          && _myistream >> lp1.neighbors ) {

@@ -61,6 +61,14 @@ enum lp_predefined {    //---------------
         SL_R5_AD69,     // SL & R5 & AD69
         LP_USER1};      // first user defined lp set, if any
 
+
+enum PLANNER {
+	STRAIGHTLINE,
+	ROTATE_AT_S,
+	ASTAR_DISTANCE,
+	ASTAR_CLEARANCE,
+	INVALID_PLANNER};
+
 //---------------------------------------------------------------
 // Algo base information data structures
 //---------------------------------------------------------------                        
@@ -95,8 +103,8 @@ class LocalPlanners;
 
 class Roadmap;
 
-typedef bool (*LPF) (Environment *env,CollisionDetection *,DistanceMetric*,
-				Cfg&,Cfg&,LP&,LPInfo*); 	// pointer to lp function
+//typedef bool (*LPF) (Environment *env,CollisionDetection *,DistanceMetric*,
+//				Cfg&,Cfg&,LP&,LPInfo*); 	// pointer to lp function
                                          		// *NOTE* need to update
                                          		//  when params known
 
@@ -129,7 +137,8 @@ public:
   // Other Methods
   //===================================================================
   char*  GetName() const;
-  LPF    GetPlanner();
+  //LPF    GetPlanner();
+  PLANNER GetPlanner();
   double GetS() const;
   int    GetTries() const;
   int    GetNeighbors() const;
@@ -142,7 +151,8 @@ protected:
   // Data
   //===================================================================
   char   name[80];
-  LPF    planner;          // ptr to local planner code
+  //LPF    planner;          // ptr to local planner code
+  PLANNER planner;
   double sValue;
   int    tries;
   int    neighbors;
@@ -187,7 +197,7 @@ public:
         // Adding LPs, Making & Modifying LP sets
    int AddLP(const char* _lpinfo);     // add lp(s) to universe
    int AddLPToSet(const SID _sid, const EID _lpid);
-   int DeleteLPFromSet(const SID _sid, const EID _lpid);
+   //int DeleteLPFromSet(const SID _sid, const EID _lpid);
 
    SID MakeLPSet(const char* lplist);  // make an ordered set of lps,
    SID MakeLPSet(istream& _myistream); //  - add lp to universe if not there
@@ -261,7 +271,7 @@ public:
 
   // Generalized form of LP functions, replace 'pointer to function' way doing this,
   // but fulfill the same purpose. In addition, it eases deriving classes. 06/10/00 GS
-  virtual bool IsConnected(char * lpName, Environment *env,CollisionDetection *,DistanceMetric *,
+  virtual bool IsConnected(PLANNER lpName, Environment *env,CollisionDetection *,DistanceMetric *,
                                 Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
 
   virtual bool IsConnected_straightline_simple(Environment *env,CollisionDetection *,DistanceMetric *,
