@@ -523,22 +523,18 @@ CSpaceMAPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *dm,
           GN& _gn, GNInfo &_info){
 
    #ifndef QUIET
-     cout << "(numNodes=" << _gn.numNodes.GetValue() << ") ";
+     cout << "(numNodes="      << _gn.numNodes.GetValue()       << ", ";
+     cout << "clearanceNum="   << _gn.clearanceNum.GetValue()   << ", ";
+     cout << "penetrationNum=" << _gn.penetrationNum.GetValue() << ") ";
    #endif
 
    #if INTERMEDIATE_FILES
      vector<Cfg> path; path.reserve(_gn.numNodes.GetValue());
    #endif
 
-   //check that calcClearance is > 0
-   if(_info.calcClearance <= 0) {
-     cout << "\n\nERROR: -calcClear flag not set!\n\n";
-     exit(-1);
-   }
-
    // MAPRM style node generation using clearances in the CSpace
    for (int i=0; i < _gn.numNodes.GetValue(); i++) {
-      Cfg cfg = Cfg::GetMedialAxisCfg(_env,cd,_info.cdsetid,_info.cdInfo,dm,_info.dmsetid,_info.calcClearance);
+      Cfg cfg = Cfg::GetMedialAxisCfg(_env,cd,_info.cdsetid,_info.cdInfo,dm,_info.dmsetid,_gn.clearanceNum.GetValue(),_gn.penetrationNum.GetValue());
 
       if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) {
          _info.nodes.push_back(Cfg(cfg));
@@ -568,7 +564,9 @@ OBMAPRM(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
 	GN& _gn, GNInfo &_info){
    #ifndef QUIET
       cout << "(numNodes="          << _gn.numNodes.GetValue()          << ", ";
-      cout << "\tproportionSurface="<< _gn.proportionSurface.GetValue() << ", ";
+      cout << "clearanceNum="       << _gn.clearanceNum.GetValue()      << ", ";
+      cout << "penetrationNum="     << _gn.penetrationNum.GetValue()    << ", ";
+      cout << "\nproportionSurface="<< _gn.proportionSurface.GetValue() << ", ";
       cout << "\nnumShells="        << _gn.numShells.GetValue()         << ", ";
       cout << "collPair="           << _gn.collPair.GetValue()          << ", ";
       cout << "freePair="           << _gn.freePair.GetValue()          << ", ";
@@ -597,7 +595,7 @@ OBMAPRM(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
       Cfg cfg = obprmCfgs[i];
 
       cfg.PushToMedialAxis(_env, cd, _info.cdsetid, _info.cdInfo, 
-                           dm, _info.dmsetid, _info.calcClearance);
+                           dm, _info.dmsetid, _gn.clearanceNum.GetValue(), _gn.penetrationNum.GetValue());
 
       if ( !cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo) ) {
          _info.nodes.push_back(Cfg(cfg));
@@ -1444,7 +1442,9 @@ proportionSurface("pctSurf",         1.0,  0,   1.0),
 collPair         ("collPair","cM rT "),
 freePair         ("freePair","cM rV "),
 clearanceFactor  ("clearFact",       1.0,  0,   1.0),
-gauss_d          ("d",                 0,  0,   5000000)
+gauss_d          ("d",                 0,  0,   5000000),
+clearanceNum     ("clearance",         5,  1,   100),
+penetrationNum   ("penetration",       5,  1,   100)
 
 {
 	
@@ -1471,10 +1471,11 @@ gauss_d          ("d",                 0,  0,   5000000)
 	collPair.PutNumStrings(2);
 	freePair.PutNumStrings(2);
 	
-	
     clearanceFactor.PutDesc  ("FLOAT  ","");
     gauss_d.PutDesc          ("FLOAT  ","");
-	
+
+    clearanceNum.PutDesc     ("INT  ","");
+    penetrationNum.PutDesc   ("INT  ","");
 	
 	strcpy(name,"");
 	generator = 0;
@@ -1576,6 +1577,8 @@ PrintUsage_CSpaceMAPRM(ostream& _os){
 
         _os << "\nCSpaceMAPRM ";
         _os << "\n\t"; numNodes.PrintUsage(_os);
+	_os << "\n\t"; clearanceNum.PrintUsage(_os);
+	_os << "\n\t"; penetrationNum.PrintUsage(_os);
 
     cout.setf(ios::right,ios::adjustfield);
 
@@ -1588,6 +1591,8 @@ PrintUsage_OBMAPRM(ostream& _os){
 
         _os << "\nOBMAPRM ";
 	_os << "\n\t"; numNodes.PrintUsage(_os);
+	_os << "\n\t"; clearanceNum.PrintUsage(_os);
+	_os << "\n\t"; penetrationNum.PrintUsage(_os);
 	_os << "\n\t"; numShells.PrintUsage(_os);
 	_os << "\n\t"; proportionSurface.PrintUsage(_os);
 	_os << "\n\t"; numShells.PrintUsage(_os);
@@ -1640,12 +1645,16 @@ operator==(const GN& _gn) const
         } else if ( !strcmp(name,"CSpaceMAPRM") ) {
                 return true;
 
-                //return ( numNodes.GetValue() == _gn.numNodes.GetValue() );
+                //return ( (numNodes.GetValue() == _gn.numNodes.GetValue()) &&
+		//         (clearanceNum.GetValue() == _gn.clearanceNum.GetValue()) &&
+		//         (penetrationNum.GetValue() == _gn.penetrationNum.GetValue()) );
 		
 	} else if ( !strcmp(name,"OBMAPRM") ) {
   	        return true;
 
                 //return ( (numNodes.GetValue() == _gn.numNodes.GetValue()) &&
+		//       (clearanceNum.GetValue() == _gn.clearanceNum.GetValue()) &&
+		//       (penetrationNum.GetValue() == _gn.penetrationNum.GetValue()) &&
 		//       (numShells.GetValue() == _gn.numShells.GetValue()) &&
 		//       (proportionSurface.GetValue() == _gn.proportionSurface.GetValue()) &&
 		//       (collPair.GetValue() == _gn.collPair.GetValue()) &&
@@ -1705,9 +1714,13 @@ ostream& operator<< (ostream& _os, const GN& gn) {
     }
     if ( !strstr(gn.GetName(),"CSpaceMAPRM") ){
         _os<< ", numNodes = " << gn.numNodes.GetValue();
+        _os<< ", clearanceNum = " << gn.clearanceNum.GetValue();
+	_os<< ", penetrationNum = " << gn.penetrationNum.GetValue();
     }
     if ( !strstr(gn.GetName(),"OBMAPRM") ){
 	_os<< ", numNodes = " << gn.numNodes.GetValue();
+	_os<< ", clearanceNum = " << gn.clearanceNum.GetValue();
+	_os<< ", penetrationNum = " << gn.penetrationNum.GetValue();
 	_os<< ", numShells = " << gn.numShells.GetValue();
 	_os<< ", proportionSurface = " << gn.proportionSurface.GetValue();
 	_os<< ", collPair = " << gn.collPair.GetValue();
@@ -1876,7 +1889,7 @@ MakeGNSet(istream& _myistream) {
 			GetFieldRange();
 			
 			for (int j=start;j<stop; ++j) {
-				if(gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.gauss_d.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else {
 					cout << "\nERROR MakeGNSet: Don\'t understand \""
@@ -1909,7 +1922,7 @@ MakeGNSet(istream& _myistream) {
 			GetFieldRange();
 			
 			for (int j=start;j<stop; ++j) {
-				if (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.numShells.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.proportionSurface.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.freePair.AckCmdLine(&j,(int)stop,(char**)(&argv))){
@@ -1939,6 +1952,8 @@ MakeGNSet(istream& _myistream) {
 
                         for (int j=start;j<stop; ++j) {
                                 if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.clearanceNum.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.penetrationNum.AckCmdLine(&j,(int)stop,(char**)(&argv))){
                                 } else {
 	                                cout << "\nERROR MakeGNSet: Don\'t understand \""
                                                 << cmdFields[j]<<"\"\n\n";
@@ -1953,7 +1968,10 @@ MakeGNSet(istream& _myistream) {
 			GetFieldRange();
 			
 			for (int j=start;j<stop; ++j) {
-				if (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.numShells.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.clearanceNum.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.penetrationNum.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.numShells.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.proportionSurface.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.freePair.AckCmdLine(&j,(int)stop,(char**)(&argv))){

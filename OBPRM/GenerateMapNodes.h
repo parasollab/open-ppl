@@ -202,6 +202,8 @@ public:
         *   -# GN::freePair  falg="freePair" default_value="cM rV"
         *   -# GN::clearanceFactor  falg="clearFact" default_value=1.0  MIN=0 MAX=1.0
         *   -# GN::gauss_d  falg="d" default_value=0  MIN=0 MAX=5000000
+	*   -# GN::clearanceNum falg="clearance" default_value=5 MIN=1 MAX=100
+	*   -# GN::penetrationNum falg="penetration" default_value=5 MIN=1 MAX=100
         *
         *@see num_param and n_str_param.
         */
@@ -328,14 +330,17 @@ public:
       void  PrintUsage_BasicMAPRM(ostream& _os);
 
      /**Print out CSpace MAPRM Usage to given output stream.
-        *@see GN::numNodes and
-            *num_param::PrintUsage for underline PrintUsage
+        *@see GN::numNodes, GN::clearanceNum, GN::penetrationNum and
+        *num_param::PrintUsage for underline PrintUsage
         */
       void  PrintUsage_CSpaceMAPRM(ostream& _os);
 
      /**Print out OBMAPRM Usage to given output stream.
-        *@see GN::numNodes and
-            *num_param::PrintUsage for underline PrintUsage
+        *@see GN::numNodes, GN::clearanceNum, GN::penetrationNum,
+	*GN::numShells, GN::proportionSurface
+	*, GN::collPair, GN::freePair, and GN::clearanceFactor.
+        *num_param::PrintUsage and n_str_param::PrintUsage for 
+	*underline PrintUsage
         */
       void  PrintUsage_OBMAPRM(ostream& _os);
       
@@ -388,6 +393,20 @@ public:
       *@see GenerateMapNodes::GaussPRM
       */
     num_param<double> gauss_d;
+
+    /**Number of rays for approx clearance calculation
+     *@see Cfg::ApproxCSpaceClearance, 
+     *GenerateMapNodes::CSpaceMAPRM, and 
+     *GenetrateMapNodes::OBMAPRM
+     */
+    num_param<int> clearanceNum;
+
+    /**Number of rays for approx penetration calculation
+     *@see Cfg::ApproxCSpaceClearance, 
+     *GenerateMapNodes::CSpaceMAPRM, and 
+     *GenerateMapNodes::OBMAPRM
+     */
+    num_param<int> penetrationNum;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -535,10 +554,18 @@ public:
          *  -# CSpaceMAPRM
          *      -# GN::numNodes = user specified value
          *         (if no user specified value, default value is 10 )
+	 *      -# GN::clearanceNum = user specified value
+	 *         (if no user specified value, default value is 5 )
+	 *      -# GN::penetrationNum = user specified value
+	 *         (if no user specified value, default value is 5 )
          *
 	 *  -# OBMAPRM
 	 *      -# GN::numNodes = user specified value
 	 *         (if no user specified value, default value is 10 )
+	 *      -# GN::clearanceNum = user specified value
+	 *         (if no user specified value, default value is 5 )
+	 *      -# GN::penetrationNum = user specified value
+	 *         (if no user specified value, default value is 5 )
 	 *      -# GN::numShells = user spcified value
          *         (if no user spcified value, default value is 3 )
          *      -# GN::proportionSurface = user spcified value
