@@ -56,13 +56,11 @@ Body::~Body() {
 //===================================================================
 GMSPolyhedron & Body::GetWorldPolyhedron() {
 
-
-    worldPolyhedron = polyhedron;
     int i;
     for (i=0; i < polyhedron.numVertices; i++)  // Transform the vertices
-        worldPolyhedron.vertexList[i] = worldTransformation * worldPolyhedron.vertexList[i];
+        worldPolyhedron.vertexList[i] = worldTransformation * polyhedron.vertexList[i];
     for (i=0; i < polyhedron.numPolygons; i++)  // Transform the normals
-        worldPolyhedron.polygonList[i].normal = worldTransformation.orientation * worldPolyhedron.polygonList[i].normal;
+        worldPolyhedron.polygonList[i].normal = worldTransformation.orientation * polyhedron.polygonList[i].normal;
 
     return worldPolyhedron;
 }
