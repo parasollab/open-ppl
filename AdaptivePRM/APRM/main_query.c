@@ -8,9 +8,10 @@
 #include "AdaptiveQuery.h"
 #include "Stat_Class.h"
 #include "GraphAlgo.h"
+#include "MyQueryCmds.h"
 
 Input input;
-QueryCmds Qinput;
+MyQueryCmds Qinput;
 extern Stat_Class Stats;
 
 //========================================================================
