@@ -59,16 +59,10 @@
 #define INVALID_DBL -999
 //@}
 
-/**@name General data structures*/
-//@{
-typedef short SID;///< set id type
-typedef short EID;///< element id type
-//@}
-
 //-----------------------------------
 // c-space representations
 //-----------------------------------
-//#include "Cfg.h"  //??Why need Cfg.h here????
+//#include "Cfg.h"  
 
 //-----------------------------------
 // choose represention for edge weights in roadmap graph, some samples

@@ -29,7 +29,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "Vectors.h"
-#include "OBPRM.h"
+//#include "OBPRM.h"
+#include "BasicDefns.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Frowrad decalaration
@@ -322,7 +323,7 @@ public:
     /**@name Access Methods*/
     //@{
         ///Get internal storage of configuration
-        vector<double> GetData() const;
+        const vector<double>& GetData() const;
         ///Call CfgManager::GetRobotCenterPosition(this)
         Vector3D GetRobotCenterPosition();
         /// Return the number of degrees of freedom for the configuration class
@@ -472,6 +473,10 @@ public:
     
         /// generates random configuration that is in Free CSpace. Call CfgManager::GetFreeRandomCfg
         static Cfg GetFreeRandomCfg(Environment *env,CollisionDetection* cd,SID _cdsetid, CDInfo& _cdInfo);
+	/// generates N random configurations
+	static void GetNFreeRandomCfgs(vector<Cfg> &nodes, Environment *env,
+	     CollisionDetection* cd,SID _cdsetid, CDInfo& _cdInfo, int num);
+
     //@}
     
     

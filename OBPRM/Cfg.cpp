@@ -183,8 +183,9 @@ Cfg Cfg::operator/(double s) {
 
 bool Cfg::operator==(const Cfg &tmp) const{
 
-    return v.size() == tmp.v.size() &&
-        equal(v.begin(), v.end(), tmp.v.begin());
+    //return v.size() == tmp.v.size() &&
+    //    equal(v.begin(), v.end(), tmp.v.begin());
+    return CfgHelper->AlmostEqual(*this, tmp);
 }
 
 bool Cfg::operator!=( const Cfg &tmp) const{
@@ -214,7 +215,7 @@ Cfg Cfg::InvalidData(){
     return CfgHelper->InvalidData();
 }
 
-vector<double> Cfg::GetData() const {
+const vector<double>& Cfg::GetData() const {
     return v;
 }
 
@@ -474,6 +475,13 @@ Cfg Cfg::GetFreeRandomCfg(Environment *env, CollisionDetection *cd, SID _cdsetid
                           CDInfo& _cdInfo){
     return CfgHelper->GetFreeRandomCfg(env, cd, _cdsetid, _cdInfo);
 }
+
+
+void Cfg::GetNFreeRandomCfgs(vector<Cfg> &nodes, Environment *env,
+                 CollisionDetection* cd,SID _cdsetid, CDInfo& _cdInfo, int num) {
+      return CfgHelper->GetNFreeRandomCfgs(nodes, env, cd, _cdsetid, _cdInfo, num);
+};
+
 
 // tests whether or not robot in this configuration has every vertex inside
 // the environment specified bounding box
