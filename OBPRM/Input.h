@@ -303,9 +303,6 @@ public:
         n_str_param       collPair;             ///< Collosion Pair for OBPRM
         n_str_param       freePair;             ///< Free Pair for OBPRM
 
-        num_param<int>    calcClearance;        ///< Is clearance will be calculated after free Cfgs are generated.
-        num_param<int>    calcPenetration;      ///< Is penetration will be calculated if Cfg is in collision.
-
         num_param<double> posres;               ///< Position Resolution
         num_param<double> orires;               ///< Orientation Resolution
 

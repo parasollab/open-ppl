@@ -120,20 +120,6 @@ struct GNInfo {
         double proportionSurface;
     //@}
 
-    /**Will or won't generated clearance information
-      *for Cfgs in nodes.
-      *The calculated Cfg will put in InfoCfg::clearance.
-      *@see Cfg::info
-      */
-    int calcClearance;
-
-    /**Will or won't generated penetration information
-      *for Cfgs in nodes.
-      *The calculated Cfg penetration will put in InfoCfg::clearance.
-      *@see Cfg::info
-      */
-    int calcPenetration;
-
     /**Will or won't generated Cfgs add to Roadmap graph.
       *If True, GenerateMapNodes::GenerateNodes
       *will add generated free Cfgs to roadmap graph.
@@ -824,7 +810,6 @@ public:
         *   -# GNInfo::proportionSurface = Input::proportionSurface
         *   -# GNInfo::collPair = Input::collPair
         *   -# GNInfo::freePair = Input::freePair
-        *   -# GNInfo::calcClearance = Input::calcClearance
         *   -# GNInfo::addNodes2Map = True
         *   -# GNInfo::tag = InfoCfg::NULL_INFO
         *
@@ -862,10 +847,6 @@ public:
         *   -# Get speicified GNSet
         *   -# Call low level node generation funtions in
         *      GNs in this speicified GNSet.
-        *   -# if GNinfo::calcClearance is true
-        *      Clearance for each generated Cfg is computed.
-        *      otherwise Clearance for each generated Cfg is set
-        *      to -1.
         *   -# if GNinfo::addNodes2Map is true
         *      Gfgs are inserted in Roadmap, _rm.
         *

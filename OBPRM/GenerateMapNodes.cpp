@@ -110,8 +110,6 @@ UserInit(Input * input, Environment *_env)
 	
     gnInfo.collPair = input->collPair;
     gnInfo.freePair = input->freePair;
-    gnInfo.calcClearance = input->calcClearance.GetValue();
-    gnInfo.calcPenetration = !(input->calcPenetration.GetValue()==0);
     gnInfo.addNodes2Map = true;
     gnInfo.tag = InfoCfg::NULL_INFO;
 };
@@ -150,16 +148,6 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
 #endif
 		
 	}
-	
-	if (info.calcClearance) {
-		// go through info.nodes and calculate their clearances...
-		for (int i=0; i < info.nodes.size(); i++) {
-			info.nodes[i].info.clearance = 
-				info.nodes[i].ApproxCSpaceClearance
-				(_rm->environment, cd, info.cdsetid, info.cdInfo, dm, 
-				 info.dmsetid, info.calcClearance, info.calcPenetration);
-		}
-	} 
 	
 	// if that's what the user wants
 	if (info.addNodes2Map) {

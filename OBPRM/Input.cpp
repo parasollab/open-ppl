@@ -57,9 +57,7 @@ Input::Input():
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
         bbox             ("-bbox",""),
         collPair         ("-collPair","cM rT "),    // center of Mass
-        freePair         ("-freePair","cM rV "),    // center of Mass
-        calcClearance    ("-calcClear",          0,  0,    100),
-	calcPenetration  ("-calcPenetration",    0,  0,    1) //set default as false.
+        freePair         ("-freePair","cM rV ")     // center of Mass
         {
 
     //Cfg::CfgHelper=NULL; 
@@ -77,9 +75,6 @@ Input::Input():
     descDir.PutDesc    ("STRING ",
         " directory where program will look for the data"
         "\n\t\t\t    files specified in environment specification file");
-
-    calcClearance.PutDesc    ("INTEGER","");
-	calcPenetration.PutDesc  ("BOOLEAN","\t*NOTE*: Affect Only if -calcClear is set.");
 
     bbox.PutDesc       ("STRING ", "[Xmin,Xmax,Ymin,Ymax,Zmin,Zmax]"
                                     "\n\t\t\t(default calculated from environment)"
@@ -323,8 +318,6 @@ void Input::ReadCommandLine(int argc, char** argv){
         } else if ( lineSegment.AckCmdLine(&i, argc, argv) ) {
         } else if ( usingClearance.AckCmdLine(&i, argc, argv) ) {
         } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
-	} else if ( calcClearance.AckCmdLine(&i, argc, argv) ) {
-	} else if ( calcPenetration.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
         } else if ( posres.AckCmdLine(&i, argc, argv) ) {
@@ -435,8 +428,6 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n\nOPTIONAL:\n";
         _os << "\n  "; descDir.PrintUsage(_os);
         _os << "\n  "; inmapFile.PrintUsage(_os);
-    	_os << "\n  "; calcClearance.PrintUsage(_os);
-    	_os << "\n  "; calcPenetration.PrintUsage(_os);
         _os << "\n  "; lineSegment.PrintUsage(_os);
         _os << "\n  "; usingClearance.PrintUsage(_os);
         _os << "\n  "; addPartialEdge.PrintUsage(_os);
@@ -472,8 +463,6 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"mapFile"<<"\t"<<mapFile.GetValue();
   _os <<"\n"<<setw(FW)<<"inmapFile"<<"\t"<<inmapFile.GetValue();
 
-  _os <<"\n"<<setw(FW)<<"calcClearance"<<"\t"<<calcClearance.GetValue();
-  _os <<"\n"<<setw(FW)<<"calcPenetration"<<"\t"<<calcPenetration.GetValue();
   _os <<"\n"<<setw(FW)<<"lineSegment"<<"\t"<<lineSegment.GetValue();
   _os <<"\n"<<setw(FW)<<"usingClearance"<<"\t"<<usingClearance.GetValue();
   _os <<"\n"<<setw(FW)<<"addPartialEdge"<<"\t"<<addPartialEdge.GetValue();
@@ -527,10 +516,6 @@ Input::PrintDefaults(){
             orires.GetDefault() << endl << endl;
    cout << setw(FW) << "bounding box scale" << " (" << bbox_scale.GetFlag() << ") : " <<
             bbox_scale.GetDefault() << endl << endl;
-   cout << setw(FW) << "calculate clearance" << " (" << calcClearance.GetFlag() << ") : " << 
-            calcClearance.GetDefault() << endl << endl;
-   cout << setw(FW) << "calculate clearance" << " (" << calcPenetration.GetFlag() << ") : " << 
-            calcPenetration.GetDefault() << endl << endl;
    cout << setw(FW) << "Cfg" << " (" << CFGstrings[0]->GetFlag() << ") : " << Cfg::GetName() << endl << endl;
 
    // get default parameters by initializing each class
