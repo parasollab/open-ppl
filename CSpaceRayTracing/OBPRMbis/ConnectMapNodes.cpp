@@ -2131,13 +2131,16 @@ MakeCNSet(istream& _myistream) {
     } else if (!strcmp(cnname,"RayTracer")  ) {
 	       CN cn1;
  	       strcpy(cn1.name,cnname); 
-	       char orientation[100]; 
+	       char orientation[100]; char schedule[100];
                int a;
-               int b; int c;
+               int b; int c; int d; int e;
 	       _myistream >> orientation;
 	       _myistream >> a;
 	       _myistream >> b;
 	       _myistream >> c;
+	       _myistream >> schedule;
+	       _myistream >> d;
+	       _myistream >> e;
 	    }
       else {
        cout << "INVALID: connection method name = " << cnname;
