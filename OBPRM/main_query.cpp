@@ -44,8 +44,8 @@ int main(int argc, char** argv)
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
   dm.UserInit(&input,   &gn, &lp );
-  gn.UserInit(&input, query.rdmp.GetEnvironment() );
-  cn.UserInit(&input, query.rdmp.GetEnvironment() );
+  gn.UserInit(&input, query.pRdmp->GetEnvironment() );
+  cn.UserInit(&input, query.pRdmp->GetEnvironment() );
   
   /** set up set ids for query stage. And this has been 
       done after cn has been set up */
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
   cout << endl;
   lp.planners.DisplayLPSets();
   cout << endl;
-  query.rdmp.roadmap.DisplayCCStats(10);
+  query.pRdmp->roadmap.DisplayCCStats(10);
   cout << endl;
 
   //----------------------------------------------------
