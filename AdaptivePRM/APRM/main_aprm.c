@@ -76,13 +76,24 @@ int main(int argc, char** argv)
     nodeValidateType = APPROXIMATE;
   }
 
+  double resolution;
   VALIDATE edgeValidateType = COMPLETE;
   if(!strncmp(input.edgeValidationFlag.GetValue(),"none",4)) {
     edgeValidateType = NONE;
   } else if(!strncmp(input.edgeValidationFlag.GetValue(),"approximate",11)) {
     edgeValidateType = APPROXIMATE;
+    char tmpType[20];
+    istrstream is(input.edgeValidationFlag.GetValue());
+    is >> tmpType; //read in "approximate"
+    if(is >> resolution) {
+      if(resolution<0 || resolution>1) { //out of range
+	cout << "\n\nERROR: resolution out of range! Must be [0,1].\n";
+	exit(-1);
+      }
+    } else {
+      resolution = 0.1; //default
+    }
   }
-
 
   #ifdef QUIET
   #else
@@ -134,8 +145,8 @@ int main(int argc, char** argv)
     cn.ConnectNodes(&rmap,&noop_cd,&noop_lp,&dm, cn.cnInfo.cnsetid, cn.cnInfo);
     break;
   case APPROXIMATE:
-    cn.setConnectionResolution(rmap.GetEnvironment()->GetPositionRes()*10,
-			       rmap.GetEnvironment()->GetOrientationRes()*10);
+    cn.setConnectionResolution(rmap.GetEnvironment()->GetPositionRes()/resolution,
+			       rmap.GetEnvironment()->GetOrientationRes()/resolution);
   case COMPLETE:
     cn.ConnectNodes(&rmap,&cd,&lp,&dm, cn.cnInfo.cnsetid, cn.cnInfo);
     break;
