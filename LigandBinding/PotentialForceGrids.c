@@ -100,7 +100,8 @@ vector<AtomType> &atomtype) {
      if(!strncmp(recordName, "ATOM  ", 6)) {
          char atomName[4], resName[3], x[8], y[8], z[8];
          double point[3];
-         for(int i=0; i<4; ++i)
+	 int i;
+         for(i=0; i<4; ++i)
             atomName[i] = line[12+i];
          for(i=0; i<3; ++i)
             resName[i] = line[17+i];
@@ -116,11 +117,11 @@ vector<AtomType> &atomtype) {
          //cout << atomName << "111" << endl;
          if(!strncmp(atomName, " N", 2))
             atomtype.push_back(Nitrogen);
-         else if(strncmp(atomName, " C", 2))
+         else if(!strncmp(atomName, " C", 2))
             atomtype.push_back(Carbon);
-         else if(strncmp(atomName, " O", 2))
+         else if(!strncmp(atomName, " O", 2))
             atomtype.push_back(Oxygen);
-         else if(strncmp(atomName, " S", 2))
+         else if(!strncmp(atomName, " S", 2))
             atomtype.push_back(Sulfar);
          else {
            cout << "error: unknown atom type:" << atomName << endl;
@@ -131,7 +132,8 @@ vector<AtomType> &atomtype) {
 
   }
   Vector3D sum(0,0,0);
-  for(int i=0; i<coord.size(); ++i) {
+  int i;
+  for(i=0; i<coord.size(); ++i) {
         sum = sum + coord[i];
   }
   Vector3D com = sum/coord.size();
@@ -436,7 +438,8 @@ double PotentialForceGrids::GetRealPotential(const vector<Vector3D> &ligandAtoms
 const vector<char> &atomtype) const {
 
    vector<AtomType> vat;
-   for(int i=0; i<ligandAtoms.size(); ++i) {
+   int i;
+   for(i=0; i<ligandAtoms.size(); ++i) {
       switch(atomtype[i]) {
         case 'N':
            vat.push_back(Nitrogen);
