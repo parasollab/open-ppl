@@ -25,15 +25,35 @@
 #ifndef Input_h
 #define Input_h
 
+#ifdef _WIN32
+#include <iostream.h>
+#endif
+
 #include "DHparameters.h"
 #include "Vectors.h"
 #include "Orientation.h"
 #include <string.h>
+#ifdef _WIN32
+//using namespace std;
 #include <vector.h>
+//#include <ostream>
+#include <strstrea.h>
+//using std::vector;
+
+
+//using std::ostream;
+ 
+
+#else
+#include <vector.h>
+#include <strstream.h>
+#endif
+
 #include <stdlib.h>
 #include <math.h>
 
-#include <strstream.h>
+//#include <strstream.h>
+
 
 class Environment;
 
@@ -129,7 +149,22 @@ protected:
 class Input {
 public:
 // brc changed
-    static const int ARGSTRING_LENGTH = 256;	// used by motion planning
+#ifdef _WIN32
+#define ARGSTRING_LENGTH  256
+#define MAX_CN             10
+#define MAX_GN             10
+#define MAX_LP             10
+#define MAX_CD             10
+#define MAX_DM             10
+#define MAX_CFG	         10
+
+#define FILENAME_LENGTH    80
+#define MAX_MULTIBODY      50
+#define MAX_CONNECTION     50
+#define MAX_FIXEDBODY      50
+#define MAX_FREEBODY       50
+#else
+	static const int ARGSTRING_LENGTH = 256;	// used by motion planning
     static const int MAX_CN           =  10;
     static const int MAX_GN           =  10;
     static const int MAX_LP           =  10;
@@ -142,7 +177,7 @@ public:
     static const int MAX_CONNECTION   =  50;
     static const int MAX_FIXEDBODY    =  50;
     static const int MAX_FREEBODY     =  50;
-
+#endif
     //-----------------------------------------------------------
     //  Constructors and Destructor
     //-----------------------------------------------------------
@@ -286,17 +321,24 @@ GetDefault(){
 };
 template<class TYPE> void param<TYPE>::
 PutDesc(char *_desc){
-    desc = new char[strlen(_desc)];
-    strcpy(desc,_desc);
+    /*desc = new char[strlen(_desc)];
+		   strcpy(desc,_desc);
+		   // tck tck tck bad, very bad you should have use strlen+1
     typedesc = new char[strlen("LKD-VALUE")];
-    strcpy(typedesc,"LKD-VALUE");
+    strcpy(typedesc,"LKD-VALUE");*/
+
+	desc=strdup(_desc);
+	typedesc=strdup("LKD-VALUE");
 };
 template<class TYPE> void param<TYPE>::
 PutDesc(char *_typedesc,char *_desc){
+	/*
     desc = new char[strlen(_desc)];
     strcpy(desc,_desc);
     typedesc = new char[strlen(_typedesc)];
-    strcpy(typedesc,_typedesc);
+    strcpy(typedesc,_typedesc);*/
+    desc=strdup(_desc);
+    typedesc=strdup(_typedesc);
 };
 template<class TYPE> char* param<TYPE>::
 GetDesc(){
