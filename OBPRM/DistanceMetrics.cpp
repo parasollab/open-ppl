@@ -62,10 +62,6 @@ ParseCommandLine(int argc, char** argv) {
   bool found = FALSE;
   vector<DistanceMetricMethod*>::iterator itr;
 
-  cout << "argc[" << argc << "]:\n";
-  for(int i=0; i<argc; i++)
-    cout << argv[i] << endl;
-  
   int cmd_begin = 0;
   int cmd_argc = 0;
   char* cmd_argv[50];
@@ -86,10 +82,6 @@ ParseCommandLine(int argc, char** argv) {
 	      break;
 	    } 
 	} while(!is_method_name && cmd_begin+cmd_argc < argc);
-
-	cout << "cmd_argc[" << cmd_argc << "]:\n";
-	for(int i=0; i<cmd_argc; i++)
-	  cout << cmd_argv[i] << endl;
 
 	(*itr)->ParseCommandLine(cmd_argc, cmd_argv);
 	selected.push_back((*itr)->CreateCopy());
@@ -248,7 +240,7 @@ WriteDMs(ostream& _myostream) const {
   _myostream << endl << "#####DMSTART#####";
   _myostream << endl << selected.size();  // number of dms
   PrintValues(_myostream);
-  _myostream << endl << "#####DMSTOP#####"; 
+  _myostream << "#####DMSTOP#####"; 
 }
 
 
