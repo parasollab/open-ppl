@@ -92,7 +92,8 @@ ParseCommandLine(int argc, char **argv) {
   int i;
   for (i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) || 
-        numAttempts.AckCmdLine(&i, argc, argv) ) {
+	exactNodes.AckCmdLine(&i, argc, argv)) {
+/*         numAttempts.AckCmdLine(&i, argc, argv) || */
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
       for(int j=0; j<argc; j++)
@@ -114,7 +115,9 @@ PrintUsage(ostream& _os){
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os); _os << " ";
-  _os << "\n\t"; numAttempts.PrintUsage(_os);
+/*   _os << "\n\t"; numAttempts.PrintUsage(_os); */
+  _os << "\n\t"; exactNodes.PrintUsage(_os);
+
 
   _os.setf(ios::right,ios::adjustfield);
 }
@@ -125,7 +128,8 @@ BasicPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
-  _os << numAttempts.GetFlag() << " " << numAttempts.GetValue();
+/*   _os << numAttempts.GetFlag() << " " << numAttempts.GetValue(); */
+  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue();
   _os << endl;
 }
 
@@ -147,18 +151,16 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      vector<CFG>& nodes) {
 	
 #ifndef QUIET
-  if (numAttempts.GetValue()==0)
+  if (exactNodes.GetValue()==1)
      cout << "(numNodes=" << numNodes.GetValue() << ") ";
   else
-     cout << "(numAttempts=" << numAttempts.GetValue() << ") ";
+    cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
 #endif
   
-  //int attempts = 0; //numNodes is the number of desired free nodes
-  int attempts = numAttempts.GetValue();  //numNodes is the number of attempted nodes
   //PRM style node generation -- generate in expanded bounding box
   vector<Cfg*> path;
   
-  if (attempts == 0) { // we want to obtain numNodes free nodes 
+  if (exactNodes.GetValue() == 1) { // we want to obtain numNodes free nodes 
     CFG tmp;
     int default_maxTries = 100;
     for (int i=0; i < numNodes.GetValue(); ++i) {
@@ -176,10 +178,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
          }
        }
     }
-  }
-  else { //we want to try numAttempts nodes (either free or in collision)
+  } else { //we want to try numNodess attempts (either free or in collision)
     CFG tmp;
-    for (int i=0; i < attempts; ++i) {
+    for (int i=0; i < numNodes.GetValue(); ++i) {
       Stats.IncNodes_Attempted();
       tmp.GetRandomCfg(_env);
       if (!tmp.isCollision(_env, Stats, cd, *cdInfo)) {

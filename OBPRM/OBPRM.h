@@ -343,6 +343,7 @@ ParseCommandLine(int argc, char **argv) {
   int i;
   for (i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
     } else if (numShells.AckCmdLine(&i, argc, argv) ) {
     } else if (proportionSurface.AckCmdLine(&i, argc, argv) ) {
     } else if (collPair.AckCmdLine(&i, argc, argv) ) {
@@ -383,6 +384,7 @@ PrintUsage(ostream& _os) {
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
+  _os << "\n\t"; exactNodes.PrintUsage(_os);
   _os << "\n\t"; numShells.PrintUsage(_os);
   _os << "\n\t"; proportionSurface.PrintUsage(_os);
   _os << "\n\t"; collPair.PrintUsage(_os);
@@ -399,6 +401,7 @@ OBPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
   _os << numShells.GetFlag() << " " << numShells.GetValue() << " ";
   _os << proportionSurface.GetFlag() << " " << proportionSurface.GetValue() << " ";
   _os << collPair.GetFlag() << " " << collPair.GetValue() << " ";
@@ -424,6 +427,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 	      DistanceMetric *dm, vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes="          << numNodes.GetValue()          << ", ";
+  cout << "(exactNodes="          << exactNodes.GetValue()          << ", ";
   cout << "\tproportionSurface="<< proportionSurface.GetValue() << ", ";
   cout << "\nnumShells="        << numShells.GetValue()         << ", ";
   cout << "collPair="           << collPair.GetValue()          << ", ";
@@ -431,6 +435,10 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   cout << "clearanceFactor="    << clearanceFactor.GetValue()   << ") ";
 #endif
   
+  if  (exactNodes.GetValue() == 1){
+    cerr << "\nFunction to generate exact numbers for OBPRM not implemented yet." << endl;
+  } 
+
   pair<int,int> seedSelect,freeSelect;
 	
   ValidatePairs("seedSelect", collPair, &seedSelect);
@@ -477,6 +485,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 	nodes.push_back(obstFree[i]);
       }
       
+
+
+
 #if INTERMEDIATE_FILES
       surface.insert(surface.end(),
 		     obstSurface.begin(),obstSurface.end());
@@ -503,6 +514,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
       }
     
   } // for(obstacle)
+
   
 #if INTERMEDIATE_FILES
   WritePathConfigurations("surface.path", surface, _env);

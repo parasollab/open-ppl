@@ -426,8 +426,8 @@ BasicOBPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
-    }
-    else if (numShells.AckCmdLine(&i, argc, argv) ) {
+    }else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
+    }else if (numShells.AckCmdLine(&i, argc, argv) ) {
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
       for(int j=0; j<argc; j++)
@@ -450,7 +450,7 @@ PrintUsage(ostream& _os) {
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
   _os << "\n\t"; numShells.PrintUsage(_os);
-  
+  _os << "\n\t"; exactNodes.PrintUsage(_os);
   _os.setf(ios::right,ios::adjustfield);
 }
 
@@ -461,6 +461,7 @@ BasicOBPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
   _os << numShells.GetFlag() << " " << numShells.GetValue() << " ";
   _os << endl;
 }
@@ -483,9 +484,14 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      vector<CFG>& nodes) {  
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ", "<<flush;
+  cout << "(exactNodes=" << exactNodes.GetValue() << ", "<<flush;
   cout << "numShells=" << numShells.GetValue() << ") "<<flush;
 #endif
   
+  if  (exactNodes.GetValue() == 1){
+    cerr << "\nFunction to generate exact numbers for BasicOBPRM not implemented yet." << endl;
+  } 
+
 #if INTERMEDIATE_FILES
   vector<CFG> surface;
 #endif

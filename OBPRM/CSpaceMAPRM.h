@@ -117,10 +117,9 @@ CSpaceMAPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
-    }
-    else if (clearanceNum.AckCmdLine(&i, argc, argv) ) {
-    }    
-    else if (penetrationNum.AckCmdLine(&i, argc, argv) ) {
+    } else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (clearanceNum.AckCmdLine(&i, argc, argv) ) {
+    } else if (penetrationNum.AckCmdLine(&i, argc, argv) ) {
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
       for(int j=0; j<argc; j++)
@@ -142,6 +141,7 @@ PrintUsage(ostream& _os) {
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
+  _os << "\n\t"; exactNodes.PrintUsage(_os);
   _os << "\n\t"; clearanceNum.PrintUsage(_os);
   _os << "\n\t"; penetrationNum.PrintUsage(_os);
   
@@ -155,6 +155,7 @@ CSpaceMAPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
   _os << clearanceNum.GetFlag() << " " << clearanceNum.GetValue() << " ";
   _os << penetrationNum.GetFlag() << " " << penetrationNum.GetValue() << " ";
   _os << endl;
@@ -177,6 +178,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 	      DistanceMetric *dm, vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes="      << numNodes.GetValue()       << ", ";
+  cout << "(exactNodes="      << exactNodes.GetValue()       << ", ";
   cout << "clearanceNum="   << clearanceNum.GetValue()   << ", ";
   cout << "penetrationNum=" << penetrationNum.GetValue() << ") ";
 #endif
@@ -194,14 +196,15 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     CFG cfg;
     cfg.GetMedialAxisCfg(_env,Stats,cd,*cdInfo,dm,
 			 clearanceNum.GetValue(),penetrationNum.GetValue());
+    //if in collision and asking for exactNum, keep generating
     
-    if ( !cfg.isCollision(_env,Stats,cd,*cdInfo) ) {
+    if (! cfg.isCollision(_env,Stats,cd,*cdInfo) ){
       nodes.push_back(CFG(cfg));
 #if INTERMEDIATE_FILES
       path.push_back(cfg);
 #endif
-    } else { 
-      //cout << "cfg in collision!\n" << flush; 
+    }else if (exactNodes.GetValue() == 1){ // keep generating the ith node
+      i --;
     }
   }
   

@@ -110,10 +110,9 @@ BasicMAPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
-    }
-    else if (m_bApprox.AckCmdLine(&i, argc, argv) ) {
-    }    
-    else if (m_iRays.AckCmdLine(&i, argc, argv) ) {
+    } else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (m_bApprox.AckCmdLine(&i, argc, argv) ) {
+    } else if (m_iRays.AckCmdLine(&i, argc, argv) ) {
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
       for(int j=0; j<argc; j++)
@@ -135,6 +134,7 @@ PrintUsage(ostream& _os) {
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
+  _os << "\n\t"; exactNodes.PrintUsage(_os);
   _os << "\n\t"; m_bApprox.PrintUsage(_os);
   _os << "\n\t"; m_iRays.PrintUsage(_os);
   
@@ -147,6 +147,7 @@ BasicMAPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
   _os << m_bApprox.GetFlag() << " " << m_bApprox.GetValue() << " ";
   _os << m_iRays.GetFlag() << " " << m_iRays.GetValue() << " ";
   _os << endl;
@@ -177,8 +178,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     cout<<"\t\t- Use approximate penetration\n";
     cout<<"\t\t- " << m_iRays.GetValue() << " rays will be used to approximate penetration.\n";
   }
+  cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
 #endif
-  
+
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
   path.reserve(numNodes.GetValue());
