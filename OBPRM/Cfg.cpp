@@ -26,40 +26,6 @@
 #define EQ(a,b)  (fabs(a-b)<0.0001)
 
 /////////////////////////////////////////////////////////////////////
-//Init static Data Member
-const int InfoCfg::NULL_INFO =-1;
-
-//---------------------------------------------
-// Input/Output operators for InfoCfg
-//---------------------------------------------
-istream& operator>> (istream&s, InfoCfg &_c){
-    s >> _c.obst;
-    s >> _c.tag;
-    s >> _c.clearance;
-    _c.Read(s);
-    return s;
-}
-ostream& operator<< (ostream&s, const InfoCfg &_c){
-    s << _c.obst      << " ";
-    s << _c.tag       << " ";
-    s << _c.clearance << " ";
-    _c.Write(s);
-    return s;
-}
-
-void InfoCfg::Write(ostream &s) const {
-    s << obst      << " ";
-    s << tag       << " ";
-    s << clearance << " ";
-}
-
-void InfoCfg::Read(istream &s) {
-    s >> obst;
-    s >> tag;
-    s >> clearance;
-}
-
-/////////////////////////////////////////////////////////////////////
 
 ClearanceInfo::ClearanceInfo() {
     clearance = -1e10;
@@ -189,14 +155,14 @@ bool Cfg::isWithinResolution(const Cfg& c, double positionRes, double orientatio
 //---------------------------------------------
 istream& operator>> (istream& s, Cfg& pt) {
   pt.Read(s);
-  pt.info.Read(s);
+  pt.ReadInfo(s);
   return s;
 }
 
 
 ostream& operator<< (ostream& s, const Cfg& pt) {
   pt.Write(s);
-  pt.info.Write(s);
+  pt.WriteInfo(s);
   return s;
 }
 
@@ -208,10 +174,24 @@ void Cfg::Write(ostream &os) const {
 }
 
 
+void Cfg::WriteInfo(ostream &os) const {
+  os << obst << " ";
+  os << tag << " ";
+  os << clearance << " ";
+}
+
+
 void Cfg::Read(istream &is) {
   for(int i=0; i<v.size(); ++i) {
     is >> v[i];
   }
+}
+
+
+void Cfg::ReadInfo(istream &is) {
+  is >> obst;
+  is >> tag;
+  is >> clearance;
 }
 
 
@@ -651,7 +631,9 @@ void Cfg::Increment(const Cfg& _increment) {
   for(int i=0; i<v.size(); ++i)
     v[i] += _increment.v[i];
   Normalize_orientation();
-  info = InfoCfg(); // reset info to NULL_INFO. 
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -728,8 +710,9 @@ void Cfg::GetRandomCfg(Environment* env, int maxTries) {
     // not need define boudingBox here     //dawenx
     // double *bb = env->GetBoundingBox();
  
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 
   while (maxTries-- > 0) {
     this->GetRandomCfg_CenterOfMass(env);
@@ -754,8 +737,9 @@ void Cfg::GetRandomCfg(Environment* env) {
   int default_maxTries = 100;
   this->GetRandomCfg(env, default_maxTries);
 
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -802,8 +786,9 @@ void Cfg::GetRandomCfg(Environment* env, DistanceMetric* dm, double length) {
   delete aboveCfg;
   delete belowCfg;
 
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -869,12 +854,12 @@ void Cfg::MAPRMfree(Environment* _env, CollisionDetection* cd,
   ClearanceInfo clearInfo;
   cfg->ApproxCSpaceClearance2(_env, cd, cdsetid, cdInfo, dm,
 			      n, clearInfo, 0);
-  cfg->info.clearance = clearInfo.getClearance();
+  cfg->clearance = clearInfo.getClearance();
   dir = clearInfo.getDirection();
   //delete clearInfo.getDirection();
     
   int i = 0;
-  double stepSize = cfg->info.clearance;
+  double stepSize = cfg->clearance;
   
   //oldCfg = cfg;
   oldCfg = cfg->CreateNewCfg();
@@ -882,13 +867,13 @@ void Cfg::MAPRMfree(Environment* _env, CollisionDetection* cd,
   newCfg = oldCfg->CreateNewCfg();
 
   /// find max. clearance point by stepping out:
-  while ((newCfg->info.clearance >= oldCfg->info.clearance) && (newCfg->InBoundingBox(_env))) {    
+  while ((newCfg->clearance >= oldCfg->clearance) && (newCfg->InBoundingBox(_env))) {    
     delete oldCfg;
     oldCfg = newCfg->CreateNewCfg();
     newCfg->c1_towards_c2(*newCfg, *dir, stepSize*-1);
-    newCfg->info.clearance = newCfg->ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,n,0);    
+    newCfg->clearance = newCfg->ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,n,0);    
     
-    stepSize = newCfg->info.clearance;
+    stepSize = newCfg->clearance;
    
     i++;
   }
@@ -903,9 +888,9 @@ void Cfg::MAPRMfree(Environment* _env, CollisionDetection* cd,
       //midpoint between newCfg and oldCfg
       midCfg->add(*newCfg, *oldCfg);
       midCfg->divide(*midCfg, 2);
-      midCfg->info.clearance = midCfg->ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,n,0);
+      midCfg->clearance = midCfg->ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,n,0);
 
-      if (midCfg->info.clearance > oldCfg->info.clearance) {
+      if (midCfg->clearance > oldCfg->clearance) {
 	oldCfg->equals(*midCfg);
       } else {
 	newCfg->equals(*midCfg);

@@ -389,10 +389,10 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
   vector<CFG> oldV,newV,verts;
   _rm->m_pRoadmap->GetVerticesData(verts);
   // if separation of vertices into two sets is desired
-  if (tag != InfoCfg::NULL_INFO) {
+  if (tag != -1) {
     // separate on tag values
     for( int iV=0;iV<verts.size();++iV ) {
-      if(verts[iV].info.tag == tag) 
+      if(verts[iV].tag == tag) 
 	newV.push_back(verts[iV]);
       else                         
 	oldV.push_back(verts[iV]);

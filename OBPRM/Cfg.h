@@ -27,93 +27,6 @@
 #include "BasicDefns.h"
 
 
-////////////////////////////////////////////////////////////////////////////////////////////
-
-//
-/// Information about the cfg, for example the obstacle info.
-//
-class  InfoCfg {
- public:
-  
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //    Constructors and Destructor
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Constructors and Destructor*/
-  //@{
-  
-  InfoCfg():obst(NULL_INFO),tag(NULL_INFO),clearance(NULL_INFO){};
-  InfoCfg(int _obst):obst(_obst),tag(NULL_INFO),clearance(NULL_INFO){};
-  InfoCfg(int _obst,double _tag):obst(_obst),tag(_tag),clearance(NULL_INFO){};
-  InfoCfg(int _obst,double _tag,double _cl):obst(_obst),tag(_tag),clearance(_cl){};
-  
-  //@}
-  
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //    Operator Overloading
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Operator Overloading*/
-  //@{
-  bool operator== (const InfoCfg&tmp) const{return obst==tmp.obst && tag==tmp.tag && clearance==tmp.clearance;};
-  bool operator!= (const InfoCfg&tmp) const{return obst!=tmp.obst || tag!=tmp.tag || clearance!=tmp.clearance;};
-  //@}
-  
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //    Access Method
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Access Method*/
-  //@{
-  void SetObst(int _obst){obst = _obst;};
-  int GetObst() const {return obst;};
-  void SetClearance(double _cl){clearance = _cl;};
-  double GetClearance() const {return clearance;};
-  //@}
-  
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //    I/O
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name I/O*/
-  //@{
-  void Write(ostream &os) const;
-  void Read(istream &is);
-  //@}
-  
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //    Data
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  
-  //Initialization of this member was moved to Cfg.cpp
-  static const int NULL_INFO;  
-  
-  /**From which Obstacle this, this Cfg is generated.
-   *@see GenerateMapNodes::GaussPRM, GenerateMapNodes::BasicOBPRM
-   *GenerateMapNodes::OBPRM
-   */
-  int obst;
-  double tag;
-  
-  /**Cleanance of this Cfg.
-   *Closet distance from this Cfg to any Obstacle in Environment.s
-   */
-  double clearance;
-};
-
-//---------------------------------------------
-/// Input/Output operators for InfoCfg
-//---------------------------------------------
-istream& operator>> (istream&s, InfoCfg &_c);
-ostream& operator<< (ostream&s, const InfoCfg &_c);
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////
 //
 /// Information about the clearance of a cfg.
@@ -267,15 +180,15 @@ class Cfg {
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   /**@name I/O*/
-  //@{
-  ///Call InfoCfg::Write and Write in this class.
+  //@{ 
   friend ostream& operator<< (ostream&, const Cfg&);
-  ///Call InfoCfg::Read and Read in this class.
   friend istream& operator>> (istream&, Cfg&);
   ///Write configuration to output stream
   void Write(ostream& os) const;
+  void WriteInfo(ostream& os) const;
   ///Read configuration from input stream
-  void Read(istream & is);
+  void Read(istream& is);
+  void ReadInfo(istream& is);
  
   virtual void printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs) const;
   virtual void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
@@ -536,7 +449,19 @@ class Cfg {
   int posDof;
   
  public:
-  InfoCfg info;
+  //Info:
+  /**From which Obstacle this Cfg is generated.
+   *@see GenerateMapNodes::GausePRM, GenerateMapNodes::BasicOBPRM
+   *GenerateMapNodes::OBPRM
+   */
+  int obst;
+
+  double tag;
+
+  /**Clearance of this Cfg.
+   *Closest distance from this Cfg to any Obstacle in Environment
+   */
+  double clearance;
 
 }; // class Cfg
 

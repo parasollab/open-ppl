@@ -26,6 +26,10 @@ Cfg_free::Cfg_free() {
   v.clear();
   for(int i=0; i<dof; i++)
     v.push_back(0);
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -43,6 +47,10 @@ Cfg_free::Cfg_free(double x, double y, double z,
   v.push_back(yaw);
 
   Normalize_orientation();
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -53,6 +61,10 @@ Cfg_free::Cfg_free(const Vector6<double>& _v) {
   for(int i=0; i<dof; i++)
     v.push_back(_v[i]);
   Normalize_orientation();
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -70,7 +82,10 @@ Cfg_free::Cfg_free(const Cfg& _c) {
   for(int i=0; i<dof; i++)
     v.push_back(_v[i]);
   Normalize_orientation();
-  info = _c.info;
+
+  obst = _c.obst;
+  tag = _c.tag;
+  clearance = _c.clearance;
 }
 
 
@@ -88,7 +103,10 @@ void Cfg_free::equals(const Cfg& c) {
   v.clear();
   for(int i=0; i<dof; i++)
     v.push_back(_v[i]);
-  info = c.info;
+
+  obst = c.obst;
+  tag = c.tag;
+  clearance = c.clearance;
 }
 
 
@@ -139,8 +157,9 @@ void Cfg_free::GetRandomCfg(double R, double rStep) {
   v.push_back(pitch);
   v.push_back(yaw);
 
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -165,8 +184,9 @@ void Cfg_free::GetRandomRay(double incr) {
   v.push_back(0.0);
   v.push_back(0.0);
 
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -402,7 +422,8 @@ void Cfg_free::GetRandomCfg_CenterOfMass(Environment *env) {
       v.push_back(drand48());
   }
 
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 

@@ -463,11 +463,11 @@ GenerateNodes(Environment* _env, CollisionDetection* cd,
       // Collect free & surface nodes for return
       int i;
       for (i=0;i<obstSurface.size();i++) {
-	obstSurface[i].info.obst = obstacle;
+	obstSurface[i].obst = obstacle;
 	nodes.push_back(obstSurface[i]);
       }
       for (i=0;i<obstFree.size();i++) {
-	obstFree[i].info.obst = obstacle;
+	obstFree[i].obst = obstacle;
 	nodes.push_back(obstFree[i]);
       }
       
@@ -488,7 +488,7 @@ GenerateNodes(Environment* _env, CollisionDetection* cd,
 	vector<CFG> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle,
 						  numNodes.GetValue());
 	for(int i=0; i<CobstNodes.size(); ++i){
-	  CobstNodes[i].info.obst = obstacle;
+	  CobstNodes[i].obst = obstacle;
 	  nodes.push_back(CobstNodes[i]);
 	}
 #if INTERMEDIATE_FILES

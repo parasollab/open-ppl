@@ -29,6 +29,10 @@ Cfg_fixed_PRR::Cfg_fixed_PRR() {
   v.push_back(0);
   v.push_back(0);
   v.push_back(0);
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -48,6 +52,10 @@ Cfg_fixed_PRR::Cfg_fixed_PRR(double zz, double ceta1, double ceta2) {
   v.push_back(ceta2);
   
   Normalize_orientation();
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -59,6 +67,10 @@ Cfg_fixed_PRR::Cfg_fixed_PRR(const Vector3<double>& _v) {
     v.push_back(_v[i]);
   
   Normalize_orientation();
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -76,7 +88,10 @@ Cfg_fixed_PRR::Cfg_fixed_PRR(const Cfg& _c) {
   for(int i=0; i<dof; i++)
     v.push_back(_v[i]);
   Normalize_orientation();
-  info = _c.info;
+
+  obst = _c.obst;
+  tag = _c.tag;
+  clearance = _c.clearance;
 } 
 		    
 
@@ -88,7 +103,9 @@ void Cfg_fixed_PRR::equals(const Cfg& c) {
   posDof = c.posDOF();
   v.clear();
   v = c.GetData();
-  info = c.info;
+  obst = c.obst;
+  tag = c.tag;
+  clearance = c.clearance;
 }
 	
 
@@ -118,8 +135,9 @@ void Cfg_fixed_PRR::GetRandomCfg(double R, double rStep){
   v.push_back(ceta1);
   v.push_back(ceta2);
   
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -136,8 +154,9 @@ void Cfg_fixed_PRR::GetRandomRay(double incr) {
   v.push_back(z1*sin(alpha));
   v.push_back(z);
   
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -158,8 +177,9 @@ void Cfg_fixed_PRR::GetRandomCfg_CenterOfMass(Environment *env) {
   v.push_back(ceta1);
   v.push_back(ceta2);
   
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 

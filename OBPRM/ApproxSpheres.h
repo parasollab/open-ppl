@@ -182,13 +182,13 @@ IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
   //calculate the distance between the two cfgs
   dist = dm->Distance(_env,_c1,_c2);
   
-  if (_c1.info.clearance != -1)
-    c1_clearance = _c1.info.clearance;
+  if (_c1.clearance != -1)
+    c1_clearance = _c1.clearance;
   else
     c1_clearance = _c1.ApproxCSpaceClearance(_env,cd,*cdsetid,*cdInfo,
 					     dm,n.GetValue());
-  if (_c2.info.clearance != -1)
-    c2_clearance = _c2.info.clearance;
+  if (_c2.clearance != -1)
+    c2_clearance = _c2.clearance;
   else
     c2_clearance = _c2.ApproxCSpaceClearance(_env,cd,*cdsetid,*cdInfo,
 					     dm,n.GetValue());

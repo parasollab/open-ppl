@@ -36,6 +36,10 @@ Cfg_fixed_tree::Cfg_fixed_tree() {
       v.push_back(0);
 
   Normalize_orientation();
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 Cfg_fixed_tree::Cfg_fixed_tree(double x, double y, double z,
@@ -58,6 +62,10 @@ Cfg_fixed_tree::Cfg_fixed_tree(int _numofJoints) {
     v.push_back(0);
   
   Normalize_orientation();
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -74,6 +82,10 @@ Cfg_fixed_tree::Cfg_fixed_tree(const vector<double>& _data) {
     v.push_back(_data[i]);
   
   Normalize_orientation();
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 
@@ -86,7 +98,10 @@ Cfg_fixed_tree::Cfg_fixed_tree(const Cfg& _c) {
   for(int i=0; i<dof; i++)
     v.push_back(_v[i]);
   Normalize_orientation();
-  info = _c.info;
+
+  obst = _c.obst;
+  tag = _c.tag;
+  clearance = _c.clearance;
 } 
 
 Cfg_fixed_tree::~Cfg_fixed_tree() {}
@@ -96,7 +111,9 @@ void Cfg_fixed_tree::equals(const Cfg& c) {
   posDof = c.posDOF();
   v.clear();
   v = c.GetData();
-  info = c.info;
+  obst = c.obst;
+  tag = c.tag;
+  clearance = c.clearance;
 }
 	
 Vector3D Cfg_fixed_tree::GetRobotCenterPosition() const {
@@ -118,8 +135,9 @@ void Cfg_fixed_tree::GetRandomCfg(double R, double rStep){
     v.push_back(jointAngle);
   }
   
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 

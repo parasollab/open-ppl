@@ -29,7 +29,6 @@ class Environment;        ///< Environment classes
 template <class CFG, class WEIGHT> class LocalPlanners;      ///< Local Planner       Algobase
 class DistanceMetric;     ///< Distance Metrics    Algobase
 class CollisionDetection; ///< Collision Detection Algobase
-class InfoCfg;
 
 /////////////////////////////////////////////////////////////////////
 
@@ -742,7 +741,7 @@ SaveCurrentVersion(const char* _fname, int thisVersion,
 // to the adjacency lists *ONLY*.
 //
 // ASSUMPTION: the old version is a subset of the new version, missing only
-//             some values in either the InfoCfg field or in the Edge Weights
+//             some values in either the Cfg fields or in the Edge Weights
 // REMEDY: the missing fields will be padded with some "null" value - note
 //         this is not a robust approach and may yield trouble later...
 //
@@ -778,7 +777,7 @@ ConvertGraph(istream&  myifstream, ostream& myofstream,
       myofstream << tagstring << " "; 
     }
     for (i=0; i < missingCfgFields; i++) {
-      myofstream << InfoCfg::NULL_INFO << " "; 
+      myofstream << -1 << " "; 
     }
     
     int adjedges;

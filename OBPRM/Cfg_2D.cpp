@@ -30,6 +30,10 @@ Cfg_2D::Cfg_2D(){
   v.clear();
   for(int i=0; i<6; i++)
     v.push_back(0);
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 Cfg_2D::Cfg_2D(double x, double y, double z, 
@@ -43,6 +47,10 @@ Cfg_2D::Cfg_2D(double x, double y, double z,
   v.push_back(0.0);
   v.push_back(0.0);
   v.push_back(roll);
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 Cfg_2D::Cfg_2D(const Cfg& _c) {
@@ -54,7 +62,10 @@ Cfg_2D::Cfg_2D(const Cfg& _c) {
   for (int i = 0; i < 6; i ++)
     v.push_back(_v[i]);
   Normalize_orientation();
-  info = _c.info;
+
+  obst = _c.obst;
+  tag = _c.tag;
+  clearance = _c.clearance;
 }
 
 Cfg_2D::Cfg_2D(const Vector6<double>& _v) {
@@ -64,6 +75,10 @@ Cfg_2D::Cfg_2D(const Vector6<double>& _v) {
   for (int i = 0; i < 6; i ++)
     v.push_back(_v[i]);
   Normalize_orientation();
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 Cfg_2D::~Cfg_2D() {}
@@ -99,7 +114,9 @@ void Cfg_2D::equals(const Cfg& c) {
   v.clear();
   for(int i=0; i<6; i++)
     v.push_back(_v[i]);
-  info = c.info;  
+  obst = c.obst;
+  tag = c.tag;
+  clearance = c.clearance;
 }
 
 const char* Cfg_2D::GetName() const {
@@ -150,8 +167,9 @@ void Cfg_2D::GetRandomCfg(double R, double rStep){
   v.push_back(pitch);
   v.push_back(yaw);
 
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
   ForceItTo2D();
 }
 
@@ -186,8 +204,9 @@ void Cfg_2D::GetRandomCfg_CenterOfMass(Environment *env) {
       v.push_back(drand48());
   }
   
-  InfoCfg newInfo;
-  info = newInfo;
+  obst = -1;
+  tag = -1;
+  clearance = -1;
   ForceItTo2D();
 }
 

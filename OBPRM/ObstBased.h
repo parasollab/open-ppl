@@ -25,7 +25,7 @@
     *Following Algorithm is used:
     *   -# classify all nodes in roadmap by their obstacle id
     *      (obstacle id is assignment in node generation time
-    *       to InfoCfg::obst in every Cfg)
+    *       to Cfg::obst in every Cfg)
     *   -# for each obstacle id, i
     *       -# for each obstacle id, j ,here j>=i
     *       -# find k closest pairs between Cfgs haveing obs_id=i
@@ -78,8 +78,8 @@ class ObstBased: public ConnectionMethod<CFG,WEIGHT> {
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
   // Core: Connection method
-  /**Compare InfoCfg::obst between two given Cfgs.
-   *@return (_cc1.info.obst < _cc2.info.obst )
+  /**Compare Cfg::obst between two given Cfgs.
+   *@return (_cc1.obst < _cc2.obst )
    *@note this is used to "sort" Cfg's by obst generation number
    *@see Get_Cfgs_By_Obst
    */
@@ -214,7 +214,7 @@ template <class CFG, class WEIGHT>
 bool
 ObstBased<CFG, WEIGHT>::
 info_Compare(const CFG& _cc1, const CFG& _cc2){
-  return (_cc1.info.obst < _cc2.info.obst ) ;
+  return (_cc1.obst < _cc2.obst ) ;
 }
 
 
@@ -238,7 +238,7 @@ Get_Cfgs_By_Obst(Roadmap<CFG, WEIGHT>* _rm) {
   int  id, prev= -505;
   bool firstList=true;
   for (int i=0;i<vert.size();++i){
-    id= vert[i].info.obst;
+    id= vert[i].obst;
     if (id != prev)
       if (prev == -1) {
 	tmp.erase(tmp.begin(),tmp.end());

@@ -513,7 +513,7 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric* dm,
       
       // Collect the generated surface nodes
       for (int i=0;i<obstSurface.size();i++){
-	obstSurface[i].info.obst = obstacle;
+	obstSurface[i].obst = obstacle;
 	nodes.push_back(obstSurface[i]);
       }
       
@@ -532,7 +532,7 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric* dm,
 						  numNodes.GetValue());
 	int i;
 	for(i=0; i<CobstNodes.size(); ++i) {
-	  CobstNodes[i].info.obst = obstacle;
+	  CobstNodes[i].obst = obstacle;
 	  nodes.push_back(CobstNodes[i]);
 	}
 #if INTERMEDIATE_FILES

@@ -200,10 +200,10 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric *,
     // because cfg2 is modified it must be checked again
     if (cfg2.InBoundingBox(_env)) {    
       bool cfg1_free = !cfg1.isCollision(_env,cd,*cdsetid,*cdInfo);
-      cfg1.info.obst = cdInfo->colliding_obst_index;
+      cfg1.obst = cdInfo->colliding_obst_index;
       
       bool cfg2_free = !cfg2.isCollision(_env,cd,*cdsetid,*cdInfo);
-      cfg2.info.obst = cdInfo->colliding_obst_index;
+      cfg2.obst = cdInfo->colliding_obst_index;
       
       if (cfg1_free && !cfg2_free) {
 	nodes.push_back(CFG(cfg1));   
