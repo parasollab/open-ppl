@@ -154,7 +154,7 @@ public:
          *@param _numNodes How many vertices are going to be reserved in this graph
          *@param _numEdges How many edges are going to be reserved for each vertex
          */
-       void Init(const int _numNodes, const int _numEdges);
+       virtual void Init(const int _numNodes, const int _numEdges);
 
     //@}
 

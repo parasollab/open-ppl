@@ -92,7 +92,7 @@ int main(int argc, char** argv)
            << " sec (ie, " << NodeGenClock.GetClock_USEC() << " usec)";
     }
     
-	cout << ", "<<rmap.roadmap.GetVertexCount()<<" nodes\n"<< flush;
+	cout << ", "<<rmap.m_pRoadmap->GetVertexCount()<<" nodes\n"<< flush;
   #endif
 
 
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
     ConnectionClock.PrintName();
     cout << ": " << ConnectionClock.GetClock_SEC()
          << " sec"
-         << ", "<<rmap.roadmap.GetEdgeCount()<<" edges\n"<< flush;
+         << ", "<<rmap.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
     Stats.PrintAllStats(&rmap);
   #endif
 

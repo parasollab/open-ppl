@@ -163,7 +163,7 @@ LocalPlanners::
 IsConnected(Roadmap *rm,CollisionDetection *cd,DistanceMetric *dm,Cfg _c1, Cfg _c2, SID _lpsetid,
 			LPInfo *info) {
 	
-	if( rm->roadmap.IsEdge(_c1, _c2) )  // check they are already connected.
+	if( rm->m_pRoadmap->IsEdge(_c1, _c2) )  // check they are already connected.
 		return true;
 	Environment *_env = rm->GetEnvironment();
 	

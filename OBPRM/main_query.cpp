@@ -61,7 +61,7 @@ int main(int argc, char** argv)
   cout << endl;
   lp.planners.DisplayLPSets();
   cout << endl;
-  query.rdmp.roadmap.DisplayCCStats(10);
+  query.rdmp.m_pRoadmap->DisplayCCStats(10);
   cout << endl;
 
   //----------------------------------------------------

@@ -31,6 +31,7 @@
 #include "OBPRM.h"
 #include "CollisionDetection.h" //for CDINFO instance, so we can not use forward declaration.
 #include "Cfg.h"                //for vector<Cfg>, so we can not use forward declaration.
+#include "Weight.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 

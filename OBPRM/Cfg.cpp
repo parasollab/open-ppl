@@ -62,6 +62,7 @@ void InfoCfg::Read(istream &s) {
     s >> clearance;
 }
 
+/////////////////////////////////////////////////////////////////////
 
 ClearanceInfo::ClearanceInfo() {
     clearance = 1e10;
@@ -181,11 +182,13 @@ Cfg Cfg::operator/(double s) {
 }
 
 bool Cfg::operator==(const Cfg &tmp) const{
-	return v.size() == tmp.v.size() &&
+
+    return v.size() == tmp.v.size() &&
         equal(v.begin(), v.end(), tmp.v.begin());
 }
 
 bool Cfg::operator!=( const Cfg &tmp) const{
+
         return !(*this==tmp);
 }
 
@@ -309,12 +312,12 @@ Cfg Cfg::ClosestPtOnLineSegment(const Cfg &pt1, const Cfg &pt2) const{
 }
 
 Cfg Cfg::c1_towards_c2(Cfg cfg1, Cfg cfg2, double d){
+
     Cfg tmp = cfg2 - cfg1;
     tmp = tmp / tmp.PositionMagnitude();
     cfg2 = cfg1 + (tmp * d);
     return cfg2;
 }
-
 
 // generates a random configuration without consideration of bounding box restrictions
 Cfg Cfg::GetRandomCfg(double R, double rStep) {
@@ -670,9 +673,10 @@ double Cfg::ApproxCSpaceClearance(Environment *env,
                                   SID cdsetid, 
                                   CDInfo& cdInfo,
                                   DistanceMetric * dm, 
-                                  SID dmsetid, int n)
+                                  SID dmsetid, int n, bool bComputePenetration)
 {
-    ClearanceInfo clearInfo = ApproxCSpaceClearance2(env, cd, cdsetid, cdInfo, dm, dmsetid, n);
+    ClearanceInfo clearInfo = 
+        ApproxCSpaceClearance2(env, cd, cdsetid, cdInfo, dm, dmsetid, n,bComputePenetration);
     delete clearInfo.getDirection(); //free direction memory, allocated in ApproxCSpaceClearance2
     return clearInfo.getClearance();
 }
@@ -684,9 +688,10 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
                             SID cdsetid, 
                             CDInfo& cdInfo,
                             DistanceMetric * dm, 
-                            SID dmsetid, int n) {
+                            SID dmsetid, int n,
+                            bool bComputePenetration) {
     ClearanceInfo clearInfo;
-    return ApproxCSpaceClearance2(env,cd,cdsetid,cdInfo,dm,dmsetid,n,clearInfo);
+    return ApproxCSpaceClearance2(env,cd,cdsetid,cdInfo,dm,dmsetid,n,clearInfo,bComputePenetration);
 }
 
 //Approximate C-Space Clearance
@@ -698,7 +703,8 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
                             DistanceMetric * dm, 
                             SID dmsetid, 
                             int n, 
-                            ClearanceInfo & clearInfo)
+                            ClearanceInfo & clearInfo,
+                            bool bComputePenetration)
 {
     Cfg cfg = *this;
     
@@ -707,16 +713,18 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
     
     //if collide, set to true. Otherwise, set to false
     bool bInitState = cfg.isCollision(env,cd,cdsetid,cdInfo);
-    
+    if( bComputePenetration==false && bInitState==true) //don't need to comput penetration.
+        return clearInfo;
+
     Cfg dir;
     if ( clearInfo.getCheckOneDirection() ) { //only want the c-space clearance in one specific direction
         n = 1;
         dir = *clearInfo.getDirection();
     }
 
-	//Get information about robot
-	int iRobot=env->GetRobotIndex();
-	double incrBound = env->GetMultiBody(iRobot)->GetMaxAxisRange(); //max step size
+    //Get information about robot
+    int iRobot=env->GetRobotIndex();
+    double incrBound = env->GetMultiBody(iRobot)->GetMaxAxisRange(); //max step size
     
     //shot n rays
     for(int i = 0 ; i < n ; i++){
@@ -728,7 +736,7 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
         int n_ticks;
         Cfg tick = cfg;
         Cfg incr = cfg.FindIncrement(dir,&n_ticks,positionRes,orientationRes);
-		double incrSize = incr.OrientationMagnitude()+incr.PositionMagnitude();//step size
+        double incrSize = incr.OrientationMagnitude()+incr.PositionMagnitude();//step size
         
         // this flag will be set if state changed. i.e. from collide to free or
         // from free to collide
@@ -753,11 +761,11 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
                 stateChangedFlag = true;
             }
 
-			//if increment still less than a max bound.
-			if( incrSize<incrBound ){
-				incr = incr*2;
-				incrSize *= 2;
-			}
+            //if increment still less than a max bound.
+            if( incrSize<incrBound ){
+                incr = incr*2;
+                incrSize *= 2;
+            }
         }
     }
     

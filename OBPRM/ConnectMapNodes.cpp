@@ -132,13 +132,13 @@ ConnectNodes(Roadmap * rdmp,
        cnfcn(rdmp,cd,lp,dm,cnset[cn], info);
 
        // add newly generated edges to the roadmap
-       rdmp->roadmap.AddEdges(info.edges);
+       rdmp->m_pRoadmap->AddEdges(info.edges);
        // move this part to the inside of each function.
 
        #ifndef QUIET
        clock.StopClock();
        cout << clock.GetClock_SEC() << " sec, "
-		<< rdmp->roadmap.GetCCcount() 
+		<< rdmp->m_pRoadmap->GetCCcount() 
 		<< " connected components\n"<< flush;
        #endif
   }
@@ -157,10 +157,10 @@ ConnectNodes(Environment * environment, RoadmapGraph<Cfg,WEIGHT>& roadmap,
              DistanceMetric * dm, SID _cnsetid, CNInfo &info) {
   Roadmap rdmp;
   rdmp.environment = environment;
-  rdmp.roadmap = roadmap;
+  rdmp.m_pRoadmap = &roadmap;
 
   ConnectNodes(&rdmp, cd, lp, dm, _cnsetid, info);
-  roadmap = rdmp.roadmap;
+  roadmap = *rdmp.m_pRoadmap;
 };
 
 // ------------------------------------------------------------------
@@ -208,13 +208,13 @@ ConnectNodes_Random(
     //-- initialize information needed to check connection between cfg's
     LPInfo lpInfo=Initialize_LPinfo(_rm,info);
 
-    vector<Cfg> vertices = _rm->roadmap.GetVerticesData();
+    vector<Cfg> vertices = _rm->m_pRoadmap->GetVerticesData();
     vector<pair<SID,vector<LP> > > sets = lp->planners.GetLPSets();
 
     for (int i=0; i < _cn.GetNumEdges(); i++) {
 
-      	int c1id = (int)(lrand48()%_rm->roadmap.GetVertexCount());
-      	int c2id = (int)(lrand48()%_rm->roadmap.GetVertexCount());
+      	int c1id = (int)(lrand48()%_rm->m_pRoadmap->GetVertexCount());
+      	int c2id = (int)(lrand48()%_rm->m_pRoadmap->GetVertexCount());
       	Cfg c1 = vertices[c1id];
       	Cfg c2 = vertices[c2id];
 
@@ -222,7 +222,7 @@ ConnectNodes_Random(
       	SID setid = sets[thisset].first;
 
       	if ( lp->IsConnected(_rm,cd,dm,c1,c2,setid,&lpInfo) ) {
-	    _rm->roadmap.AddEdge(c1id, c2id, lpInfo.edge);
+	    _rm->m_pRoadmap->AddEdge(c1id, c2id, lpInfo.edge);
       	}
      }
 };
@@ -249,7 +249,7 @@ ConnectNodes_Closest(
   cout << "(k="<<_cn.GetKClosest()<<"): "<<flush;
   #endif
 
-  vector<Cfg> vertices = _rm->roadmap.GetVerticesData();
+  vector<Cfg> vertices = _rm->m_pRoadmap->GetVerticesData();
   const int verticeSize = vertices.size();
   const int kclosest = min(_cn.GetKClosest(),verticeSize);
 
@@ -266,14 +266,14 @@ ConnectNodes_Closest(
   // for each pair identified
   for (int j=0; j < kp.size(); j++) {
      #if CHECKIFSAMECC
-     if(_rm->roadmap.IsSameCC(kp[j].first,kp[j].second)) continue;
+     if(_rm->m_pRoadmap->IsSameCC(kp[j].first,kp[j].second)) continue;
      #endif
 
      if (lp->IsConnected(_rm,cd,dm,
-                         _rm->roadmap.GetData(kp[j].first),
-			 _rm->roadmap.GetData(kp[j].second),
+                         _rm->m_pRoadmap->GetData(kp[j].first),
+			 _rm->m_pRoadmap->GetData(kp[j].second),
                          info.lpsetid,&lpInfo)) 
-		_rm->roadmap.AddEdge(kp[j].first, kp[j].second, lpInfo.edge);
+		_rm->m_pRoadmap->AddEdge(kp[j].first, kp[j].second, lpInfo.edge);
 
   } //endfor j
 
@@ -347,7 +347,7 @@ ConnectNodes_ClosestVE(
 	using namespace std;
 #endif
 
-  vector<Cfg> oldV,newV,verts= _rm->roadmap.GetVerticesData();
+  vector<Cfg> oldV,newV,verts= _rm->m_pRoadmap->GetVerticesData();
   // if separation of vertices into two sets is desired
   if (info.tag != InfoCfg::NULL_INFO){
         // separate on tag values
@@ -384,8 +384,8 @@ ClosestVE(
   // Get edges 
   // reserve extra space ...will update local copy for efficiency
   vector< pair<pair<VID,VID>,WEIGHT> > edges;
-  edges.reserve(_rm->roadmap.GetEdgeCount() + newV.size()*_cn.GetKClosest());
-  edges = _rm->roadmap.GetEdges();
+  edges.reserve(_rm->m_pRoadmap->GetEdgeCount() + newV.size()*_cn.GetKClosest());
+  edges = _rm->m_pRoadmap->GetEdges();
 
   // May have to adjust user's desired k wrt what is actually possible
   int k = min(_cn.GetKClosest(), oldV.size()+edges.size());
@@ -409,7 +409,7 @@ ClosestVE(
       for (vector<Cfg_VE_Type>::iterator kp=KP.begin();kp<KP.end();++kp){
 
          #if CHECKIFSAMECC
-         if(_rm->roadmap.IsSameCC(kp->cfg1,kp->cfg2)) continue;
+         if(_rm->m_pRoadmap->IsSameCC(kp->cfg1,kp->cfg2)) continue;
          #endif
 
          //-- if new edge is collision free
@@ -420,20 +420,20 @@ ClosestVE(
               //-- may have to add a new node in "middle" of existing edge
               if ( kp->cfg2_IsOnEdge ) {
 
-                _rm->roadmap.AddVertex(kp->cfg2);
+                _rm->m_pRoadmap->AddVertex(kp->cfg2);
 
                 ++info.dupeNodes;  // keep count of duplicated nodes
 
               }//endif cfg2_IsOnEdge
 
               //-- add new edge to map
-              _rm->roadmap.AddEdge(kp->cfg1, kp->cfg2, lpInfo.edge);
+              _rm->m_pRoadmap->AddEdge(kp->cfg1, kp->cfg2, lpInfo.edge);
 
               //-- if did add an explicit interior node to edge(endpt0,endpt1)
               if ( kp->cfg2_IsOnEdge ) {
 
-                        _rm->roadmap.AddEdge(kp->endpt[0],kp->cfg2,lpInfo.edge);
-                        _rm->roadmap.AddEdge(kp->cfg2,kp->endpt[1],lpInfo.edge);
+                        _rm->m_pRoadmap->AddEdge(kp->endpt[0],kp->cfg2,lpInfo.edge);
+                        _rm->m_pRoadmap->AddEdge(kp->cfg2,kp->endpt[1],lpInfo.edge);
 
                         info.dupeEdges += 2;  // keep count of duplicated edges <--for what??
 
@@ -449,7 +449,7 @@ ClosestVE(
 // ------------------------------------------------------------------
 // ConnectNodes_ConnectCCs: 
 //
-// Try to connect different connected components of the roadmap.
+// Try to connect different connected components of the m_pRoadmap->
 // We try to connect all pairs of connected components. If both
 // components are small (less than "smallcc" nodes), then we try to 
 // connect all pairs of nodes.  If at least one of the components is 
@@ -469,7 +469,7 @@ ConnectNodes_ConnectCCs(
           ++info.lpsetid;
   }
 
-  vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
+  vector< pair<int,VID> > ccvec = _rm->m_pRoadmap->GetCCStats();
   int smallcc = _cn.GetSmallCCSize();
 
   #ifndef QUIET
@@ -485,15 +485,14 @@ ConnectNodes_ConnectCCs(
       VID cc2id = ccvec[cc2].second;
         
       // if cc1 & cc2 not already connected, try to connect them 
-      if ( !_rm->roadmap.IsSameCC(cc1id,cc2id) ) {
-	 if(_rm->roadmap.GetCC(cc1id).size() < smallcc &&
-	    _rm->roadmap.GetCC(cc2id).size() < smallcc ) {
-               ConnectSmallCCs(_rm,cd,lp,dm,_cn,info,cc1id,cc2id);
-         } else {
-               ConnectBigCCs(_rm,cd,lp,dm,_cn,info,cc1id,cc2id);
-         }
-      } 
-
+     if ( !_rm->m_pRoadmap->IsSameCC(cc1id,cc2id) ) {
+		if(_rm->m_pRoadmap->GetCC(cc1id).size() < smallcc &&
+		    _rm->m_pRoadmap->GetCC(cc2id).size() < smallcc ) {
+				ConnectSmallCCs(_rm,cd,lp,dm,_cn,info,cc1id,cc2id);
+			} else {
+				ConnectBigCCs(_rm,cd,lp,dm,_cn,info,cc1id,cc2id);
+			}
+		} 
     }/*endfor cc2*/ 
   }/*endfor cc1*/ 
 
@@ -512,10 +511,10 @@ ConnectSmallCCs(Roadmap* _rm,CollisionDetection *cd, LocalPlanners* lp,DistanceM
   // created a temporary variable since GetCC requires &
 
   Cfg t;
-  t=_rm->roadmap.GetData(_cc1id);
-  vector<Cfg> cc1vec = _rm->roadmap.GetCC(t);
-  t=_rm->roadmap.GetData(_cc2id);
-  vector<Cfg> cc2vec = _rm->roadmap.GetCC(t);
+  t=_rm->m_pRoadmap->GetData(_cc1id);
+  vector<Cfg> cc1vec = _rm->m_pRoadmap->GetCC(t);
+  t=_rm->m_pRoadmap->GetData(_cc2id);
+  vector<Cfg> cc2vec = _rm->m_pRoadmap->GetCC(t);
   bool connected = false;
 
   for (int c1 = 0; c1 < cc1vec.size(); c1++) {
@@ -523,14 +522,14 @@ ConnectSmallCCs(Roadmap* _rm,CollisionDetection *cd, LocalPlanners* lp,DistanceM
 
        if (lp->IsConnected(_rm,cd,dm,
 			cc1vec[c1],cc2vec[c2],info.lpsetid,&lpInfo)) {
-	   _rm->roadmap.AddEdge(cc1vec[c1], cc2vec[c2], lpInfo.edge);
+	   _rm->m_pRoadmap->AddEdge(cc1vec[c1], cc2vec[c2], lpInfo.edge);
            connected = true;
            break;
        } else if(info.addPartialEdge) {
 	   Cfg &tmp = lpInfo.savedEdge.second;
 	   if(!tmp.AlmostEqual(cc1vec[c1])) {
-	      _rm->roadmap.AddVertex(tmp);
-	      _rm->roadmap.AddEdge(cc1vec[c1], tmp, lpInfo.edge);
+	      _rm->m_pRoadmap->AddVertex(tmp);
+	      _rm->m_pRoadmap->AddEdge(cc1vec[c1], tmp, lpInfo.edge);
 	   }
        }
     }
@@ -557,10 +556,10 @@ ConnectBigCCs(
   int kpairs = _cn.GetKPairs();
   
   Cfg t;
-  t=_rm->roadmap.GetData(_cc1id);
-  vector<Cfg> cc1vec = _rm->roadmap.GetCC(t);
-  t=_rm->roadmap.GetData(_cc2id);
-  vector<Cfg> cc2vec = _rm->roadmap.GetCC(t);
+  t=_rm->m_pRoadmap->GetData(_cc1id);
+  vector<Cfg> cc1vec = _rm->m_pRoadmap->GetCC(t);
+  t=_rm->m_pRoadmap->GetData(_cc2id);
+  vector<Cfg> cc2vec = _rm->m_pRoadmap->GetCC(t);
 
   kpairs = min(kpairs, cc2vec.size());
 
@@ -570,13 +569,13 @@ ConnectBigCCs(
   for (int i = 0; i < kp.size(); i++) {
       if (lp->IsConnected(_rm,cd,dm,kp[i].first,
 		kp[i].second,info.lpsetid,&lpInfo)) {
-	   _rm->roadmap.AddEdge(kp[i].first, kp[i].second, lpInfo.edge); 
+	   _rm->m_pRoadmap->AddEdge(kp[i].first, kp[i].second, lpInfo.edge); 
            break;
       } else if(info.addPartialEdge) {
            Cfg &tmp = lpInfo.savedEdge.second;
 	   if(!tmp.AlmostEqual(kp[i].first)) {
-             _rm->roadmap.AddVertex(tmp);
-             _rm->roadmap.AddEdge(kp[i].first, tmp, lpInfo.edge);
+             _rm->m_pRoadmap->AddVertex(tmp);
+             _rm->m_pRoadmap->AddEdge(kp[i].first, tmp, lpInfo.edge);
 	   }
       }
   }
@@ -747,8 +746,8 @@ FindKClosestPairs(Roadmap *rm, DistanceMetric * dm, CNInfo& info,
        // save pairs
        //pairs.insert(pairs.end(),kp.begin(),kp.end());
        for(int i=0; i<kp.size(); ++i) {
-	  pairs.push_back(pair<VID, VID>(rm->roadmap.GetVID(kp[i].first), 
-					 rm->roadmap.GetVID(kp[i].second)));
+	  pairs.push_back(pair<VID, VID>(rm->m_pRoadmap->GetVID(kp[i].first), 
+					 rm->m_pRoadmap->GetVID(kp[i].second)));
        }
 
     }//endfor cfg
@@ -860,8 +859,8 @@ FindKClosestPairs(Roadmap *_rm,DistanceMetric * dm, CNInfo& info,
      //-- EDGES:
      for (int e1 = 0; e1 < edges.size(); e1++) {
 
-          Cfg endpt1 = _rm->roadmap.GetData(edges[e1].first.first);
-          Cfg endpt2 = _rm->roadmap.GetData(edges[e1].first.second);
+          Cfg endpt1 = _rm->m_pRoadmap->GetData(edges[e1].first.first);
+          Cfg endpt2 = _rm->m_pRoadmap->GetData(edges[e1].first.second);
           Cfg tmp = cfg.ClosestPtOnLineSegment(endpt1,endpt2);
 
           if (tmp != endpt1 && tmp != endpt2){
@@ -904,7 +903,7 @@ ConnectMapNodes::
 Get_Cfgs_By_Obst(Roadmap * _rm){
 
   //-- get all vertices
-  vector<Cfg> vert= _rm->roadmap.GetVerticesData();
+  vector<Cfg> vert= _rm->m_pRoadmap->GetVerticesData();
 
   //-- sort by info
   sort (vert.begin(), vert.end(), ptr_fun(info_Compare) );
@@ -956,7 +955,7 @@ Get_Cfgs_By_Obst(Roadmap * _rm){
            functions
 
   Algm explores starting from initial tree input and adds whatever 
-  nodes and edges it explores as vertices and edges to roadmap.
+  nodes and edges it explores as vertices and edges to m_pRoadmap->
 ---------------------------------------------------------------*/
 void 
 ConnectMapNodes::
@@ -972,7 +971,7 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
       Cfg x_rand = Cfg(tmp);
 
       vector<Cfg> verticesData;
-                  verticesData = rm->roadmap.GetVerticesData();
+                  verticesData = rm->m_pRoadmap->GetVerticesData();
 
 	  //find closest Cfg in map from random cfg.
       vector<  CfgPairType > kp = FindKClosestPairs(
@@ -1008,8 +1007,8 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
 
              // add x_new and connecting edge to x_near into roadmap
              Cfg t=Cfg(x_new);
-             rm->roadmap.AddVertex(t);
-             rm->roadmap.AddEdge(x_near, x_new, lpInfo.edge);
+             rm->m_pRoadmap->AddVertex(t);
+             rm->m_pRoadmap->AddEdge(x_near, x_new, lpInfo.edge);
          }
       } //endif (kp.size()>0) 
 
@@ -1033,21 +1032,21 @@ ModifyRoadMap(
 
   //Add vertex
   for (i=0;i<vids.size();++i) {
-    t=fromMap->roadmap.GetData(vids[i]);
+    t=fromMap->m_pRoadmap->GetData(vids[i]);
     
-    toMap->roadmap.AddVertex(t);
+    toMap->m_pRoadmap->AddVertex(t);
   } //endfor i
 
 
   //-- get edges from _rm connected component and add to submap
   for (i=0;i<vids.size();++i) {
      vector< pair<pair<VID,VID>,WEIGHT> > edges =
-                           fromMap->roadmap.GetIncidentEdges(vids[i]);
+                           fromMap->m_pRoadmap->GetIncidentEdges(vids[i]);
      for (int j=0;j<edges.size();++j) {
-       Cfg t1=fromMap->roadmap.GetData(edges[j].first.first),
-           t2=fromMap->roadmap.GetData(edges[j].first.second);
+       Cfg t1=fromMap->m_pRoadmap->GetData(edges[j].first.first),
+           t2=fromMap->m_pRoadmap->GetData(edges[j].first.second);
 
-       toMap->roadmap.AddEdge(t1,t2, edges[j].second);
+       toMap->m_pRoadmap->AddEdge(t1,t2, edges[j].second);
      } //endfor j
 
   } //endfor i
@@ -1082,7 +1081,7 @@ ConnectNodes_ExpandRRT(
 #endif
 
   // process components from smallest to biggest
-  vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
+  vector< pair<int,VID> > ccvec = _rm->m_pRoadmap->GetCCStats();
   for ( vector< pair<int,VID> >::reverse_iterator cc1=ccvec.rbegin();
        (*cc1).first <= _cn.GetSmallCCSize() && 
 #if defined(__HP_aCC)
@@ -1096,7 +1095,7 @@ ConnectNodes_ExpandRRT(
       Roadmap submap;
       submap.environment = _rm->GetEnvironment();
       ModifyRoadMap(&submap,_rm,
-                    _rm->roadmap.GetCC( (*cc1).second));
+                    _rm->m_pRoadmap->GetCC( (*cc1).second));
 
       if ( !strcmp(_cn.GetName(),"RRTexpand") ){
 		  
@@ -1109,7 +1108,7 @@ ConnectNodes_ExpandRRT(
               cd, lp, dm, info, lpInfo);
           //-- map = map + submap
           ModifyRoadMap(_rm,&submap,
-			  submap.roadmap.GetVerticesVID());
+			  submap.m_pRoadmap->GetVerticesVID());
 		  
       }else{  //"RRTcomponents"
 		  
@@ -1120,12 +1119,12 @@ ConnectNodes_ExpandRRT(
 			  VID cc1id = (*cc1).second;
 			  VID cc2id = (*cc2).second;
 			  
-			  if ( !_rm->roadmap.IsSameCC(cc1id,cc2id) ) {
+			  if ( !_rm->m_pRoadmap->IsSameCC(cc1id,cc2id) ) {
 				  
 				  //added tmp & separated decl from init for SUN compiler
 				  Cfg tmp;
-				  tmp = _rm->roadmap.GetData(cc2id);
-				  vector<Cfg> U = _rm->roadmap.GetCC(tmp);
+				  tmp = _rm->m_pRoadmap->GetData(cc2id);
+				  vector<Cfg> U = _rm->m_pRoadmap->GetCC(tmp);
 				  RRT(&submap,
 					  _cn.GetIterations(),
 					  _cn.GetStepFactor() * lpInfo.positionRes,
@@ -1134,7 +1133,7 @@ ConnectNodes_ExpandRRT(
 				  
 				  //-- map = map + submap
 				  ModifyRoadMap(_rm,&submap,
-					  submap.roadmap.GetVerticesVID());
+					  submap.m_pRoadmap->GetVerticesVID());
 				  
 			  }// endif !_rm
 			  
@@ -1213,12 +1212,12 @@ ConnectNodes_ObstBased(
         //-- check connections between pairs
         for (int m=0;m<kp.size();++m){
                 #if CHECKIFSAMECC
-                if(_rm->roadmap.IsSameCC(kp[m].first,kp[m].second)) continue;
+                if(_rm->m_pRoadmap->IsSameCC(kp[m].first,kp[m].second)) continue;
                 #endif
 
                 if (lp->IsConnected(_rm,cd,dm,
                         kp[m].first,kp[m].second,info.lpsetid,&lpInfo)){
-                               _rm->roadmap.AddEdge(kp[m].first,kp[m].second,lpInfo.edge);
+                               _rm->m_pRoadmap->AddEdge(kp[m].first,kp[m].second,lpInfo.edge);
                 }//endif IsConnected
         }//endfor m
 
@@ -1302,7 +1301,7 @@ ConnectNodes_modifiedLM(
   int numCfgAdded  = 0;
 
   //-- while (more than one CC remains *AND* added fewer new Cfgs than requested)
-  while(_rm->roadmap.GetCCStats().size()>1 && numCfgAdded<requested) {
+  while(_rm->m_pRoadmap->GetCCStats().size()>1 && numCfgAdded<requested) {
 
      //init counter
      int numTries=0;
@@ -1336,13 +1335,13 @@ ConnectNodes_modifiedLM(
           int numofConnection=0;
 
           //-- get current connected components from roadmap
-          vector< pair<int,VID> > allCC = _rm->roadmap.GetCCStats();
+          vector< pair<int,VID> > allCC = _rm->m_pRoadmap->GetCCStats();
 
           //-- for each connected component, CC
           for(int i=0; i<allCC.size(); ++i) {
 
-             Cfg          tmp = _rm->roadmap.GetData(allCC[i].second);
-             vector<Cfg>   CC = _rm->roadmap.GetCC(tmp);
+             Cfg          tmp = _rm->m_pRoadmap->GetData(allCC[i].second);
+             vector<Cfg>   CC = _rm->m_pRoadmap->GetCC(tmp);
 
              vector< pair<Cfg, Cfg> > kp = FindKClosestPairs(
                                       env,dm,info,cfg,CC,kclosest);
@@ -1375,7 +1374,7 @@ ConnectNodes_modifiedLM(
           if(numofConnection == 1) {
 
              // get all cfg's in CC
-             vector<Cfg> CC = _rm->roadmap.GetCC(edges[0].second);
+             vector<Cfg> CC = _rm->m_pRoadmap->GetCC(edges[0].second);
 
              // calculate CC's center (of mass), CCcenter
              Cfg CCcenter; // sum initialized to 0 by constructor.
@@ -1416,9 +1415,9 @@ ConnectNodes_modifiedLM(
                     ++numCfgAdded;
      
                     //-- add cfg & all edges
-                    _rm->roadmap.WeightedGraph<Cfg,WEIGHT>::AddVertex(cfg);
+                    _rm->m_pRoadmap->WeightedGraph<Cfg,WEIGHT>::AddVertex(cfg);
                     for(int i=0; i<edges.size(); ++i) {
-                              _rm->roadmap.AddEdge(edges[i].first,  // always 'cfg'
+                              _rm->m_pRoadmap->AddEdge(edges[i].first,  // always 'cfg'
                                                    edges[i].second, // cfg in CC
                                                    edgelpinfos[i]); 
                     }//endfor i

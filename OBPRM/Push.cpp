@@ -212,11 +212,11 @@ void Push::ShortestPush(vector <Cfg> nodes)
  if(fixed.size()) {
     cout << "Add as fixed : " << fixed.size() << " nodes added\n";
     for(i=0;i<fixed.size();i++)
-       cout << "VID : "<< rdmp->roadmap.AddVertex(fixed[i]) << " " <<fixed[i] << " added in fixed\n";
+       cout << "VID : "<< rdmp->m_pRoadmap->AddVertex(fixed[i]) << " " <<fixed[i] << " added in fixed\n";
     LPInfo lpInfo(rdmp, connectionInfo);
     for(i=1;i<fixed.size();i++) {
        if(lp->IsConnected(env,cd,dm,fixed[i-1],fixed[i],connectionInfo.lpsetid,&lpInfo)) {
-          rdmp->roadmap.AddEdge(fixed[i-1],fixed[i], lpInfo.edge);
+          rdmp->m_pRoadmap->AddEdge(fixed[i-1],fixed[i], lpInfo.edge);
        }
        else  cout << "Warning:  Could not connect the successive haptic nodes\n";
     }
@@ -272,7 +272,7 @@ static int Compare3D(const void *c,const void  *d)
 ///////////////////////////////////////////////////////////////////////
 // Get the direction vectores for the "k" closest pairs of vertices
 // between the robot and the obstacle in the environment belonging
-// to the given roadmap.
+// to the given m_pRoadmap->
 //
 // 
 // We have assume that there are one robot and one obstacle in the
@@ -359,7 +359,7 @@ void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
         inter=GenerateOutsideCfg(env,cd, seeds[i],
 			ccc,
                           generationInfo);
-        cout << "VID : "<< rdmp->roadmap.AddVertex(inter) << 
+        cout << "VID : "<< rdmp->m_pRoadmap->AddVertex(inter) << 
 		" " <<inter << " added in closestWorkspacePoints\n";
 
         surface.push_back(inter);
@@ -471,7 +471,7 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
   {
     cout << "Add as surface : " << surface.size() << " nodes added\n";
     for(i=0;i<surface.size();i++)
-           cout << "VID : "<< rdmp->roadmap.AddVertex(surface[i]) << " " <<surface[i] << " added in surface\n";
+           cout << "VID : "<< rdmp->m_pRoadmap->AddVertex(surface[i]) << " " <<surface[i] << " added in surface\n";
   } 
 
 }

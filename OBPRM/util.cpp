@@ -135,28 +135,6 @@ WritePathConfigurations( char output_file[80],
     fclose(fp);
 }
 
-
-
-ostream& operator<< (ostream& _os, const IntWeight& w) {
-	_os<< w.lp << " " << w.nticks ;
-	return _os;
-};
-
-istream& operator>> (istream& _is, IntWeight& w) {
-	_is>> w.lp >> w.nticks ;
-	return _is;
-};
-istream& operator>> (istream& _is, DblWeight& w) {
-	_is>> w.lp >> w.weight ;
-	return _is;
-};
-ostream& operator<< (ostream& _os, const DblWeight& w) {
-	_os<< w.lp << " " << w.weight ;
-	return _os;
-}; 
-
-
-
 bool
 VerifyFileExists(char *_fname,int action){
 	

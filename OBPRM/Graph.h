@@ -66,15 +66,6 @@
 #include <deque.h>  
 #include <stack.h>  
 #endif
-/*
-
-#ifdef __HP_aCC                 //aCC in parasol
-#include <algorithm>    
-#include <list>     
-#include <vector>       
-#include <deque>        
-#include <stack>        
-#endif*/
 
 #ifndef VID
 ///ID for every vertex in graph.
@@ -1622,13 +1613,11 @@ public:
        /**Is _v1's VID smaller than _v2's VID?.
          *@return (_v1.vid < _v2.vid )
          */
-
 #ifdef __HP_aCC
        static bool VID_Compare (const Vertex _v1, const Vertex _v2); 
 #else 
        static bool VID_Compare (const Vertex& _v1, const Vertex& _v2); 
 #endif
-
    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1664,6 +1653,7 @@ public:
          *@return (_firstpair.second > _secondpair.second)
          *@see TopologicalSort
          */
+
 #ifdef __HP_aCC
        static bool FinishLate(const pair<VID,int>,const pair<VID,int>); 
 #else 
@@ -1679,8 +1669,8 @@ public:
        ///Data structure for Dijkstra's algorithm
        class dkinfo {
        public:
-         dkinfo() {};
-         dkinfo(VID _vid, VID _pvid, double _d) {vid=_vid; predvid=_pvid; dist=_d;};
+         dkinfo() {}
+         dkinfo(VID _vid, VID _pvid, double _d) {vid=_vid; predvid=_pvid; dist=_d;}
          VID    vid;
          VID    predvid;
          double dist;
@@ -2240,7 +2230,7 @@ public:
     /**@name Constructors and Destructor*/
     //@{
         ///Default Constructor. Do nothing.
-        dfsinfo() {};
+        dfsinfo() {}
 
         /**Constructor with memory reservation.
           *@param _numVerts How many speaces are going to be reserved.
@@ -2257,7 +2247,7 @@ public:
                 vnode[i] = 0;    
                 finish_time[i] = 0;    
             }
-        };
+        }
 
      //@}
     
@@ -2303,19 +2293,19 @@ AbstractGraph<VERTEX>::
 AbstractGraph() {
     vertIDs=numVerts=numEdges=0;
     reserveEdgesPerVertex = 0;
-};
+}
 
 template<class VERTEX> 
 AbstractGraph<VERTEX>::
 AbstractGraph(int _reserveEdgesPerVertex) {
     vertIDs=numVerts=numEdges=0;
     reserveEdgesPerVertex = _reserveEdgesPerVertex;
-};
+}
 
 template<class VERTEX> 
 AbstractGraph<VERTEX>::
 ~AbstractGraph() {
-};
+}
 
 //==================================
 // AbstractGraph class Methods: Statistics -- num verts/edges, etc 
@@ -2326,21 +2316,21 @@ int
 AbstractGraph<VERTEX>:: 
 GetVertexCount() const {
     return numVerts;
-};
+}
 
 template<class VERTEX> 
 int 
 AbstractGraph<VERTEX>:: 
 GetEdgeCount() const {
     return numEdges;
-};
+}
 
 template<class VERTEX>
 VID
 AbstractGraph<VERTEX>::
 GetNextVID() const {
     return vertIDs;
-};
+}
 
 //==================================
 // AbstractGraph class Methods: Modify Data -- num verts/edges, etc 
@@ -2354,21 +2344,21 @@ void
 AbstractGraph<VERTEX>:: 
 SetStartID(VID _startvid) {
     vertIDs = _startvid;
-};
+}
 
 template<class VERTEX> 
 void 
 AbstractGraph<VERTEX>:: 
 SetnumVerts(int _num) {
     numVerts = _num;
-};
+}
 
 template<class VERTEX> 
 void 
 AbstractGraph<VERTEX>:: 
 SetnumEdges(int _num) {
     numEdges = _num;
-};
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -2390,13 +2380,13 @@ SetnumEdges(int _num) {
 template<class VERTEX,class WEIGHT> 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 WeightedMultiDiGraph(){
-};
+}
 
 template<class VERTEX,class WEIGHT> 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 WeightedMultiDiGraph(int _sz) {
     v.reserve(_sz);
-};
+}
 
 template<class VERTEX,class WEIGHT> 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
@@ -2404,12 +2394,12 @@ WeightedMultiDiGraph(int _sz, int _edgelistsz)
 : AbstractGraph<VERTEX> (_edgelistsz) 
 {
     v.reserve(_sz);
-};
+}
 
 template<class VERTEX, class WEIGHT> 
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
 ~WeightedMultiDiGraph(){
-};
+}
 
 
 //==================================
@@ -2425,7 +2415,7 @@ AddVertex(VERTEX& _v) {
     v.push_back(newVertex);
     this->numVerts++;
     return (vid); // return vertex id (not nec. index)
-};
+}
 
 template<class VERTEX, class WEIGHT>
 VID
@@ -2440,7 +2430,7 @@ AddVertex(vector<VERTEX>& _v) {
     }
     return INVALID_VID;
     
-};
+}
 
 template<class VERTEX, class WEIGHT> 
 VID 
@@ -2451,7 +2441,7 @@ AddVertex(VERTEX& _v, VID _vid) {
     v.push_back(newVertex);
     this->numVerts++;
     return (vid); // return vertex id (not nec. index)
-};
+}
 
 
 template<class VERTEX, class WEIGHT> 
@@ -2469,8 +2459,8 @@ DeleteVertex(VERTEX& _v1) {
     } else {
         cout << "\nDeleteVertex: vertex not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 int 
@@ -2487,8 +2477,8 @@ DeleteVertex(VID _v1id) {
     } else {
         cout << "\nDeleteVertex: vertex not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -2498,7 +2488,7 @@ EraseGraph() {
         v.pop_back();
     this->vertIDs = this->numVerts = this->numEdges = 0;
     return OK;
-};
+}
 
 
 //==================================
@@ -2517,7 +2507,7 @@ PutData(VID _vid, VERTEX _v){ // lkd: 7-7-99
         v1 = const_cast<VI>(cv1);
         v1->data = _v;
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void
@@ -2537,7 +2527,7 @@ SetPredecessors() {
             }
         }
     }
-};
+}
 
 //==================================
 // WeightedMultiDiGraph class Methods: Adding & Deleting Edges
@@ -2560,8 +2550,8 @@ AddEdge(VID _v1id, EI _ei) {
     } else {
         cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -2578,8 +2568,8 @@ AddEdge(VID _v1id, VID _v2id, WEIGHT _weight) {
     } else {
         cout << endl << "AddEdge: v1 " << _v1id << " and/or v2 " << _v2id << "not in graph" ;
         return ERROR;
-    };
-};
+    }
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -2598,8 +2588,8 @@ AddEdge(VID _v1id, VID _v2id, pair<WEIGHT,WEIGHT> _wtpair ) {
     } else {
         cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -2616,8 +2606,8 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight) {
     } else {
         cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -2635,8 +2625,8 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT> _wtpair) {
       } else {
          cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
          return ERROR;
-     };
-};
+     }
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -2651,8 +2641,8 @@ AddPredecessorEdge(VID _v1id, VID _v0id, WEIGHT _weight) {
      } else {
          cout << endl << "AddPredecessorEdge: v1 " << _v1id << " and/or v0 " << _v0id << "not in graph" ;
          return ERROR;
-     };
-};
+     }
+}
 
 
 
@@ -2744,7 +2734,7 @@ DeleteAllEdgesToV(VID _v2id) {
             this->numEdges -= vi->DeleteXEdges(_v2id,-1);
         }
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -2757,7 +2747,7 @@ DeleteAllEdgesFromV(VID _v1id) {
         this->numEdges -= v1->edgelist.size();
         v1->edgelist.erase( v1->edgelist.begin(), v1->edgelist.end() );
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -2765,7 +2755,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 DeleteAllEdges(VID _vid) {
     DeleteAllEdgesToV(_vid);
     DeleteAllEdgesFromV(_vid);
-};
+}
 
 // default: delete all edges (v1,v2), otherwise delete _n
 template<class VERTEX, class WEIGHT>
@@ -2780,8 +2770,8 @@ DeleteEdge(VID _v1id, VID _v2id, int _n) {
         return OK;
     } else {
         return ERROR;
-    };
-};
+    }
+}
 
 // default: delete all edges (v1,v2) of specified weight, otherwise delete _n
 template<class VERTEX, class WEIGHT>
@@ -2796,8 +2786,8 @@ DeleteWtEdge(VID _v1id, VID _v2id, WEIGHT _weight, int _n) {
         return OK;
     } else {
         return ERROR;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -2809,7 +2799,7 @@ DeleteAllEdgesToV(VERTEX& _v2) {
             this->numEdges -= vi->DeleteXEdges(v2->vid,-1);
         }
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -2822,7 +2812,7 @@ DeleteAllEdgesFromV(VERTEX& _v1) {
         this->numEdges -= v1->edgelist.size();
         v1->edgelist.erase( v1->edgelist.begin(), v1->edgelist.end() );
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -2830,7 +2820,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 DeleteAllEdges(VERTEX& _v) {
     DeleteAllEdgesToV(_v);
     DeleteAllEdgesFromV(_v);
-};
+}
 
 
 // default: delete all edges (v1,v2), otherwise delete _n
@@ -2847,8 +2837,8 @@ DeleteEdge(VERTEX& _v1, VERTEX& _v2, int _n) {
         return OK;
     } else {
         return ERROR;
-    };
-};
+    }
+}
 
 
 // default: delete all edges (v1,v2) of specified weight, otherwise delete _n
@@ -2865,8 +2855,8 @@ DeleteWtEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight, int _n) {
         return OK;
     } else {
         return ERROR;
-    };
-};
+    }
+}
 
 
 //==================================
@@ -2879,7 +2869,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 IsVertex(VID _v1id) const {
     CVI v1;
     return ( IsVertex(_v1id,&v1) );
-};
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -2893,7 +2883,7 @@ IsVertex(VID _v1id, const Vertex**  _v1ptr) const {
     } else {
         return false;
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -2901,7 +2891,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 IsVertex(VERTEX& _v1) const {
     CVI v1;
     return ( IsVertex(_v1,&v1) );
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -2915,8 +2905,8 @@ IsVertex(VERTEX& _v1, const Vertex**  _v1ptr) const {
         return true;
     } else {
         return false;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -2925,7 +2915,7 @@ IsEdge(VID _v1id, VID _v2id) const {
     CVI v1;
     CEI e12;
     return ( IsEdge(_v1id,_v2id,&v1,&e12) );
-};
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -2934,7 +2924,7 @@ IsEdge(VID _v1id, VID _v2id, WEIGHT _weight) const {
     CVI v1;
     CEI e12;
     return ( IsEdge(_v1id,_v2id,_weight,&v1,&e12) );
-};
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -2952,8 +2942,8 @@ IsEdge(VID _v1id, VID _v2id, const Vertex** _v1ptr, const WtEdge** _e12ptr) cons
         }
     } else {
         return false;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -2971,8 +2961,8 @@ IsEdge(VID _v1id, VID _v2id, WEIGHT _weight, const Vertex** _v1ptr, const WtEdge
         }
     } else {
         return false;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -2981,7 +2971,7 @@ IsEdge(VERTEX& _v1, VERTEX& _v2) const {
     CVI v1;
     CEI e12;
     return ( IsEdge(_v1,_v2,&v1,&e12) );
-};
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -2990,7 +2980,7 @@ IsEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight) const {
     CVI v1;
     CEI e12;
     return ( IsEdge(_v1,_v2,_weight,&v1,&e12) );
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3009,8 +2999,8 @@ IsEdge(VERTEX& _v1, VERTEX& _v2, const Vertex** _v1ptr, const WtEdge** _e12ptr) 
         }
     } else {
         return false;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -3028,8 +3018,8 @@ IsEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight, const Vertex** _v1ptr, const Wt
         }
     } else {
         return false;
-    };
-};
+    }
+}
 
 //==================================
 // WeightedMultiDiGraph class Methods: Getting Data & Statistics
@@ -3046,7 +3036,7 @@ GetVerticesVID() const {
     }
     sort( verts.begin(),verts.end() );
     return verts;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VID>
@@ -3065,7 +3055,7 @@ GetVerticesVID(VID _vid, int _n) const {
     }
     sort( verts.begin(),verts.end() );
     return verts;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VERTEX> 
@@ -3077,7 +3067,7 @@ GetVerticesData() const {
         verts.push_back(vi->data);
     }
     return verts;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VERTEX>
@@ -3095,7 +3085,7 @@ GetVerticesData(VID _vid, int _n) const {
         cout << "\nIn GetVerticesData(VID,int): no vertex VID=" << _vid << " in graph\n";
     }
     return verts;
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3113,7 +3103,7 @@ GetEdges() const {
         }
     }
     return edges;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector< pair< pair<VERTEX,VERTEX>, WEIGHT> >
@@ -3131,7 +3121,7 @@ GetEdgesVData() const {
         }
     }
     return edges;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 VERTEX
@@ -3143,7 +3133,7 @@ GetData(VID _v1id) const {
     } else {
         return VERTEX::InvalidData(); 
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 VERTEX*
@@ -3156,7 +3146,7 @@ GetReferenceofData(VID _v1id) {
 //	VERTEX vv = VERTEX::InvalidData();
         return NULL; 
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VERTEX>
@@ -3174,7 +3164,7 @@ GetData(VID _v1id, VID _v2id) const {
     } else {
         return vset; //in this case return an empty vector
     }
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3187,7 +3177,7 @@ GetVID(VERTEX& _v1) const {
     } else {
         return INVALID_VID;
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -3199,7 +3189,7 @@ GetVertexOutDegree(VID _v1) const {
     } else {
         return ERROR;
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VID>
@@ -3214,9 +3204,9 @@ GetSuccessors(VID _v1id) const {
         }
     } else {
         cout << "\nGetSuccessors: vertex "<< _v1id << " not in graph";
-    };
+    }
     return succ;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VERTEX>
@@ -3232,15 +3222,15 @@ GetSuccessorsDATA(VID _v1id) const {
          }
      } else {
          cout << "\nGetSuccessors: vertex "<< _v1id << " not in graph";
-     };
+     }
      return succ;
-};
+}
 template<class VERTEX, class WEIGHT>
 vector<VID>
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 GetSuccessors(VERTEX& _v1) const {
   return GetSuccessors( GetVID(_v1) );
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3248,7 +3238,7 @@ vector<VERTEX>
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 GetSuccessorsDATA(VERTEX& _v1) const {
   return GetSuccessorsDATA( GetVID(_v1) );
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3265,9 +3255,9 @@ GetPredecessors(VID _v1id) const {
          }
      } else {
          cout << "\nGetPredecessors: vertex "<< _v1id << " not in graph";
-     };
+     }
      return pred;
-};
+}
 template<class VERTEX, class WEIGHT>
 vector<VERTEX>
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
@@ -3283,22 +3273,22 @@ GetPredecessorsDATA(VID _v1id) const {
          }
      } else {
          cout << "\nGetPredecessors: vertex "<< _v1id << " not in graph";
-     };
+     }
      return pred;
-};
+}
 template<class VERTEX, class WEIGHT>
 vector<VID>
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 GetPredecessors(VERTEX& _v1) const {
   return GetPredecessors( GetVID(_v1) );
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VERTEX>
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 GetPredecessorsDATA(VERTEX& _v1) const {
   return GetPredecessorsDATA( GetVID(_v1) );
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VID>
@@ -3312,7 +3302,7 @@ GetSources() const {
         if(v1->predecessors.empty()) sourcevids.push_back(v1->vid);
     }
     return sourcevids;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WEIGHT 
@@ -3325,7 +3315,7 @@ GetEdgeWeight(VID _v1id, VID _v2id) const {
     } else {
         return WEIGHT::InvalidWeight();
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WEIGHT 
@@ -3333,7 +3323,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 GetEdgeWeight(VERTEX& _v1, VERTEX& _v2) const {
     
     return GetEdgeWeight( GetVID(_v1), GetVID(_v2) );
-};
+}
 
 //==================================
 // WeightedMultiDiGraph class Methods: Basic Graph Algorithms
@@ -3355,7 +3345,7 @@ BFS (VERTEX& _startV) const {
         WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree;
         return bfstree; 
     }
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3399,7 +3389,7 @@ BFS (VID _startVid) const {
     }
     bfstree.vertIDs = this->vertIDs; // set the same vert ID as in graph
     return bfstree;
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3408,7 +3398,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 BFSVID (VERTEX& _startV) const {
     WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_startV); 
     return bfstree.GetVerticesVID();
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VID>
@@ -3416,7 +3406,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 BFSVID (VID _startVID) const {
     WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_startVID); 
     return bfstree.GetVerticesVID();
-};
+}
 
 
 //*************************************************************** 
@@ -3434,7 +3424,7 @@ DFS (VERTEX& _startV) const {
         WeightedMultiDiGraph<VERTEX,WEIGHT> dfstree;
         return dfstree; 
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WeightedMultiDiGraph<VERTEX,WEIGHT>
@@ -3444,7 +3434,7 @@ DFS (VID & vid) const {
  
   dfsinfo dfs(this->GetVertexCount());
   return true_DFS(vid, dfs);
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VID>
@@ -3452,7 +3442,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 DFSVID (VERTEX& _startV) const {
     WeightedMultiDiGraph<VERTEX,WEIGHT> dfstree = DFS(_startV); 
     return dfstree.GetVerticesVID();
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VID>
@@ -3460,7 +3450,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 DFSVID (VID& _startVID) const {
     WeightedMultiDiGraph<VERTEX,WEIGHT> dfstree = DFS(_startVID); 
     return dfstree.GetVerticesVID();
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<WeightedMultiDiGraph<VERTEX,WEIGHT> >
@@ -3478,7 +3468,7 @@ DFS () const {
             dfstree_vector.push_back(true_DFS(vid, dfs));
     }
     return dfstree_vector;
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3489,7 +3479,7 @@ IsCycle () const {
     aux_DFS(dfs);
     if( dfs.backedge_vector.empty() ) return false;
     else return true;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector< pair<VID,VID> >
@@ -3498,7 +3488,7 @@ GetBackedge() const {
     dfsinfo dfs(this->GetVertexCount());
     aux_DFS(dfs);
     return dfs.backedge_vector;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VID>
@@ -3514,7 +3504,7 @@ TopologicalSort () const {
     dfsinfo dfs(n);
     aux_DFS(dfs);
     
-    for(i=0;i<n;i++) {
+    for(i=1;i<=n;i++) {
         pair<VID,int> newpair(i,dfs.finish_time[i]);
         tmp.push_back(newpair);
     }   
@@ -3523,26 +3513,25 @@ TopologicalSort () const {
     
     for(i=0; i<n;i++) {
         tps.push_back(tmp[i].first);
-    }
 #if DEBUG
-    cout<<"\nTopological Sort results: "<<endl;
-    for(i=0; i<n;i++) {
+	cout<<"\nTopological Sort results: "<<endl;
         cout<<tmp[i].first<<" ";
-    }
 #endif
+    }
     return tps;            
-};
+}
 
 template<class VERTEX, class WEIGHT>
 bool
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
+
 #ifdef __HP_aCC
 FinishLate(const pair<VID,int> _x, const pair<VID,int> _y) {
 #else 
 FinishLate(const pair<VID,int>& _x, const pair<VID,int>& _y) {
 #endif
     return _x.second > _y.second;
-}; 
+} 
 
 template<class VERTEX, class WEIGHT>
 void
@@ -3562,7 +3551,7 @@ aux_DFS (dfsinfo& dfs) const {
         true_DFS(vid, dfs);
   }
 
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WeightedMultiDiGraph<VERTEX,WEIGHT>
@@ -3620,7 +3609,7 @@ true_DFS (VID & vid, dfsinfo & dfs) const {
     }
     //dfstree.DisplayGraph();
     return dfstree;
-};
+}
 
 //==============================
 //  FindPathBFS (for any graph)
@@ -3640,7 +3629,7 @@ FindPathBFS (VERTEX& _startV, VERTEX& _endV) const {
         vector< pair<VERTEX,WEIGHT> > path;
         return path; 
     }
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3701,7 +3690,7 @@ FindPathBFS (VID _startVid, VID _endVid) const {
      }
   }
   return path;
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -3762,7 +3751,7 @@ FindVIDPathBFS (VID _startVid, VID _endVid) const {
      }
   }
   return path;
-};
+}
 
 //*************************************************************** 
 //  DIJKSTRA'S ALGORITHM
@@ -3770,13 +3759,14 @@ FindVIDPathBFS (VID _startVid, VID _endVid) const {
 template<class VERTEX, class WEIGHT>
 bool 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
+
 #ifdef __HP_aCC
 dkinfo_Compare ( const dkinfo _d1, const dkinfo _d2) {
 #else 
 dkinfo_Compare ( const dkinfo& _d1, const dkinfo& _d2) {
 #endif
     return ( _d1.dist > _d2.dist );
-};
+}
 
 ///////////////////////////////////////////////////////////////////////
 // Dijkstra's Algorithm (follows CLR)
@@ -3825,7 +3815,7 @@ DijkstraSSSP(VID _startVid) const {
             sssptree.AddVertex( tmp );
             VERTEX tmp1 = GetData(u.predvid);
             sssptree.AddEdge( tmp1, tmp, u.dist);
-        }; 
+        } 
         pq.pop_back();
         
         // check all u's successors 
@@ -3902,7 +3892,7 @@ FindPathDijkstra (VERTEX& _startV, VERTEX& _endV) const {
         vector< pair<VERTEX,WEIGHT> > path;
         return path;
     }
-};
+}
 
 
 //==================================
@@ -3922,7 +3912,7 @@ DisplayGraph() const {
           vi->DisplayEdgelist();
           cout<<endl;
       }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void
@@ -3931,7 +3921,7 @@ DisplayVertices() const {
     for (CVI vi = v.begin(); vi != v.end(); vi++) {
         DisplayVertex(vi->vid); 
     } 
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void
@@ -3945,7 +3935,7 @@ DisplayVertex(VID _v1id) const {
     } else {
         cout << "vertex with id=" << _v1id << " not in graph.";
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -3958,7 +3948,7 @@ DisplayVertexAndEdgelist(VID _v1id) const{
     } else {
         cout << "vertex with id=" << _v1id << " not in graph.";
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -3971,7 +3961,7 @@ WriteGraph(const char* _fname) const {
     }
     WriteGraph(myofstream);
     myofstream.close();
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -3991,7 +3981,7 @@ WriteGraph(ostream& _myostream) const {
       _myostream << endl << "#####GRAPHSTOP#####";
       //_myostream << endl << "GRAPHSTOP";
       _myostream << endl; 
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -4006,7 +3996,7 @@ ReadGraph(const char*  _fname) {
     }
     ReadGraph(myifstream);
     myifstream.close();
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -4057,7 +4047,7 @@ ReadGraph(istream& _myistream) {
          cout << endl << "In ReadGraph: didn't read GRAPHSTOP tag right";
          return;
       }
-};
+}
 template<class VERTEX, class WEIGHT>
 void 
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
@@ -4070,7 +4060,7 @@ ReadGraphwithAutoVID(const char*  _fname) {
       }
       ReadGraphwithAutoVID(myifstream);
       myifstream.close();
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -4122,7 +4112,7 @@ ReadGraphwithAutoVID(istream& _myistream) {
          cout << endl << "In ReadGraph: didn't read GRAPHSTOP tag right";
          return;
       }
-};
+}
   //==================================
   // WeightedMultiDiGraph class Predicates, Comparisons & Operations
   //==================================
@@ -4185,13 +4175,14 @@ my_find_VDATA_eq(const VERTEX& _v) const {
 template<class VERTEX, class WEIGHT>
 bool 
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
+
 #ifdef __HP_aCC
 VID_Compare (const Vertex _v1, const Vertex _v2){
 #else 
 VID_Compare (const Vertex& _v1, const Vertex& _v2){
 #endif
     return (_v1.vid < _v2.vid ) ; 
-};
+}
 
 
 /*-------------- don't work with sgi/CC, work with sun/g++ -----------------
@@ -4203,11 +4194,11 @@ public:
 explicit VID_eq(const VID vid) : testid (vid) {}
 bool operator() (Vertex v) {
 return v.vid == testid;
-};
+}
 protected:
 private:
 VID testid;
-};
+}
 
   template<class VERTEX, class WEIGHT>
   class
@@ -4217,11 +4208,11 @@ VID testid;
   explicit VDATA_eq(const VERTEX vt) : testdata (vt) {}
   bool operator() (Vertex v) {
   return v.data == testdata;
-  };
+  }
   protected:
   private:
   VERTEX testdata;
-  };
+  }
   
     template<class VERTEX, class WEIGHT>
     class 
@@ -4229,10 +4220,10 @@ VID testid;
     VID_Compare {
     public:
     int operator() (const Vertex & _v1, const Vertex & _v2) const 
-    { return (_v1.GetVID() < _v2.GetVID() ); };
+    { return (_v1.GetVID() < _v2.GetVID() ); }
     protected:
     private:
-    };
+    }
     
 --------------------------------------------------------------------------*/
 
@@ -4255,26 +4246,26 @@ VID testid;
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::
 WeightedGraph(){
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::
 WeightedGraph(int _sz)
 : WeightedMultiDiGraph<VERTEX,WEIGHT>(_sz) 
 {
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::
 WeightedGraph(int _sz, int _edgelistsz)
 : WeightedMultiDiGraph<VERTEX,WEIGHT>(_sz,_edgelistsz) 
 {
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::
 ~WeightedGraph(){
-};
+}
 //==================================
 // WeightedGraph class Methods: Adding & Deleting Vertices
 //==================================
@@ -4306,8 +4297,8 @@ AddEdge(VID _v1id, VID _v2id, WEIGHT _weight) {
     } else {
         cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -4332,8 +4323,8 @@ AddEdge(VID _v1id, VID _v2id, pair<WEIGHT,WEIGHT> _wtpair ) {
     } else {
         cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -4359,8 +4350,8 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight) {
     } else {
         cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -4385,8 +4376,8 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT> _wtpair) {
     } else {
         cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 
 
@@ -4416,8 +4407,8 @@ AddEdge(VID _v1id, EI _ei) {
     } else {
         cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -4438,7 +4429,7 @@ DeleteEdge(VID _v1id, VID _v2id, int _n) {
         } 
     }
     return ERROR;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -4458,7 +4449,7 @@ DeleteWtEdge(VID _v1id, VID _v2id, WEIGHT _w, int _n) {
         } 
     }
     return ERROR;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -4478,7 +4469,7 @@ DeleteEdge(VERTEX& _v1, VERTEX& _v2, int _n) {
         }
     }
     return ERROR;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -4498,7 +4489,7 @@ DeleteWtEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _w, int _n) {
         }
     }
     return ERROR;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -4510,7 +4501,7 @@ ChangeEdgeWeight(VID _v1id, VID _v2id, WEIGHT _weight) {
     } else {
         return ERROR;
     }  
-};
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -4522,7 +4513,7 @@ ChangeEdgeWeight(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight) {
     } else {
         return ERROR;
     }  
-};
+}
 
 
 //==================================
@@ -4548,7 +4539,7 @@ GetEdges() const {
         }
     }
     return edges;
-};
+}
 
 // only report each edge once
 template<class VERTEX, class WEIGHT>
@@ -4569,7 +4560,7 @@ GetEdgesVData() const {
         }
     }
     return edges;
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
@@ -4582,15 +4573,15 @@ GetVertexDegree(VID _v1id) const {
     } else {
         cout << "\nGetVertexDegree: vertex "<< _v1id << " not in graph";
         return ERROR;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VID>
 WeightedGraph<VERTEX,WEIGHT>::
 GetAdjacentVertices(VID _v1id) const {
     return this->GetSuccessors(_v1id);
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector< pair<pair<VID,VID>,WEIGHT> >
@@ -4607,9 +4598,9 @@ GetIncidentEdges(VID _v1id) const {
         }
     } else {
         cout << "\nGetIncidentEdges: vertex "<< _v1id << " not in graph";
-    };
+    }
     return iedges;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector< pair<pair<VERTEX,VERTEX>,WEIGHT> >
@@ -4627,9 +4618,9 @@ GetIncidentEdgesVData(VID _v1id) const {
         }
     } else {
         cout << "\nGetIncidentEdgesVData: vertex "<< _v1id << " not in graph";
-    };
+    }
     return iedges;
-};
+}
 
 
 //==================================
@@ -4647,8 +4638,8 @@ IsSameCC (VID _v1id, VID _v2id) const {
         return true;
     } else {
         return false;
-    };
-};
+    }
+}
 
 template<class VERTEX, class WEIGHT>
 bool
@@ -4662,7 +4653,7 @@ IsSameCC (VERTEX& _v1, VERTEX& _v2) const {
     } else {
         return false;
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 vector<VID> 
@@ -4783,7 +4774,7 @@ GetCCStats () const {
 #endif
     
     return ccstats;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 int
@@ -4791,7 +4782,7 @@ WeightedGraph<VERTEX,WEIGHT>::
 GetCCcount () const {
     vector< pair<int,VID> > ccstats = GetCCStats();
     return ccstats.size();
-};
+}
 
 
 //==================================
@@ -4813,7 +4804,7 @@ DisplayCC ( VID _v1id) const {
         if (vi != ccverts.end() -1 ) cout << ", ";
     }
     cout << "}\n";
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void
@@ -4831,7 +4822,7 @@ DisplayEdgesByCCVDataOnly() const {
         }
     }
     
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void
@@ -4859,7 +4850,7 @@ DisplayCCStats(int _maxCCprint) const {
         ccnum++;
         if (ccnum > maxCCprint) return; 
     }
-};
+}
 
 //==================================
 // WeightedGraph class Predicates, Comparisons & Operations
@@ -4873,7 +4864,7 @@ WeightedGraph<VERTEX,WEIGHT>::CCVID_Compare(const pair<int,VID>& _cc1, const pai
 #endif
 {
     return (_cc1.first > _cc2.first ) ;
-};
+}
 
 
 //================================
@@ -4906,7 +4897,7 @@ DagToUndirected(WeightedMultiDiGraph<VERTEX, WEIGHT>& _dag) {
     
     ung.SetnumVerts( _dag.GetVertexCount() );
     return ung;
-};
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -4927,14 +4918,14 @@ DagToUndirected(WeightedMultiDiGraph<VERTEX, WEIGHT>& _dag) {
 template<class VERTEX, class WEIGHT>
 WtVertexType<VERTEX,WEIGHT>:: 
 WtVertexType(){
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WtVertexType<VERTEX,WEIGHT>:: 
 WtVertexType(VERTEX& _data, VID _id){
     data = _data;
     vid = _id;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WtVertexType<VERTEX,WEIGHT>:: 
@@ -4942,13 +4933,13 @@ WtVertexType(VERTEX& _data, VID _id, int _edgelistsz){
     data = _data;
     vid = _id;
     edgelist.reserve( _edgelistsz );
-};
+}
 
 
 template<class VERTEX, class WEIGHT>
 WtVertexType<VERTEX,WEIGHT>:: 
 ~WtVertexType(){
-};
+}
 
 //==================================
 // Vertex class Methods: Adding & Deleting Edges
@@ -4960,7 +4951,7 @@ WtVertexType<VERTEX,WEIGHT>::
 AddEdge(VID _v2id, WEIGHT _weight) {
      WtEdge newEdge(_v2id, _weight);
      edgelist.push_back(newEdge);
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -4975,7 +4966,7 @@ AddEdgewCheck(VID _v2id, WEIGHT _weight) {
      edgelist.push_back(newEdge);
   }
 
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -4983,7 +4974,7 @@ WtVertexType<VERTEX,WEIGHT>::
 AddPredecessorEdge(VID _v0id, WEIGHT _weight) {
      WtEdge newEdge(_v0id, _weight);
      predecessors.push_back(newEdge);
-};
+}
 
 
 //delete upto _x edges (v1,v2) of any weight (delete first encountered)
@@ -5003,7 +4994,7 @@ DeleteXEdges(VID _v2id, int _x) {
         ei = my_find_EID2_eq(ei,edgelist.end(),_v2id);
     }
     return num_deleted;
-};
+}
 
 //delete upto _x edges (v1,v2) of specified weight (delete first encountered) 
 template<class VERTEX, class WEIGHT>
@@ -5026,7 +5017,7 @@ DeleteXEdges(VID _v2id, WEIGHT _weight, int _x) {
         }
     }
     return num_deleted;
-};
+}
 
 
 //==================================
@@ -5039,7 +5030,7 @@ WtVertexType<VERTEX,WEIGHT>::
 IsEdge(VID _v2id) const {
     EI ei;
     return ( IsEdge(_v2id, &ei) );
-};
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -5052,7 +5043,7 @@ IsEdge(VID _v2id, const WtEdge** _ei) const {
     } else {
         return false;
     }
-};
+}
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -5065,7 +5056,7 @@ IsEdge(VID _v2id, WEIGHT _weight, const WtEdge** _ei) const {
     } else {
         return false;
     }
-};
+}
 
 //==================================
 // Vertex class Methods: Getting Data & Statistics 
@@ -5076,21 +5067,21 @@ VERTEX
 WtVertexType<VERTEX,WEIGHT>::
 GetData() const {
     return data;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 int 
 WtVertexType<VERTEX,WEIGHT>::
 GetVID() const {
     return vid;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 int 
 WtVertexType<VERTEX,WEIGHT>::
 GetEdgeCount() const {
     return edgelist.size();
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WEIGHT 
@@ -5104,8 +5095,8 @@ GetEdgeWeight(VID _v2id) const {
     } else {
         cout << "\nGetEdgeWeight: edge not in graph";
         return WEIGHT::InvalidWeight();
-    };
-};
+    }
+}
 
 //==================================
 // Vertex class Methods: Display, Input, Output 
@@ -5123,7 +5114,7 @@ DisplayEdgelist() const {
         if (ei != edgelist.end() - 1) cout << ", ";
     }
     cout << "} \n";
-};
+}
 
 template<class VERTEX, class WEIGHT>
 void
@@ -5138,7 +5129,7 @@ WriteEdgelist(ostream& _myostream) const {
         ei->WriteEdge(_myostream);
         _myostream << " "; 
     }
-};
+}
 
 //==================================
 // Vertex class Predicate Utilities
@@ -5158,7 +5149,7 @@ my_find_EID1_eq(const EID _eid) const {
         }
     }
     return const_cast<WtEdgeType<VERTEX,WEIGHT>*>(ei);
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WtEdgeType<VERTEX,WEIGHT>*
@@ -5176,7 +5167,7 @@ my_find_EID2_eq(const WtEdgeType<VERTEX,WEIGHT>* _start,
         }
     }
     return const_cast<WtEdgeType<VERTEX,WEIGHT>*>(ei);
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WtEdgeType<VERTEX,WEIGHT>*
@@ -5192,7 +5183,7 @@ my_find_EWT_eq(const WEIGHT _wt) const {
         }
     }
     return const_cast<WtEdgeType<VERTEX,WEIGHT>*>(ei);
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WtEdgeType<VERTEX,WEIGHT>*
@@ -5210,7 +5201,7 @@ my_find_EIDWT_eq(const pair<VID,WEIGHT> _wtpair) const {
       }
    }
    return const_cast<WtEdgeType<VERTEX,WEIGHT>*>(ei);
-};
+}
 
 
 /*--------------- NMA: these don't work with sgi/CC, but do for sun/g++
@@ -5222,11 +5213,11 @@ public:
 explicit EID_eq(const VID i) : testid (i) {}
 bool operator() (WtEdgeType<VERTEX,WEIGHT> e) {
 return e.vertex2id == testid;
-};
+}
 VID testid;
 protected:
 private:
-};
+}
 
   
     template<class VERTEX, class WEIGHT>
@@ -5237,11 +5228,11 @@ private:
     explicit EWT_eq(const WEIGHT w) : testwt (w) {}
     bool operator() (WtEdgeType<VERTEX,WEIGHT> e) {
     return e.weight == testwt;
-    };
+    }
     WEIGHT testwt;
     protected:
     private:
-    };
+    }
     
       template<class VERTEX, class WEIGHT>
       class 
@@ -5251,11 +5242,11 @@ private:
       explicit EIDWT_eq(const pair<VID,WEIGHT> eid) : testedge (eid) {}
       bool operator() (WtEdgeType<VERTEX,WEIGHT> e) {
       return ((e.vertex2id==testedge.first) && (e.weight == testedge.second));
-      };
+      }
       pair<VID,WEIGHT> testedge;
       protected:
       private:
-      };
+      }
 */
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -5277,19 +5268,19 @@ private:
 template<class VERTEX, class WEIGHT>
 WtEdgeType<VERTEX,WEIGHT>:: 
 WtEdgeType(){
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WtEdgeType<VERTEX,WEIGHT>:: 
 WtEdgeType(VID _v2id, WEIGHT _weight){
     vertex2id = _v2id;
     weight = _weight;
-};
+}
 
 template<class VERTEX, class WEIGHT>
 WtEdgeType<VERTEX,WEIGHT>:: 
 ~WtEdgeType(){
-};
+}
 
 //==================================
 // WtEdge class Methods: Getting Data & Statistics
@@ -5304,14 +5295,14 @@ void
 WtEdgeType<VERTEX,WEIGHT>:: 
 DisplayEdge() const {
     cout << vertex2id << "(" << weight << ")";
-}; 
+} 
 
 template<class VERTEX, class WEIGHT>
 void
 WtEdgeType<VERTEX,WEIGHT>::
 WriteEdge(ostream& _myostream) const {
     _myostream << vertex2id << " " << weight << " ";
-};
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //

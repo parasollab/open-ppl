@@ -116,7 +116,7 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
   sci.dmsetid = gci.dmsetid = dmsetid;
 
 
-  vector< pair<int,VID> > ccs = rdmp.roadmap.GetCCStats();  
+  vector< pair<int,VID> > ccs = rdmp.m_pRoadmap->GetCCStats();  
 
   bool connected = false;
   int  i, thiscc = 0;
@@ -125,8 +125,8 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
   while ( !connected && thiscc < ccs.size() ) {
 
     //get cc
-    Cfg t=rdmp.roadmap.GetData(ccs[thiscc].second);
-    vector<Cfg> cc = rdmp.roadmap.GetCC(t);
+    Cfg t=rdmp.m_pRoadmap->GetData(ccs[thiscc].second);
+    vector<Cfg> cc = rdmp.m_pRoadmap->GetCC(t);
 
     //connect start and goal to cc
     if ( CanConnectToCC(_start,cd,cn,lp,dm,cc,_lpsid,&scvid,&sci) && 
@@ -161,7 +161,7 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
        if ( scvid != gcvid ) {
 
           vector< pair<Cfg,WEIGHT> > rp;
-      rp = rdmp.roadmap.FindPathDijkstra(scvid,gcvid);
+      rp = rdmp.m_pRoadmap->FindPathDijkstra(scvid,gcvid);
 
       #if INTERMEDIATE_FILES
           //-----------------------------------------------------
@@ -202,10 +202,10 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
   if(connected) {
      // add start and goal to the roadmap
      // to extend current roadmap if successful query.
-     rdmp.roadmap.AddVertex(_start);
-     rdmp.roadmap.AddVertex(_goal);
-     rdmp.roadmap.AddEdge(rdmp.roadmap.GetVID(_start), scvid, sci.edge);
-     rdmp.roadmap.AddEdge(rdmp.roadmap.GetVID(_goal), gcvid, gci.edge);
+     rdmp.m_pRoadmap->AddVertex(_start);
+     rdmp.m_pRoadmap->AddVertex(_goal);
+     rdmp.m_pRoadmap->AddEdge(rdmp.m_pRoadmap->GetVID(_start), scvid, sci.edge);
+     rdmp.m_pRoadmap->AddEdge(rdmp.m_pRoadmap->GetVID(_goal), gcvid, gci.edge);
   }
 
   return connected;
@@ -229,7 +229,7 @@ CanConnectToCC(Cfg _cfg, CollisionDetection *cd,
    // (now try all, later only k closest)
    for (int i=0; i < _cc.size(); i++ ) {
       if ( lp->IsConnected(&rdmp,cd, dm,_cfg,_cc[i],_lpsid,_ci) ) {
-          *_vid = rdmp.roadmap.GetVID(_cc[i]);
+          *_vid = rdmp.m_pRoadmap->GetVID(_cc[i]);
           return true;
       } else {
           // clear out previous (ie, "old") connection attempt

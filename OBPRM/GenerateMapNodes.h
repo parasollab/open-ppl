@@ -127,6 +127,13 @@ struct GNInfo {
       */
     int calcClearance;
 
+    /**Will or won't generated penetration information
+      *for Cfgs in nodes.
+      *The calculated Cfg penetration will put in InfoCfg::clearance.
+      *@see Cfg::info
+      */
+    int calcPenetration;
+
     /**Will or won't generated Cfgs add to Roadmap graph.
       *If True, GenerateMapNodes::GenerateNodes
       *will add generated free Cfgs to roadmap graph.

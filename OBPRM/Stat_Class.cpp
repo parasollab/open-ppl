@@ -462,8 +462,8 @@ PrintAllStats( Roadmap *rmap, int numCCs) {
   }
 
   cout << endl << endl;
-  cout << "Number of Nodes: " << rmap->roadmap.GetVertexCount() << endl;
-  cout << "Number of Edges: " << rmap->roadmap.GetEdgeCount() << endl;
+  cout << "Number of Nodes: " << rmap->m_pRoadmap->GetVertexCount() << endl;
+  cout << "Number of Edges: " << rmap->m_pRoadmap->GetEdgeCount() << endl;
 
   cout << "Number of Collision Detection Calls: " << endl;
   for(i=0;i<MaxCD;i++)
@@ -477,9 +477,9 @@ PrintAllStats( Roadmap *rmap, int numCCs) {
 
   cout << endl;
 
-  if (numCCs==ALL)    {rmap->roadmap.DisplayCCStats();      }
-  else if (numCCs==0) {rmap->roadmap.DisplayCCStats(0);     }
-  else                {rmap->roadmap.DisplayCCStats(numCCs);}
+  if (numCCs==ALL)    {rmap->m_pRoadmap->DisplayCCStats();      }
+  else if (numCCs==0) {rmap->m_pRoadmap->DisplayCCStats(0);     }
+  else                {rmap->m_pRoadmap->DisplayCCStats(numCCs);}
 
 }
 
@@ -492,10 +492,10 @@ PrintDataLine(ostream& _myostream, Roadmap *rmap, int show_column_headers) {
         _myostream <<"\nV  E #CC 1 2 3 4 5 6 7 8 9 10 #iso CD  LPattSum LPcdSum\n";
    }//endif
 
-   _myostream << rmap->roadmap.GetVertexCount() << " ";
-   _myostream << rmap->roadmap.GetEdgeCount()   << " ";
+   _myostream << rmap->m_pRoadmap->GetVertexCount() << " ";
+   _myostream << rmap->m_pRoadmap->GetEdgeCount()   << " ";
 
-   vector< pair<int,VID> > ccstats = rmap->roadmap.GetCCStats();
+   vector< pair<int,VID> > ccstats = rmap->m_pRoadmap->GetCCStats();
    _myostream << ccstats.size() << "  ";
    int i;
    for (i=0;i<10;++i)

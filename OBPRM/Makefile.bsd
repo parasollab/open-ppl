@@ -137,7 +137,8 @@ OBJS = \
 	ConnectMapNodes.o \
 	Roadmap.o \
 	QueryCmds.o \
-	Query.o 
+	Query.o \
+	Weight.o
 
 objs:: $(OBJS)
 

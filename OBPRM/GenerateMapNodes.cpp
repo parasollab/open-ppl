@@ -108,6 +108,7 @@ UserInit(Input * input, Environment *_env)
     gnInfo.collPair = input->collPair;
     gnInfo.freePair = input->freePair;
     gnInfo.calcClearance = input->calcClearance.GetValue();
+	gnInfo.calcPenetration = !(input->calcPenetration.GetValue()==0);
     gnInfo.addNodes2Map = true;
     gnInfo.tag = InfoCfg::NULL_INFO;
 };
@@ -124,6 +125,13 @@ void
 GenerateMapNodes::
 GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnsetid, GNInfo &info) {
 	
+	vector< pair<EID,GN> > haha=generators.GetElements();
+
+	for(int iE=0; iE<haha.size(); iE++ )
+	{
+		cout<<"GN "<<haha[iE].second<<endl;
+	}
+
 	vector<GN> gnset = generators.GetGNSet(_gnsetid);
 	
 	// clear generated nodes space
@@ -150,10 +158,12 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
 	if (info.calcClearance) {
 		// go through info.nodes and calculate their clearances...
 		//cout << "Calculating Clearances...\n";
+		cout<<info.nodes.size()<<endl;
 		for (int i=0; i < info.nodes.size(); i++) {
 			info.nodes[i].info.clearance = 
 				info.nodes[i].ApproxCSpaceClearance
-				(_rm->environment, cd, info.cdsetid, info.cdInfo, dm, info.dmsetid, info.calcClearance);
+				(_rm->environment, cd, info.cdsetid, info.cdInfo, dm, 
+				 info.dmsetid, info.calcClearance, info.calcPenetration);
 		}
 	} 
 	
@@ -166,7 +176,7 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
 		
 		
 		// then add generated nodes
-		_rm->roadmap.AddVertex(info.nodes); //add node to graph
+		_rm->m_pRoadmap->AddVertex(info.nodes); //add node to graph
 	}
 	
 };

@@ -6,7 +6,7 @@
 //   General Description
 //      This is the main OBPRM class which contains data and methods
 //      to manipulate the environment with specified moving bodies
-//      (ie, robot(s)) and the corresponding roadmap.
+//      (ie, robot(s)) and the corresponding m_pRoadmap->
 //
 //      This file contains the definitions for the prototypes declared
 //      in the file "Roadmap.h".
@@ -27,7 +27,8 @@
 //===================================================================
 Roadmap::
 Roadmap(){
-};
+	m_pRoadmap = new RoadmapGraph<Cfg,WEIGHT>;
+}
 
 Roadmap::
 Roadmap(Input *input,
@@ -36,13 +37,18 @@ Roadmap(Input *input,
 		LocalPlanners *lp,
 		Environment * env)
 {
+	m_pRoadmap = new RoadmapGraph<Cfg,WEIGHT>;
+
     InitRoadmap(input,cd,dm,lp,NULL,env); 
     RoadmapVersionNumber = RDMPVER_CURRENT;
-};
+}
 
 Roadmap::
 ~Roadmap(){
-};
+	if( m_pRoadmap != NULL )
+		delete m_pRoadmap;
+	m_pRoadmap = NULL;
+}
 
 //////////////////////////////////////////////////////////////////////
 //  Initialize roadmap according to command line arguments
@@ -96,7 +102,6 @@ InitEnvironment(Input *input){
 	input->Read(EXIT);
 	// read environment files & put them in Environment object
 	environment->Get(input);
-	
 };
 
 
@@ -153,7 +158,7 @@ ReadRoadmapGRAPHONLY(const char* _fname){
 			moreFile = false;
 	}
 	
-	roadmap.ReadGraph(myifstream);           // reads verts & adj lists
+	m_pRoadmap->ReadGraph(myifstream);           // reads verts & adj lists
 	
 	myifstream.close();
 	
@@ -194,7 +199,7 @@ ReadRoadmap(Input *input,
 	cd->collisionCheckers.ReadCDs(myifstream);
 	dm->distanceMetrics.ReadDMs(myifstream);
 	
-	roadmap.ReadGraph(myifstream);           // reads verts & adj lists
+	m_pRoadmap->ReadGraph(myifstream);           // reads verts & adj lists
 	
 	myifstream.close();
 	
@@ -233,7 +238,7 @@ WriteRoadmap(Input *input,
 	cd->collisionCheckers.WriteCDs(myofstream);
 	dm->distanceMetrics.WriteDMs(myofstream);
 	
-	roadmap.WriteGraph(myofstream);         // writes verts & adj lists
+	m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
 	myofstream.close();
 };
 
