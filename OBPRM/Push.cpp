@@ -287,17 +287,6 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
     _roadmap->GetEnvironment()->GetMultiBody(robot_index)->GetFirstBody()->GetPolyhedron();
   
   // Get the transformation matrix corresponding to the given robot's configuration
-/*
-  t44 robotT;
-  double Q[6];
-  Q[0] = _robotCfg.GetPositionVector().getX();
-  Q[1] = _robotCfg.GetPositionVector().getY();
-  Q[2] = _robotCfg.GetPositionVector().getZ();
-  Q[3] = _robotCfg.GetOrientationVector().getX();
-  Q[4] = _robotCfg.GetOrientationVector().getY();
-  Q[5] = _robotCfg.GetOrientationVector().getZ();
-  RPY_Config_To_Transform(Q, robotT);
-*/
 
   // How to get the obstacle index???
   int obstacle_index = 1;  // for now, let's assume it as being "1", the 2nd body
