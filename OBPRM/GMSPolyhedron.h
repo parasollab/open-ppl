@@ -213,6 +213,8 @@ public:
     /// Write in "original" GMS format
     void Write(ostream & _os);
 
+    /// Write in BYU format
+    void WriteBYU(ostream & _os);
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
