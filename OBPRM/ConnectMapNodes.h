@@ -31,14 +31,6 @@
 #ifndef ConnectMapNodes_h
 #define ConnectMapNodes_h
 
-/* brc changed this
-int   dupeNodes ;  // I hacked these in as global's 
-int   dupeEdges ; // good for you. would you please don't do these nex time
-
-*/
-extern int dupeNodes;
-extern int dupeEdges;
-
 #include "OBPRM.h"
 #include "Sets.h"
 #include "RoadmapGraph.h"
@@ -81,6 +73,8 @@ struct CNInfo {
     int numEdges;
     vector <EdgeInfo<WEIGHT> > edges;
     bool addPartialEdge;
+    int dupeNodes,dupeEdges;  // used for acct'ing w/ closestVE
+
 };
 
 #define SMALL_CC    3                   // default cut-off for small CCs
