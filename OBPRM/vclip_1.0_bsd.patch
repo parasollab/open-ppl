@@ -1,0 +1,65 @@
+diff -ur vclip_1.0.orig/Makefile vclip_1.0/Makefile
+--- vclip_1.0.orig/Makefile	Tue Dec 30 12:42:30 1997
++++ vclip_1.0/Makefile	Tue Jun 13 12:49:08 2000
+@@ -9,11 +9,11 @@
+ #
+ #	If so:
+ #
+-all:	lib/libvclipi.a lib/libvclip.a exmpls iv_exmpls
++#all:	lib/libvclipi.a lib/libvclip.a exmpls iv_exmpls
+ #
+ #	If not:
+ #
+-#all:	lib/libvclip.a exmpls
++all:	lib/libvclip.a
+ #
+ # If the Inventor libraries are not available, the examples in directory
+ # iv_examples will not be built.
+@@ -25,7 +25,7 @@
+ # (The qhull directory should contain libqhull.a and several header
+ # files such as qhull_a.h.)
+ #
+-QHULL_DIR  = qhull
++QHULL_DIR  = ../qhull
+ QHULL_CC   = -DQHULL -I $(QHULL_DIR)
+ QHULL_LD   = -L $(QHULL_DIR) -lqhull
+ # 
+@@ -35,7 +35,7 @@
+ # time errors if Qhull is not available.
+ 
+ 
+-
++CC = gcc
+ 
+ OPTIMIZER= -O2
+ 
+@@ -48,12 +48,12 @@
+ # this compiler's template mechanism.
+ 
+ lib/libvclip.a:
+-	CC $(CFLAGS) -c src/mv.C 
+-	CC $(CFLAGS) -c src/PolyTree.C -woff 3271,3666
+-	CC $(CFLAGS) -c src/vclip.C 
+-	/usr/lib/DCC/edg_prelink PolyTree.o vclip.o
++	$(CC) $(CFLAGS) -c src/mv.C 
++	$(CC) $(CFLAGS) -c src/PolyTree.C
++	$(CC) $(CFLAGS) -c src/vclip.C 
++#	/usr/lib/DCC/edg_prelink PolyTree.o vclip.o
+ 	ld -r vclip.o PolyTree.o mv.o $(QHULL_LD) -o lib/libvclip.a
+-	rm -r *.o ii_files
++	rm -r *.o
+ 
+ lib/libvclipi.a:
+ 	CC $(CFLAGS) -DINVENTOR -c src/mv.C 
+Only in vclip_1.0: Makefile.orig
+diff -ur vclip_1.0.orig/src/mv.C vclip_1.0/src/mv.C
+--- vclip_1.0.orig/src/mv.C	Tue Dec 30 12:24:48 1997
++++ vclip_1.0/src/mv.C	Tue Jun 13 12:49:08 2000
+@@ -39,6 +39,7 @@
+ #include <strstream.h>
+ #include <string.h>
+ #include "mv.h"
++#include <stdlib.h>
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ //  constants

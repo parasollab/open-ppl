@@ -1,0 +1,22 @@
+diff -ur RAPID_v2_01.orig/Makefile RAPID_v2_01/Makefile
+--- RAPID_v2_01.orig/Makefile	Thu Jul  3 11:54:09 1997
++++ RAPID_v2_01/Makefile	Tue Jun 13 12:52:30 2000
+@@ -1,5 +1,5 @@
+ 
+-CC = CC -O
++CC = gcc -O2
+ 
+ CFLAGS		= -I. -I..
+ 
+diff -ur RAPID_v2_01.orig/RAPID_private.H RAPID_v2_01/RAPID_private.H
+--- RAPID_v2_01.orig/RAPID_private.H	Thu Jul  3 11:54:09 1997
++++ RAPID_v2_01/RAPID_private.H	Wed Jun  7 14:28:46 2000
+@@ -17,7 +17,7 @@
+   
+   int build_hierarchy();
+   
+-  friend RAPID_Collide(double R1[3][3], double T1[3], 
++  friend int RAPID_Collide(double R1[3][3], double T1[3], 
+ 		       double s1, RAPID_model *RAPID_model1,
+ 		       double R2[3][3], double T2[3], 
+ 		       double s2, RAPID_model *RAPID_model2,
