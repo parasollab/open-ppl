@@ -410,35 +410,25 @@ Cfg Cfg::GetMedialAxisCfg(Environment *_env, CollisionDetection *_cd,
                           SID _cdsetid, CDInfo &_cdInfo, DistanceMetric *_dm,
                           SID _dmsetid, int n) {
     Cfg maprmCfg = GetRandomCfg(_env);
-    maprmCfg.PushToMedialAxis(_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
-    return maprmCfg;
-}
 
-// pushes node towards c-space medial axis
-void Cfg::PushToMedialAxis(Environment *_env, CollisionDetection *cd,
-			     SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			     SID dmsetid, int n) {
-    Cfg cfg = *this;
-
-    if (cfg.isCollision(_env,cd,cdsetid,cdInfo)) {
+    if (maprmCfg.isCollision(_env,_cd,_cdsetid,_cdInfo)) {
         ClearanceInfo clearInfo;
-        cfg.ApproxCSpaceClearance2(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,clearInfo,1);
-	cfg = *clearInfo.getDirection();
+        maprmCfg.ApproxCSpaceClearance2(_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n,clearInfo,1);
+	maprmCfg = *clearInfo.getDirection();
 	delete clearInfo.getDirection();
     }
 
-    if (!(cfg.isCollision(_env,cd,cdsetid,cdInfo))) {
-        cfg.MAPRMfree(_env,cd,cdsetid,cdInfo,dm,dmsetid,n);
+    if (!(maprmCfg.isCollision(_env,_cd,_cdsetid,_cdInfo))) {
+        maprmCfg = MAPRMfree(maprmCfg,_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
     }
 
-    *this = cfg;
+    return maprmCfg;
 }
 
 // pushes free node towards c-space medial axis
-void Cfg::MAPRMfree(Environment *_env, CollisionDetection *cd,
+Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
                    SID cdsetid, CDInfo &cdInfo, DistanceMetric *dm,
                    SID dmsetid, int n) {
-    Cfg cfg = *this;
     Cfg newCfg, oldCfg, dir;
     
     ClearanceInfo clearInfo;
@@ -484,13 +474,12 @@ void Cfg::MAPRMfree(Environment *_env, CollisionDetection *cd,
         
     }
     
-    *this = oldCfg;
+    return oldCfg;
 }
 
 // pushes colliding node towards free space
-void Cfg::MAPRMcollision(Environment *_env, CollisionDetection *cd,
+Cfg Cfg::MAPRMcollision(Cfg cfg, Environment *_env, CollisionDetection *cd,
                         SID cdsetid, CDInfo& cdInfo, int n) {
-    Cfg cfg = *this;
     double stepSize = 0.5;
     
     ///pick n random directions:
@@ -502,7 +491,7 @@ void Cfg::MAPRMcollision(Environment *_env, CollisionDetection *cd,
     }  
     
     if (directions.size()==0)
-        *this = cfg;
+        return cfg;
     
     ///step out along each direction:
     int found = -1;
@@ -517,7 +506,7 @@ void Cfg::MAPRMcollision(Environment *_env, CollisionDetection *cd,
         stepSize = stepSize * 2;
     }
     
-    *this = steps[found];
+    return steps[found];
 }
 
 Cfg Cfg::GetFreeRandomCfg(Environment *env, CollisionDetection *cd, SID _cdsetid,
