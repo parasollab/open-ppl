@@ -29,13 +29,21 @@ GMSPolyhedron::GMSPolyhedron() {
 }
 
 GMSPolyhedron::GMSPolyhedron(GMSPolyhedron & _p) {
+
+	//Copy vertex size
     numVertices = _p.numVertices;
+
+	//Copy vertices
     vertexList = new Vector3D[numVertices];
     int i;
     for (i = 0; i < numVertices; i++) {
         vertexList[i] = _p.vertexList[i];
     }
+
+	//Copy polygon size
     numPolygons = _p.numPolygons;
+
+	//Copy polygons (why not using polygon's operator?)
     polygonList = new GMSPolygon[numPolygons];
     for (i = 0; i < numPolygons; i++) {
         polygonList[i].numVertices = _p.polygonList[i].numVertices;
@@ -45,6 +53,8 @@ GMSPolyhedron::GMSPolyhedron(GMSPolyhedron & _p) {
         }
         polygonList[i].normal = _p.polygonList[i].normal;
     }
+
+	//copy other info
     area = _p.area;
     maxRadius = _p.maxRadius;
 }
@@ -60,37 +70,54 @@ GMSPolyhedron::~GMSPolyhedron() {
 //  Operators
 //=========================================================================
 GMSPolyhedron & GMSPolyhedron::operator=(GMSPolyhedron & _p) {
-   int i,j,aptal;
-   int *trick;
-  if(this != &_p) { // protect against self assignment. p = p
+  
+  int i,j,aptal;
+  int *trick;
+
+  if(this != &_p) // protect against self assignment. p = p
+  {
     delete[] vertexList;
     delete[] polygonList;
 
+	//Copy vertex size
     numVertices = _p.numVertices;
+
+	//Copy vertices
     vertexList = new Vector3D[numVertices];
     for (i = 0; i < numVertices; i++) {
         vertexList[i] = _p.vertexList[i];
     }
+
+	//Copy polygon size
     numPolygons = _p.numPolygons;
+
+	//Copy polygons
     polygonList = new GMSPolygon[numPolygons];
-    for (i = 0; i < numPolygons; i++) {
-        polygonList[i].numVertices = _p.polygonList[i].numVertices;
+    for (i = 0; i < numPolygons; i++) 
+	{
+		polygonList[i].numVertices = _p.polygonList[i].numVertices;
         aptal=polygonList[i].numVertices;
-          trick=new int[aptal];
-         if(trick==NULL) {
-              printf("Not enough memory\n");
-              exit(5);
-         }
-	polygonList[i].vertexList = trick;
-	for (j = 0; j < polygonList[i].numVertices; j++) {
-	    polygonList[i].vertexList[j] = _p.polygonList[i].vertexList[j];
+        trick=new int[aptal];
+        if(trick==NULL) 
+		{
+			printf("Not enough memory\n");
+            exit(5);
+        }
+
+		polygonList[i].vertexList = trick;
+		for (j = 0; j < polygonList[i].numVertices; j++) 
+		{
+		    polygonList[i].vertexList[j] = _p.polygonList[i].vertexList[j];
+		}
+		polygonList[i].normal = _p.polygonList[i].normal;
 	}
-	polygonList[i].normal = _p.polygonList[i].normal;
-    }
+
+	//Copy other info
     area = _p.area;
     maxRadius = _p.maxRadius;
   }
-  aptal++;
+
+  aptal++; //<--What is this??
   return *this;
 }
 
@@ -103,7 +130,8 @@ void GMSPolyhedron::ComputeNormals() {
     Vector3D v1, v2;
 
     double sum = 0;
-    for (i=0; i < numPolygons; i++) {
+    for (i=0; i < numPolygons; i++)
+	{
       p = &(polygonList[i]);
       v1 = vertexList[p->vertexList[1]] - vertexList[p->vertexList[0]];
       v2 = vertexList[p->vertexList[2]] - vertexList[p->vertexList[0]];
@@ -113,6 +141,7 @@ void GMSPolyhedron::ComputeNormals() {
       p->normal.normalize();
       p->normal.normalize();
     }
+
     this->area = sum;
 }
 
@@ -143,11 +172,14 @@ Vector3D GMSPolyhedron::Read(char* fileName) {
 
     int fileLength = strlen(fileName);
 
-    if (!strncmp(fileName+fileLength-4,".dat",4)) {
+    if (!strncmp(fileName+fileLength-4,".dat",4)) 
+	{
         com = Read(_is);
-    } else if (!strncmp(fileName+fileLength-2,".g",2)) {
+    } else if (!strncmp(fileName+fileLength-2,".g",2)) 
+	{
         com = ReadBYU(_is);
-    } else {
+    } else 
+	{
         cout<<"ERROR: \""<<fileName<<"\" format is unrecognized.";
         cout<<"\n\n       Formats are recognized by file suffixes:"
                         "\n\t    GMS(*.dat)"
@@ -281,21 +313,49 @@ void GMSPolyhedron::Write(ostream & _os) {
     _os<<endl;
 }
 
-GMSPolygon    &GMSPolygon::operator=(GMSPolygon  _p) {
-    if(this == &_p) return *this;
+/***********************************************************************************
+ *
+ *
+ *
+ *
+ *	Implementation of GMSPolygon methods
+ *
+ *
+ *
+ *
+ ***********************************************************************************/
+GMSPolygon & GMSPolygon::operator=(GMSPolygon  _p) {
+    
+	//Check if these two are the same
+	if(this == &_p) return *this;
+
+	//Copy vertex nunmber
 	numVertices=_p.numVertices;
+
+	//Copy vertex
 	vertexList=new int[numVertices];
-	if( vertexList==NULL) { fprintf(stderr,"Can't allocate memory for GMSPolygon\n"); exit(4);}
-	normal=_p.normal;
-	area=area;
+	if( vertexList==NULL) 
+	{ 
+		fprintf(stderr,"Can't allocate memory for GMSPolygon\n"); 
+		exit(4);
+	}
+
 	for(int i=0;i<numVertices;i++)
 	{
 		vertexList[i]=_p.vertexList[i];
 	}
 
+	//copy normal
+	normal=_p.normal;
+
+	//copy area
+	area=area;	//<--- This is wierd
+
 	return *this;
 }
+
 GMSPolygon    GMSPolygon::getCopy(){
+
 	GMSPolygon *cp;
 	cp=new GMSPolygon;
 	cp->numVertices=numVertices;

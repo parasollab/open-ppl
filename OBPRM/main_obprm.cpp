@@ -17,6 +17,7 @@
 #include "Stat_Class.h"
 #include "CollisionDetection.h"
 #include "ConnectMapNodes.h"
+#include "DistanceMetrics.h"
 
 Input input;
 Stat_Class Stats; 
@@ -90,7 +91,8 @@ int main(int argc, char** argv)
       cout << ": " << NodeGenClock.GetClock_SEC()
            << " sec (ie, " << NodeGenClock.GetClock_USEC() << " usec)";
     }
-      cout << ", "<<rmap.roadmap.GetVertexCount()<<" nodes\n"<< flush;
+    
+	cout << ", "<<rmap.roadmap.GetVertexCount()<<" nodes\n"<< flush;
   #endif
 
 

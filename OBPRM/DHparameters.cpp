@@ -4,12 +4,12 @@
 //
 //  Created   3/ 1/98 Aaron Michalk
 /////////////////////////////////////////////////////////////////////
+#include <math.h>
 
 #include "DHparameters.h"
-#include "math.h"
+#include "Transformation.h"
 
 #define DEGTORAD (3.1415926535/180.0)
-
 
 //===================================================================
 //  Constructors and Destructor

@@ -15,10 +15,11 @@
 /////////////////////////////////////////////////////////////////////
 
 
-#include "Query.h"            
 #include <fstream.h>
-
 #include <string.h>
+
+#include "Query.h"
+#include "Environment.h"
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -118,8 +119,11 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 
   while ( !connected && thiscc < ccs.size() ) {
 
+	//get cc
     Cfg t=rdmp.roadmap.GetData(ccs[thiscc].second);
     vector<Cfg> cc = rdmp.roadmap.GetCC(t);
+
+	//connect start and goal to cc
     if ( CanConnectToCC(_start,cd,cn,lp,dm,cc,_lpsid,&scvid,&sci) && 
          CanConnectToCC(_goal, cd,cn,lp,dm,cc,_lpsid,&gcvid,&gci) ) {
 
@@ -279,7 +283,7 @@ GetPathSegment(Cfg _c1, Cfg _c2, CollisionDetection *cd,
         cout << "\n\n\t lpfcn: "<<lpfcn_name<<" FAILED!!! \n\n";
      }
 
-   } else {
+   } else { ///not found
 
      // LKD: should have a method 
      //		rdmp.lp->planners.IsPlanner(FoundInBitPosition)

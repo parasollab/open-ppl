@@ -6,8 +6,9 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "Connection.h"
+
+#include "Input.h"
 #include "MultiBody.h"
-#include "Body.h"
 
 //===================================================================
 //  Constructors and Destructor

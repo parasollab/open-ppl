@@ -1,13 +1,26 @@
 // $Id$
 
 #include <iostream.h>
-#include "Clock_Class.h"
 #include <time.h>
+#include <string.h>
+
+///Modified for VC
+#if defined(_WIN32)
+///////////////////////////////////////////////////////////////////////
+//Time information for ms windows
+#include <sys/timeb.h>
+_timeb timebuffer;
+#else
+
+///////////////////////////////////////////////////////////////////////
+//Time information for unix
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
+struct rusage buf;
+#endif
 
-
+#include "Clock_Class.h"
 
 
 /////////////////////////////////////////////////////////////////////
@@ -21,8 +34,6 @@
 //      1/27/99 Chris Jones
 //
 /////////////////////////////////////////////////////////////////////
-
-struct rusage buf;
 
 //----------------------------------------
 // Clock_Class constructor
@@ -62,9 +73,18 @@ int
 Clock_Class::
 
 StartClock(char *Name) {
+
+///Modified for VC
+#if defined(_WIN32)
+  _ftime( &timebuffer );
+  s_utime=timebuffer.millitm;	//millisecond
+  s_time=timebuffer.time;		//second
+#else
   getrusage(RUSAGE_SELF, &buf);
   s_utime = buf.ru_utime.tv_usec;
   s_time = buf.ru_utime.tv_sec;
+#endif
+
   strcpy(ClockName,Name);
   return(1);
 };
@@ -75,9 +95,18 @@ StartClock(char *Name) {
 int
 Clock_Class::
 StopClock() {
+
+///Modified for VC
+#if defined(_WIN32)
+  _ftime( &timebuffer );
+  u_utime=timebuffer.millitm - s_utime;	//millisecond
+  u_time=timebuffer.time - s_time;		//second
+#else
   getrusage(RUSAGE_SELF, &buf);
   u_utime = buf.ru_utime.tv_usec - s_utime;
   u_time = buf.ru_utime.tv_sec - s_time;
+#endif
+
   return(1);
 };
 
@@ -127,7 +156,13 @@ PrintName() {
 double
 Clock_Class::
 GetClock_SEC() {
+
+///Modified for VC
+#if defined(_WIN32)
+  return (double)u_utime/1e3+u_time;
+#else
   return (double)u_utime/1e6+u_time;
+#endif
 };
 
 //----------------------------------------
@@ -136,6 +171,12 @@ GetClock_SEC() {
 int
 Clock_Class::
 GetClock_USEC() {
-  return         u_time*1e6+u_utime;
+
+///Modified for VC
+#if defined(_WIN32)
+  return u_time*1e6+u_utime*1e3; //here u_utime is millisecond
+#else
+  return u_time*1e6+u_utime;
+#endif
 };
 

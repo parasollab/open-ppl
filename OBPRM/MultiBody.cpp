@@ -5,21 +5,13 @@
 //  Created   3/ 1/98 Aaron Michalk
 /////////////////////////////////////////////////////////////////////
 
-#include "MultiBody.h"
-#include "Contact.h"
-#include "FreeBody.h"
-#include "FixedBody.h"
-#include "Contact.h"
-
-#include "util.h"
-
 #include <vector.h>
 #include <stdlib.h>
 #include <math.h>
 
-////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 // header files for C-space Toolkit
-////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 //#include <sys/time.h>
 #ifdef HPUX
 #include <sys/io.h>
@@ -30,6 +22,10 @@
 #include <distance.h>
 #include <witnesses.h>
 #endif
+
+//////////////////////////////////////////////////////////////////////////////////
+#include "MultiBody.h"
+#include "Input.h"
 
 #define MAXCONTACT  10
 
@@ -246,21 +242,24 @@ void MultiBody::Get(Input * _input, int _multibodyIndex) {
     double fixSum = 0;
     double freeSum = 0;
     int i;
-    for (i=0; i < _input->BodyCount[_multibodyIndex]; i++) {
-        if (!_input->isFree[_multibodyIndex][i]){
-	   FixedBody * fix = new FixedBody(this);
-	   fix->Get(_input, _multibodyIndex, i);
-           fixAreas.push_back(fix->GetPolyhedron().area);
-           fixSum += fix->GetPolyhedron().area;
-	   AddBody(fix);
-        }
-	else{
-	   FreeBody * free = new FreeBody(this);
-	   free->Get(_input, _multibodyIndex, i);
-           freeAreas.push_back(free->GetPolyhedron().area);
-           freeSum += free->GetPolyhedron().area;
-	   AddBody(free);
-	}
+    for (i=0; i < _input->BodyCount[_multibodyIndex]; i++) 
+	{
+		if (!_input->isFree[_multibodyIndex][i])
+		{
+			FixedBody * fix = new FixedBody(this);
+			fix->Get(_input, _multibodyIndex, i);
+			fixAreas.push_back(fix->GetPolyhedron().area);
+			fixSum += fix->GetPolyhedron().area;
+			AddBody(fix);
+		}
+		else
+		{
+			FreeBody * free = new FreeBody(this);
+			free->Get(_input, _multibodyIndex, i);
+			freeAreas.push_back(free->GetPolyhedron().area);
+			freeSum += free->GetPolyhedron().area;
+			AddBody(free);
+		}
     }
     fixArea = fixSum;
     freeArea = freeSum;
@@ -281,23 +280,30 @@ void MultiBody::Get(Input * _input, int _multibodyIndex) {
     cout << "connectionCount = " << _input->connectionCount[_multibodyIndex] << endl;
 #endif
 
-    for (i=0; i < _input->connectionCount[_multibodyIndex]; i++) {
+    for (i=0; i < _input->connectionCount[_multibodyIndex]; i++) 
+	{
+		//Get connection info about first body in this connection
+		//from Input instance
         bodyIndex0 = _input->previousBodyIndex[_multibodyIndex][i];
+
         realbodyIndex0 = _input->BodyIndex[_multibodyIndex][bodyIndex0];
         if (!_input->isFree[_multibodyIndex][bodyIndex0]){
-	   c = new Connection(GetFixedBody(realbodyIndex0));
-	   c->Get(_input, _multibodyIndex, i);
 
-	   // Set up both backward and forward connectionships
-	   GetFixedBody(realbodyIndex0)->Link(c);
-	}
-	else{
-	   c = new Connection(GetFreeBody(realbodyIndex0));
-	   c->Get(_input, _multibodyIndex, i);
-
-	   // Set up both backward and forward connectionships
-	   GetFreeBody(realbodyIndex0)->Link(c);
-	}
+			//Set first body in connection
+			c = new Connection(GetFixedBody(realbodyIndex0));
+			//set second body in connection using Get!!
+			c->Get(_input, _multibodyIndex, i);
+			
+			// Set up both backward and forward connectionships
+			GetFixedBody(realbodyIndex0)->Link(c);
+		}
+		else{
+			c = new Connection(GetFreeBody(realbodyIndex0));
+			c->Get(_input, _multibodyIndex, i);
+			
+			// Set up both backward and forward connectionships
+			GetFreeBody(realbodyIndex0)->Link(c);
+		}
     }
     FindBoundingBox();
     ComputeCenterOfMass();
@@ -371,50 +377,60 @@ void MultiBody::ComputeCenterOfMass(){
 //  FindBoundingBox
 //===================================================================
 void MultiBody::FindBoundingBox(){
-
+	
     int i, nfree, nfixed;
     double * tmp;
-
+	
     nfree = GetFreeBodyCount();
     nfixed = GetFixedBodyCount();
-
+	
+	///////////////////////////////////////////////////////////
+	//Check Free Bodys' Boudning Box
     double minx, miny, minz, maxx, maxy, maxz;
     i = 0;
     if(nfree > 0){
-	this->GetFreeBody(i)->FindBoundingBox();
-	tmp = this->GetFreeBody(i)->GetBoundingBox();
-	minx = tmp[0]; maxx = tmp[1];
-	miny = tmp[2]; maxy = tmp[3];
-	minz = tmp[4]; maxz = tmp[5];
-
-	for(i = 1 ; i < nfree ; i++){
-	    this->GetFreeBody(i)->FindBoundingBox();
-	    tmp = this->GetFreeBody(i)->GetBoundingBox();
-	    minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
-	    miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
-	    minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
-	}
+		this->GetFreeBody(i)->FindBoundingBox();
+		tmp = this->GetFreeBody(i)->GetBoundingBox();
+		minx = tmp[0]; maxx = tmp[1];
+		miny = tmp[2]; maxy = tmp[3];
+		minz = tmp[4]; maxz = tmp[5];
+		
+		for(i = 1 ; i < nfree ; i++){
+			this->GetFreeBody(i)->FindBoundingBox();
+			tmp = this->GetFreeBody(i)->GetBoundingBox();
+			minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
+			miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
+			minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
+		}
     }
-
+	
+	///////////////////////////////////////////////////////////
+	//Check Fixed Bodys' Boudning Box
     i = 0;
     if(nfixed > 0){
-	this->GetFixedBody(i)->FindBoundingBox();
-	tmp = this->GetFixedBody(i)->GetBoundingBox();
-	minx = tmp[0]; maxx = tmp[1];
+		this->GetFixedBody(i)->FindBoundingBox();
+		tmp = this->GetFixedBody(i)->GetBoundingBox();
+		minx = tmp[0]; maxx = tmp[1];
         miny = tmp[2]; maxy = tmp[3];
         minz = tmp[4]; maxz = tmp[5];
-
-	for(i = 1 ; i < nfixed ; i++){
-	    this->GetFixedBody(i)->FindBoundingBox();
-	    tmp = this->GetFixedBody(i)->GetBoundingBox();
+		
+		for(i = 1 ; i < nfixed ; i++){
+			this->GetFixedBody(i)->FindBoundingBox();
+			tmp = this->GetFixedBody(i)->GetBoundingBox();
             minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
             miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
             minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
         }
     }
+
+	///////////////////////////////////////////////////////////
+	//Pack
     boundingBox[0] = minx; boundingBox[1] = maxx;
     boundingBox[2] = miny; boundingBox[3] = maxy;
     boundingBox[4] = minz; boundingBox[5] = maxz;
+	
+	///////////////////////////////////////////////////////////
+	//By the way
 
     // Find maxAxisRange
     double rangex, rangey, rangez;

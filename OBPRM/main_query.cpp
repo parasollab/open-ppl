@@ -5,6 +5,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream.h>
+#include "GenerateMapNodes.h"
+#include "ConnectMapNodes.h"
+#include "LocalPlanners.h"
+#include "DistanceMetrics.h"
+#include "CollisionDetection.h"
+#include "Input.h"
+
 #include "Query.h"
 #include "Stat_Class.h"
 #include "Clock_Class.h"

@@ -6,6 +6,7 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "FixedBody.h"
+#include "Input.h"
 
 //===================================================================
 //  Constructors and Destructor
@@ -31,16 +32,16 @@ FixedBody::~FixedBody() {
 //  Need a mechanism to distinguish between an obstacle and an object
 //===================================================================
 GMSPolyhedron & FixedBody::GetWorldPolyhedron() {
- GMSPolyhedron a;
+ //GMSPolyhedron a;
 #if 0
     if (!worldPolyhedronComputed) {
         Body::GetWorldPolyhedron();
         worldPolyhedronComputed = 1;
     }
 #endif
-   GetWorldTransformation();
-    worldPolyhedron=Body::GetWorldPolyhedron();
-    return worldPolyhedron;
+   GetWorldTransformation();	///<----?????
+   worldPolyhedron=Body::GetWorldPolyhedron();
+   return worldPolyhedron;
 }
 
 //===================================================================

@@ -1,27 +1,28 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
-//
-//  Cfg_fixed_tree.c
-//
-//  General Description
-//	A derived template class from CfgManager. It provides some 
-//	specific implementation directly related to a multiple joints
-//	serial robot.
-//
-//  Created
-//	08/31/99	Guang Song
-//
-//  Last Modified By:
-//
+/**@file  Cfg_fixed_tree.cpp
+  *
+  * General Description
+  *	A derived template class from CfgManager. It provides some 
+  *	specific implementation directly related to a multiple joints
+  *	serial robot.
+  *
+  * Created
+  *	@date08/31/99	
+  * @author Guang Song
+  */
 /////////////////////////////////////////////////////////////////////
 
-#include "util.h"
-#include "Vectors.h"
 
 #include "Cfg_fixed_tree.h"
+
+#include "Cfg.h"
+#include "MultiBody.h"
 #include "Environment.h"
 #include "GenerateMapNodes.h"
+#include "util.h"
 
+///@todo Document this!!
 #define DefaultRange 0.25
 
 Cfg_fixed_tree::Cfg_fixed_tree(int _numofJoints) : CfgManager(_numofJoints, 0), NumofJoints(_numofJoints) {}
@@ -38,10 +39,11 @@ Cfg Cfg_fixed_tree::GetRandomCfg(double R, double rStep){
    vector<double> result;
    double jointAngle;
 
-   for(int i=0; i<NumofJoints; i++) {
-	jointAngle = (2.0*rStep)*drand48() - rStep;
+   for(int i=0; i<NumofJoints; i++) 
+   {
+		jointAngle = (2.0*rStep)*drand48() - rStep;
         jointAngle = jointAngle*DefaultRange;
-	result.push_back(jointAngle);
+		result.push_back(jointAngle);
    }
 
    return Cfg(result);
@@ -61,6 +63,10 @@ Cfg Cfg_fixed_tree::GetRandomRay(double incr) {
 }
 
 Cfg Cfg_fixed_tree::GetRandomCfg_CenterOfMass(double *boundingBox) {
+
+// Why following comments are here? This method suppose will generate
+// Cfg whose center of mass will inside a given bounding box....
+
 // this is not EXACTLY accurate, ok with most cases ... TO DO
 // To be accurate, one has to make sure every link is inside the given BB,
 // but here only the base link is taken care of. It is almost fine since
@@ -140,13 +146,13 @@ bool Cfg_fixed_tree::GenerateOverlapCfg(
 		Vector3D robot_goal, 
 		Cfg *resultCfg){
 
-     vector<double> treeData;
-     for(int i=0; i<NumofJoints; i++)
-	treeData.push_back(drand48()*DefaultRange);
-     // pass back the Cfg for this pose.
-     *resultCfg = Cfg(treeData);
-     return true;
+    vector<double> treeData;
+    for(int i=0; i<NumofJoints; i++)
+		treeData.push_back(drand48()*DefaultRange);
 
+    // pass back the Cfg for this pose.
+    *resultCfg = Cfg(treeData);
+    return true;
 }
 
 //===================================================================

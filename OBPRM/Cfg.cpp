@@ -14,15 +14,23 @@
 //
 /////////////////////////////////////////////////////////////////////
 
-#include "util.h"
-#include "Vectors.h"
+/////////////////////////////////////////////////////////////////////
+//Include standard headers
+#include <vector.h>
 
+/////////////////////////////////////////////////////////////////////
+//Include OBPRM headers
 #include "Cfg.h"
+#include "MultiBody.h"
 #include "CfgManager.h"
 #include "Cfg_free.h"
 #include "Environment.h"
-
 #include "DistanceMetrics.h"
+#include "CollisionDetection.h"
+
+/////////////////////////////////////////////////////////////////////
+//Init static Data Member
+const int InfoCfg::NULL_INFO =-1;
 
 //---------------------------------------------
 // Input/Output operators for InfoCfg
@@ -56,6 +64,7 @@ void InfoCfg::Read(istream &s) {
    
 
 CfgManager * Cfg::CfgHelper = new Cfg_free();
+
 const char* Cfg::GetName() {
    //return CfgHelper->GetName();
    return "Cfg_free_rigid";
@@ -107,16 +116,14 @@ Cfg::Cfg(double x,double y,double z) {
 Cfg::~Cfg(){
 }
 
-Cfg Cfg::operator+(
-                const Cfg &tmp) const{
+Cfg Cfg::operator+(const Cfg &tmp) const{
     vector<double> a;
     for(int i=0; i<v.size(); ++i)
 	a.push_back(v[i]+tmp.v[i]);
     return Cfg(a);
 };
 
-Cfg Cfg::operator-(
-                const Cfg &tmp) const{
+Cfg Cfg::operator-(const Cfg &tmp) const{
     vector<double> a;
     for(int i=0; i<v.size(); ++i)
         a.push_back(v[i]-tmp.v[i]);
@@ -144,13 +151,11 @@ Cfg Cfg::operator/(double s) {
     return Cfg(a);
 };
 
-bool Cfg::operator==(
-                const Cfg &tmp) const{
+bool Cfg::operator==(const Cfg &tmp) const{
         return v==tmp.v;
 };
 
-bool Cfg::operator!=(
-                const Cfg &tmp) const{
+bool Cfg::operator!=( const Cfg &tmp) const{
         return !(v==tmp.v);
 };
 
@@ -242,13 +247,18 @@ double Cfg::GetSingleParam(int param) {
 // pt1 & pt2 are two endpts of a line segment
 // find the closest point to the current cfg on that line segment
 // it could be one of the two endpoints of course
-Cfg Cfg::ClosestPtOnLineSegment(const Cfg &pt1, const Cfg &pt2)const{
+Cfg Cfg::ClosestPtOnLineSegment(const Cfg &pt1, const Cfg &pt2) const{
 
-    Cfg B = pt2   - pt1,
-        C = *this - pt1;
+    Cfg B = pt2-pt1;
+	Cfg C = *this - pt1;
 
     double B_dot_C  =0,
            B_squared=0;
+
+///Modified for VC
+#if defined(_WIN32)
+	using namespace std;
+#endif
 
     for (vector<double>::iterator b=B.v.begin(),c=C.v.begin();
                                   b<B.v.end();
@@ -513,7 +523,7 @@ bool Cfg::isCollision(Environment *env, CollisionDetection *cd,
 
 double Cfg::Clearance(Environment *env,CollisionDetection *cd ){
      if(!ConfigEnvironment(env))
-	return -1;
+		return -1;
      return  cd->Clearance(env);
 }
 
@@ -570,7 +580,7 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 
 bool Cfg::GenerateOverlapCfg(
 		Environment *env,  // although env and robot is not used here,
-		int robot,            // they are needed in other Cfg classes.
+		int robot,         // they are needed in other Cfg classes.
 		Vector3D robot_start,
 		Vector3D robot_goal,
 		Cfg *resultCfg){
@@ -596,4 +606,3 @@ int obstacle, int nCfgs, SID _cdsetid, CDInfo& _cdInfo){
 double Cfg::Potential(Environment * env) const {
    return CfgHelper->GetPotential(*this, env);
 }
-

@@ -6,8 +6,7 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "Body.h"
-#include "Connection.h"
-#include "Contact.h"
+#include "Input.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -118,7 +117,6 @@ void Body::Link(Connection * _c) {
     AddForwardConnection(_c);
     // Establish a backward connectionship for the next body
     _c->GetNextBody()->AddBackwardConnection(_c);
-
 }
 
 //===================================================================
@@ -174,7 +172,7 @@ void Body::RemoveBackwardConnection(Connection * _connection, int _delete) {
 	    break;
     }
     if (i < backwardConnectionCount) {
-        if (_delete)
+        if ((bool)_delete)
             delete backwardConnection[i];
         if (i < backwardConnectionCount) {
             backwardConnectionCount--;
@@ -364,6 +362,7 @@ void Body::FindBoundingBox(){
         if(poly.vertexList[i].getZ() < minz) minz = poly.vertexList[i].getZ();
         else if(maxz < poly.vertexList[i].getZ()) maxz = poly.vertexList[i].getZ();
     }
+
     boundingBox[0] = minx; boundingBox[1] = maxx;
     boundingBox[2] = miny; boundingBox[3] = maxy;
     boundingBox[4] = minz; boundingBox[5] = maxz;

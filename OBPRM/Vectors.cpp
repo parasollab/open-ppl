@@ -21,11 +21,11 @@
 //---------------------------------------------
 istream& operator>> (istream&s, Vector3D &pt){
 	pt = Vector3D(s);
-        return s;
+    return s;
 };
+
 ostream& operator<< (ostream&s, const Vector3D &pt){
         return s<<setw(4)<<pt.getX()<<' '
                 <<setw(4)<<pt.getY()<<' '
                 <<setw(4)<<pt.getZ();
 };
-

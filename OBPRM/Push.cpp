@@ -14,6 +14,12 @@
 #include <stdlib.h>
 #include "Push.h"
 
+#include "Environment.h"
+#include "util.h"
+#include "GMSPolyhedron.h"
+#include "MultiBody.h"
+#include "DistanceMetrics.h"
+
 // *** not sure if this is needed, or should go in Haptic.cpp
 #define EXPANSION_FACTOR 100
 #define MAX_PATH_NUM 20

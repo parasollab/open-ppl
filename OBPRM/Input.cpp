@@ -7,7 +7,6 @@
 
 #include "Input.h"
 #include "Environment.h"
-#include "Contact.h"
 #include "FreeBody.h"
 #include "FixedBody.h"
 
@@ -16,7 +15,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <strstream.h>
+//#include <strstream.h>
 
 #include "Cfg.h"
 #include "CfgManager.h"
@@ -25,6 +24,7 @@
 #include "Cfg_free_tree.h"
 #include "Cfg_fixed_tree.h"
 
+#include "util.h"
 
 // Need for retreiving default parameters of each
 // in executing the parameter "-defaults"
@@ -225,7 +225,7 @@ void Input::ReadCfgType(istream &is) {
         if(is) {
         is >> numofJoints;
         if(numofJoints < 0 || numofJoints > 1000) {
-            cerr << "Error in Input.c, wrong input for numofJoints !" << endl;
+            cerr << "Error in Input.cpp, wrong input for numofJoints !" << endl;
             exit(2);
         }
         }

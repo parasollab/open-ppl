@@ -25,22 +25,23 @@
 //      08/31/99        Guang Song
 //
 /////////////////////////////////////////////////////////////////////
-#include "util.h"
-#include "Vectors.h"
-#include "Cfg.h"
 #include "CfgManager.h"
+
+#include "util.h"
+#include "Cfg.h"
 #include "Environment.h"
+#include "CollisionDetection.h"
+#include "MultiBody.h"
 
+/////////////////////////////////////////////////////////////////////
 #define EQ(a,b)  (fabs(a-b)<0.0001)
-
-
 
 CfgManager::~CfgManager() {}
 
 // Normalize the orientation to the some range.
 void CfgManager::Normalize_orientation(Cfg& c) {
     for(int i=posDof; i<c.v.size(); ++i)
-	c.v[i] = c.v[i] - floor(c.v[i]);
+		c.v[i] = c.v[i] - floor(c.v[i]);
 }
 
 
@@ -78,7 +79,6 @@ pair<double,double> CfgManager::SingleParamRange(int param) {
 	exit(1);
   }
   return range;
- 
 }
  
 #if 0
@@ -117,43 +117,56 @@ void CfgManager::IncrementTowardsGoal(
 {
   double tmp;
   int i;
-  for(i=0; i<posDof; ++i) {
+
+  ///For Posiotn
+  for(i=0; i<posDof; ++i)
+  {
+	  //If the diff between goal and c is smaller than increment
         if( fabs(goal.v[i]-c.v[i]) < fabs(increment.v[i]))
             c.v[i] = goal.v[i];
         else
             c.v[i] += increment.v[i];
   }
-  for(i=posDof; i<dof; ++i) {
-      if(c.v[i] != goal.v[i]) {
-	 double orientationIncr = increment.v[i] < 0.5 ? increment.v[i] : 1-increment.v[i];
+
+  ///For Oirentation
+  for(i=posDof; i<dof; ++i)
+  {
+      if(c.v[i] != goal.v[i])
+	  {
+		 double orientationIncr = increment.v[i] < 0.5 ? increment.v[i] : 1-increment.v[i];
          tmp=DirectedAngularDistance(c.v[i],goal.v[i]);
-         if(fabs(tmp) < orientationIncr) {
+         if(fabs(tmp) < orientationIncr)
+		 {
             c.v[i]=goal.v[i];
-         } else {
+         }
+		 else
+		 {
             c.v[i] += increment.v[i];
-	    c.v[i] = c.v[i] - floor(c.v[i]);
+			c.v[i] = c.v[i] - floor(c.v[i]);
          }
       }
    }
-  
-
 }
 
 
 vector<Cfg> CfgManager::FindNeighbors(
 	const Cfg& start,
-	Environment *_env,
-	const Cfg &increment,
-  	CollisionDetection *cd,
-	int noNeighbors,
-	SID  _cdsetid,
-	CDInfo& _cdInfo){
+	Environment *_env,      //for CD
+	const Cfg &increment,   //for finding neighbor
+  	CollisionDetection *cd, //for CD
+	int noNeighbors,	    //Number of neighbors
+	SID  _cdsetid,	   	    //for CD
+	CDInfo& _cdInfo){	    //for CD
 
-   vector<Cfg> ret;
+   vector<Cfg> ret;	//return value
+
    vector<Cfg> nList;
- 
-   nList.push_back(increment); 
    vector<double> posOnly, oriOnly;
+ 
+   /////////////////////////////////////////////////////////////////////
+   //Push 2 cfgs into nList whose position or orientation is the same 
+   //as increment
+   nList.push_back(increment); 
    int i;
    for(i=0; i<dof; ++i) {
 	if(i<posDof) {
@@ -167,19 +180,25 @@ vector<Cfg> CfgManager::FindNeighbors(
    nList.push_back(Cfg(posOnly));
    nList.push_back(Cfg(oriOnly));
 
+   /////////////////////////////////////////////////////////////////////
+   //Push dof cfgs into nList whose value in each dimension is the same
+   //as or complement of increment
+
    // find close neighbour in every dimension.
    vector<double> oneDim;
    for(i=0; i< dof; i++)
-	oneDim.push_back(0.0);
+		oneDim.push_back(0.0);
+
    for(i=0; i< dof; i++) { 
         oneDim[i] = increment.v[i];
         nList.push_back(Cfg(oneDim));
         nList.push_back(-Cfg(oneDim));
         oneDim[i] = 0.0;  // reset to 0.0
    }
-        
 
-   if(noNeighbors > nList.size()) noNeighbors = nList.size(); 
+   /////////////////////////////////////////////////////////////////////
+   //Validate Neighbors
+   if(noNeighbors > nList.size()) noNeighbors = nList.size();
    for(i=0;i<(noNeighbors);i++) {
        Cfg tmp= start + nList[i];
        if(!AlmostEqual(start, tmp) && !tmp.isCollision(_env, cd, _cdsetid,_cdInfo) ) 
@@ -199,11 +218,15 @@ vector<Cfg> CfgManager::FindNeighbors(
 	SID  _cdsetid,
 	CDInfo& _cdInfo) {
 
-   vector<Cfg> ret;
-   vector<Cfg> nList;
-     
-   nList.push_back(increment);
+   vector<Cfg> ret;	//return value
+
+   vector<Cfg> nList;  
    vector<double> posOnly, oriOnly;
+
+   /////////////////////////////////////////////////////////////////////
+   //Push 2 cfgs into nList whose position or orientation is the same 
+   //as increment
+   nList.push_back(increment);
    int i;
    for(i=0; i<dof; ++i) {
         if(i<posDof) {
@@ -217,6 +240,10 @@ vector<Cfg> CfgManager::FindNeighbors(
    nList.push_back(Cfg(posOnly));
    nList.push_back(Cfg(oriOnly));
 
+   /////////////////////////////////////////////////////////////////////
+   //Push dof cfgs into nList whose value in each dimension is the same
+   //as or complement of increment
+
    // find close neighbour in every dimension.
    vector<double> oneDim;
    for(i=0; i< dof; i++)
@@ -228,12 +255,14 @@ vector<Cfg> CfgManager::FindNeighbors(
         oneDim[i] = 0.0;  // reset to 0.0
    }
 
+   /////////////////////////////////////////////////////////////////////
+   //Validate Neighbors
 
    /* Need to modify following code for the future cfgs */
    if(noNeighbors > nList.size()) noNeighbors = nList.size();
    for(i=0;i<noNeighbors;++i) {
        Cfg tmp = start;
-       IncrementTowardsGoal(tmp, goal, nList[i]);
+       IncrementTowardsGoal(tmp, goal, nList[i]); //The only difference~
        if(!AlmostEqual(start, tmp) && !tmp.isCollision(_env,cd,_cdsetid,_cdInfo) ) {
             ret.push_back(tmp);
        }
@@ -266,27 +295,35 @@ Cfg CfgManager::FindIncrement(
 	int  n_ticks)
 {
     vector<double> incr;
-    for(int i=0; i<dof; ++i) {
-	if(i<posDof) 
-	    incr.push_back((_goal.v[i] - c.v[i])/n_ticks);
-	else
-	    incr.push_back(DirectedAngularDistance(c.v[i], _goal.v[i])/n_ticks);
+    for(int i=0; i<dof; ++i)
+	{
+		if(i<posDof) 
+			incr.push_back((_goal.v[i] - c.v[i])/n_ticks);
+		else
+			incr.push_back(DirectedAngularDistance(c.v[i], _goal.v[i])/n_ticks);
     }
 	    
     return Cfg(incr);
 }
 
 
-
+///@todo Analysis
 bool CfgManager::AlmostEqual(const Cfg&c1, const Cfg &c2)
 {
-  for(int i=0; i<dof; ++i) {
-     if(i<posDof) {
-	if(!EQ(c1.v[i], c2.v[i])) return false;
-     } else {
-	if(!EQ(DirectedAngularDistance(c1.v[i], c2.v[i]), 0.0)) return false;
+  for(int i=0; i<dof; ++i) 
+  {
+     if(i<posDof) 
+	 {
+		if(!EQ(c1.v[i], c2.v[i]))
+			return false;
+     } 
+	 else 
+	 {
+		if(!EQ(DirectedAngularDistance(c1.v[i], c2.v[i]), 0.0)) 
+			return false;
      }
   }
+
   return true;
 }
 
@@ -306,8 +343,9 @@ bool CfgManager::isWithinResolution(
 vector <double> CfgManager::GetPosition(const Cfg&c)
 {
   vector <double> ret;
- for(int i=0; i<posDof; ++i) {
-        ret.push_back(c.v[i]);
+
+  for(int i=0; i<posDof; ++i) {
+     ret.push_back(c.v[i]);
   }
   return ret;
 }
@@ -387,7 +425,6 @@ vector<Vector6D> & cfigs) {
                     ori.gamma/6.2832, ori.beta/6.2832, ori.alpha/6.2832);
      cfigs.push_back(v6);		    
   }
-
 }
 
 void CfgManager::print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg) {
@@ -401,14 +438,13 @@ void CfgManager::print_preamble_to_file(Environment *env, FILE *_fp, int numofCf
      else fprintf(_fp,"1\n");
 
     fprintf(_fp,"%d ",numofCfg);
-
 }
 
 bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
                            SID _cdsetid, CDInfo& _cdInfo, MultiBody * onflyRobot) {
 	ConfigEnvironment(c, env);
-        bool result = cd->IsInCollision(env, _cdsetid, _cdInfo, onflyRobot);
-        return result;
+    bool result = cd->IsInCollision(env, _cdsetid, _cdInfo, onflyRobot);
+    return result;
 }
 
 bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,

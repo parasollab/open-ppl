@@ -9,7 +9,12 @@
 #include <vector.h>
 #include <stdlib.h>
 
+///Modified for VC
+#if defined(_WIN32)
+#include <strstrea.h>
+#else
 #include <strstream.h>
+#endif
 
 #include "Parameters.h"
 

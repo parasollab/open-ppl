@@ -14,8 +14,13 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "ConnectMapNodes.h"
+
+#include "Cfg.h"
+#include "DistanceMetrics.h"
+#include "Environment.h"
 #include "Roadmap.h"
 #include "Clock_Class.h"
+#include "util.h"
 
 #define K_OTHER      10        // default for obst-other connections
 #define K_SELF        3        // default for obst-self  connections
@@ -333,11 +338,16 @@ ConnectNodes_ClosestVE(
   }
 
 
+///Modified for VC
+#if defined(_WIN32)
+	using namespace std;
+#endif
+
   vector<Cfg> oldV,newV,verts= _rm->roadmap.GetVerticesData();
   // if separation of vertices into two sets is desired
   if (info.tag != InfoCfg::NULL_INFO){
         // separate on tag values
-	for (vector<Cfg>::iterator v=verts.begin();v<verts.end();++v){
+	  for (vector<Cfg>::iterator v=verts.begin();v<verts.end();++v){
 		if (v->info.tag == info.tag) newV.push_back(*v);
 		else                         oldV.push_back(*v);
 	}
@@ -375,6 +385,12 @@ ClosestVE(
 
   // May have to adjust user's desired k wrt what is actually possible
   int k = min(_cn.GetKClosest(), oldV.size()+edges.size());
+
+  
+///Modified for VC
+#if defined(_WIN32)
+	using namespace std;
+#endif
 
   // for each "real" cfg in roadmap
   for (vector<Cfg>::iterator v=newV.begin();v<newV.end();++v){
@@ -415,7 +431,7 @@ ClosestVE(
                         _rm->roadmap.AddEdge(kp->endpt[0],kp->cfg2,lpInfo.edge);
                         _rm->roadmap.AddEdge(kp->cfg2,kp->endpt[1],lpInfo.edge);
 
-                        info.dupeEdges += 2;  // keep count of duplicated edges
+                        info.dupeEdges += 2;  // keep count of duplicated edges <--for what??
 
               }//endif cfg2_IsOnEdge
 
@@ -658,6 +674,11 @@ FindKClosestPairs(Environment *_env,DistanceMetric * dm, CNInfo& info,
   // if valid number of pairs requested
   if (k>0){
 
+///Modified for VC
+#if defined(_WIN32)
+	using namespace std;
+#endif
+
     vector<Cfg> vec_of_cfgs = vec1;
 
     for (vector<Cfg>::reverse_iterator cfg=vec1.rbegin();cfg<vec1.rend()-1;++cfg){
@@ -693,6 +714,11 @@ FindKClosestPairs(Roadmap *rm, DistanceMetric * dm, CNInfo& info,
 
   // if valid number of pairs requested
   if (k>0){
+  
+///Modified for VC
+#if defined(_WIN32)
+	using namespace std;
+#endif
 
     vector<Cfg> vec_of_cfgs = vec1;
 
@@ -937,6 +963,7 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
       vector<Cfg> verticesData;
                   verticesData = rm->roadmap.GetVerticesData();
 
+	  //find closest Cfg in map from random cfg.
       vector<  CfgPairType > kp = FindKClosestPairs(
                                            env,
                                            dm,
@@ -945,14 +972,16 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
                                            verticesData,
                                            1
                                           );
+	  //if there is closet vertex.
       if (kp.size()>0) {
 
          Cfg x_near = kp[0].second;
 
          Cfg u;
 
+		 //select direction
          if ( U.size() > 0 ) {
-             // select u at random from input set U
+             // select u at random from input set U <---why?
              u = U[(int)(lrand48()%U.size())];
          } else {
              // holonomic robot assumption in purely random selection of u
@@ -990,6 +1019,8 @@ ModifyRoadMap(
 
   Cfg t;
   int i;
+
+  //Add vertex
   for (i=0;i<vids.size();++i) {
     t=fromMap->roadmap.GetData(vids[i]);
     
@@ -1033,64 +1064,70 @@ ConnectNodes_ExpandRRT(
   // initialize information needed to check connection between cfg's
   LPInfo lpInfo=Initialize_LPinfo(_rm,info);
 
+  
+///Modified for VC
+#if defined(_WIN32)
+	using namespace std;
+#endif
+
   // process components from smallest to biggest
   vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
-  for (vector< pair<int,VID> >::reverse_iterator cc1=ccvec.rbegin();
-       cc1->first <= _cn.GetSmallCCSize() && cc1<ccvec.rend();
+  for ( vector< pair<int,VID> >::reverse_iterator cc1=ccvec.rbegin();
+       (*cc1).first <= _cn.GetSmallCCSize() && cc1<ccvec.rend();
        ++cc1){
 
       //-- submap = vertices & edges of current (cc1) connected component
       Roadmap submap;
       submap.environment = _rm->GetEnvironment();
       ModifyRoadMap(&submap,_rm,
-                    _rm->roadmap.GetCC(cc1->second));
+                    _rm->roadmap.GetCC( (*cc1).second));
 
       if ( !strcmp(_cn.GetName(),"RRTexpand") ){
-
+		  
           // use random U
           vector<Cfg> dummyU;
-          RRT(&submap, 
+          RRT(&submap,
               _cn.GetIterations(),
               _cn.GetStepFactor() * lpInfo.positionRes,
               dummyU,
               cd, lp, dm, info, lpInfo);
           //-- map = map + submap
           ModifyRoadMap(_rm,&submap,
-                        submap.roadmap.GetVerticesVID());
-
+			  submap.roadmap.GetVerticesVID());
+		  
       }else{  //"RRTcomponents"
-
-	  // use each connected component cfg's as U
+		  
+		  // use each connected component cfg's as U
           for (vector< pair<int,VID> >::iterator cc2=ccvec.begin();
-               cc2<ccvec.end();++cc2){
-
-             VID cc1id = cc1->second;
-             VID cc2id = cc2->second;
-
-             if ( !_rm->roadmap.IsSameCC(cc1id,cc2id) ) {
-
-                //added tmp & separated decl from init for SUN compiler
-                Cfg tmp;
-		tmp = _rm->roadmap.GetData(cc2id);
-                vector<Cfg> U = _rm->roadmap.GetCC(tmp);
-                RRT(&submap,
-                    _cn.GetIterations(),
-                    _cn.GetStepFactor() * lpInfo.positionRes,
-                    U,
-                    cd, lp, dm, info, lpInfo);
-
-                //-- map = map + submap
-                ModifyRoadMap(_rm,&submap,
-                        submap.roadmap.GetVerticesVID());
-
-             }// endif !_rm
-
+		  cc2<ccvec.end();++cc2){
+			  
+			  VID cc1id = (*cc1).second;
+			  VID cc2id = (*cc2).second;
+			  
+			  if ( !_rm->roadmap.IsSameCC(cc1id,cc2id) ) {
+				  
+				  //added tmp & separated decl from init for SUN compiler
+				  Cfg tmp;
+				  tmp = _rm->roadmap.GetData(cc2id);
+				  vector<Cfg> U = _rm->roadmap.GetCC(tmp);
+				  RRT(&submap,
+					  _cn.GetIterations(),
+					  _cn.GetStepFactor() * lpInfo.positionRes,
+					  U,
+					  cd, lp, dm, info, lpInfo);
+				  
+				  //-- map = map + submap
+				  ModifyRoadMap(_rm,&submap,
+					  submap.roadmap.GetVerticesVID());
+				  
+			  }// endif !_rm
+			  
           } // endfor cc2
-
+		  
       }
-
-
-  } //endfor cc1 
+	  
+	  
+	   } //endfor cc1 
 
 
 };
@@ -1576,12 +1613,15 @@ DeleteCNFromSet(const SID _sid, const EID _cnid) {
 SID 
 CNSets::
 MakeCNSet(const char* _cnlist){
-  istrstream  is(_cnlist);
+
+  ///Modified for VC
+  istrstream  is((char *)_cnlist);
   if (!is) {
          cout << endl << "In MakeCNSet: can't open instring: " << _cnlist ;
          return INVALID_SID;
   }
-  return MakeCNSet(is);  
+
+  return MakeCNSet(is); 
 };
 
 SID

@@ -13,12 +13,16 @@
 //
 /////////////////////////////////////////////////////////////////////
 
-#include "util.h"
-#include "Vectors.h"
+//#include "util.h"
+//#include "Vectors.h"
 
 #include "Cfg_free.h"
+
+#include "Cfg.h"
+#include "MultiBody.h"
 #include "Environment.h"
 #include "GenerateMapNodes.h"
+#include "util.h"
 
 Cfg_free::Cfg_free() : CfgManager(6, 3) {}
 
@@ -62,17 +66,18 @@ Cfg Cfg_free::GetRandomRay(double incr) {
 
 Cfg Cfg_free::GetRandomCfg_CenterOfMass(double *boundingBox) {
    vector<double> tmp;
+   
    for(int i=0; i<6; ++i) {
       if(i<3) {
-	 int k = 2*i;
-         double p = boundingBox[k] +
-                        (boundingBox[k+1]-boundingBox[k])*drand48();
+		 int k = 2*i;
+         double p = boundingBox[k] +(boundingBox[k+1]-boundingBox[k])*drand48();
          tmp.push_back(p);
-      } else
+      }
+	  else
          tmp.push_back(drand48());
    }
-   return Cfg(tmp);
 
+   return Cfg(tmp);
 }
 
 
@@ -95,7 +100,7 @@ bool Cfg_free::ConfigEnvironment(const Cfg &c, Environment *env) {
 
 bool Cfg_free::GenerateOverlapCfg(
 		Environment *env,  // although env and robot is not used here,
-		int robot,            // they are needed in other Cfg classes.
+		int robot,         // they are needed in other Cfg classes.
 		Vector3D robot_start,
 		Vector3D robot_goal,
 		Cfg *resultCfg){
@@ -119,29 +124,44 @@ Cfg_free::GetCfgByOverlappingNormal(
 	MultiBody * onflyRobot){
 
 	static const double posRes = env->GetPositionRes();
-        vector<Cfg> surface;
-        Vector3D robotVertex[3], obstVertex[3], robotPoint, obstPoint, robotNormal, obstNormal;
+    vector<Cfg> surface;
+    Vector3D robotVertex[3], obstVertex[3], robotPoint, obstPoint, robotNormal, obstNormal;
+
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	//Check if robTri and obsTri are in side the range
 	if(robTri < 0 || robTri >= polyRobot.numPolygons ||
 	   obsTri < 0 || obsTri >= polyObst.numPolygons ) {
 		cout << "out of range: Cfg_free::GetCfgByOverlappingNormal() " << endl;
 		exit(10);
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	//Get polygon accroding to index
 	GMSPolygon *pRobot = &polyRobot.polygonList[robTri];
 	GMSPolygon *pObst = &polyObst.polygonList[obsTri];
+
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	//Get first three vertices of polygon, as a triangular
 	for(int i=0; i<3; i++) {
-	   robotVertex[i] = polyRobot.vertexList[pRobot->vertexList[i]];
-	   obstVertex[i]  = polyObst.vertexList[pObst->vertexList[i]];
+	   //Get vertex location
+	   robotVertex[i] = polyRobot.vertexList[pRobot->vertexList[i]/*vertex index*/];
+	   obstVertex[i]  = polyObst.vertexList[pObst->vertexList[i]/*vertex index*/];
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////////
 	// find normals for both triangles (on robot and obstacle):
 	robotNormal = pRobot->normal;
 	obstNormal = pObst->normal;
 
+	/////////////////////////////////////////////////////////////////////////////////////////////
 	// Overlap these two normals, solve for alpha, beta, gamma of FixedXYZ rotation.
 	Orientation orient;
 	double dot = robotNormal.dotProduct(obstNormal);
 	if(abs(dot) == 1) { // two normals parallel to each other.
 	   orient = Orientation(IdentityMatrix);
-	} else {
+	} 
+	else 
+	{
 	   double cV = sqrt((1+dot)/2.0);
 	   double sV = sqrt((1-dot)/2.0);
 	   Vector3D vertical = robotNormal.crossProduct(obstNormal);
@@ -149,51 +169,72 @@ Cfg_free::GetCfgByOverlappingNormal(
 	   orient = Orientation(cV, vertical*sV);
 	}
 	orient.ConvertType(Orientation::FixedXYZ);
+
 	double alpha = orient.alpha, beta = orient.beta, gamma = orient.gamma;
 
-        int trials = 0;
-        while(trials++ < 10) {
+	/////////////////////////////////////////////////////////////////////////////////////////////
+
+    int trials = 0;
+    while(trials++ < 10)
+	{
 	   // find a point on robot's facet and one on obstacle's facet(one of the triangles).
-	   // points on edge.
+	   
+		// points on edge.
 	   double ran1 = drand48();
 	   double ran2 = drand48();
+	   //random interpolation between two random points (vertices) (robot)
 	   robotPoint = robotVertex[rand()%3]*ran1 + robotVertex[rand()%3]*(1.-ran1);
+	   //random interpolation between two random points (vertices) (obstacle)
 	   obstPoint = obstVertex[rand()%3]*ran2 + obstVertex[rand()%3]*(1.-ran2);
 
+	   ///I can't see what's goning on next???
 	   Vector3D robotCMS = obstPoint - ( orient * robotPoint);
 	   Vector3D direction(0,0,0);
 	   Vector3D disp = obstNormal*(posRes*0.5);  //0.01;
+
 	   Cfg displacement = Cfg(Vector6<double>(disp[0], disp[1], disp[2], 0, 0, 0));
 	   Cfg cfgIn = Cfg(Vector6<double>(robotCMS[0], robotCMS[1], robotCMS[2],
 			gamma/TWOPI, beta/TWOPI, alpha/TWOPI));
 	   cfgIn.Increment(displacement);
-	   if(! isCollision(cfgIn, env,cd,_cdsetid, _cdInfo, onflyRobot) ) {
+
+	   if(! isCollision(cfgIn, env,cd,_cdsetid, _cdInfo, onflyRobot) ) 
+	   {
 	      direction = obstNormal;
-	   } else {
+	   } 
+	   else 
+	   {
 	      cfgIn = cfgIn - displacement - displacement;
-	      if(! isCollision(cfgIn, env,cd,_cdsetid, _cdInfo, onflyRobot) ) {
-		  direction = -obstNormal;
-	      } else {
+	      if(! isCollision(cfgIn, env,cd,_cdsetid, _cdInfo, onflyRobot) ) 
+		  {
+			direction = -obstNormal;
+	      } 
+		  else 
+		  {
 	          orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
 	          robotCMS = obstPoint - ( orient * robotPoint);
 	          cfgIn = Cfg(Vector6<double>(robotCMS[0], robotCMS[1], robotCMS[2],
                         gamma/TWOPI, (beta+PI)/TWOPI, (alpha+PI)/TWOPI));
 	          cfgIn.Increment(displacement);
-	          if(! isCollision(cfgIn, env,cd,_cdsetid, _cdInfo, onflyRobot) ) {
+	          if(! isCollision(cfgIn, env,cd,_cdsetid, _cdInfo, onflyRobot) ) 
+			  {
             	       direction = obstNormal;
-                  } else {
+              }
+			  else 
+			  {
 		       cfgIn = cfgIn - displacement - displacement;
-                       if(! isCollision(cfgIn, env,cd,_cdsetid, _cdInfo, onflyRobot) ) {
+                       if(! isCollision(cfgIn, env,cd,_cdsetid, _cdInfo, onflyRobot) ) 
+					   {
                             direction = -obstNormal;
-		       }
-                  }
+					   }
+              }
 	      }
 	   }
+
 	   if(direction.magnitude() > 0) { // this means free Cfg is found.
 	      surface.push_back(cfgIn);
 	      break;
 	   }
-        }
+    }
 	return surface;
 }
 
@@ -204,28 +245,32 @@ bool Cfg_free::InNarrowPassage(
 	MultiBody * onflyRobot){
 
 	    if(c.GetData().size() != 6) {
-		cout << "Error in Cfg_free::InNarrowPassage, Cfg must be rigidbody type. " << endl;
-		exit(1);
+			cout << "Error in Cfg_free::InNarrowPassage, Cfg must be rigidbody type. " << endl;
+			exit(1);
 	    }
-            // add filter here
+        
+		// add filter here
 	    static const double posRes = env->GetPositionRes();
-            double width = 2.0*posRes;
-            int narrowpassageWeight = 0;
+        double width = 2.0*posRes;
+        int narrowpassageWeight = 0;
 	    Vector6<double> tmp(0,0,0,0,0,0);
-            for(int i=0; i<3; i++) {
-                tmp[i] = width;
-                Cfg incr(tmp);
-                Cfg shiftL = c - incr;
-                Cfg shiftR = c + incr;
-                tmp[i] = 0.0;
-                if(isCollision(shiftL,env,cd,_cdsetid, _cdInfo, onflyRobot) &&
-                   isCollision(shiftR,env,cd,_cdsetid, _cdInfo, onflyRobot) ) {  // Inside Narrow Passage !
-                     narrowpassageWeight++;
-                }
+
+        for(int i=0; i<3; i++) {
+            tmp[i] = width;
+            Cfg incr(tmp);
+            Cfg shiftL = c - incr;
+            Cfg shiftR = c + incr;
+            tmp[i] = 0.0;
+            if(isCollision(shiftL,env,cd,_cdsetid, _cdInfo, onflyRobot) &&
+               isCollision(shiftR,env,cd,_cdsetid, _cdInfo, onflyRobot) ) // Inside Narrow Passage !
+			{
+                 narrowpassageWeight++;
             }
-            double THROWpercentage = 0.5; // (0.5:walls) (0.97:alpha) (1.0:flange)
-            if(narrowpassageWeight < 2  && drand48() < THROWpercentage)
-                return false; // throw most of No-inside-narrow nodes away.
+        }
+        
+		double THROWpercentage = 0.5; // (0.5:walls) (0.97:alpha) (1.0:flange)
+        if(narrowpassageWeight < 2  && drand48() < THROWpercentage)
+            return false; // throw most of No-inside-narrow nodes away.
 	    return true;
 }
 
@@ -244,25 +289,25 @@ SID _cdsetid,CDInfo& _cdInfo){
       int robot = env->GetRobotIndex();
 
       GMSPolyhedron &polyRobot = env->GetMultiBody(robot)->GetFreeBody(0)->GetPolyhedron();
-      GMSPolyhedron &polyObst = env->GetMultiBody(obstacle)->GetFixedBody(0)
-				  ->GetWorldPolyhedron();
+      GMSPolyhedron &polyObst = env->GetMultiBody(obstacle)->GetFixedBody(0)->GetWorldPolyhedron();
 
       int num = 0;
 
       while(num < nCfgs) {
-	  int robotTriIndex = (int)(drand48()*polyRobot.numPolygons);
-	  int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
-	  vector<Cfg> tmp = GetCfgByOverlappingNormal(env, cd, 
-				polyRobot, polyObst,
-				robotTriIndex, obstTriIndex, 
-				_cdsetid, _cdInfo,
-				env->GetMultiBody(robot));
+		  int robotTriIndex = (int)(drand48()*polyRobot.numPolygons);
+		  int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
 
-	  if(!tmp.empty() && tmp[0].InBoundingBox(env)) {
-		surface.push_back(tmp[0]);
-		++num;
-	  }
+		  vector<Cfg> tmp = GetCfgByOverlappingNormal(env, cd, 
+					polyRobot, polyObst,
+					robotTriIndex, obstTriIndex, 
+					_cdsetid, _cdInfo,
+					env->GetMultiBody(robot));
+
+		  if(!tmp.empty() && tmp[0].InBoundingBox(env)) {
+			surface.push_back(tmp[0]);
+			++num;
+		  }
       }
+
       return surface;
 }
-

@@ -12,7 +12,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "Haptic.h"
+#include "Environment.h"
+#include "Push.h"
+#include "util.h"
 
 #define EXPANSION_FACTOR 100
 #define MAX_PATH_NUM 20
