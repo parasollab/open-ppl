@@ -33,7 +33,7 @@ Stat_Class Stats;
 int main(int argc, char** argv)
 {
   GenerateMapNodes<CfgType>   gn;
-  ConnectMap<CfgType, WeightType> cm;
+  QueryConnect<CfgType, WeightType> cm;
   LocalPlanners<CfgType, WeightType> lp;
   DistanceMetric     dm;
   CollisionDetection cd;
