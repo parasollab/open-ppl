@@ -839,6 +839,63 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
     return clearInfo;
 }
 
+
+vector<Cfg> Cfg::ApproxCSpaceContactPoints(vector<Cfg> directions,
+					   Environment *env,
+					   CollisionDetection *cd,
+					   SID cdsetid,
+					   CDInfo &cdInfo) {
+
+  Cfg origin = *this;
+  vector<Cfg> contact_points;
+
+  //initialize:
+  for(int i=0; i<directions.size(); i++) {
+    contact_points.push_back(origin);
+  }
+  double positionRes = env->GetPositionRes();
+  double orientationRes = env->GetOrientationRes();
+  bool bInitState = origin.isCollision(env, cd, cdsetid, cdInfo);
+
+  //find max step size:
+  int iRobot = env->GetRobotIndex();
+  double incrBound = env->GetMultiBody(iRobot)->GetMaxAxisRange();
+
+  //step out along each ray and record first cfg in collision:
+  for(int i=0; i<contact_points.size(); i++) {
+
+        int n_ticks;
+	Cfg tick = origin;
+        Cfg incr = origin.FindIncrement(directions[i], &n_ticks, positionRes, orientationRes);
+        double incrSize = incr.OrientationMagnitude() + incr.PositionMagnitude(); //step size
+        
+        int stateChangedFlag = false;
+        
+        while(!stateChangedFlag) {
+            
+            tick.Increment(incr);
+            bool bCurrentState = tick.isCollision(env, cd, cdsetid, cdInfo);
+            //double currentDist;
+            
+            // if state was changed or this cfg is out of bounding box
+            if( (bCurrentState != bInitState) || !(tick.InBoundingBox(env)) ){
+	        //contact_points[i] = tick; //first cfg in collision
+	        contact_points[i] = tick - incr; //last free cfg
+                stateChangedFlag = true;
+            }
+
+            //if increment still less than a max bound
+            if(incrSize < incrBound){
+                incr = incr*2;
+                incrSize *= 2;
+            }
+        }//end while
+  }
+
+  return contact_points;
+}
+
+
 bool Cfg::GenerateOverlapCfg(Environment *env,  // although env and robot is not used here,
                              int robot,         // they are needed in other Cfg classes.
                              Vector3D robot_start,
