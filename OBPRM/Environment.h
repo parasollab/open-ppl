@@ -82,7 +82,7 @@ public:
     /**Destrcutor.
       *Free memory for every added MultiBody instance.
       */
-    ~Environment();
+    virtual ~Environment();
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
 
     ///Return format version for path files
-    int GetPathVersion();
+    virtual int GetPathVersion();
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -111,22 +111,22 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
 
     ///Return the number of MultiBody's in the environment
-    int GetMultiBodyCount();
+    virtual int GetMultiBodyCount();
 
     ///Put this _multibody into list and increase the number of MultiBody.
-    void AddMultiBody(MultiBody *_multibody);
+    virtual void AddMultiBody(MultiBody *_multibody);
 
     /**Return a pointer to MultiBody according to this given index.
       *If this index is out of the boundary of list, NULL will be returned.
       *@param _index the index for target, a MultiBody pointer
       */
-    MultiBody * GetMultiBody(int _index);
+    virtual MultiBody * GetMultiBody(int _index);
 
     ///Do nothing Not implemeneted?
-    void Couple(MultiBody *_multibody[], int _number);
+    virtual void Couple(MultiBody *_multibody[], int _number);
 
     ///Do nothing. Not implemeneted?
-    void Decouple(MultiBody *_multibody[], int _number);
+    virtual void Decouple(MultiBody *_multibody[], int _number);
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -159,12 +159,12 @@ public:
     /**Return the Index for Robot in environment. This index is the index for MultiBody list in
       *this Environment instance.
       */
-    int GetRobotIndex(){return robotIndex;};
+    virtual int GetRobotIndex(){return robotIndex;};
 
     /**Set the Index for Robot in environment. This index is the index for MultiBody list in
       *this Environment instance.
       */  
-    void SetRobotIndex(int index){robotIndex = index;};
+    virtual void SetRobotIndex(int index){robotIndex = index;};
 
     //@}
 
@@ -183,21 +183,21 @@ public:
       *Robot. Moreover, minmax_BodyAxisRange and resolution for postion are also calculated.
       *@see MultiBody::GetBoundingBox and MultiBody::GetMaxAxisRange
       */
-    void FindBoundingBox();
+    virtual void FindBoundingBox();
 
     /**Return a Bounding Box that encloses all MultiBodys added to this instance.
       *The format of this bounding box is a 6 elements array.
       *They are minx, maxx, miny, maxy, minz, and maxz.
       *@see FindBoundingBox, Input::bbox_scale, and Input::bbox
       */
-    double * GetBoundingBox();
+    virtual double * GetBoundingBox();
 
     /**Update a Calculate Bounding Box according to user input.
       *This methods did two things. First, if user provide a Bounding Box, this Bounding Box
       *will overwrite the one calculated in FindBoundingBox. Second, if scale factor for bound
       *box is not 1, then scale this bounding box.
       */
-    void UpdateBoundingBox(Input * _input);
+    virtual void UpdateBoundingBox(Input * _input);
 
     /**Set Bounding by given parameters.
       *@param x Minimam x for bounding box
@@ -207,13 +207,13 @@ public:
       *@param z Minimam z for bounding box
       *@param Z Maximam z for bounding box
       */
-    void PutBoundingBox(double x,double X,double y,double Y,double z,double Z);
+    virtual void PutBoundingBox(double x,double X,double y,double Y,double z,double Z);
 
 
     /**Return manximu axis range of bounding box.
       *This value is calculated in FindBoundingBox.
       */
-    double Getminmax_BodyAxisRange();
+    virtual double Getminmax_BodyAxisRange();
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -230,12 +230,12 @@ public:
       *2 things are output, Number of MultiBodys, and information about MultiBodys.
       *@see MultiBody::Write
       */
-    void Write(ostream & _os);
+    virtual void Write(ostream & _os);
 
     /**Output the bounding box to ouputstream.
       *Display it in text format.....
       */
-    void DisplayBoundingBox(ostream & _os);
+    virtual void DisplayBoundingBox(ostream & _os);
 
   //@}
 
