@@ -4,7 +4,7 @@
 //  Cfg_free_serial.c
 //
 //  General Description
-//	A derived template class from CfgManager. It provides some 
+//	A derived template class from CfgManager. It provides some
 //	specific implementation directly related to a multiple joints
 //	serial robot.
 //
@@ -47,13 +47,13 @@ Cfg Cfg_free_serial::GetRandomCfg(double R, double rStep){
 
    double roll, pitch, yaw;
    roll = (2.0*rStep)*drand48() - rStep;
-   pitch = (2.0*rStep)*drand48() - rStep;  
+   pitch = (2.0*rStep)*drand48() - rStep;
    yaw = (2.0*rStep)*drand48() - rStep;
 
    Vector6<double> base(z1*cos(alpha),z1*sin(alpha),z,roll,pitch,yaw);
    vector<double> result;
    int i;
-   for( i=0; i<6; ++i) 
+   for( i=0; i<6; ++i)
 	result.push_back(base[i]);
    for(i=0; i<NumofJoints; i++) {
         jointAngle = (2.0*rStep)*drand48() - rStep;
@@ -91,11 +91,11 @@ Cfg Cfg_free_serial::GetRandomRay(double incr) {
 
 }
 
-Cfg Cfg_free_serial::GetRandomCfg_COM(double *boundingBox) {
+Cfg Cfg_free_serial::GetRandomCfg_CenterOfMass(double *boundingBox) {
 // this is not EXACTLY accurate, ok with most cases ... TO DO
 // To be accurate, one has to make sure every link is inside the given BB,
 // but here only the base link is taken care of. It is almost fine since
-// a little 'bigger' BB will contain all links. 
+// a little 'bigger' BB will contain all links.
 
    vector<double> tmp;
    for(int i=0; i<dof; ++i) {
@@ -149,15 +149,15 @@ bool Cfg_free_serial::ConfigEnvironment(const Cfg &c, Environment *_env) {
 bool Cfg_free_serial::GenerateOverlapCfg(
 		Environment *env,  // although env and robot is not used here,
 		int robot,            // they are needed in other Cfg classes.
-		Vector3D robot_start, 
-		Vector3D robot_goal, 
+		Vector3D robot_start,
+		Vector3D robot_goal,
 		Cfg *resultCfg){
 
      int i;
      Vector3D diff = robot_goal - robot_start;
 
      vector<double> result;
-     for(i=0; i<3; ++i) 
+     for(i=0; i<3; ++i)
 	result.push_back(diff[i]);
      for(i=3; i<dof; ++i)
 	result.push_back(drand48());

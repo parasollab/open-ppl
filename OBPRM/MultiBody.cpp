@@ -52,7 +52,7 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
     //---------------------------------------------------------------
     //  Compute theta1
     //---------------------------------------------------------------
-    double root = sqrt(_t.position.getX()*_t.position.getX() + _t.position.getY()*_t.position.getY() - _d3*_d3); 
+    double root = sqrt(_t.position.getX()*_t.position.getX() + _t.position.getY()*_t.position.getY() - _d3*_d3);
     theta[0][0] = atan2(_t.position.getY(), _t.position.getX()) - atan2(_d3, root);
     theta[4][0] = atan2(_t.position.getY(), _t.position.getX()) - atan2(_d3, root);
     int i;
@@ -81,8 +81,8 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
         c1 = cos(theta[i][0]);
         s3 = sin(theta[i][2]);
         c3 = cos(theta[i][2]);
-        theta[i][1] = atan2((-_a3 - _a2*c3)*_t.position.getZ() - (c1*_t.position.getX() + s1*_t.position.getY())*(_d4 - _a2*s3), 
-                              (_a2*s3 - _d4)*_t.position.getZ() - (_a3 + _a2*c3)*(c1*_t.position.getX() + s1*_t.position.getY())) 
+        theta[i][1] = atan2((-_a3 - _a2*c3)*_t.position.getZ() - (c1*_t.position.getX() + s1*_t.position.getY())*(_d4 - _a2*s3),
+                              (_a2*s3 - _d4)*_t.position.getZ() - (_a3 + _a2*c3)*(c1*_t.position.getX() + s1*_t.position.getY()))
                         - theta[i][2];
         theta[i+1][1] = theta[i][1];
     }
@@ -98,7 +98,7 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
         c1 = cos(theta[i][0]);
         s23 = sin(theta[i][1] + theta[i][2]);
         c23 = cos(theta[i][1] + theta[i][2]);
-        theta[i][3] = atan2(-r13*s1 + r23*c1, 
+        theta[i][3] = atan2(-r13*s1 + r23*c1,
                             -(r13*c1 + r23*s1)*c23 + r33*s23);
         theta[i+1][3] = theta[i][3] + 180.0;
     }
@@ -113,10 +113,10 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
         c23 = cos(theta[i][1] + theta[i][2]);
         s4 = sin(theta[i][3]);
         c4 = cos(theta[i][3]);
-        theta[i][4] = atan2(-r13*(c1*c23*c4 + s1*s4) - r23*(s1*c23*c4 - c1*s4) + r33*(s23*c4), 
+        theta[i][4] = atan2(-r13*(c1*c23*c4 + s1*s4) - r23*(s1*c23*c4 - c1*s4) + r33*(s23*c4),
                             -(r13*c1 + r23*s1)*s23 - r33*c23);
         theta[i+1][4] = -theta[i][4];
-    }    
+    }
     //---------------------------------------------------------------
     //  Compute theta6
     //---------------------------------------------------------------
@@ -133,10 +133,10 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
         c4 = cos(theta[i][3]);
         s5 = sin(theta[i][4]);
         c5 = cos(theta[i][4]);
-        theta[i][5] = atan2(-r11*(c1*c23*s4 - s1*c4) - r21*(s1*c23*s4 + c1*c4) + r31*s23*s4, 
+        theta[i][5] = atan2(-r11*(c1*c23*s4 - s1*c4) - r21*(s1*c23*s4 + c1*c4) + r31*s23*s4,
                             r11*((c1*c23*c4 + s1*s4)*c5 - c1*s23*s5) + r21*((s1*c23*c4 - c1*s4)*c5 - s1*s23*s5) - r31*(s23*c4*c5 + c23*s5));
         theta[i+1][5] = theta[i][5] + 180.0;
-    }    
+    }
 }
 
 //===================================================================
@@ -161,7 +161,7 @@ MultiBody::~MultiBody() {
 
 //===================================================================
 //  ConfigureJoint
-// 
+//
 //  Function: Configure the joint by the given amount of displacement
 //
 //  Added  6/5/98   Wookho Son
@@ -175,8 +175,8 @@ void MultiBody::ConfigureJoint(double * _s, int _dof) {
 
 //===================================================================
 //  GetFirstBody
-// 
-//  Function: Get the very first body in a MultiBody. 
+//
+//  Function: Get the very first body in a MultiBody.
 //            It is a fixed base body, if the MultiBody is a manipualtor
 //            Otherwise, it is the body itself.
 //
@@ -185,7 +185,7 @@ void MultiBody::ConfigureJoint(double * _s, int _dof) {
 //===================================================================
 Body * MultiBody::GetFirstBody() {
     //  I assume that the first body in the list is the anchor body.
-    //  That is, all other bodies in the MultiBody are linked sequentially 
+    //  That is, all other bodies in the MultiBody are linked sequentially
     //  in a "forward" direction (with possible branches) from this anchor.
     if (FixedBodyCount > 0) {
 	return fixedBody[0];
@@ -215,7 +215,7 @@ void MultiBody::AddBody(FreeBody * _body) {
 
 //===================================================================
 //  GetNumberOfLinks
-//  
+//
 //  Output: The number of links in "this" MultiBody
 //===================================================================
 int MultiBody::GetNumberOfLinks() {
@@ -308,7 +308,7 @@ void MultiBody::Get(Input * _input, int _multibodyIndex) {
 	}
     }
     FindBoundingBox();
-    ComputeCOM();
+    ComputeCenterOfMass();
 }
 
 
@@ -370,40 +370,6 @@ void MultiBody::ComputeCenterOfMass(){
   }
 }
 
-
-//===================================================================
-//  ComputeCOM
-//  9/5/98  Daniel Vallejo
-//===================================================================
-void MultiBody::ComputeCOM(){
-
-// this is wrong
-
-  int  nfree  = GetFreeBodyCount();
-  int  nfixed = GetFixedBodyCount();
-
-  if ((nfree+nfixed) == 0) {
-        cout << "\nERROR: No MultiBodies to take MultiBody::CenterOfMass from...\n";
-  }else{
-        Vector3D sum(0,0,0);
-        int i;
-        for(i = 0 ; i < nfree ; i++){
-                sum = sum + GetFreeBody(i)->GetCOM();
-        }
-        for(i = 0 ; i < nfixed ; i++){
-                sum = sum + GetFixedBody(i)->GetCOM();
-        }
-        com = sum/(nfree+nfixed);
-  }
-}
-
-//===================================================================
-//  GetCOM
-//  9/5/98  Daniel Vallejo
-//===================================================================
-Vector3D MultiBody::GetCOM(){
-    return com;
-}
 
 //===================================================================
 //  FindBoundingBox
@@ -542,7 +508,7 @@ vector<double> MultiBody::GetFreeAreas(){
 // the maximum size of this multibody
 double MultiBody::GetBoundingSphereRadius() {
    double result = GetBody(0)->GetPolyhedron().maxRadius;
-   for(int i=1; i<GetBodyCount(); i++) 
+   for(int i=1; i<GetBodyCount(); i++)
 	result += GetBody(i)->GetPolyhedron().maxRadius * 2.0;
 
    return result;

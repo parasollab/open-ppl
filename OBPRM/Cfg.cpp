@@ -53,7 +53,7 @@ Cfg::Cfg() {
 	v.push_back(0.0);
 }
 
-Cfg::Cfg(const vector<double> &v2) 
+Cfg::Cfg(const vector<double> &v2)
 {
    v = v2;
    Normalize_orientation();
@@ -68,7 +68,7 @@ Cfg::Cfg(const Vector6<double> &v2)
 
 
 Cfg::Cfg(
-	double x,double y,double z, 
+	double x,double y,double z,
 	double roll,double pitch,double yaw) {
 
     Vector6<double> tmp(x,y,z,roll,pitch,yaw);
@@ -91,7 +91,7 @@ Cfg::~Cfg(){
 Cfg Cfg::operator+(
                 const Cfg &tmp) const{
     vector<double> a;
-    for(int i=0; i<v.size(); ++i) 
+    for(int i=0; i<v.size(); ++i)
 	a.push_back(v[i]+tmp.v[i]);
     return Cfg(a);
 };
@@ -99,28 +99,28 @@ Cfg Cfg::operator+(
 Cfg Cfg::operator-(
                 const Cfg &tmp) const{
     vector<double> a;
-    for(int i=0; i<v.size(); ++i) 
+    for(int i=0; i<v.size(); ++i)
         a.push_back(v[i]-tmp.v[i]);
     return Cfg(a);
 };
 
 Cfg Cfg::operator-() const{
     vector<double> a;
-    for(int i=0; i<v.size(); ++i) 
+    for(int i=0; i<v.size(); ++i)
         a.push_back(-v[i]);
     return Cfg(a);
 };
 
 Cfg Cfg::operator*(double s) {
     vector<double> a;
-    for(int i=0; i<v.size(); ++i) 
+    for(int i=0; i<v.size(); ++i)
         a.push_back(v[i]*s);
     return Cfg(a);
 };
 
 Cfg Cfg::operator/(double s) {
     vector<double> a;
-    for(int i=0; i<v.size(); ++i) 
+    for(int i=0; i<v.size(); ++i)
         a.push_back(v[i]/s);
     return Cfg(a);
 };
@@ -138,7 +138,7 @@ bool Cfg::operator!=(
 Cfg Cfg::WeightedSum(const Cfg& first,
                  const Cfg& second, double weight) {
     vector<double> a;
-    for(int i=0; i<first.v.size(); ++i) 
+    for(int i=0; i<first.v.size(); ++i)
         a.push_back(first.v[i]*(1.-weight) + second.v[i]*weight);
     return Cfg(a);
 }
@@ -180,35 +180,35 @@ int Cfg::DOFs() {
 pair<double,double> Cfg::SingleParamRange(int param) {
    return CfgHelper->SingleParamRange(param);
 }
- 
+
 // Set a single parameter in the configuration (i.e., x,y,z,roll...)
 // param = the parameter number to set
 // value = the value to set the parameter as
 int Cfg::SetSingleParam(int param, double value) {
- 
+
   if ((param>=0) && (param<DOFs())) {
     v[param]=value;
     return 1;
   } else {
     return 0;
   }
- 
+
 }
 
 // Increment a single parameter in the configuration (i.e., x,y,z,roll...)
 // param = the parameter number to set
 // value = the value to increment the parameter by
 int Cfg::IncSingleParam(int param, double value) {
- 
+
   if ((param>=0) && (param<DOFs())) {
     v[param]+=value;
     return 1;
   } else {
     return 0;
   }
- 
+
 }
- 
+
 // Retreive a single parameter in the configuration (i.e., x,y,z,roll...)
 // param = the parameter number to retreive
 double Cfg::GetSingleParam(int param) {
@@ -260,10 +260,10 @@ Cfg Cfg::GetRandomCfg(double R, double rStep) {
    return CfgHelper->GetRandomCfg(R,rStep);
 }
 
-// generates random configuration where workspace robot's CENTER OF MASS (COM)
+// generates random configuration where workspace robot's CENTER OF MASS
 // is guaranteed to lie within the environment specified bounding box
-Cfg Cfg::GetRandomCfg_COM(double *boundingBox) {
-   return CfgHelper->GetRandomCfg_COM(boundingBox);
+Cfg Cfg::GetRandomCfg_CenterOfMass(double *boundingBox) {
+   return CfgHelper->GetRandomCfg_CenterOfMass(boundingBox);
 }
 
 // generates random configuration where workspace robot's EVERY VERTEX
@@ -272,28 +272,28 @@ Cfg Cfg::GetRandomCfg(Environment *env) {
 
   // Probably should do something smarter than 3 strikes and exit.
   // eg, if it fails once, check size of bounding box vs robot radius
-  // and see if user has an impossibly small (for this robot) bounding 
+  // and see if user has an impossibly small (for this robot) bounding
   // box specified
   int maxTries = 10;
 
   double *bb = env->GetBoundingBox();
 
   while (maxTries-- > 0){
-     Cfg tmp = GetRandomCfg_COM(bb);
+     Cfg tmp = GetRandomCfg_CenterOfMass(bb);
      if (tmp.InBoundingBox(env))
               return tmp;
   }//endwhile
 
 
   // Print error message and some helpful (I hope!) statistics and exit...
-  cout << "\n\nERROR: GetRandomCfg not able to find anything in bounding box." 
-       <<   "\n       robot radius is " 
+  cout << "\n\nERROR: GetRandomCfg not able to find anything in bounding box."
+       <<   "\n       robot radius is "
        << env->GetMultiBody(env->GetRobotIndex())->GetBoundingSphereRadius();
   env->DisplayBB(cout);
   exit(-1);
 
   // compiler wants this method to return something
-  return InvalidData(); 
+  return InvalidData();
 }
 
 // tests whether or not robot in this configuration has every vertex inside
@@ -343,7 +343,7 @@ Cfg Cfg::GetRandomRay(double incr) {
 
 
 void Cfg::IncrementTowardsGoal(
-	const Cfg &goal, 
+	const Cfg &goal,
 	const Cfg &increment)
 {
    CfgHelper->IncrementTowardsGoal(*this, goal, increment);
@@ -372,8 +372,8 @@ vector<Cfg> Cfg::FindNeighbors(
   return CfgHelper->FindNeighbors(*this, _env, goal, increment, cd, noNeighbors, _cdsetid);
 }
 
-Cfg Cfg::FindIncrement( 
-	const Cfg& _goal, 
+Cfg Cfg::FindIncrement(
+	const Cfg& _goal,
 	int * n_ticks,
 	double positionRes,
 	double orientationRes)
@@ -381,20 +381,20 @@ Cfg Cfg::FindIncrement(
   return CfgHelper->FindIncrement(*this, _goal, n_ticks, positionRes, orientationRes);
 }
 
-Cfg Cfg::FindIncrement( 
-	const Cfg& _goal, 
+Cfg Cfg::FindIncrement(
+	const Cfg& _goal,
 	int  n_ticks)
 {
   return CfgHelper->FindIncrement(*this, _goal, n_ticks);
 }
 
- 
+
 void Cfg::Increment(const Cfg &_increment)
 {
-   for(int i=0; i<v.size(); ++i) 
+   for(int i=0; i<v.size(); ++i)
 	v[i] += _increment.v[i];
    Normalize_orientation();
-   
+
 }
 
 
@@ -466,9 +466,9 @@ bool Cfg::isCollision(Environment *env,CollisionDetection *cd, SID _cdsetid){
      return answerFromEnvironment;
 }
 
-bool Cfg::isCollision(Environment *env, CollisionDetection *cd, 
+bool Cfg::isCollision(Environment *env, CollisionDetection *cd,
 		int robot, int obs, SID _cdsetid){
-     if(!ConfigEnvironment(env)) 
+     if(!ConfigEnvironment(env))
 	  return true;
 
      // ask CollisionDetection class directly.
@@ -477,14 +477,14 @@ bool Cfg::isCollision(Environment *env, CollisionDetection *cd,
 }
 
 double Cfg::Clearance(Environment *env,CollisionDetection *cd ){
-     if(!ConfigEnvironment(env)) 
+     if(!ConfigEnvironment(env))
 	return -1;
      return  cd->Clearance(env);
 }
 
 
 //Approximate C-Space Clearance
-double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, int n) 
+double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, int n)
 {
   //cout << endl << endl << "Inside ApproxCSpaceClearance: " << flush;
   Cfg cfg = *this;
@@ -498,7 +498,7 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 
   Cfg dir;
   for(int i = 0 ; i < n ; i++){
-    dir = GetRandomCfg(env); 
+    dir = GetRandomCfg(env);
     //cout << endl << "dir = " << dir;
 
     Cfg tick = cfg;
@@ -548,8 +548,8 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 bool Cfg::GenerateOverlapCfg(
 		Environment *env,  // although env and robot is not used here,
 		int robot,            // they are needed in other Cfg classes.
-		Vector3D robot_start, 
-		Vector3D robot_goal, 
+		Vector3D robot_start,
+		Vector3D robot_goal,
 		Cfg *resultCfg){
 
    return CfgHelper->GenerateOverlapCfg(env, robot, robot_start, robot_goal, resultCfg);

@@ -61,7 +61,7 @@ Cfg Cfg_fixed_PRR::GetRandomRay(double incr) {
 
 }
 
-Cfg Cfg_fixed_PRR::GetRandomCfg_COM(double *boundingBox) {
+Cfg Cfg_fixed_PRR::GetRandomCfg_CenterOfMass(double *boundingBox) {
 
    double zz = boundingBox[4] +
                         (boundingBox[5]-boundingBox[4])*drand48();
@@ -99,8 +99,8 @@ bool Cfg_fixed_PRR::ConfigEnvironment(const Cfg &c, Environment *_env) {
 bool Cfg_fixed_PRR::GenerateOverlapCfg(
 		Environment *env,  // although env and robot is not used here,
 		int robot,            // they are needed in other Cfg classes.
-		Vector3D robot_start, 
-		Vector3D robot_goal, 
+		Vector3D robot_start,
+		Vector3D robot_goal,
 		Cfg *resultCfg){
 
      // formulas here is from Craig book P128 with a little modifications.

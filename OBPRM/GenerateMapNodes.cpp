@@ -28,14 +28,14 @@
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class GenerateMapNodes
-//      
+//
 /////////////////////////////////////////////////////////////////////
   //==================================
   // GenerateMapNodes class Methods: Constructors and Destructor
   //==================================
 
 GenerateMapNodes::
-GenerateMapNodes() 
+GenerateMapNodes()
 {
     DefaultInit();
 };
@@ -109,7 +109,7 @@ void
 GenerateMapNodes::
 GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnsetid, GNInfo &info) {
 
-  vector<GN> gnset = generators.GetGNSet(_gnsetid); 
+  vector<GN> gnset = generators.GetGNSet(_gnsetid);
 
   // clear generated nodes space
   info.nodes.erase(info.nodes.begin(),info.nodes.end());
@@ -132,16 +132,16 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
 
   }
 
-  // add generated nodes 
+  // add generated nodes
   _rm->roadmap.AddVertex(info.nodes);
 
 };
 
 
 //===================================================================
-// Basic PRM 
+// Basic PRM
 //===================================================================
-void 
+void
 GenerateMapNodes::
 BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GNInfo &_info){
 
@@ -181,7 +181,7 @@ BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GN
 //           add the free one to the roadmap
 //     endif
 //   endfor
-//  
+//
 //===================================================================
 void
 GenerateMapNodes::
@@ -234,7 +234,7 @@ GaussPRM(
 
 
 //===================================================================
-// BasicOBPRM 
+// BasicOBPRM
 //===================================================================
 void
 GenerateMapNodes::
@@ -270,7 +270,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
 
         for(int n = 0 ; n < N; n++){
 
-		// Generate Inside cfg 
+		// Generate Inside cfg
 		Cfg InsideNode;
 		if(!GenerateInsideCfg(_env, robot, obstacle, &InsideNode)) {
                    cout << "\nError: cannot overlap COMs of robot & obstacle\n";
@@ -282,12 +282,12 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
                    continue;
                 }
 
-		// Generate Random direction	
+		// Generate Random direction
   		Cfg incrCfg=Cfg::GetRandomRay(
 			EXPANSION_FACTOR * _env->GetPositionRes()
 		);
 
-		// Generate outside cfg 
+		// Generate outside cfg
 		Cfg OutsideNode = GenerateOutsideCfg(_env,cd,robot,obstacle,
 				InsideNode,incrCfg,_info);
 		if(OutsideNode.AlmostEqual(InsideNode)) continue; // can not find outside node.
@@ -385,7 +385,7 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
         if(obstacle != robot){
 
 	    // Generate Surface Cfgs using Binary Search Procedure
-	    obstSurface = GenSurfaceCfgs4Obst(_env,cd,dm, obstacle, NSEED, _info); 
+	    obstSurface = GenSurfaceCfgs4Obst(_env,cd,dm, obstacle, NSEED, _info);
 
 	    // Generate Free Cfgs using Ad Hoc procedure
 	    obstFree = GenFreeCfgs4Obst(_env,cd, obstacle, NFREE, _info);
@@ -412,10 +412,10 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
             obstFree.erase(obstFree.begin(), obstFree.end());
 
         } // if(obstacle != robot)
-	else  // obst = robot : Guang 10/13/99 
+	else  // obst = robot : Guang 10/13/99
 	if(numMultiBody == 1) {
 	    vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _info.numNodes, _info);
-	    for(int i=0; i<CobstNodes.size(); ++i){ 
+	    for(int i=0; i<CobstNodes.size(); ++i){
 		CobstNodes[i].info.obst = obstacle;
 		_info.nodes.push_back(CobstNodes[i]);
 	    }
@@ -423,8 +423,8 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
 		surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
 	    #endif
 	}
-	    
-	
+
+
     } // for(obstacle)
 
     #if INTERMEDIATE_FILES
@@ -479,10 +479,10 @@ GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection* cd,DistanceMetri
     pair<int,int> seedSelect;
     ValidatePairs("seedSelect", info.collPair, &seedSelect);
 
-    vector<Cfg> obstSeeds; 
+    vector<Cfg> obstSeeds;
     GenerateSeeds(env,cd,info,obstacle,nCfgs,seedSelect.first,seedSelect.second,&obstSeeds);
 
-    int robot = env->GetRobotIndex(); 
+    int robot = env->GetRobotIndex();
     vector<Cfg> tmp, preshells, shells, surface;
     for(int i = 0 ; i < obstSeeds.size() ; i++){
 
@@ -521,8 +521,8 @@ GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, i
     int i;
     for(i=0; i<nCfgs; ++i) {
 	Cfg::GenerateOverlapCfg(env, robot, voidA, voidB, &gen);  // voidA, voidB is not used.
-	if(gen.isCollision(env,cd, info.cdsetid)) 
-           obstSeeds.push_back(gen);       
+	if(gen.isCollision(env,cd, info.cdsetid))
+           obstSeeds.push_back(gen);
         else
 	   surface.push_back(gen);
     }
@@ -706,7 +706,7 @@ GenerateSeeds(Environment * env,CollisionDetection *cd, GNInfo &_gnInfo,
 //===================================================================
 vector<Cfg>
 GenerateMapNodes::
-GenFreeCfgs4Obst(Environment * env, CollisionDetection *cd, int obstacle, int nCfgs, GNInfo &info){ 
+GenFreeCfgs4Obst(Environment * env, CollisionDetection *cd, int obstacle, int nCfgs, GNInfo &info){
 
     pair<int,int> freeSelect;
     ValidatePairs("freeSelect", info.freePair, &freeSelect);
@@ -821,7 +821,7 @@ DIST_Compare (const VID_DISTANCE_TYPE &_cc1, const VID_DISTANCE_TYPE &_cc2) {
 
 void
 GenerateMapNodes::
-FarthestFromStart(Environment * env, DistanceMetric * dm,GNInfo &info, 
+FarthestFromStart(Environment * env, DistanceMetric * dm,GNInfo &info,
 	Cfg start, vector<Cfg> spread, vector<Cfg>* farNode){
 
 
@@ -830,7 +830,7 @@ FarthestFromStart(Environment * env, DistanceMetric * dm,GNInfo &info,
 
     for(int i = 0 ; i < spread.size() ; i++){
         ds.push_back( VID_DISTANCE_TYPE(
-			i, 
+			i,
 			dm->Distance(env, start, spread[i], info.dmsetid))
                     );
     }
@@ -850,7 +850,7 @@ FarthestFromStart(Environment * env, DistanceMetric * dm,GNInfo &info,
 //===================================================================
 void
 GenerateMapNodes::
-FirstNFreeCfgs(Environment *env,CollisionDetection *cd, GNInfo &info, 
+FirstNFreeCfgs(Environment *env,CollisionDetection *cd, GNInfo &info,
 	int n, vector<Cfg> cfgs, vector<Cfg>* free){
 
     int size = cfgs.size();
@@ -873,7 +873,7 @@ FirstNFreeCfgs(Environment *env,CollisionDetection *cd, GNInfo &info,
 void
 GenerateMapNodes::
 GenNewPivots(Environment *env,CollisionDetection *cd, DistanceMetric * dm,GNInfo &info,
-	Cfg start, vector<Cfg> pivots, 
+	Cfg start, vector<Cfg> pivots,
 	double tStep, double rStep, int nspread, int nFar,
         vector<Cfg>* newPivots){
 
@@ -894,11 +894,11 @@ GenNewPivots(Environment *env,CollisionDetection *cd, DistanceMetric * dm,GNInfo
 void
 GenerateMapNodes::
 SpreadCfg(Environment *env,CollisionDetection *cd,DistanceMetric * dm, GNInfo &info,
-        Cfg start,                                     
-        double tStep,                                 
-        double rStep,                                
-        int nspread,                                   
-        int nFar,                                      
+        Cfg start,
+        double tStep,
+        double rStep,
+        int nspread,
+        int nFar,
         int nIterations){
 
     //-- default values for everything except "start" configuration
@@ -931,15 +931,15 @@ SpreadCfg(Environment *env,CollisionDetection *cd,DistanceMetric * dm, GNInfo &i
     info.nodes.push_back(start);
     pivots.push_back(start);
 
-    vector<Cfg> tmp; 
+    vector<Cfg> tmp;
     for(int j = 0 ; j < nIterations ; j++){
 
 	if(pivots.size() == 0) break;
 	tmp.reserve(nFar);
-        GenNewPivots(env,cd,dm,info, 
+        GenNewPivots(env,cd,dm,info,
 		start, pivots, tStep, rStep, nspread, nFar, &tmp);
 
-	pivots.erase(pivots.begin(),pivots.end());	
+	pivots.erase(pivots.begin(),pivots.end());
 	pivots.reserve(nFar);
 
 	// Collect all the generated nodes
@@ -957,7 +957,7 @@ SpreadCfg(Environment *env,CollisionDetection *cd,DistanceMetric * dm, GNInfo &i
 #if INTERMEDIATE_FILES
     WritePathTranformationMatrices("ss.path", free, env);
 #endif
- 
+
 };
 
 
@@ -987,7 +987,7 @@ GenerateMapNodes::
 InsideBB(Environment *env, vector<Cfg> cfgs){
 
     vector<Cfg> ncfgs;
-    
+
     for(int i = 0 ; i < cfgs.size() ; i++)
 	if(cfgs[i].InBoundingBox(env))
             ncfgs.push_back(cfgs[i]);
@@ -1002,7 +1002,7 @@ Vector3D
 GenerateMapNodes::
 ChooseRandomVertexOnBody(Body *body, bool isFreeBody)
 {
-    GMSPolyhedron polyhedron; 
+    GMSPolyhedron polyhedron;
 
     // for robot, choose body frame; for obstacle, choose world frame
     if(isFreeBody) polyhedron = body->GetPolyhedron();
@@ -1014,7 +1014,7 @@ ChooseRandomVertexOnBody(Body *body, bool isFreeBody)
 
 
 //===================================================================
-// ExtremeVertex  
+// ExtremeVertex
 //===================================================================
 Vector3D
 GenerateMapNodes::
@@ -1083,7 +1083,7 @@ Vector3D
 GenerateMapNodes::
 ChooseRandomTriangleOnBody(Body *body, bool isFreeBody)
 {
-    GMSPolyhedron polyhedron; 
+    GMSPolyhedron polyhedron;
     // for robot, choose body frame; for obstacle, choose world frame
     if(isFreeBody)
 	polyhedron = body->GetPolyhedron();
@@ -1100,7 +1100,7 @@ ChooseRandomTriangleOnBody(Body *body, bool isFreeBody)
     r = polyhedron.vertexList[poly->vertexList[2]];
 
     Vector3D u;
-    u = ChoosePointOnTriangle(p, q, r); 
+    u = ChoosePointOnTriangle(p, q, r);
     return u;
 };
 
@@ -1163,10 +1163,7 @@ PointOnBody(Body * body, int select, bool isFreeBody)
 
     switch( (PairOptions)select ){
         case cM:
-	    if(isFreeBody)
-               pt = body->GetCOM();
-	    else
-               pt = body->GetCenterOfMass();
+             pt = body->GetCenterOfMass();
             break;
 
         case rV:
@@ -1188,10 +1185,7 @@ PointOnBody(Body * body, int select, bool isFreeBody)
 	case cM_rV:
  	    opt = rand() % 2;
  	    if(opt == 0){
-		if(isFreeBody)
-               	    pt = body->GetCOM();
-            	else
-               	    pt = body->GetCenterOfMass();
+       	    pt = body->GetCenterOfMass();
 	    }
 	    else{
 	   	pt = ChooseRandomVertexOnBody(body, isFreeBody);
@@ -1221,10 +1215,7 @@ PointOnBody(Body * body, int select, bool isFreeBody)
 	case all:
 	    opt = rand() % 5;
             if(opt == 0){
-                if(isFreeBody)
-                    pt = body->GetCOM();
-                else
-                    pt = body->GetCenterOfMass();
+                pt = body->GetCenterOfMass();
             }
             else if(opt == 1){
                 pt = ChooseRandomVertexOnBody(body, isFreeBody);
@@ -1267,7 +1258,7 @@ PointsOnMultiBody(MultiBody * mbody, int npts, int select)
         for(int j = 0 ; j < npts ; j++){
             pts.push_back(PointOnBody(mbody->GetFreeBody(nFree-1),select,1));
         }
-    else  
+    else
         for(int j = 0 ; j < npts ; j++){
             pts.push_back(PointOnBody(mbody->GetFixedBody(0), select, 0));
         }
@@ -1307,7 +1298,7 @@ GenerateInsideCfg(Environment *_env, int rob, int obst, Cfg * insideNode){
 
     _env->GetMultiBody(obst)->ComputeCenterOfMass();
     bool tmp = Cfg::GenerateOverlapCfg(_env, rob,
-                _env->GetMultiBody(rob)->GetCOM(),
+                _env->GetMultiBody(rob)->GetCenterOfMass(),
                 _env->GetMultiBody(obst)->GetCenterOfMass(),
                 insideNode);
     return tmp;
@@ -1337,14 +1328,14 @@ GenerateOutsideCfg(Environment *env,CollisionDetection * cd, int rob, int obst,
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class GN
-//      
+//
 /////////////////////////////////////////////////////////////////////
 
 GN::
 GN() {
   strcpy(name,"");
   Gauss_d = 0;
-  generator = 0; 
+  generator = 0;
   gnid = INVALID_EID;
 };
 
@@ -1352,7 +1343,7 @@ GN::
 ~GN() {
 };
 
-bool 
+bool
 GN::
 operator==(const GN& _gn) const
 {
@@ -1372,20 +1363,20 @@ operator==(const GN& _gn) const
 };
 
 
-char* 
+char*
 GN::
 GetName() const {
   return const_cast<char*>(name);
 };
 
-GNF 
+GNF
 GN::
 GetGenerator(){
   return generator;
 };
 
 
-EID 
+EID
 GN::
 GetID() const {
   return gnid;
@@ -1414,7 +1405,7 @@ ostream& operator<< (ostream& _os, const GN& gn) {
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class GNSets
-//      
+//
 /////////////////////////////////////////////////////////////////////
 
   //==================================
@@ -1434,10 +1425,10 @@ GNSets::
   //===================================================================
   // GNSets class Methods: Adding GNs, Making & Modifying GN sets
   //===================================================================
-  // EID AddGN(const char* _gninfo); 
-  // int AddGNToSet(const SID _sid, const EID _gnid); 
-  // int DeleteGNFromSet(const SID _sid, const EID _gnid); 
-  // SID MakeGNSet(const char* gnlist);  // make an ordered set of gns, 
+  // EID AddGN(const char* _gninfo);
+  // int AddGNToSet(const SID _sid, const EID _gnid);
+  // int DeleteGNFromSet(const SID _sid, const EID _gnid);
+  // SID MakeGNSet(const char* gnlist);  // make an ordered set of gns,
   // SID MakeGNSet(istream& _myistream); //  - add gn to universe if not there
   // SID MakeGNSet(const EID _eid);
   // SID MakeGNSet(const vector<EID> _eidvector);
@@ -1449,28 +1440,28 @@ PutDefaults(Environment *_env) {
   DEFAULT_Gauss_d = _env->Getminmax_BodyAxisRange();
 };
 
-int 
+int
 GNSets::
 AddGN(const char* _gninfo) {
-  SID sid = MakeGNSet(_gninfo); 
+  SID sid = MakeGNSet(_gninfo);
   SetIDs--;
   return DeleteOSet(sid);        // delete the set, but not elements
 };
 
 
-int 
+int
 GNSets::
 AddGNToSet(const SID _sid, const EID _gnid) {
   return AddElementToOSet(_sid,_gnid);
 };
 
-int 
+int
 GNSets::
 DeleteGNFromSet(const SID _sid, const EID _gnid) {
   return DeleteElementFromOSet(_sid,_gnid);
 };
 
-SID 
+SID
 GNSets::
 MakeGNSet(const char* _gnlist){
 #ifdef _WIN32
@@ -1482,7 +1473,7 @@ MakeGNSet(const char* _gnlist){
          cout << endl << "In MakeGNSet: can't open instring: " << _gnlist ;
          return INVALID_SID;
   }
-  return MakeGNSet(is);  
+  return MakeGNSet(is);
 };
 
 SID
@@ -1499,28 +1490,28 @@ MakeGNSet(const vector<EID> _eidvector) {
 
 int
 GNSets::
-DeleteGNSet(const SID _sid) { 
+DeleteGNSet(const SID _sid) {
   return DeleteOSet(_sid);
 }
 
 
-SID 
-GNSets:: 
-MakeGNSet(istream& _myistream) { 
-  char gnname[100]; 
-  vector<EID> gnvec;  // vector of gnids for this set 
+SID
+GNSets::
+MakeGNSet(istream& _myistream) {
+  char gnname[100];
+  vector<EID> gnvec;  // vector of gnids for this set
 
-  while ( _myistream >> gnname ) { // while gns to process...  
-    if (!strcmp(gnname,"BasicPRM")) {           // BasicPRM 
-       GN gn1; 
+  while ( _myistream >> gnname ) { // while gns to process...
+    if (!strcmp(gnname,"BasicPRM")) {           // BasicPRM
+       GN gn1;
        strcpy(gn1.name,gnname);
        gn1.generator = &GenerateMapNodes::BasicPRM;
-       gn1.gnid = AddElementToUniverse(gn1); 
+       gn1.gnid = AddElementToUniverse(gn1);
        if ( ChangeElementInfo(gn1.gnid,gn1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";
           exit(-1);
        }
-       gnvec.push_back( gn1.gnid ); 
+       gnvec.push_back( gn1.gnid );
 
     } else if (!strcmp(gnname,"GaussPRM")) {
        GN gn1; double Gauss_d;
@@ -1558,12 +1549,12 @@ MakeGNSet(istream& _myistream) {
        GN gn1;
        strcpy(gn1.name,gnname);
        gn1.generator = &GenerateMapNodes::BasicOBPRM;
-       gn1.gnid = AddElementToUniverse(gn1); 
+       gn1.gnid = AddElementToUniverse(gn1);
        if ( ChangeElementInfo(gn1.gnid,gn1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";
           exit(-1);
        }
-       gnvec.push_back( gn1.gnid ); 
+       gnvec.push_back( gn1.gnid );
 
     } else if (!strcmp(gnname,"OBPRM")) {  // OBPRM
        GN gn1;
@@ -1580,7 +1571,7 @@ MakeGNSet(istream& _myistream) {
        cout << "INVALID: map node generator name = " << gnname;
        exit(-1);
     }
-  } // end while 
+  } // end while
 
   return MakeOSet(gnvec);
 }
@@ -1599,65 +1590,65 @@ GetGN(const EID _gnid) const {
    return GetElement(_gnid);
 };
 
-vector<GN> 
+vector<GN>
 GNSets::
 GetGNs() const {
-  vector<GN> elts2; 
-  vector<pair<EID,GN> > elts1 = GetElements(); 
-  for (int i=0; i < elts1.size(); i++) 
+  vector<GN> elts2;
+  vector<pair<EID,GN> > elts1 = GetElements();
+  for (int i=0; i < elts1.size(); i++)
      elts2.push_back( elts1[i].second );
-  return elts2; 
+  return elts2;
 };
 
-vector<GN> 
+vector<GN>
 GNSets::
 GetGNSet(const SID _sid) const {
-  vector<GN> elts2; 
-  vector<pair<EID,GN> > elts1 = GetOSet(_sid); 
-  for (int i=0; i < elts1.size(); i++) 
+  vector<GN> elts2;
+  vector<pair<EID,GN> > elts1 = GetOSet(_sid);
+  for (int i=0; i < elts1.size(); i++)
      elts2.push_back( elts1[i].second );
-  return elts2; 
+  return elts2;
 };
 
 
-vector<pair<SID,vector<GN> > > 
+vector<pair<SID,vector<GN> > >
 GNSets::
 GetGNSets() const {
 
   vector<pair<SID,vector<GN> > > s2;
   vector<GN> thesegns;
 
-  vector<pair<SID,vector<pair<EID,GN> > > > s1 = GetOSets(); 
+  vector<pair<SID,vector<pair<EID,GN> > > > s1 = GetOSets();
 
   for (int i=0; i < s1.size(); i++)  {
     thesegns.erase(thesegns.begin(),thesegns.end());
-    for (int j=0; j < s1[i].second.size(); j++ ) 
+    for (int j=0; j < s1[i].second.size(); j++ )
        thesegns.push_back (s1[i].second[j].second);
     s2.push_back( pair<SID,vector<GN> > (s1[i].first,thesegns) );
   }
-  return s2; 
+  return s2;
 };
 
 
-void 
+void
 GNSets::
 DisplayGNs() const{
    DisplayElements();
 };
 
-void 
+void
 GNSets::
 DisplayGN(const EID _gnid) const{
    DisplayElement(_gnid);
 };
 
-void 
+void
 GNSets::
 DisplayGNSets() const{
    DisplayOSets();
 };
 
-void 
+void
 GNSets::
 DisplayGNSet(const SID _sid) const{
    DisplayOSet(_sid);

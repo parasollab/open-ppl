@@ -4,22 +4,22 @@
 //  CfgManager.h
 //
 //  General Description
-//	This class provides some implmentations which could be 
+//	This class provides some implmentations which could be
 //	different for different Cfg types, and some methods do require
 //	a derived Cfg provide its own version(pure virtual methods).
 //	This is an abstract class.
-//	         
+//
 //		  CfgManager   <--------  Cfg
-//		  /   |     \ 
+//		  /   |     \
 //		_/    |      \_
 //	Cfg_free      |         Cfg_free_serial<int>
 //		  Cfg_fixed_PRR
 //
-//  BE AWARE: 
+//  BE AWARE:
 //      It is ASSUMED that all position values are packed together
-//      in the first 'posDof' spots of a Cfg data. Other choices 
+//      in the first 'posDof' spots of a Cfg data. Other choices
 //	would require the corrrsponding derived class have its own
-//	version of most member functions listed here. 
+//	version of most member functions listed here.
 //
 //  Created
 //	08/31/99	Guang Song
@@ -61,11 +61,11 @@ public:
   virtual pair<double,double> SingleParamRange(int param);
   virtual void Normalize_orientation(Cfg &c);
   virtual bool AlmostEqual(const Cfg&c1, const Cfg& c2);
-  virtual bool isWithinResolution(const Cfg&c1, const Cfg&c2, 
+  virtual bool isWithinResolution(const Cfg&c1, const Cfg&c2,
                             double positionRes, double orientationRes);
   virtual Cfg InvalidData();
   virtual Cfg GetRandomCfg(double R, double rStep) = 0;
-  virtual Cfg GetRandomCfg_COM(double *boundingBox) = 0;
+  virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox) = 0;
   virtual Cfg GetRandomRay(double incr) = 0;
   virtual Cfg GetPositionOrientationFrom2Cfg(
 	const Cfg& c1, const Cfg& c2);  // rotate-at-s helper
@@ -73,13 +73,13 @@ public:
 		      double s); // for rotate-at-s Local Planner.
 
   // methods for nodes connection.
-  virtual vector<Cfg> FindNeighbors(const Cfg& c, Environment *env, 
+  virtual vector<Cfg> FindNeighbors(const Cfg& c, Environment *env,
 			const Cfg& increment,CollisionDetection *,
 			int noNeighbors, SID  _cdsetid);
   virtual vector<Cfg> FindNeighbors(const Cfg& c, Environment *env, const Cfg& goal,
 	const Cfg& increment, CollisionDetection *,int noNeighbors, SID  _cdsetid);
   virtual void IncrementTowardsGoal(Cfg& c, const Cfg &goal, const Cfg &increment);
-  virtual Cfg FindIncrement(const Cfg& c, const Cfg& _goal, int * n_ticks, 
+  virtual Cfg FindIncrement(const Cfg& c, const Cfg& _goal, int * n_ticks,
                             double positionRes, double orientationRes);
   virtual Cfg FindIncrement(const Cfg& c, const Cfg& _goal, int  n_ticks);
 
@@ -93,8 +93,8 @@ public:
                            SID _cdsetid, MultiBody * onflyRobot);
 
   // Node Generation methods
-  virtual bool GenerateOverlapCfg(Environment *env, int robot, 
-         Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg) = 0; // OBPRM 
+  virtual bool GenerateOverlapCfg(Environment *env, int robot,
+         Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg) = 0; // OBPRM
   virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
          CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid) = 0; // NORMAL
 
@@ -103,7 +103,7 @@ public:
   virtual void print_vizmo_format_to_file(const Cfg &c, Environment *env, FILE *_fp);
   virtual void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
-  
+
   protected:
 	// dof: Degree of Freedom, posDof: DOF for positions.
 	int dof;
@@ -113,5 +113,5 @@ public:
 
 
 
-} ; 
+} ;
 #endif

@@ -36,15 +36,15 @@ public:
   //===================================================================
   virtual Vector3D GetRobotCenterPosition(const Cfg & c) const;
   virtual Cfg GetRandomCfg(double R, double rStep);
-  virtual Cfg GetRandomCfg_COM(double *boundingBox);
+  virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
   virtual Cfg GetRandomRay(double incr);
 
   // methods for Cfg generation and collision checking.
   virtual bool ConfigEnvironment(const Cfg &c, Environment *env);
 
   // Node Generation methods
-  virtual bool GenerateOverlapCfg(Environment *env, int robot, 
-         Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg); // OBPRM 
+  virtual bool GenerateOverlapCfg(Environment *env, int robot,
+         Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg); // OBPRM
   virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
          CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid); // NORMAL
 
@@ -54,5 +54,5 @@ public:
 
 
 
-} ; 
+} ;
 #endif

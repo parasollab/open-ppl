@@ -65,12 +65,12 @@ Cfg Cfg_free::GetRandomRay(double incr) {
 
 }
 
-Cfg Cfg_free::GetRandomCfg_COM(double *boundingBox) {
+Cfg Cfg_free::GetRandomCfg_CenterOfMass(double *boundingBox) {
    vector<double> tmp;
    for(int i=0; i<6; ++i) {
       if(i<3) {
 	 int k = 2*i;
-         double p = boundingBox[k] + 
+         double p = boundingBox[k] +
                         (boundingBox[k+1]-boundingBox[k])*drand48();
          tmp.push_back(p);
       } else
@@ -93,7 +93,7 @@ bool Cfg_free::ConfigEnvironment(const Cfg &c, Environment *env) {
           Vector3D(v[0],v[1],v[2])
      );
      // update link 1.
-     env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);  
+     env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);
      return true;
 }
 
@@ -101,23 +101,23 @@ bool Cfg_free::ConfigEnvironment(const Cfg &c, Environment *env) {
 bool Cfg_free::GenerateOverlapCfg(
 		Environment *env,  // although env and robot is not used here,
 		int robot,            // they are needed in other Cfg classes.
-		Vector3D robot_start, 
-		Vector3D robot_goal, 
+		Vector3D robot_start,
+		Vector3D robot_goal,
 		Cfg *resultCfg){
 
      Vector3D diff = robot_goal - robot_start;
 
      // pass back the Cfg for this pose.
-     *resultCfg = 
-        Cfg(diff[0], diff[1], diff[2], 
+     *resultCfg =
+        Cfg(diff[0], diff[1], diff[2],
 			drand48(), drand48(),drand48());
      return true;
 }
 
 
-vector<Cfg> 
+vector<Cfg>
 Cfg_free::GetCfgByOverlappingNormal
-(Environment * env,CollisionDetection* cd, const GMSPolyhedron &polyRobot, 
+(Environment * env,CollisionDetection* cd, const GMSPolyhedron &polyRobot,
 const GMSPolyhedron &polyObst, int robTri, int obsTri, SID _cdsetid, MultiBody * onflyRobot){
 
 	static const double posRes = env->GetPositionRes();
@@ -159,7 +159,7 @@ const GMSPolyhedron &polyObst, int robTri, int obsTri, SID _cdsetid, MultiBody *
         while(trials++ < 10) {
 	   // find a point on robot's facet and one on obstacle's facet(one of the triangles).
 	   // points on edge.
-	   double ran1 = drand48(); 
+	   double ran1 = drand48();
 	   double ran2 = drand48();
 	   robotPoint = robotVertex[rand()%3]*ran1 + robotVertex[rand()%3]*(1.-ran1);
 	   obstPoint = obstVertex[rand()%3]*ran2 + obstVertex[rand()%3]*(1.-ran2);
@@ -173,7 +173,7 @@ const GMSPolyhedron &polyObst, int robTri, int obsTri, SID _cdsetid, MultiBody *
 			gamma/TWOPI, beta/TWOPI, alpha/TWOPI));
 	   cfgIn.Increment(displacement);
 	   if(! isCollision(cfgIn, env,cd,_cdsetid, onflyRobot) ) {
-	      direction = obstNormal; 
+	      direction = obstNormal;
 	   } else {
 	      cfgIn = cfgIn - displacement - displacement;
 	      if(! isCollision(cfgIn, env,cd,_cdsetid, onflyRobot) ) {
@@ -203,7 +203,7 @@ const GMSPolyhedron &polyObst, int robTri, int obsTri, SID _cdsetid, MultiBody *
 }
 
 
-bool Cfg_free::InNarrowPassage(const Cfg&c, Environment * env,CollisionDetection* cd, 
+bool Cfg_free::InNarrowPassage(const Cfg&c, Environment * env,CollisionDetection* cd,
                                  SID _cdsetid, MultiBody * onflyRobot){
 	    if(c.GetData().size() != 6) {
 		cout << "Error in Cfg_free::InNarrowPassage, Cfg must be rigidbody type. " << endl;
@@ -211,7 +211,7 @@ bool Cfg_free::InNarrowPassage(const Cfg&c, Environment * env,CollisionDetection
 	    }
             // add filter here 06/14/99
 	    static const double posRes = env->GetPositionRes();
-            double width = 2.0*posRes; 
+            double width = 2.0*posRes;
             int narrowpassageWeight = 0;
 	    Vector6<double> tmp(0,0,0,0,0,0);
             for(int i=0; i<3; i++) {
@@ -226,7 +226,7 @@ bool Cfg_free::InNarrowPassage(const Cfg&c, Environment * env,CollisionDetection
                 }
             }
             double THROWpercentage = 0.5; // (0.5:walls) (0.97:alpha) (1.0:flange)
-            if(narrowpassageWeight < 2  && drand48() < THROWpercentage) 
+            if(narrowpassageWeight < 2  && drand48() < THROWpercentage)
                 return false; // throw most of No-inside-narrow nodes away.
 	    return true;
 }
@@ -243,7 +243,7 @@ Cfg_free::GenSurfaceCfgs4ObstNORMAL
 (Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, SID _cdsetid){
 
       vector<Cfg> surface;
-      int robot = env->GetRobotIndex();	
+      int robot = env->GetRobotIndex();
 
       GMSPolyhedron &polyRobot = env->GetMultiBody(robot)->GetFreeBody(0)->GetPolyhedron();
       GMSPolyhedron &polyObst = env->GetMultiBody(obstacle)->GetFixedBody(0)
@@ -251,7 +251,7 @@ Cfg_free::GenSurfaceCfgs4ObstNORMAL
 
       int num = 0;
 
-      while(num < nCfgs) { 
+      while(num < nCfgs) {
 	  int robotTriIndex = (int)(drand48()*polyRobot.numPolygons);
 	  int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
           // brc removed &

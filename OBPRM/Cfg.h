@@ -6,7 +6,7 @@
 //  General Description
 //	Configuration Data Class, it has all the interface needed
 //	by other Motion Planning classes. Since it is abstract, it
-//	will have to 'ask' a helper class called CfgManager to 
+//	will have to 'ask' a helper class called CfgManager to
 //	provide implementation to some specific functions.
 //
 //  Created
@@ -129,7 +129,7 @@ public:
   // param = the parameter number to set
   // value = the value to increment the parameter by
   int IncSingleParam(int param, double value);
- 
+
   // Retreive a single parameter in the configuration (i.e., x,y,z,roll...)
   // param = the parameter number to retreive
   double GetSingleParam(int param);
@@ -140,10 +140,10 @@ public:
   static Cfg GetRandomRay(double incr);
 
   // for rotate-at-s Local Planner.
-  vector<Cfg> GetMovingSequenceNodes(const Cfg& other, double s) const; 
+  vector<Cfg> GetMovingSequenceNodes(const Cfg& other, double s) const;
 
   // methods for nodes connection.
-  vector<Cfg> FindNeighbors(Environment *env, 
+  vector<Cfg> FindNeighbors(Environment *env,
 			const Cfg& increment,CollisionDetection *,
 	int noNeighbors, SID  _cdsetid);
   vector<Cfg> FindNeighbors(Environment *env, const Cfg& goal,
@@ -162,9 +162,9 @@ public:
   // generates a random configuration without consideration of bounding box restrictions
   static Cfg GetRandomCfg(double R, double rStep);
 
-  // generates random configuration where workspace robot's CENTER OF MASS (COM)
+  // generates random configuration where workspace robot's CENTER OF MASS
   // is guaranteed to lie within the environment specified bounding box
-  static Cfg GetRandomCfg_COM(double *boundingBox);
+  static Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
 
   // generates random configuration where workspace robot's EVERY VERTEX
   // is guaranteed to lie within the environment specified bounding box
@@ -178,13 +178,13 @@ public:
   // methods for Cfg generation and collision checking.
   double Clearance(Environment *env,CollisionDetection* cd);
 
-  //Approximate C-Space Clearance 
+  //Approximate C-Space Clearance
   double ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, int n);
 
   bool ConfigEnvironment(Environment *env);
   bool isCollision(Environment *env,CollisionDetection* cd, SID _cdsetid);
   bool isCollision(Environment *env, CollisionDetection *cd,int robot, int obs, SID _cdsetid);
-  static bool GenerateOverlapCfg(Environment *env, int robot, 
+  static bool GenerateOverlapCfg(Environment *env, int robot,
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg);  // OBPRM and BasicOBPRM
   static vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
          CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid);
@@ -194,7 +194,7 @@ public:
   static void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
   //===================================================================
-  //  Data          
+  //  Data
   //===================================================================
   protected:
     Cfg operator/ (double);
@@ -203,7 +203,7 @@ public:
 
   private:
 
-    vector<double> v;	
+    vector<double> v;
     static CfgManager * CfgHelper;
 
   public:

@@ -204,7 +204,7 @@ void Body::ReadBYU(cd_predefined cdtype, istream & _is) {
     //---------------------------------------------------------------
     // Read polyhedron
     //---------------------------------------------------------------
-    com = polyhedron.ReadBYU(_is);
+    polyhedron.ReadBYU(_is);
     worldPolyhedron = polyhedron;
 
     FindBoundingBox();
@@ -300,12 +300,8 @@ void Body::Read(char * _fileName) {
     //---------------------------------------------------------------
     // Read polyhedron
     //---------------------------------------------------------------
-    com = polyhedron.Read(_fileName);
+    polyhedron.Read(_fileName);
     worldPolyhedron = polyhedron;
-
-#if VERBOSE
-    cout << endl << "com = " << com << endl;
-#endif
 
     FindBoundingBox();
 }
@@ -405,14 +401,6 @@ void * Body::GetCstkBody(int proc_id){
 }
 
 #endif
-
-//===================================================================
-//  GetCOM
-//  9/5/98  Daniel Vallejo
-//===================================================================
-Vector3D Body::GetCOM(){
-    return com;
-}
 
 
 #ifdef USE_CSTK

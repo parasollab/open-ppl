@@ -93,12 +93,9 @@ public:
     void ComputeCenterOfMass();
     Vector3D GetCenterOfMass();
 
-    void ComputeCOM();
-    Vector3D GetCOM();          // Get original center of mass
-
 
     //added on 02/23/99 by Guang to facilitate robot self collision checking.
-    bool isAdjacent(Body *); 
+    bool isAdjacent(Body *);
     Transformation & WorldTransformation();  // added by Guang Song on 03/02/99
     //---------------------------------------------------------------
     //  Connection methods
@@ -111,7 +108,7 @@ public:
     void AddBackwardConnection(Connection * _connection);
     void RemoveForwardConnection(Connection * _connection, int _delete);
     void RemoveBackwardConnection(Connection * _connection, int _delete);
-    void Link(Body * _otherBody, const Transformation & _transformationToBody2, 
+    void Link(Body * _otherBody, const Transformation & _transformationToBody2,
      const DHparameters & _dhparameters, const Transformation &_transformationToDHFrame);
     void Link(Connection * _c);
 protected:
@@ -146,8 +143,6 @@ protected:
 #ifdef USE_RAPID
     RAPID_model *rapidBody;
 #endif
-
-    Vector3D com;       // Original center of mass
 
 private:
 friend class MultiBody;

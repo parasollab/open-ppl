@@ -4,8 +4,8 @@
 //
 //  Created   2/25/98 Aaron Michalk
 //  Modified  4/13/98 Aaron Michalk
-//  Added     4/16/98 Wookho 
-//  Modified  7/14/98 Wookho 
+//  Added     4/16/98 Wookho
+//  Modified  7/14/98 Wookho
 //  Modified  7/31/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
@@ -15,8 +15,8 @@
 #include <iomanip.h>
 #include <fstream.h>
 #include <list.h>
-#include "Input.h"      
-#include "Body.h"      
+#include "Input.h"
+#include "Body.h"
 #include "Transformation.h"
 #include "Matrix.h"
 #include "FixedBody.h"
@@ -74,19 +74,16 @@ public:
     double * GetBoundingBox();
     double GetMaxAxisRange();
 
-    void ComputeCOM();
-    Vector3D GetCOM();          // Get original center of mass
-
     // the maximum size of this multibody
     double GetBoundingSphereRadius();
 
     // Area Methods
-    int GetNumBodies();         
+    int GetNumBodies();
     double GetFixArea();
     double GetFreeArea();
     double GetArea();
-    vector<double> GetFixAreas();    
-    vector<double> GetFreeAreas();   
+    vector<double> GetFixAreas();
+    vector<double> GetFreeAreas();
 
 protected:
 private:
@@ -105,7 +102,6 @@ private:
 
     double boundingBox[6];
     double maxAxisRange;
-    Vector3D com;       	// Original center of mass
 
 
     // Area Stuff
@@ -185,7 +181,7 @@ inline FixedBody * MultiBody::GetFixedBody(int _index) {
 inline FreeBody * MultiBody::GetFreeBody(int _index) {
     if (_index < FreeBodyCount)
         return freeBody[_index];
-    else 
+    else
         return 0;
 }
 

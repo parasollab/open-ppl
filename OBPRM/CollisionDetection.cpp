@@ -9,21 +9,21 @@
 //      8/11/98  Daniel Vallejo
 //  Last Modified By:
 //      1/13/99  Guang Song 'cfg' is removed from argument list.
-//               Vclip collision detection is fixed so that 
+//               Vclip collision detection is fixed so that
 //	         Both Vclip and cstk give the SAME results for collision checking!
-// 
+//
 /////////////////////////////////////////////////////////////////////
 
 #include "CollisionDetection.h"
 #include "Roadmap.h"
 #include "Stat_Class.h"
 
-extern Stat_Class Stats; 
+extern Stat_Class Stats;
 
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class CollisionDetection
-//      
+//
 /////////////////////////////////////////////////////////////////////
   //==================================
   // CollisionDetection class Methods: Constructors and Destructor
@@ -67,7 +67,7 @@ UserInit(Input * input,  GenerateMapNodes* gn, ConnectMapNodes* cn)
     collisionCheckers.MakeCDSet("cstk");	// enum CSTK
 					      	// ie,c-space toolkit
 #endif
-                                                
+
 #ifdef USE_VCLIP
     collisionCheckers.MakeCDSet("vclip");    // enum VCLIP
 #endif
@@ -77,7 +77,7 @@ UserInit(Input * input,  GenerateMapNodes* gn, ConnectMapNodes* cn)
 #endif
 
     if( input->numCDs == 0 ){                  	// use default CD sets
-    } 
+    }
     else{                                     	// make user-defined sets
         gn->gnInfo.cdsetid=CD_USER1;
         cn->cnInfo.cdsetid=CD_USER1;
@@ -89,7 +89,7 @@ UserInit(Input * input,  GenerateMapNodes* gn, ConnectMapNodes* cn)
 
 
 #ifdef USE_VCLIP
-VclipPose CollisionDetection::GetVclipPose(const Transformation &myT, 
+VclipPose CollisionDetection::GetVclipPose(const Transformation &myT,
 		const Transformation &obstT) {
 
   //Transformation diff2 = Transformation(myT) - obstT;
@@ -98,7 +98,7 @@ VclipPose CollisionDetection::GetVclipPose(const Transformation &myT,
   diff.orientation.ConvertType(Orientation::EulerXYZ);
 
   //------------------------------------------------
-  // here's where it really starts.  
+  // here's where it really starts.
   //------------------------------------------------
 
   Vect3 XYZ(diff.position.getX(),diff.position.getY(),diff.position.getZ());
@@ -153,7 +153,7 @@ IsInCollision(Environment * env, SID _cdsetid, MultiBody * lineRobot){
             if(IsInCollision(env, rob, env->GetMultiBody(i), _cdsetid)){
                 return true;
             }
-        } else { 
+        } else {
         // robot self checking. Warning: rob and env->GetMultiBody(robot) may NOT be the same.
 	    if(rob->GetBodyCount() > 1 && IsInCollision(env, rob, rob, _cdsetid))
 	        return true;
@@ -187,7 +187,9 @@ Clearance(Environment * env){
     }
     return dist;
 #else
-     cout << "Clearance function is not supported by current collision detection library. \n Please recompile with a supporting library.\n";
+     cout << "Clearance function is not supported by "
+     << "current collision detection library." << endl
+     << "Please recompile with a supporting library.\n";
     exit(5);
 #endif
 }
@@ -211,7 +213,7 @@ IsInCollision(Environment * env, MultiBody * rob, MultiBody * obst, SID _cdsetid
 
     int nFreeRobot;
     nFreeRobot = rob->GetFreeBodyCount();
- 
+
     vector<CD> cdset = collisionCheckers.GetCDSet(_cdsetid);
     for(int cd = 0 ; cd < cdset.size() ; cd++){
 
@@ -233,7 +235,7 @@ IsInCollision(Environment * env, MultiBody * rob, MultiBody * obst, SID _cdsetid
 	    if(cdfcn(rob,obst,cdset[cd]) == true){
 	    	return true;
 	    }
-	    else{	
+	    else{
 	    	return false;
 	    }
 	}
@@ -242,7 +244,7 @@ IsInCollision(Environment * env, MultiBody * rob, MultiBody * obst, SID _cdsetid
 }
 
 
-bool 
+bool
 CollisionDetection::
 IsInCollision_boundingSpheres(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
  	cout << endl << "boundingSpheres Collision Check invocation";
@@ -250,7 +252,7 @@ IsInCollision_boundingSpheres(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
    return true;
 }
 
-bool 
+bool
 CollisionDetection::
 IsInCollision_insideSpheres(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
  	cout << endl << "insideSpheres Collision Check invocation";
@@ -258,7 +260,7 @@ IsInCollision_insideSpheres(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
    return false;
 }
 
-bool 
+bool
 CollisionDetection::
 IsInCollision_naive(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
  	cout << endl << "naive Collision Check invocation";
@@ -266,7 +268,7 @@ IsInCollision_naive(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
    return false;
 }
 
-bool 
+bool
 CollisionDetection::
 IsInCollision_quinlan(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
  	cout << endl << "Quinlan Collision Check invocation";
@@ -279,14 +281,14 @@ IsInCollision_quinlan(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
 
 #ifdef USE_VCLIP
 ClosestFeaturesHT closestFeaturesHT(3000);
-bool 
+bool
 CollisionDetection::
 IsInCollision_vclip(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
    Stats.IncNumCollDetCalls( "vclip" );
 
     Real dist;
     VclipPose X12;
-    PolyTree *rob, *obst; 
+    PolyTree *rob, *obst;
     Vect3 cp1, cp2;   // closest points between bodies, in local frame
                       // we're throwing this info away for now
 
@@ -345,10 +347,11 @@ IsInCollision_RAPID(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
 		p1[p] = t1.position[p];
 		p2[p] = t2.position[p];
 	    }
-	    
-	    if(RAPID_Collide(t1.orientation.matrix, p1, rob, 
+
+	    if(RAPID_Collide(t1.orientation.matrix, p1, rob,
 			  t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT)) {
-		cout << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY" << RAPID_Collide(t1.orientation.matrix, p1, rob, t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT) << endl;
+		cout << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY"
+		<< RAPID_Collide(t1.orientation.matrix, p1, rob, t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT) << endl;
 		exit(1);
 	    }
 	    if(RAPID_num_contacts)
@@ -361,17 +364,17 @@ IsInCollision_RAPID(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
 #endif
 
 #ifdef USE_CSTK
-bool 
+bool
 CollisionDetection::
 IsInCollision_cstk(MultiBody* robot, MultiBody* obstacle,  CD& _cd){
 
     Stats.IncNumCollDetCalls( "cstk" );
 
-			// Identity in row-major order 
-    double linTrans[12] = {1,0,0,0, 0,1,0,0, 0,0,1,0};  
+			// Identity in row-major order
+    double linTrans[12] = {1,0,0,0, 0,1,0,0, 0,0,1,0};
 
-    void *rob, *obst; 
-    cstkReal tolerance = 0.001; 
+    void *rob, *obst;
+    cstkReal tolerance = 0.001;
     cstkReal dist;
 
     for(int i = 0 ; i < robot->GetFreeBodyCount(); i++){
@@ -424,7 +427,7 @@ cstkDistance(MultiBody* robot, MultiBody* obstacle){
             tmp = cstkBodyBodyDist(rob, obst, 500, 0, NULL, 0, NULL);
             if(tmp < dist){
                 //free (wits);
-                dist = tmp;  
+                dist = tmp;
             }
         }
     }
@@ -440,7 +443,7 @@ cstkDistance(MultiBody* robot, MultiBody* obstacle){
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class CD
-//      
+//
 /////////////////////////////////////////////////////////////////////
 
 CD::
@@ -462,7 +465,7 @@ operator=(const CD& _cd) {
   return *this;
 };
 
-bool 
+bool
 CD::
 operator==(const CD& _cd) const
 {
@@ -475,21 +478,22 @@ operator==(const CD& _cd) const
   } else if ( !strcmp(name,"naive") ) {
      return true;
   } else if ( !strcmp(name,"quinlan") ) {
-     return true; 
+     return true;
   } else if ( !strcmp(name,"cstk") ) {
 #ifdef USE_CSTK
-     return true; 
+     return true;
 #else
-    cout << "Current compilation does not include CSTK.\n Please recompile with CSTK if you'd like to use cstk option\n";
+    cout << "Current compilation does not include CSTK." << endl <<
+    "Please recompile with CSTK if you'd like to use cstk option\n";
     exit(5);
- 
+
 #endif
   } else if ( !strcmp(name,"vclip") ) {
 #ifdef USE_VCLIP
      return true;
 #else
-    cout << "Current compilation does not include VCLIP.\n Please recompile with
-VCLIP if you'd like to use VCLIP option\n";
+    cout << "Current compilation does not include VCLIP." << endl
+    << "Please recompile with VCLIP if you'd like to use VCLIP\n";
     exit(5);
 #endif
 
@@ -497,23 +501,23 @@ VCLIP if you'd like to use VCLIP option\n";
 #ifdef USE_RAPID
      return true;
 #else
-    cout << "Current compilation does not include RAPID.\n Please recompile with
-RAPID if you'd like to use cstk option\n";
+    cout << "Current compilation does not include RAPID."
+    << endl << "Please recompile with RAPID\n";
     exit(5);
 
 #endif
-  } else {  
-     return false; 
+  } else {
+     return false;
   }
 };
 
-char* 
+char*
 CD::
 GetName() const {
   return const_cast<char*>(name);
 };
 
-CDF 
+CDF
 CD::
 GetCollisionDetection(){
   return collision_detection;
@@ -528,23 +532,24 @@ GetType() const {
 ostream& operator<< (ostream& _os, const CD& cd){
         _os<< cd.GetName();
         if ( !strcmp(cd.GetName(),"boundingSpheres")){
-           _os << ", Type = " << cd.GetType(); 
+           _os << ", Type = " << cd.GetType();
         }
         if ( !strcmp(cd.GetName(),"insideSpheres")){
-           _os << ", Type = " << cd.GetType(); 
+           _os << ", Type = " << cd.GetType();
         }
         if ( !strcmp(cd.GetName(),"naive") ){
-           _os << ", Type = " << cd.GetType(); 
+           _os << ", Type = " << cd.GetType();
         }
         if ( strstr(cd.GetName(),"quinlan") ){
-           _os << ", Type = " << cd.GetType(); 
+           _os << ", Type = " << cd.GetType();
         }
 
         if ( strstr(cd.GetName(),"cstk") ){
 #ifdef USE_CSTK
-           _os << ", Type = " << cd.GetType(); 
+           _os << ", Type = " << cd.GetType();
 #else
-    cout << "Current compilation does not include CSTK.\n Please recompile with CSTK if you'd like to use cstk option\n";
+    cout << "Current compilation does not include CSTK." << endl <<
+    "Please recompile with CSTK if you'd like to use cstk\n";
     exit(5);
 #endif
         }
@@ -552,8 +557,8 @@ ostream& operator<< (ostream& _os, const CD& cd){
 #ifdef USE_VCLIP
            _os << ", Type = " << cd.GetType();
 #else
-    cout << "Current compilation does not include VCLIP.\n Please recompile with
-VCLIP if you'd like to use vclip option\n";
+    cout << "Current compilation does not include VCLIP." <<
+    "Please recompile with VCLIP if you'd like to use vclip option\n";
     exit(5);
 #endif
 	}
@@ -561,8 +566,8 @@ VCLIP if you'd like to use vclip option\n";
 #ifdef USE_RAPID
            _os << ", Type = " << cd.GetType();
 #else
-    cout << "Current compilation does not include RAPID.\n Please recompile with
-RAPID if you'd like to use rapid option\n";
+    cout << "Current compilation does not include RAPID." << endl
+    << "Please recompile with RAPID\n";
     exit(5);
 #endif
 
@@ -575,7 +580,7 @@ RAPID if you'd like to use rapid option\n";
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class CDSets
-//      
+//
 /////////////////////////////////////////////////////////////////////
 
   //==================================
@@ -652,7 +657,7 @@ MakeCDSet(istream& _myistream) {
        CD cd1;
        strcpy(cd1.name,cdname);
        cd1.collision_detection = &CollisionDetection::IsInCollision_boundingSpheres;
-       cd1.type = Out;	
+       cd1.type = Out;
        cd1.cdid = AddElementToUniverse(cd1);
        if ( ChangeElementInfo(cd1.cdid,cd1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";
@@ -664,7 +669,7 @@ MakeCDSet(istream& _myistream) {
        CD cd1;
        strcpy(cd1.name,cdname);
        cd1.collision_detection = &CollisionDetection::IsInCollision_insideSpheres;
-       cd1.type = In;	
+       cd1.type = In;
        cd1.cdid = AddElementToUniverse(cd1);
        if ( ChangeElementInfo(cd1.cdid,cd1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";
@@ -676,7 +681,7 @@ MakeCDSet(istream& _myistream) {
        CD cd1;
        strcpy(cd1.name,cdname);
        cd1.collision_detection = &CollisionDetection::IsInCollision_naive;
-       cd1.type = Exact;	
+       cd1.type = Exact;
        cd1.cdid = AddElementToUniverse(cd1);
        if ( ChangeElementInfo(cd1.cdid,cd1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";
@@ -688,7 +693,7 @@ MakeCDSet(istream& _myistream) {
        CD cd1;
        strcpy(cd1.name,cdname);
        cd1.collision_detection = & CollisionDetection::IsInCollision_quinlan;
-       cd1.type = Exact;	
+       cd1.type = Exact;
        cd1.cdid = AddElementToUniverse(cd1);
        if ( ChangeElementInfo(cd1.cdid,cd1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";
@@ -701,7 +706,7 @@ MakeCDSet(istream& _myistream) {
        CD cd1;
        strcpy(cd1.name,cdname);
        cd1.collision_detection = & CollisionDetection::IsInCollision_cstk;
-       cd1.type = Exact;	
+       cd1.type = Exact;
        cd1.cdid = AddElementToUniverse(cd1);
        if ( ChangeElementInfo(cd1.cdid,cd1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";
@@ -709,7 +714,8 @@ MakeCDSet(istream& _myistream) {
        }
        cdvec.push_back( cd1.cdid );
 #else
-    cout << "Current compilation does not include CSTK.\n Please recompile with CSTK if you'd like to use cstk option\n";
+    cout << "Current compilation does not include CSTK." << endl
+    << "Please recompile with CSTK\n";
     exit(5);
 #endif
 
@@ -727,8 +733,8 @@ MakeCDSet(istream& _myistream) {
        }
        cdvec.push_back( cd1.cdid );
 #else
-    cout << "Current compilation does not include VCLIP.\n Please recompile with
-VCLIP if you'd like to use vclip option\n";
+    cout << "Current compilation does not include VCLIP."
+    << "Please recompile with VCLIP if you'd like to use vclip\n";
     exit(5);
 #endif
 
@@ -748,8 +754,8 @@ VCLIP if you'd like to use vclip option\n";
        cdvec.push_back( cd1.cdid );
 
 #else
-    cout << "Current compilation does not include RAPID.\n Please recompile with
-RAPID if you'd like to use rapid option\n";
+    cout << "Current compilation does not include RAPID." << endl
+    << "Please recompile with RAPID if you'd like to use rapid\n";
     exit(5);
 #endif
 
