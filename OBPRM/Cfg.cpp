@@ -583,7 +583,7 @@ vector<Cfg> Cfg::FindNeighbors(
                                int noNeighbors,
                                SID  _cdsetid, CDInfo& _cdInfo) {
     
-    return cfgTypecfgTypecfgType->FindNeighbors(*this, 
+    return cfgType->FindNeighbors(*this, 
         _env, goal, increment, 
         cd, 
         noNeighbors, 
