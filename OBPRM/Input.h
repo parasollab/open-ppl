@@ -217,10 +217,7 @@ public:
     //
     str_param<char*>  defaultFile;
     str_param<char*>  descDir;            // env desc files here (*.dat,*.g,etc)
-    num_param<int>    numEdges;
-    num_param<int>    numNodes;
     num_param<int>    numShells;
-    num_param<int>    numNodesPerObst;
     num_param<double> proportionSurface;
     num_param<int>    lineSegment;        // used for LocalPlanner.
     num_param<int>    usingClearance;

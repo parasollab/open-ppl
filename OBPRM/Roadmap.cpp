@@ -62,11 +62,6 @@ InitRoadmap(Input *input,
 
    if ( ExistingMap != NULL ) {           // start from previous map
       ReadRoadmap( input, cd,dm,lp, ExistingMap );
-   } else {                                   // start from scratch
-      // 'reserve' space for nodes/edges in roadmap graph
-      roadmap.Init(
-		input->numNodes.GetValue(),
-		input->numEdges.GetValue());
    }
 
    //-----------------------------------------------
@@ -80,13 +75,6 @@ InitRoadmap(Input *input,
    else{
       InitEnvironment(env);      
    }
-
-   //-----------------------------------------------
-   // set number of nodes correctly
-   //-----------------------------------------------
-   if ( input->numNodesPerObst.IsActivated() ) 
-	input->numNodes.PutValue(
-		input->numNodesPerObst.GetValue() * input->multibodyCount);
 
 };
 

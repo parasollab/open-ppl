@@ -74,7 +74,6 @@ struct CNInfo {
     SID cdsetid;        // collision detection set id
     SID dmsetid;        // distance metric set id
     CDInfo cdInfo;
-    int numEdges;
     vector <EdgeInfo<WEIGHT> > edges;
     bool addPartialEdge;
     int tag;            // nodes can be marked by user

@@ -51,6 +51,8 @@
 
 #include <vector.h>
 
+#define MAX_NODES           5000000
+#define MAX_NODES_PER_OBST 5000
 
 //---------------------------------------------------------------
 //  Pre-defined Algobase Sets
@@ -70,8 +72,6 @@ struct GNInfo {
     SID gnsetid;        // generator set id
     SID cdsetid;        // collision detection set id
     SID dmsetid;        // distance metric set id
-    int numNodes;
-    int numNodesPerObst;
     int numShells;
     int calcClearance;
     bool addNodes2Map;
@@ -127,6 +127,7 @@ public:
   EID    GetID() const;
   double Get_Gauss_d() const;
   double Get_clearanceFactor() const;
+  double Get_numNodes() const;
 
 protected:
   //===================================================================
@@ -137,6 +138,7 @@ protected:
   EID    gnid;
   double Gauss_d;
   double clearanceFactor;
+  int    numNodes;
 
 private:
 
@@ -211,6 +213,7 @@ public:
 protected:
 private:
   double DEFAULT_Gauss_d;
+  int DEFAULT_numNodes;
 };
 
 /////////////////////////////////////////////////////////////////////

@@ -81,8 +81,6 @@ UserInit(Input * input, Environment *_env)
         }
     }
 
-    gnInfo.numNodes = input->numNodes.GetValue();
-    gnInfo.numNodesPerObst = input->numNodesPerObst.GetValue();
     gnInfo.numShells = input->numShells.GetValue();
     gnInfo.proportionSurface = input->proportionSurface.GetValue();
     gnInfo.collPair = input->collPair;
@@ -162,15 +160,15 @@ GenerateMapNodes::
 BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GNInfo &_info){
 
    #ifndef QUIET
-     cout << "(numNodes=" << _info.numNodes << ") ";
+     cout << "(numNodes=" << _gn.Get_numNodes() << ") ";
    #endif
 
    #if INTERMEDIATE_FILES
-     vector<Cfg> path; path.reserve(_info.numNodes);
+     vector<Cfg> path; path.reserve(_gn.Get_numNodes());
    #endif
 
    // PRM style node generation -- generate in expanded bounding box
-   for (int i=0; i < _info.numNodes; i++) {
+   for (int i=0; i < _gn.Get_numNodes(); i++ ) {
       Cfg cfg = Cfg::GetRandomCfg(_env);
 
       if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) {
@@ -206,15 +204,15 @@ GaussPRM(
    GN& _gn, GNInfo &_info){
 
    #ifndef QUIET
-     cout << "(numNodes=" << _info.numNodes << ") ";
+     cout << "(numNodes=" << _gn.Get_numNodes() << ") ";
    #endif
 
    #if INTERMEDIATE_FILES
-     vector<Cfg> path; path.reserve(_info.numNodes);
+     vector<Cfg> path; path.reserve(_gn.Get_numNodes());
    #endif
 
    // generate in bounding box
-   for (int i=0,newNodes=0; i < _info.numNodes || newNodes<1 ; i++) {
+   for (int i=0,newNodes=0; i < _gn.Get_numNodes() || newNodes<1 ; i++) {
 
       // cfg1 & cfg2 are generated to be inside bbox
       Cfg cfg1 = Cfg::GetRandomCfg(_env);
@@ -265,7 +263,7 @@ GenerateMapNodes::
 BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _gn, GNInfo &_info){
 
   #ifndef QUIET
-    cout << "(numNodes=" << _info.numNodes << ", "<<flush;
+    cout << "(numNodes=" << _gn.Get_numNodes() << ", "<<flush;
     cout << "numShells=" << _info.numShells << ") "<<flush;
   #endif
 
@@ -279,11 +277,11 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
 
   Cfg InsideNode, OutsideNode, low, high, mid;
 
-  int N = _info.numNodes
+  int N = _gn.Get_numNodes()
                 / (numMultiBody-1)  // -1 for the robot
         / _info.numShells;
 
-  if (N < 1) N = max(_info.numNodes,_info.numShells);
+  if (N < 1) N = max(_gn.Get_numNodes(),_info.numShells);
 
   for (int obstacle = 0 ; obstacle < numMultiBody ; obstacle++){
     if (obstacle != robot){  // && obstacle is "Passive" not "Active" robot
@@ -343,7 +341,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
     } // endif (obstacle != robot)
     else
     if(numMultiBody == 1) {
-            vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _info.numNodes, _info);
+            vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.Get_numNodes(), _info);
             int i;
             for(i=0; i<CobstNodes.size(); ++i)
         CobstNodes[i].info.obst = obstacle;
@@ -370,7 +368,7 @@ GenerateMapNodes::
 OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GNInfo &_info){
 
     #ifndef QUIET
-      cout << "(numNodes="          << _info.numNodes   << ", ";
+      cout << "(numNodes="          << _gn.Get_numNodes() << ", ";
       cout << "\tproportionSurface="<< _info.proportionSurface << ", ";
       cout << "\nnumShells="        << _info.numShells   << ", ";
       cout << "collPair="           << _info.collPair.GetValue()    << ", ";
@@ -393,9 +391,8 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
     double P = _info.proportionSurface;
 
     // Subtract # of robots (ie, numMultiBody-1)
-    int NSEED = (int)(P * _info.numNodes/(numMultiBody-1)/_info.numShells);
-    int NFREE = (int)((1.0-P) * _info.numNodes/(numMultiBody-1));
-
+    int NSEED = (int)(P * _gn.Get_numNodes()/(numMultiBody-1)/_info.numShells);
+    int NFREE = (int)((1.0-P) * _gn.Get_numNodes()/(numMultiBody-1));
 
     if (NSEED < 1) NSEED = 1;
 
@@ -434,7 +431,7 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
         } // if(obstacle != robot)
     else 
     if(numMultiBody == 1) {
-        vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _info.numNodes, _info);
+        vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.Get_numNodes(), _info);
         for(int i=0; i<CobstNodes.size(); ++i){
         CobstNodes[i].info.obst = obstacle;
         _info.nodes.push_back(CobstNodes[i]);
@@ -475,8 +472,8 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 
    #ifndef QUIET
       cout << endl << "Begin BasicMAPRM..." << endl;
-      cout << "(numNodes=" << _info.numNodes << ") " << endl;
-	   cout << "_env PositionRes  = " << _env->GetPositionRes() << endl;
+      cout << "(numNodes=" << _gn.Get_numNodes() << ") " << endl;
+      cout << "_env PositionRes  = " << _env->GetPositionRes() << endl;
       cout << "Expansion Factor  = " << EXPANSION_FACTOR << endl;
       
       double *bb = _env->GetBoundingBox();
@@ -486,10 +483,10 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 
    #if INTERMEDIATE_FILES
       vector<Cfg> path; 
-      path.reserve(_info.numNodes);
+      path.reserve(_gn.Get_numNodes());
    #endif
 
-   for (int i=0; i < _info.numNodes; i++) 
+   for (int i=0; i < _gn.Get_numNodes(); i++)
    {
       // Get a random configuration that STARTS in the bounding box of env
 	   cfg = Cfg::GetRandomCfg(_env);
@@ -545,7 +542,7 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
          MoveToMedialAxis(cfg, NULL, _env, cd, dm, _gn, _info);
       #endif
 
-   } // end for i = 1 to _info.numNodes
+   } // end for i = 1 to _gn.Get_numNodes()
 
    #if INTERMEDIATE_FILES
       WritePathTranformationMatrices("maprm.path", path, _env);
@@ -1719,6 +1716,12 @@ Get_clearanceFactor() const {
     return clearanceFactor;
 };
 
+double
+GN::
+Get_numNodes() const {
+    return numNodes;
+};
+
 ostream& operator<< (ostream& _os, const GN& gn) {
     _os<< gn.GetName();
     if ( !strstr(gn.GetName(),"GaussPRM") ){
@@ -1768,6 +1771,7 @@ void
 GNSets::
 PutDefaults(Environment *_env) {
   DEFAULT_Gauss_d = _env->Getminmax_BodyAxisRange();
+  DEFAULT_numNodes = 10;
 };
 
 int
@@ -1836,6 +1840,17 @@ MakeGNSet(istream& _myistream) {
        GN gn1;
        strcpy(gn1.name,gnname);
        gn1.generator = &GenerateMapNodes::BasicPRM;
+       gn1.numNodes = DEFAULT_numNodes;
+       int numNodes;
+       if( _myistream >> numNodes) { // get numNodes
+          if ( ( numNodes < 1 ) || ( numNodes > MAX_NODES ) ) {
+            cout << endl << "INVALID: numNodes = " << numNodes << " is out of range";
+            exit(-1);
+          } 
+          gn1.numNodes = numNodes;
+       }
+       _myistream.clear(); // clear failure to read parameters
+
        gn1.gnid = AddElementToUniverse(gn1);
        if ( ChangeElementInfo(gn1.gnid,gn1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";
@@ -1847,6 +1862,17 @@ MakeGNSet(istream& _myistream) {
        GN gn1; double Gauss_d;
        strcpy(gn1.name,gnname);
        gn1.generator = &GenerateMapNodes::GaussPRM;
+       gn1.numNodes = DEFAULT_numNodes;
+       int numNodes;
+       if( _myistream >> numNodes) { // get numNodes
+          if ( ( numNodes < 1 ) || ( numNodes > MAX_NODES ) ) {
+            cout << endl << "INVALID: numNodes = " << numNodes << " is out of range";
+            exit(-1);
+          } 
+          gn1.numNodes = numNodes;
+       }
+       _myistream.clear(); // clear failure to read parameters
+     
        gn1.Gauss_d = 0;
        if( _myistream >> Gauss_d) { // get d value
           if ( Gauss_d < 0 ) {
@@ -1879,6 +1905,17 @@ MakeGNSet(istream& _myistream) {
        GN gn1;
        strcpy(gn1.name,gnname);
        gn1.generator = &GenerateMapNodes::BasicOBPRM;
+       gn1.numNodes = DEFAULT_numNodes;
+       int numNodes;
+       if( _myistream >> numNodes) { // get numNodes
+          if ( ( numNodes < 1 ) || ( numNodes > MAX_NODES_PER_OBST ) ) {
+            cout << endl << "INVALID: numNodes = " << numNodes << " is out of range";
+            exit(-1);
+          } 
+          gn1.numNodes = numNodes;
+       }
+       _myistream.clear(); // clear failure to read parameters
+
        gn1.gnid = AddElementToUniverse(gn1);
        if ( ChangeElementInfo(gn1.gnid,gn1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";
@@ -1890,6 +1927,17 @@ MakeGNSet(istream& _myistream) {
        GN gn1;
        strcpy(gn1.name,gnname);
        gn1.generator = &GenerateMapNodes::OBPRM;
+       gn1.numNodes = DEFAULT_numNodes;
+       int numNodes;
+       if( _myistream >> numNodes) { // get numNodes
+          if ( ( numNodes < 1 ) || ( numNodes > MAX_NODES_PER_OBST ) ) {
+            cout << endl << "INVALID: numNodes = " << numNodes << " is out of range";
+            exit(-1);
+          } 
+          gn1.numNodes = numNodes;
+       }
+       _myistream.clear(); // clear failure to read parameters
+
        gn1.clearanceFactor = 1.0;
        double clearanceFactor;
        if( _myistream >> clearanceFactor) { // get value
@@ -1911,6 +1959,17 @@ MakeGNSet(istream& _myistream) {
        GN gn1;
        strcpy(gn1.name,gnname);
        gn1.generator = &GenerateMapNodes::BasicMAPRM;
+       gn1.numNodes = DEFAULT_numNodes;
+       int numNodes;
+       if( _myistream >> numNodes) { // get numNodes
+          if ( ( numNodes < 1 ) || ( numNodes > MAX_NODES ) ) {
+            cout << endl << "INVALID: numNodes = " << numNodes << " is out of range";
+            exit(-1);
+          } 
+          gn1.numNodes = numNodes;
+       }
+       _myistream.clear(); // clear failure to read parameters
+
        gn1.gnid = AddElementToUniverse(gn1);
        if ( ChangeElementInfo(gn1.gnid,gn1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";

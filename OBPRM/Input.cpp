@@ -101,10 +101,7 @@ Input::Input():
         mapFile          ("-outmapFile"),
         inmapFile        ("-inmapFile"),
                        //  default   min,max
-        numEdges         ("-edges",              5,  1, 5000),
         numShells        ("-nshells",            3,  1,   50),
-        numNodes         ("-nodes",             10,  1,5000000),
-        numNodesPerObst  ("-nodesPerObst",      10,  1, 5000),
         lineSegment      ("-lineSegment",        0,  0, 5000),
         usingClearance   ("-clearance",          0,  0,    1),
         addPartialEdge   ("-addPartialEdge",     0,  0,    1),
@@ -118,10 +115,7 @@ Input::Input():
         calcClearance    ("-calcClear",          0,  0,    1) 
         {
 
-    numEdges.PutDesc         ("INTEGER","");
     numShells.PutDesc        ("INTEGER","");
-    numNodes.PutDesc         ("INTEGER","");
-    numNodesPerObst.PutDesc  ("INTEGER","");
     proportionSurface.PutDesc("FLOAT  ","");
     lineSegment.PutDesc      ("INTEGER","");
     usingClearance.PutDesc   ("INTEGER","");
@@ -184,11 +178,14 @@ Input::Input():
 
     GNstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default BasicPRM"
-        "\n\t\t\t  BasicPRM"
-        "\n\t\t\t  BasicOBPRM"
-        "\n\t\t\t  OBPRM    DOUBLE  (clearanceFactor:1.0)"
-        "\n\t\t\t  GaussPRM INTEGER (default,based on environment)"
-        "\n\t\t\t  BasicMAPRM"
+        "\n\t\t\t  BasicPRM   INT (number of nodes)"
+        "\n\t\t\t  BasicOBPRM INT (number of nodes per obstacle)"
+        "\n\t\t\t  OBPRM      INT DOUBLE  (number of nodes per obstacle, clearanceFactor:1.0)"
+        "\n\t\t\t  GaussPRM   INT INTEGER (number of nodes, default based on environment)"
+        "\n\t\t\t  BasicMAPRM INT (number of nodes)"
+        "\n\t\t\tWARNING!!!: For multiple parameters, you must specify ALL parameters."
+        "\n\t\t\t            Example, in order to specifiy the clearanceFactor for OBPRM,"
+        "\n\t\t\t            you must also specify the number of nodes per obstacle."
         );
     CNstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default closest 10"
@@ -279,11 +276,6 @@ void Input::ReadCommandLine(int argc, char** argv){
     strcat(commandLine," ");
   }
 
-  //-- Initialize error message
-  char ERROR_MutualExclusive[300];
-  sprintf(ERROR_MutualExclusive,"\nERROR: \"%s\" & \"%s\" options are "
-    "mutually exclusive on the command line.\n",
-    numNodes.GetFlag(),numNodesPerObst.GetFlag());
 
 #ifdef USE_VCLIP
    cdtype= VCLIP;
@@ -320,9 +312,6 @@ void Input::ReadCommandLine(int argc, char** argv){
         } else if ( envFile.AckCmdLine(&i, argc, argv) ) {
         } else if ( mapFile.AckCmdLine(&i, argc, argv) ) {
         } else if ( inmapFile.AckCmdLine(&i, argc, argv) ) {
-        } else if ( numNodes.AckCmdLine(&i, argc, argv) ){
-        } else if ( numEdges.AckCmdLine(&i, argc, argv) ) {
-        } else if ( numNodesPerObst.AckCmdLine(&i, argc, argv) ) {
         } else if ( numShells.AckCmdLine(&i, argc, argv) ) {
         } else if ( lineSegment.AckCmdLine(&i, argc, argv) ) {
         } else if ( usingClearance.AckCmdLine(&i, argc, argv) ) {
@@ -415,11 +404,6 @@ void Input::ReadCommandLine(int argc, char** argv){
         VerifyFileExists(inmapFile.GetValue());
     }
 
-    if ( numNodesPerObst.IsActivated() && numNodes.IsActivated() ) {
-    cout << ERROR_MutualExclusive;
-    throw BadUsage();
-    }
-
     descDir.VerifyValidDirName();
 
     //-- Verify INPUT file exists
@@ -456,9 +440,6 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n\nOPTIONAL:\n";
         _os << "\n  "; descDir.PrintUsage(_os);
         _os << "\n  "; inmapFile.PrintUsage(_os);
-        _os << "\n  "; numNodes.PrintUsage(_os);
-        _os << "\n  "; numEdges.PrintUsage(_os);
-        _os << "\n  "; numNodesPerObst.PrintUsage(_os);
         _os << "\n  "; proportionSurface.PrintUsage(_os);
         _os << "\n  "; numShells.PrintUsage(_os);
         _os << "\n  "; collPair.PrintUsage(_os);
@@ -499,9 +480,6 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"mapFile"<<"\t"<<mapFile.GetValue();
   _os <<"\n"<<setw(FW)<<"inmapFile"<<"\t"<<inmapFile.GetValue();
 
-  _os <<"\n"<<setw(FW)<<"numNodes"<<"\t"<<setw(F)<< numNodes.GetValue();
-  _os <<"\n"<<setw(FW)<<"numEdges"<<"\t"<<setw(F)<< numEdges.GetValue();
-  _os <<"\n"<<setw(FW)<<"numNodesPerObst"<<"\t"<<setw(F)<<numNodesPerObst.GetValue();
   _os <<"\n"<<setw(FW)<<"proportionSurface"<<"\t"<<setw(F)<<proportionSurface.GetValue
 ();
   _os <<"\n"<<setw(FW)<<"numShells"<<"\t"<<setw(F)<< numShells.GetValue();
@@ -549,14 +527,8 @@ Input::PrintDefaults(){
 
    cout << setw(FW) << "defaultFile : no default string for this parameter" << endl;
    cout << setw(FW) << " (those parameters not listed here have no default value)" << endl << endl;
-   cout << setw(FW) << "number of edges" << " (" << numEdges.GetFlag() << "): " <<
-            numEdges.GetDefault() << endl << endl;
    cout << setw(FW) << "number of shells" << " (" << numShells.GetFlag() << ") : " <<
             numShells.GetDefault() << endl << endl;
-   cout << setw(FW) << "number of nodes" << " (" << numNodes.GetFlag() << ") : " <<
-            numNodes.GetDefault() << endl << endl;
-   cout << setw(FW) << "number of nodes per obstacle" << " (" << numNodesPerObst.GetFlag() <<
-           ") : " << numNodesPerObst.GetDefault() << endl << endl;
    cout << setw(FW) << "line segment" << " (" << lineSegment.GetFlag() << ") : " <<
             lineSegment.GetDefault() << endl << endl;
    cout << setw(FW) << "using clearance" << " (" << usingClearance.GetFlag() << ") : " <<

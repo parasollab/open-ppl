@@ -91,7 +91,6 @@ UserInit(Input * input, Environment * env){
      }
    }
 
-   cnInfo.numEdges = input->numEdges.GetValue();
    cnInfo.addPartialEdge = input->addPartialEdge.GetValue();
 
    connectionPosRes = env->GetPositionRes();
@@ -208,7 +207,7 @@ ConnectNodes_Random(
     vector<Cfg> vertices = _rm->roadmap.GetVerticesData();
     vector<pair<SID,vector<LP> > > sets = lp->planners.GetLPSets();
 
-    for (int i=0; i < info.numEdges ; i++) {
+    for (int i=0; i < _cn.GetNumEdges(); i++) {
 
       	int c1id = (int)(lrand48()%_rm->roadmap.GetVertexCount());
       	int c2id = (int)(lrand48()%_rm->roadmap.GetVertexCount());
@@ -1255,7 +1254,7 @@ ConnectNodes_modifiedLM(
   GNInfo gnInfo;
          gnInfo = info.gn.gnInfo;      // modify only local copy of gnInfo
          gnInfo.addNodes2Map = false;  // don't add new node to map (yet!)
-         gnInfo.numNodes = 1;          // only need one new node at a time
+	 int numNodes = 1;             // only need one new node at a time
 
   //-- unless user has specified otherwise, BasicPRM generation for 'cfg'
   if (!info.gn.generators.IsMember(gnInfo.gnsetid)) gnInfo.gnsetid = BASICPRM;
