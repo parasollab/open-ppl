@@ -20,7 +20,7 @@
 #include "CurveWeight.h"
 
 Input input;
-QueryCmds Qinput;
+MyQueryCmds Qinput;
 Stat_Class Stats;
 
 //========================================================================
