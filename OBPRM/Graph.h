@@ -811,6 +811,20 @@ public:
          */
        virtual int  AddEdge(VERTEX&, VERTEX&, WEIGHT);  
 
+       /**Add edge v1->v2, and v2->v1 to graph with same weight.
+         *Here v1 is any vertex contains user data in the first parameter,
+         *and v2 is any vertex contains user data in the second parameter.
+         *if there are more than one, then the first will be applied.
+         *@return ERROR if v1 and/or v2 are not in graph.
+         *@return ERROR if v1 and v2 have been connected.
+         *@note enven 2 edges are created, but they are counted as one edge.
+	 *This is here only for DijkstraSSSP(VID) const, which reqires 
+	 *this function in
+	 * sssptree.AddEdge( tmp1, tmp, u.dist);
+	 *where u.dist is a double type
+         */
+       virtual int  AddEdge(VERTEX&, VERTEX&, double);
+
        /**Add a predecessor edge, from the v2 to v1 vertex with weight.
          *@param vid1 the id for the first vertex
          *@param vid2 the id for the second vertex
@@ -2539,7 +2553,7 @@ void
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
 SetPredecessors() {
     VI v1, v2;
-    CVI cv1, cv2;
+    CVI cv2;
     VID _v2id;
     bool DoneSet = false;
 
@@ -2643,6 +2657,25 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight) {
         return ERROR;
     }
 }
+
+
+template<class VERTEX, class WEIGHT>
+int
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+AddEdge(VERTEX& _v1, VERTEX& _v2, double _weight) {
+    CVI cv1, cv2;
+    VI v1, v2;
+    if (IsVertex(_v1,&cv1) && IsVertex(_v2,&cv2) ) {
+        v1 = const_cast<VI>(cv1);
+        v2 = const_cast<VI>(cv2);
+        v1->AddEdge(v2->vid,_weight);
+        this->numEdges++;
+        return OK;
+    } else {
+        cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
+        return ERROR;
+    };
+};
 
 template<class VERTEX, class WEIGHT>
 int
@@ -3465,9 +3498,10 @@ template<class VERTEX, class WEIGHT>
 WeightedMultiDiGraph<VERTEX,WEIGHT>
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 DFS (VERTEX& _startV) const {
-    CVI cv1;
+    CVI cv1; VI v1;
     if ( IsVertex(_startV,&cv1) ) {
-        return DFS(cv1->vid);
+      v1 = const_cast<VI> (cv1);
+        return DFS(v1->vid);
     } else {
         cout << "\nIn GraphBFS: root vertex=" << _startV  << " not in graph";
         WeightedMultiDiGraph<VERTEX,WEIGHT> dfstree;
@@ -3507,11 +3541,12 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 DFS () const {
 //To find all dfs trees
     vector< WeightedMultiDiGraph<VERTEX,WEIGHT> > dfstree_vector;
-    VI  v1;
+    CVI cv1; VI  v1;
     VID vid;    
     dfsinfo dfs(this->GetVertexCount());
 
-    for (v1 = v.begin(); v1 < v.end(); v1++) {
+    for (cv1 = v.begin(); cv1 < v.end(); cv1++) {
+      v1 = const_cast<VI> (cv1);
         vid = v1->vid;
             if( dfs.color[vid] == 0 ) 
             dfstree_vector.push_back(true_DFS(vid, dfs));
@@ -3544,7 +3579,6 @@ vector<VID>
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 TopologicalSort () const {
     int i,n;
-    VID vid;
     vector<VID> tps;
     n=this->GetVertexCount();
     vector<pair<VID,int> > tmp;
@@ -3612,7 +3646,7 @@ true_DFS (VID & vid, dfsinfo & dfs) const {
     CVI cv1,cv2;
     VI  v1;
     VID v1id=0,v2id=0;  //v1id=parent(vid), v2id=adj(vid)
-    int kk=0,k=1;
+    int k=1;
     static int ftime=0; //static finish time,  the finish time for different 
     //trees is in consecutive order
     WeightedMultiDiGraph<VERTEX,WEIGHT> dfstree;
