@@ -44,6 +44,10 @@
 #include <stdlib.h>
 #include <math.h>
 
+// Format version for environment (*.env) files
+#define ENV_VER_LEGACY                     0
+#define ENV_VER_20001022                   20001022
+
 class Environment;
 
 class BadUsage{};
@@ -177,7 +181,7 @@ public:
     static bool VerifyFileExists(char *_fname);
 
     void Read();
-    void Read(istream & _is);
+    void Read(istream & _is, int envFormatVersion);
     virtual void ReadCommandLine(int argc, char** argv);
 
     void ReadPreamble(istream& _myistream);

@@ -627,15 +627,70 @@ void Input::Read() {
 
   VerifyFileExists(envFile.GetValue());
 
+  // open file and read first field
   ifstream is(envFile.GetValue());
-  Read(is);
-  is.close();
+  char string1[32];
+  is >> string1;
+
+
+  // if first field is a comment delimiter
+  if (strstr(string1, "#")){
+        int envFormatVersion;
+        char string2[32];
+        char string3[32];
+        is >> string2 >> string3;
+        if (   strstr(string2, "Environment")
+            && strstr(string3, "Version")      ){
+                 is >> envFormatVersion;
+                 Read(is,envFormatVersion);
+                 is.close();
+        } else {
+            cerr << "\nREAD ERROR: bad file format in \""
+                 << envFile.GetValue() << "\"";
+            cerr << "\n            something is wrong w/ the following\n"
+                 << "\n            "<<string1<<" "<<string2<<" "<<string3
+                 <<"\n\n";
+            exit(-1);
+        }
+  // else first field is NOT a comment delimiter
+  } else {
+
+        // Legacy Version Indicated.
+
+        // close the file ...
+        is.close();
+
+        // ...  and start over.
+        ifstream is(envFile.GetValue());
+        Read(is,ENV_VER_LEGACY);
+
+        is.close();
+
+  }//endif "#"
+
 };
 
-void Input::Read(istream & _is) {
+
+void Input::Read(istream & _is, int envFormatVersion) {
+
     int  i;
     char string[32];
     char tmpFilename[FILENAME_LENGTH*2];
+
+    switch(envFormatVersion) {
+      case ENV_VER_20001022:
+         // put in whatever may be specific to the format
+         // ENV_VER_20001022 is equivalent to ENV_VER_LEGACY
+         // so nothing is specific here
+         break;
+      case ENV_VER_LEGACY:
+         break;
+      default:
+         cerr << "\nERROR: Unrecognized environment version <"
+              << envFormatVersion << ">" << endl << endl;
+         exit(-1);
+         break;
+    }
 
     _is >> multibodyCount;      // # of MultiBodys'
 
