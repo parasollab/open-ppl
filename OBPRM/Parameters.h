@@ -37,10 +37,6 @@
 #endif
 
 #include "Defines.h"
-//#include <iomanip.h>
-//#include <string.h>
-//#include <vector.h>
-//#include <stdlib.h>
 #include <math.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +125,7 @@ public:
         char* GetTypeDesc();
 
         ///Get parameter value. (#tvalue)
-        TYPE GetValue();
+        TYPE GetValue() const;
 
         ///Validate and set parameter value. (#tvalue)
         void PutValue(TYPE _val);
@@ -432,6 +428,7 @@ public:
         /// Verify value given is of a valid format for a directory
         n_str_param(char *_flag,char* _initialValue);
 
+	n_str_param(const n_str_param& tmp);
     //@}
 
     /** Data fields are updated according to what was specified on 
@@ -450,7 +447,7 @@ public:
     //@{
 
           ///Get number of substrings. (#numStrings)
-          int GetNumStrings();
+          int GetNumStrings() const;
 
           ///Set number of substrings. (#numStrings)
           void PutNumStrings(int _n);
@@ -527,7 +524,7 @@ GetTypeDesc(){
     return typedesc;
 };
 template<class TYPE> TYPE param<TYPE>::
-GetValue(){
+GetValue() const {
     return tvalue;
 };
 template<class TYPE> void param<TYPE>::
@@ -653,18 +650,25 @@ VerifyValidValue(TYPE _val){
 template<class TYPE> str_param<TYPE>::
 str_param():param<TYPE>(){
     tvalue = new char[300];
+    SetValue("");
+    tdefault = new char[300];
+    SetDefault("");
 };
 template<class TYPE> str_param<TYPE>::
 str_param(char *_flag)
         :param<TYPE>(_flag){
     tvalue = new char[300];
     SetValue("");
+    tdefault = new char[300];
+    SetDefault("");
 };
 template<class TYPE> str_param<TYPE>::
 str_param(char *_flag, char *_initialValue)
         :param<TYPE>(_flag){
     tvalue = new char[300];
     SetValue(_initialValue);
+    tdefault = new char[300];
+    SetDefault(_initialValue);
 };
 template<class TYPE> void str_param<TYPE>::
 VerifyValidDirName(){

@@ -5,9 +5,6 @@
 //  11/27/00 Lucia K. Dale
 /////////////////////////////////////////////////////////////////////
 
-//#include <string.h>
-//#include <vector.h>
-//#include <stdlib.h>
 #include "Defines.h"
 ///Modified for VC
 #if defined(_WIN32)
@@ -27,11 +24,34 @@ n_str_param ::n_str_param(char *_flag)
                       :str_param <char*>(_flag) {numStrings=0;};
 n_str_param ::n_str_param(char *_flag,char* _initialValue)
                       :str_param<char*>(_flag,_initialValue){numStrings=0;};
-
+n_str_param ::n_str_param(const n_str_param& tmp) {
+  if (tmp.tvalue!=NULL) {
+    //strcpy(tvalue, tmp.tvalue);
+    tvalue = strdup(tmp.tvalue);
+  }
+  if (tmp.tdefault!=NULL) {
+    //strcpy(tdefault, tmp.tdefault);
+    tdefault = strdup(tmp.tdefault);
+  }
+  if (tmp.flag!=NULL) {
+    strcpy(flag, tmp.flag);
+    //flag = strdup(tmp.flag);
+  }
+  activated = tmp.activated;
+  if (tmp.typedesc!=NULL) {
+    //strcpy(typedesc, tmp.typedesc);
+    typedesc = strdup(tmp.typedesc);
+  }
+  if (tmp.desc!=NULL) {
+    //strcpy(desc, tmp.desc);
+    desc = strdup(tmp.desc);
+  }
+  numStrings = tmp.GetNumStrings();
+};
 
 ///
 int n_str_param::
-GetNumStrings(){
+GetNumStrings() const {
 	return numStrings;
 };
 
