@@ -153,6 +153,7 @@ public:
   //===================================================================
        //  Adding & Deleting Edges 
   void AddEdge(VID, WEIGHT); 
+  void AddPredecessorEdge(VID, WEIGHT);
   int  DeleteXEdges(VID, int); 
   int  DeleteXEdges(VID, WEIGHT, int); 
 
@@ -202,7 +203,7 @@ CRPEI;
   VID    vid;          // this vertex's unique id (not nec. index)
   vector< WtEdge > edgelist;   // adj list rep of graph
   vector< WtEdge > predecessors; // call SetPredecessors() to initialize
-  
+
 protected:
 private:
 };
@@ -317,6 +318,7 @@ public:
         // Adding & Deleting Edges
    virtual int  AddEdge(VID, VID, pair<WEIGHT,WEIGHT>);
    virtual int  AddEdge(VID, VID, WEIGHT);
+   virtual int  AddPredecessorEdge(VID, VID, WEIGHT);
    virtual int  AddPath( vector<VID>&, WEIGHT); // all edges same weight
    virtual int  AddPath( vector< pair<VID,WEIGHT> >& ); 
    virtual int  AddPath( vector< pair<VID, pair<WEIGHT,WEIGHT> > >& );
@@ -394,6 +396,7 @@ public:
    vector<pair<VID,VID> > GetBackedge() const;
    vector<VID> TopologicalSort() const;
 
+   vector< VID > FindPathBFS(VID,VID) const;
    vector< pair<VERTEX,WEIGHT> > FindPathBFS(VID,VID) const;
    vector< pair<VERTEX,WEIGHT> > FindPathBFS(VERTEX&,VERTEX&) const;
 
@@ -944,6 +947,24 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT> _wtpair) {
          return ERROR;
      };
 };
+
+template<class VERTEX, class WEIGHT>
+int
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+AddPredecessorEdge(VID _v1id, VID _v0id, WEIGHT _weight) {
+    CVI cv1;
+    VI v1;
+    if (IsVertex(_v1id,&cv1) && IsVertex(_v0id) ) {
+         v1 = const_cast<VI>(cv1);
+         v1->AddPredecessorEdge(_v0id,_weight);
+         return OK;
+     } else {
+         cout << endl << "AddPredecessorEdge: v1 " << _v1id << " and/or v0 " << _v0id << "not in graph" ;
+         return ERROR;
+     };
+};
+
+
 
 template<class VERTEX, class WEIGHT>
 int
@@ -1667,7 +1688,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 DFS (VID & vid) const {
 //To find one dfs tree w/ start vertex vid
  
-  dfsinfo dfs(GetVertexCount());
+  dfsinfo dfs(this->GetVertexCount());
   return true_DFS(vid, dfs);
 };
 
@@ -1695,7 +1716,7 @@ DFS () const {
  	vector< WeightedMultiDiGraph<VERTEX,WEIGHT> > dfstree_vector;
   	VI  v1;
   	VID vid;	
- 	dfsinfo dfs(GetVertexCount());
+ 	dfsinfo dfs(this->GetVertexCount());
 
  	for (v1 = v.begin(); v1 < v.end(); v1++) {
    	 	vid = v1->vid;
@@ -1710,7 +1731,7 @@ template<class VERTEX, class WEIGHT>
 bool
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 IsCycle () const {
-	dfsinfo dfs(GetVertexCount());
+	dfsinfo dfs(this->GetVertexCount());
 	aux_DFS(dfs);
 	if( dfs.backedge_vector.empty() ) return false;
 	else return true;
@@ -1720,7 +1741,7 @@ template<class VERTEX, class WEIGHT>
 vector< pair<VID,VID> >
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 GetBackedge() const {
-	dfsinfo dfs(GetVertexCount());
+	dfsinfo dfs(this->GetVertexCount());
 	aux_DFS(dfs);
 	return dfs.backedge_vector;
 };
@@ -1732,7 +1753,7 @@ TopologicalSort () const {
  	int i,n;
 	VID vid;
 	vector<VID> tps;
-	n=GetVertexCount();
+	n=this->GetVertexCount();
  	vector<pair<VID,int> > tmp(n);
 	dfsinfo dfs(n);
 	aux_DFS(dfs);
@@ -1764,10 +1785,12 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 aux_DFS (dfsinfo& dfs) const {
 //driver, to find all backedges, and topological order of vertices
  
+  CVI cv1;
   VI  v1;
   VID vid;	
 
-  for (v1 = v.begin(); v1 < v.end(); v1++) {
+  for (cv1 = v.begin(); cv1 < v.end(); cv1++) {
+  	v1 = const_cast<VI> (cv1);
     	vid = v1->vid;
     	if( dfs.color[vid] == 0 ) 
 		true_DFS(vid, dfs);
@@ -1903,6 +1926,66 @@ FindPathBFS (VID _startVid, VID _endVid) const {
         v2id = e->vertex2id;
         if ( bfstree.IsVertex(v2id,&cv1) ) {
            path.insert( path.begin(), pair<VERTEX,WEIGHT>(cv1->data,e->weight) );
+           bfstree.DeleteEdge(v1id,v2id);
+        } else {
+           cout << "In FindPathBFS: hmm....\n";
+        }
+     }
+  }
+  return path;
+};
+
+
+template<class VERTEX, class WEIGHT>
+vector< VID > 
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+FindPathBFS (VID _startVid, VID _endVid) const {
+  WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree;
+  vector< VID > path;
+  list<VID> q;
+  CVI cv1,cv2;
+  VI v1,v2;
+  VID v1id, v2id;
+
+
+  if ( IsVertex(_startVid,&cv1) ) {
+     path.reserve( v.size() );
+     q.push_back(_startVid);
+     v1 = const_cast<VI>(cv1);
+     bfstree.AddVertex(v1->data,_startVid); 
+  } else {
+     cout << "\nIn FindPathBFS: start vertex (" << _startVid << ") not in graph";
+     return path; 
+  }
+
+  while ( !q.empty() && !bfstree.IsVertex(_endVid) ) {
+     v1id = q.front();
+     if ( IsVertex(v1id,&cv1) ) {
+       for (CEI e = cv1->edgelist.begin(); e < cv1->edgelist.end(); e++) {
+         v2id = e->vertex2id;
+         if ( !bfstree.IsVertex(v2id) && IsVertex(v2id,&cv2) ) {
+            q.push_back(v2id);
+            v2 = const_cast<VI>(cv2);
+            bfstree.AddVertex(v2->data,v2id);
+            if ( bfstree.AddEdge(v2id,v1id,e->weight) != OK) {
+                cout << "\nIn FindPathBFS: OOPS! edge not added right...";
+            }
+         }
+       }
+     } else {
+       cout << "\nIn GraphBFS: OOPS! vertex=" << v1id << " not in graph";
+     }
+     q.pop_front();
+  }
+
+  if ( bfstree.IsVertex(_endVid,&cv1) && bfstree.IsVertex(_startVid,&cv2) ) {
+     path.push_back(cv1->vid);
+     while ( !(*path.begin() ==  cv2->vid) ) {
+        CEI e = cv1->edgelist.begin();
+        v1id = cv1->vid;
+        v2id = e->vertex2id;
+        if ( bfstree.IsVertex(v2id,&cv1) ) {
+           path.push_back(cv1->vid);
            bfstree.DeleteEdge(v1id,v2id);
         } else {
            cout << "In FindPathBFS: hmm....\n";
@@ -2673,7 +2756,7 @@ GetIncidentEdgesVData(VID _v1id) const {
      if ( IsVertex(_v1id,&v1) ) {
          iedges.reserve( v1->edgelist.size() );
          for (CEI ei = v1->edgelist.begin(); ei != v1->edgelist.end(); ei++) {
-            pair<VERTEX,VERTEX> nextedge( GetData(_v1id), GetData(ei->vertex2id));
+            pair<VERTEX,VERTEX> nextedge( this->GetData(_v1id), this->GetData(ei->vertex2id));
             pair<pair<VERTEX,VERTEX>,WEIGHT> nextedgewt(nextedge,ei->weight);
             iedges.push_back( nextedgewt );
          }
@@ -2992,6 +3075,14 @@ WtVertexType<VERTEX,WEIGHT>::
 AddEdge(VID _v2id, WEIGHT _weight) {
      WtEdge newEdge(_v2id, _weight);
      edgelist.push_back(newEdge);
+};
+
+template<class VERTEX, class WEIGHT>
+void 
+WtVertexType<VERTEX,WEIGHT>:: 
+AddPredecessorEdge(VID _v0id, WEIGHT _weight) {
+     WtEdge newEdge(_v0id, _weight);
+     predecessors.push_back(newEdge);
 };
 
 //delete upto _x edges (v1,v2) of any weight (delete first encountered)
