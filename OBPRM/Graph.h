@@ -51,7 +51,7 @@
 
 //g++ in SUN or CC in SGI
 ///Modified for VC
-#if defined(sun) || defined(__sgi) || defined(__linux) || defined(_WIN32)
+#if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32)
 #include <algo.h>   
 #include <list.h>   
 #include <vector.h>
