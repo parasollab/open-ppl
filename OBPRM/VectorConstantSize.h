@@ -301,6 +301,7 @@ public:
 
 	// Magnitude of a vector
     double magnitude ();
+    const double normsqr() const { return v[0]*v[0] + v[1]*v[1] + v[2]*v[2]; }
 
 	// Cross Product Operation
     inline Vector3 crossProduct (Vector3&) const;
