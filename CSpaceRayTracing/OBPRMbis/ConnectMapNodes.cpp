@@ -974,23 +974,26 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
          int tk = 0; // controls the number of ticks generated
          //SID dmsetid = lpInfo.dmsetid;
          //cdsetid = cn->cnInfo.cdsetid;  
-cout << n_ticks;
+         cout << "# of ticks: "<< n_ticks << " ";
          while(!collision && (tk<=n_ticks)&& (dm->Distance(env,cfg,tick,info.dmsetid) < maxLength) ) {
             lastFreeConfiguration = tick;
             tick.Increment(incr); //next configuration to check
             cout << "here" << tk ;
-            if( (tick.isCollision(env,cd,info.cdsetid,info.cdInfo)) || !(tick.InBoundingBox(env)) ) {
+            if( (tick.isCollision(env,cd,info.cdsetid,info.cdInfo)) || 
+                             !(tick.InBoundingBox(env)) ) {
                collisionDistance = dm->Distance(env, cfg, tick, lpInfo.dmsetid);
                collision = true;
                }
             tk++;// increases the tick
             } // end_while
          bool attemptConnection = TRUE;
-         if (tk < 7) {
+         if (tk < 10) {
             if (toConnect && ( lastFreeConfiguration == u ) && connecting) {
+               cout << "tk small but still want to connect!!!\n";
                attemptConnection = TRUE;
                }
-            else {            
+            else {
+               cout << "tk too small! donot connect!\n";
                attemptConnection = FALSE;
                toConnect = FALSE;
                } 

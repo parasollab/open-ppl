@@ -61,7 +61,7 @@ ConnectMapComponents::~ConnectMapComponents() {
 int ConnectMapComponents::ReadCommandLine(int *argc, char **argv) {
   ReadCommandLineCollection(argc, argv); //Review if this is how we want it  
   selected.clear();
-  
+ 
   //fill out a list of selected methods (one might be there twice)
   vector<ComponentConnectionMethod *>::iterator itr;
   
@@ -69,12 +69,14 @@ int ConnectMapComponents::ReadCommandLine(int *argc, char **argv) {
   istrstream input_stream(options.GetValue());
   string method_name;
   while (input_stream >> method_name) {
-    for (itr = all.begin(); itr != all.end(); itr++)
-      if (method_name == (*itr)->GetName()) {
-	//here we'll need to change this to clone (*itr)
-	(*itr)->ParseCommandLine(argc, argv, input_stream);
-	selected.push_back(*itr);
-      }
+      cout << method_name << "\n";
+      for (itr = all.begin(); itr != all.end(); itr++)
+        if (method_name == (*itr)->GetName()) {
+	  //here we'll need to change this to clone (*itr)
+	  (*itr)->ParseCommandLine(argc, argv, input_stream);
+	  selected.push_back(*itr);
+        }
+ 
   }
   if ( selected.size() == 0 )
     selected = ConnectMapComponents::GetDefault();
@@ -178,9 +180,13 @@ int RRTConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstream &in
 	  if (int_rd < 0)
 	    throw BadUsage();
 	  smallcc = int_rd;
+
 	}
+        else throw BadUsage();
       }
+      else throw BadUsage();
     }
+    else throw BadUsage();
   } catch (BadUsage) {
     cerr << "Error in RRT parameters" << endl;//PrintUsage(cout,...);
     exit(-1);
@@ -239,7 +245,9 @@ int ConnectCCsConnectionMethod::ParseCommandLine(int *argc,char **argv,istrstrea
 	  throw BadUsage();
 	smallcc = int_rd;
       }
+      else throw BadUsage();
     }
+    else throw BadUsage();
   } catch (BadUsage) {
     cerr << "Error in ConnectCCs parameters" << endl;//PrintUsage(cout,...);
     exit(-1);
@@ -257,7 +265,7 @@ int ConnectCCsConnectionMethod::ParseCommandLine(int *argc,char **argv,istrstrea
  
 void ConnectCCsConnectionMethod::SetDefault() {
   smallcc = SMALL_CC;
-  kpairs = 4;//What is KPAIRS for then?
+  kpairs = KPAIRS;
   if (cn1 !=NULL)
     delete cn1;
   cn1 = new CN(kpairs,smallcc,0,0);
@@ -337,12 +345,19 @@ int RayTracerConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstre
 		    throw BadUsage();
 		  SampleMaxSize = int_rd;
 		}
+                else throw BadUsage();
 	      }
+              else throw BadUsage();
 	    }
+            else throw BadUsage();
 	  }
+          else throw BadUsage();
 	}
+        else throw BadUsage();
       }
+      else throw BadUsage();
     }
+    else throw BadUsage();
   } catch (BadUsage) {
     cerr << "Error in RayTracer parameters" << endl;//PrintUsage(cout,...);
     exit(-1);
