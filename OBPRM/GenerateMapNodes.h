@@ -784,7 +784,7 @@ public:
         *
         *@see GN::MakeGNSet(istream&) and ValidateParameters
         */
-      void UserInit(Input * input, Environment *_env);
+      virtual void UserInit(Input * input, Environment *_env);
 
   //@}
 

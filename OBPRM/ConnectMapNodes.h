@@ -714,7 +714,7 @@ public:
         *
         *@see CN::MakeCNSet(istream&) and ValidateParameters
         */
-      void UserInit(Input * input, Environment * env); ///< Get more information from Input.
+      virtual void UserInit(Input * input, Environment * env); ///< Get more information from Input.
 
   //@}
   
