@@ -173,9 +173,10 @@ GetClock_USEC() {
 
 ///Modified for VC
 #if defined(_WIN32)
-  return u_time*1e6+u_utime*1e3; //here u_utime is millisecond
+  return (int)(u_time*1e6+u_utime*1e3); //here u_utime is millisecond
 #else
-  return u_time*1e6+u_utime;
+  return (int)(u_time*1e6+u_utime);
 #endif
+
 };
 

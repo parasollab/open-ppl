@@ -39,9 +39,7 @@ static int path_num = 0;
 /////////////////////////////////////////////////////
 void read_segment(char fileName[80])
 {
-  int i;
   FILE *in;
-  int timeStep;
   cfig *prev;
   char line[256];
   cout << "Reading from the approx. path file\n" << fileName << endl;

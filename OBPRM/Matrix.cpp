@@ -125,8 +125,8 @@ void Matrix::Copy(const Matrix & _m) {
 Matrix Matrix::Inverse() {
     if (ncol != nrow)
         return Matrix();
-    double * result;
-    return Matrix(result, nrow, ncol);
+
+    return Matrix(NULL, nrow, ncol);
 }
 
 //==========================================================================

@@ -234,15 +234,34 @@ void MultiBody::Get(Input * _input, int _multibodyIndex) {
     //---------------------------------------------------------------
     // Get bodies
     //---------------------------------------------------------------
-#if VERBOSE
+	GetBodyInfoFromInput(_input,_multibodyIndex);
+
+    //---------------------------------------------------------------
+    // Get links
+    //---------------------------------------------------------------
+	GetLinkInfoFromInput(_input,_multibodyIndex);
+
+    //---------------------------------------------------------------
+	//calaulate help data
+    //---------------------------------------------------------------
+    FindBoundingBox();
+    ComputeCenterOfMass();
+}
+
+//===================================================================
+//  Get body info
+//===================================================================
+void MultiBody::GetBodyInfoFromInput(Input * _input, int _multibodyIndex)
+{
+	#if VERBOSE
     cout << "BodyCount = " << _input->BodyCount[_multibodyIndex] << endl;
     cout << "FixedBodyCount = " << _input->FixedBodyCount[_multibodyIndex] << endl;
 #endif
 
     double fixSum = 0;
     double freeSum = 0;
-    int i;
-    for (i=0; i < _input->BodyCount[_multibodyIndex]; i++) 
+
+    for(int i=0; i < _input->BodyCount[_multibodyIndex]; i++) 
 	{
 		if (!_input->isFree[_multibodyIndex][i])
 		{
@@ -268,10 +287,14 @@ void MultiBody::Get(Input * _input, int _multibodyIndex) {
 #if VERBOSE
     cout << "FreeBodyCount = " << _input->FreeBodyCount[_multibodyIndex] << endl;
 #endif
+}
 
-    //---------------------------------------------------------------
-    // Get links
-    //---------------------------------------------------------------
+
+//===================================================================
+//  Get link info
+//===================================================================
+void MultiBody::GetLinkInfoFromInput(Input * _input, int _multibodyIndex)
+{
     Connection * c;
 
     int bodyIndex0, realbodyIndex0;
@@ -280,7 +303,7 @@ void MultiBody::Get(Input * _input, int _multibodyIndex) {
     cout << "connectionCount = " << _input->connectionCount[_multibodyIndex] << endl;
 #endif
 
-    for (i=0; i < _input->connectionCount[_multibodyIndex]; i++) 
+    for(int i=0; i < _input->connectionCount[_multibodyIndex]; i++) 
 	{
 		//Get connection info about first body in this connection
 		//from Input instance
@@ -305,10 +328,7 @@ void MultiBody::Get(Input * _input, int _multibodyIndex) {
 			GetFreeBody(realbodyIndex0)->Link(c);
 		}
     }
-    FindBoundingBox();
-    ComputeCenterOfMass();
 }
-
 
 //===================================================================
 //  Write

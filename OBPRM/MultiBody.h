@@ -224,7 +224,7 @@ public:
 	  *@see FreeBody::Get, FixedBody::Get, Connection, FreeBody::Link, Connection::Get,
 	  *FixedBody::Link ,FindBoundingBox, and ComputeCenterOfMass
 	  */
-    void Get(Input * _input, int _index);
+    virtual void Get(Input * _input, int _index);
 
 	//@}
 
@@ -292,6 +292,30 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //	get information from input
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //@{
+
+	///Get Body Info from input
+	void GetBodyInfoFromInput(Input * _input, int _index);
+	///Get Link Info from input
+	void GetLinkInfoFromInput(Input * _input, int _index);
+
+  //@}
+
+	
+  // Area Stuff
+  int numBodies;              ///< Total number of Bodies
+  double fixArea;             ///< Area of FixedBodies
+  double freeArea;            ///< Area of FreeBodies
+  double area;                ///< Total Area of Bodies
+  vector<double> fixAreas;    ///< Vector of Areas of FixedBodies
+  vector<double> freeAreas;   ///< Vector of Areas of FreeBodies
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -318,16 +342,6 @@ private:
 
     double boundingBox[6];
     double maxAxisRange;
-
-
-    // Area Stuff
-    int numBodies;              ///< Total number of Bodies
-    double fixArea;             ///< Area of FixedBodies
-    double freeArea;            ///< Area of FreeBodies
-    double area;                ///< Total Area of Bodies
-    vector<double> fixAreas;    ///< Vector of Areas of FixedBodies
-    vector<double> freeAreas;   ///< Vector of Areas of FreeBodies
-
 };
 
 

@@ -219,14 +219,14 @@ public:
 
 	Roadmap * pRdmp;
 
-	vector<Cfg> query;      ///< start,[intermediate nodes],goal 
-	vector<Cfg> path;       ///< output paths
+	vector<Cfg> query;                  ///< start,[intermediate nodes],goal 
+	vector<Cfg> path;                   ///< output paths
 
-	char *outputPathFile;	///< File name for path data
+	char *outputPathFile;				///< File name for path data
 
-	SID lpsetid;		///< Local planner set id for query
-	SID cdsetid;		///< Collision Detection set id for query
-	SID dmsetid;		///< Distance Metrics set id for query
+	SID lpsetid;						///< Local planner set id for query
+	SID cdsetid;						///< Collision Detection set id for query
+	SID dmsetid;						///< Distance Metrics set id for query
 };
 
 #endif

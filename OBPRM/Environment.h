@@ -140,13 +140,15 @@ public:
 	  *@note FindBoundingBox also calculates defalut Position Resolution. If there is no
 	  *user input to overwrite this default value, default value will be returned. 
 	  */
-    inline double GetPositionRes() {return positionRes;};
+    inline double GetPositionRes() {return positionRes;}
+	inline void SetPositionRes(const double pRes) {positionRes=pRes;}
 
 	/**Return the resolution for rotation.
       *This tells client how fine this workspace is descretized about rotation.
 	  *@see Get, this function reads this value from Input instance.
 	  */
     inline double GetOrientationRes() {return orientationRes;};
+	inline void SetOrientationRes(const double rRes) {orientationRes=rRes;}
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	//

@@ -234,7 +234,7 @@ bool Push::CheckConnection(Cfg c1,Cfg c2)
 {
 vector<LP> mylpset = lp->planners.GetLPSet(SL);
   LP bsl = mylpset[0];
-  int i;
+
   // to create an edge
   WEIGHT bfedge = bsl.GetFEdgeMask();
   WEIGHT bbedge = bsl.GetBEdgeMask();
@@ -346,7 +346,6 @@ void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
  
   int i,j;
   Cfg inter;
-  double Q[6];
   cout << "Adding using  closest workspace points with " << totalNodes << "\n" << flush;
   double incrCoord = EXPANSION_FACTOR*env->GetPositionRes();
   

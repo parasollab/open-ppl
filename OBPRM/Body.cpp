@@ -172,7 +172,7 @@ void Body::RemoveBackwardConnection(Connection * _connection, int _delete) {
 	    break;
     }
     if (i < backwardConnectionCount) {
-        if ((bool)_delete)
+        if ( _delete )
             delete backwardConnection[i];
         if (i < backwardConnectionCount) {
             backwardConnectionCount--;

@@ -500,7 +500,7 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 	Cfg      move_out_dir_cfg;
 	long     steps_out, min_steps_out;
 	long     attempts_out;
-	long     max_tries_out, max_rnd_cfg_attempts;
+	long     max_tries_out;
 	double   *bb, x_scale, y_scale, z_scale;
 	long     seed;
 	
@@ -2053,7 +2053,7 @@ DeleteGNSet(const SID _sid) {
 SID
 GNSets::
 MakeGNSet(istream& _myistream) {
-	char gnname[100];
+
 	vector<EID> gnvec;  // vector of gnids for this set
 	
 	// BEGIN - Ugly

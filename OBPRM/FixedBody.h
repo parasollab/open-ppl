@@ -83,7 +83,7 @@ public:
 	  *@param _bodyIndex index for this fixed body in the owner in input
 	  *@see Read
 	  */
-    void Get(Input * _input, int _multibodyIndex, int _bodyIndex);
+    virtual void Get(Input * _input, int _multibodyIndex, int _bodyIndex);
 	//@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
