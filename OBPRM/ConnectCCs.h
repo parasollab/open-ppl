@@ -97,13 +97,7 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
 		     bool addPartialEdge, bool addAllEdges);
 
   //@}
-  void ConnectNodes_ConnectCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-                               CollisionDetection* cd, LocalPlanners<CFG,WEIGHT>* lp,
-                               DistanceMetric* dm, 
-                               vector< pair<int,VID> >& ccs1, 
-                               vector< pair<int,VID> >& ccs2,
-			       bool addPartialEdge,
-			       bool addAllEdges);
+
   void ConnectComponents();
   void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
 			 CollisionDetection*, 
@@ -310,13 +304,26 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 
 template <class CFG, class WEIGHT>
-void
-ConnectCCs<CFG, WEIGHT>::
-ConnectNodes_ConnectCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-                        CollisionDetection* cd, LocalPlanners<CFG,WEIGHT>* lp, 
-                        DistanceMetric* dm, vector< pair<int,VID> >& ccs1, 
-                        vector< pair<int,VID> >& ccs2,
-			bool addPartialEdge, bool addAllEdges) {
+void ConnectCCs<CFG,WEIGHT>::
+ConnectComponents() {
+  //cout << "Connecting CCs with method: components kpairs="<< kpairs;
+  //cout << " smallcc= " << smallcc << endl;
+  //cout << "DOING NOTHING" << endl;
+}
+ 
+
+template <class CFG, class WEIGHT>
+void ConnectCCs<CFG,WEIGHT>::
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+                  CollisionDetection* cd , 
+                  DistanceMetric * dm,
+                  LocalPlanners<CFG,WEIGHT>* lp,
+		  bool addPartialEdge,
+		  bool addAllEdges) {
+  vector< pair<int,VID> > ccs1;
+  GetCCStats(*(_rm->m_pRoadmap),ccs1);
+  vector< pair<int,VID> > ccs2 = ccs1;
+  
 #ifndef QUIET
   cout << "components(kpairs="<< kpairs ;
   cout << ", smallcc="<<smallcc <<"): "<<flush;
@@ -347,30 +354,6 @@ ConnectNodes_ConnectCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     }/*endfor cc2*/ 
     ccs2.pop_back();
   }/*endfor cc1*/
-}
-
-
-template <class CFG, class WEIGHT>
-void ConnectCCs<CFG,WEIGHT>::
-ConnectComponents() {
-  //cout << "Connecting CCs with method: components kpairs="<< kpairs;
-  //cout << " smallcc= " << smallcc << endl;
-  //cout << "DOING NOTHING" << endl;
-}
- 
-
-template <class CFG, class WEIGHT>
-void ConnectCCs<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-                  CollisionDetection* cd , 
-                  DistanceMetric * dm,
-                  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges) {
-  vector< pair<int,VID> > allCCs;
-  GetCCStats(*(_rm->m_pRoadmap),allCCs);
-  
-  ConnectNodes_ConnectCCs(_rm, Stats, cd, lp, dm, allCCs, allCCs, addPartialEdge, addAllEdges);
 }
 
 #endif
