@@ -56,8 +56,8 @@ int main(int argc, char** argv)
   Roadmap rmap(&input,  &cd, &dm, &lp);
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
-  gn.UserInit(&input,                  rmap.GetEnvironment() );
-  cn.UserInit(&input);
+  gn.UserInit(&input, rmap.GetEnvironment() );
+  cn.UserInit(&input, rmap.GetEnvironment() );
   dm.UserInit(&input,   &gn, &lp );
 
 
