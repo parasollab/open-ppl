@@ -623,6 +623,7 @@ void Cfg::Increment(const Cfg &_increment)
     for(int i=0; i<v.size(); ++i)
         v[i] += _increment.v[i];
     Normalize_orientation();
+    info = InfoCfg(); // reset info to NULL_INFO. 
     
 }
 
