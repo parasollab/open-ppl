@@ -79,6 +79,7 @@ struct GNInfo {
     n_str_param freePair;
     double proportionSurface;
     vector<Cfg> nodes;
+    int tag;
     CDInfo cdInfo;
 };
 

@@ -96,6 +96,7 @@ UserInit(Input * input, Environment *_env)
     gnInfo.freePair = input->freePair;
     gnInfo.calcClearance = input->calcClearance.GetValue();
     gnInfo.addNodes2Map = true;
+    gnInfo.tag = InfoCfg::NULL_INFO;
 };
 
 
@@ -143,6 +144,11 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
 
   // if that's what the user wants
   if (info.addNodes2Map) {
+
+     // tag all nodes generated as user indicates
+     for (int i=0;i<info.nodes.size();++i)
+	info.nodes[i].info.tag = info.tag;
+
 
      // then add generated nodes
      _rm->roadmap.AddVertex(info.nodes);
