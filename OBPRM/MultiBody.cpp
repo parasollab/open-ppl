@@ -138,6 +138,7 @@ MultiBody::MultiBody(Environment * _owner) {
     freeBody = 0;
     fixedBody = 0;
     CenterOfMassAvailable = false;
+    bInternal = false;
 }
 
 MultiBody::~MultiBody() {
@@ -537,7 +538,24 @@ double MultiBody::GetBoundingSphereRadius() {
    return result;
 }
 
+//===================================================================
+// CalculateArea
+//===================================================================
+void MultiBody::CalculateArea(){
+  double fixSum = 0;
+  double freeSum = 0;
 
+  for(int i=0; i<FixedBodyCount; i++) {
+    fixAreas.push_back(fixedBody[i]->GetPolyhedron().area);
+    fixSum += fixedBody[i]->GetPolyhedron().area;
+  }
 
+  for(int i=0; i<FreeBodyCount; i++) {
+    freeAreas.push_back(freeBody[i]->GetPolyhedron().area);
+    freeSum += freeBody[i]->GetPolyhedron().area;
+  }
 
-
+  fixArea = fixSum;
+  freeArea = freeSum;
+  area = fixArea + freeArea;
+}
