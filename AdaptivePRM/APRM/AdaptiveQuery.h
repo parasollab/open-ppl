@@ -13,6 +13,7 @@
 #include"QueryRequirements.h"
 #include"MyQueryCmds.h"
 
+
 class AdaptiveQuery : public Query {
 
 public:
@@ -33,12 +34,24 @@ public:
    virtual bool removeBadNodes(vector <Cfg>& cfgs, Environment *env,
 			       CollisionDetection *cd, SID cdsetid);
 
+   typedef pair<Cfg, Cfg> CfgPairType;
+
+   typedef pair<CfgPairType, double> DIS_TYPE;
+   /*
+   bool DIST_Compare(const DIST_TYPE& _cc1, const DIST_TYPE& _cc2) {
+     return (_cc1.second < _cc2.second );
+   }
+*/
+
+   virtual void FindKClosestPairs(vector<CfgPairType>& kp, Environment* _env, DistanceMetric* dm,
+				  const int kclosest, const Cfg& c, const vector<Cfg>& vertices, 
+				  SID dmsid);
+
    /////////////////////////////////////////////////////////
    //  data 
    /////////////////////////////////////////////////////////
    QueryRequirementsObject queryReq;
    int checkAllNodes;
-
 };
 
 #endif

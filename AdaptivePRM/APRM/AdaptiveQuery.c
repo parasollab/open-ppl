@@ -46,16 +46,15 @@ AdaptiveQuery::PerformQuery(CollisionDetection* cd, ConnectMapNodes* cn,
 }
 
 
-typedef pair<Cfg, Cfg> CfgPairType;
-typedef pair<CfgPairType, double> DIS_TYPE;
-bool DIST_Compare(const DIST_TYPE &_cc1, const DIST_TYPE &_cc2) {
-        return (_cc1.second < _cc2.second ) ;
+bool DIST_Compare(const DIST_TYPE& _cc1, const DIST_TYPE& _cc2) {
+  return (_cc1.second < _cc2.second );
 }
 
 
 void
-FindKClosestPairs(vector<CfgPairType> &kp, Environment *_env,DistanceMetric * dm,
-                  const int kclosest, const Cfg& c, const vector<Cfg> &vertices, SID dmsid){
+AdaptiveQuery::FindKClosestPairs(vector<CfgPairType>& kp, Environment* _env,DistanceMetric* dm,
+				 const int kclosest, const Cfg& c, const vector<Cfg>& vertices, 
+				 SID dmsid) {
   if(kclosest > vertices.size()) {
      for(int i=0; i<vertices.size(); ++i)
         kp.push_back(CfgPairType(c,vertices[i]));
