@@ -275,12 +275,18 @@ public:
         *this new edge.
         */
       void AddEdge(VID, WEIGHT); 
+     
+      /**Adding a predecessor edge by given id for the first endpoint and the weight of 
+        *this new edge.
+        */
+    void AddPredecessorEdge(VID, WEIGHT);
 
       /**Delete edge(s) whose endpoint is given.
         *@param VID the second endpoint of edge.
         *@param int how many edges with given endpoint will be delete.
         *if this parameter is -l. All edges with given endpoint will be delete
         */
+
 
       int  DeleteXEdges(VID, int); 
       /**Delete edge(s) whose endpoint and wight are the same as parameters.
@@ -410,8 +416,7 @@ public:
       */
     WtEdge* my_find_EIDWT_eq(const pair<VID,WEIGHT> _wtpair) const;
     
-    //new!!
-    void AddPredecessorEdge(VID, WEIGHT);
+
 
   //@}
 
@@ -758,8 +763,6 @@ public:
          *@param vid1 the id for the first vertex
          *@param vid2 the id for the second vertex
          *@param WEIGHT the weight for this new edge
-         *@note pair.first is weight for vid1->vid2 and pair.second
-         *is weight for vid2->vid1
          *@note vid1 and v2 should be added in graph before, otherwise
          *ERROR will be returned.
          *@return OK if vid1 and vid2 are found in this graph and new edge
@@ -786,8 +789,6 @@ public:
          *@param v1 the user data for the first vertex
          *@param v2 the user data for the second vertex
          *@param WEIGHT the weight for this new edge
-         *@note pair.first is weight for v1->v2 and pair.second
-         *is weight for v2->v1
          *@note v1 and v2 should be found in graph, otherwise
          *ERROR will be returned. if there are more than one vertex
          *constain v1 or v2, then the first one found in the graph will
@@ -797,6 +798,17 @@ public:
          */
        virtual int  AddEdge(VERTEX&, VERTEX&, WEIGHT);  
 
+       /**Add a predecessor edge, from the v2 to v1 vertex with weight.
+         *@param vid1 the id for the first vertex
+         *@param vid2 the id for the second vertex
+         *@param WEIGHT the weight for this new edge
+         *@note vid1 and v2 should be added in graph before, otherwise
+         *ERROR will be returned.
+         *@return OK if vid1 and vid2 are found in this graph and new edge
+         *is created correctly
+         */
+
+      virtual int  AddPredecessorEdge(VID, VID, WEIGHT);
 
        /**Delete n edges from vid1 to vid2.
          *Delete edges starting from vid1 to vid2.
@@ -857,11 +869,6 @@ public:
          */
        void DeleteAllEdges(VERTEX&);
        
-      //new!!
-      virtual int  AddPredecessorEdge(VID, VID, WEIGHT);
-
-    //new
-    vector< VID > FindVIDPathBFS(VID,VID) const;   
    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1101,6 +1108,12 @@ public:
          *error message will be output to standard output.
          */
        virtual vector<VID> GetSuccessors(VID) const;
+
+       /**Get VERTEXs which are connected to by edges going out from
+         *specied VID.
+         *@return empty vector If there is no such vertex found and
+         *error message will be output to standard output.
+         */
        virtual vector<VERTEX> GetSuccessorsDATA(VID) const;
 
        /**Get VIDs which are connected to by edges going out from
@@ -1111,6 +1124,14 @@ public:
          *error message will be output to standard output.
          */
        virtual vector<VID> GetSuccessors(VERTEX&) const;
+
+       /**Get VERTEXs which are connected to by edges going out from
+         *specied v.
+         *Here v is any vertex contains user data in the parameter
+         *if there are more than one, then the first will be applied.
+         *@return empty vector If there is no such vertex found and
+         *error message will be output to standard output.
+         */
        virtual vector<VERTEX> GetSuccessorsDATA(VERTEX&) const;
 
        /**Initialize predecessors in the data field of Vertex.
@@ -1124,7 +1145,7 @@ public:
     //to initialize predecessor vector
     //=======================================================
 
-       /**Get all predecessors of a specied VID.
+       /**Get all predecessors of a specied VID as a vector<VID>.
          *@note Need to call SetPredecessors() first to initialize predecessor vector
          *before using this method.
          *
@@ -1133,9 +1154,18 @@ public:
          *@see SetPredecessors
          */
        virtual vector<VID> GetPredecessors(VID) const;
+
+       /**Get all predecessors of a specied VID as a vector<VERTEX>.
+         *@note Need to call SetPredecessors() first to initialize predecessor vector
+         *before using this method.
+         *
+         *@return empty vector If there is no such vertex found and
+         *error message will be output to standard output.
+         *@see SetPredecessors
+         */
        virtual vector<VERTEX> GetPredecessorsDATA(VID) const;
 
-       /**Get all predecessors of a specied v.
+       /**Get all predecessors of a specied v as a vector<VID>.
          *Here v is any vertex contains user data in the parameter
          *if there are more than one, then the first will be applied.
          *
@@ -1146,6 +1176,17 @@ public:
          *error message will be output to standard output.
          */
        virtual vector<VID> GetPredecessors(VERTEX&) const;
+
+       /**Get all predecessors of a specied v as a vector<VERTEX>.
+         *Here v is any vertex contains user data in the parameter
+         *if there are more than one, then the first will be applied.
+         *
+         *@note Need to call SetPredecessors() first to initialize predecessor vector
+         *before using this method.
+         *
+         *@return empty vector If there is no such vertex found and
+         *error message will be output to standard output.
+         */
        virtual vector<VERTEX> GetPredecessorsDATA(VERTEX&) const;
 
        /**Return VIDs of vertices which are sources.
@@ -1218,6 +1259,11 @@ public:
          *@see FindPathBFS(VID,VID) and IsVertex(VERTEX&)
          */
        vector< pair<VERTEX,WEIGHT> > FindPathBFS(VERTEX&,VERTEX&) const;
+
+       /**Find BFS path between 2 specified vertices. Return the path as a vector<VID>
+         *@see FindPathBFS(VID,VID) and IsVertex(VERTEX&)
+         */    
+       vector< VID > FindVIDPathBFS(VID,VID) const;   
 
        //////////////////////////////////////////////////////////////////////////////////////////
        //
@@ -1361,21 +1407,23 @@ public:
        void WriteGraph(const char*  _filename) const; 
 
 
-       /**Read graph info from the given input stream.
+       /**Read graph info from the given input stream. Assign vid with given values.
          *Read data which were written by WriteGraph.
          @note Error message will be outputed if something wrong
          *during processing.
          */
-    /* use vid from input file as internal vid */    
+       /* use vid from input file as internal vid */    
        void ReadGraph(istream& _myistream);
 
-       /* automatic assign vid to each nodes */
+       /* automatic assign vid to each nodes, need to transform vid in the edgelist */
        void ReadGraphwithAutoVID(istream& _myistream);
 
        /**Read graph info from the file of file name, _filename.
          *This method calls ReadGraph(istream& _myistream).
          */
        void ReadGraph(const char*  _filename);
+
+       /* automatic assign vid to each nodes, need to transform vid in the edgelist */
        void ReadGraphwithAutoVID(const char*  _filename);
 
     //@}
@@ -3081,9 +3129,8 @@ GetReferenceofData(VID _v1id) {
     if ( IsVertex(_v1id,&v1) ) {
         return const_cast<VERTEX*> (&v1->data);
     } else {
-	//VERTEX vv = VERTEX::InvalidData();
-        //VERTEX* vv = NULL;
-	return NULL; 
+//	VERTEX vv = VERTEX::InvalidData();
+        return NULL; 
     }
 };
 
@@ -3437,7 +3484,8 @@ TopologicalSort () const {
     VID vid;
     vector<VID> tps;
     n=this->GetVertexCount();
-    vector<pair<VID,int> > tmp(n);
+    vector<pair<VID,int> > tmp;
+    tmp.reserve(n);
 
     dfsinfo dfs(n);
     aux_DFS(dfs);
@@ -3451,7 +3499,10 @@ TopologicalSort () const {
     
     for(i=0; i<n;i++) {
         tps.push_back(tmp[i].first);
-        cout<<tmp[i].first<<endl;
+#if DEBUG
+	cout<<"\nTopological Sort results: "<<endl;
+        cout<<tmp[i].first<<" ";
+#endif
     }
     return tps;            
 };
