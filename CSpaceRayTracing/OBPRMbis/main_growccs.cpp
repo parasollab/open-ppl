@@ -86,12 +86,34 @@ int main(int argc, char** argv)
   connect_ccs.PerformConnectCCs(&cd,&cn,&lp,&dm);
   clock.StopClock();
 
-  #if QUIET
+/*  #if QUIET
   #else
     cout << ": " << clock.GetClock_SEC()
          << " sec (ie, " << clock.GetClock_USEC() << " usec)";
   #endif
-
+*/
+  //---------------------------
+  // Print out some useful info
+  //---------------------------
+  #ifdef QUIET
+    ofstream  myofstream(input.mapFile.GetValue(),ios::app);
+    if (!myofstream) {
+      cout<<"\nIn main_obprm: can't re-open mapfile: "
+          <<input.mapFile.GetValue();
+      exit(-1);
+    }
+    PrintRawLine(cout,
+        &(connect_ccs.rdmp), &NodeGenClock,&clock,cn,1);  // to stdout
+    PrintRawLine(myofstream,
+        &(connect_ccs.rdmp), &NodeGenClock,&clock,cn,0);  // to map
+  #else
+    cout << "\n";
+    clock.PrintName();
+    cout << ": " << clock.GetClock_SEC()
+         << " sec"
+         << ", "<<connect_ccs.rdmp.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
+    Stats.PrintAllStats(&(connect_ccs.rdmp));
+  #endif
 
   //------------------------
   // Done
