@@ -136,7 +136,8 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
   for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++) 
   {
     total+=iter->second;
-    cout << i << ") " << iter->second << " " << iter->first << endl;
+    cout << i << ") " << iter->second << " ";
+    printf("%s\n", iter->first); //K2 does not have the << operator defined for string
     }
 
   cout << "total " << total << endl;
