@@ -19,6 +19,7 @@
 #include "RandomConnect.h"
 #include "ObstBased.h"
 #include "ModifiedLM.h"
+#include "ConnectFirst.h"
 
 //#############################################################################
 // A collection of component connection methods
@@ -35,7 +36,7 @@ class ConnectMap {
 
   //////////////////////
   // Access methods
-  static vector<ConnectionMethod<CFG,WEIGHT> *> GetDefault();
+  virtual vector<ConnectionMethod<CFG,WEIGHT> *> GetDefault();
 
   //////////////////////
   // I/O methods
@@ -61,7 +62,7 @@ class ConnectMap {
 			 vector<vector<CFG> >& verticesList);
 
 
- private:
+ protected:
 
   //////////////////////
   // Data
@@ -122,6 +123,9 @@ ConnectMap<CFG,WEIGHT>::ConnectMap() {
   ModifiedLM<CFG,WEIGHT>* lm = new ModifiedLM<CFG,WEIGHT>();
   all.push_back(lm);
 
+  ConnectFirst<CFG,WEIGHT>* connectFirst = new ConnectFirst<CFG,WEIGHT>();
+  all.push_back(connectFirst);
+
   //Command-line-option string
   options.PutDesc("STRING",
    "\n\t\t\tPick any combo: default RayTracer targetOriented 1 10000 10000"
@@ -162,13 +166,13 @@ ConnectMap<CFG,WEIGHT>::~ConnectMap() {
 
 template <class CFG, class WEIGHT>
 vector<ConnectionMethod<CFG,WEIGHT> *> ConnectMap<CFG,WEIGHT>::GetDefault() {
-    vector<ConnectionMethod<CFG,WEIGHT> *> tmp;
+  vector<ConnectionMethod<CFG,WEIGHT> *> tmp;
   Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>();
   closest->SetDefault();
   tmp.push_back(closest);    
-
-    return tmp;
-  }
+  
+  return tmp;
+}
 // For compatability with connectmapnodes
 
 template <class CFG, class WEIGHT>
@@ -223,7 +227,7 @@ int ConnectMap<CFG,WEIGHT>::ReadCommandLine(Input* input, Environment* env) {
 
   //when there was no method selected, use the default
   if(selected.size() == 0) {
-    selected = ConnectMap<CFG,WEIGHT>::GetDefault();
+    selected = this->GetDefault();
     for (itr = selected.begin(); itr != selected.end(); itr++) {
       (*itr)->cdInfo = &cdInfo;
       (*itr)->connectionPosRes= connectionPosRes;
@@ -252,7 +256,7 @@ void ConnectMap<CFG,WEIGHT>::PrintValues(ostream& _os){
 template <class CFG, class WEIGHT>
 void ConnectMap<CFG,WEIGHT>::PrintDefaults(ostream& _os) {
   vector<ConnectionMethod<CFG,WEIGHT>*> Default;
-  Default = GetDefault();
+  Default = this->GetDefault();
   typename vector<ConnectionMethod<CFG,WEIGHT>*>::iterator I;
   for(I=Default.begin(); I!=Default.end(); I++)
     (*I)->PrintValues(_os);
