@@ -17,7 +17,7 @@
 # collision detection packages available
 #--------------------------------------------------------------------------
 
- CD_DIR	= /research/parasol/dsmft/CD-libs
+ CD_DIR	= /research/sunburn/dsmft/CD-libs/hp
 
  VCLIP_DIR     = ${CD_DIR}/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
