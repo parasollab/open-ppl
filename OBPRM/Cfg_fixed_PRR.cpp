@@ -25,12 +25,6 @@ Cfg_fixed_PRR::Cfg_fixed_PRR() : CfgManager(3, 1) {}
 
 Cfg_fixed_PRR::~Cfg_fixed_PRR() {}
 
-CfgManager * Cfg_fixed_PRR::clone() const {
-   return (new Cfg_fixed_PRR());
-}
-
-
-
 Vector3D Cfg_fixed_PRR::GetRobotCenterPosition(const Cfg &c) const {
    vector<double> tmp = c.GetData();
    return Vector3D(0, 0, tmp[0]);

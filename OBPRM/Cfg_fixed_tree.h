@@ -49,11 +49,6 @@ public:
 
   //@}
 
-   /// create and clone functions
-   CfgManager * create() const { return (new Cfg_fixed_tree(NumofJoints)); }
-   CfgManager * clone() const;
-
-
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //

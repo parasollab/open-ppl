@@ -237,7 +237,7 @@ public:
         ///Copy the configuration in v2 to this configuration
         Cfg(const vector<double> &v2);
         ///Copy Constructor
-        Cfg(const Cfg & otherCfg);
+        //Cfg::Cfg( const Cfg & otherCfg);
         ///Destructor. Do nothing.
         ~Cfg();
     
@@ -252,8 +252,7 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
     /**@name Operators*/
     //@{
-        /// Copy operator
-        Cfg & operator= (const Cfg&);
+    
         ///Return true if this and other Cfg instance have same configuration
         bool operator== (const Cfg&) const;
         ///Return true if this and other Cfg instance have different configuration
@@ -325,10 +324,6 @@ public:
     //@{
         ///Get internal storage of configuration
         const vector<double>& GetData() const;
-	/// create CfgManager
-	void createCfgHelper();
-	/// Get CfgManager
-	CfgManager * GetCfgManager() { return CfgHelper; }
         ///Call CfgManager::GetRobotCenterPosition(this)
         Vector3D GetRobotCenterPosition();
         /// Return the number of degrees of freedom for the configuration class
@@ -576,27 +571,22 @@ public:
       */
       void Normalize_orientation(int index = -1);
       
-      ///////////////////////////////////////////////////////////////////////////
+      ///////////////////////////////////////////////////////////////////////////////////////////
       //
       //
       //    Private Data members and Member methods
       //
       //
-      //////////////////////////////////////////////////////////////////////////
-
-  protected:    
+      //////////////////////////////////////////////////////////////////////////////////////////
+  private:
       
       vector<double> v;   
-      CfgManager * CfgHelper;  ///<Cfg_Free
-      friend CfgManager;
-
+      
   public:
-  
+      static CfgManager * CfgHelper;  ///<Cfg_Free
       InfoCfg info;
-
-      static CfgManager * cfgType;
-
-};
+      friend CfgManager;
+}; // class Cfg
 
 
 #endif

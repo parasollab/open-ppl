@@ -66,12 +66,6 @@ public:
   ~CfgManager();
   //@}
 
-  /// clone and create function.
-  /// create only generate a new pointer to CfgManager,
-  /// clone generates an identical one (with same data)
-  virtual CfgManager * create() const = 0;
-  virtual CfgManager * clone() const = 0;
-
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //

@@ -201,7 +201,7 @@ public:
         /**Read Cfg type from input stream.
           *This method read Cfg's name and joint number from input stream,
           *and then according to Cfg's name, appropricate CfgManager will be created and
-          *set it as Cfg::cfgType.
+          *set it as Cfg::CfgHelper.
           *If this CfgManager was created, #cfgSet will be set as true.
           *@note cfgSet's default value is false.
           */
