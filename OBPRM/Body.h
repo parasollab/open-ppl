@@ -43,7 +43,7 @@
 class MultiBody;
 class Input;
 class Transformation;
-class DHParameters;
+class DHparameters;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**class Body is a high level represented object in workspace.
