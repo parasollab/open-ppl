@@ -28,26 +28,6 @@ void MyInput::ReadCommandLine(int argc, char** argv) {
   ReadPotentialParameters();
 }
 
-// Identical copy from Input.cpp. Somehow this kind of gadget should 
-// be put in some public place instead of having duplicate copies.
-#define COMMENT_DELIMITER '#'
-#define LINEMAX 256
-template <class T> bool Myreadfield (istream &_is, T *fred) {
-
-  char c;
-  char ThrowAwayLine[LINEMAX];
-
-  while ( _is.get(c) )
-    if (c == '#')
-        _is.getline(ThrowAwayLine,LINEMAX,'\n');
-    else if (c != '\n') {
-        _is.putback(c);
-        if (_is >> *fred ) return true;
-        else               return false;
-    }
-  return false;
-}
-
 
 void MyInput::ReadPotentialParameters() {
   char tmp[80];
@@ -61,7 +41,7 @@ void MyInput::ReadPotentialParameters() {
 
 void MyInput::ReadPotentialParameters(istream &is) {
   char ptype[80];
-  Myreadfield(is, &ptype);
+  readfield(is, &ptype);
   //if(ptype == ...) then ReadPotentialParametersMainChain...();
   //else if(ptype == ) ...
   // Since different type of potentials probably have different input 
@@ -83,9 +63,9 @@ void MyInput::ReadPotentialParameters(istream &is) {
      exit(10);
   }
 
-  Myreadfield(is, &BioPotentials::gnEmin);
-  Myreadfield(is, &BioPotentials::gnEmax);
-  Myreadfield(is, &BioPotentials::cnEmax);
+  readfield(is, &BioPotentials::gnEmin);
+  readfield(is, &BioPotentials::gnEmax);
+  readfield(is, &BioPotentials::cnEmax);
 
   // this is something extra for ligand binding.
   if(BioPotentials::potentialType == LigandBinding || 
@@ -111,12 +91,12 @@ void MyInput::ReadPotentialParameters(istream &is) {
      vector<Vector3D> v;
      char ch;
      Vector3D tmp;
-     Myreadfield(fs, &frames);
+     readfield(fs, &frames);
      for(int n=0; n<frames; ++n) {
-	Myreadfield(fs, &atoms);
+	readfield(fs, &atoms);
 	for(int k=0; k<atoms; ++k) {
-	   Myreadfield(fs,&ch);
-	   fs >> tmp;
+	   readfield(fs,&ch);
+	   readfield(fs, &tmp);
            BioPotentials::atomType.push_back(ch);
 	   v.push_back(tmp);
 	}
@@ -131,31 +111,31 @@ void MyInput::ReadPotentialParameters(istream &is) {
      
 
 
-  Myreadfield(is, &BioPotentials::vdwSphereRadiusMax);
-  Myreadfield(is, &BioPotentials::vdwSphereRadiusMin);
+  readfield(is, &BioPotentials::vdwSphereRadiusMax);
+  readfield(is, &BioPotentials::vdwSphereRadiusMin);
 
-  Myreadfield(is, &BioPotentials::HbondsNum);
-  Myreadfield(is, &BioPotentials::SSbondsNum);
+  readfield(is, &BioPotentials::HbondsNum);
+  readfield(is, &BioPotentials::SSbondsNum);
 
   int i;
   for(i=0; i<BioPotentials::HbondsNum; ++i) {
      int donor, acceptor;
-     Myreadfield(is, &donor);
-     Myreadfield(is, &acceptor);
+     readfield(is, &donor);
+     readfield(is, &acceptor);
      BioPotentials::HbondPair.push_back(pair<int,int>(donor, acceptor));
   }
 
   for(i=0; i<BioPotentials::SSbondsNum; ++i) {
      int sA, sB;
-     Myreadfield(is, &sA);
-     Myreadfield(is, &sB);
+     readfield(is, &sA);
+     readfield(is, &sB);
      BioPotentials::SSbondPair.push_back(pair<int,int>(sA, sB));
   }
 
   int numofResidue = numofJoints/2;
   for(i=0; i< numofResidue; ++i) {
     char structureType[2];
-    Myreadfield(is, &structureType);
+    readfield(is, &structureType);
     switch(structureType[0]) {
       case 'H':  // alpha Helix
 	 BioPotentials::torsionAngle.push_back(-60); // phi
@@ -173,8 +153,8 @@ void MyInput::ReadPotentialParameters(istream &is) {
   }
 
   // now, read in the value of 'std' & 'range' for CfgProtein class.
-  //Myreadfield(is, &CfgProtein::std);
-  //Myreadfield(is, &CfgProtein::range);
+  //readfield(is, &CfgProtein::std);
+  //readfield(is, &CfgProtein::range);
 }	 
 
      
