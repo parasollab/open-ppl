@@ -255,7 +255,7 @@ public:
       *@param _input provides information to initialize Environment.
       *@see MultiBody::Get, FindBoundingBox, and UpdateBoundingBox
       */
-    void Get(Input * _input);
+    virtual void Get(Input * _input);
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
