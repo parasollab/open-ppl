@@ -4,9 +4,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream.h>
-#include "Query.h"
 #include "AdaptiveQuery.h"
 #include "Stat_Class.h"
+#include "Clock_Class.h"
 #include "GraphAlgo.h"
 #include "MyQueryCmds.h"
 
@@ -24,6 +24,7 @@ int main(int argc, char** argv)
   LocalPlanners      lp;
   DistanceMetric     dm;
   CollisionDetection cd;
+  Clock_Class        QueryClock;
 
   //----------------------------------------------------
   // instantiate query/roadmap object
@@ -61,6 +62,7 @@ int main(int argc, char** argv)
   // perform the query
   // if successful, write path to a file
   //----------------------------------------------------
+  QueryClock.StartClock("Query");
   if ( query.PerformQuery(&cd,&cn,&lp,&dm) ) {
     query.WritePath();
     cout << endl << "SUCCESSFUL query";
@@ -68,6 +70,13 @@ int main(int argc, char** argv)
   } else {
     cout << endl << "UNSUCCESSFUL query";
   }
+  QueryClock.StopClock();
+
+  #if QUIET
+  #else
+    cout << ": " << QueryClock.GetClock_SEC()
+	 << " sec (ie, " << QueryClock.GetClock_USEC() << " usec)";
+  #endif
 
   //------------------------
   // Done
