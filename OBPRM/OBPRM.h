@@ -32,6 +32,8 @@
 #define ORIENTATION_RES             0.05
 #define POSITION_RES_FACTOR         0.05
 
+#define NULL_WT_INFO -999              // to pad weight fields for graph conversions
+
 #define INVALID_SID -999
 #define INVALID_EID -999
 
