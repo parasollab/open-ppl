@@ -5,7 +5,7 @@
 
 # -- for dynamic shared object library libobprm.so
    OBPRM_DIR   = .
-   OBPRM_LIB   = -L${OBPRM_DIR} -lobprm
+   OBPRMLIB   = -L${OBPRM_DIR} -lobprm
 
 #------------------------------------------------------
 # Basic defns; do not change
@@ -60,7 +60,7 @@ CXX = ${CC}
 #  OPTS =  -o32 -O2 -OPT:Olimit=0 -show
 
 #  DEPS = 
-#  DEPS = -MDupdate Dependencies 
+   DEPS = -MMD #Dependencies 
 
 # -- warnings (default, full, none) --
 #  CWARNS = 
@@ -69,7 +69,7 @@ CXX = ${CC}
 
 CFLAGS     = $(OPTS) $(AFLAGS) $(DEPS) $(CWARNS)
 CXXFLAGS   = $(CFLAGS) 
-DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
+DSOFLAGS   = $(CFLAGS) -shared #-no_unresolved
 
 #-----------------------------------------------------------------------------
 # Build 
@@ -79,26 +79,35 @@ DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
 deps:: 
 	touch Dependencies
 
-libs:: objs libobprm.a
+libs:: objs libobprm.so
 
-libobprm.a:: $(OBJS)
-	ar  -rc libobprm.a $(OBJS) 
+#libobprm.a:: $(OBJS)
+#	ar  -rc libobprm.a $(OBJS) 
+libobprm.so:: $(OBJS)
+	$(CXX) -o libobprm.so $(DSOFLAGS) $(OBJS)
+
 
 #--------------------------------------------------------------------
 obprm:: main_obprm.cpp libs
 	$(CXX) $(CXXFLAGS) -o obprm \
                 main_obprm.cpp \
-		libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
-	rm -f main_obprm.o
+		$(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
+	rm -f main_obprm.o main_obprm.d
 
 #--------------------------------------------------------------------
 query:: main_query.cpp libs
 	$(CXX) $(CXXFLAGS) -o query \
                 main_query.cpp \
-                libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
-	rm -f main_query.o
+                $(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+	rm -f main_query.o main_query.d
 
 #--------------------------------------------------------------------
+.SUFFIXES: .cpp
+.cpp.o:
+	$(CXX) ${CXXFLAGS} -c $<
+	cat $*.d >> Dependencies
+	rm -f $*.d
+
 % :: %.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 
@@ -119,7 +128,6 @@ OBJS = \
 	Body.o \
 	MultiBody.o \
 	Input.o \
-	HapticInput.o \
         Haptic.o \
         Push.o \
 	Cfg.o \
@@ -157,6 +165,8 @@ reallyclean::
 	rm -f *.a *.so *.o
 	rm -R -f ii_files
 	rm -f so_locations
+	rm -f Dependencies
+	touch Dependencies
 
 #-----------------------------------------------------------------------------
 # Build and update dependencies
