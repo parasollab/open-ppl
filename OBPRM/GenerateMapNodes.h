@@ -126,6 +126,7 @@ public:
   GNF    GetGenerator();
   EID    GetID() const;
   double Get_Gauss_d() const;
+  double Get_clearanceFactor() const;
 
 protected:
   //===================================================================
@@ -135,6 +136,7 @@ protected:
   GNF    generator;          // ptr to generator code
   EID    gnid;
   double Gauss_d;
+  double clearanceFactor;
 
 private:
 
@@ -270,10 +272,22 @@ public:
                    int, int, Cfg, Cfg);
 
   static vector<Cfg>
+  GenerateSurfaceCfg(Environment*, CollisionDetection*,DistanceMetric*,GNInfo&,
+                   int, int, Cfg, Cfg,double);
+
+  static vector<Cfg>
   GenSurfaceCfgs4Obst(Environment * env,CollisionDetection *,DistanceMetric* dm, int obstacle, int nCfgs, GNInfo &_info);
 
   static vector<Cfg>
+  GenSurfaceCfgs4Obst(Environment * env,CollisionDetection *,DistanceMetric* dm, 
+    int obstacle, int nCfgs, GNInfo &_info, double clearanceFactor);
+
+  static vector<Cfg>
   GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection *,DistanceMetric* dm, int obstacle, int nCfgs, GNInfo &_info);
+
+  static vector<Cfg>
+  GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection *,DistanceMetric* dm, 
+    int obstacle, int nCfgs, GNInfo &_info, double clearanceFactor);
 
 //===================================================================
 // protected method implementations
@@ -355,6 +369,10 @@ protected:
 
   static vector<Cfg>
   GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, int obstacle, int nCfgs, GNInfo &_info);
+
+  static vector<Cfg>
+  GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, 
+     int obstacle, int nCfgs, GNInfo &_info, double clearanceFactor);
 
   static vector<Cfg>
   GenFreeCfgs4Obst(Environment * env,CollisionDetection *,

@@ -377,8 +377,11 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
       cout << "\tproportionSurface="<< _info.proportionSurface << ", ";
       cout << "\nnumShells="        << _info.numShells   << ", ";
       cout << "collPair="           << _info.collPair.GetValue()    << ", ";
-      cout << "freePair="           << _info.freePair.GetValue()   << ") ";
+      cout << "freePair="           << _info.freePair.GetValue()   << ", ";
+      cout << "clearanceFactor="    << _gn.Get_clearanceFactor()   << ") ";
     #endif
+    double clearanceFactor;
+    clearanceFactor  = _gn.Get_clearanceFactor();
 
     pair<int,int> seedSelect,freeSelect;
 
@@ -405,7 +408,7 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
         if(obstacle != robot){
 
         // Generate Surface Cfgs using Binary Search Procedure
-        obstSurface = GenSurfaceCfgs4Obst(_env,cd,dm, obstacle, NSEED, _info);
+        obstSurface = GenSurfaceCfgs4Obst(_env,cd,dm, obstacle, NSEED, _info,clearanceFactor);
 
         // Generate Free Cfgs using Ad Hoc procedure
         obstFree = GenFreeCfgs4Obst(_env,cd, obstacle, NFREE, _info);
@@ -476,7 +479,17 @@ ValidateParameters(Input *_input){
 //===================================================================
 vector<Cfg>
 GenerateMapNodes::
-GenSurfaceCfgs4Obst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, int obstacle, int nCfgs, GNInfo &info){
+GenSurfaceCfgs4Obst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, 
+int obstacle, int nCfgs, GNInfo &info){
+
+  GenSurfaceCfgs4Obst(env,cd,dm,obstacle,nCfgs,info,1.0);
+
+}
+
+vector<Cfg>
+GenerateMapNodes::
+GenSurfaceCfgs4Obst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, 
+int obstacle, int nCfgs, GNInfo &info,double clearanceFactor){
 
     pair<int,int> seedSelect;
     ValidatePairs("seedSelect", info.collPair, &seedSelect);
@@ -485,7 +498,7 @@ GenSurfaceCfgs4Obst(Environment * env,CollisionDetection* cd,DistanceMetric * dm
         return Cfg::GenSurfaceCfgs4ObstNORMAL(
 		env, cd, obstacle, nCfgs, info.cdsetid, info.cdInfo);
     else
-        return GenSurfaceCfgs4ObstVERTEX(env, cd, dm, obstacle, nCfgs, info);
+        return GenSurfaceCfgs4ObstVERTEX(env, cd, dm, obstacle, nCfgs, info, clearanceFactor);
 }
 
 
@@ -495,7 +508,16 @@ GenSurfaceCfgs4Obst(Environment * env,CollisionDetection* cd,DistanceMetric * dm
 //===================================================================
 vector<Cfg>
 GenerateMapNodes::
-GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection* cd,DistanceMetric * dm, int obstacle, int nCfgs, GNInfo &info){
+GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection* cd,DistanceMetric * dm, 
+int obstacle, int nCfgs, GNInfo &info){
+
+    GenSurfaceCfgs4ObstVERTEX(env,cd,dm,obstacle,nCfgs,info,1.0);
+}
+
+vector<Cfg>
+GenerateMapNodes::
+GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection* cd,DistanceMetric * dm, 
+int obstacle, int nCfgs, GNInfo &info,double clearanceFactor){
 
     pair<int,int> seedSelect;
     ValidatePairs("seedSelect", info.collPair, &seedSelect);
@@ -512,7 +534,7 @@ GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection* cd,DistanceMetri
     Cfg OutsideNode = GenerateOutsideCfg(env,cd,robot,obstacle,obstSeeds[i],incrCfg,info);
     if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
 
-    tmp = GenerateSurfaceCfg(env,cd,dm,info,robot,obstacle,obstSeeds[i],OutsideNode);
+    tmp = GenerateSurfaceCfg(env,cd,dm,info,robot,obstacle,obstSeeds[i],OutsideNode,clearanceFactor);
 
         // Choose as many as nshells
         preshells = Shells(tmp, info.numShells);
@@ -533,7 +555,17 @@ GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection* cd,DistanceMetri
 //===================================================================
 vector<Cfg>
 GenerateMapNodes::
-GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, int obstacle, int nCfgs, GNInfo &info){
+GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, 
+int obstacle, int nCfgs, GNInfo &info){
+
+    GenCfgsFromCObst(env,cd,dm,obstacle,nCfgs,info,1.0);
+
+}
+
+vector<Cfg>
+GenerateMapNodes::
+GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, 
+int obstacle, int nCfgs, GNInfo &info, double clearanceFactor){
 
     int robot = env->GetRobotIndex();
     vector<Cfg> surface, obstSeeds;
@@ -556,7 +588,7 @@ GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, i
         Cfg OutsideNode = GenerateOutsideCfg(env,cd,robot,obstacle,obstSeeds[i],incrCfg,info);
     if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
 
-        tmp = GenerateSurfaceCfg(env,cd,dm,info,robot,obstacle,obstSeeds[i],OutsideNode);
+        tmp = GenerateSurfaceCfg(env,cd,dm,info,robot,obstacle,obstSeeds[i],OutsideNode,clearanceFactor);
 
         // Choose as many as nshells
         preshells = Shells(tmp, info.numShells);
@@ -775,6 +807,15 @@ GenerateMapNodes::
 GenerateSurfaceCfg(Environment *env,CollisionDetection *cd, DistanceMetric * dm,GNInfo& info,
                    int rob, int obst, Cfg insideCfg, Cfg outsideCfg){
 
+    GenerateSurfaceCfg(env,cd,dm,info,rob,obst,insideCfg,outsideCfg,1.0);
+
+}
+
+vector<Cfg>
+GenerateMapNodes::
+GenerateSurfaceCfg(Environment *env,CollisionDetection *cd, DistanceMetric * dm,GNInfo& info,
+                   int rob, int obst, Cfg insideCfg, Cfg outsideCfg, double clearanceFactor){
+
     const double PositionRes = env->GetPositionRes();
     vector<Cfg> surface; surface.reserve(MAX_CONVERGE);
     vector<Cfg>     tmp;     tmp.reserve(MAX_CONVERGE);
@@ -790,7 +831,7 @@ GenerateSurfaceCfg(Environment *env,CollisionDetection *cd, DistanceMetric * dm,
 
     // Do the Binary Search
     tmp.push_back(high);
-    while((delta >= PositionRes) && (cnt < MAX_CONVERGE)){
+    while((delta >= clearanceFactor*PositionRes) && (cnt < MAX_CONVERGE)){
         if(mid.isCollision(env,cd , rob, obst, info.cdsetid,info.cdInfo) ) {
             low = mid;
         } else {
@@ -1375,6 +1416,7 @@ GN::
 GN() {
   strcpy(name,"");
   Gauss_d = 0;
+  clearanceFactor = 1.0;
   generator = 0;
   gnid = INVALID_EID;
 };
@@ -1394,7 +1436,7 @@ operator==(const GN& _gn) const
   } else if ( !strcmp(name,"BasicOBPRM") ) {
      return true;
   } else if ( !strcmp(name,"OBPRM") ) {
-     return true;
+     return ( clearanceFactor == _gn.clearanceFactor );
   } else if ( !strcmp(name,"GaussPRM") ) {
      return ( Gauss_d == _gn.Gauss_d );
   } else { // unrecognized...
@@ -1432,10 +1474,19 @@ Get_Gauss_d() const {
   }
 };
 
+double
+GN::
+Get_clearanceFactor() const {
+    return clearanceFactor;
+};
+
 ostream& operator<< (ostream& _os, const GN& gn) {
     _os<< gn.GetName();
     if ( !strstr(gn.GetName(),"GaussPRM") ){
            _os<< ", d = " << gn.Get_Gauss_d();
+    }
+    if ( !strstr(gn.GetName(),"OBPRM") ){
+           _os<< ", clearanceFactor = " << gn.Get_clearanceFactor();
     }
     return _os;
 };
@@ -1600,6 +1651,16 @@ MakeGNSet(istream& _myistream) {
        GN gn1;
        strcpy(gn1.name,gnname);
        gn1.generator = &GenerateMapNodes::OBPRM;
+       gn1.clearanceFactor = 1.0;
+       double clearanceFactor;
+       if( _myistream >> clearanceFactor) { // get value
+          if ( clearanceFactor <= 0 ) {
+            cout << endl << "INVALID: clearanceFactor = " << clearanceFactor;
+            exit(-1);
+          }
+          gn1.clearanceFactor = clearanceFactor;
+       }
+       _myistream.clear(); // clear failure to read parameters
        gn1.gnid = AddElementToUniverse(gn1);
        if ( ChangeElementInfo(gn1.gnid,gn1) != OK ) {
           cout << endl << "In MakeSet: couldn't change element info";

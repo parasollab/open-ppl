@@ -220,7 +220,7 @@ Input::Input():
         "\n\t\t\tPick any combo: default BasicPRM"
         "\n\t\t\t  BasicPRM"
         "\n\t\t\t  BasicOBPRM"
-        "\n\t\t\t  OBPRM"
+        "\n\t\t\t  OBPRM    DOUBLE  (clearanceFactor:1.0)"
         "\n\t\t\t  GaussPRM INTEGER (default,based on environment)"
         );
     CNstrings[0]->PutDesc("STRING",
