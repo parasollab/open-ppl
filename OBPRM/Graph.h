@@ -832,7 +832,7 @@ public:
 	 * sssptree.AddEdge( tmp1, tmp, u.dist);
 	 *where u.dist is a double type
          */
-        int  AddEdge(VERTEX&, VERTEX&, double);
+        virtual int  AddEdge(VERTEX&, VERTEX&, double);
 
        /**Add a predecessor edge, from the v2 to v1 vertex with weight.
          *@param vid1 the id for the first vertex
