@@ -61,6 +61,7 @@ libobprm.so: objs
 
 %.o: %.cpp
 	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -c $<
+	touch $*.d
 	cat $*.d >> Dependencies
 	rm -f $*.d
 
