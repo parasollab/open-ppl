@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 
 #include <iostream.h>
 #include <fstream.h>
@@ -51,7 +52,8 @@
 
 //g++ in SUN or CC in SGI
 ///Modified for VC
-#if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32) || defined(__HP_aCC)
+#if defined(sun) || defined(__sgi) || defined(__linux__) ||
+defined(_WIN32) || defined(__HP_aCC)
 #include <algo.h>   
 #include <list.h>   
 #include <vector.h>
@@ -66,6 +68,7 @@
 #include <deque.h>  
 #include <stack.h>  
 #endif
+
 
 /*
 //aCC in parasol
@@ -823,7 +826,7 @@ public:
 	 * sssptree.AddEdge( tmp1, tmp, u.dist);
 	 *where u.dist is a double type
          */
-       virtual int  AddEdge(VERTEX&, VERTEX&, double);
+        int  AddEdge(VERTEX&, VERTEX&, double);
 
        /**Add a predecessor edge, from the v2 to v1 vertex with weight.
          *@param vid1 the id for the first vertex
@@ -1163,9 +1166,10 @@ public:
 
        /**Initialize predecessors in the data field of Vertex.
          *Predecessors tells client where the edges that 
-         *connected to this vertex are from.
+         *connected to this vertex are from. Return false if the predecessors 
+         *already set.
          */
-       void SetPredecessors();
+       bool SetPredecessors();
 
     //=======================================================
     //The following methods need to call SetPredecessors() first
@@ -2549,20 +2553,20 @@ PutData(VID _vid, VERTEX _v){ // lkd: 7-7-99
 }
 
 template<class VERTEX, class WEIGHT>
-void
+bool
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
 SetPredecessors() {
     VI v1, v2;
     CVI cv2;
     VID _v2id;
-    bool DoneSet = false;
+	bool DoSet=true;
 
     //check if SetPredecessors() already called
     for(v1 = v.begin(); v1 < v.end(); v1++) {
 	if(!v1->predecessors.empty()) {
-		DoneSet = true;
+		DoSet = false;
 		cout<<"\nSetPredecessors() already called."<<endl;
-		return;
+		return DoSet;
 	}
     }
 
@@ -2576,6 +2580,7 @@ SetPredecessors() {
             }
         }
     }
+    return DoSet;
 }
 
 //==================================
@@ -3587,7 +3592,7 @@ TopologicalSort () const {
     dfsinfo dfs(n);
     aux_DFS(dfs);
     
-    for(i=1;i<=n;i++) {
+    for(i=0;i<n;i++) {
         pair<VID,int> newpair(i,dfs.finish_time[i]);
         tmp.push_back(newpair);
     }   
@@ -4050,7 +4055,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 WriteGraph(ostream& _myostream) const {
 
       _myostream << endl << "#####GRAPHSTART#####";
-      //_myostream << endl << "GRAPHSTART";
+//      _myostream << endl << "GRAPHSTART";
       _myostream << endl << this->numVerts << " " << this->numEdges << " " << this->vertIDs; 
 
       //format: VID VERTEX #edges VID WEIGHT VID WEIGHT ... 
@@ -4060,7 +4065,7 @@ WriteGraph(ostream& _myostream) const {
       } 
 
       _myostream << endl << "#####GRAPHSTOP#####";
-      //_myostream << endl << "GRAPHSTOP";
+//      _myostream << endl << "GRAPHSTOP";
       _myostream << endl; 
 }
 
