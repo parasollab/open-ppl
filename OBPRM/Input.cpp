@@ -15,7 +15,7 @@
 #include <vector.h>
 #include <stdlib.h>
 #include <math.h>
-
+B
 #include <strstream.h>
 
 #include "Cfg.h"
@@ -23,6 +23,14 @@
 #include "Cfg_free.h"
 #include "Cfg_fixed_PRR.h"
 #include "Cfg_free_serial.h"
+
+// used by PrintDefaults()
+#include "LocalPlanners.h"
+#include "DistanceMetrics.h"
+#include "ConnectMapNodes.h"
+#include "GenerateMapNodes.h"
+#include "CollisionDetection.h"
+
 //----------------------------------------
 //  string (mostly) parameter ( n fields acknowledged from argv )
 //----------------------------------------
@@ -307,11 +315,16 @@ void Input::ReadCommandLine(int argc, char** argv){
     cdtype = CSTK;
 #endif
 
-  //-- evaluate command line 
+  //-- evaluate command line
   try {
 
     if (argc == 1)
 	throw BadUsage();
+
+	else if ((argc == 2) && (!strcmp(argv[1], "-defaults"))) {
+	  PrintDefaults();
+	  exit(-1);
+    }
 
     for (int i=1;i<argc; ++i) {
         if ( defaultFile.AckCmdLine(&i, argc, argv) ){
@@ -402,20 +415,20 @@ void Input::ReadCommandLine(int argc, char** argv){
         }else if (!(strncmp(cfgName,"Cfg_fixed_PRR",13))) {
             Cfg::CfgHelper = new Cfg_fixed_PRR();
         }else if (!(strncmp(cfgName,"Cfg_free_serial",15))) {
-            Cfg::CfgHelper = new Cfg_free_serial(numofJoints); 
+            Cfg::CfgHelper = new Cfg_free_serial(numofJoints);
             // to be done later, parameter for Cfg_free_serial.
         }
     } // default is Cfg_free().
-	
+
 
     //-- Do some clean up and final checking
 
     if ( !defaultFile.IsActivated() &&
-	 !( envFile.IsActivated() && mapFile.IsActivated() )){ 
+	 !( envFile.IsActivated() && mapFile.IsActivated() )){
     	throw BadUsage();
     }
 
-    if ( inmapFile.IsActivated() ){ 
+    if ( inmapFile.IsActivated() ){
         VerifyFileExists(inmapFile.GetValue());
     }
 
@@ -539,6 +552,65 @@ PrintValues(ostream& _os){
         _os << "\n\n";
 };
 
+
+// added by J Kim
+void
+Input::PrintDefaults(){
+
+   cout << "defaultFile : no default string for this parameter" << endl;
+   cout << " (the parameters not listed here have no default value)" << endl;
+   cout << "numEdges : " << numEdges.GetDefault() << endl;
+   cout << "numShells : " << numShells.GetDefault() << endl;
+   cout << "numNodes : " << numNodes.GetDefault() << endl;
+   cout << "numNodesPerObst : " << numNodesPerObst.GetDefault() << endl;
+   cout << "lineSegment : " << lineSegment.GetDefault() << endl;
+   cout << "usingClearance : " << usingClearance.GetDefault() << endl;
+   cout << "addPartialEdge : " << addPartialEdge.GetDefault() << endl;
+   cout << "proportionSurface : " << proportionSurface.GetDefault() << endl;
+   cout << "posres : " << posres.GetDefault() << endl;
+   cout << "orires : " << orires.GetDefault() << endl;
+   cout << "bbox_scale : " << bbox_scale.GetDefault() << endl;
+   cout << "bbox : " << bbox.GetDefault() << endl;
+   cout << "collPair : " << collPair.GetDefault() << endl;
+   cout << "freePair : " << freePair.GetDefault() << endl;
+   cout << "orires : " << orires.GetDefault() << endl;
+   cout << "Cfg : Cfg_free_rigid" << endl;
+
+
+   GenerateMapNodes gn;
+   cout << "gn : " << endl;
+   if (gn.gnInfo.gnsetid == BASICPRM)
+     cout << "Basic PRM" << endl;
+   else if (gn.gnInfo.gnsetid == BASICOBPRM)
+     cout << "Basic OBPRM" << endl;
+
+   ConnectMapNodes cn;
+   cout << "cn  : " << endl;
+   if (cn.cnInfo.cnsetid == CLOSEST10)
+     cout << "closest 10" << endl;
+   else if (cn.cnInfo.cnsetid == CLOSEST20)
+     cout << "closest 20" << endl;
+   else if (cn.cnInfo.cnsetid == RANDOM)
+     cout << "random" << endl;
+
+
+   LocalPlanners lp;
+   cout << endl << "lp : " << endl;
+   lp.planners.DisplayLPSets();
+
+   DistanceMetric dm;
+   cout << endl << endl << "dm : " << endl;
+   dm.distanceMetrics.DisplayDMSets();
+
+   CollisionDetection cd;
+   cout << endl << endl << "cd : " << endl;
+   cd.UserInit(this,   &gn, &cn );
+   cd.collisionCheckers.DisplayCDSets();
+
+   cout << endl << flush;
+}
+
+
 bool
 Input::VerifyFileExists(char *_fname){
 
@@ -610,7 +682,7 @@ void Input::Read(istream & _is) {
                _is >> BodyIndex[m][i];   // fixed body index
                BodyIndex[m][i] = FixedBodyCount[m] - 1;
 
-               // Data file name for fixed body 
+               // Data file name for fixed body
                _is >> tmpFilename;
                strcpy(fixedbodyFileName[m][FixedBodyCount[m]-1],
 			descDir.GetValue());
@@ -620,11 +692,11 @@ void Input::Read(istream & _is) {
                strcpy(tmpFilename,"");
 
                //if (i==0){  // for the very first body
- 	       // Now for every fixed body 10/15/99 
+ 	       // Now for every fixed body 10/15/99
 
                fixedbodyPosition[m][FixedBodyCount[m]-1] = Vector3D(_is);
                Vector3D angles = Vector3D(_is);
-               fixedbodyOrientation[m][FixedBodyCount[m]-1] = Orientation(Orientation::FixedXYZ, 
+               fixedbodyOrientation[m][FixedBodyCount[m]-1] = Orientation(Orientation::FixedXYZ,
 	                 angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
 
                //}
@@ -649,7 +721,7 @@ void Input::Read(istream & _is) {
                    freebodyPosition[m] = Vector3D(_is);
 
 	           Vector3D angles = Vector3D(_is);
-	           freebodyOrientation[m] = Orientation(Orientation::FixedXYZ, 
+	           freebodyOrientation[m] = Orientation(Orientation::FixedXYZ,
 	           angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
                }
             }
@@ -670,9 +742,9 @@ void Input::Read(istream & _is) {
 
                 transformPosition[m][i] = Vector3D(_is);
                 Vector3D angles = Vector3D(_is);
-                transformOrientation[m][i] = Orientation(Orientation::FixedXYZ, 
+                transformOrientation[m][i] = Orientation(Orientation::FixedXYZ,
 		   angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
- 
+
                 _is >> dhparameters[m][i].alpha;          // DH parameter, alpha
                 _is >> dhparameters[m][i].a;              // DH parameter, a
                 _is >> dhparameters[m][i].d;              // DH parameter, d
@@ -717,10 +789,10 @@ void Input::ReadPreamble(istream& _myistream) {
     cout << endl << "In ReadEnvFile: didn't read PREAMBLESTART tag right";
     return;
   }
- 
+
   _myistream.getline(tagstring,100,'\n');  // throw out prev line
   _myistream.getline(tagstring,4*ARGSTRING_LENGTH,'\n'); // do nothing for now...
-  
+
   _myistream >> tagstring;
   if ( !strstr(tagstring,"PREAMBLESTOP") ) {
     cout << endl << "In ReadEnvFile: didn't read PREAMBLESTOP tag right";
@@ -752,9 +824,9 @@ void Input::ReadEnvFile(istream& _myistream) {
     cout << endl << "In ReadEnvFile: didn't read ENVFILESTART tag right";
     return;
   }
- 
+
   _myistream >> envFile.GetValue();
-  
+
   _myistream >> tagstring;
   if ( !strstr(tagstring,"ENVFILESTOP") ) {
     cout << endl << "In ReadEnvFile: didn't read ENVFILESTOP tag right";

@@ -54,7 +54,7 @@ Body::~Body() {
 //===================================================================
 //  GetWorldPolyhedron
 //
-//  Function: Transform the vertices and normals of the polyhedron 
+//  Function: Transform the vertices and normals of the polyhedron
 //            w.r.t. the world frame
 //
 //  Output: The polyhedron transformed w.r.t the world frame
@@ -104,14 +104,14 @@ GMSPolyhedron & Body::GetPolyhedron() {
 //===================================================================
 //  Link
 //  Function: Link "this" body to the given other body by setting up
-//            a connectionship between them using the given DH 
+//            a connectionship between them using the given DH
 //            parameters and the transformation (from the distal
 //	      joint of "this" body to the center of gravity of the other).
 //
 //===================================================================
-void Body::Link(Body * _otherBody, const Transformation & _transformationToBody2, const 
+void Body::Link(Body * _otherBody, const Transformation & _transformationToBody2, const
 DHparameters &_dhparameters, const Transformation & _transformationToDHFrame) {
-    Connection * c = new Connection(this, _otherBody, _transformationToBody2, 
+    Connection * c = new Connection(this, _otherBody, _transformationToBody2,
                                     _dhparameters, _transformationToDHFrame);
     Link(c);
 }
@@ -128,7 +128,7 @@ void Body::Link(Connection * _c) {
     _c->GetNextBody()->AddBackwardConnection(_c);
 
 //    if (_c->GetNextBody()->forwardConnectionCount==0)
-//       cout << "forwardConnectionCount for next body = " << _c->GetNextBody()->forwardConnectionCount << endl;      
+//       cout << "forwardConnectionCount for next body = " << _c->GetNextBody()->forwardConnectionCount << endl;
 }
 
 //===================================================================
@@ -237,7 +237,7 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 	GMSPolyhedron poly = GetPolyhedron();
 	Polyhedron *vpoly = new Polyhedron;
 	for(int v = 0 ; v < poly.numVertices ; v++){
-		vpoly->addVertex("", 
+		vpoly->addVertex("",
 			Vect3(poly.vertexList[v].getX(),
 			      poly.vertexList[v].getY(),
 			      poly.vertexList[v].getZ()
@@ -248,14 +248,14 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 ///home/user/burchanb/dsmft/obprm/Body.c:277: undefined reference to `Polyhedron::buildHull(voi
 	vclipBody = new PolyTree;
 	vclipBody->setPoly(vpoly);
-    } else 
+    } else
 #endif
 #ifdef USE_CSTK
     if (cdtype == CSTK){
 
-        for (int p=0; p<nprocs; ++p) 
+        for (int p=0; p<nprocs; ++p)
            cstkBody[p] = From_GMS_to_CSTK();
-    } else 
+    } else
 #endif
 #ifdef USE_RAPID
       if (cdtype == RAPID){
@@ -269,14 +269,14 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 	    for(int i=0; i<3; i++) {
 	       vertexNum[i] = poly.polygonList[q].vertexList[i];
 	       Vector3D &tmp = poly.vertexList[vertexNum[i]];
-	       for(int j=0; j<3; j++) 
-	           point[i][j] = tmp[j]; 
+	       for(int j=0; j<3; j++)
+	           point[i][j] = tmp[j];
 	    }
 	    rapidBody->AddTri(point[0], point[1], point[2], q);
 	}
 	rapidBody->EndModel();
 
-    } else 
+    } else
 #endif
     {
 	cout <<"\n\n\tERROR: all other cd type's undefined\n\n";
@@ -351,7 +351,7 @@ void Body::ComputeCenterOfMass(){
 
 //===================================================================
 //  FindBoundingBox
-//  8/19/98  Daniel Vallejo 
+//  8/19/98  Daniel Vallejo
 //===================================================================
 void Body::FindBoundingBox(){
 
@@ -361,12 +361,12 @@ void Body::FindBoundingBox(){
 
     double minx, miny, minz, maxx, maxy, maxz;
     minx = maxx = poly.vertexList[0].getX();
-    miny = maxy = poly.vertexList[0].getY(); 
+    miny = maxy = poly.vertexList[0].getY();
     minz = maxz = poly.vertexList[0].getZ();
     for(int i = 1 ; i < poly.numVertices ; i++){
         if(poly.vertexList[i].getX() < minx) minx = poly.vertexList[i].getX();
         else if(maxx < poly.vertexList[i].getX()) maxx = poly.vertexList[i].getX();
-	
+
         if(poly.vertexList[i].getY() < miny) miny = poly.vertexList[i].getY();
         else if(maxy < poly.vertexList[i].getY()) maxy = poly.vertexList[i].getY();
 
@@ -400,7 +400,7 @@ RAPID_model * Body::GetRapidBody() {
 void * Body::GetCstkBody(){
     return cstkBody[0];
 }
-void * Body::GetCstkBody(int proc_id){ 
+void * Body::GetCstkBody(int proc_id){
     return cstkBody[proc_id];
 }
 
@@ -422,7 +422,7 @@ Vector3D Body::GetCOM(){
 // Convert GMS model to CSTK model.
 //
 /////////////////////////////////////////////////////////////////////
-void** Body::From_GMS_to_cstk() 
+void** Body::From_GMS_to_cstk()
 {
     GMSPolyhedron poly = GetWorldPolyhedron();
 
@@ -438,9 +438,9 @@ void** Body::From_GMS_to_cstk()
     for(i = 0 ; i < numVerts ; i++){
         cstkReal pt[3];
 
-    	pt[0] = poly.vertexList[i].getX();  
-    	pt[1] = poly.vertexList[i].getY();  
-    	pt[2] = poly.vertexList[i].getZ();  
+    	pt[0] = poly.vertexList[i].getX();
+    	pt[1] = poly.vertexList[i].getY();
+    	pt[2] = poly.vertexList[i].getZ();
     	verts[i] = cstkMake3DVertex(pt);
     }
 
@@ -450,9 +450,9 @@ void** Body::From_GMS_to_cstk()
     // Read in triangles
     tris = (void **) new char[sizeof(void *) * (numTris + 1)];
     for(i = 0 ; i < numTris ; i++){
-    	vnum[0] = poly.polygonList[i].vertexList[0]; 
-    	vnum[1] = poly.polygonList[i].vertexList[1]; 
-    	vnum[2] = poly.polygonList[i].vertexList[2]; 
+    	vnum[0] = poly.polygonList[i].vertexList[0];
+    	vnum[1] = poly.polygonList[i].vertexList[1];
+    	vnum[2] = poly.polygonList[i].vertexList[2];
 
     	tverts[0] = verts[vnum[0]];
     	tverts[1] = verts[vnum[1]];
@@ -472,17 +472,17 @@ void** Body::From_GMS_to_cstk()
 // Convert GMS body to CSTK body.
 //
 /////////////////////////////////////////////////////////////////////
-void * Body::From_GMS_to_CSTK()  
+void * Body::From_GMS_to_CSTK()
 {
     void **tmpPolys = NULL;
-    tmpPolys = From_GMS_to_cstk(); 
+    tmpPolys = From_GMS_to_cstk();
 
     int triCount;
     for (triCount = 0; tmpPolys[triCount]; triCount++);
     void *sub = cstkMakeBodyFromPolys(tmpPolys, triCount);
     delete tmpPolys;   // Just an array of (void *), so no destructors called.
     void *robot = cstkMakeLMovableBody(sub);
- 
+
     return robot;
 }
 
