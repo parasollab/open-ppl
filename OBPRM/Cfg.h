@@ -120,6 +120,7 @@ public:
 
   /// Return the number of degrees of freedom for the configuration class
   static int DOFs();
+  static const char* GetName();
 
   /// Return the range of a single parameter of the configuration (i.e., range of x)
   /// param = the parameter to get the range for
