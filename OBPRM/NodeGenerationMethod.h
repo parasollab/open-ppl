@@ -67,7 +67,6 @@ class NodeGenerationMethod {
   num_param<int> numNodes;
 
   SID* cdsetid;
-  SID* dmsetid;
   CDInfo* cdInfo;
 };
 

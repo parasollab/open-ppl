@@ -760,8 +760,7 @@ void Cfg::GetRandomCfg(Environment* env) {
 
 
 // generates a random cfg with a given length 
-void Cfg::GetRandomCfg(Environment* env, DistanceMetric* dm,
-		       SID dmsetid, double length) {
+void Cfg::GetRandomCfg(Environment* env, DistanceMetric* dm, double length) {
   vector<double> originVector;
   for(int i=0; i<dof; i++)
     originVector.push_back(0.0);
@@ -770,7 +769,7 @@ void Cfg::GetRandomCfg(Environment* env, DistanceMetric* dm,
   outsideCfg->GetRandomCfg(env,1000);
   
   // first find an outsite configuration with sufficient size
-  for(; dm->Distance(env, *origin, *outsideCfg, dmsetid) < 2*length; outsideCfg->multiply(*outsideCfg,2)); 
+  for(; dm->Distance(env, *origin, *outsideCfg) < 2*length; outsideCfg->multiply(*outsideCfg,2)); 
   
   // now, using binary search  find a configuration with the approximate
   // length
@@ -783,8 +782,8 @@ void Cfg::GetRandomCfg(Environment* env, DistanceMetric* dm,
     /*cout <<"Above " << aboveCfg << endl;
       cout <<"Current " << currentCfg << endl;
       cout <<"Below " << belowCfg << endl; */
-    double magnitude = dm->Distance(env, *origin, *currentCfg, dmsetid);
-    double diff = dm->Distance(env, *aboveCfg, *belowCfg, dmsetid);
+    double magnitude = dm->Distance(env, *origin, *currentCfg);
+    double diff = dm->Distance(env, *aboveCfg, *belowCfg);
     cout << "Current magnitude is \n" << magnitude << " " << length
 	 << " " << diff << endl;
     if( (magnitude >= length*0.9) && (magnitude <= length*1.1)) {
@@ -835,9 +834,9 @@ void Cfg::GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
 // the free c-space
 void Cfg::GetMedialAxisCfg(Environment* _env, CollisionDetection* _cd,
 			   SID _cdsetid, CDInfo& _cdInfo, DistanceMetric* _dm,
-			   SID _dmsetid, int clearance_n, int penetration_n) { 
+			   int clearance_n, int penetration_n) { 
     this->GetRandomCfg(_env);
-    this->PushToMedialAxis(_env, _cd, _cdsetid, _cdInfo, _dm, _dmsetid, 
+    this->PushToMedialAxis(_env, _cd, _cdsetid, _cdInfo, _dm, 
 			   clearance_n, penetration_n);
 }
 
@@ -845,17 +844,17 @@ void Cfg::GetMedialAxisCfg(Environment* _env, CollisionDetection* _cd,
 // pushes node towards c-space medial axis
 void Cfg::PushToMedialAxis(Environment *_env, CollisionDetection *cd,
 			     SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			     SID dmsetid, int clearance_n, int penetration_n) {
+			     int clearance_n, int penetration_n) {
     if(this->isCollision(_env, cd, cdsetid, cdInfo)) {
       ClearanceInfo clearInfo;
-      this->ApproxCSpaceClearance2(_env, cd, cdsetid, cdInfo, dm, dmsetid, 
+      this->ApproxCSpaceClearance2(_env, cd, cdsetid, cdInfo, dm, 
 				   penetration_n, clearInfo, 1);
       this->v = (clearInfo.getDirection())->v;
       //delete clearInfo.getDirection();
     }
 
     if(!(this->isCollision(_env, cd, cdsetid, cdInfo))) {
-      this->MAPRMfree(_env, cd, cdsetid, cdInfo, dm, dmsetid, clearance_n);
+      this->MAPRMfree(_env, cd, cdsetid, cdInfo, dm, clearance_n);
     }
 }
 
@@ -863,12 +862,12 @@ void Cfg::PushToMedialAxis(Environment *_env, CollisionDetection *cd,
 // pushes free node towards c-space medial axis
 void Cfg::MAPRMfree(Environment* _env, CollisionDetection* cd,
 		    SID cdsetid, CDInfo& cdInfo, DistanceMetric* dm,
-		    SID dmsetid, int n) {
+		    int n) {
   Cfg* cfg = this;
   Cfg* newCfg, *oldCfg, *dir;
     
   ClearanceInfo clearInfo;
-  cfg->ApproxCSpaceClearance2(_env, cd, cdsetid, cdInfo, dm, dmsetid,
+  cfg->ApproxCSpaceClearance2(_env, cd, cdsetid, cdInfo, dm,
 			      n, clearInfo, 0);
   cfg->info.clearance = clearInfo.getClearance();
   dir = clearInfo.getDirection();
@@ -887,7 +886,7 @@ void Cfg::MAPRMfree(Environment* _env, CollisionDetection* cd,
     delete oldCfg;
     oldCfg = newCfg->CreateNewCfg();
     newCfg->c1_towards_c2(*newCfg, *dir, stepSize*-1);
-    newCfg->info.clearance = newCfg->ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,0);    
+    newCfg->info.clearance = newCfg->ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,n,0);    
     
     stepSize = newCfg->info.clearance;
    
@@ -904,7 +903,7 @@ void Cfg::MAPRMfree(Environment* _env, CollisionDetection* cd,
       //midpoint between newCfg and oldCfg
       midCfg->add(*newCfg, *oldCfg);
       midCfg->divide(*midCfg, 2);
-      midCfg->info.clearance = midCfg->ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,0);
+      midCfg->info.clearance = midCfg->ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,n,0);
 
       if (midCfg->info.clearance > oldCfg->info.clearance) {
 	oldCfg->equals(*midCfg);
@@ -913,7 +912,7 @@ void Cfg::MAPRMfree(Environment* _env, CollisionDetection* cd,
       }
       
       i++;
-    } while ((dm->Distance(_env, *newCfg, *oldCfg, dmsetid) > minDistance) && (i <= maxNumSteps));
+    } while ((dm->Distance(_env, *newCfg, *oldCfg) > minDistance) && (i <= maxNumSteps));
     delete midCfg;
   }
   
@@ -973,10 +972,10 @@ double Cfg::Clearance(Environment *env, CollisionDetection *cd ) const {
 //Approximate C-Space Clearance
 double Cfg::ApproxCSpaceClearance(Environment* env, CollisionDetection *cd, 
                                   SID cdsetid, CDInfo& cdInfo,
-                                  DistanceMetric* dm, SID dmsetid, 
+                                  DistanceMetric* dm, 
 				  int n, bool bComputePenetration) const {
   ClearanceInfo clearInfo;
-  ApproxCSpaceClearance2(env, cd, cdsetid, cdInfo, dm, dmsetid, n, clearInfo, bComputePenetration);
+  ApproxCSpaceClearance2(env, cd, cdsetid, cdInfo, dm, n, clearInfo, bComputePenetration);
   //delete clearInfo.getDirection(); //free direction memory, allocated in ApproxCSpaceClearance2
   return clearInfo.getClearance();
 }
@@ -985,7 +984,7 @@ double Cfg::ApproxCSpaceClearance(Environment* env, CollisionDetection *cd,
 //Approximate C-Space Clearance
 void Cfg::ApproxCSpaceClearance2(Environment* env, CollisionDetection* cd, 
 				 SID cdsetid, CDInfo& cdInfo,
-				 DistanceMetric* dm, SID dmsetid, 
+				 DistanceMetric* dm, 
 				 int n, ClearanceInfo& clearInfo,
 				 bool bComputePenetration) const {
   Cfg* cfg = this->CreateNewCfg();
@@ -1070,7 +1069,7 @@ void Cfg::ApproxCSpaceClearance2(Environment* env, CollisionDetection* cd,
 	      stateChangedFlag = true;
 	    }
 	  } else {
-	    clearInfo.setClearance(dm->Distance(env, *tick[i], *cfg, dmsetid));
+	    clearInfo.setClearance(dm->Distance(env, *tick[i], *cfg));
 	    
 	    Cfg* tmp3 = tick[i]->CreateNewCfg();
 	    clearInfo.setDirection(tmp3);
@@ -1081,7 +1080,7 @@ void Cfg::ApproxCSpaceClearance2(Environment* env, CollisionDetection* cd,
       } else { //finding clearance
 	if ( (tick[i]->isCollision(env, cd, cdsetid, cdInfo) != bInitState) 
 	     || !(tick[i]->InBoundingBox(env)) ) {
-	  clearInfo.setClearance(dm->Distance(env, *tick[i], *cfg, dmsetid));
+	  clearInfo.setClearance(dm->Distance(env, *tick[i], *cfg));
 	  
 	  Cfg* tmp3 = tick[i]->CreateNewCfg();
 	  clearInfo.setDirection(tmp3);

@@ -58,7 +58,6 @@ class ConnectionMethod {
     *@note used by Query::CanConnectToCC.
     */
    void SortByDistFromCfg(Environment* _env, DistanceMetric* dm, 
-			  SID dmsetid,
 			  const CFG& _cfg1, 
 			  vector<CFG>&  _cfgs);
   /**Find k pairs of closest Cfgs from a given Cfg to 
@@ -191,7 +190,6 @@ class ConnectionMethod {
   //
  public:
   SID* cdsetid;
-  SID* dmsetid;
   CDInfo* cdInfo;
   double connectionPosRes, ///< Position resolution for node connection
          connectionOriRes; ///< Orientation resolution for node connection
@@ -245,14 +243,14 @@ CfgDist_Compare (const pair<CFG,double>& _cc1, const pair<CFG,double>& _cc2) {
 template <class CFG, class WEIGHT>
 void
 ConnectionMethod<CFG, WEIGHT>::
-SortByDistFromCfg(Environment* _env, DistanceMetric* dm, SID dmsetid,
+SortByDistFromCfg(Environment* _env, DistanceMetric* dm,
 		  const CFG& _cfg1, 
 		  vector<CFG>& _cfgs) {
   // compute distances from _cfg1 for all cfgs in _cfgs
   vector<pair<CFG,double> > distances;
   pair<CFG,double> tmp;
   for (int i=0; i < _cfgs.size(); i++) {
-    double dist = dm->Distance(_env, (CFG*)&_cfg1, (CFG*)&_cfgs[i], dmsetid);
+    double dist = dm->Distance(_env, (CFG*)&_cfg1, (CFG*)&_cfgs[i]);
     tmp.first = _cfgs[i];
     tmp.second = dist;
     distances.push_back(tmp);
@@ -392,7 +390,7 @@ FindKClosestPairs(Environment* _env, DistanceMetric* dm,
       for (int c2 = 0; c2 < vec2.size(); c2++) {
 	//if( vec1[c1]==vec2[c2] ) continue; //don't connect same
 
-	double dist = dm->Distance(_env, vec1[c1],vec2[c2],*dmsetid);
+	double dist = dm->Distance(_env, vec1[c1],vec2[c2]);
 	if ( dist < kp[k-1].second) {
 	  tmp.first.first = vec1[c1];
 	  tmp.first.second = vec2[c2];

@@ -68,7 +68,6 @@ class ConnectMap {
   string collection_name;
  public:
   SID cdsetid;
-  SID dmsetid;
   CDInfo cdInfo;
   static double connectionPosRes, ///< Position resolution for node connection
          connectionOriRes; ///< Orientation resolution for node connection
@@ -87,7 +86,6 @@ template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::ConnectMap() {
   selected.clear();
   all.clear();
-  dmsetid = S_EUCLID9;
 
   #if defined USE_CSTK
     cdsetid = CSTK;
@@ -211,7 +209,6 @@ int ConnectMap<CFG,WEIGHT>::ReadCommandLine(Input* input, Environment* env) {
 	    (*itr)->ParseCommandLine(_myistream);
 	    // .., set their parameters
 	    (*itr)->cdsetid = &cdsetid;
-	    (*itr)->dmsetid = &dmsetid;
 	    (*itr)->cdInfo = &cdInfo;
 	    (*itr)->connectionPosRes = connectionPosRes;
 	    (*itr)->connectionOriRes = connectionOriRes; 
@@ -238,7 +235,6 @@ int ConnectMap<CFG,WEIGHT>::ReadCommandLine(Input* input, Environment* env) {
     selected = ConnectMap<CFG,WEIGHT>::GetDefault();
     for (itr = selected.begin(); itr != selected.end(); itr++) {
       (*itr)->cdsetid = &cdsetid;
-      (*itr)->dmsetid = &dmsetid;
       (*itr)->cdInfo = &cdInfo;
       (*itr)->connectionPosRes= connectionPosRes;
       (*itr)->connectionOriRes= connectionOriRes; 

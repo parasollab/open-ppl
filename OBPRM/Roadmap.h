@@ -526,7 +526,7 @@ ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   input->ReadEnvFile(myifstream);    
   lp->ReadLPs(myifstream);
   cd->collisionCheckers.ReadCDs(myifstream);
-  dm->distanceMetrics.ReadDMs(myifstream);
+  dm->ReadDMs(myifstream);
   
   m_pRoadmap->ReadGraph(myifstream);           // reads verts & adj lists
   
@@ -561,7 +561,7 @@ WriteRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   input->WriteEnvFile(myofstream);
   lp->WriteLPs(myofstream);
   cd->collisionCheckers.WriteCDs(myofstream);
-  dm->distanceMetrics.WriteDMs(myofstream);
+  dm->WriteDMs(myofstream);
   
   m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
   myofstream.close();

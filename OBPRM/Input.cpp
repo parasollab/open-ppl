@@ -493,8 +493,8 @@ Input::PrintDefaults(){
    DistanceMetric dm;
    // this default is already set in ConnectMapNodes::DefaultInit()
    cout << setw(FW) << endl << endl << "Distance Metric" << " (" << DMstrings[0]->GetFlag() <<
-      ") : default set id = " << cn.dmsetid;
-   dm.distanceMetrics.DisplayDMSet( cn.dmsetid ); // DM set was already added
+      ") : default = ";
+   dm.PrintDefaults(cout);
 
    // Collision Detection
    CollisionDetection cd;

@@ -245,7 +245,6 @@ vector<LP> mylpset = lp->planners.GetLPSet(SL);
   lpInfo.checkCollision = true;
   lpInfo.savePath = false;
   lpInfo.cdsetid = connectionInfo.cdsetid;
-  lpInfo.dmsetid = connectionInfo.dmsetid;
   return lp->IsConnected(env,cd,dm, c1,c2,connectionInfo.lpsetid,&lpInfo);
 
 }
@@ -568,7 +567,7 @@ if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo) ||
 }
 
     mid = Cfg::WeightedSum(low, high);  //(low + high) / 2.0;
-    delta = dm->Distance(env, low, high, _gnInfo.dmsetid);
+    delta = dm->Distance(env, low, high);
     cnt = 0;
     prev=high;
     // Do the Binary Search
@@ -589,7 +588,7 @@ if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo) ||
             surface=high;
         }
         mid = Cfg::WeightedSum(low, high); // (low + high) / 2.0;
-        delta = dm->Distance(env, low, high, _gnInfo.dmsetid);
+        delta = dm->Distance(env, low, high);
         cnt++;
     }
     if(surface.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo)) {

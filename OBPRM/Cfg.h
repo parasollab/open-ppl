@@ -415,7 +415,7 @@ class Cfg {
   virtual void GetRandomCfg(Environment* env);
   /// Generates a random configuration with approximate length
   virtual void GetRandomCfg(Environment* env, DistanceMetric* _dm,
-			    SID _dmsetid, double length);
+			    double length);
   virtual void GetRandomRay(double) = 0;
     
   /// generates random configuration that is in Free CSpace. 
@@ -430,17 +430,17 @@ class Cfg {
   /// free c-space
   void GetMedialAxisCfg(Environment* _env, CollisionDetection* _cd,
 			SID _cdsetid, CDInfo& _cdInfo, 
-			DistanceMetric* _dm, SID _dmsetid, 
+			DistanceMetric* _dm, 
 			int clearnce_n, int penetration_n);
   /// pushes a node towards the medial axis
   void PushToMedialAxis(Environment* _env, CollisionDetection* cd,
 			SID cdsetid, CDInfo& cdInfo, 
-			DistanceMetric* dm, SID dmsetid, 
+			DistanceMetric* dm, 
 			int clearance_n, int penetration_n);
   /// pushes a free node towards the medial axis
   virtual void MAPRMfree(Environment* _env, CollisionDetection* cd,
 			 SID cdsetid, CDInfo& cdInfo, 
-			 DistanceMetric* dm, SID dmsetid, int n);
+			 DistanceMetric* dm, int n);
   /// pushes a colliding node towards the free space
   virtual void MAPRMcollision(Environment* _env, CollisionDetection* cd,
 			      SID cdsetid, CDInfo& cdInfo, int n);
@@ -476,12 +476,12 @@ class Cfg {
   /// returns clearance in c-space
   double ApproxCSpaceClearance(Environment* env, CollisionDetection* cd, 
 			       SID cdsetid, CDInfo& cdInfo, 
-			       DistanceMetric* dm, SID dmsetid, 
+			       DistanceMetric* dm, 
 			       int n, bool bComputePenetration=false) const;
   /// clearance and the direction set via ClearanceInfo
   void ApproxCSpaceClearance2(Environment* env, CollisionDetection* cd,
 			      SID cdsetid, CDInfo& cdInfo,
-			      DistanceMetric* dm, SID dmsetid, 
+			      DistanceMetric* dm, 
 			      int n, ClearanceInfo& clearInfo, 
 			      bool bComputePenetration) const;
   ///Approximate C-Space Contact Points

@@ -620,7 +620,7 @@ GenerateSurfaceCfg(Environment* env, CollisionDetection* cd, DistanceMetric* dm,
   low = insideCfg; 
   high = outsideCfg;
   mid.WeightedSum(low, high, 0.5);
-  delta = dm->Distance(env, low, high, *dmsetid);
+  delta = dm->Distance(env, low, high);
   cnt = 0;
   
   // Do the Binary Search
@@ -633,7 +633,7 @@ GenerateSurfaceCfg(Environment* env, CollisionDetection* cd, DistanceMetric* dm,
       tmp.push_back(high);
     }
     mid.WeightedSum(low, high, 0.5);
-    delta = dm->Distance(env, low, high, *dmsetid);
+    delta = dm->Distance(env, low, high);
     cnt++;
   }
   

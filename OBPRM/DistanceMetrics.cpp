@@ -1,663 +1,799 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
-//
-//  DistanceMetrics.c
-//
-//  General Description
-//
-//  Created
-//      8/21/98  Daniel Vallejo
-//
-/////////////////////////////////////////////////////////////////////
+
+/**
+ * @file DistanceMetrics.c
+ *
+ * @author Daniel Vallejo
+ * @date 8/21/1998
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////
 #include "DistanceMetrics.h"
 
-#include "GenerateMapNodes.h"
+//#include "GenerateMapNodes.h"
 #include "Environment.h"
 #include "util.h"
 #include "Input.h"
 
-/////////////////////////////////////////////////////////////////////
-//
-//  METHODS for class DistanceMetric
-//      
-/////////////////////////////////////////////////////////////////////
-//==================================
-// DistanceMetric class Methods: Constructors and Destructor
-//==================================
 
 DistanceMetric::
 DistanceMetric() {
-	DefaultInit();
-};
+  EuclideanDistance* euclidean = new EuclideanDistance();
+  all.push_back(euclidean);
 
-DistanceMetric::
-~DistanceMetric() {
-};
+  ScaledEuclideanDistance* scaledEuclidean = new ScaledEuclideanDistance();
+  all.push_back(scaledEuclidean);
 
-//==================================
-// DistanceMetric class Methods: Distance Metric Functions
-//==================================
-//-----------------------------------------------
-// initialize default values for distance metrics
-//  CAUTION:  DO NOT CHANGE ORDER OF SET DEFN's
-//           w/o CHANGING ENUM ORDER in "OBPRM.h"
-//-----------------------------------------------
-void
-DistanceMetric::
-DefaultInit() {
-	// initialize dm sets
-	// enum S_EUCLID9
-	distanceMetrics.MakeDMSet("scaledEuclidean 0.9");
-	// enum EUCLID
-	distanceMetrics.MakeDMSet("euclidean");
-	// enum minkowski
-	distanceMetrics.MakeDMSet("minkowski 3 3 0.3333");
-	// enum manhattan
-	distanceMetrics.MakeDMSet("manhattan");
-	// enum com
-	distanceMetrics.MakeDMSet("com");
+  MinkowskiDistance* minkowski = new MinkowskiDistance();
+  all.push_back(minkowski);
+
+  ManhattanDistance* manhattan = new ManhattanDistance();
+  all.push_back(manhattan);
+
+  CenterOfMassDistance* com = new CenterOfMassDistance();
+  all.push_back(com);
 }
 
 
-double
 DistanceMetric::
-Distance(Environment *env, const Cfg& _c1, const Cfg& _c2, SID _dmsetid){
-	
-    MultiBody* robot;
-    robot = env->GetMultiBody(env->GetRobotIndex());
-    double dist;
-	
-    vector<DM> dmset = distanceMetrics.GetDMSet(_dmsetid); 
-    for(int dm = 0 ; dm < dmset.size() ; dm++){
-		
-		DMF dmfcn = dmset[dm].GetDistanceMetric();
-        int tp = dmset[dm].GetType();
-		dist = dmfcn(robot,_c1,_c2,dmset[dm]);
-		
-    }
-    return dist;
-};
+~DistanceMetric() {
+  vector<DistanceMetricMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++)
+    delete *I;
 
-double
+  for(I=all.begin(); I!=all.end(); I++)
+    delete *I;
+}
+
+
+vector<DistanceMetricMethod*> 
 DistanceMetric::
-Distance(Environment *env, const Cfg* _c1, const Cfg* _c2, SID _dmsetid) {
-	
-    MultiBody* robot;
-    robot = env->GetMultiBody(env->GetRobotIndex());
-    double dist;
-	
-    vector<DM> dmset = distanceMetrics.GetDMSet(_dmsetid); 
-    for(int dm = 0 ; dm < dmset.size() ; dm++){
-		
-		DMF dmfcn = dmset[dm].GetDistanceMetric();
-        int tp = dmset[dm].GetType();
-		dist = dmfcn(robot,*_c1,*_c2,dmset[dm]);
-		
+GetDefault() {
+  vector<DistanceMetricMethod*> Default;
+  ScaledEuclideanDistance* scaledEuclidean = new ScaledEuclideanDistance(0.9);
+  Default.push_back(scaledEuclidean);
+  return Default;
+}
+
+
+bool 
+DistanceMetric::
+ParseCommandLine(int argc, char** argv) {
+  bool found = FALSE;
+  vector<DistanceMetricMethod*>::iterator itr;
+
+  cout << "argc[" << argc << "]:\n";
+  for(int i=0; i<argc; i++)
+    cout << argv[i] << endl;
+  
+  int cmd_begin = 0;
+  int cmd_argc = 0;
+  char* cmd_argv[50];
+  do {
+    for(itr=all.begin(); itr!=all.end(); itr++) {
+      if( !strcmp(argv[cmd_begin], (*itr)->GetName()) ) {
+	cmd_argc = 0;
+	bool is_method_name = false;
+	do {
+	  cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
+	  cmd_argc++;
+	  
+	  vector<DistanceMetricMethod*>::iterator itr_names;
+	  is_method_name = false;
+	  for(itr_names=all.begin(); itr_names!=all.end() && cmd_begin+cmd_argc < argc; itr_names++)
+	    if( !strcmp(argv[cmd_begin+cmd_argc], (*itr_names)->GetName())) {
+	      is_method_name = true;
+	      break;
+	    } 
+	} while(!is_method_name && cmd_begin+cmd_argc < argc);
+
+	cout << "cmd_argc[" << cmd_argc << "]:\n";
+	for(int i=0; i<cmd_argc; i++)
+	  cout << cmd_argv[i] << endl;
+
+	(*itr)->ParseCommandLine(cmd_argc, cmd_argv);
+	selected.push_back((*itr)->CreateCopy());
+	(*itr)->SetDefault();
+	found = TRUE;
+	break;
+      }
     }
-    return dist;
-};
+    cmd_begin = cmd_begin + cmd_argc;
+  } while(cmd_begin < argc);
 
-double ScaledDistance(const Cfg& _c1, const Cfg& _c2, double sValue){
-	
-  //+++++    
+  return found;
+}
 
-    //  Cfg tmp=_c1-_c2;
-  Cfg *pTmp = _c1.CreateNewCfg();
-  pTmp->subtract(_c1,_c2);
-  double dReturn = sqrt(  sValue*sqr(pTmp->PositionMagnitude()) + 
-			  (1.0 - sValue)*sqr(pTmp->OrientationMagnitude()) );
-  delete pTmp;
-  return dReturn;
+
+int 
+DistanceMetric::
+ReadCommandLine(n_str_param* DMstrings[MAX_DM], int numDMs) {
+  vector<DistanceMetricMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++)
+    delete *I;
+  selected.clear();
+
+  for(int i=0; i<numDMs; i++) {
+    istrstream _myistream(DMstrings[i]->GetValue());
+
+    int argc = 0;
+    char* argv[50];
+    char cmdFields[50][100];
+    while(_myistream >> cmdFields[argc]) {
+      argv[argc] = (char*)(&cmdFields[argc]);
+      argc++;
+    }
+   
+    bool found = FALSE;
+    try {
+      found = ParseCommandLine(argc, argv);
+      if (!found)
+	throw BadUsage();
+    } catch (BadUsage) {
+      cerr << "Command line error" << endl;
+      PrintUsage(cerr);
+      exit(-1);
+    }
+  }
+
+  if(selected.size() == 0)
+    selected = GetDefault();
+}
+
+
+void 
+DistanceMetric::
+PrintUsage(ostream& _os) const {
+  vector<DistanceMetricMethod*>::const_iterator I;
+  for(I=all.begin(); I!=all.end(); I++)
+    (*I)->PrintUsage(_os);
+}
+
+
+void 
+DistanceMetric::
+PrintValues(ostream& _os) const {
+  vector<DistanceMetricMethod*>::const_iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++)
+    (*I)->PrintValues(_os);
+}
+
+
+void 
+DistanceMetric::
+PrintDefaults(ostream& _os) const { 
+  vector<DistanceMetricMethod*> Default;
+  Default = GetDefault();
+  vector<DistanceMetricMethod*>::iterator I;
+  for(I=Default.begin(); I!=Default.end(); I++)
+    (*I)->PrintValues(_os);
+  for(I=Default.begin(); I!=Default.end(); I++)
+    delete (*I);
+}
+
+
+void 
+DistanceMetric::
+ReadDMs(const char* _fname) {
+  ifstream  myifstream(_fname);
+  if (!myifstream) {
+    cout << endl << "In ReadDMs: can't open infile: " << _fname ;
+    return;
+  }
+  ReadDMs(myifstream);
+  myifstream.close();
+}
+
+
+void 
+DistanceMetric::
+ReadDMs(istream& _myistream) {
+  char tagstring[100];
+  char dmdesc[100];
+  int  numDMs;
+  
+  _myistream >> tagstring;
+  if ( !strstr(tagstring,"DMSTART") ) {
+    cout << endl << "In ReadDMs: didn't read DMSTART tag right";
+    return;
+  }
+  
+  _myistream >> numDMs;
+  _myistream.getline(dmdesc,100,'\n');  // throw out rest of this line
+  for (int i = 0; i < numDMs; i++) {
+    _myistream.getline(dmdesc,100,'\n');
+    istrstream _dmstream(dmdesc);
+    int argc = 0;
+    char* argv[50];
+    char cmdFields[50][100];
+    while (_dmstream >> cmdFields[argc]) {
+      argv[argc] = (char*)(&cmdFields[argc]);
+      argc++;
+    }
+
+    bool found = FALSE;
+    try {
+      found = ParseCommandLine(argc, argv);
+      if(!found)
+	throw BadUsage();
+    } catch (BadUsage) {
+      cerr << "Line error" << endl;
+      exit(-1);
+    }
+  }
+  
+  _myistream >> tagstring;
+  if ( !strstr(tagstring,"DMSTOP") ) {
+    cout << endl << "In ReadDMs: didn't read DMSTOP tag right";
+    return;
+  }
+}
+
+
+void 
+DistanceMetric::
+WriteDMs(const char* _fname) const {
+  ofstream  myofstream(_fname);
+  if (!myofstream) {
+    cout << endl << "In WriteDMS: can't open outfile: " << _fname ;
+  }
+  WriteDMs(myofstream);
+  myofstream.close();
+}
+
+
+void 
+DistanceMetric::
+WriteDMs(ostream& _myostream) const {
+  _myostream << endl << "#####DMSTART#####";
+  _myostream << endl << selected.size();  // number of dms
+  PrintValues(_myostream);
+  _myostream << endl << "#####DMSTOP#####"; 
 }
 
 
 double 
 DistanceMetric::
-EuclideanDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
-	
-    double dist;
-    dist = sqrt(2.0)*ScaledDistance(_c1, _c2, 0.5); 
-    return dist;
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
+  MultiBody* robot;
+  robot = env->GetMultiBody(env->GetRobotIndex());
+  return selected[0]->Distance(robot, _c1, _c2);
 }
 
-double
+
+double 
 DistanceMetric::
-ScaledEuclideanDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
-	
-    double dist;
-    dist = ScaledDistance(_c1, _c2, _dm.GetS()); 
-    return dist;
-}
-double
-DistanceMetric::
-MinkowskiDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
-	
-    double dist,pos=0,orient=0/*,d*/;
-    //+++++
-    //    Cfg c=_c1-_c2;
-    Cfg *pC = _c1.CreateNewCfg();
-    pC->subtract(_c1,_c2);
-
-    vector<double> p=pC->GetPosition(); // position values
-    vector<double> o=pC->GetOrientation(); //orientation values
-	
-	
-	
-    int i;
-    for(i=0;i<p.size();i++) {
-		if(p[i]<0) p[i]=-p[i];
-		pos+=pow(p[i],_dm.GetR1());
-    }
-	
-	for(i=0;i<o.size();i++) {
-		orient+=pow(o[i],_dm.GetR2());
-    }
-	
-	dist=pow(pos+orient,_dm.GetR3());
-	delete pC;
-
-	return dist;
-}                           
-
-double
-DistanceMetric::
-ManhattanDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
-	
-    double dist=0;
-    //++++
-    //    Cfg c=_c1-_c2;
-    Cfg *pC = _c1.CreateNewCfg();
-
-    vector<double> dt=pC->GetData(); // position values
-	
-	
-	
-    int i;
-    for(i=0;i<dt.size();i++) {
-		if(dt[i]<0) dist=dist-dt[i];
-		else
-			dist+=dt[i];
-    }
-	
-  delete pC;
-  return dist;
-}                                                                               
-
-double DistanceMetric::
-CenterOfMassDistance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2, DM& _dm){
-	
-    Vector3D d=_c1.GetRobotCenterPosition()-_c2.GetRobotCenterPosition();
-    return d.magnitude();
-}
-/////////////////////////////////////////////////////////////////////
-//
-//  METHODS for class DM
-//      
-/////////////////////////////////////////////////////////////////////
-
-DM::
-DM() {
-	strcpy(name,"");
-	distanceMetric = 0;
-	dmid = INVALID_EID;
-	type = -1;
-	sValue = 0;
+Distance(Environment* env, const Cfg* _c1, const Cfg* _c2) {
+  MultiBody* robot;
+  robot = env->GetMultiBody(env->GetRobotIndex());
+  return selected[0]->Distance(robot, *_c1, *_c2);
 }
 
-DM::
-~DM() {
+//////////
+
+DistanceMetricMethod::
+DistanceMetricMethod() {
 }
 
-DM&
-DM::
-operator=(const DM& _dm) {
-	strcpy(name,_dm.name);
-	return *this;
-};
 
-bool 
-DM::
-operator==(const DM& _dm) const
-{
-	if ( strcmp(name,_dm.name) != 0 ) {
-		return false;
-	} else if ( !strcmp(name,"euclidean") ||
-		!strcmp(name,"manhattan") || 
-		!strcmp(name,"com")  ) {
-		return true;
-	} else if ( !strcmp(name,"scaledEuclidean") ) {
-		return ( abs(sValue-_dm.sValue) <0.000000001);
-	} else if ( !strcmp(name,"minkowski") ) {
-		return ( (abs(r1 - _dm.r1 )<0.000000001) && 
-			(abs(r2 - _dm.r2 ) <0.000000001)&&
-			(abs(r3 - _dm.r3 )<0.000000001));
-	} else {  
-		return false; 
-	}
-};
+DistanceMetricMethod::
+~DistanceMetricMethod() {
+}
+
+
+bool
+DistanceMetricMethod::
+operator==(const DistanceMetricMethod& dm) const {
+  return ( !(strcmp(GetName(), dm.GetName())) );
+}
+
+//////////
+
+
+EuclideanDistance::
+EuclideanDistance() : DistanceMetricMethod() {
+  type = CS;
+}
+ 
+
+EuclideanDistance::
+~EuclideanDistance() {
+}
+
 
 char* 
-DM::
+EuclideanDistance::
 GetName() const {
-	return const_cast<char*>(name);
-};
-
-DMF 
-DM::
-GetDistanceMetric(){
-	return distanceMetric;
-};
-
-int
-DM::
-GetType() const {
-	return type;
-};
-
-ostream& operator<< (ostream& _os, const DM& dm){
-	_os<< dm.GetName();
-	if ( (!strcmp(dm.GetName(),"euclidean")) ||
-		(!strcmp(dm.GetName(),"manhattan")) ||
-		(!strcmp(dm.GetName(),"com"))    ){
-		_os << ", Type = " << dm.GetType(); 
-	}
-	if ( !strcmp(dm.GetName(),"scaledEuclidean")){
-		_os << ", Type = " << dm.GetType(); 
-		_os << ", s = " << dm.GetS(); 
-	}
-	
-	if ( !strcmp(dm.GetName(),"minkowski")){
-		_os << ", Type = " << dm.GetType();
-		_os << ", r1   = " << dm.GetR1();
-		_os << ", r2   = " << dm.GetR2();
-		_os << ", r3   = " << dm.GetR3();
-	}
-	
-	return _os;
-};
-
-double
-DM::
-GetS() const {
-    if( !strcmp(name,"scaledEuclidean") ){
-		return sValue;
-	} else {
-		return -1;
-	}
-};
-
-double
-DM::
-GetR1() const {
-    if( !strcmp(name,"minkowski") ){
-		return r1;
-	} else {
-		return -1;
-	}
-};
-double
-DM::
-GetR2() const {
-    if( !strcmp(name,"minkowski") ){
-		return r2;
-	} else {
-		return -1;
-	}
-};
-double
-DM::
-GetR3() const {
-    if( !strcmp(name,"minkowski") ){
-		return r3;
-	} else {
-		return -1;
-	}
-};          
-
-
-/////////////////////////////////////////////////////////////////////
-//
-//  METHODS for class DMSets
-//      
-/////////////////////////////////////////////////////////////////////
-
-//==================================
-// DMSets class Methods: Constructors and Destructor
-//==================================
-
-DMSets::
-DMSets(){
-};
-
-DMSets::
-~DMSets(){
-};
-
-
-//===================================================================
-// DMSets class Methods: Adding DMs, Making & Modifying DM sets
-//===================================================================
-
-int
-DMSets::
-AddDM(const char* _dminfo) {
-	SID sid = MakeDMSet(_dminfo);
-	SetIDs--;
-	return DeleteOSet(sid);        // delete the set, but not elements
-};
-
-int
-DMSets::
-AddDMToSet(const SID _sid, const EID _dmid) {
-	return AddElementToOSet(_sid,_dmid);
-};
-
-int
-DMSets::
-DeleteDMFromSet(const SID _sid, const EID _dmid) {
-	return DeleteElementFromOSet(_sid,_dmid);
-};
-
-
-SID
-DMSets::
-MakeDMSet(const char* _dmlist){
-	
-	///Modified for VC
-	istrstream  is( (char *) _dmlist);
-	if (!is) {
-		cout << endl << "In MakeDMSet: can't open instring: " << _dmlist ;
-		return INVALID_SID;
-	}
-	
-	return MakeDMSet(is);
-};
-
-
-SID
-DMSets::
-MakeDMSet(const EID _eid) {
-	return MakeOSet(_eid);
+  return "euclidean";
 }
 
-SID
-DMSets::
-MakeDMSet(const vector<EID> _eidvector) {
-	return MakeOSet(_eidvector);
+
+void 
+EuclideanDistance::
+SetDefault() {
 }
 
-SID
-DMSets::
-MakeDMSet(istream& _myistream) {
-	char dmname[100];
-	double sValue;
-	vector<EID> dmvec;  // vector of dmids for this set
-	
-	while ( _myistream >> dmname ) { // while dms to process...
-		
-		if (!strcmp(dmname,"euclidean")) {              // Euclidean Distance Metric
-			DM dm1;
-			strcpy(dm1.name,dmname);
-			dm1.distanceMetric = &DistanceMetric::EuclideanDistance;
-			dm1.type = CS;	
-			dm1.dmid = AddElementToUniverse(dm1);
-			if ( ChangeElementInfo(dm1.dmid,dm1) != OK ) {
-				cout << endl << "In MakeSet: couldn't change element info";
-				exit(-1);
-			}
-			dmvec.push_back( dm1.dmid );
-			
-		} else if (!strcmp(dmname,"scaledEuclidean")){	// Scaled Euclidean
-			DM dm1;
-			strcpy(dm1.name,dmname);
-			dm1.distanceMetric = &DistanceMetric::ScaledEuclideanDistance;
-			dm1.type = CS;
-			dm1.sValue = 2.0;
-			while( _myistream >> sValue ) { //get s values
-				if ( sValue < 0 || sValue > 1 ) {
-					cout << endl << "INVALID: scaled Euclidean s= " << sValue;
-					exit(-1);
-				} else {
-					dm1.sValue = sValue;
-					dm1.dmid = AddElementToUniverse(dm1);
-					if( ChangeElementInfo(dm1.dmid,dm1) != OK ) {
-						cout << endl << "In MakeSet: couldn't change element info";
-						exit(-1);
-					}
-					dmvec.push_back( dm1.dmid );
-				}
-			}
-			if(dm1.sValue == 2.0) {  //if no s value given, use default 0.5
-				dm1.sValue = 0.5;
-				dm1.dmid = AddElementToUniverse(dm1);
-				if( ChangeElementInfo(dm1.dmid,dm1) != OK ) {
-					cout << endl << "In MakeSet: couldn't change element info";
-					exit(-1);
-				}
-				dmvec.push_back( dm1.dmid );
-			}
-			_myistream.clear(); // clear failure to read in last s value
-			
-		} else if (!strcmp(dmname,"minkowski")){ 
-			DM dm1;
-			double r1,r2,r3;
-			strcpy(dm1.name,dmname);
-			dm1.distanceMetric = &DistanceMetric::MinkowskiDistance;
-			dm1.type = CS;
-			r1 = 3;
-			r2 = 3;
-			r3 = 1.0/3;
-			if( _myistream >> r1) {
-				r2=r3=r1;
-				if( _myistream >> r2) {
-					if (! (_myistream >> r3)) {
-						cout << endl << "INVALID: If you specified 2 values please also specify the third";
-						exit(-1);
-					}
-				}
-			}
-			dm1.r1 = r1;
-			dm1.r2 = r2;
-			dm1.r3 = r3; 
-			dm1.dmid = AddElementToUniverse(dm1);
-			if( ChangeElementInfo(dm1.dmid,dm1) != OK ) {
-                cout << endl << "In MakeSet: couldn't change element info";
-                exit(-1);
-            }
-			dmvec.push_back( dm1.dmid );
-			
-			_myistream.clear(); // clear failure to read in last r value
-		}else  if (!strcmp(dmname,"manhattan")) {// manhattan
-			DM dm1;
-			strcpy(dm1.name,dmname);
-			dm1.distanceMetric = &DistanceMetric::ManhattanDistance;
-			dm1.type = CS;
-			dm1.dmid = AddElementToUniverse(dm1);
-			if ( ChangeElementInfo(dm1.dmid,dm1) != OK ) {
-				cout << endl << "In MakeSet: couldn't change element info";
-				exit(-1);
-			}
-			dmvec.push_back( dm1.dmid );
-			
-		}  else if (!strcmp(dmname,"com")) {// com
-			DM dm1;
-			strcpy(dm1.name,dmname);
-			dm1.distanceMetric = &DistanceMetric::CenterOfMassDistance;
-			dm1.type = WS;
-			dm1.dmid = AddElementToUniverse(dm1);
-			if ( ChangeElementInfo(dm1.dmid,dm1) != OK ) {
-				cout << endl << "In MakeSet: couldn't change element info";
-				exit(-1);
-			}
-			dmvec.push_back( dm1.dmid );
-			
-		} else {
-			cout << "INVALID: Distance Metric name = " << dmname;
-			exit(-1);
-		}
-  } // end while
+
+void 
+EuclideanDistance::
+ParseCommandLine(int argc, char** argv) {
+  if(argc > 1) {
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
+	 << argv << "\"\n\n";
+    PrintUsage(cerr);
+    cerr << endl;
+    exit(-1);
+  }
+}
+
+ 
+void 
+EuclideanDistance::
+PrintUsage(ostream& _os) const {
+  _os.setf(ios::left,ios::adjustfield);
+
+  _os << "\n" << GetName() << " ";
+
+  _os.setf(ios::right,ios::adjustfield);
+}
+
+
+void 
+EuclideanDistance::
+PrintValues(ostream& _os) const {
+  _os << "\n" << GetName() << " ";
+  _os << endl;
+}
+
+
+DistanceMetricMethod* 
+EuclideanDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new EuclideanDistance(*this);
+  return _copy;
+}
+
+
+double 
+EuclideanDistance::
+Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+  double dist;
+  dist = sqrt(2.0)*ScaledDistance(_c1, _c2, 0.5);
+  return dist;
+}
+
+double
+EuclideanDistance::
+ScaledDistance(const Cfg& _c1, const Cfg& _c2, double sValue) {
+  Cfg *pTmp = _c1.CreateNewCfg();
+  pTmp->subtract(_c1,_c2);
+  double dReturn = sqrt(  sValue*sqr(pTmp->PositionMagnitude()) + 
+                          (1.0 - sValue)*sqr(pTmp->OrientationMagnitude()) );
+  delete pTmp;
+  return dReturn;
+}
+
+//////////
+
+ScaledEuclideanDistance::
+ScaledEuclideanDistance() : EuclideanDistance() {
+  sValue = 0.5;
+}
+
+
+ScaledEuclideanDistance::
+ScaledEuclideanDistance(double _sValue) : EuclideanDistance() {
+  if((_sValue < 0) || (_sValue > 1)) {
+    cout << "\n\nERROR: sValue " << _sValue << " invalid, must be between 0 and 1\n";
+    exit(-1);
+  }
+  sValue = _sValue;
+}
+
+
+ScaledEuclideanDistance::
+~ScaledEuclideanDistance() {
+}
+
+
+char* 
+ScaledEuclideanDistance::
+GetName() const {
+  return "scaledEuclidean";
+}
+
+
+void 
+ScaledEuclideanDistance::
+SetDefault() {
+  sValue = 0.5;
+}
+
+
+bool
+ScaledEuclideanDistance::
+operator==(const ScaledEuclideanDistance& dm) const {
+  if( strcmp(GetName(), dm.GetName()) ) {
+    return false;
+  } else {
+    return ((sValue-dm.GetS() < 0.000000001) && 
+            (sValue-dm.GetS() > -0.000000001));
+  }
+}
+
+
+void 
+ScaledEuclideanDistance::
+ParseCommandLine(int argc, char** argv) {
+  if(argc > 2) {
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
+	 << argv << "\"\n\n";
+    PrintUsage(cerr);
+    cerr << endl;
+    exit(-1);
+  }
+
+  if(argc == 2) { //read in sValue
+    istrstream is(argv[1]);
+    if(!(is >> sValue)) {
+      cerr << "\nERROR ParseCommandLine: Don\'t understand\""
+	   << argv << "\"\n\n";
+      PrintUsage(cerr);
+      cerr << endl;
+      exit(-1);
+    }
+    if((sValue < 0) || (sValue > 1)) {
+      cerr << "\nERROR invalid sValue " << sValue << ", must be between 0 and 1\n\n";
+      exit(-1);
+    }
+  }
+}
+
+
+void 
+ScaledEuclideanDistance::
+PrintUsage(ostream& _os) const {
+  _os.setf(ios::left,ios::adjustfield);
+
+  _os << "\n" << GetName() << " ";
+  _os << "FLOAT (default,0.5)";
+
+  _os.setf(ios::right,ios::adjustfield);
+}
+
+
+void 
+ScaledEuclideanDistance::
+PrintValues(ostream& _os) const {
+  _os << "\n" << GetName() << " ";
+  _os << sValue;
+  _os << endl;
+}
+
+
+DistanceMetricMethod* 
+ScaledEuclideanDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new ScaledEuclideanDistance(*this);
+  return _copy;
+}
+
+
+double 
+ScaledEuclideanDistance::
+Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+  double dist;
+  dist = ScaledDistance(_c1, _c2, sValue); 
+  return dist;
+}
+
+//////////
+
+MinkowskiDistance::
+MinkowskiDistance() : DistanceMetricMethod() {
+  type = CS;
+  r1 = 3;
+  r2 = 3;
+  r3 = 1.0/3;
+}
+
+
+MinkowskiDistance::
+~MinkowskiDistance() {
+}
+
+
+char* 
+MinkowskiDistance::
+GetName() const {
+  return "minkowski";
+}
+
+
+void 
+MinkowskiDistance::
+SetDefault() {
+  r1 = 3;
+  r2 = 3;
+  r3 = 0.333;
+}
+
+
+bool
+MinkowskiDistance::
+operator==(const MinkowskiDistance& dm) const {
+  if( strcmp(GetName(), dm.GetName()) ) {
+    return false;
+  } else {
+    return ( ((r1-dm.GetR1() < 0.000000001) && (r1-dm.GetR1() > -0.000000001)) &&
+             ((r2-dm.GetR2() < 0.000000001) && (r2-dm.GetR2() > -0.000000001)) &&
+             ((r3-dm.GetR3() < 0.000000001) && (r3-dm.GetR3() > -0.000000001)) );
+  }
+}
+
+
+void 
+MinkowskiDistance::
+ParseCommandLine(int argc, char** argv) {
+  if(argc > 4) {
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
+	 << argv << "\"\n\n";
+    PrintUsage(cerr);
+    cerr << endl;
+    exit(-1);
+  }
+
+  if(argc > 1) { //read in r1
+    istrstream is1(argv[1]);
+    if(!(is1 >> r1)) {
+      cerr << "\nERROR ParseCommandLine: Don\'t understand\""
+	   << argv << "\"\n\n";
+      PrintUsage(cerr);
+      cerr << endl;
+      exit(-1);
+    }
+    r2 = r3 = r1;
+  }
+
+  if(argc > 2) { //read in r2 and r3
+    if(argc != 4) {
+      cerr << "\nERROR ParseCommandLine: If you specify 2 values, you must specify a 3rd.\n\n";
+      exit(-1);
+    }
+
+    istrstream is2(argv[2]);
+    if(!(is2 >> r2)) {
+      cerr << "\nERROR ParseCommandLine: Don\'t understand\""
+	   << argv << "\"\n\n";
+      PrintUsage(cerr);
+      cerr << endl;
+      exit(-1);
+    }
+
+    istrstream is3(argv[3]); 
+    if(!(is3 >> r3)) {
+      cerr << "\nERROR ParseCommandLine: Don\'t understand\""
+	   << argv << "\"\n\n";
+      PrintUsage(cerr);
+      cerr << endl;
+      exit(-1);
+    }
+  }
+}
+
+
+void 
+MinkowskiDistance::
+PrintUsage(ostream& _os) const {
+  _os.setf(ios::left,ios::adjustfield);
+
+  _os << "\n" << GetName() << " ";
+  _os << "FLOAT FLOAT FLOAT (default 3 3 0.3333)";
+
+  _os.setf(ios::right,ios::adjustfield);
+}
+
+ 
+void 
+MinkowskiDistance::
+PrintValues(ostream& _os) const {
+  _os << "\n" << GetName() << " ";
+  _os << r1 << " " << r2 << " " << r3;
+  _os << endl;
+}
+
+
+DistanceMetricMethod* 
+MinkowskiDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new MinkowskiDistance(*this);
+  return _copy;
+}
+
+
+double 
+MinkowskiDistance::
+Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+  double dist,pos=0,orient=0/*,d*/;
+
+  Cfg *pC = _c1.CreateNewCfg();
+  pC->subtract(_c1,_c2);
   
-  return MakeOSet(dmvec);
+  vector<double> p = pC->GetPosition(); // position values
+  vector<double> o = pC->GetOrientation(); //orientation values
+              
+  int i;
+  for(i=0; i<p.size(); i++) {
+    if(p[i] < 0) 
+      p[i] = -p[i];
+    pos += pow(p[i], r1);
+  }
+  
+  for(i=0;i<o.size();i++) {
+    orient += pow(o[i], r2);
+  }
+  
+  dist = pow(pos+orient, r3);
+  delete pC;
+  
+  return dist;
+}
+
+//////////
+
+ManhattanDistance::
+ManhattanDistance() : DistanceMetricMethod() {
+  type = CS;
 }
 
 
-int
-DMSets::
-DeleteDMSet(const SID _sid) {
-	return DeleteOSet(_sid);
-};
-
-//===================================================================
-// DMSets class Methods: Getting Data & Statistics
-//===================================================================
-
-DM
-DMSets::
-GetDM(const EID _dmid) const {
-	return GetElement(_dmid);
-};
-
-vector<DM>
-DMSets::
-GetDMs() const {
-	vector<DM> elts2;
-	vector<pair<EID,DM> > elts1 = GetElements();
-	for (int i=0; i < elts1.size(); i++)
-		elts2.push_back( elts1[i].second );
-	return elts2;
-};
-
-vector<DM>
-DMSets::
-GetDMSet(const SID _sid) const {
-	vector<DM> elts2;
-	vector<pair<EID,DM> > elts1 = GetOSet(_sid);
-	for (int i=0; i < elts1.size(); i++)
-		elts2.push_back( elts1[i].second );
-	return elts2;
-};
+ManhattanDistance::
+~ManhattanDistance() {
+}
 
 
-vector<pair<SID,vector<DM> > >
-DMSets::
-GetDMSets() const {
-	
-	vector<pair<SID,vector<DM> > > s2;
-	vector<DM> thesedms;
-	
-	vector<pair<SID,vector<pair<EID,DM> > > > s1 = GetOSets();
-	
-	for (int i=0; i < s1.size(); i++)  {
-		thesedms.erase(thesedms.begin(),thesedms.end());
-		for (int j=0; j < s1[i].second.size(); j++ )
-			thesedms.push_back (s1[i].second[j].second);
-		s2.push_back( pair<SID,vector<DM> > (s1[i].first,thesedms) );
-	}
-	return s2;
-};
+char* 
+ManhattanDistance::
+GetName() const {
+  return "manhattan";
+}
 
-//===================================================================
-// DMSets class Methods: Display, Input, Output
-//===================================================================
 
-void
-DMSets::
-DisplayDMs() const{
-	DisplayElements();
-};
+void 
+ManhattanDistance::
+SetDefault() {
+}
 
-void
-DMSets::
-DisplayDM(const EID _dmid) const{
-	DisplayElement(_dmid);
-};
 
-void
-DMSets::
-DisplayDMSets() const{
-	DisplayOSets();
-};
+void 
+ManhattanDistance::
+ParseCommandLine(int argc, char** argv) {
+  if(argc > 1) {
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
+	 << argv << "\"\n\n";
+    PrintUsage(cerr);
+    cerr << endl;
+    exit(-1);
+  }
+}
 
-void
-DMSets::
-DisplayDMSet(const SID _sid) const{
-	DisplayOSet(_sid);
-};
 
-void
-DMSets::
-WriteDMs(const char* _fname) const {
-	
-	ofstream  myofstream(_fname);
-	if (!myofstream) {
-		cout << endl << "In WriteDMS: can't open outfile: " << _fname ;
-	}
-	WriteDMs(myofstream);
-	myofstream.close();
-};
+void 
+ManhattanDistance::
+PrintUsage(ostream& _os) const {
+  _os.setf(ios::left,ios::adjustfield);
 
-void
-DMSets::
-WriteDMs(ostream& _myostream) const {
-	
-	vector<DM> dms = GetDMs();
-	
-	_myostream << endl << "#####DMSTART#####";
-	_myostream << endl << dms.size();  // number of dms
-	
-	//format: DM_NAME (a string) DM_PARMS (double, int, etc)
-	for (int i = 0; i < dms.size() ; i++) {
-		_myostream << endl;
-		_myostream << dms[i].name << " ";
-		if ( !strcmp(dms[i].name,"scaledEuclidean") ) {
-			_myostream << dms[i].sValue;
-		}
-		if ( !strcmp(dms[i].name,"minkowski") ) {
-			_myostream << dms[i].r1 <<" ";
-			_myostream << dms[i].r2 <<" ";
-			_myostream << dms[i].r3;
-		}      
-	}
-	_myostream << endl << "#####DMSTOP#####";
-};
+  _os << "\n" << GetName() << " ";
 
-void
-DMSets::
-ReadDMs(const char* _fname) {
-	
-	ifstream  myifstream(_fname);
-	if (!myifstream) {
-		cout << endl << "In ReadDMs: can't open infile: " << _fname ;
-		return;
-	}
-	ReadDMs(myifstream);
-	myifstream.close();
-};
+  _os.setf(ios::right,ios::adjustfield);
+}
 
-void
-DMSets::
-ReadDMs(istream& _myistream) {
-	
-	char tagstring[100];
-	char dmdesc[100];
-	int  numDMs;
-	
-	_myistream >> tagstring;
-	if ( !strstr(tagstring,"DMSTART") ) {
-		cout << endl << "In ReadDMs: didn't read DMSTART tag right";
-		return;
-	}
-	
-	_myistream >> numDMs;
-	_myistream.getline(dmdesc,100,'\n');  // throw out rest of this line
-	for (int i = 0; i < numDMs; i++) {
-        _myistream.getline(dmdesc,100,'\n');
-        AddDM(dmdesc);
-	}
-	
-	_myistream >> tagstring;
-	if ( !strstr(tagstring,"DMSTOP") ) {
-		cout << endl << "In ReadDMs: didn't read DMSTOP tag right";
-		return;
-	}
-};
+
+void 
+ManhattanDistance::
+PrintValues(ostream& _os) const {
+  _os << "\n" << GetName() << " ";
+  _os << endl;
+}
+
+
+DistanceMetricMethod* 
+ManhattanDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new ManhattanDistance(*this);
+  return _copy;
+}
+
+
+double 
+ManhattanDistance::
+Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+  double dist = 0;
+  
+  Cfg *pC = _c1.CreateNewCfg();
+  
+  vector<double> dt = pC->GetData(); // position values
+               
+  for(int i=0; i < dt.size(); i++) {
+    if(dt[i] < 0) 
+      dist = dist-dt[i];
+    else
+      dist += dt[i];
+  }
+  
+  delete pC;
+  return dist;
+}
+
+//////////
+
+CenterOfMassDistance::  
+CenterOfMassDistance() : DistanceMetricMethod() {
+  type = WS;
+}
+
+
+CenterOfMassDistance::
+~CenterOfMassDistance() {
+}
+
+
+char* 
+CenterOfMassDistance::
+GetName() const {
+  return "com";
+}
+
+
+void 
+CenterOfMassDistance::
+SetDefault() {
+}
+
+
+void 
+CenterOfMassDistance::
+ParseCommandLine(int argc, char** argv) {
+  if(argc > 1) {
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \""
+	 << argv << "\"\n\n";
+    PrintUsage(cerr);
+    cerr << endl;
+    exit(-1);
+  }
+}
+
+
+void 
+CenterOfMassDistance::
+PrintUsage(ostream& _os) const {
+  _os.setf(ios::left,ios::adjustfield);
+
+  _os << "\n" << GetName() << " ";
+
+  _os.setf(ios::right,ios::adjustfield);
+}
+
+
+void 
+CenterOfMassDistance::
+PrintValues(ostream& _os) const {
+  _os << "\n" << GetName() << " ";
+  _os << endl;
+}
+
+
+DistanceMetricMethod* 
+CenterOfMassDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new CenterOfMassDistance(*this);
+  return _copy;
+}
+
+
+double 
+CenterOfMassDistance::
+Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+  Vector3D d = _c1.GetRobotCenterPosition()-_c2.GetRobotCenterPosition();
+  return d.magnitude();
+}

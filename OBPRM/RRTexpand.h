@@ -345,7 +345,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
 
          vector<CFG> clearance_cfgs;
          vector<CFG>::iterator startIterator;
-         while(!collision && (tk<=n_ticks)&& (dm->Distance(env,cfg,tick,*dmsetid) < maxLength) ) {
+         while(!collision && (tk<=n_ticks)&& (dm->Distance(env,cfg,tick) < maxLength) ) {
             lastFreeConfiguration = tick;
             if ( clearance_cfgs.size() <= o_clearance )
                clearance_cfgs.push_back( CFG(lastFreeConfiguration) );
@@ -357,7 +357,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
             tick.Increment(incr); //next configuration to check
             cout << "here" << tk ;
             if( (tick.isCollision(env,cd,*cdsetid,*cdInfo)) || !(tick.InBoundingBox(env)) ) {
-               collisionDistance = dm->Distance(env, cfg, tick, *dmsetid);
+               collisionDistance = dm->Distance(env, cfg, tick);
                collision = true;
                }
             tk++;// increases the tick
@@ -423,11 +423,11 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
                 cout << "GetCCcount" << GetCCcount(*(rm->m_pRoadmap)) << "\n";
                 cout <<"\nfrom    " << x_near;
 		cout <<"\nto added "<< x_new << "\n distance to collision: " << collisionDistance << "\n";
-                cout << "distance to u: " << dm->Distance(env,x_new,u, *dmsetid) << "  "<< rm->GetEnvironment()->GetPositionRes()<< "\n";
+                cout << "distance to u: " << dm->Distance(env,x_new,u) << "  "<< rm->GetEnvironment()->GetPositionRes()<< "\n";
                 if (connecting) {
                    //Cfg temp=x_new;
                    U.push_back(x_new);
-                   if (toConnect && dm->Distance(env,x_new,u, *dmsetid)<=env->GetPositionRes()){
+                   if (toConnect && dm->Distance(env,x_new,u)<=env->GetPositionRes()){
                         //Cfg temp1 = Cfg(temp);
                         //if ( lp->IsConnected(env,cd,dm,temp1,u,info.lpsetid,&lpOutput) ) {
                         if (settoConnect) {

@@ -312,7 +312,7 @@ FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
   // now go through all kp and find closest k
   for (int c1 = 0; c1 < verts.size(); c1++) {
     if (cfg != verts[c1] ) { 
-      double dist = dm->Distance(_rm->GetEnvironment(), cfg, verts[c1], *dmsetid);
+      double dist = dm->Distance(_rm->GetEnvironment(), cfg, verts[c1]);
       if ( dist < kp[k-1].second) {
 	tmp2.first = CfgVEType<CFG>(cfg,verts[c1]);
 	tmp2.second = dist;
@@ -330,7 +330,7 @@ FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
     tmp.ClosestPtOnLineSegment(cfg,endpt1,endpt2);
     
     if (tmp != endpt1 && tmp != endpt2){
-      double dist = dm->Distance(_rm->GetEnvironment(), cfg, tmp, *dmsetid);
+      double dist = dm->Distance(_rm->GetEnvironment(), cfg, tmp);
       
       if ( dist < kp[k-1].second) {
 	tmp2.first = CfgVEType<CFG>(cfg, tmp, endpt1, endpt2);

@@ -40,13 +40,13 @@ class RayCSpace {
   //This function has to call a collision detection routine (throug cfg)
   bool collide(Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			SID dmsetid, double maxLength, int &cd_counts);//Check for collision in the environment
+			double maxLength, int &cd_counts);//Check for collision in the environment
   bool connectTarget (Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-		      SID dmsetid, CFG &dir, int &cd_counts);
+		      CFG &dir, int &cd_counts);
   bool connectTarget (Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-		      SID dmsetid, int &cd_counts);
+		      int &cd_counts);
   double length(void); //Length of the ray, I still have to figure out the units
   void writePath(Environment *env);
   void writePathConfigurations(char output_file[80],
@@ -121,7 +121,7 @@ void RayCSpace<CFG>::bounce(CFG direction) {
 template <class CFG>
 bool RayCSpace<CFG>::collide(Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			SID dmsetid, double maxLength, int &cd_counts) {
+			double maxLength, int &cd_counts) {
   bool collision=false; 
   
   CFG cfg = origin; //Cfg of first collision
@@ -136,21 +136,21 @@ bool RayCSpace<CFG>::collide(Environment *env, CollisionDetection *cd,
   incr.FindIncrement(cfg,dir,&n_ticks,positionRes,orientationRes);
   int tk = 0; // controls the number of ticks generated
 
-  while(!collision && (dm->Distance(env,cfg,tick,dmsetid) < maxLength) ) {
+  while(!collision && (dm->Distance(env,cfg,tick) < maxLength) ) {
     lastFreeConfiguration = tick;
     tick.Increment(incr); //next configuration to check
     if( (tick.isCollision(env,cd,cdsetid,cdInfo)) || !(tick.InBoundingBox(env)) ) {
       collisionConfiguration = tick;
-      collisionDistance = dm->Distance(env, cfg, tick, dmsetid);
+      collisionDistance = dm->Distance(env, cfg, tick);
       collision = true;
     }
     tk++;// increases the tick
   }
   if (collision) {
-    traveledDistance = dm->Distance(env, cfg, collisionConfiguration, dmsetid);
+    traveledDistance = dm->Distance(env, cfg, collisionConfiguration);
   }
   else
-    traveledDistance += dm->Distance(env, cfg, tick, dmsetid);
+    traveledDistance += dm->Distance(env, cfg, tick);
   cd_counts += tk;
   return collision;
 }
@@ -158,23 +158,23 @@ bool RayCSpace<CFG>::collide(Environment *env, CollisionDetection *cd,
 template <class CFG>
 bool RayCSpace<CFG>::connectTarget(Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			      SID dmsetid, int &cd_counts) {
+			      int &cd_counts) {
   if (using_target_vector && target_vector != NULL) {
     //    cout << "looking for connections with " << target_vector->size() << " confs" << endl;
     for (unsigned int i = 0; i < target_vector->size(); ++i)
-      if (connectTarget(env, cd, cdsetid, cdInfo, dm, dmsetid, (*target_vector)[i], cd_counts))
+      if (connectTarget(env, cd, cdsetid, cdInfo, dm, (*target_vector)[i], cd_counts))
 	return true;
     return false;
   }
   else
-    return connectTarget(env, cd, cdsetid, cdInfo, dm, dmsetid, target, cd_counts);
+    return connectTarget(env, cd, cdsetid, cdInfo, dm, target, cd_counts);
   return false;
 }
 //Based on code by Shawna (Cfg::cAproxCspaceClearance:
 template <class CFG>
 bool RayCSpace<CFG>::connectTarget(Environment *env, CollisionDetection *cd,
 			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
-			SID dmsetid, CFG &dir, int &cd_counts) {
+			CFG &dir, int &cd_counts) {
   bool collision=false; 
   
   CFG cfg = origin; //Cfg of first collision
@@ -193,18 +193,18 @@ bool RayCSpace<CFG>::connectTarget(Environment *env, CollisionDetection *cd,
     lastFreeConfiguration = tick;
     tick.Increment(incr); //next configuration to check
     if( (tick.isCollision(env,cd,cdsetid,cdInfo)) || !(tick.InBoundingBox(env)) ) {
-      tmpDist = dm->Distance(env, cfg, tick, dmsetid);//distance % the ticks
+      tmpDist = dm->Distance(env, cfg, tick);//distance % the ticks
       collisionConfiguration = tick;
-      collisionDistance = dm->Distance(env, cfg, tick, dmsetid);
+      collisionDistance = dm->Distance(env, cfg, tick);
       collision = true; 
     }    
     tk++;// increases the tick
   }
   if (collision) {
-    traveledDistance = dm->Distance(env, cfg, collisionConfiguration, dmsetid);
+    traveledDistance = dm->Distance(env, cfg, collisionConfiguration);
   }
   else
-    traveledDistance += dm->Distance(env, cfg, tick, dmsetid);
+    traveledDistance += dm->Distance(env, cfg, tick);
   if (!collision)
     reached_target = dir;
   cd_counts += tk;
@@ -339,7 +339,6 @@ class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
 
   //Get rid of the following setids as soon as possible
   //SID cdsetid;
-  //SID dmsetid;
   Roadmap<CFG,WEIGHT> *rdmp;
   CollisionDetection *cd;
   DistanceMetric *dm;
@@ -827,7 +826,7 @@ bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VI
 
 
 //  bool RayTracer::trace(CollisionDetection *cd, SID cdsetid, CDInfo& cdinfo, 
-//  		      DistanceMetric * dm, SID dmsetid) {
+//  		      DistanceMetric * dm) {
 template <class CFG, class WEIGHT>
 bool RayTracer<CFG,WEIGHT>::trace(Roadmap<CFG,WEIGHT> &ray_rdmp) {
   bool path_found = false; //true if a path has been found, false otherwise
@@ -840,11 +839,11 @@ bool RayTracer<CFG,WEIGHT>::trace(Roadmap<CFG,WEIGHT> &ray_rdmp) {
   //cout << "looking for a path with " << max_bounces << " max_bounces and " << max_ray_length << " max_ray_length " << endl;
   while (!path_found && number_bouncings < max_bounces &&
 	 ray.length() < max_ray_length) {
-    if (ray.connectTarget(ray_rdmp.GetEnvironment(), cd, *cdsetid, *cdInfo, dm, *dmsetid, cd_counts)) {
+    if (ray.connectTarget(ray_rdmp.GetEnvironment(), cd, *cdsetid, *cdInfo, dm, cd_counts)) {
       ray.finish();
       path_found = true;
     }
-    else if (ray.collide(ray_rdmp.GetEnvironment(), cd, *cdsetid, *cdInfo, dm, *dmsetid,max_ray_length, cd_counts)) { // if there is a collision
+    else if (ray.collide(ray_rdmp.GetEnvironment(), cd, *cdsetid, *cdInfo, dm,max_ray_length, cd_counts)) { // if there is a collision
       //cout<< "\tif the collided object is the target's screen\n";
       //cout << "\t\tpath_found=true;\n";
       //cout << "\telse\n";
@@ -910,7 +909,7 @@ void RayTracer<CFG,WEIGHT>::getBoundaryCfgs(const vector<CFG> &input, vector<CFG
   vector<pair<CFG,double> > distances;
   for (i = 0; i < input.size(); ++i) {
     CFG tmp = input[i];
-    double dist = dm->Distance(rdmp->GetEnvironment(), center_mass, tmp, *dmsetid);
+    double dist = dm->Distance(rdmp->GetEnvironment(), center_mass, tmp);
     //distances.push_back(ConnectMapNodes<CFG,WEIGHT>::CfgDistType(input[i], dist));
     pair<CFG,double> tmpPair(input[i],dist);
     distances.push_back(tmpPair);

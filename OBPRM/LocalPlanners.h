@@ -115,10 +115,6 @@ class LocalPlanners {
 
   /**@name */
   //@{
-  /**Indicates what distance metric set will be used.
-   *@see dm_predefined for predefined ids. DMSets for more information.
-   */
-  SID dmsetid;
   /**Indicates what collision detector will be used.
    *@see CDSets for more information.
    */
@@ -176,8 +172,6 @@ LocalPlanners() {
 #error You have to specify at least one collision detection library.
 #endif
 #endif
-
-  dmsetid = S_EUCLID9;
 
   StraightLine<CFG, WEIGHT>* straight_line = new StraightLine<CFG, WEIGHT>(cdtype);
   all.push_back(straight_line);
@@ -270,7 +264,6 @@ ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtyp
     selected = LocalPlanners<CFG,WEIGHT>::GetDefault();
     for (itr = selected.begin(), lpid = 1; itr != selected.end(); itr++, lpid++) {
       (*itr)->cdsetid = &cdsetid;
-      (*itr)->dmsetid = &dmsetid;
       (*itr)->cdInfo = &cdInfo;
       (*itr)->SetID(GetNewID());
     }
@@ -313,7 +306,6 @@ ParseCommandLine(int argc, char **argv) {
 	if (!InSelected(*itr)) {
 	  // .., set their parameters
 	  (*itr)->cdsetid = &cdsetid;
-	  (*itr)->dmsetid = &dmsetid;
 	  (*itr)->cdInfo = &cdInfo;
 	  (*itr)->SetID(GetNewID());
 	  //check if lp is straightline to set saved_sl_id for add partial edge

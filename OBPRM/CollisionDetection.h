@@ -518,7 +518,7 @@ class CollisionDetection {
   /** Initialize n direction vectors  with the penetration length*/
   template <class CFG>
   void InitializePenetration(double times, int nCfgs,  Environment* env,
-			     DistanceMetric* dm, SID dmsetid, double ratio=0.5);
+			     DistanceMetric* dm, double ratio=0.5);
   
   double penetration; // Penetration distance
   
@@ -859,7 +859,7 @@ template <class CFG>
 void 
 CollisionDetection::
 InitializePenetration(double times, int nCfgs, Environment* env,
-		      DistanceMetric* dm, SID dmsetid, double ratio) {
+		      DistanceMetric* dm, double ratio) {
   CFG origin;
   acceptableRatio = ratio; 
   // first find the environment resolution
@@ -867,7 +867,7 @@ InitializePenetration(double times, int nCfgs, Environment* env,
   res.GetResolutionCfg(env);
   
   // now find the length of that resolution
-  double length = dm->Distance(env, res, origin, dmsetid);
+  double length = dm->Distance(env, res, origin);
   
   // penetration is length*times
   penetration = times*length;
@@ -877,7 +877,7 @@ InitializePenetration(double times, int nCfgs, Environment* env,
   CFG* tmp;
   for(int i=0; i < nCfgs; i++) {
     tmp = new CFG;
-    tmp->GetRandomCfg(env, dm, dmsetid, penetration*drand48());
+    tmp->GetRandomCfg(env, dm, penetration*drand48());
     directions.push_back(tmp);
     cout <<"Added Cfg\n"<<flush;
   }

@@ -191,9 +191,6 @@ void Haptic::AddFreeNodes(vector <Cfg>cfgs,bool checkConnection)
   lpInfo.checkCollision = true;
   lpInfo.savePath = false;
   lpInfo.cdsetid = connectionInfo.cdsetid;
-  lpInfo.dmsetid = connectionInfo.dmsetid;
-    
-
 
   for(i=0;i<cfgs.size();i++)
   {

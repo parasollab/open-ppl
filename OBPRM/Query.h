@@ -73,7 +73,7 @@ public:
     //@{
 
         /**Default initializations.
-          *Set set_id for #lpsetid, #cdsetid, and #dmsetid from
+          *Set set_id for #cdsetid from
           *given ConnectMap instance.
           *If there is no user specified local planner set id then
           *SL_R5_AD69 will be used.
@@ -207,7 +207,6 @@ public:
     char *outputPathFile;               ///< File name for path data
 
     SID cdsetid;                        ///< Collision Detection set id for query
-    SID dmsetid;                        ///< Distance Metrics set id for query
 };
 
 
@@ -268,7 +267,6 @@ initDefaultSetIDs(ConnectMap<CFG, WEIGHT>* cn) {
   // default for QUERY is most powerful set
   
   // user specifed, same defaults as for ROADMAP construction
-  dmsetid = cn->dmsetid;
   cdsetid = cn->cdsetid;
 }
 
@@ -417,7 +415,7 @@ CanConnectToCC(CFG _cfg, CollisionDetection* cd,
    //function SortByDistFromCfg
    vector<ConnectionMethod<CFG,WEIGHT> *>::iterator first_method;
    first_method = selected.begin();
-   (*first_method)->SortByDistFromCfg(rdmp.GetEnvironment(),dm,dmsetid,_cfg,_cc);
+   (*first_method)->SortByDistFromCfg(rdmp.GetEnvironment(),dm,_cfg,_cc);
    // try to connect _cfg to (closest) config in _cc 
    // (now try all, later only k closest)
    for (int i=0; i < _cc.size(); i++ ) {

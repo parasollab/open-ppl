@@ -180,18 +180,18 @@ IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
   double dist, c1_clearance, c2_clearance;
   
   //calculate the distance between the two cfgs
-  dist = dm->Distance(_env,_c1,_c2,*dmsetid);
+  dist = dm->Distance(_env,_c1,_c2);
   
   if (_c1.info.clearance != -1)
     c1_clearance = _c1.info.clearance;
   else
     c1_clearance = _c1.ApproxCSpaceClearance(_env,cd,*cdsetid,*cdInfo,
-					     dm,*dmsetid,n.GetValue());
+					     dm,n.GetValue());
   if (_c2.info.clearance != -1)
     c2_clearance = _c2.info.clearance;
   else
     c2_clearance = _c2.ApproxCSpaceClearance(_env,cd,*cdsetid,*cdInfo,
-					     dm,*dmsetid,n.GetValue());
+					     dm,n.GetValue());
   
   Stats.IncLPCollDetCalls("ApproxSpheres", cd_cntr);
   if (c1_clearance + c2_clearance >= dist) {

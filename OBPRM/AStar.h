@@ -334,7 +334,7 @@ ChooseOptimalNeighbor(Environment *_env, CollisionDetection *cd, DistanceMetric 
   int retPosition=0;
   double value = 0;
   for(int i=0;i<neighbors.size();i++) {
-    value=dm->Distance(_env,*neighbors[i],_c2,*dmsetid);
+    value=dm->Distance(_env,*neighbors[i],_c2);
     if (value<minDistance) {
       retPosition=i;
       minDistance=value;

@@ -231,7 +231,6 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
   int robot        = env->GetRobotIndex();
   BasicOBPRM<CFG> gn = BasicOBPRM<CFG>();
   gn.cdsetid = cdsetid;
-  gn.dmsetid = dmsetid;
   gn.cdInfo = cdInfo;
   vector<CFG> nodes;
   int numNodes = 1;             // only need one new node at a time
@@ -325,12 +324,12 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
 	// calculate CCradius 
 	double CCradius = 0.0;
 	for(i=0; i<CC.size(); ++i) {
-	  CCradius += dm->Distance(env, CCcenter, CC[i], *dmsetid);
+	  CCradius += dm->Distance(env, CCcenter, CC[i]);
 	}
 	CCradius /= CC.size();
 	
 	// calculate distance of cfg to CCcenter 
-	double distFromCenter = dm->Distance(env, CCcenter, cfg, *dmsetid);
+	double distFromCenter = dm->Distance(env, CCcenter, cfg);
 	
 	// if cfg distance to CCcenter > rfactor * CCradius
 	if(distFromCenter > rfactor * CCradius) {
