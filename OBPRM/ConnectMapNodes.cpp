@@ -21,11 +21,12 @@
 #include "Roadmap.h"
 #include "Clock_Class.h"
 
-#define K_OTHER    10                  // default for obst-other connections
-#define K_SELF      3                  // default for obst-self  connections
-#define STEP_FACTOR 3                  // default for rrt stepFactor
-#define ITERATIONS 10                  // default for rrt iterations
-#define MAX_NUM 20                     // default for modifiedLM maxNum
+#define K_OTHER      10        // default for obst-other connections
+#define K_SELF        3        // default for obst-self  connections
+#define STEP_FACTOR   3        // default for rrt stepFactor
+#define ITERATIONS   10        // default for rrt iterations
+#define MAX_NUM      20        // default for modifiedLM maxNum
+#define RFACTOR       2        // default for modifiedLM 'radius' factor
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -1138,20 +1139,24 @@ ConnectNodes_ObstBased(
 };
 
 
-//////////////////////////////////////////////////////////////////////
+//--------------------------------------------------------------------
+//   "modifiedLM" -- modified Laumond's method. During connection 
+//   phase, nodes are randomly generated, they are kept if they can 
+//   be connected to no CCs or more than one CCs, otherwise it will 
+//   be tossed away(only connected to one CC) if its 'distance' from 
+//   the 'center' of that CC not larger than user-specified 'r' times 
+//   the radius of that CC, i.e, it will be kept only when it 
+//   'expand's that CC.
 //
-//   "modifiedLM" -- modified Laumond's method. During connection phase,
-//   nodes are randomly generated, they are kept if they can be connected
-//   to no CCs or more than one CCs, otherwise it will be tossed away(only
-//   connected to one CC) if its 'distance' from the 'center' of that CC
-//   not larger than 2 times the radius of that CC, i.e, it will be kept
-//   only if it 'expand' that CC.
-//   note:  parameters are:
+//   Parameters:
+//
 //   1) kclosest: num of closest nodes in each CC that this node is
-//                going to try connection.
+//		going to try connection.
 //   2) maxNum: the maximum numbers of nodes that are going to be
-//              added into the roadmap during this.
-//////////////////////////////////////////////////////////////////////
+//		added into the roadmap during this.
+//   3) rfactor: multiplier for 'radius' of CC, w/in which thrown out, 
+//		outside of which kept.
+// ------------------------------------------------------------------
 void
 ConnectMapNodes::
 ConnectNodes_modifiedLM(
@@ -1164,10 +1169,12 @@ ConnectNodes_modifiedLM(
   vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
   const int kclosest = _cn.GetKClosest();
   const int maxNum = _cn.GetMaxNum();
+  const int rfactor = _cn.GetRFactor();
 
   #ifndef QUIET
   cout << "(kclosest=" << _cn.GetKClosest();
-  cout << ", maxNum=" << _cn.GetMaxNum() << "): "<<flush;
+  cout << ", maxNum=" << _cn.GetMaxNum();
+  cout << ", rfactor=" << _cn.GetRFactor()<< "): "<<flush;
   #endif
 
   int numCfgAdded = 0;
@@ -1201,9 +1208,9 @@ ConnectNodes_modifiedLM(
               edges.push_back(kp[j]);
 	      edgelpinfos.push_back(lpInfo.edge);
               break;
-           }
-        }
-     }
+           } //endif (lp-> ...
+        } //endfor j
+     } //endfor i
      bool add = false;
      if(numofConnection == 1) {
         vector<Cfg> ccvc = _rm->roadmap.GetCC(edges[0].second);
@@ -1218,7 +1225,7 @@ ConnectNodes_modifiedLM(
         }
         radius /= ccvc.size();
         double meFromCenter = dm->Distance(env, center, edges[0].first, info.dmsetid);
-        if(meFromCenter >= 2.0 * radius)
+        if(meFromCenter >= rfactor * radius)
                 add = true;
      }
      if(add || numofConnection != 1) {
@@ -1226,10 +1233,12 @@ ConnectNodes_modifiedLM(
          _rm->roadmap.WeightedGraph<Cfg,WEIGHT>::AddVertex(me);
          for(int i=0; i<edges.size(); ++i) {
              _rm->roadmap.AddEdge(edges[i].first, edges[i].second, edgelpinfos[i]);
-         }
-     }
-  }
-}
+         }//endfor i
+     } //endif (add || ...
+
+  } //endwhile
+
+}//end method
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -1267,7 +1276,9 @@ operator==(const CN& _cn) const
   } else if ( !strcmp(name,"components") ) {
      return ( (kpairs == _cn.kpairs) && (smallcc == _cn.smallcc) );
   } else if ( !strcmp(name,"modifiedLM") ) {
-     return ( (kclosest == _cn.kclosest) && (maxNum == _cn.maxNum) );
+     return ( (kclosest == _cn.kclosest) 
+             && (maxNum == _cn.maxNum) 
+             && (rfactor == _cn.rfactor) );
   } else {  
      return false;
   }
@@ -1346,6 +1357,11 @@ CN::
 GetMaxNum() const {
     return maxNum;
 };
+int
+CN::
+GetRFactor() const {
+    return rfactor;
+};
 
 
 
@@ -1367,7 +1383,8 @@ ostream& operator<< (ostream& _os, const CN& cn) {
         }
         if ( strstr(cn.GetName(),"modifiedLM") ){
            _os<< ", kclosest = " << cn.GetKClosest()
-              << ", maxNum = " << cn.GetMaxNum();
+              << ", maxNum = " << cn.GetMaxNum()
+              << ", rfactor = " << cn.GetRFactor();
         }
         if ( strstr(cn.GetName(),"components") ){
            _os<< ", kpairs = " << cn.GetKPairs() << ", smallcc = " << cn.GetSmallCCSize();  
@@ -1467,7 +1484,7 @@ MakeCNSet(istream& _myistream) {
   int smallcc, kpairs;         // parameters for ConnectCCs
   int k_other, k_self;         // parameters for ObstBased
   int iterations, stepFactor;  // parameters for RRTexpand,RRTcomponents
-  int maxNum;                  // parameters for modifiedLM
+  int maxNum,rfactor;          // parameters for modifiedLM
 
   vector<EID> cnvec;  // vector of cnids for this set 
 
@@ -1676,17 +1693,29 @@ MakeCNSet(istream& _myistream) {
                if ( maxNum < 0 ) {
                   cout << endl << "INVALID: maxNum = " << maxNum;
                   exit(-1);
-               }
+               } else {
+                  if (_myistream >> rfactor) { //get value, if any
+                     if ( rfactor < 0 ) { 
+                        cout << endl << "INVALID: rfactor = " << rfactor;
+                        exit(-1);
+                     }
+		  } else {
+               		rfactor = RFACTOR;  // default
+                  }
+	       }
             } else {
                maxNum = MAX_NUM;  // default
+               rfactor = RFACTOR;  // default
             }
           }
        } else {
           kclosest = 5;  // default
           maxNum = MAX_NUM;  // default
+          rfactor = RFACTOR;  // default
        }
        cn1.kclosest = kclosest;
        cn1.maxNum = maxNum;
+       cn1.rfactor = rfactor;
 
        cn1.cnid = AddElementToUniverse(cn1);
        if( ChangeElementInfo(cn1.cnid,cn1) != OK ) {

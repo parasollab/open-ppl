@@ -215,13 +215,13 @@ Input::Input():
     CNstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default closest 10"
         "\n\t\t\t  random"
-        "\n\t\t\t  closest    INTEGER (default,5)"
-        "\n\t\t\t  closestVE  INTEGER (default,5)"
-        "\n\t\t\t  components INTEGER INTEGER (defaults,3 4)"
-        "\n\t\t\t  obstBased  INTEGER INTEGER (defaults, oth:10 slf:3)"
-        "\n\t\t\t  RRTexpand  INT INT INT (def, k:10 factor:3 cc:3)"
-        "\n\t\t\t  RRTcomponents  INT INT INT (def, k:10 factor:3 cc:3)"
-        "\n\t\t\t  modifiedLM INTEGER INTEGER (defaults, 5, 10)"
+        "\n\t\t\t  closest        INT         (k:5)"
+        "\n\t\t\t  closestVE      INT         (k:5)"
+        "\n\t\t\t  components     INT INT     (kpairs:3 smallcc:4)"
+        "\n\t\t\t  obstBased      INT INT     (other:10 self:3)"
+        "\n\t\t\t  RRTexpand      INT INT INT (iter:10 factor:3 cc:3)"
+        "\n\t\t\t  RRTcomponents  INT INT INT (iter:10 factor:3 cc:3)"
+        "\n\t\t\t  modifiedLM     INT INT INT (kpairs:5, add:10, rfactor:2)"
         );
     LPstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default straightline rotate_at_s 0.5"

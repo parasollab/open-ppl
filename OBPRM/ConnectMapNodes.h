@@ -70,7 +70,7 @@ struct CNInfo {
     SID lpsetid;        // local planner set id
     SID cdsetid;        // collision detection set id
     SID dmsetid;        // distance metric set id
-    CDInfo cdInfo;      
+    CDInfo cdInfo;
     int numEdges;
     vector <EdgeInfo<WEIGHT> > edges;
     bool addPartialEdge;
@@ -135,6 +135,7 @@ public:
   int 	 GetIterations () const;
   int 	 GetStepFactor () const;
   int    GetMaxNum     () const;
+  int    GetRFactor    () const;
 
 protected:
   //===================================================================
@@ -146,6 +147,7 @@ protected:
   int 	numEdges;          // used by random algm 
   int   kclosest;          // used by closest algm & modifiedLM
   int   maxNum;            // used by modifiedLM
+  int   rfactor;           // used by modifiedLM
   int 	kpairs;            // used by components algm
   int 	smallcc;           // used by components & rrt algm
   int 	stepFactor;        // used by rrt algm
@@ -253,15 +255,21 @@ private:
 //                                               "posres" to use)
 //                                 3) smallcc (grow CCs smaller/equal this size)
 //        * "modifiedLM" -- modified Laumond's method. During connection phase,
-//           nodes are randomly generated, they are kept if they can be connected
-//           to no CCs or more than one CCs, otherwise it will be tossed away(only
-//           connected to one CC) if its 'distance' from the 'center' of that CC
-//           not larger than 2 times the radius of that CC, i.e, it will be kept
-//           only if it 'expand' that CC.
+//           nodes are randomly generated, they are kept if they can be 
+//           connected to no CCs or more than one CCs, otherwise it will 
+//           be tossed away(only connected to one CC) if its 'distance' 
+//   	     from the 'center' of that CC not larger than a 'radial factor' 
+//           times the radius of that CC, 
+//           i.e, it will be kept only if it 'expand' that CC.
 //           note:  parameters are 1) kclosest: num of closest nodes in each CC
 //                                    that this node is going to try connection.
 //                                 2) maxNum: the maximum numbers of nodes that
-//                                    are going to be added into the roadmap during this.
+//                                    are going to be added into the roadmap 
+//                                    during this.
+//                                 3) rfactor: given that every CC has a
+//				      'radius', here's what the method does.
+//				      if cfg.dist > r*radial_factor 
+//					then add cfg to map
 //
 //     'Wrapper' methods cycle thru sets of cns, stopping upon 1st
 //     success or trying all.
