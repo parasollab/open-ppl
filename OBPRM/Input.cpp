@@ -637,7 +637,7 @@ Input::PrintDefaults(){
    ConnectMapNodes cn;          // default value of cnInfo.cnsetid is set
    cout << setw(FW) << endl << endl << "Connect Map Nodes" << " (" << CNstrings[0]->GetFlag() <<
       ") : default set id = " << cn.cnInfo.cnsetid;
-   cn.UserInit(this);           // to dsiplay, add CN sets
+   cn.UserInit(this, &env);           // to dsiplay, add CN sets
    cn.connectors.DisplayCNSet(cn.cnInfo.cnsetid);
 
    // Local Planners
