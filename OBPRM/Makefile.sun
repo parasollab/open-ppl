@@ -21,8 +21,7 @@
 # collision detection packages available
 #--------------------------------------------------------------------------
 
- #CD_DIR = /pub/dsmft1/CD-libs/solaris
- CD_DIR = /user/gsong/OBPRM/CD-libs/solaris
+ CD_DIR = /home2/CD-libs/solaris
 
  VCLIP_DIR     = ${CD_DIR}/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
