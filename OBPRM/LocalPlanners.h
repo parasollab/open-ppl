@@ -84,10 +84,10 @@ public:
     SID dmsetid;
     vector<Cfg> path;
     pair<Cfg,Cfg> savedEdge;
-
+    int nTicks;
     
 };
-
+    
 class LP;
 class LPSets;
 class LocalPlanners;
