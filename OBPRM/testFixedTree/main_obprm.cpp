@@ -67,11 +67,11 @@ int main(int argc, char** argv)
   //----------------------------------------------------
   Roadmap<CfgType, WeightType> rmap(&input,  &cd, &dm, &lp);
   
-  cd.UserInit(&input,   &gn, &cm );
-  lp.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype, cm.cdsetid);
+  cd.ReadCommandLine(input.CDstrings, input.numCDs);
+  lp.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype);
   gn.ReadCommandLine(input.GNstrings, input.numGNs);
   cm.ReadCommandLine(&input, rmap.GetEnvironment());
-  dm.UserInit(&input,   &gn, &cm );
+  dm.ReadCommandLine(input.DMstrings, input.numDMs);
 
   #ifdef QUIET
   #else
