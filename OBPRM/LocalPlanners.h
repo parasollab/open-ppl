@@ -249,29 +249,34 @@ public:
   //===================================================================
   // Other Methods
   //===================================================================
-  void DefaultInit();
-  void UserInit(Input *input,  ConnectMapNodes*);
-  bool IsConnected(Environment *env,CollisionDetection *,DistanceMetric *,
+  virtual void DefaultInit();
+  virtual void UserInit(Input *input,  ConnectMapNodes*);
+  virtual bool IsConnected(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
-  bool IsConnected(Roadmap * rm,CollisionDetection *,DistanceMetric *,
+  virtual bool IsConnected(Roadmap * rm,CollisionDetection *,DistanceMetric *,
                                 Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
-  bool IsConnectedFindAll(Environment *env,CollisionDetection *,DistanceMetric *,
+  virtual bool IsConnectedFindAll(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
 
-  static bool IsConnected_straightline_simple(Environment *env,CollisionDetection *,DistanceMetric *,
-				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool IsConnected_SLclearance(Environment *env,CollisionDetection *,DistanceMetric *,
+  // Generalized form of LP functions, replace 'pointer to function' way doing this,
+  // but fulfill the same purpose. In addition, it eases deriving classes. 06/10/00 GS
+  virtual bool IsConnected(char * lpName, Environment *env,CollisionDetection *,DistanceMetric *,
                                 Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool lineSegmentInCollision(Environment *env,CollisionDetection *,DistanceMetric *,
+
+  virtual bool IsConnected_straightline_simple(Environment *env,CollisionDetection *,DistanceMetric *,
+				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
+  virtual bool IsConnected_SLclearance(Environment *env,CollisionDetection *,DistanceMetric *,
                                 Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool IsConnected_straightline(Environment *env,CollisionDetection *,DistanceMetric *,
+  virtual bool lineSegmentInCollision(Environment *env,CollisionDetection *,DistanceMetric *,
+                                Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
+  virtual bool IsConnected_straightline(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool IsConnected_rotate_at_s(Environment *env,CollisionDetection *,DistanceMetric *,
+  virtual bool IsConnected_rotate_at_s(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool IsConnected_astar(Environment *env,CollisionDetection *,DistanceMetric *,
+  virtual bool IsConnected_astar(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
 
-  bool UsesPlannerOtherThan(char plannerName[], SID lpsetid=0);
+  virtual bool UsesPlannerOtherThan(char plannerName[], SID lpsetid=0);
 
   //===================================================================
   // Data

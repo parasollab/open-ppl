@@ -144,9 +144,9 @@ IsConnected(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cfg _c1,
   } else {
     while (!connected && lpcnt < lpset.size() ) {
        info->path.erase(info->path.begin(),info->path.end());
-       LPF lpfcn = lpset[lpcnt].GetPlanner();
+       //LPF lpfcn = lpset[lpcnt].GetPlanner();
 
-       if ( lpfcn(_env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
+       if ( IsConnected(lpset[lpcnt].GetName(), _env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
           fedge = fedge | lpset[lpcnt].GetFEdgeMask();
           bedge = bedge | lpset[lpcnt].GetBEdgeMask();
 
@@ -193,9 +193,9 @@ LPInfo *info) {
   } else {
     while (!connected && lpcnt < lpset.size() ) {
        info->path.erase(info->path.begin(),info->path.end());
-       LPF lpfcn = lpset[lpcnt].GetPlanner();
+       //LPF lpfcn = lpset[lpcnt].GetPlanner();
 
-       if ( lpfcn(_env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
+       if ( IsConnected(lpset[lpcnt].GetName(),_env,cd,dm,_c1,_c2,lpset[lpcnt],info) == true ) {
           fedge = fedge | lpset[lpcnt].GetFEdgeMask();
           bedge = bedge | lpset[lpcnt].GetBEdgeMask();
 
@@ -234,8 +234,8 @@ IsConnectedFindAll(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,C
   } else {
     while (lp < lpset.size() ) {
        info->path.erase(info->path.begin(),info->path.end());
-       LPF lpfcn = lpset[lp].GetPlanner();
-       if ( lpfcn(_env,cd,dm,_c1,_c2,lpset[lp],info) == true ) {
+       //LPF lpfcn = lpset[lp].GetPlanner();
+       if ( IsConnected(lpset[lp].GetName(),_env,cd,dm,_c1,_c2,lpset[lp],info) == true ) {
           fedge = fedge | lpset[lp].GetFEdgeMask();
           bedge = bedge | lpset[lp].GetBEdgeMask();
           connected = true;
@@ -253,6 +253,24 @@ IsConnectedFindAll(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,C
   WEIGHT Bedge(bedge,n_ticks);
   info->edge = pair<WEIGHT,WEIGHT>(Fedge,Bedge);
   return connected;
+}
+
+// Generalized form of LP functions.
+bool LocalPlanners::IsConnected(char *lpName, Environment *_env,CollisionDetection *cd,
+     DistanceMetric*dm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info) {
+
+  if (!strcmp(lpName,"straightline")) {
+	return IsConnected_straightline(_env,cd,dm,_c1,_c2,_lp,info);
+  } else if(!strcmp(lpName,"rotate_at_s")) {
+	return IsConnected_rotate_at_s(_env,cd,dm,_c1,_c2,_lp,info);
+  } else if(!strcmp(lpName,"a_star_clearance") || !strcmp(lpName,"a_star_distance")) { // A_star
+	return IsConnected_astar(_env,cd,dm,_c1,_c2,_lp,info);
+  } else {
+	cout << "Error: in LocalPlanners::IsConnected(char *lpName, ...), invalid lp option!" << endl;
+	exit(1);
+  }
+
+
 }
 
 bool LocalPlanners::IsConnected_SLclearance(Environment *_env,CollisionDetection *cd,
@@ -761,7 +779,7 @@ MakeLPSet(istream& _myistream) {
     if (!strcmp(lpname,"straightline")) {              // STRAIGHTLINE 
        LP lp1; 
        strcpy(lp1.name,lpname);
-       lp1.planner = &LocalPlanners::IsConnected_straightline;
+       //lp1.planner = &(lpPtr->IsConnected_straightline);
        lp1.lpid = AddElementToUniverse(lp1); 
        lp1.forwardEdge = lp1.backEdge = 1 << lp1.lpid;
        if ( ChangeElementInfo(lp1.lpid,lp1) != OK ) {
@@ -774,7 +792,7 @@ MakeLPSet(istream& _myistream) {
     } else if (!strcmp(lpname,"rotate_at_s")) {          // ROTATE-AT-S
        LP lp1, lp2;
        strcpy(lp1.name,lpname);
-       lp1.planner = &LocalPlanners::IsConnected_rotate_at_s;
+       //lp1.planner = &(lpPtr->IsConnected_rotate_at_s);
        lp1.sValue = 2.0; 
        lp2 = lp1;
        while ( _myistream >> sValue ) { //get s values 
@@ -813,7 +831,7 @@ MakeLPSet(istream& _myistream) {
                !strcmp(lpname,"a_star_distance")) {   
        LP lp1; 
        strcpy(lp1.name,lpname);
-       lp1.planner = &LocalPlanners::IsConnected_astar;
+       //lp1.planner = &(lpPtr->IsConnected_astar);
 
        if ( _myistream >> lp1.tries
          && _myistream >> lp1.neighbors ) {
