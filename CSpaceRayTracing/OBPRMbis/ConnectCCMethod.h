@@ -40,10 +40,52 @@ class TestConnectionMethod: public ComponentConnectionMethod {
     is_default = true;
   }
   void ConnectComponents(/*parameters for CC connection*/) {
-    cout << "Connecting CCs with method Test" << endl;
+    cout << "Connecting CCs with method: Test" << endl;
   }
  private:
   bool is_default;
+};
+
+class RayTracerConnectionMethod: public ComponentConnectionMethod {
+ public:
+  RayTracerConnectionMethod(): ComponentConnectionMethod() { 
+    //set defaults
+    is_default = false;
+    //parse to overwrite the defaults
+    //ParseCommandLine(0, "");
+  }
+  int ParseCommandLine(int *argc, char **argv) { }
+
+  void SetDefault() {
+    is_default = true;
+  }
+  void ConnectComponents(/*parameters for CC connection*/) {
+    cout << "Connecting CCs with method: RayTracer" << endl;
+  }
+ private:
+  bool is_default;
+
+};
+
+class RRTConnectionMethod: public ComponentConnectionMethod {
+ public:
+  RRTConnectionMethod(): ComponentConnectionMethod() { 
+    //set defaults
+    is_default = false;
+    //parse to overwrite the defaults
+    //ParseCommandLine(0, "");
+  }
+  int ParseCommandLine(int *argc, char **argv) { }
+
+  void SetDefault() {
+    is_default = true;
+  }
+  void ConnectComponents(/*parameters for CC connection*/) {
+    cout << "Connecting CCs with method: RRT" << endl;
+  }
+ private:
+  bool is_default;
+
 };
 
 
@@ -57,7 +99,14 @@ class ConnectMapComponents {
 
     TestConnectionMethod* test= new TestConnectionMethod();
     all.push_back(test);    
+
+    RRTConnectionMethod* rrt = new RRTConnectionMethod();
+    all.push_back(rrt);
+
+    RayTracerConnectionMethod* rt = new RayTracerConnectionMethod();
+    all.push_back(rt);
   }
+
   ~ConnectMapComponents() {
     selected.clear();
     all.clear();
@@ -69,6 +118,15 @@ class ConnectMapComponents {
     TestConnectionMethod* test = new TestConnectionMethod();
     test->SetDefault();
     tmp.push_back(test);
+
+    RRTConnectionMethod* rrt = new RRTConnectionMethod();
+    rrt->SetDefault();
+    tmp.push_back(rrt);
+
+    RayTracerConnectionMethod* rt = new RayTracerConnectionMethod();
+    rt->SetDefault();
+    tmp.push_back(rt);
+
     return tmp;
   }
 
