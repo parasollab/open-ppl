@@ -23,10 +23,10 @@ const double IdentityMatrix[3][3] =
 
 /**This class stores inforation about object orientation in 3D space.
   *Many kinds of representation are implemented here, such as
-  *	- Matrix
-  *	- Euler Angle
-  *	- Quaternion
-  *	- Rodriques
+  * - Matrix
+  * - Euler Angle
+  * - Quaternion
+  * - Rodriques
   *Operations for there representations are provided.
   *Coversion between these representation types are also available.
   */
@@ -40,21 +40,21 @@ public:
       *Including Matix, Euler, Quaternion, and Rodriques types.
       */
     enum OrientationType {
-	Matrix   = 0,
-	EulerXYZ = 1,  FixedZYX = 1,
-	EulerXZY = 2,  FixedYZX = 2,
-	EulerYXZ = 3,  FixedZXY = 3,
-	EulerYZX = 4,  FixedXZY = 4,
-	EulerZXY = 5,  FixedYXZ = 5,
-	EulerZYX = 6,  FixedXYZ = 6,
-	EulerXYX = 7,  FixedXYX = 7,
-	EulerXZX = 8,  FixedXZX = 8,
-	EulerYXY = 9,  FixedYXY = 9,
-	EulerYZY = 10, FixedYZY = 10,
-	EulerZXZ = 11, FixedZXZ = 11,
-	EulerZYZ = 12, FixedZYZ = 12,
-	Quaternion = 20,
-	Rodriques  = 21
+    Matrix   = 0,
+    EulerXYZ = 1,  FixedZYX = 1,
+    EulerXZY = 2,  FixedYZX = 2,
+    EulerYXZ = 3,  FixedZXY = 3,
+    EulerYZX = 4,  FixedXZY = 4,
+    EulerZXY = 5,  FixedYXZ = 5,
+    EulerZYX = 6,  FixedXYZ = 6,
+    EulerXYX = 7,  FixedXYX = 7,
+    EulerXZX = 8,  FixedXZX = 8,
+    EulerYXY = 9,  FixedYXY = 9,
+    EulerYZY = 10, FixedYZY = 10,
+    EulerZXZ = 11, FixedZXZ = 11,
+    EulerZYZ = 12, FixedZYZ = 12,
+    Quaternion = 20,
+    Rodriques  = 21
     };
     //-----------------------------------------------------------
     //  Static Data
@@ -65,7 +65,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Operator Overloadings
+  //    Operator Overloadings
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +188,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Help Methods
+  //    Help Methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +236,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Data
+  //    Data
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -276,17 +276,17 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Protected data member and member methods
+  //    Protected data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
-	
+    
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Private data member and member methods
+  //    Private data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////

@@ -24,7 +24,7 @@
 //
 //
 //
-//	Class GMSPolygon
+//  Class GMSPolygon
 //
 //
 //
@@ -39,7 +39,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -49,15 +49,15 @@ public:
     //-----------------------------------------------------------
     //@{
 
-	///Destructor. Free memory for storing vertex.
+    ///Destructor. Free memory for storing vertex.
     ~GMSPolygon() { delete[] vertexList; }
 
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Operator Overloadings
+  //    Operator Overloadings
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -66,21 +66,21 @@ public:
     //-----------------------------------------------------------
     //@{
 
-	 /**Copy _p's values to this instance.
-	   *It is slow but otherwis if any function use a local
-	   *polygon which is assigned to another polygon variable, the
+     /**Copy _p's values to this instance.
+       *It is slow but otherwis if any function use a local
+       *polygon which is assigned to another polygon variable, the
        *descructor would free not only the local variables vertexlist
        *but the vertexlist of the original polygon as well. so with
        *@param a operator each polygon will have its own vertex list
        */
      GMSPolygon & operator=(GMSPolygon  _p);
 
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Helper Methods
+  //    Helper Methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -89,15 +89,15 @@ public:
     //-----------------------------------------------------------
     //@{
 
-	 ///Return a copy of this instance. Clone!!
+     ///Return a copy of this instance. Clone!!
      GMSPolygon getCopy();
 
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Public Data Members
+  //    Public Data Members
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ public:
     int * vertexList;///< Vector list. A list of index, which points to vetex in Polyhedron
     int numVertices; ///< Number of vectex in this polygon
     Vector3D normal; ///< The normal vector of this polygon (??)
-    double   area;	 ///< Size of this polygon
+    double   area;   ///< Size of this polygon
 };
 
 
@@ -113,7 +113,7 @@ public:
 //
 //
 //
-//	Class GMSPolyhedron
+//  Class GMSPolyhedron
 //
 //
 //
@@ -129,7 +129,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -139,21 +139,21 @@ public:
     //-----------------------------------------------------------
     //@{
 
-	///Init every thing to zero and NULL
+    ///Init every thing to zero and NULL
     GMSPolyhedron();
 
     ///Copy constructor
     GMSPolyhedron(GMSPolyhedron & _p);
 
-	///Destructor. delete vertex and polygon array.
+    ///Destructor. delete vertex and polygon array.
     ~GMSPolyhedron();
 
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Operator Overloadings
+  //    Operator Overloadings
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -162,15 +162,15 @@ public:
     //-----------------------------------------------------------
     //@{
 
-	///Copy values in _p to this instance and return this instance as a reference
+    ///Copy values in _p to this instance and return this instance as a reference
     GMSPolyhedron & operator=(GMSPolyhedron & _p);
 
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Helper Methods
+  //    Helper Methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -179,17 +179,17 @@ public:
     //-----------------------------------------------------------
     //@{
 
-	/**Calculate Normal for every Polygons. (The areas is computed as well)
-	  *@warning this seems assumed that every polygon is a triangular
-	  */
+    /**Calculate Normal for every Polygons. (The areas is computed as well)
+      *@warning this seems assumed that every polygon is a triangular
+      */
     void ComputeNormals();
 
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	I/O Methods
+  //    I/O Methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -197,11 +197,11 @@ public:
     /**@name I/O Methods.*/
     //-----------------------------------------------------------
     //@{
-	/**This Read distuishes format and call other read methods.
-	  *This version of the "Read" method will distinguish which file
+    /**This Read distuishes format and call other read methods.
+      *This version of the "Read" method will distinguish which file
       *file format body should request polyhedron to read. If format is not recognized
-	  *, exit will be called.
-	  */
+      *, exit will be called.
+      */
     Vector3D Read(char* fileName);
 
     /// read GMS format and caluate maxRadius
@@ -210,23 +210,23 @@ public:
     /// read BYU format and caluate maxRadius
     Vector3D ReadBYU(istream & _is);
 
-	/// Write in "original" GMS format
+    /// Write in "original" GMS format
     void Write(ostream & _os);
 
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Public Data Members
+  //    Public Data Members
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 
-    Vector3D  * vertexList;	///< 3D Vector stores vertex location info.
+    Vector3D  * vertexList; ///< 3D Vector stores vertex location info.
     int       numVertices;  ///< Number of vertex in this polyhedron
     GMSPolygon * polygonList; ///< An array of GMSPolygon
-    int       numPolygons;	  ///< Number of polygon in this polyhedron
+    int       numPolygons;    ///< Number of polygon in this polyhedron
 
     double    area; ///<The summation of all area of polygons in this polyhedron.
     /// the maximum distance from a vertex to com.

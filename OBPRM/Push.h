@@ -21,7 +21,7 @@ public:
   // Constructors and Destructor
   //===================================================================
    Push(Roadmap *rm, CollisionDetection *_cd, 
-	LocalPlanners *_lp, DistanceMetric *_dm, GNInfo gnInfo, CNInfo cnInfo);
+    LocalPlanners *_lp, DistanceMetric *_dm, GNInfo gnInfo, CNInfo cnInfo);
    ~Push();
 
   //===================================================================
@@ -67,5 +67,5 @@ private:
                           Cfg , Cfg ,  GNInfo& );
    Cfg GenerateOutsideCfg(Environment *, CollisionDetection *cd, Cfg , Cfg , GNInfo &);
    vector <Cfg> GenerateOBPRMNodes(Environment *env, CollisionDetection *cd, 
-				   DistanceMetric *, vector <Cfg> ,int , GNInfo &);
+                   DistanceMetric *, vector <Cfg> ,int , GNInfo &);
 

@@ -22,10 +22,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "OBPRM.h"              // Cfg type defined here
-#include "RoadmapGraph.h"     	// graph class
-#include "ConnectMapNodes.h" 	// Map Node Connectors Algobase
+#include "RoadmapGraph.h"       // graph class
+#include "ConnectMapNodes.h"    // Map Node Connectors Algobase
 
-class Input;			  ///< init info (command line, env initfile)
+class Input;              ///< init info (command line, env initfile)
 class Environment;        ///< Environment classes
 class LocalPlanners;      ///< Local Planner       Algobase
 class GenerateMapNodes;   ///< Map Node Generators Algobase
@@ -113,7 +113,7 @@ class CollisionDetection; ///< Collision Detection Algobase
 #define RDMPVER_CURRENT                     61300 
 #endif
 
-#define RDMPVER_CURRENT_STR                "061300"		 ///< Current version # in string format
+#define RDMPVER_CURRENT_STR                "061300"      ///< Current version # in string format
 #define RDMPVER_CURRENT_CFG_FIELDS          3            ///< obst, tag, clearance
 #define RDMPVER_CURRENT_EDGEWT_FIELDS       2            ///< lp, ticks (or weight for DBL)
 
@@ -126,88 +126,88 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
    /**@name Constructors and Destructor*/
    //@{
 
-	   ///Default Constrcutor. Do nothing.
-	   Roadmap();
+       ///Default Constrcutor. Do nothing.
+       Roadmap();
 
 
-	   /** *Preferred* Constrcutor, 
-	     * fills input & inits.
-	     * This method initalizes it data members by
-		 * calling InitRoadmap, and set Roadmap version
-		 * as current version, RDMPVER_CURRENT.
-	     */
-	   Roadmap(Input*, CollisionDetection*, 
-		   DistanceMetric*, LocalPlanners*, 
-		   Environment* env = NULL);
+       /** *Preferred* Constrcutor, 
+         * fills input & inits.
+         * This method initalizes it data members by
+         * calling InitRoadmap, and set Roadmap version
+         * as current version, RDMPVER_CURRENT.
+         */
+       Roadmap(Input*, CollisionDetection*, 
+           DistanceMetric*, LocalPlanners*, 
+           Environment* env = NULL);
 
-	   /**Delete all the elements of RoadMap. 
-	     *Actually do nothing currently.
-		 */
-	   ~Roadmap();
+       /**Delete all the elements of RoadMap. 
+         *Actually do nothing currently.
+         */
+       ~Roadmap();
 
   //@}
 
   //////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Init functions
+  //    Init functions
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   /**@name Initialization Methods*/
   //@{
-	   /**Initialize Roadmap (parse command line & read in data).
-	     *Initialize roadmap according to command line arguments.
-		 *reserve space for nodes/edges in roadmap graph.
-		 *read roadmap's environment.
-		 *@param ExistingMap if ExistingMap is not null, then
-		 *roadmap will read roadmap data from file 
-		 *named ExistingMap.
-		 *
-		 *@note this method calls InitEnvironment(Input*)
-		 *to initialize Environmentin this instance.
+       /**Initialize Roadmap (parse command line & read in data).
+         *Initialize roadmap according to command line arguments.
+         *reserve space for nodes/edges in roadmap graph.
+         *read roadmap's environment.
+         *@param ExistingMap if ExistingMap is not null, then
+         *roadmap will read roadmap data from file 
+         *named ExistingMap.
          *
-		 *@see InitEnvironment
-		 */
-	   void InitRoadmap(Input*, CollisionDetection*,
-		   DistanceMetric*,LocalPlanners*, char *ExistingMap=NULL, 
-		   Environment* env = NULL); 
-	   
-	   /**Initialize roadmap's environment from given Input instance.
-	     *
-	     *@note Not necessary if constructor "Roadmap(&input)" or
-	     *      method "InitRoadmap(input)" is used. 
-		 *@see Environment::Get and Read(int action)
-	     */
-	   void InitEnvironment(Input*);
-	   
-	   /**Copy given Environment pointer to this roadmap's environment.
-	     */
-	   void InitEnvironment(Environment*);
+         *@note this method calls InitEnvironment(Input*)
+         *to initialize Environmentin this instance.
+         *
+         *@see InitEnvironment
+         */
+       void InitRoadmap(Input*, CollisionDetection*,
+           DistanceMetric*,LocalPlanners*, char *ExistingMap=NULL, 
+           Environment* env = NULL); 
+       
+       /**Initialize roadmap's environment from given Input instance.
+         *
+         *@note Not necessary if constructor "Roadmap(&input)" or
+         *      method "InitRoadmap(input)" is used. 
+         *@see Environment::Get and Read(int action)
+         */
+       void InitEnvironment(Input*);
+       
+       /**Copy given Environment pointer to this roadmap's environment.
+         */
+       void InitEnvironment(Environment*);
 
    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Access Method (Getting Statistics)
+  //    Access Method (Getting Statistics)
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
    /**@name Access Method.
      *Getting Statistics.
-	 */
+     */
    //@{
 
        /// Get a pointer to roadmap's environment 
-	   Environment * GetEnvironment();
+       Environment * GetEnvironment();
 
    //@}
 
@@ -215,125 +215,125 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	I/O (Display, Input, Output)
+  //    I/O (Display, Input, Output)
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
    /**@name I/O.
      *Display, Input, Output.
-	 */
+     */
    //@{
 
-	    /**Read data from roadmap file.
-		  *Usually, a readmap file is called *.map, which 
-		  *provide information like roadmap version, 
-		  *associated enviroment filename, what local planners are used, 
-		  *what collision detectors are used, and what distace metrics
-		  *are used when this roadmap was generated.
-		  *
-		  *@param _filename Filename of roadmap data. Usually *.map.
-		  *
-		  *@see CheckVersion, Input::ReadPreamble, Input::ReadEnvFile, 
-		  *LocalPlanners::ReadLPs, CollisionDetection::ReadCDs, 
-		  *DistanceMetric::ReadDMs, and WeightedMultiDiGraph::ReadGraph.
-		  *These methods are called in this function to help 
-		  *reading from *.map file.
-		  */
-		void ReadRoadmap(Input*, CollisionDetection *cd,
-								 DistanceMetric *dm,
-								 LocalPlanners *lp,
-								 const char* _filename);
+        /**Read data from roadmap file.
+          *Usually, a readmap file is called *.map, which 
+          *provide information like roadmap version, 
+          *associated enviroment filename, what local planners are used, 
+          *what collision detectors are used, and what distace metrics
+          *are used when this roadmap was generated.
+          *
+          *@param _filename Filename of roadmap data. Usually *.map.
+          *
+          *@see CheckVersion, Input::ReadPreamble, Input::ReadEnvFile, 
+          *LocalPlanners::ReadLPs, CollisionDetection::ReadCDs, 
+          *DistanceMetric::ReadDMs, and WeightedMultiDiGraph::ReadGraph.
+          *These methods are called in this function to help 
+          *reading from *.map file.
+          */
+        void ReadRoadmap(Input*, CollisionDetection *cd,
+                                 DistanceMetric *dm,
+                                 LocalPlanners *lp,
+                                 const char* _filename);
 
-	    /**Write data to roadmap file.
-		  *Usually, a readmap file is called *.map, which 
-		  *provide information like roadmap version, 
-		  *associated enviroment filename, what local planners are used, 
-		  *what collision detectors are used, and what distace metrics
-		  *are used when this roadmap was generated.
-		  *
-		  *@param _filename Filename of roadmap data. Usually *.map.
-		  *
-		  *@see CheckVersion, Input::WritePreamble, Input::WriteEnvFile, 
-		  *LocalPlanners::WriteLPs, CollisionDetection::WriteCDs, 
-		  *DistanceMetric::WriteDMs and WeightedMultiDiGraph::WriteGraph. 
-		  *These methods are called in this function to help 
-		  *writing to *.map file.
-		  */
-		void WriteRoadmap(Input*, CollisionDetection *cd,
-								 DistanceMetric *dm,
-								 LocalPlanners *lp,
-								 const char* _filename = NULL);
+        /**Write data to roadmap file.
+          *Usually, a readmap file is called *.map, which 
+          *provide information like roadmap version, 
+          *associated enviroment filename, what local planners are used, 
+          *what collision detectors are used, and what distace metrics
+          *are used when this roadmap was generated.
+          *
+          *@param _filename Filename of roadmap data. Usually *.map.
+          *
+          *@see CheckVersion, Input::WritePreamble, Input::WriteEnvFile, 
+          *LocalPlanners::WriteLPs, CollisionDetection::WriteCDs, 
+          *DistanceMetric::WriteDMs and WeightedMultiDiGraph::WriteGraph. 
+          *These methods are called in this function to help 
+          *writing to *.map file.
+          */
+        void WriteRoadmap(Input*, CollisionDetection *cd,
+                                 DistanceMetric *dm,
+                                 LocalPlanners *lp,
+                                 const char* _filename = NULL);
 
-		void ReadRoadmapGRAPHONLY(const char* _filename);
+        void ReadRoadmapGRAPHONLY(const char* _filename);
 
-		/**Check version of roadmap file.
-		  *@param The file which contain roadmap data and version info.
-		  *@return True if the version of this is current version, 
-		  *RDMPVER_CURRENT. Otherwise this method will call 
-		  *ConvertToCurrentVersion and return what it returnes.
-		  *@see RDMPVER_CURRENT for current version number and
-		  *ConvertToCurrentVersion
-		  */
-		bool CheckVersion(const char* _fname);
-		
-		/**utilities to automatically convert to current roadmap version
-		  *This method reads version number in specified file,
-		  *and convert file accroding to this number.
-		  *Before converting, this method will
-		  *copy current file _fname to "_fname.XXX" where XXX=thisVersion.
-		  *
-		  *@see Roadmap.h for more information about formats for versions
-		  *and ConvertGraph for roadmap graph conversion, SaveCurrentVersion
-		  *for backup data in old version.
-		  */
-		bool ConvertToCurrentVersion(const char* _fname, int thisVersion);
+        /**Check version of roadmap file.
+          *@param The file which contain roadmap data and version info.
+          *@return True if the version of this is current version, 
+          *RDMPVER_CURRENT. Otherwise this method will call 
+          *ConvertToCurrentVersion and return what it returnes.
+          *@see RDMPVER_CURRENT for current version number and
+          *ConvertToCurrentVersion
+          */
+        bool CheckVersion(const char* _fname);
+        
+        /**utilities to automatically convert to current roadmap version
+          *This method reads version number in specified file,
+          *and convert file accroding to this number.
+          *Before converting, this method will
+          *copy current file _fname to "_fname.XXX" where XXX=thisVersion.
+          *
+          *@see Roadmap.h for more information about formats for versions
+          *and ConvertGraph for roadmap graph conversion, SaveCurrentVersion
+          *for backup data in old version.
+          */
+        bool ConvertToCurrentVersion(const char* _fname, int thisVersion);
 
-		/**Convert format for old graph to newest verion.
-		  *This is done by filling null values to new fields which
-		  *is not defined in old version.
-		  */
-		void ConvertGraph
-			 (istream&  myifstream, ostream& myofstream, int presentCfgFields, int presentEdgeWtFields);
+        /**Convert format for old graph to newest verion.
+          *This is done by filling null values to new fields which
+          *is not defined in old version.
+          */
+        void ConvertGraph
+             (istream&  myifstream, ostream& myofstream, int presentCfgFields, int presentEdgeWtFields);
 
-		/**Backup old version roadmap file to another file.
-		  *@param _fname File name for old version roadmap file.
-		  *@param infile this method will copy _fname to infile.
-		  *client should allocate memory for infile.
-		  *@param outfile this method will be _fname.oldversion to
-		  *outfile. client should allocate memory for outfile.
-		  *@param thisVersion The version in _fname
-		  *@note this method copy every thing in infile to outfile.
-		  */
-		void SaveCurrentVersion
-			 (const char* _fname, int thisVersion, char* infile, char* outfile);
+        /**Backup old version roadmap file to another file.
+          *@param _fname File name for old version roadmap file.
+          *@param infile this method will copy _fname to infile.
+          *client should allocate memory for infile.
+          *@param outfile this method will be _fname.oldversion to
+          *outfile. client should allocate memory for outfile.
+          *@param thisVersion The version in _fname
+          *@note this method copy every thing in infile to outfile.
+          */
+        void SaveCurrentVersion
+             (const char* _fname, int thisVersion, char* infile, char* outfile);
 
 
         /**Write roadmap's environment to an output stream.
-		  *This method calls Environment::Write to do this.
-		  *@see Environment::Write(ostream&)
-		  */
-		void WriteEnvironment(ostream& _ostream);
+          *This method calls Environment::Write to do this.
+          *@see Environment::Write(ostream&)
+          */
+        void WriteEnvironment(ostream& _ostream);
 
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Data
+  //    Data
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 
-   Environment * environment;		   ///< Environment.
+   Environment * environment;          ///< Environment.
 
    RoadmapGraph<Cfg,WEIGHT> roadmap;   ///< Roadmap built for environment. WEIGHT defined in OBPRM.h.
 
-   int RoadmapVersionNumber;		   ///< Newest version number.
+   int RoadmapVersionNumber;           ///< Newest version number.
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Protected Data members and Member methods
+  //    Protected Data members and Member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -342,7 +342,7 @@ protected:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Private Data members and Member methods
+  //    Private Data members and Member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////

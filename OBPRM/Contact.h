@@ -24,7 +24,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -32,11 +32,11 @@ public:
     //-----------------------------------------------------------
     /**@name  Constructors and Destructor*/
     //-----------------------------------------------------------
-	//@{
+    //@{
     Contact();
     Contact(Body * _body1,  Body * _body2, Vector3D & _position, Vector3D & _normal1, Vector3D & _normal2);
     ~Contact();
-	//@}
+    //@}
 
     Body *GetBody(int _index);
     Transformation & GetUtransformToContact(int _index);
@@ -51,7 +51,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Protected data member and member methods
+  //    Protected data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ private:
     //       body1 - belonging to manipulator (free body)
     //       body2 - belonging to obstacle (fixed body)
     //-----------------------------------------------------------
-    Body *body[2];	// Body identities
+    Body *body[2];  // Body identities
     Transformation UtransformToContact[2];
     Vector3D position;
     Vector3D normal[2];
@@ -74,7 +74,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 //
-//	Implementation of Contact (inline methods)
+//  Implementation of Contact (inline methods)
 //
 //
 //////////////////////////////////////////////////////////////////////////////////////////

@@ -30,7 +30,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +48,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Access Methods : Retrive and set related information of this class
+  //    Access Methods : Retrive and set related information of this class
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,8 @@ public:
   /**Randomly generate a Cfg
     *@param R This new Cfg will have distance (position) R from origin
     *@param rStep
-	*@todo what is rStep?
-	*/
+    *@todo what is rStep?
+    */
   virtual Cfg GetRandomCfg(double R, double rStep);
 
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
@@ -75,7 +75,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	methods for nodes generation 
+  //    methods for nodes generation 
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -84,8 +84,8 @@ public:
 
   /**Node Generation methods: OBPRM.
     *Generate a new Cfg, and put it in resultCfg.
-	*The position of new cfg is from (robot_goal-robot_start)
-	*The orientation of new cfg is generated randomly.
+    *The position of new cfg is from (robot_goal-robot_start)
+    *The orientation of new cfg is generated randomly.
     */
   virtual bool GenerateOverlapCfg(Environment *env, int robot,
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg);
@@ -111,7 +111,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Helper functions
+  //    Helper functions
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +123,7 @@ public:
 
   /**Check if a given configuration c is inside narrow passage.
     *This is done by moving c a little bit and check for collision.
-	*return true if inside narrow passage.
+    *return true if inside narrow passage.
     */
   virtual bool InNarrowPassage(
     const Cfg& c, Environment * env,CollisionDetection* cd,
@@ -134,7 +134,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	protected Data member and member methods
+  //    protected Data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +143,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	private Data member and member methods
+  //    private Data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////

@@ -34,12 +34,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 /**@name 3D rigit body Cfg index*/
 //@{
-#define Xx 	0
-#define Yy 	1
-#define Zz	2
-#define ROLLroll 	3
-#define PITCHpitch	4
-#define YAWyaw  	5
+#define Xx  0
+#define Yy  1
+#define Zz  2
+#define ROLLroll    3
+#define PITCHpitch  4
+#define YAWyaw      5
 //@}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -67,28 +67,28 @@ public:
   /**@name  Constructors and Destructor*/
   //===================================================================
   //@{
-	/**Reserve SIZE memory blocks and fill all of them as 0.0
-	  *@note what happens when ELEMENT type is not float point or not numbers??
-	  */
+    /**Reserve SIZE memory blocks and fill all of them as 0.0
+      *@note what happens when ELEMENT type is not float point or not numbers??
+      */
     VectorConstantSize();
-	///Copy constructor
+    ///Copy constructor
     VectorConstantSize(const VectorConstantSize&);
-	///Reserve SIZE memory blocks and fill all of them as given ELEMENT
+    ///Reserve SIZE memory blocks and fill all of them as given ELEMENT
     VectorConstantSize(const ELEMENT&);
-	/**Copy given std::vector and copy its values to this instance.
-	  *@note this given vector should have the same size as this VectorConstantSize instance.
-	  */
+    /**Copy given std::vector and copy its values to this instance.
+      *@note this given vector should have the same size as this VectorConstantSize instance.
+      */
     VectorConstantSize(const vector<ELEMENT>&);
-	/**Reserve SIZE memory blocks and read data from given inputstream
-	  *@warning Should this throw exception?
-	  */
+    /**Reserve SIZE memory blocks and read data from given inputstream
+      *@warning Should this throw exception?
+      */
     VectorConstantSize(istream &);
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -97,10 +97,10 @@ public:
   /** Operators*/
   //===================================================================
   //@{
-	/// Assignment
+    /// Assignment
     VectorConstantSize& operator=  (const VectorConstantSize &); 
 
-	/// Addition, Subtration, Negation, Multiply & Divide by a Constant
+    /// Addition, Subtration, Negation, Multiply & Divide by a Constant
     VectorConstantSize  operator+  (const VectorConstantSize &)const; 
     VectorConstantSize  operator-  (const VectorConstantSize &)const;
     VectorConstantSize  operator-  () const;
@@ -109,7 +109,7 @@ public:
     ELEMENT & operator[] (int s) { return v[s]; }
     const ELEMENT & operator[] (int s) const { return v[s]; }
 
-	/// Tests for Equality and Inequality
+    /// Tests for Equality and Inequality
     bool operator== (const VectorConstantSize &)const; 
     bool operator!= (const VectorConstantSize &)const; 
   //@}
@@ -117,7 +117,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Helper methods
+  //    Helper methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -126,30 +126,30 @@ public:
   /** Helper Methods*/
   //===================================================================
   //@{
-	
-	/**
-	 *set vector value by arrary, this array should have size "SIZE".
+    
+    /**
+     *set vector value by arrary, this array should have size "SIZE".
      *This method will NOT check the length of given array, if
-	 *the actural size of given array is different from Size of this instance
-	 *, memory access violation might occur.
-	 *@param pElem A array of length "SIZE"
-	 *@postcondition #v will contain values in pElem
-	 */
-	virtual void setValue( const ELEMENT * pElem );
+     *the actural size of given array is different from Size of this instance
+     *, memory access violation might occur.
+     *@param pElem A array of length "SIZE"
+     *@postcondition #v will contain values in pElem
+     */
+    virtual void setValue( const ELEMENT * pElem );
 
-	/// Query for dimension(ie, size) of vector
+    /// Query for dimension(ie, size) of vector
     inline int size() const;
 
-	/// Magnitude of a vector. return = sqrt( (V1*V1)+(V2*V2)... )
+    /// Magnitude of a vector. return = sqrt( (V1*V1)+(V2*V2)... )
     double magnitude() const;
 
-	/// Change values of vector so as to Normalize it
+    /// Change values of vector so as to Normalize it
     inline void normalize();
 
-	/// Dot Product Operation. Vnew = (V11*V21)+(V12*V22)+(V13*V23)+....
+    /// Dot Product Operation. Vnew = (V11*V21)+(V12*V22)+(V13*V23)+....
     inline double dotProduct(VectorConstantSize&) const;
 
-	/// I/O for vector
+    /// I/O for vector
     void Read(istream&) ;
     inline void Write(ostream&) const;
   //@}
@@ -157,7 +157,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Protected data members and member methods
+  //    Protected data members and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +174,7 @@ protected:
 //
 //
 //
-//	Implementation of VectorConstantSize
+//  Implementation of VectorConstantSize
 //
 //
 //
@@ -189,19 +189,19 @@ template<int SIZE,class ELEMENT>
 VectorConstantSize<SIZE,ELEMENT>::VectorConstantSize(){
        v.reserve(SIZE);
        for(int i=0;i<SIZE;++i)
-		v.push_back(0.0);
+        v.push_back(0.0);
 };
 
 template<int SIZE,class ELEMENT>
 VectorConstantSize<SIZE,ELEMENT>::VectorConstantSize(const VectorConstantSize &c){
     v.reserve(SIZE);
-	v = c.v;
+    v = c.v;
 };
 template<int SIZE,class ELEMENT>
 VectorConstantSize<SIZE,ELEMENT>::VectorConstantSize(const ELEMENT &assignVal){
         v.reserve(SIZE);
         for (int i=0;i<SIZE;++i){
-			v.push_back(assignVal);
+            v.push_back(assignVal);
         };
 };
 template<int SIZE,class ELEMENT>
@@ -220,7 +220,7 @@ VectorConstantSize<SIZE,ELEMENT>::VectorConstantSize(const vector<ELEMENT> &assi
 
 template<int SIZE,class ELEMENT>
 VectorConstantSize<SIZE,ELEMENT>::VectorConstantSize(istream &_is){
-	v.reserve(SIZE);
+    v.reserve(SIZE);
         ELEMENT tmp;
         for (int i=0;i<SIZE;++i){
                 _is>>tmp;
@@ -243,8 +243,8 @@ template<int SIZE,class ELEMENT> VectorConstantSize<SIZE,ELEMENT>
 VectorConstantSize<SIZE,ELEMENT>::operator+(const VectorConstantSize & aa)const{
         vector <ELEMENT> result;
         for (int i=0; i< SIZE; ++i)
-		{
-        	result.push_back(v[i] + aa.v[i]);
+        {
+            result.push_back(v[i] + aa.v[i]);
         }
         return VectorConstantSize(result);
 };
@@ -253,8 +253,8 @@ template<int SIZE,class ELEMENT> VectorConstantSize<SIZE,ELEMENT>
 VectorConstantSize<SIZE,ELEMENT>::operator-(const VectorConstantSize & aa)const{
         vector <ELEMENT> result;
         for (int i=0; i< SIZE; ++i)
-		{
-        	result.push_back(v[i]-aa.v[i]);
+        {
+            result.push_back(v[i]-aa.v[i]);
         }
         return VectorConstantSize(result);
 };
@@ -263,7 +263,7 @@ template<int SIZE,class ELEMENT> VectorConstantSize<SIZE,ELEMENT>
 VectorConstantSize<SIZE,ELEMENT>::operator-()const{
         vector <ELEMENT> result;
         for (int i=0; i< SIZE; ++i)
-		{
+        {
                 result.push_back(-v[i]);
         }
         return VectorConstantSize(result);
@@ -273,7 +273,7 @@ template<int SIZE,class ELEMENT> VectorConstantSize<SIZE,ELEMENT>
 VectorConstantSize<SIZE,ELEMENT>::operator*(double s)const{
         vector <ELEMENT> result;
         for (int i=0; i< SIZE; ++i)
-		{
+        {
                 result.push_back(v[i]*s);
         }
         return VectorConstantSize(result);
@@ -282,12 +282,12 @@ VectorConstantSize<SIZE,ELEMENT>::operator*(double s)const{
 template<int SIZE,class ELEMENT> VectorConstantSize<SIZE,ELEMENT>
 VectorConstantSize<SIZE,ELEMENT>::operator/(double s)const{
         vector <ELEMENT> result;
-		if (s == 0.0)
-		{
-					cout << "\nERROR: divide by zero detected"
-							<< endl << "       Bye-bye!!!" << endl;
-					exit(0);
-		}
+        if (s == 0.0)
+        {
+                    cout << "\nERROR: divide by zero detected"
+                            << endl << "       Bye-bye!!!" << endl;
+                    exit(0);
+        }
 
         for (int i=0; i< SIZE; ++i){
                 result.push_back(v[i]/s);
@@ -315,34 +315,34 @@ VectorConstantSize<SIZE,ELEMENT>::operator!=(const VectorConstantSize & aa)const
 template<int SIZE,class ELEMENT>
 void VectorConstantSize<SIZE,ELEMENT>::setValue( const ELEMENT * pElem )
 {
-	if( pElem==NULL ) return; //huh.. given value is null, give up
+    if( pElem==NULL ) return; //huh.. given value is null, give up
 
-	//clean elements in v
-	v.clear();
+    //clean elements in v
+    v.clear();
 
-	for( int i=0;i<SIZE;i++ )
-	{
-		v.push_back(pElem[i]);
-	}
+    for( int i=0;i<SIZE;i++ )
+    {
+        v.push_back(pElem[i]);
+    }
 }
 
 template<int SIZE,class ELEMENT>
 int VectorConstantSize<SIZE,ELEMENT>::size()const{
-	return SIZE;
+    return SIZE;
 };
 
 template<int SIZE,class ELEMENT>
 double VectorConstantSize<SIZE,ELEMENT>::magnitude()const{
     double result=0.0;
-	for (int i=0;i<SIZE;++i)
+    for (int i=0;i<SIZE;++i)
       result += (v[i])*(v[i]);
     return (sqrt(result));
 };
 
 template<int SIZE,class ELEMENT>
 void VectorConstantSize<SIZE,ELEMENT>::normalize(){
-	double m = magnitude();
-	for (int i=0;i<SIZE;++i)
+    double m = magnitude();
+    for (int i=0;i<SIZE;++i)
       v[i] = v[i]/m;
 };
 
@@ -350,7 +350,7 @@ template<int SIZE,class ELEMENT> double
 VectorConstantSize<SIZE,ELEMENT>::dotProduct(VectorConstantSize &v2) const{
     double result=0.0; 
     for (int i=0; i<SIZE;++i)
-	{
+    {
       result += (v[i]*v2.v[i]);
     }
     return (result);
@@ -374,8 +374,8 @@ void VectorConstantSize<SIZE,ELEMENT>::Read(istream & _is){
 
 template<int SIZE,class ELEMENT>
 void VectorConstantSize<SIZE,ELEMENT>::Write(ostream & _os)const{
-	for (int i=0;i<SIZE;++i)
-		_os << v[i] << ' ';
+    for (int i=0;i<SIZE;++i)
+        _os << v[i] << ' ';
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -383,7 +383,7 @@ void VectorConstantSize<SIZE,ELEMENT>::Write(ostream & _os)const{
 //
 //
 //
-//	Vector3
+//  Vector3
 //
 //
 //
@@ -394,7 +394,7 @@ void VectorConstantSize<SIZE,ELEMENT>::Write(ostream & _os)const{
   *
   * General Description
   *    Template class derived from base class VectorConstantSize
-  *	but with dimension (ie,size) always equal to 3.
+  * but with dimension (ie,size) always equal to 3.
   *
   */
 
@@ -405,7 +405,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -414,19 +414,19 @@ public:
   /**@name  Constructors and Destructor*/
   //===================================================================
   //@{
-	/**create a (0.0,0.0,0.0) vector.
-	  *@note what happens when ELEMENT type is not float point or not numbers??
-	  */
+    /**create a (0.0,0.0,0.0) vector.
+      *@note what happens when ELEMENT type is not float point or not numbers??
+      */
     Vector3();
-	///Reserve SIZE memory blocks and fill all of them as given ELEMENT
+    ///Reserve SIZE memory blocks and fill all of them as given ELEMENT
     Vector3(const ELEMENT &);
-	///Copy constructor
+    ///Copy constructor
     Vector3(const VectorConstantSize<3,ELEMENT> &);
-	///Create this instance by given 3 elemets.
+    ///Create this instance by given 3 elemets.
     Vector3(const ELEMENT &_x,const ELEMENT &_y,const ELEMENT &_z);
-	/**Reserve SIZE memory blocks and read data from given inputstream
-	  *@warning Should this throw exception?
-	  */
+    /**Reserve SIZE memory blocks and read data from given inputstream
+      *@warning Should this throw exception?
+      */
     Vector3(istream &);
   //@}
 
@@ -434,9 +434,9 @@ public:
   /**Operators.*/
   //===================================================================
   //@{
-	// Addition, Subtration, Negation, Multiply & Divide by a Constant
+    // Addition, Subtration, Negation, Multiply & Divide by a Constant
     /*Do nothing special
-	Vector3 operator+ (const Vector3 &) const;
+    Vector3 operator+ (const Vector3 &) const;
     Vector3 operator- (const Vector3 &) const;
     Vector3 operator- () const;
     Vector3 operator* (double) const;
@@ -447,17 +447,17 @@ public:
   /** Other Methods*/
   //===================================================================
   //@{
-	/// Magnitude of a vector
+    /// Magnitude of a vector
     //double magnitude ();
 
-	///Return (V1*V1)+(V2*V2)+(V3*V3)
+    ///Return (V1*V1)+(V2*V2)+(V3*V3)
     const double normsqr() const { return v[0]*v[0] + v[1]*v[1] + v[2]*v[2]; }
 
-	/// Cross Product Operation.
+    /// Cross Product Operation.
     inline Vector3 crossProduct (Vector3&) const;
 
     // Get various data element values
-    inline ELEMENT getX()const;	///<Get the first element in vector
+    inline ELEMENT getX()const; ///<Get the first element in vector
     inline ELEMENT getY()const; ///<Get the second element in vector
     inline ELEMENT getZ()const; ///<Get the third element in vector
   //@}
@@ -468,7 +468,7 @@ public:
 //
 //
 //
-//	Implementation of Vector3
+//  Implementation of Vector3
 //
 //
 //
@@ -485,12 +485,12 @@ Vector3<ELEMENT>::Vector3():VectorConstantSize<3,ELEMENT>(){
 
 template<class ELEMENT>
 Vector3<ELEMENT>::Vector3(const VectorConstantSize<3,ELEMENT> &c)
-		:VectorConstantSize<3,ELEMENT>(c){
+        :VectorConstantSize<3,ELEMENT>(c){
 };
 
 template<class ELEMENT>
 Vector3<ELEMENT>::Vector3(const ELEMENT &assignVal)
-		:VectorConstantSize<3,ELEMENT>(assignVal){
+        :VectorConstantSize<3,ELEMENT>(assignVal){
 };
 
 template<class ELEMENT>
@@ -498,23 +498,23 @@ Vector3<ELEMENT>::Vector3(const ELEMENT &_x,const ELEMENT &_y,const ELEMENT &_z)
 :VectorConstantSize<3,ELEMENT>(){
 
     if(v.size() == 0) 
-	{
-		v.push_back(_x); v.push_back(_y); v.push_back(_z);
+    {
+        v.push_back(_x); v.push_back(_y); v.push_back(_z);
     } 
-	else if(v.size() == 3) 
-	{
-		v[0] = _x; v[1] = _y; v[2] = _z;
+    else if(v.size() == 3) 
+    {
+        v[0] = _x; v[1] = _y; v[2] = _z;
     }
-	else 
-	{
-		cout << " Error in Vector3D(x,y,z) constructor " << endl;
-		exit(-1);
+    else 
+    {
+        cout << " Error in Vector3D(x,y,z) constructor " << endl;
+        exit(-1);
     }
 };
 
 template<class ELEMENT>
 Vector3<ELEMENT>::Vector3(istream & _is)
-		:VectorConstantSize<3,ELEMENT>(_is){
+        :VectorConstantSize<3,ELEMENT>(_is){
 };
 
 //=====================================================================
@@ -527,14 +527,14 @@ Vector3<ELEMENT>::Vector3(istream & _is)
 /*
 template<class ELEMENT>
 Vector3<ELEMENT> Vector3<ELEMENT>::operator+(
-		const Vector3<ELEMENT> &tmp) const{
-	return (Vector3(VectorConstantSize<3,ELEMENT>::operator+(tmp) ));
+        const Vector3<ELEMENT> &tmp) const{
+    return (Vector3(VectorConstantSize<3,ELEMENT>::operator+(tmp) ));
 };
 
 template<class ELEMENT>
 Vector3<ELEMENT> Vector3<ELEMENT>::operator-(
-		const Vector3<ELEMENT> &tmp) const{
-	return (Vector3(VectorConstantSize<3,ELEMENT>::operator-(tmp) ));
+        const Vector3<ELEMENT> &tmp) const{
+    return (Vector3(VectorConstantSize<3,ELEMENT>::operator-(tmp) ));
 };
 
 template<class ELEMENT>
@@ -563,25 +563,25 @@ double Vector3<ELEMENT>::magnitude() {
 
 template<class ELEMENT>
 Vector3<ELEMENT> Vector3<ELEMENT>::crossProduct(
-		Vector3 &w) const{
-	return (Vector3(
-		  v[Yy]*w.v[Zz] - w.v[Yy]*  v[Zz],
-		w.v[Xx]*  v[Zz] -   v[Xx]*w.v[Zz],
-		  v[Xx]*w.v[Yy] - w.v[Xx]*  v[Yy]
-		));
+        Vector3 &w) const{
+    return (Vector3(
+          v[Yy]*w.v[Zz] - w.v[Yy]*  v[Zz],
+        w.v[Xx]*  v[Zz] -   v[Xx]*w.v[Zz],
+          v[Xx]*w.v[Yy] - w.v[Xx]*  v[Yy]
+        ));
 };
 
 template<class ELEMENT>
 ELEMENT Vector3<ELEMENT>::getX()const{
-	return v[Xx];
+    return v[Xx];
 };
 template<class ELEMENT>
 ELEMENT Vector3<ELEMENT>::getY()const{
-	return v[Yy];
+    return v[Yy];
 };
 template<class ELEMENT>
 ELEMENT Vector3<ELEMENT>::getZ()const{
-	return v[Zz];
+    return v[Zz];
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -589,7 +589,7 @@ ELEMENT Vector3<ELEMENT>::getZ()const{
 //
 //
 //
-//	Vector6
+//  Vector6
 //
 //
 //
@@ -611,22 +611,22 @@ public:
   /**@name  Constructors */
   //===================================================================
   //@{
-	/**create a (0.0,0.0,0.0,0.0,0.0,0.0) vector.
-	  *@note what happens when ELEMENT type is not float point or not numbers??
-	  */
+    /**create a (0.0,0.0,0.0,0.0,0.0,0.0) vector.
+      *@note what happens when ELEMENT type is not float point or not numbers??
+      */
     Vector6();
-	///Reserve SIZE memory blocks and fill all of them as given ELEMENT
+    ///Reserve SIZE memory blocks and fill all of them as given ELEMENT
     Vector6(const ELEMENT &);
-	///Copy constructor
+    ///Copy constructor
     Vector6(const VectorConstantSize<6,ELEMENT> &);
 
-	///Create this instance by given 6 elemets (in order) .
+    ///Create this instance by given 6 elemets (in order) .
     Vector6(const ELEMENT &_x,const ELEMENT &_y,const ELEMENT &_z,
              const ELEMENT &_r,const ELEMENT &_p,const ELEMENT &_yaw);
 
-	/**Reserve SIZE memory blocks and read data from given inputstream
-	  *@warning Should this throw exception?
-	  */
+    /**Reserve SIZE memory blocks and read data from given inputstream
+      *@warning Should this throw exception?
+      */
     Vector6(istream &);
   //@}
 
@@ -645,16 +645,16 @@ public:
   /**@name Helper Methods*/
   //===================================================================
   //@{
-	// Magnitude of a vector
+    // Magnitude of a vector
     //double magnitude ();
 
     // Get various data element values
-    inline ELEMENT getX()const;	///<Get the first element in vector
-    inline ELEMENT getY()const;	///<Get the second element in vector
-    inline ELEMENT getZ()const;	///<Get the third element in vector
-    inline ELEMENT getRoll()const;	///<Get the fourth element in vector
-    inline ELEMENT getPitch()const;	///<Get the fifth element in vector;
-    inline ELEMENT getYaw()const;	///<Get the sixth element in vector
+    inline ELEMENT getX()const; ///<Get the first element in vector
+    inline ELEMENT getY()const; ///<Get the second element in vector
+    inline ELEMENT getZ()const; ///<Get the third element in vector
+    inline ELEMENT getRoll()const;  ///<Get the fourth element in vector
+    inline ELEMENT getPitch()const; ///<Get the fifth element in vector;
+    inline ELEMENT getYaw()const;   ///<Get the sixth element in vector
   //@}
 };
 
@@ -663,7 +663,7 @@ public:
 //
 //
 //
-//	Implementation of Vector6
+//  Implementation of Vector6
 //
 //
 //
@@ -674,33 +674,33 @@ public:
 //=====================================================================
 template<class ELEMENT>
 Vector6<ELEMENT>::Vector6()
-		:VectorConstantSize<6,ELEMENT>(){
+        :VectorConstantSize<6,ELEMENT>(){
 };
 
 template<class ELEMENT>
 Vector6<ELEMENT>::Vector6(const VectorConstantSize<6,ELEMENT> &c)
-		:VectorConstantSize<6,ELEMENT>(c){
+        :VectorConstantSize<6,ELEMENT>(c){
 };
 
 template<class ELEMENT>
 Vector6<ELEMENT>::Vector6(const ELEMENT &assignVal)
-		:VectorConstantSize<6,ELEMENT>(assignVal){
+        :VectorConstantSize<6,ELEMENT>(assignVal){
 };
 
 template<class ELEMENT>
 Vector6<ELEMENT>::Vector6
-	(const ELEMENT &_x,const ELEMENT &_y,const ELEMENT &_z,
-	 const ELEMENT &_r,const ELEMENT &_p,const ELEMENT &_yaw)
-		:VectorConstantSize<6,ELEMENT>(){
+    (const ELEMENT &_x,const ELEMENT &_y,const ELEMENT &_z,
+     const ELEMENT &_r,const ELEMENT &_p,const ELEMENT &_yaw)
+        :VectorConstantSize<6,ELEMENT>(){
      if(v.size() == 0) {
-	v.push_back(_x); v.push_back(_y); v.push_back(_z);
-	v.push_back(_r); v.push_back(_p); v.push_back(_yaw);
+    v.push_back(_x); v.push_back(_y); v.push_back(_z);
+    v.push_back(_r); v.push_back(_p); v.push_back(_yaw);
      } else if(v.size() == 6) {
-	v[0] = _x; v[1] = _y; v[2] = _z;
-	v[3] = _r; v[4] = _p; v[5] = _yaw;
+    v[0] = _x; v[1] = _y; v[2] = _z;
+    v[3] = _r; v[4] = _p; v[5] = _yaw;
      } else {
-	cout << " Error in Vector6<ELEMENT>(x,y,z,r,p,w) constructor " << endl;
-	exit(-1);
+    cout << " Error in Vector6<ELEMENT>(x,y,z,r,p,w) constructor " << endl;
+    exit(-1);
      }
 };
 
@@ -718,13 +718,13 @@ Vector6<ELEMENT>::Vector6(istream & _is)
 /*
 template<class ELEMENT>
 Vector6<ELEMENT> Vector6<ELEMENT>::operator+(
-		const Vector6<ELEMENT> &tmp) const{
-	return (Vector6(VectorConstantSize<6,ELEMENT>::operator+(tmp) ));
+        const Vector6<ELEMENT> &tmp) const{
+    return (Vector6(VectorConstantSize<6,ELEMENT>::operator+(tmp) ));
 };
 template<class ELEMENT>
 Vector6<ELEMENT> Vector6<ELEMENT>::operator-(
-		const Vector6<ELEMENT> &tmp) const{
-	return (Vector6(VectorConstantSize<6,ELEMENT>::operator-(tmp) ));
+        const Vector6<ELEMENT> &tmp) const{
+    return (Vector6(VectorConstantSize<6,ELEMENT>::operator-(tmp) ));
 };
 
 template<class ELEMENT>
@@ -754,26 +754,26 @@ double Vector6<ELEMENT>::magnitude() {
 
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getX()const{
-	return v[Xx];
+    return v[Xx];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getY()const{
-	return v[Yy];
+    return v[Yy];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getZ()const{
-	return v[Zz];
+    return v[Zz];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getRoll()const{
-	return v[ROLLroll];
+    return v[ROLLroll];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getPitch()const{
-	return v[PITCHpitch];
+    return v[PITCHpitch];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getYaw()const{
-	return v[YAWyaw];
+    return v[YAWyaw];
 };
 #endif

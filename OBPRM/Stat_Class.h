@@ -6,13 +6,13 @@
 class RoadMap;
 
 // Maximum number of connected components to keep track of
-const int MaxCC=	100;
+const int MaxCC=    100;
 
 // Maximum number of local planners to keeps stats on
-const int MaxLP=	10;
+const int MaxLP=    10;
 
 // Maximum number of collision detection algorithms to keep stats on
-const int MaxCD=	10;
+const int MaxCD=    10;
 
 /**@file Stat_Class.h
    This class lets you keep statistics on various aspects of

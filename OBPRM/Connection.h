@@ -26,10 +26,10 @@ class Body;
 
 /**This class stores information about connection from one body to another one.
   *The information stored in this class includes:
-  *	- Connection type
-  *	- 2 Body instances
-  *	- Tansformation instances
-  *	- DHparameters
+  * - Connection type
+  * - 2 Body instances
+  * - Tansformation instances
+  * - DHparameters
   */
 class Connection {
 public:
@@ -38,14 +38,14 @@ public:
     //---------------------------------------------------------------
     enum ConnectionType {
         Revolute,
-		Prismatic
+        Prismatic
     };
 
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -62,9 +62,9 @@ public:
       *Get might be called to retrieve values for unset data member.
       *@param _body1 One of this _body1's end joints is this connection.
       *@param _body2 One of this _body2's start joints is this connection.
-	  *@note if _body2 is NULL, then client might use Get to get information
-	  *about body2 from Input instance.
-	  *@see Input, Get
+      *@note if _body2 is NULL, then client might use Get to get information
+      *about body2 from Input instance.
+      *@see Input, Get
       */
     Connection(Body * _body1, Body * _body2 = 0);  // Second argument is optional
     
@@ -76,12 +76,12 @@ public:
       *@param _transformationToBody2 Transform from DH-Frame to frame of body1
       **/
     Connection(Body * _body1, Body * _body2, const Transformation & _transformationToBody2, 
-	const DHparameters & _dhparameters, const Transformation & _transformationToDHFrame);
-	 
+    const DHparameters & _dhparameters, const Transformation & _transformationToDHFrame);
+     
     /**Destructor.
-	  *call first body's RemoveForwardConnection and second's RemoveBackwardConnection
-	  *@see Body::RemoveForwardConnection and Body::RemoveBackwardConnection
-	  */
+      *call first body's RemoveForwardConnection and second's RemoveBackwardConnection
+      *@see Body::RemoveForwardConnection and Body::RemoveBackwardConnection
+      */
     ~Connection();
 
     //@}
@@ -89,7 +89,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Access Methods
+  //    Access Methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -117,8 +117,8 @@ public:
     Body * GetNextBody();
     
     /**Get the type of connection used in this Connection instance.
-	  *@see ConnectionType
-	  */
+      *@see ConnectionType
+      */
     ConnectionType GetConnectionType();
 
     ///Get a refecence of DHparameters used in this Connection instance.   
@@ -143,24 +143,24 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	I/O
+  //    I/O
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
     /**@name I/O Methods. Use these method to read in/write out internal state*/
-	//@{
+    //@{
 
-	/**Write inforamtion about Body2, transformationToBody2, and transformationToDHFrame 
-	  *to output stream.
-	  */
+    /**Write inforamtion about Body2, transformationToBody2, and transformationToDHFrame 
+      *to output stream.
+      */
     virtual void Write(ostream & _os);
 
-	//@}
+    //@}
     
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Protected data member and member methods
+  //    Protected data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +193,7 @@ private:
 //
 //
 //
-//	Implementation of Connection
+//  Implementation of Connection
 //
 //
 //

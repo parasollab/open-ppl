@@ -37,7 +37,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -45,61 +45,61 @@ public:
     //-----------------------------------------------------------
     /**@name  Constructors and Destructor*/
     //-----------------------------------------------------------
-	//@{
-	///Create a Transformation with position (0,0,0) and a matrix represented orientation.
+    //@{
+    ///Create a Transformation with position (0,0,0) and a matrix represented orientation.
     Transformation();
-	
-	///Create a Transformation with given position and orientation.
+    
+    ///Create a Transformation with given position and orientation.
     Transformation(const Orientation & _orientation, const Vector3D & _position);
 
-	///@todo what is DHparameters??
+    ///@todo what is DHparameters??
     Transformation(const DHparameters & _dhparameters);
 
-	///Copy constructor
+    ///Copy constructor
     Transformation(const Transformation & _t);
-	///Destructor. Do nothing.
+    ///Destructor. Do nothing.
     ~Transformation();
-	//@}
+    //@}
     
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Operator Overloadings
+  //    Operator Overloadings
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 
-	//-----------------------------------------------------------
+    //-----------------------------------------------------------
     /**@name Operator Overload with other Transformation or Vector*/
     //-----------------------------------------------------------
-	//@{
-	///return a vector which is (_vector*Orientation+position)
+    //@{
+    ///return a vector which is (_vector*Orientation+position)
     Vector3D operator*(const Vector3D & _vector);
-	/*This acts like +=.
-	 *The orientation of this instance is changed to (orientation+_t.orientation)
-	 *The position of this instance is changed to (position+_t.position)
-	 *this instance is returned.
-	 */
+    /*This acts like +=.
+     *The orientation of this instance is changed to (orientation+_t.orientation)
+     *The position of this instance is changed to (position+_t.position)
+     *this instance is returned.
+     */
     Transformation & operator+(const Transformation & _t);
-	/*This acts like -=.
-	 *The orientation of this instance is changed to (orientation-_t.orientation)
-	 *The position of this instance is changed to (position-_t.position)
-	 *this instance is returned.
-	 */
+    /*This acts like -=.
+     *The orientation of this instance is changed to (orientation-_t.orientation)
+     *The position of this instance is changed to (position-_t.position)
+     *this instance is returned.
+     */
     Transformation operator-(const Transformation & _t);
-	/**Return a new Transformation which is 
-	  *The new orientation will be (orientation * _t.orientation)
-	  *The new position will be (orientation * _t.position + position)
-	  */
+    /**Return a new Transformation which is 
+      *The new orientation will be (orientation * _t.orientation)
+      *The new position will be (orientation * _t.position + position)
+      */
     Transformation operator*(const Transformation & _t);
-	///Copy position and orientation from _t
+    ///Copy position and orientation from _t
     Transformation & operator=(const Transformation & _t);
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Helper methods : I/O and Invert
+  //    Helper methods : I/O and Invert
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -107,31 +107,31 @@ public:
     //-----------------------------------------------------------
     /**@name Helper  Methods*/
     //-----------------------------------------------------------
-	//@{
-	/**Invert this instance of Transformation.
-	  *This is calculated by Orientation is Orientation::Invert
-	  *position is -(Orientation::Invert * position)
-	  *@see Orientation::Invert
-	  */
+    //@{
+    /**Invert this instance of Transformation.
+      *This is calculated by Orientation is Orientation::Invert
+      *position is -(Orientation::Invert * position)
+      *@see Orientation::Invert
+      */
     void Invert();
 
-	///Create a new Transformation which is inverse of this Transformation.
+    ///Create a new Transformation which is inverse of this Transformation.
     Transformation Inverse();
 
-    void Read(ifstream & _is);	///<Read position and orientation from _is
+    void Read(ifstream & _is);  ///<Read position and orientation from _is
     void Write(ostream & _os);  ///<Write position and orientation to _os
-	//@}
+    //@}
 
     //-----------------------------------------------------------
     //  Data
     //-----------------------------------------------------------
-    Vector3D position;			///<Translation
-    Orientation orientation;	///<Rotation
+    Vector3D position;          ///<Translation
+    Orientation orientation;    ///<Rotation
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Protected data member and member methods
+  //    Protected data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ protected:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Protected data member and member methods
+  //    Protected data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////

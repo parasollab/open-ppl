@@ -22,7 +22,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -31,17 +31,17 @@ public:
     /**@name Constructors and Destructor.*/
     //-----------------------------------------------------------
     //@{
-	  ///Default constructor. Set every thing to zero
-	  Clock_Class();
+      ///Default constructor. Set every thing to zero
+      Clock_Class();
 
-	  ///Destrcutor. Do nothing
-	  ~Clock_Class();
-	//@}
+      ///Destrcutor. Do nothing
+      ~Clock_Class();
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Clock methods
+  //    Clock methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -51,25 +51,25 @@ public:
     //-----------------------------------------------------------
     //@{
 
-	  ///Set every thing to zero
-	  int ClearClock();
+      ///Set every thing to zero
+      int ClearClock();
 
-	  ///Start the clock and the name is identity of this clock.
-	  int StartClock( char *Name );
+      ///Start the clock and the name is identity of this clock.
+      int StartClock( char *Name );
 
-	  ///Stop the clock and calculate the total running time.
-	  int StopClock();
+      ///Stop the clock and calculate the total running time.
+      int StopClock();
 
-	  ///Call StopClock and PrintClock.
-	  int StopPrintClock();
+      ///Call StopClock and PrintClock.
+      int StopPrintClock();
 
-	//@}
+    //@}
 
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	I/O
+  //    I/O
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -79,20 +79,20 @@ public:
     //-----------------------------------------------------------
     //@{
 
-	  /**Output the clock name given in StartClock and runinng time accosited with this name
-	    *to the standard output.
-	    */
-	  void PrintClock();
+      /**Output the clock name given in StartClock and runinng time accosited with this name
+        *to the standard output.
+        */
+      void PrintClock();
 
-	  ///Output the clock name given in StartClock to the standard output
-	  void PrintName();
+      ///Output the clock name given in StartClock to the standard output
+      void PrintName();
 
-	//@}
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Access Methods
+  //    Access Methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -102,20 +102,20 @@ public:
     //-----------------------------------------------------------
     //@{
 
-  	  ///Get how many seconds of running time are. (integer, without fraction part!!)
-	  int GetClock();
+      ///Get how many seconds of running time are. (integer, without fraction part!!)
+      int GetClock();
 
-	  ///Get how many seconds of running time are.
-	  double GetClock_SEC();
+      ///Get how many seconds of running time are.
+      double GetClock_SEC();
 
-  	  ///Get how many 1e-6 seconds of running time are.
-	  int GetClock_USEC();
-	//@}
+      ///Get how many 1e-6 seconds of running time are.
+      int GetClock_USEC();
+    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Private Data Members and MEmber Methods Methods (Undocumented)
+  //    Private Data Members and MEmber Methods Methods (Undocumented)
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////

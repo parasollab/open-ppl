@@ -4,12 +4,12 @@
   *
   * General Description
   *
-  *	A derived template class from CfgManager. It provides some 
-  *	specific implementation directly related to fixed-base 
-  *	tree structure robots.
+  * A derived template class from CfgManager. It provides some 
+  * specific implementation directly related to fixed-base 
+  * tree structure robots.
   *
   * Created
-  *	@date 10/11/99	
+  * @date 10/11/99  
   * @author Guang Song
   */
 /////////////////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Constructors and Destructor
+  //    Constructors and Destructor
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Access Methods : Retrive and set related information of this class
+  //    Access Methods : Retrive and set related information of this class
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ public:
 
   /**Randomly generate all joint angles for this new Cfg. (No bounding box is concerned)
     *@param R Not used here.
-	*@param rStep
+    *@param rStep
     */
   virtual Cfg GetRandomCfg(double R, double rStep);
   
@@ -78,7 +78,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	methods for nodes generation 
+  //    methods for nodes generation 
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -88,9 +88,9 @@ public:
 
   /** for rotate-at-s Local Planner.
     *return three Cfg in vector. The first one is c1 and the last one is c2.
-	*The second Cfg whose first 2 joint angles are from c1 and rest of them are from c2.
+    *The second Cfg whose first 2 joint angles are from c1 and rest of them are from c2.
     *@param s Not used.
-	*@warning there is no checking to make sure that c1 and c2 have NumofJoints joints.
+    *@warning there is no checking to make sure that c1 and c2 have NumofJoints joints.
     */
   virtual vector<Cfg> GetMovingSequenceNodes(const Cfg& c1, const Cfg& c2, double s);
 
@@ -107,7 +107,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	Helper functions
+  //    Helper functions
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -124,18 +124,18 @@ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	protected Data member and member methods
+  //    protected Data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
-  int NumofJoints;	///< # of Joints
+  int NumofJoints;  ///< # of Joints
   
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	private Data member and member methods
+  //    private Data member and member methods
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////

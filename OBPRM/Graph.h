@@ -1362,7 +1362,7 @@ public:
          @note Error message will be outputed if something wrong
          *during processing.
          */
-	/* use vid from input file as internal vid */	 
+    /* use vid from input file as internal vid */    
        void ReadGraph(istream& _myistream);
 
        /* automatic assign vid to each nodes */
@@ -3138,8 +3138,8 @@ GetSuccessorsDATA(VID _v1id) const {
      if ( IsVertex(_v1id,&v1) ) {
          succ.reserve( v1->edgelist.size() );
          for (CEI ei = v1->edgelist.begin(); ei != v1->edgelist.end(); ei++) {
-	   if ( IsVertex(ei->vertex2id,&v2) )
-	     succ.push_back(v2->data);
+       if ( IsVertex(ei->vertex2id,&v2) )
+         succ.push_back(v2->data);
          }
      } else {
          cout << "\nGetSuccessors: vertex "<< _v1id << " not in graph";
@@ -3186,11 +3186,11 @@ GetPredecessorsDATA(VID _v1id) const {
      vector<VERTEX> pred;
      CVI cv1,v1,v2;
      if ( IsVertex(_v1id,&cv1) ) {
-     	v1=const_cast<VI> (cv1);
+        v1=const_cast<VI> (cv1);
          pred.reserve( v1->predecessors.size() );
          for (CEI ei = v1->predecessors.begin(); ei != v1->predecessors.end(); ei++) {
-	    if ( IsVertex(ei->vertex2id,&v2) )  
-	      pred.push_back(v2->data);
+        if ( IsVertex(ei->vertex2id,&v2) )  
+          pred.push_back(v2->data);
          }
      } else {
          cout << "\nGetPredecessors: vertex "<< _v1id << " not in graph";
@@ -3659,7 +3659,7 @@ FindVIDPathBFS (VID _startVid, VID _endVid) const {
         } else {
           // cout << "In FindPathBFS: hmm....\n";
            break;
-	}
+    }
      }
   }
   return path;
@@ -3996,7 +3996,7 @@ ReadGraphwithAutoVID(istream& _myistream) {
       for (int i = 0; i < nVerts; i++){
          _myistream >> data;             // read and add vertex 
          AddVertex(data);
-	v1id = i;		//start vid from 0
+    v1id = i;       //start vid from 0
          if ( !IsVertex(v1id,&cv1) ) {
             cout << "\nIn ReadGraph: didn't add v1...";
          }

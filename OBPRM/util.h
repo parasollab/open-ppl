@@ -78,46 +78,46 @@ inline double sqr(double a)
 /**@name Cfgs I/O Utility*/
 //@{
 
-	/**Write a list of Cfgs in a give path and path size 
-	  *to file with given filename.
-	  *
-	  *This method writes number of links of robot,
-	  *path size to output_file. Then Cfgs for
-	  *each link in robot will be output to file 
-	  *named "output_file".cfg
-	  *
-	  *
-	  *@param filename Filename for Cfg data.
-	  *@param path All Gfgs will be written to file.
-	  *@param env is used to get "robot link" information.
-	  *@note if file couldn't be opened, error message will be post 
-	  *and process will be terminated.
-	  *
-	  *@see Cfg::printLinkConfigurations
-	  */
-	void WritePathLinkConfigurations(char output_file[80], 
-									 const vector<Cfg> &path, 
-									 Environment *env);
+    /**Write a list of Cfgs in a give path and path size 
+      *to file with given filename.
+      *
+      *This method writes number of links of robot,
+      *path size to output_file. Then Cfgs for
+      *each link in robot will be output to file 
+      *named "output_file".cfg
+      *
+      *
+      *@param filename Filename for Cfg data.
+      *@param path All Gfgs will be written to file.
+      *@param env is used to get "robot link" information.
+      *@note if file couldn't be opened, error message will be post 
+      *and process will be terminated.
+      *
+      *@see Cfg::printLinkConfigurations
+      */
+    void WritePathLinkConfigurations(char output_file[80], 
+                                     const vector<Cfg> &path, 
+                                     Environment *env);
 
-	/**Write a list of Cfgs in a give path and path size 
-	  *to file with given filename.
-	  *@param filename Filename for Cfg data.
-	  *@param path All Gfgs will be written to file.
-	  *@param env is not used.
-	  *@note if file couldn't be opened, error message will be post 
-	  *and process will be terminated.
-	  */
-	void WritePathConfigurations(char output_file[80], 
-								 vector<Cfg> path, 
-								 Environment *env);
+    /**Write a list of Cfgs in a give path and path size 
+      *to file with given filename.
+      *@param filename Filename for Cfg data.
+      *@param path All Gfgs will be written to file.
+      *@param env is not used.
+      *@note if file couldn't be opened, error message will be post 
+      *and process will be terminated.
+      */
+    void WritePathConfigurations(char output_file[80], 
+                                 vector<Cfg> path, 
+                                 Environment *env);
 
-	/**Read a list of Cfgs from file with given filename.
-	  *@param filename Filename for Cfg data.
-	  *@param cfgs All new Gfg will be inserted to this list.
-	  *@note if file couldn't be opened, error message will be post.
-	  *@see Cfg::Read
-	  */
-	void ReadCfgs(char *filename, vector<Cfg> &cfgs);
+    /**Read a list of Cfgs from file with given filename.
+      *@param filename Filename for Cfg data.
+      *@param cfgs All new Gfg will be inserted to this list.
+      *@note if file couldn't be opened, error message will be post.
+      *@see Cfg::Read
+      */
+    void ReadCfgs(char *filename, vector<Cfg> &cfgs);
 
 //@}
 
@@ -133,31 +133,31 @@ inline double sqr(double a)
 /**@name File I/O Utility*/
 //@{
 
-	#define EXIT 1		///< Actions for VerifyFileExists
-	#define RETURN 2	///< Actions for VerifyFileExists
+    #define EXIT 1      ///< Actions for VerifyFileExists
+    #define RETURN 2    ///< Actions for VerifyFileExists
 
-	/**Check if or not this given filename exists.
-	  *@param _fname File name that is going to be checked.
-	  *@action What should be done if file not found.
-	  *Its value should be EXIT or RETURN.
-	  *
-	  *@return true if file exists. If file dosen't exist 
-	  *and action is EXIT, process will be terminated.
-	  *Otherwise false will be returned.
-	  */
-	bool VerifyFileExists(char *_fname,int action);
+    /**Check if or not this given filename exists.
+      *@param _fname File name that is going to be checked.
+      *@action What should be done if file not found.
+      *Its value should be EXIT or RETURN.
+      *
+      *@return true if file exists. If file dosen't exist 
+      *and action is EXIT, process will be terminated.
+      *Otherwise false will be returned.
+      */
+    bool VerifyFileExists(char *_fname,int action);
 
 
-	/**Read data for element from input stream.
-	  *This method throws away comments starting from "#", and
-	  *find out read data for element.
-	  *
-	  *@param element An element which will read data from file.
-	  *@note type T should have istream>> overloading.
-	  *@note >> overloading should return 0 (NULL or false)
-	  *if data couldn't be read correctly.
-	  */
-	template <class T> bool readfield (istream &_is, T *element);
+    /**Read data for element from input stream.
+      *This method throws away comments starting from "#", and
+      *find out read data for element.
+      *
+      *@param element An element which will read data from file.
+      *@note type T should have istream>> overloading.
+      *@note >> overloading should return 0 (NULL or false)
+      *if data couldn't be read correctly.
+      */
+    template <class T> bool readfield (istream &_is, T *element);
 
 //@}
 
@@ -175,34 +175,34 @@ inline double sqr(double a)
 #define COMMENT_DELIMITER '#'
 ///The maximum number of characters in each line.
 #define LINEMAX 256
-	
+    
 template <class T> bool readfield (istream &_is, T *element,vector <char *> &comment) {
-	
-	char c;
-	char ThrowAwayLine[LINEMAX];
-	
-	while ( _is.get(c) ) {
-		if (c == '#') {
-			_is.getline(ThrowAwayLine,LINEMAX,'\n');
-			comment.push_back(strdup(ThrowAwayLine));
-		}
-		else if (! isspace(c) ) {
-			_is.putback(c);
-			if (_is >> *element) return true;
-			else               break;
-		}
-	}
-	
-	// could not read correctly ...
-	cout << "Error in reading!!! at util::readfield. " << endl;
-	return false;
+    
+    char c;
+    char ThrowAwayLine[LINEMAX];
+    
+    while ( _is.get(c) ) {
+        if (c == '#') {
+            _is.getline(ThrowAwayLine,LINEMAX,'\n');
+            comment.push_back(strdup(ThrowAwayLine));
+        }
+        else if (! isspace(c) ) {
+            _is.putback(c);
+            if (_is >> *element) return true;
+            else               break;
+        }
+    }
+    
+    // could not read correctly ...
+    cout << "Error in reading!!! at util::readfield. " << endl;
+    return false;
 }
 
 template <class T> bool readfield (istream &_is, T *element) {
-	vector <char  *> comment;
-	bool ret=readfield(_is,element,comment);
-	comment.clear();
-	return ret;
+    vector <char  *> comment;
+    bool ret=readfield(_is,element,comment);
+    comment.clear();
+    return ret;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +216,7 @@ template <class T> bool readfield (istream &_is, T *element) {
 // definitions. In addition, rint used to round off float points to int is also here.
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#define M_PI PI	//reference PI above
+#define M_PI PI //reference PI above
 
 extern "C" {
 //Implementation of these functions are located in util.cpp
