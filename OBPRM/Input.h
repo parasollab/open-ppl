@@ -187,9 +187,6 @@ public:
           *@param _myostream Output stream
           */
         void WriteEnvFile(ostream& _myostream);
-
-        void ReadNumberofJoints(istream &is); 
-
     //@}
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -298,10 +295,6 @@ public:
         n_str_param      *DMstrings[MAX_DM];    ///< distance metrics
         int numDMs;
 
-        n_str_param      *NUMOFJOINTSstrings[MAX_CFG];  ///< number of joints
-        int numNUMOFJOINTSs;
-
-        
         /// choose collision detection (cstk or vclip) from beginning
         cd_predefined  cdtype;
 
@@ -321,7 +314,7 @@ public:
           *stored so as to be easily used by derived class.
           *@see ReadCfgType
           */
-        int numofJoints;
+	num_param<int> numofJoints; ///< number of joints
         bool cfgSet;
 
     //@}

@@ -49,7 +49,7 @@ int main(int argc, char** argv)
   //----------------------------------------------------
   input.ReadCommandLine(argc,argv);
 
-  CfgType::setNumofJoints(input.numofJoints);
+  CfgType::setNumofJoints(input.numofJoints.GetValue());
   cout << "Cfg_free_tree::NumofJoints = " 
        << CfgType::getNumofJoints() << endl;
 

@@ -40,7 +40,8 @@ Input::Input():
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
         bbox             ("-bbox",""),
         collPair         ("-collPair","cM rT "),    // center of Mass
-        freePair         ("-freePair","cM rV ")     // center of Mass
+        freePair         ("-freePair","cM rV "),    // center of Mass
+	numofJoints      ("-numofjoints", 0, 0, 1000000)
         {
 
     cfgSet=false;
@@ -63,6 +64,7 @@ Input::Input():
     bbox_scale.PutDesc        ("FLOAT  ","");
     posres.PutDesc            ("FLOAT  "," *CALCULATED*   position    resolution");
     orires.PutDesc            ("FLOAT  "," **HARDCODED**  orientation resolution");
+    numofJoints.PutDesc       ("INT    "," number of articulated linkages");
 
     int i;
 
@@ -78,9 +80,6 @@ Input::Input():
     numCDs = 0;
     for (i=0;i<MAX_CD;++i)
         CDstrings[i]=new n_str_param("-cd");
-    numNUMOFJOINTSs = 0;
-    for (i=0;i<MAX_CFG;++i)
-      NUMOFJOINTSstrings[i] = new n_str_param("-numofjoints");
     numDMs = 0;
     for (i=0;i<MAX_DM;++i)
         DMstrings[i]=new n_str_param("-dm");
@@ -257,6 +256,7 @@ void Input::ReadCommandLine(int argc, char** argv){
       } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
       } else if ( posres.AckCmdLine(&i, argc, argv) ) {
       } else if ( orires.AckCmdLine(&i, argc, argv) ) {
+      } else if ( numofJoints.AckCmdLine(&i, argc, argv) ) {
 	
       } else if ( GNstrings[numGNs]->AckCmdLine(&i, argc, argv) ) {
 	numGNs++;
@@ -302,8 +302,6 @@ void Input::ReadCommandLine(int argc, char** argv){
 
 	}
 	numCDs++;
-      } else if ( NUMOFJOINTSstrings[numNUMOFJOINTSs]->AckCmdLine(&i, argc, argv) ) {
-	numNUMOFJOINTSs++;
       } else if ( DMstrings[numDMs]->AckCmdLine(&i, argc, argv) ) {
 	numDMs++;
       } else {
@@ -312,9 +310,6 @@ void Input::ReadCommandLine(int argc, char** argv){
       } //endif
     } //endfor i
     
-    istrstream cfgstr(NUMOFJOINTSstrings[0]->GetValue());
-    ReadNumberofJoints(cfgstr);
-
     //-- Do some clean up and final checking
 
     if ( !defaultFile.IsActivated() &&
@@ -339,20 +334,6 @@ void Input::ReadCommandLine(int argc, char** argv){
   } //endcatch
 
 };
-
-
-void Input::ReadNumberofJoints(istream &is) {
-  if(is) {
-    if(is >> numofJoints) {
-      if(numofJoints < 0 || numofJoints > 1000) {
-	cerr << "Error in Input.cpp, wrong input for numofJoints !" << endl;
-	exit(2);
-      }
-    } else {
-      numofJoints = 3;
-    }
-  }
-}
 
 
 //===================================================================
@@ -383,12 +364,12 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; bbox_scale.PrintUsage(_os);
         _os << "\n  "; posres.PrintUsage(_os);
         _os << "\n  "; orires.PrintUsage(_os);
+	_os << "\n  "; numofJoints.PrintUsage(_os);
         _os << "\n";
         _os << "\n  "; GNstrings[0]->PrintUsage(_os);
         _os << "\n  "; CNstrings[0]->PrintUsage(_os);
         _os << "\n  "; LPstrings[0]->PrintUsage(_os);
         _os << "\n  "; CDstrings[0]->PrintUsage(_os);
-	_os << "\n  "; NUMOFJOINTSstrings[0]->PrintUsage(_os);	
         _os << "\n  "; DMstrings[0]->PrintUsage(_os);
 
         _os << "\n\n  to see default values only, type \"obprm -defaults\" ";
@@ -417,6 +398,7 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"bbox_scale"<<"\t"<<bbox_scale.GetValue();
   _os <<"\n"<<setw(FW)<<"posres"<<"\t"<<posres.GetValue();
   _os <<"\n"<<setw(FW)<<"orires"<<"\t"<<orires.GetValue();
+  _os <<"\n"<<setw(FW)<<"numofjoints"<<"\t"<<numofJoints.GetValue();
 
   int i;
   for(i=0;i<numGNs;++i)
@@ -431,11 +413,6 @@ PrintValues(ostream& _os){
   for(i=0;i<numCDs;++i)
     _os << "\n"<<setw(FW)<< "CDstrings"<<i
         <<"\t"<<CDstrings[i]->GetValue();
-
-    for(i=0;i<numNUMOFJOINTSs;++i)
-      _os << "\n"<<setw(FW)<< "CFGstrings"<<i
-          <<"\t"<<NUMOFJOINTSstrings[i]->GetValue();
-
   for(i=0;i<numDMs;++i)
     _os << "\n"<<setw(FW)<< "DMstrings"<<i
         <<"\t"<<DMstrings[i]->GetValue();
@@ -459,6 +436,8 @@ Input::PrintDefaults(){
             posres.GetDefault() << endl << endl;
    cout << setw(FW) << "orientation resolution" << " (" << orires.GetFlag() << ") : " <<
             orires.GetDefault() << endl << endl;
+   cout << setw(FW) << "number of joints" << " (" << numofJoints.GetFlag() << ") : " <<
+            numofJoints.GetDefault() << endl << endl;
    cout << setw(FW) << "bounding box scale" << " (" << bbox_scale.GetFlag() << ") : " <<
             bbox_scale.GetDefault() << endl << endl;
 
@@ -543,8 +522,6 @@ void Input::Read(int action) {
        else if (strstr(line, "Cfg")  && !cfgSet){
        // if Environment has Cfg info and Cfg type is not set through command 
        // line, we use this string from Environment instead to setup Cfg type.
-           istrstream cfgstr(&line[1]);
-	   ReadNumberofJoints(cfgstr);
        }
  
   }
