@@ -808,8 +808,8 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
         for (int i=0; i<directions.size(); i++) {
             tick[i].Increment(incr[i]);
 
-            if (bComputePenetration && !ignored[i]) { //finding penetration
-	        if (tick[i].isCollision(env, cd, cdsetid, cdInfo) != bInitState) {
+            if (bComputePenetration) { //finding penetration
+	        if (!ignored[i] && (tick[i].isCollision(env, cd, cdsetid, cdInfo) != bInitState)) {
                     if (!(tick[i].InBoundingBox(env))) { //ignore this direction
                         ignored[i] = true;
                         num_ignored++;
