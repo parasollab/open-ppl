@@ -61,7 +61,7 @@ Input::Input():
 		calcPenetration  ("-calcPenetration",    0,  0,    1) //set default as false.
         {
 
-    //Cfg::CfgHelper=NULL; 
+    //Cfg::cfgType=NULL; 
     cfgSet=false;
     numShells.PutDesc        ("INTEGER","");
     proportionSurface.PutDesc("FLOAT  ","");
@@ -235,16 +235,16 @@ void Input::ReadCfgType(istream &is) {
         }
         }
         if (!(strncmp(cfgName,"Cfg_free_rigid",14))) {
-            Cfg::CfgHelper = new Cfg_free();
+            Cfg::cfgType = new Cfg_free();
             cfgSet=true;
         }else if (!(strncmp(cfgName,"Cfg_fixed_PRR",13))) {
-            Cfg::CfgHelper = new Cfg_fixed_PRR();
+            Cfg::cfgType = new Cfg_fixed_PRR();
             cfgSet=true;
         }else if (!(strncmp(cfgName,"Cfg_free_tree",15))) {
-            Cfg::CfgHelper = new Cfg_free_tree(numofJoints);
+            Cfg::cfgType = new Cfg_free_tree(numofJoints);
             cfgSet=true;
 	} else if (!(strncmp(cfgName,"Cfg_fixed_tree", 14))) {
-	    Cfg::CfgHelper = new Cfg_fixed_tree(numofJoints);
+	    Cfg::cfgType = new Cfg_fixed_tree(numofJoints);
 	    cfgSet = true;
         }
     } // default is Cfg_free().
