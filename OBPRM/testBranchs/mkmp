@@ -1,7 +1,8 @@
 ../obprm -cd RAPID -f branchs \
+	-numofjoints 5 \
         -bbox_scale 20 \
 	-gNodes OBPRM nodes 500 \
 		shells 3 \
 		collPair cM rT \
-		         freePair cM rV  \
+		freePair cM rV  \
 	-cNodes closest 5 components 5 5 

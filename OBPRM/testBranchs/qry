@@ -1,1 +1,1 @@
-../query -cd RAPID -f branchs -cfg Cfg_free_tree 5
+../query -cd RAPID -f branchs -numofjoints 5
