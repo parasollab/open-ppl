@@ -1,0 +1,5 @@
+../query  -f narrow \
+	-numofjoints 3 \
+	-cd RAPID \
+	-dm euclidean \
+	-lp straightline
