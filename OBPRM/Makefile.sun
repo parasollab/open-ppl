@@ -8,7 +8,7 @@
    OBPRM_LIB   = -L${OBPRM_DIR} -lobprm
 
    Graph_DIR   = ../stapl/include/graph
-   STAPL_DIR   = ../stapl/include 
+   STAPL_DIR   = ../stapl/include
    Graph_INCL  = -I${Graph_DIR} -I${STAPL_DIR}/common
 
 #------------------------------------------------------
@@ -21,7 +21,8 @@
 # collision detection packages available
 #--------------------------------------------------------------------------
 
- CD_DIR = /pub/dsmft1/CD-libs/solaris
+ #CD_DIR = /pub/dsmft1/CD-libs/solaris
+ CD_DIR = /user/gsong/OBPRM/CD-libs/solaris
 
  VCLIP_DIR     = ${CD_DIR}/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
@@ -109,6 +110,10 @@ query:: main_query.cpp
 	libobprm.a ${VCLIP_DIR}/vclip.o $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_query.o
 #--------------------------------------------------------------------
+.SUFFIXES: .cpp
+.cpp.o:
+	$(CXX) ${CXXFLAGS} -c $<
+
 % :: %.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 
