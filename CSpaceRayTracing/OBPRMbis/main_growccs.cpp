@@ -17,7 +17,7 @@
 #include "Clock_Class.h"
 #include "GraphAlgo.h"
 
-Input input;
+Input input; Input envinput;
 //QueryCmds Qinput;
 extern Stat_Class Stats;
 
@@ -42,13 +42,14 @@ int main(int argc, char** argv)
   connect_CCs_input.ReadCommandLine(&argc,argv);
 cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
   input.ReadCommandLine(argc,argv);
-
+//char * mkmpfile = "mkmp";
+//envinput.ReadCommandLine(4,&mkmpfile);
   //Query query(&input,&connect_CCs_input, &cd, &dm, &lp,&cn);
   Roadmap rdmp(&input,  &cd, &dm, &lp);
   ConnectCCs connect_ccs(&input,&rdmp,&connect_CCs_input, &cd, &dm, &lp,&cn);
   //rdmp.ReadRoadmapGRAPHONLY( (& connect_CCs_input)->mapFile.GetValue() );
   rdmp.ReadRoadmap(&input,&cd,&dm,&lp,(& connect_CCs_input)->mapFile.GetValue() );
-  rdmp.InitEnvironment(&input);
+  //rdmp.InitEnvironment(&input);
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
   dm.UserInit(&input,   &gn, &lp );
