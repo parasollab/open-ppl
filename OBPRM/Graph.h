@@ -51,7 +51,7 @@
 
 //g++ in SUN or CC in SGI
 ///Modified for VC
-#if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32) || defined(__HP_aCC)
+#if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32)
 #include <algo.h>   
 #include <list.h>   
 #include <vector.h>
@@ -65,6 +65,15 @@
 #include <vector.h>
 #include <deque.h>  
 #include <stack.h>  
+#endif
+
+//aCC in parasol
+#ifdef __HP_aCC  
+#include <algorithm>    
+#include <list>     
+#include <vector>       
+#include <deque>        
+#include <stack>        
 #endif
 
 #ifndef VID
