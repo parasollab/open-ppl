@@ -197,7 +197,7 @@ int main(int argc, char** argv)
   sort(cfgScore.begin(), cfgScore.end(), ptr_fun(score_Compare));
 
   // output the result
-  WritePathTranformationMatrices("possibleBindingSites.path", pbs, env);
+  WritePathConfigurations("possibleBindingSites.path", pbs, env);
   ofstream op("weight_RMSD_potential.dat");
   for(m=0; m<cfgScore.size(); ++m) {
      int index = cfgScore[m].first;

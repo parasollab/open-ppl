@@ -53,7 +53,7 @@ void MyInput::ReadPotentialParameters() {
   char tmp[80];
   strcpy(tmp, defaultFile.GetValue() );
   strcat(tmp, ".parameters");
-  VerifyFileExists(tmp);
+  VerifyFileExists(tmp, EXIT);
 
   ifstream is(tmp);
   ReadPotentialParameters(is);
@@ -93,7 +93,7 @@ void MyInput::ReadPotentialParameters(istream &is) {
      char tableName[80];
      strcpy(tableName, defaultFile.GetValue() );
      strcat(tableName, ".gridTable");
-     VerifyFileExists(tableName);
+     VerifyFileExists(tableName, EXIT);
 
      if(BioPotentials::potentialType == LigandBinding) {
          BioPotentials::potentialGrid = new PotentialForceGrids(tableName);
@@ -104,7 +104,7 @@ void MyInput::ReadPotentialParameters(istream &is) {
      char ligandFile[80];
      strcpy(ligandFile, defaultFile.GetValue() );
      strcat(ligandFile, ".ligand");
-     VerifyFileExists(ligandFile);
+     VerifyFileExists(ligandFile, EXIT);
 
      ifstream fs(ligandFile);
      int frames, atoms;

@@ -48,7 +48,7 @@ cout << "minP = " << minP << endl;
 bool GradientDecent::findingLocalMin(Environment *env, 
 		vector<Cfg> &trace) {
 
-    Cfg start = trace[trace.size()-1];
+    Cfg start = trace.back();
     double pot = BioPotentials::GetPotential(start, env);
     int numNeb = 2*Cfg::DOFs();  // was 10
     int searchDepth = 20;

@@ -141,7 +141,7 @@ cout << "connection succeeded " << endl;
               os << rp[i].second << "  ";
               os << rp[i].first << "\n";
           }
-          WritePathTranformationMatrices("mapnodes.path", _mapcfgs, env);
+          WritePathConfigurations("mapnodes.path", _mapcfgs, env);
       #endif
 
       // this part outputs the potential of cfgs along the path.
