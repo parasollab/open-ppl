@@ -92,11 +92,3 @@ ostream& operator<< (ostream& _os, const DblWeight& w) {
   _os<< w.lp << " " << w.weight ;
 }; 
 
-// brc following is moved from Graph.h
-ostream& operator<< (ostream& _os, const dkinfo& dk) {
-  _os<< "dkinfo = [" << dk.predvid << "," << dk.vid << "," << dk.dist << "]";
-};
-
-bool dkinfo_Compare ( const dkinfo& _d1, const dkinfo& _d2) {
-  return ( _d1.dist > _d2.dist );
-};
