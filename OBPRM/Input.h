@@ -241,6 +241,8 @@ public:
     n_str_param       collPair;
     n_str_param       freePair;
 
+    num_param<int>    calcClearance;
+
     num_param<double> posres;             // Position Resolution
     num_param<double> orires;             // Orientation Resolution
 

@@ -131,7 +131,8 @@ Input::Input():
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
         bbox             ("-bbox",""),
         collPair         ("-collPair","cM rT "),    // center of Mass
-        freePair         ("-freePair","cM rV ")     // center of Mass
+        freePair         ("-freePair","cM rV "),    // center of Mass
+        calcClearance    ("-calcClear",          0,  0,    1) 
         {
     // brc added
 /*
@@ -184,6 +185,9 @@ Input::Input():
         );
     freePair.PutDesc   ("STRING STRING","\n\t\t\tSame as above"
         );
+
+    calcClearance.PutDesc    ("INTEGER","");
+
     bbox.PutDesc       ("STRING ", "[Xmin,Xmax,Ymin,Ymax,Zmin,Zmax]"
                                     "\n\t\t\t(default calculated from environment)"
                                     "\n\t\t\tATTN: robust if no spaces are used.");
@@ -363,6 +367,7 @@ void Input::ReadCommandLine(int argc, char** argv){
     } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
         } else if ( collPair.AckCmdLine(&i, argc, argv) ) {
         } else if ( freePair.AckCmdLine(&i, argc, argv) ) {
+	} else if ( calcClearance.AckCmdLine(&i, argc, argv) ) {
         } else if ( proportionSurface.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
@@ -496,6 +501,7 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; numShells.PrintUsage(_os);
         _os << "\n  "; collPair.PrintUsage(_os);
         _os << "\n  "; freePair.PrintUsage(_os);
+	_os << "\n  "; calcClearance.PrintUsage(_os);
         _os << "\n  "; lineSegment.PrintUsage(_os);
         _os << "\n  "; usingClearance.PrintUsage(_os);
     _os << "\n  "; addPartialEdge.PrintUsage(_os);
@@ -539,6 +545,7 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"numShells"<<"\t"<<setw(F)<< numShells.GetValue();
   _os <<"\n"<<setw(FW)<<"collPair"<<"\t"<<collPair.GetValue();
   _os <<"\n"<<setw(FW)<<"freePair"<<"\t"<<freePair.GetValue();
+  _os <<"\n"<<setw(FW)<<"calcClearance"<<"\t"<<calcClearance.GetValue();
   _os <<"\n"<<setw(FW)<<"lineSegment"<<"\t"<<lineSegment.GetValue();
   _os <<"\n"<<setw(FW)<<"usingClearance"<<"\t"<<usingClearance.GetValue();
   _os <<"\n"<<setw(FW)<<"addPartialEdge"<<"\t"<<addPartialEdge.GetValue();
@@ -606,6 +613,8 @@ Input::PrintDefaults(){
             collPair.GetValue() << endl << endl;
    cout << setw(FW) << "free pair" << " (" << freePair.GetFlag() << ") : " <<
             freePair.GetValue() << endl << endl;
+   cout << setw(FW) << "calculate clearance" << " (" << calcClearance.GetFlag() << ") : " << 
+            calcClearance.GetDefault() << endl << endl;
    cout << setw(FW) << "Cfg" << " (" << CFGstrings[0]->GetFlag() << ") : " << Cfg_default_string << endl << endl;
 
    // get default parameters by initializing each class
