@@ -29,11 +29,11 @@ public:
 
    // base structure (function) for both straightline & rotate_at_s local planners.
    virtual bool IsConnected_straightline_simple(Environment *env,
-	CollisionDetection *,DistanceMetric *, Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
+	CollisionDetection *, DistanceMetric *, Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
   
-   // 
-   //virtual bool IsConnected_astar(Environment *env,CollisionDetection *,DistanceMetric *,
-   //                             Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
+    
+   virtual bool IsConnected_astar(Environment *env,
+        CollisionDetection *, DistanceMetric *, Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
    
 
    /////////////////////////////////////////////////////////////////////

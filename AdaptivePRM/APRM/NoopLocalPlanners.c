@@ -21,8 +21,12 @@ bool
 NoopLocalPlanners::IsConnected_straightline_simple(Environment *env,
 	CollisionDetection *,DistanceMetric *, Cfg& _c1, Cfg& _c2, 
 	LP& _lp, LPInfo *info) {
-  static int i=0;
-  cout << i++ << endl;
   return true;
 }
   
+bool
+NoopLocalPlanners::IsConnected_astar(Environment *env,
+	CollisionDetection *,DistanceMetric *, Cfg& _c1, Cfg& _c2,
+	LP& _lp, LPInfo *info) {
+  return true;
+}
