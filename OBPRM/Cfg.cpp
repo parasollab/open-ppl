@@ -648,7 +648,7 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 
     int tk = 0;
     int collisionFlag = false;
-    while(tk < n_ticks && !collisionFlag){
+    while(tk < n_ticks && !collisionFlag && (dm->Distance(env,cfg,tick,dmsetid) < clear) ){
 
       tick.Increment(incr);
 
@@ -696,7 +696,7 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
    
     int tk = 0;
     int collisionFlag = false;
-    while(tk < n_ticks && !collisionFlag){
+    while(tk < n_ticks && !collisionFlag && (dm->Distance(env,cfg,tick,dmsetid) < clear) ){
 
       tick.Increment(incr);
 
