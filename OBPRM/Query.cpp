@@ -248,7 +248,7 @@ GetPathSegment(Cfg _c1, Cfg _c2, CollisionDetection *cd,
    if (Found) {
 
      LP Lp = lp->planners.GetLP(FoundInBitPosition);
-     LPF lpfcn = Lp.GetPlanner();
+     //LPF lpfcn = Lp.GetPlanner();
 
      LPInfo info,info_rev;
         info.checkCollision=info_rev.checkCollision= _ci->checkCollision;
@@ -259,14 +259,14 @@ GetPathSegment(Cfg _c1, Cfg _c2, CollisionDetection *cd,
 	info.dmsetid       =info_rev.dmsetid       = _ci->dmsetid;
 
      // FORWARD
-     if ( lpfcn(rdmp.GetEnvironment(),cd,dm,_c1, _c2, Lp, &info) ) {
+     if ( lp->IsConnected(Lp.GetName(), rdmp.GetEnvironment(),cd,dm,_c1, _c2, Lp, &info) ) {
 	_ci->path.insert(_ci->path.end(),
 		info.path.begin(),info.path.end());
 	info.path.erase(info.path.begin(),info.path.end());
         return true;
 
      // BACKWARD
-     } else if ( lpfcn(rdmp.GetEnvironment(),cd,dm,_c2, _c1, Lp, &info_rev) ){
+     } else if ( lp->IsConnected(Lp.GetName(), rdmp.GetEnvironment(),cd,dm,_c2, _c1, Lp, &info_rev) ){
 	reverse(info_rev.path.begin(),info_rev.path.end());
 	_ci->path.insert(_ci->path.end(),
 		info_rev.path.begin(),info_rev.path.end());
