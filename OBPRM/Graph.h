@@ -572,7 +572,7 @@ public:
          *@param int number of edges per vertex ('reserve' space)
          */
        AbstractGraph(int);
-/*        AbstractGraph(int,int,int,int,int); */
+       AbstractGraph(int,int,int,int,int);
 
        ///Do nothing
        ~AbstractGraph();
@@ -750,11 +750,11 @@ public:
          */
        WeightedMultiDiGraph(int,int);
 
-/*        ///Constructor. Directly build the graph with vertices */
-/*        WeightedMultiDiGraph(vector<Vertex>&,int,int,int,int,int,int); */
+       ///Constructor. Directly build the graph with vertices
+       WeightedMultiDiGraph(vector<Vertex>&,int,int,int,int,int,int);
 
-/*        ///Constructor.  */
-/*        WeightedMultiDiGraph(int,int,int,int,int,int); */
+       ///Constructor. 
+       WeightedMultiDiGraph(int,int,int,int,int,int);
 
        /**Destrcutor. Do nothing.
          */
@@ -1907,8 +1907,8 @@ public:
 
        //WeightedGraph(WeightedMultiDiGraph<VERTEX,WEIGHT>); // construct from base  
 
-/*        ///Directly build a graph with vertices */
-/*        WeightedGraph(vector<Vertex>&,int,int);  */
+       ///Directly build a graph with vertices
+       WeightedGraph(vector<Vertex>&,int,int); 
 
        /**Destrcutor. Do nothing.
          */
@@ -2434,12 +2434,12 @@ AbstractGraph(int _reserveEdgesPerVertex) {
     reserveEdgesPerVertex = _reserveEdgesPerVertex;
 }
 
-/* template<class VERTEX>  */
-/* AbstractGraph<VERTEX>:: */
-/* AbstractGraph(int _reserveEdgesPerVertex,int t1,int t2, int t3, int t4) { */
-/*     vertIDs = t1; numVerts = t2;  */
-/*     numEdges = t3; reserveEdgesPerVertex = t4;  */
-/* } */
+template<class VERTEX> 
+AbstractGraph<VERTEX>::
+AbstractGraph(int _reserveEdgesPerVertex,int t1,int t2, int t3, int t4) {
+    vertIDs = t1; numVerts = t2; 
+    numEdges = t3; reserveEdgesPerVertex = t4; 
+}
 
 template<class VERTEX> 
 AbstractGraph<VERTEX>::
@@ -2537,21 +2537,21 @@ WeightedMultiDiGraph(int _sz, int _edgelistsz)
     v.reserve(_sz);
 }
 
-/* template<class VERTEX,class WEIGHT>  */
-/* WeightedMultiDiGraph<VERTEX,WEIGHT>:: */
-/* WeightedMultiDiGraph(vector<Vertex>& _v,int _sz,int _edgelistsz,int t1,int t2, int t3, int t4) */
-/* : AbstractGraph<VERTEX> (_edgelistsz,t1,t2,t3,t4)  */
-/* { */
-/*     v.reserve(_sz); */
-/*     v=_v; */
-/* } */
+template<class VERTEX,class WEIGHT> 
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+WeightedMultiDiGraph(vector<Vertex>& _v,int _sz,int _edgelistsz,int t1,int t2, int t3, int t4)
+: AbstractGraph<VERTEX> (_edgelistsz,t1,t2,t3,t4) 
+{
+    v.reserve(_sz);
+    v=_v;
+}
 
-/* template<class VERTEX,class WEIGHT>  */
-/* WeightedMultiDiGraph<VERTEX,WEIGHT>:: */
-/* WeightedMultiDiGraph(int _sz,int _edgelistsz,int t1,int t2, int t3, int t4) */
-/* : AbstractGraph<VERTEX> (_edgelistsz,t1,t2,t3,t4)  */
-/* { */
-/* } */
+template<class VERTEX,class WEIGHT> 
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+WeightedMultiDiGraph(int _sz,int _edgelistsz,int t1,int t2, int t3, int t4)
+: AbstractGraph<VERTEX> (_edgelistsz,t1,t2,t3,t4) 
+{
+}
 
 template<class VERTEX, class WEIGHT> 
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
