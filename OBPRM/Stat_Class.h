@@ -1,9 +1,9 @@
 // $Id$
 
-#include "Roadmap.h"
-
 #ifndef StatClass_h
 #define StatClass_h
+
+class RoadMap;
 
 // Maximum number of connected components to keep track of
 const int MaxCC=	100;
@@ -59,7 +59,7 @@ public:
   int DecLPCollDetCalls( char *LPName ,int); 
 
 
-  static const int ALL= -1;
+  static const int ALL;
   void PrintAllStats( Roadmap *rmap, int numCCs=ALL);
 
 
@@ -81,5 +81,6 @@ protected:
   int LPAttempts[MaxLP];
   int LPCollDetCalls[MaxLP];
 };
+
 #endif
 

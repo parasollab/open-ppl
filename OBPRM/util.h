@@ -1,39 +1,60 @@
 // $Id$
 
 /**@file util.h
-   @date 7/17/98
-   @author Daniel Vallejo
-*/
+  *
+  *This is a file containing many kinds of methods.
+  *
+  *@date 7/17/98
+  *@author Daniel Vallejo
+  */
 
 #ifndef util_h
 #define util_h
 
+/////////////////////////////////////////////////////////////////////////////////////////
+//Include standard headers
 
 #ifdef HPUX
 #include <sys/io.h>
 #endif
 
-#include "Body.h"
-#include "OBPRM.h"
 #include <vector.h>
 #include <ctype.h>
 
- 
-// Actions for VerifyFileExists
-#define EXIT 1
-#define RETURN 2  
+/////////////////////////////////////////////////////////////////////////////////////////
+//Include OBPRM headers
+#include "OBPRM.h"
+
+/////////////////////////////////////////////////////////////////////////////////////////
+class Cfg;
 class Environment;
+/////////////////////////////////////////////////////////////////////////////////////////
 
 
-/** Calculate the minimum DIRECTED angular distance between two angles
-normalized to 1.0 */
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+// Basic Utility.
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/**@name Basic Utility */
+//@{
+
+/**Calculate the minimum DIRECTED angular distance 
+  *between two angles normalized to 1.0 
+  */
 double DirectedAngularDistance(double a,double b);
 
-
+///Return minimun between a and b.
 inline double min(double a, double b){
     return a < b ? a : b;
 }
 
+///Return maximun between a and b.
 inline double max(double a, double b){
     return a > b ? a : b;
 }
@@ -43,51 +64,188 @@ inline double sqr(double a)
 {
     return a*a;
 }
+//@}
 
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
 // Cfgs input & output from/to files.
-void WritePathLinkConfigurations(char output_file[80], 
-     const vector<Cfg> &path, Environment *env);
-void WritePathConfigurations(char output_file[80], vector<Cfg> path, Environment *env);
-void ReadCfgs(char *filename, vector<Cfg> &cfgs);
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+/**@name Cfgs I/O Utility*/
+//@{
 
-// general functions.
-  bool VerifyFileExists(char *_fname,int action);
-template <class T> bool readfield (istream &_is, T *element);
+	/**Write a list of Cfgs in a give path and path size 
+	  *to file with given filename.
+	  *
+	  *This method writes number of links of robot,
+	  *path size to output_file. Then Cfgs for
+	  *each link in robot will be output to file 
+	  *named "output_file".cfg
+	  *
+	  *
+	  *@param filename Filename for Cfg data.
+	  *@param path All Gfgs will be written to file.
+	  *@param env is used to get "robot link" information.
+	  *@note if file couldn't be opened, error message will be post 
+	  *and process will be terminated.
+	  *
+	  *@see Cfg::printLinkConfigurations
+	  */
+	void WritePathLinkConfigurations(char output_file[80], 
+									 const vector<Cfg> &path, 
+									 Environment *env);
+
+	/**Write a list of Cfgs in a give path and path size 
+	  *to file with given filename.
+	  *@param filename Filename for Cfg data.
+	  *@param path All Gfgs will be written to file.
+	  *@param env is not used.
+	  *@note if file couldn't be opened, error message will be post 
+	  *and process will be terminated.
+	  */
+	void WritePathConfigurations(char output_file[80], 
+								 vector<Cfg> path, 
+								 Environment *env);
+
+	/**Read a list of Cfgs from file with given filename.
+	  *@param filename Filename for Cfg data.
+	  *@param cfgs All new Gfg will be inserted to this list.
+	  *@note if file couldn't be opened, error message will be post.
+	  *@see Cfg::Read
+	  */
+	void ReadCfgs(char *filename, vector<Cfg> &cfgs);
+
+//@}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+// Files input & output from/to files.
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+/**@name File I/O Utility*/
+//@{
+
+	#define EXIT 1		///< Actions for VerifyFileExists
+	#define RETURN 2	///< Actions for VerifyFileExists
+
+	/**Check if or not this given filename exists.
+	  *@param _fname File name that is going to be checked.
+	  *@action What should be done if file not found.
+	  *Its value should be EXIT or RETURN.
+	  *
+	  *@return true if file exists. If file dosen't exist 
+	  *and action is EXIT, process will be terminated.
+	  *Otherwise false will be returned.
+	  */
+	bool VerifyFileExists(char *_fname,int action);
 
 
+	/**Read data for element from input stream.
+	  *This method throws away comments starting from "#", and
+	  *find out read data for element.
+	  *
+	  *@param element An element which will read data from file.
+	  *@note type T should have istream>> overloading.
+	  *@note >> overloading should return 0 (NULL or false)
+	  *if data couldn't be read correctly.
+	  */
+	template <class T> bool readfield (istream &_is, T *element);
 
-//-----------------------------------------------------------
+//@}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
 // implementation for the template function.
-//-----------------------------------------------------------
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
+///The character to distinguish commnets.
 #define COMMENT_DELIMITER '#'
+///The maximum number of characters in each line.
 #define LINEMAX 256
+	
 template <class T> bool readfield (istream &_is, T *element,vector <char *> &comment) {
-
-  char c;
-  char ThrowAwayLine[LINEMAX];
-
-  while ( _is.get(c) ) {
-    if (c == '#') {
-        _is.getline(ThrowAwayLine,LINEMAX,'\n');
-        comment.push_back(strdup(ThrowAwayLine));
-    }
-    else if (! isspace(c) ) {
-        _is.putback(c);
-        if (_is >> *element) return true;
-        else               break;
-    }
-  }
-  
-  // could not read correctly ...
-  cout << "Error in reading!!! at util::readfield. " << endl;
-  return false;
+	
+	char c;
+	char ThrowAwayLine[LINEMAX];
+	
+	while ( _is.get(c) ) {
+		if (c == '#') {
+			_is.getline(ThrowAwayLine,LINEMAX,'\n');
+			comment.push_back(strdup(ThrowAwayLine));
+		}
+		else if (! isspace(c) ) {
+			_is.putback(c);
+			if (_is >> *element) return true;
+			else               break;
+		}
+	}
+	
+	// could not read correctly ...
+	cout << "Error in reading!!! at util::readfield. " << endl;
+	return false;
 }
+
 template <class T> bool readfield (istream &_is, T *element) {
-  vector <char  *> comment;
-  bool ret=readfield(_is,element,comment);
-  comment.clear();
-  return ret;
+	vector <char  *> comment;
+	bool ret=readfield(_is,element,comment);
+	comment.clear();
+	return ret;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//Modified for VC
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef _WIN32
+
+////////////////////////////////////////////////////////////////////////////////////////
+// Following functions define M_PI and drand48, which are not starndard c library and 
+// definitions. In addition, rint used to round off float points to int is also here.
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#define M_PI PI	//reference PI above
+
+extern "C" {
+//Implementation of these functions are located in util.cpp
+double drand48();
+double erand48(register unsigned short *xsubi);
+long irand48(register unsigned short m);
+long krand48(register unsigned short *xsubi, unsigned short m);
+long lrand48();
+long mrand48();
+static void next();
+void srand48(long seedval);
+unsigned short * seed48(unsigned short seed16v[3]);
+void lcong48(unsigned short param[7]);
+long nrand48(register unsigned short *xsubi);
+long jrand48(register unsigned short *xsubi);
+
+/**Round to closest integer.
+  *The rint() function rounds x to an integer value according
+  *to the prevalent rounding mode.  The default rounding mode
+  *is to round to the nearest integer.
+  *@return The  rint() function returns the integer value as a float-
+  *ing-point number.
+  */
+double rint(double x);
+
+} //end extern "C"
+
+#endif //_WIN32
+/////////////////////////////////////////////////////////////////////////////////////////
 
 
 #endif

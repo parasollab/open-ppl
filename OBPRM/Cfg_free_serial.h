@@ -1,30 +1,24 @@
 // $Id$
 
-/**@file Cfg_fixed_PRR.h
-  *A derived class from CfgManager. It provides some specific
-  *implementation closely related to a PRR robot.
-  *Degree of Freedom: 3
-  *@author Guang Song
-  *@date 08/31/99
-  */
-
+/**@file Cfg_free_serial.h
+   A derived template class from CfgManager. It provides some
+   specific implementation directly related to a multiple joints
+   serial robot.
+   @author Guang Song
+   @date 08/31/99
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef Cfg_fixed_PRR_h
-#define Cfg_fixed_PRR_h
+#ifndef Cfg_free_serial_h
+#define Cfg_free_serial_h
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-//Include obprm headers
+//Include OBPRM headers
 #include "CfgManager.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////
-/**
-  *A derived class from CfgManager. It provides some specific
-  *implementation closely related to a PRR robot.
-  *Degree of Freedom: 3
-  */
-class Cfg_fixed_PRR : public CfgManager {
+class Cfg_free_serial : public CfgManager {
 public:
+
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -38,16 +32,11 @@ public:
   /**@name  Constructors and Destructor*/
   //===================================================================
   //@{
-
-  /**Creae an instance of Cfg_fixed_PRR.
-    *Degree of freedom is 3 and Degree of freedom for position part is 1.
-	*/
-  Cfg_fixed_PRR();
+  ///Degree of freedom is (6+_numofJoints) and degree of freedom for position part is 3.
+  Cfg_free_serial(int _numofJoints);
   ///Do nothing
-  ~Cfg_fixed_PRR();
-
+  ~Cfg_free_serial();
   //@}
-
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -59,51 +48,57 @@ public:
   /**@name Access Methods*/
   //@{
 
-  ///The center position is (0, 0, c[0])
+  ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition(const Cfg & c) const;
-  
-  /**Randomly generate a Cfg
-    *the new Cfg whose poisiotn will be R or -R, and its orientations 
-	*are generated randomly between [0,1)
+
+  /**Randomly generate a Cfg.
+    *@param R This new Cfg will have distance (position of its base link) R from origin
     *@param rStep
+	*@return the first 6 components in Cgf is the configuration for base link.
+	*and the other (NumofJoints) components are angles between joints
 	*@todo what is rStep?
 	*/
   virtual Cfg GetRandomCfg(double R, double rStep);
 
-  /**Randomly generate a Cfg whose center positon (z only) is inside a given bounding box.
-    *(rotation, don't care!)
-    */
+  /** Randomly generate a Cfg whose center positon of base link is inside a 
+    * given bounding box.(rotation, don't care!)
+    * @todo this is not EXACTLY accurate, ok with most cases ... TO DO
+    * To be accurate, one has to make sure every link is inside the given BB,
+    * but here only the base link is taken care of. It is almost fine since
+    * a little 'bigger' BB will contain all links.
+	*/
   virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
 
-  ///Get a random vector whose magnitude is incr.
+  ///Get a random vector whose magnitude is incr (ie. the orienatation of of this Cfg is 0)
   virtual Cfg GetRandomRay(double incr);
   //@}
-
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
-  //	methods for nodes generation 
+  //	methods for nodes generation : Most of them are abstract
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-  
   /**@name Node Generation*/
   //@{
 
   /** Node Generation methods: OBPRM
-    *@todo Document this
+    * Generate a new Cfg, and put it in resultCfg.
+	* The position of new cfg is from (robot_goal-robot_start)
+	* The orientation (including joint angles) of new cfg is generated randomly.
     */
   virtual bool GenerateOverlapCfg(Environment *env, int robot,
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg);
 
   /** Node Generation methods: NORMAL
-    * Not implemented yet.
+    *generate nodes by overlapping two triangles' normal.
+    *@todo Document this
     */
   virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
          CollisionDetection *,int obstacle, int nCfgs,
     SID _cdsetid, CDInfo& _cdInfo);
- 
+
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,8 +110,10 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////
   /*@name Helper functions*/
   //@{
-  /// methods for Cfg generation and collision checking.
-  virtual bool ConfigEnvironment(const Cfg &c, Environment *env);
+	  /** methods for Cfg generation and collision checking.
+	    *@see GetWorldTransformation
+	    */
+	  virtual bool ConfigEnvironment(const Cfg &c, Environment *env);
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +124,7 @@ public:
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   protected:
+     int NumofJoints;	///<Number of Joint
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -137,7 +135,6 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////
   private:
 
+};
 
-
-} ;
 #endif

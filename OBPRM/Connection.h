@@ -10,15 +10,21 @@
 #ifndef Connection_h
 #define Connection_h
 
+////////////////////////////////////////////////////////////////////////////////////////////
+//Include standard headers
 #include <fstream.h>
-#include "Input.h"
+
+////////////////////////////////////////////////////////////////////////////////////////////
+//include OBPRM headers
 #include "DHparameters.h"
 #include "Transformation.h"
 
+/////////////////////////////////////////////////////////////////////
 class Input;
 class Body;
+/////////////////////////////////////////////////////////////////////
 
-/**This class stores information about connection for one body to another one.
+/**This class stores information about connection from one body to another one.
   *The information stored in this class includes:
   *	- Connection type
   *	- 2 Body instances
@@ -32,8 +38,18 @@ public:
     //---------------------------------------------------------------
     enum ConnectionType {
         Revolute,
-	Prismatic
+		Prismatic
     };
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //	Constructors and Destructor
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+
     //---------------------------------------------------------------
     /**@name  Constructors and Destructor
       *@todo The documentation of these function are not complete.
@@ -42,50 +58,67 @@ public:
     //---------------------------------------------------------------
     //@{
     
-    /** Constructor with Body1 and Body2 (Body2 is optional).
+    /**Constructor with Body1 and Body2 (Body2 is optional).
       *Get might be called to retrieve values for unset data member.
-      *@param _body1 Body1.
-      *@param _body2 Body2.
+      *@param _body1 One of this _body1's end joints is this connection.
+      *@param _body2 One of this _body2's start joints is this connection.
+	  *@note if _body2 is NULL, then client might use Get to get information
+	  *about body2 from Input instance.
+	  *@see Input, Get
       */
     Connection(Body * _body1, Body * _body2 = 0);  // Second argument is optional
     
     /**You need to provide all information for Constructor.
       *@param _body1
-      *@param _body1
-      *@param _transformationToBody2
-      *@param _dhparameters
-      *@param _transformationToDHFrame
+      *@param _body2
+      *@param _transformationToDHFrame Transform from frame of body1 to DH-Frame
+      *@param _dhparameters DHParameter
+      *@param _transformationToBody2 Transform from DH-Frame to frame of body1
       **/
     Connection(Body * _body1, Body * _body2, const Transformation & _transformationToBody2, 
-	 const DHparameters & _dhparameters, const Transformation & _transformationToDHFrame);
+	const DHparameters & _dhparameters, const Transformation & _transformationToDHFrame);
 	 
-    ///Destructor
+    /**Destructor.
+	  *call first body's RemoveForwardConnection and second's RemoveBackwardConnection
+	  *@see Body::RemoveForwardConnection and Body::RemoveBackwardConnection
+	  */
     ~Connection();
+
     //@}
-    
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //	Access Methods
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+
     //---------------------------------------------------------------
     /**@name  Access Methods*/
     //---------------------------------------------------------------
     //@{
     
-    /**Check if a give body is first body or not.
+    /**Check if a give body is the first body of this connection instance or not.
       *@param _body A point to Body instance. Address is checked
       * with the address of first body.
       *@return True if _body is first body. Otherwise False is returned.
       */
     int IsFirstBody(Body * _body);
     
-    /**Get Previouse Body.
+    /**Get Previouse Body. (i.e first body)
       *@note only body[0] is returned.
       **/
     Body * GetPreviousBody();    
     
-    /**Get Next Body.
+    /**Get Next Body. (i.e second body)
       *@note only body[1] is returned.
-      **/
+      */
     Body * GetNextBody();
     
-    ///Get the type of connection used in this Connection instance.
+    /**Get the type of connection used in this Connection instance.
+	  *@see ConnectionType
+	  */
     ConnectionType GetConnectionType();
 
     ///Get a refecence of DHparameters used in this Connection instance.   
@@ -105,17 +138,44 @@ public:
       * @param _connectionIndex Used to find out the type of connection from _input.
       */
     void Get(Input * _input, int _multibodyIndex, int _connectionIndex);
-    
-    ///Write inforamtion about Body2, transformationToBody2, and transformationToDHFrame to output stream.
-    virtual void Write(ostream & _os);
     //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //	I/O
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+    /**@name I/O Methods. Use these method to read in/write out internal state*/
+	//@{
+
+	/**Write inforamtion about Body2, transformationToBody2, and transformationToDHFrame 
+	  *to output stream.
+	  */
+    virtual void Write(ostream & _os);
+
+	//@}
     
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //	Protected data member and member methods
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+
 protected:
 
-///////////////////////////////////////////////////////////////////////////////////////
-// PRIVATE METHOD and DATA MEMBERS
-// NO DOCUMENTATION YET
-///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  // PRIVATE METHOD and DATA MEMBERS
+  // NO DOCUMENTATION YET
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+
 private:
     //---------------------------------------------------------------
     //  Data
@@ -128,6 +188,18 @@ private:
     int IsActuator;
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+//	Implementation of Connection
+//
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////
+
 //===================================================================
 //  Inline Functions
 //===================================================================
@@ -138,6 +210,7 @@ private:
 inline DHparameters & Connection::GetDHparameters() {
     return dhparameters;
 }
+
 
 //-------------------------------------------------------------------
 //  IsFirstBody

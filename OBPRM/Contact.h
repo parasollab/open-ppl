@@ -5,20 +5,39 @@
    @date 2/25/98 
 */
 
+///////////////////////////////////////////////////////////////////////////////////////////
+
 #ifndef Contact_h
 #define Contact_h
 
-#include "Body.h"
+///////////////////////////////////////////////////////////////////////////////////////////
+//Include OBPRM headers
 #include "Transformation.h"
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Forward declaration
+class Body;
 
 class Contact {
 public:
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //	Constructors and Destructor
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+
     //-----------------------------------------------------------
-    //  Constructors and Destructor
+    /**@name  Constructors and Destructor*/
     //-----------------------------------------------------------
+	//@{
     Contact();
     Contact(Body * _body1,  Body * _body2, Vector3D & _position, Vector3D & _normal1, Vector3D & _normal2);
     ~Contact();
+	//@}
+
     Body *GetBody(int _index);
     Transformation & GetUtransformToContact(int _index);
     Vector3D & GetPosition();
@@ -28,7 +47,15 @@ public:
     void ComputeTangential();
     void ComputeOrthogonal();
     void ComputeTransform();
-protected:
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //	Protected data member and member methods
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+
 private:
     //-----------------------------------------------------------
     //  Data
@@ -43,6 +70,14 @@ private:
     Vector3D tangential[2];
     Vector3D orthogonal[2];
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//	Implementation of Contact (inline methods)
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 inline Body * Contact::GetBody(int _index){
   return body[_index];

@@ -13,23 +13,32 @@
 #ifndef OBPRM_h
 #define OBPRM_h
 
+/////////////////////////////////////////////////////////////////////
+//Include standard headers
 #ifdef HPUX
 #include <sys/io.h>
 #endif
+
+#include <vector.h> //for bool definition in CC
+#include <iostream.h>
+
+/////////////////////////////////////////////////////////////////////
+//Include OBPRM header
 #include "BasicDefns.h"
 
+/////////////////////////////////////////////////////////////////////
 //-----------------------------------
 // Constants
 //---------------------------------
 /** @name Constants used in OBPRM.*/
 //@{
-#define ORIENTATION_RES             0.05
-#define POSITION_RES_FACTOR         0.05
+#define ORIENTATION_RES             0.05	///<Resolution for Orientation
+#define POSITION_RES_FACTOR         0.05	///<Resolution for Position
 
-#define NULL_WT_INFO -999              ///< to pad weight fields for graph conversions
+#define NULL_WT_INFO -999				///< to pad weight fields for graph conversions
 
-#define INVALID_SID -999
-#define INVALID_EID -999
+#define INVALID_SID -999				///<Invalid Set ID
+#define INVALID_EID -999				///<Invalid Element ID
 
 #define INVALID_DM -999                 ///< invalid dm id
 #define INVALID_CD -999                 ///< invalid cd id
@@ -57,7 +66,7 @@ typedef short EID;///< element id type
 //-----------------------------------
 // c-space representations
 //-----------------------------------
-#include "Cfg.h"
+//#include "Cfg.h"	//??Why need Cfg.h here????
 
 //-----------------------------------
 // choose represention for edge weights in roadmap graph, some samples

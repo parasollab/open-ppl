@@ -11,7 +11,12 @@
 #ifndef BasicDefns_h
 #define BasicDefns_h
 
+///////////////////////////////////////////////////////////////////////////
 #define PI              3.14159
+#define TWOPI           (PI*2.0)
+
+//////////////////////////////////////////////////////////////////////////
+// Check which CD library will be used
 #ifndef USE_CSTK
 #ifndef USE_VCLIP
 #ifndef USE_RAPID
@@ -19,8 +24,8 @@
 #endif
 #endif
 #endif
-#define TWOPI           (PI*2.0)
 
+/////////////////////////////////////////////////////////////////////////
 #define TRUE 1
 #define FALSE 0
 
@@ -28,15 +33,17 @@
 #define OK  0
 #endif
 
-#ifndef MAXFLOAT
-#define MAXFLOAT 99999999999999999.99999
-#endif
 #ifndef ERROR
 #define ERROR 1
 #endif
 
+//////////////////////////////////////////////////////////////////////////
+#ifndef MAXFLOAT
+#define MAXFLOAT 99999999999999999.99999
+#endif
 
-/// Lega Types of Collision Detecters
+//////////////////////////////////////////////////////////////////////////
+/// Legal Types of Collision Detecters
 enum cd_predefined {
 
 /// c-space toolkit
@@ -55,13 +62,12 @@ enum cd_predefined {
 
 /// Robust and Accurate Polygon Interference Detection
 #ifdef USE_RAPID
-    RAPID,
+        RAPID,
 #endif
 /**< enum RAPID */
 
 /// first user defined cd set, if any
         CD_USER1};    
 /**< enum CD_USER1 */
-
 
 #endif

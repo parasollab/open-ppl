@@ -1,46 +1,104 @@
 // $Id$
 
+////////////////////////////////////////////////////////////////////////////////////////////
+
 /**@file QueryCmds.h
-   @date 10/19/98
-   @author Lucia K. Dale
-*/
+  *@date 10/19/98
+  *@author Lucia K. Dale
+  */
+////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef QueryCmds_h
 #define QueryCmds_h
 
-#include "Input.h"
+////////////////////////////////////////////////////////////////////////////////////////////
+#include "Parameters.h"
 
+////////////////////////////////////////////////////////////////////////////////////////////
 class QueryCmds {
 public:
-    static const int FILENAME_LENGTH  =  80;
 
-    //-----------------------------------------------------------
-    //  Constructors and Destructor
-    //-----------------------------------------------------------
-    QueryCmds();
-    ~QueryCmds();
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Constructors and Destructor
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Constructors and Destructor */
+	//@{
 
-    //-----------------------------------------------------------
-    //  Methods
-    //-----------------------------------------------------------
-    int ReadCommandLine(int *argc, char **argv);
-    void PrintUsage(ostream& _os,char *executablename);
-    void PrintValues(ostream& _os);
+		///Default Constructor. 
+		QueryCmds();
 
-    //-----------------------------------------------------------
-    //  Data
-    //-----------------------------------------------------------
+		///Destructor. Do nothing.
+		~QueryCmds();
 
+	//@}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	I/O (Display, Input, Output)
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name I/O*/
+	//@{
+
+		/**Analysis command argument list.
+		  *This method analysis the argument list of query command
+		  *and fill values in to data members of this class.
+		  *@param argc Number of arguments in argv.
+		  *@param argv An array of arguments of obprm command.
+		  *@exception BadUsage This exception is throwed whenever bad usages is found
+		  *in command arguments.
+		  *@see param::AckCmdLine.
+		  */
+		int ReadCommandLine(int *argc, char **argv);
+
+		///Ouput usage of query command.
+		void PrintUsage(ostream& _os,char *executablename);
+
+		///Ouput values of parameters of query command.
+		void PrintValues(ostream& _os);
+
+	//@}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Public Data
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+	///Use one filename for roamap, query, and path. (extensions are different)
     str_param<char*> defaultFile;
 
-    /// INPUT  filename
+    /// INPUT  filename for road map
     str_param<char*> mapFile;
-    /// INPUT  filename
+    /// INPUT  filename for query configurations
     str_param<char*> queryFile;
-    /// OUTPUT filename
+    /// OUTPUT filename for path(s)
     str_param<char*> pathFile;
 
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Protected Data members and Member Methods
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
 protected:
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Private Data members and Member Methods
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
 private:
 };
 

@@ -1,212 +1,489 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
-/**@file Parameters.h
-        This set of classes supports a command line interface. 
-  
-        The classes in the set are:
-          o param<TYPE>       -- abstract class (single value w/ default)
-          o num_param<TYPE>   -- implements a single numerical value 
-  				 adhering to a [min,max] range
-          o str_param<TYPE>   -- implements a single value w/ a few
-  				 more methods to check directory paths etc
-                                 acknowledges 1 field from argv
-          o n_str_param<TYPE> -- implements a char* value
-                                 acknowledges n fields from argv
-  
-    @author Lucia K. Dale
-    @date   8/27/98
-*/
-/////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////////////////////////////
+/**@file  Parameters.h
+  * This set of classes supports a command line interface.
+  *
+  *General Description:
+  *
+  *	- This set of classes supports a command line interface and 
+  *         environment reading file.
+  *
+  *	- The classes in the set are:
+  *		-# param<TYPE>       -- abstract class (single value w/ default)
+  *		-# num_param<TYPE>   -- implements a single numerical value 
+  *			 adhering to a [min,max] range
+  *		-# str_param<TYPE>   -- implements a single value w/ a few
+  *			more methods to check directory paths etc
+  *                     acknowledges 1 field from argv
+  *		-# n_str_param<TYPE> -- implements a char* value
+  *                     acknowledges n fields from argv
+  *
+  *@author  Lucia K. Dale
+  *@date   8/27/98
+  */
+////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef Parameters_h
 #define Parameters_h
 
+////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef _WIN32
   #include <iostream.h>
 #endif
 
-#include <string.h>
 #ifdef _WIN32
-  #include <vector.h>
   #include <strstrea.h>
 #else
-  #include <vector.h>
   #include <strstream.h>
 #endif
 
+#include <string.h>
+#include <vector.h>
 #include <stdlib.h>
 #include <math.h>
 
+////////////////////////////////////////////////////////////////////////////////////////////
 class BadUsage{};
 
-//----------------------------------------
-/** abstract parameter (used to be pure virtual)
-        This is the base class for all our "parameter types"
-        currently used to communicate between user and program
-        via the command line.
-*/
-//----------------------------------------
+//////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+//
+//	Class param
+//
+//
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////
+/**abstract parameter (used to be pure virtual).
+  *This is the base class for all our "parameter types"
+  *currently used to communicate between user and program
+  *via the command line.
+  */
 template <class TYPE> class param {
 public:
 
-  /**@name Constructors and Destructor */
-  //@{
-        /// Default constructor.
-        param ();
-        /// Most used constructor specifies command line flag.
-        param (char *_flag);
-  //@}
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Constructors and Destructor
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Constructors and Destructor */
+	//@{
 
-  /**@name Access Methods for various data fields */
-  //@{
-        char* GetFlag();
-        TYPE GetDefault();
+		/**Default constructor.
+		  *Following is the status if this instance after constructed:
+		  *	-# #activated FALSE
+		  *	-# #desc NULL
+		  *	-# #typedesc NULL
+		  */
+		param ();
+		/**Most used constructor specifies command line flag.
+		  *Following is the status if this instance after constructed:
+		  *	-# #activated FALSE
+		  *	-# #desc NULL
+		  *	-# #typedesc NULL
+		  *	-# #falg _flag
+		  */
+		param (char *_flag);
 
-        void PutDesc(                 char *_desc);
-        void PutDesc(char *_typedesc, char *_desc);
-        char* GetDesc();
-        char* GetTypeDesc();
+	//@}
 
-        TYPE GetValue();
-        void PutValue(TYPE _val);
-  //@}
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Access Methods
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Access Methods for various data fields */
+	//@{
 
-  /// @return True when parameter exists in current command line
+		///Get #flag.
+		char* GetFlag();
+
+		///Get #tdefault.
+		TYPE GetDefault();
+
+		/**Set description of this parameter, such as usage.
+		  *Set #desc as _desc
+		  */
+		void PutDesc(                 char *_desc);
+
+		/**Set description of this parameter , such as usage
+		  *and the type of this parameter, such as integer, string....
+		  *Set #desc as _desc and #typedesc as _typedesc
+		  */
+		void PutDesc(char *_typedesc, char *_desc);
+
+		///Get Description about this parameter. (#desc)
+		char* GetDesc();
+
+		///Get Description about the type this parameter. (#typedesc)
+		char* GetTypeDesc();
+
+		///Get parameter value. (#tvalue)
+		TYPE GetValue();
+
+		///Validate and set parameter value. (#tvalue)
+		void PutValue(TYPE _val);
+
+	//@}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Helper Methods
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Helper Methods */
+	//@{
+
+		/// @return True when parameter exists in current command line
         bool IsActivated(void);
-  /// Print proper command line usage
-        void PrintUsage(ostream& _os,int width=18);
-  /** Data fields are updated according to what was specified on 
-      the command line.
-      @return True when parameter exists in current command line.
-  */
-        bool AckCmdLine(int *i, int argc, char** argv, bool nfields=false);
-protected:
-  /**@name Helper Methods for verifying and accessing major data field
-  These were originally "virtual" but Burchan changed this without 
-  explanation during the platform ports. 
-  */
-  //@{
-        virtual void SetValue(TYPE _val)=0;
-        virtual void SetDefault(TYPE _val)=0;
-        virtual bool VerifyValidValue(TYPE _val)=0;
-  //@}
 
-  /**@name Data */
-  //@{
-        TYPE tvalue, tdefault; /// major data field and its default
-        char flag[80];         /// command line flag
-        bool activated;        /// currently active on command line?
-        char *typedesc;        /// type of major data field for human eyes
-        char *desc;            /// meaning of major data field to humans
-  //@}
+		/// Print proper command line usage
+        void PrintUsage(ostream& _os,int width=18);
+
+		/** Data fields are updated according to what was specified on 
+		  * the command line.
+		  * @param i index for argv. This method will check parameter value(s)
+		  * starting from i and update i to the end of read value(s).
+		  * @param argc the length of argv
+		  * @param argv A list of parmeters from user input.
+		  *
+	      * @return True when parameter exists in current command line.
+		  */
+        bool AckCmdLine(int *i, int argc, char** argv, bool nfields=false);
+
+	//@}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Protected Data Members and Member Functions
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+protected:
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Protected Helper Methods
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Helper Methods for verifying and accessing major data field.
+	  *These were originally "virtual" but Burchan changed this without 
+	  *explanation during the platform ports. 
+	  */
+	//@{
+		  ///Abstract
+		  virtual void SetValue(TYPE _val)=0;
+ 		  ///Abstract
+		  virtual void SetDefault(TYPE _val)=0;
+		  ///Abstract
+		  virtual bool VerifyValidValue(TYPE _val)=0;
+	//@}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Data
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+	TYPE tvalue,		   ///< major data field
+		 tdefault;         ///< major data field's default value
+	char flag[80];         ///< command line flag
+	bool activated;        ///< currently active on command line?
+	char *typedesc;        ///< type of major data field for human eyes
+	char *desc;            ///< meaning of major data field to humans
 };
 
-//----------------------------------------
+//////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+//
+//	Class num_param
+//
+//
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////
 /** numeric parameter (ie, w/ value range)
-    Numeric derived parameter will have max and min values.
-*/
-//----------------------------------------
+  * Numeric derived parameter will have max and min values.
+  */
 template<class TYPE>
 class num_param : public param <TYPE> {
-public:
-  /**@name Constructors and Destructor */
-  //@{
-        /// Default constructor.
-        num_param ();
-        /// max & min set upon construction
-        num_param(char *_flag, TYPE _default, TYPE _min, TYPE _max);
-  //@}
-        /// Proper usage info for user to read...
-        void PrintUsage(ostream& _os,int width=18);
-protected:
-  /**@name Helper Methods for verifying and accessing major data field
-  These were originally "virtual" in the base class and *had* to be
-  specified in every derived class such as this one.
-  */
-  //@{
-        void SetValue(TYPE _val);
-        void SetDefault(TYPE _val);
-        bool VerifyValidValue(TYPE _val);
-  //@}
 
-        TYPE rangeMin,rangeMax;
+public:
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Constructors and Destructor
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Constructors and Destructor */
+	//@{
+
+		/// Default constructor.
+		num_param ();
+
+		/**Max & min & default set upon construction.
+		  *@see SetDefault and SetValue
+		  */
+		num_param(char *_flag, TYPE _default, TYPE _min, TYPE _max);
+
+	//@}
+
+ 	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Helper Methods
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Helper Methods */
+	//@{       
+
+		/** Proper usage info for user to read...
+		  * @param width used to format output.
+		  */
+		void PrintUsage(ostream& _os,int width=18);
+
+	//@}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Protected Data Members and Member Functions
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+protected:
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Protected Helper Methods
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Helper Methods for verifying and accessing major data field
+	These were originally "virtual" in the base class and *had* to be
+	specified in every derived class such as this one.
+	*/
+	//@{
+
+		///Set value of this parameter (#tvalue)
+		void SetValue(TYPE _val);
+
+		///Set default value of this parameter (#tdefault)
+		void SetDefault(TYPE _val);
+
+		///Check if given value is between #rangeMin and #rangeMax or not.
+		bool VerifyValidValue(TYPE _val);
+	//@}
+
+    TYPE rangeMin,	///< Minimum acceptable value for this parameter
+		 rangeMax;  ///< Maximum acceptable value for this parameter
 };
 
-
-//----------------------------------------
+//////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+//
+//	Class str_param
+//
+//
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////
 /** string (mostly) parameter ( 1 field acknowledged from argv ) */
-//----------------------------------------
 template<class TYPE>
 class str_param : public param <TYPE> {
+
 public:
-  /**@name Constructors and Destructor */
-  //@{
-        /// Default constructor.
-        str_param();
-        /// Construct w/ command line flag specfied.
-        str_param(char *_flag);
-        /// Construct w/ command line flag and initial value specfied.
-        str_param(char *_flag, char *_initialValue);
-  //@}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Constructors and Destructor
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Constructors and Destructor */
+	//@{
+
+		/// Default constructor. Allocate memory.
+		str_param();
+		/// Construct w/ command line flag specfied.
+		str_param(char *_flag);
+		/// Construct w/ command line flag and initial value specfied.
+		str_param(char *_flag, char *_initialValue);
+
+	//@}
+
+ 	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Helper Methods
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Helper Methods */
+	//@{
+
         /// Verify value given is of a valid format for a directory
         void VerifyValidDirName();
-protected:
-  /**@name Helper Methods for verifying and accessing major data field
-  These were originally "virtual" in the base class and *had* to be
-  specified in every derived class such as this one.
-  */
-  //@{
-        void SetValue(TYPE _val);
-        void SetDefault(TYPE _val);
-        bool VerifyValidValue(TYPE _val);
-  //@}
 
-  /// Verify last character in input is as specified by "ch"
-        void VerifyLastCharIsA(char *ch);
+	//@}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Protected Data Members and Member Functions
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+protected:
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Protected Helper Methods
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Helper Methods for verifying and accessing major data field
+	These were originally "virtual" in the base class and *had* to be
+	specified in every derived class such as this one.
+	*/
+	//@{
+
+		///Set value of this parameter (#tvalue)
+		void SetValue(TYPE _val);
+
+		///Set default value of this parameter (#tdefault)
+		void SetDefault(TYPE _val);
+
+		///Alway return true.
+		bool VerifyValidValue(TYPE _val);
+
+	//@}
+
+	/// Verify last character in input is as specified by "ch"
+    void VerifyLastCharIsA(char *ch);
 };
 
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+//
+//	Class str_param
+//
+//
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////
 class n_str_param : public str_param <char*> {
+
 public:
-  /**@name Constructors and Destructor */
-  //@{
-        /// Default constructor.
-        n_str_param();
-                //:str_param<char*>(){};
-        /// Construct w/ command line flag and initial value specfied.
-        n_str_param(char *_flag);
-                //:str_param<char*>(_flag){};
-        /// Verify value given is of a valid format for a directory
-        n_str_param(char *_flag,char* _initialValue);
-                //:str_param<char*>(_flag,_initialValue){};
-  //@}
 
-  /** Data fields are updated according to what was specified on 
-      the command line.
-      @return True when flag & parameter values exist in command line.
-  */
-        bool AckCmdLine(int *i, int argc, char** argv);
+	
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Constructors and Destructor
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	/**@name Constructors and Destructor */
+	//@{
 
-  /**@name Since this derived type can have a variable number of 
-           white-space separated substrings, these methods will
-           allow you to keep track of how many.  This is useful
-           for some validation procedures.  For example when 
-           exactly "x" substrings must be present.  */
-  //@{
-        int GetNumStrings();
-        void PutNumStrings(int _n);
-  //@}
+		/// Default constructor.
+		n_str_param();
 
+		/// Construct w/ command line flag and initial value specfied.
+		n_str_param(char *_flag);
+
+		/// Verify value given is of a valid format for a directory
+		n_str_param(char *_flag,char* _initialValue);
+
+	//@}
+
+	/** Data fields are updated according to what was specified on 
+		the command line.
+		@return True when flag & parameter values exist in command line.
+	*/
+	bool AckCmdLine(int *i, int argc, char** argv);
+
+	/**@name String Number.
+	  *      Since this derived type can have a variable number of 
+	  *		 white-space separated substrings, these methods will
+	  *		 allow you to keep track of how many.  This is useful
+	  *		 for some validation procedures.  For example when 
+	  *		 exactly "x" substrings must be present.  
+	  */
+	//@{
+
+		  ///Get number of substrings. (#numStrings)
+		  int GetNumStrings();
+
+		  ///Set number of substrings. (#numStrings)
+		  void PutNumStrings(int _n);
+
+	//@}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	//
+	//
+	//	Protected Data Members and Member Functions
+	//
+	//
+	//////////////////////////////////////////////////////////////////////////////////////////
 protected:
-        bool VerifyValidValue(char* _val);
-	int numStrings;
+
+	/**Validate this paramete's value
+	  *@return True if this is not a empty string. Otherwise false will be returned.
+	  */
+    bool VerifyValidValue(char* _val);
+
+	int numStrings;	///< How many substrings are in the value of this parameter.
 };
 
 
-//*********************************************************
+///////////////////////////////////////////////////////////////////////////////////////////
 //
-//      Template implementations of all the above...
 //
-//*********************************************************
+//
+//
+//	Template implementations of param Class
+//
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 template<class TYPE> param<TYPE>::
 param(){
@@ -296,6 +573,18 @@ AckCmdLine(int *i, int argc, char** argv,bool nfields){
 };
 
 
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+//	Template implementations of num_param Class
+//
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////
+
 //===================================================================
 //  numeric parameter (ie, w/ value range)
 //  Constructors  & other methods
@@ -341,6 +630,19 @@ VerifyValidValue(TYPE _val){
         return false;
     }
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+//	Template implementations of str_param Class
+//
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////
+
 //===================================================================
 //  string (mostly) parameter ( 1 field acknowledged from argv )
 //  Constructors  & other methods
