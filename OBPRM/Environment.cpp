@@ -122,13 +122,13 @@ void Environment::UpdateBBox(Input * _input) {
 
 }
 
-void Environment::PutBBox(double _x,double _X,
-                          double _y,double _Y,
-                          double _z,double _Z){
+void Environment::PutBBox(double x,double X,
+                          double y,double Y,
+                          double z,double Z){
 
-    boundingBox[0] = _x;   boundingBox[1] = _X;
-    boundingBox[2] = _y;   boundingBox[3] = _Y; 
-    boundingBox[4] = _z,   boundingBox[5] = _Z;
+    boundingBox[0] = x;   boundingBox[1] = X;
+    boundingBox[2] = y;   boundingBox[3] = Y; 
+    boundingBox[4] = z,   boundingBox[5] = Z;
 }
 
 //===================================================================

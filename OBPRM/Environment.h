@@ -62,9 +62,9 @@ public:
     void FindBoundingBox();
     double * GetBoundingBox();
     void UpdateBBox(Input * _input);
-    void PutBBox(double _x,double _X,
-                 double _y,double _Y,
-                 double _z,double _Z);
+    void PutBBox(double x,double X,
+                 double y,double Y,
+                 double z,double Z);
 
     inline double GetPositionRes() {return positionRes;};
     inline double GetOrientationRes() {return orientationRes;};
