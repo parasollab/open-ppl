@@ -10,27 +10,20 @@
 #include <Environment.h>
 #include <CollisionDetection.h>
 
-#define MAX_BOUNCINGS 10000
-#define MAX_RAY_LENGTH 10000
-//The following constant defines the maximum number of rays to be used
-//Eventually it'll have to be changed by a better approach to know when
-//to stop shooting out rays, by the moment it'll be 1
-#define MAX_RAYS 1
-#define RT_RANDOMLY 0
-#define RT_HEURISTIC 1
-#define RT_TARGET_ORIENTED 2
-#define RT_NORMAL 3
+#include <string>
 
 class RayTracer {
  public:
+  enum BouncingMode {TARGET_ORIENTED, RANDOM, HEURISTIC, NORMAL}; 
 /*    RayTracer(Environment *environment, Cfg source, Cfg target); */
-  RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, CDInfo cdinfo, DistanceMetric * dm, SID dmsetid);
+  RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid);
+  void setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length);
   void connectCCs();
   bool findPath(Cfg &source, Cfg &target);
   void setSource(Cfg configuration);
   void setTarget(Cfg configuration);
 /*    void setEnvironment(Environment *environment); */
-  void setDirection(const int policy);//set direction of the ray to trace
+  void setInitialDirection();//set direction of the ray to trace
   bool trace();//trace a ray in the established direction
   void newDirection(/*policy*/);//set a new direction according to some policy
   bool exhausted(); //returns true if all the possibilities have been explored
@@ -41,14 +34,16 @@ class RayTracer {
   Cfg source, target;
   Cfg direction; //
   Environment *environment;
+  int max_rays; // Maximum number of rays to test when finding a path
+  int max_bounces; // Maximum number of bounces for each ray
+  int max_ray_length; // Maximum length for each ray
   int rays_tested; // Number of rays tested so far
   bool all_explored; // True if all possible rays have been traced
-  int policy; // Policy to shoot rays, possible values in setDirection
+  BouncingMode bouncing_policy; // Policy to shoot rays, possible values in setDirection
 
   Roadmap *rdmp;
   CollisionDetection *cd;
   SID cdsetid;
-  CDInfo cdinfo;
   DistanceMetric *dm;
   SID dmsetid;
   

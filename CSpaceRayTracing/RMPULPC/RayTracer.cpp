@@ -14,32 +14,104 @@
 //    rays_tested = 0;
 //  }
 
-RayTracer::RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, CDInfo cdinfo, DistanceMetric * dm, SID dmsetid) {
+RayTracer::RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid) {
   this->rdmp = rdmp;
   this->cd = cd;
   this->cdsetid = cdsetid;
-  this->cdinfo = cdinfo;
   this->dm = dm;
   this->dmsetid = dmsetid;
   environment = rdmp->GetEnvironment();
   all_explored = false;
   rays_tested = 0;
+  setOptions(string("targetOriented"), 1, 10000, 10000);
+}
+
+void RayTracer::setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length) {
+  this->max_rays = max_rays;
+  this->max_bounces = max_bounces;
+  this->max_ray_length = max_ray_length;
+  //set the bouncing policy
+  if (bouncing_mode == string("targetOriented"))
+    bouncing_policy =TARGET_ORIENTED;
+  else if (bouncing_mode == string("random"))
+    bouncing_policy = RANDOM;
+  else if (bouncing_mode == string("heuristic"))
+    bouncing_policy = HEURISTIC;
+  else if (bouncing_mode == string("normal"))
+    bouncing_policy = NORMAL;
+  else
+    bouncing_policy = TARGET_ORIENTED;
+
 }
 
 void RayTracer::connectCCs() {
-  //the following lines are to be replaced with a clever
-  //way to pick a pair of configurations in two different connected components
-  //to try to connect. This is to be called afterwards
-  Cfg source = Cfg::GetFreeRandomCfg(environment, cd, cdsetid, cdinfo);
-  Cfg target = Cfg::GetFreeRandomCfg(environment, cd, cdsetid, cdinfo);
-  findPath(source, target);
+//    //the following lines are to be replaced with a clever
+//    //way to pick a pair of configurations in two different connected components
+//    //to try to connect. This is to be called afterwards
+//    Cfg source = Cfg::GetFreeRandomCfg(environment, cd, cdsetid, cd->cdInfo);
+//    Cfg target = Cfg::GetFreeRandomCfg(environment, cd, cdsetid, cd->cdInfo);
+//    findPath(source, target);
+
+//    vector< pair<int,VID> > ccs;
+//    GetCCStats(*(rdmp->m_pRoadmap), ccs);//get the CCs
+
+//    vector< pair<int,VID> >::iterator cci = ccs.begin();
+//    Roadmap submap1 = Roadmap::Roadmap();
+//    submap1.environment = rdmp->GetEnvironment();
+
+//    vector<VID> cc; // a vector with the configs of cci
+//    GetCC(*(rdmp->m_pRoadmap), cci->second, cc);
+//    ModifyRoadMap(&submap, rdmp, cc);
+//    vector< pair<int,VID> >::iterator ccj = cci+1;
+
+//    //Order CCs to attempt to connect them
+//    OrderCCByCloseness(rdmp, dm, info, ccvec);
+
+//    VID cciid = cci->second;//maybe the VID of the "flag" Cfg of the CC?
+//    while (ccj <= ccvec.end()) {
+//      Roadmap submap2 = Roadmap::Roadmap();
+//      submap2.environment = rdmp->GetEnvironment();
+
+//      vector<VID> cctj;
+//      GetCC(*(rdmp->m_pRoadmap), ccj->second, cctj);//copy the nodes in ccj->second to cct2
+//      ModifyRoadMap(&submap2, rdmp, cct2);//submap2nodes (and incident edges) = nodes cct2 from rdmp
+//      VID ccjid = ccj->second;
+//      int d = 0;
+//      GetCCcount(*(rdmp->m_pRoadmap));
+
+//      vector<VID> cct3;
+//      GetCC(*(rdmp->m_pRoadmap), ccj->second, cct3);
+//      if (cct3.size()>= MAX_SMALL_CC_SIZE)
+//        while ( !IsSameCC(*(rdmp->m_pRoadmap),  cciid, ccjid) && d < MAX_D && i < MAX_ITERATIONS) {
+//  	//	 go through each configuration of submap1 and try to connect to submap2
+//  	Roadmap * ray_rdmp = connectCCs(submap1, submap2);
+//  	// put the ray obtained into the roadmap
+//  	if (ray_rdmp != NULL){
+//  	  vector<VID> ray_vertices;
+//  	  ray_rdmp->m_pRoadmap->GetVerticesVID(ray_vertices);
+//  	  ModifyRoadMap(rdmp, &ray_rdmp, ray_vertices);
+//  	}
+//  	d++;
+//        }
+//      ccj++; d=0;
+//      submap2.environment = NULL;
+//      submap2.m_pRoadmap = NULL;
+//    }
+//    submap1.environment = NULL;
+//    submap1.m_pRoadmap = NULL; 
 }
+
+//  Roadmap * RayTracer::connectCCs(roadmap &ccA, roadmap &ccB) {
+//    //first approach (to be replaced by a better one):
+//    // findPath(config from ccA, config from ccB)
+//    // return ray.roadmap();
+//  }
 
 bool RayTracer::findPath(Cfg &source, Cfg &target) {
   bool path_found = false;
   setSource(source);
   setTarget(target);  
-  setDirection(RT_TARGET_ORIENTED);
+  setInitialDirection();
   
   while (!path_found && !exhausted()) {
     //Trace the ray
@@ -77,18 +149,20 @@ void  RayTracer::setTarget(Cfg configuration) {
 // of the target and when a ray hits an object it is going to 
 // bounce in a random direction from it (of course this has to
 // change if I want to have a coherent tracer).
-void RayTracer::setDirection(const int policy) {
+void RayTracer::setInitialDirection() {
   cout << "Setting direction of the first ray: ";
-  this->policy = policy;
-  switch (policy) {
-  case RT_TARGET_ORIENTED: direction = target;
+  switch (bouncing_policy) {
+  case TARGET_ORIENTED: direction = target;
     cout << "Direction of the target\n";
     break;
-  case RT_HEURISTIC:
+  case HEURISTIC:
     cout << "Heuristic method.\n";
     break;
-  case RT_RANDOMLY:
+  case RANDOM:
     cout << "Random,\n";
+    break;
+  case NORMAL:
+    cout << "Normal\n";
     break;
   default: direction = target;
     cout << "Direction of the target\n";
@@ -104,14 +178,14 @@ bool RayTracer::trace() {
   double ray_length = 0; //length of the ray (depending on metrics, I suppose)
 
   ray.init(source, direction, target); //initialize the ray
-  while (!path_found && number_bouncings < MAX_BOUNCINGS &&
-	 ray.length() < MAX_RAY_LENGTH) {
-    if (ray.connectTarget(environment, cd, cdsetid, cdinfo, dm, dmsetid)) {
+  while (!path_found && number_bouncings < max_bounces &&
+	 ray.length() < max_ray_length) {
+    if (ray.connectTarget(environment, cd, cdsetid, cd->cdInfo, dm, dmsetid)) {
       ray.finish();
       path_found = true;
     }
     else
-    if (ray.collide(environment, cd, cdsetid, cdinfo, dm, dmsetid,MAX_RAY_LENGTH)) { // if there is a collision
+    if (ray.collide(environment, cd, cdsetid, cd->cdInfo, dm, dmsetid,max_ray_length)) { // if there is a collision
       //cout<< "\tif the collided object is the target's screen\n";
       //cout << "\t\tpath_found=true;\n";
       //cout << "\telse\n";
@@ -122,7 +196,7 @@ bool RayTracer::trace() {
       ++number_bouncings;
     }
     //    cout << "Bouncings: "<< number_bouncings << ", Length of the ray so far: " << ray.length() << "\n";
-    //cout << "MaxBouncings: " << MAX_BOUNCINGS << ", MaxRayLength: " << MAX_RAY_LENGTH;
+    //cout << "MaxBouncings: " << max_bounces << ", MaxRayLength: " << max_ray_length;
   }
   if (path_found) {
     ray.save(environment);
@@ -136,7 +210,7 @@ bool RayTracer::trace() {
 void RayTracer::newDirection() {
   cout << "sets a new Direction according to the policy defined in setDirection\n";
   rays_tested++;
-  if (rays_tested>=MAX_RAYS)
+  if (rays_tested>=max_rays)
     all_explored = true;
   //by the momment this is going to be just a random direction
   direction = direction.GetRandomCfg(environment);

@@ -200,7 +200,8 @@ PerformConnectCCs(Roadmap * rdmp,CollisionDetection *cd, ConnectMapNodes *cn, Lo
   else if (method_name == string("RayTracer")) {
     cout << "using RayTracer to attempt to connect CCs" << endl;
     //The call to RayTracer from ConnectMapNodes goes here	
-    RayTracer tracer(rdmp, cd, cdsetid, cd->cdInfo, dm, dmsetid);
+    RayTracer tracer(rdmp, cd, cdsetid, dm, dmsetid);
+    tracer.setOptions(RayTbouncingMode, RayTmaxRays, RayTmaxBounces, RayTmaxRayLength);
     tracer.connectCCs();
   }
   else {
