@@ -12,7 +12,7 @@
 //                CfgManager   <--------  Cfg
 //                /   |     \
 //              _/    |      \_
-//      Cfg_free      |         Cfg_free_serial<int>
+//      Cfg_free      |         Cfg_free_tree<int>
 //                Cfg_fixed_PRR
 //
 //  BE AWARE: 

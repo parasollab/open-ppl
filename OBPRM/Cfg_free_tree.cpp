@@ -1,7 +1,6 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //
-//  Cfg_free_serial.c
+//  Cfg_free_tree.c
 //
 //  General Description
 //	A derived template class from CfgManager. It provides some
@@ -19,22 +18,22 @@
 #include "Vectors.h"
 
 #include "Cfg_free.h"
-#include "Cfg_free_serial.h"
+#include "Cfg_free_tree.h"
 #include "Environment.h"
 #include "GenerateMapNodes.h"
 
-Cfg_free_serial::Cfg_free_serial(int _numofJoints) : CfgManager(6+_numofJoints, 3),
+Cfg_free_tree::Cfg_free_tree(int _numofJoints) : CfgManager(6+_numofJoints, 3),
 						     NumofJoints(_numofJoints) {}
 
-Cfg_free_serial::~Cfg_free_serial() {}
+Cfg_free_tree::~Cfg_free_tree() {}
 
-Vector3D Cfg_free_serial::GetRobotCenterPosition(const Cfg &c) const {
+Vector3D Cfg_free_tree::GetRobotCenterPosition(const Cfg &c) const {
    vector<double> tmp = c.GetData();
    return Vector3D(tmp[0], tmp[1], tmp[2]);
 }
 
 
-Cfg Cfg_free_serial::GetRandomCfg(double R, double rStep){
+Cfg Cfg_free_tree::GetRandomCfg(double R, double rStep){
    double alpha,beta,z, z1;
    double jointAngle;
 
@@ -63,7 +62,7 @@ Cfg Cfg_free_serial::GetRandomCfg(double R, double rStep){
 
 }
 
-Cfg Cfg_free_serial::GetRandomRay(double incr) {
+Cfg Cfg_free_tree::GetRandomRay(double incr) {
 
    double alpha,beta,z, z1;
    double jointAngle;
@@ -89,7 +88,7 @@ Cfg Cfg_free_serial::GetRandomRay(double incr) {
 
 }
 
-Cfg Cfg_free_serial::GetRandomCfg_CenterOfMass(double *boundingBox) {
+Cfg Cfg_free_tree::GetRandomCfg_CenterOfMass(double *boundingBox) {
 // this is not EXACTLY accurate, ok with most cases ... TO DO
 // To be accurate, one has to make sure every link is inside the given BB,
 // but here only the base link is taken care of. It is almost fine since
@@ -110,7 +109,7 @@ Cfg Cfg_free_serial::GetRandomCfg_CenterOfMass(double *boundingBox) {
 }
 
 
-bool Cfg_free_serial::ConfigEnvironment(const Cfg &c, Environment *_env) {
+bool Cfg_free_tree::ConfigEnvironment(const Cfg &c, Environment *_env) {
      vector<double> v = c.GetData();
      int robot = _env->GetRobotIndex();
 
@@ -144,7 +143,7 @@ bool Cfg_free_serial::ConfigEnvironment(const Cfg &c, Environment *_env) {
 
 }
 
-bool Cfg_free_serial::GenerateOverlapCfg(
+bool Cfg_free_tree::GenerateOverlapCfg(
 		Environment *env,  // although env and robot is not used here,
 		int robot,            // they are needed in other Cfg classes.
 		Vector3D robot_start,
@@ -171,7 +170,7 @@ bool Cfg_free_serial::GenerateOverlapCfg(
 // GenSurfaceCfgs4ObstNORMAL
 //      generate nodes by overlapping two triangles' normal.
 //===================================================================
-vector<Cfg> Cfg_free_serial::GenSurfaceCfgs4ObstNORMAL
+vector<Cfg> Cfg_free_tree::GenSurfaceCfgs4ObstNORMAL
 (Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, 
 SID _cdsetid,CDInfo& _cdInfo){
     static const int SIZE = 1;

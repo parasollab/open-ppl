@@ -22,7 +22,7 @@
 #include "CfgManager.h"
 #include "Cfg_free.h"
 #include "Cfg_fixed_PRR.h"
-#include "Cfg_free_serial.h"
+#include "Cfg_free_tree.h"
 #include "Cfg_fixed_tree.h"
 
 
@@ -174,7 +174,7 @@ Input::Input():
       strcat(Cfg_string_1, " (i.e. Cfg_free)");
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_rigid");
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_PRR");
-    strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_serial");
+    strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_tree");
     strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_tree");
 
     CFGstrings[0]->PutDesc("STRING", Cfg_string_1);
@@ -235,8 +235,8 @@ void Input::ReadCfgType(istream &is) {
         }else if (!(strncmp(cfgName,"Cfg_fixed_PRR",13))) {
             Cfg::CfgHelper = new Cfg_fixed_PRR();
             cfgSet=true;
-        }else if (!(strncmp(cfgName,"Cfg_free_serial",15))) {
-            Cfg::CfgHelper = new Cfg_free_serial(numofJoints);
+        }else if (!(strncmp(cfgName,"Cfg_free_tree",15))) {
+            Cfg::CfgHelper = new Cfg_free_tree(numofJoints);
             cfgSet=true;
 	} else if (!(strncmp(cfgName,"Cfg_fixed_tree", 14))) {
 	    Cfg::CfgHelper = new Cfg_fixed_tree(numofJoints);

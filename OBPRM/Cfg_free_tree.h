@@ -1,6 +1,4 @@
-// $Id$
-
-/**@file Cfg_free_serial.h
+/**@file Cfg_free_tree.h
    A derived template class from CfgManager. It provides some
    specific implementation directly related to a multiple joints
    serial robot.
@@ -10,20 +8,20 @@
 
 
 
-#ifndef Cfg_free_serial_h
-#define Cfg_free_serial_h
+#ifndef Cfg_free_tree_h
+#define Cfg_free_tree_h
 
 #include "CfgManager.h"
 
-class Cfg_free_serial : public CfgManager {
+class Cfg_free_tree : public CfgManager {
 public:
 
   //===================================================================
   //  Constructors and Destructor
   //===================================================================
 
-  Cfg_free_serial(int _numofJoints);
-  ~Cfg_free_serial();
+  Cfg_free_tree(int _numofJoints);
+  ~Cfg_free_tree();
 
 
   //===================================================================
