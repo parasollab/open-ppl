@@ -273,8 +273,8 @@ ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
       double cci_max_intracc_dist = 0;
       double cci_mean_intracc_dist = 0;
       double n_pairs = 0;
-      vector<CFG>::iterator cci_i;
-      vector<CFG>::iterator cci_j;
+      typename vector<CFG>::iterator cci_i;
+      typename vector<CFG>::iterator cci_j;
       for (cci_i=cci_cfgs.begin(); cci_i < cci_cfgs.end(); cci_i++) {
 	for (cci_j = cci_i+1; cci_j < cci_cfgs.end(); cci_j++) {
 	  double c_dist = dm->Distance(rdmp->GetEnvironment(), *cci_i, *cci_j);
