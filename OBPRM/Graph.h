@@ -1621,7 +1621,7 @@ public:
        /**Is _v1's VID smaller than _v2's VID?.
          *@return (_v1.vid < _v2.vid )
          */
-       static bool VID_Compare (const Vertex& _v1, const Vertex& _v2); 
+       static bool VID_Compare (const Vertex _v1, const Vertex _v2); 
    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1657,7 +1657,7 @@ public:
          *@return (_firstpair.second > _secondpair.second)
          *@see TopologicalSort
          */
-       static bool FinishLate(const pair<VID,int>&,const pair<VID,int>&); 
+       static bool FinishLate(const pair<VID,int>,const pair<VID,int>); 
 
        //////////////////////////////////////////////////////////////////////////////////////////
        //
@@ -1678,7 +1678,7 @@ public:
        /**Comparing distances.
          *@return _d1.dist > _d2.dist
          */
-       static bool dkinfo_Compare (const dkinfo& _d1, const dkinfo& _d2); 
+       static bool dkinfo_Compare (const dkinfo _d1, const dkinfo _d2); 
 
        //NMA: the following predictates work with stl/sun/g++ but not stl/sgi/CC
        //class VID_eq; 
@@ -2138,7 +2138,7 @@ public:
          *@return (_cc1.first>_cc2.first)
          *@see GetCCStats
          */
-       static bool CCVID_Compare (const pair<int,VID>& _cc1, const pair<int,VID>& _cc2); 
+       static bool CCVID_Compare (const pair<int,VID> _cc1, const pair<int,VID> _cc2); 
 
        /**Transform DAG to undirected graph.
          *@note This given WeightedMultiDiGraph should not have both v1->v2 and v2->v1
@@ -3481,10 +3481,6 @@ GetBackedge() const {
     return dfs.backedge_vector;
 };
 
-static bool MyFinishLate(const pair<VID,int> _x, const pair<VID,int> _y) {
-    return _x.second > _y.second;
-}; 
-
 template<class VERTEX, class WEIGHT>
 vector<VID>
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
@@ -3504,7 +3500,7 @@ TopologicalSort () const {
         tmp.push_back(newpair);
     }   
     
-    stable_sort(tmp.begin(),tmp.end(),ptr_fun(MyFinishLate));
+    stable_sort(tmp.begin(),tmp.end(),ptr_fun(FinishLate));
     
     for(i=0; i<n;i++) {
         tps.push_back(tmp[i].first);
@@ -3521,7 +3517,7 @@ TopologicalSort () const {
 template<class VERTEX, class WEIGHT>
 bool
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
-FinishLate(const pair<VID,int>& _x, const pair<VID,int>& _y) {
+FinishLate(const pair<VID,int> _x, const pair<VID,int> _y) {
     return _x.second > _y.second;
 }; 
 
@@ -3751,7 +3747,7 @@ FindVIDPathBFS (VID _startVid, VID _endVid) const {
 template<class VERTEX, class WEIGHT>
 bool 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
-dkinfo_Compare ( const dkinfo& _d1, const dkinfo& _d2) {
+dkinfo_Compare ( const dkinfo _d1, const dkinfo _d2) {
     return ( _d1.dist > _d2.dist );
 };
 
@@ -4162,7 +4158,7 @@ my_find_VDATA_eq(const VERTEX& _v) const {
 template<class VERTEX, class WEIGHT>
 bool 
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
-VID_Compare (const Vertex& _v1, const Vertex& _v2){
+VID_Compare (const Vertex _v1, const Vertex _v2){
     return (_v1.vid < _v2.vid ) ; 
 };
 
@@ -4839,7 +4835,7 @@ DisplayCCStats(int _maxCCprint) const {
 //==================================
 template<class VERTEX, class WEIGHT>
 bool
-WeightedGraph<VERTEX,WEIGHT>::CCVID_Compare(const pair<int,VID>& _cc1, const pair<int,VID>& _cc2)
+WeightedGraph<VERTEX,WEIGHT>::CCVID_Compare(const pair<int,VID> _cc1, const pair<int,VID> _cc2)
 {
     return (_cc1.first > _cc2.first ) ;
 };
