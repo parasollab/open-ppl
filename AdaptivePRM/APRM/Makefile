@@ -44,7 +44,7 @@
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=0  -DUSE_RAPID -DUSE_VCLIP -DUSE_PQP
+   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=0  -DUSE_RAPID -DUSE_VCLIP -DUSE_PQP
 
 ### DEFS = ${ADEFS} -DQUIETGRAPH -DQUIET
     DEFS = ${ADEFS} 
@@ -111,6 +111,13 @@ query:: main_query.c libs
 	rm -f main_query.o query.d
 
 #--------------------------------------------------------------------
+checkpath:: check_path.c libs
+	$(CXX) $(CFLAGS2) -o checkpath \
+		check_path.c \
+		$(OBJS) $(ADAPT_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
+	rm -f check_path.o checkpath.d
+
+#--------------------------------------------------------------------
 .SUFFIXES: .c
 .c.o:
 	$(CXX) ${CXXFLAGS} -c $<
@@ -131,7 +138,7 @@ OBJS = \
 	MyInput.o \
 	PriorityWeight.o \
 	PriorityLocalPlanners.o \
-	PriorityQuery.o 
+	PriorityQuery.o
 
 objs:: $(OBJS)
 
