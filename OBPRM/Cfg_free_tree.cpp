@@ -310,7 +310,8 @@ SID _cdsetid,CDInfo& _cdInfo, vector<Cfg*>& surface){
       vector<double> basePose = tmp[0]->GetData();
       for(int j=0; j<SIZE; ++j) {
 	vector<double> serialData = basePose;  // for clearness, have basePose tmp variable.
-	for(int i=0; i<NumofJoints; ++i) {  // now add joint angles.
+	int i;
+	for(i=0; i<NumofJoints; ++i) {  // now add joint angles.
 	  serialData.push_back(drand48());
 	}
 	Cfg* serial = this->CreateNewCfg(serialData);
@@ -321,7 +322,7 @@ SID _cdsetid,CDInfo& _cdInfo, vector<Cfg*>& surface){
 	}
 	else
 	  delete serial;
-	for (int i = 0; i < tmp.size(); i++)
+	for (i = 0; i < tmp.size(); i++)
 	  delete tmp[i];
       }
     }

@@ -34,7 +34,11 @@
 #include "OBPRM.h"
 #include "OBMAPRM.h"
 
-#include <strstream>
+#ifdef __K2
+  #include <strstream.h>
+#else
+  #include <strstream>
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
 class Body;

@@ -632,10 +632,11 @@ GenSurfaceCfgs4Obst(Environment* env, CollisionDetection* cd, DistanceMetric* dm
     cfg.GenSurfaceCfgs4ObstNORMAL(env, cd, obstacle, nCfgs, 
 				  *cdsetid, *cdInfo, pResult);
     vector<CFG> result;
-    for(int i=0; i<pResult.size(); i++)
+    int i;
+    for(i=0; i<pResult.size(); i++)
       result.push_back((CFG)*pResult[i]);
 
-    for(int i=0; i<pResult.size(); i++)
+    for(i=0; i<pResult.size(); i++)
       delete pResult[i];
 
     return result;

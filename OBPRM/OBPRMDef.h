@@ -45,6 +45,15 @@
 #define INVALID_LP -999                 ///< invalid local planner id
 #define INVALID_GN -999                 ///< invalid generate node id
 #define INVALID_CN -999                 ///< invalid connect node id
+
+#define ARGSTRING_LENGTH  256
+#define MAX_CN             10
+#define MAX_GN             10
+#define MAX_LP             10
+#define MAX_CD             10
+#define MAX_DM             10
+#define MAX_CFG        10
+
 //@}
 
 /** @name NMA: for edge weights.

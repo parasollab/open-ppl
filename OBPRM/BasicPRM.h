@@ -151,7 +151,8 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric *,
   tmp.GetNFreeRandomCfgs(path, _env,cd,*cdsetid,
 			 *cdInfo, numNodes.GetValue());
 
-  for(int i=0; i<path.size(); i++)
+  int i;
+  for(i=0; i<path.size(); i++)
     nodes.push_back((CFG)*path[i]);
   
 #if INTERMEDIATE_FILES
@@ -159,7 +160,7 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric *,
   WritePathConfigurations("prm.path", path, _env);
 #endif
 
-  for(int i=0; i<path.size(); i++)
+  for(i=0; i<path.size(); i++)
     delete path[i];
 };
 

@@ -26,7 +26,7 @@
 #define Input_h
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
-
+#include "OBPRMDef.h"
 #include "Parameters.h"
 #include "DHparameters.h"
 #include "Vectors.h"
@@ -75,33 +75,12 @@ class Input {
 public:
 
 #ifdef _WIN32
-  #define ARGSTRING_LENGTH  256
-  #define MAX_CN             10
-  #define MAX_GN             10
-  #define MAX_LP             10
-  #define MAX_CD             10
-  #define MAX_DM             10
-  #define MAX_CFG        10
-
   #define FILENAME_LENGTH    80
   #define MAX_MULTIBODY      50
   #define MAX_CONNECTION     500
   #define MAX_FIXEDBODY      50
   #define MAX_FREEBODY       500
 #else
-
-  //@{
-  ///Used by motion planning
-  static const int ARGSTRING_LENGTH = 256;  // used by motion planning
-  static const int MAX_CN           =  10;
-  static const int MAX_GN           =  10;
-  static const int MAX_LP           =  10;
-  static const int MAX_CD           =  10;
-  static const int MAX_DM           =  10;
-  static const int MAX_CFG          =  10;
-
-  //@}
-
   //@{
   ///Used by GMS
   static const int FILENAME_LENGTH  =  80;  // GMS stuff uses these
