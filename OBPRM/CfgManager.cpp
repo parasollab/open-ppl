@@ -384,3 +384,24 @@ bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection 
         return result;
 }
 
+bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+                             SID _cdsetid){
+     if(!ConfigEnvironment(c, env))
+         return true;
+
+     // after updating the environment(multibodies), Ask ENVIRONMENT
+     // to check collision! (this is more nature.)
+     bool answerFromEnvironment = cd->IsInCollision(env, _cdsetid);
+     return answerFromEnvironment;
+}
+
+bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+                int robot, int obs, SID _cdsetid){
+     if(!ConfigEnvironment(c, env))
+          return true;
+
+     // ask CollisionDetection class directly.
+     bool answerFromCD = cd->IsInCollision(env, robot, obs, _cdsetid);
+     return answerFromCD;
+}
+
