@@ -44,7 +44,7 @@
 #include <fstream.h>
 #include <iomanip.h>
 
-#if defined(sun) || defined(__sgi)		//g++ in SUN or CC in SGI
+#if defined(sun) || defined(__sgi) || defined(__linux)		//g++ in SUN or CC in SGI
 #include <algo.h>	
 #include <list.h>	
 #include <vector.h>
