@@ -39,9 +39,13 @@
 CfgManager::~CfgManager() {}
 
 // Normalize the orientation to the some range.
-void CfgManager::Normalize_orientation(Cfg& c) {
-    for(int i=posDof; i<c.v.size(); ++i)
-		c.v[i] = c.v[i] - floor(c.v[i]);
+void CfgManager::Normalize_orientation(Cfg& c, int index) {
+    if(index == -1) {
+        for(int i=posDof; i<c.v.size(); ++i)
+	   c.v[i] = c.v[i] - floor(c.v[i]);
+    } else if(index >= posDof && index < dof) {  // orientation index
+    	c.v[index] = c.v[index] - floor(c.v[index]);
+    } 
 }
 
 

@@ -72,8 +72,8 @@ const char* Cfg::GetName() {
 
 
 // Normalize the orientation to the some range.
-void Cfg::Normalize_orientation() {
-   CfgHelper->Normalize_orientation(*this);
+void Cfg::Normalize_orientation(int index) {
+   CfgHelper->Normalize_orientation(*this, index);
 }
 
 Cfg::Cfg() {
@@ -212,6 +212,7 @@ int Cfg::SetSingleParam(int param, double value) {
 
   if ((param>=0) && (param<DOFs())) {
     v[param]=value;
+    Normalize_orientation(param);
     return 1;
   } else {
     return 0;
@@ -226,6 +227,7 @@ int Cfg::IncSingleParam(int param, double value) {
 
   if ((param>=0) && (param<DOFs())) {
     v[param]+=value;
+    Normalize_orientation(param);
     return 1;
   } else {
     return 0;

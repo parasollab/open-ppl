@@ -463,7 +463,7 @@ public:
     /** Normalize the orientation to the some range.
       * call CfgManager's Normalize_orientation.
       */
-    void Normalize_orientation();
+    void Normalize_orientation(int index = -1);
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //

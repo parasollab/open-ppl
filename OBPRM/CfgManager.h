@@ -101,6 +101,7 @@ public:
   /**@name Access Methods*/
   //@{
   inline int GetDOF() { return dof; } ///< Return Degree of Freedom of this Cfg
+  inline int PosDOF() { return posDof; }
   /// Get the center poistion of Robot. Abstract method.
   virtual Vector3D GetRobotCenterPosition(const Cfg & c) const = 0;
 
@@ -241,8 +242,11 @@ public:
     */
   virtual pair<double,double> SingleParamRange(int param);
   
-  ///Map the orientation to [0,1)
-  virtual void Normalize_orientation(Cfg &c);
+  /**Map the orientation to [0,1)
+    *if index is an orientation index, normalize it *only*. 
+    *if index == -1, normalize all orientations. Otherwise do nothing.
+    */
+  virtual void Normalize_orientation(Cfg &c, int index);
 
   ///roughly check if configurations of these wo Cfg instance are the same.
   virtual bool AlmostEqual(const Cfg&c1, const Cfg& c2);
