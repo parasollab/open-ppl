@@ -17,16 +17,16 @@
 # collision detection packages available
 #------------------------------------------------------
 
- CSTKLIB_DIR   = /pub/dsmft/CSTK/CSTK-1.22/cstk
+ CSTKLIB_DIR   = /pub/dsmft/CD-libs/CSTK/CSTK-1.22/cstk
  CSTKLIB       = -L${CSTKLIB_DIR}/lib -lcstk
  CSTK_INCL     = -I${CSTKLIB_DIR}/src/include
 
- VCLIP_DIR     = /pub/dsmft/VCLIP
+ VCLIP_DIR     = /pub/dsmft/CD-libs/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
  VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
  VCLIP_INCL    = -I${VCLIP_DIR}/include
 
- RAPID_DIR     = /pub/dsmft/RAPID/RAPID_v2_01
+ RAPID_DIR     = /pub/dsmft/CD-libs/RAPID/RAPID_v2_01
  RAPIDLIB_DIR  = ${RAPID_DIR}
  RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
  RAPID_INCL    = -I${RAPID_DIR}
@@ -74,6 +74,7 @@ CFLAGS     = $(OPTS) $(AFLAGS) $(DEPS) $(CWARNS)
 CXXFLAGS   = $(CFLAGS) 
 DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
 
+
 #-----------------------------------------------------------------------------
 # Build 
 #--------------------------------------------------------------------------
@@ -89,24 +90,28 @@ libobprm.so: $(OBJS)
 
 
 #--------------------------------------------------------------------
-obprm: main_obprm.c  libs
+obprm: main_obprm.cpp  libs
 	$(CXX) $(CXXFLAGS) -o obprm \
            -rpath $(OBPRMLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR} \
-                main_obprm.c \
+                main_obprm.cpp \
 		$(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
-query: main_query.c libs
+query: main_query.cpp libs
 	$(CXX) $(CXXFLAGS) -o query \
            -rpath $(OBPRMLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR} \
-                main_query.c \
+                main_query.cpp \
                 $(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 	rm -f main_query.o
 
 #--------------------------------------------------------------------
+.SUFFIXES: .cpp
+.cpp.o:
+	$(CC) ${CFLAGS} -c $<
+
 % : %.o
-	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+	$(CXX) $(CXXFLAGS) -o $@ $@.cp $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 
 #--------------------------------------------------------------------
 
