@@ -44,7 +44,7 @@ Query(Input *input,QueryCmds *Qinput,
 
   initDefaultSetIDs(cn);
 
-  outputPathFile = new char[strlen(Qinput->pathFile.GetValue())];
+  outputPathFile = new char[strlen(Qinput->pathFile.GetValue())+1];
   strcpy(outputPathFile,Qinput->pathFile.GetValue());
 
 };  
