@@ -245,6 +245,7 @@ public:
     int RRTstepFactor;
     int RRTsmallcc;
     CNSets * cnSets;
+    SID sid;
 };
 
 #endif

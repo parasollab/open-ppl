@@ -19,6 +19,7 @@
 #include "Environment.h"
 #include "GraphAlgo.h"
 #include "Stat_Class.h"
+#include "Clock_Class.h"
 
 extern Stat_Class Stats;
 /////////////////////////////////////////////////////////////////////
@@ -41,7 +42,7 @@ ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
 	   CollisionDetection *cd, DistanceMetric *dm, LocalPlanners *lp,
 	   ConnectMapNodes    *cn) {
   //rdmp.InitRoadmap(input,cd,dm,lp,connect_CCs_input->mapFile.GetValue() );
-  cout << "here1";
+  cout << "here1"; cnSets = NULL;
   //rdmp.ReadRoadmap(input,cd,dm,lp,connect_CCs_input->mapFile.GetValue() );
   cout << "here2";
   istrstream input_stream(connect_CCs_input->option_str.GetValue());
@@ -96,15 +97,17 @@ ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
 	RayTmaxBounces = MAX_BOUNCES;
 	RayTmaxRayLength = MAX_RAY_LENGTH;
       }
-    } else if ((cnname == string("RRTcomponents")) || (cnname == string("RRTexpand"))) {
-      method_name = cnname;
-      methods.push_back(method_name);
+    } else if ( (cnname == string("RRTcomponents")) || (cnname == string("RRTexpand")) ) {
+      method_name = cnname; //the following lines should initialize the proper cnSets and when called
+      methods.push_back(method_name);  // in performconnectCCs the proper set will be searched for
 	cout << "SETTING UP" << method_name;
-      istrstream input_stream2(connect_CCs_input->option_str.GetValue());
-      //CNSets * cnSets = new CNSets();
-      cnSets = new CNSets();
-      SID sid = (*cnSets).MakeCNSet(input_stream2);
-      (*cnSets).DisplayCNs();
+      if (cnSets == NULL) {
+        istrstream input_stream2(connect_CCs_input->option_str.GetValue());
+       //CNSets * cnSets = new CNSets();
+        cnSets = new CNSets();
+        sid = (*cnSets).MakeCNSet(input_stream2);
+        (*cnSets).DisplayCNs();
+        }
       if (input_stream >> RRTiterations) {
 	if (RRTiterations < 0) {
 	  cout << endl << "INVALID: iterations = " << RRTiterations;
@@ -132,7 +135,54 @@ ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
 	RRTiterations = ITERATIONS;  // default
 	RRTstepFactor = STEP_FACTOR;  // default
 	RRTsmallcc    = SMALL_CC;  // default
+      } }
+      else
+      if (cnname == string("components"))  {
+      method_name = cnname; //the following lines should initialize the proper cnSets and when called
+      methods.push_back(method_name);  // in performconnectCCs the proper set will be searched for
+	cout << "SETTING UP" << method_name;
+      if (cnSets == NULL) {
+        istrstream input_stream2(connect_CCs_input->option_str.GetValue());
+       //CNSets * cnSets = new CNSets();
+        cnSets = new CNSets();
+        sid = (*cnSets).MakeCNSet(input_stream2);
+        (*cnSets).DisplayCNs();
+        }
+       CN cn1;
+       //strcpy(cn1.name,cnname);
+       int kpairs = 0;
+       int smallcc = 0;
+       if ( input_stream >> kpairs) { //get kpairs value
+          if ( kpairs < 0 ) {
+            cout << endl << "INVALID: kpairs = " << kpairs;
+            exit(-1);
+          } else {
+            if (input_stream >> smallcc) { //get smallcc value, if any
+               if ( smallcc < 0 ) { 
+                  cout << endl << "INVALID: smallcc = " << smallcc;
+                  exit(-1);
+               } 
+            } else {
+               smallcc = SMALL_CC;  // default
+            }
+            smallcc = smallcc;
+            kpairs = kpairs;
+            //cn1.cnid = AddElementToUniverse(cn1);
+
+            //cnvec.push_back( cn1.cnid );
+          
+       }
+       if(kpairs == 0) {  //use defaults if no kpairs: kpairs=4,smallcc=SMALL_CC
+            smallcc = 3;
+            kpairs = 4;
+            //cn1.cnid = AddElementToUniverse(cn1);
+            //cnvec.push_back( cn1.cnid );
+       }
+       input_stream .clear(); // clear failure to read in last value
       }
+
+       
+
 //        vector<EID> cnvec;
 //        CN cn1;
 //        strcpy(cn1.name,cnname);
@@ -186,11 +236,19 @@ bool
 ConnectCCs::
 PerformConnectCCs(Roadmap * rdmp,CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm) 
 {
+  Clock_Class        clock;
+  int rrttimes =0;
+  int componenttimes =0;
 vector<string>::iterator method_name = methods.begin();
-while (method_name<=methods.end()) {
+while (method_name<methods.end()) {
+  //char mn[100] = method_name;
+  //strcpy(mn,method_name);
+  clock.StartClock("Connection:" );
   //here is where we will call the proper method from (RRT or RayTracer
   if (( (*method_name)==string("RRTcomponents")) ||
 	 ( (*method_name)==string("RRTexpand"))) {
+    clock.StartClock("RRT:" );
+    rrttimes++;
     cout << "using RRT to attempt to connect CCs" << endl;
     //The call to RRT from ConnectMapNodes goes here
     CN * cn1;
@@ -202,25 +260,67 @@ while (method_name<=methods.end()) {
     //(*cn).ConnectNodes(&rdmp,cd,lp,dm, (*cn).cnInfo.cnsetid, (*cn).cnInfo);
 
     vector<CN> cns = (*cnSets).GetCNs();
-    cn1 = cns.begin();
+    vector<CN>::iterator cntmp =cns.begin();
+    bool notFound = TRUE; int i=0; int d=0;
+    while ( (notFound) && (cntmp <=cns.end()) ) {
+       if (!strcmp((*cntmp).GetName(),"RRTcomponents")) {
+	 d++;
+	 if (d<rrttimes) { 
+	     i++; cntmp++;
+             }
+	 else notFound = FALSE;
+         }
+       else { i++; cntmp++; }
+       }
+    cn1 = cntmp;
     if ( (*method_name) == string("RRTcomponents"))
       ConnectMapNodes::ConnectNodes_RRTConnect(rdmp, &*cd, &*lp, &*dm,
     						(*cn1),(*cn).cnInfo);
     else ConnectMapNodes::ConnectNodes_ExpandRRT(rdmp, &*cd, &*lp, &*dm,
     						(*cn1),(*cn).cnInfo);
+
   }
   else if ( (*method_name) == string("RayTracer")) {
+    clock.StartClock("RayTracer:" );
     cout << "using RayTracer to attempt to connect CCs" << endl;
     //The call to RayTracer from ConnectMapNodes goes here	
     RayTracer tracer(rdmp, cd, cdsetid, dm, dmsetid);
     tracer.setOptions(RayTbouncingMode, RayTmaxRays, RayTmaxBounces, RayTmaxRayLength);
     tracer.connectCCs();
   }
+  else if ( (*method_name) == string("components")  ) {
+    clock.StartClock("components:" );
+    componenttimes++;
+    CN * cn1;
+    vector<CN> cns = (*cnSets).GetCNs();
+    vector<CN>::iterator cntmp =cns.begin();
+    bool notFound = TRUE; int i=0; int d=0;
+    while ( (notFound) && (cntmp <=cns.end()) ) {
+       if (!strcmp((*cntmp).GetName(),"components")) {
+	 d++;
+	 if (d<rrttimes) { 
+	     i++; cntmp++;
+             }
+	 else notFound = FALSE;
+         }
+       else { i++; cntmp++; }
+       }
+    cn1 = cntmp;
+    ConnectMapNodes::ConnectNodes_ConnectCCs(rdmp, &*cd, &*lp, &*dm,
+    							(*cn1),(*cn).cnInfo);
+    cn1 = NULL; 
+    cntmp = NULL; 
+    //cns = NULL;    
+  } 
   else {
     cout << "Unknown choice, doing nothing" << endl;
     return false;
     }
-
+    clock.StopClock();
+    clock.PrintName();
+    cout << ": " << clock.GetClock_SEC()
+         << " sec"
+         << ", "<<(*rdmp).m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
     Stats.PrintAllStats(rdmp);
   method_name++;
 } //end method_name <= methods.end()
