@@ -5,12 +5,6 @@
 //  Created   3/ 6/98 Aaron Michalk
 ///////////////////////////////////////////////////////////////////////////
 
-#include <vector.h>
-#include <iostream.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-
 #include "GMSPolyhedron.h"
 
 //=========================================================================

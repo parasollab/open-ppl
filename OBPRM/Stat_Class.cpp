@@ -1,7 +1,5 @@
 // $Id$
 
-#include <iostream.h>
-#include <iomanip.h>
 #include "Stat_Class.h"
 #include "GraphAlgo.h"
 /////////////////////////////////////////////////////////////////////

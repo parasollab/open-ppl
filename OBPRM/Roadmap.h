@@ -349,8 +349,6 @@ public:
 };
 
 
-#include "Defines.h"
-#include <string.h>
 #include "BasicDefns.h"
 #include "Environment.h"
 #include "DistanceMetrics.h"

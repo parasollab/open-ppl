@@ -1,8 +1,6 @@
 // $Id$
 
-#include <iostream.h>
-#include <time.h>
-#include <string.h>
+#include "Defines.h"
 
 ///Modified for VC
 #if defined(_WIN32)

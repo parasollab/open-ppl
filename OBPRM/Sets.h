@@ -32,19 +32,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include standard headers
-#include <iostream.h>
-#include <fstream.h>
-#include <iomanip.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <function.h>
-#include <algo.h>
-#include <list.h>
-#include <vector.h>
 #include <bvector.h> //for bit_vector
-#include <multimap.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include OBPRM headers

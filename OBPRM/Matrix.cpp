@@ -7,8 +7,6 @@
 
 // This is a test
 #include "Matrix.h"
-#include <math.h>
-
 
 //==========================================================================
 //  Constructors and Destructor

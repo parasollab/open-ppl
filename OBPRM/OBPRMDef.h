@@ -19,8 +19,6 @@
 #include <sys/io.h>
 #endif
 #include "Defines.h"
-#include <assert.h>
-
 
 /////////////////////////////////////////////////////////////////////
 //Include OBPRM header

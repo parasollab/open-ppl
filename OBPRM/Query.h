@@ -19,7 +19,6 @@
 #define Query_h
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#include "Defines.h"  
 #include "Roadmap.h"     
 #include "util.h"
 
@@ -211,11 +210,6 @@ public:
     SID dmsetid;                        ///< Distance Metrics set id for query
 };
 
-
-
-#include "Defines.h"
-#include <fstream.h>
-#include <string.h>
 
 #include "Environment.h"
 #include "GraphAlgo.h"

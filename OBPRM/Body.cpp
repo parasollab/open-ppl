@@ -8,9 +8,6 @@
 #include "Body.h"
 #include "Input.h"
 
-#include <string.h>
-#include <stdlib.h>
-
 //===================================================================
 //  Constructors and Destructor
 //===================================================================

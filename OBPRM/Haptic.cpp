@@ -10,9 +10,6 @@
 //      09/29/98  O.B. Bayazit (HRoadmap class)
 /////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "Haptic.h"
 #include "Environment.h"
 #include "Push.h"

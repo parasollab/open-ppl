@@ -7,7 +7,6 @@
 
 #include "Transformation.h"
 #include "DHparameters.h"
-#include <math.h>
 
 #define DEGTORAD 3.1415926535/180.0
 

@@ -2,7 +2,7 @@
 #define ConnectionMethod_h
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-#include <string>
+
 #ifdef __K2
   #include <strstream.h>
 #else

@@ -7,8 +7,6 @@
 //
 ////////////////////////////////////////////////////
 
-#include <math.h>
-
 #include "util.h"
 #include "Roadmap.h"
 #include "MultiBody.h"

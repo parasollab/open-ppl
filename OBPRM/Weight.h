@@ -14,8 +14,7 @@
 #if !defined(_OBPRM_WEIGHT_H_)
 #define _OBPRM_WEIGHT_H_
 
-#include <iostream.h>
-#include <vector.h>
+#include "Defines.h"
 
 /////////////////////////////////////////////////////////////
 //

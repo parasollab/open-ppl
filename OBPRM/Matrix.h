@@ -7,10 +7,7 @@
 #ifndef Matrix_h
 #define Matrix_h
 
-#include <stdlib.h>
-#include <fstream.h>
-#include <iostream.h>
-
+#include "Defines.h"
 
 class Matrix {
 public:

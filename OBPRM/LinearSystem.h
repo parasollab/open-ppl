@@ -8,10 +8,6 @@
 #ifndef LinearSystem_h
 #define LinearSystem_h
 
-#include <stdlib.h>
-#include <fstream.h>
-#include <iostream.h>
-
 #include "Matrix.h"
 
 

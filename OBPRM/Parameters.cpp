@@ -5,7 +5,6 @@
 //  11/27/00 Lucia K. Dale
 /////////////////////////////////////////////////////////////////////
 
-#include "Defines.h"
 ///Modified for VC
 #if defined(_WIN32)
 #include <strstrea.h>

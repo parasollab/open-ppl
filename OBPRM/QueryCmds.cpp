@@ -7,10 +7,6 @@
 
 #include "QueryCmds.h"
 
-#include <iostream.h>
-#include <iomanip.h>
-#include <string.h>
-#include <vector.h>
 #include "util.h"
 
 //===================================================================

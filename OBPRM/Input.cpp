@@ -9,9 +9,6 @@
 #include "Environment.h"
 #include "FreeBody.h"
 #include "FixedBody.h"
-#include "Defines.h"
-
-#include <math.h>
 
 #include "Cfg.h"
 #include "Cfg_free.h"
@@ -25,7 +22,6 @@
 #include "CollisionDetection.h"
 #include "ConnectMap.h"
 
-#include <iostream.h>
 //===================================================================
 //  Input class
 //  Constructors and Destructor

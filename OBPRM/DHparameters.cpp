@@ -4,7 +4,6 @@
 //
 //  Created   3/ 1/98 Aaron Michalk
 /////////////////////////////////////////////////////////////////////
-#include <math.h>
 
 #include "DHparameters.h"
 #include "Transformation.h"
