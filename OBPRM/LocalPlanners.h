@@ -67,6 +67,7 @@ enum PLANNER {
 	ROTATE_AT_S,
 	ASTAR_DISTANCE,
 	ASTAR_CLEARANCE,
+	APPROX_SPHERES,
 	INVALID_PLANNER};
 
 //---------------------------------------------------------------
@@ -145,6 +146,8 @@ public:
   EID    GetID() const;
   int    GetFEdgeMask() const;
   int    GetBEdgeMask() const;
+  int    GetN() const;
+
 
 protected:
   //===================================================================
@@ -159,6 +162,7 @@ protected:
   EID    lpid;
   int    forwardEdge;
   int    backEdge;
+  int    n;
 private:
 };
 
@@ -287,6 +291,9 @@ public:
   virtual bool IsConnected_astar(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
 
+  virtual bool IsConnected_approx_spheres(Environment *env,CollisionDetection *,DistanceMetric *,
+                                Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
+ 
   virtual bool UsesPlannerOtherThan(char plannerName[], SID lpsetid=0);
 
   //===================================================================

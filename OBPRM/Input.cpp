@@ -240,6 +240,7 @@ Input::Input():
         "\n\t\t\t  rotate_at_s      FLOAT   (def,s=0.5)"
         "\n\t\t\t  a_star_distance  INT INT (def,tries=6,neighbors=3)"
         "\n\t\t\t  a_star_clearance INT INT (def,tries=6,neighbors=3)"
+        "\n\t\t\t  approx_spheres   INT     (def,n=3)"
         );
     CDstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick one: default is the first in the list "

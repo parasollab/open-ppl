@@ -272,6 +272,9 @@ bool LocalPlanners::IsConnected(PLANNER lpName, Environment *_env,CollisionDetec
       case ASTAR_CLEARANCE:
 	 return IsConnected_astar(_env,cd,dm,_c1,_c2,_lp,info);
 	 break;
+      case APPROX_SPHERES:
+         return IsConnected_approx_spheres(_env,cd,dm,_c1,_c2,_lp,info);
+         break;
   }
   cout << "Error: in LocalPlanners::IsConnected(PLANNER lpName, ...), invalid lp option!" << endl;
   exit(1);
@@ -565,6 +568,33 @@ IsConnected_astar(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cf
 
 bool
 LocalPlanners::
+IsConnected_approx_spheres(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info) {
+  double dist, c1_clearance, c2_clearance;
+  
+  //calculate the distance between the two cfgs
+  dist = dm->Distance(_env,_c1,_c2,info->dmsetid);
+  
+  if ((_c1.info.clearance != -1) && (_c2.info.clearance != -1)) {
+    if(_c1.info.clearance + _c2.info.clearance >= dist) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    c1_clearance = _c1.ApproxCSpaceClearance(_env,cd,info->cdsetid,info->cdInfo,dm,info->dmsetid,_lp.GetN());
+    c2_clearance = _c2.ApproxCSpaceClearance(_env,cd,info->cdsetid,info->cdInfo,dm,info->dmsetid,_lp.GetN());
+    if (c1_clearance + c2_clearance >= dist) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+};
+
+
+bool
+LocalPlanners::
 UsesPlannerOtherThan(char plannerName[], SID lpsetid){
 
   vector<LP> lpset = planners.GetLPSet(lpsetid);
@@ -589,6 +619,7 @@ LP() {
   strcpy(name,"");
   planner = INVALID_PLANNER; 
   sValue = tries = neighbors = 0;
+  n = 0;
   lpid = INVALID_EID;
   forwardEdge = backEdge = 0;
 };
@@ -606,10 +637,12 @@ operator==(const LP& _lp) const
   } else if ( !strcmp(name,"straightline") ) {
      return true;
   } else if ( !strcmp(name,"rotate_at_s") ) {
-     return ( sValue == _lp.sValue );
-  } else {  // ( strstr(name,"a_star") ) 
-     return ( tries==_lp.tries 
+     return ( sValue == _lp.sValue );  
+  } else if ( !strcmp(name,"a_star") ) {
+     return ( tries==_lp.tries
            && neighbors==_lp.neighbors );
+  } else { //( strstr(name,"approx_spheres") ) 
+     return ( n==_lp.n );
   }
 };
 
@@ -675,6 +708,11 @@ GetBEdgeMask() const {
   return backEdge;
 };
 
+int
+LP::
+GetN() const {
+  return n;
+};
 
 ostream& operator<< (ostream& _os, const LP& lp) {
         _os<< lp.GetName();
@@ -780,6 +818,7 @@ LPSets::
 MakeLPSet(istream& _myistream) { 
   char lpname[100]; 
   double sValue;
+  int n;
   vector<EID> lpvec;  // vector of lpids for this set 
 
   while ( _myistream >> lpname ) { // while lps to process...  
@@ -875,6 +914,29 @@ MakeLPSet(istream& _myistream) {
           exit(-1);
        }
        lpvec.push_back( lp1.lpid );
+
+    } else if (!strcmp(lpname,"approx_spheres")) {   // APPROX_SPHERES
+      LP lp1;
+      strcpy(lp1.name,lpname);
+      lp1.planner = APPROX_SPHERES;
+      if ( _myistream >> n ) { //get n value
+        if (n < 0) {
+          cout << endl << "INVALID: approx_spheres n=" <<n;
+          exit(-1);
+        } else {
+          lp1.n = n; 
+        }
+      } else { //if no n given, use default 3
+        lp1.n = 3;
+        _myistream.clear(); // clear failure to read in last n value
+      }
+      lp1.lpid = AddElementToUniverse(lp1);
+      lp1.forwardEdge = lp1.backEdge = 1 << lp1.lpid;
+      if ( ChangeElementInfo(lp1.lpid,lp1) != OK ) {
+         cout << endl << "In MakeSet: couldn't change element info";
+         exit(-1);
+      }
+      lpvec.push_back( lp1.lpid );
 
     } else {
        cout << "INVALID: local planner name = " << lpname;
