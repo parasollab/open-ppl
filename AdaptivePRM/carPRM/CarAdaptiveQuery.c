@@ -17,7 +17,7 @@
 #include"CurveWeight.h"
 
 
-CarAdaptiveQuery::CarAdaptiveQuery(Input *input, QueryCmds *Qinput, CollisionDetection* cd, 
+CarAdaptiveQuery::CarAdaptiveQuery(Input *input, MyQueryCmds *Qinput, CollisionDetection* cd, 
 		 DistanceMetric* dm, LocalPlanners* lp,ConnectMapNodes* cn) :
 	 AdaptiveQuery(input, Qinput, cd, dm, lp, cn) {}
 
@@ -31,10 +31,9 @@ CarAdaptiveQuery::PerformQuery(CollisionDetection* cd, ConnectMapNodes* cn,
 
 typedef pair<Cfg, Cfg> CfgPairType;
 typedef pair<CfgPairType, double> DIS_TYPE;
-bool 
-DIST_Compare(const DIST_TYPE &_cc1, const DIST_TYPE &_cc2) {
+bool DIST_Compare(const DIST_TYPE &_cc1, const DIST_TYPE &_cc2) {
         return (_cc1.second < _cc2.second ) ;
-};
+}
 
 
 void
@@ -75,11 +74,10 @@ CarAdaptiveQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 	return false;
 
   // check to see if bad nodes need to be thrown away
-  vector<Cfg> allnodes;
-  rdmp.m_pRoadmap->GetVerticesData(allnodes);
-  bool throwAwayBadNodes = true;
-  if(throwAwayBadNodes) {
-	removeBadNodes(allnodes, env, cd, cdsetid);
+  if(checkAllNodes) {
+    vector<Cfg> allnodes;
+    rdmp.m_pRoadmap->GetVerticesData(allnodes);
+    removeBadNodes(allnodes, env, cd, cdsetid);
   }
 
   LPInfo sci, ci;
@@ -140,7 +138,17 @@ CarAdaptiveQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
       int i;
       _path->push_back(_start);
       bool failedToRecreatePath = false;
-      for (i=0; i<rp.size()-1; i++) {
+      bool badNodeFound = false;
+
+      if (!checkAllNodes) { //remove bad nodes in path first
+        vector<Cfg> pathnodes;
+        for (i=0; i<rp.size(); i++)
+          pathnodes.push_back(rp[i].first);
+        badNodeFound = removeBadNodes(pathnodes, env, cd, cdsetid);
+      }
+
+      if (!badNodeFound) { //didn't remove a bad node, so check edges
+        for (i=0; i<rp.size()-1; i++) {
           if ( !(GetPathSegment(rp[i].first,rp[i+1].first,cd,lp,dm,rp[i].second,&ci) )) {
                cout << endl << "In PerformQuery: can't recreate path" << endl;
                rdmp.m_pRoadmap->DeleteEdge(rp[i].first,rp[i+1].first);
@@ -159,7 +167,12 @@ CarAdaptiveQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
                   _path->insert(_path->end(), ci.path.begin(),ci.path.end());
 	       }
           }
+	}
+      } else { //removed a bad node, so couldn't recreate path
+	cout << endl << "In PerformQuery: can't meet query requirements!" << endl;
+	failedToRecreatePath = true;
       }
+
       if(failedToRecreatePath) continue;
 
       #if INTERMEDIATE_FILES

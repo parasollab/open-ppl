@@ -39,20 +39,15 @@ public:
   CarQueryReq();
 
   virtual void init(char* filename);
-
-  virtual bool nodeValid(Cfg& node, Environment *env,
-			   CollisionDetection *cd, SID cdsetid);
   
   virtual void Print(ostream& os);
 
   bool CheckTurningRadius();
   double GetTurningRadius();
-  bool CheckCollision();
 
 protected:
    // flags:
    bool checkTurningRadius;
-   bool checkCollision;
 
    // values:
    double turningRadius;

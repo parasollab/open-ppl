@@ -21,7 +21,7 @@ CarQueryReq::CarQueryReq() : BasicQueryReq() {
   checkTurningRadius = 0;
   turningRadius = 0;
 
-  checkCollision = 0;
+  checkCollision = 1;
 }
 
 
@@ -73,11 +73,12 @@ CarQueryReq::init(char * filename) {
      is >> turningRadius;
 
   is >> checkCollision;
+
   is.close();
   return;
 }
 
-
+/*
 bool 
 CarQueryReq::nodeValid(Cfg &node, Environment *env, 
 			   CollisionDetection *cd, SID cdsetid) {
@@ -89,13 +90,12 @@ CarQueryReq::nodeValid(Cfg &node, Environment *env,
 
   return BasicQueryReq::nodeValid(node, env, cd, cdsetid);
 }
-
+*/
 
 void 
 CarQueryReq::Print(ostream& os) {
   BasicQueryReq::Print(os);
   os <<   "\tTurning Radius: " << checkTurningRadius << " (" << turningRadius << ")";
-  os << "\n\tCollision: "      << checkCollision     << "\n" << flush;
 }
 
 
@@ -108,11 +108,6 @@ CarQueryReq::CheckTurningRadius() {
 double
 CarQueryReq::GetTurningRadius() {
   return turningRadius;
-}
-
-bool
-CarQueryReq::CheckCollision() {
-  return checkCollision;
 }
 
 

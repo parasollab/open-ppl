@@ -17,7 +17,7 @@
 class CarAdaptiveQuery : public AdaptiveQuery {
 
 public:
-   CarAdaptiveQuery(Input *, QueryCmds*,
+   CarAdaptiveQuery(Input *, MyQueryCmds*,
         CollisionDetection*, DistanceMetric*, LocalPlanners*,ConnectMapNodes*);
    ~CarAdaptiveQuery() {}
 
