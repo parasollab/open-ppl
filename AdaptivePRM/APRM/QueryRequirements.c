@@ -92,9 +92,8 @@ BasicQueryReq::nodeValid(Cfg& node, Environment* env,
 
   if (checkCollision) {
     CDInfo info;
-    if (node.isCollision(env, cd, cdsetid, info)) {
+    if (node.isCollision(env, cd, cdsetid, info))
       return false;
-    }
   }
 
   if (checkClearance) {
@@ -119,7 +118,7 @@ BasicQueryReq::nodeValid(Cfg& node, Environment* env,
       double gamma = tmp[3]*M_PI*2;
       double beta = tmp[4]*M_PI*2;
       double ceta = acos(cos(gamma)*cos(beta));
-      //cout << "ceta is " << ceta*180/M_PI << "titleAngle is " <<  minTilt*180/M_PI 
+      //cout << "\t\tceta is " << ceta*180/M_PI << " tiltAngle is " <<  minTilt*180/M_PI 
       // 	   << "   " << maxTilt*180/M_PI << endl;
       if(ceta > maxTilt || ceta < minTilt )
          return false;
@@ -140,8 +139,8 @@ BasicQueryReq::edgeValid(vector<Cfg> &cfgs, Environment* env,
    // checking rotation
    if(checkRotation) {
       Cfg incr = cfgs[1] - cfgs[0];
-      if(incr.OrientationMagnitude() > rotation) 
-	  return false;
+      if(incr.OrientationMagnitude() > rotation)
+	return false;
    }	  
 	  
    return true;
@@ -231,6 +230,10 @@ QueryRequirementsObject::isNodeValid(Cfg& node, Environment* env, CollisionDetec
 
 bool 
 QueryRequirementsObject::isEdgeValid(vector<Cfg>& cfgs, Environment* env, CollisionDetection* cd, SID cdsetid) {
+  if (cfgs.size() == 0) {
+    cout << "\n\nERROR: In isEdgeValid\n\tAttempting to check edge of size 0!\n\n";
+    exit (-1);
+  }
   return m_pIQueryReq->edgeValid(cfgs, env, cd, cdsetid);
 }
 
