@@ -45,6 +45,12 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////
+/**@name General data structures*/
+//@{
+typedef short SID;///< set id type
+typedef short EID;///< element id type
+//@}
+
 /// Legal Types of Collision Detecters
 enum cd_predefined {
 
