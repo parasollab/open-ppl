@@ -69,7 +69,6 @@ defined(_WIN32) || defined(__HP_aCC)
 #include <stack.h>  
 #endif
 
-
 /*
 //aCC in parasol
 #ifdef __HP_aCC  
@@ -901,6 +900,7 @@ public:
        
    //@}
 
+
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -1117,6 +1117,10 @@ public:
          *if no such edge WEIGHT::InvalidWeight() will be returned.
          */
        WEIGHT  GetEdgeWeight(VERTEX&, VERTEX&) const;
+
+       /**Put weight of edge (vid1->vid2).
+         */
+       void PutEdgeWeight(VID _v1id, VID _v2id, const WEIGHT& wt);
 
       /**Put user data to the specified vertex.
         *If this specified vertex could not be found in graph,
@@ -3411,6 +3415,18 @@ GetEdgeWeight(VERTEX& _v1, VERTEX& _v2) const {
     
     return GetEdgeWeight( GetVID(_v1), GetVID(_v2) );
 }
+
+template<class VERTEX, class WEIGHT>
+void
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+PutEdgeWeight(VID _v1id, VID _v2id, const WEIGHT& wt)  {
+  CVI v1;
+  CEI e12;
+  if (IsEdge(_v1id,_v2id,&v1,&e12)) {
+    EI e=const_cast<EI>(e12);
+    e->weight=wt;
+  }
+};  
 
 //==================================
 // WeightedMultiDiGraph class Methods: Basic Graph Algorithms
