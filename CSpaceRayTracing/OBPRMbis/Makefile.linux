@@ -119,6 +119,14 @@ growccs:: main_growccs.cpp libs
 	rm -f main_growccs.o main_growccs.d
 
 #--------------------------------------------------------------------
+growccs.test:: main_growccs.test.cpp libs
+	$(CXX) $(CFLAGS2) -o growccs.test \
+                main_growccs.test.cpp \
+		-Wl,-R${PWD}  \
+                $(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
+	rm -f main_growccs.test.o main_growccs.test.d
+
+#--------------------------------------------------------------------
 .SUFFIXES: .cpp
 .cpp.o:
 	$(CXX) ${CXXFLAGS} -c $<
