@@ -1673,19 +1673,14 @@ operator==(const GN& _gn) const
   if ( strcmp(name,_gn.name) != 0 ) {
      return false;
   } else if ( !strcmp(name,"BasicPRM") ) {
-    //return true;
      return ( numNodes == _gn.numNodes );
   } else if ( !strcmp(name,"BasicOBPRM") ) {
-    //return true;
      return ( numNodes == _gn.numNodes );
   } else if ( !strcmp(name,"OBPRM") ) {
-    //return ( clearanceFactor == _gn.clearanceFactor );
      return ( (clearanceFactor == _gn.clearanceFactor) && (numNodes == _gn.numNodes) );
   } else if ( !strcmp(name,"GaussPRM") ) {
-    //return ( Gauss_d == _gn.Gauss_d );
      return ( (Gauss_d == _gn.Gauss_d) && (numNodes == _gn.numNodes) );
   } else if ( !strcmp(name,"BasicMAPRM") ) {
-    //return true;
      return ( numNodes == _gn.numNodes );
   } else { // unrecognized...
      return false;
