@@ -258,7 +258,7 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env,CollisionDetection* cd,
   // Overlap these two normals, solve for alpha, beta, gamma of FixedXYZ rotation.
   Orientation orient;
   double dot = robotNormal.dotProduct(obstNormal);
-  if(abs(dot) == 1) { // two normals parallel to each other.
+  if(abs((int)dot) == 1) { // two normals parallel to each other.
     orient = Orientation(IdentityMatrix);
   } else {
     double cV = sqrt((1+dot)/2.0);
