@@ -90,11 +90,11 @@ int main(int argc, char** argv)
   }
 
 
-  #if QUIET
+  #ifdef QUIET
   #else
     cout << "\n";
     if ( input.inmapFile.IsActivated() ){
-      cout << "Node Generation: "<<argv[argc];
+      cout << "Node Generation: ";
     }else{
       cout << "Node Generation: " << NodeGenClock.GetClock_SEC()
            << " sec (ie, " << NodeGenClock.GetClock_USEC() << " usec)";
