@@ -59,8 +59,8 @@ CXX = ${CC}
 
 # -- for development on TERMINATOR (can't seem to use it better due to cstk)
 #   OPTS = -g -O2 -fexceptions
- OPTS = -O2 -fexceptions
-# OPTS = -g
+OPTS = -O2 -fexceptions
+#  OPTS = -g3
 #  OPTS = -o32 -O1 -show -ptv 
 # -- optimized (our O2's) (slow_compile/good_code) --
 #  OPTS =  -o32 -O2 -OPT:Olimit=0 -show

@@ -168,7 +168,7 @@ void RayCSpace::addRoadmapNodes(Roadmap &rdmp) {
 
   for (int i= 1, previous = rdmp.m_pRoadmap->AddVertex(path[0]); i < path.size(); i++, previous = current) {
     current = rdmp.m_pRoadmap->AddVertex(path[i]);
-    cout << endl << "Adding edge from " << previous << " to " << current<< endl;
+    //    cout << endl << "Adding edge from " << previous << " to " << current<< endl;
     rdmp.m_pRoadmap->AddEdge(previous, current);
   }
 }

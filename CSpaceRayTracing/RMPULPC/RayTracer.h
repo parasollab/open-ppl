@@ -37,7 +37,6 @@ class RayTracer {
 
  private:
   void getBoundaryCfgs(const vector<Cfg> &input, vector<Cfg> &output, unsigned int k);
-  void ModifyRoadMap(Roadmap *toMap, Roadmap *fromMap, vector<VID> vids);
   RayCSpace ray; // Ray to be traced
   Cfg source, target;
   vector<Cfg> *target_cfgs;
