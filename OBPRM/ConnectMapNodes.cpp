@@ -323,8 +323,8 @@ ConnectNodes_ClosestVE(
   if (info.tag != InfoCfg::NULL_INFO){
         // separate on tag values
 	for (vector<Cfg>::iterator v=verts.begin();v<verts.end();++v){
-		if (v->info.tag == info.tag) oldV.push_back(*v);
-		else                         newV.push_back(*v);
+		if (v->info.tag == info.tag) newV.push_back(*v);
+		else                         oldV.push_back(*v);
 	}
   } else {
         // only one set desired
@@ -785,7 +785,6 @@ FindKClosestPairs(Roadmap *_rm,DistanceMetric * dm, CNInfo& info,
                                      cfg,
                                      tmp,
                                      info.dmsetid);
-
 
              if ( dist < kp[k-1].second) {
                 kp[k-1] = VE_DIST_TYPE(Cfg_VE_Type(cfg,
