@@ -915,7 +915,7 @@ void
 ConnectMapNodes::
 RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
         CollisionDetection* cd, LocalPlanners* lp, DistanceMetric * dm,
-        CNInfo& info, LPInfo lpInfo){
+        CNInfo& info, LPInfo lpInfo,bool greedy){
 
   // get a local copy for brevity of notation
   Environment *env = rm->GetEnvironment();
@@ -954,29 +954,39 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
          }//endif U.size()
 
          Cfg x_new = Cfg::c1_towards_c2(x_near,u,deltaT);
-	 //if ( x_near.isWithinResolution(u,connectionPosRes,connectionOriRes) )
 
 	 if ((dm->Distance(env,u,x_near,info.dmsetid)<deltaT)
 	      && (U.size()>0))
 	 { x_new = u; close = TRUE; cout << "CLOSE";  }
-	 
+	 bool cont = greedy; 
+         int times = 1;
          //xnew = x_new;
          //if x_new in bbox AND x_new in freespace AND x_new connectable to x_near
+         while (cont || (times==1)) 
              if (x_new.InBoundingBox(env)
               && !x_new.isCollision(env,cd,info.cdsetid,info.cdInfo)
               && lp->IsConnected(rm,cd,dm,x_near,x_new,info.lpsetid,&lpInfo)){
-	          xnew = x_new;
+	          xnew = x_new; times=times+1;
                   // add x_new and connecting edge to x_near into roadmap
                   Cfg t=Cfg(x_new);
                   rm->m_pRoadmap->AddVertex(t);
                   rm->m_pRoadmap->AddEdge(x_near, x_new, lpInfo.edge);
 		  cout << x_new << "\n";
+		  if (cont) {
+			x_near=Cfg(x_new);
+         		Cfg x_new = Cfg::c1_towards_c2(x_near,u,deltaT);
+		    }
 		  if (close) {U.push_back(xnew);U.push_back(xnew);U.push_back(xnew);
 				cout<< "adding close xnew";}
+		  if ((dm->Distance(env,u,x_near,info.dmsetid)<deltaT)
+	      			&& (U.size()>0))
+	 		{ x_new = u; close = TRUE; cout << "CLOSE";  }
               }
-	      else { if (U.size()>3) {
-			while (U.size()>1) { U.erase( U.begin() ); } //endwhile
-			}//end_if U.size()>3
+	      else {  cont=FALSE;
+			  times=times+1;
+		      if (U.size()>3) {
+			   while (U.size()>1) { U.erase( U.begin() ); } //endwhile
+			   }//end_if U.size()>3
 		     cout << "x_new not added" << x_new << "\n";
 		     //Cfg t=Cfg(x_near);
 		     //rm->m_pRoadmap->DeleteVertex(t);
@@ -1137,7 +1147,7 @@ ConnectNodes_ExpandRRT(
            _cn.GetIterations(),
            _cn.GetStepFactor() * lpInfo.positionRes,
            dummyU,
-           cd, lp, dm, info, lpInfo);
+           cd, lp, dm, info, lpInfo,TRUE);
         vector<VID> verts;
         (&submap1)->m_pRoadmap->GetVerticesVID(verts);
       //-- map = map + submap
@@ -1216,7 +1226,7 @@ ConnectNodes_RRTConnect(
               _cn.GetIterations(),
               _cn.GetStepFactor() * lpInfo.positionRes,
               dummyU,
-              cd, lp, dm, info, lpInfo);
+              cd, lp, dm, info, lpInfo,FALSE);
           //-- map = map + submap
       vector<VID> verts;
       (&submap1)->m_pRoadmap->GetVerticesVID(verts);
@@ -1245,7 +1255,7 @@ ConnectNodes_RRTConnect(
               		  _cn.GetIterations()/2,
                       _cn.GetStepFactor() * lpInfo.positionRes,
                       dummyU,
-                      cd, lp, dm, info, lpInfo);
+                      cd, lp, dm, info, lpInfo,TRUE);
       		  vector<VID> verts1;
 	          (&submap3)->m_pRoadmap->GetVerticesVID(verts1);
 	  	  ModifyRoadMap(_rm,&submap3,verts1);
@@ -1304,12 +1314,12 @@ ConnectNodes_RRTConnect(
 		RRT(&submap1,
 		    	1,
 		    	_cn.GetStepFactor() * lpInfo.positionRes,
-		    	U,cd,lp,dm,info,lpInfo);
+		    	U,cd,lp,dm,info,lpInfo,FALSE);
 		cout << "between RRT calls " << U[0] << "\n";
 		RRT(&submap2,
 			1,
 			_cn.GetStepFactor() * lpInfo.positionRes,
-			U,cd,lp,dm,info,lpInfo);
+			U,cd,lp,dm,info,lpInfo,FALSE);
 		}
 		else {
 		Cfg tmp = Cfg::GetRandomCfg(submap2.environment);
@@ -1318,12 +1328,12 @@ ConnectNodes_RRTConnect(
 		RRT(&submap2,
 		    	1,
 		    	_cn.GetStepFactor() * lpInfo.positionRes,
-		    	U,cd,lp,dm,info,lpInfo);
+		    	U,cd,lp,dm,info,lpInfo,FALSE);
 		cout << "between RRT calls " << U[0] << "\n";
 		RRT(&submap1,
 		    	1,
 		    	_cn.GetStepFactor() * lpInfo.positionRes,
-		    	U,cd,lp,dm,info,lpInfo);
+		    	U,cd,lp,dm,info,lpInfo,FALSE);
 		}
 		U.erase(U.begin());
 	  } //end while !_rm
@@ -2125,7 +2135,11 @@ MakeCNSet(istream& _myistream) {
        _myistream.clear(); // clear failure to read in last value
 
 
-    } else {
+    } else if (!strcmp(cnname,"RayTracer")  ) {
+	       CN cn1;
+ 	       strcpy(cn1.name,cnname);
+	    }
+      else {
        cout << "INVALID: connection method name = " << cnname;
        exit(-1);
     }

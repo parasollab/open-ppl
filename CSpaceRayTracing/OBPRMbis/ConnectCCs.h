@@ -234,6 +234,7 @@ public:
     SID dmsetid;                        ///< Distance Metrics set id for query
 
     string method_name;
+    vector<string> methods;
     //RayTracer options
     string RayTbouncingMode;
     int RayTmaxRays;

@@ -18,6 +18,9 @@
 #include "ConnectCCs.h"
 #include "Environment.h"
 #include "GraphAlgo.h"
+#include "Stat_Class.h"
+
+extern Stat_Class Stats;
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class ConnectCCs
@@ -42,10 +45,12 @@ ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
   //rdmp.ReadRoadmap(input,cd,dm,lp,connect_CCs_input->mapFile.GetValue() );
   cout << "here2";
   istrstream input_stream(connect_CCs_input->option_str.GetValue());
-  string cnname; cout << "cnname: " << cnname << "." << endl;
+  string cnname; 
   while (input_stream >> cnname) {
     if (cnname == string("RayTracer")) {
       method_name = cnname;
+      methods.push_back(method_name);
+	cout << "SETTING UP" << method_name;
       if (input_stream >> RayTbouncingMode) {
 	if (RayTbouncingMode != string("targetOriented") && 
 	    RayTbouncingMode != string("random") && 
@@ -93,6 +98,8 @@ ConnectCCs(Input *input,Roadmap *rdmp, ConnectCCsCmds *connect_CCs_input,
       }
     } else if ((cnname == string("RRTcomponents")) || (cnname == string("RRTexpand"))) {
       method_name = cnname;
+      methods.push_back(method_name);
+	cout << "SETTING UP" << method_name;
       istrstream input_stream2(connect_CCs_input->option_str.GetValue());
       //CNSets * cnSets = new CNSets();
       cnSets = new CNSets();
@@ -179,9 +186,11 @@ bool
 ConnectCCs::
 PerformConnectCCs(Roadmap * rdmp,CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * lp,DistanceMetric * dm) 
 {
-
+vector<string>::iterator method_name = methods.begin();
+while (method_name<=methods.end()) {
   //here is where we will call the proper method from (RRT or RayTracer
-  if ((method_name == string("RRTcomponents")) || (method_name == string("RRTexpand"))) {
+  if (( (*method_name)==string("RRTcomponents")) ||
+	 ( (*method_name)==string("RRTexpand"))) {
     cout << "using RRT to attempt to connect CCs" << endl;
     //The call to RRT from ConnectMapNodes goes here
     CN * cn1;
@@ -194,13 +203,13 @@ PerformConnectCCs(Roadmap * rdmp,CollisionDetection *cd, ConnectMapNodes *cn, Lo
 
     vector<CN> cns = (*cnSets).GetCNs();
     cn1 = cns.begin();
-    if (method_name == string("RRTcomponents"))
+    if ( (*method_name) == string("RRTcomponents"))
       ConnectMapNodes::ConnectNodes_RRTConnect(rdmp, &*cd, &*lp, &*dm,
     						(*cn1),(*cn).cnInfo);
     else ConnectMapNodes::ConnectNodes_ExpandRRT(rdmp, &*cd, &*lp, &*dm,
     						(*cn1),(*cn).cnInfo);
   }
-  else if (method_name == string("RayTracer")) {
+  else if ( (*method_name) == string("RayTracer")) {
     cout << "using RayTracer to attempt to connect CCs" << endl;
     //The call to RayTracer from ConnectMapNodes goes here	
     RayTracer tracer(rdmp, cd, cdsetid, dm, dmsetid);
@@ -210,9 +219,11 @@ PerformConnectCCs(Roadmap * rdmp,CollisionDetection *cd, ConnectMapNodes *cn, Lo
   else {
     cout << "Unknown choice, doing nothing" << endl;
     return false;
-  }
+    }
 
-
+    Stats.PrintAllStats(rdmp);
+  method_name++;
+} //end method_name <= methods.end()
 //    for (int i=0; i < query.size()-1; i++ ){
 //       cout << "\nquery is ...     ";
 //                                     query[i].Write(cout);

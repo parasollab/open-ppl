@@ -1249,7 +1249,7 @@ protected:
         */
       static void RRT(Roadmap* rm, int K, double deltaT, vector<Cfg>& U,
                                     CollisionDetection*,LocalPlanners*,
-                                    DistanceMetric *, CNInfo&, LPInfo);
+                                    DistanceMetric *, CNInfo&, LPInfo,bool greedy);
 
   //}@
 
