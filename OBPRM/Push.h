@@ -1,15 +1,13 @@
-/////////////////////////////////////////////////////////////////////
-//
-//   Push.h
-//
-//   General Description
-//      This class contains pushing methods based on the 
-//      HapticInput class written by O.B. Bayazit and Guang Song.
-//      This class takes a bad path and attempts to push it to the 
-//      free space.
-//  Created
-//      09/29/98  O.B. Bayazit (HRoadmap class)
-/////////////////////////////////////////////////////////////////////
+/**@file Push.h
+   General Description
+      This class contains pushing methods based on the 
+      HapticInput class written by O.B. Bayazit and Guang Song.
+      This class takes a bad path and attempts to push it to the 
+      free space.
+   @date 09/29/98
+   @author O.B. Bayazit (HRoadmap class)
+*/
+
 #ifndef Push_h
 #define Push_h
 
