@@ -1321,7 +1321,8 @@ public:
        //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetIncidentEdges(VID) const;
        //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetIncomingEdges(VID) const;
        //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetOutgoingEdges(VID) const;
-  
+
+	int GetVertSize()  const { return v.size(); };  
 
    //@}
 
