@@ -21,7 +21,9 @@
 # collision detection packages available
 #--------------------------------------------------------------------------
 
- CD_DIR = /home2/CD-libs/solaris
+#for cron jobs on compute
+ CD_DIR = /user/sthomas/dsmft/CD-libs/solaris
+# CD_DIR = /home2/CD-libs/solaris #for joefriday
 
  VCLIP_DIR     = ${CD_DIR}/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
@@ -58,10 +60,12 @@ showdefs ::
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
 #--------------------------------------------------------------------------
- CC = /share/gnu/bin/g++ -ftemplate-depth-25
+ CC = /usr/local/bin/g++ -ftemplate-depth-25 #for cron jobs on compute
+# CC = /share/gnu/bin/g++ -ftemplate-depth-25 #for joefriday
 #CC = /pub/gnu_sgi/bin/g++
 
-CXX = /share/gnu/bin/g++ -ftemplate-depth-25
+CXX = /usr/local/bin/g++ -ftemplate-depth-25 #for cron jobs on compute
+#CXX = /share/gnu/bin/g++ -ftemplate-depth-25 #for joefriday
 
 # -- for development on TERMINATOR (can't seem to use it better due to cstk)
   OPTS = -O2 -fexceptions 
