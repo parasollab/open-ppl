@@ -142,7 +142,7 @@ private:
     // Data
     //
     /////////////////////////////////////////////////////////////////////////////
-    /**Cleanance of this Cfg.
+    /**Clearance of this Cfg.
      * Closet distance from this Cfg to any Obstacle in C-Space
      */
     double clearance;
@@ -151,6 +151,12 @@ private:
      *This Cfg is closest to the c-obst.
      */
     Cfg * direction;
+
+    /**Flag for ApproxCSpaceClearance2(...).
+     *If 0, calculate clearance as usual. (default)
+     *If 1, calculate the clearance in one direction (direction).
+     */
+    int checkOneDirection;
 
 public:
 
@@ -163,6 +169,8 @@ public:
     //@{  
     ClearanceInfo();
     ClearanceInfo(double _clearance, Cfg * _direction);
+    ClearanceInfo(double _clearance, Cfg * _direction, int _checkOneDirection);
+    ClearanceInfo(Cfg * _direction, int _checkOneDirection);
     ~ClearanceInfo();
     //@}
 
@@ -174,10 +182,13 @@ public:
     /**@name Access Method*/
     //@{
     double getClearance() {return clearance;};
-    void setClearance(double _clearance){clearance = _clearance;};
+    void setClearance(double _clearance) {clearance = _clearance;};
 
     Cfg * getDirection() {return direction;};
-    void setDirection(Cfg * _direction){direction = _direction;};
+    void setDirection(Cfg * _direction) {direction = _direction;};
+
+    int getCheckOneDirection() {return checkOneDirection;};
+    void setCheckOneDirection(int _checkOneDirection) {checkOneDirection = _checkOneDirection;};
     //@}
 
 };
@@ -484,7 +495,11 @@ public:
       /// returns the clearance and the direction via ClearanceInfo
       ClearanceInfo ApproxCSpaceClearance2(Environment *env, CollisionDetection *cd,
         SID cdsetid, CDInfo& cdInfo,
-	DistanceMetric * dm, SID dmsetid, int n);  
+	DistanceMetric * dm, SID dmsetid, int n);
+
+      ClearanceInfo ApproxCSpaceClearance2(Environment *env, CollisionDetection *cd,
+        SID cdsetid, CDInfo& cdInfo,
+	DistanceMetric * dm, SID dmsetid, int n, ClearanceInfo clearInfo);  
  
       ///Call CfgManager::ConfigEnvironment
       bool ConfigEnvironment(Environment *env);

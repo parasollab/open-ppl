@@ -66,11 +66,25 @@ void InfoCfg::Read(istream &s) {
 ClearanceInfo::ClearanceInfo() {
     clearance = 1e10;
     direction = NULL;
+    checkOneDirection = 0;
 }
 
 ClearanceInfo::ClearanceInfo(double _clearance, Cfg * _direction){
     clearance = _clearance;
     direction = _direction;
+    checkOneDirection = 0;
+}
+
+ClearanceInfo::ClearanceInfo(double _clearance, Cfg * _direction, int _checkOneDirection){
+    clearance = _clearance;
+    direction = _direction;
+    checkOneDirection = _checkOneDirection;
+}
+
+ClearanceInfo::ClearanceInfo(Cfg * _direction, int _checkOneDirection){
+    clearance = 1e10;
+    direction = _direction;
+    checkOneDirection = _checkOneDirection;
 }
 
 ClearanceInfo::~ClearanceInfo() {
@@ -695,27 +709,38 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 }
 
 //Approximate C-Space Clearance
-ClearanceInfo Cfg::ApproxCSpaceClearance2(Environment *env, CollisionDetection *cd, SID cdsetid, CDInfo& cdInfo,DistanceMetric * dm, SID dmsetid, int n)
+ClearanceInfo Cfg::ApproxCSpaceClearance2(Environment *env, CollisionDetection *cd, SID cdsetid, CDInfo& cdInfo,DistanceMetric * dm, SID dmsetid, int n) {
+  ClearanceInfo clearInfo;
+  return ApproxCSpaceClearance2(env,cd,cdsetid,cdInfo,dm,dmsetid,n,clearInfo);
+}
+
+//Approximate C-Space Clearance
+ClearanceInfo Cfg::ApproxCSpaceClearance2(Environment *env, CollisionDetection *cd, SID cdsetid, CDInfo& cdInfo,DistanceMetric * dm, SID dmsetid, int n, ClearanceInfo clearInfo)
 {
   Cfg cfg = *this;
-  ClearanceInfo clearInfo;
- 
+
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
   int n_ticks;
-  double clear, tmpDist;
-  clear = 1e10;
+  double tmpDist;
 
   Cfg dir;
+  if ( clearInfo.getCheckOneDirection() ) { //only want the c-space clearance in one specific direction
+    n = 1;
+    dir = *clearInfo.getDirection();
+  }
+
   for(int i = 0 ; i < n ; i++){
-    dir = GetRandomCfg(env);
-    
+    if ( !clearInfo.getCheckOneDirection() ) {
+      dir = GetRandomCfg(env);
+    }
+
     Cfg tick = cfg;
     Cfg incr = cfg.FindIncrement(dir,&n_ticks,positionRes,orientationRes);
    
     int tk = 0;
     int collisionFlag = false;
-    while(tk < n_ticks && !collisionFlag && (dm->Distance(env,cfg,tick,dmsetid) < clear) ){
+    while(tk < n_ticks && !collisionFlag && (dm->Distance(env,cfg,tick,dmsetid) < clearInfo.getClearance()) ){
 
       tick.Increment(incr);
 
