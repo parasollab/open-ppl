@@ -92,21 +92,6 @@ VerifyValidValue(char *_val){
 };
 
 
-/*
-public:
-        n_str_param()
-                :str_param<char*>(){};
-        n_str_param(char *_flag)
-                :str_param<char*>(_flag){};
-        n_str_param(char *_flag,char* _initialValue)
-                :str_param<char*>(_flag,_initialValue){};
-        bool AckCmdLine(int *i, int argc, char** argv);
-protected:
-        bool VerifyValidValue(char* _val);
-};
-
-*/
-
 //===================================================================
 //  Input class
 //  Constructors and Destructor
@@ -124,7 +109,7 @@ Input::Input():
         numNodesPerObst  ("-nodesPerObst",      10,  1, 5000),
         lineSegment      ("-lineSegment",        0,  0, 5000),
         usingClearance   ("-clearance",          0,  0,    1),
-    addPartialEdge   ("-addPartialEdge",     0,  0,    1),
+        addPartialEdge   ("-addPartialEdge",     0,  0,    1),
         proportionSurface("-proportionSurface",1.0,  0,  1.0),
         posres           ("-posres",          0.05, -1000, 1000),
         orires           ("-orires", ORIENTATION_RES, -1000, 1000),
@@ -134,23 +119,6 @@ Input::Input():
         freePair         ("-freePair","cM rV "),    // center of Mass
         calcClearance    ("-calcClear",          0,  0,    1) 
         {
-    // brc added
-/*
-    ARGSTRING_LENGTH = 256;
-     MAX_CN           =  10;
-    MAX_GN           =  10;
-    MAX_LP           =  10;
-    MAX_CD           =  10;
-    MAX_DM           =  10;
-    MAX_CFG          =  10;
-
-    FILENAME_LENGTH  =  80;   // GMS stuff uses these
-    MAX_MULTIBODY    =  50;
-    MAX_CONNECTION   =  50;
-    MAX_FIXEDBODY    =  50;
-    MAX_FREEBODY     =  50;
-*/
-
 
     numEdges.PutDesc         ("INTEGER","");
     numShells.PutDesc        ("INTEGER","");
@@ -180,7 +148,7 @@ Input::Input():
         "\n\t\t\t  cM_rV \"cg/random vertex\""
         "\n\t\t\t  rV_rT \"random vertex/point in random          triangle\""
         "\n\t\t\t  rV_rW \"random vertex/point in random weighted triangle\""
-    "\n\t\t\t  N_rT  \"normal of random triangle\""
+        "\n\t\t\t  N_rT  \"normal of random triangle\""
         "\n\t\t\t  all   \"all of the above\""
         );
     freePair.PutDesc   ("STRING STRING","\n\t\t\tSame as above"
@@ -297,13 +265,7 @@ Input::Input():
 };
 
 Input::~Input() {
-        //fprintf(stderr,"In Input destru\n");
-       return;
-    for (int m=0; m<MAX_MULTIBODY; m++){
-        fprintf(stderr,"%d\n",m);
-        delete []fixedbodyFileName[m];
-    delete []freebodyFileName[m];
-    }
+  return;
 }
 
 
@@ -366,7 +328,7 @@ void Input::ReadCommandLine(int argc, char** argv){
         } else if ( numShells.AckCmdLine(&i, argc, argv) ) {
         } else if ( lineSegment.AckCmdLine(&i, argc, argv) ) {
         } else if ( usingClearance.AckCmdLine(&i, argc, argv) ) {
-    } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
+        } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
         } else if ( collPair.AckCmdLine(&i, argc, argv) ) {
         } else if ( freePair.AckCmdLine(&i, argc, argv) ) {
 	} else if ( calcClearance.AckCmdLine(&i, argc, argv) ) {
@@ -506,7 +468,7 @@ PrintUsage(ostream& _os,char *executablename){
 	_os << "\n  "; calcClearance.PrintUsage(_os);
         _os << "\n  "; lineSegment.PrintUsage(_os);
         _os << "\n  "; usingClearance.PrintUsage(_os);
-    _os << "\n  "; addPartialEdge.PrintUsage(_os);
+        _os << "\n  "; addPartialEdge.PrintUsage(_os);
         _os << "\n  "; bbox.PrintUsage(_os);
         _os << "\n  "; bbox_scale.PrintUsage(_os);
         _os << "\n  "; posres.PrintUsage(_os);
@@ -516,7 +478,7 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; CNstrings[0]->PrintUsage(_os);
         _os << "\n  "; LPstrings[0]->PrintUsage(_os);
         _os << "\n  "; CDstrings[0]->PrintUsage(_os);
-    _os << "\n  "; CFGstrings[0]->PrintUsage(_os);
+        _os << "\n  "; CFGstrings[0]->PrintUsage(_os);
         _os << "\n  "; DMstrings[0]->PrintUsage(_os);
 
         _os << "\n\n  to see default values only, type \"obprm -defaults\" ";
@@ -694,24 +656,6 @@ void Input::Read() {
   is.close();
 };
 
-#define COMMENT_DELIMITER '#'
-#define LINEMAX 256
-template <class T> bool readfield (istream &_is, T *fred) {
-
-  char c;
-  char ThrowAwayLine[LINEMAX];
-
-  while ( _is.get(c) )
-    if (c == '#')
-        _is.getline(ThrowAwayLine,LINEMAX,'\n');
-    else if (c != '\n') {
-        _is.putback(c);
-        if (_is >> *fred ) return true;
-        else               return false;
-    }
-  return false;
-}
-
 void Input::Read(istream & _is) {
     int  i;
     char string[32];
@@ -723,12 +667,12 @@ void Input::Read(istream & _is) {
         //---------------------------------------------------------------
         // Read tag
         //---------------------------------------------------------------
-        readfield(_is, &string);              // Tag, "MultiBody"
-        readfield(_is, &string);              // Tag, "Active/Passive"
+        _is >> string;                        // Tag, "MultiBody"
+        _is >> string;                        // Tag, "Active/Passive"
 
-        readfield(_is, &BodyCount[m]);   // Tag, "FreeBody" or "FixedBody"
+        _is >> BodyCount[m];                  // number of bodies
         for (i=0; i<BodyCount[m]; i++){
-            readfield(_is, &string);    // Tag for fixed body (FixedBody or FreeBody)
+            _is >> string;                    // Tag (FixedBody or FreeBody)
 
             if (!strncmp(string, "FixedBody", 10)){
                isFree[m][i] = 0;
@@ -740,23 +684,20 @@ void Input::Read(istream & _is) {
                // Data file name for fixed body
                _is >> tmpFilename;
                strcpy(fixedbodyFileName[m][FixedBodyCount[m]-1],
-            descDir.GetValue());
+                                                descDir.GetValue());
                strcat(fixedbodyFileName[m][FixedBodyCount[m]-1],
-            tmpFilename);
+                                                tmpFilename);
                VerifyFileExists(fixedbodyFileName[m][FixedBodyCount[m]-1]);
                strcpy(tmpFilename,"");
 
-               //if (i==0){  // for the very first body
-           // Now for every fixed body 10/15/99
-
                fixedbodyPosition[m][FixedBodyCount[m]-1] = Vector3D(_is);
                Vector3D angles = Vector3D(_is);
-               fixedbodyOrientation[m][FixedBodyCount[m]-1] = Orientation(Orientation::FixedXYZ,
-                     angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
-
-               //}
-            }
-            else{
+               fixedbodyOrientation[m][FixedBodyCount[m]-1] = 
+                               Orientation(Orientation::FixedXYZ,
+                               angles[2]*TWOPI/360.0, 
+                               angles[1]*TWOPI/360.0, 
+                               angles[0]*TWOPI/360.0);
+            } else { // FreeBody
                isFree[m][i] = 1;
                FreeBodyCount[m]++;
 
@@ -764,26 +705,29 @@ void Input::Read(istream & _is) {
                BodyIndex[m][i] = FreeBodyCount[m] - 1;
                _is >> tmpFilename;
                strcpy(freebodyFileName[m][FreeBodyCount[m]-1],
-            descDir.GetValue());
+                                                descDir.GetValue());
                strcat(freebodyFileName[m][FreeBodyCount[m]-1],
-            tmpFilename);
+                                                tmpFilename);
                VerifyFileExists(freebodyFileName[m][FreeBodyCount[m]-1]);
                strcpy(tmpFilename,"");
 
                if (i==0){  // for the very first body
-           // this whole 'if' statements should be got rid of later. not in use.
-           // the only purpose here is to be able to use old environment file. Guang 10/15/99
+                   // this whole 'if' statements should be got rid of later. 
+                   // not in use. the only purpose here is to be able to use 
+                   // old environment file.  Guang 10/15/99
                    freebodyPosition[m] = Vector3D(_is);
 
-               Vector3D angles = Vector3D(_is);
-               freebodyOrientation[m] = Orientation(Orientation::FixedXYZ,
-               angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
+                   Vector3D angles = Vector3D(_is);
+                   freebodyOrientation[m] = Orientation(Orientation::FixedXYZ,
+                               angles[2]*TWOPI/360.0, 
+                               angles[1]*TWOPI/360.0, 
+                               angles[0]*TWOPI/360.0);
                }
-            }
+            } // endelse FreeBody
 
-        }
+        } //endfor i
 
-        readfield(_is, &string);               // Tag, "Connection"
+        _is >> string;               // Tag, "Connection"
         _is >> connectionCount[m];   // # of connections
 
         /////////////////////////////////////////////////////////////////
@@ -793,31 +737,35 @@ void Input::Read(istream & _is) {
                 _is >> previousBodyIndex[m][i];              // first body
                 _is >> nextBodyIndex[m][i];                  // second body
 
-                readfield(_is, &string);        // Tag, "Actuated/NonActuated"
+                _is >> string;             // Tag, "Actuated/NonActuated"
 
                 transformPosition[m][i] = Vector3D(_is);
                 Vector3D angles = Vector3D(_is);
                 transformOrientation[m][i] = Orientation(Orientation::FixedXYZ,
-           angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
+                                 angles[2]*TWOPI/360.0, 
+                                 angles[1]*TWOPI/360.0, 
+                                 angles[0]*TWOPI/360.0);
 
                 _is >> dhparameters[m][i].alpha;          // DH parameter, alpha
                 _is >> dhparameters[m][i].a;              // DH parameter, a
                 _is >> dhparameters[m][i].d;              // DH parameter, d
                 _is >> dhparameters[m][i].theta;          // DH parameter, theta
 
-                readfield(_is, &string); // Tag, "Revolute" or "Prismatic"
+                _is >> string;             // Tag, "Revolute" or "Prismatic"
                 if (!strncmp(string, "Revolute", 9))
                    connectionType[m][i] = 0;              // Revolute type
                 else
                    connectionType[m][i] = 1;              // Prismatic type
 
-        positionToDHFrame[m][i] = Vector3D(_is);
-        angles = Vector3D(_is);
-        orientationToDHFrame[m][i] = Orientation(Orientation::FixedXYZ,
-                   angles[2]*TWOPI/360.0, angles[1]*TWOPI/360.0, angles[0]*TWOPI/360.0);
-        }
+                positionToDHFrame[m][i] = Vector3D(_is);
+                angles = Vector3D(_is);
+                orientationToDHFrame[m][i] = Orientation(Orientation::FixedXYZ,
+                                 angles[2]*TWOPI/360.0, 
+                                 angles[1]*TWOPI/360.0, 
+                                 angles[0]*TWOPI/360.0);
+        } //endfor i
 
-   }
+   } //endfor m
 };
 
 
