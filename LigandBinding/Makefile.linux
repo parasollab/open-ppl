@@ -2,10 +2,13 @@
 #------------------------------------------------------
 # Make your own and use it or use the one in BASELINE
 #------------------------------------------------------
+   BINDING_DIR = .
+   BINDING_LIB = -L${BINDING_DIR} -lbinding
 
 # -- for dynamic shared object library libobprm.so
-   OBPRM_DIR   = /home/user/gsong/cvs/OBPRM
-   OBPRM_LIB   = -L${OBPRM_DIR} -lobprm
+   OBPRM_DIR   = /research/sunburn/dsmft/OBPRM-libs
+   OBPRM_LIB   = -L${OBPRM_DIR}/linux -lobprm
+   OBPRM_INCL  = -I${OBPRM_DIR}/include
 
 #------------------------------------------------------
 # Basic defns; do not change
@@ -15,13 +18,14 @@
 # collision detection packages available
 #--------------------------------------------------------------------------
 
+ CD_DIR = /research/sunburn/dsmft/CD-libs/linux
 
- VCLIP_DIR     = /home/dsmft/CD-libs/VCLIP
+ VCLIP_DIR     = ${CD_DIR}/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
  VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
  VCLIP_INCL    = -I${VCLIP_DIR}/include
 
- RAPID_DIR     = /home/dsmft/CD-libs/RAPID
+ RAPID_DIR     = ${CD_DIR}/RAPID
  RAPIDLIB_DIR  = ${RAPID_DIR}
  RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
  RAPID_INCL    = -I${RAPID_DIR}
@@ -41,7 +45,7 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. -I${OBPRM_DIR} ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${DEFS}
+ AFLAGS    = -I. ${OBPRM_INCL} ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${DEFS}
 
 
 #-----------------------------------------------------------------------------
@@ -59,7 +63,7 @@ CXX = ${CC}
 #  OPTS =  -o32 -O2 -OPT:Olimit=0 -show
 
 #  DEPS = 
-#  DEPS = -MDupdate Dependencies 
+   DEPS = -MMD #Dependencies 
 
 # -- warnings (default, full, none) --
 #  CWARNS = 
@@ -68,7 +72,7 @@ CXX = ${CC}
 
 CFLAGS     = $(OPTS) $(AFLAGS) $(DEPS) $(CWARNS)
 CXXFLAGS   = $(CFLAGS) 
-DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
+DSOFLAGS   = $(CFLAGS) -shared # -no_unresolved
 
 #-----------------------------------------------------------------------------
 # Build 
@@ -78,33 +82,48 @@ DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
 deps:: 
 	touch Dependencies
 
-libs:: objs
+libs:: objs libbinding.so
+
+libbinding.so:: $(OBJS)
+	$(CXX) -o libbinding.so $(DSOFLAGS) $(OBJS)
 
 #--------------------------------------------------------------------
-obprm:: main_obprm.c libs
-	$(CXX) $(CXXFLAGS) -o obprm \
-                main_obprm.c \
-		$(OBJS) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
-	rm -f main_obprm.o
+binding:: main_binding.c libs
+	$(CXX) $(CXXFLAGS) -o binding \
+                main_binding.c \
+               $(BINDING_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+	rm -f main_binding.o main_binding.d
 
 #--------------------------------------------------------------------
-query:: main_query.c libs
-	$(CXX) $(CXXFLAGS) -o query \
-                main_query.c \
-                $(OBJS) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
-	rm -f main_query.o
-
+#obprm:: main_obprm.c libs
+#	$(CXX) $(CXXFLAGS) -o obprm \
+#                main_obprm.c \
+#		$(BINDING_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
+#	rm -f main_obprm.o main_obprm.d
+#
 #--------------------------------------------------------------------
+#query:: main_query.c libs
+#	$(CXX) $(CXXFLAGS) -o query \
+#                main_query.c \
+#                $(BINDING_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+#	rm -f main_query.o main_query.d
+#
+#--------------------------------------------------------------------
+.SUFFIXES: .c
+.c.o:
+	$(CXX) ${CXXFLAGS} -c $<
+	cat $*.d >> Dependencies
+	rm -f $*.d
+
 % :: %.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 
 #--------------------------------------------------------------------
-
 OBJS = \
         MyInput.o \
-        DynamicsLocalPlanners.o \
-        BioPotentials.o \
-        MyQuery.o \
+	DynamicsLocalPlanners.o \
+	BioPotentials.o \
+	MyQuery.o \
 	CfgLigand.o \
 	PotentialForceGrids.o \
 	MyDistanceMetrics.o \
@@ -128,6 +147,8 @@ reallyclean::
 	rm -f *.a *.so *.o
 	rm -R -f ii_files
 	rm -f so_locations
+	rm -f Dependencies
+	touch Dependencies
 
 #-----------------------------------------------------------------------------
 # Build and update dependencies
