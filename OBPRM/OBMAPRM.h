@@ -234,11 +234,11 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric* dm,
   for (i=0; i < obprmCfgs.size(); i++) {
     CFG cfg = obprmCfgs[i];
     
-    cfg.PushToMedialAxis(_env, cd, *cdsetid, *cdInfo, 
+    cfg.PushToMedialAxis(_env, cd, *cdInfo, 
 			 dm, clearanceNum.GetValue(), 
 			 penetrationNum.GetValue());
     
-    if ( !cfg.isCollision(_env, cd, *cdsetid, *cdInfo) ) {
+    if ( !cfg.isCollision(_env, cd, *cdInfo) ) {
       nodes.push_back(CFG(cfg));
 #if INTERMEDIATE_FILES
       path.push_back(cfg);

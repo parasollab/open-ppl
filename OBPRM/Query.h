@@ -72,15 +72,6 @@ public:
     /**@name Help methods*/
     //@{
 
-        /**Default initializations.
-          *Set set_id for #cdsetid from
-          *given ConnectMap instance.
-          *If there is no user specified local planner set id then
-          *SL_R5_AD69 will be used.
-          */
-        virtual 
-	void initDefaultSetIDs(ConnectMap<CFG, WEIGHT> * cn);
-
         /**Try to connect given Cfg to given connected component.
           *This method tries to connect every Cfgs in given 
           *connected component to this given Cfg.
@@ -206,7 +197,6 @@ public:
 
     char *outputPathFile;               ///< File name for path data
 
-    SID cdsetid;                        ///< Collision Detection set id for query
 };
 
 
@@ -239,8 +229,6 @@ Query(Input* input, QueryCmds* Qinput,
     
     ReadQuery( Qinput->queryFile.GetValue() );
     
-    //initDefaultSetIDs(cn);
-    
     outputPathFile = new char[strlen(Qinput->pathFile.GetValue())+1];
     strcpy(outputPathFile,Qinput->pathFile.GetValue());
 }
@@ -258,17 +246,6 @@ Query<CFG, WEIGHT>::
 //==================================================================
 // Query class Methods: Other Methods
 //==================================================================
-
-template <class CFG, class WEIGHT>
-void 
-Query<CFG, WEIGHT>::
-initDefaultSetIDs(ConnectMap<CFG, WEIGHT>* cn) {
-  // allow user to specify new sets for connection start/goal
-  // default for QUERY is most powerful set
-  
-  // user specifed, same defaults as for ROADMAP construction
-  cdsetid = cn->cdsetid;
-}
 
 template <class CFG, class WEIGHT>
 bool 

@@ -524,7 +524,7 @@ ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   input->ReadPreamble(myifstream); // do nothing now (could init defaults)
   input->ReadEnvFile(myifstream);    
   lp->ReadLPs(myifstream);
-  cd->collisionCheckers.ReadCDs(myifstream);
+  cd->ReadCDs(myifstream);
   dm->ReadDMs(myifstream);
   
   m_pRoadmap->ReadGraph(myifstream);           // reads verts & adj lists
@@ -559,7 +559,7 @@ WriteRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   input->WritePreamble(myofstream); // for now just write commandline
   input->WriteEnvFile(myofstream);
   lp->WriteLPs(myofstream);
-  cd->collisionCheckers.WriteCDs(myofstream);
+  cd->WriteCDs(myofstream);
   dm->WriteDMs(myofstream);
   
   m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists

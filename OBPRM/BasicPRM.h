@@ -148,7 +148,7 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric *,
   vector<Cfg*> path;
 
   CFG tmp;
-  tmp.GetNFreeRandomCfgs(path, _env,cd,*cdsetid,
+  tmp.GetNFreeRandomCfgs(path, _env,cd,
 			 *cdInfo, numNodes.GetValue());
 
   int i;

@@ -228,12 +228,12 @@ IsConnectedOneWay(Environment *_env,CollisionDetection *cd,
     
     cd_cntr++;
 
-    if(!diagonal.isCollision(_env,cd, *cdsetid,*cdInfo)){
+    if(!diagonal.isCollision(_env,cd, *cdInfo)){
       p = diagonal;
     } else {
       neighbors.clear();
       p.FindNeighbors(_env, _c2, incr, cd, n_neighbors.GetValue(),
-		       *cdsetid, *cdInfo, neighbors);
+		       *cdInfo, neighbors);
       if (neighbors.size()==0) { 
 	connected = false;
         pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > tmp;

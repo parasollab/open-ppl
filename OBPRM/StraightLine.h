@@ -292,7 +292,7 @@ IsConnectedSLSequential(Environment *_env,
     
     cd_cntr ++;
     if(checkCollision){
-      if(tick.isCollision(_env,cd, *cdsetid,*cdInfo)){
+      if(tick.isCollision(_env,cd, *cdInfo)){
         CFG neg_incr;
 	neg_incr = incr; 
 	neg_incr.negative(incr);
@@ -368,7 +368,7 @@ lineSegmentInCollision(Environment *_env, CollisionDetection *cd,
     cd_cntr ++; //?
     
     //Check collision
-    if( cd->IsInCollision(_env, *cdsetid, *cdInfo, lineSegment) )
+    if( cd->IsInCollision(_env, *cdInfo, lineSegment) )
       return true;	//Collide
     return false;	//No collision
 }
@@ -417,7 +417,7 @@ IsConnectedSLBinary(Environment *_env, CollisionDetection *cd,
 	  if(clr < 0) clr = 0.0;
 	}
       } else {
-	if(mid.isCollision(_env,cd,*cdsetid,*cdInfo))
+	if(mid.isCollision(_env,cd,*cdInfo))
 	  return false;
       }
 

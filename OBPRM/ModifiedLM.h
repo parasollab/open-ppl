@@ -230,7 +230,6 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
   int numMultiBody = env->GetMultiBodyCount();
   int robot        = env->GetRobotIndex();
   BasicOBPRM<CFG> gn = BasicOBPRM<CFG>();
-  gn.cdsetid = cdsetid;
   gn.cdInfo = cdInfo;
   vector<CFG> nodes;
   int numNodes = 1;             // only need one new node at a time

@@ -186,10 +186,10 @@ GenerateNodes(Environment* _env, CollisionDetection* cd,
   // MAPRM style node generation using clearances in the CSpace
   for (int i=0; i < numNodes.GetValue(); i++) {
     CFG cfg;
-    cfg.GetMedialAxisCfg(_env,cd,*cdsetid,*cdInfo,dm,
+    cfg.GetMedialAxisCfg(_env,cd,*cdInfo,dm,
 			 clearanceNum.GetValue(),penetrationNum.GetValue());
     
-    if ( !cfg.isCollision(_env,cd,*cdsetid,*cdInfo) ) {
+    if ( !cfg.isCollision(_env,cd,*cdInfo) ) {
       nodes.push_back(CFG(cfg));
 #if INTERMEDIATE_FILES
       path.push_back(cfg);

@@ -117,7 +117,6 @@ class GenerateMapNodes {
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-  SID cdsetid;
   /**Used for record collsion deteciotion inforamtion.
    *This is used in like Cfg::ApproxCSpaceClearance
    *, Cfg::GetFreeRandomCfg, and Cfg::isCollision
@@ -140,22 +139,6 @@ class GenerateMapNodes {
 template <class CFG>
 GenerateMapNodes<CFG>::
 GenerateMapNodes() {
-
-#if defined USE_CSTK
-  cdsetid = CSTK;
-#elif defined USE_RAPID
-  cdsetid = RAPID;
-#elif defined USE_PQP
-  cdsetid = PQP;
-#elif defined USE_VCLIP
-  cdsetid = VCLIP;
-#else
-#ifdef NO_CD_USE
-  cdsetid = -1;
-#else
-#error You have to specify at least one collision detection library.
-#endif
-#endif
 
   BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>();
   all.push_back(basicPRM);
@@ -258,7 +241,6 @@ ReadCommandLine(n_str_param* GNstrings[MAX_GN], int numGNs) {
 	    // .. use the parser of the matching method
 	    (*itr)->ParseCommandLine(cmd_argc, cmd_argv);
 	    // .., set their parameters
-	    (*itr)->cdsetid = &cdsetid;
 	    (*itr)->cdInfo = &cdInfo;
 	    //  and push it back into the list of selected methods.	  
 	    selected.push_back((*itr)->CreateCopy());	 
@@ -282,7 +264,6 @@ ReadCommandLine(n_str_param* GNstrings[MAX_GN], int numGNs) {
   if(selected.size() == 0) {
     selected = GenerateMapNodes<CFG>::GetDefault();
     for (itr = selected.begin(); itr != selected.end(); itr++) {
-      (*itr)->cdsetid = &cdsetid;
       (*itr)->cdInfo = &cdInfo;
     }
   }

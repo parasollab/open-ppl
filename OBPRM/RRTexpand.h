@@ -356,7 +356,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
                }
             tick.Increment(incr); //next configuration to check
             cout << "here" << tk ;
-            if( (tick.isCollision(env,cd,*cdsetid,*cdInfo)) || !(tick.InBoundingBox(env)) ) {
+            if( (tick.isCollision(env,cd,*cdInfo)) || !(tick.InBoundingBox(env)) ) {
                collisionDistance = dm->Distance(env, cfg, tick);
                collision = true;
                }
@@ -392,7 +392,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
 
 	 LPOutput<CFG,WEIGHT> lpOutput;
 	 if (x_new.InBoundingBox(env) && attemptConnection
-	     && !x_new.isCollision(env,cd,*cdsetid,*cdInfo)
+	     && !x_new.isCollision(env,cd,*cdInfo)
 	     && !rm->m_pRoadmap->IsEdge(x_near,x_new)
 	     && lp->IsConnected(rm->GetEnvironment(),cd,dm,x_near,x_new,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))) {
 	        //xnew = x_new;
@@ -403,7 +403,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
                    x_new = u; 
                    settoConnect = TRUE;
                    if (x_new.InBoundingBox(env) && attemptConnection
-                       && !x_new.isCollision(env,cd,*cdsetid,*cdInfo)
+                       && !x_new.isCollision(env,cd,*cdInfo)
 		       && !rm->m_pRoadmap->IsEdge(x_near,x_new)
 		       && lp->IsConnected(rm->GetEnvironment(),cd,dm,x_near,x_new,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))) {
                          cout << "configurations equal==";

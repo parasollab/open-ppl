@@ -86,7 +86,6 @@ class LocalPlannerMethod {
   void SetID(int new_id);
   int GetID() const;
   
-  SID* cdsetid;
   CDInfo* cdInfo;
 
 };

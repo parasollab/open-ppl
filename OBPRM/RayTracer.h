@@ -12,7 +12,7 @@ enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTH
 // Created
 //    Traces Rays in CSpace
 //////////////////////////////////////
-#include <string>
+//#include <string>
 
 #include "Environment.h"
 #include "CollisionDetection.h"
@@ -39,13 +39,13 @@ class RayCSpace {
 
   //This function has to call a collision detection routine (throug cfg)
   bool collide(Environment *env, CollisionDetection *cd,
-			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+			CDInfo& cdInfo, DistanceMetric *dm,
 			double maxLength, int &cd_counts);//Check for collision in the environment
   bool connectTarget (Environment *env, CollisionDetection *cd,
-			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+			CDInfo& cdInfo, DistanceMetric *dm,
 		      CFG &dir, int &cd_counts);
   bool connectTarget (Environment *env, CollisionDetection *cd,
-			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+			CDInfo& cdInfo, DistanceMetric *dm,
 		      int &cd_counts);
   double length(void); //Length of the ray, I still have to figure out the units
   void writePath(Environment *env);
@@ -120,7 +120,7 @@ void RayCSpace<CFG>::bounce(CFG direction) {
 //Based on code by Shawna (Cfg::cAproxCspaceClearance:
 template <class CFG>
 bool RayCSpace<CFG>::collide(Environment *env, CollisionDetection *cd,
-			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+			CDInfo& cdInfo, DistanceMetric *dm,
 			double maxLength, int &cd_counts) {
   bool collision=false; 
   
@@ -139,7 +139,7 @@ bool RayCSpace<CFG>::collide(Environment *env, CollisionDetection *cd,
   while(!collision && (dm->Distance(env,cfg,tick) < maxLength) ) {
     lastFreeConfiguration = tick;
     tick.Increment(incr); //next configuration to check
-    if( (tick.isCollision(env,cd,cdsetid,cdInfo)) || !(tick.InBoundingBox(env)) ) {
+    if( (tick.isCollision(env,cd,cdInfo)) || !(tick.InBoundingBox(env)) ) {
       collisionConfiguration = tick;
       collisionDistance = dm->Distance(env, cfg, tick);
       collision = true;
@@ -157,23 +157,23 @@ bool RayCSpace<CFG>::collide(Environment *env, CollisionDetection *cd,
 
 template <class CFG>
 bool RayCSpace<CFG>::connectTarget(Environment *env, CollisionDetection *cd,
-			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+			CDInfo& cdInfo, DistanceMetric *dm,
 			      int &cd_counts) {
   if (using_target_vector && target_vector != NULL) {
     //    cout << "looking for connections with " << target_vector->size() << " confs" << endl;
     for (unsigned int i = 0; i < target_vector->size(); ++i)
-      if (connectTarget(env, cd, cdsetid, cdInfo, dm, (*target_vector)[i], cd_counts))
+      if (connectTarget(env, cd, cdInfo, dm, (*target_vector)[i], cd_counts))
 	return true;
     return false;
   }
   else
-    return connectTarget(env, cd, cdsetid, cdInfo, dm, target, cd_counts);
+    return connectTarget(env, cd, cdInfo, dm, target, cd_counts);
   return false;
 }
 //Based on code by Shawna (Cfg::cAproxCspaceClearance:
 template <class CFG>
 bool RayCSpace<CFG>::connectTarget(Environment *env, CollisionDetection *cd,
-			SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+			CDInfo& cdInfo, DistanceMetric *dm,
 			CFG &dir, int &cd_counts) {
   bool collision=false; 
   
@@ -192,7 +192,7 @@ bool RayCSpace<CFG>::connectTarget(Environment *env, CollisionDetection *cd,
   while(tk < n_ticks && !collision) {
     lastFreeConfiguration = tick;
     tick.Increment(incr); //next configuration to check
-    if( (tick.isCollision(env,cd,cdsetid,cdInfo)) || !(tick.InBoundingBox(env)) ) {
+    if( (tick.isCollision(env,cd,cdInfo)) || !(tick.InBoundingBox(env)) ) {
       tmpDist = dm->Distance(env, cfg, tick);//distance % the ticks
       collisionConfiguration = tick;
       collisionDistance = dm->Distance(env, cfg, tick);
@@ -291,7 +291,7 @@ class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
   void SetDefault();
 
   // Access from this method only
-  void setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length);
+  void setOptions(char* bouncing_mode, int max_rays, int max_bounces, int max_ray_length);
   void setSource(CFG configuration);
   void setTarget(CFG configuration);
   void setTargetCfgs(vector<CFG> *target_cfgs);
@@ -327,7 +327,7 @@ class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // Data
-  string RayTbouncingMode;
+  char RayTbouncingMode[100];
   int RayTmaxRays;
   int RayTmaxBounces;
   int RayTmaxRayLength;
@@ -337,8 +337,6 @@ class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
   unsigned int ScheduleMaxSize;
   SCHEDULING_MODE SchedulingMode;
 
-  //Get rid of the following setids as soon as possible
-  //SID cdsetid;
   Roadmap<CFG,WEIGHT> *rdmp;
   CollisionDetection *cd;
   DistanceMetric *dm;
@@ -385,14 +383,14 @@ void RayTracer<CFG,WEIGHT>::
 ParseCommandLine(istrstream& is) {
   char c;
   SetDefault(); 
-  string str_rd; //to parse strings
+  char str_rd[100]; //to parse strings
   int point = is.tellg();
   try {
     if (is >> RayTbouncingMode) {
-      if (RayTbouncingMode != string("targetOriented") && 
-          RayTbouncingMode != string("random") && 
-	  RayTbouncingMode != string("heuristic") && 
-	  RayTbouncingMode != string("normal")) {
+      if (strcmp(RayTbouncingMode,"targetOriented") && //RayTbouncingMode != string("targetOriented") && 
+          strcmp(RayTbouncingMode,"random") && //RayTbouncingMode != string("random") && 
+	  strcmp(RayTbouncingMode,"heuristic") && //RayTbouncingMode != string("heuristic") && 
+	  strcmp(RayTbouncingMode,"normal") ) { //RayTbouncingMode != string("normal")) {
 	//cout << "read: " << RayTbouncingMode << point << "\n";
 	is.seekg(point);
 	//cout << is.str() << endl;
@@ -429,13 +427,13 @@ ParseCommandLine(istrstream& is) {
 		      throw BadUsage();
 	      
 	            if (is >> str_rd) {
-		      if (str_rd == string("largestToSmallest"))
+		      if (!strcmp(str_rd,"largestToSmallest"))//if (str_rd == string("largestToSmallest"))
 		        SchedulingMode = LARGEST_TO_SMALLEST;
-		      else if (str_rd == string("smallestToLargest"))
+		      else if (!strcmp(str_rd,"smallestToLargest"))//else if (str_rd == string("smallestToLargest"))
 		        SchedulingMode = SMALLEST_TO_LARGEST;
-		      else if (str_rd == string("closestToFarthest"))
+		      else if (!strcmp(str_rd,"closestToFarthest"))//else if (str_rd == string("closestToFarthest"))
 		        SchedulingMode = CLOSEST_TO_FARTHEST;
-		      else if (str_rd == string("farthestToClosest"))
+		      else if (!strcmp(str_rd,"farthestToClosest"))//else if (str_rd == string("farthestToClosest"))
 		        SchedulingMode = FARTHEST_TO_CLOSEST;
 		      else 
 		        throw BadUsage();
@@ -535,9 +533,10 @@ void RayTracer<CFG,WEIGHT>::SetDefault() {
 
   all_explored = false;
   rays_tested = 0;
-  setOptions(string("targetOriented"), 1, 10000, 10000);
+  //setOptions(string("targetOriented"), 1, 10000, 10000);
+  setOptions("targetOriented", 1, 10000, 10000);
   
-  RayTbouncingMode = string("targetOriented");
+  strcpy(RayTbouncingMode,"targetOriented");//string("targetOriented");
   RayTmaxRays = MAX_RAYS;
   RayTmaxBounces = MAX_BOUNCES;
   RayTmaxRayLength = MAX_RAY_LENGTH;
@@ -591,18 +590,18 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
 
 
 template <class CFG, class WEIGHT>
-void RayTracer<CFG,WEIGHT>::setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length) {
+void RayTracer<CFG,WEIGHT>::setOptions(char* bouncing_mode, int max_rays, int max_bounces, int max_ray_length) {
   this->max_rays = max_rays;
   this->max_bounces = max_bounces;
   this->max_ray_length = max_ray_length;
   //set the bouncing policy
-  if (bouncing_mode == string("targetOriented"))
+  if (!strcmp(bouncing_mode,"targetOriented"))//if (bouncing_mode == string("targetOriented"))
     bouncing_policy =TARGET_ORIENTED;
-  else if (bouncing_mode == string("random"))
+  else if (!strcmp(bouncing_mode,"random"))//else if (bouncing_mode == string("random"))
     bouncing_policy = RANDOM;
-  else if (bouncing_mode == string("heuristic"))
+  else if (!strcmp(bouncing_mode,"heuristic"))//else if (bouncing_mode == string("heuristic"))
     bouncing_policy = HEURISTIC;
-  else if (bouncing_mode == string("normal"))
+  else if (!strcmp(bouncing_mode,"normal"))//else if (bouncing_mode == string("normal"))
     bouncing_policy = NORMAL;
   else
     bouncing_policy = TARGET_ORIENTED;
@@ -825,7 +824,7 @@ bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VI
 }
 
 
-//  bool RayTracer::trace(CollisionDetection *cd, SID cdsetid, CDInfo& cdinfo, 
+//  bool RayTracer::trace(CollisionDetection *cd, CDInfo& cdinfo, 
 //  		      DistanceMetric * dm) {
 template <class CFG, class WEIGHT>
 bool RayTracer<CFG,WEIGHT>::trace(Roadmap<CFG,WEIGHT> &ray_rdmp) {
@@ -839,11 +838,11 @@ bool RayTracer<CFG,WEIGHT>::trace(Roadmap<CFG,WEIGHT> &ray_rdmp) {
   //cout << "looking for a path with " << max_bounces << " max_bounces and " << max_ray_length << " max_ray_length " << endl;
   while (!path_found && number_bouncings < max_bounces &&
 	 ray.length() < max_ray_length) {
-    if (ray.connectTarget(ray_rdmp.GetEnvironment(), cd, *cdsetid, *cdInfo, dm, cd_counts)) {
+    if (ray.connectTarget(ray_rdmp.GetEnvironment(), cd, *cdInfo, dm, cd_counts)) {
       ray.finish();
       path_found = true;
     }
-    else if (ray.collide(ray_rdmp.GetEnvironment(), cd, *cdsetid, *cdInfo, dm,max_ray_length, cd_counts)) { // if there is a collision
+    else if (ray.collide(ray_rdmp.GetEnvironment(), cd, *cdInfo, dm,max_ray_length, cd_counts)) { // if there is a collision
       //cout<< "\tif the collided object is the target's screen\n";
       //cout << "\t\tpath_found=true;\n";
       //cout << "\telse\n";

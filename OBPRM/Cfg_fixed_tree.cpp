@@ -248,7 +248,7 @@ bool Cfg_fixed_tree::GenerateOverlapCfg(Environment *env,  // although env and r
 //===================================================================
 void Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL(Environment * env,CollisionDetection* cd, 
 					       int obstacle, int nCfgs, 
-					       SID _cdsetid, CDInfo& _cdInfo, 
+					       CDInfo& _cdInfo, 
 					       vector<Cfg*>& surface) const {
   cout << "\n\nERROR in Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL(), not implemented yet\n";
   exit(10);

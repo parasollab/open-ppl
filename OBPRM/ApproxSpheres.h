@@ -185,12 +185,12 @@ IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
   if (_c1.clearance != -1)
     c1_clearance = _c1.clearance;
   else
-    c1_clearance = _c1.ApproxCSpaceClearance(_env,cd,*cdsetid,*cdInfo,
+    c1_clearance = _c1.ApproxCSpaceClearance(_env,cd,*cdInfo,
 					     dm,n.GetValue());
   if (_c2.clearance != -1)
     c2_clearance = _c2.clearance;
   else
-    c2_clearance = _c2.ApproxCSpaceClearance(_env,cd,*cdsetid,*cdInfo,
+    c2_clearance = _c2.ApproxCSpaceClearance(_env,cd,*cdInfo,
 					     dm,n.GetValue());
   
   Stats.IncLPCollDetCalls("ApproxSpheres", cd_cntr);

@@ -305,7 +305,7 @@ bool Cfg_free_tree::GenerateOverlapCfg(Environment *env,  // although env and ro
 //===================================================================
 void Cfg_free_tree::GenSurfaceCfgs4ObstNORMAL
 (Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, 
-SID _cdsetid,CDInfo& _cdInfo, vector<Cfg*>& surface){
+CDInfo& _cdInfo, vector<Cfg*>& surface){
   surface.clear();
   static const int SIZE = 1;
   //static double jointAngles[SIZE][3] = {{0.0, 0.0, 0.0}, {0.25, 0.25, 0.25}, {0.0, 0.4, 0.0},
@@ -326,7 +326,7 @@ SID _cdsetid,CDInfo& _cdInfo, vector<Cfg*>& surface){
     GetCfgByOverlappingNormal(env, cd, 
 			      polyRobot, polyObst, 
 			      robotTriIndex, obstTriIndex, 
-			      _cdsetid, _cdInfo,
+			      _cdInfo,
 			      base, tmp);
     if(!tmp.empty()) {
       vector<double> basePose = tmp[0]->GetData();
@@ -337,7 +337,7 @@ SID _cdsetid,CDInfo& _cdInfo, vector<Cfg*>& surface){
 	  serialData.push_back(drand48());
 	}
 	Cfg* serial = this->CreateNewCfg(serialData);
-	if(!serial->isCollision(env,cd,_cdsetid,_cdInfo) && serial->InBoundingBox(env)) {
+	if(!serial->isCollision(env,cd,_cdInfo) && serial->InBoundingBox(env)) {
 	  
 	  surface.push_back(serial);
 	  ++num;

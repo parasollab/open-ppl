@@ -108,7 +108,7 @@ public:
     */
   virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env,
          CollisionDetection *,int obstacle, int nCfgs,
-    SID _cdsetid, CDInfo& _cdInfo, vector<Cfg*>&) const;
+    CDInfo& _cdInfo, vector<Cfg*>&) const;
  
   //@}
 

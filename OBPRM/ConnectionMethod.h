@@ -189,7 +189,6 @@ class ConnectionMethod {
   // Public Data
   //
  public:
-  SID* cdsetid;
   CDInfo* cdInfo;
   double connectionPosRes, ///< Position resolution for node connection
          connectionOriRes; ///< Orientation resolution for node connection

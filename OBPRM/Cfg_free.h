@@ -104,7 +104,7 @@ public:
     */
   virtual void GenSurfaceCfgs4ObstNORMAL(Environment* env, CollisionDetection *,
 					 int obstacle, int nCfgs,
-					 SID _cdsetid, CDInfo& _cdInfo,
+					 CDInfo& _cdInfo,
 					 vector<Cfg*>&) const;
   
   /**@todo Document this
@@ -113,7 +113,7 @@ public:
 					 const GMSPolyhedron &polyRobot, 
 					 const GMSPolyhedron &polyObst,
 					 int robTri, int obsTri,
-					 SID _cdsetid, CDInfo& _cdInfo,
+					 CDInfo& _cdInfo,
 					 MultiBody*, vector<Cfg*>&) const;
 
   //@}
@@ -133,7 +133,7 @@ public:
     *return true if inside narrow passage.
     */
   virtual bool InNarrowPassage(Environment* env, CollisionDetection* cd,
-			       SID _cdsetid, CDInfo& _cdInfo,
+			       CDInfo& _cdInfo,
 			       MultiBody* onflyRobot) const;
   //@}
 

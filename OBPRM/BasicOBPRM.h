@@ -481,7 +481,7 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric* dm,
 	  cout << "\nError: cannot overlap COMs of robot & obstacle\n";
 	  continue;
 	}
-	if(!InsideNode.isCollision(_env,cd,robot,obstacle,*cdsetid,*cdInfo)){
+	if(!InsideNode.isCollision(_env,cd,robot,obstacle,*cdInfo)){
 	  cout << "\nError: Seed not in collision w/"
 	    " obstacle[index="<<obstacle<<"]\n" << flush;
 	  continue;
@@ -560,7 +560,7 @@ GenerateInsideCfg(Environment* _env, CollisionDetection* _cd,
 					    insideNode);
   
   // check the cfg obtained by center of mass overlapping if valid
-  if (!insideNode->isCollision(_env, _cd, rob, obst, *cdsetid,
+  if (!insideNode->isCollision(_env, _cd, rob, obst,
 			       *cdInfo)) {
     
     // if center of mass does not work in getting the cfg in collision,
@@ -591,7 +591,7 @@ GenerateOutsideCfg(Environment* env, CollisionDetection* cd,
   int count = 0;
   CFG OutsideNode;
   OutsideNode.add(InsideNode, incrCfg);
-  while(OutsideNode.isCollision(env,cd, rob, obst, *cdsetid, *cdInfo) ) {
+  while(OutsideNode.isCollision(env,cd, rob, obst, *cdInfo) ) {
     OutsideNode.add(OutsideNode, incrCfg);
     if(count++ > 500)
       return InsideNode;
@@ -626,7 +626,7 @@ GenerateSurfaceCfg(Environment* env, CollisionDetection* cd, DistanceMetric* dm,
   // Do the Binary Search
   tmp.push_back(high);
   while((delta >= clearanceFactor*PositionRes) && (cnt < MAX_CONVERGE)){
-    if(mid.isCollision(env,cd , rob, obst, *cdsetid, *cdInfo) ) {
+    if(mid.isCollision(env,cd , rob, obst, *cdInfo) ) {
       low = mid;
     } else {
       high = mid;
@@ -639,7 +639,7 @@ GenerateSurfaceCfg(Environment* env, CollisionDetection* cd, DistanceMetric* dm,
   
   // if converged save the cfgs that don't collide with the environment
   if(cnt < MAX_CONVERGE) {
-    if(!high.isCollision(env,cd, *cdsetid, *cdInfo)) {
+    if(!high.isCollision(env,cd, *cdInfo)) {
       surface = FirstFreeCfgs(env, cd,tmp);
     }
   }
@@ -663,7 +663,7 @@ GenCfgsFromCObst(Environment* env, CollisionDetection* cd, DistanceMetric* dm,
     gen.GenerateOverlapCfg(env, robot, voidA, voidB, &gen);  // voidA, voidB is not used.
     
     ///check collision
-    if(gen.isCollision(env,cd, *cdsetid, *cdInfo))
+    if(gen.isCollision(env,cd, *cdInfo))
       obstSeeds.push_back(gen);
     else
       surface.push_back(gen);
@@ -967,7 +967,7 @@ FirstFreeCfgs(Environment* env, CollisionDetection* cd,
   free.reserve(size);
   int i = 0; int cnt = 0;
   for (i = 0, cnt = 0; i < size && cnt < n; i++){
-    if(!cfgs[i].isCollision(env,cd, *cdsetid, *cdInfo)){
+    if(!cfgs[i].isCollision(env,cd, *cdInfo)){
       free.push_back(cfgs[i]);
       cnt++;
     }

@@ -630,7 +630,7 @@ GenSurfaceCfgs4Obst(Environment* env, CollisionDetection* cd, DistanceMetric* dm
     CFG cfg;
     vector<Cfg*> pResult;
     cfg.GenSurfaceCfgs4ObstNORMAL(env, cd, obstacle, nCfgs, 
-				  *cdsetid, *cdInfo, pResult);
+				  *cdInfo, pResult);
     vector<CFG> result;
     int i;
     for(i=0; i<pResult.size(); i++)
@@ -712,8 +712,8 @@ GenFreeCfgs4Obst(Environment* env, CollisionDetection* cd,
   for(int i = 0 ; i < nCfgs ; i++){
     if( cfg.GenerateOverlapCfg(env, robot, ptsRobot[i], ptsObstacle[i], &cfg) ) {
       // check if it is possible to generate a Cfg with this pose.
-      //if(!cfg.isCollision(env, *cdsetid,*cdInfo) && CfgInsideBB(env,cfg)) {
-      if(!cfg.isCollision(env,cd, *cdsetid,*cdInfo)) {
+      //if(!cfg.isCollision(env, *cdInfo) && CfgInsideBB(env,cfg)) {
+      if(!cfg.isCollision(env,cd, *cdInfo)) {
 	free.push_back(cfg);
       }
     }
@@ -750,7 +750,7 @@ GenerateSeeds(Environment* env, CollisionDetection* cd,
   for(int i = 0 ; i < nseeds ; i++){
     if(cfg.GenerateOverlapCfg(env, rob, ptsRobot[i], ptsObstacle[i], &cfg)){
       // check if it is possible to generate a Cfg with this pose.
-      if(cfg.isCollision(env,cd, *cdsetid,*cdInfo)) {
+      if(cfg.isCollision(env,cd, *cdInfo)) {
 	seeds->push_back(cfg);
       }
     }

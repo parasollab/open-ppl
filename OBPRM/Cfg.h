@@ -284,13 +284,13 @@ class Cfg {
   virtual void FindNeighbors(Environment* env, const Cfg& increment,
 			     CollisionDetection*,
 			     int noNeighbors, 
-			     SID  _cdsetid, CDInfo& _cdInfo,
+			     CDInfo& _cdInfo,
 			     vector<Cfg*>& cfgs);
   /// methods for nodes connection. 
   virtual void FindNeighbors(Environment* env, const Cfg& goal, const Cfg& increment, 
 			     CollisionDetection*,
 			     int noNeighbors, 
-			     SID  _cdsetid, CDInfo& _cdInfo,
+			     CDInfo& _cdInfo,
 			     vector<Cfg*>& cfgs);
     
   ///Increase every value in this instance in each dimention by the value in _increment
@@ -333,30 +333,30 @@ class Cfg {
     
   /// generates random configuration that is in Free CSpace. 
   virtual void GetFreeRandomCfg(Environment* env, CollisionDetection* cd,
-				SID _cdsetid, CDInfo& _cdInfo);
+				CDInfo& _cdInfo);
   /// generates N random configurations
   virtual void GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
-				  CollisionDetection* cd, SID _cdsetid, 
+				  CollisionDetection* cd,  
 				  CDInfo& _cdInfo, int num) const;
 
   /// generates random configuration and pushes it to the medial axis of the
   /// free c-space
   void GetMedialAxisCfg(Environment* _env, CollisionDetection* _cd,
-			SID _cdsetid, CDInfo& _cdInfo, 
+			CDInfo& _cdInfo, 
 			DistanceMetric* _dm, 
 			int clearnce_n, int penetration_n);
   /// pushes a node towards the medial axis
   void PushToMedialAxis(Environment* _env, CollisionDetection* cd,
-			SID cdsetid, CDInfo& cdInfo, 
+			CDInfo& cdInfo, 
 			DistanceMetric* dm, 
 			int clearance_n, int penetration_n);
   /// pushes a free node towards the medial axis
   virtual void MAPRMfree(Environment* _env, CollisionDetection* cd,
-			 SID cdsetid, CDInfo& cdInfo, 
+			 CDInfo& cdInfo, 
 			 DistanceMetric* dm, int n);
   /// pushes a colliding node towards the free space
   virtual void MAPRMcollision(Environment* _env, CollisionDetection* cd,
-			      SID cdsetid, CDInfo& cdInfo, int n);
+			      CDInfo& cdInfo, int n);
     
 
   virtual bool GenerateOverlapCfg(Environment* env, int robot,
@@ -364,7 +364,7 @@ class Cfg {
 				  Cfg* resultCfg) = 0;  // OBPRM and BasicOBPRM
   virtual void GenSurfaceCfgs4ObstNORMAL(Environment* env, CollisionDetection*,
 					 int obstacle, int nCfgs,
-					 SID _cdsetid, CDInfo& _cdInfo,
+					 CDInfo& _cdInfo,
 					 vector<Cfg*>& nodes) const = 0;
   //@}
     
@@ -388,12 +388,12 @@ class Cfg {
   ///Approximate C-Space Clearance.
   /// returns clearance in c-space
   double ApproxCSpaceClearance(Environment* env, CollisionDetection* cd, 
-			       SID cdsetid, CDInfo& cdInfo, 
+			       CDInfo& cdInfo, 
 			       DistanceMetric* dm, 
 			       int n, bool bComputePenetration=false) const;
   /// clearance and the direction set via ClearanceInfo
   void ApproxCSpaceClearance2(Environment* env, CollisionDetection* cd,
-			      SID cdsetid, CDInfo& cdInfo,
+			      CDInfo& cdInfo,
 			      DistanceMetric* dm, 
 			      int n, ClearanceInfo& clearInfo, 
 			      bool bComputePenetration) const;
@@ -402,18 +402,18 @@ class Cfg {
   /// returns the obstacle contact point for each direction from origin
   /// (contact points are in-collision)
   void ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* _env,
-				 CollisionDetection* cd, SID cdsetid, CDInfo &cdInfo,
+				 CollisionDetection* cd, CDInfo &cdInfo,
 				 vector<Cfg*>& contact_points) const;    
   
   virtual bool isCollision(Environment* env, CollisionDetection* cd, 
-			   SID _cdsetid, CDInfo& _cdInfo,
+			   CDInfo& _cdInfo,
 			   bool enablePenetration=true);
   virtual bool isCollision(Environment* env, CollisionDetection* cd,
 			   int robot, int obs, 
-			   SID _cdsetid, CDInfo& _cdInfo,
+			   CDInfo& _cdInfo,
 			   bool enablePenetration=true);
   virtual bool isCollision(Environment* env, CollisionDetection* cd,
-			   SID _cdsetid, CDInfo& _cdInfo,
+			   CDInfo& _cdInfo,
 			   MultiBody*, bool enablePenetration=true);
     
   //@}

@@ -260,9 +260,8 @@ void WritePathLinkConfigurations(char output_file[80],
 				 vector<CFG>& path, 
 				 Environment *env) {
   vector<Cfg*> ppath;
-  vector<CFG>::iterator I;
-  for(I=path.begin(); I!=path.end(); I++)
-    ppath.push_back((Cfg*)(&*I));
+  for(int i=0; i<path.size(); i++)
+    ppath.push_back(&path[i]);
   WritePathLinkConfigurations(output_file, ppath, env);
 }
 
@@ -272,9 +271,8 @@ void WritePathConfigurations(char output_file[80],
 			     vector<CFG>& path,
 			     Environment *env) {
   vector<Cfg*> ppath;
-  vector<CFG>::iterator I;
-  for(I=path.begin(); I!=path.end(); I++)
-    ppath.push_back((Cfg*)(&*I));
+  for(int i=0; i<path.size(); i++) 
+    ppath.push_back(&path[i]);
   WritePathConfigurations(output_file, ppath, env);
 }
 

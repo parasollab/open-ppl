@@ -49,7 +49,7 @@ class LocalPlanners {
 
   //////////////////////
   // I/O methods
-  int ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtype, SID _cdsetid, bool append_selected = false);
+  int ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtype, bool append_selected = false);
   bool ParseCommandLine(int argc, char **argv);
   bool InSelected(const LocalPlannerMethod<CFG,WEIGHT> *test_lp);
   void PrintUsage(ostream& _os);
@@ -118,11 +118,10 @@ class LocalPlanners {
   /**Indicates what collision detector will be used.
    *@see CDSets for more information.
    */
-  SID cdsetid;
   CDInfo cdInfo;
   //@}
 
-  //Check the following variable against cdsetid
+  //Check the following variable against 
   static cd_predefined cdtype; ///< Used for building line segment. (lineSegmentInCollision)
   
 };
@@ -155,23 +154,6 @@ int LocalPlanners<CFG,WEIGHT>::lp_counter = -1;
 template <class CFG, class WEIGHT>
 LocalPlanners<CFG,WEIGHT>::
 LocalPlanners() {
-
-
-#if defined USE_CSTK
-  cdsetid = CSTK;
-#elif defined USE_RAPID
-  cdsetid = RAPID;
-#elif defined USE_PQP
-  cdsetid = PQP;
-#elif defined USE_VCLIP
-  cdsetid = VCLIP;
-#else
-#ifdef NO_CD_USE
-  cdsetid = -1;
-#else
-#error You have to specify at least one collision detection library.
-#endif
-#endif
 
   StraightLine<CFG, WEIGHT>* straight_line = new StraightLine<CFG, WEIGHT>(cdtype);
   all.push_back(straight_line);
@@ -226,9 +208,8 @@ GetDefault() {
 template <class CFG, class WEIGHT>
 int
 LocalPlanners<CFG,WEIGHT>::
-ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtype, SID _cdsetid, bool append_selected) {
+ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtype, bool append_selected) {
   cdtype = _cdtype;
-  cdsetid = _cdsetid;
 
   if (!append_selected)
     ResetSelected(); // reset lp_counter and clears selected vector
@@ -263,7 +244,6 @@ ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtyp
     int lpid;
     selected = LocalPlanners<CFG,WEIGHT>::GetDefault();
     for (itr = selected.begin(), lpid = 1; itr != selected.end(); itr++, lpid++) {
-      (*itr)->cdsetid = &cdsetid;
       (*itr)->cdInfo = &cdInfo;
       (*itr)->SetID(GetNewID());
     }
@@ -305,7 +285,6 @@ ParseCommandLine(int argc, char **argv) {
 	(*itr)->ParseCommandLine(cmd_argc, cmd_argv);
 	if (!InSelected(*itr)) {
 	  // .., set their parameters
-	  (*itr)->cdsetid = &cdsetid;
 	  (*itr)->cdInfo = &cdInfo;
 	  (*itr)->SetID(GetNewID());
 	  //check if lp is straightline to set saved_sl_id for add partial edge

@@ -500,12 +500,10 @@ Input::PrintDefaults(){
    CollisionDetection cd;
    // this default is already set in ConnectMapNodes::DefaultInit()
    cout << setw(FW) << endl << endl << "Collision Detection" << " (" << CDstrings[0]->GetFlag() <<
-      ") : default set id = " << cn.cdsetid;
-   cd.UserInit(this, &gn, &cn);
-   cd.collisionCheckers.DisplayCDSet( cn.cdsetid );
+      ") : default = ";
+   cd.PrintDefaults(cout);
 
-   cout << endl << flush;
-}
+   cout << endl << flush; }
 
 
 //===================================================================

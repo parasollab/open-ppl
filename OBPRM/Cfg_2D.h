@@ -80,13 +80,13 @@ public:
 				  Cfg *resultCfg);
 
   virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, CollisionDetection *,
-					 int obstacle, int nCfgs, SID _cdsetid,
+					 int obstacle, int nCfgs, 
 					 CDInfo& _cdInfo, vector<Cfg*>&);
 
   virtual void GetCfgByOverlappingNormal(Environment * env, CollisionDetection* cd,
 					 const GMSPolyhedron &polyRobot, const GMSPolyhedron &polyObst,
 					 int robTri, int obsTri,
-					 SID _cdsetid, CDInfo& _cdInfo,
+					 CDInfo& _cdInfo,
 					 MultiBody *, vector<Cfg*>);
 
   ///////////////////////////////////////////////////////////////////////////////////////////

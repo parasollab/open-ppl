@@ -65,9 +65,7 @@ class ConnectMap {
   vector<ConnectionMethod<CFG,WEIGHT> *> selected;
   
   n_str_param options; //component connection options
-  string collection_name;
  public:
-  SID cdsetid;
   CDInfo cdInfo;
   static double connectionPosRes, ///< Position resolution for node connection
          connectionOriRes; ///< Orientation resolution for node connection
@@ -86,22 +84,6 @@ template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::ConnectMap() {
   selected.clear();
   all.clear();
-
-  #if defined USE_CSTK
-    cdsetid = CSTK;
-  #elif defined USE_RAPID
-    cdsetid = RAPID;
-  #elif defined USE_PQP
-    cdsetid = PQP;
-  #elif defined USE_VCLIP
-    cdsetid = VCLIP;
-  #else
-    #ifdef NO_CD_USE;
-      cdsetid = -1;
-    #else
-      #error You have to specify at least one collision detection library.
-    #endif
-  #endif
 
   Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>();
   all.push_back(closest);
@@ -139,7 +121,7 @@ ConnectMap<CFG,WEIGHT>::ConnectMap() {
 
 template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::ConnectMap(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetection* cd, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp) : 
-  options("-cComponents"), collection_name("cComponents") {
+  options("-cComponents") {
   selected.clear();
   all.clear();
   //need to fill out the vector of connection_methods 
@@ -208,7 +190,6 @@ int ConnectMap<CFG,WEIGHT>::ReadCommandLine(Input* input, Environment* env) {
   	    // .. use the parser of the matching method
 	    (*itr)->ParseCommandLine(_myistream);
 	    // .., set their parameters
-	    (*itr)->cdsetid = &cdsetid;
 	    (*itr)->cdInfo = &cdInfo;
 	    (*itr)->connectionPosRes = connectionPosRes;
 	    (*itr)->connectionOriRes = connectionOriRes; 
@@ -234,7 +215,6 @@ int ConnectMap<CFG,WEIGHT>::ReadCommandLine(Input* input, Environment* env) {
   if(selected.size() == 0) {
     selected = ConnectMap<CFG,WEIGHT>::GetDefault();
     for (itr = selected.begin(); itr != selected.end(); itr++) {
-      (*itr)->cdsetid = &cdsetid;
       (*itr)->cdInfo = &cdInfo;
       (*itr)->connectionPosRes= connectionPosRes;
       (*itr)->connectionOriRes= connectionOriRes; 

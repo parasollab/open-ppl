@@ -113,7 +113,7 @@ class Cfg_fixed_tree : public Cfg {
 
   ///Not implemented yet.
   virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, CollisionDetection *,
-					 int obstacle, int nCfgs, SID _cdsetid, 
+					 int obstacle, int nCfgs,  
 					 CDInfo& _cdInfo, vector<Cfg*>&) const; // NORMAL
 
   //@}
