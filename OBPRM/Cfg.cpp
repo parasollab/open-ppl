@@ -566,3 +566,9 @@ Cfg::GenSurfaceCfgs4ObstNORMAL
 (Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, SID _cdsetid){
    return CfgHelper->GenSurfaceCfgs4ObstNORMAL(env, cd, obstacle, nCfgs, _cdsetid);
 }
+
+// return a configuration(conformation)'s potential.
+double Cfg::Potential(Environment * env) const {
+   return CfgHelper->GetPotential(*this, env);
+}
+
