@@ -98,6 +98,10 @@ public:
         virtual void FlushVertex();
     //@}
 
+
+    
+    virtual WeightedMultiDiGraph<VERTEX,WEIGHT> BFS(VID) const;
+
 private:
     Stapl_Lock<short> m_Lock;
     vector< vector<Cfg> > m_Vertex;
@@ -428,6 +432,17 @@ AddEdge(VERTEX& v1, VERTEX& v2, pair<WEIGHT,WEIGHT> w){
 template<class VERTEX, class WEIGHT> void
 pRoadmapGraph<VERTEX,WEIGHT>::FlushVertex(){
     RoadmapGraph<VERTEX,WEIGHT>::AddVertex(m_Vertex[m_get_myid()]);
+}
+
+template<class VERTEX, class WEIGHT>
+WeightedMultiDiGraph<VERTEX,WEIGHT> 
+pRoadmapGraph<VERTEX,WEIGHT>::BFS(VID vid) const{
+    WeightedMultiDiGraph<VERTEX,WEIGHT> returnV;
+    m_Lock.aquire_lock();
+    returnV = RoadmapGraph<VERTEX,WEIGHT>::BFS(vid);
+    m_Lock.release_lock();
+    return returnV;
+
 }
 
 #endif

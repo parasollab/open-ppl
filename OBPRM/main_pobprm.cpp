@@ -132,6 +132,7 @@ bool pGenerateMapNodes::CheckStatus(){
 ///////////////////////////////////////////////////////////////////
 //  Parallel Node Connection class : Constructor
 ///////////////////////////////////////////////////////////////////
+Stapl_Lock<short> pConnectMapNodes::m_Lock;
 pConnectMapNodes::pConnectMapNodes( CPOBPRM_MPComponents & rMPC )
 :ConnectMapNodes(), m_rMPC(rMPC){}
 
@@ -202,6 +203,8 @@ void pConnectMapNodes::ConnectNodes_Closest
     (cfgs.begin(), allVectices.begin()+index, allVectices.begin()+index+numNodePerProc);
 
     //call override ConnectNodes_Closest
+    int id = m_get_myid();
+
     ConnectMapNodes::ConnectNodes_Closest(_rm, cd, lp, dm, _cn, info, cfgs, allVectices, k);
 }
 
