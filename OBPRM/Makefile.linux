@@ -30,12 +30,12 @@
  #CSTK_INCL    = -I${CSTKLIB_DIR}/src/include
 
 
- VCLIP_DIR     = /home/user/burchanb/dsmft/VCLIP
+ VCLIP_DIR     = /home/dsmft/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
  VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
  VCLIP_INCL    = -I${VCLIP_DIR}/include
 
- RAPID_DIR     = //home/user/burchanb/dsmft/RAPID_v2_01
+ RAPID_DIR     = /home/dsmft/RAPID_v2_01
  RAPIDLIB_DIR  = ${RAPID_DIR}
  RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
  RAPID_INCL    = -I${RAPID_DIR}
@@ -143,7 +143,7 @@ libmp.so: $(MP_OBJS)
 obprm: main_obprm.c libs
 	$(CXX) $(CXXFLAGS) -o obprm \
                 main_obprm.c \
-		libmp.a libgms.a libmp.a libgms.a $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/home/user/burchanb/dsmft/qhull -lqhull
+		libmp.a libgms.a libmp.a libgms.a $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/home/dsmft/qhull -lqhull
 	rm -f main_obprm.o
 
                 #$(GMSLIB) $(MPLIB) $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
