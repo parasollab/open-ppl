@@ -107,7 +107,7 @@ public:
 
   ///Abstract methods
   virtual Cfg GetRandomCfg(double R, double rStep) = 0;
-  virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox) = 0;
+  virtual Cfg GetRandomCfg_CenterOfMass(Environment *env) = 0;
   virtual Cfg GetRandomRay(double incr) = 0;
 
   /// Get Position part of configuration according to posDof

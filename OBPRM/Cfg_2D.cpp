@@ -65,8 +65,9 @@ Cfg Cfg_2D::GetRandomRay(double incr) {
    // this implementation is only true for this kind of Cfgs.
 }
 
-Cfg Cfg_2D::GetRandomCfg_CenterOfMass(double *boundingBox) {
+Cfg Cfg_2D::GetRandomCfg_CenterOfMass(Environment *env) {
    vector<double> tmp;
+   double *boundingBox = env->GetBoundingBox();
    
    for(int i=0; i<6; ++i) {
       if(i<3) {

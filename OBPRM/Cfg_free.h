@@ -66,7 +66,7 @@ public:
   virtual Cfg GetRandomCfg(double R, double rStep);
 
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
-  virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
+  virtual Cfg GetRandomCfg_CenterOfMass(Environment *env);
 
   ///Get a random vector whose magnitude is incr (note. the orienatation of of this Cfg is 0)
   virtual Cfg GetRandomRay(double incr);

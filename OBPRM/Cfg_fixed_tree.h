@@ -69,7 +69,7 @@ public:
   virtual Cfg GetRandomCfg(double R, double rStep);
   
   ///Just like GetRandomCfg.
-  virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
+  virtual Cfg GetRandomCfg_CenterOfMass(Environment *env);
 
   ///Get a random vector. incr will always be reset to 0.005.
   virtual Cfg GetRandomRay(double incr);
@@ -131,7 +131,7 @@ public:
 
 protected:
   int NumofJoints;  ///< # of Joints
-  
+ 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //

@@ -440,12 +440,6 @@ public:
          */
         static Cfg GetRandomCfg(double R, double rStep);
     
-        /** 
-         * generates random configuration where workspace robot's CENTER OF MASS
-         * is guaranteed to lie within the environment specified bounding box
-         * Call CfgManager::GetRandomCfg_CenterOfMass
-         */
-        static Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
     
         /** 
          * generates random configuration where workspace robot's EVERY VERTEX
@@ -585,7 +579,14 @@ public:
       * call CfgManager's Normalize_orientation.
       */
       void Normalize_orientation(int index = -1);
-      
+     
+     /**
+       * generates random configuration where workspace robot's CENTER OF MASS
+       * is guaranteed to lie within the environment specified bounding box
+       * Call CfgManager::GetRandomCfg_CenterOfMass
+       */
+	static Cfg GetRandomCfg_CenterOfMass(Environment *env);
+						 
       ///////////////////////////////////////////////////////////////////////////////////////////
       //
       //

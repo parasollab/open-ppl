@@ -64,8 +64,9 @@ Cfg Cfg_free::GetRandomRay(double incr) {
 
 }
 
-Cfg Cfg_free::GetRandomCfg_CenterOfMass(double *boundingBox) {
+Cfg Cfg_free::GetRandomCfg_CenterOfMass(Environment *env) {
    vector<double> tmp;
+   double *boundingBox = env->GetBoundingBox();
    
    for(int i=0; i<6; ++i) {
       if(i<3) {

@@ -89,13 +89,15 @@ Cfg Cfg_free_tree::GetRandomRay(double incr) {
 
 }
 
-Cfg Cfg_free_tree::GetRandomCfg_CenterOfMass(double *boundingBox) {
+Cfg Cfg_free_tree::GetRandomCfg_CenterOfMass(Environment *env) {
 // this is not EXACTLY accurate, ok with most cases ... TO DO
 // To be accurate, one has to make sure every link is inside the given BB,
 // but here only the base link is taken care of. It is almost fine since
 // a little 'bigger' BB will contain all links.
 
    vector<double> tmp;
+   double *boundingBox = env->GetBoundingBox();
+
    for(int i=0; i<dof; ++i) {
       if(i<3) {
          int k = 2*i;

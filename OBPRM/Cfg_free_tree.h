@@ -29,7 +29,7 @@ public:
   //===================================================================
   virtual Vector3D GetRobotCenterPosition(const Cfg & c) const;
   virtual Cfg GetRandomCfg(double R, double rStep);
-  virtual Cfg GetRandomCfg_CenterOfMass(double *boundingBox);
+  virtual Cfg GetRandomCfg_CenterOfMass(Environment *env);
   virtual Cfg GetRandomRay(double incr);
 
   /// methods for Cfg generation and collision checking.

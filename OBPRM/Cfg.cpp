@@ -327,8 +327,8 @@ Cfg Cfg::GetRandomCfg(double R, double rStep) {
 
 // generates random configuration where workspace robot's CENTER OF MASS
 // is guaranteed to lie within the environment specified bounding box
-Cfg Cfg::GetRandomCfg_CenterOfMass(double *boundingBox) {
-    return CfgHelper->GetRandomCfg_CenterOfMass(boundingBox);
+Cfg Cfg::GetRandomCfg_CenterOfMass(Environment *env) {
+    return CfgHelper->GetRandomCfg_CenterOfMass(env);
 }
 
 
@@ -341,10 +341,12 @@ Cfg Cfg::GetRandomCfg(Environment *env, int maxTries) {
     // and see if user has an impossibly small (for this robot) bounding
     // box specified
     
-    double *bb = env->GetBoundingBox();
+    // Since the argument of GetRandomCfg_CenterOfMass is changed, we do
+    // not need define boudingBox here     //dawenx
+    // double *bb = env->GetBoundingBox();
     
     while (maxTries-- > 0){
-        Cfg tmp = GetRandomCfg_CenterOfMass(bb);
+        Cfg tmp = GetRandomCfg_CenterOfMass(env);
         if (tmp.InBoundingBox(env))
             return tmp;
     }//endwhile

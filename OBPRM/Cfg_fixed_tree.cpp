@@ -62,7 +62,7 @@ Cfg Cfg_fixed_tree::GetRandomRay(double incr) {
 
 }
 
-Cfg Cfg_fixed_tree::GetRandomCfg_CenterOfMass(double *boundingBox) {
+Cfg Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *env) {
 
 // Why following comments are here? This method suppose will generate
 // Cfg whose center of mass will inside a given bounding box....

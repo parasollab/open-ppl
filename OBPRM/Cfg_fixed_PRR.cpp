@@ -58,8 +58,9 @@ Cfg Cfg_fixed_PRR::GetRandomRay(double incr) {
 
 }
 
-Cfg Cfg_fixed_PRR::GetRandomCfg_CenterOfMass(double *boundingBox) {
+Cfg Cfg_fixed_PRR::GetRandomCfg_CenterOfMass(Environment *env) {
 
+   double *boundingBox = env->GetBoundingBox();
    double zz = boundingBox[4] +
                         (boundingBox[5]-boundingBox[4])*drand48();
 
