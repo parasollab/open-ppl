@@ -57,6 +57,7 @@ public:
   static vector<Vector3D> GetCoordinatesPotential(const Cfg &c, Environment * env);
   static vector<Vector3D> GetCoordinatesForRMSD(const Cfg &c, Environment * env);
   static vector<Vector3D> GetCoordinatesLigandBinding(const Cfg &c, Environment * env);
+  static vector< vector<Vector3D> >GetCoordinatesLigandBindingbyFrame(const Cfg &c, Environment * env);
 
 protected:
 

@@ -116,6 +116,25 @@ vector<Vector3D> BioPotentials::GetCoordinatesLigandBinding(const Cfg &c, Enviro
     return coordinates;
 }
 
+vector< vector<Vector3D> > BioPotentials::GetCoordinatesLigandBindingbyFrame(const Cfg &c, Environment * env) {
+    Cfg::CfgHelper->ConfigEnvironment(c, env);
+    vector<vector<Vector3D> > coordinates;
+
+    MultiBody *robot = env->GetMultiBody(env->GetRobotIndex());
+
+    for(int i=0 ; i<robot->GetFreeBodyCount(); i++){
+        vector<Vector3D> tv;
+	Transformation tmp = robot->GetFreeBody(i)->WorldTransformation();
+	for(int j=0; j<atomCoord[i].size(); ++j) {
+	   tv.push_back(tmp*atomCoord[i][j]);
+	}
+	coordinates.push_back(tv);
+    }
+    return coordinates;
+}
+
+
+
 double BioPotentials::PotentialLigandBinding(const Cfg &c, Environment * env) {
     vector<Vector3D> coordinates = GetCoordinatesLigandBinding(c,env);
     return potentialGrid->GetPotential(coordinates, atomType);
