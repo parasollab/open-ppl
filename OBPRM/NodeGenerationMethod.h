@@ -3,9 +3,11 @@
 
 #include "Parameters.h"
 #include "util.h"
+#include "Stat_Class.h"
 
 class Environment;
 class CollisionDetection;
+class CDInfo;
 class DistanceMetric;
 
 //////////////////////////////////////////////////////////////////////////////////////////
