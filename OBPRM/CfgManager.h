@@ -39,7 +39,7 @@
 
 
 class Body;
-class AttEnvironment;
+class Environment;
 class Cfg;
 
 class CfgManager {
@@ -73,10 +73,10 @@ public:
 		      double s); // for rotate-at-s Local Planner.
 
   // methods for nodes connection.
-  virtual vector<Cfg> FindNeighbors(const Cfg& c, AttEnvironment *env, 
+  virtual vector<Cfg> FindNeighbors(const Cfg& c, Environment *env, 
 			const Cfg& increment,CollisionDetection *,
 			int noNeighbors, SID  _cdsetid);
-  virtual vector<Cfg> FindNeighbors(const Cfg& c, AttEnvironment *env, const Cfg& goal,
+  virtual vector<Cfg> FindNeighbors(const Cfg& c, Environment *env, const Cfg& goal,
 	const Cfg& increment, CollisionDetection *,int noNeighbors, SID  _cdsetid);
   virtual void IncrementTowardsGoal(Cfg& c, const Cfg &goal, const Cfg &increment);
   virtual Cfg FindIncrement(const Cfg& c, const Cfg& _goal, int * n_ticks, 
@@ -88,20 +88,20 @@ public:
   virtual double  PositionMagnitude(const Cfg& c);
 
   // methods for Cfg generation and collision checking.
-  virtual bool ConfigEnvironment(const Cfg &c, AttEnvironment *env) = 0;
-  virtual bool isCollision(const Cfg &c, AttEnvironment *env, CollisionDetection *cd,
+  virtual bool ConfigEnvironment(const Cfg &c, Environment *env) = 0;
+  virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
                            SID _cdsetid, MultiBody * onflyRobot);
 
   // Node Generation methods
-  virtual bool GenerateOverlapCfg(AttEnvironment *env, int robot, 
+  virtual bool GenerateOverlapCfg(Environment *env, int robot, 
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg) = 0; // OBPRM 
-  virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(AttEnvironment * env,
+  virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
          CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid) = 0; // NORMAL
 
   // printing methods.
   virtual void writeTransformation(FILE *_fp, Transformation & tmp);
-  virtual void print_vizmo_format_to_file(const Cfg &c, AttEnvironment *env, FILE *_fp);
-  virtual void print_preamble_to_file(AttEnvironment *env, FILE *_fp, int numofCfg);
+  virtual void print_vizmo_format_to_file(const Cfg &c, Environment *env, FILE *_fp);
+  virtual void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
   
   protected:

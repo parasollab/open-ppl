@@ -12,8 +12,6 @@
 #include <fstream.h>
 #include <iostream.h>
 
-#include <nrutil.h>
-
 #include "Matrix.h"
 
 

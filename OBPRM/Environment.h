@@ -18,17 +18,13 @@
 #ifndef Environment_h
 #define Environment_h
 
-
-
-
 #include <fstream.h>
 #include <list.h>
 #include "MultiBody.h"      
 #include "Matrix.h"
 #include "Contact.h"
 
-class Input;
-//class MultiBody;
+extern Input input;
 
 class Environment {
 public:
@@ -45,20 +41,27 @@ public:
     //  Constructors and Destructor
     //---------------------------------------------------------------
     Environment();
+    Environment(int index);
+
     ~Environment();
     //---------------------------------------------------------------
     //  Methods
     //---------------------------------------------------------------
     int GetMultiBodyCount();
-//
-// Wookho Son 4/10/98
-//
     void AddMultiBody(MultiBody *_multibody);
     MultiBody * GetMultiBody(int _index);
     void Couple(MultiBody *_multibody[], int _number);
     void Decouple(MultiBody *_multibody[], int _number);
     void Get(Input * _input);
     void Write(ostream & _os);
+    void SetRobotIndex(int index){robotIndex = index;};
+    int GetRobotIndex(){return robotIndex;};
+    void FindBoundingBox();
+    double * GetBoundingBox();
+    inline double GetPositionRes() {return positionRes;};
+    inline double GetOrientationRes() {return orientationRes;};
+    void DisplayBB(ostream & _os);
+    double Getminmax_BodyAxisRange();
 
 protected:
 private:
@@ -67,6 +70,11 @@ private:
     //---------------------------------------------------------------
     int multibodyCount;
     MultiBody **multibody;
+    int robotIndex;
+    double boundingBox[6];
+    double positionRes;
+    double orientationRes;
+    double minmax_BodyAxisRange;
 
 };
 

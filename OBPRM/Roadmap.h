@@ -22,7 +22,7 @@
 
 #include "Input.h"              // init info (command line, env initfile)
 #include "OBPRM.h"              // Cfg type defined here
-#include "AttEnvironment.h"     // Environment classes
+#include "Environment.h"     // Environment classes
 #include "RoadmapGraph.h"     	// graph class
 
 #include "LocalPlanners.h"      // Local Planner       Algobase
@@ -49,7 +49,7 @@ public:
    // *preferred*, fills input & inits 
    Roadmap(Input*, CollisionDetection*, 
 	   DistanceMetric*, LocalPlanners*, 
-	   AttEnvironment* env = NULL);
+	   Environment* env = NULL);
 
         //------------------------------------------------------------
         // Delete all the elements of RoadMap. 
@@ -64,14 +64,14 @@ public:
         //------------------------------------------------------------
    void InitRoadmap(Input*, CollisionDetection*,
 		    DistanceMetric*,LocalPlanners*, char *ExistingMap=NULL, 
-		    AttEnvironment* env = NULL); 
+		    Environment* env = NULL); 
 
         //------------------------------------------------------------
         // Read roadmap's environment from a file into environment field
         //------------------------------------------------------------
    void InitEnvironment(Input*);
 
-   void InitEnvironment(AttEnvironment*);
+   void InitEnvironment(Environment*);
 
   //=======================================================================
   // Getting Statistics
@@ -79,7 +79,7 @@ public:
         //------------------------------------------------------------
         // Get a pointer to roadmap's environment 
         //------------------------------------------------------------
-    AttEnvironment * GetAttEnvironment();
+    Environment * GetEnvironment();
 
   //=======================================================================
   // Display, Input, Output
@@ -110,7 +110,7 @@ public:
   //=======================================================================
 public:
 
-   AttEnvironment * environment;
+   Environment * environment;
 
    RoadmapGraph<Cfg,WEIGHT> roadmap;   // Roadmap built for environment
 

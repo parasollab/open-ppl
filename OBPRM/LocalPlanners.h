@@ -94,7 +94,7 @@ class LocalPlanners;
 
 class Roadmap;
 
-typedef bool (*LPF) (AttEnvironment *env,CollisionDetection *,DistanceMetric*,
+typedef bool (*LPF) (Environment *env,CollisionDetection *,DistanceMetric*,
 				Cfg&,Cfg&,LP&,LPInfo*); 	// pointer to lp function
                                          		// *NOTE* need to update
                                          		//  when params known
@@ -251,24 +251,24 @@ public:
   //===================================================================
   void DefaultInit();
   void UserInit(Input *input,  ConnectMapNodes*);
-  bool IsConnected(AttEnvironment *env,CollisionDetection *,DistanceMetric *,
+  bool IsConnected(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
   bool IsConnected(Roadmap * rm,CollisionDetection *,DistanceMetric *,
                                 Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
-  bool IsConnectedFindAll(AttEnvironment *env,CollisionDetection *,DistanceMetric *,
+  bool IsConnectedFindAll(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
 
-  static bool IsConnected_straightline_simple(AttEnvironment *env,CollisionDetection *,DistanceMetric *,
+  static bool IsConnected_straightline_simple(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool IsConnected_SLclearance(AttEnvironment *env,CollisionDetection *,DistanceMetric *,
+  static bool IsConnected_SLclearance(Environment *env,CollisionDetection *,DistanceMetric *,
                                 Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool lineSegmentInCollision(AttEnvironment *env,CollisionDetection *,DistanceMetric *,
+  static bool lineSegmentInCollision(Environment *env,CollisionDetection *,DistanceMetric *,
                                 Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool IsConnected_straightline(AttEnvironment *env,CollisionDetection *,DistanceMetric *,
+  static bool IsConnected_straightline(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool IsConnected_rotate_at_s(AttEnvironment *env,CollisionDetection *,DistanceMetric *,
+  static bool IsConnected_rotate_at_s(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  static bool IsConnected_astar(AttEnvironment *env,CollisionDetection *,DistanceMetric *,
+  static bool IsConnected_astar(Environment *env,CollisionDetection *,DistanceMetric *,
 				Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
 
   bool UsesPlannerOtherThan(char plannerName[], SID lpsetid=0);

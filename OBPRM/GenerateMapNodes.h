@@ -85,10 +85,10 @@ class GenerateMapNodes;
 
 class Input;
 class Roadmap;
-class AttEnvironment;
+class Environment;
 class DistanceMetric;
 
-typedef void (*GNF) (AttEnvironment*, CollisionDetection*,DistanceMetric*,GN&, GNInfo&);  // pointer to gn function
+typedef void (*GNF) (Environment*, CollisionDetection*,DistanceMetric*,GN&, GNInfo&);  // pointer to gn function
 
 
 /////////////////////////////////////////////////////////////////////
@@ -168,7 +168,7 @@ public:
   //===================================================================
 
         // Setting up any default values for sets
-  void   PutDefaults(AttEnvironment *_env);
+  void   PutDefaults(Environment *_env);
 
         // Adding GNs, Making & Modifying GN sets
    int AddGN(const char*);     // add gn(s) to universe
@@ -236,40 +236,40 @@ public:
   //===================================================================
 
   void DefaultInit();
-  void UserInit(Input * input, AttEnvironment *_env);
+  void UserInit(Input * input, Environment *_env);
 
   void GenerateNodes(Roadmap*, CollisionDetection*,DistanceMetric*,SID, GNInfo&);
 
   static
   void BasicPRM
-	(AttEnvironment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
+	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
 
   static
   void BasicOBPRM
-	(AttEnvironment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
+	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
 
   static
   void OBPRM
-       	(AttEnvironment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& ); 
+       	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& ); 
 
   static
   void GaussPRM
-	(AttEnvironment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
+	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
 
   static 
   bool ValidateParameters(Input*);
 
   static
   vector<Cfg>
-  GenerateSurfaceCfg(AttEnvironment*, CollisionDetection *,
+  GenerateSurfaceCfg(Environment*, CollisionDetection *,
 			DistanceMetric*,GNInfo& ,
                    int, int, Cfg, Cfg);
 
   static vector<Cfg>
-  GenSurfaceCfgs4Obst(AttEnvironment * env,CollisionDetection *,DistanceMetric* dm, int obstacle, int nCfgs, GNInfo &_info);
+  GenSurfaceCfgs4Obst(Environment * env,CollisionDetection *,DistanceMetric* dm, int obstacle, int nCfgs, GNInfo &_info);
 
   static vector<Cfg>
-  GenSurfaceCfgs4ObstVERTEX(AttEnvironment * env,CollisionDetection *,DistanceMetric* dm, int obstacle, int nCfgs, GNInfo &_info);
+  GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection *,DistanceMetric* dm, int obstacle, int nCfgs, GNInfo &_info);
 
 //===================================================================
 // protected method implementations
@@ -285,7 +285,7 @@ protected:
   bool ValidatePairs(char*, n_str_param, pair<int,int>*);
 
   static void 
-  GenerateSeeds(AttEnvironment*, CollisionDetection *,GNInfo&,
+  GenerateSeeds(Environment*, CollisionDetection *,GNInfo&,
 		int, int, int, int, vector<Cfg>*);
 
   static void
@@ -298,26 +298,26 @@ protected:
   static bool DIST_Compare (const VID_DISTANCE_TYPE&, const VID_DISTANCE_TYPE&);
 
   static void
-  FarthestFromStart(AttEnvironment*, DistanceMetric*,
+  FarthestFromStart(Environment*, DistanceMetric*,
 		GNInfo&, Cfg, vector<Cfg>, vector<Cfg>*);
 
   static void
-  FirstNFreeCfgs(AttEnvironment*, CollisionDetection *,GNInfo&,
+  FirstNFreeCfgs(Environment*, CollisionDetection *,GNInfo&,
 		 int, vector<Cfg>, vector<Cfg>*);
 
   static void
-  GenNewPivots(AttEnvironment*, CollisionDetection *cd,DistanceMetric*,GNInfo&,
+  GenNewPivots(Environment*, CollisionDetection *cd,DistanceMetric*,GNInfo&,
         Cfg, vector<Cfg>, double, double, int, int, vector<Cfg>*);
 
   static void
-  SpreadCfg(AttEnvironment*, CollisionDetection *cd,DistanceMetric*,GNInfo&,
+  SpreadCfg(Environment*, CollisionDetection *cd,DistanceMetric*,GNInfo&,
             Cfg, double, double, int, int, int);
 
   static vector<Cfg>
-  FreeCfgs(AttEnvironment*, CollisionDetection *cd,vector<Cfg>, GNInfo&);
+  FreeCfgs(Environment*, CollisionDetection *cd,vector<Cfg>, GNInfo&);
 
   static vector<Cfg>
-  InsideBB(AttEnvironment*, vector<Cfg>);
+  InsideBB(Environment*, vector<Cfg>);
 
   static Vector3D
   ChooseRandomVertexOnBody(Body*, bool);
@@ -344,16 +344,16 @@ protected:
   Shells(vector<Cfg>, int);
 
   static bool 
-  GenerateInsideCfg(AttEnvironment*, int, int, Cfg*);
+  GenerateInsideCfg(Environment*, int, int, Cfg*);
 
   static Cfg
-  GenerateOutsideCfg(AttEnvironment*, CollisionDetection*,int, int, Cfg, Cfg, GNInfo&);
+  GenerateOutsideCfg(Environment*, CollisionDetection*,int, int, Cfg, Cfg, GNInfo&);
 
   static vector<Cfg> 
-  GenCfgsFromCObst(AttEnvironment * env,CollisionDetection* cd,DistanceMetric * dm, int obstacle, int nCfgs, GNInfo &_info);
+  GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, int obstacle, int nCfgs, GNInfo &_info);
 
   static vector<Cfg>
-  GenFreeCfgs4Obst(AttEnvironment * env,CollisionDetection *,
+  GenFreeCfgs4Obst(Environment * env,CollisionDetection *,
 			 int obstacle, int nCfgs, GNInfo &_info);
 
 

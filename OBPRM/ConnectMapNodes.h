@@ -84,7 +84,7 @@ class CNSets;
 class ConnectNodes;
 
 class Roadmap;
-class AttEnvironment;
+class Environment;
 
 const double MAX_DIST =  1e10;
 
@@ -305,7 +305,7 @@ public:
   void ConnectNodes(Roadmap*, CollisionDetection *,LocalPlanners* ,
 		DistanceMetric *,SID, CNInfo&); 
 
-  void ConnectNodes(AttEnvironment*, RoadmapGraph<Cfg,WEIGHT> & roadmap,
+  void ConnectNodes(Environment*, RoadmapGraph<Cfg,WEIGHT> & roadmap,
 		CollisionDetection *, LocalPlanners* ,DistanceMetric *,
 		SID, CNInfo&);
 
@@ -343,7 +343,7 @@ public:
 
   typedef pair <Cfg,double> CfgDistType;
   static bool CfgDist_Compare (const CfgDistType&, const CfgDistType&);
-  static void SortByDistFromCfg (AttEnvironment *_env,DistanceMetric *dm, 
+  static void SortByDistFromCfg (Environment *_env,DistanceMetric *dm, 
 				CNInfo& info, const Cfg& _cfg1, vector<Cfg>&  _cfgs);
 
 private:
@@ -362,15 +362,15 @@ private:
 				DistanceMetric *, CN&, CNInfo&, VID, VID);
 
   static vector< CfgPairType > FindKClosestPairs(
-                AttEnvironment*, DistanceMetric *, CNInfo&, 
+                Environment*, DistanceMetric *, CNInfo&, 
                 vector<Cfg>&, vector<Cfg>&, int);
 
   static vector< CfgPairType > FindKClosestPairs(
-                AttEnvironment*, DistanceMetric *, CNInfo&, 
+                Environment*, DistanceMetric *, CNInfo&, 
                 vector<Cfg>&, int);
 
   static vector< CfgPairType > FindKClosestPairs(
-                AttEnvironment*, DistanceMetric *, CNInfo&, 
+                Environment*, DistanceMetric *, CNInfo&, 
                 Cfg&, vector<Cfg>&, int);
 
   static vector< Cfg_VE_Type > FindKClosestPairs(

@@ -56,7 +56,7 @@ public:
 protected:
 private:
    Roadmap *rdmp;
-   AttEnvironment *env;
+   Environment *env;
    CollisionDetection *cd;
    LocalPlanners *lp;
    DistanceMetric *dm;
@@ -70,9 +70,9 @@ private:
    //----------------------------------------------------------------------------
    // these three methods are from GenerateMapNodes class, so go back there later.
    // 07/23/99 (G)
-   Cfg GenerateSurfaceCfg(AttEnvironment *, CollisionDetection *cd, DistanceMetric *, 
+   Cfg GenerateSurfaceCfg(Environment *, CollisionDetection *cd, DistanceMetric *, 
                           Cfg , Cfg ,  GNInfo& );
-   Cfg GenerateOutsideCfg(AttEnvironment *, CollisionDetection *cd, Cfg , Cfg , GNInfo &);
-   vector <Cfg> GenerateOBPRMNodes(AttEnvironment *env, CollisionDetection *cd, 
+   Cfg GenerateOutsideCfg(Environment *, CollisionDetection *cd, Cfg , Cfg , GNInfo &);
+   vector <Cfg> GenerateOBPRMNodes(Environment *env, CollisionDetection *cd, 
 				   DistanceMetric *, vector <Cfg> ,int , GNInfo &);
 

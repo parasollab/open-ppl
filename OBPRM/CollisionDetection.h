@@ -44,7 +44,7 @@
 
 const double MaxDist =  1e10;
 
-class AttEnvironment;
+class Environment;
 class GenerateMapNodes;
 class ConnectMapNodes;
 
@@ -192,11 +192,11 @@ public:
 #ifdef USE_CSTK
   double cstkDistance(MultiBody* robot, MultiBody* obstacle);
 #endif
-  double Clearance(AttEnvironment * env);
+  double Clearance(Environment * env);
 
-  bool IsInCollision(AttEnvironment * env, SID _cdsetid, MultiBody * lineRobot = NULL);
-  bool IsInCollision(AttEnvironment * env, MultiBody * rob, MultiBody * obstacle, SID _cdsetid);
-  bool IsInCollision(AttEnvironment * env, int robot, int obstacle, SID _cdsetid);
+  bool IsInCollision(Environment * env, SID _cdsetid, MultiBody * lineRobot = NULL);
+  bool IsInCollision(Environment * env, MultiBody * rob, MultiBody * obstacle, SID _cdsetid);
+  bool IsInCollision(Environment * env, int robot, int obstacle, SID _cdsetid);
 
   static bool IsInCollision_boundingSpheres(MultiBody* robot, MultiBody* obstacle,  CD& _cd);
   static bool IsInCollision_insideSpheres(MultiBody* robot, MultiBody* obstacle,  CD& _cd);

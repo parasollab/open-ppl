@@ -3,26 +3,18 @@
 # Make your own and use it or use the one in BASELINE
 #------------------------------------------------------
 
-# -- for dynamic shared object library libgms.so
-   GMSLIB_DIR = .
-   GMSLIB     = -L${GMSLIB_DIR} -lgms
-
-# -- for dynamic shared object library libmp.so
-   MPLIB_DIR  = .
-   MPLIB      = -L${MPLIB_DIR} -lmp
+# -- for dynamic shared object library libobprm.so
+   OBPRM_DIR   = .
+   OBPRM_LIB   = -L${OBPRM_DIR} -lobprm
 
 #------------------------------------------------------
 # Basic defns; do not change
 #------------------------------------------------------
- ON        = 1
- OFF       = 0
  MATHLIB   = -lm
- OPENGL    = /usr/share/src/OpenGL/libglut
- NR_INCL   = -I/pub/dsmft/GMS/NR
  STL_INCL  = -I/pub/dsmft/STL
 
 #-----------------------------------------------------------------------------
-# collision detection: c-space toolkit, vclip
+# collision detection packages available
 #--------------------------------------------------------------------------
 
  #CSTKLIB_DIR  = /pub/dsmft/CSTK/CSTK-1.22/cstk
@@ -55,45 +47,16 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. ${STL_INCL} ${NR_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${DEFS}
-
-#------------------------------------------------------
-# if GRAPHICS are OFF then blank out GLLIBS & GL_INCL
-#------------------------------------------------------
-
-#------
-# ON
-#------
-#  GLLIBS    = ${OPENGL}/libglut.a -lGLU -lGL -lXmu -lXext -lX11 
-#  GL_INCL   = -I${OPENGL}
-#  BFLAGS    = ${AFLAGS} ${GL_INCL} -DGRAPHICS=${ON}
-
-#------
-# OFF
-#------
-   GLLIBS    =
-   GL_INCL   =
-   BFLAGS    = ${AFLAGS} -DGRAPHICS=${OFF}  -I /share/gnu/include/g++-3/
-
+ AFLAGS    = -I. ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${DEFS}
 
 
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
 #--------------------------------------------------------------------------
  CC = /share/gnu/bin/g++ 
-
 #CC = /pub/gnu_sgi/bin/g++
 
 CXX = /share/gnu/bin/g++
-
-# -- for development on our O2s
-# -- (fast_compile/bad_code, medium_compile/code, verbose) -- 
-#  OPTS = 
-#  OPTS = -O1 -o32
-#  OPTS = -O2 -o32 -OPT:Olimit=0
-#  OPTS = -show -ptv 
-# -- optimized (our O2's) (slow_compile/good_code) --
-#  OPTS = -r5000 -mips4 -Ofast -o32 -OPT:Olimit=0
 
 # -- for development on TERMINATOR (can't seem to use it better due to cstk)
   OPTS = -g -O2 -fexceptions 
@@ -101,17 +64,15 @@ CXX = /share/gnu/bin/g++
 # -- optimized (our O2's) (slow_compile/good_code) --
 #  OPTS =  -o32 -O2 -OPT:Olimit=0 -show
 
-   INCS = $(BFLAGS)
-
 #  DEPS = 
-   #DEPS = -MDupdate Dependencies 
+#  DEPS = -MDupdate Dependencies 
 
 # -- warnings (default, full, none) --
 #  CWARNS = 
 #  CWARNS = -fullwarn
    CWARNS = -w
 
-CFLAGS     = $(OPTS) $(INCS) $(DEPS) $(CWARNS)
+CFLAGS     = $(OPTS) $(AFLAGS) $(DEPS) $(CWARNS)
 CXXFLAGS   = $(CFLAGS) 
 DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
 
@@ -120,47 +81,35 @@ DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
 #--------------------------------------------------------------------------
 
 #--------------------------------------------------------------------
-deps: 
+deps:: 
 	touch Dependencies
 
 
-libs: objs libgms.a libmp.a
+libs:: objs libobprm.a
 
-libgms.a: $(GMS_OBJS)
-	ar  -rc libgms.a $(GMS_OBJS) 
+libobprm.a:: $(OBJS)
+	ar  -rc libobprm.a $(OBJS) 
 
-libgms.so: $(GMS_OBJS)
-	$(CXX) -o libgms.so $(DSOFLAGS) $(GMS_OBJS)
-
-libmp.a: $(MP_OBJS)
-	ar -rc libmp.a  $(MP_OBJS) 
-
-libmp.so: $(MP_OBJS)
-	$(CXX) -o libmp.so  $(DSOFLAGS) $(MP_OBJS) 
-
-           #-rpath $(GMSLIB_DIR):$(MPLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR} \
 #--------------------------------------------------------------------
-obprm: main_obprm.c libs
+obprm:: main_obprm.c libs
 	$(CXX) $(CXXFLAGS) -v -o obprm \
 	main_obprm.c \
-	libmp.a libgms.a libmp.a libgms.a $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L//pub/rlab3/solaris/qhull -lqhull
+	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/pub/rlab3/solaris/qhull -lqhull
 	rm -f main_obprm.o
 
-                #$(GMSLIB) $(MPLIB) $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 #--------------------------------------------------------------------
-query: main_query.c
+query:: main_query.c
 	$(CXX) $(CXXFLAGS) -v -o query \
 	main_query.c \
-	${VCLIPLIB} libmp.a libgms.a libmp.a libgms.a  ${VCLIP_DIR}/vclip.o $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L//pub/rlab3/solaris/qhull -lqhull
+	libobprm.a ${VCLIP_DIR}/vclip.o $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/pub/rlab3/solaris/qhull -lqhull
 	rm -f main_query.o
 #--------------------------------------------------------------------
-% : %.o
+% :: %.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 
 #--------------------------------------------------------------------
 
-GMS_OBJS = \
-	AttEnvironment.o \
+OBJS = \
 	Environment.o \
 	FreeBody.o \
 	FixedBody.o \
@@ -173,9 +122,7 @@ GMS_OBJS = \
 	Matrix.o \
 	Vectors.o \
 	Body.o \
-	MultiBody.o 
-
-MP_OBJS = \
+	MultiBody.o \
 	Input.o \
 	HapticInput.o \
 	Cfg.o \
@@ -195,7 +142,7 @@ MP_OBJS = \
 	QueryCmds.o \
 	Query.o 
 
-objs: $(MP_OBJS) $(GMS_OBJS)
+objs:: $(BJS)
 
 #--------------------------------------------------------------------
 runclean::
@@ -210,18 +157,17 @@ clean::
 reallyclean::
 	rm -f query
 	rm -f obprm
-	rm -f libmp.so
-	rm -f libgms.so
+	rm -f *.so *.a
 	rm -R -f ii_files
 	rm -f *.o
 	rm -f Dependencies
 	rm -f so_locations
 
 #-----------------------------------------------------------------------------
-# Build and update depent
+# Build and update dependencies
 #-----------------------------------------------------------------------------
 
-Dependencies:
+Dependencies::
 	echo >Dependencies "#-*- Makefile -*-"
 
 include Dependencies

@@ -34,7 +34,7 @@
 #endif
 
 class Body;
-class AttEnvironment;
+class Environment;
 class CollisionDetection;
 class CfgManager;
 
@@ -136,10 +136,10 @@ public:
   vector<Cfg> GetMovingSequenceNodes(const Cfg& other, double s) const; 
 
   // methods for nodes connection.
-  vector<Cfg> FindNeighbors(AttEnvironment *env, 
+  vector<Cfg> FindNeighbors(Environment *env, 
 			const Cfg& increment,CollisionDetection *,
 	int noNeighbors, SID  _cdsetid);
-  vector<Cfg> FindNeighbors(AttEnvironment *env, const Cfg& goal,
+  vector<Cfg> FindNeighbors(Environment *env, const Cfg& goal,
 	const Cfg& increment, CollisionDetection *,int noNeighbors, SID  _cdsetid);
   void IncrementTowardsGoal(const Cfg &goal, const Cfg &increment);
   Cfg  FindIncrement(const Cfg& _goal, int * n_ticks,
@@ -161,30 +161,30 @@ public:
 
   // generates random configuration where workspace robot's EVERY VERTEX
   // is guaranteed to lie within the environment specified bounding box
-  static Cfg GetRandomCfg(AttEnvironment *env);
+  static Cfg GetRandomCfg(Environment *env);
 
   // tests whether or not robot in this configuration has every vertex inside
   // the environment specified bounding box
-  bool InBoundingBox(AttEnvironment *env);
+  bool InBoundingBox(Environment *env);
 
 
   // methods for Cfg generation and collision checking.
-  double Clearance(AttEnvironment *env,CollisionDetection* cd);
+  double Clearance(Environment *env,CollisionDetection* cd);
 
   //Approximate C-Space Clearance 
-  double ApproxCSpaceClearance(AttEnvironment *env, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, int n);
+  double ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, int n);
 
-  bool ConfigEnvironment(AttEnvironment *env);
-  bool isCollision(AttEnvironment *env,CollisionDetection* cd, SID _cdsetid);
-  bool isCollision(AttEnvironment *env, CollisionDetection *cd,int robot, int obs, SID _cdsetid);
-  static bool GenerateOverlapCfg(AttEnvironment *env, int robot, 
+  bool ConfigEnvironment(Environment *env);
+  bool isCollision(Environment *env,CollisionDetection* cd, SID _cdsetid);
+  bool isCollision(Environment *env, CollisionDetection *cd,int robot, int obs, SID _cdsetid);
+  static bool GenerateOverlapCfg(Environment *env, int robot, 
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg);  // OBPRM and BasicOBPRM
-  static vector<Cfg> GenSurfaceCfgs4ObstNORMAL(AttEnvironment * env,
+  static vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
          CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid);
 
   // new: printing methods.
-  void print_vizmo_format_to_file(AttEnvironment *env, FILE *_fp);
-  static void print_preamble_to_file(AttEnvironment *env, FILE *_fp, int numofCfg);
+  void print_vizmo_format_to_file(Environment *env, FILE *_fp);
+  static void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
   //===================================================================
   //  Data          

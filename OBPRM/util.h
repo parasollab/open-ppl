@@ -24,7 +24,7 @@
 #include "OBPRM.h"
 #include <vector.h>
 
-class AttEnvironment;
+class Environment;
 
 const double Pi = 3.1415927;
 const double BETA_EPSILON = 1.0e-30;
@@ -65,7 +65,7 @@ inline double DirectedAngularDistance(double a,double b)
 
 
 void
-WritePathTranformationMatrices(char output_file[80], vector<Cfg> path, AttEnvironment *env);
+WritePathTranformationMatrices(char output_file[80], vector<Cfg> path, Environment *env);
 
 
 inline double min(double a, double b){

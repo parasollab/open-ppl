@@ -40,18 +40,18 @@ public:
   virtual Cfg GetRandomRay(double incr);
 
   // methods for Cfg generation and collision checking.
-  virtual bool ConfigEnvironment(const Cfg &c, AttEnvironment *env);
+  virtual bool ConfigEnvironment(const Cfg &c, Environment *env);
 
   // Node Generation methods
-  virtual bool GenerateOverlapCfg(AttEnvironment *env, int robot, 
+  virtual bool GenerateOverlapCfg(Environment *env, int robot, 
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg); // OBPRM 
-  virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(AttEnvironment * env,
+  virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
          CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid); // NORMAL
 
-  virtual vector<Cfg> GetCfgByOverlappingNormal(AttEnvironment * env,
+  virtual vector<Cfg> GetCfgByOverlappingNormal(Environment * env,
          CollisionDetection* cd, const GMSPolyhedron &polyRobot,
          const GMSPolyhedron &polyObst, int robTri, int obsTri, SID _cdsetid, MultiBody *);
-  virtual bool InNarrowPassage(const Cfg& c, AttEnvironment * env,CollisionDetection* cd,
+  virtual bool InNarrowPassage(const Cfg& c, Environment * env,CollisionDetection* cd,
                                  SID _cdsetid, MultiBody * onflyRobot);
 
   protected:

@@ -3,29 +3,23 @@
 # Make your own and use it or use the one in BASELINE
 #------------------------------------------------------
 
-# -- for dynamic shared object library libgms.so
-   GMSLIB_DIR = .
-   GMSLIB     = -L${GMSLIB_DIR} -lgms
-
-# -- for dynamic shared object library libmp.so
-   MPLIB_DIR  = .
-   MPLIB      = -L${MPLIB_DIR} -lmp
+# -- for dynamic shared object library libobprm.so
+   OBPRM_DIR   = .
+   OBPRM_LIB   = -L${OBPRM_DIR} -lobprm
 
 #------------------------------------------------------
 # Basic defns; do not change
 #------------------------------------------------------
  MATHLIB   = -lm
- NR_INCL   = -I/pub/dsmft/GMS/NR
  STL_INCL  = -I/pub/dsmft/STL
 
 #-----------------------------------------------------------------------------
-# collision detection: c-space toolkit, vclip
+# collision detection packages available
 #--------------------------------------------------------------------------
 
- CSTKLIB_DIR  = /pub/dsmft/CSTK/CSTK-1.22/cstk
- CSTKLIB      = -L${CSTKLIB_DIR}/lib -lcstk
- CSTK_INCL    = -I${CSTKLIB_DIR}/src/include
-
+ CSTKLIB_DIR   = /pub/dsmft/CSTK/CSTK-1.22/cstk
+ CSTKLIB       = -L${CSTKLIB_DIR}/lib -lcstk
+ CSTK_INCL     = -I${CSTKLIB_DIR}/src/include
 
  VCLIP_DIR     = /pub/dsmft/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
@@ -52,7 +46,7 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. ${STL_INCL} ${NR_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${DEFS}
+ AFLAGS    = -I. ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${DEFS}
 
 
 #-----------------------------------------------------------------------------
@@ -87,41 +81,37 @@ DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
 #--------------------------------------------------------------------------
 
 #--------------------------------------------------------------------
-deps: 
+deps:: 
 	touch Dependencies
 
-libs: objs libgms.so libmp.so 
+libs:: objs libobprm.so
 
-libgms.so: $(GMS_OBJS)
-	$(CXX) -o libgms.so $(DSOFLAGS) $(GMS_OBJS)
-
-libmp.so: $(MP_OBJS)
-	$(CXX) -o libmp.so  $(DSOFLAGS) $(MP_OBJS) 
+libobprm.so:: $(OBJS)
+	$(CXX) -o libobprm.so $(DSOFLAGS) $(OBJS)
 
 #--------------------------------------------------------------------
-obprm: main_obprm.c  libs
+obprm:: main_obprm.c  libs
 	$(CXX) $(CXXFLAGS) -o obprm \
-           -rpath $(GMSLIB_DIR):$(MPLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR} \
+           -rpath OBPRMLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR} \
                 main_obprm.c \
-		$(GMSLIB) $(MPLIB) $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+		$(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
-query: main_query.c libs
+query:: main_query.c libs
 	$(CXX) $(CXXFLAGS) -o query \
-           -rpath $(GMSLIB_DIR):$(MPLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR} \
+           -rpath $(OBPRMLIB_DIR):CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR} \
                 main_query.c \
-                $(GMSLIB) $(MPLIB) $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+                $(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 	rm -f main_query.o
 
 #--------------------------------------------------------------------
-% : %.o
+% :: %.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 
 #--------------------------------------------------------------------
 
-GMS_OBJS = \
-	AttEnvironment.o \
+OBJS = \
 	Environment.o \
 	FreeBody.o \
 	FixedBody.o \
@@ -134,9 +124,7 @@ GMS_OBJS = \
 	Matrix.o \
 	Vectors.o \
 	Body.o \
-	MultiBody.o 
-
-MP_OBJS = \
+	MultiBody.o \
 	Input.o \
 	HapticInput.o \
 	Cfg.o \
@@ -156,7 +144,7 @@ MP_OBJS = \
 	QueryCmds.o \
 	Query.o 
 
-objs: $(MP_OBJS) $(GMS_OBJS)
+objs:: $(OBJS)
 
 #--------------------------------------------------------------------
 runclean::
@@ -171,8 +159,7 @@ clean::
 reallyclean::
 	rm -f query
 	rm -f obprm
-	rm -f libmp.so
-	rm -f libgms.so
+	rm -f *.so *.a
 	rm -R -f ii_files
 	rm -f *.o
 	rm -f Dependencies
@@ -182,7 +169,7 @@ reallyclean::
 # Build and update depent
 #-----------------------------------------------------------------------------
 
-Dependencies:
+Dependencies::
 	echo >Dependencies "#-*- Makefile -*-"
 
 include Dependencies

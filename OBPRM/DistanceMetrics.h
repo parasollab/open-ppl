@@ -191,7 +191,7 @@ public:
   void DefaultInit();
   void UserInit(Input *,  GenerateMapNodes*, LocalPlanners*);
 
-  double Distance(AttEnvironment *env, Cfg _c1, Cfg _c2, SID _dmsetid);
+  double Distance(Environment *env, Cfg _c1, Cfg _c2, SID _dmsetid);
 
   static double EuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
   static double ScaledEuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
