@@ -686,8 +686,9 @@ void Input::Read(istream & _is, int envFormatVersion) {
       case ENV_VER_LEGACY:
          break;
       default:
-         cerr << "\nERROR: Unrecognized environment version <"
-              << envFormatVersion << ">" << endl << endl;
+         cerr << "\nREAD ERROR: Unrecognized Environment Version \""
+              << envFormatVersion << "\""
+              <<"\n\n";
          exit(-1);
          break;
     }
