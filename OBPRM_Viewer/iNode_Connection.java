@@ -32,7 +32,7 @@ iNode_Connection extends iMultipleOptionPanel
         //
         /////////////////////////////////////////////////////////////////////////////////////////
         
-        final private String m_str_Iconname="images/nc_icon.gif";
+        final private String m_str_Iconname=iOBPRMUtility.getImageDirectory()+"nc_icon.gif";
 
         
         /////////////////////////////////////////////////////////////////////////////////////////

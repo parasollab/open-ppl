@@ -32,7 +32,7 @@ iCollision_Detection extends iMultipleOptionPanel
         //
         /////////////////////////////////////////////////////////////////////////////////////////
         
-        final private String m_str_Iconname="images/cd_icon.gif";
+        final private String m_str_Iconname=iOBPRMUtility.getImageDirectory()+"cd_icon.gif";
 
         
         /////////////////////////////////////////////////////////////////////////////////////////

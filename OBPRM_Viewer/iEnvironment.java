@@ -30,7 +30,7 @@ iEnvironment extends iOptionPanel
         //      Class data member
         //
         /////////////////////////////////////////////////////////////////////////////////////////
-        final private String m_str_env_Iconname="images/env_icon.gif";
+        final private String m_str_env_Iconname=iOBPRMUtility.getImageDirectory()+"env_icon.gif";
         iEvnOBPRM m_envOBPRM;
         iEvnQUERY m_envQUERY;
             
@@ -567,7 +567,7 @@ final class iEvnOBPRM implements CaretListener, ActionListener
         create_Components()
         {
         	int tfLength=20; //length for textfield
-        	ImageIcon open_Icon=new ImageIcon("images/Open16.gif");
+        	ImageIcon open_Icon=new ImageIcon(iOBPRMUtility.getImageDirectory()+"Open16.gif");
                 
                 //for command name
                 m_tf_cmdName=new JTextField(tfLength);
@@ -1051,7 +1051,7 @@ final class iEvnQUERY implements CaretListener, ActionListener
         private void create_Components()
         {
         	int tfLength=20; //length for textfield
-        	ImageIcon open_Icon=new ImageIcon("images/Open16.gif"); //icon for file open button.
+        	ImageIcon open_Icon=new ImageIcon(iOBPRMUtility.getImageDirectory()+"Open16.gif"); //icon for file open button.
                 
                                 
                 //for command name

@@ -100,7 +100,7 @@ import java.text.*;
                 Des_Label.setFont(new Font("Serif", Font.ITALIC, 18));
                 
                 //default button
-                JButton default_Button=new JButton(new ImageIcon("images/setdedault.gif"));
+                JButton default_Button=new JButton(new ImageIcon(iOBPRMUtility.getImageDirectory()+"setdedault.gif"));
                 default_Button.setToolTipText("Set to default values");
                 default_Button.setPreferredSize(new Dimension(18,18));
                 default_Button.addActionListener(new ActionListener() 

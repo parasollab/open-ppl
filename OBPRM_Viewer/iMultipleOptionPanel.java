@@ -464,10 +464,10 @@ iMultipleOptionPanel extends iOptionPanel implements ItemListener, ListSelection
                 listScrollPane.setPreferredSize(new Dimension(100,250));
                         
                 //Create Buttons
-                m_CreateButton=new JButton(new ImageIcon("images/New16.gif"));
-                m_DeleteButton=new JButton(new ImageIcon("images/Delete16.gif"));
-                m_UpButton=new JButton(new ImageIcon("images/Up16.gif"));
-                m_DownButton=new JButton(new ImageIcon("images/Down16.gif"));
+                m_CreateButton=new JButton(new ImageIcon(iOBPRMUtility.getImageDirectory()+"New16.gif"));
+                m_DeleteButton=new JButton(new ImageIcon(iOBPRMUtility.getImageDirectory()+"Delete16.gif"));
+                m_UpButton=new JButton(new ImageIcon(iOBPRMUtility.getImageDirectory()+"Up16.gif"));
+                m_DownButton=new JButton(new ImageIcon(iOBPRMUtility.getImageDirectory()+"Down16.gif"));
                 
                 JPanel up_down_panel=new JPanel();
                         up_down_panel.setLayout(new GridLayout(1,4));

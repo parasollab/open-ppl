@@ -31,7 +31,7 @@ iDistance_Metrics extends iMultipleOptionPanel
         //
         /////////////////////////////////////////////////////////////////////////////////////////
         
-        final private String m_str_Iconname="images/dm_icon.gif";
+        final private String m_str_Iconname=iOBPRMUtility.getImageDirectory()+"dm_icon.gif";
 
         
         /////////////////////////////////////////////////////////////////////////////////////////

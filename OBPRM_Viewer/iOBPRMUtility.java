@@ -144,6 +144,10 @@ class iOBPRMUtility
         	
         	return false;
         }
+	static public String getImageDirectory()
+	{
+		return "/share/iOBPRM/images/";		
+	}
         
         static public File getCurrentDirectory()
         {
@@ -335,9 +339,9 @@ class iOBPRMUtility
         	//create images
         	ImageIcon iconIN_OUT=null;
         	if( bIN ) //if this is a parameter for input (file or dir)
-        		iconIN_OUT = new ImageIcon("images/Import16.gif");
+        		iconIN_OUT = new ImageIcon(getImageDirectory()+"Import16.gif");
         	else	//output file/dir
-        		iconIN_OUT = new ImageIcon("images/Export16.gif");
+        		iconIN_OUT = new ImageIcon(getImageDirectory()+"Export16.gif");
 
              	//Description label
                 JLabel D_label=new JLabel(strLabel,iconIN_OUT,SwingConstants.LEFT);

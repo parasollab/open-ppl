@@ -30,6 +30,7 @@ import java.io.*;
 public class iOBPRM extends JPanel
 {
         
+	private final String str_TOOLBAR_IMG_DIR="/share/iOBPRM/images/toolbar/";
         private String str_MKMP_FileName;       //currnetly opened mkmp file name
         private String str_QRY_FileName;        //currnetly opened qry file name
 
@@ -108,7 +109,7 @@ public class iOBPRM extends JPanel
                 JToolBar toolBar = new JToolBar(SwingConstants.VERTICAL);
                 toolBar.setFont(new Font("times", Font.BOLD,10));
                 //New
-                JButton bt_New=new JButton(new ImageIcon("images/toolbar/new.gif"));
+                JButton bt_New=new JButton(new ImageIcon( str_TOOLBAR_IMG_DIR+"new.gif"));
                                         bt_New.addActionListener(new ActionListener()
                 {       public void actionPerformed(ActionEvent e) 
                         {iOBPRM.this.doNew();}
@@ -116,7 +117,7 @@ public class iOBPRM extends JPanel
                 bt_New.setToolTipText("new");
                 
                 //Open
-                JButton bt_Open=new JButton(new ImageIcon("images/toolbar/open.gif"));
+                JButton bt_Open=new JButton(new ImageIcon(str_TOOLBAR_IMG_DIR+"open.gif"));
                 bt_Open.addActionListener(new ActionListener() 
                 {       public void actionPerformed(ActionEvent e) 
                         {iOBPRM.this.doOpen();}
@@ -124,7 +125,7 @@ public class iOBPRM extends JPanel
                 bt_Open.setToolTipText("open");
                 
                 //Save
-                JButton bt_Save=new JButton(new ImageIcon("images/toolbar/save.gif"));
+                JButton bt_Save=new JButton(new ImageIcon(str_TOOLBAR_IMG_DIR+"save.gif"));
                 bt_Save.addActionListener(new ActionListener() 
                 {       public void actionPerformed(ActionEvent e) 
                         {iOBPRM.this.doSave();}
@@ -132,7 +133,7 @@ public class iOBPRM extends JPanel
                 bt_Save.setToolTipText("save");
                 
                 //Save as
-                JButton bt_SaveAs=new JButton(new ImageIcon("images/toolbar/saveas.gif"));
+                JButton bt_SaveAs=new JButton(new ImageIcon(str_TOOLBAR_IMG_DIR+"saveas.gif"));
                 bt_SaveAs.addActionListener(new ActionListener() 
                 {       public void actionPerformed(ActionEvent e) 
                         {iOBPRM.this.doSaveAs();}
@@ -140,7 +141,7 @@ public class iOBPRM extends JPanel
                 bt_SaveAs.setToolTipText("save as");
                 
                 //Run OBPRM & QUERY
-                JButton bt_Run=new JButton(new ImageIcon("images/toolbar/run.gif"));
+                JButton bt_Run=new JButton(new ImageIcon(str_TOOLBAR_IMG_DIR+"run.gif"));
                 bt_Run.addActionListener(new ActionListener() 
                 {       public void actionPerformed(ActionEvent e) 
                         {iOBPRM.this.doRun();}
@@ -148,7 +149,7 @@ public class iOBPRM extends JPanel
                 bt_Run.setToolTipText("run obprm & query");
                 
                 //Run OBPRM
-                JButton bt_RunOB=new JButton(new ImageIcon("images/toolbar/runob.gif"));
+                JButton bt_RunOB=new JButton(new ImageIcon(str_TOOLBAR_IMG_DIR+"runob.gif"));
                 bt_RunOB.addActionListener(new ActionListener() 
                 {       public void actionPerformed(ActionEvent e) 
                         {iOBPRM.this.doRunObprm();}
@@ -156,7 +157,7 @@ public class iOBPRM extends JPanel
                 bt_RunOB.setToolTipText("run obprm");
                 
                 //Run QUERY
-                JButton bt_RunQu=new JButton(new ImageIcon("images/toolbar/runqu.gif")); 
+                JButton bt_RunQu=new JButton(new ImageIcon(str_TOOLBAR_IMG_DIR+"runqu.gif")); 
                 bt_RunQu.addActionListener(new ActionListener() 
                 {       public void actionPerformed(ActionEvent e) 
                         {iOBPRM.this.doRunQuery();}
@@ -164,7 +165,7 @@ public class iOBPRM extends JPanel
                 bt_RunQu.setToolTipText("run query");
                 
                 //Stop
-                JButton bt_Stop=new JButton(new ImageIcon("images/toolbar/stop.gif"));    
+                JButton bt_Stop=new JButton(new ImageIcon(str_TOOLBAR_IMG_DIR+"stop.gif"));    
                 bt_Stop.addActionListener(new ActionListener() 
                 {       public void actionPerformed(ActionEvent e) 
                         {iOBPRM.this.doStop();}

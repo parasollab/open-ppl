@@ -32,7 +32,7 @@ iLocal_Planner extends iMultipleOptionPanel
         //
         /////////////////////////////////////////////////////////////////////////////////////////
         
-        final private String m_str_Iconname="images/lp_icon.gif";
+        final private String m_str_Iconname=iOBPRMUtility.getImageDirectory()+"lp_icon.gif";
 
         
         /////////////////////////////////////////////////////////////////////////////////////////

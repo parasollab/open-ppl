@@ -31,7 +31,7 @@ iNode_Generation extends iMultipleOptionPanel
         //
         /////////////////////////////////////////////////////////////////////////////////////////
         
-        final private String m_str_Iconname="images/ng_icon.gif";
+        final private String m_str_Iconname=iOBPRMUtility.getImageDirectory()+"ng_icon.gif";
         
         //check if clearance will be calulated for every generated nodes
         private boolean m_bCalculateClearance;
