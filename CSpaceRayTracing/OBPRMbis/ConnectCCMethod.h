@@ -137,31 +137,11 @@ ConnectMapNodes* cn;
 // A collection of component connection methods
 class ConnectMapComponents {
  public:
-  ConnectMapComponents() {
-    selected.clear();
-    all.clear();
-    //need to fill out the vector of connection_methods 
-
-    TestConnectionMethod* test= new TestConnectionMethod();
-    all.push_back(test);    
-
-    RRTConnectionMethod* rrt = new RRTConnectionMethod();
-    all.push_back(rrt);
-
-    RayTracerConnectionMethod* rt = new RayTracerConnectionMethod();
-    all.push_back(rt);
-  }
+  ConnectMapComponents();
   ConnectMapComponents(Input * input,Roadmap * rdmp, CollisionDetection* cd, 
-                               DistanceMetric* dm, LocalPlanners* lp, 
-                               ConnectMapNodes* cn){
-    RRTConnectionMethod* rrt = new RRTConnectionMethod(input,rdmp,cd,dm,lp,cn);
-    all.push_back(rrt);  
-  }
-
-  ~ConnectMapComponents() {
-    selected.clear();
-    all.clear();
-  }
+		       DistanceMetric* dm, LocalPlanners* lp, 
+		       ConnectMapNodes* cn);
+  ~ConnectMapComponents();
 
   static vector<ComponentConnectionMethod *> GetDefault() {
     vector<ComponentConnectionMethod *> tmp;
@@ -181,8 +161,9 @@ class ConnectMapComponents {
     return tmp;
   }
 
-  //Fill connectCC_command_line_options with (tag options) from the command line
   int ReadCommandLine(int *argc, char **argv) {
+    ReadCommandLineCollection(argc, argv); //Review if this is how we want it
+
     selected.clear();
     vector<ComponentConnectionMethod *>::iterator itr;
     for ( itr = all.begin(); itr != all.end(); itr++ )
@@ -191,6 +172,15 @@ class ConnectMapComponents {
     if ( selected.size() == 0 )
       selected = ConnectMapComponents::GetDefault();
   }
+
+  //
+  int ReadCommandLineCollection(int *argc, char **argv);
+  //Output usage of ConnectMapComponents collection
+  void PrintUsage(ostream& _os, char *executable_name);
+  //Output values of parameters of ConnectMapComponents collection
+  void PrintValues(ostream& _os);
+  //Output default values of ConnectMapComponents collection
+  void PrintDefaults();
 
   void ConnectComponents(/**/) {
     vector<ComponentConnectionMethod *>::iterator itr;
@@ -204,9 +194,11 @@ class ConnectMapComponents {
 
   vector<string> component_connection_command_line_options;//double check whether we want this
 
+  
+
   //input string options are put in the following variables
-  str_param<char*> defaultFile;
-  str_param<char*> mapFile; //roadmap
-  n_str_param option_str; //component connection options
+  str_param<char*> default_file;
+  str_param<char*> map_file; //roadmap
+  n_str_param options; //component connection options
 };
 
