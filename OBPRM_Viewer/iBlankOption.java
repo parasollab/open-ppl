@@ -97,7 +97,7 @@ import java.text.*;
                 //des & set Default button
                 JPanel Des_Panel=new JPanel();
                 JLabel Des_Label=new JLabel(toString());
-                Des_Label.setFont(new Font("Serif", Font.ITALIC, 18));
+                Des_Label.setFont(new Font("times", Font.ITALIC, 18));
                 
                 //default button
                 JButton default_Button=new JButton(new ImageIcon(iOBPRMUtility.getImageDirectory()+"setdedault.gif"));
