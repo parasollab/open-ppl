@@ -70,9 +70,9 @@ public:
   #define MAX_CFG	     10
   #define FILENAME_LENGTH    80
   #define MAX_MULTIBODY      50
-  #define MAX_CONNECTION     50
+  #define MAX_CONNECTION     500
   #define MAX_FIXEDBODY      50
-  #define MAX_FREEBODY       50
+  #define MAX_FREEBODY       500
 #else
   static const int ARGSTRING_LENGTH = 256;	// used by motion planning
   static const int MAX_CN           =  10;
@@ -84,9 +84,9 @@ public:
 
   static const int FILENAME_LENGTH  =  80;	// GMS stuff uses these
   static const int MAX_MULTIBODY    =  50;
-  static const int MAX_CONNECTION   =  50;
+  static const int MAX_CONNECTION   =  500;
   static const int MAX_FIXEDBODY    =  50;
-  static const int MAX_FREEBODY     =  50;
+  static const int MAX_FREEBODY     =  500;
 #endif
 
     //-----------------------------------------------------------
