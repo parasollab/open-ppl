@@ -71,32 +71,6 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
     /**@name Help methods*/
     //@{
-
-        /**Try to connect given Cfg to given connected component.
-          *This method tries to connect every Cfgs in given 
-          *connected component to this given Cfg.
-          *(Cfgs in cc are sorted before connecting)
-          *
-          *@param _cfg connect this Cfg to connected component.
-          *@param _cc A list of Cfgs in same connected component.
-          *@param _vid if Connection is made then this parameter will
-          *be set as the id of vertex (Cfg) in the roadmap graph. If
-          *no connection is made, this parameter will be set as 
-          *INVALID_VID.
-          *@param _ci Connected path will be put in here.
-          *
-          *@see ConnectMap::SortByDistFromCfg
-          */
-        virtual 
-	  bool CanConnectToCC(CFG _cfg, Stat_Class& Stats,
-			      CollisionDetection *cd,
-			      ConnectMap<CFG, WEIGHT> *cn, 
-			      LocalPlanners<CFG,WEIGHT> *lp,
-			      DistanceMetric *dm,
-			      vector<CFG> _cc, 
-			      VID *_vid,
-			      LPOutput<CFG,WEIGHT> *_ci);
-
 	virtual
 	  bool CanRecreatePath(vector<pair<CFG,WEIGHT> >& attemptedPath,
 			       Stat_Class& Stats, CollisionDetection* cd, 
@@ -208,6 +182,28 @@ public:
 };
 
 
+template <class CFG, class WEIGHT>
+class QueryConnect : public ConnectMap<CFG,WEIGHT> {
+ public:
+  QueryConnect() : ConnectMap<CFG,WEIGHT>() {}
+  QueryConnect(Roadmap<CFG,WEIGHT>* rm, CollisionDetection* cd,
+	       DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp) :
+    ConnectMap<CFG,WEIGHT>() {}
+  ~QueryConnect() {
+    selected.clear();
+    all.clear();
+  }
+
+  virtual vector<ConnectionMethod<CFG,WEIGHT>*> GetDefault() {
+    vector<ConnectionMethod<CFG,WEIGHT>*> tmp;
+    ConnectFirst<CFG,WEIGHT>* connectFirst = new ConnectFirst<CFG,WEIGHT>();
+    connectFirst->SetDefault();
+    tmp.push_back(connectFirst);
+    return tmp;
+  }
+};
+
+
 #include "Environment.h"
 #include "GraphAlgo.h"
 #include "QueryCmds.h"
@@ -260,7 +256,8 @@ bool
 Query<CFG, WEIGHT>::
 PerformQuery(Stat_Class& Stats, CollisionDetection* cd, ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm) 
 {
-  for(vector<CFG>::iterator Q = query.begin(); (Q+1) != query.end(); ++Q) {
+  for(typename vector<CFG>::iterator Q = query.begin(); 
+      (Q+1) != query.end(); ++Q) {
     cout << "\nquery is ...     ";
     Q->Write(cout);
     cout << "\n                 ";
@@ -311,21 +308,33 @@ PerformQuery(CFG _start, CFG _goal, Stat_Class& Stats, CollisionDetection* cd,
     GetCC(*(rdmp.m_pRoadmap), cc_cfg, cc);
 
     //attempt to connect start and goal to cc
-    cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]" << endl;
-    CanConnectToCC(_start, Stats,cd,cn,lp,dm, cc,&scvid,&sci);
-    cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]" << endl;
-    CanConnectToCC(_goal,  Stats,cd,cn,lp,dm, cc,&gcvid,&gci);
+    bool addPartialEdge = false; //??
+    bool addAllEdges = false; //??
+    vector<vector<CFG> > verticesList(2);
+    verticesList[1] = cc;
+
+    cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
+    verticesList[0].push_back(_start);
+    cn->ConnectComponents(&rdmp, Stats, cd, dm, lp, false, false,
+			 verticesList);
+
+    cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
+    verticesList[0].clear();
+    verticesList[0].push_back(_goal);
+    cn->ConnectComponents(&rdmp, Stats, cd, dm, lp, false, false,
+			 verticesList);
 
     connected = false;
+    vector<pair<CFG,WEIGHT> > rp;
     while(IsSameCC(*(rdmp.m_pRoadmap), svid, gvid)) {
-      cout << "\nStart(" << svid
-	   << ") and Goal(" << gvid
+      //get DSSP path
+      rp.clear();
+      FindPathDijkstra(*(rdmp.m_pRoadmap), svid, gvid, rp);
+
+      cout << "\nStart(" << rdmp.m_pRoadmap->GetVID(rp[1].first)
+	   << ") and Goal(" << rdmp.m_pRoadmap->GetVID(rp[rp.size()-2].first)
 	   << ") seem connected to same CC[" << distance(ccsBegin, CC)+1 
 	   << "]!" << endl;
-      
-      //get DSSP path
-      vector<pair<CFG,WEIGHT> > rp;
-      FindPathDijkstra(*(rdmp.m_pRoadmap), svid, gvid, rp);
     
       //attempt to recreate path
       vector<CFG> recreatedPath;
@@ -347,7 +356,8 @@ PerformQuery(CFG _start, CFG _goal, Stat_Class& Stats, CollisionDetection* cd,
       //Print out all start, all graph nodes, goal
       //ie, *NO* "ticks" from local planners
       vector<CFG> _mapcfgs;
-      for(vector<pair<CFG,WEIGHT> >::iterator I = rp.begin(); I != rp.end() ++I)
+      for(typename vector<pair<CFG,WEIGHT> >::iterator I = rp.begin(); 
+	  I != rp.end(); ++I)
         _mapcfgs.push_back(I->first);
       WritePathConfigurations("mapnodes.path", _mapcfgs, rdmp.GetEnvironment());
 #endif
@@ -357,46 +367,6 @@ PerformQuery(CFG _start, CFG _goal, Stat_Class& Stats, CollisionDetection* cd,
   
   return connected;
 };
-
-template <class CFG, class WEIGHT>
-bool
-Query<CFG, WEIGHT>::
-CanConnectToCC(CFG _cfg, Stat_Class& Stats, CollisionDetection* cd,
-	       ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, 
-	       DistanceMetric* dm, vector<CFG> _cc, 
-	       VID* _vid, LPOutput<CFG,WEIGHT>*_ci) {
-   // erase previous connection attempt. 
-   _ci->path.erase(_ci->path.begin(),_ci->path.end() );
-
-   // sort the cfgs in _cc by distance from _cfg
-   vector<ConnectionMethod<CFG,WEIGHT>*> selected = cn->GetDefault();
-   typename vector<ConnectionMethod<CFG,WEIGHT>*>::iterator first_method = selected.begin();
-   (*first_method)->SortByDistFromCfg(rdmp.GetEnvironment(),dm,_cfg,_cc);
-
-   // try to connect _cfg to (closest) config in _cc 
-   // (now try all, later only k closest)
-   for (vector<CFG>::iterator I = _cc.begin(); I != _cc.end(); ++I) {
-     if (!rdmp.m_pRoadmap->IsEdge(_cfg, *I) && 
-	 lp->IsConnected(rdmp.GetEnvironment(), Stats, cd, dm, _cfg, *I, 
-			 _ci, rdmp.GetEnvironment()->GetPositionRes(), 
-			 rdmp.GetEnvironment()->GetOrientationRes(), 
-			 true, true)) {
-       *_vid = rdmp.m_pRoadmap->GetVID(*I);
-       VID _cfgVID;
-       if(rdmp.m_pRoadmap->IsVertex(_cfg))
-	 _cfgVID = rdmp.m_pRoadmap->GetVID(_cfg);
-       else
-	 _cfgVID = rdmp.m_pRoadmap->AddVertex(_cfg);
-       rdmp.m_pRoadmap->AddEdge(_cfgVID, *_vid, _ci->edge);
-       return true;
-     } else {
-       // clear out previous (ie, "old") connection attempt
-       _ci->path.erase(_ci->path.begin(), _ci->path.end());
-     }     
-   }
-   *_vid = INVALID_VID;
-   return false;
-}
 
 
 template <class CFG, class WEIGHT>
@@ -408,7 +378,7 @@ CanRecreatePath(vector<pair<CFG,WEIGHT> >& attemptedPath,
 		vector<CFG>& recreatedPath) {
   LPOutput<CFG,WEIGHT> ci;
 
-  for(vector<pair<CFG,WEIGHT> >::iterator I = attemptedPath.begin(); 
+  for(typename vector<pair<CFG,WEIGHT> >::iterator I = attemptedPath.begin(); 
       (I+1) != attemptedPath.end(); ++I) {
     if(!(lp->GetPathSegment(rdmp.GetEnvironment(), Stats, cd, dm,
 			    I->first, (I+1)->first, I->second, &ci,
