@@ -49,10 +49,10 @@ default: libs
 
 libs: objs $(OBPRM_LIBFILE)
 
-libobprm.a: $(OBJS)
+libobprm.a: objs
 	$(AR) libobprm.a $(OBJS)
 
-libobprm.so: $(OBJS)
+libobprm.so: objs
 	$(CC) -shared $(OPTS) $(INCLUDES) $(DEFS) $(OBJS) -o libobprm.so
 
 %: main_%.cpp libs
