@@ -80,11 +80,11 @@ showdefs ::
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
 #--------------------------------------------------------------------------
- CC = g++ 
+ CC = /share/gnu/bin/g++ 
 
 #CC = /pub/gnu_sgi/bin/g++
 
-CXX = g++
+CXX = /share/gnu/bin/g++
 
 # -- for development on our O2s
 # -- (fast_compile/bad_code, medium_compile/code, verbose) -- 
