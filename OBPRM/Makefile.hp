@@ -120,6 +120,7 @@ OBJS = \
 	Vectors.o \
 	Body.o \
 	MultiBody.o \
+        Parameters.o \
 	Input.o \
 	HapticInput.o \
         Haptic.o \

@@ -1,32 +1,27 @@
 // $Id$
+
 /////////////////////////////////////////////////////////////////////
-//
-//  GenerateMapNodes.h
-//
-//  General Description
-//      This set of classes supports a "RoadMap Node Generation Algobase".
-//      Generate roadmap nodes and enter each as a graph node.
-//
-//      The classes in the set are:
-//        o GN            -- info related to an individual method of node
-//                              generation
-//        o GNSets        -- contains 'master' list of all generation methods
-//                           and maintains sets of generation methods
-//                           (derived from BasicSets<GN>)
-//        o GenerateMapNodes
-//                        -- has GNSets as data element, and its methods
-//                           include the actual generation algorithms.
-//                           A 'wrapper' method cycles thru sets of gn's.
-//
-//       Each GN element is given a unique id, which is used to compose
-//              hmmm, I don't know what...
-//
-//  Created
-//      8/27/98  Lucia K. Dale
-//
-//  Last Modified
-//      8/21/99  Lucia K. Dale  added GaussPRM
-//
+/**@file GenerateMapNodes.h
+        This set of classes supports a "RoadMap Node Generation Algobase".
+        Generate roadmap nodes and enter each as a graph node.
+  
+        The classes in the set are:
+          o GN            -- info related to an individual method of node
+                                generation
+          o GNSets        -- contains 'master' list of all generation methods
+                             and maintains sets of generation methods
+                             (derived from BasicSets<GN>)
+          o GenerateMapNodes
+                          -- has GNSets as data element, and its methods
+                             include the actual generation algorithms.
+                             A 'wrapper' method cycles thru sets of gn's.
+  
+         Each GN element is given a unique id, which is used to compose
+                hmmm, I don't know what...
+  
+    @author Lucia K. Dale
+    @date   8/27/98
+*/
 /////////////////////////////////////////////////////////////////////
 
 #ifndef GenerateMapNodes_h
@@ -53,9 +48,10 @@
 #define MAX_NODES_PER_OBST 5000
 
 //---------------------------------------------------------------
-//  Pre-defined Algobase Sets
-//  CAUTION:  DO NOT CHANGE THE ENUMERATION ORDERS w/o CHANGING
-//              SET DEFN's in "GenerateMapNodes.c"
+/** Pre-defined Algobase Sets
+    @warning DO NOT CHANGE THE ENUMERATION ORDERS w/o CHANGING
+                SET DEFN's in "GenerateMapNodes.c"
+*/
 //---------------------------------------------------------------
 enum gn_predefined {    //----------------
         BASICPRM,       // Probabalistic roadmap
@@ -63,9 +59,8 @@ enum gn_predefined {    //----------------
         GN_USER1};      // first user defined gn set, if any
 
 //---------------------------------------------------------------
-// Algo base information data structures
+/// Algo base information data structure
 //---------------------------------------------------------------
-
 struct GNInfo {
     SID gnsetid;        // generator set id
     SID cdsetid;        // collision detection set id
@@ -90,72 +85,89 @@ class Roadmap;
 class Environment;
 class DistanceMetric;
 
-typedef void (*GNF) (Environment*, CollisionDetection*,DistanceMetric*,GN&, GNInfo&);  // pointer to gn function
+/// pointer to gn function
+typedef void (*GNF) (Environment*, CollisionDetection*,DistanceMetric*,GN&, GNInfo&);
 
 
 /////////////////////////////////////////////////////////////////////
-//  class GN
-//
-//  General Description
-//     This class contains information relevant to a particular
-//     map node generator (e.g., name, ptr to function, etc).
-//
-//
+/** class GN
+    This class contains information relevant to a particular
+    map node generator (e.g., name, ptr to function, etc).
+*/
 /////////////////////////////////////////////////////////////////////
 class GN {
   friend class GNSets;
 public:
 
   //===================================================================
-  // Constructors and Destructor
+  /**@name Constructors and Destructor */
   //===================================================================
+  //@{
+  ///Default constructor. Initialize its data member to invalid values.
   GN();
+  ///Destructor. Currently do nothing.
   ~GN();
+  //@}
 
   //===================================================================
-  // Operators
+  /**@name Operator overloading*/
   //===================================================================
+  //@{
+  /**Compare name of given GN with name of this instance.
+    @param _gn the name of this GN is compared with name of this instance.
+    @return True, if names of these two instance are the same. Otherwise False.
+    */
   bool operator==(const GN&) const;
+  //@}
 
   //===================================================================
-  // Other Methods
+  /**@name Access Methods
+    All of these functions used for getting values of datamembers.
+    */
   //===================================================================
+  //@{
   char*  GetName() const;
   GNF    GetGenerator();
   EID    GetID() const;
+  //@}
 
   //===================================================================
-  // Usage Documentation Methods for generation heuristics
+  /**@name Usage Documentation Methods
+    Methods are used to print out incrementally useful documentation
+    messages about proper usage based on the type of "bad" usage observed.
+    */
   //===================================================================
+  //@{
   void  PrintUsage_All(ostream& _os);
   void  PrintUsage_BasicPRM(ostream& _os);
   void  PrintUsage_BasicOBPRM(ostream& _os);
   void  PrintUsage_OBPRM(ostream& _os);
   void  PrintUsage_GaussPRM(ostream& _os);
   void  PrintUsage_BasicMAPRM(ostream& _os);
-
-  //===================================================================
-  // Data
-  //===================================================================
+  //@}
 
 public:
-    num_param<int>    numNOdes;
-    num_param<int>    numShells;
-    num_param<double> proportionSurface;
-    n_str_param       collPair;
-    n_str_param       freePair;
-    num_param<double> clearanceFactor;
-    num_param<double> gauss_d;
+  //===================================================================
+  /**@name Data
+    All of these functions used for getting values of datamembers.
+  //===================================================================
+    */
+  //@{
+    num_param<int>    numNOdes;    /// number of nodes to generate
+    num_param<int>    numShells;   /// number of shells to retain
+    num_param<double> proportionSurface; /// proportion of free nodes to surface
+    n_str_param       collPair;    /// (surface nodes) collision pair
+    n_str_param       freePair;    /// (free nodes)     free pair
+    num_param<double> clearanceFactor; 
+    num_param<double> gauss_d;     /// distance from surface to retain Gausian
 
 //slm fix numNOdes to be the "real" numNodes
 
 protected:
-  //===================================================================
-  // Data
-  //===================================================================
-  char   name[80];
+  char   name[80];           // method name in character format
   GNF    generator;          // ptr to generator code
   EID    gnid;
+  //@}
 
 private:
 
@@ -166,36 +178,36 @@ ostream& operator<< (ostream&, const GN& );
 
 
 /////////////////////////////////////////////////////////////////////
-//  class GNSets
-//
-//  General Description
-//     This class is derived from BasicSets<GN>.
-//
-//     This class manages/contains:
-//        o a 'master' list of all generators, and
-//        o sets of generators
-//
-//     Each generator and set is given a unique id. The gn ids (EIDs)
-//     are used to compose labels encoding generator sets (used, e.g.,
-//     to record
-//
+/**This class is derived from BasicSets<GN>.
+   This class manages/contains:
+          o a 'master' list of all generators, and
+          o sets of generators
+  
+       Each generator and set is given a unique id. The gn ids (EIDs)
+       are used to compose labels encoding generator sets (used, e.g.,
+       to record
+  
+  */
 /////////////////////////////////////////////////////////////////////
 class GNSets : public BasicSets<GN> {
 public:
+
   //===================================================================
-  //  Constructors and Destructor
+  /**@name Constructors and Destructor */
   //===================================================================
-    GNSets();
-    ~GNSets();
+  //@{
+  ///Default constructor. Initialize its data member to invalid values.
+  GNSets();
+  ///Destructor. Currently do nothing.
+  ~GNSets();
+  //@}
 
   //===================================================================
   //  Other Methods
   //===================================================================
 
-        // Setting up any default values for sets
-  void   PutDefaults(Environment *_env);
-
-        // Adding GNs, Making & Modifying GN sets
+   /**@name Adding GNs, Making & Modifying GN sets */
+   //@{
    int AddGN(const char*);     // add gn(s) to universe
    int AddGNToSet(const SID, const EID);
    int DeleteGNFromSet(const SID, const EID);
@@ -206,14 +218,21 @@ public:
    SID MakeGNSet(const vector<EID> );
 
    int DeleteGNSet(const SID _sid);
+   //@}
 
-        // Getting Data & Statistics
+   /// Setting up any default values for sets
+  void   PutDefaults(Environment *_env);
+
+   /**@name Getting Data & Statistics */
+   //@{ 
    GN GetGN(const EID ) const;
    vector<GN> GetGNs() const;
    vector<GN> GetGNSet(const SID ) const;
    vector<pair<SID,vector<GN> > > GetGNSets() const;
+   //@}
 
-        // Display, Input, Output
+   /**@name Display, Input, Output */
+   //@{ 
    void DisplayGNs() const;
    void DisplayGN(const EID ) const;
    void DisplayGNSets() const;
@@ -223,128 +242,172 @@ public:
    void WriteGNs(ostream& ) const;
    void ReadGNs(const char* _fname);
    void ReadGNs(istream& );
+   //@}
 
   //===================================================================
-  //  Data
+  // Data
   //===================================================================
+public:
 protected:
 private:
 };
 
 /////////////////////////////////////////////////////////////////////
-//  class GenerateMapNodes
-//
-//  General Description
-//     This is the main generator class. It has an GNSets object
-//     as a data element (list of gns and gn sets), and its methods
-//     include the actual map node generator algorithms:
-//        o probabalistic roadmap (PRM)
-//        o simple binary search
-//
-//     'Wrapper' methods cycle thru sets of gns, stopping upon 1st
-//     success or trying all.
-//
+/** class GenerateMapNodes
+    General Description
+       This is the main generator class. It has an GNSets object
+       as a data element (list of gns and gn sets), and its methods
+       include the actual map node generator algorithms:
+          o probabalistic roadmap (PRM)
+          o simple binary search
+  
+       'Wrapper' methods cycle thru sets of gns, stopping upon 1st
+       success or trying all.
+*/  
 /////////////////////////////////////////////////////////////////////
-
 class GenerateMapNodes {
    friend SID MakeGNSet(istream&);
 public:
+
+
   //===================================================================
-  // Constructors and Destructor
+  /**@name Constructors and Destructor */
   //===================================================================
+  //@{
+  ///Default constructor. Initialize its data member to invalid values.
   GenerateMapNodes();
+  ///Destructor. Currently do nothing.
   ~GenerateMapNodes();
+  //@}
 
   //===================================================================
-  // Other Methods
+  /**@name Initialization Methods */
   //===================================================================
-
+  //@{
   void DefaultInit();
   void UserInit(Input * input, Environment *_env);
+  //@}
 
-  void GenerateNodes(Roadmap*, CollisionDetection*,DistanceMetric*,SID, GNInfo&);
+  //===================================================================
+  /**@name Drivers for Node Generation (may call more than one`
+     "Actual Node Generation Heuristic" in sets */
+  //===================================================================
+  //@{
+  void GenerateNodes(Roadmap*, CollisionDetection*,DistanceMetric*,
+                     SID, GNInfo&);
+  //@}
 
+  //===================================================================
+  /**@name Actual Node Generation Heuristics */
+  //===================================================================
+  //@{
+  /// Basic Randomized (probabilistic) Node Generation
   static
   void BasicPRM
 	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
-
+  /// Basic, no frills,  Obstacle Based Node Generation 
   static
   void BasicOBPRM
 	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
-
   static
+  /** Obstacle Based Node Generation  with some nifty enhancements such
+  shells, alternative seed picking heuristics, and some free nodes
+  */
   void OBPRM
        	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
-
+  /** Filters randomly generated nodes in such a way that a "Gaussian" 
+   distribution on obstacle surfaces is retained.
+  */
   static
   void GaussPRM
 	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
-
+  /// Moves randomly generated nodes to some point on the medial axis
   static
   void BasicMAPRM
-  (Environment *_env, CollisionDetection* cd, DistanceMetric *dm, GN& _gn, GNInfo &_info);
+	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
+  //@}
 
-  static
-  void MoveToMedialAxis
-  (Cfg &cfg, vector<Cfg> *path, Environment *_env, CollisionDetection* cd, DistanceMetric *dm, GN& _gn, GNInfo &_info);
 
+
+  //===================================================================
+  /**@name Helper Methods for Heuristics (public) */
+  //===================================================================
+  //@{
+
+  /// validate values specified for collision and free pairs
   static
   bool ValidateParameters(Input*);
 
   static
-  vector<Cfg>
+  void MoveToMedialAxis
+  (Cfg &cfg, vector<Cfg> *path, Environment *_env, 
+   CollisionDetection* cd, DistanceMetric *dm, GN& _gn, GNInfo &_info);
+
+  static vector<Cfg>
   GenerateSurfaceCfg(Environment*, CollisionDetection *,
-			DistanceMetric*,GNInfo& ,
-                   int, int, Cfg, Cfg);
+			    DistanceMetric*, GNInfo&, int, int, Cfg, Cfg);
 
   static vector<Cfg>
-  GenerateSurfaceCfg(Environment*, CollisionDetection*,DistanceMetric*,GNInfo&,
-                   int, int, Cfg, Cfg,double);
+  GenerateSurfaceCfg(Environment*, CollisionDetection*,
+                            DistanceMetric*,GNInfo&, int, int, Cfg, Cfg,double);
 
   static vector<Cfg>
-  GenSurfaceCfgs4Obst(Environment * env,CollisionDetection *,DistanceMetric* dm, int obstacle, int nCfgs, GNInfo &_info);
+  GenSurfaceCfgs4Obst(Environment * env,CollisionDetection *,
+                            DistanceMetric* dm, int obstacle, int nCfgs, 
+                            GNInfo &_info);
 
   static vector<Cfg>
-  GenSurfaceCfgs4Obst(Environment * env,CollisionDetection *,DistanceMetric* dm, 
-    int obstacle, int nCfgs, GNInfo &_info, double clearanceFactor);
+  GenSurfaceCfgs4Obst(Environment * env,CollisionDetection *,
+                            DistanceMetric* dm, int obstacle, int nCfgs, 
+                            GNInfo &_info, double clearanceFactor);
 
   static vector<Cfg>
-  GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection *,DistanceMetric* dm, int obstacle, int nCfgs, GNInfo &_info);
+  GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection *,
+                            DistanceMetric* dm, int obstacle, int nCfgs, 
+                            GNInfo &_info);
 
   static vector<Cfg>
-  GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection *,DistanceMetric* dm, 
-    int obstacle, int nCfgs, GNInfo &_info, double clearanceFactor);
+  GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection *,
+                            DistanceMetric* dm, int obstacle, int nCfgs, 
+                            GNInfo &_info, double clearanceFactor);
+  //@}
 
-//===================================================================
-// protected method implementations
-//===================================================================
+  //===================================================================
+  /**@name Helper Methods for Heuristics (protected) */
+  //===================================================================
+  //@{
 protected:
 
+  /// any two of these are valid values for collision and free pairs
   enum PairOptions {cM,rV,rT,rE,rW,cM_rV,rV_rT,rV_rW,N_rT,all,INVALID_OPTION};
 
+  /// character specification of PairOptions must be converted to enum
   static
   int TranslateOptionCode(char*, n_str_param);
 
+  /// validate values specified for collision *or* free pairs
   static
   bool ValidatePairs(char*, n_str_param, pair<int,int>*);
 
+  /// generate seeds in specified (user or default) manner
   static void
   GenerateSeeds(Environment*, CollisionDetection *,GNInfo&,
 		int, int, int, int, vector<Cfg>*);
 
-/// Generates random cfgs within a specified area around a given cfg
+  /// generates random cfgs within a specified area around a given cfg
   static void
   Spread(Cfg, double, double, int, vector<Cfg>* );
 
-/// Returns the first n free cfgs from a given vector of cfgs.  Returns all
-/// free cfgs if there are less than n.
+  /** returns the first n free cfgs from a given vector of cfgs.  Returns all
+  free cfgs if there are less than n. */
   static vector<Cfg>
   FirstFreeCfgs(Environment*, CollisionDetection*, vector<Cfg>, GNInfo&, int);
 
-/// Return all free cfgs in the given vector of cfgs.
+  /// return all free cfgs in the given vector of cfgs.
   static vector<Cfg>
   FirstFreeCfgs(Environment*, CollisionDetection*,vector<Cfg>, GNInfo&);
 
+  /// given a vector of cfg's return only those which are in the bounding box
   static vector<Cfg>
   InsideBoundingBox(Environment*, vector<Cfg>);
 
@@ -373,35 +436,41 @@ protected:
   Shells(vector<Cfg>, int);
 
   static bool
-  GenerateInsideCfg(Environment*, CollisionDetection* cd, int, int, Cfg*, GNInfo &_info);
+  GenerateInsideCfg(Environment*, CollisionDetection* cd, 
+                    int, int, Cfg*, GNInfo &_info);
 
   static Cfg
-  GenerateOutsideCfg(Environment*, CollisionDetection*,int, int, Cfg, Cfg, GNInfo&);
+  GenerateOutsideCfg(Environment*, CollisionDetection*,
+                    int, int, Cfg, Cfg, GNInfo&);
 
   static vector<Cfg>
-  GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, int obstacle, int nCfgs, GNInfo &_info);
+  GenCfgsFromCObst(Environment * env,CollisionDetection* cd,
+                    DistanceMetric * dm, int obstacle, int nCfgs, 
+                    GNInfo &_info);
 
   static vector<Cfg>
-  GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, 
-     int obstacle, int nCfgs, GNInfo &_info, double clearanceFactor);
+  GenCfgsFromCObst(Environment * env,CollisionDetection* cd,
+                    DistanceMetric * dm, int obstacle, int nCfgs, 
+                    GNInfo &_info, double clearanceFactor);
 
   static vector<Cfg>
   GenFreeCfgs4Obst(Environment * env,CollisionDetection *,
-			 int obstacle, int nCfgs, GNInfo &_info);
-
+                    int obstacle, int nCfgs, GNInfo &_info);
+  //@}
 
   //===================================================================
-  // Data
+  /**@name Data */
   //===================================================================
-
 public:
-  GNSets generators;
-  GNInfo gnInfo;
+  GNSets generators;  /// actual generators
+  GNInfo gnInfo;      /// information passes to and from generators
 
 protected:
-  static const int MAX_CONVERGE = 20;
+  /// max. # of attempts at surface convergence
+  static const int MAX_CONVERGE = 20;  
 
 private:
+  //@}
 };
 
 
@@ -410,7 +479,6 @@ private:
 // This ought to be placed elsewhere, but at the moment
 // it - along with Medial Axis is "in development"
 // so it is stuck here - do NOT count on it remaining here !!!
-//---------------------------------------------------------------
 // The code comes from Numerical Recipes in C, pages 274 - 285
 //---------------------------------------------------------------
 #define MBIG    1000000000
@@ -419,6 +487,5 @@ private:
 #define FAC ((float)1.0 / MBIG)
 
 float Ran3(long *idum);
-//---------------------------------------------------------------
 
 #endif
