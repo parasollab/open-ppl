@@ -347,14 +347,14 @@ void Input::ReadCommandLine(int argc, char** argv){
 
 void Input::ReadNumberofJoints(istream &is) {
   if(is) {
-    numofJoints = 3;
-    if(is) {
-      is >> numofJoints;
+    if(is >> numofJoints) {
       if(numofJoints < 0 || numofJoints > 1000) {
 	cerr << "Error in Input.cpp, wrong input for numofJoints !" << endl;
 	exit(2);
       }
-    } 
+    } else {
+      numofJoints = 3;
+    }
   }
 }
 
