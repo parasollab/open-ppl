@@ -22,6 +22,15 @@ Body::Body(MultiBody * _owner) {
     forwardConnection = 0;
     backwardConnection = 0;
     CenterOfMassAvailable = false;
+#ifdef USE_VCLIP
+    vclipBody=NULL;    ///<VCLIP internal model
+#endif
+#ifdef USE_RAPID
+    rapidBody=NULL; ///<RAPID internal model
+#endif
+#ifdef USE_PQP
+    pqpBody=NULL; ///<PQP internal model
+#endif
 }
 
 Body::Body(MultiBody * _owner, GMSPolyhedron & _polyhedron) {
@@ -33,6 +42,16 @@ Body::Body(MultiBody * _owner, GMSPolyhedron & _polyhedron) {
     forwardConnection = 0;
     backwardConnection = 0;
     CenterOfMassAvailable = false;
+#ifdef USE_VCLIP
+    vclipBody=NULL;    ///<VCLIP internal model
+#endif
+#ifdef USE_RAPID
+    rapidBody=NULL; ///<RAPID internal model
+#endif
+#ifdef USE_PQP
+    pqpBody=NULL; ///<PQP internal model
+#endif
+
 }
 
 Body::~Body() {

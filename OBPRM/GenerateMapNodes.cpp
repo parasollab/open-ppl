@@ -25,6 +25,7 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "DistanceMetrics.h"
+#include "BasicMAPRM.h"
 
 #include "Clock_Class.h"
 #include "util.h"
@@ -499,338 +500,8 @@ GenerateMapNodes::
 BasicMAPRM(Environment *_env, CollisionDetection* cd, 
            DistanceMetric *dm,GN& _gn, GNInfo &_info)
 {
-	bool     collided, reverse_tried;
-	bool     take_first_non_collide;
-	Cfg      cfg, orig_cfg, non_collide_cfg;
-	Cfg      move_out_dir_cfg;
-	long     steps_out, min_steps_out;
-	long     attempts_out;
-	long     max_tries_out;
-	double   *bb, x_scale, y_scale, z_scale;
-	long     seed;
-	
-	bb = _env->GetBoundingBox();
-	
-#ifndef QUIET
-	cout << endl << "Begin BasicMAPRM..." << endl;
-	cout << "(numNodes=" << _gn.numNodes.GetValue() << ") " << endl;
-	cout << "_env PositionRes  = " << _env->GetPositionRes() << endl;
-	cout << "Expansion Factor  = " << EXPANSION_FACTOR << endl;
-	
-	cout << "Bounding box min is " << bb[0] << " " << bb[2] << " " << bb[4] << endl;
-	cout << "             max is " << bb[1] << " " << bb[3] << " " << bb[5] << endl;
-#endif
-	
-#if INTERMEDIATE_FILES
-	vector<Cfg> path; 
-	path.reserve(_gn.numNodes.GetValue());
-#endif
-	
-	seed = -3;  // must be a negative number
-	x_scale = bb[1] - bb[0];
-	y_scale = bb[3] - bb[2];
-	z_scale = bb[5] - bb[4];
-	
-	for (int i=0; i < _gn.numNodes.GetValue(); i++)
-	{
-		// Get a random configuration that STARTS in the bounding box of env
-		cfg = Cfg::GetRandomCfg(_env);  // should always be in bounding box
-		
-		// Below is a temporary HACK -- use cfg = Cfg::GetRandomCfg(_env) 
-		// for more "defined" results
-		// Get a UNIFORM random configuration that starts in bounding box
-		//      max_rnd_cfg_attempts = 50;
-		//      while (max_rnd_cfg_attempts > 0)
-		//      {
-		// Ran3 is a "global" function defined towards end of this C file
-		//         cfg.SetSingleParam(0, Ran3(&seed)*x_scale + bb[0] );   // X in bb[0] to bb[1]
-		//         cfg.SetSingleParam(1, Ran3(&seed)*y_scale + bb[2] );   // Y in bb[2] to bb[3]
-		//         cfg.SetSingleParam(2, Ran3(&seed)*z_scale + bb[4] );   // Z in bb[4] to bb[5]
-		//         cfg.SetSingleParam(3, Ran3(&seed) );                   // alpha in 0 to 1
-		//         cfg.SetSingleParam(4, Ran3(&seed) );                   // beta in 0 to 1
-		//         cfg.SetSingleParam(5, Ran3(&seed) );                   // gamma in 0 to 1
-		
-		//         if (cfg.InBoundingBox(_env))
-		//         {
-		//            max_rnd_cfg_attempts = 0;
-		//         }
-		
-		//         max_rnd_cfg_attempts--;
-		//      }//endwhile
-		
-		// Store cfg in its "original" state
-		orig_cfg = cfg;
-		
-		// For kicks wanted to see difference if only take shortest way out of collision
-		// set take_first_non_collide to FALSE to see this effect.
-		take_first_non_collide = false;
-		
-		// Note: below call may or may not bother getting "all" info
-		collided = cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
-		if ( collided ) 
-		{
-			// since what points are "near" is not clearly defined when collisions
-			// occur - particularly across collision detection libraries
-			// we will pick a completely random direction and push our point
-			// that way, once we get out of collision we will apply the
-			// same method as if we were originally not in collision
-			
-			// Set _info so we do NOT get all info (for speed)
-			_info.cdInfo.ResetVars();
-			
-			// Generate Random direction
-			move_out_dir_cfg = Cfg::GetRandomRay(EXPANSION_FACTOR * _env->GetPositionRes() );
-			
-			reverse_tried = false;
-			
-			attempts_out = 0;
-			steps_out = 0;
-			min_steps_out = 9999999;   // init to arbitrary LARGE number
-			non_collide_cfg = cfg;
-			max_tries_out = 50;  // how many times do we try to get random cfg out of collision
-			
-			// We will always try max_tries_out times and we keep the one
-			// that moved out in the fewest number of steps
-			while (attempts_out < max_tries_out)
-			{
-				// Move cfg out of collision in move_out_dir_cfg
-				// later use trans_cfg instead of incrCfg... should get odd? results ???
-				non_collide_cfg = non_collide_cfg + move_out_dir_cfg;
-				steps_out++;
-				
-				collided = non_collide_cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
-				
-				// If we move out of the bounding box, we reset to orig_cfg
-				// and we first try the opposite direction then if
-				// that also leads out of the bb then we will
-				// try a new random direction -- we do limit the
-				// number of attempts at this by attempts_out
-				if (!non_collide_cfg.InBoundingBox(_env) )
-				{
-					if ( !reverse_tried)
-					{
-						move_out_dir_cfg = -move_out_dir_cfg;
-						reverse_tried = true;
-					}
-					else
-					{
-						attempts_out++;
-						move_out_dir_cfg = Cfg::GetRandomRay(1);
-						reverse_tried = false;
-					}
-					non_collide_cfg = orig_cfg;
-					collided = true;   // orig_cfg IS in collision
-					steps_out = 0;
-				}
-				else if (!collided)
-				{
-					if (take_first_non_collide)
-					{
-						cfg = non_collide_cfg;
-						attempts_out = max_tries_out;  // force bail from while loop
-					}
-					else
-					{
-						if (steps_out < min_steps_out)
-						{
-							cfg = non_collide_cfg;
-							min_steps_out = steps_out;
-						}
-						// else we don't keep it, we've already got a shorter out cfg
-						attempts_out++;
-						non_collide_cfg = orig_cfg;
-						move_out_dir_cfg = Cfg::GetRandomRay(1);
-						reverse_tried = false;
-						collided = true;   // orig_cfg IS in collision
-						steps_out = 0;
-					}
-				} // end if in bbox and not in collision
-				
-			} // end while not "too many" attempts
-			
-			// set collided correctly based on what cfg was set to
-			collided = cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
-			
-		} // end if random cfg was initially in collision
-		
-		// So we "should" be out of collision and INSIDE bounding box 
-		// so we can move cfg toward Medial Axis
-		if (!collided)
-		{
-#if INTERMEDIATE_FILES
-            MoveToMedialAxis(cfg, &path, _env, cd, dm, _gn, _info);
-#else
-            MoveToMedialAxis(cfg, NULL, _env, cd, dm, _gn, _info);
-#endif
-		}
-		else
-		{
-			cout << "BasicMAPRM unable to move random cfg out of collision." << endl;
-		}
-		
-   } // end for i = 1 to _gn.numNodes.GetValue()
-   
-#if INTERMEDIATE_FILES
-   WritePathConfigurations("maprm.path", path, _env);
-#endif
-   
-#ifndef QUIET
-   cout << endl << "... END BasicMAPRM" << endl;
-#endif
-   
+	CBasicMAPRM::BasicMAPRM(_env,cd,dm,_gn,_info);
 } // end BasicMAPRM
-
-//===================================================================
-// MoveToMedialAxis
-// written by Brent, September 2000  -- FUNCTION IS IN DEVELOPMENT
-//
-// Move a configuration - that is NOT in collision - to the MA
-// (or at least close to the Medial Axis)
-//===================================================================
-void
-GenerateMapNodes::
-MoveToMedialAxis(Cfg &cfg, vector<Cfg> *path, Environment *_env, 
-                 CollisionDetection* cd, DistanceMetric *dm,GN& _gn, GNInfo &_info)
-{
-	Cfg      orig_cfg;          // orig_cfg, used to restore cfg to orig state if bounding box thing fails 
-	Vector3D trans_dir;
-	Cfg      temp_trans_cfg;
-	Cfg      trans_cfg(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-	CDInfo   oldInfo;
-	long     times_incremented;
-	long     mult_cnt;
-	//   double   max_mag;
-	bool     collided;
-	
-	orig_cfg = cfg;
-	
-	// Set flag in _info.cdInfo to cause isCollision 
-	// to return "all info" such as witness pairs and min dist 
-	// and collision object index
-	//    would make more sense if it was in cd->cdInfo
-	//    but not confident the member var will stick around
-	//    nor how it might be used elsewhere
-	// NEW info currently always put in _info.cdInfo
-	// note we do NOTHING with cd->stuff
-	_info.cdInfo.ResetVars();
-	_info.cdInfo.ret_all_info = true;
-	
-	// find closest obstacle -- and collided better come back false!
-	collided = cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
-	
-	// Set up translation direction based on nearest obstacle
-	trans_dir = _info.cdInfo.robot_point - _info.cdInfo.object_point;
-	
-	trans_dir.normalize();
-	
-	// And then scale arbitrarily 'small' - prefer to have scale determined by the _env
-	trans_dir = trans_dir * 0.2;
-	
-	// Create a translation variable cfg
-	// assume cfg_free --> x, y, z, roll, pitch, yaw
-	
-	// Make some BIG assumptions about parameter order - for cfg_free this should be right
-	trans_cfg.SetSingleParam(0, trans_dir[0]);
-	trans_cfg.SetSingleParam(1, trans_dir[1]);
-	trans_cfg.SetSingleParam(2, trans_dir[2]);
-	
-	// so not in collision thus move cfg towards medial axis.
-	times_incremented = 0;
-	
-	do  //want to translate cfg in trans_dir until closest obstacle changes
-	{
-		cfg = cfg + trans_cfg;
-		times_incremented ++;
-		
-		oldInfo = _info.cdInfo;   // oldInfo used in loop termination check
-		
-		_info.cdInfo.ResetVars();
-		_info.cdInfo.ret_all_info = true;
-		
-		if ( ! cfg.InBoundingBox(_env) )
-		{
-			_info.cdInfo.nearest_obst_index ++;  // so we exit the do-while, but don't count as collide
-			
-			// move back to one half the distance we traveled before going out of the bounding box
-			// trans_cfg = distance from object and robot originally
-			// trans_cfg * times_incremented = distance robot was moved until it
-			// was out of the bounding box, add those 2 values and divide by 2
-			// BUT must maintain random cfg orientation
-			
-			temp_trans_cfg = trans_cfg;  // account for the orig. dist from robot to object
-			// Now move 1/2 the distance to the bounding box (rounded down)
-			for (mult_cnt = 1; mult_cnt <= times_incremented/2; mult_cnt++)
-			{
-				temp_trans_cfg = temp_trans_cfg + trans_cfg;
-			}
-			cfg = orig_cfg + temp_trans_cfg; 
-			
-			// Note object was moved along the above translation vector 
-			// so it cannot be in collision or out of bounding box (theoretically)
-			// We check anyways - these checks might be removed later - after testing and modifying
-			if ( ! cfg.InBoundingBox(_env))
-			{
-				//cout << "Attempt to move cfg to half distance from object to bounding box put cfg outside." << endl;
-				// This happens often - because bounding box is NOT an object
-				// Thus random point is closer to bb than object, so we tried to
-				// move in the wrong direction. First easy fix was just to put it back to orig cfg as.
-				// orig cfg was NOT in collision and INSIDE bb
-				cfg = orig_cfg;   
-				
-				// We should try to find distance to bb in trans_dir and then
-				// place cfg half way between bb and nearest obstacle
-				// "on average" orig_cfg probably is there anyway.
-			}
-			else if (cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo))
-			{
-				// as long as our scaling factors are good this should never happen
-				cout << "Attempt to move cfg back into bounding box resulted in collision state." << endl;
-				cfg = orig_cfg;
-			}
-		}
-		else
-		{
-			collided = cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
-		}
-		
-	} while ( (!collided) &&
-		(_info.cdInfo.nearest_obst_index == oldInfo.nearest_obst_index) );
-	
-	// while we should never move into a collision state, we check anyway
-	if (!collided)
-	{
-		_info.nodes.push_back(Cfg(cfg));
-		
-#if INTERMEDIATE_FILES
-		path->push_back(cfg);
-#endif
-	}
-	else if (_info.cdInfo.nearest_obst_index == oldInfo.nearest_obst_index)
-	{
-		// Note: if we hit bounding box, indices would NOT match
-		// So we moved into collision, but nearest object is still the same
-		// chances are we started inside the object -- in a tunnel or cavity
-		// or in some bizarre recess
-		// We assume we STARTED out of collision so we HAD a good cfg...
-		// we didn't bail out of the above loop until collision, so if
-		// we back up one step we should NOT be in collision -- should check
-		cfg = cfg - trans_cfg;
-		_info.nodes.push_back(Cfg(cfg));
-		
-#if INTERMEDIATE_FILES
-		path->push_back(cfg);
-#endif
-		
-		cout << "MoveToMedialAxis: moved into collision and stepped back." << endl;
-	}
-	else  // if we did push into collision we don't keep it 
-	{
-		// message is temp. for debug
-		cout << "MoveToMedialAxis: --- MOVED INTO COLLISION - cfg thrown out." << endl;
-	}
-	
-} // end MoveToMedialAxis
-
 
 //===================================================================
 // CSpaceMAPRM
@@ -2092,7 +1763,6 @@ MakeGNSet(istream& _myistream) {
 					exit (-1);
 				} //endif
 			} //endfor j
-			
 		} else if (!strcmp(cmdFields[i],"GaussPRM")) {
 			gn1.generator = &GenerateMapNodes::GaussPRM;
 			GetFieldRange();
@@ -2131,7 +1801,7 @@ MakeGNSet(istream& _myistream) {
 			GetFieldRange();
 			
 			for (int j=start;j<stop; ++j) {
-				if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				if (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.numShells.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.proportionSurface.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 				} else if (gn1.freePair.AckCmdLine(&j,(int)stop,(char**)(&argv))){
@@ -2145,22 +1815,16 @@ MakeGNSet(istream& _myistream) {
 					exit (-1);
 				} //endif
 			} //endfor j
-			
 		} else if (!strcmp(cmdFields[i],"BasicMAPRM")) {
 			gn1.generator = &GenerateMapNodes::BasicMAPRM;
 			GetFieldRange();
-			
-			for (int j=start;j<stop; ++j) {
-				if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
-				} else {
-					cout << "\nERROR MakeGNSet: Don\'t understand \""
-						<< cmdFields[j]<<"\"\n\n";
-					gn1.PrintUsage_BasicMAPRM(cout);
-					cout << endl;
-					exit (-1);
-				} //endif
-			} //endfor j
-			
+			if( CBasicMAPRM::ReadParameters(start,stop,(char**)(&argv),gn1.numNodes)==false ){
+				cout << "\nERROR MakeGNSet: Don\'t understand \""
+				<< cmdFields[start]<<"\"\n\n";
+				gn1.PrintUsage_BasicMAPRM(cout);
+				cout << endl;
+				exit (-1);
+			}//end if
                 } else if (!strcmp(cmdFields[i],"CSpaceMAPRM")) {
                         gn1.generator = &GenerateMapNodes::CSpaceMAPRM;
                         GetFieldRange();

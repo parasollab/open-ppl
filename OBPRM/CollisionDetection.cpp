@@ -50,14 +50,14 @@ void
 CollisionDetection::
 DefaultInit()
 {
-  penetration=-1;	
-};
+	penetration=-1;	
+}
 
 
 void CollisionDetection::
 SetPenetration(double times)
 {
-  penetration=times;
+	penetration=times;
 }
 
 void
@@ -86,6 +86,7 @@ UserInit(Input * input,  GenerateMapNodes* gn, ConnectMapNodes* cn)
 	
 #ifdef USE_PQP
     collisionCheckers.MakeCDSet("PQP");    // enum PQP
+	m_pRay=NULL;
 #endif
 	
     if( input->numCDs == 0 ){                  	// use default CD sets
@@ -159,71 +160,62 @@ vector<Cfg> acceptable;
 /////////////////////////////////////////////
 bool CollisionDetection::
 AcceptablePenetration(Cfg c,Environment *env,CollisionDetection *cd, 
-		SID cdsetid, CDInfo& cdInfo)
+					  SID cdsetid, CDInfo& cdInfo)
 {
- int numOkCfgs=0;
-
- for(int i=0;i<directions.size();i++)
- {
-   Cfg next=c+directions[i];
-
-   if (!next.isCollision(env,cd,cdsetid,cdInfo,false)) {
-	   numOkCfgs++;
-	   if ((numOkCfgs*1.0/directions.size())>acceptableRatio){
+	int numOkCfgs=0;
+	
+	for(int i=0;i<directions.size();i++)
+	{
+		Cfg next=c+directions[i];
+		
+		if (!next.isCollision(env,cd,cdsetid,cdInfo,false)) {
+			numOkCfgs++;
+			if ((numOkCfgs*1.0/directions.size())>acceptableRatio){
 #ifdef DEBUG
-	     acceptable.push_back(c);
+				acceptable.push_back(c);
 #endif
-	     return true;
-	   }
-   }
-   
- }
- if((numOkCfgs*1.0/directions.size())>acceptableRatio)  {
-
-	 return true; }
- else
-	 return false;	
+				return true;
+			}
+		}
+		
+	}
+	if((numOkCfgs*1.0/directions.size())>acceptableRatio)  {
+		
+		return true; }
+	else
+		return false;	
 }
 
-////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 // InitializePenetration
 //
 // Set the penetrationdepth and find n direction vectors
 //
 //
-/////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 void CollisionDetection::
 InitializePenetration(double times,int nCfgs, Environment *env,
-		        DistanceMetric * dm, SID dmsetid,double ratio)
+					  DistanceMetric * dm, SID dmsetid,double ratio)
 {
 	
-  Cfg origin;
-   acceptableRatio=ratio; 
-  // first find the environment resolution
-  Cfg res=Cfg::GetResolutionCfg(env);
-
-  // now find the length of that resolution
-  double length=dm->Distance(env,res,origin,dmsetid);
-
-  // penetration is length*times
-  penetration=times*length;
-
-  cout << "Penetration is " << penetration << endl;
-
-  for(int i=0;i<nCfgs;i++) {
-     /*Cfg randomCfg=;
-     while(1) {
-       randomCfg=Cfg::GetRandomCfg(env,1000);
-       double dist=dm->Distance(env,randomCfg,origin,dmsetid);
-       cout << "Found a dist of" << dist <<" \n";
-       if(dist<penetration) break;
-       }
-     cout <<"Adding Cfg " << randomCfg << endl;  */
-
-     directions.push_back(Cfg::GetRandomCfg(env,dm,dmsetid,penetration*drand48()));
-     cout <<"Added Cfg\n"<<flush;
-   }
+	Cfg origin;
+	acceptableRatio=ratio; 
+	// first find the environment resolution
+	Cfg res=Cfg::GetResolutionCfg(env);
+	
+	// now find the length of that resolution
+	double length=dm->Distance(env,res,origin,dmsetid);
+	
+	// penetration is length*times
+	penetration=times*length;
+	
+	cout << "Penetration is " << penetration << endl;
+	
+	for(int i=0;i<nCfgs;i++) {
+		directions.push_back(Cfg::GetRandomCfg(env,dm,dmsetid,penetration*drand48()));
+		cout <<"Added Cfg\n"<<flush;
+	}
 }
 
 
@@ -368,6 +360,142 @@ Clearance(Environment * env){
 #endif
 }
 
+
+bool CollisionDetection::
+isInsideObstacle(const Cfg & cfg, Environment* env, SID _cdsetid, CDInfo& _cdInfo)
+{
+	vector<CD> cdset = collisionCheckers.GetCDSet(_cdsetid);
+	CDF cdfcn = cdset[0].GetCollisionDetection();
+#ifdef USE_CSTK
+	if( cdfcn==&CollisionDetection::IsInCollision_cstk )
+		return isInsideObs_cstk(cfg, env, _cdsetid, _cdInfo);
+#endif
+
+#ifdef USE_VCLIP
+	if( cdfcn==&CollisionDetection::IsInCollision_vclip )
+		return isInsideObs_vclip(cfg, env, _cdsetid, _cdInfo);
+#endif
+
+#ifdef USE_RAPID
+	if( cdfcn==&CollisionDetection::IsInCollision_RAPID )
+	return isInsideObs_RAPID(cfg, env, _cdsetid, _cdInfo);
+#endif
+
+#ifdef USE_PQP
+	if( cdfcn==&CollisionDetection::IsInCollision_PQP )
+	return isInsideObs_PQP(cfg, env, _cdsetid, _cdInfo);
+#endif
+}
+
+#ifdef USE_CSTK
+	bool CollisionDetection::
+	isInsideObs_cstk(const Cfg & cfg, Environment* env, SID _cdsetid, CDInfo& _cdInfo)
+	{
+		cerr<<"isInsideObs_cstk: Not implemeneted yet"<<endl;
+		exit(1);
+	}
+#endif //USE_CSTK
+
+#ifdef USE_VCLIP
+	bool CollisionDetection:: 
+	isInsideObs_vclip(const Cfg & cfg, Environment* env, SID _cdsetid, CDInfo& _cdInfo)
+	{
+		cerr<<"isInsideObs_vclip: Not implemeneted yet"<<endl;
+		exit(1);
+	}
+#endif //USE_VCLIP
+
+#ifdef USE_RAPID
+	bool CollisionDetection::
+	isInsideObs_RAPID(const Cfg & cfg, Environment* env, SID _cdsetid, CDInfo& _cdInfo)
+	{
+		cerr<<"isInsideObs_vclip: Not implemeneted yet"<<endl;
+		exit(1);
+	}
+#endif //USE_RAPID
+
+#ifdef USE_PQP
+	bool CollisionDetection::
+	isInsideObs_PQP(const Cfg & cfg, Environment* env, SID _cdsetid, CDInfo& _cdInfo)
+	{
+		if( m_pRay==NULL ) m_pRay=BuildPQPSegment(1e10,0,0);
+		assert(m_pRay!=NULL);
+		int nmulti = env->GetMultiBodyCount();
+		int robot = env->GetRobotIndex();
+		PQP_REAL t[3]={cfg.GetData()[0],cfg.GetData()[1],cfg.GetData()[2]};
+		static PQP_REAL r[3][3]={{1,0,0},{0,1,0},{0,0,1}};
+
+		for( int i=0;i<nmulti;i++ ){//for all obstacles
+			if( i==robot ) continue;
+			MultiBody * obstacle=env->GetMultiBody(i);
+			for(int j=0; j<obstacle->GetBodyCount(); j++)
+			{
+				PQP_Model * obst = obstacle->GetBody(j)->GetPqpBody();
+				GMSPolyhedron & poly=obstacle->GetBody(j)->GetPolyhedron();
+				Transformation &t2 = obstacle->GetBody(j)->WorldTransformation();
+				t2.orientation.ConvertType(Orientation::Matrix);
+				double p2[3];
+				for(int p=0; p<3; p++) p2[p] = t2.position[p];
+
+				PQP_CollideResult result;
+				PQP_Collide(&result,r,t,m_pRay,t2.orientation.matrix,p2,obst);
+    
+				//anaylize result (check if there are adjacent triangle)
+				vector<int> tri;
+				//for each tri
+				for( int iT=0;iT<result.NumPairs();iT++ ){
+					bool add=true;
+					int * tri1=poly.polygonList[result.Id2(iT)].vertexList;
+					//for each checked triangle
+					for( int i=0;i<tri.size();i++){
+						int * tri2=poly.polygonList[tri[i]].vertexList;
+						//check if they share same vertices
+						for(int itri1=0;itri1<3;itri1++){
+							for(int itri2=0;itri2<3;itri2++){
+								if( tri2[itri2]==tri1[itri1] ){
+									add=false;
+									break;
+								}
+							}
+						}
+						if( add==false ) break;
+					}
+					//Ok no one shares vertex with you...
+					if( add==true ) tri.push_back(result.Id2(iT));
+				}
+				int size=tri.size();
+				if( (tri.size()%2)==1 ) return true;
+			}//end of each part of obs
+		}//end of each obstacle
+
+		return false;
+	}//end of function
+
+	PQP_Model * CollisionDetection::
+	BuildPQPSegment(PQP_REAL dX, PQP_REAL dY, PQP_REAL dZ) const
+	{
+		//build a narrow triangle.
+		PQP_Model * pRay = new PQP_Model();
+		if( pRay==NULL ) return NULL;
+    
+		if( dY==0 && dZ==0 && dX==0 ) 
+			cout<<"! CollisionDetection::BuildPQPRay Warning : All are [0]"<<endl;
+
+		PQP_REAL p1[3] = { (PQP_REAL)(1e-20/LONG_MAX), (PQP_REAL)(1e-20/LONG_MAX), (PQP_REAL)(1e-20/LONG_MAX) };
+		PQP_REAL p2[3] = { (PQP_REAL)(1e-20/LONG_MAX)/2,(PQP_REAL)(1e-20/LONG_MAX)/2, (PQP_REAL)(1e-20/LONG_MAX)/2 };
+		PQP_REAL p3[3] = { (PQP_REAL)dX, (PQP_REAL)dY, (PQP_REAL)dZ};
+    
+		pRay->BeginModel();
+		pRay->AddTri(p1, p2, p3, 0);
+		pRay->EndModel();
+    
+		return pRay;
+	}
+#endif //USE_PQP
+
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 bool
 CollisionDetection::
@@ -552,7 +680,7 @@ IsInColl_AllInfo_vclip
 			
 			obst = obstacle->GetBody(j)->GetVclipBody();
 			X12 = GetVclipPose(robot->GetFreeBody(i)->WorldTransformation(),
-			obstacle->GetBody(j)->WorldTransformation());
+				obstacle->GetBody(j)->WorldTransformation());
 			dist = PolyTree::vclip(rob,obst,X12,closestFeaturesHT, cp1, cp2);
 			
 			if ( dist < 0.0 )  
@@ -660,9 +788,75 @@ IsInCollision_PQP
 	
     if (_cdInfo.ret_all_info == true)
     {
-		cout << endl;
-		cout << "Currently unable to return ALL info using PQP cd." << endl;
-		cout << "Defaulting to minimal information." << endl;
+		/////////////////////////////////////////////////////////////////////////////
+		//	11/2/01 modified by Jyh-Ming Lien : Start
+		/////////////////////////////////////////////////////////////////////////////
+		
+		PQP_DistanceResult res;
+		double min_dist_so_far = MaxDist;
+		Vector3D robot_pt, obs_pt;
+		bool ret_val=false;
+		
+		//for each part of robot
+		for(int i=0 ; i<robot->GetFreeBodyCount(); i++){
+			
+			rob = robot->GetFreeBody(i)->GetPqpBody();
+			Transformation &t1 = robot->GetFreeBody(i)->WorldTransformation();
+			t1.orientation.ConvertType(Orientation::Matrix);
+			double p1[3]; for(int ip1=0; ip1<3; ip1++) p1[ip1] = t1.position[ip1];
+			
+			//for each part of obstacle
+			for(int j=0; j<obstacle->GetBodyCount(); j++){
+				
+				// if robot check self collision, skip adjacent links.
+				if(robot == obstacle &&
+					robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(j)) )
+				{
+					continue;
+				}
+				
+				obst = obstacle->GetBody(j)->GetPqpBody();
+				
+				Transformation &t2 = obstacle->GetBody(j)->WorldTransformation();
+				t2.orientation.ConvertType(Orientation::Matrix);
+				double p2[3]; for(int ip2=0; ip2<3; ip2++) p2[ip2] = t2.position[ip2];
+				
+				if(PQP_Distance(&res,t1.orientation.matrix,p1,rob,
+					t2.orientation.matrix,p2,obst,0.0,0.0))
+				{
+					cout << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"<<endl;
+					exit(1);
+				}
+				
+				if ( res.Distance() < 0.0 )  
+				{
+					ret_val = true;
+				}
+				
+				if( res.Distance()<min_dist_so_far ){
+					// _cdInfo.nearest_obst_index =  is set by IsInCollision()
+					// which called this function - look there for more info
+					min_dist_so_far=res.Distance();
+					_cdInfo.min_dist = min_dist_so_far;
+					
+					// change a 3 elmt array to Vector3D class
+					for( int k=0;k<3;k++ ){
+						robot_pt[k] = res.P1()[k];
+						obs_pt[k] = res.P2()[k];
+					}
+					
+					// transform points to world coords
+					// using *_pt vars in case overloaded * was not done well.
+					_cdInfo.robot_point = robot->GetFreeBody(i)->WorldTransformation() * robot_pt;
+					_cdInfo.object_point = obstacle->GetBody(j)->WorldTransformation() * obs_pt;
+				}
+			}//end of each part of obs
+		}//end of each part of robot
+		return ret_val;
+		
+		/////////////////////////////////////////////////////////////////////////////
+		//	11/2/01 modified by Jyh-Ming Lien : End
+		/////////////////////////////////////////////////////////////////////////////
 	}
 	
     for(int i=0 ; i<robot->GetFreeBodyCount(); i++){

@@ -270,6 +270,7 @@ public:
         Cfg operator- () const;
         ///Scalar multiplication (just like scalar times a vector)
         Cfg operator* (double);
+        Cfg operator/ (double);
     
         /**create a new Cfg instance whose configuration is weighted summation of the
         *first and the second Cfg.
@@ -573,7 +574,6 @@ public:
 
   protected:
       ///Scalar division (just like a vector divided by a scalar)
-      Cfg operator/ (double);
       
       /** Normalize the orientation to the some range.
       * call CfgManager's Normalize_orientation.
