@@ -29,6 +29,10 @@ Cfg_fixed_tree::Cfg_fixed_tree(int _numofJoints) : CfgManager(_numofJoints, 0), 
 
 Cfg_fixed_tree::~Cfg_fixed_tree() {}
 
+CfgManager * Cfg_fixed_tree::clone() const {
+   return (new Cfg_fixed_tree(NumofJoints));
+}
+
 Vector3D Cfg_fixed_tree::GetRobotCenterPosition(const Cfg &c) const {
    return Vector3D(0, 0, 0);
 }

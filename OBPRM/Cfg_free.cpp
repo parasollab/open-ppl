@@ -28,6 +28,10 @@ Cfg_free::Cfg_free() : CfgManager(6, 3) {}
 
 Cfg_free::~Cfg_free() {}
 
+CfgManager * Cfg_free::clone() const {
+   return (new Cfg_free());
+}
+
 Vector3D Cfg_free::GetRobotCenterPosition(const Cfg &c) const {
    vector<double> tmp = c.GetData();
    return Vector3D(tmp[0], tmp[1], tmp[2]);

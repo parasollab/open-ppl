@@ -48,6 +48,9 @@ public:
 
   //@}
 
+  /// create and clone functions
+  CfgManager * create() const { return (new Cfg_fixed_PRR()); }
+  CfgManager * clone() const;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //

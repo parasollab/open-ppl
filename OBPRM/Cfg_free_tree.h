@@ -22,6 +22,10 @@ public:
 
   Cfg_free_tree(int _numofJoints);
   ~Cfg_free_tree();
+  
+  /// create and clone functions
+  CfgManager * create() const { return (new Cfg_free_tree(NumofJoints)); }
+  CfgManager * clone() const;
 
 
   //===================================================================

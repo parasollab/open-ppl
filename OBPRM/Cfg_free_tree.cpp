@@ -28,6 +28,10 @@ Cfg_free_tree::Cfg_free_tree(int _numofJoints) : CfgManager(6+_numofJoints, 3),
 
 Cfg_free_tree::~Cfg_free_tree() {}
 
+CfgManager * Cfg_free_tree::clone() const {
+   return (new Cfg_free_tree(NumofJoints));
+}
+
 Vector3D Cfg_free_tree::GetRobotCenterPosition(const Cfg &c) const {
    vector<double> tmp = c.GetData();
    return Vector3D(tmp[0], tmp[1], tmp[2]);

@@ -45,6 +45,9 @@ public:
   ~Cfg_free();
   //@}
 
+  /// create and clone
+  CfgManager * create() const {return (new Cfg_free()); };
+  CfgManager * clone() const;
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
