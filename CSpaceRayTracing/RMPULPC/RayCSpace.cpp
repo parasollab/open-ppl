@@ -6,6 +6,11 @@
 #include "RayCSpace.h"
 #include <iostream.h>
 
+RayCSpace::RayCSpace() {
+}
+RayCSpace::~RayCSpace() {
+}
+
 void RayCSpace::init(Cfg origin, Cfg direction, Cfg target) {
   this->origin = origin;
   this->direction = direction;

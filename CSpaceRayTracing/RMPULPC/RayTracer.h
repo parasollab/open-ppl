@@ -18,6 +18,7 @@ class RayTracer {
   enum BouncingMode {TARGET_ORIENTED, RANDOM, HEURISTIC, NORMAL}; 
 /*    RayTracer(Environment *environment, Cfg source, Cfg target); */
   RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid);
+  ~RayTracer();
   void setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length);
   void connectCCs();
 /*    bool connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, Roadmap &ccj, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp); */
@@ -36,7 +37,7 @@ class RayTracer {
 
  private:
   void getBoundaryCfgs(const vector<Cfg> &input, vector<Cfg> &output, unsigned int k);
-
+  void ModifyRoadMap(Roadmap *toMap, Roadmap *fromMap, vector<VID> vids);
   RayCSpace ray; // Ray to be traced
   Cfg source, target;
   vector<Cfg> *target_cfgs;

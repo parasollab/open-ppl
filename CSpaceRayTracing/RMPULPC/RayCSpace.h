@@ -16,6 +16,8 @@
 
 class RayCSpace {
  public:
+  RayCSpace();
+  ~RayCSpace();
   void init(Cfg origin, Cfg direction, Cfg target); //initialize the ray
   void finish();
   void bounce(Cfg direction);//Stores point in list and changes direction
