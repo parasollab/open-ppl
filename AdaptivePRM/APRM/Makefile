@@ -6,7 +6,7 @@
    ADAPT_LIB = -L${ADAPT_DIR} -ladaptive
 
 # -- for dynamic shared object library libobprm.so
-   obprm_dir = ../obprm
+   obprm_dir   = ../obprm
 
    OBPRM_DIR   = ${obprm_dir}/OBPRM
    OBPRM_LIB   = -L${OBPRM_DIR} -lobprm
@@ -104,13 +104,6 @@ aprm:: main_aprm.c libs
 	rm -f main_aprm.o aprm.d
 
 #--------------------------------------------------------------------
-lazyprm:: main_lazyprm.c libs
-	$(CXX) $(CFLAGS2) -o lazyprm \
-		main_lazyprm.c \
-		$(OBJS) $(ADAPT_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
-	rm -f main_lazyprm.o lazyprm.d
-
-#--------------------------------------------------------------------
 query:: main_query.c libs 
 	$(CXX) $(CFLAGS2) -o query \
                 main_query.c \
@@ -134,7 +127,11 @@ OBJS = \
 	QueryRequirements.o \
 	NoopLocalPlanners.o \
 	NoopCollisionDetection.o \
-	MyQueryCmds.o
+	MyQueryCmds.o \
+	MyInput.o \
+	PriorityWeight.o \
+	PriorityLocalPlanners.o \
+	PriorityQuery.o
 
 objs:: $(OBJS)
 
