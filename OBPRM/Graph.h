@@ -261,7 +261,7 @@ public:
    virtual void DisplayGraph() const = 0; 
    virtual void DisplayVertexAndEdgelist(VID) const = 0; 
 
-//protected:
+protected:
   //===================================================================
   //  Data
   //===================================================================
@@ -273,6 +273,7 @@ public:
 private:
 };
 
+class dfsinfo;
 /////////////////////////////////////////////////////////////////////
 //  class WeightedMultiDiGraph<VERTEX,WEIGHT>
 //
@@ -383,6 +384,16 @@ public:
    WeightedMultiDiGraph<VERTEX,WEIGHT> BFS(VERTEX&) const; 
    vector<VID> BFSVID(VID) const; 
    vector<VID> BFSVID(VERTEX&) const; 
+   
+   vector<WeightedMultiDiGraph<VERTEX,WEIGHT> > DFS() const;
+   WeightedMultiDiGraph<VERTEX,WEIGHT> DFS (VID&) const;
+   WeightedMultiDiGraph<VERTEX,WEIGHT> DFS (VERTEX&) const;
+   vector<VID> DFSVID(VID&) const;
+   vector<VID> DFSVID(VERTEX&) const;
+   bool IsCycle() const;
+   vector<pair<VID,VID> > GetBackedge() const;
+   vector<VID> TopologicalSort() const;
+
    vector< pair<VERTEX,WEIGHT> > FindPathBFS(VID,VID) const;
    vector< pair<VERTEX,WEIGHT> > FindPathBFS(VERTEX&,VERTEX&) const;
 
@@ -401,7 +412,7 @@ public:
    void ReadGraph(istream& _myistream);
    void ReadGraph(const char*  _filename);
 
-//protected:
+protected:
   //===================================================================
   //  Utility Stuff for WeightedMultiDiGraphs
   //===================================================================
@@ -435,6 +446,11 @@ public:
    Vertex* my_find_VID_eq(const VID _vid) const;
    Vertex* my_find_VDATA_eq(const VERTEX& _v) const;
    static bool VID_Compare (const Vertex& _v1, const Vertex& _v2); 
+
+   // for Depth First Search Algorithm
+   void aux_DFS(dfsinfo&) const;
+   WeightedMultiDiGraph<VERTEX,WEIGHT> true_DFS (VID&,dfsinfo&) const;
+   static bool FinishLate(const pair<VID,int>&,const pair<VID,int>&); 
 
    // for Dijkstra's algorithm
    class dkinfo {
@@ -564,6 +580,28 @@ private:
   //  Data
   //===================================================================
 };
+
+   // Auxillary Data Structure for Depth First Search Algorithm
+   class dfsinfo {
+   public:
+        dfsinfo() {};
+        dfsinfo(int _numVerts) {
+		vnode.reserve(_numVerts+1);
+		color.reserve(_numVerts+1);
+		finish_time.reserve(_numVerts+1);
+
+		for(int i=0; i<_numVerts+1; i++) {
+			color[i] = 0;     
+  			vnode[i] = 0;    
+			finish_time[i] = 0;    
+  		}
+	};
+
+     vector< pair <VID, VID> > backedge_vector; 	//used in cycle detection
+     vector<int> finish_time;	
+     vector<VID> vnode;	//used as a stack to store vertex visited in seqence
+     vector<int> color;	//0: new, 1: visited, 2: finish
+   };
 
 //=====================================================================
 //=====================================================================
@@ -1605,6 +1643,195 @@ BFSVID (VID _startVID) const {
    return bfstree.GetVerticesVID();
 };
 
+
+//*************************************************************** 
+//  DEPTH-FIRST-SEARCH ALGORITHMS
+//*************************************************************** 
+template<class VERTEX, class WEIGHT>
+WeightedMultiDiGraph<VERTEX,WEIGHT>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+DFS (VERTEX& _startV) const {
+  CVI cv1;
+  if ( IsVertex(_startV,&cv1) ) {
+     return DFS(cv1->vid);
+  } else {
+     cout << "\nIn GraphBFS: root vertex=" << _startV  << " not in graph";
+     WeightedMultiDiGraph<VERTEX,WEIGHT> dfstree;
+     return dfstree; 
+  }
+};
+
+template<class VERTEX, class WEIGHT>
+WeightedMultiDiGraph<VERTEX,WEIGHT>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+DFS (VID & vid) const {
+//To find one dfs tree w/ start vertex vid
+ 
+  dfsinfo dfs(GetVertexCount());
+  return true_DFS(vid, dfs);
+};
+
+template<class VERTEX, class WEIGHT>
+vector<VID>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+DFSVID (VERTEX& _startV) const {
+   WeightedMultiDiGraph<VERTEX,WEIGHT> dfstree = DFS(_startV); 
+   return dfstree.GetVerticesVID();
+};
+
+template<class VERTEX, class WEIGHT>
+vector<VID>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+DFSVID (VID& _startVID) const {
+   WeightedMultiDiGraph<VERTEX,WEIGHT> dfstree = DFS(_startVID); 
+   return dfstree.GetVerticesVID();
+};
+
+template<class VERTEX, class WEIGHT>
+vector<WeightedMultiDiGraph<VERTEX,WEIGHT> >
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+DFS () const {
+//To find all dfs trees
+ 	vector< WeightedMultiDiGraph<VERTEX,WEIGHT> > dfstree_vector;
+  	VI  v1;
+  	VID vid;	
+ 	dfsinfo dfs(GetVertexCount());
+
+ 	for (v1 = v.begin(); v1 < v.end(); v1++) {
+   	 	vid = v1->vid;
+    		if( dfs.color[vid] == 0 ) 
+			dfstree_vector.push_back(true_DFS(vid, dfs));
+  	}
+	return dfstree_vector;
+};
+
+
+template<class VERTEX, class WEIGHT>
+bool
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+IsCycle () const {
+	dfsinfo dfs(GetVertexCount());
+	aux_DFS(dfs);
+	if( dfs.backedge_vector.empty() ) return false;
+	else return true;
+};
+
+template<class VERTEX, class WEIGHT>
+vector< pair<VID,VID> >
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+GetBackedge() const {
+	dfsinfo dfs(GetVertexCount());
+	aux_DFS(dfs);
+	return dfs.backedge_vector;
+};
+
+template<class VERTEX, class WEIGHT>
+vector<VID>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+TopologicalSort () const {
+ 	int i,n;
+	VID vid;
+	vector<VID> tps;
+	n=GetVertexCount();
+ 	vector<pair<VID,int> > tmp(n);
+	dfsinfo dfs(n);
+	aux_DFS(dfs);
+
+	for(i=1;i<=n;i++) {
+		pair<VID,int> newpair(i,dfs.finish_time[i]);
+		tmp.push_back(newpair);
+	}	
+	
+	stable_sort(tmp.begin(),tmp.end(),ptr_fun(FinishLate));
+	
+	for(i=0; i<n;i++) {
+		tps.push_back(tmp[i].first);
+	cout<<tmp[i].first<<endl;
+	}
+  	return tps;            
+};
+
+template<class VERTEX, class WEIGHT>
+bool
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+FinishLate(const pair<VID,int>& _x, const pair<VID,int>& _y) {
+	return _x.second > _y.second;
+}; 
+
+template<class VERTEX, class WEIGHT>
+void
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+aux_DFS (dfsinfo& dfs) const {
+//driver, to find all backedges, and topological order of vertices
+ 
+  VI  v1;
+  VID vid;	
+
+  for (v1 = v.begin(); v1 < v.end(); v1++) {
+    	vid = v1->vid;
+    	if( dfs.color[vid] == 0 ) 
+		true_DFS(vid, dfs);
+  }
+};
+
+template<class VERTEX, class WEIGHT>
+WeightedMultiDiGraph<VERTEX,WEIGHT>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+true_DFS (VID & vid, dfsinfo & dfs) const {
+//core DFS algorithm, start w/ vertex vid
+//return a dfstree started at vid
+//also return dfsinfo
+
+  CVI cv1,cv2;
+  VI  v1;
+  VID v1id=0,v2id=0;	//v1id=parent(vid), v2id=adj(vid)
+  int kk=0,k=1;
+  static int ftime=0;	//static finish time,  the finish time for different 
+			//trees is in consecutive order
+  WeightedMultiDiGraph<VERTEX,WEIGHT> dfstree;
+
+        dfs.color[vid] = 1;
+	dfs.vnode[k] = vid;  
+	if ( !IsVertex(vid, &cv1)) 
+		cout << "\nIn GraphDFS: vid=" << vid << " not in graph";
+        v1 = const_cast<VI>(cv1);
+	dfstree.AddVertex(v1->data,vid);
+	while( k > 0 ) {
+	    vid = dfs.vnode[k];
+	    if ( !IsVertex(vid, &cv1)) 
+	    	cout << "\nIn GraphDFS: vid=" << vid << " not in graph";
+  	    v1 = const_cast<VI>(cv1);
+   	    CEI e = v1->edgelist.begin(); 
+	    while ( e < v1->edgelist.end() ) {
+			v2id = e->vertex2id;
+			if( !dfs.color[v2id]) {
+		 		v1id = vid;
+				vid = v2id;
+				dfs.color[vid] = 1;
+			 	dfs.vnode[++k] = vid;
+	       		 	if ( IsVertex(vid, &cv2) ) {
+					v1 = const_cast<VI>(cv2);
+	        	 		dfstree.AddVertex(v1->data,vid);
+	        	 		dfstree.AddEdge(v1id,vid,e->weight);
+					e = v1->edgelist.begin();
+				} else cout << "\nIn GraphDFS: vid=" << vid << " not in graph";
+			}  
+			else if( dfs.color[v2id] == 1) {
+				pair<VID,VID> backedge(v2id,vid);
+				dfs.backedge_vector.push_back(backedge);
+				e++;
+				cout<<"backedge:"<<v2id<<" " << vid<<endl;
+			}
+ 			else e++;
+     	    }
+  	    dfs.finish_time[dfs.vnode[k]]=++ftime;
+    	    dfs.color[dfs.vnode[k]] = 2;
+   	    k--;
+    	}
+	//dfstree.DisplayGraph();
+	return dfstree;
+};
+
 //==============================
 //  FindPathBFS (for any graph)
 //  -- returns BFS path between 2 specified vertices 
@@ -1688,9 +1915,6 @@ FindPathBFS (VID _startVid, VID _endVid) const {
 //*************************************************************** 
 //  DIJKSTRA'S ALGORITHM
 //*************************************************************** 
-
-// Auxillary Data Structures & functions
-
 template<class VERTEX, class WEIGHT>
 bool 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
@@ -1883,6 +2107,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 WriteGraph(ostream& _myostream) const {
 
       _myostream << endl << "#####GRAPHSTART#####";
+      //_myostream << endl << "GRAPHSTART";
       _myostream << endl << this->numVerts << " " << this->numEdges << " " << this->vertIDs; 
 
       //format: VID VERTEX #edges VID WEIGHT VID WEIGHT ... 
@@ -1892,6 +2117,7 @@ WriteGraph(ostream& _myostream) const {
       } 
 
       _myostream << endl << "#####GRAPHSTOP#####";
+      //_myostream << endl << "GRAPHSTOP";
       _myostream << endl; 
 };
 
