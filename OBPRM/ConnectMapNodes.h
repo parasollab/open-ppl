@@ -173,7 +173,6 @@ public:
       inline CNF &  GetConnector();    ///<Get #connector
       inline EID    GetID() const;     ///<Get #cnid
       inline int    GetNumEdges   () const;///<Get #numEdges
-	  inline void   SetNumEdges(int cEdge);///<Set #numEdges
       inline int    GetKClosest   () const;///<Get #kclosest
       inline int    GetSmallCCSize() const;///<Get #smallcc
       inline int    GetKPairs     () const;///<Get #kpairs
@@ -184,6 +183,7 @@ public:
       inline int    GetMaxNum     () const;///<Get #maxNum
       inline double GetRFactor    () const;///<Get #rfactor
 
+  	  void SetNumEdges(int cEdge){numEdges=cEdge;} ///<Set #numEdges
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////

@@ -1443,10 +1443,6 @@ int CN::GetNumEdges() const{
     return numEdges;
 }
 
-void CN::SetNumEdges(int cEdge) {
-    numEdges = cEdge;
-}
-
 int CN::GetKClosest() const {
     return kclosest;
 }
