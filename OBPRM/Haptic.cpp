@@ -168,7 +168,7 @@ void Haptic::init(Roadmap *rm, char * tmp[5], CollisionDetection *_cd,
        pushObject.ShortestPush(cfgs);
    }
   #if INTERMEDIATE_FILES
-    vector<Cfg> vertices = rm->roadmap.GetVerticesData();
+    vector<Cfg> vertices = rm->m_pRoadmap->GetVerticesData();
     vector<Cfg> nodes;
     nodes.reserve(vertices.size());
     for(int k=0; k<vertices.size(); ++k)
@@ -201,20 +201,20 @@ void Haptic::AddFreeNodes(vector <Cfg>cfgs,bool checkConnection)
      if(cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
           {prev=INVALID_VID; prevCfg=cfgs[i]; continue;}
   
-     current=rdmp->roadmap.AddVertex(cfgs[i]);
+     current=rdmp->m_pRoadmap->AddVertex(cfgs[i]);
      cout << "VID : "<< current << " " <<cfgs[i] << " added in Free\n";
      if(prev==INVALID_VID) {prev=current; prevCfg=cfgs[i];continue; } 
     
      
      if(!checkConnection) {
         if(prev!=INVALID_VID) {
-	   rdmp->roadmap.AddEdge(prev,current,lpInfo.edge);
+	   rdmp->m_pRoadmap->AddEdge(prev,current,lpInfo.edge);
 	   cout << "Edge between (without check)" << prev << "-"<<current<<endl<<flush; 
 	}
      } else { 
        if(prev!=INVALID_VID &&
 	  lp->IsConnected(env,cd,dm,prevCfg,cfgs[i],connectionInfo.lpsetid,&lpInfo)) {
-             rdmp->roadmap.AddEdge(prev,current,lpInfo.edge );
+             rdmp->m_pRoadmap->AddEdge(prev,current,lpInfo.edge );
              //cout << "Edge between after check" << prev << "-"<<current<<endl<< flush;
        }
        else  cout << "Warning:  Could not connect the successive haptic nodes\n";
@@ -240,7 +240,7 @@ void Haptic::AddUsingSeed(vector <Cfg> seeds,int nodesPerSeed)
     {
       cout << "Error: The surface node is in collision\n";
     }
-   cout << "VID : "<< rdmp->roadmap.AddVertex(nodes[i]) << " " <<nodes[i] << " added in seed\n";
+   cout << "VID : "<< rdmp->m_pRoadmap->AddVertex(nodes[i]) << " " <<nodes[i] << " added in seed\n";
   }
        cout << "Added " << nodes.size() << endl;
   if (nodes.size()) {  
