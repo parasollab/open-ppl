@@ -104,6 +104,9 @@ public:
   virtual void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
 
+  // return a configuration(conformation)'s potential. default value is 0.
+  virtual double GetPotential(const Cfg &c, Environment *env) { return 0.0; } 
+  
   protected:
 	// dof: Degree of Freedom, posDof: DOF for positions.
 	int dof;
