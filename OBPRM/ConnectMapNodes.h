@@ -169,19 +169,19 @@ public:
     */
   //@{
 
-      inline char*  GetName() const;   ///<Retrive pointer for #name
-      inline CNF &  GetConnector();    ///<Get #connector
-      inline EID    GetID() const;     ///<Get #cnid
-      inline int    GetNumEdges   () const;///<Get #numEdges
-      inline int    GetKClosest   () const;///<Get #kclosest
-      inline int    GetSmallCCSize() const;///<Get #smallcc
-      inline int    GetKPairs     () const;///<Get #kpairs
-      inline int    GetKOther     () const;///<Get #k_other
-      inline int    GetKSelf      () const;///<Get #k_self
-      inline int    GetIterations () const;///<Get #iterations
-      inline int    GetStepFactor () const;///<Get #stepFactor
-      inline int    GetMaxNum     () const;///<Get #maxNum
-      inline double GetRFactor    () const;///<Get #rfactor
+      char*  GetName() const;   ///<Retrive pointer for #name
+      CNF &  GetConnector();    ///<Get #connector
+      EID    GetID() const;     ///<Get #cnid
+      int    GetNumEdges   () const;///<Get #numEdges
+      int    GetKClosest   () const;///<Get #kclosest
+      int    GetSmallCCSize() const;///<Get #smallcc
+      int    GetKPairs     () const;///<Get #kpairs
+      int    GetKOther     () const;///<Get #k_other
+      int    GetKSelf      () const;///<Get #k_self
+      int    GetIterations () const;///<Get #iterations
+      int    GetStepFactor () const;///<Get #stepFactor
+      int    GetMaxNum     () const;///<Get #maxNum
+      double GetRFactor    () const;///<Get #rfactor
 
   	  void SetNumEdges(int cEdge){numEdges=cEdge;} ///<Set #numEdges
   //@}
