@@ -321,13 +321,32 @@ final class iEvnOBPRM implements CaretListener, ActionListener
         {
    		//view strValues as a file name
         	String [] values;
+		String [] temp;
+
+		// System.out.println("\n\n\n Values[] before " + values);
+
+
         	
         	//dir
-        	values=iOBPRMUtility.getOptionValue(strValues[0], m_strDir_EnvName_CTag);
-        	if( values!=null && values.length==2 && 
+		temp=iOBPRMUtility.getOptionValue(strValues[0],"");
+        	
+		System.out.println("\ntemp[0] = " + temp[0]);// + "\ntemp[1] = " + temp[1] + "\ntemp[2] = " + temp[2]);
+		
+
+		values=iOBPRMUtility.getOptionValue(strValues[0], m_strDir_EnvName_CTag);
+
+		//System.out.println("\n\n temp[0] " + temp[0]+ "\n\n");
+
+        	//System.out.println("\n\n\n Values[0] after " + values[0]);
+		//System.out.println("\nValues[1] after " + values[1]);
+
+
+
+		if( values!=null && values.length==2 && 
         	    values[0].compareTo(m_strDir_EnvName_CTag)==0 )
         	{
         		m_strDir_EnvName=values[1];
+			m_strcmd_Name=temp[0];
         	}
         	
         	//default
@@ -810,12 +829,15 @@ final class iEvnQUERY implements CaretListener, ActionListener
         {
         	//view strValues as a file name
         	String [] values;
+		String [] cmdValue;
         	//default
+		cmdValue=iOBPRMUtility.getOptionValue(strValues[0],"");
         	values=iOBPRMUtility.getOptionValue(strValues[0], m_strquery_DefaultName_CTag);
         	if( values!=null && values.length==2 
         	    && values[0].compareTo(m_strquery_DefaultName_CTag)==0 )
         	{
         		m_strquery_DefaultName=values[1];
+			m_strcmd_Name=cmdValue[0];
         		m_bqueryDefault=true;
         		return true;
         	}
