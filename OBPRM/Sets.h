@@ -22,7 +22,7 @@
       The classes in this hierarchy (so far) include:
         o BasicSets 
 
-   @author Nancy Amato
+   @author Nancy Amato 
    @date 8/5/98
 */
 /////////////////////////////////////////////////////////////////////
