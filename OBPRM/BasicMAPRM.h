@@ -28,8 +28,8 @@ private:
 	static void BuildVCLIP( Environment * env );
 #endif
 	
-	static num_param<bool> m_bApprox; //using approximation or exact computation
-	static num_param<int> m_bRays; //number of shooting rays for approximation penetration.
+	static num_param<int> m_bApprox; //using approximation or exact computation
+	static num_param<int> m_iRays; //number of shooting rays for approximation penetration.
 };
 
 #endif

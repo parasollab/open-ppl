@@ -874,8 +874,9 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
   
     // if this cfg is free (state = false) then return smallestDistance (clearance)
     // if this cfg is not free (state = true) then return -smallestDistance (penetration)
-    clearInfo.setClearance((bInitState==false)?clearInfo.getClearance():-clearInfo.getClearance());
-    
+   // clearInfo.setClearance((bInitState==false)?clearInfo.getClearance():-clearInfo.getClearance());
+    clearInfo.setClearance(clearInfo.getClearance());
+
     return clearInfo;
 }
 

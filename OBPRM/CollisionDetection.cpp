@@ -378,13 +378,16 @@ isInsideObstacle(const Cfg & cfg, Environment* env, SID _cdsetid, CDInfo& _cdInf
 
 #ifdef USE_RAPID
 	if( cdfcn==&CollisionDetection::IsInCollision_RAPID )
-	return isInsideObs_RAPID(cfg, env, _cdsetid, _cdInfo);
+		return isInsideObs_RAPID(cfg, env, _cdsetid, _cdInfo);
 #endif
 
 #ifdef USE_PQP
 	if( cdfcn==&CollisionDetection::IsInCollision_PQP )
-	return isInsideObs_PQP(cfg, env, _cdsetid, _cdInfo);
+		return isInsideObs_PQP(cfg, env, _cdsetid, _cdInfo);
 #endif
+
+	cerr<<"! Error: CollisionDetection::isInsideObstacle"<<endl;
+	return false;
 }
 
 #ifdef USE_CSTK
@@ -481,9 +484,11 @@ isInsideObstacle(const Cfg & cfg, Environment* env, SID _cdsetid, CDInfo& _cdInf
 		if( dY==0 && dZ==0 && dX==0 ) 
 			cout<<"! CollisionDetection::BuildPQPRay Warning : All are [0]"<<endl;
 
-		PQP_REAL p1[3] = { (PQP_REAL)(1e-20/LONG_MAX), (PQP_REAL)(1e-20/LONG_MAX), (PQP_REAL)(1e-20/LONG_MAX) };
-		PQP_REAL p2[3] = { (PQP_REAL)(1e-20/LONG_MAX)/2,(PQP_REAL)(1e-20/LONG_MAX)/2, (PQP_REAL)(1e-20/LONG_MAX)/2 };
-		PQP_REAL p3[3] = { (PQP_REAL)dX, (PQP_REAL)dY, (PQP_REAL)dZ};
+		static PQP_REAL tiny_v=((double)1e-20)/LONG_MAX;
+		static PQP_REAL pico_v=tiny_v/2;
+		PQP_REAL p1[3] = { tiny_v, tiny_v, tiny_v };
+		PQP_REAL p2[3] = { pico_v, pico_v, pico_v };
+		PQP_REAL p3[3] = { dX, dY, dZ};
     
 		pRay->BeginModel();
 		pRay->AddTri(p1, p2, p3, 0);

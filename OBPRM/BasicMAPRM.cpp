@@ -2,32 +2,34 @@
 #include "MultiBody.h"
 #include "util.h"
 
-#define EXPANSION_FACTOR 100
+num_param<int> CBasicMAPRM::m_bApprox("approx",1,0,1);
+num_param<int> CBasicMAPRM::m_iRays("approx_ray",10,1,100);
 
-num_param<bool> CBasicMAPRM::m_bApprox("approx",true,false,true);
-num_param<int> CBasicMAPRM::m_bRays("appox_ray",10,1,100);
+/**
+* Read parameters from user given options.
+*/
 bool CBasicMAPRM::ReadParameters(int & start, int end, char ** argv, num_param<int>& nnode)
 {
-	m_bApprox.PutDesc("BOOL","");
-	m_bRays.PutDesc("INTEGER","");
+	m_bApprox.PutDesc("INTEGER","");
+	m_iRays.PutDesc("INTEGER","");
 	if( start>end || argv==NULL ) return false;
 	for(;start<end;start++ ){
 		if( m_bApprox.AckCmdLine(&start,(int)end,argv) ){}
-		else if( m_bRays.AckCmdLine(&start,(int)end,argv) ){}
+		else if( m_iRays.AckCmdLine(&start,(int)end,argv) ){}
 		else if( nnode.AckCmdLine(&start,(int)end,argv) ){}
 		else return false;
 	}
-
+	
 #ifndef USE_VCLIP
-	if( m_bApprox.GetValue()==false ){ //use exact penetration
+	if( m_bApprox.GetValue()==0 ){ //use exact penetration
 		cerr<<" Error : Compute exact penetration for BasicMAPRM requres VCLIP."
-		    <<" Please Recompile OBPRM with USE_VCLIP flag"<<endl;
+			<<" Please Recompile OBPRM with USE_VCLIP flag"<<endl;
 		return false;
 	}
 #endif
 #if !defined(USE_VCLIP) && !defined(USE_PQP)
 	cerr<<" Error : BasicMAPRM requres VCLIP or PQP."
-	    <<" Please Recompile OBPRM with USE_PQP or/and USE_VCLIP flag"<<endl;
+		<<" Please Recompile OBPRM with USE_PQP or/and USE_VCLIP flag"<<endl;
 	return false;
 #endif
 	
@@ -57,10 +59,14 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 	Cfg      cfg;
 	
 #ifndef QUIET
-	cout << endl << "Begin BasicMAPRM..." << endl;
-	cout << "(numNodes=" << _gn.numNodes.GetValue() << ") " << endl;
-	cout << "_env PositionRes  = " << _env->GetPositionRes() << endl;
-	cout << "Expansion Factor  = " << EXPANSION_FACTOR << endl;
+	cout << endl << "\t- Begin BasicMAPRM..." << endl;
+	if( m_bApprox.GetValue()==0 ){
+		cout<<"\t\t- Use exact penetration"<<endl;
+	}
+	else{
+		cout<<"\t\t- Use approximate penetration\n";
+		cout<<"\t\t- "<<m_iRays.GetValue()<<" rays will be used to approximate penetration."<<endl;
+	}
 #endif
 	
 #if INTERMEDIATE_FILES
@@ -69,37 +75,38 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 #endif
 	
 #ifdef USE_VCLIP
-	if( m_bApprox.GetValue()==false ) //use exact penetration (VCLIP require). 
+	if( m_bApprox.GetValue()==0 ) //use exact penetration (VCLIP require). 
 		BuildVCLIP(_env); //Make sure vclip is buid
 #endif
 	
+#ifndef QUIET
 	cout<<"- "<<flush;
+#endif
 	for (int i=0; i < _gn.numNodes.GetValue(); i++)
 	{
-		if( i%80==0 && i!=0 ) cout<<"("<<i<<"/"<<_gn.numNodes.GetValue()<<")"<<endl<<"- ";
-		cout<<"#"<<flush;
-
 		// Get a random configuration that STARTS in the bounding box of env
 		cfg = Cfg::GetRandomCfg(_env);  // should always be in bounding box
-
+		
 		//use approximate computation for moving out robot from obs
 		if( m_bApprox.GetValue() ){
 			_info.cdInfo.ret_all_info = false;
 			collided = cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
-			if( collided )	MoveOutObstacle(cfg,_env,cd,_info);
+			if( collided ){
+				MoveOutObstacle(cfg,_env,cd,_info);
+				collided = cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
+			}
 			if(cd->isInsideObstacle(cfg,_env,_info.cdsetid,_info.cdInfo)){
-				collided=true;
 				_info.cdInfo.ret_all_info = true;
 				cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
 				Vector3D trans_dir=(_info.cdInfo.object_point-_info.cdInfo.robot_point)*1.00001;
 				_info.cdInfo.ret_all_info = false;
 				MoveOutObstacle(cfg,trans_dir,_env,cd,_info);
+				collided=!cfg.InBoundingBox(_env); //out of box
 			}
-			if( collided ) collided = cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
 		}
 #ifdef USE_VCLIP
 		else{ //use exact computation for penetration
-
+			
 			_info.cdInfo.ret_all_info = true;	
 			cfg.isCollision(_env, cd, VCLIP, _info.cdInfo); //use vclip
 			_info.cdInfo.ret_all_info = false;
@@ -112,25 +119,31 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 			}
 		}
 #endif
-
+		
 		// So we "should" be out of collision and INSIDE bounding box 
 		// so we can move cfg toward Medial Axis
 		if (!collided)
 		{
 #if INTERMEDIATE_FILES
-      		      	MoveToMedialAxis(cfg, &path, _env, cd, dm, _gn, _info);
+			MoveToMedialAxis(cfg, &path, _env, cd, dm, _gn, _info);
 			//_info.nodes.push_back(cfg);
 #else
-            		MoveToMedialAxis(cfg, NULL, _env, cd, dm, _gn, _info);
+            MoveToMedialAxis(cfg, NULL, _env, cd, dm, _gn, _info);
 			//_info.nodes.push_back(cfg);
 #endif
 		}
 		else
 		{
 			//cout << "BasicMAPRM unable to move random cfg out of collision." << endl;
-			cout<<"?"<<flush;
+			//cout<<"?"<<flush;
 			i--;
+			continue;
 		}
+
+#ifndef QUIET
+		if( i%80==0 && i!=0 ) cout<<"("<<i<<"/"<<_gn.numNodes.GetValue()<<")"<<endl<<"- ";
+		cout<<"#"<<flush;
+#endif
 		
 	} // end for i = 1 to _gn.numNodes.GetValue()
 	
@@ -139,7 +152,8 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 #endif
 	
 #ifndef QUIET
-	cout << endl << "... END BasicMAPRM" << endl;
+	cout << "(done)"<<endl;
+	cout << "... END BasicMAPRM" << endl;
 #endif
 	
 } // end BasicMAPRM
@@ -148,59 +162,37 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 void CBasicMAPRM::MoveOutObstacle
 (Cfg & cfg, Environment *_env, CollisionDetection* cd, GNInfo &_info)
 {
-	// Store cfg in its "original" state
-	Cfg orig_cfg = cfg;
-	Cfg non_collide_cfg = cfg;
-
-	//bounding box
-	static double * bb = _env->GetBoundingBox();
-	static double x_scale = bb[1] - bb[0];
-	static double y_scale = bb[3] - bb[2];
-	static double z_scale = bb[5] - bb[4];
-
-	// since what points are "near" is not clearly defined when collisions
-	// occur - particularly across collision detection libraries
-	// we will pick a completely random direction and push our point
-	// that way, once we get out of collision we will apply the
-	// same method as if we were originally not in collision
-	
 	// Set _info so we do NOT get all info (for speed)
 	_info.cdInfo.ResetVars();
 	
 	// Generate Random direction
 	Cfg move_out_dir_cfg = Cfg::GetRandomRay( _env->GetPositionRes() );
+	long num_rays = m_iRays.GetValue();  // how many rays do we try to get random cfg out of collision
+	Cfg * rays=new Cfg[num_rays]; //testing directions
+	Cfg * pos=new Cfg[num_rays];  //test position, will update each time by rays
+	if( rays==NULL || pos==NULL ) return; //test if enough memory
 	
-	long attempts_out = 0;
-	long steps_out = 0;
-	long min_steps_out = 9999999;   // init to arbitrary LARGE number
-	long max_tries_out = m_bRays.GetValue();  // how many times do we try to get random cfg out of collision
+	//init arrays
+	for( int iR=0;iR<num_rays; iR++ ){
+		rays[iR]=Cfg::GetRandomRay( _env->GetPositionRes() );	
+		pos[iR]=cfg; //all start from given cfg
+	}
 	
-	// We will always try max_tries_out times and we keep the one
-	// that moved out in the fewest number of steps
-	while(attempts_out < max_tries_out)
-	{
-		// Move cfg out of collision in move_out_dir_cfg
-		// later use trans_cfg instead of incrCfg... should get odd? results ???
-		non_collide_cfg = non_collide_cfg + move_out_dir_cfg;
-		steps_out++;
-
-		if( steps_out<=min_steps_out ){
-			if( non_collide_cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo)==true ) 
-				continue;
-		}
-		
-		//make sure this node is inside bbx
-		if (non_collide_cfg.InBoundingBox(_env)){ //in bbx
-			if (steps_out < min_steps_out){
-				cfg = non_collide_cfg;
-				min_steps_out = steps_out;
+	//start to escape though each shooting rays
+	bool bCollide=true; //init condition is in collision, so set to true
+	while( bCollide ){ //loop until no in collision
+		bool allOutBBX=true; //if all out of bbx, we don't want to go ahead.
+		for( int iR=0;iR<num_rays;iR++ ){
+			pos[iR]=pos[iR]+rays[iR];
+			if( !pos[iR].InBoundingBox(_env) ) continue; //out of bounding box
+			allOutBBX=false;
+			if( !pos[iR].isCollision(_env, cd, _info.cdsetid, _info.cdInfo) ){
+				bCollide=false; //not in collision any more
+				cfg=pos[iR];
 			}
-		}
-
-		steps_out=0;
-		non_collide_cfg=orig_cfg;
-		attempts_out++;
-	} // end while not "too many" attempts
+		}//end for
+		if( allOutBBX ) break; //failed
+	}//end while( bCollide )
 }
 
 //robot is completely inside obs
@@ -208,7 +200,6 @@ void CBasicMAPRM::MoveOutObstacle
 (Cfg & cfg, Vector3D & dir,Environment *_env, CollisionDetection* cd, GNInfo &_info)
 {
 	// Store cfg in its "original" state
-	Cfg orig_cfg = cfg;
 	cfg.SetSingleParam(0, cfg.GetData()[0]+dir[0]);
 	cfg.SetSingleParam(1, cfg.GetData()[1]+dir[1]);
 	cfg.SetSingleParam(2, cfg.GetData()[2]+dir[2]);
@@ -220,11 +211,10 @@ void CBasicMAPRM::MoveOutObstacle
 	trans_cfg.SetSingleParam(1, dir[1]);
 	trans_cfg.SetSingleParam(2, dir[2]);
 	trans_cfg=trans_cfg*0.1;
-
+	
 	//move in same dir until out of collision
 	do{
 		cfg=cfg+trans_cfg;
-		if (!cfg.InBoundingBox(_env)){ cfg=orig_cfg; break; } //can't find a way to push out
 	}
 	while(cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo));
 }
@@ -241,7 +231,7 @@ MoveToMedialAxis(Cfg &cfg, vector<Cfg> *path, Environment *_env,
                  CollisionDetection* cd, DistanceMetric *dm,GN& _gn, GNInfo &_info, int l)
 {
 	//if(l>3){ _info.nodes.push_back(cfg); return;}
-
+	
 	Vector3D trans_dir;
 	Cfg      trans_cfg(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	CDInfo   oldInfo;
@@ -272,7 +262,7 @@ MoveToMedialAxis(Cfg &cfg, vector<Cfg> *path, Environment *_env,
 	//(This is not good (for non-convex), we should check closest pt.)
 	Cfg oldcfg=cfg;	Cfg newcfg=cfg;
 	Vector3D diff;
-
+	
 	do  //want to translate cfg in trans_dir until closest obstacle changes
 	{
 		oldcfg = newcfg;
@@ -292,16 +282,16 @@ MoveToMedialAxis(Cfg &cfg, vector<Cfg> *path, Environment *_env,
 		if( (oldcfg-newcfg).PositionMagnitude() < _env->GetPositionRes() ) return;
 		newcfg=(oldcfg+newcfg)/2;
 	}
-
+	
 	cfg=newcfg;
-// while we should never move into a collision state, we check anyway	
+	// while we should never move into a collision state, we check anyway	
 #if INTERMEDIATE_FILES
 	//MoveToMedialAxis(cfg, path, _env, cd, dm, _gn, _info,++l);
 	path->push_back(cfg);
 #endif
-
+	
 	_info.nodes.push_back(cfg);
-
+	
 } // end MoveToMedialAxis
 
 
@@ -390,16 +380,16 @@ getCollisionInfo( Cfg & cfg, Environment * _env, CollisionDetection* cd, SID cds
 
 #ifdef USE_VCLIP
 void CBasicMAPRM::BuildVCLIP( Environment * env ){
-		int n=env->GetMultiBodyCount();
-		for( int iM=0;iM<n;iM++ ){ //for each m-body
-			MultiBody * mbody=env->GetMultiBody(iM);
-			int nb=mbody->GetBodyCount();
-			for( int iB=0;iB<nb;iB++ ){
-				Body * body=mbody->GetBody(iB);
-				PolyTree * tree=body->GetVclipBody();
-				if( tree==NULL )
-				       	body->buildCDstructure(VCLIP);
-			}//end for each body
-		}//end for each m-body
+	int n=env->GetMultiBodyCount();
+	for( int iM=0;iM<n;iM++ ){ //for each m-body
+		MultiBody * mbody=env->GetMultiBody(iM);
+		int nb=mbody->GetBodyCount();
+		for( int iB=0;iB<nb;iB++ ){
+			Body * body=mbody->GetBody(iB);
+			PolyTree * tree=body->GetVclipBody();
+			if( tree==NULL )
+				body->buildCDstructure(VCLIP);
+		}//end for each body
+	}//end for each m-body
 }
 #endif

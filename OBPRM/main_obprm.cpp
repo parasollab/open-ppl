@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 
 
   // do not seed for now while developing code... ADD SEEDING LATER
-  //    srand48((unsigned int) time(NULL));
+  // srand48((unsigned int) time(NULL));
 
   //----------------------------------------------------
   // instantiate roadmap object 
