@@ -95,9 +95,9 @@ typedef void (*GNF) (Environment*, CollisionDetection*,DistanceMetric*,GN&, GNIn
 //  class GN
 //
 //  General Description
-//     This class contains information relevant to a particular 
+//     This class contains information relevant to a particular
 //     map node generator (e.g., name, ptr to function, etc).
-//     
+//
 //
 /////////////////////////////////////////////////////////////////////
 class GN {
@@ -136,7 +136,7 @@ private:
 
 };
 
-ostream& operator<< (ostream&, const GN& ); 
+ostream& operator<< (ostream&, const GN& );
 
 
 
@@ -152,7 +152,7 @@ ostream& operator<< (ostream&, const GN& );
 //
 //     Each generator and set is given a unique id. The gn ids (EIDs)
 //     are used to compose labels encoding generator sets (used, e.g.,
-//     to record 
+//     to record
 //
 /////////////////////////////////////////////////////////////////////
 class GNSets : public BasicSets<GN> {
@@ -223,7 +223,7 @@ private:
 /////////////////////////////////////////////////////////////////////
 
 class GenerateMapNodes {
-   friend SID MakeGNSet(istream&); 
+   friend SID MakeGNSet(istream&);
 public:
   //===================================================================
   // Constructors and Destructor
@@ -250,13 +250,13 @@ public:
 
   static
   void OBPRM
-       	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& ); 
+       	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
 
   static
   void GaussPRM
 	(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
 
-  static 
+  static
   bool ValidateParameters(Input*);
 
   static
@@ -281,10 +281,10 @@ protected:
   static
   int TranslateOptionCode(char*, n_str_param);
 
-  static 
+  static
   bool ValidatePairs(char*, n_str_param, pair<int,int>*);
 
-  static void 
+  static void
   GenerateSeeds(Environment*, CollisionDetection *,GNInfo&,
 		int, int, int, int, vector<Cfg>*);
 
@@ -332,7 +332,7 @@ protected:
   ExtremeVertex(Body*, bool isFreeBody);
 
   static Vector3D
-  ChooseRandomWeightedTriangleOnBody(Body *body, bool isFreeBody); 
+  ChooseRandomWeightedTriangleOnBody(Body *body, bool isFreeBody);
 
   static Vector3D
   PointOnBody(Body*, int, bool);
@@ -343,13 +343,13 @@ protected:
   static vector<Cfg>
   Shells(vector<Cfg>, int);
 
-  static bool 
-  GenerateInsideCfg(Environment*, int, int, Cfg*);
+  static bool
+  GenerateInsideCfg(Environment*, CollisionDetection* cd, int, int, Cfg*, GNInfo &_info);
 
   static Cfg
   GenerateOutsideCfg(Environment*, CollisionDetection*,int, int, Cfg, Cfg, GNInfo&);
 
-  static vector<Cfg> 
+  static vector<Cfg>
   GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, int obstacle, int nCfgs, GNInfo &_info);
 
   static vector<Cfg>

@@ -272,7 +272,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
 
 		// Generate Inside cfg
 		Cfg InsideNode;
-		if(!GenerateInsideCfg(_env, robot, obstacle, &InsideNode)) {
+		if(!GenerateInsideCfg(_env, cd, robot, obstacle, &InsideNode, _info)) {
                    cout << "\nError: cannot overlap COMs of robot & obstacle\n";
                    continue;
                 }
@@ -1294,13 +1294,26 @@ Shells(vector<Cfg> cfgs, int nshells){
 //===================================================================
 bool
 GenerateMapNodes::
-GenerateInsideCfg(Environment *_env, int rob, int obst, Cfg * insideNode){
+GenerateInsideCfg(Environment *_env, CollisionDetection* _cd,
+		int rob, int obst, Cfg *insideNode, GNInfo &_info){
 
     _env->GetMultiBody(obst)->ComputeCenterOfMass();
     bool tmp = Cfg::GenerateOverlapCfg(_env, rob,
                 _env->GetMultiBody(rob)->GetCenterOfMass(),
                 _env->GetMultiBody(obst)->GetCenterOfMass(),
                 insideNode);
+    if (!insideNode->isCollision(_env, _cd, rob, obst, _info.cdsetid)) {
+
+      // use random vertex instead of center of mass
+      Vector3D vP;
+
+      // copied from GenerateMapNodes::PointsOnMultiBody()
+      vP = PointOnBody(_env->GetMultiBody(obst)->GetFixedBody(0), rV, false);
+
+      Cfg c(vP[0], vP[1], vP[2], 0, 0, 0);
+      *insideNode = c;
+      tmp = true;
+    }
     return tmp;
 }
 
