@@ -328,9 +328,11 @@ protected:
   FarthestFromStart(Environment*, DistanceMetric*,
 		GNInfo&, Cfg, vector<Cfg>, vector<Cfg>*);
 
-  static void
-  FirstNFreeCfgs(Environment*, CollisionDetection *,GNInfo&,
-		 int, vector<Cfg>, vector<Cfg>*);
+  static vector<Cfg>
+  FirstFreeCfgs(Environment*, CollisionDetection*, vector<Cfg>, GNInfo&, int);
+
+  static vector<Cfg>
+  FirstFreeCfgs(Environment*, CollisionDetection*,vector<Cfg>, GNInfo&);
 
   static void
   GenNewPivots(Environment*, CollisionDetection *cd,DistanceMetric*,GNInfo&,
@@ -339,9 +341,6 @@ protected:
   static void
   SpreadCfg(Environment*, CollisionDetection *cd,DistanceMetric*,GNInfo&,
             Cfg, double, double, int, int, int);
-
-  static vector<Cfg>
-  FreeCfgs(Environment*, CollisionDetection *cd,vector<Cfg>, GNInfo&);
 
   static vector<Cfg>
   InsideBoundingBox(Environment*, vector<Cfg>);

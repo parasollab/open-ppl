@@ -37,7 +37,6 @@
 //      11/22/99  Nancy Amato (add GetEdgesVData)
 //      11/26/99  Nancy Amato (Dijkstra SSSP;BFS cleanup;Weight class;cleanup)
 /////////////////////////////////////////////////////////////////////
-
 #ifndef Graph_h
 #define Graph_h
 
@@ -49,38 +48,37 @@
 #include <fstream.h>
 #include <iomanip.h>
 
-#if defined(sun) || defined(__sgi)		//g++ in SUN or CC in SGI
-#include <algo.h>	
-#include <list.h>	
-#include <vector.h>
-#include <deque.h>	
-#include <stack.h>	
+#include <algo.h>          //g++ in SUN
+#include <list.h>          //g++ in SUN
+
+#ifndef __HP_aCC
+   //#include <algorithm>  //c++ in parasol
+   //#include <list>       //c++ in parasol
+   #include <vector.h>
+   #include <deque.h>	
+   #include <stack.h>
+	
+   #ifndef VID
+   typedef short VID;
+   #endif
+
+#else		
+   #include <iterator>
+   #include <vector>       //aCC in parasol
+   #include <deque>        //aCC in parasol
+   #include <stack>        //aCC in parasol
+
+   #ifndef VID
+   typedef int VID;
+   #endif
+
 #endif
 
-#if defined(hppa) && defined(__cplusplus)	//c++ in parasol
-#include <algorithm>	
-#include <list>		
-#include <vector.h>
-#include <deque.h>	
-#include <stack.h>	
-#endif
-
-#ifdef __HP_aCC					//aCC in parasol
-#include <algorithm>	
-#include <list>		
-#include <vector>       
-#include <deque>        
-#include <stack>		
-#endif
-
-#ifndef VID
-typedef int VID;
-#endif
 
 #include "BasicDefns.h"
 
 #ifndef EID
-typedef short EID;
+ typedef short EID;
 #endif
 
 #ifndef INVALID_VID
@@ -102,10 +100,6 @@ template<class VERTEX, class WEIGHT> class WtVertexType;
 //            first endpoint is implicit due to the adjacency list rep) 
 //        --  the edge WEIGHT
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 template<class VERTEX, class WEIGHT>
 class WtEdgeType {   
@@ -144,10 +138,6 @@ private:
 //      Its data includes an edgelist for the vertex, and its methods 
 //      are responsible for adding/removing edges and weights. 
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 template<class VERTEX, class WEIGHT>
 class WtVertexType {  
@@ -214,8 +204,8 @@ CRPEI;
   VERTEX data; // e.g., cfg, data here...
   VID    vid;          // this vertex's unique id (not nec. index)
   vector< WtEdge > edgelist;   // adj list rep of graph
-  vector< WtEdge > predecessors; // call SetPredecessors() to initialize
-  
+  vector< pair<VID, WEIGHT> > preedgelist;
+
 protected:
 private:
 };
@@ -231,16 +221,10 @@ private:
 //      representing various types of graphs (e.g., undirected,
 //      directed, unweighted, weighted, or multigraphs).
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 template<class VERTEX> 
 class AbstractGraph {
-
 public:
-
   //===================================================================
   //  Constructors and Destructor
   //===================================================================
@@ -268,11 +252,6 @@ public:
    int  GetVertexCount() const;
    int  GetEdgeCount() const;
    VID  GetNextVID() const;
-
-	//Modifying Data
-	void SetStartID(VID); 	//To define start number of identifier
-	void SetnumVerts(int);
-	void SetnumEdges(int);
 
         // Display, Input, Output 
    virtual void DisplayGraph() const = 0; 
@@ -304,11 +283,8 @@ private:
 //
 //      The graph is represented by an adjacency list structure.
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      1/15/98  Nancy Amato
 /////////////////////////////////////////////////////////////////////
+
 template<class VERTEX, class WEIGHT>
 class WeightedMultiDiGraph : public AbstractGraph<VERTEX> {
 public:
@@ -353,10 +329,8 @@ public:
    virtual int  DeleteWtEdge(VERTEX&,VERTEX&,WEIGHT, int n=-1); //default, delete all
    void DeleteAllEdges(VERTEX&);                       
 
-//lkd
         // Modifying Vertices
   void PutData(VID, VERTEX);
-  void SetPredecessors();	//Initialize predecessors in the data field of Vertex
 
         // Finding Vertices & Edges
    bool IsVertex(VID) const;
@@ -387,15 +361,9 @@ public:
    //virtual int GetVertexDegree(VID) const;
    virtual vector<VID> GetSuccessors(VID) const;
    virtual vector<VID> GetSuccessors(VERTEX&) const;
-
-//=======================================================
-//The following methods need to call SetPredecessors() first
-//to initialize predecessor vector
-//=======================================================
-   virtual vector<VID> GetPredecessors(VID) const;
-   virtual vector<VID> GetPredecessors(VERTEX&) const;
-   vector<VID> GetSources() const;
-
+   void GetPredecessorVector(); // NMA:::: THIS NEEDS TO GO!
+   //virtual vector<VID> GetPredecessors(VID) const;
+   //virtual vector<VID> GetPredecessors(VERTEX&) const;
    //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetIncidentEdges(VID) const;
    //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetIncomingEdges(VID) const;
    //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetOutgoingEdges(VID) const;
@@ -412,6 +380,10 @@ public:
    vector< pair<VERTEX,WEIGHT> >  FindPathDijkstra(VID,VID) const; //wts=ewts
    vector< pair<VERTEX,WEIGHT> >  FindPathDijkstra(VERTEX&,VERTEX&) const; 
 
+   vector< VID >  DFS () const; 
+   deque < VID >  TopologicalSort ();
+   deque < VID >  CycleDetect ();
+   void DfsTpsCyc(int, int, vector<VID>&, deque<VID>&, deque<VID>&);
 
         // Display, Input, Output 
    void DisplayGraph() const; 
@@ -423,7 +395,7 @@ public:
    void ReadGraph(istream& _myistream);
    void ReadGraph(const char*  _filename);
 
-//protected:
+protected:
   //===================================================================
   //  Utility Stuff for WeightedMultiDiGraphs
   //===================================================================
@@ -458,6 +430,17 @@ public:
    Vertex* my_find_VDATA_eq(const VERTEX& _v) const;
    static bool VID_Compare (const Vertex& _v1, const Vertex& _v2); 
 
+   // for Dijkstra's algorithm
+   class dkinfo {
+   public:
+     dkinfo() {};
+     dkinfo(VID _vid, VID _pvid, double _d) {vid=_vid; predvid=_pvid; dist=_d;};
+     VID    vid;
+     VID    predvid;
+     double dist;
+   };
+   static bool dkinfo_Compare (const dkinfo& _d1, const dkinfo& _d2); 
+
    //NMA: the following predictates work with stl/sun/g++ but not stl/sgi/CC
    //class VID_eq; 
    //class VDATA_eq;
@@ -486,10 +469,6 @@ private:
 //
 //      The graph is represented by an adjacency list structure.
 //
-//  Created
-//      7/18/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 template<class VERTEX, class WEIGHT>
 class WeightedGraph : public WeightedMultiDiGraph<VERTEX,WEIGHT> {
@@ -504,7 +483,7 @@ public:
    WeightedGraph();
    WeightedGraph(int);       // 'reserve' space for vertices
    WeightedGraph(int,int);   // 'reserve' space for verts & edges
-   WeightedGraph(WeightedMultiDiGraph<VERTEX,WEIGHT>); // construct from base  
+//   WeightedGraph(WeightedMultiDiGraph<VERTEX,WEIGHT>); // construct from base  
    ~WeightedGraph();
 
   //===================================================================
@@ -531,12 +510,7 @@ public:
    virtual int     GetVertexDegree(VID) const;
    virtual vector< VID > GetAdjacentVertices(VID) const;
    virtual vector< pair<pair<VID,VID>,WEIGHT> > GetIncidentEdges(VID) const;
-
-       // Basic Graph Algorithms (implemented in WeightedMultiDigraph)
-   //WeightedGraph<VERTEX,WEIGHT> BFS(VID) const; 
-   //WeightedGraph<VERTEX,WEIGHT> BFS(VERTEX&) const; 
-   //vector< pair<VERTEX,WEIGHT> > FindPathBFS(VID,VID) const;
-   //vector< pair<VERTEX,WEIGHT> > FindPathBFS(VERTEX&,VERTEX&) const;
+   virtual vector< pair<pair<VERTEX,VERTEX>,WEIGHT> > GetIncidentEdgesVData(VID) const;
 
        // Connected Components Utilities
    bool IsSameCC(VID,VID) const;
@@ -558,10 +532,6 @@ public:
 
         // Predicates, Comparisons, & Operations 
    static bool CCVID_Compare (const pair<int,VID>& _cc1, const pair<int,VID>& _cc2); 
-
-	//transform DAG to undirected graph
-	WeightedGraph<VERTEX,WEIGHT>
-		DagToUndirected(WeightedMultiDiGraph<VERTEX, WEIGHT>&);
 
   //===================================================================
   //  Utility Stuff for WeightedGraph
@@ -619,9 +589,6 @@ AbstractGraph<VERTEX>::
   //==================================
   // AbstractGraph class Methods: Statistics -- num verts/edges, etc 
   //==================================
-  // int GetVertexCount() const;
-  // int GetEdgeCount() const; 
-  // int GetNextVID() const;
 
 template<class VERTEX> 
 int 
@@ -644,33 +611,6 @@ GetNextVID() const {
       return vertIDs;
 };
 
-  //==================================
-  // AbstractGraph class Methods: Modify Data -- num verts/edges, etc 
-  //==================================
-  //void SetStartID(VID); 	//To define start number of identifier
-  //void SetnumVerts(int);
-  //void SetnumEdges(int);
-
-template<class VERTEX> 
-void 
-AbstractGraph<VERTEX>:: 
-SetStartID(VID _startvid) {
-      vertIDs = _startvid;
-};
-
-template<class VERTEX> 
-void 
-AbstractGraph<VERTEX>:: 
-SetnumVerts(int _num) {
-      numVerts = _num;
-};
-
-template<class VERTEX> 
-void 
-AbstractGraph<VERTEX>:: 
-SetnumEdges(int _num) {
-      numEdges = _num;
-};
 
 //=====================================================================
 // METHODS FOR template WeightedMultiDiGraph Class
@@ -707,23 +647,15 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
   //==================================
   // WeightedMultiDiGraph class Methods: Adding & Deleting Vertices
   //==================================
-  // public:
-  // virtual VID  AddVertex(VERTEX);
-  // virtual VID  AddVertex(vector<VERTEX>);
-  // int  DeleteVertex(VID);
-  // int  DeleteVertex(VERTEX);
-  // int  EraseGraph();
-  // protected:
-  // VID  AddVertex(VERTEX,VID);
 
 template<class VERTEX, class WEIGHT> 
 VID 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 AddVertex(VERTEX& _v) {
-      VID vid = this->vertIDs++;
-      Vertex newVertex(_v,vid,this->reserveEdgesPerVertex);
+      VID vid = vertIDs++;
+      Vertex newVertex(_v,vid,reserveEdgesPerVertex);
 		v.push_back(newVertex);
-      this->numVerts++;
+      numVerts++;
       return (vid); // return vertex id (not nec. index)
 };
 
@@ -747,9 +679,9 @@ VID
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
 AddVertex(VERTEX& _v, VID _vid) {
       VID vid = _vid;
-      Vertex newVertex(_v,vid,this->reserveEdgesPerVertex);
+      Vertex newVertex(_v,vid,reserveEdgesPerVertex);
       v.push_back(newVertex);
-      this->numVerts++;
+      numVerts++;
       return (vid); // return vertex id (not nec. index)
 };
 
@@ -764,7 +696,7 @@ DeleteVertex(VERTEX& _v1) {
          v1 = const_cast<VI>(cv1);
          DeleteAllEdgesToV(v1->vid);
          v.erase(v1);
-         this->numVerts--;
+         numVerts--;
          return OK;
      } else {
          cout << "\nDeleteVertex: vertex not in graph";
@@ -782,7 +714,7 @@ DeleteVertex(VID _v1id) {
          v1 = const_cast<VI>(cv1);
          DeleteAllEdgesToV(_v1id);
          v.erase(v1);
-         this->numVerts--;
+         numVerts--;
          return OK;
      } else {
          cout << "\nDeleteVertex: vertex not in graph";
@@ -796,21 +728,19 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 EraseGraph() {
      while ( v.size() != 0 ) 
          v.pop_back();
-     this->vertIDs = this->numVerts = this->numEdges = 0;
+     vertIDs = numVerts = numEdges = 0;
      return OK;
 };
 
 
   //==================================
   // WeightedMultiDiGraph class Methods: Modifying Vertices
-  //void PutData(VID, VERTEX);
-  //void SetPredecessors();
   //==================================
 
 template<class VERTEX, class WEIGHT>
 void
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
-PutData(VID _vid, VERTEX _v){ // lkd: 7-7-99
+PutData(VID _vid, VERTEX _v){ 
      CVI cv1;
      VI v1;
      if ( IsVertex(_vid,&cv1) ) {
@@ -819,52 +749,10 @@ PutData(VID _vid, VERTEX _v){ // lkd: 7-7-99
      }
 };
 
-template<class VERTEX, class WEIGHT>
-void
-WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
-SetPredecessors() {
-        VI v1, v2;
-	CVI cv1, cv2;
-        VID _v2id;
-
-        for(v1 = v.begin(); v1 < v.end(); v1++) {
-             for (EI ei = v1->edgelist.begin(); ei != v1->edgelist.end(); ei++) {
-                _v2id = ei->vertex2id;
-                if ( IsVertex(_v2id, &cv2) ) {
-				v2 = const_cast<VI> (cv2);
-     				WtEdge newEdge( v1->vid, ei->weight );
-                        v2->predecessors.push_back(newEdge);
-                }
-             }
-        }
-};
 
   //==================================
   // WeightedMultiDiGraph class Methods: Adding & Deleting Edges
   //==================================
-  // public:
-  // int  AddEdge(VID, VID, WEIGHT);
-  // int  AddEdge(VID, VID, pair<WEIGHT,WEIGHT>);
-  // int  AddEdge(VERTEX&, VERTEX&, WEIGHT);
-  // int  AddEdge(VERTEX&, VERTEX&, pair<WEIGHT,WEIGHT>);
-  // int  AddPath( vector<VID>&, WEIGHT);
-  // int  AddPath( vector< pair<VID,WEIGHT> >& );
-  // int  AddPath( vector< pair<VID, pair<WEIGHT,WEIGHT> > >& );
-  // int  AddPath( vector<VERTEX>&, WEIGHT);
-  // int  AddPath( vector< pair<VERTEX,WEIGHT> >& );
-  // int  AddPath( vector< pair<VERTEX, pair<WEIGHT,WEIGHT> > >& );
-  // virtual int  DeleteEdge(VID, VID, int _n=-1);
-  // virtual int  DeleteWtEdge(VID, VID, WEIGHT, int _n=-1);
-  // void DeleteAllEdges(VID);
-  // virtual int  DeleteEdge(VERTEX, VERTEX, int _n=-1);
-  // virtual int  DeleteWtEdge(VERTEX,VERTEX,WEIGHT, int _n=-1);
-  // void DeleteAllEdges(VERTEX);
-  // protected:
-  // int  AddEdge(VID, EI);
-  // void DeleteAllEdgesToV(VID);
-  // void DeleteAllEdgesFromV(VID);
-  // void DeleteAllEdgesToV(VERTEX);
-  // void DeleteAllEdgesFromV(VERTEX);
 
 template<class VERTEX, class WEIGHT>
 int
@@ -878,7 +766,7 @@ AddEdge(VID _v1id, EI _ei) {
     if (IsVertex(_v1id,&cv1) && IsVertex(v2id,&cv2) ) {
 	v1 = const_cast<VI> (cv1);
          v1->AddEdge(v2id,weight);
-         this->numEdges++;
+         numEdges++;
          return OK;
       } else {
          cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
@@ -896,7 +784,7 @@ AddEdge(VID _v1id, VID _v2id, WEIGHT _weight) {
     if (IsVertex(_v1id,&cv1) && IsVertex(_v2id) ) {
          v1 = const_cast<VI>(cv1);
          v1->AddEdge(_v2id,_weight);
-         this->numEdges++;
+         numEdges++;
          return OK;
      } else {
          cout << endl << "AddEdge: v1 " << _v1id << " and/or v2 " << _v2id << "not in graph" ;
@@ -916,7 +804,7 @@ AddEdge(VID _v1id, VID _v2id, pair<WEIGHT,WEIGHT> _wtpair ) {
          v2 = const_cast<VI>(cv2);
          v1->AddEdge(_v2id,_wtpair.first);
          v2->AddEdge(_v1id,_wtpair.second);
-         this->numEdges += 2;
+         numEdges += 2;
          return OK;
      } else {
          cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
@@ -934,7 +822,7 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight) {
          v1 = const_cast<VI>(cv1);
          v2 = const_cast<VI>(cv2);
          v1->AddEdge(v2->vid,_weight);
-         this->numEdges++;
+         numEdges++;
          return OK;
       } else {
          cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
@@ -953,7 +841,7 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT> _wtpair) {
          v2 = const_cast<VI>(cv2);
          v1->AddEdge(v2->vid,_wtpair.first);
          v2->AddEdge(v1->vid,_wtpair.second);
-         this->numEdges += 2;
+         numEdges += 2;
          return OK;
       } else {
          cout << "\nAddEdge: vertex 1 and/or vertex 2 not in graph";
@@ -1046,7 +934,7 @@ DeleteAllEdgesToV(VID _v2id) {
      CVI v2;
      if ( IsVertex(_v2id,&v2) ) {
         for (VI vi = v.begin(); vi < v.end(); vi++) {
-            this->numEdges -= vi->DeleteXEdges(_v2id,-1);
+            numEdges -= vi->DeleteXEdges(_v2id,-1);
         }
      }
 };
@@ -1059,7 +947,7 @@ DeleteAllEdgesFromV(VID _v1id) {
      VI v1;
      if ( IsVertex(_v1id,&cv1) ) {
         v1 = const_cast<VI>(cv1);
-        this->numEdges -= v1->edgelist.size();
+        numEdges -= v1->edgelist.size();
         v1->edgelist.erase( v1->edgelist.begin(), v1->edgelist.end() );
      }
 };
@@ -1081,7 +969,7 @@ DeleteEdge(VID _v1id, VID _v2id, int _n) {
      CVI cv1;
      if ( IsVertex(_v1id,&cv1) ) {
 	v1 = const_cast<VI> (cv1);
-         this->numEdges -= v1->DeleteXEdges(_v2id,_n);
+         numEdges -= v1->DeleteXEdges(_v2id,_n);
          return OK;
      } else {
          return ERROR;
@@ -1097,7 +985,7 @@ DeleteWtEdge(VID _v1id, VID _v2id, WEIGHT _weight, int _n) {
      CVI cv1;
      if ( IsVertex(_v1id,&cv1) ) {
 	v1 = const_cast<VI> (cv1);
-         this->numEdges -= v1->DeleteXEdges(_v2id,_weight,_n);
+         numEdges -= v1->DeleteXEdges(_v2id,_weight,_n);
          return OK;
      } else {
          return ERROR;
@@ -1111,7 +999,7 @@ DeleteAllEdgesToV(VERTEX& _v2) {
      CVI v2;
      if ( IsVertex(_v2,&v2) ) {
         for (VI vi = v.begin(); vi < v.end(); vi++) {
-            this->numEdges -= vi->DeleteXEdges(v2->vid,-1);
+            numEdges -= vi->DeleteXEdges(v2->vid,-1);
         }
      }
 };
@@ -1124,7 +1012,7 @@ DeleteAllEdgesFromV(VERTEX& _v1) {
      VI v1;
      if ( IsVertex(_v1,&cv1) ) {
         v1 = const_cast<VI>(cv1); 
-        this->numEdges -= v1->edgelist.size();
+        numEdges -= v1->edgelist.size();
         v1->edgelist.erase( v1->edgelist.begin(), v1->edgelist.end() );
      }
 };
@@ -1148,7 +1036,7 @@ DeleteEdge(VERTEX& _v1, VERTEX& _v2, int _n) {
      if ( IsVertex(_v1,&cv1) && IsVertex(_v2,&cv2) ) {
 	v1= const_cast<VI> (cv1);
 	v2= const_cast<VI> (cv2);
-         this->numEdges -= v1->DeleteXEdges(v2->vid,_n);
+         numEdges -= v1->DeleteXEdges(v2->vid,_n);
          return OK;
      } else {
          return ERROR;
@@ -1166,7 +1054,7 @@ DeleteWtEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight, int _n) {
      if ( IsVertex(_v1,&cv1) && IsVertex(_v2,&cv2) ) {
 	 v1= const_cast<VI> (cv1);
   	 v2= const_cast<VI> (cv2);
-         this->numEdges -= v1->DeleteXEdges(v2->vid,_weight,_n);
+         numEdges -= v1->DeleteXEdges(v2->vid,_weight,_n);
          return OK;
      } else {
          return ERROR;
@@ -1177,21 +1065,6 @@ DeleteWtEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight, int _n) {
   //==================================
   // WeightedMultiDiGraph class Methods: Finding Vertices & Edges
   //==================================
-  // public:
-  // bool IsVertex(VID) const;
-  // bool IsEdge(VID, VID) const;
-  // bool IsEdge(VID, VID, WEIGHT) const;
-  // bool IsVertex(VERTEX) const;
-  // bool IsEdge(VERTEX, VERTEX) const;
-  // bool IsEdge(VERTEX, VERTEX, WEIGHT) const;
-  // protected:
-  // bool IsVertex(VID, Vertex**) const;
-  // bool IsEdge(VID, VID, Vertex**, WtEdge**) const;
-  // bool IsEdge(VID, VID, WEIGHT, Vertex**, WtEdge**) const;
-  // bool IsVertex(VERTEX, Vertex**) const;
-  // bool IsEdge(VERTEX, VERTEX, Vertex**, WtEdge**) const;
-  // bool IsEdge(VERTEX, VERTEX, WEIGHT, Vertex**, WtEdge**) const;
-
  
 template<class VERTEX, class WEIGHT>
 bool 
@@ -1208,11 +1081,11 @@ IsVertex(VID _v1id, const Vertex**  _v1ptr) const {
 
         CVI v1 = my_find_VID_eq(_v1id);
         if (v1 != v.end() ) {
-	*_v1ptr = v1;
-		return true;		
+            *_v1ptr = v1;
+            return true;
         } else {
             return false;
-	}
+        }
 };
 
 template<class VERTEX, class WEIGHT>
@@ -1355,26 +1228,6 @@ IsEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight, const Vertex** _v1ptr, const Wt
   //==================================
   // WeightedMultiDiGraph class Methods: Getting Data & Statistics
   //==================================
-  //      Global Information
-  // vector<VID> GetVerticesVID();
-  // vector<VID> GetVerticesVID(VID,int);
-  // vector<VERTEX> GetVerticesData();
-  // vector<VERTEX> GetVerticesData(VID,int);
-  // vector< pair< pair<VID,VID>, WEIGHT> > GetEdges();
-  // vector< pair< pair<VERTEX,VERTEX>, WEIGHT> > GetEdgesVData();
-  //     Vertex Information
-  // VERTEX  GetData(VID);
-  // vector<VERTEX>  GetData(VID,VID);
-  // VID     GetVID(VERTEX);
-  // int GetVertexOutDegree(VID) const;
-  // vector<VID> GetSuccessors(VID) const;
-  // vector<VID> GetSuccessors(VERTEX&) const;
-  // vector<VID> GetPredecessors(VID) const;
-  // vector<VID> GetPredecessors(VERTEX&) const;
-  //   vector<VID> GetSources();
-  //     Edge Information
-  // WEIGHT  GetEdgeWeight(VID, VID);
-  // WEIGHT  GetEdgeWeight(VERTEX&, VERTEX&);
 
 template<class VERTEX, class WEIGHT>
 vector<VID> 
@@ -1445,7 +1298,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 GetEdges() const {
   vector< pair< pair<VID,VID>, WEIGHT> > edges;
 
-  edges.reserve(this->numEdges);
+  edges.reserve(numEdges);
   for (CVI vi = v.begin(); vi != v.end(); vi++) {
      for (CEI ei = vi->edgelist.begin(); ei != vi->edgelist.end(); ei++ ) {
         pair<VID,VID> newedge(vi->vid, ei->vertex2id);
@@ -1462,7 +1315,7 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 GetEdgesVData() const {
   vector< pair< pair<VERTEX,VERTEX>, WEIGHT> > edges;
 
-  edges.reserve(this->numEdges);
+  edges.reserve(numEdges);
   for (CVI vi = v.begin(); vi != v.end(); vi++) {
      for (CEI ei = vi->edgelist.begin(); ei != vi->edgelist.end(); ei++ ) {
         VERTEX v2data = GetData(ei->vertex2id);
@@ -1481,8 +1334,8 @@ GetData(VID _v1id) const {
   CVI v1;
   if ( IsVertex(_v1id,&v1) ) {
      return v1->data;
- // } else {
-   //  return VERTEX::InvalidData(); 
+  } else {
+     return VERTEX::InvalidData(); 
   }
 };
 
@@ -1554,45 +1407,6 @@ GetSuccessors(VERTEX& _v1) const {
 };
 
 template<class VERTEX, class WEIGHT>
-vector<VID>
-WeightedMultiDiGraph<VERTEX,WEIGHT>::
-GetPredecessors(VID _v1id) const {
-     vector<VID> pred;
-     CVI cv1,v1;
-     if ( IsVertex(_v1id,&cv1) ) {
-     	v1=const_cast<VI> (cv1);
-         pred.reserve( v1->predecessors.size() );
-         for (CEI ei = v1->predecessors.begin(); ei != v1->predecessors.end(); ei++) {
-            pred.push_back(ei->vertex2id);
-         }
-     } else {
-         cout << "\nGetPredecessors: vertex "<< _v1id << " not in graph";
-     };
-     return pred;
-};
-
-template<class VERTEX, class WEIGHT>
-vector<VID>
-WeightedMultiDiGraph<VERTEX,WEIGHT>::
-GetPredecessors(VERTEX& _v1) const {
-  return GetPredecessors( GetVID(_v1) );
-};
-
-template<class VERTEX, class WEIGHT>
-vector<VID>
-WeightedMultiDiGraph<VERTEX,WEIGHT>::
-GetSources() const {
-  vector<VID> sourcevids;
-  CVI cv1;
-  VI v1;
-  for(cv1=v.begin(); cv1<v.end(); cv1++) {
-	v1 = const_cast<VI> (cv1);
-	if(v1->predecessors.empty()) sourcevids.push_back(v1->vid);
-  }
-  return sourcevids;
-};
-
-template<class VERTEX, class WEIGHT>
 WEIGHT 
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
 GetEdgeWeight(VID _v1id, VID _v2id) const {
@@ -1600,8 +1414,8 @@ GetEdgeWeight(VID _v1id, VID _v2id) const {
   CEI e12;
   if (IsEdge(_v1id,_v2id,&v1,&e12)) {
      return  e12->weight;
-  //} else {
-     //return WEIGHT::InvalidWeight();
+  } else {
+     return WEIGHT::InvalidWeight();
   }
 };
 
@@ -1611,19 +1425,32 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 GetEdgeWeight(VERTEX& _v1, VERTEX& _v2) const {
 
 	return GetEdgeWeight( GetVID(_v1), GetVID(_v2) );
+}
+
+
+template<class VERTEX, class WEIGHT>
+void
+WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
+GetPredecessorVector() {
+        VI v1, v2;
+	CVI cv1, cv2;
+        VID _v2id;
+
+        for(v1 = v.begin(); v1 < v.end(); v1++) {
+             for (EI ei = v1->edgelist.begin(); ei != v1->edgelist.end(); ei++) {
+                pair<VID,WEIGHT> newedge(v1->vid, ei->weight);
+                _v2id = ei->vertex2id;
+                if ( IsVertex(_v2id, &cv2) ) {
+			v2 = const_cast<VI> (cv2);
+                        v2->preedgelist.push_back( newedge );
+                }
+             }
+        }
 };
 
   //==================================
   // WeightedMultiDiGraph class Methods: Basic Graph Algorithms
   //==================================
-  // WeightedMultiDiGraph<VERTEX> BFS (VID);
-  // WeightedMultiDiGraph<VERTEX> BFS (VERTEX);
-  // vector<VID> BFSVID(VID) const; 
-  // vector<VID> BFSVID(VERTEX&) const; 
-  // vector< pair<VERTEX,WEIGHT> > FindPathBFS (VID,VID);
-  // vector< pair<VERTEX,WEIGHT> > FindPathBFS (VERTEX,VERTEX);
-  // WeightedMultiDiGraph<VERTEX> DijkstraSSSP(VID) const; // wts=pathlength 
-  // vector< pair<VERTEX,WEIGHT> > FindPathDijkstra(VID,VID) const; 
 
 //*************************************************************** 
 //  BREADTH-FIRST-SEARCH ALGORITHMS
@@ -1682,8 +1509,7 @@ BFS (VID _startVid) const {
      }
      q.pop_front();
   }
-  bfstree.vertIDs = this->vertIDs; // set the same vert ID as in graph
-  //sort ( bfstree.v.begin(), bfstree.v.end(), ptr_fun(VID_Compare) );
+  bfstree.vertIDs = vertIDs; // set the same vert ID as in graph
   return bfstree;
 };
 
@@ -1768,7 +1594,6 @@ FindPathBFS (VID _startVid, VID _endVid) const {
   }
 
   if ( bfstree.IsVertex(_endVid,&cv1) && bfstree.IsVertex(_startVid,&cv2) ) {
-     //path.insert( path.begin(), pair<VERTEX,WEIGHT>(cv1->data,INVALID_WEIGHT) );
      path.insert( path.begin(), pair<VERTEX,WEIGHT>(cv1->data,WEIGHT::InvalidWeight() ) );
      while ( !(path.begin()->first ==  cv2->data) ) {
         CEI e = cv1->edgelist.begin();
@@ -1790,23 +1615,11 @@ FindPathBFS (VID _startVid, VID _endVid) const {
 //*************************************************************** 
 
 // Auxillary Data Structures & functions
-class dkinfo {
-public:
-  dkinfo() {};
-  dkinfo(VID _vid, VID _pvid, double _d) {vid=_vid; predvid=_pvid; dist=_d;}; 
 
-  friend ostream& operator<< (ostream& _os, const dkinfo& dk);
-
-  VID    vid;
-  VID    predvid;
-  double dist;
-};
-
-ostream& operator<< (ostream& _os, const dkinfo& dk) {
-  return _os<< "dkinfo = [" << dk.predvid << "," << dk.vid << "," << dk.dist << "]"; 
-};
-
-bool dkinfo_Compare ( dkinfo _d1, dkinfo _d2) {
+template<class VERTEX, class WEIGHT>
+bool 
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+dkinfo_Compare ( const dkinfo& _d1, const dkinfo& _d2) {
   return ( _d1.dist > _d2.dist );
 };
 
@@ -1844,17 +1657,11 @@ DijkstraSSSP(VID _startVid) const {
      bool relax = false;
      dkinfo u = pq.back();
      if ( sssptree.GetVertexCount() == 0 ) {
-       //lkd added tmp variable to satisfy SUN compiler
-       //sssptree.AddVertex( GetData(u.vid) );
        VERTEX tmp = GetData(u.vid);
        sssptree.AddVertex( tmp );
      } else {
-       //lkd added tmp variable to satisfy SUN compiler
-       // sssptree.AddVertex( GetData(u.vid) );
        VERTEX tmp = GetData(u.vid);
        sssptree.AddVertex( tmp );
-       //lkd added tmp variable to satisfy SUN compiler
-       //sssptree.AddEdge( GetData(u.predvid), GetData(u.vid), u.dist);
        VERTEX tmp1 = GetData(u.predvid);
        sssptree.AddEdge( tmp1, tmp, u.dist);
      }; 
@@ -1891,15 +1698,10 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 FindPathDijkstra (VID _v1id, VID _v2id) const {
 
   // first, get Dijkstra's SSSP tree
-  //lkd separated decl from init to satisfy SUN compiler
-  //WeightedMultiDiGraph<VERTEX,WEIGHT> sssptree =  DijkstraSSSP(_v1id); 
   WeightedMultiDiGraph<VERTEX,WEIGHT> sssptree;
   sssptree =  DijkstraSSSP(_v1id); 
 
   // now, get bfspath in sssp tree (there's only one path in tree!)
-  //lkd separated decl from init to satisfy SUN compiler
-  //lkd added tmp variables to satisfy SUN compiler
-  //vector< pair<VERTEX,WEIGHT> > dpath = sssptree.FindPathBFS(GetData(_v1id),GetData(_v2id) );
   vector< pair<VERTEX,WEIGHT> > dpath;
   VERTEX tmp1 = GetData(_v1id);
   VERTEX tmp2 = GetData(_v2id);
@@ -1907,8 +1709,6 @@ FindPathDijkstra (VID _v1id, VID _v2id) const {
 
   // now, get "real" edge weights (not the distances in sssptree)
   for (int i=1; i < dpath.size(); i++) {
-     //lkd added tmp variable to satisfy SUN compiler
-     //dpath[i-1].second = GetEdgeWeight( dpath[i-1].first, dpath[i].first ); 
      WEIGHT tmp = GetEdgeWeight( dpath[i-1].first, dpath[i].first ); 
      dpath[i-1].second = tmp;
   }
@@ -1936,18 +1736,149 @@ FindPathDijkstra (VERTEX& _startV, VERTEX& _endV) const {
   }
 };
 
+//*************************************************************** 
+//  DFS
+//*************************************************************** 
+template<class VERTEX, class WEIGHT>
+vector<VID>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+DFS () const {
+
+  vector<VID> dfstree;
+  deque<VID> tps;
+  deque<VID> cycle;
+
+  DfsTpsCyc (0, 0, dfstree, tps, cycle); 
+
+  return dfstree;
+};
+
+template<class VERTEX, class WEIGHT>
+deque<VID>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+TopologicalSort () {
+
+  vector<VID> dfstree;
+  deque<VID> tps;
+  deque<VID> cycle;
+
+  DfsTpsCyc (1, 0, dfstree, tps, cycle);
+  
+  return tps;            
+};
+
+template<class VERTEX, class WEIGHT>
+deque<VID>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+CycleDetect () {
+
+  vector<VID> dfstree;
+  deque<VID> tps;
+  deque<VID> cycle;
+
+  typedef deque<VID>::iterator CYC;
+
+      	DfsTpsCyc (0, 1, dfstree, tps, cycle);
+
+	if(!cycle.empty() ) {
+	  cout << "Cycle detected in the Graph:";
+		for( CYC cyc = cycle.begin(); cyc < cycle.end(); cyc++) {
+		  	if ( *cyc == -1 ) cout << "\ncycle: ";
+ 			else cout << *cyc << " ";   
+	        }
+	  cout << endl;
+	}
+	else cout<< "No cycle in the graph." << endl;
+
+  return cycle;            
+};
+
+
+template<class VERTEX, class WEIGHT>
+void
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+DfsTpsCyc (int tpsflag, int cycflag, vector<VID>&
+	   dfstree, deque<VID>& tps, deque<VID>& cycle) {
+
+  typedef vector<VID>::iterator DFSVI;
+  typedef deque<VID>::iterator TPSVI;
+  typedef deque<VID>::iterator CYC;
+
+  VID *vnode;   //store vertex visited in seqence to record
+			//cycle, also used as a stack
+  vnode = (VID *) malloc(numVerts * sizeof(VID) );
+
+  int *color;   //0: white, 1: grey, 2: black
+	color = (int *) malloc(numVerts * sizeof(int) );
+
+  int ii;
+  for( ii=0; ii<numVerts; ii++) color[ii] = 0;    
+  for( ii=0; ii<numVerts; ii++) vnode[ii] = (VID) 0;    
+
+  CYC cyc;
+  CVI cv, vi, v1;
+  VID vid, v1id, v2id;	//vid=x, v1id=parent(x), v2id=adj(x)
+
+  int j=0, kk=0, jj=1;
+
+ for (vi = v.begin(); vi < v.end(); vi++) {
+    int k=1;
+    vid = vi->vid;
+    if( color[vid] == 0 ) {
+        dfstree.push_back(vid);
+        color[vid] = 1;
+	vnode[k] = vid;  
+
+	v1id = 0;
+	while( k > 0 ) {
+		vid = vnode[k];
+		if ( IsVertex(vid, &cv)) ;
+		else cout << "\nIn GraphDFS: vid=" << vid << " not in graph";
+		v1 = const_cast<VI>(cv);
+		CEI e = v1->edgelist.begin(); 
+		while ( e < v1->edgelist.end() ) {
+			v2id = e->vertex2id;
+			if( color[v2id] == 0 ) {
+		 		v1id = vid;
+				vid = v2id;
+        		 	dfstree.push_back(vid);
+	        	 	color[vid] = 1;
+			 	vnode[++k] = vid;
+	       		 	if ( IsVertex(vid, &cv) ) {
+					v1 = const_cast<VI>(cv);
+					e = v1->edgelist.begin();
+				 }  
+        			 else 
+					cout << "\nIn GraphDFS: v2id=" << v2id << " not in graph";
+			}  //if (color..)
+			else if( color[v2id] == 1 && cycflag == 1) {
+	cout << "back edge = (" << vid << "," << v2id << ")" << endl;
+				cycle.push_front(v2id);
+				for(kk=k; vnode[kk]!=v2id; kk--) {
+					cycle.push_front(vnode[kk]);
+				}
+				cycle.push_front(v2id);
+				cycle.push_front((VID) -1);
+				e++, j++;
+			} //else if
+ 			else {
+				e++;
+       			} //else    
+   	 	}  
+   	if(tpsflag == 1) tps.push_front(vnode[k]);
+    	color[vnode[k]] = 2;
+   	k--;
+    	} 
+   } 
+}  
+free(vnode);
+free(color);
+};
+
 
   //==================================
   // WeightedMultiDiGraph class Methods: Display, Input, Output 
   //==================================
-  // void DisplayGraph();
-  // void DisplayVertices();
-  // void DisplayVertex(VID);
-  // void DisplayVertexAndEdgelist(VID);
-  // void WriteGraph(ostream& _myostream);
-  // void WriteGraph(char*  _filename); 
-  // void ReadGraph(istream& _myistream);
-  // void ReadGraph(char*  _filename); 
 
 
 template<class VERTEX, class WEIGHT>
@@ -2016,8 +1947,13 @@ void
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
 WriteGraph(ostream& _myostream) const {
 
+#ifndef __HP_aCC
       _myostream << endl << "#####GRAPHSTART#####";
-      _myostream << endl << this->numVerts << " " << this->numEdges << " " << this->vertIDs; 
+#else 
+      _myostream << "GRAPHSTART";
+#endif
+
+      _myostream << endl << numVerts << " " << numEdges << " " << vertIDs; 
 
       //format: VID VERTEX #edges VID WEIGHT VID WEIGHT ... 
       for (CVI vi = v.begin(); vi != v.end(); vi++) {
@@ -2025,7 +1961,12 @@ WriteGraph(ostream& _myostream) const {
           vi->WriteEdgelist(_myostream);
       } 
 
+#ifndef __HP_aCC
       _myostream << endl << "#####GRAPHSTOP#####";
+#else 
+      _myostream << endl << "GRAPHSTOP";
+#endif
+
       _myostream << endl; 
 };
 
@@ -2064,7 +2005,7 @@ ReadGraph(istream& _myistream) {
          return;
       }
 
-      if (this->numVerts != 0) {
+      if (numVerts != 0) {
          EraseGraph(); // empty graph before filling it in
       }
 
@@ -2085,9 +2026,9 @@ ReadGraph(istream& _myistream) {
          }
       }
       
-      this->numVerts = nVerts;
-      this->numEdges = nEdges;
-      this->vertIDs = maxVID; // set the maximum VID used so far...
+      numVerts = nVerts;
+      numEdges = nEdges;
+      vertIDs = maxVID; // set the maximum VID used so far...
                         // should sort verts & find biggest used...
 
       _myistream >> tagstring;
@@ -2097,15 +2038,10 @@ ReadGraph(istream& _myistream) {
          return;
       }
 };
+
   //==================================
   // WeightedMultiDiGraph class Predicates, Comparisons & Operations
   //==================================
-  // Vertex* my_find_VID_eq(const VID _vid) const; 
-  // Vertex* my_find_VDATA_eq(const VERTEX& _v) const; 
-  // bool VID_Compare(const Vertex& _v1, const Vertex& _v2); 
-  // class VID_eq; 
-  // class VDATA_eq;
-  // class VID_Compare; 
 
 template<class VERTEX, class WEIGHT>
 WtVertexType<VERTEX,WEIGHT>*
@@ -2221,11 +2157,6 @@ VID_Compare {
   //==================================
   // WeightedGraph class Methods: Constructors and Destructor
   //==================================
-  // WeightedGraph();
-  // WeightedGraph(int);
-  // WeightedGraph(int,int);
-  // WeightedGraph(WeightedMultiDiGraph<VERTEX,WEIGHT)); 
-  // ~WeightedGraph();
 
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::
@@ -2248,13 +2179,6 @@ WeightedGraph(int _sz, int _edgelistsz)
 
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::
-WeightedGraph( WeightedMultiDiGraph<VERTEX,WEIGHT> _base)
- : WeightedMultiDiGraph<VERTEX,WEIGHT>(_base) 
-{
-};
-
-template<class VERTEX, class WEIGHT>
-WeightedGraph<VERTEX,WEIGHT>::
 ~WeightedGraph(){
 };
   //==================================
@@ -2264,19 +2188,6 @@ WeightedGraph<VERTEX,WEIGHT>::
   //==================================
   // WeightedGraph class Methods: Adding & Deleting Edges
   //==================================
-  // public:
-  // virtual int  AddEdge(VID, VID, WEIGHT);
-  // virtual int  AddEdge(VID, VID, pair<WEIGHT,WEIGHT>);
-  // virtual int  DeleteEdge(VID, VID);
-  // virtual int  DeleteWtEdge(VID, VID, WEIGHT);
-  // virtual int  ChangeEdgeWeight(VID, VID, WEIGHT);
-  // virtual int  AddEdge(VERTEX, VERTEX, WEIGHT);
-  // virtual int  AddEdge(VERTEX, VERTEX, pair<WEIGHT,WEIGHT>);
-  // virtual int  DeleteEdge(VERTEX, VERTEX);
-  // virtual int  DeleteWtEdge(VERTEX, VERTEX, WEIGHT);
-  // virtual int  ChangeEdgeWeight(VERTEX, VERTEX, WEIGHT);
-  // protected:
-  // virtual int  AddEdge(VID, EI);
 
 template<class VERTEX, class WEIGHT>
 int 
@@ -2285,12 +2196,12 @@ AddEdge(VID _v1id, VID _v2id, WEIGHT _weight) {
     CVI cv1,cv2;
     VI v1,v2;
     if (_v1id != _v2id && IsVertex(_v1id,&cv1) && IsVertex(_v2id,&cv2) ) {
-        if ( !this->IsEdge(_v1id,_v2id) ) {
+        if ( !IsEdge(_v1id,_v2id) ) {
            v1 = const_cast<VI>(cv1);
            v2 = const_cast<VI>(cv2);
            v1->AddEdge(_v2id,_weight);
            v2->AddEdge(_v1id,_weight);
-           this->numEdges++;
+           numEdges++;
            return OK;
         } else {
            #ifndef QUIETGRAPH
@@ -2311,12 +2222,12 @@ AddEdge(VID _v1id, VID _v2id, pair<WEIGHT,WEIGHT> _wtpair ) {
     CVI cv1,cv2;
     VI v1,v2;
     if (_v1id != _v2id && IsVertex(_v1id,&cv1) && IsVertex(_v2id,&cv2) ) {
-        if ( !this->IsEdge(_v1id,_v2id) ) {
+        if ( !IsEdge(_v1id,_v2id) ) {
            v1 = const_cast<VI>(cv1);
            v2 = const_cast<VI>(cv2);
            v1->AddEdge(_v2id,_wtpair.first);
            v2->AddEdge(_v1id,_wtpair.second);
-           this->numEdges++;
+           numEdges++;
            return OK;
         } else {
            #ifndef QUIETGRAPH
@@ -2343,7 +2254,7 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight) {
            v2 = const_cast<VI>(cv2);
            v1->AddEdge(v2->vid,_weight);
            v2->AddEdge(v1->vid,_weight);
-           this->numEdges++;
+           numEdges++;
            return OK;
         } else {
            #ifndef QUIETGRAPH
@@ -2369,7 +2280,7 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT> _wtpair) {
            v2 = const_cast<VI>(cv2);
            v1->AddEdge(v2->vid,_wtpair.first);
            v2->AddEdge(v1->vid,_wtpair.second);
-           this->numEdges++;
+           numEdges++;
            return OK;
         } else {
            #ifndef QUIETGRAPH
@@ -2395,12 +2306,12 @@ AddEdge(VID _v1id, EI _ei) {
     WEIGHT weight = _ei->weight;
 
     if (_v1id != v2id && IsVertex(_v1id,&cv1) && IsVertex(v2id,&cv2) ) {
-        if ( !this->IsEdge(_v1id,v2id) ) {
+        if ( !IsEdge(_v1id,v2id) ) {
            v1 = const_cast<VI>(cv1);
            v2 = const_cast<VI>(cv2);
            v1->AddEdge(v2id,weight);
            v2->AddEdge(_v1id,weight);
-           this->numEdges++;
+           numEdges++;
            return OK;
         } else {
            #ifndef QUIETGRAPH
@@ -2422,13 +2333,13 @@ DeleteEdge(VID _v1id, VID _v2id, int _n) {
    CVI cv1, cv2;
    VI v1, v2;
 
-   if ( IsVertex(_v1id,&cv1) && IsVertex(_v2id,&cv2) &&this->IsEdge(_v1id,_v2id) ) {
+   if ( IsVertex(_v1id,&cv1) && IsVertex(_v2id,&cv2) && IsEdge(_v1id,_v2id) ) {
       v1 = const_cast<VI>(cv1);
       v2 = const_cast<VI>(cv2);
       int ok1 = v1->DeleteXEdges(_v2id,-1);
       int ok2 = v2->DeleteXEdges(_v1id,-1);
       if ( ok1==1 && ok2==1 ) { //each should have found only 1 
-         this->numEdges--;
+         numEdges--;
          return OK;
       } 
    }
@@ -2442,13 +2353,13 @@ DeleteWtEdge(VID _v1id, VID _v2id, WEIGHT _w, int _n) {
    CVI cv1, cv2;
    VI v1, v2;
 
-   if ( IsVertex(_v1id,&cv1) && IsVertex(_v2id,&cv2) &&this->IsEdge(_v1id,_v2id,_w) ) {
+   if ( IsVertex(_v1id,&cv1) && IsVertex(_v2id,&cv2) && IsEdge(_v1id,_v2id,_w) ) {
       v1 = const_cast<VI>(cv1);
       v2 = const_cast<VI>(cv2);
       int ok1 = v1->DeleteXEdges(_v2id,-1);
       int ok2 = v2->DeleteXEdges(_v1id,-1);
       if ( ok1==1 && ok2==1 ) { //each should have found only 1 
-         this->numEdges--;
+         numEdges--;
          return OK;
       } 
    }
@@ -2462,13 +2373,13 @@ DeleteEdge(VERTEX& _v1, VERTEX& _v2, int _n) {
    CVI cv1, cv2;
    VI v1, v2;
 
-   if ( IsVertex(_v1,&cv1) && IsVertex(_v2,&cv2) &&this->IsEdge(_v1,_v2) ) {
+   if ( IsVertex(_v1,&cv1) && IsVertex(_v2,&cv2) && IsEdge(_v1,_v2) ) {
       v1 = const_cast<VI>(cv1);
       v2 = const_cast<VI>(cv2);
       int ok1 = v1->DeleteXEdges(v2->vid,-1);
       int ok2 = v2->DeleteXEdges(v1->vid,-1);
       if ( ok1==1 && ok2==1 ) { //each should have found only 1
-         this->numEdges--; 
+         numEdges--; 
          return OK;
       }
    }
@@ -2482,13 +2393,13 @@ DeleteWtEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _w, int _n) {
    CVI cv1, cv2;
    VI v1, v2;
 
-   if ( IsVertex(_v1,&cv1) && IsVertex(_v2,&cv2) &&this->IsEdge(_v1,_v2,_w) ) {
+   if ( IsVertex(_v1,&cv1) && IsVertex(_v2,&cv2) && IsEdge(_v1,_v2,_w) ) {
       v1 = const_cast<VI>(cv1);
       v2 = const_cast<VI>(cv2);
       int ok1 = v1->DeleteXEdges(v2->vid,-1);
       int ok2 = v2->DeleteXEdges(v1->vid,-1);
       if ( ok1==1 && ok2==1 ) { //each should have found only 1
-         this->numEdges--; 
+         numEdges--; 
          return OK;
       }
    }
@@ -2523,13 +2434,6 @@ ChangeEdgeWeight(VERTEX& _v1, VERTEX& _v2, WEIGHT _weight) {
   //==================================
   // WeightedGraph class Methods: Getting Data & Statistics
   //==================================
-  //               global information
-  //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetEdges();
-  //virtual vector< pair< pair<VERTEX,VERTEX>, WEIGHT> > GetEdgesVData();
-  //              vertex information
-  //virtual int GetVertexDegree(VID);
-  //virtual vector<VID> GetAdjacentVertices(VID);
-  //virtual vector< pair<pair<VID,VID>,WEIGHT> > GetIncidentEdges(VID);
 
 // only report each edge once
 template<class VERTEX, class WEIGHT>
@@ -2538,9 +2442,9 @@ WeightedGraph<VERTEX,WEIGHT>::
 GetEdges() const {
   vector< pair< pair<VID,VID>, WEIGHT> > edges;
 
-  edges.reserve(this->numEdges);
+  edges.reserve(numEdges);
 
-  for (CVI vi = this->v.begin(); vi != this->v.end(); vi++) {
+  for (CVI vi = v.begin(); vi != v.end(); vi++) {
      for (CEI ei = vi->edgelist.begin(); ei != vi->edgelist.end(); ei++ ) {
         if ( vi->vid < ei->vertex2id) {
           pair<VID,VID> newedge(vi->vid, ei->vertex2id);
@@ -2559,8 +2463,8 @@ WeightedGraph<VERTEX,WEIGHT>::
 GetEdgesVData() const {
   vector< pair< pair<VERTEX,VERTEX>, WEIGHT> > edges;
 
-  edges.reserve(this->numEdges);
-  for (CVI vi = this->v.begin(); vi != this->v.end(); vi++) {
+  edges.reserve(numEdges);
+  for (CVI vi = v.begin(); vi != v.end(); vi++) {
      for (CEI ei = vi->edgelist.begin(); ei != vi->edgelist.end(); ei++ ) {
         if ( vi->vid < ei->vertex2id) {
           VERTEX v2data = GetData(ei->vertex2id);
@@ -2591,7 +2495,7 @@ template<class VERTEX, class WEIGHT>
 vector<VID>
 WeightedGraph<VERTEX,WEIGHT>::
 GetAdjacentVertices(VID _v1id) const {
-   return this->GetSuccessors(_v1id);
+   return GetSuccessors(_v1id);
 };
 
 template<class VERTEX, class WEIGHT>
@@ -2613,29 +2517,36 @@ GetIncidentEdges(VID _v1id) const {
      return iedges;
 };
 
+template<class VERTEX, class WEIGHT>
+vector< pair<pair<VERTEX,VERTEX>,WEIGHT> >
+WeightedGraph<VERTEX,WEIGHT>::
+GetIncidentEdgesVData(VID _v1id) const {
+     vector< pair<pair<VERTEX,VERTEX>,WEIGHT> > iedges;
+     CVI v1;
+     if ( IsVertex(_v1id,&v1) ) {
+         iedges.reserve( v1->edgelist.size() );
+         for (CEI ei = v1->edgelist.begin(); ei != v1->edgelist.end(); ei++) {
+            pair<VERTEX,VERTEX> nextedge( GetData(_v1id), GetData(ei->vertex2id));
+            pair<pair<VERTEX,VERTEX>,WEIGHT> nextedgewt(nextedge,ei->weight);
+            iedges.push_back( nextedgewt );
+         }
+     } else {
+         cout << "\nGetIncidentEdgesVData: vertex "<< _v1id << " not in graph";
+     };
+     return iedges;
+};
 
 
   //==================================
   // WeightedGraph class Methods: Connected Components Utilities
   //==================================
-  // bool IsSameCC(VID,VID);
-  // bool IsSameCC(VERTEX,VERTEX);
-  // vector< VID > GetCC(VID);
-  // vector< VERTEX > GetCC(VID);
-  // vector< pair<pair<VID,VID>, WEIGHT> > GetCCEdges(VID) const;
-  // vector< pair<pair<VID,VID>, WEIGHT> > GetCCEdges(VERTEX&) const;
-  // vector< pair<pair<VERTEX,VERTEX>, WEIGHT> > GetCCEdgesVData(VID) const;
-  // vector< pair<pair<VERTEX,VERTEX>, WEIGHT> > GetCCEdgesVData(VERTEX&) const;
-  // vector< vector< pair<VERTEX,VERTEX> > GetEdgesByCCVDataOnly(); 
-  // vector< pair<int,VID> > GetCCStats();
-  // int GetCCcount () const; 
 
 template<class VERTEX, class WEIGHT>
 bool
 WeightedGraph<VERTEX,WEIGHT>::
 IsSameCC (VID _v1id, VID _v2id) const {
 
-   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = this->BFS(_v1id); 
+   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_v1id); 
 
    if ( bfstree.IsVertex(_v1id) && bfstree.IsVertex(_v2id) ) {
       return true;
@@ -2649,7 +2560,7 @@ bool
 WeightedGraph<VERTEX,WEIGHT>::
 IsSameCC (VERTEX& _v1, VERTEX& _v2) const {
 
-   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = this->BFS(_v1);
+   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_v1);
 
    if ( bfstree.IsVertex(_v1) && bfstree.IsVertex(_v2) ) {
       return true;
@@ -2663,7 +2574,7 @@ vector<VID>
 WeightedGraph<VERTEX,WEIGHT>::
 GetCC ( VID _v1id) const {
 
-   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = this->BFS(_v1id);
+   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_v1id);
    vector<VID> ccverts = bfstree.GetVerticesVID();
    //sort( ccverts.begin(), ccverts.end() ); //sort by VID for CC stats
    return ccverts;
@@ -2674,7 +2585,7 @@ vector<VERTEX>
 WeightedGraph<VERTEX,WEIGHT>::
 GetCC ( VERTEX& _v1) const {
 
-   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = this->BFS(_v1);
+   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_v1);
    vector<VERTEX> ccverts = bfstree.GetVerticesData();
    return ccverts;
 }
@@ -2684,8 +2595,16 @@ vector< pair<pair<VID,VID>, WEIGHT> >
 WeightedGraph<VERTEX,WEIGHT>::
 GetCCEdges ( VID _v1id) const {
 
-   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = this->BFS(_v1id);
-   vector< pair<pair<VID,VID>,WEIGHT> > ccedges = bfstree.GetEdges();
+   vector< pair<pair<VID,VID>,WEIGHT> > ccedges, newedges;
+
+   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_v1id);
+   vector<VID> ccverts = bfstree.GetVerticesVID();
+   for (int i=0; i < ccverts.size(); i++) {
+      newedges = GetIncidentEdges(ccverts[i]);
+      for (int k=0; k < newedges.size(); k++){
+         ccedges.push_back ( newedges[k] );
+      }
+   }
    return ccedges;
 }
 
@@ -2694,9 +2613,7 @@ vector< pair<pair<VID,VID>, WEIGHT> >
 WeightedGraph<VERTEX,WEIGHT>::
 GetCCEdges ( VERTEX&  _v1) const {
 
-   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = this->BFS(_v1);
-   vector< pair<pair<VID,VID>,WEIGHT> > ccedges = bfstree.GetEdges();
-   return ccedges;
+   return GetCCEdges ( GetVID(_v1) );
 }
 
 template<class VERTEX, class WEIGHT>
@@ -2704,8 +2621,16 @@ vector< pair<pair<VERTEX,VERTEX>, WEIGHT> >
 WeightedGraph<VERTEX,WEIGHT>::
 GetCCEdgesVData ( VID  _v1id) const {
 
-   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = this->BFS(_v1id);
-   vector< pair<pair<VERTEX,VERTEX>,WEIGHT> > ccedges = bfstree.GetEdgesVData();
+   vector< pair<pair<VERTEX,VERTEX>,WEIGHT> > ccedges, newedges;
+
+   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_v1id);
+   vector<VID> ccverts = bfstree.GetVerticesVID();
+   for (int i=0; i < ccverts.size(); i++) {
+      newedges = GetIncidentEdgesVData(ccverts[i]);
+      for (int k=0; k < newedges.size(); k++){
+         ccedges.push_back ( newedges[k] );
+      }
+   }
    return ccedges;
 }
 
@@ -2714,9 +2639,7 @@ vector< pair<pair<VERTEX,VERTEX>, WEIGHT> >
 WeightedGraph<VERTEX,WEIGHT>::
 GetCCEdgesVData ( VERTEX&  _v1) const {
 
-   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_v1);
-   vector< pair<pair<VERTEX,VERTEX>,WEIGHT> > ccedges = bfstree.GetEdgesVData();
-   return ccedges;
+   return GetCCEdgesVData ( GetVID(_v1) );
 }
 
 // return 2D vector ccedges[i,j] = jth edge of ith CC, edge is VERTEX pair
@@ -2745,7 +2668,7 @@ vector< pair<int,VID> >
 WeightedGraph<VERTEX,WEIGHT>::
 GetCCStats () const {
   vector< pair<int,VID> > ccstats;
-  vector<VID> verts = this->GetVerticesVID();
+  vector<VID> verts = GetVerticesVID();
 
   while ( verts.size() != 0 ) {
      VID v1id = verts.front();
@@ -2773,9 +2696,6 @@ GetCCcount () const {
   //==================================
   // WeightedGraph class Methods: Display, Input, Output 
   //==================================
-   //void DisplayCC(VID);
-   //void DisplayEdgesByCCVDataOnly();
-   //void DisplayCCStats(int);
 
 
 template<class VERTEX, class WEIGHT>
@@ -2799,6 +2719,7 @@ void
 WeightedGraph<VERTEX,WEIGHT>::
 DisplayEdgesByCCVDataOnly() const {
 
+
    vector< vector< pair<VERTEX,VERTEX> > >  ccedges = GetEdgesByCCVDataOnly();
 
    cout << endl << "Edges in each connected component (vertex data shown)";
@@ -2808,6 +2729,7 @@ DisplayEdgesByCCVDataOnly() const {
        cout << " (" << ccedges[cc][e].first << "," << ccedges[cc][e].second << ")"; 
      }
    }
+
 };
 
 template<class VERTEX, class WEIGHT>
@@ -2838,47 +2760,12 @@ DisplayCCStats(int _maxCCprint) const {
   //==================================
   // WeightedGraph class Predicates, Comparisons & Operations
   //==================================
-  // bool CCVID_Compare(const pair<int,VID>& _cc1, const pair<int,VID>& _cc12);
 
 template<class VERTEX, class WEIGHT>
 bool
 WeightedGraph<VERTEX,WEIGHT>::
 CCVID_Compare (const pair<int,VID>& _cc1, const pair<int,VID>& _cc2) {
       return (_cc1.first > _cc2.first ) ;
-};
-
-
-  //================================
-  // WeightedGraph class Methods: Transform DAG to Undirected
-  //==================================
-  //	WeightedGraph<VERTEX,WEIGHT>
-  //		DagToUndirected(WeightedMultiDiGraph<VERTEX, WEIGHT>&);
-  //==================================
-
-template<class VERTEX, class WEIGHT>
-WeightedGraph<VERTEX,WEIGHT>
-WeightedGraph<VERTEX,WEIGHT>:: 
-DagToUndirected(WeightedMultiDiGraph<VERTEX, WEIGHT>& _dag) {
-	VI v1,v2;
-	CVI cv2;
-	WeightedGraph<VERTEX,WEIGHT> ung;
-
-	for(v1=_dag.v.begin(); v1<_dag.v.end(); v1++) { 
-		VID _v1id = v1->vid;
-		ung.AddVertex(v1->data,_v1id);
-	}
-
-	for(v1=_dag.v.begin(); v1<_dag.v.end(); v1++) { 
-		VID _v1id = v1->vid;
-		for(EI e1=v1->edgelist.begin(); e1<v1->edgelist.end();
-e1++) {
-			VID _v2id = e1->vertex2id;
-			ung.AddEdge(_v1id, _v2id, e1->weight);
-		}
-	}
- 
-       ung.SetnumVerts( _dag.GetVertexCount() );
-	return ung;
 };
 
 
@@ -2889,9 +2776,6 @@ e1++) {
   //==================================
   // WtVertexType class Methods: Constructors and Destructor
   //==================================
-  // Vertex();
-  // Vertex(VERTEX, VID);
-  // ~Vertex();
 
 template<class VERTEX, class WEIGHT>
 WtVertexType<VERTEX,WEIGHT>:: 
@@ -2922,9 +2806,6 @@ WtVertexType<VERTEX,WEIGHT>::
   //==================================
   // Vertex class Methods: Adding & Deleting Edges
   //==================================
-  // void AddEdge(VID, WEIGHT);
-  // int  DeleteXEdges(VID, int); 
-  // int  DeleteXEdges(VID, WEIGHT, int); 
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -2985,9 +2866,6 @@ DeleteXEdges(VID _v2id, WEIGHT _weight, int _x) {
   //==================================
   // Vertex class Methods: Finding Edges
   //==================================
-  // bool IsEdge(VID); 
-  // bool IsEdge(VID, WtEdge**);
-  // bool IsEdge(VID, WEIGHT, WtEdge** _ei);
 
 template<class VERTEX, class WEIGHT>
 bool 
@@ -3028,10 +2906,6 @@ IsEdge(VID _v2id, WEIGHT _weight, const WtEdge** _ei) const {
   //==================================
   // Vertex class Methods: Getting Data & Statistics 
   //==================================
-  // VERTEX  GetData();
-  // int  GetVID();
-  // int  GetEdgeCount();
-  // WEIGHT  GetEdgeWeight(VID); 
 
 template<class VERTEX, class WEIGHT>
 VERTEX 
@@ -3063,17 +2937,15 @@ GetEdgeWeight(VID _v2id) const {
      if (IsEdge(_v2id,&cei)) {
 	 ei = const_cast<EI> (cei);
          return ei->weight;
-     //} else {
-         //cout << "\nGetEdgeWeight: edge not in graph";
-         //return WEIGHT::InvalidWeight();
+     } else {
+         cout << "\nGetEdgeWeight: edge not in graph";
+         return WEIGHT::InvalidWeight();
      };
 };
 
   //==================================
   // Vertex class Methods: Display, Input, Output 
   //==================================
-  // void DisplayEdgelist();
-  // void WriteEdgelist(ostream& _myostream);
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -3107,12 +2979,6 @@ WriteEdgelist(ostream& _myostream) const {
   //==================================
   // Vertex class Predicate Utilities
   //==================================
-  // WtEdge* my_find_EID1_eq(const EID _eid) const; 
-  // WtEdge* my_find_EID2_eq(const WtEdge*, const WtEdge*, const EID) const; 
-  // NMA: these don't work with sgi/CC, but do for sun/g++
-  // class EID_eq;
-  // class EWT_eq;
-  // class EIDWT_eq;
 
 template<class VERTEX, class WEIGHT>
 WtEdgeType<VERTEX,WEIGHT>*
@@ -3181,7 +3047,7 @@ my_find_EIDWT_eq(const pair<VID,WEIGHT> _wtpair) const {
 };
 
 
-/*
+/*--------------- NMA: these don't work with sgi/CC, but do for sun/g++
 template<class VERTEX, class WEIGHT>
 class 
 WtVertexType<VERTEX,WEIGHT>::
@@ -3233,9 +3099,6 @@ EIDWT_eq : public unary_function< WtEdgeType<VERTEX,WEIGHT>,bool> {
   //==================================
   // WtEdge class Methods: Constructors and Destructor
   //==================================
-  // WtEdge();
-  // WtEdge(VID, WEIGHT);
-  // ~WtEdge();
 
 template<class VERTEX, class WEIGHT>
 WtEdgeType<VERTEX,WEIGHT>:: 
@@ -3261,8 +3124,6 @@ WtEdgeType<VERTEX,WEIGHT>::
   //==================================
   // WtEdge class Methods: Display, Input, Output
   //==================================
-  // void DisplayEdge();
-  // void WriteEdge(ostream&);
 
 template<class VERTEX, class WEIGHT>
 void 
@@ -3277,54 +3138,5 @@ WtEdgeType<VERTEX,WEIGHT>::
 WriteEdge(ostream& _myostream) const {
       _myostream << vertex2id << " " << weight << " ";
 };
-
-//=====================================================================
-// GENERIC FUNCTIONS: BASIC GRAPH ALGORITHMS
-//=====================================================================
-
-/* NOT WORKING.......
-template<class GRAPH, class VERTEX>
-GRAPH BFS (GRAPH& _graph, VID _startVid) {
-  //typedef  vector< EDGESTR >::iterator EI;
-  //typedef  vector< VERTEXSTR >::iterator VI;
-
-  GRAPH bfstree;
-  VERTEX vdata;
-  list<VID> q;
-  VI v1,v2;
-  VID v1id, v2id;
-
-  if ( _graph.IsVertex(_startVid) ) {
-    q.push_back(_startVid);
-    if ( _graph.GetData(_startVid,&vdata) != OK) {
-       cout << "\n OOPS... wrong data";       
-    }
-    bfstree.AddVertex(vdata,_startVid);
-    while ( !q.empty() ) {
-       v1id = q.front();
-       if ( _graph.IsVertex(v1id,&v1) ) {
-         for (EI e = v1->edgelist.begin(); e < v1->edgelist.end(); e++) {
-           v2id = e->vertex2id;
-           if ( !bfstree.IsVertex(v2id) && _graph.IsVertex(v2id) ) {
-              q.push_back(v2id);
-              if ( _graph.GetData(v2id,&vdata) != OK) {
-                 cout << "\n OOPS... wrong data";       
-              }
-              bfstree.AddVertex(vdata,v2id);
-              if ( bfstree.AddEdge(v1id,e) != OK) {
-                  cout << "\nIn GraphBFS: OOPS! edge not added right...";
-              }
-           }
-         }
-       } else {
-         cout << "\nIn GraphBFS: OOPS! vertex=" << v1id << " not in graph";
-       }
-       q.pop_front();
-    }
-  }
-  return bfstree;
-};
-*/
-
 
 #endif

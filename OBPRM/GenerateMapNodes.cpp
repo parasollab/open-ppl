@@ -1196,7 +1196,7 @@ GenerateSurfaceCfg(Environment *env,CollisionDetection *cd, DistanceMetric * dm,
     // if converged save the cfgs that don't collide with the environment
     if(cnt < MAX_CONVERGE) {
         if(!high.isCollision(env,cd, info.cdsetid,info.cdInfo)) {
-            surface = FreeCfgs(env, cd,tmp, info);
+            surface = FirstFreeCfgs(env, cd,tmp, info);
         }
     }
     return surface;
@@ -1258,24 +1258,36 @@ FarthestFromStart(Environment * env, DistanceMetric * dm,GNInfo &info,
 
 
 //===================================================================
-// FirstNFreeCfgs
+// FirstFreeCfgs
 //===================================================================
-void
+vector<Cfg>
 GenerateMapNodes::
-FirstNFreeCfgs(Environment *env,CollisionDetection *cd, GNInfo &info,
-    int n, vector<Cfg> cfgs, vector<Cfg>* free){
+FirstFreeCfgs(Environment *env,CollisionDetection *cd, vector<Cfg> cfgs, GNInfo &info, int n){
 
     int size = cfgs.size();
     n = min(n,size);
 
+    vector<Cfg> free;
+    free.reserve(size);
     int i = 0; int cnt = 0;
-    while(i < size && cnt < n){
+    for (i = 0, cnt = 0; i < size && cnt < n; i++){
 	if(!cfgs[i].isCollision(env,cd, info.cdsetid,info.cdInfo)){
-            free->push_back(cfgs[i]);
+            free.push_back(cfgs[i]);
             cnt++;
         }
-        i++;
     }
+    return free;
+}
+
+
+//===================================================================
+// FirstFreeCfgs
+//===================================================================
+vector<Cfg>
+GenerateMapNodes::
+FirstFreeCfgs(Environment *env,CollisionDetection *cd, vector<Cfg> cfgs, GNInfo &info){
+    int size = cfgs.size();
+    return FirstFreeCfgs(env, cd, cfgs, info, size);
 }
 
 
@@ -1296,7 +1308,7 @@ GenNewPivots(Environment *env,CollisionDetection *cd, DistanceMetric * dm,GNInfo
     }
     vector<Cfg> farNode; farNode.reserve(spread.size());
     FarthestFromStart(env,dm, info, start, spread, &farNode);
-    FirstNFreeCfgs(env,cd, info, nFar, farNode, newPivots);
+    *newPivots=FirstFreeCfgs(env,cd, farNode, info, nFar);
 }
 
 
@@ -1371,24 +1383,6 @@ SpreadCfg(Environment *env,CollisionDetection *cd,DistanceMetric * dm, GNInfo &i
 #endif
 
 };
-
-
-//===================================================================
-// FreeCfgs
-//===================================================================
-vector<Cfg>
-GenerateMapNodes::
-FreeCfgs(Environment *env,CollisionDetection *cd, vector<Cfg> cfgs, GNInfo &info){
-    int size = cfgs.size();
-    vector<Cfg> free;
-    free.reserve(size);
-    for(int i = 0 ; i < size ; i++){
-	if(!cfgs[i].isCollision(env,cd, info.cdsetid,info.cdInfo)) {
-            free.push_back(cfgs[i]);
-        }
-    }
-    return free;
-}
 
 
 //===================================================================
