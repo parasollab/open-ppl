@@ -396,7 +396,7 @@ public:
    vector<pair<VID,VID> > GetBackedge() const;
    vector<VID> TopologicalSort() const;
 
-   vector< VID > FindPathBFS(VID,VID) const;
+   vector< VID > FindVIDPathBFS(VID,VID) const;
    vector< pair<VERTEX,WEIGHT> > FindPathBFS(VID,VID) const;
    vector< pair<VERTEX,WEIGHT> > FindPathBFS(VERTEX&,VERTEX&) const;
 
@@ -1939,7 +1939,7 @@ FindPathBFS (VID _startVid, VID _endVid) const {
 template<class VERTEX, class WEIGHT>
 vector< VID > 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
-FindPathBFS (VID _startVid, VID _endVid) const {
+FindVIDPathBFS (VID _startVid, VID _endVid) const {
   WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree;
   vector< VID > path;
   list<VID> q;
