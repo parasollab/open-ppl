@@ -23,11 +23,13 @@
 //  Constructors
 //===================================================================
 Environment::Environment() {
+    pathVersion = PATHVER_102200;    // Format version for path files
     multibodyCount = 0;
     multibody = 0;
     robotIndex = 0;
 }
 Environment::Environment(int index) {
+    pathVersion = PATHVER_102200;    // Format version for path files
     multibodyCount = 0;
     multibody = 0;
     robotIndex = index;

@@ -394,7 +394,8 @@ void CfgManager::print_vizmo_format_to_file(const Cfg &c, Environment *env, FILE
 }
 
 void CfgManager::print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg) {
-    fprintf(_fp,"VIZMO_PATH_FILE\n");
+    int pathVersion = env->GetPathVersion();
+    fprintf(_fp,"VIZMO_PATH_FILE   Path Version %d\n", pathVersion);
 
     int numofLink = env->GetMultiBody(env->GetRobotIndex())->GetFreeBodyCount();
     fprintf(_fp,"%d\n", numofLink);

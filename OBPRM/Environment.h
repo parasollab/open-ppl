@@ -24,7 +24,9 @@
 #include "Matrix.h"
 #include "Contact.h"
 
-//extern Input input;
+// Format version for path files
+#define PATHVER_LEGACY                     102200
+#define PATHVER_102200                     102200
 
 class Environment {
 public:
@@ -47,6 +49,7 @@ public:
     //---------------------------------------------------------------
     //  Methods
     //---------------------------------------------------------------
+    int GetPathVersion();
     int GetMultiBodyCount();
     void AddMultiBody(MultiBody *_multibody);
     MultiBody * GetMultiBody(int _index);
@@ -76,6 +79,7 @@ private:
     //---------------------------------------------------------------
     //  Data
     //---------------------------------------------------------------
+    int pathVersion;           // Format version for path files
     int multibodyCount;
     MultiBody **multibody;
     int robotIndex;
@@ -89,6 +93,11 @@ private:
 //===================================================================
 //  Inline functions
 //===================================================================
+
+// Format version for path files
+inline int Environment::GetPathVersion() {
+    return pathVersion;
+}
 
 //-------------------------------------------------------------------
 //  GetMultiBodyCount
