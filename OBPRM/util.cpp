@@ -78,6 +78,9 @@ WritePathTranformationMatrices( char output_file[80],
 
     Cfg::print_preamble_to_file(env, fp, path.size());
 
+    char cfgFile[100];
+    sprintf(cfgFile, "%s%s", output_file, ".cfg");
+    ofstream oc(cfgFile);
     for(int i = 0 ; i < path.size() ; i++){
         // Translate all path configurations such that their resulting
         // center of gravity is what was saved (ie, the rover original)
@@ -89,6 +92,9 @@ WritePathTranformationMatrices( char output_file[80],
 	            tmp[j][3], tmp[j][4], tmp[j][5]);
 	}	    
 	// Cfg class need Environment Info to interprete 'abstract' Cfg.
+	path[i].Write(oc);
+	oc << "\n";
+	
 
     }
     fprintf(fp,"\n");
