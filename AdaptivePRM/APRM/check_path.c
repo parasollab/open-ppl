@@ -85,14 +85,29 @@ int main(int argc, char** argv)
       cout << "\nFound bad node: " << path[i] << endl;
       return 0;
     }
-  cout << "Nodes meet requirements.";
+  cout << "\nNodes meet requirements.";
 
 
   //------------------------
   // Check edges
   //------------------------
 
+  LPInfo info;
+  info.positionRes = query.rdmp.GetEnvironment()->GetPositionRes();
+  info.orientationRes = query.rdmp.GetEnvironment()->GetOrientationRes();
+  info.checkCollision = true;
+  info.cdsetid = query.cdsetid;
+  info.dmsetid = query.dmsetid;
+  info.savePath = false;
+
   for(int i=0; i<path.size()-1; i++) {
+    if(!query.GetPathSegment(path[i], path[i+1], &cd, &lp, &dm, 
+			     query.rdmp.m_pRoadmap->GetEdgeWeight(path[i],path[i+1]),
+			     &info)) {
+      cout << "\nFound edge in-collision: " << path[i] << "-> " << path[i+1] << endl;
+      return 0;
+    }
+
     vector<Cfg> edge;
     edge.push_back(path[i]);
     edge.push_back(path[i+1]);
