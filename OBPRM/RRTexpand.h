@@ -247,7 +247,7 @@ ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,
   //-- get edges from _rm connected component and add to submap
   for (i=0;i<vids.size();++i) {
     vector< pair<pair<VID,VID>,WEIGHT> > edges; 
-    fromMap->m_pRoadmap->GetIncidentEdges(vids[i], edges);
+    fromMap->m_pRoadmap->GetOutgoingEdges(vids[i], edges);
     
     for (int j=0;j<edges.size();++j) {
       CFG t1=fromMap->m_pRoadmap->GetData(edges[j].first.first),

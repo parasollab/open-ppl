@@ -347,7 +347,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	++numCfgAdded;
 	
 	//-- add cfg & all edges
-	_rm->m_pRoadmap->Graph<UG<CFG,WEIGHT>, NMG<CFG,WEIGHT>, WG<CFG,WEIGHT>, CFG, WEIGHT>::AddVertex(cfg);
+	_rm->m_pRoadmap->Graph<DG<CFG,WEIGHT>, NMG<CFG,WEIGHT>, WG<CFG,WEIGHT>, CFG, WEIGHT>::AddVertex(cfg);
 	for(int i=0; i<edges.size(); ++i) {
 	  _rm->m_pRoadmap->AddEdge(edges[i].first,  // always 'cfg'
 				   edges[i].second, // cfg in CC

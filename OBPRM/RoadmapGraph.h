@@ -52,10 +52,9 @@ public:
        /**Constructor, init data members.
          *@param _v1 The ID for the first endpoint of this edge.
          *@param _v2 The ID for the second endpoint of this edge.
-         *@param _wts _wts.first is weight for _v1->_v2 and _wts.second is 
-         *weight for _v2->_v1
+         *@param _wt The weight for _v1->_v2 
          */
-       EdgeInfo(VID _v1, VID _v2, pair<WEIGHT,WEIGHT> _wts) : v1(_v1), v2(_v2), edgewts(_wts) {}
+       EdgeInfo(VID _v1, VID _v2, WEIGHT _wt) : v1(_v1), v2(_v2), edgewt(_wt) {}
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,8 +67,8 @@ public:
 
    VID v1;  ///<The ID for the first endpoint of this edge.
    VID v2;  ///<The ID for the second endpoint of this edge.
-   ///_wts.first is weight for _v1->_v2 and _wts.second is *weight for _v2->_v1
-   pair<WEIGHT,WEIGHT> edgewts;
+   ///_wt The weight for _v1->_v2 
+   WEIGHT edgewt;
 
 };
 
@@ -92,7 +91,7 @@ public:
 /**Derived from WeightedGraph<VERTEX,WEIGHT> (defined in Graph.h).
   *
   *The RoadmapGraph class:
-  * -# is an *undirected* weighted graph 
+  * -# is a *directed* weighted graph 
   * -# does not allow multiple vertices with the same VERTEX data 
   *    (which is the only difference from WeightedGraph). 
   * -# does not allow multiple (v1,v2) edges 
@@ -105,11 +104,11 @@ public:
 
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : 
-public Graph<UG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,WEIGHT> {
+public Graph<DG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,WEIGHT> {
 
 public:
 
-typedef Graph<UG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,WEIGHT> GRAPH;
+typedef Graph<DG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,WEIGHT> GRAPH;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -332,7 +331,7 @@ int
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdges( vector<EdgeInfo<WEIGHT> >& _e) {
     for (int i=0; i < _e.size(); i++){
-        GRAPH::AddEdge(_e[i].v1, _e[i].v2, _e[i].edgewts);
+        GRAPH::AddEdge(_e[i].v1, _e[i].v2, _e[i].edgewt);
     }
     return OK;
 }
@@ -355,14 +354,16 @@ template <class VERTEX, class WEIGHT>
 int  
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w) {
-  GRAPH::AddEdge(_v1,_v2,_w);
+  GRAPH::AddEdge(_v1,_v2,_w.first);
+  GRAPH::AddEdge(_v2,_v1,_w.second);
 }
 
 template <class VERTEX, class WEIGHT>
 int  
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT>& _w) {
-  GRAPH::AddEdge(_v1,_v2,_w);
+  GRAPH::AddEdge(_v1,_v2,_w.first);
+  GRAPH::AddEdge(_v2,_v1,_w.second);
 }
 
 template <class VERTEX, class WEIGHT>

@@ -103,17 +103,33 @@ class CollisionDetection; ///< Collision Detection Algobase
 //@}
 
 /////////////////////////////////////////////////////////////////////
+/**@name Constants for Roadmap Version 10604 Infomation*/ 
+//@{
+
+//Modified for VC
+#if defined(WIN32) || defined(__HP_aCC)
+#define RDMPVER_010604                      010604
+#else
+#define RDMPVER_010604                      10604
+#endif
+
+#define RDMPVER_010604_CFG_FIELDS           3            ///< obst, tag, clearance
+#define RDMPVER_010604_EDGEWT_FIELDS        2            ///< lp, ticks (or weight for DBL)
+
+//@}
+
+/////////////////////////////////////////////////////////////////////
 /**@name Constants for Roadmap Current Version Infomation*/ 
 //@{
 
 //Modified for VC
 #if defined(WIN32) || defined(__HP_aCC)
-#define RDMPVER_CURRENT                     061300 
+#define RDMPVER_CURRENT                     010604 
 #else
-#define RDMPVER_CURRENT                     61300 
+#define RDMPVER_CURRENT                     10604
 #endif
 
-#define RDMPVER_CURRENT_STR                "061300"      ///< Current version # in string format
+#define RDMPVER_CURRENT_STR                "010604"      ///< Current version # in string format
 #define RDMPVER_CURRENT_CFG_FIELDS          3            ///< obst, tag, clearance
 #define RDMPVER_CURRENT_EDGEWT_FIELDS       2            ///< lp, ticks (or weight for DBL)
 
@@ -290,7 +306,7 @@ public:
    *This is done by filling null values to new fields which
    *is not defined in old version.
    */
-  void ConvertGraph(istream& myifstream, ostream& myofstream, 
+  void ConvertGraph(istream& myifstream, ostream& myofstream, int thisVersion, 
 		    int presentCfgFields, int presentEdgeWtFields);
   
   /**Backup old version roadmap file to another file.
@@ -655,25 +671,25 @@ ConvertToCurrentVersion(const char* _fname, int thisVersion) {
   
   if ( thisVersion == RDMPVER_LEGACY) {
     // legacy: 0 cfg fields, 1 wt field (lp)
-    ConvertGraph(myifstream, myofstream, 
+    ConvertGraph(myifstream, myofstream, thisVersion,
 		 RDMPVER_LEGACY_CFG_FIELDS, RDMPVER_LEGACY_EDGEWT_FIELDS);
     myofstream << endl << "Converted from ROADMAP VERSION LEGACY";
     
   } else if (thisVersion == RDMPVER_62000) {
     // 62000: 2 cfg fields (obst, tag), 2 wt fields (lp, ticks/weight)
-    ConvertGraph(myifstream, myofstream, 
+    ConvertGraph(myifstream, myofstream, thisVersion,
 		 RDMPVER_62000_CFG_FIELDS, RDMPVER_62000_EDGEWT_FIELDS);
     myofstream << endl << "Converted from ROADMAP VERSION 62000";
     
   } else if (thisVersion == RDMPVER_061100) {
     // 061100: 2 cfg fields (obst, tag), 2 wt fields (lp, ticks/weight)
-    ConvertGraph(myifstream, myofstream, 
+    ConvertGraph(myifstream, myofstream, thisVersion,
 		 RDMPVER_061100_CFG_FIELDS, RDMPVER_061100_EDGEWT_FIELDS);
     myofstream << endl << "Converted from ROADMAP VERSION 061100";
     
   } else if (thisVersion == RDMPVER_061300) {
     // 061300: 3 cfg fields (obst, tag, clearance), 2 wt fields (lp, ticks/weight)
-    ConvertGraph(myifstream, myofstream,
+    ConvertGraph(myifstream, myofstream, thisVersion,
 		 RDMPVER_061300_CFG_FIELDS, RDMPVER_061300_EDGEWT_FIELDS);
     myofstream << endl << "Converted from ROADMAP VERSION 061300";
     
@@ -750,7 +766,7 @@ SaveCurrentVersion(const char* _fname, int thisVersion,
 template <class CFG, class WEIGHT>
 void 
 Roadmap<CFG, WEIGHT>::
-ConvertGraph(istream&  myifstream, ostream& myofstream, 
+ConvertGraph(istream&  myifstream, ostream& myofstream, int thisVersion,
 	     int presentCfgFields, int presentEdgeWtFields) {
   char tagstring[200];
   int v, i, j, nverts, nedges, vids;
@@ -760,7 +776,13 @@ ConvertGraph(istream&  myifstream, ostream& myofstream,
   myofstream << tagstring << endl;
   // GRAPH info (#verts #edges #vids) 
   myifstream >> nverts >> nedges >> vids;
-  myofstream << nverts << " " << nedges << " " << vids << endl;
+  if((thisVersion == RDMPVER_061300) || 
+     (thisVersion == RDMPVER_061100) ||
+     (thisVersion == RDMPVER_62000) || 
+     (thisVersion == RDMPVER_LEGACY)) //old graph was undirected
+    myofstream << nverts << " " << nedges*2 << " " << vids << endl;
+  else
+    myofstream << nverts << " " << nedges << " " << vids << endl;
   
   CFG c;
   int dofs = c.DOF();
