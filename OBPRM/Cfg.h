@@ -193,6 +193,8 @@ public:
   void print_vizmo_format_to_file(Environment *env, FILE *_fp);
   static void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
 
+  // return a configuration(conformation)'s potential.
+  double Potential(Environment *env) const;
   //===================================================================
   //  Data
   //===================================================================
@@ -203,13 +205,13 @@ public:
 
   private:
 
-    vector<double> v;
-    static CfgManager * CfgHelper;
+    vector<double> v;	
 
   public:
+    static CfgManager * CfgHelper;
     InfoCfg info;
 
-    friend Input;
+    //friend Input;
     friend CfgManager;
 
 
