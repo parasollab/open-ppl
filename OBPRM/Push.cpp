@@ -475,7 +475,7 @@ vector <Cfg> Push::GenerateIntermediateCfgs(Cfg cfg_start, Cfg cfg_end) {
 vector <Cfg> Push::findCollidedCfgs(vector<Cfg> cfgs) {
   vector <Cfg> collidedCfgs;
   for (int i = 0; i < cfgs.size(); i++) {
-    if (isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
+    if (cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
       collidedCfgs.push_back(cfgs[i]);
   }
   return collidedCfgs;  
@@ -487,7 +487,7 @@ vector <Cfg> Push::findCollidedCfgs(vector<Cfg> cfgs) {
 bool Push::isPathGood(vector <Cfg> cfgs) {
   bool goodpath = true;
   for (int i = 0; i < cfgs.size(); i++) {
-    if (isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)){
+    if (cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)){
       goodpath = false;
       break;
     }
