@@ -197,6 +197,10 @@ public:
 	*/
 	int   GetType() const; 
 	//@}
+
+	/**True if clearance function provided by the cd package
+	*/
+	bool  clearanceAvailable();
 	
 	///////////////////////////////////////////////////////////////////////////////////////////
 	//
@@ -285,32 +289,32 @@ public:
 	*/
 	SID MakeCDSet(const char* cdlist);  // make an ordered set of cds,
 	
-										/**Read collision detection info from inputstream,
-										*, create CD instances for these info, and make an (ordered) CD set for these.
-										*Accroding to read-in cd names, following rules are applied.
-										*
-										*  -# boundingSpheres CD::collision_detection = CollisionDetection::IsInCollision_boundingSpheres
-										*                     CD::type = Out
-										*  -# insideSpheres CD::collision_detection = CollisionDetection::IsInCollision_insideSpheres
-										*                   CD::type = In
-										*  -# naive CD::collision_detection = CollisionDetection::IsInCollision_naive
-										*           CD::type = Exact
-										*  -# quinlan CD::collision_detection = CollisionDetection::IsInCollision_quinlan
-										*             CD::type = Exact
-										*  -# cstk CD::collision_detection = CollisionDetection::IsInCollision_cstk
-										*          CD::type = Exact
-										*  -# vclip CD::collision_detection = CollisionDetection::IsInCollision_vclip
-										*           CD::type = Exact
-										*  -# RAPID CD::collision_detection = CollisionDetection::IsInCollision_RAPID
-										*           CD::type = Exact
-										*
-										*@return SID of new set if every thing is OK. Otherwise, process will be terminiated.
-										*@see BasicSets::MakeOSet 
-	*/
+	/**Read collision detection info from inputstream,
+	*, create CD instances for these info, and make an (ordered) CD set for these.
+        *Accroding to read-in cd names, following rules are applied.
+        *
+        *  -# boundingSpheres CD::collision_detection = CollisionDetection::IsInCollision_boundingSpheres
+        *                     CD::type = Out
+        *  -# insideSpheres CD::collision_detection = CollisionDetection::IsInCollision_insideSpheres
+        *                   CD::type = In
+        *  -# naive CD::collision_detection = CollisionDetection::IsInCollision_naive
+        *           CD::type = Exact
+        *  -# quinlan CD::collision_detection = CollisionDetection::IsInCollision_quinlan
+        *             CD::type = Exact
+        *  -# cstk CD::collision_detection = CollisionDetection::IsInCollision_cstk
+        *          CD::type = Exact
+        *  -# vclip CD::collision_detection = CollisionDetection::IsInCollision_vclip
+        *           CD::type = Exact
+        *  -# RAPID CD::collision_detection = CollisionDetection::IsInCollision_RAPID
+        *           CD::type = Exact
+        *
+        *@return SID of new set if every thing is OK. Otherwise, process will be terminiated.
+        *@see BasicSets::MakeOSet 
+        */
 	SID MakeCDSet(istream& _myistream); //  - add cd to universe if not there
 	
-										/**Make a new (ordered) cd set with element _eid.
-										*@see BasicSets::MakeOSet(const EID _eid)
+	/**Make a new (ordered) cd set with element _eid.
+	*@see BasicSets::MakeOSet(const EID _eid)
 	*/
 	SID MakeCDSet(const EID _eid);
 	
@@ -334,8 +338,8 @@ public:
 	//
 	//////////////////////////////////////////////////////////////////////////////////////////
 	/**@name Access Methods.
-    *Getting Data & Statistics 
-    */
+	*Getting Data & Statistics 
+	*/
 	//@{
 	
 	/**Get a CD instance from universe.
@@ -536,6 +540,10 @@ public:
 	   */
 	bool isInsideObstacle(const Cfg & cfg, Environment* env, SID _cdsetid, CDInfo& _cdInfo);
 	//@}
+
+	/**True if clearance function provided by the cd package
+	*/
+	bool clearanceAvailable();
 	
 	//////////////////////////////////////////////////////////////////////////////////////////
 	//

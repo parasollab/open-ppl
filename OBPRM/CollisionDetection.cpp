@@ -499,6 +499,18 @@ isInsideObstacle(const Cfg & cfg, Environment* env, SID _cdsetid, CDInfo& _cdInf
 #endif //USE_PQP
 
 
+bool
+CollisionDetection::
+clearanceAvailable() {
+  vector<CD> cds = collisionCheckers.GetCDs();
+  for(int i=0; i<cds.size(); i++)
+    if(!strcmp(cds[i].GetName(),"cstk"))
+      return true;
+ 
+  return false;
+};
+
+
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
