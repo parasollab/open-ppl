@@ -415,7 +415,7 @@ public:
    void ReadGraph(istream& _myistream);
    void ReadGraph(const char*  _filename);
 
-protected:
+//protected:
   //===================================================================
   //  Utility Stuff for WeightedMultiDiGraphs
   //===================================================================
