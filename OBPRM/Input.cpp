@@ -52,6 +52,7 @@ Input::Input():
         lineSegment      ("-lineSegment",        0,  0, 5000),
         usingClearance   ("-clearance",          0,  0,    1),
         addPartialEdge   ("-addPartialEdge",     0,  0,    1),
+	addAllEdges      ("-addAllEdges",        0,  0,    1),
         posres           ("-posres",          0.05, -1000, 1000),
         orires           ("-orires", ORIENTATION_RES, -1000, 1000),
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
@@ -65,6 +66,7 @@ Input::Input():
     lineSegment.PutDesc      ("INTEGER","");
     usingClearance.PutDesc   ("INTEGER","");
     addPartialEdge.PutDesc   ("INTEGER","");
+    addAllEdges.PutDesc      ("INTEGER","");
 
     envFile.PutDesc    ("STRING ","");
     mapFile.PutDesc    ("STRING ","");
@@ -318,6 +320,7 @@ void Input::ReadCommandLine(int argc, char** argv){
         } else if ( lineSegment.AckCmdLine(&i, argc, argv) ) {
         } else if ( usingClearance.AckCmdLine(&i, argc, argv) ) {
         } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
+	} else if ( addAllEdges.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
         } else if ( posres.AckCmdLine(&i, argc, argv) ) {
@@ -431,6 +434,7 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; lineSegment.PrintUsage(_os);
         _os << "\n  "; usingClearance.PrintUsage(_os);
         _os << "\n  "; addPartialEdge.PrintUsage(_os);
+	_os << "\n  "; addAllEdges.PrintUsage(_os);
         _os << "\n  "; bbox.PrintUsage(_os);
         _os << "\n  "; bbox_scale.PrintUsage(_os);
         _os << "\n  "; posres.PrintUsage(_os);
@@ -466,6 +470,7 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"lineSegment"<<"\t"<<lineSegment.GetValue();
   _os <<"\n"<<setw(FW)<<"usingClearance"<<"\t"<<usingClearance.GetValue();
   _os <<"\n"<<setw(FW)<<"addPartialEdge"<<"\t"<<addPartialEdge.GetValue();
+  _os <<"\n"<<setw(FW)<<"addAllEdges"<<"\t"<<addAllEdges.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox"<<"\t"<<bbox.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox_scale"<<"\t"<<bbox_scale.GetValue();
   _os <<"\n"<<setw(FW)<<"posres"<<"\t"<<posres.GetValue();
@@ -510,6 +515,8 @@ Input::PrintDefaults(){
             usingClearance.GetDefault() << endl << endl;
    cout << setw(FW) << "add partial edge" << " (" << addPartialEdge.GetFlag() << ") : " <<
             addPartialEdge.GetDefault() << endl << endl;
+   cout << setw(FW) << "add all edges" << " (" << addAllEdges.GetFlag() << ") : " <<
+            addAllEdges.GetDefault() << endl << endl;
    cout << setw(FW) << "position resolution" << " (" << posres.GetFlag() << ") : " <<
             posres.GetDefault() << endl << endl;
    cout << setw(FW) << "orientation resolution" << " (" << orires.GetFlag() << ") : " <<

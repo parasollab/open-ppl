@@ -299,6 +299,7 @@ public:
         num_param<int>    lineSegment;        ///< used for LocalPlanner.
         num_param<int>    usingClearance;     ///< Mantain certain amount of clearance of Robot duing connection time.
         num_param<int>    addPartialEdge;     ///< Add failed path to roadmap. (For node connection)
+	num_param<int>    addAllEdges;        ///< Add all edges, valid or not, to roadmap. (For node connection)
 
         n_str_param       collPair;             ///< Collosion Pair for OBPRM
         n_str_param       freePair;             ///< Free Pair for OBPRM
