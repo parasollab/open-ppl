@@ -1262,7 +1262,7 @@ protected:
       static void 
       ConnectSmallCCs
       (Roadmap* _rm,CollisionDetection *cd, LocalPlanners* lp,DistanceMetric * dm,CN& _cn, 
-       CNInfo& info, VID _cc1id, VID _cc2id);
+       CNInfo& info, vector<Cfg> & cc1vec, vector<Cfg> & cc2vec);
 
       /**Connect two big connected components.
         *Algorithm:
@@ -1289,7 +1289,7 @@ protected:
       static void 
       ConnectBigCCs
       (Roadmap* _rm,CollisionDetection *cd, LocalPlanners* lp,DistanceMetric * dm,CN& _cn, 
-       CNInfo& info, VID _cc1id, VID _cc2id);
+       CNInfo& info, vector<Cfg> & cc1vec, vector<Cfg> & cc2vec);
 
   //@}
 

@@ -286,7 +286,9 @@ ConnectNodes_Closest(Roadmap * _rm,CollisionDetection* cd,
 			_rm->m_pRoadmap->GetData(kp[j].first),
 			_rm->m_pRoadmap->GetData(kp[j].second),
 			info.lpsetid,&lpInfo))
+		{
 			_rm->m_pRoadmap->AddEdge(kp[j].first, kp[j].second, lpInfo.edge);
+		}
 	} //endfor j
 }
 
@@ -469,22 +471,25 @@ void ConnectMapNodes::ConnectNodes_ConnectCCs
 	cout << ", smallcc=" << _cn.GetSmallCCSize() << "): "<<flush;
 #endif
 
+	RoadmapGraph<Cfg, WEIGHT> * pMap = _rm->m_pRoadmap;
 	int smallcc = _cn.GetSmallCCSize();
 
 	// process components from smallest to biggest  
 	for (int cc1 = ccs1.size()-1 ; cc1 >= 0 ; cc1--) {
 		for (int cc2 = ccs2.size() - 2 ; cc2 >= 0 ; cc2--){
 
-			VID cc1id = ccs1[cc1].second;
-			VID cc2id = ccs2[cc2].second;
-			
+			VID cc1id = ccs1[cc1].second; VID cc2id = ccs2[cc2].second;
+			Cfg cc1Cfg = pMap->GetData(cc1id); Cfg cc2Cfg = pMap->GetData(cc2id); 
+
 			// if cc1 & cc2 not already connected, try to connect them 
-			if ( !_rm->m_pRoadmap->IsSameCC(cc1id,cc2id) ) {
-				if(_rm->m_pRoadmap->GetCC(cc1id).size() < smallcc &&
-					_rm->m_pRoadmap->GetCC(cc2id).size() < smallcc ) {
-					ConnectSmallCCs(_rm,cd,lp,dm,_cn,info,cc1id,cc2id);
+			if ( !pMap->IsSameCC(cc1id,cc2id) )
+			{
+				vector<Cfg> cc1 = pMap->GetCC(cc1Cfg);
+				vector<Cfg> cc2 = pMap->GetCC(cc2Cfg);
+				if(cc1.size() < smallcc && cc2.size() < smallcc ) {
+					ConnectSmallCCs(_rm,cd,lp,dm,_cn,info,cc1,cc2);
 				} else {
-					ConnectBigCCs(_rm,cd,lp,dm,_cn,info,cc1id,cc2id);
+					ConnectBigCCs(_rm,cd,lp,dm,_cn,info,cc1,cc2);
 				}
 			} 
 		}/*endfor cc2*/ 
@@ -496,83 +501,64 @@ void ConnectMapNodes::ConnectNodes_ConnectCCs
 // try to connect all pairs of cfgs in the two CCs
 //
 void
-ConnectMapNodes::
-ConnectSmallCCs(Roadmap* _rm,CollisionDetection *cd, LocalPlanners* lp,DistanceMetric * dm,CN& _cn, CNInfo& info, VID _cc1id, VID _cc2id) {
+ConnectMapNodes::ConnectSmallCCs
+(Roadmap* _rm,CollisionDetection *cd, LocalPlanners* lp,DistanceMetric * dm,
+ CN& _cn, CNInfo& info, vector<Cfg> & cc1vec, vector<Cfg> & cc2vec) 
+{
 
-  //-- initialize information needed to check connection between cfg's
-  LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+	//-- initialize information needed to check connection between cfg's
+	LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+	RoadmapGraph<Cfg, WEIGHT> * pMap = _rm->m_pRoadmap;
 
-  // created a temporary variable since GetCC requires &
-
-  Cfg t;
-  t=_rm->m_pRoadmap->GetData(_cc1id);
-  vector<Cfg> cc1vec = _rm->m_pRoadmap->GetCC(t);
-  t=_rm->m_pRoadmap->GetData(_cc2id);
-  vector<Cfg> cc2vec = _rm->m_pRoadmap->GetCC(t);
-  bool connected = false;
-
-  for (int c1 = 0; c1 < cc1vec.size(); c1++) {
-    for (int c2 = 0; c2 < cc2vec.size(); c2++) {
-
-       if (lp->IsConnected(_rm,cd,dm,
-			cc1vec[c1],cc2vec[c2],info.lpsetid,&lpInfo)) {
-	   _rm->m_pRoadmap->AddEdge(cc1vec[c1], cc2vec[c2], lpInfo.edge);
-           connected = true;
-           break;
-       } else if(info.addPartialEdge) {
-	   Cfg &tmp = lpInfo.savedEdge.second;
-	   if(!tmp.AlmostEqual(cc1vec[c1])) {
-	      _rm->m_pRoadmap->AddVertex(tmp);
-	      _rm->m_pRoadmap->AddEdge(cc1vec[c1], tmp, lpInfo.edge);
-	   }
-       }
-    }
-
-    if (connected) break;
-  }
-
+	// created a temporary variable since GetCC requires &
+	for (int c1 = 0; c1 < cc1vec.size(); c1++){
+		for (int c2 = 0; c2 < cc2vec.size(); c2++){
+			if (lp->IsConnected(_rm,cd,dm,cc1vec[c1],cc2vec[c2],info.lpsetid,&lpInfo)){
+				pMap->AddEdge(cc1vec[c1], cc2vec[c2], lpInfo.edge);
+				return;
+			}
+			else if(info.addPartialEdge) {
+				Cfg &tmp = lpInfo.savedEdge.second;
+				if(!tmp.AlmostEqual(cc1vec[c1])) {
+					pMap->AddVertex(tmp);
+					pMap->AddEdge(cc1vec[c1], tmp, lpInfo.edge);
+				}
+			}
+		}//end for c2
+	}//end for c1
 }
 
 //
 // try to connect kclosest pairs of cfgs in the two CCs
 //
 void
-ConnectMapNodes::
-ConnectBigCCs(
-        Roadmap* _rm,CollisionDetection *cd, 
-        LocalPlanners* lp,DistanceMetric * dm,
-        CN& _cn, CNInfo& info, 
-        VID _cc1id, VID _cc2id) {
+ConnectMapNodes::ConnectBigCCs
+( Roadmap* _rm,CollisionDetection *cd, LocalPlanners* lp,DistanceMetric * dm,
+  CN& _cn, CNInfo& info, vector<Cfg> & cc1vec, vector<Cfg> & cc2vec) 
+{
 
-  //-- initialize information needed to check connection between cfg's
-  LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+	//-- initialize information needed to check connection between cfg's
+	LPInfo lpInfo=Initialize_LPinfo(_rm,info);
+	RoadmapGraph<Cfg, WEIGHT> * pMap = _rm->m_pRoadmap;
 
-  int kpairs = _cn.GetKPairs();
-  
-  Cfg t;
-  t=_rm->m_pRoadmap->GetData(_cc1id);
-  vector<Cfg> cc1vec = _rm->m_pRoadmap->GetCC(t);
-  t=_rm->m_pRoadmap->GetData(_cc2id);
-  vector<Cfg> cc2vec = _rm->m_pRoadmap->GetCC(t);
-
-  kpairs = min(kpairs, cc2vec.size());
-
-  vector< pair<Cfg,Cfg> > kp = FindKClosestPairs(_rm->GetEnvironment(),
-	dm,info,cc1vec,cc2vec,kpairs);
-
-  for (int i = 0; i < kp.size(); i++) {
-      if (lp->IsConnected(_rm,cd,dm,kp[i].first,
-		kp[i].second,info.lpsetid,&lpInfo)) {
-	   _rm->m_pRoadmap->AddEdge(kp[i].first, kp[i].second, lpInfo.edge); 
-           break;
-      } else if(info.addPartialEdge) {
-           Cfg &tmp = lpInfo.savedEdge.second;
-	   if(!tmp.AlmostEqual(kp[i].first)) {
-             _rm->m_pRoadmap->AddVertex(tmp);
-             _rm->m_pRoadmap->AddEdge(kp[i].first, tmp, lpInfo.edge);
-	   }
-      }
-  }
+	int kpairs = min(_cn.GetKPairs(), cc2vec.size());
+	
+	vector< pair<Cfg,Cfg> > kp = 
+		FindKClosestPairs(_rm->GetEnvironment(),dm,info,cc1vec,cc2vec,kpairs);
+	
+	for (int i = 0; i < kp.size(); i++) {
+		if (lp->IsConnected(_rm,cd,dm,kp[i].first,kp[i].second,info.lpsetid,&lpInfo)) {
+			pMap->AddEdge(kp[i].first, kp[i].second, lpInfo.edge); 
+			return;
+		}
+		else if(info.addPartialEdge) {
+			Cfg &tmp = lpInfo.savedEdge.second;
+			if(!tmp.AlmostEqual(kp[i].first)) {
+				pMap->AddVertex(tmp);
+				pMap->AddEdge(kp[i].first, tmp, lpInfo.edge);
+			}
+		}//end for c2
+	}//end for c1
 }
 
 //
