@@ -69,17 +69,19 @@ public class iOBPRM extends JPanel
                 
                 ////////////////////////////////////////////////////////
                 iEnvironment iEnv=null;
+		iEnvExtra iAdvBB=null;
                 iNode_Generation iNode_Gen=new iNode_Generation();
                 iNode_Connection iNode_Con=new iNode_Connection();
                 iLocal_Planner iLP=new iLocal_Planner();
                 iDistance_Metrics iDM=new iDistance_Metrics();
                 iCollision_Detection iCD=new iCollision_Detection();
                 iEnv=new iEnvironment();
+		iAdvBB = new iEnvExtra();
                 
                 ////////////////////////////////////////////////////////
                 //Check error
                 if( iEnv==null || iNode_Gen==null ||iNode_Con==null ||
-                    iLP==null || iDM==null || iCD==null )
+                    iLP==null || iDM==null || iCD==null || iAdvBB==null )
                 {
                         System.err.println("iOBPRM error: not enough memory");
                         System.exit(1);
@@ -88,6 +90,7 @@ public class iOBPRM extends JPanel
                 ////////////////////////////////////////////////////////
                 //Add to tabbed panel
                 tabbed_Panel.addTab("Environment",iEnv.getIcon(),iEnv,iEnv.toString());
+		tabbed_Panel.addTab("Advanced Environment",iAdvBB.getIcon(),iAdvBB,iAdvBB.toString());
                 tabbed_Panel.addTab("Map Node Generation",iNode_Gen.getIcon(),iNode_Gen,iNode_Gen.toString());
                 tabbed_Panel.addTab("Map Node Connection",iNode_Con.getIcon(),iNode_Con,iNode_Con.toString());
                 tabbed_Panel.addTab("Local Planner",iLP.getIcon(),iLP,iLP.toString());
@@ -607,8 +610,20 @@ public class iOBPRM extends JPanel
                 //show frame....
                 iOBPRM_Frame.setContentPane(iobprm);
                 iOBPRM_Frame.pack();
-                iOBPRM_Frame.setSize(new Dimension(585,400)); //try and try
-                //iOBPRM_Frame.setResizable(false);       //not allow resize
+		 iOBPRM_Frame.setSize(new Dimension(585,400)); //try and try
+                
+		//iOBPRM_Frame.setResizable(false);       //not allow resize
                 iOBPRM_Frame.show();
         }
  }
+
+
+
+
+
+
+
+
+
+
+
