@@ -91,7 +91,7 @@ class LocalPlanners {
 		      bool checkCollision=true, 
 		      bool savePath=false, bool saveFailedPath=false);
 
- private:
+ protected:
   LocalPlannerMethod<CFG, WEIGHT> * GetLocalPlanner(unsigned int lpid); 
   unsigned int GetNewID();
   void ResetSelected();
