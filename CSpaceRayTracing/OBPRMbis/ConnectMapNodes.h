@@ -1250,7 +1250,8 @@ protected:
         */
       static void RRT(Roadmap* rm, int K, double deltaT, vector<Cfg>& U,
                                     CollisionDetection*,LocalPlanners*,
-                                    DistanceMetric *, CNInfo&, LPInfo,bool greedy);
+                                    DistanceMetric *, CNInfo&, LPInfo,
+							bool & toConnect, bool connecting);
 
   //}@
 
