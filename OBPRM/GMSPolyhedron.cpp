@@ -139,7 +139,6 @@ void GMSPolyhedron::ComputeNormals() {
       polygonList[i].area = (0.5) * p->normal.magnitude();
       sum += polygonList[i].area;
       p->normal.normalize();
-      p->normal.normalize();
     }
 
     this->area = sum;
@@ -258,10 +257,11 @@ Vector3D GMSPolyhedron::ReadBYU(istream & _is) {
     com = sum/numVertices;
 
     maxRadius = 0.0; // shift center to origin and find maximum radius.
-    for (i = 0; i < numVertices; i++) {
-	vertexList[i] = vertexList[i] - com;
-	if(vertexList[i].magnitude() > maxRadius) 
-		maxRadius = vertexList[i].magnitude();
+    for (i = 0; i < numVertices; i++) 
+	{
+		vertexList[i] = vertexList[i] - com;
+		if(vertexList[i].magnitude() > maxRadius) 
+			maxRadius = vertexList[i].magnitude();
     }
     com = Vector3D(0.0, 0.0, 0.0);
 
@@ -288,6 +288,7 @@ Vector3D GMSPolyhedron::ReadBYU(istream & _is) {
         }
 
     }
+
     ComputeNormals();
     return com;
 }
