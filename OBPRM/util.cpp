@@ -15,6 +15,29 @@
 #include "util.h"
 #include "Roadmap.h"
 
+
+// Calculate the minimum DIRECTED angular distance between two angles
+// normalized to 1.0
+double DirectedAngularDistance(double a,double b)
+{
+    //float a = aa;
+    //float b = bb;
+
+    // normalize both a and b to [0, 1)
+    a = a - floor(a);
+    b = b - floor(b);
+
+    // shorten the distance between a and b by shifting a or b by 1.
+    if( b-a > 0.500001 )
+        ++a;
+    else if( a-b > 0.500001)
+        ++b;
+
+    return b-a;
+
+}
+
+
 /////////////////////////////////////////////////////////////////////
 //
 // Output to a file the sequence of cfgs in matrix form
