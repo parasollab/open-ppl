@@ -213,7 +213,7 @@ operator==(const DM& _dm) const
               !strcmp(name,"com")  ) {
      return true;
   } else if ( !strcmp(name,"scaledEuclidean") ) {
-     return ( abs(sValue-_dm.sValue) <0.000000001);  //sValue==_dm.sValue
+     return ( abs(sValue-_dm.sValue) <0.000000001);
   } else if ( !strcmp(name,"minkowski") ) {
      return ( (abs(r1 - _dm.r1 )<0.000000001) && 
               (abs(r2 - _dm.r2 ) <0.000000001)&&

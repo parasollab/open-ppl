@@ -8,6 +8,13 @@
 //     This file contains the definitions of the prototypes
 //     declared in "GenerateMapNodes.h".
 //
+//  Created
+//      8/27/98  Lucia K. Dale
+//
+//  Last Modified
+//      8/21/99  Lucia K. Dale  added GaussPRM
+//      8/31/99  Lucia K. Dale  invoked method name change
+//
 /////////////////////////////////////////////////////////////////////
 
 #include "GenerateMapNodes.h"

@@ -178,7 +178,7 @@ vector<double> Cfg::GetData() const {
 	return v;
 }
 
-Vector3D Cfg::GetRobotCenterPosition() /* brc const */{
+Vector3D Cfg::GetRobotCenterPosition(){
   return CfgHelper->GetRobotCenterPosition(*this);
 }
 

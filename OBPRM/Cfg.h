@@ -66,7 +66,7 @@ public:
    void Read(istream &is);
 
    // Data
-   static const int NULL_INFO =-1;//= -1;
+   static const int NULL_INFO =-1;
    int obst;
    int tag;
    double clearance;

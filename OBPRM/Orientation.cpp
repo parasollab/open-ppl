@@ -1,6 +1,12 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
 //  Orientation.c
+//
+//  Created   3/ 1/98 Aaron Michalk
+//  Modified  4/13/98 Aaron Michalk
+//  Added     6/ 4/98 Wookho Son
+//  Added     1/13/99 Guang Song add EulerZYX in ConvertType method to 
+// 	      convert it to or from Matrix type or EulerXYZ type. 
 /////////////////////////////////////////////////////////////////////
 
 #include "Orientation.h"
