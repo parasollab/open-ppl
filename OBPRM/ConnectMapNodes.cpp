@@ -1291,14 +1291,15 @@ ConnectNodes_modifiedLM(
 
              // calculate CC's center (of mass), CCcenter
              Cfg CCcenter; // sum initialized to 0 by constructor.
-             for(int i=0; i<CC.size(); ++i) {
+             int i;
+             for(i=0; i<CC.size(); ++i) {
                 double centerWeight = float(i)/CC.size();
                 CCcenter = Cfg::WeightedSum(CC[i], CCcenter, centerWeight);
              }
 
              // calculate CCradius 
              double CCradius = 0.0;
-             for(int i=0; i<CC.size(); ++i) {
+             for(i=0; i<CC.size(); ++i) {
                 CCradius += dm->Distance(env, CCcenter, CC[i], info.dmsetid);
              }
              CCradius /= CC.size();
