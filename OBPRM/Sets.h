@@ -1,32 +1,29 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
-//
-//  Sets.h
-//
-//  General Description
-//      This set of template classes provides an implementation for
-//      maintaining a universe of *unique* elements, and forming
-//      sets of elements from the universe. Capabilities for both:
-//        o ordered sets (duplicate elements allowed)
-//        o unordered sets (duplicate elements not allowed)
-//
-//      Both elements and sets are assigned unique ids (short ints).
-//  
-//      NOTE: elements can be added, but *not* deleted from the universe,
-//            sets can be created/deleted/modified. 
-//
-//      The user must provide the parameter type ELEMENT, which is
-//      the data that will be stored in each element of the universe.
-//      It is assumed the ELEMENT class has the following operators
-//      defined for it: <<  ==
-//
-//      The classes in this hierarchy (so far) include:
-//        o BasicSets 
-//
-//
-//  Created
-//      8/5/98  Nancy Amato
-/////////////////////////////////////////////////////////////////////
+
+/**@file Sets.h
+   General Description
+      This set of template classes provides an implementation for
+      maintaining a universe of *unique* elements, and forming
+      sets of elements from the universe. Capabilities for both:
+        o ordered sets (duplicate elements allowed)
+        o unordered sets (duplicate elements not allowed)
+
+      Both elements and sets are assigned unique ids (short ints).
+  
+      NOTE: elements can be added, but *not* deleted from the universe,
+            sets can be created/deleted/modified. 
+
+      The user must provide the parameter type ELEMENT, which is
+      the data that will be stored in each element of the universe.
+      It is assumed the ELEMENT class has the following operators
+      defined for it: <<  ==
+
+      The classes in this hierarchy (so far) include:
+        o BasicSets 
+
+   @author Nancy Amato
+   @date 8/5/98
+*/
 
 #ifndef Sets_h
 #define Sets_h
@@ -49,12 +46,13 @@
 
 #include "BasicDefns.h"
 
-/////////////////////////////////////////////////////////////////////
-//  class BasicSets<ELEMENT>
-//
-//  General Description
-//      Base class for universe and sets of ELEMENTS 
-/////////////////////////////////////////////////////////////////////
+
+
+\
+/**@file class BasicSets<ELEMENT>
+   General Description
+      Base class for universe and sets of ELEMENTS 
+*/
 
 template <class ELEMENT>
 class BasicSets {
