@@ -29,6 +29,8 @@ BasicQueryReq::BasicQueryReq() {
 
   checkPotential = 0;
   potential = 0;
+
+  checkCollision = 1; //default to checking for collision-free nodes
 }
 
 
@@ -69,12 +71,14 @@ BasicQueryReq::init(char* filename) {
     maxTilt = maxTilt*M_PI/180; // convert it from drgree to Radian.
   }    
 	
-
   //read in potiential requirements:
   is >> checkPotential;
   if (checkPotential) {
     is >> potential;
   }
+
+  //read in collision requirements:
+  is >> checkCollision;
 
   is.close();
   return;
@@ -85,6 +89,13 @@ bool
 BasicQueryReq::nodeValid(Cfg& node, Environment* env,
 			 CollisionDetection* cd, SID cdsetid) {
   double d;
+
+  if (checkCollision) {
+    CDInfo info;
+    if (node.isCollision(env, cd, cdsetid, info)) {
+      return false;
+    }
+  }
 
   if (checkClearance) {
     //calculate workspace clearance
@@ -144,6 +155,7 @@ BasicQueryReq::Print(ostream& os) {
   os << "\n\tRotation: "   << checkRotation   << " (" << rotation   << ")";
   os << "\n\tTilting: "    << checkTilting    << " (" << minTilt    << ", " << maxTilt << ")";
   os << "\n\tPotential: "  << checkPotential  << " (" << potential  << ")";
+  os << "\n\tCollision: "  << checkCollision;
 }
 
 

@@ -207,16 +207,6 @@ bool AdaptiveQuery::removeBadNodes(vector <Cfg>& cfgs, Environment *env,
       removed_a_node = true;
     }
   }
-
-//remove later
-  CDInfo info;
-  for(int i=0; i<cfgs.size(); ++i) {
-    if(cfgs[i].isCollision(env, _cd, _cdsetid, info)) {
-      rdmp.m_pRoadmap->DeleteVertex(cfgs[i]);
-      removed_a_node = true;
-    }
-  }
-//endremove
   
   return removed_a_node;
 };

@@ -55,6 +55,7 @@ protected:
    bool checkRotation;
    bool checkTilting;
    bool checkPotential;
+   bool checkCollision;
 
    // values:
    double resolution;
