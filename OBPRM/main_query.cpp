@@ -32,12 +32,13 @@ int main(int argc, char** argv)
 
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
-  cn.UserInit(&input);
+  //cn.UserInit(&input);
   dm.UserInit(&input,   &gn, &lp );
 
   Query query(&input,&Qinput, &cd, &dm, &lp,&cn);
 
-  gn.UserInit(&input,           query.rdmp.GetEnvironment() );
+  gn.UserInit(&input, query.rdmp.GetEnvironment() );
+  cn.UserInit(&input, query.rdmp.GetEnvironment() );
 
 
   Qinput.PrintValues(cout);
