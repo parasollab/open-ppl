@@ -278,13 +278,23 @@ void Orientation::ConvertType(OrientationType _newType) {
           }
 	  case EulerXYZ:
 	    beta = atan2(matrix[0][2], sqrt(matrix[1][2]*matrix[1][2] + matrix[2][2]*matrix[2][2]));
-	    alpha = atan2(-matrix[1][2]/cos(beta), matrix[2][2]/cos(beta));
-	    gamma = atan2(-matrix[0][1]/cos(beta), matrix[0][0]/cos(beta));
+	    if(cos(beta) > 0) {
+	        alpha = atan2(-matrix[1][2], matrix[2][2]);
+		gamma = atan2(-matrix[0][1], matrix[0][0]);
+	    } else {
+	        alpha = atan2(matrix[1][2], -matrix[2][2]);
+		gamma = atan2(matrix[0][1], -matrix[0][0]);
+	    }		    
 	    break;
 	  case EulerZYX: // FixedXYZ: add on 2/10/99 Guang Song
             beta = atan2(-matrix[2][0], sqrt(matrix[2][1]*matrix[2][1] + matrix[2][2]*matrix[2][2]));
-            alpha = atan2(matrix[1][0]/cos(beta), matrix[0][0]/cos(beta));
-            gamma = atan2(matrix[2][1]/cos(beta), matrix[2][2]/cos(beta));
+	    if(cos(beta) > 0) {
+	    	alpha = atan2(matrix[1][0], matrix[0][0]);
+		gamma = atan2(matrix[2][1], matrix[2][2]));
+	    } else {	
+                alpha = atan2(-matrix[1][0], -matrix[0][0]);
+                gamma = atan2(-matrix[2][1], -matrix[2][2]);
+	    }
 	  case EulerXZY:
 	    // TODO
 	    break;
