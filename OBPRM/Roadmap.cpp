@@ -21,6 +21,8 @@
 #include "Environment.h"
 #include "DistanceMetrics.h"
 #include "util.h"
+#include "LocalPlanners.h"
+#include "Input.h"
 
 //===================================================================
 //  Roadmap class Methods: Constructors and Destructor

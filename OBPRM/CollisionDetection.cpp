@@ -21,6 +21,9 @@
 #include "Stat_Class.h"
 #include <string.h>
 #include "util.h"
+#include "DistanceMetrics.h"
+#include "LocalPlanners.h"
+#include "Input.h"
 
 extern Stat_Class Stats;
 

@@ -19,6 +19,7 @@
 #include "GMSPolyhedron.h"
 #include "MultiBody.h"
 #include "DistanceMetrics.h"
+#include "LocalPlanners.h"
 
 // *** not sure if this is needed, or should go in Haptic.cpp
 #define EXPANSION_FACTOR 100

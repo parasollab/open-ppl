@@ -5,6 +5,8 @@
 #include "Roadmap.h"
 #include "Stat_Class.h"
 #include "GraphAlgo.h"
+#include "Weight.h"
+#include "Cfg.h"
 /////////////////////////////////////////////////////////////////////
 //
 //  Stat_Class.c

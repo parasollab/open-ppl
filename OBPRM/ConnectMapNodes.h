@@ -27,9 +27,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Include OBPRM headers
 #include "RoadmapGraph.h"
-#include "LocalPlanners.h"
 #include "GenerateMapNodes.h"
 
+class LocalPlanners;
+class LPInfo;
 
 //---------------------------------------------------------------
 /**Pre-defined Algobase Sets.

@@ -40,9 +40,6 @@
 //Include OBPRM headers
 #include "OBPRM.h"
 #include "Sets.h"
-#include "Transformation.h"
-#include "Environment.h"
-#include "DistanceMetrics.h"
 #include "Cfg.h"
 
 #include <vector.h>
@@ -56,6 +53,9 @@ class MultiBody;
 class CD;
 class CDSets;
 class CollisionDetection;
+class Transformation;
+class Environment;
+class DistanceMetric;
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -21,6 +21,8 @@
 #include "Clock_Class.h"
 #include "util.h"
 #include "GraphAlgo.h"
+#include "LocalPlanners.h"
+#include "Input.h"
 
 #define K_OTHER      10        // default for obst-other connections
 #define K_SELF        3        // default for obst-self  connections

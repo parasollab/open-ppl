@@ -12,6 +12,8 @@
 #define Push_h
 
 #include "Roadmap.h"
+#include "GenerateMapNodes.h"
+#include "ConnectMapNodes.h"
 
 class Push {
     

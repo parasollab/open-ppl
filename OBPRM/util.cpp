@@ -13,6 +13,7 @@
 #include "Roadmap.h"
 #include "MultiBody.h"
 #include "Environment.h"
+#include "Cfg.h"
 
 // Calculate the minimum DIRECTED angular distance between two angles
 // normalized to 1.0

@@ -17,6 +17,7 @@
 #include "Environment.h"
 #include "Push.h"
 #include "util.h"
+#include "LocalPlanners.h"
 
 #define EXPANSION_FACTOR 100
 #define MAX_PATH_NUM 20

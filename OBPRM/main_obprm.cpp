@@ -18,6 +18,7 @@
 #include "CollisionDetection.h"
 #include "ConnectMapNodes.h"
 #include "DistanceMetrics.h"
+#include "LocalPlanners.h"
 
 Input input;
 extern Stat_Class Stats; 

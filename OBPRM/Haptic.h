@@ -18,6 +18,8 @@
 #define USE_SURFACE2 16
 
 #include "Roadmap.h"
+#include "GenerateMapNodes.h"
+#include "ConnectMapNodes.h"
 
 class Haptic {
 

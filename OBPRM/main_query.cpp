@@ -16,6 +16,7 @@
 #include "Stat_Class.h"
 #include "Clock_Class.h"
 #include "GraphAlgo.h"
+#include "QueryCmds.h"
 
 Input input;
 QueryCmds Qinput;

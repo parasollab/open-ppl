@@ -21,6 +21,10 @@
 #include "Query.h"
 #include "Environment.h"
 #include "GraphAlgo.h"
+#include "QueryCmds.h"
+#include "LocalPlanners.h"
+#include "ConnectMapNodes.h"
+
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class Query

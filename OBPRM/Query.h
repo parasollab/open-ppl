@@ -20,9 +20,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 #include "Defines.h"
-#include "QueryCmds.h"     
 #include "Roadmap.h"     
 #include "util.h"
+
+class QueryCmds;
+class ConnectMapNodes;
+class LPInfo;
 
 class Query
 {

@@ -24,14 +24,14 @@
 //#include "Defines.h"
 #include "OBPRM.h"              // Cfg type defined here
 #include "RoadmapGraph.h"       // graph class
-#include "ConnectMapNodes.h"    // Map Node Connectors Algobase
 
 class Input;              ///< init info (command line, env initfile)
 class Environment;        ///< Environment classes
 class LocalPlanners;      ///< Local Planner       Algobase
 class GenerateMapNodes;   ///< Map Node Generators Algobase
-class DistanceMetrics;    ///< Distance Metrics    Algobase
+class DistanceMetric;    ///< Distance Metrics    Algobase
 class CollisionDetection; ///< Collision Detection Algobase
+class Cfg;
 
 /////////////////////////////////////////////////////////////////////
 

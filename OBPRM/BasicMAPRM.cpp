@@ -1,6 +1,7 @@
 #include "BasicMAPRM.h"
 #include "MultiBody.h"
 #include "util.h"
+#include "Environment.h"
 
 num_param<int> CBasicMAPRM::m_bApprox("approx",1,0,1);
 num_param<int> CBasicMAPRM::m_iRays("approx_ray",10,1,100);

@@ -20,6 +20,7 @@
 #include "ConnectMapNodes.h"
 #include "Environment.h"
 #include "MultiBody.h"
+#include "Input.h"
 
 extern Stat_Class Stats;
 

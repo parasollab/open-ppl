@@ -15,6 +15,7 @@
 #include "GenerateMapNodes.h"
 #include "Environment.h"
 #include "util.h"
+#include "Input.h"
 
 /////////////////////////////////////////////////////////////////////
 //

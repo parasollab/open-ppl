@@ -29,6 +29,8 @@
 
 #include "Clock_Class.h"
 #include "util.h"
+#include "Input.h"
+#include "Weight.h"
 
 #define EXPANSION_FACTOR 100
 

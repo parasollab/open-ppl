@@ -36,7 +36,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include OBPRM headers
 #include "SwitchDefines.h"
-#include "DHparameters.h"
 #include "GMSPolyhedron.h"
 #include "Connection.h"
 
@@ -44,6 +43,7 @@
 class MultiBody;
 class Input;
 class Transformation;
+class DHParameters;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**class Body is a high level represented object in workspace.
