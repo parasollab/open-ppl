@@ -376,16 +376,16 @@ public:
       *therefore, one more typedef is used here
       */
     typedef  vector< WtEdge > WtEdge_VECTOR;
-    typedef  WtEdge_VECTOR::iterator EI;
-    typedef  WtEdge_VECTOR::const_iterator CEI;
-    typedef  WtEdge_VECTOR::reverse_iterator REI;
-    typedef  WtEdge_VECTOR::const_reverse_iterator CREI;
+    typedef  typename WtEdge_VECTOR::iterator EI;
+    typedef  typename WtEdge_VECTOR::const_iterator CEI;
+    typedef  typename WtEdge_VECTOR::reverse_iterator REI;
+    typedef  typename WtEdge_VECTOR::const_reverse_iterator CREI;
 
     typedef  vector< pair<VID, WEIGHT> > PAIR_VECTOR;
-    typedef  PAIR_VECTOR::iterator PEI;
-    typedef  PAIR_VECTOR::const_iterator CPEI;  
-    typedef  PAIR_VECTOR::reverse_iterator RPEI;
-    typedef  PAIR_VECTOR::const_reverse_iterator CRPEI;
+    typedef  typename PAIR_VECTOR::iterator PEI;
+    typedef  typename PAIR_VECTOR::const_iterator CPEI;  
+    typedef  typename PAIR_VECTOR::reverse_iterator RPEI;
+    typedef  typename PAIR_VECTOR::const_reverse_iterator CRPEI;
 
     // Predicates
 
@@ -1398,16 +1398,16 @@ public:
     *therefore, one more typedef is used here
     */
    typedef vector< Vertex > VERTEX_VECTOR;
-   typedef VERTEX_VECTOR::iterator VI;                  ///<VI Vertex Iterator
-   typedef VERTEX_VECTOR::const_iterator CVI;           ///<CVI Constant Vertex Iterator
-   typedef VERTEX_VECTOR::reverse_iterator RVI;         ///<RVI Reverse Vertex Iterator
-   typedef VERTEX_VECTOR::const_reverse_iterator CRVI;  ///<CRVI Constant Reverse Vertex Iterator
+   typedef typename VERTEX_VECTOR::iterator VI;   ///<VI Vertex Iterator
+   typedef typename VERTEX_VECTOR::const_iterator CVI;           ///<CVI Constant Vertex Iterator
+   typedef typename VERTEX_VECTOR::reverse_iterator RVI;         ///<RVI Reverse Vertex Iterator
+   typedef typename VERTEX_VECTOR::const_reverse_iterator CRVI;  ///<CRVI Constant Reverse Vertex Iterator
 
    typedef vector< WtEdge > WtEdge_VECTOR;
-   typedef WtEdge_VECTOR::iterator EI;                  ///<EI Edge Iterator
-   typedef WtEdge_VECTOR::const_iterator CEI;           ///<CEI Constant Edge Iterator
-   typedef WtEdge_VECTOR::reverse_iterator REI;         ///<REI Reverse Edge Iterator
-   typedef WtEdge_VECTOR::const_reverse_iterator CREI;  ///<CREI Constant Reverse Edge Iterator
+   typedef typename WtEdge_VECTOR::iterator EI;                  ///<EI Edge Iterator
+   typedef typename WtEdge_VECTOR::const_iterator CEI;           ///<CEI Constant Edge Iterator
+   typedef typename WtEdge_VECTOR::reverse_iterator REI;         ///<REI Reverse Edge Iterator
+   typedef typename WtEdge_VECTOR::const_reverse_iterator CREI;  ///<CREI Constant Reverse Edge Iterator
 
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -2066,16 +2066,16 @@ public:
          *therefore, one more typedef is used here
          */
        typedef  vector< Vertex > VERTEX_VECTOR;
-       typedef  VERTEX_VECTOR::iterator VI;                 ///<VI Vertex Iterator
-       typedef  VERTEX_VECTOR::const_iterator CVI;          ///<CVI Constant Vertex Iterator
-       typedef  VERTEX_VECTOR::reverse_iterator RVI;        ///<RVI Reverse Vertex Iterator
-       typedef  VERTEX_VECTOR::const_reverse_iterator CRVI; ///<CRVI Constant Reverse Vertex Iterator
+       typedef  typename VERTEX_VECTOR::iterator VI;                 ///<VI Vertex Iterator
+       typedef  typename VERTEX_VECTOR::const_iterator CVI;          ///<CVI Constant Vertex Iterator
+       typedef  typename VERTEX_VECTOR::reverse_iterator RVI;        ///<RVI Reverse Vertex Iterator
+       typedef  typename VERTEX_VECTOR::const_reverse_iterator CRVI; ///<CRVI Constant Reverse Vertex Iterator
 
        typedef  vector< WtEdge > WtEdge_VECTOR; 
-       typedef  WtEdge_VECTOR::iterator EI;                 ///<EI Edge Iterator
-       typedef  WtEdge_VECTOR::const_iterator CEI;          ///<CEI Constant Edge Iterator
-       typedef  WtEdge_VECTOR::reverse_iterator REI;        ///<REI Reverse Edge Iterator
-       typedef  WtEdge_VECTOR::const_reverse_iterator CREI; ///<CREI Constant Reverse Edge Iterator
+       typedef  typename WtEdge_VECTOR::iterator EI;                 ///<EI Edge Iterator
+       typedef  typename WtEdge_VECTOR::const_iterator CEI;          ///<CEI Constant Edge Iterator
+       typedef  typename WtEdge_VECTOR::reverse_iterator REI;        ///<REI Reverse Edge Iterator
+       typedef  typename WtEdge_VECTOR::const_reverse_iterator CREI; ///<CREI Constant Reverse Edge Iterator
 
        /**Compare the size of two given connected components.
          *@return (_cc1.first>_cc2.first)
@@ -3418,7 +3418,7 @@ TopologicalSort () const {
     int i,n;
     VID vid;
     vector<VID> tps;
-    n=GetVertexCount();
+    n=this->GetVertexCount();
     vector<pair<VID,int> > tmp(n);
 
     dfsinfo dfs(n);
