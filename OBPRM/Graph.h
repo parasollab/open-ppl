@@ -1186,9 +1186,16 @@ public:
          */
        virtual vector<VERTEX> GetPredecessorsDATA(VERTEX&) const;
 
+       /**Return VIDs of vertices which are sinks.
+         *Sink vertex is the vertex that has no outgoing edges (i.e. no successors)
+         *This method returns all sinks in the graph.
+         */
+       vector<VID> GetSinks() const;
+
        /**Return VIDs of vertices which are sources.
          *Source vertex is the vertex that has no incoming edges (i.e. no predecessors)
          *This method returns all sources in the graph.
+	 *Need to call SetPredecessors() for the graph before using this method
          */
        vector<VID> GetSources() const;
 
@@ -1613,11 +1620,13 @@ public:
        /**Is _v1's VID smaller than _v2's VID?.
          *@return (_v1.vid < _v2.vid )
          */
+
 #ifdef __HP_aCC
        static bool VID_Compare (const Vertex _v1, const Vertex _v2); 
 #else 
        static bool VID_Compare (const Vertex& _v1, const Vertex& _v2); 
 #endif
+
    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -2516,7 +2525,17 @@ SetPredecessors() {
     VI v1, v2;
     CVI cv1, cv2;
     VID _v2id;
-    
+    bool DoneSet = false;
+
+    //check if SetPredecessors() already called
+    for(v1 = v.begin(); v1 < v.end(); v1++) {
+	if(!v1->predecessors.empty()) {
+		DoneSet = true;
+		cout<<"\nSetPredecessors() already called."<<endl;
+		return;
+	}
+    }
+
     for(v1 = v.begin(); v1 < v.end(); v1++) {
         for (EI ei = v1->edgelist.begin(); ei != v1->edgelist.end(); ei++) {
             _v2id = ei->vertex2id;
@@ -3297,11 +3316,25 @@ GetSources() const {
     vector<VID> sourcevids;
     CVI cv1;
     VI v1;
-    for(cv1=v.begin(); cv1<v.end(); cv1++) {
+    for(cv1=v.begin(); cv1!=v.end(); cv1++) {
         v1 = const_cast<VI> (cv1);
         if(v1->predecessors.empty()) sourcevids.push_back(v1->vid);
     }
     return sourcevids;
+}
+
+template<class VERTEX, class WEIGHT>
+vector<VID>
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+GetSinks() const {
+    vector<VID> sinkvids;
+    CVI cv1;
+    VI v1;
+    for(cv1=v.begin(); cv1!=v.end(); cv1++) {
+//        v1 = const_cast<VI> (cv1);
+	if(cv1->edgelist.empty()) sinkvids.push_back(cv1->vid);
+    }
+    return sinkvids;
 }
 
 template<class VERTEX, class WEIGHT>
@@ -3524,7 +3557,6 @@ TopologicalSort () const {
 template<class VERTEX, class WEIGHT>
 bool
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
-
 #ifdef __HP_aCC
 FinishLate(const pair<VID,int> _x, const pair<VID,int> _y) {
 #else 
@@ -3759,7 +3791,6 @@ FindVIDPathBFS (VID _startVid, VID _endVid) const {
 template<class VERTEX, class WEIGHT>
 bool 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
-
 #ifdef __HP_aCC
 dkinfo_Compare ( const dkinfo _d1, const dkinfo _d2) {
 #else 
@@ -4175,7 +4206,6 @@ my_find_VDATA_eq(const VERTEX& _v) const {
 template<class VERTEX, class WEIGHT>
 bool 
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
-
 #ifdef __HP_aCC
 VID_Compare (const Vertex _v1, const Vertex _v2){
 #else 
