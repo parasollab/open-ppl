@@ -31,8 +31,22 @@
 #include "DistanceMetrics.h"    // Distance Metrics    Algobase
 #include "CollisionDetection.h" // Collision Detection Algobase
 
+#define RDMPVER_LEGACY                      0
+#define RDMPVER_LEGACY_CFG_FIELDS           0            // none
+#define RDMPVER_LEGACY_EDGEWT_FIELDS        1            // lp
 
-//typedef int WEIGHT;             // weights for roadmap graph (encode lps)
+#define RDMPVER_62000                      62000
+#define RDMPVER_62000_CFG_FIELDS           2            // obst, tag
+#define RDMPVER_62000_EDGEWT_FIELDS        2            // lp, ticks (or weight for DBL)
+
+#define RDMPVER_061100                      61100
+#define RDMPVER_061100_CFG_FIELDS           2            // obst, tag
+#define RDMPVER_061100_EDGEWT_FIELDS        2            // lp, ticks (or weight for DBL)
+
+#define RDMPVER_CURRENT                     61100 
+#define RDMPVER_CURRENT_STR                "061100" 
+#define RDMPVER_CURRENT_CFG_FIELDS          2            // obst, tag
+#define RDMPVER_CURRENT_EDGEWT_FIELDS       2            // lp, ticks (or weight for DBL)
 
 class Roadmap {
 public:
@@ -97,6 +111,12 @@ public:
                              const char* _filename = 0);
     void ReadRoadmapGRAPHONLY(const char* _filename);
 
+    // utilities to automatically convert to current roadmap version
+    bool CheckVersion(const char* _fname);
+    bool ConvertToCurrentVersion(const char* _fname, int thisVersion);
+    void ConvertGraph(istream&  myifstream, ostream& myofstream,
+		      int presentCfgFields, int presentEdgeWtFields);
+    void SaveCurrentVersion(const char* _fname, int thisVersion, char* infile, char* outfile);
 
 
         //------------------------------------------------------------
