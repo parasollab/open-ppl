@@ -45,7 +45,9 @@ void Connection::Get(Input * _input, int _multibodyIndex, int _connectionIndex) 
     int bodyIndex = _input->BodyIndex[_multibodyIndex][index];
 
     if (_input->isFree[_multibodyIndex][index]){
-       cout << "bodyIndex = " << bodyIndex << endl;
+       #ifndef QUIET
+         cout << "bodyIndex = " << bodyIndex << endl;
+       #endif
        body[1] = (Body *)(body[0]->GetMultiBody()->GetFreeBody(bodyIndex));
     }
     else{
@@ -61,9 +63,11 @@ void Connection::Get(Input * _input, int _multibodyIndex, int _connectionIndex) 
     dhparameters = _input->dhparameters[_multibodyIndex][_connectionIndex];
     type = (ConnectionType) _input->connectionType[_multibodyIndex][_connectionIndex];
 
+#ifndef QUIET
     cout << "transformationToBody2 = (" << transformationToBody2.position.getX() << ", " << transformationToBody2.position.getY() << ", " << transformationToBody2.position.getZ() << ", " << transformationToBody2.orientation.alpha << ", " << transformationToBody2.orientation.beta << ", " << transformationToBody2.orientation.gamma << ")" << endl;
 
     cout << "dhparameters = (" << dhparameters.alpha << ", " << dhparameters.a << ", " << dhparameters.d << ", " << dhparameters.theta << ")" << endl;
+#endif
 
 }
 
