@@ -1306,12 +1306,16 @@ GenerateInsideCfg(Environment *_env, CollisionDetection* _cd,
                 _env->GetMultiBody(rob)->GetCenterOfMass(),
                 _env->GetMultiBody(obst)->GetCenterOfMass(),
                 insideNode);
-    if (!insideNode->isCollision(_env, _cd, rob, obst, _info.cdsetid, _info.cdInfo)) {
+   
+    // check the cfg obtained by center of mass overlapping if valid
+    if (!insideNode->isCollision(_env, _cd, rob, obst, _info.cdsetid,
+       _info.cdInfo)) {
 
-      // use random vertex instead of center of mass
+      // if center of mass does not work in getting the cfg in collision,
+      // use random vertex of an obstacle (J Kim)
       Vector3D vP;
 
-      // copied from GenerateMapNodes::PointsOnMultiBody()
+      // code copied from GenerateMapNodes::PointsOnMultiBody()
       vP = PointOnBody(_env->GetMultiBody(obst)->GetFixedBody(0), rV, false);
 
       // get inside cfg again by using vP instead of center of mass
