@@ -73,7 +73,7 @@ DEPS = +md
 CWARNS = -w
 
 CFLAGS     = $(OPTS) $(AFLAGS) $(CWARNS) $(DEPS)
-CXXFLAGS   = $(CFLAGS) +z
+CXXFLAGS   = $(CFLAGS) +Z
 DSOFLAGS   = $(CFLAGS) -b
 
 #-----------------------------------------------------------------------------
