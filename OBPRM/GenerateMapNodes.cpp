@@ -530,6 +530,12 @@ CSpaceMAPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *dm,
      vector<Cfg> path; path.reserve(_gn.numNodes.GetValue());
    #endif
 
+   //check that calcClearance is > 0
+   if(_info.calcClearance <= 0) {
+     cout << "\n\nERROR: -calcClear flag not set!\n\n";
+     exit(-1);
+   }
+
    // MAPRM style node generation using clearances in the CSpace
    for (int i=0; i < _gn.numNodes.GetValue(); i++) {
       Cfg cfg = Cfg::GetMedialAxisCfg(_env,cd,_info.cdsetid,_info.cdInfo,dm,_info.dmsetid,_info.calcClearance);
