@@ -222,9 +222,10 @@ public:
 		*	-# OBPRM
 		*	-# GaussPRM
 		*	-# BasicMAPRM
+                *       -# CSpaceMAPRM
 		*@return True, if names of these two instance are the same. Otherwise False.
 		*If this method could not recognize _gn's name then false will be returned.
-		*/
+		*/ 
 	  bool operator==(const GN&) const;
 
    //@}
@@ -281,7 +282,8 @@ public:
 		*	-# PrintUsage_OBPRM
 		*	-# PrintUsage_GaussPRM
 		*	-# PrintUsage_BasicMAPRM
-		*/
+                *       -# PrintUsage_CSpaceMAPRM
+		*/ 
 	  void  PrintUsage_All(ostream& _os);
 
 	  /**Print out Basic PRM Usage to given output stream.
@@ -316,6 +318,12 @@ public:
 	    */
 	  void  PrintUsage_BasicMAPRM(ostream& _os);
 
+	 /**Print out CSpace MAPRM Usage to given output stream.
+	    *@see GN::numNodes and
+	        *num_param::PrintUsage for underline PrintUsage
+	    */
+	  void  PrintUsage_CSpaceMAPRM(ostream& _os);
+	  
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -509,9 +517,13 @@ public:
 		 *		-# GN::numNodes = user spcified value 
 		 *         (if no user spcified value, default value is 10 )
 		 *
+		 *      -# CSpaceMAPRM
+		 *              -# GN::numNodes = user specified value
+		 *         (if no user specified value, default value is 10 )
+		 *
 		 *@return SID of new set if every thing is OK. Otherwise, process will be terminiated.
 	     *@see BasicSets::MakeOSet 
-	     */
+	     */ 
 	   SID MakeGNSet(istream&);     
 
 	   /**Make a new (ordered) GN set with element _eid.
@@ -939,6 +951,9 @@ public:
 	  static
 	  void BasicMAPRM(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
 
+	  static 
+          void CSpaceMAPRM(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
+	  
   //@}
 
 

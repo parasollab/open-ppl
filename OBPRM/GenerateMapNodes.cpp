@@ -826,6 +826,48 @@ MoveToMedialAxis(Cfg &cfg, vector<Cfg> *path, Environment *_env,
 	
 } // end MoveToMedialAxis
 
+
+//===================================================================
+// CSpaceMAPRM
+//
+// Generates random configurations and pushes them to the medial
+// axis of the C-Space. It considers both free nodes and nodes in
+// collision.
+//===================================================================
+void
+GenerateMapNodes::
+CSpaceMAPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *dm,
+          GN& _gn, GNInfo &_info){
+
+   #ifndef QUIET
+     cout << "(numNodes=" << _gn.numNodes.GetValue() << ") ";
+   #endif
+
+   #if INTERMEDIATE_FILES
+     vector<Cfg> path; path.reserve(_gn.numNodes.GetValue());
+   #endif
+
+   // MAPRM style node generation using clearances in the CSpace
+   for (int i=0; i < _gn.numNodes.GetValue(); i++) {
+      Cfg cfg = Cfg::GetMedialAxisCfg(_env,cd,_info.cdsetid,_info.cdInfo,dm,_info.dmsetid,_info.calcClearance);
+
+      if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) {
+         _info.nodes.push_back(Cfg(cfg));
+         #if INTERMEDIATE_FILES
+       path.push_back(cfg);
+         #endif
+      } else { 
+        cout << "cfg in collision!\n" << flush; 
+      }
+   }
+
+   #if INTERMEDIATE_FILES
+   //in util.h
+     WritePathConfigurations("csmaprm.path", path, _env);
+   #endif
+};
+
+
 //===================================================================
 // Validate Parameters
 //===================================================================
@@ -1705,6 +1747,7 @@ PrintUsage_All(ostream& _os){
     PrintUsage_OBPRM(_os);
     PrintUsage_GaussPRM(_os);
     PrintUsage_BasicMAPRM(_os);
+    PrintUsage_CSpaceMAPRM(_os);
 	
 }
 
@@ -1778,6 +1821,18 @@ PrintUsage_BasicMAPRM(ostream& _os){
     cout.setf(ios::right,ios::adjustfield);
 	
 };
+void
+GN::
+PrintUsage_CSpaceMAPRM(ostream& _os){
+
+    cout.setf(ios::left,ios::adjustfield);
+
+        _os << "\nCSpaceMAPRM ";
+        _os << "\n\t"; numNodes.PrintUsage(_os);
+
+    cout.setf(ios::right,ios::adjustfield);
+
+};
 
 bool
 GN::
@@ -1816,6 +1871,11 @@ operator==(const GN& _gn) const
 		return true;
 		
 		//return ( numNodes.GetValue() == _gn.numNodes.GetValue() );
+
+        } else if ( !strcmp(name,"CSpaceMAPRM") ) {
+                return true;
+
+                //return ( numNodes.GetValue() == _gn.numNodes.GetValue() );
 		
 	} else { // unrecognized...
 		return false;
@@ -1867,6 +1927,9 @@ ostream& operator<< (ostream& _os, const GN& gn) {
     }
     if ( !strstr(gn.GetName(),"BasicMAPRM") ){
 	_os<< ", numNodes = " << gn.numNodes.GetValue();
+    }
+    if ( !strstr(gn.GetName(),"CSpaceMAPRM") ){
+        _os<< ", numNodes = " << gn.numNodes.GetValue();
     }
     */
 	
@@ -1982,7 +2045,8 @@ DeleteGNSet(const SID _sid) {
 	&& strcmp(cmdFields[i+1],"GaussPRM")                 \
 	&& strcmp(cmdFields[i+1],"BasicOBPRM")               \
 	&& strcmp(cmdFields[i+1],"OBPRM")                    \
-	&& strcmp(cmdFields[i+1],"BasicMAPRM") )&&i+1<argc   \
+	&& strcmp(cmdFields[i+1],"BasicMAPRM")               \
+        && strcmp(cmdFields[i+1],"CSpaceMAPRM") )&&i+1<argc  \
 	){i++;}                                              \
 	int stop=i+1;                                        \
 	
@@ -2093,6 +2157,21 @@ MakeGNSet(istream& _myistream) {
 				} //endif
 			} //endfor j
 			
+                } else if (!strcmp(cmdFields[i],"CSpaceMAPRM")) {
+                        gn1.generator = &GenerateMapNodes::CSpaceMAPRM;
+                        GetFieldRange();
+
+                        for (int j=start;j<stop; ++j) {
+                                if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+                                } else {
+	                                cout << "\nERROR MakeGNSet: Don\'t understand \""
+                                                << cmdFields[j]<<"\"\n\n";
+                                        gn1.PrintUsage_CSpaceMAPRM(cout);
+                                        cout << endl;
+                                        exit (-1);
+                                } //endif
+                        } //endfor j
+
 		} else {
 			cout << "\n\nERROR MakeGNSet: Don\'t understand \""
 				<< cmdFields[i]<<"\"\n";

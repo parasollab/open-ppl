@@ -377,6 +377,21 @@ public:
 	  /// ditto, but with a default number of tries (10).
 	  static Cfg GetRandomCfg(Environment *env);
 
+          /// generates random configuration and pushes it to the medial axis of the
+          /// free c-space
+          static Cfg GetMedialAxisCfg(Environment *_env, CollisionDetection *_cd,
+		                      SID _cdsetid, CDInfo &_cdInfo, DistanceMetric *_dm,
+                                      SID _dmsetid, int n);
+
+          /// pushes a free node towards the medial axis
+          static Cfg MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
+                               SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+                               SID dmsetid, int n);
+
+          /// pushes a colliding node towards the free space
+          static Cfg MAPRMcollision(Cfg cfg, Environment *_env, CollisionDetection *cd,
+                                    SID cdsetid, CDInfo& cdInfo, int n);
+
 	  /// generates random configuration that is in Free CSpace. Call CfgManager::GetFreeRandomCfg
 	  static Cfg GetFreeRandomCfg(Environment *env,CollisionDetection* cd,SID _cdsetid, CDInfo& _cdInfo);
   //@}
@@ -408,6 +423,12 @@ public:
 		SID cdsetid, CDInfo& cdInfo, 
 		DistanceMetric * dm, SID dmsetid, int n);
 
+          /// returns the clearance and also the direction of the clearance 
+          /// via Cfg *direction
+          double ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, 
+	        SID cdsetid, CDInfo& cdInfo, 
+	        DistanceMetric * dm, SID dmsetid, int n, Cfg *direction);
+       
 	  ///Call CfgManager::ConfigEnvironment
 	  bool ConfigEnvironment(Environment *env);
 	  ///Call CfgManager::isCollision

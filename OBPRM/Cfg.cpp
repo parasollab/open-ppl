@@ -330,6 +330,104 @@ Cfg Cfg::GetRandomCfg(Environment *env) {
   return Cfg::GetRandomCfg(env, default_maxTries);
 }
 
+// generates random configuration and then pushes it to the medial axis of
+// the free c-space
+Cfg Cfg::GetMedialAxisCfg(Environment *_env, CollisionDetection *_cd,
+         SID _cdsetid, CDInfo &_cdInfo, DistanceMetric *_dm,
+         SID _dmsetid, int n) {
+  Cfg maprmCfg = GetRandomCfg(_env);
+
+  if (maprmCfg.isCollision(_env, _cd, _cdsetid, _cdInfo)) {
+    maprmCfg = MAPRMcollision(maprmCfg,_env,_cd,_cdsetid,_cdInfo,n); 
+    if (!(maprmCfg.isCollision(_env,_cd,_cdsetid,_cdInfo))) {
+      maprmCfg = MAPRMfree(maprmCfg,_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
+    }
+  } else {
+    maprmCfg = MAPRMfree(maprmCfg,_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
+  }
+
+  return maprmCfg;
+}
+
+// pushes free node towards medial axis
+Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
+                   SID cdsetid, CDInfo &cdInfo, DistanceMetric *dm,
+                   SID dmsetid, int n) {
+  Cfg newCfg, oldCfg, dir;
+  
+  cfg.info.clearance = cfg.ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,&dir);
+  double stepSize = cfg.info.clearance;
+  int maxNumSteps = 200;
+
+  oldCfg = cfg;
+  newCfg = oldCfg;
+    
+  /// find max. clearance point by stepping out:
+  int i=0;
+
+  while ((newCfg.info.clearance >= oldCfg.info.clearance) && (newCfg.InBoundingBox(_env))) {
+    oldCfg = newCfg;
+    newCfg = c1_towards_c2(newCfg, dir, stepSize*-1);
+    newCfg.info.clearance = newCfg.ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n);
+    stepSize = newCfg.info.clearance;
+    i++;
+  }
+  
+  if (newCfg.InBoundingBox(_env)) {
+    /// binary search betwen oldCfg and newCfg to find max clearance:
+    Cfg midCfg;
+    double minDistance = 0.1;
+
+    do {
+      midCfg = (newCfg + oldCfg) / 2; //midpoint between newCfg and oldCfg
+      midCfg.info.clearance = midCfg.ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n);
+
+      if (midCfg.info.clearance > oldCfg.info.clearance) {
+        oldCfg = midCfg;
+      } else {
+        newCfg = midCfg;
+      }
+
+      i++;
+    } while ((dm->Distance(_env, newCfg, oldCfg, dmsetid) > minDistance) && (i<=maxNumSteps));
+
+  }
+  
+  return oldCfg;
+}
+
+// pushes colliding node towards free space
+Cfg Cfg::MAPRMcollision(Cfg cfg, Environment *_env, CollisionDetection *cd,
+                        SID cdsetid, CDInfo& cdInfo, int n) {
+  double stepSize = 0.5;
+
+  ///pick n random directions:
+  vector <Cfg> directions;
+  vector <Cfg> steps;
+  for (int i=0; i<n; i++) {
+    directions.push_back(GetRandomCfg(_env));
+    steps.push_back(cfg);
+  }  
+
+  if (directions.size()==0)
+    return cfg;
+
+  ///step out along each direction:
+  int found = -1;
+  while (found < 0) {
+    for (int i=0; i<directions.size(); i++) {
+      steps[i]=c1_towards_c2(steps[i],directions[i],stepSize);
+      if (!(steps[i].isCollision(_env,cd,cdsetid,cdInfo))) {
+        found = i;
+        break;
+      }
+    }
+    stepSize = stepSize * 2;
+  }
+
+  return steps[found];
+}
+
 Cfg Cfg::GetFreeRandomCfg(Environment *env, CollisionDetection *cd, SID _cdsetid,
 CDInfo& _cdInfo){
      return CfgHelper->GetFreeRandomCfg(env, cd, _cdsetid, _cdInfo);
@@ -576,7 +674,55 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
   return clear;
 }
 
+//Approximate C-Space Clearance
+double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, CDInfo& cdInfo,DistanceMetric * dm, SID dmsetid, int n, Cfg *direction)
+{
+  Cfg cfg = *this;
+ 
+  double positionRes = env->GetPositionRes();
+  double orientationRes = env->GetOrientationRes();
+  int n_ticks;
+  double clear, tmpDist;
+  clear = 1e10;
 
+  Cfg dir;
+  for(int i = 0 ; i < n ; i++){
+    dir = GetRandomCfg(env);
+    
+    Cfg tick = cfg;
+    Cfg incr = cfg.FindIncrement(dir,&n_ticks,positionRes,orientationRes);
+   
+    int tk = 0;
+    int collisionFlag = false;
+    while(tk < n_ticks && !collisionFlag){
+
+      tick.Increment(incr);
+
+      if( (tick.isCollision(env,cd,cdsetid,cdInfo)) || !(tick.InBoundingBox(env)) ){
+
+	
+	tmpDist = dm->Distance(env, cfg, tick, dmsetid);
+	if(tmpDist < clear){
+	  clear = tmpDist;
+          direction = &dir;
+        }
+	collisionFlag = true;
+      }
+
+      if(tk == n_ticks-1 && !collisionFlag){
+
+	tmpDist = dm->Distance(env, cfg, tick, dmsetid);
+	
+	if(tmpDist < clear){
+	  clear = tmpDist;
+          direction = &dir;
+	}
+      }
+      tk++;
+    }
+  }
+  return clear;
+}
 
 bool Cfg::GenerateOverlapCfg(
 		Environment *env,  // although env and robot is not used here,
