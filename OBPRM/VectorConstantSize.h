@@ -462,7 +462,7 @@ public:
     inline ELEMENT getZ()const; ///<Get the third element in vector
 
     // InvalidData: required to be used with Graph.h
-    Vector3 InvalidData() {return Vector3();}
+    static Vector3 InvalidData() {return Vector3<ELEMENT>();}
   //@}
 };
 
