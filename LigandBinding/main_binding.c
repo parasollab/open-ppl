@@ -25,11 +25,19 @@
 #include "MyDistanceMetrics.h"
 #include "util.h"
 
+class nodeInfo {
+public:
+  int index;
+  double potential;
+  double rmsd;
+  double score;
+};
+
 MyInput input;
 Stat_Class Stats; 
 void PrintRawLine( ostream& _os, Roadmap *rmap, 
                    Clock_Class *NodeGenClock, Clock_Class *ConnectionClock );
-bool score_Compare(const pair<int, double>& c1, const pair<int, double>& c2);
+bool score_Compare(const nodeInfo&, const nodeInfo&);
 double calScore(const Cfg &c, Environment *env);
 
 
@@ -114,9 +122,13 @@ int main(int argc, char** argv)
   vector<Cfg> vertices = rmap.roadmap.GetVerticesData(); // Node from OBPRM
   if(! haptic.empty()) // Nodes from Haptic
       vertices.insert(vertices.end(), haptic.begin(), haptic.end());
+
+// temporary
+vertices.insert(vertices.end(), query.front());
       
   // perform gradient descent for all the nodes.
   ofstream o1("pot_bf_gradDescent.m"), o2("pot_aft_gradDescent.m");
+  ofstream o3("shift_RMSD.m");
   vector<Cfg> trace, possibleBindingSite;
   Environment *env = rmap.GetEnvironment();
 
@@ -126,7 +138,8 @@ int main(int argc, char** argv)
      trace.push_back(vertices[m]);
      bool success = GradientDecent::findingLocalMin(env, trace);
      o2 << BioPotentials::GetPotential(trace.back(), env) << "\n";
-     if(success)
+     o3 << dm.Distance(env, vertices[m], trace.back(), -1) << "   " << success << "\n";
+     //if(success)
         possibleBindingSite.push_back(trace.back());
   }
 
@@ -134,11 +147,11 @@ int main(int argc, char** argv)
   // *goal* binding site added to roadmap too only for RMSD calc. purpose.
   vector<Cfg> pbs;
   for(m=0; m<possibleBindingSite.size(); ++m) {
-     if(BioPotentials::GetPotential(possibleBindingSite[m], env) > 50.0) continue;
-     rmap.roadmap.AddVertex(possibleBindingSite[m]);
+     //if(BioPotentials::GetPotential(possibleBindingSite[m], env) > 50.0) continue;
+     //rmap.roadmap.AddVertex(possibleBindingSite[m]);
      pbs.push_back(possibleBindingSite[m]);
   }
-  rmap.roadmap.AddVertex(query.front()); 
+  //rmap.roadmap.AddVertex(query.front()); 
   pbs.push_back(query.front()); // query[0] by itself is the binding site.
 
   #ifdef QUIET
@@ -159,7 +172,8 @@ int main(int argc, char** argv)
   // Connect roadmap nodes
   //---------------------------
   ConnectionClock.StartClock("Node Connection");
-  cn.ConnectNodes(&rmap,&cd,&lp,&dm, cn.cnInfo.cnsetid, cn.cnInfo);
+// temporary
+//cn.ConnectNodes(&rmap,&cd,&lp,&dm, cn.cnInfo.cnsetid, cn.cnInfo);
   ConnectionClock.StopClock();
 
 
@@ -186,14 +200,20 @@ int main(int argc, char** argv)
   // now, evaluate all the pbs nodes with second criterion: 
   // connected the largest CC (I. accessable) and II. having 
   // a good weight.
-  vector< pair<int,VID> > ccstats = rmap.roadmap.GetCCStats();
-  Cfg tmpC =  rmap.roadmap.GetData(ccstats[0].second);
-  vector< pair<int, double> > cfgScore;
+  //vector< pair<int,VID> > ccstats = rmap.roadmap.GetCCStats();
+  //Cfg tmpC =  rmap.roadmap.GetData(ccstats[0].second);
+  //vector< pair<int, double> > cfgScore;
+  vector< nodeInfo > cfgScore;
   for(m=0; m<pbs.size(); ++m) {
      // check if it is accessable, ie. in the biggest CC.
-     if(!rmap.roadmap.IsSameCC(tmpC, pbs[m])) continue;
-     double score = calScore(pbs[m], env);
-     cfgScore.push_back(pair<int,double>(m, score));
+     // temporary
+     //if(!rmap.roadmap.IsSameCC(tmpC, pbs[m])) continue;
+     nodeInfo tmp;
+     tmp.index = m;
+     tmp.score = 0.0; //calScore(pbs[m], env);
+     tmp.rmsd = dm.Distance(env, pbs[m], query.front(), -1);
+     tmp.potential = BioPotentials::GetPotential(pbs[m], env);
+     cfgScore.push_back(tmp);
   }
   sort(cfgScore.begin(), cfgScore.end(), ptr_fun(score_Compare));
 
@@ -201,12 +221,12 @@ int main(int argc, char** argv)
   WritePathConfigurations("possibleBindingSites.path", pbs, env);
   ofstream op("weight_RMSD_potential.dat");
   for(m=0; m<cfgScore.size(); ++m) {
-     int index = cfgScore[m].first;
-     double score = cfgScore[m].second;
-     double disToGoal = dm.Distance(env, pbs[index], query.front(), -1);
-     double potential = BioPotentials::GetPotential(pbs[index], env);
-     op << score     << "  " << disToGoal << "  " 
-        << potential << "  " << index+1   << ";\n";
+     //int index = cfgScore[m].first;
+     //double score = cfgScore[m].second;
+     //double disToGoal = dm.Distance(env, pbs[index], query.front(), -1);
+     //double potential = BioPotentials::GetPotential(pbs[index], env);
+     op << cfgScore[m].rmsd     << "  " << cfgScore[m].score << "  " 
+        << cfgScore[m].potential << "  " << cfgScore[m].index  << ";\n";
   }
 
 
@@ -250,8 +270,8 @@ void PrintRawLine( ostream& _os, Roadmap *rmap,
   _os << "\n\n";
 }
 
-bool score_Compare(const pair<int, double>& c1, const pair<int, double>& c2) {
-     return c1.second < c2.second;
+bool score_Compare(const nodeInfo& c1, const nodeInfo& c2) {
+     return c1.rmsd < c2.rmsd;
 }
 
 double calScore(const Cfg &c, Environment *env) {
