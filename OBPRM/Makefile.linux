@@ -16,12 +16,12 @@
 #--------------------------------------------------------------------------
 
 
- VCLIP_DIR     = /home/dsmft/CDLIB/VCLIP
+ VCLIP_DIR     = /home/dsmft/CD-libs/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
  VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
  VCLIP_INCL    = -I${VCLIP_DIR}/include
 
- RAPID_DIR     = /home/dsmft/CDLIB/RAPID_v2_01
+ RAPID_DIR     = /home/dsmft/CD-libs/RAPID
  RAPIDLIB_DIR  = ${RAPID_DIR}
  RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
  RAPID_INCL    = -I${RAPID_DIR}
@@ -87,7 +87,7 @@ libobprm.a:: $(OBJS)
 obprm:: main_obprm.cpp libs
 	$(CXX) $(CXXFLAGS) -o obprm \
                 main_obprm.cpp \
-		libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/home/dsmft/CDLIB/qhull -lqhull
+		libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
