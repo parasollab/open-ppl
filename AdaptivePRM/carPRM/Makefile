@@ -6,9 +6,14 @@
    CARLIKE_LIB = -L${CARLIKE_DIR} -lcarlike
 
 # -- for dynamic shared object library libobprm.so
-   OBPRM_DIR   = ../OBPRM
+   obprm_dir   = ../obprm
+
+   OBPRM_DIR   = ${obprm_dir}/OBPRM
    OBPRM_LIB   = -L${OBPRM_DIR} -lobprm
-   OBPRM_INCL  = -I${OBPRM_DIR}
+   OBPRM_INCL  = -I${OBPRM_DIR}/
+
+   GRAPH_DIR   = ${obprm_dir}/stapl/include/graph
+   GRAPH_INCL  = -I${GRAPH_DIR}/
 
 # -- for dynamic shared object library libadaptive.so
    ADAPT_DIR   = ../APRM
@@ -55,7 +60,7 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. ${ADAPT_INCL} ${OBPRM_INCL} ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
+ AFLAGS    = -I. ${ADAPT_INCL} ${OBPRM_INCL} ${GRAPH_INCL} ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
 
 
 #-----------------------------------------------------------------------------
