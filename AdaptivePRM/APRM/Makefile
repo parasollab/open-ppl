@@ -131,7 +131,8 @@ OBJS = \
 	MyInput.o \
 	PriorityWeight.o \
 	PriorityLocalPlanners.o \
-	PriorityQuery.o
+	PriorityQuery.o \
+	ApproxNodeValidation.o
 
 objs:: $(OBJS)
 
@@ -162,4 +163,7 @@ Dependencies::
 	echo >Dependencies "#-*- Makefile -*-"
 
 include Dependencies
+
+
+
 
