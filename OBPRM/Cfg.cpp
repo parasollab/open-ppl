@@ -41,14 +41,14 @@ istream& operator>> (istream&s, InfoCfg &_c){
     s >> _c.clearance;
     _c.Read(s);
     return s;
-};
+}
 ostream& operator<< (ostream&s, const InfoCfg &_c){
     s << _c.obst      << " ";
     s << _c.tag       << " ";
     s << _c.clearance << " ";
     _c.Write(s);
     return s;
-};
+}
 
 void InfoCfg::Write(ostream &s) const {
     s << obst      << " ";
@@ -150,43 +150,44 @@ Cfg Cfg::operator+(const Cfg &tmp) const{
     for(int i=0; i<v.size(); ++i)
         a.push_back(v[i]+tmp.v[i]);
     return Cfg(a);
-};
+}
 
 Cfg Cfg::operator-(const Cfg &tmp) const{
     vector<double> a;
     for(int i=0; i<v.size(); ++i)
         a.push_back(v[i]-tmp.v[i]);
     return Cfg(a);
-};
+}
 
 Cfg Cfg::operator-() const{
     vector<double> a;
     for(int i=0; i<v.size(); ++i)
         a.push_back(-v[i]);
     return Cfg(a);
-};
+}
 
 Cfg Cfg::operator*(double s) {
     vector<double> a;
     for(int i=0; i<v.size(); ++i)
         a.push_back(v[i]*s);
     return Cfg(a);
-};
+}
 
 Cfg Cfg::operator/(double s) {
     vector<double> a;
     for(int i=0; i<v.size(); ++i)
         a.push_back(v[i]/s);
     return Cfg(a);
-};
+}
 
 bool Cfg::operator==(const Cfg &tmp) const{
-    return v==tmp.v;
-};
+	return v.size() == tmp.v.size() &&
+        equal(v.begin(), v.end(), tmp.v.begin());
+}
 
 bool Cfg::operator!=( const Cfg &tmp) const{
-    return !(v==tmp.v);
-};
+        return !(*this==tmp);
+}
 
 Cfg Cfg::WeightedSum(const Cfg& first,
                      const Cfg& second, double weight) {
@@ -305,14 +306,14 @@ Cfg Cfg::ClosestPtOnLineSegment(const Cfg &pt1, const Cfg &pt2) const{
     } else {
         return pt1 + B*(B_dot_C/B_squared);
     }
-};
+}
 
 Cfg Cfg::c1_towards_c2(Cfg cfg1, Cfg cfg2, double d){
     Cfg tmp = cfg2 - cfg1;
     tmp = tmp / tmp.PositionMagnitude();
     cfg2 = cfg1 + (tmp * d);
     return cfg2;
-};
+}
 
 
 // generates a random configuration without consideration of bounding box restrictions
@@ -612,12 +613,12 @@ istream& operator>> (istream&s, Cfg &pt){
     pt.Read(s);
     pt.info.Read(s);
     return s;
-};
+}
 ostream& operator<< (ostream&s, const Cfg &pt){
     pt.Write(s);
     pt.info.Write(s);
     return s;
-};
+}
 
 void Cfg::Write(ostream &os) const {
     for(int i=0; i<v.size(); ++i) {

@@ -684,8 +684,11 @@ FindKClosestPairs(Environment *_env,DistanceMetric * dm, CNInfo& info,
 #endif
 
     vector<Cfg> vec_of_cfgs = vec1;
-
+#if defined(__HP_aCC)
+    for (vector<Cfg>::reverse_iterator cfg=vec1.rbegin();cfg!=vec1.rend()-1;++cfg){
+#else
     for (vector<Cfg>::reverse_iterator cfg=vec1.rbegin();cfg<vec1.rend()-1;++cfg){
+#endif
 
        // find k closest cfgs between the two vectors 
        vector< pair<Cfg,Cfg> > kp = FindKClosestPairs(
@@ -726,8 +729,11 @@ FindKClosestPairs(Roadmap *rm, DistanceMetric * dm, CNInfo& info,
 
     vector<Cfg> vec_of_cfgs = vec1;
 
+#if defined(__HP_aCC)
+    for (vector<Cfg>::reverse_iterator cfg=vec1.rbegin();cfg!=vec1.rend()-1;++cfg){
+#else
     for (vector<Cfg>::reverse_iterator cfg=vec1.rbegin();cfg<vec1.rend()-1;++cfg){
-
+#endif
        // find k closest cfgs between the two vectors
        vector< pair<Cfg,Cfg> > kp = FindKClosestPairs(
                                                 _env,
@@ -767,8 +773,9 @@ FindKClosestPairs(Environment *_env,DistanceMetric * dm, CNInfo& info,
 
   // if valid number of pairs requested
   if (k>0){
-
-    if (vec1 == vec2){
+    //aCC Modify
+    if( vec1.size()==vec2.size() && equal(vec1.begin(), vec1.end(), vec2.begin()) ){
+    //if (vec1 == vec2){
        return FindKClosestPairs(_env, dm, info, vec1, k);
     } else {
 
@@ -1077,8 +1084,13 @@ ConnectNodes_ExpandRRT(
   // process components from smallest to biggest
   vector< pair<int,VID> > ccvec = _rm->roadmap.GetCCStats();
   for ( vector< pair<int,VID> >::reverse_iterator cc1=ccvec.rbegin();
-       (*cc1).first <= _cn.GetSmallCCSize() && cc1<ccvec.rend();
-       ++cc1){
+       (*cc1).first <= _cn.GetSmallCCSize() && 
+#if defined(__HP_aCC)
+       (cc1!=ccvec.rend())
+#else
+       (cc1<ccvec.rend())
+#endif
+       ;++cc1){
 
       //-- submap = vertices & edges of current (cc1) connected component
       Roadmap submap;

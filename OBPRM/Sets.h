@@ -32,16 +32,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include standard headers
+#include <iostream.h>
+#include <fstream.h>
+#include <iomanip.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#include <iostream.h>
-#include <fstream.h>
-#include <iomanip.h>
-
 #include <function.h>
-
 #include <algo.h>
 #include <list.h>
 #include <vector.h>
@@ -520,16 +518,16 @@ protected:
    
    //Modified for VC
    typedef vector< pair<EID,ELEMENT> > PAIR_EID_ELEM_VECTOR;///<Element Vector
-   typedef PAIR_EID_ELEM_VECTOR::iterator EI;               ///<EI Element Iterator
-   typedef PAIR_EID_ELEM_VECTOR::const_iterator CEI;        ///<CEI Constant Element Iterator
+   typedef typename PAIR_EID_ELEM_VECTOR::iterator EI;      ///<EI Element Iterator
+   typedef typename PAIR_EID_ELEM_VECTOR::const_iterator CEI; ///<CEI Constant Element Iterator
 
    typedef vector< pair<SID,bit_vector> > PAIR_SID_BITV_VECTOR; ///<Set Vector
-   typedef PAIR_SID_BITV_VECTOR::iterator SI;                   ///<SI Set Iterator
-   typedef PAIR_SID_BITV_VECTOR::const_iterator CSI;            ///<CSI Constant Set Iterator
+   typedef typename PAIR_SID_BITV_VECTOR::iterator SI;          ///<SI Set Iterator
+   typedef typename PAIR_SID_BITV_VECTOR::const_iterator CSI;   ///<CSI Constant Set Iterator
 
    typedef vector< pair<SID,vector<EID> > > PAIR_SID_EIDV_VECTOR;///<Ordered Set Vector
-   typedef PAIR_SID_EIDV_VECTOR::iterator OSI;                   ///<OSI Ordered Set Iterator
-   typedef PAIR_SID_EIDV_VECTOR::const_iterator COSI;            ///<COSI Constant Ordered Set Iterator
+   typedef typename PAIR_SID_EIDV_VECTOR::iterator OSI;        ///<OSI Ordered Set Iterator
+   typedef typename PAIR_SID_EIDV_VECTOR::const_iterator COSI; ///<COSI Constant Ordered Set Iterator
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -776,7 +774,7 @@ MakeSet( const vector<ELEMENT>& _evector ) {
     
     ///Modified for VC
     typedef vector<ELEMENT> ELEM_VECTOR;
-    typedef ELEM_VECTOR::const_iterator CELI;
+    typedef typename ELEM_VECTOR::const_iterator CELI;
     
     bool added = false;
     bit_vector newset(ElementIDs,false);
@@ -940,7 +938,7 @@ MakeOSet( const vector<EID>& _eidvector ) {
     
     ///Modified for VC
     typedef vector<EID> EID_VECTOR;
-    typedef EID_VECTOR::const_iterator CEIDI; 
+    typedef typename EID_VECTOR::const_iterator CEIDI; 
     
     bool added = false;
     vector<EID> newset;
@@ -970,7 +968,7 @@ MakeOSet( const vector<ELEMENT>& _evector ) {
     
     ///Modified for VC
     typedef vector<ELEMENT> ELEM_VECTOR;
-    typedef ELEM_VECTOR::const_iterator CELI;
+    typedef typename ELEM_VECTOR::const_iterator CELI;
     
     bool added = false;
     vector<EID> newset;
@@ -1029,7 +1027,7 @@ DeleteElementFromOSet( const SID _sid, const EID _eid ) {
     
     ///Modified for VC
     typedef vector<EID> EID_VECTOR;
-    typedef EID_VECTOR::iterator EIDI;
+    typedef typename EID_VECTOR::iterator EIDI;
     
     CEI e = my_find_EID_eq(_eid);
     OSI s = my_find_OSID_eq(_sid);

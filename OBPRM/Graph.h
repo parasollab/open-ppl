@@ -51,7 +51,7 @@
 
 //g++ in SUN or CC in SGI
 ///Modified for VC
-#if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32)
+#if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32) || defined(__HP_aCC)
 #include <algo.h>   
 #include <list.h>   
 #include <vector.h>
@@ -66,6 +66,7 @@
 #include <deque.h>  
 #include <stack.h>  
 #endif
+/*
 
 #ifdef __HP_aCC                 //aCC in parasol
 #include <algorithm>    
@@ -73,7 +74,7 @@
 #include <vector>       
 #include <deque>        
 #include <stack>        
-#endif
+#endif*/
 
 #ifndef VID
 ///ID for every vertex in graph.

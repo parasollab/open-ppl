@@ -65,6 +65,7 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
+
    VID v1;  ///<The ID for the first endpoint of this edge.
    VID v2;  ///<The ID for the second endpoint of this edge.
    ///_wts.first is weight for _v1->_v2 and _wts.second is *weight for _v2->_v1
@@ -204,6 +205,11 @@ public:
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 protected:
+
+   typedef WtVertexType<VERTEX,WEIGHT> Vertex;
+   typedef vector< Vertex > VERTEX_VECTOR;
+   typedef typename VERTEX_VECTOR::iterator VI; ///<VI Vertex Iterator
+   typedef typename VERTEX_VECTOR::const_iterator CVI; ///<CVI Constant Vertex Iterator
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
