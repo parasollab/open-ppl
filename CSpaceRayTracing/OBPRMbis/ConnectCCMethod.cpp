@@ -5,7 +5,8 @@
 // ConnectMapComponents: method definitions
 
 ConnectMapComponents::ConnectMapComponents(): 
-  default_file("-f"), map_file("-inmapFile"), options("-cComponents") {
+  //default_file("-f"), map_file("-inmapFile"), 
+  options("-cComponents") {
   
   selected.clear();
   all.clear();
@@ -32,7 +33,8 @@ ConnectMapComponents::ConnectMapComponents():
 }
 
 ConnectMapComponents::ConnectMapComponents(Input * input,Roadmap * rdmp, CollisionDetection* cd, DistanceMetric* dm, LocalPlanners* lp, ConnectMapNodes* cn) :
-  default_file("-f"), map_file("-inmapFile"), options("-cComponents") {
+  //default_file("-f"), map_file("-inmapFile"), 
+  options("-cComponents") {
 
   selected.clear();
   all.clear();
@@ -100,19 +102,20 @@ int ConnectMapComponents::ReadCommandLineCollection (int *argc, char **argv) {
     cmd.push_back(argv[0]);
     for (int i=1;i<*argc; ++i) {  
       //-- if present then record & keep
-      if ( default_file.AckCmdLine(&i, *argc, argv) ){
-	char tmp[80];
-	strcpy(tmp, default_file.GetValue() ); 
-	strcat(tmp,".map");
-	map_file.PutValue(tmp);
-	
-	cmd.push_back(argv[i-1]);
-	cmd.push_back(argv[i]);
-	//-- if present then record & remove from command line
-      } 
-      else if ( map_file.AckCmdLine(&i, *argc, argv) ) {
-      } 
-      else if ( options.AckCmdLine(&i, *argc, argv)) {
+      //if ( default_file.AckCmdLine(&i, *argc, argv) ){
+	//char tmp[80];
+	//strcpy(tmp, default_file.GetValue() ); 
+	//strcat(tmp,".map");
+	//map_file.PutValue(tmp);
+	//
+	//cmd.push_back(argv[i-1]);
+	//cmd.push_back(argv[i]);
+	////-- if present then record & remove from command line
+      //} 
+      //else if ( map_file.AckCmdLine(&i, *argc, argv) ) {
+      //} 
+      //else 
+      if ( options.AckCmdLine(&i, *argc, argv)) {
 	;//-- if unrecognized keep	
       } 
       else {
@@ -121,14 +124,15 @@ int ConnectMapComponents::ReadCommandLineCollection (int *argc, char **argv) {
     } //endfor i
   
     //-- Do some clean up and final checking	  
-    if ( !default_file.IsActivated() && !( map_file.IsActivated() ) && !options.IsActivated() )
+    //if ( !default_file.IsActivated() && !( map_file.IsActivated() ) && !options.IsActivated() )
+    if ( !options.IsActivated() )
       throw BadUsage();
     
     //	-- Verify INPUT files exist
-    VerifyFileExists(map_file.GetValue(),EXIT);
+    //VerifyFileExists(map_file.GetValue(),EXIT);
   } //endtry
   catch (BadUsage ) {
-    PrintUsage(cout,argv[0]);
+    //PrintUsage(cout,argv[0]);
     exit(-1);
   } //endcatch
   
@@ -162,8 +166,8 @@ void ConnectMapComponents::PrintUsage(ostream& _os, char *executable_name) {
 }
 
 void ConnectMapComponents::PrintValues(ostream& _os){
-  _os <<"\n"<<setw(20)<<"defaultFile"<<"\t"<<default_file.GetValue();
-  _os <<"\n"<<setw(20)<<"mapFile"<<"\t"<<map_file.GetValue();
+  //_os <<"\n"<<setw(20)<<"defaultFile"<<"\t"<<default_file.GetValue();
+  //_os <<"\n"<<setw(20)<<"mapFile"<<"\t"<<map_file.GetValue();
   _os <<"\n"<<setw(20)<<"cComponents"<<"\t"<<options.GetValue();
   _os << "\n\n";
 

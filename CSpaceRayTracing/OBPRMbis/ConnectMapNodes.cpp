@@ -986,9 +986,14 @@ cout << n_ticks;
             tk++;// increases the tick
             } // end_while
          bool attemptConnection = TRUE;
-         if (tk < 8) {
-            attemptConnection = FALSE;
-            toConnect = FALSE; 
+         if (tk < 7) {
+            if (toConnect && ( lastFreeConfiguration == u ) && connecting) {
+               attemptConnection = TRUE;
+               }
+            else {            
+               attemptConnection = FALSE;
+               toConnect = FALSE;
+               } 
             }
          //Cfg x_new = lastFreeConfiguration;
          Cfg x_new = lastFreeConfiguration;
