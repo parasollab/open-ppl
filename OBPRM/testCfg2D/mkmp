@@ -1,0 +1,3 @@
+../obprm -f campus  \
+        -gNodes BasicPRM nodes 100 \
+	-cNodes closest 5
