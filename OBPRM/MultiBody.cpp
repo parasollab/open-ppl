@@ -555,13 +555,13 @@ double MultiBody::GetInsideSphereRadius() {
 void MultiBody::CalculateArea(){
   double fixSum = 0;
   double freeSum = 0;
-
-  for(int i=0; i<FixedBodyCount; i++) {
+  int i;
+  for(i=0; i<FixedBodyCount; i++) {
     fixAreas.push_back(fixedBody[i]->GetPolyhedron().area);
     fixSum += fixedBody[i]->GetPolyhedron().area;
   }
 
-  for(int i=0; i<FreeBodyCount; i++) {
+  for(i=0; i<FreeBodyCount; i++) {
     freeAreas.push_back(freeBody[i]->GetPolyhedron().area);
     freeSum += freeBody[i]->GetPolyhedron().area;
   }

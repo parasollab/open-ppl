@@ -320,12 +320,13 @@ void GMSPolyhedron::Write(ostream & _os) {
 //  WriteBYU
 //=========================================================================
 void GMSPolyhedron::WriteBYU(ostream & _os) {
+  int i;
   _os << "1 " << numVertices << " " << numPolygons << " 1 1 1" << endl;
-  for(int i=0; i<numVertices; i++) {
+  for(i=0; i<numVertices; i++) {
     vertexList[i].Write(_os);
     _os << endl;
   }
-  for(int i=0; i<numPolygons; i++) {
+  for(i=0; i<numPolygons; i++) {
     for(int j=0; j<polygonList[i].numVertices; j++) {
       if(j == polygonList[i].numVertices-1) { //last one
 	_os << "-" << polygonList[i].vertexList[j]+1 << endl;
