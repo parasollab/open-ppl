@@ -60,7 +60,7 @@ class CollisionDetection; ///< Collision Detection Algobase
 
 //This was changed to this because the VC reads numbers 
 //starting with 0 (zero) as octal number (not decimal)
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__HP_aCC)
 #define RDMPVER_62000                      062000
 #else
 #define RDMPVER_62000                      62000
@@ -76,7 +76,7 @@ class CollisionDetection; ///< Collision Detection Algobase
 //@{
 
 //Modified for VC
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__HP_aCC)
 #define RDMPVER_061100                      061100
 #else
 #define RDMPVER_061100                      61100
@@ -92,7 +92,7 @@ class CollisionDetection; ///< Collision Detection Algobase
 //@{
 
 //Modified for VC
-#if defined(WIN32)
+#if defined(WIN32) || defined(__HP_aCC)
 #define RDMPVER_061300                      061300
 #else
 #define RDMPVER_061300                      61300
@@ -108,7 +108,7 @@ class CollisionDetection; ///< Collision Detection Algobase
 //@{
 
 //Modified for VC
-#if defined(WIN32)
+#if defined(WIN32) || defined(__HP_aCC)
 #define RDMPVER_CURRENT                     061300 
 #else
 #define RDMPVER_CURRENT                     61300 

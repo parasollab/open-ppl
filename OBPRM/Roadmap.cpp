@@ -294,7 +294,6 @@ ConvertToCurrentVersion(const char* _fname, int thisVersion)
 {
 	
 	char infile[200], outfile[200];
-	
 	// copy current file _fname to "_fname.XXX"  where XXX=thisVersion
 	// construct infile=_fname.XXX  and outfile=_fname names
 	SaveCurrentVersion(_fname, thisVersion, infile, outfile);
