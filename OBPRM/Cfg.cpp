@@ -185,7 +185,7 @@ Vector3D Cfg::GetRobotCenterPosition() /* brc const */{
 
 // Return the number of degrees of freedom for the configuration class
 int Cfg::DOFs() {
-  return v.size();
+  return CfgHelper->GetDOF();
 }
 
 // Return the range of a single parameter of the configuration (i.e., range of x)

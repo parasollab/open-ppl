@@ -119,7 +119,7 @@ public:
   Vector3D GetRobotCenterPosition();
 
   // Return the number of degrees of freedom for the configuration class
-  int DOFs();
+  static int DOFs();
 
   // Return the range of a single parameter of the configuration (i.e., range of x)
   // param = the parameter to get the range for
