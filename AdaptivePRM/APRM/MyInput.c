@@ -19,9 +19,11 @@ MyInput::MyInput():
 			     "\n\t\t\t   none                all nodes are added to roadmap"
 			     "\n\t\t\t   approximate STRING  only approx. valid nodes are added to roadmap"
 			     "\n\t\t\t                       STRING specifies the type of env approximation:"
-			     "\n\t\t\t                         box     bounding box used"
+			     "\n\t\t\t                         box     bounding box used (default)"
 			     "\n\t\t\t                         sphere  bounding sphere used"
 			     "\n\t\t\t                         hull    convex hull used"
+			     "\n\t\t\t                         robot   only robot approximated"
+			     "\n\t\t\t                         all     all objects approximated (default)"
 			     "\n\t\t\t   complete            only valid nodes are added to roadmap");
   edgeValidationFlag.PutDesc("STRING FLOAT",
 			     "\n\t\t\t Type of edge validation: default complete"
@@ -83,8 +85,6 @@ MyInput::ReadCommandLine(int argc, char** argv) {
         } else if ( lineSegment.AckCmdLine(&i, argc, argv) ) {
         } else if ( usingClearance.AckCmdLine(&i, argc, argv) ) {
         } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
-	} else if ( calcClearance.AckCmdLine(&i, argc, argv) ) {
-	} else if ( calcPenetration.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
         } else if ( posres.AckCmdLine(&i, argc, argv) ) {
