@@ -458,9 +458,15 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric* dm,
   
   CFG InsideNode, OutsideNode, low, high, mid;	
   
-  int N = numNodes.GetValue()
-    / (numExternalBody-1)  // -1 for the robot
-    / numShells.GetValue();
+  int N;
+  if (numExternalBody > 1) //more objects besides the robot
+    N = numNodes.GetValue()
+      / (numExternalBody-1)  // -1 for the robot
+      / numShells.GetValue();
+  else //the only obstacle is the robot		
+    N = numNodes.GetValue()
+      / (numExternalBody)
+      / numShells.GetValue();
   
   if (N < 1) N = max(numNodes.GetValue(),numShells.GetValue());
   
@@ -525,9 +531,10 @@ GenerateNodes(Environment* _env, CollisionDetection* cd, DistanceMetric* dm,
 	vector<CFG> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, 
 						  numNodes.GetValue());
 	int i;
-	for(i=0; i<CobstNodes.size(); ++i)
+	for(i=0; i<CobstNodes.size(); ++i) {
 	  CobstNodes[i].info.obst = obstacle;
-	nodes.push_back(CobstNodes[i]);
+	  nodes.push_back(CobstNodes[i]);
+	}
 #if INTERMEDIATE_FILES
 	surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
 #endif

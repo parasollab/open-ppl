@@ -22,12 +22,14 @@
 Environment::Environment() {
     pathVersion = PATHVER_20001125;    // Format version for path files
     multibodyCount = 0;
+    externalbodyCount = 0;
     multibody = 0;
     robotIndex = 0;
 }
 Environment::Environment(int index) {
     pathVersion = PATHVER_20001125;    // Format version for path files
     multibodyCount = 0;
+    externalbodyCount = 0;
     multibody = 0;
     robotIndex = index;
 }
@@ -66,6 +68,7 @@ void Environment::Decouple(MultiBody *_multibody[], int number) {
 //============================================
 void Environment::SortMultiBodies(){
   int i,j;
+  externalbodyCount = 1; //the only object is the robot
   i = 0;
   j = multibodyCount-1;
   while (i < j)
