@@ -55,7 +55,6 @@ public:
     //---------------------------------------------------------------------
     //  Methods
     //---------------------------------------------------------------------
-    void Draw();
     void ComputeNormals();
     Vector3D Read(char* fileName);          // distuishes format
     Vector3D Read(istream & _is);           // read GMS format

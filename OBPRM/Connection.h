@@ -37,7 +37,6 @@ public:
     //---------------------------------------------------------------
     //  Methods
     //---------------------------------------------------------------
-    void Draw();
     int IsFirstBody(Body * _body);
     Body * GetNextBody();
     ConnectionType GetConnectionType();

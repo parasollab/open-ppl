@@ -229,9 +229,9 @@ public:
     // data fields from 'init' file (given as command line argument)
     //
     int multibodyCount;
-    int attBodyCount[MAX_MULTIBODY];
-    int attFixedBodyCount[MAX_MULTIBODY];
-    int attFreeBodyCount[MAX_MULTIBODY];
+    int BodyCount[MAX_MULTIBODY];
+    int FixedBodyCount[MAX_MULTIBODY];
+    int FreeBodyCount[MAX_MULTIBODY];
     char *fixedbodyFileName[MAX_MULTIBODY][MAX_FIXEDBODY];
     char *freebodyFileName[MAX_MULTIBODY][MAX_FREEBODY];
 
@@ -239,7 +239,7 @@ public:
     int connectionCount[MAX_MULTIBODY];
 
     int isFree[MAX_MULTIBODY][MAX_FIXEDBODY + MAX_FREEBODY];
-    int attBodyIndex[MAX_MULTIBODY][MAX_FIXEDBODY + MAX_FREEBODY];
+    int BodyIndex[MAX_MULTIBODY][MAX_FIXEDBODY + MAX_FREEBODY];
 
     int previousBodyIndex[MAX_MULTIBODY][MAX_CONNECTION];
     int nextBodyIndex[MAX_MULTIBODY][MAX_CONNECTION];

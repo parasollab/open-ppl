@@ -69,7 +69,6 @@ public:
     void ReadBYU(cd_predefined cdtype, istream & _is);
     void buildCDstructure(cd_predefined cdtype, int nprocs = 1);
 
-    void Draw();
     MultiBody * GetMultiBody();
     void AddContactCount();
     void InitializeContact();

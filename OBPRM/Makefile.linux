@@ -164,8 +164,6 @@ GMS_OBJS = \
 	Environment.o \
 	FreeBody.o \
 	FixedBody.o \
-	AttFreeBody.o \
-	AttFixedBody.o \
 	Connection.o \
 	Contact.o \
 	DHparameters.o \

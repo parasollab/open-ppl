@@ -19,8 +19,8 @@
 #include "Body.h"      
 #include "Transformation.h"
 #include "Matrix.h"
-#include "AttFixedBody.h"
-#include "AttFreeBody.h"
+#include "FixedBody.h"
+#include "FreeBody.h"
 #include "Debug.h"
 
 #ifndef VID
@@ -47,18 +47,17 @@ public:
     //-----------------------------------------------------------
     //  Methods
     //-----------------------------------------------------------
-    AttFreeBody * GetAttFreeBody(int _index);
-    AttFixedBody * GetAttFixedBody(int _index);
+    FreeBody * GetFreeBody(int _index);
+    FixedBody * GetFixedBody(int _index);
     Body * GetBody(int _index); // new
     int GetBodyCount(); // new
-    int GetAttFreeBodyCount();
-    int GetAttFixedBodyCount();
-    int GetAttFreeBodyIndex(AttFreeBody * _b);
-    int GetAttFixedBodyIndex(AttFixedBody * _b);
-    void Draw();
+    int GetFreeBodyCount();
+    int GetFixedBodyCount();
+    int GetFreeBodyIndex(FreeBody * _b);
+    int GetFixedBodyIndex(FixedBody * _b);
     Body * GetFirstBody();
-    void AddBody(AttFreeBody * _body);
-    void AddBody(AttFixedBody * _body);
+    void AddBody(FreeBody * _body);
+    void AddBody(FixedBody * _body);
     double ComputeDistance(Body * _body1, Body * _body2);
     int GetNumberOfLinks();
     void Get(Input * _input, int _index);
@@ -95,10 +94,10 @@ private:
     //  Data
     //-----------------------------------------------------------
     Environment * environment;
-    int attFixedBodyCount;
-    AttFixedBody ** attFixedBody;
-    int attFreeBodyCount;
-    AttFreeBody ** attFreeBody;
+    int FixedBodyCount;
+    FixedBody ** fixedBody;
+    int FreeBodyCount;
+    FreeBody ** freeBody;
     //Equation motionEquation;
 
     Vector3D CenterOfMass;
@@ -134,17 +133,17 @@ inline Vector3D MultiBody::GetCenterOfMass(){
 }
 
 //-------------------------------------------------------------------
-//  GetAttFixedBodyCount
+//  GetFixedBodyCount
 //-------------------------------------------------------------------
-inline int MultiBody::GetAttFixedBodyCount() {
-    return attFixedBodyCount;
+inline int MultiBody::GetFixedBodyCount() {
+    return FixedBodyCount;
 }
 
 //-------------------------------------------------------------------
-//  GetAttFreeBodyCount
+//  GetFreeBodyCount
 //-------------------------------------------------------------------
-inline int MultiBody::GetAttFreeBodyCount() {
-    return attFreeBodyCount;
+inline int MultiBody::GetFreeBodyCount() {
+    return FreeBodyCount;
 }
 
 //-------------------------------------------------------------------
@@ -152,61 +151,61 @@ inline int MultiBody::GetAttFreeBodyCount() {
 //  02/23/99 Guang Song
 //-------------------------------------------------------------------
 inline int MultiBody::GetBodyCount() {
-    return attFreeBodyCount+attFixedBodyCount;
+    return FreeBodyCount+FixedBodyCount;
 }
 //-------------------------------------------------------------------
 //  GetBody
 //  02/23/99 Guang Song
 //-------------------------------------------------------------------
 inline Body * MultiBody::GetBody(int _index) {
-    if(_index < 0 || _index >= attFreeBodyCount+attFixedBodyCount) {
+    if(_index < 0 || _index >= FreeBodyCount+FixedBodyCount) {
         cout << "Error in MultiBody::GetBody !!" << endl;
         exit(-1);
     } else
-    if (_index < attFixedBodyCount) {
-        return attFixedBody[_index];
+    if (_index < FixedBodyCount) {
+        return fixedBody[_index];
     } else {
-        return attFreeBody[_index-attFixedBodyCount];
+        return freeBody[_index-FixedBodyCount];
     }
 }
 
 //-------------------------------------------------------------------
-//  GetAttFixedBody
+//  GetFixedBody
 //-------------------------------------------------------------------
-inline AttFixedBody * MultiBody::GetAttFixedBody(int _index) {
-    if (_index < attFixedBodyCount)
-        return attFixedBody[_index];
+inline FixedBody * MultiBody::GetFixedBody(int _index) {
+    if (_index < FixedBodyCount)
+        return fixedBody[_index];
     else
         return 0;
 }
 
 //-------------------------------------------------------------------
-//  GetAttFreeBody
+//  GetFreeBody
 //-------------------------------------------------------------------
-inline AttFreeBody * MultiBody::GetAttFreeBody(int _index) {
-    if (_index < attFreeBodyCount)
-        return attFreeBody[_index];
+inline FreeBody * MultiBody::GetFreeBody(int _index) {
+    if (_index < FreeBodyCount)
+        return freeBody[_index];
     else 
         return 0;
 }
 
 //-------------------------------------------------------------------
-//  GetAttFreeBodyIndex
+//  GetFreeBodyIndex
 //-------------------------------------------------------------------
-inline int MultiBody::GetAttFreeBodyIndex(AttFreeBody * _b) {
-    for (int i=0; i < attFreeBodyCount; i++)
-        if (_b == GetAttFreeBody(i))
+inline int MultiBody::GetFreeBodyIndex(FreeBody * _b) {
+    for (int i=0; i < FreeBodyCount; i++)
+        if (_b == GetFreeBody(i))
 	    return i;
     // error
     return -1;
 }
 
 //-------------------------------------------------------------------
-//  GetAttFixedBodyIndex
+//  GetFixedBodyIndex
 //-------------------------------------------------------------------
-inline int MultiBody::GetAttFixedBodyIndex(AttFixedBody * _b) {
-    for (int i=0; i < attFixedBodyCount; i++)
-        if (_b == GetAttFixedBody(i))
+inline int MultiBody::GetFixedBodyIndex(FixedBody * _b) {
+    for (int i=0; i < FixedBodyCount; i++)
+        if (_b == GetFixedBody(i))
 	    return i;
     // error
     return -1;
@@ -223,7 +222,7 @@ inline int MultiBody::GetAttFixedBodyIndex(AttFixedBody * _b) {
 //  Added  5/21/98  Wookho Son
 //-------------------------------------------------------------------
 inline int MultiBody::IsManipulator() {
-    return (attFreeBodyCount > 0) ? 1 : 0;
+    return (FreeBodyCount > 0) ? 1 : 0;
 }
 
 

@@ -44,7 +44,6 @@ public:
     //-----------------------------------------------------------
     void Invert();
     Transformation Inverse();
-    void glTransform();
     void Read(ifstream & _is);
     void Write(ostream & _os);
     //-----------------------------------------------------------

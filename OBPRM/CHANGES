@@ -1,3 +1,29 @@
+------------------- ------------------- ------------------- ------------------- 
+Lucia  - May 2000
+------------------- ------------------- ------------------- ------------------- 
+1. removing all mention of GRAPHICS flags, defines, codebits
+           also "ON" & "OFF" references
+
+2. removing all mention of NR_INCLUDE flags, defines, codebits
+           I think there is no code we need here.  Or if there is it's
+           only one small function of less than 10 lines.  We can put it
+           all in a file and keep it with our OBPRM project code under CVS.
+
+3. getting rid of all Att* files and mentions.
+
+4. modify Makefile*'s to only make only one "local" library
+           named "obprm"
+           Right now we make "gms" & "mp".  We've talked about how "mp"
+           is a bad name used already by parallel library of same name...
+
+5. remove "dead" files.  Right now cvs OBPRM project has everything.
+           Having them doesn't hurt but it's messy and confusing to get them
+           when you "cvs checkout OBPRM"
+
+------------------- ------------------- ------------------- ------------------- 
+Burchan
+------------------- ------------------- ------------------- ------------------- 
+
 Cfg.h
 In Vector3D Cfg::GetRobotCenterPosition() removed const keyword
 
