@@ -3,156 +3,224 @@
 /**@file  Cfg_fixed_tree.cpp
   *
   * General Description
-  *	A derived template class from CfgManager. It provides some 
+  *	A derived template class from Cfg. It provides some 
   *	specific implementation directly related to a multiple joints
   *	serial robot.
   *
   * Created
-  *	@date08/31/99	
+  * @date08/31/99	
   * @author Guang Song
+  *
+  * Last Modified
   */
 /////////////////////////////////////////////////////////////////////
 
 
 #include "Cfg_fixed_tree.h"
 
-#include "Cfg.h"
 #include "MultiBody.h"
 #include "Environment.h"
-#include "GenerateMapNodes.h"
 #include "util.h"
+
+int Cfg_fixed_tree::NumofJoints;
 
 ///@todo Document this!!
 #define DefaultRange 0.25
 
-Cfg_fixed_tree::Cfg_fixed_tree(int _numofJoints) : CfgManager(_numofJoints, 0), NumofJoints(_numofJoints) {}
+Cfg_fixed_tree::Cfg_fixed_tree() {
+  dof = NumofJoints;
+  posDof = 0;
+
+  v.clear();
+  for(int i=0; i<dof; i++)
+      v.push_back(0);
+
+  Normalize_orientation();
+}
+
+Cfg_fixed_tree::Cfg_fixed_tree(double x, double y, double z,
+                               double roll, double pitch, double yaw) {
+  cout << "\n\nERROR in Cfg_fixed_tree::Cfg_fixed_tree(double,double,double,double,double,double), not implement yet.\n";
+  exit(-1);
+}
+		  
+Cfg_fixed_tree::Cfg_fixed_tree(int _numofJoints) {
+  if (NumofJoints != _numofJoints ) {
+    cout << "ERROR in Cfg_fixed_tree::Cfg_fixed_tree(int), cannot change numofJoints\n";
+    exit(-1);
+  }
+    
+  dof = NumofJoints;
+  posDof = 0;
+  
+  v.clear();
+  for(int i=0; i<dof; i++)
+    v.push_back(0);
+  
+  Normalize_orientation();
+}
+
+
+Cfg_fixed_tree::Cfg_fixed_tree(const vector<double>& _data) {
+  dof = NumofJoints;
+  posDof = 0;
+  if(_data.size() < dof) {
+    cout << "\n\nERROR in Cfg_fixed_tree::Cfg_fixed_tree(vector<double>), ";
+    cout << "size of vector is less than dof\n";
+    exit(-1);
+  }
+  v.clear();
+  for(int i=0; i<dof; i++)
+    v.push_back(_data[i]);
+  
+  Normalize_orientation();
+}
+
+
+Cfg_fixed_tree::Cfg_fixed_tree(const Cfg& _c) { 
+  vector<double> _v;
+  _v = _c.GetData();
+  dof = _v.size();
+  posDof = 0;
+  v.clear();
+  for(int i=0; i<dof; i++)
+    v.push_back(_v[i]);
+  Normalize_orientation();
+  info = _c.info;
+} 
 
 Cfg_fixed_tree::~Cfg_fixed_tree() {}
 
-Vector3D Cfg_fixed_tree::GetRobotCenterPosition(const Cfg &c) const {
-   return Vector3D(0, 0, 0);
+void Cfg_fixed_tree::equals(const Cfg& c) {
+  dof = c.DOF();
+  posDof = c.posDOF();
+  v.clear();
+  v = c.GetData();
+  info = c.info;
+}
+	
+Vector3D Cfg_fixed_tree::GetRobotCenterPosition() const {
+  return Vector3D(0, 0, 0);
 }
 
 
-Cfg Cfg_fixed_tree::GetRandomCfg(double R, double rStep){
-
-   vector<double> result;
-   double jointAngle;
-
-   for(int i=0; i<NumofJoints; i++) 
-   {
-		jointAngle = (2.0*rStep)*drand48() - rStep;
-        jointAngle = jointAngle*DefaultRange;
-		result.push_back(jointAngle);
-   }
-
-   return Cfg(result);
-
+const char* Cfg_fixed_tree::GetName() const {
+  return "Cfg_fixed_tree";
 }
-
-Cfg Cfg_fixed_tree::GetRandomRay(double incr) {
-
-   incr = 0.005;
-
-   vector<double> result;
-   for(int i=0; i<NumofJoints; i++)
-        result.push_back(drand48()*DefaultRange*incr);
-
-   return Cfg(result);
-
-}
-
-Cfg Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *env) {
-
-// Why following comments are here? This method suppose will generate
-// Cfg whose center of mass will inside a given bounding box....
-
-// this is not EXACTLY accurate, ok with most cases ... TO DO
-// To be accurate, one has to make sure every link is inside the given BB,
-// but here only the base link is taken care of. It is almost fine since
-// a little 'bigger' BB will contain all links. 
-
-   vector<double> tmp;
-   for(int i=0; i<dof; ++i) 
-      tmp.push_back(drand48()*DefaultRange);
-   return Cfg(tmp);
-
-}
-
-vector<Cfg> Cfg_fixed_tree::GetMovingSequenceNodes(const Cfg &c1, const Cfg &c2, double s) {
-
-   vector<Cfg> result;
-   vector<double> tmp;
-   for(int i=0; i<dof; i++) {
-      if(i<2)
-         tmp.push_back(c1.GetData()[i]);
-      else
-         tmp.push_back(c2.GetData()[i]);
-   }
-
-   result.push_back(c1);
-   result.push_back(Cfg(tmp));
-   result.push_back(c2);
-
-   return result;
+  
+void Cfg_fixed_tree::GetRandomCfg(double R, double rStep){
+  double jointAngle;
+  v.clear();
+  
+  for(int i=0; i<NumofJoints; i++) {
+    jointAngle = (2.0*rStep)*drand48() - rStep;
+    jointAngle = jointAngle*DefaultRange;
+    v.push_back(jointAngle);
+  }
+  
+  InfoCfg newInfo;
+  info = newInfo;
 }
 
 
-bool Cfg_fixed_tree::isInRange(const Cfg &c) {
-     //Normalize_orientation();
-     vector<double> v = c.GetData();
-
-     for(int i=0; i<dof; i++) {
-        if(v[i] > DefaultRange)
-          return false;
-     }
-     return true;
+void Cfg_fixed_tree::GetRandomCfg(Environment* env) {
+    Cfg::GetRandomCfg(env);
 }
 
 
-bool Cfg_fixed_tree::ConfigEnvironment(const Cfg &c, Environment *_env) {
-     if(! isInRange(c)) return false;
-
-     vector<double> v = c.GetData();
-     int robot = _env->GetRobotIndex();
-
-     int i;
-     for(i=0; i<NumofJoints; i++) {
-        _env->GetMultiBody(robot)->GetFreeBody(i)
-            ->GetBackwardConnection(0)->GetDHparameters().theta = v[i]*360.0;
-     }  // config the robot
-
-     for(i=0; i<NumofJoints; i++) {
-        FreeBody * afb = _env->GetMultiBody(robot)->GetFreeBody(i);
-        if(afb->ForwardConnectionCount() == 0)  // tree tips: leaves.
-             afb->GetWorldTransformation();
-     }
-
-     // since Transformation is calculated in recursive manner, only
-     // let the last links(or Freebody) call getWorldTransformation will
-     // automatically calculate the transformations for all previous links.
-
-     // when all worldTransformations are recalculated by using new cfg, the
-     // config of the whole robot is updated.
-     return true;
-
-
+void Cfg_fixed_tree::GetRandomRay(double incr) {
+  incr = 0.005;
+  v.clear();
+  
+  for(int i=0; i<NumofJoints; i++)
+    v.push_back(drand48()*DefaultRange*incr);
 }
 
-bool Cfg_fixed_tree::GenerateOverlapCfg(
-		Environment *env,  // although env and robot is not used here,
-		int robot,            // they are needed in other Cfg classes.
-		Vector3D robot_start, 
-		Vector3D robot_goal, 
-		Cfg *resultCfg){
 
-    vector<double> treeData;
-    for(int i=0; i<NumofJoints; i++)
-		treeData.push_back(drand48()*DefaultRange);
+void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *env) {
 
-    // pass back the Cfg for this pose.
-    *resultCfg = Cfg(treeData);
-    return true;
+  // Why following comments are here? This method suppose will generate
+  // Cfg whose center of mass will inside a given bounding box....
+  
+  // this is not EXACTLY accurate, ok with most cases ... TO DO
+  // To be accurate, one has to make sure every link is inside the given BB,
+  // but here only the base link is taken care of. It is almost fine since
+  // a little 'bigger' BB will contain all links. 
+  v.clear();
+  for(int i=0; i<dof; ++i) 
+    v.push_back(drand48()*DefaultRange);
+}
+
+void Cfg_fixed_tree::GetMovingSequenceNodes(const Cfg& other, double s, vector<Cfg*>& result) const {
+  Cfg* c1 = this->CreateNewCfg();
+  result.push_back(c1);
+  
+  vector<double> _data,_data2;
+  for(int i=0; i<dof; i++) {
+    if(i<2)
+      _data.push_back(this->GetData()[i]);
+    else
+      _data.push_back(other.GetData()[i]);
+  }
+  Cfg* tmp = new Cfg_fixed_tree(_data);
+  result.push_back(tmp);
+  
+  _data2 = other.GetData();
+  Cfg* c2 = new Cfg_fixed_tree(_data2);
+  result.push_back(c2);
+}
+
+
+bool Cfg_fixed_tree::isInRange() const {
+  //Normalize_orientation();
+  
+  for(int i=0; i<dof; i++) {
+    if(v[i] > DefaultRange)
+      return false;
+  }
+  return true;
+}
+
+
+bool Cfg_fixed_tree::ConfigEnvironment(Environment *_env) const {
+  if(! isInRange()) return false;
+  
+  int robot = _env->GetRobotIndex();
+  
+  int i;
+  for(i=0; i<NumofJoints; i++) {
+    _env->GetMultiBody(robot)->GetFreeBody(i)
+      ->GetBackwardConnection(0)->GetDHparameters().theta = v[i]*360.0;
+  }  // config the robot
+  
+  for(i=0; i<NumofJoints; i++) {
+    FreeBody * afb = _env->GetMultiBody(robot)->GetFreeBody(i);
+    if(afb->ForwardConnectionCount() == 0)  // tree tips: leaves.
+      afb->GetWorldTransformation();
+  }
+  
+  // since Transformation is calculated in recursive manner, only
+  // let the last links(or Freebody) call getWorldTransformation will
+  // automatically calculate the transformations for all previous links.
+  
+  // when all worldTransformations are recalculated by using new cfg, the
+  // config of the whole robot is updated.
+  return true;
+}
+
+bool Cfg_fixed_tree::GenerateOverlapCfg(Environment *env,  // although env and robot is not used here,
+					int robot,            // they are needed in other Cfg classes.
+					Vector3D robot_start, 
+					Vector3D robot_goal, 
+					Cfg *resultCfg){
+
+  vector<double> treeData;
+  for(int i=0; i<NumofJoints; i++)
+    treeData.push_back(drand48()*DefaultRange);
+  
+  // pass back the Cfg for this pose.
+  *resultCfg = Cfg_fixed_tree(treeData);
+  return true;
 }
 
 //===================================================================
@@ -160,9 +228,37 @@ bool Cfg_fixed_tree::GenerateOverlapCfg(
 //      generate nodes by overlapping two triangles' normal.
 // Guang Song 08/24/99
 //===================================================================
-vector<Cfg> Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL
-(Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, SID _cdsetid, CDInfo& _cdInfo){
-   cout << "Error in Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL(), not implemented yet" << endl;
-   exit(10);
+void Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL(Environment * env,CollisionDetection* cd, 
+					       int obstacle, int nCfgs, 
+					       SID _cdsetid, CDInfo& _cdInfo, 
+					       vector<Cfg*>& surface) const {
+  cout << "\n\nERROR in Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL(), not implemented yet\n";
+  exit(10);
+}
+
+Cfg* Cfg_fixed_tree::CreateNewCfg() const {
+  Cfg* tmp = new Cfg_fixed_tree(NumofJoints);
+  tmp->equals(*this);
+  return tmp;
+}
+
+
+Cfg* Cfg_fixed_tree::CreateNewCfg(vector<double>& data) const {
+  vector<double> _data;
+  if(data.size() < dof) {
+    cout << "\n\nERROR in Cfg_fixed_tree::CreateNewCfg(vector<double>), ";
+    cout << "size of vector is less than dof\n";
+    exit(-1);
+  }
+  for(int i=0; i<dof; i++)
+    _data.push_back(data[i]);
+  Cfg* tmp = new Cfg_fixed_tree(_data);
+  return tmp;
+}
+
+
+void Cfg_fixed_tree::c1_towards_c2(const Cfg& cfg1, const Cfg& cfg2, double d) {
+  cout << "Error in Cfg_fixed_tree::c1_towards_c2(), not implement yet.\n";
+  exit(-1);
 }
 
