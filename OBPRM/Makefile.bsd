@@ -139,7 +139,8 @@ OBJS = \
 	Roadmap.o \
 	QueryCmds.o \
 	Query.o \
-	Weight.o
+	Weight.o \
+	BasicMAPRM.o
 
 objs:: $(OBJS)
 
