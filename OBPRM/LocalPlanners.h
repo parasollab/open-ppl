@@ -176,7 +176,7 @@ LocalPlanners() {
 template <class CFG, class WEIGHT>
 LocalPlanners<CFG,WEIGHT>::
 ~LocalPlanners() {
-  vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
   
@@ -240,7 +240,7 @@ ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtyp
 
   //when there was no method selected, use the default
   if(selected.size() == 0) {
-    vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
+    typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
     int lpid;
     selected = LocalPlanners<CFG,WEIGHT>::GetDefault();
     for (itr = selected.begin(), lpid = 1; itr != selected.end(); itr++, lpid++) {
@@ -256,7 +256,7 @@ bool
 LocalPlanners<CFG,WEIGHT>::
 ParseCommandLine(int argc, char **argv) {
   bool found = FALSE;
-  vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
 
   int cmd_begin = 0;
   int cmd_argc = 0;
@@ -272,7 +272,7 @@ ParseCommandLine(int argc, char **argv) {
 	  cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
 	  cmd_argc++;
 
-	  vector<LocalPlannerMethod<CFG,WEIGHT>*>::iterator itr_names;
+	  typename vector<LocalPlannerMethod<CFG,WEIGHT>*>::iterator itr_names;
 	  is_method_name = false;
 	  for (itr_names = all.begin(); itr_names != all.end() &&cmd_begin+cmd_argc < argc; itr_names++)
 	    if (!strcmp(argv[cmd_begin+cmd_argc],(*itr_names)->GetName())) {
@@ -311,7 +311,7 @@ bool
 LocalPlanners<CFG,WEIGHT>::
 InSelected(const LocalPlannerMethod<CFG,WEIGHT> *test_lp) {
   bool result = false;
-  vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
   for (I = selected.begin(); I != selected.end(); I++)
     if ( (*test_lp) == (**I) ) {
       result = true;
@@ -324,7 +324,7 @@ template <class CFG, class WEIGHT>
 void 
 LocalPlanners<CFG,WEIGHT>::
 PrintUsage(ostream& _os) {
-  vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
   for(I=all.begin(); I!=all.end(); I++)
     (*I)->PrintUsage(_os);
 }
@@ -333,7 +333,7 @@ template <class CFG, class WEIGHT>
 void 
 LocalPlanners<CFG,WEIGHT>::
 PrintValues(ostream& _os) {
-  vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     (*I)->PrintValues(_os);
 }
@@ -404,7 +404,7 @@ LocalPlanners<CFG,WEIGHT>::
 PrintDefaults(ostream& _os) {
   vector<LocalPlannerMethod<CFG, WEIGHT>*> Default;
   Default = GetDefault();
-  vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
   for(I=Default.begin(); I!=Default.end(); I++)
     (*I)->PrintValues(_os);
 }
@@ -434,7 +434,7 @@ IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
   lpOutput->edge.second.SetWeight(0);
   lpOutput->savedEdge.clear();
 
-  vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
   int connecting_lp = saved_sl_id;
   bool connected = false;
 
@@ -510,7 +510,7 @@ UsesPlannerOtherThan(char plannerName[]){
 #if defined(_WIN32)
   using namespace std;
 #endif
-  vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
   for (itr = selected.begin(); itr != selected.end(); itr++) {
     cout << "\n\t UsesPlanner: " << (*itr)->GetName();
     if ( strcmp((*itr)->GetName(), plannerName) )
@@ -560,7 +560,7 @@ GetLocalPlanner(unsigned int lpid) {
   else if (selected[lpid-1]->GetID() == lpid)
     lp = selected[lpid-1];
   else {   //Otherwise search the selected vector for the proper local planner
-    vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
+    typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
     for (itr = selected.begin(); itr != selected.end(); itr++) {
       if ( (*itr)->GetID() == lpid ) {
 	lp = (*itr);
@@ -585,7 +585,7 @@ LocalPlanners<CFG,WEIGHT>::
 ResetSelected() {
   lp_counter = 0;
   saved_sl_id = -1;
-  vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
   for(I = selected.begin(); I != selected.end(); I++)
     delete *I;
   selected.clear();

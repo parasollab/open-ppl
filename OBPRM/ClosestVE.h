@@ -104,7 +104,7 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT> {
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
   // Core: Connection method
-  static bool VE_DIST_Compare(const pair<CfgVEType<CFG>,double>& _cc1, const pair<CfgVEType<CFG>,double>& _cc2);
+  static bool VE_DIST_Compare(const pair<CfgVEType<CFG>,double> _cc1, const pair<CfgVEType<CFG>,double> _cc2);
   /**Find k pairs of closest Cfgs from a given Cfg to Cfgs in a Cfg vector
    *or on the edges in edge vector.
    *
@@ -138,7 +138,7 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT> {
    */
   vector<CfgVEType<CFG> > FindKClosestPairs(Roadmap<CFG, WEIGHT>*, 
 					      DistanceMetric*,  
-					      CFG& cfg, vector<CFG>& verts,
+					      CFG cfg, vector<CFG>& verts,
 					      vector<pair<pair<VID,VID>,WEIGHT> >& edges, 
 					      int k, bool midpoint);
 
@@ -274,7 +274,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 bool
 ClosestVE<CFG, WEIGHT>::
-VE_DIST_Compare (const pair<CfgVEType<CFG>,double>& _cc1, const pair<CfgVEType<CFG>,double>& _cc2) {
+VE_DIST_Compare (const pair<CfgVEType<CFG>,double> _cc1, const pair<CfgVEType<CFG>,double> _cc2) {
   return (_cc1.second < _cc2.second ) ;
 }
 
@@ -288,7 +288,7 @@ vector<CfgVEType<CFG> >
 ClosestVE<CFG, WEIGHT>::
 FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
 		  DistanceMetric* dm, 
-		  CFG& cfg, vector<CFG>& verts, 
+		  CFG cfg, vector<CFG>& verts, 
 		  vector< pair<pair<VID,VID>,WEIGHT> >& edges, 
 		  int k, bool midpoint) {  
   vector<CfgVEType<CFG> > pairs;
@@ -418,14 +418,14 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
   
   // for each "real" cfg in roadmap
   LPOutput<CFG,WEIGHT> lpOutput;
-  for (vector<CFG>::iterator v=newV.begin();v<newV.end();++v) {
+  for (typename vector<CFG>::iterator v=newV.begin();v<newV.end();++v) {
     // Find k closest cfgs in the roadmap
     bool midpt_approx_of_closestPt = false;
     vector<CfgVEType<CFG> > KP = FindKClosestPairs(_rm, dm, 
 						   *v, oldV, edges,
 						   k, midpt_approx_of_closestPt);
     // for each pair identified	
-    for (vector<CfgVEType<CFG> >::iterator kp=KP.begin();kp<KP.end();++kp){
+    for (typename vector<CfgVEType<CFG> >::iterator kp=KP.begin();kp<KP.end();++kp){
       
 #if CHECKIFSAMECC
       if(IsSameCC(*(_rm->m_pRoadmap),kp->cfg1,kp->cfg2)) continue;

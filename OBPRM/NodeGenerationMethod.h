@@ -2,6 +2,7 @@
 #define NodeGenerationMethod_h
 
 #include "Parameters.h"
+#include "util.h"
 
 class Environment;
 class CollisionDetection;

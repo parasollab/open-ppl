@@ -310,7 +310,7 @@ PerformQuery(CFG _start, CFG _goal, CollisionDetection* cd,
       _path->push_back(_start);
       
       // Add to Path "tick" cfg's: [ start->rdmp ]
-      vector<CFG>::iterator I;
+      typename vector<CFG>::iterator I;
       for(I=sci.path.begin(); I!=sci.path.end(); I++)
 	_path->push_back(*I);
 
@@ -338,7 +338,7 @@ PerformQuery(CFG _start, CFG _goal, CollisionDetection* cd,
 	     cout << endl << "In PerformQuery: can't recreate path" << endl;
 	   } else {
 	     // Add to Path rdmp cfg's & "tick"s: [ rdmp.rdmp ]
-	     vector<CFG>::iterator I;
+	     typename vector<CFG>::iterator I;
 	     for(I=ci.path.begin(); I!=ci.path.end(); I++)
 	       _path->push_back(*I);
 	   }
@@ -349,7 +349,7 @@ PerformQuery(CFG _start, CFG _goal, CollisionDetection* cd,
        
        // Add to Path "tick" cfg's: [ rdmp.goal ]
        reverse(gci.path.begin(),gci.path.end());
-       vector<CFG>::iterator J;
+       typename vector<CFG>::iterator J;
        for(J=gci.path.begin(); J!=gci.path.end(); J++)
 	 _path->push_back(*J);
 
@@ -390,7 +390,7 @@ CanConnectToCC(CFG _cfg, CollisionDetection* cd,
    selected = cn->GetDefault();
    //this is needed to use any ConnectionMethod to access
    //function SortByDistFromCfg
-   vector<ConnectionMethod<CFG,WEIGHT> *>::iterator first_method;
+   typename vector<ConnectionMethod<CFG,WEIGHT> *>::iterator first_method;
    first_method = selected.begin();
    (*first_method)->SortByDistFromCfg(rdmp.GetEnvironment(),dm,_cfg,_cc);
    // try to connect _cfg to (closest) config in _cc 

@@ -255,7 +255,7 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm,
 	return;
       }
       else if(addPartialEdge) {
-	vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
+	typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
 	for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
 	  CFG tmp = I->first.second;
 	  if(!tmp.AlmostEqual(cc1vec[c1])) {
@@ -295,7 +295,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm,
       return;
     }
     else if(addPartialEdge) {
-      vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
+      typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
       for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
 	CFG tmp = I->first.second;
 	if(!tmp.AlmostEqual(kp[i].first)) {

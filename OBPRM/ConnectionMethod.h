@@ -6,8 +6,15 @@
 #ifdef __K2
   #include <strstream.h>
 #else
+#ifdef __HP_aCC
+  #include <strstream.h>
+#else
   #include <strstream>
 #endif
+#endif
+
+//#define MAX_CN 10
+const double MAX_DIST =  1e10;
 
 // Abstract Interface Class for connection methods
 template <class CFG, class WEIGHT>
@@ -39,13 +46,13 @@ class ConnectionMethod {
   /**Compare two distances in DIST_TYPE instances.
    *return (_cc1.second < _cc2.second)
    */
-  static bool DIST_Compare(const pair<pair<CFG,CFG>,double>& _cc1, 
-			   const pair<pair<CFG,CFG>,double>& _cc2);
+  static bool DIST_Compare(const pair<pair<CFG,CFG>,double> _cc1, 
+			   const pair<pair<CFG,CFG>,double> _cc2);
    /**Compare distances in 2 CfgDistType instances.
     *@note used to sort cfgs by distance
     */
-  static bool CfgDist_Compare(const pair<CFG,double>&, 
-			       const pair<CFG,double>&);
+  static bool CfgDist_Compare(const pair<CFG,double>, 
+			       const pair<CFG,double>);
    /**Sort given list accroding to the distance from given
     *Cfg to every Cfg in the list.
     *
@@ -72,7 +79,7 @@ class ConnectionMethod {
   //static 
   vector<pair<CFG,CFG> > FindKClosestPairs(Environment* _env, 
 						  DistanceMetric* dm, 
-						  CFG& cfg1,
+						  CFG cfg1,
 						  vector<CFG>& vec1, int k);
   /**Find k of closest Cfgs in given vector of Cfgs for each Cfg
    *in same vector.
@@ -220,7 +227,7 @@ char* ConnectionMethod<CFG,WEIGHT>::GetName() {
 template <class CFG, class WEIGHT>
 bool
 ConnectionMethod<CFG, WEIGHT>::
-DIST_Compare (const pair<pair<CFG,CFG>,double>& _cc1, const pair<pair<CFG,CFG>,double>& _cc2) {
+DIST_Compare (const pair<pair<CFG,CFG>,double> _cc1, const pair<pair<CFG,CFG>,double> _cc2) {
   return (_cc1.second < _cc2.second ) ;
 }
 
@@ -230,7 +237,7 @@ DIST_Compare (const pair<pair<CFG,CFG>,double>& _cc1, const pair<pair<CFG,CFG>,d
 template <class CFG, class WEIGHT>
 bool
 ConnectionMethod<CFG, WEIGHT>::
-CfgDist_Compare (const pair<CFG,double>& _cc1, const pair<CFG,double>& _cc2) {
+CfgDist_Compare (const pair<CFG,double> _cc1, const pair<CFG,double> _cc2) {
   return (_cc1.second < _cc2.second ) ;
 }
 //----------------------------------------------------------------------
@@ -271,7 +278,7 @@ template <class CFG, class WEIGHT>
 vector<pair<CFG,CFG> >
 ConnectionMethod<CFG, WEIGHT>::
 FindKClosestPairs(Environment* _env, DistanceMetric* dm, 
-		  CFG& cfg1, vector<CFG>& vec1, int k) {
+		  CFG cfg1, vector<CFG>& vec1, int k) {
   vector<CFG> cfg;
   cfg.push_back(cfg1);
   

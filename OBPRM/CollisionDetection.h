@@ -40,6 +40,7 @@
 //Include OBPRM headers
 #include "OBPRMDef.h"
 #include "Cfg.h"
+#include "DistanceMetrics.h"
 
 //////////////////////////////////////////////////////////////////////////////
 class Input;
@@ -48,7 +49,6 @@ template <class CFG> class GenerateMapNodes;
 template <class CFG, class WEIGHT> class ConnectMap;
 class MultiBody;
 class Transformation;
-class DistanceMetric;
 
 class CollisionDetectionMethod;
 class n_str_param;

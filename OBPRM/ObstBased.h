@@ -83,7 +83,7 @@ class ObstBased: public ConnectionMethod<CFG,WEIGHT> {
    *@note this is used to "sort" Cfg's by obst generation number
    *@see Get_Cfgs_By_Obst
    */
-  static bool info_Compare(const CFG& _cc1, const CFG& _cc2);
+  static bool info_Compare(const CFG _cc1, const CFG _cc2);
   /**Classify Cfgs by from which obstacles these Cfg are generated.
    *Vertices are stored as generated but they may have been originally
    *generated with respect to some obstacle. This proceedure
@@ -213,7 +213,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 bool
 ObstBased<CFG, WEIGHT>::
-info_Compare(const CFG& _cc1, const CFG& _cc2){
+info_Compare(const CFG _cc1, const CFG _cc2){
   return (_cc1.obst < _cc2.obst ) ;
 }
 

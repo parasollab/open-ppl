@@ -344,7 +344,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
          //clearance_cfgs will be a vector containing last n_clearance cfgs
 
          vector<CFG> clearance_cfgs;
-         vector<CFG>::iterator startIterator;
+         typename vector<CFG>::iterator startIterator;
          while(!collision && (tk<=n_ticks)&& (dm->Distance(env,cfg,tick) < maxLength) ) {
             lastFreeConfiguration = tick;
             if ( clearance_cfgs.size() <= o_clearance )

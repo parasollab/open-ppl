@@ -3,6 +3,7 @@
 #define BasicMAPRM_h
 
 #include "NodeGenerationMethod.h"
+#include "MultiBody.h"
 
 template <class CFG>
 class BasicMAPRM : public NodeGenerationMethod<CFG> {

@@ -8,7 +8,7 @@
    OBPRMLIB   = -L${OBPRM_DIR} libobprm.sl
 
    Graph_DIR   = ../stapl/include/graph
-   STAPL_DIR   = ../stapl/include/
+   STAPL_DIR   = ../stapl/include
    Graph_INCL  = -I${Graph_DIR} -I${STAPL_DIR}/common
 
 #------------------------------------------------------
@@ -32,29 +32,29 @@
  PQPLIB      = -L${PQPLIB_DIR} -lPQP
  PQP_INCL    = -I${PQP_DIR}/include
 
- STAPL_DIR    = /research/sunburn/dsmft/libs/hp/stapl
- STAPLLIB_DIR = ${STAPL_DIR}
- STAPLLIB     = ${STAPL_DIR}/sup_lib/pthread_task.o \
-                -L${STAPL_DIR}/lib -Wl,+b -Wl,${STAPL_DIR}/lib \
-                -lhoard -lpthread
- STAPL_INCL   = -I${STAPL_DIR}/include \
-                -I${STAPL_DIR}/include_stl \
-                -I${STAPL_DIR}/include_stl/nongnu
-
- STL_INCL  = -I${STAPL_DIR}/include_stl 
+# STAPL_DIR    = /research/sunburn/dsmft/libs/hp/stapl
+# STAPLLIB_DIR = ${STAPL_DIR}
+# STAPLLIB     = ${STAPL_DIR}/sup_lib/pthread_task.o \
+#                -L${STAPL_DIR}/lib -Wl,+b -Wl,${STAPL_DIR}/lib \
+#                -lhoard -lpthread
+# STAPL_INCL   = -I${STAPL_DIR}/include \
+#                -I${STAPL_DIR}/include_stl \
+#                -I${STAPL_DIR}/include_stl/nongnu
+#
+# STL_INCL  = -I${STAPL_DIR}/include_stl 
 
 #-----------------------------------------------------------------------------
 # Defines for various types of executables
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=0 -DUSE_PQP -DUSE_RAPID 
-DEFS = ${ADEFS} -DQUIET
+ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=1 -DUSE_PQP -DUSE_RAPID 
+DEFS = ${ADEFS} -D__HP_aCC
 
 showdefs :: 
 	echo "${DEFS}";
 
-AFLAGS    = -I. ${STAPL_INCL} ${Graph_INCL} ${STL_INCL} ${CSTK_INCL} ${PQP_INCL} ${RAPID_INCL} ${DEFS}
+AFLAGS    = -I. ${Graph_INCL} ${CSTK_INCL} ${PQP_INCL} ${RAPID_INCL} ${DEFS}
 
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
@@ -92,19 +92,19 @@ libobprm.sl:: $(OBJS)
 #--------------------------------------------------------------------
 obprm:: main_obprm.cpp libs
 	$(CXX) $(CFLAGS)  -o obprm main_obprm.cpp \
-	$(OBPRMLIB) $(MATHLIB) ${STAPLLIB} ${PQPLIB} ${RAPIDLIB}
+	$(OBPRMLIB) $(MATHLIB) ${PQPLIB} ${RAPIDLIB}
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
 query:: main_query.cpp libs
 	$(CXX) $(CFLAGS)  -o query main_query.cpp \
-	$(OBPRMLIB) $(MATHLIB) ${STAPLLIB} ${PQPLIB} ${RAPIDLIB}
+	$(OBPRMLIB) $(MATHLIB) ${PQPLIB} ${RAPIDLIB}
 	rm -f main_query.o
 
 #--------------------------------------------------------------------
 pobprm:: main_pobprm.cpp libs
 	$(CXX) $(CXXFLAGS)  -o pobprm main_pobprm.cpp \
-        $(OBPRMLIB) $(MATHLIB) ${STAPLLIB} ${PQPLIB} ${RAPIDLIB}
+        $(OBPRMLIB) $(MATHLIB) ${PQPLIB} ${RAPIDLIB}
 	rm -f main_pobprm.o
 #--------------------------------------------------------------------
 .SUFFIXES: .cpp
@@ -114,7 +114,7 @@ pobprm:: main_pobprm.cpp libs
 	rm -f $*.d
 
 % :: %.o
-	$(CXX) $(CXXFLAGS) -o $@ $< $(OBPRM_LIB) $(MATHLIB) $(STAPLLIB) ${RAPIDLIB} ${PQPLIB}
+	$(CXX) $(CXXFLAGS) -o $@ $< $(OBPRM_LIB) $(MATHLIB) ${RAPIDLIB} ${PQPLIB}
 
 #--------------------------------------------------------------------
 
@@ -135,10 +135,7 @@ OBJS = \
 	MultiBody.o \
         Parameters.o \
 	Input.o \
-        Haptic.o \
-        Push.o \
 	Cfg.o \
-	CfgManager.o \
 	Cfg_free.o \
 	Cfg_fixed_PRR.o \
 	Cfg_free_tree.o \
@@ -147,18 +144,15 @@ OBJS = \
 	util.o \
 	Clock_Class.o \
 	Stat_Class.o \
-	LocalPlanners.o \
 	DistanceMetrics.o \
 	CollisionDetection.o \
-	GenerateMapNodes.o \
-	ConnectMapNodes.o \
-	Roadmap.o \
 	QueryCmds.o \
-	Query.o \
-	Weight.o \
-	BasicMAPRM.o
+	Weight.o
 
 objs:: $(OBJS)
+
+#Haptic.o \
+#Push.o \
 
 #--------------------------------------------------------------------
 runclean::

@@ -37,7 +37,11 @@
 #ifdef __K2
   #include <strstream.h>
 #else
+#ifdef __HP_aCC
+  #include <strstream.h>
+#else
   #include <strstream>
+#endif
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +172,7 @@ GenerateMapNodes() {
 template <class CFG>
 GenerateMapNodes<CFG>::
 ~GenerateMapNodes() {
-  vector<NodeGenerationMethod<CFG>*>::iterator I;
+  typename vector<NodeGenerationMethod<CFG>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
 
@@ -192,13 +196,13 @@ template <class CFG>
 int 
 GenerateMapNodes<CFG>::
 ReadCommandLine(n_str_param* GNstrings[MAX_GN], int numGNs) {
-  vector<NodeGenerationMethod<CFG>*>::iterator I;
+  typename vector<NodeGenerationMethod<CFG>*>::iterator I;
 
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
   selected.clear();
   
-  vector<NodeGenerationMethod<CFG>*>::iterator itr;
+  typename vector<NodeGenerationMethod<CFG>*>::iterator itr;
 
   //go through the command line looking for method names
   for(int i=0; i<numGNs; i++) {
@@ -229,7 +233,7 @@ ReadCommandLine(n_str_param* GNstrings[MAX_GN], int numGNs) {
 	      cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
 	      cmd_argc++;
 	      
-	      vector<NodeGenerationMethod<CFG>*>::iterator itr_names;
+	      typename vector<NodeGenerationMethod<CFG>*>::iterator itr_names;
 	      is_method_name = false;
 	      for (itr_names = all.begin(); itr_names != all.end() &&cmd_begin+cmd_argc < argc; itr_names++)
 		if (!strcmp(argv[cmd_begin+cmd_argc],(*itr_names)->GetName())) {
@@ -279,7 +283,7 @@ template <class CFG>
 void 
 GenerateMapNodes<CFG>::
 PrintUsage(ostream& _os) {
-  vector<NodeGenerationMethod<CFG>*>::iterator I;
+  typename vector<NodeGenerationMethod<CFG>*>::iterator I;
   for(I=all.begin(); I!=all.end(); I++)
     (*I)->PrintUsage(_os);
 }
@@ -289,7 +293,7 @@ template <class CFG>
 void 
 GenerateMapNodes<CFG>::
 PrintValues(ostream& _os) {
-  vector<NodeGenerationMethod<CFG>*>::iterator I;
+  typename vector<NodeGenerationMethod<CFG>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     (*I)->PrintValues(_os);
 }
@@ -301,7 +305,7 @@ GenerateMapNodes<CFG>::
 PrintDefaults(ostream& _os) {
   vector<NodeGenerationMethod<CFG>*> Default;
   Default = GetDefault();
-  vector<NodeGenerationMethod<CFG>*>::iterator I;
+  typename vector<NodeGenerationMethod<CFG>*>::iterator I;
   for(I=Default.begin(); I!=Default.end(); I++)
     (*I)->PrintValues(_os);
 }
@@ -316,7 +320,7 @@ GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, CollisionDetection* cd,
   // clear generated nodes space
   nodes.erase(nodes.begin(),nodes.end());
 
-  vector<NodeGenerationMethod<CFG>*>::iterator itr;
+  typename vector<NodeGenerationMethod<CFG>*>::iterator itr;
   for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
 #ifndef QUIET	
     Clock_Class clock;

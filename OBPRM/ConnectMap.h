@@ -9,7 +9,11 @@
 #ifdef __K2
   #include <strstream.h>
 #else
+#ifdef __HP_aCC
+  #include <strstream.h>
+#else
   #include <strstream>
+#endif
 #endif
 
 #include "RayTracer.h"
@@ -22,8 +26,6 @@
 #include "ObstBased.h"
 #include "ModifiedLM.h"
 
-//#define MAX_CN 10
-const double MAX_DIST =  1e10;
 //#############################################################################
 // A collection of component connection methods
 template <class CFG, class WEIGHT>
@@ -167,13 +169,13 @@ int ConnectMap<CFG,WEIGHT>::ReadCommandLine(Input* input, Environment* env) {
   connectionPosRes = env->GetPositionRes();
   connectionOriRes = env->GetOrientationRes();   
 
-  vector<ConnectionMethod<CFG, WEIGHT>*>::iterator I;
+  typename vector<ConnectionMethod<CFG, WEIGHT>*>::iterator I;
   
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
   selected.clear();
 
-  vector<ConnectionMethod<CFG,WEIGHT> *>::iterator itr, itr_names;
+  typename vector<ConnectionMethod<CFG,WEIGHT> *>::iterator itr, itr_names;
 
   //go through the command line looking for method names
   for(int i=0; i< input->numCNs; i++) {
@@ -226,7 +228,7 @@ int ConnectMap<CFG,WEIGHT>::ReadCommandLine(Input* input, Environment* env) {
 
 template <class CFG, class WEIGHT>
 void ConnectMap<CFG,WEIGHT>::PrintUsage(ostream& _os) {
-  vector<ConnectionMethod<CFG,WEIGHT>*>::iterator I;
+  typename vector<ConnectionMethod<CFG,WEIGHT>*>::iterator I;
   for(I=all.begin(); I!=all.end(); I++)
     (*I)->PrintUsage(_os);
 
@@ -234,7 +236,7 @@ void ConnectMap<CFG,WEIGHT>::PrintUsage(ostream& _os) {
 
 template <class CFG, class WEIGHT>
 void ConnectMap<CFG,WEIGHT>::PrintValues(ostream& _os){
-  vector<ConnectionMethod<CFG,WEIGHT>*>::iterator I;
+  typename vector<ConnectionMethod<CFG,WEIGHT>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     (*I)->PrintValues(_os);
 };
@@ -243,7 +245,7 @@ template <class CFG, class WEIGHT>
 void ConnectMap<CFG,WEIGHT>::PrintDefaults(ostream& _os) {
   vector<ConnectionMethod<CFG,WEIGHT>*> Default;
   Default = GetDefault();
-  vector<ConnectionMethod<CFG,WEIGHT>*>::iterator I;
+  typename vector<ConnectionMethod<CFG,WEIGHT>*>::iterator I;
   for(I=Default.begin(); I!=Default.end(); I++)
     (*I)->PrintValues(_os);
 }
@@ -256,7 +258,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge,
 		  bool addAllEdges) {
-  vector<ConnectionMethod<CFG,WEIGHT> *>::iterator itr;
+  typename vector<ConnectionMethod<CFG,WEIGHT> *>::iterator itr;
   for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
 #ifndef QUIET
     Clock_Class clock;

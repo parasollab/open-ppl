@@ -23,12 +23,12 @@
 //Include OBPRM headers
 #include "OBPRMDef.h"              // Cfg type defined here
 #include "RoadmapGraph.h"       // graph class
+#include "Input.h"        ///< init info (command line, env initfile)
+#include "CollisionDetection.h" ///< Collision Detection Algobase
 
-class Input;              ///< init info (command line, env initfile)
 class Environment;        ///< Environment classes
 template <class CFG, class WEIGHT> class LocalPlanners;      ///< Local Planner       Algobase
 class DistanceMetric;     ///< Distance Metrics    Algobase
-class CollisionDetection; ///< Collision Detection Algobase
 
 /////////////////////////////////////////////////////////////////////
 
