@@ -61,6 +61,33 @@ void Environment::Couple(MultiBody *_multibody[], int number) {
 void Environment::Decouple(MultiBody *_multibody[], int number) {
 }
 
+//============================================
+//SortBodies so that the external bodies appear first in the array
+//============================================
+void Environment::SortMultiBodies(){
+  int i,j;
+  i = 0;
+  j = multibodyCount-1;
+  while (i < j)
+    {//Quicksort
+      while((i<multibodyCount) && !multibody[i]->IsInternal()) 
+	i++;
+      while ((j>0)&&(multibody[j]->IsInternal()))
+	j--;
+      if (i<j)
+	{
+	  MultiBody *pMidBody = multibody[j];//switch multibody[i] & multibody[j]
+	  multibody[j] = multibody[i];
+	  multibody[i] = pMidBody;
+	}
+    }
+    if (i == j+1)
+    	externalbodyCount = i;
+    else
+    	cout << "Wrong sorting in void Environment::SortMultiBodies(){}"<<endl;
+	 
+}
+
 //===================================================================
 //  Get
 //===================================================================
@@ -71,7 +98,9 @@ void Environment::Get(Input * _input) {
 		mb->Get(_input, i);
 		AddMultiBody(mb);
     }
-	
+
+    //put the external bodies in the beginning part of the multibody array;
+    SortMultiBodies();
     // calculate bounding box
     FindBoundingBox();
     UpdateBoundingBox(_input);
