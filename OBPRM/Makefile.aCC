@@ -103,6 +103,17 @@ pobprm:: main_pobprm.cpp libs
         $(OBPRMLIB) $(MATHLIB) ${STAPLLIB} ${PQPLIB} ${RAPIDLIB}
 	rm -f main_pobprm.o
 #--------------------------------------------------------------------
+.SUFFIXES: .cpp
+.cpp.o:
+	$(CXX) ${CXXFLAGS} -c $<
+	cat $*.d >> Dependencies
+	rm -f $*.d
+
+% :: %.o
+	$(CXX) $(CXXFLAGS) -o $@ $< $(OBPRM_LIB) $(MATHLIB) $(STAPLLIB) ${RAPIDLIB} ${PQPLIB}
+
+#--------------------------------------------------------------------
+
 
 OBJS = \
 	Environment.o \
