@@ -594,7 +594,7 @@ public:
   public:
       static CfgManager * CfgHelper;  ///<Cfg_Free
       InfoCfg info;
-      friend CfgManager;
+      friend class CfgManager;
 }; // class Cfg
 
 
