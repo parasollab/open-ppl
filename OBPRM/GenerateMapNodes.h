@@ -269,6 +269,8 @@ ReadCommandLine(n_str_param* GNstrings[MAX_GN], int numGNs) {
   //cout << "selected:\n";
   //for(int j=0; j<selected.size(); j++)
   //  selected[j]->PrintValues(cout);
+
+  return selected.size();
 }
 
 

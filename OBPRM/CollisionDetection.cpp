@@ -299,6 +299,8 @@ ReadCommandLine(n_str_param* CDstrings[MAX_CD], int numCDs) {
 
   if(selected.size() == 0)
     selected = GetDefault();
+
+  return selected.size();
 }
 
 
@@ -656,6 +658,7 @@ Clearance(Environment* env, Stat_Class& Stats) {
        << "current collision detection library." << endl
        << "Please recompile with a supporting library.\n";
   exit(5);
+  return -1;
 }
 
 
@@ -671,6 +674,7 @@ CollisionDetectionMethod::
 isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo) {
   cerr<<"isInsideObstacle: Not implemeneted yet"<<endl;
   exit(1);
+  return false;
 }
 
 

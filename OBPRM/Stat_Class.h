@@ -61,7 +61,9 @@ public:
 
   static const int ALL;
   template <class CFG, class WEIGHT>
-  void PrintAllStats( Roadmap<CFG, WEIGHT> *rmap, int numCCs=ALL);
+  void PrintAllStats( Roadmap<CFG, WEIGHT> *rmap);
+  template <class CFG, class WEIGHT>
+  void PrintAllStats( Roadmap<CFG, WEIGHT> *rmap, int numCCs);
 
   template <class CFG, class WEIGHT>
   void PrintDataLine(ostream&, Roadmap<CFG, WEIGHT>* , int show_column_headers=0);
@@ -134,6 +136,13 @@ protected:
 };
 
 //definitions of templated functions
+template <class CFG, class WEIGHT>
+void
+Stat_Class::
+PrintAllStats( Roadmap<CFG, WEIGHT>* rmap) {
+  PrintAllStats(rmap, ALL);
+}
+
 template <class CFG, class WEIGHT>
 void
 Stat_Class::

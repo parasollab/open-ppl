@@ -126,8 +126,7 @@ class LocalPlanners {
   
 };
 
-/* //moved to main_obprm.cpp/main_query.cpp 
-   //because hp needs explicit instantiation of static members
+
 template <class CFG, class WEIGHT>
 int LocalPlanners<CFG,WEIGHT>::lp_counter = -1;
 
@@ -151,7 +150,7 @@ int LocalPlanners<CFG,WEIGHT>::lp_counter = -1;
     #error You have to specify at least one collision detection library.
   #endif
 #endif
-*/
+
 
 template <class CFG, class WEIGHT>
 LocalPlanners<CFG,WEIGHT>::
@@ -251,6 +250,7 @@ ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtyp
     }
   }
   
+  return selected.size();
 }
 
 template <class CFG, class WEIGHT>

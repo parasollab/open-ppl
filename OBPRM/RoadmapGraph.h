@@ -340,14 +340,14 @@ template <class VERTEX, class WEIGHT>
 int  
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VID _v1, VID _v2, WEIGHT _w) {
-  GRAPH::AddEdge(_v1,_v2,_w);
+  return GRAPH::AddEdge(_v1,_v2,_w);
 }
 
 template <class VERTEX, class WEIGHT>
 int  
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _w) {
-  GRAPH::AddEdge(_v1,_v2,_w);
+  return GRAPH::AddEdge(_v1,_v2,_w);
 }
 
 template <class VERTEX, class WEIGHT>
@@ -355,7 +355,7 @@ int
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w) {
   GRAPH::AddEdge(_v1,_v2,_w.first);
-  GRAPH::AddEdge(_v2,_v1,_w.second);
+  return GRAPH::AddEdge(_v2,_v1,_w.second);
 }
 
 template <class VERTEX, class WEIGHT>
@@ -363,7 +363,7 @@ int
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT>& _w) {
   GRAPH::AddEdge(_v1,_v2,_w.first);
-  GRAPH::AddEdge(_v2,_v1,_w.second);
+  return GRAPH::AddEdge(_v2,_v1,_w.second);
 }
 
 template <class VERTEX, class WEIGHT>

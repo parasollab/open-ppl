@@ -134,6 +134,8 @@ ReadCommandLine(n_str_param* DMstrings[MAX_DM], int numDMs) {
 
   if(selected.size() == 0)
     selected = GetDefault();
+
+  return selected.size();
 }
 
 
