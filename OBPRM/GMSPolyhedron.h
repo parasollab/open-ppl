@@ -13,12 +13,12 @@
 #include <fstream.h>
 #include "Vectors.h"
 
-class Polygon {
+class GMSPolygon {
 public:
     //---------------------------------------------------------------------
     //  Constructor(s) and Destructor
     //---------------------------------------------------------------------
-    ~Polygon() { delete[] vertexList; } 
+    ~GMSPolygon() { delete[] vertexList; } 
 
     //---------------------------------------------------------------------
     //  Data
@@ -27,6 +27,14 @@ public:
     int    numVertices;
     Vector3D normal;
     double   area;
+	/* burchan added operator=. It is slow but otherwis if any function 
+	   use a local 
+	 polygon which is assigned to another polygon variable, the
+	 descructor would free not only the local variables vertexlist 
+	 but the vertexlist of the original polygon as well. so with
+	 a = operator each polygon will have its own vertex list */
+	 GMSPolygon    &operator=(GMSPolygon  _p);
+     GMSPolygon getCopy();
 };
 
 class GMSPolyhedron {
@@ -36,7 +44,7 @@ public:
     //---------------------------------------------------------------------
     Vector3D  * vertexList;
     int       numVertices;
-    Polygon * polygonList;
+    GMSPolygon * polygonList;
     int       numPolygons;
     double    area;
     double    maxRadius; // the maximum distance from a vertex to com.
