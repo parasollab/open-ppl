@@ -6,9 +6,14 @@
    ADAPT_LIB = -L${ADAPT_DIR} -ladaptive
 
 # -- for dynamic shared object library libobprm.so
-   OBPRM_DIR   = ../OBPRM
+   obprm_dir = ../obprm
+
+   OBPRM_DIR   = ${obprm_dir}/OBPRM
    OBPRM_LIB   = -L${OBPRM_DIR} -lobprm
    OBPRM_INCL  = -I${OBPRM_DIR}/
+
+   GRAPH_DIR   = ${obprm_dir}/stapl/include/graph
+   GRAPH_INCL  = -I${GRAPH_DIR}/
 
 #------------------------------------------------------
 # Basic defns; do not change
@@ -48,7 +53,7 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. ${OBPRM_INCL} ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
+ AFLAGS    = -I. ${OBPRM_INCL} ${GRAPH_INCL} ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
 
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
