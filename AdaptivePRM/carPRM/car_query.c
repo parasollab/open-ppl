@@ -4,22 +4,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream.h>
-#include "GenerateMapNodes.h"
-#include "ConnectMapNodes.h"
-#include "LocalPlanners.h"
-#include "DistanceMetrics.h"
-#include "CollisionDetection.h"
-#include "Input.h"
-#include "GraphAlgo.h"
-
-#include "Query.h"
+#include "CarAdaptiveQuery.h"
 #include "Stat_Class.h"
 #include "Clock_Class.h"
+#include "GraphAlgo.h"
+#include "MyQueryCmds.h"
+#include "MyInput.h"
+#include "CarPriorityQuery.h"
+#include "PriorityLocalPlanners.h"
 
-#include "CarAdaptiveQuery.h"
 #include "CurveWeight.h"
 
-Input input;
+MyInput input;
 MyQueryCmds Qinput;
 Stat_Class Stats;
 
@@ -31,6 +27,7 @@ int main(int argc, char** argv)
   GenerateMapNodes   gn;
   ConnectMapNodes    cn;
   LocalPlanners      lp;
+  PriorityLocalPlanners plp;
   DistanceMetric     dm;
   CollisionDetection cd;
   Clock_Class        QueryClock;
@@ -42,16 +39,19 @@ int main(int argc, char** argv)
   Qinput.ReadCommandLine(&argc,argv);
   input.ReadCommandLine(argc,argv);
 
+  enum{SEQUENTIAL, PRIORITY} pathValidateType = SEQUENTIAL;
+  if(!strncmp(Qinput.pathValidationFlag.GetValue(),"priority",8))
+    pathValidateType = PRIORITY;
+
   CurveWeightFactory* fact = new CurveWeightFactory();
   WeightObject::SetWeightFactory(fact);
 
-  CarQueryReqFactory* reqFact = new CarQueryReqFactory();
-  QueryRequirementsObject::SetQueryReqFactory(reqFact);
-
-  CarAdaptiveQuery query(&input,&Qinput, &cd, &dm, &lp,&cn);
+  CarAdaptiveQuery query(&input, &Qinput, &cd, &dm, &lp, &cn);
+  CarPriorityQuery pquery(&input, &Qinput, &cd, &dm, &plp, &cn);
 
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
+  plp.UserInit(&input,       &cn );
   dm.UserInit(&input,   &gn, &lp );
   gn.UserInit(&input, query.rdmp.GetEnvironment() );
   cn.UserInit(&input, query.rdmp.GetEnvironment() );
@@ -59,6 +59,7 @@ int main(int argc, char** argv)
   /** set up set ids for query stage. And this has been 
       done after cn has been set up */
   query.initDefaultSetIDs(&cn);
+  pquery.initDefaultSetIDs(&cn);
 
 
   Qinput.PrintValues(cout);
@@ -73,21 +74,30 @@ int main(int argc, char** argv)
   DisplayCCStats(*(query.rdmp.m_pRoadmap), 10);
   cout << endl;
 
-  vector<pair<pair<VID,VID>, WEIGHT> > shawna;
-  query.rdmp.m_pRoadmap->GetEdges(shawna);
-
-
   //----------------------------------------------------
   // perform the query
   // if successful, write path to a file
   //----------------------------------------------------
   QueryClock.StartClock("Query");
-  if ( query.PerformQuery(&cd,&cn,&lp,&dm) ) {
-    query.WritePath();
-    cout << endl << "SUCCESSFUL query";
-    //query.rdmp.WriteRoadmap(&input,&cd,&dm,&lp);
-  } else {
-    cout << endl << "UNSUCCESSFUL query";
+  switch(pathValidateType) {
+  case SEQUENTIAL:
+    if ( query.PerformQuery(&cd,&cn,&lp,&dm) ) {
+      query.WritePath();
+      cout << endl << "SUCCESSFUL query";
+      //query.rdmp.WriteRoadmap(&input,&cd,&dm,&lp);
+    } else {
+      cout << endl << "UNSUCCESSFUL query";
+    }
+    break;
+  case PRIORITY:
+    if ( pquery.PerformQuery(&cd,&cn,&plp,&dm) ) {
+      pquery.WritePath();
+      cout << endl << "SUCCESSFUL query";
+      //pquery.rdmp.WriteRoadmap(&input,&cd,&dm,&plp);
+    } else {
+      cout << endl << "UNSUCCESSFUL query";
+    }
+    break;
   }
   QueryClock.StopClock();
 

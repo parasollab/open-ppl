@@ -49,6 +49,8 @@ int main(int argc, char** argv)
   //----------------------------------------------------
   input.ReadCommandLine(argc,argv);
 
+  CurveWeightFactory* fact = new CurveWeightFactory();
+  WeightObject::SetWeightFactory(fact);
 
   // do not seed for now while developing code... ADD SEEDING LATER
   //    srand48((unsigned int) time(NULL));
