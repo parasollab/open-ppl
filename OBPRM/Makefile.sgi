@@ -153,12 +153,9 @@ query: main_query.c libs
 #--------------------------------------------------------------------
 
 GMS_OBJS = \
-	AttEnvironment.o \
 	Environment.o \
 	FreeBody.o \
 	FixedBody.o \
-	AttFreeBody.o \
-	AttFixedBody.o \
 	Connection.o \
 	Contact.o \
 	DHparameters.o \
