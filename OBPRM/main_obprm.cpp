@@ -20,8 +20,9 @@
 
 Input input;
 Stat_Class Stats; 
-void PrintRawLine( ostream& _os, Roadmap *rmap, 
-                   Clock_Class *NodeGenClock, Clock_Class *ConnectionClock );
+void PrintRawLine( ostream& _os,
+        Roadmap *rmap, Clock_Class *NodeGenClock, Clock_Class *ConnectionClock,
+        ConnectMapNodes cn, int printHeaders);
 
 num_param<int>    numNodes("-nodes",             10,  1,50000);
 str_param<char *> mapFile          ("-outmapFile");
@@ -39,8 +40,6 @@ int main(int argc, char** argv)
   Clock_Class        NodeGenClock;
   Clock_Class        ConnectionClock;
 
-  numNodes.PutValue(5);
-  mapFile.PutValue("salam");
   //----------------------------------------------------
   // Get information from the user via the command line
   //----------------------------------------------------
@@ -85,8 +84,7 @@ int main(int argc, char** argv)
   }
 
 
-
-  #ifdef QUIET
+  #if QUIET
   #else
     cout << "\n";
     if ( input.inmapFile.IsActivated() ){
@@ -106,27 +104,6 @@ int main(int argc, char** argv)
   cn.ConnectNodes(&rmap,&cd,&lp,&dm, cn.cnInfo.cnsetid, cn.cnInfo);
   ConnectionClock.StopClock();
 
-
-  #ifdef QUIET
-    // When running closestVE, nodes and edges are explicitly added which are
-    // already implicit.  We want see how many of each.
-    ofstream  myofstream(input.mapFile.GetValue(),ios::app);
-    if (!myofstream) {
-      cout<<"\nIn main_obprm: can't re-open mapfile: "
-          <<input.mapFile.GetValue();
-      exit(-1);
-    }
-    myofstream << "\nbVE 0 0 0 0 ";
-    Stats.PrintDataLine(myofstream,&rmap); // to map
-  #else
-    cout << "\n";
-    ConnectionClock.PrintName();
-    cout << ": " << ConnectionClock.GetClock_SEC()
-         << " sec"
-         << ", "<<rmap.roadmap.GetEdgeCount()<<" edges\n"<< flush;
-  #endif
-
-
   //---------------------------
   // Write roadmap
   //---------------------------
@@ -137,12 +114,25 @@ int main(int argc, char** argv)
   // Print out some useful info
   //---------------------------
   #ifdef QUIET
-    myofstream << "\naVE "<<cn.cnInfo.dupeNodes<<" "<<cn.cnInfo.dupeEdges;
-    PrintRawLine(      cout,&rmap,&NodeGenClock,&ConnectionClock);  // to stdout
-    PrintRawLine(myofstream,&rmap,&NodeGenClock,&ConnectionClock);  // to map
+    ofstream  myofstream(input.mapFile.GetValue(),ios::app);
+    if (!myofstream) {
+      cout<<"\nIn main_obprm: can't re-open mapfile: "
+          <<input.mapFile.GetValue();
+      exit(-1);
+    }
+    PrintRawLine(cout,
+        &rmap, &NodeGenClock,&ConnectionClock,cn,1);  // to stdout
+    PrintRawLine(myofstream,
+        &rmap, &NodeGenClock,&ConnectionClock,cn,0);  // to map
   #else
+    cout << "\n";
+    ConnectionClock.PrintName();
+    cout << ": " << ConnectionClock.GetClock_SEC()
+         << " sec"
+         << ", "<<rmap.roadmap.GetEdgeCount()<<" edges\n"<< flush;
     Stats.PrintAllStats(&rmap);
   #endif
+
 
   //------------------------
   // Done
@@ -155,13 +145,17 @@ int main(int argc, char** argv)
 }
 
 
-void PrintRawLine( ostream& _os, Roadmap *rmap, 
-                   Clock_Class *NodeGenClock, Clock_Class *ConnectionClock ){
+void PrintRawLine( ostream& _os,
+        Roadmap *rmap, Clock_Class *NodeGenClock, Clock_Class *ConnectionClock,
+        ConnectMapNodes cn,int printHeader = 0 ){
+
+  _os << "\ndups  " <<cn.cnInfo.dupeNodes<<" "<<cn.cnInfo.dupeEdges;
+
   _os << "\nraw ";               // We can grep out "raw" datalines.
   _os << NodeGenClock->GetClock_SEC()     << " ";
   _os << NodeGenClock->GetClock_USEC()    << " ";
   _os << ConnectionClock->GetClock_SEC()  << " ";
   _os << ConnectionClock->GetClock_USEC() << " ";
-  Stats.PrintDataLine(_os,rmap,1);
+  Stats.PrintDataLine(_os,rmap,printHeader);
   _os << "\n\n";
 }
