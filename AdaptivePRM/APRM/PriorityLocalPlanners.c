@@ -71,14 +71,19 @@ PriorityLocalPlanners::IsConnected_straightline_simple(Environment* env,
 	return false;
       }
     }
-    if(info->savePath || info->saveFailedPath) {
-      info->path.push_back(tick);
-    }
   }
 
   double edgeWeight = CalWeight(env,_c1,_c2,dm,info);
   info->edge.first.Weight() = edgeWeight;
   info->edge.second.Weight() = edgeWeight;
+
+  if(info->savePath || info->saveFailedPath) {
+    tick = _c1;
+    for(int i=0; i<n_ticks; i++) {
+      tick.Increment(incr);
+      info->path.push_back(tick);
+    }
+  }
   
   return true;
 }
@@ -101,73 +106,3 @@ PriorityLocalPlanners::IsConnected_astar(Environment* env,
   return false;
 }
 
-
-int
-PriorityLocalPlanners::GetTicks(vector<Cfg>& ticks, Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info) {
-	
-  vector<LP> lpset = planners.GetLPSet(_lpsetid); 
-  int  lpcnt = 0;
-   		
-  return GetTicks(lpset[lpcnt].GetPlanner(), ticks, _c1, _c2, info);
-}
-
-
-int
-PriorityLocalPlanners::GetTicks(PLANNER lpName, vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2, LPInfo *info) {
-	
-  switch(lpName) {
-  case STRAIGHTLINE:
-    return GetTicks_straightline_simple(ticks,_c1,_c2,info);
-    break;
-  case ROTATE_AT_S:
-    return GetTicks_rotate_at_s(ticks,_c1,_c2,info);
-    break;
-  case ASTAR_DISTANCE:
-  case ASTAR_CLEARANCE:
-    return GetTicks_astar(ticks,_c1,_c2,info);
-    break;
-  case APPROX_SPHERES:
-    return GetTicks_approx_spheres(ticks,_c1,_c2,info);
-    break;
-  }
-  cout << "Error: in PriorityLocalPlanners::GetTicks(PLANNER lpName, ...), invalid lp option!" << endl;
-  exit(1);
-}
-
-
-int
-PriorityLocalPlanners::GetTicks_straightline_simple(vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2, 
-						 LPInfo* info) {  
-  int n_ticks = pow(2, ((PriorityWeight*)info->edge.first.GetIWeight())->Level());
-  Cfg tick = _c1;
-  Cfg incr = _c1.FindIncrement(_c2, n_ticks);
-
-  ticks.push_back(tick);
-  for(int i=0; i<n_ticks; i++) {
-    tick.Increment(incr);
-    ticks.push_back(tick);
-  }
-  
-  return ticks.size();
-}
-
-
-int
-PriorityLocalPlanners::GetTicks_rotate_at_s(vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2,
-					 LPInfo* info) {
-  return ticks.size();
-}
-   
-
-int
-PriorityLocalPlanners::GetTicks_astar(vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2,
-				   LPInfo* info) {
-  return ticks.size();
-}
-    
-
-int
-PriorityLocalPlanners::GetTicks_approx_spheres(vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2,
-					    LPInfo* info) {
-  return ticks.size();
-}

@@ -44,18 +44,6 @@ public:
    virtual bool IsConnected_astar(Environment *env,CollisionDetection *,
 				  DistanceMetric *, Cfg& _c1, Cfg& _c2, LP& _lp, 
 				  LPInfo *info);
-
-   int GetTicks(vector<Cfg>& ticks, Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
-
-   int GetTicks(PLANNER lpName, vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2, LPInfo *info);
-
-   int GetTicks_straightline_simple(vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2, LPInfo* info) ;
-
-   int GetTicks_rotate_at_s(vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2, LPInfo* info);
- 
-   int GetTicks_astar(vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2, LPInfo* info);
-  
-   int GetTicks_approx_spheres(vector<Cfg>& ticks, Cfg& _c1, Cfg& _c2, LPInfo* info);
  
    inline double& Lambda() { return lambda; }
 
