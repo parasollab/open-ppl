@@ -469,14 +469,19 @@ public:
         static Cfg GetMedialAxisCfg(Environment *_env, CollisionDetection *_cd,
             SID _cdsetid, CDInfo &_cdInfo, DistanceMetric *_dm,
             SID _dmsetid, int n);
+
+	/// pushes a node towards the medial axis
+	void PushToMedialAxis(Environment *_env, CollisionDetection *cd,
+	    SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
+            SID dmsetid, int n);
     
         /// pushes a free node towards the medial axis
-        static Cfg MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
+        void MAPRMfree(Environment *_env, CollisionDetection *cd,
             SID cdsetid, CDInfo& cdInfo, DistanceMetric *dm,
             SID dmsetid, int n);
     
         /// pushes a colliding node towards the free space
-        static Cfg MAPRMcollision(Cfg cfg, Environment *_env, CollisionDetection *cd,
+        void MAPRMcollision(Environment *_env, CollisionDetection *cd,
             SID cdsetid, CDInfo& cdInfo, int n);
     
         /// generates random configuration that is in Free CSpace. Call CfgManager::GetFreeRandomCfg
@@ -512,6 +517,7 @@ public:
         double Clearance(Environment *env,CollisionDetection* cd);
     
         ///Approximate C-Space Clearance.
+	/// returns clearance in c-space
         double ApproxCSpaceClearance(Environment *env, 
                                      CollisionDetection *cd, 
                                      SID cdsetid, 
@@ -521,7 +527,7 @@ public:
                                      int n, 
                                      bool bComputePenetration=false);
     
-        /// returns the clearance and the direction via ClearanceInfo
+	/// clearance and the direction set via ClearanceInfo
         void ApproxCSpaceClearance2(Environment *env, 
                                     CollisionDetection *cd,
                                     SID cdsetid,
