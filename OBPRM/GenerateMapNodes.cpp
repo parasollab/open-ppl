@@ -108,12 +108,10 @@ UserInit(Input * input, Environment *_env)
         }
     }
 	
-    gnInfo.numShells = input->numShells.GetValue();
-    gnInfo.proportionSurface = input->proportionSurface.GetValue();
     gnInfo.collPair = input->collPair;
     gnInfo.freePair = input->freePair;
     gnInfo.calcClearance = input->calcClearance.GetValue();
-	gnInfo.calcPenetration = !(input->calcPenetration.GetValue()==0);
+    gnInfo.calcPenetration = !(input->calcPenetration.GetValue()==0);
     gnInfo.addNodes2Map = true;
     gnInfo.tag = InfoCfg::NULL_INFO;
 };
@@ -1477,7 +1475,6 @@ PrintUsage_OBPRM(ostream& _os){
 	_os << "\n\t"; numNodes.PrintUsage(_os);
 	_os << "\n\t"; numShells.PrintUsage(_os);
 	_os << "\n\t"; proportionSurface.PrintUsage(_os);
-	_os << "\n\t"; numShells.PrintUsage(_os);
 	_os << "\n\t"; collPair.PrintUsage(_os);
 	_os << "\n\t"; freePair.PrintUsage(_os);
 	_os << "\n\t"; clearanceFactor.PrintUsage(_os);

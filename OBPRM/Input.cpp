@@ -48,11 +48,9 @@ Input::Input():
         mapFile          ("-outmapFile"),
         inmapFile        ("-inmapFile"),
                        //  default   min,max
-        numShells        ("-nshells",            3,  1,   50),
         lineSegment      ("-lineSegment",        0,  0, 5000),
         usingClearance   ("-clearance",          0,  0,    1),
         addPartialEdge   ("-addPartialEdge",     0,  0,    1),
-        proportionSurface("-proportionSurface",1.0,  0,  1.0),
         posres           ("-posres",          0.05, -1000, 1000),
         orires           ("-orires", ORIENTATION_RES, -1000, 1000),
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
@@ -60,13 +58,11 @@ Input::Input():
         collPair         ("-collPair","cM rT "),    // center of Mass
         freePair         ("-freePair","cM rV "),    // center of Mass
         calcClearance    ("-calcClear",          0,  0,    100),
-		calcPenetration  ("-calcPenetration",    0,  0,    1) //set default as false.
+	calcPenetration  ("-calcPenetration",    0,  0,    1) //set default as false.
         {
 
     //Cfg::CfgHelper=NULL; 
     cfgSet=false;
-    numShells.PutDesc        ("INTEGER","");
-    proportionSurface.PutDesc("FLOAT  ","");
     lineSegment.PutDesc      ("INTEGER","");
     usingClearance.PutDesc   ("INTEGER","");
     addPartialEdge.PutDesc   ("INTEGER","");
@@ -80,21 +76,6 @@ Input::Input():
     descDir.PutDesc    ("STRING ",
         " directory where program will look for the data"
         "\n\t\t\t    files specified in environment specification file");
-    collPair.PutDesc   ("STRING STRING",
-        "\n\t\t\tSpecify 2 of the following recognized mnemonics:"
-        "\n\t\t\t  cM    \"center of mass\""
-        "\n\t\t\t  rV    \"random vertex\""
-        "\n\t\t\t  rT    \"point in random triangle\""
-        "\n\t\t\t  rE    \"random extreme vertex\""
-        "\n\t\t\t  rW    \"point in random weighted triangle\""
-        "\n\t\t\t  cM_rV \"cg/random vertex\""
-        "\n\t\t\t  rV_rT \"random vertex/point in random          triangle\""
-        "\n\t\t\t  rV_rW \"random vertex/point in random weighted triangle\""
-        "\n\t\t\t  N_rT  \"normal of random triangle\""
-        "\n\t\t\t  all   \"all of the above\""
-        );
-    freePair.PutDesc   ("STRING STRING","\n\t\t\tSame as above"
-        );
 
     calcClearance.PutDesc    ("INTEGER","");
 	calcPenetration.PutDesc  ("BOOLEAN","\t*NOTE*: Affect Only if -calcClear is set.");
@@ -129,14 +110,30 @@ Input::Input():
 
     GNstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default BasicPRM"
-        "\n\t\t\t  BasicPRM   INT (number of nodes)"
-        "\n\t\t\t  BasicOBPRM INT (number of nodes per obstacle)"
-        "\n\t\t\t  OBPRM      INT DOUBLE  (number of nodes per obstacle, clearanceFactor:1.0)"
-        "\n\t\t\t  GaussPRM   INT INTEGER (number of nodes, default based on environment)"
-        "\n\t\t\t  BasicMAPRM INT (number of nodes)"
-        "\n\t\t\tWARNING!!!: For multiple parameters, you must specify ALL parameters."
-        "\n\t\t\t            Example, in order to specifiy the clearanceFactor for OBPRM,"
-        "\n\t\t\t            you must also specify the number of nodes per obstacle."
+        "\n\t\t\t  BasicPRM   nodes INT (number of nodes, default 10)"
+        "\n\t\t\t  BasicOBPRM nodes  INT (number of nodes, default 10)"
+        "\n\t\t\t             shells INT (number of shells, default 3)"
+        "\n\t\t\t  OBPRM      nodes     INT (number of nodes, default 10)"
+	"\n\t\t\t             shells    INT (number of shells, default 3)"
+        "\n\t\t\t             collPair  STRING STRING (default cM, rT)"
+        "\n\t\t\t                       Specify 2 of the following recognized mnemonics:"
+        "\n\t\t\t                       cM    \"center of mass\""
+        "\n\t\t\t                       rV    \"random vertex\""
+        "\n\t\t\t                       rT    \"point in random triangle\""
+        "\n\t\t\t                       rE    \"random extreme vertex\""
+        "\n\t\t\t                       rW    \"point in random weighted triangle\""
+        "\n\t\t\t                       cM_rV \"cg/random vertex\""
+        "\n\t\t\t                       rV_rT \"random vertex/point in random          triangle\""
+        "\n\t\t\t                       rV_rW \"random vertex/point in random weighted triangle\""
+        "\n\t\t\t                       N_rT  \"normal of random triangle\""
+        "\n\t\t\t                       all   \"all of the above\""
+        "\n\t\t\t             freePair  STRING STRING (default cM, rV)"
+        "\n\t\t\t                       Same as above"
+        "\n\t\t\t             clearFact DOUBLE (clearance factor, default 1.0)"
+        "\n\t\t\t             pctSurf   DOUBLE (proportion surface nodes, default 1.0)"
+        "\n\t\t\t  GaussPRM   nodes INT (number of nodes, default 10)" 
+        "\n\t\t\t             d     INT (distance, default based on environment)"
+        "\n\t\t\t  BasicMAPRM nodes INT (number of nodes, default 10)"
         );
     CNstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default closest 10"
@@ -309,15 +306,11 @@ void Input::ReadCommandLine(int argc, char** argv){
         } else if ( envFile.AckCmdLine(&i, argc, argv) ) {
         } else if ( mapFile.AckCmdLine(&i, argc, argv) ) {
         } else if ( inmapFile.AckCmdLine(&i, argc, argv) ) {
-        } else if ( numShells.AckCmdLine(&i, argc, argv) ) {
         } else if ( lineSegment.AckCmdLine(&i, argc, argv) ) {
         } else if ( usingClearance.AckCmdLine(&i, argc, argv) ) {
         } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
-        } else if ( collPair.AckCmdLine(&i, argc, argv) ) {
-        } else if ( freePair.AckCmdLine(&i, argc, argv) ) {
-		} else if ( calcClearance.AckCmdLine(&i, argc, argv) ) {
-		} else if ( calcPenetration.AckCmdLine(&i, argc, argv) ) {
-        } else if ( proportionSurface.AckCmdLine(&i, argc, argv) ) {
+	} else if ( calcClearance.AckCmdLine(&i, argc, argv) ) {
+	} else if ( calcPenetration.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
         } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
         } else if ( posres.AckCmdLine(&i, argc, argv) ) {
@@ -428,10 +421,6 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n\nOPTIONAL:\n";
         _os << "\n  "; descDir.PrintUsage(_os);
         _os << "\n  "; inmapFile.PrintUsage(_os);
-        _os << "\n  "; proportionSurface.PrintUsage(_os);
-        _os << "\n  "; numShells.PrintUsage(_os);
-        _os << "\n  "; collPair.PrintUsage(_os);
-        _os << "\n  "; freePair.PrintUsage(_os);
     	_os << "\n  "; calcClearance.PrintUsage(_os);
     	_os << "\n  "; calcPenetration.PrintUsage(_os);
         _os << "\n  "; lineSegment.PrintUsage(_os);
@@ -469,11 +458,6 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"mapFile"<<"\t"<<mapFile.GetValue();
   _os <<"\n"<<setw(FW)<<"inmapFile"<<"\t"<<inmapFile.GetValue();
 
-  _os <<"\n"<<setw(FW)<<"proportionSurface"<<"\t"<<setw(F)<<proportionSurface.GetValue
-();
-  _os <<"\n"<<setw(FW)<<"numShells"<<"\t"<<setw(F)<< numShells.GetValue();
-  _os <<"\n"<<setw(FW)<<"collPair"<<"\t"<<collPair.GetValue();
-  _os <<"\n"<<setw(FW)<<"freePair"<<"\t"<<freePair.GetValue();
   _os <<"\n"<<setw(FW)<<"calcClearance"<<"\t"<<calcClearance.GetValue();
   _os <<"\n"<<setw(FW)<<"calcPenetration"<<"\t"<<calcPenetration.GetValue();
   _os <<"\n"<<setw(FW)<<"lineSegment"<<"\t"<<lineSegment.GetValue();
@@ -517,26 +501,18 @@ Input::PrintDefaults(){
 
    cout << setw(FW) << "defaultFile : no default string for this parameter" << endl;
    cout << setw(FW) << " (those parameters not listed here have no default value)" << endl << endl;
-   cout << setw(FW) << "number of shells" << " (" << numShells.GetFlag() << ") : " <<
-            numShells.GetDefault() << endl << endl;
    cout << setw(FW) << "line segment" << " (" << lineSegment.GetFlag() << ") : " <<
             lineSegment.GetDefault() << endl << endl;
    cout << setw(FW) << "using clearance" << " (" << usingClearance.GetFlag() << ") : " <<
             usingClearance.GetDefault() << endl << endl;
    cout << setw(FW) << "add partial edge" << " (" << addPartialEdge.GetFlag() << ") : " <<
             addPartialEdge.GetDefault() << endl << endl;
-   cout << setw(FW) << "proportion surface" << " (" << proportionSurface.GetFlag() << ") : " <<
-            proportionSurface.GetDefault() << endl << endl;
    cout << setw(FW) << "position resolution" << " (" << posres.GetFlag() << ") : " <<
             posres.GetDefault() << endl << endl;
    cout << setw(FW) << "orientation resolution" << " (" << orires.GetFlag() << ") : " <<
             orires.GetDefault() << endl << endl;
    cout << setw(FW) << "bounding box scale" << " (" << bbox_scale.GetFlag() << ") : " <<
             bbox_scale.GetDefault() << endl << endl;
-   cout << setw(FW) << "collision pair" << " (" << collPair.GetFlag() << ") : " <<
-            collPair.GetValue() << endl << endl;
-   cout << setw(FW) << "free pair" << " (" << freePair.GetFlag() << ") : " <<
-            freePair.GetValue() << endl << endl;
    cout << setw(FW) << "calculate clearance" << " (" << calcClearance.GetFlag() << ") : " << 
             calcClearance.GetDefault() << endl << endl;
    cout << setw(FW) << "calculate clearance" << " (" << calcPenetration.GetFlag() << ") : " << 
@@ -566,21 +542,21 @@ Input::PrintDefaults(){
 
    // Local Planners
    LocalPlanners lp;
-   // this defulat is already set in ConnectMapNodes::DefaultInit()
+   // this default is already set in ConnectMapNodes::DefaultInit()
    cout << setw(FW) << endl << endl << "Local Planners" << " (" << LPstrings[0]->GetFlag() <<
       ") : default set id = " << cn.cnInfo.lpsetid;
    lp.planners.DisplayLPSet(cn.cnInfo.lpsetid); // LP set was already added
 
    // Distance Metric
    DistanceMetric dm;
-   // this defulat is already set in ConnectMapNodes::DefaultInit()
+   // this default is already set in ConnectMapNodes::DefaultInit()
    cout << setw(FW) << endl << endl << "Distance Metric" << " (" << DMstrings[0]->GetFlag() <<
       ") : default set id = " << cn.cnInfo.dmsetid;
    dm.distanceMetrics.DisplayDMSet(cn.cnInfo.dmsetid); // DM set was already added
 
    // Collision Detection
    CollisionDetection cd;
-   // this defulat is already set in ConnectMapNodes::DefaultInit()
+   // this default is already set in ConnectMapNodes::DefaultInit()
    cout << setw(FW) << endl << endl << "Collision Detection" << " (" << CDstrings[0]->GetFlag() <<
       ") : default set id = " << cn.cnInfo.cdsetid;
    cd.UserInit(this, &gn, &cn);

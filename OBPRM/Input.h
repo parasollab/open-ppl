@@ -296,8 +296,6 @@ public:
       */
     //{@
 
-        num_param<int>    numShells;          ///< How many layers of shell for each obstacle (for BasicOBPRM and OBPRM).
-        num_param<double> proportionSurface;  ///< What proportion of Cfg will be generated from surface of obstacles (for OBPRM).
         num_param<int>    lineSegment;        ///< used for LocalPlanner.
         num_param<int>    usingClearance;     ///< Mantain certain amount of clearance of Robot duing connection time.
         num_param<int>    addPartialEdge;     ///< Add failed path to roadmap. (For node connection)
@@ -306,7 +304,7 @@ public:
         n_str_param       freePair;             ///< Free Pair for OBPRM
 
         num_param<int>    calcClearance;        ///< Is clearance will be calculated after free Cfgs are generated.
-		num_param<int>    calcPenetration;      ///< Is penetration will be calculated if Cfg is in collision.
+        num_param<int>    calcPenetration;      ///< Is penetration will be calculated if Cfg is in collision.
 
         num_param<double> posres;               ///< Position Resolution
         num_param<double> orires;               ///< Orientation Resolution
