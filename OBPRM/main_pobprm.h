@@ -295,6 +295,7 @@ template<class pRange>
 class p_GNodes : public p_function {
 public:
     void operator()(pRange& pr) {
+	//srand48((unsigned int) m_get_myid());
         for (typename pRange::iterator i = pr.begin(); i != pr.end(); i++) {
             //prepare components
             GenerateMapNodes *   pGN = i->GetGN();
@@ -431,7 +432,9 @@ AddEdge(VERTEX& v1, VERTEX& v2, pair<WEIGHT,WEIGHT> w){
 
 template<class VERTEX, class WEIGHT> void
 pRoadmapGraph<VERTEX,WEIGHT>::FlushVertex(){
+    m_Lock.aquire_lock();
     RoadmapGraph<VERTEX,WEIGHT>::AddVertex(m_Vertex[m_get_myid()]);
+    m_Lock.release_lock();
 }
 
 template<class VERTEX, class WEIGHT>
