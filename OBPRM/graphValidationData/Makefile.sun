@@ -11,13 +11,14 @@ CC = /share/gnu/bin/g++
 
 #OPTFLAGS = +O0 
 
-DIR = /pub/dsmft3/OBPRM/graphValidationData
+#DIR = /research/sunburn/dsmft/OBPRM/graphValidationData/
+DIR = 
 #INC = -I $(PAHWC_BASE_DIR)/include
 #LIB = -L $(PAHWC_BASE_DIR)/lib -lpahwc32 -lrt -lm
 
-OBJS= $(DIR)/graphtest.o
-BIN = $(DIR)/graphtest.exe
-SRC = $(DIR)/graphtest.c
+OBJS= $(DIR)graphtest.o
+BIN = $(DIR)graphtest.exe
+SRC = $(DIR)graphtest.c
 
 all:       
 	$(CC) -o $(BIN) $(SRC) 
