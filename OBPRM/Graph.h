@@ -57,7 +57,8 @@
 #include <list.h>   
 #include <vector.h>
 #include <deque.h>  
-#include <stack.h>  
+#include <stack.h> 
+#include <map.h> 
 #endif
 
 #if defined(hppa) && defined(__cplusplus)   //c++ in parasol
@@ -66,6 +67,7 @@
 #include <vector.h>
 #include <deque.h>  
 #include <stack.h>  
+#include <map> 
 #endif
 
 
@@ -77,14 +79,26 @@
 #include <vector>       
 #include <deque>        
 #include <stack>        
+#include <map> 
 #else 
 #include <algo.h>   
 #include <list.h>   
 #include <vector.h>
 #include <deque.h>  
 #include <stack.h>  
+#include <map.h> 
 #endif
 #endif
+
+#ifndef MAX_EDGE_LIST_SIZE
+#define MAX_EDGE_LIST_SIZE 6
+#endif
+
+//In experimental use for MPI only, don't need to concern about it
+#ifndef MAX_VERT_SIZE
+#define MAX_VERT_SIZE 100
+#endif
+//////////////////////////////////////////////////////////////////
 
 
 // Some compilers need explicit reference to namespace std.
@@ -272,9 +286,55 @@ public:
         */
       WtVertexType(VERTEX&, VID, int);  // 'reserve' space for edges
 
+      ///Create a vertex with some edges and predecessors
+      WtVertexType(VERTEX& _data, VID _id, vector<WtEdge> _edgelist, 
+		   vector<WtEdge> _predecessors);
+
       ///Do nothing
       ~WtVertexType();
     //@}
+
+      //data and methods for graph message passing using MPI
+  int esize;   ///real size of the edgelist
+  int psize;   ///real size of the predecessors
+  WtEdge edgelistbuf[MAX_EDGE_LIST_SIZE];
+  WtEdge predlistbuf[MAX_EDGE_LIST_SIZE];
+  void Set() {
+    int i;
+    esize = edgelist.size();
+    psize = predecessors.size();
+    for( i=0;i<esize;i++) {
+      edgelistbuf[i] = *(edgelist.begin()+i); 
+    }
+    for( i=0;i<psize;i++) 
+      predlistbuf[i] = *(predecessors.begin()+i);
+  }
+  void Put() {
+    int i;
+      edgelist.erase(edgelist.begin(),edgelist.end());
+    for( i=0;i<esize;i++) {
+       edgelist.push_back(edgelistbuf[i]);
+    } 
+      predecessors.erase(predecessors.begin(),predecessors.end());
+    for( i=0;i<psize;i++) {
+       predecessors.push_back(predlistbuf[i]);
+    }
+  }
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Data
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+
+  VID    vid;  ///< This vertex's unique id (not nec. index) to initialize
+  VERTEX data; ///<Vertex Data e.g., cfg, data here...
+  vector< WtEdge > edgelist; ///< Adj list rep of graph
+  vector< WtEdge > predecessors; ///< call WeightedMultiDiGraph::SetPredecessor
+
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -447,18 +507,6 @@ public:
   //class EWT_eq;
   //class EIDWT_eq;
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Data
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-  VERTEX data; ///<Vertex Data e.g., cfg, data here...
-  VID    vid;  ///< This vertex's unique id (not nec. index)
-  vector< WtEdge > edgelist; ///< Adj list rep of graph
-  vector< WtEdge > predecessors; ///< call WeightedMultiDiGraph::SetPredecessors() to initialize
   
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -524,6 +572,7 @@ public:
          *@param int number of edges per vertex ('reserve' space)
          */
        AbstractGraph(int);
+/*        AbstractGraph(int,int,int,int,int); */
 
        ///Do nothing
        ~AbstractGraph();
@@ -624,7 +673,7 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-protected:
+       //protected:
 
    VID vertIDs;  ///< used to give each vertex unique identifier     
    int numVerts; ///<How many vertices are in this graph
@@ -701,11 +750,36 @@ public:
          */
        WeightedMultiDiGraph(int,int);
 
+/*        ///Constructor. Directly build the graph with vertices */
+/*        WeightedMultiDiGraph(vector<Vertex>&,int,int,int,int,int,int); */
+
+/*        ///Constructor.  */
+/*        WeightedMultiDiGraph(int,int,int,int,int,int); */
+
        /**Destrcutor. Do nothing.
          */
        ~WeightedMultiDiGraph();
 
     //@}
+
+       //data and methods for graph message passing using MPI
+    int vsize;
+    Vertex vertbuf[MAX_VERT_SIZE];
+
+       void Set() {
+	 vsize = v.size();
+	 for(int i=0; i< vsize; i++) {
+ 	   (v.begin()+i)->Set(); 
+	   vertbuf[i]=*(v.begin()+i);
+	 }
+       };  
+       void Put() {
+	 v.erase(v.begin(),v.end());
+	 for(int i=0; i< vsize; i++){
+	   vertbuf[i].Put();
+	   v.push_back(vertbuf[i]);
+	 }
+       };  
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -1833,11 +1907,15 @@ public:
 
        //WeightedGraph(WeightedMultiDiGraph<VERTEX,WEIGHT>); // construct from base  
 
+/*        ///Directly build a graph with vertices */
+/*        WeightedGraph(vector<Vertex>&,int,int);  */
+
        /**Destrcutor. Do nothing.
          */
        ~WeightedGraph();
 
    //@}
+
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -2356,6 +2434,13 @@ AbstractGraph(int _reserveEdgesPerVertex) {
     reserveEdgesPerVertex = _reserveEdgesPerVertex;
 }
 
+/* template<class VERTEX>  */
+/* AbstractGraph<VERTEX>:: */
+/* AbstractGraph(int _reserveEdgesPerVertex,int t1,int t2, int t3, int t4) { */
+/*     vertIDs = t1; numVerts = t2;  */
+/*     numEdges = t3; reserveEdgesPerVertex = t4;  */
+/* } */
+
 template<class VERTEX> 
 AbstractGraph<VERTEX>::
 ~AbstractGraph() {
@@ -2433,7 +2518,9 @@ SetnumEdges(int _num) {
 
 template<class VERTEX,class WEIGHT> 
 WeightedMultiDiGraph<VERTEX,WEIGHT>::
-WeightedMultiDiGraph(){
+WeightedMultiDiGraph()
+: AbstractGraph<VERTEX> () 
+{
 }
 
 template<class VERTEX,class WEIGHT> 
@@ -2449,6 +2536,22 @@ WeightedMultiDiGraph(int _sz, int _edgelistsz)
 {
     v.reserve(_sz);
 }
+
+/* template<class VERTEX,class WEIGHT>  */
+/* WeightedMultiDiGraph<VERTEX,WEIGHT>:: */
+/* WeightedMultiDiGraph(vector<Vertex>& _v,int _sz,int _edgelistsz,int t1,int t2, int t3, int t4) */
+/* : AbstractGraph<VERTEX> (_edgelistsz,t1,t2,t3,t4)  */
+/* { */
+/*     v.reserve(_sz); */
+/*     v=_v; */
+/* } */
+
+/* template<class VERTEX,class WEIGHT>  */
+/* WeightedMultiDiGraph<VERTEX,WEIGHT>:: */
+/* WeightedMultiDiGraph(int _sz,int _edgelistsz,int t1,int t2, int t3, int t4) */
+/* : AbstractGraph<VERTEX> (_edgelistsz,t1,t2,t3,t4)  */
+/* { */
+/* } */
 
 template<class VERTEX, class WEIGHT> 
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
@@ -4359,7 +4462,8 @@ VID testid;
 
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::
-WeightedGraph(){
+WeightedGraph()
+{
 }
 
 template<class VERTEX, class WEIGHT>
@@ -4372,7 +4476,14 @@ WeightedGraph(int _sz)
 template<class VERTEX, class WEIGHT>
 WeightedGraph<VERTEX,WEIGHT>::
 WeightedGraph(int _sz, int _edgelistsz)
-: WeightedMultiDiGraph<VERTEX,WEIGHT>(_sz,_edgelistsz) 
+/* : WeightedMultiDiGraph<VERTEX,WEIGHT>(_sz,_edgelistsz,0,0,0,0)  */
+{
+}
+
+template<class VERTEX,class WEIGHT> 
+WeightedGraph<VERTEX,WEIGHT>::
+WeightedGraph(vector<Vertex>& _v,int _sz, int _edgelistsz)
+: WeightedMultiDiGraph<VERTEX,WEIGHT>(_v,_sz,_edgelistsz,0,0,0,0)
 {
 }
 
@@ -5047,6 +5158,23 @@ WtVertexType(VERTEX& _data, VID _id, int _edgelistsz){
     data = _data;
     vid = _id;
     edgelist.reserve( _edgelistsz );
+}
+
+template<class VERTEX, class WEIGHT>
+WtVertexType<VERTEX,WEIGHT>:: 
+WtVertexType(VERTEX& _data, VID _id, vector<WtEdge> _edgelist, 
+	     vector<WtEdge> _predecessors){
+    data = _data;
+    vid = _id;
+    int i;
+
+    edgelist.reserve(_edgelist.size());
+    for(i=0;i<_edgelist.size();i++)
+    edgelist.push_back(_edgelist[i]);
+
+    predecessors.resize(_predecessors.size());
+    for(i=0;i<_predecessors.size();i++)
+    predecessors[i] = _predecessors[i];
 }
 
 
