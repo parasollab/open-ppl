@@ -1,8 +1,7 @@
 #ifndef ClosestVE_h
 #define ClosestVE_h
 #include "ConnectionMethod.h"
-#include <string>
-#include <strstream>
+
 
    /**Connect nodes in map to their k closest neighbors, which
     *could be vertex or point on edges in roadmap.

@@ -1,8 +1,6 @@
 #ifndef ModifiedLM_h
 #define ModifiedLM_h
 #include "ConnectionMethod.h"
-#include <string>
-#include <strstream>
 #include "BasicOBPRM.h"
 
 

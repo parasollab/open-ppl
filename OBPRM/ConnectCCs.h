@@ -1,8 +1,6 @@
 #ifndef ConnectCCs_h
 #define ConnectCCs_h
 #include "ConnectionMethod.h"
-#include <string>
-#include <strstream>
 
 
 //ConnectCCs

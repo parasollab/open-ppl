@@ -2,9 +2,6 @@
 #define RandomConnect_h
 #include "ConnectionMethod.h"
 
-#include <string>
-#include <strstream>
-
 
 // ------------------------------------------------------------------
 // Connect nodes in a random way.

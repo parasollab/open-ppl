@@ -1,8 +1,6 @@
 #ifndef Closest_h
 #define Closest_h
 #include "ConnectionMethod.h"
-#include <string>
-#include <strstream>
 
 
 //Connect K Closest

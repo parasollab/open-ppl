@@ -1,8 +1,7 @@
 #ifndef ObstBased_h
 #define ObstBased_h
 #include "ConnectionMethod.h"
-#include <string>
-#include <strstream>
+
 
    /**Connect nodes depends on Obstacle information.
     *Obstacle to Obstacle connections are attempted for 

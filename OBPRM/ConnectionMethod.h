@@ -3,6 +3,11 @@
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
 #include <string>
+#ifdef __K2
+  #include <strstream.h>
+#else
+  #include <strstream>
+#endif
 
 // Abstract Interface Class for connection methods
 template <class CFG, class WEIGHT>

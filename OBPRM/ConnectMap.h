@@ -6,7 +6,11 @@
 #include "DistanceMetrics.h"
 #include "Clock_Class.h"
 #include "util.h"
-#include <strstream>
+#ifdef __K2
+  #include <strstream.h>
+#else
+  #include <strstream>
+#endif
 
 #include "RayTracer.h"
 #include "RRTexpand.h"

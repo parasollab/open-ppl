@@ -20,8 +20,6 @@ enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTH
 #include "RRTcomponents.h"
 #include "RRTexpand.h"
 #include "ConnectionMethod.h"
-#include <string>
-#include <strstream>
 
 #include <Cfg.h>
 #include <Roadmap.h>
@@ -256,7 +254,8 @@ void RayCSpace<CFG>::addRoadmapNodes(Roadmap<CFG,WEIGHT> &rdmp, LocalPlanners<CF
 
   LPOutput<CFG,WEIGHT> lpOutput;
 
-  for (int i= 1, previous = rdmp.m_pRoadmap->AddVertex(path[0]); i < path.size(); i++, previous = current) {
+  previous = rdmp.m_pRoadmap->AddVertex(path[0]);
+  for (int i= 1; i < path.size(); i++, previous = current) {
     current = rdmp.m_pRoadmap->AddVertex(path[i]);
     //    cout << endl << "Adding edge from " << previous << " to " << current<< endl;
     if (!rdmp.m_pRoadmap->IsEdge(path[i], path[i-1]) &&
@@ -716,12 +715,13 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
   bool try_backwards = false;
   RRTcomponents<CFG,WEIGHT>* rrtcomp = new RRTcomponents<CFG,WEIGHT>();
   //scheduling the order to try to connect pairs
+  vector< pair<int,VID> >::iterator cci, ccj;
   switch (scheduling_mode) {
   case FARTHEST_TO_CLOSEST:
     rrtcomp->OrderCCByCloseness(rdmp, dm, ccs);
   case SMALLEST_TO_LARGEST:
-    for (vector< pair<int,VID> >::iterator cci = ccs.end()-1; cci > ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --cci) 
-      for (vector< pair<int,VID> >::iterator ccj = cci-1; ccj >= ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --ccj) {
+    for (cci = ccs.end()-1; cci > ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --cci) 
+      for (ccj = cci-1; ccj >= ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --ccj) {
 	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
       }
     break;
@@ -729,8 +729,8 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
     rrtcomp->OrderCCByCloseness(rdmp, dm, ccs);
   default:
   case LARGEST_TO_SMALLEST:
-    for (vector< pair<int,VID> >::iterator cci = ccs.begin(); cci+1 < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++cci) 
-      for (vector< pair<int,VID> >::iterator ccj = cci+1; ccj < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++ccj) {
+    for (cci = ccs.begin(); cci+1 < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++cci) 
+      for (ccj = cci+1; ccj < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++ccj) {
 	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
       }
     break;
@@ -741,7 +741,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
   for (vector< pair<VID,VID> >::iterator cc_itrtr =cc_trl_schdl.begin(); cc_itrtr < cc_trl_schdl.end(); ++cc_itrtr) {
     if (!IsSameCC(*(rdmp->m_pRoadmap),cc_itrtr->first, cc_itrtr->second)) {
       
-      Roadmap<CFG,WEIGHT> target_rdmp = Roadmap<CFG,WEIGHT>::Roadmap();
+      Roadmap<CFG,WEIGHT> target_rdmp;
       target_rdmp.environment = rdmp->GetEnvironment();
       
       vector<CFG> cci_cfgs;
@@ -770,7 +770,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
 
 
 template <class CFG, class WEIGHT>
-bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VID ccj_id, vector<CFG> &rep_ccj_cfgs, Roadmap<CFG,WEIGHT> &target_rdmp, bool try_backwards=false) {
+bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VID ccj_id, vector<CFG> &rep_ccj_cfgs, Roadmap<CFG,WEIGHT> &target_rdmp, bool try_backwards) {
   bool path_found = false;
 
   //cout << endl << "!!!connecting CC " << cci_id << " To CC " << ccj_id << endl;
@@ -780,7 +780,7 @@ bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VI
 
   //find paths from cci to ccj
   for (unsigned int i = 0; i < rep_cci_cfgs.size(); ++i) {
-    Roadmap<CFG,WEIGHT> ray_rdmp = Roadmap<CFG,WEIGHT>::Roadmap();
+    Roadmap<CFG,WEIGHT> ray_rdmp;
     ray_rdmp.environment = rdmp->GetEnvironment();
   
     if (findPath(rep_cci_cfgs[i],  rep_ccj_cfgs[0], &rep_ccj_cfgs, ray_rdmp)) {
@@ -802,7 +802,7 @@ bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VI
   //now from ccj to cci
   if (!path_found && try_backwards)
     for (unsigned int i = 0; i < rep_ccj_cfgs.size(); ++i) {
-      Roadmap<CFG,WEIGHT> ray_rdmp = Roadmap<CFG,WEIGHT>::Roadmap();
+      Roadmap<CFG,WEIGHT> ray_rdmp;
       ray_rdmp.environment = rdmp->GetEnvironment();
       if (findPath(rep_ccj_cfgs[i],  rep_cci_cfgs[0], &rep_cci_cfgs, ray_rdmp)) {
 	//cout << "A path was found" << endl;
@@ -911,7 +911,8 @@ void RayTracer<CFG,WEIGHT>::getBoundaryCfgs(const vector<CFG> &input, vector<CFG
     CFG tmp = input[i];
     double dist = dm->Distance(rdmp->GetEnvironment(), center_mass, tmp, *dmsetid);
     //distances.push_back(ConnectMapNodes<CFG,WEIGHT>::CfgDistType(input[i], dist));
-    distances.push_back(pair<CFG,double>::pair(input[i],dist));
+    pair<CFG,double> tmpPair(input[i],dist);
+    distances.push_back(tmpPair);
   }
 
   //order distances by distance to center of mass (first field of pair)

@@ -1,8 +1,6 @@
 #ifndef RRTcomponents_h
 #define RRTcomponents_h
 #include "RRTexpand.h"
-#include <string>
-#include <strstream>
 
 
 //#define STEP_FACTOR  50        // default for rrt stepFactor
@@ -222,7 +220,7 @@ for ( int z = 0; z <=1; z++) {
 
 
       //-- submap = vertices & edges of current (cc1) connected component
-      Roadmap<CFG,WEIGHT> submap1 = Roadmap<CFG,WEIGHT>::Roadmap();
+      Roadmap<CFG,WEIGHT> submap1;
 
       //submap->InitEnvironment(_rm->GetEnvironment());
       //Environment temp_env = Environment::Environment(0);
@@ -256,7 +254,7 @@ for ( int z = 0; z <=1; z++) {
 		vector<VID> cc;
       		GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cc);
 		if ( cc.size()<= smallcc ) {
-	  	  Roadmap<CFG,WEIGHT> submap3 = Roadmap<CFG,WEIGHT>::Roadmap();
+	  	  Roadmap<CFG,WEIGHT> submap3;
 	          submap3.environment = _rm->GetEnvironment();
 		  vector<VID> cct;
                   GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cct);
@@ -300,7 +298,7 @@ for ( int z = 0; z <=1; z++) {
           
 	  OrderCCByCloseness(_rm,dm,ccvec);
 	  cout<<"\n";
-          for(int b=0;b<ccvec.size();b++)
+          for(b=0;b<ccvec.size();b++)
              cout << "ccvec["<<b<<"] "<<ccvec[b].second;
           cout<<endl;
           cc1= ccvec.begin();
@@ -313,7 +311,7 @@ for ( int z = 0; z <=1; z++) {
 		  cctemp<=ccvec.end();++cctemp) 
 	      _rm->m_pRoadmap->DisplayCC((*cctemp).second);
 	  */
-          Roadmap<CFG,WEIGHT> submap2 = Roadmap<CFG,WEIGHT>::Roadmap();
+          Roadmap<CFG,WEIGHT> submap2;
           submap2.environment = _rm->GetEnvironment();
 	  //cc2 = ++cc1;
           //cout << "problem here\n";

@@ -1,8 +1,6 @@
 #ifndef RRTexpand_h
 #define RRTexpand_h
 #include "ConnectionMethod.h"
-#include <string>
-#include <strstream>
 
 #define STEP_FACTOR  10000        // default for rrt stepFactor
 #define ITERATIONS   50        // default for rrt iterations
@@ -476,7 +474,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
   //-- submap = vertices & edges of current (cc1) connected component
 
   while (cc1 <= ccvec.end()) {
-    Roadmap<CFG,WEIGHT> submap1 = Roadmap<CFG,WEIGHT>::Roadmap();
+    Roadmap<CFG,WEIGHT> submap1;
     submap1.environment = _rm->GetEnvironment();
     vector<VID> cc;
     GetCC(*(_rm->m_pRoadmap),(*cc1).second ,cc);
