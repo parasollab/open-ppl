@@ -23,7 +23,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
-#include "OBPRM.h"
+#include "OBPRMDef.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 class Cfg;
@@ -96,7 +96,11 @@ inline double sqr(double a)
       *@see Cfg::printLinkConfigurations
       */
     void WritePathLinkConfigurations(char output_file[80], 
-                                     const vector<Cfg> &path, 
+                                     vector<Cfg*>& path, 
+                                     Environment *env);
+    template <class CFG>
+    void WritePathLinkConfigurations(char output_file[80], 
+                                     vector<CFG>& path, 
                                      Environment *env);
 
     /**Write a list of Cfgs in a give path and path size 
@@ -106,9 +110,13 @@ inline double sqr(double a)
       *@param env is not used.
       *@note if file couldn't be opened, error message will be post 
       *and process will be terminated.
-      */
+      */   
     void WritePathConfigurations(char output_file[80], 
-                                 vector<Cfg> path, 
+                                 vector<Cfg*>& path, 
+                                 Environment *env);  
+    template <class CFG>
+    void WritePathConfigurations(char output_file[80], 
+				 vector<CFG>& path, 
                                  Environment *env);
 
     /**Read a list of Cfgs from file with given filename.
@@ -117,7 +125,8 @@ inline double sqr(double a)
       *@note if file couldn't be opened, error message will be post.
       *@see Cfg::Read
       */
-    void ReadCfgs(char *filename, vector<Cfg> &cfgs);
+    template <class CFG>
+    void ReadCfgs(char *filename, vector<CFG>& cfgs);
 
 //@}
 
@@ -246,6 +255,48 @@ double rint(double x);
 
 #endif //_WIN32
 /////////////////////////////////////////////////////////////////////////////////////////
+
+template <class CFG>
+void WritePathLinkConfigurations(char output_file[80], 
+				 vector<CFG>& path, 
+				 Environment *env) {
+  vector<Cfg*> ppath;
+  vector<CFG>::iterator I;
+  for(I=path.begin(); I!=path.end(); I++)
+    ppath.push_back((Cfg*)(&*I));
+  WritePathLinkConfigurations(output_file, ppath, env);
+}
+
+
+template <class CFG>
+void WritePathConfigurations(char output_file[80],
+			     vector<CFG>& path,
+			     Environment *env) {
+  vector<Cfg*> ppath;
+  vector<CFG>::iterator I;
+  for(I=path.begin(); I!=path.end(); I++)
+    ppath.push_back((Cfg*)(&*I));
+  WritePathConfigurations(output_file, ppath, env);
+}
+
+
+// read cfgs from a file into a vector.
+template <class CFG>
+void ReadCfgs(char * filename,  vector<CFG>& cfgs) {
+  ifstream  is(filename);
+  if (!is) {
+    cout << "\nWarning: in util::ReadCfgs: can't open infile: " << filename << endl;
+    return;
+  }
+  
+  CFG tempCfg;
+  while (1) {
+    tempCfg.Read(is);
+    if(!is) break;
+    cfgs.push_back(tempCfg);
+  }
+}
+
 
 
 #endif
