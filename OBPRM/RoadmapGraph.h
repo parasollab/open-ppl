@@ -1,24 +1,25 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
-//  RoadmapGraph.h
-//
-//  General Description
-//      This set of template classes provides an implementation for 
-//      graphs to be used as motion planning roadmaps. 
-//
-//      The user must provide:
-//      -- the parameter type VERTEX, which is the data type 
-//         (e.g., configurationsstored in each vertex of the graph.
-//      -- the parameter type WEIGHT, which is the data type stored in 
-//         each edge of the graph (e.g., local planner identification).
-//
-//      Each graph vertex is assigned a unique vertex identifier (VID). 
-//      The VID is typedef'ed as a short int (in Graph.h), which should 
-//      be sufficient for roadmaps (this limits the number of vertices 
-//      in the roadmap to the maximum value expressed in a short int).
-//
-//  Created
-//      7/18/98  Nancy Amato
+/**@file RoadmapGraph.h
+
+  General Description
+      This set of template classes provides an implementation for 
+      graphs to be used as motion planning roadmaps. 
+
+      The user must provide:
+      -- the parameter type VERTEX, which is the data type 
+         (e.g., configurationsstored in each vertex of the graph.
+      -- the parameter type WEIGHT, which is the data type stored in 
+         each edge of the graph (e.g., local planner identification).
+
+      Each graph vertex is assigned a unique vertex identifier (VID). 
+      The VID is typedef'ed as a short int (in Graph.h), which should 
+      be sufficient for roadmaps (this limits the number of vertices 
+      in the roadmap to the maximum value expressed in a short int).
+
+   @date 7/18/98
+   @author Nancy Amato
+*/
 /////////////////////////////////////////////////////////////////////
 #ifndef RoadmapGraph_h
 #define RoadmapGraph_h
