@@ -134,6 +134,7 @@ OBJS = \
 	Cfg_2D.o \
 	util.o \
 	Clock_Class.o \
+	Clock_Elapsed.o \
 	Stat_Class.o \
 	LocalPlanners.o \
 	DistanceMetrics.o \
