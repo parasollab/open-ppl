@@ -73,6 +73,7 @@ struct GNInfo {
     int numNodes;
     int numNodesPerObst;
     int numShells;
+    bool addNodes2Map;
     n_str_param collPair;
     n_str_param freePair;
     double proportionSurface;

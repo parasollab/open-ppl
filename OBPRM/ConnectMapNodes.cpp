@@ -53,13 +53,16 @@ DefaultInit(){
     //-----------------------------------------------
     cnInfo.cnsetid = CLOSEST10;
     cnInfo.lpsetid = SL_R5;
+    cnInfo.dmsetid = S_EUCLID9;
 #ifdef USE_CSTK
     cnInfo.cdsetid = CSTK;
 #else
     cnInfo.cdsetid = RAPID;
 #endif
 
-    cnInfo.dmsetid = S_EUCLID9;
+
+    cnInfo.dupeEdges = cnInfo.dupeNodes = 0;
+    cnInfo.gn.gnInfo.gnsetid = -1;
 };
 
 
@@ -85,7 +88,6 @@ UserInit(Input * input){
 
    cnInfo.numEdges = input->numEdges.GetValue();
    cnInfo.addPartialEdge = input->addPartialEdge.GetValue();
-   cnInfo.dupeEdges = cnInfo.dupeNodes = 0;
 };
 
 
@@ -1188,9 +1190,9 @@ ConnectNodes_modifiedLM(
     cout << ", rfactor=" << _cn.GetRFactor()<< "): "<<flush;
   #endif
 
-  const int    kclosest = _cn.GetKClosest();
+  const int    kclosest  = _cn.GetKClosest();
   const int    requested = _cn.GetMaxNum();
-  const double rfactor = _cn.GetRFactor();
+  const double rfactor   = _cn.GetRFactor();
 
   // initialize information needed to check connection between cfg's
   LPInfo lpInfo(_rm, info);
@@ -1200,109 +1202,141 @@ ConnectNodes_modifiedLM(
   int numMultiBody = env->GetMultiBodyCount();
   int robot        = env->GetRobotIndex();
 
+  GNInfo gnInfo;
+         gnInfo = info.gn.gnInfo;      // modify only local copy of gnInfo
+         gnInfo.addNodes2Map = false;  // don't add new node to map (yet!)
+         gnInfo.numNodes = 1;          // only need one new node at a time
+
+  //-- unless user has specified otherwise, BasicPRM generation for 'cfg'
+  if (!info.gn.generators.IsMember(gnInfo.gnsetid)) gnInfo.gnsetid = BASICPRM;
+
   // init counter
   int numCfgAdded  = 0;
 
   //-- while (more than one CC remains *AND* added fewer new Cfgs than requested)
   while(_rm->roadmap.GetCCStats().size()>1 && numCfgAdded<requested) {
 
-     //-- generate a random configuration, cfg
-     Cfg vc  = Cfg::GetRandomCfg(env);
-     Cfg cfg = Cfg(vc);
+     //init counter
+     int numTries=0;
+      
+     Cfg cfg;
+     while ( numTries++ < MAX_NUM ){
 
-     // declare data structures necessary to return connection info
-     vector< pair<Cfg, Cfg> > edges;
-     vector< pair<WEIGHT,WEIGHT> > edgelpinfos;
+          gnInfo.nodes.erase(gnInfo.nodes.begin(), gnInfo.nodes.end());
 
-     // init counter
-     int i, numofConnection=0;
+          //-- generate new 'cfg'
+          info.gn.GenerateNodes(_rm,cd,dm, gnInfo.gnsetid, gnInfo);
 
-     //-- get current connected components from roadmap
-     vector< pair<int,VID> > allCC = _rm->roadmap.GetCCStats();
+          // if a cfg node generated exit loop else keep trying...
+          if ( gnInfo.nodes.size() > 0 ) 
+               break;
+          
+     }//endwhile numTries
 
-     //-- for each connected component, CC
-     for(i=0; i<allCC.size(); ++i) {
+     // OBPRM-variants may return more than one node because of "shells"
+     // and multiple obstacles to find the surface of so go thru all nodes returned
+     for (int k=gnInfo.nodes.size()-1;k>=0;k--){
 
-        Cfg          tmp = _rm->roadmap.GetData(allCC[i].second);
-        vector<Cfg>   CC = _rm->roadmap.GetCC(tmp);
+          // try to add this cfg
+          cfg = gnInfo.nodes[k];
 
-        vector< pair<Cfg, Cfg> > kp = FindKClosestPairs(
+          // declare data structures necessary to return connection info
+          vector< pair<Cfg, Cfg> > edges;
+          vector< pair<WEIGHT,WEIGHT> > edgelpinfos;
+
+          // init counter
+          int numofConnection=0;
+
+          //-- get current connected components from roadmap
+          vector< pair<int,VID> > allCC = _rm->roadmap.GetCCStats();
+
+          //-- for each connected component, CC
+          for(int i=0; i<allCC.size(); ++i) {
+
+             Cfg          tmp = _rm->roadmap.GetData(allCC[i].second);
+             vector<Cfg>   CC = _rm->roadmap.GetCC(tmp);
+
+             vector< pair<Cfg, Cfg> > kp = FindKClosestPairs(
                                       env,dm,info,cfg,CC,kclosest);
  
-        //-- if possible to connect cfg to CC
-        for(int j=0; j<kp.size(); ++j) {
+             //-- if possible to connect cfg to CC
+             for(int j=0; j<kp.size(); ++j) {
 
-           if (lp->IsConnected(_rm,cd,dm, kp[j].first,kp[j].second,
+                if (lp->IsConnected(_rm,cd,dm, kp[j].first,kp[j].second,
                                info.lpsetid,&lpInfo))  {
-                //-- increment count of connections, #connections
-                ++numofConnection;
+                     //-- increment count of connections, #connections
+                     ++numofConnection;
 
-                // record edge in case we decide to add it later 
-                edges.push_back(kp[j]);
-                edgelpinfos.push_back(lpInfo.edge);
+                     // record edge in case we decide to add it later 
+                     edges.push_back(kp[j]);
+                     edgelpinfos.push_back(lpInfo.edge);
 
-                // only need one connection per CC so exit for j loop
-                break;
+                     // only need one connection per CC so exit for j loop
+                     break;
 
-           } //endif (lp-> ...)
-        } //endfor j
+                } //endif (lp-> ...)
 
-     } //endfor i
+             } //endfor j
 
-     // default decision is to not add cfg
-     bool addExpandingCfg = false;
+          } //endfor i
 
-     // if only connected to one CC 
-     if(numofConnection == 1) {
+          // default decision is to not add cfg
+          bool addExpandingCfg = false;
 
-        // get all cfg's in CC
-        vector<Cfg> CC = _rm->roadmap.GetCC(edges[0].second);
+          // if only connected to one CC 
+          if(numofConnection == 1) {
 
-        // calculate CC's center (of mass), CCcenter
-        Cfg CCcenter; // sum initialized to 0 by constructor.
-        for(int i=0; i<CC.size(); ++i) {
-           double centerWeight = float(i)/CC.size();
-           CCcenter = Cfg::WeightedSum(CC[i], CCcenter, centerWeight);
-        }
+             // get all cfg's in CC
+             vector<Cfg> CC = _rm->roadmap.GetCC(edges[0].second);
 
-        // calculate CCradius 
-        double CCradius = 0.0;
-        for(i=0; i<CC.size(); ++i) {
-           CCradius += dm->Distance(env, CCcenter, CC[i], info.dmsetid);
-        }
-        CCradius /= CC.size();
+             // calculate CC's center (of mass), CCcenter
+             Cfg CCcenter; // sum initialized to 0 by constructor.
+             for(int i=0; i<CC.size(); ++i) {
+                double centerWeight = float(i)/CC.size();
+                CCcenter = Cfg::WeightedSum(CC[i], CCcenter, centerWeight);
+             }
 
-        // calculate distance of cfg to CCcenter 
-        double distFromCenter = dm->Distance(env, 
-                                             CCcenter, 
-                                             cfg,
-                                             info.dmsetid);
+             // calculate CCradius 
+             double CCradius = 0.0;
+             for(int i=0; i<CC.size(); ++i) {
+                CCradius += dm->Distance(env, CCcenter, CC[i], info.dmsetid);
+             }
+             CCradius /= CC.size();
 
-        // if cfg distance to CCcenter > rfactor * CCradius
-        if(distFromCenter > rfactor * CCradius) {
-                // adding cfg 'expands' CC sufficiently so decide to add cfg
-                addExpandingCfg = true;
-        }
+             // calculate distance of cfg to CCcenter 
+             double distFromCenter = dm->Distance(env, 
+                                                  CCcenter, 
+                                                  cfg,
+                                                  info.dmsetid);
 
-     }//endif(numofConnection == 1)
+             // if cfg distance to CCcenter > rfactor * CCradius
+             if(distFromCenter > rfactor * CCradius) {
+                     // adding cfg 'expands' CC sufficiently so decide to add cfg
+                     addExpandingCfg = true;
+             }
+
+          }//endif(numofConnection == 1)
 
 
-     //-- if (#connections is zero *OR* #connections greater than one )
-        //-- *OR*
-        //-- (#connections is one *AND* cfg distance to CCcenter > rfactor * CCradius)
-     if ( numofConnection != 1  ||  addExpandingCfg ) {
+          //-- if (#connections is zero *OR* #connections greater than one )
+             //-- *OR*
+             //-- (#connections is one *AND* cfg distance to CCcenter > rfactor * CCradius)
+          if ( numofConnection != 1  ||  addExpandingCfg ) {
 
-               //-- increment count of new Cfgs added
-               ++numCfgAdded;
+                    //-- increment count of new Cfgs added
+                    ++numCfgAdded;
+     
+                    //-- add cfg & all edges
+                    _rm->roadmap.WeightedGraph<Cfg,WEIGHT>::AddVertex(cfg);
+                    for(int i=0; i<edges.size(); ++i) {
+                              _rm->roadmap.AddEdge(edges[i].first,  // always 'cfg'
+                                                   edges[i].second, // cfg in CC
+                                                   edgelpinfos[i]); 
+                    }//endfor i
 
-               //-- add cfg & all edges
-               _rm->roadmap.WeightedGraph<Cfg,WEIGHT>::AddVertex(cfg);
-               for(int i=0; i<edges.size(); ++i) {
-                         _rm->roadmap.AddEdge(edges[i].first,  // always 'cfg'
-                                              edges[i].second, // cfg in CC
-                                              edgelpinfos[i]); 
-         }//endfor i
-     } //endif (add || ...)
+          } //endif (numofConnection != 1 || addExpandingCfg)
+
+     } //endfor k
 
   } //endwhile
 

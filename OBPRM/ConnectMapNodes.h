@@ -39,6 +39,9 @@
 #include "CollisionDetection.h"
 #include "LocalPlanners.h"
 
+#include "GenerateMapNodes.h"
+class GenerateMapNodes;
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -76,6 +79,7 @@ struct CNInfo {
     bool addPartialEdge;
     int tag;            // nodes can be marked by user
     int dupeNodes,dupeEdges;  // used for acct'ing w/ closestVE
+    GenerateMapNodes gn;// how new cfg's should be generated
 
 };
 

@@ -27,7 +27,7 @@
 //  Created
 //      8/5/98  Nancy Amato
 //  Last Modified By:
-//      xx/xx/xx  <Name>
+//      6/16/00  Lucia K. Dale
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Sets_h
@@ -73,6 +73,9 @@ public:
   //===================================================================
   //  Other Methods
   //===================================================================
+
+        // Querying Elements of Universe
+   bool IsMember(const SID _sid) const;
 
         // Adding Elements to Universe (they are never deleted)
    virtual EID AddElementToUniverse(const ELEMENT _e); 
@@ -122,6 +125,7 @@ public:
    virtual void DisplaySet(const SID _sid) const; 
    virtual void DisplayOSet(const SID _sid) const; 
 
+   
 protected:
   //===================================================================
   //  Utility Stuff for Basic Sets
@@ -195,6 +199,28 @@ template <class ELEMENT>
 BasicSets<ELEMENT>::
 ~BasicSets(){
 };
+
+  //===================================================================
+  // BasicSets class Methods: Querying Elements of Universe
+  //===================================================================
+  // bool IsMember(const SID _sid) const;
+
+template <class ELEMENT>
+bool
+BasicSets<ELEMENT>::
+IsMember(const SID _sid) const {
+
+   //COSI s = find_if(osets.begin(), osets.end(), OSID_eq(_sid) );
+   COSI s = my_find_OSID_eq(_sid);
+
+   if ( s != osets.end() ) {
+	return true;
+   } else {
+	return false;
+   }
+}
+
+
 
   //===================================================================
   // BasicSets class Methods: Adding Elements To Universe

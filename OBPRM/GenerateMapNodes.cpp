@@ -94,7 +94,7 @@ UserInit(Input * input, Environment *_env)
     gnInfo.proportionSurface = input->proportionSurface.GetValue();
     gnInfo.collPair = input->collPair;
     gnInfo.freePair = input->freePair;
-
+    gnInfo.addNodes2Map = true;
 };
 
 
@@ -132,8 +132,12 @@ GenerateNodes(Roadmap *_rm, CollisionDetection *cd,DistanceMetric *dm,SID _gnset
 
   }
 
-  // add generated nodes
-  _rm->roadmap.AddVertex(info.nodes);
+  // if that's what the user wants
+  if (info.addNodes2Map) {
+
+     // then add generated nodes
+     _rm->roadmap.AddVertex(info.nodes);
+  }
 
 };
 
@@ -198,7 +202,7 @@ GaussPRM(
    #endif
 
    // generate in bounding box
-   for (int i=0; i < _info.numNodes; i++) {
+   for (int i=0,newNodes=0; i < _info.numNodes || newNodes<1 ; i++) {
 
       // cfg1 & cfg2 are generated to be inside bbox
       Cfg cfg1 = Cfg::GetRandomCfg(_env);
@@ -216,17 +220,21 @@ GaussPRM(
 
 
         if (cfg1_free && !cfg2_free) {
-         _info.nodes.push_back(Cfg(cfg1));
 
+         _info.nodes.push_back(Cfg(cfg1));   newNodes++;
          #if INTERMEDIATE_FILES
            path.push_back(cfg1);
          #endif
+
         } else if (!cfg1_free && cfg2_free) {
-         _info.nodes.push_back(Cfg(cfg2));
+
+         _info.nodes.push_back(Cfg(cfg2));   newNodes++;
          #if INTERMEDIATE_FILES
            path.push_back(cfg2);
          #endif
+
         } // endif push nodes
+
       } // endif BB
    } // endfor
 
@@ -263,11 +271,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
                 / (numMultiBody-1)  // -1 for the robot
         / _info.numShells;
 
-  if (N<1) {
-    cout << "\n  Not asking to generate any nodes per obstacle (N="
-        << N << ")\n\n" << flush;
-    return;
-  }
+  if (N < 1) N = max(_info.numNodes,_info.numShells);
 
   for (int obstacle = 0 ; obstacle < numMultiBody ; obstacle++){
     if (obstacle != robot){  // && obstacle is "Passive" not "Active" robot
@@ -377,11 +381,8 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
     int NSEED = (int)(P * _info.numNodes/(numMultiBody-1)/_info.numShells);
     int NFREE = (int)((1.0-P) * _info.numNodes/(numMultiBody-1));
 
-    if (NSEED<1 && NFREE<1) {
-        cout << "\n  Not asking to generate any nodes (NSEED="
-                << NSEED << ", NFREE=" << NFREE << ")\n\n" << flush;
-        return;
-    }
+
+    if (NSEED < 1) NSEED = 1;
 
     vector<Cfg> obstSurface, obstFree, surface;
     for(int obstacle = 0 ; obstacle < numMultiBody ; obstacle++){
