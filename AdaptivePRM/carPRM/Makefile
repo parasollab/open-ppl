@@ -51,7 +51,7 @@
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=0  -DUSE_RAPID -DUSE_VCLIP -DUSE_PQP
+   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=0  -DUSE_RAPID -DUSE_VCLIP -DUSE_PQP
 
 ### DEFS = ${ADEFS} -DQUIETGRAPH -DQUIET
     DEFS = ${ADEFS} 
@@ -130,6 +130,7 @@ query:: car_query.c libs
 
 OBJS = \
 	CarAdaptiveQuery.o \
+	CarPriorityQuery.o \
 	CarQueryReq.o \
 	CfgCarLike.o \
 	CurveWeight.o \
