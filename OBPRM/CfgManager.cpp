@@ -440,14 +440,14 @@ void CfgManager::print_preamble_to_file(Environment *env, FILE *_fp, int numofCf
     fprintf(_fp,"%d ",numofCfg);
 }
 
-bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+bool CfgManager::isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
                            SID _cdsetid, CDInfo& _cdInfo, MultiBody * onflyRobot) {
 	ConfigEnvironment(c, env);
     bool result = cd->IsInCollision(env, _cdsetid, _cdInfo, onflyRobot);
     return result;
 }
 
-bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+bool CfgManager::isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
                              SID _cdsetid, CDInfo& _cdInfo){
      if(!ConfigEnvironment(c, env))
          return true;
@@ -458,7 +458,7 @@ bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection 
      return answerFromEnvironment;
 }
 
-bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+bool CfgManager::isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
                 int robot, int obs, SID _cdsetid, CDInfo& _cdInfo){
      if(!ConfigEnvironment(c, env))
           return true;

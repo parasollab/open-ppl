@@ -257,19 +257,19 @@ public:
   /**updating the environment(multibodies), then ask CollisionDetection to check collision 
     *@see CollisionDetection:IsInCollision
     */
-  virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+  virtual bool isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
                            int robot, int obs, SID _cdsetid, CDInfo& _cdInfo);
 
   /**updating the environment(multibodies), then ask CollisionDetection to check collision 
     *@see CollisionDetection:IsInCollision
     */
-  virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+  virtual bool isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
                            SID _cdsetid, CDInfo& _cdInfo);
 
   /**updating the environment(multibodies), then ask CollisionDetection to check collision 
     *@see CollisionDetection:IsInCollision
     */
-  virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
+  virtual bool isCollision(Cfg &c, Environment *env, CollisionDetection *cd,
                            SID _cdsetid, CDInfo& _cdInfo, MultiBody * onflyRobot);
 
 
