@@ -184,6 +184,9 @@ public:
 
   // generates random configuration where workspace robot's EVERY VERTEX
   // is guaranteed to lie within the environment specified bounding box
+  static Cfg GetRandomCfg(Environment *env, int maxTries);
+
+  // ditto, but with a default number of tries (10)
   static Cfg GetRandomCfg(Environment *env);
 
   // tests whether or not robot in this configuration has every vertex inside

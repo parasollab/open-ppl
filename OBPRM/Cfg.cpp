@@ -285,13 +285,12 @@ Cfg Cfg::GetRandomCfg_CenterOfMass(double *boundingBox) {
 
 // generates random configuration where workspace robot's EVERY VERTEX
 // is guaranteed to lie within the environment specified bounding box
-Cfg Cfg::GetRandomCfg(Environment *env) {
+Cfg Cfg::GetRandomCfg(Environment *env, int maxTries) {
 
   // Probably should do something smarter than 3 strikes and exit.
   // eg, if it fails once, check size of bounding box vs robot radius
   // and see if user has an impossibly small (for this robot) bounding
   // box specified
-  int maxTries = 10;
 
   double *bb = env->GetBoundingBox();
 
@@ -311,6 +310,12 @@ Cfg Cfg::GetRandomCfg(Environment *env) {
 
   // compiler wants this method to return something
   return InvalidData();
+}
+
+// ditto, but with a default number of tries (10)
+Cfg Cfg::GetRandomCfg(Environment *env) {
+  int default_maxTries = 10;
+  return Cfg::GetRandomCfg(env, default_maxTries);
 }
 
 // tests whether or not robot in this configuration has every vertex inside
