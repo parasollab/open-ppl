@@ -123,9 +123,31 @@ public:
   char*  GetName() const;
   GNF    GetGenerator();
   EID    GetID() const;
-  double Get_Gauss_d() const;
-  double Get_clearanceFactor() const;
-  double Get_numNodes() const;
+
+  //===================================================================
+  // Usage Documentation Methods for generation heuristics
+  //===================================================================
+  void  PrintUsage_All(ostream& _os);
+  void  PrintUsage_BasicPRM(ostream& _os);
+  void  PrintUsage_BasicOBPRM(ostream& _os);
+  void  PrintUsage_OBPRM(ostream& _os);
+  void  PrintUsage_GaussPRM(ostream& _os);
+  void  PrintUsage_BasicMAPRM(ostream& _os);
+
+  //===================================================================
+  // Data
+  //===================================================================
+
+public:
+    num_param<int>    numNOdes;
+    num_param<int>    numShells;
+    num_param<double> proportionSurface;
+    n_str_param       collPair;
+    n_str_param       freePair;
+    num_param<double> clearanceFactor;
+    num_param<double> gauss_d;
+
+//slm fix numNOdes to be the "real" numNodes
 
 protected:
   //===================================================================
@@ -134,9 +156,6 @@ protected:
   char   name[80];
   GNF    generator;          // ptr to generator code
   EID    gnid;
-  double Gauss_d;
-  double clearanceFactor;
-  int    numNodes;
 
 private:
 
@@ -210,8 +229,6 @@ public:
   //===================================================================
 protected:
 private:
-  double DEFAULT_Gauss_d;
-  int DEFAULT_numNodes;
 };
 
 /////////////////////////////////////////////////////////////////////

@@ -136,8 +136,11 @@ public:
         n_str_param(char *_flag,char* _initialValue);
                 //:str_param<char*>(_flag,_initialValue){};
         bool AckCmdLine(int *i, int argc, char** argv);
+        int GetNumStrings();
+        void PutNumStrings(int _n);
 protected:
         bool VerifyValidValue(char* _val);
+	int numStrings;
 };
 
 
