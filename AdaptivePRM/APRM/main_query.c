@@ -9,8 +9,12 @@
 #include "Clock_Class.h"
 #include "GraphAlgo.h"
 #include "MyQueryCmds.h"
+#include "MyInput.h"
+#include "PriorityQuery.h"
+#include "PriorityLocalPlanners.h"
+//#include "PriorityWeight.h"
 
-Input input;
+MyInput input;
 MyQueryCmds Qinput;
 extern Stat_Class Stats;
 
@@ -22,6 +26,7 @@ int main(int argc, char** argv)
   GenerateMapNodes   gn;
   ConnectMapNodes    cn;
   LocalPlanners      lp;
+  PriorityLocalPlanners plp;
   DistanceMetric     dm;
   CollisionDetection cd;
   Clock_Class        QueryClock;
@@ -33,10 +38,16 @@ int main(int argc, char** argv)
   Qinput.ReadCommandLine(&argc,argv);
   input.ReadCommandLine(argc,argv);
 
+  enum {SEQUENTIAL, PRIORITY} pathValidateType = SEQUENTIAL;
+  if(!strncmp(Qinput.pathValidationFlag.GetValue(),"priority",8))
+    pathValidateType = PRIORITY;
+
   AdaptiveQuery query(&input, &Qinput, &cd, &dm, &lp, &cn);
+  PriorityQuery pquery(&input, &Qinput, &cd, &dm, &plp, &cn);
 
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
+  plp.UserInit(&input,       &cn );
   dm.UserInit(&input,   &gn, &lp );
   gn.UserInit(&input,  query.rdmp.GetEnvironment() );
   cn.UserInit(&input,  query.rdmp.GetEnvironment() );
@@ -44,6 +55,7 @@ int main(int argc, char** argv)
   /** set up set ids for query stage. And this has been 
       done after cn has been set up */
   query.initDefaultSetIDs(&cn);
+  pquery.initDefaultSetIDs(&cn);
 
 
   Qinput.PrintValues(cout);
@@ -63,12 +75,25 @@ int main(int argc, char** argv)
   // if successful, write path to a file
   //----------------------------------------------------
   QueryClock.StartClock("Query");
-  if ( query.PerformQuery(&cd,&cn,&lp,&dm) ) {
-    query.WritePath();
-    cout << endl << "SUCCESSFUL query";
-    query.rdmp.WriteRoadmap(&input,&cd,&dm,&lp);
-  } else {
-    cout << endl << "UNSUCCESSFUL query";
+  switch(pathValidateType) {
+  case SEQUENTIAL:
+    if ( query.PerformQuery(&cd,&cn,&lp,&dm) ) {
+      query.WritePath();
+      cout << endl << "SUCCESSFUL query";
+      query.rdmp.WriteRoadmap(&input,&cd,&dm,&lp);
+    } else {
+      cout << endl << "UNSUCCESSFUL query";
+    }   
+    break;
+  case PRIORITY:
+    if ( pquery.PerformQuery(&cd,&cn,&plp,&dm) ) {
+      pquery.WritePath();
+      cout << endl << "SUCCESSFUL query";
+      pquery.rdmp.WriteRoadmap(&input,&cd,&dm,&plp);
+    } else {
+      cout << endl << "UNSUCCESSFUL query";
+    } 
+    break;
   }
   QueryClock.StopClock();
 
