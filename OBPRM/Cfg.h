@@ -522,15 +522,15 @@ public:
                                      bool bComputePenetration=false);
     
         /// returns the clearance and the direction via ClearanceInfo
-        ClearanceInfo ApproxCSpaceClearance2(Environment *env, 
-                                             CollisionDetection *cd,
-                                             SID cdsetid,
-                                             CDInfo& cdInfo,
-                                             DistanceMetric * dm, 
-                                             SID dmsetid, 
-                                             int n, 
-                                             ClearanceInfo & clearInfo, 
-                                             bool bComputePenetration);
+        void ApproxCSpaceClearance2(Environment *env, 
+                                    CollisionDetection *cd,
+                                    SID cdsetid,
+                                    CDInfo& cdInfo,
+                                    DistanceMetric * dm, 
+                                    SID dmsetid, 
+                                    int n, 
+                                    ClearanceInfo & clearInfo, 
+                                    bool bComputePenetration);
 
 	///Approximate C-Space Contact Points
 	/// given an origin Cfg and a vector of directions

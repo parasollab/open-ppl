@@ -89,7 +89,7 @@ ClearanceInfo::ClearanceInfo(Cfg * _direction, int _checkOneDirection){
 }
 
 ClearanceInfo::~ClearanceInfo() {
-    
+
 }
 
 
@@ -414,7 +414,7 @@ Cfg Cfg::GetMedialAxisCfg(Environment *_env, CollisionDetection *_cd,
         //maprmCfg = MAPRMcollision(maprmCfg,_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
  
 	ClearanceInfo clearInfo;
-	clearInfo = maprmCfg.ApproxCSpaceClearance2(_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n,clearInfo,1);
+	maprmCfg.ApproxCSpaceClearance2(_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n,clearInfo,1);
         maprmCfg = *clearInfo.getDirection();
 	delete clearInfo.getDirection();
     }
@@ -433,9 +433,10 @@ Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
     Cfg newCfg, oldCfg, dir;
     
     ClearanceInfo clearInfo;
-    clearInfo = cfg.ApproxCSpaceClearance2(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,clearInfo,0);
+    cfg.ApproxCSpaceClearance2(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,clearInfo,0);
     cfg.info.clearance = clearInfo.getClearance();
     dir = *(clearInfo.getDirection());
+    delete clearInfo.getDirection();
     
     int i = 0;
     double stepSize = cfg.info.clearance;
@@ -474,8 +475,6 @@ Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
         
     }
     
-    //free direction memory, allocated in ApproxCSpaceClearance2
-    delete clearInfo.getDirection();
     return oldCfg;
 }
 
@@ -741,14 +740,14 @@ double Cfg::ApproxCSpaceClearance(Environment *env,
                                   SID dmsetid, int n, bool bComputePenetration)
 {
     ClearanceInfo clearInfo;
-    clearInfo = ApproxCSpaceClearance2(env, cd, cdsetid, cdInfo, dm, dmsetid, n, clearInfo, bComputePenetration);
+    ApproxCSpaceClearance2(env, cd, cdsetid, cdInfo, dm, dmsetid, n, clearInfo, bComputePenetration);
     delete clearInfo.getDirection(); //free direction memory, allocated in ApproxCSpaceClearance2
     return clearInfo.getClearance();
 }
 
 
 //Approximate C-Space Clearance
-ClearanceInfo 
+void 
 Cfg::ApproxCSpaceClearance2(Environment *env, 
                             CollisionDetection *cd, 
                             SID cdsetid, 
@@ -765,11 +764,10 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
     double dist = 100 * env->GetPositionRes();
     int i;
     for (i=0; i<n; i++) {
-        //directions.push_back( GetRandomCfg( env ) );
         directions.push_back( GetRandomRay(dist) );
     }
     if (directions.size() == 0) { //unable to generate random directions
-        return clearInfo;
+      return;
     }
     
     double positionRes = env->GetPositionRes();
@@ -779,9 +777,9 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
     bool bInitState = cfg.isCollision( env, cd, cdsetid, cdInfo );
 
     if( bComputePenetration == false && bInitState == true ) //don't need to compute clearance
-        return clearInfo;
+      return;
     if( bComputePenetration == true && bInitState == false ) //don't need to compute penetration
-        return clearInfo;
+      return;
 
     //find max step size:
     int iRobot = env->GetRobotIndex();
@@ -874,10 +872,10 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
   
     // if this cfg is free (state = false) then return smallestDistance (clearance)
     // if this cfg is not free (state = true) then return -smallestDistance (penetration)
-   // clearInfo.setClearance((bInitState==false)?clearInfo.getClearance():-clearInfo.getClearance());
+    // clearInfo.setClearance((bInitState==false)?clearInfo.getClearance():-clearInfo.getClearance());
     clearInfo.setClearance(clearInfo.getClearance());
 
-    return clearInfo;
+    return;
 }
 
 
