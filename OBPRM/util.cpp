@@ -104,8 +104,6 @@ void
 WritePathConfigurations( char output_file[80],
                                 vector<Cfg> path,
                                 Environment *env ) {
-   WritePathLinkConfigurations(output_file,path,env);
-   return;
     FILE *fp;
  
     if((fp = fopen(output_file,"w")) == NULL){

@@ -61,7 +61,7 @@ template <class T> bool readfield (istream &_is, T *element);
 //-----------------------------------------------------------
 #define COMMENT_DELIMITER '#'
 #define LINEMAX 256
-template <class T> bool readfield (istream &_is, T *element,vector <char *> comment) {
+template <class T> bool readfield (istream &_is, T *element,vector <char *> &comment) {
 
   char c;
   char ThrowAwayLine[LINEMAX];

@@ -37,7 +37,7 @@
  *      For example, comparing 200083  to 20000604.
  */
 
-#define PATHVER_LEGACY                     20001022
+#define PATHVER_LEGACY                     20001025
 #define PATHVER_20001022                   20001022
 #define PATHVER_20001125                   20001125
 

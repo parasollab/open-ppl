@@ -594,11 +594,11 @@ void Input::Read(int action) {
                               Cfg::CfgHelper = new Cfg_fixed_PRR();
                              cfgSet=true;
                       }else if (!(strncmp(&line[1],"Cfg_free_serial",15))) {
+                         if(!cfgSet) {
                               int numofJoints;
                                sscanf(&line[1],"%s %d",string2,& numofJoints);
-                         if(!cfgSet) {
                               Cfg::CfgHelper = new Cfg_free_serial(numofJoints);
-                             cfgSet=true;
+                              cfgSet=true;
                             }
                       }    
          }
