@@ -36,6 +36,7 @@ Body::Body(MultiBody * _owner) {
 Body::Body(MultiBody * _owner, GMSPolyhedron & _polyhedron) {
     multibody = _owner;
     polyhedron = _polyhedron;
+    worldPolyhedron = _polyhedron;
     contactCount = 0;
     forwardConnectionCount = 0;
     backwardConnectionCount = 0;
@@ -74,10 +75,9 @@ Body::~Body() {
 //
 //===================================================================
 GMSPolyhedron & Body::GetWorldPolyhedron() {
-
     int i;
-    for (i=0; i < polyhedron.numVertices; i++)  // Transform the vertices
-        worldPolyhedron.vertexList[i] = worldTransformation * polyhedron.vertexList[i];
+    for (i=0; i < polyhedron.numVertices; i++) // Transform the vertices
+      worldPolyhedron.vertexList[i] = worldTransformation * polyhedron.vertexList[i];
     for (i=0; i < polyhedron.numPolygons; i++)  // Transform the normals
         worldPolyhedron.polygonList[i].normal = worldTransformation.orientation * polyhedron.polygonList[i].normal;
 
