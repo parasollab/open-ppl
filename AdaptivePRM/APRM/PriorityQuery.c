@@ -218,9 +218,9 @@ PriorityQuery::PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
 	if(path_collision_free) {
 	  for (i=0; i<rp.size()-1; i++) {
 	    ci.path.erase(ci.path.begin(), ci.path.end()); //clear potential old storage
-	    ci.checkCollision = 0;
+	    ci.checkCollision = false;
 	    lp->IsConnected(env, cd, dm, rp[i].first, rp[i+1].first, _lpsid, &ci);
-	    ci.checkCollision = 1;
+	    ci.checkCollision = true;
 	    if(!queryReq.isEdgeValid(ci.path, env, cd, cdsetid)) {
 	      cout << endl << "In PerformQuery: can't meet query requirements!" << endl;
 	      rdmp.m_pRoadmap->DeleteEdge(rp[i].first,rp[i+1].first);
