@@ -58,6 +58,31 @@ ConnectMapComponents::~ConnectMapComponents() {
   all.clear();
 }
 
+int ConnectMapComponents::ReadCommandLine(int *argc, char **argv) {
+    ReadCommandLineCollection(argc, argv); //Review if this is how we want it
+
+    selected.clear();
+
+    //fill out a list of selected methods (one might be there twice)
+    vector<ComponentConnectionMethod *>::iterator itr;
+
+    //go through each parameter in the command line looking for method names
+    istrstream input_stream(options.GetValue());
+    string method_name;
+    while (input_stream >> method_name) {
+      for (itr = all.begin(); itr != all.end(); itr++)
+	if (method_name == (*itr)->GetName()) {
+	  //here we'll need to change this to clone (*itr)
+	  (*itr)->ParseCommandLine(argc, argv, input_stream);
+	  selected.push_back(*itr);
+	}
+    }
+
+    if ( selected.size() == 0 )
+      selected = ConnectMapComponents::GetDefault();
+  }
+
+
 int ConnectMapComponents::ReadCommandLineCollection (int *argc, char **argv) {
   vector<char*> cmd; 
   cmd.reserve(*argc);
@@ -146,23 +171,3 @@ void ConnectMapComponents::PrintDefaults() {
 
   //add printing the default values for the default method
 }
-
-
-//  void ConnectCCMethodCaller::CreateConnectionMethods() {
-
-//    istrstream input_stream(option_str.GetValue());
-//    string cmethod_name;
-//    while (input_stream >> cmethod_name) {
-//      if (cmethod_name == string("RayTracer")) {
-//        connection_methods.push_back(cmethod_name, RayTracerConnectCCMethod(input_stream)); 
-//      }
-//      else if ( (cnname == string("RRTcomponents")) || (cnname == string("RRTexpand")) ) {
-//        connection_methods.push_back(cmethod_name, RRTConnectCCMethod(input_stream));
-//      }
-//      else if (cnname == string("components"))  {
-//        connection_methods.push_back(cmethod_name, ComponentsConnectCCMethod(input_stream));
-//      }
-    
-//    }
-
-//  }

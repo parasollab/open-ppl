@@ -29,22 +29,25 @@ int main(int argc, char** argv)
   CollisionDetection cd;
   Clock_Class        clock;
 
+  Roadmap rdmp;
+  //Testing the use of the ConnectCCMethodCaller
+  //ConnectMapComponents component_connector;
+  ConnectMapComponents component_connector =  ConnectMapComponents(&input,&rdmp,&cd,&dm, &lp,&cn);
+  component_connector.ReadCommandLine(&argc, argv);
+
   //----------------------------------------------------
   // instantiate roadmap object
   //    parse command line and init roadmap, lps, read in environment, etc
 
   input.ReadCommandLine(argc,argv);
-  Roadmap rdmp(&input,  &cd, &dm, &lp);
+  //Roadmap rdmp(&input,  &cd, &dm, &lp);
+  rdmp.InitRoadmap(&input, &cd, &dm, &lp);
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
   dm.UserInit(&input,   &gn, &lp );
   gn.UserInit(&input, rdmp.GetEnvironment() );
   cn.UserInit(&input, rdmp.GetEnvironment() );
 
-  //Testing the use of the ConnectCCMethodCaller
-  //ConnectMapComponents component_connector;
-  ConnectMapComponents component_connector =  ConnectMapComponents(&input,&rdmp,&cd,&dm, &lp,&cn);
-  component_connector.ReadCommandLine(&argc, argv);
 
   if ( input.inmapFile.IsActivated() ){
     //---------------------------
