@@ -57,7 +57,7 @@ Input::Input():
         bbox             ("-bbox",""),
         collPair         ("-collPair","cM rT "),    // center of Mass
         freePair         ("-freePair","cM rV "),    // center of Mass
-        calcClearance    ("-calcClear",          0,  0,    1) 
+        calcClearance    ("-calcClear",          0,  0,    100) 
         {
 
     //Cfg::CfgHelper=NULL; 
