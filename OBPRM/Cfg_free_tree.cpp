@@ -46,7 +46,7 @@ Cfg_free_tree::Cfg_free_tree(int _numofJoints) {
   }
   
   dof = 6 + NumofJoints;
-  posDof = 6;
+  posDof = 3;
   
   v.clear();
   for(int i=0; i<dof; i++)
