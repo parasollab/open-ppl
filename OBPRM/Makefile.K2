@@ -16,6 +16,7 @@
 #------------------------------------------------------
 # collision detection packages available
 #------------------------------------------------------
+ CD_DIR = /home/g0s4525/ParallelCode/CD-libs/
 
  CSTK_DIR  = /home/g0s4525/ParallelCode/CD-libs/CSTK/
  CSTKLIB_DIR  = /home/g0s4525/ParallelCode/CD-libs/CSTK/lib
@@ -27,13 +28,18 @@
  VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
  VCLIP_INCL    = -I${VCLIP_DIR}/include
 
+ PQP_DIR     = ${CD_DIR}/PQP
+ PQPLIB_DIR  = ${PQP_DIR}/lib
+ PQPLIB      = -L${PQPLIB_DIR} -lPQP
+ PQP_INCL    = -I${PQP_DIR}/include
+
 
 #-----------------------------------------------------------------------------
 # Defines for various types of executables
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=0 -DNO_CD_USE #-DUSE_CSTK #-DUSE_VCLIP 
+   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=0 -DUSE_PQP #-DUSE_CSTK -DUSE_VCLIP 
 
 ### DEFS = ${ADEFS} -DQUIETGRAPH -DQUIET
     DEFS = ${ADEFS} -D QUIET
@@ -90,7 +96,7 @@ obprm: main_obprm.cpp  libs
 	$(CXX) $(CXXFLAGS) -o obprm \
            -rpath $(OBPRMLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR}:${PQPLIB_DIR} \
                 main_obprm.cpp \
-		$(OBPRMLIB) $(MATHLIB) #$(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
+		$(OBPRMLIB) $(MATHLIB) ${PQPLIB} #$(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
@@ -98,8 +104,16 @@ query: main_query.cpp libs
 	$(CXX) $(CXXFLAGS) -o query \
            -rpath $(OBPRMLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR}:${PQPLIB_DIR} \
                 main_query.cpp \
-                $(OBPRMLIB) $(MATHLIB) #$(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
+                $(OBPRMLIB) $(MATHLIB) ${PQPLIB} #$(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
 	rm -f main_query.o
+
+#--------------------------------------------------------------------
+pobprm: main_pobprm.sgi.cpp libs
+	$(CXX) $(CXXFLAGS) -o pobprm \
+        -rpath $(OBPRMLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR}:${PQPLIB_DIR} \
+                main_pobprm.sgi.cpp \
+        $(OBPRMLIB) $(MATHLIB) ${PQPLIB} #$(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+	rm -f main_pobprm.o
 
 #--------------------------------------------------------------------
 .SUFFIXES: .cpp
