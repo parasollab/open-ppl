@@ -31,15 +31,24 @@
 // Input/Output operators for InfoCfg
 //---------------------------------------------
 istream& operator>> (istream&s, InfoCfg &_c){
-    s >> _c.obst;
-    s >> _c.tag;
+    _c.Read(s);
     return s;
 };
 ostream& operator<< (ostream&s, const InfoCfg &_c){
-    s << _c.obst << " ";
-    s << _c.tag  << " ";
+    _c.Write(s);
     return s;
 };
+
+void InfoCfg::Write(ostream &s) const {
+    s << obst << " ";
+    s << tag  << " ";
+}
+
+void InfoCfg::Read(istream &s) {
+    s >> obst;
+    s >> tag;
+}
+   
 
 CfgManager * Cfg::CfgHelper = new Cfg_free();
 
@@ -429,20 +438,27 @@ vector<Cfg> Cfg::GetMovingSequenceNodes(const Cfg &other, double s) const {
 // Input/Output operators for Cfg
 //---------------------------------------------
 istream& operator>> (istream&s, Cfg &pt){
-    for(int i=0; i<pt.v.size(); ++i) {
-	s >> pt.v[i];
-    }
-    s >> pt.info;
+    pt.Read(s);
+    pt.info.Read(s);
     return s;
 };
 ostream& operator<< (ostream&s, const Cfg &pt){
-    for(int i=0; i<pt.v.size(); ++i) {
-	s << setw(4)<<pt.v[i]<<' ';
-    }
-    s << pt.info;
+    pt.Write(s);
+    pt.info.Write(s);
     return s;
 };
 
+void Cfg::Write(ostream &os) const {
+   for(int i=0; i<v.size(); ++i) {
+        os << setw(4)<<v[i]<<' ';
+    }
+}
+
+void Cfg::Read(istream &is) {
+   for(int i=0; i<v.size(); ++i) {
+        is >> v[i];
+    }
+}
 
 void Cfg::print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg) {
      CfgHelper->print_preamble_to_file(env, _fp, numofCfg);

@@ -59,6 +59,9 @@ public:
    void SetObst(int _obst){obst = _obst;};
    int GetObst() const {return obst;};
 
+   void Write(ostream &os) const;
+   void Read(istream &is);
+
    // Data
    static const int NULL_INFO =-1;//= -1;
    int obst;
@@ -107,6 +110,8 @@ public:
   //===================================================================
   //  Other Methods
   //===================================================================
+  void Write(ostream &os) const;
+  void Read(istream  &is);
   vector<double> GetData() const;
   Vector3D GetRobotCenterPosition();
 
