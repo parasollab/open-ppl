@@ -339,7 +339,7 @@ void Body::InitializeContact() {
 //  This assumes that each vertex carries the same mass, and
 //  edges are weightless. To be more accurate, we need to
 //  be modify this to consider the length of edges, which is
-//  still an approximation. (J Kim)
+//  still an approximation.
 //===================================================================
 void Body::ComputeCenterOfMass(){
   GMSPolyhedron poly = GetWorldPolyhedron();

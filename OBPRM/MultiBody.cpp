@@ -351,7 +351,7 @@ void MultiBody::Write(ostream & _os) {
 //
 //  The degree of approximation in calculating center of mass is
 //  the same as in Body.cpp. To be more accurate, we need to
-//  modify this function to consider the mass of each body. (J Kim)
+//  modify this function to consider the mass of each body.
 // 
 //===================================================================
 void MultiBody::ComputeCenterOfMass(){
