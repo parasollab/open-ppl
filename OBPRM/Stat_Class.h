@@ -90,11 +90,6 @@ Stat_Class::
 PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
   int i;
 
-#if VERBOSE
-  rmap->lp.planners.DisplayLPs();
-  rmap->lp.planners.DisplayLPSets();
-#endif
-
   cout << endl << endl << "Local Planners:" << endl;
   cout << setw(20) << "Name"
 	<<setw(15) << "Connections"
