@@ -243,6 +243,7 @@ public:
     int RRTiterations;
     int RRTstepFactor;
     int RRTsmallcc;
+    CNSets * cnSets;
 };
 
 #endif

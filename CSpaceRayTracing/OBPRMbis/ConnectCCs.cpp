@@ -90,6 +90,11 @@ ConnectCCs(Input *input,ConnectCCsCmds *connect_CCs_input,
       }
     } else if (cnname == string("RRTcomponents")) {
       method_name = cnname;
+      istrstream input_stream2(connect_CCs_input->option_str.GetValue());
+      //CNSets * cnSets = new CNSets();
+      cnSets = new CNSets();
+      SID sid = (*cnSets).MakeCNSet(input_stream2);
+      (*cnSets).DisplayCNs();
       if (input_stream >> RRTiterations) {
 	if (RRTiterations < 0) {
 	  cout << endl << "INVALID: iterations = " << RRTiterations;
@@ -176,7 +181,18 @@ PerformConnectCCs(CollisionDetection *cd, ConnectMapNodes *cn, LocalPlanners * l
   if (method_name == string("RRTcomponents")) {
     cout << "using RRT to attempt to connect CCs" << endl;
     //The call to RRT from ConnectMapNodes goes here
-    (*cn).ConnectNodes(&rdmp,cd,lp,dm, (*cn).cnInfo.cnsetid, (*cn).cnInfo);
+    CN * cn1;
+    //CNSets * cnSets = new CNSets();
+    const char * rrt = "RRTcomponents";
+    //int i = (*cnSets).AddCN(rrt);
+    //(*cnSets).DisplayCNs();
+    //(*cn1).name = string(rrt);
+    //(*cn).ConnectNodes(&rdmp,cd,lp,dm, (*cn).cnInfo.cnsetid, (*cn).cnInfo);
+
+    vector<CN> cns = (*cnSets).GetCNs();
+    cn1 = cns.begin();
+    ConnectMapNodes::ConnectNodes_RRTConnect(&rdmp, &*cd, &*lp, &*dm,
+    						(*cn1),(*cn).cnInfo);
   }
   else if (method_name == string("RayTracer")) {
     cout << "using RayTracer to attempt to connect CCs" << endl;
