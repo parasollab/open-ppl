@@ -50,7 +50,7 @@
 /**@name General data structures*/
 //@{
 typedef short SID;///< set id type
-typedef short EID;///< element id type
+typedef int EID;///< element id type
 //@}
 
 /// Legal Types of Collision Detecters
