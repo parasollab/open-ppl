@@ -411,14 +411,18 @@ Cfg Cfg::GetMedialAxisCfg(Environment *_env, CollisionDetection *_cd,
     Cfg maprmCfg = GetRandomCfg(_env);
     
     if (maprmCfg.isCollision(_env, _cd, _cdsetid, _cdInfo)) {
-        maprmCfg = MAPRMcollision(maprmCfg,_env,_cd,_cdsetid,_cdInfo,n); 
-        if (!(maprmCfg.isCollision(_env,_cd,_cdsetid,_cdInfo))) {
-            maprmCfg = MAPRMfree(maprmCfg,_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
-        }
-    } else {
+        //maprmCfg = MAPRMcollision(maprmCfg,_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
+ 
+	ClearanceInfo clearInfo;
+	clearInfo = maprmCfg.ApproxCSpaceClearance2(_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n,clearInfo,1);
+        maprmCfg = *clearInfo.getDirection();
+	delete clearInfo.getDirection();
+    }
+
+    if (!(maprmCfg.isCollision(_env,_cd,_cdsetid,_cdInfo))) {
         maprmCfg = MAPRMfree(maprmCfg,_env,_cd,_cdsetid,_cdInfo,_dm,_dmsetid,n);
     }
-    
+
     return maprmCfg;
 }
 
@@ -429,23 +433,21 @@ Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
     Cfg newCfg, oldCfg, dir;
     
     ClearanceInfo clearInfo;
-    clearInfo = cfg.ApproxCSpaceClearance2(_env,cd,cdsetid,cdInfo,dm,dmsetid,n);
+    clearInfo = cfg.ApproxCSpaceClearance2(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,clearInfo,0);
     cfg.info.clearance = clearInfo.getClearance();
     dir = *(clearInfo.getDirection());
     
+    int i = 0;
     double stepSize = cfg.info.clearance;
-    int maxNumSteps = 200;
     
     oldCfg = cfg;
     newCfg = oldCfg;
     
     /// find max. clearance point by stepping out:
-    int i=0;
-    
     while ((newCfg.info.clearance >= oldCfg.info.clearance) && (newCfg.InBoundingBox(_env))) {
         oldCfg = newCfg;
         newCfg = c1_towards_c2(newCfg, dir, stepSize*-1);
-        newCfg.info.clearance = newCfg.ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n);
+        newCfg.info.clearance = newCfg.ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,0);
 
         stepSize = newCfg.info.clearance;
         i++;
@@ -454,11 +456,12 @@ Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
     if (newCfg.InBoundingBox(_env)) {
         /// binary search betwen oldCfg and newCfg to find max clearance:
         Cfg midCfg;
-        double minDistance = 0.1;
+	double minDistance = _env->GetPositionRes() + _env->GetOrientationRes();
+        int maxNumSteps = 200; //arbitrary
         
         do {
             midCfg = (newCfg + oldCfg) / 2; //midpoint between newCfg and oldCfg
-            midCfg.info.clearance = midCfg.ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n);
+            midCfg.info.clearance = midCfg.ApproxCSpaceClearance(_env,cd,cdsetid,cdInfo,dm,dmsetid,n,0);
 
             if (midCfg.info.clearance > oldCfg.info.clearance) {
                 oldCfg = midCfg;
@@ -467,7 +470,7 @@ Cfg Cfg::MAPRMfree(Cfg cfg, Environment *_env, CollisionDetection *cd,
             }
             
             i++;
-        } while ((dm->Distance(_env, newCfg, oldCfg, dmsetid) > minDistance) && (i<=maxNumSteps));
+        } while ((dm->Distance(_env, newCfg, oldCfg, dmsetid) > minDistance) && (i <= maxNumSteps));
         
     }
     
@@ -737,24 +740,12 @@ double Cfg::ApproxCSpaceClearance(Environment *env,
                                   DistanceMetric * dm, 
                                   SID dmsetid, int n, bool bComputePenetration)
 {
-    ClearanceInfo clearInfo = 
-        ApproxCSpaceClearance2(env, cd, cdsetid, cdInfo, dm, dmsetid, n,bComputePenetration);
+    ClearanceInfo clearInfo;
+    clearInfo = ApproxCSpaceClearance2(env, cd, cdsetid, cdInfo, dm, dmsetid, n, clearInfo, bComputePenetration);
     delete clearInfo.getDirection(); //free direction memory, allocated in ApproxCSpaceClearance2
     return clearInfo.getClearance();
 }
 
-//Approximate C-Space Clearance
-ClearanceInfo 
-Cfg::ApproxCSpaceClearance2(Environment *env, 
-                            CollisionDetection *cd, 
-                            SID cdsetid, 
-                            CDInfo& cdInfo,
-                            DistanceMetric * dm, 
-                            SID dmsetid, int n,
-                            bool bComputePenetration) {
-    ClearanceInfo clearInfo;
-    return ApproxCSpaceClearance2(env,cd,cdsetid,cdInfo,dm,dmsetid,n,clearInfo,bComputePenetration);
-}
 
 //Approximate C-Space Clearance
 ClearanceInfo 
@@ -769,72 +760,118 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
                             bool bComputePenetration)
 {
     Cfg cfg = *this;
+
+    vector <Cfg> directions;
+    for (int i=0; i<n; i++) {
+        directions.push_back( GetRandomCfg( env ) );
+    }
+    if (directions.size() == 0) { //unable to generate random directions
+        return clearInfo;
+    }
     
     double positionRes = env->GetPositionRes();
     double orientationRes = env->GetOrientationRes();
     
     //if collide, set to true. Otherwise, set to false
-    bool bInitState = cfg.isCollision(env,cd,cdsetid,cdInfo);
-    if( bComputePenetration==false && bInitState==true) //don't need to comput penetration.
+    bool bInitState = cfg.isCollision( env, cd, cdsetid, cdInfo );
+
+    if( bComputePenetration == false && bInitState == true ) //don't need to compute clearance
+        return clearInfo;
+    if( bComputePenetration == true && bInitState == false ) //don't need to compute penetration
         return clearInfo;
 
-    Cfg dir;
-    if ( clearInfo.getCheckOneDirection() ) { //only want the c-space clearance in one specific direction
-        n = 1;
-        dir = *clearInfo.getDirection();
+    //find max step size:
+    int iRobot = env->GetRobotIndex();
+    double incrBound = env->GetMultiBody(iRobot)->GetMaxAxisRange(); //max step size    
+    
+    vector <Cfg> tick;
+    vector <Cfg> incr;
+    vector <double> incrSize;
+    vector <bool> ignored;
+    int num_ignored = 0;
+    int n_ticks;
+
+    for (int i=0; i<directions.size(); i++) {
+        tick.push_back(cfg);
+        incr.push_back(cfg.FindIncrement(directions[i], &n_ticks, positionRes, orientationRes));
+        incrSize.push_back(incr[i].OrientationMagnitude() + incr[i].PositionMagnitude());
+	ignored.push_back(false);
     }
 
-    //Get information about robot
-    int iRobot=env->GetRobotIndex();
-    double incrBound = env->GetMultiBody(iRobot)->GetMaxAxisRange(); //max step size
-    
-    //shot n rays
-    for(int i = 0 ; i < n ; i++){
-        
-        if ( !clearInfo.getCheckOneDirection() ) {
-            dir = GetRandomCfg(env);
-        }
-        
-        int n_ticks;
-        Cfg tick = cfg;
-        Cfg incr = cfg.FindIncrement(dir,&n_ticks,positionRes,orientationRes);
-        double incrSize = incr.OrientationMagnitude()+incr.PositionMagnitude();//step size
-        
-        // this flag will be set if state changed. i.e. from collide to free or
-        // from free to collide
-        int stateChangedFlag = false;
-        
-        while(!stateChangedFlag && 
-            (dm->Distance(env,cfg,tick,dmsetid)<clearInfo.getClearance()) ){
-            
-            tick.Increment(incr);
-            bool bCurrentState = tick.isCollision(env,cd,cdsetid,cdInfo);
-            double currentDist;
-            
-            // if state was changed or this cfg is out of bounding box
-            if( (bCurrentState!=bInitState) || !(tick.InBoundingBox(env)) ){
-                currentDist = dm->Distance(env, cfg, tick, dmsetid);
-                if( currentDist < clearInfo.getClearance() ) {
-                    clearInfo.setClearance( currentDist );
-                    Cfg * pTmpDir = new Cfg();
-                    *pTmpDir = tick-incr/2;
-                    clearInfo.setDirection( pTmpDir );
+    int stateChangedFlag = false;
+
+    //step out along each direction:
+    while ( !stateChangedFlag ) {
+        for (int i=0; i<directions.size(); i++) {
+            tick[i].Increment(incr[i]);
+
+            if (bComputePenetration && !ignored[i]) { //finding penetration
+	        if (tick[i].isCollision(env, cd, cdsetid, cdInfo) != bInitState) {
+                    if (!(tick[i].InBoundingBox(env))) { //ignore this direction
+                        ignored[i] = true;
+                        num_ignored++;
+                        if (num_ignored == directions.size()) { //if no more directions left, exit loop
+			    clearInfo.setClearance(10000);
+
+			    Cfg *tmp = new Cfg();
+			    *tmp = cfg;
+			    clearInfo.setDirection(tmp);
+
+			    stateChangedFlag = true;
+                        }
+                    } else {
+		        clearInfo.setClearance(dm->Distance(env, tick[i], cfg, dmsetid));
+
+		        Cfg * tmp = new Cfg();
+		        *tmp = tick[i];
+		        clearInfo.setDirection(tmp);
+
+		        stateChangedFlag = true;
+                    }
                 }
-                stateChangedFlag = true;
-            }
+	    } else { //finding clearance
+                if ( (tick[i].isCollision(env, cd, cdsetid, cdInfo) != bInitState) 
+		     || !(tick[i].InBoundingBox(env)) ) {
+     	            clearInfo.setClearance(dm->Distance(env, tick[i], cfg, dmsetid));
 
-            //if increment still less than a max bound.
-            if( incrSize<incrBound ){
-                incr = incr*2;
-                incrSize *= 2;
-            }
-        }
-    }
-    
+                    Cfg * tmp = new Cfg();
+                    *tmp = tick[i];
+                    clearInfo.setDirection(tmp);
+
+                    stateChangedFlag = true;
+	        }
+	    }
+
+	    if (stateChangedFlag) {
+	        break; //exit for loop
+	    }
+
+	    /*
+            //if state was changed or this cfg is out of bounding box	    
+            if ( ((tick[i].isCollision(env, cd, cdsetid, cdInfo)) != bInitState) || !(tick[i].InBoundingBox(env)) ) {
+                clearInfo.setClearance(dm->Distance(env, tick[i], cfg, dmsetid));
+
+                Cfg * tmp = new Cfg();
+                *tmp = tick[i];
+                clearInfo.setDirection(tmp);
+
+                stateChangedFlag = true;
+                break; //exit for loop
+	    }
+            */
+ 
+            //if increment still less than a max bound
+            if (incrSize[i] < incrBound) {
+                incr[i] = incr[i] * 2;
+                incrSize[i] = incrSize[i] * 2;
+            }	
+	   
+        }//end for
+    }//end while
+  
     // if this cfg is free (state = false) then return smallestDistance (clearance)
     // if this cfg is not free (state = true) then return -smallestDistance (penetration)
-    clearInfo.
-        setClearance( (bInitState==false)?clearInfo.getClearance():-clearInfo.getClearance() );
+    clearInfo.setClearance((bInitState==false)?clearInfo.getClearance():-clearInfo.getClearance());
     
     return clearInfo;
 }
