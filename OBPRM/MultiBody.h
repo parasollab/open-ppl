@@ -3,10 +3,6 @@
 //  MultiBody.h
 //
 //  Created   2/25/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Added     4/16/98 Wookho
-//  Modified  7/14/98 Wookho
-//  Modified  7/31/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
 #ifndef MultiBody_h

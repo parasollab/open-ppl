@@ -12,8 +12,6 @@
 //      in the file "Roadmap.h".
 //  Created   
 //      07/16/98  Lucia K. Dale
-//  Modified   
-//      07/07/99  Lucia K. Dale
 /////////////////////////////////////////////////////////////////////
 
 #include "Roadmap.h"

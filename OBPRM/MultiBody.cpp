@@ -3,13 +3,6 @@
 //  MultiBody.c
 //
 //  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/15/98 Aaron Michalk
-//  Added     5/ 1/98 Wookho Son
-//  Added     5/15/98 Wookho Son
-//  Added     5/25/98 Wookho Son
-//  Modified  7/14/98 Wookho Son
-//  Modified  7/31/98 Wookho Son
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "MultiBody.h"

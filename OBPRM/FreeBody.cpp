@@ -3,10 +3,6 @@
 //  FreeBody.c
 //
 //  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Added/Modified  7/31/98 Wookho Son
-//  1/13/99 Guang Song GetWorldTransformation method is modified.
-//  2/27/99 add WorldTransformation() method.
 /////////////////////////////////////////////////////////////////////
 
 #include "FreeBody.h"

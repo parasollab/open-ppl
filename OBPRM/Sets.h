@@ -26,8 +26,6 @@
 //
 //  Created
 //      8/5/98  Nancy Amato
-//  Last Modified By:
-//      6/16/00  Lucia K. Dale
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Sets_h
@@ -143,12 +141,6 @@ protected:
    pair<SID,bit_vector>* my_find_SID_eq(const SID _sid) const;
    pair<SID,vector<EID> >* my_find_OSID_eq(const SID _sid) const;
 
-   // NMA: the predicates below work with stl/g++ but not with our sgi CC 
-   //class ELEM_eq;
-   //class EID_eq;
-   //class SID_eq;
-   //class OSID_eq;
-
   //===================================================================
   // Data
   //===================================================================
@@ -167,10 +159,6 @@ protected:
   //==================================
   // BasicSets class Methods: Constructors and Destructor
   //==================================
-  // BasicSets();
-  // BasicSets(const ELEMENT&);
-  // BasicSets(const vector<ELEMENT>&);
-  // ~BasicSets();
 
 template <class ELEMENT>
 BasicSets<ELEMENT>::
@@ -203,14 +191,12 @@ BasicSets<ELEMENT>::
   //===================================================================
   // BasicSets class Methods: Querying Elements of Universe
   //===================================================================
-  // bool IsMember(const SID _sid) const;
 
 template <class ELEMENT>
 bool
 BasicSets<ELEMENT>::
 IsMember(const SID _sid) const {
 
-   //COSI s = find_if(osets.begin(), osets.end(), OSID_eq(_sid) );
    COSI s = my_find_OSID_eq(_sid);
 
    if ( s != osets.end() ) {
@@ -225,16 +211,12 @@ IsMember(const SID _sid) const {
   //===================================================================
   // BasicSets class Methods: Adding Elements To Universe
   //===================================================================
-  // virtual EID AddElementToUniverse(const ELEMENT& _e); 
-  // virtual EID AddElementToUniverse(const vector<ELEMENT>& _evec); 
-  // virtual int ChangeElementInfo(EID _eid, ELEMENT _e); 
 
 template <class ELEMENT>
 EID 
 BasicSets<ELEMENT>::
 AddElementToUniverse(const ELEMENT _e){
 
-   //EI ei = find_if( elements.begin(),elements.end(),ELEM_eq(_e) );
    EI ei = my_find_ELEM_eq(_e);
 
    if ( ei != elements.end() ) {
@@ -263,7 +245,6 @@ int
 BasicSets<ELEMENT>::
 ChangeElementInfo(EID _eid, ELEMENT _e){
 
-   //EI ei = find_if( elements.begin(),elements.end(),EID_eq(_eid) );
    EI ei = my_find_EID_eq(_eid);
 
    if ( ei != elements.end() ) {
@@ -280,17 +261,6 @@ ChangeElementInfo(EID _eid, ELEMENT _e){
   //            UN-ordered Sets 
   // BasicSets class Methods: Making, Modifying & Deleting Sets of Elements
   //===================================================================
-  // virtual SID  MakeSet(const EID _eid);
-  // virtual SID  MakeSet(const ELEMENT& _e);
-  // virtual SID  MakeSet(const vector<EID>& _eidvector );
-  // virtual SID  MakeSet(const vector<ELEMENT>& _evector );
-  // virtual int AddElementToSet(const SID _sid, const EID _eid );
-  // virtual int AddElementToSet(const SID _sid, const ELEMENT& _e );
-  // virtual int DeleteElementFromSet(const SID _sid, const EID _eid );
-  // virtual int DeleteElementFromSet(const SID _sid, const ELEMENT& _e );
-  // virtual SID  MergeSets(const SID _s1id, const SID _s2id );
-  // virtual int DeleteSet(const SID _sid );
-
 
 template <class ELEMENT>
 SID 
@@ -329,7 +299,6 @@ MakeSet( const vector<EID>& _eidvector ) {
    bit_vector newset(ElementIDs,false);
 
    for ( CEIDI eid = _eidvector.begin(); eid != _eidvector.end(); eid++ ) {
-      //CEI ei = find_if(elements.begin(), elements.end(), EID_eq(*eid) );
       CEI ei = my_find_EID_eq(*eid);
       if ( ei != elements.end() ) {
          newset[*eid] = true;
@@ -357,7 +326,6 @@ MakeSet( const vector<ELEMENT>& _evector ) {
    bit_vector newset(ElementIDs,false);
 
    for ( CELI e = _evector.begin(); e != _evector.end(); e++ ) {
-      //CEI ei = find_if(elements.begin(), elements.end(), ELEM_eq(*e) );
       EI ei = my_find_ELEM_eq(*e);
       if ( ei != elements.end() ) {
          newset[ei->first] = true;
@@ -382,9 +350,7 @@ int
 BasicSets<ELEMENT>::
 AddElementToSet( const SID _sid, const EID _eid ) {
 
-   //CEI e = find_if(elements.begin(), elements.end(), EID_eq(_eid) ); 
    CEI e = my_find_EID_eq(_eid);
-   //SI s = find_if(sets.begin(), sets.end(), SID_eq(_sid) );
    SI s = my_find_SID_eq(_sid);
 
    if ( e != elements.end() && s != sets.end() ) {
@@ -413,9 +379,7 @@ int
 BasicSets<ELEMENT>::
 DeleteElementFromSet( const SID _sid, const EID _eid ) {
 
-   //CEI e = find_if(elements.begin(), elements.end(), EID_eq(_eid) ); 
    CEI e = my_find_EID_eq(_eid);
-   //SI s = find_if(sets.begin(), sets.end(), SID_eq(_sid) );
    SI s = my_find_SID_eq(_sid);
 
    if ( e != elements.end() && s != sets.end() ) {
@@ -444,7 +408,6 @@ int
 BasicSets<ELEMENT>::
 DeleteSet(const SID _sid ){
 
-   //SI s = find_if(sets.begin(), sets.end(), SID_eq(_sid) );
    SI s = my_find_SID_eq(_sid);
 
    if ( s != sets.end() ) {
@@ -462,9 +425,7 @@ SID
 BasicSets<ELEMENT>::
 MergeSets(const SID _s1id, const SID _s2id ){
 
-   //SI s1 = find_if(sets.begin(), sets.end(), SID_eq(_s1id) );
    SI s1 = my_find_SID_eq(_s1id);
-   //SI s2 = find_if(sets.begin(), sets.end(), SID_eq(_s2id) );
    SI s2 = my_find_SID_eq(_s2id);
 
    if ( s1 != sets.end() && s2 != sets.end() ) {
@@ -488,24 +449,12 @@ MergeSets(const SID _s1id, const SID _s2id ){
   //            ordered Sets 
   // BasicSets class Methods: Making, Modifying & Deleting Sets of Elements
   //===================================================================
-  // virtual SID  MakeOSet(const EID _eid);
-  // virtual SID  MakeOSet(const ELEMENT& _e);
-  // virtual SID  MakeOSet(const vector<EID>& _eidvector );
-  // virtual SID  MakeOSet(const vector<ELEMENT>& _evector );
-  // virtual int AddElementToOSet(const SID _sid, const EID _eid );
-  // virtual int AddElementToOSet(const SID _sid, const ELEMENT& _e );
-  // virtual int DeleteElementFromOSet(const SID _sid, const EID _eid );
-  // virtual int DeleteElementFromOSet(const SID _sid, const ELEMENT& _e );
-  // virtual SID  MergeSets(const SID _s1id, const SID _s2id );
-  // virtual int DeleteOSet(const SID _sid );
-
 
 template <class ELEMENT>
 SID 
 BasicSets<ELEMENT>::
 MakeOSet( const EID _eid ) {
 
-   //CEI ei = find_if(elements.begin(), elements.end(), EID_eq(_eid) );
    CEI ei = my_find_EID_eq(_eid);
    if ( ei != elements.end() ) {
       vector<EID> newset;
@@ -537,7 +486,6 @@ MakeOSet( const vector<EID>& _eidvector ) {
    vector<EID> newset;
 
    for ( CEIDI eid = _eidvector.begin(); eid != _eidvector.end(); eid++ ) {
-      //CEI ei = find_if(elements.begin(), elements.end(), EID_eq(*eid) );
       CEI ei = my_find_EID_eq(*eid);
       if ( ei != elements.end() ) {
          newset.push_back(*eid);
@@ -565,7 +513,6 @@ MakeOSet( const vector<ELEMENT>& _evector ) {
    vector<EID> newset;
 
    for ( CELI e = _evector.begin(); e != _evector.end(); e++ ) {
-      //CEI ei = find_if(elements.begin(), elements.end(), ELEM_eq(*e) );
       EI ei = my_find_ELEM_eq(*e);
 
       if ( ei != elements.end() ) {
@@ -591,9 +538,7 @@ int
 BasicSets<ELEMENT>::
 AddElementToOSet( const SID _sid, const EID _eid ) {
 
-   //CEI e = find_if(elements.begin(), elements.end(), EID_eq(_eid) ); 
    CEI e = my_find_EID_eq(_eid);
-   //OSI s = find_if(osets.begin(), osets.end(), OSID_eq(_sid) );
    OSI s = my_find_OSID_eq(_sid);
 
    if ( e != elements.end() && s != osets.end() ) {
@@ -620,9 +565,7 @@ BasicSets<ELEMENT>::
 DeleteElementFromOSet( const SID _sid, const EID _eid ) {
    typedef  vector<EID>::iterator EIDI;
 
-   //CEI e = find_if(elements.begin(), elements.end(), EID_eq(_eid) ); 
    CEI e = my_find_EID_eq(_eid);
-   //OSI s = find_if(osets.begin(), osets.end(), OSID_eq(_sid) );
    OSI s = my_find_OSID_eq(_sid);
 
    if ( e != elements.end() && s != osets.end() ) {
@@ -649,7 +592,6 @@ int
 BasicSets<ELEMENT>::
 DeleteOSet(const SID _sid ){
 
-   //OSI s = find_if(osets.begin(), osets.end(), OSID_eq(_sid) );
    OSI s = my_find_OSID_eq(_sid);
 
    if ( s != osets.end() ) {
@@ -667,9 +609,7 @@ SID
 BasicSets<ELEMENT>::
 SpliceOSets(const SID _s1id, const SID _s2id ){
 
-   //OSI s1 = find_if(osets.begin(), osets.end(), OSID_eq(_s1id) );
    OSI s1 = my_find_OSID_eq(_s1id);
-   //OSI s2 = find_if(osets.begin(), osets.end(), OSID_eq(_s2id) );
    OSI s2 = my_find_OSID_eq(_s2id);
 
    if ( s1 != osets.end() && s2 != osets.end() ) {
@@ -688,15 +628,6 @@ SpliceOSets(const SID _s1id, const SID _s2id ){
   //===================================================================
   // BasicSets class Methods: Getting Data & Statistics
   //===================================================================
-  // virtual vector< pair<EID,ELEMENT> > GetElements() const; // eid is index
-  // virtual ELEMENT GetElement(const EID _eid) const;
-  // virtual EID GetElementID(const ELEMENT& _e) const;
-  // virtual vector< pair<SID,vector< pair<EID,ELEMENT> > > > GetSets() const; // (sid,set) pairs
-  // virtual vector< pair<SID,vector< pair<EID,ELEMENT> > > > GetOSets() const; // (sid,set) pairs
-  // virtual vector<ELEMENT> GetSet(cont SID _sid) const;
-  // virtual vector<ELEMENT> GetOSet(cont SID _sid) const;
-
-
 
 template <class ELEMENT>
 vector< pair<EID,ELEMENT> > 
@@ -714,7 +645,6 @@ template <class ELEMENT>
 ELEMENT
 BasicSets<ELEMENT>::
 GetElement(const EID _eid) const {
-   //CEI e = find_if(elements.begin(), elements.end(), EID_eq(_eid) ); 
    CEI e = my_find_EID_eq(_eid);
    return e->second;
 }
@@ -723,7 +653,6 @@ template <class ELEMENT>
 EID
 BasicSets<ELEMENT>::
 GetElementID(const ELEMENT& _e) const {
-   //CEI e = find_if(elements.begin(),elements.end(),ELEM_eq(_e) );   
    CEI e = my_find_ELEM_eq(_e);
 
    if ( e != elements.end() ) {
@@ -770,7 +699,6 @@ BasicSets<ELEMENT>::
 GetSet(const SID _sid) const {
    vector< pair<EID,ELEMENT> > myset;
 
-   //CSI s = find_if(sets.begin(), sets.end(), SID_eq(_sid) );
    CSI s = my_find_SID_eq(_sid);
 
    if ( s != sets.end() ) {
@@ -793,12 +721,10 @@ BasicSets<ELEMENT>::
 GetOSet(const SID _sid) const {
    vector< pair<EID,ELEMENT> > myset;
 
-   //COSI s = find_if(osets.begin(), osets.end(), OSID_eq(_sid) );
    COSI s = my_find_OSID_eq(_sid);
 
    if ( s != osets.end() ) {
       for (int i = 0; i < s->second.size(); i++) {
-         //CEI e = find_if(elements.begin(),elements.end(),EID_eq(s->second[i]) );
          CEI e = my_find_EID_eq(s->second[i]);
          myset.push_back( *e );
       }
@@ -812,12 +738,6 @@ GetOSet(const SID _sid) const {
   //===================================================================
   // BasicSets class Methods: Display, Input & Output
   //===================================================================
-  // virtual void DisplayElements() const;    // eid is index
-  // virtual void DisplayElement(const EID _eid ) const;    // eid is index
-  // virtual void DisplaySets() const; // 
-  // virtual void DisplayOSets() const; // 
-  // virtual void DisplaySet(const SID _sid) const;
-  // virtual void DisplayOSet(const SID _sid) const;
 
 template <class ELEMENT>
 void
@@ -897,11 +817,6 @@ DisplayOSet(const SID _sid) const {
   //===================================================================
   // BasicSets class Methods Predicates
   //===================================================================
-  // class ELEM_eq;
-  // pair<EID,ELEMENT>* my_find_ELEM_eq(const ELEMENT& _e) const;
-  // class EID_eq;
-  // class SID_eq;
-  // class OSID_eq;
 
 template<class ELEMENT>
 pair<EID,ELEMENT>*
@@ -966,64 +881,5 @@ my_find_OSID_eq(const SID _sid) const {
    }
    return const_cast<pair<SID,vector<EID> >*>(si);
 }
-
-/*------------- stl stuff that won't work on SGI CC ------------
-template<class ELEMENT>
-class
-BasicSets<ELEMENT>::
-ELEM_eq : public unary_function< pair<EID,ELEMENT>,bool> {
-   public:
-     explicit ELEM_eq(const ELEMENT& elem) : testelem (elem) {}
-     bool operator() ( const pair<EID,ELEMENT>&  e) const {
-         return e.second == testelem;
-     };
-   protected:
-   private:
-     ELEMENT testelem;
-};
-
-
-template<class ELEMENT>
-class
-BasicSets<ELEMENT>::
-EID_eq : public unary_function< pair<EID,ELEMENT>,bool> {
-   public:
-     explicit EID_eq(const EID eid) : testeid (eid) {}
-     bool operator() ( const pair<EID,ELEMENT>&  e) const {
-         return e.first == testeid;
-     };
-   protected:
-   private:
-     EID testeid;
-};
-
-template<class ELEMENT>
-class
-BasicSets<ELEMENT>::
-SID_eq : public unary_function< pair<SID,bit_vector>,bool> {
-   public:
-     explicit SID_eq(const SID sid) : testsid (sid) {}
-     bool operator() (const pair<SID,bit_vector>& s) const {
-         return s.first == testsid;
-     };
-   protected:
-   private:
-     SID testsid;
-};
-
-template<class ELEMENT>
-class
-BasicSets<ELEMENT>::
-OSID_eq : public unary_function< pair<SID,vector<EID> >,bool> {
-   public:
-     explicit OSID_eq(const SID sid) : testsid (sid) {}
-     bool operator() (const pair<SID,vector<EID> >& s) const {
-         return s.first == testsid;
-     };
-   protected:
-   private:
-     SID testsid;
-};
--------------end of stl stuff that won't work on SGI CC ------------*/
 
 #endif

@@ -3,16 +3,11 @@
 //  Matrix.c
 //
 //  Created   4/24/98 Aaron Michalk
-//  Added     5/16/98 Wookho Son
-//  Added     5/27/98 Wookho Son
-//  Added     6/ 5/98 Wookho Son
 ////////////////////////////////////////////////////////////////////////////
 
 // This is a test
 #include "Matrix.h"
 #include <math.h>
-// this is test 3
-//#include <imsl.h>
 
 
 //==========================================================================
@@ -95,7 +90,6 @@ Matrix Matrix::operator*(Matrix & _m) {
         return Matrix();
 
     double *resultm = new double [nrow*_m.ncol];
-//    double * resultm = imsl_d_mat_mul_rect("A*B", IMSL_A_MATRIX, nrow, ncol, m, IMSL_B_MATRIX, _m.nrow, _m.ncol, _m.m, 0);
 
     for (int i=0; i<nrow; i++)
         for (int j=0; j<_m.ncol; j++){
@@ -132,7 +126,6 @@ Matrix Matrix::Inverse() {
     if (ncol != nrow)
         return Matrix();
     double * result;
-//    imsl_d_lin_sol_gen(nrow, m, m, IMSL_INVERSE, &result, 0);
     return Matrix(result, nrow, ncol);
 }
 
@@ -141,10 +134,8 @@ Matrix Matrix::Inverse() {
 //==========================================================================
 Matrix Matrix::Transpose() {
     int  i, j;
-//    cout << "Transposing from dimension (" << nrow << ", " << ncol << ")" << " to dimension (" << ncol << ", " << nrow << ")" << endl;
 
     double * resultm = new double [ncol*nrow];
-//    result = imsl_d_mat_mul_rect("trans(A)", IMSL_A_MATRIX, nrow, ncol, m, 0);
     for (i=0; i<nrow; i++)
         for (j=0; j<ncol; j++)
 	    resultm[j*nrow + i] = m[i*ncol + j];
@@ -245,12 +236,6 @@ Matrix Matrix::Extract(int _startRow, int _endRow, int _startCol, int _endCol) {
     for (i = _startRow; i <= _endRow; i++)
         for (j = _startCol; j <= _endCol; j++)
 	    resultm[(i - _startRow)*colSize + (j - _startCol)] = m[i*ncol + j];
-
-//    for (i=_startRow; i<_endRow; i++){
-//        for (j=_startCol; j<_endCol; j++)
-//	    cout << m[i*ncol + j] << " ";
-//	cout << endl;
-//    }
 
     Matrix result(resultm, rowSize, colSize);
     result.Print();

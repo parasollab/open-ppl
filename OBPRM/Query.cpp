@@ -119,7 +119,6 @@ PerformQuery(Cfg _start, Cfg _goal, CollisionDetection *cd,
   while ( !connected && thiscc < ccs.size() ) {
 
     Cfg t=rdmp.roadmap.GetData(ccs[thiscc].second);
-    //vector<Cfg> cc = rdmp.roadmap.GetCC(rdmp.roadmap.GetData(ccs[thiscc].second));
     vector<Cfg> cc = rdmp.roadmap.GetCC(t);
     if ( CanConnectToCC(_start,cd,cn,lp,dm,cc,_lpsid,&scvid,&sci) && 
          CanConnectToCC(_goal, cd,cn,lp,dm,cc,_lpsid,&gcvid,&gci) ) {
@@ -251,7 +250,6 @@ GetPathSegment(Cfg _c1, Cfg _c2, CollisionDetection *cd,
    if (Found) {
 
      LP Lp = lp->planners.GetLP(FoundInBitPosition);
-     //LPF lpfcn = Lp.GetPlanner();
 
      LPInfo info,info_rev;
         info.checkCollision=info_rev.checkCollision= _ci->checkCollision;

@@ -11,8 +11,6 @@
 //
 //  Created
 //      7/26/98  Lucia K. Dale
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 
 #include <iomanip.h>

@@ -3,7 +3,6 @@
 //  Orientation.h
 //
 //  Created   2/25/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Orientation_h
@@ -47,7 +46,6 @@ public:
     Orientation();
     Orientation(OrientationType _type);
     Orientation(const double _matrix[3][3]);
-//    Orientation(double alpha, double beta, double gamma);
     Orientation(OrientationType _type, double _alpha, double _beta, double _gamma);
     Orientation(const Orientation & _o);
     Orientation(double _rotationAngle, const Vector3D &_rotationAxis); // quaternion
@@ -67,7 +65,6 @@ public:
     //-----------------------------------------------------------
     void Invert();
     Orientation Inverse();
-//    void Normalize(Vector3D & v);  // for quaternion
     void ConvertType(OrientationType _newType);
     void Read(istream & _is);
     void Write(ostream & _os);

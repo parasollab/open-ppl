@@ -19,12 +19,6 @@
 //
 //  Created
 //      7/26/98  Lucia K. Dale
-//  Last Modified By:
-//      11/04/98 Guang Song
-//      add subscripting operator & add 'const' to some operator def.
-//      for Vector3<double> and Vector6<double> so that they can be
-//      used by some constant variables as well. 
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 
 #ifndef VectorConstantSize_h

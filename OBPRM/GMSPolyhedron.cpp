@@ -3,11 +3,6 @@
 //  GMSPolyhedron.c
 //
 //  Created   3/ 6/98 Aaron Michalk
-//  Modified  4/ 2/98 Aaron Michalk
-//  Modified  7/24/98 Aaron Michalk
-//  Last modified:
-//            06/16/99 Guang Song:  add constructors and destructors. 
-//				    rewrite copy operator
 ///////////////////////////////////////////////////////////////////////////
 
 #include <vector.h>
@@ -81,14 +76,11 @@ GMSPolyhedron & GMSPolyhedron::operator=(GMSPolyhedron & _p) {
     for (i = 0; i < numPolygons; i++) {
         polygonList[i].numVertices = _p.polygonList[i].numVertices;
         aptal=polygonList[i].numVertices;
-        //fprintf(stderr,"%d\n",aptal);
-	//polygonList[i].vertexList = new int[polygonList[i].numVertices];
           trick=new int[aptal];
          if(trick==NULL) {
               printf("Not enough memory\n");
               exit(5);
          }
-	//polygonList[i].vertexList = new int[aptal];
 	polygonList[i].vertexList = trick;
 	for (j = 0; j < polygonList[i].numVertices; j++) {
 	    polygonList[i].vertexList[j] = _p.polygonList[i].vertexList[j];
@@ -305,7 +297,6 @@ GMSPolygon    &GMSPolygon::operator=(GMSPolygon  _p) {
 }
 GMSPolygon    GMSPolygon::getCopy(){
 	GMSPolygon *cp;
-    //if(this == &_p) return *this;
 	cp=new GMSPolygon;
 	cp->numVertices=numVertices;
 	cp->vertexList=new int[numVertices];

@@ -9,10 +9,6 @@
 //      free space.
 //  Created
 //      09/29/98  O.B. Bayazit (HRoadmap class)
-//      07/23/99  Guang Song (add some methods, rename it HapticInput)
-//  Last Modified By:
-//      07/21/00 Sujay Sundaram and Shawna Miller (removed/renamed
-//               some methods, rename it Push)
 /////////////////////////////////////////////////////////////////////
 #ifndef Push_h
 #define Push_h

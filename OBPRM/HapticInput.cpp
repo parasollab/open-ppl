@@ -8,8 +8,6 @@
 //      free nodes in the roadmap.
 //  Created
 //      09/29/98  O.B. Bayazit (HRoadmap class)
-//      07/23/99  Guang Song (add some methods, rename it HapticInput)
-//  Last Modified By:
 /////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -130,8 +128,6 @@ void HapticInput::init(Roadmap *rm, char * tmp[5], CollisionDetection *_cd,
    list=create_list(path_head,path_num);
    for(int i=0; i<list.size(); i++) {
 	AddHapticPath(list[i], mask, n,m,closest,true);
-	//AddHapticPath(list[i],USE_SURFACE2,n,m,closest,true);
-        //AddUsingSurface2(list[i]);
    }
   #if INTERMEDIATE_FILES
     vector<Cfg> vertices = rm->roadmap.GetVerticesData();
@@ -206,9 +202,6 @@ double &jumpSize, Cfg inside, double incrCoord) {
 	    if(directionKnown) phi *= 0.05;
             double tmpx=direction[0], tmpy=direction[1],tmpz= direction[2];
 	    direction = Zaxis*cos(phi) + direction*sin(phi);
-	    //Cfg ray(Vector6<double>(0,0,0,0,0,0));
-//ray=Vector6<double>(direction[0], direction[1], direction[2], 0, 0, 0);
-	    //Cfg ray(Vector6<double>(direction[0], direction[1], direction[2], 0, 0, 0));
 	    Cfg ray(Vector6<double>(tmpx,tmpy,tmpz, 0, 0, 0));
 	    randomRay.push_back(ray*stepSize);
 	    startCfg.push_back(inside+ray*jumpSize);
@@ -245,11 +238,8 @@ void HapticInput::AddUsingSurface2(vector <Cfg> nodes)
 	  vector<Cfg> mycfgs; 
 	  int steps = 2;
 	  for(int m=0; m<nodes.size()-1; m++) {
-	      //Cfg &incr = nodes[m].FindIncrement(nodes[m+1], steps);
-	      //Cfg tmp = nodes[m];
 	      for(int n=0; n < steps; n++) {
 		 mycfgs.push_back(Cfg::WeightedSum(nodes[m], nodes[m+1], 1./steps*n));
-		 //tmp.Increment(incr);
               }
 	  }
 	  nodes = mycfgs;
@@ -376,7 +366,6 @@ void HapticInput::AddFreeNodes(vector <Cfg>cfgs,bool checkConnection)
        if(prev!=INVALID_VID &&
 	  lp->IsConnected(env,cd,dm,prevCfg,cfgs[i],connectionInfo.lpsetid,&lpInfo)) {
              rdmp->roadmap.AddEdge(prev,current,lpInfo.edge );
-             //cout << "Edge between after check" << prev << "-"<<current<<endl<< flush;
        }
        else  cout << "Warning:  Could not connect the successive haptic nodes\n";
      }
@@ -424,7 +413,6 @@ void HapticInput::AddUsingSeed(vector <Cfg> seeds,int nodesPerSeed)
        cout << "Added " << nodes.size() << endl;
   if (nodes.size()) {  
        cout << "Added " << nodes.size() << endl;
-       //Connect_MapNodes();
   }
 
 }
@@ -436,7 +424,6 @@ static int Compare3D(const void *c,const void  *d)
 {
    double aval,bval;
    Vector3D *a=(Vector3D *) c,*b=(Vector3D *) d;
-   //aptal++;
    aval= a->magnitude();
    bval= b->magnitude();
    if (aval<bval) return -1;
@@ -459,7 +446,6 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
   vector<Vector3D> returnVectorList;
   Vector3D *vectorList;
 
-  //int robot_index = _roadmap.GetEnvironment()->GetRobotIndex();
   int robot_index = 0;  // for now, the robot is the 1st body in the environment
 
   // Get the polyhedron for the robot (which is not world-transformed)
@@ -490,14 +476,10 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
   for (i=0; i< robotPoly.numVertices; i++)
       for (int j=0; j< obstaclePoly.numVertices; j++){
 	  vectorList[i*obstaclePoly.numVertices+j]=(obstaclePoly.vertexList[j] - robotPoly.vertexList[i]);
-      //cout << i << " " << j << " " << i*obstaclePoly.numVertices+j << " " << vectorList[i*obstaclePoly.numVertices+j] << endl << flush;
 	}
     cout << "soring "  << robotPoly.numVertices*obstaclePoly.numVertices <<endl <<endl;
-    //aptal=0;
     qsort((void *)vectorList,robotPoly.numVertices*obstaclePoly.numVertices,sizeof(Vector3D),Compare3D); 
     cout << "sorted" << _k << endl <<flush;
-  //  vectorList.resize(_k);
-    //cout << " size = " << vectorList.size() << " k= " << _k << endl << flush;
 #endif
   int pairs = robotPoly.numVertices*obstaclePoly.numVertices;
   int size = pairs > 10000 ? 10000 : pairs;
@@ -512,7 +494,6 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
 
     for(i=0;i<_k;i++)
     {
-      //cout << "value= "<<vectorList[i].magnitude() << endl << flush;
 	returnVectorList.push_back(vectorList[i]);
      }
 	free(vectorList);
@@ -541,7 +522,6 @@ void HapticInput::AddUsingClosestWorkspacePoints(vector <Cfg> seeds,int totalNod
         Cfg ccc(Vector6<double>(tmpx,tmpy,tmpz,0,0,0));
 
         inter=GenerateOutsideCfg(env,cd, seeds[i],
-           //           (ccc)/incrCoord,
 			ccc,
                           generationInfo);
         cout << "VID : "<< rdmp->roadmap.AddVertex(inter) << 
@@ -552,7 +532,6 @@ void HapticInput::AddUsingClosestWorkspacePoints(vector <Cfg> seeds,int totalNod
  }
  Vector3D com;
  WritePathTranformationMatrices("closestWorkspacePoints.path", surface, env);
-    //Connect_MapNodes();
 }
 
 void HapticInput::AddUsingSurface(vector <Cfg> nodes,int numIntermediate)
@@ -623,7 +602,6 @@ void HapticInput::AddUsingSurface(vector <Cfg> nodes,int numIntermediate)
               if(!ccc.AlmostEqual(zero)) {
                   cout << "\n Calling Generate outside for " << ccc << endl << flush;
                   inter=GenerateOutsideCfg(env,cd,inside[j],
-                    //  (ccc)/incrCoord,
 			ccc,
                           generationInfo);
                   cout << "\n Positional inter " << inter << endl << flush;
@@ -650,7 +628,6 @@ void HapticInput::AddUsingSurface(vector <Cfg> nodes,int numIntermediate)
     cout << "Add as surface : " << surface.size() << " nodes added\n";
     for(i=0;i<surface.size();i++)
            cout << "VID : "<< rdmp->roadmap.AddVertex(surface[i]) << " " <<surface[i] << " added in surface\n";
-    //Connect_MapNodes();
   } 
 
 }

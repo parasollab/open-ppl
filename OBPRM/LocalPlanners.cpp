@@ -10,8 +10,6 @@
 //
 //  Created
 //      8/7/98  Nancy Amato
-//  Last Modified By:
-//      8/20/98  Daniel Vallejo
 /////////////////////////////////////////////////////////////////////
 
 #include "LocalPlanners.h"
@@ -62,8 +60,6 @@ cd_predefined LocalPlanners::cdtype = RAPID;
   //==================================
   // LocalPlanners class Methods: Constructors and Destructor
   //==================================
-  // LocalPlanners();
-  // ~LocalPlanners();
 
 LocalPlanners::
 LocalPlanners() {
@@ -117,12 +113,6 @@ UserInit(Input *input, ConnectMapNodes* cn) {
    usingClearance = input->usingClearance.GetValue();
    cdtype = input->cdtype;
 }
-
-  // bool IsConnected(Roadmap *rm,Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
-  // bool IsConnectedFindAll(Roadmap *rm,Cfg _c1, Cfg _c2, SID _lpsetid, LPInfo *info);
-  // bool IsConnected_straightline(Roadmap *rm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  // bool IsConnected_rotate_at_s(Roadmap *rm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
-  // bool IsConnected_astar(Roadmap *rm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info);
 
 //
 // Find 1st LP in the set that can make the connection
@@ -288,7 +278,6 @@ bool LocalPlanners::IsConnected_SLclearance(Environment *_env,CollisionDetection
 	double clr, halfDist, halfOriDist;
 	double rmax = _env->GetMultiBody(_env->GetRobotIndex())->GetBoundingSphereRadius();
 	bool sameOrientation = (_c1-_c2).OrientationMagnitude() <= info->orientationRes;
-	//bool sameOrientation = Cfg::isSameOrientation(_c1, _c2);
         typedef pair<Cfg,Cfg> cfgPair;
         deque<cfgPair> pairQ;
     	pairQ.push_back(cfgPair(_c1,_c2));
@@ -345,12 +334,7 @@ bool LocalPlanners::lineSegmentInCollision(Environment *_env,CollisionDetection 
     //if(Cfg::GetType() == RIGID_BODY) 
     Vector3D v1 = _c1.GetRobotCenterPosition();
     Vector3D v2 = _c2.GetRobotCenterPosition();
-    //Vector3D dif = v1-v2;
-    //if(dif.magnitude() > 0.0001) {
     Vector3D v3 = v1 + Vector3D(0.000001, 0, 0);
-    //Vector3D v3 = v1.crossProduct(v2);
-    //v3.normalize();
-    //v3 = v3*0.000001; // really thinny triangle.
     Vector3D center = (v1+v2+v3)/3.0;
     
     char str[200];
@@ -483,7 +467,6 @@ IsConnected_astar(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cf
     int retPosition,noNeighbors=3,i;
     int typeLP=0;
     double value;
-    //if( !strcmp(_lp.GetName(),"a_star_distance")) typeLP=1;
     if(_lp.GetPlanner() == ASTAR_DISTANCE) typeLP=1;
 
     incr=_c1.FindIncrement(_c2,&n_ticks,info->positionRes,info->orientationRes);
@@ -725,8 +708,6 @@ ostream& operator<< (ostream& _os, const LP& lp) {
   //==================================
   // LPSets class Methods: Constructors and Destructor
   //==================================
-  // LPSets();
-  // ~LPSets();
 
 LPSets::
 LPSets(){
@@ -739,14 +720,6 @@ LPSets::
   //===================================================================
   // LPSets class Methods: Adding LPs, Making & Modifying LP sets
   //===================================================================
-  // EID AddLP(const char* _lpinfo); 
-  // int AddLPToSet(const SID _sid, const EID _lpid); 
-  // int DeleteLPFromSet(const SID _sid, const EID _lpid); 
-  // SID MakeLPSet(const char* lplist);  // make an ordered set of lps, 
-  // SID MakeLPSet(istream& _myistream); //  - add lp to universe if not there
-  // SID MakeLPSet(const EID _eid);
-  // SID MakeLPSet(const vector<EID> _eidvector);
-  // int DeleteLPSet(const SID _sid);
 
 int 
 LPSets::
@@ -762,14 +735,6 @@ LPSets::
 AddLPToSet(const SID _sid, const EID _lpid) {
   return AddElementToOSet(_sid,_lpid);
 };
-
-/*
-int 
-LPSets::
-DeleteLPFromSet(const SID _sid, const EID _lpid) {
-  return DeleteElementFromOSet(_sid,_lpid);
-};
-*/
 
 SID 
 LPSets::
@@ -813,7 +778,6 @@ MakeLPSet(istream& _myistream) {
     if (!strcmp(lpname,"straightline")) {              // STRAIGHTLINE 
        LP lp1; 
        strcpy(lp1.name,lpname);
-       //lp1.planner = &(lpPtr->IsConnected_straightline);
        lp1.planner = STRAIGHTLINE;
        lp1.lpid = AddElementToUniverse(lp1); 
        lp1.forwardEdge = lp1.backEdge = 1 << lp1.lpid;
@@ -827,7 +791,6 @@ MakeLPSet(istream& _myistream) {
     } else if (!strcmp(lpname,"rotate_at_s")) {          // ROTATE-AT-S
        LP lp1, lp2;
        strcpy(lp1.name,lpname);
-       //lp1.planner = &(lpPtr->IsConnected_rotate_at_s);
        lp1.planner = ROTATE_AT_S;
        lp1.sValue = 2.0; 
        lp2 = lp1;
@@ -836,7 +799,6 @@ MakeLPSet(istream& _myistream) {
             cout << endl << "INVALID: rotate_at_s s=" << sValue;
             exit(-1);
           } else {
-            //lp1.sValue = sValue;
             lp2.sValue = 1.0 - sValue;
             lp1.sValue = 1.0 - lp2.sValue;
             lp1.lpid = AddElementToUniverse(lp1);
@@ -867,7 +829,6 @@ MakeLPSet(istream& _myistream) {
                !strcmp(lpname,"a_star_distance")) {   
        LP lp1; 
        strcpy(lp1.name,lpname);
-       //lp1.planner = &(lpPtr->IsConnected_astar);
        if( !strcmp(lpname,"a_star_clearance") ) 
 	   lp1.planner = ASTAR_CLEARANCE;
        else
@@ -938,10 +899,6 @@ MakeLPSet(istream& _myistream) {
   //===================================================================
   // LPSets class Methods: Getting Data & Statistics
   //===================================================================
-  // LP GetLP(const EID _lpid) const;
-  // vector<LP> GetLPs() const;
-  // vector<LP> GetLPSet(const SID _sid) const;
-  // vector<pair<SID,vector<LP> > > GetLPSets() const;
 
 LP
 LPSets::
@@ -993,16 +950,6 @@ GetLPSets() const {
   //===================================================================
   // LPSets class Methods: Display, Input, Output
   //===================================================================
-  // void DisplayLPs() const;    
-  // void DisplayLP(const EID _lpid) const;    
-  // void DisplayLPSets() const; 
-  // void DisplayLPSet(const SID _sid) const; 
-  // void WriteLPs(const char* _fname) const;
-  // void WriteLPs(ostream& _myostream) const;
-  // void ReadLPs(const char* _fname) const;
-  // void ReadLPs(istream& _myistream) const;
-
-
 
 void 
 LPSets::

@@ -3,16 +3,11 @@
 //  Orientation.c
 //
 //  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Added     6/ 4/98 Wookho Son
-//  Added     1/13/99 Guang Song add EulerZYX in ConvertType method to 
-// 	      convert it to or from Matrix type or EulerXYZ type. 
 /////////////////////////////////////////////////////////////////////
 
 #include "Orientation.h"
 #include <math.h>
 
-//#define DEGTORAD (3.1415926535/180.0)
 #define EPSILON  1.0e-6
 
 
@@ -70,7 +65,6 @@ Orientation::Orientation(OrientationType _type, double _alpha, double _beta, dou
     beta  = _beta;
     gamma = _gamma;
 
-//    ConvertType(Matrix); // Convert to matrix representation
 }
 
 Orientation::Orientation(double _rotationAngle, const Vector3D &_rotationAxis) {
@@ -79,7 +73,6 @@ Orientation::Orientation(double _rotationAngle, const Vector3D &_rotationAxis) {
     rotationAngle = _rotationAngle;
     rotationAxis = _rotationAxis;
 
-//    ConvertType(Matrix); // Convert to matrix representation
 }
 
 //-------------------------------------------------------------------

@@ -17,15 +17,12 @@
 //
 //  Created
 //      7/26/98  Lucia K. Dale
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Vectors_h
 #define Vectors_h
 
 #include "VectorConstantSize.h"
-//#include "OBPRM.h"
 
 //-------------------------------------------------
 // Vector3D:

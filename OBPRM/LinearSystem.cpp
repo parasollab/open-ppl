@@ -4,21 +4,16 @@
 //
 //
 //  Created   6/ 4/98  Wookho Son
-//  Added   6/ 10/98  Wookho Son
 ////////////////////////////////////////////////////////////////////////////
 
 //typedef int bool;
 
 #include "LinearSystem.h"
-//#include <engine.h>
-//#include <math.h>
 
 #define MAX(a, b)  ( (a > b) ? a : b )
 #define MIN(a, b)  ( (a > b) ? b : a )
 
 #define NUMERICAL_RECIPES
-//#define IMSL
-//#define MATLAB
 
 
 
@@ -121,7 +116,6 @@ void LinearSystem::Solve() {
        // For SVD
        double **u = dmatrix(0, nrow-1, 0, ncol-1);
        double *w = dvector(0, ncol-1);
-//       double *sol = dvector(0, ncol-1);
        double **v = dmatrix(0, ncol-1, 0, ncol-1);
        x = new double [ncol];
 
@@ -171,7 +165,6 @@ void LinearSystem::Solve() {
 
        free_dmatrix(u, 0, nrow-1, 0, ncol-1);
        free_dvector(w, 0, ncol-1);
-//       free_dvector(sol, 0, ncol-1);
        free_dmatrix(v, 0, ncol-1, 0, ncol-1); 
        
 #if 0

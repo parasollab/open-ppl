@@ -5,11 +5,6 @@
 //
 //      Created 7/17/98         Daniel Vallejo
 //
-//  Last Modified By:   
-//      08/24/98  Daniel Vallejo
-//      1/13/99   Guang Song
-//	06/29/2000 Guang. rewrite some functions.
-//
 ////////////////////////////////////////////////////
 
 #ifndef util_h

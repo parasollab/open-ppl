@@ -19,8 +19,6 @@
 //
 //  Created
 //      7/18/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 #ifndef RoadmapGraph_h
 #define RoadmapGraph_h
@@ -53,8 +51,6 @@ public:
 //
 //  Created
 //      7/25/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : public WeightedGraph<VERTEX,WEIGHT> {
@@ -78,95 +74,6 @@ public:
 
    virtual int  AddEdges( vector<EdgeInfo<WEIGHT> >& );
 
-/*---------------------------------------------------------------------
-   int  DeleteVertex(VID);           // Methods below this line are
-   int  DeleteVertex(VERTEX&);       // from the base class WeightedGraph.
-   int  EraseGraph();                // Defs repeated for your convenience.
-
-        // Adding & Deleting Edges
-   int  AddEdge(VID, VID, WEIGHT);
-   int  AddEdge(VID, VID, pair<WEIGHT,WEIGHT>);
-   int  AddPath( vector<VID>&, WEIGHT);
-   int  AddPath( vector< pair<VID,WEIGHT> >& );
-   int  AddPath( vector< pair<VID, pair<WEIGHT,WEIGHT> > >& );
-   int  DeleteEdge(VID, VID);
-   int  ChangeEdgeWeight(VID, VID, WEIGHT); 
-   void DeleteAllEdges(VID);
-
-   int  AddEdge(VERTEX&, VERTEX&, WEIGHT);
-   int  AddEdge(VERTEX&, VERTEX&, pair<WEIGHT,WEIGHT>);
-   int  AddPath( vector<VERTEX>&, WEIGHT);
-   int  AddPath( vector< pair<VERTEX,WEIGHT> >& );
-   int  AddPath( vector< pair<VERTEX, pair<WEIGHT,WEIGHT> > >& );
-   int  DeleteEdge(VERTEX&, VERTEX&);
-   int  ChangeEdgeWeight(VERTEX&, VERTEX&, WEIGHT);
-   void DeleteAllEdges(VERTEX&);
-
-        // Finding Vertices & Edges
-   bool IsVertex(VID) const;
-   bool IsEdge(VID, VID) const;
-   bool IsEdge(VID, VID, WEIGHT) const;
-
-   bool IsVertex(VERTEX&) const;
-   bool IsEdge(VERTEX&, VERTEX&) const;
-   bool IsEdge(VERTEX&, VERTEX&, WEIGHT) const;
-
-       // Data & Statistics -- Num Verts, Num Edges, Etc
-                // global information
-   int  GetVertexCount() const;
-   int  GetEdgeCount() const;
-   VID  GetNextVID() const;
-   vector<VID> GetVerticesVID() const;
-   vector<VID> GetVerticesVID(VID,int) const;     // get int verts, starting with VID
-   vector<VERTEX> GetVerticesData() const;
-   vector<VERTEX> GetVerticesData(VID,int) const; // get int verts, starting with VID
-   vector< pair<pair<VID,VID>,WEIGHT> > GetEdges() const;
-   vector< pair<pair<VERTEX,VERTEX>, WEIGHT> > GetEdgesVData() const;
-                // vertex information
-   VERTEX  GetData(VID) const;
-   vector<VERTEX> GetData(VID _v1id, VID _v2id) const;
-   VID     GetVID(VERTEX&) const;
-   WEIGHT  GetEdgeWeight(VID, VID) const;
-   WEIGHT  GetEdgeWeight(VERTEX&, VERTEX&) const;
-   int     GetVertexDegree(VID) const;
-   vector<VID> GetAdjacentVertices(VID) const;
-   vector< pair<pair<VID,VID>,WEIGHT> > GetIncidentEdges(VID) const;
-
-       // Basic Graph Algorithms
-   WeightedMultiDiGraph<VERTEX,WEIGHT> BFS(VID) const; 
-   WeightedMultiDiGraph<VERTEX,WEIGHT> BFS(VERTEX&) const; 
-   vector< pair<VERTEX,WEIGHT> > FindPathBFS(VID,VID) const;
-   vector< pair<VERTEX,WEIGHT> > FindPathBFS(VERTEX&,VERTEX&) const;
-   WeightedMultiDiGraph<VERTEX,WEIGHT> DijkstraSSSP(VID) const; //wts=pathlength
-   vector< pair<VERTEX,WEIGHT> >  FindPathDijkstra(VID,VID) const; //wts=ewts
-   vector< pair<VERTEX,WEIGHT> >  FindPathDijkstra(VERTEX&,VERTEX&) const;
-
-       // Connected Components Utilities
-   bool IsSameCC(VID,VID) const;
-   bool IsSameCC(VERTEX&,VERTEX&) const;
-   vector<VID> GetCC(VID) const;
-   vector<VERTEX> GetCC(VERTEX&) const;
-   vector< pair<pair<VID,VID>, WEIGHT> > GetCCEdges(VID) const;
-   vector< pair<pair<VID,VID>, WEIGHT> > GetCCEdges(VERTEX&) const;
-   vector< pair<pair<VERTEX,VERTEX>, WEIGHT> > GetCCEdgesVData(VID) const;
-   vector< pair<pair<VERTEX,VERTEX>, WEIGHT> > GetCCEdgesVData(VERTEX&) const;
-   vector< vector< pair<VERTEX,VERTEX> > GetEdgesByCCVDataOnly(); //[i,j]=CC i,edge j
-   vector< pair<int,VID> > GetCCStats() const;   // (CCsize,VID in CC) pairs
-   int GetCCcount() const;
-
-        // Display, Input, Output 
-   void DisplayGraph() const;
-   void DisplayVertices() const;
-   void DisplayVertex(VID) const;
-   void DisplayVertexAndEdgelist(VID) const;
-   void DisplayCC(VID) const;
-   void DisplayCCStats(int _numCCtoPrint = -1) const; // default print all 
-
-   void WriteGraph(ostream& _myostream) const;
-   void WriteGraph(const char*  _filename) const;
-   void ReadGraph(istream& _myistream);
-   void ReadGraph(const char*  _filename);
----------------------------------------------------------------------*/
 
 protected:
 private:
@@ -211,7 +118,6 @@ RoadmapGraph<VERTEX,WEIGHT>::
   //==================================
   // RoadmapGraph class Methods: Initialization
   //==================================
-  // void Init(const int _numNodes, const int _numEdges);
 
 template<class VERTEX, class WEIGHT>
 void
@@ -224,8 +130,6 @@ Init(const int _numNodes, const int _numEdges) {
   //==================================
   // RoadmapGraph class Methods: Adding & Deleting Vertices
   //==================================
-  // VID AddVertex(VERTEX&);
-  // VID AddVertex(vector<VERTEX>&);
 
 // require that VERTEX data (configuration) is unique
 template<class VERTEX, class WEIGHT>

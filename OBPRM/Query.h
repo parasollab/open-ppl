@@ -13,8 +13,6 @@
 //
 //  Created
 //      08/18/98  Nancy Amato
-//  Last Modified By:
-//      11/23/98  Lucia K. Dale
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Query_h

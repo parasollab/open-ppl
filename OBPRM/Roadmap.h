@@ -13,8 +13,6 @@
 //
 //  Created
 //      07/16/98  Lucia K. Dale
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Roadmap_h

@@ -31,11 +31,6 @@
 //
 //  Created
 //      7/18/98  Nancy Amato
-//  Last Modified By:
-//      8/26/99  An Ping
-//      8/31/99  Lucia K. Dale
-//      11/22/99  Nancy Amato (add GetEdgesVData)
-//      11/26/99  Nancy Amato (Dijkstra SSSP;BFS cleanup;Weight class;cleanup)
 /////////////////////////////////////////////////////////////////////
 #ifndef Graph_h
 #define Graph_h
@@ -52,8 +47,6 @@
 #include <list.h>          //g++ in SUN
 
 #ifndef __HP_aCC
-   //#include <algorithm>  //c++ in parasol
-   //#include <list>       //c++ in parasol
    #include <vector.h>
    #include <deque.h>	
    #include <stack.h>
@@ -357,16 +350,9 @@ public:
    WEIGHT  GetEdgeWeight(VERTEX&, VERTEX&) const;
 
    virtual int GetVertexOutDegree(VID) const;
-   //virtual int GetVertexInDegree(VID) const;
-   //virtual int GetVertexDegree(VID) const;
    virtual vector<VID> GetSuccessors(VID) const;
    virtual vector<VID> GetSuccessors(VERTEX&) const;
    void GetPredecessorVector(); // NMA:::: THIS NEEDS TO GO!
-   //virtual vector<VID> GetPredecessors(VID) const;
-   //virtual vector<VID> GetPredecessors(VERTEX&) const;
-   //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetIncidentEdges(VID) const;
-   //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetIncomingEdges(VID) const;
-   //virtual vector< pair< pair<VID,VID>, WEIGHT> > GetOutgoingEdges(VID) const;
 
        // Basic Graph Algorithms
    WeightedMultiDiGraph<VERTEX,WEIGHT> BFS(VID) const; 
@@ -1102,7 +1088,6 @@ bool
 WeightedMultiDiGraph<VERTEX,WEIGHT>:: 
 IsVertex(VERTEX& _v1, const Vertex**  _v1ptr) const {
 
-     //CVI v1 = find_if(v.begin(), v.end(), VDATA_eq(_v1) );
      CVI v1 = my_find_VDATA_eq(_v1);
      if (v1 != v.end() ) {
          *_v1ptr = v1;
@@ -1639,7 +1624,6 @@ DijkstraSSSP(VID _startVid) const {
   WeightedMultiDiGraph<VERTEX,WEIGHT> sssptree;
 
   // initialize all distances to be big... and predecessors = NULL
-  // priority_queue<dkinfo,dkinfo_Compare> pq;
   vector<dkinfo> pq;
   double  maxdist = v.size() * WEIGHT::MaxWeight();
   for ( cv1 = v.begin(); cv1 != v.end(); cv1++) {
@@ -1996,10 +1980,8 @@ ReadGraph(istream& _myistream) {
       WEIGHT weight;
       int nVerts, nEdges, nedges;
       char tagstring[100];
-      //string tagstring;
 
       _myistream >> tagstring;
-      //if ( tagstring != "#####GRAPHSTART" ) {
       if ( !strstr(tagstring,"GRAPHSTART") ) {
          cout << endl << "In ReadGraph: didn't read GRAPHSTART tag right";
          return;
@@ -2032,7 +2014,6 @@ ReadGraph(istream& _myistream) {
                         // should sort verts & find biggest used...
 
       _myistream >> tagstring;
-      //if ( tagstring != "#####GRAPHSTOP" ) {
       if ( !strstr(tagstring,"GRAPHSTOP") ) {
          cout << endl << "In ReadGraph: didn't read GRAPHSTOP tag right";
          return;
@@ -2576,7 +2557,6 @@ GetCC ( VID _v1id) const {
 
    WeightedMultiDiGraph<VERTEX,WEIGHT> bfstree = BFS(_v1id);
    vector<VID> ccverts = bfstree.GetVerticesVID();
-   //sort( ccverts.begin(), ccverts.end() ); //sort by VID for CC stats
    return ccverts;
 }
 
@@ -2825,12 +2805,10 @@ DeleteXEdges(VID _v2id, int _x) {
      if (_x == -1) 
         num_to_delete = edgelist.size();
         else num_to_delete = _x;
-     //EI ei = find_if(edgelist.begin(), edgelist.end(), EID_eq(_v2id) );
      EI ei = my_find_EID1_eq(_v2id);
      while ( (ei != edgelist.end()) && (num_deleted < num_to_delete) ) {
          edgelist.erase(ei);
          num_deleted++;
-         //ei = find_if(ei, edgelist.end(), EID_eq(_v2id) );
          ei = my_find_EID2_eq(ei,edgelist.end(),_v2id);
      }
      return num_deleted;
@@ -2846,16 +2824,13 @@ DeleteXEdges(VID _v2id, WEIGHT _weight, int _x) {
      if (_x == -1)
         num_to_delete = edgelist.size();
         else num_to_delete = _x;
-     //EI ei = find_if(edgelist.begin(), edgelist.end(), EID_eq(_v2id) );
      EI ei = my_find_EID1_eq(_v2id);
      while ( (ei != edgelist.end()) && (num_deleted < num_to_delete) ) {
          if (ei->weight == _weight) {
             edgelist.erase(ei);
             num_deleted++;
-            //ei = find_if(ei, edgelist.end(), EID_eq(_v2id) );
             ei = my_find_EID2_eq(ei,edgelist.end(),_v2id);
          } else {
-            //ei = find_if(ei+1, edgelist.end(), EID_eq(_v2id) );
             ei = my_find_EID2_eq(ei+1,edgelist.end(),_v2id);
          }
      }
@@ -2879,7 +2854,6 @@ template<class VERTEX, class WEIGHT>
 bool 
 WtVertexType<VERTEX,WEIGHT>::
 IsEdge(VID _v2id, const WtEdge** _ei) const {
-     //CEI ei = find_if(edgelist.begin(), edgelist.end(), EID_eq(_v2id));
      CEI ei = my_find_EID1_eq(_v2id);
      if (ei != edgelist.end() ) {
          *_ei = ei;
@@ -2893,7 +2867,6 @@ template<class VERTEX, class WEIGHT>
 bool 
 WtVertexType<VERTEX,WEIGHT>::
 IsEdge(VID _v2id, WEIGHT _weight, const WtEdge** _ei) const {
-     //CEI ei = find_if(edgelist.begin(), edgelist.end(), EIDWT_eq( pair<VID,WEIGHT>(_v2id,_weight) ) );
      CEI ei = my_find_EIDWT_eq( pair<VID,WEIGHT>(_v2id,_weight) );
      if (ei != edgelist.end() ) {
          *_ei = ei;

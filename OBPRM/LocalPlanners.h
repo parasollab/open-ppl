@@ -24,8 +24,6 @@
 //
 //  Created
 //      8/7/98  Nancy Amato
-//  Last Modified By:
-//      xx/xx/xx  <Name>
 /////////////////////////////////////////////////////////////////////
 
 #ifndef LocalPlanners_h
@@ -94,7 +92,6 @@ public:
     SID dmsetid;
     vector<Cfg> path;
     pair<Cfg,Cfg> savedEdge;
-    //int nTicks;
     
 };
     
@@ -103,11 +100,6 @@ class LPSets;
 class LocalPlanners;
 
 class Roadmap;
-
-//typedef bool (*LPF) (Environment *env,CollisionDetection *,DistanceMetric*,
-//				Cfg&,Cfg&,LP&,LPInfo*); 	// pointer to lp function
-                                         		// *NOTE* need to update
-                                         		//  when params known
 
 
 /////////////////////////////////////////////////////////////////////
@@ -138,7 +130,6 @@ public:
   // Other Methods
   //===================================================================
   char*  GetName() const;
-  //LPF    GetPlanner();
   PLANNER GetPlanner();
   double GetS() const;
   int    GetTries() const;
@@ -154,7 +145,6 @@ protected:
   // Data
   //===================================================================
   char   name[80];
-  //LPF    planner;          // ptr to local planner code
   PLANNER planner;
   double sValue;
   int    tries;
@@ -201,7 +191,6 @@ public:
         // Adding LPs, Making & Modifying LP sets
    int AddLP(const char* _lpinfo);     // add lp(s) to universe
    int AddLPToSet(const SID _sid, const EID _lpid);
-   //int DeleteLPFromSet(const SID _sid, const EID _lpid);
 
    SID MakeLPSet(const char* lplist);  // make an ordered set of lps,
    SID MakeLPSet(istream& _myistream); //  - add lp to universe if not there
@@ -214,7 +203,6 @@ public:
    LP GetLP(const EID _lpid) const;
    vector<LP> GetLPs() const;
    vector<LP> GetLPSet(const SID _sid) const;
-   //vector<pair<SID,vector<pair<EID,LP> > > > GetLPSets() const;
    vector<pair<SID,vector<LP> > > GetLPSets() const;
 
         // Display, Input, Output

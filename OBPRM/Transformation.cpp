@@ -3,8 +3,6 @@
 //  Transformation.c
 //
 //  Created   3/ 1/98 Aaron Michalk
-//  Modified  3/18/98 Aaron Michalk
-//  Modified  6/ 4/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
 #include "Transformation.h"

@@ -3,8 +3,6 @@
 //  FreeBody.h
 //
 //  Created   2/25/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Added/Modified  7/31/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
 #ifndef FreeBody_h
@@ -41,7 +39,6 @@ private:
     //  Data
     //-----------------------------------------------------------
     double Mass;
-    //Inertia inertia;
     double jointLimit;
 };
 

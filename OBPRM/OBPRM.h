@@ -10,12 +10,6 @@
 //
 //  Created
 //      8/25/98  Lucia K. Dale
-//  History
-//      8/27/98  Lucia K. Dale
-//      8/31/98  O.B. Bayazit     added the Cfg class
-//      03/03/99 Guang Song       add Cfg_fixed_PRR
-//	                          add Cfg_free_serial & its iostream.
-//
 /////////////////////////////////////////////////////////////////////
 
 #ifndef OBPRM_h
@@ -115,7 +109,6 @@ private:
 //-----------------------------------
 #ifndef WEIGHT
 typedef IntWeight WEIGHT;
-//typedef DblWeight WEIGHT;
 #endif
 
 

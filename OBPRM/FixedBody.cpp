@@ -3,9 +3,6 @@
 //  FixedBody.c
 //
 //  Created   3/ 1/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
-//  Added/Modified  6/ 4/98 Wookho Son
-//  Added/Modified  7/31/98 Wookho Son
 /////////////////////////////////////////////////////////////////////
 
 #include "FixedBody.h"
@@ -43,7 +40,6 @@ GMSPolyhedron & FixedBody::GetWorldPolyhedron() {
 #endif
    GetWorldTransformation();
     worldPolyhedron=Body::GetWorldPolyhedron();
-    //a=worldPolyhedron;
     return worldPolyhedron;
 }
 
@@ -82,7 +78,6 @@ void FixedBody::Get(Input * _input, int _multibodyIndex, int _index) {
     // Now for every fixedbody, see Input.c for corresponding changes. 
     worldTransformation.orientation = _input->fixedbodyOrientation[_multibodyIndex][bodyIndex];
     worldTransformation.position = _input->fixedbodyPosition[_multibodyIndex][bodyIndex];
-    //}
     Body::Read(_input,_input->fixedbodyFileName[_multibodyIndex][bodyIndex]);
 }
 

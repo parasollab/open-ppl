@@ -8,8 +8,6 @@
 // 	free nodes in the roadmap.
 //  Created
 //      09/29/98  O.B. Bayazit (HRoadmap class)
-//      07/23/99  Guang Song (add some methods, rename it HapticInput)
-//  Last Modified By:
 /////////////////////////////////////////////////////////////////////
 #ifndef HapticInput_h
 #define HapticInput_h

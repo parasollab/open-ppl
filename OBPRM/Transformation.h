@@ -3,7 +3,6 @@
 //  Transformation.h
 //
 //  Created   2/25/98 Aaron Michalk
-//  Modified  4/13/98 Aaron Michalk
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Transformation_h

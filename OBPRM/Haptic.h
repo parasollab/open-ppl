@@ -8,10 +8,6 @@
 //      is based on the HapticInput class.
 //  Created
 //      09/29/98  O.B. Bayazit (HRoadmap class)
-//      07/23/99  Guang Song (add some methods, rename it HapticInput)
-//  Last Modified By:
-//      07/21/00 Sujay Sundaram and Shawna Miller (remove some
-//               methods, rename is Haptic)
 /////////////////////////////////////////////////////////////////////
 #ifndef Haptic_h
 #define Haptic_h

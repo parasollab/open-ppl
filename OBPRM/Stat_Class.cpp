@@ -469,8 +469,6 @@ PrintAllStats( Roadmap *rmap, int numCCs) {
 
 
   #if VERBOSE
-//    cout << endl << "The nodes & edges(weights) are:" << endl;
-//    rmap->roadmap.DisplayGraph();
   #endif
 
   cout << endl;

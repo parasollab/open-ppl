@@ -8,10 +8,6 @@
 //      free space.
 //  Created
 //      09/29/98  O.B. Bayazit (HRoadmap class)
-//      07/23/99  Guang Song (add some methods, rename it HapticInput)
-//  Last Modified By:
-//      07/21/00 Sujay Sundaram and Shawna Miller (removed/renamed
-//               some methods, rename it Push)
 /////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -211,7 +207,6 @@ void Push::ShortestPush(vector <Cfg> nodes)
     cout << "Add as fixed : " << fixed.size() << " nodes added\n";
     for(i=0;i<fixed.size();i++)
        cout << "VID : "<< rdmp->roadmap.AddVertex(fixed[i]) << " " <<fixed[i] << " added in fixed\n";
-    //Connect_MapNodes();
     LPInfo lpInfo(rdmp, connectionInfo);
     for(i=1;i<fixed.size();i++) {
        if(lp->IsConnected(env,cd,dm,fixed[i-1],fixed[i],connectionInfo.lpsetid,&lpInfo)) {
@@ -285,7 +280,6 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
   vector<Vector3D> returnVectorList;
   Vector3D *vectorList;
 
-  //int robot_index = _roadmap.GetEnvironment()->GetRobotIndex();
   int robot_index = 0;  // for now, the robot is the 1st body in the environment
 
   // Get the polyhedron for the robot (which is not world-transformed)
@@ -316,14 +310,10 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
   for (i=0; i< robotPoly.numVertices; i++)
       for (int j=0; j< obstaclePoly.numVertices; j++){
 	  vectorList[i*obstaclePoly.numVertices+j]=(obstaclePoly.vertexList[j] - robotPoly.vertexList[i]);
-      //cout << i << " " << j << " " << i*obstaclePoly.numVertices+j << " " << vectorList[i*obstaclePoly.numVertices+j] << endl << flush;
 	}
     cout << "soring "  << robotPoly.numVertices*obstaclePoly.numVertices <<endl <<endl;
-    //aptal=0;
     qsort((void *)vectorList,robotPoly.numVertices*obstaclePoly.numVertices,sizeof(Vector3D),Compare3D); 
     cout << "sorted" << _k << endl <<flush;
-  //  vectorList.resize(_k);
-    //cout << " size = " << vectorList.size() << " k= " << _k << endl << flush;
 #endif
   int pairs = robotPoly.numVertices*obstaclePoly.numVertices;
   int size = pairs > 10000 ? 10000 : pairs;
@@ -338,7 +328,6 @@ vector<Vector3D>  closestKvertex(Roadmap * _roadmap, int _k)
 
     for(i=0;i<_k;i++)
     {
-      //cout << "value= "<<vectorList[i].magnitude() << endl << flush;
 	returnVectorList.push_back(vectorList[i]);
      }
 	free(vectorList);
@@ -374,7 +363,6 @@ void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
         Cfg ccc(Vector6<double>(tmpx,tmpy,tmpz,0,0,0));
 
         inter=GenerateOutsideCfg(env,cd, seeds[i],
-           //           (ccc)/incrCoord,
 			ccc,
                           generationInfo);
         cout << "VID : "<< rdmp->roadmap.AddVertex(inter) << 
@@ -385,7 +373,6 @@ void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
  }
  Vector3D com;
  WritePathTranformationMatrices("closestWorkspacePoints.path", surface, env);
-    //Connect_MapNodes();
 }
 
 
@@ -491,7 +478,6 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
     cout << "Add as surface : " << surface.size() << " nodes added\n";
     for(i=0;i<surface.size();i++)
            cout << "VID : "<< rdmp->roadmap.AddVertex(surface[i]) << " " <<surface[i] << " added in surface\n";
-    //Connect_MapNodes();
   } 
 
 }
@@ -521,7 +507,6 @@ vector <Cfg> Push::GenerateIntermediateCfgs(Cfg cfg_start, Cfg cfg_end,
 
   Cfg dir = original_dir;
   
-  //while (original_dir == dir) {
   while ((original_dir.GetSingleParam(0) == dir.GetSingleParam(0)) &&
          (original_dir.GetSingleParam(1) == dir.GetSingleParam(1)) &&
          (original_dir.GetSingleParam(2) == dir.GetSingleParam(2))) {
@@ -529,7 +514,6 @@ vector <Cfg> Push::GenerateIntermediateCfgs(Cfg cfg_start, Cfg cfg_end,
     temp = Cfg:: c1_towards_c2(temp,cfg_end,stepSize);
     dir = cfg_end - temp;
 
-    //dir = dir / dir.PositionMagnitude();
     dir.SetSingleParam(0, dir.GetSingleParam(0) / dir.PositionMagnitude());
     dir.SetSingleParam(1, dir.GetSingleParam(1) / dir.PositionMagnitude());
     dir.SetSingleParam(2, dir.GetSingleParam(2) / dir.PositionMagnitude());    
@@ -664,16 +648,3 @@ GenerateOBPRMNodes(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
     }
   return SurfaceNodes;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

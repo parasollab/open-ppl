@@ -3,8 +3,6 @@
 //  Matrix.h
 //
 //  Created   4/24/98 Aaron Michalk
-//  Added     5/15/98 Wookho Son
-//  Added     6/ 5/98 Wookho Son
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef Matrix_h
@@ -22,7 +20,6 @@ public:
     //----------------------------------------------------------------------
     Matrix(int _ncol, int _nrow);
     Matrix(double *_m = 0, int _ncol = 0, int _nrow = 0);
-//    Matrix(double *_m = 0, int _n = 0);
     Matrix(const Matrix & _m);
     ~Matrix();
     //----------------------------------------------------------------------

@@ -3,8 +3,6 @@
 //  GMSPolyhedron.h
 //
 //  Created   3/ 6/98 Aaron Michalk
-//  Last modified:
-//            06/16/99 Guang Song:  add constructors and destructors.
 ///////////////////////////////////////////////////////////////////////////
 
 #ifndef GMSPolyhedron_h
@@ -71,23 +69,3 @@ public:
 };
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
