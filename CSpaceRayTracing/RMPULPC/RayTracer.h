@@ -20,7 +20,8 @@ class RayTracer {
   RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid);
   void setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length);
   void connectCCs();
-  bool connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, Roadmap &ccj, VID ccj_id, vector<Cfg> &rep_ccj_cfgs);
+/*    bool connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, Roadmap &ccj, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp); */
+  bool connectCCs(VID cci_id, vector<Cfg> &rep_cci_cfgs, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp);
   bool findPath(Cfg &source, Cfg &target, Roadmap &ray_rdmp);
   bool findPath(Cfg &source, Cfg &target, vector<Cfg> *target_cfgs, Roadmap &ray_rdmp);
   void setSource(Cfg configuration);
@@ -34,7 +35,7 @@ class RayTracer {
   void printPath ();//print the path found
 
  private:
-  void getBoundaryCfgs(Roadmap &input_rdmp, const vector<VID> &input, vector<Cfg> &output, unsigned int k);
+  void getBoundaryCfgs(const vector<Cfg> &input, vector<Cfg> &output, unsigned int k);
 
   RayCSpace ray; // Ray to be traced
   Cfg source, target;

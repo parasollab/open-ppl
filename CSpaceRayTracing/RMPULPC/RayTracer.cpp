@@ -51,33 +51,40 @@ void RayTracer::connectCCs() {
   GetCCStats(*(rdmp->m_pRoadmap), ccs);//get the CCs
 
   vector< pair<int,VID> >::iterator cci = ccs.begin(); //cci is the i'th cc
-  Roadmap rdmp_cci = Roadmap::Roadmap();
-  rdmp_cci.environment = rdmp->GetEnvironment();
+//    Roadmap rdmp_cci = Roadmap::Roadmap();
+//    rdmp_cci.environment = rdmp->GetEnvironment();
 
-  vector<VID> cci_cfgs; // a vector with the configs of cci
-  GetCC(*(rdmp->m_pRoadmap), cci->second, cci_cfgs); //cci_cfgs = cfgs in cci
-  ConnectMapNodes::ModifyRoadMap(&rdmp_cci, rdmp, cci_cfgs);//rdmp_cci: submap of rdmp for cci
+//    vector<VID> cci_cfgs_id; // a vector with the configs of cci
+//    GetCC(*(rdmp->m_pRoadmap), cci->second, cci_cfgs_id); //cci_cfgs = cfgs in cci
+//    ConnectMapNodes::ModifyRoadMap(&rdmp_cci, rdmp, cci_cfgs_id);//rdmp_cci: submap of rdmp for cci
 
   unsigned int k = 10;
 
+  vector<Cfg> cci_cfgs;
+  Cfg cci_tmp = rdmp->m_pRoadmap->GetData(cci->second);
+  GetCC(*(rdmp->m_pRoadmap), cci_tmp, cci_cfgs);
   vector<Cfg> rep_cci_cfgs;
-  getBoundaryCfgs(rdmp_cci, cci_cfgs, rep_cci_cfgs, k);
+  getBoundaryCfgs(cci_cfgs, rep_cci_cfgs, k);
 
   vector< pair<int,VID> >::iterator ccj = cci+1; //ccj is the cc after cci
-//    Roadmap rdmp_ccj = Roadmap::Roadmap();
-//    rdmp_ccj.environment = rdmp->GetEnvironment();
 //    //Order CCs to attempt to connect them
 //    OrderCCByCloseness(rdmp, dm, info, ccs);
+
+  Roadmap target_rdmp = Roadmap::Roadmap();
+  target_rdmp.environment = rdmp->GetEnvironment();
   
   while (ccj <= ccs.end() && !path_found) {
-    Roadmap rdmp_ccj = Roadmap::Roadmap();
-    rdmp_ccj.environment = rdmp->GetEnvironment();
+//      Roadmap rdmp_ccj = Roadmap::Roadmap();
+//      rdmp_ccj.environment = rdmp->GetEnvironment();
 
-    vector<VID> ccj_cfgs;
-    GetCC(*(rdmp->m_pRoadmap), ccj->second, ccj_cfgs);//copy nodes in ccj to ccj_cfgs
-    ConnectMapNodes::ModifyRoadMap(&rdmp_ccj, rdmp, ccj_cfgs);//rdmp_ccj nodes (and incident edges) = nodes ccj_cfgs from rdmp
+//      vector<VID> ccj_cfgs_id;
+//      GetCC(*(rdmp->m_pRoadmap), ccj->second, ccj_cfgs_id);//copy nodes in ccj to ccj_cfgs_id
+//      ConnectMapNodes::ModifyRoadMap(&rdmp_ccj, rdmp, ccj_cfgs_id);//rdmp_ccj nodes (and incident edges) = nodes ccj_cfgs from rdmp
+    vector<Cfg> ccj_cfgs;
+    Cfg ccj_tmp = rdmp->m_pRoadmap->GetData(ccj->second);
+    GetCC(*(rdmp->m_pRoadmap), ccj_tmp, ccj_cfgs);
     vector<Cfg> rep_ccj_cfgs;
-    getBoundaryCfgs(rdmp_ccj, ccj_cfgs, rep_ccj_cfgs, k);
+    getBoundaryCfgs(ccj_cfgs, rep_ccj_cfgs, k);
 
 //      int d = 0;
 //      GetCCcount(*(rdmp->m_pRoadmap));
@@ -87,25 +94,33 @@ void RayTracer::connectCCs() {
 //      if (cct3.size()>= MAX_SMALL_CC_SIZE)
 //        while ( !IsSameCC(*(rdmp->m_pRoadmap),  cciid, ccjid) && d < MAX_D && i < MAX_ITERATIONS) {
 //  	//	 go through each configuration of submap1 and try to connect to submap2
-    if (connectCCs(rdmp_cci, cci->second, rep_cci_cfgs, rdmp_ccj, ccj->second, rep_ccj_cfgs)) {
+    if (connectCCs(cci->second, rep_cci_cfgs, ccj->second, rep_ccj_cfgs, target_rdmp)) {
       // put the ray obtained into the roadmap	
-      vector<VID> ray_vertices;
-      rdmp_cci.m_pRoadmap->GetVerticesVID(ray_vertices);
-      ConnectMapNodes::ModifyRoadMap(rdmp, &rdmp_cci, ray_vertices);
+      //      vector<VID> ray_vertices;
+      //rdmp_cci.m_pRoadmap->GetVerticesVID(ray_vertices);
+      //ConnectMapNodes::ModifyRoadMap(rdmp, &rdmp_cci, ray_vertices);
       path_found = true;
     }
 //  	d++;
 //        }
     ccj++; 
     //d=0;
-    rdmp_ccj.environment = NULL;
-    rdmp_ccj.m_pRoadmap = NULL;
+//      rdmp_ccj.environment = NULL;
+//      rdmp_ccj.m_pRoadmap = NULL;
   }
-  rdmp_cci.environment = NULL;
-  rdmp_cci.m_pRoadmap = NULL; 
+//    rdmp_cci.environment = NULL;
+//    rdmp_cci.m_pRoadmap = NULL; 
+
+  //update the roadmap
+  vector<VID> target_rdmp_vertices;
+  target_rdmp.m_pRoadmap->GetVerticesVID(target_rdmp_vertices);
+  ConnectMapNodes::ModifyRoadMap(rdmp, &target_rdmp, target_rdmp_vertices);
+
+  target_rdmp.environment = NULL;
+  target_rdmp.m_pRoadmap = NULL;
 }
 
-bool RayTracer::connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, Roadmap &ccj, VID ccj_id, vector<Cfg> &rep_ccj_cfgs) {
+bool RayTracer::connectCCs(VID cci_id, vector<Cfg> &rep_cci_cfgs, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp) {
 //    //first approach (to be replaced by a better one):
 //    // findPath(config from ccA, config from ccB)
 //    // return ray.roadmap();
@@ -126,7 +141,8 @@ bool RayTracer::connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, 
       cout << "A path was found" << endl;
       vector<VID> ray_vertices;
       ray_rdmp.m_pRoadmap->GetVerticesVID(ray_vertices);
-      ConnectMapNodes::ModifyRoadMap(&cci, &ray_rdmp, ray_vertices);
+      //ConnectMapNodes::ModifyRoadMap(&cci, &ray_rdmp, ray_vertices);
+      ConnectMapNodes::ModifyRoadMap(&target_rdmp, &ray_rdmp, ray_vertices);
       path_found = true;
       break;
     }
@@ -286,26 +302,33 @@ void RayTracer::printPath() {
   cout << "print the path found, remember that it is stored in the roadmap"<<endl;
 }
 
-void RayTracer::getBoundaryCfgs(Roadmap &input_rdmp, const vector<VID> &input, vector<Cfg> &output, unsigned int k) {
+void RayTracer::getBoundaryCfgs(const vector<Cfg> &input, vector<Cfg> &output, unsigned int k) {
   //get center of mass of all Cfgs in input
   Cfg center_mass;
   int i=0;
-  for (i = 1, center_mass = input_rdmp.m_pRoadmap->GetData(input[0]); i < input.size(); ++i) {
-    center_mass = center_mass + input_rdmp.m_pRoadmap->GetData(input[i]);
+//    for (i = 1, center_mass = input_rdmp.m_pRoadmap->GetData(input[0]); i < input.size(); ++i) {
+//      center_mass = center_mass + input_rdmp.m_pRoadmap->GetData(input[i]);
+//    }
+  for (i = 1, center_mass = input[0]; i < input.size(); ++i) {
+    center_mass = center_mass + input[i];
   }
   center_mass = center_mass / i;
 
+  //  ConnectMapNodes::SortByDistFromCfg(input_rdmp.GetEnvironment(), dm, 
 //    cout << "Number of cfgs processed: " << i << ", center of mass: " << center_mass << endl;
   //copy input to distances (pair of distances to center of mass, VID)
-  vector <VE_DIST_TYPE> distances;
+  vector <ConnectMapNodes::CfgDistType> distances;
   for (i = 0; i < input.size(); ++i) {
-    double dist = dm->Distance(input_rdmp.GetEnvironment(), center_mass, input_rdmp.m_pRoadmap->GetData(input[i]), dmsetid);
-    Cfg current_cfg = input_rdmp.m_pRoadmap->GetData(input[i]);
-    distances.push_back(VE_DIST_TYPE(Cfg_VE_Type(center_mass, current_cfg), dist));
+//      double dist = dm->Distance(input_rdmp.GetEnvironment(), center_mass, input_rdmp.m_pRoadmap->GetData(input[i]), dmsetid);
+    double dist = dm->Distance(environment, center_mass, input[i], dmsetid);
+    //    Cfg current_cfg = input_rdmp.m_pRoadmap->GetData(input[i]);
+    //    distances.push_back(VE_DIST_TYPE(Cfg_VE_Type(center_mass, current_cfg), dist));
+    //distances.push_back(ConnectMapNodes::CfgDistType(input_rdmp.m_pRoadmap->GetData(input[i]), dist));
+    distances.push_back(ConnectMapNodes::CfgDistType(input[i], dist));
   }
 
   //order distances by distance to center of mass (first field of pair)
-  sort(distances.begin(), distances.end(), ptr_fun(ConnectMapNodes::VE_DIST_Compare));
+  sort(distances.begin(), distances.end(), ptr_fun(ConnectMapNodes::CfgDist_Compare));
 
   //clear output
   output.clear();
@@ -316,7 +339,7 @@ void RayTracer::getBoundaryCfgs(Roadmap &input_rdmp, const vector<VID> &input, v
 
   //copy the first k to output
   for (i = distances.size() - 1; (i > lim_inf) && (i >= 0) ; --i) {
-    output.push_back(distances[i].first.cfg2);
+    output.push_back(distances[i].first);
 //      cout << "processing distances["<<i<<"]"<<endl;
   }
   
