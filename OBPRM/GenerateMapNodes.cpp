@@ -160,7 +160,7 @@ BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GN
       if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) {
          _info.nodes.push_back(Cfg(cfg));
          #if INTERMEDIATE_FILES
-	   path.push_back(cfg);
+       path.push_back(cfg);
          #endif
       }
    }
@@ -256,13 +256,13 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
   Cfg InsideNode, OutsideNode, low, high, mid;
 
   int N = _info.numNodes
-                / (numMultiBody-1) 	// -1 for the robot
-		/ _info.numShells;
+                / (numMultiBody-1)  // -1 for the robot
+        / _info.numShells;
 
   if (N<1) {
-	cout << "\n  Not asking to generate any nodes per obstacle (N="
-		<< N << ")\n\n" << flush;
-	return;
+    cout << "\n  Not asking to generate any nodes per obstacle (N="
+        << N << ")\n\n" << flush;
+    return;
   }
 
   for (int obstacle = 0 ; obstacle < numMultiBody ; obstacle++){
@@ -270,48 +270,48 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
 
         for(int n = 0 ; n < N; n++){
 
-		// Generate Inside cfg
-		Cfg InsideNode;
-		if(!GenerateInsideCfg(_env, cd, robot, obstacle, &InsideNode, _info)) {
+        // Generate Inside cfg
+        Cfg InsideNode;
+        if(!GenerateInsideCfg(_env, cd, robot, obstacle, &InsideNode, _info)) {
                    cout << "\nError: cannot overlap COMs of robot & obstacle\n";
                    continue;
                 }
 		if(!InsideNode.isCollision(_env,cd,robot,obstacle,_info.cdsetid,_info.cdInfo)){
                    cout << "\nError: Seed not in collision w/"
-				" obstacle[index="<<obstacle<<"]\n" << flush;
+                " obstacle[index="<<obstacle<<"]\n" << flush;
                    continue;
                 }
 
-		// Generate Random direction
-  		Cfg incrCfg=Cfg::GetRandomRay(
-			EXPANSION_FACTOR * _env->GetPositionRes()
-		);
+        // Generate Random direction
+        Cfg incrCfg=Cfg::GetRandomRay(
+            EXPANSION_FACTOR * _env->GetPositionRes()
+        );
 
-		// Generate outside cfg
-		Cfg OutsideNode = GenerateOutsideCfg(_env,cd,robot,obstacle,
-				InsideNode,incrCfg,_info);
-		if(OutsideNode.AlmostEqual(InsideNode)) continue; // can not find outside node.
+        // Generate outside cfg
+        Cfg OutsideNode = GenerateOutsideCfg(_env,cd,robot,obstacle,
+                InsideNode,incrCfg,_info);
+        if(OutsideNode.AlmostEqual(InsideNode)) continue; // can not find outside node.
 
-		// Generate surface cfgs
+        // Generate surface cfgs
                 tmp = GenerateSurfaceCfg(_env,cd,dm,_info,
-			robot,obstacle, InsideNode,OutsideNode);
+            robot,obstacle, InsideNode,OutsideNode);
 
-		// Choose as many as nshells
+        // Choose as many as nshells
                 preshells = Shells(tmp, _info.numShells);
                 shells = InsideBB(_env, preshells);
                 preshells.erase(preshells.begin(), preshells.end());
 
-		// Collect the cfgs for this obstacle
-		obstSurface.insert(obstSurface.end(),
-			shells.begin(),shells.end());
+        // Collect the cfgs for this obstacle
+        obstSurface.insert(obstSurface.end(),
+            shells.begin(),shells.end());
 
-	} // endfor: n
+    } // endfor: n
 
         // Collect the generated surface nodes
         for (int i=0;i<obstSurface.size();i++){
-		obstSurface[i].info.obst = obstacle;
-		_info.nodes.push_back(obstSurface[i]);
-	}
+        obstSurface[i].info.obst = obstacle;
+        _info.nodes.push_back(obstSurface[i]);
+    }
 
         #if INTERMEDIATE_FILES
         surface.insert(surface.end(),
@@ -326,7 +326,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
             vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _info.numNodes, _info);
             int i;
             for(i=0; i<CobstNodes.size(); ++i)
-		CobstNodes[i].info.obst = obstacle;
+        CobstNodes[i].info.obst = obstacle;
                 _info.nodes.push_back(CobstNodes[i]);
             #if INTERMEDIATE_FILES
                 surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
@@ -384,45 +384,45 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
 
         if(obstacle != robot){
 
-	    // Generate Surface Cfgs using Binary Search Procedure
-	    obstSurface = GenSurfaceCfgs4Obst(_env,cd,dm, obstacle, NSEED, _info);
+        // Generate Surface Cfgs using Binary Search Procedure
+        obstSurface = GenSurfaceCfgs4Obst(_env,cd,dm, obstacle, NSEED, _info);
 
-	    // Generate Free Cfgs using Ad Hoc procedure
-	    obstFree = GenFreeCfgs4Obst(_env,cd, obstacle, NFREE, _info);
+        // Generate Free Cfgs using Ad Hoc procedure
+        obstFree = GenFreeCfgs4Obst(_env,cd, obstacle, NFREE, _info);
 
             // Collect free & surface nodes for return
             int i;
             for (i=0;i<obstSurface.size();i++){
-		obstSurface[i].info.obst = obstacle;
+        obstSurface[i].info.obst = obstacle;
                 _info.nodes.push_back(obstSurface[i]);
-	    }
+        }
             for (    i=0;i<obstFree.size();i++){
-		obstFree[i].info.obst = obstacle;
+        obstFree[i].info.obst = obstacle;
                 _info.nodes.push_back(obstFree[i]);
-	    }
+        }
 
             #if INTERMEDIATE_FILES
               surface.insert(surface.end(),
-				obstSurface.begin(),obstSurface.end());
+                obstSurface.begin(),obstSurface.end());
               surface.insert(surface.end(),
-				obstFree.begin(),obstFree.end());
+                obstFree.begin(),obstFree.end());
             #endif
 
             obstSurface.erase(obstSurface.begin(),obstSurface.end());
             obstFree.erase(obstFree.begin(), obstFree.end());
 
         } // if(obstacle != robot)
-	else  // obst = robot : Guang 10/13/99
-	if(numMultiBody == 1) {
-	    vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _info.numNodes, _info);
-	    for(int i=0; i<CobstNodes.size(); ++i){
-		CobstNodes[i].info.obst = obstacle;
-		_info.nodes.push_back(CobstNodes[i]);
-	    }
-	    #if INTERMEDIATE_FILES
-		surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
-	    #endif
-	}
+    else  // obst = robot : Guang 10/13/99
+    if(numMultiBody == 1) {
+        vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _info.numNodes, _info);
+        for(int i=0; i<CobstNodes.size(); ++i){
+        CobstNodes[i].info.obst = obstacle;
+        _info.nodes.push_back(CobstNodes[i]);
+        }
+        #if INTERMEDIATE_FILES
+        surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
+        #endif
+    }
 
 
     } // for(obstacle)
@@ -440,8 +440,8 @@ bool
 GenerateMapNodes::
 ValidateParameters(Input *_input){
   if ( ValidatePairs(NULL,_input->collPair,NULL) )
-  	if ( ValidatePairs(NULL,_input->freePair,NULL) )
-		return true;
+    if ( ValidatePairs(NULL,_input->freePair,NULL) )
+        return true;
   return false;
 }
 
@@ -487,12 +487,12 @@ GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection* cd,DistanceMetri
     vector<Cfg> tmp, preshells, shells, surface;
     for(int i = 0 ; i < obstSeeds.size() ; i++){
 
-	Cfg incrCfg = Cfg::GetRandomRay(EXPANSION_FACTOR*env->GetPositionRes());
+    Cfg incrCfg = Cfg::GetRandomRay(EXPANSION_FACTOR*env->GetPositionRes());
 
-	Cfg OutsideNode = GenerateOutsideCfg(env,cd,robot,obstacle,obstSeeds[i],incrCfg,info);
-	if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
+    Cfg OutsideNode = GenerateOutsideCfg(env,cd,robot,obstacle,obstSeeds[i],incrCfg,info);
+    if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
 
-	tmp = GenerateSurfaceCfg(env,cd,dm,info,robot,obstacle,obstSeeds[i],OutsideNode);
+    tmp = GenerateSurfaceCfg(env,cd,dm,info,robot,obstacle,obstSeeds[i],OutsideNode);
 
         // Choose as many as nshells
         preshells = Shells(tmp, info.numShells);
@@ -509,7 +509,7 @@ GenSurfaceCfgs4ObstVERTEX(Environment * env,CollisionDetection* cd,DistanceMetri
 //===================================================================
 // GenCfgsFromCObst
 //      generate nodes by collecting free nodes and emitting rays from nodes in collision.
-//	Guang Song 10/13/99
+//  Guang Song 10/13/99
 //===================================================================
 vector<Cfg>
 GenerateMapNodes::
@@ -525,7 +525,7 @@ GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, i
 	if(gen.isCollision(env,cd, info.cdsetid,info.cdInfo))
            obstSeeds.push_back(gen);
         else
-	   surface.push_back(gen);
+       surface.push_back(gen);
     }
 
     vector<Cfg> tmp, preshells, shells;
@@ -534,7 +534,7 @@ GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, i
         Cfg incrCfg = Cfg::GetRandomRay(EXPANSION_FACTOR*env->GetPositionRes());
 
         Cfg OutsideNode = GenerateOutsideCfg(env,cd,robot,obstacle,obstSeeds[i],incrCfg,info);
-	if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
+    if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
 
         tmp = GenerateSurfaceCfg(env,cd,dm,info,robot,obstacle,obstSeeds[i],OutsideNode);
 
@@ -658,7 +658,7 @@ ValidatePairs(char *msg, n_str_param params, pair<int,int> * results){
 
         //-- Indicate success
         success = true;
-	return true;
+    return true;
   }
 
   //-- Indicate failure
@@ -801,7 +801,7 @@ Spread(Cfg pivot, double tStep, double rStep, int nspread,
        vector<Cfg>* spread){
 
     for(int j = 0 ; j < nspread ; j++){
-	spread->push_back(pivot + Cfg::GetRandomCfg(tStep, rStep));
+    spread->push_back(pivot + Cfg::GetRandomCfg(tStep, rStep));
     }
 }
 
@@ -823,7 +823,7 @@ DIST_Compare (const VID_DISTANCE_TYPE &_cc1, const VID_DISTANCE_TYPE &_cc2) {
 void
 GenerateMapNodes::
 FarthestFromStart(Environment * env, DistanceMetric * dm,GNInfo &info,
-	Cfg start, vector<Cfg> spread, vector<Cfg>* farNode){
+    Cfg start, vector<Cfg> spread, vector<Cfg>* farNode){
 
 
     vector<pair <int, double> > ds;
@@ -831,8 +831,8 @@ FarthestFromStart(Environment * env, DistanceMetric * dm,GNInfo &info,
 
     for(int i = 0 ; i < spread.size() ; i++){
         ds.push_back( VID_DISTANCE_TYPE(
-			i,
-			dm->Distance(env, start, spread[i], info.dmsetid))
+            i,
+            dm->Distance(env, start, spread[i], info.dmsetid))
                     );
     }
     sort(ds.begin(), ds.end(), ptr_fun(DIST_Compare));
@@ -840,7 +840,7 @@ FarthestFromStart(Environment * env, DistanceMetric * dm,GNInfo &info,
     for(int j = 0 ; j < spread.size() ; j++){
 
 
-		farNode->push_back(spread[ds[j].first]);
+        farNode->push_back(spread[ds[j].first]);
 
     }
 }
@@ -852,7 +852,7 @@ FarthestFromStart(Environment * env, DistanceMetric * dm,GNInfo &info,
 void
 GenerateMapNodes::
 FirstNFreeCfgs(Environment *env,CollisionDetection *cd, GNInfo &info,
-	int n, vector<Cfg> cfgs, vector<Cfg>* free){
+    int n, vector<Cfg> cfgs, vector<Cfg>* free){
 
     int size = cfgs.size();
     n = min(n,size);
@@ -874,8 +874,8 @@ FirstNFreeCfgs(Environment *env,CollisionDetection *cd, GNInfo &info,
 void
 GenerateMapNodes::
 GenNewPivots(Environment *env,CollisionDetection *cd, DistanceMetric * dm,GNInfo &info,
-	Cfg start, vector<Cfg> pivots,
-	double tStep, double rStep, int nspread, int nFar,
+    Cfg start, vector<Cfg> pivots,
+    double tStep, double rStep, int nspread, int nFar,
         vector<Cfg>* newPivots){
 
     int num = pivots.size();
@@ -935,23 +935,23 @@ SpreadCfg(Environment *env,CollisionDetection *cd,DistanceMetric * dm, GNInfo &i
     vector<Cfg> tmp;
     for(int j = 0 ; j < nIterations ; j++){
 
-	if(pivots.size() == 0) break;
-	tmp.reserve(nFar);
+    if(pivots.size() == 0) break;
+    tmp.reserve(nFar);
         GenNewPivots(env,cd,dm,info,
-		start, pivots, tStep, rStep, nspread, nFar, &tmp);
+        start, pivots, tStep, rStep, nspread, nFar, &tmp);
 
-	pivots.erase(pivots.begin(),pivots.end());
-	pivots.reserve(nFar);
+    pivots.erase(pivots.begin(),pivots.end());
+    pivots.reserve(nFar);
 
-	// Collect all the generated nodes
+    // Collect all the generated nodes
         for(int i=0; i<tmp.size(); i++)
-	  info.nodes.push_back(Cfg(tmp[i]));
-	pivots.insert(pivots.end(),tmp.begin(),tmp.end());
-	#if INTERMEDIATE_FILES
-	  free.insert(free.end(),tmp.begin(),tmp.end());
-	#endif
+      info.nodes.push_back(Cfg(tmp[i]));
+    pivots.insert(pivots.end(),tmp.begin(),tmp.end());
+    #if INTERMEDIATE_FILES
+      free.insert(free.end(),tmp.begin(),tmp.end());
+    #endif
 
-	tmp.erase(tmp.begin(),tmp.end());
+    tmp.erase(tmp.begin(),tmp.end());
 
     } // endfor(j)
 
@@ -990,7 +990,7 @@ InsideBB(Environment *env, vector<Cfg> cfgs){
     vector<Cfg> ncfgs;
 
     for(int i = 0 ; i < cfgs.size() ; i++)
-	if(cfgs[i].InBoundingBox(env))
+    if(cfgs[i].InBoundingBox(env))
             ncfgs.push_back(cfgs[i]);
     return ncfgs;
 };
@@ -1087,9 +1087,9 @@ ChooseRandomTriangleOnBody(Body *body, bool isFreeBody)
     GMSPolyhedron polyhedron;
     // for robot, choose body frame; for obstacle, choose world frame
     if(isFreeBody)
-	polyhedron = body->GetPolyhedron();
+    polyhedron = body->GetPolyhedron();
     else
-	polyhedron = body->GetWorldPolyhedron();
+    polyhedron = body->GetWorldPolyhedron();
 
     // We choose a triangle of the body at random
 
@@ -1179,42 +1179,42 @@ PointOnBody(Body * body, int select, bool isFreeBody)
             pt = ExtremeVertex(body, isFreeBody);
             break;
 
-	case rW:
+    case rW:
             pt = ChooseRandomWeightedTriangleOnBody(body, isFreeBody);
             break;
 
-	case cM_rV:
- 	    opt = rand() % 2;
- 	    if(opt == 0){
-       	    pt = body->GetCenterOfMass();
-	    }
-	    else{
-	   	pt = ChooseRandomVertexOnBody(body, isFreeBody);
-	    }
+    case cM_rV:
+        opt = rand() % 2;
+        if(opt == 0){
+            pt = body->GetCenterOfMass();
+        }
+        else{
+        pt = ChooseRandomVertexOnBody(body, isFreeBody);
+        }
             break;
 
-	case rV_rT:
-	    opt = rand() % 2;
-	    if(opt == 0){
+    case rV_rT:
+        opt = rand() % 2;
+        if(opt == 0){
                 pt = ChooseRandomVertexOnBody(body, isFreeBody);
             }
-	    else{
-		pt = ChooseRandomTriangleOnBody(body, isFreeBody);
-	    }
-	    break;
+        else{
+        pt = ChooseRandomTriangleOnBody(body, isFreeBody);
+        }
+        break;
 
-	case rV_rW:
-	    opt = rand() % 2;
+    case rV_rW:
+        opt = rand() % 2;
             if(opt == 0){
                 pt = ChooseRandomVertexOnBody(body, isFreeBody);
             }
             else{
-		pt = ChooseRandomWeightedTriangleOnBody(body, isFreeBody);
-	    }
-	    break;
+        pt = ChooseRandomWeightedTriangleOnBody(body, isFreeBody);
+        }
+        break;
 
-	case all:
-	    opt = rand() % 5;
+    case all:
+        opt = rand() % 5;
             if(opt == 0){
                 pt = body->GetCenterOfMass();
             }
@@ -1225,12 +1225,12 @@ PointOnBody(Body * body, int select, bool isFreeBody)
                 pt = ChooseRandomTriangleOnBody(body, isFreeBody);
             }
             else if(opt == 3){
-		pt = ExtremeVertex(body, isFreeBody);
-	    }
-	    else{
+        pt = ExtremeVertex(body, isFreeBody);
+        }
+        else{
                 pt = ChooseRandomWeightedTriangleOnBody(body, isFreeBody);
             }
-	    break;
+        break;
 
         default:
             cout << "\n Unknown Option for PointOnBody \n";
@@ -1296,14 +1296,13 @@ Shells(vector<Cfg> cfgs, int nshells){
 bool
 GenerateMapNodes::
 GenerateInsideCfg(Environment *_env, CollisionDetection* _cd,
-		int rob, int obst, Cfg *insideNode, GNInfo &_info){
+        int rob, int obst, Cfg *insideNode, GNInfo &_info){
 
-    _env->GetMultiBody(obst)->ComputeCenterOfMass();
     bool tmp = Cfg::GenerateOverlapCfg(_env, rob,
                 _env->GetMultiBody(rob)->GetCenterOfMass(),
                 _env->GetMultiBody(obst)->GetCenterOfMass(),
                 insideNode);
-    if (!insideNode->isCollision(_env, _cd, rob, obst, _info.cdsetid,_info.cdInfo)) {
+    if (!insideNode->isCollision(_env, _cd, rob, obst, _info.cdsetid, _info.cdInfo)) {
 
       // use random vertex instead of center of mass
       Vector3D vP;
@@ -1311,8 +1310,11 @@ GenerateInsideCfg(Environment *_env, CollisionDetection* _cd,
       // copied from GenerateMapNodes::PointsOnMultiBody()
       vP = PointOnBody(_env->GetMultiBody(obst)->GetFixedBody(0), rV, false);
 
-      Cfg c(vP[0], vP[1], vP[2], 0, 0, 0);
-      *insideNode = c;
+      // get inside cfg again by using vP instead of center of mass
+      bool tmp = Cfg::GenerateOverlapCfg(_env, rob,
+                _env->GetMultiBody(rob)->GetCenterOfMass(),
+                vP,
+                insideNode);
       tmp = true;
     }
     return tmp;
@@ -1331,8 +1333,8 @@ GenerateOutsideCfg(Environment *env,CollisionDetection * cd, int rob, int obst,
     Cfg OutsideNode = InsideNode + incrCfg;
     while(OutsideNode.isCollision(env,cd, rob, obst, info.cdsetid,info.cdInfo) ) {
         OutsideNode = OutsideNode + incrCfg;
-	if(count++ > 500)
-	   return InsideNode;
+    if(count++ > 500)
+       return InsideNode;
     }
     return OutsideNode;
 }
@@ -1479,7 +1481,7 @@ SID
 GNSets::
 MakeGNSet(const char* _gnlist){
 #ifdef _WIN32
-	istrstream  is((char*) _gnlist);
+    istrstream  is((char*) _gnlist);
 #else
   istrstream  is(_gnlist);
 #endif
@@ -1559,7 +1561,7 @@ MakeGNSet(istream& _myistream) {
        }
 
 
-    } else if (!strcmp(gnname,"BasicOBPRM")) { 	// BasicOBPRM
+    } else if (!strcmp(gnname,"BasicOBPRM")) {  // BasicOBPRM
        GN gn1;
        strcpy(gn1.name,gnname);
        gn1.generator = &GenerateMapNodes::BasicOBPRM;
