@@ -1,25 +1,21 @@
 // $Id$
-/////////////////////////////////////////////////////////////////////
-//
-//  VectorConstantSize.h
-//
-//  General Description
-//      This set of template classes provides an implementation for
-//      the a vector data type.
-//
-//      The user must provide the parameter type ELEMENT, which is
-//      the data that will be stored in each coordinate of the vector.
-//      In addition, for the base class a SIZE must be specified.
-//	This is the dimension of the vector and is always an integer.
-//
-//      The classes in this hierarchy (so far) include:
-//        "VectorConstantSize" a vector class template
-//            "Vector3"  a derived 3-dimensional vector class template
-//            "Vector6"  a derived 6-dimensional vector class template
-//
-//  Created
-//      7/26/98  Lucia K. Dale
-/////////////////////////////////////////////////////////////////////
+/**@file VectorConstantSize.h
+   This set of template classes provides an implementation for
+   the a vector data type.
+
+   The user must provide the parameter type ELEMENT, which is
+   the data that will be stored in each coordinate of the vector.
+   In addition, for the base class a SIZE must be specified.
+   This is the dimension of the vector and is always an integer.
+
+   The classes in this hierarchy (so far) include:
+   "VectorConstantSize" a vector class template
+   "Vector3"  a derived 3-dimensional vector class template
+   "Vector6"  a derived 6-dimensional vector class template
+
+   @date 7/26/98
+   @author Lucia K. Dale
+*/
 
 #ifndef VectorConstantSize_h
 #define VectorConstantSize_h
@@ -36,12 +32,12 @@
 #define PITCHpitch	4
 #define YAWyaw  	5
 
-/////////////////////////////////////////////////////////////////////
-//  class VectorConstantSize<SIZE,ELEMENT>
-//
-//  General Description
-//      Base class for all vectors of constant size.
-/////////////////////////////////////////////////////////////////////
+/**
+  class VectorConstantSize<SIZE,ELEMENT>
+
+  General Description
+      Base class for all vectors of constant size.
+*/
 
 template <int SIZE,class ELEMENT>
 class VectorConstantSize{
@@ -256,13 +252,13 @@ void VectorConstantSize<SIZE,ELEMENT>::Write(ostream & _os)const{
 	for (int i=0;i<SIZE;++i)
 		_os << v[i] << ' ';
 };
-/////////////////////////////////////////////////////////////////////
-//  class Vector3<ELEMENT>
-//
-//  General Description
-//      Template class derived from base class VectorConstantSize
-//	but with dimension (ie,size) always equal to 3.
-/////////////////////////////////////////////////////////////////////
+/**
+  class Vector3<ELEMENT>
+
+  General Description
+      Template class derived from base class VectorConstantSize
+	but with dimension (ie,size) always equal to 3.
+*/
 
 template <class ELEMENT>
 class Vector3 : public VectorConstantSize<3,ELEMENT>{
@@ -390,13 +386,13 @@ ELEMENT Vector3<ELEMENT>::getZ()const{
 	return v[Zz];
 };
 
-/////////////////////////////////////////////////////////////////////
-//  class Vector6<ELEMENT>
-//
-//  General Description
-//      Template class derived from base class VectorConstantSize
-//      but with dimension (ie,size) always equal to 6.
-/////////////////////////////////////////////////////////////////////
+/**
+  class Vector6<ELEMENT>
+
+  General Description
+      Template class derived from base class VectorConstantSize
+      but with dimension (ie,size) always equal to 6.
+*/
 
 template <class ELEMENT>
 class Vector6 : public VectorConstantSize<6,ELEMENT>{

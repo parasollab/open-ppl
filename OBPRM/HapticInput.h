@@ -1,14 +1,12 @@
-/////////////////////////////////////////////////////////////////////
-//
-//   HapticInput.h
-//
-//   General Description
-//	Based on HRoadmap class written by O.B. Bayazit, this class
-//	read in a 'haptic' path as input and process it and return 
-// 	free nodes in the roadmap.
-//  Created
-//      09/29/98  O.B. Bayazit (HRoadmap class)
-/////////////////////////////////////////////////////////////////////
+/**@HapticInput.h
+   Based on HRoadmap class written by O.B. Bayazit, this class
+   read in a 'haptic' path as input and process it and return 
+   free nodes in the roadmap.
+
+   @date 09/29/98
+   @author O.B. Bayazit
+*/
+
 #ifndef HapticInput_h
 #define HapticInput_h
 

@@ -14,19 +14,15 @@ const int MaxLP=	10;
 // Maximum number of collision detection algorithms to keep stats on
 const int MaxCD=	10;
 
-/////////////////////////////////////////////////////////////////////
-//
-//  Stat_Class.h
-//
-//  General Description
-//	This class lets you keep statistics on various aspects of
-//	the program (ie. number of collision detection calls,
-//	number of calls to each local planner, etc).
-//
-//  Created
-//     1/27/99  Chris Jones 
-//
-/////////////////////////////////////////////////////////////////////
+/**@file Stat_Class.h
+   This class lets you keep statistics on various aspects of
+   the program (ie. number of collision detection calls,
+   number of calls to each local planner, etc).
+
+   @date 1/27/99
+   @author Chris Jones 
+*/
+
 class Stat_Class {
 public:
   Stat_Class();
