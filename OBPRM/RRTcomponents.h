@@ -250,7 +250,7 @@ for ( int z = 0; z <=1; z++) {
 	  vector< pair<int,VID> >::iterator cctemp=ccvec.begin();
           int b =0;
 	  if (z == 0)
-	  while(cctemp<=ccvec.end()) {
+	  while(cctemp!=ccvec.end()) {
 		vector<VID> cc;
       		GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cc);
 		if ( cc.size()<= smallcc ) {
@@ -280,17 +280,28 @@ for ( int z = 0; z <=1; z++) {
 	  } //cctemp<=ccvec.end()
 
         cout << "z==1\n";
-	if ( z == 1) {
-	   GetCCStats(*(_rm->m_pRoadmap),ccvec);  
-	   vector< pair<int,VID> >::iterator startIterator = ccvec.begin();
- 	   vector< pair<int,VID> >::iterator ccswitch=ccvec.begin();
-	   ccswitch++; 
-	   pair<int,VID> ins = ccvec[0];
-	   ccvec.push_back(ins);
-	   startIterator = ccvec.begin();
-	   ccvec.erase(startIterator);
-	   cc1 = ccvec.begin();
-	   cc2 = cc1 + 1; 
+	if (( z == 1) && (ccvec.size()>2)) {
+	   GetCCStats(*(_rm->m_pRoadmap),ccvec);
+	   // Will put the first/largest CC at the end move everything
+	   // else up one spot
+	   vector< pair<int,VID> >::iterator startcciter = ccvec.begin();
+	   vector< pair<int,VID> >::iterator endcciter = ccvec.end();
+	   startcciter++;
+	   vector< pair<int,VID> > tmp_vec1;
+	   vector< pair<int,VID> >::iterator startIterator = tmp_vec1.begin();
+	   tmp_vec1.insert(startIterator,startcciter,endcciter);
+	   startcciter = ccvec.begin();
+	   tmp_vec1.push_back(*startcciter);
+	   ccvec.swap( tmp_vec1  );
+	   //vector< pair<int,VID> >::iterator startIterator = ccvec.begin();
+ 	   //vector< pair<int,VID> >::iterator ccswitch=ccvec.begin();
+	   //ccswitch++; 
+	   //pair<int,VID> ins = ccvec[0];
+	   //ccvec.push_back(ins);
+	   //startIterator = ccvec.begin();
+	   //ccvec.erase(startIterator);
+	   //cc1 = ccvec.begin();
+	   //cc2 = cc1 + 1; 
 	   //pair<int,VID>  first = ccvec[0];
 	   //ccvec[1] = ccvec[0];
 	   //cc
@@ -306,7 +317,7 @@ for ( int z = 0; z <=1; z++) {
           cout << "outside orderccsbycloseness\n";
 	  VID cc1id = (*cc1).second;
           cout << "cc1: " << (*cc1).second << " cc2: " << (*cc2).second << "\n";
-     while(cc2<=ccvec.end()) {
+     while(cc2!=ccvec.end()) {
           /*for (vector< pair<int,VID> >::iterator cctemp=ccvec.begin();
 		  cctemp<=ccvec.end();++cctemp) 
 	      _rm->m_pRoadmap->DisplayCC((*cctemp).second);

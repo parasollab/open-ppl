@@ -296,20 +296,32 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
 
          CFG u;
 	 bool close = FALSE;
-
-		 //select direction
+	 int translate_or_not = lrand48();
+	 //select direction
          if ( connecting ) {
              //cout << "selecting from U\n";
              if (U.size() > 0)
                u = U[0];
-             else { u = x_rand;
+             else { 
                     toConnect = FALSE;
-                  
+		    if(translate_or_not%2 == 0) {
+		      CFG tmp_cfg = x_rand;
+		      x_rand.GetPositionOrientationFrom2Cfg(tmp_cfg,x_near);
+		      //cout << x_rand << endl;
+		      //cout << x_near <<endl;
+		    }
+		    u = x_rand;
 	            uu = u;
                   }
          } else {
-             // holonomic robot assumption in purely random selection of u
-             u = x_rand;
+	   if(translate_or_not%2 == 0) {
+	     CFG tmp_cfg = x_rand;
+	     x_rand.GetPositionOrientationFrom2Cfg(tmp_cfg,x_near);
+	     //cout << x_rand << endl;
+	     //cout << x_near <<endl;
+	   }
+	   // holonomic robot assumption in purely random selection of u
+	   u = x_rand;
          }//endif connecting
          //cout << "VID#" << kp[0].first;
 // Based on Marco's code which is based off Shawna's
@@ -473,7 +485,8 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
   vector< pair<int,VID> >::iterator cc1=ccvec.begin();
   //-- submap = vertices & edges of current (cc1) connected component
 
-  while (cc1 <= ccvec.end()) {
+
+  while (cc1 != ccvec.end()) {
     Roadmap<CFG,WEIGHT> submap1;
     submap1.environment = _rm->GetEnvironment();
     vector<VID> cc;
