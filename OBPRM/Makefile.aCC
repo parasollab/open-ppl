@@ -3,9 +3,9 @@
 # Make your own and use it or use the one in BASELINE
 #------------------------------------------------------
 
-# -- for dynamic shared object library libobprm.so
+# -- for dynamic shared object library libobprm.sl
    OBPRM_DIR   = .
-   OBPRM_LIB   = -L${OBPRM_DIR} -lobprm
+   OBPRMLIB   = -L${OBPRM_DIR} libobprm.sl
 
 #------------------------------------------------------
 # Basic defns; do not change
@@ -31,29 +31,26 @@
  STAPL_DIR    = /research/sunburn/dsmft/libs/hp/stapl
  STAPLLIB_DIR = ${STAPL_DIR}
  STAPLLIB     = ${STAPL_DIR}/sup_lib/pthread_task.o \
-                -L${STAPL_DIR}/lib -Wl,+b -Wl,${STAPL_DIR}lib \
+                -L${STAPL_DIR}/lib -Wl,+b -Wl,${STAPL_DIR}/lib \
                 -lhoard -lpthread
  STAPL_INCL   = -I${STAPL_DIR}/include \
                 -I${STAPL_DIR}/include_stl \
                 -I${STAPL_DIR}/include_stl/nongnu
 
- STL_INCL  = -I${STAPL_DIR}/include_stl -I${STAPL_DIR}/include
+ STL_INCL  = -I${STAPL_DIR}/include_stl 
 
 #-----------------------------------------------------------------------------
 # Defines for various types of executables
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=1 -DUSE_PQP -DUSE_RAPID 
-
-### DEFS = ${ADEFS} -DQUIETGRAPH -DQUIET
-    DEFS = ${ADEFS} 
+ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=0 -DCHECKIFSAMECC=1 -DUSE_PQP -DUSE_RAPID 
+DEFS = ${ADEFS} -DQUIET
 
 showdefs :: 
 	echo "${DEFS}";
 
-
- AFLAGS    = -I. ${STL_INCL} ${CSTK_INCL} ${PQP_INCL} ${RAPID_INCL} ${STAPL_INCL} ${DEFS}
+AFLAGS    = -I. ${STAPL_INCL} ${STL_INCL} ${CSTK_INCL} ${PQP_INCL} ${RAPID_INCL} ${DEFS}
 
 #-----------------------------------------------------------------------------
 # Choose a compiler & its options
@@ -63,22 +60,14 @@ CC = aCC
 CXX = aCC
 
 # -- for development on TERMINATOR (can't seem to use it better due to cstk)
-   OPTS = -g +O2 
-#  OPTS = -o32 -O1 -show -ptv 
-# -- optimized (our O2's) (slow_compile/good_code) --
-#  OPTS =  -o32 -O2 -OPT:Olimit=0 -show
-
-#  DEPS = 
-#  DEPS = -MDupdate Dependencies 
+OPTS = +O2
 
 # -- warnings (default, full, none) --
-#  CWARNS = 
-#  CWARNS = -fullwarn
-   CWARNS = -w
+CWARNS = -w
 
-CFLAGS     = $(OPTS) $(AFLAGS) $(DEPS) $(CWARNS)
-CXXFLAGS   = $(CFLAGS) 
-DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
+CFLAGS     = $(OPTS) $(AFLAGS) $(CWARNS)
+CXXFLAGS   = $(CFLAGS) +z
+DSOFLAGS   = $(CFLAGS) -b
 
 #-----------------------------------------------------------------------------
 # Build 
@@ -88,29 +77,28 @@ DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
 deps:: 
 	touch Dependencies
 
-libs:: objs libobprm.a
+libs:: objs libobprm.sl
 
-libobprm.a:: $(OBJS)
-	ar  -rc libobprm.a $(OBJS) 
+libobprm.sl:: $(OBJS)
+	$(CXX) ${DSOFLAGS} -o $@ $(OBJS) 
 
 #--------------------------------------------------------------------
 obprm:: main_obprm.cpp libs
-	$(CXX) $(CXXFLAGS)  -o obprm \
-	main_obprm.cpp \
-	libobprm.a $(MATHLIB) ${STAPLLIB} ${PQPLIB} ${RAPIDLIB}
+	$(CXX) $(CFLAGS)  -o obprm main_obprm.cpp \
+	$(OBPRMLIB) $(MATHLIB) ${STAPLLIB} ${PQPLIB} ${RAPIDLIB}
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
 query:: main_query.cpp libs
-	$(CXX) $(CXXFLAGS)  -o query \
-	main_query.cpp \
-	libobprm.a $(MATHLIB) ${STAPLLIB} ${PQPLIB} ${RAPIDLIB}
+	$(CXX) $(CFLAGS)  -o query main_query.cpp \
+	$(OBPRMLIB) $(MATHLIB) ${STAPLLIB} ${PQPLIB} ${RAPIDLIB}
 	rm -f main_query.o
 
 #--------------------------------------------------------------------
-% :: %.o
-	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) ${PQPLIB} ${RAPIDLIB}
-
+pobprm:: main_pobprm.cpp libs
+	$(CXX) $(CXXFLAGS)  -o pobprm main_pobprm.cpp \
+        $(OBPRMLIB) $(MATHLIB) ${STAPLLIB} ${PQPLIB} ${RAPIDLIB}
+	rm -f main_pobprm.o
 #--------------------------------------------------------------------
 
 OBJS = \
