@@ -42,9 +42,27 @@ int main(int argc, char** argv)
   cn.UserInit(&input, rdmp.GetEnvironment() );
 
   //Testing the use of the ConnectCCMethodCaller
-  ConnectMapComponents component_connector;
+  //ConnectMapComponents component_connector;
+  ConnectMapComponents component_connector =  ConnectMapComponents(&input,&rdmp,&cd,&dm, &lp,&cn);
   component_connector.ReadCommandLine(&argc, argv);
 
+  if ( input.inmapFile.IsActivated() ){
+    //---------------------------
+    // Read roadmap 
+    //---------------------------
+    cout << "branch 1 :" << (&input)->inmapFile.GetValue();
+    rdmp.ReadRoadmap(&input,&cd,&dm,&lp,(&input)->inmapFile.GetValue());
+  } else {
+    //---------------------------
+    // Use default file to read in roadmap
+    //---------------------------
+	char tmp[80];
+	strcpy(tmp, (&input)->defaultFile.GetValue() ); 
+	strcat(tmp,".map");
+        cout << "branch 2 :" << tmp;
+	//mapFile.PutValue(&input,&cd,&dm,&lp,(&tmp));
+    rdmp.ReadRoadmap(&input,&cd,&dm,&lp,tmp);
+  }
   //We need to move the commented code below to the ConnectCCMethods
 //    cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
 //    ConnectCCs connect_ccs(&input,&rdmp,&connect_CCs_input, &cd, &dm, &lp,&cn);
@@ -62,8 +80,8 @@ int main(int argc, char** argv)
 //    cout << endl;
 //    lp.planners.DisplayLPSets();
 //    cout << endl;
-//    DisplayCCStats(*(rdmp.m_pRoadmap),10);
-//    cout << endl;
+    DisplayCCStats(*(rdmp.m_pRoadmap),10);
+    cout << endl;
 
   //----------------------------------------------------
   // The cc_connector (an instance of ConnectCCMethodCaller attempts 

@@ -1813,7 +1813,16 @@ CN() {
   connector = 0; 
   cnid = INVALID_EID;
 }
-
+CN::
+CN(int kp, int small, int step, int iter) {
+  strcpy(name,"");
+  connector = 0; 
+  kpairs = kp;
+  smallcc = small;
+  stepFactor = step;
+  iterations = iter;
+  cnid = INVALID_EID;
+}
 CN::
 ~CN() {
 }

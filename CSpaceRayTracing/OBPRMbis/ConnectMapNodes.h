@@ -118,6 +118,7 @@ public:
 
       ///Default constructor. Initialize its data member to invalid values.
       CN();
+      CN(int kp, int small, int step, int iter);
       ///Destructor. Currently do nothing.
       ~CN();
 
