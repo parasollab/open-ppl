@@ -1,4 +1,4 @@
-// $Iwd: Input.cpp,v 1.8 2000/06/16 01:56:26 obprm Exp $
+// $Id$
 /////////////////////////////////////////////////////////////////////
 //  Input.c
 //
@@ -120,7 +120,7 @@ Input::Input():
                        //  default   min,max
         numEdges         ("-edges",              5,  1, 5000),
         numShells        ("-nshells",            3,  1,   50),
-        numNodes         ("-nodes",             10,  1,50000),
+        numNodes         ("-nodes",             10,  1,5000000),
         numNodesPerObst  ("-nodesPerObst",      10,  1, 5000),
         lineSegment      ("-lineSegment",        0,  0, 5000),
         usingClearance   ("-clearance",          0,  0,    1),
