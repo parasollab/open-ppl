@@ -179,7 +179,8 @@ OBJS = \
 	ConnectCCsCmds.o \
 	ConnectCCs.o \
 	RayTracer.o \
-	RayCSpace.o
+	RayCSpace.o \
+	ConnectCCMethod.o
 	
 
 
