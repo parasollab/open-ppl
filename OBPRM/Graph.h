@@ -1055,6 +1055,10 @@ public:
          *an empty vector will be returned.
          *@note _v1id should be smaller than _v2id
          */
+ 
+      ///Get a pointer of User specified data stored in this vertex.
+        VERTEX* GetReferenceofData(VID); 
+
        vector<VERTEX>  GetData(VID _v1id, VID _v2id) const;
 
 
@@ -3066,6 +3070,20 @@ GetData(VID _v1id) const {
         return v1->data;
     } else {
         return VERTEX::InvalidData(); 
+    }
+};
+
+template<class VERTEX, class WEIGHT>
+VERTEX*
+WeightedMultiDiGraph<VERTEX,WEIGHT>::
+GetReferenceofData(VID _v1id) {
+    CVI v1;
+    if ( IsVertex(_v1id,&v1) ) {
+        return const_cast<VERTEX*> (&v1->data);
+    } else {
+	//VERTEX vv = VERTEX::InvalidData();
+        //VERTEX* vv = NULL;
+	return NULL; 
     }
 };
 
