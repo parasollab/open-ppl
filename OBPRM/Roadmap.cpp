@@ -349,6 +349,12 @@ ConvertToCurrentVersion(const char* _fname, int thisVersion)
 		   RDMPVER_061100_CFG_FIELDS, RDMPVER_061100_EDGEWT_FIELDS);
       myofstream << endl << "Converted from ROADMAP VERSION 061100";
 
+   } else if (thisVersion == RDMPVER_061300) {
+      // 061300: 3 cfg fields (obst, tag, clearance), 2 wt fields (lp, ticks/weight)
+      ConvertGraph(myifstream, myofstream,
+		   RDMPVER_061300_CFG_FIELDS, RDMPVER_061300_EDGEWT_FIELDS);
+      myofstream << endl << "Converted from ROADMAP VERSION 061300";
+
    } else {
       cout << "In ConvertToCurrentVersion: unknown roadmap version in " << _fname << endl;
       return false;
@@ -380,6 +386,8 @@ SaveCurrentVersion(const char* _fname, int thisVersion,
       strcat ( outfile, "62000" );
    } else if ( thisVersion == RDMPVER_061100 ) {
       strcat ( outfile, "061100" );
+   } else if ( thisVersion == RDMPVER_061300 ) {
+      strcat ( outfile, "061300" );
    } else {
       strcat ( outfile, "UNKNOWN_VERSION" );
    }
@@ -475,4 +483,5 @@ ConvertGraph(istream&  myifstream, ostream& myofstream,
 
    return;
 }
+
 

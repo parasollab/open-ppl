@@ -43,9 +43,13 @@
 #define RDMPVER_061100_CFG_FIELDS           2            // obst, tag
 #define RDMPVER_061100_EDGEWT_FIELDS        2            // lp, ticks (or weight for DBL)
 
-#define RDMPVER_CURRENT                     61100 
-#define RDMPVER_CURRENT_STR                "061100" 
-#define RDMPVER_CURRENT_CFG_FIELDS          2            // obst, tag
+#define RDMPVER_061300                      61300
+#define RDMPVER_061300_CFG_FIELDS           3            // obst, tag, clearance
+#define RDMPVER_061300_EDGEWT_FIELDS        2            // lp, ticks (or weight for DBL)
+
+#define RDMPVER_CURRENT                     61300 
+#define RDMPVER_CURRENT_STR                "061300" 
+#define RDMPVER_CURRENT_CFG_FIELDS          3            // obst, tag, clearance
 #define RDMPVER_CURRENT_EDGEWT_FIELDS       2            // lp, ticks (or weight for DBL)
 
 class Roadmap {
