@@ -317,14 +317,16 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 					  gamma/TWOPI, beta/TWOPI, alpha/TWOPI));
     cfgIn.Increment(displacement);
     
-    if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
+    std::string tmpStr = Callee+CallCnt;
+    if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
       direction = obstNormal;
     } else {
       cfgIn.subtract(cfgIn,displacement);
       cfgIn.subtract(cfgIn,displacement);
       
       CallCnt="2";
-      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
+      tmpStr = Callee+CallCnt;
+      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
 	direction = -obstNormal;
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
@@ -333,13 +335,15 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 				       gamma/TWOPI, (beta+PI)/TWOPI, (alpha+PI)/TWOPI));
 	cfgIn.Increment(displacement);
 	CallCnt="3";
-	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot, true, &(Callee+CallCnt)) ) {
+	tmpStr = Callee+CallCnt;
+	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot, true, &tmpStr) ) {
 	  direction = obstNormal;
 	} else {
 	  cfgIn.subtract(cfgIn,displacement);
 	  cfgIn.subtract(cfgIn,displacement);
 	  CallCnt="4";
-	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
+	  tmpStr = Callee+CallCnt;
+	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
 	    direction = -obstNormal;
 	  }
 	}

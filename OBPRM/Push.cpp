@@ -157,11 +157,13 @@ void Push::ShortestPush(vector <Cfg> nodes)
   Cfg direction;
   int i,k;
   Cfg zero(Vector6<double>(0,0,0,0,0,0));
+  std::string tmpStr;
   for(i=0;i<nodes.size();i++) {
     cout << "At node " << nodes[i] << endl << flush;
    
     CallCnt="1";
-    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt)) && 
+    tmpStr = Callee+CallCnt;
+    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&tmpStr) && 
        i<(nodes.size()-1) ) {
 
        prevFound=false;
@@ -205,7 +207,8 @@ void Push::ShortestPush(vector <Cfg> nodes)
        prevFreeCfg=nodes[i];
        // skip the last one, it may be in collision.
        CallCnt="2";
-       if(i < nodes.size()-1 || !nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt)))  
+       tmpStr = Callee+CallCnt;
+       if(i < nodes.size()-1 || !nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&tmpStr))  
 	  fixed.push_back(nodes[i]);
       
     } //else
@@ -403,12 +406,14 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
   std::string Callee(GetName()),CallCnt;
   {std::string Method("-push::SimplePush");Callee=Calle+Method;}
 
+  std::string tmpStr;
   for(i=0;i<nodes.size();i++)
   {
     cout << "At node " << nodes[i] << endl << flush;
    
     CallCnt="1";
-    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt))) {
+    tmpStr = Callee+CallCnt;
+    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&tmpStr)) {
        cout << "It is in  collision " << endl << flush;
        prevFound=false;
        inside.push_back(nodes[i]);
@@ -427,7 +432,8 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
              intermediate.push_back(inter); 
              InterList.push_back(inter);
 	     CallCnt="2";
-             if(!inter.isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt))) {
+	     tmpStr = Callee+CallCnt;
+             if(!inter.isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&tmpStr)) {
                   surface.push_back(inter);
                   cout << "Intermediate " << inter << " is added to surface list\n" << flush;
              }
@@ -437,7 +443,8 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
             Cfg ccc;
             for(k=0;k<numIntermediate;k++) {
 	      CallCnt="3";
-              if(intermediate[k].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&(Callee+CallCnt))) {
+	      tmpStr = Callee+CallCnt;
+              if(intermediate[k].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo,true,&tmpStr)) {
                  cout << "GenerateSurfaceCfg\n";
                  inter=GenerateOutsideCfg(env,cd, inside[j], 
 			(intermediate[k]-inside[j]),
@@ -582,11 +589,14 @@ GenerateSurfaceCfg(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
 
 
     low = insideCfg; high = outsideCfg;
-    if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallH+CallCnt))
+    std::string tmpStr = Callee+CallH+CallCnt;
+    if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&tmpStr)
        cout << "Ebesinin ki  sicmis ya " << "\n" <<flush;
 CallCnt="2";
-if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallH+CallCnt) ||
-   !low.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallL) ) {
+       tmpStr = Callee+CallH+CallCnt;
+       std::string tmpStr2 = Callee+CallL;
+if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&tmpStr) ||
+   !low.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&tmpStr2 ) {
   cout << " **************************** " << endl;
 }
 
@@ -598,31 +608,36 @@ if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallH+
     cout << "detal = " << delta << " positionres= " << PositionRes << "\n" <<flush;
 
     cout << "Ebesinin ki " << mid << "\n" <<flush;
-    while((delta >= PositionRes) &&
-                !high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallWH))) {
-            prev=high;
-         cout << "Ebesinin ki hi " << high << "\n" <<flush;
-         cout << "Ebesinin ki mid" << mid << "\n" <<flush;
-         cout << "Ebesinin ki low " << low << "\n" <<flush;
-         cout << "delta =   " << delta << "\n" <<flush;
-        if(mid.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallM)){
-            low = mid;
-        } else {
-            high = mid;
-            surface=high;
-        }
-        mid = Cfg::WeightedSum(low, high); // (low + high) / 2.0;
-        delta = dm->Distance(env, low, high);
-        cnt++;
-    }
-    if(surface.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallS))) {
-           CallCnt="3";
-           if(high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo,true,&(Callee+CallH+CallCnt)))
-                cout <<" Anlamiyorum abi " << flush;
-cout <<" returning high" << flush;
-           return prev;
-    }
-     else return surface;
+   tmpStr = Callee+CallWH;
+   while((delta >= PositionRes) &&
+	 !high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo,true,&tmpStr)) {
+     prev=high;
+     cout << "Ebesinin ki hi " << high << "\n" <<flush;
+     cout << "Ebesinin ki mid" << mid << "\n" <<flush;
+     cout << "Ebesinin ki low " << low << "\n" <<flush;
+     cout << "delta =   " << delta << "\n" <<flush;
+     tmpStr1 = Callee+CallM;
+     if(mid.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo,true,&tmpStr1){
+       low = mid;
+     } else {
+       high = mid;
+       surface=high;
+     }
+     mid = Cfg::WeightedSum(low, high); // (low + high) / 2.0;
+     delta = dm->Distance(env, low, high);
+     cnt++;
+     tmpStr = Callee+CallWH;
+   }
+     tmpStr = Callee+CallS;
+   if(surface.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo,true,&tmpStr)) {
+     CallCnt="3";
+     tmpStr = Callee+CallH+CallCnt;
+     if(high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo,true,&tmpStr))
+       cout <<" Anlamiyorum abi " << flush;
+     cout <<" returning high" << flush;
+     return prev;
+   } else 
+     return surface;
 }
 
 

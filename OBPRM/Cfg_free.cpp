@@ -323,14 +323,16 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
     cfgIn.Increment(displacement);
     
     CallCnt="1";
-    if(! cfgIn.isCollision(env, Stats, cd,_cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
+    std::string tmpStr = Callee+CallCnt;
+    if(! cfgIn.isCollision(env, Stats, cd,_cdInfo, onflyRobot,true, &tmpStr) ) {
       direction = obstNormal;
     } else {
       //cfgIn = cfgIn - displacement - displacement;
       cfgIn.subtract(cfgIn, displacement);
       cfgIn.subtract(cfgIn, displacement);  
       CallCnt="2";
-      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
+      tmpStr = Callee+CallCnt;
+      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
 	direction = -obstNormal;
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
@@ -339,14 +341,16 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 			 gamma/TWOPI, (beta+PI)/TWOPI, (alpha+PI)/TWOPI);
 	cfgIn.Increment(displacement);
 	CallCnt="3";
-	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
+	tmpStr = Callee+CallCnt;
+	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
 	  direction = obstNormal;
 	} else {
 	  //cfgIn = cfgIn - displacement - displacement;
 	  cfgIn.subtract(cfgIn, displacement);
 	  cfgIn.subtract(cfgIn, displacement);
 	  CallCnt="4";
-	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &(Callee+CallCnt)) ) {
+	  tmpStr = Callee+CallCnt;
+	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
 	    direction = -obstNormal;
 	  }
 	}
@@ -388,8 +392,10 @@ bool Cfg_free::InNarrowPassage(Environment* env, Stat_Class& Stats,
     Cfg_free shiftR;
     shiftR.add(*this, incr);
     tmp[i] = 0.0;
-    if(shiftL.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&(Callee+CallL)) &&
-       shiftR.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&(Callee+CallR)) ) { // Inside Narrow Passage !
+    std::string tmpStr1 = Callee+CallL;
+    std::string tmpStr2 = Callee+CallR;
+    if(shiftL.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&tmpStr1) &&
+       shiftR.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&tmpStr2) ) { // Inside Narrow Passage !
       narrowpassageWeight++;
     }
   }

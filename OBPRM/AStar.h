@@ -230,6 +230,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
   int noTries=0;
   int nTicks = 0;
   
+  std::string tmpStr = Callee+Method;
   do {
     /* First check the diagonal to find out if it it available */
     diagonal = p;
@@ -238,7 +239,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     cd_cntr++;
 
     Callee=diagonal.GetName();
-    if(!diagonal.isCollision(_env,Stats,cd, *cdInfo , &(Callee+Method))){
+    if(!diagonal.isCollision(_env,Stats,cd, *cdInfo , &tmpStr)){
       p = diagonal;
     } else {
       neighbors.clear();

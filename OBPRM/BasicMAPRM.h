@@ -192,6 +192,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 #ifndef QUIET
   cout<<"- "<<flush;
 #endif
+  std::string tmpStr;
   for (int i=0; i < numNodes.GetValue(); i++){
     // Get a random configuration that STARTS in the bounding box of env
     cfg.GetRandomCfg(_env);  // should always be in bounding box
@@ -199,16 +200,19 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     //use approximate computation for moving out robot from obs
     if( m_bApprox.GetValue() ){
       cdInfo->ret_all_info = false;
-      collided = cfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method+CallCnt));
+      tmpStr = Callee+Method+CallCnt;
+      collided = cfg.isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr);
       if( collided ){
 	MoveOutObstacle(cfg,_env, Stats, cd);
 	CallCnt="2";
-	collided = cfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method+CallCnt));
+	tmpStr = Callee+Method+CallCnt;
+	collided = cfg.isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr);
       }
       if(cd->isInsideObstacle(cfg,_env,*cdInfo)){
 	cdInfo->ret_all_info = true;
 	CallCnt="3";
-	cfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method+CallCnt));
+	tmpStr = Callee+Method+CallCnt;
+	cfg.isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr);
 	Vector3D trans_dir=(cdInfo->object_point-cdInfo->robot_point)*1.00001;
 	cdInfo->ret_all_info = false;
 	MoveOutObstacle(cfg,trans_dir,_env,Stats,cd);
@@ -224,7 +228,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
       cd_selected.push_back(&vclip);
       CollisionDetection cd_vclip(cd_selected);
       CallCnt="vclip1";
-      cfg.isCollision(_env, Stats, &cd_vclip, *cdInfo, true, &(Callee+Method+CallCnt)); //use vclip
+      tmpStr = Callee+Method+CallCnt;
+      cfg.isCollision(_env, Stats, &cd_vclip, *cdInfo, true, &tmpStr); //use vclip
       cdInfo->ret_all_info = false;
       if( collided ){
 	Vector3D dir=(cdInfo->object_point-cdInfo->robot_point)*1.00001;
@@ -232,7 +237,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 	cfg.SetSingleParam(1, cfg.GetData()[1]+dir[1]);
 	cfg.SetSingleParam(2, cfg.GetData()[2]+dir[2]);
         CallCnt="vclip2";
-	collided = cfg.isCollision(_env, Stats, cd, *cdInfo,true, &(Callee+Method+CallCnt));
+	tmpStr = Callee+Method+CallCnt;
+	collided = cfg.isCollision(_env, Stats, cd, *cdInfo,true, &tmpStr);
       }
     }
 #endif
@@ -321,13 +327,15 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
   
   //start to escape though each shooting rays
   bool bCollide=true; //init condition is in collision, so set to true
+  std::string tmpStr;
   while( bCollide ){ //loop until no in collision
     bool allOutBBX=true; //if all out of bbx, we don't want to go ahead.
     for( int iR=0;iR<num_rays;iR++ ){
       pos[iR].add(pos[iR], rays[iR]);
       if( !pos[iR].InBoundingBox(_env) ) continue; //out of bounding box
       allOutBBX=false;
-      if( !pos[iR].isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method+CallCnt)) ){
+tmpStr = Callee+Method+CallCnt;
+      if( !pos[iR].isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr) ){
 	bCollide=false; //not in collision any more
 	cfg=pos[iR];
       }
@@ -360,10 +368,11 @@ MoveOutObstacle(CFG& cfg, Vector3D& dir, Environment* _env, Stat_Class& Stats,
   trans_cfg.multiply(trans_cfg, 0.1);
   
   //move in same dir until out of collision
+  std::string tmpStr = Callee+Method;
   do{
     cfg.add(cfg, trans_cfg);
   }
-  while(cfg.isCollision(_env, Stats, cd, *cdInfo, &(Callee+Method)));
+  while(cfg.isCollision(_env, Stats, cd, *cdInfo, &tmpStr));
 }
 
 
@@ -424,8 +433,9 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Sta
   if( cd->isInsideObstacle(newcfg,_env,*cdInfo) ) return;
   //make sure newcfg is collision free
   cdInfo->ResetVars();
+  std::string tmpStr = Callee+Method;
   while( true ){
-    if( newcfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee+Method))==false ) 
+    if( newcfg.isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr)==false ) 
       break;
     CFG tmp;
     tmp.subtract(oldcfg, newcfg);
@@ -457,7 +467,8 @@ getCollisionInfo(CFG& cfg, Environment* _env, Stat_Class& Stats,
   std::string Callee(cfg.GetName()), 
               Method("-BasicMAPRM::getCollisionInfo"); 
 
-  if( cfg.isCollision(_env, Stats, cd, cdInfo, &(Callee+Method)) ) return true;
+  std::string tmpStr = Callee+Method;
+  if( cfg.isCollision(_env, Stats, cd, cdInfo, &tmpStr) ) return true;
   const static double * bbx = _env->GetBoundingBox();
   MultiBody *robot = _env->GetMultiBody(_env->GetRobotIndex());
   

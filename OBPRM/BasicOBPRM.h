@@ -652,9 +652,10 @@ GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
   
   // Do the Binary Search
   tmp.push_back(high);
+  std::string tmpStr = Callee+CallM;
   while((delta >= clearanceFactor*PositionRes) && (cnt < MAX_CONVERGE)){
     if(mid.isCollision(env, Stats, cd , rob, obst, *cdInfo,
-                       true, &(Callee+CallM)) ) {
+                       true, &tmpStr) ) {
       low = mid;
     } else {
       high = mid;
@@ -667,7 +668,8 @@ GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
   
   // if converged save the cfgs that don't collide with the environment
   if(cnt < MAX_CONVERGE) {
-    if(!high.isCollision(env, Stats, cd, *cdInfo, true, &(Callee+CallH))) {
+    tmpStr = Callee+CallH;
+    if(!high.isCollision(env, Stats, cd, *cdInfo, true, &tmpStr)) {
       surface = FirstFreeCfgs(env, Stats, cd,tmp);
     }
   }

@@ -207,11 +207,13 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     // because cfg2 is modified it must be checked again
     if (cfg2.InBoundingBox(_env)) {    
       CallCnt="1"; 
-      bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo,true, &(Callee+CallCnt));
+      std::string tmpStr = Callee+CallCnt;
+      bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo,true, &tmpStr);
       cfg1.obst = cdInfo->colliding_obst_index;
       
-      CallCnt="2"; 
-      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*cdInfo,true, &(Callee+CallCnt));
+      CallCnt="2";
+      tmpStr = Callee+CallCnt; 
+      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*cdInfo,true, &tmpStr);
       cfg2.obst = cdInfo->colliding_obst_index;
       
       if (cfg1_free && !cfg2_free) {
