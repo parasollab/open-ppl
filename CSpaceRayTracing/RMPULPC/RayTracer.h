@@ -1,3 +1,10 @@
+#ifndef _scheduling_mode_
+#define _scheduling_mode_
+//This enum should go inside the ConnectMapComponent collection
+enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTHEST, FARTHEST_TO_CLOSEST};
+#endif
+
+
 #ifndef _RAYTRACER_H_INCLUDED
 #define _RAYTRACER_H_INCLUDED
 ///////////////////////////////////////
@@ -10,10 +17,13 @@
 #include <Environment.h>
 #include <CollisionDetection.h>
 #include <GraphAlgo.h>
-#include "ConnectCCs.h"
+/*#include "ConnectCCs.h"*/
+
+#include "ConnectCCMethod.h"
 
 #include <string>
 
+class RayTracerConnectionMethod;
 class ConnectCCs;
 class RayTracer {
  public:
@@ -22,7 +32,7 @@ class RayTracer {
   RayTracer(Roadmap *rdmp, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, ConnectMapNodes *cn);
   ~RayTracer();
   void setOptions(string bouncing_mode, int max_rays, int max_bounces, int max_ray_length);
-  void connectCCs(ConnectCCs::SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size);
+  void connectCCs(SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size);
 /*    bool connectCCs(Roadmap &cci, VID cci_id, vector<Cfg> &rep_cci_cfgs, Roadmap &ccj, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp); */
   bool connectCCs(VID cci_id, vector<Cfg> &rep_cci_cfgs, VID ccj_id, vector<Cfg> &rep_ccj_cfgs, Roadmap &target_rdmp, bool try_backwards=false);
   bool findPath(Cfg &source, Cfg &target, Roadmap &ray_rdmp);
@@ -64,10 +74,4 @@ class RayTracer {
 };
 
 #endif /*_RAYTRACER_H_INCLUDED*/
-
-
-
-
-
-
 

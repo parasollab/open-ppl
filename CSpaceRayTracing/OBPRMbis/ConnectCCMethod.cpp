@@ -47,7 +47,7 @@ ConnectMapComponents::ConnectMapComponents(Input * input,Roadmap * rdmp, Collisi
   ConnectCCsConnectionMethod* connectccs = new ConnectCCsConnectionMethod(input,rdmp,cd,dm,lp,cn);
   all.push_back(connectccs);
 
-  RayTracerConnectionMethod* rt = new RayTracerConnectionMethod();
+  RayTracerConnectionMethod* rt = new RayTracerConnectionMethod(rdmp,cd,dm,lp,cn);
   all.push_back(rt);
 
   //Command-line-option string
@@ -183,128 +183,243 @@ void ConnectMapComponents::PrintDefaults() {
 /////////////////////////////////////////////////////////////////////////////////
 //   ComponentConnectionMethod: method definitions
 
+///////////////////////////////////////////////////////////////////////////////
 //   Connection Method:  RRTConnectionMethod
 
- RRTConnectionMethod::RRTConnectionMethod() { 
-    element_name = string ("RRTcomponents"); //in ConnectCCs there is RRTexpand
-    //set defaults
-    is_default = false;
-    //parse to overwrite the defaults
-    //ParseCommandLine(0, "");
- }
+RRTConnectionMethod::RRTConnectionMethod():ComponentConnectionMethod() { 
+  element_name = string ("RRTcomponents"); //in ConnectCCs there is RRTexpand
+  //set defaults
+  is_default = false;
+  //parse to overwrite the defaults
+  //ParseCommandLine(0, "");
+}
 
- RRTConnectionMethod::RRTConnectionMethod(Input * input,Roadmap * rmp, 
+RRTConnectionMethod::RRTConnectionMethod(Input * input,Roadmap * rmp, 
                                CollisionDetection* colldetect, 
                                DistanceMetric* distmet, LocalPlanners* localp, 
-                               ConnectMapNodes* cmn){
-    element_name = string ("RRTcomponents"); //in ConnectCCs there is RRTexpand
+                               ConnectMapNodes* cmn):ComponentConnectionMethod(){
+  element_name = string ("RRTcomponents"); //in ConnectCCs there is RRTexpand
   rdmp = rmp; cd = colldetect; 
   dm = distmet; lp = localp; 
   cn = cmn;
   cn1 = new CN(0,SMALL_CC,STEP_FACTOR,ITERATIONS);
-  }
- RRTConnectionMethod::~RRTConnectionMethod() { }
+}
+
+RRTConnectionMethod::~RRTConnectionMethod() { }
 //../growccs.test -f narrow  -outmapFile RRTa.map \
 //        -cComponents RRTcomponents 200 2000 1  
- int RRTConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstream &input_stream) { 
 
-       if ( input_stream >> iterations) { //get value, if any
-          if ( iterations < 0 ) {
-            cout << endl << "INVALID: iterations = " << iterations;
-            exit(-1);
-          } else {
-            if ( input_stream >> stepFactor) { //get value, if any
-               if ( stepFactor < 0 ) {
-                  cout << endl << "INVALID: stepFactor = " << stepFactor;
-                  exit(-1);
-               } else {
-                 if (input_stream >> smallcc) { //get value, if any
-                    if ( smallcc < 0 ) {
-                       cout << endl << "INVALID: smallcc = " << smallcc;
-                       exit(-1);
-                    }
-                 } else {
-                       smallcc = SMALL_CC;  // default
-                 }
-               }
-            } else {
-               stepFactor = STEP_FACTOR;  // default
-               smallcc    = SMALL_CC;  // default
-            }
-          }
-       } else {
-          iterations = ITERATIONS;  // default
-          stepFactor = STEP_FACTOR;  // default
-          smallcc    = SMALL_CC;  // default
-       }
+int RRTConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstream &input_stream) { 
+  if ( input_stream >> iterations) { //get value, if any
+    if ( iterations < 0 ) {
+      cout << endl << "INVALID: iterations = " << iterations;
+      exit(-1);
+    } else {
+      if ( input_stream >> stepFactor) { //get value, if any
+	if ( stepFactor < 0 ) {
+	  cout << endl << "INVALID: stepFactor = " << stepFactor;
+	  exit(-1);
+	} else {
+	  if (input_stream >> smallcc) { //get value, if any
+	    if ( smallcc < 0 ) {
+	      cout << endl << "INVALID: smallcc = " << smallcc;
+	      exit(-1);
+	    }
+	  } else {
+	    smallcc = SMALL_CC;  // default
+	  }
+	}
+      } else {
+	stepFactor = STEP_FACTOR;  // default
+	smallcc    = SMALL_CC;  // default
+      }
+    }
+  } else {
+    iterations = ITERATIONS;  // default
+    stepFactor = STEP_FACTOR;  // default
+    smallcc    = SMALL_CC;  // default
+  }
+  
+  cn1 = new CN(0,smallcc,stepFactor,iterations);
+  
+}
 
-       cn1 = new CN(0,smallcc,stepFactor,iterations);
+void RRTConnectionMethod::SetDefault() {
+  is_default = true;
+}
+ 
+void RRTConnectionMethod::ConnectComponents(/*parameters for CC connection*/) {
+  //Roadmap * _rm,CollisionDetection* cd,
+  //LocalPlanners* lp,DistanceMetric * dm,
+  //CN& _cn, CNInfo& info
+  cout << "Connecting CCs with method: RRT" << endl;
+  ConnectMapNodes::ConnectNodes_RRTConnect(rdmp, &*cd, &*lp, &*dm,
+					   (*cn1),(*cn).cnInfo);
+}
 
- }
+/////////////////////////////////////////////////////////////////////////////////   Connection Method:  ConnectCCsConnectionMethod
 
- void RRTConnectionMethod::SetDefault() {
-    is_default = true;
- }
- void RRTConnectionMethod::ConnectComponents(/*parameters for CC connection*/) {
-        //Roadmap * _rm,CollisionDetection* cd,
-        //LocalPlanners* lp,DistanceMetric * dm,
-        //CN& _cn, CNInfo& info
-    cout << "Connecting CCs with method: RRT" << endl;
-    ConnectMapNodes::ConnectNodes_RRTConnect(rdmp, &*cd, &*lp, &*dm,
-    						(*cn1),(*cn).cnInfo);
- }
+ConnectCCsConnectionMethod::ConnectCCsConnectionMethod():ComponentConnectionMethod() { 
+  element_name = string ("components"); //in ConnectCCs
+  //set defaults
+  is_default = false;
+  //parse to overwrite the defaults
+  //ParseCommandLine(0, "");
+}
 
-//   Connection Method:  ConnectCCsConnectionMethod
-
- ConnectCCsConnectionMethod::ConnectCCsConnectionMethod() { 
-    element_name = string ("components"); //in ConnectCCs
-    //set defaults
-    is_default = false;
-    //parse to overwrite the defaults
-    //ParseCommandLine(0, "");
- }
-
- ConnectCCsConnectionMethod::ConnectCCsConnectionMethod(Input * input,Roadmap * rmp, 
+ConnectCCsConnectionMethod::ConnectCCsConnectionMethod(Input * input,Roadmap * rmp, 
                                CollisionDetection* colldetect, 
                                DistanceMetric* distmet, LocalPlanners* localp, 
-                               ConnectMapNodes* cmn){
-    element_name = string ("components"); //in ConnectCCs
+                               ConnectMapNodes* cmn):ComponentConnectionMethod() {
+  element_name = string ("components"); //in ConnectCCs	
   rdmp = rmp; cd = colldetect; 
   dm = distmet; lp = localp; 
   cn = cmn;
   cn1 = new CN(KPAIRS,SMALL_CC,0,0);
-  }
- ConnectCCsConnectionMethod::~ConnectCCsConnectionMethod() { }
+}
  
- int ConnectCCsConnectionMethod::ParseCommandLine(int *argc,char **argv,istrstream &input_stream){ 
-    if ( input_stream >> kpairs) { //get kpairs value
-       if ( kpairs < 0 ) {
-         cout << endl << "INVALID: kpairs = " << kpairs;
-         exit(-1);
-       } else {
-         if (input_stream >> smallcc) { //get smallcc value, if any
-            if ( smallcc < 0 ) { 
-               cout << endl << "INVALID: smallcc = " << smallcc;
-               exit(-1);
-            } 
-          } else {
-            smallcc = SMALL_CC;  // default
-         }
-       }
+ConnectCCsConnectionMethod::~ConnectCCsConnectionMethod() { }
+ 
+int ConnectCCsConnectionMethod::ParseCommandLine(int *argc,char **argv,istrstream &input_stream){ 
+  if ( input_stream >> kpairs) { //get kpairs value
+    if ( kpairs < 0 ) {
+      cout << endl << "INVALID: kpairs = " << kpairs;
+      exit(-1);
+    } else {
+      if (input_stream >> smallcc) { //get smallcc value, if any
+	if ( smallcc < 0 ) { 
+	  cout << endl << "INVALID: smallcc = " << smallcc;
+	  exit(-1);
+	} 
+      } else {
+	smallcc = SMALL_CC;  // default
+      }
     }
-    if(kpairs == 0) {  //use defaults if no kpairs: kpairs=4,smallcc=SMALL_CC
-         smallcc = SMALL_CC;
-         kpairs = 4;
-         }
-    cn1 = new CN(kpairs,smallcc,0,0);
+  }
+  if(kpairs == 0) {  //use defaults if no kpairs: kpairs=4,smallcc=SMALL_CC
+    smallcc = SMALL_CC;
+    kpairs = 4;
+  }
+  cn1 = new CN(kpairs,smallcc,0,0);
 }//end ParseCommandLine
- void ConnectCCsConnectionMethod::SetDefault() {
-    is_default = true;
- }
- void ConnectCCsConnectionMethod::ConnectComponents(/*parameters for CC connection*/) {
+ 
+void ConnectCCsConnectionMethod::SetDefault() {
+  is_default = true;
+}
 
-    cout << "Connecting CCs with method: ConnectCCs" << endl;
-    ConnectMapNodes::ConnectNodes_ConnectCCs(rdmp, &*cd, &*lp, &*dm,
-    						(*cn1),(*cn).cnInfo);
- }
+void ConnectCCsConnectionMethod::ConnectComponents(/*parameters for CC connection*/) {
+  
+  cout << "Connecting CCs with method: ConnectCCs" << endl;
+  ConnectMapNodes::ConnectNodes_ConnectCCs(rdmp, &*cd, &*lp, &*dm,
+					   (*cn1),(*cn).cnInfo);
+}
 
+/////////////////////////////////////////////////////////////////////////////////   Connection Method:  RayTracerConnectionMethod
+RayTracerConnectionMethod::RayTracerConnectionMethod(): ComponentConnectionMethod() { 
+  element_name = string ("RayTracer");
+  SetDefault();
+}
+
+RayTracerConnectionMethod::RayTracerConnectionMethod(Roadmap *rdmp, CollisionDetection *cd, DistanceMetric *dm, LocalPlanners *lp, ConnectMapNodes *cn):
+  ComponentConnectionMethod(rdmp, cd, dm, lp, cn) {
+  element_name = string ("RayTracer");
+  SetDefault();
+}
+
+int RayTracerConnectionMethod::ParseCommandLine(int *argc, char **argv, istrstream &input_stream) { 
+  string SchedulingModeStr;
+  
+  if (input_stream >> RayTbouncingMode) {
+    if (RayTbouncingMode != string("targetOriented") && 
+	RayTbouncingMode != string("random") && 
+	RayTbouncingMode != string("heuristic") && 
+	RayTbouncingMode != string("normal")) {
+      cout << endl << "INVALID: bouncingMode = " << RayTbouncingMode;
+      exit(-1);
+    } else {
+      if (input_stream >> RayTmaxRays) {
+	if (RayTmaxRays < 1) {
+	  cout << endl << "INVALID: maxRays = " << RayTmaxRays;
+	  exit(-1);
+	} else {
+	  if (input_stream >> RayTmaxBounces) {
+	    if (RayTmaxBounces < 1) {
+	      cout << endl << "INVALID: maxBounces = " << RayTmaxBounces;
+	      exit(-1);
+	    } else {
+	      if (input_stream >> RayTmaxRayLength) {
+		if (RayTmaxRayLength < 1) {
+		  cout << endl << "INVALID: maxRayLength = " << RayTmaxRayLength;
+		  exit(-1);
+		}
+		else {
+		  if (input_stream >> SchedulingModeStr) {
+		    if (SchedulingModeStr != string("largestToSmallest") &&
+			SchedulingModeStr != string("smallestToLargest") &&
+			SchedulingModeStr != string("closestToFarthest") &&
+			SchedulingModeStr != string("farthestToClosest")) {
+		      cout << endl << "INVALID: schedulingMode = " << SchedulingMode;
+		      exit(-1);		      
+		    } else {
+		      if (SchedulingModeStr == string("largestToSmallest"))
+			SchedulingMode = LARGEST_TO_SMALLEST;
+		      else if (SchedulingModeStr == string("smallestToLargest"))
+			SchedulingMode = SMALLEST_TO_LARGEST;
+		      else if (SchedulingModeStr == string("closestToFarthest"))
+			SchedulingMode = CLOSEST_TO_FARTHEST;
+		      else if (SchedulingModeStr == string("farthestToClosest"))
+			SchedulingMode = FARTHEST_TO_CLOSEST;
+		      else 
+			SchedulingMode = LARGEST_TO_SMALLEST;
+		      if (input_stream >> ScheduleMaxSize) {
+			if (ScheduleMaxSize < 1) {
+			  cout << endl << "INVALID: scheduleMaxSize = " << ScheduleMaxSize;
+			  exit(-1);
+			} else
+			  if (input_stream >> SampleMaxSize) {
+			    if (SampleMaxSize < 1) {
+			      cout << endl << "INVALID:sampleMaxSize = " << SampleMaxSize;
+			      exit(-1);
+			    }
+			    cout << "!!!!!read SAMPLEMAXSIZE"<< SampleMaxSize<<endl;
+			  }
+			cout << "!!!!!read SCHEDULEMAXSIZE"<< ScheduleMaxSize<<endl;
+		      }
+		    }
+		  } 
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }  
+}
+
+void RayTracerConnectionMethod::SetDefault() {
+  is_default = false;
+  
+  RayTbouncingMode = string("targetOriented");
+  RayTmaxRays = MAX_RAYS;
+  RayTmaxBounces = MAX_BOUNCES;
+  RayTmaxRayLength = MAX_RAY_LENGTH;
+  
+  SchedulingMode = LARGEST_TO_SMALLEST;
+  ScheduleMaxSize = 20;
+  SampleMaxSize = 10;
+  
+  //get rid of the following two lines as soon as possible
+  dmsetid = cn->cnInfo.dmsetid;
+  cdsetid = cn->cnInfo.cdsetid;  
+
+  //parse to overwrite the defaults
+  //ParseCommandLine(0, "");  
+}
+
+void RayTracerConnectionMethod::ConnectComponents(/*parameters for CC connection*/) {
+  cout << "Connecting CCs with method: RayTracer" << endl;
+  RayTracer tracer(rdmp, cd, cdsetid, dm, dmsetid, cn);
+  tracer.setOptions(RayTbouncingMode, RayTmaxRays, RayTmaxBounces, RayTmaxRayLength);
+  tracer.connectCCs(SchedulingMode, ScheduleMaxSize, SampleMaxSize);
+}

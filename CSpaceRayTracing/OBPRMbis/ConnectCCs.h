@@ -7,6 +7,11 @@
   * @author Marco Morales
   */
 ////////////////////////////////////////////////////////////////////////////////////////////
+#ifndef _scheduling_mode_
+#def _scheduling_mode_
+//This enum should go inside the ConnectMapComponent collection
+enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTHEST, FARTHEST_TO_CLOSEST};
+#endif
 
 #ifndef ConnectCCs_h
 #define ConnectCCs_h
@@ -17,6 +22,8 @@
 #include "Roadmap.h"     
 #include "util.h"
 
+#include "ConnectCCMethod.h"
+
 #include <string>
 
 #define MAX_BOUNCES 10000
@@ -26,6 +33,7 @@
 #define ITERATIONS 10
 #define STEP_FACTOR 10
 #define SMALL_CC 3
+
 
 class ConnectCCs
 {
@@ -248,7 +256,7 @@ public:
     SID sid;
 
     //Scheduling options (now bound to RayTracer)
-    enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTHEST, FARTHEST_TO_CLOSEST};
+    //enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTHEST, FARTHEST_TO_CLOSEST};
     unsigned int SampleMaxSize;
     unsigned int ScheduleMaxSize;
     SCHEDULING_MODE SchedulingMode;

@@ -52,7 +52,7 @@ void RayTracer::setOptions(string bouncing_mode, int max_rays, int max_bounces, 
 
 }
 
-void RayTracer::connectCCs(ConnectCCs::SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size) {
+void RayTracer::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size) {
 
   cout << "RayTracer: (scheduling_mode: " << scheduling_mode << "; schedule_max_size: " << schedule_max_size << "; sample_max_size: " << sample_max_size << ")"<<endl;
 
@@ -80,18 +80,18 @@ void RayTracer::connectCCs(ConnectCCs::SCHEDULING_MODE scheduling_mode, unsigned
 
   //scheduling the order to try to connect pairs
   switch (scheduling_mode) {
-  case ConnectCCs::FARTHEST_TO_CLOSEST:
+  case FARTHEST_TO_CLOSEST:
     ConnectMapNodes::OrderCCByCloseness(rdmp, dm, cn->cnInfo, ccs);
-  case ConnectCCs::SMALLEST_TO_LARGEST:
+  case SMALLEST_TO_LARGEST:
     for (vector< pair<int,VID> >::iterator cci = ccs.end()-1; cci > ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --cci) 
       for (vector< pair<int,VID> >::iterator ccj = cci-1; ccj >= ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --ccj) {
 	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
       }
     break;
-  case ConnectCCs::CLOSEST_TO_FARTHEST:
+  case CLOSEST_TO_FARTHEST:
     ConnectMapNodes::OrderCCByCloseness(rdmp, dm, cn->cnInfo, ccs);
   default:
-  case ConnectCCs::LARGEST_TO_SMALLEST:
+  case LARGEST_TO_SMALLEST:
     for (vector< pair<int,VID> >::iterator cci = ccs.begin(); cci+1 < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++cci) 
       for (vector< pair<int,VID> >::iterator ccj = cci+1; ccj < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++ccj) {
 	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
