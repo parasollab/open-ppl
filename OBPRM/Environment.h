@@ -113,6 +113,9 @@ public:
     ///Return the number of MultiBody's in the environment
     virtual int GetMultiBodyCount();
 
+    //added by xinyu Tang;
+    ///Return the number of External Body's in the environment;
+    virtual int GetExternalBodyCount();
     ///Put this _multibody into list and increase the number of MultiBody.
     virtual void AddMultiBody(MultiBody *_multibody);
 
@@ -167,6 +170,19 @@ public:
     virtual void SetRobotIndex(int index){robotIndex = index;};
 
     //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Sort External obstacles operations
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+    //added by Xinyu Tang
+    //============================================
+    //SortBodies so that the external bodies appear first in the array
+    //============================================
+    void SortMultiBodies();
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -256,6 +272,7 @@ public:
       *@see MultiBody::Get, FindBoundingBox, and UpdateBoundingBox
       */
     virtual void Get(Input * _input);
+
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -282,6 +299,7 @@ private:
     //---------------------------------------------------------------
     int pathVersion;           /// Format version for path files
     int multibodyCount;
+    int externalbodyCount;     //The number of external bodies.
     MultiBody **multibody;
     int robotIndex;
     double boundingBox[6];
@@ -312,6 +330,15 @@ inline int Environment::GetPathVersion() {
     return pathVersion;
 }
 
+//-------------------------------------------------------------------
+///  GetMultiBodyCount
+///  Output: the number of MultiBody's in the environment
+//-------------------------------------------------------------------
+inline int Environment::GetExternalBodyCount() {
+    return externalbodyCount;
+    }
+
+    
 //-------------------------------------------------------------------
 ///  GetMultiBodyCount
 ///  Output: the number of MultiBody's in the environment

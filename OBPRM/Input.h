@@ -44,6 +44,13 @@ class Environment;
   *      For example, comparing 200083  to 20000604.
   */
 //@{
+
+//defined by Xinyu Tang, 03/27/2002
+//Objective: To enable the obprm to distinguish the external & internal obstacles, 
+//           so it would not try to generate nodes on the surfaces of the internal
+//           obstacles, which might save a lot of time for obprm;
+#define ENV_VER_20020327                   20020327
+
 #define ENV_VER_20001022                   20001022
 #define ENV_VER_LEGACY                     0
 //@}
@@ -355,6 +362,11 @@ public:
 
         int multibodyCount;                                          ///< How many multibodys in environment
         int BodyCount[MAX_MULTIBODY];                                ///< How many (fixed  and free) bodys for each multibody
+	// addded by Xinyu Tang, 03/28/2002
+	// Objective: to show whether this Obstacle is Internal;
+	//            by default it's external, so they should be false;
+        int bBodyInternal[MAX_MULTIBODY];                                ///< How many (fixed  and free) bodys for each multibody
+
         int FixedBodyCount[MAX_MULTIBODY];                           ///< How many fixed bodys for each multibody
         int FreeBodyCount[MAX_MULTIBODY];                            ///< How many free bodys for each multibody
         char *fixedbodyFileName[MAX_MULTIBODY][MAX_FIXEDBODY];       ///< Geometric data filename for each fixed body.

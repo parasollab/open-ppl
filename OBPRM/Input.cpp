@@ -36,6 +36,7 @@
 #include "CollisionDetection.h"
 
 
+#include <iostream>
 //===================================================================
 //  Input class
 //  Constructors and Destructor
@@ -646,7 +647,15 @@ void Input::Read(istream & _is, int envFormatVersion,int action) {
     char string[32];
     char tmpFilename[FILENAME_LENGTH*2];
 
+    //Variable added by Xinyu Tang, 03/27/2002
+    //Usage: to see whether this version of obprm can distinguish the external obstacles & 
+    //       internal obstacles;
+    bool bVersionInternal = true;
+
     switch(envFormatVersion) {
+      case ENV_VER_20020327:
+	//	bVersionInternal = true;
+	break;
       case ENV_VER_20001022:
          // put in whatever may be specific to the format
          // ENV_VER_20001022 is equivalent to ENV_VER_LEGACY
@@ -665,13 +674,35 @@ void Input::Read(istream & _is, int envFormatVersion,int action) {
     _is >> multibodyCount;      // # of MultiBodys'
 
     for (int m=0; m<multibodyCount; m++){
+        
+      bool bInternal = false;
+
         //---------------------------------------------------------------
         // Read tag
         //---------------------------------------------------------------
         readfield(_is, &string);              // Tag, "MultiBody"
         readfield(_is, &string);              // Tag, "Active/Passive"
 
-        readfield(_is, &BodyCount[m]);        // number of bodies
+	//	_is.peek >> skipws;
+	char cPeek = _is.peek();
+  	while ((cPeek== ' ') || (cPeek == '\n'))
+	  {
+	    _is.get();
+	    cPeek = _is.peek();
+	  }
+
+	if (cPeek =='I')
+	  {
+	    readfield(_is, &string);
+	    if (!strncmp(string, "Internal", 8))
+	      {
+		bInternal = true;
+		bBodyInternal[m] = true;
+	      }
+	  }
+
+	readfield(_is, &BodyCount[m]);        // number of bodies
+
         for (i=0; i<BodyCount[m]; i++){
            readfield(_is, &string,comments[m][i]);// Tag (FixedBody or FreeBody)
             if (!strncmp(string, "FixedBody", 10)){

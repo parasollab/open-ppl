@@ -301,55 +301,60 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
 	
 	vector<Cfg>  preshells, shells, tmp, obstSurface;
 	int numMultiBody = _env->GetMultiBodyCount();
+	int numExternalBody = _env->GetExternalBodyCount();
+	//added by Xinyu Tang
+	
 	int robot        = _env->GetRobotIndex();
 	
 	Cfg InsideNode, OutsideNode, low, high, mid;
 	
+
+	//Modified by Xinyu Tang 04/01/2002
 	int N = _gn.numNodes.GetValue()
-		/ (numMultiBody-1)  // -1 for the robot
-        / _gn.numShells.GetValue();
+		/ (numExternalBody-1)  // -1 for the robot
+         / _gn.numShells.GetValue();
 	
 	if (N < 1) N = max(_gn.numNodes.GetValue(),_gn.numShells.GetValue());
 	
-	for (int obstacle = 0 ; obstacle < numMultiBody ; obstacle++){
+	for (int obstacle = 0 ; obstacle < numExternalBody ; obstacle++){
 		if (obstacle != robot){  // && obstacle is "Passive" not "Active" robot
 			
 			for(int n = 0 ; n < N; n++){
 				
 				// Generate Inside cfg
-				Cfg InsideNode;
-				if(!GenerateInsideCfg(_env, cd, robot, obstacle, &InsideNode, _info)) {
-					cout << "\nError: cannot overlap COMs of robot & obstacle\n";
-					continue;
-                }
-				if(!InsideNode.isCollision(_env,cd,robot,obstacle,_info.cdsetid,_info.cdInfo)){
-					cout << "\nError: Seed not in collision w/"
-						" obstacle[index="<<obstacle<<"]\n" << flush;
-					continue;
-                }
+			  Cfg InsideNode;
+			  if(!GenerateInsideCfg(_env, cd, robot, obstacle, &InsideNode, _info)) {
+			    cout << "\nError: cannot overlap COMs of robot & obstacle\n";
+			    continue;
+			  }
+			  if(!InsideNode.isCollision(_env,cd,robot,obstacle,_info.cdsetid,_info.cdInfo)){
+			    cout << "\nError: Seed not in collision w/"
+			      " obstacle[index="<<obstacle<<"]\n" << flush;
+			    continue;
+			  }
 				
 				// Generate Random direction
-				Cfg incrCfg=Cfg::GetRandomRay(
-					EXPANSION_FACTOR * _env->GetPositionRes()
-					);
+			  Cfg incrCfg=Cfg::GetRandomRay(
+							EXPANSION_FACTOR * _env->GetPositionRes()
+							);
 				
 				// Generate outside cfg
-				Cfg OutsideNode = GenerateOutsideCfg(_env,cd,robot,obstacle,
-					InsideNode,incrCfg,_info);
-				if(OutsideNode.AlmostEqual(InsideNode)) continue; // can not find outside node.
+			  Cfg OutsideNode = GenerateOutsideCfg(_env,cd,robot,obstacle,
+							       InsideNode,incrCfg,_info);
+			  if(OutsideNode.AlmostEqual(InsideNode)) continue; // can not find outside node.
 				
 				// Generate surface cfgs
-                tmp = GenerateSurfaceCfg(_env,cd,dm,_info,
-					robot,obstacle, InsideNode,OutsideNode);
+			  tmp = GenerateSurfaceCfg(_env,cd,dm,_info,
+						   robot,obstacle, InsideNode,OutsideNode);
 				
 				// Choose as many as nshells
-                preshells = Shells(tmp, _gn.numShells.GetValue());
-                shells = InsideBoundingBox(_env, preshells);
-                preshells.erase(preshells.begin(), preshells.end());
+			  preshells = Shells(tmp, _gn.numShells.GetValue());
+			  shells = InsideBoundingBox(_env, preshells);
+			  preshells.erase(preshells.begin(), preshells.end());
 				
 				// Collect the cfgs for this obstacle
-				obstSurface.insert(obstSurface.end(),
-					shells.begin(),shells.end());
+			  obstSurface.insert(obstSurface.end(),
+					     shells.begin(),shells.end());
 				
 			} // endfor: n
 			
@@ -368,16 +373,17 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
 			
 		} // endif (obstacle != robot)
 		else
-			if(numMultiBody == 1) {
-				vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNodes.GetValue(), _info);
-				int i;
-				for(i=0; i<CobstNodes.size(); ++i)
-					CobstNodes[i].info.obst = obstacle;
-                _info.nodes.push_back(CobstNodes[i]);
+		  if(numExternalBody == 1) { //if robot is the only object
+		    //		  if(numMultiBody == 1) {
+		    vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNodes.GetValue(), _info);
+		    int i;
+		    for(i=0; i<CobstNodes.size(); ++i)
+		      CobstNodes[i].info.obst = obstacle;
+		    _info.nodes.push_back(CobstNodes[i]);
 #if INTERMEDIATE_FILES
-                surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
+		    surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
 #endif
-			}
+		  }
 			
 	} // endfor: obstacle
 	
@@ -418,17 +424,24 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
 	
     int numMultiBody = _env->GetMultiBodyCount();
     int robot        = _env->GetRobotIndex();
+    int numExternalBody = _env->GetExternalBodyCount();
+    //added by Xinyu Tang
 	
     double P = _gn.proportionSurface.GetValue();
 	
     // Subtract # of robots (ie, numMultiBody-1)
-    int NSEED = (int)(P * _gn.numNodes.GetValue()/(numMultiBody-1)/_gn.numShells.GetValue());
-    int NFREE = (int)((1.0-P) * _gn.numNodes.GetValue()/(numMultiBody-1));
+//      int NSEED = (int)(P * _gn.numNodes.GetValue()/(numMultiBody-1)/_gn.numShells.GetValue());
+//      int NFREE = (int)((1.0-P) * _gn.numNodes.GetValue()/(numMultiBody-1));
+
+    // modified by Xinyu Tang 04/01/2002
+    // Subtract # of robots (ie, numExternalBody-1)
+    int NSEED = (int)(P * _gn.numNodes.GetValue()/(numExternalBody-1)/_gn.numShells.GetValue());
+    int NFREE = (int)((1.0-P) * _gn.numNodes.GetValue()/(numExternalBody-1));
 	
     if (NSEED < 1) NSEED = 1;
 	
     vector<Cfg> obstSurface, obstFree, surface;
-    for(int obstacle = 0 ; obstacle < numMultiBody ; obstacle++){
+    for(int obstacle = 0 ; obstacle < numExternalBody ; obstacle++){
 		
         if(obstacle != robot){
 			
@@ -461,7 +474,8 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
 			
         } // if(obstacle != robot)
 		else 
-			if(numMultiBody == 1) { //if robot is the only object
+		  //			if(numMultiBody == 1) { //if robot is the only object
+			if(numExternalBody == 1) { //if robot is the only object
 				vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNodes.GetValue(), _info);
 				for(int i=0; i<CobstNodes.size(); ++i){
 					CobstNodes[i].info.obst = obstacle;
