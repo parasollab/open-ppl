@@ -22,12 +22,12 @@
  #CSTK_INCL    = -I${CSTKLIB_DIR}/src/include
 
 
- VCLIP_DIR     = //pub/rlab3/solaris/VCLIP
+ VCLIP_DIR     = /pub/rlab3/solaris/VCLIP
  VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
  VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
  VCLIP_INCL    = -I${VCLIP_DIR}/include
 
- RAPID_DIR     = //pub/rlab3/solaris/RAPID_v2_01
+ RAPID_DIR     = /pub/rlab3/solaris/RAPID_v2_01
  RAPIDLIB_DIR  = ${RAPID_DIR}
  RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
  RAPID_INCL    = -I${RAPID_DIR}
@@ -142,7 +142,7 @@ OBJS = \
 	QueryCmds.o \
 	Query.o 
 
-objs:: $(BJS)
+objs:: $(OBJS)
 
 #--------------------------------------------------------------------
 runclean::
