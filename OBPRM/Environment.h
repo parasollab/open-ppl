@@ -54,13 +54,18 @@ public:
     void Decouple(MultiBody *_multibody[], int _number);
     void Get(Input * _input);
 
-    void UpdateBBox(Input * _input);
 
     void Write(ostream & _os);
     void SetRobotIndex(int index){robotIndex = index;};
     int GetRobotIndex(){return robotIndex;};
+
     void FindBoundingBox();
     double * GetBoundingBox();
+    void UpdateBBox(Input * _input);
+    void PutBBox(double _x,double _X,
+                 double _y,double _Y,
+                 double _z,double _Z);
+
     inline double GetPositionRes() {return positionRes;};
     inline double GetOrientationRes() {return orientationRes;};
     void DisplayBB(ostream & _os);
