@@ -3,6 +3,8 @@
 
 #include "OBPRM.h"
 
+#define MAX_NUM_NODES_TRIES 100
+
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -232,7 +234,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   int nNodesGoal = numNodes.GetValue();
   int nNodesGap = bExact ? nNodesGoal - nodes.size() : nNodesGoal;
   //generate obprm nodes   
-  while (nNodesGap >0){
+  int nNumTries = 0;
+  while (nNodesGap >0 && nNumTries < MAX_NUM_NODES_TRIES){
     vector<CFG> obprmCfgs;
     numNodes.PutValue(nNodesGap);
     OBPRM<CFG>::GenerateNodes(_env,Stats,cd,dm,obprmCfgs);
@@ -262,7 +265,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     }
   
     nNodesGap = bExact? nNodesGoal - nodes.size() : 0;
+    nNumTries ++;
   } // while (nNodesGap >0)
+
+  if (nNumTries >= MAX_NUM_NODES_TRIES)
+    cerr << GetName() << ": Can\'t generate engough nodes! " << endl;
 
   numNodes.PutValue(nNodesGoal);//restore the original value - not sure if necessary.
 #if INTERMEDIATE_FILES

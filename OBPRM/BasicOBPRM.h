@@ -4,6 +4,7 @@
 #include "NodeGenerationMethod.h"
 
 #define EXPANSION_FACTOR 100
+#define MAX_NUM_NODES_TRIES 100
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -82,11 +83,13 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
   /**Generate Cfg in C-Free but near Obstacle.
    *These Gfgs are created alone the line made by
    *insideCfg and outsideCfg. Algorithm is :
+   * -#do{
    *   -# do {
    *       -# mid = midpoint between in and out
    *       -# if mid is in C-Free then out=mid
    *       -# else in=mid
    *   -# } while dist(in,out) > clearance
+   * -#}while (not enough nodes gnerated && not enough tries tried)
    *Here dist is ditance between in and out.
    *clearance is clearanceFactor * PositionRes.
    *All midpoints which are in C-Free will be recorded.
@@ -518,6 +521,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   if (N < 1) N = 1; //max(numNodes.GetValue(),numShells.GetValue());
 
   int nNodesGap = numNodes.GetValue() - nodes.size(); 
+  int nNumTries = 0;
   do{ // while not enough nodes are generated
     for (int obstacle = 0 ; obstacle < numExternalBody ; obstacle++) {
       if (obstacle != robot) {  // && obstacle is "Passive" not "Active" robot
@@ -643,7 +647,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
       obstSurface.erase(obstSurface.begin(),obstSurface.end());
       N = 0;
     }
-  }while (N>0);
+    nNumTries++;
+  }while (N>0 && nNumTries < MAX_NUM_NODES_TRIES); // while not enough nodes generated. 
+  
+  if (nNumTries >= MAX_NUM_NODES_TRIES)
+    cerr << GetName() << ": Can\'t generate engough nodes! " << endl;
   
 #if INTERMEDIATE_FILES
   WritePathConfigurations("surface.path", surface, _env);

@@ -3,6 +3,8 @@
 
 #include "BasicOBPRM.h"
 
+#define MAX_NUM_NODES_TRIES 100
+
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -466,6 +468,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   
   if (NSEED < 1) NSEED = 1;
   int nNodesGap = numNodes.GetValue() - nodes.size();  
+  int nNumTries = 0;
   do{
     vector<CFG> obstSurface, obstFree, surface;  
     for(int obstacle = 0 ; obstacle < numExternalBody ; obstacle++) {
@@ -569,7 +572,12 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
       NSEED = 0;
     }
     
-  }while(NSEED>0) ;
+    nNumTries++;
+  }while(NSEED>0 && nNumTries < MAX_NUM_NODES_TRIES) ;
+
+  if (nNumTries >= MAX_NUM_NODES_TRIES)
+    cerr << GetName() << ": Can\'t generate engough nodes! " << endl;
+
 #if INTERMEDIATE_FILES
   WritePathConfigurations("surface.path", surface, _env);
 #endif
