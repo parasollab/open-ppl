@@ -54,7 +54,8 @@ class NodeGenerationMethod {
   /**Generate nodes according to method type, abstract.
    *@param nodes New created nodes are stored here.
    */
-  virtual void GenerateNodes(Environment* _env, CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
+                             CollisionDetection* cd, 
 			     DistanceMetric *, vector<CFG>& nodes) = 0;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
