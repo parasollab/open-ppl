@@ -290,7 +290,7 @@ void Orientation::ConvertType(OrientationType _newType) {
             beta = atan2(-matrix[2][0], sqrt(matrix[2][1]*matrix[2][1] + matrix[2][2]*matrix[2][2]));
 	    if(cos(beta) > 0) {
 	    	alpha = atan2(matrix[1][0], matrix[0][0]);
-		gamma = atan2(matrix[2][1], matrix[2][2]));
+		gamma = atan2(matrix[2][1], matrix[2][2]);
 	    } else {	
                 alpha = atan2(-matrix[1][0], -matrix[0][0]);
                 gamma = atan2(-matrix[2][1], -matrix[2][2]);
