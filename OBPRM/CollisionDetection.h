@@ -55,9 +55,15 @@ class CD;
 class CDSets;
 class CollisionDetection;
 
-typedef bool (*CDF) (MultiBody*,MultiBody*,CD&);     // pointer to cd function
-                                    // *NOTE* need to update
-                                    //  when params known
+//---------------------------------------------------------------
+// Algo base information data structures
+//---------------------------------------------------------------
+struct CDInfo {
+    int colliding_obst_index;
+};
+
+// pointer to cd function
+typedef bool (*CDF) (MultiBody*,MultiBody*,CD&,CDInfo&);     
 
 const int Out = 0;	// Type Out: no collision sure; collision unsure.
 const int In = 1;	// Type In: no collision unsure; collision sure.
@@ -194,36 +200,49 @@ public:
 #endif
   double Clearance(Environment * env);
 
-  bool IsInCollision(Environment * env, SID _cdsetid, MultiBody * lineRobot = NULL);
-  bool IsInCollision(Environment * env, MultiBody * rob, MultiBody * obstacle, SID _cdsetid);
-  bool IsInCollision(Environment * env, int robot, int obstacle, SID _cdsetid);
+  // Drivers
+  bool IsInCollision
+	(Environment* env, SID _cdsetid, CDInfo& _cnInfo, MultiBody* lineRobot = NULL);
+  bool IsInCollision
+	(Environment* env, SID _cdsetid, CDInfo& _cnInfo, MultiBody* rob, MultiBody* obstacle);
+  bool IsInCollision
+	(Environment* env, SID _cdsetid, CDInfo& _cnInfo, int robot, int obstacle);
 
-  static bool IsInCollision_boundingSpheres(MultiBody* robot, MultiBody* obstacle,  CD& _cd);
-  static bool IsInCollision_insideSpheres(MultiBody* robot, MultiBody* obstacle,  CD& _cd);
-  static bool IsInCollision_naive(MultiBody* robot, MultiBody* obstacle, CD& _cd);
-  static bool IsInCollision_quinlan(MultiBody* robot, MultiBody* obstacle,  CD& _cd);
+  // Individual Static Methods
+  static bool IsInCollision_boundingSpheres
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+  static bool IsInCollision_insideSpheres
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+  static bool IsInCollision_naive
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
+  static bool IsInCollision_quinlan
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
 #ifdef USE_CSTK
-  static bool IsInCollision_cstk(MultiBody* robot, MultiBody* obstacle,  CD& _cd);
+  static bool IsInCollision_cstk
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
 #endif
 #ifdef USE_VCLIP
-  static bool IsInCollision_vclip(
-	MultiBody* robot, MultiBody* obstacle,  CD& _cd);
+  static bool IsInCollision_vclip
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
   static VclipPose GetVclipPose(const Transformation&, const Transformation&);
 #endif
 #ifdef USE_RAPID
-  static bool IsInCollision_RAPID(MultiBody* robot, MultiBody* obstacle,  CD& _cd);
+  static bool IsInCollision_RAPID
+	(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cnInfo);
 #endif
 
-  static void SetLineTransformation(const Transformation&, double linTrans[12]); // for cstk
+  // for cstk
+  static void SetLineTransformation(const Transformation&, double linTrans[12]); 
 
   //===================================================================
   // Data
   //===================================================================
   CDSets collisionCheckers;
 
+public:
+  CDInfo cdInfo;
 protected:
 private:
 };
 
 #endif
-

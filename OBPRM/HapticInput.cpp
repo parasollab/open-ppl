@@ -154,7 +154,7 @@ void HapticInput::AddHapticPath(vector <Cfg> cfgs, int mask,
   fprintf(stderr,"size=%d\n",cfgs.size());
   for(i=0;i<cfgs.size();i++)
   {
-   if(cfgs[i].isCollision(env, cd, connectionInfo.cdsetid))
+   if(cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
    {
      collided.push_back(cfgs[i]);
    }
@@ -220,7 +220,7 @@ double &jumpSize, Cfg inside, double incrCoord) {
      for(int l=0; l<loopSize; l++) {
         for(int i=0; i < testSize; i++) {
 	   startCfg[i] = startCfg[i] + randomRay[i];
-	   if(!startCfg[i].isCollision(env, cd, connectionInfo.cdsetid)) {
+	   if(!startCfg[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)) {
                 cout << " loop counter is " << l << "step Size is " << stepSize << endl;
 		jumpSize += stepSize * (l+1);
 		direct = randomRay[i].GetRobotCenterPosition();
@@ -269,7 +269,7 @@ void HapticInput::AddUsingSurface2(vector <Cfg> nodes)
   for(i=0;i<nodes.size();i++) {
     cout << "At node " << nodes[i] << endl << flush;
    
-    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid) && i<(nodes.size()-1) ) {
+    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo) && i<(nodes.size()-1) ) {
        prevFound=false;
        inside.push_back(nodes[i]);
     } else {
@@ -313,7 +313,7 @@ void HapticInput::AddUsingSurface2(vector <Cfg> nodes)
        prevFound=true;
        prevFreeCfg=nodes[i];
        // skip the last one, it may be in collision.
-       if(i < nodes.size()-1 || !nodes[i].isCollision(env, cd, connectionInfo.cdsetid))  
+       if(i < nodes.size()-1 || !nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))  
 	  fixed.push_back(nodes[i]);
       
     } //else
@@ -362,7 +362,7 @@ void HapticInput::AddFreeNodes(vector <Cfg>cfgs,bool checkConnection)
   for(i=0;i<cfgs.size();i++)
   {
      cout << "Trying " << cfgs[i] << endl << flush;
-     if(cfgs[i].isCollision(env, cd, connectionInfo.cdsetid))
+     if(cfgs[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
           {prev=INVALID_VID; prevCfg=cfgs[i]; continue;}
   
      current=rdmp->roadmap.AddVertex(cfgs[i]);
@@ -418,7 +418,7 @@ void HapticInput::AddUsingSeed(vector <Cfg> seeds,int nodesPerSeed)
   nodes=GenerateOBPRMNodes(env,cd, dm, seeds,nodesPerSeed,generationInfo);
   for(int i=0;i<nodes.size();i++)
   {
-    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid))
+    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo))
     {
       cout << "Error: The surface node is in collision\n";
     }
@@ -581,7 +581,7 @@ void HapticInput::AddUsingSurface(vector <Cfg> nodes,int numIntermediate)
   {
     cout << "At node " << nodes[i] << endl << flush;
    
-    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid)) {
+    if(nodes[i].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)) {
        cout << "It is in  collision " << endl << flush;
        prevFound=false;
        inside.push_back(nodes[i]);
@@ -599,7 +599,7 @@ void HapticInput::AddUsingSurface(vector <Cfg> nodes,int numIntermediate)
 	     inter.Increment(incr);
              intermediate.push_back(inter); 
              InterList.push_back(inter);
-             if(!inter.isCollision(env, cd, connectionInfo.cdsetid)) {
+             if(!inter.isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)) {
                   surface.push_back(inter);
                   cout << "Intermediate " << inter << " is added to surface list\n" << flush;
              }
@@ -608,7 +608,7 @@ void HapticInput::AddUsingSurface(vector <Cfg> nodes,int numIntermediate)
           for(j=0;j< inside.size(); j++) {
             Cfg ccc;
             for(k=0;k<numIntermediate;k++) {
-              if(intermediate[k].isCollision(env, cd, connectionInfo.cdsetid)) {
+              if(intermediate[k].isCollision(env, cd, connectionInfo.cdsetid,connectionInfo.cdInfo)) {
                  cout << "GenerateSurfaceCfg\n";
                  inter=GenerateOutsideCfg(env,cd, inside[j], 
 			(intermediate[k]-inside[j]),
@@ -678,10 +678,10 @@ GenerateSurfaceCfg(Environment *env, CollisionDetection *cd, DistanceMetric *dm,
     int cnt;
 
     low = insideCfg; high = outsideCfg;
-    if(high.isCollision(env, cd, _gnInfo.cdsetid))
+    if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo))
        cout << "Ebesinin ki  sicmis ya " << "\n" <<flush;
-if(high.isCollision(env, cd, _gnInfo.cdsetid) ||
-   !low.isCollision(env, cd, _gnInfo.cdsetid) ) {
+if(high.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo) ||
+   !low.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo) ) {
   cout << " **************************** " << endl;
 }
 
@@ -694,13 +694,13 @@ if(high.isCollision(env, cd, _gnInfo.cdsetid) ||
 
     cout << "Ebesinin ki " << mid << "\n" <<flush;
     while((delta >= PositionRes) &&
-                !high.isCollision(env, cd,_gnInfo.cdsetid)) {
+                !high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo)) {
             prev=high;
          cout << "Ebesinin ki hi " << high << "\n" <<flush;
          cout << "Ebesinin ki mid" << mid << "\n" <<flush;
          cout << "Ebesinin ki low " << low << "\n" <<flush;
          cout << "delta =   " << delta << "\n" <<flush;
-        if(mid.isCollision(env, cd, _gnInfo.cdsetid)){
+        if(mid.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo)){
             low = mid;
         } else {
             high = mid;
@@ -710,8 +710,8 @@ if(high.isCollision(env, cd, _gnInfo.cdsetid) ||
         delta = dm->Distance(env, low, high, _gnInfo.dmsetid);
         cnt++;
     }
-    if(surface.isCollision(env, cd,_gnInfo.cdsetid)) {
-           if(high.isCollision(env, cd,_gnInfo.cdsetid))
+    if(surface.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo)) {
+           if(high.isCollision(env, cd,_gnInfo.cdsetid,_gnInfo.cdInfo))
                 cout <<" Anlamiyorum abi " << flush;
 cout <<" returning high" << flush;
            return prev;
@@ -725,7 +725,7 @@ GenerateOutsideCfg(Environment *env, CollisionDetection *cd,
 
     Cfg OutsideNode;
     OutsideNode = InsideNode + incrCfg;
-    while(OutsideNode.isCollision(env, cd, _gnInfo.cdsetid)){
+    while(OutsideNode.isCollision(env, cd, _gnInfo.cdsetid,_gnInfo.cdInfo)){
         OutsideNode = OutsideNode + incrCfg;
     }
     return OutsideNode;

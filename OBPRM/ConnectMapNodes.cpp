@@ -916,7 +916,7 @@ RRT( Roadmap * rm,int K, double deltaT, vector<Cfg>&U,
 
          //if x_new in bbox AND x_new in freespace AND x_new connectable to x_near
          if (x_new.InBoundingBox(env)
-          && !x_new.isCollision(env,cd,info.cdsetid)
+          && !x_new.isCollision(env,cd,info.cdsetid,info.cdInfo)
           && lp->IsConnected(rm,cd,dm,x_near,x_new,info.lpsetid,&lpInfo)){
 
              // add x_new and connecting edge to x_near into roadmap

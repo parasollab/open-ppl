@@ -70,6 +70,7 @@ struct CNInfo {
     SID lpsetid;        // local planner set id
     SID cdsetid;        // collision detection set id
     SID dmsetid;        // distance metric set id
+    CDInfo cdInfo;      
     int numEdges;
     vector <EdgeInfo<WEIGHT> > edges;
     bool addPartialEdge;

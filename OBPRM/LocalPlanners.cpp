@@ -372,7 +372,7 @@ bool LocalPlanners::lineSegmentInCollision(Environment *_env,CollisionDetection 
     lineSegment->AddBody(&fb);
 
     info->cd_cntr ++;
-    if( cd->IsInCollision(_env, info->cdsetid, lineSegment) )
+    if( cd->IsInCollision(_env, info->cdsetid, info->cdInfo, lineSegment) )
         return true;
     return false;
 }
@@ -416,7 +416,7 @@ IsConnected_straightline_simple(Environment *_env,CollisionDetection *cd,Distanc
 
         info->cd_cntr ++;
         if(info->checkCollision){
-            if(tick.isCollision(_env,cd, info->cdsetid)){
+            if(tick.isCollision(_env,cd, info->cdsetid,info->cdInfo)){
 		tick.Increment(-incr);
 		info->savedEdge = pair<Cfg,Cfg>(_c1, tick);
 		info->edge.first.Weight() += nTicks;
@@ -501,10 +501,11 @@ IsConnected_astar(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,Cf
       diagonal.IncrementTowardsGoal(_c2,incr);
 
       info->cd_cntr++;
-      if(!diagonal.isCollision(_env,cd, info->cdsetid)){
+      if(!diagonal.isCollision(_env,cd, info->cdsetid,info->cdInfo)){
           p=diagonal;
       } else {
-          neighbors=p.FindNeighbors(_env, _c2,incr,cd,noNeighbors,info->cdsetid);
+          neighbors=p.FindNeighbors(_env, _c2,incr,cd,noNeighbors,
+		info->cdsetid,info->cdInfo);
           if (neighbors.size()==0) { 
              connected = false;
 	     info->savedEdge = pair<Cfg,Cfg>(_c1, p);

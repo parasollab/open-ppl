@@ -75,9 +75,10 @@ public:
   // methods for nodes connection.
   virtual vector<Cfg> FindNeighbors(const Cfg& c, Environment *env,
 			const Cfg& increment,CollisionDetection *,
-			int noNeighbors, SID  _cdsetid);
-  virtual vector<Cfg> FindNeighbors(const Cfg& c, Environment *env, const Cfg& goal,
-	const Cfg& increment, CollisionDetection *,int noNeighbors, SID  _cdsetid);
+			int noNeighbors, SID  _cdsetid, CDInfo& _cdInfo);
+  virtual vector<Cfg> FindNeighbors(const Cfg& c, Environment *env, 
+	const Cfg& goal, const Cfg& increment, 
+	CollisionDetection *,int noNeighbors, SID  _cdsetid, CDInfo& _cdInfo);
   virtual void IncrementTowardsGoal(Cfg& c, const Cfg &goal, const Cfg &increment);
   virtual Cfg FindIncrement(const Cfg& c, const Cfg& _goal, int * n_ticks,
                             double positionRes, double orientationRes);
@@ -90,17 +91,18 @@ public:
   // methods for Cfg generation and collision checking.
   virtual bool ConfigEnvironment(const Cfg &c, Environment *env) = 0;
   virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
-                           int robot, int obs, SID _cdsetid);
+                           int robot, int obs, SID _cdsetid, CDInfo& _cdInfo);
   virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
-                           SID _cdsetid);
+                           SID _cdsetid, CDInfo& _cdInfo);
   virtual bool isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
-                           SID _cdsetid, MultiBody * onflyRobot);
+                           SID _cdsetid, CDInfo& _cdInfo, MultiBody * onflyRobot);
 
   // Node Generation methods
   virtual bool GenerateOverlapCfg(Environment *env, int robot,
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg) = 0; // OBPRM
   virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
-         CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid) = 0; // NORMAL
+         CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid,
+	CDInfo& _cdInfo) = 0; // NORMAL
 
   // printing methods.
   virtual void writeTransformation(FILE *_fp, Transformation & tmp);

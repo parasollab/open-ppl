@@ -157,7 +157,7 @@ BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GN
    for (int i=0; i < _info.numNodes; i++) {
       Cfg cfg = Cfg::GetRandomCfg(_env);
 
-      if ( !cfg.isCollision(_env,cd,_info.cdsetid) ) {
+      if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) {
          _info.nodes.push_back(Cfg(cfg));
          #if INTERMEDIATE_FILES
 	   path.push_back(cfg);
@@ -208,8 +208,8 @@ GaussPRM(
       // because cfg2 is modified it must be checked again
       if (cfg2.InBoundingBox(_env)){
 
-        bool cfg1_free = !cfg1.isCollision(_env,cd,_info.cdsetid);
-        bool cfg2_free = !cfg2.isCollision(_env,cd,_info.cdsetid);
+        bool cfg1_free = !cfg1.isCollision(_env,cd,_info.cdsetid,_info.cdInfo);
+        bool cfg2_free = !cfg2.isCollision(_env,cd,_info.cdsetid,_info.cdInfo);
 
         if (cfg1_free && !cfg2_free) {
          _info.nodes.push_back(Cfg(cfg1));
@@ -276,7 +276,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
                    cout << "\nError: cannot overlap COMs of robot & obstacle\n";
                    continue;
                 }
-		if(!InsideNode.isCollision(_env,cd,robot,obstacle,_info.cdsetid)){
+		if(!InsideNode.isCollision(_env,cd,robot,obstacle,_info.cdsetid,_info.cdInfo)){
                    cout << "\nError: Seed not in collision w/"
 				" obstacle[index="<<obstacle<<"]\n" << flush;
                    continue;
@@ -462,7 +462,8 @@ GenSurfaceCfgs4Obst(Environment * env,CollisionDetection* cd,DistanceMetric * dm
     ValidatePairs("seedSelect", info.collPair, &seedSelect);
 
     if(seedSelect.first == N_rT && seedSelect.second == N_rT)
-        return Cfg::GenSurfaceCfgs4ObstNORMAL(env, cd, obstacle, nCfgs, info.cdsetid);
+        return Cfg::GenSurfaceCfgs4ObstNORMAL(
+		env, cd, obstacle, nCfgs, info.cdsetid, info.cdInfo);
     else
         return GenSurfaceCfgs4ObstVERTEX(env, cd, dm, obstacle, nCfgs, info);
 }
@@ -521,7 +522,7 @@ GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm, i
     int i;
     for(i=0; i<nCfgs; ++i) {
 	Cfg::GenerateOverlapCfg(env, robot, voidA, voidB, &gen);  // voidA, voidB is not used.
-	if(gen.isCollision(env,cd, info.cdsetid))
+	if(gen.isCollision(env,cd, info.cdsetid,info.cdInfo))
            obstSeeds.push_back(gen);
         else
 	   surface.push_back(gen);
@@ -691,7 +692,7 @@ GenerateSeeds(Environment * env,CollisionDetection *cd, GNInfo &_gnInfo,
     for(int i = 0 ; i < nseeds ; i++){
         if(Cfg::GenerateOverlapCfg(env, rob, ptsRobot[i], ptsObstacle[i], &cfg)){
             // check if it is possible to generate a Cfg with this pose.
-            if(cfg.isCollision(env,cd, _gnInfo.cdsetid)) {
+            if(cfg.isCollision(env,cd, _gnInfo.cdsetid,_gnInfo.cdInfo)) {
                 seeds->push_back(cfg);
             }
         }
@@ -726,8 +727,8 @@ GenFreeCfgs4Obst(Environment * env, CollisionDetection *cd, int obstacle, int nC
     for(int i = 0 ; i < nCfgs ; i++){
         if( Cfg::GenerateOverlapCfg(env, robot, ptsRobot[i], ptsObstacle[i], &cfg) ) {
            // check if it is possible to generate a Cfg with this pose.
-           //if(!cfg.isCollision(env, info.cdsetid) && CfgInsideBB(env, cfg)) {
-           if(!cfg.isCollision(env,cd, info.cdsetid)) {
+           //if(!cfg.isCollision(env, info.cdsetid,info.cdInfo) && CfgInsideBB(env, cfg)) {
+           if(!cfg.isCollision(env,cd, info.cdsetid,info.cdInfo)) {
                free.push_back(cfg);
            }
         }
@@ -770,7 +771,7 @@ GenerateSurfaceCfg(Environment *env,CollisionDetection *cd, DistanceMetric * dm,
     // Do the Binary Search
     tmp.push_back(high);
     while((delta >= PositionRes) && (cnt < MAX_CONVERGE)){
-        if(mid.isCollision(env,cd , rob, obst, info.cdsetid) ) {
+        if(mid.isCollision(env,cd , rob, obst, info.cdsetid,info.cdInfo) ) {
             low = mid;
         } else {
             high = mid;
@@ -783,7 +784,7 @@ GenerateSurfaceCfg(Environment *env,CollisionDetection *cd, DistanceMetric * dm,
 
     // if converged save the cfgs that don't collide with the environment
     if(cnt < MAX_CONVERGE) {
-        if(!high.isCollision(env,cd, info.cdsetid)) {
+        if(!high.isCollision(env,cd, info.cdsetid,info.cdInfo)) {
             surface = FreeCfgs(env, cd,tmp, info);
         }
     }
@@ -858,7 +859,7 @@ FirstNFreeCfgs(Environment *env,CollisionDetection *cd, GNInfo &info,
 
     int i = 0; int cnt = 0;
     while(i < size && cnt < n){
-	if(!cfgs[i].isCollision(env,cd, info.cdsetid)){
+	if(!cfgs[i].isCollision(env,cd, info.cdsetid,info.cdInfo)){
             free->push_back(cfgs[i]);
             cnt++;
         }
@@ -971,7 +972,7 @@ FreeCfgs(Environment *env,CollisionDetection *cd, vector<Cfg> cfgs, GNInfo &info
     vector<Cfg> free;
     free.reserve(size);
     for(int i = 0 ; i < size ; i++){
-	if(!cfgs[i].isCollision(env,cd, info.cdsetid)) {
+	if(!cfgs[i].isCollision(env,cd, info.cdsetid,info.cdInfo)) {
             free.push_back(cfgs[i]);
         }
     }
@@ -1302,7 +1303,7 @@ GenerateInsideCfg(Environment *_env, CollisionDetection* _cd,
                 _env->GetMultiBody(rob)->GetCenterOfMass(),
                 _env->GetMultiBody(obst)->GetCenterOfMass(),
                 insideNode);
-    if (!insideNode->isCollision(_env, _cd, rob, obst, _info.cdsetid)) {
+    if (!insideNode->isCollision(_env, _cd, rob, obst, _info.cdsetid,_info.cdInfo)) {
 
       // use random vertex instead of center of mass
       Vector3D vP;
@@ -1328,7 +1329,7 @@ GenerateOutsideCfg(Environment *env,CollisionDetection * cd, int rob, int obst,
 
     int count = 0;
     Cfg OutsideNode = InsideNode + incrCfg;
-    while(OutsideNode.isCollision(env,cd, rob, obst, info.cdsetid) ) {
+    while(OutsideNode.isCollision(env,cd, rob, obst, info.cdsetid,info.cdInfo) ) {
         OutsideNode = OutsideNode + incrCfg;
 	if(count++ > 500)
 	   return InsideNode;

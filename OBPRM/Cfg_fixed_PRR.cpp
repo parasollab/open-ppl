@@ -137,7 +137,8 @@ bool Cfg_fixed_PRR::GenerateOverlapCfg(
 //===================================================================
 vector<Cfg>
 Cfg_fixed_PRR::GenSurfaceCfgs4ObstNORMAL
-(Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, SID _cdsetid){
+(Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, 
+	SID _cdsetid,CDInfo& _cdInfo){
    cout << "Error in Cfg_fixed_PRR::GenSurfaceCfgs4ObstNORMAL(), not implemented yet" << endl;
    exit(10);
 }

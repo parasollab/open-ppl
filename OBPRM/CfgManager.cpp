@@ -142,7 +142,8 @@ vector<Cfg> CfgManager::FindNeighbors(
 	const Cfg &increment,
   	CollisionDetection *cd,
 	int noNeighbors,
-	SID  _cdsetid){
+	SID  _cdsetid,
+	CDInfo& _cdInfo){
 
    vector<Cfg> ret;
    vector<Cfg> nList;
@@ -177,7 +178,7 @@ vector<Cfg> CfgManager::FindNeighbors(
    if(noNeighbors > nList.size()) noNeighbors = nList.size(); 
    for(i=0;i<(noNeighbors);i++) {
        Cfg tmp= start + nList[i];
-       if(!AlmostEqual(start, tmp) && !tmp.isCollision(_env, cd, _cdsetid) ) 
+       if(!AlmostEqual(start, tmp) && !tmp.isCollision(_env, cd, _cdsetid,_cdInfo) ) 
             ret.push_back(tmp);
    }
 
@@ -191,7 +192,8 @@ vector<Cfg> CfgManager::FindNeighbors(
 	const Cfg& increment,
         CollisionDetection *cd,
 	int noNeighbors,
-	SID  _cdsetid) {
+	SID  _cdsetid,
+	CDInfo& _cdInfo) {
 
    vector<Cfg> ret;
    vector<Cfg> nList;
@@ -228,7 +230,7 @@ vector<Cfg> CfgManager::FindNeighbors(
    for(i=0;i<noNeighbors;++i) {
        Cfg tmp = start;
        IncrementTowardsGoal(tmp, goal, nList[i]);
-       if(!AlmostEqual(start, tmp) && !tmp.isCollision(_env,cd,_cdsetid) ) {
+       if(!AlmostEqual(start, tmp) && !tmp.isCollision(_env,cd,_cdsetid,_cdInfo) ) {
             ret.push_back(tmp);
        }
    }
@@ -377,31 +379,31 @@ void CfgManager::print_preamble_to_file(Environment *env, FILE *_fp, int numofCf
 }
 
 bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
-                           SID _cdsetid, MultiBody * onflyRobot) {
+                           SID _cdsetid, CDInfo& _cdInfo, MultiBody * onflyRobot) {
         //ConfigEnvironment(c, onflyRobot);
 	ConfigEnvironment(c, env);
-        bool result = cd->IsInCollision(env, _cdsetid, onflyRobot);
+        bool result = cd->IsInCollision(env, _cdsetid, _cdInfo, onflyRobot);
         return result;
 }
 
 bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
-                             SID _cdsetid){
+                             SID _cdsetid, CDInfo& _cdInfo){
      if(!ConfigEnvironment(c, env))
          return true;
 
      // after updating the environment(multibodies), Ask ENVIRONMENT
      // to check collision! (this is more nature.)
-     bool answerFromEnvironment = cd->IsInCollision(env, _cdsetid);
+     bool answerFromEnvironment = cd->IsInCollision(env, _cdsetid, _cdInfo);
      return answerFromEnvironment;
 }
 
 bool CfgManager::isCollision(const Cfg &c, Environment *env, CollisionDetection *cd,
-                int robot, int obs, SID _cdsetid){
+                int robot, int obs, SID _cdsetid, CDInfo& _cdInfo){
      if(!ConfigEnvironment(c, env))
           return true;
 
      // ask CollisionDetection class directly.
-     bool answerFromCD = cd->IsInCollision(env, robot, obs, _cdsetid);
+     bool answerFromCD = cd->IsInCollision(env, _cdsetid, _cdInfo, robot, obs);
      return answerFromCD;
 }
 

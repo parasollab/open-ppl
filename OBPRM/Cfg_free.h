@@ -46,13 +46,20 @@ public:
   virtual bool GenerateOverlapCfg(Environment *env, int robot,
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg); // OBPRM
   virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
-         CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid); // NORMAL
+         CollisionDetection *,int obstacle, int nCfgs, 
+	SID _cdsetid,CDInfo& _cdInfo); // NORMAL
 
-  virtual vector<Cfg> GetCfgByOverlappingNormal(Environment * env,
-         CollisionDetection* cd, const GMSPolyhedron &polyRobot,
-         const GMSPolyhedron &polyObst, int robTri, int obsTri, SID _cdsetid, MultiBody *);
-  virtual bool InNarrowPassage(const Cfg& c, Environment * env,CollisionDetection* cd,
-                                 SID _cdsetid, MultiBody * onflyRobot);
+  virtual vector<Cfg> GetCfgByOverlappingNormal(
+	Environment * env, CollisionDetection* cd, 
+	const GMSPolyhedron &polyRobot, const GMSPolyhedron &polyObst, 
+	int robTri, int obsTri, 
+	SID _cdsetid, CDInfo& _cdInfo,
+	MultiBody *);
+
+  virtual bool InNarrowPassage(
+	const Cfg& c, Environment * env,CollisionDetection* cd,
+	SID _cdsetid, CDInfo& _cdInfo,
+	MultiBody * onflyRobot);
 
   protected:
 

@@ -46,7 +46,8 @@ public:
   virtual bool GenerateOverlapCfg(Environment *env, int robot,
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg); // OBPRM
   virtual vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
-         CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid); // NORMAL
+         CollisionDetection *,int obstacle, int nCfgs, 
+	SID _cdsetid, CDInfo& _cdInfo); // NORMAL
 
 
   protected:

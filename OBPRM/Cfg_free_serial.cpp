@@ -175,7 +175,8 @@ bool Cfg_free_serial::GenerateOverlapCfg(
 // Guang Song 08/24/99
 //===================================================================
 vector<Cfg> Cfg_free_serial::GenSurfaceCfgs4ObstNORMAL
-(Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, SID _cdsetid){
+(Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, 
+SID _cdsetid,CDInfo& _cdInfo){
     static const int SIZE = 1;
     //static double jointAngles[SIZE][3] = {{0.0, 0.0, 0.0}, {0.25, 0.25, 0.25}, {0.0, 0.4, 0.0},
     //                                   {0.4, 0.6, 0.4},};
@@ -193,8 +194,12 @@ vector<Cfg> Cfg_free_serial::GenSurfaceCfgs4ObstNORMAL
           int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
           // brc removed &
           //vector<Cfg> &cfgFree = cfgFreeManager.GetCfgByOverlappingNormal(env, cd, polyRobot,
-          vector<Cfg> cfgFree = cfgFreeManager.GetCfgByOverlappingNormal(env, cd, polyRobot,
-                                 polyObst, robotTriIndex, obstTriIndex, _cdsetid, base);
+          vector<Cfg> cfgFree = cfgFreeManager.GetCfgByOverlappingNormal(
+				env, cd, 
+				polyRobot, polyObst, 
+				robotTriIndex, obstTriIndex, 
+				_cdsetid, _cdInfo,
+				base);
           if(!cfgFree.empty()) {
              // brc removed &
              //vector<double> &basePose = cfgFree[0].GetData();
@@ -206,7 +211,7 @@ vector<Cfg> Cfg_free_serial::GenSurfaceCfgs4ObstNORMAL
 		   serialData.push_back(drand48());
                 }
                 Cfg serial(serialData);
-                if(!serial.isCollision(env,cd,_cdsetid) && serial.InBoundingBox(env)) {
+                if(!serial.isCollision(env,cd,_cdsetid,_cdInfo) && serial.InBoundingBox(env)) {
                    surface.push_back(serial);
                    ++num;
                 }

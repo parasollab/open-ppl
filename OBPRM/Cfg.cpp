@@ -351,25 +351,30 @@ void Cfg::IncrementTowardsGoal(
 
 
 vector<Cfg> Cfg::FindNeighbors(
-	Environment *_env,
-	const Cfg &increment,
+	Environment *_env, const Cfg &increment,
   	CollisionDetection *cd,
 	int noNeighbors,
-	SID  _cdsetid){
+	SID  _cdsetid, CDInfo& _cdInfo){
 
-  return CfgHelper->FindNeighbors(*this, _env, increment, cd, noNeighbors, _cdsetid);
+  return CfgHelper->FindNeighbors(*this, 
+	_env, increment, 
+	cd, 
+	noNeighbors, 
+	_cdsetid, _cdInfo);
 
 }
 
 vector<Cfg> Cfg::FindNeighbors(
-	Environment *_env,
-	const Cfg& goal,
-	const Cfg& increment,
+	Environment *_env, const Cfg& goal, const Cfg& increment,
         CollisionDetection *cd,
 	int noNeighbors,
-	SID  _cdsetid) {
+	SID  _cdsetid, CDInfo& _cdInfo) {
 
-  return CfgHelper->FindNeighbors(*this, _env, goal, increment, cd, noNeighbors, _cdsetid);
+  return CfgHelper->FindNeighbors(*this, 
+	_env, goal, increment, 
+	cd, 
+	noNeighbors, 
+	_cdsetid, _cdInfo);
 }
 
 Cfg Cfg::FindIncrement(
@@ -456,13 +461,14 @@ bool Cfg::ConfigEnvironment(Environment *env) {
 }
 
 
-bool Cfg::isCollision(Environment *env,CollisionDetection *cd, SID _cdsetid){
-     return CfgHelper->isCollision(*this, env, cd, _cdsetid);
+bool Cfg::isCollision(Environment *env,CollisionDetection *cd, SID _cdsetid,
+CDInfo& _cdInfo){
+     return CfgHelper->isCollision(*this, env, cd, _cdsetid, _cdInfo);
 }
 
 bool Cfg::isCollision(Environment *env, CollisionDetection *cd,
-		int robot, int obs, SID _cdsetid){
-     return CfgHelper->isCollision(*this, env, cd, robot, obs, _cdsetid);
+		int robot, int obs, SID _cdsetid, CDInfo& _cdInfo){
+     return CfgHelper->isCollision(*this, env, cd, robot, obs, _cdsetid, _cdInfo);
 }
 
 double Cfg::Clearance(Environment *env,CollisionDetection *cd ){
@@ -473,7 +479,7 @@ double Cfg::Clearance(Environment *env,CollisionDetection *cd ){
 
 
 //Approximate C-Space Clearance
-double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, int n)
+double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, CDInfo& cdInfo,DistanceMetric * dm, SID dmsetid, int n)
 {
   //cout << endl << endl << "Inside ApproxCSpaceClearance: " << flush;
   Cfg cfg = *this;
@@ -500,7 +506,7 @@ double Cfg::ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID 
 
       tick.Increment(incr);
 
-      if(tick.isCollision(env,cd,cdsetid)){
+      if(tick.isCollision(env,cd,cdsetid,cdInfo)){
 
 	//cout << endl << "Inside Collision!" << flush;
 	//cout << endl << "tick = " << tick;
@@ -552,8 +558,10 @@ bool Cfg::GenerateOverlapCfg(
 //===================================================================
 vector<Cfg>
 Cfg::GenSurfaceCfgs4ObstNORMAL
-(Environment * env,CollisionDetection* cd, int obstacle, int nCfgs, SID _cdsetid){
-   return CfgHelper->GenSurfaceCfgs4ObstNORMAL(env, cd, obstacle, nCfgs, _cdsetid);
+(Environment * env,CollisionDetection* cd, 
+int obstacle, int nCfgs, SID _cdsetid, CDInfo& _cdInfo){
+
+   return CfgHelper->GenSurfaceCfgs4ObstNORMAL(env, cd, obstacle, nCfgs, _cdsetid,_cdInfo);
 }
 
 // return a configuration(conformation)'s potential.

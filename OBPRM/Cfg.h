@@ -39,6 +39,7 @@ class CfgManager;
 
 
 class DistanceMetric;
+struct CDInfo;
 
 
 //
@@ -143,11 +144,18 @@ public:
   vector<Cfg> GetMovingSequenceNodes(const Cfg& other, double s) const;
 
   // methods for nodes connection.
-  vector<Cfg> FindNeighbors(Environment *env,
-			const Cfg& increment,CollisionDetection *,
-	int noNeighbors, SID  _cdsetid);
-  vector<Cfg> FindNeighbors(Environment *env, const Cfg& goal,
-	const Cfg& increment, CollisionDetection *,int noNeighbors, SID  _cdsetid);
+  vector<Cfg> FindNeighbors(
+	Environment *env, const Cfg& increment,
+	CollisionDetection *,
+	int noNeighbors, 
+	SID  _cdsetid, CDInfo& _cdInfo);
+
+  vector<Cfg> FindNeighbors(
+	Environment *env, const Cfg& goal, const Cfg& increment, 
+	CollisionDetection *,
+	int noNeighbors, 
+	SID  _cdsetid, CDInfo& _cdInfo);
+
   void IncrementTowardsGoal(const Cfg &goal, const Cfg &increment);
   Cfg  FindIncrement(const Cfg& _goal, int * n_ticks,
 	                          double positionRes, double orientationRes);
@@ -179,15 +187,19 @@ public:
   double Clearance(Environment *env,CollisionDetection* cd);
 
   //Approximate C-Space Clearance
-  double ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, SID cdsetid, DistanceMetric * dm, SID dmsetid, int n);
+  double ApproxCSpaceClearance(Environment *env, CollisionDetection *cd, 
+	SID cdsetid, CDInfo& cdInfo, 
+	DistanceMetric * dm, SID dmsetid, int n);
 
   bool ConfigEnvironment(Environment *env);
-  bool isCollision(Environment *env,CollisionDetection* cd, SID _cdsetid);
-  bool isCollision(Environment *env, CollisionDetection *cd,int robot, int obs, SID _cdsetid);
+  bool isCollision(Environment *env,CollisionDetection* cd, 
+	SID _cdsetid, CDInfo& _cdInfo);
+  bool isCollision(Environment *env, CollisionDetection *cd,int robot, int obs, 	SID _cdsetid, CDInfo& _cdInfo);
   static bool GenerateOverlapCfg(Environment *env, int robot,
          Vector3D robot_start, Vector3D robot_goal, Cfg *resultCfg);  // OBPRM and BasicOBPRM
   static vector<Cfg> GenSurfaceCfgs4ObstNORMAL(Environment * env,
-         CollisionDetection *,int obstacle, int nCfgs, SID _cdsetid);
+         CollisionDetection *,int obstacle, int nCfgs, 
+	SID _cdsetid, CDInfo& _cdInfo);
 
   // new: printing methods.
   void print_vizmo_format_to_file(Environment *env, FILE *_fp);

@@ -81,6 +81,7 @@ public:
     double orientationRes;
     int cd_cntr;
     SID cdsetid;
+    CDInfo cdInfo;
     SID dmsetid;
     vector<Cfg> path;
     pair<Cfg,Cfg> savedEdge;
