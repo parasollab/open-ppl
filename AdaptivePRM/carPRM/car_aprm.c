@@ -9,10 +9,11 @@
 
 #include "OBPRM.h"
 #include "Roadmap.h"
-#include "Input.h"
+#include "MyInput.h"
 
 #include "CfgCarLike.h"
 #include "NoopLocalPlanners.h"
+#include "NoopCollisionDetection.h"
 #include "util.h"
 #include "CurveWeight.h"
 
@@ -22,7 +23,7 @@
 #include "ConnectMapNodes.h"
 #include "DistanceMetrics.h"
 
-Input input;
+MyInput input;
 Stat_Class Stats; 
 void PrintRawLine( ostream& _os,
         Roadmap *rmap, Clock_Class *NodeGenClock, Clock_Class *ConnectionClock,
@@ -35,9 +36,11 @@ int main(int argc, char** argv)
 {
   GenerateMapNodes   gn;
   ConnectMapNodes    cn;
-  NoopLocalPlanners  lp;
+  LocalPlanners      lp;
+  NoopLocalPlanners  noop_lp;
   DistanceMetric     dm;
   CollisionDetection cd;
+  NoopCollisionDetection noop_cd;
   Clock_Class        NodeGenClock;
   Clock_Class        ConnectionClock;
 
@@ -57,12 +60,30 @@ int main(int argc, char** argv)
   // build map
   // write map to a file
   //----------------------------------------------------
-  Roadmap rmap(&input,  &cd, &dm, &lp);
-  cd.UserInit(&input,   &gn, &cn );
-  lp.UserInit(&input,        &cn );
-  gn.UserInit(&input, rmap.GetEnvironment() );
-  cn.UserInit(&input, rmap.GetEnvironment() );
-  dm.UserInit(&input,   &gn, &lp );
+  Roadmap rmap(&input, &cd, &dm, &lp);
+  cd.UserInit(&input, &gn, &cn);
+  noop_cd.UserInit(&input, &gn, &cn);
+  lp.UserInit(&input, &cn);
+  noop_lp.UserInit(&input, &cn);
+  gn.UserInit(&input, rmap.GetEnvironment());
+  cn.UserInit(&input, rmap.GetEnvironment());
+  dm.UserInit(&input, &gn, &lp);
+
+  enum VALIDATE {NONE, APPROXIMATE, COMPLETE};
+
+  VALIDATE nodeValidateType = COMPLETE;
+  if(!strncmp(input.nodeValidationFlag.GetValue(),"none",4)) {
+    nodeValidateType = NONE;
+  } else if(!strncmp(input.nodeValidationFlag.GetValue(),"approximate",11)) {
+    nodeValidateType = APPROXIMATE;
+  }
+
+  VALIDATE edgeValidateType = COMPLETE;
+  if(!strncmp(input.edgeValidationFlag.GetValue(),"none",4)) {
+    edgeValidateType = NONE;
+  } else if (!strncmp(input.edgeValidationFlag.GetValue(),"approximate",11)) {
+    edgeValidateType = APPROXIMATE;
+  }
 
   // initial CfgHelper at here.
   Cfg::CfgHelper = new CfgCarLike();
@@ -83,7 +104,15 @@ int main(int argc, char** argv)
     // Generate roadmap nodes
     //---------------------------
     NodeGenClock.StartClock("Node Generation");
-    gn.GenerateNodes(&rmap,&cd,&dm, gn.gnInfo.gnsetid, gn.gnInfo);
+    switch(nodeValidateType) {
+    case NONE:
+      gn.GenerateNodes(&rmap,&noop_cd,&dm, gn.gnInfo.gnsetid, gn.gnInfo);
+      break;
+    case APPROXIMATE:
+    case COMPLETE:
+      gn.GenerateNodes(&rmap,&cd,&dm, gn.gnInfo.gnsetid, gn.gnInfo);
+      break;
+    }
     NodeGenClock.StopClock();
   }
 
@@ -106,7 +135,17 @@ int main(int argc, char** argv)
   // Connect roadmap nodes
   //---------------------------
   ConnectionClock.StartClock("Node Connection");
-  cn.ConnectNodes(&rmap,&cd,&lp,&dm, cn.cnInfo.cnsetid, cn.cnInfo);
+  switch(edgeValidateType) {
+  case NONE:
+    cn.ConnectNodes(&rmap,&noop_cd,&noop_lp,&dm, cn.cnInfo.cnsetid, cn.cnInfo);
+    break;
+  case APPROXIMATE:
+    cn.setConnectionResolution(rmap.GetEnvironment()->GetPositionRes()*10,
+			       rmap.GetEnvironment()->GetOrientationRes()*10);
+  case COMPLETE:
+    cn.ConnectNodes(&rmap,&cd,&lp,&dm, cn.cnInfo.cnsetid, cn.cnInfo);
+    break;
+  }
   ConnectionClock.StopClock();
 
 
