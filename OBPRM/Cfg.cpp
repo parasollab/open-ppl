@@ -31,22 +31,30 @@
 // Input/Output operators for InfoCfg
 //---------------------------------------------
 istream& operator>> (istream&s, InfoCfg &_c){
+    s >> _c.obst;
+    s >> _c.tag;
+    s >> _c.clearance;
     _c.Read(s);
     return s;
 };
 ostream& operator<< (ostream&s, const InfoCfg &_c){
+    s << _c.obst      << " ";
+    s << _c.tag       << " ";
+    s << _c.clearance << " ";
     _c.Write(s);
     return s;
 };
 
 void InfoCfg::Write(ostream &s) const {
-    s << obst << " ";
-    s << tag  << " ";
+    s << obst      << " ";
+    s << tag       << " ";
+    s << clearance << " ";
 }
 
 void InfoCfg::Read(istream &s) {
     s >> obst;
     s >> tag;
+    s >> clearance;
 }
    
 
