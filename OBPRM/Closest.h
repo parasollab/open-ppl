@@ -163,7 +163,7 @@ ConnectNodes_Closest(Roadmap<CFG, WEIGHT>* _rm,
   vector< pair<VID,VID> > kp;
   // Find k closest cfgs to each cfg in the roadmap
   if(k < vec2.size() - 1) {
-    kp = FindKClosestPairs(_rm, dm, vec1, vec2, k);
+    kp = dm->FindKClosestPairs(_rm, vec1, vec2, k); 
   } 
   else { // all the pairs
     for(int i=0; i<vec1.size(); ++i)

@@ -149,11 +149,8 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
     centvec.push_back( centervec[i] );
   }  
   cout << "orderccs problem1";
-  vector<pair<CFG,CFG> > kp = RRTexpand<CFG,WEIGHT>::
-                              FindKClosestPairs(env,dm,
-						centervec[0],
-						centvec,
-						centervec.size()-1);
+  vector<pair<CFG,CFG> > kp= dm->FindKClosestPairs(env, centervec[0], centvec, 
+						   centervec.size()-1);
   vector< pair<int,VID> > ccvec_tmp;
   ccvec_tmp.push_back( *ccvec.begin() );
   for(i=0; i<kp.size(); i++) {

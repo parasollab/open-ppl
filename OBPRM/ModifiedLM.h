@@ -281,8 +281,8 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
 	vector<CFG>   CC;
 	GetCC(*(_rm->m_pRoadmap),tmp,CC);
 	
-	vector< pair<CFG,CFG> > kp = FindKClosestPairs(env, dm, 
-						       cfg, CC, kclosest);
+	vector< pair<CFG,CFG> > kp = dm->FindKClosestPairs(env,
+							   cfg, CC, kclosest);
 	
 	//-- if possible to connect cfg to CC
 	for(int j=0; j<kp.size(); ++j) {

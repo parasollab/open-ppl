@@ -285,7 +285,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm,
   int k = min(kpairs, cc2vec.size());
   
   vector< pair<CFG,CFG> > kp = 
-    FindKClosestPairs(_rm->GetEnvironment(),dm,cc1vec,cc2vec,k);
+    dm->FindKClosestPairs(_rm->GetEnvironment(),cc1vec,cc2vec,k);
   
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int i = 0; i < kp.size(); i++) {

@@ -40,9 +40,11 @@ DistanceMetric::
   vector<DistanceMetricMethod*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
+  selected.clear();
 
   for(I=all.begin(); I!=all.end(); I++)
     delete *I;
+  all.clear();
 }
 
 

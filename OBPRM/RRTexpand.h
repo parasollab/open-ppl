@@ -285,9 +285,9 @@ RRT( Roadmap<CFG,WEIGHT> * rm,int K, double deltaT,
       vector<  pair<CFG, CFG> > kp;
       cout << "\nU.size() = " << U.size()<< ". ";
       if (U.size()>0) 
-        kp = FindKClosestPairs(env,dm,U[0],verticesData,1);
+        kp = dm->FindKClosestPairs(env,U[0],verticesData,1);
       else
-        kp = FindKClosestPairs(env,dm,x_rand,verticesData,1);
+        kp = dm->FindKClosestPairs(env,x_rand,verticesData,1);
 
 	  //if there is closet vertex.
       if (kp.size()>0) {

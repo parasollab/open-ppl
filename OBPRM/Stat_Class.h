@@ -67,6 +67,9 @@ public:
   void PrintDataLine(ostream&, Roadmap<CFG, WEIGHT>* , int show_column_headers=0);
   void PrintParams();
 
+  template <class CFG, class WEIGHT>
+  void ComputeIntraCCStats(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
+
 protected:
   int NumNodes;
   int NumEdges;
@@ -171,6 +174,68 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *rmap, int show_column_h
    _myostream << sumAtt << " ";
    _myostream << sumCD  << " ";
    ccstats.clear();
+}
+
+
+// Compute intra-connected-component statistics
+template <class CFG, class WEIGHT>
+void
+Stat_Class::
+ComputeIntraCCStats(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
+  vector< pair<int,VID> > ccs; //connected components in the roadmap
+  GetCCStats(*(rdmp->m_pRoadmap), ccs);//fill ccs
+
+  vector< pair<int,VID> >::iterator cci; // cci is CC[i] hereafter
+  for (cci = ccs.begin(); cci < ccs.end(); cci++) {
+    
+    vector<CFG> cci_cfgs; //configurations in cci
+    CFG cci_tmp = rdmp->m_pRoadmap->GetData(cci->second);//cci->second: vertex ID of first node in cci
+    GetCC(*(rdmp->m_pRoadmap), cci_tmp, cci_cfgs); //fill cci_cfgs
+
+    //compute shortest, longest, mean, and std-dev distances between
+    //nodes
+    
+    cout << "Distance Metric will get the closest pairs of nodes to use later" << endl;
+    //vector< pair<VID,VID> > pairs;
+    //pairs = dm->FindKClosestPairs<CFG,WEIGHT>(rdmp, cci_cfgs,
+    //cci_cfgs.size()*cci_cfgs.size());
+    vector< pair<CFG,CFG> > pairs;
+/*     pairs = ((DistanceMetric)*dm).FindKClosestPairs<CFG>(rdmp->GetEnvironment(), cci_cfgs, (int)(cci_cfgs.size()*cci_cfgs.size()));  */
+    pairs = dm->FindKClosestPairs(rdmp->GetEnvironment(), cci_cfgs, (int)(cci_cfgs.size()*cci_cfgs.size())); 
+
+/*     for each pair of nodes (na, nb) in CC[i]{ */
+/*       compute distance between na and nb */
+/* 	keep Max, Min, Mean, and Std-dev */
+/* 	} */
+    
+/*     //compute length of longest edge in the component */
+/*     cci_length = 0; */
+/*     for each edge (na,nb) in CC[i] { */
+/*       keep longest edge */
+/* 	cci_length += length of edge (na,nb); */
+/*     } */
+
+    cout << "Computing center of mass" << endl;
+    //get center of mass of all Cfgs in current CC
+    CFG center_of_mass = cci_cfgs[0];
+    for (int j =1; j < cci_cfgs.size(); ++j)
+      center_of_mass.add(center_of_mass, cci_cfgs[j]);
+    center_of_mass.divide(center_of_mass, cci_cfgs.size());
+    cout << "the center of mass is: " << center_of_mass << endl;
+    
+    cout << "Computing the average distance of " << cci_cfgs.size() << " cfgs to the center of mass" << endl;
+    //compute average distance of the nodes to the center of mass
+    double average_distance_to_cm = 0;
+    for (int j = 0; j < cci_cfgs.size(); ++j) {
+      CFG tmp = cci_cfgs[j];
+      cout << "* Compute distance between: " << endl << tmp << "* And: " << center_of_mass << endl;
+      average_distance_to_cm += dm->Distance(rdmp->GetEnvironment(), center_of_mass, tmp);
+    }
+    cout << "Now averaging for " << cci_cfgs.size() << " configurations" << endl;
+    if (cci_cfgs.size() > 0 )
+      average_distance_to_cm /= cci_cfgs.size();
+    cout << "The average distance to the center of mass is " << average_distance_to_cm << endl;
+  }
 }
 
 #endif

@@ -326,8 +326,8 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm,
 	continue;
       
       // get closest pairs of nodes on obst to (possibly) another obstacle
-      vector< pair<CFG,CFG> > kp = FindKClosestPairs(_rm->GetEnvironment(), dm,
-						     body[i], body[j], k);
+      vector< pair<CFG,CFG> > kp = dm->FindKClosestPairs(_rm->GetEnvironment(),
+							 body[i], body[j], k);
       //-- check connections between pairs
       for (int m=0;m<kp.size();++m){
         #if CHECKIFSAMECC
