@@ -1,7 +1,9 @@
 // $Id$
 
 #include <time.h>
-//#include <sys/time.h>
+#ifdef BSD
+#include <sys/time.h>
+#endif
 #include <sys/resource.h>
 
 // brc added extern 
