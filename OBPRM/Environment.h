@@ -61,14 +61,14 @@ public:
 
     void FindBoundingBox();
     double * GetBoundingBox();
-    void UpdateBBox(Input * _input);
-    void PutBBox(double x,double X,
+    void UpdateBoundingBox(Input * _input);
+    void PutBoundingBox(double x,double X,
                  double y,double Y,
                  double z,double Z);
 
     inline double GetPositionRes() {return positionRes;};
     inline double GetOrientationRes() {return orientationRes;};
-    void DisplayBB(ostream & _os);
+    void DisplayBoundingBox(ostream & _os);
     double Getminmax_BodyAxisRange();
 
 protected:

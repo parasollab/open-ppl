@@ -325,7 +325,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
 
         // Choose as many as nshells
                 preshells = Shells(tmp, _info.numShells);
-                shells = InsideBB(_env, preshells);
+                shells = InsideBoundingBox(_env, preshells);
                 preshells.erase(preshells.begin(), preshells.end());
 
         // Collect the cfgs for this obstacle
@@ -785,7 +785,7 @@ int obstacle, int nCfgs, GNInfo &info,double clearanceFactor){
 
         // Choose as many as nshells
         preshells = Shells(tmp, info.numShells);
-        shells = InsideBB(env, preshells);
+        shells = InsideBoundingBox(env, preshells);
         preshells.erase(preshells.begin(), preshells.end());
 
         // Collect the cfgs for this obstacle
@@ -839,7 +839,7 @@ int obstacle, int nCfgs, GNInfo &info, double clearanceFactor){
 
         // Choose as many as nshells
         preshells = Shells(tmp, info.numShells);
-        shells = InsideBB(env, preshells);
+        shells = InsideBoundingBox(env, preshells);
         preshells.erase(preshells.begin(), preshells.end());
 
         // Collect the cfgs for this obstacle
@@ -1289,11 +1289,11 @@ FreeCfgs(Environment *env,CollisionDetection *cd, vector<Cfg> cfgs, GNInfo &info
 
 
 //===================================================================
-// InsideBB
+// InsideBoundingBox
 //===================================================================
 vector<Cfg>
 GenerateMapNodes::
-InsideBB(Environment *env, vector<Cfg> cfgs){
+InsideBoundingBox(Environment *env, vector<Cfg> cfgs){
 
     vector<Cfg> ncfgs;
 

@@ -75,7 +75,7 @@ void Environment::Get(Input * _input) {
 
     // calculate bounding box
     FindBoundingBox();
-    UpdateBBox(_input);
+    UpdateBoundingBox(_input);
 
     // if user supplied a positional resolution, overwrite the one
     // calculated by "FindBoundingBox"
@@ -89,7 +89,7 @@ void Environment::Get(Input * _input) {
 
 }
 
-void Environment::UpdateBBox(Input * _input) {
+void Environment::UpdateBoundingBox(Input * _input) {
 
 
     // if user supplied a bounding box, overwrite calculated boundingBox
@@ -122,7 +122,7 @@ void Environment::UpdateBBox(Input * _input) {
 
 }
 
-void Environment::PutBBox(double x,double X,
+void Environment::PutBoundingBox(double x,double X,
                           double y,double Y,
                           double z,double Z){
 
@@ -211,10 +211,10 @@ double * Environment::GetBoundingBox(){
 
 
 //===================================================================
-//  DisplayBB
+//  DisplayBoundingBox
 //  9/6/98  Daniel Vallejo
 //===================================================================
-void Environment::DisplayBB(ostream & _os){
+void Environment::DisplayBoundingBox(ostream & _os){
 
     _os << endl << "Bounding Box: " << endl;
     for(int i = 0 ; i < 6 ; i++){

@@ -343,7 +343,7 @@ protected:
   FreeCfgs(Environment*, CollisionDetection *cd,vector<Cfg>, GNInfo&);
 
   static vector<Cfg>
-  InsideBB(Environment*, vector<Cfg>);
+  InsideBoundingBox(Environment*, vector<Cfg>);
 
   static Vector3D
   ChooseRandomVertexOnBody(Body*, bool);

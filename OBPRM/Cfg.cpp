@@ -305,7 +305,7 @@ Cfg Cfg::GetRandomCfg(Environment *env, int maxTries) {
   cout << "\n\nERROR: GetRandomCfg not able to find anything in bounding box."
        <<   "\n       robot radius is "
        << env->GetMultiBody(env->GetRobotIndex())->GetBoundingSphereRadius();
-  env->DisplayBB(cout);
+  env->DisplayBoundingBox(cout);
   exit(-1);
 
   // compiler wants this method to return something
