@@ -445,7 +445,16 @@ protected:
    Vertex* my_find_VID_eq(const VID _vid) const;
    Vertex* my_find_VDATA_eq(const VERTEX& _v) const;
    static bool VID_Compare (const Vertex& _v1, const Vertex& _v2); 
-   class dkinfo;   // for Dijkstra's algorithm
+
+   // for Dijkstra's algorithm
+   class dkinfo {
+   public:
+     dkinfo() {};
+     dkinfo(VID _vid, VID _pvid, double _d) {vid=_vid; predvid=_pvid; dist=_d;};
+     VID    vid;
+     VID    predvid;
+     double dist;
+   };
    static bool dkinfo_Compare (const dkinfo& _d1, const dkinfo& _d2); 
 
    //NMA: the following predictates work with stl/sun/g++ but not stl/sgi/CC
@@ -1626,17 +1635,6 @@ FindPathBFS (VID _startVid, VID _endVid) const {
 //*************************************************************** 
 
 // Auxillary Data Structures & functions
-template<class VERTEX, class WEIGHT>
-class
-WeightedMultiDiGraph<VERTEX,WEIGHT>::
-dkinfo {
-public:
-  dkinfo() {};
-  dkinfo(VID _vid, VID _pvid, double _d) {vid=_vid; predvid=_pvid; dist=_d;}; 
-  VID    vid;
-  VID    predvid;
-  double dist;
-};
 
 template<class VERTEX, class WEIGHT>
 bool 
