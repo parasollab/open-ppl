@@ -1,0 +1,32 @@
+#CC = aCC
+CC = g++
+#CC = /pub/gnu_sgi/bin/g++
+#CC = /share/gnu/bin/g++
+
+
+#ARCH = +DA2.0
+
+#CFLAGS = +e
+#FFLAGS = +noppu
+
+#OPTFLAGS = +O0 
+
+DIR = /research/sunburn/dsmft/OBPRM/graphValidationData
+#INC = -I $(PAHWC_BASE_DIR)/include
+#LIB = -L $(PAHWC_BASE_DIR)/lib -lpahwc32 -lrt -lm
+
+OBJS= $(DIR)/graphtest.o
+BIN = $(DIR)/graphtest.exe
+SRC = $(DIR)/graphtest.c
+
+all:       
+	$(CC) -o $(BIN) $(SRC) 
+
+#: 
+#	$(CC)  -o $(BIN) $(SRC)
+
+clean:
+	-rm *.exe
+	-rm *.o
+	-rm *~
+
