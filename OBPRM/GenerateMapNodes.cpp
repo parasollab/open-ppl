@@ -219,62 +219,61 @@ BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GN
 //===================================================================
 void
 GenerateMapNodes::
-GaussPRM(
-		 Environment *_env, CollisionDetection* cd, DistanceMetric *,
-		 GN& _gn, GNInfo &_info){
+GaussPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,
+	 GN& _gn, GNInfo &_info){
 	
 #ifndef QUIET
-	cout << "(numNodes=" << _gn.numNodes.GetValue() << ") ";
+    cout << "(numNodes=" << _gn.numNodes.GetValue() << ") ";
 #endif
 	
 #if INTERMEDIATE_FILES
-	vector<Cfg> path; path.reserve(_gn.numNodes.GetValue());
+    vector<Cfg> path; path.reserve(_gn.numNodes.GetValue());
 #endif
 	
-	if (_gn.gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from env
-		_gn.gauss_d.PutValue(_env->Getminmax_BodyAxisRange());
-	}
+    if (_gn.gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from env
+        _gn.gauss_d.PutValue(_env->Getminmax_BodyAxisRange());
+    }
 	
-	// generate in bounding box
-	for (int i=0,newNodes=0; i < _gn.numNodes.GetValue() || newNodes<1 ; i++) {
+    // generate in bounding box
+    for (int i=0,newNodes=0; i < _gn.numNodes.GetValue() || newNodes<1 ; i++) {
 		
-		// cfg1 & cfg2 are generated to be inside bbox
-		Cfg cfg1 = Cfg::GetRandomCfg(_env);
-		Cfg cfg2 = Cfg::GetRandomCfg(_env);
-		cfg2 = Cfg::c1_towards_c2(cfg1,cfg2,_gn.gauss_d.GetValue());
+	// cfg1 & cfg2 are generated to be inside bbox
+	Cfg cfg1 = Cfg::GetRandomCfg(_env);
+	Cfg cfg2 = Cfg::GetRandomCfg(_env);
+	cfg2 = Cfg::c1_towards_c2(cfg1,cfg2,_gn.gauss_d.GetValue());
 		
-		// because cfg2 is modified it must be checked again
-		if (cfg2.InBoundingBox(_env)){
+	// because cfg2 is modified it must be checked again
+	if (cfg2.InBoundingBox(_env)){
 			
-			bool cfg1_free = !cfg1.isCollision(_env,cd,_info.cdsetid,_info.cdInfo);
-			cfg1.info.obst = _info.cdInfo.colliding_obst_index;
+	    bool cfg1_free = !cfg1.isCollision(_env,cd,_info.cdsetid,_info.cdInfo);
+	    cfg1.info.obst = _info.cdInfo.colliding_obst_index;
 			
-			bool cfg2_free = !cfg2.isCollision(_env,cd,_info.cdsetid,_info.cdInfo);
-			cfg2.info.obst = _info.cdInfo.colliding_obst_index;
+	    bool cfg2_free = !cfg2.isCollision(_env,cd,_info.cdsetid,_info.cdInfo);
+	    cfg2.info.obst = _info.cdInfo.colliding_obst_index;
 			
 			
-			if (cfg1_free && !cfg2_free) {
+	    if (cfg1_free && !cfg2_free) {
 				
-				_info.nodes.push_back(Cfg(cfg1));   newNodes++;
-#if INTERMEDIATE_FILES
-				path.push_back(cfg1);
-#endif
+	        _info.nodes.push_back(Cfg(cfg1));   newNodes++;
+                #if INTERMEDIATE_FILES
+		    path.push_back(cfg1);
+                #endif
 				
-			} else if (!cfg1_free && cfg2_free) {
+	    } else if (!cfg1_free && cfg2_free) {
 				
-				_info.nodes.push_back(Cfg(cfg2));   newNodes++;
-#if INTERMEDIATE_FILES
-				path.push_back(cfg2);
-#endif
+	        _info.nodes.push_back(Cfg(cfg2));   newNodes++;
+                #if INTERMEDIATE_FILES
+		    path.push_back(cfg2);
+                #endif
 				
-			} // endif push nodes
+	    } // endif push nodes
 			
-		} // endif BB
-	} // endfor
+	} // endif BB
+    } // endfor
 	
-#if INTERMEDIATE_FILES
+    #if INTERMEDIATE_FILES
 	WritePathConfigurations("GaussPRM.path", path, _env);
-#endif
+    #endif
 
 };
 
@@ -295,99 +294,96 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
     vector<Cfg> surface;
 #endif
 	
-	_info.numShells = _gn.numShells.GetValue();
+    _info.numShells = _gn.numShells.GetValue();
 	
-	vector<Cfg>  preshells, shells, tmp, obstSurface;
-	int numMultiBody = _env->GetMultiBodyCount();
-	int numExternalBody = _env->GetExternalBodyCount();
-	//added by Xinyu Tang
+    vector<Cfg> preshells, shells, tmp, obstSurface;
+    int numMultiBody = _env->GetMultiBodyCount();
+    int numExternalBody = _env->GetExternalBodyCount();
+    //added by Xinyu Tang
 	
-	int robot        = _env->GetRobotIndex();
+    int robot = _env->GetRobotIndex();
 	
-	Cfg InsideNode, OutsideNode, low, high, mid;
-	
+    Cfg InsideNode, OutsideNode, low, high, mid;	
 
-	//Modified by Xinyu Tang 04/01/2002
-	int N = _gn.numNodes.GetValue()
-		/ (numExternalBody-1)  // -1 for the robot
-         / _gn.numShells.GetValue();
+    //Modified by Xinyu Tang 04/01/2002
+    int N = _gn.numNodes.GetValue()
+	    / (numExternalBody-1)  // -1 for the robot
+            / _gn.numShells.GetValue();
 	
-	if (N < 1) N = max(_gn.numNodes.GetValue(),_gn.numShells.GetValue());
+    if (N < 1) N = max(_gn.numNodes.GetValue(),_gn.numShells.GetValue());
 	
-	for (int obstacle = 0 ; obstacle < numExternalBody ; obstacle++){
-		if (obstacle != robot){  // && obstacle is "Passive" not "Active" robot
+    for (int obstacle = 0 ; obstacle < numExternalBody ; obstacle++){
+        if (obstacle != robot){  // && obstacle is "Passive" not "Active" robot
 			
-			for(int n = 0 ; n < N; n++){
+	    for(int n = 0 ; n < N; n++){
 				
-				// Generate Inside cfg
-			  Cfg InsideNode;
-			  if(!GenerateInsideCfg(_env, cd, robot, obstacle, &InsideNode, _info)) {
-			    cout << "\nError: cannot overlap COMs of robot & obstacle\n";
-			    continue;
-			  }
-			  if(!InsideNode.isCollision(_env,cd,robot,obstacle,_info.cdsetid,_info.cdInfo)){
-			    cout << "\nError: Seed not in collision w/"
-			      " obstacle[index="<<obstacle<<"]\n" << flush;
-			    continue;
-			  }
+	        // Generate Inside cfg
+		Cfg InsideNode;
+		if(!GenerateInsideCfg(_env, cd, robot, obstacle, &InsideNode, _info)) {
+	            cout << "\nError: cannot overlap COMs of robot & obstacle\n";
+		    continue;
+		}
+		if(!InsideNode.isCollision(_env,cd,robot,obstacle,_info.cdsetid,_info.cdInfo)){
+		    cout << "\nError: Seed not in collision w/"
+		            " obstacle[index="<<obstacle<<"]\n" << flush;
+		    continue;
+		}
 				
-				// Generate Random direction
-			  Cfg incrCfg=Cfg::GetRandomRay(
-							EXPANSION_FACTOR * _env->GetPositionRes()
-							);
+		// Generate Random direction
+		Cfg incrCfg=Cfg::GetRandomRay( EXPANSION_FACTOR * _env->GetPositionRes() );
 				
-				// Generate outside cfg
-			  Cfg OutsideNode = GenerateOutsideCfg(_env,cd,robot,obstacle,
-							       InsideNode,incrCfg,_info);
-			  if(OutsideNode.AlmostEqual(InsideNode)) continue; // can not find outside node.
+		// Generate outside cfg
+		Cfg OutsideNode = GenerateOutsideCfg(_env,cd,robot,obstacle,
+						     InsideNode,incrCfg,_info);
+		if(OutsideNode.AlmostEqual(InsideNode)) continue; // can not find outside node.
 				
-				// Generate surface cfgs
-			  tmp = GenerateSurfaceCfg(_env,cd,dm,_info,
-						   robot,obstacle, InsideNode,OutsideNode);
+		// Generate surface cfgs
+		tmp = GenerateSurfaceCfg(_env,cd,dm,_info,
+				         robot,obstacle, InsideNode,OutsideNode);
+		
+		// Choose as many as nshells
+		preshells = Shells(tmp, _gn.numShells.GetValue());
+		shells = InsideBoundingBox(_env, preshells);
+		preshells.erase(preshells.begin(), preshells.end());
+
+		// Collect the cfgs for this obstacle
+		obstSurface.insert(obstSurface.end(),
+				   shells.begin(),shells.end());
 				
-				// Choose as many as nshells
-			  preshells = Shells(tmp, _gn.numShells.GetValue());
-			  shells = InsideBoundingBox(_env, preshells);
-			  preshells.erase(preshells.begin(), preshells.end());
-				
-				// Collect the cfgs for this obstacle
-			  obstSurface.insert(obstSurface.end(),
-					     shells.begin(),shells.end());
-				
-			} // endfor: n
+	    } // endfor: n
 			
-			// Collect the generated surface nodes
-			for (int i=0;i<obstSurface.size();i++){
-				obstSurface[i].info.obst = obstacle;
-				_info.nodes.push_back(obstSurface[i]);
-			}
+	    // Collect the generated surface nodes
+	    for (int i=0;i<obstSurface.size();i++){
+	        obstSurface[i].info.obst = obstacle;
+		_info.nodes.push_back(obstSurface[i]);
+	    }
 			
-#if INTERMEDIATE_FILES
-			surface.insert(surface.end(),
-				obstSurface.begin(),obstSurface.end());
-#endif
+            #if INTERMEDIATE_FILES
+	        surface.insert(surface.end(),
+		  	       obstSurface.begin(),obstSurface.end());
+            #endif
 			
-			obstSurface.erase   (obstSurface.begin(),obstSurface.end());
+	    obstSurface.erase   (obstSurface.begin(),obstSurface.end());
 			
-		} // endif (obstacle != robot)
-		else
-		  if(numExternalBody == 1) { //if robot is the only object
-		    //		  if(numMultiBody == 1) {
-		    vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNodes.GetValue(), _info);
-		    int i;
-		    for(i=0; i<CobstNodes.size(); ++i)
-		      CobstNodes[i].info.obst = obstacle;
+	} // endif (obstacle != robot)
+	else
+	    if(numExternalBody == 1) { //if robot is the only object
+		//		  if(numMultiBody == 1) {
+	        vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNodes.GetValue(), _info);
+		int i;
+		for(i=0; i<CobstNodes.size(); ++i)
+		    CobstNodes[i].info.obst = obstacle;
 		    _info.nodes.push_back(CobstNodes[i]);
-#if INTERMEDIATE_FILES
-		    surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
-#endif
-		  }
+                    #if INTERMEDIATE_FILES
+		        surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
+                    #endif
+		}
 			
-	} // endfor: obstacle
+    } // endfor: obstacle
 	
-#if INTERMEDIATE_FILES
-    WritePathConfigurations("surface.path", surface, _env);
-#endif
+    #if INTERMEDIATE_FILES
+        WritePathConfigurations("surface.path", surface, _env);
+    #endif
 	
 };
 
@@ -400,11 +396,11 @@ GenerateMapNodes::
 OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GNInfo &_info){
 	
 #ifndef QUIET
-	cout << "(numNodes="          << _gn.numNodes.GetValue() << ", ";
+	cout << "(numNodes="          << _gn.numNodes.GetValue()          << ", ";
 	cout << "\tproportionSurface="<< _gn.proportionSurface.GetValue() << ", ";
-	cout << "\nnumShells="        << _gn.numShells.GetValue()   << ", ";
-	cout << "collPair="           << _gn.collPair.GetValue()    << ", ";
-	cout << "freePair="           << _gn.freePair.GetValue()   << ", ";
+	cout << "\nnumShells="        << _gn.numShells.GetValue()         << ", ";
+	cout << "collPair="           << _gn.collPair.GetValue()          << ", ";
+	cout << "freePair="           << _gn.freePair.GetValue()          << ", ";
 	cout << "clearanceFactor="    << _gn.clearanceFactor.GetValue()   << ") ";
 #endif
     double clearanceFactor;
@@ -428,8 +424,8 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
     double P = _gn.proportionSurface.GetValue();
 	
     // Subtract # of robots (ie, numMultiBody-1)
-//      int NSEED = (int)(P * _gn.numNodes.GetValue()/(numMultiBody-1)/_gn.numShells.GetValue());
-//      int NFREE = (int)((1.0-P) * _gn.numNodes.GetValue()/(numMultiBody-1));
+    // int NSEED = (int)(P * _gn.numNodes.GetValue()/(numMultiBody-1)/_gn.numShells.GetValue());
+    // int NFREE = (int)((1.0-P) * _gn.numNodes.GetValue()/(numMultiBody-1));
 
     // modified by Xinyu Tang 04/01/2002
     // Subtract # of robots (ie, numExternalBody-1)
@@ -443,53 +439,52 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
 		
         if(obstacle != robot){
 			
-			// Generate Surface Cfgs using Binary Search Procedure
-			obstSurface = GenSurfaceCfgs4Obst(_env,cd,dm, obstacle, NSEED, _info,clearanceFactor);
+	    // Generate Surface Cfgs using Binary Search Procedure
+	    obstSurface = GenSurfaceCfgs4Obst(_env,cd,dm, obstacle, NSEED, _info,clearanceFactor);
 			
-			// Generate Free Cfgs using Ad Hoc procedure
-			obstFree = GenFreeCfgs4Obst(_env,cd, obstacle, NFREE, _info);
+	    // Generate Free Cfgs using Ad Hoc procedure
+	    obstFree = GenFreeCfgs4Obst(_env,cd, obstacle, NFREE, _info);
 			
             // Collect free & surface nodes for return
             int i;
             for (i=0;i<obstSurface.size();i++){
-				obstSurface[i].info.obst = obstacle;
+		obstSurface[i].info.obst = obstacle;
                 _info.nodes.push_back(obstSurface[i]);
-			}
-            for (    i=0;i<obstFree.size();i++){
-				obstFree[i].info.obst = obstacle;
+	    }
+            for (i=0;i<obstFree.size();i++){
+		obstFree[i].info.obst = obstacle;
                 _info.nodes.push_back(obstFree[i]);
-			}
+	    }
 			
-#if INTERMEDIATE_FILES
-			surface.insert(surface.end(),
+            #if INTERMEDIATE_FILES
+		surface.insert(surface.end(),
                 obstSurface.begin(),obstSurface.end());
-			surface.insert(surface.end(),
+		surface.insert(surface.end(),
                 obstFree.begin(),obstFree.end());
-#endif
+            #endif
 			
             obstSurface.erase(obstSurface.begin(),obstSurface.end());
             obstFree.erase(obstFree.begin(), obstFree.end());
 			
         } // if(obstacle != robot)
-		else 
-		  //			if(numMultiBody == 1) { //if robot is the only object
-			if(numExternalBody == 1) { //if robot is the only object
-				vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNodes.GetValue(), _info);
-				for(int i=0; i<CobstNodes.size(); ++i){
-					CobstNodes[i].info.obst = obstacle;
-					_info.nodes.push_back(CobstNodes[i]);
-				}
-#if INTERMEDIATE_FILES
-				surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
-#endif
-			}
-			
+	else 
+	    //if(numMultiBody == 1) { //if robot is the only object
+	    if(numExternalBody == 1) { //if robot is the only object
+	        vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNodes.GetValue(), _info);
+		for(int i=0; i<CobstNodes.size(); ++i){
+	            CobstNodes[i].info.obst = obstacle;
+		    _info.nodes.push_back(CobstNodes[i]);
+		}
+                #if INTERMEDIATE_FILES
+		    surface.insert(surface.end(),CobstNodes.begin(), CobstNodes.end());
+                #endif
+	    }
 			
     } // for(obstacle)
 	
-#if INTERMEDIATE_FILES
+    #if INTERMEDIATE_FILES
 	WritePathConfigurations("surface.path", surface, _env);
-#endif
+    #endif
 };
 
 
@@ -542,7 +537,7 @@ CSpaceMAPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *dm,
       if ( !cfg.isCollision(_env,cd,_info.cdsetid,_info.cdInfo) ) {
          _info.nodes.push_back(Cfg(cfg));
          #if INTERMEDIATE_FILES
-       path.push_back(cfg);
+            path.push_back(cfg);
          #endif
       } else { 
         //cout << "cfg in collision!\n" << flush; 
@@ -554,6 +549,63 @@ CSpaceMAPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *dm,
      WritePathConfigurations("csmaprm.path", path, _env);
    #endif
 };
+
+
+//===================================================================
+// OBPRM
+//
+// OBPRM-CSpaceMAPRM Hybrid.
+//===================================================================
+void
+GenerateMapNodes::
+OBMAPRM(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
+	GN& _gn, GNInfo &_info){
+   #ifndef QUIET
+      cout << "(numNodes="          << _gn.numNodes.GetValue()          << ", ";
+      cout << "\tproportionSurface="<< _gn.proportionSurface.GetValue() << ", ";
+      cout << "\nnumShells="        << _gn.numShells.GetValue()         << ", ";
+      cout << "collPair="           << _gn.collPair.GetValue()          << ", ";
+      cout << "freePair="           << _gn.freePair.GetValue()          << ", ";
+      cout << "clearanceFactor="    << _gn.clearanceFactor.GetValue()   << ") ";
+   #endif
+
+   #if INTERMEDIATE_FILES
+     vector<Cfg> path; path.reserve(_gn.numNodes.GetValue());
+   #endif
+
+   //generate obprm nodes   
+   OBPRM(_env,cd,dm,_gn,_info);
+
+   //copy nodes to obprmCfgs and erase _info.nodes vector
+   vector<Cfg> obprmCfgs;
+   for (int i=0; i < _info.nodes.size(); i++) {
+       obprmCfgs.push_back(_info.nodes[i]);
+   }
+   _info.nodes.clear();
+
+   cout << "\nobprmnodes = " << obprmCfgs.size() << "\n";
+
+   //push nodes to medial axis
+   for (int i=0; i < obprmCfgs.size(); i++) {
+      Cfg cfg = obprmCfgs[i];
+
+      cfg.PushToMedialAxis(_env, cd, _info.cdsetid, _info.cdInfo, 
+                           dm, _info.dmsetid, _info.calcClearance);
+
+      if ( !cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo) ) {
+         _info.nodes.push_back(Cfg(cfg));
+         #if INTERMEDIATE_FILES
+            path.push_back(cfg);
+	 #endif
+      }
+   }
+   
+   #if INTERMEDIATE_FILES
+   //in util.h
+     WritePathConfigurations("obmaprm.path", path, _env);
+     //WritePathConfigurations("surface.path", surface, _env);
+   #endif
+}
 
 
 //===================================================================
@@ -669,14 +721,14 @@ GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm,
     Cfg gen;
     int i;
     for(i=0; i<nCfgs; ++i) {
-		///random orientation....?
-		Cfg::GenerateOverlapCfg(env, robot, voidA, voidB, &gen);  // voidA, voidB is not used.
+        ///random orientation....?
+	Cfg::GenerateOverlapCfg(env, robot, voidA, voidB, &gen);  // voidA, voidB is not used.
 
-		///check collision
-		if(gen.isCollision(env,cd, info.cdsetid,info.cdInfo))
-			obstSeeds.push_back(gen);
+	///check collision
+	if(gen.isCollision(env,cd, info.cdsetid,info.cdInfo))
+	    obstSeeds.push_back(gen);
         else
-			surface.push_back(gen);
+	    surface.push_back(gen);
     }
 	
     vector<Cfg> tmp, preshells, shells;
@@ -685,7 +737,7 @@ GenCfgsFromCObst(Environment * env,CollisionDetection* cd,DistanceMetric * dm,
         Cfg incrCfg = Cfg::GetRandomRay(EXPANSION_FACTOR*env->GetPositionRes());
 		
         Cfg OutsideNode = GenerateOutsideCfg(env,cd,robot,obstacle,obstSeeds[i],incrCfg,info);
-		if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
+	    if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
 		
         tmp = GenerateSurfaceCfg(env,cd,dm,info,robot,obstacle,obstSeeds[i],OutsideNode,clearanceFactor);
 		
@@ -1436,6 +1488,7 @@ PrintUsage_All(ostream& _os){
     PrintUsage_GaussPRM(_os);
     PrintUsage_BasicMAPRM(_os);
     PrintUsage_CSpaceMAPRM(_os);
+    PrintUsage_OBMAPRM(_os);
 	
 }
 
@@ -1520,6 +1573,24 @@ PrintUsage_CSpaceMAPRM(ostream& _os){
     cout.setf(ios::right,ios::adjustfield);
 
 };
+void
+GN::
+PrintUsage_OBMAPRM(ostream& _os){
+
+    cout.setf(ios::left,ios::adjustfield);
+
+        _os << "\nOBMAPRM ";
+	_os << "\n\t"; numNodes.PrintUsage(_os);
+	_os << "\n\t"; numShells.PrintUsage(_os);
+	_os << "\n\t"; proportionSurface.PrintUsage(_os);
+	_os << "\n\t"; numShells.PrintUsage(_os);
+	_os << "\n\t"; collPair.PrintUsage(_os);
+	_os << "\n\t"; freePair.PrintUsage(_os);
+	_os << "\n\t"; clearanceFactor.PrintUsage(_os);
+
+    cout.setf(ios::right,ios::adjustfield);
+
+};
 
 bool
 GN::
@@ -1564,6 +1635,16 @@ operator==(const GN& _gn) const
 
                 //return ( numNodes.GetValue() == _gn.numNodes.GetValue() );
 		
+	} else if ( !strcmp(name,"OBMAPRM") ) {
+  	        return true;
+
+                //return ( (numNodes.GetValue() == _gn.numNodes.GetValue()) &&
+		//       (numShells.GetValue() == _gn.numShells.GetValue()) &&
+		//       (proportionSurface.GetValue() == _gn.proportionSurface.GetValue()) &&
+		//       (collPair.GetValue() == _gn.collPair.GetValue()) &&
+		//       (freePair.GetValue() == _gn.freePair.GetValue()) &&
+		//       (clearanceFactor.GetValue() == _gn.clearanceFactor.GetValue()) );
+
 	} else { // unrecognized...
 		return false;
 	}
@@ -1617,6 +1698,14 @@ ostream& operator<< (ostream& _os, const GN& gn) {
     }
     if ( !strstr(gn.GetName(),"CSpaceMAPRM") ){
         _os<< ", numNodes = " << gn.numNodes.GetValue();
+    }
+    if ( !strstr(gn.GetName(),"OBMAPRM") ){
+	_os<< ", numNodes = " << gn.numNodes.GetValue();
+	_os<< ", numShells = " << gn.numShells.GetValue();
+	_os<< ", proportionSurface = " << gn.proportionSurface.GetValue();
+	_os<< ", collPair = " << gn.collPair.GetValue();
+	_os<< ", freePair = " << gn.freePair.GetValue();
+	_os<< ", clearanceFactor = " << gn.clearanceFactor.GetValue();
     }
     */
 	
@@ -1733,7 +1822,8 @@ DeleteGNSet(const SID _sid) {
 	&& strcmp(cmdFields[i+1],"BasicOBPRM")               \
 	&& strcmp(cmdFields[i+1],"OBPRM")                    \
 	&& strcmp(cmdFields[i+1],"BasicMAPRM")               \
-        && strcmp(cmdFields[i+1],"CSpaceMAPRM") )&&i+1<argc  \
+        && strcmp(cmdFields[i+1],"CSpaceMAPRM")              \
+        && strcmp(cmdFields[i+1],"OBMAPRM") )&&i+1<argc      \
 	){i++;}                                              \
 	int stop=i+1;                                        \
 	
@@ -1850,6 +1940,26 @@ MakeGNSet(istream& _myistream) {
                                         exit (-1);
                                 } //endif
                         } //endfor j
+
+                 } else if (!strcmp(cmdFields[i],"OBMAPRM")) {
+			gn1.generator = &GenerateMapNodes::OBMAPRM;
+			GetFieldRange();
+			
+			for (int j=start;j<stop; ++j) {
+				if (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.numShells.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.proportionSurface.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.freePair.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.collPair.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else if (gn1.clearanceFactor.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+				} else {
+					cout << "\nERROR MakeGNSet: Don\'t understand \""
+						<< cmdFields[j]<<"\"\n\n";
+					gn1.PrintUsage_OBMAPRM(cout);
+					cout << endl;
+					exit (-1);
+				} //endif
+			} //endfor j
 
 		} else {
 			cout << "\n\nERROR MakeGNSet: Don\'t understand \""

@@ -229,7 +229,8 @@ public:
         *   -# OBPRM
         *   -# GaussPRM
         *   -# BasicMAPRM
-                *       -# CSpaceMAPRM
+        *   -# CSpaceMAPRM
+	*   -# OBMAPRM
         *@return True, if names of these two instance are the same. Otherwise False.
         *If this method could not recognize _gn's name then false will be returned.
         */ 
@@ -289,7 +290,8 @@ public:
         *   -# PrintUsage_OBPRM
         *   -# PrintUsage_GaussPRM
         *   -# PrintUsage_BasicMAPRM
-                *       -# PrintUsage_CSpaceMAPRM
+        *   -# PrintUsage_CSpaceMAPRM
+	*   -# PrintUsage_OBMAPRM
         */ 
       void  PrintUsage_All(ostream& _os);
 
@@ -330,6 +332,12 @@ public:
             *num_param::PrintUsage for underline PrintUsage
         */
       void  PrintUsage_CSpaceMAPRM(ostream& _os);
+
+     /**Print out OBMAPRM Usage to given output stream.
+        *@see GN::numNodes and
+            *num_param::PrintUsage for underline PrintUsage
+        */
+      void  PrintUsage_OBMAPRM(ostream& _os);
       
   //@}
 
@@ -524,9 +532,23 @@ public:
          *      -# GN::numNodes = user spcified value 
          *         (if no user spcified value, default value is 10 )
          *
-         *      -# CSpaceMAPRM
-         *              -# GN::numNodes = user specified value
+         *  -# CSpaceMAPRM
+         *      -# GN::numNodes = user specified value
          *         (if no user specified value, default value is 10 )
+         *
+	 *  -# OBMAPRM
+	 *      -# GN::numNodes = user specified value
+	 *         (if no user specified value, default value is 10 )
+	 *      -# GN::numShells = user spcified value
+         *         (if no user spcified value, default value is 3 )
+         *      -# GN::proportionSurface = user spcified value
+         *         (if no user spcified value, default value is 1.0 )
+         *      -# GN::freePair = user spcified value
+         *         (if no user spcified value, default value is cM rV )
+         *      -# GN::collPair = user spcified value
+         *         (if no user spcified value, default value is cM rT )
+         *      -# GN::clearanceFactor = user spcified value
+         *         (if no user spcified value, default value is 1.0 )
          *
          *@return SID of new set if every thing is OK. Otherwise, process will be terminiated.
          *@see BasicSets::MakeOSet 
@@ -959,7 +981,10 @@ public:
       void BasicMAPRM(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
 
       static 
-          void CSpaceMAPRM(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
+      void CSpaceMAPRM(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
+
+      static
+      void OBMAPRM(Environment*,CollisionDetection*,DistanceMetric* dm, GN&, GNInfo& );
       
   //@}
 
@@ -1144,7 +1169,7 @@ protected:
       static vector<Cfg>
       FirstFreeCfgs(Environment *env,CollisionDetection *cd, vector<Cfg> cfgs, GNInfo &info);
 
-        /**Get nshells Cfgs from given Cfg list.
+      /**Get nshells Cfgs from given Cfg list.
         *@param nshells number of Cfgs that are going to
         *bereturned.
         *@note if the size of given list is smaller than nshells
