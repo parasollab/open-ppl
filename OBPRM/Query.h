@@ -43,21 +43,21 @@ public:
   // Other Methods
   //===================================================================
       // default initializations
-   void initDefaultSetIDs(ConnectMapNodes    *);
+   virtual void initDefaultSetIDs(ConnectMapNodes    *);
  
       // actually do the query
-   bool PerformQuery(CollisionDetection*, ConnectMapNodes*, LocalPlanners*, DistanceMetric*);
-   bool PerformQuery(Cfg _start, Cfg _goal, CollisionDetection*,
+   virtual bool PerformQuery(CollisionDetection*, ConnectMapNodes*, LocalPlanners*, DistanceMetric*);
+   virtual bool PerformQuery(Cfg _start, Cfg _goal, CollisionDetection*,
         ConnectMapNodes*, LocalPlanners*, DistanceMetric*, SID _lpsid, vector<Cfg>* _path);
-   bool CanConnectToCC(Cfg, CollisionDetection*, ConnectMapNodes*,
+   virtual bool CanConnectToCC(Cfg, CollisionDetection*, ConnectMapNodes*,
         LocalPlanners*,DistanceMetric*, vector<Cfg>, SID, VID*, LPInfo*);
-   bool GetPathSegment(Cfg, Cfg, CollisionDetection*, LocalPlanners*, 
+   virtual bool GetPathSegment(Cfg, Cfg, CollisionDetection*, LocalPlanners*, 
         DistanceMetric*, WEIGHT, LPInfo*);
 
       // Display, Input, Output
-   void ReadQuery(const char* _filename);
-   void WritePath();
-   void WritePath(char* _filename);
+   virtual void ReadQuery(const char* _filename);
+   virtual void WritePath();
+   virtual void WritePath(char* _filename);
 
   //===============================================================
   //  Data
