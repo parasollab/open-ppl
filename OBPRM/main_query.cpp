@@ -6,7 +6,7 @@
 
 #include <iostream.h>
 #include "Query.h"
-#include "Stat_Class.cpp"
+#include "Stat_Class.h"
 
 Input input;
 QueryCmds Qinput;
