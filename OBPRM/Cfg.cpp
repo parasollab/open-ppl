@@ -762,9 +762,11 @@ Cfg::ApproxCSpaceClearance2(Environment *env,
     Cfg cfg = *this;
 
     vector <Cfg> directions;
+    double dist = 100 * env->GetPositionRes();
     int i;
     for (i=0; i<n; i++) {
-        directions.push_back( GetRandomCfg( env ) );
+        //directions.push_back( GetRandomCfg( env ) );
+        directions.push_back( GetRandomRay(dist) );
     }
     if (directions.size() == 0) { //unable to generate random directions
         return clearInfo;
