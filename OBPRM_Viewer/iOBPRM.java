@@ -608,7 +608,7 @@ public class iOBPRM extends JPanel
                 iOBPRM_Frame.setContentPane(iobprm);
                 iOBPRM_Frame.pack();
                 iOBPRM_Frame.setSize(new Dimension(585,400)); //try and try
-                iOBPRM_Frame.setResizable(false);       //not allow resize
+                //iOBPRM_Frame.setResizable(false);       //not allow resize
                 iOBPRM_Frame.show();
         }
  }
