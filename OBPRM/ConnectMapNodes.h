@@ -169,19 +169,20 @@ public:
     */
   //@{
 
-      char*  GetName() const;   ///<Retrive pointer for #name
-      CNF    GetConnector();    ///<Get #connector
-      EID    GetID() const;     ///<Get #cnid
-      int    GetNumEdges   () const;///<Get #numEdges
-      int    GetKClosest   () const;///<Get #kclosest
-      int    GetSmallCCSize() const;///<Get #smallcc
-      int    GetKPairs     () const;///<Get #kpairs
-      int    GetKOther     () const;///<Get #k_other
-      int    GetKSelf      () const;///<Get #k_self
-      int    GetIterations () const;///<Get #iterations
-      int    GetStepFactor () const;///<Get #stepFactor
-      int    GetMaxNum     () const;///<Get #maxNum
-      double GetRFactor    () const;///<Get #rfactor
+      inline char*  GetName() const;   ///<Retrive pointer for #name
+      inline CNF &  GetConnector();    ///<Get #connector
+      inline EID    GetID() const;     ///<Get #cnid
+      inline int    GetNumEdges   () const;///<Get #numEdges
+	  inline void   SetNumEdges(int cEdge);///<Set #numEdges
+      inline int    GetKClosest   () const;///<Get #kclosest
+      inline int    GetSmallCCSize() const;///<Get #smallcc
+      inline int    GetKPairs     () const;///<Get #kpairs
+      inline int    GetKOther     () const;///<Get #k_other
+      inline int    GetKSelf      () const;///<Get #k_self
+      inline int    GetIterations () const;///<Get #iterations
+      inline int    GetStepFactor () const;///<Get #stepFactor
+      inline int    GetMaxNum     () const;///<Get #maxNum
+      inline double GetRFactor    () const;///<Get #rfactor
 
   //@}
 
@@ -801,7 +802,7 @@ public:
         *@param info Record node connection process infomation.
         *@see RoadmapGraph::AddEdges
         */
-      void ConnectNodes(Roadmap * rdmp,
+      virtual void ConnectNodes(Roadmap * rdmp,
              CollisionDetection *cd,LocalPlanners* lp, DistanceMetric * dm, 
              SID _cnsetid, CNInfo &info);
 
@@ -813,7 +814,7 @@ public:
         *
         *@note New created edges are inserted into given RoadmapGraph, roadmap.
         */
-      void ConnectNodes(Environment * environment, RoadmapGraph<Cfg,WEIGHT>& roadmap,
+      virtual void ConnectNodes(Environment * environment, RoadmapGraph<Cfg,WEIGHT>& roadmap,
              CollisionDetection *cd,LocalPlanners* lp,
              DistanceMetric * dm, SID _cnsetid, CNInfo &info);
 
@@ -877,7 +878,7 @@ public:
                                        CollisionDetection* cd,
                                        LocalPlanners* lp,
                                        DistanceMetric * dm,
-                                       CN& _cn, CNInfo& info); 
+                                       CN& _cn, CNInfo& info);
 
       /**Connect nodes in map to their k closest neighbors, which
         *could be vertex or point on edges in roadmap.
@@ -1077,6 +1078,39 @@ protected:
   //////////////////////////////////////////////////////////////////////////////////////////
   //
   //
+  //    Protected Static: Closest Vertex Methods
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  /**@name Closest Edge Methods*/
+  //@{
+	/**
+	 *Connect all cfgs in vec1 to cfgs in vec2.
+     *Following Algorithm is used:
+     *   -# for evry node, cfg1, in vec1
+     *       -# find k closet neighbors in vec2 for cfg1
+     *       -# lp_set is a local planner set defined in info.lpsetid
+     *       -# for every node, cfg2, in k-closest neighbor list for cfg1
+     *           -# using local planning functions in lp_set
+     *              to connect cfg1 and cfg2
+     *           -# if connected, add this edge to map, _rm.
+     *       -#end for
+     *   -# end for
+     *
+	 */
+	static void ConnectNodes_Closest(Roadmap * _rm,
+		                             CollisionDetection* cd,
+									 LocalPlanners* lp,
+									 DistanceMetric * dm,
+									 CN& _cn, CNInfo& info,
+									 vector<Cfg>& vec1,
+									 vector<Cfg>& vec2,
+									 const int kclosest);
+  //@}
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
   //    Protected Static: Closest Vertex & Edge Methods
   //
   //
@@ -1114,6 +1148,32 @@ protected:
             LocalPlanners* lp,DistanceMetric * dm,
             CN& _cn, CNInfo& info, vector<Cfg>& oldV, vector<Cfg>& newV);
 
+  //@}
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Protected Static: Connect CC Methods
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  /**@name Connect CC Methods*/
+  //@{
+	  /**
+	   *Try to connect connected components in ccs1 to connected components
+	   *in ccs2.
+       *@see WeightedGraph ::GetCCStats, WeightedGraph ::GetCC, 
+       *WeightedGraph ::IsSameCC for information about connected 
+       *component in graph,and ConnectSmallCCs, ConnectBigCCs for 
+       *connecting between connected component.
+       */
+      static void ConnectNodes_ConnectCCs(Roadmap * _rm,
+                                          CollisionDetection* cd,
+                                          LocalPlanners* lp,
+                                          DistanceMetric * dm,
+                                          CN& _cn, CNInfo& info,
+										  vector< pair<int,VID> > & ccs1,
+										  vector< pair<int,VID> >  ccs2);
   //@}
 
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -1299,6 +1359,30 @@ protected:
       static vector< pair<VID, VID> > 
       FindKClosestPairs
       (Roadmap *rm, DistanceMetric * dm, CNInfo& info, vector<Cfg>& vec1, int k);
+
+	   /**
+	    *k pairs of closest cfgs for each cfg in vec1 to all cfgs in vec2.
+		*This means there will be k*n pairs returned. n in number of cfgs in 
+        *vec1. k pair for each cfg in vec1.
+		*The differences between this function and FindKClosestPairs
+        *(Environment *,DistanceMetric * , CNInfo& info, vector<Cfg>& , vector<Cfg>& , int )
+		*are type and size of return values.
+        *Following is short Alg for calculating result list:
+        *   -# for every Cfg, c1, in first vector
+		*		-# find k first closest cfg in second vector from c1
+        *   -# end for
+        *
+        *@param vec1 A list of Cfgs.
+        *@param vec2 A list of Cfgs.
+        *@param k Find k pairs with first k shortest distance between vec1 and vec2.
+        *
+        *@return A (k*n-elemet) list of pair of Cfgs, and each pair represents a path from 
+        *the frist Cfg to the second Cfg which has k-small distance between all 
+        *possilbe paths.
+        */
+	  static vector< pair<VID, VID> > 
+	  FindKClosestPairs
+	  (Roadmap *rm,DistanceMetric * dm, CNInfo& info,vector<Cfg>& vec1,vector<Cfg>& vec2, int k);
 
       /**Find k pairs of closest Cfgs between the two input vectors of Cfgs.
         *This method check distance from every Cfg in vec1 to every Cfg in vec2.
