@@ -99,6 +99,13 @@ aprm:: main_aprm.c libs
 	rm -f main_aprm.o aprm.d
 
 #--------------------------------------------------------------------
+lazyprm:: main_lazyprm.c libs
+	$(CXX) $(CFLAGS2) -o lazyprm \
+		main_lazyprm.c \
+		$(OBJS) $(ADAPT_LIB) $(OBPRM_LIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
+	rm -f main_lazyprm.o lazyprm.d
+
+#--------------------------------------------------------------------
 query:: main_query.c libs 
 	$(CXX) $(CFLAGS2) -o query \
                 main_query.c \
@@ -120,7 +127,8 @@ query:: main_query.c libs
 OBJS = \
         AdaptiveQuery.o \
 	QueryRequirements.o \
-	NoopLocalPlanners.o
+	NoopLocalPlanners.o \
+	NoopCollisionDetection.o
 
 objs:: $(OBJS)
 
