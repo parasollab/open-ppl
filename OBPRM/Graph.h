@@ -1766,10 +1766,19 @@ DijkstraSSSP(VID _startVid) const {
      bool relax = false;
      dkinfo u = pq.back();
      if ( sssptree.GetVertexCount() == 0 ) {
-       sssptree.AddVertex( GetData(u.vid) );
+       //lkd added tmp variable to satisfy SUN compiler
+       //sssptree.AddVertex( GetData(u.vid) );
+       VERTEX tmp = GetData(u.vid);
+       sssptree.AddVertex( tmp );
      } else {
-       sssptree.AddVertex( GetData(u.vid) );
-       sssptree.AddEdge( GetData(u.predvid), GetData(u.vid), u.dist);
+       //lkd added tmp variable to satisfy SUN compiler
+       // sssptree.AddVertex( GetData(u.vid) );
+       VERTEX tmp = GetData(u.vid);
+       sssptree.AddVertex( tmp );
+       //lkd added tmp variable to satisfy SUN compiler
+       //sssptree.AddEdge( GetData(u.predvid), GetData(u.vid), u.dist);
+       VERTEX tmp1 = GetData(u.predvid);
+       sssptree.AddEdge( tmp1, tmp, u.dist);
      }; 
      pq.pop_back();
 
@@ -1804,14 +1813,26 @@ WeightedMultiDiGraph<VERTEX,WEIGHT>::
 FindPathDijkstra (VID _v1id, VID _v2id) const {
 
   // first, get Dijkstra's SSSP tree
-  WeightedMultiDiGraph<VERTEX,WEIGHT> sssptree =  DijkstraSSSP(_v1id); 
+  //lkd separated decl from init to satisfy SUN compiler
+  //WeightedMultiDiGraph<VERTEX,WEIGHT> sssptree =  DijkstraSSSP(_v1id); 
+  WeightedMultiDiGraph<VERTEX,WEIGHT> sssptree;
+  sssptree =  DijkstraSSSP(_v1id); 
 
   // now, get bfspath in sssp tree (there's only one path in tree!)
-  vector< pair<VERTEX,WEIGHT> > dpath = sssptree.FindPathBFS(GetData(_v1id),GetData(_v2id) );
+  //lkd separated decl from init to satisfy SUN compiler
+  //lkd added tmp variables to satisfy SUN compiler
+  //vector< pair<VERTEX,WEIGHT> > dpath = sssptree.FindPathBFS(GetData(_v1id),GetData(_v2id) );
+  vector< pair<VERTEX,WEIGHT> > dpath;
+  VERTEX tmp1 = GetData(_v1id);
+  VERTEX tmp2 = GetData(_v2id);
+  dpath = sssptree.FindPathBFS(tmp1, tmp2);
 
   // now, get "real" edge weights (not the distances in sssptree)
   for (int i=1; i < dpath.size(); i++) {
-     dpath[i-1].second = GetEdgeWeight( dpath[i-1].first, dpath[i].first ); 
+     //lkd added tmp variable to satisfy SUN compiler
+     //dpath[i-1].second = GetEdgeWeight( dpath[i-1].first, dpath[i].first ); 
+     WEIGHT tmp = GetEdgeWeight( dpath[i-1].first, dpath[i].first ); 
+     dpath[i-1].second = tmp;
   }
 
   return dpath;
