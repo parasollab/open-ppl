@@ -81,7 +81,7 @@ void Environment::Get(Input * _input) {
     // if user supplied a bounding box, overwrite calculated boundingBox
     if ( _input->bbox.IsActivated() ) {
 
-       sscanf(input.bbox.GetValue(),"[%lf,%lf,%lf,%lf,%lf,%lf]",
+       sscanf(_input->bbox.GetValue(),"[%lf,%lf,%lf,%lf,%lf,%lf]",
           &boundingBox[0], &boundingBox[1], &boundingBox[2],
           &boundingBox[3], &boundingBox[4], &boundingBox[5]);
 
