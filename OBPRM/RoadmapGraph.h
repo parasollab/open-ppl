@@ -210,7 +210,7 @@ typedef Graph<UG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,W
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-protected:
+  //protected:
 
    typedef WtVertexType<VERTEX,WEIGHT> Vertex;
    typedef vector< Vertex > VERTEX_VECTOR;

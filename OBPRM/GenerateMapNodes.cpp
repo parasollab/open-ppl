@@ -584,7 +584,8 @@ OBMAPRM(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
 
    //copy nodes to obprmCfgs and erase _info.nodes vector
    vector<Cfg> obprmCfgs;
-   for (int i=0; i < _info.nodes.size(); i++) {
+   int i;
+   for (i=0; i < _info.nodes.size(); i++) {
        obprmCfgs.push_back(_info.nodes[i]);
    }
    _info.nodes.clear();
@@ -592,7 +593,7 @@ OBMAPRM(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
    cout << "\nobprmnodes = " << obprmCfgs.size() << "\n";
 
    //push nodes to medial axis
-   for (int i=0; i < obprmCfgs.size(); i++) {
+   for (i=0; i < obprmCfgs.size(); i++) {
       Cfg cfg = obprmCfgs[i];
 
       cfg.PushToMedialAxis(_env, cd, _info.cdsetid, _info.cdInfo, 

@@ -30,9 +30,9 @@
 
 #else
 #if defined(sun) || defined(__sgi) || defined(__linux__) || defined(_WIN32)
-#include <iostream>
-#include <fstream>
-#include <iomanip>
+#include <iostream.h>
+#include <fstream.h>
+#include <iomanip.h>
 #include <algo.h>   
 #include <list.h>   
 #include <vector.h>
@@ -46,11 +46,11 @@
 #include <iostream.h>
 #include <fstream.h>
 #include <iomanip.h>
-//#include <algo.h>    
+#include <algorithm>    
 #include <list>     
-#include <vector.h>
-#include <deque.h>  
-#include <stack.h>  
+#include <vector>
+#include <deque>  
+#include <stack>  
 #include <map> 
 #endif
 
