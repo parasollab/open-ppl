@@ -63,6 +63,19 @@ Body::~Body() {
     for (i=0; i < backwardConnectionCount; i++) {
         delete backwardConnection[i];
     }
+
+#ifdef USE_VCLIP
+    if(vclipBody)
+      delete vclipBody;    ///<VCLIP internal model
+#endif
+#ifdef USE_RAPID
+    if(rapidBody)
+      delete rapidBody; ///<RAPID internal model
+#endif
+#ifdef USE_PQP
+    if(pqpBody)
+      delete pqpBody; ///<PQP internal model
+#endif
 }
 
 //===================================================================
