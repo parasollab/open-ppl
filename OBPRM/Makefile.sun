@@ -29,13 +29,17 @@
  RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
  RAPID_INCL    = -I${RAPID_DIR}
 
+ PQP_DIR     = ${CD_DIR}/PQP
+ PQPLIB_DIR  = ${PQP_DIR}/lib
+ PQPLIB      = -L${PQPLIB_DIR} -lPQP
+ PQP_INCL    = -I${PQP_DIR}/include
 
 #-----------------------------------------------------------------------------
 # Defines for various types of executables
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=1 -DUSE_RAPID 
+   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=1 -DUSE_RAPID -DUSE_PQP
 
 ### DEFS = ${ADEFS} -DQUIETGRAPH -DQUIET
     DEFS = ${ADEFS} -DSOLARIS
@@ -44,7 +48,7 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${DEFS}
+ AFLAGS    = -I. ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
 
 
 #-----------------------------------------------------------------------------
@@ -91,18 +95,18 @@ libobprm.a:: $(OBJS)
 obprm:: main_obprm.cpp libs
 	$(CXX) $(CXXFLAGS)  -o obprm \
 	main_obprm.cpp \
-	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
+	libobprm.a $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
 query:: main_query.cpp
 	$(CXX) $(CXXFLAGS)  -o query \
 	main_query.cpp \
-	libobprm.a ${VCLIP_DIR}/vclip.o $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
+	libobprm.a ${VCLIP_DIR}/vclip.o $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_query.o
 #--------------------------------------------------------------------
 % :: %.o
-	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 
 #--------------------------------------------------------------------
 

@@ -20,7 +20,9 @@
 #ifndef USE_CSTK
 #ifndef USE_VCLIP
 #ifndef USE_RAPID
+#ifndef USE_PQP
 #error You have to specify at least one collision detection library.
+#endif
 #endif
 #endif
 #endif
@@ -65,6 +67,12 @@ enum cd_predefined {
         RAPID,
 #endif
 /**< enum RAPID */
+
+/// Proximity Query Package
+#ifdef USE_PQP
+        PQP,
+#endif
+/**< enum PQP */
 
 /// first user defined cd set, if any
         CD_USER1};    

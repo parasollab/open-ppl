@@ -265,6 +265,27 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 
     } else
 #endif
+#ifdef USE_PQP
+      if (cdtype == PQP){
+	GMSPolyhedron poly = GetPolyhedron();
+
+	pqpBody = new PQP_Model;
+	pqpBody->BeginModel();
+	for(int q=0; q < poly.numPolygons; q++) {
+	    int vertexNum[3];
+	    double point[3][3];
+	    for(int i=0; i<3; i++) {
+	       vertexNum[i] = poly.polygonList[q].vertexList[i];
+	       Vector3D &tmp = poly.vertexList[vertexNum[i]];
+	       for(int j=0; j<3; j++)
+	           point[i][j] = tmp[j];
+	    }
+	    pqpBody->AddTri(point[0], point[1], point[2], q);
+	}
+	pqpBody->EndModel();
+
+    } else
+#endif
     {
 	cout <<"\n\n\tERROR: all other cd type's undefined\n\n";
 	cout <<"\n  you gave me <" << cdtype << ">";
@@ -276,6 +297,9 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 #endif
 #ifdef USE_CSTK
 	cout <<"\n\nbut CSTK  = " << CSTK ;
+#endif
+#ifdef USE_PQP
+	cout <<"\n\nbut RAPID = " << PQP;
 #endif
 	cout <<"\n\n\tERROR: all other cd type's undefined\n\n";
 	exit(-1);
@@ -379,6 +403,12 @@ PolyTree * Body::GetVclipBody(){
 #ifdef USE_RAPID
 RAPID_model * Body::GetRapidBody() {
     return rapidBody;
+}
+#endif
+
+#ifdef USE_PQP
+PQP_Model * Body::GetPqpBody() {
+    return pqpBody;
 }
 #endif
 

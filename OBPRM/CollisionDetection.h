@@ -32,6 +32,9 @@
 #ifdef USE_RAPID
 #include <RAPID.H>
 #endif
+#ifdef USE_PQP
+#include <PQP.h>
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
@@ -702,6 +705,10 @@ public:
     (MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
 #endif
 
+#ifdef USE_PQP
+  static bool IsInCollision_PQP
+    (MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo);
+#endif
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////

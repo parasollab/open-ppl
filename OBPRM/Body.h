@@ -26,6 +26,9 @@
 #ifdef USE_VCLIP
 #include <vclip.h>
 #endif
+#ifdef USE_PQP
+#include <PQP.h>
+#endif
 #ifdef USE_RAPID
 #include <RAPID.H>
 #endif
@@ -236,6 +239,9 @@ public:
 #ifdef USE_RAPID
         RAPID_model * GetRapidBody(); ///<Return RAPID internal model
 #endif
+#ifdef USE_PQP
+        PQP_Model * GetPqpBody(); ///<Return PQP internal model
+#endif
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -330,6 +336,9 @@ protected:
 #endif
 #ifdef USE_RAPID
     RAPID_model *rapidBody; ///<RAPID internal model
+#endif
+#ifdef USE_PQP
+    PQP_Model *pqpBody; ///<PQP internal model
 #endif
 
   ///////////////////////////////////////////////////////////////////////////////////////////

@@ -76,6 +76,10 @@ UserInit(Input * input,  GenerateMapNodes* gn, ConnectMapNodes* cn)
     collisionCheckers.MakeCDSet("RAPID");    // enum RAPID
 #endif
 	
+#ifdef USE_PQP
+    collisionCheckers.MakeCDSet("PQP");    // enum PQP
+#endif
+	
     if( input->numCDs == 0 ){                  	// use default CD sets
     }
     else{                                     	// make user-defined sets
@@ -554,6 +558,61 @@ IsInCollision_RAPID
 }
 #endif
 
+#ifdef USE_PQP
+bool
+CollisionDetection::
+IsInCollision_PQP
+(MultiBody* robot, MultiBody* obstacle, CD& _cd, CDInfo& _cdInfo){
+	Stats.IncNumCollDetCalls( "PQP" );
+	
+    PQP_Model *rob, *obst;
+    PQP_CollideResult result;
+	
+    if (_cdInfo.ret_all_info == true)
+    {
+		cout << endl;
+		cout << "Currently unable to return ALL info using PQP cd." << endl;
+		cout << "Defaulting to minimal information." << endl;
+	}
+	
+    for(int i=0 ; i<robot->GetFreeBodyCount(); i++){
+		
+		rob = robot->GetFreeBody(i)->GetPqpBody();
+		
+		for(int j=0; j<obstacle->GetBodyCount(); j++){
+			
+            // if robot check self collision, skip adjacent links.
+            if(robot == obstacle &&
+				robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(j)) )
+				continue;
+			
+            obst = obstacle->GetBody(j)->GetPqpBody();
+			Transformation &t1 = robot->GetFreeBody(i)->WorldTransformation();
+			Transformation &t2 = obstacle->GetBody(j)->WorldTransformation();
+			t1.orientation.ConvertType(Orientation::Matrix);
+			t2.orientation.ConvertType(Orientation::Matrix);
+			double p1[3], p2[3];
+			for(int p=0; p<3; p++) {
+				p1[p] = t1.position[p];
+				p2[p] = t2.position[p];
+			}
+			
+			if(PQP_Collide(&result, t1.orientation.matrix, p1, rob,
+				t2.orientation.matrix, p2, obst, PQP_FIRST_CONTACT)) {
+				cout << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY"
+					<< PQP_Collide(&result, t1.orientation.matrix, p1, rob, t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT) << endl;
+				exit(1);
+			}
+			if(result.Colliding()) {
+				return true;
+            }
+			
+		}
+    }
+    return false;
+}
+#endif
+
 #ifdef USE_CSTK
 bool
 CollisionDetection::
@@ -684,13 +743,21 @@ operator==(const CD& _cd) const
 			<< "Please recompile with VCLIP if you'd like to use VCLIP\n";
 		exit(5);
 #endif
-		
 	} else if ( !strcmp(name,"RAPID") ) {
 #ifdef USE_RAPID
 		return true;
 #else
 		cout << "Current compilation does not include RAPID."
 			<< endl << "Please recompile with RAPID\n";
+		exit(5);
+		
+#endif
+	} else if ( !strcmp(name,"PQP") ) {
+#ifdef USE_PQP
+		return true;
+#else
+		cout << "Current compilation does not include PQP."
+			<< endl << "Please recompile with PQP\n";
 		exit(5);
 		
 #endif
@@ -759,6 +826,15 @@ ostream& operator<< (ostream& _os, const CD& cd){
 		exit(5);
 #endif
 		
+	}
+	if ( strstr(cd.GetName(),"PQP") ){
+#ifdef USE_PQP
+		_os << ", Type = " << cd.GetType();
+#else
+		cout << "Current compilation does not include PQP." << endl
+			<< "Please recompile with PQP\n";
+		exit(5);
+#endif
 	}
 	return _os;
 };
@@ -949,6 +1025,26 @@ MakeCDSet(istream& _myistream) {
 #else
 			cout << "Current compilation does not include RAPID." << endl
 				<< "Please recompile with RAPID if you'd like to use rapid\n";
+			exit(5);
+#endif
+			
+		} else if (!strcmp(cdname,"PQP")) {          // PQP
+#ifdef USE_PQP
+			
+			CD cd1;
+			strcpy(cd1.name,cdname);
+			cd1.collision_detection = & CollisionDetection::IsInCollision_PQP;
+			cd1.type = Exact;
+			cd1.cdid = AddElementToUniverse(cd1);
+			if ( ChangeElementInfo(cd1.cdid,cd1) != OK ) {
+				cout << endl << "In MakeSet: couldn't change element info";
+				exit(-1);
+			}
+			cdvec.push_back( cd1.cdid );
+			
+#else
+			cout << "Current compilation does not include PQP." << endl
+				<< "Please recompile with PQP if you'd like to use PQP\n";
 			exit(5);
 #endif
 			

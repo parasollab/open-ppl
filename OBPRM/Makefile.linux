@@ -26,13 +26,18 @@
  RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
  RAPID_INCL    = -I${RAPID_DIR}
 
+ PQP_DIR     = ${CD_DIR}/PQP
+ PQPLIB_DIR  = ${PQP_DIR}/lib
+ PQPLIB      = -L${PQPLIB_DIR} -lPQP
+ PQP_INCL    = -I${PQP_DIR}/include
+
 
 #-----------------------------------------------------------------------------
 # Defines for various types of executables
 #	VERBOSE  for printing out all kinds of babble for debugging
 #       INTERMEDIATE_FILES for creating intermediate "*.path" files
 #--------------------------------------------------------------------------
-   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=1  -DUSE_RAPID -DUSE_VCLIP
+   ADEFS = -DVERBOSE=0 -DINTERMEDIATE_FILES=1 -DCHECKIFSAMECC=1  -DUSE_RAPID -DUSE_VCLIP -DUSE_PQP
 
 ### DEFS = ${ADEFS} -DQUIETGRAPH -DQUIET
     DEFS = ${ADEFS} 
@@ -41,7 +46,7 @@ showdefs ::
 	echo "${DEFS}";
 
 
- AFLAGS    = -I. ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${DEFS}
+ AFLAGS    = -I. ${STL_INCL} ${CSTK_INCL} ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${DEFS}
 
 
 #-----------------------------------------------------------------------------
@@ -90,14 +95,14 @@ libobprm.so:: $(OBJS)
 obprm:: main_obprm.cpp libs
 	$(CXX) $(CXXFLAGS) -o obprm \
                 main_obprm.cpp \
-		$(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} 
+		$(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_obprm.o main_obprm.d
 
 #--------------------------------------------------------------------
 query:: main_query.cpp libs
 	$(CXX) $(CXXFLAGS) -o query \
                 main_query.cpp \
-                $(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+                $(OBPRMLIB) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 	rm -f main_query.o main_query.d
 
 #--------------------------------------------------------------------
@@ -108,7 +113,7 @@ query:: main_query.cpp libs
 	rm -f $*.d
 
 % :: %.o
-	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
+	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} ${PQPLIB}
 
 #--------------------------------------------------------------------
 

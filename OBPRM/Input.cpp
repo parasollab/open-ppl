@@ -164,6 +164,9 @@ Input::Input():
 #ifdef USE_VCLIP
         "\n\t\t\t  vclip"
 #endif
+#ifdef USE_PQP
+    "\n\t\t\t  PQP"
+#endif
         );
 
     char Cfg_string_1[300];
@@ -272,6 +275,10 @@ void Input::ReadCommandLine(int argc, char** argv){
     cdtype = CSTK;
 #endif
 
+#ifdef USE_PQP
+   cdtype = PQP;
+#endif
+
   //-- evaluate command line
   try {
 
@@ -339,6 +346,15 @@ void Input::ReadCommandLine(int argc, char** argv){
                         cdtype = RAPID;
 #else
      cout << "RAPID is not supported by current collision detection library. \n Please recompile with RAPID .\n";
+    exit(5);
+#endif
+
+        }else if (!(strncmp(CDstrings[numCDs]->GetValue(),"PQP",3))) {
+#ifdef USE_PQP
+
+                        cdtype = PQP;
+#else
+     cout << "PQP is not supported by current collision detection library. \n Please recompile with PQP .\n";
     exit(5);
 #endif
 
