@@ -310,7 +310,9 @@ ReadQuery(const char* _filename) {
    }
 
 
-   while ( myifstream >> tempCfg) {
+   while (1) {
+      tempCfg.Read(myifstream);
+      if(!myifstream) break;
       query.push_back(tempCfg);
    }
 
