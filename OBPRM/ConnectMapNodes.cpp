@@ -14,7 +14,6 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "ConnectMapNodes.h"
-
 #include "Cfg.h"
 #include "DistanceMetrics.h"
 #include "Environment.h"
