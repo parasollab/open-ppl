@@ -132,7 +132,6 @@ OBJS = \
 	MultiBody.o  \
         Parameters.o \
 	Input.o \
-	HapticInput.o \
         Haptic.o \
         Push.o \
 	Cfg.o \
