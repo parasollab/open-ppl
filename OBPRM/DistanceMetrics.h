@@ -628,7 +628,7 @@ KClosest(Environment *env,
 	 vector<CFG>& v1, vector<CFG>& v2, unsigned int k) {
   vector< pair<CFG,CFG> > kpairs;
   vector< pair<CFG,CFG> > kpairs_i;
-  vector<CFG>::iterator v1_i;
+  typename vector<CFG>::iterator v1_i;
   for (v1_i = v1.begin(); v1_i < v1.end(); v1_i++) {
     kpairs_i = KClosest(env,(*v1_i),v2,k);
     kpairs.insert(kpairs.end(),kpairs_i.begin(),kpairs_i.end());
@@ -659,7 +659,7 @@ KClosest(Environment *env,
 
   int max_index = 0;
   double dist;
-  vector<CFG>::iterator vi;
+  typename vector<CFG>::iterator vi;
   for (vi = v.begin(); vi < v.end(); vi++) {
     if (cc == (*vi))
       continue; //don't check distance to same
@@ -677,7 +677,7 @@ KClosest(Environment *env,
   }
   sort (kpairs_dist.begin(), kpairs_dist.end(), CFG_DIST_COMPARE<CFG>());
   // return only cfgs
-  vector<pair<CFG,double> >::iterator c_iter;
+  typename vector<pair<CFG,double> >::iterator c_iter;
   for (c_iter = kpairs_dist.begin(); c_iter < kpairs_dist.end(); c_iter++) 
     if (c_iter->first !=invalid)
       kpairs.push_back(pair<CFG,CFG>(cc,c_iter->first));
@@ -697,7 +697,7 @@ KClosest(Roadmap<CFG,WEIGHT>* rdmp,
 	 vector<CFG>& v1, vector<CFG>& v2, unsigned int k) {
   vector< pair<VID,VID> > kpairs;
   vector< pair<VID,VID> > kpairs_i;
-  vector<CFG>::iterator v1_i;
+  typename vector<CFG>::iterator v1_i;
   //  for (v1_i = v1.begin(); v1_i < v1.end(); v1_i++) {
   for (v1_i = v1.end()-1; v1_i >= v1.begin(); v1_i--) {
     kpairs_i = KClosest(rdmp,(*v1_i),v2,k);
@@ -724,7 +724,7 @@ KClosest(Roadmap<CFG,WEIGHT> *rdmp,
   VID cc_id = rdmp->m_pRoadmap->GetVID(cc);
   vector<pair<CFG,CFG> > kpairs_cfg = KClosest(rdmp->GetEnvironment(),
 					       cc, v, k);
-  vector<pair<CFG,CFG> >::iterator pairs_i;
+  typename vector<pair<CFG,CFG> >::iterator pairs_i;
   for (pairs_i = kpairs_cfg.begin(); pairs_i < kpairs_cfg.end(); pairs_i++)
     kpairs.push_back(pair<VID,VID>(cc_id, //same as GetVID(pairs_i->first
 				   rdmp->m_pRoadmap->GetVID(pairs_i->second)));
@@ -757,7 +757,7 @@ KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp,
   int max_index = 0;
   double dist;
   Environment *env = rdmp->GetEnvironment();
-  vector<CFG>::iterator vi;
+  typename vector<CFG>::iterator vi;
   for (vi = v.begin(); vi < v.end(); vi++) {
     if (cc == (*vi))
       continue; //don't check distance to same
@@ -781,7 +781,7 @@ KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp,
   }
   sort (kpairs_dist.begin(), kpairs_dist.end(), CFG_DIST_COMPARE<CFG>());
   // return only cfgs
-  vector<pair<CFG,double> >::iterator c_iter;
+  typename vector<pair<CFG,double> >::iterator c_iter;
   VID cc_vid = rdmp->m_pRoadmap->GetVID(cc);
   for (c_iter = kpairs_dist.begin(); c_iter < kpairs_dist.end(); c_iter++) 
     if (c_iter->first !=invalid)
