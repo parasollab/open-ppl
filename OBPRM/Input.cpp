@@ -59,6 +59,8 @@ Input::Input():
         calcClearance    ("-calcClear",          0,  0,    1) 
         {
 
+    //Cfg::CfgHelper=NULL; 
+    cfgSet=false;
     numShells.PutDesc        ("INTEGER","");
     proportionSurface.PutDesc("FLOAT  ","");
     lineSegment.PutDesc      ("INTEGER","");
@@ -329,10 +331,13 @@ void Input::ReadCommandLine(int argc, char** argv){
         }
         if (!(strncmp(cfgName,"Cfg_free_rigid",14))) {
             Cfg::CfgHelper = new Cfg_free();
+            cfgSet=true;
         }else if (!(strncmp(cfgName,"Cfg_fixed_PRR",13))) {
             Cfg::CfgHelper = new Cfg_fixed_PRR();
+            cfgSet=true;
         }else if (!(strncmp(cfgName,"Cfg_free_serial",15))) {
             Cfg::CfgHelper = new Cfg_free_serial(numofJoints);
+            cfgSet=true;
             // to be done later, parameter for Cfg_free_serial.
         }
     } // default is Cfg_free().
@@ -549,50 +554,60 @@ Input::PrintDefaults(){
 //  Read
 //===================================================================
 void Input::Read(int action) {
+  int envFormatVersion= ENV_VER_LEGACY;
+  char t;
 
   VerifyFileExists(envFile.GetValue(),action);
 
   // open file and read first field
   ifstream is(envFile.GetValue());
   char string1[32];
-  is >> string1;
+  //is >> string1;
 
-
+#define LINEMAX 256
   // if first field is a comment delimiter
-  if (strstr(string1, "#")){
-        int envFormatVersion;
+   while   ((t=is.peek())=='#') {
+         char line[LINEMAX];
+          is.getline(line,LINEMAX,'\n');
         char string2[32];
         char string3[32];
-        is >> string2 >> string3;
-        if (   strstr(string2, "Environment")
-            && strstr(string3, "Version")      ){
-                 is >> envFormatVersion;
-                 Read(is,envFormatVersion,action);
-                 is.close();
-        } else {
-            cerr << "\nREAD ERROR: bad file format in \""
-                 << envFile.GetValue() << "\"";
-            cerr << "\n            something is wrong w/ the following\n"
-                 << "\n            "<<string1<<" "<<string2<<" "<<string3
-                 <<"\n\n";
-            if(action==EXIT)
-            exit(-1);
-        }
-  // else first field is NOT a comment delimiter
-  } else {
+        if (   strstr(line, "Environment") ){
+                  sscanf(&line[1],"%s %s %d",string2,string3,&envFormatVersion);
+               if( !strstr(string3, "Version")      ) {
+                   cerr << "\nREAD ERROR: bad file format in \""
+                        << envFile.GetValue() << "\"";
+                   cerr << "\n            something is wrong w/ the following\n"
+                    << "\n            "<<string1<<" "<<string2<<" "<<string3
+                    <<"\n\n";
+                   if(action==EXIT)
+                   exit(-1);
+               }
+        } 
+       else    
+         if (   strstr(line, "Cfg") ){
+                  if (!(strncmp(&line[1],"Cfg_free_rigid",14))) {      
+                         if(!cfgSet)
+                             Cfg::CfgHelper = new Cfg_free();
+                             cfgSet=true;
+                      }else if (!(strncmp(&line[1],"Cfg_fixed_PRR",13))) {
+                         if(!cfgSet)
+                              Cfg::CfgHelper = new Cfg_fixed_PRR();
+                             cfgSet=true;
+                      }else if (!(strncmp(&line[1],"Cfg_free_serial",15))) {
+                              int numofJoints;
+                               sscanf(&line[1],"%s %d",string2,& numofJoints);
+                         if(!cfgSet) {
+                              Cfg::CfgHelper = new Cfg_free_serial(numofJoints);
+                             cfgSet=true;
+                            }
+                      }    
+         }
+ 
+  }
+  Read(is,envFormatVersion,action);
 
-        // Legacy Version Indicated.
+  is.close();
 
-        // close the file ...
-        is.close();
-
-        // ...  and start over.
-        ifstream is(envFile.GetValue());
-        Read(is,ENV_VER_LEGACY,action);
-
-        is.close();
-
-  }//endif "#"
 
 };
 
@@ -620,7 +635,6 @@ void Input::Read(istream & _is, int envFormatVersion,int action) {
     }
 
     _is >> multibodyCount;      // # of MultiBodys'
-    cout <<"OBPRM body count= "<< multibodyCount;
 
     for (int m=0; m<multibodyCount; m++){
         //---------------------------------------------------------------
@@ -630,31 +644,8 @@ void Input::Read(istream & _is, int envFormatVersion,int action) {
         readfield(_is, &string);              // Tag, "Active/Passive"
 
         readfield(_is, &BodyCount[m]);        // number of bodies
-        cout << "Num of active bodies " << BodyCount[m] << endl;
         for (i=0; i<BodyCount[m]; i++){
            readfield(_is, &string,comments[m][i]);// Tag (FixedBody or FreeBody)
-           cout <<"String = " <<string<<"\n";
-/*
-            while(string[0]=='#')  {
-                 char comment_line[1000]="";
-                 strcat(comment_line,&string[1]);
-                 strcat(comment_line," ");
-                 _is >> string;
-                 while ( strncmp(string,"FreeBody",9) && 
-                         strncmp(string,"FixedBody",10) && string[0]!='#'){
-                   strcat(comment_line,string);
-                   strcat(comment_line," ");
-                  _is >> string;
-                  
-                 }
-                    comments[m][i].push_back(strdup(comment_line));
-                    cout << comment_line << endl;
-            }
-  */
-           for(int j=0;j<comments[m][i].size();j++)
-           {
-              cout <<comments[m][i][j];
-           }
             if (!strncmp(string, "FixedBody", 10)){
                isFree[m][i] = 0;
                FixedBodyCount[m]++;

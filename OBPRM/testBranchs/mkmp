@@ -1,4 +1,4 @@
-../obprm -cd RAPID -f branchs -cfg Cfg_free_serial 5 \
+../obprm -cd RAPID -f branchs -cfg Cfg_free_serial 5\
         -bbox_scale 20 \
 	-gNodes OBPRM nodes 500 \
 		shells 3 \

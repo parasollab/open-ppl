@@ -176,6 +176,7 @@ public:
     //
     // data fields from 'init' file (given as command line argument)
     //
+    bool cfgSet;
     int multibodyCount;
     int BodyCount[MAX_MULTIBODY];
     int FixedBodyCount[MAX_MULTIBODY];
