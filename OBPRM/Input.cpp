@@ -243,6 +243,10 @@ Input::Input():
         "\n\t\t\tPick one: default scaledEuclidean 0.9"
         "\n\t\t\t  euclidean"
         "\n\t\t\t  scaledEuclidean FLOAT (default,0.5)"
+        "\n\t\t\t  minkowski FLOAT FLOAT FLOAT (default 3 3 0.333)"
+        "\n\t\t\t  manhattan"
+        "\n\t\t\t  com"
+
         );
 
     strcpy(commandLine,"");

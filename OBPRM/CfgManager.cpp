@@ -305,6 +305,24 @@ bool CfgManager::isWithinResolution(
 
 }
 
+vector <double> CfgManager::GetPosition(const Cfg&c)
+{
+  vector <double> ret;
+ for(int i=0; i<posDof; ++i) {
+        ret.push_back(c.v[i]);
+  }
+  return ret;
+}
+             
+
+vector <double> CfgManager::GetOrientation(const Cfg&c)
+{
+  vector <double> ret;
+ for(int i=posDof; i<dof; ++i) {
+        ret.push_back(c.v[i]);
+  }     
+  return ret;
+}
 
 double  CfgManager::OrientationMagnitude(const Cfg& c)
 {
@@ -339,6 +357,7 @@ Cfg CfgManager::GetPositionOrientationFrom2Cfg(
   return Cfg(tmp);
   
 }
+
 
 vector<Cfg> CfgManager::GetMovingSequenceNodes(const Cfg &c1, const Cfg &c2, double s) {
     vector<Cfg> result;

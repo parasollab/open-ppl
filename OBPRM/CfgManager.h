@@ -86,6 +86,9 @@ public:
                             double positionRes, double orientationRes);
   virtual Cfg FindIncrement(const Cfg& c, const Cfg& _goal, int  n_ticks);
 
+  virtual vector<double>  GetPosition(const Cfg& c);
+  virtual vector<double>  GetOrientation(const Cfg& c);
+
   // methods for Distance Metric.
   virtual double  OrientationMagnitude(const Cfg& c);
   virtual double  PositionMagnitude(const Cfg& c);

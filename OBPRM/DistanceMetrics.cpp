@@ -52,6 +52,12 @@ DefaultInit() {
    distanceMetrics.MakeDMSet("scaledEuclidean 0.9");
                                         // enum EUCLID
    distanceMetrics.MakeDMSet("euclidean");
+                                        // enum minkowski
+   distanceMetrics.MakeDMSet("minkowski 3 3 0.3333");
+                                        // enum manhattan
+   distanceMetrics.MakeDMSet("manhattan");
+                                        // enum com
+   distanceMetrics.MakeDMSet("com");
 }
 
 //-----------------------------------------------
@@ -116,8 +122,60 @@ ScaledEuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
     dist = ScaledDistance(_c1, _c2, _dm.GetS()); 
     return dist;
 }
+double
+DistanceMetric::
+MinkowskiDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
+ 
+    double dist,pos=0,orient=0,d;
+    Cfg c=_c1-_c2;
+    vector<double> p=c.GetPosition(); // position values
+    vector<double> o=c.GetOrientation(); //orientation values
+ 
+ 
+ 
+    int i;
+    for(i=0;i<p.size();i++) {
+         if(p[i]<0) p[i]=-p[i];
+         pos+=pow(p[i],_dm.GetR1());
+    }
+ 
+   for(i=0;i<o.size();i++) {
+         orient+=pow(o[i],_dm.GetR2());
+    }
+ 
+   dist=pow(pos+orient,_dm.GetR3());
+   return dist;
+}                           
 
+double
+DistanceMetric::
+ManhattanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
+ 
+    double dist=0;
+    Cfg c=_c1-_c2;
+    vector<double> dt=c.GetData(); // position values
+ 
+ 
+ 
+    int i;
+    for(i=0;i<dt.size();i++) {
+         if(dt[i]<0) dist=dist-dt[i];
+           else
+             dist+=dt[i];
+    }
+ 
+   return dist;
+}                                                                               
 
+double DistanceMetric::
+CenterOfMassDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm){
+ 
+    Vector3D d=_c1.GetRobotCenterPosition()-_c2.GetRobotCenterPosition();
+    return d.magnitude();
+    
+
+    
+}
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class DM
@@ -150,10 +208,16 @@ operator==(const DM& _dm) const
 {
   if ( strcmp(name,_dm.name) != 0 ) {
      return false;
-  } else if ( !strcmp(name,"euclidean") ) {
+  } else if ( !strcmp(name,"euclidean") ||
+              !strcmp(name,"manhattan") || 
+              !strcmp(name,"com")  ) {
      return true;
   } else if ( !strcmp(name,"scaledEuclidean") ) {
-     return (sValue == _dm.sValue ); 
+     return ( abs(sValue-_dm.sValue) <0.000000001);  //sValue==_dm.sValue
+  } else if ( !strcmp(name,"minkowski") ) {
+     return ( (abs(r1 - _dm.r1 )<0.000000001) && 
+              (abs(r2 - _dm.r2 ) <0.000000001)&&
+              (abs(r3 - _dm.r3 )<0.000000001));
   } else {  
      return false; 
   }
@@ -179,13 +243,23 @@ GetType() const {
 
 ostream& operator<< (ostream& _os, const DM& dm){
         _os<< dm.GetName();
-        if ( !strcmp(dm.GetName(),"euclidean")){
+        if ( (!strcmp(dm.GetName(),"euclidean")) ||
+             (!strcmp(dm.GetName(),"manhattan")) ||
+             (!strcmp(dm.GetName(),"com"))    ){
            _os << ", Type = " << dm.GetType(); 
         }
         if ( !strcmp(dm.GetName(),"scaledEuclidean")){
            _os << ", Type = " << dm.GetType(); 
            _os << ", s = " << dm.GetS(); 
         }
+ 
+        if ( !strcmp(dm.GetName(),"minkowski")){
+           _os << ", Type = " << dm.GetType();
+           _os << ", r1   = " << dm.GetR1();
+           _os << ", r2   = " << dm.GetR2();
+           _os << ", r3   = " << dm.GetR3();
+        }
+             
         return _os;
 };
 
@@ -198,6 +272,34 @@ GetS() const {
     return -1;
   }
 };
+ 
+double
+DM::
+GetR1() const {
+    if( !strcmp(name,"minkowski") ){
+    return r1;
+  } else {
+    return -1;
+  }
+};
+double
+DM::
+GetR2() const {
+    if( !strcmp(name,"minkowski") ){
+    return r2;
+  } else {
+    return -1;
+  }
+};
+double
+DM::
+GetR3() const {
+    if( !strcmp(name,"minkowski") ){
+    return r3;
+  } else {
+    return -1;
+  }
+};          
 
 
 /////////////////////////////////////////////////////////////////////
@@ -320,6 +422,60 @@ MakeDMSet(istream& _myistream) {
        }
        _myistream.clear(); // clear failure to read in last s value
 
+    } else if (!strcmp(dmname,"minkowski")){ 
+      DM dm1;
+      double r1,r2,r3;
+       strcpy(dm1.name,dmname);
+       dm1.distanceMetric = &DistanceMetric::MinkowskiDistance;
+       //dm1.distanceMetric = &DistanceMetric::EuclideanDistance;
+       dm1.type = CS;
+       r1 = 3;
+       r2 = 3;
+       r3 = 1.0/3;
+       if( _myistream >> r1) {
+          r2=r3=r1;
+           if( _myistream >> r2) {
+              if (! (_myistream >> r3)) {
+                  cout << endl << "INVALID: If you specified 2 values please also specify the third";
+                exit(-1);
+              }
+           }
+        }
+        dm1.r1 = r1;
+        dm1.r2 = r2;
+        dm1.r3 = r3; 
+        dm1.dmid = AddElementToUniverse(dm1);
+        if( ChangeElementInfo(dm1.dmid,dm1) != OK ) {
+                cout << endl << "In MakeSet: couldn't change element info";
+                exit(-1);
+            }
+         dmvec.push_back( dm1.dmid );
+ 
+       _myistream.clear(); // clear failure to read in last r value
+    }else  if (!strcmp(dmname,"manhattan")) {// manhattan
+       DM dm1;
+       strcpy(dm1.name,dmname);
+       dm1.distanceMetric = &DistanceMetric::ManhattanDistance;
+       dm1.type = CS;
+       dm1.dmid = AddElementToUniverse(dm1);
+       if ( ChangeElementInfo(dm1.dmid,dm1) != OK ) {
+          cout << endl << "In MakeSet: couldn't change element info";
+          exit(-1);
+       }
+       dmvec.push_back( dm1.dmid );
+ 
+    }  else if (!strcmp(dmname,"com")) {// com
+       DM dm1;
+       strcpy(dm1.name,dmname);
+       dm1.distanceMetric = &DistanceMetric::CenterOfMassDistance;
+       dm1.type = WS;
+       dm1.dmid = AddElementToUniverse(dm1);
+       if ( ChangeElementInfo(dm1.dmid,dm1) != OK ) {
+          cout << endl << "In MakeSet: couldn't change element info";
+          exit(-1);
+       }
+       dmvec.push_back( dm1.dmid );
+ 
     } else {
        cout << "INVALID: Distance Metric name = " << dmname;
        exit(-1);
@@ -441,6 +597,11 @@ WriteDMs(ostream& _myostream) const {
           if ( !strcmp(dms[i].name,"scaledEuclidean") ) {
              _myostream << dms[i].sValue;
           }
+          if ( !strcmp(dms[i].name,"minkowski") ) {
+             _myostream << dms[i].r1 <<" ";
+             _myostream << dms[i].r2 <<" ";
+             _myostream << dms[i].r3;
+          }      
       }
       _myostream << endl << "#####DMSTOP#####";
 };

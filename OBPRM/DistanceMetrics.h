@@ -43,6 +43,9 @@ class LocalPlanners;
 enum dm_predefined {    //-----------------
         S_EUCLID9,      // Scaled Euclidean s=0.9
         EUCLID,         // Euclidean
+        MINKOWSKI,         // Euclidean
+        MANHATTAN,        // Manhattan
+        COM,        // Center of Mass
         DM_USER1};      // first user defined dm set, if any
 
 //---------------------------------------------------------------
@@ -93,6 +96,9 @@ public:
   DMF   GetDistanceMetric();
   int 	GetType() const; 
   double GetS() const;
+  double GetR1() const;
+  double GetR2() const;
+  double GetR3() const;
 
 protected:
 
@@ -104,6 +110,9 @@ protected:
   EID	dmid;
   int  	type;
   double sValue;
+  double r1;
+  double r2;
+  double r3;
 
 
 private:
@@ -195,6 +204,9 @@ public:
 
   static double EuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
   static double ScaledEuclideanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
+  static double MinkowskiDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
+  static double ManhattanDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
+  static double CenterOfMassDistance(MultiBody* robot, Cfg& _c1, Cfg& _c2, DM& _dm);
 
   //===================================================================
   // Data

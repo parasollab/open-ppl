@@ -170,9 +170,12 @@ public:
   Cfg  FindIncrement(const Cfg& _goal, int  n_ticks);
   void Increment(const Cfg& _increment);
 
+  vector<double>  GetPosition();
+  vector<double>  GetOrientation();
   // methods for Distance Metric.
   double  OrientationMagnitude();
   double  PositionMagnitude();
+  
 
 
   // generates a random configuration without consideration of bounding box restrictions

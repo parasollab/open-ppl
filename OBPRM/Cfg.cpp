@@ -430,6 +430,16 @@ void Cfg::Increment(const Cfg &_increment)
 }
 
 
+vector <double> Cfg::GetOrientation()
+{
+  return CfgHelper->GetOrientation(*this);
+}
+ 
+vector <double> Cfg::GetPosition()
+{
+  return CfgHelper->GetPosition(*this);
+}
+           
 double  Cfg::OrientationMagnitude()
 {
   return CfgHelper->OrientationMagnitude(*this);
