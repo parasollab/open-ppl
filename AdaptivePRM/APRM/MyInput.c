@@ -19,11 +19,13 @@ MyInput::MyInput():
 			     "\n\t\t\t   none                all nodes are added to roadmap"
 			     "\n\t\t\t   approximate STRING  only approx. valid nodes are added to roadmap"
 			     "\n\t\t\t                       STRING specifies the type of env approximation:"
-			     "\n\t\t\t                         box     bounding box used (default)"
-			     "\n\t\t\t                         sphere  bounding sphere used"
-			     "\n\t\t\t                         hull    convex hull used"
-			     "\n\t\t\t                         robot   only robot approximated"
-			     "\n\t\t\t                         all     all objects approximated (default)"
+			     "\n\t\t\t                         box            bounding box used (default)"
+			     "\n\t\t\t                         sphere         bounding sphere used"
+			     "\n\t\t\t                         hull           convex hull used"
+			     "\n\t\t\t                         custom STRING  STRING is new .g filename for robot"
+			     "\n\t\t\t"
+			     "\n\t\t\t                         robot          only robot approximated"
+			     "\n\t\t\t                         all            all objects approximated (default)"
 			     "\n\t\t\t   complete            only valid nodes are added to roadmap");
   edgeValidationFlag.PutDesc("STRING FLOAT",
 			     "\n\t\t\t Type of edge validation: default complete"

@@ -89,12 +89,13 @@ int main(int argc, char** argv)
 
   //read in validate flags
   enum VALIDATE {NONE, APPROXIMATE, COMPLETE};
-  enum APPROX_TYPE {BOX, SPHERE, HULL};
+  enum APPROX_TYPE {BOX, SPHERE, HULL, CUSTOM};
   enum APPROX_OBJECTS {ALL, ROBOT};
 
   VALIDATE nodeValidateType = COMPLETE;
   APPROX_TYPE nodeApproximationType = BOX;
   APPROX_OBJECTS approximateObjects = ALL;
+  char robotFileName[100] = "";
 
   if(!strncmp(input.nodeValidationFlag.GetValue(),"none",4)) {
     nodeValidateType = NONE;
@@ -108,13 +109,23 @@ int main(int argc, char** argv)
     while(is >> str) {
       if(!strncmp(str,"box",3)) {
 	nodeApproximationType = BOX;
+
       } else if(!strncmp(str,"hull",4)) {
 	nodeApproximationType = HULL;
+
       } else if(!strncmp(str,"sphere",6)) {
 	nodeApproximationType = SPHERE;
 
+      } else if(!strncmp(str,"custom",6)) {
+	nodeApproximationType = CUSTOM;
+	if( !(is >> robotFileName) ) {
+	  cout << "\n\nERROR: No .g filename given for custom robot.\n";
+	  exit(-1);
+	}
+
       } else if(!strncmp(str,"robot",5)) {
 	approximateObjects = ROBOT;
+
       } else if(!strncmp(str,"all",3)) {
 	approximateObjects = ALL;
 
@@ -123,6 +134,9 @@ int main(int argc, char** argv)
 	exit(-1);
       }
     }
+
+    if(nodeApproximationType == CUSTOM)
+      approximateObjects = ROBOT;
 
     /*
     if(!strncmp(input.nodeValidationFlag.GetValue(),"approximate box",15)) {
@@ -177,7 +191,7 @@ int main(int argc, char** argv)
 	MultiBody* approxMB = new MultiBody(approxEnv);
 	GMSPolyhedron P;
 
-	if(approximateObjects == ALL || i==realEnv->GetRobotIndex()) {	  
+	if(approximateObjects == ALL || i == realEnv->GetRobotIndex()) {	  
 	  switch(nodeApproximationType) {
 	  case BOX:
 	    P = *(createBBoxPolyhedron(realMB));
@@ -186,6 +200,9 @@ int main(int argc, char** argv)
 	    break;
 	  case HULL:
 	    P = *(createHullPolyhedron(realMB));
+	    break;
+	  case CUSTOM:
+	    P.Read(robotFileName);
 	    break;
 	  }
 	  
