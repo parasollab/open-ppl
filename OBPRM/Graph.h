@@ -71,7 +71,7 @@
 
 //aCC in parasol
 #ifdef __HP_aCC
-#ifndef _ASCI_
+#ifdef _ASCI_
 #include <algorithm>    
 #include <list>     
 #include <vector>       
