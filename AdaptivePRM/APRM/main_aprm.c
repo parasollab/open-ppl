@@ -21,11 +21,18 @@
 #include "ConnectMapNodes.h"
 #include "PriorityWeight.h"
 
+#include "GMSPolyhedron.h"
+#include "MultiBody.h"
+
 MyInput input;
 Stat_Class Stats; 
 void PrintRawLine( ostream& _os,
         Roadmap *rmap, Clock_Class *NodeGenClock, Clock_Class *ConnectionClock,
         ConnectMapNodes cn, int printHeaders);
+
+GMSPolyhedron* createBBoxPolyhedron(MultiBody* mb);
+GMSPolyhedron* createBSpherePolyhedron(MultiBody* mb);
+GMSPolyhedron* createHullPolyhedron(MultiBody* mb);
 
 //========================================================================
 //  main
@@ -39,7 +46,7 @@ int main(int argc, char** argv)
   DistanceMetric     dm;
   CollisionDetection cd;
   NoopCollisionDetection noop_cd;
-  CollisionDetection approx_cd;
+  Clock_Class        ApproxEnvClock;
   Clock_Class        NodeGenClock;
   Clock_Class        ConnectionClock;
 
@@ -66,21 +73,29 @@ int main(int argc, char** argv)
   Roadmap rmap(&input, &cd, &dm, &lp);
   cd.UserInit(&input, &gn, &cn);
   noop_cd.UserInit(&input, &gn, &cn);
-  approx_cd.UserInit(&input, &gn, &cn);
   lp.UserInit(&input, &cn);
   noop_lp.UserInit(&input, &cn);
   gn.UserInit(&input, rmap.GetEnvironment());
   cn.UserInit(&input, rmap.GetEnvironment());
   dm.UserInit(&input, &gn, &lp);
 
-
+  //read in validate flags
   enum VALIDATE {NONE, APPROXIMATE, COMPLETE};
+  enum APPROX_TYPE {BOX, SPHERE, HULL};
 
   VALIDATE nodeValidateType = COMPLETE;
+  APPROX_TYPE nodeApproximationType = SPHERE;
+
   if(!strncmp(input.nodeValidationFlag.GetValue(),"none",4)) {
     nodeValidateType = NONE;
   } else if(!strncmp(input.nodeValidationFlag.GetValue(),"approximate",11)) {
     nodeValidateType = APPROXIMATE;
+
+    if(!strncmp(input.nodeValidationFlag.GetValue(),"approximate box",15)) {
+      nodeApproximationType = BOX;
+    } else if(!strncmp(input.nodeValidationFlag.GetValue(),"approximate hull",16)) {
+      nodeApproximationType = HULL;
+    }
   }
 
   double resolution;
@@ -107,6 +122,66 @@ int main(int argc, char** argv)
     input.PrintValues(cout);
   #endif
 
+
+  //if approximating node validation, calculate new environment
+  if(nodeValidateType == APPROXIMATE) {
+    ApproxEnvClock.StartClock("Approximate Env Setup");
+    Environment* realEnv = rmap.GetEnvironment();
+    Environment* approxEnv = new Environment();
+
+    for(int i=0; i<realEnv->GetMultiBodyCount(); i++) {
+      MultiBody* realMB = realEnv->GetMultiBody(i);
+      MultiBody* approxMB = new MultiBody(approxEnv);
+      GMSPolyhedron P;
+
+      switch(nodeApproximationType) {
+      case BOX:
+	P = *(createBBoxPolyhedron(realMB));
+	break;
+      case SPHERE:
+	P = *(createBSpherePolyhedron(realMB));
+	break;
+      case HULL:
+	P = *(createHullPolyhedron(realMB));
+	break;
+      }
+
+      if( realMB->GetFreeBodyCount() ) {
+	FreeBody* freeBody = new FreeBody(approxMB,P);
+	freeBody->buildCDstructure(input.cdtype);
+	approxMB->AddBody(freeBody);
+      } else {
+	FixedBody* fixedBody = new FixedBody(approxMB,P);
+	fixedBody->buildCDstructure(input.cdtype);
+	approxMB->AddBody(fixedBody);
+      }
+      approxMB->CalculateArea();
+      approxEnv->AddMultiBody(approxMB);
+    }
+
+    approxEnv->SetRobotIndex( realEnv->GetRobotIndex() );
+
+    approxEnv->FindBoundingBox();
+    approxEnv->UpdateBoundingBox(&input);
+    if ( input.posres.IsActivated() )
+      approxEnv->SetPositionRes( input.posres.GetValue() );
+    approxEnv->SetOrientationRes( input.orires.GetValue() ); 
+
+    rmap.InitEnvironment(approxEnv);
+
+    ApproxEnvClock.StopClock();
+
+    #if QUIET
+    #else
+      cout << "\n";
+      ApproxEnvClock.PrintName();
+      cout << ": " << ApproxEnvClock.GetClock_SEC()
+	   << " sec (ie, " << ApproxEnvClock.GetClock_USEC() << " usec)"
+	   << endl;
+    #endif
+  }
+
+
   if ( input.inmapFile.IsActivated() ){
     //---------------------------
     // Read roadmap nodes
@@ -122,8 +197,6 @@ int main(int argc, char** argv)
       gn.GenerateNodes(&rmap,&noop_cd,&dm, gn.gnInfo.gnsetid, gn.gnInfo);
       break;
     case APPROXIMATE:
-      gn.GenerateNodes(&rmap,&approx_cd,&dm, gn.gnInfo.gnsetid, gn.gnInfo);
-      break;
     case COMPLETE:
       gn.GenerateNodes(&rmap,&cd,&dm, gn.gnInfo.gnsetid, gn.gnInfo);
       break;
@@ -216,4 +289,138 @@ void PrintRawLine( ostream& _os,
   _os << ConnectionClock->GetClock_USEC() << " ";
   Stats.PrintDataLine(_os,rmap,printHeader);
   _os << "\n\n";
+}
+
+
+GMSPolyhedron* createBBoxPolyhedron(MultiBody* mb) {
+  GMSPolyhedron* p = new GMSPolyhedron();
+
+  //find bounding box coords
+  mb->FindBoundingBox();
+  double* bbox = mb->GetBoundingBox();
+  double minx, maxx, miny, maxy, minz, maxz;
+  minx = bbox[0]; maxx = bbox[1];
+  miny = bbox[2]; maxy = bbox[3];
+  minz = bbox[4]; maxz = bbox[5];
+
+  //create polyhedron file in BYU format
+  char polyhedron[1000];
+  sprintf(polyhedron,"1 8 6 1 1 1\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n5 6 -8\n1 3 -4\n2 6 -8\n1 3 -7\n7 8 -4\n1 2 -6\n",minx,miny,minz,minx,miny,maxz,minx,maxy,minz,minx,maxy,maxz,maxx,miny,minz,maxx,miny,maxz,maxx,maxy,minz,maxx,maxy,maxz);
+
+  //init polyhedron
+  istrstream is(polyhedron);
+  p->ReadBYU(is);
+  //p->Write(cout); 
+  
+  return p;
+}
+
+
+GMSPolyhedron* createBSpherePolyhedron(MultiBody* mb) {
+  GMSPolyhedron* p = new GMSPolyhedron();
+  return p;
+}
+
+
+GMSPolyhedron* createHullPolyhedron(MultiBody* mb) {
+  GMSPolyhedron* p = new GMSPolyhedron();
+  GMSPolyhedron* real_p = &(mb->GetBody(0)->GetPolyhedron());
+
+  /*
+  //set up variables
+  int curlong, totlong, exitcode;
+  static char* options="qhull Qs Qx QJ i Tcv C-0";
+  facetT *facet;
+  vertexT *vertex;
+  vertexT **vertexp;
+  setT *vertices;
+  
+  //put points in qhullData array
+  int size=real_p->numvertices;
+  coordT* qhullData = new coordT[size*3];
+  for(int i=0; i<size; i++) {
+    qhullData[i*3+0] = real_p->vertexList[i].getX();
+    qhullData[i*3+1] = real_p->vertexList[i].getY();
+    qhullData[i*3+2] = real_p->vertexList[i].getZ();
+  }
+  
+  //initialize qh
+  qh_init_A(stdin, stdout, stderr, 0, NULL);
+  exitcode = setjmp(qh errexit);
+  if(exitcode) {
+    cerr << "error building convex hull of Polyhedron \a" << endl;
+    cerror << "exitcode: " << exitcode << endl;
+    delete qhullData;
+    qh NOerrexit = True;
+    qh_freeqhull(!qh_ALL);
+    qh_memfreeshort(&curlong, &totlong);
+    exit(-1);
+  }
+  qh_initflags(options);
+  qh_init_B(qhullData, size, 3, false);
+  
+  //run
+  qh_hull();
+  qh_check_output();
+  
+  //copy points into vertex list
+  vector<Vector3D> polyVertices;
+  FORALLvertices {
+    Vector3D tmp(vertex->point[0], vertex->point[1], vertex->point[2]);
+    polyVertices.push_back(tmp);
+  }
+  
+  //copy polygon surfaces
+  vector<vector<int> > polyFacets;
+  int count = 0;
+  FORALLfacets {
+    vertices = qh_facet3vertex(facet);
+    FOREACHvertex_(vertices) {
+      Vector3D tmp(vertex->point[0], vertex->point[1], vertex->point[2]);
+      //find index
+      int index = -1;
+      for (int i=0; i<polyVertices.size(); i++) {
+	if(polyVerticies[i] == tmp) {
+	  index = i;
+	  break;
+	}
+      }
+      polyFacets[count].push_back(index);
+    }
+    count++;
+  }
+  
+  //create polyhedron file in BYU format
+  char polyhedron[1000], tmp[100];
+
+  sprintf(polyhedron, "1 %d %d 1 1 1\n", polyVertices.size(), polyFacets.size());
+
+  for(int i=0; i<polyVertices.size(); i++) {
+    sprintf(tmp, "%f %f %f\n", polyVertices[i].getX(), polyVertices[i].getY(), polyVertices[i].getZ());
+    polyhedron = strcat(polyhedron, tmp);
+  }
+
+  for(int i=0; i<polyFacets.size(); i++)
+    for(int j=0; j<polyFacets[i].size(); j++) {
+      if(j == polyFacets[i].size()-1) { //last one
+        sprintf(tmp, "-%d\n", polyFacets[i][j]);
+      } else {
+        sprintf(tmp, "%d ", polyFacets[i][j]);
+      }
+      polyhedron = strcat(polyhedron, tmp);
+    }
+  
+  //init polyhedron
+  istrstream is(polyhedron);
+  p->Read(is);
+  //p->Write(cout);
+
+  //release qhull data
+  delete qhullData;
+  qh NOerrexit = True;
+  qh_freeqhull(!qh_ALL);
+  qh_memfreeshort(&curlong, &totlong);
+  */
+
+  return p;
 }
