@@ -266,7 +266,7 @@ CheckVersion(const char* _fname)
    ifstream  myifstream(_fname);
    if (!myifstream) {
          cout << endl << "In CheckVersion: can't open infile: " << _fname ;
-         return;
+         return false;
    }
 
    int  thisVersion; 
