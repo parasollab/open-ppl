@@ -63,6 +63,7 @@ public:
    static const int NULL_INFO =-1;//= -1;
    int obst;
    int tag;
+   //double clearance;
 };
 
 
