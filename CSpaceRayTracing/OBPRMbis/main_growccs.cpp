@@ -46,7 +46,9 @@ cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
   //Query query(&input,&connect_CCs_input, &cd, &dm, &lp,&cn);
   Roadmap rdmp(&input,  &cd, &dm, &lp);
   ConnectCCs connect_ccs(&input,&rdmp,&connect_CCs_input, &cd, &dm, &lp,&cn);
-
+  //rdmp.ReadRoadmapGRAPHONLY( (& connect_CCs_input)->mapFile.GetValue() );
+  rdmp.ReadRoadmap(&input,&cd,&dm,&lp,(& connect_CCs_input)->mapFile.GetValue() );
+  rdmp.InitEnvironment(&input);
   cd.UserInit(&input,   &gn, &cn );
   lp.UserInit(&input,        &cn );
   dm.UserInit(&input,   &gn, &lp );
@@ -57,7 +59,7 @@ cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
 
 
   //ConnectCCs connect_ccs(&input,&rdmp,&connect_CCs_input, &cd, &dm, &lp,&cn);
-  rdmp.ReadRoadmapGRAPHONLY( (& connect_CCs_input)->mapFile.GetValue() );
+  //rdmp.ReadRoadmapGRAPHONLY( (& connect_CCs_input)->mapFile.GetValue() );
   
   /** set up set ids for query stage. And this has been 
       done after cn has been set up */
@@ -95,7 +97,7 @@ cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
   //---------------------------
   // Write roadmap
   //---------------------------
-  connect_ccs.rdmp.WriteRoadmap(&input,&cd,&dm,&lp);
+  rdmp.WriteRoadmap(&input,&cd,&dm,&lp);
 
 /*  #if QUIET
   #else
@@ -114,16 +116,16 @@ cout <<"in main_grows.cpp" << connect_CCs_input.option_str.GetValue();
       exit(-1);
     }
     PrintRawLine(cout,
-        &(connect_ccs.rdmp), &NodeGenClock,&clock,cn,1);  // to stdout
+        &rdmp, &NodeGenClock,&clock,cn,1);  // to stdout
     PrintRawLine(myofstream,
-        &(connect_ccs.rdmp), &NodeGenClock,&clock,cn,0);  // to map
+        &rdmp, &NodeGenClock,&clock,cn,0);  // to map
   #else
     cout << "\n";
     clock.PrintName();
     cout << ": " << clock.GetClock_SEC()
          << " sec"
          << ", "<<rdmp.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
-    Stats.PrintAllStats(rdmp);
+    Stats.PrintAllStats(&rdmp);
   #endif
 
   //------------------------
