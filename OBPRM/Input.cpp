@@ -11,31 +11,19 @@
 #include "FixedBody.h"
 #include "Defines.h"
 
-//#include <string>
-//#include <vector>
-//#include <stdlib.h>
 #include <math.h>
 
-//#include <strstream.h>
-
 #include "Cfg.h"
-#include "CfgManager.h"
 #include "Cfg_free.h"
-#include "Cfg_fixed_PRR.h"
-#include "Cfg_free_tree.h"
-#include "Cfg_fixed_tree.h"
-#include "Cfg_2D.h"
 
 #include "util.h"
 
 // Need for retreiving default parameters of each
 // in executing the parameter "-defaults"
-#include "LocalPlanners.h"
 #include "DistanceMetrics.h"
-#include "ConnectMapNodes.h"
 #include "GenerateMapNodes.h"
 #include "CollisionDetection.h"
-
+#include "ConnectMap.h"
 
 #include <iostream.h>
 //===================================================================
@@ -49,8 +37,6 @@ Input::Input():
         mapFile          ("-outmapFile"),
         inmapFile        ("-inmapFile"),
                        //  default   min,max
-        lineSegment      ("-lineSegment",        0,  0, 5000),
-        usingClearance   ("-clearance",          0,  0,    1),
         addPartialEdge   ("-addPartialEdge",     0,  0,    1),
 	addAllEdges      ("-addAllEdges",        0,  0,    1),
         posres           ("-posres",          0.05, -1000, 1000),
@@ -61,10 +47,7 @@ Input::Input():
         freePair         ("-freePair","cM rV ")     // center of Mass
         {
 
-    //Cfg::CfgHelper=NULL; 
     cfgSet=false;
-    lineSegment.PutDesc      ("INTEGER","");
-    usingClearance.PutDesc   ("INTEGER","");
     addPartialEdge.PutDesc   ("INTEGER","");
     addAllEdges.PutDesc      ("INTEGER","");
 
@@ -99,9 +82,9 @@ Input::Input():
     numCDs = 0;
     for (i=0;i<MAX_CD;++i)
         CDstrings[i]=new n_str_param("-cd");
-    numCFGs = 0;
+    numNUMOFJOINTSs = 0;
     for (i=0;i<MAX_CFG;++i)
-    CFGstrings[i] = new n_str_param("-cfg");
+      NUMOFJOINTSstrings[i] = new n_str_param("-numofjoints");
     numDMs = 0;
     for (i=0;i<MAX_DM;++i)
         DMstrings[i]=new n_str_param("-dm");
@@ -132,6 +115,8 @@ Input::Input():
         "\n\t\t\t  GaussPRM    nodes INT (number of nodes, default 10)" 
         "\n\t\t\t              d     INT (distance, default based on environment)"
         "\n\t\t\t  BasicMAPRM  nodes INT (number of nodes, default 10)"
+	"\n\t\t\t              approx INT (using approximation or exact computation, default 1)"
+        "\n\t\t\t              approx_ray INT (number of rays for approximation penetration, default 10)"
         "\n\t\t\t  CSpaceMAPRM nodes       INT (number of nodes, default 10)"
 	"\n\t\t\t              clearance   INT (number of rays for approx clearance calulation, default 5)"
 	"\n\t\t\t              penetration INT (number of rays for approx penetration calculation, default 5)"
@@ -153,17 +138,18 @@ Input::Input():
         "\n\t\t\t  closestVE      INT         (k:5)"
         "\n\t\t\t  components     INT INT     (kpairs:3 smallcc:4)"
         "\n\t\t\t  obstBased      INT INT     (other:10 self:3)"
-        "\n\t\t\t  RRTexpand      INT INT INT (iter:10 factor:3 cc:3)"
-        "\n\t\t\t  RRTcomponents  INT INT INT (iter:10 factor:3 cc:3)"
-        "\n\t\t\t  modifiedLM     INT INT INT (kpairs:5, add:10, rfactor:2)"
+        "\n\t\t\t  RRTexpand      INT INT INT INT INT (iter:50 step:10000 smallcc:3 \n\t\t\t\t\t obst_clearance: 1 clearance_from_node 1)"
+        "\n\t\t\t  RRTcomponents  INT INT INT INT INT (iter:50 step:10000 smallcc:3 \n\t\t\t\t\t obst_clearance: 1 clearance_from_node 1)"
+        "\n\t\t\t  RayTracer      STRING INT INT INT STRING INT INT (\n\t\t\t\t\t bouncingMode:targetOriented \n\t\t\t\t\t maxRays:1 maxBounces:10000 maxRayLength:10000 \n\t\t\t\t\t schedulingMode:largestToSmallest \n\t\t\t\t\t scheduleMaxSize:20 sampleMaxSize:10)"
+        "\n\t\t\t  modifiedLM     INT INT INT (kpairs:5, add:20, rfactor:2)"
         );
     LPstrings[0]->PutDesc("STRING",
-        "\n\t\t\tPick any combo: default straightline rotate_at_s 0.5"
-        "\n\t\t\t  straightline"
-        "\n\t\t\t  rotate_at_s      FLOAT   (def,s=0.5)"
-        "\n\t\t\t  a_star_distance  INT INT (def,tries=6,neighbors=3)"
-        "\n\t\t\t  a_star_clearance INT INT (def,tries=6,neighbors=3)"
-        "\n\t\t\t  approx_spheres   INT     (def,n=3)"
+        "\n\t\t\tPick any combo: default straightline rotate_at_s s 0.5"
+	"\n\t\t\t  straightline     lineSegmentLength INT binarySearch INT (def,lineSegment=0, binarySearch=0)"
+        "\n\t\t\t  rotate_at_s      s FLOAT   (def,s=0.5)"
+        "\n\t\t\t  a_star_distance  tries INT neighbors INT (def,tries=6,neighbors=3)"
+        "\n\t\t\t  a_star_clearance tries INT neighbors INT (def,tries=6,neighbors=3)"
+        "\n\t\t\t  approx_spheres   n INT     (def,n=3)"
         );
     CDstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick one: default is the first in the list "
@@ -180,20 +166,6 @@ Input::Input():
     "\n\t\t\t  PQP"
 #endif
         );
-
-    char Cfg_string_1[300];
-
-    strcpy(Cfg_string_1, "\n\t\t\tPick one: default ");
-    strcat(Cfg_string_1, Cfg::GetName());
-    if (!strcmp(Cfg::GetName(), "Cfg_free_rigid"))
-      strcat(Cfg_string_1, " (i.e. Cfg_free)");
-    strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_rigid");
-    strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_PRR");
-    strcat(Cfg_string_1,"\n\t\t\t  Cfg_free_tree");
-    strcat(Cfg_string_1,"\n\t\t\t  Cfg_fixed_tree");
-    strcat(Cfg_string_1,"\n\t\t\t  Cfg_2D");
-
-    CFGstrings[0]->PutDesc("STRING", Cfg_string_1);
 
     DMstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick one: default scaledEuclidean 0.9"
@@ -236,186 +208,156 @@ Input::~Input() {
   return;
 }
 
-
-//===================================================================
-//  Input class
-//  ReadCfgType(istream &)
-//  Guang 12/14/00
-//===================================================================
-void Input::ReadCfgType(istream &is) {
-    if(is) {
-        numofJoints = 3;
-        is >> cfgName;
-        if(is) {
-        is >> numofJoints;
-        if(numofJoints < 0 || numofJoints > 1000) {
-            cerr << "Error in Input.cpp, wrong input for numofJoints !" << endl;
-            exit(2);
-        }
-        }
-        if (!(strncmp(cfgName,"Cfg_free_rigid",14))) {
-            Cfg::CfgHelper = new Cfg_free();
-            cfgSet=true;
-        }else if (!(strncmp(cfgName,"Cfg_fixed_PRR",13))) {
-            Cfg::CfgHelper = new Cfg_fixed_PRR();
-            cfgSet=true;
-        }else if (!(strncmp(cfgName,"Cfg_free_tree",15))) {
-            Cfg::CfgHelper = new Cfg_free_tree(numofJoints);
-            cfgSet=true;
-	} else if (!(strncmp(cfgName,"Cfg_fixed_tree", 14))) {
-	    Cfg::CfgHelper = new Cfg_fixed_tree(numofJoints);
-	    cfgSet = true;
-	} else if (!(strncmp(cfgName,"Cfg_2D", 6))) {
-	    Cfg::CfgHelper = new Cfg_2D();
-	    cfgSet = true;
-        }
-    } // default is Cfg_free().
-}
-
-
-
-//===================================================================
-//  Input class
-//  ReadCommandLine
-//===================================================================
 void Input::ReadCommandLine(int argc, char** argv){
-
+  
   //-- save command line for future reference
   for (int i=0; i < argc; i++) {
     strcat(commandLine,argv[i]);
     strcat(commandLine," ");
   }
-
-#if defined USE_CSTK
+  
+  #if defined USE_CSTK
     cdtype = CSTK;
-#elif defined USE_RAPID
+  #elif defined USE_RAPID
     cdtype = RAPID;
-#elif defined USE_PQP
+  #elif defined USE_PQP
     cdtype = PQP;
-#elif defined USE_VCLIP
+  #elif defined USE_VCLIP
     cdtype = VCLIP;
-#else
+  #else
     #ifdef NO_CD_USE
-       cdtype = CD_USER1;
+      cdtype = CD_USER1;
     #else
-       #error You have to specify at least one collision detection library.
+      #error You have to specify at least one collision detection library.
     #endif
-#endif
-
+  #endif
+  
   //-- evaluate command line
   try {
-
+    
     if (argc == 1)
-    throw BadUsage();
-
+      throw BadUsage();
+    
     // process input parameter "-defaults"
     else if ((argc == 2) && (!strcmp(argv[1], "-defaults"))) {
-        PrintDefaults();
-        exit(-1);
+      PrintDefaults();
+      exit(-1);
     }
-
+    
     for (int i=1;i<argc; ++i) {
-        if ( defaultFile.AckCmdLine(&i, argc, argv) ){
-      char tmp[80];
-      strcpy(tmp, defaultFile.GetValue() ); strcat(tmp,".env");
-          envFile.PutValue(tmp);
-      strcpy(tmp, defaultFile.GetValue() ); strcat(tmp,".map");
-          mapFile.PutValue(tmp);
-        } else if ( descDir.AckCmdLine(&i, argc, argv) ) {
-        } else if ( envFile.AckCmdLine(&i, argc, argv) ) {
-        } else if ( mapFile.AckCmdLine(&i, argc, argv) ) {
-        } else if ( inmapFile.AckCmdLine(&i, argc, argv) ) {
-        } else if ( lineSegment.AckCmdLine(&i, argc, argv) ) {
-        } else if ( usingClearance.AckCmdLine(&i, argc, argv) ) {
-        } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
-	} else if ( addAllEdges.AckCmdLine(&i, argc, argv) ) {
-        } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
-        } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
-        } else if ( posres.AckCmdLine(&i, argc, argv) ) {
-        } else if ( orires.AckCmdLine(&i, argc, argv) ) {
-
-        } else if ( GNstrings[numGNs]->AckCmdLine(&i, argc, argv) ) {
-                numGNs++;
-        } else if ( CNstrings[numCNs]->AckCmdLine(&i, argc, argv) ) {
-                numCNs++;
-        } else if ( LPstrings[numLPs]->AckCmdLine(&i, argc, argv) ) {
-                numLPs++;
-        } else if ( CDstrings[numCDs]->AckCmdLine(&i, argc, argv) ) {
+      if ( defaultFile.AckCmdLine(&i, argc, argv) ){
+	char tmp[80];
+	strcpy(tmp, defaultFile.GetValue() ); strcat(tmp,".env");
+	envFile.PutValue(tmp);
+	strcpy(tmp, defaultFile.GetValue() ); strcat(tmp,".map");
+	mapFile.PutValue(tmp);
+      } else if ( descDir.AckCmdLine(&i, argc, argv) ) {
+      } else if ( envFile.AckCmdLine(&i, argc, argv) ) {
+      } else if ( mapFile.AckCmdLine(&i, argc, argv) ) {
+      } else if ( inmapFile.AckCmdLine(&i, argc, argv) ) {
+      } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
+      } else if ( addAllEdges.AckCmdLine(&i, argc, argv) ) {
+      } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
+      } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
+      } else if ( posres.AckCmdLine(&i, argc, argv) ) {
+      } else if ( orires.AckCmdLine(&i, argc, argv) ) {
+	
+      } else if ( GNstrings[numGNs]->AckCmdLine(&i, argc, argv) ) {
+	numGNs++;
+      } else if ( CNstrings[numCNs]->AckCmdLine(&i, argc, argv) ) {
+	numCNs++;
+      } else if ( LPstrings[numLPs]->AckCmdLine(&i, argc, argv) ) {
+	numLPs++;
+      } else if ( CDstrings[numCDs]->AckCmdLine(&i, argc, argv) ) {
         if (!(strncmp(CDstrings[numCDs]->GetValue(),"cstk",4))) {
-#ifdef USE_CSTK
-            cdtype = CSTK;
-#else
-     cout << "CSTK is not supported by current collision detection library. \n Please recompile with  CSTK .\n";
-    exit(5);
-
-#endif
-
+          #ifdef USE_CSTK
+	    cdtype = CSTK;
+          #else
+	    cout << "CSTK is not supported by current collision detection library. \n Please recompile with  CSTK .\n";
+	    exit(5);	  
+          #endif
+	  
         }else if (!(strncmp(CDstrings[numCDs]->GetValue(),"vclip",5))) {
-
-#ifdef USE_VCLIP
-            cdtype = VCLIP;
-#else
-     cout << "VCLIP is not supported by current collision detection library. \n Please recompile with   VCLIP .\n";
-    exit(5);
-#endif
-
+	  
+          #ifdef USE_VCLIP
+	    cdtype = VCLIP;
+          #else
+	    cout << "VCLIP is not supported by current collision detection library. \n Please recompile with   VCLIP .\n";
+	    exit(5);
+          #endif
+	  
         }else if (!(strncmp(CDstrings[numCDs]->GetValue(),"RAPID",5))) {
-#ifdef USE_RAPID
-
-                        cdtype = RAPID;
-#else
-     cout << "RAPID is not supported by current collision detection library. \n Please recompile with RAPID .\n";
-    exit(5);
-#endif
-
+          #ifdef USE_RAPID
+	  
+	    cdtype = RAPID;
+          #else
+	    cout << "RAPID is not supported by current collision detection library. \n Please recompile with RAPID .\n";
+	    exit(5);
+          #endif
+	  
         }else if (!(strncmp(CDstrings[numCDs]->GetValue(),"PQP",3))) {
-#ifdef USE_PQP
+          #ifdef USE_PQP
+	  
+	    cdtype = PQP;
+          #else
+	    cout << "PQP is not supported by current collision detection library. \n Please recompile with PQP .\n";
+	    exit(5);
+          #endif
 
-                        cdtype = PQP;
-#else
-     cout << "PQP is not supported by current collision detection library. \n Please recompile with PQP .\n";
-    exit(5);
-#endif
-
-                }
-                numCDs++;
-    } else if ( CFGstrings[numCFGs]->AckCmdLine(&i, argc, argv) ) {
-                numCFGs++;
-        } else if ( DMstrings[numDMs]->AckCmdLine(&i, argc, argv) ) {
-                numDMs++;
-        } else {
-                cout << "\nERROR: Don\'t understand \""<< argv[i]<<"\"";
-                throw BadUsage();
-        } //endif
+	}
+	numCDs++;
+      } else if ( NUMOFJOINTSstrings[numNUMOFJOINTSs]->AckCmdLine(&i, argc, argv) ) {
+	numNUMOFJOINTSs++;
+      } else if ( DMstrings[numDMs]->AckCmdLine(&i, argc, argv) ) {
+	numDMs++;
+      } else {
+	cout << "\nERROR: Don\'t understand \""<< argv[i]<<"\"";
+	throw BadUsage();
+      } //endif
     } //endfor i
-
-    istrstream cfgstr(CFGstrings[0]->GetValue());
-    ReadCfgType(cfgstr);
+    
+    istrstream cfgstr(NUMOFJOINTSstrings[0]->GetValue());
+    ReadNumberofJoints(cfgstr);
 
     //-- Do some clean up and final checking
 
     if ( !defaultFile.IsActivated() &&
-     !( envFile.IsActivated() && mapFile.IsActivated() )){
-        throw BadUsage();
+	 !( envFile.IsActivated() && mapFile.IsActivated() )){
+      throw BadUsage();
     }
 
     if ( inmapFile.IsActivated() ){
-        VerifyFileExists(inmapFile.GetValue(),EXIT);
+      VerifyFileExists(inmapFile.GetValue(),EXIT);
     }
 
     descDir.VerifyValidDirName();
-
+    
     //-- Verify INPUT file exists
     VerifyFileExists(envFile.GetValue(),EXIT);
 
 
   } //endtry
   catch (BadUsage ) {
-        PrintUsage(cout,argv[0]);
-        exit(-1);
+    PrintUsage(cout,argv[0]);
+    exit(-1);
   } //endcatch
 
 };
+
+
+void Input::ReadNumberofJoints(istream &is) {
+  if(is) {
+    numofJoints = 3;
+    if(is) {
+      is >> numofJoints;
+      if(numofJoints < 0 || numofJoints > 1000) {
+	cerr << "Error in Input.cpp, wrong input for numofJoints !" << endl;
+	exit(2);
+      }
+    } 
+  }
+}
+
 
 //===================================================================
 //  Input class
@@ -439,8 +381,6 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n\nOPTIONAL:\n";
         _os << "\n  "; descDir.PrintUsage(_os);
         _os << "\n  "; inmapFile.PrintUsage(_os);
-        _os << "\n  "; lineSegment.PrintUsage(_os);
-        _os << "\n  "; usingClearance.PrintUsage(_os);
         _os << "\n  "; addPartialEdge.PrintUsage(_os);
 	_os << "\n  "; addAllEdges.PrintUsage(_os);
         _os << "\n  "; bbox.PrintUsage(_os);
@@ -452,7 +392,7 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; CNstrings[0]->PrintUsage(_os);
         _os << "\n  "; LPstrings[0]->PrintUsage(_os);
         _os << "\n  "; CDstrings[0]->PrintUsage(_os);
-        _os << "\n  "; CFGstrings[0]->PrintUsage(_os);
+	_os << "\n  "; NUMOFJOINTSstrings[0]->PrintUsage(_os);	
         _os << "\n  "; DMstrings[0]->PrintUsage(_os);
 
         _os << "\n\n  to see default values only, type \"obprm -defaults\" ";
@@ -475,8 +415,6 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"mapFile"<<"\t"<<mapFile.GetValue();
   _os <<"\n"<<setw(FW)<<"inmapFile"<<"\t"<<inmapFile.GetValue();
 
-  _os <<"\n"<<setw(FW)<<"lineSegment"<<"\t"<<lineSegment.GetValue();
-  _os <<"\n"<<setw(FW)<<"usingClearance"<<"\t"<<usingClearance.GetValue();
   _os <<"\n"<<setw(FW)<<"addPartialEdge"<<"\t"<<addPartialEdge.GetValue();
   _os <<"\n"<<setw(FW)<<"addAllEdges"<<"\t"<<addAllEdges.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox"<<"\t"<<bbox.GetValue();
@@ -497,9 +435,11 @@ PrintValues(ostream& _os){
   for(i=0;i<numCDs;++i)
     _os << "\n"<<setw(FW)<< "CDstrings"<<i
         <<"\t"<<CDstrings[i]->GetValue();
-  for(i=0;i<numCFGs;++i)
-    _os << "\n"<<setw(FW)<< "CFGstrings"<<i
-        <<"\t"<<CFGstrings[i]->GetValue();
+
+    for(i=0;i<numNUMOFJOINTSs;++i)
+      _os << "\n"<<setw(FW)<< "CFGstrings"<<i
+          <<"\t"<<NUMOFJOINTSstrings[i]->GetValue();
+
   for(i=0;i<numDMs;++i)
     _os << "\n"<<setw(FW)<< "DMstrings"<<i
         <<"\t"<<DMstrings[i]->GetValue();
@@ -507,8 +447,6 @@ PrintValues(ostream& _os){
         _os << "\n\n";
 };
 
-
-// if the input parameter is "-defaults", print defaults and exit program
 void
 Input::PrintDefaults(){
 
@@ -517,10 +455,6 @@ Input::PrintDefaults(){
 
    cout << setw(FW) << "defaultFile : no default string for this parameter" << endl;
    cout << setw(FW) << " (those parameters not listed here have no default value)" << endl << endl;
-   cout << setw(FW) << "line segment" << " (" << lineSegment.GetFlag() << ") : " <<
-            lineSegment.GetDefault() << endl << endl;
-   cout << setw(FW) << "using clearance" << " (" << usingClearance.GetFlag() << ") : " <<
-            usingClearance.GetDefault() << endl << endl;
    cout << setw(FW) << "add partial edge" << " (" << addPartialEdge.GetFlag() << ") : " <<
             addPartialEdge.GetDefault() << endl << endl;
    cout << setw(FW) << "add all edges" << " (" << addAllEdges.GetFlag() << ") : " <<
@@ -531,7 +465,6 @@ Input::PrintDefaults(){
             orires.GetDefault() << endl << endl;
    cout << setw(FW) << "bounding box scale" << " (" << bbox_scale.GetFlag() << ") : " <<
             bbox_scale.GetDefault() << endl << endl;
-   cout << setw(FW) << "Cfg" << " (" << CFGstrings[0]->GetFlag() << ") : " << Cfg::GetName() << endl << endl;
 
    // get default parameters by initializing each class
    // for some, need to call UserInit() to add sets so that we can display
@@ -540,45 +473,43 @@ Input::PrintDefaults(){
    // "selected" is recognized by the setid number.
 
    // Generate Map Nodes
-   GenerateMapNodes gn;         // default value of gnInfo.gnsetid is set
+   GenerateMapNodes<Cfg_free> gn;
    Environment env;
    cout << setw(FW) << "Generate Map Nodes" << " (" << GNstrings[0]->GetFlag() <<
-      ") : default set id = " << gn.gnInfo.gnsetid;
-   gn.UserInit(this, &env);      // to dsiplay, add GN sets
-   gn.generators.DisplayGNSet(gn.gnInfo.gnsetid);
+     ") : default = ";
+   gn.PrintDefaults(cout);
 
    // Connect Map Nodes
-   ConnectMapNodes cn;          // default value of cnInfo.cnsetid is set
-   cout << setw(FW) << endl << endl << "Connect Map Nodes" << " (" << CNstrings[0]->GetFlag() <<
-      ") : default set id = " << cn.cnInfo.cnsetid;
-   cn.UserInit(this, &env);           // to dsiplay, add CN sets
-   cn.connectors.DisplayCNSet(cn.cnInfo.cnsetid);
+   ConnectMap<Cfg_free, DefaultWeight> cn;          // default value of cnInfo.cnsetid is set
+   cout << setw(FW) << endl << endl
+        << "Connect Map (" << CNstrings[0]->GetFlag() <<
+      ") : default ";
+   cn.PrintDefaults(cout);
 
    // Local Planners
-   LocalPlanners lp;
+   LocalPlanners<Cfg_free, DefaultWeight> lp;
    // this default is already set in ConnectMapNodes::DefaultInit()
    cout << setw(FW) << endl << endl << "Local Planners" << " (" << LPstrings[0]->GetFlag() <<
-      ") : default set id = " << cn.cnInfo.lpsetid;
-   lp.planners.DisplayLPSet(cn.cnInfo.lpsetid); // LP set was already added
+      ") : default = ";
+   lp.PrintDefaults(cout);
 
    // Distance Metric
    DistanceMetric dm;
    // this default is already set in ConnectMapNodes::DefaultInit()
    cout << setw(FW) << endl << endl << "Distance Metric" << " (" << DMstrings[0]->GetFlag() <<
-      ") : default set id = " << cn.cnInfo.dmsetid;
-   dm.distanceMetrics.DisplayDMSet(cn.cnInfo.dmsetid); // DM set was already added
+      ") : default set id = " << cn.dmsetid;
+   dm.distanceMetrics.DisplayDMSet( cn.dmsetid ); // DM set was already added
 
    // Collision Detection
    CollisionDetection cd;
    // this default is already set in ConnectMapNodes::DefaultInit()
    cout << setw(FW) << endl << endl << "Collision Detection" << " (" << CDstrings[0]->GetFlag() <<
-      ") : default set id = " << cn.cnInfo.cdsetid;
+      ") : default set id = " << cn.cdsetid;
    cd.UserInit(this, &gn, &cn);
-   cd.collisionCheckers.DisplayCDSet(cn.cnInfo.cdsetid);
+   cd.collisionCheckers.DisplayCDSet( cn.cdsetid );
 
    cout << endl << flush;
 }
-
 
 
 //===================================================================
@@ -619,7 +550,7 @@ void Input::Read(int action) {
        // if Environment has Cfg info and Cfg type is not set through command 
        // line, we use this string from Environment instead to setup Cfg type.
            istrstream cfgstr(&line[1]);
-	   ReadCfgType(cfgstr);
+	   ReadNumberofJoints(cfgstr);
        }
  
   }

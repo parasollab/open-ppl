@@ -32,6 +32,8 @@
 #include "Vectors.h"
 #include "Orientation.h"
 
+#include "Cfg.h"
+
 //////////////////////////////////////////////////////////////////////////////////
 class Environment;
 
@@ -96,7 +98,8 @@ public:
   static const int MAX_LP           =  10;
   static const int MAX_CD           =  10;
   static const int MAX_DM           =  10;
-  static const int MAX_CFG      =  10;
+  static const int MAX_CFG          =  10;
+
   //@}
 
   //@{
@@ -151,7 +154,8 @@ public:
           *in command arguments.
           *@see main this method is called in main.
           */
-        virtual void ReadCommandLine(int argc, char** argv);
+	virtual 
+	void ReadCommandLine(int argc, char** argv);
 
         /**Read data from Environment file and check version.
           *This method reads data from file whose filename 
@@ -205,14 +209,7 @@ public:
           */
         void WriteEnvFile(ostream& _myostream);
 
-        /**Read Cfg type from input stream.
-          *This method read Cfg's name and joint number from input stream,
-          *and then according to Cfg's name, appropricate CfgManager will be created and
-          *set it as Cfg::CfgHelper.
-          *If this CfgManager was created, #cfgSet will be set as true.
-          *@note cfgSet's default value is false.
-          */
-        void ReadCfgType(istream &is);
+        void ReadNumberofJoints(istream &is); 
 
     //@}
 
@@ -240,6 +237,7 @@ public:
           *@param executablename The name of executable file. Ex: obprm and query.
           *@see param::Print_Usage
           */
+	virtual
         void PrintUsage(ostream& _os,char *executablename);
 
         /**Print values of data members.
@@ -248,6 +246,7 @@ public:
           *@param _os Output stream for data values.
           *@see param::GetValue
           */
+	virtual
         void PrintValues(ostream& _os);
 
         /**Print default values of data members.
@@ -255,6 +254,7 @@ public:
           *standard output.
           *@see param::GetDefault
           */
+	virtual
         void PrintDefaults();   // for the parameter "-defaults"
     //@}
 
@@ -296,8 +296,6 @@ public:
       */
     //{@
 
-        num_param<int>    lineSegment;        ///< used for LocalPlanner.
-        num_param<int>    usingClearance;     ///< Mantain certain amount of clearance of Robot duing connection time.
         num_param<int>    addPartialEdge;     ///< Add failed path to roadmap. (For node connection)
 	num_param<int>    addAllEdges;        ///< Add all edges, valid or not, to roadmap. (For node connection)
 
@@ -320,8 +318,9 @@ public:
         int numCDs;
         n_str_param      *DMstrings[MAX_DM];    ///< distance metrics
         int numDMs;
-        n_str_param      *CFGstrings[MAX_CFG];  ///< Cfg type
-        int numCFGs;
+
+        n_str_param      *NUMOFJOINTSstrings[MAX_CFG];  ///< number of joints
+        int numNUMOFJOINTSs;
 
         
         /// choose collision detection (cstk or vclip) from beginning
