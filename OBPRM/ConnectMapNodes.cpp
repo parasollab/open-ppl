@@ -132,7 +132,7 @@ ConnectNodes(Roadmap * rdmp,
        cnfcn(rdmp,cd,lp,dm,cnset[cn], info);
 
        // add newly generated edges to the roadmap
-       rdmp->m_pRoadmap->AddEdges(info.edges);
+       //rdmp->m_pRoadmap->AddEdges(info.edges);
        // move this part to the inside of each function.
 
        #ifndef QUIET
