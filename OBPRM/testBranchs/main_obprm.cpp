@@ -69,7 +69,7 @@ int main(int argc, char** argv)
   lp.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype, cm.cdsetid);
   gn.ReadCommandLine(input.GNstrings, input.numGNs);
   cm.ReadCommandLine(&input, rmap.GetEnvironment());
-  dm.UserInit(&input,   &gn, &cm );
+  dm.ReadCommandLine(input.DMstrings, input.numDMs);
 
   #ifdef QUIET
   #else

@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 
   cd.UserInit(&input,   &gn, &cm );
   lp.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype, cm.cdsetid, true);
-  dm.UserInit(&input,   &gn, &cm );
+  dm.ReadCommandLine(input.DMstrings, input.numDMs);
   gn.ReadCommandLine(input.GNstrings, input.numGNs);
   cm.ReadCommandLine(&input, query.rdmp.GetEnvironment());
   
