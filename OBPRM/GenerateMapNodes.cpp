@@ -167,15 +167,15 @@ GenerateMapNodes::
 BasicPRM(Environment *_env, CollisionDetection* cd, DistanceMetric *,GN& _gn, GNInfo &_info){
 
    #ifndef QUIET
-     cout << "(numNodes=" << _gn.numNOdes.GetValue() << ") ";
+     cout << "(numNodes=" << _gn.numNodes.GetValue() << ") ";
    #endif
 
    #if INTERMEDIATE_FILES
-     vector<Cfg> path; path.reserve(_gn.numNOdes.GetValue());
+     vector<Cfg> path; path.reserve(_gn.numNodes.GetValue());
    #endif
 
    // PRM style node generation -- generate in expanded bounding box
-   for (int i=0; i < _gn.numNOdes.GetValue(); i++ ) {
+   for (int i=0; i < _gn.numNodes.GetValue(); i++ ) {
       Cfg cfg = Cfg::GetFreeRandomCfg(_env,cd,_info.cdsetid,_info.cdInfo);
       //Cfg cfg = Cfg::GetRandomCfg(_env);
 
@@ -212,11 +212,11 @@ GaussPRM(
    GN& _gn, GNInfo &_info){
 
    #ifndef QUIET
-     cout << "(numNodes=" << _gn.numNOdes.GetValue() << ") ";
+     cout << "(numNodes=" << _gn.numNodes.GetValue() << ") ";
    #endif
 
    #if INTERMEDIATE_FILES
-     vector<Cfg> path; path.reserve(_gn.numNOdes.GetValue());
+     vector<Cfg> path; path.reserve(_gn.numNodes.GetValue());
    #endif
 
    if (_gn.gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from env
@@ -224,7 +224,7 @@ GaussPRM(
    }
 
    // generate in bounding box
-   for (int i=0,newNodes=0; i < _gn.numNOdes.GetValue() || newNodes<1 ; i++) {
+   for (int i=0,newNodes=0; i < _gn.numNodes.GetValue() || newNodes<1 ; i++) {
 
       // cfg1 & cfg2 are generated to be inside bbox
       Cfg cfg1 = Cfg::GetRandomCfg(_env);
@@ -275,7 +275,7 @@ GenerateMapNodes::
 BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _gn, GNInfo &_info){
 
   #ifndef QUIET
-    cout << "(numNodes=" << _gn.numNOdes.GetValue() << ", "<<flush;
+    cout << "(numNodes=" << _gn.numNodes.GetValue() << ", "<<flush;
     cout << "numShells=" << _gn.numShells.GetValue() << ") "<<flush;
   #endif
 
@@ -291,11 +291,11 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
 
   Cfg InsideNode, OutsideNode, low, high, mid;
 
-  int N = _gn.numNOdes.GetValue()
+  int N = _gn.numNodes.GetValue()
                 / (numMultiBody-1)  // -1 for the robot
         / _gn.numShells.GetValue();
 
-  if (N < 1) N = max(_gn.numNOdes.GetValue(),_gn.numShells.GetValue());
+  if (N < 1) N = max(_gn.numNodes.GetValue(),_gn.numShells.GetValue());
 
   for (int obstacle = 0 ; obstacle < numMultiBody ; obstacle++){
     if (obstacle != robot){  // && obstacle is "Passive" not "Active" robot
@@ -355,7 +355,7 @@ BasicOBPRM(Environment *_env, CollisionDetection* cd, DistanceMetric * dm, GN& _
     } // endif (obstacle != robot)
     else
     if(numMultiBody == 1) {
-            vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNOdes.GetValue(), _info);
+            vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNodes.GetValue(), _info);
             int i;
             for(i=0; i<CobstNodes.size(); ++i)
         CobstNodes[i].info.obst = obstacle;
@@ -382,7 +382,7 @@ GenerateMapNodes::
 OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GNInfo &_info){
 
     #ifndef QUIET
-      cout << "(numNodes="          << _gn.numNOdes.GetValue() << ", ";
+      cout << "(numNodes="          << _gn.numNodes.GetValue() << ", ";
       cout << "\tproportionSurface="<< _gn.proportionSurface.GetValue() << ", ";
       cout << "\nnumShells="        << _gn.numShells.GetValue()   << ", ";
       cout << "collPair="           << _gn.collPair.GetValue()    << ", ";
@@ -408,8 +408,8 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
     double P = _gn.proportionSurface.GetValue();
 
     // Subtract # of robots (ie, numMultiBody-1)
-    int NSEED = (int)(P * _gn.numNOdes.GetValue()/(numMultiBody-1)/_gn.numShells.GetValue());
-    int NFREE = (int)((1.0-P) * _gn.numNOdes.GetValue()/(numMultiBody-1));
+    int NSEED = (int)(P * _gn.numNodes.GetValue()/(numMultiBody-1)/_gn.numShells.GetValue());
+    int NFREE = (int)((1.0-P) * _gn.numNodes.GetValue()/(numMultiBody-1));
 
     if (NSEED < 1) NSEED = 1;
 
@@ -448,7 +448,7 @@ OBPRM(Environment *_env, CollisionDetection *cd ,DistanceMetric * dm,GN& _gn, GN
         } // if(obstacle != robot)
     else 
     if(numMultiBody == 1) {
-        vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNOdes.GetValue(), _info);
+        vector<Cfg> CobstNodes = GenCfgsFromCObst(_env, cd, dm, obstacle, _gn.numNodes.GetValue(), _info);
         for(int i=0; i<CobstNodes.size(); ++i){
         CobstNodes[i].info.obst = obstacle;
         _info.nodes.push_back(CobstNodes[i]);
@@ -500,7 +500,7 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 
    #ifndef QUIET
       cout << endl << "Begin BasicMAPRM..." << endl;
-      cout << "(numNodes=" << _gn.numNOdes.GetValue() << ") " << endl;
+      cout << "(numNodes=" << _gn.numNodes.GetValue() << ") " << endl;
       cout << "_env PositionRes  = " << _env->GetPositionRes() << endl;
       cout << "Expansion Factor  = " << EXPANSION_FACTOR << endl;
       
@@ -510,7 +510,7 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 
    #if INTERMEDIATE_FILES
       vector<Cfg> path; 
-      path.reserve(_gn.numNOdes.GetValue());
+      path.reserve(_gn.numNodes.GetValue());
    #endif
 
    seed = -3;  // must be a negative number
@@ -518,7 +518,7 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
    y_scale = bb[3] - bb[2];
    z_scale = bb[5] - bb[4];
 
-   for (int i=0; i < _gn.numNOdes.GetValue(); i++)
+   for (int i=0; i < _gn.numNodes.GetValue(); i++)
    {
       // Get a random configuration that STARTS in the bounding box of env
 	   cfg = Cfg::GetRandomCfg(_env);  // should always be in bounding box
@@ -655,7 +655,7 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
          cout << "BasicMAPRM unable to move random cfg out of collision." << endl;
       }
 
-   } // end for i = 1 to _gn.numNOdes.GetValue()
+   } // end for i = 1 to _gn.numNodes.GetValue()
 
    #if INTERMEDIATE_FILES
       WritePathConfigurations("maprm.path", path, _env);
@@ -1167,7 +1167,7 @@ GenerateMapNodes::
 GenerateSurfaceCfg(Environment *env,CollisionDetection *cd, DistanceMetric * dm,GNInfo& info,
                    int rob, int obst, Cfg insideCfg, Cfg outsideCfg){
 
-    GenerateSurfaceCfg(env,cd,dm,info,rob,obst,insideCfg,outsideCfg,1.0);
+    return GenerateSurfaceCfg(env,cd,dm,info,rob,obst,insideCfg,outsideCfg,1.0);
 
 }
 
@@ -1635,7 +1635,7 @@ GN::
 GN():
 
         //                                default  MIN  MAX
-        numNOdes         ("nodes",            10,  1,   5000000),
+        numNodes         ("nodes",            10,  1,   5000000),
         numShells        ("shells",            3,  1,   50),
         proportionSurface("pctSurf",         1.0,  0,   1.0),
         collPair         ("collPair","cM rT "),
@@ -1645,7 +1645,7 @@ GN():
 
 {
 
-    numNOdes.PutDesc         ("INTEGER","");
+    numNodes.PutDesc         ("INTEGER","");
     numShells.PutDesc        ("INTEGER","");
     proportionSurface.PutDesc("FLOAT  ","");
     collPair.PutDesc         ("STRING STRING",
@@ -1701,7 +1701,7 @@ PrintUsage_BasicPRM(ostream& _os){
     cout.setf(ios::left,ios::adjustfield);
 
         _os << "\nBasicPRM ";
-        _os << "\n\t"; numNOdes.PrintUsage(_os);
+        _os << "\n\t"; numNodes.PrintUsage(_os);
 
     cout.setf(ios::right,ios::adjustfield);
 
@@ -1713,7 +1713,7 @@ PrintUsage_BasicOBPRM(ostream& _os){
     cout.setf(ios::left,ios::adjustfield);
 
         _os << "\nBasicOBPRM ";
-        _os << "\n\t"; numNOdes.PrintUsage(_os);
+        _os << "\n\t"; numNodes.PrintUsage(_os);
         _os << "\n\t"; numShells.PrintUsage(_os);
 
     cout.setf(ios::right,ios::adjustfield);
@@ -1727,7 +1727,7 @@ PrintUsage_OBPRM(ostream& _os){
     cout.setf(ios::left,ios::adjustfield);
 
         _os << "\nOBPRM ";
-        _os << "\n\t"; numNOdes.PrintUsage(_os);
+        _os << "\n\t"; numNodes.PrintUsage(_os);
         _os << "\n\t"; numShells.PrintUsage(_os);
         _os << "\n\t"; proportionSurface.PrintUsage(_os);
         _os << "\n\t"; numShells.PrintUsage(_os);
@@ -1746,7 +1746,7 @@ PrintUsage_GaussPRM(ostream& _os){
     cout.setf(ios::left,ios::adjustfield);
 
         _os << "\nGaussPRM ";
-        _os << "\n\t"; numNOdes.PrintUsage(_os);
+        _os << "\n\t"; numNodes.PrintUsage(_os);
         _os << "\n\t"; gauss_d.PrintUsage(_os);
 
     cout.setf(ios::right,ios::adjustfield);
@@ -1759,7 +1759,7 @@ PrintUsage_BasicMAPRM(ostream& _os){
     cout.setf(ios::left,ios::adjustfield);
 
         _os << "\nBasicMAPRM ";
-        _os << "\n\t"; numNOdes.PrintUsage(_os);
+        _os << "\n\t"; numNodes.PrintUsage(_os);
 
     cout.setf(ios::right,ios::adjustfield);
 
@@ -1774,18 +1774,18 @@ operator==(const GN& _gn) const
   } else if ( !strcmp(name,"BasicPRM") ) {
      return true;
 
-     //return ( numNOdes.GetValue() == _gn.numNOdes.GetValue );
+     //return ( numNodes.GetValue() == _gn.numNodes.GetValue );
 
   } else if ( !strcmp(name,"BasicOBPRM") ) {
      return true;
 
-     //return ( (numNOdes.GetValue() == _gn.numNOdes.GetValue()) &&
+     //return ( (numNodes.GetValue() == _gn.numNodes.GetValue()) &&
      //         (numShells.GetValue() == _gn.numShells.GetValue()) );           
 
   } else if ( !strcmp(name,"OBPRM") ) {
      return true;
 
-     //return ( (numNOdes.GetValue() == _gn.numNOdes.GetValue()) &&
+     //return ( (numNodes.GetValue() == _gn.numNodes.GetValue()) &&
      //       (numShells.GetValue() == _gn.numShells.GetValue()) &&
      //       (proportionSurface.GetValue() == _gn.proportionSurface.GetValue()) &&
      //       (collPair.GetValue() == _gn.collPair.GetValue()) &&
@@ -1795,13 +1795,13 @@ operator==(const GN& _gn) const
   } else if ( !strcmp(name,"GaussPRM") ) {
      return true;
 
-     //return ( (numNOdes.GetValue() == _gn.numNOdes.GetValue()) &&
+     //return ( (numNodes.GetValue() == _gn.numNodes.GetValue()) &&
      //         (gauss_d.GetValue() == _gn.gauss_d.GetValue()) );
 
   } else if ( !strcmp(name,"BasicMAPRM") ) {
      return true;
 
-     //return ( numNOdes.GetValue() == _gn.numNOdes.GetValue() );
+     //return ( numNodes.GetValue() == _gn.numNodes.GetValue() );
 
   } else { // unrecognized...
      return false;
@@ -1833,18 +1833,18 @@ ostream& operator<< (ostream& _os, const GN& gn) {
 
     /*
     if ( !strstr(gn.GetName(),"BasicPRM") ){
-           _os<< ", numNOdes = " << gn.numNOdes.GetValue();
+           _os<< ", numNodes = " << gn.numNodes.GetValue();
     }
     if ( !strstr(gn.GetName(),"GaussPRM") ){
-           _os<< ", numNOdes = " << gn.numNOdes.GetValue();
+           _os<< ", numNodes = " << gn.numNodes.GetValue();
            _os<< ", d = " << gn.gauss_d.GetValue();
     }
     if ( !strstr(gn.GetName(),"BasicOBPRM") ){
-           _os<< ", numNOdes = " << gn.numNOdes.GetValue();
+           _os<< ", numNodes = " << gn.numNodes.GetValue();
            _os<< ", numShells = " << gn.numShells.GetValue();
     }
     if ( !strstr(gn.GetName(),"OBPRM") ){
-           _os<< ", numNOdes = " << gn.numNOdes.GetValue();
+           _os<< ", numNodes = " << gn.numNodes.GetValue();
            _os<< ", numShells = " << gn.numShells.GetValue();
            _os<< ", proportionSurface = " << gn.proportionSurface.GetValue();
            _os<< ", collPair = " << gn.collPair.GetValue();
@@ -1852,7 +1852,7 @@ ostream& operator<< (ostream& _os, const GN& gn) {
            _os<< ", clearanceFactor = " << gn.clearanceFactor.GetValue();
     }
     if ( !strstr(gn.GetName(),"BasicMAPRM") ){
-           _os<< ", numNOdes = " << gn.numNOdes.GetValue();
+           _os<< ", numNodes = " << gn.numNodes.GetValue();
     }
     */
 
@@ -1994,7 +1994,7 @@ MakeGNSet(istream& _myistream) {
 	GetFieldRange();
 
         for (int j=start;j<stop; ++j) {
-          if        (gn1.numNOdes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+          if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
           } else {
              cout << "\nERROR MakeGNSet: Don\'t understand \""
                   << cmdFields[j]<<"\"\n\n";
@@ -2009,7 +2009,7 @@ MakeGNSet(istream& _myistream) {
 	GetFieldRange();
 
         for (int j=start;j<stop; ++j) {
-          if        (gn1.numNOdes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+          if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
           } else if (gn1.gauss_d.AckCmdLine(&j,(int)stop,(char**)(&argv))){
           } else {
              cout << "\nERROR MakeGNSet: Don\'t understand \""
@@ -2025,7 +2025,7 @@ MakeGNSet(istream& _myistream) {
 	GetFieldRange();
 
           for (int j=start;j<stop; ++j) {
-          if        (gn1.numNOdes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+          if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
 	  } else if (gn1.numShells.AckCmdLine(&j,(int)stop,(char**)(&argv))){
           } else {
              cout << "\nERROR MakeGNSet: Don\'t understand \""
@@ -2042,8 +2042,7 @@ MakeGNSet(istream& _myistream) {
 	GetFieldRange();
 
         for (int j=start;j<stop; ++j) {
-//slm add the "real" numNodes (rather than numNOdes)
-          if        (gn1.numNOdes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+          if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
           } else if (gn1.numShells.AckCmdLine(&j,(int)stop,(char**)(&argv))){
           } else if (gn1.proportionSurface.AckCmdLine(&j,(int)stop,(char**)(&argv))){
           } else if (gn1.freePair.AckCmdLine(&j,(int)stop,(char**)(&argv))){
@@ -2064,7 +2063,7 @@ MakeGNSet(istream& _myistream) {
 	GetFieldRange();
 
         for (int j=start;j<stop; ++j) {
-          if        (gn1.numNOdes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
+          if        (gn1.numNodes.AckCmdLine(&j,(int)stop,(char**)(&argv))){
           } else {
              cout << "\nERROR MakeGNSet: Don\'t understand \""
                   << cmdFields[j]<<"\"\n\n";

@@ -153,15 +153,13 @@ public:
   //===================================================================
     */
   //@{
-    num_param<int>    numNOdes;    /// number of nodes to generate
+    num_param<int>    numNodes;    /// number of nodes to generate
     num_param<int>    numShells;   /// number of shells to retain
     num_param<double> proportionSurface; /// proportion of free nodes to surface
     n_str_param       collPair;    /// (surface nodes) collision pair
     n_str_param       freePair;    /// (free nodes)     free pair
     num_param<double> clearanceFactor; 
     num_param<double> gauss_d;     /// distance from surface to retain Gausian
-
-//slm fix numNOdes to be the "real" numNodes
 
 protected:
   char   name[80];           // method name in character format
