@@ -121,43 +121,43 @@ DSOFLAGS   = $(CFLAGS) -shared -no_unresolved
 #--------------------------------------------------------------------------
 
 #--------------------------------------------------------------------
-deps: 
+deps:: 
 	touch Dependencies
 
-static: 
+static:: 
 
 
-libs: objs libgms.a libmp.a
+libs:: objs libgms.a libmp.a
 
-libgms.a: $(GMS_OBJS)
+libgms.a:: $(GMS_OBJS)
 	ar  -rc libgms.a $(GMS_OBJS) 
 
-libgms.so: $(GMS_OBJS)
+libgms.so:: $(GMS_OBJS)
 	$(CXX) -o libgms.so $(DSOFLAGS) $(GMS_OBJS)
 
-libmp.a: $(MP_OBJS)
+libmp.a:: $(MP_OBJS)
 	ar -rc libmp.a  $(MP_OBJS) 
 
-libmp.so: $(MP_OBJS)
+libmp.so:: $(MP_OBJS)
 	$(CXX) -o libmp.so  $(DSOFLAGS) $(MP_OBJS) 
 
            #-rpath $(GMSLIB_DIR):$(MPLIB_DIR):$(CSTKLIB_DIR):${VCLIPLIB_DIR}:${RAPIDLIB_DIR} \
 #--------------------------------------------------------------------
-obprm: main_obprm.c libs
+obprm:: main_obprm.c libs
 	$(CXX) $(CXXFLAGS)  -o obprm \
 	main_obprm.c \
 	${VCLIPLIB} ${RAPIDLIB} libmp.a libgms.a libmp.a libgms.a $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/research/dsmft/qhull -lqhull
 	rm -f main_obprm.o
 
 #--------------------------------------------------------------------
-query: main_query.c libs
+query:: main_query.c libs
 	$(CXX) $(CXXFLAGS)  -o query \
 	main_query.c \
 	libmp.a libgms.a libmp.a libgms.a $(GLLIBS) $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB} -L/research/dsmft/qhull -lqhull
 	rm -f main_query.o
 
 #--------------------------------------------------------------------
-% : %.o
+% :: %.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(MATHLIB) $(CSTKLIB) ${VCLIPLIB} ${RAPIDLIB}
 
 #--------------------------------------------------------------------
@@ -200,7 +200,7 @@ MP_OBJS = \
 	QueryCmds.o \
 	Query.o 
 
-objs: $(MP_OBJS) $(GMS_OBJS)
+objs:: $(MP_OBJS) $(GMS_OBJS)
 
 #--------------------------------------------------------------------
 runclean::
@@ -215,8 +215,8 @@ clean::
 reallyclean::
 	rm -f query
 	rm -f obprm
-	rm -f libmp.so
-	rm -f libgms.so
+	rm -f libmp.a
+	rm -f libgms.a
 	rm -R -f ii_files
 	rm -f *.o
 	rm -f Dependencies
@@ -226,7 +226,7 @@ reallyclean::
 # Build and update depent
 #-----------------------------------------------------------------------------
 
-Dependencies:
+Dependencies::
 	echo >Dependencies "#-*- Makefile -*-"
 
 include Dependencies
