@@ -244,8 +244,8 @@ StraightLine<CFG, WEIGHT>::
 IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm, 
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
-	    bool checkCollision=true, 
-	    bool savePath=false, bool saveFailedPath=false) {
+	    bool checkCollision, 
+	    bool savePath, bool saveFailedPath) {
 	
   Stats.IncLPAttempts( "Straightline" );
   int cd_cntr = 0; 
@@ -277,8 +277,8 @@ IsConnectedSLSequential(Environment *_env,
 			const CFG &_c1, const CFG &_c2, 
 			LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
 			double positionRes, double orientationRes,
-			bool checkCollision=true, 
-			bool savePath=false, bool saveFailedPath=false) {
+			bool checkCollision, 
+			bool savePath, bool saveFailedPath) {
   
   int n_ticks;
   CFG tick;
@@ -381,8 +381,8 @@ IsConnectedSLBinary(Environment *_env, CollisionDetection *cd,
 		    DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
 		    LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
 		    double positionRes, double orientationRes,  
-		    bool checkCollision=true, 
-		    bool savePath=false, bool saveFailedPath=false) {
+		    bool checkCollision, 
+		    bool savePath, bool saveFailedPath) {
   if(checkCollision) {
     double clr = 0;
 

@@ -169,8 +169,8 @@ RotateAtS<CFG,WEIGHT>::
 IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
-	    bool checkCollision=true, 
-	    bool savePath=false, bool saveFailedPath=false) {  
+	    bool checkCollision, 
+	    bool savePath, bool saveFailedPath) {  
   bool connected = false;
   s_value = sValue.GetValue();
   connected = IsConnectedOneWay(_env, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
@@ -190,8 +190,8 @@ RotateAtS<CFG,WEIGHT>::
 IsConnectedOneWay(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
-	    bool checkCollision=true, 
-	    bool savePath=false, bool saveFailedPath=false) {  
+	    bool checkCollision, 
+	    bool savePath, bool saveFailedPath) {  
   char RatS[20] = "Rotate_at_s";
   sprintf(RatS,"%s=%3.1f",RatS, sValue.GetValue());
   Stats.IncLPAttempts( RatS );
@@ -206,7 +206,8 @@ IsConnectedOneWay(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
   _c1.GetMovingSequenceNodes(_c2, s_value, sequence);
   
   bool connected = true;
-  for(int i=0; i<sequence.size()-1; ++i) {
+  int i;
+  for(i=0; i<sequence.size()-1; ++i) {
     bool flag;
     if(binarySearch.GetValue()) 
       flag = IsConnectedSLBinary(_env, cd, dm, *sequence[i], *sequence[i+1], lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
@@ -223,7 +224,7 @@ IsConnectedOneWay(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
   Stats.IncLPCollDetCalls( RatS, cd_cntr );
   
   // Since we use vector<Cfg*>, we need to delete it
-  for(int i=0; i<sequence.size();i++) {
+  for(i=0; i<sequence.size();i++) {
     if (sequence[i] != NULL)
       delete sequence[i];
   }

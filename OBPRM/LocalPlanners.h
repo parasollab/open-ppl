@@ -232,7 +232,7 @@ GetDefault() {
 template <class CFG, class WEIGHT>
 int
 LocalPlanners<CFG,WEIGHT>::
-ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtype, SID _cdsetid, bool append_selected = false) {
+ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtype, SID _cdsetid, bool append_selected) {
   cdtype = _cdtype;
   cdsetid = _cdsetid;
 
@@ -453,8 +453,8 @@ LocalPlanners<CFG,WEIGHT>::
 IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
 	    CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes, 
-	    bool checkCollision=true, 
-	    bool savePath=false, bool saveFailedPath=false) {
+	    bool checkCollision, 
+	    bool savePath, bool saveFailedPath) {
   //clear lpOutput
   lpOutput->path.clear();      
   lpOutput->edge.first.SetWeight(0);
@@ -502,8 +502,8 @@ IsConnected(Roadmap<CFG, WEIGHT> *rm,
 	    CollisionDetection *cd, DistanceMetric *dm,
 	    CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
 	    double positionRes, double orientationRes, 
-	    bool checkCollision=true, 
-	    bool savePath=false, bool saveFailedPath=false) {
+	    bool checkCollision, 
+	    bool savePath, bool saveFailedPath) {
 
   bool connected;
   if( rm->m_pRoadmap->IsEdge(_c1, _c2) )  // check they are already connected.
@@ -522,8 +522,8 @@ IsConnected(unsigned int lpid, Environment *_env, CollisionDetection *cd,
 	    DistanceMetric *dm,
 	    CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes, 
-	    bool checkCollision=true, 
-	    bool savePath=false, bool saveFailedPath=false) {
+	    bool checkCollision, 
+	    bool savePath, bool saveFailedPath) {
   return GetLocalPlanner(lpid)->IsConnected(_env,cd,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
 }
 
@@ -553,8 +553,8 @@ GetPathSegment(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
 	       CFG _c1, CFG _c2, WEIGHT _weight, 
 	       LPOutput<CFG,WEIGHT>* _ci,	    
 	       double positionRes, double orientationRes, 
-	       bool checkCollision=true, 
-	       bool savePath=false, bool saveFailedPath=false) {
+	       bool checkCollision, 
+	       bool savePath, bool saveFailedPath) {
   bool connected = false;
 
   if (_weight.GetLP() >= 1 && _weight.GetLP() <= selected.size()) {         

@@ -181,8 +181,8 @@ AStar<CFG,WEIGHT>::
 IsConnected(Environment *_env,CollisionDetection *cd, DistanceMetric *dm, 
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
-	    bool checkCollision=true, 
-	    bool savePath=false, bool saveFailedPath=false) {
+	    bool checkCollision, 
+	    bool savePath, bool saveFailedPath) {
   bool connected = false;
   connected = IsConnectedOneWay(_env, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   if (!connected) { //try the other way
@@ -201,8 +201,8 @@ IsConnectedOneWay(Environment *_env,CollisionDetection *cd,
 		  DistanceMetric *dm, 
 		  const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 		  double positionRes, double orientationRes,
-		  bool checkCollision=true, 
-		  bool savePath=false, bool saveFailedPath=false) {
+		  bool checkCollision, 
+		  bool savePath, bool saveFailedPath) {
   Stats.IncLPAttempts( "AStar" );
   int cd_cntr = 0;
   

@@ -172,8 +172,8 @@ ApproxSpheres<CFG,WEIGHT>::
 IsConnected(Environment *_env, CollisionDetection *cd, DistanceMetric *dm,
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
-	    bool checkCollision=true, 
-	    bool savePath=false, bool saveFailedPath=false) {
+	    bool checkCollision, 
+	    bool savePath, bool saveFailedPath) {
   Stats.IncLPAttempts( "ApproxSpheres" );
   int cd_cntr = 0;
 
