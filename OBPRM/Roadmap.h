@@ -1,18 +1,19 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
 //
-//   Roadmap.h
-//
-//   General Description
-//      This is the main OBPRM class which contains data and methods
-//      to manipulate the environment with specified moving bodies
-//      (ie, robot(s)) and the corresponding roadmap.
-//
-//      This file contains the prototype declarations for the class. 
-//      Definitions are in the file "Roadmap.c".
-//
-//  Created
-//      07/16/98  Lucia K. Dale
+/**@file Roadmap.h
+
+   General Description
+      This is the main OBPRM class which contains data and methods
+      to manipulate the environment with specified moving bodies
+      (ie, robot(s)) and the corresponding roadmap.
+
+      This file contains the prototype declarations for the class. 
+      Definitions are in the file "Roadmap.c".
+
+   @date 07/16/98  
+   @author Lucia K. Dale
+*/
 /////////////////////////////////////////////////////////////////////
 
 #ifndef Roadmap_h

@@ -1,29 +1,29 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////
 //
-//  CfgManager.h
-//
-//  General Description
-//	This class provides some implmentations which could be
-//	different for different Cfg types, and some methods do require
-//	a derived Cfg provide its own version(pure virtual methods).
-//	This is an abstract class.
-//
-//		  CfgManager   <--------  Cfg
-//		  /   |     \
-//		_/    |      \_
-//	Cfg_free      |         Cfg_free_serial<int>
-//		  Cfg_fixed_PRR
-//
-//  BE AWARE:
-//      It is ASSUMED that all position values are packed together
-//      in the first 'posDof' spots of a Cfg data. Other choices
-//	would require the corrrsponding derived class have its own
-//	version of most member functions listed here.
-//
-//  Created
-//	08/31/99	Guang Song
-//
+/**@file CfgManager.h
+
+   General Description
+	This class provides some implmentations which could be
+	different for different Cfg types, and some methods do require
+	a derived Cfg provide its own version(pure virtual methods).
+	This is an abstract class.
+
+		  CfgManager   <--------  Cfg
+		  /   |     \
+		_/    |      \_
+	Cfg_free      |         Cfg_free_serial<int>
+		  Cfg_fixed_PRR
+
+  BE AWARE:
+      It is ASSUMED that all position values are packed together
+      in the first 'posDof' spots of a Cfg data. Other choices
+	would require the corrrsponding derived class have its own
+	version of most member functions listed here.
+
+  @date 8/31/99
+  @author Guang Song
+*/
 /////////////////////////////////////////////////////////////////////
 
 #ifndef CfgManager_h
