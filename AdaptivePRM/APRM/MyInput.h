@@ -23,15 +23,8 @@ public:
    void PrintDefaults();
    void PrintValues(ostream& _os);
 
-   str_param<char*> nodeValidationFlag;
+   n_str_param nodeValidationFlag;
    n_str_param edgeValidationFlag;
 };
 
 #endif
-
-
-
-
-
-
-
