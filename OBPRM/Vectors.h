@@ -27,5 +27,6 @@ typedef Vector3<double> Vector3D;
 ostream& operator<< (ostream&, const Vector3D &);
 istream& operator>> (istream&, Vector3D &);
 
+typedef Vector6<double> Vector6D;
 #endif
 
