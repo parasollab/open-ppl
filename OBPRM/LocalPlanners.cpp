@@ -251,7 +251,7 @@ IsConnectedFindAll(Environment *_env,CollisionDetection *cd,DistanceMetric *dm,C
 
 // Generalized form of LP functions.
 bool LocalPlanners::IsConnected(PLANNER lpName, Environment *_env,CollisionDetection *cd,
-								DistanceMetric*dm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info) {
+				DistanceMetric*dm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info) {
 	
 	switch(lpName) {
 	case STRAIGHTLINE:
@@ -275,77 +275,77 @@ bool LocalPlanners::IsConnected(PLANNER lpName, Environment *_env,CollisionDetec
 }
 
 bool LocalPlanners::IsConnected_SLclearance(Environment *_env,CollisionDetection *cd,
-											DistanceMetric*,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info) {
+					    DistanceMetric *dm,Cfg& _c1, Cfg& _c2, LP& _lp, LPInfo *info) {
+  if(info->checkCollision) {
+    double clr = 0;
+
+    ///Bound Shpere
+    double rmax = _env->GetMultiBody(_env->GetRobotIndex())->GetBoundingSphereRadius();
     
-	if(info->checkCollision) {
-		double clr, halfDist, halfOriDist;
+    //Check if orientation of two Cfg are similar
+    bool sameOrientation = (_c1-_c2).OrientationMagnitude() <= info->orientationRes;
 
-		///Bound Shpere
-		double rmax = _env->GetMultiBody(_env->GetRobotIndex())->GetBoundingSphereRadius();
+    typedef pair<Cfg,Cfg> cfgPair;
+    deque<cfgPair> pairQ;
+    pairQ.push_back(cfgPair(_c1,_c2));
+    
+    while(! pairQ.empty() ) {
+      cfgPair &tmp = pairQ.front();	//dequeue
+      
+      //average of two Cfg, mid point.
+      Cfg mid = Cfg::WeightedSum(tmp.first, tmp.second, 0.5);
+      
+      info->cd_cntr ++;	//?
+      
+      if(cd->clearanceAvailable()) { //&& usingClearance
+	//get clearance when robot's cfg is mid
+	if((clr = mid.Clearance(_env,cd)) <= 0.001) // 0.001 tolerance.
+	  return false;	///too close to obstacle, failed
 
-		//Check if orientation of two Cfg are similar
-		bool sameOrientation = (_c1-_c2).OrientationMagnitude() <= info->orientationRes;
-
-        typedef pair<Cfg,Cfg> cfgPair;
-        deque<cfgPair> pairQ;
-		pairQ.push_back(cfgPair(_c1,_c2));
-		
-		while(! pairQ.empty() ) {
-			cfgPair &tmp = pairQ.front();	//dequeue
-
-			//average of two Cfg, mid point.
-			Cfg mid = Cfg::WeightedSum(tmp.first, tmp.second, 0.5);
-
-			info->cd_cntr ++;	//?
-
-			//get clearance when robot's cfg is mid
-			if((clr = mid.Clearance(_env,cd)) <= 0.001) { // 0.001 tolerance.
-				return false;	///too close to obstacle, failed
-			} else {
-				if(!sameOrientation) { //if have different orientation
-					clr -= rmax;	   //clearance - bounding sphere radius
-					if(clr < 0) clr = 0.0;
-				}
-
-				Cfg diff = tmp.first - tmp.second;
-				halfDist = diff.PositionMagnitude()/2;
-
-				if(clr < halfDist) { //if clearance smaller than half of distance
-
-					halfOriDist = diff.OrientationMagnitude()/2;
-
-					//if they are longer than resolution, partition it
-					if(info->positionRes < halfDist || info->orientationRes < halfOriDist ) {
-
-						//tmp1=(clr/halfDist)*tmp.first+(1-clr/halfDist)*mid)
-						//tmp2=(1-clr/halfDist)*mid+(clr/halfDist)*tmp.second)
-						Cfg tmp1 = Cfg::WeightedSum(tmp.first, mid, 1.0-clr/halfDist);
-						Cfg tmp2 = Cfg::WeightedSum(mid, tmp.second, clr/halfDist);
-
-						pairQ.push_back(cfgPair(tmp.first, tmp1));
-						pairQ.push_back(cfgPair(tmp2, tmp.second)); 
-					}
-
-				}
-			}
-			pairQ.pop_front();
-		} //end while
-	}//end if
-
-	if(info->savePath || info->saveFailedPath){
-		int steps;
-        Cfg incr = _c1.FindIncrement(_c2,&steps,info->positionRes,info->orientationRes);
-		Cfg tick = _c1;
-		for(int i=0; i<steps; i++) {
-			tick.Increment(incr);
-			info->path.push_back(tick);
-		}
+	if(!sameOrientation) { //if have different orientation
+	  clr -= rmax;	   //clearance - bounding sphere radius
+	  if(clr < 0) clr = 0.0;
 	}
-	return true; //success
+      } else {
+	if(mid.isCollision(_env,cd,info->cdsetid,info->cdInfo))
+	  return false;
+      }
+
+      Cfg diff = tmp.first - tmp.second;
+      double halfDist = diff.PositionMagnitude()/2;
+      double halfOriDist = diff.OrientationMagnitude()/2;
+      
+      if(clr < halfDist) { //if clearance smaller than half of distance
+	//if they are longer than resolution, partition it
+	if(info->positionRes < halfDist || info->orientationRes < halfOriDist ) {
+	  Cfg tmp1 = Cfg::WeightedSum(tmp.first, mid, 1.0-clr/halfDist);
+	  Cfg tmp2 = Cfg::WeightedSum(mid, tmp.second, clr/halfDist);
+	  pairQ.push_back(cfgPair(tmp.first, tmp1));
+	  pairQ.push_back(cfgPair(tmp2, tmp.second)); 
+	}  
+      }
+      pairQ.pop_front();
+    } //end while
+  }//end if
+
+  int steps = 0;  
+  Cfg incr = _c1.FindIncrement(_c2,&steps,info->positionRes,info->orientationRes);
+  if(info->savePath || info->saveFailedPath){
+    Cfg tick = _c1;
+    for(int i=0; i<steps; i++) {
+      tick.Increment(incr);
+      info->path.push_back(tick);
+    }
+  }
+
+  info->edge.first.Weight() += steps;
+  info->edge.second.Weight() += steps;
+
+  return true; //success
 }//end of IsConnected_SLclearance
 
 bool LocalPlanners::lineSegmentInCollision(Environment *_env,CollisionDetection *cd,
-										   DistanceMetric* dm, Cfg& _c1, Cfg&_c2, LP& _lp, LPInfo *info) {
+					   DistanceMetric* dm, Cfg& _c1, Cfg&_c2, LP& _lp, LPInfo *info) {
     int steps = (_c1-_c2).PositionMagnitude()/info->positionRes;
     if( steps <= lineSegmentLength ) return false;
 	
