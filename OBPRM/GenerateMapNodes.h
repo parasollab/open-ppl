@@ -332,32 +332,18 @@ protected:
   GenerateSeeds(Environment*, CollisionDetection *,GNInfo&,
 		int, int, int, int, vector<Cfg>*);
 
+/// Generates random cfgs within a specified area around a given cfg
   static void
   Spread(Cfg, double, double, int, vector<Cfg>* );
 
-  //-----------------------------------------
-  // used by "FarthestFromStart" for sort
-  //-----------------------------------------
-  typedef pair<int,double> VID_DISTANCE_TYPE;
-  static bool DIST_Compare (const VID_DISTANCE_TYPE&, const VID_DISTANCE_TYPE&);
-
-  static void
-  FarthestFromStart(Environment*, DistanceMetric*,
-		GNInfo&, Cfg, vector<Cfg>, vector<Cfg>*);
-
+/// Returns the first n free cfgs from a given vector of cfgs.  Returns all
+/// free cfgs if there are less than n.
   static vector<Cfg>
   FirstFreeCfgs(Environment*, CollisionDetection*, vector<Cfg>, GNInfo&, int);
 
+/// Return all free cfgs in the given vector of cfgs.
   static vector<Cfg>
   FirstFreeCfgs(Environment*, CollisionDetection*,vector<Cfg>, GNInfo&);
-
-  static void
-  GenNewPivots(Environment*, CollisionDetection *cd,DistanceMetric*,GNInfo&,
-        Cfg, vector<Cfg>, double, double, int, int, vector<Cfg>*);
-
-  static void
-  SpreadCfg(Environment*, CollisionDetection *cd,DistanceMetric*,GNInfo&,
-            Cfg, double, double, int, int, int);
 
   static vector<Cfg>
   InsideBoundingBox(Environment*, vector<Cfg>);
