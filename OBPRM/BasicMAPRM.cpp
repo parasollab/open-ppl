@@ -25,7 +25,7 @@ bool CBasicMAPRM::ReadParameters(int & start, int end, char ** argv, num_param<i
 		return false;
 	}
 #endif
-#ifndef USE_VCLIP && USE_PQP
+#if !defined(USE_VCLIP) && !defined(USE_PQP)
 	cerr<<" Error : BasicMAPRM requres VCLIP or PQP."
 	    <<" Please Recompile OBPRM with USE_PQP or/and USE_VCLIP flag"<<endl;
 	return false;
@@ -68,8 +68,10 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 	path.reserve(_gn.numNodes.GetValue());
 #endif
 	
+#ifdef USE_VCLIP
 	if( m_bApprox.GetValue()==false ) //use exact penetration (VCLIP require). 
 		BuildVCLIP(_env); //Make sure vclip is buid
+#endif
 	
 	cout<<"- "<<flush;
 	for (int i=0; i < _gn.numNodes.GetValue(); i++)
@@ -95,6 +97,7 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 			}
 			if( collided ) collided = cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
 		}
+#ifdef USE_VCLIP
 		else{ //use exact computation for penetration
 
 			_info.cdInfo.ret_all_info = true;	
@@ -108,6 +111,7 @@ BasicMAPRM(Environment *_env, CollisionDetection* cd,
 				collided = cfg.isCollision(_env, cd, _info.cdsetid, _info.cdInfo);
 			}
 		}
+#endif
 
 		// So we "should" be out of collision and INSIDE bounding box 
 		// so we can move cfg toward Medial Axis
@@ -384,7 +388,7 @@ getCollisionInfo( Cfg & cfg, Environment * _env, CollisionDetection* cd, SID cds
 	return (cdInfo.min_dist>=0)?false:true;;
 }
 
-
+#ifdef USE_VCLIP
 void CBasicMAPRM::BuildVCLIP( Environment * env ){
 		int n=env->GetMultiBodyCount();
 		for( int iM=0;iM<n;iM++ ){ //for each m-body
@@ -398,3 +402,4 @@ void CBasicMAPRM::BuildVCLIP( Environment * env ){
 			}//end for each body
 		}//end for each m-body
 }
+#endif

@@ -24,7 +24,9 @@ private:
 	static bool	getCollisionInfo
 	( Cfg & cfg, Environment * _env, CollisionDetection* cd, SID cdsetid, CDInfo& cdInfo);
 
+#ifdef USE_VCLIP
 	static void BuildVCLIP( Environment * env );
+#endif
 	
 	static num_param<bool> m_bApprox; //using approximation or exact computation
 	static num_param<int> m_bRays; //number of shooting rays for approximation penetration.
