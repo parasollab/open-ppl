@@ -73,19 +73,9 @@ void Environment::Get(Input * _input) {
 	AddMultiBody(mb);
     }
 
-
-    // it seems this method does more than its name implies so...
     // calculate bounding box
     FindBoundingBox();
-
-    // if user supplied a bounding box, overwrite calculated boundingBox
-    if ( _input->bbox.IsActivated() ) {
-
-       sscanf(_input->bbox.GetValue(),"[%lf,%lf,%lf,%lf,%lf,%lf]",
-          &boundingBox[0], &boundingBox[1], &boundingBox[2],
-          &boundingBox[3], &boundingBox[4], &boundingBox[5]);
-
-    }
+    UpdateBBox(_input);
 
     // if user supplied a positional resolution, overwrite the one
     // calculated by "FindBoundingBox"
@@ -95,7 +85,21 @@ void Environment::Get(Input * _input) {
 
     // orientational resolution may be user supplied but at this time
     // is not calculated
-    orientationRes = _input->orires.GetValue();
+    orientationRes = _input->orires.GetValue(); 
+
+}
+
+void Environment::UpdateBBox(Input * _input) {
+
+
+    // if user supplied a bounding box, overwrite calculated boundingBox
+    if ( _input->bbox.IsActivated() ) {
+
+       sscanf(_input->bbox.GetValue(),"[%lf,%lf,%lf,%lf,%lf,%lf]",
+          &boundingBox[0], &boundingBox[1], &boundingBox[2],
+          &boundingBox[3], &boundingBox[4], &boundingBox[5]);
+
+    }
 
     // use bounding box scale factor
     if ( _input->bbox_scale.GetValue() != 1.0 ) {

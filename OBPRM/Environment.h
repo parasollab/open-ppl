@@ -53,6 +53,9 @@ public:
     void Couple(MultiBody *_multibody[], int _number);
     void Decouple(MultiBody *_multibody[], int _number);
     void Get(Input * _input);
+
+    void UpdateBBox(Input * _input);
+
     void Write(ostream & _os);
     void SetRobotIndex(int index){robotIndex = index;};
     int GetRobotIndex(){return robotIndex;};
