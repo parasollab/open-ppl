@@ -470,8 +470,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   int nNodesGap = numNodes.GetValue() - nodes.size();  
   int nNumTries = 0;
   
+
+  vector<CFG> surface;
   do{
-    vector<CFG> obstSurface, obstFree, surface, nodesBuffer;  
+    vector<CFG> obstSurface, obstFree, nodesBuffer;  
+    surface.clear();
     for(int obstacle = 0 ; obstacle < numExternalBody ; obstacle++) {
     
       if(obstacle != robot) {
