@@ -66,28 +66,27 @@ void Environment::Decouple(MultiBody *_multibody[], int number) {
 //SortBodies so that the external bodies appear first in the array
 //============================================
 void Environment::SortMultiBodies(){
-  int i,j;
-  externalbodyCount = 1; //the only object is the robot
-  i = 0;
-  j = multibodyCount-1;
-  while (i < j)
-    {//Quicksort
+  externalbodyCount = 1;
+  if(multibodyCount != 1) { //the robot is not the only object
+    int i = 0;
+    int j = multibodyCount-1;
+    while (i < j) {
+      //Quicksort
       while((i<multibodyCount) && !multibody[i]->IsInternal()) 
 	i++;
-      while ((j>0)&&(multibody[j]->IsInternal()))
+      while ((j>0) && (multibody[j]->IsInternal()))
 	j--;
-      if (i<j)
-	{
-	  MultiBody *pMidBody = multibody[j];//switch multibody[i] & multibody[j]
-	  multibody[j] = multibody[i];
-	  multibody[i] = pMidBody;
-	}
+      if (i<j) {
+	MultiBody *pMidBody = multibody[j];//switch multibody[i] & multibody[j]
+	multibody[j] = multibody[i];
+	multibody[i] = pMidBody;
+      }
     }
     if (i == j+1)
-    	externalbodyCount = i;
+      externalbodyCount = i;
     else
-    	cout << "Wrong sorting in void Environment::SortMultiBodies(){}"<<endl;
-	 
+      cout << "Wrong sorting in void Environment::SortMultiBodies(){}"<<endl;
+  }
 }
 
 //===================================================================
