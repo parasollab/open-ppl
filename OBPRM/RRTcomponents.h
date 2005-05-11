@@ -108,39 +108,36 @@ void RRTcomponents<CFG,WEIGHT>::
 OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 		   DistanceMetric * dm,
 		   vector< pair<int,VID> >& ccvec) {   
-  cout << "\nOrderCCByCloseness\n";
+
   Environment *env = rm->GetEnvironment();   
-  //rm->m_pRoadmap->DisplayCCSt	ats(	-1); 
+
   vector< pair<int,VID> >::iterator cc2=ccvec.begin();
-  //vector<VID> vidvec = rm->m_pRoadmap	->GetCC((*cc2).second);
+
   vector<VID> vidvec;
-  //cout << "cc2.se	cond in order cc:" << (*cc2).second;
+
   GetCC(*(rm->m_pRoadmap),(*cc2).second ,vidvec);
   int i = 0; int index = 0;
   CFG vtemp;
   vector<CFG> centervec;
-  cout << "orderccs problem-1";
+
   while(cc2<ccvec.end()) {
 
     while( i < vidvec.size() ) {
       vtemp=rm->m_pRoadmap->GetData(vidvec[i]);
-	    //cout << vtemp << endl;
       if (i==0)
 	centervec.push_back(vtemp);
       else{
 	centervec[index].add(centervec[index],vtemp);
-	//for(int d=0;
+
       }
       i++;
     } //while i<vidvec.size()
-    cout << i << endl;
-    DisplayCC((*rm->m_pRoadmap),(*cc2).second);
-    cout << "centervec=" << centervec[index] << endl;
+
+    //DisplayCC((*rm->m_pRoadmap),(*cc2).second);
+
     centervec[index].divide(centervec[index],i);
-    cout << "centervec=" << centervec[index] << endl;
+
     cc2++; i = 0; index++;     
-    cout << "cc2.second in order cc:" << (*cc2).second;
-    //vidvec=rm->m_pRoadmap->GetCC((*cc2).second);
     vidvec.clear();
     GetCC(*(rm->m_pRoadmap),(*cc2).second ,vidvec);
   } //while cc2<ccvec.end()
@@ -148,30 +145,28 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
   for(i=1; i<centervec.size();i++) {
     centvec.push_back( centervec[i] );
   }  
-  cout << "orderccs problem1";
+
   vector<pair<CFG,CFG> > kp= dm->FindKClosestPairs(env, centervec[0], centvec, 
 						   centervec.size()-1);
   vector< pair<int,VID> > ccvec_tmp;
   ccvec_tmp.push_back( *ccvec.begin() );
   for(i=0; i<kp.size(); i++) {
     int j=0;
-    cout << "orderccs problem2";
+
     while ( (kp[i].second != centervec[j]) && (j<centervec.size()) )
       j++;
     if ( j < centervec.size() ) {
-      cout << "putting centervec "<<j<<"at position "<<i+1<<"\n";
-      //pair<int,VID> tmp = ccvec[i+1];
-      //ccvec[i+1] = ccvec[j];
-      //ccvec[j] = tmp;
+
       pair<int,VID>& tmp = ccvec[j];
       ccvec_tmp.push_back( tmp );
       }
-    else cout << "ERROR in OrderCCByCloseness" << endl; 
+
   }// end for
   ccvec.swap(ccvec_tmp);
-  for(int b=0;b<ccvec.size();b++)
-    cout << "ccvec["<<b<<"] "<<ccvec[b].second;
-  cout << endl;
+  for(int b=0;b<ccvec.size();b++) {
+    //cout << "ccvec["<<b<<"] "<<ccvec[b].second;
+    //cout << endl;
+  }
 }
 
 
@@ -257,7 +252,7 @@ for ( int z = 0; z <=1; z++) {
                   GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cct);
 	 	  ModifyRoadMap(&submap3,_rm,cct);
 		  bool toConnect = FALSE;
-                  cout << "problem here 12atrue";
+
 		  RRT(&submap3, Stats,
               		  iterations/2,
                       stepFactor * _rm->GetEnvironment()->GetPositionRes(),
@@ -270,13 +265,11 @@ for ( int z = 0; z <=1; z++) {
 	  	  ModifyRoadMap(_rm,&submap3,verts1);
 		  submap3.environment = NULL;
 		  } //end if
-		cout << "iter" << b;
-		//_rm->m_pRoadmap->DisplayCC((*cctemp).second);
 		
 		cctemp++; b++;
 	  } //cctemp<=ccvec.end()
 
-        cout << "z==1\n";
+
 	if (( z == 1) && (ccvec.size()>2)) {
 	   GetCCStats(*(_rm->m_pRoadmap),ccvec);
 	   // Will put the first/largest CC at the end move everything
@@ -290,39 +283,18 @@ for ( int z = 0; z <=1; z++) {
 	   startcciter = ccvec.begin();
 	   tmp_vec1.push_back(*startcciter);
 	   ccvec.swap( tmp_vec1  );
-	   //vector< pair<int,VID> >::iterator startIterator = ccvec.begin();
- 	   //vector< pair<int,VID> >::iterator ccswitch=ccvec.begin();
-	   //ccswitch++; 
-	   //pair<int,VID> ins = ccvec[0];
-	   //ccvec.push_back(ins);
-	   //startIterator = ccvec.begin();
-	   //ccvec.erase(startIterator);
-	   //cc1 = ccvec.begin();
-	   //cc2 = cc1 + 1; 
-	   //pair<int,VID>  first = ccvec[0];
-	   //ccvec[1] = ccvec[0];
-	   //cc
 	   }
           
 	  OrderCCByCloseness(_rm,dm,ccvec);
-	  cout<<"\n";
-          for(b=0;b<ccvec.size();b++)
-             cout << "ccvec["<<b<<"] "<<ccvec[b].second;
-          cout<<endl;
+
           cc1= ccvec.begin();
           cc2 = ccvec.begin(); cc2++;
-          cout << "outside orderccsbycloseness\n";
 	  VID cc1id = (*cc1).second;
-          cout << "cc1: " << (*cc1).second << " cc2: " << (*cc2).second << "\n";
+
      while(cc2!=ccvec.end()) {
-          /*for (vector< pair<int,VID> >::iterator cctemp=ccvec.begin();
-		  cctemp<=ccvec.end();++cctemp) 
-	      _rm->m_pRoadmap->DisplayCC((*cctemp).second);
-	  */
+
           Roadmap<CFG,WEIGHT> submap2;
           submap2.environment = _rm->GetEnvironment();
-	  //cc2 = ++cc1;
-          //cout << "problem here\n";
           vector<VID> cct2;
           GetCC(*(_rm->m_pRoadmap),(*cc2).second,cct2);
 	  ModifyRoadMap(&submap2,_rm,cct2);
@@ -335,12 +307,10 @@ for ( int z = 0; z <=1; z++) {
 	  int i = 0;
           vector<CFG> dummyU;
 	  vector<CFG> U;
-	  cout << "outside while\n";
-          cout << "cc1: " << (*cc1).second << " cc2: " << (*cc2).second << "\n";
 	  int d=0;
-          cout << "GetCCcount" << GetCCcount(*(_rm->m_pRoadmap)) << "\n";
-          DisplayCCStats(*(_rm->m_pRoadmap),-1);
-          //cout << "problem here 2\n";
+
+          //DisplayCCStats(*(_rm->m_pRoadmap),-1);
+
           bool toConnect = FALSE;
           vector<VID> cct3;
           GetCC(*(_rm->m_pRoadmap),(*cc2).second,cct3);
@@ -350,36 +320,25 @@ for ( int z = 0; z <=1; z++) {
 		&& (i<iterations) ) {
 	  U.clear();
           toConnect = FALSE;
-	  /*while ( (U.size()<2)
-	    && (!IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id))
-	    && ( i <= _cn.GetIterations() ) ) {
-          */
+
            while (!toConnect 
                   && (!IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id))
                   && ( i <= iterations )) {
 
-		//vector<Cfg> U;
+
  		U.clear();
-          	i++; cout << "\ni=" << i << "  \n ";
-	        //cout << "inside while not same cc";
+          	i++; 
 	      if ((i % 2 )== 0) {
-		//Cfg tmp = Cfg::GetRandomCfg(submap1.environment);
-		//Cfg x_rand = Cfg(tmp);
-		//U.push_back(x_rand);
                 
     		toConnect = FALSE;            
-                //cout << "problem here 12btrue\n";
 		RRT(&submap1, Stats,
 		    1,
 		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
 		    o_clearance,clearance_from_node,
 		    U,cd,lp,dm,toConnect,TRUE,
 		    addPartialEdge, addAllEdges);
-                if (U.size() > 0)
-		  cout << "between RRT calls " << U[0] << "\n";
-                else cout << "between RRTcalls random config\n";
+
                 toConnect = TRUE;
-                //cout << "start of problem\n";
 		RRT(&submap2, Stats,
 		    1,
 		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
@@ -388,22 +347,15 @@ for ( int z = 0; z <=1; z++) {
 		    addPartialEdge, addAllEdges);
 		}
 		else {
-		//Cfg tmp = Cfg::GetRandomCfg(submap2.environment);
-		//Cfg x_rand = Cfg(tmp);
-		//U.push_back(x_rand);
 		toConnect = FALSE;
-                cout << "problem here 12ctrue\n";
 		RRT(&submap2, Stats,
 		    1,
 		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
 		    o_clearance,clearance_from_node,
 		    U,cd,lp,dm,toConnect,TRUE,
 		    addPartialEdge, addAllEdges);
-		if (U.size() > 0)
-                  cout << "between RRT calls " << U[0] << "\n";
-                else cout << "between RRTcalls random config\n";
+
                 toConnect = TRUE;
-                //cout << "start of problem\n";
 		RRT(&submap1, Stats,
 		    1,
 		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
@@ -411,18 +363,16 @@ for ( int z = 0; z <=1; z++) {
 		    U,cd,lp,dm,toConnect,TRUE,
 		    addPartialEdge, addAllEdges);
 		}
-		//U.erase(U.begin());
                 
 	  } //end while (!toConnect && ( i <= _cn.GetIterations() )
-	      //if(!IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id)) {
-		cout << "Modifying map\n";
+	     
       		vector<VID> vertsa;
       		(&submap1)->m_pRoadmap->GetVerticesVID(vertsa);
                 ModifyRoadMap(_rm,&submap1, vertsa);
       		vector<VID> vertsb;  //not sure here if cc2 should be cc2 or vice versa
       	        (&submap2)->m_pRoadmap->GetVerticesVID(vertsb);
                 ModifyRoadMap(_rm,&submap2, vertsb);
-		//}
+		
 		d++;
 	} //end while sameCC
       cc2++; d=0; i=0; 

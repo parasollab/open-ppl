@@ -283,7 +283,6 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
 
       //find closest Cfg in map from random cfg.
       vector<  pair<CFG, CFG> > kp;
-      cout << "\nU.size() = " << U.size()<< ". ";
       if (U.size()>0) 
         kp = dm->FindKClosestPairs(env,U[0],verticesData,1);
       else
@@ -299,7 +298,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
 	 int translate_or_not = lrand48();
 	 //select direction
          if ( connecting ) {
-             //cout << "selecting from U\n";
+
              if (U.size() > 0)
                u = U[0];
              else { 
@@ -307,8 +306,6 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
 		    if(translate_or_not%2 == 0) {
 		      CFG tmp_cfg = x_rand;
 		      x_rand.GetPositionOrientationFrom2Cfg(tmp_cfg,x_near);
-		      //cout << x_rand << endl;
-		      //cout << x_near <<endl;
 		    }
 		    u = x_rand;
 	            uu = u;
@@ -317,20 +314,18 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
 	   if(translate_or_not%2 == 0) {
 	     CFG tmp_cfg = x_rand;
 	     x_rand.GetPositionOrientationFrom2Cfg(tmp_cfg,x_near);
-	     //cout << x_rand << endl;
-	     //cout << x_near <<endl;
+
 	   }
 	   // holonomic robot assumption in purely random selection of u
 	   u = x_rand;
          }//endif connecting
-         //cout << "VID#" << kp[0].first;
 // Based on Marco's code which is based off Shawna's
          bool collision=false; 
          CFG lastFreeConfiguration;
          CFG cfg = CFG(x_near); //Cfg of first collision
          double positionRes = env->GetPositionRes();
          double orientationRes = env->GetOrientationRes();
-         cout << "positionRes = " << positionRes << " orientationRes " << orientationRes << endl;
+
          int n_ticks;
          double tmpDist;
          double collisionDistance;
@@ -340,7 +335,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
          CFG incr;
 	 incr.FindIncrement(cfg,dir,&n_ticks,positionRes,orientationRes);
          int tk = 0; // controls the number of ticks generated
-	 cout << "# of ticks: "<< n_ticks << " ";
+
          //clearance_cfgs will be a vector containing last n_clearance cfgs
 
          vector<CFG> clearance_cfgs;
@@ -355,7 +350,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
                clearance_cfgs.erase( startIterator );
                }
             tick.Increment(incr); //next configuration to check
-            cout << "here" << tk ;
+
             if( (tick.isCollision(env,Stats,cd,*cdInfo)) || !(tick.InBoundingBox(env)) ) {
                collisionDistance = dm->Distance(env, cfg, tick);
                collision = true;
@@ -363,15 +358,12 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
             tk++;// increases the tick
             } // end_while
          bool attemptConnection = TRUE;
-         //int clearance_from_node = 5;
          CFG x_new;
          if ( tk < (clearance_from_node + o_clearance) ) {
             if (toConnect && ( lastFreeConfiguration == u ) && connecting) {
-               cout << "\ntk small but still want to connect!!!\n";
                x_new = clearance_cfgs[clearance_cfgs.size()-1];
 	    }
             else { 
-               cout << "\ntk " <<tk<< " too small! donot connect!\n";
                attemptConnection = FALSE;
                toConnect = FALSE;
                x_new = lastFreeConfiguration;
@@ -379,16 +371,13 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
             }
          else {
             if (toConnect && ( lastFreeConfiguration == u )){
-               cout << "\nfound configuration to connect " <<lastFreeConfiguration<< "\n";
                x_new = lastFreeConfiguration;
                }
             else {
-       	       cout << "\nadding: " << clearance_cfgs[0] << "\n";
                x_new = clearance_cfgs[0];
                }
             }
-	 cout << "GetCCcount" << GetCCcount(*(rm->m_pRoadmap));
-	 DisplayCCStats(*(rm->m_pRoadmap),-1);
+	 //DisplayCCStats(*(rm->m_pRoadmap),-1);
 
 	 LPOutput<CFG,WEIGHT> lpOutput;
 	 if (x_new.InBoundingBox(env) && attemptConnection
@@ -406,39 +395,27 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
                        && !x_new.isCollision(env,Stats,cd,*cdInfo)
 		       && !rm->m_pRoadmap->IsEdge(x_near,x_new)
 		       && lp->IsConnected(rm->GetEnvironment(),Stats,cd,dm,x_near,x_new,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))) {
-                         cout << "configurations equal==";
                          CFG t=CFG(x_new);
                          rm->m_pRoadmap->AddVertex(t);
                          rm->m_pRoadmap->AddEdge(x_near, x_new, lpOutput.edge);
-                         //rm->m_pRoadmap->AddEdge(x_near, x_new);
-                         //cout << "VID" << x_new.first
                        }   
                    }
                 else { CFG t=CFG(x_new);
                    settoConnect = FALSE;
                    rm->m_pRoadmap->AddVertex(t);
                    rm->m_pRoadmap->AddEdge(x_near, x_new, lpOutput.edge);
-                   //rm->m_pRoadmap->AddEdge(x_near, x_new);
                    }
-                cout << "GetCCcount" << GetCCcount(*(rm->m_pRoadmap)) << "\n";
-                cout <<"\nfrom    " << x_near;
-		cout <<"\nto added "<< x_new << "\n distance to collision: " << collisionDistance << "\n";
-                cout << "distance to u: " << dm->Distance(env,x_new,u) << "  "<< rm->GetEnvironment()->GetPositionRes()<< "\n";
+
                 if (connecting) {
-                   //Cfg temp=x_new;
                    U.push_back(x_new);
                    if (toConnect && dm->Distance(env,x_new,u)<=env->GetPositionRes()){
-                        //Cfg temp1 = Cfg(temp);
-                        //if ( lp->IsConnected(env,cd,dm,temp1,u,info.lpsetid,&lpOutput) ) {
+
                         if (settoConnect) {
                            toConnect = TRUE;
-                           //rm->m_pRoadmap->AddEdge(x_new, u, lpOutput.edge);
-                           cout << "configuration connectable\n u  ="<<u<<"\nxnew="<<x_new<< "\n";
+
                            }
                         else {
                            toConnect = FALSE;
-                           cout << "configuration NOTconnectable\n u  ="<<u<<"\nxnew="<<x_new<< "\n";
-                           
                            }
                         }
                    else toConnect = FALSE;
@@ -449,7 +426,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
            toConnect = FALSE; 
            }             
       } //endif (kp.size()>0) 
-      else { cout << "no closest pair " << verticesData.size();
+      else { 
 	     xnew.GetRandomCfg(env);
 	   }
 
