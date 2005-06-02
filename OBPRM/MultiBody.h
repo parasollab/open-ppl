@@ -269,6 +269,9 @@ public:
       */
     double ComputeDistance(Body * _body1, Body * _body2);
 
+    /** Ability needed to get the Environment from the Configuration 
+    */
+    Environment* GetEnvironment() { return environment; }
 
     /**Configure the joint by the given amount of displacement.
       *@param _dof Number of Freebody that is going to be reconfigured (moved)
