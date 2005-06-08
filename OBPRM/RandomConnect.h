@@ -171,8 +171,8 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int i=0; i < numEdges; i++) {
-    int c1id = (int)(lrand48()%_rm->m_pRoadmap->GetVertexCount());
-    int c2id = (int)(lrand48()%_rm->m_pRoadmap->GetVertexCount());
+    int c1id = (int)(OBPRM_lrand()%_rm->m_pRoadmap->GetVertexCount());
+    int c2id = (int)(OBPRM_lrand()%_rm->m_pRoadmap->GetVertexCount());
     CFG c1 = vertices[c1id];
     CFG c2 = vertices[c2id];
     

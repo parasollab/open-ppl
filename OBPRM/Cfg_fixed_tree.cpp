@@ -130,7 +130,7 @@ void Cfg_fixed_tree::GetRandomCfg(double R, double rStep){
   v.clear();
   
   for(int i=0; i<NumofJoints; i++) {
-    jointAngle = (2.0*rStep)*drand48() - rStep;
+    jointAngle = (2.0*rStep)*OBPRM_drand() - rStep;
     jointAngle = jointAngle*DefaultRange;
     v.push_back(jointAngle);
   }
@@ -151,7 +151,7 @@ void Cfg_fixed_tree::GetRandomRay(double incr) {
   v.clear();
   
   for(int i=0; i<NumofJoints; i++)
-    v.push_back(drand48()*DefaultRange*incr);
+    v.push_back(OBPRM_drand()*DefaultRange*incr);
 }
 
 
@@ -166,7 +166,7 @@ void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *env) {
   // a little 'bigger' BB will contain all links. 
   v.clear();
   for(int i=0; i<dof; ++i) 
-    v.push_back(drand48()*DefaultRange);
+    v.push_back(OBPRM_drand()*DefaultRange);
 }
 
 void Cfg_fixed_tree::GetMovingSequenceNodes(const Cfg& other, double s, vector<Cfg*>& result) const {
@@ -234,7 +234,7 @@ bool Cfg_fixed_tree::GenerateOverlapCfg(Environment *env,  // although env and r
 
   vector<double> treeData;
   for(int i=0; i<NumofJoints; i++)
-    treeData.push_back(drand48()*DefaultRange);
+    treeData.push_back(OBPRM_drand()*DefaultRange);
   
   // pass back the Cfg for this pose.
   *resultCfg = Cfg_fixed_tree(treeData);

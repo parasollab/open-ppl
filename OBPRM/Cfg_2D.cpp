@@ -149,15 +149,15 @@ void Cfg_2D::GetRandomCfg(Environment* env) {
 void Cfg_2D::GetRandomCfg(double R, double rStep){
   double alpha,beta,z, z1;
   
-  alpha = 2.0*M_PI*drand48();
-  beta  = 2.0*M_PI*drand48();
+  alpha = 2.0*M_PI*OBPRM_drand();
+  beta  = 2.0*M_PI*OBPRM_drand();
   z = R*cos(beta);
   z1 = R*sin(beta);
   
   double roll, pitch, yaw;
-  roll = (2.0*rStep)*drand48() - rStep;
-  pitch = (2.0*rStep)*drand48() - rStep;
-  yaw = (2.0*rStep)*drand48() - rStep;
+  roll = (2.0*rStep)*OBPRM_drand() - rStep;
+  pitch = (2.0*rStep)*OBPRM_drand() - rStep;
+  yaw = (2.0*rStep)*OBPRM_drand() - rStep;
   
   v.clear();
   v.push_back(z1*cos(alpha));
@@ -176,8 +176,8 @@ void Cfg_2D::GetRandomCfg(double R, double rStep){
 void Cfg_2D::GetRandomRay(double incr) {
    double alpha,beta,z, z1;
 
-   alpha = 2.0*M_PI*drand48();
-   beta  = 2.0*M_PI*drand48();
+   alpha = 2.0*M_PI*OBPRM_drand();
+   beta  = 2.0*M_PI*OBPRM_drand();
    z = incr*cos(beta);
    z1 = incr*sin(beta);
    v.clear();
@@ -197,11 +197,11 @@ void Cfg_2D::GetRandomCfg_CenterOfMass(Environment *env) {
   for(int i=0; i<6; ++i) {
     if(i<3) {
       int k = 2*i;
-      double p = boundingBox[k] +(boundingBox[k+1]-boundingBox[k])*drand48();
+      double p = boundingBox[k] +(boundingBox[k+1]-boundingBox[k])*OBPRM_drand();
       v.push_back(p);
     }
     else
-      v.push_back(drand48());
+      v.push_back(OBPRM_drand());
   }
   
   obst = -1;
@@ -218,13 +218,13 @@ bool Cfg_2D::GenerateOverlapCfg(Environment *env,  // although env and robot is 
 
   Vector3D diff = robot_goal - robot_start;
   double rand[3];
-  rand[0] = drand48();
-  rand[1] = drand48();
-  rand[2] = drand48();
+  rand[0] = OBPRM_drand();
+  rand[1] = OBPRM_drand();
+  rand[2] = OBPRM_drand();
   
   // pass back the Cfg for this pose.
   // Cfg_2D cfg2d(diff[0], diff[1], diff[2],
-  //      	  drand48(), drand48(),drand48());
+  //      	  OBPRM_drand(), OBPRM_drand(),OBPRM_drand());
   Cfg_2D cfg2d(diff[0], diff[1], diff[2],
 	       rand[0], rand[1], rand[2]);
   
@@ -300,12 +300,12 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
     // find a point on robot's facet and one on obstacle's facet(one of the triangles).
     
     // points on edge.
-    double ran1 = drand48();
-    double ran2 = drand48();
+    double ran1 = OBPRM_drand();
+    double ran2 = OBPRM_drand();
     //random interpolation between two random points (vertices) (robot)
-    robotPoint = robotVertex[rand()%3]*ran1 + robotVertex[rand()%3]*(1.-ran1);
+    robotPoint = robotVertex[OBPRM_lrand()%3]*ran1 + robotVertex[OBPRM_lrand()%3]*(1.-ran1);
     //random interpolation between two random points (vertices) (obstacle)
-    obstPoint = obstVertex[rand()%3]*ran2 + obstVertex[rand()%3]*(1.-ran2);
+    obstPoint = obstVertex[OBPRM_lrand()%3]*ran2 + obstVertex[OBPRM_lrand()%3]*(1.-ran2);
     
     ///I can't see what's goning on next???
     Vector3D robotCMS = obstPoint - ( orient * robotPoint);
@@ -376,8 +376,8 @@ void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
   int num = 0;
   
   while(num < nCfgs) {
-    int robotTriIndex = (int)(drand48()*polyRobot.numPolygons);
-    int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
+    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.numPolygons);
+    int obstTriIndex = (int)(OBPRM_drand()*polyObst.numPolygons);
     
     vector<Cfg*> tmp;
     GetCfgByOverlappingNormal(env, Stats, cd, 

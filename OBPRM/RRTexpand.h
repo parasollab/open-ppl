@@ -295,7 +295,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
 
          CFG u;
 	 bool close = FALSE;
-	 int translate_or_not = lrand48();
+	 int translate_or_not = OBPRM_lrand();
 	 //select direction
          if ( connecting ) {
 

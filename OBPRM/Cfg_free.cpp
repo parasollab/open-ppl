@@ -139,15 +139,15 @@ bool Cfg_free::ConfigEnvironment(Environment* env) const {
 void Cfg_free::GetRandomCfg(double R, double rStep) {
   double alpha, beta, z, z1;
   
-  alpha = 2.0*M_PI*drand48();
-  beta  = 2.0*M_PI*drand48();
+  alpha = 2.0*M_PI*OBPRM_drand();
+  beta  = 2.0*M_PI*OBPRM_drand();
   z = R*cos(beta);
   z1 = R*sin(beta);
   
   double roll, pitch, yaw;
-  roll = (2.0*rStep)*drand48() - rStep;
-  pitch = (2.0*rStep)*drand48() - rStep;
-  yaw = (2.0*rStep)*drand48() - rStep;
+  roll = (2.0*rStep)*OBPRM_drand() - rStep;
+  pitch = (2.0*rStep)*OBPRM_drand() - rStep;
+  yaw = (2.0*rStep)*OBPRM_drand() - rStep;
   
   v.clear();
   v.push_back(z1*cos(alpha));
@@ -171,8 +171,8 @@ void Cfg_free::GetRandomCfg(Environment* env) {
 void Cfg_free::GetRandomRay(double incr) {
   double alpha, beta, z, z1;
   
-  alpha = 2.0*M_PI*drand48();
-  beta  = 2.0*M_PI*drand48();
+  alpha = 2.0*M_PI*OBPRM_drand();
+  beta  = 2.0*M_PI*OBPRM_drand();
   z = incr*cos(beta);
   z1 = incr*sin(beta);
   
@@ -198,7 +198,7 @@ bool Cfg_free::GenerateOverlapCfg(Environment *env,  // although env and robot i
   
   // pass back the Cfg for this pose.
   *resultCfg = Cfg_free(diff[0], diff[1], diff[2], 
-			drand48(), drand48(), drand48());
+			OBPRM_drand(), OBPRM_drand(), OBPRM_drand());
   return true;
 }
 
@@ -221,8 +221,8 @@ void Cfg_free::GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats,
   int num = 0;
   
   while(num < nCfgs) {
-    int robotTriIndex = (int)(drand48()*polyRobot.numPolygons);
-    int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
+    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.numPolygons);
+    int obstTriIndex = (int)(OBPRM_drand()*polyObst.numPolygons);
   
     vector<Cfg*> tmp;  
     GetCfgByOverlappingNormal(env, Stats, cd, polyRobot, polyObst,
@@ -304,12 +304,12 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
     // find a point on robot's facet and one on obstacle's facet(one of the triangles).
     
     // points on edge.
-    double ran1 = drand48();
-    double ran2 = drand48();
+    double ran1 = OBPRM_drand();
+    double ran2 = OBPRM_drand();
     //random interpolation between two random points (vertices) (robot)
-    robotPoint = robotVertex[rand()%3]*ran1 + robotVertex[rand()%3]*(1.-ran1);
+    robotPoint = robotVertex[OBPRM_lrand()%3]*ran1 + robotVertex[OBPRM_lrand()%3]*(1.-ran1);
     //random interpolation between two random points (vertices) (obstacle)
-    obstPoint = obstVertex[rand()%3]*ran2 + obstVertex[rand()%3]*(1.-ran2);
+    obstPoint = obstVertex[OBPRM_lrand()%3]*ran2 + obstVertex[OBPRM_lrand()%3]*(1.-ran2);
     
     ///I can't see what's goning on next???
     Vector3D robotCMS = obstPoint - ( orient * robotPoint);
@@ -401,7 +401,7 @@ bool Cfg_free::InNarrowPassage(Environment* env, Stat_Class& Stats,
   }
   
   double THROWpercentage = 0.5; // (0.5:walls) (0.97:alpha) (1.0:flange)
-  if(narrowpassageWeight < 2  && drand48() < THROWpercentage)
+  if(narrowpassageWeight < 2  && OBPRM_drand() < THROWpercentage)
     return false; // throw most of No-inside-narrow nodes away.
   return true;
 }
@@ -435,10 +435,10 @@ void Cfg_free::GetRandomCfg_CenterOfMass(Environment *env) {
   for(int i=0; i<6; ++i) {
     if(i<3) {
       int k = 2*i;
-      double p = boundingBox[k] +(boundingBox[k+1]-boundingBox[k])*drand48();
+      double p = boundingBox[k] +(boundingBox[k+1]-boundingBox[k])*OBPRM_drand();
       v.push_back(p);
     } else
-      v.push_back(drand48());
+      v.push_back(OBPRM_drand());
   }
 
   obst = -1;

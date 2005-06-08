@@ -121,14 +121,14 @@ const char* Cfg_fixed_PRR::GetName() const {
   
 void Cfg_fixed_PRR::GetRandomCfg(double R, double rStep){
   double zz;
-  if(drand48() > 0.5)
+  if(OBPRM_drand() > 0.5)
     zz = R;
   else
     zz = -R;
   
   double ceta1, ceta2;
-  ceta1 = (2.0*rStep)*drand48() - rStep;
-  ceta2 = (2.0*rStep)*drand48() - rStep;
+  ceta1 = (2.0*rStep)*OBPRM_drand() - rStep;
+  ceta2 = (2.0*rStep)*OBPRM_drand() - rStep;
   
   v.clear();
   v.push_back(zz);
@@ -144,8 +144,8 @@ void Cfg_fixed_PRR::GetRandomCfg(double R, double rStep){
 void Cfg_fixed_PRR::GetRandomRay(double incr) {
   double alpha,beta,z, z1;
   
-  alpha = 2.0*M_PI*drand48();
-  beta  = 2.0*M_PI*drand48();
+  alpha = 2.0*M_PI*OBPRM_drand();
+  beta  = 2.0*M_PI*OBPRM_drand();
   z = incr*cos(beta);
   z1 = incr*sin(beta);
    
@@ -167,10 +167,10 @@ void Cfg_fixed_PRR::GetRandomCfg(Environment* env) {
 void Cfg_fixed_PRR::GetRandomCfg_CenterOfMass(Environment *env) {
   double *boundingBox = env->GetBoundingBox();
   double zz = boundingBox[4] +
-    (boundingBox[5]-boundingBox[4])*drand48();
+    (boundingBox[5]-boundingBox[4])*OBPRM_drand();
   
-  double ceta1 =1.0 * drand48();
-  double ceta2 =1.0 * drand48();
+  double ceta1 =1.0 * OBPRM_drand();
+  double ceta2 =1.0 * OBPRM_drand();
   
   v.clear();
   v.push_back(zz);

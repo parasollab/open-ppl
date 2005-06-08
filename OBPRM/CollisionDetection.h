@@ -528,7 +528,7 @@ InitializePenetration(double times, int nCfgs, Environment* env,
   CFG* tmp;
   for(int i=0; i < nCfgs; i++) {
     tmp = new CFG;
-    tmp->GetRandomCfg(env, dm, penetration*drand48());
+    tmp->GetRandomCfg(env, dm, penetration*OBPRM_drand());
     directions.push_back(tmp);
     cout <<"Added Cfg\n"<<flush;
   }

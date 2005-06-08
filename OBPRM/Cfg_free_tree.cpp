@@ -165,15 +165,15 @@ void Cfg_free_tree::GetRandomCfg(double R, double rStep){
   double alpha,beta,z, z1;
   double jointAngle;
   
-  alpha = 2.0*M_PI*drand48();
-  beta  = 2.0*M_PI*drand48();
+  alpha = 2.0*M_PI*OBPRM_drand();
+  beta  = 2.0*M_PI*OBPRM_drand();
   z = R*cos(beta);
   z1 = R*sin(beta);
 
   double roll, pitch, yaw;
-  roll = (2.0*rStep)*drand48() - rStep;
-  pitch = (2.0*rStep)*drand48() - rStep;
-  yaw = (2.0*rStep)*drand48() - rStep;
+  roll = (2.0*rStep)*OBPRM_drand() - rStep;
+  pitch = (2.0*rStep)*OBPRM_drand() - rStep;
+  yaw = (2.0*rStep)*OBPRM_drand() - rStep;
   
   Vector6<double> base(z1*cos(alpha),z1*sin(alpha),z,roll,pitch,yaw);
   
@@ -182,7 +182,7 @@ void Cfg_free_tree::GetRandomCfg(double R, double rStep){
   for( i=0; i<6; ++i)
     v.push_back(base[i]);
   for(i=0; i<NumofJoints; i++) {
-    jointAngle = (2.0*rStep)*drand48() - rStep;
+    jointAngle = (2.0*rStep)*OBPRM_drand() - rStep;
     // or: jointAngle = 0.0; I am not sure which is more reasonable now. Guang
     v.push_back(jointAngle);
   }
@@ -196,8 +196,8 @@ void Cfg_free_tree::GetRandomRay(double incr) {
   double alpha,beta,z, z1;
   double jointAngle;
   
-  alpha = 2.0*M_PI*drand48();
-  beta  = 2.0*M_PI*drand48();
+  alpha = 2.0*M_PI*OBPRM_drand();
+  beta  = 2.0*M_PI*OBPRM_drand();
   z = incr*cos(beta);
   z1 = incr*sin(beta);
   
@@ -209,7 +209,7 @@ void Cfg_free_tree::GetRandomRay(double incr) {
     v.push_back(base[i]);
   for(i=0; i<NumofJoints; i++) {
     jointAngle = 0.0;
-    // or: jointAngle = drand48();
+    // or: jointAngle = OBPRM_drand();
     v.push_back(jointAngle);
   }
   
@@ -230,10 +230,10 @@ void Cfg_free_tree::GetRandomCfg_CenterOfMass(Environment *env) {
     if(i<3) {
       int k = 2*i;
       double p = boundingBox[k] +
-	(boundingBox[k+1]-boundingBox[k])*drand48();
+	(boundingBox[k+1]-boundingBox[k])*OBPRM_drand();
       v.push_back(p);
     } else
-      v.push_back(drand48());
+      v.push_back(OBPRM_drand());
   }
   
   obst = -1;
@@ -289,11 +289,11 @@ bool Cfg_free_tree::GenerateOverlapCfg(Environment *env,  // although env and ro
   for(i=0; i<3; ++i)
     result.push_back(diff[i]);
   for(i=3; i<dof; ++i)
-    result.push_back(drand48());
+    result.push_back(OBPRM_drand());
   
   // pass back the Cfg for this pose.
   //       *resultCfg = Cfg_free_tree(diff[0], diff[1], diff[2], 
-  //  				drand48(), drand48);
+  //  				OBPRM_drand(), OBPRM_drand());
   *resultCfg = Cfg_free_tree(result);
   return true;
 }
@@ -322,8 +322,8 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
   base->AddBody(env->GetMultiBody(robot)->GetFreeBody(0));
   
   while(num < nCfgs) {
-    int robotTriIndex = (int)(drand48()*polyRobot.numPolygons);
-    int obstTriIndex = (int)(drand48()*polyObst.numPolygons);
+    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.numPolygons);
+    int obstTriIndex = (int)(OBPRM_drand()*polyObst.numPolygons);
     vector<Cfg*> tmp;
     GetCfgByOverlappingNormal(env, Stats, cd, 
 			      polyRobot, polyObst, 
@@ -336,7 +336,7 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
 	vector<double> serialData = basePose;  // for clearness, have basePose tmp variable.
 	int i;
 	for(i=0; i<NumofJoints; ++i) {  // now add joint angles.
-	  serialData.push_back(drand48());
+	  serialData.push_back(OBPRM_drand());
 	}
 	Cfg* serial = this->CreateNewCfg(serialData);
 	if(!serial->isCollision(env,Stats,cd,_cdInfo) && serial->InBoundingBox(env)) {
