@@ -1,4 +1,4 @@
 ../obprm -cd RAPID -f PRR \
 	-gNodes BasicPRM \
-		nodes 100 \
+		nodes 100 chunkSize 50 exact 1 \
 	-cNodes closest components 5 5 

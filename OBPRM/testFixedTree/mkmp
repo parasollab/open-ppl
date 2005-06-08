@@ -1,9 +1,9 @@
-../obprm -f narrow \
+../fixed_tree -f narrow \
 	-cd RAPID \
 	-numofjoints 3 \
 	-bbox [-100,100,-100,100,-100,100] \
 	-bbox_scale 2 \
 	-dm euclidean \
 	-lp straightline \
-	-gNodes BasicPRM nodes 100 \
+	-gNodes BasicPRM nodes 100 chunkSize 50 exact 1 \
 	-cNodes closest
