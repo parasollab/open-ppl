@@ -20,7 +20,7 @@
 #include "DistanceMetrics.h"
 #include "Weight.h"
 #include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
+#include "MapGenerator.h"
 
 #include "CfgTypes.h"
 
@@ -30,8 +30,9 @@ typedef DefaultWeight WeightType;
 
 Input input;
 Stat_Class Stats; 
+
 void PrintRawLine( ostream& _os,
-        Roadmap<CfgType, WeightType> *rmap, Clock_Class *NodeGenClock, Clock_Class *ConnectionClock,
+        Roadmap<CfgType, WeightType> *rmap, Clock_Class *MapGenClock,
         int printHeaders);
 
 //========================================================================
@@ -39,25 +40,28 @@ void PrintRawLine( ostream& _os,
 //========================================================================
 int main(int argc, char** argv)
 {
-  GenerateMapNodes<CfgType> gn;
-  ConnectMap<CfgType, WeightType> cm;
+  MapGenerator<CfgType, WeightType> mg;
   LocalPlanners<CfgType, WeightType> lp;
   DistanceMetric     dm;
   CollisionDetection cd;
-  Clock_Class        NodeGenClock;
-  Clock_Class        ConnectionClock;
+  Clock_Class        MapGenClock;
 
-  //----------------------------------------------------
+  //---------------------------------------------------
   // Get information from the user via the command line
   //----------------------------------------------------
   input.ReadCommandLine(argc,argv);
 
-  CfgType::setNumofJoints(input.numofJoints.GetValue());
-  cout << "Cfg_fixed_tree::NumofJoints = " 
+   CfgType::setNumofJoints(input.numofJoints.GetValue());
+   cout << "Cfg_fixed_tree::NumofJoints = " 
        << CfgType::getNumofJoints() << endl;
 
+
   // do not seed for now while developing code... ADD SEEDING LATER
-  // srand48((unsigned int) time(NULL));
+  // use the following way to seed
+  // baseSeed = OBPRM_srand(seedValue);
+  // e.g., baseSeed = OBPRM_srand((unsigned int) time(NULL)), here the seedValue is time
+  long baseSeed;
+  baseSeed = OBPRM_srand();
 
   //----------------------------------------------------
   // instantiate roadmap object 
@@ -66,12 +70,13 @@ int main(int argc, char** argv)
   // build map
   // write map to a file
   //----------------------------------------------------
-  Roadmap<CfgType, WeightType> rmap(&input,  &cd, &dm, &lp);
+  Roadmap<CfgType, WeightType> rmap(&input,  &cd, &dm, &lp, baseSeed);
+  cout<<"the RNGseed in rmap is (from main): "<<rmap.GetRNGseed()<<endl;
   
   cd.ReadCommandLine(input.CDstrings, input.numCDs);
   lp.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype);
-  gn.ReadCommandLine(input.GNstrings, input.numGNs);
-  cm.ReadCommandLine(&input, rmap.GetEnvironment());
+  mg.gn.ReadCommandLine(input.GNstrings, input.numGNs);
+  mg.cm.ReadCommandLine(&input, rmap.GetEnvironment());
   dm.ReadCommandLine(input.DMstrings, input.numDMs);
 
   #ifdef QUIET
@@ -79,44 +84,12 @@ int main(int argc, char** argv)
     input.PrintValues(cout);
   #endif
 
-  if ( input.inmapFile.IsActivated() ){
-    //---------------------------
-    // Read roadmap nodes
-    //---------------------------
-    rmap.ReadRoadmapGRAPHONLY(input.inmapFile.GetValue());
-  } else {
-    //---------------------------
-    // Generate roadmap nodes
-    //---------------------------
-    NodeGenClock.StartClock("Node Generation");
+    MapGenClock.StartClock("Map Generation");
     vector<CfgType> nodes;
-    gn.GenerateNodes<WeightType>(&rmap,Stats,&cd,&dm,nodes);
-    NodeGenClock.StopClock();
-  }
+    mg.GenerateMap(&rmap,Stats,&cd,&dm,nodes,&lp, &input);
+    MapGenClock.StopClock();
 
-
-  #ifdef QUIET
-  #else
-    cout << "\n";
-    if ( input.inmapFile.IsActivated() ){
-      cout << "Node Generation: ";
-    }else{
-      cout << "Node Generation: " << NodeGenClock.GetClock_SEC()
-           << " sec (ie, " << NodeGenClock.GetClock_USEC() << " usec)";
-    }
-    
-	cout << ", "<<rmap.m_pRoadmap->GetVertexCount()<<" nodes\n"<< flush;
-  #endif
-
-
-  //---------------------------
-  // Connect roadmap nodes
-  //---------------------------
-  ConnectionClock.StartClock("Node Connection");
-  cm.ConnectComponents(&rmap, Stats, &cd, &dm, &lp,
-		       input.addPartialEdge.GetValue(), input.addAllEdges.GetValue());
-  ConnectionClock.StopClock();
-
+  
   //---------------------------
   // Write roadmap
   //---------------------------
@@ -134,14 +107,15 @@ int main(int argc, char** argv)
       exit(-1);
     }
     PrintRawLine(cout,
-        &rmap, &NodeGenClock,&ConnectionClock,1);  // to stdout
+        &rmap, &MapGenClock,1);  // to stdout
     PrintRawLine(myofstream,
-        &rmap, &NodeGenClock,&ConnectionClock,0);  // to map
+        &rmap, &MapGenClock,0);  // to map
   #else
     cout << "\n";
-    ConnectionClock.PrintName();
-    cout << ": " << ConnectionClock.GetClock_SEC()
+    MapGenClock.PrintName();
+    cout << ": " << MapGenClock.GetClock_SEC()
          << " sec"
+ 	 << ", "<<rmap.m_pRoadmap->GetVertexCount()<<" nodes"
          << ", "<<rmap.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
     Stats.PrintAllStats(&rmap);
   #endif
@@ -159,14 +133,12 @@ int main(int argc, char** argv)
 
 
 void PrintRawLine( ostream& _os,
-        Roadmap<CfgType, WeightType> *rmap, Clock_Class *NodeGenClock, Clock_Class *ConnectionClock,
+        Roadmap<CfgType, WeightType> *rmap, Clock_Class *MapGenClock,
         int printHeader = 0 ){
 
   _os << "\nraw ";               // We can grep out "raw" datalines.
-  _os << NodeGenClock->GetClock_SEC()     << " ";
-  _os << NodeGenClock->GetClock_USEC()    << " ";
-  _os << ConnectionClock->GetClock_SEC()  << " ";
-  _os << ConnectionClock->GetClock_USEC() << " ";
+  _os << MapGenClock->GetClock_SEC()     << " ";
+  _os << MapGenClock->GetClock_USEC()    << " ";
   Stats.PrintDataLine(_os,rmap,printHeader);
   _os << "\n\n";
 }
