@@ -38,6 +38,10 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
   // Access
   virtual char* GetName();
   virtual void SetDefault();
+  virtual int GetNextNodeIndex();
+  virtual void SetNextNodeIndex(int);
+  virtual void IncreaseNextNodeIndex(int);
+
 
   //////////////////////
   // I/O methods
@@ -80,8 +84,15 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
   /**Distance from surface to retain Gausian
    */
   num_param<double> gauss_d;
+  //Index for next node 
+  //used in incremental map generation
+  static int nextNodeIndex;
+
 };
 
+
+template <class CFG>
+int GaussPRM<CFG>::nextNodeIndex = 0;
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -119,11 +130,34 @@ SetDefault() {
 
 
 template <class CFG>
+int
+GaussPRM<CFG>::
+GetNextNodeIndex() {
+  return nextNodeIndex;
+}
+
+template <class CFG>
+void
+GaussPRM<CFG>::
+SetNextNodeIndex(int index) {
+  nextNodeIndex = index;
+}
+
+template <class CFG>
+void
+GaussPRM<CFG>::
+IncreaseNextNodeIndex(int numIncrease) {
+  nextNodeIndex += numIncrease;
+}
+
+
+template <class CFG>
 void
 GaussPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if ( chunkSize.AckCmdLine(&i, argc, argv) ) {
     } else if ( exactNodes.AckCmdLine(&i, argc, argv) ) {
     } else if ( gauss_d.AckCmdLine(&i, argc, argv) ) {
     } else {
@@ -147,6 +181,7 @@ PrintUsage(ostream& _os){
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
+  _os << "\n\t"; chunkSize.PrintUsage(_os);
   _os << "\n\t"; exactNodes.PrintUsage(_os);
   _os << "\n\t"; gauss_d.PrintUsage(_os);
   
@@ -160,6 +195,7 @@ GaussPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
   _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
   _os << gauss_d.GetFlag() << " " << gauss_d.GetValue() << " ";
   _os << endl;
@@ -183,6 +219,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ") ";
+  cout << "(chunkSize=" << chunkSize.GetValue() << ") ";
   cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
 #endif
 

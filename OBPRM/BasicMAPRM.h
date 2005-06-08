@@ -17,6 +17,10 @@ class BasicMAPRM : public NodeGenerationMethod<CFG> {
   // Access
   virtual char* GetName();
   virtual void SetDefault();
+  virtual int GetNextNodeIndex();
+  virtual void SetNextNodeIndex(int);
+  virtual void IncreaseNextNodeIndex(int);
+
 
   //////////////////////
   // I/O methods
@@ -52,7 +56,15 @@ class BasicMAPRM : public NodeGenerationMethod<CFG> {
 
   num_param<int> m_bApprox; //using approximation or exact computation
   num_param<int> m_iRays; //number of shooting rays for approximation penetration.
+  //Index for next node 
+  //used in incremental map generation
+  static int nextNodeIndex;
+
 };
+
+
+template <class CFG>
+int BasicMAPRM<CFG>::nextNodeIndex = 0;
 
 
 //---------------------------------------------------------------
@@ -105,11 +117,33 @@ SetDefault() {
 
 
 template <class CFG>
+int
+BasicMAPRM<CFG>::
+GetNextNodeIndex() {
+  return nextNodeIndex;
+}
+
+template <class CFG>
+void
+BasicMAPRM<CFG>::
+SetNextNodeIndex(int index) {
+  nextNodeIndex = index;
+}
+
+template <class CFG>
+void
+BasicMAPRM<CFG>::
+IncreaseNextNodeIndex(int numIncrease) {
+  nextNodeIndex += numIncrease;
+}
+
+template <class CFG>
 void
 BasicMAPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (chunkSize.AckCmdLine(&i, argc, argv) ) {
     } else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
     } else if (m_bApprox.AckCmdLine(&i, argc, argv) ) {
     } else if (m_iRays.AckCmdLine(&i, argc, argv) ) {
@@ -134,6 +168,7 @@ PrintUsage(ostream& _os) {
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
+  _os << "\n\t"; chunkSize.PrintUsage(_os);
   _os << "\n\t"; exactNodes.PrintUsage(_os);
   _os << "\n\t"; m_bApprox.PrintUsage(_os);
   _os << "\n\t"; m_iRays.PrintUsage(_os);
@@ -147,6 +182,7 @@ BasicMAPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
   _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
   _os << m_bApprox.GetFlag() << " " << m_bApprox.GetValue() << " ";
   _os << m_iRays.GetFlag() << " " << m_iRays.GetValue() << " ";

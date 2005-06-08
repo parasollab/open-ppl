@@ -41,6 +41,9 @@ class OBMAPRM : public OBPRM<CFG> {
   // Access
   virtual char* GetName();
   virtual void SetDefault();
+  virtual int GetNextNodeIndex();
+  virtual void SetNextNodeIndex(int);
+  virtual void IncreaseNextNodeIndex(int);
 
   //////////////////////
   // I/O methods
@@ -70,8 +73,16 @@ class OBMAPRM : public OBPRM<CFG> {
    *@see Cfg::ApproxCSpaceClearance
    */
   num_param<int> penetrationNum;
+
+  //Index for next node
+  //used in incremental map generation
+  static int nextNodeIndex;
+
 };
 
+
+template <class CFG>
+int OBMAPRM<CFG>::nextNodeIndex = 0;
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -113,12 +124,37 @@ SetDefault() {
 
 
 template <class CFG>
+int
+OBMAPRM<CFG>::
+GetNextNodeIndex() {
+  return nextNodeIndex;
+}
+
+
+template <class CFG>
+void
+OBMAPRM<CFG>::
+SetNextNodeIndex(int index) {
+  nextNodeIndex = index;
+}
+
+
+template <class CFG>
+void
+OBMAPRM<CFG>::
+IncreaseNextNodeIndex(int numIncrease) {
+  nextNodeIndex += numIncrease;
+}
+
+
+template <class CFG>
 void
 OBMAPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   int i;
   for (i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (chunkSize.AckCmdLine(&i, argc, argv) ) {
     } else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
     } else if (numShells.AckCmdLine(&i, argc, argv) ) {
     } else if (proportionSurface.AckCmdLine(&i, argc, argv) ) {
@@ -162,6 +198,7 @@ PrintUsage(ostream& _os) {
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
+  _os << "\n\t"; chunkSize.PrintUsage(_os);
   _os << "\n\t"; exactNodes.PrintUsage(_os);
   _os << "\n\t"; clearanceNum.PrintUsage(_os);
   _os << "\n\t"; penetrationNum.PrintUsage(_os);
@@ -181,6 +218,7 @@ OBMAPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
   _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
   _os << clearanceNum.GetFlag() << " " << clearanceNum.GetValue() << " ";
   _os << penetrationNum.GetFlag() << " " << penetrationNum.GetValue() << " ";
@@ -211,7 +249,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes="          << numNodes.GetValue()          << ", ";
-  cout << "exactNodes="        << exactNodes.GetValue()         << ", ";
+  cout << "chunkSize="          << chunkSize.GetValue()         << ", ";
+  cout << "exactNodes="         << exactNodes.GetValue()         << ", ";
   cout << "clearanceNum="       << clearanceNum.GetValue()      << ", ";
   cout << "penetrationNum="     << penetrationNum.GetValue()    << ", ";
   cout << "\nproportionSurface="<< proportionSurface.GetValue() << ", ";

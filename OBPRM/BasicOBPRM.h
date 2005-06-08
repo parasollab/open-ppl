@@ -41,6 +41,10 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
   // Access
   virtual char* GetName();
   virtual void SetDefault();
+  virtual int GetNextNodeIndex();
+  virtual void SetNextNodeIndex(int);
+  virtual void IncreaseNextNodeIndex(int);
+
 
   //////////////////////
   // I/O methods
@@ -378,6 +382,10 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
   num_param<int> numShells;
   /// max. # of attempts at surface convergence	
   static const int MAX_CONVERGE;
+
+  //Index for next node 
+  //used in incremental map generation
+  static int nextNodeIndex;
 };
 
 
@@ -388,6 +396,9 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
 const int BasicOBPRM<CFG>::MAX_CONVERGE = 20;  
+
+template <class CFG>
+int BasicOBPRM<CFG>::nextNodeIndex = 0;
 
 
 template <class CFG>
@@ -420,6 +431,27 @@ SetDefault() {
   numShells.PutValue(3);
 }
 
+template <class CFG>
+int
+BasicOBPRM<CFG>::
+GetNextNodeIndex() {
+  return nextNodeIndex;
+}
+
+template <class CFG>
+void
+BasicOBPRM<CFG>::
+SetNextNodeIndex(int index) {
+  nextNodeIndex = index;
+}
+
+template <class CFG>
+void
+BasicOBPRM<CFG>::
+IncreaseNextNodeIndex(int numIncrease) {
+  nextNodeIndex += numIncrease;
+}
+
 
 template <class CFG>
 void
@@ -428,6 +460,7 @@ ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
     }else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
+    }else if (chunkSize.AckCmdLine(&i, argc, argv) ) {
     }else if (numShells.AckCmdLine(&i, argc, argv) ) {
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
@@ -452,6 +485,7 @@ PrintUsage(ostream& _os) {
   _os << "\n\t"; numNodes.PrintUsage(_os);
   _os << "\n\t"; numShells.PrintUsage(_os);
   _os << "\n\t"; exactNodes.PrintUsage(_os);
+  _os << "\n\t"; chunkSize.PrintUsage(_os);
   _os.setf(ios::right,ios::adjustfield);
 }
 
@@ -463,6 +497,7 @@ PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
   _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
+  _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
   _os << numShells.GetFlag() << " " << numShells.GetValue() << " ";
   _os << endl;
 }
@@ -486,6 +521,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ", "<<flush;
   cout << "(exactNodes=" << exactNodes.GetValue() << ", "<<flush;
+  cout << "(chunkSize=" << chunkSize.GetValue() << ", "<<flush;
   cout << "numShells=" << numShells.GetValue() << ") "<<flush;
 #endif
   
@@ -630,7 +666,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	int iSelect;
 	for (int j = 0; j < nNodesGap; j++) //randomly sample #nNodesGap 
 	  {
-	    do { iSelect = rand() % nActualNodes; } while (indices[iSelect] == true);
+	    do { iSelect = OBPRM_lrand() % nActualNodes; } while (indices[iSelect] == true);
 	    indices[iSelect] = true;
 	  }
 
@@ -932,7 +968,7 @@ PointOnBody(Body* body, int select, bool isFreeBody) {
     break;
     
   case cM_rV:
-    opt = rand() % 2;
+    opt = OBPRM_lrand() % 2;
     if(opt == 0){
       pt = body->GetCenterOfMass();
     } else {
@@ -941,7 +977,7 @@ PointOnBody(Body* body, int select, bool isFreeBody) {
     break;
     
   case rV_rT:
-    opt = rand() % 2;
+    opt = OBPRM_lrand() % 2;
     if(opt == 0){
       pt = ChooseRandomVertexOnBody(body, isFreeBody);
     } else {
@@ -950,7 +986,7 @@ PointOnBody(Body* body, int select, bool isFreeBody) {
     break;
     
   case rV_rW:
-    opt = rand() % 2;
+    opt = OBPRM_lrand() % 2;
     if(opt == 0){
       pt = ChooseRandomVertexOnBody(body, isFreeBody);
     } else {
@@ -959,7 +995,7 @@ PointOnBody(Body* body, int select, bool isFreeBody) {
     break;
     
   case all:
-    opt = rand() % 5;
+    opt = OBPRM_lrand() % 5;
     if(opt == 0){
       pt = body->GetCenterOfMass();
     } else if(opt == 1){
@@ -995,7 +1031,7 @@ ChooseRandomVertexOnBody(Body* body, bool isFreeBody) {
     polyhedron = body->GetWorldPolyhedron();
   
   // We choose a vertex of the part at random
-  return polyhedron.vertexList[(int)(drand48()*polyhedron.numVertices)];
+  return polyhedron.vertexList[(int)(OBPRM_drand()*polyhedron.numVertices)];
 };
 
 
@@ -1012,7 +1048,7 @@ ChooseRandomTriangleOnBody(Body* body, bool isFreeBody) {
   
   // We choose a triangle of the body at random
   
-  GMSPolygon *poly = &polyhedron.polygonList[(int)(drand48()*polyhedron.numPolygons)];
+  GMSPolygon *poly = &polyhedron.polygonList[(int)(OBPRM_drand()*polyhedron.numPolygons)];
   Vector3D p, q, r;
   p = polyhedron.vertexList[poly->vertexList[0]];
   q = polyhedron.vertexList[poly->vertexList[1]];
@@ -1068,7 +1104,7 @@ ExtremeVertex(Body* body, bool isFreeBody) {
   }
   
   // Choose an extreme random vertex at random
-  int index = rand() % 6;
+  int index = OBPRM_lrand() % 6;
   return polyhedron.vertexList[index];
 };
 
@@ -1088,7 +1124,7 @@ ChooseRandomWeightedTriangleOnBody(Body* body, bool isFreeBody) {
   double area;
   area = body->GetPolyhedron().area;
   
-  double targetArea = area * drand48();
+  double targetArea = area * OBPRM_drand();
   
   int index, i;
   double sum;
@@ -1123,9 +1159,9 @@ ChoosePointOnTriangle(Vector3D p, Vector3D q, Vector3D r) {
   u = q - p;
   v = r - p;
   
-  double s = drand48(); double t = drand48();
+  double s = OBPRM_drand(); double t = OBPRM_drand();
   while(s + t > 1){
-    t = drand48();
+    t = OBPRM_drand();
   }
   return (p + u*s + v*t);
 };

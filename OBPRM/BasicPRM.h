@@ -36,6 +36,10 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
   //////////////////////
   // Access
   virtual char* GetName();
+  virtual int GetNextNodeIndex();
+  virtual void SetNextNodeIndex(int);
+  virtual void IncreaseNextNodeIndex(int);
+
 
   //////////////////////
   // I/O methods
@@ -57,8 +61,15 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
   virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
 			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
+
+  //Index for next node 
+  //used in incremental map generation
+  static int nextNodeIndex;
 };
 
+
+template <class CFG>
+int BasicPRM<CFG>::nextNodeIndex = 0;
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -84,6 +95,29 @@ GetName() {
   return "BasicPRM";
 }
 
+template <class CFG>
+int
+BasicPRM<CFG>::
+GetNextNodeIndex() {
+  return nextNodeIndex;
+}
+
+template <class CFG>
+void
+BasicPRM<CFG>::
+SetNextNodeIndex(int index) {
+  nextNodeIndex = index;
+}
+
+template <class CFG>
+void
+BasicPRM<CFG>::
+IncreaseNextNodeIndex(int numIncrease) {
+  nextNodeIndex += numIncrease;
+}
+
+
+
 
 template <class CFG>
 void
@@ -92,6 +126,7 @@ ParseCommandLine(int argc, char **argv) {
   int i;
   for (i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) || 
+        chunkSize.AckCmdLine(&i, argc, argv) ||
 	exactNodes.AckCmdLine(&i, argc, argv)) {
 /*         numAttempts.AckCmdLine(&i, argc, argv) || */
     } else {
@@ -115,6 +150,7 @@ PrintUsage(ostream& _os){
   
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os); _os << " ";
+  _os << "\n\t"; chunkSize.PrintUsage(_os); _os << " ";
 /*   _os << "\n\t"; numAttempts.PrintUsage(_os); */
   _os << "\n\t"; exactNodes.PrintUsage(_os);
 
@@ -128,6 +164,8 @@ BasicPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  _os << chunkSize.GetFlag() << " " <<chunkSize.GetValue() << " ";
+
 /*   _os << numAttempts.GetFlag() << " " << numAttempts.GetValue(); */
   _os << exactNodes.GetFlag() << " " << exactNodes.GetValue();
   _os << endl;

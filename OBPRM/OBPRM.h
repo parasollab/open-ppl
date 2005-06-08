@@ -39,6 +39,10 @@ class OBPRM : public BasicOBPRM<CFG> {
   // Access
   virtual char* GetName();
   virtual void SetDefault();
+  virtual int GetNextNodeIndex();
+  virtual void SetNextNodeIndex(int);
+  virtual void IncreaseNextNodeIndex(int);
+
 
   //////////////////////
   // I/O methods
@@ -273,8 +277,16 @@ class OBPRM : public BasicOBPRM<CFG> {
    *@see GenerateMapNodes::GenerateSurfaceCfg
    */
   num_param<double> clearanceFactor; 
+  
+  //Index for next node 
+  //used in incremental map generation
+  static int nextNodeIndex;
+
 };
 
+
+template <class CFG>
+int OBPRM<CFG>::nextNodeIndex = 0;
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -337,6 +349,28 @@ SetDefault() {
   clearanceFactor.PutValue(1.0);
 }
 
+template <class CFG>
+int
+OBPRM<CFG>::
+GetNextNodeIndex() {
+  return nextNodeIndex;
+}
+
+template <class CFG>
+void
+OBPRM<CFG>::
+SetNextNodeIndex(int index) {
+  nextNodeIndex = index;
+}
+
+template <class CFG>
+void
+OBPRM<CFG>::
+IncreaseNextNodeIndex(int numIncrease) {
+  nextNodeIndex += numIncrease;
+}
+
+
 
 template <class CFG>
 void
@@ -346,6 +380,7 @@ ParseCommandLine(int argc, char **argv) {
   for (i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
     } else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (chunkSize.AckCmdLine(&i, argc, argv) ) {
     } else if (numShells.AckCmdLine(&i, argc, argv) ) {
     } else if (proportionSurface.AckCmdLine(&i, argc, argv) ) {
     } else if (collPair.AckCmdLine(&i, argc, argv) ) {
@@ -387,6 +422,7 @@ PrintUsage(ostream& _os) {
   _os << "\n" << GetName() << " ";
   _os << "\n\t"; numNodes.PrintUsage(_os);
   _os << "\n\t"; exactNodes.PrintUsage(_os);
+  _os << "\n\t"; chunkSize.PrintUsage(_os);
   _os << "\n\t"; numShells.PrintUsage(_os);
   _os << "\n\t"; proportionSurface.PrintUsage(_os);
   _os << "\n\t"; collPair.PrintUsage(_os);
@@ -404,6 +440,7 @@ PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
   _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
+  _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
   _os << numShells.GetFlag() << " " << numShells.GetValue() << " ";
   _os << proportionSurface.GetFlag() << " " << proportionSurface.GetValue() << " ";
   _os << collPair.GetFlag() << " " << collPair.GetValue() << " ";
@@ -430,6 +467,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 #ifndef QUIET
   cout << "(numNodes="          << numNodes.GetValue()          << ", ";
   cout << "(exactNodes="          << exactNodes.GetValue()          << ", ";
+  cout << "(chunkSize="          << chunkSize.GetValue()          << ", ";
   cout << "\tproportionSurface="<< proportionSurface.GetValue() << ", ";
   cout << "\nnumShells="        << numShells.GetValue()         << ", ";
   cout << "collPair="           << collPair.GetValue()          << ", ";
@@ -469,6 +507,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   if (NSEED < 1) NSEED = 1;
   int nNodesGap = numNodes.GetValue() - nodes.size();  
   int nNumTries = 0;
+ 
   
 
   vector<CFG> surface;
@@ -546,7 +585,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 	int iSelect;
 	for (int j = 0; j < nNodesGap; j++) //randomly sample #nNodesGap 
 	  {
-	    do { iSelect = rand() % nActualNodes; } while (indices[iSelect] == true);
+	    do { iSelect = OBPRM_lrand() % nActualNodes; } while (indices[iSelect] == true);
 	    indices[iSelect] = true;
 	  }
 
