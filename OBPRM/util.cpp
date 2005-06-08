@@ -42,6 +42,89 @@ double DirectedAngularDistance(double a,double b) {
 }
 
 
+/////////////////////////////////////////////////////////////
+//	RandomNumGenerator
+/////////////////////////////////////////////////////////////
+
+
+double
+OBPRM_drand() {
+  return drand48();
+  
+}
+
+long
+OBPRM_lrand() {
+  return lrand48();
+}
+
+long
+OBPRM_mrand() {
+  return mrand48();
+}
+
+// normally(gaussian) distributed random number generator.
+double OBPRM_grand(bool reset) {
+  double v1, v2, rsq;
+  static int iset = 0;
+  if( reset )  { //reset iset to 0 and return
+    iset = 0;
+    //cout<<"OBPRM_grand() is called. reset internal static variables"<<endl;
+    return 0.0;
+  }
+  static double gset;
+  if(iset == 0) {
+     do {
+        v1 = 2*drand48() - 1.0;
+	v2 = 2*drand48() - 1.0;
+	rsq = v1*v1 + v2*v2;
+     } while (rsq >= 1.0 || rsq == 0.0);
+     double fac = sqrt(-2.0*log(rsq)/rsq);
+     gset = v1*fac;
+     iset = 1;
+     return v2*fac;
+  } else {
+     iset = 0;
+     return gset;
+  }
+}
+
+  
+long
+OBPRM_srand(long seedval){
+  static long oldSeed = seedval;
+  if(oldSeed != seedval) {
+    oldSeed = seedval;
+    return OBPRM_srand("NONE", 0, seedval, true);
+  } else
+  return OBPRM_srand("NONE", 0, seedval);
+}
+
+//the real seed is decided by: baseSeed, methodName, nextNodeIndex
+long
+OBPRM_srand(std::string methodName, int nextNodeIndex, long base, bool reset) {
+  static long baseSeed = base;
+  if (reset)
+    baseSeed = base;
+  //cout<<"baseSeed is: "<<baseSeed<<endl;
+  
+  if (methodName != "NONE") {
+    long methodID = 0;
+    for(int i=0; i<methodName.length(); i++){
+      int tmp = methodName[i];
+      methodID += tmp*(i+1)*(i+2);
+    }
+    cout<<"the seed is:"<<long (baseSeed * (nextNodeIndex+1) + methodID)<<endl;
+    srand48(long (baseSeed * (nextNodeIndex+1) + methodID));
+  } 
+  else {
+    srand48(baseSeed);
+  }
+  
+  return baseSeed;
+}
+
+
 /////////////////////////////////////////////////////////////////////
 // Output to a file the sequence of cfgs.
 /////////////////////////////////////////////////////////////////////

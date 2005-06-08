@@ -69,6 +69,46 @@ inline double sqr(double a)
 //
 //
 //
+// Random Number Generator
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
+  //return non-negative double-prevision floating-point values 
+  //uniformly distributed over the interval [0.0, 1.0)
+  //call drand48()
+  double OBPRM_drand();
+  
+  //return non-negative long integers uniformly distributed over the interval [0, 2**31)
+  //call lrand48()
+  long OBPRM_lrand();
+
+  //return signed long integers uniformly distributed over the interval [-2**31, 2**31)
+  //call mrand48()
+  long OBPRM_mrand();
+
+  // normally(gaussian) distributed random number generator.
+  // when reset is 1, it reset the internal static variable and return 0.0
+  double OBPRM_grand(bool reset = false);
+  
+  /* use seedval as the seed
+   */
+  long OBPRM_srand(long seedval = 0x1234ABCD330E);
+  
+  /* "baseSeed" is a static variable in this function
+     we use baseSeed, methodName and nextNodeIndex to generate a deterministic seed,
+     then call seed48()
+     when reset is 1, baseSeed will be reset
+   */
+  long OBPRM_srand(std::string methodName, int nextNodeIndex, long base = 0x1234ABCD330E, bool reset = false);
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
 // Cfgs input & output from/to files.
 //
 //
