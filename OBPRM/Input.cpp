@@ -35,6 +35,7 @@ Input::Input():
                        //  default   min,max
         addPartialEdge   ("-addPartialEdge",     0,  0,    1),
 	addAllEdges      ("-addAllEdges",        0,  0,    1),
+	seedByChunk      ("-seedByChunk",        1,  0,    1),
         posres           ("-posres",          0.05, -1000, 1000),
         orires           ("-orires", ORIENTATION_RES, -1000, 1000),
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
@@ -47,10 +48,11 @@ Input::Input():
     cfgSet=false;
     addPartialEdge.PutDesc   ("INTEGER","");
     addAllEdges.PutDesc      ("INTEGER","");
+    seedByChunk.PutDesc   ("INTEGER"," seed for each chunk");
 
     envFile.PutDesc    ("STRING ","");
     mapFile.PutDesc    ("STRING ","");
-    inmapFile.PutDesc  ("STRING *causes Node Generation to be SKIPPED","");
+    inmapFile.PutDesc  ("STRING read in a map file","");
 
     defaultFile.PutDesc("STRING ",
         " default filename prefix for common files");
@@ -86,13 +88,16 @@ Input::Input():
 
     GNstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default BasicPRM"
-        "\n\t\t\t  BasicPRM    nodes INT (number of nodes, default 10)"
-        "\n\t\t\t              exact INT (Whether to generate exact num of nodes, default 0)"
-        "\n\t\t\t  BasicOBPRM  nodes  INT (number of nodes, default 10)"
-        "\n\t\t\t              exact INT (Whether to generate exact num of nodes, default 0)"
-        "\n\t\t\t              shells INT (number of shells, default 3)"
+        "\n\t\t\t  BasicPRM    nodes     INT (number of nodes, default 10)"
+        "\n\t\t\t              exact     INT (Whether to generate exact num of nodes, default 0)"
+	"\n\t\t\t              chunkSize INT (chunk size, default 10)"
+        "\n\t\t\t  BasicOBPRM  nodes     INT (number of nodes, default 10)"
+        "\n\t\t\t              exact     INT (Whether to generate exact num of nodes, default 0)"
+	"\n\t\t\t              chunkSize INT (chunk size, default 10)"
+        "\n\t\t\t              shells    INT (number of shells, default 3)"
         "\n\t\t\t  OBPRM       nodes     INT (number of nodes, default 10)"
-        "\n\t\t\t              exact INT (Whether to generate exact num of nodes, default 0)"
+        "\n\t\t\t              exact     INT (Whether to generate exact num of nodes, default 0)"
+	"\n\t\t\t              chunkSize INT (chunk size, default 10)"
 	"\n\t\t\t              shells    INT (number of shells, default 3)"
         "\n\t\t\t              collPair  STRING STRING (default cM, rT)"
         "\n\t\t\t                        Specify 2 of the following recognized mnemonics:"
@@ -110,19 +115,23 @@ Input::Input():
         "\n\t\t\t                        Same as above"
         "\n\t\t\t              clearFact DOUBLE (clearance factor, default 1.0)"
         "\n\t\t\t              pctSurf   DOUBLE (proportion surface nodes, default 1.0)"
-        "\n\t\t\t  GaussPRM    nodes INT (number of nodes, default 10)" 
-        "\n\t\t\t              exact INT (Whether to generate exact num of nodes, default 0)"
-        "\n\t\t\t              d     INT (distance, default based on environment)"
-        "\n\t\t\t  BasicMAPRM  nodes INT (number of nodes, default 10)"
-        "\n\t\t\t              exact INT (Whether to generate exact num of nodes, default 0)"
-	"\n\t\t\t              approx INT (using approximation or exact computation, default 1)"
+        "\n\t\t\t  GaussPRM    nodes     INT (number of nodes, default 10)" 
+        "\n\t\t\t              exact     INT (Whether to generate exact num of nodes, default 0)"
+	"\n\t\t\t              chunkSize INT (chunk size, default 10)"
+        "\n\t\t\t              d         INT (distance, default based on environment)"
+        "\n\t\t\t  BasicMAPRM  nodes     INT (number of nodes, default 10)"
+        "\n\t\t\t              exact     INT (Whether to generate exact num of nodes, default 0)"
+	"\n\t\t\t              chunkSize INT (chunk size, default 10)"
+	"\n\t\t\t              approx    INT (using approximation or exact computation, default 1)"
         "\n\t\t\t              approx_ray INT (number of rays for approximation penetration, default 10)"
-        "\n\t\t\t  CSpaceMAPRM nodes       INT (number of nodes, default 10)"
-        "\n\t\t\t              exact INT (Whether to generate exact num of nodes, default 0)"
-	"\n\t\t\t              clearance   INT (number of rays for approx clearance calulation, default 5)"
+        "\n\t\t\t  CSpaceMAPRM nodes     INT (number of nodes, default 10)"
+        "\n\t\t\t              exact     INT (Whether to generate exact num of nodes, default 0)"
+	"\n\t\t\t              chunkSize INT (chunk size, default 10)"
+	"\n\t\t\t              clearance INT (number of rays for approx clearance calulation, default 5)"
 	"\n\t\t\t              penetration INT (number of rays for approx penetration calculation, default 5)"
-	"\n\t\t\t  OBMAPRM     nodes       INT (number of nodes, default 10)"
-        "\n\t\t\t              exact INT (Whether to generate exact num of nodes, default 0)"
+	"\n\t\t\t  OBMAPRM     nodes     INT (number of nodes, default 10)"
+        "\n\t\t\t              exact     INT (Whether to generate exact num of nodes, default 0)"
+	"\n\t\t\t              chunkSize INT (chunk size, default 10)"
         "\n\t\t\t              clearance   INT (number of rays for approx clearance calculation, default 5)"
         "\n\t\t\t              penetration INT (number of rays for approx penetration calculation, default 5)"
 	"\n\t\t\t              shells      INT (number of shells, default 3)"
@@ -259,6 +268,7 @@ void Input::ReadCommandLine(int argc, char** argv){
       } else if ( inmapFile.AckCmdLine(&i, argc, argv) ) {
       } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
       } else if ( addAllEdges.AckCmdLine(&i, argc, argv) ) {
+      } else if ( seedByChunk.AckCmdLine(&i, argc, argv) ) {
       } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
       } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
       } else if ( posres.AckCmdLine(&i, argc, argv) ) {
@@ -367,6 +377,7 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; inmapFile.PrintUsage(_os);
         _os << "\n  "; addPartialEdge.PrintUsage(_os);
 	_os << "\n  "; addAllEdges.PrintUsage(_os);
+	_os << "\n  "; seedByChunk.PrintUsage(_os);
         _os << "\n  "; bbox.PrintUsage(_os);
         _os << "\n  "; bbox_scale.PrintUsage(_os);
         _os << "\n  "; posres.PrintUsage(_os);
@@ -401,6 +412,7 @@ PrintValues(ostream& _os){
 
   _os <<"\n"<<setw(FW)<<"addPartialEdge"<<"\t"<<addPartialEdge.GetValue();
   _os <<"\n"<<setw(FW)<<"addAllEdges"<<"\t"<<addAllEdges.GetValue();
+  _os <<"\n"<<setw(FW)<<"seedByChunk"<<"\t"<<seedByChunk.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox"<<"\t"<<bbox.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox_scale"<<"\t"<<bbox_scale.GetValue();
   _os <<"\n"<<setw(FW)<<"posres"<<"\t"<<posres.GetValue();
@@ -439,6 +451,8 @@ Input::PrintDefaults(){
             addPartialEdge.GetDefault() << endl << endl;
    cout << setw(FW) << "add all edges" << " (" << addAllEdges.GetFlag() << ") : " <<
             addAllEdges.GetDefault() << endl << endl;
+   cout << setw(FW) << "seed by chunk " << " (" << seedByChunk.GetFlag() << ") : " <<
+            seedByChunk.GetDefault() << endl << endl;
    cout << setw(FW) << "position resolution" << " (" << posres.GetFlag() << ") : " <<
             posres.GetDefault() << endl << endl;
    cout << setw(FW) << "orientation resolution" << " (" << orires.GetFlag() << ") : " <<

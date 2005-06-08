@@ -259,7 +259,7 @@ public:
     //@}
 
     /// command line arguments
-    char commandLine[4*ARGSTRING_LENGTH];    // store command line
+    char commandLine[8*ARGSTRING_LENGTH];    // store command line
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -274,6 +274,7 @@ public:
 
         num_param<int>    addPartialEdge;     ///< Add failed path to roadmap. (For node connection)
 	num_param<int>    addAllEdges;        ///< Add all edges, valid or not, to roadmap. (For node connection)
+	num_param<int>    seedByChunk;        ///< Seed for each chunk. (For node generation)
 
         n_str_param       collPair;             ///< Collosion Pair for OBPRM
         n_str_param       freePair;             ///< Free Pair for OBPRM
