@@ -116,6 +116,20 @@ class CollisionDetection; ///< Collision Detection Algobase
 #define RDMPVER_010604_CFG_FIELDS           3            ///< obst, tag, clearance
 #define RDMPVER_010604_EDGEWT_FIELDS        2            ///< lp, ticks (or weight for DBL)
 
+/////////////////////////////////////////////////////////////////////
+/**@name Constants for Roadmap Version 10604 Infomation*/ 
+//@{
+
+//Modified for VC
+#if defined(WIN32) || defined(__HP_aCC)
+#define RDMPVER_041805                      041805
+#else
+#define RDMPVER_041805                      41805
+#endif
+
+#define RDMPVER_041805_CFG_FIELDS           3            ///< obst, tag, clearance
+#define RDMPVER_041805_EDGEWT_FIELDS        2            ///< lp, ticks (or weight for DBL)
+
 //@}
 
 /////////////////////////////////////////////////////////////////////
@@ -124,14 +138,15 @@ class CollisionDetection; ///< Collision Detection Algobase
 
 //Modified for VC
 #if defined(WIN32) || defined(__HP_aCC)
-#define RDMPVER_CURRENT                     010604 
+#define RDMPVER_CURRENT                     041805 
 #else
-#define RDMPVER_CURRENT                     10604
+#define RDMPVER_CURRENT                     41805
 #endif
 
-#define RDMPVER_CURRENT_STR                "010604"      ///< Current version # in string format
+#define RDMPVER_CURRENT_STR                "041805"      ///< Current version # in string format
 #define RDMPVER_CURRENT_CFG_FIELDS          3            ///< obst, tag, clearance
 #define RDMPVER_CURRENT_EDGEWT_FIELDS       2            ///< lp, ticks (or weight for DBL)
+#define INVALID_RNGSEED_STR                "-999"        ///< invalid RNG seed string: -999
 
 //@}
 
@@ -161,7 +176,8 @@ public:
    * as current version, RDMPVER_CURRENT.
    */
   Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm, 
-	  LocalPlanners<CFG,WEIGHT>* lp, Environment* env = NULL);
+	  LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env = NULL);
+
   
   /**Delete all the elements of RoadMap. 
    *Actually do nothing currently.
@@ -327,6 +343,46 @@ public:
    *@see Environment::Write(ostream&)
    */
   void WriteEnvironment(ostream& _ostream);
+
+
+  /**Read information about RNGseed from file.
+    *@param _fname filename for data file.
+    *@see ReadRNGseed(istream& _myistream)
+    */
+  void ReadRNGseed(const char* _fname);
+  
+  /**Read information about RNGseed from input stream.
+    *@see WriteRNGseed for data format
+    *@note if it is not a value, then error message will be post to 
+    *standard output.
+    */
+  void ReadRNGseed(istream& _myistream);
+  
+  /**Ouput RNGseed to file.
+    *@param _fname filename for data file.
+    *@see WriteRNGseed(ostream& _myostream)
+    */
+  void WriteRNGseed(const char* _fname) const;
+  
+  /**Ouput information about RNGseed output stream.
+    *@note format: long
+    *@note if a map is converted from older version map, we put "-999"
+    *
+    */
+  void WriteRNGseed(ostream& _myostream) const;
+
+
+  /////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Acess
+  //
+  //
+  /////////////////////////////////////////////////////////////////////
+
+  void SetRNGseed(long seedval) {RNGseed = seedval;}
+  long GetRNGseed() const {return RNGseed;}
+
   
   //@}
   
@@ -344,6 +400,8 @@ public:
   RoadmapGraph<CFG,WEIGHT>* m_pRoadmap; //an interface pointer
   
   int RoadmapVersionNumber;           ///< Newest version number.
+
+  long RNGseed;                      ///seed for random number generator
   
   /////////////////////////////////////////////////////////////////////
   //
@@ -384,11 +442,12 @@ Roadmap() {
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>::
 Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
-	LocalPlanners<CFG,WEIGHT>* lp, Environment* env) {
+	LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env) {
   m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
   
   InitRoadmap(input, cd, dm, lp, NULL, env); 
   RoadmapVersionNumber = RDMPVER_CURRENT;
+  RNGseed = RNGseedValue;
 }
 
 
@@ -501,11 +560,11 @@ ReadRoadmapGRAPHONLY(const char* _fname) {
     return;
   }
   
-  // skip over stuff up to and including DMSTOP, next line should contain GRAPHSTART
+  // skip over stuff up to and including RNGSEEDSTOP, next line should contain GRAPHSTART
   char tagstring[400]; bool moreFile=true;
   while(moreFile) {
     myifstream  >> tagstring;
-    if ( strstr(tagstring,"DMSTOP") ) 
+    if ( strstr(tagstring,"RNGSEEDSTOP") ) 
       moreFile = false;
   }
   
@@ -544,7 +603,8 @@ ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   lp->ReadLPs(myifstream);
   cd->ReadCDs(myifstream);
   dm->ReadDMs(myifstream);
-  
+  ReadRNGseed(myifstream);
+
   m_pRoadmap->ReadGraph(myifstream);           // reads verts & adj lists
   
   myifstream.close();
@@ -579,7 +639,8 @@ WriteRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   lp->WriteLPs(myofstream);
   cd->WriteCDs(myofstream);
   dm->WriteDMs(myofstream);
-  
+  WriteRNGseed(myofstream);
+
   m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
   myofstream.close();
 };
@@ -597,12 +658,79 @@ WriteEnvironment(ostream& _os) {
 
 
 //////////////////////////////////////////////////////////////////////
+// Read/Write RNGseed
+//////////////////////////////////////////////////////////////////////
+
+template <class CFG, class WEIGHT>
+void 
+Roadmap<CFG, WEIGHT>::
+ReadRNGseed(const char* _fname) {
+  ifstream  myifstream(_fname);
+  if (!myifstream) {
+    cout << endl << "In ReadRNGseed: can't open infile: " << _fname ;
+    return;
+  }
+  ReadRNGseed(myifstream);
+  myifstream.close();
+}
+
+
+template <class CFG, class WEIGHT>
+void 
+Roadmap<CFG, WEIGHT>::
+ReadRNGseed(istream& _myistream) {
+  char tagstring[100];
+  char rngdesc[100];
+  int  RNGseed;
+  
+  _myistream >> tagstring;
+  if ( !strstr(tagstring,"RNGSEEDSTART") ) {
+    cout << endl << "In ReadRNGseed: didn't read RNGSEEDSTART tag right";
+    return;
+  }
+  
+  _myistream >> RNGseed;
+  _myistream.getline(rngdesc,100,'\n');  // throw out rest of this line
+
+  _myistream >> tagstring;
+  if ( !strstr(tagstring,"RNGSEEDSTOP") ) {
+    cout << endl << "In ReadRNGseed: didn't read RNGSEEDSTOP tag right";
+    return;
+  }
+}
+
+template <class CFG, class WEIGHT>
+void 
+Roadmap<CFG, WEIGHT>::
+WriteRNGseed(const char* _fname) const {
+  ofstream  myofstream(_fname);
+  if (!myofstream) {
+    cout << endl << "In WriteRNGseed: can't open outfile: " << _fname ;
+  }
+  WriteRNGseed(myofstream);
+  myofstream.close();
+}
+
+
+template <class CFG, class WEIGHT>
+void 
+Roadmap<CFG, WEIGHT>::
+WriteRNGseed(ostream& _myostream) const {
+  _myostream << endl << "#####RNGSEEDSTART#####";
+  _myostream << endl << RNGseed;  // seed for RNG
+  _myostream << endl <<"#####RNGSEEDSTOP#####"; 
+}
+
+
+
+//////////////////////////////////////////////////////////////////////
 // Roadmap Version Check and Convertors
 //////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 bool 
 Roadmap<CFG, WEIGHT>::
 CheckVersion(const char* _fname) {
+  cout<<"Roadmap::CheckVersion is called"<<endl;
   ifstream  myifstream(_fname);
   if (!myifstream) {
     cout << endl << "In CheckVersion: can't open infile: " << _fname ;
@@ -638,7 +766,7 @@ bool
 Roadmap<CFG, WEIGHT>::
 ConvertToCurrentVersion(const char* _fname, int thisVersion) {
   char infile[200], outfile[200];
-  
+  cout<<"Roadmap::ConvertToCurrentVersion is called"<<endl;
   // copy current file _fname to "_fname.XXX"  where XXX=thisVersion
   // construct infile=_fname.XXX  and outfile=_fname names
   SaveCurrentVersion(_fname, thisVersion, infile, outfile);
@@ -656,7 +784,8 @@ ConvertToCurrentVersion(const char* _fname, int thisVersion) {
   }
   
   char tagstring[500];
-  
+  std::string graphLine;
+
   if ( thisVersion != RDMPVER_LEGACY ) {
     // read tags "Roadmap Version Number XXX" -- don't exist in LEGACY VERSION
     myifstream >> tagstring >> tagstring >> tagstring >> tagstring;
@@ -669,6 +798,11 @@ ConvertToCurrentVersion(const char* _fname, int thisVersion) {
     myofstream << tagstring << endl;
   }
   
+  //add RNGseed section
+  myofstream <<"#####RNGSEEDSTART#####"<<endl;
+  myofstream << INVALID_RNGSEED_STR<<endl;  // INVALID SEED
+  myofstream << "#####RNGSEEDSTOP#####"<<endl; 
+
   if ( thisVersion == RDMPVER_LEGACY) {
     // legacy: 0 cfg fields, 1 wt field (lp)
     ConvertGraph(myifstream, myofstream, thisVersion,
@@ -693,6 +827,15 @@ ConvertToCurrentVersion(const char* _fname, int thisVersion) {
 		 RDMPVER_061300_CFG_FIELDS, RDMPVER_061300_EDGEWT_FIELDS);
     myofstream << endl << "Converted from ROADMAP VERSION 061300";
     
+  } else if (thisVersion == RDMPVER_010604) {
+    // 010604: 3 cfg fields (obst, tag, clearance), 2 wt fields (lp, ticks/weight)
+    cout<<"copy each line for a graph"<<endl;
+    while ( graphLine.find("GRAPHSTOP") == string::npos ) {
+      getline(myifstream, graphLine);
+      myofstream << graphLine << endl;
+    } 
+    myofstream << endl << "Converted from ROADMAP VERSION 010604";
+    
   } else {
     cout << "In ConvertToCurrentVersion: unknown roadmap version in " << _fname << endl;
     return false;
@@ -713,8 +856,9 @@ void
 Roadmap<CFG, WEIGHT>::
 SaveCurrentVersion(const char* _fname, int thisVersion, 
 		   char* infile, char* outfile) {
-  char tagstring[500];
-  
+  //char tagstring[500];
+  string tagstring;
+  cout<<"Roadmap::SaveCurrentVersion is called"<<endl;
   // construct names for infile (_fname) and outfile (_fname.XXX)
   strcpy( infile, _fname );
   strcpy( outfile, _fname );
@@ -727,7 +871,9 @@ SaveCurrentVersion(const char* _fname, int thisVersion,
     strcat ( outfile, "061100" );
   } else if ( thisVersion == RDMPVER_061300 ) {
     strcat ( outfile, "061300" );
-  } else {
+  } else if ( thisVersion == RDMPVER_010604 ) {
+    strcat ( outfile, "010604" );
+  }  else {
     strcat ( outfile, "UNKNOWN_VERSION" );
   }
   
@@ -744,9 +890,14 @@ SaveCurrentVersion(const char* _fname, int thisVersion,
   }
   
   // copy infile into outfile
-  while ( myifstream.getline(tagstring,499) ){
+  //while ( myifstream.getline(tagstring,499) ){
+  //  myofstream << tagstring << endl;
+  //}
+  
+  while ( getline(myifstream, tagstring) ){
     myofstream << tagstring << endl;
   }
+
   
   // now, swap the names so we'll read from _fname.XXX and write to _fname
   strcpy( infile, outfile ); 

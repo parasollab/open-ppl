@@ -43,6 +43,7 @@
 #define INVALID_LP -999                 ///< invalid local planner id
 #define INVALID_GN -999                 ///< invalid generate node id
 #define INVALID_CN -999                 ///< invalid connect node id
+#define INVALID_RNGSEED -999            ///< invalid seed value for Random Number Generator
 
 #define ARGSTRING_LENGTH  256
 #define MAX_CN             10
