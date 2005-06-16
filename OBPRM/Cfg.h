@@ -186,10 +186,10 @@ class Cfg {
   friend istream& operator>> (istream&, Cfg&);
   ///Write configuration to output stream
   void Write(ostream& os) const;
-  void WriteInfo(ostream& os) const;
+  virtual void WriteInfo(ostream& os) const;
   ///Read configuration from input stream
   void Read(istream& is);
-  void ReadInfo(istream& is);
+  virtual void ReadInfo(istream& is);
  
   virtual void printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs) const;
   virtual void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
