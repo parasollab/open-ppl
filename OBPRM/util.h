@@ -95,14 +95,14 @@ inline double sqr(double a)
   
   /* use seedval as the seed
    */
-  long OBPRM_srand(long seedval = 0x1234ABCD330E);
+  long OBPRM_srand(long seedval = 0x1234ABCD);
   
   /* "baseSeed" is a static variable in this function
      we use baseSeed, methodName and nextNodeIndex to generate a deterministic seed,
      then call seed48()
      when reset is 1, baseSeed will be reset
    */
-  long OBPRM_srand(std::string methodName, int nextNodeIndex, long base = 0x1234ABCD330E, bool reset = false);
+  long OBPRM_srand(std::string methodName, int nextNodeIndex, long base = 0x1234ABCD, bool reset = false);
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
