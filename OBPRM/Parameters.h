@@ -95,7 +95,7 @@ public:
         char* GetFlag();
 
         ///Get #tdefault.
-        TYPE GetDefault();
+        TYPE GetDefault() const;
 
         /**Set description of this parameter, such as usage.
           *Set #desc as _desc
@@ -109,10 +109,10 @@ public:
         void PutDesc(char *_typedesc, char *_desc);
 
         ///Get Description about this parameter. (#desc)
-        char* GetDesc();
+        char* GetDesc() const;
 
         ///Get Description about the type this parameter. (#typedesc)
-        char* GetTypeDesc();
+        char* GetTypeDesc() const;
 
         ///Get parameter value. (#tvalue)
         TYPE GetValue() const;
@@ -133,10 +133,10 @@ public:
     //@{
 
         /// @return True when parameter exists in current command line
-        bool IsActivated(void);
+        bool IsActivated(void) const;
 
         /// Print proper command line usage
-        void PrintUsage(ostream& _os,int width=18);
+        void PrintUsage(ostream& _os,int width=18) const;
 
         /** Data fields are updated according to what was specified on 
           * the command line.
@@ -250,7 +250,7 @@ public:
         /** Proper usage info for user to read...
           * @param width used to format output.
           */
-        void PrintUsage(ostream& _os,int width=18);
+        void PrintUsage(ostream& _os,int width=18) const;
 
     //@}
 
@@ -492,7 +492,7 @@ GetFlag(){
     return flag;
 };
 template<class TYPE> TYPE param<TYPE>::
-GetDefault(){
+GetDefault() const {
     return tdefault;
 };
 template<class TYPE> void param<TYPE>::
@@ -506,11 +506,11 @@ PutDesc(char *_typedesc,char *_desc){
     typedesc=strdup(_typedesc);
 };
 template<class TYPE> char* param<TYPE>::
-GetDesc(){
+GetDesc() const {
     return desc;
 };
 template<class TYPE> char* param<TYPE>::
-GetTypeDesc(){
+GetTypeDesc() const {
     return typedesc;
 };
 template<class TYPE> TYPE param<TYPE>::
@@ -525,11 +525,11 @@ PutValue(TYPE _val){
         cout << "\n       Value is NOT changed.\n";
 };
 template<class TYPE> bool param<TYPE>::
-IsActivated(void){
+IsActivated(void) const {
     return activated;
 };
 template<class TYPE> void param<TYPE>::
-PrintUsage(ostream& _os, int width){
+PrintUsage(ostream& _os, int width) const {
     _os << setw(width) << flag ;
     _os << GetTypeDesc();
     _os << GetDesc();
@@ -591,7 +591,7 @@ num_param(char *_flag, TYPE _default, TYPE _min, TYPE _max)
                 SetDefault(_default);
 };
 template<class TYPE> void num_param<TYPE>::
-PrintUsage(ostream& _os, int width){
+PrintUsage(ostream& _os, int width) const {
     _os << setw(width) << flag << GetTypeDesc() << " (default, " ;
 
     _os.setf(ios::right,ios::adjustfield);
