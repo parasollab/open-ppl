@@ -283,9 +283,9 @@ class DistanceMetricMethod {
 
   virtual bool operator==(const DistanceMetricMethod& dm) const;
 
-  virtual void ParseCommandLine(int argc, char** argv) = 0;
-  virtual void PrintUsage(ostream& _os) const = 0;
-  virtual void PrintValues(ostream& _os) const = 0;
+  virtual void ParseCommandLine(int argc, char** argv);
+  virtual void PrintUsage(ostream& _os) const;
+  virtual void PrintValues(ostream& _os) const;
   virtual DistanceMetricMethod* CreateCopy() = 0;
 
   virtual double Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) = 0;
@@ -305,10 +305,6 @@ class EuclideanDistance : public DistanceMetricMethod {
 
   virtual char* GetName() const;
   virtual void SetDefault();
-
-  virtual void ParseCommandLine(int argc, char** argv);
-  virtual void PrintUsage(ostream& _os) const;
-  virtual void PrintValues(ostream& _os) const;
   virtual DistanceMetricMethod* CreateCopy();
 
   /**This method calculates 
@@ -417,10 +413,6 @@ class ManhattanDistance : public DistanceMetricMethod {
 
   virtual char* GetName() const;
   virtual void SetDefault();
-
-  virtual void ParseCommandLine(int argc, char** argv);
-  virtual void PrintUsage(ostream& _os) const;
-  virtual void PrintValues(ostream& _os) const;
   virtual DistanceMetricMethod* CreateCopy();
 
   /**This method calculates 
@@ -442,10 +434,6 @@ class CenterOfMassDistance : public DistanceMetricMethod {
 
   virtual char* GetName() const;
   virtual void SetDefault();
-
-  virtual void ParseCommandLine(int argc, char** argv);
-  virtual void PrintUsage(ostream& _os) const;
-  virtual void PrintValues(ostream& _os) const;
   virtual DistanceMetricMethod* CreateCopy();
 
   /**This method calculates

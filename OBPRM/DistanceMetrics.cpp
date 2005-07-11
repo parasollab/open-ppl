@@ -285,6 +285,40 @@ operator==(const DistanceMetricMethod& dm) const {
   return ( !(strcmp(GetName(), dm.GetName())) );
 }
 
+
+void 
+DistanceMetricMethod::
+ParseCommandLine(int argc, char** argv) {
+  if(argc > 1) {
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
+    for(int i=0; i<argc; i++)
+      cerr << argv[i] << " ";
+    cerr << "\"\n\n";
+    PrintUsage(cerr);
+    cerr << endl;
+    exit(-1);
+  }
+}
+
+ 
+void 
+DistanceMetricMethod::
+PrintUsage(ostream& _os) const {
+  _os.setf(ios::left,ios::adjustfield);
+
+  _os << "\n" << GetName() << " ";
+
+  _os.setf(ios::right,ios::adjustfield);
+}
+
+
+void 
+DistanceMetricMethod::
+PrintValues(ostream& _os) const {
+  _os << "\n" << GetName() << " ";
+  _os << endl;
+}
+
 //////////
 
 
@@ -309,40 +343,6 @@ GetName() const {
 void 
 EuclideanDistance::
 SetDefault() {
-}
-
-
-void 
-EuclideanDistance::
-ParseCommandLine(int argc, char** argv) {
-  if(argc > 1) {
-    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-    for(int i=0; i<argc; i++)
-      cerr << argv[i] << " ";
-    cerr << "\"\n\n";
-    PrintUsage(cerr);
-    cerr << endl;
-    exit(-1);
-  }
-}
-
- 
-void 
-EuclideanDistance::
-PrintUsage(ostream& _os) const {
-  _os.setf(ios::left,ios::adjustfield);
-
-  _os << "\n" << GetName() << " ";
-
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-
-void 
-EuclideanDistance::
-PrintValues(ostream& _os) const {
-  _os << "\n" << GetName() << " ";
-  _os << endl;
 }
 
 
@@ -677,40 +677,6 @@ SetDefault() {
 }
 
 
-void 
-ManhattanDistance::
-ParseCommandLine(int argc, char** argv) {
-  if(argc > 1) {
-    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-    for(int i=0; i<argc; i++)
-      cerr << argv[i] << " ";
-    cerr << "\"\n\n";
-    PrintUsage(cerr);
-    cerr << endl;
-    exit(-1);
-  }
-}
-
-
-void 
-ManhattanDistance::
-PrintUsage(ostream& _os) const {
-  _os.setf(ios::left,ios::adjustfield);
-
-  _os << "\n" << GetName() << " ";
-
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-
-void 
-ManhattanDistance::
-PrintValues(ostream& _os) const {
-  _os << "\n" << GetName() << " ";
-  _os << endl;
-}
-
-
 DistanceMetricMethod* 
 ManhattanDistance::
 CreateCopy() {
@@ -762,40 +728,6 @@ GetName() const {
 void 
 CenterOfMassDistance::
 SetDefault() {
-}
-
-
-void 
-CenterOfMassDistance::
-ParseCommandLine(int argc, char** argv) {
-  if(argc > 1) {
-    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-    for(int i=0; i<argc; i++)
-      cerr << argv[i] << " ";
-    cerr << "\"\n\n";
-    PrintUsage(cerr);
-    cerr << endl;
-    exit(-1);
-  }
-}
-
-
-void 
-CenterOfMassDistance::
-PrintUsage(ostream& _os) const {
-  _os.setf(ios::left,ios::adjustfield);
-
-  _os << "\n" << GetName() << " ";
-
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-
-void 
-CenterOfMassDistance::
-PrintValues(ostream& _os) const {
-  _os << "\n" << GetName() << " ";
-  _os << endl;
 }
 
 
