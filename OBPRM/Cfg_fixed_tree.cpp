@@ -169,7 +169,7 @@ void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *env) {
     v.push_back(OBPRM_drand()*DefaultRange);
 }
 
-void Cfg_fixed_tree::GetMovingSequenceNodes(const Cfg& other, double s, vector<Cfg*>& result) const {
+void Cfg_fixed_tree::GetMovingSequenceNodes(const Cfg& other, vector<double> s, vector<Cfg*>& result) const {
   Cfg* c1 = this->CreateNewCfg();
   result.push_back(c1);
   

@@ -273,7 +273,9 @@ class Cfg {
   virtual void GetPositionOrientationFrom2Cfg(const Cfg&, const Cfg&);
 
   /// for rotate-at-s Local Planner. 
-  virtual void GetMovingSequenceNodes(const Cfg& other, double s, vector<Cfg*>& cfgs) const;
+  virtual void GetMovingSequenceNodes(const Cfg& other, vector<double> s_value, vector<Cfg*>& cfgs) const;
+
+ virtual void GetMovingSequenceNodes(const Cfg& other, double s, vector<Cfg*>& cfgs) const;
 
   /** pt1 & pt2 are two endpts of a line segment
    * find the closest point to the current cfg on that line segment

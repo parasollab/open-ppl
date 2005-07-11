@@ -157,7 +157,7 @@ Input::Input():
     LPstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default straightline rotate_at_s s 0.5"
 	"\n\t\t\t  straightline     lineSegmentLength INT binarySearch INT (def,lineSegment=0, binarySearch=0)"
-        "\n\t\t\t  rotate_at_s      s FLOAT   (def,s=0.5)"
+        "\n\t\t\t  rotate_at_s      s FLOAT   (def,s=0.5) may have multiple values "
         "\n\t\t\t  a_star_distance  tries INT neighbors INT (def,tries=6,neighbors=3)"
         "\n\t\t\t  a_star_clearance tries INT neighbors INT (def,tries=6,neighbors=3)"
         "\n\t\t\t  approx_spheres   n INT     (def,n=3)"

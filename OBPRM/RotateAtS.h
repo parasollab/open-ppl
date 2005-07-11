@@ -69,6 +69,8 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
   //    double sValue;  ///< Should in [0,1]. This is the s for planner.
     num_param<double> sValue;
     double s_value;
+    vector<double> s_values_in;
+    vector<double> s_values;
   //@}
 };
 
@@ -120,8 +122,12 @@ template <class CFG, class WEIGHT>
 void
 RotateAtS<CFG, WEIGHT>::
 ParseCommandLine(int argc, char **argv) {
+  s_values.clear();
+  cout << "Parsing RotateAtS command line" << endl;
   for (int i = 1; i < argc; ++i) {
     if( sValue.AckCmdLine(&i, argc, argv) ) {
+      s_values.push_back(sValue.GetValue());
+
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
       for(int j=0; j<argc; j++)
@@ -131,6 +137,23 @@ ParseCommandLine(int argc, char **argv) {
       cerr << endl;
       exit (-1);
     }
+  }
+  if (s_values.size()>=1) {
+    std::sort(s_values.begin (), s_values.end());
+    if (s_values[0] < 0.0 || s_values[s_values.size()-1] > 1.0) {
+      cerr << "\nERROR ParseCommandLine: s values out of range (0.0,1.0) \"";
+      PrintUsage(cerr);
+      cerr << endl;
+      exit(-1);
+    }
+  } else {
+      cerr << "\nERROR ParseCommandLine: no value of s inserted \"";
+      PrintUsage(cerr);
+      cerr << endl;
+      exit(-1);
+  }
+  for(int i=0; i<s_values.size(); i++){
+    cout << "s_values["<<i<<"]="<< s_values[i]<< endl; 
   }
 }
 
@@ -153,8 +176,10 @@ void
 RotateAtS<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
   _os << GetName() << " ";
-  _os << sValue.GetFlag() << " " << sValue.GetValue() << " ";
-  _os << endl;
+  for(int i=0; i<s_values.size(); i++){
+   _os << sValue.GetFlag() << " " << s_values[i] << " ";
+   }
+ _os << endl;
 }
 
 
@@ -177,10 +202,14 @@ IsConnected(Environment *_env, Stat_Class& Stats,
 	    bool checkCollision, 
 	    bool savePath, bool saveFailedPath) {  
   bool connected = false;
-  s_value = sValue.GetValue();
+  using namespace std;
+
   connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   if (!connected) { //try the other way
-    s_value = 1 - sValue.GetValue();
+    for(int i=0; i<s_values.size(); i++){
+      s_values[i] = 1 - s_values[i];
+    }
+    std::sort(s_values.begin(),s_values.end());
     connected = IsConnectedOneWay(_env, Stats, cd, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
     if (savePath)
       reverse(lpOutput->path.begin(), lpOutput->path.end());
@@ -198,17 +227,17 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
 	    bool checkCollision, 
 	    bool savePath, bool saveFailedPath) {  
   char RatS[20] = "Rotate_at_s";
-  sprintf(RatS,"%s=%3.1f",RatS, sValue.GetValue());
+  sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);
   Stats.IncLPAttempts( RatS );
   int cd_cntr= 0;
-  
+   
   if(lineSegmentLength.GetValue() && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
     Stats.IncLPCollDetCalls( RatS, cd_cntr );
     return false;
   }
   
   vector<Cfg *> sequence;
-  _c1.GetMovingSequenceNodes(_c2, s_value, sequence);
+   _c1.GetMovingSequenceNodes(_c2, s_values, sequence);
   
   bool connected = true;
   int i;
@@ -236,5 +265,4 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
   
   return connected;
 };
-
 #endif

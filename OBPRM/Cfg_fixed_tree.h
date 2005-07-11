@@ -104,7 +104,7 @@ class Cfg_fixed_tree : public Cfg {
     *@param s Not used.
     *@warning there is no checking to make sure that c1 and c2 have NumofJoints joints.
     */
-  virtual void GetMovingSequenceNodes(const Cfg& other, double s, vector<Cfg*>& result) const;
+  virtual void GetMovingSequenceNodes(const Cfg& other, vector<double> s, vector<Cfg*>& result) const;
 
   ///Just like GetRandomCfg.
   virtual bool GenerateOverlapCfg(Environment *env, int robot, 

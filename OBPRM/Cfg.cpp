@@ -430,6 +430,32 @@ void Cfg::GetPositionOrientationFrom2Cfg(const Cfg& c1,
   Normalize_orientation();
 }
 
+void Cfg::GetMovingSequenceNodes(const Cfg& other, vector<double> s_value, vector<Cfg*>& result) const {
+  Cfg* tmp;
+  Cfg* s_i_previous;
+  tmp=this->CreateNewCfg();
+  result.push_back(tmp);
+
+  double o_weight=0.0;
+  for(int i=0; i<s_value.size(); i++){
+    tmp = this->CreateNewCfg();
+    tmp->WeightedSum(*this, other, s_value[i]);
+    Cfg* s_i = tmp->CreateNewCfg();
+    s_i->GetPositionOrientationFrom2Cfg(*tmp, *(result[result.size()-1]));
+					
+    o_weight += 1.0 / s_value.size();
+    tmp = this->CreateNewCfg();
+    tmp->WeightedSum(*this, other, o_weight);
+    Cfg* s_i_next = tmp->CreateNewCfg();
+    s_i_next->GetPositionOrientationFrom2Cfg(*s_i, *tmp);
+  
+    result.push_back(s_i);
+    result.push_back(s_i_next);
+  }
+  tmp=other.CreateNewCfg();
+  result.push_back(tmp);
+
+}	
 
 void Cfg::GetMovingSequenceNodes(const Cfg& other, double s, vector<Cfg*>& result) const {
   Cfg* tmp = this->CreateNewCfg();
