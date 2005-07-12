@@ -120,6 +120,9 @@ public:
         ///Validate and set parameter value. (#tvalue)
         void PutValue(TYPE _val);
 
+        ///Validate and set default value.
+        void PutDefault(TYPE _val);
+
     //@}
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -523,6 +526,13 @@ PutValue(TYPE _val){
         SetValue(_val);
     else
         cout << "\n       Value is NOT changed.\n";
+};
+template<class TYPE> void param<TYPE>::
+PutDefault(TYPE _val){
+    if (VerifyValidValue(_val))
+        SetDefault(_val);
+    else
+        cout << "\n       Default is NOT changed.\n";
 };
 template<class TYPE> bool param<TYPE>::
 IsActivated(void) const {
