@@ -84,6 +84,7 @@ RotateAtS<CFG, WEIGHT>::
 RotateAtS(cd_predefined _cdtype) : StraightLine<CFG, WEIGHT>(_cdtype),
   sValue ("s", 0.5, 0, 1) {
   sValue.PutDesc("FLOAT	", "(def, s=0.5)");
+  SetDefault(); 
 }
 
 template <class CFG, class WEIGHT>
@@ -116,6 +117,8 @@ RotateAtS<CFG, WEIGHT>::
 SetDefault() {
   StraightLine<CFG, WEIGHT>::SetDefault();
   sValue.PutValue(0.5);
+  s_values.clear();
+  s_values.push_back(sValue.GetValue()); 
 }
 
 template <class CFG, class WEIGHT>
@@ -152,10 +155,7 @@ ParseCommandLine(int argc, char **argv) {
       cerr << endl;
       exit(-1);
   }
-  for(int i=0; i<s_values.size(); i++){
-    cout << "s_values["<<i<<"]="<< s_values[i]<< endl; 
   }
-}
 
 
 template <class CFG, class WEIGHT>
