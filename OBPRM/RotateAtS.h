@@ -126,7 +126,6 @@ void
 RotateAtS<CFG, WEIGHT>::
 ParseCommandLine(int argc, char **argv) {
   s_values.clear();
-  cout << "Parsing RotateAtS command line" << endl;
   for (int i = 1; i < argc; ++i) {
     if( sValue.AckCmdLine(&i, argc, argv) ) {
       s_values.push_back(sValue.GetValue());

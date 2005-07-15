@@ -293,7 +293,6 @@ ParseCommandLine(int argc, char **argv) {
 	  if ( !strcmp( "straightline", (*itr)->GetName()) )
 	    saved_sl_id = (*itr)->GetID();
 	  //  and push it back into the list of selected methods.
-	  cout << (*itr)->GetName() << endl;
 	  selected.push_back((*itr)->CreateCopy());
 	}
       
@@ -337,9 +336,8 @@ void
 LocalPlanners<CFG,WEIGHT>::
 PrintValues(ostream& _os) {
   typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
-  for(I=selected.begin(); I!=selected.end(); I++) {
+  for(I=selected.begin(); I!=selected.end(); I++)
     (*I)->PrintValues(_os);
-  }
 }
 
 template <class CFG, class WEIGHT>
