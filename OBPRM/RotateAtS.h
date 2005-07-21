@@ -119,6 +119,10 @@ SetDefault() {
   sValue.PutValue(0.5);
   s_values.clear();
   s_values.push_back(sValue.GetValue()); 
+  s_values_in.clear();
+ for(int i=0; i<s_values.size(); i++){
+    s_values_in.push_back(s_values[i]);
+  }
 }
 
 template <class CFG, class WEIGHT>
@@ -126,6 +130,7 @@ void
 RotateAtS<CFG, WEIGHT>::
 ParseCommandLine(int argc, char **argv) {
   s_values.clear();
+
   for (int i = 1; i < argc; ++i) {
     if( sValue.AckCmdLine(&i, argc, argv) ) {
       s_values.push_back(sValue.GetValue());
@@ -140,6 +145,15 @@ ParseCommandLine(int argc, char **argv) {
       exit (-1);
     }
   }
+     if (s_values.size()<1){
+       SetDefault();
+    }
+     s_values_in.clear();
+ for(int i=0; i<s_values.size(); i++){
+    s_values_in.push_back(s_values[i]);
+  }
+ std::sort(s_values_in.begin (), s_values_in.end());
+
   if (s_values.size()>=1) {
     std::sort(s_values.begin (), s_values.end());
     if (s_values[0] < 0.0 || s_values[s_values.size()-1] > 1.0) {
@@ -202,7 +216,7 @@ IsConnected(Environment *_env, Stat_Class& Stats,
 	    bool savePath, bool saveFailedPath) {  
   bool connected = false;
   using namespace std;
-
+ 
   connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   if (!connected) { //try the other way
     for(int i=0; i<s_values.size(); i++){
@@ -212,6 +226,10 @@ IsConnected(Environment *_env, Stat_Class& Stats,
     connected = IsConnectedOneWay(_env, Stats, cd, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
     if (savePath)
       reverse(lpOutput->path.begin(), lpOutput->path.end());
+    for(int i=0; i<s_values.size(); i++){
+      s_values[i] = 1 - s_values[i];
+    }
+    std::sort(s_values.begin(),s_values.end());
   }
   return connected;
   
@@ -225,8 +243,11 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
 	    double positionRes, double orientationRes,
 	    bool checkCollision, 
 	    bool savePath, bool saveFailedPath) {  
-  char RatS[20] = "Rotate_at_s";
-  sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);
+  char RatS[50] = "Rotate_at_s";
+sprintf(RatS,"%s=%3.1f",RatS, s_values_in[0]);
+  for(int i=1; i<s_values_in.size(); i++){
+  sprintf(RatS,"%s,%3.1f",RatS, s_values_in[i]);
+ }
   Stats.IncLPAttempts( RatS );
   int cd_cntr= 0;
    
