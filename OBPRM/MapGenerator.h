@@ -20,6 +20,7 @@ class MapGenerator {
   /////////////////////////////////
   
   MapGenerator();
+  MapGenerator(int num_rep);
   ~MapGenerator();
 
   //main wrapper, called by main_obprm.cpp
@@ -57,7 +58,8 @@ class MapGenerator {
   //////////////////////
  
   public:
-  
+
+  int numRepNodesPerCC;          //number of representative nodes per connectted component
   GenerateMapNodes<CFG> gn;     //used to generate map nodes
   ConnectMap<CFG, WEIGHT> cm;   //used to connect map nodes
   GenerateMapNodes<CFG> old_gn; //used to parse command line from the existing map
@@ -66,7 +68,19 @@ class MapGenerator {
 
 template <class CFG, class WEIGHT>
 MapGenerator<CFG, WEIGHT>::
-MapGenerator(){}
+MapGenerator(){
+  numRepNodesPerCC = 5;         //default value is set to 5
+}
+
+template <class CFG, class WEIGHT>
+MapGenerator<CFG, WEIGHT>::
+MapGenerator(int num_rep){
+  if(num_rep < 0) {
+    cout<<"in MapGenerator<CFG, WEIGHT>::MapGenerator(int), the argument should not be negative."<<endl;
+    exit(-1);
+  }
+  numRepNodesPerCC = num_rep;
+}
 
 template <class CFG, class WEIGHT>
 MapGenerator<CFG, WEIGHT>::
@@ -269,7 +283,9 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 
     SetupFromMap(input, rmap);
   } 
-    
+  
+  bool firstChunk = true; // the first chunk for this map (no matter which gen method we use)
+
   typename vector<NodeGenerationMethod<CFG>*>::iterator itr;
   for ( itr = gn.selected.begin(); itr != gn.selected.end(); itr++ ) {
 
@@ -287,8 +303,15 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
       numChunks ++;
     vector<CFG> sub_nodes;
     cout<<"the chunk size is: "<<chunkSize<<", and the number of chunks is: "<<numChunks<<endl;
+    vector<CFG> rep_cfgs;  //representative cfgs for existing nodes
+
 
     //generate nodes chunk by chunk and seed for each chunk
+    //perform connection chunk by chunk:
+    //  we use newly generated nodes and some prepresentativ nodes from the existing map.
+    //  if numRepNodePerCC is set, we pick numRepNodePerCC nodes from each CC;
+    //  if numRepNodePerCC is 0, we only use newly nodes.
+    //  Note: the connection method should provide function to take a vector of nodes as an argument
     for (int i=0; i<numChunks; i++) {
       Clock_Class genClock;
       Clock_Class conClock;
@@ -307,7 +330,43 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
       (*itr)->GenerateNodes(rmap->GetEnvironment(), Stats, cd, dm, sub_nodes);  //this is the original GenerateNodes function
       genClock.StopClock();
 
-      //cout<<endl<<"  generate "<<sub_nodes.size()<<endl;
+      
+      //Select up to numRepNodesPerCC nodes from each CC of the existing roadmap and store them in rep_cfgs
+      if (rmap->m_pRoadmap->GetVertexCount()  > 0 && numRepNodesPerCC > 0) //starts from 2nd chunk
+      {
+        firstChunk = false;
+        vector< pair<int,VID> > ccs;
+        GetCCStats(*(rmap->m_pRoadmap),ccs);
+        rep_cfgs.clear(); 
+     
+        for (int num_cc = 0; num_cc< ccs.size(); num_cc++) {
+          VID cc_vid = ccs[num_cc].second;                //VID that represents this cc
+          CFG cc_cfg = rmap->m_pRoadmap->GetData(cc_vid);  //CFG for this vertex
+          vector<CFG> cc_cfgs;                          //get CFGs in this cc
+	  GetCC(*(rmap->m_pRoadmap), cc_cfg, cc_cfgs);
+	  int cc_size = cc_cfgs.size();
+	  if(cc_size < numRepNodesPerCC )  //select all nodes from this cc if its side is smaller than numRepNodesPerCC
+	  {
+	    for(int j=0; j< cc_size;j++){
+	      rep_cfgs.push_back(cc_cfgs[j]);
+	    }
+	    
+	  } 
+	  else {  //only select numRepNodesPerCC nodes from this cc
+	
+	    vector <bool> indices(cc_size);
+	    int iSelect;
+	    for (int j = 0; j < numRepNodesPerCC; j++) //randomly pick #num_pick 
+	    {
+	      do { iSelect = OBPRM_lrand() % cc_size; } while (indices[iSelect] == true);
+	      indices[iSelect] = true;
+	      rep_cfgs.push_back(cc_cfgs[iSelect]);
+	    }
+
+          }//end else
+        }  //end for num_cc
+      } //end select rep_cfgs
+
       if (gn.addNodes2Map) {
         rmap->m_pRoadmap->AddVertex(sub_nodes); //add sub_nodes to graph
       }
@@ -315,11 +374,23 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
       //also keep these nodes in nodes
       nodes.insert(nodes.end(), sub_nodes.begin(), sub_nodes.end());
 
-      //do the connection here
-      //we should have optimization here
+      //add rep_cfgs from existing roadmap to sub_nodes
+      //we do this from the 2nd chunk && numRepNodesPerCC > 0
+      if (!firstChunk && numRepNodesPerCC > 0) {
+        for (int j=0; j<rep_cfgs.size();j++) 
+          sub_nodes.push_back(rep_cfgs[j]);
+      } 
+      
+      vector<vector<CFG> > verticesList;
+      verticesList.push_back(sub_nodes);
+      verticesList.push_back(sub_nodes);
+
+      //If the connection method does not take vector<vector<CFG> > as argument,
+      //we will use all the nodes in the map to perform connection
+      //see: ConnectionMethod.h
       conClock.StartClock(conClockName);
       cm.ConnectComponents(rmap, Stats, cd, dm, lp,
-	       addPartialEdge, addAllEdges);
+	       addPartialEdge, addAllEdges, verticesList);
       conClock.StopClock();
 
       //set the next node index for this generation method
