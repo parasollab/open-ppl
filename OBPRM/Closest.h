@@ -263,10 +263,12 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   }
 
   if((v1.size() >= kclosest) && (v2.size() >= kclosest)) { //k closest each way
-    vector<pair<VID,VID> > kp2;
     kp = dm->FindKClosestPairs(_rm, v1, v2, kclosest);
-    kp2 = dm->FindKClosestPairs(_rm, v2, v1, kclosest);
-    kp.insert(kp.end(), kp2.begin(), kp2.end());
+    if(v1 != v2) {
+      vector<pair<VID,VID> > kp2;
+      kp2 = dm->FindKClosestPairs(_rm, v2, v1, kclosest);
+      kp.insert(kp.end(), kp2.begin(), kp2.end());
+    }
   } 
 
   if((v1.size() < kclosest) && (v2.size() >= kclosest)) { //k closest in v2
