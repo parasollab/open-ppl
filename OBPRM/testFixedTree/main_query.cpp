@@ -50,14 +50,17 @@ int main(int argc, char** argv)
   CfgType::setNumofJoints(input.numofJoints.GetValue());
   cout << "Cfg_fixed_tree::NumofJoints = "
        << CfgType::getNumofJoints() << endl;
+   
+  Roadmap<CfgType, WeightType> rdmp;
+  rdmp.InitRoadmap(&input,&cd,&dm,&lp,Qinput.mapFile.GetValue() );
 
-  Query<CfgType, WeightType> query(&input,&Qinput, &cd, &dm, &lp,&cm);
+  Query<CfgType, WeightType> query(&Qinput);
 
   cd.ReadCommandLine(input.CDstrings, input.numCDs);
   lp.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype, true);
   dm.ReadCommandLine(input.DMstrings, input.numDMs);
   gn.ReadCommandLine(input.GNstrings, input.numGNs);
-  cm.ReadCommandLine(&input, query.rdmp.GetEnvironment());
+  cm.ReadCommandLine(&input, rdmp.GetEnvironment());
   
   Qinput.PrintValues(cout);
 
@@ -66,7 +69,7 @@ int main(int argc, char** argv)
   //---------------------------
   lp.PrintValues(cout);
   cout << endl;
-  DisplayCCStats(*(query.rdmp.m_pRoadmap),10);
+  DisplayCCStats(*(rdmp.m_pRoadmap),10);
   cout << endl;
 
   //----------------------------------------------------
@@ -74,8 +77,8 @@ int main(int argc, char** argv)
   // if successful, write path to a file
   //----------------------------------------------------
   QueryClock.StartClock("Query");
-  if ( query.PerformQuery(Stats,&cd,&cm,&lp,&dm) ) {
-    query.WritePath();
+  if ( query.PerformQuery(&rdmp,Stats,&cd,&cm,&lp,&dm) ) {
+    query.WritePath(&rdmp);
     cout << endl << "SUCCESSFUL query";
   } else {
     cout << endl << "UNSUCCESSFUL query";
