@@ -22,7 +22,6 @@
 
 typedef Cfg_fixed_PRR CfgType;
 typedef DefaultWeight WeightType;
-#include "ExplicitInstantiation.h"
 
 Input input;
 QueryCmds Qinput;

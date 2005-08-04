@@ -26,7 +26,6 @@
 
 typedef Cfg_2D CfgType;
 typedef DefaultWeight WeightType;
-#include "ExplicitInstantiation.h"
 
 Input input;
 Stat_Class Stats; 
