@@ -200,17 +200,35 @@ class QueryConnect : public ConnectMap<CFG,WEIGHT> {
 	       DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp) :
     ConnectMap<CFG,WEIGHT>() {}
   ~QueryConnect() {
-    selected.clear();
-    all.clear();
+    selected_node_methods.clear();
+    all_node_methods.clear();
+
+    selected_component_methods.clear();
+    all_component_methods.clear();
+    
+    //selected_roadmap_methods.clear();
+    //all_roadmap_methods.clear();
   }
 
-  virtual vector<ConnectionMethod<CFG,WEIGHT>*> GetDefault() {
-    vector<ConnectionMethod<CFG,WEIGHT>*> tmp;
+  virtual vector<NodeConnectionMethod<CFG,WEIGHT>*> GetNodeDefault() {
+    vector<NodeConnectionMethod<CFG,WEIGHT>*> tmp;
     ConnectFirst<CFG,WEIGHT>* connectFirst = new ConnectFirst<CFG,WEIGHT>();
     connectFirst->SetDefault();
     tmp.push_back(connectFirst);
     return tmp;
   }
+
+  virtual vector<ComponentConnectionMethod<CFG,WEIGHT>*> GetComponentDefault() {
+    vector<ComponentConnectionMethod<CFG,WEIGHT>*> tmp;
+    return tmp;
+  }
+
+  /*
+  virtual vector<RoadmapConnectionMethod<CFG,WEIGHT>*> GetRoadmapDefault() {
+    vector<RoadmapConnectionMethod<CFG,WEIGHT>*> tmp;
+    return tmp;
+  }
+  */
 };
 
 
@@ -335,19 +353,21 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
     //attempt to connect start and goal to cc
     bool addPartialEdge = false; //??
     bool addAllEdges = false; //??
-    vector<vector<CFG> > verticesList(2);
-    verticesList[1] = cc;
 
+    vector<CFG> verticesList(1, _start);
     cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
-    verticesList[0].push_back(_start);
+    cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false,
+		     verticesList, cc);
+    vector<CFG> ccList(1, cc_cfg);
     cn->ConnectComponents(rdmp, Stats, cd, dm, lp, false, false,
-			 verticesList);
+			  verticesList, ccList);
 
     cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
-    verticesList[0].clear();
-    verticesList[0].push_back(_goal);
+    verticesList[0] = _goal;
+    cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false,
+		     verticesList, cc);
     cn->ConnectComponents(rdmp, Stats, cd, dm, lp, false, false,
-			 verticesList);
+			  verticesList, ccList);
 
     connected = false;
     vector<pair<CFG,WEIGHT> > rp;

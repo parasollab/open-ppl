@@ -1,10 +1,12 @@
 #ifndef ConnectFirst_h
 #define ConnectFirst_h
-#include "ConnectionMethod.h"
+
+#include "NodeConnectionMethod.h"
+#include "LocalPlanners.h"
 
 
 template <class CFG, class WEIGHT>
-class ConnectFirst : public ConnectionMethod<CFG,WEIGHT> {
+class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
  public:
   //////////////////////
   // Constructors and Destructor
@@ -21,37 +23,31 @@ class ConnectFirst : public ConnectionMethod<CFG,WEIGHT> {
   void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
-  virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
+  virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
 
   //////////////////////
   // Core: Connection method
-  void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-			 CollisionDetection*, DistanceMetric *,
-			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge, bool addAllEdges);  
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-			 CollisionDetection*, DistanceMetric*,
-			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge, bool addAllEdges,
-			 vector<vector<CFG> >& verticesList);
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-			 CollisionDetection*, DistanceMetric *,
-			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge, bool addAllEdges,
-			 CFG& cfg, vector<CFG>& vec);
-
+  void Connect(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats, 
+	       CollisionDetection* cd, DistanceMetric* dm,
+	       LocalPlanners<CFG,WEIGHT>* lp,
+	       bool addPartialEdge, bool addAllEdges);  
+  void Connect(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats,
+	       CollisionDetection* cd, DistanceMetric* dm,
+	       LocalPlanners<CFG,WEIGHT>* lp,
+	       bool addPartialEdge, bool addAllEdges,
+	       vector<CFG>& cfgs1, vector<CFG>& cfgs2);
+  
  private:
   //////////////////////
   // Data
-
+  
   int kfirst;
 };
 
 
 template <class CFG, class WEIGHT>
 ConnectFirst<CFG,WEIGHT>::
-ConnectFirst() : ConnectionMethod<CFG,WEIGHT>() { 
+ConnectFirst() : NodeConnectionMethod<CFG,WEIGHT>() { 
   element_name = "connectfirst"; 
   SetDefault();
 }
@@ -121,94 +117,76 @@ PrintValues(ostream& _os) {
 
 
 template <class CFG, class WEIGHT>
-ConnectionMethod<CFG,WEIGHT>* 
+NodeConnectionMethod<CFG,WEIGHT>* 
 ConnectFirst<CFG,WEIGHT>::
 CreateCopy() {
-  ConnectionMethod<CFG,WEIGHT>* _copy = 
+  NodeConnectionMethod<CFG,WEIGHT>* _copy = 
            new ConnectFirst<CFG,WEIGHT>(*this);
   return _copy;
 }
 
+
 template <class CFG, class WEIGHT>
 void 
 ConnectFirst<CFG,WEIGHT>::
-ConnectComponents() {
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+	CollisionDetection* cd, DistanceMetric* dm,
+	LocalPlanners<CFG,WEIGHT>* lp,
+	bool addPartialEdge, bool addAllEdges) {
+  vector<CFG> cfgs;
+  _rm->m_pRoadmap->GetVerticesData(cfgs);
+  return Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,
+		 cfgs, cfgs);
 }
 
 
 template <class CFG, class WEIGHT>
-void ConnectFirst<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-                  CollisionDetection* cd , 
-                  DistanceMetric * dm,
-                  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges) {
+void 
+ConnectFirst<CFG,WEIGHT>::
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+	CollisionDetection* cd, DistanceMetric* dm,
+	LocalPlanners<CFG,WEIGHT>* lp,
+	bool addPartialEdge, bool addAllEdges,
+	vector<CFG>& cfgs1, vector<CFG>& cfgs2) {
 #ifndef QUIET
-  cout << "connectfirst(k="<< kfirst <<"): "<<flush;
+  cout << "connectfirst(k=" << kfirst << "): " << flush;
 #endif
 
-  //do nothing for now...  
+  typename vector<CFG>::iterator C1, C2;
+  typename vector<pair<CFG,double> >::iterator D;
+  for(C1 = cfgs1.begin(); C1 != cfgs1.end(); ++C1) {
+    // sort cfgs2 in by distance from C
+    vector<pair<CFG,double> > distances;
+    for(C2 = cfgs2.begin(); C2 != cfgs2.end(); ++C2)
+      distances.push_back(make_pair(*C2, dm->Distance(_rm->GetEnvironment(), 
+						      *C1, *C2)));
+    sort(distances.begin(), distances.end(), CfgDist_Compare<CFG>());
 
+    //try to connect, return after failure or connect first k
+    int numFound = 0;
+    for(D = distances.begin(); (D != distances.end()) && (numFound < kfirst); 
+	++D) {
+      LPOutput<CFG,WEIGHT> _ci;
+      if(!_rm->m_pRoadmap->IsEdge(*C1, D->first) && 
+	 lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm, *C1, D->first, 
+			 &_ci, _rm->GetEnvironment()->GetPositionRes(), 
+			 _rm->GetEnvironment()->GetOrientationRes(), 
+			 true, true)) {
+	VID _cfgVID1, _cfgVID2;
+	if(_rm->m_pRoadmap->IsVertex(*C1))
+	  _cfgVID1 = _rm->m_pRoadmap->GetVID(*C1);
+	else
+	  _cfgVID1 = _rm->m_pRoadmap->AddVertex(*C1);
+	if(_rm->m_pRoadmap->IsVertex(D->first))
+	  _cfgVID2 = _rm->m_pRoadmap->GetVID(D->first);
+	else
+	  _cfgVID2 = _rm->m_pRoadmap->AddVertex(D->first);
+	_rm->m_pRoadmap->AddEdge(_cfgVID1, _cfgVID2, _ci.edge);
+	numFound++;
+      } 
+    }
+  }
 }
 
-
-template <class CFG, class WEIGHT>
-void 
-ConnectFirst<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-                  CollisionDetection* cd , 
-                  DistanceMetric * dm,
-                  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges,
-		  vector<vector<CFG> >& verticesList) {
-
-  //assume that first "vector" has the 1 cfg you want to connect...
-  for(int i=1; i<verticesList.size(); ++i)
-    ConnectComponents(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,
-		      verticesList[0][0], verticesList[i]);
-}
-
-
-template <class CFG, class WEIGHT>
-void 
-ConnectFirst<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-                  CollisionDetection* cd , 
-                  DistanceMetric * dm,
-                  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges,
-		  CFG& cfg, vector<CFG>& vec) {
-#ifndef QUIET
-  cout << "connectfirst*(k="<< kfirst <<"): "<<flush;
-#endif
-
-  // sort the cfgs in vec by distance from cfg
-  SortByDistFromCfg(_rm->GetEnvironment(),dm,cfg,vec);
-   
-  //try to connect, return after failure or connect first k
-  int numFound = 0;
-  for(typename vector<CFG>::iterator I = vec.begin(); I != vec.end(); ++I) {
-    LPOutput<CFG,WEIGHT> _ci;
-    if(!_rm->m_pRoadmap->IsEdge(cfg, *I) && 
-       lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm, cfg, *I, 
-		       &_ci, _rm->GetEnvironment()->GetPositionRes(), 
-		       _rm->GetEnvironment()->GetOrientationRes(), 
-		       true, true)) {
-       VID _cfgVID;
-       if(_rm->m_pRoadmap->IsVertex(cfg))
-	 _cfgVID = _rm->m_pRoadmap->GetVID(cfg);
-       else
-	 _cfgVID = _rm->m_pRoadmap->AddVertex(cfg);
-       _rm->m_pRoadmap->AddEdge(_cfgVID, _rm->m_pRoadmap->GetVID(*I), 
-				_ci.edge);
-       numFound++;
-       if(numFound >= kfirst)
-	 return;
-     } 
-   }
-}
 
 #endif

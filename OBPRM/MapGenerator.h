@@ -5,6 +5,7 @@
 #include "GenerateMapNodes.h"
 #include "ConnectMap.h"
 #include "MapEvaluator.h"
+#include "GraphAlgo.h"
 
 /////////////////////////////////////////////////////////////
 //
@@ -386,16 +387,16 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	    sub_nodes.push_back(rep_cfgs[j]);
 	} 
 	
-	vector<vector<CFG> > verticesList;
-	verticesList.push_back(sub_nodes);
-	verticesList.push_back(sub_nodes);
-	
 	//If the connection method does not take vector<vector<CFG> > as argument,
 	//we will use all the nodes in the map to perform connection
 	//see: ConnectionMethod.h
 	conClock.StartClock(conClockName);
+	cm.ConnectNodes(rmap, Stats, cd, dm, lp,
+			addPartialEdge, addAllEdges, sub_nodes, sub_nodes);
+	/*
 	cm.ConnectComponents(rmap, Stats, cd, dm, lp,
-			     addPartialEdge, addAllEdges, verticesList);
+			     addPartialEdge, addAllEdges, sub_nodes, sub_nodes);
+	*/
 	conClock.StopClock();
 	
 	//set the next node index for this generation method
@@ -511,8 +512,8 @@ GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
   // Connect roadmap nodes
   //---------------------------
   ConnectionClock.StartClock("Node Connection");
-  cm.ConnectComponents(rmap, Stats, cd, dm, lp,
-	       addPartialEdge, addAllEdges);
+  cm.Connect(rmap, Stats, cd, dm, lp,
+	     addPartialEdge, addAllEdges);
   ConnectionClock.StopClock();
 
 } 
