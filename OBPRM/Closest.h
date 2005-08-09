@@ -1,36 +1,35 @@
 #ifndef Closest_h
 #define Closest_h
-#include "ConnectionMethod.h"
-
+#include "NodeConnectionMethod.h"
+#include "LocalPlanners.h"
+#include "GraphAlgo.h"
 
 //Connect K Closest
-   /**Connect nodes in map to their k closest neighbors.
-    *Following Algorithm is used:
-    *   -# for evry node, cfg1, in roadmap
-    *       -# find k closet neighbors for cfg1
-    *       -# lp_set is a local planner set defined in info.lpsetid
-    *       -# for every node, cfg2, in k-closest neighbor list for cfg1
-    *           -# using local planning functions in lp_set
-    *              to connect cfg1 and cfg2
-    *           -# if connected, add this edge to map, _rm.
-    *       -#end for
-    *   -# end for
-    *
-    *@param info provides inforamtion other than connection, like
-    *collision dection, local planner, and distance metrics.
-    *@param _cn provides information for specific node connection 
-    *paramters.
-    *@param lp Local planner for connecting given 2 Cfgs.
-    *
-    *@see RoadmapGraph::AddEdge and LocalPlanners::IsConnected
-    */
-
+/**Connect nodes in map to their k closest neighbors.
+ *Following Algorithm is used:
+ *   -# for evry node, cfg1, in roadmap
+ *       -# find k closet neighbors for cfg1
+ *       -# lp_set is a local planner set defined in info.lpsetid
+ *       -# for every node, cfg2, in k-closest neighbor list for cfg1
+ *           -# using local planning functions in lp_set
+ *              to connect cfg1 and cfg2
+ *           -# if connected, add this edge to map, _rm.
+ *       -#end for
+ *   -# end for
+ *
+ *@param info provides inforamtion other than connection, like
+ *collision dection, local planner, and distance metrics.
+ *@param _cn provides information for specific node connection 
+ *paramters.
+ *@param lp Local planner for connecting given 2 Cfgs.
+ *
+ *@see RoadmapGraph::AddEdge and LocalPlanners::IsConnected
+ */
 
 #define KCLOSEST 5 
 
-
 template <class CFG, class WEIGHT>
-class Closest: public ConnectionMethod<CFG,WEIGHT> {
+class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
  public:
   //////////////////////
   // Constructors and Destructor
@@ -44,28 +43,31 @@ class Closest: public ConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-
   void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
-  virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
+  virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
+
   //////////////////////
   // Core: Connection method
-  void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-			 CollisionDetection*, DistanceMetric *,
-			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge, bool addAllEdges);  
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-			 CollisionDetection*, DistanceMetric*,
-			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge, bool addAllEdges,
-			 vector<vector<CFG> >& verticesList);
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-			 CollisionDetection*, DistanceMetric *,
-			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge, bool addAllEdges,
-			 vector<CFG>& v1, vector<CFG>& v2);
+  void Connect();
+
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+             CollisionDetection*, DistanceMetric *,
+             LocalPlanners<CFG,WEIGHT>*,
+             bool addPartialEdge, bool addAllEdges);  
+
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+             CollisionDetection*, DistanceMetric *,
+             LocalPlanners<CFG,WEIGHT>*,
+             bool addPartialEdge, bool addAllEdges,
+             vector<CFG>& v1, vector<CFG>& v2);
+
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+             CollisionDetection*, DistanceMetric*,
+             LocalPlanners<CFG,WEIGHT>*,
+             bool addPartialEdge, bool addAllEdges,
+             vector<vector<CFG> >& verticesList);
 
 
  private:
@@ -77,15 +79,14 @@ class Closest: public ConnectionMethod<CFG,WEIGHT> {
 
 
 template <class CFG, class WEIGHT>
-Closest<CFG,WEIGHT>::Closest():ConnectionMethod<CFG,WEIGHT>() { 
+Closest<CFG,WEIGHT>::Closest():NodeConnectionMethod<CFG,WEIGHT>() { 
   element_name = "closest"; 
-
   SetDefault();
 }
 
 
 template <class CFG, class WEIGHT>
-Closest<CFG,WEIGHT>::Closest(int k):ConnectionMethod<CFG,WEIGHT>() { 
+Closest<CFG,WEIGHT>::Closest(int k):NodeConnectionMethod<CFG,WEIGHT>() { 
   element_name = "closest"; 
   kclosest = k;
 }
@@ -153,30 +154,33 @@ PrintValues(ostream& _os){
 
 
 template <class CFG, class WEIGHT>
-ConnectionMethod<CFG,WEIGHT>* 
+NodeConnectionMethod<CFG,WEIGHT>* 
 Closest<CFG,WEIGHT>::
 CreateCopy() {
-  ConnectionMethod<CFG,WEIGHT>* _copy = 
+  NodeConnectionMethod<CFG,WEIGHT>* _copy = 
            new Closest<CFG,WEIGHT>(*this);
   return _copy;
 }
 
+
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::
-ConnectComponents() {
+Connect() {
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl ;
   //cout << "DOING NOTHING" << endl;
 }
 
 
+
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-                  CollisionDetection* cd , 
-                  DistanceMetric * dm,
-                  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges) {
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+            CollisionDetection* cd , 
+            DistanceMetric * dm,
+            LocalPlanners<CFG,WEIGHT>* lp,
+            bool addPartialEdge,
+            bool addAllEdges) 
+{
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
 #ifndef QUIET
   cout << "closest(k="<< kclosest <<"): "<<flush;
@@ -224,29 +228,31 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-                  CollisionDetection* cd , 
-                  DistanceMetric * dm,
-                  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges,
-		  vector<vector<CFG> >& verticesList) {
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+            CollisionDetection* cd , 
+            DistanceMetric * dm,
+            LocalPlanners<CFG,WEIGHT>* lp,
+            bool addPartialEdge,
+            bool addAllEdges,
+            vector<vector<CFG> >& verticesList)
+{
   for(int i=0; i<verticesList.size()-1; ++i)
     for(int j=i+1; j<verticesList.size(); ++j)
-      ConnectComponents(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,
-			verticesList[i], verticesList[j]);
+      Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,
+            verticesList[i], verticesList[j]);
 }
 
 
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-                  CollisionDetection* cd , 
-                  DistanceMetric * dm,
-                  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges,
-		  vector<CFG>& v1, vector<CFG>& v2) {
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+            CollisionDetection* cd , 
+            DistanceMetric * dm,
+            LocalPlanners<CFG,WEIGHT>* lp,
+            bool addPartialEdge,
+            bool addAllEdges,
+            vector<CFG>& v1, vector<CFG>& v2) 
+{
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
 #ifndef QUIET
   cout << "closest*(k="<< kclosest <<"): "<<flush;
@@ -258,8 +264,8 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   if((v1.size() < kclosest) && (v2.size() < kclosest)) {//all pairs
     for(typename vector<CFG>::iterator I = v1.begin(); I != v1.end(); ++I)
       for(typename vector<CFG>::iterator J = v2.begin(); J != v2.end(); ++J)
-	if(*I != *J)
-	  kp.push_back(make_pair<VID,VID>(pMap->GetVID(*I), pMap->GetVID(*J)));
+    if(*I != *J)
+      kp.push_back(make_pair<VID,VID>(pMap->GetVID(*I), pMap->GetVID(*J)));
   }
 
   if((v1.size() >= kclosest) && (v2.size() >= kclosest)) { //k closest each way
@@ -289,15 +295,13 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       continue;
 #endif
     if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm,
-		       _rm->m_pRoadmap->GetData(KP->first),
-		       _rm->m_pRoadmap->GetData(KP->second),
-		       &lpOutput, connectionPosRes, connectionOriRes, 
-		       (!addAllEdges) )) {
+               _rm->m_pRoadmap->GetData(KP->first),
+               _rm->m_pRoadmap->GetData(KP->second),
+               &lpOutput, connectionPosRes, connectionOriRes, 
+               (!addAllEdges) )) {
       _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
     }
   } 
 }
-
-
 
 #endif

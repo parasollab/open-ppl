@@ -11,7 +11,7 @@
 
 //node connection methods
 #include "NodeConnectionMethod.h"
-//#include "Closest.h"
+#include "Closest.h"
 //#include "UnconnectedKClosest.h"
 //#include "RandomConnect.h"
 //#include "ModifiedLM.h"
@@ -132,8 +132,8 @@ ConnectMap() {
   selected_node_methods.clear();
   all_node_methods.clear();
 
-  //Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>();
-  //all_node_methods.push_back(closest);
+  Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>();
+  all_node_methods.push_back(closest);
 
   //UnconnectedClosest<CFG,WEIGHT>* unconnectedclosest = new UnconnectedClosest<CFG,WEIGHT>();
   //all_node_methods.push_back(unconnectedclosest);
@@ -212,9 +212,9 @@ vector<NodeConnectionMethod<CFG,WEIGHT> *>
 ConnectMap<CFG,WEIGHT>::
 GetNodeDefault() {
   vector<NodeConnectionMethod<CFG,WEIGHT> *> tmp;
-  //Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>();
-  //closest->SetDefault();
-  //tmp.push_back(closest);    
+  Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>();
+  closest->SetDefault();
+  tmp.push_back(closest);    
   
   return tmp;
 }
