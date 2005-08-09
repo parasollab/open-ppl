@@ -13,7 +13,7 @@
 #include "NodeConnectionMethod.h"
 #include "Closest.h"
 //#include "UnconnectedKClosest.h"
-//#include "RandomConnect.h"
+#include "RandomConnect.h"
 //#include "ModifiedLM.h"
 //#include "ObstBased.h"
 //#include "ClosestVE.h"
@@ -138,8 +138,8 @@ ConnectMap() {
   //UnconnectedClosest<CFG,WEIGHT>* unconnectedclosest = new UnconnectedClosest<CFG,WEIGHT>();
   //all_node_methods.push_back(unconnectedclosest);
 
-  //RandomConnect<CFG,WEIGHT>* random = new RandomConnect<CFG,WEIGHT>();
-  //all_nodes_methods.push_back(random);
+  RandomConnect<CFG,WEIGHT>* random = new RandomConnect<CFG,WEIGHT>();
+  all_node_methods.push_back(random);
 
   //ModifiedLM<CFG,WEIGHT>* lm = new ModifiedLM<CFG,WEIGHT>();
   //all_node_methods.push_back(lm);
