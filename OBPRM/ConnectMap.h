@@ -15,7 +15,7 @@
 //#include "UnconnectedKClosest.h"
 #include "RandomConnect.h"
 //#include "ModifiedLM.h"
-//#include "ObstBased.h"
+#include "ObstBased.h"
 #include "ClosestVE.h"
 //#include "RRTexpand.h"
 //#include "RayTracer.h" //??
@@ -144,8 +144,8 @@ ConnectMap() {
   //ModifiedLM<CFG,WEIGHT>* lm = new ModifiedLM<CFG,WEIGHT>();
   //all_node_methods.push_back(lm);
 
-  //ObstBased<CFG,WEIGHT>* obstbased = new ObstBased<CFG,WEIGHT>();
-  //all_node_methods.push_back(obstbased);
+  ObstBased<CFG,WEIGHT>* obstbased = new ObstBased<CFG,WEIGHT>();
+  all_node_methods.push_back(obstbased);
 
   ClosestVE<CFG,WEIGHT>* closestve = new ClosestVE<CFG,WEIGHT>();
   all_node_methods.push_back(closestve);
