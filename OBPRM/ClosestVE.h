@@ -1,13 +1,13 @@
 #ifndef ClosestVE_h
 #define ClosestVE_h
-#include "ConnectionMethod.h"
+#include "NodeConnectionMethod.h"
 
 
    /**Connect nodes in map to their k closest neighbors, which
     *could be vertex or point on edges in roadmap.
     *
     *This method not only creates edges, but creates new verteices 
-    *also. New verteices are always on the existing edges.
+    *also. New vertices are always on the existing edges.
     *
     *@param info provides inforamtion other than connection, like
     *collision dection, local planner, and distance metrics.
@@ -84,7 +84,7 @@ class CfgVEType {
 
 
 template <class CFG, class WEIGHT>
-class ClosestVE: public ConnectionMethod<CFG,WEIGHT> {
+class ClosestVE: public NodeConnectionMethod<CFG,WEIGHT> {
  public:
   //////////////////////
   // Constructors and Destructor
@@ -101,7 +101,7 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT> {
   void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os); 
-  virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
+  virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
   // Core: Connection method
   static bool VE_DIST_Compare(const pair<CfgVEType<CFG>,double> _cc1, const pair<CfgVEType<CFG>,double> _cc2);
@@ -169,13 +169,18 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT> {
    *@see RoadmapGraph::GetEdges
    */
   //@}
-  void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
 			 bool addPartialEdge=false,
 			 bool addAllEdges=false);
+
+  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+	       CollisionDetection* cd, DistanceMetric* dm,
+	       LocalPlanners<CFG,WEIGHT>* lp,
+	       bool addPartialEdge, bool addAllEdges,
+	       vector<CFG>& cfgs1, vector<CFG>& cfgs2);
 
  private:
   //////////////////////
@@ -187,7 +192,7 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT> {
 
 
 template <class CFG, class WEIGHT>
-ClosestVE<CFG,WEIGHT>::ClosestVE():ConnectionMethod<CFG,WEIGHT>() { 
+ClosestVE<CFG,WEIGHT>::ClosestVE():NodeConnectionMethod<CFG,WEIGHT>() { 
   element_name = "closestVE"; 
 
   SetDefault();
@@ -259,10 +264,10 @@ PrintValues(ostream& _os){
 
 
 template <class CFG, class WEIGHT>
-ConnectionMethod<CFG,WEIGHT>* 
+NodeConnectionMethod<CFG,WEIGHT>* 
 ClosestVE<CFG,WEIGHT>::
 CreateCopy() {
-  ConnectionMethod<CFG,WEIGHT>* _copy = 
+  NodeConnectionMethod<CFG,WEIGHT>* _copy = 
            new ClosestVE<CFG,WEIGHT>(*this);
   return _copy;
 }
@@ -353,12 +358,6 @@ FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
   return pairs;
 }
 
-
-template <class CFG, class WEIGHT>
-void ClosestVE<CFG,WEIGHT>::
-ConnectComponents() {
-}
-
  
 // ------------------------------------------------------------------
 // ClosestVE:
@@ -369,7 +368,7 @@ ConnectComponents() {
 // ------------------------------------------------------------------
 template <class CFG, class WEIGHT>
 void ClosestVE<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
 		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
@@ -460,6 +459,19 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 }
 
+
+template <class CFG, class WEIGHT>
+void ClosestVE<CFG,WEIGHT>::
+Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+	       CollisionDetection* cd, DistanceMetric* dm,
+	       LocalPlanners<CFG,WEIGHT>* lp,
+	       bool addPartialEdge, bool addAllEdges,
+	       vector<CFG>& cfgs1, vector<CFG>& cfgs2){
+
+
+  // Left empty because I didn't know how to implement it...
+
+}
 
 // ------------------------------------------------------------------
 // CfgVEType is a private class used by ConnectMapNodes class
