@@ -359,15 +359,15 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
     cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false,
 		     verticesList, cc);
     vector<CFG> ccList(1, cc_cfg);
-    cn->ConnectComponents(rdmp, Stats, cd, dm, lp, false, false,
-			  verticesList, ccList);
+    //cn->ConnectComponents(rdmp, Stats, cd, dm, lp, false, false,
+//			  verticesList, ccList);
 
     cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
     verticesList[0] = _goal;
     cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false,
 		     verticesList, cc);
-    cn->ConnectComponents(rdmp, Stats, cd, dm, lp, false, false,
-			  verticesList, ccList);
+  //  cn->ConnectComponents(rdmp, Stats, cd, dm, lp, false, false,
+//			  verticesList, ccList);
 
     connected = false;
     vector<pair<CFG,WEIGHT> > rp;

@@ -23,7 +23,7 @@
 
 //component connection methods
 #include "ComponentConnectionMethod.h"
-//#include "ConnectCCs.h"
+#include "ConnectCCs.h"
 //#include "RRTcompnents.h"
 //#include "RayTracer.h"
 
@@ -87,12 +87,12 @@ class ConnectMap {
 			 CollisionDetection* cd, DistanceMetric* dm,
 			 LocalPlanners<CFG,WEIGHT>* lp,
 			 bool addPartialEdge, bool addAllEdges,
-			 vector<CFG>& cfgs1, vector<CFG>& cfgs2);
+			 vector<VID>& vids1, vector<VID>& vids2);
   void ConnectComponents(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 			 CollisionDetection* cd, DistanceMetric* dm,
 			 LocalPlanners<CFG,WEIGHT>* lp,
 			 bool addPartialEdge, bool addAllEdges,
-			 vector<vector<CFG> >& cfgs);
+			 vector<vector<VID> >& vids);
 
   //void ConnectRoadmap();
 
@@ -161,8 +161,8 @@ ConnectMap() {
   selected_component_methods.clear();
   all_component_methods.clear();
 
-  //ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>();
-  //all_component_methods.push_back(connectccs);
+  ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>();
+  all_component_methods.push_back(connectccs);
 
   //RRTcomponents<CFG,WEIGHT>* rrtcomp = new RRTcomponents<CFG,WEIGHT>();
   //all_component_methods.push_back(rrtcomp);
@@ -597,7 +597,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  CollisionDetection* cd, DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge, bool addAllEdges,
-		  vector<CFG>& cfgs1, vector<CFG>& cfgs2) {
+		  vector<VID>& vids1, vector<VID>& vids2) {
   typename vector<ComponentConnectionMethod<CFG,WEIGHT> *>::iterator itr;
   for(itr = selected_component_methods.begin(); 
       itr != selected_component_methods.end(); itr++) {
@@ -609,7 +609,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
-    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,cfgs1,cfgs2);
+    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,vids1,vids2);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec, "
@@ -627,7 +627,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  CollisionDetection* cd, DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge, bool addAllEdges,
-		  vector<vector<CFG> >& cfgs) {
+		  vector<vector<VID> >& vids) {
   typename vector<ComponentConnectionMethod<CFG,WEIGHT> *>::iterator itr;
   for(itr = selected_component_methods.begin(); 
       itr != selected_component_methods.end(); itr++) {
@@ -639,7 +639,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
-    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,cfgs);
+    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,vids);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec, "

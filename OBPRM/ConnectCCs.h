@@ -1,6 +1,7 @@
 #ifndef ConnectCCs_h
 #define ConnectCCs_h
-#include "ConnectionMethod.h"
+
+#include "ComponentConnectionMethod.h"
 
 
 //ConnectCCs
@@ -22,7 +23,7 @@
 
 
 template <class CFG, class WEIGHT>
-class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
+class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
  public:
   //////////////////////
   // Constructors and Destructor
@@ -41,7 +42,7 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
   void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
-  virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
+  virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
   // Core: Connection method
   /**Connect two small connected components.
@@ -98,13 +99,19 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
 
   //@}
 
-  void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-			 CollisionDetection*, 
-			 DistanceMetric *,
-			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge,
-			 bool addAllEdges);
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+		 CollisionDetection*, 
+		 DistanceMetric *,
+		 LocalPlanners<CFG,WEIGHT>*,
+		 bool addPartialEdge,
+		 bool addAllEdges);
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+		 CollisionDetection*, 
+		 DistanceMetric *,
+		 LocalPlanners<CFG,WEIGHT>*,
+		 bool addPartialEdge,
+		 bool addAllEdges,
+		 vector<VID>& vids1, vector<VID>& vids2);
 
  private:
   //////////////////////
@@ -119,7 +126,7 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
 //   Connection Method:  ConnectCCs
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::ConnectCCs():
-  ConnectionMethod<CFG,WEIGHT>() { 
+  ComponentConnectionMethod<CFG,WEIGHT>() { 
   element_name = "components"; 
 
   SetDefault();
@@ -128,7 +135,7 @@ ConnectCCs<CFG,WEIGHT>::ConnectCCs():
 
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::ConnectCCs(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetection* cd, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp):
-  ConnectionMethod<CFG,WEIGHT>(rdmp, cd, dm, lp) {
+  ComponentConnectionMethod<CFG,WEIGHT>(rdmp, cd, dm, lp) {
   element_name = string("components");
 
   SetDefault();
@@ -213,10 +220,10 @@ PrintValues(ostream& _os){
 
 
 template <class CFG, class WEIGHT>
-ConnectionMethod<CFG,WEIGHT>* 
+ComponentConnectionMethod<CFG,WEIGHT>* 
 ConnectCCs<CFG,WEIGHT>::
 CreateCopy() {
-  ConnectionMethod<CFG,WEIGHT>* _copy = 
+  ComponentConnectionMethod<CFG,WEIGHT>* _copy = 
            new ConnectCCs<CFG,WEIGHT>(*this);
   return _copy;
 }
@@ -307,23 +314,15 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 }
 
 
-template <class CFG, class WEIGHT>
-void ConnectCCs<CFG,WEIGHT>::
-ConnectComponents() {
-  //cout << "Connecting CCs with method: components kpairs="<< kpairs;
-  //cout << " smallcc= " << smallcc << endl;
-  //cout << "DOING NOTHING" << endl;
-}
- 
 
 template <class CFG, class WEIGHT>
 void ConnectCCs<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-                  CollisionDetection* cd , 
-                  DistanceMetric * dm,
-                  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges) {
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+          CollisionDetection* cd , 
+          DistanceMetric * dm,
+          LocalPlanners<CFG,WEIGHT>* lp,
+          bool addPartialEdge,
+	  bool addAllEdges) {
   vector< pair<int,VID> > ccs1;
   GetCCStats(*(_rm->m_pRoadmap),ccs1);
   vector< pair<int,VID> > ccs2 = ccs1;
@@ -357,6 +356,45 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       } 
     }/*endfor cc2*/ 
     ccs2.pop_back();
+  }/*endfor cc1*/
+}
+
+
+template <class CFG, class WEIGHT>
+void ConnectCCs<CFG,WEIGHT>::
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+          CollisionDetection* cd , 
+          DistanceMetric * dm,
+          LocalPlanners<CFG,WEIGHT>* lp,
+          bool addPartialEdge,
+          bool addAllEdges,
+	  vector<VID> & vids1, vector<VID> & vids2) {
+#ifndef QUIET
+  cout << "components(kpairs="<< kpairs ;
+  cout << ", smallcc="<<smallcc <<"): "<<flush;
+#endif
+  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
+  
+  for (int cc1 = 0; cc1 < vids1.size(); cc1++) {
+    for (int cc2 = 0; cc2 < vids2.size(); cc2++) {
+      VID cc1id = vids1[cc1]; 
+      VID cc2id = vids2[cc2];
+      CFG cc1Cfg = pMap->GetData(cc1id); 
+      CFG cc2Cfg = pMap->GetData(cc2id); 
+      
+      // if cc1 & cc2 not already connected, try to connect them 
+      if ( !IsSameCC(*pMap,cc1id,cc2id) ) {
+        vector<CFG> cc1Cfgs;
+        GetCC(*pMap,cc1Cfg,cc1Cfgs);
+        vector<CFG> cc2Cfgs;
+        GetCC(*pMap,cc2Cfg,cc2Cfgs);
+        if(cc1Cfgs.size() < smallcc && cc2Cfgs.size() < smallcc ) {
+          ConnectSmallCCs(_rm,Stats,cd,lp,dm,cc1Cfgs,cc2Cfgs,addPartialEdge,addAllEdges);
+        } else {
+          ConnectBigCCs(_rm,Stats,cd,lp,dm,cc1Cfgs,cc2Cfgs,addPartialEdge,addAllEdges);
+        }
+      } 
+    }/*endfor cc2*/ 
   }/*endfor cc1*/
 }
 
