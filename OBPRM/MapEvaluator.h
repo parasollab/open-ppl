@@ -1,7 +1,6 @@
 #ifndef _MAP_EVALUATOR_H
 #define _MAP_EVALUATOR_H
 #include "Roadmap.h"
-#include "Query.h"
 
 template <class CFG, class WEIGTH> 
 class MapEvaluationMethod;
@@ -154,6 +153,7 @@ struct InverseWeightCapacity {
 
 /////////////////////////
 // evaluate the coverage of a given roadmap
+#include "NodeGenerationMethod.h"
  
 template <class CFG, class WEIGHT>
 class CoverageEvaluation : public MapEvaluationMethod<CFG,WEIGHT> 
@@ -236,6 +236,8 @@ private:
 
 /////////////////////////////////////////
 //query evaluation
+#include "Query.h"
+
 template <class CFG, class WEIGHT>
 class QueryEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
 
