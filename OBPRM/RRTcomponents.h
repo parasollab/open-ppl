@@ -25,7 +25,7 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
   //////////////////////
   // I/O methods
   // ParseCommandLine derived
-  virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
+  virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
   // Core: Connection methods 
   /**Copy vertices and all incident edges associated with "vids" 
@@ -36,34 +36,26 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
    *@param vids Source, vertex information will be retrived from here.
    *Usually, in this list, elements are Cfgs in same connected component.
    */
-/*  static void ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap, 
-			    Roadmap<CFG, WEIGHT>* fromMap, 
-			    vector<VID> vids);
-  void RRT(Roadmap<CFG, WEIGHT>* rm, 
-	   int K, double deltaT, int o_clearance, 
-	   int clearance_from_node,vector<CFG>& U,
-	   CollisionDetection*, LocalPlanners<CFG,WEIGHT>*,
-	   DistanceMetric *,
-	   bool & toConnect, bool connecting);
-*/
+
   void OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 				 DistanceMetric * dm,
 				 vector< pair<int,VID> >& ccvec);
-  void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-			 CollisionDetection*, 
-			 DistanceMetric *,
-			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge,
-			 bool addAllEdges);
+
+  // new component connection interface
+  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+	       CollisionDetection* cd, DistanceMetric* dm,
+	       LocalPlanners<CFG,WEIGHT>* lp,
+	       bool addPartialEdge, bool addAllEdges);
+  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+	       CollisionDetection* cd, DistanceMetric* dm,
+	       LocalPlanners<CFG,WEIGHT>* lp,
+	       bool addPartialEdge, bool addAllEdges,
+	       vector<VID>& vids1, vector<VID>& vids2);
+
  private:
   //////////////////////
   // Data
-  //int iterations; 
-  //int stepFactor;  
-  //int smallcc; 
-  //int o_clearance;
-  //int clearance_from_node;
+  // data stored in RRTexpand base class
 };
 
 
@@ -83,19 +75,12 @@ RRTcomponents<CFG,WEIGHT>::~RRTcomponents() {
 
 
 template <class CFG, class WEIGHT>
-ConnectionMethod<CFG,WEIGHT>* 
+ComponentConnectionMethod<CFG,WEIGHT>* 
 RRTcomponents<CFG,WEIGHT>::
 CreateCopy() {
   RRTcomponents<CFG,WEIGHT>* _copy = 
            new RRTcomponents<CFG,WEIGHT>(*this);
   return _copy;
-}
-
-
-template <class CFG, class WEIGHT>
-void RRTcomponents<CFG,WEIGHT>::ConnectComponents() {
-  cout << "Connecting CCs with method: RRTcomponents" << endl;
-  cout << "DO NOTHING" <<endl;
 }
 
 
@@ -169,221 +154,225 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
   }
 }
 
+template <class CFG, class WEIGHT>
+void RRTcomponents<CFG,WEIGHT>::
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+	CollisionDetection* cd , 
+	DistanceMetric * dm,
+	LocalPlanners<CFG,WEIGHT>* lp,
+	bool addPartialEdge,
+	bool addAllEdges,
+	vector<VID>& vids1, vector<VID>& vids2) {
+
+  Roadmap<CFG,WEIGHT> submap1;
+  submap1.environment = _rm->GetEnvironment();
+
+  ModifyRoadMap(&submap1, _rm, vids1);
+  ModifyRoadMap(&submap1, _rm, vids2);
+
+  Connect(&submap1, Stats, cd, dm, lp, addPartialEdge, addAllEdges);
+
+  vector<VID> verts;
+  (&submap1)->m_pRoadmap->GetVerticesVID(verts);
+  ModifyRoadMap(_rm, &submap1,verts);
+  submap1.environment = NULL;
+
+
+}
 
 template <class CFG, class WEIGHT>
 void RRTcomponents<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		  CollisionDetection* cd , 
-		  DistanceMetric * dm,
-		  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges) {
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+	CollisionDetection* cd , 
+	DistanceMetric * dm,
+	LocalPlanners<CFG,WEIGHT>* lp,
+	bool addPartialEdge,
+	bool addAllEdges) {
   // display information specific to method
-  #ifndef QUIET
+
+#ifndef QUIET
   cout << "RRTcomponents(iterations = "<< iterations
        << ", stepFactor= "<< stepFactor
        << ", smallcc   = "<< smallcc
        << ", oclearance = " << o_clearance
        << ", node_clearance = " << clearance_from_node
        <<"): " <<flush;
-  #endif
+#endif
  
-///Modified for VC
+  ///Modified for VC
 #if defined(_WIN32)
-	using namespace std;
+  using namespace std;
 #endif
 
   // process components from smallest to biggest
   // vector< pair<int,VID> > ccvec = _rm->m_pRoadmap->GetCCStats();
-	vector< pair<int,VID> > ccvec;
-	GetCCStats(*(_rm->m_pRoadmap),ccvec);
-/*  for ( vector< pair<int,VID> >::reverse_iterator cc1=ccvec.rbegin();
-       (*cc1).first <= _cn.GetSmallCCSize() && 
-#if defined(__HP_aCC)
-       (cc1!=ccvec.rend())
-#else
-       (cc1<ccvec.rend())
-#endif
-       ;++cc1){ 
-*/
-      vector< pair<int,VID> >::iterator cc1=ccvec.begin();
-for ( int z = 0; z <=1; z++) {
+  vector< pair<int,VID> > ccvec;
+  GetCCStats(*(_rm->m_pRoadmap),ccvec);
 
+  vector< pair<int,VID> >::iterator cc1=ccvec.begin();
+  for ( int z = 0; z <=1; z++) {
 
+    vector< pair<int,VID> > tempccvec;
+    GetCCStats(*(_rm->m_pRoadmap),tempccvec);
 
-      //-- submap = vertices & edges of current (cc1) connected component
-      Roadmap<CFG,WEIGHT> submap1;
+    if( tempccvec.size() <= 1 ) continue;
 
-      //submap->InitEnvironment(_rm->GetEnvironment());
-      //Environment temp_env = Environment::Environment(0);
-      /*temp_env = *_rm->GetEnvironment(); */
-      //*submap.environment = new Environment;
-      //&submap.environment.pathversion = _rm->GetEnvironment()->GetPathVersion();
-      //submap.environment.multibodyCount= ( _rm->GetEnvironment() )->GetMultiBodyCount();
-      //for(int i=0;i<submap.environment.multibodyCount; i++)
-      //submap.environment.multibody[i] = _rm->GetEnvironment()->GetMultiBody(i);
-      //submap.environment = _rm->GetEnvironment();       //submap.environment = Environment(submap.environment);
-      
+    //-- submap = vertices & edges of current (cc1) connected component
+    Roadmap<CFG,WEIGHT> submap1;
+  
+    vector<CFG> dummyU;
 
-      //submap1.environment = _rm->GetEnvironment();
+    vector< pair<int,VID> >::iterator cc2=cc1+1;
 
-      //vector<VID> cc;
-      //GetCC(*(_rm->m_pRoadmap),(*cc1).second,cc);
-      //ModifyRoadMap(&submap1,_rm,cc);
-      vector<CFG> dummyU;
+    //DisplayCCStats(*(_rm->m_pRoadmap),0);  
 
-
-	//"RRTcomponents"
-	//submap1.m_pRoadmap = _rm->m_pRoadmap;
-
-          vector< pair<int,VID> >::iterator cc2=cc1+1;
-
-	  //_rm->m_pRoadmap->DisplayCCStats(-1);
-	  vector< pair<int,VID> >::iterator cctemp=ccvec.begin();
-          int b =0;
-	  if (z == 0)
-	  while(cctemp!=ccvec.end()) {
-		vector<VID> cc;
-      		GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cc);
-		if ( cc.size()<= smallcc ) {
-	  	  Roadmap<CFG,WEIGHT> submap3;
-	          submap3.environment = _rm->GetEnvironment();
-		  vector<VID> cct;
-                  GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cct);
-	 	  ModifyRoadMap(&submap3,_rm,cct);
-		  bool toConnect = FALSE;
-
-		  RRT(&submap3, Stats,
-              		  iterations/2,
-                      stepFactor * _rm->GetEnvironment()->GetPositionRes(),
-                      o_clearance,clearance_from_node,
-                      dummyU,
-                      cd, lp, dm, toConnect,FALSE,
-		      addPartialEdge, addAllEdges);
-      		  vector<VID> verts1;
-	          (&submap3)->m_pRoadmap->GetVerticesVID(verts1);
-	  	  ModifyRoadMap(_rm,&submap3,verts1);
-		  submap3.environment = NULL;
-		  } //end if
+    vector< pair<int,VID> >::iterator cctemp=ccvec.begin();
+    int b =0;
+    if (z == 0)
+      while(cctemp!=ccvec.end()) {
+	vector<VID> cc;
+	GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cc);
+	if ( cc.size()<= smallcc ) {
+	  Roadmap<CFG,WEIGHT> submap3;
+	  submap3.environment = _rm->GetEnvironment();
+	  vector<VID> cct;
+	  GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cct);
+	  ModifyRoadMap(&submap3,_rm,cct);
+	  bool toConnect = FALSE;
+	  
+	  RRT(&submap3, Stats,
+	      iterations/2,
+	      stepFactor * _rm->GetEnvironment()->GetPositionRes(),
+	      o_clearance,clearance_from_node,
+	      dummyU,
+	      cd, lp, dm, toConnect,FALSE,
+	      addPartialEdge, addAllEdges);
+	  vector<VID> verts1;
+	  (&submap3)->m_pRoadmap->GetVerticesVID(verts1);
+	  ModifyRoadMap(_rm,&submap3,verts1);
+	  submap3.environment = NULL;
+	} //end if
 		
-		cctemp++; b++;
-	  } //cctemp<=ccvec.end()
+	cctemp++; b++;
+      } //cctemp<=ccvec.end()
 
 
-	if (( z == 1) && (ccvec.size()>2)) {
-	   GetCCStats(*(_rm->m_pRoadmap),ccvec);
-	   // Will put the first/largest CC at the end move everything
-	   // else up one spot
-	   vector< pair<int,VID> >::iterator startcciter = ccvec.begin();
-	   vector< pair<int,VID> >::iterator endcciter = ccvec.end();
-	   startcciter++;
-	   vector< pair<int,VID> > tmp_vec1;
-	   vector< pair<int,VID> >::iterator startIterator = tmp_vec1.begin();
-	   tmp_vec1.insert(startIterator,startcciter,endcciter);
-	   startcciter = ccvec.begin();
-	   tmp_vec1.push_back(*startcciter);
-	   ccvec.swap( tmp_vec1  );
-	   }
+    if (( z == 1) && (ccvec.size()>2)) {
+      GetCCStats(*(_rm->m_pRoadmap),ccvec);
+      // Will put the first/largest CC at the end move everything
+      // else up one spot
+      vector< pair<int,VID> >::iterator startcciter = ccvec.begin();
+      vector< pair<int,VID> >::iterator endcciter = ccvec.end();
+      startcciter++;
+      vector< pair<int,VID> > tmp_vec1;
+      vector< pair<int,VID> >::iterator startIterator = tmp_vec1.begin();
+      tmp_vec1.insert(startIterator,startcciter,endcciter);
+      startcciter = ccvec.begin();
+      tmp_vec1.push_back(*startcciter);
+      ccvec.swap( tmp_vec1  );
+    }
           
-	  OrderCCByCloseness(_rm,dm,ccvec);
+    OrderCCByCloseness(_rm,dm,ccvec);
 
-          cc1= ccvec.begin();
-          cc2 = ccvec.begin(); cc2++;
-	  VID cc1id = (*cc1).second;
+    cc1= ccvec.begin();
+    cc2 = ccvec.begin(); cc2++;
+    VID cc1id = (*cc1).second;
 
-     while(cc2!=ccvec.end()) {
+    //while(cc2!=ccvec.end()) {
+    while(cc2<ccvec.end()) {
 
-          Roadmap<CFG,WEIGHT> submap2;
-          submap2.environment = _rm->GetEnvironment();
-          vector<VID> cct2;
-          GetCC(*(_rm->m_pRoadmap),(*cc2).second,cct2);
-	  ModifyRoadMap(&submap2,_rm,cct2);
-          submap1.environment = _rm->GetEnvironment();
-          vector<VID> cc;
-          GetCC(*(_rm->m_pRoadmap),(*cc1).second,cc);
-          ModifyRoadMap(&submap1,_rm,cc);
+      Roadmap<CFG,WEIGHT> submap2;
+      submap2.environment = _rm->GetEnvironment();
+      vector<VID> cct2;
+      GetCC(*(_rm->m_pRoadmap),(*cc2).second,cct2);
+      ModifyRoadMap(&submap2,_rm,cct2);
+      submap1.environment = _rm->GetEnvironment();
+      vector<VID> cc;
+      GetCC(*(_rm->m_pRoadmap),(*cc1).second,cc);
+      ModifyRoadMap(&submap1,_rm,cc);
 
-		VID cc2id = (*cc2).second;
-	  int i = 0;
-          vector<CFG> dummyU;
-	  vector<CFG> U;
-	  int d=0;
+      VID cc2id = (*cc2).second;
+      int i = 0;
+      vector<CFG> dummyU;
+      vector<CFG> U;
+      int d=0;
 
-          //DisplayCCStats(*(_rm->m_pRoadmap),-1);
+      //DisplayCCStats(*(_rm->m_pRoadmap),-1);
 
-          bool toConnect = FALSE;
-          vector<VID> cct3;
-          GetCC(*(_rm->m_pRoadmap),(*cc2).second,cct3);
-	  if(cct3.size()>= smallcc)
-	  while ( !IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id) 
+      bool toConnect = FALSE;
+      vector<VID> cct3;
+      GetCC(*(_rm->m_pRoadmap),(*cc2).second,cct3);
+      if(cct3.size()>= smallcc)
+	while ( !IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id) 
                 && !toConnect
 		&& (i<iterations) ) {
 	  U.clear();
           toConnect = FALSE;
 
-           while (!toConnect 
-                  && (!IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id))
-                  && ( i <= iterations )) {
+	  while (!toConnect 
+		 && (!IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id))
+		 && ( i <= iterations )) {
 
 
- 		U.clear();
-          	i++; 
-	      if ((i % 2 )== 0) {
+	    U.clear();
+	    i++; 
+	    if ((i % 2 )== 0) {
                 
-    		toConnect = FALSE;            
-		RRT(&submap1, Stats,
-		    1,
-		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
-		    o_clearance,clearance_from_node,
-		    U,cd,lp,dm,toConnect,TRUE,
-		    addPartialEdge, addAllEdges);
-
-                toConnect = TRUE;
-		RRT(&submap2, Stats,
-		    1,
-		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
-		    o_clearance,clearance_from_node,
-		    U,cd,lp,dm,toConnect,TRUE,
-		    addPartialEdge, addAllEdges);
-		}
-		else {
-		toConnect = FALSE;
-		RRT(&submap2, Stats,
-		    1,
-		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
-		    o_clearance,clearance_from_node,
-		    U,cd,lp,dm,toConnect,TRUE,
-		    addPartialEdge, addAllEdges);
-
-                toConnect = TRUE;
-		RRT(&submap1, Stats,
-		    1,
-		    stepFactor * _rm->GetEnvironment()->GetPositionRes(),
-		    o_clearance,clearance_from_node,
-		    U,cd,lp,dm,toConnect,TRUE,
-		    addPartialEdge, addAllEdges);
-		}
-                
+	      toConnect = FALSE;            
+	      RRT(&submap1, Stats,
+		  1,
+		  stepFactor * _rm->GetEnvironment()->GetPositionRes(),
+		  o_clearance,clearance_from_node,
+		  U,cd,lp,dm,toConnect,TRUE,
+		  addPartialEdge, addAllEdges);
+	      
+	      toConnect = TRUE;
+	      RRT(&submap2, Stats,
+		  1,
+		  stepFactor * _rm->GetEnvironment()->GetPositionRes(),
+		  o_clearance,clearance_from_node,
+		  U,cd,lp,dm,toConnect,TRUE,
+		  addPartialEdge, addAllEdges);
+	    }
+	    else {
+	      toConnect = FALSE;
+	      RRT(&submap2, Stats,
+		  1,
+		  stepFactor * _rm->GetEnvironment()->GetPositionRes(),
+		  o_clearance,clearance_from_node,
+		  U,cd,lp,dm,toConnect,TRUE,
+		  addPartialEdge, addAllEdges);
+	      
+	      toConnect = TRUE;
+	      RRT(&submap1, Stats,
+		  1,
+		  stepFactor * _rm->GetEnvironment()->GetPositionRes(),
+		  o_clearance,clearance_from_node,
+		  U,cd,lp,dm,toConnect,TRUE,
+		  addPartialEdge, addAllEdges);
+	    }
+	    
 	  } //end while (!toConnect && ( i <= _cn.GetIterations() )
 	     
-      		vector<VID> vertsa;
-      		(&submap1)->m_pRoadmap->GetVerticesVID(vertsa);
-                ModifyRoadMap(_rm,&submap1, vertsa);
-      		vector<VID> vertsb;  //not sure here if cc2 should be cc2 or vice versa
-      	        (&submap2)->m_pRoadmap->GetVerticesVID(vertsb);
-                ModifyRoadMap(_rm,&submap2, vertsb);
+	  vector<VID> vertsa;
+	  (&submap1)->m_pRoadmap->GetVerticesVID(vertsa);
+	  ModifyRoadMap(_rm,&submap1, vertsa);
+	  vector<VID> vertsb;  //not sure here if cc2 should be cc2 or vice versa
+	  (&submap2)->m_pRoadmap->GetVerticesVID(vertsb);
+	  ModifyRoadMap(_rm,&submap2, vertsb);
 		
-		d++;
+	  d++;
 	} //end while sameCC
       cc2++; d=0; i=0; 
       submap2.environment = NULL;
       submap2.m_pRoadmap = NULL;
-      } //end while cc2 != ccvec.end()
+    } //end while cc2 != ccvec.end()
 
-submap1.environment = NULL;
-submap1.m_pRoadmap = NULL;	  
+    submap1.environment = NULL;
+    submap1.m_pRoadmap = NULL;	  
 	  
-	 } //endfor cc1 and cc1.next 
+  } //endfor cc1 and cc1.next 
+
 
 
 

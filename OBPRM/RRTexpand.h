@@ -1,6 +1,6 @@
 #ifndef RRTexpand_h
 #define RRTexpand_h
-#include "ConnectionMethod.h"
+#include "ComponentConnectionMethod.h"
 
 #define STEP_FACTOR  10000        // default for rrt stepFactor
 #define ITERATIONS   50        // default for rrt iterations
@@ -10,7 +10,7 @@
 
 
 template <class CFG, class WEIGHT>
-class RRTexpand: public ConnectionMethod<CFG,WEIGHT> {
+class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
  public:
   //////////////////////
   // Constructors and Destructor
@@ -27,7 +27,7 @@ class RRTexpand: public ConnectionMethod<CFG,WEIGHT> {
   void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);   
-  virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
+  virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
   // Core: Connection methods 
   /**Copy vertices and all incident edges associated with "vids" 
@@ -49,14 +49,18 @@ class RRTexpand: public ConnectionMethod<CFG,WEIGHT> {
 	   bool & toConnect, bool connecting,
 	   bool addPartialEdge, bool addAllEdges);
 
-  void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-			 CollisionDetection*, 
-			 DistanceMetric *,
-			 LocalPlanners<CFG,WEIGHT>*,
-			 bool addPartialEdge,
-			 bool addAllEdges);
- 
+
+  // new component connection interface
+  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+	       CollisionDetection* cd, DistanceMetric* dm,
+	       LocalPlanners<CFG,WEIGHT>* lp,
+	       bool addPartialEdge, bool addAllEdges);
+  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+	       CollisionDetection* cd, DistanceMetric* dm,
+	       LocalPlanners<CFG,WEIGHT>* lp,
+	       bool addPartialEdge, bool addAllEdges,
+	       vector<VID>& vids1, vector<VID>& vids2);
+
   //////////////////////
   // Data
   int iterations; 
@@ -70,7 +74,7 @@ class RRTexpand: public ConnectionMethod<CFG,WEIGHT> {
 ///////////////////////////////////////////////////////////////////////////////
 //   Connection Method:  RRTexpand
 template <class CFG, class WEIGHT>
-RRTexpand<CFG,WEIGHT>::RRTexpand():ConnectionMethod<CFG,WEIGHT>() { 
+RRTexpand<CFG,WEIGHT>::RRTexpand():ComponentConnectionMethod<CFG,WEIGHT>() { 
   element_name = "RRTexpand"; //in ConnectCCs there is RRTexpand
 
   SetDefault();
@@ -197,7 +201,7 @@ PrintValues(ostream& _os){
 
 
 template <class CFG, class WEIGHT>
-ConnectionMethod<CFG,WEIGHT>* 
+ComponentConnectionMethod<CFG,WEIGHT>* 
 RRTexpand<CFG,WEIGHT>::
 CreateCopy() {
   RRTexpand<CFG,WEIGHT>* _copy = 
@@ -213,13 +217,6 @@ void RRTexpand<CFG,WEIGHT>::SetDefault() {
   smallcc    = SMALL_CC;
   o_clearance = O_CLEARANCE;
   clearance_from_node = CLEARANCE_FROM_NODE;
-}
-
- 
-template <class CFG, class WEIGHT>
-void RRTexpand<CFG,WEIGHT>::ConnectComponents() {
-  cout << "Connecting CCs with method: RRTexpand" << endl;
-  cout << "DO NOTHING" <<endl;
 }
 
 
@@ -436,12 +433,12 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
 
 template <class CFG, class WEIGHT>
 void RRTexpand<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		  CollisionDetection* cd , 
-		  DistanceMetric * dm,
-		  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges) {
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+	CollisionDetection* cd , 
+	DistanceMetric * dm,
+	LocalPlanners<CFG,WEIGHT>* lp,
+	bool addPartialEdge,
+	bool addAllEdges) {
   // display information specific to method
   #ifndef QUIET
   cout << "RRTexpand(iterations = "<< iterations
@@ -485,7 +482,82 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       ModifyRoadMap(_rm,&submap1,verts);
     }
     cc1++;   submap1.environment = NULL;
-  }
- 
+  }//end while cc1 != ccvec.end
+
 }
+
+template <class CFG, class WEIGHT>
+void RRTexpand<CFG,WEIGHT>::
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+	CollisionDetection* cd , 
+	DistanceMetric * dm,
+	LocalPlanners<CFG,WEIGHT>* lp,
+	bool addPartialEdge,
+	bool addAllEdges,
+	vector<VID>& vids1, vector<VID>& vids2) {
+  // display information specific to method
+#ifndef QUIET
+  cout << "RRTexpand(iterations = "<< iterations
+       << ", stepFactor= "<< stepFactor
+       << ", smallcc   = "<< smallcc
+       << ", oclearance = " << o_clearance
+       << ", node_clearance = " << clearance_from_node
+       <<"): " <<flush;
+#endif
+ 
+  ///Modified for VC
+#if defined(_WIN32)
+  using namespace std;
+#endif
+
+  // first set of vids
+  Roadmap<CFG,WEIGHT> submap1;
+  submap1.environment = _rm->GetEnvironment();
+  //vector<VID> cc;
+  //GetCC(*(_rm->m_pRoadmap),(*cc1).second ,cc);
+  ModifyRoadMap(&submap1,_rm,vids1);
+  vector<CFG> dummyU;
+  if (vids1.size()<= smallcc) {
+    bool toConnect = FALSE;
+    RRT(&submap1, Stats,
+	iterations,
+	stepFactor * connectionPosRes,
+	o_clearance, clearance_from_node,
+	dummyU,
+	cd, lp, dm, toConnect,FALSE,
+	addPartialEdge, addAllEdges);
+    vector<VID> verts;
+    (&submap1)->m_pRoadmap->GetVerticesVID(verts);
+    //-- map = map + submap
+    ModifyRoadMap(_rm,&submap1,verts);
+  }
+  submap1.environment = NULL;
+
+  // second set of vids
+  Roadmap<CFG,WEIGHT> submap2;
+  submap2.environment = _rm->GetEnvironment();
+  //vector<VID> cc;
+  //GetCC(*(_rm->m_pRoadmap),(*cc1).second ,cc);
+  ModifyRoadMap(&submap1,_rm,vids2);
+  dummyU.clear();
+  if (vids2.size()<= smallcc) {
+    bool toConnect = FALSE;
+    RRT(&submap2, Stats,
+	iterations,
+	stepFactor * connectionPosRes,
+	o_clearance, clearance_from_node,
+	dummyU,
+	cd, lp, dm, toConnect,FALSE,
+	addPartialEdge, addAllEdges);
+    vector<VID> verts;
+    (&submap2)->m_pRoadmap->GetVerticesVID(verts);
+    //-- map = map + submap
+    ModifyRoadMap(_rm,&submap2,verts);
+  }
+  submap2.environment = NULL;
+
+
+
+}
+
 #endif

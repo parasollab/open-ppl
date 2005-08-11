@@ -17,14 +17,14 @@
 //#include "ModifiedLM.h"
 #include "ObstBased.h"
 #include "ClosestVE.h"
-//#include "RRTexpand.h"
+#include "RRTexpand.h"
 //#include "RayTracer.h" //??
 #include "ConnectFirst.h"
 
 //component connection methods
 #include "ComponentConnectionMethod.h"
 #include "ConnectCCs.h"
-//#include "RRTcompnents.h"
+#include "RRTcomponents.h"
 //#include "RayTracer.h"
 
 //roadmap connection methods
@@ -150,9 +150,6 @@ ConnectMap() {
   ClosestVE<CFG,WEIGHT>* closestve = new ClosestVE<CFG,WEIGHT>();
   all_node_methods.push_back(closestve);
 
-  //RRTexpand<CFG,WEIGHT>* rrtexpand = new RRTexpand<CFG,WEIGHT>();
-  //all_node_methods.push_back(rrtexpand);
-
   ConnectFirst<CFG,WEIGHT>* connectFirst = new ConnectFirst<CFG,WEIGHT>();
   all_node_methods.push_back(connectFirst);
 
@@ -164,8 +161,11 @@ ConnectMap() {
   ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>();
   all_component_methods.push_back(connectccs);
 
-  //RRTcomponents<CFG,WEIGHT>* rrtcomp = new RRTcomponents<CFG,WEIGHT>();
-  //all_component_methods.push_back(rrtcomp);
+  RRTexpand<CFG,WEIGHT>* rrtexpand = new RRTexpand<CFG,WEIGHT>();
+  all_component_methods.push_back(rrtexpand);
+
+  RRTcomponents<CFG,WEIGHT>* rrtcomp = new RRTcomponents<CFG,WEIGHT>();
+  all_component_methods.push_back(rrtcomp);
 
   //RayTracer<CFG,WEIGHT>* rt = new RayTracer<CFG,WEIGHT>();
   //all_component_methods.push_back(rt);
@@ -579,6 +579,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
+    cout << " Connecting with: " << (*itr)->GetName() << endl;
     (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges);
 #ifndef QUIET
     clock.StopClock();
