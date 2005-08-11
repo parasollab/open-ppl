@@ -93,7 +93,8 @@ class ObstBased: public NodeConnectionMethod<CFG,WEIGHT> {
    *@return Return a 2D "array", each row contains Cfgs generated 
    *"from" same obstacle.
    */
-  static vector<vector<CFG> > Get_Cfgs_By_Obst(Roadmap<CFG, WEIGHT>* _rm);
+
+  static vector<vector<CFG> > Get_Cfgs_By_Obst(vector<CFG>& vert);
 
   void Connect();
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
@@ -115,13 +116,13 @@ class ObstBased: public NodeConnectionMethod<CFG,WEIGHT> {
              bool addPartialEdge, bool addAllEdges,
              vector<vector<CFG> >& verticesList);
 
-  void Connect2VectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-            CollisionDetection* cd , 
-            DistanceMetric * dm,
-            LocalPlanners<CFG,WEIGHT>* lp,
-            bool addPartialEdge,
-            bool addAllEdges,
-	    vector<CFG>& v1, vector<CFG>& v2, int k);
+  void ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+				 CollisionDetection* cd , 
+				 DistanceMetric * dm,
+				 LocalPlanners<CFG,WEIGHT>* lp,
+				 bool addPartialEdge,
+				 bool addAllEdges, 
+				 vector< vector<CFG> > &body);
 
 
  private:
@@ -240,14 +241,12 @@ info_Compare(const CFG _cc1, const CFG _cc2){
 
 
 template <class CFG, class WEIGHT>
-vector<vector<CFG> >
+vector<vector<CFG> > 
 ObstBased<CFG, WEIGHT>::
-Get_Cfgs_By_Obst(Roadmap<CFG, WEIGHT>* _rm) {
+Get_Cfgs_By_Obst(vector<CFG>& vert) {
   //-- get all vertices
-  vector<CFG> vert;
-  _rm->m_pRoadmap->GetVerticesData(vert);
-  
   //-- sort by info
+
   sort (vert.begin(), vert.end(), ptr_fun(info_Compare) );
   
   //-- declare value to return
@@ -280,6 +279,7 @@ Get_Cfgs_By_Obst(Roadmap<CFG, WEIGHT>* _rm) {
     byInfo.push_back(tmp);
   
   //-- return vector of vectors of vertices
+
   return byInfo;
 }
 
@@ -314,23 +314,22 @@ For example:
   When i=j, the "k" value may be different than otherwise
 ---------------------------------------------------------------*/ 
 template <class CFG, class WEIGHT>
-void ObstBased<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		  CollisionDetection* cd , 
-		  DistanceMetric * dm,
-		  LocalPlanners<CFG,WEIGHT>* lp,
-		  bool addPartialEdge,
-		  bool addAllEdges) {
+		       void ObstBased<CFG,WEIGHT>::
+		       Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+			       CollisionDetection* cd , 
+			       DistanceMetric * dm,
+			       LocalPlanners<CFG,WEIGHT>* lp,
+			       bool addPartialEdge,
+			       bool addAllEdges) {
 
-  #ifndef QUIET
-  cout << "obstBased(k_other="<<k_other
-       << ", k_self="<<k_self<<"): "<<flush;
-  #endif  
 
   //-- get cfg's
-  vector<vector<CFG> > body = Get_Cfgs_By_Obst(_rm);
-  
-  Connect( _rm,  Stats, cd, dm, lp, addPartialEdge, addAllEdges, body);
+  vector<CFG> vert; 
+  _rm->m_pRoadmap->GetVerticesData(vert); 
+  vector<vector<CFG> > body = Get_Cfgs_By_Obst(vert);
+
+  ConnectVVectorsByKClosest( _rm, Stats, cd , dm, lp, 
+			     addPartialEdge,addAllEdges, body);
 
 }
 
@@ -344,24 +343,16 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             bool addAllEdges,
             vector<vector<CFG> >& verticesList)
 {
-  for(int i=0; i<verticesList.size()-1; ++i)
-    for(int j=i; j<verticesList.size(); ++j){
+  vector<CFG> vert;
+  
+  for(int i=0; i<verticesList.size(); ++i){
+    copy (verticesList[i].begin(), verticesList[i].end(), back_inserter(vert));
+  }
 
-      int k;
-      if (j==i) 
-	k = min(k_self,verticesList[i].size());
-      else      
-	k = min(k_other,min(verticesList[i].size(),verticesList[j].size()));
-      
-      // if no pairs to find, continue to next set of bodies
-      if (k==0) 
-	continue;
-      
-      Connect2VectorsByKClosest(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges, verticesList[i], verticesList[j], k);
-      
-/*       Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges, */
-/*             verticesList[i], verticesList[j]); */
-    }
+  vector<vector<CFG> > body = Get_Cfgs_By_Obst(vert);
+  ConnectVVectorsByKClosest( _rm, Stats, cd , dm, lp, 
+			     addPartialEdge,addAllEdges, body);
+
 }
 
 
@@ -375,51 +366,54 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             bool addAllEdges,
             vector<CFG>& v1, vector<CFG>& v2) 
 {
-  //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
+  copy (v2.begin(), v2.end(), back_inserter(v1));
 
-  int k;
-  if (v1 == v2) 
-    k = min(k_self, v1.size());
-  else      
-    k = min(k_other,min(v1.size(), v2.size()));
-  
-  // if no pairs to find, continue to next set of bodies
-  if (k==0) 
-    return;
-      
+  vector< vector< CFG> > body = Get_Cfgs_By_Obst(v1);
 
-  Connect2VectorsByKClosest(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges, v1, v2, k);
+  ConnectVVectorsByKClosest(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,body);
 }
 
 template <class CFG, class WEIGHT>
 void ObstBased<CFG,WEIGHT>::
-Connect2VectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
-            vector<CFG>& v1, vector<CFG>& v2, int k) 
+            vector< vector< CFG> > &body) 
 {
-  //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
-  //  cerr << "This method has not been implemented. "  << endl;
 
+  if (body.empty()) return;
 
-  LPOutput<CFG,WEIGHT> lpOutput;
-  // get closest pairs of nodes on obst to (possibly) another obstacle
-  vector< pair<CFG,CFG> > kp = dm->FindKClosestPairs(_rm->GetEnvironment(),
-						     v1, v2, k);
-  //-- check connections between pairs
-  for (int m=0;m<kp.size();++m){
+  for(int i=0; i< body.size()-1; ++i)
+    for(int j=i; j<body.size(); ++j){
+      int k;
+      if (i == j) 
+	k = min(k_self, body[i].size());
+      else      
+	k = min(k_other,min(body[i].size(), body[j].size()));
+  
+      // if no pairs to find, continue to next set of bodies
+      if (k==0) 
+	return;
+
+      LPOutput<CFG,WEIGHT> lpOutput;
+      // get closest pairs of nodes on obst to (possibly) another obstacle
+      vector< pair<CFG,CFG> > kp = dm->FindKClosestPairs(_rm->GetEnvironment(),
+							 body[i], body[j], k);
+      //-- check connections between pairs
+      for (int m=0;m<kp.size();++m){
 #if CHECKIFSAMECC
-    if(IsSameCC(*(_rm->m_pRoadmap),kp[m].first,kp[m].second)) continue;
+	if(IsSameCC(*(_rm->m_pRoadmap),kp[m].first,kp[m].second)) continue;
 #endif
 
-    if (!_rm->m_pRoadmap->IsEdge(kp[m].first,kp[m].second)
-	&& lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,kp[m].first,kp[m].second,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))){
-      _rm->m_pRoadmap->AddEdge(kp[m].first,kp[m].second,lpOutput.edge);
-    }//endif IsConnected
-  }//endfor m
+	if (!_rm->m_pRoadmap->IsEdge(kp[m].first,kp[m].second)
+	    && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,kp[m].first,kp[m].second,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))){
+	  _rm->m_pRoadmap->AddEdge(kp[m].first,kp[m].second,lpOutput.edge);
+	}//endif IsConnected
+      }//endfor m
       
+    }
 }
 #endif
