@@ -189,7 +189,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   vector<CFG> vertices;
   pMap->GetVerticesData(vertices);
-  const int k = min(kclosest,vertices.size());
+  const int k = (int)min(kclosest,vertices.size());
   
   vector< pair<VID,VID> > kp;
   // Find k closest cfgs to each cfg in the roadmap

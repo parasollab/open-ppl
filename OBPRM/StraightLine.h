@@ -339,7 +339,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     CFG diff;
     //diff = _c1.CreateNewCfg();
     diff.subtract(_c1, _c2);
-    int steps = diff.PositionMagnitude()/positionRes;
+    int steps = (int)(diff.PositionMagnitude()/positionRes);
     //delete diff;
     
     if( steps <= lineSegmentLength.GetValue() )

@@ -286,7 +286,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	      bool addPartialEdge, bool addAllEdges) { 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
-  int k = min(kpairs, cc2vec.size());
+  int k = (int)min(kpairs, cc2vec.size());
   
   vector< pair<CFG,CFG> > kp = 
     dm->FindKClosestPairs(_rm->GetEnvironment(),cc1vec,cc2vec,k);

@@ -23,8 +23,8 @@ double DirectedAngularDistance(double a,double b) {
   
   // shorten the distance between a and b by shifting a or b by 1.
   // have to do ROUND-UP INTEGER comparision to avoid subtle numerical errors.
-  int intA = rint(a*1000000);
-  int intB = rint(b*1000000);
+  int intA = (int)rint(a*1000000);
+  int intB = (int)rint(b*1000000);
   
   if( intB - intA  > 500000 ) 
     ++a;

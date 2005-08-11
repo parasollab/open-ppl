@@ -390,9 +390,9 @@ ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     for(int j=i; j<body.size(); ++j){
       int k;
       if (i == j) 
-	k = min(k_self, body[i].size());
+	k = (int)min(k_self, body[i].size());
       else      
-	k = min(k_other,min(body[i].size(), body[j].size()));
+	k = (int)min(k_other,min(body[i].size(), body[j].size()));
   
       // if no pairs to find, continue to next set of bodies
       if (k==0) 
