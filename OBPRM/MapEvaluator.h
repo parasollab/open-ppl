@@ -20,7 +20,7 @@ class MapEvaluator {
   }
 
   bool operator()(Roadmap<CFG,WEIGHT>* rmap) {
-    vector<MapEvaluationMethod<CFG,WEIGHT>*>::iterator E;
+    typename vector<MapEvaluationMethod<CFG,WEIGHT>*>::iterator E;
     for(E = evaluators.begin(); E != evaluators.end(); ++E)
       if(!(*E)->evaluate(rmap))
 	return false;

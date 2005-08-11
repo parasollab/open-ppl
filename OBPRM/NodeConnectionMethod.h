@@ -39,7 +39,7 @@ class NodeConnectionMethod {
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       bool addPartialEdge, bool addAllEdges,
 		       vector<vector<CFG> >& cfgs) {
-    vector<vector<CFG> >::iterator I, J;
+    typename vector<vector<CFG> >::iterator I, J;
     for(I = cfgs.begin(); I+1 != cfgs.end(); ++I) 
       for(J = I+1; J != cfgs.end(); ++J)
 	this->Connect(rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,
