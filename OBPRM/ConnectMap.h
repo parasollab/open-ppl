@@ -579,7 +579,6 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
-    cout << " Connecting with: " << (*itr)->GetName() << endl;
     (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges);
 #ifndef QUIET
     clock.StopClock();
