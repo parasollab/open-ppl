@@ -162,7 +162,6 @@ CreateCopy() {
   return _copy;
 }
 
-
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::
 Connect() {

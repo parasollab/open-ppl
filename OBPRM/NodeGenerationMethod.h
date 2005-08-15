@@ -78,6 +78,9 @@ class NodeGenerationMethod {
 
 //  num_param<int> numAttempts;
   CDInfo* cdInfo;
+#ifdef COLLISIONCFG
+ vector< vector<CFG> >  m_vGeneratedCollisionConfiguration;
+#endif
 };
 
 
@@ -88,16 +91,13 @@ class NodeGenerationMethod {
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
 NodeGenerationMethod<CFG>::
-NodeGenerationMethod():
-  
+NodeGenerationMethod():  
   numNodes         ("nodes",            10,  1,   5000000),  
   chunkSize        ("chunkSize",        10,  1,   5000000),
-//  numAttempts      ("attempts",            0,  0,   5000000),
   exactNodes ("exact", 0 ,0 ,1)
 {
   numNodes.PutDesc("INTEGER","(number of nodes, default 10)");
   chunkSize.PutDesc("INTEGER","(size of chunk, default 10)");
-//  numAttempts.PutDesc("INTEGER","(number of nodes to attempt, default 0 so nodes will be used)");
   exactNodes.PutDesc("INTEGER","(whether to generate exact num of nodes, default 0");
   SetDefault();
 }
@@ -114,7 +114,6 @@ void NodeGenerationMethod<CFG>::
 SetDefault() {
   numNodes.PutValue(10);
   chunkSize.PutValue(10);
-/*   numAttempts.PutValue(0); */
   exactNodes.PutValue(0);
 }
 

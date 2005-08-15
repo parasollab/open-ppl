@@ -1,4 +1,3 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //
 /**@file Roadmap.h
@@ -167,7 +166,9 @@ public:
   
   ///Default Constrcutor. Do nothing.
   Roadmap();
-  
+
+  //Copy Constructor. Create a new roadmap from another roadmap.
+  Roadmap(Roadmap<CFG,WEIGHT> &from_rdmp);  
   
   /** *Preferred* Constrcutor, 
    * fills input & inits.
@@ -296,6 +297,12 @@ public:
   
   void ReadRoadmapGRAPHONLY(const char* _fname);
   
+
+  /**Append nodes and edges from one roadmap (from_rdmp) into 
+   * another roadmap (to_rdmp)
+   */
+  vector<VID> AppendRoadmap(Roadmap<CFG,WEIGHT> &from_rdmp);
+
   /**Check version of roadmap file.
    *@param The file which contain roadmap data and version info.
    *@return True if the version of this is current version, 
@@ -434,7 +441,8 @@ public:
 //===================================================================
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>::
-Roadmap() {
+Roadmap() 
+  : environment(NULL) {
   m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
 }
 
@@ -442,24 +450,60 @@ Roadmap() {
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>::
 Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
-	LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env) {
+	LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env)
+  : RoadmapVersionNumber(RDMPVER_CURRENT) {
   m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
   
   InitRoadmap(input, cd, dm, lp, NULL, env); 
-  RoadmapVersionNumber = RDMPVER_CURRENT;
   RNGseed = RNGseedValue;
 }
 
+template <class CFG, class WEIGHT>
+Roadmap<CFG, WEIGHT>:: 
+Roadmap(Roadmap<CFG, WEIGHT> &from_rdmp)
+  :  environment(from_rdmp.environment), 
+     RoadmapVersionNumber(from_rdmp.RoadmapVersionNumber) {
+  m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
+  AppendRoadmap(from_rdmp);
+}
+
+template <class CFG, class WEIGHT>
+vector<VID>
+Roadmap<CFG, WEIGHT>::
+AppendRoadmap(Roadmap<CFG, WEIGHT> &from_rdmp) {
+  vector<VID> from_vid, to_vids;
+  from_rdmp.m_pRoadmap->GetVerticesVID(from_vid); // get vertices
+  vector<VID>::iterator vid_itrt;
+  //copy vertices
+  for (vid_itrt = from_vid.begin(); vid_itrt < from_vid.end(); vid_itrt++) {
+    CFG cfg = from_rdmp.m_pRoadmap->GetData(*vid_itrt);
+    to_vids.push_back(m_pRoadmap->AddVertex(cfg));
+  }
+  vector< pair<pair<VID,VID>,WEIGHT> > edges;
+  typename vector< pair<pair<VID,VID>,WEIGHT> >::iterator edge_itrt;
+  for (vid_itrt = from_vid.begin(); vid_itrt < from_vid.end(); vid_itrt++) {
+    edges.clear();
+    from_rdmp.m_pRoadmap->GetOutgoingEdges(*vid_itrt, edges); //get edges
+    for (edge_itrt = edges.begin(); edge_itrt < edges.end(); edge_itrt++) {
+      if (!m_pRoadmap->IsEdge((*edge_itrt).first.first, (*edge_itrt).first.second)) { //add an edge if it is not yet in m_pRoadmap
+	CFG cfg_a = from_rdmp.m_pRoadmap->GetData((*edge_itrt).first.first);
+	CFG cfg_b = from_rdmp.m_pRoadmap->GetData((*edge_itrt).first.second);
+	m_pRoadmap->AddEdge(cfg_a,cfg_b,(*edge_itrt).second);
+      }
+    } //endfor edge_itrt	
+  } //endfor vid_itrt
+  return to_vids;
+}
 
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>::
 ~Roadmap() {
   if( m_pRoadmap != NULL ) 
     delete m_pRoadmap;
-  if( environment != NULL ) 
-    delete environment;
+/*   if( environment != NULL )  */
+/*     delete environment; */
   m_pRoadmap = NULL;
-  environment = NULL;
+/*   environment = NULL; */
 }
 
 
@@ -484,7 +528,8 @@ InitRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   // initialize problem environment
   //-----------------------------------------------
   if(env == NULL) {
-    environment = new Environment;
+    CFG test_cfg;
+    environment = new Environment(test_cfg.DOF(),test_cfg.posDOF());
     InitEnvironment( input );
   } else {
     InitEnvironment(env);      

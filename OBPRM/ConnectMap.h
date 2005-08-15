@@ -12,23 +12,27 @@
 //node connection methods
 #include "NodeConnectionMethod.h"
 #include "Closest.h"
-//#include "UnconnectedKClosest.h"
+//#include "UnconnectedClosest.h"
 #include "RandomConnect.h"
 //#include "ModifiedLM.h"
 #include "ObstBased.h"
 #include "ClosestVE.h"
-#include "RRTexpand.h"
+//#include "RRTexpand.h"
 //#include "RayTracer.h" //??
 #include "ConnectFirst.h"
 
 //component connection methods
 #include "ComponentConnectionMethod.h"
 #include "ConnectCCs.h"
-#include "RRTcomponents.h"
+//#include "RRTcomponents.h"
 //#include "RayTracer.h"
 
-//roadmap connection methods
-//...
+// MPRegion is used by region combination methods
+#include "MPRegion.h"
+
+// region connection methods
+//#include "NaiveMapCombine.h"
+//#include "RegionOverlapMapCombine.h"
 
 
 //#############################################################################
@@ -94,7 +98,13 @@ class ConnectMap {
 			 bool addPartialEdge, bool addAllEdges,
 			 vector<vector<VID> >& vids);
 
-  //void ConnectRoadmap();
+  void ConnectRegions(CollisionDetection* cd,
+		      DistanceMetric* dm,
+		      LocalPlanners<CFG,WEIGHT>* lp,
+		      bool addPartialEdge,
+		      bool addAllEdges,
+		      vector<MPRegion<CFG,WEIGHT>* > subregions,
+		      MPRegion<CFG,WEIGHT>* target_region=NULL);
 
  protected:
   //////////////////////
@@ -161,11 +171,11 @@ ConnectMap() {
   ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>();
   all_component_methods.push_back(connectccs);
 
-  RRTexpand<CFG,WEIGHT>* rrtexpand = new RRTexpand<CFG,WEIGHT>();
-  all_component_methods.push_back(rrtexpand);
+/*   RRTexpand<CFG,WEIGHT>* rrtexpand = new RRTexpand<CFG,WEIGHT>(); */
+/*   all_component_methods.push_back(rrtexpand); */
 
-  RRTcomponents<CFG,WEIGHT>* rrtcomp = new RRTcomponents<CFG,WEIGHT>();
-  all_component_methods.push_back(rrtcomp);
+/*   RRTcomponents<CFG,WEIGHT>* rrtcomp = new RRTcomponents<CFG,WEIGHT>(); */
+/*   all_component_methods.push_back(rrtcomp); */
 
   //RayTracer<CFG,WEIGHT>* rt = new RayTracer<CFG,WEIGHT>();
   //all_component_methods.push_back(rt);
@@ -175,6 +185,13 @@ ConnectMap() {
   //selected_roadmap_methods.clear();
   //all_roadmap_methods.clear();
 
+
+
+/*   NaiveMapCombine<CFG,WEIGHT>* nmc = new NaiveMapCombine<CFG,WEIGHT>(); */
+/*   all_c_maps.push_back(nmc); */
+
+/*   RegionOverlapMapCombine<CFG,WEIGHT>* romc = new RegionOverlapMapCombine<CFG,WEIGHT>(); */
+/*   all_c_maps.push_back(romc); */
 
   //Command-line-option string
   options.PutDesc("STRING",
@@ -228,7 +245,6 @@ GetComponentDefault() {
 
   return tmp;
 }
-
 
 /*
 template <class CFG, class WEIGHT>
@@ -618,6 +634,40 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 #endif
   }
 }
+
+/* template <class CFG, class WEIGHT> */
+/* void ConnectMap<CFG,WEIGHT>:: */
+/* ConnectRegions(CollisionDetection* cd, */
+/* 			   DistanceMetric* dm, */
+/* 			   LocalPlanners<CFG,WEIGHT>* lp, */
+/* 			   bool addPartialEdge, */
+/* 			   bool addAllEdges, */
+/* 			   vector<MPRegion<CFG,WEIGHT>* > subregions, */
+/* 			   MPRegion<CFG,WEIGHT>* target_region) { */
+
+  
+/*   typename vector<ConnectionMethod<CFG,WEIGHT>*>::iterator itr;   */
+  
+/*   for (itr = selected_c_maps.begin(); itr != selected_c_maps.end(); itr++ ) { */
+/* #ifndef QUIET	 */
+/*     Clock_Class clock; */
+/*     clock.StartClock((*itr)->GetName()); */
+/*     cout<<"\n  "; clock.PrintName(); cout << " " << flush; */
+/* #endif	 */
+    
+/*     (*itr)->CombineRegions(target_region, subregions, *this, *cd, *dm, *lp, */
+/* 			   addPartialEdge, addAllEdges); */
+/* #ifndef QUIET */
+/*     clock.StopClock(); */
+/*     cout << clock.GetClock_SEC() << " sec  \n" << flush; */
+/* #endif */
+/*   } */
+
+/*   cout << "------Stopping Combinations-------" << endl; */
+
+/* }; */
+
+
 
 
 template <class CFG, class WEIGHT>

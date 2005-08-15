@@ -407,8 +407,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   _rm->m_pRoadmap->GetEdges(edges);
   
   // May have to adjust user's desired k wrt what is actually possible
-  int k = (int)min(kclosest, oldV.size()+edges.size());
-  
+  int k = (int)min(kclosest, oldV.size()+edges.size());  
   
   ///Modified for VC
 #if defined(_WIN32)

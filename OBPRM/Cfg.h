@@ -1,4 +1,3 @@
-// $Id$
 /**@file Cfg.h
 *
 *General Description

@@ -1,5 +1,3 @@
-// $Id$
-
 ////////////////////////////////////////////////////////////////////////////////////////////
 /**@file Query.h
   *
@@ -83,7 +81,8 @@ public:
     /**@name Help methods*/
     //@{
 	virtual
-	  bool CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, vector<pair<CFG,WEIGHT> >& attemptedPath,
+	  bool CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, 
+			       vector<pair<CFG,WEIGHT> >& attemptedPath,
 			       Stat_Class& Stats, CollisionDetection* cd, 
 			       LocalPlanners<CFG,WEIGHT>* lp, 
 			       DistanceMetric* dm, 
@@ -417,7 +416,8 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
-CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, vector<pair<CFG,WEIGHT> >& attemptedPath, 
+CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, 
+		vector<pair<CFG,WEIGHT> >& attemptedPath, 
 		Stat_Class& Stats, CollisionDetection* cd, 
 		LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm, 
 		vector<CFG>& recreatedPath) {

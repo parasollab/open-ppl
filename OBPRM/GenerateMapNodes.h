@@ -1,5 +1,3 @@
-// $Id$
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /**@file GenerateMapNodes.h
   *This set of classes supports a "RoadMap Node Generation Algobase".
@@ -105,9 +103,10 @@ class GenerateMapNodes {
   //////////////////////
   // Data
   vector<NodeGenerationMethod<CFG>*> all;
-  vector<NodeGenerationMethod<CFG>*> selected;
-
  public:
+  vector<NodeGenerationMethod<CFG>*> selected; //move back to private later
+
+  // public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -126,6 +125,7 @@ class GenerateMapNodes {
    *Other generated Cfgs will be left nodes.
    */
   bool addNodes2Map;
+
 };
 
 

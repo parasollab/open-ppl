@@ -1,5 +1,3 @@
-// $Id$
-
 /**
   * @file MultiBody.h
   * @date 2/25/98

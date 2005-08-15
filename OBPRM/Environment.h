@@ -1,40 +1,28 @@
-// $Id$
-/**@file Environment.h
- * Created   2/25/98 Aaron Michalk
- * Modified  4/13/98 Aaron Michalk
- * Modified  4/16/98 Wookho Son
- * Added     5/18/98 Wookho Son
- * Modified  7/14/98 Wookho Son
- * Added/Modified  7/31/98 Wookho Son
- *
- * Header files should be included whenever if need to use 
- * the membership functions here. Otherwise, just the inclusion of 
- * the class definition is ok.
- *
- * @date 2/25/1998
- * @author Aaron Michalk
- */
-
-////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef Environment_h
 #define Environment_h
 
-////////////////////////////////////////////////////////////////////////////////////////////
-//Include standard headers
+////////////////////////////////////////////////////////////////
 #include "Defines.h"
 
-//////////////////////////////////////////////////////////////////////////////////
+#include "Boundary.h"
+
+
+#include "MultiBody.h"
+#include "Input.h"
+#include "OBPRMDef.h" 
+#include "string.h"
+#include <sstream>
+
+
 class MultiBody;
 class Input;
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
 
 /**@name Format version for path files
  *
- *      The number breaks down as YearMonthDay so numerical
- *      comparisons can be more easily made.
+ *      The number breaks down as YearMonthDay (YYYYMMDD) so numerical
+ *      comparisons can be made.
  * Warning: Be consistent.  It should be YYYYMMDD
- *      Inconsistent conversions can be misleading.  
- *      For example, comparing 200083  to 20000604.
  */
 //@{
 #define PATHVER_LEGACY                     20001025
@@ -43,22 +31,16 @@ class Input;
 //@}
 
 
+/*
+ * @todo: DeleteObstaclesOutsideBoundingBox()->UpdateUsableMultibody() (and it should be a private function in the constructor
+ */
+
 class Environment {
 public:
-    //-----------------------------------------------------------
-    /// @name  Enumerations
-    //-----------------------------------------------------------
-    enum DirectionType {
-         GMS_NORMAL = 0,
-         GMS_TANGENTIAL = 1,
-         GMS_ORTHOGONAL = 2
-    };
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
-  //
   //    Constructors and Destructor
-  //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,20 +49,32 @@ public:
   //===================================================================
   //@{
 
-    /**Constrcutor. Set pathversion as newest path file version ID (hard coded).
-      *and initialize other data member to 0, NULL, and false.
-      */
-    Environment();
+    /** Constructor. 
+     * Set pathversion as newest path file version ID (hard coded),
+     * initialize other data member to 0, NULL, and false. sets
+     * default boundaries with passed number of dofs and pos_dofs.
+     */
+    Environment(int dofs, int pos_dofs);
 
-    /**Constrcutor. Set pathversion as newest path file version ID (hard coded).
-      *set Rotbot id as index and initialize other data member to 0, NULL, and false.
-      *@param index the index for robot.
-      */
-    Environment(int index);
+    /** 
+     * Copy Constructor.
+     * copies multibodies from usable_multibodies of from_env and
+     * updates usable_multibodies accordingly.
+     */
+    Environment(Environment &from_env);
 
-    /**Destrcutor.
-      *Free memory for every added MultiBody instance.
-      */
+    /** 
+     * Copy Constructor.
+     * uses i_boundaries instead of boundaries in from_env
+     */
+    Environment(Environment &from_env, BoundingBox &i_boundaries);
+
+
+    /**
+     * Destructor.
+     * Free memory for every added MultiBody instance if this instance
+     * was not copied from another one.	
+     */
     virtual ~Environment();
   //@}
 
@@ -112,11 +106,8 @@ public:
     ///Return the number of MultiBody's in the environment
     virtual int GetMultiBodyCount();
 
-    //added by xinyu Tang;
     ///Return the number of External Body's in the environment;
     virtual int GetExternalBodyCount();
-    ///Put this _multibody into list and increase the number of MultiBody.
-    virtual void AddMultiBody(MultiBody *_multibody);
 
     /**Return a pointer to MultiBody according to this given index.
       *If this index is out of the boundary of list, NULL will be returned.
@@ -124,11 +115,6 @@ public:
       */
     virtual MultiBody * GetMultiBody(int _index);
 
-    ///Do nothing Not implemeneted?
-    virtual void Couple(MultiBody *_multibody[], int _number);
-
-    ///Do nothing. Not implemeneted?
-    virtual void Decouple(MultiBody *_multibody[], int _number);
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -163,11 +149,6 @@ public:
       */
     virtual int GetRobotIndex(){return robotIndex;};
 
-    /**Set the Index for Robot in environment. This index is the index for MultiBody list in
-      *this Environment instance.
-      */  
-    virtual void SetRobotIndex(int index){robotIndex = index;};
-
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +158,6 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-    //added by Xinyu Tang
     //============================================
     //SortBodies so that the external bodies appear first in the array
     //============================================
@@ -201,30 +181,10 @@ public:
     virtual void FindBoundingBox();
 
     /**Return a Bounding Box that encloses all MultiBodys added to this instance.
-      *The format of this bounding box is a 6 elements array.
-      *They are minx, maxx, miny, maxy, minz, and maxz.
       *@see FindBoundingBox, Input::bbox_scale, and Input::bbox
       */
-    virtual double * GetBoundingBox();
-
-    /**Update a Calculate Bounding Box according to user input.
-      *This methods did two things. First, if user provide a Bounding Box, this Bounding Box
-      *will overwrite the one calculated in FindBoundingBox. Second, if scale factor for bound
-      *box is not 1, then scale this bounding box.
-      */
-    virtual void UpdateBoundingBox(Input * _input);
-
-    /**Set Bounding by given parameters.
-      *@param x Minimam x for bounding box
-      *@param X Maximam x for bounding box
-      *@param y Minimam y for bounding box
-      *@param Y Maximam y for bounding box
-      *@param z Minimam z for bounding box
-      *@param Z Maximam z for bounding box
-      */
-    virtual void PutBoundingBox(double x,double X,double y,double Y,double z,double Z);
-
-
+    virtual BoundingBox * GetBoundingBox();
+    
     /**Return manximu axis range of bounding box.
       *This value is calculated in FindBoundingBox.
       */
@@ -247,11 +207,6 @@ public:
       */
     virtual void Write(ostream & _os);
 
-    /**Output the bounding box to ouputstream.
-      *Display it in text format.....
-      */
-    virtual void DisplayBoundingBox(ostream & _os);
-
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -268,13 +223,13 @@ public:
       *this Environment instance. By the way, Bounding Box is calculated.
       *Resolution information is also fetched from input instance.
       *@param _input provides information to initialize Environment.
-      *@see MultiBody::Get, FindBoundingBox, and UpdateBoundingBox
+      *@see MultiBody::Get, FindBoundingBox
       */
     virtual void Get(Input * _input);
 
   //@}
 
-    virtual void DeleteObstaclesOutsideBoundingBox();
+    virtual void UpdateUsableMultibody();
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -284,41 +239,32 @@ public:
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 
-protected:
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Private Data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-private:
+ protected:
     //---------------------------------------------------------------
     /// @name  Data
     //---------------------------------------------------------------
-    int pathVersion;           /// Format version for path files
-    int multibodyCount;
-    int externalbodyCount;     //The number of external bodies.
-    MultiBody **multibody;
+    int pathVersion;          /// Format version for path files
+
+    vector<MultiBody *> multibody;
+    int externalbodyCount;     // Bodies enclosing internal obstacles
+
+    vector<MultiBody *> usable_multibody;
+    int usable_externalbody_count;
+
     int robotIndex;
-    double boundingBox[6];
+    BoundingBox boundaries;
+
     double positionRes;
     double orientationRes;
-    double minmax_BodyAxisRange;
+    double minmax_BodyAxisRange;    
 
+    bool copied_instance; //true if instance copied. Used for memory
+			  //management
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
-//
-//
-//
 //  implemetation of Environment
-//
-//
-//
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -327,7 +273,9 @@ private:
 //===================================================================
 
 /// Format version for path files
-inline int Environment::GetPathVersion() {
+inline int 
+Environment::
+GetPathVersion() {
     return pathVersion;
 }
 
@@ -335,28 +283,36 @@ inline int Environment::GetPathVersion() {
 ///  GetMultiBodyCount
 ///  Output: the number of MultiBody's in the environment
 //-------------------------------------------------------------------
-inline int Environment::GetExternalBodyCount() {
-    return externalbodyCount;
-    }
+
+inline int 
+Environment::
+GetExternalBodyCount() {
+  return usable_externalbody_count;
+}
 
     
 //-------------------------------------------------------------------
 ///  GetMultiBodyCount
 ///  Output: the number of MultiBody's in the environment
 //-------------------------------------------------------------------
-inline int Environment::GetMultiBodyCount() {
-    return multibodyCount;
+inline int 
+Environment::
+GetMultiBodyCount() {
+  return usable_multibody.size();
 }
 
 //-------------------------------------------------------------------
 ///  GetMultiBody
 ///  Output: A pointer to a MultiBody in the environment
 //-------------------------------------------------------------------
-inline MultiBody * Environment::GetMultiBody(int _index) {
-    if (_index < multibodyCount)
-        return multibody[_index];
-    else
-        return 0;
+inline MultiBody * 
+Environment::
+GetMultiBody(int _index) {
+  if (_index < usable_multibody.size())
+    return usable_multibody[_index];
+  else
+    return 0;
 }
+
 
 #endif

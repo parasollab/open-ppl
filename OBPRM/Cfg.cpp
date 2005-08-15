@@ -1,4 +1,3 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //
 //  Cfg.c
@@ -22,6 +21,15 @@
 #include "DistanceMetrics.h"
 #include "CollisionDetection.h"
 #include "util.h"
+
+
+
+//class Cfg_free;
+//typedef Cfg_free CfgType;
+
+#ifdef COLLISIONCFG
+extern  vector < vector < vector <  double > > > CollisionConfiguration;
+#endif
 
 #define EQ(a,b)  (fabs(a-b)<0.0001)
 
@@ -355,38 +363,27 @@ void Cfg::InvalidData() {
 // tests whether or not robot in this configuration has every vertex inside
 // the environment specified bounding box
 bool Cfg::InBoundingBox(Environment *env) const {
-  double *bb = env->GetBoundingBox();
+  BoundingBox *bb =  env->GetBoundingBox();
+
+  // @todo: if there are multiple robots, this needs to be changed.
   MultiBody *robot = env->GetMultiBody(env->GetRobotIndex());
-  // if there are multiple robots, this line need to be changed too.
   
-  // First, a faster, loose check:
-  static const double minClearance = robot->GetBoundingSphereRadius();
-  const Vector3D centerOfRobot = GetRobotCenterPosition();
-  bool isCloseToWall = false;
-  for(int i=0; i<3; ++i) {
-    if(min(centerOfRobot[i]-bb[2*i], bb[2*i+1]-centerOfRobot[i]) < minClearance) {
-      isCloseToWall = true;
-      break;
+  if (bb->GetClearance(GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
+    // Robot is close to wall, have a strict check.
+    ConfigEnvironment(env); // Config the Environment(robot indeed).
+  
+    for(int m=0; m<robot->GetFreeBodyCount(); m++) {
+      GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
+      for(int j = 0 ; j < poly.numVertices ; j++){
+	if (!bb->IfSatisfiesConstraints(poly.vertexList[j]))
+	  return false;
+      }
     }
   }
-  if(! isCloseToWall) return true;
-  
-  // if isCloseToWall, have a strict check.
-  ConfigEnvironment(env); // Config the Environment(robot indeed).
-  
-  for(int m=0; m<robot->GetFreeBodyCount(); m++) {
-    GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
-    for(int j = 0 ; j < poly.numVertices ; j++){
-      
-      if(poly.vertexList[j][0] < bb[0] || poly.vertexList[j][0] > bb[1] ||
-	 poly.vertexList[j][1] < bb[2] || poly.vertexList[j][1] > bb[3] ||
-	 poly.vertexList[j][2] < bb[4] || poly.vertexList[j][2] > bb[5] ){
-	
-	return FALSE;
-      }//endif
-    }
-  }
-  return true;
+  // Every workspace constraint has been satisfied, now check higher
+  // DOFs
+  // @todo: verify this works for all node generation methods
+  return bb->IfSatisfiesConstraints(v);
 }
 
 
@@ -743,9 +740,6 @@ void Cfg::GetRandomCfg(Environment* env, int maxTries) {
   // and see if user has an impossibly small (for this robot) bounding
   // box specified
   
-  // Since the argument of GetRandomCfg_CenterOfMass is changed, we do
-    // not need define boudingBox here     //dawenx
-    // double *bb = env->GetBoundingBox();
  
   obst = -1;
   tag = -1;
@@ -763,7 +757,7 @@ void Cfg::GetRandomCfg(Environment* env, int maxTries) {
   cout << "\n\nERROR: GetRandomCfg not able to find anything in bounding box."
        <<   "\n       robot radius is "
        << env->GetMultiBody(env->GetRobotIndex())->GetBoundingSphereRadius();
-  env->DisplayBoundingBox(cout);
+  (env->GetBoundingBox())->Print(cout);
   exit(-1);
 }
 
@@ -1244,6 +1238,14 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
   // after updating the environment(multibodies), Ask ENVIRONMENT
   // to check collision! (this is more nature.)
   bool answerFromEnvironment = cd->IsInCollision(env, Stats, _cdInfo, (MultiBody*)NULL, true, pCallName);
+
+#ifdef COLLISIONCFG
+ if(answerFromEnvironment)
+    {
+   	CollisionConfiguration[_cdInfo.colliding_obst_index].push_back(v);
+    }
+#endif
+
   if ( (answerFromEnvironment) && enablePenetration &&
        (cd->penetration>=0)) {
     Cfg* tmp = this->CreateNewCfg();
@@ -1270,6 +1272,13 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
   
   // ask CollisionDetection class directly.
   bool answerFromCD = cd->IsInCollision(env, Stats, _cdInfo, robot, obs, pCallName);
+#ifdef COLLISIONCFG
+  if(answerFromCD)
+    {
+      CollisionConfiguration[_cdInfo.colliding_obst_index].push_back(v);
+    }
+#endif
+
   if ( (answerFromCD) && enablePenetration &&
        (cd->penetration>=0)) {
     Cfg* tmp = this->CreateNewCfg();
@@ -1287,12 +1296,20 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
 		      CollisionDetection* cd,
 		      CDInfo& _cdInfo, MultiBody* onflyRobot,
 		      bool enablePenetration, std::string *pCallName) {
+
+  //cout << "I is here" << endl << flush;
     this->ConfigEnvironment(env);
   bool Clear = (pCallName) ? false : true; 
   if( !pCallName )
      pCallName = new std::string("isColl(e,s,cd,cdi,mb,ep)");
 
-    bool answer = cd->IsInCollision(env, Stats, _cdInfo, onflyRobot, true, pCallName);
+  bool answer = cd->IsInCollision(env, Stats, _cdInfo, onflyRobot, true, pCallName);
+#ifdef COLLISIONCFG
+  if(answer)
+    {
+      CollisionConfiguration[_cdInfo.colliding_obst_index].push_back(v);
+    }
+#endif
     if ( (answer) && enablePenetration && (cd->penetration>=0)) {
       Cfg* tmp = this->CreateNewCfg();
       bool result = !cd->AcceptablePenetration(*tmp, env, Stats, cd, _cdInfo);

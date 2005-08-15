@@ -214,6 +214,12 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	   Stats.IncNodes_Generated();
            collision = false;
          }
+#ifdef COLLISIONCFG
+	 else{
+	   m_vGeneratedCollisionConfiguration[cdInfo->colliding_obst_index].push_back(tmp);
+	 }
+#endif
+
        }
        if (j == default_maxTries)
 	 cerr << "Can't generate enought nodes! " << endl;
@@ -228,6 +234,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	path.push_back ( (Cfg*)tmp.CreateNewCfg() );
 	Stats.IncNodes_Generated();
       }
+#ifdef COLLISIONCFG
+      else{
+	m_vGeneratedCollisionConfiguration[cdInfo->colliding_obst_index].push_back(tmp);
+      }
+#endif
     }
   }
   

@@ -1,5 +1,3 @@
-// $Id$
-
 /**@file util.h
   *
   *This is a file containing many kinds of methods.

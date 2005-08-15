@@ -1,4 +1,3 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //
 //  Cfg_2D.cpp
@@ -191,19 +190,12 @@ void Cfg_2D::GetRandomRay(double incr) {
 }
 
 void Cfg_2D::GetRandomCfg_CenterOfMass(Environment *env) {
-  double *boundingBox = env->GetBoundingBox();
+  BoundingBox *boundingBox = env->GetBoundingBox();
   v.clear();
   
-  for(int i=0; i<6; ++i) {
-    if(i<3) {
-      int k = 2*i;
-      double p = boundingBox[k] +(boundingBox[k+1]-boundingBox[k])*OBPRM_drand();
-      v.push_back(p);
-    }
-    else
-      v.push_back(OBPRM_drand());
-  }
-  
+  for(int i=0; i<dof; ++i)
+    v.push_back(boundingBox->GetRandomValueInParameter(i));
+
   obst = -1;
   tag = -1;
   clearance = -1;

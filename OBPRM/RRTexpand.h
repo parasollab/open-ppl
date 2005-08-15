@@ -37,10 +37,11 @@ class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
    *@param fromMap Source, edge information will be retrived from here.
    *@param vids Source, vertex information will be retrived from here.
    *Usually, in this list, elements are Cfgs in same connected component.
-   */
-  static void ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap, 
+   
+  static vector<VID> ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap, 
 			    Roadmap<CFG, WEIGHT>* fromMap, 
 			    vector<VID> vids);
+  */
   void RRT(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats,
 	   int K, double deltaT, int o_clearance, 
 	   int clearance_from_node,vector<CFG>& U,
@@ -223,21 +224,23 @@ void RRTexpand<CFG,WEIGHT>::SetDefault() {
 /*---------------------------------------------------------------
 Copy vertices and all incident edges associated with "vids" 
 from one roadmap to another
----------------------------------------------------------------*/
+---------------------------------------------------------------
 template <class CFG, class WEIGHT>
-void
+vector<VID>
 RRTexpand<CFG, WEIGHT>::
 ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,
 	      Roadmap<CFG, WEIGHT>* fromMap,
 	      vector<VID> vids){
   CFG t;
   int i;
+
+  vector<VID> newVids;
   
   //Add vertex
   for (i=0;i<vids.size();++i) {
     t=fromMap->m_pRoadmap->GetData(vids[i]);
     
-    toMap->m_pRoadmap->AddVertex(t);
+    newVids.push_back(toMap->m_pRoadmap->AddVertex(t));
   } //endfor i
 
 
@@ -255,8 +258,10 @@ ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,
     
   } //endfor i
 
-}
 
+  return newVids;
+}
+*/
 
 template<class CFG, class WEIGHT>
 void 
@@ -465,7 +470,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     submap1.environment = _rm->GetEnvironment();
     vector<VID> cc;
     GetCC(*(_rm->m_pRoadmap),(*cc1).second ,cc);
-    ModifyRoadMap(&submap1,_rm,cc);
+    submap1.m_pRoadmap->MergeRoadMap(_rm->m_pRoadmap,cc);
     vector<CFG> dummyU;
     if (cc.size()<= smallcc) {
       bool toConnect = FALSE;
@@ -479,7 +484,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       vector<VID> verts;
       (&submap1)->m_pRoadmap->GetVerticesVID(verts);
       //-- map = map + submap
-      ModifyRoadMap(_rm,&submap1,verts);
+      _rm->m_pRoadmap->MergeRoadMap(submap1.m_pRoadmap,verts);
     }
     cc1++;   submap1.environment = NULL;
   }//end while cc1 != ccvec.end

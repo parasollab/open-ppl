@@ -1,4 +1,3 @@
-// $Id$
 ////////////////////////////////////////////////////////////////////////////////////////////
 /**@file  Input.h
   * The header file for handling input of obprm.
@@ -254,8 +253,11 @@ public:
         str_param<char*> envFile;               ///< input environmental filename
         str_param<char*>  mapFile;              ///< output roadmap filename
         str_param<char*> inmapFile;             ///< input roadmap filename
+	str_param<char*> inmapFile2;             ///< input roadmap filename2
         str_param<char*>  defaultFile;        ///< Default input and output filenames
         str_param<char*>  descDir;            ///< env desc files here (*.dat,*.g,etc)
+	str_param<char*> partitionType;
+	str_param<char*> integrationType;
     //@}
 
     /// command line arguments
@@ -283,6 +285,7 @@ public:
         num_param<double> orires;               ///< Orientation Resolution
 
         n_str_param       bbox;                 ///< Environment Bounding Box
+	n_str_param       bbox_ref;                 ///< Environment Bounding Box
         num_param<double> bbox_scale;           ///< Environment Bounding Box scale factor
 
         n_str_param      *GNstrings[MAX_GN];    ///< mapnode generators

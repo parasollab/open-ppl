@@ -1,4 +1,3 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //
 //  CollisionDetection.c
@@ -473,6 +472,7 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
       
       if ( (collision_found) && ( ! _cdInfo.ret_all_info) ) {
 	_cdInfo.colliding_obst_index = i;
+	
 	return true;
       } else  if (_cdInfo.ret_all_info) {  // store more info
 	if ((collision_found) && (!ret_val)) {

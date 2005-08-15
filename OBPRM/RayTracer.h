@@ -774,7 +774,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
       
       vector<VID> target_rdmp_vertices;
       target_rdmp.m_pRoadmap->GetVerticesVID(target_rdmp_vertices);
-      rrtcomp->ModifyRoadMap(rdmp, &target_rdmp, target_rdmp_vertices);
+      rdmp->m_pRoadmap->MergeRoadMap(target_rdmp.m_pRoadmap, target_rdmp_vertices);
       target_rdmp.environment = NULL;
       target_rdmp.m_pRoadmap = NULL;
     }
@@ -801,7 +801,7 @@ bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VI
       //cout << endl << "A path was found" << endl;
       vector<VID> ray_vertices;
       ray_rdmp.m_pRoadmap->GetVerticesVID(ray_vertices);
-      RRTexpand<CFG, WEIGHT>::ModifyRoadMap(&target_rdmp, &ray_rdmp, ray_vertices);
+      target_rdmp.m_pRoadmap->MergeRoadMap(ray_rdmp.m_pRoadmap, ray_vertices);
       path_found = true;
       ray_rdmp.environment = NULL;
       ray_rdmp.m_pRoadmap = NULL;
@@ -822,7 +822,7 @@ bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VI
 	//cout << "A path was found" << endl;
 	vector<VID> ray_vertices;
 	ray_rdmp.m_pRoadmap->GetVerticesVID(ray_vertices);
-	RRTexpand<CFG, WEIGHT>::ModifyRoadMap(&target_rdmp, &ray_rdmp, ray_vertices);
+	target_rdmp.m_pRoadmap->MergeRoadMap(ray_rdmp.m_pRoadmap, ray_vertices);
 	path_found = true;
 	ray_rdmp.environment = NULL;
 	ray_rdmp.m_pRoadmap = NULL;

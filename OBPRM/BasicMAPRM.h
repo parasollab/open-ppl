@@ -1,4 +1,3 @@
-// $Id$
 #ifndef BasicMAPRM_h
 #define BasicMAPRM_h
 
@@ -513,67 +512,76 @@ getCollisionInfo(CFG& cfg, Environment* _env, Stat_Class& Stats,
 
   std::string tmpStr = Callee+Method;
   if( cfg.isCollision(_env, Stats, cd, cdInfo, &tmpStr) ) return true;
-  const static double * bbx = _env->GetBoundingBox();
+  //  const static double * bbx = _env->GetBoundingBox();
+
+  const BoundingBox * bbx = _env->GetBoundingBox();
+
   MultiBody *robot = _env->GetMultiBody(_env->GetRobotIndex());
   
+  std::pair<double,double> bbx_range;
   //find cloest pt between robot and bbx
   for(int m=0; m<robot->GetFreeBodyCount(); m++) {
     GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
     for(int j = 0 ; j < poly.numVertices ; j++){
       //cout<<j<<" "<<poly.vertexList[j]<<endl;
       bool change=false;
-      if( (poly.vertexList[j][0]-bbx[0])<cdInfo.min_dist ){
-	change=true;
-	cdInfo.object_point[0]=bbx[0];
-	cdInfo.object_point[1]=poly.vertexList[j][1];
-	cdInfo.object_point[2]=poly.vertexList[j][2];
-	cdInfo.min_dist=poly.vertexList[j][0]-bbx[0];
-	cdInfo.nearest_obst_index=-1; //bbx
+      bbx_range = bbx->GetRange(0);
+
+      if( (poly.vertexList[j][0]-bbx_range.first) < cdInfo.min_dist ){
+	change = true;
+	cdInfo.object_point[0] = bbx_range.first;
+	cdInfo.object_point[1] = poly.vertexList[j][1];
+	cdInfo.object_point[2] = poly.vertexList[j][2];
+	cdInfo.min_dist = poly.vertexList[j][0]-bbx_range.first;
+	cdInfo.nearest_obst_index = -1; //bbx
       }
       
-      if( (bbx[1]-poly.vertexList[j][0])<cdInfo.min_dist ){
-	change=true;
-	cdInfo.object_point[0]=bbx[1];
-	cdInfo.object_point[1]=poly.vertexList[j][1];
-	cdInfo.object_point[2]=poly.vertexList[j][2];
-	cdInfo.min_dist=bbx[1]-poly.vertexList[j][0];
-	cdInfo.nearest_obst_index=-2; //bbx
+      if( (bbx_range.second-poly.vertexList[j][0]) < cdInfo.min_dist ){
+	change = true;
+	cdInfo.object_point[0] = bbx_range.second;
+	cdInfo.object_point[1] = poly.vertexList[j][1];
+	cdInfo.object_point[2] = poly.vertexList[j][2];
+	cdInfo.min_dist = bbx_range.second-poly.vertexList[j][0];
+	cdInfo.nearest_obst_index = -2; //bbx
       }
       
-      if( (poly.vertexList[j][1]-bbx[2])<cdInfo.min_dist ){
-	change=true;
-	cdInfo.object_point[0]=poly.vertexList[j][0]; 
-	cdInfo.object_point[1]=bbx[2];
-	cdInfo.object_point[2]=poly.vertexList[j][2];
-	cdInfo.min_dist=poly.vertexList[j][1]-bbx[2];
-	cdInfo.nearest_obst_index=-3; //bbx
+      bbx_range = bbx->GetRange(1);
+
+      if( (poly.vertexList[j][1]-bbx_range.first) < cdInfo.min_dist ){
+	change = true;
+	cdInfo.object_point[0] = poly.vertexList[j][0]; 
+	cdInfo.object_point[1] = bbx_range.first;
+	cdInfo.object_point[2] = poly.vertexList[j][2];
+	cdInfo.min_dist = poly.vertexList[j][1]-bbx_range.first;
+	cdInfo.nearest_obst_index = -3; //bbx
       }
       
-      if( (bbx[3]-poly.vertexList[j][1])<cdInfo.min_dist ){
-	change=true;
-	cdInfo.object_point[0]=poly.vertexList[j][0];
-	cdInfo.object_point[1]=bbx[3];
-	cdInfo.object_point[2]=poly.vertexList[j][2];
-	cdInfo.min_dist=bbx[3]-poly.vertexList[j][1];
-	cdInfo.nearest_obst_index=-4; //bbx
+      if( (bbx_range.second-poly.vertexList[j][1]) < cdInfo.min_dist ){
+	change = true;
+	cdInfo.object_point[0] = poly.vertexList[j][0];
+	cdInfo.object_point[1] = bbx_range.second;
+	cdInfo.object_point[2] = poly.vertexList[j][2];
+	cdInfo.min_dist = bbx_range.second-poly.vertexList[j][1];
+	cdInfo.nearest_obst_index = -4; //bbx
       }
       
-      if( (poly.vertexList[j][2]-bbx[4])<cdInfo.min_dist ){
-	change=true;
-	cdInfo.object_point[0]=poly.vertexList[j][0]; 
-	cdInfo.object_point[1]=poly.vertexList[j][1]; 
-	cdInfo.object_point[2]=bbx[4];
-	cdInfo.min_dist=poly.vertexList[j][2]-bbx[4];
-	cdInfo.nearest_obst_index=-5; //bbx
+      bbx_range = bbx->GetRange(2);
+      if( (poly.vertexList[j][2]-bbx_range.first) < cdInfo.min_dist ){
+	change = true;
+	cdInfo.object_point[0] = poly.vertexList[j][0]; 
+	cdInfo.object_point[1] = poly.vertexList[j][1]; 
+	cdInfo.object_point[2] = bbx_range.first;
+	cdInfo.min_dist = poly.vertexList[j][2]-bbx_range.first;
+	cdInfo.nearest_obst_index = -5; //bbx
       }
       
-      if( (bbx[5]-poly.vertexList[j][2])<cdInfo.min_dist ){
-	change=true;
-	cdInfo.object_point[0]=poly.vertexList[j][0];
-	cdInfo.object_point[1]=poly.vertexList[j][1];
-	cdInfo.object_point[2]=bbx[5];
-	cdInfo.min_dist=bbx[5]-poly.vertexList[j][2];
-	cdInfo.nearest_obst_index=-6; //bbx
+      if( (bbx_range.second-poly.vertexList[j][2]) < cdInfo.min_dist ){
+	change = true;
+	cdInfo.object_point[0] = poly.vertexList[j][0];
+	cdInfo.object_point[1] = poly.vertexList[j][1];
+	cdInfo.object_point[2] = bbx_range.second;
+	cdInfo.min_dist = bbx_range.second-poly.vertexList[j][2];
+	cdInfo.nearest_obst_index = -6; //bbx
       }
       
       if(change==true){

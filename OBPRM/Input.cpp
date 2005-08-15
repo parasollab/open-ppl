@@ -1,4 +1,3 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //  Input.c
 //
@@ -32,6 +31,9 @@ Input::Input():
         envFile          ("-envFile"),
         mapFile          ("-outmapFile"),
         inmapFile        ("-inmapFile"),
+	inmapFile2        ("-inmapFile2"),
+	partitionType    ("-partition"),
+	integrationType ("-integration"),
                        //  default   min,max
         addPartialEdge   ("-addPartialEdge",     0,  0,    1),
 	addAllEdges      ("-addAllEdges",        0,  0,    1),
@@ -40,6 +42,7 @@ Input::Input():
         orires           ("-orires", ORIENTATION_RES, -1000, 1000),
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
         bbox             ("-bbox",""),
+	bbox_ref         ("-bbox_ref",""),
         collPair         ("-collPair","cM rT "),    // center of Mass
         freePair         ("-freePair","cM rV "),    // center of Mass
 	numofJoints      ("-numofjoints", 0, 0, 1000000)
@@ -53,6 +56,10 @@ Input::Input():
     envFile.PutDesc    ("STRING ","");
     mapFile.PutDesc    ("STRING ","");
     inmapFile.PutDesc  ("STRING read in a map file","");
+    inmapFile2.PutDesc  ("STRING *causes Node Generation to be SKIPPED","");
+
+    partitionType.PutDesc("STRING determine what kind of partitioning will be used","");
+    integrationType.PutDesc("STRING determine what kind of integration method will be used","");
 
     defaultFile.PutDesc("STRING ",
         " default filename prefix for common files");
@@ -63,6 +70,11 @@ Input::Input():
     bbox.PutDesc       ("STRING ", "[Xmin,Xmax,Ymin,Ymax,Zmin,Zmax]"
                                     "\n\t\t\t(default calculated from environment)"
                                     "\n\t\t\tATTN: robust if no spaces are used.");
+
+    bbox_ref.PutDesc       ("STRING ", "[Xmin,Xmax,Ymin,Ymax,Zmin,Zmax]"
+			"\n\t\t\t(default calculated from environment)"
+			"\n\t\t\tATTN: robust if no spaces are used.");
+
     bbox_scale.PutDesc        ("FLOAT  ","");
     posres.PutDesc            ("FLOAT  "," *CALCULATED*   position    resolution");
     orires.PutDesc            ("FLOAT  "," **HARDCODED**  orientation resolution");
@@ -266,10 +278,14 @@ void Input::ReadCommandLine(int argc, char** argv){
       } else if ( envFile.AckCmdLine(&i, argc, argv) ) {
       } else if ( mapFile.AckCmdLine(&i, argc, argv) ) {
       } else if ( inmapFile.AckCmdLine(&i, argc, argv) ) {
+      } else if ( inmapFile2.AckCmdLine(&i, argc, argv) ) {
+	} else if ( partitionType.AckCmdLine(&i, argc, argv) ) {
+	} else if ( integrationType.AckCmdLine(&i, argc, argv) ) {
       } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
       } else if ( addAllEdges.AckCmdLine(&i, argc, argv) ) {
       } else if ( seedByChunk.AckCmdLine(&i, argc, argv) ) {
       } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
+      } else if ( bbox_ref.AckCmdLine(&i, argc, argv) ) {
       } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
       } else if ( posres.AckCmdLine(&i, argc, argv) ) {
       } else if ( orires.AckCmdLine(&i, argc, argv) ) {
@@ -322,7 +338,7 @@ void Input::ReadCommandLine(int argc, char** argv){
       } else if ( DMstrings[numDMs]->AckCmdLine(&i, argc, argv) ) {
 	numDMs++;
       } else {
-	cout << "\nERROR: Don\'t understand \""<< argv[i]<<"\"";
+	cout << "\nERROR: Don\'t understand blah\""<< argv[i]<<"\"";
 	throw BadUsage();
       } //endif
     } //endfor i
@@ -336,6 +352,9 @@ void Input::ReadCommandLine(int argc, char** argv){
 
     if ( inmapFile.IsActivated() ){
       VerifyFileExists(inmapFile.GetValue(),EXIT);
+    }
+    if ( inmapFile2.IsActivated() ){
+      VerifyFileExists(inmapFile2.GetValue(),EXIT);
     }
 
     descDir.VerifyValidDirName();
@@ -375,10 +394,14 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n\nOPTIONAL:\n";
         _os << "\n  "; descDir.PrintUsage(_os);
         _os << "\n  "; inmapFile.PrintUsage(_os);
+        _os << "\n  "; inmapFile2.PrintUsage(_os);
+	_os << "\n  "; partitionType.PrintUsage(_os);
+	_os << "\n  "; integrationType.PrintUsage(_os);
         _os << "\n  "; addPartialEdge.PrintUsage(_os);
 	_os << "\n  "; addAllEdges.PrintUsage(_os);
 	_os << "\n  "; seedByChunk.PrintUsage(_os);
         _os << "\n  "; bbox.PrintUsage(_os);
+	_os << "\n  "; bbox_ref.PrintUsage(_os);
         _os << "\n  "; bbox_scale.PrintUsage(_os);
         _os << "\n  "; posres.PrintUsage(_os);
         _os << "\n  "; orires.PrintUsage(_os);
@@ -409,11 +432,14 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"envFile"<<"\t"<<envFile.GetValue();
   _os <<"\n"<<setw(FW)<<"mapFile"<<"\t"<<mapFile.GetValue();
   _os <<"\n"<<setw(FW)<<"inmapFile"<<"\t"<<inmapFile.GetValue();
-
+  _os <<"\n"<<setw(FW)<<"inmapFile2"<<"\t"<<inmapFile2.GetValue();
+  _os <<"\n"<<setw(FW)<<"partitionType"<<"\t"<<partitionType.GetValue();
+  _os <<"\n"<<setw(FW)<<"integrationType"<<"\t"<<integrationType.GetValue();
   _os <<"\n"<<setw(FW)<<"addPartialEdge"<<"\t"<<addPartialEdge.GetValue();
   _os <<"\n"<<setw(FW)<<"addAllEdges"<<"\t"<<addAllEdges.GetValue();
   _os <<"\n"<<setw(FW)<<"seedByChunk"<<"\t"<<seedByChunk.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox"<<"\t"<<bbox.GetValue();
+  _os <<"\n"<<setw(FW)<<"bbox"<<"\t"<<bbox_ref.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox_scale"<<"\t"<<bbox_scale.GetValue();
   _os <<"\n"<<setw(FW)<<"posres"<<"\t"<<posres.GetValue();
   _os <<"\n"<<setw(FW)<<"orires"<<"\t"<<orires.GetValue();
@@ -470,7 +496,6 @@ Input::PrintDefaults(){
 
    // Generate Map Nodes
    GenerateMapNodes<Cfg_free> gn;
-   Environment env;
    cout << setw(FW) << "Generate Map Nodes" << " (" << GNstrings[0]->GetFlag() <<
      ") : default = ";
    gn.PrintDefaults(cout);

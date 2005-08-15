@@ -1,4 +1,3 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //
 //  Cfg_free.c
@@ -190,15 +189,20 @@ void Cfg_free::GetRandomRay(double incr) {
 }
 
 
-bool Cfg_free::GenerateOverlapCfg(Environment *env,  // although env and robot is not used here,
-				  int robot,         // they are needed in other Cfg classes.
-				  Vector3D robot_start, Vector3D robot_goal,
-				  Cfg *resultCfg) {
+bool 
+Cfg_free::
+GenerateOverlapCfg(Environment *env,
+		   int robot, //  robot not used, needed in other Cfg classes
+		   Vector3D robot_start, Vector3D robot_goal,
+		   Cfg *resultCfg) {
   Vector3D diff = robot_goal - robot_start;
   
   // pass back the Cfg for this pose.
+  BoundingBox * bbox = env->GetBoundingBox();
   *resultCfg = Cfg_free(diff[0], diff[1], diff[2], 
-			OBPRM_drand(), OBPRM_drand(), OBPRM_drand());
+			bbox->GetRandomValueInParameter(3), 
+			bbox->GetRandomValueInParameter(4), 
+			bbox->GetRandomValueInParameter(5));  
   return true;
 }
 
@@ -236,6 +240,7 @@ void Cfg_free::GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats,
 	delete tmp[i];
       ++num;
     }
+    //i++;
   }
 }
 
@@ -429,18 +434,11 @@ Cfg* Cfg_free::CreateNewCfg(vector<double>& data) const {
 
 
 void Cfg_free::GetRandomCfg_CenterOfMass(Environment *env) {
-  double* boundingBox = env->GetBoundingBox();
-  
+  BoundingBox *boundingBox =env->GetBoundingBox();
   v.clear();
-  for(int i=0; i<6; ++i) {
-    if(i<3) {
-      int k = 2*i;
-      double p = boundingBox[k] +(boundingBox[k+1]-boundingBox[k])*OBPRM_drand();
-      v.push_back(p);
-    } else
-      v.push_back(OBPRM_drand());
-  }
 
+  for(int i=0; i<6; ++i)
+    v.push_back(boundingBox->GetRandomValueInParameter(i));
   obst = -1;
   tag = -1;
   clearance = -1;

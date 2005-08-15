@@ -294,10 +294,10 @@ StraightLine<CFG, WEIGHT>::
   std::string Callee(GetName());
   {std::string Method("-straightline::IsConnectedSLSequential");Callee=Callee+Method;}
   
+
   int nTicks = 0;
   for(int i = 0; i < n_ticks ; i++){
     tick.Increment(incr);
-    
     cd_cntr ++;
     if(checkCollision){
       if(tick.isCollision(_env,Stats,cd, *cdInfo,true,&(Callee))){
@@ -321,7 +321,6 @@ StraightLine<CFG, WEIGHT>::
     }
     nTicks++;
   }
-  
   lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + nTicks);
   lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + nTicks);
 

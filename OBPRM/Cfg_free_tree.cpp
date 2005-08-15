@@ -1,4 +1,3 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //
 //  Cfg_free_tree.c
@@ -10,9 +9,6 @@
 //
 //  Created
 //	08/31/99	Guang Song
-//
-//  Last Modified By:
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "Cfg_free_tree.h"
@@ -224,17 +220,10 @@ void Cfg_free_tree::GetRandomCfg_CenterOfMass(Environment *env) {
   // but here only the base link is taken care of. It is almost fine since
   // a little 'bigger' BB will contain all links.
   
-  double *boundingBox = env->GetBoundingBox();
+  BoundingBox* boundingBox = env->GetBoundingBox();
   v.clear();
-  for(int i=0; i<dof; ++i) {
-    if(i<3) {
-      int k = 2*i;
-      double p = boundingBox[k] +
-	(boundingBox[k+1]-boundingBox[k])*OBPRM_drand();
-      v.push_back(p);
-    } else
-      v.push_back(OBPRM_drand());
-  }
+  for (int i = 0 ; i < dof ; ++i)
+    v.push_back(boundingBox->GetRandomValueInParameter(i));
   
   obst = -1;
   tag = -1;
@@ -276,24 +265,23 @@ bool Cfg_free_tree::ConfigEnvironment(Environment *_env) const {
   return true;
 }
 
-bool Cfg_free_tree::GenerateOverlapCfg(Environment *env,  // although env and robot is not used here,
-				       int robot,            // they are needed in other Cfg classes.
-				       Vector3D robot_start,
-				       Vector3D robot_goal,
-				       Cfg *resultCfg){
-  
+bool 
+Cfg_free_tree::
+GenerateOverlapCfg(Environment *env,
+		   int robot, //not used here, needed in other Cfg classes
+		   Vector3D robot_start, Vector3D robot_goal, 
+		   Cfg *resultCfg){
   int i;
   Vector3D diff = robot_goal - robot_start;
-  
+
+  BoundingBox *bbox = env->GetBoundingBox();
+
   vector<double> result;
   for(i=0; i<3; ++i)
     result.push_back(diff[i]);
   for(i=3; i<dof; ++i)
-    result.push_back(OBPRM_drand());
-  
-  // pass back the Cfg for this pose.
-  //       *resultCfg = Cfg_free_tree(diff[0], diff[1], diff[2], 
-  //  				OBPRM_drand(), OBPRM_drand());
+    result.push_back(bbox->GetRandomValueInParameter(i));
+
   *resultCfg = Cfg_free_tree(result);
   return true;
 }
@@ -318,6 +306,9 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
   GMSPolyhedron &polyObst = env->GetMultiBody(obstacle)->GetFixedBody(0)
     ->GetWorldPolyhedron();
   int num = 0;
+//   int tries = 3 * num;
+//   int i = 0;
+
   MultiBody * base = new MultiBody(env);
   base->AddBody(env->GetMultiBody(robot)->GetFreeBody(0));
   
@@ -350,6 +341,7 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
 	  delete tmp[i];
       }
     }
+    //i++;
   }
 }
 

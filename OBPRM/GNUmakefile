@@ -23,12 +23,12 @@ endif
 
 #set default library type
 ifndef library
-  library=dynamic
+  library=static
 endif
 
 #set default debug
 ifndef debug
-  debug=0
+  debug=1
 endif
 
 #set default CHECKIFSAMECC
@@ -62,6 +62,9 @@ libobprm.dylib: objs
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_$@.cpp $(LIBS) -o $@
 	rm -f $@.d
 
+metaplanner: main_metaplanner.cpp libs
+	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) -DCOLLISIONCFG main_metaplanner.cpp $(LIBS) -o metaplanner
+
 %.o: %.cpp
 ifeq ($(platform2), SUN_CC)
 	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -xM1 -c $< > $*.d
@@ -72,7 +75,6 @@ endif
 	rm -f $*.d
 
 OBJS = \
-	Environment.o \
 	FreeBody.o \
 	FixedBody.o \
 	Connection.o \
@@ -93,6 +95,7 @@ OBJS = \
 	Cfg_free_tree.o \
 	Cfg_fixed_tree.o \
 	Cfg_2D.o \
+	Environment.o \
 	util.o \
 	Clock_Class.o \
 	Clock_Elapsed.o \
@@ -100,7 +103,8 @@ OBJS = \
 	DistanceMetrics.o \
 	CollisionDetection.o \
 	QueryCmds.o \
-	Weight.o
+	Weight.o \
+	Boundary.o
 #	Haptic.o \
 #	Push.o \
 
@@ -109,10 +113,12 @@ objs: $(OBJS)
 clean:
 	rm -f obprm
 	rm -f query
+	rm -f metaplanner
 
 reallyclean:
 	rm -f obprm
 	rm -f query
+	rm -f metaplanner
 	rm -f *.a *.so *.o *.dylib
 	rm -R -f ii_files
 	rm -R -f SunWS_cache

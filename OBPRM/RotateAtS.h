@@ -145,15 +145,15 @@ ParseCommandLine(int argc, char **argv) {
       exit (-1);
     }
   }
-     if (s_values.size()<1){
-       SetDefault();
-    }
-     s_values_in.clear();
- for(int i=0; i<s_values.size(); i++){
+  if (s_values.size()<1){
+    SetDefault();
+  }
+  s_values_in.clear();
+  for(int i=0; i<s_values.size(); i++){
     s_values_in.push_back(s_values[i]);
   }
- std::sort(s_values_in.begin (), s_values_in.end());
-
+  std::sort(s_values_in.begin (), s_values_in.end());
+  
   if (s_values.size()>=1) {
     std::sort(s_values.begin (), s_values.end());
     if (s_values[0] < 0.0 || s_values[s_values.size()-1] > 1.0) {
@@ -168,7 +168,7 @@ ParseCommandLine(int argc, char **argv) {
       cerr << endl;
       exit(-1);
   }
-  }
+}
 
 
 template <class CFG, class WEIGHT>
@@ -215,8 +215,6 @@ IsConnected(Environment *_env, Stat_Class& Stats,
 	    bool checkCollision, 
 	    bool savePath, bool saveFailedPath) {  
   bool connected = false;
-  using namespace std;
- 
   connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   if (!connected) { //try the other way
     for(int i=0; i<s_values.size(); i++){
@@ -232,7 +230,6 @@ IsConnected(Environment *_env, Stat_Class& Stats,
     std::sort(s_values.begin(),s_values.end());
   }
   return connected;
-  
 }
 
 template <class CFG, class WEIGHT>

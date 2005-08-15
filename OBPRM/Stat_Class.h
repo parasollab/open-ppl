@@ -1,9 +1,8 @@
-// $Id$
-
 #ifndef StatClass_h
 #define StatClass_h
 
 #include "Roadmap.h"
+
 
 // Maximum number of connected components to keep track of
 const int MaxCC=    100;
@@ -301,7 +300,7 @@ ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
       double cci_sigma_intracc_dist = 0;
       for (cci_i=cci_cfgs.begin(); cci_i < cci_cfgs.end(); cci_i++) {
 	for (cci_j = cci_i+1; cci_j < cci_cfgs.end(); cci_j++) {
-	  cci_sigma_intracc_dist += power(dm->Distance(rdmp->GetEnvironment(),
+	  cci_sigma_intracc_dist += pow(dm->Distance(rdmp->GetEnvironment(),
 		     *cci_i, *cci_j)-cci_mean_intracc_dist, 2);
 	}
       }
@@ -335,7 +334,7 @@ ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
 	CFG e_v1 = rdmp->m_pRoadmap->GetData(e_iter->first);
 	CFG e_v2 = rdmp->m_pRoadmap->GetData(e_iter->second);
 	double e_dist = dm->Distance(rdmp->GetEnvironment(), e_v1, e_v2);
-	cci_sigma_intracc_edge_s += power(e_dist-cci_mean_intracc_edge_s, 2);
+	cci_sigma_intracc_edge_s += pow(e_dist-cci_mean_intracc_edge_s, 2);
       }
       if (cci_edges.size() > 1)
 	cci_sigma_intracc_edge_s /= cci_edges.size() - 1;
@@ -368,7 +367,7 @@ ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
 	CFG tmp = cci_cfgs[j];
 	double e_dist = dm->Distance(rdmp->GetEnvironment(), 
 				     center_of_mass, tmp);
-	cci_sigma_intracc_dist_to_cm += power(e_dist-cci_mean_intracc_dist_to_cm, 2);
+	cci_sigma_intracc_dist_to_cm += pow(e_dist-cci_mean_intracc_dist_to_cm, 2);
       }
       if (cci_cfgs.size() > 1)
 	cci_sigma_intracc_dist_to_cm /= cci_cfgs.size() - 1;
@@ -426,7 +425,6 @@ ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
   avg_sigma_intracc_dist_to_cm /= norm;
 }
 
-
 // Compute inter-connected-component statistics
 // Find Closest nodes between two ccs and find distance 
 // between the closest pairs of ccs
@@ -482,7 +480,7 @@ ComputeInterCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
 
   sigma_cc_size = 0;
   for (int j = 0; j < ccsizes.size(); j++)
-    sigma_cc_size  += power(ccsizes[j]-avg_cc_size, 2);
+    sigma_cc_size  += pow(ccsizes[j]-avg_cc_size, 2);
   if (ccsizes.size() > 1)
     sigma_cc_size /= (ccsizes.size()-1);
   sigma_cc_size = sqrt(sigma_cc_size);
@@ -528,7 +526,7 @@ ComputeInterCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
   if (pairs_checked > 0)
     avg_intercc_dist /= pairs_checked;
   for (int j = 0; j < min_cc_distance_between_closest_pairs.size(); j++)
-    sigma_intercc_dist += power(min_cc_distance_between_closest_pairs[j]-
+    sigma_intercc_dist += pow(min_cc_distance_between_closest_pairs[j]-
 				avg_intercc_dist , 2);
   if (min_cc_distance_between_closest_pairs.size() > 1)
     sigma_intercc_dist /= min_cc_distance_between_closest_pairs.size() - 1;

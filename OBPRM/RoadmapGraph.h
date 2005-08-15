@@ -1,4 +1,3 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 /**@file RoadmapGraph.h
   *
@@ -209,6 +208,19 @@ typedef Graph<DG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,W
 
     //@}
 
+    /**@name Adding Vertices & Edges from other RoadmapGraph's*/
+    //@{
+       /**Copy vertices and all incident edges associated with "vids" 
+	*from one roadmap to another.
+	*@param toMap Target, Cfgs in vids and incident edges in fromMap  
+	*will be copied to this submap.
+	*@param fromMap Source, edge information will be retrived from here.
+	*@param vids Source, vertex information will be retrived from here.
+	*Usually, in this list, elements are Cfgs in same connected component.
+	*/
+       vector<VID> MergeRoadMap(RoadmapGraph<VERTEX,WEIGHT>*, 
+				 vector<VID> vids);
+     //@}
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -385,5 +397,44 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT*,WEIGHT*>& _w) {
   tmp.second = *_w.second;
   return AddEdge(_v1,_v2,tmp);
 }
+
+template <class VERTEX, class WEIGHT>
+vector<VID> 
+RoadmapGraph<VERTEX,WEIGHT>::
+MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap, 
+	      vector<VID> vids) {
+  VERTEX t;
+  int i;
+  vector<VID> newVids;
+
+  //Add vertex
+  for (i=0;i<vids.size();++i) {
+    t=_fromMap->GetData(vids[i]);
+    
+    newVids.push_back(this->AddVertex(t));
+  } //endfor i
+
+
+  //-- get edges from _rm connected component and add to submap
+  for (i=0;i<vids.size();++i) {
+    vector< pair<pair<VID,VID>,WEIGHT> > edges; 
+    _fromMap->GetOutgoingEdges(vids[i], edges);
+    
+    for (int j=0;j<edges.size();++j) {
+      VERTEX t1=_fromMap->GetData(edges[j].first.first);
+      VERTEX t2=_fromMap->GetData(edges[j].first.second);
+      
+      this->AddEdge(t1,t2, edges[j].second);
+    } //endfor j
+    
+  } //endfor i
+
+
+  return newVids;
+
+
+}
+
+
 
 #endif

@@ -48,6 +48,35 @@ class UnconnectedClosest: public ConnectionMethod<CFG,WEIGHT> {
 			 bool addPartialEdge,
 			 bool addAllEdges);
 
+  /* void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+			 CollisionDetection*, 
+			 DistanceMetric *,
+			 LocalPlanners<CFG,WEIGHT>*,
+			 bool addPartialEdge,
+			 bool addAllEdges
+			 vector<CFG>& v1, vector<CFG>& v2);*/
+
+
+void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+			 CollisionDetection*, DistanceMetric*,
+			 LocalPlanners<CFG,WEIGHT>*,
+			 bool addPartialEdge, bool addAllEdges,
+			 vector<vector<CFG> >& verticesList);
+
+
+
+
+
+
+ void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+			 CollisionDetection*, DistanceMetric *,
+			 LocalPlanners<CFG,WEIGHT>*,
+			 bool addPartialEdge, bool addAllEdges,
+			 vector<CFG>& v1, vector<CFG>& v2);
+
+
+
+
  private:
   //////////////////////
   // Data
@@ -176,6 +205,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	}
     }
     
+    
     //	 for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
     for (int j=0; j < kp.size(); j++) {
@@ -196,5 +226,175 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     } //endfor j
   }//endfor z
 }
+
+
+
+
+template <class CFG, class WEIGHT>
+void  UnconnectedClosest<CFG,WEIGHT>::
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+                  CollisionDetection* cd , 
+                  DistanceMetric * dm,
+                  LocalPlanners<CFG,WEIGHT>* lp,
+		  bool addPartialEdge,
+		  bool addAllEdges,
+		  vector<vector<CFG> >& verticesList) {
+  for(int i=0; i<verticesList.size()-1; ++i)
+    for(int j=i+1; j<verticesList.size(); ++j)
+      ConnectComponents(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,
+			verticesList[i], verticesList[j]);
+}
+
+
+template <class CFG, class WEIGHT>
+void  UnconnectedClosest<CFG,WEIGHT>::
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+                  CollisionDetection* cd , 
+                  DistanceMetric * dm,
+                  LocalPlanners<CFG,WEIGHT>* lp,
+		  bool addPartialEdge,
+		  bool addAllEdges,
+		  vector<CFG>& v1, vector<CFG>& v2) {
+  //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
+#ifndef QUIET
+  cout << "UnconnectedClosest2b(k="<< kclosest <<"): "<<flush;
+#endif
+  
+
+  cout << "V1 size: " << v1.size() << endl;
+  cout << "V2 size: " << v2.size() << endl;
+  //vector<CFG> vec1;
+  //_rm->m_pRoadmap->GetVerticesData(vec1);
+  const int verticeSize = v1.size();//vec1.size();
+  const int k = min(kclosest,verticeSize);
+  //vector<CFG> vec2 = vec1;
+
+  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
+  //  vector< pair<VID,VID> > kp;
+  // Find k closest cfgs to each cfg in the roadmap
+  /*  if(k < v2.size() - 1) {
+    kp = dm->FindKClosestPairs(_rm, v1, v2, k); 
+    kp = dm->FindKClosestPairs(_rm, v2, v1, k);
+  } 
+
+  else { // all the pairs
+    for(int i=0; i<v1.size(); ++i)
+      for(int j=0; j<v2.size(); ++j){
+        if( v1[i]==v2[j] ) continue;
+        kp.push_back(pair<VID,VID>(pMap->GetVID(v1[i]), pMap->GetVID(v2[j])));
+      }
+      }
+  // for each pair identified
+  LPOutput<CFG,WEIGHT> lpOutput;
+  for (int j=0; j < kp.size(); j++) {
+    if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
+#if CHECKIFSAMECC
+    if(IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
+#endif
+    if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
+                        _rm->m_pRoadmap->GetData(kp[j].first),
+                        _rm->m_pRoadmap->GetData(kp[j].second),
+                        &lpOutput,
+                        connectionPosRes, connectionOriRes, 
+                        (!addAllEdges) )) {
+      _rm->m_pRoadmap->AddEdge(kp[j].first, kp[j].second, lpOutput.edge);
+    }
+  } //endfor j*/
+  bool done = false;
+  vector< pair<VID,VID> > kp;
+   vector< pair<VID,VID> > kp_temp;
+  for(int r=0; r<v1.size(); r++)
+    {
+      for(int z=0; (z<v2.size())&&!done;z++) {  
+	
+	// Find k closest cfgs to each cfg in the roadmap
+	if(k < v2.size()) {
+	  kp_temp = dm->KUnconnectedClosest(_rm, v1[r], v2, k); 
+	  kp.insert(kp.end(),kp_temp.begin(),kp_temp.end());
+	  
+	  //  cout << "calling dm->KUnconnectedClosest with v2.size = " << v2.size() << endl;
+	} 
+	else { // all the pairs
+	  for(int i=0; i<v2.size(); ++i)
+	    {
+	      //	for(int j=0; j<vertices.size(); ++j){
+	      if( v1[r]==v2[i] ) continue;
+	      kp.push_back(pair<VID,VID>(pMap->GetVID(v1[r]), pMap->GetVID(v2[i])));
+
+	      //	      done=true;
+	    }
+	  //}
+	}
+      }
+    }
+
+  /*
+  
+ for(int r=0; r<v2.size(); r++)
+    {
+      for(int z=0; (z<v1.size())&&!done;++z) {  
+	
+	// Find k closest cfgs to each cfg in the roadmap
+	if(k < v1.size()) {
+	  kp_temp = dm->KUnconnectedClosest(_rm, v2[r], v1, k); 
+	  kp.insert(kp.end(),kp_temp.begin(),kp_temp.end());
+	} 
+	else { // all the pairs
+	  for(int i=0; i<v1.size(); ++i)
+	    {
+	      //	for(int j=0; j<vertices.size(); ++j){
+	      if( v2[r]==v1[i] ) continue;
+	      kp.push_back(pair<VID,VID>(pMap->GetVID(v2[r]), pMap->GetVID(v1[i])));
+	      //   done=true;
+	    }
+	  //}
+	}
+      }
+    }
+  */
+	//	 for each pair identified
+	LPOutput<CFG,WEIGHT> lpOutput;
+	for (int j=0; j < kp.size(); j++) {
+	  if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
+#if CHECKIFSAMECC
+	  if(IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
+#endif	
+	  Stats.IncConnections_Attempted();
+	  if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
+			      _rm->m_pRoadmap->GetData(kp[j].first),
+			      _rm->m_pRoadmap->GetData(kp[j].second),
+			      &lpOutput,
+			      connectionPosRes, connectionOriRes, 
+			      (!addAllEdges) )) {
+	    _rm->m_pRoadmap->AddEdge(kp[j].first, kp[j].second, lpOutput.edge);
+	    Stats.IncConnections_Made();
+      }
+    } //endfor j
+	//}//endfor z
+	// }
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif

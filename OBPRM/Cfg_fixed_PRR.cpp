@@ -1,4 +1,3 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //
 //  Cfg_fixed_PRR.c
@@ -163,11 +162,13 @@ void Cfg_fixed_PRR::GetRandomRay(double incr) {
 void Cfg_fixed_PRR::GetRandomCfg(Environment* env) {
   Cfg::GetRandomCfg(env);
 }
-  
+
+/*
+  @todo validate the GetRandomValueInParameter(2), I used 2 because it was like that before, but I don't know why it is that way.
+ */  
 void Cfg_fixed_PRR::GetRandomCfg_CenterOfMass(Environment *env) {
-  double *boundingBox = env->GetBoundingBox();
-  double zz = boundingBox[4] +
-    (boundingBox[5]-boundingBox[4])*OBPRM_drand();
+  BoundingBox *boundingBox = env->GetBoundingBox();
+  double zz = boundingBox->GetRandomValueInParameter(2);
   
   double ceta1 =1.0 * OBPRM_drand();
   double ceta2 =1.0 * OBPRM_drand();
