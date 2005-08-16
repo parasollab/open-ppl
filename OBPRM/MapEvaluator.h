@@ -1,5 +1,6 @@
 #ifndef _MAP_EVALUATOR_H
 #define _MAP_EVALUATOR_H
+
 #include "Roadmap.h"
 
 template <class CFG, class WEIGTH> 
@@ -23,7 +24,7 @@ class MapEvaluator {
     typename vector<MapEvaluationMethod<CFG,WEIGHT>*>::iterator E;
     for(E = evaluators.begin(); E != evaluators.end(); ++E)
       if(!(*E)->evaluate(rmap))
-	return false;
+    return false;
     return true;
   }
 };
@@ -49,8 +50,6 @@ class TestEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     return (rmap->m_pRoadmap->GetVertexCount() > size);
   }
 };
-
-
 
 /////////////////////////
 // Max Flow Evaluators
@@ -320,4 +319,71 @@ evaluate(Roadmap<CFG,WEIGHT>* rmap) {
   return queryResult;
 
 }
+
+
+/////////////////////////
+// evaluate component length
+template <class CFG, class WEIGHT>
+class CCDistanceEvaluation : public MapEvaluationMethod<CFG,WEIGHT> 
+{
+public:
+
+    CCDistanceEvaluation
+    (float t, ConnectMap<CFG,WEIGHT>* cm, DistanceMetric* dm)
+    :m_cm(cm), m_dm(dm)
+    {
+        m_threshold=t;
+    }
+
+    virtual bool evaluate(Roadmap<CFG,WEIGHT>* rmap) 
+    {
+	//compute features
+	Stat_Class my_stats;
+	my_stats.ComputeInterCCFeatures(m_cm,rmap,m_dm);
+	//done    
+        return my_stats.avg_intercc_dist<m_threshold;
+    }
+
+private:
+
+    float m_threshold; // success rate
+
+    //planner stuff
+    ConnectMap<CFG,WEIGHT>* m_cm; 
+    DistanceMetric* m_dm;
+};
+
+/////////////////////////
+// component diameter
+template <class CFG, class WEIGHT>
+class CCDiameterEvaluation : public MapEvaluationMethod<CFG,WEIGHT> 
+{
+public:
+
+    CCDiameterEvaluation
+    (float t, ConnectMap<CFG,WEIGHT>* cm, DistanceMetric* dm)
+    :m_cm(cm), m_dm(dm)
+    {
+        m_threshold=t;
+    }
+
+    virtual bool evaluate(Roadmap<CFG,WEIGHT>* rmap) 
+    {
+	//compute features
+	Stat_Class my_stats;
+	my_stats.ComputeIntraCCFeatures(m_cm,rmap,m_dm);
+	//done    
+        return my_stats.avg_mean_intracc_dist_to_cm>m_threshold;
+    }
+
+private:
+
+    float m_threshold; // success rate
+
+    //planner stuff
+    ConnectMap<CFG,WEIGHT>* m_cm; 
+    DistanceMetric* m_dm;
+};
+
+
 #endif
