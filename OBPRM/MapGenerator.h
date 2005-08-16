@@ -486,7 +486,7 @@ GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
   // Connect roadmap nodes
   //---------------------------
   ConnectionClock.StartClock("Node Connection");
-  cm.ConnectComponents(rmap, Stats, cd, dm, lp,
+  cm.Connect(rmap, Stats, cd, dm, lp,
 	       addPartialEdge, addAllEdges);
   ConnectionClock.StopClock();
 
