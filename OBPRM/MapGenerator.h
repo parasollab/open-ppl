@@ -224,7 +224,6 @@ GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	     DistanceMetric* dm, vector<CFG>& nodes, 
 	     LocalPlanners<CFG,WEIGHT>* lp,
 	     Input* input) {
-
   if(input->seedByChunk.GetValue()) 
     GenerateIncrementalMap(rmap,Stats,cd,dm,nodes,lp,input, 
 			   input->addPartialEdge.GetValue(), 
@@ -402,6 +401,13 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
     cout <<endl<<"Total node generation time for expansion round: "<<expandGenTime << " sec  \n";
     cout <<"Total node connection time for expansion round: "<<expandConTime << " sec  \n";
 #endif
+
+    //output map
+    char mapname[256];
+    sprintf(mapname, "%s.%d.%d.map", input->defaultFile.GetValue(),
+            rmap->m_pRoadmap->GetVertexCount(),
+            rmap->m_pRoadmap->GetEdgeCount());
+    rmap->WriteRoadmap(input, cd, dm, lp, mapname);
 
     Clock_Class evaluationClock;
     evaluationClock.StartClock("Evaluation time");
