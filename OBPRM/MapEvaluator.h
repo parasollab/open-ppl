@@ -206,7 +206,7 @@ public:
             //add the node to the map
             VID added_ID=rmapG->AddVertex(test_nodes[i]);
             //connect the node to the rest of the map
-            m_cm->ConnectComponents
+            m_cm->ConnectNodes
                 (rmap,my_stats,m_cd,m_dm,m_lp,false,false,vv);
             //check if the node has connections
             if(rmapG->GetVertexOutDegree(added_ID)>0)
