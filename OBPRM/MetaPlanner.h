@@ -216,16 +216,16 @@ class MetaPlanner {
 
  protected:
  public:
-  GenerateMapNodes<CFG> gn_map;
-  ConnectMap<CFG, WEIGHT> cm_map, cm_combine;
-  LocalPlanners<CFG, WEIGHT> lp_map;
-  DistanceMetric     dm;
+  // GenerateMapNodes<CFG> gn_map;
+  //ConnectMap<CFG, WEIGHT> cm_map, cm_combine;
+  //LocalPlanners<CFG, WEIGHT> lp_map;
+  // DistanceMetric     dm;
 
-  bool addPartialEdge, addAllEdges;
+  // bool addPartialEdge, addAllEdges;
 
   //ValidityTest vt;
-  CollisionDetection cd;
-  Environment env;
+  //CollisionDetection cd;
+  // Environment env;
 
   Clock_Class        NodeGenClock;
   Clock_Class        ConnectionClock;
