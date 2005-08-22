@@ -3,6 +3,7 @@
 
 ////////////////////////////////////////////////////////////////
 #include "Defines.h"
+#include "tinyxml.h"
 
 #include "Boundary.h"
 
@@ -11,11 +12,15 @@
 #include "Input.h"
 #include "OBPRMDef.h" 
 #include "string.h"
+
 #include <sstream>
+#include <iostream>
+#include <fstream>
 
 
 class MultiBody;
 class Input;
+class MPProblem;
 ////////////////////////////////////////////////////////////////
 
 /**@name Format version for path files
@@ -71,7 +76,9 @@ public:
      */
     Environment(Environment &from_env, BoundingBox &i_boundaries);
 
-
+    ///\brief Constructor taking in an XML object
+    Environment(TiXmlNode* in_pNode);
+     
     /**
      * Destructor.
      * Free memory for every added MultiBody instance if this instance
@@ -254,7 +261,7 @@ public:
     int usable_externalbody_count;
 
     int robotIndex;
-    BoundingBox boundaries;
+    BoundingBox* boundaries;
 
     double positionRes;
     double orientationRes;

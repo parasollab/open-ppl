@@ -16,6 +16,8 @@
 
 #include "Defines.h"
 
+
+
 /////////////////////////////////////////////////////////////
 //
 //	Weight
@@ -59,5 +61,6 @@ class DefaultWeight {
 
   static double MAX_WEIGHT;
 };
+
 
 #endif // !defined(_OBPRM_WEIGHT_H_)

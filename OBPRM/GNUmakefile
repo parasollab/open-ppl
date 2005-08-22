@@ -40,9 +40,9 @@ include $(STAPL)/GNUmakefile.STAPLdefaults
 include $(OBPRM)/GNUmakefile.OBPRMdefaults
 
 #common misc.
-DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS)
+DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) -DTIXML_USE_STL
 INCLUDES = -I. $(STAPL_INCL) $(CD_INCL)
-LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB)
+LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB)
 
 #compile targest
 default: libs
@@ -54,11 +54,11 @@ utils:
 
 libs: utils objs $(OBPRM_LIBFILE)
 
-libobprm.a: objs
+libobprm.a: utils objs
 	$(AR) libobprm.a $(OBJS)
 
-libobprm.so: objs
-	$(LD) $(OBJS) -o libobprm.so
+#libobprm.so: objs
+#	$(LD) $(OBJS) -o libobprm.so
 
 libobprm.dylib: objs
 	$(LD) $(OBJS) -o libobprm.dylib -lc -lgcc -lstdc++ $(CD_LIB)
@@ -67,7 +67,15 @@ libobprm.dylib: objs
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_$@.cpp $(LIBS) -o $@
 	rm -f $@.d
 
+
+pmp: main_pmp.cpp libobprm.a
+	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS)  main_pmp.cpp $(LIBS)  -o main_pmp
+	rm -f $@.d
+
+
+
 metaplanner: main_metaplanner.cpp libs 
+
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) -DCOLLISIONCFG main_metaplanner.cpp $(LIBS) -o metaplanner
 
 %.o: %.cpp
@@ -112,6 +120,7 @@ OBJS = \
 	Boundary.o
 #	Haptic.o \
 #	Push.o \
+
 
 objs: $(OBJS)
 

@@ -1,12 +1,18 @@
 #include "Environment.h"
+#include "MPProblem.h"
+#include <fstream>
+#include <iostream>
+//#include "tinyxml.h"
 #include "util.h"
+
 
 //===================================================================
 //  Constructors
 //===================================================================
+
 Environment::
-Environment(int dofs, int pos_dofs) :
-  boundaries(dofs,pos_dofs) {
+Environment(int dofs, int pos_dofs) {
+  boundaries = new BoundingBox(dofs,pos_dofs);
 
   pathVersion = PATHVER_20001125;
 
@@ -22,8 +28,8 @@ Environment(int dofs, int pos_dofs) :
 }
 
 Environment::
-Environment(int dofs, int pos_dofs, Input * input) :
-  boundaries(dofs,pos_dofs) {
+Environment(int dofs, int pos_dofs, Input * input) {
+  boundaries = new BoundingBox(dofs,pos_dofs);
 
   pathVersion = PATHVER_20001125;
 
@@ -47,8 +53,9 @@ Environment(int dofs, int pos_dofs, Input * input) :
  * Copy Constructor
  */
 Environment::
-Environment(Environment &from_env) : 
-  boundaries(*(from_env.GetBoundingBox())) {
+Environment(Environment &from_env) {
+  //boundaries(*(from_env.GetBoundingBox())) {
+  boundaries = new BoundingBox(*(from_env.GetBoundingBox()));
   pathVersion = PATHVER_20001125;
 
 
@@ -72,9 +79,22 @@ Environment(Environment &from_env) :
  * environment
  */
 Environment::
-Environment(Environment &from_env, BoundingBox &i_boundaries) : 
-  boundaries(i_boundaries) {
+Environment(Environment &from_env, BoundingBox &i_boundaries) {
+ 
+  boundaries = new BoundingBox(i_boundaries);
+
   pathVersion = PATHVER_20001125;
+
+  multibody.clear();
+  externalbodyCount = 0;
+
+  usable_multibody.clear();
+  usable_externalbody_count = 0;
+
+  robotIndex = 0;
+  copied_instance = false;
+
+
 
   // only usable bodies in from_env will be copied
   multibody.clear();
@@ -89,6 +109,60 @@ Environment(Environment &from_env, BoundingBox &i_boundaries) :
   UpdateUsableMultibody();
   copied_instance = true;
 }
+
+///\brief Constructor taking in an XML node for parsing
+///\todo Fix hack to input Env file ... Shouln't use Input Class.
+///\todo Fix boundaries init
+
+Environment::
+Environment(TiXmlNode* in_pNode) {
+    pathVersion = PATHVER_20001125;
+
+    multibody.clear();
+    externalbodyCount = 0;
+
+    usable_multibody.clear();
+    usable_externalbody_count = 0;
+
+    robotIndex = 0;
+    copied_instance = false;
+    
+    ///\todo Fix this hardcoded value!!!
+    boundaries = new BoundingBox(3,3);
+    if(!in_pNode) {
+      cout << "Error -1" << endl; exit(-1);
+    }
+    if(string(in_pNode->Value()) != "environment") {
+      cout << "Error reading <environment> tag...." << endl; exit(-1);
+    }
+
+    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+      if(string(pChild->Value()) == "robot") {
+        cout << "  TODO: write code for <environment><robot> tag..." << endl;
+      } else if(string(pChild->Value()) == "boundary") {
+        cout << "  TODO: write code for <environment><boundary> tag..." << endl;
+      } else if(string(pChild->Value()) == "resolution") {
+        cout << "  TODO: write code for <environment><resolution> tag..." << endl;
+      } else {
+        if(!pChild->Type() == TiXmlNode::COMMENT) {
+          cout << "  I don't know: " << *pChild << endl;
+        }
+      }
+    }
+
+    const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
+    Input* pinput;
+    ///DAMN I FORGOT TO Create ... but still worked ??::::
+    pinput = new Input;
+    pinput->cdtype = RAPID;
+  
+    pinput->Read(env_filename,EXIT);
+    Get(pinput);
+}
+
+
+
+
 
 //===================================================================
 //  Destructor
@@ -149,10 +223,8 @@ Get(Input * _input) {
     mb->Get(_input, i);
     multibody.push_back(mb);
   }
-
   // put the external bodies in the beginning part of the multibody array;
   SortMultiBodies();
-
   // compute bounding box and positional resolution
   FindBoundingBox();
    
@@ -160,7 +232,7 @@ Get(Input * _input) {
   if (_input->bbox.IsActivated()) {
     std::stringstream i_bbox;
     i_bbox << _input->bbox.GetValue();
-    boundaries.Parse(i_bbox);	
+    boundaries->Parse(i_bbox);	
   }
 
   // if user supplied a positional resolution, use it instead
@@ -173,7 +245,7 @@ Get(Input * _input) {
   orientationRes = _input->orires.GetValue(); 
 
   // scale boundary
-  boundaries.TranslationalScale(_input->bbox_scale.GetValue());	
+  boundaries->TranslationalScale(_input->bbox_scale.GetValue());	
   
   // activate objects inside the bounding box and deactivate other
   // objects
@@ -186,12 +258,12 @@ Get(Input * _input) {
 void 
 Environment::
 UpdateUsableMultibody() {
-  double minx = boundaries.GetRange(0).first; 
-  double maxx = boundaries.GetRange(0).second;
-  double miny = boundaries.GetRange(1).first; 
-  double maxy = boundaries.GetRange(1).second;
-  double minz = boundaries.GetRange(2).first; 
-  double maxz = boundaries.GetRange(2).second;  
+  double minx = boundaries->GetRange(0).first; 
+  double maxx = boundaries->GetRange(0).second;
+  double miny = boundaries->GetRange(1).first; 
+  double maxy = boundaries->GetRange(1).second;
+  double minz = boundaries->GetRange(2).first; 
+  double maxz = boundaries->GetRange(2).second;  
 
   //save original robot index
   int rob = robotIndex;  
@@ -291,7 +363,7 @@ FindBoundingBox(){
   boundingBox.push_back(minz-sf); 
   boundingBox.push_back(maxz+sf);
   
-  boundaries.SetRanges(boundingBox);
+  boundaries->SetRanges(boundingBox);
   
   positionRes = posres * POSITION_RES_FACTOR;
   minmax_BodyAxisRange = posres;
@@ -308,5 +380,5 @@ Getminmax_BodyAxisRange(){
 
 BoundingBox *
 Environment::GetBoundingBox() {
-  return &boundaries;
+  return boundaries;
 }

@@ -2,6 +2,7 @@
 #define _MPRegion_h_
 
 #include "Boundary.h"
+#include "Environment.h"
 
 
 template <class CFG, class WEIGHT>

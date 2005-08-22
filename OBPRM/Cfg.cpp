@@ -1297,7 +1297,6 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
 		      CDInfo& _cdInfo, MultiBody* onflyRobot,
 		      bool enablePenetration, std::string *pCallName) {
 
-  //cout << "I is here" << endl << flush;
     this->ConfigEnvironment(env);
   bool Clear = (pCallName) ? false : true; 
   if( !pCallName )

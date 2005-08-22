@@ -4,6 +4,7 @@
 #include "Parameters.h"
 #include "util.h"
 #include "Stat_Class.h"
+#include "tinyxml.h"
 
 class Environment;
 class CollisionDetection;
@@ -47,6 +48,8 @@ class NodeGenerationMethod {
   virtual int GetNextNodeIndex() = 0;
   virtual void SetNextNodeIndex(int) = 0;
   virtual void IncreaseNextNodeIndex(int) = 0;
+  virtual void ParseXML(TiXmlNode* in_pNode) = 0;
+  void ParseXMLnum_nodes(TiXmlNode* in_pNode);
 
   //////////////////////
   // I/O methods
@@ -116,6 +119,38 @@ SetDefault() {
   chunkSize.PutValue(10);
   exactNodes.PutValue(0);
 }
+
+template <class CFG>
+void NodeGenerationMethod<CFG>::
+ParseXMLnum_nodes(TiXmlNode* in_pNode) {
+  if(!in_pNode) {
+    cout << "Error -1" << endl; exit(-1);
+  }
+  if(string(in_pNode->Value()) != "num_nodes") {
+    cout << "Error reading <num_nodes> tag...." << endl; exit(-1);
+  }
+
+  cout << "I will parse num_nodes" << endl;
+  int nexactNodes, nnumNodes, nchunkSize;
+    
+  in_pNode->ToElement()->QueryIntAttribute("number",&nnumNodes);
+  in_pNode->ToElement()->QueryIntAttribute("exact",&nexactNodes);
+  in_pNode->ToElement()->QueryIntAttribute("chunk_size",&nchunkSize);
+  exactNodes.SetValue(nexactNodes);
+  numNodes.SetValue(nnumNodes);
+  chunkSize.SetValue(nchunkSize);
+  
+  cout << "NodeGenerationMethod<CFG>::ParseXMLnum_nodes()" << endl;
+  cout << "   num_nodes  = " << numNodes.GetValue() << endl;
+  cout << "   exact      = " << exactNodes.GetValue() << endl;;
+  cout << "   chunk_size = " << chunkSize.GetValue() << endl;
+  
+}
+  
+  
+
+
+
 
 
 #endif

@@ -579,8 +579,58 @@ void Input::Read(int action) {
 };
 
 
-void Input::Read(istream & _is, int envFormatVersion,int action) {
+void Input::Read(const char* in_filename, int action) {
+  
+  int envFormatVersion= ENV_VER_LEGACY;
+  char t;
 
+  VerifyFileExists(in_filename,action);
+
+  // open file and read first field
+  ifstream is(in_filename);
+  char string1[32];
+  //is >> string1;
+
+#define LINEMAX 256
+  // if first field is a comment delimiter
+   while   ((t=is.peek())=='#') {
+  char line[LINEMAX];
+  is.getline(line,LINEMAX,'\n');
+  char string2[32];
+  char string3[32];
+  if (   strstr(line, "Environment") ){
+    sscanf(&line[1],"%s %s %d",string2,string3,&envFormatVersion);
+    if( !strstr(string3, "Version")      ) {
+      cerr << "\nREAD ERROR: bad file format in \""
+          << in_filename << "\"";
+      cerr << "\n            something is wrong w/ the following\n"
+          << "\n            "<<string1<<" "<<string2<<" "<<string3
+          <<"\n\n";
+      if(action==EXIT)
+        exit(-1);
+    }
+  } 
+  else if (strstr(line, "Cfg")  && !cfgSet){
+       // if Environment has Cfg info and Cfg type is not set through command 
+       // line, we use this string from Environment instead to setup Cfg type.
+  }
+ 
+   }
+   Read(is,envFormatVersion,action);
+
+   is.close();
+
+
+};
+
+
+
+
+
+
+
+
+void Input::Read(istream & _is, int envFormatVersion,int action) {
     int  i;
     char string[32];
     char tmpFilename[FILENAME_LENGTH*2];
@@ -610,7 +660,6 @@ void Input::Read(istream & _is, int envFormatVersion,int action) {
     }
 
     _is >> multibodyCount;      // # of MultiBodys'
-
     for (int m=0; m<multibodyCount; m++){
         
       bool bInternal = false;
@@ -620,7 +669,6 @@ void Input::Read(istream & _is, int envFormatVersion,int action) {
         //---------------------------------------------------------------
         readfield(_is, &string);              // Tag, "MultiBody"
         readfield(_is, &string);              // Tag, "Active/Passive"
-
 	//	_is.peek >> skipws;
 	char cPeek = _is.peek();
   	while ((cPeek== ' ') || (cPeek == '\n'))
@@ -631,6 +679,7 @@ void Input::Read(istream & _is, int envFormatVersion,int action) {
 
 	if (cPeek =='I')
 	  {
+     
 	    readfield(_is, &string);
 	    if (!strncmp(string, "Internal", 8))
 	      {
@@ -638,9 +687,7 @@ void Input::Read(istream & _is, int envFormatVersion,int action) {
 		bBodyInternal[m] = true;
 	      }
 	  }
-
 	readfield(_is, &BodyCount[m]);        // number of bodies
-
         for (i=0; i<BodyCount[m]; i++){
            readfield(_is, &string,comments[m][i]);// Tag (FixedBody or FreeBody)
             if (!strncmp(string, "FixedBody", 10)){

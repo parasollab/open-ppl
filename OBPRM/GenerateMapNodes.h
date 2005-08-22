@@ -31,6 +31,7 @@
 #include "BasicOBPRM.h"
 #include "OBPRM.h"
 #include "OBMAPRM.h"
+#include "tinyxml.h"
 
 #include <sstream>
 
@@ -73,6 +74,7 @@ class GenerateMapNodes {
 
   ///Default Constructor.
   GenerateMapNodes();
+  GenerateMapNodes(TiXmlNode* in_pNode);
   ///Destructor.	
   ~GenerateMapNodes();
 
@@ -140,7 +142,7 @@ GenerateMapNodes() {
 
   BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>();
   all.push_back(basicPRM);
-
+  /*
   GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>();
   all.push_back(gaussPRM);
 
@@ -158,10 +160,60 @@ GenerateMapNodes() {
   
   OBMAPRM<CFG>* obmaprm = new OBMAPRM<CFG>();
   all.push_back(obmaprm);
-  
+  */
   addNodes2Map = true;
 }
 
+template <class CFG>
+GenerateMapNodes<CFG>::
+GenerateMapNodes(TiXmlNode* in_pNode) {
+
+  BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>();
+  all.push_back(basicPRM);
+  /*
+  GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>();
+  all.push_back(gaussPRM);
+
+  BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>();
+  all.push_back(basicOBPRM);
+
+  OBPRM<CFG>* obprm = new OBPRM<CFG>();
+  all.push_back(obprm);
+  
+  BasicMAPRM<CFG>* basicMAPRM = new BasicMAPRM<CFG>();
+  all.push_back(basicMAPRM);
+
+  CSpaceMAPRM<CFG>* cspaceMAPRM = new CSpaceMAPRM<CFG>();
+  all.push_back(cspaceMAPRM);
+  
+  OBMAPRM<CFG>* obmaprm = new OBMAPRM<CFG>();
+  all.push_back(obmaprm);
+  */
+  addNodes2Map = true;
+  
+  
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    for(int i=0; i<all.size(); ++i) {
+      if(string(pChild->Value()) == all[i]->GetName()) {
+        for( TiXmlNode* pChild2 = pChild->FirstChild(); pChild2 !=0; pChild2 = pChild2->NextSibling()) {
+          if(string(pChild2->Value()) == "num_nodes") {
+            all[i]->ParseXMLnum_nodes(pChild2);
+          }
+          all[i]->cdInfo = &cdInfo;
+          selected.push_back(all[i]->CreateCopy());
+          
+        }
+      }
+    }
+  }
+  
+  if(selected.size() < 1)
+    cout << "No NodeGenerationMethods selected!" << endl;
+  
+  
+  
+  
+}
 
 template <class CFG>
 GenerateMapNodes<CFG>::
@@ -314,18 +366,22 @@ GenerateMapNodes<CFG>::
 GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	      CollisionDetection* cd, 
 	      DistanceMetric* dm, vector<CFG>& nodes) {
+cout << "GenerateMapNodes<CFG>::GenerateNodes" << endl;
   // clear generated nodes space
   nodes.erase(nodes.begin(),nodes.end());
-
+  cout << "nodes.erase" << endl;
   typename vector<NodeGenerationMethod<CFG>*>::iterator itr;
+  cout << "I am here1" << endl << flush;
   for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
+    cout << "I am here2" << endl << flush;
 #ifndef QUIET	
     Clock_Class clock;
     clock.StartClock((*itr)->GetName());
     cout<<"\n  "; clock.PrintName(); cout << " " << flush;
 #endif	
-    
+    cout << "before (*itr)->GenerateNodes" << endl;
     (*itr)->GenerateNodes(_rm->GetEnvironment(), Stats, cd, dm, nodes);
+    cout << "after (*itr)->GenerateNodes" << endl;
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec  \n" << flush;

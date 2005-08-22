@@ -39,7 +39,7 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
-
+  virtual void ParseXML(TiXmlNode* in_pNode);
 
   //////////////////////
   // I/O methods
@@ -93,6 +93,14 @@ char*
 BasicPRM<CFG>::
 GetName() {
   return "BasicPRM";
+}
+template <class CFG>
+void
+BasicPRM<CFG>::
+ParseXML(TiXmlNode* in_pNode) {
+  
+  
+  
 }
 
 template <class CFG>
@@ -214,11 +222,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	   Stats.IncNodes_Generated();
            collision = false;
          }
-#ifdef COLLISIONCFG
-	 else{
-	   m_vGeneratedCollisionConfiguration[cdInfo->colliding_obst_index].push_back(tmp);
-	 }
-#endif
+//#ifdef COLLISIONCFG
+//	 else{
+//	   m_vGeneratedCollisionConfiguration[cdInfo->colliding_obst_index].push_back(tmp);
+//	 }
+//#endif
 
        }
        if (j == default_maxTries)

@@ -33,6 +33,9 @@ CDInfo() {
   ResetVars();
 } // end constructor
 
+
+
+
 /////////////////////////////////////////////////////////////////////////
 // Destructor
 /////////////////////////////////////////////////////////////////////////
@@ -100,6 +103,70 @@ CollisionDetection() {
   Quinlan* quinlan = new Quinlan();
   all.push_back(quinlan);
 }
+
+
+
+CollisionDetection::
+    CollisionDetection(TiXmlNode* in_pNode) { 
+  cout << "CollisionDetection::CollisionDetection(TiXmlNode* in_pNode)" << endl;
+  penetration = -1;
+
+#ifdef USE_CSTK
+  Cstk* cstk = new Cstk();
+  all.push_back(cstk);
+#endif
+
+#ifdef USE_VCLIP
+  Vclip* vclip = new Vclip();
+  all.push_back(vclip);
+#endif
+
+#ifdef USE_RAPID
+  Rapid* rapid = new Rapid();
+  all.push_back(rapid);
+#endif
+
+#ifdef USE_PQP
+  Pqp* pqp = new Pqp();
+  all.push_back(pqp);
+#endif
+
+  BoundingSpheres* boundingSpheres = new BoundingSpheres();
+  all.push_back(boundingSpheres);
+
+  InsideSpheres* insideSpheres = new InsideSpheres();
+  all.push_back(insideSpheres);
+
+  Naive* naive = new Naive();
+  all.push_back(naive);
+
+  Quinlan* quinlan = new Quinlan();
+  all.push_back(quinlan);
+  
+  vector<CollisionDetectionMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++)
+    delete *I;
+  selected.clear();
+
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    for(int i=0; i<all.size(); ++i) {
+      if(string(pChild->Value()) == all[i]->GetName()) {
+        cout << "CollisionDetectionMethod selected = " << all[i]->GetName() << endl;
+        selected.push_back(all[i]);
+      }
+    }
+  }
+  
+  if(selected.size() < 1)
+    cout << "No CollisionDetectionMethods selected!" << endl;
+  
+}
+
+
+
+
+
+
 
 
 CollisionDetection::
@@ -1073,7 +1140,6 @@ IsInCollision(MultiBody* robot, MultiBody* obstacle,
 	  p1[p] = t1.position[p];
 	  p2[p] = t2.position[p];
 	}
-	
 	if(RAPID_Collide(t1.orientation.matrix, p1, rob,
 			 t2.orientation.matrix, p2, obst, RAPID_FIRST_CONTACT)) {
 	  cout << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY"

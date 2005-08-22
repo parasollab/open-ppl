@@ -152,7 +152,8 @@ public:
         bool AckCmdLine(int *i, int argc, char** argv, bool nfields=false);
 
     //@}
-
+	///\todo clean me up.
+ virtual void SetValue(TYPE _val)=0;
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
@@ -175,7 +176,7 @@ protected:
       */
     //@{
           ///Abstract
-          virtual void SetValue(TYPE _val)=0;
+         
           ///Abstract
           virtual void SetDefault(TYPE _val)=0;
           ///Abstract
@@ -255,6 +256,9 @@ public:
         void PrintUsage(ostream& _os,int width=18) const;
 
     //@}
+ ///Set value of this parameter (#tvalue)
+	///\todo clean me up.
+        void SetValue(TYPE _val);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -278,9 +282,7 @@ protected:
     */
     //@{
 
-        ///Set value of this parameter (#tvalue)
-        void SetValue(TYPE _val);
-
+       
         ///Set default value of this parameter (#tdefault)
         void SetDefault(TYPE _val);
 
@@ -352,6 +354,9 @@ public:
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
+///\todo clean me up.
+ ///Set value of this parameter (#tvalue)
+        void SetValue(TYPE _val);
 protected:
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -367,8 +372,7 @@ protected:
     */
     //@{
 
-        ///Set value of this parameter (#tvalue)
-        void SetValue(TYPE _val);
+       
 
         ///Set default value of this parameter (#tdefault)
         void SetDefault(TYPE _val);

@@ -26,8 +26,8 @@ ifeq ($(platform), LINUX_gcc) 	#linux/gcc
   NO_DEBUG_OPT = -fPIC -O2 -w -fexceptions
   DEBUG_OPT = -fPIC -g -fexceptions
   CD_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP
-  CD_INCL = $(VCLIP_INCL) $(RAPID_INCL) $(PQP_INCL)
-  CD_LIB = $(VCLIPLIB) $(RAPIDLIB) $(PQPLIB)
+  CD_INCL = $(VCLIP_INCL) $(RAPID_INCL) $(PQP_INCL) $(TINYXML_INCL)
+  CD_LIB = $(VCLIPLIB) $(RAPIDLIB) $(PQPLIB) $(TINYXMLLIB)
   DEPS = -MMD
   AR = ar rcs
   LD = $(CC) -shared -fPIC $(DEPS)
@@ -50,7 +50,7 @@ ifeq ($(platform2), SUN_CC) #native sun compiler on compute
   NO_DEBUG_OPT = -KPIC -O2 -w
   DEBUG_OPT = -KPIC -g
   CD_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP
-  CD_INCL = $(RAPID_INCL) $(PQP_INCL)
+  CD_INCL = $(RAPID_INCL) $(PQP_INCL) 
   CD_LIB = $(RAPIDLIB) $(PQPLIB) -L/usr/local/lib
   DEPS =
   AR = ar rcs
@@ -162,6 +162,10 @@ VCLIP_DIR     = ${CD_DIR}/VCLIP
 VCLIPLIB_DIR  = ${VCLIP_DIR}/lib
 VCLIPLIB      = -L${VCLIPLIB_DIR} -lvclip
 VCLIP_INCL    = -I${VCLIP_DIR}/include
+
+TINYXML_DIR = ../utils/xml/tinyxml
+TINYXML_INCL = -I${TINYXML_DIR}
+TINYXMLLIB = -L${TINYXML_DIR} -ltinyxml
 
 RAPID_DIR     = ${CD_DIR}/RAPID
 RAPIDLIB_DIR  = ${RAPID_DIR}

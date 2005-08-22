@@ -16,6 +16,7 @@
 #include <functional>
 
 #include "OBPRMDef.h"
+#include "tinyxml.h"
 #ifndef VID //from BaseGraph.h
 ///ID for every vertex in graph.
 typedef int VID;
@@ -53,6 +54,7 @@ class DistanceMetric {
   DistanceMetric();
   ~DistanceMetric();
 
+  DistanceMetric(TiXmlNode* in_pNode);
   static vector<DistanceMetricMethod*> GetDefault();
 
   int ReadCommandLine(n_str_param* DMstrings[MAX_DM], int numDMs);

@@ -34,6 +34,47 @@ DistanceMetric() {
 
 
 DistanceMetric::
+DistanceMetric(TiXmlNode* in_pNode) {
+  cout << "DistanceMetric::DistanceMetric" << endl;
+  /*
+  EuclideanDistance* euclidean = new EuclideanDistance();
+  all.push_back(euclidean);
+
+  ScaledEuclideanDistance* scaledEuclidean = new ScaledEuclideanDistance();
+  all.push_back(scaledEuclidean);
+
+  MinkowskiDistance* minkowski = new MinkowskiDistance();
+  all.push_back(minkowski);
+
+  ManhattanDistance* manhattan = new ManhattanDistance();
+  all.push_back(manhattan);
+
+  CenterOfMassDistance* com = new CenterOfMassDistance();
+  all.push_back(com);
+  */
+  if(!in_pNode) {
+    cout << "Error -1" << endl; exit(-1);
+  }
+  if(string(in_pNode->Value()) != "distance_metrics") {
+    cout << "Error reading <distance_metrics> tag...." << endl; exit(-1);
+  }
+
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    if(string(pChild->Value()) == "euclidean") {
+      cout << "  parsing a <euclidean> entry..." << endl;
+      EuclideanDistance* euclidean = new EuclideanDistance();
+      all.push_back(euclidean);
+      selected.push_back(euclidean->CreateCopy());
+    } else {
+      cout << "  I don't know: " << *pChild << endl;
+    }
+  }
+  
+  
+}
+
+
+DistanceMetric::
 ~DistanceMetric() {
   vector<DistanceMetricMethod*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)

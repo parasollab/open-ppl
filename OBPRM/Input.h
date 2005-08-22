@@ -146,6 +146,16 @@ public:
           *@see Read(istream & , int ,int ) and ReadCfgType.
           */
         void Read(int action);
+        
+        
+        /**Read data from Environment file and check version.
+         *This method reads data from file whose filename 
+         *is saved in #envFile.
+         *This method will also check if this given file is or not a valid
+         *environment file. If not and action=EXIT, process will be terminated.
+         *
+         */
+        void Read(const char* in_filename, int action);
 
         /**Read environmental data from specified input stream.
           *Reads information about how many multibodys, how many bodys for each

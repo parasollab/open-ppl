@@ -29,6 +29,7 @@
 
 // MPRegion is used by region combination methods
 #include "MPRegion.h"
+#include "tinyxml.h"
 
 // region connection methods
 //#include "NaiveMapCombine.h"
@@ -44,6 +45,7 @@ class ConnectMap {
   //////////////////////
   // Constructors and destructor
   ConnectMap();
+  ConnectMap(TiXmlNode* in_pNode);
   ConnectMap(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
 	     DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
   ~ConnectMap();
@@ -199,6 +201,66 @@ ConnectMap() {
    "\n\t\t\t\tRayTracer \tSTRING \tINT \tINT \tINT \tSTRING \tINT \tINT (bouncingMode:targetOriented maxRays:1 maxBounces:10000 maxRayLength:10000 \tschedulingMode:largestToSmallest scheduleMaxSize:20 sampleMaxSize:10)"
    "\n\t\t\t  RRTcomponents  INT INT INT INT INT (iter:10 factor:3 cc:3 o_clr:2 node_clr:4)" );
 }
+
+template <class CFG, class WEIGHT>
+ConnectMap<CFG,WEIGHT>::
+ConnectMap(TiXmlNode* in_pNode) {
+
+  //setup node connection methods
+  selected_node_methods.clear();
+  all_node_methods.clear();
+
+  Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>();
+  all_node_methods.push_back(closest);
+
+  //UnconnectedClosest<CFG,WEIGHT>* unconnectedclosest = new UnconnectedClosest<CFG,WEIGHT>();
+  //all_node_methods.push_back(unconnectedclosest);
+
+  RandomConnect<CFG,WEIGHT>* random = new RandomConnect<CFG,WEIGHT>();
+  all_node_methods.push_back(random);
+
+  //ModifiedLM<CFG,WEIGHT>* lm = new ModifiedLM<CFG,WEIGHT>();
+  //all_node_methods.push_back(lm);
+
+  ObstBased<CFG,WEIGHT>* obstbased = new ObstBased<CFG,WEIGHT>();
+  all_node_methods.push_back(obstbased);
+
+  ClosestVE<CFG,WEIGHT>* closestve = new ClosestVE<CFG,WEIGHT>();
+  all_node_methods.push_back(closestve);
+
+  ConnectFirst<CFG,WEIGHT>* connectFirst = new ConnectFirst<CFG,WEIGHT>();
+  all_node_methods.push_back(connectFirst);
+
+
+  //setup component connection methods
+  selected_component_methods.clear();
+  all_component_methods.clear();
+
+  ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>();
+  all_component_methods.push_back(connectccs);
+
+  ///\todo Fix closest .... for some reason doesnt match them up.
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    for(int i=0; i<all_component_methods.size(); ++i) {
+      if(string(pChild->Value()) == all_component_methods[i]->GetName()) {
+        cout << "ConnectionMethod selected = " << all_component_methods[i]->GetName() << endl;
+        selected_component_methods.push_back(all_component_methods[i]);
+      }
+    }
+  }
+  
+  if(selected_component_methods.size() < 1)
+    cout << "No Connection Methods selected!" << endl;
+
+  
+  
+
+
+
+}
+
+
+
 
 
 template <class CFG, class WEIGHT>

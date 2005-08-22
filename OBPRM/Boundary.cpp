@@ -27,6 +27,24 @@ BoundingBox(int i_dofs, int i_pos_dofs ) :
   }
 }
 
+///\brief Bounding Box Constructor MUST TAKE IN A <environemnt> tag inXML
+///\todo Remove dependence on <environment> tag, must be done in Environment class
+BoundingBox::
+BoundingBox(TiXmlNode* in_pNode): dofs(3), 
+  pos_dofs(3) {
+cout << "I am parsing a Bounding Box using an <Envornment> tag" << endl;
+  bounding_box.clear();
+  for (int i = 0; i < dofs; i++) {
+    bounding_box.push_back(pair<double,double>(0.0,1.0));
+    if (i < pos_dofs)
+      par_type.push_back(TRANSLATIONAL);
+    else
+      par_type.push_back(REVOLUTE);
+  }
+
+
+}
+
 BoundingBox::
 BoundingBox(const BoundingBox &from_bbox)  {
   dofs = from_bbox.GetDOFs();

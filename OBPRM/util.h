@@ -191,7 +191,7 @@ inline double sqr(double a)
       *and action is EXIT, process will be terminated.
       *Otherwise false will be returned.
       */
-    bool VerifyFileExists(char *_fname,int action);
+    bool VerifyFileExists(const char *_fname,int action);
 
 
     /**Read data for element from input stream.
@@ -223,7 +223,6 @@ inline double sqr(double a)
 #define LINEMAX 256
     
 template <class T> bool readfield (istream &_is, T *element,vector <char *> &comment) {
-    
     char c;
     char ThrowAwayLine[LINEMAX];
     
@@ -234,8 +233,11 @@ template <class T> bool readfield (istream &_is, T *element,vector <char *> &com
         }
         else if (! isspace(c) ) {
             _is.putback(c);
-            if (_is >> *element) return true;
-            else               break;
+            if (_is >> *element) {
+              return true;
+            } else {
+            break;
+            }
         }
     }
     

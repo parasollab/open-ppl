@@ -13,6 +13,7 @@
 #include "CollisionDetection.h" //for CDINFO instance, so we can not use forward declaration.
 #include "Cfg.h"		//for vector<Cfg>, so we can not use forward declaration.
 #include "Weight.h"
+#include "tinyxml.h"
 
 
 // Include LocalPlanners
@@ -37,6 +38,7 @@ class LocalPlanners {
  public:
   ///Default Constructor.
   LocalPlanners();
+  LocalPlanners(TiXmlNode* in_pNode);
   ///Destructor.	
   ~LocalPlanners();
 
@@ -172,6 +174,46 @@ LocalPlanners() {
   
   ResetSelected();
 }
+
+
+template <class CFG, class WEIGHT>
+LocalPlanners<CFG,WEIGHT>::
+LocalPlanners(TiXmlNode* in_pNode) {
+
+  StraightLine<CFG, WEIGHT>* straight_line = new StraightLine<CFG, WEIGHT>(cdtype);
+  all.push_back(straight_line);
+
+  RotateAtS<CFG, WEIGHT>* rotate_at_s = new RotateAtS<CFG,WEIGHT>(cdtype);
+  all.push_back(rotate_at_s);
+ 
+  AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>();
+  all.push_back(a_star_distance);
+  
+  AStarClearance<CFG, WEIGHT>* a_star_clearance = new AStarClearance<CFG, WEIGHT>();
+  all.push_back(a_star_clearance);
+  
+  ApproxSpheres<CFG, WEIGHT>* approx_spheres = new ApproxSpheres<CFG,WEIGHT>();
+  all.push_back(approx_spheres);
+  
+  ResetSelected();
+
+   ///\todo Fix closest .... for some reason doesnt match them up.
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    for(int i=0; i<all.size(); ++i) {
+      if(string(pChild->Value()) == all[i]->GetName()) {
+        cout << "Local Planner selected = " << all[i]->GetName() << endl;
+        selected.push_back(all[i]);
+      }
+    }
+  }
+  
+  if(selected.size() < 1)
+    cout << "No Local Planner selected!" << endl;
+
+  
+    
+}
+
 
 template <class CFG, class WEIGHT>
 LocalPlanners<CFG,WEIGHT>::

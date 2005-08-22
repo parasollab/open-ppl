@@ -38,6 +38,8 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
+#include "tinyxml.h"
+
 class DistanceMetric;
 class Input;
 class Environment;
@@ -116,6 +118,7 @@ const int Exact = 2;    ///<Type Exact: no collision sure; collision sure.
 class CollisionDetection {
  public:
   CollisionDetection();
+  CollisionDetection(TiXmlNode* in_pNode);
   CollisionDetection(vector<CollisionDetectionMethod*>& _selected);
   ~CollisionDetection();
   

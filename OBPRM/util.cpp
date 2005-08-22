@@ -202,7 +202,7 @@ WritePathConfigurations( char output_file[80],
 
 
 bool
-VerifyFileExists(char *_fname,int action) {
+VerifyFileExists(const char *_fname,int action) {
   ifstream is(_fname);
   char ch;
   if (!is.get(ch)) {
