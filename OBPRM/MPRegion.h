@@ -51,8 +51,8 @@ MPRegion<CFG,WEIGHT>::
   parent(i_parent) {
 
   // empty initial roadmaps
-  roadmap.InitEnvironment(this);
-  feature_roadmap.InitEnvironment(this);
+  roadmap.SetEnvironment(this);
+  feature_roadmap.SetEnvironment(this);
 
   // set region_id
   std::stringstream ss;

@@ -56,6 +56,8 @@ public:
      */
     Environment(int dofs, int pos_dofs);
 
+    Environment(int dofs, int pos_dofs, Input * input);
+
     /** 
      * Copy Constructor.
      * copies multibodies from usable_multibodies of from_env and

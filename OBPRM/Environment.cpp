@@ -1,4 +1,5 @@
 #include "Environment.h"
+#include "util.h"
 
 //===================================================================
 //  Constructors
@@ -6,6 +7,7 @@
 Environment::
 Environment(int dofs, int pos_dofs) :
   boundaries(dofs,pos_dofs) {
+
   pathVersion = PATHVER_20001125;
 
   multibody.clear();
@@ -16,7 +18,30 @@ Environment(int dofs, int pos_dofs) :
 
   robotIndex = 0;
   copied_instance = false;
+
 }
+
+Environment::
+Environment(int dofs, int pos_dofs, Input * input) :
+  boundaries(dofs,pos_dofs) {
+
+  pathVersion = PATHVER_20001125;
+
+  multibody.clear();
+  externalbodyCount = 0;
+
+  usable_multibody.clear();
+  usable_externalbody_count = 0;
+
+  robotIndex = 0;
+  copied_instance = false;
+
+  if (input != NULL) {
+    input->Read(EXIT); // read only input
+    Get(input);
+  }
+}
+
 
 /**
  * Copy Constructor

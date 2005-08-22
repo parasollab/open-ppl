@@ -177,7 +177,7 @@ public:
    * as current version, RDMPVER_CURRENT.
    */
   Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm, 
-	  LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env = NULL);
+	  LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env);
 
   
   /**Delete all the elements of RoadMap. 
@@ -212,18 +212,10 @@ public:
    */
   void InitRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm, 
 		   LocalPlanners<CFG,WEIGHT>* lp, char* ExistingMap=NULL, Environment* env = NULL); 
-  
-  /**Initialize roadmap's environment from given Input instance.
-   *
-   *@note Not necessary if constructor "Roadmap(&input)" or
-   *      method "InitRoadmap(input)" is used. 
-   *@see Environment::Get and Read(int action)
-   */
-  void InitEnvironment(Input* input);
-  
+    
   /**Copy given Environment pointer to this roadmap's environment.
    */
-  void InitEnvironment(Environment* env);
+  void SetEnvironment(Environment* env);
   
   //@}
   
@@ -275,7 +267,7 @@ public:
   void ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
 		   LocalPlanners<CFG,WEIGHT>* lp, const char* _fname);
   
-  void ReadRoadmap(const char* _fname);
+  /* @todo: void ReadRoadmap(const char* _fname); */
   
   /**Write data to roadmap file.
    *Usually, a readmap file is called *.map, which 
@@ -340,17 +332,10 @@ public:
    *outfile. client should allocate memory for outfile.
    *@param thisVersion The version in _fname
    *@note this method copy every thing in infile to outfile.
+   * @todo make conversion perl scripts and remove conversion code from roadmap.
    */
   void SaveCurrentVersion(const char* _fname, int thisVersion, 
 			  char* infile, char* outfile);
-  
-  
-  /**Write roadmap's environment to an output stream.
-   *This method calls Environment::Write to do this.
-   *@see Environment::Write(ostream&)
-   */
-  void WriteEnvironment(ostream& _ostream);
-
 
   /**Read information about RNGseed from file.
     *@param _fname filename for data file.
@@ -442,7 +427,8 @@ public:
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>::
 Roadmap() 
-  : environment(NULL) {
+  :  environment(NULL), 
+     RoadmapVersionNumber(RDMPVER_CURRENT) {
   m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
 }
 
@@ -461,8 +447,8 @@ Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>:: 
 Roadmap(Roadmap<CFG, WEIGHT> &from_rdmp)
-  :  environment(from_rdmp.environment), 
-     RoadmapVersionNumber(from_rdmp.RoadmapVersionNumber) {
+  :  RoadmapVersionNumber(from_rdmp.RoadmapVersionNumber) {
+  environment = from_rdmp.GetEnvironment();
   m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
   AppendRoadmap(from_rdmp);
 }
@@ -500,10 +486,7 @@ Roadmap<CFG, WEIGHT>::
 ~Roadmap() {
   if( m_pRoadmap != NULL ) 
     delete m_pRoadmap;
-/*   if( environment != NULL )  */
-/*     delete environment; */
   m_pRoadmap = NULL;
-/*   environment = NULL; */
 }
 
 
@@ -529,35 +512,17 @@ InitRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   //-----------------------------------------------
   if(env == NULL) {
     CFG test_cfg;
-    environment = new Environment(test_cfg.DOF(),test_cfg.posDOF());
-    InitEnvironment( input );
+    environment = new Environment(test_cfg.DOF(),test_cfg.posDOF(), input);
   } else {
-    InitEnvironment(env);      
+    SetEnvironment(env);      
   }
 };
 
 
-//////////////////////////////////////////////////////////////////////
-//  Initialize roadmap's environment from a file
-//
-//  **NOTE** Not necessary if constructor "Roadmap(&input)" or
-//           method "InitRoadmap(input)" is used. 
-//////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 void
 Roadmap<CFG, WEIGHT>::
-InitEnvironment(Input* input) {
-  // open 'init' file, read it into Input object, & close it
-  input->Read(EXIT);
-  // read environment files & put them in Environment object
-  environment->Get(input);
-};
-
-
-template <class CFG, class WEIGHT>
-void
-Roadmap<CFG, WEIGHT>::
-InitEnvironment(Environment* env) {
+SetEnvironment(Environment* env) {
   environment = env;
 };
 
@@ -575,18 +540,6 @@ Environment*
 Roadmap<CFG, WEIGHT>::
 GetEnvironment() { 
   return environment;
-};
-
-
-template <class CFG, class WEIGHT>
-void 
-Roadmap<CFG, WEIGHT>::
-ReadRoadmap(const char* _fname) {
-  ifstream  myifstream(_fname);
-  if (!myifstream) {
-    cout << endl << "In ReadRoadmap: can't open infile: " << _fname ;
-    return;
-  }  
 };
 
 
@@ -643,7 +596,7 @@ ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   myifstream >> tagstring >> tagstring >> tagstring; 
   myifstream >> RoadmapVersionNumber;
   
-  input->ReadPreamble(myifstream); // do nothing now (could init defaults)
+  input->ReadPreamble(myifstream);
   input->ReadEnvFile(myifstream);    
   lp->ReadLPs(myifstream);
   cd->ReadCDs(myifstream);
@@ -690,16 +643,6 @@ WriteRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   myofstream.close();
 };
 
-
-//
-// Write roadmap's environment to an output stream
-//
-template <class CFG, class WEIGHT>
-void 
-Roadmap<CFG, WEIGHT>::
-WriteEnvironment(ostream& _os) {
-  environment->Write(_os);
-};
 
 
 //////////////////////////////////////////////////////////////////////
