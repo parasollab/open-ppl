@@ -1,5 +1,5 @@
 ifndef STAPL
-  STAPL=../stapl_release
+  STAPL=../utils/stapl_release
 endif
 
 ifndef OBPRM
@@ -47,7 +47,12 @@ LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB)
 #compile targest
 default: libs
 
-libs: objs $(OBPRM_LIBFILE)
+utils: 
+	cd ../utils/geom/CD-libs/RAPID/;make libRAPID.a
+	cd ../utils/xml/tinyxml/;make libs
+	cd ../utils/geom/CD-libs/PQP_v1.2;make library
+
+libs: utils objs $(OBPRM_LIBFILE)
 
 libobprm.a: objs
 	$(AR) libobprm.a $(OBJS)
@@ -58,11 +63,11 @@ libobprm.so: objs
 libobprm.dylib: objs
 	$(LD) $(OBJS) -o libobprm.dylib -lc -lgcc -lstdc++ $(CD_LIB)
 
-%: main_%.cpp libs
+%: main_%.cpp libs 
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_$@.cpp $(LIBS) -o $@
 	rm -f $@.d
 
-metaplanner: main_metaplanner.cpp libs
+metaplanner: main_metaplanner.cpp libs 
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) -DCOLLISIONCFG main_metaplanner.cpp $(LIBS) -o metaplanner
 
 %.o: %.cpp

@@ -22,7 +22,7 @@ endif
 #set platform specific variables
 ifeq ($(platform), LINUX_gcc) 	#linux/gcc
   CC = g++ 	#for now until mpiCC is on all the machines
-  CD_DIR = /research/umbrella/dsmft/CD-libs/linux
+  CD_DIR = ../utils/geom/CD-libs
   NO_DEBUG_OPT = -fPIC -O2 -w -fexceptions
   DEBUG_OPT = -fPIC -g -fexceptions
   CD_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP
@@ -168,7 +168,7 @@ RAPIDLIB_DIR  = ${RAPID_DIR}
 RAPIDLIB      = -L${RAPIDLIB_DIR} -lRAPID
 RAPID_INCL    = -I${RAPID_DIR}
 
-PQP_DIR     = ${CD_DIR}/PQP
+PQP_DIR     = ${CD_DIR}/PQP_v1.2
 PQPLIB_DIR  = ${PQP_DIR}/lib
 PQPLIB      = -L${PQPLIB_DIR} -lPQP
 PQP_INCL    = -I${PQP_DIR}/include
