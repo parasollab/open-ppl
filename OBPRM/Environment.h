@@ -3,7 +3,7 @@
 
 ////////////////////////////////////////////////////////////////
 #include "Defines.h"
-#include "tinyxml.h"
+#include "util.h"
 
 #include "Boundary.h"
 
@@ -40,7 +40,7 @@ class MPProblem;
  * @todo: DeleteObstaclesOutsideBoundingBox()->UpdateUsableMultibody() (and it should be a private function in the constructor
  */
 
-class Environment {
+class Environment : public MPBaseObject {
 public:
 
   ///////////////////////////////////////////////////////////////////////////////////////////

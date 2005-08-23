@@ -335,14 +335,18 @@ void ReadCfgs(char * filename,  vector<CFG>& cfgs) {
   }
 }
 
+#endif
+
+#ifndef _MPBaseObject_h_
+#define _MPBaseObject_h_
 /////////////////
 //
 //Logging + XML stuff
 //
 /////////////////
-#define VERBOSE 1
-#define WARNING 2
-#define ERROR 3
+#define DEBUG_MSG 1
+#define WARNING_MSG 2
+#define ERROR_MSG 3
 
 
 class MessageLogs {
@@ -400,3 +404,4 @@ class MPBaseObject {
 
 
 #endif
+

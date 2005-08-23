@@ -412,9 +412,9 @@ BasicOBPRM() : NodeGenerationMethod<CFG>(),
 template <class CFG>
 BasicOBPRM<CFG>::
     BasicOBPRM(TiXmlNode* in_pNode) : NodeGenerationMethod<CFG>() {
-  LOG_MSG("BasicOBPRM::BasicOBPRM()",VERBOSE);
+  LOG_MSG("BasicOBPRM::BasicOBPRM()",DEBUG_MSG);
   ParseXML(in_pNode);
-  LOG_MSG("~BasicOBPRM::BasicOBPRM()",VERBOSE);
+  LOG_MSG("~BasicOBPRM::BasicOBPRM()",DEBUG_MSG);
 }
 
 template <class CFG>

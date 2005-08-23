@@ -28,7 +28,7 @@ endif
 
 #set default debug
 ifndef debug
-  debug=0
+  debug=1
 endif
 
 #set default CHECKIFSAMECC
@@ -40,7 +40,7 @@ include $(STAPL)/GNUmakefile.STAPLdefaults
 include $(OBPRM)/GNUmakefile.OBPRMdefaults
 
 #common misc.
-DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) -DTIXML_USE_STL -Wno-deprecated
+DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) -DTIXML_USE_STL -Wno-deprecated -D_LOG
 INCLUDES = -I. $(STAPL_INCL) $(CD_INCL)
 LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB)
 
@@ -119,7 +119,9 @@ OBJS = \
 	CollisionDetection.o \
 	QueryCmds.o \
 	Weight.o \
-	Boundary.o
+	Boundary.o \
+	MPStrategy.o \
+	MPProblem.o 
 #	Haptic.o \
 #	Push.o \
 

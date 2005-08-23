@@ -173,15 +173,15 @@ GenerateMapNodes() {
 template <class CFG>
 GenerateMapNodes<CFG>::
 GenerateMapNodes(TiXmlNode* in_pNode) {
-  LOG_MSG("GenerateMapNodes::GenearteMapNodes()",VERBOSE);
+  LOG_MSG("GenerateMapNodes::GenearteMapNodes()",DEBUG_MSG);
   ParseXML(in_pNode);
-  LOG_MSG("~GenerateMapNodes::GenearteMapNodes()",VERBOSE);
+  LOG_MSG("~GenerateMapNodes::GenearteMapNodes()",DEBUG_MSG);
 }
 
 template <class CFG>
 void GenerateMapNodes<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
-  LOG_MSG("GenerateMapNodes::ParseXML()",VERBOSE);
+  LOG_MSG("GenerateMapNodes::ParseXML()",DEBUG_MSG);
   
   for( TiXmlNode* pChild = in_pNode->FirstChild(); 
       pChild !=0; pChild = pChild->NextSibling()) {
@@ -231,16 +231,16 @@ ParseXML(TiXmlNode* in_pNode) {
   }
   */
   if(selected.size() < 1)
-    LOG_MSG("GenerateMapNodes::ParseXML() -- No methods selected",WARNING);
+    LOG_MSG("GenerateMapNodes::ParseXML() -- No methods selected",WARNING_MSG);
   
-  LOG_MSG("~GenerateMapNodes::ParseXML()",VERBOSE);
+  LOG_MSG("~GenerateMapNodes::ParseXML()",DEBUG_MSG);
 }
 
 
 template <class CFG>
 void GenerateMapNodes<CFG>::
 Reset() {
-  LOG_MSG("GenerateMapNodes::Reset()",VERBOSE);
+  LOG_MSG("GenerateMapNodes::Reset()",DEBUG_MSG);
   typename vector<NodeGenerationMethod<CFG>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
@@ -250,15 +250,15 @@ Reset() {
   
   all.clear();
   selected.clear();
-  LOG_MSG("~GenerateMapNodes::Reset()",VERBOSE);
+  LOG_MSG("~GenerateMapNodes::Reset()",DEBUG_MSG);
 }
 
 template <class CFG>
 GenerateMapNodes<CFG>::
 ~GenerateMapNodes() {
-  LOG_MSG("GenerateMapNodes::~GenerateMapNodes()",VERBOSE);
+  LOG_MSG("GenerateMapNodes::~GenerateMapNodes()",DEBUG_MSG);
   Reset();
-  LOG_MSG("~GenerateMapNodes::~GenerateMapNodes()",VERBOSE);
+  LOG_MSG("~GenerateMapNodes::~GenerateMapNodes()",DEBUG_MSG);
 }
 
 

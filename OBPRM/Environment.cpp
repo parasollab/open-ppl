@@ -116,6 +116,7 @@ Environment(Environment &from_env, BoundingBox &i_boundaries) {
 
 Environment::
 Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
+    LOG_MSG("Environment::Environment()",VERBOSE);
     pathVersion = PATHVER_20001125;
 
     multibody.clear();
@@ -153,7 +154,8 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
 
     
     ///\todo fix hack.  This hack gets env_filename from environment xml tag
-    const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
+    //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
+    const char* env_filename = in_pProblem->GetEnvFileName().c_str();
     ///\todo fix hack.  This hack creates a temp Input to parse environment file.
     Input* pinput;
     pinput = new Input;
@@ -161,6 +163,7 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
   
     pinput->Read(env_filename,EXIT);
     Get(pinput);
+    LOG_MSG("~Environment::Environment()",VERBOSE);
 }
 
 

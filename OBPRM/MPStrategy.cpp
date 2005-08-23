@@ -4,15 +4,15 @@
 MPStrategy::
 MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pproblem) {
 
-    LOG_MSG( "MPStrategy::MPStrategy()" , VERBOSE);
+    LOG_MSG( "MPStrategy::MPStrategy()" , DEBUG_MSG);
     m_pProblem = in_pproblem;
     addPartialEdge= true;
     addAllEdges=true;
     if(!in_pNode) {
-      LOG_MSG("MPStrategy::MPStrategy() error xml input",ERROR); exit(-1);
+      LOG_MSG("MPStrategy::MPStrategy() error xml input",ERROR_MSG); exit(-1);
     }
     if(string(in_pNode->Value()) != "MPStrategy") {
-      LOG_MSG("MPStrategy::MPStrategy() error xml input",ERROR); exit(-1);
+      LOG_MSG("MPStrategy::MPStrategy() error xml input",ERROR_MSG); exit(-1);
     }
  
     for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
@@ -23,16 +23,16 @@ MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pproblem) {
       } else if(string(pChild->Value()) == "lp_methods") {
         m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(pChild);
       } else {
-        LOG_MSG("MPStrategy::  I don't know: "<< endl << *pChild,WARNING);
+        LOG_MSG("MPStrategy::  I don't know: "<< endl << *pChild,WARNING_MSG);
       }
     }
-    LOG_MSG( "~MPStrategy::MPStrategy()" , VERBOSE);
+    LOG_MSG( "~MPStrategy::MPStrategy()" , DEBUG_MSG);
 }
 
 
 void MPStrategy::
 GenerateMap() {
-  LOG_MSG("MPStrategy::GenerateMap()",VERBOSE);
+  LOG_MSG("MPStrategy::GenerateMap()",DEBUG_MSG);
   Stat_Class Stats;
   
   Clock_Class        NodeGenClock;
@@ -86,5 +86,5 @@ GenerateMap() {
   
   //delete input;
   cout << "Finished writting roadmap" << endl;
-  LOG_MSG("~MPStrategy::GenerateMap()",VERBOSE);
+  LOG_MSG("~MPStrategy::GenerateMap()",DEBUG_MSG);
 } 

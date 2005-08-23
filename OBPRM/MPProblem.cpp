@@ -3,7 +3,7 @@
 
 MPProblem::
 MPProblem(TiXmlNode* in_pNode) {
-  LOG_MSG("MPProblem::MPProblem()",VERBOSE);
+  LOG_MSG("MPProblem::MPProblem()",DEBUG_MSG);
   
   ParseXML(in_pNode);
   rmp.environment = m_pEnvironment;
@@ -11,12 +11,12 @@ MPProblem(TiXmlNode* in_pNode) {
 
 void MPProblem::
 ParseXML(TiXmlNode* in_pNode) { 
-  LOG_MSG("MPProblem::ParseXML()",VERBOSE);
+  LOG_MSG("MPProblem::ParseXML()",DEBUG_MSG);
   if(!in_pNode) {
-    LOG_MSG("MPProblem::ParseXML() error xml input",ERROR); exit(-1); exit(-1);
+    LOG_MSG("MPProblem::ParseXML() error xml input",ERROR_MSG); exit(-1); exit(-1);
   }
   if(string(in_pNode->Value()) != "MPProblem") {
-    LOG_MSG("MPProblem::ParseXML() error xml input",ERROR); exit(-1);
+    LOG_MSG("MPProblem::ParseXML() error xml input",ERROR_MSG); exit(-1);
   }
 
   for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; 
@@ -33,19 +33,19 @@ ParseXML(TiXmlNode* in_pNode) {
     } else  if(string(pChild->Value()) == "MPRegions") {
       //m_output_dir = string(pChild->ToElement()->Attribute("dir_name"));
     }else {
-      LOG_MSG("MPProblem::  I don't know: "<< endl << *pChild,WARNING);
+      LOG_MSG("MPProblem::  I don't know: "<< endl << *pChild,WARNING_MSG);
     }
   }
 
   PrintOptions();
-  LOG_MSG("~MPProblem::ParseXML()",VERBOSE);
+  LOG_MSG("~MPProblem::ParseXML()",DEBUG_MSG);
 }
 
 void MPProblem::
 ParseXMLFileIO(TiXmlNode* in_pNode) {
-  LOG_MSG("MPProblem::ParseXMLFileIO()",VERBOSE);
+  LOG_MSG("MPProblem::ParseXMLFileIO()",DEBUG_MSG);
   if(string(in_pNode->Value()) != "file_io") {
-    LOG_MSG("MPProblem::ParseFileIO() error xml input",ERROR); exit(-1);
+    LOG_MSG("MPProblem::ParseFileIO() error xml input",ERROR_MSG); exit(-1);
   }
 
   for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; 
@@ -57,10 +57,10 @@ ParseXMLFileIO(TiXmlNode* in_pNode) {
     } else  if(string(pChild->Value()) == "output_dir") {
       m_output_dir = string(pChild->ToElement()->Attribute("dir_name"));
     } else {
-      LOG_MSG("MPProblem::  I don't know: "<< endl << *pChild,WARNING);
+      LOG_MSG("MPProblem::  I don't know: "<< endl << *pChild,WARNING_MSG);
     }
   }
-  LOG_MSG("~MPProblem::ParseXMLFileIO()",VERBOSE);
+  LOG_MSG("~MPProblem::ParseXMLFileIO()",DEBUG_MSG);
 }
 
 void MPProblem::
@@ -74,11 +74,11 @@ PrintOptions()
 
 void MPProblem::
 WriteRoadmapForVizmo() {
-  LOG_MSG("MPProblem::WriteRoadmapForVizmo()",VERBOSE);
+  LOG_MSG("MPProblem::WriteRoadmapForVizmo()",DEBUG_MSG);
   ofstream  myofstream(GetOutputRoadmap().c_str());
   
   if (!myofstream) {
-    LOG_MSG("MPProblem::WriteRoadmapForVizmo: can't open outfile: ",ERROR);
+    LOG_MSG("MPProblem::WriteRoadmapForVizmo: can't open outfile: ",ERROR_MSG);
     exit(-1);
   }
   
@@ -98,5 +98,5 @@ WriteRoadmapForVizmo() {
 
   GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
   myofstream.close();
-  LOG_MSG("~MPProblem::WriteRoadmapForVizmo()",VERBOSE);
+  LOG_MSG("~MPProblem::WriteRoadmapForVizmo()",DEBUG_MSG);
 }
