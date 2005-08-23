@@ -21,6 +21,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "OBPRMDef.h"
+#include "tinyxml.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 class Cfg;
@@ -333,6 +334,68 @@ void ReadCfgs(char * filename,  vector<CFG>& cfgs) {
     cfgs.push_back(tempCfg);
   }
 }
+
+/////////////////
+//
+//Logging + XML stuff
+//
+/////////////////
+#define VERBOSE 1
+#define WARNING 2
+#define ERROR 3
+
+
+class MessageLogs {
+
+  public:
+    MessageLogs() {
+      bOutput = false;
+      level = VERBOSE;
+    };
+    
+    inline int GetLevel() { return level; };
+    inline void SetLevel(int in_level) { level = in_level; };
+    inline void operator << (ostream& io_os) { 
+      if(!bOutput)
+        cout << io_os << endl;;
+    };
+    
+  private:
+    int level;
+    bool bOutput;
+    
+
+};
+
+
+class MPBaseObject {
+
+  public: 
+    MPBaseObject(){};
+    virtual void ParseXML(TiXmlNode* in_pNode) { };
+    inline MessageLogs& GetMessageLog() { return m_message_log; };
+  private:
+    MessageLogs m_message_log;
+
+};
+
+
+#ifdef _LOG
+//#define DEBUG_MSG
+//ERROR_MSG
+//WARNIND_MSG
+
+#define LOG_MSG( msg , level) \
+{ \
+        if(level >= GetMessageLog().GetLevel()) \
+        cerr << msg << endl ; \
+}
+
+#else 
+
+#define LOG_MSG( msg ) { } 
+
+#endif //_LOG
 
 
 

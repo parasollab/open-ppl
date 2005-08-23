@@ -1,5 +1,6 @@
 #include "Boundary.h"
-#include "util.h"
+//#include "util.h"
+#include "MPProblem.h"
 
 Boundary::Boundary() {
 /*     cout << "Boundary(). TODO ALL " << endl; */
@@ -30,7 +31,7 @@ BoundingBox(int i_dofs, int i_pos_dofs ) :
 ///\brief Bounding Box Constructor MUST TAKE IN A <environemnt> tag inXML
 ///\todo Remove dependence on <environment> tag, must be done in Environment class
 BoundingBox::
-BoundingBox(TiXmlNode* in_pNode): dofs(3),   pos_dofs(3) {
+BoundingBox(TiXmlNode* in_pNode,MPProblem* in_pproblem): dofs(3),   pos_dofs(3) {
   if(! (string(in_pNode->Value()) == "boundary")) {
     cout << "Error: I have not ben given <boundary>" << endl;
     exit(-1);

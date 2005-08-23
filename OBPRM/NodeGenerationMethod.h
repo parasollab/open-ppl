@@ -4,7 +4,6 @@
 #include "Parameters.h"
 #include "util.h"
 #include "Stat_Class.h"
-#include "tinyxml.h"
 
 class Environment;
 class CollisionDetection;
@@ -21,7 +20,7 @@ class DistanceMetric;
 /**This is the interface for all node generation methods (prm, obprm, maprm, etc.).
  */
 template <class CFG>
-class NodeGenerationMethod { 
+class NodeGenerationMethod : public MPBaseObject{ 
  public:
 
   //////////////////////////////////////////////////////////////////////////////////////////

@@ -77,7 +77,7 @@ public:
     Environment(Environment &from_env, BoundingBox &i_boundaries);
 
     ///\brief Constructor taking in an XML object
-    Environment(TiXmlNode* in_pNode);
+    Environment(TiXmlNode* in_pNode, MPProblem*);
      
     /**
      * Destructor.

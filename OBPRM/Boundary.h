@@ -4,7 +4,8 @@
 #include <vector>
 #include "Vectors.h"
 #include "Parameters.h"
-#include "tinyxml.h"
+#include "util.h"
+class MPProblem;
 
 class Boundary {
  public:
@@ -17,7 +18,7 @@ class BoundingBox : public Boundary {
  public:
   enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};
   BoundingBox(int i_dofs, int i_pos_dofs);
-  BoundingBox(TiXmlNode*);
+  BoundingBox(TiXmlNode*,MPProblem* in_pproblem);
   BoundingBox(const BoundingBox &from_bbox);
   ~BoundingBox();
 

@@ -28,6 +28,7 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   BasicPRM();
+  BasicPRM(TiXmlNode* in_pNode);
   ///Destructor.	
   virtual ~BasicPRM();
 
@@ -81,6 +82,11 @@ BasicPRM<CFG>::
 BasicPRM() : NodeGenerationMethod<CFG>() {
 }
 
+template <class CFG>
+BasicPRM<CFG>::
+    BasicPRM(TiXmlNode* in_pNode) : NodeGenerationMethod<CFG>() {
+}
+
 
 template <class CFG>
 BasicPRM<CFG>::
@@ -94,13 +100,17 @@ BasicPRM<CFG>::
 GetName() {
   return "BasicPRM";
 }
+
 template <class CFG>
 void
 BasicPRM<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
-  
-  
-  
+  for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
+       pChild2 = pChild2->NextSibling()) {
+    if(string(pChild2->Value()) == "num_nodes") {
+      ParseXMLnum_nodes(pChild2);
+    }
+  }
 }
 
 template <class CFG>

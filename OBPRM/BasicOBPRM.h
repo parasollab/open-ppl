@@ -32,9 +32,10 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   BasicOBPRM();
+  BasicOBPRM(TiXmlNode* in_pNode);
   ///Destructor.
   ~BasicOBPRM();
-
+  virtual void ParseXML(TiXmlNode* in_pNode);
   //@}
 
   //////////////////////
@@ -408,6 +409,25 @@ BasicOBPRM() : NodeGenerationMethod<CFG>(),
   numShells.PutDesc("INTEGER","(number of shells, default 3)");
 }
 
+template <class CFG>
+BasicOBPRM<CFG>::
+    BasicOBPRM(TiXmlNode* in_pNode) : NodeGenerationMethod<CFG>() {
+  LOG_MSG("BasicOBPRM::BasicOBPRM()",VERBOSE);
+  ParseXML(in_pNode);
+  LOG_MSG("~BasicOBPRM::BasicOBPRM()",VERBOSE);
+}
+
+template <class CFG>
+void BasicOBPRM<CFG>::
+ParseXML(TiXmlNode* in_pNode) {
+
+ for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
+    pChild2 = pChild2->NextSibling()) {
+      if(string(pChild2->Value()) == "num_nodes") {
+        ParseXMLnum_nodes(pChild2);
+      } //else if(string(pChild2->Value()) == "num_nodes") {
+  }
+}
 
 template <class CFG>
 BasicOBPRM<CFG>::

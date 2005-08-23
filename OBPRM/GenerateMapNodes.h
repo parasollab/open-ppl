@@ -31,7 +31,7 @@
 #include "BasicOBPRM.h"
 #include "OBPRM.h"
 #include "OBMAPRM.h"
-#include "tinyxml.h"
+#include "util.h"
 
 #include <sstream>
 
@@ -58,8 +58,10 @@ template <class CFG, class WEIGHT> class Roadmap;
  *contains only those selected by the user.
  */
 template <class CFG> class NodeGenerationMethod;
+
+
 template <class CFG>
-class GenerateMapNodes {
+class GenerateMapNodes : public MPBaseObject{
  public:
 
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -90,6 +92,7 @@ class GenerateMapNodes {
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
   void PrintDefaults(ostream& _os);
+  
 
   /**Generate nodes according to those in selected vector.
    *@param _rm New created nodes will be added to this roadmap if addNodes@Map=true.
@@ -127,6 +130,9 @@ class GenerateMapNodes {
    *Other generated Cfgs will be left nodes.
    */
   bool addNodes2Map;
+  private:
+    void ParseXML(TiXmlNode* in_pNode);
+    void Reset();
 
 };
 
@@ -167,15 +173,32 @@ GenerateMapNodes() {
 template <class CFG>
 GenerateMapNodes<CFG>::
 GenerateMapNodes(TiXmlNode* in_pNode) {
+  LOG_MSG("GenerateMapNodes::GenearteMapNodes()",VERBOSE);
+  ParseXML(in_pNode);
+  LOG_MSG("~GenerateMapNodes::GenearteMapNodes()",VERBOSE);
+}
 
-  BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>();
-  all.push_back(basicPRM);
+template <class CFG>
+void GenerateMapNodes<CFG>::
+ParseXML(TiXmlNode* in_pNode) {
+  LOG_MSG("GenerateMapNodes::ParseXML()",VERBOSE);
+  
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); 
+      pChild !=0; pChild = pChild->NextSibling()) {
+    if(string(pChild->Value()) == "BasicPRM") {
+      BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>(pChild);
+      selected.push_back(basicPRM);
+    } else if(string(pChild->Value()) == "basicOBPRM") {
+      BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>(pChild);
+      selected.push_back(basicOBPRM);
+    }
+  }
   /*
   GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>();
   all.push_back(gaussPRM);
 
-  BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>();
-  all.push_back(basicOBPRM);
+  
+  
 
   OBPRM<CFG>* obprm = new OBPRM<CFG>();
   all.push_back(obprm);
@@ -191,7 +214,7 @@ GenerateMapNodes(TiXmlNode* in_pNode) {
   */
   addNodes2Map = true;
   
-  
+  /*
   for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
     for(int i=0; i<all.size(); ++i) {
       if(string(pChild->Value()) == all[i]->GetName()) {
@@ -206,24 +229,36 @@ GenerateMapNodes(TiXmlNode* in_pNode) {
       }
     }
   }
-  
+  */
   if(selected.size() < 1)
-    cout << "No NodeGenerationMethods selected!" << endl;
+    LOG_MSG("GenerateMapNodes::ParseXML() -- No methods selected",WARNING);
   
-  
-  
-  
+  LOG_MSG("~GenerateMapNodes::ParseXML()",VERBOSE);
 }
 
+
 template <class CFG>
-GenerateMapNodes<CFG>::
-~GenerateMapNodes() {
+void GenerateMapNodes<CFG>::
+Reset() {
+  LOG_MSG("GenerateMapNodes::Reset()",VERBOSE);
   typename vector<NodeGenerationMethod<CFG>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
 
   for(I=all.begin(); I!=all.end(); I++)
     delete *I;
+  
+  all.clear();
+  selected.clear();
+  LOG_MSG("~GenerateMapNodes::Reset()",VERBOSE);
+}
+
+template <class CFG>
+GenerateMapNodes<CFG>::
+~GenerateMapNodes() {
+  LOG_MSG("GenerateMapNodes::~GenerateMapNodes()",VERBOSE);
+  Reset();
+  LOG_MSG("~GenerateMapNodes::~GenerateMapNodes()",VERBOSE);
 }
 
 

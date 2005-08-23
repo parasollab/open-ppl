@@ -1,8 +1,6 @@
 #ifndef MPProblem_h
 #define MPProblem_h
 
-#include "tinyxml.h"
-
 #include "SwitchDefines.h"
 #include<sys/time.h>
 
@@ -25,91 +23,52 @@
 /* util.h defines EXIT used in initializing the environment*/
 #include "util.h"
 #include "CfgTypes.h"
+
+class MPStrategy;
+
 typedef Cfg_free CfgType;
 typedef DefaultWeight WeightType;
 
-class MPProblem
+class MPProblem : public MPBaseObject
 {
 public:
-  MPProblem(TiXmlNode* in_pNode) {
-    cout << "Making a MPProblem." << endl;
-    parse_xml(in_pNode);
-
-    rmp.environment = env;
-  }
+  MPProblem(TiXmlNode* in_pNode);
   
-  void print_input_options()
-  {
-    cout << "Parsing MPproblem" << endl;
-    cout << "  input_env  = " << m_input_env << endl;
-    cout << "  output_map = " << m_output_map << endl;
-    cout << "  output_dir = " << m_output_dir << endl;
-  }
-
-  string GetEnvFileName() { return m_input_env; }
+  void PrintOptions();
+  
   
 private:
   ///\todo Create constructors for distance_metrics, collision_detection, MPRegions
-  void parse_xml(TiXmlNode* in_pNode) { 
-    if(!in_pNode) {
-      cout << "Error -1" << endl; exit(-1);
-    }
-    if(string(in_pNode->Value()) != "MPProblem") {
-      cout << "Error reading <MPProblem> tag...." << endl; exit(-1);
-    }
+  virtual void ParseXML(TiXmlNode* in_pNode); 
+  void ParseXMLFileIO(TiXmlNode* in_pNode);
   
-    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-      if(string(pChild->Value()) == "file_io") {
-        parse_file_io(pChild);
-      } else if(string(pChild->Value()) == "environment") {
-        cout << "I am making an Environment" << endl;
-        env = new Environment(pChild);
-      } else  if(string(pChild->Value()) == "distance_metrics") {
-        cout << "I am making a <distance_metrics>" << endl;
-        dm = new DistanceMetric(pChild);
-      } else  if(string(pChild->Value()) == "collision_detection") {
-        cd = new CollisionDetection(pChild);
-      } else  if(string(pChild->Value()) == "MPRegions") {
-        //m_output_dir = string(pChild->ToElement()->Attribute("dir_name"));
-      }else {
-        cout << "I dont know: " << *pChild << endl;
-      }
-    }
-
-  print_input_options();
-}
-
-  void parse_file_io(TiXmlNode* in_pNode) {
-    cout << "I am parsing file_io" << endl;
-    if(string(in_pNode->Value()) != "file_io") {
-      cout << "Error reading <file_io> tag...." << endl; exit(-1);
-    }
+public:
+  ///\todo Finish these interfaces.
+ // void WriteRoadmap();
+  void WriteRoadmapForVizmo();
+  void SetMPStrategy(MPStrategy* in_pStrategy) {m_pMPStrategy = in_pStrategy;};
+  inline DistanceMetric* GetDistanceMetric() {return m_pDistanceMetric; };
+  inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection; };
+  inline Environment* GetEnvironment() {return m_pEnvironment; };
+  inline string& GetEnvFileName() {return m_input_env;};
+  inline string& GetOutputRoadmap() {return m_output_map;};
+  inline string& GetOutputDir() {return m_output_dir;};
   
-    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-      if(string(pChild->Value()) == "input_env") {
-        m_input_env = string(pChild->ToElement()->Attribute("file_name"));
-      } else if(string(pChild->Value()) == "output_map") {
-        m_output_map = string(pChild->ToElement()->Attribute("file_name"));
-      } else  if(string(pChild->Value()) == "output_dir") {
-        m_output_dir = string(pChild->ToElement()->Attribute("dir_name"));
-      } else {
-        cout << "I dont know: " << *pChild << endl;
-      }
-    }
-   cout << "I am finished parsing file_io" << endl;
-  }
-
+  inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
+  inline Roadmap<CfgType,WeightType>* GetColRoadmap() {return &rmp_col;};
 ////////////
 //
 //Data
 //
 //////////////
-  public:
+  private:
  
   string m_input_env, m_output_map, m_output_dir;
-  DistanceMetric*     dm;
-  CollisionDetection* cd;
-  Environment* env;
+  
+  MPStrategy* m_pMPStrategy;
+  DistanceMetric*     m_pDistanceMetric;
+  CollisionDetection* m_pCollisionDetection;
+  Environment* m_pEnvironment;
   Roadmap<CfgType,WeightType> rmp;
   Roadmap<CfgType,WeightType> rmp_col;
   vector< MPRegion<CfgType,WeightType> > regions; 

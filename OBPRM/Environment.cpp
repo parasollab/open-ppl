@@ -115,7 +115,7 @@ Environment(Environment &from_env, BoundingBox &i_boundaries) {
 ///\todo Fix boundaries init
 
 Environment::
-Environment(TiXmlNode* in_pNode) {
+Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
     pathVersion = PATHVER_20001125;
 
     multibody.clear();
@@ -141,7 +141,7 @@ Environment(TiXmlNode* in_pNode) {
         cout << "  TODO: write code for <environment><robot> tag..." << endl;
       } else if(string(pChild->Value()) == "boundary") {
         cout << "  TODO: write code for <environment><boundary> tag..." << endl;
-	boundaries = new BoundingBox(pChild);
+	      boundaries = new BoundingBox(pChild,in_pProblem);
       } else if(string(pChild->Value()) == "resolution") {
         cout << "  TODO: write code for <environment><resolution> tag..." << endl;
       } else {
@@ -151,9 +151,11 @@ Environment(TiXmlNode* in_pNode) {
       }
     }
 
+    
+    ///\todo fix hack.  This hack gets env_filename from environment xml tag
     const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
+    ///\todo fix hack.  This hack creates a temp Input to parse environment file.
     Input* pinput;
-    ///DAMN I FORGOT TO Create ... but still worked ??::::
     pinput = new Input;
     pinput->cdtype = RAPID;
   
