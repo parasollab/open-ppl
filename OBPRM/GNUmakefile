@@ -40,7 +40,7 @@ include $(STAPL)/GNUmakefile.STAPLdefaults
 include $(OBPRM)/GNUmakefile.OBPRMdefaults
 
 #common misc.
-DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) -DTIXML_USE_STL
+DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) -DTIXML_USE_STL -Wno-deprecated
 INCLUDES = -I. $(STAPL_INCL) $(CD_INCL)
 LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB)
 
@@ -51,6 +51,8 @@ utils:
 	cd ../utils/geom/CD-libs/RAPID/;make libRAPID.a
 	cd ../utils/xml/tinyxml/;make libs
 	cd ../utils/geom/CD-libs/PQP_v1.2;make library
+	cd ../utils/geom/CD-libs/qhull3.0/src;make all
+	cd ../utils/geom/CD-libs/VCLIP;make all
 
 libs: utils objs $(OBPRM_LIBFILE)
 
