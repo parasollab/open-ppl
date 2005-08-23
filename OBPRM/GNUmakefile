@@ -70,7 +70,7 @@ libobprm.dylib: objs
 	rm -f $@.d
 
 
-pmp: main_pmp.cpp libobprm.a
+pmp: main_pmp.cpp libs
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS)  main_pmp.cpp $(LIBS)  -o main_pmp
 	rm -f $@.d
 
