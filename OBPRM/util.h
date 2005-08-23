@@ -393,7 +393,7 @@ class MPBaseObject {
 
 #else 
 
-#define LOG_MSG( msg ) { } 
+#define LOG_MSG( msg , level) { } 
 
 #endif //_LOG
 
