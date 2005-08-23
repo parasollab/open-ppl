@@ -129,7 +129,7 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
     copied_instance = false;
     
     ///\todo Fix this hardcoded value!!!
-    //   boundaries = new BoundingBox(3,3);
+       boundaries = new BoundingBox(3,3);
     if(!in_pNode) {
       cout << "Error -1" << endl; exit(-1);
     }
@@ -142,7 +142,7 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
         cout << "  TODO: write code for <environment><robot> tag..." << endl;
       } else if(string(pChild->Value()) == "boundary") {
         cout << "  TODO: write code for <environment><boundary> tag..." << endl;
-	      boundaries = new BoundingBox(pChild,in_pProblem);
+	//      boundaries = new BoundingBox(pChild,in_pProblem);
       } else if(string(pChild->Value()) == "resolution") {
         cout << "  TODO: write code for <environment><resolution> tag..." << endl;
       } else {

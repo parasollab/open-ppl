@@ -187,9 +187,11 @@ ParseXML(TiXmlNode* in_pNode) {
       pChild !=0; pChild = pChild->NextSibling()) {
     if(string(pChild->Value()) == "BasicPRM") {
       BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>(pChild);
+      basicPRM->cdInfo = &cdInfo;
       selected.push_back(basicPRM);
-    } else if(string(pChild->Value()) == "basicOBPRM") {
+    } else if(string(pChild->Value()) == "BasicOBPRM") {
       BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>(pChild);
+      basicOBPRM->cdInfo = &cdInfo;
       selected.push_back(basicOBPRM);
     }
   }
