@@ -13,7 +13,7 @@
 #include "CollisionDetection.h" //for CDINFO instance, so we can not use forward declaration.
 #include "Cfg.h"		//for vector<Cfg>, so we can not use forward declaration.
 #include "Weight.h"
-#include "tinyxml.h"
+#include "util.h"
 
 
 // Include LocalPlanners
@@ -34,14 +34,16 @@ struct LPOutput {
 
    
 template <class CFG, class WEIGHT>
-class LocalPlanners {
+class LocalPlanners : MPBaseObject{
  public:
   ///Default Constructor.
   LocalPlanners();
-  LocalPlanners(TiXmlNode* in_pNode);
+  LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.	
   ~LocalPlanners();
 
+  void PrintOptions(ostream& out_os);
+  LocalPlannerMethod<CFG, WEIGHT>* GetMethod(string& in_strLabel);
   //////////////////////
   // Access methods
   static vector<LocalPlannerMethod<CFG, WEIGHT> *> GetDefault();
@@ -91,6 +93,8 @@ class LocalPlanners {
 		      double positionRes, double orientationRes, 
 		      bool checkCollision=true, 
 		      bool savePath=false, bool saveFailedPath=false);
+  
+  
 
  protected:
   LocalPlannerMethod<CFG, WEIGHT> * GetLocalPlanner(unsigned int lpid); 
@@ -177,9 +181,26 @@ LocalPlanners() {
 
 
 template <class CFG, class WEIGHT>
+LocalPlannerMethod<CFG, WEIGHT>* 
 LocalPlanners<CFG,WEIGHT>::
-LocalPlanners(TiXmlNode* in_pNode) {
+GetMethod(string& in_strLabel) {
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++) {
+    if(I->GetLabel() == in_strLabel) {
+      return &(*I);
+    }
+  }
+  LOG_ERROR_MSG("LocalPlanners:: cannot find LocalPlannerMethod label = " << in_strLabel);
+  exit(-1);
+}
 
+template <class CFG, class WEIGHT>
+LocalPlanners<CFG,WEIGHT>::
+LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+  MPBaseObject(in_pNode,in_pProblem) {
+
+  LOG_DEBUG_MSG("LocalPlanners::LocalPlanners()");
+  
   StraightLine<CFG, WEIGHT>* straight_line = new StraightLine<CFG, WEIGHT>(cdtype);
   all.push_back(straight_line);
 
@@ -202,16 +223,17 @@ LocalPlanners(TiXmlNode* in_pNode) {
     for(int i=0; i<all.size(); ++i) {
       if(string(pChild->Value()) == all[i]->GetName()) {
         cout << "Local Planner selected = " << all[i]->GetName() << endl;
+        all[i]->cdInfo = &cdInfo;
+        all[i]->SetID(GetNewID());
         selected.push_back(all[i]);
       }
     }
   }
   
   if(selected.size() < 1)
-    cout << "No Local Planner selected!" << endl;
+    LOG_WARNING_MSG("No Local Planner selected!");
 
-  
-    
+  LOG_DEBUG_MSG("~LocalPlanners::LocalPlanners()");
 }
 
 
@@ -238,9 +260,10 @@ GetDefault() {
   StraightLine<CFG, WEIGHT>* straight_line = new StraightLine<CFG, WEIGHT>(cdtype);
   Default.push_back(straight_line);
   
+  
   RotateAtS<CFG, WEIGHT>* rotate_at_s = new RotateAtS<CFG, WEIGHT>(cdtype);
   Default.push_back(rotate_at_s);
-
+  
 /*    AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>();  */
 /*    Default.push_back(a_star_distance); */
 
@@ -392,6 +415,16 @@ WriteLPs(ostream& _os) {
   PrintValues(_os);
   _os << "#####LPSTOP#####";
 };
+
+template <class CFG, class WEIGHT>
+void LocalPlanners<CFG,WEIGHT>::
+PrintOptions(ostream& out_os) {
+  out_os << "  Local Planners" << endl;
+  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++) {
+    (*I)->PrintOptions(out_os);
+  }
+}
 
 template <class CFG, class WEIGHT>
 void 

@@ -1,14 +1,16 @@
 #ifndef ComponentConnectionMethod_h
 #define ComponentConnectionMethod_h
+#include "util.h"
 
 // Abstract Interface Class for node connection methods
 template <class CFG, class WEIGHT>
-class ComponentConnectionMethod { 
+class ComponentConnectionMethod : MPBaseObject{ 
  public:
   
   //////////////////////
   // Constructors and Destructor
   ComponentConnectionMethod();
+  ComponentConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ~ComponentConnectionMethod();
   
   //////////////////////
@@ -21,6 +23,8 @@ class ComponentConnectionMethod {
   virtual void ParseCommandLine(std::istringstream& is) = 0;
   virtual void PrintUsage(ostream& _os) = 0;
   virtual void PrintValues(ostream& _os) = 0;   
+  ///Used in new MPProblem framework. \todo remove the "{ }" later
+  virtual void PrintOptions(ostream& out_os) { };
   virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy() = 0;
   
   //////////////////////
@@ -66,6 +70,14 @@ template <class CFG, class WEIGHT>
 ComponentConnectionMethod<CFG,WEIGHT>::
 ComponentConnectionMethod() {
 }
+
+template <class CFG, class WEIGHT>
+ComponentConnectionMethod<CFG,WEIGHT>::
+ComponentConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    MPBaseObject(in_pNode,in_pProblem){
+}
+
+
 
 
 template <class CFG, class WEIGHT>

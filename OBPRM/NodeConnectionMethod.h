@@ -1,14 +1,17 @@
 #ifndef NodeConnectionMethod_h
 #define NodeConnectionMethod_h
 
+#include "util.h"
+
 // Abstract Interface Class for node connection methods
 template <class CFG, class WEIGHT>
-class NodeConnectionMethod { 
+class NodeConnectionMethod : MPBaseObject { 
  public:
   
   //////////////////////
   // Constructors and Destructor
   NodeConnectionMethod();
+  NodeConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ~NodeConnectionMethod();
   
   //////////////////////
@@ -20,7 +23,9 @@ class NodeConnectionMethod {
   // I/O methods
   virtual void ParseCommandLine(std::istringstream& is) = 0;
   virtual void PrintUsage(ostream& _os) = 0;
-  virtual void PrintValues(ostream& _os) = 0;   
+  virtual void PrintValues(ostream& _os) = 0;
+  ///Used in new MPProblem framework. \todo remove the "{ }" later
+  virtual void PrintOptions(ostream& out_os) { };
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy() = 0;
   
   //////////////////////
@@ -77,6 +82,14 @@ template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>::
 NodeConnectionMethod() {
 }
+
+
+template <class CFG, class WEIGHT>
+NodeConnectionMethod<CFG,WEIGHT>::
+NodeConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+  MPBaseObject(in_pNode,in_pProblem) {
+}
+
 
 
 template <class CFG, class WEIGHT>

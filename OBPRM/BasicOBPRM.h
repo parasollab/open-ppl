@@ -32,10 +32,11 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   BasicOBPRM();
-  BasicOBPRM(TiXmlNode* in_pNode);
+  BasicOBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.
   ~BasicOBPRM();
   virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXMLshells(TiXmlNode* in_pNode);
   //@}
 
   //////////////////////
@@ -45,6 +46,7 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
+  
 
 
   //////////////////////
@@ -52,6 +54,8 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
+  ///Used in new MPProblem framework.
+  virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
   /** Basic, no frills,  Obstacle Based Node Generation.
@@ -411,22 +415,44 @@ BasicOBPRM() : NodeGenerationMethod<CFG>(),
 
 template <class CFG>
 BasicOBPRM<CFG>::
-    BasicOBPRM(TiXmlNode* in_pNode) : NodeGenerationMethod<CFG>() {
-  LOG_MSG("BasicOBPRM::BasicOBPRM()",DEBUG_MSG);
+    BasicOBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    NodeGenerationMethod<CFG>(in_pNode, in_pProblem) {
+  LOG_DEBUG_MSG("BasicOBPRM::BasicOBPRM()");
   ParseXML(in_pNode);
-  LOG_MSG("~BasicOBPRM::BasicOBPRM()",DEBUG_MSG);
+  LOG_DEBUG_MSG("~BasicOBPRM::BasicOBPRM()");
 }
 
 template <class CFG>
 void BasicOBPRM<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
-
- for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
+  LOG_DEBUG_MSG("BasicOBPRM::ParseXML()");
+  for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
     pChild2 = pChild2->NextSibling()) {
       if(string(pChild2->Value()) == "num_nodes") {
         ParseXMLnum_nodes(pChild2);
-      } //else if(string(pChild2->Value()) == "num_nodes") {
+      } else if(string(pChild2->Value()) == "shells") {
+        ParseXMLshells(pChild2);
+      }
   }
+  LOG_DEBUG_MSG("~BasicOBPRM::ParseXML()");
+}
+
+template <class CFG>
+void BasicOBPRM<CFG>::
+ParseXMLshells(TiXmlNode* in_pNode) {
+  LOG_DEBUG_MSG("BasicOBPRM::ParseXMLshells()");
+  
+  if(!in_pNode) {
+    LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
+  }
+  if(string(in_pNode->Value()) != "shells") {
+    LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
+  }
+  int shells;  
+  in_pNode->ToElement()->QueryIntAttribute("number",&shells);
+  
+  numShells.SetValue(shells);
+  LOG_DEBUG_MSG("~BasicOBPRM::ParseXMLshells()");
 }
 
 template <class CFG>
@@ -522,6 +548,19 @@ PrintValues(ostream& _os){
   _os << endl;
 }
 
+template <class CFG>
+void
+BasicOBPRM<CFG>::
+PrintOptions(ostream& out_os){
+  out_os << "    " << GetName() << ":: ";
+  out_os << " num nodes = " << numNodes.GetValue() << " ";
+  out_os << " exact  = " << exactNodes.GetValue() << " ";
+  out_os << " chunk size = " << chunkSize.GetValue() << " ";
+  out_os << " num shells = " << numShells.GetValue() << " ";
+  out_os << endl;
+}
+
+
 
 template <class CFG>
 NodeGenerationMethod<CFG>* 
@@ -538,6 +577,7 @@ BasicOBPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats, 
 	      CollisionDetection* cd, DistanceMetric* dm, 
 	      vector<CFG>& nodes) {  
+  LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes()");
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ", "<<flush;
   cout << "(exactNodes=" << exactNodes.GetValue() << ", "<<flush;
@@ -713,6 +753,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 #if INTERMEDIATE_FILES
   WritePathConfigurations("surface.path", surface, _env);
 #endif
+
+  LOG_DEBUG_MSG("~BasicOBPRM::GenerateNodes()");
 };
 
 

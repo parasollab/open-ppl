@@ -35,6 +35,8 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
+  ///Used in new MPProblem framework.
+  virtual void PrintOptions(ostream& out_os);
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
   /**Check if two Cfgs could be connected by straight line.
@@ -236,6 +238,17 @@ PrintValues(ostream& _os) {
 
 
 template <class CFG, class WEIGHT>
+void
+StraightLine<CFG, WEIGHT>::
+PrintOptions(ostream& out_os) {
+  out_os << "    " << GetName() << "::  ";
+  out_os << "line segment length = " << " " << lineSegmentLength.GetValue() << " ";
+  out_os << "binary search = " << " " << binarySearch.GetValue() << " ";
+  out_os << endl;
+}
+
+
+template <class CFG, class WEIGHT>
 LocalPlannerMethod<CFG, WEIGHT>* 
 StraightLine<CFG, WEIGHT>::
 CreateCopy() {
@@ -285,7 +298,6 @@ StraightLine<CFG, WEIGHT>::
 			double positionRes, double orientationRes,
 			bool checkCollision, 
 			bool savePath, bool saveFailedPath) {
-  
   int n_ticks;
   CFG tick;
   tick = _c1; 
@@ -323,7 +335,6 @@ StraightLine<CFG, WEIGHT>::
   }
   lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + nTicks);
   lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + nTicks);
-
   return true;
 };
 

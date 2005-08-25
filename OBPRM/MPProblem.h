@@ -53,9 +53,11 @@ public:
   inline string& GetEnvFileName() {return m_input_env;};
   inline string& GetOutputRoadmap() {return m_output_map;};
   inline string& GetOutputDir() {return m_output_dir;};
+  inline MPStrategy* GetMPStrategy() {return m_pMPStrategy;};
   
   inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
   inline Roadmap<CfgType,WeightType>* GetColRoadmap() {return &rmp_col;};
+  void PrintOptions(ostream& out_os);
 ////////////
 //
 //Data

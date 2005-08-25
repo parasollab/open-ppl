@@ -2,21 +2,23 @@
 #include "MPStrategy.h"
 
 MPProblem::
-MPProblem(TiXmlNode* in_pNode) {
-  LOG_MSG("MPProblem::MPProblem()",DEBUG_MSG);
+MPProblem(TiXmlNode* in_pNode) : MPBaseObject(in_pNode, this) {
+  LOG_DEBUG_MSG("MPProblem::MPProblem()");
   
   ParseXML(in_pNode);
   rmp.environment = m_pEnvironment;
+  
+  LOG_DEBUG_MSG("~MPProblem::MPProblem()");
 }
 
 void MPProblem::
 ParseXML(TiXmlNode* in_pNode) { 
-  LOG_MSG("MPProblem::ParseXML()",DEBUG_MSG);
+  LOG_DEBUG_MSG("MPProblem::ParseXML()");
   if(!in_pNode) {
-    LOG_MSG("MPProblem::ParseXML() error xml input",ERROR_MSG); exit(-1); exit(-1);
+    LOG_ERROR_MSG("MPProblem::ParseXML() error xml input"); exit(-1);
   }
   if(string(in_pNode->Value()) != "MPProblem") {
-    LOG_MSG("MPProblem::ParseXML() error xml input",ERROR_MSG); exit(-1);
+    LOG_ERROR_MSG("MPProblem::ParseXML() error xml input"); exit(-1);
   }
 
   for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; 
@@ -27,25 +29,25 @@ ParseXML(TiXmlNode* in_pNode) {
     } else if(string(pChild->Value()) == "environment") {
       m_pEnvironment = new Environment(pChild, this);
     } else  if(string(pChild->Value()) == "distance_metrics") {
-      m_pDistanceMetric = new DistanceMetric(pChild);
+      m_pDistanceMetric = new DistanceMetric(pChild, this);
     } else  if(string(pChild->Value()) == "collision_detection") {
-      m_pCollisionDetection = new CollisionDetection(pChild);
+      m_pCollisionDetection = new CollisionDetection(pChild, this);
     } else  if(string(pChild->Value()) == "MPRegions") {
+      ///\Todo Parse MPRegions
       //m_output_dir = string(pChild->ToElement()->Attribute("dir_name"));
     }else {
-      LOG_MSG("MPProblem::  I don't know: "<< endl << *pChild,WARNING_MSG);
+      LOG_WARNING_MSG("MPProblem::  I don't know: "<< endl << *pChild);
     }
   }
 
-  PrintOptions();
-  LOG_MSG("~MPProblem::ParseXML()",DEBUG_MSG);
+  LOG_DEBUG_MSG("~MPProblem::ParseXML()");
 }
 
 void MPProblem::
 ParseXMLFileIO(TiXmlNode* in_pNode) {
-  LOG_MSG("MPProblem::ParseXMLFileIO()",DEBUG_MSG);
+  LOG_DEBUG_MSG("MPProblem::ParseXMLFileIO()");
   if(string(in_pNode->Value()) != "file_io") {
-    LOG_MSG("MPProblem::ParseFileIO() error xml input",ERROR_MSG); exit(-1);
+    LOG_ERROR_MSG("MPProblem::ParseFileIO() error xml input"); exit(-1);
   }
 
   for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; 
@@ -57,34 +59,40 @@ ParseXMLFileIO(TiXmlNode* in_pNode) {
     } else  if(string(pChild->Value()) == "output_dir") {
       m_output_dir = string(pChild->ToElement()->Attribute("dir_name"));
     } else {
-      LOG_MSG("MPProblem::  I don't know: "<< endl << *pChild,WARNING_MSG);
+      LOG_WARNING_MSG("MPProblem::  I don't know: "<< endl << *pChild);
     }
   }
-  LOG_MSG("~MPProblem::ParseXMLFileIO()",DEBUG_MSG);
+  LOG_DEBUG_MSG("~MPProblem::ParseXMLFileIO()");
 }
 
 void MPProblem::
-PrintOptions()
+PrintOptions(ostream& out_os)
 {
-  cout << "MPProblem" << endl;
-  cout << "  input_env  = " << m_input_env << endl;
-  cout << "  output_map = " << m_output_map << endl;
-  cout << "  output_dir = " << m_output_dir << endl;
+  out_os << "MPProblem" << endl;
+  out_os << "  input_env  = " << m_input_env << endl;
+  out_os << "  output_map = " << m_output_map << endl;
+  out_os << "  output_dir = " << m_output_dir << endl;
+  
+  m_pMPStrategy->PrintOptions(out_os);
+  m_pDistanceMetric->PrintOptions(out_os);
+  m_pCollisionDetection->PrintOptions(out_os);
+  m_pEnvironment->PrintOptions(out_os);
 }
 
 void MPProblem::
 WriteRoadmapForVizmo() {
-  LOG_MSG("MPProblem::WriteRoadmapForVizmo()",DEBUG_MSG);
+  LOG_DEBUG_MSG("MPProblem::WriteRoadmapForVizmo()");
   ofstream  myofstream(GetOutputRoadmap().c_str());
   
   if (!myofstream) {
-    LOG_MSG("MPProblem::WriteRoadmapForVizmo: can't open outfile: ",ERROR_MSG);
+    LOG_ERROR_MSG("MPProblem::WriteRoadmapForVizmo: can't open outfile: ");
     exit(-1);
   }
   
   myofstream << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
   myofstream << endl << "#####PREAMBLESTART#####";
-  myofstream << endl << "../obprm -f -bbox [-10,10,-10,10,-10,10]";//commandLine;
+  myofstream << endl << "../obprm -f " << GetEnvFileName() << " ";//commandLine;
+  GetEnvironment()->GetBoundingBox()->PrintForVizmo(myofstream);
   myofstream << endl << "#####PREAMBLESTOP#####";
   
   myofstream << endl << "#####ENVFILESTART#####";
@@ -98,5 +106,6 @@ WriteRoadmapForVizmo() {
 
   GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
   myofstream.close();
-  LOG_MSG("~MPProblem::WriteRoadmapForVizmo()",DEBUG_MSG);
+  LOG_DEBUG_MSG("~MPProblem::WriteRoadmapForVizmo()");
 }
+

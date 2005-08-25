@@ -2,89 +2,71 @@
 
 
 MPStrategy::
-MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pproblem) {
+MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem) : MPBaseObject(in_pNode,in_pProblem) {
+  LOG_DEBUG_MSG( "MPStrategy::MPStrategy()");
+  ///\todo Find a home for "addPartialEdge" and "addAllEdges" or remove all together
+  addPartialEdge= true;
+  addAllEdges=false;
+  if(!in_pNode) {
+    LOG_ERROR_MSG("MPStrategy::MPStrategy() error xml input"); exit(-1);
+  }
+  if(string(in_pNode->Value()) != "MPStrategy") {
+    LOG_ERROR_MSG("MPStrategy::MPStrategy() error xml input"); exit(-1);
+  }
+     
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    if(string(pChild->Value()) == "node_generation_methods") {
+      m_pNodeGeneration = new GenerateMapNodes<CfgType>(pChild, GetMPProblem());
+    } else if(string(pChild->Value()) == "connection_methods") {
+      m_pConnection = new ConnectMap<CfgType, WeightType>(pChild, GetMPProblem());
+    } else if(string(pChild->Value()) == "lp_methods") {
+      m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(pChild, GetMPProblem());
+    } else if(string(pChild->Value()) == "MPStrategyMethod") {
+      ParseStrategyMethod(pChild);
+    } else {
+      LOG_WARNING_MSG("MPStrategy::  I don't know: "<< endl << *pChild);
+    }
+  }
 
-    LOG_MSG( "MPStrategy::MPStrategy()" , DEBUG_MSG);
-    m_pProblem = in_pproblem;
-    addPartialEdge= true;
-    addAllEdges=true;
-    if(!in_pNode) {
-      LOG_MSG("MPStrategy::MPStrategy() error xml input",ERROR_MSG); exit(-1);
-    }
-    if(string(in_pNode->Value()) != "MPStrategy") {
-      LOG_MSG("MPStrategy::MPStrategy() error xml input",ERROR_MSG); exit(-1);
-    }
- 
-    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-      if(string(pChild->Value()) == "node_generation_methods") {
-        m_pNodeGeneration = new GenerateMapNodes<CfgType>(pChild);
-      } else if(string(pChild->Value()) == "connection_methods") {
-        m_pConnection = new ConnectMap<CfgType, WeightType>(pChild);
-      } else if(string(pChild->Value()) == "lp_methods") {
-        m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(pChild);
-      } else {
-        LOG_MSG("MPStrategy::  I don't know: "<< endl << *pChild,WARNING_MSG);
-      }
-    }
-    LOG_MSG( "~MPStrategy::MPStrategy()" , DEBUG_MSG);
+  
+  LOG_DEBUG_MSG( "~MPStrategy::MPStrategy()");
 }
 
 
 void MPStrategy::
-GenerateMap() {
-  LOG_MSG("MPStrategy::GenerateMap()",DEBUG_MSG);
-  Stat_Class Stats;
+PrintOptions(ostream& out_os)
+{
+  out_os << "MPStrategy" << endl;
+  m_pNodeGeneration->PrintOptions(out_os);
+  m_pConnection->PrintOptions(out_os);
+  m_pLocalPlanners->PrintOptions(out_os);
+}
+
+void MPStrategy::
+ParseStrategyMethod(TiXmlNode* in_pNode) {
+  if(!in_pNode) {
+    LOG_ERROR_MSG("MPStrategy::ParseStrategyMethod() error xml input"); exit(-1);
+  }
+  if(string(in_pNode->Value()) != "MPStrategyMethod") {
+    LOG_ERROR_MSG("MPStrategy::ParseStrategyMethod() require tag <MPStrategyMethod>");
+    exit(-1);
+  }
   
-  Clock_Class        NodeGenClock;
-  Clock_Class        ConnectionClock;
-  vector<CfgType> nodes;
-  nodes.erase(nodes.begin(),nodes.end());
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    if(string(pChild->Value()) == "PRMRoadmap") {
+      PRMRoadmap* prm = new PRMRoadmap(pChild,GetMPProblem());
+      all_MPStrategyMethod.push_back( prm );
+      selected_MPStrategyMethod = prm;
+    } else {
+      LOG_WARNING_MSG("MPStrategy::  I don't know: "<< endl << *pChild);
+    }
+  }
+}
 
-  //---------------------------
-  // Generate roadmap nodes
-  //---------------------------
-  NodeGenClock.StartClock("Node Generation");
-  cout << "Starting Generate Nodes" << endl;
-  m_pNodeGeneration->GenerateNodes(m_pProblem->GetRoadmap(),Stats,
-                                    m_pProblem->GetCollisionDetection(),
-                                    m_pProblem->GetDistanceMetric(),nodes);
-  cout << "Finished Generate Nodes" << endl;
-  NodeGenClock.StopClock();
+void MPStrategy::
+Solve() {
+  LOG_DEBUG_MSG("MPStrategy::Solve()")
+  (*selected_MPStrategyMethod)();
+  LOG_DEBUG_MSG("~MPStrategy::Solve()")
+};
 
-
-  //---------------------------
-  // Connect roadmap nodes
-  //---------------------------
-  ConnectionClock.StartClock("Node Connection");
-  cout << "Starting connect" << endl;
-  m_pConnection->Connect(m_pProblem->GetRoadmap(), Stats, 
-                          m_pProblem->GetCollisionDetection(),
-                          m_pProblem->GetDistanceMetric(), 
-                          m_pLocalPlanners,
-                          addPartialEdge, addAllEdges);
-  cout << "Finished connect" << endl;
-  ConnectionClock.StopClock();
-  /*
-  Input* input = new Input;
-  cout << "Writing roadmap" << endl;
-
-  char env[100];
-  char cmd[100];
-  strcpy(env,m_pProblem->GetEnvFileName().c_str());
-  input->envFile.SetValue(env);
-  strcpy(cmd,"../obprm -f");
-  cout << "setting envfile to: " << env << endl;
-  strcpy(input->commandLine,cmd);
-  */
-  /*
-  m_pProblem->GetRoadmap()->WriteRoadmap(input,m_pProblem->GetCollisionDetection(),
-                               m_pProblem->GetDistanceMetric(), 
-                               m_pLocalPlanners,
-                               m_pProblem->GetOutputRoadmap());
-  */
-  m_pProblem->WriteRoadmapForVizmo();
-  
-  //delete input;
-  cout << "Finished writting roadmap" << endl;
-  LOG_MSG("~MPStrategy::GenerateMap()",DEBUG_MSG);
-} 

@@ -34,6 +34,7 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   Closest();
+  Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   Closest(int k);
   ~Closest();
  
@@ -46,6 +47,8 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
   void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
+  ///Used in new MPProblem framework.
+  virtual void PrintOptions(ostream& out_os);  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
 
   //////////////////////
@@ -83,6 +86,16 @@ Closest<CFG,WEIGHT>::Closest():NodeConnectionMethod<CFG,WEIGHT>() {
   element_name = "closest"; 
   SetDefault();
 }
+
+template <class CFG, class WEIGHT>
+Closest<CFG,WEIGHT>::Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+    NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
+  element_name = "closest"; 
+  SetDefault();
+}
+
+
+
 
 
 template <class CFG, class WEIGHT>
@@ -150,6 +163,15 @@ PrintValues(ostream& _os){
   _os << "\n" << GetName() << " kclosest = ";
   _os << kclosest;
   _os << endl;
+}
+
+template <class CFG, class WEIGHT>
+void
+Closest<CFG, WEIGHT>::
+PrintOptions(ostream& out_os){
+  out_os << "    " << GetName() << "::  kclosest = ";
+  out_os << kclosest;
+  out_os << endl;
 }
 
 

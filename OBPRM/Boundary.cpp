@@ -181,9 +181,23 @@ IfWrap(int par) {
 
 void
 BoundingBox::
+PrintForVizmo(std::ostream& _os) {
+  std::vector< std::pair<double, double> >::iterator itrb;
+  _os << " -bbox [ " ;
+  for (itrb = bounding_box.begin(); itrb < bounding_box.end(); ++itrb) {
+    if (itrb+1 != bounding_box.end())
+      _os << itrb->first << "," << itrb->second << ",";
+    else
+      _os << itrb->first << "," << itrb->second << "";
+  }
+  _os << "]";
+}
+
+void
+BoundingBox::
 Print(std::ostream& _os) {
   std::vector< std::pair<double, double> >::iterator itrb;
-  _os << " Bounding Box => [ " ;
+  _os << " Bounding Box => [" ;
   for (itrb = bounding_box.begin(); itrb < bounding_box.end(); ++itrb) {
     if (itrb+1 != bounding_box.end())
       _os << itrb->first << ":" << itrb->second << " ; ";
@@ -192,6 +206,7 @@ Print(std::ostream& _os) {
   }
   _os << "]" << endl;
 }
+
 
 void
 BoundingBox::

@@ -42,6 +42,8 @@ class BoundingBox : public Boundary {
   void SetRanges(std::vector<double> &ranges);
 
   void Print(std::ostream& _os);
+  void PrintForVizmo(std::ostream& _os);
+
   void Parse(std::stringstream &i_bbox);
 
   bool IfWrap(int par);

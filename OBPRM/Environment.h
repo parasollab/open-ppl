@@ -77,7 +77,7 @@ public:
     Environment(Environment &from_env, BoundingBox &i_boundaries);
 
     ///\brief Constructor taking in an XML object
-    Environment(TiXmlNode* in_pNode, MPProblem*);
+    Environment(TiXmlNode* in_pNode, MPProblem* in_pProblem);
      
     /**
      * Destructor.
@@ -124,7 +124,7 @@ public:
       */
     virtual MultiBody * GetMultiBody(int _index);
 
-
+    void PrintOptions(ostream& out_os);
     //////////////////////////////////////////////////////////////////////////////////////////
     //
     //  Resolution.

@@ -16,7 +16,7 @@
 #include <functional>
 
 #include "OBPRMDef.h"
-#include "tinyxml.h"
+#include "util.h"
 #ifndef VID //from BaseGraph.h
 ///ID for every vertex in graph.
 typedef int VID;
@@ -49,18 +49,19 @@ const int WS = 1;   ///< Type WS: Workspace distance metric
   *and selected.  all contains all of the different types of distance 
   *metric methods.  selected contains only those selected by the user.
   */
-class DistanceMetric {
+class DistanceMetric : MPBaseObject{
  public:
   DistanceMetric();
   ~DistanceMetric();
 
-  DistanceMetric(TiXmlNode* in_pNode);
+  DistanceMetric(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   static vector<DistanceMetricMethod*> GetDefault();
 
   int ReadCommandLine(n_str_param* DMstrings[MAX_DM], int numDMs);
   void PrintUsage(ostream& _os) const;
   void PrintValues(ostream& _os) const;
   void PrintDefaults(ostream& _os) const;
+  void PrintOptions(ostream& _os) const;
 
   /**Read information about DistanceMetricMethods selected from file.
     *@param _fname filename for data file.
@@ -286,6 +287,7 @@ class DistanceMetricMethod {
   virtual void ParseCommandLine(int argc, char** argv);
   virtual void PrintUsage(ostream& _os) const;
   virtual void PrintValues(ostream& _os) const;
+  virtual void PrintOptions(ostream& _os) const;
   virtual DistanceMetricMethod* CreateCopy() = 0;
 
   virtual double Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) = 0;
@@ -339,6 +341,7 @@ class ScaledEuclideanDistance : public EuclideanDistance {
   virtual void ParseCommandLine(int argc, char** argv);
   virtual void PrintUsage(ostream& _os) const;
   virtual void PrintValues(ostream& _os) const;
+  virtual void PrintOptions(ostream& _os) const;
   virtual DistanceMetricMethod* CreateCopy();
 
   /**This method calculates 
@@ -377,6 +380,7 @@ class MinkowskiDistance : public DistanceMetricMethod {
   virtual void ParseCommandLine(int argc, char** argv);
   virtual void PrintUsage(ostream& _os) const;
   virtual void PrintValues(ostream& _os) const;
+  virtual void PrintOptions(ostream& _os) const;
   virtual DistanceMetricMethod* CreateCopy();
 
   /**This method calculates 

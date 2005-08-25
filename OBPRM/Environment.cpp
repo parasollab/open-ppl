@@ -115,8 +115,8 @@ Environment(Environment &from_env, BoundingBox &i_boundaries) {
 ///\todo Fix boundaries init
 
 Environment::
-Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
-    LOG_MSG("Environment::Environment()",VERBOSE);
+Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) : MPBaseObject(in_pNode, in_pProblem) {
+    LOG_DEBUG_MSG("Environment::Environment()");
     pathVersion = PATHVER_20001125;
 
     multibody.clear();
@@ -131,10 +131,10 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
     ///\todo Fix this hardcoded value!!!
        boundaries = new BoundingBox(3,3);
     if(!in_pNode) {
-      cout << "Error -1" << endl; exit(-1);
+      LOG_ERROR_MSG("Error reading <environment> tag...."); exit(-1);
     }
     if(string(in_pNode->Value()) != "environment") {
-      cout << "Error reading <environment> tag...." << endl; exit(-1);
+      LOG_ERROR_MSG("Error reading <environment> tag...."); exit(-1);
     }
 
     for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
@@ -155,7 +155,7 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
     
     ///\todo fix hack.  This hack gets env_filename from environment xml tag
     //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
-    const char* env_filename = in_pProblem->GetEnvFileName().c_str();
+    const char* env_filename = GetMPProblem()->GetEnvFileName().c_str();
     ///\todo fix hack.  This hack creates a temp Input to parse environment file.
     Input* pinput;
     pinput = new Input;
@@ -163,10 +163,14 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
   
     pinput->Read(env_filename,EXIT);
     Get(pinput);
-    LOG_MSG("~Environment::Environment()",VERBOSE);
+    LOG_DEBUG_MSG("~Environment::Environment()");
 }
 
-
+void Environment::
+PrintOptions(ostream& out_os) {
+  out_os << "  Environment" << endl;
+  
+}
 
 
 
@@ -175,7 +179,7 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) {
 //===================================================================
 Environment::
 ~Environment() {
-  cout << " ~Environment(). " << endl;
+  LOG_DEBUG_MSG("Environment::~Environment()");
   usable_multibody.clear();
 
   // release memory from multibody if this instance was not copied
@@ -184,6 +188,7 @@ Environment::
     for (int i=0; i < multibody.size(); i++) {
       delete multibody[i];
     }
+  LOG_DEBUG_MSG("~Environment::~Environment()");
 }
 
 
@@ -223,6 +228,7 @@ SortMultiBodies(){
 void 
 Environment::
 Get(Input * _input) {	
+  LOG_DEBUG_MSG("Environment::Get()");
   // read multibodies in the environment (robot and obstacles)
   for (int i = 0; i < _input->multibodyCount; i++) {
     MultiBody * mb = new MultiBody(this);
@@ -256,6 +262,7 @@ Get(Input * _input) {
   // activate objects inside the bounding box and deactivate other
   // objects
   UpdateUsableMultibody();	
+  LOG_DEBUG_MSG("~Environment::Get()");
 }
 
 
@@ -264,6 +271,21 @@ Get(Input * _input) {
 void 
 Environment::
 UpdateUsableMultibody() {
+
+int rob = robotIndex;  
+usable_externalbody_count =0;
+for (int i = 0; i < multibody.size(); i++) {
+      if (i == rob) { // @todo: need a test function in multibody to
+		    // decide if a multibody is a robot
+      usable_multibody.push_back(multibody[i]);
+      usable_externalbody_count++; // robot is an external body
+      robotIndex = usable_multibody.size()-1;
+    } else {
+      usable_multibody.push_back(multibody[i]);
+      usable_externalbody_count++; // robot is an external body
+}
+}
+/*
   double minx = boundaries->GetRange(0).first; 
   double maxx = boundaries->GetRange(0).second;
   double miny = boundaries->GetRange(1).first; 
@@ -309,6 +331,8 @@ UpdateUsableMultibody() {
       }
     }
   }
+
+*/
 }
 
 //===================================================================

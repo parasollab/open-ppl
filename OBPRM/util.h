@@ -335,18 +335,14 @@ void ReadCfgs(char * filename,  vector<CFG>& cfgs) {
   }
 }
 
-#endif
-
-#ifndef _MPBaseObject_h_
-#define _MPBaseObject_h_
 /////////////////
 //
 //Logging + XML stuff
 //
 /////////////////
-#define DEBUG_MSG 1
-#define WARNING_MSG 2
-#define ERROR_MSG 3
+//#define DEBUG_MSG 1
+//#define WARNING_MSG 2
+//#define ERROR_MSG 3
 
 
 class MessageLogs {
@@ -371,34 +367,61 @@ class MessageLogs {
 
 };
 
-
+class MPProblem;
 class MPBaseObject {
 
   public: 
-    MPBaseObject(){};
-    virtual void ParseXML(TiXmlNode* in_pNode) { };
+    MPBaseObject(){ m_pProblem = NULL;};
+    MPBaseObject(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+         m_strLabel("") { 
+      m_pProblem = in_pProblem;
+      ParseXML(in_pNode); 
+    };
+    virtual void ParseXML(TiXmlNode* in_pNode) {
+      if(in_pNode->Type() == TiXmlNode::ELEMENT) {
+        const char* carLabel = in_pNode->ToElement()->Attribute("Label");
+        if(carLabel) {
+          m_strLabel = string(carLabel);
+        }
+      }  
+    };
+    
     inline MessageLogs& GetMessageLog() { return m_message_log; };
+    inline MPProblem* GetMPProblem() { return m_pProblem;}
+    virtual void PrintOptions(ostream& out_os) { };
+    inline string& GetLabel() { return m_strLabel; };
   private:
     MessageLogs m_message_log;
+    MPProblem* m_pProblem;
+    string m_strLabel;
+    //      remove from below ... use in future
+      //if(level >= GetMessageLog().GetLevel()) \
 
 };
 
 
 #ifdef _LOG
-//#define DEBUG_MSG
-//ERROR_MSG
-//WARNIND_MSG
 
-#define LOG_MSG( msg , level) \
+#define LOG_DEBUG_MSG( msg ) \
 { \
-        if(level >= GetMessageLog().GetLevel()) \
-        cerr << msg << endl ; \
+        cerr << "DEBUG: " << msg << endl ; \
+}
+
+#define LOG_WARNING_MSG( msg ) \
+{ \
+        cerr << "WARNING: " << msg << endl ; \
+}
+
+#define LOG_ERROR_MSG( msg ) \
+{ \
+        cerr << "ERROR: " << msg << endl ; \
 }
 
 #else 
 
-#define LOG_MSG( msg , level) { } 
-
+#define LOG_DEBUG_MSG( msg ) { }
+#define LOG_WARNING_MSG( msg ) { }
+#define LOG_ERROR_MSG( msg ) { }
 #endif //_LOG
 
 

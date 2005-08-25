@@ -29,7 +29,7 @@
 
 // MPRegion is used by region combination methods
 #include "MPRegion.h"
-#include "tinyxml.h"
+#include "MPProblem.h"
 
 // region connection methods
 //#include "NaiveMapCombine.h"
@@ -39,13 +39,13 @@
 //#############################################################################
 // A collection of component connection methods
 template <class CFG, class WEIGHT>
-class ConnectMap {
+class ConnectMap : MPBaseObject{
  public:
 
   //////////////////////
   // Constructors and destructor
   ConnectMap();
-  ConnectMap(TiXmlNode* in_pNode);
+  ConnectMap(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ConnectMap(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
 	     DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
   ~ConnectMap();
@@ -54,6 +54,9 @@ class ConnectMap {
   // Access methods
   virtual vector<NodeConnectionMethod<CFG,WEIGHT>*> GetNodeDefault();
   virtual vector<ComponentConnectionMethod<CFG,WEIGHT>*> GetComponentDefault();
+  NodeConnectionMethod<CFG,WEIGHT>* GetNodeMethod(string& in_strLabel);
+  ComponentConnectionMethod<CFG,WEIGHT>* GetComponentMethod(string& in_strLabel);
+  
   //virtual vector<RoadmapConnectionMethod<CFG,WEIGHT>*> GetRoadmapDefault();
 
   //////////////////////
@@ -62,6 +65,7 @@ class ConnectMap {
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
   void PrintDefaults(ostream& _os);
+  void PrintOptions(ostream& out_os);
 
   //////////////////////
   // Core: Connection methods
@@ -122,6 +126,8 @@ class ConnectMap {
   
   n_str_param options; //component connection options
 
+  void ParseXML(TiXmlNode* in_pNode);
+  
  public:
   CDInfo cdInfo;
   static double connectionPosRes, ///< Position resolution for node connection
@@ -204,8 +210,53 @@ ConnectMap() {
 
 template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::
-ConnectMap(TiXmlNode* in_pNode) {
+ConnectMap(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+  MPBaseObject(in_pNode, in_pProblem){
+  LOG_DEBUG_MSG("ConnectMap::ConnectMap()");
+  ParseXML(in_pNode);
+  
+  
+  if(selected_component_methods.size() < 1)
+    LOG_WARNING_MSG("No Connection Methods selected!");
 
+  
+  
+
+
+  LOG_DEBUG_MSG("~ConnectMap::ConnectMap()");
+}
+
+
+template <class CFG, class WEIGHT>
+void ConnectMap<CFG,WEIGHT>::
+ParseXML(TiXmlNode* in_pNode) {
+  LOG_DEBUG_MSG("ConnectMap::ParseXML()");
+  
+  connectionPosRes = GetMPProblem()->GetEnvironment()->GetPositionRes();
+  cout << "connectionPosRes = " << connectionPosRes << endl;
+  connectionOriRes = GetMPProblem()->GetEnvironment()->GetOrientationRes();     
+  cout << "connectionOriRes = " << connectionOriRes << endl;
+
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); 
+      pChild !=0; pChild = pChild->NextSibling()) {
+    if(string(pChild->Value()) == "Closest") {
+      Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>(in_pNode,GetMPProblem());
+      closest->cdInfo = &cdInfo;
+      closest->connectionPosRes = connectionPosRes;
+      closest->connectionOriRes = connectionOriRes; 
+      all_node_methods.push_back(closest);
+      selected_node_methods.push_back(closest);
+    } else if(string(pChild->Value()) == "ConnectCCs") {
+      ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>(in_pNode,GetMPProblem());
+      connectccs->cdInfo = &cdInfo;
+      connectccs->connectionPosRes = connectionPosRes;
+      connectccs->connectionOriRes = connectionOriRes; 
+      all_component_methods.push_back(connectccs);
+      selected_component_methods.push_back(connectccs);
+    }
+  }
+  
+/*
   //setup node connection methods
   selected_node_methods.clear();
   all_node_methods.clear();
@@ -241,27 +292,18 @@ ConnectMap(TiXmlNode* in_pNode) {
 
   ///\todo Fix closest .... for some reason doesnt match them up.
   for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    for(int i=0; i<all_component_methods.size(); ++i) {
-      if(string(pChild->Value()) == all_component_methods[i]->GetName()) {
-        cout << "ConnectionMethod selected = " << all_component_methods[i]->GetName() << endl;
-        selected_component_methods.push_back(all_component_methods[i]);
-      }
-    }
-  }
-  
-  if(selected_component_methods.size() < 1)
-    cout << "No Connection Methods selected!" << endl;
-
-  
-  
-
-
-
+  for(int i=0; i<all_component_methods.size(); ++i) {
+  if(string(pChild->Value()) == all_component_methods[i]->GetName()) {
+  cout << "ConnectionMethod selected = " << all_component_methods[i]->GetName() << endl;
+  selected_component_methods.push_back(all_component_methods[i]);
 }
-
-
-
-
+}
+}
+  
+  */
+    
+  LOG_DEBUG_MSG("~ConnectMap::ParseXML()");
+}
 
 template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::
@@ -284,6 +326,37 @@ ConnectMap<CFG,WEIGHT>::
   //selected_roadmap_methods.clear();
   //all_roadmap_methods.clear();
 }
+
+template <class CFG, class WEIGHT>
+NodeConnectionMethod<CFG,WEIGHT>* 
+ConnectMap<CFG,WEIGHT>::GetNodeMethod(string& in_strLabel) {
+
+  typename vector<NodeConnectionMethod<CFG, WEIGHT>*>::iterator I;
+  for(I = selected_node_methods.begin(); 
+    I != selected_node_methods.end(); ++I) {
+    if(*I->GetLabel() == in_strLabel) {
+      return &(*I);
+    }
+  }
+  LOG_ERROR_MSG("ConnectMap:: cannot find NodeConnectionMethod label = " << in_strLabel);
+  exit(-1);
+}
+  
+  
+template <class CFG, class WEIGHT>
+ComponentConnectionMethod<CFG,WEIGHT>* 
+ConnectMap<CFG,WEIGHT>::GetComponentMethod(string& in_strLabel) {
+
+  typename vector<ComponentConnectionMethod<CFG, WEIGHT>*>::iterator I;
+  for(I = selected_node_methods.begin(); 
+    I != selected_node_methods.end(); ++I) {
+    if(*I->GetLabel() == in_strLabel) {
+      return &(*I);
+    }
+  }
+  LOG_ERROR_MSG("ConnectMap:: cannot find ComponentConnectionMethod label = " << in_strLabel);
+  exit(-1);
+}  
 
 
 template <class CFG, class WEIGHT>
@@ -325,8 +398,9 @@ int
 ConnectMap<CFG,WEIGHT>::
 ReadCommandLine(Input* input, Environment* env) {
   connectionPosRes = env->GetPositionRes();
+  cout << "connectionPosRes = " << connectionPosRes << endl;
   connectionOriRes = env->GetOrientationRes();   
-  
+  cout << "connectionOriRes = " << connectionOriRes << endl;
   typename vector<NodeConnectionMethod<CFG, WEIGHT>*>::iterator I;
   for(I = selected_node_methods.begin(); 
       I != selected_node_methods.end(); ++I)
@@ -465,6 +539,21 @@ ReadCommandLine(Input* input, Environment* env) {
   */
 
   return selected_node_methods.size() + selected_component_methods.size(); //+ selected_roadmap_methods.size();
+}
+
+template <class CFG, class WEIGHT>
+void
+ConnectMap<CFG,WEIGHT>::
+PrintOptions(ostream& out_os) {
+  out_os << "  Connection Methods" << endl;
+  typename vector<NodeConnectionMethod<CFG,WEIGHT>*>::iterator I;
+  for(I = all_node_methods.begin(); I != all_node_methods.end(); ++I)
+    (*I)->PrintOptions(out_os);
+
+  typename vector<ComponentConnectionMethod<CFG,WEIGHT>*>::iterator J;
+  for(J = all_component_methods.begin(); J != all_component_methods.end(); ++J)
+    (*J)->PrintOptions(out_os);
+  
 }
 
 

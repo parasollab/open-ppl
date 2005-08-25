@@ -107,8 +107,9 @@ CollisionDetection() {
 
 
 CollisionDetection::
-    CollisionDetection(TiXmlNode* in_pNode) { 
-  cout << "CollisionDetection::CollisionDetection(TiXmlNode* in_pNode)" << endl;
+CollisionDetection(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+    MPBaseObject(in_pNode, in_pProblem) { 
+  LOG_DEBUG_MSG("CollisionDetection::CollisionDetection()");
   penetration = -1;
 
 #ifdef USE_CSTK
@@ -157,9 +158,12 @@ CollisionDetection::
     }
   }
   
-  if(selected.size() < 1)
-    cout << "No CollisionDetectionMethods selected!" << endl;
+  if(selected.size() < 1) {
+    LOG_WARNING_MSG("No CollisionDetectionMethods selected!");
+  }
   
+  
+  LOG_DEBUG_MSG("~CollisionDetection::CollisionDetection()");
 }
 
 
@@ -225,6 +229,16 @@ CollisionDetection::
     delete directions[i];
 }
 
+
+void CollisionDetection::
+PrintOptions(ostream& out_os) {
+  out_os << "  CollisionDetection" << endl;
+  vector<CollisionDetectionMethod*>::const_iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++)
+    (*I)->PrintOptions(out_os);
+}
+
+
 vector<CollisionDetectionMethod*>
 CollisionDetection::
 GetDefault() {
@@ -287,6 +301,14 @@ PrintValues(ostream& _os) const {
   _os << "\n" << GetName() << " ";
   _os << endl;
 }
+
+void
+CollisionDetectionMethod::
+PrintOptions(ostream& _os) const {
+  _os << "    " << GetName() << " ";
+  _os << endl;
+}
+
 
 
 bool

@@ -38,7 +38,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
-#include "tinyxml.h"
+#include "util.h"
 
 class DistanceMetric;
 class Input;
@@ -115,10 +115,10 @@ const int In = 1;       ///<Type In: no collision unsure; collision sure.
 const int Exact = 2;    ///<Type Exact: no collision sure; collision sure.
 
 
-class CollisionDetection {
+class CollisionDetection : MPBaseObject {
  public:
   CollisionDetection();
-  CollisionDetection(TiXmlNode* in_pNode);
+  CollisionDetection(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   CollisionDetection(vector<CollisionDetectionMethod*>& _selected);
   ~CollisionDetection();
   
@@ -128,6 +128,7 @@ class CollisionDetection {
   void PrintUsage(ostream& _os) const;
   void PrintValues(ostream& _os) const;
   void PrintDefaults(ostream& _os) const;
+  void PrintOptions(ostream& out_os);
 
   /**Ouput information about all CD instances to file.
    *@param _fname filename for data file.
@@ -259,6 +260,7 @@ class CollisionDetectionMethod {
   virtual void ParseCommandLine(int argc, char** argv);
   virtual void PrintUsage(ostream& _os) const;
   virtual void PrintValues(ostream& _os) const;
+  virtual void PrintOptions(ostream& _os) const;
   virtual CollisionDetectionMethod* CreateCopy() = 0;
 
   /**Get minimum distance from Robot to Obstacles in environment.

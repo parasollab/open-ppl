@@ -28,6 +28,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   ConnectCCs();
+  ConnectCCs(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ConnectCCs(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
 		      DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
   ~ConnectCCs();
@@ -42,6 +43,8 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
+  ///Used in new MPProblem framework.
+  virtual void PrintOptions(ostream& out_os);
   virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
   // Core: Connection method
@@ -125,8 +128,18 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 ///////////////////////////////////////////////////////////////////////////////
 //   Connection Method:  ConnectCCs
 template <class CFG, class WEIGHT>
-ConnectCCs<CFG,WEIGHT>::ConnectCCs():
-  ComponentConnectionMethod<CFG,WEIGHT>() { 
+ConnectCCs<CFG,WEIGHT>::
+ConnectCCs():ComponentConnectionMethod<CFG,WEIGHT>() { 
+  element_name = "components"; 
+
+  SetDefault();
+}
+
+
+template <class CFG, class WEIGHT>
+ConnectCCs<CFG,WEIGHT>::
+ConnectCCs(TiXmlNode* in_pNode, MPProblem* in_pProblem):
+  ComponentConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
   element_name = "components"; 
 
   SetDefault();
@@ -216,6 +229,16 @@ PrintValues(ostream& _os){
   _os << "\n" << GetName() << " kpairs = ";
   _os << kpairs << "smallcc = " << smallcc ;
   _os << endl;
+}
+
+
+template <class CFG, class WEIGHT>
+void
+ConnectCCs<CFG, WEIGHT>::
+PrintOptions(ostream& out_os){
+  out_os << "    " << GetName() << "::  kpairs = ";
+  out_os << kpairs << "  smallcc = " << smallcc ;
+  out_os << endl;
 }
 
 

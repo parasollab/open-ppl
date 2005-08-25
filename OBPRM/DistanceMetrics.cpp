@@ -34,8 +34,9 @@ DistanceMetric() {
 
 
 DistanceMetric::
-DistanceMetric(TiXmlNode* in_pNode) {
-  cout << "DistanceMetric::DistanceMetric" << endl;
+DistanceMetric(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+    MPBaseObject(in_pNode, in_pProblem){
+  LOG_DEBUG_MSG("DistanceMetric::DistanceMetric()");
   /*
   EuclideanDistance* euclidean = new EuclideanDistance();
   all.push_back(euclidean);
@@ -53,24 +54,27 @@ DistanceMetric(TiXmlNode* in_pNode) {
   all.push_back(com);
   */
   if(!in_pNode) {
-    cout << "Error -1" << endl; exit(-1);
+    LOG_ERROR_MSG("Error reading <distance_metrics> tag....");exit(-1);
   }
   if(string(in_pNode->Value()) != "distance_metrics") {
-    cout << "Error reading <distance_metrics> tag...." << endl; exit(-1);
+    LOG_ERROR_MSG("Error reading <distance_metrics> tag....");exit(-1);
   }
 
   for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
     if(string(pChild->Value()) == "euclidean") {
-      cout << "  parsing a <euclidean> entry..." << endl;
       EuclideanDistance* euclidean = new EuclideanDistance();
       all.push_back(euclidean);
       selected.push_back(euclidean->CreateCopy());
+    } else if(string(pChild->Value()) == "scaledEuclidean") {
+      ScaledEuclideanDistance* scaledEuclidean = new ScaledEuclideanDistance();
+      all.push_back(scaledEuclidean);
+      selected.push_back(scaledEuclidean->CreateCopy());
     } else {
-      cout << "  I don't know: " << *pChild << endl;
+      LOG_WARNING_MSG("  I don't know: " << *pChild);
     }
   }
   
-  
+  LOG_DEBUG_MSG("~DistanceMetric::DistanceMetric()");
 }
 
 
@@ -196,6 +200,7 @@ PrintValues(ostream& _os) const {
 }
 
 
+
 void 
 DistanceMetric::
 PrintDefaults(ostream& _os) const { 
@@ -206,6 +211,16 @@ PrintDefaults(ostream& _os) const {
     (*I)->PrintValues(_os);
   for(I=Default.begin(); I!=Default.end(); I++)
     delete (*I);
+}
+
+
+void 
+DistanceMetric::
+PrintOptions(ostream& out_os) const { 
+  out_os << "  Distance Metrics" << endl;
+  vector<DistanceMetricMethod*>::const_iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++)
+    (*I)->PrintOptions(out_os);
 }
 
 
@@ -357,6 +372,15 @@ PrintValues(ostream& _os) const {
   _os << "\n" << GetName() << " ";
   _os << endl;
 }
+
+
+void 
+DistanceMetricMethod::
+PrintOptions(ostream& _os) const {
+  _os << "    " << GetName() << " ";
+  _os << endl;
+}
+
 
 //////////
 
@@ -513,6 +537,14 @@ PrintValues(ostream& _os) const {
   _os << endl;
 }
 
+void 
+ScaledEuclideanDistance::
+PrintOptions(ostream& _os) const {
+  _os << "    " << GetName() << "::  ";
+  _os << "scale = " << sValue;
+  _os << endl;
+}
+
 
 DistanceMetricMethod* 
 ScaledEuclideanDistance::
@@ -649,6 +681,14 @@ void
 MinkowskiDistance::
 PrintValues(ostream& _os) const {
   _os << "\n" << GetName() << " ";
+  _os << r1 << " " << r2 << " " << r3;
+  _os << endl;
+}
+
+void 
+MinkowskiDistance::
+PrintOptions(ostream& _os) const {
+  _os << "    " << GetName() << ":: ";
   _os << r1 << " " << r2 << " " << r3;
   _os << endl;
 }

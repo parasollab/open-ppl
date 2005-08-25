@@ -76,9 +76,11 @@ class GenerateMapNodes : public MPBaseObject{
 
   ///Default Constructor.
   GenerateMapNodes();
-  GenerateMapNodes(TiXmlNode* in_pNode);
+  GenerateMapNodes(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.	
   ~GenerateMapNodes();
+  
+  void PrintOptions(ostream& out_os);
 
   //@}
 
@@ -92,6 +94,7 @@ class GenerateMapNodes : public MPBaseObject{
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
   void PrintDefaults(ostream& _os);
+  NodeGenerationMethod<CFG>* GetMethod(string& in_strLabel);
   
 
   /**Generate nodes according to those in selected vector.
@@ -102,6 +105,8 @@ class GenerateMapNodes : public MPBaseObject{
   void GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		     CollisionDetection* cd, 
 		     DistanceMetric* dm, vector<CFG>& nodes);
+
+  
 
  //protected:
  public:
@@ -151,13 +156,13 @@ GenerateMapNodes() {
   /*
   GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>();
   all.push_back(gaussPRM);
-
+*/
   BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>();
   all.push_back(basicOBPRM);
 
   OBPRM<CFG>* obprm = new OBPRM<CFG>();
   all.push_back(obprm);
-  
+  /*
   BasicMAPRM<CFG>* basicMAPRM = new BasicMAPRM<CFG>();
   all.push_back(basicMAPRM);
 
@@ -172,25 +177,27 @@ GenerateMapNodes() {
 
 template <class CFG>
 GenerateMapNodes<CFG>::
-GenerateMapNodes(TiXmlNode* in_pNode) {
-  LOG_MSG("GenerateMapNodes::GenearteMapNodes()",DEBUG_MSG);
+GenerateMapNodes(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+     MPBaseObject(in_pNode,in_pProblem) {
+  
+  LOG_DEBUG_MSG("GenerateMapNodes::GenearteMapNodes()");
   ParseXML(in_pNode);
-  LOG_MSG("~GenerateMapNodes::GenearteMapNodes()",DEBUG_MSG);
+  LOG_DEBUG_MSG("~GenerateMapNodes::GenearteMapNodes()");
 }
 
 template <class CFG>
 void GenerateMapNodes<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
-  LOG_MSG("GenerateMapNodes::ParseXML()",DEBUG_MSG);
+  LOG_DEBUG_MSG("GenerateMapNodes::ParseXML()");
   
   for( TiXmlNode* pChild = in_pNode->FirstChild(); 
       pChild !=0; pChild = pChild->NextSibling()) {
     if(string(pChild->Value()) == "BasicPRM") {
-      BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>(pChild);
+      BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>(pChild, GetMPProblem());
       basicPRM->cdInfo = &cdInfo;
       selected.push_back(basicPRM);
     } else if(string(pChild->Value()) == "BasicOBPRM") {
-      BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>(pChild);
+      BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>(pChild, GetMPProblem());
       basicOBPRM->cdInfo = &cdInfo;
       selected.push_back(basicOBPRM);
     }
@@ -232,17 +239,30 @@ ParseXML(TiXmlNode* in_pNode) {
     }
   }
   */
-  if(selected.size() < 1)
-    LOG_MSG("GenerateMapNodes::ParseXML() -- No methods selected",WARNING_MSG);
+  if(selected.size() < 1) {
+    LOG_WARNING_MSG("GenerateMapNodes::ParseXML() -- No methods selected");
+  }
   
-  LOG_MSG("~GenerateMapNodes::ParseXML()",DEBUG_MSG);
+  LOG_DEBUG_MSG("~GenerateMapNodes::ParseXML()");
 }
 
+template <class CFG>
+NodeGenerationMethod<CFG>* 
+GenerateMapNodes<CFG>::GetMethod(string& in_strLabel) {
+  typename vector<NodeGenerationMethod<CFG>*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++) {
+    if(I->GetLabel() == in_strLabel) {
+      return &(*I);
+    }
+  }
+  LOG_ERROR_MSG("GenerateMapNodes:: cannot find NodeGenerationMethod label = " << in_strLabel);
+  exit(-1);
+}
 
 template <class CFG>
 void GenerateMapNodes<CFG>::
 Reset() {
-  LOG_MSG("GenerateMapNodes::Reset()",DEBUG_MSG);
+  LOG_DEBUG_MSG("GenerateMapNodes::Reset()");
   typename vector<NodeGenerationMethod<CFG>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
@@ -252,15 +272,15 @@ Reset() {
   
   all.clear();
   selected.clear();
-  LOG_MSG("~GenerateMapNodes::Reset()",DEBUG_MSG);
+  LOG_DEBUG_MSG("~GenerateMapNodes::Reset()");
 }
 
 template <class CFG>
 GenerateMapNodes<CFG>::
 ~GenerateMapNodes() {
-  LOG_MSG("GenerateMapNodes::~GenerateMapNodes()",DEBUG_MSG);
+  LOG_DEBUG_MSG("GenerateMapNodes::~GenerateMapNodes()");
   Reset();
-  LOG_MSG("~GenerateMapNodes::~GenerateMapNodes()",DEBUG_MSG);
+  LOG_DEBUG_MSG("~GenerateMapNodes::~GenerateMapNodes()");
 }
 
 
@@ -403,35 +423,48 @@ GenerateMapNodes<CFG>::
 GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	      CollisionDetection* cd, 
 	      DistanceMetric* dm, vector<CFG>& nodes) {
-cout << "GenerateMapNodes<CFG>::GenerateNodes" << endl;
+
+  LOG_DEBUG_MSG("GenerateMapNodes::GenerateNodes");
   // clear generated nodes space
   nodes.erase(nodes.begin(),nodes.end());
-  cout << "nodes.erase" << endl;
   typename vector<NodeGenerationMethod<CFG>*>::iterator itr;
-  cout << "I am here1" << endl << flush;
   for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
-    cout << "I am here2" << endl << flush;
 #ifndef QUIET	
     Clock_Class clock;
     clock.StartClock((*itr)->GetName());
     cout<<"\n  "; clock.PrintName(); cout << " " << flush;
 #endif	
-    cout << "before (*itr)->GenerateNodes" << endl;
     (*itr)->GenerateNodes(_rm->GetEnvironment(), Stats, cd, dm, nodes);
-    cout << "after (*itr)->GenerateNodes" << endl;
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec  \n" << flush;
 #endif
+    if (addNodes2Map) {
+      _rm->m_pRoadmap->AddVertex(nodes); //add node to graph
+    }
+    nodes.erase(nodes.begin(),nodes.end());
   }
 
   //if that's what the user wants
-  if (addNodes2Map) {
-    _rm->m_pRoadmap->AddVertex(nodes); //add node to graph
-  }
+  /////Moved this section up to for loop.
+  //if (addNodes2Map) {
+  //  _rm->m_pRoadmap->AddVertex(nodes); //add node to graph
+  //}
+  
+  LOG_DEBUG_MSG("~GenerateMapNodes::GenerateNodes");
 };
 
 
+template <class CFG>
+void
+GenerateMapNodes<CFG>::
+PrintOptions(ostream& out_os) {
+  out_os << "  Node Generation Mehods" << endl;
+  typename vector<NodeGenerationMethod<CFG>*>::iterator itr;
+  for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
+    (*itr)->PrintOptions(out_os);
+  }
+}
 
 
 #endif

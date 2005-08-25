@@ -28,7 +28,7 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   BasicPRM();
-  BasicPRM(TiXmlNode* in_pNode);
+  BasicPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.	
   virtual ~BasicPRM();
 
@@ -47,6 +47,8 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
+  ///Used in new MPProblem framework.
+  virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
   /**Basic Randomized (probabilistic) Node Generation.
@@ -84,14 +86,21 @@ BasicPRM() : NodeGenerationMethod<CFG>() {
 
 template <class CFG>
 BasicPRM<CFG>::
-    BasicPRM(TiXmlNode* in_pNode) : NodeGenerationMethod<CFG>() {
+~BasicPRM() {
 }
 
 
 template <class CFG>
 BasicPRM<CFG>::
-~BasicPRM() {
+BasicPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+NodeGenerationMethod<CFG>(in_pNode, in_pProblem) {
+  LOG_DEBUG_MSG("BasicPRM::BasicPRM()");
+  ParseXML(in_pNode);
+  LOG_DEBUG_MSG("~BasicPRM::BasicPRM()");
 }
+
+
+
 
 
 template <class CFG>
@@ -105,12 +114,15 @@ template <class CFG>
 void
 BasicPRM<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
+  LOG_DEBUG_MSG("BasicPRM::ParseXML()");
   for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
        pChild2 = pChild2->NextSibling()) {
     if(string(pChild2->Value()) == "num_nodes") {
       ParseXMLnum_nodes(pChild2);
     }
   }
+  PrintValues(cout);
+  LOG_DEBUG_MSG("~BasicPRM::ParseXML()");
 }
 
 template <class CFG>
@@ -198,6 +210,17 @@ CreateCopy() {
   return _copy;
 }
 
+template <class CFG>
+void
+BasicPRM<CFG>::
+PrintOptions(ostream& out_os){
+  out_os << "    " << GetName() << ":: ";
+  out_os << " num nodes = " << numNodes.GetValue() << " ";
+  out_os << " exact = " << exactNodes.GetValue() << " ";
+  out_os << " chunk size = " << chunkSize.GetValue() << " ";
+  out_os << endl;
+}
+
 
 template <class CFG>
 void
@@ -205,7 +228,8 @@ BasicPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      CollisionDetection* cd, DistanceMetric *,
 	      vector<CFG>& nodes) {
-	
+
+  LOG_DEBUG_MSG("BasicPRM::GenerateNodes()");	
 #ifndef QUIET
   if (exactNodes.GetValue()==1)
      cout << "(numNodes=" << numNodes.GetValue() << ") ";
@@ -268,7 +292,14 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   for(i=0; i<path.size(); i++)
     if (path[i]!=NULL)
       delete path[i];
+  
+  
+  LOG_DEBUG_MSG("~BasicPRM::GenerateNodes()"); 
 };
+
+
+
+
 
 #endif
 
