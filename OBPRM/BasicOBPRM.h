@@ -428,9 +428,7 @@ ParseXML(TiXmlNode* in_pNode) {
   LOG_DEBUG_MSG("BasicOBPRM::ParseXML()");
   for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
     pChild2 = pChild2->NextSibling()) {
-      if(string(pChild2->Value()) == "num_nodes") {
-        ParseXMLnum_nodes(pChild2);
-      } else if(string(pChild2->Value()) == "shells") {
+      if(string(pChild2->Value()) == "shells") {
         ParseXMLshells(pChild2);
       }
   }

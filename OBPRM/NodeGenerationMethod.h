@@ -73,7 +73,7 @@ class NodeGenerationMethod : public MPBaseObject{
 			     DistanceMetric *, vector<CFG>& nodes) = 0;
 
   ///\todo remove the "{ }" and replace with "= 0" to force all methods 
-  virtual void GenerateNodes(vector< pair< CFG, CFGcolorType > > &vectorPair) { };
+  virtual void GenerateNodes(vector< CFG > &outCfgs) { };
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -86,6 +86,9 @@ class NodeGenerationMethod : public MPBaseObject{
   num_param<int> exactNodes;
   num_param<int> numNodes;
   num_param<int> chunkSize;
+  int m_nExactNodes;
+  int m_nNumNodes;
+  int m_nMaxCdCalls;
 
 //  num_param<int> numAttempts;
   CDInfo* cdInfo;
@@ -117,6 +120,16 @@ template <class CFG>
 NodeGenerationMethod<CFG>::
 NodeGenerationMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
      MPBaseObject(in_pNode,in_pProblem) {
+  LOG_DEBUG_MSG("NodeGenerationMethod::NodeGenerationMethod()");
+  
+  for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
+    pChild2 = pChild2->NextSibling()) {
+    if(string(pChild2->Value()) == "num_nodes") {
+      ParseXMLnum_nodes(pChild2);
+    }
+  }
+  
+  LOG_DEBUG_MSG("~NodeGenerationMethod::NodeGenerationMethod()");
 }
 
 
@@ -132,6 +145,7 @@ SetDefault() {
   numNodes.PutValue(10);
   chunkSize.PutValue(10);
   exactNodes.PutValue(0);
+  m_nMaxCdCalls=MAX_INT;
 }
 
 template <class CFG>
@@ -145,14 +159,21 @@ ParseXMLnum_nodes(TiXmlNode* in_pNode) {
     LOG_ERROR_MSG("Error reading <num_nodes> tag....");exit(-1);
   }
 
-  int nexactNodes, nnumNodes, nchunkSize;
+  int nexactNodes, nnumNodes, nMaxCdCalls;
     
   in_pNode->ToElement()->QueryIntAttribute("number",&nnumNodes);
   in_pNode->ToElement()->QueryIntAttribute("exact",&nexactNodes);
-  in_pNode->ToElement()->QueryIntAttribute("chunk_size",&nchunkSize);
+  in_pNode->ToElement()->QueryIntAttribute("max_cd_calls",&nMaxCdCalls);
+ // in_pNode->ToElement()->QueryIntAttribute("chunk_size",&nchunkSize);
   exactNodes.SetValue(nexactNodes);
   numNodes.SetValue(nnumNodes);
-  chunkSize.SetValue(nchunkSize);
+  ///\todo fix this hack, chunkSize should be removed in the future!
+  chunkSize.SetValue(nnumNodes);
+  
+  
+  m_nExactNodes = nexactNodes;
+  m_nNumNodes = nnumNodes;
+  m_nMaxCdCalls = nMaxCdCalls;
   
   ///\todo remove the comments when everything is ready!
   //cout << "NodeGenerationMethod<CFG>::ParseXMLnum_nodes()" << endl;

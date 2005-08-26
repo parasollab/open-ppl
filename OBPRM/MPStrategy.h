@@ -92,7 +92,7 @@ class PRMRoadmap : public MPStrategyMethod {
    
   virtual void operator()() {
       LOG_DEBUG_MSG("PRMRoadmap::()");
-      Stat_Class Stats;
+      Stat_Class * pStatClass = GetMPProblem()->GetStatClass();
   
       Clock_Class        NodeGenClock;
       Clock_Class        ConnectionClock;
@@ -103,10 +103,18 @@ class PRMRoadmap : public MPStrategyMethod {
   // Generate roadmap nodes
   //---------------------------
       NodeGenClock.StartClock("Node Generation");
-      GetMPProblem()->GetMPStrategy()->
-          GetGenerateMapNodes()->GenerateNodes(GetMPProblem()->GetRoadmap(),Stats,
+    /*  GetMPProblem()->GetMPStrategy()->
+          GetGenerateMapNodes()->GenerateNodes(GetMPProblem()->GetRoadmap(),*pStatClass,
                                            GetMPProblem()->GetCollisionDetection(),
-                                           GetMPProblem()->GetDistanceMetric(),nodes);
+      GetMPProblem()->GetDistanceMetric(),nodes);*/
+      vector< Cfg_free > vectorCfgs;
+      NodeGenerationMethod<Cfg_free> * pNodeGen;
+      pNodeGen = GetMPProblem()->GetMPStrategy()->
+          GetGenerateMapNodes()->GetMethod(string("RogerBasicPRM"));
+      pNodeGen->GenerateNodes(vectorCfgs);
+      cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
+      GetMPProblem()->AddToRoadmap(vectorCfgs);
+      
       NodeGenClock.StopClock();
 
 
@@ -115,7 +123,7 @@ class PRMRoadmap : public MPStrategyMethod {
   //---------------------------
       ConnectionClock.StartClock("Node Connection");
       GetMPProblem()->GetMPStrategy()->
-          GetConnectMap()->Connect(GetMPProblem()->GetRoadmap(), Stats, 
+          GetConnectMap()->Connect(GetMPProblem()->GetRoadmap(), *pStatClass, 
                                  GetMPProblem()->GetCollisionDetection(),
                                  GetMPProblem()->GetDistanceMetric(), 
                                  GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
@@ -124,7 +132,7 @@ class PRMRoadmap : public MPStrategyMethod {
       ConnectionClock.StopClock();
       GetMPProblem()->WriteRoadmapForVizmo();
       
-      Stats.PrintAllStats(GetMPProblem()->GetRoadmap());
+      pStatClass->PrintAllStats(GetMPProblem()->GetRoadmap());
   
       LOG_DEBUG_MSG("~PRMRoadmap::()");
   };

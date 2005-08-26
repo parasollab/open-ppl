@@ -64,6 +64,8 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
   virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
 			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
+  
+  virtual void GenerateNodes(vector< CFG >  &outCfgs);
 
   //Index for next node 
   //used in incremental map generation
@@ -115,12 +117,6 @@ void
 BasicPRM<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
   LOG_DEBUG_MSG("BasicPRM::ParseXML()");
-  for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
-       pChild2 = pChild2->NextSibling()) {
-    if(string(pChild2->Value()) == "num_nodes") {
-      ParseXMLnum_nodes(pChild2);
-    }
-  }
   PrintValues(cout);
   LOG_DEBUG_MSG("~BasicPRM::ParseXML()");
 }
@@ -222,6 +218,14 @@ PrintOptions(ostream& out_os){
 }
 
 
+
+
+
+
+
+
+
+
 template <class CFG>
 void
 BasicPRM<CFG>::
@@ -295,6 +299,72 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   
   
   LOG_DEBUG_MSG("~BasicPRM::GenerateNodes()"); 
+}
+
+
+
+template <class CFG>
+void 
+BasicPRM<CFG>::
+GenerateNodes(vector< CFG >  &outCfgs) {
+
+  LOG_DEBUG_MSG("BasicPRM::GenerateNodes()"); 
+  
+  Environment* pEnv = GetMPProblem()->GetEnvironment();
+  Stat_Class* pStatClass = GetMPProblem()->GetStatClass();
+  CollisionDetection* pCd = GetMPProblem()->GetCollisionDetection();
+  
+  if (exactNodes.GetValue()==1)
+     cout << "(numNodes=" << numNodes.GetValue() << ") ";
+  else
+    cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
+  
+  
+  
+  int nNumCdCalls = 0;
+  if(m_nExactNodes == 1) {  //Generate exactly num nodes
+    int nFree = 0;
+    nNumCdCalls = 0;
+    while(nFree < m_nNumNodes && nNumCdCalls < m_nMaxCdCalls) {
+      CFG sample;
+      sample.SetLabel("BasicPRM",true);
+      sample.GetRandomCfg(pEnv);
+      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo);
+      ++nNumCdCalls;
+      if (!bCd) {
+        ++nFree;
+        pStatClass->IncNodes_Generated();
+        //tmp_pair.second = FREE;
+      } else{
+        ///\todo add a stats.IncColl call here later!
+        //tmp_pair.second = COLL;
+      }
+      outCfgs.push_back(sample);
+    }    
+  } else {  //Attempt num nodes
+    int nAttempts = 0;
+    nNumCdCalls = 0;
+    while(nAttempts < m_nNumNodes && nNumCdCalls < m_nMaxCdCalls) {
+      CFG sample;
+      sample.SetLabel("BasicPRM",true);
+      sample.GetRandomCfg(pEnv);
+      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo);
+      ++nNumCdCalls;
+      ++nAttempts;
+      if (!bCd) {
+        pStatClass->IncNodes_Generated();
+        //tmp_pair.second = FREE;
+      } else{
+        ///\todo add a stats.IncColl call here later!
+        //tmp_pair.second = COLL;
+      }
+      outCfgs.push_back(sample);
+    }
+  }
+  
+  LOG_DEBUG_MSG("~BasicPRM::GenerateNodes()"); 
+  
+  
 };
 
 

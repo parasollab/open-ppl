@@ -394,6 +394,7 @@ class MPBaseObject {
     MessageLogs m_message_log;
     MPProblem* m_pProblem;
     string m_strLabel;
+    /// want to add string m_strName;
     //      remove from below ... use in future
       //if(level >= GetMessageLog().GetLevel()) \
 

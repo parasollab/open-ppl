@@ -7,9 +7,13 @@ MPProblem(TiXmlNode* in_pNode) : MPBaseObject(in_pNode, this) {
   
   ParseXML(in_pNode);
   rmp.environment = m_pEnvironment;
+  m_pStatClass = new Stat_Class;
   
   LOG_DEBUG_MSG("~MPProblem::MPProblem()");
 }
+
+
+
 
 void MPProblem::
 ParseXML(TiXmlNode* in_pNode) { 
@@ -109,3 +113,17 @@ WriteRoadmapForVizmo() {
   LOG_DEBUG_MSG("~MPProblem::WriteRoadmapForVizmo()");
 }
 
+void MPProblem::
+AddToRoadmap(vector<Cfg_free >& in_Cfgs) {
+
+  vector< Cfg_free >::iterator I;
+  for(I=in_Cfgs.begin(); I!=in_Cfgs.end(); I++) {
+    if((*I).IsLabel("VALID")) {  
+      if((*I).GetLabel("VALID")) {//Add to Free roadmap
+        rmp.m_pRoadmap->AddVertex((*I));
+      } else {  //Add to Coll Roadmap 
+      rmp_col.m_pRoadmap->AddVertex((*I));
+    }
+   }
+  }
+}

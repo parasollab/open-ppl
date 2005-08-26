@@ -1230,7 +1230,10 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
 		      CollisionDetection* cd, CDInfo& _cdInfo, 
 		      bool enablePenetration, std::string *pCallName) {
   if(!this->ConfigEnvironment(env))
+  {
+    SetLabel("VALID",!true);
     return true;
+  } 
   bool Clear = (pCallName) ? false : true; 
   if( !pCallName )
      pCallName = new std::string("isColl(e,s,cd,cdi,ep)");
@@ -1252,10 +1255,10 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
     bool result = !cd->AcceptablePenetration(*tmp, env, Stats, cd, _cdInfo);
     delete tmp;
     if( Clear ) delete pCallName;
-    return result;
+    { SetLabel("VALID",!result); return result; }
   }
   if( Clear ) delete pCallName;
-  return answerFromEnvironment;
+  { SetLabel("VALID",!answerFromEnvironment); return answerFromEnvironment;}
 }
 
 
@@ -1264,7 +1267,7 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
                       int robot, int obs, CDInfo& _cdInfo,
 		      bool enablePenetration, std::string *pCallName) {
   if(!this->ConfigEnvironment(env))
-    return true;
+   { SetLabel("VALID",!true); return true; }
   bool Clear = (pCallName) ? false : true; 
   if( !pCallName )
      pCallName = new std::string("isColl(e,s,cd,r,o,cdi,ep)");
@@ -1285,10 +1288,10 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
     bool result = !cd->AcceptablePenetration(*tmp, env, Stats, cd, _cdInfo);
     delete tmp;
     if(Clear) delete pCallName;
-    return result;
+    {SetLabel("VALID",!result); return result;}
   }
   if(Clear) delete pCallName;
-  return answerFromCD;
+  {SetLabel("VALID",!answerFromCD); return answerFromCD;}
 }
 
 
@@ -1314,10 +1317,10 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
       bool result = !cd->AcceptablePenetration(*tmp, env, Stats, cd, _cdInfo);
       delete tmp;
       if(Clear) delete pCallName;
-      return result;
+      {SetLabel("VALID",!result); return result;}
     }
     if(Clear) delete pCallName;
-    return answer;
+    {SetLabel("VALID",!answer); return answer;}
 }
 
 
@@ -1329,4 +1332,27 @@ void Cfg::Normalize_orientation(int index) {
   } else if(index >= posDof && index < dof) {  // orientation index
     v[index] = v[index] - floor(v[index]);
   } 
+}
+
+bool Cfg::GetLabel(string in_strLabel) {
+  if(IsLabel(in_strLabel))
+  {
+    return m_LabelMap[in_strLabel];
+  }
+  else
+  {
+    cout << "Cfg::GetLabel -- I cannot find Label =  " << in_strLabel << endl;
+    exit(-1);
+  }
+}
+
+bool Cfg::IsLabel(string in_strLabel) {
+   if(m_LabelMap.count(in_strLabel) > 0)
+    { return true ; }
+   else
+    { return false; }
+}
+ 
+void Cfg::SetLabel(string in_strLabel,bool in_bool) {
+  m_LabelMap[in_strLabel] = in_bool;
 }

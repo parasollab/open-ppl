@@ -444,6 +444,10 @@ class Cfg {
    * Call CfgManager::GetRandomCfg_CenterOfMass
    */
   virtual void GetRandomCfg_CenterOfMass(Environment *env) = 0;
+
+  bool GetLabel(string in_strLabel);
+  bool IsLabel(string in_strLabel);
+  void SetLabel(string in_strLabel,bool in_bool);
   
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -457,6 +461,8 @@ class Cfg {
   vector<double> v;   
   int dof;
   int posDof;
+
+  std::map<string,bool> m_LabelMap;
   
  public:
   //Info:

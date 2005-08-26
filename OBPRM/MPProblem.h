@@ -54,9 +54,12 @@ public:
   inline string& GetOutputRoadmap() {return m_output_map;};
   inline string& GetOutputDir() {return m_output_dir;};
   inline MPStrategy* GetMPStrategy() {return m_pMPStrategy;};
+  inline Stat_Class* GetStatClass() {return m_pStatClass;};
+  
   
   inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
   inline Roadmap<CfgType,WeightType>* GetColRoadmap() {return &rmp_col;};
+  void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
   void PrintOptions(ostream& out_os);
 ////////////
 //
@@ -74,6 +77,7 @@ public:
   Roadmap<CfgType,WeightType> rmp;
   Roadmap<CfgType,WeightType> rmp_col;
   vector< MPRegion<CfgType,WeightType> > regions; 
+  Stat_Class* m_pStatClass;
    
     
 };

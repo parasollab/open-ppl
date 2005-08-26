@@ -7,6 +7,6 @@
 #include "Cfg_fixed_tree.h"
 #include "Cfg_fixed_PRR.h"
 
-enum CFGcolorType { FREE, COLL };
+
 
 #endif
