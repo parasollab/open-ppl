@@ -214,16 +214,17 @@ class MetaPlanner {
 
  protected:
  public:
-  // GenerateMapNodes<CFG> gn_map;
-  //ConnectMap<CFG, WEIGHT> cm_map, cm_combine;
-  //LocalPlanners<CFG, WEIGHT> lp_map;
-  // DistanceMetric     dm;
+  GenerateMapNodes<CFG> gn_map; //@todo replace by MPStrategy::m_pNodeGeneration
+  ConnectMap<CFG, WEIGHT> cm_map; //@todo replace by MPStrategy::m_pConnection
+  ConnectMap<CFG, WEIGHT> cm_combine; 
+  LocalPlanners<CFG, WEIGHT> lp_map; //@todo replace by MPStrategy::m_pLocalPlanners
+  DistanceMetric     dm; //@todo replace by MPProblem::m_pProblem::...
 
-  // bool addPartialEdge, addAllEdges;
+  bool addPartialEdge, addAllEdges; //@todo replace by MPStrategy::... (which will be moved to ConnectMap
 
   //ValidityTest vt;
-  //CollisionDetection cd;
-  // Environment env;
+  CollisionDetection cd; //@todo replace by MPProblem::m_pProblem::...
+  Environment env;
 
   Clock_Class        NodeGenClock;
   Clock_Class        ConnectionClock;

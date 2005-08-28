@@ -36,9 +36,6 @@ class MPProblem;
 //@}
 
 
-/*
- * @todo: DeleteObstaclesOutsideBoundingBox()->UpdateUsableMultibody() (and it should be a private function in the constructor
- */
 
 class Environment : public MPBaseObject {
 public:
@@ -234,11 +231,12 @@ public:
       *@param _input provides information to initialize Environment.
       *@see MultiBody::Get, FindBoundingBox
       */
-    virtual void Get(Input * _input);
+    virtual void GetBodies(Input * _input);
 
   //@}
 
-    virtual void UpdateUsableMultibody();
+    //@todo make private
+    virtual void SelectUsableMultibodies();
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -260,7 +258,7 @@ public:
     vector<MultiBody *> usable_multibody;
     int usable_externalbody_count;
 
-    int robotIndex;
+    int robotIndex; //index of the robot in the usable_multibody vector
     BoundingBox* boundaries;
 
     double positionRes;

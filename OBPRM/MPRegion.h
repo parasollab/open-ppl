@@ -77,7 +77,7 @@ void
 MPRegion<CFG,WEIGHT>::
 PrintValues(ostream& _os) {
   _os << "MPRegion::PrintValues ID(" << region_id << "): ";
-  boundaries.Print(_os);
+  boundaries->Print(_os);
 }
 
 /* template <class CFG, class WEIGHT> */

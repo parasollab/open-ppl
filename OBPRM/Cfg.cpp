@@ -27,6 +27,8 @@
 //class Cfg_free;
 //typedef Cfg_free CfgType;
 
+int Cfg::NumofJoints;
+
 #ifdef COLLISIONCFG
 extern  vector < vector < vector <  double > > > CollisionConfiguration;
 #endif
@@ -1332,6 +1334,14 @@ void Cfg::Normalize_orientation(int index) {
   } else if(index >= posDof && index < dof) {  // orientation index
     v[index] = v[index] - floor(v[index]);
   } 
+}
+
+int Cfg::getNumofJoints() {
+  return NumofJoints;
+}
+
+void Cfg::setNumofJoints(int _numofjoints) {
+  NumofJoints = _numofjoints;
 }
 
 bool Cfg::GetLabel(string in_strLabel) {

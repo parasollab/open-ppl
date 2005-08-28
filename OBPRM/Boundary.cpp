@@ -28,16 +28,15 @@ BoundingBox(int i_dofs, int i_pos_dofs ) :
   }
 }
 
-///\brief Bounding Box Constructor MUST TAKE IN A <environemnt> tag inXML
-///\todo Remove dependence on <environment> tag, must be done in Environment class
 BoundingBox::
-BoundingBox(TiXmlNode* in_pNode,MPProblem* in_pproblem): dofs(3),   pos_dofs(3) {
+BoundingBox(TiXmlNode* in_pNode,MPProblem* in_pproblem)
+  : dofs(in_pproblem->GetDOFs()),   
+    pos_dofs(in_pproblem->GetPosDOFs()) {
   if(! (string(in_pNode->Value()) == "boundary")) {
     cout << "Error: I have not ben given <boundary>" << endl;
     exit(-1);
   }
 
-  cout << "I am parsing a Bounding Box using an <Envornment> tag" << endl;
   bounding_box.clear();
   for (int i = 0; i < dofs; i++) {
     bounding_box.push_back(pair<double,double>(0.0,1.0));
@@ -47,6 +46,28 @@ BoundingBox(TiXmlNode* in_pNode,MPProblem* in_pproblem): dofs(3),   pos_dofs(3) 
       par_type.push_back(REVOLUTE);
   }
 
+  for (TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    if (string(pChild->Value()) == "parameter") {
+      int par_id;
+      pChild->ToElement()->QueryIntAttribute("id",&par_id);
+      string par_label = string(pChild->ToElement()->Attribute("Label")); //@todo par_label is not used in bbox parameters, may want to use it
+      double par_min, par_max;
+      pChild->ToElement()->QueryDoubleAttribute("min",&par_min);
+      pChild->ToElement()->QueryDoubleAttribute("max",&par_max);
+      SetParameter(par_id,par_min,par_max);
+      if (string(pChild->ToElement()->Attribute("type")) == "translational")
+	par_type[par_id] = TRANSLATIONAL;
+      else
+	par_type[par_id] = REVOLUTE;
+    } else {
+      if (!pChild->Type() == TiXmlNode::COMMENT) {
+	cout << "  I don't know: " << *pChild << endl;
+      }
+    }
+  }
+  double translational_scale;
+  in_pNode->ToElement()->QueryDoubleAttribute("translational_scale", &translational_scale);
+  TranslationalScale(translational_scale);
 }
 
 BoundingBox::
@@ -181,30 +202,16 @@ IfWrap(int par) {
 
 void
 BoundingBox::
-PrintForVizmo(std::ostream& _os) {
+Print(std::ostream& _os, char range_sep, char par_sep) {
   std::vector< std::pair<double, double> >::iterator itrb;
-  _os << " -bbox [ " ;
+  _os << "[ " ;
   for (itrb = bounding_box.begin(); itrb < bounding_box.end(); ++itrb) {
     if (itrb+1 != bounding_box.end())
-      _os << itrb->first << "," << itrb->second << ",";
+      _os << itrb->first << range_sep << itrb->second << " " << par_sep << " ";
     else
-      _os << itrb->first << "," << itrb->second << "";
+      _os << itrb->first << range_sep << itrb->second << "";
   }
-  _os << "]";
-}
-
-void
-BoundingBox::
-Print(std::ostream& _os) {
-  std::vector< std::pair<double, double> >::iterator itrb;
-  _os << " Bounding Box => [" ;
-  for (itrb = bounding_box.begin(); itrb < bounding_box.end(); ++itrb) {
-    if (itrb+1 != bounding_box.end())
-      _os << itrb->first << ":" << itrb->second << " ; ";
-    else
-      _os << itrb->first << ":" << itrb->second << " ";
-  }
-  _os << "]" << endl;
+  _os << " ]" << endl;
 }
 
 

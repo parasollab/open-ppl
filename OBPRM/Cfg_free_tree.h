@@ -29,6 +29,8 @@ class Cfg_free_tree : public Cfg_free {
   ~Cfg_free_tree();
 
   static int  getNumofJoints() { return NumofJoints; }
+
+  // setNumofJoints should be consistent in every class
   static void setNumofJoints(int _numofjoints) { NumofJoints = _numofjoints; }
 
   ///////////////////////////////////////////////////////////////////////////////////////////

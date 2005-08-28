@@ -41,8 +41,7 @@ class BoundingBox : public Boundary {
 
   void SetRanges(std::vector<double> &ranges);
 
-  void Print(std::ostream& _os);
-  void PrintForVizmo(std::ostream& _os);
+  void Print(std::ostream& _os, char range_sep=':', char par_sep=';');
 
   void Parse(std::stringstream &i_bbox);
 

@@ -96,7 +96,8 @@ WriteRoadmapForVizmo() {
   myofstream << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
   myofstream << endl << "#####PREAMBLESTART#####";
   myofstream << endl << "../obprm -f " << GetEnvFileName() << " ";//commandLine;
-  GetEnvironment()->GetBoundingBox()->PrintForVizmo(myofstream);
+  myofstream << " -bbox ";
+  GetEnvironment()->GetBoundingBox()->Print(myofstream, ',', ',');
   myofstream << endl << "#####PREAMBLESTOP#####";
   
   myofstream << endl << "#####ENVFILESTART#####";

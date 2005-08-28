@@ -445,6 +445,11 @@ class Cfg {
    */
   virtual void GetRandomCfg_CenterOfMass(Environment *env) = 0;
 
+  static int  getNumofJoints();
+
+  // setNumofJoints should be consistent in every class
+  static void setNumofJoints(int _numofjoints);
+
   bool GetLabel(string in_strLabel);
   bool IsLabel(string in_strLabel);
   void SetLabel(string in_strLabel,bool in_bool);
@@ -478,6 +483,9 @@ class Cfg {
    *Closest distance from this Cfg to any Obstacle in Environment
    */
   double clearance;
+
+ protected:
+  static int NumofJoints;
 
 }; // class Cfg
 

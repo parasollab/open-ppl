@@ -59,6 +59,10 @@ public:
   
   inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
   inline Roadmap<CfgType,WeightType>* GetColRoadmap() {return &rmp_col;};
+
+  void SetNumOfJoints(int num_of_joints) {CfgType::setNumofJoints(num_of_joints);}
+  int GetDOFs() {return robot_cfg.DOF(); }
+  int GetPosDOFs() {return robot_cfg.posDOF();}
   void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
   void PrintOptions(ostream& out_os);
 ////////////
@@ -79,7 +83,8 @@ public:
   vector< MPRegion<CfgType,WeightType> > regions; 
   Stat_Class* m_pStatClass;
    
-    
+  // temporary variable to deal with posDOFs() and DOFs()
+  CfgType robot_cfg;  // @todo may want to replace by real robot class
 };
 
 
