@@ -5,7 +5,7 @@ MPStrategy::
 MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem) : MPBaseObject(in_pNode,in_pProblem) {
   LOG_DEBUG_MSG( "MPStrategy::MPStrategy()");
   ///\todo Find a home for "addPartialEdge" and "addAllEdges" or remove all together
-  addPartialEdge= true;
+  addPartialEdge=true;
   addAllEdges=false;
   if(!in_pNode) {
     LOG_ERROR_MSG("MPStrategy::MPStrategy() error xml input"); exit(-1);

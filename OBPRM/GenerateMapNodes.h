@@ -94,7 +94,7 @@ class GenerateMapNodes : public MPBaseObject{
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
   void PrintDefaults(ostream& _os);
-  NodeGenerationMethod<CFG>* GetMethod(string in_strLabel);
+  NodeGenerationMethod<CFG>* GetMethod(string& in_strLabel);
   
 
   /**Generate nodes according to those in selected vector.
@@ -248,7 +248,7 @@ ParseXML(TiXmlNode* in_pNode) {
 
 template <class CFG>
 NodeGenerationMethod<CFG>* 
-GenerateMapNodes<CFG>::GetMethod(string in_strLabel) {
+GenerateMapNodes<CFG>::GetMethod(string& in_strLabel) {
   typename vector<NodeGenerationMethod<CFG>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++) {
     if((*I)->GetLabel() == in_strLabel) {

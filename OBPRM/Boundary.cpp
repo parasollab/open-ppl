@@ -32,6 +32,7 @@ BoundingBox::
 BoundingBox(TiXmlNode* in_pNode,MPProblem* in_pproblem)
   : dofs(in_pproblem->GetDOFs()),   
     pos_dofs(in_pproblem->GetPosDOFs()) {
+      LOG_DEBUG_MSG("BoundingBox::BoundingBox()");
   if(! (string(in_pNode->Value()) == "boundary")) {
     cout << "Error: I have not ben given <boundary>" << endl;
     exit(-1);
@@ -48,12 +49,16 @@ BoundingBox(TiXmlNode* in_pNode,MPProblem* in_pproblem)
 
   for (TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
     if (string(pChild->Value()) == "parameter") {
+     
       int par_id;
       pChild->ToElement()->QueryIntAttribute("id",&par_id);
       string par_label = string(pChild->ToElement()->Attribute("Label")); //@todo par_label is not used in bbox parameters, may want to use it
       double par_min, par_max;
       pChild->ToElement()->QueryDoubleAttribute("min",&par_min);
       pChild->ToElement()->QueryDoubleAttribute("max",&par_max);
+      LOG_DEBUG_MSG("BoundingBox:: setting parameter par_id="<<par_id<<" par_min="
+          <<par_min<<" par_max="<<par_max);
+      
       SetParameter(par_id,par_min,par_max);
       if (string(pChild->ToElement()->Attribute("type")) == "translational")
 	par_type[par_id] = TRANSLATIONAL;
@@ -68,6 +73,7 @@ BoundingBox(TiXmlNode* in_pNode,MPProblem* in_pproblem)
   double translational_scale;
   in_pNode->ToElement()->QueryDoubleAttribute("translational_scale", &translational_scale);
   TranslationalScale(translational_scale);
+  LOG_DEBUG_MSG("~BoundingBox::BoundingBox()");
 }
 
 BoundingBox::

@@ -24,7 +24,13 @@
 #include "util.h"
 #include "CfgTypes.h"
 
+
+
+
+
+
 class MPStrategy;
+
 
 typedef Cfg_free CfgType;
 typedef DefaultWeight WeightType;
@@ -65,6 +71,8 @@ public:
   int GetPosDOFs() {return robot_cfg.posDOF();}
   void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
   void PrintOptions(ostream& out_os);
+  //ostream& GetFileStreamByLabel(string& in_strLabel);
+  
 ////////////
 //
 //Data
@@ -82,7 +90,7 @@ public:
   Roadmap<CfgType,WeightType> rmp_col;
   vector< MPRegion<CfgType,WeightType> > regions; 
   Stat_Class* m_pStatClass;
-   
+  //map<string,MPFileIO> m_mapLabelFile;
   // temporary variable to deal with posDOFs() and DOFs()
   CfgType robot_cfg;  // @todo may want to replace by real robot class
 };

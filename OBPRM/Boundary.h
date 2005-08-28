@@ -7,13 +7,15 @@
 #include "util.h"
 class MPProblem;
 
-class Boundary {
+///\todo add MPBaseObject defautl constructor
+class Boundary : public MPBaseObject{
  public:
   Boundary();
   ~Boundary();
  private:
 };
 
+///\todo add MPBaseObject defautl constructor
 class BoundingBox : public Boundary {
  public:
   enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};

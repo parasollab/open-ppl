@@ -85,9 +85,44 @@ class PRMRoadmap : public MPStrategyMethod {
   virtual void PrintOptions(ostream& out_os) { };
   
   virtual void ParseXML(TiXmlNode* in_pNode) {
-      LOG_DEBUG_MSG("PRMRoadmap::ParseXML()");
-     
-      LOG_DEBUG_MSG("~PRMRoadmap::ParseXML()");
+    LOG_DEBUG_MSG("PRMRoadmap::ParseXML()");
+      
+    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+      if(string(pChild->Value()) == "node_generation_method") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        if(in_char) {
+          string node_generation_method(in_char);
+          m_vecStrNodeGenLabels.push_back(node_generation_method);
+        }
+      } else if(string(pChild->Value()) == "node_connection_method") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        LOG_DEBUG_MSG("PRMRoadmap::ParseXML() -- node_connection_method");
+        if(in_char) {
+          string connect_method(in_char);
+          m_vecStrNodeConnectionLabels.push_back(connect_method);
+        }
+      } else if(string(pChild->Value()) == "component_connection_method") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        LOG_DEBUG_MSG("PRMRoadmap::ParseXML() -- component_connection_method");
+        if(in_char) {
+          string connect_method(in_char);
+          m_vecStrComponentConnectionLabels.push_back(connect_method);
+        }
+      } else if(string(pChild->Value()) == "lp_method") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        if(in_char) {
+          m_strLocalPlannerLabel = string(in_char);
+        }
+      } else {
+        LOG_WARNING_MSG("PRMRoadmap::  I don't know: "<< endl << *pChild);
+      }
+    }
+      
+    
+    
+    
+    
+    LOG_DEBUG_MSG("~PRMRoadmap::ParseXML()");
   };
    
   virtual void operator()() {
@@ -103,17 +138,17 @@ class PRMRoadmap : public MPStrategyMethod {
   // Generate roadmap nodes
   //---------------------------
       NodeGenClock.StartClock("Node Generation");
-    /*  GetMPProblem()->GetMPStrategy()->
-          GetGenerateMapNodes()->GenerateNodes(GetMPProblem()->GetRoadmap(),*pStatClass,
-                                           GetMPProblem()->GetCollisionDetection(),
-      GetMPProblem()->GetDistanceMetric(),nodes);*/
-      vector< Cfg_free > vectorCfgs;
-      NodeGenerationMethod<Cfg_free> * pNodeGen;
-      pNodeGen = GetMPProblem()->GetMPStrategy()->
-          GetGenerateMapNodes()->GetMethod(string("RogerBasicPRM"));
-      pNodeGen->GenerateNodes(vectorCfgs);
-      cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
-      GetMPProblem()->AddToRoadmap(vectorCfgs);
+      typedef vector<string>::iterator I;
+      for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
+      {
+        vector< Cfg_free > vectorCfgs;
+        NodeGenerationMethod<Cfg_free> * pNodeGen;
+        pNodeGen = GetMPProblem()->GetMPStrategy()->
+            GetGenerateMapNodes()->GetMethod(*itr);
+        pNodeGen->GenerateNodes(vectorCfgs);
+        cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
+        GetMPProblem()->AddToRoadmap(vectorCfgs);
+      }
       
       NodeGenClock.StopClock();
 
@@ -122,13 +157,44 @@ class PRMRoadmap : public MPStrategyMethod {
   // Connect roadmap nodes
   //---------------------------
       ConnectionClock.StartClock("Node Connection");
-      GetMPProblem()->GetMPStrategy()->
-          GetConnectMap()->Connect(GetMPProblem()->GetRoadmap(), *pStatClass, 
+      
+      ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
+      typedef vector<string>::iterator J;
+      for(J itr = m_vecStrNodeConnectionLabels.begin(); 
+          itr != m_vecStrNodeConnectionLabels.end(); ++itr)
+      {
+        LOG_DEBUG_MSG("PRMRoadmap:: " << *itr);
+        NodeConnectionMethod<CfgType,WeightType>* pConnection;
+        pConnection = connectmap->GetNodeMethod(*itr);
+      
+        pConnection->Connect(GetMPProblem()->GetRoadmap(), *pStatClass, 
                                  GetMPProblem()->GetCollisionDetection(),
                                  GetMPProblem()->GetDistanceMetric(), 
                                  GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                  GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                  GetMPProblem()->GetMPStrategy()->addAllEdges);
+      
+      }
+      
+      typedef vector<string>::iterator K;
+      for(K itr = m_vecStrComponentConnectionLabels.begin(); 
+          itr != m_vecStrComponentConnectionLabels.end(); ++itr)
+      {
+        LOG_DEBUG_MSG("PRMRoadmap:: " << *itr);
+        ComponentConnectionMethod<CfgType,WeightType>* pConnection;
+        pConnection = connectmap->GetComponentMethod(*itr);
+      
+        pConnection->Connect(GetMPProblem()->GetRoadmap(), *pStatClass, 
+                             GetMPProblem()->GetCollisionDetection(),
+                             GetMPProblem()->GetDistanceMetric(), 
+                             GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                             GetMPProblem()->GetMPStrategy()->addPartialEdge, 
+                             GetMPProblem()->GetMPStrategy()->addAllEdges);
+      
+      }
+      
+      
+      
       ConnectionClock.StopClock();
       GetMPProblem()->WriteRoadmapForVizmo();
       
@@ -136,6 +202,12 @@ class PRMRoadmap : public MPStrategyMethod {
   
       LOG_DEBUG_MSG("~PRMRoadmap::()");
   };
+
+private:
+  vector<string> m_vecStrNodeGenLabels;
+  vector<string> m_vecStrNodeConnectionLabels;
+  vector<string> m_vecStrComponentConnectionLabels;
+  string m_strLocalPlannerLabel;
    
 };
 

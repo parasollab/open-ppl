@@ -50,6 +50,7 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
+  virtual void ParseXML(TiXmlNode* in_pNode);
 
   //////////////////////
   // Core: Connection method
@@ -90,8 +91,13 @@ Closest<CFG,WEIGHT>::Closest():NodeConnectionMethod<CFG,WEIGHT>() {
 template <class CFG, class WEIGHT>
 Closest<CFG,WEIGHT>::Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
     NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
+  LOG_DEBUG_MSG("Closest::Closest()"); 
   element_name = "closest"; 
   SetDefault();
+  ParseXML(in_pNode);
+  
+  
+  LOG_DEBUG_MSG("~Closest::Closest()"); 
 }
 
 
@@ -107,6 +113,18 @@ Closest<CFG,WEIGHT>::Closest(int k):NodeConnectionMethod<CFG,WEIGHT>() {
 
 template <class CFG, class WEIGHT>
 Closest<CFG,WEIGHT>::~Closest() { 
+}
+
+
+template <class CFG, class WEIGHT>
+void Closest<CFG,WEIGHT>::ParseXML(TiXmlNode* in_pNode) { 
+  
+  int k;
+  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("k",&k))
+  {
+    kclosest = k;
+  }
+ 
 }
 
 

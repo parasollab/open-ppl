@@ -344,63 +344,6 @@ void ReadCfgs(char * filename,  vector<CFG>& cfgs) {
 //#define WARNING_MSG 2
 //#define ERROR_MSG 3
 
-
-class MessageLogs {
-
-  public:
-    MessageLogs() {
-      bOutput = false;
-      level = VERBOSE;
-    };
-    
-    inline int GetLevel() { return level; };
-    inline void SetLevel(int in_level) { level = in_level; };
-    inline void operator << (ostream& io_os) { 
-      if(!bOutput)
-        cout << io_os << endl;;
-    };
-    
-  private:
-    int level;
-    bool bOutput;
-    
-
-};
-
-class MPProblem;
-class MPBaseObject {
-
-  public: 
-    MPBaseObject(){ m_pProblem = NULL;};
-    MPBaseObject(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-         m_strLabel("") { 
-      m_pProblem = in_pProblem;
-      ParseXML(in_pNode); 
-    };
-    virtual void ParseXML(TiXmlNode* in_pNode) {
-      if(in_pNode->Type() == TiXmlNode::ELEMENT) {
-        const char* carLabel = in_pNode->ToElement()->Attribute("Label");
-        if(carLabel) {
-          m_strLabel = string(carLabel);
-        }
-      }  
-    };
-    
-    inline MessageLogs& GetMessageLog() { return m_message_log; };
-    inline MPProblem* GetMPProblem() { return m_pProblem;}
-    virtual void PrintOptions(ostream& out_os) { };
-    inline string& GetLabel() { return m_strLabel; };
-  private:
-    MessageLogs m_message_log;
-    MPProblem* m_pProblem;
-    string m_strLabel;
-    /// want to add string m_strName;
-    //      remove from below ... use in future
-      //if(level >= GetMessageLog().GetLevel()) \
-
-};
-
-
 #ifdef _LOG
 
 #define LOG_DEBUG_MSG( msg ) \
@@ -424,6 +367,110 @@ class MPBaseObject {
 #define LOG_WARNING_MSG( msg ) { }
 #define LOG_ERROR_MSG( msg ) { }
 #endif //_LOG
+
+
+
+
+
+
+class MessageLogs {
+
+  public:
+    MessageLogs() {
+      bOutput = false;
+      level = VERBOSE;
+    };
+    
+    inline int GetLevel() { return level; };
+    inline void SetLevel(int in_level) { level = in_level; };
+    inline void operator << (ostream& io_os) { 
+      if(!bOutput)
+        cout << io_os << endl;;
+    };
+    
+  private:
+    int level;
+    bool bOutput;
+    
+
+};
+
+///\todo{ XML wrapper, things needed.
+///isElement == name
+///isChild 
+///getChild
+///isAttribute
+///findAttribute
+
+
+class MPProblem;
+class MPBaseObject {
+
+  public: 
+    MPBaseObject(){ m_pProblem = NULL;};
+    MPBaseObject(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+         m_strLabel("") { 
+      m_pProblem = in_pProblem;
+      ParseXML(in_pNode); 
+    };
+    virtual void ParseXML(TiXmlNode* in_pNode) {
+      if(in_pNode->Type() == TiXmlNode::ELEMENT) {
+        const char* carLabel = in_pNode->ToElement()->Attribute("Label");
+        if(carLabel) {
+          m_strLabel = string(carLabel);
+        }
+      } 
+    };
+    
+    inline MessageLogs& GetMessageLog() { return m_message_log; };
+    inline MPProblem* GetMPProblem() { return m_pProblem;}
+    virtual void PrintOptions(ostream& out_os) { };
+    inline string& GetLabel() { return m_strLabel; };
+  private:
+    MessageLogs m_message_log;
+    MPProblem* m_pProblem;
+    string m_strLabel;
+    /// want to add string m_strName;
+    //      remove from below ... use in future
+      //if(level >= GetMessageLog().GetLevel()) \
+
+};
+/*
+
+class MPFileIO : public MPBaseObject {
+public:
+  MPFileIO(string& in_strFileName) {
+    constructed = true;
+    m_strFileName = in_strFilename;
+  };
+    
+  MPFileIO() { constructed = false;}
+    
+  //May need to add reference counting through
+  //copy constrctor later;
+    
+  string& GetFileName() {return m_strFileName; };
+  
+  ostream& GetFileStream() {
+    if(!constructed) {
+      LOG_ERROR_MSG("file_name_io::I dont have a filename"); exit(-1);
+    }
+  
+    if(!fileOpened) {
+      m_fstream = new fstream(m_strFileName);
+    }
+    return *m_fstream; 
+  };
+
+private:
+  bool fileOpened, constructed; 
+  string m_strFileName;
+  fstream* m_fstream;
+};
+
+*/
+
+
 
 
 

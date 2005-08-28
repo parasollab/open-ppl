@@ -89,6 +89,7 @@ class NodeGenerationMethod : public MPBaseObject{
   int m_nExactNodes;
   int m_nNumNodes;
   int m_nMaxCdCalls;
+  int m_numCdCalls;
 
 //  num_param<int> numAttempts;
   CDInfo* cdInfo;

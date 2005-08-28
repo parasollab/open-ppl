@@ -140,9 +140,24 @@ template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::
 ConnectCCs(TiXmlNode* in_pNode, MPProblem* in_pProblem):
   ComponentConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
+  
+  LOG_DEBUG_MSG("ConnectCCs::ConnectCCs()");
   element_name = "components"; 
-
   SetDefault();
+   
+  int _kpairs;
+  int _smallcc;
+  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("kpairs",&_kpairs))
+  {
+    kpairs = _kpairs;
+  }  
+  
+  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("smallcc",&_smallcc))
+  {
+    smallcc = _smallcc;
+  }  
+  
+  LOG_DEBUG_MSG("~ConnectCCs::ConnectCCs()");
 }
 
 

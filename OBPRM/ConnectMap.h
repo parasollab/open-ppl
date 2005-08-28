@@ -39,7 +39,7 @@
 //#############################################################################
 // A collection of component connection methods
 template <class CFG, class WEIGHT>
-class ConnectMap : MPBaseObject{
+class ConnectMap : public MPBaseObject{
  public:
 
   //////////////////////
@@ -240,14 +240,16 @@ ParseXML(TiXmlNode* in_pNode) {
   for( TiXmlNode* pChild = in_pNode->FirstChild(); 
       pChild !=0; pChild = pChild->NextSibling()) {
     if(string(pChild->Value()) == "Closest") {
-      Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>(in_pNode,GetMPProblem());
+      cout << "ConnectMap found Closest" << endl;
+      Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>(pChild,GetMPProblem());
       closest->cdInfo = &cdInfo;
       closest->connectionPosRes = connectionPosRes;
       closest->connectionOriRes = connectionOriRes; 
       all_node_methods.push_back(closest);
       selected_node_methods.push_back(closest);
     } else if(string(pChild->Value()) == "ConnectCCs") {
-      ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>(in_pNode,GetMPProblem());
+      cout << "ConnectMap found ConnectCCs" << endl;
+      ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>(pChild,GetMPProblem());
       connectccs->cdInfo = &cdInfo;
       connectccs->connectionPosRes = connectionPosRes;
       connectccs->connectionOriRes = connectionOriRes; 
@@ -334,12 +336,11 @@ ConnectMap<CFG,WEIGHT>::GetNodeMethod(string& in_strLabel) {
   typename vector<NodeConnectionMethod<CFG, WEIGHT>*>::iterator I;
   for(I = selected_node_methods.begin(); 
     I != selected_node_methods.end(); ++I) {
-    if(*I->GetLabel() == in_strLabel) {
-      return &(*I);
+      if((*I)->GetLabel() == in_strLabel) {
+      return (*I);
     }
   }
   LOG_ERROR_MSG("ConnectMap:: cannot find NodeConnectionMethod label = " << in_strLabel);
-  exit(-1);
 }
   
   
@@ -348,14 +349,13 @@ ComponentConnectionMethod<CFG,WEIGHT>*
 ConnectMap<CFG,WEIGHT>::GetComponentMethod(string& in_strLabel) {
 
   typename vector<ComponentConnectionMethod<CFG, WEIGHT>*>::iterator I;
-  for(I = selected_node_methods.begin(); 
-    I != selected_node_methods.end(); ++I) {
-    if(*I->GetLabel() == in_strLabel) {
-      return &(*I);
+  for(I = selected_component_methods.begin(); 
+    I != selected_component_methods.end(); ++I) {
+      if((*I)->GetLabel() == in_strLabel) {
+      return (*I);
     }
   }
   LOG_ERROR_MSG("ConnectMap:: cannot find ComponentConnectionMethod label = " << in_strLabel);
-  exit(-1);
 }  
 
 

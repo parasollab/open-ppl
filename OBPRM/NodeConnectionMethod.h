@@ -5,7 +5,7 @@
 
 // Abstract Interface Class for node connection methods
 template <class CFG, class WEIGHT>
-class NodeConnectionMethod : MPBaseObject { 
+class NodeConnectionMethod : public MPBaseObject { 
  public:
   
   //////////////////////
