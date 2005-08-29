@@ -56,17 +56,44 @@ ParseStrategyMethod(TiXmlNode* in_pNode) {
     if(string(pChild->Value()) == "PRMRoadmap") {
       PRMRoadmap* prm = new PRMRoadmap(pChild,GetMPProblem());
       all_MPStrategyMethod.push_back( prm );
-      selected_MPStrategyMethod = prm;
+      //selected_MPStrategyMethod = prm;
+    } if(string(pChild->Value()) == "Compare") {
+      MPCompare* comp = new MPCompare(pChild,GetMPProblem());
+      all_MPStrategyMethod.push_back( comp );
+      //selected_MPStrategyMethod = comp;
     } else {
       LOG_WARNING_MSG("MPStrategy::  I don't know: "<< endl << *pChild);
     }
   }
+  
+  m_strController_MPStrategyMethod = "";
+  
+  if(in_pNode->Type() == TiXmlNode::ELEMENT) {
+    const char* carLabel = in_pNode->ToElement()->Attribute("Controller");
+    if(carLabel) {
+      m_strController_MPStrategyMethod =  string(carLabel);
+    }
+  } 
+  
+  
+}
+
+MPStrategyMethod* MPStrategy::
+GetMPStrategyMethod(string& in_strLabel) {
+  vector<MPStrategyMethod*>::iterator I;
+  for(I = all_MPStrategyMethod.begin(); 
+      I != all_MPStrategyMethod.end(); ++I) {
+        if((*I)->GetLabel() == in_strLabel) {
+          return (*I);
+        }
+      }
 }
 
 void MPStrategy::
 Solve() {
   LOG_DEBUG_MSG("MPStrategy::Solve()")
-  (*selected_MPStrategyMethod)();
+      LOG_DEBUG_MSG("MPStrategy::Solve() -- about to run " << m_strController_MPStrategyMethod);
+      (*(GetMPStrategyMethod(m_strController_MPStrategyMethod)))();
   LOG_DEBUG_MSG("~MPStrategy::Solve()")
 };
 

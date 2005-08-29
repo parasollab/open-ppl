@@ -89,7 +89,7 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
 			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
           
-  virtual void GenerateNodes(vector< CFG > &outCfgs);
+  virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &outCfgs);
 
   /**Generate Cfg in C-Free but near Obstacle.
    *These Gfgs are created alone the line made by
@@ -771,10 +771,10 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 template <class CFG>
 void
 BasicOBPRM<CFG>::
-GenerateNodes(vector< CFG > &nodes) {
+GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &nodes) {
   
-  Environment* _env = GetMPProblem()->GetEnvironment();
-  Stat_Class& Stats = *(GetMPProblem()->GetStatClass());
+  Environment* _env = in_pRegion;
+  Stat_Class& Stats = *(in_pRegion->GetStatClass());
   CollisionDetection* cd = GetMPProblem()->GetCollisionDetection();
   DistanceMetric* dm =  GetMPProblem()->GetDistanceMetric();
   

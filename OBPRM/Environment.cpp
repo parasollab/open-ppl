@@ -106,6 +106,40 @@ Environment(Environment &from_env) {
   copied_instance = true;
 }
 
+
+/**
+ * Copy Constructor, copies from MPProblem's environemnt
+ */
+Environment::
+Environment(MPProblem* in_pProblem) : MPBaseObject(in_pProblem) {
+  Environment& from_env = *(in_pProblem->GetEnvironment());
+  //boundaries(*(from_env.GetBoundingBox())) {
+  boundaries = new BoundingBox(*(from_env.GetBoundingBox()));
+  pathVersion = PATHVER_20001125;
+
+
+  // only usable bodies in from_env will be copied
+  multibody.clear();
+  usable_multibody.clear();
+  for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
+    multibody.push_back(from_env.GetMultiBody(i));
+    usable_multibody.push_back(from_env.GetMultiBody(i));
+  }
+
+  externalbodyCount = from_env.GetExternalBodyCount();
+  usable_externalbody_count = from_env.GetExternalBodyCount();
+  positionRes = from_env.GetPositionRes();
+  orientationRes = from_env.GetOrientationRes();
+  robotIndex = from_env.GetRobotIndex();
+  copied_instance = true;
+}
+
+
+
+
+
+
+
 /**
  * Copy Constructor
  * receiving a bounding box (not necessarily the same as the original

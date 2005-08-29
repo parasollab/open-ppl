@@ -28,8 +28,11 @@
 //#include "RayTracer.h"
 
 // MPRegion is used by region combination methods
-#include "MPRegion.h"
+///\todo Fix this include mess
+///////////#include "MPRegion.h"
+//class MPRegion;
 #include "MPProblem.h"
+#include "util.h"
 
 // region connection methods
 //#include "NaiveMapCombine.h"
@@ -104,6 +107,7 @@ class ConnectMap : public MPBaseObject{
 			 bool addPartialEdge, bool addAllEdges,
 			 vector<vector<VID> >& vids);
 
+  /*
   void ConnectRegions(CollisionDetection* cd,
 		      DistanceMetric* dm,
 		      LocalPlanners<CFG,WEIGHT>* lp,
@@ -111,7 +115,7 @@ class ConnectMap : public MPBaseObject{
 		      bool addAllEdges,
 		      vector<MPRegion<CFG,WEIGHT>* > subregions,
 		      MPRegion<CFG,WEIGHT>* target_region=NULL);
-
+  */
  protected:
   //////////////////////
   // Data

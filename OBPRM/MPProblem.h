@@ -16,6 +16,8 @@
 #include "LocalPlanners.h"
 #include "GenerateMapNodes.h"
 
+#include "MPRegion.h"
+
 #include "GeneratePartitions.h"
 
 //#include "ExplicitInstantiation.h"
@@ -23,7 +25,7 @@
 /* util.h defines EXIT used in initializing the environment*/
 #include "util.h"
 #include "CfgTypes.h"
-
+#include "MPRegion.h"
 
 
 
@@ -51,7 +53,7 @@ private:
 public:
   ///\todo Finish these interfaces.
  // void WriteRoadmap();
-  void WriteRoadmapForVizmo();
+ 
   void SetMPStrategy(MPStrategy* in_pStrategy) {m_pMPStrategy = in_pStrategy;};
   inline DistanceMetric* GetDistanceMetric() {return m_pDistanceMetric; };
   inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection; };
@@ -60,16 +62,18 @@ public:
   inline string& GetOutputRoadmap() {return m_output_map;};
   inline string& GetOutputDir() {return m_output_dir;};
   inline MPStrategy* GetMPStrategy() {return m_pMPStrategy;};
-  inline Stat_Class* GetStatClass() {return m_pStatClass;};
+  //inline Stat_Class* GetStatClass() {return m_pStatClass;};
   
   
-  inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
-  inline Roadmap<CfgType,WeightType>* GetColRoadmap() {return &rmp_col;};
+  //inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
+  //inline Roadmap<CfgType,WeightType>* GetColRoadmap() {return &rmp_col;};
+  int CreateMPRegion();
+  MPRegion<CfgType,WeightType>* GetMPRegion(int);
 
   void SetNumOfJoints(int num_of_joints) {CfgType::setNumofJoints(num_of_joints);}
   int GetDOFs() {return robot_cfg.DOF(); }
   int GetPosDOFs() {return robot_cfg.posDOF();}
-  void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
+  //void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
   void PrintOptions(ostream& out_os);
   //ostream& GetFileStreamByLabel(string& in_strLabel);
   
@@ -86,10 +90,10 @@ public:
   DistanceMetric*     m_pDistanceMetric;
   CollisionDetection* m_pCollisionDetection;
   Environment* m_pEnvironment;
-  Roadmap<CfgType,WeightType> rmp;
-  Roadmap<CfgType,WeightType> rmp_col;
-  vector< MPRegion<CfgType,WeightType> > regions; 
-  Stat_Class* m_pStatClass;
+  //Roadmap<CfgType,WeightType> rmp;
+  //Roadmap<CfgType,WeightType> rmp_col;
+  vector< MPRegion<CfgType,WeightType>* > m_vecMPRegions; 
+  //Stat_Class* m_pStatClass;
   //map<string,MPFileIO> m_mapLabelFile;
   // temporary variable to deal with posDOFs() and DOFs()
   CfgType robot_cfg;  // @todo may want to replace by real robot class

@@ -6,8 +6,8 @@ MPProblem(TiXmlNode* in_pNode) : MPBaseObject(in_pNode, this) {
   LOG_DEBUG_MSG("MPProblem::MPProblem()");
   
   ParseXML(in_pNode);
-  rmp.environment = m_pEnvironment;
-  m_pStatClass = new Stat_Class;
+ // rmp.environment = m_pEnvironment;
+ // m_pStatClass = new Stat_Class;
   
   LOG_DEBUG_MSG("~MPProblem::MPProblem()");
 }
@@ -83,37 +83,30 @@ PrintOptions(ostream& out_os)
   m_pEnvironment->PrintOptions(out_os);
 }
 
-void MPProblem::
-WriteRoadmapForVizmo() {
-  LOG_DEBUG_MSG("MPProblem::WriteRoadmapForVizmo()");
-  ofstream  myofstream(GetOutputRoadmap().c_str());
-  
-  if (!myofstream) {
-    LOG_ERROR_MSG("MPProblem::WriteRoadmapForVizmo: can't open outfile: ");
+
+
+int MPProblem::
+CreateMPRegion() {
+  int returnVal = m_vecMPRegions.size();
+  m_vecMPRegions.push_back(new MPRegion<CfgType,WeightType>(returnVal,this));
+  return returnVal;
+}
+
+
+MPRegion<CfgType,WeightType>* 
+MPProblem::
+GetMPRegion(int in_RegionId) {
+  if( in_RegionId >= m_vecMPRegions.size()) 
+  {  
+    LOG_ERROR_MSG("MPProblem:: I dont have region id = " << in_RegionId);
     exit(-1);
   }
   
-  myofstream << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
-  myofstream << endl << "#####PREAMBLESTART#####";
-  myofstream << endl << "../obprm -f " << GetEnvFileName() << " ";//commandLine;
-  myofstream << " -bbox ";
-  GetEnvironment()->GetBoundingBox()->Print(myofstream, ',', ',');
-  myofstream << endl << "#####PREAMBLESTOP#####";
-  
-  myofstream << endl << "#####ENVFILESTART#####";
-  myofstream << endl << GetEnvFileName();
-  myofstream << endl << "#####ENVFILESTOP#####";
-  
-  m_pMPStrategy->GetLocalPlanners()->WriteLPs(myofstream);
-  GetCollisionDetection()->WriteCDs(myofstream);
-  GetDistanceMetric()->WriteDMs(myofstream);
-  GetRoadmap()->WriteRNGseed(myofstream);
-
-  GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
-  myofstream.close();
-  LOG_DEBUG_MSG("~MPProblem::WriteRoadmapForVizmo()");
+  return (m_vecMPRegions[in_RegionId]);
 }
 
+
+/*
 void MPProblem::
 AddToRoadmap(vector<Cfg_free >& in_Cfgs) {
 
@@ -128,3 +121,5 @@ AddToRoadmap(vector<Cfg_free >& in_Cfgs) {
    }
   }
 }
+*/
+

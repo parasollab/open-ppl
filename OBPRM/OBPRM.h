@@ -82,7 +82,7 @@ class OBPRM : public BasicOBPRM<CFG> {
 			     CollisionDetection* cd, 
 			     DistanceMetric *, vector<CFG>& nodes);
           
-  virtual void GenerateNodes(vector<CFG>& nodes);
+  virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion,vector<CFG>& nodes);
 
   /**Generate Free Cfgs near the surface of Obstacle.
    *Get CollPair infomation by calling ValidatePairs for info.collPair.
@@ -472,9 +472,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 template <class CFG>
 void 
 OBPRM<CFG>::
-GenerateNodes(vector<CFG>& nodes) {
-  Environment* _env = GetMPProblem()->GetEnvironment();
-  Stat_Class& Stats = *(GetMPProblem()->GetStatClass());
+GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
+  Environment* _env = in_pRegion;
+  Stat_Class& Stats = *(in_pRegion->GetStatClass());
   CollisionDetection* cd = GetMPProblem()->GetCollisionDetection();
   DistanceMetric* dm =  GetMPProblem()->GetDistanceMetric();
          

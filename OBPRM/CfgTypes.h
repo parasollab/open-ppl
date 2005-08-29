@@ -8,5 +8,12 @@
 #include "Cfg_fixed_PRR.h"
 
 
+#include "Weight.h"
+
+//typedef Cfg_free CfgType;
+//typedef DefaultWeight WeightType;
+
+//typedef Cfg_free CFG;
+//typedef DefaultWeight WEIGHT;
 
 #endif

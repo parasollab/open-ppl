@@ -65,7 +65,7 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
 			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
   
-  virtual void GenerateNodes(vector< CFG >  &outCfgs);
+  virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs);
 
   //Index for next node 
   //used in incremental map generation
@@ -306,12 +306,12 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 template <class CFG>
 void 
 BasicPRM<CFG>::
-GenerateNodes(vector< CFG >  &outCfgs) {
+GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) {
 
   LOG_DEBUG_MSG("BasicPRM::GenerateNodes()"); 
   
-  Environment* pEnv = GetMPProblem()->GetEnvironment();
-  Stat_Class* pStatClass = GetMPProblem()->GetStatClass();
+  Environment* pEnv = in_pRegion;
+  Stat_Class* pStatClass = in_pRegion->GetStatClass();
   CollisionDetection* pCd = GetMPProblem()->GetCollisionDetection();
   
   if (exactNodes.GetValue()==1)

@@ -5,6 +5,8 @@
 #include "util.h"
 #include "Stat_Class.h"
 #include "CfgTypes.h"
+#include "MPProblem.h"
+#include "MPRegion.h"
 
 class Environment;
 class CollisionDetection;
@@ -73,7 +75,8 @@ class NodeGenerationMethod : public MPBaseObject{
 			     DistanceMetric *, vector<CFG>& nodes) = 0;
 
   ///\todo remove the "{ }" and replace with "= 0" to force all methods 
-  virtual void GenerateNodes(vector< CFG > &outCfgs) { };
+  
+  virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &outCfgs) { };
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //

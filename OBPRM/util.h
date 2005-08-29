@@ -408,6 +408,7 @@ class MPBaseObject {
 
   public: 
     MPBaseObject(){ m_pProblem = NULL;};
+    MPBaseObject(MPProblem* in_pProblem){ m_pProblem = in_pProblem;};
     MPBaseObject(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
          m_strLabel("") { 
       m_pProblem = in_pProblem;

@@ -66,6 +66,13 @@ public:
      * updates usable_multibodies accordingly.
      */
     Environment(Environment &from_env);
+    
+    /** 
+     * Copy Constructor. COPIES FROM MPPRoblem's Environment
+     * copies multibodies from usable_multibodies of from_env and
+     * updates usable_multibodies accordingly.
+     */
+    Environment(MPProblem* in_pProblem);
 
     /** 
      * Copy Constructor.
