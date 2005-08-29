@@ -56,15 +56,17 @@ ParseStrategyMethod(TiXmlNode* in_pNode) {
     if(string(pChild->Value()) == "PRMRoadmap") {
       PRMRoadmap* prm = new PRMRoadmap(pChild,GetMPProblem());
       all_MPStrategyMethod.push_back( prm );
-      //selected_MPStrategyMethod = prm;
-    } if(string(pChild->Value()) == "Compare") {
+    } else if(string(pChild->Value()) == "Compare") {
       MPCompare* comp = new MPCompare(pChild,GetMPProblem());
       all_MPStrategyMethod.push_back( comp );
-      //selected_MPStrategyMethod = comp;
+    } else if(string(pChild->Value()) == "RoadmapInput") {
+      RoadmapInput* rmpinput = new RoadmapInput(pChild,GetMPProblem());
+      all_MPStrategyMethod.push_back( rmpinput );
     } else {
       LOG_WARNING_MSG("MPStrategy::  I don't know: "<< endl << *pChild);
     }
   }
+  
   
   m_strController_MPStrategyMethod = "";
   

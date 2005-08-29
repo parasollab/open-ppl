@@ -115,7 +115,7 @@ public:
     LOG_DEBUG_MSG("MPCompare::() -- executing "<< m_vecStrStrategyMethod[0]);
     (*input1)(Input1RegionId);
     LOG_DEBUG_MSG("MPCompare::() -- executing "<< m_vecStrStrategyMethod[1]);
-    (*input1)(Input2RegionId); 
+    (*input2)(Input2RegionId); 
     LOG_DEBUG_MSG("MPCompare::()");
   }
   
@@ -281,6 +281,54 @@ private:
   string m_strLocalPlannerLabel;
    
 };
+
+
+class RoadmapInput : public MPStrategyMethod {
+  public:
+    
+    
+  RoadmapInput(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_pNode,in_pProblem) {
+    LOG_DEBUG_MSG("RoadmapInput::RoadmapInput()");
+    ParseXML(in_pNode);    
+    LOG_DEBUG_MSG("~RoadmapInput::RoadmapInput()");
+    };
+    
+    virtual void PrintOptions(ostream& out_os) { };
+  
+    virtual void ParseXML(TiXmlNode* in_pNode) {
+      LOG_DEBUG_MSG("RoadmapInput::ParseXML()");
+      
+          const char* in_char = in_pNode->ToElement()->Attribute("input_map");
+          if(in_char) {
+            m_strInputFileName = string(in_char);
+          }
+         else {
+           LOG_ERROR_MSG("RoadmapInput::  I don't know: "<< endl << *in_pNode);exit(-1);
+        }
+    
+        LOG_DEBUG_MSG("~RoadmapInput::ParseXML()");
+    };
+   
+    virtual void operator()(int in_RegionID) {
+      LOG_DEBUG_MSG("PRMRoadmap::() -- Reading in file: " << m_strInputFileName);
+      MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
+      
+      region->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strInputFileName.c_str());
+      
+      LOG_DEBUG_MSG("~PRMRoadmap::()");
+    }
+  
+    virtual void operator()() {
+      int newRegionId = GetMPProblem()->CreateMPRegion();
+      (*this)(newRegionId);      
+    };
+
+  private:
+    string m_strInputFileName;
+   
+};
+
 
 
 
