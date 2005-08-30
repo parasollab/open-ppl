@@ -199,6 +199,9 @@ LocalPlanners<CFG,WEIGHT>::
 LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
   MPBaseObject(in_pNode,in_pProblem) {
 
+  
+  ///\todo Finish this parcer .... need to have binary search!
+  
   LOG_DEBUG_MSG("LocalPlanners::LocalPlanners()");
   
   StraightLine<CFG, WEIGHT>* straight_line = new StraightLine<CFG, WEIGHT>(cdtype);

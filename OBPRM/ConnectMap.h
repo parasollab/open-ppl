@@ -12,6 +12,7 @@
 //node connection methods
 #include "NodeConnectionMethod.h"
 #include "Closest.h"
+#include "AllPairsNodeConnection.h"
 //#include "UnconnectedClosest.h"
 #include "RandomConnect.h"
 //#include "ModifiedLM.h"
@@ -259,6 +260,15 @@ ParseXML(TiXmlNode* in_pNode) {
       connectccs->connectionOriRes = connectionOriRes; 
       all_component_methods.push_back(connectccs);
       selected_component_methods.push_back(connectccs);
+    } else if(string(pChild->Value()) == "AllPairs") {
+      cout << "ConnectMap found ConnectCCs" << endl;
+      AllPairsNodeConnection<CFG,WEIGHT>* allPairs = 
+          new AllPairsNodeConnection<CFG,WEIGHT>(pChild,GetMPProblem());
+      allPairs->cdInfo = &cdInfo;
+      allPairs->connectionPosRes = connectionPosRes;
+      allPairs->connectionOriRes = connectionOriRes; 
+      all_node_methods.push_back(allPairs);
+      selected_node_methods.push_back(allPairs);
     }
   }
   
