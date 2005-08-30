@@ -29,10 +29,20 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   GaussPRM();
+  GaussPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.
   virtual ~GaussPRM();
 
   //@}
+
+
+  //////////////////////////////////////////////////
+  //Gaussian number generator
+  //parameters: m = median given by user
+  //and s = standar deviation set to 0.5 for testSerial env.
+
+  double Gaussian(double m, double s);
+
 
   //////////////////////
   // Access
@@ -41,6 +51,7 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
+  virtual void ParseXML(TiXmlNode* in_pNode);
 
 
   //////////////////////
@@ -48,6 +59,8 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
+  ///Used in new MPProblem framework.
+  virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
   /**Filters randomly generated nodes in such a way that a "Gaussian" 
@@ -73,6 +86,8 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
   virtual void GenerateNodes(Environment* _env, Stat_Class&,
 			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
+ 
+  virtual void GenerateNodes(vector< CFG >  &outCfgs);
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -112,12 +127,30 @@ GaussPRM<CFG>::
 ~GaussPRM() {
 }
 
+template <class CFG>
+GaussPRM<CFG>::
+GaussPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+NodeGenerationMethod<CFG>(in_pNode, in_pProblem) {
+  LOG_DEBUG_MSG("GaussPRM::GaussPRM()");
+  ParseXML(in_pNode);
+  LOG_DEBUG_MSG("~GaussPRM::GaussPRM()");
+}
+
 
 template <class CFG>
 char*
 GaussPRM<CFG>::
 GetName() {
   return "GaussPRM";
+}
+
+template <class CFG>
+void
+GaussPRM<CFG>::
+ParseXML(TiXmlNode* in_pNode) {
+  LOG_DEBUG_MSG("GaussPRM::ParseXML()");
+  PrintValues(cout);
+  LOG_DEBUG_MSG("~GaussPRM::ParseXML()");
 }
 
 
@@ -210,13 +243,51 @@ CreateCopy() {
   return _copy;
 }
 
+template <class CFG>
+void
+GaussPRM<CFG>::
+PrintOptions(ostream& out_os){
+  out_os << "    " << GetName() << ":: ";
+  out_os << " num nodes = " << numNodes.GetValue() << " ";
+  out_os << " exact = " << exactNodes.GetValue() << " ";
+  out_os << " chunk size = " << chunkSize.GetValue() << " ";
+  out_os << endl;
+}
+
+template <class CFG>
+double
+GaussPRM<CFG>::
+Gaussian(double m, double s){
+  // normal distribution with mean m and standard deviation s
+  double x1, x2, w, r,r1;
+  do {
+    r1 =(double)rand();
+    r = ((double)(r1 / (RAND_MAX+1)))*-1;
+    //cout<<"1. RAND_MAX::"<<RAND_MAX<<";R1::"<<r1<<"; R::"<<r<<endl;
+    x1 = 2. * r - 1.;
+    r1 =(double)rand();
+    r = ( (double)(r1 / (RAND_MAX+1)) )*-1;
+    //cout<<"2. RAND_MAX::"<<RAND_MAX<<";R1::"<<r1<<"; R::"<<r<<endl;
+    x2 = 2. * r - 1.;
+    w = x1*x1 + x2*x2;
+    //cout<<"W: "<<w<<endl;
+}while (w >= 1. || w < 1E-30);
+ 
+  w = sqrt((-2.*log(w))/w);
+  x1 *= w;
+  return x1 * s + m;
+}
+
 
 template <class CFG>
 void
 GaussPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
-	      CollisionDetection* cd, DistanceMetric *,
+	      CollisionDetection* cd, DistanceMetric *dm,
 	      vector<CFG>& nodes) {
+
+  LOG_DEBUG_MSG("GaussPRM::GenerateNodes()");	
+
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ") ";
   cout << "(chunkSize=" << chunkSize.GetValue() << ") ";
@@ -233,19 +304,24 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-GaussPRM::GenerateNodes"); Callee = Callee+Method;}
 
-  if (gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from env
-    gauss_d.PutValue(_env->Getminmax_BodyAxisRange());
+  if (gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from robot
+    gauss_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
   }
   
+  //generate random number with normal distribution
+  //this is the distance it will use to compute Cfg2
+
+  double gauss_dist = Gaussian(gauss_d.GetValue(), 0.5); 
   
   // generate in bounding box
-  for (int i=0,newNodes=0; i < numNodes.GetValue() || newNodes<1 ; i++) {
-    
+  //for (int i=0,newNodes=0; i < numNodes.GetValue() || newNodes<1 ; i++) {
+  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < numNodes.GetValue() ; attempts++) { 
     // cfg1 & cfg2 are generated to be inside bbox
     CFG cfg1, cfg2;
     cfg1.GetRandomCfg(_env);
     cfg2.GetRandomCfg(_env);
-    cfg2.c1_towards_c2(cfg1,cfg2,gauss_d.GetValue());
+    //cfg2.c1_towards_c2(cfg1,cfg2,gauss_d.GetValue());
+    cfg2.c1_towards_c2(cfg1,cfg2,gauss_dist);
     
     // because cfg2 is modified it must be checked again
     if (cfg2.InBoundingBox(_env)) {    
@@ -266,28 +342,56 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	path.push_back(cfg1);
 #endif
 	
-      } else if (!cfg1_free && cfg2_free) {
+      } 
+      else if (!cfg1_free && cfg2_free) {
 	nodes.push_back(CFG(cfg2));   
 	newNodes++;
 #if INTERMEDIATE_FILES
 	path.push_back(cfg2);
 #endif
-	
-      } else if (bExact){
-	i--; // in this case, keep trying to generate the ith node;
-	continue;
-      }// endif push nodes
+      } 
+
+/*       else if (bExact){ */
+/* 	i--; // in this case, keep trying to generate the ith node; */
+/* 	continue; */
+/*       }// endif push nodes */
       
-    } else if (bExact){ //outside of BBxz
-	i--; // in this case, keep trying to generate the ith node;
-    } // endif BB
+/*     }  */
+/*     else if (bExact){ //outside of BBxz */
+/*       i--; // in this case, keep trying to generate the ith node; */
+/*     } // endif BB */
+    }
+    if (bExact)
+      success_cntr = newNodes;
+    else
+      success_cntr = attempts+1;
     
   } // endfor
-	
+  
 #if INTERMEDIATE_FILES
   WritePathConfigurations("GaussPRM.path", path, _env);
 #endif
 
-};
+  LOG_DEBUG_MSG("~GaussPRM::GenerateNodes()"); 
+
+}
+
+
+template <class CFG>
+void 
+GaussPRM<CFG>::
+GenerateNodes(vector< CFG >  &outCfgs) {
+
+  LOG_DEBUG_MSG("GaussPRM::GenerateNodes()"); 
+ 
+  Environment* pEnv = GetMPProblem()->GetEnvironment();
+  Stat_Class* pStatClass = GetMPProblem()->GetStatClass();
+  CollisionDetection* pCd = GetMPProblem()->GetCollisionDetection();
+  DistanceMetric *dm = GetMPProblem()->GetDistanceMetric();
+ 
+  GenerateNodes(pEnv,*pStatClass, pCd, dm, outCfgs);
+
+}
+
 
 #endif

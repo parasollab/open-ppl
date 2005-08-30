@@ -31,6 +31,8 @@
 #include "BasicOBPRM.h"
 #include "OBPRM.h"
 #include "OBMAPRM.h"
+#include "BridgeTest.h"
+
 #include "util.h"
 
 #include <sstream>
@@ -153,10 +155,10 @@ GenerateMapNodes() {
 
   BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>();
   all.push_back(basicPRM);
-  /*
+  
   GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>();
   all.push_back(gaussPRM);
-*/
+
   BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>();
   all.push_back(basicOBPRM);
 
@@ -172,6 +174,10 @@ GenerateMapNodes() {
   OBMAPRM<CFG>* obmaprm = new OBMAPRM<CFG>();
   all.push_back(obmaprm);
   */
+
+  BridgeTestPRM<CFG>* bridgePRM = new BridgeTestPRM<CFG>();
+  all.push_back(bridgePRM);
+  
   addNodes2Map = true;
 }
 
@@ -206,9 +212,6 @@ ParseXML(TiXmlNode* in_pNode) {
   GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>();
   all.push_back(gaussPRM);
 
-  
-  
-
   OBPRM<CFG>* obprm = new OBPRM<CFG>();
   all.push_back(obprm);
   
@@ -220,6 +223,11 @@ ParseXML(TiXmlNode* in_pNode) {
   
   OBMAPRM<CFG>* obmaprm = new OBMAPRM<CFG>();
   all.push_back(obmaprm);
+
+  BridgeTestPRM<CFG>* bridgePRM = new BridgeTestPRM<CFG>();
+  all.push_back(bridgePRM);
+
+
   */
   addNodes2Map = true;
   
