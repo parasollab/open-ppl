@@ -149,6 +149,19 @@ void
 GaussPRM<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
   LOG_DEBUG_MSG("GaussPRM::ParseXML()");
+  SetDefault();
+  if(!in_pNode) {
+    LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
+  }
+  if(string(in_pNode->Value()) != "GaussPRM") {
+    LOG_ERROR_MSG("Error reading <GaussPRM> tag...."); exit(-1);
+  }
+  double gauss;  
+  in_pNode->ToElement()->QueryDoubleAttribute("gauss_d",&gauss);
+  
+  gauss_d.SetValue(gauss);
+  
+  
   PrintValues(cout);
   LOG_DEBUG_MSG("~GaussPRM::ParseXML()");
 }

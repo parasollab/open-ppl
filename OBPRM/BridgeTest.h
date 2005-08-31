@@ -151,6 +151,22 @@ void
 BridgeTestPRM<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
   LOG_DEBUG_MSG("BridgeTestPRM::ParseXML()");
+  SetDefault();
+  if(!in_pNode) {
+    LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
+  }
+  if(string(in_pNode->Value()) != "BridgeTestPRM") {
+    LOG_ERROR_MSG("Error reading <BridgeTestPRM> tag...."); exit(-1);
+  }
+  double bridge;  
+  in_pNode->ToElement()->QueryDoubleAttribute("bridge_d",&bridge);
+  
+  bridge_d.SetValue(bridge);
+  
+  
+  PrintValues(cout);
+  
+  
   PrintValues(cout);
   LOG_DEBUG_MSG("~BridgeTestPRM::ParseXML()");
 }

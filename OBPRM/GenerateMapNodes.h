@@ -206,6 +206,14 @@ ParseXML(TiXmlNode* in_pNode) {
       BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>(pChild, GetMPProblem());
       basicOBPRM->cdInfo = &cdInfo;
       selected.push_back(basicOBPRM);
+    } else if(string(pChild->Value()) == "BridgeTestPRM") {
+      BridgeTestPRM<CFG>* bridgeTest = new BridgeTestPRM<CFG>(pChild, GetMPProblem());
+      bridgeTest->cdInfo = &cdInfo;
+      selected.push_back(bridgeTest);
+    } else if(string(pChild->Value()) == "GaussPRM") {
+      GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>(pChild, GetMPProblem());
+      gaussPRM->cdInfo = &cdInfo;
+      selected.push_back(gaussPRM);
     }
   }
   /*
