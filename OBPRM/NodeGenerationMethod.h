@@ -5,13 +5,13 @@
 #include "util.h"
 #include "Stat_Class.h"
 #include "CfgTypes.h"
-#include "MPProblem.h"
-#include "MPRegion.h"
 
 class Environment;
 class CollisionDetection;
 class CDInfo;
 class DistanceMetric;
+template <class CFG, class WEIGHT> class MPRegion;
+class MPProblem;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
