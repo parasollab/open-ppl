@@ -47,16 +47,13 @@ LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB)
 #compile targest
 default: libs
 
-utils: 
-	cd ../utils/geom/CD-libs/RAPID/;make libRAPID.a
-	cd ../utils/xml/tinyxml/;make libs
-	cd ../utils/geom/CD-libs/PQP_v1.2;make library
-	cd ../utils/geom/CD-libs/qhull3.0/src;make all
-	cd ../utils/geom/CD-libs/VCLIP;make all
+include $(OBPRM)/GNUmakefile.OBPRMobjs
 
-libs: utils objs $(OBPRM_LIBFILE)
+objs: $(OBJS)
 
-libobprm.a: utils objs
+libs: $(OBPRM_LIBFILE) 
+
+libobprm.a: $(OBJS) $(XML_LIBFILE) $(CD_LIBFILE) 
 	$(AR) libobprm.a $(OBJS)
 
 #libobprm.so: objs
@@ -65,19 +62,15 @@ libobprm.a: utils objs
 libobprm.dylib: objs
 	$(LD) $(OBJS) -o libobprm.dylib -lc -lgcc -lstdc++ $(CD_LIB)
 
-%: main_%.cpp libs 
+%: main_%.cpp $(OBPRM_LIBFILE) 
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_$@.cpp $(LIBS) -o $@
 	rm -f $@.d
 
-
-pmp: main_pmp.cpp libs
+pmp: main_pmp.cpp $(OBPRM_LIBFILE)
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS)  main_pmp.cpp $(LIBS)  -o main_pmp
 	rm -f $@.d
 
-
-
-metaplanner: main_metaplanner.cpp libs 
-
+metaplanner: main_metaplanner.cpp $(OBPRM_LIBFILE)
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) -DCOLLISIONCFG main_metaplanner.cpp $(LIBS) -o metaplanner
 
 %.o: %.cpp
@@ -88,45 +81,6 @@ endif
 	touch $*.d
 	cat $*.d >> Dependencies
 	rm -f $*.d
-
-OBJS = \
-	FreeBody.o \
-	FixedBody.o \
-	Connection.o \
-	Contact.o \
-	DHparameters.o \
-	Transformation.o \
-	Orientation.o \
-	GMSPolyhedron.o \
-	Matrix.o \
-	Vectors.o \
-	Body.o \
-	MultiBody.o \
-	Parameters.o \
-	Input.o \
-	Cfg.o \
-	Cfg_free.o \
-	Cfg_fixed_PRR.o \
-	Cfg_free_tree.o \
-	Cfg_fixed_tree.o \
-	Cfg_2D.o \
-	Environment.o \
-	util.o \
-	Clock_Class.o \
-	Clock_Elapsed.o \
-	Stat_Class.o \
-	DistanceMetrics.o \
-	CollisionDetection.o \
-	QueryCmds.o \
-	Weight.o \
-	Boundary.o \
-	MPStrategy.o \
-	MPProblem.o 
-#	Haptic.o \
-#	Push.o \
-
-
-objs: $(OBJS)
 
 clean:
 	rm -f obprm
@@ -143,7 +97,6 @@ reallyclean:
 	rm -f so_locations
 	rm -f Dependencies
 	touch Dependencies
-
 
 include Dependencies
 
