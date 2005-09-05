@@ -214,6 +214,7 @@ PrintOptions(ostream& out_os){
   out_os << " num nodes = " << numNodes.GetValue() << " ";
   out_os << " exact = " << exactNodes.GetValue() << " ";
   out_os << " chunk size = " << chunkSize.GetValue() << " ";
+  out_os << " MaxCDCalls = " << m_nMaxCdCalls << " ";
   out_os << endl;
 }
 

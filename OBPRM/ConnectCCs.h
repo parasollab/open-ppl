@@ -68,8 +68,8 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   void ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		       CollisionDetection *cd, LocalPlanners<CFG,WEIGHT>* lp,
 		       DistanceMetric * dm, 
-		       vector<CFG>& cc1vec, 
-		       vector<CFG>& cc2vec,
+		       vector<VID>& cc1vec, 
+		       vector<VID>& cc2vec,
 		       bool addPartialEdge,
 		       bool addAllEdges);  
   /**Connect two big connected components.
@@ -96,8 +96,8 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
    */
   void ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		     CollisionDetection* cd, LocalPlanners<CFG,WEIGHT>* lp,
-		     DistanceMetric* dm, vector<CFG>& cc1vec, 
-		     vector<CFG>& cc2vec,
+		     DistanceMetric* dm, vector<VID>& cc1vec, 
+		     vector<VID>& cc2vec,
 		     bool addPartialEdge, bool addAllEdges);
 
   //@}
@@ -128,8 +128,8 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 ///////////////////////////////////////////////////////////////////////////////
 //   Connection Method:  ConnectCCs
 template <class CFG, class WEIGHT>
-ConnectCCs<CFG,WEIGHT>::
-ConnectCCs():ComponentConnectionMethod<CFG,WEIGHT>() { 
+ConnectCCs<CFG,WEIGHT>::ConnectCCs():
+  ComponentConnectionMethod<CFG,WEIGHT>() { 
   element_name = "components"; 
 
   SetDefault();
@@ -276,7 +276,7 @@ ConnectCCs<CFG, WEIGHT>::
 ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		CollisionDetection *cd, LocalPlanners<CFG,WEIGHT>* lp,
 		DistanceMetric* dm, 
-		vector<CFG>& cc1vec, vector<CFG>& cc2vec,
+		vector<VID>& cc1vec, vector<VID>& cc2vec,
 		bool addPartialEdge, bool addAllEdges) {
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
@@ -288,7 +288,8 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       Stats.IncConnections_Attempted();
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
           && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
-			     cc1vec[c1],cc2vec[c2],
+			     pMap->GetData(cc1vec[c1]),
+			     pMap->GetData(cc2vec[c2]),
 			     &lpOutput, 
 			     connectionPosRes, connectionOriRes, 
 			     (!addAllEdges)) ) {
@@ -300,9 +301,9 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
 	for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
 	  CFG tmp = I->first.second;
-	  if(!tmp.AlmostEqual(cc1vec[c1])) {
-	    pMap->AddVertex(tmp);
-	    pMap->AddEdge(cc1vec[c1], tmp, I->second);
+	  if(!tmp.AlmostEqual(pMap->GetData(cc1vec[c1]))) {
+	    VID tmpVID = pMap->AddVertex(tmp);
+	    pMap->AddEdge(cc1vec[c1], tmpVID, I->second);
 	  }
 	}
       }
@@ -320,20 +321,27 @@ ConnectCCs<CFG, WEIGHT>::
 ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	      CollisionDetection *cd, LocalPlanners<CFG,WEIGHT>* lp, 
 	      DistanceMetric* dm, 
-	      vector<CFG>& cc1vec, vector<CFG>& cc2vec,
+	      vector<VID>& cc1vec, vector<VID>& cc2vec,
 	      bool addPartialEdge, bool addAllEdges) { 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
   int k = (int)min(kpairs, cc2vec.size());
-  
-  vector< pair<CFG,CFG> > kp = 
-    dm->FindKClosestPairs(_rm->GetEnvironment(),cc1vec,cc2vec,k);
-  
+
+  //Clock_Class clock;
+  //clock.StartClock("dm computation");  
+  vector<pair<VID,VID> > kp = 
+    dm->FindKClosestPairs(_rm,cc1vec,cc2vec,k);
+  //clock.StopPrintClock();
+
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int i = 0; i < kp.size(); i++) {
     Stats.IncConnections_Attempted();
-    if (!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
-	&& lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,kp[i].first,kp[i].second,&lpOutput, connectionPosRes, connectionOriRes, (!addAllEdges)) ) {
+    if(!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
+       && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
+			  pMap->GetData(kp[i].first),
+			  pMap->GetData(kp[i].second),
+			  &lpOutput, connectionPosRes, connectionOriRes, 
+			  (!addAllEdges)) ) {
       pMap->AddEdge(kp[i].first, kp[i].second, lpOutput.edge); 
       Stats.IncConnections_Made();
       return;
@@ -342,9 +350,9 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
       for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
 	CFG tmp = I->first.second;
-	if(!tmp.AlmostEqual(kp[i].first)) {
-	  pMap->AddVertex(tmp);
-	  pMap->AddEdge(kp[i].first, tmp, I->second);
+	if(!tmp.AlmostEqual(pMap->GetData(kp[i].first))) {
+	  VID tmpVID = pMap->AddVertex(tmp);
+	  pMap->AddEdge(kp[i].first, tmpVID, I->second);
 	}
       }
     }//end for c2
@@ -363,7 +371,6 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	  bool addAllEdges) {
   vector< pair<int,VID> > ccs1;
   GetCCStats(*(_rm->m_pRoadmap),ccs1);
-  vector< pair<int,VID> > ccs2 = ccs1;
   
 #ifndef QUIET
   cout << "components(kpairs="<< kpairs ;
@@ -373,27 +380,27 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
   // process components from smallest to biggest  
-  for (int cc1 = ccs1.size()-1 ; cc1 >= 0 ; cc1--) {
-    for (int cc2 = ccs2.size() - 2 ; cc2 >= 0 ; cc2--) {
-      VID cc1id = ccs1[cc1].second; 
-      VID cc2id = ccs2[cc2].second;
-      CFG cc1Cfg = pMap->GetData(cc1id); 
-      CFG cc2Cfg = pMap->GetData(cc2id); 
-      
+  vector<pair<int,VID> >::reverse_iterator C1, C2;
+  for(C1 = ccs1.rbegin(); C1+1 != ccs1.rend(); ++C1) {
+    for(C2 = C1+1; C2 != ccs1.rend(); ++C2) {      
       // if cc1 & cc2 not already connected, try to connect them 
-      if ( !IsSameCC(*pMap,cc1id,cc2id) ) {
-        vector<CFG> cc1;
-        GetCC(*pMap,cc1Cfg,cc1);
-        vector<CFG> cc2;
-        GetCC(*pMap,cc2Cfg,cc2);
+      if ( !IsSameCC(*pMap,C1->second,C2->second) ) {
+        vector<VID> cc1;
+        GetCC(*pMap,C1->second,cc1);
+
+        vector<VID> cc2;
+        GetCC(*pMap,C2->second,cc2);
+
         if(cc1.size() < smallcc && cc2.size() < smallcc ) {
           ConnectSmallCCs(_rm,Stats,cd,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
         } else {
-          ConnectBigCCs(_rm,Stats,cd,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+          if(cc1.size() <= cc2.size())
+            ConnectBigCCs(_rm,Stats,cd,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+          else
+            ConnectBigCCs(_rm,Stats,cd,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
         }
       } 
     }/*endfor cc2*/ 
-    ccs2.pop_back();
   }/*endfor cc1*/
 }
 
@@ -412,28 +419,34 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   cout << ", smallcc="<<smallcc <<"): "<<flush;
 #endif
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  
-  for (int cc1 = 0; cc1 < vids1.size(); cc1++) {
-    for (int cc2 = 0; cc2 < vids2.size(); cc2++) {
-      VID cc1id = vids1[cc1]; 
-      VID cc2id = vids2[cc2];
-      CFG cc1Cfg = pMap->GetData(cc1id); 
-      CFG cc2Cfg = pMap->GetData(cc2id); 
-      
-      // if cc1 & cc2 not already connected, try to connect them 
-      if ( !IsSameCC(*pMap,cc1id,cc2id) ) {
-        vector<CFG> cc1Cfgs;
-        GetCC(*pMap,cc1Cfg,cc1Cfgs);
-        vector<CFG> cc2Cfgs;
-        GetCC(*pMap,cc2Cfg,cc2Cfgs);
-        if(cc1Cfgs.size() < smallcc && cc2Cfgs.size() < smallcc ) {
-          ConnectSmallCCs(_rm,Stats,cd,lp,dm,cc1Cfgs,cc2Cfgs,addPartialEdge,addAllEdges);
+
+  //DisplayCCStats(*pMap); cout << endl;
+
+  vector<VID>::reverse_iterator V1, V2;
+  for(V1 = vids1.rbegin(); V1 != vids1.rend(); ++V1) {
+    for(V2 = vids2.rbegin(); V2 != vids2.rend(); ++V2) {
+      // if V1 & V2 not already connected, try to connect them 
+      if ( !IsSameCC(*pMap,*V1,*V2) ) {
+        vector<VID> cc1;
+        GetCC(*pMap,*V1,cc1);
+
+        vector<VID> cc2;
+        GetCC(*pMap,*V2,cc2);
+
+        if(cc1.size() < smallcc && cc2.size() < smallcc ) {
+          ConnectSmallCCs(_rm,Stats,cd,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
         } else {
-          ConnectBigCCs(_rm,Stats,cd,lp,dm,cc1Cfgs,cc2Cfgs,addPartialEdge,addAllEdges);
+          if(cc1.size() <= cc2.size())
+            ConnectBigCCs(_rm,Stats,cd,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+          else
+            ConnectBigCCs(_rm,Stats,cd,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
         }
       } 
-    }/*endfor cc2*/ 
-  }/*endfor cc1*/
+
+    }/*endfor V2*/ 
+  }/*endfor V1*/
+
+  //DisplayCCStats(*pMap); cout << endl;
 }
 
 #endif

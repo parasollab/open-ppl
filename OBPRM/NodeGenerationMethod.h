@@ -125,6 +125,7 @@ NodeGenerationMethod<CFG>::
 NodeGenerationMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
      MPBaseObject(in_pNode,in_pProblem) {
   LOG_DEBUG_MSG("NodeGenerationMethod::NodeGenerationMethod()");
+  SetDefault();
   
   for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
     pChild2 = pChild2->NextSibling()) {
@@ -165,19 +166,23 @@ ParseXMLnum_nodes(TiXmlNode* in_pNode) {
 
   int nexactNodes, nnumNodes, nMaxCdCalls;
     
-  in_pNode->ToElement()->QueryIntAttribute("number",&nnumNodes);
-  in_pNode->ToElement()->QueryIntAttribute("exact",&nexactNodes);
-  in_pNode->ToElement()->QueryIntAttribute("max_cd_calls",&nMaxCdCalls);
+  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("number",&nnumNodes))
+  {numNodes.SetValue(nnumNodes);m_nNumNodes = nnumNodes;}
+  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("exact",&nexactNodes))
+  {exactNodes.SetValue(nexactNodes);m_nExactNodes = nexactNodes;}
+  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("max_cd_calls",&nMaxCdCalls))
+  {m_nMaxCdCalls = nMaxCdCalls;}
+  
  // in_pNode->ToElement()->QueryIntAttribute("chunk_size",&nchunkSize);
-  exactNodes.SetValue(nexactNodes);
-  numNodes.SetValue(nnumNodes);
+  
+  
   ///\todo fix this hack, chunkSize should be removed in the future!
   chunkSize.SetValue(nnumNodes);
   
   
-  m_nExactNodes = nexactNodes;
-  m_nNumNodes = nnumNodes;
-  m_nMaxCdCalls = nMaxCdCalls;
+  
+  
+  
   
   ///\todo remove the comments when everything is ready!
   //cout << "NodeGenerationMethod<CFG>::ParseXMLnum_nodes()" << endl;

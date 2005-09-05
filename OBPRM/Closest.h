@@ -65,13 +65,13 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
              CollisionDetection*, DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
-             vector<CFG>& v1, vector<CFG>& v2);
+             vector<VID>& v1, vector<VID>& v2);
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
              CollisionDetection*, DistanceMetric*,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
-             vector<vector<CFG> >& verticesList);
+             vector<vector<VID> >& verticesList);
 
 
  private:
@@ -226,8 +226,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 #endif
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  vector<CFG> vertices;
-  pMap->GetVerticesData(vertices);
+  vector<VID> vertices;
+  pMap->GetVerticesVID(vertices);
   const int k = (int)min(kclosest,vertices.size());
   
   vector< pair<VID,VID> > kp;
@@ -240,7 +240,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     for(int i=0; i<vertices.size(); ++i)
       for(int j=0; j<vertices.size(); ++j){
         if( vertices[i]==vertices[j] ) continue;
-        kp.push_back(pair<VID,VID>(pMap->GetVID(vertices[i]), pMap->GetVID(vertices[j])));
+        kp.push_back(pair<VID,VID>(vertices[i], vertices[j]));
       }
   }
   
@@ -273,7 +273,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
-            vector<vector<CFG> >& verticesList)
+            vector<vector<VID> >& verticesList)
 {
   for(int i=0; i<verticesList.size()-1; ++i)
     for(int j=i+1; j<verticesList.size(); ++j)
@@ -290,7 +290,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
-            vector<CFG>& v1, vector<CFG>& v2) 
+            vector<VID>& v1, vector<VID>& v2) 
 {
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
 #ifndef QUIET
@@ -301,10 +301,10 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   vector< pair<VID,VID> > kp;
 
   if((v1.size() < kclosest) && (v2.size() < kclosest)) {//all pairs
-    for(typename vector<CFG>::iterator I = v1.begin(); I != v1.end(); ++I)
-      for(typename vector<CFG>::iterator J = v2.begin(); J != v2.end(); ++J)
+    for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I)
+      for(vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J)
     if(*I != *J)
-      kp.push_back(make_pair<VID,VID>(pMap->GetVID(*I), pMap->GetVID(*J)));
+      kp.push_back(make_pair<VID,VID>(*I, *J));
   }
 
   if((v1.size() >= kclosest) && (v2.size() >= kclosest)) { //k closest each way

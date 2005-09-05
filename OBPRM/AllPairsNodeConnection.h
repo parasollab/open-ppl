@@ -65,13 +65,13 @@ class AllPairsNodeConnection: public NodeConnectionMethod<CFG,WEIGHT> {
              CollisionDetection*, DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
-             vector<CFG>& v1, vector<CFG>& v2) {};
+             vector<VID>& v1, vector<VID>& v2) {};
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
              CollisionDetection*, DistanceMetric*,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
-             vector<vector<CFG> >& verticesList) {};
+             vector<vector<VID> >& verticesList) {};
 
   
  private:

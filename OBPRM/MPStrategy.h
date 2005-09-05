@@ -21,13 +21,16 @@
 
 #include "GeneratePartitions.h"
 
+
 //#include "ExplicitInstantiation.h"
 
 /* util.h defines EXIT used in initializing the environment*/
 #include "util.h"
 #include "MPProblem.h"
+#include "MPCharacterizer.h"
 
 ///Will be used to derive IMP,PRM,RRT,metaplanner, etc.
+
 class MPStrategyMethod : public MPBaseObject 
 {
   public:
@@ -53,6 +56,7 @@ public:
   LocalPlanners<CfgType, WeightType>* GetLocalPlanners() {return m_pLocalPlanners;};
   GenerateMapNodes<CfgType>* GetGenerateMapNodes() {return m_pNodeGeneration;};
   ConnectMap<CfgType, WeightType>* GetConnectMap(){return m_pConnection;};
+  MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
   bool addPartialEdge, addAllEdges; //move to connect map class
   void PrintOptions(ostream& out_os);
   void Solve(); 
@@ -62,9 +66,9 @@ public:
   GenerateMapNodes<CfgType>* m_pNodeGeneration;
   ConnectMap<CfgType, WeightType>* m_pConnection;
   LocalPlanners<CfgType, WeightType>* m_pLocalPlanners;
+  MPCharacterizer<CfgType, WeightType>* m_pCharacterizer;
   
   //Map_Evaluation
-  //Filtering
   vector< MPStrategyMethod* > all_MPStrategyMethod;
   string m_strController_MPStrategyMethod;
 };
@@ -86,7 +90,9 @@ public:
   virtual void ParseXML(TiXmlNode* in_pNode) {
     LOG_DEBUG_MSG("MPCompare::ParseXML()");
       
-    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; 
+         pChild = pChild->NextSibling()) {
+           
       if(string(pChild->Value()) == "input") {
         const char* in_char = pChild->ToElement()->Attribute("Method");
         if(in_char) {
@@ -168,14 +174,18 @@ class PRMRoadmap : public MPStrategyMethod {
         if(in_char) {
           m_strLocalPlannerLabel = string(in_char);
         }
+      } else if(string(pChild->Value()) == "NodeCharacterizer") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        if(in_char) {
+          string node_char(in_char);
+          m_vecNodeCharacterizerLabels.push_back(node_char);
+        }
       } else {
         LOG_WARNING_MSG("PRMRoadmap::  I don't know: "<< endl << *pChild);
       }
     }
       
-    
-    
-    
+   
     
     LOG_DEBUG_MSG("~PRMRoadmap::ParseXML()");
   };
@@ -213,7 +223,18 @@ class PRMRoadmap : public MPStrategyMethod {
       
     NodeGenClock.StopClock();
 
-
+    MPCharacterizer<CfgType, WeightType>* characterize =
+            GetMPProblem()->GetMPStrategy()->GetCharacterizer();
+    typedef vector<string>::iterator J;
+    for(J itr = m_vecNodeCharacterizerLabels.begin(); 
+        itr != m_vecNodeCharacterizerLabels.end(); ++itr)
+    {
+      NodeCharacterizerMethod<CfgType,WeightType>* pNodeChar;
+      pNodeChar = characterize->GetNodeCharacterizerMethod(*itr);
+      pNodeChar->Characterize(region);
+    }
+      
+    
   //---------------------------
   // Connect roadmap nodes
   //---------------------------
@@ -278,6 +299,7 @@ private:
   vector<string> m_vecStrNodeGenLabels;
   vector<string> m_vecStrNodeConnectionLabels;
   vector<string> m_vecStrComponentConnectionLabels;
+  vector<string> m_vecNodeCharacterizerLabels;
   string m_strLocalPlannerLabel;
    
 };

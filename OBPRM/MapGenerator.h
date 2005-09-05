@@ -278,19 +278,19 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
   } 
   
   bool isFirstChunk = true; // the first chunk for this map (no matter which gen method we use)
-
+  
   bool finished;
   do {
     double expandGenTime = 0.0;
     double expandConTime = 0.0;
-
+    
     typename vector<NodeGenerationMethod<CFG>*>::iterator itr;
     for ( itr = gn.selected.begin(); itr != gn.selected.end(); itr++ ) {
-
+      
 #ifndef QUIET
       cout<<endl<< (*itr)->GetName()<<endl;
 #endif
-
+      
       double genTime = 0.0;    //this selected method
       double conTime = 0.0;    //this selected method
       
@@ -300,6 +300,7 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
       if( oriNumNodes > chunkSize * numChunks)
 	numChunks ++;
       vector<CFG> sub_nodes;
+      vector<VID> sub_nodesVID;
       cout << "current map has "<< rmap->m_pRoadmap->GetVertexCount()<<" nodes"<<endl;
       cout << "the chunk size is: " << chunkSize
 	   << ", and the number of chunks is: " << numChunks << endl;
@@ -315,30 +316,33 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	
 	cout<<endl<<"Chunk "<<i<<endl;
 	sub_nodes.clear();
+	sub_nodesVID.clear();
 	int nextNodeIndex = (*itr)->GetNextNodeIndex();
 	nextNodeIndex += chunkSize;
 	
 	(*itr)->numNodes.PutValue (chunkSize);
         OBPRM_srand((*itr)->GetName(), (*itr)->GetNextNodeIndex());
-
+	
 	genClock.StartClock(genClockName);
 	(*itr)->GenerateNodes(rmap->GetEnvironment(), Stats, cd, dm, sub_nodes);  //this is the original GenerateNodes function
 	genClock.StopClock();
-
+	
         if (rmap->m_pRoadmap->GetVertexCount()  > 0 ) 
           isFirstChunk = false;
-
-	if (gn.addNodes2Map) {
-	  rmap->m_pRoadmap->AddVertex(sub_nodes); //add sub_nodes to graph
-	}
 	
+	
+	if (gn.addNodes2Map) {
+	  for(vector<CFG>::iterator S = sub_nodes.begin(); S != sub_nodes.end(); ++S)
+	    sub_nodesVID.push_back(rmap->m_pRoadmap->AddVertex(*S)); //add sub_nodes to graph
+	}
+
 	//also keep these nodes in nodes
 	nodes.insert(nodes.end(), sub_nodes.begin(), sub_nodes.end());
 	
 	//do connection only using nodes in this chunk
 	conClock.StartClock(conClockName);
 	cm.ConnectNodes(rmap, Stats, cd, dm, lp,
-			     addPartialEdge, addAllEdges, sub_nodes, sub_nodes);
+			addPartialEdge, addAllEdges, sub_nodesVID, sub_nodesVID);
 			     
 	//component connection
 	//if it is the first chunk, we do component connection among all CCs
@@ -403,11 +407,13 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 #endif
 
     //output map
+/*
     char mapname[256];
     sprintf(mapname, "%s.%d.%d.map", input->defaultFile.GetValue(),
             rmap->m_pRoadmap->GetVertexCount(),
             rmap->m_pRoadmap->GetEdgeCount());
     rmap->WriteRoadmap(input, cd, dm, lp, mapname);
+*/
 
     Clock_Class evaluationClock;
     evaluationClock.StartClock("Evaluation time");
@@ -430,7 +436,7 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
   cout << "Total node connection time: " << totalConTime << " sec  \n";
   cout << "Total evaluation time: " << totalEvalTime << " sec  \n";
 #endif
-} 
+  }
 
 
 //This is the regular method we use: 

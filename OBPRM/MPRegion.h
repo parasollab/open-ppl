@@ -29,6 +29,7 @@ class MPRegion : public Environment {
   
   MPRegion(int in_RegionId, MPProblem* in_pProblem);
   Roadmap<CFG,WEIGHT>* GetRoadmap() { return &roadmap;};
+  Roadmap<CFG,WEIGHT>* GetColRoadmap() { return &col_roadmap;};
   Stat_Class* GetStatClass() {return &StatClass;};
   void AddToRoadmap(vector<CFG >& in_Cfgs);
   void WriteRoadmapForVizmo();

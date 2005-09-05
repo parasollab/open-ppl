@@ -112,10 +112,12 @@ class DistanceMetric : MPBaseObject{
    *Here n1,..,nk are k Cfgs in vec1 and are k closest neighbors of cfg1.
    */
   //static 
-  template <class CFG>
-  vector<pair<CFG,CFG> > FindKClosestPairs(Environment* _env, 
-					   CFG cfg1,
-					   vector<CFG>& vec1, int k);
+  /*
+  template <class CFG, class WEIGHT>
+  vector<pair<VID,VID> > FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm, 
+					   VID cfg1,
+					   vector<VID>& vec1, int k);
+  */
   /**Find k of closest Cfgs in given vector of Cfgs for each Cfg
    *in same vector.
    *Therefore the return list will contains k*n pairs.
@@ -136,9 +138,11 @@ class DistanceMetric : MPBaseObject{
    *use same alogithm, but returns differnt format of list.
    */
   //static 
+  /*
   template <class CFG>
   vector<pair<CFG,CFG> > FindKClosestPairs(Environment* _env, 
 						  vector<CFG>& vec1, int k);
+  */
   /**Find k of closest Cfgs in given vector of Cfgs for each Cfg
    *in same vector.
    *Therefore the return list will contains k*n pairs.
@@ -157,9 +161,11 @@ class DistanceMetric : MPBaseObject{
    *the frist VID to all other elements in vec1.
    */
   //static 
+  /*
   template <class CFG, class WEIGHT>
   vector<pair<VID,VID> > FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
 					   vector<CFG>& vec1, int k);
+  */
 
   /**
    *k pairs of closest cfgs for each cfg in vec1 to all cfgs in vec2.
@@ -184,8 +190,20 @@ class DistanceMetric : MPBaseObject{
   //static
   template <class CFG, class WEIGHT>
   vector<pair<VID,VID> > FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
-					   vector<CFG>& vec1,
-					   vector<CFG>& vec2, int k);
+					   vector<VID>& vec1,
+					   vector<VID>& vec2, int k);
+  template <class CFG, class WEIGHT>
+  vector<pair<VID,VID> > FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
+					   vector<VID>& vec1,
+					   int k);
+        
+  template <class CFG, class WEIGHT>
+  vector<VID> RangeQuery(Roadmap<CFG, WEIGHT>* rm,
+                   VID in_query, double in_radius);
+  
+  template <class CFG, class WEIGHT>
+  vector<VID> RangeQuery(Roadmap<CFG, WEIGHT>* rm,
+                         CFG in_query, double in_radius);
 
   /**Find k pairs of closest Cfgs between the two input vectors of Cfgs.
    *This method check distance from every Cfg in vec1 to every Cfg in vec2.
@@ -208,11 +226,12 @@ class DistanceMetric : MPBaseObject{
    *the frist Cfg to the second  Cfg which has k-small distance between all 
    *possilbe paths.   */
   //static 
+  /*
   template <class CFG>
   vector<pair<CFG,CFG> > FindKClosestPairs(Environment* _env, 
 					   vector<CFG>& vec1,
 					   vector<CFG>& vec2, int k);
-
+  */
   template <class CFG>
     vector<pair<CFG,CFG> > KClosest(Environment* env,
 				    vector<CFG>& v1,
@@ -233,6 +252,7 @@ class DistanceMetric : MPBaseObject{
 				    CFG& cc,
 				    vector<CFG>& v2,
 				    unsigned int k);
+  
   template <class CFG, class WEIGHT>
     vector<pair<VID,VID> > KUnconnectedClosest(Roadmap<CFG,WEIGHT>* rdmp,
 				    CFG& cc,
@@ -248,16 +268,15 @@ class DistanceMetric : MPBaseObject{
 /**Compare two distances in DIST_TYPE instances.
  *return (_cc1.second < _cc2.second)
  */
-template <class CFG>
-class DIST_Compare : public binary_function<const pair<pair<CFG,CFG>,double>,
-					    const pair<pair<CFG,CFG>,double>,
+template <class T>
+class DIST_Compare : public binary_function<const pair<pair<T,T>,double>,
+					    const pair<pair<T,T>,double>,
 					    bool> {
  public:
-  bool operator()(const pair<pair<CFG,CFG>,double> _cc1,
-		  const pair<pair<CFG,CFG>,double> _cc2) {
+  bool operator()(const pair<pair<T,T>,double> _cc1,
+		  const pair<pair<T,T>,double> _cc2) {
     return (_cc1.second < _cc2.second);
   }
-
 };
 
 template <class CFG>
@@ -450,21 +469,24 @@ class CenterOfMassDistance : public DistanceMetricMethod {
 
 #include "Roadmap.h"
 
+
+/*
 //----------------------------------------------------------------------
 // Given: k and ONE cfg and ONE vector
 // Find : find k pairs of closest cfg from "cfg" to "vector"
 //----------------------------------------------------------------------
-template <class CFG>
-vector<pair<CFG,CFG> >
+template <class CFG, class WEIGHT>
+vector<pair<VID,VID> >
 DistanceMetric::
-FindKClosestPairs(Environment* _env, CFG cfg1, vector<CFG>& vec1, int k) {
+FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm, VID cfg1, vector<VID>& vec1, int k) {
   vector<CFG> cfg;
   cfg.push_back(cfg1);
   
   // find kclosest cfgs to cfg in vertices
   return FindKClosestPairs<CFG>( _env, cfg, vec1, k);
 }
-
+*/
+/*
 //----------------------------------------------------------------------
 // Given: k and ONE vector
 // Find : find k pairs of closest cfg from vector to each cfg in vector
@@ -489,7 +511,8 @@ FindKClosestPairs(Environment* _env, vector<CFG>& vec1, int k) {
   
   return pairs;
 }
-
+*/
+/*
 //----------------------------------------------------------------------
 // Given: k and a vector
 // Find : k pairs of closest cfgs for each cfg in vector to all other cfgs in vector.
@@ -501,8 +524,8 @@ DistanceMetric::
 FindKClosestPairs(Roadmap<CFG, WEIGHT> *rm, vector<CFG>& vec1, int k) {
   return FindKClosestPairs<CFG,WEIGHT>(rm, vec1, vec1, k);
 }
-
-
+*/
+/*
 //----------------------------------------------------------------------
 // Given: k and a TWO vectors
 // Find : k pairs of closest cfgs for each cfg in vec1 to all cfgs in vec2.
@@ -517,73 +540,69 @@ template <class CFG, class WEIGHT>
 vector< pair<VID, VID> >
 DistanceMetric::
 FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
-		  vector<CFG>& vec1,vector<CFG>& vec2, int k) {
-  vector< pair<VID, VID> > pairs;
-  if (k<=0) return pairs;
+		  vector<VID>& vec1,vector<VID>& vec2, int k) {
+  vector<pair<VID, VID> > pairs;
+  if(k<=0) 
+    return pairs;
   
-  Environment *_env = rm->GetEnvironment();
   RoadmapGraph<CFG, WEIGHT> * pMap = rm->m_pRoadmap;
   
   //compute from the last to the first
   for( int iV1=vec1.size()-1; iV1>=0; iV1-- ){
     // find k closest cfgs
-    vector< pair<CFG,CFG> > kpair = FindKClosestPairs<CFG>(_env,vec1[iV1],vec2,k); /*CHANGED */
+    vector<pair<VID,VID> > kpair = FindKClosestPairs(rm,vec1[iV1],vec2,k); //CHANGED //
     // save VID pairs (convert from Cfg to VID)
     for(int iKP=0; iKP<kpair.size(); ++iKP) {
-      pairs.push_back(pair<VID, VID>(pMap->GetVID(kpair[iKP].first),pMap->GetVID(kpair[iKP].second)));
+      pairs.push_back(make_pair(kpair[iKP].first,kpair[iKP].second));
     }
   }
   
   return pairs;
 }
-
+*/
 
 //----------------------------------------------------------------------
 // Given: k and TWO vectors
 // Find : k pairs of closest cfgs between the two input vectors of cfgs
 // -- if k don't exist, return as many as do
 //----------------------------------------------------------------------
-template <class CFG>
-vector<pair<CFG,CFG> >
+template <class CFG, class WEIGHT>
+vector<pair<VID,VID> >
 DistanceMetric::
-FindKClosestPairs(Environment* _env,
-		  vector<CFG>& vec1, vector<CFG>& vec2, int k) {
-  vector<pair<CFG,CFG> > pairs;
-  CFG invalid;
-  invalid.InvalidData();
-  pair<pair<CFG,CFG>,double> tmp;
+FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
+		  vector<VID>& vec1, vector<VID>& vec2, int k) {
+  vector<pair<VID,VID> > pairs;
   // if valid number of pairs requested
-  if (k<=0) return pairs;
-  
-  //Modified for aCC, replace vec1==vec2
-  if( vec1.size()==vec2.size() && equal(vec1.begin(), vec1.end(), vec2.begin()) ){
-    return FindKClosestPairs<CFG>(_env, vec1, k);
+  if (k<=0) 
+    return pairs;
+
+  if(vec1.size()==vec2.size() && 
+     equal(vec1.begin(), vec1.end(), vec2.begin()) ){
+    return FindKClosestPairs(rm, vec1, k);
   } else {
+    Environment* _env = rm->GetEnvironment();
+    RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
+
     // initialize w/ k elements each with huge distance...
-    vector<pair<pair<CFG,CFG>,double> > kp;
-    for (int i=0; i < k; i++) {
-      tmp.first.first = invalid;
-      tmp.first.second = invalid;
-      tmp.second = MAX_DIST;
-      kp.push_back(tmp);
-    }
+    vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
+							MAX_DIST));
     int max_index = 0;
     double max_value = MAX_DIST;
     
     // now go through all kp and find closest k
-    for (int c1 = 0; c1 < vec1.size(); c1++) {
-      for (int c2 = 0; c2 < vec2.size(); c2++) {
+    vector<VID>::iterator V1, V2;
+    for(V1 = vec1.begin(); V1 != vec1.end(); ++V1) {
+      CFG v1 = pMap->GetData(*V1);
+      for(V2 = vec2.begin(); V2 != vec2.end(); ++V2) {
 	//marcom/08nov03 check if results in other functions is same
-	if( vec1[c1]==vec2[c2] ) continue; //don't connect same
+	if(*V1 == *V2)
+	  continue; //don't connect same
 	
-	double dist = Distance(_env, vec1[c1],vec2[c2]);
-	if ( dist < kp[max_index].second) { 
-	  tmp.first.first = vec1[c1];
-	  tmp.first.second = vec2[c2];
-	  tmp.second = dist;
-	  kp[max_index] = tmp;
+	double dist = Distance(_env, v1, pMap->GetData(*V2));
+	if(dist < kp[max_index].second) { 
+	  kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
 	  max_value = dist;
-
+	  
 	  //search for new max_index (faster O(k) than sort O(k log k) )
 	  for (int p = 0; p < kp.size(); p++) {
 	    if (max_value < kp[p].second) {
@@ -596,17 +615,76 @@ FindKClosestPairs(Environment* _env,
       }//endfor c2
     }//endfor c1
 
-    sort (kp.begin(), kp.end(), DIST_Compare<CFG>());
+    sort(kp.begin(), kp.end(), DIST_Compare<VID>());
     
     // now construct vector of k pairs to return (don't need distances...)
     for (int p = 0; p < k && p < kp.size(); p++)
-      if (kp[p].first.first != invalid && kp[p].first.second != invalid)
+      if (kp[p].first.first != -999 && kp[p].first.second != -999)
 	pairs.push_back( kp[p].first );
   }//endif vec1 == vec2	
   
   return pairs;
 }
+//----------------------------------------------------------------------
+// Given: k and ONE vectors
+// Find : k pairs of closest cfgs between the input vector of cfgs
+// -- if k don't exist, return as many as do
+//----------------------------------------------------------------------
+template <class CFG, class WEIGHT>
+vector<pair<VID,VID> >
+DistanceMetric::
+FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
+		  vector<VID>& vec1, int k) {
+  vector<pair<VID,VID> > pairs;
+  // if valid number of pairs requested
+  if (k<=0) 
+    return pairs;
 
+  Environment* _env = rm->GetEnvironment();
+  RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
+  
+  // now go through all kp and find closest k
+  vector<VID>::iterator V1, V2;
+  for(V1 = vec1.begin(); V1 != vec1.end(); ++V1) {
+    // initialize w/ k elements each with huge distance...
+    vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
+							MAX_DIST));
+    int max_index = 0;
+    double max_value = MAX_DIST;
+ 
+    CFG v1 = pMap->GetData(*V1);
+
+    for(V2 = vec1.begin(); V2 != vec1.end(); ++V2) {
+      if(*V1 == *V2)
+	continue;
+
+      double dist = Distance(_env, v1, pMap->GetData(*V2));
+      if(dist < kp[max_index].second) { 
+	kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
+	max_value = dist;
+	
+	//search for new max_index (faster O(k) than sort O(k log k) )
+	for (int p = 0; p < kp.size(); p++) {
+	  if (max_value < kp[p].second) {
+	    max_value = kp[p].second;
+	    max_index = p;
+	  }
+	}
+	
+      }
+    }//endfor c2
+  
+    sort(kp.begin(), kp.end(), DIST_Compare<VID>());
+  
+    // now construct vector of k pairs to return (don't need distances...)
+    for (int p = 0; p < k && p < kp.size(); p++)
+      if (kp[p].first.first != -999 && kp[p].first.second != -999)
+	pairs.push_back( kp[p].first );
+
+  }//endfor c1
+
+  return pairs;
+}
 
 //-----------------------------------------------------------------------
 // Input: vectors of CFG (v1, v2) and k
@@ -782,6 +860,52 @@ KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp,
  
   return kpairs; //by construction kpairs is never larger than k  
 }
+
+template <class CFG, class WEIGHT>
+vector<VID> DistanceMetric::
+RangeQuery(Roadmap<CFG, WEIGHT>* rm, VID in_query, double in_radius) {
+  vector<VID> returnVec;
+  RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
+  Environment* _env = rm->GetEnvironment();
+  
+  vector<VID> vec_vids;
+  pMap->GetVerticesVID(vec_vids);
+  typename vector<VID>::iterator itr;
+  for(itr = vec_vids.begin(); itr != vec_vids.end(); ++itr)
+  {
+    if(in_query == *itr) continue;
+    double dist = Distance(_env, pMap->GetData(in_query), pMap->GetData(*itr));
+    //cout << "Distance = " << dist << " Radius = " << in_radius << endl;
+    if( dist< in_radius) {
+      returnVec.push_back(*itr);
+    }
+  }
+  return returnVec;
+}
+
+
+template <class CFG, class WEIGHT>
+vector<VID> DistanceMetric::
+RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
+  vector<VID> returnVec;
+  RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
+  Environment* _env = rm->GetEnvironment();
+  
+  
+  vector<VID> vec_vids;
+  pMap->GetVerticesVID(vec_vids);
+  typename vector<VID>::iterator itr;
+  for(itr = vec_vids.begin(); itr != vec_vids.end(); ++itr)
+  {
+    if(in_query == pMap->GetData(*itr)) continue;
+    if(Distance(_env, in_query, pMap->GetData(*itr)) < in_radius) {
+      returnVec.push_back(*itr);
+    }
+  }
+  return returnVec;
+}
+
+
 
 #endif
 

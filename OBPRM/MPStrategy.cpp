@@ -23,12 +23,13 @@ MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem) : MPBaseObject(in_pNode,
       m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(pChild, GetMPProblem());
     } else if(string(pChild->Value()) == "MPStrategyMethod") {
       ParseStrategyMethod(pChild);
+    } else if(string(pChild->Value()) == "MPCharacterizer") {
+      m_pCharacterizer = new MPCharacterizer<CfgType, WeightType>(pChild, GetMPProblem());
     } else {
       LOG_WARNING_MSG("MPStrategy::  I don't know: "<< endl << *pChild);
     }
   }
 
-  
   LOG_DEBUG_MSG( "~MPStrategy::MPStrategy()");
 }
 

@@ -14,10 +14,10 @@
 #include "Closest.h"
 #include "AllPairsNodeConnection.h"
 //#include "UnconnectedClosest.h"
-#include "RandomConnect.h"
+//#include "RandomConnect.h"
 //#include "ModifiedLM.h"
-#include "ObstBased.h"
-#include "ClosestVE.h"
+//#include "ObstBased.h"
+//#include "ClosestVE.h"
 //#include "RRTexpand.h"
 //#include "RayTracer.h" //??
 #include "ConnectFirst.h"
@@ -86,12 +86,12 @@ class ConnectMap : public MPBaseObject{
 		    CollisionDetection* cd, DistanceMetric * dm,
 		    LocalPlanners<CFG,WEIGHT>* lp,
 		    bool addPartialEdge, bool addAllEdges,
-		    vector<CFG>& cfgs1, vector<CFG>& cfgs2);  
+		    vector<VID>& cfgs1, vector<VID>& cfgs2);  
   void ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		    CollisionDetection* cd, DistanceMetric * dm,
 		    LocalPlanners<CFG,WEIGHT>* lp,
 		    bool addPartialEdge, bool addAllEdges,
-		    vector<vector<CFG> >& cfgs);
+		    vector<vector<VID> >& cfgs);
   
   void ConnectComponents(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 			 CollisionDetection* cd, DistanceMetric* dm,
@@ -107,7 +107,6 @@ class ConnectMap : public MPBaseObject{
 			 LocalPlanners<CFG,WEIGHT>* lp,
 			 bool addPartialEdge, bool addAllEdges,
 			 vector<vector<VID> >& vids);
-
   /*
   void ConnectRegions(CollisionDetection* cd,
 		      DistanceMetric* dm,
@@ -161,17 +160,17 @@ ConnectMap() {
   //UnconnectedClosest<CFG,WEIGHT>* unconnectedclosest = new UnconnectedClosest<CFG,WEIGHT>();
   //all_node_methods.push_back(unconnectedclosest);
 
-  RandomConnect<CFG,WEIGHT>* random = new RandomConnect<CFG,WEIGHT>();
-  all_node_methods.push_back(random);
+  //RandomConnect<CFG,WEIGHT>* random = new RandomConnect<CFG,WEIGHT>();
+  //all_node_methods.push_back(random);
 
   //ModifiedLM<CFG,WEIGHT>* lm = new ModifiedLM<CFG,WEIGHT>();
   //all_node_methods.push_back(lm);
 
-  ObstBased<CFG,WEIGHT>* obstbased = new ObstBased<CFG,WEIGHT>();
-  all_node_methods.push_back(obstbased);
+  //ObstBased<CFG,WEIGHT>* obstbased = new ObstBased<CFG,WEIGHT>();
+  //all_node_methods.push_back(obstbased);
 
-  ClosestVE<CFG,WEIGHT>* closestve = new ClosestVE<CFG,WEIGHT>();
-  all_node_methods.push_back(closestve);
+  //ClosestVE<CFG,WEIGHT>* closestve = new ClosestVE<CFG,WEIGHT>();
+  //all_node_methods.push_back(closestve);
 
   ConnectFirst<CFG,WEIGHT>* connectFirst = new ConnectFirst<CFG,WEIGHT>();
   all_node_methods.push_back(connectFirst);
@@ -412,9 +411,8 @@ int
 ConnectMap<CFG,WEIGHT>::
 ReadCommandLine(Input* input, Environment* env) {
   connectionPosRes = env->GetPositionRes();
-  cout << "connectionPosRes = " << connectionPosRes << endl;
   connectionOriRes = env->GetOrientationRes();   
-  cout << "connectionOriRes = " << connectionOriRes << endl;
+  
   typename vector<NodeConnectionMethod<CFG, WEIGHT>*>::iterator I;
   for(I = selected_node_methods.begin(); 
       I != selected_node_methods.end(); ++I)
@@ -689,7 +687,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	     CollisionDetection* cd, DistanceMetric * dm,
 	     LocalPlanners<CFG,WEIGHT>* lp,
 	     bool addPartialEdge, bool addAllEdges,
-	     vector<CFG>& cfgs1, vector<CFG>& cfgs2) {
+	     vector<VID>& cfgs1, vector<VID>& cfgs2) {
   typename vector<NodeConnectionMethod<CFG,WEIGHT> *>::iterator itr;
   for(itr = selected_node_methods.begin(); 
       itr != selected_node_methods.end(); itr++) {
@@ -719,7 +717,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	     CollisionDetection* cd, DistanceMetric * dm,
 	     LocalPlanners<CFG,WEIGHT>* lp,
 	     bool addPartialEdge, bool addAllEdges,
-	     vector<vector<CFG> >& cfgs) {
+	     vector<vector<VID> >& cfgs) {
   typename vector<NodeConnectionMethod<CFG,WEIGHT> *>::iterator itr;
   for(itr = selected_node_methods.begin(); 
       itr != selected_node_methods.end(); itr++) {
