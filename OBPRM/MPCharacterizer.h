@@ -68,12 +68,18 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
         //cout << "VID = " << *itr << " has " << vids.size() 
         //<< "nodes in radius in Free Map and " 
         //<< col_vids.size() << " in Col Map " << endl;
-        if(col_vids.size() == 1)
+        if(col_vids.size() == 1) {
           cout << "Gauss-like node found" << endl;
-        else if(col_vids.size() == 2)
+          pGraph->GetReferenceofData(*itr)->SetLabel("GaussLike",true);
+        }
+        if(col_vids.size() == 2) {
           cout << "Bridge-like node found" << endl;
-        else if(col_vids.size() > 2)
+          pGraph->GetReferenceofData(*itr)->SetLabel("BridgeLike",true);
+        }
+        if(col_vids.size() > 2) {
           cout << "Better than bridge node found" << endl;
+          pGraph->GetReferenceofData(*itr)->SetLabel("BetterThanBridge",true);
+        }
       }
       LOG_DEBUG_MSG("~LocalNodeInfoCharacterizer::Characterize()");
     };
