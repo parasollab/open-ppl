@@ -234,6 +234,8 @@ class PRMRoadmap : public MPStrategyMethod {
       
     NodeGenClock.StopClock();
 
+    //Characterize Nodes
+    
     MPCharacterizer<CfgType, WeightType>* characterize =
             GetMPProblem()->GetMPStrategy()->GetCharacterizer();
     typedef vector<string>::iterator J;
@@ -245,6 +247,17 @@ class PRMRoadmap : public MPStrategyMethod {
       pNodeChar->Characterize(region);
     }
       
+    //Remove nodes that we don't want;
+    RoadmapGraph<CfgType,WeightType>* pMap = region->GetRoadmap()->m_pRoadmap;
+    vector<VID> map_vids;
+    pMap->GetVerticesVID(map_vids);
+    typedef vector<VID>::iterator vecVID;
+    for(vecVID itr = map_vids.begin(); itr!= map_vids.end(); ++itr)
+    {
+      if(!(pMap->GetData(*itr).IsLabel("BridgeLike")))
+        pMap->DeleteVertex(*itr);
+    }
+    
     
   //---------------------------
   // Connect roadmap nodes
