@@ -203,7 +203,7 @@ LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
   ///\todo Finish this parcer .... need to have binary search!
   
   LOG_DEBUG_MSG("LocalPlanners::LocalPlanners()");
-  
+  /*
   StraightLine<CFG, WEIGHT>* straight_line = new StraightLine<CFG, WEIGHT>(cdtype);
   all.push_back(straight_line);
 
@@ -235,7 +235,17 @@ LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
   
   if(selected.size() < 1)
     LOG_WARNING_MSG("No Local Planner selected!");
-
+ */
+  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+    if(string(pChild->Value()) == string("straightline")) {
+      StraightLine<CFG, WEIGHT>* straight_line = 
+          new StraightLine<CFG, WEIGHT>(cdtype, pChild, GetMPProblem());
+      straight_line->cdInfo = &cdInfo;
+      straight_line->SetID(GetNewID());
+      selected.push_back(straight_line);
+      all.push_back(straight_line);
+    }
+  }
   LOG_DEBUG_MSG("~LocalPlanners::LocalPlanners()");
 }
 

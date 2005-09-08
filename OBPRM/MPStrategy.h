@@ -43,6 +43,19 @@ class MPStrategyMethod : public MPBaseObject
       } else {
         LOG_DEBUG_MSG("MPStrategyMethod::No Seed Found");
       }
+      int iterations;
+      if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("iterations",&iterations)) {
+        m_iterations = iterations;
+      } else {
+        LOG_DEBUG_MSG("MPStrategyMethod::Iterations Found");
+      }
+      const char* filename;
+      filename= in_pNode->ToElement()->Attribute("filename");
+      if(filename) {
+        m_base_filename = string(filename);
+      } else {
+        LOG_DEBUG_MSG("MPStrategyMethod::No filename Found");
+      }
       LOG_DEBUG_MSG("MPStrategyMethod::Seed is " << m_baseSeed);
     };
   virtual void ParseXML(TiXmlNode* in_pNode)=0;
@@ -50,9 +63,13 @@ class MPStrategyMethod : public MPBaseObject
   virtual void operator()(int in_RegionID)=0;
   virtual void PrintOptions(ostream& out_os)=0;
   long getSeed(){return m_baseSeed;};
+  string getBaseFilename(){return m_base_filename;};
   void setSeed(long in_seed){m_baseSeed = in_seed;};
+  int m_iterations;
   private:
+  
   long m_baseSeed;
+  string m_base_filename;
 };
 
 
@@ -208,17 +225,22 @@ class PRMRoadmap : public MPStrategyMethod {
     
   
     Clock_Class Allstuff;
+    //string base_filename = "itr_test_";
+    
 
 
     Allstuff.StartClock("Everything");
     Clock_Class        NodeGenClock;
     Clock_Class        ConnectionClock;
-    vector<CfgType> nodes;
-    nodes.erase(nodes.begin(),nodes.end());
-
   //---------------------------
   // Generate roadmap nodes
   //---------------------------
+    for(int it =0; it< m_iterations; ++it)
+    {
+    vector<CfgType> nodes;
+    vector<VID> new_free_vids;
+
+    nodes.erase(nodes.begin(),nodes.end());
     NodeGenClock.StartClock("Node Generation");
     typedef vector<string>::iterator I;
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
@@ -229,7 +251,7 @@ class PRMRoadmap : public MPStrategyMethod {
           GetGenerateMapNodes()->GetMethod(*itr);
       pNodeGen->GenerateNodes(region, vectorCfgs); /////////this needs fixing bad.
       cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
-      region->AddToRoadmap(vectorCfgs);
+      new_free_vids = region->AddToRoadmap(vectorCfgs);
     }
       
     NodeGenClock.StopClock();
@@ -246,7 +268,7 @@ class PRMRoadmap : public MPStrategyMethod {
       pNodeChar = characterize->GetNodeCharacterizerMethod(*itr);
       pNodeChar->Characterize(region);
     }
-      
+      /*
     //Remove nodes that we don't want;
     RoadmapGraph<CfgType,WeightType>* pMap = region->GetRoadmap()->m_pRoadmap;
     vector<VID> map_vids;
@@ -257,7 +279,7 @@ class PRMRoadmap : public MPStrategyMethod {
       if(!(pMap->GetData(*itr).IsLabel("BridgeLike")))
         pMap->DeleteVertex(*itr);
     }
-    
+   */
     
   //---------------------------
   // Connect roadmap nodes
@@ -272,13 +294,15 @@ class PRMRoadmap : public MPStrategyMethod {
       LOG_DEBUG_MSG("PRMRoadmap:: " << *itr);
       NodeConnectionMethod<CfgType,WeightType>* pConnection;
       pConnection = connectmap->GetNodeMethod(*itr);
-      
+      vector<VID> verticesVID;
+      region->GetRoadmap()->m_pRoadmap->GetVerticesVID(verticesVID);
       pConnection->Connect(region->GetRoadmap(), *pStatClass, 
                            GetMPProblem()->GetCollisionDetection(),
                            GetMPProblem()->GetDistanceMetric(), 
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-                           GetMPProblem()->GetMPStrategy()->addAllEdges);
+                           GetMPProblem()->GetMPStrategy()->addAllEdges,
+                           new_free_vids, verticesVID);
     }
       
     typedef vector<string>::iterator K;
@@ -301,15 +325,36 @@ class PRMRoadmap : public MPStrategyMethod {
       
       
     ConnectionClock.StopClock();
-    region->WriteRoadmapForVizmo();
+      std::stringstream ss;
+      ss << it;
+      std::string str_index;
+      ss >> str_index;
+
+      
+      std::stringstream ssIterations;
+      ssIterations << m_iterations;
+      std::string str_Iterations;
+      ssIterations >> str_Iterations;
+  
+      string outputFilename = getBaseFilename() + str_index + "of" + str_Iterations+ ".map";
+      ofstream  myofstream(outputFilename.c_str());
+  
+      if (!myofstream) {
+        LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
+        exit(-1);
+      }
+      region->WriteRoadmapForVizmo(myofstream);
+      myofstream.close();
+    
       
     pStatClass->PrintAllStats(region->GetRoadmap());
-
+    
 
 
     cout << "I took this long" << endl;
 
     Allstuff.StopPrintClock();
+    }
   
     LOG_DEBUG_MSG("~PRMRoadmap::()");
   }

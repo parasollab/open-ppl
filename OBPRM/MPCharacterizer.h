@@ -69,7 +69,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
         //<< "nodes in radius in Free Map and " 
         //<< col_vids.size() << " in Col Map " << endl;
         if(col_vids.size() >= 1) {
-          cout << "Gauss-like node found" << endl;
+       //   cout << "Gauss-like node found" << endl;
           pGraph->GetReferenceofData(*itr)->SetLabel("GaussLike",true);
         }
         if(col_vids.size() >= 2) {
@@ -82,7 +82,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
           }
         }
         if(col_vids.size() > 2) {
-          cout << "Better than bridge node found" << endl;
+         // cout << "Better than bridge node found" << endl;
           pGraph->GetReferenceofData(*itr)->SetLabel("BetterThanBridge",true);
         }
       }
@@ -96,12 +96,14 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       typename vector<CFG>::iterator I,J;
       for(I=vec_col.begin(); I!=vec_col.end(); ++I) {
         for(J=I; J!=vec_col.end(); ++J) {
+          if(*I == *J)
+            continue;
           double df1,df2,dc;
           DistanceMetric* dm = GetMPProblem()->GetDistanceMetric();
           df1 = dm->Distance(GetMPProblem()->GetEnvironment(),free_cfg,*I);
           df2 = dm->Distance(GetMPProblem()->GetEnvironment(),free_cfg,*J);
           dc = dm->Distance(GetMPProblem()->GetEnvironment(),*I,*J);
-          if(dc >= 0.5 * (df1 + df2 + dc)) {
+          if(dc >= 0.491 * (df1 + df2 + dc)) {
              return true;
           }
         }

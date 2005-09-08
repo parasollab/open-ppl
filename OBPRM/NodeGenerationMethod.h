@@ -123,8 +123,15 @@ NodeGenerationMethod():
 template <class CFG>
 NodeGenerationMethod<CFG>::
 NodeGenerationMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-     MPBaseObject(in_pNode,in_pProblem) {
+     MPBaseObject(in_pNode,in_pProblem),
+  numNodes         ("nodes",            10,  1,   5000000),  
+  chunkSize        ("chunkSize",        10,  1,   5000000),
+  exactNodes ("exact", 0 ,0 ,1)  {
   LOG_DEBUG_MSG("NodeGenerationMethod::NodeGenerationMethod()");
+  
+  numNodes.PutDesc("INTEGER","(number of nodes, default 10)");
+  chunkSize.PutDesc("INTEGER","(size of chunk, default 10)");
+  exactNodes.PutDesc("INTEGER","(whether to generate exact num of nodes, default 0");
   SetDefault();
   
   for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 

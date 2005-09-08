@@ -65,13 +65,15 @@ class AllPairsNodeConnection: public NodeConnectionMethod<CFG,WEIGHT> {
              CollisionDetection*, DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
-             vector<VID>& v1, vector<VID>& v2) {};
+             vector<VID>& v1, vector<VID>& v2);
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
              CollisionDetection*, DistanceMetric*,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
-             vector<vector<VID> >& verticesList) {};
+             vector<vector<VID> >& verticesList) {
+    LOG_DEBUG_MSG("AllPairsNodeConnection::Connection(vector<vector<>>) not implemented yet");
+    exit(-1);};
 
   
  private:
@@ -239,6 +241,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   for(int i=0; i<verticesVID.size(); ++i) {
     for(int j=i+1; j<verticesVID.size(); ++j) {
       //cout << "(i,j) = (" << i << "," << j <<")" << endl;
+      if(_rm->m_pRoadmap->IsEdge(verticesVID[i], verticesVID[j])) 
       Stats.IncConnections_Attempted();
         if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
                             _rm->m_pRoadmap->GetData(verticesVID[i]),
@@ -272,17 +275,45 @@ AllPairsNodeConnection(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             verticesList[i], verticesList[j]);
 }
 
-
+*/
 template <class CFG, class WEIGHT>
 void AllPairsNodeConnection<CFG,WEIGHT>::
-AllPairsNodeConnection(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
-            vector<CFG>& v1, vector<CFG>& v2) 
-{
+            vector<VID>& v1, vector<VID>& v2) 
+{ 
+
+
+  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
+  LPOutput<CFG,WEIGHT> lpOutput;
+  for(int i=0; i<v1.size(); ++i) {
+    for(int j=i+1; j<v2.size(); ++j) {
+      if(v1[i] == v2[j]) continue;
+      if(_rm->m_pRoadmap->IsEdge(v1[i], v2[j])) 
+      Stats.IncConnections_Attempted();
+        if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
+                            _rm->m_pRoadmap->GetData(v1[i]),
+                            _rm->m_pRoadmap->GetData(v2[j]),
+                            &lpOutput,
+                            connectionPosRes, connectionOriRes, 
+                            (!addAllEdges) )) {
+            _rm->m_pRoadmap->AddEdge(v1[i], v2[j],
+                                                      lpOutput.edge);
+            Stats.IncConnections_Made();
+          }
+        }
+     }
+
+
+
+
+
+/*
+
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
 #ifndef QUIET
   cout << "closest*(k="<< kclosest <<"): "<<flush;
@@ -332,6 +363,7 @@ AllPairsNodeConnection(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
     }
   } 
-}
 */
+}
+
 #endif

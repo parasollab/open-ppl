@@ -348,17 +348,17 @@ void ReadCfgs(char * filename,  vector<CFG>& cfgs) {
 
 #define LOG_DEBUG_MSG( msg ) \
 { \
-        cerr << "DEBUG: " << msg << endl ; \
+        cout << "DEBUG: " << msg << endl ; \
 }
 
 #define LOG_WARNING_MSG( msg ) \
 { \
-        cerr << "WARNING: " << msg << endl ; \
+        cout << "WARNING: " << msg << endl ; \
 }
 
 #define LOG_ERROR_MSG( msg ) \
 { \
-        cerr << "ERROR: " << msg << endl ; \
+        cout << "ERROR: " << msg << endl ; \
 }
 
 #else 

@@ -31,8 +31,9 @@ class MPRegion : public Environment {
   Roadmap<CFG,WEIGHT>* GetRoadmap() { return &roadmap;};
   Roadmap<CFG,WEIGHT>* GetColRoadmap() { return &col_roadmap;};
   Stat_Class* GetStatClass() {return &StatClass;};
-  void AddToRoadmap(vector<CFG >& in_Cfgs);
+  vector<VID> AddToRoadmap(vector<CFG >& in_Cfgs);
   void WriteRoadmapForVizmo();
+  void WriteRoadmapForVizmo(ostream& out_os);
   
   ~MPRegion();
 
@@ -139,31 +140,29 @@ PrintValues(ostream& _os) {
 
 
 
-
+///\todo this is a bad implementation only returns FREE vids ... we need COLORS!
 template <class CFG, class WEIGHT>
-void MPRegion<CFG,WEIGHT>::
+vector<VID> MPRegion<CFG,WEIGHT>::
 AddToRoadmap(vector<CFG>& in_Cfgs) {
-
+  vector<VID> returnVec;
   typename vector< CFG >::iterator I;
   for(I=in_Cfgs.begin(); I!=in_Cfgs.end(); I++) {
     if((*I).IsLabel("VALID")) {  
       if((*I).GetLabel("VALID")) {//Add to Free roadmap
-        roadmap.m_pRoadmap->AddVertex((*I));
+        returnVec.push_back(roadmap.m_pRoadmap->AddVertex((*I)));
       } else {  //Add to Coll Roadmap 
         col_roadmap.m_pRoadmap->AddVertex((*I));
       }
     }
   }
+  return returnVec;
 }
 
 
 template <class CFG, class WEIGHT>
 void MPRegion<CFG,WEIGHT>::
 WriteRoadmapForVizmo() {
-
-  LOG_DEBUG_MSG("MPRegion::WriteRoadmapForVizmo()");
-  
-  std::stringstream ss;
+ std::stringstream ss;
   ss << m_RegionId;
   std::string str_index;
   ss >> str_index;
@@ -175,6 +174,16 @@ WriteRoadmapForVizmo() {
     LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
     exit(-1);
   }
+  WriteRoadmapForVizmo(myofstream);
+  myofstream.close();
+};
+template <class CFG, class WEIGHT>
+void MPRegion<CFG,WEIGHT>::
+WriteRoadmapForVizmo(ostream& myofstream) {
+
+  LOG_DEBUG_MSG("MPRegion::WriteRoadmapForVizmo()");
+  
+  
   
   myofstream << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
   myofstream << endl << "#####PREAMBLESTART#####";
@@ -192,7 +201,7 @@ WriteRoadmapForVizmo() {
   GetRoadmap()->WriteRNGseed(myofstream);
 
   GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
-  myofstream.close();
+  
   LOG_DEBUG_MSG("~MPRegion::WriteRoadmapForVizmo()");
 }
 

@@ -19,6 +19,8 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 
   ///Default Constructor.
   StraightLine(cd_predefined _cdtype);
+  StraightLine(cd_predefined _cdtype, TiXmlNode* in_pNode, MPProblem* in_pProblem);
+
   ///Destructor.	
   virtual ~StraightLine();
 
@@ -154,6 +156,35 @@ StraightLine(cd_predefined _cdtype) : LocalPlannerMethod<CFG, WEIGHT>(),
   binarySearch.PutDesc   ("INTEGER","(check line sequentially(0 default) or with a binary search(1)");
   cdtype = _cdtype;
 
+ 
+
+
+}
+
+template <class CFG, class WEIGHT>
+StraightLine<CFG, WEIGHT>::
+StraightLine(cd_predefined _cdtype, TiXmlNode* in_pNode, MPProblem* in_pProblem) : LocalPlannerMethod<CFG, WEIGHT>(in_pNode,in_pProblem),
+  lineSegmentLength      ("lineSegmentLength",        0,  0, 5000),
+  binarySearch   ("binarySearch",          0,  0,    1) {
+  lineSegmentLength.PutDesc      ("INTEGER","(lineSegmentLength, default 0");
+  binarySearch.PutDesc   ("INTEGER","(check line sequentially(0 default) or with a binary search(1)");
+  cdtype = _cdtype;
+  LOG_DEBUG_MSG("StraightLine::StraightLine()");
+
+  int length; 
+  if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("length",&length)) {
+        lineSegmentLength.SetValue(length);
+      } else {
+        LOG_DEBUG_MSG("MPStrategyMethod::length not found");
+      }
+ 
+  int binary_search;
+  if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("binary_search",&binary_search)) {
+        binarySearch.SetValue(binary_search);
+      } else {
+        LOG_DEBUG_MSG("MPStrategyMethod::binary_search not Found");
+      }
+  LOG_DEBUG_MSG("~StraightLine::StraightLine()");
 }
 
 
@@ -268,7 +299,8 @@ IsConnected(Environment *_env, Stat_Class& Stats,
 	
   Stats.IncLPAttempts( "Straightline" );
   int cd_cntr = 0; 
- 
+
+  ///\todo fix this bug ... CD count not right.
   if(lineSegmentLength.GetValue() && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
     Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
     return false;	//not connected

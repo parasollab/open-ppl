@@ -133,8 +133,10 @@ BridgeTestPRM<CFG>::
 template <class CFG>
 BridgeTestPRM<CFG>::
 BridgeTestPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-NodeGenerationMethod<CFG>(in_pNode, in_pProblem) {
+NodeGenerationMethod<CFG>(in_pNode, in_pProblem), 
+  bridge_d          ("d",                 0,  0,   5000000) {
   LOG_DEBUG_MSG("BridgeTestPRM::BridgeTestPRM()");
+  SetDefault();
   ParseXML(in_pNode);
   LOG_DEBUG_MSG("~BridgeTestPRM::BridgeTestPRM()");
 }
@@ -151,7 +153,7 @@ void
 BridgeTestPRM<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
   LOG_DEBUG_MSG("BridgeTestPRM::ParseXML()");
-  SetDefault();
+//  SetDefault();
   if(!in_pNode) {
     LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
   }
@@ -160,6 +162,8 @@ ParseXML(TiXmlNode* in_pNode) {
   }
   double bridge;  
   in_pNode->ToElement()->QueryDoubleAttribute("bridge_d",&bridge);
+
+  cout <<"BRIDGE DOULBE VALUE = " << bridge << endl;
   
   bridge_d.SetValue(bridge);
   
@@ -167,15 +171,15 @@ ParseXML(TiXmlNode* in_pNode) {
   PrintValues(cout);
   
   
-  PrintValues(cout);
+  //PrintValues(cout);
   LOG_DEBUG_MSG("~BridgeTestPRM::ParseXML()");
 }
 
 template <class CFG>
 void BridgeTestPRM<CFG>::
 SetDefault() {
-  NodeGenerationMethod<CFG>::SetDefault();
-  bridge_d.PutValue(0);
+  //NodeGenerationMethod<CFG>::SetDefault();
+  bridge_d.SetValue(0);
 }
 
 template <class CFG>
@@ -267,6 +271,7 @@ PrintOptions(ostream& out_os){
   out_os << " num nodes = " << numNodes.GetValue() << " ";
   out_os << " exact = " << exactNodes.GetValue() << " ";
   out_os << " chunk size = " << chunkSize.GetValue() << " ";
+  out_os << " bridge d = " << bridge_d.GetValue() << " ";
   out_os << endl;
 }
 
