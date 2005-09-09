@@ -130,8 +130,10 @@ GaussPRM<CFG>::
 template <class CFG>
 GaussPRM<CFG>::
 GaussPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-NodeGenerationMethod<CFG>(in_pNode, in_pProblem) {
+NodeGenerationMethod<CFG>(in_pNode, in_pProblem),
+gauss_d          ("d",                 0,  0,   5000000) {
   LOG_DEBUG_MSG("GaussPRM::GaussPRM()");
+  gauss_d.PutDesc("FLOAT  ","(distance, default based on environment)");
   ParseXML(in_pNode);
   LOG_DEBUG_MSG("~GaussPRM::GaussPRM()");
 }
@@ -149,7 +151,8 @@ void
 GaussPRM<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
   LOG_DEBUG_MSG("GaussPRM::ParseXML()");
-  SetDefault();
+ // SetDefault();
+  gauss_d.PutValue(0);
   if(!in_pNode) {
     LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
   }
