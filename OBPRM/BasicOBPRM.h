@@ -412,14 +412,16 @@ template <class CFG>
 BasicOBPRM<CFG>::
 BasicOBPRM() : NodeGenerationMethod<CFG>(),      
   numShells        ("shells",            3,  1,   50) {
-  numShells.PutDesc("INTEGER","(number of shells, default 3)");
+  
 }
 
 template <class CFG>
 BasicOBPRM<CFG>::
     BasicOBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    NodeGenerationMethod<CFG>(in_pNode, in_pProblem) {
+    NodeGenerationMethod<CFG>(in_pNode, in_pProblem),
+    numShells        ("shells",            3,  1,   50) {
   LOG_DEBUG_MSG("BasicOBPRM::BasicOBPRM()");
+  numShells.PutDesc("INTEGER","(number of shells, default 3)");
   ParseXML(in_pNode);
   LOG_DEBUG_MSG("~BasicOBPRM::BasicOBPRM()");
 }
@@ -441,16 +443,16 @@ template <class CFG>
 void BasicOBPRM<CFG>::
 ParseXMLshells(TiXmlNode* in_pNode) {
   LOG_DEBUG_MSG("BasicOBPRM::ParseXMLshells()");
-  
+  numShells.PutValue(3);
   if(!in_pNode) {
     LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
   }
   if(string(in_pNode->Value()) != "shells") {
     LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
   }
-  int shells;  
+  int shells;
   in_pNode->ToElement()->QueryIntAttribute("number",&shells);
-  
+
   numShells.SetValue(shells);
   LOG_DEBUG_MSG("~BasicOBPRM::ParseXMLshells()");
 }

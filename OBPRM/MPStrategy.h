@@ -239,7 +239,8 @@ class PRMRoadmap : public MPStrategyMethod {
     {
     vector<CfgType> nodes;
     vector<VID> new_free_vids;
-
+    
+    new_free_vids.erase(new_free_vids.begin(),new_free_vids.end());
     nodes.erase(nodes.begin(),nodes.end());
     NodeGenClock.StartClock("Node Generation");
     typedef vector<string>::iterator I;
@@ -249,7 +250,7 @@ class PRMRoadmap : public MPStrategyMethod {
       NodeGenerationMethod<CfgType> * pNodeGen;
       pNodeGen = GetMPProblem()->GetMPStrategy()->
           GetGenerateMapNodes()->GetMethod(*itr);
-      pNodeGen->GenerateNodes(region, vectorCfgs); /////////this needs fixing bad.
+      pNodeGen->GenerateNodes(region, vectorCfgs); ///\todo this needs fixing bad.
       cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
       new_free_vids = region->AddToRoadmap(vectorCfgs);
     }

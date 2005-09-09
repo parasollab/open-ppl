@@ -30,9 +30,12 @@ class OBPRM : public BasicOBPRM<CFG> {
 
   ///Default Constructor.
   OBPRM();
+  OBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.
   virtual ~OBPRM();
-
+  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXMLcol_pair(TiXmlNode* in_pNode);
+  virtual void ParseXMLfree_pair(TiXmlNode* in_pNode);
   //@}
 
   //////////////////////
@@ -49,6 +52,7 @@ class OBPRM : public BasicOBPRM<CFG> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
+  virtual void PrintOptions(ostream& _os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
   /** Obstacle Based Node Generation with some nifty enhancements such
@@ -326,6 +330,116 @@ OBPRM() : BasicOBPRM<CFG>(),
 }
 
 
+///\todo xmlize proportionSurface and clearanceFactor
+template <class CFG>
+OBPRM<CFG>::
+OBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+  BasicOBPRM<CFG>(in_pNode, in_pProblem),     
+  proportionSurface("pctSurf",         1.0,  0,   1.0), 
+  collPair         ("collPair","cM rT "),
+  freePair         ("freePair","cM rV "), 
+  clearanceFactor  ("clearFact",       1.0,  0,   1.0) {
+  proportionSurface.PutDesc("FLOAT  ","proportion surface nodes, default 1.0");
+  
+  LOG_DEBUG_MSG("OBPRM::OBPRM()");
+  collPair.PutDesc("STRING STRING",
+                   "\n\t\t\tSpecify 2 of the following recognized mnemonics:"
+                   "\n\t\t\t  cM    \"center of mass\""
+                   "\n\t\t\t  rV    \"random vertex\""
+                   "\n\t\t\t  rT    \"point in random triangle\""
+                   "\n\t\t\t  rE    \"random extreme vertex\""
+                   "\n\t\t\t  rW    \"point in random weighted triangle\""
+                   "\n\t\t\t  cM_rV \"cg/random vertex\""
+                   "\n\t\t\t  rV_rT \"random vertex/point in random          triangle\""
+                   "\n\t\t\t  rV_rW \"random vertex/point in random weighted triangle\""
+                   "\n\t\t\t  N_rT  \"normal of random triangle\""
+                   "\n\t\t\t  all   \"all of the above\"");
+  collPair.PutNumStrings(2); 
+  freePair.PutDesc("STRING STRING","\n\t\t\tSame as above");
+  freePair.PutNumStrings(2);
+  clearanceFactor.PutDesc  ("FLOAT  ","(clearance factor, default 1.0)");
+  ///\todo organize setting default better
+  collPair.PutValue("cM rT ");
+  freePair.PutValue("cM rV "); 
+  proportionSurface.PutValue(1.0);
+  clearanceFactor.PutValue(1.0);
+  ParseXML(in_pNode);
+  LOG_DEBUG_MSG("~OBPRM::OBPRM()");
+}
+
+template <class CFG>
+void OBPRM<CFG>::
+ParseXML(TiXmlNode* in_pNode) {
+  LOG_DEBUG_MSG("OBPRM::ParseXML()");
+  for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
+       pChild2 = pChild2->NextSibling()) {
+         if(string(pChild2->Value()) == "coll_pair") {
+           ParseXMLcol_pair(pChild2);
+         } else if(string(pChild2->Value()) == "free_pair") {
+           ParseXMLfree_pair(pChild2);
+         }
+       }
+  LOG_DEBUG_MSG("~OBPRM::ParseXML()");
+}
+
+template <class CFG>
+void OBPRM<CFG>::
+ParseXMLcol_pair(TiXmlNode* in_pNode) {
+  LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair()");
+  const char* a_pair;
+  string str_a_pair;
+  a_pair= in_pNode->ToElement()->Attribute("a");
+  if(a_pair) {
+    str_a_pair = string(a_pair);
+  } else {
+    LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair no a_pair found");
+  }
+  
+  const char* b_pair;
+  string str_b_pair;
+  b_pair= in_pNode->ToElement()->Attribute("b");
+  if(b_pair) {
+    str_b_pair = string(b_pair);
+  } else {
+    LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair no b_pair found");
+  }
+  string final_col_pair = a_pair + string(" ") + b_pair + string(" ");
+  char str_char[100];
+  strcpy(str_char, final_col_pair.c_str());
+
+  collPair.PutValue(str_char);
+  LOG_DEBUG_MSG("~OBPRM::ParseXMLcol_pair()");
+}
+    
+template <class CFG>
+void OBPRM<CFG>::
+ParseXMLfree_pair(TiXmlNode* in_pNode) {
+  LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair()");
+  const char* a_pair;
+  string str_a_pair;
+  a_pair= in_pNode->ToElement()->Attribute("a");
+  if(a_pair) {
+    str_a_pair = string(a_pair);
+  } else {
+    LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair no a_pair found");
+  }
+  
+  const char* b_pair;
+  string str_b_pair;
+  b_pair= in_pNode->ToElement()->Attribute("b");
+  if(b_pair) {
+    str_b_pair = string(b_pair);
+  } else {
+    LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair no b_pair found");
+  }
+  string final_free_pair = a_pair + string(" ") + b_pair + string(" ");
+  char str_char[100];
+  strcpy(str_char, final_free_pair.c_str());
+  freePair.PutValue(str_char);
+  LOG_DEBUG_MSG("~OBPRM::ParseXMLcol_pair()");
+}
+
+
 template <class CFG>
 OBPRM<CFG>::
 ~OBPRM() {
@@ -449,6 +563,24 @@ PrintValues(ostream& _os){
   _os << freePair.GetFlag() << " " << freePair.GetValue() << " ";
   _os << clearanceFactor.GetFlag() << " " << clearanceFactor.GetValue() << " ";
  _os << endl;
+}
+
+
+template <class CFG>
+    void
+OBPRM<CFG>::
+    PrintOptions(ostream& _os){
+  _os << "    " << GetName() << ":: ";
+  _os << " num nodes = " << numNodes.GetValue() << " ";
+  _os << " exact  = " << exactNodes.GetValue() << " ";
+  _os << " chunk size = " << chunkSize.GetValue() << " ";
+  _os << " num shells = " << numShells.GetValue() << " ";
+  _os << endl << "                    ";
+  _os << "  proportionSurface = " << proportionSurface.GetValue() << " ";
+  _os << "  collPair = " << collPair.GetValue() << " ";
+  _os << "  freePair = " << freePair.GetValue() << " ";
+  _os << "  clearanceFactor = " << clearanceFactor.GetValue() << " ";
+  _os << endl;
 }
 
 
@@ -585,7 +717,8 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
       if ( nActualNodes < nNodesGap){
 	nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 	
 	nNodesGap = nNodesGap - nActualNodes;
-	numNodes.PutValue(nNodesGap);
+ ///\todo figure out this logic
+ // numNodes.PutValue(nNodesGap);/////////why?
  	nodesBuffer.erase(nodesBuffer.begin(), nodesBuffer.end()); 
 	
 	NSEED = (int)(P * nNodesGap/(numExternalBody-1)/numShells.GetValue());

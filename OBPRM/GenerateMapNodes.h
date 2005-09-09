@@ -116,7 +116,7 @@ class GenerateMapNodes : public MPBaseObject{
   // Data
   vector<NodeGenerationMethod<CFG>*> all;
  public:
-  vector<NodeGenerationMethod<CFG>*> selected; //move back to private later
+   vector<NodeGenerationMethod<CFG>*> selected; ///\todo move back to private later
 
   // public:
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -214,8 +214,16 @@ ParseXML(TiXmlNode* in_pNode) {
       GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>(pChild, GetMPProblem());
       gaussPRM->cdInfo = &cdInfo;
       selected.push_back(gaussPRM);
+    } else if(string(pChild->Value()) == "OBPRM") {
+      OBPRM<CFG>* obprm = new OBPRM<CFG>(pChild,GetMPProblem());
+      //all.push_back(obprm);
+      obprm->cdInfo = &cdInfo;
+      selected.push_back(obprm);
     }
   }
+  
+  
+  
   /*
   GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>();
   all.push_back(gaussPRM);
