@@ -610,7 +610,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
   CollisionDetection* cd = GetMPProblem()->GetCollisionDetection();
   DistanceMetric* dm =  GetMPProblem()->GetDistanceMetric();
          
-         
+  int origNumNodes = numNodes.GetValue();        
          
          
 #ifndef QUIET
@@ -717,8 +717,8 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
       if ( nActualNodes < nNodesGap){
 	nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 	
 	nNodesGap = nNodesGap - nActualNodes;
- ///\todo figure out this logic
- // numNodes.PutValue(nNodesGap);/////////why?
+        ///\todo figure out this logic
+        numNodes.PutValue(nNodesGap);/////////why?
  	nodesBuffer.erase(nodesBuffer.begin(), nodesBuffer.end()); 
 	
 	NSEED = (int)(P * nNodesGap/(numExternalBody-1)/numShells.GetValue());
@@ -763,6 +763,8 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
 #if INTERMEDIATE_FILES
   WritePathConfigurations("surface.path", surface, _env);
 #endif
+  ///reset numNodes back to origional value
+  numNodes.PutValue(origNumNodes);
 }
 
 
