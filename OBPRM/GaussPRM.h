@@ -304,10 +304,16 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
   LOG_DEBUG_MSG("GaussPRM::GenerateNodes()");	
 
+  if (gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from robot
+    gauss_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
+  }
+
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ") ";
   cout << "(chunkSize=" << chunkSize.GetValue() << ") ";
   cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
+  cout << "(d=" << gauss_d.GetValue() << ") ";
+
 #endif
 
 #if INTERMEDIATE_FILES
@@ -319,10 +325,6 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-GaussPRM::GenerateNodes"); Callee = Callee+Method;}
-
-  if (gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from robot
-    gauss_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
-  }
   
   //generate random number with normal distribution
   //this is the distance it will use to compute Cfg2
@@ -331,14 +333,14 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   
   // generate in bounding box
   //for (int i=0,newNodes=0; i < numNodes.GetValue() || newNodes<1 ; i++) {
-  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < numNodes.GetValue() ; attempts++) { 
+  for(int attempts=0,newNodes=0,success_cntr=0;  
+      success_cntr < numNodes.GetValue() ; attempts++) { 
     // cfg1 & cfg2 are generated to be inside bbox
-    CFG cfg1, cfg2;
+    CFG cfg1, cfg2, incr;
     cfg1.GetRandomCfg(_env);
-    cfg2.GetRandomCfg(_env);
-    //cfg2.c1_towards_c2(cfg1,cfg2,gauss_d.GetValue());
-    cfg2.c1_towards_c2(cfg1,cfg2,gauss_dist);
-    
+    incr.GetRandomRay(gauss_dist);
+    cfg2.add(cfg1, incr);
+
     // because cfg2 is modified it must be checked again
     if (cfg2.InBoundingBox(_env)) {    
       CallCnt="1"; 

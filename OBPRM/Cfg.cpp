@@ -912,10 +912,25 @@ void Cfg::MAPRMfree(Environment* _env, Stat_Class& Stats,
   newCfg = oldCfg->CreateNewCfg();
 
   /// find max. clearance point by stepping out:
+  double magnitude;
+  Cfg* tmpCfg = newCfg->CreateNewCfg();
+  vector<double> tmpCfgData;
   while ((newCfg->clearance >= oldCfg->clearance) && (newCfg->InBoundingBox(_env))) {    
     delete oldCfg;
     oldCfg = newCfg->CreateNewCfg();
-    newCfg->c1_towards_c2(*newCfg, *dir, stepSize*-1);
+    //newCfg->c1_towards_c2(*newCfg, *dir, stepSize*-1);
+    tmpCfg->subtract(*dir, *newCfg);
+    //normalize
+    magnitude = 0;
+    tmpCfgData = tmpCfg->GetData();
+    for(int i=0; i<tmpCfgData.size(); ++i)
+      magnitude += tmpCfgData[i]*tmpCfgData[i];
+    magnitude = sqrt(magnitude);
+    tmpCfg->divide(*tmpCfg, magnitude);
+    tmpCfg->multiply(*tmpCfg, stepSize*-1);
+    newCfg->add(*newCfg, *tmpCfg);
+
+
     newCfg->clearance = newCfg->ApproxCSpaceClearance(_env,Stats,cd,cdInfo,dm,n,0);
     
     stepSize = newCfg->clearance;
@@ -953,6 +968,7 @@ void Cfg::MAPRMfree(Environment* _env, Stat_Class& Stats,
 }
 
 
+//not used anymore...
 // pushes colliding node towards free space
 void Cfg::MAPRMcollision(Environment* _env, Stat_Class& Stats,
 			 CollisionDetection* cd,
@@ -1024,7 +1040,8 @@ void Cfg::ApproxCSpaceClearance2(Environment* env, Stat_Class& Stats,
   Cfg* cfg = this->CreateNewCfg();
   
   vector<Cfg*> directions;
-  double dist = 100 * env->GetPositionRes();
+  double dist = 100 * min(env->GetPositionRes(),
+			  env->GetOrientationRes());
   int i;
   Cfg* tmp;
   std::string Callee(GetName()),CallCnt;

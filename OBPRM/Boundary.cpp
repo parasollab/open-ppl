@@ -217,7 +217,7 @@ Print(std::ostream& _os, char range_sep, char par_sep) {
     else
       _os << itrb->first << range_sep << itrb->second << "";
   }
-  _os << " ]" << endl;
+  _os << " ]";
 }
 
 

@@ -168,6 +168,27 @@ void Cfg_free::GetRandomCfg(Environment* env) {
 
 
 void Cfg_free::GetRandomRay(double incr) {
+  v.clear();
+
+  //randomly sample params
+  for(int i=0; i<DOF(); ++i)
+    v.push_back(OBPRM_drand());
+  Normalize_orientation();
+
+  //normalize to a unit vector
+  double mag = 0;
+  for(int i=0; i<DOF(); ++i)
+    mag = v[i]*v[i];
+  mag = sqrt(mag);
+  transform(v.begin(), v.end(), v.begin(), 
+	    bind2nd(divides<double>(), mag));
+
+  //scale up
+  transform(v.begin(), v.end(), v.begin(),
+	    bind2nd(multiplies<double>(), incr));
+  Normalize_orientation();
+
+  /*
   double alpha, beta, z, z1;
   
   alpha = 2.0*M_PI*OBPRM_drand();
@@ -182,6 +203,7 @@ void Cfg_free::GetRandomRay(double incr) {
   v.push_back(0.0);
   v.push_back(0.0);
   v.push_back(0.0);
+  */
 
   obst = -1;
   tag = -1;

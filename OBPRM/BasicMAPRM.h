@@ -354,9 +354,12 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
   // Set _info so we do NOT get all info (for speed)
   cdInfo->ResetVars();
   
+  /*
   // Generate Random direction
   CFG move_out_dir_cfg;
-  move_out_dir_cfg.GetRandomRay( _env->GetPositionRes() );
+  move_out_dir_cfg.GetRandomRay( min(_env->GetPositionRes(),
+				     _env->GetOrientationRes() );
+  */
   long num_rays = m_iRays.GetValue();  // how many rays do we try to get random cfg out of collision
   CFG* rays=new CFG[num_rays]; //testing directions
   CFG* pos=new CFG[num_rays];  //test position, will update each time by rays
@@ -364,7 +367,8 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
   
   //init arrays
   for( int iR=0;iR<num_rays; iR++ ){
-    rays[iR].GetRandomRay( _env->GetPositionRes() );	
+    rays[iR].GetRandomRay( min(_env->GetPositionRes(),
+			       _env->GetOrientationRes()) );	
     pos[iR]=cfg; //all start from given cfg
   }
   
@@ -374,10 +378,11 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
   while( bCollide ){ //loop until no in collision
     bool allOutBBX=true; //if all out of bbx, we don't want to go ahead.
     for( int iR=0;iR<num_rays;iR++ ){
-      pos[iR].add(pos[iR], rays[iR]);
+      //pos[iR].add(pos[iR], rays[iR]);
+      pos[iR].Increment(rays[iR]);
       if( !pos[iR].InBoundingBox(_env) ) continue; //out of bounding box
       allOutBBX=false;
-tmpStr = Callee+Method+CallCnt;
+      tmpStr = Callee+Method+CallCnt;
       if( !pos[iR].isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr) ){
 	bCollide=false; //not in collision any more
 	cfg=pos[iR];
@@ -413,7 +418,8 @@ MoveOutObstacle(CFG& cfg, Vector3D& dir, Environment* _env, Stat_Class& Stats,
   //move in same dir until out of collision
   std::string tmpStr = Callee+Method;
   do{
-    cfg.add(cfg, trans_cfg);
+    cfg.Increment(trans_cfg);
+    //cfg.add(cfg, trans_cfg);
   }
   while(cfg.isCollision(_env, Stats, cd, *cdInfo, &tmpStr));
 }

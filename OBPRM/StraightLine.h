@@ -344,7 +344,8 @@ StraightLine<CFG, WEIGHT>::
     tick.Increment(incr);
     cd_cntr ++;
     if(checkCollision){
-      if(tick.isCollision(_env,Stats,cd, *cdInfo,true,&(Callee))){
+      if(!tick.InBoundingBox(_env) ||
+	 tick.isCollision(_env,Stats,cd, *cdInfo,true,&(Callee))){
         CFG neg_incr;
 	neg_incr = incr; 
 	neg_incr.negative(incr);
@@ -367,6 +368,7 @@ StraightLine<CFG, WEIGHT>::
   }
   lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + nTicks);
   lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + nTicks);
+
   return true;
 };
 
@@ -422,8 +424,19 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     //if( cd->IsInCollision(_env, Stats, *cdInfo, lineSegment) )
     std::string Callee(GetName()),Method("-StraightLine::lineSegmentInCollision");
     Callee+=Method;
-    if( cd->IsInCollision(_env, Stats, *cdInfo, lineSegment, true, &Callee) )
+
+    BoundingBox *bb =  _env->GetBoundingBox();
+    for(int m = 0; m<lineSegment->GetFreeBodyCount(); ++m) {
+      GMSPolyhedron &poly = lineSegment->GetFreeBody(m)->GetWorldPolyhedron();
+      for(int j = 0 ; j < poly.numVertices ; j++){
+	if (!bb->IfSatisfiesConstraints(poly.vertexList[j]))
+	  return true; //Collide (out of Bounding Box)
+      }
+    }
+
+    if(cd->IsInCollision(_env, Stats, *cdInfo, lineSegment, true, &Callee) )
       return true;	//Collide
+
     return false;	//No collision
 }
 
@@ -476,7 +489,8 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 	  if(clr < 0) clr = 0.0;
 	}
       } else {
-	if(mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee)))
+	if(!mid.InBoundingBox(_env) ||
+	   mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee)))
 	  return false;
       }
 

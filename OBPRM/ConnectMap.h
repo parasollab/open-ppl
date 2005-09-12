@@ -220,7 +220,7 @@ ConnectMap(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
   ParseXML(in_pNode);
   
   
-  if(selected_component_methods.size() < 1)
+  if(selected_node_methods.size() < 1)
     LOG_WARNING_MSG("No Connection Methods selected!");
 
   

@@ -236,6 +236,7 @@ LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
   if(selected.size() < 1)
     LOG_WARNING_MSG("No Local Planner selected!");
  */
+  ResetSelected();
   for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
     if(string(pChild->Value()) == string("straightline")) {
       StraightLine<CFG, WEIGHT>* straight_line = 

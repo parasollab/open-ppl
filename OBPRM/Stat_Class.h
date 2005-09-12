@@ -120,17 +120,17 @@ protected:
   int NumEdges;
   int NumCC;
 
-  int NumCollDetCalls[MaxCD];
+  unsigned long int NumCollDetCalls[MaxCD];
   char CDNameList[MaxCD][50];
 
   int SizeCC[MaxCC];
 
   char LPNameList[MaxLP][50];
-  int LPConnections[MaxLP];
-  int LPAttempts[MaxLP];
-  int LPCollDetCalls[MaxLP];
+  unsigned long int LPConnections[MaxLP];
+  unsigned long int LPAttempts[MaxLP];
+  unsigned long int LPCollDetCalls[MaxLP];
 
-  std::map<std::string, int> CollDetCountByName;
+  std::map<std::string, unsigned long int> CollDetCountByName;
 
 };
 
@@ -147,7 +147,7 @@ void
 Stat_Class::
 PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
   int i;
-  std::map<std::string, int>::const_iterator iter;
+  std::map<std::string, unsigned long int>::const_iterator iter;
   int total=0;
 
   cout << endl << endl << "Local Planners:" << endl;

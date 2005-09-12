@@ -189,6 +189,27 @@ void Cfg_free_tree::GetRandomCfg(double R, double rStep){
 }
 
 void Cfg_free_tree::GetRandomRay(double incr) {
+  v.clear();
+
+  //randomly sample params
+  for(int i=0; i<DOF(); ++i)
+    v.push_back(OBPRM_drand());
+  Normalize_orientation();
+
+  //normalize to a unit vector
+  double mag = 0;
+  for(int i=0; i<DOF(); ++i)
+    mag = v[i]*v[i];
+  mag = sqrt(mag);
+  transform(v.begin(), v.end(), v.begin(), 
+	    bind2nd(divides<double>(), mag));
+
+  //scale up
+  transform(v.begin(), v.end(), v.begin(),
+	    bind2nd(multiplies<double>(), incr));
+  Normalize_orientation();
+
+  /*
   double alpha,beta,z, z1;
   double jointAngle;
   
@@ -208,7 +229,8 @@ void Cfg_free_tree::GetRandomRay(double incr) {
     // or: jointAngle = OBPRM_drand();
     v.push_back(jointAngle);
   }
-  
+  */
+
   obst = -1;
   tag = -1;
   clearance = -1;

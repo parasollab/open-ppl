@@ -307,12 +307,17 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      CollisionDetection* cd, DistanceMetric *,
 	      vector<CFG>& nodes) {
 
-  LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()");	
+  //LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()");
+
+  if (bridge_d.GetValue() == 0) {  //if no bridge_d value given (standard deviation), calculate from robot
+    bridge_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
+  }	
 
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ") ";
   cout << "(chunkSize=" << chunkSize.GetValue() << ") ";
   cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
+  cout << "(d=" << bridge_d.GetValue() << ") ";
 #endif
   
 #if INTERMEDIATE_FILES
@@ -323,17 +328,12 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-BridgeTestPRM::GenerateNodes"); Callee = Callee+Method;}
-  
-  if (bridge_d.GetValue() == 0) {  //if no bridge_d value given (standard deviation), calculate from robot
-    bridge_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
-  }
-  
 
   // generate in bounding box
   for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < numNodes.GetValue() ; attempts++) {
     
     // cfg1 & cfg2 are generated to be inside bbox
-    CFG cfg1, cfg2, cfgP;
+    CFG cfg1, cfg2, cfgP, incr;
 
     cfg1.GetRandomCfg(_env);
 
@@ -342,11 +342,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     
     bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
     if (!cfg1_free){
-      cfg2.GetRandomCfg(_env);
-
       double gauss_dist = GaussianDistribution(0, bridge_d.GetValue()); 
 
-      cfg2.c1_towards_c2(cfg1,cfg2,gauss_dist);
+      //cfg2.c1_towards_c2(cfg1,cfg2,gauss_dist);
+      incr.GetRandomRay(gauss_dist);
+      cfg2.add(cfg1, incr);
 
       CallCnt="2";
       tmpStr = Callee+CallCnt; 
