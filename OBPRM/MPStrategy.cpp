@@ -21,6 +21,9 @@ MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem) : MPBaseObject(in_pNode,
       m_pConnection = new ConnectMap<CfgType, WeightType>(pChild, GetMPProblem());
     } else if(string(pChild->Value()) == "lp_methods") {
       m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(pChild, GetMPProblem());
+    } else if (string(pChild->Value()) == "MPEvaluator_methods") {
+      m_Evaluator = new MapEvaluator<CfgType, WeightType>(pChild, GetMPProblem());
+
     } else if(string(pChild->Value()) == "MPStrategyMethod") {
       ParseStrategyMethod(pChild);
     } else if(string(pChild->Value()) == "MPCharacterizer") {
@@ -41,6 +44,7 @@ PrintOptions(ostream& out_os)
   m_pNodeGeneration->PrintOptions(out_os);
   m_pConnection->PrintOptions(out_os);
   m_pLocalPlanners->PrintOptions(out_os);
+  m_Evaluator->PrintOptions(out_os);
 }
 
 void MPStrategy::
@@ -57,12 +61,18 @@ ParseStrategyMethod(TiXmlNode* in_pNode) {
     if(string(pChild->Value()) == "PRMRoadmap") {
       PRMRoadmap* prm = new PRMRoadmap(pChild,GetMPProblem());
       all_MPStrategyMethod.push_back( prm );
+    } else if(string(pChild->Value()) == "PRMOriginalRoadmap") {
+      PRMOriginalRoadmap* comp = new PRMOriginalRoadmap(pChild,GetMPProblem());
+      all_MPStrategyMethod.push_back( comp );
     } else if(string(pChild->Value()) == "Compare") {
-      MPCompare* comp = new MPCompare(pChild,GetMPProblem());
+      MPComparer* comp = new MPComparer(pChild,GetMPProblem());
       all_MPStrategyMethod.push_back( comp );
     } else if(string(pChild->Value()) == "RoadmapInput") {
       RoadmapInput* rmpinput = new RoadmapInput(pChild,GetMPProblem());
       all_MPStrategyMethod.push_back( rmpinput );
+    } else if(string(pChild->Value()) == "MPMultiStrategy") {
+      MPMultiStrategy* multistrategy = new MPMultiStrategy(pChild,GetMPProblem());
+      all_MPStrategyMethod.push_back( multistrategy );
     } else {
       LOG_WARNING_MSG("MPStrategy::  I don't know: "<< endl << *pChild);
     }
@@ -87,6 +97,7 @@ GetMPStrategyMethod(string& in_strLabel) {
   for(I = all_MPStrategyMethod.begin(); 
       I != all_MPStrategyMethod.end(); ++I) {
         if((*I)->GetLabel() == in_strLabel) {
+	  LOG_DEBUG_MSG("MPStrategyMethod::GetMPStrategyMethod(): found " << in_strLabel);
           return (*I);
         }
       }

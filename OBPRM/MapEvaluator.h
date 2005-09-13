@@ -3,35 +3,169 @@
 
 #include "Roadmap.h"
 
+#include "util.h"
+
+#include "Query.h" /* for query evaluation */
+#include "GraphAlgo.h" /* for max flow evaluation */
+#include "NodeGenerationMethod.h" /* for coverage evaluation */
+
+#include "MPRegionComparerMethod.h"
+
 template <class CFG, class WEIGTH> 
 class MapEvaluationMethod;
 
 template <class CFG, class WEIGHT>
-class MapEvaluator {
- public:
-  vector<MapEvaluationMethod<CFG,WEIGHT>*> evaluators;
+class ConnectableNodeComparer;
 
+template <class CFG, class WEIGHT>
+class MapEvaluator : public MPBaseObject {
+ public:
   MapEvaluator() {}
   MapEvaluator(const vector<MapEvaluationMethod<CFG,WEIGHT>*>& e) : 
-    evaluators(e) {}
+    m_conditional_evaluators(e) {}
+
+
+  MapEvaluator(TiXmlNode* in_pNode, MPProblem* in_pProblem) {
+    LOG_DEBUG_MSG("MapEvaluator::MapEvaluator()");
+    if (!in_pNode) {
+      LOG_ERROR_MSG("MapEvaluator::MapEvaluator() error xml input");
+      exit(-1);
+    }
+    if (string(in_pNode->Value()) != "MPEvaluator_methods") {
+      LOG_ERROR_MSG("MaPEvaluator::MaPEvaluator() error xml input");
+    }
+
+    for (TiXmlNode* pChild=in_pNode->FirstChild(); pChild != NULL; pChild = pChild->NextSibling()) {
+      if (string(pChild->Value()) == "MPRegionComparers") {
+	ParseXMLComparers(pChild, in_pProblem);
+      } else if (string(pChild->Value()) == "MPRegionConditionalEvaluators") {
+	ParseXMLConditionalEvaluators(pChild, in_pProblem);
+      } else {
+	LOG_WARNING_MSG("MapEvaluator:: I don't know: " << endl << *pChild);
+      }
+    }
+  }
+
+  void ParseXMLComparers(TiXmlNode* in_pNode, MPProblem* in_pProblem) {
+    LOG_DEBUG_MSG("MapEvaluator::ParseXMLComparers()");
+    if (!in_pNode) {
+      LOG_ERROR_MSG("MapEvaluator::ParseXMLComparers() error xml input");
+      exit(-1);
+    }
+    if (string(in_pNode->Value()) != "MPRegionComparers") {
+      LOG_ERROR_MSG("MapEvaluator::ParseXMLComparers() error xml input"); 
+      exit(-1);
+    }
+
+    m_comparer_evaluators.clear();
+    for (TiXmlNode* pChild = in_pNode->FirstChild(); pChild != NULL; pChild = pChild->NextSibling()) {
+      if (string(pChild->Value()) == "ConnectableNodeComparer") {
+	ConnectableNodeComparer<CFG,WEIGHT>* connectable_node_comparer = new ConnectableNodeComparer<CFG,WEIGHT>(pChild, in_pProblem);
+	m_comparer_evaluators.push_back(connectable_node_comparer);
+      }
+      else if (string(pChild->Value()) == "RandomConnectComparer") {
+	RandomConnectComparer<CFG,WEIGHT>* random_query_comparer = new RandomConnectComparer<CFG,WEIGHT>(pChild, in_pProblem);
+	m_comparer_evaluators.push_back(random_query_comparer);
+      } else {
+	LOG_DEBUG_MSG("I don't understand");
+      }
+    }
+  }
+
+  void ParseXMLConditionalEvaluators(TiXmlNode* in_pNode, MPProblem *in_pProblem) {
+    LOG_DEBUG_MSG("MapEvaluator::ParseXMLConditionalEvaluators()");
+    if (!in_pNode) {
+      LOG_ERROR_MSG("MapEvaluator::ParseXMLConditionalEvaluators() error xml input");
+      exit(-1);
+    }
+    if (string(in_pNode->Value()) != "MPRegionConditionalEvaluators") {
+      LOG_ERROR_MSG("MapEvaluator::ParseXMLConditionalEvaluators() error xml input"); 
+      exit(-1);
+    }
+
+    m_conditional_evaluators.clear();
+    for (TiXmlNode* pChild = in_pNode->FirstChild(); pChild != NULL; pChild = pChild->NextSibling()) {
+
+      if (string(pChild->Value()) == "") { // remove when methods below are implemented
+/*       if (string(pChild->Value()) == "TestConditionalEvaluator") { */
+/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/* 	m_conditional_evaluators.push_back(); */
+/*       } else  */
+/*       if (string(pChild->Value()) == "MaxFlowConditionalEvaluator") { */
+/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/* 	m_conditional_evaluators.push_back(); */
+/*       } else if (string(pChild->Value()) == "CoverageConditionalEvaluator") { */
+/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/* 	m_conditional_evaluators.push_back(); */
+/*       } else if (string(pChild->Value()) == "QueryConditionalEvaluator") { */
+/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/* 	m_conditional_evaluators.push_back(); */
+/*       } else if (string(pChild->Value()) == "CCDistanceConditionalEvaluator") { */
+/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/* 	m_conditional_evaluators.push_back(); */
+/*       } else if (string(pChild->Value()) == "CCDiameterConditionalEvaluator") { */
+/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/* 	m_conditional_evaluators.push_back(); */
+      } else {
+	LOG_DEBUG_MSG("I don't understand");
+      }
+    }
+  }
+
   ~MapEvaluator() {}
 
   void AddEvaluator(MapEvaluationMethod<CFG,WEIGHT>* e) {
-    evaluators.push_back(e);
+    m_conditional_evaluators.push_back(e);
   }
 
   bool operator()(Roadmap<CFG,WEIGHT>* rmap) {
     typename vector<MapEvaluationMethod<CFG,WEIGHT>*>::iterator E;
-    for(E = evaluators.begin(); E != evaluators.end(); ++E)
+    for(E = m_conditional_evaluators.begin(); E != m_conditional_evaluators.end(); ++E)
       if(!(*E)->evaluate(rmap))
     return false;
     return true;
   }
+
+  bool operator()(MPRegion<CFG,WEIGHT>* region_a, MPRegion<CFG,WEIGHT>* region_b) {
+    typename vector<MPRegionComparerMethod<CFG,WEIGHT>* >::iterator E;
+    for (E = m_comparer_evaluators.begin(); E!= m_comparer_evaluators.end(); ++E)
+      compare(region_a, region_b);
+    // @todo operator() should return meaningful comparison, not just a boolean
+    return true;
+  }
+
+  MPRegionComparerMethod< CFG, WEIGHT > * GetComparerMethod(string& in_label) {
+    typedef typename vector< MPRegionComparerMethod< CFG, WEIGHT > * >::iterator Itrtr;
+    for (Itrtr itrtr = m_comparer_evaluators.begin(); itrtr < m_comparer_evaluators.end(); itrtr++) {
+      if ((*itrtr)->GetLabel() == in_label) {
+	return *itrtr;
+      }
+    }
+    LOG_ERROR_MSG( "MapEvaluator:: cannot find ComparerMethod = " << in_label);
+    exit(-1);
+  }
+
+  void PrintOptions(ostream& out_os) {
+    out_os << "  Map Evaluation: " << m_comparer_evaluators.size() << " Comparer Methods" << endl;
+    typedef typename vector< MPRegionComparerMethod< CFG, WEIGHT > * >::iterator Itrtr;
+    for (Itrtr itrtr = m_comparer_evaluators.begin(); itrtr < m_comparer_evaluators.end(); itrtr++) { 
+      (*itrtr)->PrintOptions(out_os);
+    }
+  }
+
+  vector<MapEvaluationMethod<CFG,WEIGHT>*> m_conditional_evaluators;
+  vector<MPRegionComparerMethod<CFG,WEIGHT>* > m_comparer_evaluators;
 };
 
 template <class CFG, class WEIGHT>
-class MapEvaluationMethod {
+class MapEvaluationMethod: public MPBaseObject {
  public:
+  MapEvaluationMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    MPBaseObject(in_pNode, in_pProblem) { }
+  virtual void ParseXML(TiXmlNode* in_pNode) = 0;
+  virtual void operator() ()=0;
+  virtual void operator() (int in_RegionID) = 0;
+  // @todo evaluate may need to be replaced by the () operator
   virtual bool evaluate(Roadmap<CFG,WEIGHT>* rmap) = 0;
 };
 
@@ -44,6 +178,7 @@ class TestEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
  public:
   int size;
   TestEvaluation(int s = 400) : size(s) {}
+
   ~TestEvaluation() {}
 
   virtual bool evaluate(Roadmap<CFG,WEIGHT>* rmap) {
@@ -53,7 +188,6 @@ class TestEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
 
 /////////////////////////
 // Max Flow Evaluators
-#include "GraphAlgo.h"
 
 template <class CFG, class WEIGHT, class CAPACITY>
 class MaxFlowEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
@@ -152,7 +286,6 @@ struct InverseWeightCapacity {
 
 /////////////////////////
 // evaluate the coverage of a given roadmap
-#include "NodeGenerationMethod.h"
  
 template <class CFG, class WEIGHT>
 class CoverageEvaluation : public MapEvaluationMethod<CFG,WEIGHT> 
@@ -235,7 +368,6 @@ private:
 
 /////////////////////////////////////////
 //query evaluation
-#include "Query.h"
 
 template <class CFG, class WEIGHT>
 class QueryEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
@@ -384,6 +516,5 @@ private:
     ConnectMap<CFG,WEIGHT>* m_cm; 
     DistanceMetric* m_dm;
 };
-
 
 #endif

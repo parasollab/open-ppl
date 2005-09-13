@@ -27,6 +27,7 @@
 #include "ConnectCCs.h"
 //#include "RRTcomponents.h"
 //#include "RayTracer.h"
+#include "Disconnect.h"
 
 // MPRegion is used by region combination methods
 ///\todo Fix this include mess
@@ -36,7 +37,8 @@
 #include "util.h"
 
 // region connection methods
-//#include "NaiveMapCombine.h"
+#include "RegionConnectionMethod.h"
+#include "NaiveRegionConnect.h"
 //#include "RegionOverlapMapCombine.h"
 
 
@@ -58,10 +60,12 @@ class ConnectMap : public MPBaseObject{
   // Access methods
   virtual vector<NodeConnectionMethod<CFG,WEIGHT>*> GetNodeDefault();
   virtual vector<ComponentConnectionMethod<CFG,WEIGHT>*> GetComponentDefault();
+  virtual vector<RegionConnectionMethod<CFG,WEIGHT>*> GetRegionDefault();
+
   NodeConnectionMethod<CFG,WEIGHT>* GetNodeMethod(string& in_strLabel);
   ComponentConnectionMethod<CFG,WEIGHT>* GetComponentMethod(string& in_strLabel);
+  RegionConnectionMethod<CFG,WEIGHT>* GetRegionMethod(string& in_strLabel);
   
-  //virtual vector<RoadmapConnectionMethod<CFG,WEIGHT>*> GetRoadmapDefault();
 
   //////////////////////
   // I/O methods
@@ -107,15 +111,13 @@ class ConnectMap : public MPBaseObject{
 			 LocalPlanners<CFG,WEIGHT>* lp,
 			 bool addPartialEdge, bool addAllEdges,
 			 vector<vector<VID> >& vids);
-  /*
-  void ConnectRegions(CollisionDetection* cd,
-		      DistanceMetric* dm,
+
+  void ConnectRegions(CollisionDetection* cd, DistanceMetric* dm,
 		      LocalPlanners<CFG,WEIGHT>* lp,
-		      bool addPartialEdge,
-		      bool addAllEdges,
-		      vector<MPRegion<CFG,WEIGHT>* > subregions,
+		      bool addPartialEdge, bool addAllEdges,
+		      vector<MPRegion<CFG,WEIGHT>* > source_regions,
 		      MPRegion<CFG,WEIGHT>* target_region=NULL);
-  */
+
  protected:
   //////////////////////
   // Data
@@ -125,8 +127,8 @@ class ConnectMap : public MPBaseObject{
   vector<ComponentConnectionMethod<CFG,WEIGHT> *> all_component_methods;
   vector<ComponentConnectionMethod<CFG,WEIGHT> *> selected_component_methods;
 
-  //vector<RoadmapConnectionMethod<CFG,WEIGHT> *> all_roadmap_methods;
-  //vector<RoadmapConnectionMethod<CFG,WEIGHT> *> selected_roadmap_methods;
+  vector<RegionConnectionMethod<CFG,WEIGHT> *> all_region_methods;
+  vector<RegionConnectionMethod<CFG,WEIGHT> *> selected_region_methods;
   
   n_str_param options; //component connection options
 
@@ -175,6 +177,8 @@ ConnectMap() {
   ConnectFirst<CFG,WEIGHT>* connectFirst = new ConnectFirst<CFG,WEIGHT>();
   all_node_methods.push_back(connectFirst);
 
+  Disconnect<CFG,WEIGHT>* disconnect = new Disconnect<CFG,WEIGHT>();
+  all_node_methods.push_back(disconnect);
 
   //setup component connection methods
   selected_component_methods.clear();
@@ -194,16 +198,14 @@ ConnectMap() {
 
 
   //setup roadmap connection methods
-  //selected_roadmap_methods.clear();
-  //all_roadmap_methods.clear();
+  selected_region_methods.clear();
+  all_region_methods.clear();
 
+  NaiveRegionConnect<CFG,WEIGHT>* nmc = new NaiveRegionConnect<CFG,WEIGHT>();
+  all_region_methods.push_back(nmc);
 
-
-/*   NaiveMapCombine<CFG,WEIGHT>* nmc = new NaiveMapCombine<CFG,WEIGHT>(); */
-/*   all_c_maps.push_back(nmc); */
-
-/*   RegionOverlapMapCombine<CFG,WEIGHT>* romc = new RegionOverlapMapCombine<CFG,WEIGHT>(); */
-/*   all_c_maps.push_back(romc); */
+/*   OverlapRegionConnect<CFG,WEIGHT>* romc = new OverlapRegionConnect<CFG,WEIGHT>(); */
+/*   all_region_methods.push_back(romc); */
 
   //Command-line-option string
   options.PutDesc("STRING",
@@ -260,7 +262,7 @@ ParseXML(TiXmlNode* in_pNode) {
       all_component_methods.push_back(connectccs);
       selected_component_methods.push_back(connectccs);
     } else if(string(pChild->Value()) == "AllPairs") {
-      cout << "ConnectMap found ConnectCCs" << endl;
+      cout << "ConnectMap found AllPairs" << endl;
       AllPairsNodeConnection<CFG,WEIGHT>* allPairs = 
           new AllPairsNodeConnection<CFG,WEIGHT>(pChild,GetMPProblem());
       allPairs->cdInfo = &cdInfo;
@@ -268,6 +270,15 @@ ParseXML(TiXmlNode* in_pNode) {
       allPairs->connectionOriRes = connectionOriRes; 
       all_node_methods.push_back(allPairs);
       selected_node_methods.push_back(allPairs);
+    } else if(string(pChild->Value()) == "Disconnect") {
+      cout << "ConnectMap found Disconnect" << endl;
+      Disconnect<CFG,WEIGHT>* disconnect = 
+          new Disconnect< CFG,WEIGHT >(pChild,GetMPProblem());
+      disconnect->cdInfo = &cdInfo;
+      disconnect->connectionPosRes = connectionPosRes;
+      disconnect->connectionOriRes = connectionOriRes; 
+      all_node_methods.push_back(disconnect);
+      selected_node_methods.push_back(disconnect);
     }
   }
   
@@ -338,13 +349,14 @@ ConnectMap<CFG,WEIGHT>::
   selected_component_methods.clear();
   all_component_methods.clear();
 
-  //selected_roadmap_methods.clear();
-  //all_roadmap_methods.clear();
+  selected_region_methods.clear();
+  all_region_methods.clear();
 }
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>* 
-ConnectMap<CFG,WEIGHT>::GetNodeMethod(string& in_strLabel) {
+ConnectMap<CFG,WEIGHT>::
+GetNodeMethod(string& in_strLabel) {
 
   typename vector<NodeConnectionMethod<CFG, WEIGHT>*>::iterator I;
   for(I = selected_node_methods.begin(); 
@@ -359,7 +371,8 @@ ConnectMap<CFG,WEIGHT>::GetNodeMethod(string& in_strLabel) {
   
 template <class CFG, class WEIGHT>
 ComponentConnectionMethod<CFG,WEIGHT>* 
-ConnectMap<CFG,WEIGHT>::GetComponentMethod(string& in_strLabel) {
+ConnectMap<CFG,WEIGHT>::
+GetComponentMethod(string& in_strLabel) {
 
   typename vector<ComponentConnectionMethod<CFG, WEIGHT>*>::iterator I;
   for(I = selected_component_methods.begin(); 
@@ -369,6 +382,23 @@ ConnectMap<CFG,WEIGHT>::GetComponentMethod(string& in_strLabel) {
     }
   }
   LOG_ERROR_MSG("ConnectMap:: cannot find ComponentConnectionMethod label = " << in_strLabel);
+}  
+
+
+template <class CFG, class WEIGHT>
+RegionConnectionMethod<CFG,WEIGHT>* 
+ConnectMap<CFG,WEIGHT>::
+GetRegionMethod(string& in_strLabel) {
+
+  typename vector<RegionConnectionMethod<CFG, WEIGHT>*>::iterator I;
+  for(I = selected_region_methods.begin(); 
+    I != selected_region_methods.end(); ++I) {
+    if(*I->GetLabel() == in_strLabel) {
+      return &(*I);
+    }
+  }
+  LOG_ERROR_MSG("ConnectMap:: cannot find RegionConnectionMethod label = " << in_strLabel);
+  exit(-1);
 }  
 
 
@@ -394,16 +424,16 @@ GetComponentDefault() {
   return tmp;
 }
 
-/*
+
 template <class CFG, class WEIGHT>
-vector<RoadmapConnectionMethod<CFG,WEIGHT> *> 
+vector<RegionConnectionMethod<CFG,WEIGHT> *> 
 ConnectMap<CFG,WEIGHT>::
-GetRoadmapDefault() {
-  vector<RoadmapConnectionMethod<CFG,WEIGHT> *> tmp;
+GetRegionDefault() {
+  vector<RegionConnectionMethod<CFG,WEIGHT> *> tmp;
   
   return tmp;
 }
-*/
+
 
 
 template <class CFG, class WEIGHT>
@@ -425,13 +455,12 @@ ReadCommandLine(Input* input, Environment* env) {
     delete *J;
   selected_component_methods.clear();  
 
-  /*
-  typename vector<RoadmapConnectionMethod<CFG, WEIGHT>*>::iterator K;
-  for(K = selected_roadmap_methods.begin(); 
-      K != selected_roadmap_methods.end(); ++K)
+
+  typename vector<RegionConnectionMethod<CFG, WEIGHT>*>::iterator K;
+  for(K = selected_region_methods.begin(); 
+      K != selected_region_methods.end(); ++K)
     delete *K;
-  selected_roadmap_methods.clear();
-  */
+  selected_region_methods.clear();
 
   //go through the command line looking for method names
   for(int i=0; i<input->numCNs; ++i) {
@@ -481,11 +510,10 @@ ReadCommandLine(Input* input, Environment* env) {
 	  }
 	}
 	
-	/*
 	if(!found) {
 	  //go through the command line looking for method names
-	  for(K = all_roadmap_methods.begin(); 
-	      K != all_roadmap_methods.end(); ++K) {
+	  for(K = all_region_methods.begin(); 
+	      K != all_region_methods.end(); ++K) {
 	    //If the method matches any of the supported methods ...
 	    if(!strcmp(cnname, (*K)->GetName())) {
 	      // .. use the parser of the matching method
@@ -495,14 +523,13 @@ ReadCommandLine(Input* input, Environment* env) {
 	      (*K)->connectionPosRes = connectionPosRes;
 	      (*K)->connectionOriRes = connectionOriRes; 	      
 	      //  and push it back into the list of selected methods.	  
-	      selected_roadmap_methods.push_back((*K)->CreateCopy());	 
+	      selected_region_methods.push_back((*K)->CreateCopy());	 
 	      (*K)->SetDefault();
 	      found = TRUE;
 	      break;
 	    } 
 	  }
 	}
-	*/
 
 	if(!found)
   	  throw BadUsage();
@@ -537,20 +564,18 @@ ReadCommandLine(Input* input, Environment* env) {
     }
   }
 
-  /*
-  //when there was no roadmap method selected, use the default
-  if(selected_roadmap_methods.empty() {
-    selected_roadmap_methods = this->GetRoadmapDefault();
-    for(K = selected_roadmap_methods.begin(); 
-	K != selected_roadmap_methods.end(); ++K) {
+  //when there was no region method selected, use the default
+  if(selected_region_methods.empty()) {
+    selected_region_methods = this->GetRegionDefault();
+    for(K = selected_region_methods.begin(); 
+	K != selected_region_methods.end(); ++K) {
       (*K)->cdInfo = &cdInfo;
       (*K)->connectionPosRes= connectionPosRes;
       (*K)->connectionOriRes= connectionOriRes; 
     }
   }
-  */
 
-  return selected_node_methods.size() + selected_component_methods.size(); //+ selected_roadmap_methods.size();
+  return selected_node_methods.size() + selected_component_methods.size() + selected_region_methods.size();
 }
 
 template <class CFG, class WEIGHT>
@@ -565,6 +590,10 @@ PrintOptions(ostream& out_os) {
   typename vector<ComponentConnectionMethod<CFG,WEIGHT>*>::iterator J;
   for(J = all_component_methods.begin(); J != all_component_methods.end(); ++J)
     (*J)->PrintOptions(out_os);
+
+  typename vector<RegionConnectionMethod<CFG,WEIGHT>*>::iterator K;
+  for(K = all_region_methods.begin(); K != all_region_methods.end(); ++K)
+    (*K)->PrintOptions(out_os);
   
 }
 
@@ -581,11 +610,10 @@ PrintUsage(ostream& _os) {
   for(J = all_component_methods.begin(); J != all_component_methods.end(); ++J)
     (*J)->PrintUsage(_os);
 
-  /*
-  typename vector<RoadmapConnectionMethod<CFG,WEIGHT>*>::iterator K;
-  for(K = all_roadmap_methods.begin(); K != all_roadmap_methods.end(); ++K)
+  typename vector<RegionConnectionMethod<CFG,WEIGHT>*>::iterator K;
+  for(K = all_region_methods.begin(); K != all_region_methods.end(); ++K)
     (*K)->PrintUsage(_os);
-  */
+
 }
 
 
@@ -603,12 +631,11 @@ PrintValues(ostream& _os){
       J != selected_component_methods.end(); ++J)
     (*J)->PrintValues(_os);
 
-  /*
-  typename vector<RoadmapConnectionMethod<CFG,WEIGHT>*>::iterator K;
-  for(K = selected_roadmap_methods.begin(); 
-      K != selected_roadmap_methods.end(); ++K)
+  typename vector<RegionConnectionMethod<CFG,WEIGHT>*>::iterator K;
+  for(K = selected_region_methods.begin(); 
+      K != selected_region_methods.end(); ++K)
     (*K)->PrintValues(_os);
-  */
+
 };
 
 
@@ -628,13 +655,12 @@ PrintDefaults(ostream& _os) {
   for(J = Default2.begin(); J != Default2.end(); ++J)
     (*J)->PrintValues(_os);
 
-  /*
-  vector<RoadmapConnectionMethod<CFG,WEIGHT>*> Default3;
-  Default3 = this->GetRoadmapDefault();
-  typename vector<RoadmapConnectionMethod<CFG,WEIGHT>*>::iterator K;
+  vector<RegionConnectionMethod<CFG,WEIGHT>*> Default3;
+  Default3 = this->GetRegionDefault();
+  typename vector<RegionConnectionMethod<CFG,WEIGHT>*>::iterator K;
   for(K = Default3.begin(); K != Default3.end(); ++K)
     (*K)->PrintValues(_os);
-  */
+
 }
 
 
@@ -647,9 +673,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	bool addPartialEdge, bool addAllEdges) {
   ConnectNodes(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges);
   ConnectComponents(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges);
-  //ConnectRoadmap(...);
 }
-
 
 template <class CFG, class WEIGHT>
 void 
@@ -798,41 +822,6 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   }
 }
 
-/* template <class CFG, class WEIGHT> */
-/* void ConnectMap<CFG,WEIGHT>:: */
-/* ConnectRegions(CollisionDetection* cd, */
-/* 			   DistanceMetric* dm, */
-/* 			   LocalPlanners<CFG,WEIGHT>* lp, */
-/* 			   bool addPartialEdge, */
-/* 			   bool addAllEdges, */
-/* 			   vector<MPRegion<CFG,WEIGHT>* > subregions, */
-/* 			   MPRegion<CFG,WEIGHT>* target_region) { */
-
-  
-/*   typename vector<ConnectionMethod<CFG,WEIGHT>*>::iterator itr;   */
-  
-/*   for (itr = selected_c_maps.begin(); itr != selected_c_maps.end(); itr++ ) { */
-/* #ifndef QUIET	 */
-/*     Clock_Class clock; */
-/*     clock.StartClock((*itr)->GetName()); */
-/*     cout<<"\n  "; clock.PrintName(); cout << " " << flush; */
-/* #endif	 */
-    
-/*     (*itr)->CombineRegions(target_region, subregions, *this, *cd, *dm, *lp, */
-/* 			   addPartialEdge, addAllEdges); */
-/* #ifndef QUIET */
-/*     clock.StopClock(); */
-/*     cout << clock.GetClock_SEC() << " sec  \n" << flush; */
-/* #endif */
-/*   } */
-
-/*   cout << "------Stopping Combinations-------" << endl; */
-
-/* }; */
-
-
-
-
 template <class CFG, class WEIGHT>
 void 
 ConnectMap<CFG,WEIGHT>::
@@ -861,5 +850,32 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 #endif
   }
 }
+
+template <class CFG, class WEIGHT>
+void ConnectMap<CFG,WEIGHT>::
+ConnectRegions(CollisionDetection* cd, DistanceMetric* dm,
+	       LocalPlanners<CFG,WEIGHT>* lp,
+	       bool addPartialEdge, bool addAllEdges,
+	       vector<MPRegion<CFG,WEIGHT>* > source_regions,
+	       MPRegion<CFG,WEIGHT>* target_region) {
+  typename vector<RegionConnectionMethod<CFG,WEIGHT>*>::iterator itr;
+  for (itr = selected_region_methods.begin(); itr != selected_region_methods.end(); itr++ ) {
+#ifndef QUIET
+    Clock_Class clock;
+    clock.StartClock((*itr)->GetName());
+    cout<<"\n  "; 
+    clock.PrintName(); 
+    cout << " " << flush;
+#endif
+    
+    (*itr)->Connect(target_region, source_regions, *this, *cd, *dm, *lp,
+		    addPartialEdge, addAllEdges);
+#ifndef QUIET
+    clock.StopClock();
+    cout << clock.GetClock_SEC() << " sec  \n" << flush;
+#endif
+  }
+}
+
 
 #endif /*_ConnectMap_h_*/

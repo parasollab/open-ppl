@@ -29,6 +29,8 @@
 #include "MPProblem.h"
 #include "MPCharacterizer.h"
 
+#include "MapEvaluator.h"
+
 ///Will be used to derive IMP,PRM,RRT,metaplanner, etc.
 
 class MPStrategyMethod : public MPBaseObject 
@@ -90,6 +92,8 @@ public:
   GenerateMapNodes<CfgType>* GetGenerateMapNodes() {return m_pNodeGeneration;};
   ConnectMap<CfgType, WeightType>* GetConnectMap(){return m_pConnection;};
   MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
+  MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_Evaluator;}; 
+
   bool addPartialEdge, addAllEdges; //move to connect map class
   void PrintOptions(ostream& out_os);
   void Solve(); 
@@ -99,70 +103,15 @@ public:
   GenerateMapNodes<CfgType>* m_pNodeGeneration;
   ConnectMap<CfgType, WeightType>* m_pConnection;
   LocalPlanners<CfgType, WeightType>* m_pLocalPlanners;
+  //Characterization and Filtering
   MPCharacterizer<CfgType, WeightType>* m_pCharacterizer;
   
   //Map_Evaluation
+  MapEvaluator<CfgType, WeightType>* m_Evaluator;
+
   vector< MPStrategyMethod* > all_MPStrategyMethod;
   string m_strController_MPStrategyMethod;
 };
-
-class MPCompare : public MPStrategyMethod {
-  
-public: 
-  MPCompare(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPStrategyMethod(in_pNode,in_pProblem) {
-    LOG_DEBUG_MSG("MPCompare::MPCompare()");
-    ParseXML(in_pNode);    
-    LOG_DEBUG_MSG("~MPCompare::MPCompare()");
-  };
-  
-  
-  
-  virtual void PrintOptions(ostream& out_os) { };
-  
-  virtual void ParseXML(TiXmlNode* in_pNode) {
-    LOG_DEBUG_MSG("MPCompare::ParseXML()");
-      
-    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; 
-         pChild = pChild->NextSibling()) {
-           
-      if(string(pChild->Value()) == "input") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        if(in_char) {
-          string strategy(in_char);
-          m_vecStrStrategyMethod.push_back(strategy);
-        }
-      } else {
-        LOG_WARNING_MSG("MPCompare::  I don't know: "<< endl << *pChild);
-      }
-    }
-      
-    LOG_DEBUG_MSG("~MPCompare::ParseXML()");
-  };
-   
-  virtual void operator()(int in_RegionID) { };
-  virtual void operator()() {
-    LOG_DEBUG_MSG("MPCompare::()");
-    MPStrategyMethod* input1 = GetMPProblem()->GetMPStrategy()->
-        GetMPStrategyMethod(m_vecStrStrategyMethod[0]);
-    MPStrategyMethod* input2 = GetMPProblem()->GetMPStrategy()->
-        GetMPStrategyMethod(m_vecStrStrategyMethod[1]);
-    
-    int Input1RegionId = GetMPProblem()->CreateMPRegion();
-    int Input2RegionId = GetMPProblem()->CreateMPRegion();
-    
-    LOG_DEBUG_MSG("MPCompare::() -- executing "<< m_vecStrStrategyMethod[0]);
-    (*input1)(Input1RegionId);
-    LOG_DEBUG_MSG("MPCompare::() -- executing "<< m_vecStrStrategyMethod[1]);
-    (*input2)(Input2RegionId); 
-    LOG_DEBUG_MSG("MPCompare::()");
-  }
-  
-  private:
-    vector<string> m_vecStrStrategyMethod;
-
-};
-
 
 
 class PRMRoadmap : public MPStrategyMethod {
@@ -380,6 +329,193 @@ private:
 };
 
 
+class PRMOriginalRoadmap : public MPStrategyMethod {
+  public:
+    
+    
+  PRMOriginalRoadmap(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_pNode,in_pProblem) {
+    LOG_DEBUG_MSG("PRMOriginalRoadmap::PRMOriginalRoadmap()");
+    ParseXML(in_pNode);    
+    LOG_DEBUG_MSG("~PRMOriginalRoadmap::PRMOriginalRoadmap()");
+    };
+    
+  virtual void PrintOptions(ostream& out_os) { };
+  
+  virtual void ParseXML(TiXmlNode* in_pNode) {
+    LOG_DEBUG_MSG("PRMOriginalRoadmap::ParseXML()");
+    OBPRM_srand(getSeed()); 
+    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+      if(string(pChild->Value()) == "node_generation_method") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        if(in_char) {
+          string node_generation_method(in_char);
+          m_vecStrNodeGenLabels.push_back(node_generation_method);
+        }
+      } else if(string(pChild->Value()) == "node_connection_method") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        LOG_DEBUG_MSG("PRMOriginalRoadmap::ParseXML() -- node_connection_method");
+        if(in_char) {
+          string connect_method(in_char);
+          m_vecStrNodeConnectionLabels.push_back(connect_method);
+        }
+      } else if(string(pChild->Value()) == "component_connection_method") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        LOG_DEBUG_MSG("PRMOriginalRoadmap::ParseXML() -- component_connection_method");
+        if(in_char) {
+          string connect_method(in_char);
+          m_vecStrComponentConnectionLabels.push_back(connect_method);
+        }
+      } else if(string(pChild->Value()) == "lp_method") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        if(in_char) {
+          m_strLocalPlannerLabel = string(in_char);
+        }
+      } else {
+        LOG_WARNING_MSG("PRMOriginalRoadmap::  I don't know: "<< endl << *pChild);
+      }
+    }
+      
+   
+    
+    LOG_DEBUG_MSG("~PRMOriginalRoadmap::ParseXML()");
+  };
+   
+  virtual void operator()(int in_RegionID) {
+    LOG_DEBUG_MSG("PRMOriginalRoadmap::()");
+    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
+    Stat_Class * pStatClass = region->GetStatClass();
+    
+  
+    Clock_Class Allstuff;
+    //string base_filename = "itr_test_";
+    
+
+
+    Allstuff.StartClock("Everything");
+    Clock_Class        NodeGenClock;
+    Clock_Class        ConnectionClock;
+  //---------------------------
+  // Generate roadmap nodes
+  //---------------------------
+    NodeGenClock.StartClock("Node Generation");
+    typedef vector<string>::iterator I;
+    for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
+    {
+      vector< CfgType > vectorCfgs;
+      NodeGenerationMethod<CfgType> * pNodeGen;
+      pNodeGen = GetMPProblem()->GetMPStrategy()->
+          GetGenerateMapNodes()->GetMethod(*itr);
+      pNodeGen->GenerateNodes(region, vectorCfgs); ///\todo this needs fixing bad.
+      cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
+      region->AddToRoadmap(vectorCfgs);
+    }
+      
+    NodeGenClock.StopClock();
+
+    //Characterize Nodes
+    
+    MPCharacterizer<CfgType, WeightType>* characterize =
+            GetMPProblem()->GetMPStrategy()->GetCharacterizer();
+    typedef vector<string>::iterator J;
+    for(J itr = m_vecNodeCharacterizerLabels.begin(); 
+        itr != m_vecNodeCharacterizerLabels.end(); ++itr)
+    {
+      NodeCharacterizerMethod<CfgType,WeightType>* pNodeChar;
+      pNodeChar = characterize->GetNodeCharacterizerMethod(*itr);
+      pNodeChar->Characterize(region);
+    }
+      /*
+    //Remove nodes that we don't want;
+    RoadmapGraph<CfgType,WeightType>* pMap = region->GetRoadmap()->m_pRoadmap;
+    vector<VID> map_vids;
+    pMap->GetVerticesVID(map_vids);
+    typedef vector<VID>::iterator vecVID;
+    for(vecVID itr = map_vids.begin(); itr!= map_vids.end(); ++itr)
+    {
+      if(!(pMap->GetData(*itr).IsLabel("BridgeLike")))
+        pMap->DeleteVertex(*itr);
+    }
+   */
+    
+  //---------------------------
+  // Connect roadmap nodes
+  //---------------------------
+    ConnectionClock.StartClock("Node Connection");
+      
+    ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
+    typedef vector<string>::iterator J;
+    for(J itr = m_vecStrNodeConnectionLabels.begin(); 
+        itr != m_vecStrNodeConnectionLabels.end(); ++itr)
+    {
+      LOG_DEBUG_MSG("PRMOriginalRoadmap:: " << *itr);
+      NodeConnectionMethod<CfgType,WeightType>* pConnection;
+      pConnection = connectmap->GetNodeMethod(*itr);
+      pConnection->Connect(region->GetRoadmap(), *pStatClass, 
+                           GetMPProblem()->GetCollisionDetection(),
+                           GetMPProblem()->GetDistanceMetric(), 
+                           GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                           GetMPProblem()->GetMPStrategy()->addPartialEdge, 
+                           GetMPProblem()->GetMPStrategy()->addAllEdges);
+    }
+      
+    typedef vector<string>::iterator K;
+    for(K itr = m_vecStrComponentConnectionLabels.begin(); 
+        itr != m_vecStrComponentConnectionLabels.end(); ++itr)
+    {
+      LOG_DEBUG_MSG("PRMOriginalRoadmap:: " << *itr);
+      ComponentConnectionMethod<CfgType,WeightType>* pConnection;
+      pConnection = connectmap->GetComponentMethod(*itr);
+      
+      pConnection->Connect(region->GetRoadmap(), *pStatClass, 
+                           GetMPProblem()->GetCollisionDetection(),
+                           GetMPProblem()->GetDistanceMetric(), 
+                           GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                           GetMPProblem()->GetMPStrategy()->addPartialEdge, 
+                           GetMPProblem()->GetMPStrategy()->addAllEdges);
+      
+    }
+      
+      
+      
+    ConnectionClock.StopClock();
+  
+    string outputFilename = getBaseFilename() + "original.map";
+    ofstream  myofstream(outputFilename.c_str());
+    
+    if (!myofstream) {
+      LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
+      exit(-1);
+    }
+    region->WriteRoadmapForVizmo(myofstream);
+    myofstream.close();
+    
+      
+    pStatClass->PrintAllStats(region->GetRoadmap());
+    
+
+
+    cout << "I took this long" << endl;
+
+    Allstuff.StopPrintClock();
+  
+    LOG_DEBUG_MSG("~PRMOriginalRoadmap::()");
+  }
+  
+  virtual void operator()() {
+    int newRegionId = GetMPProblem()->CreateMPRegion();
+    (*this)(newRegionId);      
+  };
+
+private:
+  vector<string> m_vecStrNodeGenLabels;
+  vector<string> m_vecStrNodeConnectionLabels;
+  vector<string> m_vecStrComponentConnectionLabels;
+  vector<string> m_vecNodeCharacterizerLabels;
+  string m_strLocalPlannerLabel;
+   
+};
+
 class RoadmapInput : public MPStrategyMethod {
   public:
     
@@ -408,12 +544,12 @@ class RoadmapInput : public MPStrategyMethod {
     };
    
     virtual void operator()(int in_RegionID) {
-      LOG_DEBUG_MSG("PRMRoadmap::() -- Reading in file: " << m_strInputFileName);
+      LOG_DEBUG_MSG("PRMInput::() -- Reading in file: " << m_strInputFileName);
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
       
       region->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strInputFileName.c_str());
       
-      LOG_DEBUG_MSG("~PRMRoadmap::()");
+      LOG_DEBUG_MSG("~PRMInput::()");
     }
   
     virtual void operator()() {
@@ -425,6 +561,157 @@ class RoadmapInput : public MPStrategyMethod {
     string m_strInputFileName;
    
 };
+
+
+
+class MPComparer : public MPStrategyMethod {
+  
+public: 
+  MPComparer(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_pNode,in_pProblem) {
+    LOG_DEBUG_MSG("MPComparer::MPComparer()");
+    ParseXML(in_pNode);    
+    LOG_DEBUG_MSG("~MPComparer::MPComparer()");
+  };
+  
+  
+  
+  virtual void PrintOptions(ostream& out_os) { };
+  
+  virtual void ParseXML(TiXmlNode* in_pNode) {
+    LOG_DEBUG_MSG("MPComparer::ParseXML()");
+    
+    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+      if(string(pChild->Value()) == "input") {
+        const char* in_char = pChild->ToElement()->Attribute("Method");
+        if(in_char) {
+          string strategy(in_char);
+          m_input_methods.push_back(strategy);
+        }
+      } else if (string(pChild->Value()) == "comparer_method") {
+	const char* in_char = pChild->ToElement()->Attribute("Method");
+	LOG_DEBUG_MSG("MPComparer::ParseXML() -- comparer_method");
+	if (in_char) {
+	  string evaluator_method(in_char);
+	  m_comparer_methods.push_back(evaluator_method);
+	}
+      } else {
+        LOG_WARNING_MSG("MPComparer::  I don't know: "<< endl << *pChild);
+      }
+    }
+      
+    LOG_DEBUG_MSG("~MPComparer::ParseXML()");
+  }
+
+  virtual void operator()(int in_RegionID) { 
+
+  }
+   
+  // @todo make the parameter be a vector<int> in_region_ids and loop through it to map regions
+  virtual void operator()(int in_RegionID_1, int in_RegionID_2) { 
+
+    // mapping region 1
+    LOG_DEBUG_MSG("MPComparer::() -- executing "<< m_input_methods[0]);
+    MPStrategyMethod* input1 = GetMPProblem()->GetMPStrategy()->
+        GetMPStrategyMethod(m_input_methods[0]);
+    (*input1)(in_RegionID_1);
+
+    // mapping region 2
+    LOG_DEBUG_MSG("MPComparer::() -- executing "<< m_input_methods[1]);
+    MPStrategyMethod* input2 = GetMPProblem()->GetMPStrategy()->
+        GetMPStrategyMethod(m_input_methods[1]);
+    (*input2)(in_RegionID_2); 
+
+    // comparing region 1 to region 2 with each comparer
+    typedef vector<string>::iterator Itrtr;
+    for (Itrtr itrtr = m_comparer_methods.begin(); itrtr < m_comparer_methods.end(); itrtr++) {
+      MPRegionComparerMethod< CfgType, WeightType > * region_comparer;
+      region_comparer = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetComparerMethod(*itrtr);
+      region_comparer->Compare(in_RegionID_1, in_RegionID_2);
+      region_comparer->Compare(in_RegionID_2, in_RegionID_1);
+    }
+
+  }
+
+  virtual void operator()() {
+    LOG_DEBUG_MSG("MPComparer::()");
+    
+    int Input1RegionId = GetMPProblem()->CreateMPRegion();
+    int Input2RegionId = GetMPProblem()->CreateMPRegion();
+    
+    (*this)(Input1RegionId, Input2RegionId);
+
+    LOG_DEBUG_MSG("MPComparer::()");
+
+  }
+  
+  private:
+  vector<string> m_input_methods;
+  vector<string> m_comparer_methods;
+};
+
+
+
+class MPMultiStrategy : public MPStrategyMethod {
+  
+public: 
+  MPMultiStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_pNode,in_pProblem) {
+    LOG_DEBUG_MSG("MPMultiStrategy::MPMultiStrategy()");
+    ParseXML(in_pNode);    
+    LOG_DEBUG_MSG("~MPMultiStrategy::MPMultiStrategy()");
+  };
+  
+  
+  
+  virtual void PrintOptions(ostream& out_os) { };
+  
+  virtual void ParseXML(TiXmlNode* in_pNode) {
+    LOG_DEBUG_MSG("MPMultiStrategy::ParseXML()");
+    
+    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+      if (string(pChild->Value()) == "strategy") {
+	const char* in_char = pChild->ToElement()->Attribute("Method");
+	LOG_DEBUG_MSG("MPMultiStrategy::ParseXML() -- strategy_method");
+	if (in_char) {
+	  string strategy(in_char);
+	  m_strategy_methods.push_back(strategy);
+	}
+      } else {
+        LOG_WARNING_MSG("MPMultiStrategy::  I don't know: "<< endl << *pChild);
+      }
+    }
+      
+    LOG_DEBUG_MSG("~MPMultiStrategy::ParseXML()");
+  }
+
+  virtual void operator()(int in_RegionID) { 
+
+    // initializing region from input
+    typedef vector< string >::iterator VITRTR;
+    for (VITRTR s_itrtr = m_strategy_methods.begin(); s_itrtr < m_strategy_methods.end(); s_itrtr++) { 
+      LOG_DEBUG_MSG("MPMultiStrategy::() -- executing "<< (*s_itrtr));
+      MPStrategyMethod* strategy = GetMPProblem()->GetMPStrategy()->
+        GetMPStrategyMethod(*s_itrtr);
+      (*strategy)(in_RegionID);
+    }
+  }
+   
+
+  virtual void operator()() {
+    LOG_DEBUG_MSG("MPMultiStrategy::()");
+    
+    int RegionId = GetMPProblem()->CreateMPRegion();    
+    (*this)(RegionId);
+
+    LOG_DEBUG_MSG("MPMultiStrategy::()");
+
+  }
+  
+  private:
+  vector< string > m_strategy_methods;
+};
+
 
 
 

@@ -259,7 +259,7 @@ template <class CFG, class WEIGHT>
 MetaPlanner<CFG,WEIGHT>::
 MetaPlanner(Input& input, int i_maximum_tree_height, double i_epsilon, 
 	    int i_characterization_samples, int dofs, int pos_dofs, bool randomSeed=true) 
-  : env(dofs,pos_dofs), maximum_tree_height(i_maximum_tree_height), 
+  : env(dofs,pos_dofs,&input), maximum_tree_height(i_maximum_tree_height), 
      epsilon(i_epsilon), 
      characterizer(input, dm, cd, env, i_characterization_samples) {
 
@@ -282,8 +282,8 @@ MetaPlanner(Input& input, int i_maximum_tree_height, double i_epsilon,
    */
   
 /*   Roadmap<CFG, WEIGHT> rmap(&input,  &cd, &dm, &lp); */
-  input.Read(EXIT);
-  env.Get(&input);
+/*   input.Read(EXIT); */
+/*   env.Get(&input); */
 
   //CollisionDetection cd;
   cd.ReadCommandLine(input.CDstrings, input.numCDs);

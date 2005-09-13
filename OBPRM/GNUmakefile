@@ -40,15 +40,19 @@ include $(STAPL)/GNUmakefile.STAPLdefaults
 include $(OBPRM)/GNUmakefile.OBPRMdefaults
 
 #common misc.
-DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) -DTIXML_USE_STL -Wno-deprecated
+DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 -D_LOG $(STAPLFLAGS) $(DEPS) -DTIXML_USE_STL -Wno-deprecated
 INCLUDES = -I. $(STAPL_INCL) $(CD_INCL)
 LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB)
 
 #compile targest
 default: libs
 
-include $(OBPRM)/GNUmakefile.OBPRMobjs
+utils: 
+	cd ../utils/geom/CD-libs/; make 
+	cd ../utils/xml/tinyxml/;make libs
 
+
+include $(OBPRM)/GNUmakefile.OBPRMobjs
 objs: $(OBJS)
 
 libs: $(OBPRM_LIBFILE) 
@@ -66,8 +70,8 @@ libobprm.dylib: objs
 	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_$@.cpp $(LIBS) -o $@
 	rm -f $@.d
 
-pmp: main_pmp.cpp $(OBPRM_LIBFILE)
-	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS)  main_pmp.cpp $(LIBS)  -o main_pmp
+pmp: main_pmp.cpp libs
+	$(CC) $(OPTS) $(LIBFLAGS) $(INCLUDES) $(DEFS) main_pmp.cpp $(LIBS)  -o pmp
 	rm -f $@.d
 
 metaplanner: main_metaplanner.cpp $(OBPRM_LIBFILE)
