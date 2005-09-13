@@ -212,7 +212,40 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) : MPBaseObject(in_pNod
     pinput->Read(env_filename,EXIT);
     
     GetBodies(pinput);
-    //    FindBoundingBox();
+    //FindBoundingBox();
+
+      //compute RESOLUTION
+
+        double robot_span;
+        multibody[robotIndex]->FindBoundingBox();
+        robot_span = multibody[robotIndex]->GetMaxAxisRange();
+        double bodies_min_span;
+        bodies_min_span = robot_span;
+		
+        bool first = true;
+        double * tmp;
+        for(int i = 0 ; i < multibody.size() ; i++){
+        if(i != robotIndex){
+          if(first){
+            multibody[i]->FindBoundingBox();
+            first = false;
+            bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+          }
+          else{
+            multibody[i]->FindBoundingBox();
+            bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+          } 
+        }
+      }
+  
+      double min_clearance = robot_span/3.0;
+      positionRes = bodies_min_span * POSITION_RES_FACTOR;
+      minmax_BodyAxisRange = bodies_min_span;
+
+      cout << "Position RESSSSSSSSSSOlution = " << positionRes << endl;
+      // END compute RESOLUTION
+
+
 
     for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
       if(string(pChild->Value()) == "robot") {
@@ -230,9 +263,9 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) : MPBaseObject(in_pNod
 	}
 	
       } else if(string(pChild->Value()) == "resolution") {
-	pChild->ToElement()->QueryDoubleAttribute("pos_res",&positionRes);
-	pChild->ToElement()->QueryDoubleAttribute("ori_res",&orientationRes);
-	
+	//pChild->ToElement()->QueryDoubleAttribute("pos_res",&positionRes);
+	//pChild->ToElement()->QueryDoubleAttribute("ori_res",&orientationRes);
+        
       } else {
         if(!pChild->Type() == TiXmlNode::COMMENT) {
           cout << "  I don't know: " << *pChild << endl;

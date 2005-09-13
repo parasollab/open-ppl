@@ -666,7 +666,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   WritePathConfigurations("BridgeTestPRM.path", path, _env);
 #endif
 
-  LOG_DEBUG_MSG("~BridgeTestPRM::GenerateNodes()"); 
+  LOG_DEBUG_MSG("~BasicOBPRM::GenerateNodes()"); 
 
 };
 

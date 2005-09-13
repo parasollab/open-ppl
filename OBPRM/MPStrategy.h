@@ -42,7 +42,12 @@ class MPStrategyMethod : public MPBaseObject
         m_baseSeed = (long) seed;
       } else {
         LOG_DEBUG_MSG("MPStrategyMethod::No Seed Found");
+        struct timeval tv;
+        gettimeofday(&tv,NULL);
+        m_baseSeed = ((unsigned int) tv.tv_usec);
+	cout << "RANDOM SEED = " << m_baseSeed << endl;
       }
+  
       int iterations;
       if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("iterations",&iterations)) {
         m_iterations = iterations;
@@ -235,7 +240,7 @@ class PRMRoadmap : public MPStrategyMethod {
   //---------------------------
   // Generate roadmap nodes
   //---------------------------
-    for(int it =0; it< m_iterations; ++it)
+    for(int it =1; it<= m_iterations; ++it)
     {
     vector<CfgType> nodes;
     vector<VID> new_free_vids;
