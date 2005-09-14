@@ -314,6 +314,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       kp2 = dm->FindKClosestPairs(_rm, v2, v1, kclosest);
       kp.insert(kp.end(), kp2.begin(), kp2.end());
     }
+    cout << "KP.size():: " << kp.size() << endl;
   } 
 
   if((v1.size() < kclosest) && (v2.size() >= kclosest)) { //k closest in v2

@@ -240,7 +240,11 @@ class PRMRoadmap : public MPStrategyMethod {
   // Connect roadmap nodes
   //---------------------------
     ConnectionClock.StartClock("Node Connection");
-      
+    
+    // get VID's from nodes in the roadmap  
+    vector<VID> verticesVID;
+    region->GetRoadmap()->m_pRoadmap->GetVerticesVID(verticesVID);
+    LOG_DEBUG_MSG("PRMRoadmap:: all nodes: " << verticesVID.size() << "; new nodes: " << new_free_vids.size());
     ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
     typedef vector<string>::iterator J;
     for(J itr = m_vecStrNodeConnectionLabels.begin(); 
@@ -249,15 +253,27 @@ class PRMRoadmap : public MPStrategyMethod {
       LOG_DEBUG_MSG("PRMRoadmap:: " << *itr);
       NodeConnectionMethod<CfgType,WeightType>* pConnection;
       pConnection = connectmap->GetNodeMethod(*itr);
-      vector<VID> verticesVID;
-      region->GetRoadmap()->m_pRoadmap->GetVerticesVID(verticesVID);
+      //connect new free vids to nodes that were already in the roadmap at itr-1
       pConnection->Connect(region->GetRoadmap(), *pStatClass, 
                            GetMPProblem()->GetCollisionDetection(),
                            GetMPProblem()->GetDistanceMetric(), 
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                            GetMPProblem()->GetMPStrategy()->addAllEdges,
-                           new_free_vids, verticesVID);
+			   new_free_vids, verticesVID);
+      // @todo need to use ifSameCC
+      // @todo improve performance: copy new nodes to a temporary roadmap where connection is done.
+      // @todo Then,  copy nodes and edges back from the temporary roadmap into the "permanent" roadmap
+      // @todo connections in temporary roadmap can be done with IfSameCC option enabled 
+      // @todo ISameCC is as efficient as it could be because the temporary roadmap only contains a fraction
+      // @todo of the nodes of the "permanent" roadmap
+/*        pConnection->Connect(region->GetRoadmap(), *pStatClass,  */
+/*  			   GetMPProblem()->GetCollisionDetection(), */
+/*  			   GetMPProblem()->GetDistanceMetric(),  */
+/*  			   GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), */
+/*                             GetMPProblem()->GetMPStrategy()->addPartialEdge,  */
+/*  			   GetMPProblem()->GetMPStrategy()->addAllEdges, */
+/*  			   new_free_vids, new_free_vids); */
     }
       
     typedef vector<string>::iterator K;

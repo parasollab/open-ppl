@@ -583,15 +583,17 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
     Environment* _env = rm->GetEnvironment();
     RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
 
-    // initialize w/ k elements each with huge distance...
-    vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
-							MAX_DIST));
     int max_index = 0;
     double max_value = MAX_DIST;
-    
+    vector< pair< pair< VID, VID >, double > > kall;
+
     // now go through all kp and find closest k
     vector<VID>::iterator V1, V2;
     for(V1 = vec1.begin(); V1 != vec1.end(); ++V1) {
+
+      // initialize w/ k elements each with huge distance...
+      vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
+							max_value));
       CFG v1 = pMap->GetData(*V1);
       for(V2 = vec2.begin(); V2 != vec2.end(); ++V2) {
 	//marcom/08nov03 check if results in other functions is same
@@ -613,14 +615,15 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
 
 	}
       }//endfor c2
+      kall.insert(kall.end(),kp.begin(),kp.end());
     }//endfor c1
 
-    sort(kp.begin(), kp.end(), DIST_Compare<VID>());
+    sort(kall.begin(), kall.end(), DIST_Compare<VID>());
     
     // now construct vector of k pairs to return (don't need distances...)
-    for (int p = 0; p < k && p < kp.size(); p++)
-      if (kp[p].first.first != -999 && kp[p].first.second != -999)
-	pairs.push_back( kp[p].first );
+    for (int p = 0; p < kall.size(); p++)
+      if (kall[p].first.first != -999 && kall[p].first.second != -999)
+	pairs.push_back( kall[p].first );
   }//endif vec1 == vec2	
   
   return pairs;
