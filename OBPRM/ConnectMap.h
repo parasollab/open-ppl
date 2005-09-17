@@ -359,9 +359,8 @@ ConnectMap<CFG,WEIGHT>::
 GetNodeMethod(string& in_strLabel) {
 
   typename vector<NodeConnectionMethod<CFG, WEIGHT>*>::iterator I;
-  for(I = selected_node_methods.begin(); 
-    I != selected_node_methods.end(); ++I) {
-      if((*I)->GetLabel() == in_strLabel) {
+  for(I = selected_node_methods.begin(); I != selected_node_methods.end(); ++I) {
+    if((*I)->GetLabel() == in_strLabel) {
       return (*I);
     }
   }

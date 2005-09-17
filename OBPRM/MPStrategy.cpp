@@ -13,7 +13,8 @@ MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem) : MPBaseObject(in_pNode,
   if(string(in_pNode->Value()) != "MPStrategy") {
     LOG_ERROR_MSG("MPStrategy::MPStrategy() error xml input"); exit(-1);
   }
-     
+
+  m_Evaluator = NULL;     
   for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
     if(string(pChild->Value()) == "node_generation_methods") {
       m_pNodeGeneration = new GenerateMapNodes<CfgType>(pChild, GetMPProblem());
@@ -44,7 +45,8 @@ PrintOptions(ostream& out_os)
   m_pNodeGeneration->PrintOptions(out_os);
   m_pConnection->PrintOptions(out_os);
   m_pLocalPlanners->PrintOptions(out_os);
-  m_Evaluator->PrintOptions(out_os);
+  if (m_Evaluator)
+    m_Evaluator->PrintOptions(out_os);
 }
 
 void MPStrategy::
@@ -67,6 +69,9 @@ ParseStrategyMethod(TiXmlNode* in_pNode) {
     } else if(string(pChild->Value()) == "Compare") {
       MPComparer* comp = new MPComparer(pChild,GetMPProblem());
       all_MPStrategyMethod.push_back( comp );
+    } else if(string(pChild->Value()) == "RoadmapClear") {
+      RoadmapClear* rmpclear = new RoadmapClear(pChild,GetMPProblem());
+      all_MPStrategyMethod.push_back( rmpclear );
     } else if(string(pChild->Value()) == "RoadmapInput") {
       RoadmapInput* rmpinput = new RoadmapInput(pChild,GetMPProblem());
       all_MPStrategyMethod.push_back( rmpinput );

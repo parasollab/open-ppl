@@ -23,48 +23,7 @@ const int Stat_Class::ALL= -1;
 // Stat_Class Class Constructor
 Stat_Class::
 Stat_Class() {
-  int i;
-
-  NumNodes=0;
-  NumEdges=0;
-
-  Nodes_Generated = 0;
-  Nodes_Attempted = 0;
-  Connections_Attempted = 0;
-  Connections_Made = 0;
-  avg_min_intracc_dist = 0;
-  avg_max_intracc_dist = 0;
-  avg_mean_intracc_dist = 0;
-  avg_sigma_intracc_dist = 0;
-  avg_min_intracc_edge_s = 0;
-  avg_max_intracc_edge_s = 0;
-  avg_mean_intracc_edge_s = 0;
-  avg_sigma_intracc_edge_s = 0;
-  avg_mean_intracc_dist_to_cm = 0;
-  max_intercc_dist = 0.0;
-  avg_intercc_dist = 0.0; 
-  sigma_intercc_dist = 0.0;
-  min_intercc_dist = 100000.0;
-
-  // initialize the size of each connected component to 0
-  NumCC=0;
-  for(i=0;i<MaxCC;i++)
-    SizeCC[i]=0;
-
-  // initialize the number of collision detection calls to 0
-  for(i=0;i<MaxCD;i++) {
-    NumCollDetCalls[i]=0;
-    strcpy(CDNameList[i],"empty");
-  }
-
-  // initialize each local planners successful connections, attempts,
-  // and collision detection calls to 0
-  for(i=0;i<MaxLP;i++) {
-    LPConnections[i]=0;
-    LPAttempts[i]=0;
-    LPCollDetCalls[i]=0;
-    strcpy(LPNameList[i],"empty");
-  }
+  ClearStats();
 };
 
 
@@ -87,21 +46,57 @@ ClearStats() {
   NumNodes=0;
   NumEdges=0;
 
+  // initialize the size of each connected component to 0
   NumCC=0;
   for(i=0;i<MaxCC;i++)
     SizeCC[i]=0;
 
+  // initialize the number of collision detection calls to 0
   for(i=0;i<MaxCD;i++) {
     NumCollDetCalls[i]=0;
     strcpy(CDNameList[i],"empty");
   }
 
+  // initialize each local planners successful connections, attempts,
+  // and collision detection calls to 0
   for(i=0;i<MaxLP;i++) {
     LPConnections[i]=0;
     LPAttempts[i]=0;
     LPCollDetCalls[i]=0;
     strcpy(LPNameList[i],"empty");
   }
+
+  Connections_Attempted = 0;
+  Connections_Made = 0;
+  Nodes_Attempted = 0;
+  Nodes_Generated = 0;
+  cc_number = 0;
+
+  avg_min_intracc_dist = 0;
+  avg_max_intracc_dist = 0;
+  avg_mean_intracc_dist = 0;
+  avg_sigma_intracc_dist = 0;
+
+  avg_min_intracc_edge_s = 0;
+  avg_max_intracc_edge_s = 0;
+  avg_mean_intracc_edge_s = 0;
+  avg_sigma_intracc_edge_s = 0;
+
+  avg_max_intracc_dist_to_cm = 0;
+  avg_min_intracc_dist_to_cm = 0;
+  avg_mean_intracc_dist_to_cm = 0;
+  avg_sigma_intracc_dist_to_cm = 0;
+
+  max_intercc_dist = 0.0;
+  avg_intercc_dist = 0.0; 
+  sigma_intercc_dist = 0.0;
+  min_intercc_dist = 100000.0;
+
+  max_cc_size = 0.0;
+  min_cc_size = 0.0;
+  avg_cc_size = 0.0;
+  sigma_cc_size = 0.0;
+
 };
 
 //----------------------------------------

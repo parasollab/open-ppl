@@ -64,6 +64,14 @@ class MPStrategyMethod : public MPBaseObject
         LOG_DEBUG_MSG("MPStrategyMethod::No filename Found");
       }
       LOG_DEBUG_MSG("MPStrategyMethod::Seed is " << m_baseSeed);
+
+      m_reset_stats = false;
+      int reset_stats;
+      if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("reset_stats",&reset_stats)) {
+	if (reset_stats)
+	  m_reset_stats = true;
+      }
+
     };
   virtual void ParseXML(TiXmlNode* in_pNode)=0;
   virtual void operator()()=0;
@@ -72,11 +80,14 @@ class MPStrategyMethod : public MPBaseObject
   long getSeed(){return m_baseSeed;};
   string getBaseFilename(){return m_base_filename;};
   void setSeed(long in_seed){m_baseSeed = in_seed;};
-  int m_iterations;
-  private:
+ private:
   
   long m_baseSeed;
   string m_base_filename;
+
+ protected:
+  int m_iterations;
+  bool m_reset_stats;
 };
 
 
@@ -402,6 +413,8 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
     MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
     Stat_Class * pStatClass = region->GetStatClass();
     
+    if (m_reset_stats)
+      pStatClass->ClearStats();
   
     Clock_Class Allstuff;
     //string base_filename = "itr_test_";
@@ -428,31 +441,6 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
     }
       
     NodeGenClock.StopClock();
-
-    //Characterize Nodes
-    
-    MPCharacterizer<CfgType, WeightType>* characterize =
-            GetMPProblem()->GetMPStrategy()->GetCharacterizer();
-    typedef vector<string>::iterator J;
-    for(J itr = m_vecNodeCharacterizerLabels.begin(); 
-        itr != m_vecNodeCharacterizerLabels.end(); ++itr)
-    {
-      NodeCharacterizerMethod<CfgType,WeightType>* pNodeChar;
-      pNodeChar = characterize->GetNodeCharacterizerMethod(*itr);
-      pNodeChar->Characterize(region);
-    }
-      /*
-    //Remove nodes that we don't want;
-    RoadmapGraph<CfgType,WeightType>* pMap = region->GetRoadmap()->m_pRoadmap;
-    vector<VID> map_vids;
-    pMap->GetVerticesVID(map_vids);
-    typedef vector<VID>::iterator vecVID;
-    for(vecVID itr = map_vids.begin(); itr!= map_vids.end(); ++itr)
-    {
-      if(!(pMap->GetData(*itr).IsLabel("BridgeLike")))
-        pMap->DeleteVertex(*itr);
-    }
-   */
     
   //---------------------------
   // Connect roadmap nodes
@@ -578,6 +566,43 @@ class RoadmapInput : public MPStrategyMethod {
    
 };
 
+class RoadmapClear : public MPStrategyMethod {
+ public:
+    
+  RoadmapClear(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_pNode,in_pProblem) {
+    LOG_DEBUG_MSG("RoadmapClear::RoadmapClear()");
+    ParseXML(in_pNode);    
+    LOG_DEBUG_MSG("~RoadmapClear::RoadmapClear()");
+    };
+    
+    virtual void PrintOptions(ostream& out_os) { };
+  
+    virtual void ParseXML(TiXmlNode* in_pNode) {
+      LOG_DEBUG_MSG("RoadmapClear::ParseXML()");
+    
+      LOG_DEBUG_MSG("~RoadmapClear::ParseXML()");
+    };
+   
+    virtual void operator()(int in_RegionID) {
+      LOG_DEBUG_MSG("RoadmapClear::() ");
+      MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
+      
+
+      region->GetRoadmap()->m_pRoadmap->EraseGraph();
+      region->GetStatClass()->ClearStats();
+      
+      LOG_DEBUG_MSG("~RoadmapClear::()");
+    }
+  
+    virtual void operator()() {
+      int newRegionId = GetMPProblem()->CreateMPRegion();
+      (*this)(newRegionId);      
+    };
+
+  private:
+   
+};
 
 
 class MPComparer : public MPStrategyMethod {
