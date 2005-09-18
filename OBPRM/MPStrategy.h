@@ -185,6 +185,7 @@ class PRMRoadmap : public MPStrategyMethod {
    
   virtual void operator()(int in_RegionID) {
     LOG_DEBUG_MSG("PRMRoadmap::()");
+    OBPRM_srand(getSeed()); 
     MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
     Stat_Class * pStatClass = region->GetStatClass();
     
@@ -317,9 +318,20 @@ class PRMRoadmap : public MPStrategyMethod {
       ssIterations << m_iterations;
       std::string str_Iterations;
       ssIterations >> str_Iterations;
-  
-      string outputFilename = getBaseFilename() + str_index + "of" + str_Iterations+ ".map";
+
+      std::stringstream ssRandomSeed;
+      ssRandomSeed << getSeed();
+      std::string str_RandomSeed;
+      ssRandomSeed >> str_RandomSeed; 
+ 
+      string output_base_filename =  getBaseFilename() +"." + str_RandomSeed +"." 
+                                              + str_index + "of" + str_Iterations;
+      string outputFilename = output_base_filename+ ".map";
+      string outStatname = output_base_filename+ ".stat";
       ofstream  myofstream(outputFilename.c_str());
+      std::ofstream  stat_ofstream(outStatname.c_str());
+      //std::filebuf stat_ofstream;       // no constructor takes a file name
+      //stat_ofstream.open(outStatname.c_str());   // ... it has to be opened manually 
   
       if (!myofstream) {
         LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
@@ -328,16 +340,32 @@ class PRMRoadmap : public MPStrategyMethod {
       region->WriteRoadmapForVizmo(myofstream);
       myofstream.close();
     
+
+      std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later
+      std::cout.rdbuf(stat_ofstream.rdbuf());   // redirect destination of std::cout
+   
+      pStatClass->PrintAllStats(region->GetRoadmap());
+      NodeGenClock.PrintClock();
+      ConnectionClock.PrintClock();
+      Allstuff.StopPrintClock();
+
+
+      pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(),
+                                         GetMPProblem()->GetDistanceMetric());
+
+      pStatClass->ComputeInterCCFeatures(region->GetRoadmap(),
+                                         GetMPProblem()->GetDistanceMetric());
+      pStatClass->PrintFeatures();
       
-    pStatClass->PrintAllStats(region->GetRoadmap());
-    
-
-
-    cout << "I took this long" << endl;
-
-    Allstuff.StopPrintClock();
-    }
-  
+      std::cout.rdbuf(sbuf);  // restore original stream buffer 
+      stat_ofstream.close();
+    // system call to gzip
+      string system_out_call(string("gzip -9 ") + outputFilename);
+      
+      system(system_out_call.c_str());
+      cout << "Finished iteration " << str_index << " of " << str_Iterations << endl;
+     }
+     cout << "!!ALL FINISHED!!"<< endl;
     LOG_DEBUG_MSG("~PRMRoadmap::()");
   }
   

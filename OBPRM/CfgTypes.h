@@ -16,8 +16,8 @@ typedef DefaultWeight WeightType;
 #endif
 
 #ifdef PMPSerial
-typedef Cfg_free_tree CFG;
-typedef DefaultWeight WEIGHT;
+typedef Cfg_free_tree CfgType;
+typedef DefaultWeight WeightType;
 #endif
 
 #endif

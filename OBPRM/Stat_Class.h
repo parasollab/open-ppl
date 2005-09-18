@@ -73,10 +73,10 @@ public:
   void PrintParams();
 
   template <class CFG, class WEIGHT>
-  void ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
+  void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
 
   template <class CFG, class WEIGHT>
-  void ComputeInterCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
+  void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
   void PrintFeatures();
   void IncNodes_Generated();
   void IncNodes_Attempted();
@@ -273,7 +273,7 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *rmap, int show_column_h
 template <class CFG, class WEIGHT>
 void
 Stat_Class::
-ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
+ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
   avg_min_intracc_dist = 0;
   avg_max_intracc_dist = 0;
   avg_mean_intracc_dist = 0;
@@ -430,9 +430,11 @@ ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
     avg_sigma_intracc_dist_to_cm /= ccs.size();
 
   }
+  
   CFG tcfg;
   double norm = rdmp->GetEnvironment()->Getminmax_BodyAxisRange()*tcfg.DOF();
-  avg_min_intracc_dist /= norm;
+  cout << "norm value = " << norm << endl;
+  /*avg_min_intracc_dist /= norm;
   avg_max_intracc_dist /= norm;
   avg_mean_intracc_dist /= norm;
   avg_sigma_intracc_dist /= norm;
@@ -446,6 +448,7 @@ ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
   avg_min_intracc_dist_to_cm /= norm;
   avg_mean_intracc_dist_to_cm /= norm;
   avg_sigma_intracc_dist_to_cm /= norm;
+  */
 }
 
 // Compute inter-connected-component statistics
@@ -454,7 +457,7 @@ ComputeIntraCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
 template <class CFG, class WEIGHT>
 void
 Stat_Class::
-ComputeInterCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
+ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
   vector< pair<int,VID> > ccs; //connected components in the roadmap
   cout << "in inter ccs portion" << endl;
   GetCCStats(*(rdmp->m_pRoadmap), ccs);//fill ccs
@@ -524,19 +527,20 @@ ComputeInterCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
       //ccj++;
       for(ccj++;ccj<ccs.end();ccj++) {
 	
-	vector<CFG> cci_cfgs; //configurations in cci
-	vector<CFG> ccj_cfgs; //configurations in ccj
-	CFG cci_tmp = rdmp->m_pRoadmap->GetData(cci->second);//cci->second: vertex ID of first node in cci
-	CFG ccj_tmp = rdmp->m_pRoadmap->GetData(ccj->second);//ccj->second: vertex ID of first node in ccj
+	vector<VID> cci_cfgs; //configurations in cci
+	vector<VID> ccj_cfgs; //configurations in ccj
+	//CFG cci_tmp = rdmp->m_pRoadmap->GetData(cci->second);//cci->second: vertex ID of first node in cci
+//	CFG ccj_tmp = rdmp->m_pRoadmap->GetData(ccj->second);//ccj->second: vertex ID of first node in ccj
 
-	GetCC(*(rdmp->m_pRoadmap), cci_tmp, cci_cfgs); //fill cci_cfgs
-	GetCC(*(rdmp->m_pRoadmap), ccj_tmp, ccj_cfgs); //fill ccj_cfgs
+	GetCC(*(rdmp->m_pRoadmap), cci->second, cci_cfgs); //fill cci_cfgs
+	GetCC(*(rdmp->m_pRoadmap), ccj->second, ccj_cfgs); //fill ccj_cfgs
 	
-	vector< pair<CFG,CFG> > pairs;
-	pairs = dm->FindKClosestPairs(rdmp->GetEnvironment(), 
+	vector< pair<VID,VID> > pairs;
+	pairs = dm->FindKClosestPairs(rdmp, 
 				      cci_cfgs, ccj_cfgs, 1); 
 	double tmp_dist = dm->Distance(rdmp->GetEnvironment(),
-				       pairs[0].first, pairs[0].second);
+				       rdmp->m_pRoadmap->GetData(pairs[0].first), 
+                                       rdmp->m_pRoadmap->GetData(pairs[0].second));
 	if(tmp_dist > max_intercc_dist) 
 	  max_intercc_dist = tmp_dist;
 	if(min_intercc_dist == 0.0 || tmp_dist < min_intercc_dist) 
@@ -555,12 +559,19 @@ ComputeInterCCFeatures(ConnectMap<CFG, WEIGHT>* cm, Roadmap<CFG,WEIGHT> * rdmp, 
     sigma_intercc_dist /= min_cc_distance_between_closest_pairs.size() - 1;
   sigma_intercc_dist = sqrt(sigma_intercc_dist);
 
+
   CFG tcfg;
-  double norm = rdmp->GetEnvironment()->Getminmax_BodyAxisRange()*tcfg.DOF();
+  //double norm = rdmp->GetEnvironment()->Getminmax_BodyAxisRange()*tcfg.DOF();
+  double norm = rdmp->GetEnvironment()->Getminmax_BodyAxisRange()
+                  *rdmp->GetEnvironment()->GetBoundingBox()->GetDOFs();
+  cout << "norm value = " << norm << endl;
+ /*
+  cout << "norm value = " << norm << endl;
   max_intercc_dist /= norm;
   min_intercc_dist /= norm;
   avg_intercc_dist /= norm;
   sigma_intercc_dist /= norm;
+  */
 }
 #endif
 

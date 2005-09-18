@@ -232,6 +232,7 @@ class DistanceMetric : MPBaseObject{
 					   vector<CFG>& vec1,
 					   vector<CFG>& vec2, int k);
   */
+  ///\todo See if all KClosest can be removed/replaced by FindKClosest.
   template <class CFG>
     vector<pair<CFG,CFG> > KClosest(Environment* env,
 				    vector<CFG>& v1,
@@ -253,6 +254,7 @@ class DistanceMetric : MPBaseObject{
 				    vector<CFG>& v2,
 				    unsigned int k);
   
+  ///\todo Fix this ... needs to conform to VID standard.
   template <class CFG, class WEIGHT>
     vector<pair<VID,VID> > KUnconnectedClosest(Roadmap<CFG,WEIGHT>* rdmp,
 				    CFG& cc,

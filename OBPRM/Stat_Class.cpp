@@ -482,9 +482,9 @@ void
 Stat_Class::
 PrintFeatures() {
   cout << "General features:" << endl;
-  cout << "\tNodes_Attempted: " << Nodes_Attempted << endl;
-  cout << "\tNodes_Generated: " << Nodes_Generated << endl;
-  cout << "\tpct_free_nodes: " << ((double)Nodes_Generated)/Nodes_Attempted << endl;
+  //cout << "\tNodes_Attempted: " << Nodes_Attempted << endl;
+  //cout << "\tNodes_Generated: " << Nodes_Generated << endl;
+  //cout << "\tpct_free_nodes: " << ((double)Nodes_Generated)/Nodes_Attempted << endl;
   cout << "\tcc_number: " << cc_number << endl;
   cout << "\tConnections_Attempted: " << Connections_Attempted << endl;
   cout << "\tConnections_Made: " << Connections_Made << endl;
