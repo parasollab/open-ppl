@@ -325,7 +325,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
   VID scvid, gcvid;
 
-  vector<VID> cc; 
+  //  vector<VID> cc; 
   vector< pair<int,VID> > ccs;
   GetCCStats(*(rdmp->m_pRoadmap),ccs);  
   
@@ -344,6 +344,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
   vector<pair<int,VID> >::const_iterator CC, ccsBegin = ccs.begin();
   for(CC = ccs.begin(); CC != ccs.end(); ++CC) {
     //get cc vids
+      vector<VID> cc; 
     GetCC(*(rdmp->m_pRoadmap), CC->second, cc);
 
     //attempt to connect start and goal to cc
@@ -352,10 +353,12 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
 
     vector<VID> verticesList(1, svid);
     cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
+    //    cout << "CC size = " << CC->first << endl;
     cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false,
 		     verticesList, cc);
 
     cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
+    //    cout << "CC size = " << CC->first << endl;
     verticesList[0] = gvid;
     cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false,
 		     verticesList, cc);
