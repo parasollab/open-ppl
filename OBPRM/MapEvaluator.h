@@ -15,7 +15,7 @@ template <class CFG, class WEIGTH>
 class MapEvaluationMethod;
 
 template <class CFG, class WEIGHT>
-class ConnectableNodeComparer;
+class ConnectableComponentComparer;
 
 template <class CFG, class WEIGHT>
 class MapEvaluator : public MPBaseObject {
@@ -59,9 +59,9 @@ class MapEvaluator : public MPBaseObject {
 
     m_comparer_evaluators.clear();
     for (TiXmlNode* pChild = in_pNode->FirstChild(); pChild != NULL; pChild = pChild->NextSibling()) {
-      if (string(pChild->Value()) == "ConnectableNodeComparer") {
-	ConnectableNodeComparer<CFG,WEIGHT>* connectable_node_comparer = new ConnectableNodeComparer<CFG,WEIGHT>(pChild, in_pProblem);
-	m_comparer_evaluators.push_back(connectable_node_comparer);
+      if (string(pChild->Value()) == "ConnectableComponentComparer") {
+	ConnectableComponentComparer<CFG,WEIGHT>* connectable_component_comparer = new ConnectableComponentComparer<CFG,WEIGHT>(pChild, in_pProblem);
+	m_comparer_evaluators.push_back(connectable_component_comparer);
       }
       else if (string(pChild->Value()) == "RandomConnectComparer") {
 	RandomConnectComparer<CFG,WEIGHT>* random_query_comparer = new RandomConnectComparer<CFG,WEIGHT>(pChild, in_pProblem);

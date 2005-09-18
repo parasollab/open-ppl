@@ -673,7 +673,6 @@ public:
       MPRegionComparerMethod< CfgType, WeightType > * region_comparer;
       region_comparer = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetComparerMethod(*itrtr);
       region_comparer->Compare(in_RegionID_1, in_RegionID_2);
-      region_comparer->Compare(in_RegionID_2, in_RegionID_1);
     }
 
   }

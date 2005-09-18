@@ -51,7 +51,7 @@ class MPRegion : public Environment {
 
   
   ///\todo May need a reall region id into MPProblem later.
-  string region_id;
+  string region_tag;
 
   int m_RegionId;
  private:
@@ -78,15 +78,15 @@ MPRegion<CFG,WEIGHT>::
   roadmap.SetEnvironment(this);
   feature_roadmap.SetEnvironment(this);
 
-  // set region_id
+  // set region_tag
   std::stringstream ss;
   ss << index;
   std::string str_index;
   ss >> str_index;
   if (parent == NULL) 
-    region_id = str_index;
+    region_tag = str_index;
   else
-    region_id = parent->region_id + "-" + str_index;  
+    region_tag = parent->region_tag + "-" + str_index;  
 }
 
 
@@ -105,15 +105,15 @@ MPRegion(int in_RegionId, MPProblem* in_pProblem) :
     
     m_RegionId = in_RegionId;
     /*
-  // set region_id
+  // set region_tag
     std::stringstream ss;
     ss << index;
     std::string str_index;
     ss >> str_index;
     if (parent == NULL) 
-      region_id = str_index;
+      region_tag = str_index;
     else
-      region_id = parent->region_id + "-" + str_index;  
+      region_tag = parent->region_tag + "-" + str_index;  
     */
   
 }
@@ -134,7 +134,7 @@ template <class CFG, class WEIGHT>
 void 
 MPRegion<CFG,WEIGHT>::
 PrintValues(ostream& _os) {
-  _os << "MPRegion::PrintValues ID(" << region_id << "): ";
+  _os << "MPRegion::PrintValues ID(" << region_tag << "): ";
   boundaries->Print(_os);
 }
 

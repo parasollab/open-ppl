@@ -132,7 +132,7 @@ class CSpaceCharacterizer {
     ConnectionClock.StopClock();
   
     //save feature roadmap: check whether we can set its name
-    string ftr_map_file = environment_name + "."+ region->region_id + ".ftr.map";
+    string ftr_map_file = environment_name + "."+ region->region_tag + ".ftr.map";
     region->feature_roadmap.WriteRoadmap(&input,&cd,&dm,&lp_features,ftr_map_file.c_str());
   
 
@@ -538,14 +538,14 @@ FeatureSensitiveMap(MPRegion<CFG,WEIGHT>* region, int tree_node_height, int maxi
     cout << "\t\t roadmap = CombineRoadmaps(subregions) " << endl;
     cm_combine.ConnectRegions(&cd, &dm, &lp_map, false, false,
 			    subregions, region);
-    string map_file = environment_name + "." + region->region_id + ".cmb.map";
+    string map_file = environment_name + "." + region->region_tag + ".cmb.map";
     region->roadmap.WriteRoadmap(&input,&cd,&dm,&lp_map,map_file.c_str());
   } else {
     
     // this region is a leave. Map it
     cout << "\t\t roadmap = MapRegion(region,region_characterization) " << endl;
     MakeRegionRoadmap(region);
-    string map_file = environment_name + "." + region->region_id + ".btm.map";
+    string map_file = environment_name + "." + region->region_tag + ".btm.map";
     region->roadmap.WriteRoadmap(&input,&cd,&dm,&lp_map,map_file.c_str());
 
   }

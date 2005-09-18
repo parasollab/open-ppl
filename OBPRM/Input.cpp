@@ -9,8 +9,7 @@
 #include "FreeBody.h"
 #include "FixedBody.h"
 
-#include "Cfg.h"
-#include "Cfg_free.h"
+#include "CfgTypes.h"
 
 #include "util.h"
 

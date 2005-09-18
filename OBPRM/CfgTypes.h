@@ -10,10 +10,14 @@
 
 #include "Weight.h"
 
-//typedef Cfg_free CfgType;
-//typedef DefaultWeight WeightType;
+#ifdef PMPRigid
+typedef Cfg_free CfgType;
+typedef DefaultWeight WeightType;
+#endif
 
-//typedef Cfg_free CFG;
-//typedef DefaultWeight WEIGHT;
+#ifdef PMPSerial
+typedef Cfg_free_tree CFG;
+typedef DefaultWeight WEIGHT;
+#endif
 
 #endif

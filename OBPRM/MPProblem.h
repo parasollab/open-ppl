@@ -27,15 +27,7 @@
 #include "CfgTypes.h"
 #include "MPRegion.h"
 
-
-
-
-
 class MPStrategy;
-
-
-typedef Cfg_free_tree CfgType;
-typedef DefaultWeight WeightType;
 
 class MPProblem : public MPBaseObject
 {
