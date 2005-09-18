@@ -301,9 +301,12 @@ IsConnected(Environment *_env, Stat_Class& Stats,
   int cd_cntr = 0; 
 
   ///\todo fix this bug ... CD count not right.
-  if(lineSegmentLength.GetValue() && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
+  ///\todo fix lineSegment implementation!  very poor for counting stats, etc.
+  if(lineSegmentLength.GetValue()) {
     Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
-    return false;	//not connected
+    if( lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
+       return false;	//not connected
+    }
   }
 
   bool connected;
@@ -344,8 +347,10 @@ StraightLine<CFG, WEIGHT>::
     tick.Increment(incr);
     cd_cntr ++;
     if(checkCollision){
-      if(!tick.InBoundingBox(_env) ||
-	 tick.isCollision(_env,Stats,cd, *cdInfo,true,&(Callee))){
+      bool bbox_check = tick.InBoundingBox(_env);
+      bool col_check = tick.isCollision(_env,Stats,cd, *cdInfo,true,&(Callee));  
+      if(!bbox_check || col_check){  ///changed to precompute bool vals,
+                                     ///compiler was optimizing and counts got screwed up --roger 9.17.2005
         CFG neg_incr;
 	neg_incr = incr; 
 	neg_incr.negative(incr);
@@ -418,7 +423,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     
     lineSegment->AddBody(&fb);	//Add this free body to MultiBody
     
-    cd_cntr ++; //?
+    cd_cntr++; //?
     
     //Check collision
     //if( cd->IsInCollision(_env, Stats, *cdInfo, lineSegment) )
@@ -477,7 +482,8 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
       CFG mid;
       mid.WeightedSum(tmp.first, tmp.second, 0.5);
       
-      cd_cntr ++;	//?
+      ///Moved below by Roger 9.17.2005
+      //  cd_cntr ++;	//?
       
       if(cd->clearanceAvailable()) { //&& binarySearch
 	//get clearance when robot's cfg is mid
@@ -489,9 +495,13 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 	  if(clr < 0) clr = 0.0;
 	}
       } else {
-	if(!mid.InBoundingBox(_env) ||
-	   mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee)))
+        bool bbox_check = mid.InBoundingBox(_env);
+        bool coll_check = mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee));
+        cd_cntr++;	//?
+	if(!bbox_check || coll_check ) { ///changed to precompute bool vals,
+                                        ///compiler was optimizing and counts got screwed up --roger 9.17.2005
 	  return false;
+        }
       }
 
       CFG diff;

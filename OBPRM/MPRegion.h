@@ -151,7 +151,7 @@ AddToRoadmap(vector<CFG>& in_Cfgs) {
       if((*I).GetLabel("VALID")) {//Add to Free roadmap
         returnVec.push_back(roadmap.m_pRoadmap->AddVertex((*I)));
       } else {  //Add to Coll Roadmap 
-        LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- Adding Coll CFG");
+        //LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- Adding Coll CFG");
         col_roadmap.m_pRoadmap->AddVertex((*I));
       }
     } else {LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- UNLABELED!!!!!!!");}

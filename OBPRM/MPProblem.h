@@ -34,7 +34,7 @@
 class MPStrategy;
 
 
-typedef Cfg_free CfgType;
+typedef Cfg_free_tree CfgType;
 typedef DefaultWeight WeightType;
 
 class MPProblem : public MPBaseObject

@@ -20,6 +20,7 @@
 #include "Environment.h"
 #include "DistanceMetrics.h"
 #include "CollisionDetection.h"
+#include "Stat_Class.h"
 #include "util.h"
 
 
@@ -1248,6 +1249,8 @@ void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
 bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
 		      CollisionDetection* cd, CDInfo& _cdInfo, 
 		      bool enablePenetration, std::string *pCallName) {
+  Stats.IncCfgIsColl(pCallName);
+
   if(!this->ConfigEnvironment(env))
   {
     SetLabel("VALID",!true);
@@ -1285,6 +1288,8 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
 		      CollisionDetection* cd,
                       int robot, int obs, CDInfo& _cdInfo,
 		      bool enablePenetration, std::string *pCallName) {
+  Stats.IncCfgIsColl(pCallName);
+
   if(!this->ConfigEnvironment(env))
    { SetLabel("VALID",!true); return true; }
   bool Clear = (pCallName) ? false : true; 
@@ -1319,6 +1324,7 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
 		      CDInfo& _cdInfo, MultiBody* onflyRobot,
 		      bool enablePenetration, std::string *pCallName) {
 
+  Stats.IncCfgIsColl(pCallName);
     this->ConfigEnvironment(env);
   bool Clear = (pCallName) ? false : true; 
   if( !pCallName )

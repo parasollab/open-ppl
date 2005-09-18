@@ -97,6 +97,10 @@ ClearStats() {
   avg_cc_size = 0.0;
   sigma_cc_size = 0.0;
 
+  CollDetCountByName.clear();
+
+  IsCollByName.clear();
+  IsCollTotal = 0;
 };
 
 //----------------------------------------
@@ -228,6 +232,22 @@ IncNumCollDetCalls( char *CDName, std::string *pCallName){
   { CollDetCountByName[*pCallName]++; }
 
   return(NumCollDetCalls[CD]);
+};
+
+//----------------------------------------
+// Increment the number of Cfg::isCollision
+// calls 
+//----------------------------------------
+void
+Stat_Class::
+IncCfgIsColl( std::string *pCallName) {
+
+ if( pCallName )
+  { IsCollByName[*pCallName]++; }
+  else { IsCollByName[string("UNKNOWN")]++; }
+
+  IsCollTotal++;
+
 };
 
 //----------------------------------------

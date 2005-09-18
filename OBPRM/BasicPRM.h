@@ -233,7 +233,7 @@ BasicPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      CollisionDetection* cd, DistanceMetric *,
 	      vector<CFG>& nodes) {
-
+  string callee("BasicPRM::GenerateNodes");
   LOG_DEBUG_MSG("BasicPRM::GenerateNodes()");	
 #ifndef QUIET
   if (exactNodes.GetValue()==1)
@@ -255,7 +255,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
          j++;
          Stats.IncNodes_Attempted();
          tmp.GetRandomCfg(_env);
-         if (!tmp.isCollision(_env, Stats, cd, *cdInfo)) {
+         
+         if (!tmp.isCollision(_env, Stats, cd, *cdInfo,true, &callee)) {
 	   nodes.push_back( CFG(tmp));
 	   path.push_back ( (Cfg*)tmp.CreateNewCfg() );
 	   Stats.IncNodes_Generated();
@@ -276,7 +277,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     for (int i=0; i < numNodes.GetValue(); ++i) {
       Stats.IncNodes_Attempted();
       tmp.GetRandomCfg(_env);
-      if (!tmp.isCollision(_env, Stats, cd, *cdInfo)) {
+      if (!tmp.isCollision(_env, Stats, cd, *cdInfo,true, &callee)) {
 	nodes.push_back( CFG(tmp));
 	path.push_back ( (Cfg*)tmp.CreateNewCfg() );
 	Stats.IncNodes_Generated();
@@ -310,7 +311,7 @@ BasicPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) {
 
   LOG_DEBUG_MSG("BasicPRM::GenerateNodes()"); 
-  
+  string callee("BasicPRM::GenerateNodes");
   Environment* pEnv = in_pRegion;
   Stat_Class* pStatClass = in_pRegion->GetStatClass();
   CollisionDetection* pCd = GetMPProblem()->GetCollisionDetection();
@@ -330,7 +331,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
       CFG sample;
       sample.SetLabel("BasicPRM",true);
       sample.GetRandomCfg(pEnv);
-      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo);
+      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo,true, &callee);
       ++nNumCdCalls;
       if (!bCd) {
         ++nFree;
@@ -349,7 +350,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
       CFG sample;
       sample.SetLabel("BasicPRM",true);
       sample.GetRandomCfg(pEnv);
-      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo);
+      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo, true, &callee);
       ++nNumCdCalls;
       ++nAttempts;
       if (!bCd) {

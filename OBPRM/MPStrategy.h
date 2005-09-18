@@ -140,7 +140,7 @@ class PRMRoadmap : public MPStrategyMethod {
   
   virtual void ParseXML(TiXmlNode* in_pNode) {
     LOG_DEBUG_MSG("PRMRoadmap::ParseXML()");
-    OBPRM_srand(getSeed()); 
+    //OBPRM_srand(getSeed()); 
     for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
       if(string(pChild->Value()) == "node_generation_method") {
         const char* in_char = pChild->ToElement()->Attribute("Method");
@@ -371,7 +371,7 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
   
   virtual void ParseXML(TiXmlNode* in_pNode) {
     LOG_DEBUG_MSG("PRMOriginalRoadmap::ParseXML()");
-    OBPRM_srand(getSeed()); 
+    //OBPRM_srand(getSeed()); 
     for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
       if(string(pChild->Value()) == "node_generation_method") {
         const char* in_char = pChild->ToElement()->Attribute("Method");
@@ -410,6 +410,8 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
    
   virtual void operator()(int in_RegionID) {
     LOG_DEBUG_MSG("PRMOriginalRoadmap::()");
+
+    OBPRM_srand(getSeed()); 
     MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
     Stat_Class * pStatClass = region->GetStatClass();
     
@@ -549,6 +551,7 @@ class RoadmapInput : public MPStrategyMethod {
    
     virtual void operator()(int in_RegionID) {
       LOG_DEBUG_MSG("PRMInput::() -- Reading in file: " << m_strInputFileName);
+      OBPRM_srand(getSeed()); 
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
       
       region->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strInputFileName.c_str());
@@ -587,6 +590,7 @@ class RoadmapClear : public MPStrategyMethod {
     virtual void operator()(int in_RegionID) {
       LOG_DEBUG_MSG("RoadmapClear::() ");
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
+      OBPRM_srand(getSeed()); 
       
 
       region->GetRoadmap()->m_pRoadmap->EraseGraph();
@@ -650,7 +654,7 @@ public:
    
   // @todo make the parameter be a vector<int> in_region_ids and loop through it to map regions
   virtual void operator()(int in_RegionID_1, int in_RegionID_2) { 
-
+    OBPRM_srand(getSeed()); 
     // mapping region 1
     LOG_DEBUG_MSG("MPComparer::() -- executing "<< m_input_methods[0]);
     MPStrategyMethod* input1 = GetMPProblem()->GetMPStrategy()->

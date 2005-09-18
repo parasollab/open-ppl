@@ -39,6 +39,10 @@ public:
   int SetSizeCC( int CC, int Size );
 
   int IncNumCollDetCalls( char *CDName , std::string *pCallName = NULL);
+
+  void IncCfgIsColl( std::string *pCallName = NULL);
+
+
   int FindCD( char *CDName );
 
   int FindLP( char *LPName );
@@ -132,6 +136,10 @@ protected:
 
   std::map<std::string, unsigned long int> CollDetCountByName;
 
+  ///IsColl simply counts the number of times a Cfg is tested for Collision.
+  ///\see Cfg::isCollision
+  std::map<std::string, unsigned long int> IsCollByName;
+  unsigned long int IsCollTotal;
 };
 
 //definitions of templated functions
@@ -167,13 +175,13 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
   cout << endl << endl;
   cout << "Number of Nodes: " << rmap->m_pRoadmap->GetVertexCount() << endl;
   cout << "Number of Edges: " << rmap->m_pRoadmap->GetEdgeCount() << endl;
-
+/*  Removed by Roger for reasons given below
   cout << "Number of Collision Detection Calls: " << endl;
   for(i=0;i<MaxCD;i++)
     if (strcmp(CDNameList[i],"empty")!=0)
       cout << setw(20) << CDNameList[i] 
 	   << setw(15) << NumCollDetCalls[i] << endl;
-
+*/
 
   #if VERBOSE
   #endif
@@ -184,6 +192,12 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
   else if (numCCs==0) {DisplayCCStats(*(rmap->m_pRoadmap),0);     }
   else                {DisplayCCStats(*(rmap->m_pRoadmap),numCCs);}
 
+
+  ///Below removed b/c it counts Coll Detection too fine grained.  We have decided 
+  ///to only keep Total times Cfg::isCollision is called.  This makes the 'price' for a 
+  ///free node the same as a collision node.  Will be added back after collision detection
+  ///counting is properly fixed     --Roger 9/17/2005
+/*
   cout << endl << endl << "Collision Detection Exact Counts:" << endl;
   for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++) 
   {
@@ -195,6 +209,15 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
     }
 
   cout << "total " << total << endl;
+  */
+
+  cout << endl << endl << "Cfg::isCollision() Exact Counts:" << endl;
+  for (i=0, iter=IsCollByName.begin(); iter != IsCollByName.end(); iter++, i++) 
+  {
+    cout << i << ") " << iter->second << " " << iter->first << endl;;
+
+  }
+  cout << "Total Cfg::isCollision() = " << IsCollTotal << endl << endl;
 
 }
 
