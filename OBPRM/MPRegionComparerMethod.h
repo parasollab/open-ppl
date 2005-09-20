@@ -48,40 +48,62 @@ class MPRegionComparerMethod: public MPBaseObject {
   pair < unsigned int, unsigned int > ConnectionsWitnessToRoadmap(vector < CFG > & witness_cfgs, Roadmap< CFG, WEIGHT > *rdmp) {
     vector < pair< int, VID > > cc;
     GetCCStats(*(rdmp->m_pRoadmap), cc);
-    vector < unsigned int > connected_to_cc;
+    vector < vector< unsigned int > > connected_to_cc;
+    vector < unsigned int > tmp_vector;
     for(unsigned int i=0; i< cc.size(); i++)
-      connected_to_cc.push_back(0);
+      connected_to_cc.push_back(tmp_vector);
     
     unsigned int possible_connections = 0;
     vector< CFG > witness_test_cfg;
     typedef typename vector< CFG >::iterator CFG_ITRTR;
-    for (CFG_ITRTR i_witness_cfgs=witness_cfgs.begin(); i_witness_cfgs < witness_cfgs.end(); i_witness_cfgs++) {
+    for (unsigned int i=0; i < witness_cfgs.size(); i++) {
       witness_test_cfg.clear();
-      witness_test_cfg.push_back(*i_witness_cfgs);
+      witness_test_cfg.push_back(witness_cfgs[i]);
 
       typedef typename vector < pair< int, VID > >::iterator CC_ITRTR;
-      unsigned int i=0;
-      for (CC_ITRTR i_cc=cc.begin(); i_cc < cc.end(); i_cc++,i++) {
+      unsigned int j=0;
+      bool i_witness_can_connect = false;
+      for (unsigned int j=0; j < cc.size(); j++) {
 	vector < CFG > cc_cfgs;
-	GetCC(*(rdmp->m_pRoadmap), *(new CFG(rdmp->m_pRoadmap->GetData(i_cc->second))), cc_cfgs);
+	GetCC(*(rdmp->m_pRoadmap), *(new CFG(rdmp->m_pRoadmap->GetData(cc[j].second))), cc_cfgs);
 	if ( CanConnectComponents(witness_test_cfg, cc_cfgs) ) {
-	  possible_connections++; 
-	  connected_to_cc[i]++;
+	  i_witness_can_connect = true;
+	  connected_to_cc[j].push_back(i);
 	}
       }
+      if (i_witness_can_connect)
+      	  possible_connections++; 
     }
 
     unsigned int possible_queries = 0;
     typedef typename vector< unsigned int >::iterator INT_ITRTR;
-    for (INT_ITRTR i_con=connected_to_cc.begin(); i_con < connected_to_cc.end(); i_con++)
-      if ((*i_con) != 0) {
-	// count whether *i_witness_cfg can connect to this cc in rdmp
-	// count the number of queries that could be done through this cc
-	possible_queries += (*i_con)*((*i_con)-1); //remember to divide by 2 at the end
-	cout << "here => " << possible_connections << " queries" << possible_queries << endl;
+    typedef typename vector< vector < unsigned int > >::iterator DINT_ITRTR;
+    for (DINT_ITRTR i_ccs=connected_to_cc.begin(); i_ccs+1 < connected_to_cc.end(); i_ccs++) {
+      bool i_in_j = false;
+      for (INT_ITRTR i_el_i = i_ccs->begin(); i_el_i < i_ccs->end(); i_el_i++) {
+	//test whether *i_ccs is in *(i_ccs+1)
+	for (INT_ITRTR i_el_j = (i_ccs+1)->begin(); i_el_j < (i_ccs+1)->end(); i_el_j++) {
+	  if ( (*i_el_i) == (*i_el_j) ) {
+	    (i_ccs+1)->erase(i_el_j);
+	    bool i_in_j = true;
+	    break;
+	  }
+	  if (i_in_j)
+	    break;
+	}
       }
+      if (i_in_j) { // add i into j and remove i
+	(i_ccs+1)->insert((i_ccs+1)->end(),i_ccs->begin(),i_ccs->end());
+	connected_to_cc.erase(i_ccs);
+      }
+    }
 
-    cout << "possible connections " << possible_connections << "; possible queries " << possible_queries << endl;
+    for (DINT_ITRTR i_con=connected_to_cc.begin(); i_con < connected_to_cc.end(); i_con++) {
+      // count whether *i_witness_cfg can connect to this cc in rdmp	
+      // count the number of queries that could be done through this cc	
+      possible_queries += (i_con->size())*(i_con->size()-1); //remember to divide by 2 at the end
+    }
+
     return pair < unsigned int, unsigned int>(possible_connections, possible_queries/2);
   }
 
