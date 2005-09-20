@@ -37,7 +37,7 @@ ifndef CHECKIFSAMECC
 endif
 
 #ROBOT = 
-#ROBOT_DEF = -DPMPRigid
+ROBOT_DEF = -DPMPRigid
 #ROBOT_DEF = -DPMPSerial
 
 include $(STAPL)/GNUmakefile.STAPLdefaults

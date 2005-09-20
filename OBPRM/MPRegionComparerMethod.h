@@ -12,12 +12,12 @@ class MPRegionComparerMethod: public MPBaseObject {
     MPBaseObject(in_pNode, in_pProblem) { 
     m_pProblem = in_pProblem;
     
-    const char * template_file = in_pNode->ToElement()->Attribute("template_file");
-    if (template_file) {
+    const char * witness_file = in_pNode->ToElement()->Attribute("witness_file");
+    if (witness_file) {
       Roadmap< CFG, WEIGHT > tmp_roadmap;
-      tmp_roadmap.ReadRoadmapGRAPHONLY(template_file);
-      tmp_roadmap.m_pRoadmap->GetVerticesData(m_template_cfgs);
-    LOG_DEBUG_MSG("MPRegionComparerMethod:: input cfgs: " << m_template_cfgs.size());
+      tmp_roadmap.ReadRoadmapGRAPHONLY(witness_file);
+      tmp_roadmap.m_pRoadmap->GetVerticesData(m_witness_cfgs);
+    LOG_DEBUG_MSG("MPRegionComparerMethod:: input cfgs: " << m_witness_cfgs.size());
 
     }
 
@@ -45,29 +45,44 @@ class MPRegionComparerMethod: public MPBaseObject {
     return false;
   }
  
-  unsigned int ConnectionsToRoadmap(vector < CFG > & template_cfgs, Roadmap< CFG, WEIGHT > *rdmp) {
-    // variables needed for the local planner call in loop
+  pair < unsigned int, unsigned int > ConnectionsWitnessToRoadmap(vector < CFG > & witness_cfgs, Roadmap< CFG, WEIGHT > *rdmp) {
     vector < pair< int, VID > > cc;
     GetCCStats(*(rdmp->m_pRoadmap), cc);
-
-    unsigned int connection_counter = 0;
-    vector< CFG > template_test_cfg;
+    vector < unsigned int > connected_to_cc;
+    for(unsigned int i=0; i< cc.size(); i++)
+      connected_to_cc.push_back(0);
+    
+    unsigned int possible_connections = 0;
+    vector< CFG > witness_test_cfg;
     typedef typename vector< CFG >::iterator CFG_ITRTR;
-    for (CFG_ITRTR i_template_cfgs = template_cfgs.begin(); i_template_cfgs < template_cfgs.end(); i_template_cfgs++) {
-      template_test_cfg.clear();
-      template_test_cfg.push_back(*i_template_cfgs);
+    for (CFG_ITRTR i_witness_cfgs=witness_cfgs.begin(); i_witness_cfgs < witness_cfgs.end(); i_witness_cfgs++) {
+      witness_test_cfg.clear();
+      witness_test_cfg.push_back(*i_witness_cfgs);
 
       typedef typename vector < pair< int, VID > >::iterator CC_ITRTR;
-      for (CC_ITRTR i_cc = cc.begin(); i_cc < cc.end(); i_cc++) {
+      unsigned int i=0;
+      for (CC_ITRTR i_cc=cc.begin(); i_cc < cc.end(); i_cc++,i++) {
 	vector < CFG > cc_cfgs;
 	GetCC(*(rdmp->m_pRoadmap), *(new CFG(rdmp->m_pRoadmap->GetData(i_cc->second))), cc_cfgs);
-	if ( CanConnectComponents(template_test_cfg, cc_cfgs) ) {
-	  connection_counter++; 
-	  break; // stop as soon as one cc in template_cfgs can connect to a node in b
-	  }
+	if ( CanConnectComponents(witness_test_cfg, cc_cfgs) ) {
+	  possible_connections++; 
+	  connected_to_cc[i]++;
+	}
       }
     }
-    return connection_counter;
+
+    unsigned int possible_queries = 0;
+    typedef typename vector< unsigned int >::iterator INT_ITRTR;
+    for (INT_ITRTR i_con=connected_to_cc.begin(); i_con < connected_to_cc.end(); i_con++)
+      if ((*i_con) != 0) {
+	// count whether *i_witness_cfg can connect to this cc in rdmp
+	// count the number of queries that could be done through this cc
+	possible_queries += (*i_con)*((*i_con)-1); //remember to divide by 2 at the end
+	cout << "here => " << possible_connections << " queries" << possible_queries << endl;
+      }
+
+    cout << "possible connections " << possible_connections << "; possible queries " << possible_queries << endl;
+    return pair < unsigned int, unsigned int>(possible_connections, possible_queries/2);
   }
 
   //@todo operators () without parameters and taking in pairs of region ids
@@ -81,7 +96,7 @@ class MPRegionComparerMethod: public MPBaseObject {
   }
 
   MPProblem * m_pProblem;
-  vector< CFG > m_template_cfgs;
+  vector< CFG > m_witness_cfgs;
 };
 
 
@@ -196,14 +211,20 @@ public:
     Roadmap< CFG, WEIGHT >* rdmp_a = m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
     Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
 
-    cout << " Template size: " << m_template_cfgs.size() << endl;
+    unsigned int witness_queries = m_witness_cfgs.size()*(m_witness_cfgs.size()-1)/2;
+    cout << "RandomConnectComparer::Compare: Witness size: " << m_witness_cfgs.size() << "Witness queries: " << witness_queries << endl;
 
-   int template_connectable_to_a_cntr = ConnectionsToRoadmap(m_template_cfgs, rdmp_a);
-    cout << "RandomConnectComparer::Compare: Template nodes to A Counter: " << template_connectable_to_a_cntr << " = " << 100*template_connectable_to_a_cntr/m_template_cfgs.size() << "%" << endl;
+    pair< unsigned int, unsigned int > witness_to_a = ConnectionsWitnessToRoadmap(m_witness_cfgs, rdmp_a);
+    double witness_to_a_connections_percent = 100*witness_to_a.first/m_witness_cfgs.size();
+    double witness_to_a_succ_queries_percent = 100*witness_to_a.second/witness_queries;
+    cout << "RandomConnectComparer::Compare: Witness nodes connected to A: " << witness_to_a.first << " = " << witness_to_a_connections_percent << "%" << endl;
+    cout << "RandomConnectComparer::Compare: Witness queries succesful in A: " << witness_to_a.second << " = " << witness_to_a_succ_queries_percent << "%" << endl;
 
-   int template_connectable_to_b_cntr = ConnectionsToRoadmap(m_template_cfgs, rdmp_b);
-    cout << "RandomConnectComparer::Compare: Template nodes to B Counter: " << template_connectable_to_b_cntr << " = " << 100*template_connectable_to_b_cntr/m_template_cfgs.size() << "%" << endl;
-
+    pair< unsigned int, unsigned int > witness_to_b = ConnectionsWitnessToRoadmap(m_witness_cfgs, rdmp_b);
+    double witness_to_b_connections_percent = 100*witness_to_b.first/m_witness_cfgs.size();
+    double witness_to_b_succ_queries_percent = 100*witness_to_b.second/witness_queries;
+    cout << "RandomConnectComparer::Compare: Witness nodes connected to B: " << witness_to_b.first << " = " << witness_to_b_connections_percent << "%" << endl;
+    cout << "RandomConnectComparer::Compare: Witness queries succesful in B: " << witness_to_b.second << " = " << witness_to_b_succ_queries_percent << "%" << endl;
   }
 
 private:
