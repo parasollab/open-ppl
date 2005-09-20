@@ -38,13 +38,51 @@ class MPRegionComparerMethod: public MPBaseObject {
     for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
       for (CFG_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
 	if (lp->IsConnected(env, Stats, cd, dm, (*i_cc_a), (*i_cc_b), 
-			    &lp_output, pos_res, ori_res, true))
+			    &lp_output, pos_res, ori_res, true)) {
 	  return true; // stop as soon as one cc in a can connect to a node in b
+	}
       }
     }
     return false;
   }
  
+
+  pair < unsigned int, unsigned int > ComponentsASpanningInB(Roadmap<CFG, WEIGHT> *rdmp_a, Roadmap<CFG, WEIGHT> *rdmp_b) {
+  vector < pair< int, VID > > cc_a;
+    GetCCStats(*(rdmp_a->m_pRoadmap), cc_a);
+    cout << " Components in Roadmap A " << cc_a.size() << endl;
+    vector < pair< int, VID > > cc_b;
+    GetCCStats(*(rdmp_b->m_pRoadmap), cc_b);
+    cout << " Components in Roadmap B " << cc_b.size() << endl;
+
+    typedef typename vector < pair< int, VID > >::iterator CC_ITRTR;
+
+    int spanning_cc_a = 0; // components in A that can connect to B
+    // for each connected component cc_a in A
+    for (CC_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
+      vector < CFG > cc_a_cfgs;
+      GetCC(*(rdmp_a->m_pRoadmap), *(rdmp_a->m_pRoadmap->GetReferenceofData(i_cc_a->second)), cc_a_cfgs);
+      
+      int connectable_cc_a_to_b = 0;
+      // for each connected component cc_b in B
+      for (CC_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
+	vector <CFG > cc_b_cfgs;
+	GetCC(*(rdmp_b->m_pRoadmap), *(rdmp_b->m_pRoadmap->GetReferenceofData(i_cc_b->second)), cc_b_cfgs);
+
+	// try to connect component A to component B
+	if (CanConnectComponents(cc_a_cfgs, cc_b_cfgs)) {
+	  connectable_cc_a_to_b++;
+	  if (connectable_cc_a_to_b > 1) {
+	    spanning_cc_a++;
+	      break;
+	  }
+	}
+      }
+    }
+
+    return pair < unsigned int, unsigned int>(spanning_cc_a, cc_a.size());
+  }
+
   pair < unsigned int, unsigned int > ConnectionsWitnessToRoadmap(vector < CFG > & witness_cfgs, Roadmap< CFG, WEIGHT > *rdmp) {
     vector < pair< int, VID > > cc;
     GetCCStats(*(rdmp->m_pRoadmap), cc);
@@ -95,12 +133,31 @@ class MPRegionComparerMethod: public MPBaseObject {
       if (i_in_j) { // add i into j and remove i
 	(i_ccs+1)->insert((i_ccs+1)->end(),i_ccs->begin(),i_ccs->end());
 	connected_to_cc.erase(i_ccs);
+	i_ccs--; //to keep going in the right place
       }
     }
 
+    cout << "checking ccomps" << endl;
+    //remove repeated instances in each bin
+    for (DINT_ITRTR ccs=connected_to_cc.begin(); ccs < connected_to_cc.end(); ccs++) {
+      for (INT_ITRTR cc_i=ccs->begin(); cc_i+1 < ccs->end(); cc_i++) {
+	cout << " " << *cc_i;
+	for (INT_ITRTR cc_j = cc_i+1; cc_j < ccs->end(); cc_j++) {
+	  if ( (*cc_i) == (*cc_j)) { //remove c	c_j
+	    cout << " (found again, removed) ";
+	    ccs->erase(cc_j);
+	    cc_j--;
+	  }
+	}
+      }
+      cout << endl;
+    }
+    cout << "finished checking ccomps " << endl;
+
     for (DINT_ITRTR i_con=connected_to_cc.begin(); i_con < connected_to_cc.end(); i_con++) {
       // count whether *i_witness_cfg can connect to this cc in rdmp	
-      // count the number of queries that could be done through this cc	
+      // count the number of queries that could be done through this cc
+      
       possible_queries += (i_con->size())*(i_con->size()-1); //remember to divide by 2 at the end
     }
 
@@ -147,58 +204,13 @@ public:
 
     Roadmap< CFG, WEIGHT >* rdmp_a = m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
     Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
+    
+    pair< unsigned int, unsigned int > spanning_a = ComponentsASpanningInB(rdmp_a, rdmp_b);
+    cout << "ConnectableComponentComparer::Compare: Components in A " << spanning_a.second << "; Spanning more than 1 in B: " << spanning_a.first << " = " << 100*spanning_a.first/spanning_a.second << "%" << endl;
 
- 
-    vector < pair< int, VID > > cc_a;
-    GetCCStats(*(rdmp_a->m_pRoadmap), cc_a);
-    cout << " Components in Roadmap A " << cc_a.size() << endl;
-    vector < pair< int, VID > > cc_b;
-    GetCCStats(*(rdmp_b->m_pRoadmap), cc_b);
-    cout << " Components in Roadmap B " << cc_b.size() << endl;
-
-    typedef typename vector < pair< int, VID > >::iterator CC_ITRTR;
-
-    int connectable_cc_a_cntr = 0; // components in A that can connect to B
-    // for each connected component cc_a in A
-    for (CC_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
-      vector < CFG > cc_a_cfgs;
-      GetCC(*(rdmp_a->m_pRoadmap), *(new CFG(rdmp_a->m_pRoadmap->GetData(i_cc_a->second))), cc_a_cfgs);
-
-      // for each connected component cc_b in B
-      for (CC_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
-	vector <CFG > cc_b_cfgs;
-	GetCC(*(rdmp_b->m_pRoadmap), *(new CFG(rdmp_b->m_pRoadmap->GetData(i_cc_b->second))), cc_b_cfgs);
-
-	// try to connect component A to component B
-	if (CanConnectComponents(cc_a_cfgs, cc_b_cfgs)) {
-	  connectable_cc_a_cntr++;
-	  break;
-	}
-      }
-    }
-
-    cout << "ConnectableComponentComparer::Compare: Components in A->B Counter: " << connectable_cc_a_cntr << " = " << 100*connectable_cc_a_cntr/cc_a.size() << "%" << endl;
-
-    int connectable_cc_b_cntr = 0; // components in B that can connect to A
-    // for each connected component cc_b in B
-    for (CC_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
-      vector < CFG > cc_b_cfgs;
-      GetCC(*(rdmp_b->m_pRoadmap), *(new CFG(rdmp_b->m_pRoadmap->GetData(i_cc_b->second))), cc_b_cfgs);
-
-      // for each connected component cc_a in B
-      for (CC_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
-	vector <CFG > cc_a_cfgs;
-	GetCC(*(rdmp_a->m_pRoadmap), *(new CFG(rdmp_a->m_pRoadmap->GetData(i_cc_a->second))), cc_a_cfgs);
-
-	// try to connect component A to component B
-	if (CanConnectComponents(cc_b_cfgs, cc_a_cfgs)) {
-	  connectable_cc_b_cntr++;
-	  break;
-	}
-      }
-    }
-
-    cout << "ConnectableComponentComparer::Compare: Components in B->A Counter: " << connectable_cc_b_cntr << " = " << 100*connectable_cc_b_cntr/cc_b.size() << "%" << endl;
+    pair< unsigned int, unsigned int > spanning_b = ComponentsASpanningInB(rdmp_b, rdmp_a);
+    cout << "ConnectableComponentComparer::Compare: Components in B " << spanning_b.second << "; Spanning more than 1 in A: " << spanning_b.first << " = " << 100*spanning_b.first/spanning_b.second << "%" << endl;
+  
 
   }
 
