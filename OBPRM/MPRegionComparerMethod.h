@@ -23,6 +23,30 @@ class MPRegionComparerMethod: public MPBaseObject {
 
   }
 
+  ///\todo implement this better, sort by distance or something.....
+  bool CfgIsVisible(CFG& in_cfg, vector< CFG >& in_vec_cfg) {
+    LocalPlanners < CFG, WEIGHT > * lp = m_pProblem->GetMPStrategy()->GetLocalPlanners();
+    LPOutput< CFG, WEIGHT > lp_output; 
+    Environment * env = m_pProblem->GetEnvironment();
+    CollisionDetection * cd = m_pProblem->GetCollisionDetection();
+    DistanceMetric * dm = m_pProblem->GetDistanceMetric();
+    double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
+    double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
+    Stat_Class Stats;
+
+    typedef typename vector< CFG >::iterator CFG_ITRTR;
+    for(CFG_ITRTR i_vec_cfg = in_vec_cfg.begin(); i_vec_cfg < in_vec_cfg.end(); i_vec_cfg++) {
+        if (in_cfg == (*i_vec_cfg)) {
+          return true;
+        }
+	if (lp->IsConnected(env, Stats, cd, dm, in_cfg, (*i_vec_cfg), 
+			    &lp_output, pos_res, ori_res, true)) {
+	  return true; // stop as soon in_cfg can connect to one cfg in in_vec_cfg
+        }
+    }
+    return false;
+  }
+
   bool CanConnectComponents(vector < CFG > & cc_a, vector < CFG > & cc_b) {
     // variables needed for the local planner call in loop
     LocalPlanners < CFG, WEIGHT > * lp = m_pProblem->GetMPStrategy()->GetLocalPlanners();
@@ -83,7 +107,8 @@ class MPRegionComparerMethod: public MPBaseObject {
     return pair < unsigned int, unsigned int>(spanning_cc_a, cc_a.size());
   }
 
-  pair < unsigned int, unsigned int > ConnectionsWitnessToRoadmap(vector < CFG > & witness_cfgs, Roadmap< CFG, WEIGHT > *rdmp) {
+  pair < unsigned int, unsigned int >
+  ConnectionsWitnessToRoadmap(vector < CFG > & witness_cfgs, Roadmap< CFG, WEIGHT > *rdmp) {
     vector < pair< int, VID > > cc;
     GetCCStats(*(rdmp->m_pRoadmap), cc);
     vector < vector< unsigned int > > connected_to_cc;
@@ -164,7 +189,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     return pair < unsigned int, unsigned int>(possible_connections, possible_queries/2);
   }
 
-  //@todo operators () without parameters and taking in pairs of region ids
+  ///@todo operators () without parameters and taking in pairs of region ids
 /*   virtual void operator() () = 0; */
 /*   virtual void operator() (int in_RegionID_a, int in_RegionID_b) = 0; */
 
@@ -265,6 +290,95 @@ private:
 
 };
 
+
+template <class CFG, class WEIGHT>
+class RegionCoverageComparer : public MPRegionComparerMethod< CFG, WEIGHT > 
+{
+public:
+  RegionCoverageComparer(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    MPRegionComparerMethod<CFG,WEIGHT> (in_pNode, in_pProblem) {
+    LOG_DEBUG_MSG("RegionCoverageComparer::IncrementalRegionComparer()");
+    if (!in_pNode) {
+      LOG_ERROR_MSG("RegionCoverageComparer::IncrementalRegionComparer() error xml input");
+      exit(-1);
+    }
+    if (string(in_pNode->Value()) != "RegionCoverageComparer") {
+      LOG_ERROR_MSG("RegionCoverageComparer::RegionCoverageComparer() error xml input");
+      exit(-1);
+    }
+    
+    LOG_DEBUG_MSG("~RegionCoverageComparer::RegionCoverageComparer()");    
+  }
+
+  virtual bool Compare(int in_region_a, int in_region_b) {
+    LOG_DEBUG_MSG("RegionCoverageComparer::Compare(region_a, region_b)");    
+
+    Roadmap< CFG, WEIGHT >* rdmp_a = m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
+    Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
+
+
+    int a_small_cc_size =0;
+    int b_small_cc_size =0;
+    
+    vector< pair <int,VID > > a_cc_stats;
+    GetCCStats (*(rdmp_a->m_pRoadmap),a_cc_stats);
+    vector< pair <int,VID > > b_cc_stats;
+    GetCCStats (*(rdmp_b->m_pRoadmap),b_cc_stats);
+    a_small_cc_size = int(double(a_cc_stats[0].first) * double(0.01));
+    b_small_cc_size = int(double(b_cc_stats[0].first) * double(0.01));
+    cout << "RegionCoverageComparer::Compare: a_small_cc_size: " << a_small_cc_size << endl;
+    cout << "RegionCoverageComparer::Compare: b_small_cc_size: " << b_small_cc_size << endl;
+    
+    //Get vector<VID> from a;
+    vector<CFG> rdmp_a_cfg, rdmp_b_cfg;  ///\todo implement this better with iterators.
+    vector<VID> rdmp_a_vids, rdmp_b_vids;
+    int a_revealing_node =0;
+    int a_trapped_node =0;
+    int b_revealing_node =0;
+    int b_trapped_node =0;
+    rdmp_a->m_pRoadmap->GetVerticesData(rdmp_a_cfg);
+    rdmp_b->m_pRoadmap->GetVerticesData(rdmp_b_cfg);
+    
+    rdmp_a->m_pRoadmap->GetVerticesVID(rdmp_a_vids);
+    rdmp_b->m_pRoadmap->GetVerticesVID(rdmp_b_vids);
+
+    typename vector<VID>::iterator a_vid_itr;
+    for(a_vid_itr = rdmp_a_vids.begin(); a_vid_itr!=rdmp_a_vids.end(); ++a_vid_itr) {
+      if(!CfgIsVisible(*(rdmp_a->m_pRoadmap->GetReferenceofData(*a_vid_itr)), rdmp_b_cfg)) {
+         // found a potential revealing/trapped node
+        vector<VID> tmp_cc;
+        GetCC(*(rdmp_a->m_pRoadmap),(*a_vid_itr), tmp_cc);
+        if( tmp_cc.size() >= a_small_cc_size) { 
+          // found a revealing node
+          a_revealing_node++;
+        } else { a_trapped_node++;} //found a trapped node.
+      }
+    }
+
+    typename vector<VID>::iterator b_vid_itr;
+    for(b_vid_itr = rdmp_b_vids.begin(); b_vid_itr!=rdmp_b_vids.end(); ++b_vid_itr) {
+     if(!CfgIsVisible(*(rdmp_b->m_pRoadmap->GetReferenceofData(*b_vid_itr)), rdmp_a_cfg)) {
+        // found a potential revealing/trapped node
+        vector<VID> tmp_cc;
+        GetCC(*(rdmp_b->m_pRoadmap),(*b_vid_itr), tmp_cc);
+        if( tmp_cc.size() >= b_small_cc_size) { 
+          // found a revealing node
+          b_revealing_node++;
+        } else { b_trapped_node++;} //found a trapped node.
+      }
+    }
+
+    cout << "RegionCoverageComparer::Compare: a_revealing_node: " << a_revealing_node << endl;
+    cout << "RegionCoverageComparer::Compare: a_trapped_node: " << a_trapped_node << endl;
+    cout << "RegionCoverageComparer::Compare: b_revealing_node: " << b_revealing_node << endl;
+    cout << "RegionCoverageComparer::Compare: b_trapped_node: " << b_trapped_node << endl;
+
+   LOG_DEBUG_MSG("~RegionCoverageComparer::Compare(region_a, region_b)");    
+  }
+
+private:
+
+};
 
 
 #endif /* _MPREGIONCOMPARERMETHOD_H_ */

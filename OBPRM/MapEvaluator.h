@@ -66,7 +66,12 @@ class MapEvaluator : public MPBaseObject {
       else if (string(pChild->Value()) == "RandomConnectComparer") {
 	RandomConnectComparer<CFG,WEIGHT>* random_query_comparer = new RandomConnectComparer<CFG,WEIGHT>(pChild, in_pProblem);
 	m_comparer_evaluators.push_back(random_query_comparer);
-      } else {
+      } 
+      else if (string(pChild->Value()) == "RegionCoverageComparer") {
+	RegionCoverageComparer<CFG,WEIGHT>* coverage_comparer = 
+                  new RegionCoverageComparer<CFG,WEIGHT>(pChild, in_pProblem);
+	m_comparer_evaluators.push_back(coverage_comparer);
+      }else {
 	LOG_DEBUG_MSG("I don't understand");
       }
     }
@@ -286,7 +291,7 @@ struct InverseWeightCapacity {
 
 /////////////////////////
 // evaluate the coverage of a given roadmap
- 
+
 template <class CFG, class WEIGHT>
 class CoverageEvaluation : public MapEvaluationMethod<CFG,WEIGHT> 
 {
