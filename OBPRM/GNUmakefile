@@ -28,7 +28,7 @@ endif
 
 #set default debug
 ifndef debug
-  debug=1
+  debug=0
 endif
 
 #set default CHECKIFSAMECC
@@ -37,14 +37,14 @@ ifndef CHECKIFSAMECC
 endif
 
 #ROBOT = 
-ROBOT_DEF = -DPMPRigid
-#ROBOT_DEF = -DPMPSerial
+#ROBOT_DEF = -DPMPRigid
+ROBOT_DEF = -DPMPSerial
 
 include $(STAPL)/GNUmakefile.STAPLdefaults
 include $(OBPRM)/GNUmakefile.OBPRMdefaults
 
 #common misc.
-DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 -D_LOG $(STAPLFLAGS) $(DEPS) $(ROBOT_DEF) -DTIXML_USE_STL -Wno-deprecated
+DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) $(ROBOT_DEF) -DTIXML_USE_STL -Wno-deprecated
 INCLUDES = -I. $(STAPL_INCL) $(CD_INCL)
 LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB)
 

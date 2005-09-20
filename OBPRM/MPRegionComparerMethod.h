@@ -17,12 +17,12 @@ class MPRegionComparerMethod: public MPBaseObject {
       Roadmap< CFG, WEIGHT > tmp_roadmap;
       tmp_roadmap.ReadRoadmapGRAPHONLY(witness_file);
       tmp_roadmap.m_pRoadmap->GetVerticesData(m_witness_cfgs);
-    LOG_DEBUG_MSG("MPRegionComparerMethod:: input cfgs: " << m_witness_cfgs.size());
-
+      LOG_DEBUG_MSG("MPRegionComparerMethod:: input cfgs: " << m_witness_cfgs.size());
+      
     }
-
+    
   }
-
+  
   ///\todo implement this better, sort by distance or something.....
   bool CfgIsVisible(CFG& in_cfg, vector< CFG >& in_vec_cfg) {
     LocalPlanners < CFG, WEIGHT > * lp = m_pProblem->GetMPStrategy()->GetLocalPlanners();
@@ -33,20 +33,20 @@ class MPRegionComparerMethod: public MPBaseObject {
     double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
     Stat_Class Stats;
-
+    
     typedef typename vector< CFG >::iterator CFG_ITRTR;
     for(CFG_ITRTR i_vec_cfg = in_vec_cfg.begin(); i_vec_cfg < in_vec_cfg.end(); i_vec_cfg++) {
-        if (in_cfg == (*i_vec_cfg)) {
-          return true;
-        }
-	if (lp->IsConnected(env, Stats, cd, dm, in_cfg, (*i_vec_cfg), 
-			    &lp_output, pos_res, ori_res, true)) {
-	  return true; // stop as soon in_cfg can connect to one cfg in in_vec_cfg
-        }
+      if (in_cfg == (*i_vec_cfg)) {
+	return true;
+      }
+      if (lp->IsConnected(env, Stats, cd, dm, in_cfg, (*i_vec_cfg), 
+			  &lp_output, pos_res, ori_res, true)) {
+	return true; // 	stop as soon in_cfg can connect to one cfg in in_vec_cfg
+      }
     }
     return false;
   }
-
+  
   bool CanConnectComponents(vector < CFG > & cc_a, vector < CFG > & cc_b) {
     // variables needed for the local planner call in loop
     LocalPlanners < CFG, WEIGHT > * lp = m_pProblem->GetMPStrategy()->GetLocalPlanners();
@@ -57,13 +57,13 @@ class MPRegionComparerMethod: public MPBaseObject {
     double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
     Stat_Class Stats;
- 
+    
     typedef typename vector< CFG >::iterator CFG_ITRTR;
     for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
       for (CFG_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
 	if (lp->IsConnected(env, Stats, cd, dm, (*i_cc_a), (*i_cc_b), 
 			    &lp_output, pos_res, ori_res, true)) {
-	  return true; // stop as soon as one cc in a can connect to a node in b
+	  return true; // st	op as soon as one cc in a can connect to a node in b
 	}
       }
     }
@@ -72,45 +72,58 @@ class MPRegionComparerMethod: public MPBaseObject {
  
 
   pair < unsigned int, unsigned int > ComponentsASpanningInB(Roadmap<CFG, WEIGHT> *rdmp_a, Roadmap<CFG, WEIGHT> *rdmp_b) {
-  vector < pair< int, VID > > cc_a;
+    
+    int a_small_cc_size =0;
+    int b_small_cc_size =0;
+    
+    vector < pair< int, VID > > cc_a;
     GetCCStats(*(rdmp_a->m_pRoadmap), cc_a);
-    cout << " Components in Roadmap A " << cc_a.size() << endl;
+    a_small_cc_size = int(double(cc_a[0].first) * double(0.01));
+    cout << " Components in Roadmap A " << cc_a.size() << " small_cc_size " << a_small_cc_size << endl;
     vector < pair< int, VID > > cc_b;
     GetCCStats(*(rdmp_b->m_pRoadmap), cc_b);
-    cout << " Components in Roadmap B " << cc_b.size() << endl;
-
+    b_small_cc_size = int(double(cc_b[0].first) * double(0.01));
+    cout << " Components in Roadmap B " << cc_b.size() << " small_cc_size " << b_small_cc_size << endl;
+    
     typedef typename vector < pair< int, VID > >::iterator CC_ITRTR;
-
+    
     int spanning_cc_a = 0; // components in A that can connect to B
+    int not_small_cc_as = 0;
     // for each connected component cc_a in A
     for (CC_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
       vector < CFG > cc_a_cfgs;
       GetCC(*(rdmp_a->m_pRoadmap), *(rdmp_a->m_pRoadmap->GetReferenceofData(i_cc_a->second)), cc_a_cfgs);
       
-      int connectable_cc_a_to_b = 0;
-      // for each connected component cc_b in B
-      for (CC_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
-	vector <CFG > cc_b_cfgs;
-	GetCC(*(rdmp_b->m_pRoadmap), *(rdmp_b->m_pRoadmap->GetReferenceofData(i_cc_b->second)), cc_b_cfgs);
-
-	// try to connect component A to component B
-	if (CanConnectComponents(cc_a_cfgs, cc_b_cfgs)) {
-	  connectable_cc_a_to_b++;
-	  if (connectable_cc_a_to_b > 1) {
-	    spanning_cc_a++;
-	      break;
+      if (cc_a_cfgs.size() >= a_small_cc_size) {
+	not_small_cc_as++;
+	int connectable_cc_a_to_b = 0;
+	// for each connected component cc_b in B
+	for (CC_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
+	  vector <CFG > cc_b_cfgs;
+	  GetCC(*(rdmp_b->m_pRoadmap), *(rdmp_b->m_pRoadmap->GetReferenceofData(i_cc_b->second)), cc_b_cfgs);
+	  
+	  if (cc_b_cfgs.size() >= b_small_cc_size) {
+	    // try to connect component A to component B
+	    if (CanConnectComponents(cc_a_cfgs, cc_b_cfgs)) {
+	      connectable_cc_a_to_b++;
+	      if (connectable_cc_a_to_b > 1) {
+		spanning_cc_a++;
+		break;
+	      }
+	    }
 	  }
 	}
       }
     }
-
-    return pair < unsigned int, unsigned int>(spanning_cc_a, cc_a.size());
+    return pair < unsigned int, unsigned int>(spanning_cc_a, not_small_cc_as);
   }
-
+  
   pair < unsigned int, unsigned int >
   ConnectionsWitnessToRoadmap(vector < CFG > & witness_cfgs, Roadmap< CFG, WEIGHT > *rdmp) {
+    int small_cc_size =0;
     vector < pair< int, VID > > cc;
     GetCCStats(*(rdmp->m_pRoadmap), cc);
+    small_cc_size = int(double(cc[0].first) * double(0.01));
     vector < vector< unsigned int > > connected_to_cc;
     vector < unsigned int > tmp_vector;
     for(unsigned int i=0; i< cc.size(); i++)
@@ -129,9 +142,11 @@ class MPRegionComparerMethod: public MPBaseObject {
       for (unsigned int j=0; j < cc.size(); j++) {
 	vector < CFG > cc_cfgs;
 	GetCC(*(rdmp->m_pRoadmap), *(new CFG(rdmp->m_pRoadmap->GetData(cc[j].second))), cc_cfgs);
-	if ( CanConnectComponents(witness_test_cfg, cc_cfgs) ) {
-	  i_witness_can_connect = true;
-	  connected_to_cc[j].push_back(i);
+	if (cc_cfgs.size() >= small_cc_size) {
+	  if ( CanConnectComponents(witness_test_cfg, cc_cfgs) ) {
+	    i_witness_can_connect = true;
+	    connected_to_cc[j].push_back(i);
+	  }
 	}
       }
       if (i_witness_can_connect)
@@ -141,49 +156,32 @@ class MPRegionComparerMethod: public MPBaseObject {
     unsigned int possible_queries = 0;
     typedef typename vector< unsigned int >::iterator INT_ITRTR;
     typedef typename vector< vector < unsigned int > >::iterator DINT_ITRTR;
-    for (DINT_ITRTR i_ccs=connected_to_cc.begin(); i_ccs+1 < connected_to_cc.end(); i_ccs++) {
+    for (DINT_ITRTR i_ccs=connected_to_cc.begin(); i_ccs < connected_to_cc.end(); i_ccs++) {
       bool i_in_j = false;
-      for (INT_ITRTR i_el_i = i_ccs->begin(); i_el_i < i_ccs->end(); i_el_i++) {
-	//test whether *i_ccs is in *(i_ccs+1)
-	for (INT_ITRTR i_el_j = (i_ccs+1)->begin(); i_el_j < (i_ccs+1)->end(); i_el_j++) {
-	  if ( (*i_el_i) == (*i_el_j) ) {
-	    (i_ccs+1)->erase(i_el_j);
-	    bool i_in_j = true;
+      for(DINT_ITRTR i_ccs_other= i_ccs+1; i_ccs_other < connected_to_cc.end(); i_ccs_other++) {
+	for (INT_ITRTR i_el_i = i_ccs->begin(); i_el_i < i_ccs->end(); i_el_i++) {
+	  //test whether *i_ccs is in *(i_ccs+1)	
+	  for (INT_ITRTR i_el_j = (i_ccs_other)->begin(); i_el_j < (i_ccs_other)->end(); i_el_j++) {
+	    if ( (*i_el_i) == (*i_el_j) ) {
+	      i_ccs_other->insert(i_ccs_other->end(),i_ccs->begin(),i_ccs->end());
+	      i_in_j = true;
 	    break;
-	  }
-	  if (i_in_j)
-	    break;
+	    }
+	}
+	if (i_in_j)
+	  i_ccs->clear();
 	}
       }
-      if (i_in_j) { // add i into j and remove i
-	(i_ccs+1)->insert((i_ccs+1)->end(),i_ccs->begin(),i_ccs->end());
-	connected_to_cc.erase(i_ccs);
-	i_ccs--; //to keep going in the right place
-      }
     }
-
-    cout << "checking ccomps" << endl;
-    //remove repeated instances in each bin
-    for (DINT_ITRTR ccs=connected_to_cc.begin(); ccs < connected_to_cc.end(); ccs++) {
-      for (INT_ITRTR cc_i=ccs->begin(); cc_i+1 < ccs->end(); cc_i++) {
-	cout << " " << *cc_i;
-	for (INT_ITRTR cc_j = cc_i+1; cc_j < ccs->end(); cc_j++) {
-	  if ( (*cc_i) == (*cc_j)) { //remove c	c_j
-	    cout << " (found again, removed) ";
-	    ccs->erase(cc_j);
-	    cc_j--;
-	  }
-	}
-      }
-      cout << endl;
-    }
-    cout << "finished checking ccomps " << endl;
 
     for (DINT_ITRTR i_con=connected_to_cc.begin(); i_con < connected_to_cc.end(); i_con++) {
       // count whether *i_witness_cfg can connect to this cc in rdmp	
       // count the number of queries that could be done through this cc
-      
-      possible_queries += (i_con->size())*(i_con->size()-1); //remember to divide by 2 at the end
+      sort(i_con->begin(),i_con->end());
+      INT_ITRTR newEnd;
+      newEnd = unique(i_con->begin(),i_con->end());
+      int i_con_size = newEnd - i_con->begin();
+      possible_queries += (i_con_size)*(i_con_size-1); //remember to divide by 2 at the end
     }
 
     return pair < unsigned int, unsigned int>(possible_connections, possible_queries/2);
@@ -231,10 +229,10 @@ public:
     Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
     
     pair< unsigned int, unsigned int > spanning_a = ComponentsASpanningInB(rdmp_a, rdmp_b);
-    cout << "ConnectableComponentComparer::Compare: Components in A " << spanning_a.second << "; Spanning more than 1 in B: " << spanning_a.first << " = " << 100*spanning_a.first/spanning_a.second << "%" << endl;
+    cout << "ConnectableComponentComparer::Compare: Not small ccs in A " << spanning_a.second << "; Span more than 1 in B: " << spanning_a.first << " = " << 100*spanning_a.first/spanning_a.second << "%" << endl;
 
     pair< unsigned int, unsigned int > spanning_b = ComponentsASpanningInB(rdmp_b, rdmp_a);
-    cout << "ConnectableComponentComparer::Compare: Components in B " << spanning_b.second << "; Spanning more than 1 in A: " << spanning_b.first << " = " << 100*spanning_b.first/spanning_b.second << "%" << endl;
+    cout << "ConnectableComponentComparer::Compare: Not small ccs in B " << spanning_b.second << "; Span more than 1 in A: " << spanning_b.first << " = " << 100*spanning_b.first/spanning_b.second << "%" << endl;
   
 
   }
@@ -271,19 +269,19 @@ public:
     Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
 
     unsigned int witness_queries = m_witness_cfgs.size()*(m_witness_cfgs.size()-1)/2;
-    cout << "RandomConnectComparer::Compare: Witness size: " << m_witness_cfgs.size() << "Witness queries: " << witness_queries << endl;
+    cout << "RandomConnectComparer::Compare: Witness size: " << m_witness_cfgs.size() << "; Witness queries: " << witness_queries << endl;
 
     pair< unsigned int, unsigned int > witness_to_a = ConnectionsWitnessToRoadmap(m_witness_cfgs, rdmp_a);
     double witness_to_a_connections_percent = 100*witness_to_a.first/m_witness_cfgs.size();
     double witness_to_a_succ_queries_percent = 100*witness_to_a.second/witness_queries;
-    cout << "RandomConnectComparer::Compare: Witness nodes connected to A: " << witness_to_a.first << " = " << witness_to_a_connections_percent << "%" << endl;
-    cout << "RandomConnectComparer::Compare: Witness queries succesful in A: " << witness_to_a.second << " = " << witness_to_a_succ_queries_percent << "%" << endl;
+    cout << "RandomConnectComparer::Compare: Witness nodes connected to non-small ccs in A: " << witness_to_a.first << " = " << witness_to_a_connections_percent << "%" << endl;
+    cout << "RandomConnectComparer::Compare: Witness queries succesful in non-small ccs in A: " << witness_to_a.second << " = " << witness_to_a_succ_queries_percent << "%" << endl;
 
     pair< unsigned int, unsigned int > witness_to_b = ConnectionsWitnessToRoadmap(m_witness_cfgs, rdmp_b);
     double witness_to_b_connections_percent = 100*witness_to_b.first/m_witness_cfgs.size();
     double witness_to_b_succ_queries_percent = 100*witness_to_b.second/witness_queries;
-    cout << "RandomConnectComparer::Compare: Witness nodes connected to B: " << witness_to_b.first << " = " << witness_to_b_connections_percent << "%" << endl;
-    cout << "RandomConnectComparer::Compare: Witness queries succesful in B: " << witness_to_b.second << " = " << witness_to_b_succ_queries_percent << "%" << endl;
+    cout << "RandomConnectComparer::Compare: Witness nodes connected to non-small ccs in B: " << witness_to_b.first << " = " << witness_to_b_connections_percent << "%" << endl;
+    cout << "RandomConnectComparer::Compare: Witness queries succesful in non-small ccs in B: " << witness_to_b.second << " = " << witness_to_b_succ_queries_percent << "%" << endl;
   }
 
 private:
