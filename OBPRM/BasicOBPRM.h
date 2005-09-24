@@ -394,6 +394,10 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
   /// max. # of attempts at surface convergence	
   static const int MAX_CONVERGE;
 
+  int m_balanced;
+
+  unsigned long int m_balColl, m_balFree;
+
   //Index for next node 
   //used in incremental map generation
   static int nextNodeIndex;
@@ -440,6 +444,10 @@ ParseXML(TiXmlNode* in_pNode) {
         ParseXMLshells(pChild2);
       }
   }
+
+  int Balanced;
+  in_pNode->ToElement()->QueryIntAttribute("Balanced",&Balanced);
+  m_balanced = Balanced;
   LOG_DEBUG_MSG("~BasicOBPRM::ParseXML()");
 }
 
@@ -481,6 +489,10 @@ BasicOBPRM<CFG>::
 SetDefault() {
   NodeGenerationMethod<CFG>::SetDefault();
   numShells.PutValue(3);
+  m_balanced = 0;
+
+  m_balColl=0;
+  m_balFree=0;
 }
 
 template <class CFG>
@@ -563,6 +575,7 @@ PrintOptions(ostream& out_os){
   out_os << " exact  = " << exactNodes.GetValue() << " ";
   out_os << " chunk size = " << chunkSize.GetValue() << " ";
   out_os << " num shells = " << numShells.GetValue() << " ";
+  out_os << " Balanced = " << m_balanced << " ";
   out_os << endl;
 }
 
@@ -576,7 +589,8 @@ CreateCopy() {
   return _copy;
 }
 
-
+///\todo FIX BasicOBPRM::balanced implementation.  This one is 
+///quick and dirty for ICRA06 submission.
 template <class CFG>
 void
 BasicOBPRM<CFG>::
@@ -585,6 +599,10 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      vector<CFG>& nodes) {  
          
   
+  m_balColl=0;
+  m_balFree=0;
+
+
   LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes()");
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ", "<<flush;
@@ -600,7 +618,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-BasicOBPRM::GenerateNodes"); Callee = Callee+Method;}
-  
+if(m_balanced == 0) {
   // generate in bounding box
   for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < numNodes.GetValue() ; attempts++) {
     //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() attempts = " << attempts);
@@ -661,7 +679,75 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
       success_cntr = attempts+1;
     //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- success_cntr = " << success_cntr);
   } // endfor
+} else {  //DO IT BALANCED!!!
+  //m_balColl=0;
+  //m_balFree=0;
 
+  // generate in bounding box
+  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < numNodes.GetValue() ; attempts++) {
+    //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() attempts = " << attempts);
+    CFG cfg1,last_free;
+    cfg1.GetRandomCfg(_env);
+    
+    CallCnt=" 1st Sample"; 
+    std::string tmpStr = Callee+CallCnt;
+    
+    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+    if (!cfg1_free && (m_balColl <= m_balFree)) {  //push out of Obs
+      ++m_balColl;
+      //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push Out of Obs");
+      CFG r_dir;
+      r_dir.GetRandomRay(min(_env->GetPositionRes(),
+                         _env->GetOrientationRes()));
+      bool pushed_enough = false;
+      bool outofbb = false;
+      do {
+        //last_free.equals(cfg1);
+        cfg1.Increment(r_dir);
+        if(!cfg1.InBoundingBox(_env) ) {outofbb=true;continue;} //out of bounding box
+        CallCnt=" PushOutOfObs"; 
+        std::string tmpStr = Callee+CallCnt;
+        ++m_balColl;
+        pushed_enough = !cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+        if(pushed_enough) {
+         // nodes.push_back(CFG(cfg1));
+         // newNodes++;
+         ComputeCSpaceShells(_env, Stats, cd, dm, cfg1, r_dir, nodes);
+        }
+      } while (pushed_enough == false && outofbb == false);
+    } else if(cfg1_free && (m_balColl >= m_balFree)){   //Push to Obs
+      ++m_balFree;
+      //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push to Obs");
+      CFG r_dir;
+      r_dir.GetRandomRay(min(_env->GetPositionRes(),
+                         _env->GetOrientationRes()));
+      bool pushed_enough = false;
+      bool outofbb = false;
+      do {
+        
+        CFG last_free(cfg1);
+        cfg1.Increment(r_dir);
+        if(!cfg1.InBoundingBox(_env) ) {outofbb=true;continue;} //out of bounding box
+        CallCnt=" PushToObs"; 
+        std::string tmpStr = Callee+CallCnt;
+        ++m_balFree;
+        pushed_enough = cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+        if(pushed_enough) {
+          //nodes.push_back(CFG(last_free));
+          //newNodes++;
+          r_dir.multiply(r_dir,double(-1));
+          ComputeCSpaceShells(_env, Stats, cd, dm, last_free, r_dir, nodes);
+        }
+      } while (pushed_enough == false && outofbb == false);
+    }
+    
+    if (exactNodes.GetValue())
+      success_cntr = nodes.size();
+    else
+      success_cntr = attempts+1;
+    //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- success_cntr = " << success_cntr);
+  } // endfor
+}
 #if INTERMEDIATE_FILES
   WritePathConfigurations("BridgeTestPRM.path", path, _env);
 #endif
@@ -681,6 +767,7 @@ ComputeCSpaceShells(Environment* _env, Stat_Class& Stats,
   if(numShells.GetValue() < 1) {
     cout << "ERROR, SHELLS must be larger than 0" << endl; exit(-1);
   }
+  if(numShells.GetValue() > 1) {
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-BasicOBPRM::GenerateNodes"); Callee = Callee+Method;}
   CallCnt=" ComputeCSpaceShells"; 
@@ -691,6 +778,7 @@ ComputeCSpaceShells(Environment* _env, Stat_Class& Stats,
    }
      _freeCfg.Increment(_incr);
   }
+  } else { nodes.push_back(CFG(_freeCfg)); }
 }
   
 

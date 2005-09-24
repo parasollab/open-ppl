@@ -167,10 +167,10 @@ GenerateMapNodes() {
   /*
   BasicMAPRM<CFG>* basicMAPRM = new BasicMAPRM<CFG>();
   all.push_back(basicMAPRM);
-
+  */
   CSpaceMAPRM<CFG>* cspaceMAPRM = new CSpaceMAPRM<CFG>();
   all.push_back(cspaceMAPRM);
-  
+  /*
   OBMAPRM<CFG>* obmaprm = new OBMAPRM<CFG>();
   all.push_back(obmaprm);
   */
@@ -214,6 +214,10 @@ ParseXML(TiXmlNode* in_pNode) {
       GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>(pChild, GetMPProblem());
       gaussPRM->cdInfo = &cdInfo;
       selected.push_back(gaussPRM);
+    } else if(string(pChild->Value()) == "CSpaceMAPRM") {
+      CSpaceMAPRM<CFG>* cspaceMAPRM = new CSpaceMAPRM<CFG>(pChild, GetMPProblem());
+      cspaceMAPRM->cdInfo = &cdInfo;
+      selected.push_back(cspaceMAPRM);
     } else if(string(pChild->Value()) == "OBPRM") {
       OBPRM<CFG>* obprm = new OBPRM<CFG>(pChild,GetMPProblem());
       //all.push_back(obprm);
@@ -221,6 +225,8 @@ ParseXML(TiXmlNode* in_pNode) {
       selected.push_back(obprm);
     }
   }
+  
+
   
   
   

@@ -29,6 +29,7 @@ class CSpaceMAPRM : public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   CSpaceMAPRM();
+  CSpaceMAPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.
   virtual ~CSpaceMAPRM();
 
@@ -41,13 +42,14 @@ class CSpaceMAPRM : public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
-
+  virtual void ParseXML(TiXmlNode* in_pNode) { };
 
   //////////////////////
   // I/O methods
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
+  virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
   /*Generates random configurations and pushes them to the medial
@@ -57,6 +59,8 @@ class CSpaceMAPRM : public NodeGenerationMethod<CFG> {
   virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
 			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
+
+  virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &nodes);
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -99,6 +103,15 @@ CSpaceMAPRM() : NodeGenerationMethod<CFG>(),
   penetrationNum.PutDesc("INT  ","(number of rays for approx penetration calculation, default 5)");
 }
 
+template <class CFG>
+CSpaceMAPRM<CFG>::
+CSpaceMAPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) : NodeGenerationMethod<CFG>(in_pNode,in_pProblem),
+  clearanceNum     ("clearance",         10,  1,   100),///Modified for RoadmapComparision!!!! was 5.
+  penetrationNum   ("penetration",       5,  1,   100) {
+  clearanceNum.PutDesc("INT  ","(number of rays for approx clearance calulation, default 5)");
+  penetrationNum.PutDesc("INT  ","(number of rays for approx penetration calculation, default 5)");
+
+}
 
 template <class CFG>
 CSpaceMAPRM<CFG>::
@@ -113,13 +126,13 @@ GetName() {
   return "CSpaceMAPRM";
 }
 
-
+///\todo Fixback default
 template <class CFG>
 void
 CSpaceMAPRM<CFG>::
 SetDefault() {
   NodeGenerationMethod<CFG>::SetDefault();
-  clearanceNum.PutValue(5);
+  clearanceNum.PutValue(10); ///Modified for RoadmapComparision!!!! was 5.
   penetrationNum.PutValue(5);
 }
 
@@ -201,6 +214,19 @@ PrintValues(ostream& _os){
   _os << endl;
 }
 
+template <class CFG>
+void
+CSpaceMAPRM<CFG>::
+PrintOptions(ostream& out_os){
+  out_os << "    " << GetName() << ":: ";
+  out_os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  out_os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
+  out_os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
+  out_os << clearanceNum.GetFlag() << " " << clearanceNum.GetValue() << " ";
+  out_os << penetrationNum.GetFlag() << " " << penetrationNum.GetValue() << " ";
+  out_os << endl;
+}
+
 
 template <class CFG>
 NodeGenerationMethod<CFG>* 
@@ -255,6 +281,21 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   WritePathConfigurations("csmaprm.path", path, _env);
 #endif
 }
+
+
+template <class CFG>
+void
+CSpaceMAPRM<CFG>::
+GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &nodes) {
+  
+  Environment* _env = in_pRegion;
+  Stat_Class& Stats = *(in_pRegion->GetStatClass());
+  CollisionDetection* cd = GetMPProblem()->GetCollisionDetection();
+  DistanceMetric* dm =  GetMPProblem()->GetDistanceMetric();
+  
+  GenerateNodes(_env,  Stats,  cd,  dm, nodes);
+};
+
 
 #endif
 

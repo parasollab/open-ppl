@@ -26,6 +26,7 @@ class BasicMAPRM : public NodeGenerationMethod<CFG> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
+  virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
   //////////////////////
@@ -187,6 +188,22 @@ PrintValues(ostream& _os){
   _os << m_iRays.GetFlag() << " " << m_iRays.GetValue() << " ";
   _os << endl;
 }
+
+template <class CFG>
+void
+BasicMAPRM<CFG>::
+PrintOptions(ostream& out_os){
+  out_os << "    " << GetName() << ":: ";
+  out_os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
+  out_os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
+  out_os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
+  out_os << m_bApprox.GetFlag() << " " << m_bApprox.GetValue() << " ";
+  out_os << m_iRays.GetFlag() << " " << m_iRays.GetValue() << " ";
+  out_os << endl;
+}
+
+
+
 
 template <class CFG>
 NodeGenerationMethod<CFG>* BasicMAPRM<CFG>::CreateCopy() {
