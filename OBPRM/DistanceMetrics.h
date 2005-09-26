@@ -292,6 +292,28 @@ class CFG_DIST_COMPARE : public binary_function<const pair<CFG,double>,
   
 };
 
+//A new distance compare method that doesnt require a precomputed pair<cfg,double>
+//proper constructor must be called!
+template <class CFG>
+class CFG_CFG_DIST_COMPARE : public binary_function<const CFG, const CFG, bool> {
+
+  public:
+    CFG_CFG_DIST_COMPARE(CFG& start_cfg, DistanceMetric* _dm, Environment* _env): 
+        m_cfg(start_cfg), m_dm(_dm), m_env(_env) { };
+    bool operator()(const CFG _cc1, const CFG _cc2) {
+      double dcc1,dcc2;
+      dcc1 = m_dm->Distance(m_env, m_cfg, _cc1);
+      dcc2 = m_dm->Distance(m_env, m_cfg, _cc2);
+      return (dcc1 < dcc2);
+  }
+
+  private:
+    CFG_CFG_DIST_COMPARE() {};
+    Environment* m_env;
+    DistanceMetric* m_dm;
+    CFG& m_cfg;
+};
+
 /**This is the interface for all distance metric methods(euclidean, 
   *scaledEuclidean, minkowski, manhattan, com, etc.).
   */
