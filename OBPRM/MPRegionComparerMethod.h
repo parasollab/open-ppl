@@ -23,7 +23,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     
   }
   
-  ///\todo implement this better, sort by distance or something.....
+  
   bool CfgIsVisible(CFG& in_cfg, vector< CFG >& in_vec_cfg) {
     LocalPlanners < CFG, WEIGHT > * lp = m_pProblem->GetMPStrategy()->GetLocalPlanners();
     LPOutput< CFG, WEIGHT > lp_output; 
@@ -33,18 +33,25 @@ class MPRegionComparerMethod: public MPBaseObject {
     double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
     Stat_Class Stats;
+
+    //CFG_CFG_DIST_COMPARE<CFG> mydistcompare(in_cfg, dm, env);
+   
     
     typedef typename vector< CFG >::iterator CFG_ITRTR;
     for(CFG_ITRTR i_vec_cfg = in_vec_cfg.begin(); i_vec_cfg < in_vec_cfg.end(); i_vec_cfg++) {
       if (in_cfg == (*i_vec_cfg)) {
-	return true;
+	return true; //   in_cfg is actually inside in_vec_cfg
       }
-      if (lp->IsConnected(env, Stats, cd, dm, in_cfg, (*i_vec_cfg), 
+    }
+   
+   sort(in_vec_cfg.begin(), in_vec_cfg.end(), CFG_CFG_DIST_COMPARE<CFG>(in_cfg, dm, env));
+   for(CFG_ITRTR i_vec_cfg = in_vec_cfg.begin(); i_vec_cfg < in_vec_cfg.end(); i_vec_cfg++) {
+    if (lp->IsConnected(env, Stats, cd, dm, in_cfg, (*i_vec_cfg), 
 			  &lp_output, pos_res, ori_res, true)) {
 	return true; // 	stop as soon in_cfg can connect to one cfg in in_vec_cfg
       }
-    }
-    return false;
+   }
+    return false;  //in_cfg is not visible to anything in_vec_cfg
   }
   
   bool CanConnectComponents(vector < CFG > & cc_a, vector < CFG > & cc_b) {
@@ -71,7 +78,8 @@ class MPRegionComparerMethod: public MPBaseObject {
   }
  
 
-  pair < unsigned int, unsigned int > ComponentsASpanningInB(Roadmap<CFG, WEIGHT> *rdmp_a, Roadmap<CFG, WEIGHT> *rdmp_b) {
+  pair < unsigned int, unsigned int > 
+  ComponentsASpanningInB(Roadmap<CFG, WEIGHT> *rdmp_a, Roadmap<CFG, WEIGHT> *rdmp_b) {
     
     int a_small_cc_size =0;
     int b_small_cc_size =0;
@@ -378,5 +386,198 @@ private:
 
 };
 
+
+template <class CFG, class WEIGHT>
+class RegionSimilarity : public MPRegionComparerMethod< CFG, WEIGHT > 
+{
+public:
+  RegionSimilarity(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+    MPRegionComparerMethod<CFG,WEIGHT> (in_pNode, in_pProblem) {
+    LOG_DEBUG_MSG("RegionSimilarity::IncrementalRegionComparer()");
+    if (!in_pNode) {
+      LOG_ERROR_MSG("RegionSimilarity::IncrementalRegionComparer() error xml input");
+      exit(-1);
+    }
+    if (string(in_pNode->Value()) != "RegionSimilarity") {
+      LOG_ERROR_MSG("RegionSimilarity::RegionSimilarity() error xml input");
+      exit(-1);
+    }
+    
+    LOG_DEBUG_MSG("~RegionSimilarity::RegionSimilarity()");    
+  }
+
+  virtual bool Compare(int in_region_a, int in_region_b) {
+    LOG_DEBUG_MSG("RegionSimilarity::Compare(region_a, region_b)");    
+
+    Roadmap< CFG, WEIGHT >* rdmp_a = m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
+    Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
+
+
+    int a_small_cc_size =0;
+    int b_small_cc_size =0;
+    
+    vector< pair <int,VID > > a_cc_stats;
+    GetCCStats (*(rdmp_a->m_pRoadmap),a_cc_stats);
+    vector< pair <int,VID > > b_cc_stats;
+    GetCCStats (*(rdmp_b->m_pRoadmap),b_cc_stats);
+    a_small_cc_size = int(double(a_cc_stats[0].first) * double(0.01));
+    b_small_cc_size = int(double(b_cc_stats[0].first) * double(0.01));
+    cout << "RegionSimilarity::Compare: a_small_cc_size: " << a_small_cc_size << endl;
+    cout << "RegionSimilarity::Compare: b_small_cc_size: " << b_small_cc_size << endl;
+
+    //Get vector<VID> from a;
+    vector<CFG> usable_rdmp_a_cfg, usable_rdmp_b_cfg;  ///\todo implement this better with iterators.
+    vector<VID> all_rdmp_a_vids, all_rdmp_b_vids;
+    vector<VID> usable_rdmp_a_vids, usable_rdmp_b_vids;
+    int a_revealing_node =0;
+    int a_trapped_node =0;
+    int b_revealing_node =0;
+    int b_trapped_node =0;
+
+    rdmp_a->m_pRoadmap->GetVerticesVID(all_rdmp_a_vids);
+    rdmp_b->m_pRoadmap->GetVerticesVID(all_rdmp_b_vids);
+    
+
+    //Get usable nodes in a
+    typename vector<VID>::iterator all_a_vid_itr;
+    for(all_a_vid_itr = all_rdmp_a_vids.begin(); all_a_vid_itr!=all_rdmp_a_vids.end(); ++all_a_vid_itr) {
+      vector<VID> tmp_cc;
+      GetCC(*(rdmp_a->m_pRoadmap),(*all_a_vid_itr), tmp_cc);
+      if( tmp_cc.size() >= a_small_cc_size) {
+         usable_rdmp_a_vids.push_back((*all_a_vid_itr));
+         usable_rdmp_a_cfg.push_back(rdmp_a->m_pRoadmap->GetData((*all_a_vid_itr)));
+      } //else not usable!!
+    }
+
+    typename vector<VID>::iterator all_b_vid_itr;
+    for(all_b_vid_itr = all_rdmp_b_vids.begin(); all_b_vid_itr!=all_rdmp_b_vids.end(); ++all_b_vid_itr) {
+      vector<VID> tmp_cc;
+      GetCC(*(rdmp_b->m_pRoadmap),(*all_b_vid_itr), tmp_cc);
+      if( tmp_cc.size() >= b_small_cc_size) {
+         usable_rdmp_b_vids.push_back((*all_b_vid_itr));
+         usable_rdmp_b_cfg.push_back(rdmp_b->m_pRoadmap->GetData((*all_b_vid_itr)));
+      } //else not usable!!
+    }
+
+    //For all usable nodes in A, check if visible to usable node in B
+    //Print total number of visible + non-visible in A/B
+    int node_a_visible_in_b = 0;
+    int node_a_not_visible_in_b = 0;
+    int node_b_visible_in_a = 0;
+    int node_b_not_visible_in_a = 0;
+    
+    typename vector<VID>::iterator usable_a_vid_itr;
+    for(usable_a_vid_itr = usable_rdmp_a_vids.begin(); 
+              usable_a_vid_itr!=usable_rdmp_a_vids.end(); ++usable_a_vid_itr) {
+        vector<VID> tmp_cc;
+        GetCC(*(rdmp_a->m_pRoadmap),(*usable_a_vid_itr), tmp_cc);
+        if( tmp_cc.size() >= a_small_cc_size) {  // Make sure its a "usable" node
+          if(CfgIsVisible(*(rdmp_a->m_pRoadmap->GetReferenceofData(*usable_a_vid_itr)), usable_rdmp_b_cfg)) {
+            ++node_a_visible_in_b;
+          } else { ++node_a_not_visible_in_b; }
+      }
+    }
+
+    typename vector<VID>::iterator usable_b_vid_itr;
+    for(usable_b_vid_itr = usable_rdmp_b_vids.begin(); 
+              usable_b_vid_itr!=usable_rdmp_b_vids.end(); ++usable_b_vid_itr) {
+        vector<VID> tmp_cc;
+        GetCC(*(rdmp_b->m_pRoadmap),(*usable_b_vid_itr), tmp_cc);
+        if( tmp_cc.size() >= b_small_cc_size) {  // Make sure its a "usable" node
+          if(CfgIsVisible(*(rdmp_b->m_pRoadmap->GetReferenceofData(*usable_b_vid_itr)), usable_rdmp_a_cfg)) {
+            ++node_b_visible_in_a;
+          } else { ++node_b_not_visible_in_a; }
+      }
+    }
+
+
+    
+    //For all edges in A, if in usable component, check if visible to same component in B
+    int edge_a_visible_in_b = 0;
+    int edge_a_not_visible_in_b = 0;
+    int edge_b_visible_in_a = 0;
+    int edge_b_not_visible_in_a = 0;
+    vector< pair<VID,VID> > all_edges_a, all_edges_b;
+    rdmp_a->m_pRoadmap->GetEdges(all_edges_a);
+    rdmp_b->m_pRoadmap->GetEdges(all_edges_b);
+
+    typename vector< pair<VID,VID> >::iterator all_edges_a_itr;
+    for(all_edges_a_itr = all_edges_a.begin(); all_edges_a_itr != all_edges_a.end(); 
+           ++all_edges_a_itr) {
+      vector<VID> tmp_cc;
+      GetCC(*(rdmp_a->m_pRoadmap),(*all_edges_a_itr).first, tmp_cc);
+      if( tmp_cc.size() < a_small_cc_size) { continue; } // not a edge in "usable" component
+      //for all connected components in rdmp_b....
+      vector< pair<int,VID> > all_cc_b;
+      GetCCStats(*(rdmp_b->m_pRoadmap), all_cc_b);
+      bool found_edge_a_visible_in_b=false;
+      typename vector< pair<int,VID> >::iterator all_cc_b_itr;
+      for(all_cc_b_itr = all_cc_b.begin(); all_cc_b_itr != all_cc_b.end(); ++all_cc_b_itr) {
+        if((*all_cc_b_itr).first < b_small_cc_size) { continue; } //not usable cc
+        vector<CFG> usable_cc_in_b;
+        GetCC(*(rdmp_b->m_pRoadmap), 
+              *(rdmp_b->m_pRoadmap->GetReferenceofData((*all_cc_b_itr).second)), 
+              usable_cc_in_b);
+        if(CfgIsVisible(*(rdmp_a->m_pRoadmap->GetReferenceofData((*all_edges_a_itr).first)), 
+                        usable_cc_in_b)) {
+          if(CfgIsVisible(*(rdmp_a->m_pRoadmap->GetReferenceofData((*all_edges_a_itr).second)), 
+                        usable_cc_in_b)) {
+            ++edge_a_visible_in_b;
+            found_edge_a_visible_in_b = true;
+            break;
+          }
+        }
+    }
+    if(!found_edge_a_visible_in_b) {++edge_a_not_visible_in_b;}
+  }
+
+  typename vector< pair<VID,VID> >::iterator all_edges_b_itr;
+  for(all_edges_b_itr = all_edges_b.begin(); all_edges_b_itr != all_edges_b.end(); 
+         ++all_edges_b_itr) {
+    vector<VID> tmp_cc;
+    GetCC(*(rdmp_b->m_pRoadmap),(*all_edges_b_itr).first, tmp_cc);
+    if( tmp_cc.size() < b_small_cc_size) { continue; } // not a edge in "usable" component
+    //for all connected components in rdmp_a....
+    vector< pair<int,VID> > all_cc_a;
+    GetCCStats(*(rdmp_a->m_pRoadmap), all_cc_a);
+    typename vector< pair<int,VID> >::iterator all_cc_a_itr;
+    bool found_edge_b_visible_in_a = false;
+    for(all_cc_a_itr = all_cc_a.begin(); all_cc_a_itr != all_cc_a.end(); ++all_cc_a_itr) {
+      if((*all_cc_a_itr).first < a_small_cc_size) { continue; } //not usable cc
+      vector<CFG> usable_cc_in_a;
+      GetCC(*(rdmp_a->m_pRoadmap), 
+            *(rdmp_a->m_pRoadmap->GetReferenceofData((*all_cc_a_itr).second)), 
+            usable_cc_in_a);
+      if(CfgIsVisible(*(rdmp_b->m_pRoadmap->GetReferenceofData((*all_edges_b_itr).first)), 
+                      usable_cc_in_a)) {
+        if(CfgIsVisible(*(rdmp_b->m_pRoadmap->GetReferenceofData((*all_edges_b_itr).second)), 
+                      usable_cc_in_a)) {
+          ++edge_b_visible_in_a;
+          found_edge_b_visible_in_a = true;
+          break;
+        }
+      }
+    }
+    if(!found_edge_b_visible_in_a) {++edge_b_not_visible_in_a;}
+  }
+  
+  cout << "node_a_visible_in_b = " << node_a_visible_in_b << endl;
+  cout << "node_a_not_visible_in_b = " << node_a_not_visible_in_b << endl;
+
+  cout << "node_b_visible_in_a = " << node_b_visible_in_a << endl;
+  cout << "node_b_not_visible_in_a = " << node_b_not_visible_in_a << endl;
+
+  cout << "edge_a_visible_in_b = " << edge_a_visible_in_b << endl;
+  cout << "edge_a_not_visible_in_b = " << edge_a_not_visible_in_b << endl;
+
+  cout << "edge_b_visible_in_a = " << edge_b_visible_in_a << endl;
+  cout << "edge_b_not_visible_in_a = " << edge_b_not_visible_in_a << endl;
+  
+  LOG_DEBUG_MSG("~RegionSimilarity::Compare(region_a, region_b)");    
+  }
+
+private:
+
+};
 
 #endif /* _MPREGIONCOMPARERMETHOD_H_ */

@@ -71,11 +71,17 @@ class MapEvaluator : public MPBaseObject {
 	RegionCoverageComparer<CFG,WEIGHT>* coverage_comparer = 
                   new RegionCoverageComparer<CFG,WEIGHT>(pChild, in_pProblem);
 	m_comparer_evaluators.push_back(coverage_comparer);
-      }else {
+      } else if (string(pChild->Value()) == "RegionSimilarity") {
+	RegionSimilarity<CFG,WEIGHT>* similar = 
+                  new RegionSimilarity<CFG,WEIGHT>(pChild, in_pProblem);
+	m_comparer_evaluators.push_back(similar);
+      } else {
 	LOG_DEBUG_MSG("I don't understand");
       }
     }
   }
+
+
 
   void ParseXMLConditionalEvaluators(TiXmlNode* in_pNode, MPProblem *in_pProblem) {
     LOG_DEBUG_MSG("MapEvaluator::ParseXMLConditionalEvaluators()");
