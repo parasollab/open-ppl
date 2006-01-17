@@ -24,14 +24,14 @@
 #include "GMSPolyhedron.h"
  
 //Include node generation methods
-#include "BasicPRM.h"
-#include "GaussPRM.h"
-#include "CSpaceMAPRM.h"
-#include "BasicMAPRM.h"
+#include "PRMUniform.h"
+#include "PRMGauss.h"
+#include "MAPRMCSpace.h"
+#include "MAPRMWSpace.h"
 #include "BasicOBPRM.h"
 #include "OBPRM.h"
 #include "OBMAPRM.h"
-#include "BridgeTest.h"
+#include "PRMBridgeTest.h"
 
 #include "util.h"
 

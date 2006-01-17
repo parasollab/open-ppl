@@ -1,7 +1,7 @@
 #ifndef BasicMAPRM_h
 #define BasicMAPRM_h
 
-#include "NodeGenerationMethod.h"
+#include "NodeGeneratorMethod.h"
 #include "MultiBody.h"
 
 template <class CFG>

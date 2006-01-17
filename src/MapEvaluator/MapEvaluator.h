@@ -7,7 +7,7 @@
 
 #include "Query.h" /* for query evaluation */
 #include "GraphAlgo.h" /* for max flow evaluation */
-#include "NodeGenerationMethod.h" /* for coverage evaluation */
+#include "NodeGeneratorMethod.h" /* for coverage evaluation */
 
 #include "MPRegionComparerMethod.h"
 

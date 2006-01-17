@@ -1,7 +1,7 @@
 #ifndef BasicOBPRM_h
 #define BasicOBPRM_h
 
-#include "NodeGenerationMethod.h"
+#include "NodeGeneratorMethod.h"
 
 #define EXPANSION_FACTOR 100
 #define MAX_NUM_NODES_TRIES 100

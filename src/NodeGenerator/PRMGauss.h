@@ -1,12 +1,12 @@
-#ifndef BridgeTestPRM_h
-#define BridgeTestPRM_h
+#ifndef GaussPRM_h
+#define GaussPRM_h
 
-#include "NodeGenerationMethod.h"
+#include "NodeGeneratorMethod.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 //
-//  class BridgeTestPRM
+//  class GaussPRM
 //
 //
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@
  *off of NodeGenerationMethod.
  */
 template <class CFG>
-class BridgeTestPRM: public NodeGenerationMethod<CFG> {
+class GaussPRM: public NodeGenerationMethod<CFG> {
  public:
  
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -28,10 +28,10 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
   //@{
 
   ///Default Constructor.
-  BridgeTestPRM();
-  BridgeTestPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  GaussPRM();
+  GaussPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.
-  virtual ~BridgeTestPRM();
+  virtual ~GaussPRM();
 
   //@}
 
@@ -41,7 +41,7 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
   //parameters: m = median given by user
   //and s = standar deviation set to 0.5 for testSerial env.
 
-  double GaussianDistribution(double m, double s);
+  double Gaussian(double m, double s);
 
 
   //////////////////////
@@ -53,6 +53,7 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
   virtual void IncreaseNextNodeIndex(int);
   virtual void ParseXML(TiXmlNode* in_pNode);
 
+
   //////////////////////
   // I/O methods
   virtual void ParseCommandLine(int argc, char **argv);
@@ -62,19 +63,14 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
   virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
-  /**Generates a "bridge" (line segment) whose end points are cfgs in collision 
-   *increases sampling density inside narrow passages
+  /**Filters randomly generated nodes in such a way that a "Gaussian" 
+   *distribution on obstacle surfaces is retained.
    *Brief Alg is:
    *   -# for i = 1 to n
    *       -# randomly generate cfg1
-   *       -# if cfg1 is in collision
-   *           -# pick a cfg2 near to cfg1 according to a gaussian  density fucntion
-   *           -# if cfg2 is in collision
-   *              -# set cgfP to be the midpoint of line segment cfg1&cgf2
-   *              -# if cfgP is not in collision
-   *                 -# add cfgP to the roadmap
-   *              -# endif
-   *           -# endif
+   *       -# randomly generate cfg2 distance of "d" away from cfg1
+   *       -# if one of (cfg1,cfg2) is in collision and the other is not
+   *           -# add the free one to the roadmap
    *       -# endif
    *   -# endfor
    *@param _env Used to get free Cfg.
@@ -90,7 +86,7 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
   virtual void GenerateNodes(Environment* _env, Stat_Class&,
 			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
-
+ 
   virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs);
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -100,105 +96,105 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-  /**Distance from surface
+  /**Distance from surface to retain Gausian
    */
-  num_param<double> bridge_d;
+  num_param<double> gauss_d;
   //Index for next node 
   //used in incremental map generation
   static int nextNodeIndex;
+
 };
 
 
 template <class CFG>
-int BridgeTestPRM<CFG>::nextNodeIndex = 0;
+int GaussPRM<CFG>::nextNodeIndex = 0;
 
 /////////////////////////////////////////////////////////////////////
 //
-//  definitions for class BridgeTestPRM declarations
+//  definitions for class GaussPRM declarations
 //
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
-BridgeTestPRM<CFG>::
-BridgeTestPRM() : NodeGenerationMethod<CFG>(),
-  bridge_d          ("d",                 0,  0,   5000000) {
-  bridge_d.PutDesc("FLOAT  ","(distance, default based on environment)");
+GaussPRM<CFG>::
+GaussPRM() : NodeGenerationMethod<CFG>(),
+  gauss_d          ("d",                 0,  0,   5000000) {
+  gauss_d.PutDesc("FLOAT  ","(distance, default based on environment)");
 }
 
 
 template <class CFG>
-BridgeTestPRM<CFG>::
-~BridgeTestPRM() {
+GaussPRM<CFG>::
+~GaussPRM() {
 }
 
 template <class CFG>
-BridgeTestPRM<CFG>::
-BridgeTestPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-NodeGenerationMethod<CFG>(in_pNode, in_pProblem), 
-  bridge_d          ("d",                 0,  0,   5000000) {
-  LOG_DEBUG_MSG("BridgeTestPRM::BridgeTestPRM()");
-  SetDefault();
+GaussPRM<CFG>::
+GaussPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
+NodeGenerationMethod<CFG>(in_pNode, in_pProblem),
+gauss_d          ("d",                 0,  0,   5000000) {
+  LOG_DEBUG_MSG("GaussPRM::GaussPRM()");
+  gauss_d.PutDesc("FLOAT  ","(distance, default based on environment)");
   ParseXML(in_pNode);
-  LOG_DEBUG_MSG("~BridgeTestPRM::BridgeTestPRM()");
+  LOG_DEBUG_MSG("~GaussPRM::GaussPRM()");
 }
+
 
 template <class CFG>
 char*
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 GetName() {
-  return "BridgeTestPRM";
+  return "GaussPRM";
 }
 
 template <class CFG>
 void
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 ParseXML(TiXmlNode* in_pNode) {
-  LOG_DEBUG_MSG("BridgeTestPRM::ParseXML()");
-//  SetDefault();
+  LOG_DEBUG_MSG("GaussPRM::ParseXML()");
+ // SetDefault();
+  gauss_d.PutValue(0);
   if(!in_pNode) {
     LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
   }
-  if(string(in_pNode->Value()) != "BridgeTestPRM") {
-    LOG_ERROR_MSG("Error reading <BridgeTestPRM> tag...."); exit(-1);
+  if(string(in_pNode->Value()) != "GaussPRM") {
+    LOG_ERROR_MSG("Error reading <GaussPRM> tag...."); exit(-1);
   }
-  double bridge;  
-  in_pNode->ToElement()->QueryDoubleAttribute("bridge_d",&bridge);
-
-  cout <<"BRIDGE DOULBE VALUE = " << bridge << endl;
+  double gauss;  
+  in_pNode->ToElement()->QueryDoubleAttribute("gauss_d",&gauss);
   
-  bridge_d.SetValue(bridge);
+  gauss_d.SetValue(gauss);
   
   
   PrintValues(cout);
-  
-  
-  //PrintValues(cout);
-  LOG_DEBUG_MSG("~BridgeTestPRM::ParseXML()");
+  LOG_DEBUG_MSG("~GaussPRM::ParseXML()");
 }
 
+
 template <class CFG>
-void BridgeTestPRM<CFG>::
+void GaussPRM<CFG>::
 SetDefault() {
-  //NodeGenerationMethod<CFG>::SetDefault();
-  bridge_d.SetValue(0);
+  NodeGenerationMethod<CFG>::SetDefault();
+  gauss_d.PutValue(0);
 }
+
 
 template <class CFG>
 int
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 GetNextNodeIndex() {
   return nextNodeIndex;
 }
 
 template <class CFG>
 void
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 SetNextNodeIndex(int index) {
   nextNodeIndex = index;
 }
 
 template <class CFG>
 void
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 IncreaseNextNodeIndex(int numIncrease) {
   nextNodeIndex += numIncrease;
 }
@@ -206,13 +202,13 @@ IncreaseNextNodeIndex(int numIncrease) {
 
 template <class CFG>
 void
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
     if( numNodes.AckCmdLine(&i, argc, argv) ) {
     } else if ( chunkSize.AckCmdLine(&i, argc, argv) ) {
     } else if ( exactNodes.AckCmdLine(&i, argc, argv) ) {
-    }else if ( bridge_d.AckCmdLine(&i, argc, argv) ) {
+    } else if ( gauss_d.AckCmdLine(&i, argc, argv) ) {
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
       for(int j=0; j<argc; j++)
@@ -228,7 +224,7 @@ ParseCommandLine(int argc, char **argv) {
 
 template <class CFG>
 void
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
@@ -236,7 +232,7 @@ PrintUsage(ostream& _os){
   _os << "\n\t"; numNodes.PrintUsage(_os);
   _os << "\n\t"; chunkSize.PrintUsage(_os);
   _os << "\n\t"; exactNodes.PrintUsage(_os);
-  _os << "\n\t"; bridge_d.PrintUsage(_os);
+  _os << "\n\t"; gauss_d.PrintUsage(_os);
   
   _os.setf(ios::right,ios::adjustfield);
 }
@@ -244,42 +240,40 @@ PrintUsage(ostream& _os){
 
 template <class CFG>
 void
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
   _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
   _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
-  _os << bridge_d.GetFlag() << " " << bridge_d.GetValue() << " ";
+  _os << gauss_d.GetFlag() << " " << gauss_d.GetValue() << " ";
   _os << endl;
 }
 
 
 template <class CFG>
 NodeGenerationMethod<CFG>* 
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 CreateCopy() {
-  NodeGenerationMethod<CFG> * _copy = new BridgeTestPRM<CFG>(*this);
+  NodeGenerationMethod<CFG> * _copy = new GaussPRM<CFG>(*this);
   return _copy;
 }
 
 template <class CFG>
 void
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
   out_os << " num nodes = " << numNodes.GetValue() << " ";
   out_os << " exact = " << exactNodes.GetValue() << " ";
   out_os << " chunk size = " << chunkSize.GetValue() << " ";
-  out_os << " bridge d = " << bridge_d.GetValue() << " ";
   out_os << endl;
 }
 
-
 template <class CFG>
 double
-BridgeTestPRM<CFG>::
-GaussianDistribution(double m, double s){
+GaussPRM<CFG>::
+Gaussian(double m, double s){
   // normal distribution with mean m and standard deviation s
   double x1, x2, w, r,r1;
   do {
@@ -300,98 +294,116 @@ GaussianDistribution(double m, double s){
   return x1 * s + m;
 }
 
+
 template <class CFG>
 void
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
-	      CollisionDetection* cd, DistanceMetric *,
+	      CollisionDetection* cd, DistanceMetric *dm,
 	      vector<CFG>& nodes) {
 
-  //LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()");
+  LOG_DEBUG_MSG("GaussPRM::GenerateNodes()");	
 
-  if (bridge_d.GetValue() == 0) {  //if no bridge_d value given (standard deviation), calculate from robot
-    bridge_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
-  }	
+  if (gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from robot
+    gauss_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
+  }
 
 #ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() << ") ";
   cout << "(chunkSize=" << chunkSize.GetValue() << ") ";
   cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
-  cout << "(d=" << bridge_d.GetValue() << ") ";
+  cout << "(d=" << gauss_d.GetValue() << ") ";
+
 #endif
-  
+
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
   path.reserve(numNodes.GetValue());
 #endif
   bool bExact = exactNodes.GetValue() == 1? true: false;
 
+  
   std::string Callee(GetName()), CallCnt;
-  {std::string Method("-BridgeTestPRM::GenerateNodes"); Callee = Callee+Method;}
+  {std::string Method("-GaussPRM::GenerateNodes"); Callee = Callee+Method;}
+  
+  //generate random number with normal distribution
+  //this is the distance it will use to compute Cfg2
 
+  double gauss_dist = Gaussian(gauss_d.GetValue(), 0.5); 
+  
   // generate in bounding box
-  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < numNodes.GetValue() ; attempts++) {
-    
+  //for (int i=0,newNodes=0; i < numNodes.GetValue() || newNodes<1 ; i++) {
+  for(int attempts=0,newNodes=0,success_cntr=0;  
+      success_cntr < numNodes.GetValue() ; attempts++) { 
     // cfg1 & cfg2 are generated to be inside bbox
-    CFG cfg1, cfg2, cfgP, incr;
-
+    CFG cfg1, cfg2, incr;
     cfg1.GetRandomCfg(_env);
+    incr.GetRandomRay(gauss_dist);
+    cfg2.add(cfg1, incr);
 
-    CallCnt="1"; 
-    std::string tmpStr = Callee+CallCnt;
-    
-    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
-    if (!cfg1_free){
-      double gauss_dist = GaussianDistribution(0, bridge_d.GetValue()); 
-
-      //cfg2.c1_towards_c2(cfg1,cfg2,gauss_dist);
-      incr.GetRandomRay(gauss_dist);
-      cfg2.add(cfg1, incr);
-
+    // because cfg2 is modified it must be checked again
+    if (cfg2.InBoundingBox(_env)) {    
+      CallCnt="1"; 
+      std::string tmpStr = Callee+CallCnt;
+      bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo,true, &tmpStr);
+      cfg1.obst = cdInfo->colliding_obst_index;
+      
       CallCnt="2";
       tmpStr = Callee+CallCnt; 
-
-      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
-      if (!cfg2_free){
-	cfgP.WeightedSum(cfg1,cfg2,0.5);
-
-	CallCnt="3";
-	tmpStr = Callee+CallCnt; 
-
-	bool cfgP_free = !cfgP.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
-	if(cfgP_free){
-	  nodes.push_back(CFG(cfgP)); 
-	  newNodes++;
+      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*cdInfo,true, &tmpStr);
+      cfg2.obst = cdInfo->colliding_obst_index;
+      
+      if (cfg1_free && !cfg2_free) {
+	nodes.push_back(CFG(cfg1));   
+	newNodes++;
 #if INTERMEDIATE_FILES
-	  path.push_back(cfgP);
+	path.push_back(cfg1);
 #endif
-	}
-      }
+	
+      } 
+      else if (!cfg1_free && cfg2_free) {
+	nodes.push_back(CFG(cfg2));   
+	newNodes++;
+#if INTERMEDIATE_FILES
+	path.push_back(cfg2);
+#endif
+      } 
+
+/*       else if (bExact){ */
+/* 	i--; // in this case, keep trying to generate the ith node; */
+/* 	continue; */
+/*       }// endif push nodes */
+      
+/*     }  */
+/*     else if (bExact){ //outside of BBxz */
+/*       i--; // in this case, keep trying to generate the ith node; */
+/*     } // endif BB */
     }
     if (bExact)
       success_cntr = newNodes;
     else
       success_cntr = attempts+1;
+    
   } // endfor
-
+  
 #if INTERMEDIATE_FILES
-  WritePathConfigurations("BridgeTestPRM.path", path, _env);
+  WritePathConfigurations("GaussPRM.path", path, _env);
 #endif
 
-  LOG_DEBUG_MSG("~BridgeTestPRM::GenerateNodes()"); 
+  LOG_DEBUG_MSG("~GaussPRM::GenerateNodes()"); 
 
 }
 
 
 template <class CFG>
 void 
-BridgeTestPRM<CFG>::
+GaussPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) {
 
-  LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()"); 
-
+  LOG_DEBUG_MSG("GaussPRM::GenerateNodes()"); 
+ 
   Environment* pEnv = in_pRegion;
-  Stat_Class* pStatClass = in_pRegion->GetStatClass(); 
+  Stat_Class* pStatClass = in_pRegion->GetStatClass();
   CollisionDetection* pCd = GetMPProblem()->GetCollisionDetection();
   DistanceMetric *dm = GetMPProblem()->GetDistanceMetric();
  

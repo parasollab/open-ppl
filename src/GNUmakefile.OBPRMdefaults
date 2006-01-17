@@ -177,3 +177,4 @@ PQPLIB_DIR  = ${PQP_DIR}/lib
 PQPLIB      = -L${PQPLIB_DIR} -lPQP
 PQP_INCL    = -I${PQP_DIR}/include
 
+PMPL_INCL = -ICfg -IConnector -IDistanceMetric -ILocalPlanner -IMapevaluator -IMPProblem -IMPStrategy -INodeGenerator -IUtilities -IValidityChecker -IMPProblem/Geometry -Itrash -IMapEvaluator

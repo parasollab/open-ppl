@@ -1,7 +1,7 @@
 #ifndef CSpaceMAPRM_h
 #define CSpaceMAPRM_h
 
-#include "NodeGenerationMethod.h"
+#include "NodeGeneratorMethod.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //

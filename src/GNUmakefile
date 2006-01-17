@@ -45,7 +45,7 @@ include $(OBPRM)/GNUmakefile.OBPRMdefaults
 
 #common misc.
 DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) $(ROBOT_DEF) -DTIXML_USE_STL -Wno-deprecated
-INCLUDES = -I. $(STAPL_INCL) $(CD_INCL)
+INCLUDES = -I. $(STAPL_INCL) $(CD_INCL) $(PMPL_INCL)
 LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB)
 
 #compile targest
@@ -81,7 +81,7 @@ metaplanner: main_metaplanner.cpp $(OBPRM_LIBFILE)
 ifeq ($(platform2), SUN_CC)
 	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -xM1 -c $< > $*.d
 endif
-	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -c $<
+	$(CC) $(OPTS) $(INCLUDES) $(DEFS) -c $< -o $*.o
 	touch $*.d
 	cat $*.d >> Dependencies
 	rm -f $*.d
