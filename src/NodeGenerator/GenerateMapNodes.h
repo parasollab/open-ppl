@@ -32,6 +32,7 @@
 #include "OBPRM.h"
 #include "OBMAPRM.h"
 #include "PRMBridgeTest.h"
+#include "PRMModelBased.h"
 
 #include "util.h"
 
@@ -177,6 +178,9 @@ GenerateMapNodes() {
 
   BridgeTestPRM<CFG>* bridgePRM = new BridgeTestPRM<CFG>();
   all.push_back(bridgePRM);
+
+  PRMModelBased<CFG>* modelBasedPRM = new PRMModelBased<CFG>();
+  all.push_back(modelBasedPRM);
   
   addNodes2Map = true;
 }
