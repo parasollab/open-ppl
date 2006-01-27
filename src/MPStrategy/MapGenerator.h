@@ -332,7 +332,7 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	
 	
 	if (gn.addNodes2Map) {
-	  for(vector<CFG>::iterator S = sub_nodes.begin(); S != sub_nodes.end(); ++S)
+	  for(typename vector<CFG>::iterator S = sub_nodes.begin(); S != sub_nodes.end(); ++S)
 	    sub_nodesVID.push_back(rmap->m_pRoadmap->AddVertex(*S)); //add sub_nodes to graph
 	}
 
