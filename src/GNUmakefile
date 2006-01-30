@@ -97,7 +97,7 @@ reallyclean:
 	rm -f metaplanner
 	rm -f pmp
 	rm -f *.a *.so *.o *.dylib
-	rm $(OBJS)
+	rm -f $(OBJS)
 	rm -R -f ii_files
 	rm -R -f SunWS_cache
 	rm -f so_locations
