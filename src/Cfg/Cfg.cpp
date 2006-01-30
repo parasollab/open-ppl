@@ -924,8 +924,8 @@ void Cfg::MAPRMfree(Environment* _env, Stat_Class& Stats,
     //normalize
     magnitude = 0;
     tmpCfgData = tmpCfg->GetData();
-    for(int i=0; i<tmpCfgData.size(); ++i)
-      magnitude += tmpCfgData[i]*tmpCfgData[i];
+    for(vector<double>::const_iterator V = tmpCfgData.begin(); V != tmpCfgData.end(); ++V)
+      magnitude += pow(*V,2);
     magnitude = sqrt(magnitude);
     tmpCfg->divide(*tmpCfg, magnitude);
     tmpCfg->multiply(*tmpCfg, stepSize*-1);
