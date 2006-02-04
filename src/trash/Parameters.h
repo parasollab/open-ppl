@@ -605,21 +605,21 @@ num_param(char *_flag, TYPE _default, TYPE _min, TYPE _max)
 };
 template<class TYPE> void num_param<TYPE>::
 PrintUsage(ostream& _os, int width) const {
-    _os << setw(width) << flag << GetTypeDesc() << " (default, " ;
+    _os << setw(width) << this->flag << this->GetTypeDesc() << " (default, " ;
 
     _os.setf(ios::right,ios::adjustfield);
-      _os << setw(width/2) << tdefault << ")";
+      _os << setw(width/2) << this->tdefault << ")";
     _os.setf(ios::left,ios::adjustfield);
 
-    _os << GetDesc();
+    _os << this->GetDesc();
 };
 template<class TYPE> void num_param<TYPE>::
 SetValue(TYPE _val){
-    tvalue = _val;
+    this->tvalue = _val;
 };
 template<class TYPE> void num_param<TYPE>::
 SetDefault(TYPE _val){
-    tdefault = _val;
+    this->tdefault = _val;
 };
 template<class TYPE> bool num_param<TYPE>::
 VerifyValidValue(TYPE _val){
@@ -627,7 +627,7 @@ VerifyValidValue(TYPE _val){
         return true;
     } else {
         cout << "\nERROR: "
-                <<flag<<" "<<_val
+                <<this->flag<<" "<<_val
                 <<" is out of range ("
                 << rangeMin <<","<<rangeMax<<")";
         return false;
@@ -652,25 +652,25 @@ VerifyValidValue(TYPE _val){
 //===================================================================
 template<class TYPE> str_param<TYPE>::
 str_param():param<TYPE>(){
-    tvalue = new char[300];
+    this->tvalue = new char[300];
     SetValue("");
-    tdefault = new char[300];
+    this->tdefault = new char[300];
     SetDefault("");
 };
 template<class TYPE> str_param<TYPE>::
 str_param(char *_flag)
         :param<TYPE>(_flag){
-    tvalue = new char[300];
+    this->tvalue = new char[300];
     SetValue("");
-    tdefault = new char[300];
+    this->tdefault = new char[300];
     SetDefault("");
 };
 template<class TYPE> str_param<TYPE>::
 str_param(char *_flag, char *_initialValue)
         :param<TYPE>(_flag){
-    tvalue = new char[300];
+    this->tvalue = new char[300];
     SetValue(_initialValue);
-    tdefault = new char[300];
+    this->tdefault = new char[300];
     SetDefault(_initialValue);
 };
 template<class TYPE> void str_param<TYPE>::
@@ -679,11 +679,11 @@ VerifyValidDirName(){
 };
 template<class TYPE> void str_param<TYPE>::
 SetValue(TYPE _val){
-    strcpy(tvalue, _val);
+    strcpy(this->tvalue, _val);
 };
 template<class TYPE> void str_param<TYPE>::
 SetDefault(TYPE _val){
-    strcpy(tdefault, _val);
+    strcpy(this->tdefault, _val);
 };
 template<class TYPE> bool str_param<TYPE>::
 VerifyValidValue(TYPE _val){
@@ -691,9 +691,9 @@ VerifyValidValue(TYPE _val){
 };
 template<class TYPE> void str_param<TYPE>::
 VerifyLastCharIsA(char *ch){
-    if (strlen(tvalue) > 0 )
-        if ( tvalue[strlen(tvalue)-1] != *ch )
-                strcat(tvalue,ch);
+    if (strlen(this->tvalue) > 0 )
+        if ( this->tvalue[strlen(this->tvalue)-1] != *ch )
+                strcat(this->tvalue,ch);
 };
 
 #endif

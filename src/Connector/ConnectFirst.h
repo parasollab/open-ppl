@@ -48,7 +48,7 @@ class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
 template <class CFG, class WEIGHT>
 ConnectFirst<CFG,WEIGHT>::
 ConnectFirst() : NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "connectfirst"; 
+  this->element_name = "connectfirst"; 
   SetDefault();
 }
 
@@ -99,7 +99,7 @@ ConnectFirst<CFG, WEIGHT>::
 PrintUsage(ostream& _os) {
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << "\tINTEGER (default " << 1 << ")";
   _os << endl;
   _os.setf(ios::right,ios::adjustfield);
@@ -110,7 +110,7 @@ template <class CFG, class WEIGHT>
 void
 ConnectFirst<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
-  _os << "\n" << GetName() << " kfirst = ";
+  _os << "\n" << this->GetName() << " kfirst = ";
   _os << kfirst;
   _os << endl;
 }

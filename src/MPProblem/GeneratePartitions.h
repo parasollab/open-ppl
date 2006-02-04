@@ -175,15 +175,15 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   c_boundary.Print(cout);
 
 /*   string p_type = "Basic"; */
-  if( dims == -1 ) {
-    dims = c_boundary.GetDOFs();
+  if( this->dims == -1 ) {
+    this->dims = c_boundary.GetDOFs();
 /*     p_type = "BasicND"; */
   }
 /*   cout << "Subdivision Strategy: Basic (random)" << endl; */
 /*   //int dims = 3; */
 
   double epsilon; 
-  int tries = dims*5;
+  int tries = this->dims*5;
   int partition_par;
   double partition_point;
   vector<BoundingBox> subregions;
@@ -211,7 +211,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   }//end for
 
 /*   if (done) { // output error	 */
-/*     DisplayDetails(p_type, ndboundingBox.size(), dims, 2); */
+/*     DisplayDetails(p_type, ndboundingBox.size(), this->dims, 2); */
 /*     subregions[0].Print(cout); */
 /*     subregions[1].Print(cout); */
 /*   } */
@@ -304,8 +304,8 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
     _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().maxRadius;
 
 
-  if(dims==-1)
-    dims = boundingBox->GetDOFs();
+  if(this->dims==-1)
+    this->dims = boundingBox->GetDOFs();
 
   /* [ 3 bounding boxes divided on the dimention with the largest
        gap between values.  
@@ -343,14 +343,14 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   if (range.second-range.first > normalizationVal)
     normalizationVal = range.second-range.first;
 
-  for (int i=0; i < dims; i++)
+  for (int i=0; i < this->dims; i++)
   {
       // Find the largest gap for dim 'i'
       //
       cur_gap_start = FindMaxGapForDim(i, free_nodes, cur_gap_width);
 
 
-      if( bNormalizeRanges ){
+      if( this->bNormalizeRanges ){
         
 	// We are normalizing, so make the largest gap
 	// value a percentage of the total space for
@@ -395,7 +395,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   // otherwise...set epsilon to the default.
   //
   if( best_dim < 3 ){
-    epsilon = r_radius;
+    this->epsilon = r_radius;
 
     // Dimention is ok if the width of the box is greater than 2 * robot
     //
@@ -412,7 +412,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   
   int BoundNdx,
     CurBoxNdx,
-    TotalBoxes= n_partitions;
+    TotalBoxes= this->n_partitions;
 
   double lb[2], cb[2], rb[2];
   double gap_end = gap_start + gap_width;
@@ -423,7 +423,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   lb[0] = boundingBox->GetRange(best_dim).first;
   if( (best_dim >= 0) && (best_dim < 3) ){
 
-    lb[1] = (gap_start - epsilon);
+    lb[1] = (gap_start - this->epsilon);
 
     //
     // Using x, y, or z
@@ -445,7 +445,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
     //
     // Not using x, y, or z
     //
-    lb[1] = lb[0] + ((gap_start - lb[0]) * percentage_p );
+    lb[1] = lb[0] + ((gap_start - lb[0]) * this->percentage_p );
   }
 
   //
@@ -454,7 +454,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   rb[1] = boundingBox->GetRange(best_dim).second;
   if( (best_dim >= 0) && (best_dim < 3) ){
 
-    rb[0] = (gap_end + epsilon);
+    rb[0] = (gap_end + this->epsilon);
 
     //
     // Using x, y, or z
@@ -476,7 +476,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
     //
     // Not using x, y, or z
     //
-    rb[0] = rb[1] - ((rb[1] - gap_end) * percentage_p );
+    rb[0] = rb[1] - ((rb[1] - gap_end) * this->percentage_p );
   }
 
   //
@@ -484,8 +484,8 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   //
   if( (best_dim >= 0) && (best_dim < 3) ){
 
-    cb[0] = (gap_start - (2*epsilon));
-    cb[1] = (gap_start + gap_width + (2*epsilon));
+    cb[0] = (gap_start - (2*this->epsilon));
+    cb[1] = (gap_start + gap_width + (2*this->epsilon));
 
   }
   else{
@@ -493,17 +493,17 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
     //
     // Not using x, y, or z
     //
-    cb[0] = (gap_start - ((gap_start - lb[0]) * percentage_p ));
-    cb[1] = (gap_end   + ((rb[1] - gap_end ) * percentage_p ));
+    cb[0] = (gap_start - ((gap_start - lb[0]) * this->percentage_p ));
+    cb[1] = (gap_end   + ((rb[1] - gap_end ) * this->percentage_p ));
   }
 
   // Verify the center box does not overlap existing boundries.
   //
   if( cb[0] <= boundingBox->GetRange(best_dim).first ){ 
-    cb[0] = (gap_start - ((gap_start - lb[0]) * percentage_p ));
+    cb[0] = (gap_start - ((gap_start - lb[0]) * this->percentage_p ));
   } 
   if( cb[1] >= boundingBox->GetRange(best_dim).second ){ 
-    cb[1] = (gap_end   + ((rb[1] - gap_end ) * percentage_p ));
+    cb[1] = (gap_end   + ((rb[1] - gap_end ) * this->percentage_p ));
   } 
 
   if( (best_dim >= 0) && (best_dim < 3) )
@@ -530,7 +530,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
 
   DisplayDetails("Gap", boundingBox->GetDOFs(), boundingBox->GetDOFs(), TotalBoxes);
 
-  if(n_partitions==3)
+  if(this->n_partitions==3)
     {
       leftbox.SetParameter(best_dim,lb[0],lb[1]);
       centerbox.SetParameter(best_dim,cb[0],cb[1]);
@@ -723,11 +723,11 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   BoundingBox * boundingBox = _env->GetBoundingBox();
   vector< pair<double,double> > ppoints_info_gain;
   string p_type = "InformationGain";
-  if( dims == -1 ) {
-    dims = boundingBox->GetDOFs();
+  if( this->dims == -1 ) {
+    this->dims = boundingBox->GetDOFs();
     p_type = "InformationGainND";
   }
-  for(int i=0; i<dims; i++) {
+  for(int i=0; i<this->dims; i++) {
     cout << " checking dimension " << i << endl << flush;
     vector<double> proj_free = ProjectToAxis( free_nodes, i );
     //cout << endl << endl;
@@ -751,14 +751,14 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
     _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().maxRadius;
   for(int i=0; i< ppoints_info_gain.size(); i++) {
     if( i < 3 ) 
-      epsilon = r_radius;
+      this->epsilon = r_radius;
     else
-      epsilon = 0.15; //orientation angle...not sure what it should be
+      this->epsilon = 0.15; //orientation angle...not sure what it should be
     bool attempt = true;
     double v1 = boundingBox->GetRange(i).first;
     double v2 = boundingBox->GetRange(i).second;
-    if( fabs( v1 - ppoints_info_gain[i].first)<2*epsilon || 
-	fabs( v2 - ppoints_info_gain[i].first)<2*epsilon )
+    if( fabs( v1 - ppoints_info_gain[i].first)<2*this->epsilon || 
+	fabs( v2 - ppoints_info_gain[i].first)<2*this->epsilon )
       attempt = false;
     if (attempt)
     if( ppoints_info_gain[i].second > largest_gain ) {
@@ -767,7 +767,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
       partition_on_axis = i;
       index = i;
       found = true;
-      epsilon_save = epsilon;
+      epsilon_save = this->epsilon;
     }
   }//end for i<ppoints
 
@@ -778,7 +778,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
     // output error	
 
     partitions.push_back( boundingBox );
-    DisplayDetails(p_type, boundingBox->GetDOFs(), dims, 1);
+    DisplayDetails(p_type, boundingBox->GetDOFs(), this->dims, 1);
 
     partitions[0]->Print(cout);
   }
@@ -794,20 +794,20 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
     cout << " partition point: " << partition_point << endl;
     cout << " partition_on_axis: " << partition_on_axis << endl;
 /*     if( partition_on_axis < 3 ) */
-/*       epsilon = r_radius; */
+/*       this->epsilon = r_radius; */
 /*     else */
-/*       epsilon = 0.15; //orientation angle...not sure what it should be */
+/*       this->epsilon = 0.15; //orientation angle...not sure what it should be */
     for(int z=0; z<2; z++) {
       //cout << "Bounding Box " << z << ": ";
       vector<double> pee;
       for(int i=0; i < x; i++) {
        	if( z==0 && (i == partition_on_axis) ) {
-	  //cout << ndboundingBox[2*i]<<", "<<partition_point+epsilon;
+	  //cout << ndboundingBox[2*i]<<", "<<partition_point+this->epsilon;
 	  pee.push_back( boundingBox->GetRange(i).first );
 	  pee.push_back( partition_point+epsilon_save );
 	}
 	else if( z==1 && (i == partition_on_axis) ) {
-	  //cout << partition_point-epsilon << ", "<< ndboundingBox[2*i+1] ;
+	  //cout << partition_point-this->epsilon << ", "<< ndboundingBox[2*i+1] ;
 	   pee.push_back(partition_point-epsilon_save);
 	   pee.push_back(boundingBox->GetRange(i).second);
 	}
@@ -821,7 +821,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
       p_bbox->SetRanges(pee);
       partitions.push_back( p_bbox );
     }//end for z
-    DisplayDetails(p_type, boundingBox->GetDOFs(), dims, 2);
+    DisplayDetails(p_type, boundingBox->GetDOFs(), this->dims, 2);
     partitions[0]->Print(cout);
     partitions[1]->Print(cout);
     //DisplayBoundBox( rightbox , 2);

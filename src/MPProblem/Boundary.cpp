@@ -116,7 +116,7 @@ GetClearance(Vector3D point3d) const {
   double min_clearance = -1;
   double clearance = 0;
   for (int i = 0; i < pos_dofs; ++i) {
-    clearance = abs(min( point3d[i] - bounding_box[i].first, 
+    clearance = abs((int)min( point3d[i] - bounding_box[i].first, 
 			 bounding_box[i].second - point3d[i]));
     if (clearance < min_clearance || min_clearance < 0)
       min_clearance = clearance;

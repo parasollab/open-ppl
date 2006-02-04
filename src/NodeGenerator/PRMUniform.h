@@ -151,9 +151,9 @@ BasicPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   int i;
   for (i =1; i < argc; ++i) {
-    if( numNodes.AckCmdLine(&i, argc, argv) || 
-        chunkSize.AckCmdLine(&i, argc, argv) ||
-	exactNodes.AckCmdLine(&i, argc, argv)) {
+    if( this->numNodes.AckCmdLine(&i, argc, argv) || 
+        this->chunkSize.AckCmdLine(&i, argc, argv) ||
+	this->exactNodes.AckCmdLine(&i, argc, argv)) {
 /*         numAttempts.AckCmdLine(&i, argc, argv) || */
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
@@ -175,10 +175,10 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; numNodes.PrintUsage(_os); _os << " ";
-  _os << "\n\t"; chunkSize.PrintUsage(_os); _os << " ";
+  _os << "\n\t"; this->numNodes.PrintUsage(_os); _os << " ";
+  _os << "\n\t"; this->chunkSize.PrintUsage(_os); _os << " ";
 /*   _os << "\n\t"; numAttempts.PrintUsage(_os); */
-  _os << "\n\t"; exactNodes.PrintUsage(_os);
+  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
 
 
   _os.setf(ios::right,ios::adjustfield);
@@ -189,11 +189,11 @@ void
 BasicPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
-  _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
-  _os << chunkSize.GetFlag() << " " <<chunkSize.GetValue() << " ";
+  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
+  _os << this->chunkSize.GetFlag() << " " <<this->chunkSize.GetValue() << " ";
 
 /*   _os << numAttempts.GetFlag() << " " << numAttempts.GetValue(); */
-  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue();
+  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue();
   _os << endl;
 }
 
@@ -211,10 +211,10 @@ void
 BasicPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << numNodes.GetValue() << " ";
-  out_os << " exact = " << exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << chunkSize.GetValue() << " ";
-  out_os << " MaxCDCalls = " << m_nMaxCdCalls << " ";
+  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
+  out_os << " exact = " << this->exactNodes.GetValue() << " ";
+  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
+  out_os << " MaxCDCalls = " << this->m_nMaxCdCalls << " ";
   out_os << endl;
 }
 
@@ -236,19 +236,19 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   string callee("BasicPRM::GenerateNodes");
   LOG_DEBUG_MSG("BasicPRM::GenerateNodes()");	
 #ifndef QUIET
-  if (exactNodes.GetValue()==1)
-     cout << "(numNodes=" << numNodes.GetValue() << ") ";
+  if (this->exactNodes.GetValue()==1)
+     cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
   else
-    cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
+    cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
 #endif
   
   //PRM style node generation -- generate in expanded bounding box
   vector<Cfg*> path;
   
-  if (exactNodes.GetValue() == 1) { // we want to obtain numNodes free nodes 
+  if (this->exactNodes.GetValue() == 1) { // we want to obtain numNodes free nodes 
     CFG tmp;
     int default_maxTries = 100;
-    for (int i=0; i < numNodes.GetValue(); ++i) {
+    for (int i=0; i < this->numNodes.GetValue(); ++i) {
        bool collision = true;
        int j=0;
        while (collision && (j<default_maxTries)) {
@@ -256,7 +256,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
          Stats.IncNodes_Attempted();
          tmp.GetRandomCfg(_env);
          
-         if (!tmp.isCollision(_env, Stats, cd, *cdInfo,true, &callee)) {
+         if (!tmp.isCollision(_env, Stats, cd, *this->cdInfo,true, &callee)) {
 	   nodes.push_back( CFG(tmp));
 	   path.push_back ( (Cfg*)tmp.CreateNewCfg() );
 	   Stats.IncNodes_Generated();
@@ -274,17 +274,17 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     }
   } else { //we want to try numNodess attempts (either free or in collision)
     CFG tmp;
-    for (int i=0; i < numNodes.GetValue(); ++i) {
+    for (int i=0; i < this->numNodes.GetValue(); ++i) {
       Stats.IncNodes_Attempted();
       tmp.GetRandomCfg(_env);
-      if (!tmp.isCollision(_env, Stats, cd, *cdInfo,true, &callee)) {
+      if (!tmp.isCollision(_env, Stats, cd, *this->cdInfo,true, &callee)) {
 	nodes.push_back( CFG(tmp));
 	path.push_back ( (Cfg*)tmp.CreateNewCfg() );
 	Stats.IncNodes_Generated();
       }
 #ifdef COLLISIONCFG
       else{
-	m_vGeneratedCollisionConfiguration[cdInfo->colliding_obst_index].push_back(tmp);
+	m_vGeneratedCollisionConfiguration[this->cdInfo->colliding_obst_index].push_back(tmp);
       }
 #endif
     }
@@ -314,24 +314,24 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
   string callee("BasicPRM::GenerateNodes");
   Environment* pEnv = in_pRegion;
   Stat_Class* pStatClass = in_pRegion->GetStatClass();
-  CollisionDetection* pCd = GetMPProblem()->GetCollisionDetection();
+  CollisionDetection* pCd = this->GetMPProblem()->GetCollisionDetection();
   
-  if (exactNodes.GetValue()==1)
-     cout << "(numNodes=" << numNodes.GetValue() << ") ";
+  if (this->exactNodes.GetValue()==1)
+     cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
   else
-    cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
+    cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
   
   
   
   int nNumCdCalls = 0;
-  if(m_nExactNodes == 1) {  //Generate exactly num nodes
+  if(this->m_nExactNodes == 1) {  //Generate exactly num nodes
     int nFree = 0;
     nNumCdCalls = 0;
-    while(nFree < m_nNumNodes && nNumCdCalls < m_nMaxCdCalls) {
+    while(nFree < this->m_nNumNodes && nNumCdCalls < this->m_nMaxCdCalls) {
       CFG sample;
       sample.SetLabel("BasicPRM",true);
       sample.GetRandomCfg(pEnv);
-      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo,true, &callee);
+      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *this->cdInfo,true, &callee);
       ++nNumCdCalls;
       if (!bCd) {
         ++nFree;
@@ -346,11 +346,11 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
   } else {  //Attempt num nodes
     int nAttempts = 0;
     nNumCdCalls = 0;
-    while(nAttempts < m_nNumNodes && nNumCdCalls < m_nMaxCdCalls) {
+    while(nAttempts < this->m_nNumNodes && nNumCdCalls < this->m_nMaxCdCalls) {
       CFG sample;
       sample.SetLabel("BasicPRM",true);
       sample.GetRandomCfg(pEnv);
-      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo, true, &callee);
+      bool bCd = sample.isCollision(pEnv, *pStatClass, pCd, *this->cdInfo, true, &callee);
       ++nNumCdCalls;
       ++nAttempts;
       if (!bCd) {

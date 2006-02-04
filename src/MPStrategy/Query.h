@@ -199,14 +199,14 @@ class QueryConnect : public ConnectMap<CFG,WEIGHT> {
 	       DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp) :
     ConnectMap<CFG,WEIGHT>() {}
   ~QueryConnect() {
-    selected_node_methods.clear();
-    all_node_methods.clear();
+    this->selected_node_methods.clear();
+    this->all_node_methods.clear();
 
-    selected_component_methods.clear();
-    all_component_methods.clear();
+    this->selected_component_methods.clear();
+    this->all_component_methods.clear();
     
-    //selected_roadmap_methods.clear();
-    //all_roadmap_methods.clear();
+    //this->selected_roadmap_methods.clear();
+    //this->all_roadmap_methods.clear();
   }
 
   virtual vector<NodeConnectionMethod<CFG,WEIGHT>*> GetNodeDefault() {

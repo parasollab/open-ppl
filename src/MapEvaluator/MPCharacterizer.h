@@ -63,8 +63,8 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       typename vector<VID>::iterator itr;
       for(itr = vids.begin(); itr != vids.end(); ++itr)
       {
-        vector<VID> vids = GetMPProblem()->GetDistanceMetric()->RangeQuery(pRoadmap,*itr,m_dRadius);
-        vector<VID> col_vids = GetMPProblem()->GetDistanceMetric()->RangeQuery(pColRoadmap,pGraph->GetData(*itr),m_dRadius);
+        vector<VID> vids = this->GetMPProblem()->GetDistanceMetric()->RangeQuery(pRoadmap,*itr,m_dRadius);
+        vector<VID> col_vids = this->GetMPProblem()->GetDistanceMetric()->RangeQuery(pColRoadmap,pGraph->GetData(*itr),m_dRadius);
         //cout << "VID = " << *itr << " has " << vids.size() 
         //<< "nodes in radius in Free Map and " 
         //<< col_vids.size() << " in Col Map " << endl;
@@ -99,10 +99,10 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
           if(*I == *J)
             continue;
           double df1,df2,dc;
-          DistanceMetric* dm = GetMPProblem()->GetDistanceMetric();
-          df1 = dm->Distance(GetMPProblem()->GetEnvironment(),free_cfg,*I);
-          df2 = dm->Distance(GetMPProblem()->GetEnvironment(),free_cfg,*J);
-          dc = dm->Distance(GetMPProblem()->GetEnvironment(),*I,*J);
+          DistanceMetric* dm = this->GetMPProblem()->GetDistanceMetric();
+          df1 = dm->Distance(this->GetMPProblem()->GetEnvironment(),free_cfg,*I);
+          df2 = dm->Distance(this->GetMPProblem()->GetEnvironment(),free_cfg,*J);
+          dc = dm->Distance(this->GetMPProblem()->GetEnvironment(),*I,*J);
           if(dc >= 0.491 * (df1 + df2 + dc)) {
              return true;
           }
@@ -138,7 +138,7 @@ public:
       
       if(string(pChild->Value()) == "LocalNodeInfoCharacterizer") {
         LocalNodeInfoCharacterizer<CFG,WEIGHT>* localnodeinfo = 
-            new LocalNodeInfoCharacterizer<CFG,WEIGHT>(pChild,GetMPProblem());
+            new LocalNodeInfoCharacterizer<CFG,WEIGHT>(pChild,this->GetMPProblem());
         all_NodeCharacterizerMethod.push_back(localnodeinfo);
       } else {
         LOG_WARNING_MSG("MPCharacterizer::  I don't know: "<< endl << *pChild);

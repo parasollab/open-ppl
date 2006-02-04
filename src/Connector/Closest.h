@@ -84,7 +84,7 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
 
 template <class CFG, class WEIGHT>
 Closest<CFG,WEIGHT>::Closest():NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "closest"; 
+  this->element_name = "closest"; 
   SetDefault();
 }
 
@@ -92,7 +92,7 @@ template <class CFG, class WEIGHT>
 Closest<CFG,WEIGHT>::Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
     NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
   LOG_DEBUG_MSG("Closest::Closest()"); 
-  element_name = "closest"; 
+  this->element_name = "closest"; 
   SetDefault();
   ParseXML(in_pNode);
   
@@ -106,7 +106,7 @@ Closest<CFG,WEIGHT>::Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
 
 template <class CFG, class WEIGHT>
 Closest<CFG,WEIGHT>::Closest(int k):NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "closest"; 
+  this->element_name = "closest"; 
   kclosest = k;
 }
 
@@ -167,7 +167,7 @@ Closest<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << "\tINTEGER (default " << KCLOSEST << ")";
   _os << endl;
   _os.setf(ios::right,ios::adjustfield);
@@ -178,7 +178,7 @@ template <class CFG, class WEIGHT>
 void
 Closest<CFG, WEIGHT>::
 PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " kclosest = ";
+  _os << "\n" << this->GetName() << " kclosest = ";
   _os << kclosest;
   _os << endl;
 }
@@ -187,7 +187,7 @@ template <class CFG, class WEIGHT>
 void
 Closest<CFG, WEIGHT>::
 PrintOptions(ostream& out_os){
-  out_os << "    " << GetName() << "::  kclosest = ";
+  out_os << "    " << this->GetName() << "::  kclosest = ";
   out_os << kclosest;
   out_os << endl;
 }
@@ -256,7 +256,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                         _rm->m_pRoadmap->GetData(kp[j].first),
                         _rm->m_pRoadmap->GetData(kp[j].second),
                         &lpOutput,
-                        connectionPosRes, connectionOriRes, 
+                        this->connectionPosRes, this->connectionOriRes, 
                         (!addAllEdges) )) {
       _rm->m_pRoadmap->AddEdge(kp[j].first, kp[j].second, lpOutput.edge);
       Stats.IncConnections_Made();
@@ -337,7 +337,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm,
                _rm->m_pRoadmap->GetData(KP->first),
                _rm->m_pRoadmap->GetData(KP->second),
-               &lpOutput, connectionPosRes, connectionOriRes, 
+               &lpOutput, this->connectionPosRes, this->connectionOriRes, 
                (!addAllEdges) )) {
       _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
     }

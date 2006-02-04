@@ -494,10 +494,10 @@ OBPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   int i;
   for (i =1; i < argc; ++i) {
-    if( numNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (chunkSize.AckCmdLine(&i, argc, argv) ) {
-    } else if (numShells.AckCmdLine(&i, argc, argv) ) {
+    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (this->exactNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (this->chunkSize.AckCmdLine(&i, argc, argv) ) {
+    } else if (this->numShells.AckCmdLine(&i, argc, argv) ) {
     } else if (proportionSurface.AckCmdLine(&i, argc, argv) ) {
     } else if (collPair.AckCmdLine(&i, argc, argv) ) {
       if (!ValidatePairs(NULL,collPair,NULL)) {
@@ -536,10 +536,10 @@ PrintUsage(ostream& _os) {
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; numNodes.PrintUsage(_os);
-  _os << "\n\t"; exactNodes.PrintUsage(_os);
-  _os << "\n\t"; chunkSize.PrintUsage(_os);
-  _os << "\n\t"; numShells.PrintUsage(_os);
+  _os << "\n\t"; this->numNodes.PrintUsage(_os);
+  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
+  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
+  _os << "\n\t"; this->numShells.PrintUsage(_os);
   _os << "\n\t"; proportionSurface.PrintUsage(_os);
   _os << "\n\t"; collPair.PrintUsage(_os);
   _os << "\n\t"; freePair.PrintUsage(_os);
@@ -554,10 +554,10 @@ void
 OBPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
-  _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
-  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
-  _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
-  _os << numShells.GetFlag() << " " << numShells.GetValue() << " ";
+  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
+  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
+  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
+  _os << this->numShells.GetFlag() << " " << this->numShells.GetValue() << " ";
   _os << proportionSurface.GetFlag() << " " << proportionSurface.GetValue() << " ";
   _os << collPair.GetFlag() << " " << collPair.GetValue() << " ";
   _os << freePair.GetFlag() << " " << freePair.GetValue() << " ";
@@ -571,10 +571,10 @@ template <class CFG>
 OBPRM<CFG>::
     PrintOptions(ostream& _os){
   _os << "    " << GetName() << ":: ";
-  _os << " num nodes = " << numNodes.GetValue() << " ";
-  _os << " exact  = " << exactNodes.GetValue() << " ";
-  _os << " chunk size = " << chunkSize.GetValue() << " ";
-  _os << " num shells = " << numShells.GetValue() << " ";
+  _os << " num nodes = " << this->numNodes.GetValue() << " ";
+  _os << " exact  = " << this->exactNodes.GetValue() << " ";
+  _os << " chunk size = " << this->chunkSize.GetValue() << " ";
+  _os << " num shells = " << this->numShells.GetValue() << " ";
   _os << endl << "                    ";
   _os << "  proportionSurface = " << proportionSurface.GetValue() << " ";
   _os << "  collPair = " << collPair.GetValue() << " ";
@@ -607,26 +607,26 @@ OBPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
   Environment* _env = in_pRegion;
   Stat_Class& Stats = *(in_pRegion->GetStatClass());
-  CollisionDetection* cd = GetMPProblem()->GetCollisionDetection();
-  DistanceMetric* dm =  GetMPProblem()->GetDistanceMetric();
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+  DistanceMetric* dm =  this->GetMPProblem()->GetDistanceMetric();
          
-  int origNumNodes = numNodes.GetValue();        
+  int origNumNodes = this->numNodes.GetValue();        
          
          
 #ifndef QUIET
-  cout << "(numNodes="          << numNodes.GetValue()          << ", ";
-  cout << "(exactNodes="          << exactNodes.GetValue()          << ", ";
-  cout << "(chunkSize="          << chunkSize.GetValue()          << ", ";
+  cout << "(numNodes="          << this->numNodes.GetValue()          << ", ";
+  cout << "(exactNodes="          << this->exactNodes.GetValue()          << ", ";
+  cout << "(chunkSize="          << this->chunkSize.GetValue()          << ", ";
   cout << "\tproportionSurface="<< proportionSurface.GetValue() << ", ";
-  cout << "\nnumShells="        << numShells.GetValue()         << ", ";
+  cout << "\nnumShells="        << this->numShells.GetValue()         << ", ";
   cout << "collPair="           << collPair.GetValue()          << ", ";
   cout << "freePair="           << freePair.GetValue()          << ", ";
   cout << "clearanceFactor="    << clearanceFactor.GetValue()   << ") ";
 #endif
   
-  bool bExact = exactNodes.GetValue() == 1? true: false;
+  bool bExact = this->exactNodes.GetValue() == 1? true: false;
 
-/*   if  (exactNodes.GetValue() == 1){ */
+/*   if  (this->exactNodes.GetValue() == 1){ */
 /*     cerr << "\nFunction to generate exact numbers for OBPRM not implemented yet." << endl; */
 /*   }  */
 
@@ -644,17 +644,17 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
   double P = proportionSurface.GetValue();
   
   // Subtract # of robots (ie, numMultiBody-1)
-  // int NSEED = (int)(P * numNodes.GetValue()/(numMultiBody-1)/numShells.GetValue());
-  // int NFREE = (int)((1.0-P) * numNodes.GetValue()/(numMultiBody-1));
+  // int NSEED = (int)(P * this->numNodes.GetValue()/(numMultiBody-1)/this->numShells.GetValue());
+  // int NFREE = (int)((1.0-P) * this->numNodes.GetValue()/(numMultiBody-1));
   
   // Subtract # of robots (ie, numExternalBody-1)
   
 
-  int NSEED = (int)(P * numNodes.GetValue()/(numExternalBody-1)/numShells.GetValue());
-  int NFREE = (int)((1.0-P) * numNodes.GetValue()/(numExternalBody-1));
+  int NSEED = (int)(P * this->numNodes.GetValue()/(numExternalBody-1)/this->numShells.GetValue());
+  int NFREE = (int)((1.0-P) * this->numNodes.GetValue()/(numExternalBody-1));
   
   if (NSEED < 1) NSEED = 1;
-  int nNodesGap = numNodes.GetValue() - nodes.size();  
+  int nNodesGap = this->numNodes.GetValue() - nodes.size();  
   int nNumTries = 0;
  
   
@@ -699,8 +699,8 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
       else 
 	//if(numMultiBody == 1) { //if robot is the only object
 	if(numExternalBody == 1) { //if robot is the only object
-	  vector<CFG> CobstNodes = GenCfgsFromCObst(_env, Stats, cd, dm, obstacle,
-						    numNodes.GetValue());
+	  vector<CFG> CobstNodes = this->GenCfgsFromCObst(_env, Stats, cd, dm, obstacle,
+						    this->numNodes.GetValue());
 	  for(int i=0; i<CobstNodes.size(); ++i){
 	    CobstNodes[i].obst = obstacle;
  	    nodesBuffer.push_back(CobstNodes[i]); 
@@ -718,10 +718,10 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
 	nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 	
 	nNodesGap = nNodesGap - nActualNodes;
         ///\todo figure out this logic
-        numNodes.PutValue(nNodesGap);/////////why?
+        this->numNodes.PutValue(nNodesGap);/////////why?
  	nodesBuffer.erase(nodesBuffer.begin(), nodesBuffer.end()); 
 	
-	NSEED = (int)(P * nNodesGap/(numExternalBody-1)/numShells.GetValue());
+	NSEED = (int)(P * nNodesGap/(numExternalBody-1)/this->numShells.GetValue());
 	NFREE = (int)((1.0-P) * nNodesGap/(numExternalBody-1));
 	if (NSEED < 1) NSEED = 1;
       }else if (nActualNodes == nNodesGap){//Generated exact number of nodes
@@ -764,7 +764,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
   WritePathConfigurations("surface.path", surface, _env);
 #endif
   ///reset numNodes back to origional value
-  numNodes.PutValue(origNumNodes);
+  this->numNodes.PutValue(origNumNodes);
 }
 
 
@@ -796,7 +796,7 @@ ValidatePairs(char* msg, n_str_param params, pair<int,int>* results) {
   
   int code1 = TranslateOptionCode(str1,params);
   int code2 = TranslateOptionCode(str2,params);
-  if (code1!=INVALID_OPTION && code2!=INVALID_OPTION){
+  if (code1!=BasicOBPRM<CFG>::INVALID_OPTION && code2!=BasicOBPRM<CFG>::INVALID_OPTION){
     //-- If storage was provided, store field values
     if (results){
       results->first = code1;
@@ -859,7 +859,7 @@ TranslateOptionCode(char* mnemonic, n_str_param param) {
 	for (i=0;i<MM.size();++i)
 	  cout << "\n\t" <<setw(5)<< MM[i].GetFlag() << "     " <<MM[i].GetValue();
 	// return MM.size()+i;
-	return INVALID_OPTION;
+	return BasicOBPRM<CFG>::INVALID_OPTION;
       }
     }
   }
@@ -878,7 +878,7 @@ TranslateOptionCode(char* mnemonic, n_str_param param) {
     param.GetFlag() << " cM rV\","
     "\n\tcM will be used as the option for the robot "
     "\n\tand rV will be used as the option for the obstacle.\n\n";
-  return INVALID_OPTION;  
+  return BasicOBPRM<CFG>::INVALID_OPTION;  
 };
 
 
@@ -891,11 +891,11 @@ GenSurfaceCfgs4Obst(Environment* env, Stat_Class& Stats,
   pair<int,int> seedSelect;
   ValidatePairs("seedSelect", collPair, &seedSelect);
   
-  if(seedSelect.first == N_rT && seedSelect.second == N_rT) {
+  if(seedSelect.first == this->N_rT && seedSelect.second == this->N_rT) {
     CFG cfg;
     vector<Cfg*> pResult;
     cfg.GenSurfaceCfgs4ObstNORMAL(env, Stats, cd, obstacle, nCfgs, 
-				  *cdInfo, pResult);
+				  *this->cdInfo, pResult);
     vector<CFG> result;
     int i;
     for(i = 0; i < pResult.size(); i++)
@@ -938,7 +938,7 @@ GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
     bool inBB = PushCfgToBoundingBox(env,obstSeeds[i],OutsideNode);
     if (inBB) {
       if (OutsideNode.AlmostEqual(obstSeeds[i]) ||
-	  !obstSeeds[i].isCollision(env,Stats,cd,robot,obstacle,*cdInfo))
+	  !obstSeeds[i].isCollision(env,Stats,cd,robot,obstacle,*this->cdInfo))
 	continue; //no valid outside or inside node was found
     }
     else
@@ -950,7 +950,7 @@ GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
 			     clearanceFactor);
     
     // Choose as many as nshells
-    preshells = Shells(tmp, numShells.GetValue());
+    preshells = Shells(tmp, this->numShells.GetValue());
     shells = InsideBoundingBox(env, preshells);
     preshells.erase(preshells.begin(), preshells.end());
     
@@ -991,8 +991,8 @@ GenFreeCfgs4Obst(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
   for(int i = 0 ; i < nCfgs ; i++){
     if( cfg.GenerateOverlapCfg(env, robot, ptsRobot[i], ptsObstacle[i], &cfg) ) {
       // check if it is possible to generate a Cfg with this pose.
-      //if(!cfg.isCollision(env, *cdInfo) && CfgInsideBB(env,cfg)) {
-      if(!cfg.isCollision(env, Stats, cd, *cdInfo,true, &Callee)) {
+      //if(!cfg.isCollision(env, *this->cdInfo) && CfgInsideBB(env,cfg)) {
+      if(!cfg.isCollision(env, Stats, cd, *this->cdInfo,true, &Callee)) {
 	free.push_back(cfg);
       }
     }
@@ -1032,7 +1032,7 @@ GenerateSeeds(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
   for(int i = 0 ; i < nseeds ; i++){
     if(cfg.GenerateOverlapCfg(env, rob, ptsRobot[i], ptsObstacle[i], &cfg)){
       // check if it is possible to generate a Cfg with this pose.
-      if(cfg.isCollision(env, Stats, cd, *cdInfo,true,&Callee)) {
+      if(cfg.isCollision(env, Stats, cd, *this->cdInfo,true,&Callee)) {
 	seeds->push_back(cfg);
       }
     }

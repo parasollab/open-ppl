@@ -522,9 +522,9 @@ void
 BasicOBPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
-    if( numNodes.AckCmdLine(&i, argc, argv) ) {
-    }else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
-    }else if (chunkSize.AckCmdLine(&i, argc, argv) ) {
+    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
+    }else if (this->exactNodes.AckCmdLine(&i, argc, argv) ) {
+    }else if (this->chunkSize.AckCmdLine(&i, argc, argv) ) {
     }else if (numShells.AckCmdLine(&i, argc, argv) ) {
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
@@ -546,10 +546,10 @@ PrintUsage(ostream& _os) {
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; numNodes.PrintUsage(_os);
+  _os << "\n\t"; this->numNodes.PrintUsage(_os);
   _os << "\n\t"; numShells.PrintUsage(_os);
-  _os << "\n\t"; exactNodes.PrintUsage(_os);
-  _os << "\n\t"; chunkSize.PrintUsage(_os);
+  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
+  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
   _os.setf(ios::right,ios::adjustfield);
 }
 
@@ -559,9 +559,9 @@ void
 BasicOBPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
-  _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
-  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
-  _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
+  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
+  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
+  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
   _os << numShells.GetFlag() << " " << numShells.GetValue() << " ";
   _os << endl;
 }
@@ -571,9 +571,9 @@ void
 BasicOBPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << numNodes.GetValue() << " ";
-  out_os << " exact  = " << exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << chunkSize.GetValue() << " ";
+  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
+  out_os << " exact  = " << this->exactNodes.GetValue() << " ";
+  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
   out_os << " num shells = " << numShells.GetValue() << " ";
   out_os << " Balanced = " << m_balanced << " ";
   out_os << endl;
@@ -605,22 +605,22 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
   LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes()");
 #ifndef QUIET
-  cout << "(numNodes=" << numNodes.GetValue() << ", "<<flush;
-  cout << "(exactNodes=" << exactNodes.GetValue() << ", "<<flush;
-  cout << "(chunkSize=" << chunkSize.GetValue() << ", "<<flush;
+  cout << "(numNodes=" << this->numNodes.GetValue() << ", "<<flush;
+  cout << "(exactNodes=" << this->exactNodes.GetValue() << ", "<<flush;
+  cout << "(chunkSize=" << this->chunkSize.GetValue() << ", "<<flush;
   cout << "numShells=" << numShells.GetValue() << ") "<<flush;
 #endif
   
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
-  path.reserve(numNodes.GetValue());
+  path.reserve(this->numNodes.GetValue());
 #endif
 
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-BasicOBPRM::GenerateNodes"); Callee = Callee+Method;}
 if(m_balanced == 0) {
   // generate in bounding box
-  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < numNodes.GetValue() ; attempts++) {
+  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < this->numNodes.GetValue() ; attempts++) {
     //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() attempts = " << attempts);
     CFG cfg1,last_free;
     cfg1.GetRandomCfg(_env);
@@ -628,7 +628,7 @@ if(m_balanced == 0) {
     CallCnt=" 1st Sample"; 
     std::string tmpStr = Callee+CallCnt;
     
-    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
     if (!cfg1_free) {  //push out of Obs
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push Out of Obs");
       CFG r_dir;
@@ -642,7 +642,7 @@ if(m_balanced == 0) {
         if(!cfg1.InBoundingBox(_env) ) {outofbb=true;continue;} //out of bounding box
         CallCnt=" PushOutOfObs"; 
         std::string tmpStr = Callee+CallCnt;
-        pushed_enough = !cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+        pushed_enough = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
         if(pushed_enough) {
          // nodes.push_back(CFG(cfg1));
          // newNodes++;
@@ -663,7 +663,7 @@ if(m_balanced == 0) {
         if(!cfg1.InBoundingBox(_env) ) {outofbb=true;continue;} //out of bounding box
         CallCnt=" PushToObs"; 
         std::string tmpStr = Callee+CallCnt;
-        pushed_enough = cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+        pushed_enough = cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
         if(pushed_enough) {
           //nodes.push_back(CFG(last_free));
           //newNodes++;
@@ -673,7 +673,7 @@ if(m_balanced == 0) {
       } while (pushed_enough == false && outofbb == false);
     }
     
-    if (exactNodes.GetValue())
+    if (this->exactNodes.GetValue())
       success_cntr = nodes.size();
     else
       success_cntr = attempts+1;
@@ -684,7 +684,7 @@ if(m_balanced == 0) {
   //m_balFree=0;
 
   // generate in bounding box
-  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < numNodes.GetValue() ; attempts++) {
+  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < this->numNodes.GetValue() ; attempts++) {
     //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() attempts = " << attempts);
     CFG cfg1,last_free;
     cfg1.GetRandomCfg(_env);
@@ -692,7 +692,7 @@ if(m_balanced == 0) {
     CallCnt=" 1st Sample"; 
     std::string tmpStr = Callee+CallCnt;
     
-    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
     if (!cfg1_free && (m_balColl <= m_balFree)) {  //push out of Obs
       ++m_balColl;
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push Out of Obs");
@@ -708,7 +708,7 @@ if(m_balanced == 0) {
         CallCnt=" PushOutOfObs"; 
         std::string tmpStr = Callee+CallCnt;
         ++m_balColl;
-        pushed_enough = !cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+        pushed_enough = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
         if(pushed_enough) {
          // nodes.push_back(CFG(cfg1));
          // newNodes++;
@@ -731,7 +731,7 @@ if(m_balanced == 0) {
         CallCnt=" PushToObs"; 
         std::string tmpStr = Callee+CallCnt;
         ++m_balFree;
-        pushed_enough = cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+        pushed_enough = cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
         if(pushed_enough) {
           //nodes.push_back(CFG(last_free));
           //newNodes++;
@@ -741,7 +741,7 @@ if(m_balanced == 0) {
       } while (pushed_enough == false && outofbb == false);
     }
     
-    if (exactNodes.GetValue())
+    if (this->exactNodes.GetValue())
       success_cntr = nodes.size();
     else
       success_cntr = attempts+1;
@@ -773,7 +773,7 @@ ComputeCSpaceShells(Environment* _env, Stat_Class& Stats,
   CallCnt=" ComputeCSpaceShells"; 
   std::string tmpStr = Callee+CallCnt;
   for(int i=0; i<numShells.GetValue(); ++i) {
-   if(!_freeCfg.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr) && _freeCfg.InBoundingBox(_env)) {
+   if(!_freeCfg.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr) && _freeCfg.InBoundingBox(_env)) {
      nodes.push_back(CFG(_freeCfg));
    }
      _freeCfg.Increment(_incr);
@@ -791,8 +791,8 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &nodes) {
   
   Environment* _env = in_pRegion;
   Stat_Class& Stats = *(in_pRegion->GetStatClass());
-  CollisionDetection* cd = GetMPProblem()->GetCollisionDetection();
-  DistanceMetric* dm =  GetMPProblem()->GetDistanceMetric();
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+  DistanceMetric* dm =  this->GetMPProblem()->GetDistanceMetric();
   
   GenerateNodes(_env,  Stats,  cd,  dm, nodes);
 };
@@ -816,7 +816,7 @@ GenerateInsideCfg(Environment* _env, Stat_Class& Stats,
   
   // check the cfg obtained by center of mass overlapping if valid
   if (!insideNode->isCollision(_env, Stats, _cd, rob, obst,
-			       *cdInfo, true, &(Callee))) {
+			       *this->cdInfo, true, &(Callee))) {
     
     // if center of mass does not work in getting the cfg in collision,
     // use random vertex of an obstacle (J Kim)
@@ -866,7 +866,7 @@ GenerateOutsideCfg(Environment* env, Stat_Class& Stats,
   {std::string Method("-BasicOBPRM::GenerateOutsideCfg");Callee=Callee+Method;}
 
   OutsideNode.add(InsideNode, incrCfg);
-  while(OutsideNode.isCollision(env, Stats, cd, rob, obst, *cdInfo, 
+  while(OutsideNode.isCollision(env, Stats, cd, rob, obst, *this->cdInfo, 
                                 true, &(Callee)) ) {
     OutsideNode.add(OutsideNode, incrCfg);
     if(count++ > 500)
@@ -936,7 +936,7 @@ GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
   tmp.push_back(high);
   std::string tmpStr = Callee+CallM;
   while((delta >= clearanceFactor*PositionRes) && (cnt < MAX_CONVERGE)){
-    if(mid.isCollision(env, Stats, cd , rob, obst, *cdInfo,
+    if(mid.isCollision(env, Stats, cd , rob, obst, *this->cdInfo,
                        true, &tmpStr) ) {
       low = mid;
     } else {
@@ -951,7 +951,7 @@ GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
   // if converged save the cfgs that don't collide with the environment
   if(cnt < MAX_CONVERGE) {
     tmpStr = Callee+CallH;
-    if(!high.isCollision(env, Stats, cd, *cdInfo, true, &tmpStr)) {
+    if(!high.isCollision(env, Stats, cd, *this->cdInfo, true, &tmpStr)) {
       surface = FirstFreeCfgs(env, Stats, cd,tmp);
     }
   }
@@ -979,7 +979,7 @@ GenCfgsFromCObst(Environment* env, Stat_Class& Stats,
     gen.GenerateOverlapCfg(env, robot, voidA, voidB, &gen);  // voidA, voidB is not used.
     
     ///check collision
-    if(gen.isCollision(env, Stats, cd, *cdInfo,true, &(Callee)))
+    if(gen.isCollision(env, Stats, cd, *this->cdInfo,true, &(Callee)))
       obstSeeds.push_back(gen);
     else
       surface.push_back(gen);
@@ -1285,7 +1285,7 @@ FirstFreeCfgs(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
   free.reserve(size);
   int i = 0; int cnt = 0;
   for (i = 0, cnt = 0; i < size && cnt < n; i++){
-    if(!cfgs[i].isCollision(env, Stats, cd, *cdInfo,true,&(Callee))){
+    if(!cfgs[i].isCollision(env, Stats, cd, *this->cdInfo,true,&(Callee))){
       free.push_back(cfgs[i]);
       cnt++;
     }

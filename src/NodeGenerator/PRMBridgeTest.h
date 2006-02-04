@@ -209,9 +209,9 @@ void
 BridgeTestPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
-    if( numNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if ( chunkSize.AckCmdLine(&i, argc, argv) ) {
-    } else if ( exactNodes.AckCmdLine(&i, argc, argv) ) {
+    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if ( this->chunkSize.AckCmdLine(&i, argc, argv) ) {
+    } else if ( this->exactNodes.AckCmdLine(&i, argc, argv) ) {
     }else if ( bridge_d.AckCmdLine(&i, argc, argv) ) {
     } else {
       cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
@@ -233,9 +233,9 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; numNodes.PrintUsage(_os);
-  _os << "\n\t"; chunkSize.PrintUsage(_os);
-  _os << "\n\t"; exactNodes.PrintUsage(_os);
+  _os << "\n\t"; this->numNodes.PrintUsage(_os);
+  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
+  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
   _os << "\n\t"; bridge_d.PrintUsage(_os);
   
   _os.setf(ios::right,ios::adjustfield);
@@ -247,9 +247,9 @@ void
 BridgeTestPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
-  _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
-  _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
-  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
+  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
+  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
+  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
   _os << bridge_d.GetFlag() << " " << bridge_d.GetValue() << " ";
   _os << endl;
 }
@@ -268,9 +268,9 @@ void
 BridgeTestPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << numNodes.GetValue() << " ";
-  out_os << " exact = " << exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << chunkSize.GetValue() << " ";
+  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
+  out_os << " exact = " << this->exactNodes.GetValue() << " ";
+  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
   out_os << " bridge d = " << bridge_d.GetValue() << " ";
   out_os << endl;
 }
@@ -314,23 +314,23 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   }	
 
 #ifndef QUIET
-  cout << "(numNodes=" << numNodes.GetValue() << ") ";
-  cout << "(chunkSize=" << chunkSize.GetValue() << ") ";
-  cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
+  cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
+  cout << "(chunkSize=" << this->chunkSize.GetValue() << ") ";
+  cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
   cout << "(d=" << bridge_d.GetValue() << ") ";
 #endif
   
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
-  path.reserve(numNodes.GetValue());
+  path.reserve(this->numNodes.GetValue());
 #endif
-  bool bExact = exactNodes.GetValue() == 1? true: false;
+  bool bExact = this->exactNodes.GetValue() == 1? true: false;
 
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-BridgeTestPRM::GenerateNodes"); Callee = Callee+Method;}
 
   // generate in bounding box
-  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < numNodes.GetValue() ; attempts++) {
+  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < this->numNodes.GetValue() ; attempts++) {
     
     // cfg1 & cfg2 are generated to be inside bbox
     CFG cfg1, cfg2, cfgP, incr;
@@ -340,7 +340,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     CallCnt="1"; 
     std::string tmpStr = Callee+CallCnt;
     
-    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
     if (!cfg1_free){
       double gauss_dist = GaussianDistribution(0, bridge_d.GetValue()); 
 
@@ -351,14 +351,14 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
       CallCnt="2";
       tmpStr = Callee+CallCnt; 
 
-      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
       if (!cfg2_free){
 	cfgP.WeightedSum(cfg1,cfg2,0.5);
 
 	CallCnt="3";
 	tmpStr = Callee+CallCnt; 
 
-	bool cfgP_free = !cfgP.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
+	bool cfgP_free = !cfgP.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
 	if(cfgP_free){
 	  nodes.push_back(CFG(cfgP)); 
 	  newNodes++;
@@ -392,8 +392,8 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
 
   Environment* pEnv = in_pRegion;
   Stat_Class* pStatClass = in_pRegion->GetStatClass(); 
-  CollisionDetection* pCd = GetMPProblem()->GetCollisionDetection();
-  DistanceMetric *dm = GetMPProblem()->GetDistanceMetric();
+  CollisionDetection* pCd = this->GetMPProblem()->GetCollisionDetection();
+  DistanceMetric *dm = this->GetMPProblem()->GetDistanceMetric();
  
   GenerateNodes(pEnv,*pStatClass, pCd, dm, outCfgs);
 

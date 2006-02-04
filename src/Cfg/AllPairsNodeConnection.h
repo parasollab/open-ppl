@@ -91,7 +91,7 @@ class AllPairsNodeConnection: public NodeConnectionMethod<CFG,WEIGHT> {
 template <class CFG, class WEIGHT>
 AllPairsNodeConnection<CFG,WEIGHT>::
 AllPairsNodeConnection():NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "closest"; 
+  this->element_name = "closest"; 
   SetDefault();
 }
 
@@ -100,7 +100,7 @@ AllPairsNodeConnection<CFG,WEIGHT>::
 AllPairsNodeConnection(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
     NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
   LOG_DEBUG_MSG("AllPairsNodeConnection::AllPairsNodeConnection()"); 
-  element_name = "AllPairsNodeConnection"; 
+  this->element_name = "AllPairsNodeConnection"; 
   //SetDefault();
   ParseXML(in_pNode);
   
@@ -108,16 +108,6 @@ AllPairsNodeConnection(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
   LOG_DEBUG_MSG("~AllPairsNodeConnection::AllPairsNodeConnection()"); 
 }
 
-
-
-
-/*
-template <class CFG, class WEIGHT>
-Closest<CFG,WEIGHT>::Closest(int k):NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "closest"; 
-  kclosest = k;
-}
-*/
 
 template <class CFG, class WEIGHT>
 AllPairsNodeConnection<CFG,WEIGHT>::
@@ -137,34 +127,6 @@ ParseXML(TiXmlNode* in_pNode) {
   
 }
 
-/*
-template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }    
-    if (c >= '0' && c <= '9') {
-      if (is >> kclosest) {
-        if (kclosest < 0)
-          throw BadUsage();
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "ERROR in \'closest\' parameters\n";
-    PrintUsage(cerr);
-    exit(-1);
-  }
-}
-
-*/
 
 /*template <class CFG, class WEIGHT>
 void AllPairsNodeConnection<CFG,WEIGHT>::SetDefault() {
@@ -185,26 +147,6 @@ PrintUsage(ostream& _os){
 }
 */
 
-/*
-template <class CFG, class WEIGHT>
-void
-Closest<CFG, WEIGHT>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " kclosest = ";
-  _os << kclosest;
-  _os << endl;
-}
-*/
-/*
-template <class CFG, class WEIGHT>
-void
-Closest<CFG, WEIGHT>::
-PrintOptions(ostream& out_os){
-  out_os << "    " << GetName() << "::  kclosest = ";
-  out_os << kclosest;
-  out_os << endl;
-}
-*/
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>* 
@@ -255,7 +197,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                             _rm->m_pRoadmap->GetData(verticesVID[i]),
                             _rm->m_pRoadmap->GetData(verticesVID[j]),
                             &lpOutput,
-                            connectionPosRes, connectionOriRes, 
+                            this->connectionPosRes, this->connectionOriRes, 
                             (!addAllEdges) )) {
             _rm->m_pRoadmap->AddEdge(verticesVID[i], verticesVID[j],
                                                       lpOutput.edge);
@@ -311,7 +253,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                             _rm->m_pRoadmap->GetData(v1[i]),
                             _rm->m_pRoadmap->GetData(v2[j]),
                             &lpOutput,
-                            connectionPosRes, connectionOriRes, 
+                            this->connectionPosRes, this->connectionOriRes, 
                             (!addAllEdges) )) {
             _rm->m_pRoadmap->AddEdge(v1[i], v2[j],
                                                       lpOutput.edge);
@@ -320,62 +262,6 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         }
      }
 
-
-
-
-
-/*
-
-  //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
-#ifndef QUIET
-  cout << "closest*(k="<< kclosest <<"): "<<flush;
-#endif
-  
-  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;  
-  vector< pair<VID,VID> > kp;
-
-  if((v1.size() < kclosest) && (v2.size() < kclosest)) {//all pairs
-    for(typename vector<CFG>::iterator I = v1.begin(); I != v1.end(); ++I)
-      for(typename vector<CFG>::iterator J = v2.begin(); J != v2.end(); ++J)
-    if(*I != *J)
-      kp.push_back(make_pair<VID,VID>(pMap->GetVID(*I), pMap->GetVID(*J)));
-  }
-
-  if((v1.size() >= kclosest) && (v2.size() >= kclosest)) { //k closest each way
-    kp = dm->FindKClosestPairs(_rm, v1, v2, kclosest);
-    if(v1 != v2) {
-      vector<pair<VID,VID> > kp2;
-      kp2 = dm->FindKClosestPairs(_rm, v2, v1, kclosest);
-      kp.insert(kp.end(), kp2.begin(), kp2.end());
-    }
-  } 
-
-  if((v1.size() < kclosest) && (v2.size() >= kclosest)) { //k closest in v2
-    kp = dm->FindKClosestPairs(_rm, v1, v2, kclosest);
-  }
-
-  if((v1.size() >= kclosest) && (v2.size() < kclosest)) { //k closest in v1
-    kp = dm->FindKClosestPairs(_rm, v2, v1, kclosest);
-  }
-
-  // for each pair identified
-  LPOutput<CFG,WEIGHT> lpOutput;
-  for(vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
-    if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) 
-      continue;
-#if CHECKIFSAMECC
-    if(IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) 
-      continue;
-#endif
-    if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm,
-               _rm->m_pRoadmap->GetData(KP->first),
-               _rm->m_pRoadmap->GetData(KP->second),
-               &lpOutput, connectionPosRes, connectionOriRes, 
-               (!addAllEdges) )) {
-      _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
-    }
-  } 
-*/
 }
 
 #endif

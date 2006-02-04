@@ -348,7 +348,7 @@ StraightLine<CFG, WEIGHT>::
     cd_cntr ++;
     if(checkCollision){
       bool bbox_check = tick.InBoundingBox(_env);
-      bool col_check = tick.isCollision(_env,Stats,cd, *cdInfo,true,&(Callee));  
+      bool col_check = tick.isCollision(_env,Stats,cd, *this->cdInfo,true,&(Callee));  
       if(!bbox_check || col_check){  ///changed to precompute bool vals,
                                      ///compiler was optimizing and counts got screwed up --roger 9.17.2005
         CFG neg_incr;
@@ -426,7 +426,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     cd_cntr++; //?
     
     //Check collision
-    //if( cd->IsInCollision(_env, Stats, *cdInfo, lineSegment) )
+    //if( cd->IsInCollision(_env, Stats, *this->cdInfo, lineSegment) )
     std::string Callee(GetName()),Method("-StraightLine::lineSegmentInCollision");
     Callee+=Method;
 
@@ -439,7 +439,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
       }
     }
 
-    if(cd->IsInCollision(_env, Stats, *cdInfo, lineSegment, true, &Callee) )
+    if(cd->IsInCollision(_env, Stats, *this->cdInfo, lineSegment, true, &Callee) )
       return true;	//Collide
 
     return false;	//No collision
@@ -496,7 +496,7 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 	}
       } else {
         bool bbox_check = mid.InBoundingBox(_env);
-        bool coll_check = mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee));
+        bool coll_check = mid.isCollision(_env,Stats,cd,*this->cdInfo,true,&(Callee));
         cd_cntr++;	//?
 	if(!bbox_check || coll_check ) { ///changed to precompute bool vals,
                                         ///compiler was optimizing and counts got screwed up --roger 9.17.2005

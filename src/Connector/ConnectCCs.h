@@ -130,7 +130,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::ConnectCCs():
   ComponentConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "components"; 
+  this->element_name = "components"; 
 
   SetDefault();
 }
@@ -142,7 +142,7 @@ ConnectCCs(TiXmlNode* in_pNode, MPProblem* in_pProblem):
   ComponentConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
   
   LOG_DEBUG_MSG("ConnectCCs::ConnectCCs()");
-  element_name = "components"; 
+  this->element_name = "components"; 
   SetDefault();
    
   int _kpairs;
@@ -164,7 +164,7 @@ ConnectCCs(TiXmlNode* in_pNode, MPProblem* in_pProblem):
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::ConnectCCs(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetection* cd, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp):
   ComponentConnectionMethod<CFG,WEIGHT>(rdmp, cd, dm, lp) {
-  element_name = string("components");
+  this->element_name = string("components");
 
   SetDefault();
 }
@@ -230,7 +230,7 @@ ConnectCCs<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << "\tINTEGER INTEGER (default kpairs:" << KPAIRS << ", smallcc:" << SMALL_CC << ")";
   _os << endl;
   _os.setf(ios::right,ios::adjustfield);
@@ -241,7 +241,7 @@ template <class CFG, class WEIGHT>
 void
 ConnectCCs<CFG, WEIGHT>::
 PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " kpairs = ";
+  _os << "\n" << this->GetName() << " kpairs = ";
   _os << kpairs << "smallcc = " << smallcc ;
   _os << endl;
 }
@@ -251,7 +251,7 @@ template <class CFG, class WEIGHT>
 void
 ConnectCCs<CFG, WEIGHT>::
 PrintOptions(ostream& out_os){
-  out_os << "    " << GetName() << "::  kpairs = ";
+  out_os << "    " << this->GetName() << "::  kpairs = ";
   out_os << kpairs << "  smallcc = " << smallcc ;
   out_os << endl;
 }
@@ -291,7 +291,7 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 			     pMap->GetData(cc1vec[c1]),
 			     pMap->GetData(cc2vec[c2]),
 			     &lpOutput, 
-			     connectionPosRes, connectionOriRes, 
+			     this->connectionPosRes, this->connectionOriRes, 
 			     (!addAllEdges)) ) {
 	Stats.IncConnections_Made();
 	pMap->AddEdge(cc1vec[c1], cc2vec[c2], lpOutput.edge);
@@ -340,7 +340,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
        && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
 			  pMap->GetData(kp[i].first),
 			  pMap->GetData(kp[i].second),
-			  &lpOutput, connectionPosRes, connectionOriRes, 
+			  &lpOutput, this->connectionPosRes, this->connectionOriRes, 
 			  (!addAllEdges)) ) {
       pMap->AddEdge(kp[i].first, kp[i].second, lpOutput.edge); 
       Stats.IncConnections_Made();

@@ -450,7 +450,7 @@ public:
     //double magnitude ();
 
     ///Return (V1*V1)+(V2*V2)+(V3*V3)
-    const double normsqr() const { return v[0]*v[0] + v[1]*v[1] + v[2]*v[2]; }
+    const double normsqr() const { return this->v[0]*this->v[0] + this->v[1]*this->v[1] + this->v[2]*this->v[2]; }
 
     /// Cross Product Operation.
     inline Vector3 crossProduct (Vector3&) const;
@@ -499,13 +499,13 @@ template<class ELEMENT>
 Vector3<ELEMENT>::Vector3(const ELEMENT &_x,const ELEMENT &_y,const ELEMENT &_z)
 :VectorConstantSize<3,ELEMENT>(){
 
-    if(v.size() == 0) 
+    if(this->v.size() == 0) 
     {
-        v.push_back(_x); v.push_back(_y); v.push_back(_z);
+        this->v.push_back(_x); this->v.push_back(_y); this->v.push_back(_z);
     } 
-    else if(v.size() == 3) 
+    else if(this->v.size() == 3) 
     {
-        v[0] = _x; v[1] = _y; v[2] = _z;
+        this->v[0] = _x; this->v[1] = _y; this->v[2] = _z;
     }
     else 
     {
@@ -567,23 +567,23 @@ template<class ELEMENT>
 Vector3<ELEMENT> Vector3<ELEMENT>::crossProduct(
         Vector3 &w) const{
     return (Vector3(
-          v[Yy]*w.v[Zz] - w.v[Yy]*  v[Zz],
-        w.v[Xx]*  v[Zz] -   v[Xx]*w.v[Zz],
-          v[Xx]*w.v[Yy] - w.v[Xx]*  v[Yy]
+          this->v[Yy]*w.v[Zz] - w.v[Yy]*  this->v[Zz],
+        w.v[Xx]*  this->v[Zz] -   this->v[Xx]*w.v[Zz],
+          this->v[Xx]*w.v[Yy] - w.v[Xx]*  this->v[Yy]
         ));
 };
 
 template<class ELEMENT>
 ELEMENT Vector3<ELEMENT>::getX()const{
-    return v[Xx];
+    return this->v[Xx];
 };
 template<class ELEMENT>
 ELEMENT Vector3<ELEMENT>::getY()const{
-    return v[Yy];
+    return this->v[Yy];
 };
 template<class ELEMENT>
 ELEMENT Vector3<ELEMENT>::getZ()const{
-    return v[Zz];
+    return this->v[Zz];
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -694,12 +694,12 @@ Vector6<ELEMENT>::Vector6
     (const ELEMENT &_x,const ELEMENT &_y,const ELEMENT &_z,
      const ELEMENT &_r,const ELEMENT &_p,const ELEMENT &_yaw)
         :VectorConstantSize<6,ELEMENT>(){
-     if(v.size() == 0) {
-    v.push_back(_x); v.push_back(_y); v.push_back(_z);
-    v.push_back(_r); v.push_back(_p); v.push_back(_yaw);
-     } else if(v.size() == 6) {
-    v[0] = _x; v[1] = _y; v[2] = _z;
-    v[3] = _r; v[4] = _p; v[5] = _yaw;
+     if(this->v.size() == 0) {
+    this->v.push_back(_x); this->v.push_back(_y); this->v.push_back(_z);
+    this->v.push_back(_r); this->v.push_back(_p); this->v.push_back(_yaw);
+     } else if(this->v.size() == 6) {
+    this->v[0] = _x; this->v[1] = _y; this->v[2] = _z;
+    this->v[3] = _r; this->v[4] = _p; this->v[5] = _yaw;
      } else {
     cout << " Error in Vector6<ELEMENT>(x,y,z,r,p,w) constructor " << endl;
     exit(-1);
@@ -756,26 +756,26 @@ double Vector6<ELEMENT>::magnitude() {
 
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getX()const{
-    return v[Xx];
+    return this->v[Xx];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getY()const{
-    return v[Yy];
+    return this->v[Yy];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getZ()const{
-    return v[Zz];
+    return this->v[Zz];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getRoll()const{
-    return v[ROLLroll];
+    return this->v[ROLLroll];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getPitch()const{
-    return v[PITCHpitch];
+    return this->v[PITCHpitch];
 };
 template<class ELEMENT>
 ELEMENT Vector6<ELEMENT>::getYaw()const{
-    return v[YAWyaw];
+    return this->v[YAWyaw];
 };
 #endif

@@ -142,9 +142,9 @@ void
 BasicMAPRM<CFG>::
 ParseCommandLine(int argc, char **argv) {
   for (int i =1; i < argc; ++i) {
-    if( numNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (chunkSize.AckCmdLine(&i, argc, argv) ) {
-    } else if (exactNodes.AckCmdLine(&i, argc, argv) ) {
+    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
+    } else if (this->chunkSize.AckCmdLine(&i, argc, argv) ) {
+    } else if (this->exactNodes.AckCmdLine(&i, argc, argv) ) {
     } else if (m_bApprox.AckCmdLine(&i, argc, argv) ) {
     } else if (m_iRays.AckCmdLine(&i, argc, argv) ) {
     } else {
@@ -167,9 +167,9 @@ PrintUsage(ostream& _os) {
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; numNodes.PrintUsage(_os);
-  _os << "\n\t"; chunkSize.PrintUsage(_os);
-  _os << "\n\t"; exactNodes.PrintUsage(_os);
+  _os << "\n\t"; this->numNodes.PrintUsage(_os);
+  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
+  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
   _os << "\n\t"; m_bApprox.PrintUsage(_os);
   _os << "\n\t"; m_iRays.PrintUsage(_os);
   
@@ -181,9 +181,9 @@ void
 BasicMAPRM<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
-  _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
-  _os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
-  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
+  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
+  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
+  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
   _os << m_bApprox.GetFlag() << " " << m_bApprox.GetValue() << " ";
   _os << m_iRays.GetFlag() << " " << m_iRays.GetValue() << " ";
   _os << endl;
@@ -194,9 +194,9 @@ void
 BasicMAPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
-  out_os << chunkSize.GetFlag() << " " << chunkSize.GetValue() << " ";
-  out_os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
+  out_os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
+  out_os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
+  out_os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
   out_os << m_bApprox.GetFlag() << " " << m_bApprox.GetValue() << " ";
   out_os << m_iRays.GetFlag() << " " << m_iRays.GetValue() << " ";
   out_os << endl;
@@ -231,13 +231,13 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     cout<<"\t\t- " << m_iRays.GetValue() << " rays will be used to approximate penetration.\n";
   }
 
-  cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
+  cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
 #endif
-  bool bExact = exactNodes.GetValue() == 1? true: false;
+  bool bExact = this->exactNodes.GetValue() == 1? true: false;
 
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
-  path.reserve(numNodes.GetValue());
+  path.reserve(this->numNodes.GetValue());
 #endif
   
 #ifdef USE_VCLIP
@@ -249,28 +249,28 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   cout<<"- "<<flush;
 #endif
   std::string tmpStr;
-  for (int i=0; i < numNodes.GetValue(); i++){
+  for (int i=0; i < this->numNodes.GetValue(); i++){
     // Get a random configuration that STARTS in the bounding box of env
     cfg.GetRandomCfg(_env);  // should always be in bounding box
     
     //use approximate computation for moving out robot from obs
     if( m_bApprox.GetValue() ){
-      cdInfo->ret_all_info = false;
+      this->cdInfo->ret_all_info = false;
       tmpStr = Callee+Method+CallCnt;
-      collided = cfg.isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr);
+      collided = cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr);
       if( collided ){
 	MoveOutObstacle(cfg,_env, Stats, cd);
 	CallCnt="2";
 	tmpStr = Callee+Method+CallCnt;
-	collided = cfg.isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr);
+	collided = cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr);
       }
-      if(cd->isInsideObstacle(cfg,_env,*cdInfo)){
-	cdInfo->ret_all_info = true;
+      if(cd->isInsideObstacle(cfg,_env,*this->cdInfo)){
+	this->cdInfo->ret_all_info = true;
 	CallCnt="3";
 	tmpStr = Callee+Method+CallCnt;
-	cfg.isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr);
-	Vector3D trans_dir=(cdInfo->object_point-cdInfo->robot_point)*1.00001;
-	cdInfo->ret_all_info = false;
+	cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr);
+	Vector3D trans_dir=(this->cdInfo->object_point-this->cdInfo->robot_point)*1.00001;
+	this->cdInfo->ret_all_info = false;
 	MoveOutObstacle(cfg,trans_dir,_env,Stats,cd);
 	collided=!cfg.InBoundingBox(_env); //out of box
       }
@@ -278,23 +278,23 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 #ifdef USE_VCLIP
     else{ //use exact computation for penetration
       
-      cdInfo->ret_all_info = true;	
+      this->cdInfo->ret_all_info = true;	
       vector<CollisionDetectionMethod*> cd_selected;
       Vclip vclip;
       cd_selected.push_back(&vclip);
       CollisionDetection cd_vclip(cd_selected);
       CallCnt="vclip1";
       tmpStr = Callee+Method+CallCnt;
-      cfg.isCollision(_env, Stats, &cd_vclip, *cdInfo, true, &tmpStr); //use vclip
-      cdInfo->ret_all_info = false;
+      cfg.isCollision(_env, Stats, &cd_vclip, *this->cdInfo, true, &tmpStr); //use vclip
+      this->cdInfo->ret_all_info = false;
       if( collided ){
-	Vector3D dir=(cdInfo->object_point-cdInfo->robot_point)*1.00001;
+	Vector3D dir=(this->cdInfo->object_point-this->cdInfo->robot_point)*1.00001;
 	cfg.SetSingleParam(0, cfg.GetData()[0]+dir[0]);
 	cfg.SetSingleParam(1, cfg.GetData()[1]+dir[1]);
 	cfg.SetSingleParam(2, cfg.GetData()[2]+dir[2]);
         CallCnt="vclip2";
 	tmpStr = Callee+Method+CallCnt;
-	collided = cfg.isCollision(_env, Stats, cd, *cdInfo,true, &tmpStr);
+	collided = cfg.isCollision(_env, Stats, cd, *this->cdInfo,true, &tmpStr);
       }
     }
 #endif
@@ -321,7 +321,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     }
     
 #ifndef QUIET
-    if( i%80==0 && i!=0 ) cout<<"("<<i<<"/"<<numNodes.GetValue()<<")"<<endl<<"- ";
+    if( i%80==0 && i!=0 ) cout<<"("<<i<<"/"<<this->numNodes.GetValue()<<")"<<endl<<"- ";
     cout<<"#"<<flush;
 #endif
     
@@ -369,7 +369,7 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
 	      CallCnt("1");
 
   // Set _info so we do NOT get all info (for speed)
-  cdInfo->ResetVars();
+  this->cdInfo->ResetVars();
   
   /*
   // Generate Random direction
@@ -400,7 +400,7 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
       if( !pos[iR].InBoundingBox(_env) ) continue; //out of bounding box
       allOutBBX=false;
       tmpStr = Callee+Method+CallCnt;
-      if( !pos[iR].isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr) ){
+      if( !pos[iR].isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr) ){
 	bCollide=false; //not in collision any more
 	cfg=pos[iR];
       }
@@ -438,7 +438,7 @@ MoveOutObstacle(CFG& cfg, Vector3D& dir, Environment* _env, Stat_Class& Stats,
     cfg.Increment(trans_cfg);
     //cfg.add(cfg, trans_cfg);
   }
-  while(cfg.isCollision(_env, Stats, cd, *cdInfo, &tmpStr));
+  while(cfg.isCollision(_env, Stats, cd, *this->cdInfo, &tmpStr));
 }
 
 
@@ -462,12 +462,12 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Sta
   // and collision object index
   // NEW info currently always put in _info.cdInfo
   // note we do NOTHING with cd->stuff
-  cdInfo->ResetVars();
-  cdInfo->ret_all_info = true;
+  this->cdInfo->ResetVars();
+  this->cdInfo->ret_all_info = true;
   
   // find closest obstacle -- and collided better come back false!
-  getCollisionInfo(cfg,_env,Stats,cd,*cdInfo);
-  trans_dir=cdInfo->robot_point-cdInfo->object_point;	
+  getCollisionInfo(cfg,_env,Stats,cd,*this->cdInfo);
+  trans_dir=this->cdInfo->robot_point-this->cdInfo->object_point;	
   trans_dir.normalize();
   
   // And then scale arbitrarily 'small' - prefer to have scale determined by the _env
@@ -489,19 +489,19 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Sta
     {
       oldcfg = newcfg;
       newcfg.add(oldcfg, trans_cfg);
-      oldInfo = *cdInfo;   // oldInfo used in loop termination check
-      cdInfo->ResetVars();
-      cdInfo->ret_all_info = true;
-      getCollisionInfo(newcfg,_env,Stats,cd,*cdInfo);
-      diff=cdInfo->object_point-oldInfo.object_point;
+      oldInfo = *this->cdInfo;   // oldInfo used in loop termination check
+      this->cdInfo->ResetVars();
+      this->cdInfo->ret_all_info = true;
+      getCollisionInfo(newcfg,_env,Stats,cd,*this->cdInfo);
+      diff=this->cdInfo->object_point-oldInfo.object_point;
     } while ( diff.normsqr()<1e-2 );
   
-  if( cd->isInsideObstacle(newcfg,_env,*cdInfo) ) return;
+  if( cd->isInsideObstacle(newcfg,_env,*this->cdInfo) ) return;
   //make sure newcfg is collision free
-  cdInfo->ResetVars();
+  this->cdInfo->ResetVars();
   std::string tmpStr = Callee+Method;
   while( true ){
-    if( newcfg.isCollision(_env, Stats, cd, *cdInfo, true, &tmpStr)==false ) 
+    if( newcfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr)==false ) 
       break;
     CFG tmp;
     tmp.subtract(oldcfg, newcfg);

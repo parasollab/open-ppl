@@ -239,12 +239,12 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     cd_cntr++;
 
     Callee=diagonal.GetName();
-    if(!diagonal.isCollision(_env,Stats,cd, *cdInfo , &tmpStr)){
+    if(!diagonal.isCollision(_env,Stats,cd, *this->cdInfo , &tmpStr)){
       p = diagonal;
     } else {
       neighbors.clear();
       p.FindNeighbors(_env, Stats,  _c2, incr, cd, n_neighbors.GetValue(),
-		       *cdInfo, neighbors);
+		       *this->cdInfo, neighbors);
       if (neighbors.size()==0) { 
 	connected = false;
         pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > tmp;

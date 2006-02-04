@@ -248,7 +248,7 @@ sprintf(RatS,"%s=%3.1f",RatS, s_values_in[0]);
   Stats.IncLPAttempts( RatS );
   int cd_cntr= 0;
    
-  if(lineSegmentLength.GetValue() && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
+  if(this->lineSegmentLength.GetValue() && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
     Stats.IncLPCollDetCalls( RatS, cd_cntr );
     return false;
   }
@@ -260,7 +260,7 @@ sprintf(RatS,"%s=%3.1f",RatS, s_values_in[0]);
   int i;
   for(i=0; i<sequence.size()-1; ++i) {
     bool flag;
-    if(binarySearch.GetValue()) 
+    if(this->binarySearch.GetValue()) 
       flag = IsConnectedSLBinary(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
     else
       flag = IsConnectedSLSequential(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);

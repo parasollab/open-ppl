@@ -59,7 +59,7 @@ class Disconnect: public NodeConnectionMethod<CFG,WEIGHT> {
 
 template <class CFG, class WEIGHT>
 Disconnect<CFG,WEIGHT>::Disconnect():NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "disconnect"; 
+  this->element_name = "disconnect"; 
   SetDefault();
 }
 
@@ -67,7 +67,7 @@ template <class CFG, class WEIGHT>
 Disconnect<CFG,WEIGHT>::Disconnect(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
     NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
   LOG_DEBUG_MSG("Disconnect::Disconnect()"); 
-  element_name = "disconnect"; 
+  this->element_name = "disconnect"; 
   SetDefault();
   ParseXML(in_pNode);
   
@@ -108,7 +108,7 @@ Disconnect<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << endl;
   _os.setf(ios::right,ios::adjustfield);
 }
@@ -118,7 +118,7 @@ template <class CFG, class WEIGHT>
 void
 Disconnect<CFG, WEIGHT>::
 PrintValues(ostream& _os){
-  _os << "\n" << GetName();
+  _os << "\n" << this->GetName();
   _os << endl;
 }
 
@@ -126,7 +126,7 @@ template <class CFG, class WEIGHT>
 void
 Disconnect<CFG, WEIGHT>::
 PrintOptions(ostream& out_os){
-  out_os << "    " << GetName() ;
+  out_os << "    " << this->GetName() ;
   out_os << endl;
 }
 

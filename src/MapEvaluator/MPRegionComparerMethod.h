@@ -233,8 +233,8 @@ public:
   virtual bool Compare(int in_region_a, int in_region_b) {
     LOG_DEBUG_MSG("ConnectableComponentComparer::Compare(region_a, region_b)");
 
-    Roadmap< CFG, WEIGHT >* rdmp_a = m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
-    Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
+    Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
+    Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
     
     pair< unsigned int, unsigned int > spanning_a = ComponentsASpanningInB(rdmp_a, rdmp_b);
     cout << "ConnectableComponentComparer::Compare: Not small ccs in A " << spanning_a.second << "; Span more than 1 in B: " << spanning_a.first << " = " << 100*spanning_a.first/spanning_a.second << "%" << endl;
@@ -273,20 +273,20 @@ public:
   virtual bool Compare(int in_region_a, int in_region_b) {
     LOG_DEBUG_MSG("RandomConnectComparer::Compare(region_a, region_b)");    
 
-    Roadmap< CFG, WEIGHT >* rdmp_a = m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
-    Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
+    Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
+    Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
 
-    unsigned int witness_queries = m_witness_cfgs.size()*(m_witness_cfgs.size()-1)/2;
-    cout << "RandomConnectComparer::Compare: Witness size: " << m_witness_cfgs.size() << "; Witness queries: " << witness_queries << endl;
+    unsigned int witness_queries = this->m_witness_cfgs.size()*(this->m_witness_cfgs.size()-1)/2;
+    cout << "RandomConnectComparer::Compare: Witness size: " << this->m_witness_cfgs.size() << "; Witness queries: " << witness_queries << endl;
 
-    pair< unsigned int, unsigned int > witness_to_a = ConnectionsWitnessToRoadmap(m_witness_cfgs, rdmp_a);
-    double witness_to_a_connections_percent = 100*witness_to_a.first/m_witness_cfgs.size();
+    pair< unsigned int, unsigned int > witness_to_a = ConnectionsWitnessToRoadmap(this->m_witness_cfgs, rdmp_a);
+    double witness_to_a_connections_percent = 100*witness_to_a.first/this->m_witness_cfgs.size();
     double witness_to_a_succ_queries_percent = 100*witness_to_a.second/witness_queries;
     cout << "RandomConnectComparer::Compare: Witness nodes connected to non-small ccs in A: " << witness_to_a.first << " = " << witness_to_a_connections_percent << "%" << endl;
     cout << "RandomConnectComparer::Compare: Witness queries succesful in non-small ccs in A: " << witness_to_a.second << " = " << witness_to_a_succ_queries_percent << "%" << endl;
 
-    pair< unsigned int, unsigned int > witness_to_b = ConnectionsWitnessToRoadmap(m_witness_cfgs, rdmp_b);
-    double witness_to_b_connections_percent = 100*witness_to_b.first/m_witness_cfgs.size();
+    pair< unsigned int, unsigned int > witness_to_b = ConnectionsWitnessToRoadmap(this->m_witness_cfgs, rdmp_b);
+    double witness_to_b_connections_percent = 100*witness_to_b.first/this->m_witness_cfgs.size();
     double witness_to_b_succ_queries_percent = 100*witness_to_b.second/witness_queries;
     cout << "RandomConnectComparer::Compare: Witness nodes connected to non-small ccs in B: " << witness_to_b.first << " = " << witness_to_b_connections_percent << "%" << endl;
     cout << "RandomConnectComparer::Compare: Witness queries succesful in non-small ccs in B: " << witness_to_b.second << " = " << witness_to_b_succ_queries_percent << "%" << endl;
@@ -319,8 +319,8 @@ public:
   virtual bool Compare(int in_region_a, int in_region_b) {
     LOG_DEBUG_MSG("RegionCoverageComparer::Compare(region_a, region_b)");    
 
-    Roadmap< CFG, WEIGHT >* rdmp_a = m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
-    Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
+    Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
+    Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
 
 
     int a_small_cc_size =0;
@@ -409,8 +409,8 @@ public:
   virtual bool Compare(int in_region_a, int in_region_b) {
     LOG_DEBUG_MSG("RegionSimilarity::Compare(region_a, region_b)");    
 
-    Roadmap< CFG, WEIGHT >* rdmp_a = m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
-    Roadmap< CFG, WEIGHT >* rdmp_b = m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
+    Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
+    Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
 
 
     int a_small_cc_size =0;
