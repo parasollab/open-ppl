@@ -66,11 +66,11 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
 			   bool savePath=false, bool saveFailedPath=false);
 
   //@{
-  //    double sValue;  ///< Should in [0,1]. This is the s for planner.
     num_param<double> sValue;
     double s_value;
-    vector<double> s_values_in;
+    //vector<double> s_values_in;
     vector<double> s_values;
+    bool isSymmetric;
   //@}
 };
 
@@ -119,10 +119,8 @@ SetDefault() {
   sValue.PutValue(0.5);
   s_values.clear();
   s_values.push_back(sValue.GetValue()); 
-  s_values_in.clear();
- for(int i=0; i<s_values.size(); i++){
-    s_values_in.push_back(s_values[i]);
-  }
+  //s_values_in = s_values;
+  isSymmetric = true;
 }
 
 template <class CFG, class WEIGHT>
@@ -148,14 +146,10 @@ ParseCommandLine(int argc, char **argv) {
   if (s_values.size()<1){
     SetDefault();
   }
-  s_values_in.clear();
-  for(int i=0; i<s_values.size(); i++){
-    s_values_in.push_back(s_values[i]);
-  }
-  std::sort(s_values_in.begin (), s_values_in.end());
+  std::sort(s_values.begin (), s_values.end());
+  //s_values_in = s_values;
   
   if (s_values.size()>=1) {
-    std::sort(s_values.begin (), s_values.end());
     if (s_values[0] < 0.0 || s_values[s_values.size()-1] > 1.0) {
       cerr << "\nERROR ParseCommandLine: s values out of range (0.0,1.0) \"";
       PrintUsage(cerr);
@@ -168,6 +162,14 @@ ParseCommandLine(int argc, char **argv) {
       cerr << endl;
       exit(-1);
   }
+
+  vector<double> reverse = s_values;
+  transform(reverse.begin(), reverse.end(), reverse.begin(), bind1st(minus<double>(), 1));
+  std::sort(reverse.begin(), reverse.end());
+  if(reverse == s_values)
+    isSymmetric = true;
+  else
+    isSymmetric = false;
 }
 
 
@@ -216,18 +218,23 @@ IsConnected(Environment *_env, Stat_Class& Stats,
 	    bool savePath, bool saveFailedPath) {  
   bool connected = false;
   connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-  if (!connected) { //try the other way
+  if (!connected && !isSymmetric) { //try the other way
+/*
     for(int i=0; i<s_values.size(); i++){
       s_values[i] = 1 - s_values[i];
     }
     std::sort(s_values.begin(),s_values.end());
+    connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+*/
     connected = IsConnectedOneWay(_env, Stats, cd, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
     if (savePath)
       reverse(lpOutput->path.begin(), lpOutput->path.end());
+/*
     for(int i=0; i<s_values.size(); i++){
       s_values[i] = 1 - s_values[i];
     }
     std::sort(s_values.begin(),s_values.end());
+*/
   }
   return connected;
 }
@@ -241,10 +248,15 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
 	    bool checkCollision, 
 	    bool savePath, bool saveFailedPath) {  
   char RatS[50] = "Rotate_at_s";
-sprintf(RatS,"%s=%3.1f",RatS, s_values_in[0]);
+/*
+  sprintf(RatS,"%s=%3.1f",RatS, s_values_in[0]);
   for(int i=1; i<s_values_in.size(); i++){
-  sprintf(RatS,"%s,%3.1f",RatS, s_values_in[i]);
- }
+    sprintf(RatS,"%s,%3.1f",RatS, s_values_in[i]);
+  }
+*/
+  sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);
+  for(int i=1; i<s_values.size(); ++i)
+    sprintf(RatS,"%s,%3.1f",RatS, s_values[i]);
   Stats.IncLPAttempts( RatS );
   int cd_cntr= 0;
    
@@ -254,7 +266,7 @@ sprintf(RatS,"%s=%3.1f",RatS, s_values_in[0]);
   }
   
   vector<Cfg *> sequence;
-   _c1.GetMovingSequenceNodes(_c2, s_values, sequence);
+  _c1.GetMovingSequenceNodes(_c2, s_values, sequence);
   
   bool connected = true;
   int i;
@@ -275,10 +287,9 @@ sprintf(RatS,"%s=%3.1f",RatS, s_values_in[0]);
   Stats.IncLPCollDetCalls( RatS, cd_cntr );
   
   // Since we use vector<Cfg*>, we need to delete it
-  for(i=0; i<sequence.size();i++) {
+  for(i=0; i<sequence.size(); ++i) 
     if (sequence[i] != NULL)
       delete sequence[i];
-  }
   
   return connected;
 };
