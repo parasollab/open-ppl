@@ -28,7 +28,7 @@ endif
 
 #set default debug
 ifndef debug
-  debug=0
+  debug=1
 endif
 
 #set default CHECKIFSAMECC
@@ -104,6 +104,5 @@ reallyclean:
 	rm -f Dependencies
 	touch Dependencies
 
-	touch Dependencies
-include Dependencies
+-include Dependencies
 

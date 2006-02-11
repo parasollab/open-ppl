@@ -53,11 +53,11 @@ Environment(int dofs, int pos_dofs, Input * _input) {
     GetBodies(_input);
     FindBoundingBox();
     
-    //	 if user supplied a bounding box, use it instead
+    //   if user supplied a bounding box, use it instead
     if (_input->bbox.IsActivated()) {
       std::stringstream i_bbox;
       i_bbox << _input->bbox.GetValue();
-      boundaries->Parse(i_bbox);	
+      boundaries->Parse(i_bbox);  
     }
 
     // if user supplied a positional resolution, use it instead
@@ -71,11 +71,11 @@ Environment(int dofs, int pos_dofs, Input * _input) {
     
     // scale boundary
     if ( _input->bbox_scale.IsActivated() )
-      boundaries->TranslationalScale(_input->bbox_scale.GetValue());	
+      boundaries->TranslationalScale(_input->bbox_scale.GetValue());  
   
     // activate objects inside the bounding box and deactivate other
     // objects
-    SelectUsableMultibodies();	
+    SelectUsableMultibodies();  
   }
 }
 
@@ -221,7 +221,7 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) : MPBaseObject(in_pNod
         robot_span = multibody[robotIndex]->GetMaxAxisRange();
         double bodies_min_span;
         bodies_min_span = robot_span;
-		
+    
         bool first = true;
         double * tmp;
         for(int i = 0 ; i < multibody.size() ; i++){
@@ -249,22 +249,22 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) : MPBaseObject(in_pNod
 
     for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
       if(string(pChild->Value()) == "robot") {
-	int num_joints;
-	pChild->ToElement()->QueryIntAttribute("num_joints", &num_joints);
-	in_pProblem->SetNumOfJoints(num_joints);
+  int num_joints;
+  pChild->ToElement()->QueryIntAttribute("num_joints", &num_joints);
+  in_pProblem->SetNumOfJoints(num_joints);
 
-	for ( TiXmlNode* rChild = pChild->FirstChild(); rChild != 0; rChild = rChild->NextSibling() ) {
-	  if (string(rChild->Value()) == "boundary") {
-	    boundaries = new BoundingBox(rChild,in_pProblem); //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
-	  } else if(!rChild->Type() == TiXmlNode::COMMENT) {
-	    cout << "  I don't know: " << *pChild << endl;
-	  }
-	  
-	}
-	
+  for ( TiXmlNode* rChild = pChild->FirstChild(); rChild != 0; rChild = rChild->NextSibling() ) {
+    if (string(rChild->Value()) == "boundary") {
+      boundaries = new BoundingBox(rChild,in_pProblem); //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
+    } else if(!rChild->Type() == TiXmlNode::COMMENT) {
+      cout << "  I don't know: " << *pChild << endl;
+    }
+    
+  }
+  
       } else if(string(pChild->Value()) == "resolution") {
-	//pChild->ToElement()->QueryDoubleAttribute("pos_res",&positionRes);
-	//pChild->ToElement()->QueryDoubleAttribute("ori_res",&orientationRes);
+  //pChild->ToElement()->QueryDoubleAttribute("pos_res",&positionRes);
+  //pChild->ToElement()->QueryDoubleAttribute("ori_res",&orientationRes);
         
       } else {
         if(!pChild->Type() == TiXmlNode::COMMENT) {
@@ -318,13 +318,13 @@ SortMultiBodies(){
     while (i < j) {
       //Quicksort
       while((i<multibody.size()) && !multibody[i]->IsInternal()) 
-	i++;
+  i++;
       while ((j>0) && (multibody[j]->IsInternal()))
-	j--;
+  j--;
       if (i<j) {
-	MultiBody *pMidBody = multibody[j];//switch multibody[i] & multibody[j]
-	multibody[j] = multibody[i];
-	multibody[i] = pMidBody;
+  MultiBody *pMidBody = multibody[j];//switch multibody[i] & multibody[j]
+  multibody[j] = multibody[i];
+  multibody[i] = pMidBody;
       }
     }
     if (i == j+1)
@@ -369,7 +369,7 @@ SelectUsableMultibodies() {
   usable_externalbody_count = 0;
   for (int i = 0; i < multibody.size(); i++) {
     if (i == rob) { // @todo: need a test function in multibody to
-		    // decide if a multibody is a robot
+        // decide if a multibody is a robot
       usable_multibody.push_back(multibody[i]);
       usable_externalbody_count++; // robot is an external body
       robotIndex = usable_multibody.size()-1;
@@ -379,23 +379,23 @@ SelectUsableMultibodies() {
       double *obb = multibody[i]->GetBoundingBox();
       
       if (((obb[0] <= maxx && obb[0] >= minx) || 
-	   (obb[1] <= maxx && obb[1] >= minx)) &&
-	  ((obb[2] <= maxy && obb[2] >= miny) || 
-	   (obb[3] <= maxy && obb[3] >= miny)) &&
-	  ((obb[4] <= maxz && obb[4] >= minz) || 
-	   (obb[5] <= maxz && obb[5] >= minz))) {
-	// any point in obstacle's bbox inside boundaries => obstacle is usable
-	usable_multibody.push_back(multibody[i]);
-	if (!(multibody[i]->IsInternal()))
-	  usable_externalbody_count++;
-      } else { // bounding boxes cross each other	
-	if (!(obb[0] > maxx || obb[1] < minx || 
-	      obb[2] > maxy || obb[3] < miny || 
-	      obb[4] > maxz || obb[5] < minz)) {
-	  usable_multibody.push_back(multibody[i]);
-	  if (!(multibody[i]->IsInternal()))
-	    usable_externalbody_count++;
-	}
+     (obb[1] <= maxx && obb[1] >= minx)) &&
+    ((obb[2] <= maxy && obb[2] >= miny) || 
+     (obb[3] <= maxy && obb[3] >= miny)) &&
+    ((obb[4] <= maxz && obb[4] >= minz) || 
+     (obb[5] <= maxz && obb[5] >= minz))) {
+  // any point in obstacle's bbox inside boundaries => obstacle is usable
+  usable_multibody.push_back(multibody[i]);
+  if (!(multibody[i]->IsInternal()))
+    usable_externalbody_count++;
+      } else { // bounding boxes cross each other 
+  if (!(obb[0] > maxx || obb[1] < minx || 
+        obb[2] > maxy || obb[3] < miny || 
+        obb[4] > maxz || obb[5] < minz)) {
+    usable_multibody.push_back(multibody[i]);
+    if (!(multibody[i]->IsInternal()))
+      usable_externalbody_count++;
+  }
       }
     }
   }
@@ -425,7 +425,7 @@ FindBoundingBox(){
   robot_span = multibody[robotIndex]->GetMaxAxisRange();
   double bodies_min_span;
   bodies_min_span = robot_span;
-		
+    
   bool first = true;
   double * tmp;
   double minx, miny, minz, maxx, maxy, maxz;
@@ -433,21 +433,21 @@ FindBoundingBox(){
   for(int i = 0 ; i < multibody.size() ; i++){
     if(i != robotIndex){
       if(first){
-	multibody[i]->FindBoundingBox();
-	tmp = multibody[i]->GetBoundingBox();
-	minx = tmp[0]; maxx = tmp[1];
-	miny = tmp[2]; maxy = tmp[3];
-	minz = tmp[4]; maxz = tmp[5];
-	first = false;
-	bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+  multibody[i]->FindBoundingBox();
+  tmp = multibody[i]->GetBoundingBox();
+  minx = tmp[0]; maxx = tmp[1];
+  miny = tmp[2]; maxy = tmp[3];
+  minz = tmp[4]; maxz = tmp[5];
+  first = false;
+  bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
       }
       else{
-	multibody[i]->FindBoundingBox();
-	tmp = multibody[i]->GetBoundingBox();
-	minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
-	miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
-	minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
-	bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+  multibody[i]->FindBoundingBox();
+  tmp = multibody[i]->GetBoundingBox();
+  minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
+  miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
+  minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
+  bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
       }
     }
   }
@@ -462,7 +462,9 @@ FindBoundingBox(){
   boundingBox.push_back(maxz+min_clearance);
   
   boundaries->SetRanges(boundingBox);
-  
+  boundaries->TranslationalScale(2); ///\todo fix this default.
+  //defaults bbox_scale to 2 when no bbox is defined.
+
   positionRes = bodies_min_span * POSITION_RES_FACTOR;
   minmax_BodyAxisRange = bodies_min_span;
 }
