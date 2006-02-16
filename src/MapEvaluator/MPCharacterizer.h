@@ -13,10 +13,79 @@ class NodeCharacterizerMethod : public MPBaseObject
       MPBaseObject(in_pNode,in_pProblem) { };
     virtual void ParseXML(TiXmlNode* in_pNode)=0;
     virtual void Characterize(MPRegion<CFG,WEIGHT>*)=0;
+    virtual void Characterize(MPRegion<CFG,WEIGHT>*, VID) {};
     virtual void PrintOptions(ostream& out_os)=0;
   private:
   
 };
+
+
+template<typename CFG,typename WEIGHT>
+class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
+{
+  public: 
+    CCExpandCharacterizer(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+      NodeCharacterizerMethod<CFG,WEIGHT>(in_pNode,in_pProblem) {
+      LOG_DEBUG_MSG("CCExpandCharacterizer::LocalNodeInfoCharacterizer()");
+      ParseXML(in_pNode);    
+      LOG_DEBUG_MSG("~CCExpandCharacterizer::LocalNodeInfoCharacterizer()");
+    };
+    
+    virtual void ParseXML(TiXmlNode* in_pNode) {
+      LOG_DEBUG_MSG("CCExpandCharacterizer::ParseXML()");
+      LOG_DEBUG_MSG("~CCExpandCharacterizer::ParseXML()");
+    };
+      
+    virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion) {
+      LOG_DEBUG_MSG("CCExpandCharacterizer::Characterize()");
+      cout << "CCExpandCharacterizer::Characterize(MPRegion*) Not implemented" << endl;
+      exit(-1);
+      LOG_DEBUG_MSG("~CCExpandCharacterizer::Characterize()");
+    };
+    
+    virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion, VID in_vid) {
+      LOG_DEBUG_MSG("CCExpandCharacterizer::Characterize()");
+      Roadmap<CFG,WEIGHT>* pRoadmap = inout_pRegion->GetRoadmap();
+      RoadmapGraph<CFG,WEIGHT>* pGraph = pRoadmap->m_pRoadmap;
+      LocalPlanners < CFG, WEIGHT > * lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
+      LPOutput< CFG, WEIGHT > lp_output; 
+      Environment * env = GetMPProblem()->GetEnvironment();
+      CollisionDetection * cd = GetMPProblem()->GetCollisionDetection();
+      DistanceMetric * dm = GetMPProblem()->GetDistanceMetric();
+      double pos_res = GetMPProblem()->GetEnvironment()->GetPositionRes();
+      double ori_res = GetMPProblem()->GetEnvironment()->GetOrientationRes();
+      Stat_Class Stats;
+
+      vector<VID> neighbors;
+      if(pGraph->GetSuccessors(in_vid, neighbors) > 1)
+      {
+         cout << "Pls sort me first since your not using CHECKIF SMAE CC" << endl; exit(-1);
+      }
+      //Next find neighbor's neighbors
+      vector<VID> neighbor_neighbor;
+      pGraph->GetSuccessors(neighbors[0],neighbor_neighbor);
+      bool is_expansion = true;
+      for(vector<VID>::iterator i_n = neighbor_neighbor.begin(); i_n !=neighbor_neighbor.end(); ++i_n)
+      {  //test connection to each;
+        if(!(lp->IsConnected(env, Stats, cd, dm, 
+                             pGraph->GetData(in_vid),
+                             pGraph->GetData(*i_n),
+                             &lp_output, pos_res, ori_res, true))) {
+          is_expansion = false; // cannot connect in_vid to neighbor_neighbor
+        }
+      }
+      if(is_expansion) 
+         pGraph->GetReferenceofData(in_vid)->SetLabel("CCEXPAND",true);
+      else
+         pGraph->GetReferenceofData(in_vid)->SetLabel("CCOVERSAMPLE",true);
+
+      LOG_DEBUG_MSG("~CCExpandCharacterizer::Characterize()");
+    };
+    virtual void PrintOptions(ostream& out_os) {};
+  private:
+};
+
+
 
 template<typename CFG,typename WEIGHT>
 class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
@@ -140,12 +209,19 @@ public:
         LocalNodeInfoCharacterizer<CFG,WEIGHT>* localnodeinfo = 
             new LocalNodeInfoCharacterizer<CFG,WEIGHT>(pChild,this->GetMPProblem());
         all_NodeCharacterizerMethod.push_back(localnodeinfo);
+      } else if(string(pChild->Value()) == "CCExpandCharacterizer") {
+        CCExpandCharacterizer<CFG,WEIGHT>* expandchar = 
+            new CCExpandCharacterizer<CFG,WEIGHT>(pChild,GetMPProblem());
+        all_NodeCharacterizerMethod.push_back(expandchar);
       } else {
         LOG_WARNING_MSG("MPCharacterizer::  I don't know: "<< endl << *pChild);
       }
     }
     LOG_DEBUG_MSG("~MPCharacterizer::ParseXML()");
   }
+
+
+
   
   void PrintOptions(ostream& out_os){};
   

@@ -88,8 +88,8 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
    *called.
    */
   virtual void GenerateNodes(Environment* _env, Stat_Class&,
-			     CollisionDetection* cd, 
-			     DistanceMetric *dm, vector<CFG>& nodes);
+           CollisionDetection* cd, 
+           DistanceMetric *dm, vector<CFG>& nodes);
 
   virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs);
 
@@ -304,14 +304,14 @@ template <class CFG>
 void
 BridgeTestPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
-	      CollisionDetection* cd, DistanceMetric *,
-	      vector<CFG>& nodes) {
+        CollisionDetection* cd, DistanceMetric *,
+        vector<CFG>& nodes) {
 
   //LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()");
 
   if (bridge_d.GetValue() == 0) {  //if no bridge_d value given (standard deviation), calculate from robot
     bridge_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
-  }	
+  } 
 
 #ifndef QUIET
   cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
@@ -341,9 +341,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     std::string tmpStr = Callee+CallCnt;
     
     bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
-    if (!cfg1_free){
+    bool cfg1_bbox = cfg1.InBoundingBox(_env);
+    if (!cfg1_free && cfg1_bbox){
       double gauss_dist = GaussianDistribution(0, bridge_d.GetValue()); 
-
       //cfg2.c1_towards_c2(cfg1,cfg2,gauss_dist);
       incr.GetRandomRay(gauss_dist);
       cfg2.add(cfg1, incr);
@@ -352,20 +352,21 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
       tmpStr = Callee+CallCnt; 
 
       bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
-      if (!cfg2_free){
-	cfgP.WeightedSum(cfg1,cfg2,0.5);
+      bool cfg2_bbox = cfg2.InBoundingBox(_env);
+      if (!cfg2_free && cfg2_bbox) {
+        cfgP.WeightedSum(cfg1,cfg2,0.5);
+        CallCnt="3";
+        tmpStr = Callee+CallCnt; 
 
-	CallCnt="3";
-	tmpStr = Callee+CallCnt; 
-
-	bool cfgP_free = cfgP.InBoundingBox(_env) && !cfgP.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
-	if(cfgP_free){
-	  nodes.push_back(CFG(cfgP)); 
-	  newNodes++;
+        bool cfgP_free = !cfgP.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+        bool cfgP_bbox = cfgP.InBoundingBox(_env);
+        if(cfgP_free && cfgP_bbox) {
+          nodes.push_back(CFG(cfgP)); 
+          newNodes++;
 #if INTERMEDIATE_FILES
-	  path.push_back(cfgP);
+          path.push_back(cfgP);
 #endif
-	}
+        }
       }
     }
     if (bExact)

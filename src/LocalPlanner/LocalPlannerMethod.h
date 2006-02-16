@@ -31,7 +31,7 @@ class LocalPlannerMethod : MPBaseObject{
   LocalPlannerMethod();
   LocalPlannerMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   
-  ///Destructor.	
+  ///Destructor.  
   virtual ~LocalPlannerMethod();
 
   //@}
@@ -59,12 +59,12 @@ class LocalPlannerMethod : MPBaseObject{
    *@param LPOutput.
    */
   virtual bool IsConnected(Environment* _env, Stat_Class& Stats,
-			   CollisionDetection* cd, 
-			   DistanceMetric *, const CFG &_c1, const CFG &_c2, 
-			   LPOutput<CFG, WEIGHT>* lpOutput,
-			   double positionRes, double orientationRes,
-			   bool checkCollision=true, 
-			   bool savePath=false, bool saveFailedPath=false) = 0;
+         CollisionDetection* cd, 
+         DistanceMetric *, const CFG &_c1, const CFG &_c2, 
+         LPOutput<CFG, WEIGHT>* lpOutput,
+         double positionRes, double orientationRes,
+         bool checkCollision=true, 
+         bool savePath=false, bool saveFailedPath=false) = 0;
 
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -87,12 +87,13 @@ class LocalPlannerMethod : MPBaseObject{
   //@}
 
   int lp_id;
-
  public:
   void SetID(int new_id);
   int GetID() const;
   
   CDInfo* cdInfo;
+
+  
 
 };
 

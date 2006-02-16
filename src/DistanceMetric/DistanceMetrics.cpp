@@ -66,7 +66,12 @@ DistanceMetric(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
       all.push_back(euclidean);
       selected.push_back(euclidean->CreateCopy());
     } else if(string(pChild->Value()) == "scaledEuclidean") {
-      ScaledEuclideanDistance* scaledEuclidean = new ScaledEuclideanDistance();
+      double par_scale;
+      ScaledEuclideanDistance* scaledEuclidean;
+      if(TIXML_SUCCESS == pChild->ToElement()->QueryDoubleAttribute("scale",&par_scale))
+      {  scaledEuclidean = new ScaledEuclideanDistance(par_scale); }
+      else
+      {  scaledEuclidean = new ScaledEuclideanDistance(); }
       all.push_back(scaledEuclidean);
       selected.push_back(scaledEuclidean->CreateCopy());
     } else {
@@ -113,26 +118,26 @@ ParseCommandLine(int argc, char** argv) {
   do {
     for(itr=all.begin(); itr!=all.end(); itr++) {
       if( !strcmp(argv[cmd_begin], (*itr)->GetName()) ) {
-	cmd_argc = 0;
-	bool is_method_name = false;
-	do {
-	  cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
-	  cmd_argc++;
-	  
-	  vector<DistanceMetricMethod*>::iterator itr_names;
-	  is_method_name = false;
-	  for(itr_names=all.begin(); itr_names!=all.end() && cmd_begin+cmd_argc < argc; itr_names++)
-	    if( !strcmp(argv[cmd_begin+cmd_argc], (*itr_names)->GetName())) {
-	      is_method_name = true;
-	      break;
-	    } 
-	} while(!is_method_name && cmd_begin+cmd_argc < argc);
+  cmd_argc = 0;
+  bool is_method_name = false;
+  do {
+    cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
+    cmd_argc++;
+    
+    vector<DistanceMetricMethod*>::iterator itr_names;
+    is_method_name = false;
+    for(itr_names=all.begin(); itr_names!=all.end() && cmd_begin+cmd_argc < argc; itr_names++)
+      if( !strcmp(argv[cmd_begin+cmd_argc], (*itr_names)->GetName())) {
+        is_method_name = true;
+        break;
+      } 
+  } while(!is_method_name && cmd_begin+cmd_argc < argc);
 
-	(*itr)->ParseCommandLine(cmd_argc, cmd_argv);
-	selected.push_back((*itr)->CreateCopy());
-	(*itr)->SetDefault();
-	found = TRUE;
-	break;
+  (*itr)->ParseCommandLine(cmd_argc, cmd_argv);
+  selected.push_back((*itr)->CreateCopy());
+  (*itr)->SetDefault();
+  found = TRUE;
+  break;
       }
     }
     if(!found)
@@ -167,7 +172,7 @@ ReadCommandLine(n_str_param* DMstrings[MAX_DM], int numDMs) {
     try {
       found = ParseCommandLine(argc, argv);
       if (!found)
-	throw BadUsage();
+  throw BadUsage();
     } catch (BadUsage) {
       cerr << "Command line error" << endl;
       PrintUsage(cerr);
@@ -267,7 +272,7 @@ ReadDMs(istream& _myistream) {
     try {
       found = ParseCommandLine(argc, argv);
       if(!found)
-	throw BadUsage();
+  throw BadUsage();
     } catch (BadUsage) {
       cerr << "Line error" << endl;
       exit(-1);
@@ -307,18 +312,18 @@ WriteDMs(ostream& _myostream) const {
 double 
 DistanceMetric::
 Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
-  MultiBody* robot;
-  robot = env->GetMultiBody(env->GetRobotIndex());
-  return selected[0]->Distance(robot, _c1, _c2);
+  //MultiBody* robot;
+  //robot = env->GetMultiBody(env->GetRobotIndex());
+  return selected[0]->Distance(env, _c1, _c2);
 }
 
 
 double 
 DistanceMetric::
 Distance(Environment* env, const Cfg* _c1, const Cfg* _c2) {
-  MultiBody* robot;
-  robot = env->GetMultiBody(env->GetRobotIndex());
-  return selected[0]->Distance(robot, *_c1, *_c2);
+  //MultiBody* robot;
+  //robot = env->GetMultiBody(env->GetRobotIndex());
+  return selected[0]->Distance(env, *_c1, *_c2);
 }
 
 //////////
@@ -419,18 +424,40 @@ CreateCopy() {
 
 double 
 EuclideanDistance::
-Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   double dist;
-  dist = sqrt(2.0)*ScaledDistance(_c1, _c2, 0.5);
+  dist = sqrt(2.0)*ScaledDistance(env,_c1, _c2, 0.5);
   return dist;
 }
 
 double
 EuclideanDistance::
-ScaledDistance(const Cfg& _c1, const Cfg& _c2, double sValue) {
+ScaledDistance(Environment* env,const Cfg& _c1, const Cfg& _c2, double sValue) {
   Cfg *pTmp = _c1.CreateNewCfg();
   pTmp->subtract(_c1,_c2);
-  double dReturn = sqrt(  sValue*sqr(pTmp->PositionMagnitude()) + 
+  //vector<double> normalized_vec;
+  double pos_mag(0.0);
+  double max_range(0.0);
+  for(int i=0; i< pTmp->posDOF(); ++i) {
+    std::pair<double,double> range = env->GetBoundingBox()->GetRange(i);
+    double tmp_range = range.second-range.first;
+    if(tmp_range > max_range) max_range = tmp_range;
+  }
+  //cout << "Distance Normalization" << endl;
+  //cout << *pTmp << endl;
+  //cout << "Max range = " << max_range << endl;
+
+  for(int i=0; i< pTmp->posDOF(); ++i) {
+    //std::pair<double,double> range = env->GetBoundingBox()->GetRange(i);
+    //normalized_vec.push_back(pTmp->GetSingleParam(i) / (range.second - range.first));
+    pos_mag += sqr(pTmp->GetSingleParam(i) / max_range);
+  }
+  //pos_mag = sqrt(pos_mag);
+  //cout << "Normalized pos distance = " << sqrt(pos_mag) << endl;
+  /*double dReturn = sqrt(  sValue*sqr(pTmp->PositionMagnitude()) + 
+                          (1.0 - sValue)*sqr(pTmp->OrientationMagnitude()) );*/
+  
+  double dReturn = sqrt(  sValue*pos_mag + 
                           (1.0 - sValue)*sqr(pTmp->OrientationMagnitude()) );
   delete pTmp;
   return dReturn;
@@ -503,7 +530,7 @@ ParseCommandLine(int argc, char** argv) {
     if(!(is >> sValue)) {
       cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
       for(int i=0; i<argc; i++)
-	cerr << argv[i] << " ";
+  cerr << argv[i] << " ";
       cerr << "\"\n\n";
       PrintUsage(cerr);
       cerr << endl;
@@ -556,9 +583,9 @@ CreateCopy() {
 
 double 
 ScaledEuclideanDistance::
-Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   double dist;
-  dist = ScaledDistance(_c1, _c2, sValue); 
+  dist = ScaledDistance(env, _c1, _c2, sValue); 
   return dist;
 }
 
@@ -625,7 +652,7 @@ ParseCommandLine(int argc, char** argv) {
     if(!(is1 >> r1)) {
       cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
       for(int i=0; i<argc; i++)
-	cerr << argv[i] << " ";
+  cerr << argv[i] << " ";
       cerr << "\"\n\n";
       PrintUsage(cerr);
       cerr << endl;
@@ -644,7 +671,7 @@ ParseCommandLine(int argc, char** argv) {
     if(!(is2 >> r2)) {
       cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
       for(int i=0; i<argc; i++)
-	cerr << argv[i] << " ";
+  cerr << argv[i] << " ";
       cerr << "\"\n\n";
       PrintUsage(cerr);
       cerr << endl;
@@ -655,7 +682,7 @@ ParseCommandLine(int argc, char** argv) {
     if(!(is3 >> r3)) {
       cerr << "\nERROR ParseCommandLine: Don\'t understand\"";
       for(int i=0; i<argc; i++)
-	cerr << argv[i] << " ";
+  cerr << argv[i] << " ";
       cerr << "\"\n\n";
       PrintUsage(cerr);
       cerr << endl;
@@ -704,7 +731,7 @@ CreateCopy() {
 
 double 
 MinkowskiDistance::
-Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   double dist,pos=0,orient=0/*,d*/;
 
   Cfg *pC = _c1.CreateNewCfg();
@@ -766,7 +793,7 @@ CreateCopy() {
 
 double 
 ManhattanDistance::
-Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   double dist = 0;
   
   Cfg *pC = _c1.CreateNewCfg();
@@ -820,7 +847,7 @@ CreateCopy() {
 
 double 
 CenterOfMassDistance::
-Distance(MultiBody* robot, const Cfg& _c1, const Cfg& _c2) {
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   Vector3D d = _c1.GetRobotCenterPosition()-_c2.GetRobotCenterPosition();
   return d.magnitude();
 }

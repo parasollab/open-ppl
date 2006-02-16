@@ -498,13 +498,14 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Sta
       getCollisionInfo(newcfg,_env,Stats,cd,*this->cdInfo);
       diff=this->cdInfo->object_point-oldInfo.object_point;
     } while ( diff.normsqr()<1e-2 );
-
+  
   tmpStr = Callee+Method;
   Stats.IncCfgIsColl(&tmpStr);  
   if( cd->isInsideObstacle(newcfg,_env,*this->cdInfo) ) return;
   //make sure newcfg is collision free
   this->cdInfo->ResetVars();
   tmpStr = Callee+Method;
+
   while( true ){
     if( newcfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr)==false ) 
       break;

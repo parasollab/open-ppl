@@ -78,6 +78,9 @@ ParseStrategyMethod(TiXmlNode* in_pNode) {
     } else if(string(pChild->Value()) == "MPMultiStrategy") {
       MPMultiStrategy* multistrategy = new MPMultiStrategy(pChild,GetMPProblem());
       all_MPStrategyMethod.push_back( multistrategy );
+    } else if(string(pChild->Value()) == "PRMIncrementalStrategy") {
+      PRMIncrementalStrategy* prminc = new PRMIncrementalStrategy(pChild,GetMPProblem());
+      all_MPStrategyMethod.push_back( prminc );
     } else {
       LOG_WARNING_MSG("MPStrategy::  I don't know: "<< endl << *pChild);
     }
@@ -102,7 +105,7 @@ GetMPStrategyMethod(string& in_strLabel) {
   for(I = all_MPStrategyMethod.begin(); 
       I != all_MPStrategyMethod.end(); ++I) {
         if((*I)->GetLabel() == in_strLabel) {
-	  LOG_DEBUG_MSG("MPStrategyMethod::GetMPStrategyMethod(): found " << in_strLabel);
+    LOG_DEBUG_MSG("MPStrategyMethod::GetMPStrategyMethod(): found " << in_strLabel);
           return (*I);
         }
       }

@@ -126,7 +126,7 @@ Closest<CFG,WEIGHT>::Closest(int k):NodeConnectionMethod<CFG,WEIGHT>() {
 
 template <class CFG, class WEIGHT>
 Closest<CFG,WEIGHT>::Closest(int k, int m):NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "closest"; 
+  this->element_name = "closest"; 
   kclosest = k;
   mfailure = m;
 }
@@ -209,6 +209,7 @@ Closest<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
+
   _os << "\n" << this->GetName() << " ";
   _os << "\tINTEGER INTEGER (default kclosest:" << KCLOSEST << ", mfailure:" << MFAILURE << ")";
   _os << endl;
@@ -310,7 +311,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 {
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
 #ifndef QUIET
-  cout << "closest*(k="<< kclosest <<"): "<<flush;
+  // cout << "closest*(k="<< kclosest <<"): "<<flush;
   cout << "failure*(m="<< mfailure <<"): "<<flush;
 
 #endif
@@ -339,6 +340,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 }
 
 
+
 //connection for a given set of pairs and only allow mfailure 
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::
@@ -359,6 +361,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       //cout << "failure time equals the max allowed number."<<KP->first<<" fails: "<<failure<<endl;
       break;
       }
+      if(_rm->IsCached(KP->first,KP->second)) {
+	if(!_rm->GetCache(KP->first,KP->second)) {
+	  //cout << "Connect:: using failed cache" << endl;
+	  continue;
+	}
+      }
       if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) 
         continue;
       #if CHECKIFSAMECC
@@ -366,16 +374,21 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         continue;
       #endif
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm,
-               _rm->m_pRoadmap->GetData(KP->first),
-               _rm->m_pRoadmap->GetData(KP->second),
-               &lpOutput, this->connectionPosRes, this->connectionOriRes, 
-               (!addAllEdges) )) {
+			 _rm->m_pRoadmap->GetData(KP->first),
+			 _rm->m_pRoadmap->GetData(KP->second),
+			 &lpOutput, this->connectionPosRes, this->connectionOriRes, 
+			 (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
+	Stats.IncConnections_Made();
+	_rm->SetCache(KP->first,KP->second,true);
       }
-      else
-      failure++;
-   } 
+      else {
+	_rm->SetCache(KP->first,KP->second,false);
+	failure++;
+      }
+    } 
 }
+
 
 
 #endif

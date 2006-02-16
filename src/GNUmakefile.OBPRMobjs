@@ -30,6 +30,7 @@ OBJS = \
 	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
 	MPStrategy/MPStrategy.o \
+	MPStrategy/PRMIncrementalStrategy.o \
 	MPProblem/MPProblem.o 
 #	Haptic.o \
 #	Push.o \

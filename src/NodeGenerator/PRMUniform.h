@@ -277,6 +277,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     for (int i=0; i < this->numNodes.GetValue(); ++i) {
       Stats.IncNodes_Attempted();
       tmp.GetRandomCfg(_env);
+
       if (tmp.InBoundingBox(_env) && !tmp.isCollision(_env, Stats, cd, *cdInfo,true, &callee)) {
 	nodes.push_back( CFG(tmp));
 	path.push_back ( (Cfg*)tmp.CreateNewCfg() );
@@ -331,6 +332,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
       CFG sample;
       sample.SetLabel("BasicPRM",true);
       sample.GetRandomCfg(pEnv);
+
       bool bCd = !sample.InBoundingBox(pEnv) || sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo,true, &callee);
       ++nNumCdCalls;
       if (!bCd) {
@@ -350,6 +352,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
       CFG sample;
       sample.SetLabel("BasicPRM",true);
       sample.GetRandomCfg(pEnv);
+
       bool bCd = !sample.InBoundingBox(pEnv) || sample.isCollision(pEnv, *pStatClass, pCd, *cdInfo, true, &callee);
       ++nNumCdCalls;
       ++nAttempts;

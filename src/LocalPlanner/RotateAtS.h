@@ -20,7 +20,8 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
 
   ///Default Constructor.
   RotateAtS(cd_predefined _cdtype);
-  ///Destructor.	
+  RotateAtS(cd_predefined _cdtype, TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  ///Destructor.  
   virtual ~RotateAtS();
 
   //@}
@@ -36,15 +37,17 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
+  virtual void PrintOptions(ostream& out_os);
+
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
   virtual bool IsConnected(Environment *env, Stat_Class& Stats,
-			   CollisionDetection *,
-			   DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
-			   LPOutput<CFG, WEIGHT>* lpOutput,
-			   double positionRes, double orientationRes,
-			   bool checkCollision=true, 
-			   bool savePath=false, bool saveFailedPath=false);
+         CollisionDetection *,
+         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         LPOutput<CFG, WEIGHT>* lpOutput,
+         double positionRes, double orientationRes,
+         bool checkCollision=true, 
+         bool savePath=false, bool saveFailedPath=false);
 
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,12 +61,12 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
  protected:
   virtual 
     bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
-			   CollisionDetection *cd,
-			   DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
-			   LPOutput<CFG, WEIGHT>* lpOutput,
-			   double positionRes, double orientationRes,
-			   bool checkCollision=true, 
-			   bool savePath=false, bool saveFailedPath=false);
+         CollisionDetection *cd,
+         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         LPOutput<CFG, WEIGHT>* lpOutput,
+         double positionRes, double orientationRes,
+         bool checkCollision=true, 
+         bool savePath=false, bool saveFailedPath=false);
 
   //@{
     num_param<double> sValue;
@@ -83,14 +86,48 @@ template <class CFG, class WEIGHT>
 RotateAtS<CFG, WEIGHT>::
 RotateAtS(cd_predefined _cdtype) : StraightLine<CFG, WEIGHT>(_cdtype),
   sValue ("s", 0.5, 0, 1) {
-  sValue.PutDesc("FLOAT	", "(def, s=0.5)");
+  sValue.PutDesc("FLOAT ", "(def, s=0.5)");
   SetDefault(); 
+}
+
+template <class CFG, class WEIGHT>
+RotateAtS<CFG, WEIGHT>::
+RotateAtS(cd_predefined _cdtype, TiXmlNode* in_pNode, MPProblem* in_pProblem) : StraightLine<CFG, WEIGHT>(_cdtype, in_pNode,in_pProblem),
+  sValue ("s", 0.5, 0, 1) {
+  sValue.PutDesc("FLOAT ", "(def, s=0.5)");
+  cdtype = _cdtype;
+  LOG_DEBUG_MSG("RotateAtS::RotateAtS()");
+
+  double  nSValue; 
+  if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryDoubleAttribute("s",&nSValue)) {
+        
+        sValue.SetValue(nSValue);
+        //s_values_in.push_back(nSValue);
+        s_values.push_back(nSValue);
+      } else {
+        LOG_DEBUG_MSG("RotateAtS::s not found");
+      }
+  LOG_DEBUG_MSG("~RotateAtS::RotateAtS()");
 }
 
 template <class CFG, class WEIGHT>
 RotateAtS<CFG, WEIGHT>::
 ~RotateAtS() {
 }
+
+
+
+template <class CFG, class WEIGHT>
+void
+RotateAtS<CFG, WEIGHT>::
+PrintOptions(ostream& out_os) {
+  out_os << "    " << GetName() << "::  ";
+  out_os << "line segment length = " << " " << lineSegmentLength.GetValue() << " ";
+  out_os << "binary search = " << " " << binarySearch.GetValue() << " ";
+  out_os << "s_value = " << s_values[0];
+  out_os << endl;
+}
+
 
 
 template <class CFG, class WEIGHT>
@@ -213,56 +250,45 @@ template <class CFG, class WEIGHT>
 bool
 RotateAtS<CFG,WEIGHT>::
 IsConnected(Environment *_env, Stat_Class& Stats,
-	    CollisionDetection *cd, DistanceMetric *dm,
-	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
-	    double positionRes, double orientationRes,
-	    bool checkCollision, 
-	    bool savePath, bool saveFailedPath) {  
+      CollisionDetection *cd, DistanceMetric *dm,
+      const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
+      double positionRes, double orientationRes,
+      bool checkCollision, 
+      bool savePath, bool saveFailedPath) {  
   bool connected = false;
-  connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+
+  connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, 
+				lpOutput, positionRes, orientationRes, 
+				checkCollision, savePath, saveFailedPath);
   if (!connected && !isSymmetric) { //try the other way
-/*
-    for(int i=0; i<s_values.size(); i++){
-      s_values[i] = 1 - s_values[i];
-    }
-    std::sort(s_values.begin(),s_values.end());
-    connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-*/
-    connected = IsConnectedOneWay(_env, Stats, cd, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+    connected = IsConnectedOneWay(_env, Stats, cd, dm, _c2, _c1, 
+				  lpOutput, positionRes, orientationRes, 
+				  checkCollision, savePath, saveFailedPath);
     if (savePath)
       reverse(lpOutput->path.begin(), lpOutput->path.end());
-/*
-    for(int i=0; i<s_values.size(); i++){
-      s_values[i] = 1 - s_values[i];
-    }
-    std::sort(s_values.begin(),s_values.end());
-*/
   }
   return connected;
+
 }
 
 template <class CFG, class WEIGHT>
 bool
 RotateAtS<CFG,WEIGHT>::
 IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, DistanceMetric *dm,
-	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
-	    double positionRes, double orientationRes,
-	    bool checkCollision, 
-	    bool savePath, bool saveFailedPath) {  
+      const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
+      double positionRes, double orientationRes,
+      bool checkCollision, 
+      bool savePath, bool saveFailedPath) {  
   char RatS[50] = "Rotate_at_s";
-/*
-  sprintf(RatS,"%s=%3.1f",RatS, s_values_in[0]);
-  for(int i=1; i<s_values_in.size(); i++){
-    sprintf(RatS,"%s,%3.1f",RatS, s_values_in[i]);
-  }
-*/
+
   sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);
   for(int i=1; i<s_values.size(); ++i)
     sprintf(RatS,"%s,%3.1f",RatS, s_values[i]);
   Stats.IncLPAttempts( RatS );
   int cd_cntr= 0;
    
-  if(this->lineSegmentLength.GetValue() && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
+  if(this->lineSegmentLength.GetValue() && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, 
+								  lpOutput, cd_cntr, positionRes)) {
     Stats.IncLPCollDetCalls( RatS, cd_cntr );
     return false;
   }
@@ -275,9 +301,13 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
   for(i=0; i<sequence.size()-1; ++i) {
     bool flag;
     if(this->binarySearch.GetValue()) 
-      flag = IsConnectedSLBinary(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+      flag = IsConnectedSLBinary(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], 
+				 lpOutput, cd_cntr, positionRes, orientationRes, 
+				 checkCollision, savePath, saveFailedPath);
     else
-      flag = IsConnectedSLSequential(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+      flag = IsConnectedSLSequential(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], 
+				     lpOutput, cd_cntr, positionRes, orientationRes, 
+				     checkCollision, savePath, saveFailedPath);
     if(!flag) {
       connected = false;
       break;

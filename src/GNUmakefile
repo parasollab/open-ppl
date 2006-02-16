@@ -44,7 +44,7 @@ include $(STAPL)/GNUmakefile.STAPLdefaults
 include $(OBPRM)/GNUmakefile.OBPRMdefaults
 
 #common misc.
-DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) $(ROBOT_DEF) -DTIXML_USE_STL -Wno-deprecated
+DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) $(ROBOT_DEF) -DTIXML_USE_STL -Wno-deprecated 
 INCLUDES = -I. $(STAPL_INCL) $(CD_INCL) $(PMPL_INCL)
 LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB)
 
@@ -105,4 +105,3 @@ reallyclean:
 	touch Dependencies
 
 -include Dependencies
-

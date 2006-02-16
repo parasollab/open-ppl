@@ -11,7 +11,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 #include "OBPRMDef.h"
 #include "CollisionDetection.h" //for CDINFO instance, so we can not use forward declaration.
-#include "Cfg.h"		//for vector<Cfg>, so we can not use forward declaration.
+#include "Cfg.h"    //for vector<Cfg>, so we can not use forward declaration.
 #include "Weight.h"
 #include "util.h"
 
@@ -39,7 +39,7 @@ class LocalPlanners : MPBaseObject{
   ///Default Constructor.
   LocalPlanners();
   LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem);
-  ///Destructor.	
+  ///Destructor.  
   ~LocalPlanners();
 
   void PrintOptions(ostream& out_os);
@@ -63,36 +63,36 @@ class LocalPlanners : MPBaseObject{
   unsigned int GetCounter();
 
   bool IsConnected(Environment *env, Stat_Class& Stats,
-		   CollisionDetection *, DistanceMetric *,
-		   CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput, 
-		   double positionRes, double orientationRes, 
-		   bool checkCollision=true, 
-		   bool savePath=false, bool saveFailedPath=false);
+       CollisionDetection *, DistanceMetric *,
+       CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput, 
+       double positionRes, double orientationRes, 
+       bool checkCollision=true, 
+       bool savePath=false, bool saveFailedPath=false);
 
   bool IsConnected(Roadmap<CFG, WEIGHT> *rm, Stat_Class& Stats,
-		   CollisionDetection *cd, DistanceMetric *dm,
-		   CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
-		   double positionRes, double orientationRes, 
-		   bool checkCollision=true, 
-		   bool savePath=false, bool saveFailedPath=false);
+       CollisionDetection *cd, DistanceMetric *dm,
+       CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
+       double positionRes, double orientationRes, 
+       bool checkCollision=true, 
+       bool savePath=false, bool saveFailedPath=false);
 
   bool IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats,
-		   CollisionDetection *cd, 
-		   DistanceMetric *dm,
-		   CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
-		   double positionRes, double orientationRes, 
-		   bool checkCollision=true, 
-		   bool savePath=false, bool saveFailedPath=false);
+       CollisionDetection *cd, 
+       DistanceMetric *dm,
+       CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
+       double positionRes, double orientationRes, 
+       bool checkCollision=true, 
+       bool savePath=false, bool saveFailedPath=false);
 
   bool UsesPlannerOtherThan(char plannerName[]);
 
   bool GetPathSegment(Environment *_env, Stat_Class& Stats,
-		      CollisionDetection *cd, 
-		      DistanceMetric *dm, CFG _c1, CFG _c2, WEIGHT _weight, 
-		      LPOutput<CFG,WEIGHT>* _ci,	    
-		      double positionRes, double orientationRes, 
-		      bool checkCollision=true, 
-		      bool savePath=false, bool saveFailedPath=false);
+          CollisionDetection *cd, 
+          DistanceMetric *dm, CFG _c1, CFG _c2, WEIGHT _weight, 
+          LPOutput<CFG,WEIGHT>* _ci,      
+          double positionRes, double orientationRes, 
+          bool checkCollision=true, 
+          bool savePath=false, bool saveFailedPath=false);
   
   
 
@@ -245,6 +245,13 @@ LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
       straight_line->SetID(GetNewID());
       selected.push_back(straight_line);
       all.push_back(straight_line);
+    } else if(string(pChild->Value()) == string("RotateAtS")) {
+      RotateAtS<CFG, WEIGHT>* rotate_at_s = 
+          new RotateAtS<CFG, WEIGHT>(cdtype, pChild, GetMPProblem());
+      rotate_at_s->cdInfo = &cdInfo;
+      rotate_at_s->SetID(GetNewID());
+      selected.push_back(rotate_at_s);
+      all.push_back(rotate_at_s);
     }
   }
   LOG_DEBUG_MSG("~LocalPlanners::LocalPlanners()");
@@ -309,7 +316,7 @@ ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtyp
     try {
       found = ParseCommandLine(argc, argv);
       if (!found)
-	throw BadUsage();
+  throw BadUsage();
     } catch (BadUsage) {
       cerr << "Command line error" << endl;
       PrintUsage(cerr);
@@ -346,38 +353,38 @@ ParseCommandLine(int argc, char **argv) {
     for (itr = all.begin(); itr != all.end(); itr++) {
       //If the method matches any of the supported methods ...
       if ( !strcmp( argv[cmd_begin], (*itr)->GetName()) ) {
-	cmd_argc = 0;
-	bool is_method_name = false;
-	do {
-	  cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
-	  cmd_argc++;
+  cmd_argc = 0;
+  bool is_method_name = false;
+  do {
+    cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
+    cmd_argc++;
 
-	  typename vector<LocalPlannerMethod<CFG,WEIGHT>*>::iterator itr_names;
-	  is_method_name = false;
-	  for (itr_names = all.begin(); itr_names != all.end() &&cmd_begin+cmd_argc < argc; itr_names++)
-	    if (!strcmp(argv[cmd_begin+cmd_argc],(*itr_names)->GetName())) {
-	      is_method_name = true;
-	      break;
-	    }
-	} while (! is_method_name && cmd_begin+cmd_argc < argc);
+    typename vector<LocalPlannerMethod<CFG,WEIGHT>*>::iterator itr_names;
+    is_method_name = false;
+    for (itr_names = all.begin(); itr_names != all.end() &&cmd_begin+cmd_argc < argc; itr_names++)
+      if (!strcmp(argv[cmd_begin+cmd_argc],(*itr_names)->GetName())) {
+        is_method_name = true;
+        break;
+      }
+  } while (! is_method_name && cmd_begin+cmd_argc < argc);
 
-	// .. use the parser of the matching method
-	(*itr)->ParseCommandLine(cmd_argc, cmd_argv);
-	if (!InSelected(*itr)) {
-	  // .., set their parameters
-	  (*itr)->cdInfo = &cdInfo;
-	  (*itr)->SetID(GetNewID());
-	  //check if lp is straightline to set saved_sl_id for add partial edge
-	  if ( !strcmp( "straightline", (*itr)->GetName()) )
-	    saved_sl_id = (*itr)->GetID();
-	  //  and push it back into the list of selected methods.
-	  cout << (*itr)->GetName() << endl;
-	  selected.push_back((*itr)->CreateCopy());
-	}
+  // .. use the parser of the matching method
+  (*itr)->ParseCommandLine(cmd_argc, cmd_argv);
+  if (!InSelected(*itr)) {
+    // .., set their parameters
+    (*itr)->cdInfo = &cdInfo;
+    (*itr)->SetID(GetNewID());
+    //check if lp is straightline to set saved_sl_id for add partial edge
+    if ( !strcmp( "straightline", (*itr)->GetName()) )
+      saved_sl_id = (*itr)->GetID();
+    //  and push it back into the list of selected methods.
+    cout << (*itr)->GetName() << endl;
+    selected.push_back((*itr)->CreateCopy());
+  }
       
-	(*itr)->SetDefault(); //reset in all, not in selected
-	found = TRUE;
-	break;
+  (*itr)->SetDefault(); //reset in all, not in selected
+  found = TRUE;
+  break;
       } 
     }
     if(!found)
@@ -444,7 +451,7 @@ template <class CFG, class WEIGHT>
 void 
 LocalPlanners<CFG,WEIGHT>::
 ReadLPs(istream& _is) {
-	
+  
   char tagstring[100];
   char lpdesc[100];
   int  numLPs;
@@ -475,7 +482,7 @@ ReadLPs(istream& _is) {
     try {
       found = ParseCommandLine(argc, argv);
       if (!found)
-	throw BadUsage();
+  throw BadUsage();
     } catch (BadUsage) {
       cerr << "Line error" << endl;
       exit(-1); 
@@ -516,11 +523,11 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 IsConnected(Environment *_env, Stat_Class& Stats, 
-	    CollisionDetection *cd, DistanceMetric *dm,
-	    CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
-	    double positionRes, double orientationRes, 
-	    bool checkCollision, 
-	    bool savePath, bool saveFailedPath) {
+      CollisionDetection *cd, DistanceMetric *dm,
+      CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
+      double positionRes, double orientationRes, 
+      bool checkCollision, 
+      bool savePath, bool saveFailedPath) {
   //clear lpOutput
   lpOutput->path.clear();      
   lpOutput->edge.first.SetWeight(0);
@@ -545,7 +552,7 @@ IsConnected(Environment *_env, Stat_Class& Stats,
       
       connected = (*itr)->IsConnected(_env,Stats,cd,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
       if (connected)
-	connecting_lp = (*itr)->GetID();
+  connecting_lp = (*itr)->GetID();
     }
   }
 
@@ -565,11 +572,11 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 IsConnected(Roadmap<CFG, WEIGHT> *rm, Stat_Class& Stats, 
-	    CollisionDetection *cd, DistanceMetric *dm,
-	    CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
-	    double positionRes, double orientationRes, 
-	    bool checkCollision, 
-	    bool savePath, bool saveFailedPath) {
+      CollisionDetection *cd, DistanceMetric *dm,
+      CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
+      double positionRes, double orientationRes, 
+      bool checkCollision, 
+      bool savePath, bool saveFailedPath) {
 
   bool connected;
   if( rm->m_pRoadmap->IsEdge(_c1, _c2) )  // check they are already connected.
@@ -585,11 +592,11 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats,
-	    CollisionDetection *cd, DistanceMetric *dm,
-	    CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
-	    double positionRes, double orientationRes, 
-	    bool checkCollision, 
-	    bool savePath, bool saveFailedPath) {
+      CollisionDetection *cd, DistanceMetric *dm,
+      CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
+      double positionRes, double orientationRes, 
+      bool checkCollision, 
+      bool savePath, bool saveFailedPath) {
   return GetLocalPlanner(lpid)->IsConnected(_env,Stats,cd,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
 }
 
@@ -616,30 +623,30 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 GetPathSegment(Environment *_env, Stat_Class& Stats, 
-	       CollisionDetection *cd, DistanceMetric *dm, 
-	       CFG _c1, CFG _c2, WEIGHT _weight, 
-	       LPOutput<CFG,WEIGHT>* _ci,	    
-	       double positionRes, double orientationRes, 
-	       bool checkCollision, 
-	       bool savePath, bool saveFailedPath) {
+         CollisionDetection *cd, DistanceMetric *dm, 
+         CFG _c1, CFG _c2, WEIGHT _weight, 
+         LPOutput<CFG,WEIGHT>* _ci,     
+         double positionRes, double orientationRes, 
+         bool checkCollision, 
+         bool savePath, bool saveFailedPath) {
   bool connected = false;
 
   if (_weight.GetLP() >= 1 && _weight.GetLP() <= selected.size()) {         
     for (int lpid = _weight.GetLP(); !connected && lpid <= selected.size(); lpid++) {
-      // clear possible old storage.	
+      // clear possible old storage.  
       _ci->path.erase(_ci->path.begin(), _ci->path.end());
       //the local planner takes care of forward and backward connection
       if ( IsConnected(lpid, _env,Stats,cd,dm,_c1,_c2, _ci, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) ) {
-	connected = true;
+  connected = true;
       } else {                       // NEITHER!
-	cout << "\n\n\t Planner: " << GetLocalPlanner(lpid)->GetName() << " FAILED!!! \n\n";
+  cout << "\n\n\t Planner: " << GetLocalPlanner(lpid)->GetName() << " FAILED!!! \n\n";
       }
     }
     
   } else { ///Local planner not found  
     cout << "\nERROR: _weight(" << _weight 
-	 << ") is out of bounds (numLPs)" 
-	 << "\n       where numLPs = " << selected.size()  << "\n";
+   << ") is out of bounds (numLPs)" 
+   << "\n       where numLPs = " << selected.size()  << "\n";
   }
   return connected;
 }
@@ -657,8 +664,8 @@ GetLocalPlanner(unsigned int lpid) {
     typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
     for (itr = selected.begin(); itr != selected.end(); itr++) {
       if ( (*itr)->GetID() == lpid ) {
-	lp = (*itr);
-	break;
+  lp = (*itr);
+  break;
       }
     }
   }

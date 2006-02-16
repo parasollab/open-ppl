@@ -153,7 +153,7 @@ class CollisionDetection; ///< Collision Detection Algobase
 template <class CFG, class WEIGHT>
 class Roadmap {
 public:
-	
+  
   /////////////////////////////////////////////////////////////////////
   //
   //
@@ -177,7 +177,7 @@ public:
    * as current version, RDMPVER_CURRENT.
    */
   Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm, 
-	  LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env);
+    LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env);
 
   
   /**Delete all the elements of RoadMap. 
@@ -211,7 +211,7 @@ public:
    *@see InitEnvironment
    */
   void InitRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm, 
-		   LocalPlanners<CFG,WEIGHT>* lp, char* ExistingMap=NULL, Environment* env = NULL); 
+       LocalPlanners<CFG,WEIGHT>* lp, char* ExistingMap=NULL, Environment* env = NULL); 
     
   /**Copy given Environment pointer to this roadmap's environment.
    */
@@ -265,7 +265,7 @@ public:
    *reading from *.map file.
    */
   void ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
-		   LocalPlanners<CFG,WEIGHT>* lp, const char* _fname);
+       LocalPlanners<CFG,WEIGHT>* lp, const char* _fname);
   
   /* @todo: void ReadRoadmap(const char* _fname); */
   
@@ -285,7 +285,7 @@ public:
    *writing to *.map file.
    */
   void WriteRoadmap(Input* input, CollisionDetection *cd, DistanceMetric* dm,
-		    LocalPlanners<CFG,WEIGHT>* lp, const char* _fname = NULL);
+        LocalPlanners<CFG,WEIGHT>* lp, const char* _fname = NULL);
   
   void ReadRoadmapGRAPHONLY(const char* _fname);
   
@@ -316,13 +316,13 @@ public:
    *for backup data in old version.
    */
   bool ConvertToCurrentVersion(const char* _fname, int thisVersion);
-	
+  
   /**Convert format for old graph to newest verion.
    *This is done by filling null values to new fields which
    *is not defined in old version.
    */
   void ConvertGraph(istream& myifstream, ostream& myofstream, int thisVersion, 
-		    int presentCfgFields, int presentEdgeWtFields);
+        int presentCfgFields, int presentEdgeWtFields);
   
   /**Backup old version roadmap file to another file.
    *@param _fname File name for old version roadmap file.
@@ -335,7 +335,7 @@ public:
    * @todo make conversion perl scripts and remove conversion code from roadmap.
    */
   void SaveCurrentVersion(const char* _fname, int thisVersion, 
-			  char* infile, char* outfile);
+        char* infile, char* outfile);
 
   /**Read information about RNGseed from file.
     *@param _fname filename for data file.
@@ -375,6 +375,29 @@ public:
   void SetRNGseed(long seedval) {RNGseed = seedval;}
   long GetRNGseed() const {return RNGseed;}
 
+
+   bool IsCached(VID _v1, VID _v2) {
+    if(m_lpcache.count(std::pair<VID,VID>(_v1,_v2)) > 0)
+      return true;
+    else
+      return false;
+  }
+
+  bool GetCache(VID _v1, VID _v2) {
+    if(IsCached(_v1,_v2)) {
+      return m_lpcache[std::pair<VID,VID>(_v1,_v2)];
+    }
+    else
+    {
+      cout << "LocalPlannerMethod::GetCache -- Cache Error " << endl;
+      exit(-1);
+    }
+  }
+
+  void SetCache(VID _v1, VID _v2, bool _b) {
+    m_lpcache[std::pair<VID,VID>(_v1,_v2)] = _b;
+    m_lpcache[std::pair<VID,VID>(_v2,_v1)] = _b;
+  }
   
   //@}
   
@@ -412,6 +435,7 @@ public:
   //
   /////////////////////////////////////////////////////////////////////
  private:
+  std::map<std::pair<VID,VID>,bool> m_lpcache;
 };
 
 
@@ -436,7 +460,7 @@ Roadmap()
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>::
 Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
-	LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env)
+  LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env)
   : RoadmapVersionNumber(RDMPVER_CURRENT) {
   m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
   
@@ -472,11 +496,11 @@ AppendRoadmap(Roadmap<CFG, WEIGHT> &from_rdmp) {
     from_rdmp.m_pRoadmap->GetOutgoingEdges(*vid_itrt, edges); //get edges
     for (edge_itrt = edges.begin(); edge_itrt < edges.end(); edge_itrt++) {
       if (!m_pRoadmap->IsEdge((*edge_itrt).first.first, (*edge_itrt).first.second)) { //add an edge if it is not yet in m_pRoadmap
-	CFG cfg_a = from_rdmp.m_pRoadmap->GetData((*edge_itrt).first.first);
-	CFG cfg_b = from_rdmp.m_pRoadmap->GetData((*edge_itrt).first.second);
-	m_pRoadmap->AddEdge(cfg_a,cfg_b,(*edge_itrt).second);
+  CFG cfg_a = from_rdmp.m_pRoadmap->GetData((*edge_itrt).first.first);
+  CFG cfg_b = from_rdmp.m_pRoadmap->GetData((*edge_itrt).first.second);
+  m_pRoadmap->AddEdge(cfg_a,cfg_b,(*edge_itrt).second);
       }
-    } //endfor edge_itrt	
+    } //endfor edge_itrt  
   } //endfor vid_itrt
   return to_vids;
 }
@@ -499,7 +523,7 @@ template <class CFG, class WEIGHT>
 void
 Roadmap<CFG, WEIGHT>::
 InitRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
-	    LocalPlanners<CFG,WEIGHT>* lp, char* ExistingMap, Environment* env) {
+      LocalPlanners<CFG,WEIGHT>* lp, char* ExistingMap, Environment* env) {
   //---------------------------------------------------------
   // initialize roadmap, from scratch or previously built map
   //---------------------------------------------------------
@@ -579,7 +603,7 @@ template <class CFG, class WEIGHT>
 void 
 Roadmap<CFG, WEIGHT>::
 ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
-	    LocalPlanners<CFG,WEIGHT>* lp, const char* _fname) {
+      LocalPlanners<CFG,WEIGHT>* lp, const char* _fname) {
   if ( !CheckVersion(_fname) ) {
     cout << endl << "In ReadRoadmap: don't recognize format in: " << _fname ;
     return;
@@ -616,7 +640,7 @@ template <class CFG, class WEIGHT>
 void 
 Roadmap<CFG, WEIGHT>::
 WriteRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
-	     LocalPlanners<CFG,WEIGHT>* lp, const char* _fname) {
+       LocalPlanners<CFG,WEIGHT>* lp, const char* _fname) {
   char outfile[200];
   
   if ( _fname == NULL ) {
@@ -794,25 +818,25 @@ ConvertToCurrentVersion(const char* _fname, int thisVersion) {
   if ( thisVersion == RDMPVER_LEGACY) {
     // legacy: 0 cfg fields, 1 wt field (lp)
     ConvertGraph(myifstream, myofstream, thisVersion,
-		 RDMPVER_LEGACY_CFG_FIELDS, RDMPVER_LEGACY_EDGEWT_FIELDS);
+     RDMPVER_LEGACY_CFG_FIELDS, RDMPVER_LEGACY_EDGEWT_FIELDS);
     myofstream << endl << "Converted from ROADMAP VERSION LEGACY";
     
   } else if (thisVersion == RDMPVER_62000) {
     // 62000: 2 cfg fields (obst, tag), 2 wt fields (lp, ticks/weight)
     ConvertGraph(myifstream, myofstream, thisVersion,
-		 RDMPVER_62000_CFG_FIELDS, RDMPVER_62000_EDGEWT_FIELDS);
+     RDMPVER_62000_CFG_FIELDS, RDMPVER_62000_EDGEWT_FIELDS);
     myofstream << endl << "Converted from ROADMAP VERSION 62000";
     
   } else if (thisVersion == RDMPVER_061100) {
     // 061100: 2 cfg fields (obst, tag), 2 wt fields (lp, ticks/weight)
     ConvertGraph(myifstream, myofstream, thisVersion,
-		 RDMPVER_061100_CFG_FIELDS, RDMPVER_061100_EDGEWT_FIELDS);
+     RDMPVER_061100_CFG_FIELDS, RDMPVER_061100_EDGEWT_FIELDS);
     myofstream << endl << "Converted from ROADMAP VERSION 061100";
     
   } else if (thisVersion == RDMPVER_061300) {
     // 061300: 3 cfg fields (obst, tag, clearance), 2 wt fields (lp, ticks/weight)
     ConvertGraph(myifstream, myofstream, thisVersion,
-		 RDMPVER_061300_CFG_FIELDS, RDMPVER_061300_EDGEWT_FIELDS);
+     RDMPVER_061300_CFG_FIELDS, RDMPVER_061300_EDGEWT_FIELDS);
     myofstream << endl << "Converted from ROADMAP VERSION 061300";
     
   } else if (thisVersion == RDMPVER_010604) {
@@ -843,7 +867,7 @@ template <class CFG, class WEIGHT>
 void
 Roadmap<CFG, WEIGHT>::
 SaveCurrentVersion(const char* _fname, int thisVersion, 
-		   char* infile, char* outfile) {
+       char* infile, char* outfile) {
   //char tagstring[500];
   string tagstring;
   cout<<"Roadmap::SaveCurrentVersion is called"<<endl;
@@ -906,7 +930,7 @@ template <class CFG, class WEIGHT>
 void 
 Roadmap<CFG, WEIGHT>::
 ConvertGraph(istream&  myifstream, ostream& myofstream, int thisVersion,
-	     int presentCfgFields, int presentEdgeWtFields) {
+       int presentCfgFields, int presentEdgeWtFields) {
   char tagstring[200];
   int v, i, j, nverts, nedges, vids;
   
@@ -950,11 +974,11 @@ ConvertGraph(istream&  myifstream, ostream& myofstream, int thisVersion,
       myifstream >> tagstring;         // vid of adj vertex for this edge
       myofstream << tagstring << " "; 
       for (j=0; j < presentEdgeWtFields; j++) {
-	myifstream >> tagstring;
-	myofstream << tagstring << " "; 
+  myifstream >> tagstring;
+  myofstream << tagstring << " "; 
       }
       for (j=0; j < missingEdgeWtFields; j++) {
-	myofstream << NULL_WT_INFO << " "; 
+  myofstream << NULL_WT_INFO << " "; 
       }
     }
     myofstream << endl;

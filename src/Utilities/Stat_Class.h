@@ -39,6 +39,7 @@ public:
   int SetSizeCC( int CC, int Size );
 
   int IncNumCollDetCalls( char *CDName , std::string *pCallName = NULL);
+  unsigned long int GetIsCollTotal() { return IsCollTotal; }
 
   void IncCfgIsColl( std::string *pCallName = NULL);
 
@@ -160,9 +161,9 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
 
   cout << endl << endl << "Local Planners:" << endl;
   cout << setw(20) << "Name"
-	<<setw(15) << "Connections"
-	<<setw(15) << "Attempts"
-	<<setw(15) << "Coll Det Calls" << endl;
+  <<setw(15) << "Connections"
+  <<setw(15) << "Attempts"
+  <<setw(15) << "Coll Det Calls" << endl;
  
   for(i=0;i<MaxLP;i++)
     if (strcmp(LPNameList[i],"empty")!=0) {
@@ -180,7 +181,7 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
   for(i=0;i<MaxCD;i++)
     if (strcmp(CDNameList[i],"empty")!=0)
       cout << setw(20) << CDNameList[i] 
-	   << setw(15) << NumCollDetCalls[i] << endl;
+     << setw(15) << NumCollDetCalls[i] << endl;
 */
 
   #if VERBOSE
@@ -307,28 +308,28 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
       typename vector<CFG>::iterator cci_i;
       typename vector<CFG>::iterator cci_j;
       for (cci_i=cci_cfgs.begin(); cci_i < cci_cfgs.end(); cci_i++) {
-	for (cci_j = cci_i+1; cci_j < cci_cfgs.end(); cci_j++) {
-	  double c_dist = dm->Distance(rdmp->GetEnvironment(), *cci_i, *cci_j);
-	  if (c_dist > cci_max_intracc_dist)
-	    cci_max_intracc_dist = c_dist;
-	  if (cci_min_intracc_dist == 0 || c_dist < cci_min_intracc_dist)
-	    cci_min_intracc_dist = c_dist;
-	  cci_mean_intracc_dist += c_dist;
-	  n_pairs++;
-	}
+  for (cci_j = cci_i+1; cci_j < cci_cfgs.end(); cci_j++) {
+    double c_dist = dm->Distance(rdmp->GetEnvironment(), *cci_i, *cci_j);
+    if (c_dist > cci_max_intracc_dist)
+      cci_max_intracc_dist = c_dist;
+    if (cci_min_intracc_dist == 0 || c_dist < cci_min_intracc_dist)
+      cci_min_intracc_dist = c_dist;
+    cci_mean_intracc_dist += c_dist;
+    n_pairs++;
+  }
       }
       if (n_pairs > 0)
-	cci_mean_intracc_dist /= n_pairs;
+  cci_mean_intracc_dist /= n_pairs;
 
       double cci_sigma_intracc_dist = 0;
       for (cci_i=cci_cfgs.begin(); cci_i < cci_cfgs.end(); cci_i++) {
-	for (cci_j = cci_i+1; cci_j < cci_cfgs.end(); cci_j++) {
-	  cci_sigma_intracc_dist += pow(dm->Distance(rdmp->GetEnvironment(),
-		     *cci_i, *cci_j)-cci_mean_intracc_dist, 2);
-	}
+  for (cci_j = cci_i+1; cci_j < cci_cfgs.end(); cci_j++) {
+    cci_sigma_intracc_dist += pow(dm->Distance(rdmp->GetEnvironment(),
+         *cci_i, *cci_j)-cci_mean_intracc_dist, 2);
+  }
       }
       if (n_pairs > 1)
-	cci_sigma_intracc_dist /= (n_pairs-1);
+  cci_sigma_intracc_dist /= (n_pairs-1);
       cci_sigma_intracc_dist = sqrt(cci_sigma_intracc_dist);
 
       //compute shortest, longest, mean and std-dev (sigma) edge sizes 
@@ -340,33 +341,33 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
       double cci_mean_intracc_edge_s = 0;
       double cci_sigma_intracc_edge_s = 0;
       for (vector< pair<VID,VID> >::iterator e_iter = cci_edges.begin();
-	   e_iter < cci_edges.end(); e_iter++) {
-	CFG e_v1 = rdmp->m_pRoadmap->GetData(e_iter->first);
-	CFG e_v2 = rdmp->m_pRoadmap->GetData(e_iter->second);
-	double e_dist = dm->Distance(rdmp->GetEnvironment(), e_v1, e_v2);
-	if (e_dist > cci_max_intracc_edge_s)
-	  cci_max_intracc_edge_s = e_dist;
-	if (cci_min_intracc_edge_s == 0 || e_dist < cci_min_intracc_edge_s)
-	  cci_min_intracc_edge_s = e_dist;
-	cci_mean_intracc_edge_s += e_dist;
+     e_iter < cci_edges.end(); e_iter++) {
+  CFG e_v1 = rdmp->m_pRoadmap->GetData(e_iter->first);
+  CFG e_v2 = rdmp->m_pRoadmap->GetData(e_iter->second);
+  double e_dist = dm->Distance(rdmp->GetEnvironment(), e_v1, e_v2);
+  if (e_dist > cci_max_intracc_edge_s)
+    cci_max_intracc_edge_s = e_dist;
+  if (cci_min_intracc_edge_s == 0 || e_dist < cci_min_intracc_edge_s)
+    cci_min_intracc_edge_s = e_dist;
+  cci_mean_intracc_edge_s += e_dist;
       }
       if (cci_edges.size() > 0)
-	cci_mean_intracc_edge_s /= cci_edges.size();
+  cci_mean_intracc_edge_s /= cci_edges.size();
       for (vector< pair<VID,VID> >::iterator e_iter = cci_edges.begin();
-	   e_iter < cci_edges.end(); e_iter++) {
-	CFG e_v1 = rdmp->m_pRoadmap->GetData(e_iter->first);
-	CFG e_v2 = rdmp->m_pRoadmap->GetData(e_iter->second);
-	double e_dist = dm->Distance(rdmp->GetEnvironment(), e_v1, e_v2);
-	cci_sigma_intracc_edge_s += pow(e_dist-cci_mean_intracc_edge_s, 2);
+     e_iter < cci_edges.end(); e_iter++) {
+  CFG e_v1 = rdmp->m_pRoadmap->GetData(e_iter->first);
+  CFG e_v2 = rdmp->m_pRoadmap->GetData(e_iter->second);
+  double e_dist = dm->Distance(rdmp->GetEnvironment(), e_v1, e_v2);
+  cci_sigma_intracc_edge_s += pow(e_dist-cci_mean_intracc_edge_s, 2);
       }
       if (cci_edges.size() > 1)
-	cci_sigma_intracc_edge_s /= cci_edges.size() - 1;
+  cci_sigma_intracc_edge_s /= cci_edges.size() - 1;
       cci_sigma_intracc_edge_s = sqrt(cci_sigma_intracc_edge_s);
 
       //get center of mass of all Cfgs in current CC
       CFG center_of_mass = cci_cfgs[0];
       for (int j = 1; j < cci_cfgs.size(); ++j)
-	center_of_mass.add(center_of_mass, cci_cfgs[j]);
+  center_of_mass.add(center_of_mass, cci_cfgs[j]);
       center_of_mass.divide(center_of_mass, cci_cfgs.size());
     
       //compute average distance of the nodes to the center of mass
@@ -375,25 +376,25 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
       double cci_mean_intracc_dist_to_cm = 0;
       double cci_sigma_intracc_dist_to_cm = 0;
       for (int j = 0; j < cci_cfgs.size(); ++j) {
-	CFG tmp = cci_cfgs[j];
-	double e_dist = dm->Distance(rdmp->GetEnvironment(), 
-				     center_of_mass, tmp);
-	if (e_dist > cci_max_intracc_dist_to_cm)
-	  cci_max_intracc_dist_to_cm = e_dist;
-	if (cci_min_intracc_dist_to_cm == 0 || e_dist < cci_min_intracc_dist_to_cm)
-	  cci_min_intracc_dist_to_cm = e_dist;
-	cci_mean_intracc_dist_to_cm += e_dist;
+  CFG tmp = cci_cfgs[j];
+  double e_dist = dm->Distance(rdmp->GetEnvironment(), 
+             center_of_mass, tmp);
+  if (e_dist > cci_max_intracc_dist_to_cm)
+    cci_max_intracc_dist_to_cm = e_dist;
+  if (cci_min_intracc_dist_to_cm == 0 || e_dist < cci_min_intracc_dist_to_cm)
+    cci_min_intracc_dist_to_cm = e_dist;
+  cci_mean_intracc_dist_to_cm += e_dist;
       }
       if (cci_cfgs.size() > 0 )
-	cci_mean_intracc_dist_to_cm /= cci_cfgs.size();
+  cci_mean_intracc_dist_to_cm /= cci_cfgs.size();
       for (int j = 0; j < cci_cfgs.size(); ++j) {
-	CFG tmp = cci_cfgs[j];
-	double e_dist = dm->Distance(rdmp->GetEnvironment(), 
-				     center_of_mass, tmp);
-	cci_sigma_intracc_dist_to_cm += pow(e_dist-cci_mean_intracc_dist_to_cm, 2);
+  CFG tmp = cci_cfgs[j];
+  double e_dist = dm->Distance(rdmp->GetEnvironment(), 
+             center_of_mass, tmp);
+  cci_sigma_intracc_dist_to_cm += pow(e_dist-cci_mean_intracc_dist_to_cm, 2);
       }
       if (cci_cfgs.size() > 1)
-	cci_sigma_intracc_dist_to_cm /= cci_cfgs.size() - 1;
+  cci_sigma_intracc_dist_to_cm /= cci_cfgs.size() - 1;
       cci_sigma_intracc_dist_to_cm = sqrt(cci_sigma_intracc_dist_to_cm);
 
       avg_min_intracc_dist += cci_min_intracc_dist;
@@ -484,12 +485,12 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
     GetCCEdges(*(rdmp->m_pRoadmap),ccedges,cce->second);
     double total_size = 0.0;
     cout << "size of edge list for cc:" << cce->second 
-	 << " "<< ccedges.size() << endl;
+   << " "<< ccedges.size() << endl;
     for(vector< pair<VID,VID> >::iterator cciter=ccedges.begin(); cciter<ccedges.end();cciter++) {
       CFG cciter_a = rdmp->m_pRoadmap->GetData(cciter->first);
       CFG cciter_b = rdmp->m_pRoadmap->GetData(cciter->second);
       double dist =dm->Distance(rdmp->GetEnvironment(),
-				cciter_a, cciter_b);
+        cciter_a, cciter_b);
       total_size += dist;
     }     
     ccedges.clear();
@@ -526,35 +527,35 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
       ccj = cci;
       //ccj++;
       for(ccj++;ccj<ccs.end();ccj++) {
-	
-	vector<VID> cci_cfgs; //configurations in cci
-	vector<VID> ccj_cfgs; //configurations in ccj
-	//CFG cci_tmp = rdmp->m_pRoadmap->GetData(cci->second);//cci->second: vertex ID of first node in cci
-//	CFG ccj_tmp = rdmp->m_pRoadmap->GetData(ccj->second);//ccj->second: vertex ID of first node in ccj
+  
+  vector<VID> cci_cfgs; //configurations in cci
+  vector<VID> ccj_cfgs; //configurations in ccj
+  //CFG cci_tmp = rdmp->m_pRoadmap->GetData(cci->second);//cci->second: vertex ID of first node in cci
+//  CFG ccj_tmp = rdmp->m_pRoadmap->GetData(ccj->second);//ccj->second: vertex ID of first node in ccj
 
-	GetCC(*(rdmp->m_pRoadmap), cci->second, cci_cfgs); //fill cci_cfgs
-	GetCC(*(rdmp->m_pRoadmap), ccj->second, ccj_cfgs); //fill ccj_cfgs
-	
-	vector< pair<VID,VID> > pairs;
-	pairs = dm->FindKClosestPairs(rdmp, 
-				      cci_cfgs, ccj_cfgs, 1); 
-	double tmp_dist = dm->Distance(rdmp->GetEnvironment(),
-				       rdmp->m_pRoadmap->GetData(pairs[0].first), 
+  GetCC(*(rdmp->m_pRoadmap), cci->second, cci_cfgs); //fill cci_cfgs
+  GetCC(*(rdmp->m_pRoadmap), ccj->second, ccj_cfgs); //fill ccj_cfgs
+  
+  vector< pair<VID,VID> > pairs;
+  pairs = dm->FindKClosestPairs(rdmp, 
+              cci_cfgs, ccj_cfgs, 1); 
+  double tmp_dist = dm->Distance(rdmp->GetEnvironment(),
+               rdmp->m_pRoadmap->GetData(pairs[0].first), 
                                        rdmp->m_pRoadmap->GetData(pairs[0].second));
-	if(tmp_dist > max_intercc_dist) 
-	  max_intercc_dist = tmp_dist;
-	if(min_intercc_dist == 0.0 || tmp_dist < min_intercc_dist) 
-	  min_intercc_dist = tmp_dist;
-	avg_intercc_dist += tmp_dist;
-	min_cc_distance_between_closest_pairs.push_back( tmp_dist );
-	pairs_checked++;
+  if(tmp_dist > max_intercc_dist) 
+    max_intercc_dist = tmp_dist;
+  if(min_intercc_dist == 0.0 || tmp_dist < min_intercc_dist) 
+    min_intercc_dist = tmp_dist;
+  avg_intercc_dist += tmp_dist;
+  min_cc_distance_between_closest_pairs.push_back( tmp_dist );
+  pairs_checked++;
       }
     }
   if (pairs_checked > 0)
     avg_intercc_dist /= pairs_checked;
   for (int j = 0; j < min_cc_distance_between_closest_pairs.size(); j++)
     sigma_intercc_dist += pow(min_cc_distance_between_closest_pairs[j]-
-				avg_intercc_dist , 2);
+        avg_intercc_dist , 2);
   if (min_cc_distance_between_closest_pairs.size() > 1)
     sigma_intercc_dist /= min_cc_distance_between_closest_pairs.size() - 1;
   sigma_intercc_dist = sqrt(sigma_intercc_dist);

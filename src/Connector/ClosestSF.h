@@ -131,9 +131,14 @@ template <class CFG, class WEIGHT>
 void ClosestSF<CFG,WEIGHT>::ParseXML(TiXmlNode* in_pNode) { 
   
   int k;
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("k",&k))
+  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("success",&k))
   {
     ksuccess = k;
+  }
+  int fail;		
+  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("fail",&fail))
+  {
+    mfailure = fail;
   }
  
 }

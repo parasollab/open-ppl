@@ -197,9 +197,9 @@ PRMModelBased<CFG>::
 ParseCommandLine(int argc, char **argv) {
   int i;
   for (i =1; i < argc; ++i) {
-    if( numNodes.AckCmdLine(&i, argc, argv) || 
-        chunkSize.AckCmdLine(&i, argc, argv) ||
-	exactNodes.AckCmdLine(&i, argc, argv) ||
+    if( this->numNodes.AckCmdLine(&i, argc, argv) || 
+        this->chunkSize.AckCmdLine(&i, argc, argv) ||
+	this->exactNodes.AckCmdLine(&i, argc, argv) ||
 	initial_model_size.AckCmdLine(&i, argc, argv) ||
 	sample_size.AckCmdLine(&i, argc, argv) ||
 	reference_size.AckCmdLine(&i, argc, argv) ||
@@ -224,9 +224,9 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; numNodes.PrintUsage(_os); 
-  _os << "\n\t"; chunkSize.PrintUsage(_os);
-  _os << "\n\t"; exactNodes.PrintUsage(_os); 
+  _os << "\n\t"; this->numNodes.PrintUsage(_os); 
+  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
+  _os << "\n\t"; this->exactNodes.PrintUsage(_os); 
   _os << "\n\t"; initial_model_size.PrintUsage(_os); 
   _os << "\n\t"; sample_size.PrintUsage(_os);
   _os << "\n\t"; reference_size.PrintUsage(_os);
@@ -240,9 +240,9 @@ void
 PRMModelBased<CFG>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
-  _os << numNodes.GetFlag() << " " << numNodes.GetValue() << " ";
-  _os << chunkSize.GetFlag() << " " <<chunkSize.GetValue() << " ";
-  _os << exactNodes.GetFlag() << " " << exactNodes.GetValue() << " ";
+  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
+  _os << this->chunkSize.GetFlag() << " " <<this->chunkSize.GetValue() << " ";
+  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
   _os << initial_model_size.GetFlag() << " " << initial_model_size.GetValue() << " ";
   _os << sample_size.GetFlag() << " " << sample_size.GetValue() << " ";
   _os << reference_size.GetFlag() << " " << reference_size.GetValue() << " ";
@@ -264,9 +264,9 @@ void
 PRMModelBased<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << numNodes.GetValue() << " ";
-  out_os << " exact = " << exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << chunkSize.GetValue() << " ";
+  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
+  out_os << " exact = " << this->exactNodes.GetValue() << " ";
+  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
   out_os << " initial model size = " << initial_model_size.GetValue() << " ";
   out_os << " sample size = " << sample_size.GetValue() << " ";
   out_os << " reference size = " << reference_size.GetValue() << " ";
@@ -338,9 +338,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   string callee("PRMModelBased::GenerateNodes");
   LOG_DEBUG_MSG("PRMModelBased::GenerateNodes()");	
 #ifndef QUIET
-  cout << "(numNodes=" << numNodes.GetValue() << ") ";
-  cout << "(chunkSize=" << chunkSize.GetValue() << ") ";
-  cout << "(exactNodes=" << exactNodes.GetValue() << ") ";
+  cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
+  cout << "(chunkSize=" << this->chunkSize.GetValue() << ") ";
+  cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
   cout << "(init=" << initial_model_size.GetValue() << ") ";
   cout << "(sample=" << sample_size.GetValue() << ") ";
   cout << "(reference =" << reference_size.GetValue() << ") ";
@@ -356,6 +356,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   for(int i=0; i<initial_model_size.GetValue(); ++i) {
     CFG x;
     x.GetRandomCfg(_env);
+
     if(!x.InBoundingBox(_env) || x.isCollision(_env,Stats,cd,*cdInfo,true,&callee))
       model.push_back(make_pair(Normalize(_env,x.GetData()),-1));
     else 
@@ -365,7 +366,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   //generate nodes based on the model information
   GaussianWeighting w(k.GetValue());
   DotProduct<double> dot;
-  for(int i=0; i<numNodes.GetValue(); ++i) {
+  for(int i=0; i<this->numNodes.GetValue(); ++i) {
     //generate sample_size samples, select the one that maximizes expected model variance reduction over the reference set
 
     //generate reference set 
@@ -511,11 +512,13 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     }
 
     //check collision and add to the roadmap if free
+
     bool collision_check = !min_x.InBoundingBox(_env) || min_x.isCollision(_env,Stats,cd,*cdInfo,true,&callee);
+
     if(!collision_check) //min_x is free
       nodes.push_back(min_x);	
     else 
-      if(exactNodes.GetValue()) 
+      if(this->exactNodes.GetValue()) 
 	i--;
 
     //add min_x to the model M
