@@ -20,4 +20,9 @@ typedef Cfg_free_tree CfgType;
 typedef DefaultWeight WeightType;
 #endif
 
+#ifdef PMPFixedTree
+typedef Cfg_fixed_tree CfgType;
+typedef DefaultWeight WeightType;
+#endif
+
 #endif

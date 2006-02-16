@@ -264,9 +264,12 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 	tmpStr = Callee+Method+CallCnt;
 	collided = cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr);
       }
-      if(cd->isInsideObstacle(cfg,_env,*this->cdInfo)){
-	this->cdInfo->ret_all_info = true;
-	CallCnt="3";
+      CallCnt = "3";
+      tmpStr = Callee+Method+CallCnt;
+      Stats.IncCfgIsCall(&tmpStr);
+      if(cd->isInsideObstacle(cfg,_env,*cdInfo)){
+	cdInfo->ret_all_info = true;
+	CallCnt="4";
 	tmpStr = Callee+Method+CallCnt;
 	cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr);
 	Vector3D trans_dir=(this->cdInfo->object_point-this->cdInfo->robot_point)*1.00001;
@@ -455,7 +458,7 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Sta
   CDInfo   oldInfo;
   std::string Callee(GetName()), 
               Method("::MoveToMedialAxis(,v)");
-
+  std::string tmpStr = Callee+Method;
   
   // Set flag in _info.cdInfo to cause isCollision 
   // to return "all info" such as witness pairs and min dist 
@@ -495,11 +498,13 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Sta
       getCollisionInfo(newcfg,_env,Stats,cd,*this->cdInfo);
       diff=this->cdInfo->object_point-oldInfo.object_point;
     } while ( diff.normsqr()<1e-2 );
-  
+
+  tmpStr = Callee+Method;
+  Stats.IncCfgIsColl(&tmpStr);  
   if( cd->isInsideObstacle(newcfg,_env,*this->cdInfo) ) return;
   //make sure newcfg is collision free
   this->cdInfo->ResetVars();
-  std::string tmpStr = Callee+Method;
+  tmpStr = Callee+Method;
   while( true ){
     if( newcfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr)==false ) 
       break;

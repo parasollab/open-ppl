@@ -278,7 +278,8 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
   } 
   
   bool isFirstChunk = true; // the first chunk for this map (no matter which gen method we use)
-  
+  vector<VID> all_nodesVID; // keep track of all VIDs we already have
+
   bool finished;
   do {
     double expandGenTime = 0.0;
@@ -338,11 +339,13 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 
 	//also keep these nodes in nodes
 	nodes.insert(nodes.end(), sub_nodes.begin(), sub_nodes.end());
-	
+        all_nodesVID.insert(all_nodesVID.end(), sub_nodesVID.begin(), sub_nodesVID.end());	
+
 	//do connection only using nodes in this chunk
 	conClock.StartClock(conClockName);
 	cm.ConnectNodes(rmap, Stats, cd, dm, lp,
-			addPartialEdge, addAllEdges, sub_nodesVID, sub_nodesVID);
+			//addPartialEdge, addAllEdges, sub_nodesVID, sub_nodesVID);
+			addPartialEdge, addAllEdges, sub_nodesVID, all_nodesVID);
 			     
 	//component connection
 	//if it is the first chunk, we do component connection among all CCs

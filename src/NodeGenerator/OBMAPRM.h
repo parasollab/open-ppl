@@ -295,7 +295,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 			   dm, clearanceNum.GetValue(), 
 			   penetrationNum.GetValue());
     
-      if ( !cfg.isCollision(_env, Stats, cd, *this->cdInfo,true, &Callee) ) {
+      if (cfg.InBoundingBox(_env) && !cfg.isCollision(_env, Stats, cd, *cdInfo,true, &Callee) ) {
 	nodes.push_back(CFG(cfg));
 #if INTERMEDIATE_FILES	
 	path.push_back(cfg);

@@ -19,6 +19,7 @@
 #include "GenerateMapNodes.h"
 #include "CollisionDetection.h"
 #include "ConnectMap.h"
+#include "MapEvaluator.h"
 
 //===================================================================
 //  Input class
@@ -96,6 +97,9 @@ Input::Input():
     numDMs = 0;
     for (i=0;i<MAX_DM;++i)
         DMstrings[i]=new n_str_param("-dm");
+    numMEs = 0;
+    for(i=0;i<MAX_GN;++i)
+	MEstrings[i]=new n_str_param("-eval");
 
     GNstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick any combo: default BasicPRM"
@@ -198,6 +202,8 @@ Input::Input():
 	"\n\t\t\t  com"
 
         );
+
+    MEstrings[0]->PutDesc("STRING","\n\t\t  specify map evaluators");
 
     strcpy(commandLine,"");
 
@@ -336,6 +342,8 @@ void Input::ReadCommandLine(int argc, char** argv){
 	numCDs++;
       } else if ( DMstrings[numDMs]->AckCmdLine(&i, argc, argv) ) {
 	numDMs++;
+      } else if (MEstrings[numMEs]->AckCmdLine(&i, argc, argv)) { 
+	numMEs++;
       } else {
 	cout << "\nERROR: Don\'t understand blah\""<< argv[i]<<"\"";
 	throw BadUsage();
@@ -411,6 +419,7 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; LPstrings[0]->PrintUsage(_os);
         _os << "\n  "; CDstrings[0]->PrintUsage(_os);
         _os << "\n  "; DMstrings[0]->PrintUsage(_os);
+	_os << "\n  "; MEstrings[0]->PrintUsage(_os);
 
         _os << "\n\n  to see default values only, type \"obprm -defaults\" ";
 
@@ -460,6 +469,8 @@ PrintValues(ostream& _os){
   for(i=0;i<numDMs;++i)
     _os << "\n"<<setw(FW)<< "DMstrings"<<i
         <<"\t"<<DMstrings[i]->GetValue();
+  for(i=0;i<numMEs;++i)
+    _os << "\n" << setw(FW) << "MEstrings" << i << "\t" << MEstrings[i]->GetValue();
 
         _os << "\n\n";
 };
@@ -519,6 +530,11 @@ Input::PrintDefaults(){
    cout << setw(FW) << endl << endl << "Distance Metric" << " (" << DMstrings[0]->GetFlag() <<
       ") : default = ";
    dm.PrintDefaults(cout);
+
+   //Map Evaluator
+   MapEvaluator<Cfg_free, DefaultWeight> me;
+   cout << setw(FW) << endl << endl << "Map Evaluators" << " (" << MEstrings[0]->GetFlag() << ") : default = ";
+   me.PrintDefaults(cout);
 
    // Collision Detection
    CollisionDetection cd;

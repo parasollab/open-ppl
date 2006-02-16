@@ -347,10 +347,12 @@ StraightLine<CFG, WEIGHT>::
     tick.Increment(incr);
     cd_cntr ++;
     if(checkCollision){
-      bool bbox_check = tick.InBoundingBox(_env);
-      bool col_check = tick.isCollision(_env,Stats,cd, *this->cdInfo,true,&(Callee));  
-      if(!bbox_check || col_check){  ///changed to precompute bool vals,
+      //bool bbox_check = tick.InBoundingBox(_env);
+      //bool col_check = tick.isCollision(_env,Stats,cd, *cdInfo,true,&(Callee));  
+      //if(!bbox_check || col_check){  ///changed to precompute bool vals,
                                      ///compiler was optimizing and counts got screwed up --roger 9.17.2005
+      if(!tick.InBoundingBox(_env) || 
+         tick.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee)) ) {
         CFG neg_incr;
 	neg_incr = incr; 
 	neg_incr.negative(incr);
@@ -495,11 +497,13 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 	  if(clr < 0) clr = 0.0;
 	}
       } else {
-        bool bbox_check = mid.InBoundingBox(_env);
-        bool coll_check = mid.isCollision(_env,Stats,cd,*this->cdInfo,true,&(Callee));
+        //bool bbox_check = mid.InBoundingBox(_env);
+        //bool coll_check = mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee));
         cd_cntr++;	//?
-	if(!bbox_check || coll_check ) { ///changed to precompute bool vals,
+	//if(!bbox_check || coll_check ) { ///changed to precompute bool vals,
                                         ///compiler was optimizing and counts got screwed up --roger 9.17.2005
+        if(!mid.InBoundingBox(_env) ||
+           mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee)) ) {
 	  return false;
         }
       }

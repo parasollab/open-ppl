@@ -130,7 +130,9 @@ ParseCommandLine(int argc, char **argv) {
   s_values.clear();
 
   for (int i = 1; i < argc; ++i) {
-    if( sValue.AckCmdLine(&i, argc, argv) ) {
+    if( lineSegmentLength.AckCmdLine(&i, argc, argv) ) {
+    } else if( binarySearch.AckCmdLine(&i, argc, argv) ) {
+    } else if( sValue.AckCmdLine(&i, argc, argv) ) {
       s_values.push_back(sValue.GetValue());
 
     } else {

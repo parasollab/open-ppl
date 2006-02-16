@@ -1,12 +1,12 @@
-#ifndef Closest_h
-#define Closest_h
+#ifndef ClosestSF_h
+#define ClosestSF_h
 #include "NodeConnectionMethod.h"
 #include "LocalPlanners.h"
 #include "GraphAlgo.h"
 
-//Connect K Closest only allowed M failures
+//Attempt K+M Closest neighbors and only allowed K success OR M failures
 //If M is not specified in command line, it is set as same as K
-/**Connect nodes in map to their k closest neighbors.
+/**Connect nodes in map to their k+m closest neighbors.
  *Following Algorithm is used:
  *   -# for evry node, cfg1, in roadmap
  *       -# find k closet neighbors for cfg1
@@ -27,19 +27,18 @@
  *@see RoadmapGraph::AddEdge and LocalPlanners::IsConnected
  */
 
-#define KCLOSEST 5 
+#define KSUCCESS 5 
 #define MFAILURE 5 
 
 template <class CFG, class WEIGHT>
-class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
+class ClosestSF: public NodeConnectionMethod<CFG,WEIGHT> {
  public:
   //////////////////////
   // Constructors and Destructor
-  Closest();
-  Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem);
-  Closest(int k);
-  Closest(int k, int m);
-  ~Closest();
+  ClosestSF();
+  ClosestSF(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  ClosestSF(int k, int m);
+  ~ClosestSF();
  
   //////////////////////
   // Access
@@ -77,7 +76,7 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
              vector<vector<VID> >& verticesList);
 
   //function used in this class only
-  void Closest<CFG,WEIGHT>::
+  void ClosestSF<CFG,WEIGHT>::
   Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
@@ -91,59 +90,50 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Data
 
-  int kclosest;
+  int ksuccess;
   int mfailure;
 };
 
 
 template <class CFG, class WEIGHT>
-Closest<CFG,WEIGHT>::Closest():NodeConnectionMethod<CFG,WEIGHT>() { 
-  this->element_name = "closest"; 
+ClosestSF<CFG,WEIGHT>::ClosestSF():NodeConnectionMethod<CFG,WEIGHT>() { 
+  element_name = "closestsf"; 
   SetDefault();
 }
 
 template <class CFG, class WEIGHT>
-Closest<CFG,WEIGHT>::Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+ClosestSF<CFG,WEIGHT>::ClosestSF(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
     NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
-  LOG_DEBUG_MSG("Closest::Closest()"); 
-  this->element_name = "closest"; 
+  LOG_DEBUG_MSG("ClosestSF::ClosestSF()"); 
+  element_name = "closestsf"; 
   SetDefault();
   ParseXML(in_pNode);
   
   
-  LOG_DEBUG_MSG("~Closest::Closest()"); 
+  LOG_DEBUG_MSG("~ClosestSF::ClosestSF()"); 
 }
 
 
-//this is backward support for function call from other class
-//to be cleaned
 template <class CFG, class WEIGHT>
-Closest<CFG,WEIGHT>::Closest(int k):NodeConnectionMethod<CFG,WEIGHT>() { 
-  this->element_name = "closest"; 
-  kclosest = k;
-  mfailure = k;
-}
-
-template <class CFG, class WEIGHT>
-Closest<CFG,WEIGHT>::Closest(int k, int m):NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "closest"; 
-  kclosest = k;
+ClosestSF<CFG,WEIGHT>::ClosestSF(int k, int m):NodeConnectionMethod<CFG,WEIGHT>() { 
+  element_name = "closestsf"; 
+  ksuccess = k;
   mfailure = m;
 }
 
 
 template <class CFG, class WEIGHT>
-Closest<CFG,WEIGHT>::~Closest() { 
+ClosestSF<CFG,WEIGHT>::~ClosestSF() { 
 }
 
 
 template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::ParseXML(TiXmlNode* in_pNode) { 
+void ClosestSF<CFG,WEIGHT>::ParseXML(TiXmlNode* in_pNode) { 
   
   int k;
   if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("k",&k))
   {
-    kclosest = k;
+    ksuccess = k;
   }
  
 }
@@ -153,7 +143,7 @@ void Closest<CFG,WEIGHT>::ParseXML(TiXmlNode* in_pNode) {
 //If there is only one parameter, 
 //  we set M equal to K (this is identical to K-closest connection method)
 template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
+void ClosestSF<CFG,WEIGHT>::
 ParseCommandLine(std::istringstream& is) {
   char c;
   SetDefault();
@@ -164,8 +154,8 @@ ParseCommandLine(std::istringstream& is) {
       c = is.peek();
     }
     if (c >= '0' && c <= '9') {
-      if (is >> kclosest) {
-        if (kclosest < 0)
+      if (is >> ksuccess) {
+        if (ksuccess < 0)
   	  throw BadUsage();
 
         c = is.peek();
@@ -180,7 +170,7 @@ ParseCommandLine(std::istringstream& is) {
           } else
 	      throw BadUsage();
         } else 
-          mfailure = kclosest;  
+          mfailure = ksuccess;  
 	  //set mfailure equals to kcloest if it is not specified in the command line
 
       } else
@@ -197,20 +187,20 @@ ParseCommandLine(std::istringstream& is) {
 
 
 template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::SetDefault() {
-  kclosest = KCLOSEST;
+void ClosestSF<CFG,WEIGHT>::SetDefault() {
+  ksuccess = KSUCCESS;
   mfailure = MFAILURE;
 }
 
 
 template <class CFG, class WEIGHT>
 void
-Closest<CFG, WEIGHT>::
+ClosestSF<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << this->GetName() << " ";
-  _os << "\tINTEGER INTEGER (default kclosest:" << KCLOSEST << ", mfailure:" << MFAILURE << ")";
+  _os << "\n" << GetName() << " ";
+  _os << "\tINTEGER INTEGER (default ksuccess:" << KSUCCESS << ", mfailure:" << MFAILURE << ")";
   _os << endl;
   _os.setf(ios::right,ios::adjustfield);
 }
@@ -218,42 +208,42 @@ PrintUsage(ostream& _os){
 
 template <class CFG, class WEIGHT>
 void
-Closest<CFG, WEIGHT>::
+ClosestSF<CFG, WEIGHT>::
 PrintValues(ostream& _os){
-  _os << "\n" << this->GetName() << " kclosest = ";
-  _os << kclosest << " mfailure = " << mfailure ;
+  _os << "\n" << GetName() << " ksuccess = ";
+  _os << ksuccess << " mfailure = " << mfailure ;
   _os << endl;
 }
 
 template <class CFG, class WEIGHT>
 void
-Closest<CFG, WEIGHT>::
+ClosestSF<CFG, WEIGHT>::
 PrintOptions(ostream& out_os){
-  out_os << "    " << this->GetName() << "::  kclosest = ";
-  out_os << kclosest << "  mfailure = " << mfailure ;
+  out_os << "    " << GetName() << "::  ksuccess = ";
+  out_os << ksuccess << "  mfailure = " << mfailure ;
   out_os << endl;
 }
 
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>* 
-Closest<CFG,WEIGHT>::
+ClosestSF<CFG,WEIGHT>::
 CreateCopy() {
   NodeConnectionMethod<CFG,WEIGHT>* _copy = 
-           new Closest<CFG,WEIGHT>(*this);
+           new ClosestSF<CFG,WEIGHT>(*this);
   return _copy;
 }
 
 template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
+void ClosestSF<CFG,WEIGHT>::
 Connect() {
-  //cout << "Connecting CCs with method: closest k="<< kclosest << endl ;
+  //cout << "Connecting CCs with method: closest k="<< ksuccess << endl ;
   //cout << "DOING NOTHING" << endl;
 }
 
 
 template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
+void ClosestSF<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
@@ -261,9 +251,9 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             bool addPartialEdge,
             bool addAllEdges) 
 {
-  //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
+  //cout << "Connecting CCs with method: closest k="<< ksuccess << endl;
 #ifndef QUIET
-  cout << "closest(k="<< kclosest <<"): "<<flush;
+  cout << "closest(k="<< ksuccess <<"): "<<flush;
 #endif
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
@@ -276,7 +266,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 
 template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
+void ClosestSF<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
@@ -294,12 +284,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 /*
  * for each node in v1 {
- *   find k closest nodes in v2
+ *   find (kclosest+mfailure) nodes in v2
  *   attempt connection
  * }
  */
 template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
+void ClosestSF<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
@@ -308,9 +298,9 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             bool addAllEdges,
             vector<VID>& v1, vector<VID>& v2) 
 {
-  //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
+  //cout << "Connecting CCs with method: closest k="<< ksuccess << endl;
 #ifndef QUIET
-  cout << "closest*(k="<< kclosest <<"): "<<flush;
+  cout << "closest*(k="<< ksuccess <<"): "<<flush;
   cout << "failure*(m="<< mfailure <<"): "<<flush;
 
 #endif
@@ -318,7 +308,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;  
   vector< pair<VID,VID> > kp;
 
-  if( v2.size() < kclosest) {//all pairs
+  if( v2.size() < ksuccess+mfailure) {//all pairs
     for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
       kp.clear();
       for(vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J){
@@ -333,7 +323,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     kp.clear();
     vector<VID> v;
     v.push_back(*I);
-    kp = dm->FindKClosestPairs(_rm,v, v2, kclosest);
+    kp = dm->FindKClosestPairs(_rm,v, v2, ksuccess+mfailure);
     Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges, kp);
   }
 }
@@ -341,7 +331,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 //connection for a given set of pairs and only allow mfailure 
 template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
+void ClosestSF<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
@@ -350,27 +340,35 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             bool addAllEdges,
             vector< pair<VID,VID> > kp) 
 {
-    int failure = 0;   //actual failure attemp for this node 
+    int success = 0;   //actual success attemp for this node
+    int failure = 0;   //actual failure attemp for this node
+    
     // for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
     for(vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
       //cout<<KP->first<<"->"<<KP->second<<endl;
-      if(failure >= mfailure){
-      //cout << "failure time equals the max allowed number."<<KP->first<<" fails: "<<failure<<endl;
+      if(failure >= mfailure || success >= ksuccess){
+      //cout << "mfailure/ksuccss equals the max allowed number."<<KP->first<<" fails: "<<failure<<", success: "<<success<<endl;
       break;
       }
-      if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) 
+      if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) {
+        success++;
         continue;
+      }
       #if CHECKIFSAMECC
-      if(IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) 
+      if(IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) {
+        success++;
         continue;
+      }
       #endif
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm,
                _rm->m_pRoadmap->GetData(KP->first),
                _rm->m_pRoadmap->GetData(KP->second),
-               &lpOutput, this->connectionPosRes, this->connectionOriRes, 
+               &lpOutput, connectionPosRes, connectionOriRes, 
                (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
+	success++;
+	
       }
       else
       failure++;

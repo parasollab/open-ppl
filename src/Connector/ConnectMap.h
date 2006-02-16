@@ -13,6 +13,7 @@
 //node connection methods
 #include "NodeConnectionMethod.h"
 #include "Closest.h"
+#include "ClosestSF.h"
 #include "AllPairsNodeConnection.h"
 //#include "UnconnectedClosest.h"
 //#include "RandomConnect.h"
@@ -26,6 +27,7 @@
 //component connection methods
 #include "ComponentConnectionMethod.h"
 #include "ConnectCCs.h"
+#include "ConnectkCCs.h"
 //#include "RRTcomponents.h"
 //#include "RayTracer.h"
 #include "Disconnect.h"
@@ -160,6 +162,9 @@ ConnectMap() {
   Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>();
   all_node_methods.push_back(closest);
 
+  ClosestSF<CFG,WEIGHT>* closestsf = new ClosestSF<CFG,WEIGHT>();
+  all_node_methods.push_back(closestsf);
+
   //UnconnectedClosest<CFG,WEIGHT>* unconnectedclosest = new UnconnectedClosest<CFG,WEIGHT>();
   //all_node_methods.push_back(unconnectedclosest);
 
@@ -187,6 +192,10 @@ ConnectMap() {
 
   ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>();
   all_component_methods.push_back(connectccs);
+
+  ConnectkCCs<CFG,WEIGHT>* connectkccs = new ConnectkCCs<CFG,WEIGHT>();
+  all_component_methods.push_back(connectkccs);
+
 
 /*   RRTexpand<CFG,WEIGHT>* rrtexpand = new RRTexpand<CFG,WEIGHT>(); */
 /*   all_component_methods.push_back(rrtexpand); */
@@ -254,7 +263,15 @@ ParseXML(TiXmlNode* in_pNode) {
       closest->connectionOriRes = connectionOriRes; 
       all_node_methods.push_back(closest);
       selected_node_methods.push_back(closest);
-    } else if(string(pChild->Value()) == "ConnectCCs") {
+    }else if(string(pChild->Value()) == "ClosestSF") {
+      cout << "ConnectMap found ClosestSF" << endl;
+      ClosestSF<CFG,WEIGHT>* closestsf = new ClosestSF<CFG,WEIGHT>(pChild,GetMPProblem());
+      closestsf->cdInfo = &cdInfo;
+      closestsf->connectionPosRes = connectionPosRes;
+      closestsf->connectionOriRes = connectionOriRes; 
+      all_node_methods.push_back(closestsf);
+      selected_node_methods.push_back(closestsf);
+    }  else if(string(pChild->Value()) == "ConnectCCs") {
       cout << "ConnectMap found ConnectCCs" << endl;
       ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>(pChild,GetMPProblem());
       connectccs->cdInfo = &cdInfo;

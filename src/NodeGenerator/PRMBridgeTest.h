@@ -358,7 +358,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	CallCnt="3";
 	tmpStr = Callee+CallCnt; 
 
-	bool cfgP_free = !cfgP.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+	bool cfgP_free = cfgP.InBoundingBox(_env) && !cfgP.isCollision(_env,Stats,cd,*cdInfo, true, &tmpStr);
 	if(cfgP_free){
 	  nodes.push_back(CFG(cfgP)); 
 	  newNodes++;

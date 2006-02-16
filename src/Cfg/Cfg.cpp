@@ -874,7 +874,7 @@ void Cfg::PushToMedialAxis(Environment *_env, Stat_Class& Stats,
 			     int clearance_n, int penetration_n) {
   std::string Callee(GetName()),CallCnt("1");
   {std::string Method("-Cfg::PushToMedialAxis");Callee=Callee+Method;}
-    if(this->isCollision(_env, Stats, cd, cdInfo,true, &(Callee))) {
+    if(!this->InBoundingBox(_env) || this->isCollision(_env, Stats, cd, cdInfo,true, &(Callee))) {
       ClearanceInfo clearInfo;
       this->ApproxCSpaceClearance2(_env, Stats, cd, cdInfo, dm, 
 				   penetration_n, clearInfo, 1);
@@ -883,7 +883,7 @@ void Cfg::PushToMedialAxis(Environment *_env, Stat_Class& Stats,
     }
     CallCnt="2";
     std::string tmpStr = Callee+CallCnt;
-    if(!(this->isCollision(_env, Stats, cd, cdInfo,true,&tmpStr))) {
+    if(this->InBoundingBox(_env) && !this->isCollision(_env, Stats, cd, cdInfo,true,&tmpStr)) {
       this->MAPRMfree(_env, Stats, cd, cdInfo, dm, clearance_n);
     }
 }
@@ -1000,7 +1000,7 @@ void Cfg::MAPRMcollision(Environment* _env, Stat_Class& Stats,
   while (found < 0) {
     for (int i=0; i<directions.size(); i++) {
       steps[i]->c1_towards_c2(*steps[i], *directions[i], stepSize);
-      if (!(steps[i]->isCollision(_env, Stats, cd, cdInfo,true,&(Callee)))) {
+      if (steps[i]->InBoundingBox(_env) && !steps[i]->isCollision(_env, Stats, cd, cdInfo,true,&(Callee))) {
 	found = i;
 	break;
       }
@@ -1065,7 +1065,8 @@ void Cfg::ApproxCSpaceClearance2(Environment* env, Stat_Class& Stats,
   //if collide, set to true. Otherwise, set to false
   CallCnt="1";
   std::string tmpStr = Callee+CallCnt;
-  bool bInitState = cfg->isCollision( env, Stats, cd, cdInfo,
+  bool bInitState = !cfg->InBoundingBox(env) ||  
+		cfg->isCollision( env, Stats, cd, cdInfo,
 				      true, &tmpStr );
   
   if( bComputePenetration == false && bInitState == true ) { //don't need to compute clearance
@@ -1204,7 +1205,7 @@ void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
   double orientationRes = env->GetOrientationRes();
   CallCnt="1";
   std::string tmpStr = Callee+CallCnt;
-  bool bInitState = origin->isCollision(env, Stats, cd, cdInfo,true,&tmpStr);
+  bool bInitState = !origin->InBoundingBox(env) || origin->isCollision(env, Stats, cd, cdInfo,true,&tmpStr);
   
   //find max step size:
   int iRobot = env->GetRobotIndex();
@@ -1226,7 +1227,7 @@ void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
       tick->Increment(*incr);
       CallCnt="2";
       tmpStr = Callee+CallCnt;
-      bool bCurrentState = tick->isCollision(env, Stats, cd, cdInfo,true, &tmpStr);
+      bool bCurrentState = !tick->InBoundingBox(env) || tick->isCollision(env, Stats, cd, cdInfo,true, &tmpStr);
       //double currentDist;
       
       // if state was changed or this cfg is out of bounding box

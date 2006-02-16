@@ -308,6 +308,8 @@ public:
         int numCDs;
         n_str_param      *DMstrings[MAX_DM];    ///< distance metrics
         int numDMs;
+	n_str_param *MEstrings[MAX_GN];
+	int numMEs;
 
         /// choose collision detection (cstk or vclip) from beginning
         cd_predefined  cdtype;
