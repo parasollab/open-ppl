@@ -71,7 +71,6 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
   //@{
     num_param<double> sValue;
     double s_value;
-    //vector<double> s_values_in;
     vector<double> s_values;
     bool isSymmetric;
   //@}
@@ -135,7 +134,8 @@ bool
 RotateAtS<CFG, WEIGHT>::
 SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const {
   bool result = false;
-  if (sValue.GetValue() == ((RotateAtS<CFG,WEIGHT>&) other).sValue.GetValue())
+  if( (StraightLine<CFG,WEIGHT>::SameParameters(other)) &&
+      (sValue.GetValue() == ((RotateAtS<CFG,WEIGHT>&) other).sValue.GetValue()) )
     result = true;
   return result;
 }
@@ -156,7 +156,6 @@ SetDefault() {
   sValue.PutValue(0.5);
   s_values.clear();
   s_values.push_back(sValue.GetValue()); 
-  //s_values_in = s_values;
   isSymmetric = true;
 }
 
@@ -219,6 +218,8 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
+  _os << "\n\t"; lineSegmentLength.PrintUsage(_os);
+  _os << "\n\t"; binarySearch.PrintUsage(_os);
   _os << "\n\t"; sValue.PrintUsage(_os);
  
   _os.setf(ios::right,ios::adjustfield);
@@ -230,6 +231,8 @@ void
 RotateAtS<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
   _os << GetName() << " ";
+  _os << lineSegmentLength.GetFlag() << " " << lineSegmentLength.GetValue() << " ";
+  _os << binarySearch.GetFlag() << " " << binarySearch.GetValue() << " ";
   for(int i=0; i<s_values.size(); i++){
    _os << sValue.GetFlag() << " " << s_values[i] << " ";
    }
@@ -256,14 +259,9 @@ IsConnected(Environment *_env, Stat_Class& Stats,
       bool checkCollision, 
       bool savePath, bool saveFailedPath) {  
   bool connected = false;
-
-  connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, 
-				lpOutput, positionRes, orientationRes, 
-				checkCollision, savePath, saveFailedPath);
+  connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   if (!connected && !isSymmetric) { //try the other way
-    connected = IsConnectedOneWay(_env, Stats, cd, dm, _c2, _c1, 
-				  lpOutput, positionRes, orientationRes, 
-				  checkCollision, savePath, saveFailedPath);
+    connected = IsConnectedOneWay(_env, Stats, cd, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
     if (savePath)
       reverse(lpOutput->path.begin(), lpOutput->path.end());
   }
@@ -280,7 +278,6 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
       bool checkCollision, 
       bool savePath, bool saveFailedPath) {  
   char RatS[50] = "Rotate_at_s";
-
   sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);
   for(int i=1; i<s_values.size(); ++i)
     sprintf(RatS,"%s,%3.1f",RatS, s_values[i]);
