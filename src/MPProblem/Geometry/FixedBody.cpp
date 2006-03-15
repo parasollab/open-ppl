@@ -6,7 +6,6 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "FixedBody.h"
-#include "Input.h"
 
 //===================================================================
 //  Constructors and Destructor
@@ -65,22 +64,6 @@ void FixedBody::Configure(Transformation & _transformation){
     worldTransformation = _transformation;
 }
 #endif
-
-//===================================================================
-//  Get
-//===================================================================
-void FixedBody::Get(Input * _input, int _multibodyIndex, int _index) {
-    // Invoke the "Read" of the parent class
-    // (Remember "Read" is a virtual)
-    int bodyIndex = _input->BodyIndex[_multibodyIndex][_index];
-
-    //if (_index==0){  // the very first body
-    // 6 parameters for world transformation (position and orientation)
-    // Now for every fixedbody, see Input.c for corresponding changes. 
-    worldTransformation.orientation = _input->fixedbodyOrientation[_multibodyIndex][bodyIndex];
-    worldTransformation.position = _input->fixedbodyPosition[_multibodyIndex][bodyIndex];
-    Body::Read(_input,_input->fixedbodyFileName[_multibodyIndex][bodyIndex]);
-}
 
 //===================================================================
 //  Write               

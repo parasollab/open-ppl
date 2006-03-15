@@ -37,7 +37,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MultiBody;
-class Input;
 class Transformation;
 class DHparameters;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,7 +148,7 @@ public:
     /**CAll Read(char *) and buildCDstructure
       *@see buildCDstructure
       */
-    void Read(Input*, char * _fileName);
+    void Read(char* _fileName, cd_predefined cdtype, int nprocs);
 
     /**Read BYU format data from given inpustream. 
       *Call GMSPolyhedron::ReadBYU, calculate the bounding box, and then call buildCDstructure

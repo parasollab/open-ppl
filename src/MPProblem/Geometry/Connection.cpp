@@ -7,7 +7,6 @@
 
 #include "Connection.h"
 
-#include "Input.h"
 #include "MultiBody.h"
 
 //===================================================================
@@ -38,38 +37,38 @@ Connection::~Connection() {
 
 
 //===================================================================
-//  Get
+//  Read
 //===================================================================
-void Connection::Get(Input * _input, int _multibodyIndex, int _connectionIndex) {
-    int index = _input->nextBodyIndex[_multibodyIndex][_connectionIndex];  
-    int bodyIndex = _input->BodyIndex[_multibodyIndex][index];
-
-    if (_input->isFree[_multibodyIndex][index]){
-       #ifndef QUIET
-         cout << "bodyIndex = " << bodyIndex << endl;
-       #endif
-       body[1] = (Body *)(body[0]->GetMultiBody()->GetFreeBody(bodyIndex));
-    }
-    else{
-       body[1] = (Body *)(body[0]->GetMultiBody()->GetFixedBody(bodyIndex));
-    }
-
-    Transformation transform(_input->transformOrientation[_multibodyIndex][_connectionIndex], _input->transformPosition[_multibodyIndex][_connectionIndex]);
-    transformationToBody2 = transform;
-    transformationToDHFrame = Transformation(
-          _input->orientationToDHFrame[_multibodyIndex][_connectionIndex],
-	  _input->positionToDHFrame[_multibodyIndex][_connectionIndex]);
-
-    dhparameters = _input->dhparameters[_multibodyIndex][_connectionIndex];
-    type = (ConnectionType) _input->connectionType[_multibodyIndex][_connectionIndex];
-
+void Connection::Read(Body* body1, Body* body2,
+		      const Vector3D& transformPosition, const Orientation& transformOrientation,
+		      const Vector3D& positionToDHFrame, const Orientation& orientationToDHFrame,
+		      const DHparameters& _dhparameters, const ConnectionType& connectionType) {
+  body[0] = body1;
+  body[1] = body2;
+  
+  transformationToBody2 = Transformation(transformOrientation, transformPosition);
+  transformationToDHFrame = Transformation(orientationToDHFrame, positionToDHFrame);
+  dhparameters = _dhparameters;  
+  type = connectionType;
+  
 #ifndef QUIET
-    cout << "transformationToBody2 = (" << transformationToBody2.position.getX() << ", " << transformationToBody2.position.getY() << ", " << transformationToBody2.position.getZ() << ", " << transformationToBody2.orientation.alpha << ", " << transformationToBody2.orientation.beta << ", " << transformationToBody2.orientation.gamma << ")" << endl;
-
-    cout << "dhparameters = (" << dhparameters.alpha << ", " << dhparameters.a << ", " << dhparameters.d << ", " << dhparameters.theta << ")" << endl;
-#endif
-
+  cout << "transformationToBody2 = (" 
+       << transformationToBody2.position.getX() << ", " 
+       << transformationToBody2.position.getY() << ", " 
+       << transformationToBody2.position.getZ() << ", " 
+       << transformationToBody2.orientation.alpha << ", " 
+       << transformationToBody2.orientation.beta << ", " 
+       << transformationToBody2.orientation.gamma << ")" << endl;
+  
+  cout << "dhparameters = (" 
+       << dhparameters.alpha << ", " 
+       << dhparameters.a << ", " 
+       << dhparameters.d << ", " 
+       << dhparameters.theta << ")" 
+       << endl;
+#endif 
 }
+
 
 //===================================================================
 //  Write

@@ -19,7 +19,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 class Environment;
-class Input;
 class Transformation;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -220,16 +219,15 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    /**Get user input information from Input instance.
-      *This method get number of (free and fixed) body info and number of connection from input.
-      *Then it calls Get(s) in FreeBody or FixedBody to get information from Input instance.
+    /**Get user input information.
       *Number of bodys (fixed and free), areas, bounding box, and center of mass are all computed
       *in here.
       *@param _multibodyIndex index for the owner of this fixed body in input
-      *@see FreeBody::Get, FixedBody::Get, Connection, FreeBody::Link, Connection::Get,
+      *@see FreeBody::Read, FixedBody::Read, Connection, FreeBody::Link, Connection::Read,
       *FixedBody::Link ,FindBoundingBox, and ComputeCenterOfMass
       */
-    virtual void Get(Input * _input, int _index);
+    virtual void Read(istream& is, int action, const char* descDir,
+		      cd_predefined cdtype, int nprocs);
 
     //@}
 
@@ -299,24 +297,7 @@ public:
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 
-protected:
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    get information from input
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //@{
-
-    ///Get Body Info from input
-    void GetBodyInfoFromInput(Input * _input, int _index);
-    ///Get Link Info from input
-    void GetLinkInfoFromInput(Input * _input, int _index);
-
-  //@}
-
-    
+protected:    
   // Area Stuff
   int numBodies;              ///< Total number of Bodies
   double fixArea;             ///< Area of FixedBodies
@@ -341,19 +322,19 @@ private:
   // to say whether this multibody is Internal(fake obsbacle);
   bool bInternal;
 
-    Environment * environment;  ///Owner
+  Environment * environment;  ///Owner
 
-    int FixedBodyCount;
-    FixedBody ** fixedBody;
-    int FreeBodyCount;
-    FreeBody ** freeBody;
-    //Equation motionEquation;
-
-    Vector3D CenterOfMass;
-    bool CenterOfMassAvailable;
-
-    double boundingBox[6];
-    double maxAxisRange;
+  int FixedBodyCount;
+  FixedBody ** fixedBody;
+  int FreeBodyCount;
+  FreeBody ** freeBody;
+  //Equation motionEquation;
+  
+  Vector3D CenterOfMass;
+  bool CenterOfMassAvailable;
+  
+  double boundingBox[6];
+  double maxAxisRange;
 };
 
 

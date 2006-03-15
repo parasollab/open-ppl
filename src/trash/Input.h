@@ -27,34 +27,10 @@
 //Include OBPRM headers
 #include "OBPRMDef.h"
 #include "Parameters.h"
-#include "DHparameters.h"
-#include "Vectors.h"
-#include "Orientation.h"
-
 #include "Cfg.h"
 
 //////////////////////////////////////////////////////////////////////////////////
-class Environment;
 
-//////////////////////////////////////////////////////////////////////////////////
-/**@name Format version for environment (*.env) files
-  *      The number breaks down as YearMonthDay so numerical
-  *      comparisons can be more easily made.
-  *@warning Be consistent.  It should be YYYYMMDD
-  *      Inconsistent conversions can be misleading.
-  *      For example, comparing 200083  to 20000604.
-  */
-//@{
-
-//defined by Xinyu Tang, 03/27/2002
-//Objective: To enable the obprm to distinguish the external & internal obstacles, 
-//           so it would not try to generate nodes on the surfaces of the internal
-//           obstacles, which might save a lot of time for obprm;
-#define ENV_VER_20020327                   20020327
-
-#define ENV_VER_20001022                   20001022
-#define ENV_VER_LEGACY                     0
-//@}
 
 //////////////////////////////////////////////////////////////////////////////////
 //
@@ -72,24 +48,6 @@ class Environment;
 
 class Input {
 public:
-
-#ifdef _WIN32
-  #define FILENAME_LENGTH    80
-  #define MAX_MULTIBODY      50
-  #define MAX_CONNECTION     500
-  #define MAX_FIXEDBODY      50
-  #define MAX_FREEBODY       500
-#else
-  //@{
-  ///Used by GMS
-  static const int FILENAME_LENGTH  =  80;  // GMS stuff uses these
-  static const int MAX_MULTIBODY    =  50;
-  static const int MAX_CONNECTION   =  500;
-  static const int MAX_FIXEDBODY    =  50;
-  static const int MAX_FREEBODY     =  500;
-  //@}
-
-#endif
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -135,37 +93,6 @@ public:
 	virtual 
 	void ReadCommandLine(int argc, char** argv);
 
-        /**Read data from Environment file and check version.
-          *This method reads data from file whose filename 
-          *is saved in #envFile.
-          *This method will also check if this given file is or not a valid
-          *environment file. If not and action=EXIT, process will be terminated.
-          *
-          *@param action What action will be performed, if file processing
-          *error was found.
-          *@see Read(istream & , int ,int ) and ReadCfgType.
-          */
-        void Read(int action);
-        
-        
-        /**Read data from Environment file and check version.
-         *This method reads data from file whose filename 
-         *is saved in #envFile.
-         *This method will also check if this given file is or not a valid
-         *environment file. If not and action=EXIT, process will be terminated.
-         *
-         */
-        void Read(const char* in_filename, int action);
-
-        /**Read environmental data from specified input stream.
-          *Reads information about how many multibodys, how many bodys for each
-          *multibody, fixed or free, positions and orientations, filenames for
-          *geometric data, connection (joint) information....
-          *
-          *@param _is Input stream which contains enviromental data.
-          */
-        void Read(istream & _is, int envFormatVersion,int action);
-
         /**Do nothing (cited from Input.cpp file).
           *Read data from preamble setion and throw them away.
           *@param _myisrean The source of input.
@@ -209,11 +136,6 @@ public:
       *Print out some usefull information, such as parameter usages.
       */
     //@{ 
-
-        /**Ouput filenames for free bodys and fixed bodys.
-          *@note for debugging purposes
-          */
-        void PrintBodyNames();
 
         /**Print program usage.
           *This method prints out program name and its usage.
@@ -332,56 +254,6 @@ public:
           */
 	num_param<int> numofJoints; ///< number of joints
         bool cfgSet;
-
-    //@}
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //  For Enviroment
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-    /**Environment Related Data. */
-    //@{
-
-        int multibodyCount;                                          ///< How many multibodys in environment
-        int BodyCount[MAX_MULTIBODY];                                ///< How many (fixed  and free) bodys for each multibody
-	// addded by Xinyu Tang, 03/28/2002
-	// Objective: to show whether this Obstacle is Internal;
-	//            by default it's external, so they should be false;
-        int bBodyInternal[MAX_MULTIBODY];                                ///< How many (fixed  and free) bodys for each multibody
-
-        int FixedBodyCount[MAX_MULTIBODY];                           ///< How many fixed bodys for each multibody
-        int FreeBodyCount[MAX_MULTIBODY];                            ///< How many free bodys for each multibody
-        char *fixedbodyFileName[MAX_MULTIBODY][MAX_FIXEDBODY];       ///< Geometric data filename for each fixed body.
-        char *freebodyFileName[MAX_MULTIBODY][MAX_FREEBODY];         ///< Geometric data filename for each free body.
-
-
-        int connectionCount[MAX_MULTIBODY];                          ///< Number of connection (joint) for MultiBody
-
-        int isFree[MAX_MULTIBODY][MAX_FIXEDBODY + MAX_FREEBODY];     ///< 1 if this specified Body is free. 0 is fixed.
-        int BodyIndex[MAX_MULTIBODY][MAX_FIXEDBODY + MAX_FREEBODY];  ///< Index for fixed (or free) body in fixed (or free) Body's array.
-
-        int previousBodyIndex[MAX_MULTIBODY][MAX_CONNECTION];        ///< The index for Body before this connection (joint).
-        int nextBodyIndex[MAX_MULTIBODY][MAX_CONNECTION];            ///< The index for Body after this connection (joint).
-
-        Vector3D fixedbodyPosition[MAX_MULTIBODY][MAX_CONNECTION];       ///< Position of fixed body
-        Orientation fixedbodyOrientation[MAX_MULTIBODY][MAX_CONNECTION]; ///< Orientation of fixed body
-
-        Vector3D bodyOrientation[MAX_MULTIBODY][MAX_CONNECTION];         ///< Orientation of body (for free and fixed)
-
-        /**Not used elsewhere, only to read in something.
-          *so that the previous version of .env files could still be used. 
-          */
-        Vector3D freebodyPosition[MAX_MULTIBODY];                        ///< Position of free body
-        Orientation freebodyOrientation[MAX_MULTIBODY];                  ///< Orientation of free body
-
-        int connectionType[MAX_MULTIBODY][MAX_CONNECTION];               ///< Which type of this join is. "Revolute" or "Prismatic"
-        Vector3D transformPosition[MAX_MULTIBODY][MAX_CONNECTION];       ///< Translation Transform (from DHframe to next link's frame)
-        Orientation transformOrientation[MAX_MULTIBODY][MAX_CONNECTION]; ///< Orientation Tranform (from DHframe to next link's frame)
-        DHparameters dhparameters[MAX_MULTIBODY][MAX_CONNECTION];        ///< DH-Parameter for joint.
-        Vector3D positionToDHFrame[MAX_MULTIBODY][MAX_CONNECTION];       ///< Translation Transform (from current link's frame to DHframe)
-        Orientation orientationToDHFrame[MAX_MULTIBODY][MAX_CONNECTION]; ///< Orientation Tranform (from current link's frame to DHframe)
-        vector <char *> comments[MAX_MULTIBODY][MAX_CONNECTION];         ///< A string (FixedBody or FreeBody) for each body in environment.
 
     //@}
 

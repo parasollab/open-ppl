@@ -214,6 +214,15 @@ public:
   /**@name I/O Methods*/
   //@{
 
+
+    /**Read data from Environment file and check version.
+      */
+    void Read(const char* in_filename, int action,
+	      const char* descDir, cd_predefined cdtype, int nprocs);
+    void Read(istream & _is, int envFormatVersion,int action,
+	      const char* descDir, cd_predefined cdtype, int nprocs);
+    
+
     /**Write the Input data for an environment into a given output stream.
       *2 things are output, Number of MultiBodys, and information about MultiBodys.
       *@see MultiBody::Write
@@ -229,18 +238,6 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-  /*@name Helper functions*/
-  //@{
-    /**Get information from Input instance.
-      *According to information from _input, MultiBody(s) is (are) created and added to
-      *this Environment instance. By the way, Bounding Box is calculated.
-      *Resolution information is also fetched from input instance.
-      *@param _input provides information to initialize Environment.
-      *@see MultiBody::Get, FindBoundingBox
-      */
-    virtual void GetBodies(Input * _input);
-
-  //@}
 
     //@todo make private
     virtual void SelectUsableMultibodies();

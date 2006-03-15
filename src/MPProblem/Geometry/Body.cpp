@@ -6,7 +6,6 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "Body.h"
-#include "Input.h"
 
 //===================================================================
 //  Constructors and Destructor
@@ -231,19 +230,18 @@ void Body::ReadBYU(cd_predefined cdtype, istream & _is) {
 }
 
 
-void Body::Read(Input *input, char * _fileName) {
-
-    //---------------------------------------------------------------
-    // Read polyhedron
-    //---------------------------------------------------------------
-    Read(_fileName);
-
-
-    //---------------------------------------------------------------
-    // Now create auxilary data structure for collision detection
-    //---------------------------------------------------------------
-    buildCDstructure(input->cdtype, input->nprocs);
+void Body::Read(char* _fileName, cd_predefined cdtype, int nprocs) {
+  //---------------------------------------------------------------
+  // Read polyhedron
+  //---------------------------------------------------------------
+  Read(_fileName);
+  
+  //---------------------------------------------------------------
+  // Now create auxilary data structure for collision detection
+  //---------------------------------------------------------------
+  buildCDstructure(cdtype, nprocs);
 }
+
 
 void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 

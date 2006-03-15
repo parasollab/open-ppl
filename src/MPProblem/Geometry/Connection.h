@@ -16,7 +16,6 @@
 #include "Transformation.h"
 
 /////////////////////////////////////////////////////////////////////
-class Input;
 class Body;
 /////////////////////////////////////////////////////////////////////
 
@@ -58,9 +57,6 @@ public:
       *Get might be called to retrieve values for unset data member.
       *@param _body1 One of this _body1's end joints is this connection.
       *@param _body2 One of this _body2's start joints is this connection.
-      *@note if _body2 is NULL, then client might use Get to get information
-      *about body2 from Input instance.
-      *@see Input, Get
       */
     Connection(Body * _body1, Body * _body2 = 0);  // Second argument is optional
     
@@ -126,14 +122,12 @@ public:
     ///Get a refecence of transformation which is a transformation from body1 to DHFrame of body2. (Not sure)
     Transformation & GetTransformationToDHFrame();
     
-    /** Read values for data member from Input instance.
-      * Get information about Body2, transformationToBody2, and transformationToDHFrame
-      * from a given Input instance.
-      * @param _input Pointer to Input instance. Most information is stored here.
-      * @param _multibodyIndex  Used to find out index of body2 from _input.
-      * @param _connectionIndex Used to find out the type of connection from _input.
+    /** Set values for data member
       */
-    void Get(Input * _input, int _multibodyIndex, int _connectionIndex);
+    void Read(Body* body1, Body* body2,
+	      const Vector3D& transformPosition, const Orientation& transformOrientation,
+	      const Vector3D& positionToDHFrame, const Orientation& orientationToDHFrame,
+	      const DHparameters& _dhparameters, const ConnectionType& connectionType);
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////

@@ -6,6 +6,27 @@
 #include "util.h"
 
 
+//////////////////////////////////////////////////////////////////////////////////
+/**@name Format version for environment (*.env) files
+  *      The number breaks down as YearMonthDay so numerical
+  *      comparisons can be more easily made.
+  *@warning Be consistent.  It should be YYYYMMDD
+  *      Inconsistent conversions can be misleading.
+  *      For example, comparing 200083  to 20000604.
+  */
+//@{
+
+//defined by Xinyu Tang, 03/27/2002
+//Objective: To enable the obprm to distinguish the external & internal obstacles, 
+//           so it would not try to generate nodes on the surfaces of the internal
+//           obstacles, which might save a lot of time for obprm;
+#define ENV_VER_20020327                   20020327
+
+#define ENV_VER_20001022                   20001022
+#define ENV_VER_LEGACY                     0
+//@}
+
+
 //===================================================================
 //  Constructors
 //===================================================================
@@ -49,8 +70,8 @@ Environment(int dofs, int pos_dofs, Input * _input) {
   copied_instance = false;
 
   if (_input != NULL) {
-    _input->Read(EXIT); // read only input
-    GetBodies(_input);
+    Read(_input->envFile.GetValue(), EXIT,
+	 _input->descDir.GetValue(), _input->cdtype, _input->nprocs);
     FindBoundingBox();
     
     //   if user supplied a bounding box, use it instead
@@ -135,11 +156,6 @@ Environment(MPProblem* in_pProblem) : MPBaseObject(in_pProblem) {
 }
 
 
-
-
-
-
-
 /**
  * Copy Constructor
  * receiving a bounding box (not necessarily the same as the original
@@ -203,15 +219,8 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) : MPBaseObject(in_pNod
     ///\todo fix hack.  This hack gets env_filename from environment xml tag
     //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
     const char* env_filename = GetMPProblem()->GetEnvFileName().c_str();
-    ///\todo fix hack.  This hack creates a temp Input to parse environment file.
-    Input* pinput;
-    pinput = new Input;
-    ///\todo fix hack. This hack assigns RAPID as the cd library
-    pinput->cdtype = RAPID;
-    
-    pinput->Read(env_filename,EXIT);
-    
-    GetBodies(pinput);
+    Read(env_filename, EXIT, "", RAPID, 1);
+    ///\todo fix hack. This hack assigns RAPID as the cd library and the main directory as "".
     //FindBoundingBox();
 
       //compute RESOLUTION
@@ -332,22 +341,6 @@ SortMultiBodies(){
     else
       cout << "Wrong sorting in void Environment::SortMultiBodies(){}"<<endl;
   }
-}
-
-void Environment::
-GetBodies(Input * _input) {
-  // read multibodies in the environment (robot and obstacles)
-  multibody.clear();
-  externalbodyCount = 0;
-  for (int i = 0; i < _input->multibodyCount; i++) {
-    MultiBody * mb = new MultiBody(this);
-    mb->Get(_input, i);
-    multibody.push_back(mb);
-  }
-  // put the external bodies in the beginning part of the multibody array;
-  SortMultiBodies();
-  // compute bounding box and positional resolution
-
 }
 
 
@@ -482,3 +475,75 @@ BoundingBox *
 Environment::GetBoundingBox() {
   return boundaries;
 }
+
+
+
+void 
+Environment::
+Read(const char* in_filename, int action,
+     const char* descDir, cd_predefined cdtype, int nprocs) {  
+  VerifyFileExists(in_filename,action);
+  
+  // open file and read first field
+  ifstream is(in_filename);
+  
+#define LINEMAX 256
+  // if first field is a comment delimiter
+  char t;
+  int envFormatVersion = ENV_VER_LEGACY;
+  while((t = is.peek()) == '#') {
+    char line[LINEMAX];
+    is.getline(line,LINEMAX,'\n');
+    char string1[32];
+    char string2[32];
+    char string3[32];
+    if(strstr(line, "Environment")) {
+      sscanf(&line[1],"%s %s %d",string2,string3,&envFormatVersion);
+      if(!strstr(string3, "Version")) {
+	cerr << "\nREAD ERROR: bad file format in \""
+	     << in_filename << "\"";
+	cerr << "\n            something is wrong w/ the following\n"
+	     << "\n            "<<string1<<" "<<string2<<" "<<string3
+	     <<"\n\n";
+	if(action==EXIT)
+	  exit(-1);
+      }
+    } 
+  }
+  Read(is, envFormatVersion, action, 
+       descDir, cdtype, nprocs);
+  is.close();
+}
+
+
+void 
+Environment::
+Read(istream & _is, int envFormatVersion, int action,
+     const char* descDir, cd_predefined cdtype, int nprocs) {  
+  switch(envFormatVersion) {
+  case ENV_VER_20020327:
+    break;
+  case ENV_VER_20001022:
+    // put in whatever may be specific to the format
+    // ENV_VER_20001022 is equivalent to ENV_VER_LEGACY
+    // so nothing is specific here
+    break;
+  case ENV_VER_LEGACY:
+    break;
+  default:
+    cerr << "\nREAD ERROR: Unrecognized Environment Version \""
+	 << envFormatVersion << "\""
+	 <<"\n\n";
+    exit(-1);
+    break;
+  }
+ 
+  int multibodyCount; 
+  _is >> multibodyCount;      // # of MultiBodys'
+  for (int m=0; m<multibodyCount; m++) {    
+    MultiBody * mb = new MultiBody(this);
+    mb->Read(_is, action, descDir, cdtype, nprocs);
+    multibody.push_back(mb);
+  }
+}
+ 

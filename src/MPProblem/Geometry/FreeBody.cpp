@@ -6,7 +6,6 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "FreeBody.h"
-#include "Input.h"
 
 //===================================================================
 //  Constructors and Destructor
@@ -99,14 +98,6 @@ Transformation & FreeBody::GetWorldTransformation() {
     return worldTransformation;
 }
 
-//===================================================================
-//  Read                  
-//===================================================================
-void FreeBody::Get(Input * _input, int _multibodyIndex, int _index) {
-    int bodyIndex = _input->BodyIndex[_multibodyIndex][_index];
-
-    Body::Read(_input,_input->freebodyFileName[_multibodyIndex][bodyIndex]);
-}
 
 //===================================================================
 //  Write               

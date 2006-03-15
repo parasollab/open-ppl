@@ -21,8 +21,8 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 #include "MultiBody.h"
-#include "Input.h"
 #include "Transformation.h"
+#include "util.h"
 
 #define MAXCONTACT  10
 
@@ -225,108 +225,157 @@ double MultiBody::ComputeDistance(Body * _body1, Body * _body2) {
     return 0.0;
 }
 
-//===================================================================
-//  Get
-//===================================================================
-void MultiBody::Get(Input * _input, int _multibodyIndex) {
-    //---------------------------------------------------------------
-    // Get bodies
-    //---------------------------------------------------------------
-	GetBodyInfoFromInput(_input,_multibodyIndex);
 
-    //---------------------------------------------------------------
-    // Get links
-    //---------------------------------------------------------------
-	GetLinkInfoFromInput(_input,_multibodyIndex);
+//===================================================================
+//  Read
+//===================================================================
+void MultiBody::Read(istream& _is, int action, const char* descDir, 
+		     cd_predefined cdtype, int nprocs) {
+  static const int FILENAME_LENGTH = 80;
 
-    //---------------------------------------------------------------
-	//calaulate help data
-    //---------------------------------------------------------------
-    FindBoundingBox();
-    ComputeCenterOfMass();
+  //get body info
+  char string[32];
+  readfield(_is, &string); //read "MultiBody"
+  readfield(_is, &string); //read "Active/Passive"
+
+  char cPeek = _is.peek();
+  while((cPeek == ' ') || (cPeek == '\n')) {
+    _is.get();
+    cPeek = _is.peek();
+  }
+
+  bInternal = false;    
+  if(cPeek =='I') {
+    readfield(_is, &string);
+    if (!strncmp(string, "Internal", 8)) 
+      bInternal = true;
+  }
+
+  int bodyCount;
+  readfield(_is, &bodyCount);
+  vector<bool> isFree;
+
+  double fixSum = 0;
+  double freeSum = 0;
+  for(int i=0; i<bodyCount; ++i) {
+    vector<char*> comments;
+    readfield(_is, &string, comments); //Tag FixedBody or FreeBody
+    int BodyIndex;
+    _is >> BodyIndex;
+
+    char tmpFilename[FILENAME_LENGTH*2], bodyFileName[FILENAME_LENGTH];
+    _is >> tmpFilename;
+    strcpy(bodyFileName, descDir);
+    strcat(bodyFileName, tmpFilename);
+    VerifyFileExists(bodyFileName, action);
+
+    if(!strncmp(string, "FixedBody", 10)) {
+      isFree.push_back(false);
+      
+      Vector3D bodyPosition(_is);
+      Vector3D origbodyOrientation(_is);
+      Orientation bodyOrientation(Orientation::FixedXYZ,
+				  origbodyOrientation[2]*TWOPI/360.0,
+				  origbodyOrientation[1]*TWOPI/360.0,
+				  origbodyOrientation[0]*TWOPI/360.0);
+      Transformation transformation(bodyOrientation, bodyPosition);
+      
+      FixedBody* fix = new FixedBody(this);
+      fix->Read(bodyFileName, cdtype, nprocs);
+      fix->PutWorldTransformation(transformation);
+      fixAreas.push_back(fix->GetPolyhedron().area);
+      fixSum += fix->GetPolyhedron().area;
+      AddBody(fix);      
+    } else { // FreeBody
+      isFree.push_back(true);
+
+      if(i==0) {
+	Vector3D bodyPosition(_is);
+	Vector3D origbodyOrientation(_is);
+	Orientation bodyOrientation(Orientation::FixedXYZ,
+				    origbodyOrientation[2]*TWOPI/360.0,
+				    origbodyOrientation[1]*TWOPI/360.0,
+				    origbodyOrientation[0]*TWOPI/360.0);
+	Transformation transformation(bodyOrientation, bodyPosition);
+      }
+
+      FreeBody* free = new FreeBody(this);
+      free->Read(bodyFileName, cdtype, nprocs);
+      freeAreas.push_back(free->GetPolyhedron().area);
+      freeSum += free->GetPolyhedron().area;
+      AddBody(free);
+    } // endelse FreeBody    
+  } //endfor i
+
+  fixArea = fixSum;
+  freeArea = freeSum;
+  area = fixArea + freeArea;
+
+
+  //get connection info
+  readfield(_is, &string);     // Tag, "Connection"
+  int connectionCount;
+  _is >> connectionCount;   // # of connections
+
+  for(int i=0; i<connectionCount; i++) {
+    int previousBodyIndex, nextBodyIndex;
+    _is >> previousBodyIndex;              // first body
+    _is >> nextBodyIndex;                  // second body
+      
+    readfield(_is, &string);             // Tag, "Actuated/NonActuated"
+      
+    Vector3D transformPosition(_is);
+    Vector3D angles(_is);
+    Orientation transformOrientation = Orientation(Orientation::FixedXYZ,
+						   angles[2]*TWOPI/360.0, 
+						   angles[1]*TWOPI/360.0, 
+						   angles[0]*TWOPI/360.0);
+    
+    DHparameters dhparameters;
+    _is >> dhparameters.alpha;          // DH parameter, alpha
+    _is >> dhparameters.a;              // DH parameter, a
+    _is >> dhparameters.d;              // DH parameter, d
+    _is >> dhparameters.theta;          // DH parameter, theta
+    
+    readfield(_is, &string);   // Tag, "Revolute" or "Prismatic"
+    int connectionType;
+    if (!strncmp(string, "Revolute", 9))
+      connectionType = 0;              // Revolute type
+    else
+      connectionType = 1;              // Prismatic type
+    
+    Vector3D positionToDHFrame(_is);
+    angles = Vector3D(_is);
+    Orientation orientationToDHFrame = Orientation(Orientation::FixedXYZ,
+						   angles[2]*TWOPI/360.0, 
+						   angles[1]*TWOPI/360.0, 
+						   angles[0]*TWOPI/360.0);
+    Body* prevBody;
+    if(isFree[previousBodyIndex])
+      prevBody = (Body*)GetFreeBody(previousBodyIndex);
+    else
+      prevBody = (Body*)GetFixedBody(previousBodyIndex);
+
+    Body* nextBody;
+    if(isFree[nextBodyIndex])
+      nextBody = (Body*)GetFreeBody(nextBodyIndex);
+    else
+      nextBody = (Body*)GetFixedBody(nextBodyIndex);
+
+    Connection*c = new Connection(prevBody, nextBody);
+    c->Read(prevBody, nextBody,
+	    transformPosition, transformOrientation,
+	    positionToDHFrame, orientationToDHFrame,
+	    dhparameters, Connection::ConnectionType(connectionType));
+
+    prevBody->Link(c);
+  } //endfor i
+  
+
+  FindBoundingBox();
+  ComputeCenterOfMass();
 }
 
-//===================================================================
-//  Get body info
-//===================================================================
-void MultiBody::GetBodyInfoFromInput(Input * _input, int _multibodyIndex)
-{
-	#if VERBOSE
-    cout << "BodyCount = " << _input->BodyCount[_multibodyIndex] << endl;
-    cout << "FixedBodyCount = " << _input->FixedBodyCount[_multibodyIndex] << endl;
-#endif
-
-    double fixSum = 0;
-    double freeSum = 0;
-    this->bInternal =  _input->bBodyInternal[_multibodyIndex];
-    for(int i=0; i < _input->BodyCount[_multibodyIndex]; i++) 
-	{
-		if (!_input->isFree[_multibodyIndex][i])
-		{
-			FixedBody * fix = new FixedBody(this);
-			fix->Get(_input, _multibodyIndex, i);
-			fixAreas.push_back(fix->GetPolyhedron().area);
-			fixSum += fix->GetPolyhedron().area;
-			AddBody(fix);
-		}
-		else
-		{
-			FreeBody * free = new FreeBody(this);
-			free->Get(_input, _multibodyIndex, i);
-			freeAreas.push_back(free->GetPolyhedron().area);
-			freeSum += free->GetPolyhedron().area;
-			AddBody(free);
-		}
-    }
-    fixArea = fixSum;
-    freeArea = freeSum;
-    area = fixArea + freeArea;
-
-#if VERBOSE
-    cout << "FreeBodyCount = " << _input->FreeBodyCount[_multibodyIndex] << endl;
-#endif
-}
-
-
-//===================================================================
-//  Get link info
-//===================================================================
-void MultiBody::GetLinkInfoFromInput(Input * _input, int _multibodyIndex)
-{
-    Connection * c;
-
-    int bodyIndex0, realbodyIndex0;
-
-#if VERBOSE
-    cout << "connectionCount = " << _input->connectionCount[_multibodyIndex] << endl;
-#endif
-
-    for(int i=0; i < _input->connectionCount[_multibodyIndex]; i++) 
-	{
-		//Get connection info about first body in this connection
-		//from Input instance
-        bodyIndex0 = _input->previousBodyIndex[_multibodyIndex][i];
-
-        realbodyIndex0 = _input->BodyIndex[_multibodyIndex][bodyIndex0];
-        if (!_input->isFree[_multibodyIndex][bodyIndex0]){
-
-			//Set first body in connection
-			c = new Connection(GetFixedBody(realbodyIndex0));
-			//set second body in connection using Get!!
-			c->Get(_input, _multibodyIndex, i);
-			
-			// Set up both backward and forward connectionships
-			GetFixedBody(realbodyIndex0)->Link(c);
-		}
-		else{
-			c = new Connection(GetFreeBody(realbodyIndex0));
-			c->Get(_input, _multibodyIndex, i);
-			
-			// Set up both backward and forward connectionships
-			GetFreeBody(realbodyIndex0)->Link(c);
-		}
-    }
-}
 
 //===================================================================
 //  Write

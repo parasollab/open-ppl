@@ -69,14 +69,6 @@ public:
     ///Return transformation of this body in world coordinate
     virtual Transformation & GetWorldTransformation();
 
-    /**Get user input information from Input instance.
-      *This method get translation info and geometric data filename from input.
-      *Then it calls Read to read geometric data from filename.
-      *@param _multibodyIndex index for the owner of this fixed body in input
-      *@param _bodyIndex index for this fixed body in the owner in input
-      *@see Read
-      */
-    virtual void Get(Input * _input, int _multibodyIndex, int _bodyIndex);
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
