@@ -431,50 +431,51 @@ void Cfg::GetPositionOrientationFrom2Cfg(const Cfg& c1,
 }
 
 void Cfg::GetMovingSequenceNodes(const Cfg& other, vector<double> s_value, vector<Cfg*>& result) const {
-  Cfg* tmp;
-  Cfg* s_i_previous;
-  tmp=this->CreateNewCfg();
-  result.push_back(tmp);
+  Cfg* this_copy = this->CreateNewCfg();
+  result.push_back(this_copy);
 
-  double o_weight=0.0;
-  for(int i=0; i<s_value.size(); i++){
-    tmp = this->CreateNewCfg();
-    tmp->WeightedSum(*this, other, s_value[i]);
-    Cfg* s_i = tmp->CreateNewCfg();
-    s_i->GetPositionOrientationFrom2Cfg(*tmp, *(result[result.size()-1]));
-    
-    delete tmp; // Added by Roger 2.3.06 to fix memory leak
+  Cfg* weighted_sum = this->CreateNewCfg();
+  double o_weight = 0.0;
+  for(int i=0; i<s_value.size(); ++i) {
+    weighted_sum->WeightedSum(*this, other, s_value[i]);
+
+    Cfg* s1 = this->CreateNewCfg();
+    s1->GetPositionOrientationFrom2Cfg(*weighted_sum, *result.back());
+    result.push_back(s1);
+
     o_weight += 1.0 / s_value.size();
-    tmp = this->CreateNewCfg();
-    tmp->WeightedSum(*this, other, o_weight);
-    Cfg* s_i_next = tmp->CreateNewCfg();
-    s_i_next->GetPositionOrientationFrom2Cfg(*s_i, *tmp);
-  
-    result.push_back(s_i);
-    result.push_back(s_i_next);
-    delete tmp; // Added by Roger 2.3.06 to fix memory leak
-  }
-  tmp=other.CreateNewCfg();
-  result.push_back(tmp);
+    weighted_sum->WeightedSum(*this, other, o_weight);
 
+    Cfg* s2 = this->CreateNewCfg();
+    s2->GetPositionOrientationFrom2Cfg(*s1, *weighted_sum);
+    result.push_back(s2);
+  }
+
+  Cfg* other_copy = other.CreateNewCfg();
+  result.push_back(other_copy);
+
+  delete weighted_sum;
 } 
 
 void Cfg::GetMovingSequenceNodes(const Cfg& other, double s, vector<Cfg*>& result) const {
-  Cfg* tmp = this->CreateNewCfg();
-  tmp->WeightedSum(*this, other, s);
-  
-  Cfg* s1 = tmp->CreateNewCfg();
-  s1->GetPositionOrientationFrom2Cfg(*tmp, *this);
-  
-  Cfg* s2 = tmp->CreateNewCfg();
-  s2->GetPositionOrientationFrom2Cfg(*tmp, other);
-  
-  tmp->equals(*this); 
-  result.push_back(tmp);
+  Cfg* this_copy = this->CreateNewCfg();
+  result.push_back(this_copy);
+
+  Cfg* weighted_sum = this->CreateNewCfg();
+  weighted_sum->WeightedSum(*this, other, s);
+
+  Cfg* s1 = this->CreateNewCfg();
+  s1->GetPositionOrientationFrom2Cfg(*weighted_sum, *this);
   result.push_back(s1);
+
+  Cfg* s2 = this->CreateNewCfg();
+  s2->GetPositionOrientationFrom2Cfg(*weighted_sum, other);
   result.push_back(s2);
-  tmp = other.CreateNewCfg();
-  result.push_back(tmp);
+
+  Cfg* other_copy = other.CreateNewCfg();
+  result.push_back(other_copy);
+
+  delete weighted_sum;
 }
 
 
