@@ -346,7 +346,7 @@ StraightLine<CFG, WEIGHT>::
   
 
   int nTicks = 0;
-  for(int i = 0; i < n_ticks ; i++){
+  for(int i = 1; i < n_ticks; i++){ //don't need to check the ends, _c1 and _c2
     tick.Increment(incr);
     cd_cntr ++;
     if(checkCollision){
@@ -464,93 +464,68 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
         double positionRes, double orientationRes,  
         bool checkCollision, 
         bool savePath, bool saveFailedPath) {
+  if(!checkCollision)
+    return IsConnectedSLSequential(_env, Stats, cd, dm, _c1, _c2,
+				   lpOutput, cd_cntr, 
+				   positionRes, orientationRes,
+				   checkCollision, savePath, saveFailedPath);
 
   std::string Callee(GetName());
-  {std::string Method("-straightline::IsConnectedSLBinary");Callee=Callee+Method;}
-  
-  if(checkCollision) {
-    double clr = 0;
+  std::string Method("-straightline::IsConnectedSLBinary");
+  Callee=Callee+Method;
 
-    ///Bound Shpere
-    double rmax = _env->GetMultiBody(_env->GetRobotIndex())->GetBoundingSphereRadius();
-    
-    //Check if orientation of two Cfg are similar
-    CFG c1diffc2;
-    c1diffc2.subtract(_c1,_c2);
-    bool sameOrientation = c1diffc2.OrientationMagnitude() <= orientationRes;
-
-    typedef pair<CFG,CFG> cfgPair;
-    deque<cfgPair> pairQ;
-    pairQ.push_back(cfgPair(_c1,_c2));
-
-    while(! pairQ.empty() ) {
-      cfgPair &tmp = pairQ.front(); //dequeue
-     
-      //average of two Cfg, mid point.
-      CFG mid;
-      mid.WeightedSum(tmp.first, tmp.second, 0.5);
-      
-      ///Moved below by Roger 9.17.2005
-      //  cd_cntr ++; //?
-      
-      if(cd->clearanceAvailable()) { //&& binarySearch
-  //get clearance when robot's cfg is mid
-  if((clr = mid.Clearance(_env,Stats,cd)) <= 0.001) // 0.001 tolerance.
-    return false; ///too close to obstacle, failed
-
-  if(!sameOrientation) { //if have different orientation
-    clr -= rmax;     //clearance - bounding sphere radius
-    if(clr < 0) clr = 0.0;
-  }
-      } else {
-        //bool bbox_check = mid.InBoundingBox(_env);
-        //bool coll_check = mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee));
-        cd_cntr++;	//?
-	//if(!bbox_check || coll_check ) { ///changed to precompute bool vals,
-                                        ///compiler was optimizing and counts got screwed up --roger 9.17.2005
-        if(!mid.InBoundingBox(_env) ||
-           mid.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee)) ) {
-	  return false;
-        }
-      }
-
-      CFG diff;
-      diff.subtract(tmp.first, tmp.second);
-      double halfDist = diff.PositionMagnitude()/2;
-      double halfOriDist = diff.OrientationMagnitude()/2;
-      
-      if(clr < halfDist) { //if clearance smaller than half of distance
-  //if they are longer than resolution, partition it
-  if(positionRes < halfDist || orientationRes < halfOriDist ) {
-    CFG tmp1;
-    tmp1.WeightedSum(tmp.first, mid, 1.0-clr/halfDist);
-    CFG tmp2;
-    tmp2.WeightedSum(mid, tmp.second, clr/halfDist);
-    pairQ.push_back(cfgPair(tmp.first, tmp1));
-    pairQ.push_back(cfgPair(tmp2, tmp.second)); 
-        }  
-      }
-      pairQ.pop_front();
-    } //end while
-  }//end if
-
-  int steps = 0;  
+  int n_ticks;
   CFG incr;
-  incr.FindIncrement(_c1,_c2,&steps,positionRes,orientationRes);
-  if(savePath || saveFailedPath){
+  incr.FindIncrement(_c1, _c2, &n_ticks, positionRes, orientationRes);
+
+  deque<pair<int,int> > Q;
+  Q.push_back(make_pair(0, n_ticks));
+
+  while(!Q.empty()) {
+    pair<int,int> p = Q.front();
+    int i = p.first;
+    int j = p.second;
+    Q.pop_front();
+
+    int mid = i + (int)floor(((double)(j-i))/2);
+    CFG mid_cfg = _c1;
+    /*
+    // this produces the exact same intermediate cfgs as the sequential 
+    // version (no roundoff errors), but it is slow
+    for(int z=0; z<mid; ++z)
+      mid_cfg.Increment(incr);
+    */
+    // this produces almost the same intermediate cfgs as the sequential
+    // version, but there may be some roundoff errors; it is much faster
+    // than the above solution; the error should be much smaller than the
+    // resolution so it should not be a problem
+    mid_cfg.multiply(incr, mid);
+    mid_cfg.add(_c1, mid_cfg);
+    
+    if(!mid_cfg.InBoundingBox(_env) ||
+       mid_cfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee))) {
+      return false;
+    } else {
+      if(i+1 != mid) 
+	Q.push_back(make_pair(i, mid));
+      if(mid+1 != j) 
+	Q.push_back(make_pair(mid, j));      
+    }
+  }
+
+  if(savePath || saveFailedPath) {
     CFG tick = _c1;
-    for(int i=0; i<steps; i++) {
+    for(int n=0; n<n_ticks; ++n) {
       tick.Increment(incr);
       lpOutput->path.push_back(tick);
     }
   }
 
-  lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + steps);
-  lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + steps);
+  lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + n_ticks);
+  lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + n_ticks);
 
-  return true; //success
-
-}//end of IsConnected_SLclearance
+  return true;
+}
 
 
 #endif
