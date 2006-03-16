@@ -502,6 +502,7 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
     mid_cfg.multiply(incr, mid);
     mid_cfg.add(_c1, mid_cfg);
     
+    cd_cntr++;
     if(!mid_cfg.InBoundingBox(_env) ||
        mid_cfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee))) {
       return false;
@@ -515,14 +516,14 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 
   if(savePath || saveFailedPath) {
     CFG tick = _c1;
-    for(int n=0; n<n_ticks; ++n) {
+    for(int n=1; n<n_ticks; ++n) {
       tick.Increment(incr);
       lpOutput->path.push_back(tick);
     }
   }
 
-  lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + n_ticks);
-  lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + n_ticks);
+  lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + n_ticks-1);
+  lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + n_ticks-1);
 
   return true;
 }

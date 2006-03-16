@@ -292,31 +292,50 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
   
   vector<Cfg *> sequence;
   _c1.GetMovingSequenceNodes(_c2, s_values, sequence);
-  
+
   bool connected = true;
-  int i;
-  for(i=0; i<sequence.size()-1; ++i) {
-    bool flag;
-    if(this->binarySearch.GetValue()) 
-      flag = IsConnectedSLBinary(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], 
-				 lpOutput, cd_cntr, positionRes, orientationRes, 
-				 checkCollision, savePath, saveFailedPath);
-    else
-      flag = IsConnectedSLSequential(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], 
-				     lpOutput, cd_cntr, positionRes, orientationRes, 
-				     checkCollision, savePath, saveFailedPath);
-    if(!flag) {
-      connected = false;
-      break;
+  
+  //check sequence nodes
+  if(checkCollision) {
+    std::string Callee(GetName());
+    std::string Method("-rotate_at_s::IsConnectedOneWay");
+    Callee = Callee + Method;
+    for(int i=1; i<sequence.size()-1; ++i) { //_c1 and _c2 not double checked
+      cd_cntr++;
+      if(!sequence[i]->InBoundingBox(_env) ||
+         sequence[i]->isCollision(_env, Stats, cd, *cdInfo, true, &(Callee))) {
+        connected = false;
+        break;
+      }
     }
   }
+    
+  //check intermediate nodes  
+  if(connected) {
+    for(int i=0; i<sequence.size()-1; ++i) {
+      if(this->binarySearch.GetValue()) 
+        connected = IsConnectedSLBinary(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], 
+				        lpOutput, cd_cntr, positionRes, orientationRes, 
+				        checkCollision, savePath, saveFailedPath);
+      else
+        connected = IsConnectedSLSequential(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], 
+				            lpOutput, cd_cntr, positionRes, orientationRes, 
+				            checkCollision, savePath, saveFailedPath);
+
+      if((savePath || saveFailedPath) && (i+1 != sequence.size()-1)) //don't put _c2 on end
+        lpOutput->path.push_back(*sequence[i+1]);
+
+      if(!connected) 
+        break;
+    }
+  }
+
   if(connected)
-    Stats.IncLPConnections( RatS );
-  
+    Stats.IncLPConnections( RatS );  
   Stats.IncLPCollDetCalls( RatS, cd_cntr );
   
   // Since we use vector<Cfg*>, we need to delete it
-  for(i=0; i<sequence.size(); ++i) 
+  for(int i=0; i<sequence.size(); ++i) 
     if (sequence[i] != NULL)
       delete sequence[i];
   

@@ -379,13 +379,8 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       vector<CFG> recreatedPath;
       if(CanRecreatePath(rdmp, rp, Stats, cd, lp, dm, recreatedPath)) {
 	connected = true;
-
-	//add start
-	_path->push_back(_start);
-	//add recreated path
 	_path->insert(_path->end(), 
 		      recreatedPath.begin(), recreatedPath.end());
-
 	break;
       } else
         cout << endl << "Failed to recreate path\n";
@@ -418,6 +413,7 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
 		vector<CFG>& recreatedPath) {
   LPOutput<CFG,WEIGHT> ci;
 
+  recreatedPath.push_back(attemptedPath.begin()->first);
   for(typename vector<pair<CFG,WEIGHT> >::iterator I = attemptedPath.begin(); 
       (I+1) != attemptedPath.end(); ++I) {
     if(!(lp->GetPathSegment(rdmp->GetEnvironment(), Stats, cd, dm,
@@ -430,6 +426,7 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
     } else {
       recreatedPath.insert(recreatedPath.end(), 
 			   ci.path.begin(), ci.path.end());
+      recreatedPath.push_back((I+1)->first);
     } 
   }
   return true;
