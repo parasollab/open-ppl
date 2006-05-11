@@ -199,7 +199,7 @@ class MapEvaluator : public MPBaseObject {
 
   void PrintValues(ostream& os) {
     typename vector<MapEvaluationMethod<CFG,WEIGHT>*>::iterator I;
-    for(I=m_conditional_evalutors.begin(); I != m_conditional_evaluators.end(); ++I)
+    for(I=m_conditional_evaluators.begin(); I != m_conditional_evaluators.end(); ++I)
     (*I)->PrintUsage(os);
   }
 
