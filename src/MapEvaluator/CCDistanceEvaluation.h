@@ -76,7 +76,7 @@ class CCDistanceEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     for(P = prev_distances.begin();
         P != prev_distances.end() && N != new_distances.end();
         ++P, ++N) {
-      if(abs(((*N - *P)/ *P)) > m_threshold) {
+      if(abs((int)(((*N - *P)/ *P))) > m_threshold) {
         prev_distances = new_distances;
         return false;
       }

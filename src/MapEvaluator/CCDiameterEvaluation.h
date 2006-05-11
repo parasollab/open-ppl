@@ -75,7 +75,7 @@ class CCDiameterEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     for(P = prev_diameters.begin();
         P != prev_diameters.end() && N != new_diameters.end();
         ++P, ++N) {
-      if(abs(((*N - *P)/ *P)) > m_threshold) {
+      if(abs((int)(((*N - *P)/ *P))) > m_threshold) {
         prev_diameters = new_diameters;
         return false;
       }

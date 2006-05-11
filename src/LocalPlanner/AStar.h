@@ -239,7 +239,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     cd_cntr++;
 
     Callee=diagonal.GetName();
-    if(diagonal.InBoundingBox(_env) && !diagonal.isCollision(_env,Stats,cd, *cdInfo , &tmpStr)){
+    if(diagonal.InBoundingBox(_env) && !diagonal.isCollision(_env,Stats,cd, *this->cdInfo , &tmpStr)){
       p = diagonal;
     } else {
       neighbors.clear();

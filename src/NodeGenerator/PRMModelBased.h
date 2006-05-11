@@ -357,7 +357,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     CFG x;
     x.GetRandomCfg(_env);
 
-    if(!x.InBoundingBox(_env) || x.isCollision(_env,Stats,cd,*cdInfo,true,&callee))
+    if(!x.InBoundingBox(_env) || x.isCollision(_env,Stats,cd,*this->cdInfo,true,&callee))
       model.push_back(make_pair(Normalize(_env,x.GetData()),-1));
     else 
       model.push_back(make_pair(Normalize(_env,x.GetData()),1));    
@@ -513,7 +513,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
     //check collision and add to the roadmap if free
 
-    bool collision_check = !min_x.InBoundingBox(_env) || min_x.isCollision(_env,Stats,cd,*cdInfo,true,&callee);
+    bool collision_check = !min_x.InBoundingBox(_env) || min_x.isCollision(_env,Stats,cd,*this->cdInfo,true,&callee);
 
     if(!collision_check) //min_x is free
       nodes.push_back(min_x);	

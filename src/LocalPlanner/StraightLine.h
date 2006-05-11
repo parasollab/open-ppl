@@ -355,7 +355,7 @@ StraightLine<CFG, WEIGHT>::
       //if(!bbox_check || col_check){  ///changed to precompute bool vals,
                                      ///compiler was optimizing and counts got screwed up --roger 9.17.2005
       if(!tick.InBoundingBox(_env) || 
-         tick.isCollision(_env,Stats,cd,*cdInfo,true,&(Callee)) ) {
+         tick.isCollision(_env,Stats,cd,*this->cdInfo,true,&(Callee)) ) {
         CFG neg_incr;
   neg_incr = incr; 
   neg_incr.negative(incr);
@@ -504,7 +504,7 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
     
     cd_cntr++;
     if(!mid_cfg.InBoundingBox(_env) ||
-       mid_cfg.isCollision(_env, Stats, cd, *cdInfo, true, &(Callee))) {
+       mid_cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))) {
       return false;
     } else {
       if(i+1 != mid) 

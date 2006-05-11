@@ -94,7 +94,7 @@ RotateAtS<CFG, WEIGHT>::
 RotateAtS(cd_predefined _cdtype, TiXmlNode* in_pNode, MPProblem* in_pProblem) : StraightLine<CFG, WEIGHT>(_cdtype, in_pNode,in_pProblem),
   sValue ("s", 0.5, 0, 1) {
   sValue.PutDesc("FLOAT ", "(def, s=0.5)");
-  cdtype = _cdtype;
+  this->cdtype = _cdtype;
   LOG_DEBUG_MSG("RotateAtS::RotateAtS()");
 
   double  nSValue; 
@@ -121,8 +121,8 @@ void
 RotateAtS<CFG, WEIGHT>::
 PrintOptions(ostream& out_os) {
   out_os << "    " << GetName() << "::  ";
-  out_os << "line segment length = " << " " << lineSegmentLength.GetValue() << " ";
-  out_os << "binary search = " << " " << binarySearch.GetValue() << " ";
+  out_os << "line segment length = " << " " << this->lineSegmentLength.GetValue() << " ";
+  out_os << "binary search = " << " " << this->binarySearch.GetValue() << " ";
   out_os << "s_value = " << s_values[0];
   out_os << endl;
 }
@@ -166,8 +166,8 @@ ParseCommandLine(int argc, char **argv) {
   s_values.clear();
 
   for (int i = 1; i < argc; ++i) {
-    if( lineSegmentLength.AckCmdLine(&i, argc, argv) ) {
-    } else if( binarySearch.AckCmdLine(&i, argc, argv) ) {
+    if( this->lineSegmentLength.AckCmdLine(&i, argc, argv) ) {
+    } else if( this->binarySearch.AckCmdLine(&i, argc, argv) ) {
     } else if( sValue.AckCmdLine(&i, argc, argv) ) {
       s_values.push_back(sValue.GetValue());
 
@@ -218,8 +218,8 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; lineSegmentLength.PrintUsage(_os);
-  _os << "\n\t"; binarySearch.PrintUsage(_os);
+  _os << "\n\t"; this->lineSegmentLength.PrintUsage(_os);
+  _os << "\n\t"; this->binarySearch.PrintUsage(_os);
   _os << "\n\t"; sValue.PrintUsage(_os);
  
   _os.setf(ios::right,ios::adjustfield);
@@ -231,8 +231,8 @@ void
 RotateAtS<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
   _os << GetName() << " ";
-  _os << lineSegmentLength.GetFlag() << " " << lineSegmentLength.GetValue() << " ";
-  _os << binarySearch.GetFlag() << " " << binarySearch.GetValue() << " ";
+  _os << this->lineSegmentLength.GetFlag() << " " << this->lineSegmentLength.GetValue() << " ";
+  _os << this->binarySearch.GetFlag() << " " << this->binarySearch.GetValue() << " ";
   for(int i=0; i<s_values.size(); i++){
    _os << sValue.GetFlag() << " " << s_values[i] << " ";
    }
@@ -303,7 +303,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
     for(int i=1; i<sequence.size()-1; ++i) { //_c1 and _c2 not double checked
       cd_cntr++;
       if(!sequence[i]->InBoundingBox(_env) ||
-         sequence[i]->isCollision(_env, Stats, cd, *cdInfo, true, &(Callee))) {
+         sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))) {
         connected = false;
         break;
       }

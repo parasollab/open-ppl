@@ -266,9 +266,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
       }
       CallCnt = "3";
       tmpStr = Callee+Method+CallCnt;
-      Stats.IncCfgIsCall(&tmpStr);
-      if(cd->isInsideObstacle(cfg,_env,*cdInfo)){
-	cdInfo->ret_all_info = true;
+      //Stats.IncCfgIsCall(&tmpStr);
+      if(cd->isInsideObstacle(cfg,_env,*this->cdInfo)){
+	this->cdInfo->ret_all_info = true;
 	CallCnt="4";
 	tmpStr = Callee+Method+CallCnt;
 	cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr);

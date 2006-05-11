@@ -97,7 +97,7 @@ class ClosestSF: public NodeConnectionMethod<CFG,WEIGHT> {
 
 template <class CFG, class WEIGHT>
 ClosestSF<CFG,WEIGHT>::ClosestSF():NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "closestsf"; 
+  this->element_name = "closestsf"; 
   SetDefault();
 }
 
@@ -105,7 +105,7 @@ template <class CFG, class WEIGHT>
 ClosestSF<CFG,WEIGHT>::ClosestSF(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
     NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
   LOG_DEBUG_MSG("ClosestSF::ClosestSF()"); 
-  element_name = "closestsf"; 
+  this->element_name = "closestsf"; 
   SetDefault();
   ParseXML(in_pNode);
   
@@ -116,7 +116,7 @@ ClosestSF<CFG,WEIGHT>::ClosestSF(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
 
 template <class CFG, class WEIGHT>
 ClosestSF<CFG,WEIGHT>::ClosestSF(int k, int m):NodeConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "closestsf"; 
+  this->element_name = "closestsf"; 
   ksuccess = k;
   mfailure = m;
 }
@@ -204,7 +204,7 @@ ClosestSF<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << "\tINTEGER INTEGER (default ksuccess:" << KSUCCESS << ", mfailure:" << MFAILURE << ")";
   _os << endl;
   _os.setf(ios::right,ios::adjustfield);
@@ -215,7 +215,7 @@ template <class CFG, class WEIGHT>
 void
 ClosestSF<CFG, WEIGHT>::
 PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ksuccess = ";
+  _os << "\n" << this->GetName() << " ksuccess = ";
   _os << ksuccess << " mfailure = " << mfailure ;
   _os << endl;
 }
@@ -224,7 +224,7 @@ template <class CFG, class WEIGHT>
 void
 ClosestSF<CFG, WEIGHT>::
 PrintOptions(ostream& out_os){
-  out_os << "    " << GetName() << "::  ksuccess = ";
+  out_os << "    " << this->GetName() << "::  ksuccess = ";
   out_os << ksuccess << "  mfailure = " << mfailure ;
   out_os << endl;
 }
@@ -369,7 +369,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm,
                _rm->m_pRoadmap->GetData(KP->first),
                _rm->m_pRoadmap->GetData(KP->second),
-               &lpOutput, connectionPosRes, connectionOriRes, 
+               &lpOutput, this->connectionPosRes, this->connectionOriRes, 
                (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
 	success++;

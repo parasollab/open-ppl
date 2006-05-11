@@ -47,13 +47,13 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       LOG_DEBUG_MSG("CCExpandCharacterizer::Characterize()");
       Roadmap<CFG,WEIGHT>* pRoadmap = inout_pRegion->GetRoadmap();
       RoadmapGraph<CFG,WEIGHT>* pGraph = pRoadmap->m_pRoadmap;
-      LocalPlanners < CFG, WEIGHT > * lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
+      LocalPlanners < CFG, WEIGHT > * lp = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
       LPOutput< CFG, WEIGHT > lp_output; 
-      Environment * env = GetMPProblem()->GetEnvironment();
-      CollisionDetection * cd = GetMPProblem()->GetCollisionDetection();
-      DistanceMetric * dm = GetMPProblem()->GetDistanceMetric();
-      double pos_res = GetMPProblem()->GetEnvironment()->GetPositionRes();
-      double ori_res = GetMPProblem()->GetEnvironment()->GetOrientationRes();
+      Environment * env = this->GetMPProblem()->GetEnvironment();
+      CollisionDetection * cd = this->GetMPProblem()->GetCollisionDetection();
+      DistanceMetric * dm = this->GetMPProblem()->GetDistanceMetric();
+      double pos_res = this->GetMPProblem()->GetEnvironment()->GetPositionRes();
+      double ori_res = this->GetMPProblem()->GetEnvironment()->GetOrientationRes();
       Stat_Class Stats;
 
       vector<VID> neighbors;
@@ -211,7 +211,7 @@ public:
         all_NodeCharacterizerMethod.push_back(localnodeinfo);
       } else if(string(pChild->Value()) == "CCExpandCharacterizer") {
         CCExpandCharacterizer<CFG,WEIGHT>* expandchar = 
-            new CCExpandCharacterizer<CFG,WEIGHT>(pChild,GetMPProblem());
+            new CCExpandCharacterizer<CFG,WEIGHT>(pChild,this->GetMPProblem());
         all_NodeCharacterizerMethod.push_back(expandchar);
       } else {
         LOG_WARNING_MSG("MPCharacterizer::  I don't know: "<< endl << *pChild);

@@ -266,7 +266,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 			 clearanceNum.GetValue(),penetrationNum.GetValue());
     //if in collision and asking for exactNum, keep generating
     
-    if (cfg.InBoundingBox(_env) && !cfg.isCollision(_env,Stats,cd,*cdInfo)) {
+    if (cfg.InBoundingBox(_env) && !cfg.isCollision(_env,Stats,cd,*this->cdInfo)) {
       nodes.push_back(CFG(cfg));
 #if INTERMEDIATE_FILES
       path.push_back(cfg);

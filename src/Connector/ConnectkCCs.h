@@ -94,7 +94,7 @@ protected:
 template <class CFG, class WEIGHT>
 ConnectkCCs<CFG,WEIGHT>::ConnectkCCs():
   ComponentConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "k-components"; 
+  this->element_name = "k-components"; 
 
   SetDefault();
 }
@@ -103,7 +103,7 @@ ConnectkCCs<CFG,WEIGHT>::ConnectkCCs():
 template <class CFG, class WEIGHT>
 ConnectkCCs<CFG,WEIGHT>::ConnectkCCs(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetection* cd, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp):
   ComponentConnectionMethod<CFG,WEIGHT>(rdmp, cd, dm, lp) {
-  element_name = string("k-components");
+  this->element_name = string("k-components");
 
   SetDefault();
 }
@@ -148,7 +148,7 @@ ParseCommandLine(std::istringstream& is) {
     }
 
   } catch (BadUsage) {
-    cerr << "Error in \'"<<GetName()<<"\' parameters" << endl;
+    cerr << "Error in \'"<<this->GetName()<<"\' parameters" << endl;
     PrintUsage(cerr);
     exit(-1);
   }
@@ -167,7 +167,7 @@ void
 ConnectkCCs<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
-  _os <<"\n"<<GetName()<<" ";
+  _os <<"\n"<<this->GetName()<<" ";
   _os <<"\tINTEGER INTEGER (default k1:"<<K1_CLOSEST<<", k2:"<<K2_CLOSEST<<")";
   _os <<endl;
   _os.setf(ios::right,ios::adjustfield);
@@ -178,7 +178,7 @@ template <class CFG, class WEIGHT>
 void
 ConnectkCCs<CFG, WEIGHT>::
 PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " k1 = "<< k1 << "k2 = " << k2 ;
+  _os << "\n" << this->GetName() << " k1 = "<< k1 << "k2 = " << k2 ;
   _os << endl;
 }
 
@@ -202,12 +202,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       bool addAllEdges) {
   
 #ifndef QUIET
-  cout << GetName()<<" (k1="<<k1<<", k2="<<k2<<"): "<<flush;
+  cout << this->GetName()<<" (k1="<<k1<<", k2="<<k2<<"): "<<flush;
 #endif
   Closest<CFG,WEIGHT> cl(k1);
-  cl.cdInfo=cdInfo;
-  cl.connectionPosRes=connectionPosRes;
-  cl.connectionOriRes=connectionOriRes;
+  cl.cdInfo=this->cdInfo;
+  cl.connectionPosRes=this->connectionPosRes;
+  cl.connectionOriRes=this->connectionOriRes;
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   vector< pair<int,VID> > ccs;
   int ccsize=GetCCStats(*pMap,ccs);
@@ -252,14 +252,14 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
           bool addAllEdges,
       vector<VID> & vids1, vector<VID> & vids2) {
 #ifndef QUIET
-  cout << GetName()<<" (k1="<<k1<<", k2="<<k2<<"): "<<flush;
+  cout << this->GetName()<<" (k1="<<k1<<", k2="<<k2<<"): "<<flush;
 #endif
 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   Closest<CFG,WEIGHT> cl(k1);
-  cl.cdInfo=cdInfo;
-  cl.connectionPosRes=connectionPosRes;
-  cl.connectionOriRes=connectionOriRes;
+  cl.cdInfo=this->cdInfo;
+  cl.connectionPosRes=this->connectionPosRes;
+  cl.connectionOriRes=this->connectionOriRes;
 
   //DisplayCCStats(*pMap); cout << endl;
 
