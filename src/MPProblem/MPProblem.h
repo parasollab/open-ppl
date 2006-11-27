@@ -1,33 +1,14 @@
 #ifndef MPProblem_h
 #define MPProblem_h
 
-#include "SwitchDefines.h"
-#include<sys/time.h>
-
-#include "OBPRMDef.h"
-#include "Roadmap.h"
-#include "Input.h"
-
-#include "Clock_Class.h"
-#include "Stat_Class.h"
-#include "CollisionDetection.h"
-#include "ConnectMap.h"
-#include "DistanceMetrics.h"
-#include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
-
-#include "MPRegion.h"
-
-#include "GeneratePartitions.h"
-
-//#include "ExplicitInstantiation.h"
-
-/* util.h defines EXIT used in initializing the environment*/
 #include "util.h"
 #include "CfgTypes.h"
-#include "MPRegion.h"
 
 class MPStrategy;
+class DistanceMetric;
+class CollisionDetection;
+class Environment;
+template <class CFG, class WEIGHT> class MPRegion;
 
 class MPProblem : public MPBaseObject
 {

@@ -17,6 +17,7 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "util.h"
+#include "DistanceMetrics.h"
 
 Cfg_free::Cfg_free() {
   dof = 6;
@@ -167,25 +168,16 @@ void Cfg_free::GetRandomCfg(Environment* env) {
 }
 
 
-void Cfg_free::GetRandomRay(double incr) {
-  v.clear();
-
+void Cfg_free::GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
   //randomly sample params
+  v.clear();
   for(int i=0; i<DOF(); ++i)
-    v.push_back(OBPRM_drand());
-  Normalize_orientation();
+    v.push_back( double(2.0)*OBPRM_drand() - double(1.0) );
 
-  //normalize to a unit vector
-  double mag = 0;
-  for(int i=0; i<DOF(); ++i)
-    mag = v[i]*v[i];
-  mag = sqrt(mag);
-  transform(v.begin(), v.end(), v.begin(), 
-	    bind2nd(divides<double>(), mag));
+  //scale to appropriate length
+  Cfg_free origin;
+  dm->ScaleCfg(env, incr, origin, *this);
 
-  //scale up
-  transform(v.begin(), v.end(), v.begin(),
-	    bind2nd(multiplies<double>(), incr));
   Normalize_orientation();
 
   /*

@@ -140,7 +140,7 @@ void Cfg_fixed_PRR::GetRandomCfg(double R, double rStep){
 }
 
 
-void Cfg_fixed_PRR::GetRandomRay(double incr) {
+void Cfg_fixed_PRR::GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
   double alpha,beta,z, z1;
   
   alpha = 2.0*M_PI*OBPRM_drand();

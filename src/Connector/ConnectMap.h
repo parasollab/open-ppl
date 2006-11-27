@@ -13,6 +13,7 @@
 //node connection methods
 #include "NodeConnectionMethod.h"
 #include "Closest.h"
+#include "ClosestUnconnected.h"
 #include "ClosestSF.h"
 #include "AllPairsNodeConnection.h"
 //#include "UnconnectedClosest.h"
@@ -164,6 +165,9 @@ ConnectMap() {
 
   ClosestSF<CFG,WEIGHT>* closestsf = new ClosestSF<CFG,WEIGHT>();
   all_node_methods.push_back(closestsf);
+
+  ClosestUnconnected<CFG,WEIGHT>* closestunconnected = new ClosestUnconnected<CFG,WEIGHT>();
+  all_node_methods.push_back(closestunconnected);
 
   //UnconnectedClosest<CFG,WEIGHT>* unconnectedclosest = new UnconnectedClosest<CFG,WEIGHT>();
   //all_node_methods.push_back(unconnectedclosest);

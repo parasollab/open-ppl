@@ -27,6 +27,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 ///OBPRM Headers
 #include "Graph.h"
+#include "GraphAlgo.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 #define DEFAULT_EDGES_PER_VERTEX 10  ///< Slots to reserve in each edgelist
@@ -434,6 +435,212 @@ MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap,
 
 
 }
+
+
+
+
+//////////////FROM MARCO//////////////////
+template<class GRAPH>
+double DijkstraSSSP(GRAPH &g,VID start_vid, VID *far_vid)
+{
+  typename GRAPH::WEIGHT_TYPE _w_;
+  typename GRAPH::CVI cv1;
+  typename GRAPH::VI v1;
+
+  vector<VID> vec_cc;
+  
+  vector<dkinfo> pq; //The priority Queue
+  double  maxdist = g.GetVertexCount() * _w_.MaxWeight();
+  double max_shortest_path_length=0;
+  *far_vid = start_vid;
+
+  GetCC(g, start_vid, vec_cc);
+  vector<VID>::iterator vid_itr;
+  for ( vid_itr = vec_cc.begin(); vid_itr != vec_cc.end(); vid_itr++) 
+  {
+    if (*vid_itr == start_vid) 
+    {
+      pq.push_back( dkinfo(true,*vid_itr,*vid_itr,0) );
+    } else {
+      pq.push_back( dkinfo(false,*vid_itr,-1,-1000) );
+    }
+  }
+
+  sort( pq.begin(), pq.end(),  (dkinfo_compare) );
+
+  while ( pq.size() != 0  && (pq.back().valid()) )
+  {
+    bool relax = false;
+    dkinfo u = pq.back();
+
+    if (u.dist >max_shortest_path_length) { //return value
+      max_shortest_path_length = u.dist;
+      *far_vid = u.vid;
+    }
+
+    pq.pop_back();
+    vector<VID> adj;
+    g.GetDijkstraInfo(u.vid,adj);
+
+    // check all u's successors
+    for (int i = 0; i < adj.size(); i++)
+    {
+      for (int j=0; j < pq.size(); j++)
+      {
+        if (adj[i] == pq[j].vid)
+        {
+          double wt = g.GetEdgeWeight(u.vid,pq[j].vid).Weight();
+          if(!pq[j].valid())
+          {
+            relax = true;
+            pq[j].dist = u.dist + wt;
+            pq[j].predvid = u.vid;
+            pq[j].VertexValid=true;
+          }
+          else if ( pq[j].dist > u.dist + wt )
+          {
+            relax = true;
+            pq[j].dist = u.dist + wt;
+            pq[j].predvid = u.vid;
+            pq[j].VertexValid=true;
+          }
+        }
+      } // endfor
+    } // endfor
+
+    if (relax) sort( pq.begin(), pq.end(),dkinfo_compare);
+  }
+  return max_shortest_path_length;
+}
+
+////////////////END FROM MARCO///////////////
+
+
+
+static bool dkinfo_ptr_compare (const dkinfo* d1, const dkinfo* d2)
+{
+  //d1.print();
+  //d2.print();
+  if ((!d1->valid())&&(!d2->valid()))
+  {
+    //cout<<"Both d1 and d2 are not valid"<<endl;
+    //The returned value does not make much sense
+    return ( d1->dist > d2->dist );
+  }
+  else if(!d1->valid())
+  {
+    //cout<<"D1 not valid"<<endl;
+    //So d1.dist > d2.dist
+    //return true;
+    return true;
+  }
+  else if(!d2->valid())
+  {
+    //cout<<"D2 is not valid"<<endl;
+    //return false;
+    return false;
+  }
+  else
+  {
+    //cout<<"Both are valid"<<endl;   
+    return d1->dist > d2->dist;
+  }
+  
+}
+
+
+
+template<class GRAPH>
+double ComponentDiameter(GRAPH &g,VID start_vid, VID *far_vid)
+{
+  typename GRAPH::WEIGHT_TYPE _w_;
+  typename GRAPH::CVI cv1;
+  typename GRAPH::VI v1;
+
+  vector<VID> vec_cc;
+  double  maxdist = g.GetVertexCount() * _w_.MaxWeight();
+  double max_shortest_path_length=0;
+  *far_vid = start_vid;
+
+  GetCC(g, start_vid, vec_cc);
+  int CC_size = vec_cc.size();
+  vector<dkinfo> pq_dk(CC_size); //The priority Queue -- Data only
+  vector<dkinfo*> pq_ptr; //The REAL priority Queue -- heap
+  pq_ptr.reserve(CC_size);
+  map<VID,dkinfo*> vid_dk_map;
+  for(int i=0; i<CC_size; ++i) {
+    if (vec_cc[i] == start_vid) 
+    {
+      pq_dk[i] = dkinfo(true,start_vid,start_vid,0);
+      pq_ptr.push_back(&(pq_dk[i]));
+    } else {
+      pq_dk[i] = dkinfo(false,vec_cc[i],-1,maxdist);
+    }
+    //pq_ptr[i] = &(pq_dk[i]);
+    vid_dk_map[vec_cc[i]] = &(pq_dk[i]);
+  }
+
+  //make_heap( pq_ptr.begin(), pq_ptr.end(), dkinfo_ptr_compare);
+  //pop_heap(pq_ptr.begin(),pq_ptr.end(),dkinfo_ptr_compare); //
+
+  while ( pq_ptr.size() != 0  && (pq_ptr.back()->valid()) )
+  {
+    bool relax = false;
+    dkinfo* u = pq_ptr.back(); 
+    pq_ptr.pop_back();
+    if(pq_ptr.size() > 0)
+    pop_heap(pq_ptr.begin(),pq_ptr.end(),dkinfo_ptr_compare);
+    if (u->dist >max_shortest_path_length) { //return value
+      max_shortest_path_length = u->dist;
+      *far_vid = u->vid;
+    }
+    vid_dk_map.erase(u->vid); //mapping is no longer needed.
+    vector<VID> adj;
+    g.GetDijkstraInfo(u->vid,adj);
+
+    // check all u's successors
+    for (int i = 0; i < adj.size(); i++)
+    {
+      if(vid_dk_map.count(adj[i]) > 0) {
+        dkinfo* succ= vid_dk_map[adj[i]];
+        double wt = g.GetEdgeWeight(u->vid,succ->vid).Weight();
+        if(!succ->valid()) {
+          //relax = true;
+          succ->dist = u->dist + wt;
+          succ->predvid = u->vid;
+          succ->VertexValid=true;
+          pq_ptr.push_back(succ);
+          push_heap(pq_ptr.begin(), pq_ptr.end(),dkinfo_ptr_compare);
+          pop_heap(pq_ptr.begin(),pq_ptr.end(),dkinfo_ptr_compare);
+        }
+        else if ( succ->dist > u->dist + wt ) {
+          relax = true;
+          succ->dist = u->dist + wt;
+          succ->predvid = u->vid;
+          succ->VertexValid=true;
+        }
+      }
+    } // endfor
+    if (relax && pq_ptr.size() > 0) { 
+      make_heap( pq_ptr.begin(), pq_ptr.end(),dkinfo_ptr_compare);
+      pop_heap(pq_ptr.begin(),pq_ptr.end(),dkinfo_ptr_compare);
+    }
+  }
+  return max_shortest_path_length;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

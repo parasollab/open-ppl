@@ -30,6 +30,8 @@ DistanceMetric() {
 
   CenterOfMassDistance* com = new CenterOfMassDistance();
   all.push_back(com);
+
+  m_distance_time = 0;
 }
 
 
@@ -78,7 +80,8 @@ DistanceMetric(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
       LOG_WARNING_MSG("  I don't know: " << *pChild);
     }
   }
-  
+
+  m_distance_time = 0;
   LOG_DEBUG_MSG("~DistanceMetric::DistanceMetric()");
 }
 
@@ -326,6 +329,13 @@ Distance(Environment* env, const Cfg* _c1, const Cfg* _c2) {
   return selected[0]->Distance(env, *_c1, *_c2);
 }
 
+void
+DistanceMetric::
+ScaleCfg(Environment*env, double length, Cfg& o, Cfg& c) {
+  return selected[0]->ScaleCfg(env, length, o, c);
+}
+
+
 //////////
 
 DistanceMetricMethod::
@@ -384,6 +394,46 @@ DistanceMetricMethod::
 PrintOptions(ostream& _os) const {
   _os << "    " << GetName() << " ";
   _os << endl;
+}
+
+void
+DistanceMetricMethod::
+ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c) {
+  length = abs((int)length); //a distance must be positive
+
+  Cfg* origin = &o;//o.CreateNewCfg();
+  Cfg* outsideCfg = c.CreateNewCfg();
+
+  // first find an outsite configuration with sufficient size
+  while(Distance(env, *origin, *outsideCfg) < 2*length)
+    for(int i=0; i<outsideCfg->DOF(); ++i)
+      outsideCfg->SetSingleParam(i, 2*outsideCfg->GetSingleParam(i));
+  
+  // now, using binary search  find a configuration with the approximate
+  // length
+  Cfg* aboveCfg = outsideCfg->CreateNewCfg();
+  Cfg* belowCfg = origin->CreateNewCfg();
+  Cfg* currentCfg = c.CreateNewCfg();
+  while (1) {
+    for(int i=0; i<currentCfg->DOF(); ++i)
+      currentCfg->SetSingleParam(i, (aboveCfg->GetSingleParam(i) + 
+				     belowCfg->GetSingleParam(i)) / 2);
+    double magnitude = Distance(env, *origin, *currentCfg);
+    if( (magnitude >= length*0.9) && (magnitude <= length*1.1)) 
+      break;
+    if(magnitude>length) 
+      aboveCfg->equals(*currentCfg);
+    else 
+      belowCfg->equals(*currentCfg); 
+  }
+  for(int i=0; i<c.DOF(); ++i)
+    c.SetSingleParam(i, currentCfg->GetSingleParam(i));
+
+  //delete origin;
+  delete outsideCfg;
+  delete aboveCfg;
+  delete belowCfg;
+  delete currentCfg;
 }
 
 
@@ -450,18 +500,33 @@ ScaledDistance(Environment* env,const Cfg& _c1, const Cfg& _c2, double sValue) {
   for(int i=0; i< pTmp->posDOF(); ++i) {
     //std::pair<double,double> range = env->GetBoundingBox()->GetRange(i);
     //normalized_vec.push_back(pTmp->GetSingleParam(i) / (range.second - range.first));
-    pos_mag += sqr(pTmp->GetSingleParam(i) / max_range);
+     pos_mag += sqr(pTmp->GetSingleParam(i) / max_range);
+    //pos_mag += sqr(pTmp->GetSingleParam(i)); // removed normalization 
   }
   //pos_mag = sqrt(pos_mag);
   //cout << "Normalized pos distance = " << sqrt(pos_mag) << endl;
   /*double dReturn = sqrt(  sValue*sqr(pTmp->PositionMagnitude()) + 
                           (1.0 - sValue)*sqr(pTmp->OrientationMagnitude()) );*/
-  
+
   double dReturn = sqrt(  sValue*pos_mag + 
                           (1.0 - sValue)*sqr(pTmp->OrientationMagnitude()) );
   delete pTmp;
   return dReturn;
 }
+
+void
+EuclideanDistance::
+ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c) {
+  double original_length = this->Distance(env, o, c);
+  double diff;
+  do {
+    for(int i=0; i<c.DOF(); ++i)
+      c.SetSingleParam(i, (length/original_length)*c.GetSingleParam(i));
+    original_length = this->Distance(env, o, c);
+    diff = length - original_length;
+  } while((diff > 0.1) || (diff < -0.1)); 
+}
+
 
 //////////
 
@@ -847,7 +912,7 @@ CreateCopy() {
 
 double 
 CenterOfMassDistance::
-Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
+Distance(const Cfg& _c1, const Cfg& _c2) {
   Vector3D d = _c1.GetRobotCenterPosition()-_c2.GetRobotCenterPosition();
   return d.magnitude();
 }

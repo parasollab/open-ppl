@@ -210,6 +210,8 @@ public:
 	num_param<int>    addAllEdges;        ///< Add all edges, valid or not, to roadmap. (For node connection)
 	num_param<int>    seedByChunk;        ///< Seed for each chunk. (For node generation)
 
+	num_param<long> seed;
+
         n_str_param       collPair;             ///< Collosion Pair for OBPRM
         n_str_param       freePair;             ///< Free Pair for OBPRM
 

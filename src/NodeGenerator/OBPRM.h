@@ -930,7 +930,7 @@ GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
   vector<CFG> tmp, preshells, shells, surface;
   for(int i = 0 ; i < obstSeeds.size() ; i++) {
     //Generate Random direction
-    CFG incrCfg = GenerateRandomDirection(env,obstSeeds[i]);     
+    CFG incrCfg = GenerateRandomDirection(env,dm,obstSeeds[i]);     
     // Generate outside cfg
     CFG OutsideNode = GenerateOutsideCfg(env,Stats,cd,robot,obstacle,
 					 obstSeeds[i],incrCfg);
@@ -1055,11 +1055,11 @@ PointsOnMultiBody(MultiBody* mbody, int npts, int select) {
   // for obstacle, sample first link. (in fact, only ONE link?! )
   if(nFree)
     for(int j = 0 ; j < npts ; j++){
-      pts.push_back(PointOnBody(mbody->GetFreeBody(nFree-1),select,1));
+      pts.push_back(OBPRM<CFG>::PointOnBody(mbody->GetFreeBody(nFree-1),select,1));
     }
   else
     for(int j = 0 ; j < npts ; j++){
-      pts.push_back(PointOnBody(mbody->GetFixedBody(0), select, 0));
+      pts.push_back(OBPRM<CFG>::PointOnBody(mbody->GetFixedBody(0), select, 0));
     }
   
   return pts;

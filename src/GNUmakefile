@@ -39,6 +39,7 @@ endif
 #ROBOT = 
 #ROBOT_DEF = -DPMPRigid
 ROBOT_DEF = -DPMPSerial
+#ROBOT_DEF = -DPMPCfg2D
 
 include $(STAPL)/GNUmakefile.STAPLdefaults
 include $(OBPRM)/GNUmakefile.OBPRMdefaults

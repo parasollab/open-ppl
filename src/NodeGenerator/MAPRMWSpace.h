@@ -36,7 +36,7 @@ class BasicMAPRM : public NodeGenerationMethod<CFG> {
 			     DistanceMetric *, vector<CFG>& nodes);
 
   void MoveOutObstacle(CFG & cfg, Environment *_env, Stat_Class& Stats,
-		       CollisionDetection* cd);
+		       CollisionDetection* cd, DistanceMetric* dm);
   void MoveOutObstacle(CFG & cfg, Vector3D & dir, Environment *_env, 
 		       Stat_Class& Stats, CollisionDetection* cd);
 
@@ -259,7 +259,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
       tmpStr = Callee+Method+CallCnt;
       collided = cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr);
       if( collided ){
-	MoveOutObstacle(cfg,_env, Stats, cd);
+	MoveOutObstacle(cfg,_env, Stats, cd, dm);
 	CallCnt="2";
 	tmpStr = Callee+Method+CallCnt;
 	collided = cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr);
@@ -365,7 +365,7 @@ template <class CFG>
 void 
 BasicMAPRM<CFG>::
 MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
-		CollisionDetection* cd) {
+		CollisionDetection* cd, DistanceMetric* dm) {
 
   std::string Callee(GetName()), 
               Method("::MoveOutObstacle"),
@@ -378,7 +378,7 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
   // Generate Random direction
   CFG move_out_dir_cfg;
   move_out_dir_cfg.GetRandomRay( min(_env->GetPositionRes(),
-				     _env->GetOrientationRes() );
+				     _env->GetOrientationRes(), _env, dm);
   */
   long num_rays = m_iRays.GetValue();  // how many rays do we try to get random cfg out of collision
   CFG* rays=new CFG[num_rays]; //testing directions
@@ -388,7 +388,7 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
   //init arrays
   for( int iR=0;iR<num_rays; iR++ ){
     rays[iR].GetRandomRay( min(_env->GetPositionRes(),
-			       _env->GetOrientationRes()) );	
+			       _env->GetOrientationRes()), _env, dm);	
     pos[iR]=cfg; //all start from given cfg
   }
   

@@ -175,7 +175,8 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
    *@see GenerateInsideCfg
    */
   
-  CFG GenerateRandomDirection(Environment *env, const CFG &InsideNode);
+  CFG GenerateRandomDirection(Environment *env, DistanceMetric* dm,
+			      const CFG &InsideNode);
 
   /**Returns a configuration representing a vector in a random 
    *direction for Obstacle Based node sampling.
@@ -633,7 +634,7 @@ if(m_balanced == 0) {
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push Out of Obs");
       CFG r_dir;
       r_dir.GetRandomRay(min(_env->GetPositionRes(),
-                         _env->GetOrientationRes()));
+                         _env->GetOrientationRes()), _env, dm);
       bool pushed_enough = false;
       bool outofbb = false;
       do {
@@ -653,7 +654,7 @@ if(m_balanced == 0) {
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push to Obs");
       CFG r_dir;
       r_dir.GetRandomRay(min(_env->GetPositionRes(),
-                         _env->GetOrientationRes()));
+                         _env->GetOrientationRes()), _env, dm);
       bool pushed_enough = false;
       bool outofbb = false;
       do {
@@ -698,7 +699,7 @@ if(m_balanced == 0) {
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push Out of Obs");
       CFG r_dir;
       r_dir.GetRandomRay(min(_env->GetPositionRes(),
-                         _env->GetOrientationRes()));
+                         _env->GetOrientationRes()), _env, dm);
       bool pushed_enough = false;
       bool outofbb = false;
       do {
@@ -720,7 +721,7 @@ if(m_balanced == 0) {
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push to Obs");
       CFG r_dir;
       r_dir.GetRandomRay(min(_env->GetPositionRes(),
-                         _env->GetOrientationRes()));
+                         _env->GetOrientationRes()), _env, dm);
       bool pushed_enough = false;
       bool outofbb = false;
       do {
@@ -838,10 +839,10 @@ GenerateInsideCfg(Environment* _env, Stat_Class& Stats,
 template <class CFG>
 CFG
 BasicOBPRM<CFG>::
-GenerateRandomDirection(Environment* env, const CFG &InsideNode) {
+GenerateRandomDirection(Environment* env, DistanceMetric* dm, const CFG &InsideNode) {
   CFG randomDir;
   if (InsideNode.InBoundingBox(env))
-    randomDir.GetRandomRay(EXPANSION_FACTOR * env->GetPositionRes());
+    randomDir.GetRandomRay(EXPANSION_FACTOR * env->GetPositionRes(), env, dm);
   else { //ensure randomDir goes toward BBox
     CFG insideTmp;
     insideTmp.GetRandomCfg(env);
@@ -989,7 +990,7 @@ GenCfgsFromCObst(Environment* env, Stat_Class& Stats,
   for(i = 0; i < obstSeeds.size(); i++) {
     
     CFG incrCfg;
-    incrCfg.GetRandomRay(EXPANSION_FACTOR*env->GetPositionRes());
+    incrCfg.GetRandomRay(EXPANSION_FACTOR*env->GetPositionRes(), env, dm);
     
     CFG OutsideNode =
       GenerateOutsideCfg(env,Stats,cd,robot,obstacle,obstSeeds[i],incrCfg);

@@ -1,11 +1,8 @@
 #ifndef _Boundary_h_
 #define _Boundary_h_
 
-#include <vector>
 #include "Vectors.h"
-#include "Parameters.h"
 #include "util.h"
-class MPProblem;
 
 ///\todo add MPBaseObject defautl constructor
 class Boundary : public MPBaseObject{

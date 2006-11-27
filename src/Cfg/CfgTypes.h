@@ -25,4 +25,9 @@ typedef Cfg_fixed_tree CfgType;
 typedef DefaultWeight WeightType;
 #endif
 
+#ifdef PMPCfg2D
+typedef Cfg_2D CfgType;
+typedef DefaultWeight WeightType;
+#endif
+
 #endif

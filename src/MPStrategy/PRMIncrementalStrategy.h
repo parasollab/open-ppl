@@ -48,6 +48,7 @@ class PRMIncrementalStrategy : public MPStrategyMethod {
   virtual void Characterize(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_Class& Stats);
 
   virtual void cc_local_area(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_Class& Stats);
+  virtual void merge_node_stats(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_Class& Stats);
 
   bool CanConnectComponents(vector < CfgType > & cc_a, vector < CfgType > & cc_b, Stat_Class&);
 
@@ -55,6 +56,9 @@ class PRMIncrementalStrategy : public MPStrategyMethod {
     ConnectionsWitnessToRoadmap(vector < CfgType > & witness_cfgs, Roadmap< CfgType, WeightType > *rdmp, Stat_Class&);
 
   virtual bool IsFinished();
+
+  double cc_max_length(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc);
+  double cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc);
 
   virtual void operator()() {
     int newRegionId = GetMPProblem()->CreateMPRegion();

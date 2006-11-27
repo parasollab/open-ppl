@@ -33,6 +33,7 @@ Input::Input():
         addPartialEdge   ("-addPartialEdge",     0,  0,    1),
 	addAllEdges      ("-addAllEdges",        0,  0,    1),
 	seedByChunk      ("-seedByChunk",        1,  0,    1),
+	seed             ("-seed", 0x1234ABCD, LONG_MIN, LONG_MAX),
         posres           ("-posres",          0.05, -1000, 1000),
         orires           ("-orires", ORIENTATION_RES, -1000, 1000),
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
@@ -47,6 +48,7 @@ Input::Input():
     addPartialEdge.PutDesc   ("INTEGER","");
     addAllEdges.PutDesc      ("INTEGER","");
     seedByChunk.PutDesc   ("INTEGER"," seed for each chunk");
+    seed.PutDesc("LONG","base seed for the run");
 
     envFile.PutDesc    ("STRING ","");
     mapFile.PutDesc    ("STRING ","");
@@ -261,6 +263,7 @@ void Input::ReadCommandLine(int argc, char** argv){
       } else if ( addPartialEdge.AckCmdLine(&i, argc, argv) ) {
       } else if ( addAllEdges.AckCmdLine(&i, argc, argv) ) {
       } else if ( seedByChunk.AckCmdLine(&i, argc, argv) ) {
+      } else if ( seed.AckCmdLine(&i, argc, argv) ) {
       } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
       } else if ( bbox_ref.AckCmdLine(&i, argc, argv) ) {
       } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
@@ -379,6 +382,7 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; addPartialEdge.PrintUsage(_os);
 	_os << "\n  "; addAllEdges.PrintUsage(_os);
 	_os << "\n  "; seedByChunk.PrintUsage(_os);
+	_os << "\n  "; seed.PrintUsage(_os);
         _os << "\n  "; bbox.PrintUsage(_os);
 	_os << "\n  "; bbox_ref.PrintUsage(_os);
         _os << "\n  "; bbox_scale.PrintUsage(_os);
@@ -418,6 +422,7 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"addPartialEdge"<<"\t"<<addPartialEdge.GetValue();
   _os <<"\n"<<setw(FW)<<"addAllEdges"<<"\t"<<addAllEdges.GetValue();
   _os <<"\n"<<setw(FW)<<"seedByChunk"<<"\t"<<seedByChunk.GetValue();
+  _os <<"\n"<<setw(FW)<<"seed"<<"\t"<<seed.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox"<<"\t"<<bbox.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox"<<"\t"<<bbox_ref.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox_scale"<<"\t"<<bbox_scale.GetValue();
@@ -461,6 +466,8 @@ Input::PrintDefaults(){
             addAllEdges.GetDefault() << endl << endl;
    cout << setw(FW) << "seed by chunk " << " (" << seedByChunk.GetFlag() << ") : " <<
             seedByChunk.GetDefault() << endl << endl;
+   cout << setw(FW) << "seed " << " (" << seed.GetFlag() << ") : " <<
+            seed.GetDefault() << endl << endl;
    cout << setw(FW) << "position resolution" << " (" << posres.GetFlag() << ") : " <<
             posres.GetDefault() << endl << endl;
    cout << setw(FW) << "orientation resolution" << " (" << orires.GetFlag() << ") : " <<

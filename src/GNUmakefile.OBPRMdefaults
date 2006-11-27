@@ -177,4 +177,4 @@ PQPLIB_DIR  = ${PQP_DIR}/lib
 PQPLIB      = -L${PQPLIB_DIR} -lPQP
 PQP_INCL    = -I${PQP_DIR}/include
 
-PMPL_INCL = -I$(OBPRM)/Cfg -I$(OBPRM)/Connector -I$(OBPRM)/DistanceMetric -I$(OBPRM)/LocalPlanner -I$(OBPRM)/MapEvaluator -I$(OBPRM)/MPProblem -I$(OBPRM)/MPStrategy -I$(OBPRM)/NodeGenerator -I$(OBPRM)/Utilities -I$(OBPRM)/ValidityChecker -I$(OBPRM)/MPProblem/Geometry -I$(OBPRM)/trash 
+PMPL_INCL = -I$(OBPRM)/Cfg -I$(OBPRM)/Connector -I$(OBPRM)/DistanceMetric -I$(OBPRM)/LocalPlanner -I$(OBPRM)/MapEvaluator -I$(OBPRM)/MPProblem -I$(OBPRM)/MPStrategy -I$(OBPRM)/NodeGenerator -I$(OBPRM)/Utilities -I$(OBPRM)/ValidityChecker -I$(OBPRM)/MPProblem/Geometry -I$(OBPRM)/trash -I$(OBPRM)/MPStrategy/Entropy

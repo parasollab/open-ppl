@@ -377,26 +377,23 @@ public:
 
 
    bool IsCached(VID _v1, VID _v2) {
-    if(m_lpcache.count(std::pair<VID,VID>(_v1,_v2)) > 0)
+    if(m_lpcache.count(make_pair(min(_v1,_v2), max(_v1,_v2))) > 0)
       return true;
     else
       return false;
   }
 
   bool GetCache(VID _v1, VID _v2) {
-    if(IsCached(_v1,_v2)) {
-      return m_lpcache[std::pair<VID,VID>(_v1,_v2)];
-    }
-    else
-    {
-      cout << "LocalPlannerMethod::GetCache -- Cache Error " << endl;
-      exit(-1);
-    }
+//    if(IsCached(_v1,_v2)) {
+      return m_lpcache[make_pair(min(_v1,_v2), max(_v1,_v2))];
+//    } else {
+//      cout << "LocalPlannerMethod::GetCache -- Cache Error " << endl;
+//      exit(-1);
+//    }
   }
 
   void SetCache(VID _v1, VID _v2, bool _b) {
-    m_lpcache[std::pair<VID,VID>(_v1,_v2)] = _b;
-    m_lpcache[std::pair<VID,VID>(_v2,_v1)] = _b;
+    m_lpcache[make_pair(min(_v1,_v2),max(_v1,_v2))] = _b;
   }
   
   //@}

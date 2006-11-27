@@ -1,32 +1,7 @@
 #ifndef MPStrategyMethod_h
 #define MPStrategyMethod_h
 
-
-
-
-#include "SwitchDefines.h"
-#include<sys/time.h>
-
-#include "OBPRMDef.h"
-#include "Roadmap.h"
-#include "Input.h"
-
-#include "Clock_Class.h"
-#include "Stat_Class.h"
-#include "CollisionDetection.h"
-#include "ConnectMap.h"
-#include "DistanceMetrics.h"
-#include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
-
-#include "GeneratePartitions.h"
-
-/* util.h defines EXIT used in initializing the environment*/
 #include "util.h"
-#include "MPProblem.h"
-#include "MPCharacterizer.h"
-
-#include "MapEvaluator.h"
 
 ///Will be used to derive IMP,PRM,RRT,metaplanner, etc.
 class MPStrategyMethod : public MPBaseObject 

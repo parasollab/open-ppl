@@ -76,7 +76,7 @@ class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
 //   Connection Method:  RRTexpand
 template <class CFG, class WEIGHT>
 RRTexpand<CFG,WEIGHT>::RRTexpand():ComponentConnectionMethod<CFG,WEIGHT>() { 
-  element_name = "RRTexpand"; //in ConnectCCs there is RRTexpand
+  this->element_name = "RRTexpand"; //in ConnectCCs there is RRTexpand
 
   SetDefault();
 }
@@ -162,7 +162,7 @@ ParseCommandLine(std::istringstream &is) {
         throw BadUsage();
     }
   } catch (BadUsage) {
-    cerr << "Error in \'"<< GetName()<<"\' parameters" << endl;
+    cerr << "Error in \'"<< this->GetName()<<"\' parameters" << endl;
     PrintUsage(cerr);
     exit(-1);
   }
@@ -175,7 +175,7 @@ RRTexpand<CFG,WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << "\tINT INT INT INT INT (iter:" << ITERATIONS
       << " factor:" << STEP_FACTOR
       << " cc:" << SMALL_CC
@@ -191,7 +191,7 @@ template <class CFG, class WEIGHT>
 void
 RRTexpand<CFG,WEIGHT>::
 PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << "(iterations: " << iterations
       << ", stepFactor: " <<  stepFactor
       << ", smallcc: " << smallcc 
@@ -286,9 +286,9 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
       //find closest Cfg in map from random cfg.
       vector<  pair<CFG, CFG> > kp;
       if (U.size()>0) 
-        kp = dm->FindKClosestPairs(env,U[0],verticesData,1);
+        kp = dm->KClosest(env,U[0],verticesData,1);
       else
-        kp = dm->FindKClosestPairs(env,x_rand,verticesData,1);
+        kp = dm->KClosest(env,x_rand,verticesData,1);
 
 	  //if there is closet vertex.
       if (kp.size()>0) {
@@ -297,7 +297,8 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
 
          CFG u;
 	 bool close = FALSE;
-	 int translate_or_not = OBPRM_lrand();
+	 //int translate_or_not = OBPRM_lrand();
+	 int translate_or_not = 1;
 	 //select direction
          if ( connecting ) {
 
@@ -353,7 +354,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
                }
             tick.Increment(incr); //next configuration to check
 
-            if( (tick.isCollision(env,Stats,cd,*cdInfo)) || !(tick.InBoundingBox(env)) ) {
+            if( (tick.isCollision(env,Stats,cd,*this->cdInfo)) || !(tick.InBoundingBox(env)) ) {
                collisionDistance = dm->Distance(env, cfg, tick);
                collision = true;
                }
@@ -383,9 +384,9 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
 
 	 LPOutput<CFG,WEIGHT> lpOutput;
 	 if (x_new.InBoundingBox(env) && attemptConnection
-	     && !x_new.isCollision(env,Stats,cd,*cdInfo)
+	     && !x_new.isCollision(env,Stats,cd,*this->cdInfo)
 	     && !rm->m_pRoadmap->IsEdge(x_near,x_new)
-	     && lp->IsConnected(rm->GetEnvironment(),Stats,cd,dm,x_near,x_new,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))) {
+	     && lp->IsConnected(rm->GetEnvironment(),Stats,cd,dm,x_near,x_new,&lpOutput,this->connectionPosRes, this->connectionOriRes, (!addAllEdges))) {
 	        //xnew = x_new;
                 bool settoConnect = FALSE;
                 // add x_new and connecting edge to x_near into roadmap
@@ -394,9 +395,9 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
                    x_new = u; 
                    settoConnect = TRUE;
                    if (x_new.InBoundingBox(env) && attemptConnection
-                       && !x_new.isCollision(env,Stats,cd,*cdInfo)
+                       && !x_new.isCollision(env,Stats,cd,*this->cdInfo)
 		       && !rm->m_pRoadmap->IsEdge(x_near,x_new)
-		       && lp->IsConnected(rm->GetEnvironment(),Stats,cd,dm,x_near,x_new,&lpOutput,connectionPosRes, connectionOriRes, (!addAllEdges))) {
+		       && lp->IsConnected(rm->GetEnvironment(),Stats,cd,dm,x_near,x_new,&lpOutput,this->connectionPosRes, this->connectionOriRes, (!addAllEdges))) {
                          CFG t=CFG(x_new);
                          rm->m_pRoadmap->AddVertex(t);
                          rm->m_pRoadmap->AddEdge(x_near, x_new, lpOutput.edge);
@@ -476,7 +477,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       bool toConnect = FALSE;
       RRT(&submap1, Stats,
 	  iterations,
-	  stepFactor * connectionPosRes,
+	  stepFactor * this->connectionPosRes,
 	  o_clearance, clearance_from_node,
 	  dummyU,
 	  cd, lp, dm, toConnect,FALSE,
@@ -520,13 +521,14 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   submap1.environment = _rm->GetEnvironment();
   //vector<VID> cc;
   //GetCC(*(_rm->m_pRoadmap),(*cc1).second ,cc);
-  ModifyRoadMap(&submap1,_rm,vids1);
+  //ModifyRoadMap(&submap1,_rm,vids1);
+  submap1.m_pRoadmap->MergeRoadMap(_rm->m_pRoadmap,vids1);
   vector<CFG> dummyU;
   if (vids1.size()<= smallcc) {
     bool toConnect = FALSE;
     RRT(&submap1, Stats,
 	iterations,
-	stepFactor * connectionPosRes,
+	stepFactor * this->connectionPosRes,
 	o_clearance, clearance_from_node,
 	dummyU,
 	cd, lp, dm, toConnect,FALSE,
@@ -534,7 +536,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     vector<VID> verts;
     (&submap1)->m_pRoadmap->GetVerticesVID(verts);
     //-- map = map + submap
-    ModifyRoadMap(_rm,&submap1,verts);
+    //ModifyRoadMap(_rm,&submap1,verts);
+    _rm->m_pRoadmap->MergeRoadMap(submap1.m_pRoadmap,verts);
   }
   submap1.environment = NULL;
 
@@ -543,13 +546,14 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   submap2.environment = _rm->GetEnvironment();
   //vector<VID> cc;
   //GetCC(*(_rm->m_pRoadmap),(*cc1).second ,cc);
-  ModifyRoadMap(&submap1,_rm,vids2);
+  //ModifyRoadMap(&submap1,_rm,vids2);
+  submap2.m_pRoadmap->MergeRoadMap(_rm->m_pRoadmap,vids1);
   dummyU.clear();
   if (vids2.size()<= smallcc) {
     bool toConnect = FALSE;
     RRT(&submap2, Stats,
 	iterations,
-	stepFactor * connectionPosRes,
+	stepFactor * this->connectionPosRes,
 	o_clearance, clearance_from_node,
 	dummyU,
 	cd, lp, dm, toConnect,FALSE,
@@ -557,7 +561,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     vector<VID> verts;
     (&submap2)->m_pRoadmap->GetVerticesVID(verts);
     //-- map = map + submap
-    ModifyRoadMap(_rm,&submap2,verts);
+    //ModifyRoadMap(_rm,&submap2,verts);
+    _rm->m_pRoadmap->MergeRoadMap(submap2.m_pRoadmap,verts);
   }
   submap2.environment = NULL;
 

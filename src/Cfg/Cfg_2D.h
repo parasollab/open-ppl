@@ -55,7 +55,7 @@ public:
 
   virtual void GetRandomCfg(double R, double rStep);
   virtual void GetRandomCfg(Environment *env);
-  virtual void GetRandomRay(double incr);
+  virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm);
 
   virtual void equals(const Cfg&);
 

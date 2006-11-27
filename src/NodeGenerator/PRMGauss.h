@@ -267,6 +267,7 @@ PrintOptions(ostream& out_os){
   out_os << " num nodes = " << this->numNodes.GetValue() << " ";
   out_os << " exact = " << this->exactNodes.GetValue() << " ";
   out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
+  out_os << " gauss_d = " << this->gauss_d.GetValue() << " ";
   out_os << endl;
 }
 
@@ -326,19 +327,21 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-GaussPRM::GenerateNodes"); Callee = Callee+Method;}
   
-  //generate random number with normal distribution
-  //this is the distance it will use to compute Cfg2
-
-  double gauss_dist = Gaussian(gauss_d.GetValue(), 0.5); 
-  
   // generate in bounding box
   //for (int i=0,newNodes=0; i < this->numNodes.GetValue() || newNodes<1 ; i++) {
   for(int attempts=0,newNodes=0,success_cntr=0;  
       success_cntr < this->numNodes.GetValue() ; attempts++) { 
+    //generate random number with normal distribution
+    //this is the distance it will use to compute Cfg2
+
+    double gauss_mean = fabs(gauss_d.GetValue());
+    double gauss_std = sqrt(gauss_mean);
+    double gauss_dist = fabs(Gaussian( gauss_mean, gauss_mean));
+
     // cfg1 & cfg2 are generated to be inside bbox
     CFG cfg1, cfg2, incr;
     cfg1.GetRandomCfg(_env);
-    incr.GetRandomRay(gauss_dist);
+    incr.GetRandomRay(gauss_dist, _env, dm);
     cfg2.add(cfg1, incr);
 
     // because cfg2 is modified it must be checked again

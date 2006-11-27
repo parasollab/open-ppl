@@ -102,13 +102,16 @@ public:
         /**This function returns a Polyhedron whose vertices and normals are represented in 
           *world coordinate.
           */
-        virtual GMSPolyhedron & GetWorldPolyhedron();
+       virtual GMSPolyhedron & GetWorldPolyhedron();
+       virtual GMSPolyhedron & GetWorldBoundingBox();
 
         ///Update internal data, worldPolyhedron, accroding current world transformation of this body.
         virtual void ChangeWorldPolyhedron();
 
         ///Return the local coordinates of the body
         virtual GMSPolyhedron & GetPolyhedron();
+        virtual GMSPolyhedron & GetBoundingBoxPolyhedron();
+
 
         ///Get the owner of this Body which is set in constrcutor.
         MultiBody * GetMultiBody();
@@ -307,6 +310,8 @@ protected:
     bool CenterOfMassAvailable;             ///<Is the center of mass valid?
     Vector3D CenterOfMass;                  ///<The center of mass of a given polyhedron
     double boundingBox[6];                  ///<The Box which enclose every sinlge point on this Body
+    GMSPolyhedron bb_polyhedron;
+    GMSPolyhedron bb_world_polyhedron;
     //@}
 
     /*@name Connection Related Data*/

@@ -57,7 +57,6 @@ class Cfg_free_tree : public Cfg_free {
   //===================================================================
   virtual void GetRandomCfg(double R, double rStep);
   virtual void GetRandomCfg(Environment* env);
-  virtual void GetRandomRay(double incr);
 
   /// Node Generation methods: OBPRM
   virtual bool GenerateOverlapCfg(Environment *env, int robot,

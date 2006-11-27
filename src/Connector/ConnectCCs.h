@@ -116,7 +116,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 		 bool addAllEdges,
 		 vector<VID>& vids1, vector<VID>& vids2);
 
- private:
+// private:
   //////////////////////
   // Data
 
@@ -285,6 +285,9 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int c1 = 0; c1 < cc1vec.size(); c1++){
     for (int c2 = 0; c2 < cc2vec.size(); c2++){
+      if(_rm->IsCached(cc1vec[c1], cc2vec[c2]) && !_rm->GetCache(cc1vec[c1], cc2vec[c2])) {
+        continue;
+      }
       Stats.IncConnections_Attempted();
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
           && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
@@ -335,6 +338,9 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int i = 0; i < kp.size(); i++) {
+    if(_rm->IsCached(kp[i].first, kp[i].second) && !_rm->GetCache(kp[i].first, kp[i].second)) {
+      continue;
+    }
     Stats.IncConnections_Attempted();
     if(!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
        && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,

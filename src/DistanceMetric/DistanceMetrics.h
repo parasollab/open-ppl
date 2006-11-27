@@ -22,6 +22,7 @@
 typedef int VID;
 #endif
 
+#include "Clock_Class.h"
 /////////////////////////////////////////////////////////////////////////////////////////
 
 const double MAX_DIST =  1e10;
@@ -101,6 +102,7 @@ class DistanceMetric : MPBaseObject{
   virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
   virtual double Distance(Environment* env, const Cfg* _c1, const Cfg* _c2);
 
+  void ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c);
 
   /**Find k pairs of closest Cfgs from a given Cfg to 
    *all Cfgs in a given vector.
@@ -243,6 +245,16 @@ class DistanceMetric : MPBaseObject{
             CFG& cc,
             vector<CFG>& v,
             unsigned int k);
+  // added by samuel
+  // this function will return indices into v that are the k
+  // closest (for direct access outside of function)
+  // 
+  template <class CFG>
+    vector< int > KClosestByIndex(Environment* env,
+				  CFG& cc,
+				  vector<CFG>& v,
+				  unsigned int k);
+  
   template <class CFG, class WEIGHT>
     vector<pair<VID,VID> > KClosest(Roadmap<CFG,WEIGHT>* rdmp,
             vector<CFG>& v1,
@@ -260,6 +272,9 @@ class DistanceMetric : MPBaseObject{
             CFG& cc,
             vector<CFG>& v,
             unsigned int k);
+  public:
+    double m_distance_time;
+
  protected:
   bool ParseCommandLine(int argc, char** argv);
 
@@ -279,6 +294,17 @@ class DIST_Compare : public binary_function<const pair<pair<T,T>,double>,
       const pair<pair<T,T>,double> _cc2) {
     return (_cc1.second < _cc2.second);
   }
+};
+
+template <class CFG>
+class CFG_DIST_COMPARE_INDEX : public binary_function<const pair<int,double>, 
+						      const pair<int,double>, bool> {
+ public:
+  bool operator()(const pair<int,double> _cc1,
+		  const pair<int,double> _cc2) {
+    return (_cc1.second < _cc2.second);
+  }
+  
 };
 
 template <class CFG>
@@ -334,6 +360,8 @@ class DistanceMetricMethod {
   virtual DistanceMetricMethod* CreateCopy() = 0;
 
   virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) = 0;
+  virtual void ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c);
+
  protected:
   int type; ///<WS or CS. Used to classify metrics.
 };
@@ -361,6 +389,7 @@ class EuclideanDistance : public DistanceMetricMethod {
     *@see Cfg::PositionMagnitude and OrientationMagnitude
     */
   virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
+  virtual void ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c);
 
  protected:
   virtual double ScaledDistance(Environment* env, const Cfg& _c1, const Cfg& _c2, double sValue);
@@ -488,7 +517,10 @@ class CenterOfMassDistance : public DistanceMetricMethod {
     *This method only Euclidean Distance of position part and 
     *assumed that the first 3 dimension of Cfg are for position.
     */
-  virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
+  virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
+    return Distance(_c1, _c2);
+  }
+  virtual double Distance(const Cfg& _c1, const Cfg& _c2);
 };
 
 #include "Roadmap.h"
@@ -600,6 +632,9 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
   if (k<=0) 
     return pairs;
 
+  Clock_Class distance_time;
+  distance_time.StartClock("distance_time");
+
   if(vec1.size()==vec2.size() && 
      equal(vec1.begin(), vec1.end(), vec2.begin()) ){
     return FindKClosestPairs(rm, vec1, k);
@@ -650,6 +685,8 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
   pairs.push_back( kall[p].first );
   }//endif vec1 == vec2 
   
+  distance_time.StopClock();
+  m_distance_time += distance_time.GetClock_SEC();
   return pairs;
 }
 //----------------------------------------------------------------------
@@ -666,6 +703,8 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
   // if valid number of pairs requested
   if (k<=0) 
     return pairs;
+  Clock_Class distance_time;
+  distance_time.StartClock("distance_time");
 
   Environment* _env = rm->GetEnvironment();
   RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
@@ -710,6 +749,9 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
 
   }//endfor c1
 
+  distance_time.StopClock();
+  m_distance_time += distance_time.GetClock_SEC();
+
   return pairs;
 }
 
@@ -733,6 +775,84 @@ KClosest(Environment *env,
   return kpairs;
 }
 
+// sam's function
+
+// this function will return indices into v that are the k
+// closest (for direct access outside of function)
+// 
+//-----------------------------------------------------------------------
+// Input: CFG cc, vector of CFG v, and k
+// Process: finds the k closest cfgs in v to cc (cfg_v)
+// Output: vector indices into v of k closest to cc
+//-----------------------------------------------------------------------
+template <class CFG>
+vector< int >
+DistanceMetric::
+KClosestByIndex(Environment *env, 
+		CFG &cc, vector<CFG>& v, unsigned int k) {
+  vector< int > kpairs;
+  kpairs.reserve(k); //it won't grow bigger than k
+  if (k<=0) //no valid number of pairs requested
+    return kpairs;
+  
+   Clock_Class distance_time;
+  distance_time.StartClock("distance_time");
+
+  CFG invalid;
+  invalid.InvalidData(); //make an invalid all kpairs initially
+  double max_value = MAX_DIST;
+  vector<pair<CFG,double> > kpairs_dist(k,pair<CFG,double>(invalid,max_value));
+
+  vector<pair<int,double> > kpairs_index_dist(k,pair<int,double>(-1, max_value));
+
+  kpairs_dist.reserve(k);//it won't grow more than k
+  kpairs_index_dist.reserve(k);//it won't grow more than k
+
+  int max_index = 0;
+  double dist;
+  typename vector<CFG>::iterator vi;
+  int I=0;
+  for (vi = v.begin(); vi < v.end(); vi++,I++) {
+    if (cc == (*vi))
+      continue; //don't check distance to same
+    dist = Distance(env, cc, *vi);
+    if (dist < kpairs_dist[max_index].second) {
+      kpairs_dist[max_index] = pair<CFG,double>((*vi),dist);
+      kpairs_index_dist[max_index].first = I;
+      kpairs_index_dist[max_index].second = dist;
+      max_value = dist;
+      //search for new max_index (faster O(k) than sort O(klogk))
+      for (int i = 0; i < kpairs_dist.size(); i++)
+	if (max_value < kpairs_dist[i].second) {
+	  max_value = kpairs_dist[i].second;
+	  max_index = i;
+	}
+    }
+  }
+  sort (kpairs_index_dist.begin(), kpairs_index_dist.end(), 
+	CFG_DIST_COMPARE_INDEX<CFG>());
+  // return only indices
+  typename vector< pair<int,double> >::iterator c_iter;
+
+  for (c_iter = kpairs_index_dist.begin(); 
+       c_iter < kpairs_index_dist.end(); c_iter++) 
+
+    if (c_iter->first != -1)
+      kpairs.push_back(c_iter->first);
+
+  distance_time.StopClock();
+  m_distance_time += distance_time.GetClock_SEC();
+
+ 
+  return kpairs; //by construction kpairs is never larger than k  
+}
+
+
+
+
+
+// end sam's function
+
 //-----------------------------------------------------------------------
 // Input: CFG cc, vector of CFG v, and k
 // Process: finds the k closest cfgs in v to cc (cfg_v)
@@ -747,6 +867,9 @@ KClosest(Environment *env,
   kpairs.reserve(k); //it won't grow bigger than k
   if (k<=0) //no valid number of pairs requested
     return kpairs;
+
+ Clock_Class distance_time;
+  distance_time.StartClock("distance_time");
 
   CFG invalid;
   invalid.InvalidData(); //make an invalid all kpairs initially
@@ -779,6 +902,10 @@ KClosest(Environment *env,
     if (c_iter->first !=invalid)
       kpairs.push_back(pair<CFG,CFG>(cc,c_iter->first));
  
+  distance_time.StopClock();
+  m_distance_time += distance_time.GetClock_SEC();
+
+
   return kpairs; //by construction kpairs is never larger than k  
 }
 
@@ -894,7 +1021,12 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, VID in_query, double in_radius) {
   vector<VID> returnVec;
   RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
   Environment* _env = rm->GetEnvironment();
-  
+
+
+  Clock_Class distance_time;
+  distance_time.StartClock("distance_time");
+
+
   vector<VID> vec_vids;
   pMap->GetVerticesVID(vec_vids);
   typename vector<VID>::iterator itr;
@@ -907,6 +1039,9 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, VID in_query, double in_radius) {
       returnVec.push_back(*itr);
     }
   }
+  distance_time.StopClock();
+  m_distance_time += distance_time.GetClock_SEC();
+
   return returnVec;
 }
 
@@ -918,7 +1053,11 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
   RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
   Environment* _env = rm->GetEnvironment();
   
+  Clock_Class distance_time;
+  distance_time.StartClock("distance_time");
   
+
+
   vector<VID> vec_vids;
   pMap->GetVerticesVID(vec_vids);
   typename vector<VID>::iterator itr;
@@ -929,6 +1068,9 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
       returnVec.push_back(*itr);
     }
   }
+  distance_time.StopClock();
+  m_distance_time += distance_time.GetClock_SEC();
+
   return returnVec;
 }
 

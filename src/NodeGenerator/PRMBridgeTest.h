@@ -300,12 +300,17 @@ GaussianDistribution(double m, double s){
   return x1 * s + m;
 }
 
+
 template <class CFG>
 void
 BridgeTestPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
-        CollisionDetection* cd, DistanceMetric *,
+        CollisionDetection* cd, DistanceMetric* dm,
         vector<CFG>& nodes) {
+
+  //DEBUG DATA
+  int fail1(0),fail2(0),fail3(0);
+  
 
   //LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()");
 
@@ -329,9 +334,9 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-BridgeTestPRM::GenerateNodes"); Callee = Callee+Method;}
 
+  int debug_attempts;
   // generate in bounding box
   for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < this->numNodes.GetValue() ; attempts++) {
-    
     // cfg1 & cfg2 are generated to be inside bbox
     CFG cfg1, cfg2, cfgP, incr;
 
@@ -341,39 +346,59 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     std::string tmpStr = Callee+CallCnt;
     
     bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
-    bool cfg1_bbox = cfg1.InBoundingBox(_env);
-    if (!cfg1_free && cfg1_bbox){
-      double gauss_dist = GaussianDistribution(0, bridge_d.GetValue()); 
+    //bool cfg1_bbox = cfg1.InBoundingBox(_env);
+//    cout << "Attempting to find 1st collision node" << endl;
+    if (!cfg1_free){
+//    cout << "Sucessfully found 1st collision node" << endl;
+      double gauss_mean = fabs(bridge_d.GetValue());
+      double gauss_std = sqrt(gauss_mean);
+      double gauss_dist = fabs(GaussianDistribution( gauss_mean, gauss_mean));
+ //     double gauss_dist = fabs(randgauss(0,2*gauss_mean,gauss_mean,gauss_mean));
+      //cout << "gauss_dist = " << gauss_dist << endl;
+      
+//      cout << "Got gass dist"<< endl;
       //cfg2.c1_towards_c2(cfg1,cfg2,gauss_dist);
-      incr.GetRandomRay(gauss_dist);
+//      cout << "Calling GetRandomRay where d = " << gauss_dist << endl;
+        incr.GetRandomRay(gauss_dist, _env, dm);
+//      cout << "Got Random ray" << endl;
       cfg2.add(cfg1, incr);
 
       CallCnt="2";
       tmpStr = Callee+CallCnt; 
 
       bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+//      cout << "Cfg::isCollision" << endl;
       bool cfg2_bbox = cfg2.InBoundingBox(_env);
+//      cout << "Cfg::InBBox" << endl;
+//     cout << "Attempting to find 2st collision node" << endl;
       if (!cfg2_free && cfg2_bbox) {
+//      cout << "Sucessfully found 2st collision node" << endl;
         cfgP.WeightedSum(cfg1,cfg2,0.5);
         CallCnt="3";
         tmpStr = Callee+CallCnt; 
 
         bool cfgP_free = !cfgP.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
         bool cfgP_bbox = cfgP.InBoundingBox(_env);
+//        cout << "Attempting to find free midpoint" << endl;
         if(cfgP_free && cfgP_bbox) {
+//        cout << "Sucessfully found free midpoint" << endl;
           nodes.push_back(CFG(cfgP)); 
           newNodes++;
 #if INTERMEDIATE_FILES
           path.push_back(cfgP);
 #endif
-        }
-      }
-    }
+        } else {++fail3;/*cout << "Failed to find free midpoint" << endl;*/}
+      } else {++fail2;/*cout << "Failed to find 2nd collision node ";if(!cfg2_bbox) {cout << "b/c out of bbox" << endl;} else {cout << "b/c not in coll"<<endl; } */}
+    } else {++fail1;/*cout<<"Failed to find 1st collision node"<< endl;*/}
     if (bExact)
       success_cntr = newNodes;
     else
       success_cntr = attempts+1;
+    debug_attempts = attempts;
   } // endfor
+
+ // cout << "BRIDGE_TEST_FINISHED:: attempts = "<< debug_attempts << ", fail1 = " << fail1;
+ // cout << ", fail2 = " << fail2 << ", fail3 = " << fail3 << endl;
 
 #if INTERMEDIATE_FILES
   WritePathConfigurations("BridgeTestPRM.path", path, _env);

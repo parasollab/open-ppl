@@ -2,8 +2,7 @@
 #define MPCharacterizer_h
 
 #include "util.h"
-#include "MPProblem.h"
-
+class MPProblem;
 
 template<typename CFG,typename WEIGHT>
 class NodeCharacterizerMethod : public MPBaseObject 

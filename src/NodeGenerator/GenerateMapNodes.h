@@ -1,3 +1,4 @@
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /**@file GenerateMapNodes.h
   *This set of classes supports a "RoadMap Node Generation Algobase".
@@ -22,7 +23,7 @@
 #include "Clock_Class.h"
 #include "Parameters.h"
 #include "GMSPolyhedron.h"
- 
+
 //Include node generation methods
 #include "PRMUniform.h"
 #include "PRMGauss.h"
@@ -33,6 +34,7 @@
 #include "OBMAPRM.h"
 #include "PRMBridgeTest.h"
 #include "PRMModelBased.h"
+#include "PRMActiveLearning.h"
 
 #include "util.h"
 
@@ -61,8 +63,6 @@ template <class CFG, class WEIGHT> class Roadmap;
  *contains only those selected by the user.
  */
 template <class CFG> class NodeGenerationMethod;
-
-
 template <class CFG>
 class GenerateMapNodes : public MPBaseObject{
  public:
@@ -116,10 +116,9 @@ class GenerateMapNodes : public MPBaseObject{
   //////////////////////
   // Data
   vector<NodeGenerationMethod<CFG>*> all;
- public:
-   vector<NodeGenerationMethod<CFG>*> selected; ///\todo move back to private later
+  vector<NodeGenerationMethod<CFG>*> selected;
 
-  // public:
+ public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -156,7 +155,7 @@ GenerateMapNodes() {
 
   BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>();
   all.push_back(basicPRM);
-  
+
   GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>();
   all.push_back(gaussPRM);
 
@@ -181,6 +180,9 @@ GenerateMapNodes() {
 
   PRMModelBased<CFG>* modelBasedPRM = new PRMModelBased<CFG>();
   all.push_back(modelBasedPRM);
+  
+  PRMActiveLearning<CFG>* activeLearningPRM = new PRMActiveLearning<CFG>();
+  all.push_back(activeLearningPRM);
   
   addNodes2Map = true;
 }

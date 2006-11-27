@@ -9,17 +9,10 @@
 
 #ifndef PARTITIONSCHEMA_H
 #define PARTITIONSCHEMA_H
-// not sure if these even need to be included
-#include "CollisionDetection.h"
+
 #include "Clock_Class.h"
-#include "Parameters.h"
-#include "GMSPolyhedron.h"
-//////////////////////////
-// these should be used
-#include "Input.h"
 #include <functional>
 #include "Environment.h"
-//#include "DistanceMetrics.h"
 #include <string>
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -528,7 +521,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
   BoundingBox& centerbox = *boundingBox;
   BoundingBox& rightbox = *boundingBox;
 
-  DisplayDetails("Gap", boundingBox->GetDOFs(), boundingBox->GetDOFs(), TotalBoxes);
+  this->DisplayDetails("Gap", boundingBox->GetDOFs(), boundingBox->GetDOFs(), TotalBoxes);
 
   if(this->n_partitions==3)
     {
@@ -778,7 +771,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
     // output error	
 
     partitions.push_back( boundingBox );
-    DisplayDetails(p_type, boundingBox->GetDOFs(), this->dims, 1);
+    this->DisplayDetails(p_type, boundingBox->GetDOFs(), this->dims, 1);
 
     partitions[0]->Print(cout);
   }
@@ -821,7 +814,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
       p_bbox->SetRanges(pee);
       partitions.push_back( p_bbox );
     }//end for z
-    DisplayDetails(p_type, boundingBox->GetDOFs(), this->dims, 2);
+    this->DisplayDetails(p_type, boundingBox->GetDOFs(), this->dims, 2);
     partitions[0]->Print(cout);
     partitions[1]->Print(cout);
     //DisplayBoundBox( rightbox , 2);

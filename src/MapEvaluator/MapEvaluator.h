@@ -1,19 +1,15 @@
 #ifndef _MAP_EVALUATOR_H
 #define _MAP_EVALUATOR_H
 
-#include "Roadmap.h"
-
 #include "util.h"
+class MPProblem;
 #include "MPRegionComparerMethod.h"
 
-template <class CFG, class WEIGHT> 
-class MapEvaluationMethod;
+template <class CFG, class WEIGHT> class Roadmap;
 
-template <class CFG, class WEIGHT>
-class ConnectableComponentComparer;
-
-template <class CFG, class WEIGHT> 
-class TestEvaluation;
+template <class CFG, class WEIGHT> class MapEvaluationMethod;
+template <class CFG, class WEIGHT> class ConnectableComponentComparer;
+template <class CFG, class WEIGHT> class TestEvaluation;
 
 template <class CFG, class WEIGHT>
 class MapEvaluator : public MPBaseObject {

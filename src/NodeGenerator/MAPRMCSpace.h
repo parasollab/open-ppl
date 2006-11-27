@@ -257,7 +257,8 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   bool bExact = this->exactNodes.GetValue() == 1? true: false;
 
   std::string Callee(GetName());
-  {std::string Method("-cspaceMAPRM::GenerateNodes"); Callee = Callee+Method;}
+  std::string Method("-cspaceMAPRM::GenerateNodes"); 
+  Callee = Callee+Method;
   
   // MAPRM style node generation using clearances in the CSpace
   for (int i=0; i < this->numNodes.GetValue(); i++) {
@@ -266,7 +267,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 			 clearanceNum.GetValue(),penetrationNum.GetValue());
     //if in collision and asking for exactNum, keep generating
     
-    if (cfg.InBoundingBox(_env) && !cfg.isCollision(_env,Stats,cd,*this->cdInfo)) {
+    if (cfg.InBoundingBox(_env) && !cfg.isCollision(_env,Stats,cd,*this->cdInfo,&Callee)) {
       nodes.push_back(CFG(cfg));
 #if INTERMEDIATE_FILES
       path.push_back(cfg);

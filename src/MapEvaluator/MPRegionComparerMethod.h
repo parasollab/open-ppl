@@ -1,9 +1,12 @@
 #ifndef _MPREGIONCOMPARERMETHOD_H_
 #define _MPREGIONCOMPARERMETHOD_H_
 
-#include "MPRegion.h"
-
+#include "util.h"
+class MPProblem;
 #include "Roadmap.h"
+#include "Stat_Class.h"
+#include "LocalPlanners.h"
+#include "MPStrategy.h"
 
 template <class CFG, class WEIGHT>
 class MPRegionComparerMethod: public MPBaseObject {

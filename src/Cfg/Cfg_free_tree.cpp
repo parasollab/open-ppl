@@ -18,6 +18,7 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "util.h"
+#include "DistanceMetrics.h"
 
 int Cfg_free_tree::NumofJoints;
 
@@ -183,54 +184,6 @@ void Cfg_free_tree::GetRandomCfg(double R, double rStep){
     v.push_back(jointAngle);
   }
   
-  obst = -1;
-  tag = -1;
-  clearance = -1;
-}
-
-void Cfg_free_tree::GetRandomRay(double incr) {
-  v.clear();
-
-  //randomly sample params
-  for(int i=0; i<DOF(); ++i)
-    v.push_back(OBPRM_drand());
-  Normalize_orientation();
-
-  //normalize to a unit vector
-  double mag = 0;
-  for(int i=0; i<DOF(); ++i)
-    mag = v[i]*v[i];
-  mag = sqrt(mag);
-  transform(v.begin(), v.end(), v.begin(), 
-	    bind2nd(divides<double>(), mag));
-
-  //scale up
-  transform(v.begin(), v.end(), v.begin(),
-	    bind2nd(multiplies<double>(), incr));
-  Normalize_orientation();
-
-  /*
-  double alpha,beta,z, z1;
-  double jointAngle;
-  
-  alpha = 2.0*M_PI*OBPRM_drand();
-  beta  = 2.0*M_PI*OBPRM_drand();
-  z = incr*cos(beta);
-  z1 = incr*sin(beta);
-  
-  Vector6<double> base(z1*cos(alpha),z1*sin(alpha),z,0.0,0.0,0.0);
-
-  int i;
-  v.clear();
-  for(i=0; i<6; ++i)
-    v.push_back(base[i]);
-  for(i=0; i<NumofJoints; i++) {
-    jointAngle = 0.0;
-    // or: jointAngle = OBPRM_drand();
-    v.push_back(jointAngle);
-  }
-  */
-
   obst = -1;
   tag = -1;
   clearance = -1;

@@ -3,7 +3,7 @@
 
 #include "Boundary.h"
 #include "Environment.h"
-#include "CfgTypes.h"
+#include "Stat_Class.h"
 
 ///Design info.  Each MPRegion should be a self contained
 ///MP solution.  It will have its own roadmaps, stats, etc.

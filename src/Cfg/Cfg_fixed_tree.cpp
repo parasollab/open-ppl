@@ -145,7 +145,7 @@ void Cfg_fixed_tree::GetRandomCfg(Environment* env) {
 }
 
 
-void Cfg_fixed_tree::GetRandomRay(double incr) {
+void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
   incr = 0.005;
   v.clear();
   

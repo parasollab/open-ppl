@@ -52,12 +52,8 @@ class ClearanceInfo {
    */
   Cfg* direction;
     
-  /**Flag for ApproxCSpaceClearance2(...).
-   *If 0, calculate clearance as usual. (default)
-   *If 1, calculate the clearance in one direction (direction).
-   */
-  int checkOneDirection;
-  
+  int obstacle_id;
+
  public:
   
   /////////////////////////////////////////////////////////////////////////////
@@ -67,10 +63,10 @@ class ClearanceInfo {
   /////////////////////////////////////////////////////////////////////////////  
   /**@name Constructors and Destructor*/
   //@{  
-  ClearanceInfo();
-  ClearanceInfo(double _clearance, Cfg* _direction);
-  ClearanceInfo(double _clearance, Cfg* _direction, int _checkOneDirection);
-  ClearanceInfo(Cfg* _direction, int _checkOneDirection);
+  ClearanceInfo(Cfg* _direction = NULL, double _clearance = -1e10) {
+    clearance = _clearance;
+    direction = _direction;
+  }
   ~ClearanceInfo();
   //@}
   
@@ -86,9 +82,9 @@ class ClearanceInfo {
   
   Cfg* getDirection() {return direction;};
   void setDirection(Cfg* _direction) {direction = _direction;};
-  
-  int getCheckOneDirection() {return checkOneDirection;};
-  void setCheckOneDirection(int _checkOneDirection) {checkOneDirection = _checkOneDirection;};
+
+  int getObstacleId() { return obstacle_id;};
+  void setObstacleId(int id) { obstacle_id = id;};
   //@}
     
 };
@@ -331,9 +327,13 @@ class Cfg {
   /// ditto, but with a default number of tries (10).
   virtual void GetRandomCfg(Environment* env);
   /// Generates a random configuration with approximate length
+  /*
+  virtual void BinarySearch(Environment* env, DistanceMetric* dm, double length,
+			    const Cfg& low, const Cfg& high);
+  */
   virtual void GetRandomCfg(Environment* env, DistanceMetric* _dm,
           double length);
-  virtual void GetRandomRay(double) = 0;
+  virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm) = 0;
     
   /// generates random configuration that is in Free CSpace. 
   virtual void GetFreeRandomCfg(Environment* env, Stat_Class& Stats,
@@ -358,10 +358,6 @@ class Cfg {
   virtual void MAPRMfree(Environment* _env, Stat_Class& Stats,
        CollisionDetection* cd, CDInfo& cdInfo, 
        DistanceMetric* dm, int n);
-  /// pushes a colliding node towards the free space
-  virtual void MAPRMcollision(Environment* _env, Stat_Class& Stats,
-            CollisionDetection* cd,
-            CDInfo& cdInfo, int n);
     
 
   virtual bool GenerateOverlapCfg(Environment* env, int robot,
@@ -395,16 +391,18 @@ class Cfg {
   ///Approximate C-Space Clearance.
   /// returns clearance in c-space
   double ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
-             CollisionDetection* cd, CDInfo& cdInfo, 
-             DistanceMetric* dm, 
-             int n, bool bComputePenetration=false) const;
+			       CollisionDetection* cd, CDInfo& cdInfo, 
+			       DistanceMetric* dm, int n,
+			       bool bComputePenetration,
+			       int ignore_obstacle = -1) const;
   /// clearance and the direction set via ClearanceInfo
-  void ApproxCSpaceClearance2(Environment* env, Stat_Class& Stats,
-            CollisionDetection* cd,
-            CDInfo& cdInfo,
-            DistanceMetric* dm, 
-            int n, ClearanceInfo& clearInfo, 
-            bool bComputePenetration) const;
+  void ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
+			     CollisionDetection* cd, CDInfo& cdInfo,
+			     DistanceMetric* dm, int n,
+			     ClearanceInfo& clearInfo, 
+			     bool bComputePenetration,
+			     int ignore_obstacle = -1) const;
+
   ///Approximate C-Space Contact Points
   /// given an origin Cfg and a vector of directions
   /// returns the obstacle contact point for each direction from origin

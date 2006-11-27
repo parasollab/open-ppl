@@ -172,20 +172,8 @@ void Cfg_2D::GetRandomCfg(double R, double rStep){
   ForceItTo2D();
 }
 
-void Cfg_2D::GetRandomRay(double incr) {
-   double alpha,beta,z, z1;
-
-   alpha = 2.0*M_PI*OBPRM_drand();
-   beta  = 2.0*M_PI*OBPRM_drand();
-   z = incr*cos(beta);
-   z1 = incr*sin(beta);
-   v.clear();
-   v.push_back(z1*cos(alpha));
-   v.push_back(z1*sin(alpha));
-   v.push_back(z);
-   v.push_back(0.0);
-   v.push_back(0.0);
-   v.push_back(0.0);
+void Cfg_2D::GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
+   Cfg_free::GetRandomRay(incr, env, dm);
    ForceItTo2D();
 }
 

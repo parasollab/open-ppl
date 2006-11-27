@@ -36,36 +36,11 @@ extern  vector < vector < vector <  double > > > CollisionConfiguration;
 
 #define EQ(a,b)  (fabs(a-b)<0.0001)
 
-/////////////////////////////////////////////////////////////////////
-
-ClearanceInfo::ClearanceInfo() {
-    clearance = -1e10;
-    direction = NULL;
-    checkOneDirection = 0;
+ClearanceInfo::
+~ClearanceInfo() {
+  if(direction != NULL)
+    delete direction;
 }
-
-ClearanceInfo::ClearanceInfo(double _clearance, Cfg * _direction){
-    clearance = _clearance;
-    direction = _direction;
-    checkOneDirection = 0;
-}
-
-ClearanceInfo::ClearanceInfo(double _clearance, Cfg * _direction, int _checkOneDirection){
-    clearance = _clearance;
-    direction = _direction;
-    checkOneDirection = _checkOneDirection;
-}
-
-ClearanceInfo::ClearanceInfo(Cfg * _direction, int _checkOneDirection){
-    clearance = -1e10;
-    direction = _direction;
-    checkOneDirection = _checkOneDirection;
-}
-
-ClearanceInfo::~ClearanceInfo() {
-  delete direction;
-}
-
 
 ////////////////////////////////////////////////////////////////////
 
@@ -368,25 +343,37 @@ void Cfg::InvalidData() {
 bool Cfg::InBoundingBox(Environment *env) const {
   BoundingBox *bb =  env->GetBoundingBox();
 
+  if(!bb->IfSatisfiesConstraints(v)) 
+    return false;
+
   // @todo: if there are multiple robots, this needs to be changed.
-  MultiBody *robot = env->GetMultiBody(env->GetRobotIndex());
-  
+  MultiBody *robot = env->GetMultiBody(env->GetRobotIndex());  
+
   if (bb->GetClearance(GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
     ConfigEnvironment(env); // Config the Environment(robot indeed).
-  
-    for(int m=0; m<robot->GetFreeBodyCount(); m++) {
-      GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
-      for(int j = 0 ; j < poly.numVertices ; j++){
-  if (!bb->IfSatisfiesConstraints(poly.vertexList[j]))
-    return false;
-      }
+
+    for(int m=0; m<robot->GetFreeBodyCount(); ++m) {
+      Transformation &worldTransformation = robot->GetFreeBody(m)->GetWorldTransformation();
+      
+      GMSPolyhedron &bb_poly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
+      bool bbox_check = true;
+      for(int j=0; j<bb_poly.numVertices; ++j)
+	if(!bb->IfSatisfiesConstraints(worldTransformation * bb_poly.vertexList[j])) {
+	  bbox_check = false;
+	  break;
+	}
+      if(bbox_check) 
+	continue;
+      
+      GMSPolyhedron &poly = robot->GetFreeBody(m)->GetPolyhedron();
+      for(int j=0; j<poly.numVertices; ++j) 
+        if(!bb->IfSatisfiesConstraints(worldTransformation * poly.vertexList[j]))
+	  return false;      
     }
   }
-  // Every workspace constraint has been satisfied, now check higher
-  // DOFs
-  // @todo: verify this works for all node generation methods
-  return bb->IfSatisfiesConstraints(v);
+
+  return true; 
 }
 
 
@@ -779,49 +766,16 @@ void Cfg::GetRandomCfg(Environment* env) {
   clearance = -1;
 }
 
-
+	
 // generates a random cfg with a given length 
 void Cfg::GetRandomCfg(Environment* env, DistanceMetric* dm, double length) {
-  vector<double> originVector;
-  for(int i=0; i<dof; i++)
-    originVector.push_back(0.0);
-  Cfg* origin = this->CreateNewCfg(originVector);
-  Cfg* outsideCfg = this->CreateNewCfg();
-  outsideCfg->GetRandomCfg(env,1000);
+  v = vector<double>(dof, 0);
+  Cfg* origin = this->CreateNewCfg();
+
+  GetRandomCfg(env,1000);
+  dm->ScaleCfg(env, length, *origin, *this);
   
-  // first find an outsite configuration with sufficient size
-  for(; dm->Distance(env, *origin, *outsideCfg) < 2*length; outsideCfg->multiply(*outsideCfg,2)); 
-  
-  // now, using binary search  find a configuration with the approximate
-  // length
-  Cfg* aboveCfg = outsideCfg->CreateNewCfg();
-  Cfg* belowCfg = origin->CreateNewCfg();
-  Cfg* currentCfg = this->CreateNewCfg();
-  while (1) {
-    currentCfg->add(*aboveCfg, *belowCfg);
-    currentCfg->multiply(*currentCfg, 0.5);
-    /*cout <<"Above " << aboveCfg << endl;
-      cout <<"Current " << currentCfg << endl;
-      cout <<"Below " << belowCfg << endl; */
-    double magnitude = dm->Distance(env, *origin, *currentCfg);
-    double diff = dm->Distance(env, *aboveCfg, *belowCfg);
-    cout << "Current magnitude is \n" << magnitude << " " << length
-   << " " << diff << endl;
-    if( (magnitude >= length*0.9) && (magnitude <= length*1.1)) {
-      break;
-    }
-    if(magnitude>length) {
-      aboveCfg->equals(*currentCfg);
-    } else { 
-      belowCfg->equals(*currentCfg); 
-    }
-  }
-  v = currentCfg->v;
-  delete currentCfg;
-  delete origin;
-  delete outsideCfg;
-  delete aboveCfg;
-  delete belowCfg;
+  Normalize_orientation();
 
   obst = -1;
   tag = -1;
@@ -860,158 +814,141 @@ void Cfg::GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
 
 // generates random configuration and then pushes it to the medial axis of
 // the free c-space
-void Cfg::GetMedialAxisCfg(Environment* _env, Stat_Class& Stats,
-         CollisionDetection* _cd,
-         CDInfo& _cdInfo, DistanceMetric* _dm,
-         int clearance_n, int penetration_n) { 
-    this->GetRandomCfg(_env);
-    this->PushToMedialAxis(_env, Stats, _cd, _cdInfo, _dm, 
-         clearance_n, penetration_n);
+void 
+Cfg::
+GetMedialAxisCfg(Environment* _env, Stat_Class& Stats,
+		 CollisionDetection* _cd,
+		 CDInfo& _cdInfo, DistanceMetric* _dm,
+		 int clearance_n, int penetration_n) { 
+  this->GetRandomCfg(_env);
+  this->PushToMedialAxis(_env, Stats, _cd, _cdInfo, _dm, 
+			 clearance_n, penetration_n);
 }
 
 
 // pushes node towards c-space medial axis
-void Cfg::PushToMedialAxis(Environment *_env, Stat_Class& Stats,
-         CollisionDetection *cd,
-           CDInfo& cdInfo, DistanceMetric *dm,
-           int clearance_n, int penetration_n) {
+void 
+Cfg::
+PushToMedialAxis(Environment *_env, Stat_Class& Stats,
+		 CollisionDetection *cd,
+		 CDInfo& cdInfo, DistanceMetric *dm,
+		 int clearance_n, int penetration_n) {
   std::string Callee(GetName()),CallCnt("1");
-  {std::string Method("-Cfg::PushToMedialAxis");Callee=Callee+Method;}
-    if(!this->InBoundingBox(_env) || this->isCollision(_env, Stats, cd, cdInfo,true, &(Callee))) {
-      ClearanceInfo clearInfo;
-      this->ApproxCSpaceClearance2(_env, Stats, cd, cdInfo, dm, 
-           penetration_n, clearInfo, 1);
-      this->v = (clearInfo.getDirection())->v;
-      //delete clearInfo.getDirection();
-    }
-    CallCnt="2";
-    std::string tmpStr = Callee+CallCnt;
-    if(this->InBoundingBox(_env) && !this->isCollision(_env, Stats, cd, cdInfo,true,&tmpStr)) {
-      this->MAPRMfree(_env, Stats, cd, cdInfo, dm, clearance_n);
-    }
+  std::string Method("-Cfg::PushToMedialAxis");
+  Callee=Callee+Method;
+
+  //if(!this->InBoundingBox(_env) || this->isCollision(_env, Stats, cd, cdInfo,true, &(Callee))) { //not needed if called from GetMedialAxisCfg
+  if(this->isCollision(_env, Stats, cd, cdInfo,true, &(Callee))) {
+    ClearanceInfo clearInfo;
+    this->ApproxCSpaceClearance(_env, Stats, cd, cdInfo, dm, 
+				penetration_n, clearInfo, 1);
+    this->v = (clearInfo.getDirection())->v;
+  }
+
+  CallCnt="2";
+  std::string tmpStr = Callee+CallCnt;
+  if(this->InBoundingBox(_env) && !this->isCollision(_env, Stats, cd, cdInfo,true,&tmpStr)) 
+    this->MAPRMfree(_env, Stats, cd, cdInfo, dm, clearance_n);
 }
 
 
 // pushes free node towards c-space medial axis
-void Cfg::MAPRMfree(Environment* _env, Stat_Class& Stats, 
-        CollisionDetection* cd,
-        CDInfo& cdInfo, DistanceMetric* dm,
-        int n) {
-  Cfg* cfg = this;
-  Cfg* newCfg, *oldCfg, *dir;
-    
+void 
+Cfg::
+MAPRMfree(Environment* _env, Stat_Class& Stats, 
+	  CollisionDetection* cd,
+	  CDInfo& cdInfo, DistanceMetric* dm,
+	  int n) {
+  //get clearance to c-obst
   ClearanceInfo clearInfo;
-  cfg->ApproxCSpaceClearance2(_env, Stats, cd, cdInfo, dm,
-            n, clearInfo, 0);
-  cfg->clearance = clearInfo.getClearance();
-  dir = clearInfo.getDirection();
-  //delete clearInfo.getDirection();
-    
-  int i = 0;
-  double stepSize = cfg->clearance;
-  
-  //oldCfg = cfg;
-  oldCfg = cfg->CreateNewCfg();
-  //newCfg = oldCfg;
-  newCfg = oldCfg->CreateNewCfg();
+  this->ApproxCSpaceClearance(_env, Stats, cd, cdInfo, dm,
+			      n, clearInfo, false);
+  if(clearInfo.getDirection() == NULL) //unable to compute clearance
+    return;
+  this->clearance = clearInfo.getClearance();
+  int colliding_obst = clearInfo.getObstacleId();
+
+  //get normalized direction to c-obst
+  Cfg* dir = clearInfo.getDirection()->CreateNewCfg();
+  dir->subtract(*dir, *this);
+  Cfg* origin = this->CreateNewCfg();
+  for(int i=0; i<origin->DOF(); ++i) {
+    origin->SetSingleParam(i, 0);
+  }
+  dm->ScaleCfg(_env, 1, *origin, *dir);
 
   /// find max. clearance point by stepping out:
-  double magnitude;
-  Cfg* tmpCfg = newCfg->CreateNewCfg();
-  vector<double> tmpCfgData;
-  while ((newCfg->clearance >= oldCfg->clearance) && (newCfg->InBoundingBox(_env))) {    
-    delete oldCfg;
-    oldCfg = newCfg->CreateNewCfg();
-    //newCfg->c1_towards_c2(*newCfg, *dir, stepSize*-1);
-    tmpCfg->subtract(*dir, *newCfg);
-    //normalize
-    magnitude = 0;
-    tmpCfgData = tmpCfg->GetData();
-    for(vector<double>::const_iterator V = tmpCfgData.begin(); V != tmpCfgData.end(); ++V)
-      magnitude += pow(*V,2);
-    magnitude = sqrt(magnitude);
-    tmpCfg->divide(*tmpCfg, magnitude);
-    tmpCfg->multiply(*tmpCfg, stepSize*-1);
-    newCfg->add(*newCfg, *tmpCfg);
-
-
-    newCfg->clearance = newCfg->ApproxCSpaceClearance(_env,Stats,cd,cdInfo,dm,n,0);
-    
-    stepSize = newCfg->clearance;
-   
-    i++;
+  double stepSize = this->clearance;
+  Cfg* oldCfg = this->CreateNewCfg();
+  Cfg* newCfg = this->CreateNewCfg();
+  Cfg* tmpCfg = dir->CreateNewCfg();
+  Cfg* lowCfg = oldCfg->CreateNewCfg();
+  while((stepSize > 0) &&
+	(newCfg->clearance >= oldCfg->clearance) && 
+	(newCfg->InBoundingBox(_env))) {    
+    tmpCfg->multiply(*dir, -1*stepSize);
+    tmpCfg->add(*newCfg, *tmpCfg);
+    tmpCfg->clearance = tmpCfg->ApproxCSpaceClearance(_env, Stats, cd, cdInfo,
+						       dm, n, false, colliding_obst);
+    if(tmpCfg->clearance < 0) {//unable to compute clearance...
+      tmpCfg->clearance = 0;
+    } else {
+      lowCfg->equals(*oldCfg);
+      oldCfg->equals(*newCfg);
+      newCfg->equals(*tmpCfg);
+    }
+    stepSize = tmpCfg->clearance;
   }
-  
-  if (newCfg->InBoundingBox(_env)) {
-    /// binary search betwen oldCfg and newCfg to find max clearance:
+  delete tmpCfg;
+  oldCfg->equals(*lowCfg);
+  delete lowCfg;
+  delete dir;
+
+  if(newCfg->clearance > 0 && newCfg->InBoundingBox(_env)) {
+    ///binary search between oldCfg and newCfg to find max clearance:
     Cfg* midCfg = this->CreateNewCfg();
-    double minDistance = _env->GetPositionRes() + _env->GetOrientationRes();
+    double minDistance = _env->GetPositionRes() + 
+      _env->GetOrientationRes();
+    minDistance = 0.0001; //arbitrary
     int maxNumSteps = 200; //arbitrary
-    
+    int i=0;
     do {
       //midpoint between newCfg and oldCfg
       midCfg->add(*newCfg, *oldCfg);
       midCfg->divide(*midCfg, 2);
-      midCfg->clearance = midCfg->ApproxCSpaceClearance(_env,Stats,cd,cdInfo,dm,n,0);
-
-      if (midCfg->clearance > oldCfg->clearance) {
-  oldCfg->equals(*midCfg);
-      } else {
-  newCfg->equals(*midCfg);
+      midCfg->clearance = midCfg->ApproxCSpaceClearance(_env, Stats, cd, 
+							cdInfo, dm, n, false);
+      if(midCfg->clearance < 0) { //unable to compute...keep oldCfg
+	if(newCfg->clearance > oldCfg->clearance) 
+	  oldCfg->equals(*newCfg);
+	break;
       }
-      
-      i++;
-    } while ((dm->Distance(_env, *newCfg, *oldCfg) > minDistance) && (i <= maxNumSteps));
+      if((midCfg->clearance > oldCfg->clearance) && 
+	 (midCfg->clearance > newCfg->clearance)) {
+	if(oldCfg->clearance > newCfg->clearance)
+	  newCfg->equals(*midCfg);
+	else
+	  oldCfg->equals(*midCfg);
+      } else if((midCfg->clearance < oldCfg->clearance) &&
+		(midCfg->clearance < newCfg->clearance)) {
+	if(oldCfg->clearance > newCfg->clearance)
+	  newCfg->equals(*oldCfg);
+	else
+	  oldCfg->equals(*newCfg);
+      } else if(midCfg->clearance > oldCfg->clearance) {
+	oldCfg->equals(*midCfg);
+      } else {
+	newCfg->equals(*midCfg);
+      }      
+    } while ((dm->Distance(_env, *newCfg, *oldCfg) > minDistance) &&
+	     (++i <= maxNumSteps));
     delete midCfg;
   }
-  
+
   this->equals(*oldCfg);
 
   delete oldCfg;
   delete newCfg;
-}
-
-
-//not used anymore...
-// pushes colliding node towards free space
-void Cfg::MAPRMcollision(Environment* _env, Stat_Class& Stats,
-       CollisionDetection* cd,
-       CDInfo& cdInfo, int n) {
-  Cfg* cfg = this;
-  double stepSize = 0.5;
-  std::string Callee(GetName()),CallCnt("1");
-  {std::string Method("-Cfg::MAPRMcollision");Callee=Callee+Method;}
-  
-  ///pick n random directions:
-  vector<Cfg*> directions;
-  vector<Cfg*> steps;
-  Cfg* tmp, *tmp2;
-  for (int i=0; i<n; i++) {
-    tmp = this->CreateNewCfg();
-    tmp->GetRandomCfg(_env);
-    directions.push_back(tmp);
-
-    tmp2 = cfg->CreateNewCfg();
-    steps.push_back(tmp2);
-  }  
-  
-  //if (directions.size()==0)
-  //  this = cfg;
-    
-  ///step out along each direction:
-  int found = -1;
-  while (found < 0) {
-    for (int i=0; i<directions.size(); i++) {
-      steps[i]->c1_towards_c2(*steps[i], *directions[i], stepSize);
-      if (steps[i]->InBoundingBox(_env) && !steps[i]->isCollision(_env, Stats, cd, cdInfo,true,&(Callee))) {
-  found = i;
-  break;
-      }
-    }
-    stepSize = stepSize * 2;
-  }
-  
-  this->equals(*steps[found]);
 }
 
 
@@ -1024,164 +961,158 @@ double Cfg::Clearance(Environment *env, Stat_Class& Stats,
 
 
 //Approximate C-Space Clearance
-double Cfg::ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
-          CollisionDetection *cd, CDInfo& cdInfo,
-                                  DistanceMetric* dm, 
-          int n, bool bComputePenetration) const {
+double 
+Cfg::
+ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
+		      CollisionDetection *cd, CDInfo& cdInfo,
+		      DistanceMetric* dm, 
+		      int n, bool bComputePenetration,
+		      int ignore_obstacle) const {
   ClearanceInfo clearInfo;
-  ApproxCSpaceClearance2(env, Stats, cd, cdInfo, dm, n, clearInfo, bComputePenetration);
-  //delete clearInfo.getDirection(); //free direction memory, allocated in ApproxCSpaceClearance2
+  ApproxCSpaceClearance(env, Stats, cd, cdInfo, dm, 
+			n, clearInfo, bComputePenetration, ignore_obstacle);
   return clearInfo.getClearance();
 }
 
 
 //Approximate C-Space Clearance
-void Cfg::ApproxCSpaceClearance2(Environment* env, Stat_Class& Stats,
-         CollisionDetection* cd, CDInfo& cdInfo,
-         DistanceMetric* dm, 
-         int n, ClearanceInfo& clearInfo,
-         bool bComputePenetration) const {
-  Cfg* cfg = this->CreateNewCfg();
-  
-  vector<Cfg*> directions;
-  double dist = 100 * min(env->GetPositionRes(),
-        env->GetOrientationRes());
-  int i;
-  Cfg* tmp;
-  std::string Callee(GetName()),CallCnt;
-  {std::string Method("Cfg::ApproxCSpaceClearance2");Callee=Callee+Method;}
-
-  for (i=0; i<n; i++) {
-    tmp = this->CreateNewCfg();
-    tmp->GetRandomRay(dist);
-    directions.push_back(tmp);
-  }
-  if (directions.size() == 0) { //unable to generate random directions
-    delete tmp;
-    delete cfg;
-    return;
-  }
-    
+void 
+Cfg::
+ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
+		      CollisionDetection* cd, CDInfo& cdInfo,
+		      DistanceMetric* dm, 
+		      int n, ClearanceInfo& clearInfo,
+		      bool bComputePenetration,
+		      int ignore_obstacle) const {
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
     
+  //generate n random directions at a distance dist away from this
+  double dist = 100 * min(positionRes, orientationRes);
+  vector<Cfg*> directions;
+  Cfg* tmp;
+  for(int i=0; i<n; i++) {
+    tmp = this->CreateNewCfg();
+    tmp->GetRandomRay(dist, env, dm);
+    directions.push_back(tmp);
+  }
+  //if unable to generate random directions, exit
+  if (directions.size() == 0) { 
+    delete tmp;
+    return;
+  }
+    
+  //setup strings for tracking cd calls
+  std::string Callee(GetName()), CallCnt;
+  std::string Method("Cfg::ApproxCSpaceClearance");
+  Callee=Callee+Method;
+
   //if collide, set to true. Otherwise, set to false
   CallCnt="1";
   std::string tmpStr = Callee+CallCnt;
+  Cfg* cfg = this->CreateNewCfg();  //have to make a copy because method is const
   bool bInitState = !cfg->InBoundingBox(env) ||  
-		cfg->isCollision( env, Stats, cd, cdInfo,
-              true, &tmpStr );
+    cfg->isCollision( env, Stats, cd, cdInfo, true, &tmpStr );
   
-  if( bComputePenetration == false && bInitState == true ) { //don't need to compute clearance
+  if(!bComputePenetration == bInitState) { //don't need to compute clearance/penetration
     delete cfg;
-    for(i=0; i<directions.size(); i++)
-      delete directions[i];
-    return;
-  }
-  if( bComputePenetration == true && bInitState == false ) { //don't need to compute penetration
-    delete cfg;
-    for(i=0; i<directions.size(); i++)
+    for(int i=0; i<directions.size(); i++)
       delete directions[i];
     return;
   }
 
   //find max step size:
-  int iRobot = env->GetRobotIndex();
-  double incrBound = env->GetMultiBody(iRobot)->GetMaxAxisRange(); //max step size    
+  double incrBound = 
+    env->GetMultiBody(env->GetRobotIndex())->GetMaxAxisRange(); //max step size    
   
+  //setup stepsizes for each direction
   vector<Cfg*> tick;
-  vector<Cfg*> incr;
-  vector<double> incrSize;
-  vector<bool> ignored;
-  int num_ignored = 0;
-  int n_ticks;
-
-  Cfg* tmp2;
-  for (i=0; i<directions.size(); i++) {
+  vector<pair<Cfg*,double> > incr;
+  vector<Cfg*>::iterator I;
+  for(I = directions.begin(); I != directions.end(); ++I) {
     tmp = cfg->CreateNewCfg();
     tick.push_back(tmp);
 
-    tmp2 = cfg->CreateNewCfg();
-    tmp2->FindIncrement(*cfg, *directions[i], &n_ticks, positionRes, orientationRes);
-    incr.push_back(tmp2);
-
-    incrSize.push_back(incr[i]->OrientationMagnitude() + incr[i]->PositionMagnitude());
-
-    ignored.push_back(false);
+    tmp = cfg->CreateNewCfg();
+    int n_ticks;
+    tmp->FindIncrement(*cfg, **I, &n_ticks, positionRes, orientationRes);
+    incr.push_back(make_pair(tmp,
+			     tmp->OrientationMagnitude() +
+			     tmp->PositionMagnitude()));
   }
 
-  int stateChangedFlag = false;
-  
   //step out along each direction:
-  while ( !stateChangedFlag ) {
-    for (int i=0; i<directions.size(); i++) {
-      tick[i]->Increment(*incr[i]);
-      
-      if (bComputePenetration) { //finding penetration
-        CallCnt="2";
-  tmpStr = Callee+CallCnt;
-  if (!ignored[i] && 
-      (tick[i]->isCollision(env, Stats, cd, cdInfo,
-                            true,&tmpStr) != bInitState)) {
-    if (!(tick[i]->InBoundingBox(env))) { //ignore this direction
-      ignored[i] = true;
-      num_ignored++;
-      if (num_ignored == directions.size()) { //if no more directions left, exit loop
-        clearInfo.setClearance(10000);
-        
-        Cfg* tmp3 = cfg->CreateNewCfg();
-        clearInfo.setDirection(tmp3);
+  vector<bool> ignored(directions.size(), false);
+  int stateChangedFlag = false;
+  while(!stateChangedFlag) {
+    for(int i=0; i<directions.size(); i++) {
+      if(ignored[i])
+	continue;
 
-        stateChangedFlag = true;
+      tick[i]->Increment(*incr[i].first);
+      
+      if(!(tick[i]->InBoundingBox(env))) { //outside bbox
+	if(!bComputePenetration) { //return this clearance
+	  clearInfo.setClearance(dm->Distance(env, *tick[i], *cfg));
+	  Cfg* tmp3 = tick[i]->CreateNewCfg();
+	  clearInfo.setDirection(tmp3);
+	  clearInfo.setObstacleId(-2); //use -2 for bbox (-1 used for self-collision already)
+	  stateChangedFlag = true;
+	} else { //ignore bbox for penetration
+	  ignored[i] = true;
+	  if(count(ignored.begin(), ignored.end(), true) ==
+	     directions.size()) { //if no more directions left, exit loop
+	    clearInfo.setClearance(10000);
+	    Cfg* tmp3 = cfg->CreateNewCfg();
+	    clearInfo.setDirection(tmp3);
+	    stateChangedFlag = true;
+	  }
+	}
+      } else {
+	if(ignore_obstacle != -1)
+	  cdInfo.ResetVars();
+	bool bCollision = tick[i]->isCollision(env, Stats, cd, cdInfo, true, &tmpStr);
+	if((ignore_obstacle != -1) && (cdInfo.colliding_obst_index == ignore_obstacle)) {
+	  ignored[i] = true;
+	  if(count(ignored.begin(), ignored.end(), true) ==
+	     directions.size()) {
+	    clearInfo.setClearance(10000);
+	    Cfg* tmp3 = cfg->CreateNewCfg();
+	    clearInfo.setDirection(tmp3);
+	    stateChangedFlag = true;
+	  }
+	} else {
+	  if(bCollision != bInitState) { //collision state changed
+	    clearInfo.setClearance(dm->Distance(env, *tick[i], *cfg));
+	    Cfg* tmp3 = tick[i]->CreateNewCfg();
+	    clearInfo.setDirection(tmp3);
+	    if(bCollision)
+	      clearInfo.setObstacleId(cdInfo.colliding_obst_index);
+	    stateChangedFlag = true;
+	  }
+	}
       }
-    } else {
-      clearInfo.setClearance(dm->Distance(env, *tick[i], *cfg));
-      
-      Cfg* tmp3 = tick[i]->CreateNewCfg();
-      clearInfo.setDirection(tmp3);
-      
-      stateChangedFlag = true;
-    }
-  }
-      } else { //finding clearance
-        CallCnt="3";
-  tmpStr = Callee+CallCnt;
-  if ( (tick[i]->isCollision(env, Stats, cd, cdInfo,true, &tmpStr) != bInitState) 
-       || !(tick[i]->InBoundingBox(env)) ) {
-    clearInfo.setClearance(dm->Distance(env, *tick[i], *cfg));
     
-    Cfg* tmp3 = tick[i]->CreateNewCfg();
-    clearInfo.setDirection(tmp3);
+      if(stateChangedFlag)
+	break; //exit for loop
 
-    stateChangedFlag = true;
-  }
-      }
-      
-      if (stateChangedFlag) {
-  break; //exit for loop
-      }
-      
       //if increment still less than a max bound
-      if (incrSize[i] < incrBound) {
-  incr[i]->multiply(*incr[i], 2);
-  incrSize[i] = incrSize[i] * 2;
-      } 
-      
+      if(incr[i].second < incrBound) {
+	incr[i].first->multiply(*incr[i].first,2);
+	incr[i].second *= 2;
+      }
+
     }//end for
   }//end while
-  
-  // if this cfg is free (state = false) then return smallestDistance (clearance)
-  // if this cfg is not free (state = true) then return -smallestDistance (penetration)
-  // clearInfo.setClearance((bInitState==false)?clearInfo.getClearance():-clearInfo.getClearance());
-  clearInfo.setClearance(clearInfo.getClearance());
 
+  //clean up allocated memory
   delete cfg;
-  for(i=0; i<directions.size(); i++)
+  for(int i=0; i<directions.size(); i++)
     delete directions[i];
-  for(i=0; i<tick.size(); i++)
+  for(int i=0; i<tick.size(); i++)
     delete tick[i];
-  for(i=0; i<incr.size(); i++)
-    delete incr[i];
+  for(int i=0; i<incr.size(); i++)
+    delete incr[i].first;
 
   return;
 }

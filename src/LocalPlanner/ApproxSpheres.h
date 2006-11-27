@@ -190,12 +190,12 @@ IsConnected(Environment *_env, Stat_Class& Stats,
     c1_clearance = _c1.clearance;
   else
     c1_clearance = _c1.ApproxCSpaceClearance(_env,Stats,cd,*this->cdInfo,
-					     dm,n.GetValue());
+					     dm,n.GetValue(),false);
   if (_c2.clearance != -1)
     c2_clearance = _c2.clearance;
   else
     c2_clearance = _c2.ApproxCSpaceClearance(_env,Stats,cd,*this->cdInfo,
-					     dm,n.GetValue());
+					     dm,n.GetValue(),false);
   
   Stats.IncLPCollDetCalls("ApproxSpheres", cd_cntr);
   if (c1_clearance + c2_clearance >= dist) {

@@ -94,6 +94,24 @@ GMSPolyhedron & Body::GetWorldPolyhedron() {
 }
 
 //===================================================================
+//  GetWorldBoundingBox
+//
+//  Function: Transform the vertices and normals of the BoundingBox
+//            w.r.t. the world frame
+//
+//  Output: The polyhedron transformed w.r.t the world frame
+//
+//===================================================================
+GMSPolyhedron & Body::GetWorldBoundingBox() {
+    int i;
+    for (i=0; i < bb_polyhedron.numVertices; i++) // Transform the vertices
+      bb_world_polyhedron.vertexList[i] = worldTransformation * bb_polyhedron.vertexList[i];
+    
+    return bb_world_polyhedron;
+}
+
+
+//===================================================================
 //  ChangeWorldPolyhedron
 //
 //=================================================================
@@ -115,6 +133,10 @@ void Body::ChangeWorldPolyhedron() {
 //=============================================================
 GMSPolyhedron & Body::GetPolyhedron() {
     return polyhedron;
+}
+
+GMSPolyhedron & Body::GetBoundingBoxPolyhedron() {
+  return bb_polyhedron;
 }
 
 
@@ -344,6 +366,41 @@ void Body::Read(char * _fileName) {
     polyhedron.Read(_fileName);
     worldPolyhedron = polyhedron;
 
+    GMSPolyhedron poly;
+    poly = GetPolyhedron();
+
+    double minx, miny, minz, maxx, maxy, maxz;
+    minx = maxx = poly.vertexList[0].getX();
+    miny = maxy = poly.vertexList[0].getY();
+    minz = maxz = poly.vertexList[0].getZ();
+    for(int i = 1 ; i < poly.numVertices ; i++){
+        if(poly.vertexList[i].getX() < minx) minx = poly.vertexList[i].getX();
+        else if(maxx < poly.vertexList[i].getX()) maxx = poly.vertexList[i].getX();
+
+        if(poly.vertexList[i].getY() < miny) miny = poly.vertexList[i].getY();
+        else if(maxy < poly.vertexList[i].getY()) maxy = poly.vertexList[i].getY();
+
+        if(poly.vertexList[i].getZ() < minz) minz = poly.vertexList[i].getZ();
+        else if(maxz < poly.vertexList[i].getZ()) maxz = poly.vertexList[i].getZ();
+    }
+
+//    boundingBox[0] = minx; boundingBox[1] = maxx;
+//    boundingBox[2] = miny; boundingBox[3] = maxy;
+//    boundingBox[4] = minz; boundingBox[5] = maxz;
+      bb_polyhedron.numVertices = 8;
+      bb_polyhedron.vertexList = new Vector3D[8];
+      bb_world_polyhedron.vertexList = new Vector3D[8];
+      bb_world_polyhedron.numVertices  = 8;
+      bb_polyhedron.vertexList[0] = Vector3D(minx,miny,minz);
+      bb_polyhedron.vertexList[1] = Vector3D(minx,miny,maxz);
+      bb_polyhedron.vertexList[2] = Vector3D(minx,maxy,minz);
+      bb_polyhedron.vertexList[3] = Vector3D(minx,maxy,maxz);
+      bb_polyhedron.vertexList[4] = Vector3D(maxx,miny,minz);
+      bb_polyhedron.vertexList[5] = Vector3D(maxx,miny,maxz);
+      bb_polyhedron.vertexList[6] = Vector3D(maxx,maxy,minz);
+      bb_polyhedron.vertexList[7] = Vector3D(maxx,maxy,maxz);
+
+///////////
     FindBoundingBox();
 }
 
