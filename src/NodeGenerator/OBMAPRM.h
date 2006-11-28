@@ -2,6 +2,8 @@
 #define OBMAPRM_h
 
 #include "OBPRM.h"
+#include "ObstacleBasedSamplers.h"
+#include "MedialAxisSamplers.h"
 
 #define MAX_NUM_NODES_TRIES 100
 
@@ -260,62 +262,45 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   cout << "clearanceFactor="    << this->clearanceFactor.GetValue()   << ") ";
 #endif
 
-  bool bExact = this->exactNodes.GetValue() == 1? true: false;
-  
-#if INTERMEDIATE_FILES
-  vector<CFG> path; 
-  path.reserve(this->numNodes.GetValue());
-#endif
+  CDInfo cdInfo;
+  ObstacleBasedSampler<CFG> ob_sampler(_env, Stats, cd, cdInfo, dm, this->numShells.GetValue(), 0);
+  FreeMedialAxisSampler<CFG> ma_sampler(_env, Stats, cd, cdInfo, dm, clearanceNum.GetValue(), penetrationNum.GetValue());
+  int nodes_offset = nodes.size();
 
-  std::string Callee(GetName());
-  {std::string Method("OBMAPRM::GenerateNodes");Callee=Callee+Method;}
-  
-  int nNodesGoal = this->numNodes.GetValue();
-  int nNodesGap = bExact ? nNodesGoal - nodes.size() : nNodesGoal;
-  //generate obprm nodes   
-  int nNumTries = 0;
-  while (nNodesGap >0 && nNumTries < MAX_NUM_NODES_TRIES){
-    vector<CFG> obprmCfgs;
-    this->numNodes.PutValue(nNodesGap);
-    OBPRM<CFG>::GenerateNodes(_env,Stats,cd,dm,obprmCfgs);
-    
-/*   //copy nodes to obprmCfgs and erase nodes vector */
-/*   int i; */
-/*   for (i=0; i < nodes.size(); i++) { */
-/*     obprmCfgs.push_back(nodes[i]); */
-/*   } */
-/*   nodes.clear(); */
-    cout << "\nobprmnodes = " << obprmCfgs.size() << "\n";
-  
-  //push nodes to medial axis
-    for (int i=0; i < obprmCfgs.size(); i++) {
-      CFG cfg = obprmCfgs[i];
-    
-      cfg.PushToMedialAxis(_env, Stats, cd, *this->cdInfo, 
-			   dm, clearanceNum.GetValue(), 
-			   penetrationNum.GetValue());
-    
-      if (cfg.InBoundingBox(_env) && !cfg.isCollision(_env, Stats, cd, *this->cdInfo,true, &Callee) ) {
-	nodes.push_back(CFG(cfg));
-#if INTERMEDIATE_FILES	
-	path.push_back(cfg);
-#endif	
-      }
-    }
-  
-    nNodesGap = bExact? nNodesGoal - nodes.size() : 0;
-    nNumTries ++;
-  } // while (nNodesGap >0)
+  int i=0; 
+  while(i<this->numNodes.GetValue()) {
+    CFG tmp;
+    tmp.GetRandomCfg(_env);
+    vector<CFG> in(1, tmp);
+    vector<CFG> out1, out2;
 
-  if (nNumTries >= MAX_NUM_NODES_TRIES)
-    cerr << GetName() << ": Can\'t generate engough nodes! " << endl;
+    sample(ob_sampler, in.begin(), in.end(),
+	   back_inserter<vector<CFG> >(out1), 1);
+    sample(ma_sampler, out1.begin(), out1.end(),
+           back_inserter<vector<CFG> >(out2), 1);
 
-  this->numNodes.PutValue(nNodesGoal);//restore the original value - not sure if necessary.
-#if INTERMEDIATE_FILES
-  //in util.h
+    copy(out2.begin(), out2.end(), back_inserter<vector<CFG> >(nodes));
+
+    i += out2.size();
+    //make sure advance if not exact
+    if(out2.empty() && this->exactNodes.GetValue() == 0) 
+      i++;
+  }
+
+  //correct any extras if exact true
+  if((this->exactNodes.GetValue() == 1) && 
+     ((nodes.size()-nodes_offset) > this->numNodes.GetValue())) 
+    nodes.erase(nodes.begin()+nodes_offset+this->numNodes.GetValue(),
+	        nodes.end());
+
+#ifdef INTERMEDIATE_FILES
+  vector<CFG> path;
+  copy(nodes.begin()+nodes_offset, nodes.end(),
+       back_inserter<vector<CFG> >(path));
   WritePathConfigurations("obmaprm.path", path, _env);
 #endif
 }
+
 
 #endif
 

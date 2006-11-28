@@ -2,6 +2,7 @@
 #define GaussPRM_h
 
 #include "NodeGeneratorMethod.h"
+#include "GaussianSamplers.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -34,14 +35,6 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
   virtual ~GaussPRM();
 
   //@}
-
-
-  //////////////////////////////////////////////////
-  //Gaussian number generator
-  //parameters: m = median given by user
-  //and s = standar deviation set to 0.5 for testSerial env.
-
-  double Gaussian(double m, double s);
 
 
   //////////////////////
@@ -272,129 +265,46 @@ PrintOptions(ostream& out_os){
 }
 
 template <class CFG>
-double
-GaussPRM<CFG>::
-Gaussian(double m, double s){
-  // normal distribution with mean m and standard deviation s
-  double x1, x2, w, r,r1;
-  do {
-    r1 =(double)rand();
-    r = ((double)(r1 / (RAND_MAX+1)))*-1;
-    //cout<<"1. RAND_MAX::"<<RAND_MAX<<";R1::"<<r1<<"; R::"<<r<<endl;
-    x1 = 2. * r - 1.;
-    r1 =(double)rand();
-    r = ( (double)(r1 / (RAND_MAX+1)) )*-1;
-    //cout<<"2. RAND_MAX::"<<RAND_MAX<<";R1::"<<r1<<"; R::"<<r<<endl;
-    x2 = 2. * r - 1.;
-    w = x1*x1 + x2*x2;
-    //cout<<"W: "<<w<<endl;
-}while (w >= 1. || w < 1E-30);
- 
-  w = sqrt((-2.*log(w))/w);
-  x1 *= w;
-  return x1 * s + m;
-}
-
-
-template <class CFG>
 void
 GaussPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      CollisionDetection* cd, DistanceMetric *dm,
 	      vector<CFG>& nodes) {
-
   LOG_DEBUG_MSG("GaussPRM::GenerateNodes()");	
 
-  if (gauss_d.GetValue() == 0) {  //if no Gauss_d value given, calculate from robot
+  if (gauss_d.GetValue() == 0)  //if no Gauss_d value given, calculate from robot
     gauss_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
-  }
 
 #ifndef QUIET
   cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
   cout << "(chunkSize=" << this->chunkSize.GetValue() << ") ";
   cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
   cout << "(d=" << gauss_d.GetValue() << ") ";
-
 #endif
 
-#if INTERMEDIATE_FILES
-  vector<CFG> path; 
-  path.reserve(this->numNodes.GetValue());
-#endif
-  bool bExact = this->exactNodes.GetValue() == 1? true: false;
+  CDInfo cdInfo;
+  GaussRandomSampler<CFG,true> gauss_sampler(_env, Stats, cd, cdInfo, dm, gauss_d.GetValue());
+  int nodes_offset = nodes.size();
 
-  
-  std::string Callee(GetName()), CallCnt;
-  {std::string Method("-GaussPRM::GenerateNodes"); Callee = Callee+Method;}
-  
-  // generate in bounding box
-  //for (int i=0,newNodes=0; i < this->numNodes.GetValue() || newNodes<1 ; i++) {
-  for(int attempts=0,newNodes=0,success_cntr=0;  
-      success_cntr < this->numNodes.GetValue() ; attempts++) { 
-    //generate random number with normal distribution
-    //this is the distance it will use to compute Cfg2
-
-    double gauss_mean = fabs(gauss_d.GetValue());
-    double gauss_std = sqrt(gauss_mean);
-    double gauss_dist = fabs(Gaussian( gauss_mean, gauss_mean));
-
-    // cfg1 & cfg2 are generated to be inside bbox
-    CFG cfg1, cfg2, incr;
-    cfg1.GetRandomCfg(_env);
-    incr.GetRandomRay(gauss_dist, _env, dm);
-    cfg2.add(cfg1, incr);
-
-    // because cfg2 is modified it must be checked again
-    if (cfg2.InBoundingBox(_env)) {    
-      CallCnt="1"; 
-      std::string tmpStr = Callee+CallCnt;
-      bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo,true, &tmpStr);
-      cfg1.obst = this->cdInfo->colliding_obst_index;
-      
-      CallCnt="2";
-      tmpStr = Callee+CallCnt; 
-      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*this->cdInfo,true, &tmpStr);
-      cfg2.obst = this->cdInfo->colliding_obst_index;
-      
-      if (cfg1_free && !cfg2_free) {
-	nodes.push_back(CFG(cfg1));   
-	newNodes++;
-#if INTERMEDIATE_FILES
-	path.push_back(cfg1);
-#endif
-	
-      } 
-      else if (!cfg1_free && cfg2_free) {
-	nodes.push_back(CFG(cfg2));   
-	newNodes++;
-#if INTERMEDIATE_FILES
-	path.push_back(cfg2);
-#endif
-      } 
-
-/*       else if (bExact){ */
-/* 	i--; // in this case, keep trying to generate the ith node; */
-/* 	continue; */
-/*       }// endif push nodes */
-      
-/*     }  */
-/*     else if (bExact){ //outside of BBxz */
-/*       i--; // in this case, keep trying to generate the ith node; */
-/*     } // endif BB */
-    }
-    if (bExact)
-      success_cntr = newNodes;
+  for(int i=0; i<this->numNodes.GetValue(); ++i) {    
+    CFG tmp;
+    tmp.GetRandomCfg(_env);
+    if(this->exactNodes.GetValue() == 1)
+      while(!gauss_sampler(tmp, nodes, 1)) {
+        tmp.GetRandomCfg(_env);
+      }
     else
-      success_cntr = attempts+1;
-    
-  } // endfor
-  
+      gauss_sampler(tmp, nodes, 1);
+  }
+
 #if INTERMEDIATE_FILES
+  vector<CFG> path;
+  copy(nodes.begin()+nodes_offset, nodes.end(),
+       back_inserter<vector<CFG> >(path));
   WritePathConfigurations("GaussPRM.path", path, _env);
 #endif
 
   LOG_DEBUG_MSG("~GaussPRM::GenerateNodes()"); 
-
 }
 
 
@@ -402,7 +312,6 @@ template <class CFG>
 void 
 GaussPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) {
-
   LOG_DEBUG_MSG("GaussPRM::GenerateNodes()"); 
  
   Environment* pEnv = in_pRegion;
@@ -411,7 +320,6 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
   DistanceMetric *dm = this->GetMPProblem()->GetDistanceMetric();
  
   GenerateNodes(pEnv,*pStatClass, pCd, dm, outCfgs);
-
 }
 
 

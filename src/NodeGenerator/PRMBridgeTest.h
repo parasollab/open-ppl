@@ -2,6 +2,7 @@
 #define BridgeTestPRM_h
 
 #include "NodeGeneratorMethod.h"
+#include "GaussianSamplers.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -34,14 +35,6 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
   virtual ~BridgeTestPRM();
 
   //@}
-
-
-  //////////////////////////////////////////////////
-  //Gaussian number generator
-  //parameters: m = median given by user
-  //and s = standar deviation set to 0.5 for testSerial env.
-
-  double GaussianDistribution(double m, double s);
 
 
   //////////////////////
@@ -277,46 +270,15 @@ PrintOptions(ostream& out_os){
 
 
 template <class CFG>
-double
-BridgeTestPRM<CFG>::
-GaussianDistribution(double m, double s){
-  // normal distribution with mean m and standard deviation s
-  double x1, x2, w, r,r1;
-  do {
-    r1 =(double)rand();
-    r = ((double)(r1 / (RAND_MAX+1)))*-1;
-    //cout<<"1. RAND_MAX::"<<RAND_MAX<<";R1::"<<r1<<"; R::"<<r<<endl;
-    x1 = 2. * r - 1.;
-    r1 =(double)rand();
-    r = ( (double)(r1 / (RAND_MAX+1)) )*-1;
-    //cout<<"2. RAND_MAX::"<<RAND_MAX<<";R1::"<<r1<<"; R::"<<r<<endl;
-    x2 = 2. * r - 1.;
-    w = x1*x1 + x2*x2;
-    //cout<<"W: "<<w<<endl;
-}while (w >= 1. || w < 1E-30);
- 
-  w = sqrt((-2.*log(w))/w);
-  x1 *= w;
-  return x1 * s + m;
-}
-
-
-template <class CFG>
 void
 BridgeTestPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
         CollisionDetection* cd, DistanceMetric* dm,
         vector<CFG>& nodes) {
+  LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()");
 
-  //DEBUG DATA
-  int fail1(0),fail2(0),fail3(0);
-  
-
-  //LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()");
-
-  if (bridge_d.GetValue() == 0) {  //if no bridge_d value given (standard deviation), calculate from robot
+  if (bridge_d.GetValue() == 0)   //if no bridge_d value given (standard deviation), calculate from robot
     bridge_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
-  } 
 
 #ifndef QUIET
   cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
@@ -324,88 +286,30 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
   cout << "(d=" << bridge_d.GetValue() << ") ";
 #endif
-  
+
+  CDInfo cdInfo;
+  BridgeTestRandomFreeSampler<CFG> bridge_sampler(_env, Stats, cd, cdInfo, dm, bridge_d.GetValue());
+  int nodes_offset = nodes.size();
+
+  for(int i=0; i<this->numNodes.GetValue(); ++i) {
+    CFG tmp;
+    tmp.GetRandomCfg(_env);
+    if(this->exactNodes.GetValue() == 1)
+      while(!bridge_sampler(tmp, nodes, 1)) {
+        tmp.GetRandomCfg(_env);
+      }
+    else 
+      bridge_sampler(tmp, nodes, 1);
+  }
+
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
-  path.reserve(this->numNodes.GetValue());
-#endif
-  bool bExact = this->exactNodes.GetValue() == 1? true: false;
-
-  std::string Callee(GetName()), CallCnt;
-  {std::string Method("-BridgeTestPRM::GenerateNodes"); Callee = Callee+Method;}
-
-  int debug_attempts;
-  // generate in bounding box
-  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < this->numNodes.GetValue() ; attempts++) {
-    // cfg1 & cfg2 are generated to be inside bbox
-    CFG cfg1, cfg2, cfgP, incr;
-
-    cfg1.GetRandomCfg(_env);
-
-    CallCnt="1"; 
-    std::string tmpStr = Callee+CallCnt;
-    
-    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
-    //bool cfg1_bbox = cfg1.InBoundingBox(_env);
-//    cout << "Attempting to find 1st collision node" << endl;
-    if (!cfg1_free){
-//    cout << "Sucessfully found 1st collision node" << endl;
-      double gauss_mean = fabs(bridge_d.GetValue());
-      double gauss_std = sqrt(gauss_mean);
-      double gauss_dist = fabs(GaussianDistribution( gauss_mean, gauss_mean));
- //     double gauss_dist = fabs(randgauss(0,2*gauss_mean,gauss_mean,gauss_mean));
-      //cout << "gauss_dist = " << gauss_dist << endl;
-      
-//      cout << "Got gass dist"<< endl;
-      //cfg2.c1_towards_c2(cfg1,cfg2,gauss_dist);
-//      cout << "Calling GetRandomRay where d = " << gauss_dist << endl;
-        incr.GetRandomRay(gauss_dist, _env, dm);
-//      cout << "Got Random ray" << endl;
-      cfg2.add(cfg1, incr);
-
-      CallCnt="2";
-      tmpStr = Callee+CallCnt; 
-
-      bool cfg2_free = !cfg2.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
-//      cout << "Cfg::isCollision" << endl;
-      bool cfg2_bbox = cfg2.InBoundingBox(_env);
-//      cout << "Cfg::InBBox" << endl;
-//     cout << "Attempting to find 2st collision node" << endl;
-      if (!cfg2_free && cfg2_bbox) {
-//      cout << "Sucessfully found 2st collision node" << endl;
-        cfgP.WeightedSum(cfg1,cfg2,0.5);
-        CallCnt="3";
-        tmpStr = Callee+CallCnt; 
-
-        bool cfgP_free = !cfgP.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
-        bool cfgP_bbox = cfgP.InBoundingBox(_env);
-//        cout << "Attempting to find free midpoint" << endl;
-        if(cfgP_free && cfgP_bbox) {
-//        cout << "Sucessfully found free midpoint" << endl;
-          nodes.push_back(CFG(cfgP)); 
-          newNodes++;
-#if INTERMEDIATE_FILES
-          path.push_back(cfgP);
-#endif
-        } else {++fail3;/*cout << "Failed to find free midpoint" << endl;*/}
-      } else {++fail2;/*cout << "Failed to find 2nd collision node ";if(!cfg2_bbox) {cout << "b/c out of bbox" << endl;} else {cout << "b/c not in coll"<<endl; } */}
-    } else {++fail1;/*cout<<"Failed to find 1st collision node"<< endl;*/}
-    if (bExact)
-      success_cntr = newNodes;
-    else
-      success_cntr = attempts+1;
-    debug_attempts = attempts;
-  } // endfor
-
- // cout << "BRIDGE_TEST_FINISHED:: attempts = "<< debug_attempts << ", fail1 = " << fail1;
- // cout << ", fail2 = " << fail2 << ", fail3 = " << fail3 << endl;
-
-#if INTERMEDIATE_FILES
+  copy(nodes.begin()+nodes_offset, nodes.end(),
+       back_inserter<vector<CFG> >(path));
   WritePathConfigurations("BridgeTestPRM.path", path, _env);
 #endif
 
   LOG_DEBUG_MSG("~BridgeTestPRM::GenerateNodes()"); 
-
 }
 
 
@@ -413,7 +317,6 @@ template <class CFG>
 void 
 BridgeTestPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) {
-
   LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()"); 
 
   Environment* pEnv = in_pRegion;
@@ -422,7 +325,6 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
   DistanceMetric *dm = this->GetMPProblem()->GetDistanceMetric();
  
   GenerateNodes(pEnv,*pStatClass, pCd, dm, outCfgs);
-
 }
 
 

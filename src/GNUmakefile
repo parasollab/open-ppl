@@ -46,8 +46,8 @@ include $(OBPRM)/GNUmakefile.OBPRMdefaults
 
 #common misc.
 DEFS = $(DEBUG_DEF) $(CD_DEF) -DCHECKIFSAMECC=$(CHECKIFSAMECC) -DVERBOSE=0 $(STAPLFLAGS) $(DEPS) $(ROBOT_DEF) -DTIXML_USE_STL -Wno-deprecated 
-INCLUDES = -I. $(STAPL_INCL) $(CD_INCL) $(PMPL_INCL)
-LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB)
+INCLUDES = -I. $(STAPL_INCL) $(CD_INCL) $(PMPL_INCL) -I/usr/include/boost
+LIBS = $(OBPRMLIB) $(CD_LIB) $(STAPLLIB) $(TINYXMLLIB) -L/usr/lib -lboost_program_options
 
 #compile targest
 default: libs

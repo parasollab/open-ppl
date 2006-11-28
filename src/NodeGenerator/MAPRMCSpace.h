@@ -2,6 +2,7 @@
 #define CSpaceMAPRM_h
 
 #include "NodeGeneratorMethod.h"
+#include "MedialAxisSamplers.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -249,38 +250,28 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   cout << "clearanceNum="   << clearanceNum.GetValue()   << ", ";
   cout << "penetrationNum=" << penetrationNum.GetValue() << ") ";
 #endif
-  
+
+  CDInfo cdInfo;
+  FreeMedialAxisSampler<CFG> ma_sampler(_env, Stats, cd, cdInfo, dm, clearanceNum.GetValue(), penetrationNum.GetValue());
+  int nodes_offset = nodes.size();
+
+  for(int i=0; i<this->numNodes.GetValue(); ++i) {
+    CFG tmp;
+    tmp.GetRandomCfg(_env);
+    if(this->exactNodes.GetValue() == 1)
+      while(!ma_sampler(tmp, nodes, 1)) {
+        tmp.GetRandomCfg(_env);
+      }
+    else
+      ma_sampler(tmp, nodes, 1);
+  }
+
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
-  path.reserve(this->numNodes.GetValue());
-#endif
-  bool bExact = this->exactNodes.GetValue() == 1? true: false;
-
-  std::string Callee(GetName());
-  std::string Method("-cspaceMAPRM::GenerateNodes"); 
-  Callee = Callee+Method;
-  
-  // MAPRM style node generation using clearances in the CSpace
-  for (int i=0; i < this->numNodes.GetValue(); i++) {
-    CFG cfg;
-    cfg.GetMedialAxisCfg(_env,Stats,cd,*this->cdInfo,dm,
-			 clearanceNum.GetValue(),penetrationNum.GetValue());
-    //if in collision and asking for exactNum, keep generating
-    
-    if (cfg.InBoundingBox(_env) && !cfg.isCollision(_env,Stats,cd,*this->cdInfo,&Callee)) {
-      nodes.push_back(CFG(cfg));
-#if INTERMEDIATE_FILES
-      path.push_back(cfg);
-#endif
-    }else if (bExact){ // keep generating the ith node
-      i --;
-    }
-  }
-  
-#if INTERMEDIATE_FILES
-  //in util.h
+  copy(nodes.begin()+nodes_offset, nodes.end(),
+       back_inserter<vector<CFG> >(path));
   WritePathConfigurations("csmaprm.path", path, _env);
-#endif
+#endif  
 }
 
 
@@ -288,7 +279,6 @@ template <class CFG>
 void
 CSpaceMAPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &nodes) {
-  
   Environment* _env = in_pRegion;
   Stat_Class& Stats = *(in_pRegion->GetStatClass());
   CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();

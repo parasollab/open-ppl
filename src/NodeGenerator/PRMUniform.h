@@ -2,6 +2,7 @@
 #define BasicPRM_h
 
 #include "NodeGeneratorMethod.h"
+#include "UniformSamplers.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -233,8 +234,8 @@ BasicPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      CollisionDetection* cd, DistanceMetric *,
 	      vector<CFG>& nodes) {
-  string callee("BasicPRM::GenerateNodes");
   LOG_DEBUG_MSG("BasicPRM::GenerateNodes()");	
+
 #ifndef QUIET
   if (this->exactNodes.GetValue()==1)
      cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
@@ -242,64 +243,30 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
 #endif
   
-  //PRM style node generation -- generate in expanded bounding box
-  vector<Cfg*> path;
-  
+  CDInfo cdInfo;
+  UniformRandomFreeSampler<CFG> uniform_sampler(_env, Stats, cd, cdInfo);
+  int nodes_offset = nodes.size();
+
   if (this->exactNodes.GetValue() == 1) { // we want to obtain numNodes free nodes 
-    CFG tmp;
-    int default_maxTries = 100;
-    for (int i=0; i < this->numNodes.GetValue(); ++i) {
-       bool collision = true;
-       int j=0;
-       while (collision && (j<default_maxTries)) {
-         j++;
-         Stats.IncNodes_Attempted();
-         tmp.GetRandomCfg(_env);
-         
-         if (tmp.InBoundingBox(_env) && !tmp.isCollision(_env, Stats, cd, *this->cdInfo,true, &callee)) {
-	   nodes.push_back( CFG(tmp));
-	   path.push_back ( (Cfg*)tmp.CreateNewCfg() );
-	   Stats.IncNodes_Generated();
-           collision = false;
-         }
-//#ifdef COLLISIONCFG
-//	 else{
-//	   m_vGeneratedCollisionConfiguration[cdInfo->colliding_obst_index].push_back(tmp);
-//	 }
-//#endif
-
-       }
-       if (j == default_maxTries)
-	 cerr << "Can't generate enought nodes! " << endl;
+    for(int i=0; i<this->numNodes.GetValue(); ++i) {
+      CFG tmp;
+      if(!uniform_sampler(tmp, nodes, 100)) //default_maxTries = 100
+        cerr << "Can't generate enough nodes!\n";
     }
-  } else { //we want to try numNodess attempts (either free or in collision)
-    CFG tmp;
-    for (int i=0; i < this->numNodes.GetValue(); ++i) {
-      Stats.IncNodes_Attempted();
-      tmp.GetRandomCfg(_env);
 
-      if (tmp.InBoundingBox(_env) && !tmp.isCollision(_env, Stats, cd, *this->cdInfo,true, &callee)) {
-	nodes.push_back( CFG(tmp));
-	path.push_back ( (Cfg*)tmp.CreateNewCfg() );
-	Stats.IncNodes_Generated();
-      }
-#ifdef COLLISIONCFG
-      else{
-	m_vGeneratedCollisionConfiguration[this->cdInfo->colliding_obst_index].push_back(tmp);
-      }
-#endif
+  } else { //we want to try numNodess attempts (either free or in collision)
+    for(int i=0; i<this->numNodes.GetValue(); ++i) {
+      CFG tmp;
+      uniform_sampler(tmp, nodes, 1); //attempts only
     }
   }
-  
+
 #if INTERMEDIATE_FILES
-  //in util.h
+  vector<CFG> path;
+  copy(nodes.begin()+nodes_offset, nodes.end(),
+       back_inserter<vector<CFG> >(path));
   WritePathConfigurations("prm.path", path, _env);
 #endif	
-  int i;
-  for(i=0; i<path.size(); i++)
-    if (path[i]!=NULL)
-      delete path[i];
-  
   
   LOG_DEBUG_MSG("~BasicPRM::GenerateNodes()"); 
 }
@@ -310,6 +277,8 @@ template <class CFG>
 void 
 BasicPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) {
+
+/*** note, duplicate code here, should call UniformRandomFreeSampler instead ***/
 
   LOG_DEBUG_MSG("BasicPRM::GenerateNodes()"); 
   string callee("BasicPRM::GenerateNodes");
