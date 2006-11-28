@@ -55,7 +55,7 @@ public:
       int ClearClock();
 
       ///Start the clock and the name is identity of this clock.
-      int StartClock( char *Name );
+      int StartClock(const char *Name );
 
       ///Stop the clock and calculate the total running time.
       int StopClock();

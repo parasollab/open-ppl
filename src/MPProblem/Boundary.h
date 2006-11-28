@@ -40,7 +40,7 @@ class BoundingBox : public Boundary {
 
   void SetRanges(std::vector<double> &ranges);
 
-  void Print(std::ostream& _os, char range_sep=':', char par_sep=';');
+  void Print(std::ostream& _os, char range_sep=':', char par_sep=';') const;
 
   void Parse(std::stringstream &i_bbox);
 

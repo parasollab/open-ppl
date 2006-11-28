@@ -208,8 +208,8 @@ IfWrap(int par) {
 
 void
 BoundingBox::
-Print(std::ostream& _os, char range_sep, char par_sep) {
-  std::vector< std::pair<double, double> >::iterator itrb;
+Print(std::ostream& _os, char range_sep, char par_sep) const {
+  std::vector< std::pair<double, double> >::const_iterator itrb;
   _os << "[ " ;
   for (itrb = bounding_box.begin(); itrb < bounding_box.end(); ++itrb) {
     if (itrb+1 != bounding_box.end())

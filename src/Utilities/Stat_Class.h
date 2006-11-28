@@ -129,7 +129,7 @@ protected:
   char CDNameList[MaxCD][50];
 
   int SizeCC[MaxCC];
-
+public:
   char LPNameList[MaxLP][50];
   unsigned long int LPConnections[MaxLP];
   unsigned long int LPAttempts[MaxLP];

@@ -158,6 +158,25 @@ Vector3D Cfg_free_tree::GetRobotCenterPosition() const {
 }
 
 
+Vector3D Cfg_free_tree::GetRobotCenterofMass(Environment* env) const {
+  ConfigEnvironment(env);
+
+  Vector3D com(0,0,0);
+  MultiBody* mb = env->GetMultiBody(env->GetRobotIndex());
+  for(int i=0; i<=NumofJoints; ++i) {
+    GMSPolyhedron poly = mb->GetFreeBody(i)->GetWorldPolyhedron();
+    Vector3D poly_com(0,0,0);
+    for(int j=0; j<poly.numVertices; ++j)
+      poly_com = poly_com + poly.vertexList[j];
+    poly_com = poly_com / poly.numVertices;
+    com = com + poly_com;
+  }
+  com = com / (NumofJoints+1);
+
+  return com;
+}
+
+
 void Cfg_free_tree::GetRandomCfg(double R, double rStep){
   double alpha,beta,z, z1;
   double jointAngle;

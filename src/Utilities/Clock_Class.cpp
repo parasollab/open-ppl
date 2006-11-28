@@ -70,7 +70,7 @@ ClearClock() {
 int
 Clock_Class::
 
-StartClock(char *Name) {
+StartClock(const char *Name) {
 
 ///Modified for VC
 #if defined(_WIN32)

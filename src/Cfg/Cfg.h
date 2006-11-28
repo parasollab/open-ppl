@@ -202,6 +202,9 @@ class Cfg {
   ///Get internal storage of configuration
   const vector<double>& GetData() const;
   virtual Vector3D GetRobotCenterPosition() const = 0;
+  virtual Vector3D GetRobotCenterofMass(Environment* env) const {
+    return GetRobotCenterPosition();
+  }
   /// Return the number of degrees of freedom for the configuration class
   int DOF() const;
   int posDOF() const;

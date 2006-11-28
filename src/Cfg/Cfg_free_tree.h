@@ -47,6 +47,7 @@ class Cfg_free_tree : public Cfg_free {
 
   ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition() const;
+  virtual Vector3D GetRobotCenterofMass(Environment* env) const;
 
   virtual const char* GetName() const;
 
