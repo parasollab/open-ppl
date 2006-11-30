@@ -12,6 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include OBPRM headers
 #include "Body.h"
+#include <set>
 
 /* Class FreeBody is a movable Body in workspace.
  * This class provide more specifice methods for manipulate movable object.
@@ -123,6 +124,8 @@ protected:
   //////////////////////////////////////////////////////////////////////////////////////////
 
 private:
+    Transformation & ComputeWorldTransformation(std::set<int, less<int> >& visited);
+
     //-----------------------------------------------------------
     //  Data
     //-----------------------------------------------------------

@@ -38,6 +38,7 @@ GMSPolyhedron & FreeBody::GetWorldPolyhedron() {
     return worldPolyhedron;
 }
 
+
 //===================================================================
 //  Configure
 //  
@@ -51,6 +52,7 @@ void FreeBody::Configure(Transformation & _transformation){
     worldTransformation = _transformation;
 }
 
+#include "MultiBody.h"
 //===================================================================
 //  GetWorldTransformation
 //
@@ -66,9 +68,23 @@ void FreeBody::Configure(Transformation & _transformation){
 //  Refer to a seperate digram for the transformation structure
 //
 //===================================================================
-Transformation & FreeBody::GetWorldTransformation() {
+Transformation& 
+FreeBody::
+GetWorldTransformation() {
+  std::set<int, less<int> > visited;
+  return this->ComputeWorldTransformation(visited);
+}
+Transformation& 
+FreeBody::
+ComputeWorldTransformation(std::set<int, less<int> >& visited) {
+  if(visited.find(multibody->GetFreeBodyIndex(this)) != visited.end()) {
+    return worldTransformation;
+
+  } else {
+    visited.insert(multibody->GetFreeBodyIndex(this));
+
     //for the case when the base is a freebody.
-    if(backwardConnectionCount == 0)  // base link
+    if(backwardConnectionCount == 0)   // base link
 	return worldTransformation;
     
     ///////////////////////////////////////////////////////////////////////// 
@@ -82,7 +98,7 @@ Transformation & FreeBody::GetWorldTransformation() {
 
     Transformation dh(backwardConnection[0]->GetDHparameters());
     worldTransformation = 
-        backwardConnection[0]->GetPreviousBody()->GetWorldTransformation()
+        ((FreeBody*)(backwardConnection[0]->GetPreviousBody()))->ComputeWorldTransformation(visited)
         * tlastbody
         * dh
         * backwardConnection[0]->GetTransformationToBody2();
@@ -90,12 +106,13 @@ Transformation & FreeBody::GetWorldTransformation() {
 
     Transformation dh(backwardConnection[0]->GetDHparameters());
     worldTransformation =
-        backwardConnection[0]->GetPreviousBody()->GetWorldTransformation()
+        ((FreeBody*)(backwardConnection[0]->GetPreviousBody()))->ComputeWorldTransformation(visited)
         * backwardConnection[0]->GetTransformationToDHFrame()
         * dh
         * backwardConnection[0]->GetTransformationToBody2();
 
     return worldTransformation;
+  }
 }
 
 
