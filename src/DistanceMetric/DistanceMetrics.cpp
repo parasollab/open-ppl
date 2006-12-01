@@ -31,6 +31,11 @@ DistanceMetric() {
   CenterOfMassDistance* com = new CenterOfMassDistance();
   all.push_back(com);
 
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+  ReachableDistance* rd = new ReachableDistance();
+  all.push_back(rd);
+#endif
+
   m_distance_time = 0;
 }
 
@@ -916,3 +921,46 @@ Distance(const Cfg& _c1, const Cfg& _c2) {
   Vector3D d = _c1.GetRobotCenterPosition()-_c2.GetRobotCenterPosition();
   return d.magnitude();
 }
+
+
+//////////
+
+
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+#include "Cfg_reach_cc.h"
+
+double 
+ReachableDistance::
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
+  /*
+  cout << "Computing Distance between\n";
+  ((Cfg_reach_cc&)_c1).print(cout); cout << endl;
+  ((Cfg_reach_cc&)_c2).print(cout); cout << endl;
+  */
+
+  //later make input param
+  double s1 = 0.33;
+  double s2 = 0.33;
+
+  //get the position difference
+  double d_position = 0.0;
+  vector<double> v1 = _c1.GetData();
+  vector<double> v2 = _c2.GetData();
+  for(int i=0; i<3; ++i) {
+    pair<double,double> range = env->GetBoundingBox()->GetRange(i);
+    d_position += sqr(fabs(v1[i] - v2[i])/(range.second-range.first));
+  }
+  d_position = sqrt(d_position);
+  //cout << "d_position = " << d_position << endl;
+
+  //get the length difference
+  double d_length = ((Cfg_reach_cc&)_c1).LengthDistance(_c2);
+  //cout << "d_length = " << d_length << endl;
+
+  //get the orientation difference
+  double d_ori = ((Cfg_reach_cc&)_c1).OrientationDistance(_c2);
+  //cout << "d_ori = " << d_ori << endl;
+
+  return (s1*d_position + s2*d_length + (1-s1-s2)*d_ori);
+}
+#endif

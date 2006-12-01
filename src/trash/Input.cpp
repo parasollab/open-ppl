@@ -36,6 +36,10 @@ Input::Input():
 	seed             ("-seed", 0x1234ABCD, LONG_MIN, LONG_MAX),
         posres           ("-posres",          0.05, -1000, 1000),
         orires           ("-orires", ORIENTATION_RES, -1000, 1000),
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+	rdres("-rdres", 0.05, -1000, 1000),
+	gamma("-gamma", 0.5, 0, 1),
+#endif
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
         bbox             ("-bbox",""),
 	bbox_ref         ("-bbox_ref",""),
@@ -75,6 +79,10 @@ Input::Input():
     bbox_scale.PutDesc        ("FLOAT  ","");
     posres.PutDesc            ("FLOAT  "," *CALCULATED*   position    resolution");
     orires.PutDesc            ("FLOAT  "," **HARDCODED**  orientation resolution");
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+    rdres.PutDesc("FLOAT","reachable distance resolution");
+    gamma.PutDesc("FLOAT","probability to sample convex orientations");
+#endif
     numofJoints.PutDesc       ("INT    "," number of articulated linkages");
 
     int i;
@@ -269,6 +277,10 @@ void Input::ReadCommandLine(int argc, char** argv){
       } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
       } else if ( posres.AckCmdLine(&i, argc, argv) ) {
       } else if ( orires.AckCmdLine(&i, argc, argv) ) {
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+      } else if ( rdres.AckCmdLine(&i, argc, argv) ) {
+      } else if ( gamma.AckCmdLine(&i, argc, argv) ) {
+#endif
       } else if ( numofJoints.AckCmdLine(&i, argc, argv) ) {
 	
       } else if ( GNstrings[numGNs]->AckCmdLine(&i, argc, argv) ) {
@@ -388,6 +400,10 @@ PrintUsage(ostream& _os,char *executablename){
         _os << "\n  "; bbox_scale.PrintUsage(_os);
         _os << "\n  "; posres.PrintUsage(_os);
         _os << "\n  "; orires.PrintUsage(_os);
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+        _os << "\n  "; rdres.PrintUsage(_os);
+        _os << "\n  "; gamma.PrintUsage(_os);
+#endif
 	_os << "\n  "; numofJoints.PrintUsage(_os);
         _os << "\n";
         _os << "\n  "; GNstrings[0]->PrintUsage(_os);
@@ -428,6 +444,10 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"bbox_scale"<<"\t"<<bbox_scale.GetValue();
   _os <<"\n"<<setw(FW)<<"posres"<<"\t"<<posres.GetValue();
   _os <<"\n"<<setw(FW)<<"orires"<<"\t"<<orires.GetValue();
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+  _os <<"\n"<<setw(FW)<<"rdres"<<"\t"<<rdres.GetValue();
+  _os <<"\n"<<setw(FW)<<"gamma"<<"\t"<<gamma.GetValue();
+#endif
   _os <<"\n"<<setw(FW)<<"numofjoints"<<"\t"<<numofJoints.GetValue();
 
   int i;
@@ -472,6 +492,12 @@ Input::PrintDefaults(){
             posres.GetDefault() << endl << endl;
    cout << setw(FW) << "orientation resolution" << " (" << orires.GetFlag() << ") : " <<
             orires.GetDefault() << endl << endl;
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+   cout << setw(FW) << "reachable distance resolution" << " (" << rdres.GetFlag() << ") : " <<
+            rdres.GetDefault() << endl << endl;
+   cout << setw(FW) << "convexity probability" << " (" << gamma.GetFlag() << ") : " <<
+            gamma.GetDefault() << endl << endl;
+#endif
    cout << setw(FW) << "number of joints" << " (" << numofJoints.GetFlag() << ") : " <<
             numofJoints.GetDefault() << endl << endl;
    cout << setw(FW) << "bounding box scale" << " (" << bbox_scale.GetFlag() << ") : " <<
@@ -484,20 +510,20 @@ Input::PrintDefaults(){
    // "selected" is recognized by the setid number.
 
    // Generate Map Nodes
-   GenerateMapNodes<Cfg_free> gn;
+   GenerateMapNodes<CfgType> gn;
    cout << setw(FW) << "Generate Map Nodes" << " (" << GNstrings[0]->GetFlag() <<
      ") : default = ";
    gn.PrintDefaults(cout);
 
    // Connect Map Nodes
-   ConnectMap<Cfg_free, DefaultWeight> cn;          // default value of cnInfo.cnsetid is set
+   ConnectMap<CfgType, WeightType> cn;          // default value of cnInfo.cnsetid is set
    cout << setw(FW) << endl << endl
         << "Connect Map (" << CNstrings[0]->GetFlag() <<
       ") : default ";
    cn.PrintDefaults(cout);
 
    // Local Planners
-   LocalPlanners<Cfg_free, DefaultWeight> lp;
+   LocalPlanners<CfgType, WeightType> lp;
    // this default is already set in ConnectMapNodes::DefaultInit()
    cout << setw(FW) << endl << endl << "Local Planners" << " (" << LPstrings[0]->GetFlag() <<
       ") : default = ";
@@ -511,7 +537,7 @@ Input::PrintDefaults(){
    dm.PrintDefaults(cout);
 
    //Map Evaluator
-   MapEvaluator<Cfg_free, DefaultWeight> me;
+   MapEvaluator<CfgType, WeightType> me;
    cout << setw(FW) << endl << endl << "Map Evaluators" << " (" << MEstrings[0]->GetFlag() << ") : default = ";
    me.PrintDefaults(cout);
 

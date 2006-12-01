@@ -217,6 +217,10 @@ public:
 
         num_param<double> posres;               ///< Position Resolution
         num_param<double> orires;               ///< Orientation Resolution
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+	num_param<double> rdres;
+	num_param<double> gamma;
+#endif
 
         n_str_param       bbox;                 ///< Environment Bounding Box
 	n_str_param       bbox_ref;                 ///< Environment Bounding Box

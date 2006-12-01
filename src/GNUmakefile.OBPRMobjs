@@ -19,6 +19,9 @@ OBJS = \
 	Cfg/Cfg_free_tree.o \
 	Cfg/Cfg_fixed_tree.o \
 	Cfg/Cfg_2D.o \
+	Cfg/VirtualLink.o \
+	Cfg/Cfg_reach_cc.o \
+	Cfg/Cfg_reach_cc_fixed.o \
 	MPProblem/Environment.o \
 	Utilities/util.o \
 	Utilities/Clock_Class.o \

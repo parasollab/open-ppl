@@ -62,6 +62,9 @@ inline double sqr(double a)
 {
     return a*a;
 }
+
+double GaussianDistribution(double m, double s);
+
 //@}
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -476,4 +479,3 @@ private:
 
 
 #endif
-

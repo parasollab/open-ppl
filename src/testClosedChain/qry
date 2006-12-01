@@ -1,0 +1,4 @@
+../query -f loop_20 -numofjoints 20 \
+	-cd RAPID -rdres 1 \
+	-cNodes closest 5 \
+	-lp straightline binarySearch 0

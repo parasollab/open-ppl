@@ -6,7 +6,8 @@
 #include "Cfg_free_tree.h"
 #include "Cfg_fixed_tree.h"
 #include "Cfg_fixed_PRR.h"
-
+#include "Cfg_reach_cc.h"
+#include "Cfg_reach_cc_fixed.h"
 
 #include "Weight.h"
 
@@ -27,6 +28,16 @@ typedef DefaultWeight WeightType;
 
 #ifdef PMPCfg2D
 typedef Cfg_2D CfgType;
+typedef DefaultWeight WeightType;
+#endif
+
+#ifdef PMPReachDistCC
+typedef Cfg_reach_cc CfgType;
+typedef DefaultWeight WeightType;
+#endif
+
+#ifdef PMPReachDistCCFixed
+typedef Cfg_reach_cc_fixed CfgType;
 typedef DefaultWeight WeightType;
 #endif
 

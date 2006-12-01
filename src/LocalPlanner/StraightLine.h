@@ -2,6 +2,7 @@
 #define StraightLine_h
 
 #include "LocalPlannerMethod.h"
+#include "type_traits/is_closed_chain.h" //used to switch between default and specialized impl. of IsConnected
 
 template <class CFG, class WEIGHT>
 class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
@@ -52,13 +53,40 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    *@return See description above.
    *@see lineSegmentInCollision and IsConnected_straightline_simple
    */
+  //// wrapper function to call appropriate impl based on CFG type
   virtual bool IsConnected(Environment *env, Stat_Class& Stats,
          CollisionDetection *cd,
          DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
-         bool savePath=false, bool saveFailedPath=false);
+         bool savePath=false, bool saveFailedPath=false) {
+    return _IsConnected<CFG>(env, Stats, cd, dm, _c1, _c2,
+			     lpOutput, positionRes, orientationRes,
+			     checkCollision, savePath, saveFailedPath);
+  }
+  //// work function, default, non closed chains
+  template <typename Enable>
+  bool _IsConnected(Environment *_env, Stat_Class& Stats,
+         CollisionDetection *cd,
+         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         LPOutput<CFG, WEIGHT>* lpOutput,
+         double positionRes, double orientationRes,
+         bool checkCollision=true, 
+         bool savePath=false, bool saveFailedPath=false,
+	 typename boost::disable_if<is_closed_chain<Enable> >::type* dummy = 0
+	);
+  //// work function, specialization for closed chains
+  template <typename Enable>
+  bool _IsConnected(Environment *_env, Stat_Class& Stats,
+         CollisionDetection *cd,
+         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         LPOutput<CFG, WEIGHT>* lpOutput,
+         double positionRes, double orientationRes,
+         bool checkCollision=true, 
+         bool savePath=false, bool saveFailedPath=false,
+	 typename boost::enable_if<is_closed_chain<Enable> >::type* dummy = 0
+	);
 
  protected:
   /**Check if two Cfgs could be connected by straight line.
@@ -287,16 +315,21 @@ CreateCopy() {
   return _copy;
 }
 
+
+//// default implementation for non closed chains
 template <class CFG, class WEIGHT>
+template <typename Enable>
 bool 
 StraightLine<CFG, WEIGHT>::
-IsConnected(Environment *_env, Stat_Class& Stats,
-      CollisionDetection *cd, DistanceMetric *dm, 
-      const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
-      double positionRes, double orientationRes,
-      bool checkCollision, 
-      bool savePath, bool saveFailedPath) {
-  
+_IsConnected(Environment *_env, Stat_Class& Stats,
+         CollisionDetection *cd,
+         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         LPOutput<CFG, WEIGHT>* lpOutput,
+         double positionRes, double orientationRes,
+         bool checkCollision, 
+         bool savePath, bool saveFailedPath,
+	 typename boost::disable_if<is_closed_chain<Enable> >::type* dummy) 
+{
   Stats.IncLPAttempts( "Straightline" );
   int cd_cntr = 0; 
 
@@ -322,6 +355,124 @@ IsConnected(Environment *_env, Stat_Class& Stats,
       Stats.IncLPConnections( "Straightline" );
 
     Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
+    return connected;
+}
+
+
+//// specialized implementation for closed chains
+template <class CFG, class WEIGHT>
+template <typename Enable>
+bool 
+StraightLine<CFG, WEIGHT>::
+_IsConnected(Environment *_env, Stat_Class& Stats,
+         CollisionDetection *cd,
+         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         LPOutput<CFG, WEIGHT>* lpOutput,
+         double positionRes, double orientationRes,
+         bool checkCollision, 
+         bool savePath, bool saveFailedPath,
+	 typename boost::enable_if<is_closed_chain<Enable> >::type* dummy)
+{
+  Stats.IncLPAttempts( "Straightline" );
+  int cd_cntr = 0; 
+
+    bool connected;
+    if(CFG::OrientationsDifferent(_c1, _c2)) {
+      //cout << "orientations different\n";
+      CFG intermediate;
+      bool success = intermediate.GetIntermediate(_c1, _c2); 
+      //cout << "found intermediate: " << success << endl;
+      if(!success)
+	return false;
+      
+      if(binarySearch.GetValue()) {
+	connected = (IsConnectedSLBinary(_env, Stats, cd, dm, 
+					 _c1, intermediate, 
+					 lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) 
+		     &&
+		     IsConnectedSLBinary(_env, Stats, cd, dm,
+					 intermediate, _c2,
+					 lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath)
+		    );
+	if(!connected) { //attempt other direction
+	  connected = (IsConnectedSLBinary(_env, Stats, cd, dm, 
+					   _c2, intermediate, 
+					   lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) 
+		       &&
+		       IsConnectedSLBinary(_env, Stats, cd, dm,
+					   intermediate, _c1,
+					   lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath)
+		      );
+	  if(savePath)
+	    reverse(lpOutput->path.begin(), lpOutput->path.end());
+	}
+      } else {
+	/* //for debugging
+	cout << "_c1 -> intermediate: ";
+	LPOutput<CFG,WEIGHT> out;
+	cout << IsConnectedSLSequential(_env, Stats, cd, dm,
+					_c1, intermediate,
+					&out, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+	WritePathConfigurations("path1.path", out.path, _env);
+	cout << "intermediate -> _c2: ";
+	out = LPOutput<CFG,WEIGHT>();
+	cout << IsConnectedSLSequential(_env, Stats, cd, dm,
+					intermediate, _c2,
+					&out, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+	WritePathConfigurations("path2.path", out.path, _env);
+	*/
+	connected = (IsConnectedSLSequential(_env, Stats, cd, dm, 
+					     _c1, intermediate, 
+					     lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) 
+		     &&
+		     IsConnectedSLSequential(_env, Stats, cd, dm, 
+					     intermediate, _c2, 
+					     lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath)
+		    );
+
+	if(!connected) { //attempt other direction
+	  /* for debugging
+	  cout << "_c2 -> intermediate: ";
+	  LPOutput<CFG,WEIGHT> out;
+	  cout << IsConnectedSLSequential(_env, Stats, cd, dm,
+					  _c2, intermediate,
+					  &out, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+	  WritePathConfigurations("path1r.path", out.path, _env);
+	  cout << "intermediate -> _c1: ";
+	  out = LPOutput<CFG,WEIGHT>();
+	  cout << IsConnectedSLSequential(_env, Stats, cd, dm,
+					  intermediate, _c1,
+					  &out, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+	  WritePathConfigurations("path2r.path", out.path, _env);
+	  */
+	  connected = (IsConnectedSLSequential(_env, Stats, cd, dm, 
+					       _c2, intermediate, 
+					       lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) 
+		       &&
+		       IsConnectedSLSequential(_env, Stats, cd, dm, 
+					       intermediate, _c1, 
+					       lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath)
+		      );
+	  if(savePath)
+	    reverse(lpOutput->path.begin(), lpOutput->path.end());
+	}
+      }
+    } else {
+      //cout << "orientations same\n";
+      if(binarySearch.GetValue()) {
+	connected = IsConnectedSLBinary(_env, Stats, cd, dm,
+					_c1, _c2,
+					lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+      } else {
+	connected = IsConnectedSLSequential(_env, Stats, cd, dm,
+					    _c1, _c2,
+					    lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+      }
+    }
+    if(connected)
+      Stats.IncLPConnections( "Straightline" );
+    Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
+
     return connected;
 }
 

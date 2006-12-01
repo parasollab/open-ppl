@@ -11,23 +11,7 @@ class DistanceMetric;
 #include "my_program_options.hpp"
 #include <sstream>
 
-double
-GaussianDistribution(double m, double s) 
-{
-  double x1, x2, w, r, r1;
-  do {
-    r1 = (double)rand();
-    r = ((double)(r1 / (RAND_MAX+1))) * -1;
-    x1 = 2. * r - 1.;
-    r1 = (double)rand();
-    r = ((double)(r1 / (RAND_MAX+1))) * -1;
-    x2 = 2. * r - 1.;
-    w = x1 * x1 + x2 * x2;
-  } while(w >= 1. || w < 1E-30);
-  w = sqrt((-2. * log(w)) / w);
-  x1 *= w;
-  return x1 * s + m;
-}
+#include "util.h"
 
 
 template <typename CFG, bool KEEP_FREE>

@@ -41,6 +41,9 @@ class ScaledEuclideanDistance;
 class MinkowskiDistance;
 class ManhattanDistance;
 class CenterOfMassDistance;
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+class ReachableDistance;
+#endif
 
 const int CS = 0;   ///< Type CS: Configuration space distance metric
 const int WS = 1;   ///< Type WS: Workspace distance metric 
@@ -522,6 +525,24 @@ class CenterOfMassDistance : public DistanceMetricMethod {
   }
   virtual double Distance(const Cfg& _c1, const Cfg& _c2);
 };
+
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+class ReachableDistance : public DistanceMetricMethod {
+ public:
+  ReachableDistance() : DistanceMetricMethod() {
+    type = CS;
+  }
+  ~ReachableDistance() {}
+  virtual char* GetName() const { return "reachable"; }
+  virtual void SetDefault() {}
+  virtual DistanceMetricMethod* CreateCopy() {
+    DistanceMetricMethod* _copy = new ReachableDistance(*this);
+    return _copy;
+  }
+  virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
+};
+#endif
+
 
 #include "Roadmap.h"
 
