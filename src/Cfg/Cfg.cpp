@@ -867,16 +867,12 @@ MAPRMfree(Environment* _env, Stat_Class& Stats,
     return;
   this->clearance = clearInfo.getClearance();
   int colliding_obst = clearInfo.getObstacleId();
-
+  
   //get normalized direction to c-obst
   Cfg* dir = clearInfo.getDirection()->CreateNewCfg();
+  dm->ScaleCfg(_env, 1, *this, *dir);
   dir->subtract(*dir, *this);
-  Cfg* origin = this->CreateNewCfg();
-  for(int i=0; i<origin->DOF(); ++i) {
-    origin->SetSingleParam(i, 0);
-  }
-  dm->ScaleCfg(_env, 1, *origin, *dir);
-
+  
   /// find max. clearance point by stepping out:
   double stepSize = this->clearance;
   Cfg* oldCfg = this->CreateNewCfg();
@@ -889,7 +885,7 @@ MAPRMfree(Environment* _env, Stat_Class& Stats,
     tmpCfg->multiply(*dir, -1*stepSize);
     tmpCfg->add(*newCfg, *tmpCfg);
     tmpCfg->clearance = tmpCfg->ApproxCSpaceClearance(_env, Stats, cd, cdInfo,
-						       dm, n, false, colliding_obst);
+						      dm, n, false, colliding_obst);
     if(tmpCfg->clearance < 0) {//unable to compute clearance...
       tmpCfg->clearance = 0;
     } else {
@@ -903,7 +899,7 @@ MAPRMfree(Environment* _env, Stat_Class& Stats,
   oldCfg->equals(*lowCfg);
   delete lowCfg;
   delete dir;
-
+  
   if(newCfg->clearance > 0 && newCfg->InBoundingBox(_env)) {
     ///binary search between oldCfg and newCfg to find max clearance:
     Cfg* midCfg = this->CreateNewCfg();
@@ -944,9 +940,9 @@ MAPRMfree(Environment* _env, Stat_Class& Stats,
 	     (++i <= maxNumSteps));
     delete midCfg;
   }
-
+  
   this->equals(*oldCfg);
-
+  
   delete oldCfg;
   delete newCfg;
 }
