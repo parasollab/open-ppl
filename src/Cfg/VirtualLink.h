@@ -1,11 +1,12 @@
 #ifndef __VIRTUAL_LINK__H___
 #define __VIRTUAL_LINK__H___
 
-//#include "math.h"
-
 #include <vector>
 #include <list>
 using namespace std;
+
+#include "boost/random.hpp"
+
 #define EPS_ZERO 0.00001
 #ifndef PI
 #define PI      3.1415926536
@@ -68,6 +69,10 @@ public:
   ~Link();
 
   double SampleLength(bool bSampleConvex, double);
+  double SampleLength(boost::variate_generator<boost::rand48&,
+		                               boost::uniform_real<> 
+		                              >& rand);
+
   void  ExportTreeLinkLength(vector<double> &lengths);
   int  ImportTreeLinkLength(const vector<double> &lengths, int index = 0);
 
@@ -83,7 +88,13 @@ public:
   int  ImportTreeLinkLength(const vector<double> &lengths, const vector<int> &convexities,  int index = 0);
   
   bool RecursiveSample(double l = -1, bool bSampleConvex = true, double gama=0.5);
-  bool SetLength(double l);  
+  bool RecursiveSample(boost::variate_generator<boost::rand48&,
+		                                boost::uniform_real<>
+		                               >& rand, 
+		       double l = -1);
+
+  bool SetLength(double l);
+  
   double GetLength(){return length;}
   int GetID(){return ID;}
   void PrintLink(ostream& os);

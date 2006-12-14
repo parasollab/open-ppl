@@ -149,8 +149,8 @@ int main(int argc, char** argv)
     char name[100];
     sprintf(name, "2arms.%d.map", rmap.m_pRoadmap->GetVertexCount());
     rmap.WriteRoadmap(&input,&cd,&dm,&lp, name);
-//  } while (!query.PerformQuery(&rmap, Stats, &cd, &mg.cm, &lp, &dm));
-  } while (false);
+  } while (!query.PerformQuery(&rmap, Stats, &cd, &mg.cm, &lp, &dm));
+  //} while (false);
   MapGenClock.StopClock();
 
 
@@ -159,8 +159,6 @@ int main(int argc, char** argv)
   //---------------------------
   rmap.WriteRoadmap(&input,&cd,&dm,&lp);
   
-  //string path_file(input.defaultFile.GetValue());
-  //path_file += ".path";
   char path_filename[100];
   sprintf(path_filename, "%s.path", input.defaultFile.GetValue());
   query.WritePath(&rmap, path_filename);

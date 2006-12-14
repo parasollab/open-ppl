@@ -375,105 +375,95 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
 {
   Stats.IncLPAttempts( "Straightline" );
   int cd_cntr = 0; 
-
-    bool connected;
-    if(CFG::OrientationsDifferent(_c1, _c2)) {
-      //cout << "orientations different\n";
-      CFG intermediate;
-      bool success = intermediate.GetIntermediate(_c1, _c2); 
-      //cout << "found intermediate: " << success << endl;
-      if(!success)
-	return false;
-      
-      if(binarySearch.GetValue()) {
+  
+  bool connected;
+  if(CFG::OrientationsDifferent(_c1, _c2)) {
+    CFG intermediate;
+    bool success = intermediate.GetIntermediate(_c1, _c2); 
+    if(!success)
+      return false;
+    
+    if(binarySearch.GetValue()) {
+      connected = (IsConnectedSLBinary(_env, Stats, cd, dm, 
+				       _c1, intermediate, 
+				       lpOutput, cd_cntr, 
+				       positionRes, orientationRes, 
+				       checkCollision, savePath, saveFailedPath) 
+		   &&
+		   IsConnectedSLBinary(_env, Stats, cd, dm,
+				       intermediate, _c2,
+				       lpOutput, cd_cntr, 
+				       positionRes, orientationRes, 
+				       checkCollision, savePath, saveFailedPath)
+		   );
+      if(!connected) { //attempt other direction
 	connected = (IsConnectedSLBinary(_env, Stats, cd, dm, 
-					 _c1, intermediate, 
-					 lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) 
+					 _c2, intermediate, 
+					 lpOutput, cd_cntr, 
+					 positionRes, orientationRes, 
+					 checkCollision, savePath, saveFailedPath) 
 		     &&
 		     IsConnectedSLBinary(_env, Stats, cd, dm,
-					 intermediate, _c2,
-					 lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath)
-		    );
-	if(!connected) { //attempt other direction
-	  connected = (IsConnectedSLBinary(_env, Stats, cd, dm, 
-					   _c2, intermediate, 
-					   lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) 
-		       &&
-		       IsConnectedSLBinary(_env, Stats, cd, dm,
-					   intermediate, _c1,
-					   lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath)
-		      );
-	  if(savePath)
-	    reverse(lpOutput->path.begin(), lpOutput->path.end());
-	}
-      } else {
-	/* //for debugging
-	cout << "_c1 -> intermediate: ";
-	LPOutput<CFG,WEIGHT> out;
-	cout << IsConnectedSLSequential(_env, Stats, cd, dm,
-					_c1, intermediate,
-					&out, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-	WritePathConfigurations("path1.path", out.path, _env);
-	cout << "intermediate -> _c2: ";
-	out = LPOutput<CFG,WEIGHT>();
-	cout << IsConnectedSLSequential(_env, Stats, cd, dm,
-					intermediate, _c2,
-					&out, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-	WritePathConfigurations("path2.path", out.path, _env);
-	*/
-	connected = (IsConnectedSLSequential(_env, Stats, cd, dm, 
-					     _c1, intermediate, 
-					     lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) 
-		     &&
-		     IsConnectedSLSequential(_env, Stats, cd, dm, 
-					     intermediate, _c2, 
-					     lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath)
-		    );
-
-	if(!connected) { //attempt other direction
-	  /* for debugging
-	  cout << "_c2 -> intermediate: ";
-	  LPOutput<CFG,WEIGHT> out;
-	  cout << IsConnectedSLSequential(_env, Stats, cd, dm,
-					  _c2, intermediate,
-					  &out, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-	  WritePathConfigurations("path1r.path", out.path, _env);
-	  cout << "intermediate -> _c1: ";
-	  out = LPOutput<CFG,WEIGHT>();
-	  cout << IsConnectedSLSequential(_env, Stats, cd, dm,
-					  intermediate, _c1,
-					  &out, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-	  WritePathConfigurations("path2r.path", out.path, _env);
-	  */
-	  connected = (IsConnectedSLSequential(_env, Stats, cd, dm, 
-					       _c2, intermediate, 
-					       lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) 
-		       &&
-		       IsConnectedSLSequential(_env, Stats, cd, dm, 
-					       intermediate, _c1, 
-					       lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath)
-		      );
-	  if(savePath)
-	    reverse(lpOutput->path.begin(), lpOutput->path.end());
-	}
+					 intermediate, _c1,
+					 lpOutput, cd_cntr, 
+					 positionRes, orientationRes, 
+					 checkCollision, savePath, saveFailedPath)
+		     );
+	if(savePath)
+	  reverse(lpOutput->path.begin(), lpOutput->path.end());
       }
     } else {
-      //cout << "orientations same\n";
-      if(binarySearch.GetValue()) {
-	connected = IsConnectedSLBinary(_env, Stats, cd, dm,
-					_c1, _c2,
-					lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-      } else {
-	connected = IsConnectedSLSequential(_env, Stats, cd, dm,
-					    _c1, _c2,
-					    lpOutput, cd_cntr, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+      connected = (IsConnectedSLSequential(_env, Stats, cd, dm, 
+					   _c1, intermediate, 
+					   lpOutput, cd_cntr, 
+					   positionRes, orientationRes, 
+					   checkCollision, savePath, saveFailedPath) 
+		   &&
+		   IsConnectedSLSequential(_env, Stats, cd, dm, 
+					   intermediate, _c2, 
+					   lpOutput, cd_cntr, 
+					   positionRes, orientationRes, 
+					   checkCollision, savePath, saveFailedPath)
+		   );
+      
+      if(!connected) { //attempt other direction
+	connected = (IsConnectedSLSequential(_env, Stats, cd, dm, 
+					     _c2, intermediate, 
+					     lpOutput, cd_cntr, 
+					     positionRes, orientationRes, 
+					     checkCollision, savePath, saveFailedPath) 
+		     &&
+		     IsConnectedSLSequential(_env, Stats, cd, dm, 
+					     intermediate, _c1, 
+					     lpOutput, cd_cntr, 
+					     positionRes, orientationRes, 
+					     checkCollision, savePath, saveFailedPath)
+		     );
+	if(savePath)
+	  reverse(lpOutput->path.begin(), lpOutput->path.end());
       }
     }
-    if(connected)
-      Stats.IncLPConnections( "Straightline" );
-    Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
-
-    return connected;
+  } else {
+    cout << "orientations same\n";
+    if(binarySearch.GetValue()) {
+      connected = IsConnectedSLBinary(_env, Stats, cd, dm,
+				      _c1, _c2,
+				      lpOutput, cd_cntr, 
+				      positionRes, orientationRes, 
+				      checkCollision, savePath, saveFailedPath);
+    } else {
+      connected = IsConnectedSLSequential(_env, Stats, cd, dm,
+					  _c1, _c2,
+					  lpOutput, cd_cntr, 
+					  positionRes, orientationRes, 
+					  checkCollision, savePath, saveFailedPath);
+    }
+  }
+  if(connected)
+    Stats.IncLPConnections( "Straightline" );
+  Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
+  
+  return connected;
 }
 
 

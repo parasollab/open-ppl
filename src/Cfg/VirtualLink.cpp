@@ -1,6 +1,7 @@
 #include "math.h"
 #include <iostream> 
 #include "VirtualLink.h"
+#include "util.h"
 
 // #define XINYU_DEBUG 1
 
@@ -147,17 +148,40 @@ double Link::SampleLength(bool bSampleConvex, double gama){
     return -1;
   }
   
-  SetLength(availableRange.min + (availableRange.max - availableRange.min)*drand48());
+  SetLength(availableRange.min + (availableRange.max - availableRange.min)*OBPRM_drand());
 #ifdef XINYU_DEBUG
   cout << "length:" << length << endl;
 #endif
   if (bSampleConvex){
-    double dSample = drand48();
+    double dSample = OBPRM_drand();
     convexity = dSample < gama ? 1: -1;
   }
   return length;
   
 }
+
+double Link::SampleLength(boost::variate_generator<boost::rand48&, 
+			                           boost::uniform_real<> 
+			                          >& rand) {
+  if (parent != NULL) {
+    if (parent->convexity == 0) { //it's enforced to be a flat configuration
+      Range toReachRange = RangeMinus(parent->availableRange, sibling->availableRange);
+      availableRange = RangeIntersection(availableRange, toReachRange);
+    } else {
+      Range toReachRange = RangeUnion(parent->availableRange, sibling->availableRange);
+      availableRange = RangeIntersection(availableRange, toReachRange);
+    }
+  }
+  if (availableRange.Size() < -EPS_ZERO) {
+    cerr << "available Range is empty! " << endl;
+    return -1;
+  }
+  
+  SetLength(availableRange.min + (availableRange.max - availableRange.min)*rand());
+
+  return length;
+}
+
 
 bool Link::CanRecursiveClose(){
    if (!leftChild && !rightChild)
@@ -237,6 +261,28 @@ bool Link::RecursiveSample(double l, bool bSampleConvex, double gama){
     if ( !leftChild->RecursiveSample(-1, bSampleConvex, gama))
       return false;
     if ( !rightChild->RecursiveSample(-1, bSampleConvex, gama))
+      return false;
+  }
+  return true;
+}
+
+bool Link::RecursiveSample(boost::variate_generator<boost::rand48&,
+			                            boost::uniform_real<>
+			                           >& rand, 
+			   double l) {
+  if (l < -EPS_ZERO){
+    if ( SampleLength(rand) < 0)
+      return false;
+  }else{
+    if (!SetLength(l)){
+      cerr << "Could not close for length " << l  << endl;
+      return false;
+    }
+  }
+  if (leftChild != NULL && rightChild != NULL){
+    if ( !leftChild->RecursiveSample(rand, -1))
+      return false;
+    if ( !rightChild->RecursiveSample(rand, -1))
       return false;
   }
   return true;

@@ -3,6 +3,8 @@
 #include "Environment.h"
 #include "MultiBody.h"
 #include "FreeBody.h"
+#include "boost/lambda/lambda.hpp"
+#include "boost/random.hpp"
 
 #define TWO_PI 6.2831853072
 
@@ -412,19 +414,30 @@ GetIntermediate(const Cfg_reach_cc& c1,
     ranges.push_back(Range(*L1, *L2));
   link_tree->ImportTreeLinkAvailableRange(ranges);
 
+  using boost::lambda::_1;
+  using boost::lambda::_2;
   vector<int> avg_orientations;
   transform(c1.link_orientations.begin(), c1.link_orientations.end(),
 	    c2.link_orientations.begin(),
 	    back_insert_iterator<vector<int> >(avg_orientations),
-	    plus<int>());
-  transform(avg_orientations.begin(), avg_orientations.end(),
-	    avg_orientations.begin(),
-	    bind2nd(divides<int>(),2));
+	    ((_1 + _2)/2));
   link_tree->ImportTreeLinkConvexity(avg_orientations, 0);
 
   link_tree->RecursiveBuildAvailableRange(true);
 
-  if(!link_tree->RecursiveSample(0, false))
+  //compute deterministic seed for local planning/sampling
+  double len = 0.0;
+  for(int i=0; i<c1.link_lengths.size(); ++i) 
+    len += c1.link_lengths[i]*(i+1)*(i+2) + c2.link_lengths[i]*(i+1)*(i+2);
+  uint64_t seed = len +
+    accumulate(c1.link_orientations.begin(), c1.link_orientations.end(), 0) + 
+    accumulate(c2.link_orientations.begin(), c2.link_orientations.end(), 0);
+  boost::rand48 generator(seed);
+  boost::uniform_real<> distribution(0,1);
+  boost::variate_generator<boost::rand48&, boost::uniform_real<> >
+    rand(generator, distribution);
+  
+  if(!link_tree->RecursiveSample(rand, 0))
     return false;
   else {
     link_lengths.clear();
