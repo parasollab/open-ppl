@@ -321,7 +321,8 @@ void MultiBody::Read(istream& _is, int action, const char* descDir,
     int previousBodyIndex, nextBodyIndex;
     _is >> previousBodyIndex;              // first body
     _is >> nextBodyIndex;                  // second body
-      
+
+
     readfield(_is, &string);             // Tag, "Actuated/NonActuated"
       
     Vector3D transformPosition(_is);
@@ -350,18 +351,25 @@ void MultiBody::Read(istream& _is, int action, const char* descDir,
 						   angles[2]*TWOPI/360.0, 
 						   angles[1]*TWOPI/360.0, 
 						   angles[0]*TWOPI/360.0);
+    
     Body* prevBody;
-    if(isFree[previousBodyIndex])
-      prevBody = (Body*)GetFreeBody(previousBodyIndex);
-    else
-      prevBody = (Body*)GetFixedBody(previousBodyIndex);
-
+    if(isFree[previousBodyIndex]) {
+      int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
+      prevBody = (Body*)GetFreeBody(numFreeBeforeIndex);
+    } else {
+      int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
+      prevBody = (Body*)GetFixedBody(previousBodyIndex - numFreeBeforeIndex);
+    }
+    
     Body* nextBody;
-    if(isFree[nextBodyIndex])
-      nextBody = (Body*)GetFreeBody(nextBodyIndex);
-    else
-      nextBody = (Body*)GetFixedBody(nextBodyIndex);
-
+    if(isFree[nextBodyIndex]) {
+      int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
+      nextBody = (Body*)GetFreeBody(numFreeBeforeIndex);
+    } else {
+      int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
+      nextBody = (Body*)GetFixedBody(nextBodyIndex - numFreeBeforeIndex);
+    }
+    
     Connection*c = new Connection(prevBody, nextBody);
     c->Read(prevBody, nextBody,
 	    transformPosition, transformOrientation,
