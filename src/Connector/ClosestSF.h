@@ -322,14 +322,14 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       }
       Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges, kp);
     } //end of for I
-  }// end of if
-
-  for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
-    kp.clear();
-    vector<VID> v;
-    v.push_back(*I);
-    kp = dm->FindKClosestPairs(_rm,v, v2, ksuccess+mfailure);
-    Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges, kp);
+  } else {
+    for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
+      kp.clear();
+      vector<VID> v;
+      v.push_back(*I);
+      kp = dm->FindKClosestPairs(_rm,v, v2, ksuccess+mfailure);
+      Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges, kp);
+    }
   }
 }
 
