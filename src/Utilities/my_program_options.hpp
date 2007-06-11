@@ -6,7 +6,7 @@
 #include <string>
 #include <iterator>
 
-#include "program_options.hpp"
+#include "boost/program_options.hpp"
 #include "boost/utility/enable_if.hpp"
 
 namespace po = boost::program_options;
