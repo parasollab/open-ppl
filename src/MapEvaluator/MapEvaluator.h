@@ -34,13 +34,26 @@ class MapEvaluator : public MPBaseObject {
 
     for (TiXmlNode* pChild=in_pNode->FirstChild(); pChild != NULL; pChild = pChild->NextSibling()) {
       if (string(pChild->Value()) == "MPRegionComparers") {
-	ParseXMLComparers(pChild, in_pProblem);
+  ParseXMLComparers(pChild, in_pProblem);
       } else if (string(pChild->Value()) == "MPRegionConditionalEvaluators") {
-	ParseXMLConditionalEvaluators(pChild, in_pProblem);
+  ParseXMLConditionalEvaluators(pChild, in_pProblem);
       } else {
-	LOG_WARNING_MSG("MapEvaluator:: I don't know: " << endl << *pChild);
+  LOG_WARNING_MSG("MapEvaluator:: I don't know: " << endl << *pChild);
       }
     }
+  }
+  MapEvaluator(const MapEvaluator& me) {
+    for(typename vector<MapEvaluationMethod<CFG,WEIGHT>*>::const_iterator I = me.m_conditional_evaluators.begin(); I != me.m_conditional_evaluators.end(); ++I) {
+      MapEvaluationMethod<CFG,WEIGHT>* evaluator = (*I)->CreateCopy();
+      m_conditional_evaluators.push_back(evaluator);
+    }
+    /*
+    for(typename vector<MPRegionComparerMethod<CFG,WEIGHT>*>::const_iterator I = me.m_comparer_evaluators.begin(); I != me.m_comparer_evaluators.end(); ++I) {
+      MPRegionComparerMethod<CFG,WEIGHT>* comparer = (*I)->CreateCopy();
+      m_comparer_evaluators.push_back(comparer);
+    }
+    */
+    m_comparer_evaluators = me.m_comparer_evaluators; //use above when CreateCopy is implmented
   }
   ~MapEvaluator() {
     typename vector<MapEvaluationMethod<CFG,WEIGHT>*>::iterator I;
@@ -50,6 +63,20 @@ class MapEvaluator : public MPBaseObject {
     for(I=all.begin(); I != all.end(); ++I)
       delete *I;
     all.clear();
+  }
+
+  void operator=(const MapEvaluator& me) {
+    for(typename vector<MapEvaluationMethod<CFG,WEIGHT>*>::const_iterator I = me.m_conditional_evaluators.begin(); I != me.m_conditional_evaluators.end(); ++I) {
+      MapEvaluationMethod<CFG,WEIGHT>* evaluator = (*I)->CreateCopy();
+      m_conditional_evaluators.push_back(evaluator);
+    }
+    /*
+    for(typename vector<MPRegionComparerMethod<CFG,WEIGHT>*>::const_iterator I = me.m_comparer_evaluators.begin(); I != me.m_comparer_evaluators.end(); ++I) {
+      MPRegionComparerMethod<CFG,WEIGHT>* comparer = (*I)->CreateCopy();
+      m_comparer_evaluators.push_back(comparer);
+    }
+    */
+    m_comparer_evaluators = me.m_comparer_evaluators; //use above when CreateCopy is implmented
   }
 
   void ParseXMLComparers(TiXmlNode* in_pNode, MPProblem* in_pProblem) {
@@ -66,23 +93,23 @@ class MapEvaluator : public MPBaseObject {
     m_comparer_evaluators.clear();
     for (TiXmlNode* pChild = in_pNode->FirstChild(); pChild != NULL; pChild = pChild->NextSibling()) {
       if (string(pChild->Value()) == "ConnectableComponentComparer") {
-	ConnectableComponentComparer<CFG,WEIGHT>* connectable_component_comparer = new ConnectableComponentComparer<CFG,WEIGHT>(pChild, in_pProblem);
-	m_comparer_evaluators.push_back(connectable_component_comparer);
+  ConnectableComponentComparer<CFG,WEIGHT>* connectable_component_comparer = new ConnectableComponentComparer<CFG,WEIGHT>(pChild, in_pProblem);
+  m_comparer_evaluators.push_back(connectable_component_comparer);
       }
       else if (string(pChild->Value()) == "RandomConnectComparer") {
-	RandomConnectComparer<CFG,WEIGHT>* random_query_comparer = new RandomConnectComparer<CFG,WEIGHT>(pChild, in_pProblem);
-	m_comparer_evaluators.push_back(random_query_comparer);
+  RandomConnectComparer<CFG,WEIGHT>* random_query_comparer = new RandomConnectComparer<CFG,WEIGHT>(pChild, in_pProblem);
+  m_comparer_evaluators.push_back(random_query_comparer);
       } 
       else if (string(pChild->Value()) == "RegionCoverageComparer") {
-	RegionCoverageComparer<CFG,WEIGHT>* coverage_comparer = 
+  RegionCoverageComparer<CFG,WEIGHT>* coverage_comparer = 
                   new RegionCoverageComparer<CFG,WEIGHT>(pChild, in_pProblem);
-	m_comparer_evaluators.push_back(coverage_comparer);
+  m_comparer_evaluators.push_back(coverage_comparer);
       } else if (string(pChild->Value()) == "RegionSimilarity") {
-	RegionSimilarity<CFG,WEIGHT>* similar = 
+  RegionSimilarity<CFG,WEIGHT>* similar = 
                   new RegionSimilarity<CFG,WEIGHT>(pChild, in_pProblem);
-	m_comparer_evaluators.push_back(similar);
+  m_comparer_evaluators.push_back(similar);
       } else {
-	LOG_DEBUG_MSG("I don't understand");
+  LOG_DEBUG_MSG("I don't understand");
       }
     }
   }
@@ -103,26 +130,26 @@ class MapEvaluator : public MPBaseObject {
 
       if (string(pChild->Value()) == "") { // remove when methods below are implemented
 /*       if (string(pChild->Value()) == "TestConditionalEvaluator") { */
-/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/* 	m_conditional_evaluators.push_back(); */
+/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/*  m_conditional_evaluators.push_back(); */
 /*       } else  */
 /*       if (string(pChild->Value()) == "MaxFlowConditionalEvaluator") { */
-/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/* 	m_conditional_evaluators.push_back(); */
+/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/*  m_conditional_evaluators.push_back(); */
 /*       } else if (string(pChild->Value()) == "CoverageConditionalEvaluator") { */
-/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/* 	m_conditional_evaluators.push_back(); */
+/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/*  m_conditional_evaluators.push_back(); */
 /*       } else if (string(pChild->Value()) == "QueryConditionalEvaluator") { */
-/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/* 	m_conditional_evaluators.push_back(); */
+/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/*  m_conditional_evaluators.push_back(); */
 /*       } else if (string(pChild->Value()) == "CCDistanceConditionalEvaluator") { */
-/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/* 	m_conditional_evaluators.push_back(); */
+/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/*  m_conditional_evaluators.push_back(); */
 /*       } else if (string(pChild->Value()) == "CCDiameterConditionalEvaluator") { */
-/* 	<CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/* 	m_conditional_evaluators.push_back(); */
+/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
+/*  m_conditional_evaluators.push_back(); */
       } else {
-	LOG_DEBUG_MSG("I don't understand");
+  LOG_DEBUG_MSG("I don't understand");
       }
     }
   }
@@ -147,40 +174,40 @@ class MapEvaluator : public MPBaseObject {
       try {
         int cmd_begin = 0;
         int cmd_argc = 0;
-	char* cmd_argv[50];
-	do {
-	  for(I=all.begin(); I != all.end(); ++I) {
-	    if(!strcmp(argv[cmd_begin], (*I)->GetName())) {
-	      cmd_argc = 0;
-	      bool is_method_name = false;
-	      do {
-		cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
-		cmd_argc++;
-		typename vector<MapEvaluationMethod<CFG,WEIGHT>*>::iterator N;
-		is_method_name = false;
-		for(N=all.begin(); N != all.end() && cmd_begin+cmd_argc < argc; ++N)
-		  if(!strcmp(argv[cmd_begin+cmd_argc],(*N)->GetName())) {
-		    is_method_name = true;
-		    break;
-		  }
-	      } while (!is_method_name && cmd_begin+cmd_argc < argc);
-	      (*I)->ParseCommandLine(cmd_argc, cmd_argv);
-	      m_conditional_evaluators.push_back((*I)->CreateCopy());
-	      (*I)->SetDefault();
-	      found = TRUE;
-	      break;
-	    }
+  char* cmd_argv[50];
+  do {
+    for(I=all.begin(); I != all.end(); ++I) {
+      if(!strcmp(argv[cmd_begin], (*I)->GetName())) {
+        cmd_argc = 0;
+        bool is_method_name = false;
+        do {
+    cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
+    cmd_argc++;
+    typename vector<MapEvaluationMethod<CFG,WEIGHT>*>::iterator N;
+    is_method_name = false;
+    for(N=all.begin(); N != all.end() && cmd_begin+cmd_argc < argc; ++N)
+      if(!strcmp(argv[cmd_begin+cmd_argc],(*N)->GetName())) {
+        is_method_name = true;
+        break;
+      }
+        } while (!is_method_name && cmd_begin+cmd_argc < argc);
+        (*I)->ParseCommandLine(cmd_argc, cmd_argv);
+        m_conditional_evaluators.push_back((*I)->CreateCopy());
+        (*I)->SetDefault();
+        found = TRUE;
+        break;
+      }
           }
           if(!found)
-	    break;
-	  cmd_begin = cmd_begin + cmd_argc;
-	} while (cmd_begin < argc);
-	if(!found)
-	  throw BadUsage();
+      break;
+    cmd_begin = cmd_begin + cmd_argc;
+  } while (cmd_begin < argc);
+  if(!found)
+    throw BadUsage();
       } catch (BadUsage) {
-	cerr << "Command line error" << endl;
-	PrintUsage(cerr);
-	exit(-1);
+  cerr << "Command line error" << endl;
+  PrintUsage(cerr);
+  exit(-1);
       }
     }
 
@@ -226,7 +253,7 @@ class MapEvaluator : public MPBaseObject {
     typedef typename vector< MPRegionComparerMethod< CFG, WEIGHT > * >::iterator Itrtr;
     for (Itrtr itrtr = m_comparer_evaluators.begin(); itrtr < m_comparer_evaluators.end(); itrtr++) {
       if ((*itrtr)->GetLabel() == in_label) {
-	return *itrtr;
+  return *itrtr;
       }
     }
     LOG_ERROR_MSG( "MapEvaluator:: cannot find ComparerMethod = " << in_label);
@@ -244,8 +271,12 @@ class MapEvaluator : public MPBaseObject {
   vector<MapEvaluationMethod<CFG,WEIGHT>*> m_conditional_evaluators;
   vector<MPRegionComparerMethod<CFG,WEIGHT>* > m_comparer_evaluators;
 
-  vector<MapEvaluationMethod<CFG,WEIGHT>*> all;
+  static vector<MapEvaluationMethod<CFG,WEIGHT>*> all;
 };
+ 
+template <class CFG, class WEIGHT> 
+vector<MapEvaluationMethod<CFG,WEIGHT>*> MapEvaluator<CFG,WEIGHT>::all;
+
 
 template <class CFG, class WEIGHT>
 class MapEvaluationMethod: public MPBaseObject {
@@ -291,7 +322,7 @@ class TestEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
       if(!size.AckCmdLine(&i,argc,argv)) {
         cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
         for(int j=0; j<argc; ++j)
- 	  cerr << argv[j] << " ";
+    cerr << argv[j] << " ";
         cerr << "\"\n\n";
         PrintUsage(cerr);
         cerr << endl;
