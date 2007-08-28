@@ -76,8 +76,7 @@ class ClosestSF: public NodeConnectionMethod<CFG,WEIGHT> {
              vector<vector<VID> >& verticesList);
 
   //function used in this class only
-  void ClosestSF<CFG,WEIGHT>::
-  Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+  void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
