@@ -30,14 +30,8 @@ n_str_param ::n_str_param(const n_str_param& tmp) {
     //flag = strdup(tmp.flag);
   }
   activated = tmp.activated;
-  if (tmp.typedesc!=NULL) {
-    //strcpy(typedesc, tmp.typedesc);
-    typedesc = strdup(tmp.typedesc);
-  }
-  if (tmp.desc!=NULL) {
-    //strcpy(desc, tmp.desc);
-    desc = strdup(tmp.desc);
-  }
+  typedesc.assign(tmp.typedesc);
+  desc.assign(tmp.desc);
   numStrings = tmp.GetNumStrings();
 };
 

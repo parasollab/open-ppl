@@ -65,15 +65,11 @@ public:
         /**Default constructor.
           *Following is the status if this instance after constructed:
           * -# #activated FALSE
-          * -# #desc NULL
-          * -# #typedesc NULL
           */
         param ();
         /**Most used constructor specifies command line flag.
           *Following is the status if this instance after constructed:
           * -# #activated FALSE
-          * -# #desc NULL
-          * -# #typedesc NULL
           * -# #falg _flag
           */
         param (char *_flag);
@@ -108,10 +104,10 @@ public:
         void PutDesc(char *_typedesc, char *_desc);
 
         ///Get Description about this parameter. (#desc)
-        char* GetDesc() const;
+        const char* GetDesc() const;
 
         ///Get Description about the type this parameter. (#typedesc)
-        char* GetTypeDesc() const;
+        const char* GetTypeDesc() const;
 
         ///Get parameter value. (#tvalue)
         TYPE GetValue() const;
@@ -195,8 +191,8 @@ protected:
          tdefault;         ///< major data field's default value
     char flag[80];         ///< command line flag
     bool activated;        ///< currently active on command line?
-    char *typedesc;        ///< type of major data field for human eyes
-    char *desc;            ///< meaning of major data field to humans
+    string typedesc;        ///< type of major data field for human eyes
+    string desc;            ///< meaning of major data field to humans
 };
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -483,15 +479,11 @@ protected:
 template<class TYPE> param<TYPE>::
 param(){
     activated = false;
-    desc = NULL;
-    typedesc = NULL;
 };
 template<class TYPE> param<TYPE>::
 param(char *_flag){
     strcpy(flag, _flag);
     activated = false;
-    desc = NULL;
-    typedesc = NULL;
 };
 template<class TYPE> char* param<TYPE>::
 GetFlag(){
@@ -503,21 +495,21 @@ GetDefault() const {
 };
 template<class TYPE> void param<TYPE>::
 PutDesc(char *_desc){
-    desc=strdup(_desc);
-    typedesc=strdup("LKD-VALUE");
+    desc.assign(_desc);
+    typedesc.assign("LKD-VALUE");
 };
 template<class TYPE> void param<TYPE>::
 PutDesc(char *_typedesc,char *_desc){
-    desc=strdup(_desc);
-    typedesc=strdup(_typedesc);
+    desc.assign(_desc);
+    typedesc.assign(_typedesc);
 };
-template<class TYPE> char* param<TYPE>::
+template<class TYPE> const char* param<TYPE>::
 GetDesc() const {
-    return desc;
+    return desc.c_str();
 };
-template<class TYPE> char* param<TYPE>::
+template<class TYPE> const char* param<TYPE>::
 GetTypeDesc() const {
-    return typedesc;
+    return typedesc.c_str();
 };
 template<class TYPE> TYPE param<TYPE>::
 GetValue() const {
