@@ -12,7 +12,9 @@
 //
 /////////////////////////////////////////////////////////////
 
-template <class CFG, class WEIGHT>
+template <class CFG, class WEIGHT, 
+          class GMN = GenerateMapNodes<CFG>, class CM = ConnectMap<CFG,WEIGHT>, 
+          class ME = MapEvaluator<CFG,WEIGHT> >
 class MapGenerator {
  public:
  
@@ -23,7 +25,7 @@ class MapGenerator {
   MapGenerator();
   ~MapGenerator();
 
-  void SetEvaluator(const MapEvaluator<CFG,WEIGHT>& eval) {
+  void SetEvaluator(const ME& eval) {
     stop = eval;
   }
 
@@ -63,19 +65,19 @@ class MapGenerator {
  
   public:
 
-  GenerateMapNodes<CFG> gn;     //used to generate map nodes
-  ConnectMap<CFG, WEIGHT> cm;   //used to connect map nodes
-  GenerateMapNodes<CFG> old_gn; //used to parse command line from the existing map
-  MapEvaluator<CFG,WEIGHT> stop;
+  GMN gn;     //used to generate map nodes
+  CM cm;   //used to connect map nodes
+  GMN old_gn; //used to parse command line from the existing map
+  ME stop;
 };
 
-template <class CFG, class WEIGHT>
-MapGenerator<CFG, WEIGHT>::
+template <class CFG, class WEIGHT, class GMN, class CM, class ME>
+MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
 MapGenerator(){
 }
 
-template <class CFG, class WEIGHT>
-MapGenerator<CFG, WEIGHT>::
+template <class CFG, class WEIGHT, class GMN, class CM, class ME>
+MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
 ~MapGenerator(){}
 
 
@@ -86,9 +88,9 @@ MapGenerator<CFG, WEIGHT>::
  Update current command line 
  Backup the old map
 */
-template <class CFG, class WEIGHT>
+template <class CFG, class WEIGHT, class GMN, class CM, class ME>
 void
-MapGenerator<CFG, WEIGHT>::
+MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
 SetupFromMap(Input* input, Roadmap<CFG, WEIGHT>* rmap) 
 {
     //get info from the existing map
@@ -216,9 +218,9 @@ SetupFromMap(Input* input, Roadmap<CFG, WEIGHT>* rmap)
   otherwise, use the regular method to generate a map
     call GenerateNormalMap
  */
-template <class CFG, class WEIGHT>
+template <class CFG, class WEIGHT, class GMN, class CM, class ME>
 void 
-MapGenerator<CFG, WEIGHT>::
+MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
 GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	     CollisionDetection* cd, 
 	     DistanceMetric* dm, vector<CFG>& nodes, 
@@ -242,9 +244,9 @@ GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
  3. generate/connect new nodes chunk by chunk
  4. update command line before we output the final map
  */
-template <class CFG, class WEIGHT>
+template <class CFG, class WEIGHT, class GMN, class CM, class ME>
 void 
-MapGenerator<CFG, WEIGHT>::
+MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
 GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
             CollisionDetection* cd, 
             DistanceMetric* dm, vector<CFG>& nodes, 
@@ -445,9 +447,9 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 //This is the regular method we use: 
 // 1. read/generate all nodes, 
 // 2. connect them to form a roadmap
-template <class CFG, class WEIGHT>
+template <class CFG, class WEIGHT, class GMN, class CM, class ME>
 void 
-MapGenerator<CFG, WEIGHT>::
+MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
 GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
             CollisionDetection* cd, 
             DistanceMetric* dm, vector<CFG>& nodes, 
