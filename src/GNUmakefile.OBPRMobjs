@@ -22,6 +22,7 @@ OBJS = \
 	Cfg/VirtualLink.o \
 	Cfg/Cfg_reach_cc.o \
 	Cfg/Cfg_reach_cc_fixed.o \
+	Cfg/Cfg_free_multi.o \
 	MPProblem/Environment.o \
 	Utilities/util.o \
 	Utilities/Clock_Class.o \

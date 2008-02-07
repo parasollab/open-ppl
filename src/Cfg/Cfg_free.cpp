@@ -75,7 +75,7 @@ Cfg_free::Cfg_free(const Cfg& _c) {
   _v = _c.GetData();
   if(_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free::Cfg_free(Cfg&), ";
-    cout << "size of vector is less than 6\n";
+    cout << "size of vector is less than " << dof << endl;
     exit(-1);
   }
   v.clear();
@@ -97,7 +97,7 @@ void Cfg_free::equals(const Cfg& c) {
   _v = c.GetData();
   if(_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free::equals(Cfg&), ";
-    cout << "size of vector is less than 6\n";
+    cout << "size of vector is less than " << dof << endl;
     exit(-1);
   }
   v.clear();
@@ -121,17 +121,18 @@ const char* Cfg_free::GetName() const {
 
 
 bool Cfg_free::ConfigEnvironment(Environment* env) const {
-  int robot = env->GetRobotIndex();
+  MultiBody* mb = env->GetMultiBody(env->GetRobotIndex());
   
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
   Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
-						 v[5]*TWOPI, 
+  						 v[5]*TWOPI, 
 						 v[4]*TWOPI, 
 						 v[3]*TWOPI),
 				     Vector3D(v[0],v[1],v[2]));
-  // update link 1.
-  env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);
+  // update link i
+  mb->GetFreeBody(0)->Configure(T1);
+  
   return true;
 }
 
@@ -437,7 +438,7 @@ Cfg* Cfg_free::CreateNewCfg(vector<double>& data) const {
   Vector6<double> _data;
   if(data.size() < dof) {
     cout << "\n\nERROR in Cfg_free::CreateNewCfg(vector<double>), ";
-    cout << "size of vector is less than 6\n";
+    cout << "size of vector is less than " << dof << endl;
     exit(-1);
   }
   for(int i=0; i<6; i++)
@@ -449,10 +450,11 @@ Cfg* Cfg_free::CreateNewCfg(vector<double>& data) const {
 
 void Cfg_free::GetRandomCfg_CenterOfMass(Environment *env) {
   BoundingBox *boundingBox =env->GetBoundingBox();
+  
   v.clear();
-
-  for(int i=0; i<6; ++i)
+  for(int i=0; i<dof; ++i)
     v.push_back(boundingBox->GetRandomValueInParameter(i));
+  
   obst = -1;
   tag = -1;
   clearance = -1;

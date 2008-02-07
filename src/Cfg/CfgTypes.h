@@ -8,6 +8,7 @@
 #include "Cfg_fixed_PRR.h"
 #include "Cfg_reach_cc.h"
 #include "Cfg_reach_cc_fixed.h"
+#include "Cfg_free_multi.h"
 
 #include "Weight.h"
 
@@ -38,6 +39,11 @@ typedef DefaultWeight WeightType;
 
 #ifdef PMPReachDistCCFixed
 typedef Cfg_reach_cc_fixed CfgType;
+typedef DefaultWeight WeightType;
+#endif
+
+#ifdef PMPRigidMulti
+typedef Cfg_free_multi CfgType;
 typedef DefaultWeight WeightType;
 #endif
 

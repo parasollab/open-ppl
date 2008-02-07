@@ -51,6 +51,10 @@ int main(int argc, char** argv)
    cout << "Cfg_free_tree::NumofJoints = " 
        << CfgType::getNumofJoints() << endl;
 
+#ifdef PMPRigidMulti
+  CfgType::setNumofJoints(0);
+  CfgType::setNumofRobots(input.numofJoints.GetValue());
+#endif
 
   // do not seed for now while developing code... ADD SEEDING LATER
   // use the following way to seed
