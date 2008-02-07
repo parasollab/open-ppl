@@ -17,6 +17,7 @@ OBJS = \
 	Cfg/Cfg_free.o \
 	Cfg/Cfg_fixed_PRR.o \
 	Cfg/Cfg_free_tree.o \
+	Cfg/Cfg_free_tree_2dof.o \
 	Cfg/Cfg_fixed_tree.o \
 	Cfg/Cfg_2D.o \
 	Cfg/VirtualLink.o \

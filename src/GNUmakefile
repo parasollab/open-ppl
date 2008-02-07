@@ -39,6 +39,7 @@ endif
 #ROBOT = 
 #ROBOT_DEF = -DPMPRigid
 ROBOT_DEF = -DPMPSerial
+#ROBOT_DEF = -DPMPSerial2DOF
 #ROBOT_DEF = -DPMPCfg2D
 #ROBOT_DEF = -DPMPReachDistCC
 #ROBOT_DEF = -DPMPReachDistCCFixed
