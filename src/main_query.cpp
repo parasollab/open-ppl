@@ -47,7 +47,12 @@ int main(int argc, char** argv)
   CfgType::setNumofJoints(input.numofJoints.GetValue());
   cout << "Cfg_free_tree::NumofJoints = "
        << CfgType::getNumofJoints() << endl;
-       
+
+#ifdef PMPRigidMulti
+  CfgType::setNumofJoints(0);
+  CfgType::setNumofRobots(input.numofJoints.GetValue());
+#endif
+    
   Roadmap<CfgType, WeightType> rdmp;
   rdmp.InitRoadmap(&input,&cd,&dm,&lp,Qinput.mapFile.GetValue() );
 
