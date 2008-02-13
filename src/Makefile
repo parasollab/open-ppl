@@ -24,7 +24,7 @@ endif
 
 
 # include makefile defaults
-include ${UTILS_DIR}/Makefile.defaults
+include ${UTILS_DIR}/makefile_includes/Makefile.defaults
 include ${PMPL_DIR}/Makefile.PMPLdefaults
 
 
@@ -89,4 +89,4 @@ reallyclean:
 	touch Dependencies
 
 # include automatically generated dependencies
-include Dependencies
+-include Dependencies
