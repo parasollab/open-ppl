@@ -1,0 +1,114 @@
+##########################################################
+# Platform specific flags are maintained here
+##########################################################
+# Instructions:
+#   Include this file as the first line in your Makefile.
+#   Create a default target called "default_target".
+#   Define any macros needed (see Macros To Define below).
+##########################################################
+# Input Variables:
+#   platform (string specifing which platform you want
+#             to compile for)
+#   debug (debugging mode on/off, default is 0/off)
+##########################################################
+# Macros Defined:
+#   CC (name of the c compiler)
+#   CXX (name of the c++ compiler)
+#   CFLAGS (flags for the c compiler)
+#   CXXFLAGS (flags for the C++ compiler)
+#   OPTS (debugging/optimization options)
+#   AR (library linker name and flags)
+##########################################################
+# Macros To Define:
+#   CLEAN (files to remove in a "make clean")
+#   DEFS (-D directives)
+#   INCL (include commands)
+##########################################################
+
+
+# available platforms
+#PLATFORMS = "HP_aCC IBM_xlC IBM_xlC_llnl IBM_gcc_llnl LINUX_gcc LINUX_gcc_llnl MACOSX_gcc IRIX_gcc LINUX_KCC SGI_CC BLRTS_gcc BLRTS_xlC"
+PLATFORMS = "LINUX_gcc AIX_64_gcc AIX_64_xlC"
+
+
+ifndef debug
+	debug = 0
+endif
+
+
+# set platform-specific variables
+FOUNDPLAT = 0
+
+ifeq (${platform}, LINUX_gcc)
+	FOUNDPLAT = 1
+	CC  = gcc
+	CXX = g++
+	CFLAGS = 
+	CXXFLAGS := ${CFLAGS} 
+	ifeq (${debug}, 0)
+		OPTS = -O3 -w
+	else
+		OPTS = -g -Wall
+	endif 
+	AR = ar rc  
+endif
+
+ifeq (${platform}, AIX_64_gcc)
+	FOUNDPLAT = 1
+	CC  = /usr/local/bin/gcc
+	CXX = /usr/local/bin/g++
+	CFLAGS = -maix64 -D_64_BIT #_64_BIT define used by VCLIP
+	CXXFLAGS := ${CFLAGS}
+	ifeq (${debug}, 0)
+		OPTS = -O3 -w
+	else
+		OPTS = -g -Wall
+	endif
+	AR = ld -b64 -r -o
+endif	
+
+ifeq (${platform}, AIX_64_xlC)
+	FOUNDPLAT = 1
+	CC  = xlc
+	CXX = xlc++
+	CFLAGS = -q64 -qarch=auto -D_64_BIT #_64_BIT define used by VCLIP
+	CXXFLAGS := ${CFLAGS}
+	ifeq (${debug}, 0)
+		OPTS = -O3 -qstrict -w
+	else
+		OPTS = -g -qwarn64 -qflag=w:w
+	endif
+	AR = ar -X64 rc
+endif
+
+# default target
+default: default_target
+
+# check platform
+.PHONY: check_platform
+check_platform:
+ifeq (${FOUNDPLAT}, 0)
+	@echo ""
+	@echo "platform \"${platform}\" not supported"
+	@echo "available platforms: ${PLATFORMS}"
+	@echo ""
+	@exit 2
+endif
+
+# clean target
+.PHONY: clean
+clean:
+	/bin/rm -rf ${CLEAN}
+
+.SUFFIXES: .o .c .cpp
+
+#c++ compile rule
+.cpp.o:
+	@${MAKE} -s check_platform
+	${CXX} -c ${CXXFLAGS} ${OPTS} ${DEFS} ${INCL} $< -o $@
+
+#c compile rule
+.c.o:
+	@${MAKE} -s check_platform
+	${CC} -c ${CFLAGS} ${OPTS} ${DEFS} ${INCL} $< -o $@
+
