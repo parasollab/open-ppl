@@ -1,0 +1,156 @@
+#set platform specific variables
+ifeq (${platform}, LINUX_gcc) 	#linux/gcc
+	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
+	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB}
+  
+	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a
+
+	BOOST_INCL = -I/usr/include/boost
+	BOOST_LIB = -L/usr/lib -lboost_program_options
+
+	DEPS = -MMD -MF $*.d
+endif
+
+ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
+	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
+	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB}
+  
+	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a
+
+	BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
+	BOOST_LIB = -L/scratch/shawnat/usr/lib -lboost_program_options-xlc
+
+	DEPS = -MMD -MF $*.d
+endif	
+
+ifeq (${platform}, AIX_64_xlC)	#aix/64-bit/native compiler (e.g., hydra.tamu.edu)
+	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
+	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL}
+	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB}
+  
+	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a
+
+	BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
+	BOOST_LIB = -L/scratch/shawnat/usr/lib -lboost_program_options-xlc
+
+	DEPS = -M -MF $*.d
+endif
+
+
+#set debug specific variables
+ifeq (${debug}, 0)
+	DEFS += -DINTERMEDIATE_FILES=0
+else
+	ifeq (${debug}, 1)
+		DEFS += -DINTERMEDIATE_FILES=1
+	else
+		@echo ""
+		@echo "Invalid debug value: ${debug}"
+		@echo "debug must be either 0 or 1"
+		@echo ""
+	endif
+endif
+
+
+# collision detection macros and targets
+CD_DIR = ${UTILS_DIR}/geom/CD-libs
+
+QHULL_DIR = ${CD_DIR}/qhull3.0/src
+${QHULL_DIR}/libqhull.a:
+	cd ${QHULL_DIR}; ${MAKE} platform=${platform} debug=${debug}
+
+VCLIP_DIR = ${CD_DIR}/VCLIP
+VCLIP_LIB = -L${VCLIP_DIR}/lib -lvclip
+VCLIP_INCL = -I${VCLIP_DIR}/include
+${VCLIP_DIR}/lib/libvclip.a: ${QHULL_DIR}/libqhull.a
+	cd ${VCLIP_DIR}; ${MAKE} platform=${platform} debug=${debug}
+
+RAPID_DIR = ${CD_DIR}/RAPID
+RAPID_LIB = -L${RAPID_DIR} -lRAPID
+RAPID_INCL = -I${RAPID_DIR}
+${RAPID_DIR}/libRAPID.a:
+	cd ${RAPID_DIR}; ${MAKE} platform=${platform} debug=${debug}
+
+PQP_DIR = ${CD_DIR}/PQP_v1.2
+PQP_LIB = -L${PQP_DIR}/lib -lPQP
+PQP_INCL = -I${PQP_DIR}/include
+${PQP_DIR}/lib/libPQP.a:
+	cd ${PQP_DIR}; ${MAKE} platform=${platform} debug=${debug}
+
+
+# xml macros and targets
+TINYXML_DIR = ${UTILS_DIR}/xml/tinyxml
+TINYXML_LIB = -L${TINYXML_DIR} -ltinyxml
+TINYXML_INCL = -I${TINYXML_DIR}
+${TINYXML_DIR}/libtinyxml.a: 
+	cd ${TINYXML_DIR}; ${MAKE} platform=${platform} debug=${debug}
+
+XML_LIBFILE = ${TINYXML_DIR}/libtinyxml.a
+
+
+# stapl macros
+STAPL_INCL  = -I${STAPL_DIR}/include/graph -I${STAPL_DIR}/include/common
+
+
+# pmpl macros
+PMPL_LIB = -L${PMPL_DIR} -lobprm
+PMPL_LIBFILE = libobprm.a
+PMPL_INCL = \
+	-I${PMPL_DIR}/Cfg \
+	-I${PMPL_DIR}/Connector \
+	-I${PMPL_DIR}/DistanceMetric \
+	-I${PMPL_DIR}/LocalPlanner \
+	-I${PMPL_DIR}/MapEvaluator \
+	-I${PMPL_DIR}/MPProblem \
+	-I${PMPL_DIR}/MPStrategy/Entropy \
+	-I${PMPL_DIR}/MPProblem/Geometry \
+	-I${PMPL_DIR}/MPStrategy \
+	-I${PMPL_DIR}/NodeGenerator \
+	-I${PMPL_DIR}/Utilities \
+	-I${PMPL_DIR}/ValidityChecker \
+	-I${PMPL_DIR}/trash 
+
+OBJS = \
+	MPProblem/Geometry/FreeBody.o \
+	MPProblem/Geometry/FixedBody.o \
+	MPProblem/Geometry/Connection.o \
+	MPProblem/Geometry/Contact.o \
+	Cfg/DHparameters.o \
+	Cfg/Transformation.o \
+	MPProblem/Geometry/Orientation.o \
+	MPProblem/Geometry/GMSPolyhedron.o \
+	Utilities/Matrix.o \
+	Utilities/Vectors.o \
+	MPProblem/Geometry/Body.o \
+	MPProblem/Geometry/MultiBody.o \
+	trash/Parameters.o \
+	trash/Input.o \
+	Cfg/Cfg.o \
+	Cfg/Cfg_free.o \
+	Cfg/Cfg_fixed_PRR.o \
+	Cfg/Cfg_free_tree.o \
+	Cfg/Cfg_free_tree_2dof.o \
+	Cfg/Cfg_fixed_tree.o \
+	Cfg/Cfg_2D.o \
+	Cfg/VirtualLink.o \
+	Cfg/Cfg_reach_cc.o \
+	Cfg/Cfg_reach_cc_fixed.o \
+	Cfg/Cfg_free_multi.o \
+	MPProblem/Environment.o \
+	Utilities/util.o \
+	Utilities/Clock_Class.o \
+	Utilities/Clock_Elapsed.o \
+	Utilities/Stat_Class.o \
+	DistanceMetric/DistanceMetrics.o \
+	ValidityChecker/CollisionDetection.o \
+	trash/QueryCmds.o \
+	MPProblem/Weight.o \
+	MPProblem/Boundary.o \
+	MPStrategy/MPStrategy.o \
+	MPStrategy/PRMIncrementalStrategy.o \
+	MPStrategy/HybridPRM.o \
+	MPProblem/MPProblem.o 
+#	Haptic.o \
+#	Push.o \
