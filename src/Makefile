@@ -57,20 +57,15 @@ utils: cd_libs xml_libs
 cd_libs: ${CD_LIBFILE}
 xml_libs: ${XML_LIBFILE}
 
-objs: ${OBJS}
+objs: ${PMPL_OBJS}
 
-libs: utils libobprm.a 
+libs: ${PMPL_LIBFILE} 
 
-libobprm.a: ${OBJS}
-	${AR} libobprm.a ${OBJS}
+${PMPL_LIBFILE}: ${PMPL_OBJS}
+	${AR} ${PMPL_LIBFILE} ${PMPL_OBJS}
 
-%: main_%.cpp libs 
-	@${MAKE} -s check_platform
+%: main_%.cpp libs utils
 	${CXX} ${CXXFLAGS} ${OPTS} ${DEFS} ${INCL} $< ${LIBS} -o $@
-
-#metaplanner: main_metaplanner.cpp libs
-#	@${MAKE} -s check_platform
-#	${CXX} ${CXXFLAGS} ${OPTS} ${DEFS} -DCOLLISIONCFG ${INCL} $< ${LIBS} -o $@
 
 %.o: %.cpp
 	@${MAKE} -s check_platform
@@ -84,7 +79,7 @@ CLEAN = obprm query pmpl metaplanner
 
 reallyclean:
 	@${MAKE} clean
-	rm -f *.a ${OBJS} *.d
+	rm -f *.a ${PMPL_OBJS} *.d
 	rm -f Dependencies
 	touch Dependencies
 

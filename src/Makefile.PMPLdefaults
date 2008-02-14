@@ -96,8 +96,9 @@ STAPL_INCL  = -I${STAPL_DIR}/include/graph -I${STAPL_DIR}/include/common
 
 # pmpl macros
 PMPL_LIB = -L${PMPL_DIR} -lobprm
-PMPL_LIBFILE = libobprm.a
+PMPL_LIBFILE =${PMPL_DIR}/libobprm.a
 PMPL_INCL = \
+	-I${PMPL_DIR} \
 	-I${PMPL_DIR}/Cfg \
 	-I${PMPL_DIR}/Connector \
 	-I${PMPL_DIR}/DistanceMetric \
@@ -112,7 +113,7 @@ PMPL_INCL = \
 	-I${PMPL_DIR}/ValidityChecker \
 	-I${PMPL_DIR}/trash 
 
-OBJS = \
+PMPL_OBJS = \
 	MPProblem/Geometry/FreeBody.o \
 	MPProblem/Geometry/FixedBody.o \
 	MPProblem/Geometry/Connection.o \
