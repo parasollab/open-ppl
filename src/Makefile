@@ -59,12 +59,12 @@ xml_libs: ${XML_LIBFILE}
 
 objs: ${PMPL_OBJS}
 
-libs: ${PMPL_LIBFILE} 
+libs: utils ${PMPL_LIBFILE} 
 
 ${PMPL_LIBFILE}: ${PMPL_OBJS}
 	${AR} ${PMPL_LIBFILE} ${PMPL_OBJS}
 
-%: main_%.cpp libs utils
+%: main_%.cpp libs
 	${CXX} ${CXXFLAGS} ${OPTS} ${DEFS} ${INCL} $< ${LIBS} -o $@
 
 %.o: %.cpp
