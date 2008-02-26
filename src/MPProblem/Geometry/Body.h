@@ -70,7 +70,7 @@ public:
       */
     Body(MultiBody * _owner, GMSPolyhedron & _polyhedron);
     ///Destructor. Free Forward (backward) connection information here.
-    ~Body();
+    virtual ~Body();
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////

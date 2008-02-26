@@ -42,7 +42,7 @@ public:
     FixedBody(MultiBody * _owner, GMSPolyhedron & _polyhedron);
 
     ///Do nothing
-    ~FixedBody();
+    virtual ~FixedBody();
 
     //@}
 

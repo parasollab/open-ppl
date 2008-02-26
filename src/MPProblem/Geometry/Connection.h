@@ -74,7 +74,7 @@ public:
       *call first body's RemoveForwardConnection and second's RemoveBackwardConnection
       *@see Body::RemoveForwardConnection and Body::RemoveBackwardConnection
       */
-    ~Connection();
+    virtual ~Connection();
 
     //@}
 

@@ -41,7 +41,7 @@ public:
     FreeBody(MultiBody * _owner, GMSPolyhedron & _polyhedron);
 
     ///Do nothing
-    ~FreeBody();
+    virtual ~FreeBody();
 
     //@}
 

@@ -58,7 +58,7 @@ public:
     MultiBody(Environment * _owner);
 
     ///Destrucot. Free memory allocated to all Bodys added to this multiBody.
-    ~MultiBody();
+    virtual ~MultiBody();
 
     //@}
 
