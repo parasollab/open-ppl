@@ -38,6 +38,7 @@ class PRMIncrementalStrategy : public MPStrategyMethod {
     ParseXML(in_pNode);    
     LOG_DEBUG_MSG("~PRMIncrementalStrategy::PRMIncrementalStrategy()");
     };
+  virtual ~PRMIncrementalStrategy() {}
 
   virtual void PrintOptions(ostream& out_os) { };
 

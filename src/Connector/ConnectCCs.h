@@ -31,7 +31,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   ConnectCCs(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ConnectCCs(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
 		      DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
-  ~ConnectCCs();
+  virtual ~ConnectCCs();
  
   //////////////////////
   // Access

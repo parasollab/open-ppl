@@ -8,7 +8,7 @@ template <class CFG, class WEIGHT>
 class NaiveRegionConnect: public RegionConnectionMethod<CFG,WEIGHT> {
  public:
   NaiveRegionConnect();
-  ~NaiveRegionConnect();
+  virtual ~NaiveRegionConnect();
 
   NaiveRegionConnect(TiXmlNode* in_pNode, MPProblem* in_pProblem);
 

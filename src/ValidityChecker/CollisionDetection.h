@@ -120,7 +120,7 @@ class CollisionDetection : MPBaseObject {
   CollisionDetection();
   CollisionDetection(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   CollisionDetection(vector<CollisionDetectionMethod*>& _selected);
-  ~CollisionDetection();
+  virtual ~CollisionDetection();
   
   static vector<CollisionDetectionMethod*> GetDefault();
   
@@ -248,7 +248,7 @@ class CollisionDetection : MPBaseObject {
 class CollisionDetectionMethod {
  public:
   CollisionDetectionMethod();
-  ~CollisionDetectionMethod();
+  virtual ~CollisionDetectionMethod();
 
   virtual char* GetName() const = 0;
   virtual void SetDefault();
@@ -338,7 +338,7 @@ class Vclip : public CollisionDetectionMethod {
  public:
 
   Vclip();
-  ~Vclip();
+  virtual ~Vclip();
 
   virtual char* GetName() const;
 
@@ -389,7 +389,7 @@ class Rapid: public CollisionDetectionMethod {
  public:
 
   Rapid();
-  ~Rapid();
+  virtual ~Rapid();
 
   virtual char* GetName() const;
 
@@ -419,7 +419,7 @@ class Pqp : public CollisionDetectionMethod {
  public:
 
   Pqp();
-  ~Pqp();
+  virtual ~Pqp();
 
   virtual char* GetName() const;
 
@@ -445,7 +445,7 @@ class BoundingSpheres : public CollisionDetectionMethod {
  public:
 
   BoundingSpheres();
-  ~BoundingSpheres();
+  virtual ~BoundingSpheres();
 
   virtual char* GetName() const;
 
@@ -460,7 +460,7 @@ class InsideSpheres : public CollisionDetectionMethod {
  public:
 
   InsideSpheres();
-  ~InsideSpheres();
+  virtual ~InsideSpheres();
 
   virtual char* GetName() const;
 
@@ -475,7 +475,7 @@ class Naive : public CollisionDetectionMethod {
  public:
 
   Naive();
-  ~Naive();
+  virtual ~Naive();
 
   virtual char* GetName() const;
 
@@ -490,7 +490,7 @@ class Quinlan : public CollisionDetectionMethod {
  public:
 
   Quinlan();
-  ~Quinlan();
+  virtual ~Quinlan();
 
   virtual char* GetName() const;
 

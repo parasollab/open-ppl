@@ -17,7 +17,7 @@ class Cfg_free_tree_2dof : public Cfg_free_tree {
   Cfg_free_tree_2dof(const Cfg&c);
   Cfg_free_tree_2dof(double x, double y, double z, 
 		double roll, double pitch, double yaw);
-  ~Cfg_free_tree_2dof();
+  virtual ~Cfg_free_tree_2dof();
 
   static int  getNumofJoints() { return NumofJoints; }
 

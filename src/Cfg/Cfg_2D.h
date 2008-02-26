@@ -42,7 +42,7 @@ public:
   Cfg_2D(double, double, double, double, double, double);
 
   ///Do nothing
-  ~Cfg_2D();
+  virtual ~Cfg_2D();
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////

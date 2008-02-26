@@ -43,7 +43,8 @@ class PRMRoadmap : public MPStrategyMethod {
     ParseXML(in_pNode);    
     LOG_DEBUG_MSG("~PRMRoadmap::PRMRoadmap()");
     };
-    
+  virtual ~PRMRoadmap() {}
+
   virtual void PrintOptions(ostream& out_os) { };
   
   virtual void ParseXML(TiXmlNode* in_pNode) {
@@ -302,6 +303,7 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
     ParseXML(in_pNode);    
     LOG_DEBUG_MSG("~PRMOriginalRoadmap::PRMOriginalRoadmap()");
     };
+  virtual ~PRMOriginalRoadmap() {}
     
   virtual void PrintOptions(ostream& out_os) { };
   

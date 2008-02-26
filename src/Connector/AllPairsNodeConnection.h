@@ -36,7 +36,7 @@ class AllPairsNodeConnection: public NodeConnectionMethod<CFG,WEIGHT> {
    AllPairsNodeConnection();
    AllPairsNodeConnection(TiXmlNode* in_pNode, MPProblem* in_pProblem);
    //AllPairsNodeConnection(int k);
-   ~AllPairsNodeConnection();
+   virtual ~AllPairsNodeConnection();
  
   //////////////////////
   // Access

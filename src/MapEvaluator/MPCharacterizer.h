@@ -10,6 +10,7 @@ class NodeCharacterizerMethod : public MPBaseObject
   public:
     NodeCharacterizerMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
       MPBaseObject(in_pNode,in_pProblem) { };
+    virtual ~NodeCharacterizerMethod() {}
     virtual void ParseXML(TiXmlNode* in_pNode)=0;
     virtual void Characterize(MPRegion<CFG,WEIGHT>*)=0;
     virtual void Characterize(MPRegion<CFG,WEIGHT>*, VID) {};

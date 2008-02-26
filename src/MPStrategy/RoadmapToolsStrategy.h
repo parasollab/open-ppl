@@ -43,7 +43,10 @@ class RoadmapInput : public MPStrategyMethod {
     ParseXML(in_pNode);    
     LOG_DEBUG_MSG("~RoadmapInput::RoadmapInput()");
     };
-    
+   
+
+    virtual ~RoadmapInput() {}
+
     virtual void PrintOptions(ostream& out_os) { };
   
     virtual void ParseXML(TiXmlNode* in_pNode) {
@@ -90,7 +93,9 @@ class RoadmapClear : public MPStrategyMethod {
     ParseXML(in_pNode);    
     LOG_DEBUG_MSG("~RoadmapClear::RoadmapClear()");
     };
-    
+
+    virtual ~RoadmapClear() {}
+
     virtual void PrintOptions(ostream& out_os) { };
   
     virtual void ParseXML(TiXmlNode* in_pNode) {

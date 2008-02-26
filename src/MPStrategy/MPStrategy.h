@@ -16,6 +16,7 @@ class MPStrategy : public MPBaseObject
 {
 public: 
   MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  virtual ~MPStrategy () {}
   
   void ParseStrategyMethod(TiXmlNode* in_pNode);
   
@@ -53,6 +54,7 @@ class MPComparer : public MPStrategyMethod {
   
 public: 
   MPComparer(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  virtual ~MPComparer() {}
   
   virtual void PrintOptions(ostream& out_os);  
   virtual void ParseXML(TiXmlNode* in_pNode);
@@ -72,6 +74,7 @@ class MPMultiStrategy : public MPStrategyMethod {
   
 public: 
   MPMultiStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  virtual ~MPMultiStrategy() {}
   
   virtual void PrintOptions(ostream& out_os);  
   virtual void ParseXML(TiXmlNode* in_pNode);

@@ -17,7 +17,7 @@ public:
     Matrix(int _ncol, int _nrow);
     Matrix(double *_m = 0, int _ncol = 0, int _nrow = 0);
     Matrix(const Matrix & _m);
-    ~Matrix();
+    virtual ~Matrix();
     //----------------------------------------------------------------------
     //  Operators
     //----------------------------------------------------------------------

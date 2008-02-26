@@ -81,7 +81,7 @@ class GenerateMapNodes : public MPBaseObject{
   GenerateMapNodes();
   GenerateMapNodes(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.	
-  ~GenerateMapNodes();
+  virtual ~GenerateMapNodes();
   
   void PrintOptions(ostream& out_os);
 

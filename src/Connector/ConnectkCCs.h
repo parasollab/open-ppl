@@ -29,7 +29,7 @@ class ConnectkCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   ConnectkCCs();
   ConnectkCCs(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
               DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
-  ~ConnectkCCs();
+  virtual ~ConnectkCCs();
  
   //////////////////////
   // Access

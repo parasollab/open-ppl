@@ -11,7 +11,7 @@ class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   ConnectFirst();
-  ~ConnectFirst();
+  virtual ~ConnectFirst();
  
   //////////////////////
   // Access

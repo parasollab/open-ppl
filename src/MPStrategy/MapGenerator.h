@@ -23,7 +23,7 @@ class MapGenerator {
   /////////////////////////////////
   
   MapGenerator();
-  ~MapGenerator();
+  virtual ~MapGenerator();
 
   void SetEvaluator(const ME& eval) {
     stop = eval;

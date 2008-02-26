@@ -51,6 +51,7 @@ class MPStrategyMethod : public MPBaseObject
       }
 
     };
+  virtual ~MPStrategyMethod() {}
   virtual void ParseXML(TiXmlNode* in_pNode)=0;
   virtual void operator()()=0;
   virtual void operator()(int in_RegionID)=0;

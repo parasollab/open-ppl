@@ -45,7 +45,7 @@ public:
   Cfg_free(const Vector6<double>& _v);
   Cfg_free(const Cfg& c);
   ///Do nothing
-  ~Cfg_free();
+  virtual ~Cfg_free();
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////

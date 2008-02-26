@@ -15,7 +15,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
 	       double roll, double pitch, double yaw);
   Cfg_reach_cc(const Vector6<double>& base,
 	       const vector<double>& len, const vector<int>& ori);
-  ~Cfg_reach_cc();
+  virtual ~Cfg_reach_cc();
 
   static int getNumofJoints() { return NumofJoints; }
   static void setNumofJoints(int _numofjoints);

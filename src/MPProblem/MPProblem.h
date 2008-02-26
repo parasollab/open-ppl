@@ -14,6 +14,7 @@ class MPProblem : public MPBaseObject
 {
 public:
   MPProblem(TiXmlNode* in_pNode);
+  virtual ~MPProblem() {}
   
   void PrintOptions();
   

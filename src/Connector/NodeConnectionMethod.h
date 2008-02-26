@@ -12,7 +12,7 @@ class NodeConnectionMethod : public MPBaseObject {
   // Constructors and Destructor
   NodeConnectionMethod();
   NodeConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
-  ~NodeConnectionMethod();
+  virtual ~NodeConnectionMethod();
   
   //////////////////////
   // Access

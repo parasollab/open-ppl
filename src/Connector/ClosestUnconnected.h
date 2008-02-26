@@ -39,7 +39,7 @@ class ClosestUnconnected: public NodeConnectionMethod<CFG,WEIGHT> {
   ClosestUnconnected(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ClosestUnconnected(int k);
   ClosestUnconnected(int k, int m);
-  ~ClosestUnconnected();
+  virtual ~ClosestUnconnected();
  
   //////////////////////
   // Access

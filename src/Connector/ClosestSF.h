@@ -38,7 +38,7 @@ class ClosestSF: public NodeConnectionMethod<CFG,WEIGHT> {
   ClosestSF();
   ClosestSF(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ClosestSF(int k, int m);
-  ~ClosestSF();
+  virtual ~ClosestSF();
  
   //////////////////////
   // Access

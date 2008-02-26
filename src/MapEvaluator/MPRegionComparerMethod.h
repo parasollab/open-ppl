@@ -25,7 +25,8 @@ class MPRegionComparerMethod: public MPBaseObject {
     }
     
   }
-  
+
+  virtual ~MPRegionComparerMethod() {}
   
   bool CfgIsVisible(CFG& in_cfg, vector< CFG >& in_vec_cfg) {
     LocalPlanners < CFG, WEIGHT > * lp = m_pProblem->GetMPStrategy()->GetLocalPlanners();

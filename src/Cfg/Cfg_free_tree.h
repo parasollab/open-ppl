@@ -26,7 +26,7 @@ class Cfg_free_tree : public Cfg_free {
   Cfg_free_tree(const Cfg&c);
   Cfg_free_tree(double x, double y, double z, 
 		double roll, double pitch, double yaw);
-  ~Cfg_free_tree();
+  virtual ~Cfg_free_tree();
 
   static int  getNumofJoints() { return NumofJoints; }
 

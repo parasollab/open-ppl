@@ -39,7 +39,7 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
   Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   Closest(int k);
   Closest(int k, int m);
-  ~Closest();
+  virtual ~Closest();
  
   //////////////////////
   // Access

@@ -58,7 +58,7 @@ class ConnectMap : public MPBaseObject{
   ConnectMap(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ConnectMap(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
 	     DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
-  ~ConnectMap();
+  virtual ~ConnectMap();
 
   //////////////////////
   // Access methods

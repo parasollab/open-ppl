@@ -14,7 +14,7 @@ class RegionConnectionMethod : MPBaseObject {
   // Constructors and Destructor
   RegionConnectionMethod();
   RegionConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
-  ~RegionConnectionMethod();
+  virtual ~RegionConnectionMethod();
   
   //////////////////////
   // Access

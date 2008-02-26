@@ -67,7 +67,7 @@ public:
           */
         Input();
         ///Destructor. 
-        ~Input();
+        virtual ~Input();
 
     //@}
 

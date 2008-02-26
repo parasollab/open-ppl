@@ -16,7 +16,7 @@ public:
   Cfg_free_multi(const Vector6<double>& _v);
   Cfg_free_multi(const vector<double>& _v);
   Cfg_free_multi(const Cfg& c);
-  ~Cfg_free_multi();
+  virtual ~Cfg_free_multi();
 
   static int getNumofRobots() { return NumofRobots; }
   static void setNumofRobots(int robots) { NumofRobots = robots; }

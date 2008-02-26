@@ -11,7 +11,7 @@ class ComponentConnectionMethod : public MPBaseObject{
   // Constructors and Destructor
   ComponentConnectionMethod();
   ComponentConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
-  ~ComponentConnectionMethod();
+  virtual ~ComponentConnectionMethod();
   
   //////////////////////
   // Access

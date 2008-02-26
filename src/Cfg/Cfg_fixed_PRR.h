@@ -51,7 +51,7 @@ public:
   Cfg_fixed_PRR(const Cfg& c);
 
   ///Do nothing
-  ~Cfg_fixed_PRR();
+  virtual ~Cfg_fixed_PRR();
 
   //@}
 

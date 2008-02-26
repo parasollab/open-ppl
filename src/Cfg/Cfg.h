@@ -125,7 +125,7 @@ class Cfg {
   /**@name Constructors and Destructor*/
   //@{
   Cfg() {};
-  ~Cfg() {};
+  virtual ~Cfg() {};
   
   //@}
     

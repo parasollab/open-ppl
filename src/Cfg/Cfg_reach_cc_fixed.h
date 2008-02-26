@@ -15,7 +15,7 @@ class Cfg_reach_cc_fixed : public Cfg_reach_cc {
   Cfg_reach_cc_fixed(const Vector6<double>& base,
 		     const vector<double>& len, const vector<int>& ori) :
     Cfg_reach_cc(base, len, ori) {}
-  ~Cfg_reach_cc_fixed();
+  virtual ~Cfg_reach_cc_fixed();
 
   virtual const char* GetName() const { return "Cfg_reach_cc_fixed"; }
 

@@ -48,7 +48,7 @@ class Cfg_fixed_tree : public Cfg {
   Cfg_fixed_tree(const Cfg& _c);
 
   ///Do nothing
-  ~Cfg_fixed_tree();
+  virtual ~Cfg_fixed_tree();
 
   //@}
 

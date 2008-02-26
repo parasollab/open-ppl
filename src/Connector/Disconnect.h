@@ -12,7 +12,7 @@ class Disconnect: public NodeConnectionMethod<CFG,WEIGHT> {
   // Constructors and Destructor
   Disconnect();
   Disconnect(TiXmlNode* in_pNode, MPProblem* in_pProblem);
-  ~Disconnect();
+  virtual ~Disconnect();
  
   //////////////////////
   // Access

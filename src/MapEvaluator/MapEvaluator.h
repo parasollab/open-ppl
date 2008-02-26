@@ -284,6 +284,7 @@ class MapEvaluationMethod: public MPBaseObject {
   MapEvaluationMethod() {}
   MapEvaluationMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
     MPBaseObject(in_pNode, in_pProblem) { }
+  virtual ~MapEvaluationMethod() {}
   virtual void ParseXML(TiXmlNode* in_pNode) = 0;
   virtual void operator() ()=0;
   virtual void operator() (int in_RegionID) = 0;
@@ -309,7 +310,7 @@ class TestEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     size.PutDesc("INTEGER","size, default 400");
     size.PutValue(s);
   }
-  ~TestEvaluation() {}
+  virtual ~TestEvaluation() {}
 
   virtual char* GetName() const {
     return "test";

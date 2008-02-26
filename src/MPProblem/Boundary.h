@@ -8,7 +8,7 @@
 class Boundary : public MPBaseObject{
  public:
   Boundary();
-  ~Boundary();
+  virtual ~Boundary();
  private:
 };
 
@@ -19,7 +19,7 @@ class BoundingBox : public Boundary {
   BoundingBox(int i_dofs, int i_pos_dofs);
   BoundingBox(TiXmlNode*,MPProblem* in_pproblem);
   BoundingBox(const BoundingBox &from_bbox);
-  ~BoundingBox();
+  virtual ~BoundingBox();
 
 
   void Clear();

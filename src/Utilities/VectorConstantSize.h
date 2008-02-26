@@ -82,6 +82,7 @@ public:
       *@warning Should this throw exception?
       */
     VectorConstantSize(istream &);
+    virtual ~VectorConstantSize() {}
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -427,6 +428,7 @@ public:
       *@warning Should this throw exception?
       */
     Vector3(istream &);
+    virtual ~Vector3() {}
   //@}
 
   //===================================================================

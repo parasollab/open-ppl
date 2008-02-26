@@ -31,7 +31,7 @@ class DefaultWeight {
   DefaultWeight();
   DefaultWeight(int lpID);
   DefaultWeight(int lpID, double w);
-  ~DefaultWeight();
+  virtual ~DefaultWeight();
   
   // Graph.h Interface
   static double InvalidWeight();

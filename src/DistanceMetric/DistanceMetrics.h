@@ -56,7 +56,7 @@ const int WS = 1;   ///< Type WS: Workspace distance metric
 class DistanceMetric : MPBaseObject{
  public:
   DistanceMetric();
-  ~DistanceMetric();
+  virtual ~DistanceMetric();
 
   DistanceMetric(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   static vector<DistanceMetricMethod*> GetDefault();
@@ -349,7 +349,7 @@ class CFG_CFG_DIST_COMPARE : public binary_function<const CFG, const CFG, bool> 
 class DistanceMetricMethod {
  public:
   DistanceMetricMethod();
-  ~DistanceMetricMethod();
+  virtual ~DistanceMetricMethod();
 
   virtual char* GetName() const = 0;
   virtual void SetDefault() = 0;
@@ -377,7 +377,7 @@ ostream& operator<< (ostream& _os, const DistanceMetricMethod& dm);
 class EuclideanDistance : public DistanceMetricMethod {
  public:
   EuclideanDistance();
-  ~EuclideanDistance();
+  virtual ~EuclideanDistance();
 
   virtual char* GetName() const;
   virtual void SetDefault();
@@ -406,7 +406,7 @@ class ScaledEuclideanDistance : public EuclideanDistance {
  public:
   ScaledEuclideanDistance();
   ScaledEuclideanDistance(double _sValue);
-  ~ScaledEuclideanDistance();
+  virtual ~ScaledEuclideanDistance();
 
   virtual char* GetName() const;
   virtual void SetDefault();
@@ -445,7 +445,7 @@ class ScaledEuclideanDistance : public EuclideanDistance {
 class MinkowskiDistance : public DistanceMetricMethod {
  public:
   MinkowskiDistance();
-  ~MinkowskiDistance();
+  virtual ~MinkowskiDistance();
 
   virtual char* GetName() const;
   virtual void SetDefault();
@@ -488,7 +488,7 @@ class MinkowskiDistance : public DistanceMetricMethod {
 class ManhattanDistance : public DistanceMetricMethod {
  public:
   ManhattanDistance();
-  ~ManhattanDistance();
+  virtual ~ManhattanDistance();
 
   virtual char* GetName() const;
   virtual void SetDefault();
@@ -509,7 +509,7 @@ class ManhattanDistance : public DistanceMetricMethod {
 class CenterOfMassDistance : public DistanceMetricMethod {
  public:
   CenterOfMassDistance();
-  ~CenterOfMassDistance();
+  virtual ~CenterOfMassDistance();
 
   virtual char* GetName() const;
   virtual void SetDefault();
@@ -532,7 +532,7 @@ class ReachableDistance : public DistanceMetricMethod {
   ReachableDistance() : DistanceMetricMethod() {
     type = CS;
   }
-  ~ReachableDistance() {}
+  virtual ~ReachableDistance() {}
   virtual char* GetName() const { return "reachable"; }
   virtual void SetDefault() {}
   virtual DistanceMetricMethod* CreateCopy() {

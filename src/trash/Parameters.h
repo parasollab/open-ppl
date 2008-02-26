@@ -74,6 +74,8 @@ public:
           */
         param (char *_flag);
 
+        virtual ~param () {}
+
     //@}
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -234,6 +236,8 @@ public:
           */
         num_param(char *_flag, TYPE _default, TYPE _min, TYPE _max);
 
+        virtual ~num_param() {}
+
     //@}
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -325,6 +329,8 @@ public:
         str_param(char *_flag);
         /// Construct w/ command line flag and initial value specfied.
         str_param(char *_flag, char *_initialValue);
+
+        virtual ~str_param() {}
 
     //@}
 
@@ -420,7 +426,9 @@ public:
         /// Verify value given is of a valid format for a directory
         n_str_param(char *_flag,char* _initialValue);
 
-	n_str_param(const n_str_param& tmp);
+       	n_str_param(const n_str_param& tmp);
+
+        virtual ~n_str_param() {}
     //@}
 
     /** Data fields are updated according to what was specified on 

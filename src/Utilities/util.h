@@ -417,6 +417,7 @@ class MPBaseObject {
       m_pProblem = in_pProblem;
       ParseXML(in_pNode); 
     };
+    virtual ~MPBaseObject() {}
     virtual void ParseXML(TiXmlNode* in_pNode) {
       if(in_pNode->Type() == TiXmlNode::ELEMENT) {
         const char* carLabel = in_pNode->ToElement()->Attribute("Label");

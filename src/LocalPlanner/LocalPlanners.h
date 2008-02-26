@@ -40,7 +40,7 @@ class LocalPlanners : MPBaseObject{
   LocalPlanners();
   LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem);
   ///Destructor.  
-  ~LocalPlanners();
+  virtual ~LocalPlanners();
 
   void PrintOptions(ostream& out_os);
   LocalPlannerMethod<CFG, WEIGHT>* GetMethod(string& in_strLabel);

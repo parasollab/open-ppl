@@ -50,7 +50,7 @@ public:
     ///Decompose a given Transformation into alpha, a, d, and theta.
     DHparameters(Transformation & _t);
     ///Destrcutor. Do nothing
-    ~DHparameters();
+    virtual ~DHparameters();
 
     //@}
 

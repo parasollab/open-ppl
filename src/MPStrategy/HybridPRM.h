@@ -39,6 +39,7 @@ class HybridPRM : public MPStrategyMethod {
    // m_percentage_random = double(0.5);
     LOG_DEBUG_MSG("~HybridPRM::HybridPRM()");
     };
+  virtual ~HybridPRM() {}
 
   virtual void PrintOptions(ostream& out_os) { };
 
