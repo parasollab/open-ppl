@@ -67,7 +67,7 @@ public:
         Query(CFG _start, CFG _goal);
 
         ///Destructor. Free memory.
-        ~Query();
+        virtual ~Query();
 
     //@}
 
