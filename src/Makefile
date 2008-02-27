@@ -57,11 +57,11 @@ utils: cd_libs xml_libs
 cd_libs: ${CD_LIBFILE}
 xml_libs: ${XML_LIBFILE}
 
-objs: ${PMPL_OBJS}
+objs: utils ${PMPL_OBJS}
 
 libs: utils ${PMPL_LIBFILE} 
 
-${PMPL_LIBFILE}: ${PMPL_OBJS}
+${PMPL_LIBFILE}: objs
 	${AR} ${PMPL_LIBFILE} ${PMPL_OBJS}
 
 %: main_%.cpp libs
