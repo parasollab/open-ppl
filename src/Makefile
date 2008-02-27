@@ -83,5 +83,11 @@ reallyclean:
 	rm -f Dependencies
 	touch Dependencies
 
+reallyreallyclean:
+	@${MAKE} reallyclean
+	cd ${CD_DIR}; ${MAKE} clean
+	cd ${TINYXML_DIR}; ${MAKE} clean
+
+
 # include automatically generated dependencies
 -include Dependencies
