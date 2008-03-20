@@ -7,7 +7,12 @@
 #ifndef Matrix_h
 #define Matrix_h
 
-#include "Defines.h"
+using namespace std;
+
+#include <fstream>
+#include <iostream>
+
+
 
 class Matrix {
 public:

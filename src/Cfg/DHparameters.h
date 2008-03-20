@@ -11,7 +11,9 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include general headers
-#include "Defines.h"
+//#include "Defines.h"
+#include <iostream>
+#include <fstream>
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //Forward Declaration
@@ -64,9 +66,9 @@ public:
     /**@name Input and Ouput methods*/
     //@{
     ///Read alpha, a, d, and theta one by one from _is.
-    virtual void Read(ifstream & _is);
+      virtual void Read(std::ifstream & _is);
     ///Output alpha, a, d, and theta one by one to _os.
-    virtual void Write(ostream & _os);
+      virtual void Write(std::ostream & _os);
     //@}
 
     //===============================================================

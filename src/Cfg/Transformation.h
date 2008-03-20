@@ -114,8 +114,8 @@ public:
     ///Create a new Transformation which is inverse of this Transformation.
     Transformation Inverse();
 
-    void Read(ifstream & _is);  ///<Read position and orientation from _is
-    void Write(ostream & _os);  ///<Write position and orientation to _os
+    void Read(std::ifstream & _is);  ///<Read position and orientation from _is
+    void Write(std::ostream & _os);  ///<Write position and orientation to _os
     //@}
 
     //-----------------------------------------------------------

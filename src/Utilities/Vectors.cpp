@@ -14,6 +14,9 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "Vectors.h"
+using namespace std;
+#include <iostream>
+#include <iomanip>
 
 //---------------------------------------------
 // Input/Output operators for Vector3D

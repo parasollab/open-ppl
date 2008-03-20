@@ -11,6 +11,9 @@
 #ifndef BasicDefns_h
 #define BasicDefns_h
 
+using namespace std;
+#include <iostream>
+
 ///////////////////////////////////////////////////////////////////////////
 #ifndef PI
 #define PI              3.141592653589793
@@ -39,9 +42,9 @@
 #define OK  0
 #endif
 
-#ifndef ERROR
-#define ERROR 1
-#endif
+//#ifndef ERROR
+//#define ERROR 1
+//#endif
 
 //////////////////////////////////////////////////////////////////////////
 #ifndef MAXFLOAT

@@ -1,6 +1,7 @@
 // $Id$
 
-#include "Defines.h"
+//#include "Defines.h"
+#include <iostream>
 
 ///Modified for VC
 #if defined(_WIN32)
@@ -15,6 +16,7 @@
 #endif
 
 #include "Clock_Elapsed.h"
+using namespace std;
 
 
 /////////////////////////////////////////////////////////////////////

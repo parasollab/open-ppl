@@ -17,7 +17,7 @@
 #ifdef HPUX
 #include <sys/io.h>
 #endif
-#include "Defines.h"
+// #include "Defines.h"
 
 /////////////////////////////////////////////////////////////////////
 //Include OBPRM header
@@ -35,7 +35,6 @@
 #define NULL_WT_INFO -999               ///< to pad weight fields for graph conversions
 
 #define INVALID_SID -999                ///<Invalid Set ID
-#define INVALID_EID -999                ///<Invalid Element ID
 
 #define INVALID_DM -999                 ///< invalid dm id
 #define INVALID_CD -999                 ///< invalid cd id

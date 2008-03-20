@@ -24,7 +24,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include general headers
-#include "Defines.h"
+//#include "Defines.h"
+#include <vector>
+#include <math.h>
+using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
@@ -81,7 +84,7 @@ public:
     /**Reserve SIZE memory blocks and read data from given inputstream
       *@warning Should this throw exception?
       */
-    VectorConstantSize(istream &);
+    VectorConstantSize(std::istream &);
     virtual ~VectorConstantSize() {}
   //@}
 
@@ -150,8 +153,8 @@ public:
     inline double dotProduct(VectorConstantSize&) const;
 
     /// I/O for vector
-    void Read(istream&) ;
-    inline void Write(ostream&) const;
+    void Read(std::istream&) ;
+    inline void Write(std::ostream&) const;
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +222,7 @@ VectorConstantSize<SIZE,ELEMENT>::VectorConstantSize(const vector<ELEMENT> &assi
 };
 
 template<int SIZE,class ELEMENT>
-VectorConstantSize<SIZE,ELEMENT>::VectorConstantSize(istream &_is){
+  VectorConstantSize<SIZE,ELEMENT>::VectorConstantSize(std::istream &_is){
     v.reserve(SIZE);
         ELEMENT tmp;
         for (int i=0;i<SIZE;++i){
@@ -322,7 +325,7 @@ void VectorConstantSize<SIZE,ELEMENT>::setValue( const ELEMENT * pElem )
 
     for( int i=0;i<SIZE;i++ )
     {
-        v.push_back(pElem[i]);
+     v.push_back(pElem[i]);
     }
 }
 
@@ -336,7 +339,7 @@ double VectorConstantSize<SIZE,ELEMENT>::magnitude()const{
     double result=0.0;
     for (int i=0;i<SIZE;++i)
       result += (v[i])*(v[i]);
-    return (sqrt(result));
+      return (sqrt(result));
 };
 
 template<int SIZE,class ELEMENT>
@@ -357,7 +360,7 @@ VectorConstantSize<SIZE,ELEMENT>::dotProduct(VectorConstantSize &v2) const{
 };
 
 template<int SIZE,class ELEMENT>
-void VectorConstantSize<SIZE,ELEMENT>::Read(istream & _is){
+  void VectorConstantSize<SIZE,ELEMENT>::Read(std::istream & _is){
         ELEMENT tmp;
         if (v.size() == SIZE) {
                 for (int i=0;i<SIZE;++i){
@@ -373,7 +376,7 @@ void VectorConstantSize<SIZE,ELEMENT>::Read(istream & _is){
 };
 
 template<int SIZE,class ELEMENT>
-void VectorConstantSize<SIZE,ELEMENT>::Write(ostream & _os)const{
+  void VectorConstantSize<SIZE,ELEMENT>::Write(std::ostream & _os)const{
     for (int i=0;i<SIZE;++i)
         _os << v[i] << ' ';
 };
@@ -427,7 +430,7 @@ public:
     /**Reserve SIZE memory blocks and read data from given inputstream
       *@warning Should this throw exception?
       */
-    Vector3(istream &);
+    Vector3(std::istream &);
     virtual ~Vector3() {}
   //@}
 
@@ -517,7 +520,7 @@ Vector3<ELEMENT>::Vector3(const ELEMENT &_x,const ELEMENT &_y,const ELEMENT &_z)
 };
 
 template<class ELEMENT>
-Vector3<ELEMENT>::Vector3(istream & _is)
+Vector3<ELEMENT>::Vector3(std::istream & _is)
         :VectorConstantSize<3,ELEMENT>(_is){
 };
 
@@ -631,7 +634,7 @@ public:
     /**Reserve SIZE memory blocks and read data from given inputstream
       *@warning Should this throw exception?
       */
-    Vector6(istream &);
+    Vector6(std::istream &);
   //@}
 
   //===================================================================
@@ -709,7 +712,7 @@ Vector6<ELEMENT>::Vector6
 };
 
 template<class ELEMENT>
-Vector6<ELEMENT>::Vector6(istream & _is)
+Vector6<ELEMENT>::Vector6(std::istream & _is)
                 :VectorConstantSize<6,ELEMENT>(_is){
 };
 

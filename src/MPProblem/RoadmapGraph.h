@@ -32,6 +32,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 #define DEFAULT_EDGES_PER_VERTEX 10  ///< Slots to reserve in each edgelist
 
+using stapl::dkinfo;
+using stapl::dkinfo_compare;
+using stapl::VID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 template<class WEIGHT>
@@ -104,11 +107,11 @@ public:
 
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : 
-public Graph<DG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,WEIGHT> {
+public stapl::Graph<stapl::DIRECTED,stapl::NONMULTIEDGES,stapl::WEIGHTED, VERTEX,WEIGHT> {
 
 public:
 
-typedef Graph<DG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,WEIGHT> GRAPH;
+typedef stapl::Graph<stapl::DIRECTED, stapl::NONMULTIEDGES, stapl::WEIGHTED, VERTEX,WEIGHT> GRAPH;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -231,7 +234,7 @@ typedef Graph<DG<VERTEX,WEIGHT>, NMG<VERTEX,WEIGHT>, WG<VERTEX,WEIGHT>, VERTEX,W
   //////////////////////////////////////////////////////////////////////////////////////////
   //protected:
 
-   typedef WtVertexType<VERTEX,WEIGHT> Vertex;
+   typedef stapl::WtVertexType<VERTEX,WEIGHT> Vertex;
    typedef vector< Vertex > VERTEX_VECTOR;
    typedef typename VERTEX_VECTOR::iterator VI; ///<VI Vertex Iterator
    typedef typename VERTEX_VECTOR::const_iterator CVI; ///<CVI Constant Vertex Iterator
@@ -448,7 +451,6 @@ double DijkstraSSSP(GRAPH &g,VID start_vid, VID *far_vid)
   typename GRAPH::VI v1;
 
   vector<VID> vec_cc;
-  
   vector<dkinfo> pq; //The priority Queue
   double  maxdist = g.GetVertexCount() * _w_.MaxWeight();
   double max_shortest_path_length=0;
@@ -466,7 +468,7 @@ double DijkstraSSSP(GRAPH &g,VID start_vid, VID *far_vid)
     }
   }
 
-  sort( pq.begin(), pq.end(),  (dkinfo_compare) );
+  sort( pq.begin(), pq.end(),  (dkinfo_compare<dkinfo>) );
 
   while ( pq.size() != 0  && (pq.back().valid()) )
   {
@@ -508,7 +510,7 @@ double DijkstraSSSP(GRAPH &g,VID start_vid, VID *far_vid)
       } // endfor
     } // endfor
 
-    if (relax) sort( pq.begin(), pq.end(),dkinfo_compare);
+    if (relax) sort( pq.begin(), pq.end(),dkinfo_compare<dkinfo>);
   }
   return max_shortest_path_length;
 }

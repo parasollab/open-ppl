@@ -91,7 +91,8 @@ XML_LIBFILE = ${TINYXML_DIR}/libtinyxml.a
 
 
 # stapl macros
-STAPL_INCL  = -I${STAPL_DIR}/include/graph -I${STAPL_DIR}/include/common
+STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools 
+
 
 
 # pmpl macros

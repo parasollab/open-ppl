@@ -13,8 +13,10 @@
 
 #if !defined(_OBPRM_WEIGHT_H_)
 #define _OBPRM_WEIGHT_H_
+using namespace std;
+#include <iostream>
 
-#include "Defines.h"
+//#include "Defines.h"
 
 
 

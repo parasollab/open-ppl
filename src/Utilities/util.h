@@ -17,6 +17,10 @@
 #endif
 
 #include <ctype.h>
+#include <vector>
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers

@@ -12,18 +12,15 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
-
+#include <Graph.h> //to get def for VID
 #include <functional>
 
 #include "OBPRMDef.h"
 #include "util.h"
-#ifndef VID //from BaseGraph.h
-///ID for every vertex in graph.
-typedef int VID;
-#endif
 
 #include "Clock_Class.h"
 /////////////////////////////////////////////////////////////////////////////////////////
+using stapl::VID;
 
 const double MAX_DIST =  1e10;
 

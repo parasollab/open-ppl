@@ -1,6 +1,7 @@
 #ifndef StraightLine_h
 #define StraightLine_h
 
+#include <deque>
 #include "LocalPlannerMethod.h"
 #include "type_traits/is_closed_chain.h" //used to switch between default and specialized impl. of IsConnected
 
@@ -619,7 +620,7 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
   CFG incr;
   incr.FindIncrement(_c1, _c2, &n_ticks, positionRes, orientationRes);
 
-  deque<pair<int,int> > Q;
+  std::deque<pair<int,int> > Q;
   Q.push_back(make_pair(0, n_ticks));
 
   while(!Q.empty()) {

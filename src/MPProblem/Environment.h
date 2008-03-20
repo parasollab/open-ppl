@@ -2,7 +2,7 @@
 #define Environment_h
 
 ////////////////////////////////////////////////////////////////
-#include "Defines.h"
+//#include "Defines.h"
 #include "util.h"
 
 #include "Boundary.h"

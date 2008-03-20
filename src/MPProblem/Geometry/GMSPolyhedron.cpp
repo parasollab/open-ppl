@@ -6,6 +6,10 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "GMSPolyhedron.h"
+using namespace std;
+
+#include <fstream>
+#include <istream>
 
 //=========================================================================
 //  Class GMSPolyhedron
@@ -155,10 +159,10 @@ Vector3D GMSPolyhedron::Read(char* fileName) {
     //---------------------------------------------------------------
     // Get polyhedron file name and try to open the file
     //---------------------------------------------------------------
-    ifstream _is(fileName);
+   std::ifstream _is(fileName);
 
     if (!_is) {
-        cout << "Can't open \"" << fileName << "\"." << endl;
+      std:: cout << "Can't open \"" << fileName << "\"." << endl;
         exit(1);
     }
 

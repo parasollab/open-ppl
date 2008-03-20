@@ -1,6 +1,7 @@
 // $Id$
 
-#include "Defines.h"
+//#include "Defines.h"
+#include <iostream>
 
 ///Modified for VC
 #if defined(_WIN32)
@@ -19,7 +20,7 @@ struct rusage buf;
 #endif
 
 #include "Clock_Class.h"
-
+using namespace std;
 
 /////////////////////////////////////////////////////////////////////
 //
