@@ -49,9 +49,6 @@ class OBMAPRM : public OBPRM<CFG> {
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
   
   /*OBPRM-CSpaceMAPRM Hybrid.
@@ -70,11 +67,11 @@ class OBMAPRM : public OBPRM<CFG> {
   /**Number of rays for approx clearance calculation
    *@see Cfg::ApproxCSpaceClearance
    */
-  num_param<int> clearanceNum;
+  int clearanceNum;
   /**Number of rays for approx penetration calculation
    *@see Cfg::ApproxCSpaceClearance
    */
-  num_param<int> penetrationNum;
+  int penetrationNum;
 
   //Index for next node
   //used in incremental map generation
@@ -93,11 +90,8 @@ int OBMAPRM<CFG>::nextNodeIndex = 0;
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
 OBMAPRM<CFG>::
-OBMAPRM() : OBPRM<CFG>(),
-  clearanceNum     ("clearance",         5,  1,   100),
-  penetrationNum   ("penetration",       5,  1,   100)  {
-  clearanceNum.PutDesc("INT  ","(number of rays for approx clearance calulation, default 5)");
-  penetrationNum.PutDesc("INT  ","(number of rays for approx penetration calculation, default 5)");
+OBMAPRM() : OBPRM<CFG>()  {
+  SetDefault();
 }
 
 
@@ -120,8 +114,8 @@ void
 OBMAPRM<CFG>::
 SetDefault() {
   OBPRM<CFG>::SetDefault();
-  clearanceNum.PutValue(5);
-  penetrationNum.PutValue(5);
+  clearanceNum = 5;
+  penetrationNum =5;
 }
 
 
@@ -149,89 +143,7 @@ IncreaseNextNodeIndex(int numIncrease) {
 }
 
 
-template <class CFG>
-void
-OBMAPRM<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  int i;
-  for (i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->chunkSize.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->exactNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->numShells.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->proportionSurface.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->collPair.AckCmdLine(&i, argc, argv) ) {
-      if (!this->ValidatePairs(NULL,this->collPair,NULL)) {
-	cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	     << this->collPair.GetValue() <<"\"\n\n";
-	PrintUsage(cerr);
-	cerr << endl;
-	exit (-1);
-      }
-    } else if (this->freePair.AckCmdLine(&i, argc, argv) ) {
-      if (!this->ValidatePairs(NULL,this->freePair,NULL)) {
-	cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	     << this->freePair.GetValue() <<"\"\n\n";
-	PrintUsage(cerr);
-	cerr << endl;
-	exit (-1);
-      }
-    } else if (this->clearanceFactor.AckCmdLine(&i, argc, argv) ) {
-    } else if (clearanceNum.AckCmdLine(&i, argc, argv) ) {
-    } else if (penetrationNum.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
 
-
-template <class CFG>
-void
-OBMAPRM<CFG>::
-PrintUsage(ostream& _os) {
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os);
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
-  _os << "\n\t"; clearanceNum.PrintUsage(_os);
-  _os << "\n\t"; penetrationNum.PrintUsage(_os);
-  _os << "\n\t"; this->proportionSurface.PrintUsage(_os);
-  _os << "\n\t"; this->numShells.PrintUsage(_os);
-  _os << "\n\t"; this->collPair.PrintUsage(_os);
-  _os << "\n\t"; this->freePair.PrintUsage(_os);
-  _os << "\n\t"; this->clearanceFactor.PrintUsage(_os);
-  
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-
-template <class CFG>
-void
-OBMAPRM<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  _os << clearanceNum.GetFlag() << " " << clearanceNum.GetValue() << " ";
-  _os << penetrationNum.GetFlag() << " " << penetrationNum.GetValue() << " ";
-  _os << this->numShells.GetFlag() << " " << this->numShells.GetValue() << " ";
-  _os << this->proportionSurface.GetFlag() << " " << this->proportionSurface.GetValue() << " ";
-  _os << this->collPair.GetFlag() << " " << this->collPair.GetValue() << " ";
-  _os << this->freePair.GetFlag() << " " << this->freePair.GetValue() << " ";
-  _os << this->clearanceFactor.GetFlag() << " " << this->clearanceFactor.GetValue() << " ";
-
- _os << endl;
-}
 
 
 template <class CFG>
@@ -250,25 +162,25 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      CollisionDetection* cd, DistanceMetric* dm,
 	      vector<CFG>& nodes) {
 #ifndef QUIET
-  cout << "(numNodes="          << this->numNodes.GetValue()          << ", ";
-  cout << "chunkSize="          << this->chunkSize.GetValue()         << ", ";
-  cout << "exactNodes="         << this->exactNodes.GetValue()         << ", ";
-  cout << "clearanceNum="       << clearanceNum.GetValue()      << ", ";
-  cout << "penetrationNum="     << penetrationNum.GetValue()    << ", ";
-  cout << "\nproportionSurface="<< this->proportionSurface.GetValue() << ", ";
-  cout << "\nnumShells="        << this->numShells.GetValue()         << ", ";
-  cout << "collPair="           << this->collPair.GetValue()          << ", ";
-  cout << "freePair="           << this->freePair.GetValue()          << ", ";
-  cout << "clearanceFactor="    << this->clearanceFactor.GetValue()   << ") ";
+  cout << "(numNodes="          << this->numNodes          << ", ";
+  cout << "chunkSize="          << this->chunkSize         << ", ";
+  cout << "exactNodes="         << this->exactNodes         << ", ";
+  cout << "clearanceNum="       << clearanceNum      << ", ";
+  cout << "penetrationNum="     << penetrationNum    << ", ";
+  cout << "\nproportionSurface="<< this->proportionSurface << ", ";
+  cout << "\nnumShells="        << this->numShells         << ", ";
+  cout << "collPair="           << this->collPair          << ", ";
+  cout << "freePair="           << this->freePair          << ", ";
+  cout << "clearanceFactor="    << this->clearanceFactor   << ") ";
 #endif
 
   CDInfo cdInfo;
-  ObstacleBasedSampler<CFG> ob_sampler(_env, Stats, cd, cdInfo, dm, this->numShells.GetValue(), 0);
-  FreeMedialAxisSampler<CFG> ma_sampler(_env, Stats, cd, cdInfo, dm, clearanceNum.GetValue(), penetrationNum.GetValue());
+  ObstacleBasedSampler<CFG> ob_sampler(_env, Stats, cd, cdInfo, dm, this->numShells, 0);
+  FreeMedialAxisSampler<CFG> ma_sampler(_env, Stats, cd, cdInfo, dm, clearanceNum, penetrationNum);
   int nodes_offset = nodes.size();
 
   int i=0; 
-  while(i<this->numNodes.GetValue()) {
+  while(i<this->numNodes) {
     CFG tmp;
     tmp.GetRandomCfg(_env);
     vector<CFG> in(1, tmp);
@@ -283,14 +195,14 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
     i += out2.size();
     //make sure advance if not exact
-    if(out2.empty() && this->exactNodes.GetValue() == 0) 
+    if(out2.empty() && this->exactNodes == 0) 
       i++;
   }
 
   //correct any extras if exact true
-  if((this->exactNodes.GetValue() == 1) && 
-     ((nodes.size()-nodes_offset) > this->numNodes.GetValue())) 
-    nodes.erase(nodes.begin()+nodes_offset+this->numNodes.GetValue(),
+  if((this->exactNodes == 1) && 
+     ((nodes.size()-nodes_offset) > this->numNodes)) 
+    nodes.erase(nodes.begin()+nodes_offset+this->numNodes,
 	        nodes.end());
 
 #ifdef INTERMEDIATE_FILES

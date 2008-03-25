@@ -11,14 +11,15 @@ class MPProblem;
 template <class CFG, class WEIGHT>
 class MPRegionComparerMethod: public MPBaseObject {
  public:
-  MPRegionComparerMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPBaseObject(in_pNode, in_pProblem) { 
+  MPRegionComparerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPBaseObject(in_Node, in_pProblem) { 
     m_pProblem = in_pProblem;
     
-    const char * witness_file = in_pNode->ToElement()->Attribute("witness_file");
-    if (witness_file) {
+    string filename = in_Node.stringXMLParameter(string("witness_file"),false,
+                                    string(""),string("Witness Filename"));
+    if (filename.length() > 0) {
       Roadmap< CFG, WEIGHT > tmp_roadmap;
-      tmp_roadmap.ReadRoadmapGRAPHONLY(witness_file);
+      tmp_roadmap.ReadRoadmapGRAPHONLY(filename.c_str());
       tmp_roadmap.m_pRoadmap->GetVerticesData(m_witness_cfgs);
       LOG_DEBUG_MSG("MPRegionComparerMethod:: input cfgs: " << m_witness_cfgs.size());
       
@@ -219,17 +220,12 @@ class ConnectableComponentComparer : public MPRegionComparerMethod<CFG,WEIGHT>
 {
 public:
 
-  ConnectableComponentComparer(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPRegionComparerMethod<CFG,WEIGHT> (in_pNode, in_pProblem) {
+  ConnectableComponentComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
     LOG_DEBUG_MSG("ConnectableComponentComparer::ConnectableComponentComparer()");
-    if (!in_pNode) {
-      LOG_ERROR_MSG("ConnectableComponentComparer::ConnectableComponentComparer() error xml input");
-      exit(-1);
-    }
-    if (string(in_pNode->Value()) != "ConnectableComponentComparer") {
-      LOG_ERROR_MSG("ConnectableComponentComparer::ConnectableComponentComparer() error xml input");
-      exit(-1);
-    }
+   
+    in_Node.verifyName(string("ConnectableComponentComparer"));
+   
     LOG_DEBUG_MSG("ConnectableComponentComparer::ConnectableComponentComparer() end");    
   }
 
@@ -259,17 +255,11 @@ template <class CFG, class WEIGHT>
 class RandomConnectComparer : public MPRegionComparerMethod< CFG, WEIGHT > 
 {
 public:
-  RandomConnectComparer(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPRegionComparerMethod<CFG,WEIGHT> (in_pNode, in_pProblem) {
+  RandomConnectComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
     LOG_DEBUG_MSG("RandomConnectComparer::RandomConnectComparer()");
-    if (!in_pNode) {
-      LOG_ERROR_MSG("RandomConnectComparer::RandomConnectComparer() error xml input");
-      exit(-1);
-    }
-    if (string(in_pNode->Value()) != "RandomConnectComparer") {
-      LOG_ERROR_MSG("RandomConnectComparer::RandomConnectComparer() error xml input");
-      exit(-1);
-    }
+    
+    in_Node.verifyName(string("RandomConnectComparer"));
     
     LOG_DEBUG_MSG("RandomConnectComparer::RandomconnectComparer() end");    
   }
@@ -305,17 +295,11 @@ template <class CFG, class WEIGHT>
 class RegionCoverageComparer : public MPRegionComparerMethod< CFG, WEIGHT > 
 {
 public:
-  RegionCoverageComparer(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPRegionComparerMethod<CFG,WEIGHT> (in_pNode, in_pProblem) {
+  RegionCoverageComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
     LOG_DEBUG_MSG("RegionCoverageComparer::IncrementalRegionComparer()");
-    if (!in_pNode) {
-      LOG_ERROR_MSG("RegionCoverageComparer::IncrementalRegionComparer() error xml input");
-      exit(-1);
-    }
-    if (string(in_pNode->Value()) != "RegionCoverageComparer") {
-      LOG_ERROR_MSG("RegionCoverageComparer::RegionCoverageComparer() error xml input");
-      exit(-1);
-    }
+
+    in_Node.verifyName(string("RegionCoverageComparer"));
     
     LOG_DEBUG_MSG("~RegionCoverageComparer::RegionCoverageComparer()");    
   }
@@ -395,17 +379,11 @@ template <class CFG, class WEIGHT>
 class RegionSimilarity : public MPRegionComparerMethod< CFG, WEIGHT > 
 {
 public:
-  RegionSimilarity(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPRegionComparerMethod<CFG,WEIGHT> (in_pNode, in_pProblem) {
+  RegionSimilarity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
     LOG_DEBUG_MSG("RegionSimilarity::IncrementalRegionComparer()");
-    if (!in_pNode) {
-      LOG_ERROR_MSG("RegionSimilarity::IncrementalRegionComparer() error xml input");
-      exit(-1);
-    }
-    if (string(in_pNode->Value()) != "RegionSimilarity") {
-      LOG_ERROR_MSG("RegionSimilarity::RegionSimilarity() error xml input");
-      exit(-1);
-    }
+    
+    in_Node.verifyName(string("RegionSimilarity"));
     
     LOG_DEBUG_MSG("~RegionSimilarity::RegionSimilarity()");    
   }

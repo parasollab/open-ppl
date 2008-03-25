@@ -2,8 +2,34 @@
  * @brief main function to use the feature sensitive meta-planner
  */
 
+#include <iostream>
+#include <sstream>
+#include "SwitchDefines.h"
+#include<sys/time.h>
 
-#include "Input.h"
+#include "OBPRMDef.h"
+#include "Roadmap.h"
+
+#include "Clock_Class.h"
+#include "Stat_Class.h"
+#include "CollisionDetection.h"
+#include "ConnectMap.h"
+#include "DistanceMetrics.h"
+#include "LocalPlanners.h"
+#include "GenerateMapNodes.h"
+
+#include "GeneratePartitions.h"
+
+//#include "ExplicitInstantiation.h"
+
+/* util.h defines EXIT used in initializing the environment*/
+#include "util.h"
+
+
+#include "MPRegion.h"
+#include "MPProblem.h"
+#include "MPStrategy.h"
+
 
 
 #include "CfgTypes.h"
@@ -11,13 +37,8 @@
 #include "Weight.h"
 
 
-//typedef Cfg_free CfgType;
-//typedef DefaultWeight WeightType;
+using namespace std;
 
-//#include "MetaPlanner.h"
-#include "main_pmpl.h"
-
-//using namespace mp;
 
 //========================================================================
 //  main
@@ -28,8 +49,6 @@
 int main(int argc, char** argv)
 {
   
-  MPProblem* problem;
-  MPStrategy* strategy;
   
   if(argc < 3) { cout << "Usage ... -f options.xml" << endl; exit(-1);}
   
@@ -38,44 +57,48 @@ int main(int argc, char** argv)
   
   TiXmlDocument doc( argv[2] );
   bool loadOkay = doc.LoadFile();
-  
-  
+
   if ( !loadOkay ) {
     cout << "Could not load test file " << string(argv[2]) << ". Error=" << doc.ErrorDesc() <<". Exiting.\n";
     exit( 1 );
   }
 
-  TiXmlNode* in_pNode = 0;
+  XMLNodeReader mp_node(std::string(argv[2]),doc, string("motion_planning"));
+
+  MPProblem* problem;
+  MPStrategy* strategy;
+  //Iterate over child nodes
   
-  in_pNode = doc.FirstChild( "motion_planning" );
-  assert( in_pNode );
-  
-  if(!in_pNode) {
-    cout << "Error -1" << endl; exit(-1);
-  }
-  if(string(in_pNode->Value()) != "motion_planning") {
-    cout << "Error reading <motion_planning> tag...." << endl; exit(-1);
-  }
-  
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling())
-  {
-    if(pChild->Type() == TiXmlNode::ELEMENT) {
-      if(string(pChild->Value()) == "MPProblem") {
-          problem = new MPProblem(pChild);
-      }
-      else if(string(pChild->Value()) == "MPStrategy") {
-        strategy = new MPStrategy(pChild,problem);
+  ///\note DUMMY vars that are needed to prevent seg fault with g++ -O3
+  ///\todo find out why this is :(
+  string dummy = mp_node.getName();
+  XMLNodeReader::childiterator citr = mp_node.children_begin(); 
+  dummy = (*citr).getName();
+  for(; citr != mp_node.children_end(); ++citr) {
+    if(citr->getName() == "MPProblem") {
+          problem = new MPProblem(*citr);
+    } else if(citr->getName() == "MPStrategy") {
+        strategy = new MPStrategy(*citr,problem);
         problem->SetMPStrategy(strategy);
-      }
-      else {
-        parse_unknown_tag(pChild);
-      } 
     }
+    else {
+      citr->warnUnknownNode();
+    } 
   }
+  
   //Output whats about to go on
-  problem->PrintOptions(cout);
+  if(problem != NULL) {
+    problem->PrintOptions(cout);
+  } else {
+    cerr << "I don't have a MPProblem" << endl << flush;
+  }
+  
   //Start generating!
-  strategy->Solve();
+  if(strategy != NULL) {
+    strategy->Solve();
+  } else {
+    cerr << "I don't have a MPStrategy" << endl << flush;
+  }
     return 0;
 }
 

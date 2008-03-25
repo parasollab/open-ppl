@@ -18,7 +18,6 @@ class CombinationMethod {
   virtual char* GetName() = 0;
   virtual void SetDefault();
   //I/O methods
-  virtual void ParseCommandLine(int argc, char **argv) = 0;
   virtual void PrintUsage(ostream& _os) = 0;
   virtual void PrintValues(ostream& _os) = 0;
   virtual CombinationMethod<CFG>* CreateCopy() = 0;
@@ -60,7 +59,6 @@ class BruteForceCombination: public CombinationMethod<CFG> {
   char* GetName();
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
   virtual CombinationMethod<CFG>* CreateCopy();
@@ -92,12 +90,6 @@ GetName() {
   return "BruteForceCombination";
 }
 
-template <class CFG>
-void
-BruteForceCombination<CFG>::
-ParseCommandLine(int argc, char **argv) {
-
-}
 
 template <class CFG>
 void
@@ -173,7 +165,6 @@ class CombineCSpaceRegions {
 
   static vector<CombinationMethod<CFG>*> GetDefault();
 
-  int ReadCommandLine(str_param<char *> &combinationType);
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
   void PrintDefaults(ostream& _os);
@@ -233,94 +224,6 @@ GetDefault() {
   BruteForceCombination<CFG>* brute_force_combination= new BruteForceCombination<CFG>();
   Default.push_back(brute_force_combination);
   return Default;
-}
-
-
-template <class CFG>
-int 
-CombineCSpaceRegions<CFG>::
-ReadCommandLine(str_param<char *> &combinationType) {
-  typename vector<CombinationMethod<CFG>*>::iterator I;
-
-  for(I=selected.begin(); I!=selected.end(); I++)
-    delete *I;
-  selected.clear();
-
-    
-  
-  typename vector<CombinationMethod<CFG>*>::iterator itr;
-
-  
-  if (combinationType.IsActivated()) {
-    std::istringstream _myistream(combinationType.GetValue());
-
-    int argc = 0;
-    char* argv[50];
-    char cmdFields[50][100]; 
-    while ( _myistream >> cmdFields[argc] ) {
-      argv[argc] = (char*)(&cmdFields[argc]); 
-      ++argc;
-    }
-
-    bool found = FALSE;
-    try {
-      int cmd_begin = 0;
-      int cmd_argc = 0;
-      char* cmd_argv[50];
-      do {
-	//go through the command line looking for method names
-	for (itr = all.begin(); itr != all.end(); itr++) {
-	  //If the method matches any of the supported methods ...
-	  if ( !strcmp( argv[cmd_begin], (*itr)->GetName()) ) {
-	    cmd_argc = 0;
-	    bool is_method_name = false;
-	    do {
-	      cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
-	      cmd_argc++;
-	      
-	      typename vector<CombinationMethod<CFG>*>::iterator itr_names;
-	      is_method_name = false;
-	      for (itr_names = all.begin(); itr_names != all.end() &&cmd_begin+cmd_argc < argc; itr_names++)
-		if (!strcmp(argv[cmd_begin+cmd_argc],(*itr_names)->GetName())) {
-		  is_method_name = true;
-		  break;
-		}
-	    } while (! is_method_name && cmd_begin+cmd_argc < argc);	  
-
-	    // .. use the parser of the matching method
-	    (*itr)->ParseCommandLine(cmd_argc, cmd_argv);
-	    // .., set their parameters	
-/* 	    (*itr)->cdInfo = &cdInfo; */
-	    //  and push it back into the list of selected methods.	  
-	    selected.push_back((*itr)->CreateCopy());	 
-	    (*itr)->SetDefault();
-	    found = TRUE;
-	    break;
-	  } 
-	}
-	if(!found)
-	  break;
-	cmd_begin = cmd_begin + cmd_argc;
-      } while (cmd_begin < argc);
-      if (!found)
-	throw BadUsage();
-    } catch (BadUsage) {
-      cerr << "Command line error" << endl;
-      PrintUsage(cerr);
-      exit(-1); 
-    }
-  }
-  
-  //when there was no method selected, use the default
-  if(selected.size() == 0) {
-    selected = CombineCSpaceRegions<CFG>::GetDefault();
-/*     for (itr = selected.begin(); itr != selected.end(); itr++) { */
-/*       (*itr)->cdInfo = &cdInfo; */
-/*     } */
-  }
-  //cout << "selected:\n";
-  //for(int j=0; j<selected.size(); j++)
-  //  selected[j]->PrintValues(cout);
 }
 
 

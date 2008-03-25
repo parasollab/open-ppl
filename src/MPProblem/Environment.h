@@ -9,7 +9,6 @@
 
 
 #include "MultiBody.h"
-#include "Input.h"
 #include "OBPRMDef.h" 
 #include "string.h"
 
@@ -19,7 +18,6 @@
 
 
 class MultiBody;
-class Input;
 class MPProblem;
 ////////////////////////////////////////////////////////////////
 
@@ -58,8 +56,6 @@ public:
      */
     Environment(int dofs, int pos_dofs);
 
-    Environment(int dofs, int pos_dofs, Input * input);
-
     /** 
      * Copy Constructor.
      * copies multibodies from usable_multibodies of from_env and
@@ -81,7 +77,7 @@ public:
     Environment(Environment &from_env, BoundingBox &i_boundaries);
 
     ///\brief Constructor taking in an XML object
-    Environment(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+    Environment(XMLNodeReader& in_Node, MPProblem* in_pProblem);
      
     /**
      * Destructor.

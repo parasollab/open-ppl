@@ -11,7 +11,7 @@ class NodeConnectionMethod : public MPBaseObject {
   //////////////////////
   // Constructors and Destructor
   NodeConnectionMethod();
-  NodeConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  NodeConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~NodeConnectionMethod();
   
   //////////////////////
@@ -21,7 +21,6 @@ class NodeConnectionMethod : public MPBaseObject {
   
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(std::istringstream& is) = 0;
   virtual void PrintUsage(ostream& _os) = 0;
   virtual void PrintValues(ostream& _os) = 0;
   ///Used in new MPProblem framework. \todo remove the "{ }" later
@@ -64,6 +63,7 @@ class NodeConnectionMethod : public MPBaseObject {
   CDInfo* cdInfo;
   double connectionPosRes, ///< Position resolution for node connection
     connectionOriRes; ///< Orientation resolution for node connection
+  bool m_CheckIfSameCC; ///< Check if Same Connected Component
 };
 
 
@@ -86,8 +86,12 @@ NodeConnectionMethod() {
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>::
-NodeConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-  MPBaseObject(in_pNode,in_pProblem) {
+NodeConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  MPBaseObject(in_Node,in_pProblem) {
+
+  m_CheckIfSameCC  = in_Node.boolXMLParameter(string("CheckIfSameCC"),false,
+                                              false,
+                                              string("Check if same CC"));
 }
 
 

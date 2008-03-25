@@ -9,7 +9,6 @@
 
 #include "OBPRMDef.h"
 #include "Roadmap.h"
-#include "Input.h"
 
 #include "Clock_Class.h"
 #include "Stat_Class.h"
@@ -37,10 +36,10 @@ class RoadmapInput : public MPStrategyMethod {
   public:
     
     
-  RoadmapInput(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPStrategyMethod(in_pNode,in_pProblem) {
+  RoadmapInput(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_Node,in_pProblem) {
     LOG_DEBUG_MSG("RoadmapInput::RoadmapInput()");
-    ParseXML(in_pNode);    
+    ParseXML(in_Node);    
     LOG_DEBUG_MSG("~RoadmapInput::RoadmapInput()");
     };
    
@@ -49,18 +48,13 @@ class RoadmapInput : public MPStrategyMethod {
 
     virtual void PrintOptions(ostream& out_os) { };
   
-    virtual void ParseXML(TiXmlNode* in_pNode) {
+    virtual void ParseXML(XMLNodeReader& in_Node) {
       LOG_DEBUG_MSG("RoadmapInput::ParseXML()");
       
-          const char* in_char = in_pNode->ToElement()->Attribute("input_map");
-          if(in_char) {
-            m_strInputFileName = string(in_char);
-          }
-         else {
-           LOG_ERROR_MSG("RoadmapInput::  I don't know: "<< endl << *in_pNode);exit(-1);
-        }
+      m_strInputFileName = in_Node.stringXMLParameter(string("input_map"), true,
+                                      string(""), string("Input roadmap file"));
     
-        LOG_DEBUG_MSG("~RoadmapInput::ParseXML()");
+      LOG_DEBUG_MSG("~RoadmapInput::ParseXML()");
     };
    
     virtual void operator()(int in_RegionID) {
@@ -87,10 +81,10 @@ class RoadmapInput : public MPStrategyMethod {
 class RoadmapClear : public MPStrategyMethod {
  public:
     
-  RoadmapClear(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPStrategyMethod(in_pNode,in_pProblem) {
+  RoadmapClear(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_Node,in_pProblem) {
     LOG_DEBUG_MSG("RoadmapClear::RoadmapClear()");
-    ParseXML(in_pNode);    
+    ParseXML(in_Node);    
     LOG_DEBUG_MSG("~RoadmapClear::RoadmapClear()");
     };
 
@@ -98,7 +92,7 @@ class RoadmapClear : public MPStrategyMethod {
 
     virtual void PrintOptions(ostream& out_os) { };
   
-    virtual void ParseXML(TiXmlNode* in_pNode) {
+    virtual void ParseXML(XMLNodeReader& in_Node) {
       LOG_DEBUG_MSG("RoadmapClear::ParseXML()");
     
       LOG_DEBUG_MSG("~RoadmapClear::ParseXML()");

@@ -9,7 +9,6 @@
 
 #include "OBPRMDef.h"
 #include "Roadmap.h"
-#include "Input.h"
 
 #include "Clock_Class.h"
 #include "Stat_Class.h"
@@ -37,53 +36,48 @@ class PRMRoadmap : public MPStrategyMethod {
   public:
     
     
-  PRMRoadmap(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPStrategyMethod(in_pNode,in_pProblem) {
+  PRMRoadmap(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_Node,in_pProblem) {
     LOG_DEBUG_MSG("PRMRoadmap::PRMRoadmap()");
-    ParseXML(in_pNode);    
+    ParseXML(in_Node);    
     LOG_DEBUG_MSG("~PRMRoadmap::PRMRoadmap()");
     };
   virtual ~PRMRoadmap() {}
 
   virtual void PrintOptions(ostream& out_os) { };
   
-  virtual void ParseXML(TiXmlNode* in_pNode) {
+  virtual void ParseXML(XMLNodeReader& in_Node) {
     LOG_DEBUG_MSG("PRMRoadmap::ParseXML()");
     //OBPRM_srand(getSeed()); 
-    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-      if(string(pChild->Value()) == "node_generation_method") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        if(in_char) {
-          string node_generation_method(in_char);
-          m_vecStrNodeGenLabels.push_back(node_generation_method);
-        }
-      } else if(string(pChild->Value()) == "node_connection_method") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        LOG_DEBUG_MSG("PRMRoadmap::ParseXML() -- node_connection_method");
-        if(in_char) {
-          string connect_method(in_char);
-          m_vecStrNodeConnectionLabels.push_back(connect_method);
-        }
-      } else if(string(pChild->Value()) == "component_connection_method") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        LOG_DEBUG_MSG("PRMRoadmap::ParseXML() -- component_connection_method");
-        if(in_char) {
-          string connect_method(in_char);
-          m_vecStrComponentConnectionLabels.push_back(connect_method);
-        }
-      } else if(string(pChild->Value()) == "lp_method") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        if(in_char) {
-          m_strLocalPlannerLabel = string(in_char);
-        }
-      } else if(string(pChild->Value()) == "NodeCharacterizer") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        if(in_char) {
-          string node_char(in_char);
-          m_vecNodeCharacterizerLabels.push_back(node_char);
-        }
+    XMLNodeReader::childiterator citr;
+    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+      if(citr->getName() == "node_generation_method") {
+        string node_gen_method = citr->stringXMLParameter(string("Method"), true,
+                                    string(""), string("Node Generation Method"));
+        m_vecStrNodeGenLabels.push_back(node_gen_method);
+        citr->warnUnrequestedAttributes();
+      } else if(citr->getName() == "node_connection_method") {
+        string connect_method = citr->stringXMLParameter(string("Method"), true,
+                                    string(""), string("Node Connection Method"));
+        m_vecStrNodeConnectionLabels.push_back(connect_method);
+        citr->warnUnrequestedAttributes();
+      } else if(citr->getName() == "component_connection_method") {
+        string connect_method = citr->stringXMLParameter(string("Method"), true,
+                                    string(""), string("CC Connection Method"));
+        m_vecStrComponentConnectionLabels.push_back(connect_method);
+        citr->warnUnrequestedAttributes();
+      } else if(citr->getName() == "lp_method") {
+        
+        m_strLocalPlannerLabel = citr->stringXMLParameter(string("Method"), true,
+                                    string(""), string("Local Planner Method"));
+        citr->warnUnrequestedAttributes();
+      } else if(citr->getName() == "NodeCharacterizer") {
+        string node_char = citr->stringXMLParameter(string("Method"), true,
+                                    string(""), string("Node Characterization Method"));
+        m_vecNodeCharacterizerLabels.push_back(node_char);
+        citr->warnUnrequestedAttributes();
       } else {
-        LOG_WARNING_MSG("PRMRoadmap::  I don't know: "<< endl << *pChild);
+        citr->warnUnknownNode();
       }
     }
       
@@ -297,51 +291,44 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
   public:
     
     
-  PRMOriginalRoadmap(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPStrategyMethod(in_pNode,in_pProblem) {
+  PRMOriginalRoadmap(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_Node,in_pProblem) {
     LOG_DEBUG_MSG("PRMOriginalRoadmap::PRMOriginalRoadmap()");
-    ParseXML(in_pNode);    
+    ParseXML(in_Node);    
     LOG_DEBUG_MSG("~PRMOriginalRoadmap::PRMOriginalRoadmap()");
     };
   virtual ~PRMOriginalRoadmap() {}
     
   virtual void PrintOptions(ostream& out_os) { };
   
-  virtual void ParseXML(TiXmlNode* in_pNode) {
+  virtual void ParseXML(XMLNodeReader& in_Node) {
     LOG_DEBUG_MSG("PRMOriginalRoadmap::ParseXML()");
-    //OBPRM_srand(getSeed()); 
-    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-      if(string(pChild->Value()) == "node_generation_method") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        if(in_char) {
-          string node_generation_method(in_char);
-          m_vecStrNodeGenLabels.push_back(node_generation_method);
-        }
-      } else if(string(pChild->Value()) == "node_connection_method") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        LOG_DEBUG_MSG("PRMOriginalRoadmap::ParseXML() -- node_connection_method");
-        if(in_char) {
-          string connect_method(in_char);
-          m_vecStrNodeConnectionLabels.push_back(connect_method);
-        }
-      } else if(string(pChild->Value()) == "component_connection_method") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        LOG_DEBUG_MSG("PRMOriginalRoadmap::ParseXML() -- component_connection_method");
-        if(in_char) {
-          string connect_method(in_char);
-          m_vecStrComponentConnectionLabels.push_back(connect_method);
-        }
-      } else if(string(pChild->Value()) == "lp_method") {
-        const char* in_char = pChild->ToElement()->Attribute("Method");
-        if(in_char) {
-          m_strLocalPlannerLabel = string(in_char);
-        }
+    //OBPRM_srand(getSeed());
+    XMLNodeReader::childiterator citr;
+    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+      if(citr->getName() == "node_generation_method") {
+        string node_gen_method = citr->stringXMLParameter(string("Method"),true,
+                                   string(""),string("Node Generation Method"));
+        m_vecStrNodeGenLabels.push_back(node_gen_method);
+        citr->warnUnrequestedAttributes();
+      } else if(citr->getName() == "node_connection_method") {
+        string connect_method = citr->stringXMLParameter(string("Method"),true,
+                                   string(""),string("Node Connection Method"));
+        m_vecStrNodeConnectionLabels.push_back(connect_method);
+        citr->warnUnrequestedAttributes();
+      } else if(citr->getName() == "component_connection_method") {
+        string connect_method = citr->stringXMLParameter(string("Method"),true,
+                                   string(""),string("CC Connection Method"));
+        m_vecStrComponentConnectionLabels.push_back(connect_method);
+        citr->warnUnrequestedAttributes();
+      } else if(citr->getName() == "lp_method") {
+        m_strLocalPlannerLabel = citr->stringXMLParameter(string("Method"),true,
+                                   string(""),string("Local Planner Method"));
+        citr->warnUnrequestedAttributes();
       } else {
-        LOG_WARNING_MSG("PRMOriginalRoadmap::  I don't know: "<< endl << *pChild);
+        citr->warnUnknownNode();
       }
     }
-      
-   
     
     LOG_DEBUG_MSG("~PRMOriginalRoadmap::ParseXML()");
   };
@@ -353,7 +340,8 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
     MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
     Stat_Class * pStatClass = region->GetStatClass();
     
-    if (m_reset_stats)
+    ///\todo why this is here?
+    //if (m_reset_stats)
       pStatClass->ClearStats();
   
     Clock_Class Allstuff;
@@ -424,7 +412,7 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
       
     ConnectionClock.StopClock();
  
-    if (!m_no_output_files) {
+    //if (!m_no_output_files) {
  
       string outputFilename = getBaseFilename() + ".original.map";
       string outStatname = getBaseFilename()+ ".original.stat";    
@@ -460,7 +448,7 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
       string system_out_call(string("gzip -9 ") + outputFilename);
       
       system(system_out_call.c_str());
-    }
+    //}
 
     cout << "Finished map " << endl;
     LOG_DEBUG_MSG("~PRMOriginalRoadmap::()");

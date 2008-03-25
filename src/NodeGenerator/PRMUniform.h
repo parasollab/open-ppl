@@ -29,7 +29,7 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   BasicPRM();
-  BasicPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  BasicPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.	
   virtual ~BasicPRM();
 
@@ -41,13 +41,10 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
@@ -95,10 +92,10 @@ BasicPRM<CFG>::
 
 template <class CFG>
 BasicPRM<CFG>::
-BasicPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-NodeGenerationMethod<CFG>(in_pNode, in_pProblem) {
+BasicPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+NodeGenerationMethod<CFG>(in_Node, in_pProblem) {
   LOG_DEBUG_MSG("BasicPRM::BasicPRM()");
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   LOG_DEBUG_MSG("~BasicPRM::BasicPRM()");
 }
 
@@ -116,9 +113,9 @@ GetName() {
 template <class CFG>
 void
 BasicPRM<CFG>::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("BasicPRM::ParseXML()");
-  PrintValues(cout);
+  PrintOptions(cout);
   LOG_DEBUG_MSG("~BasicPRM::ParseXML()");
 }
 
@@ -145,60 +142,6 @@ IncreaseNextNodeIndex(int numIncrease) {
 
 
 
-
-template <class CFG>
-void
-BasicPRM<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  int i;
-  for (i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) || 
-        this->chunkSize.AckCmdLine(&i, argc, argv) ||
-	this->exactNodes.AckCmdLine(&i, argc, argv)) {
-/*         numAttempts.AckCmdLine(&i, argc, argv) || */
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
-
-
-template <class CFG>
-void
-BasicPRM<CFG>::
-PrintUsage(ostream& _os){
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os); _os << " ";
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os); _os << " ";
-/*   _os << "\n\t"; numAttempts.PrintUsage(_os); */
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
-
-
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-template <class CFG>
-void
-BasicPRM<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " <<this->chunkSize.GetValue() << " ";
-
-/*   _os << numAttempts.GetFlag() << " " << numAttempts.GetValue(); */
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue();
-  _os << endl;
-}
-
-
 template <class CFG>
 NodeGenerationMethod<CFG>* 
 BasicPRM<CFG>::
@@ -212,9 +155,9 @@ void
 BasicPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
-  out_os << " exact = " << this->exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
+  out_os << " num nodes = " << this->numNodes << " ";
+  out_os << " exact = " << this->exactNodes << " ";
+  out_os << " chunk size = " << this->chunkSize << " ";
   out_os << " MaxCDCalls = " << this->m_nMaxCdCalls << " ";
   out_os << endl;
 }
@@ -237,25 +180,25 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   LOG_DEBUG_MSG("BasicPRM::GenerateNodes()");	
 
 #ifndef QUIET
-  if (this->exactNodes.GetValue()==1)
-     cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
+  if (this->exactNodes==1)
+     cout << "(numNodes=" << this->numNodes << ") ";
   else
-    cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
+    cout << "(exactNodes=" << this->exactNodes << ") ";
 #endif
   
   CDInfo cdInfo;
   UniformRandomFreeSampler<CFG> uniform_sampler(_env, Stats, cd, cdInfo);
   int nodes_offset = nodes.size();
 
-  if (this->exactNodes.GetValue() == 1) { // we want to obtain numNodes free nodes 
-    for(int i=0; i<this->numNodes.GetValue(); ++i) {
+  if (this->exactNodes == 1) { // we want to obtain numNodes free nodes 
+    for(int i=0; i<this->numNodes; ++i) {
       CFG tmp;
       if(!uniform_sampler(tmp, nodes, 100)) //default_maxTries = 100
         cerr << "Can't generate enough nodes!\n";
     }
 
   } else { //we want to try numNodess attempts (either free or in collision)
-    for(int i=0; i<this->numNodes.GetValue(); ++i) {
+    for(int i=0; i<this->numNodes; ++i) {
       CFG tmp;
       uniform_sampler(tmp, nodes, 1); //attempts only
     }
@@ -286,10 +229,10 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
   Stat_Class* pStatClass = in_pRegion->GetStatClass();
   CollisionDetection* pCd = this->GetMPProblem()->GetCollisionDetection();
   
-  if (this->exactNodes.GetValue()==1)
-     cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
+  if (this->exactNodes==1)
+     cout << "(numNodes=" << this->numNodes << ") ";
   else
-    cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
+    cout << "(exactNodes=" << this->exactNodes << ") ";
   
   
   

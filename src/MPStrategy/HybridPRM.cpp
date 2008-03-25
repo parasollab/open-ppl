@@ -3,7 +3,6 @@
 
 #include "OBPRMDef.h"
 #include "Roadmap.h"
-#include "Input.h"
 
 #include "Clock_Class.h"
 #include "Stat_Class.h"
@@ -32,81 +31,64 @@
 
 void 
 HybridPRM::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("HybridPRM::ParseXML()");
-  //OBPRM_srand(getSeed()); 
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-     if(string(pChild->Value()) == "node_generation_method") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      if(in_char) {
-        string node_generation_method(in_char);
-        m_vecStrNodeGenLabels.push_back(node_generation_method);
-	int initial_cost; 
-	pChild->ToElement()->QueryIntAttribute("initial_cost", &initial_cost);
-	if (initial_cost > 0)
-	  m_mapStrNodeGenCost[node_generation_method] = initial_cost;
-	else
-	  m_mapStrNodeGenCost[node_generation_method] = 1;
-
-      }
-    } else if(string(pChild->Value()) == "node_connection_method") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      LOG_DEBUG_MSG("HybridPRM::ParseXML() -- node_connection_method");
-      if(in_char) {
-        string connect_method(in_char);
-        m_vecStrNodeConnectionLabels.push_back(connect_method);
-      }
-    } else if(string(pChild->Value()) == "NodeCharacterizer") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      if(in_char) {
-        string node_char(in_char);
-        m_vecNodeCharacterizerLabels.push_back(node_char);
-      }
-    } else if(string(pChild->Value()) == "component_connection_method") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      LOG_DEBUG_MSG("HybridPRM::ParseXML() -- component_connection_method");
-      if(in_char) {
-        string connect_method(in_char);
-        m_vecStrComponentConnectionLabels.push_back(connect_method);
-      }
-    } else if(string(pChild->Value()) == "WitnessQuery") {
-      const char* in_char = pChild->ToElement()->Attribute("Filename");
-      if(in_char) {
-        string node_char(in_char);
-        m_strWitnessFilename = node_char;
-      }
-    } 
+  //OBPRM_srand(getSeed());
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "node_generation_method") {
+      string node_gen_method = citr->stringXMLParameter("Method",true,"","Method");
+      m_vecStrNodeGenLabels.push_back(node_gen_method);
+      
+      int initial_cost = citr->numberXMLParameter("initial_cost",true,
+                                  0,0,MAX_INT,"initial_cost");
+      if (initial_cost > 0)
+        m_mapStrNodeGenCost[node_gen_method] = initial_cost;
+      else
+        m_mapStrNodeGenCost[node_gen_method] = 1;
+    } else if(citr->getName() == "node_connection_method") {
+      string connect_method = citr->stringXMLParameter("Method",true,"","Method");
+      m_vecStrNodeConnectionLabels.push_back(connect_method);
+    } else if(citr->getName() == "NodeCharacterizer") {
+      string node_char = citr->stringXMLParameter("Method",true,"","Method");
+      m_vecNodeCharacterizerLabels.push_back(node_char);
+    } else if(citr->getName() == "component_connection_method") {
+      string connect_method = citr->stringXMLParameter("Method",true,"","Method");
+      m_vecStrComponentConnectionLabels.push_back(connect_method);
+    } else if(citr->getName() == "WitnessQuery") {
+      m_strWitnessFilename = citr->stringXMLParameter("Filename",true,"","Filename");
+    } else {
+      citr->warnUnknownNode();
+    }
   }
 
-  double per_ran;  
-  in_pNode->ToElement()->QueryDoubleAttribute("percent_random",&per_ran);
-  m_percentage_random = per_ran;
+  
+  m_percentage_random = in_Node.numberXMLParameter("percent_random",true,
+                                double(0.5),double(0),double(1),"percent_random");
+  
+  m_bin_size = in_Node.numberXMLParameter("bin_size",true,
+                                5,1,MAX_INT,"bin_size");
 
-  int bin_size;  
-  in_pNode->ToElement()->QueryIntAttribute("bin_size",&bin_size);
-  m_bin_size = bin_size;
+  m_window_percent = in_Node.numberXMLParameter("window_percent",true,
+                                double(0.5),double(0),double(1),"window_percent");
 
-  double window_per;  
-  in_pNode->ToElement()->QueryDoubleAttribute("window_percent",&window_per);
-  m_window_percent = window_per;
+  m_count_cost = in_Node.numberXMLParameter("Count_Cost",true,
+                                5,0,MAX_INT,"Count_Cost");
 
-  int cost;
-  in_pNode->ToElement()->QueryIntAttribute("Count_Cost",&cost);
-  m_count_cost = cost;
-
-  int fixed_cost;
-  m_fixed_cost = 0;
-  in_pNode->ToElement()->QueryIntAttribute("fixed_cost",&fixed_cost);
+  int fixed_cost = in_Node.numberXMLParameter("fixed_cost",true,
+                                0,0,1,"fixed_cost");
+  
   if (fixed_cost == 1);
   m_fixed_cost = 1;
 
   int resetting_learning;
-  in_pNode->ToElement()->QueryIntAttribute("resetting_learning",&resetting_learning);
-  m_resetting_learning = resetting_learning;
+  m_resetting_learning = in_Node.numberXMLParameter("resetting_learning",true,
+                                0,0,1,"resetting_learning");
 
-  const char* sampler_selection_distribution;
-  sampler_selection_distribution = in_pNode->ToElement()->Attribute("sampler_selection_distribution");
-  m_sampler_selection_distribution = string(sampler_selection_distribution);
+
+  m_sampler_selection_distribution = in_Node.stringXMLParameter("sampler_selection_distribution",
+                                                  false,"","sampler_selection_distribution");
+
   if (m_sampler_selection_distribution == "nowindow_adaptive")
     m_window_percent = 1.0; // 100% of the time learning
 

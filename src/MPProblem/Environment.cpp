@@ -2,7 +2,6 @@
 #include "MPProblem.h"
 #include <fstream>
 #include <iostream>
-//#include "tinyxml.h"
 #include "util.h"
 
 
@@ -51,6 +50,7 @@ Environment(int dofs, int pos_dofs) {
 
 }
 
+/*
 Environment::
 Environment(int dofs, int pos_dofs, Input * _input) {
   boundaries = new BoundingBox(dofs,pos_dofs);
@@ -99,7 +99,7 @@ Environment(int dofs, int pos_dofs, Input * _input) {
     SelectUsableMultibodies();  
   }
 }
-
+*/
 
 /**
  * Copy Constructor
@@ -193,7 +193,7 @@ Environment(Environment &from_env, BoundingBox &i_boundaries) {
 ///\todo Fix boundaries init
 
 Environment::
-Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) : MPBaseObject(in_pNode, in_pProblem) {
+Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem) {
     LOG_DEBUG_MSG("Environment::Environment()");
     pathVersion = PATHVER_20001125;
 
@@ -209,12 +209,8 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) : MPBaseObject(in_pNod
     robotIndex = 0;
     copied_instance = false;
     
-    if(!in_pNode) {
-      LOG_ERROR_MSG("Error reading <environment> tag...."); exit(-1);
-    }
-    if(string(in_pNode->Value()) != "environment") {
-      LOG_ERROR_MSG("Error reading <environment> tag...."); exit(-1);
-    }
+    in_Node.verifyName(string("environment"));
+    
 
     ///\todo fix hack.  This hack gets env_filename from environment xml tag
     //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
@@ -251,34 +247,30 @@ Environment(TiXmlNode* in_pNode,  MPProblem* in_pProblem) : MPBaseObject(in_pNod
       positionRes = bodies_min_span * POSITION_RES_FACTOR;
       minmax_BodyAxisRange = bodies_min_span;
 
-      cout << "Position RESSSSSSSSSSOlution = " << positionRes << endl;
+      cout << "Position Resolution = " << positionRes << endl;
       // END compute RESOLUTION
 
-
-
-    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-      if(string(pChild->Value()) == "robot") {
-  int num_joints;
-  pChild->ToElement()->QueryIntAttribute("num_joints", &num_joints);
-  in_pProblem->SetNumOfJoints(num_joints);
-
-  for ( TiXmlNode* rChild = pChild->FirstChild(); rChild != 0; rChild = rChild->NextSibling() ) {
-    if (string(rChild->Value()) == "boundary") {
-      boundaries = new BoundingBox(rChild,in_pProblem); //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
-    } else if(!rChild->Type() == TiXmlNode::COMMENT) {
-      cout << "  I don't know: " << *pChild << endl;
-    }
-    
-  }
-  
-      } else if(string(pChild->Value()) == "resolution") {
-  //pChild->ToElement()->QueryDoubleAttribute("pos_res",&positionRes);
-  //pChild->ToElement()->QueryDoubleAttribute("ori_res",&orientationRes);
+    XMLNodeReader::childiterator citr;
+    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+      if(citr->getName() == "robot") {
+        int num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
+        in_pProblem->SetNumOfJoints(num_joints);
         
-      } else {
-        if(!pChild->Type() == TiXmlNode::COMMENT) {
-          cout << "  I don't know: " << *pChild << endl;
+        XMLNodeReader::childiterator citr2;
+        for(citr2 = citr->children_begin(); citr2!= citr->children_end(); ++citr2) {
+          if (citr2->getName() == "boundary") {
+            boundaries = new BoundingBox(*citr2,in_pProblem); 
+            //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
+          } else {
+            citr2->warnUnknownNode();
+          }
         }
+  
+      } else if(citr->getName() == "resolution") {
+        //pChild->ToElement()->QueryDoubleAttribute("pos_res",&positionRes);
+        //pChild->ToElement()->QueryDoubleAttribute("ori_res",&orientationRes);
+      } else {
+        citr->warnUnknownNode();
       }
     }
 
@@ -292,6 +284,7 @@ PrintOptions(ostream& out_os) {
   out_os << "    positionRes = " << positionRes << "; orientationRes = " << orientationRes << endl;
   out_os << "    bbox = ";
   boundaries->Print(out_os);
+  out_os << endl;
 }
 
 

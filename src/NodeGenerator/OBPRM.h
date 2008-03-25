@@ -2,6 +2,7 @@
 #define OBPRM_h
 
 #include "BasicOBPRM.h"
+#include "Parameters.h"
 
 #define MAX_NUM_NODES_TRIES 100
 
@@ -30,12 +31,12 @@ class OBPRM : public BasicOBPRM<CFG> {
 
   ///Default Constructor.
   OBPRM();
-  OBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  OBPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.
   virtual ~OBPRM();
-  virtual void ParseXML(TiXmlNode* in_pNode);
-  virtual void ParseXMLcol_pair(TiXmlNode* in_pNode);
-  virtual void ParseXMLfree_pair(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
+  virtual void ParseXMLcol_pair(XMLNodeReader& in_Node);
+  virtual void ParseXMLfree_pair(XMLNodeReader& in_Node);
   //@}
 
   //////////////////////
@@ -49,9 +50,6 @@ class OBPRM : public BasicOBPRM<CFG> {
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   virtual void PrintOptions(ostream& _os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
@@ -275,14 +273,14 @@ class OBPRM : public BasicOBPRM<CFG> {
    *GenerateMapNodes::GenFreeCfgs4Obst and 
    *GenerateMapNodes:OBPRM.
    */
-  num_param<double> proportionSurface;
+  double proportionSurface;
 
   /**Clearance is clearanceFactor*Position_Resoultion.
    *Tell Node genration functions to generate free 
    *Cfgs which have certain clearance.
    *@see GenerateMapNodes::GenerateSurfaceCfg
    */
-  num_param<double> clearanceFactor; 
+  double clearanceFactor; 
   
   //Index for next node 
   //used in incremental map generation
@@ -302,11 +300,8 @@ int OBPRM<CFG>::nextNodeIndex = 0;
 template <class CFG>
 OBPRM<CFG>::
 OBPRM() : BasicOBPRM<CFG>(),     
-  proportionSurface("pctSurf",         1.0,  0,   1.0),
   collPair         ("collPair","cM rT "),
-  freePair         ("freePair","cM rV "),
-  clearanceFactor  ("clearFact",       1.0,  0,   1.0) {
-  proportionSurface.PutDesc("FLOAT  ","proportion surface nodes, default 1.0");
+  freePair         ("freePair","cM rV ") {
 
   collPair.PutDesc("STRING STRING",
 			    "\n\t\t\tSpecify 2 of the following recognized mnemonics:"
@@ -326,20 +321,16 @@ OBPRM() : BasicOBPRM<CFG>(),
   freePair.PutDesc("STRING STRING","\n\t\t\tSame as above");
   freePair.PutNumStrings(2);
 
-  clearanceFactor.PutDesc  ("FLOAT  ","(clearance factor, default 1.0)");
 }
 
 
 ///\todo xmlize proportionSurface and clearanceFactor
 template <class CFG>
 OBPRM<CFG>::
-OBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-  BasicOBPRM<CFG>(in_pNode, in_pProblem),     
-  proportionSurface("pctSurf",         1.0,  0,   1.0), 
+OBPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  BasicOBPRM<CFG>(in_Node, in_pProblem),     
   collPair         ("collPair","cM rT "),
-  freePair         ("freePair","cM rV "), 
-  clearanceFactor  ("clearFact",       1.0,  0,   1.0) {
-  proportionSurface.PutDesc("FLOAT  ","proportion surface nodes, default 1.0");
+  freePair         ("freePair","cM rV ") {
   
   LOG_DEBUG_MSG("OBPRM::OBPRM()");
   collPair.PutDesc("STRING STRING",
@@ -357,53 +348,39 @@ OBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
   collPair.PutNumStrings(2); 
   freePair.PutDesc("STRING STRING","\n\t\t\tSame as above");
   freePair.PutNumStrings(2);
-  clearanceFactor.PutDesc  ("FLOAT  ","(clearance factor, default 1.0)");
   ///\todo organize setting default better
   collPair.PutValue("cM rT ");
   freePair.PutValue("cM rV "); 
-  proportionSurface.PutValue(1.0);
-  clearanceFactor.PutValue(1.0);
-  ParseXML(in_pNode);
+  proportionSurface = 1.0;
+  clearanceFactor = 1.0;
+  ParseXML(in_Node);
   LOG_DEBUG_MSG("~OBPRM::OBPRM()");
 }
 
 template <class CFG>
 void OBPRM<CFG>::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("OBPRM::ParseXML()");
-  for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
-       pChild2 = pChild2->NextSibling()) {
-         if(string(pChild2->Value()) == "coll_pair") {
-           ParseXMLcol_pair(pChild2);
-         } else if(string(pChild2->Value()) == "free_pair") {
-           ParseXMLfree_pair(pChild2);
-         }
-       }
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "coll_pair") {
+      ParseXMLcol_pair(*citr);
+    } else if(citr->getName() == "free_pair") {
+      ParseXMLfree_pair(*citr);
+    }
+  }
   LOG_DEBUG_MSG("~OBPRM::ParseXML()");
 }
 
 template <class CFG>
 void OBPRM<CFG>::
-ParseXMLcol_pair(TiXmlNode* in_pNode) {
+ParseXMLcol_pair(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair()");
-  const char* a_pair;
-  string str_a_pair;
-  a_pair= in_pNode->ToElement()->Attribute("a");
-  if(a_pair) {
-    str_a_pair = string(a_pair);
-  } else {
-    LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair no a_pair found");
-  }
   
-  const char* b_pair;
-  string str_b_pair;
-  b_pair= in_pNode->ToElement()->Attribute("b");
-  if(b_pair) {
-    str_b_pair = string(b_pair);
-  } else {
-    LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair no b_pair found");
-  }
-  string final_col_pair = a_pair + string(" ") + b_pair + string(" ");
+  string str_a_pair = in_Node.stringXMLParameter(string("a"),true,string(""),string("col_pair_a"));
+  string str_b_pair = in_Node.stringXMLParameter(string("b"),true,string(""),string("col_pair_b"));
+ 
+  string final_col_pair = str_a_pair + string(" ") + str_b_pair + string(" ");
   char str_char[100];
   strcpy(str_char, final_col_pair.c_str());
 
@@ -413,26 +390,13 @@ ParseXMLcol_pair(TiXmlNode* in_pNode) {
     
 template <class CFG>
 void OBPRM<CFG>::
-ParseXMLfree_pair(TiXmlNode* in_pNode) {
+ParseXMLfree_pair(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair()");
-  const char* a_pair;
-  string str_a_pair;
-  a_pair= in_pNode->ToElement()->Attribute("a");
-  if(a_pair) {
-    str_a_pair = string(a_pair);
-  } else {
-    LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair no a_pair found");
-  }
-  
-  const char* b_pair;
-  string str_b_pair;
-  b_pair= in_pNode->ToElement()->Attribute("b");
-  if(b_pair) {
-    str_b_pair = string(b_pair);
-  } else {
-    LOG_DEBUG_MSG("OBPRM::ParseXMLcol_pair no b_pair found");
-  }
-  string final_free_pair = a_pair + string(" ") + b_pair + string(" ");
+
+  string str_a_pair = in_Node.stringXMLParameter(string("a"),true,string(""),string("col_pair_a"));
+  string str_b_pair = in_Node.stringXMLParameter(string("b"),true,string(""),string("col_pair_b"));
+
+  string final_free_pair = str_a_pair + string(" ") + str_b_pair + string(" ");
   char str_char[100];
   strcpy(str_char, final_free_pair.c_str());
   freePair.PutValue(str_char);
@@ -461,8 +425,8 @@ SetDefault() {
   BasicOBPRM<CFG>::SetDefault();
   collPair.PutValue("cM rT ");
   freePair.PutValue("cM rV "); 
-  proportionSurface.PutValue(1.0);
-  clearanceFactor.PutValue(1.0);
+  proportionSurface = 1.0;
+  clearanceFactor = 1.0;
 }
 
 template <class CFG>
@@ -488,82 +452,10 @@ IncreaseNextNodeIndex(int numIncrease) {
 
 
 
-template <class CFG>
-void
-OBPRM<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  int i;
-  for (i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->exactNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->chunkSize.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->numShells.AckCmdLine(&i, argc, argv) ) {
-    } else if (proportionSurface.AckCmdLine(&i, argc, argv) ) {
-    } else if (collPair.AckCmdLine(&i, argc, argv) ) {
-      if (!ValidatePairs(NULL,collPair,NULL)) {
-	cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	     << collPair.GetValue() <<"\"\n\n";
-	PrintUsage(cerr);
-	cerr << endl;
-	exit (-1);
-      }
-    } else if (freePair.AckCmdLine(&i, argc, argv) ) {
-      if (!ValidatePairs(NULL,freePair,NULL)) {
-	cerr << "\nERROR ParseCommandLine: Don\'t understand \""
-	     << freePair.GetValue() <<"\"\n\n";
-	PrintUsage(cerr);
-	cerr << endl;
-	exit (-1);
-      }
-    } else if (clearanceFactor.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
 
 
-template <class CFG>
-void
-OBPRM<CFG>::
-PrintUsage(ostream& _os) {
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os);
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
-  _os << "\n\t"; this->numShells.PrintUsage(_os);
-  _os << "\n\t"; proportionSurface.PrintUsage(_os);
-  _os << "\n\t"; collPair.PrintUsage(_os);
-  _os << "\n\t"; freePair.PrintUsage(_os);
-  _os << "\n\t"; clearanceFactor.PrintUsage(_os);
-  
-  _os.setf(ios::right,ios::adjustfield);
-}
 
 
-template <class CFG>
-void
-OBPRM<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
-  _os << this->numShells.GetFlag() << " " << this->numShells.GetValue() << " ";
-  _os << proportionSurface.GetFlag() << " " << proportionSurface.GetValue() << " ";
-  _os << collPair.GetFlag() << " " << collPair.GetValue() << " ";
-  _os << freePair.GetFlag() << " " << freePair.GetValue() << " ";
-  _os << clearanceFactor.GetFlag() << " " << clearanceFactor.GetValue() << " ";
- _os << endl;
-}
 
 
 template <class CFG>
@@ -571,15 +463,15 @@ template <class CFG>
 OBPRM<CFG>::
     PrintOptions(ostream& _os){
   _os << "    " << GetName() << ":: ";
-  _os << " num nodes = " << this->numNodes.GetValue() << " ";
-  _os << " exact  = " << this->exactNodes.GetValue() << " ";
-  _os << " chunk size = " << this->chunkSize.GetValue() << " ";
-  _os << " num shells = " << this->numShells.GetValue() << " ";
+  _os << " num nodes = " << this->numNodes << " ";
+  _os << " exact  = " << this->exactNodes << " ";
+  _os << " chunk size = " << this->chunkSize << " ";
+  _os << " num shells = " << this->numShells << " ";
   _os << endl << "                    ";
-  _os << "  proportionSurface = " << proportionSurface.GetValue() << " ";
+  _os << "  proportionSurface = " << proportionSurface << " ";
   _os << "  collPair = " << collPair.GetValue() << " ";
   _os << "  freePair = " << freePair.GetValue() << " ";
-  _os << "  clearanceFactor = " << clearanceFactor.GetValue() << " ";
+  _os << "  clearanceFactor = " << clearanceFactor << " ";
   _os << endl;
 }
 
@@ -610,23 +502,23 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
   CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
   DistanceMetric* dm =  this->GetMPProblem()->GetDistanceMetric();
          
-  int origNumNodes = this->numNodes.GetValue();        
+  int origNumNodes = this->numNodes;        
          
          
 #ifndef QUIET
-  cout << "(numNodes="          << this->numNodes.GetValue()          << ", ";
-  cout << "(exactNodes="          << this->exactNodes.GetValue()          << ", ";
-  cout << "(chunkSize="          << this->chunkSize.GetValue()          << ", ";
-  cout << "\tproportionSurface="<< proportionSurface.GetValue() << ", ";
-  cout << "\nnumShells="        << this->numShells.GetValue()         << ", ";
+  cout << "(numNodes="          << this->numNodes          << ", ";
+  cout << "(exactNodes="          << this->exactNodes          << ", ";
+  cout << "(chunkSize="          << this->chunkSize          << ", ";
+  cout << "\tproportionSurface="<< proportionSurface << ", ";
+  cout << "\nnumShells="        << this->numShells         << ", ";
   cout << "collPair="           << collPair.GetValue()          << ", ";
   cout << "freePair="           << freePair.GetValue()          << ", ";
-  cout << "clearanceFactor="    << clearanceFactor.GetValue()   << ") ";
+  cout << "clearanceFactor="    << clearanceFactor   << ") ";
 #endif
   
-  bool bExact = this->exactNodes.GetValue() == 1? true: false;
+  bool bExact = this->exactNodes == 1? true: false;
 
-/*   if  (this->exactNodes.GetValue() == 1){ */
+/*   if  (this->exactNodes == 1){ */
 /*     cerr << "\nFunction to generate exact numbers for OBPRM not implemented yet." << endl; */
 /*   }  */
 
@@ -641,20 +533,20 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
   int robot        = _env->GetRobotIndex();
   int numExternalBody = _env->GetExternalBodyCount();
   
-  double P = proportionSurface.GetValue();
+  double P = proportionSurface;
   
   // Subtract # of robots (ie, numMultiBody-1)
-  // int NSEED = (int)(P * this->numNodes.GetValue()/(numMultiBody-1)/this->numShells.GetValue());
-  // int NFREE = (int)((1.0-P) * this->numNodes.GetValue()/(numMultiBody-1));
+  // int NSEED = (int)(P * this->numNodes/(numMultiBody-1)/this->numShells);
+  // int NFREE = (int)((1.0-P) * this->numNodes/(numMultiBody-1));
   
   // Subtract # of robots (ie, numExternalBody-1)
   
 
-  int NSEED = (int)(P * this->numNodes.GetValue()/(numExternalBody-1)/this->numShells.GetValue());
-  int NFREE = (int)((1.0-P) * this->numNodes.GetValue()/(numExternalBody-1));
+  int NSEED = (int)(P * this->numNodes/(numExternalBody-1)/this->numShells);
+  int NFREE = (int)((1.0-P) * this->numNodes/(numExternalBody-1));
   
   if (NSEED < 1) NSEED = 1;
-  int nNodesGap = this->numNodes.GetValue() - nodes.size();  
+  int nNodesGap = this->numNodes - nodes.size();  
   int nNumTries = 0;
  
   
@@ -669,7 +561,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
       
 	// Generate Surface Cfgs using Binary Search Procedure
 	obstSurface = GenSurfaceCfgs4Obst(_env, Stats, cd,dm, obstacle, NSEED,
-					  clearanceFactor.GetValue());
+					  clearanceFactor);
       
 	// Generate Free Cfgs using Ad Hoc procedure
 	obstFree = GenFreeCfgs4Obst(_env, Stats, cd, obstacle, NFREE);
@@ -700,7 +592,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
 	//if(numMultiBody == 1) { //if robot is the only object
 	if(numExternalBody == 1) { //if robot is the only object
 	  vector<CFG> CobstNodes = this->GenCfgsFromCObst(_env, Stats, cd, dm, obstacle,
-						    this->numNodes.GetValue());
+						    this->numNodes);
 	  for(int i=0; i<CobstNodes.size(); ++i){
 	    CobstNodes[i].obst = obstacle;
  	    nodesBuffer.push_back(CobstNodes[i]); 
@@ -718,10 +610,10 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
 	nodes.insert(nodes.end(), nodesBuffer.begin(), nodesBuffer.end()); 	
 	nNodesGap = nNodesGap - nActualNodes;
         ///\todo figure out this logic
-        this->numNodes.PutValue(nNodesGap);/////////why?
+        this->numNodes = nNodesGap;/////////why?
  	nodesBuffer.erase(nodesBuffer.begin(), nodesBuffer.end()); 
 	
-	NSEED = (int)(P * nNodesGap/(numExternalBody-1)/this->numShells.GetValue());
+	NSEED = (int)(P * nNodesGap/(numExternalBody-1)/this->numShells);
 	NFREE = (int)((1.0-P) * nNodesGap/(numExternalBody-1));
 	if (NSEED < 1) NSEED = 1;
       }else if (nActualNodes == nNodesGap){//Generated exact number of nodes
@@ -764,7 +656,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
   WritePathConfigurations("surface.path", surface, _env);
 #endif
   ///reset numNodes back to origional value
-  this->numNodes.PutValue(origNumNodes);
+  this->numNodes = origNumNodes;
 }
 
 
@@ -950,7 +842,7 @@ GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
 			     clearanceFactor);
     
     // Choose as many as nshells
-    preshells = Shells(tmp, this->numShells.GetValue());
+    preshells = Shells(tmp, this->numShells);
     shells = InsideBoundingBox(env, preshells);
     preshells.erase(preshells.begin(), preshells.end());
     

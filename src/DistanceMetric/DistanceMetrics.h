@@ -26,7 +26,6 @@ const double MAX_DIST =  1e10;
 
 class Cfg;
 class MultiBody;
-class Input;
 class Environment;
 class n_str_param;
 
@@ -55,10 +54,9 @@ class DistanceMetric : MPBaseObject{
   DistanceMetric();
   virtual ~DistanceMetric();
 
-  DistanceMetric(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   static vector<DistanceMetricMethod*> GetDefault();
 
-  int ReadCommandLine(n_str_param* DMstrings[MAX_DM], int numDMs);
   void PrintUsage(ostream& _os) const;
   void PrintValues(ostream& _os) const;
   void PrintDefaults(ostream& _os) const;
@@ -68,26 +66,26 @@ class DistanceMetric : MPBaseObject{
     *@param _fname filename for data file.
     *@see ReadDMs(istream& _myistream)
     */
-  void ReadDMs(const char* _fname);
+  //void ReadDMs(const char* _fname);
   /**Read information about DistanceMetricMethods selected from input stream.
     *@see WriteDMs for data format
     *@note if this method could not be able to understand
     *input file format, then error message will be post to 
     *standard output.
     */
-  void ReadDMs(istream& _myistream);
+  //void ReadDMs(istream& _myistream);
   /**Ouput information about selected DistanceMetricMethods to file.
     *@param _fname filename for data file.
     *@see WriteDMs(ostream& _myostream)
     */
-  void WriteDMs(const char* _fname) const;
+  //void WriteDMs(const char* _fname) const;
   /**Ouput information about selected DistanceMetricMethods to output stream.
     *@note format: DM_NAME (a string) DM_PARMS (double, int, etc) 
     *for each DistanceMetricMethod.
     *if scaledEuclidean is encountered, then sValue will be printed.
     *if minkowski is encountered, r1, r2, and r3 will be printed.
     */
-  void WriteDMs(ostream& _myostream) const;
+ // void WriteDMs(ostream& _myostream) const;
 
   /**Get Distance between two Configurations.
     *The distance is calculated by DistanceMetricMethod in selected vector. 

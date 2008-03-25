@@ -1,13 +1,12 @@
 #ifndef LocalPlannerMethod_h
 #define LocalPlannerMethod_h
 
-#include "Parameters.h"
+
 
 #include "DistanceMetrics.h"
 #include "Roadmap.h"
 #include "Environment.h"
 #include "MultiBody.h"
-#include "Input.h"
 #include "Stat_Class.h"
 #include "util.h"
 
@@ -29,16 +28,14 @@ class LocalPlannerMethod : MPBaseObject{
 
   ///Default Constructor.
   LocalPlannerMethod();
-  LocalPlannerMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  LocalPlannerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   
   ///Destructor.  
   virtual ~LocalPlannerMethod();
 
   //@}
 
-  virtual bool operator == (const LocalPlannerMethod<CFG,WEIGHT> &other) const;
-
-  virtual bool SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const = 0;
+//  virtual bool operator == (const LocalPlannerMethod<CFG,WEIGHT> &other) const;
 
   //////////////////////
   // Access
@@ -47,7 +44,6 @@ class LocalPlannerMethod : MPBaseObject{
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv) = 0;
   virtual void PrintUsage(ostream& _os) = 0;
   virtual void PrintValues(ostream& _os) = 0;
   ///Used in new MPProblem framework. \todo remove the "{ }" later
@@ -97,16 +93,6 @@ class LocalPlannerMethod : MPBaseObject{
 
 };
 
-template <class CFG, class WEIGHT>
-bool 
-LocalPlannerMethod<CFG, WEIGHT>::operator == (const LocalPlannerMethod<CFG, WEIGHT> &other) const {
-  bool result = false;
-  if ( strcmp(GetName(), other.GetName()) ) //they are different
-    result = false;
-  else //they have the same name (they are of the same type)
-    result = SameParameters(other); 
-  return result;
-}
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -123,8 +109,8 @@ LocalPlannerMethod() {
 
 template <class CFG, class WEIGHT>
 LocalPlannerMethod<CFG, WEIGHT>::
-LocalPlannerMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-    MPBaseObject(in_pNode,in_pProblem) {
+LocalPlannerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+    MPBaseObject(in_Node,in_pProblem) {
   lp_id = -1;
   SetDefault();
 }

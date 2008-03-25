@@ -23,8 +23,7 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
   virtual ~AStar();
 
   //@}
-  virtual bool SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const;
-
+  
   //////////////////////
   // Access
   virtual char* GetName() const = 0;
@@ -32,7 +31,6 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy() = 0;
@@ -76,8 +74,8 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   //@{
-  num_param<int>    n_tries;       ///< How many time will be tried to connect to goal. (not used!?)
-  num_param<int>    n_neighbors;   ///< How many neighbors will be seached abound current Cfg. (not used?!)
+  int    n_tries;       ///< How many time will be tried to connect to goal. (not used!?)
+  int    n_neighbors;   ///< How many neighbors will be seached abound current Cfg. (not used?!)
   //@}
 
 
@@ -92,12 +90,8 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
 
 template <class CFG, class WEIGHT>
 AStar<CFG, WEIGHT>::
-AStar() : LocalPlannerMethod<CFG, WEIGHT>(),
-  n_tries     ("tries",        6,  1, 20),
-  n_neighbors ("neighbors",    3,  3, 15){
-  n_tries.PutDesc     ("INTEGER", "(tries, default=6");
-  n_neighbors.PutDesc ("INTEGER", "(neighbors, default=3");
-
+AStar() : LocalPlannerMethod<CFG, WEIGHT>() {
+  SetDefault();
 }
 
 
@@ -108,50 +102,12 @@ AStar<CFG, WEIGHT>::
 
 
 template <class CFG, class WEIGHT>
-bool
-AStar<CFG, WEIGHT>::
-SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const {
-  bool result = false;
-  if (n_tries.GetValue() == ((AStar<CFG,WEIGHT>&) other).n_tries.GetValue() && 
-      n_neighbors.GetValue() == ((AStar<CFG,WEIGHT>&) other).n_neighbors.GetValue() )
-    result = true;
-  return result;
-}
-
-
-template <class CFG, class WEIGHT>
 void
 AStar<CFG, WEIGHT>::
 SetDefault() {
   LocalPlannerMethod<CFG, WEIGHT>::SetDefault();
-  n_tries.PutValue(6);
-  n_neighbors.PutValue(3);
-}
-
-
-template <class CFG, class WEIGHT>
-void
-AStar<CFG, WEIGHT>::
-ParseCommandLine(int argc, char **argv) {
-  for (int i = 1; i < argc; ++i) {
-    if( n_tries.AckCmdLine(&i, argc, argv) ) {
-    } else if( n_neighbors.AckCmdLine(&i, argc, argv) ) { //only allow 3, 9, or 15
-      if (n_neighbors.GetValue() > 9)
-	n_neighbors.PutValue(15);
-      else if (n_neighbors.GetValue() > 3)
-	n_neighbors.PutValue(9);
-      else //In case Parameters doesn't make sure it is at least 3
-	n_neighbors.PutValue(3);
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr <<"\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
+  n_tries = 6;
+  n_neighbors = 3;
 }
 
 
@@ -162,8 +118,8 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; n_tries.PrintUsage(_os);
-  _os << "\n\t"; n_neighbors.PrintUsage(_os);
+  _os << "\n\t" << n_tries;
+  _os << "\n\t" << n_neighbors;
  
   _os.setf(ios::right,ios::adjustfield);
 }
@@ -174,8 +130,8 @@ void
 AStar<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
   _os << GetName() << " ";
-  _os << n_tries.GetFlag() << " " << n_tries.GetValue() << " ";
-  _os << n_neighbors.GetFlag() << " " << n_neighbors.GetValue() << " ";
+  _os << "n_tries" << " " << n_tries << " ";
+  _os << "n_neighbors" << " " << n_neighbors << " ";
   _os << endl;
 }
 
@@ -243,7 +199,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
       p = diagonal;
     } else {
       neighbors.clear();
-      p.FindNeighbors(_env, Stats,  _c2, incr, cd, n_neighbors.GetValue(),
+      p.FindNeighbors(_env, Stats,  _c2, incr, cd, n_neighbors,
 		       *this->cdInfo, neighbors);
       if (neighbors.size()==0) { 
 	connected = false;
@@ -263,7 +219,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
       lpOutput->path.push_back(p);
     }
     
-    if ((++noTries> n_tries.GetValue()*n_ticks)) { //if num_of_try > total_ticks*6->give up
+    if ((++noTries> n_tries * n_ticks)) { //if num_of_try > total_ticks*6->give up
       connected = false;
       pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > tmp;
       tmp.first.first = _c1;

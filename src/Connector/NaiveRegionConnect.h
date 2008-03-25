@@ -10,14 +10,13 @@ class NaiveRegionConnect: public RegionConnectionMethod<CFG,WEIGHT> {
   NaiveRegionConnect();
   virtual ~NaiveRegionConnect();
 
-  NaiveRegionConnect(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  NaiveRegionConnect(XMLNodeReader& in_Node, MPProblem* in_pProblem);
 
   char* GetName();
   void SetDefault();
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
 
@@ -76,13 +75,6 @@ template <class CFG, class WEIGHT>
 void
 NaiveRegionConnect<CFG,WEIGHT>::
 SetDefault() {
-
-}
-
-template <class CFG, class WEIGHT>
-void
-NaiveRegionConnect<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
 
 }
 

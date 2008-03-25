@@ -22,7 +22,6 @@
 //Include OBPRM headers
 #include "OBPRMDef.h"              // Cfg type defined here
 #include "RoadmapGraph.h"       // graph class
-#include "Input.h"        ///< init info (command line, env initfile)
 
 class Environment;        ///< Environment classes
 template <class CFG, class WEIGHT> class LocalPlanners;      ///< Local Planner       Algobase
@@ -176,8 +175,8 @@ public:
    * calling InitRoadmap, and set Roadmap version
    * as current version, RDMPVER_CURRENT.
    */
-  Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm, 
-    LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env);
+  //Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm, 
+  //  LocalPlanners<CFG,WEIGHT>* lp, long RNGseedValue, Environment* env);
 
   
   /**Delete all the elements of RoadMap. 
@@ -197,21 +196,7 @@ public:
   
   /**@name Initialization Methods*/
   //@{
-  /**Initialize Roadmap (parse command line & read in data).
-   *Initialize roadmap according to command line arguments.
-   *reserve space for nodes/edges in roadmap graph.
-   *read roadmap's environment.
-   *@param ExistingMap if ExistingMap is not null, then
-   *roadmap will read roadmap data from file 
-   *named ExistingMap.
-   *
-   *@note this method calls InitEnvironment(Input*)
-   *to initialize Environmentin this instance.
-   *
-   *@see InitEnvironment
-   */
-  void InitRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm, 
-       LocalPlanners<CFG,WEIGHT>* lp, char* ExistingMap=NULL, Environment* env = NULL); 
+
     
   /**Copy given Environment pointer to this roadmap's environment.
    */
@@ -264,8 +249,8 @@ public:
    *These methods are called in this function to help 
    *reading from *.map file.
    */
-  void ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
-       LocalPlanners<CFG,WEIGHT>* lp, const char* _fname);
+  //void ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
+  //     LocalPlanners<CFG,WEIGHT>* lp, const char* _fname);
   
   /* @todo: void ReadRoadmap(const char* _fname); */
   
@@ -284,8 +269,8 @@ public:
    *These methods are called in this function to help 
    *writing to *.map file.
    */
-  void WriteRoadmap(Input* input, CollisionDetection *cd, DistanceMetric* dm,
-        LocalPlanners<CFG,WEIGHT>* lp, const char* _fname = NULL);
+  //void WriteRoadmap(Input* input, CollisionDetection *cd, DistanceMetric* dm,
+  //      LocalPlanners<CFG,WEIGHT>* lp, const char* _fname = NULL);
   
   void ReadRoadmapGRAPHONLY(const char* _fname);
   
@@ -453,7 +438,7 @@ Roadmap()
   m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
 }
 
-
+/*
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>::
 Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
@@ -464,7 +449,7 @@ Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   InitRoadmap(input, cd, dm, lp, NULL, env); 
   RNGseed = RNGseedValue;
 }
-
+*/
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>:: 
 Roadmap(Roadmap<CFG, WEIGHT> &from_rdmp)
@@ -516,7 +501,7 @@ Roadmap<CFG, WEIGHT>::
 //  -- reserve space for nodes/edges in roadmap graph
 //  -- read roadmap's environment 
 //////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+/*template <class CFG, class WEIGHT>
 void
 Roadmap<CFG, WEIGHT>::
 InitRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
@@ -538,7 +523,7 @@ InitRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
     SetEnvironment(env);      
   }
 };
-
+*/
 
 template <class CFG, class WEIGHT>
 void
@@ -596,6 +581,7 @@ ReadRoadmapGRAPHONLY(const char* _fname) {
 //
 // Read roadmap from a file
 //
+/*
 template <class CFG, class WEIGHT>
 void 
 Roadmap<CFG, WEIGHT>::
@@ -628,11 +614,12 @@ ReadRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   
   myifstream.close();
 };
-
+*/
 
 //
 // Write roadmap to a file
 //
+/*
 template <class CFG, class WEIGHT>
 void 
 Roadmap<CFG, WEIGHT>::
@@ -663,7 +650,7 @@ WriteRoadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
   m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
   myofstream.close();
 };
-
+*/
 
 
 //////////////////////////////////////////////////////////////////////

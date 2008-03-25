@@ -12,15 +12,15 @@
 #include "CollisionDetection.h"
 
 #include "Cfg.h"
-#include "Input.h"
 #include "Environment.h"
 #include "MultiBody.h"
-#include "GenerateMapNodes.h"
-#include "ConnectMap.h"
+//#include "GenerateMapNodes.h"
+//#include "ConnectMap.h"
 #include <string.h>
 #include "util.h"
 #include "Transformation.h"
 #include "DistanceMetrics.h"
+#include "Stat_Class.h"
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -107,8 +107,8 @@ CollisionDetection() {
 
 
 CollisionDetection::
-CollisionDetection(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-    MPBaseObject(in_pNode, in_pProblem) { 
+CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+    MPBaseObject(in_Node, in_pProblem) { 
   LOG_DEBUG_MSG("CollisionDetection::CollisionDetection()");
   penetration = -1;
 
@@ -149,9 +149,10 @@ CollisionDetection(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
     delete *I;
   selected.clear();
 
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
     for(int i=0; i<all.size(); ++i) {
-      if(string(pChild->Value()) == all[i]->GetName()) {
+      if(citr->getName() == all[i]->GetName()) {
         cout << "CollisionDetectionMethod selected = " << all[i]->GetName() << endl;
         selected.push_back(all[i]);
       }
@@ -353,45 +354,6 @@ ParseCommandLine(int argc, char** argv) {
   return found;
 }
 
-
-int 
-CollisionDetection::
-ReadCommandLine(n_str_param* CDstrings[MAX_CD], int numCDs) {
-  vector<CollisionDetectionMethod*>::iterator I;
-  for(I=selected.begin(); I!=selected.end(); I++)
-    delete *I;
-  selected.clear();
-
-  for(int i=0; i<numCDs; i++) {
-    std::istringstream _myistream(CDstrings[i]->GetValue());
-
-    int argc = 0;
-    char* argv[50];
-    char cmdFields[50][100];
-    while(_myistream >> cmdFields[argc]) {
-      argv[argc] = (char*)(&cmdFields[argc]);
-      argc++;
-    }
-
-    bool found = FALSE;
-    try {
-      found = ParseCommandLine(argc, argv);
-      if(!found)
-        throw BadUsage();
-    } catch (BadUsage) {
-      cerr << "Command line error" << endl;
-      PrintUsage(cerr);
-      exit(-1);
-    }
-  }
-
-  if(selected.size() == 0)
-    selected = GetDefault();
-
-  return selected.size();
-}
-
-
 void 
 CollisionDetection::
 PrintUsage(ostream& _os) const {
@@ -422,7 +384,7 @@ PrintDefaults(ostream& _os) const {
     delete (*I);
 }
 
-
+/*
 void 
 CollisionDetection::
 WriteCDs(const char* _fname) const {
@@ -442,8 +404,8 @@ WriteCDs(ostream& _myostream) const {
   PrintValues(_myostream);
   _myostream << "#####CDSTOP#####";
 }
-  
-
+*/  
+/*
 void 
 CollisionDetection::
 ReadCDs(const char* _fname) {
@@ -500,7 +462,7 @@ ReadCDs(istream& _myistream) {
     return;
   }
 }
-  
+*/  
 
 bool
 CollisionDetection::

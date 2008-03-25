@@ -33,8 +33,6 @@ class UnconnectedClosest: public ConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -95,33 +93,6 @@ UnconnectedClosest<CFG,WEIGHT>::UnconnectedClosest():ConnectionMethod<CFG,WEIGHT
 
 template <class CFG, class WEIGHT>
 UnconnectedClosest<CFG,WEIGHT>::~UnconnectedClosest() { 
-}
-
-
-template <class CFG, class WEIGHT>
-void UnconnectedClosest<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }    
-    if (c >= '0' && c <= '9') {
-      if (is >> kclosest) {
-        if (kclosest < 0)
-          throw BadUsage();
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "ERROR in \'unconnectedClosest\' parameters\n";
-    PrintUsage(cerr);
-    exit(-1);
-  }
 }
 
 

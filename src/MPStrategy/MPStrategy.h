@@ -15,10 +15,10 @@ class MPStrategyMethod;
 class MPStrategy : public MPBaseObject
 {
 public: 
-  MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~MPStrategy () {}
   
-  void ParseStrategyMethod(TiXmlNode* in_pNode);
+  void ParseStrategyMethod(XMLNodeReader& in_Node);
   
   LocalPlanners<CfgType, WeightType>* GetLocalPlanners() {return m_pLocalPlanners;};
   GenerateMapNodes<CfgType>* GetGenerateMapNodes() {return m_pNodeGeneration;};
@@ -53,11 +53,11 @@ public:
 class MPComparer : public MPStrategyMethod {
   
 public: 
-  MPComparer(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  MPComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~MPComparer() {}
   
   virtual void PrintOptions(ostream& out_os);  
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   virtual void operator()(int in_RegionID);   
   virtual void operator()(int in_RegionID_1, int in_RegionID_2);
@@ -73,11 +73,11 @@ public:
 class MPMultiStrategy : public MPStrategyMethod {
   
 public: 
-  MPMultiStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  MPMultiStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~MPMultiStrategy() {}
   
   virtual void PrintOptions(ostream& out_os);  
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   virtual void operator()(int in_RegionID);
   virtual void operator()();

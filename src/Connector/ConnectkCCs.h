@@ -37,8 +37,6 @@ class ConnectkCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
   virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -112,48 +110,6 @@ ConnectkCCs<CFG,WEIGHT>::ConnectkCCs(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetect
 template <class CFG, class WEIGHT>
 ConnectkCCs<CFG,WEIGHT>::~ConnectkCCs() { 
 }
-
-
-template <class CFG, class WEIGHT>
-void ConnectkCCs<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }
-    if (c >= '0' && c <= '9') {
-      if (is >> k1) {
-        if (k1 < 0)
-        throw BadUsage();
-
-        c = is.peek();
-        while(c == ' ' || c == '\n') {
-          is.get();
-          c = is.peek();
-        }
-        if (c >= '0' && c <='9') {
-          if (is >> k2) {
-            if (k2 < 0)
-          throw BadUsage();
-          } else
-            throw BadUsage();
-        }
-
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "Error in \'"<<this->GetName()<<"\' parameters" << endl;
-    PrintUsage(cerr);
-    exit(-1);
-  }
-}
-
 
 template <class CFG, class WEIGHT>
 void ConnectkCCs<CFG,WEIGHT>::SetDefault() {

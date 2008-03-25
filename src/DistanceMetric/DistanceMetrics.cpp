@@ -11,7 +11,6 @@
 //#include "GenerateMapNodes.h"
 #include "Environment.h"
 #include "util.h"
-#include "Input.h"
 
 
 DistanceMetric::
@@ -41,8 +40,8 @@ DistanceMetric() {
 
 
 DistanceMetric::
-DistanceMetric(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-    MPBaseObject(in_pNode, in_pProblem){
+DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+    MPBaseObject(in_Node, in_pProblem){
   LOG_DEBUG_MSG("DistanceMetric::DistanceMetric()");
   /*
   EuclideanDistance* euclidean = new EuclideanDistance();
@@ -60,29 +59,28 @@ DistanceMetric(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
   CenterOfMassDistance* com = new CenterOfMassDistance();
   all.push_back(com);
   */
-  if(!in_pNode) {
-    LOG_ERROR_MSG("Error reading <distance_metrics> tag....");exit(-1);
-  }
-  if(string(in_pNode->Value()) != "distance_metrics") {
-    LOG_ERROR_MSG("Error reading <distance_metrics> tag....");exit(-1);
-  }
 
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    if(string(pChild->Value()) == "euclidean") {
+  in_Node.verifyName("distance_metrics");
+
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "euclidean") {
       EuclideanDistance* euclidean = new EuclideanDistance();
       all.push_back(euclidean);
       selected.push_back(euclidean->CreateCopy());
-    } else if(string(pChild->Value()) == "scaledEuclidean") {
+      citr->warnUnrequestedAttributes();
+    } else if(citr->getName() == "scaledEuclidean") {
       double par_scale;
       ScaledEuclideanDistance* scaledEuclidean;
-      if(TIXML_SUCCESS == pChild->ToElement()->QueryDoubleAttribute("scale",&par_scale))
-      {  scaledEuclidean = new ScaledEuclideanDistance(par_scale); }
-      else
-      {  scaledEuclidean = new ScaledEuclideanDistance(); }
+      par_scale = citr->numberXMLParameter("scale",false,double(0.5),
+                                          double(0.0),double(1.0),
+                                          "Scale Factor");
+      scaledEuclidean = new ScaledEuclideanDistance(par_scale);
       all.push_back(scaledEuclidean);
       selected.push_back(scaledEuclidean->CreateCopy());
+      citr->warnUnrequestedAttributes();
     } else {
-      LOG_WARNING_MSG("  I don't know: " << *pChild);
+      citr->warnUnknownNode();
     }
   }
 
@@ -157,43 +155,6 @@ ParseCommandLine(int argc, char** argv) {
 }
 
 
-int 
-DistanceMetric::
-ReadCommandLine(n_str_param* DMstrings[MAX_DM], int numDMs) {
-  vector<DistanceMetricMethod*>::iterator I;
-  for(I=selected.begin(); I!=selected.end(); I++)
-    delete *I;
-  selected.clear();
-
-  for(int i=0; i<numDMs; i++) {
-    std::istringstream _myistream(DMstrings[i]->GetValue());
-
-    int argc = 0;
-    char* argv[50];
-    char cmdFields[50][100];
-    while(_myistream >> cmdFields[argc]) {
-      argv[argc] = (char*)(&cmdFields[argc]);
-      argc++;
-    }
-   
-    bool found = FALSE;
-    try {
-      found = ParseCommandLine(argc, argv);
-      if (!found)
-  throw BadUsage();
-    } catch (BadUsage) {
-      cerr << "Command line error" << endl;
-      PrintUsage(cerr);
-      exit(-1);
-    }
-  }
-
-  if(selected.size() == 0)
-    selected = GetDefault();
-
-  return selected.size();
-}
-
 
 void 
 DistanceMetric::
@@ -236,7 +197,7 @@ PrintOptions(ostream& out_os) const {
     (*I)->PrintOptions(out_os);
 }
 
-
+/**
 void 
 DistanceMetric::
 ReadDMs(const char* _fname) {
@@ -248,8 +209,8 @@ ReadDMs(const char* _fname) {
   ReadDMs(myifstream);
   myifstream.close();
 }
-
-
+*/
+/*
 void 
 DistanceMetric::
 ReadDMs(istream& _myistream) {
@@ -293,8 +254,8 @@ ReadDMs(istream& _myistream) {
     return;
   }
 }
-
-
+*/
+/*
 void 
 DistanceMetric::
 WriteDMs(const char* _fname) const {
@@ -315,7 +276,7 @@ WriteDMs(ostream& _myostream) const {
   PrintValues(_myostream);
   _myostream << "#####DMSTOP#####"; 
 }
-
+*/
 
 double 
 DistanceMetric::

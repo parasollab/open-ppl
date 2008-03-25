@@ -17,7 +17,7 @@ class BoundingBox : public Boundary {
  public:
   enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};
   BoundingBox(int i_dofs, int i_pos_dofs);
-  BoundingBox(TiXmlNode*,MPProblem* in_pproblem);
+  BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem);
   BoundingBox(const BoundingBox &from_bbox);
   virtual ~BoundingBox();
 
@@ -42,7 +42,7 @@ class BoundingBox : public Boundary {
 
   void Print(std::ostream& _os, char range_sep=':', char par_sep=';') const;
 
-  void Parse(std::stringstream &i_bbox);
+  //void Parse(std::stringstream &i_bbox);
 
   bool IfWrap(int par);
   bool IfEnoughRoom(int par, double room);

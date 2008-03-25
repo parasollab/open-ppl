@@ -60,8 +60,6 @@ class ModifiedLM: public ConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -98,61 +96,6 @@ ModifiedLM<CFG,WEIGHT>::ModifiedLM():ConnectionMethod<CFG,WEIGHT>() {
 
 template <class CFG, class WEIGHT>
 ModifiedLM<CFG,WEIGHT>::~ModifiedLM() { 
-}
-
-
-template <class CFG, class WEIGHT>
-void ModifiedLM<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }    
-    if (c >= '0' && c <= '9') {
-      if (is >> kclosest) {
-        if (kclosest < 0)
-	  throw BadUsage();
-
-        c = is.peek();
-        while(c == ' ' || c == '\n') {
-          is.get();
-          c = is.peek();
-        }    
-        if (c >= '0' && c <= '9') {
-          if (is >> maxNum) {
-            if (maxNum < 0)
-	      throw BadUsage();
-
-            c = is.peek();
-            while(c == ' ' || c == '\n') {
-              is.get();
-              c = is.peek();
-            }    
-            if (c >= '0' && c <= '9') {
-	      if (is >> rfactor) {
-	        if (rfactor < 0)
-	          throw BadUsage();
-	      } else
-                throw BadUsage();
-            }
-
-          } else
-            throw BadUsage();
-        }
-
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "Error in \'modifiedLM\' parameters" << endl;
-    PrintUsage(cerr);
-    exit(-1);
-  }
 }
 
 

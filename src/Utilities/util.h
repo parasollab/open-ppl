@@ -25,8 +25,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "OBPRMDef.h"
-#include "tinyxml.h"
-
+#include "XmlWrapper.h" 
 /////////////////////////////////////////////////////////////////////////////////////////
 class Cfg;
 class Environment;
@@ -402,33 +401,24 @@ class MessageLogs {
 
 };
 
-///\todo{ XML wrapper, things needed.
-///isElement == name
-///isChild 
-///getChild
-///isAttribute
-///findAttribute
-
-
 class MPProblem;
 class MPBaseObject {
 
   public: 
     MPBaseObject(){ m_pProblem = NULL;};
     MPBaseObject(MPProblem* in_pProblem){ m_pProblem = in_pProblem;};
-    MPBaseObject(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
+    MPBaseObject(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
          m_strLabel("") { 
       m_pProblem = in_pProblem;
-      ParseXML(in_pNode); 
+      ParseXML(in_Node); 
     };
     virtual ~MPBaseObject() {}
-    virtual void ParseXML(TiXmlNode* in_pNode) {
-      if(in_pNode->Type() == TiXmlNode::ELEMENT) {
-        const char* carLabel = in_pNode->ToElement()->Attribute("Label");
-        if(carLabel) {
-          m_strLabel = string(carLabel);
-        }
-      } 
+    virtual void ParseXML(XMLNodeReader& in_Node) {
+      m_strLabel = in_Node.stringXMLParameter(string("Label"),
+                                              false, 
+                                              string(""),
+                                              string("Label Identifier"));
+   
     };
     
     inline MessageLogs& GetMessageLog() { return m_message_log; };
@@ -478,9 +468,6 @@ private:
 };
 
 */
-
-
-
 
 
 #endif

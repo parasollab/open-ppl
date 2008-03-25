@@ -38,7 +38,7 @@ class LocalPlanners : MPBaseObject{
  public:
   ///Default Constructor.
   LocalPlanners();
-  LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.  
   virtual ~LocalPlanners();
 
@@ -50,13 +50,11 @@ class LocalPlanners : MPBaseObject{
 
   //////////////////////
   // I/O methods
-  int ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtype, bool append_selected = false);
-  bool ParseCommandLine(int argc, char **argv);
   bool InSelected(const LocalPlannerMethod<CFG,WEIGHT> *test_lp);
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
-  void WriteLPs(ostream& _os);
-  void ReadLPs(istream& _is);
+  //void WriteLPs(ostream& _os);
+  //void ReadLPs(istream& _is);
 
   void PrintDefaults(ostream& _os);
 
@@ -196,62 +194,33 @@ GetMethod(string& in_strLabel) {
 
 template <class CFG, class WEIGHT>
 LocalPlanners<CFG,WEIGHT>::
-LocalPlanners(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-  MPBaseObject(in_pNode,in_pProblem) {
+LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+  MPBaseObject(in_Node,in_pProblem) {
 
   
   ///\todo Finish this parcer .... need to have binary search!
   
   LOG_DEBUG_MSG("LocalPlanners::LocalPlanners()");
-  /*
-  StraightLine<CFG, WEIGHT>* straight_line = new StraightLine<CFG, WEIGHT>(cdtype);
-  all.push_back(straight_line);
-
-  RotateAtS<CFG, WEIGHT>* rotate_at_s = new RotateAtS<CFG,WEIGHT>(cdtype);
-  all.push_back(rotate_at_s);
- 
-  AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>();
-  all.push_back(a_star_distance);
-  
-  AStarClearance<CFG, WEIGHT>* a_star_clearance = new AStarClearance<CFG, WEIGHT>();
-  all.push_back(a_star_clearance);
-  
-  ApproxSpheres<CFG, WEIGHT>* approx_spheres = new ApproxSpheres<CFG,WEIGHT>();
-  all.push_back(approx_spheres);
   
   ResetSelected();
-
-   ///\todo Fix closest .... for some reason doesnt match them up.
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    for(int i=0; i<all.size(); ++i) {
-      if(string(pChild->Value()) == all[i]->GetName()) {
-        cout << "Local Planner selected = " << all[i]->GetName() << endl;
-        all[i]->cdInfo = &cdInfo;
-        all[i]->SetID(GetNewID());
-        selected.push_back(all[i]);
-      }
-    }
-  }
-  
-  if(selected.size() < 1)
-    LOG_WARNING_MSG("No Local Planner selected!");
- */
-  ResetSelected();
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    if(string(pChild->Value()) == string("straightline")) {
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == string("straightline")) {
       StraightLine<CFG, WEIGHT>* straight_line = 
-          new StraightLine<CFG, WEIGHT>(cdtype, pChild, GetMPProblem());
+          new StraightLine<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
       straight_line->cdInfo = &cdInfo;
       straight_line->SetID(GetNewID());
       selected.push_back(straight_line);
       all.push_back(straight_line);
-    } else if(string(pChild->Value()) == string("RotateAtS")) {
+    } else if(citr->getName() == string("RotateAtS")) {
       RotateAtS<CFG, WEIGHT>* rotate_at_s = 
-          new RotateAtS<CFG, WEIGHT>(cdtype, pChild, GetMPProblem());
+          new RotateAtS<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
       rotate_at_s->cdInfo = &cdInfo;
       rotate_at_s->SetID(GetNewID());
       selected.push_back(rotate_at_s);
       all.push_back(rotate_at_s);
+    } else {
+      citr->warnUnknownNode();
     }
   }
   LOG_DEBUG_MSG("~LocalPlanners::LocalPlanners()");
@@ -291,108 +260,6 @@ GetDefault() {
   return Default;
 }
 
-template <class CFG, class WEIGHT>
-int
-LocalPlanners<CFG,WEIGHT>::
-ReadCommandLine(n_str_param* LPstrings[MAX_GN], int numLPs, cd_predefined _cdtype, bool append_selected) {
-  cdtype = _cdtype;
-
-  if (!append_selected)
-    ResetSelected(); // reset lp_counter and clears selected vector
-
-  for(int i=0; i<numLPs; i++) {
-
-    std::istringstream _myistream(LPstrings[i]->GetValue());
-
-    int argc = 0;
-    char* argv[50];
-    char cmdFields[50][100]; 
-    while ( _myistream >> cmdFields[argc] ) {
-      argv[argc] = (char*)(&cmdFields[argc]); 
-      ++argc;
-    }
-
-    bool found = FALSE;
-    try {
-      found = ParseCommandLine(argc, argv);
-      if (!found)
-  throw BadUsage();
-    } catch (BadUsage) {
-      cerr << "Command line error" << endl;
-      PrintUsage(cerr);
-      exit(-1); 
-    }
-  }
-
-  //when there was no method selected, use the default
-  if(selected.size() == 0) {
-    typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
-    int lpid;
-    selected = LocalPlanners<CFG,WEIGHT>::GetDefault();
-    for (itr = selected.begin(), lpid = 1; itr != selected.end(); itr++, lpid++) {
-      (*itr)->cdInfo = &cdInfo;
-      (*itr)->SetID(GetNewID());
-    }
-  }
-  
-  return selected.size();
-}
-
-template <class CFG, class WEIGHT>
-bool
-LocalPlanners<CFG,WEIGHT>::
-ParseCommandLine(int argc, char **argv) {
-  bool found = FALSE;
-  typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
-
-  int cmd_begin = 0;
-  int cmd_argc = 0;
-  char* cmd_argv[50];
-  do {
-    //go through the command line looking for method names
-    for (itr = all.begin(); itr != all.end(); itr++) {
-      //If the method matches any of the supported methods ...
-      if ( !strcmp( argv[cmd_begin], (*itr)->GetName()) ) {
-  cmd_argc = 0;
-  bool is_method_name = false;
-  do {
-    cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
-    cmd_argc++;
-
-    typename vector<LocalPlannerMethod<CFG,WEIGHT>*>::iterator itr_names;
-    is_method_name = false;
-    for (itr_names = all.begin(); itr_names != all.end() &&cmd_begin+cmd_argc < argc; itr_names++)
-      if (!strcmp(argv[cmd_begin+cmd_argc],(*itr_names)->GetName())) {
-        is_method_name = true;
-        break;
-      }
-  } while (! is_method_name && cmd_begin+cmd_argc < argc);
-
-  // .. use the parser of the matching method
-  (*itr)->ParseCommandLine(cmd_argc, cmd_argv);
-  if (!InSelected(*itr)) {
-    // .., set their parameters
-    (*itr)->cdInfo = &cdInfo;
-    (*itr)->SetID(GetNewID());
-    //check if lp is straightline to set saved_sl_id for add partial edge
-    if ( !strcmp( "straightline", (*itr)->GetName()) )
-      saved_sl_id = (*itr)->GetID();
-    //  and push it back into the list of selected methods.
-    cout << (*itr)->GetName() << endl;
-    selected.push_back((*itr)->CreateCopy());
-  }
-      
-  (*itr)->SetDefault(); //reset in all, not in selected
-  found = TRUE;
-  break;
-      } 
-    }
-    if(!found)
-      break;
-    cmd_begin = cmd_begin + cmd_argc;
-  } while (cmd_begin < argc);
-  return found;
-}
 
 template <class CFG, class WEIGHT>
 bool
@@ -427,6 +294,7 @@ PrintValues(ostream& _os) {
   }
 }
 
+/*
 template <class CFG, class WEIGHT>
 void 
 LocalPlanners<CFG,WEIGHT>::
@@ -436,7 +304,7 @@ WriteLPs(ostream& _os) {
   PrintValues(_os);
   _os << "#####LPSTOP#####";
 };
-
+*/
 template <class CFG, class WEIGHT>
 void LocalPlanners<CFG,WEIGHT>::
 PrintOptions(ostream& out_os) {
@@ -446,7 +314,7 @@ PrintOptions(ostream& out_os) {
     (*I)->PrintOptions(out_os);
   }
 }
-
+/*
 template <class CFG, class WEIGHT>
 void 
 LocalPlanners<CFG,WEIGHT>::
@@ -495,7 +363,7 @@ ReadLPs(istream& _is) {
     return;
   }
 }
-
+*/
 
 template <class CFG, class WEIGHT>
 void

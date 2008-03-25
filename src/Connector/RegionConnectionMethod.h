@@ -13,7 +13,7 @@ class RegionConnectionMethod : MPBaseObject {
   //////////////////////
   // Constructors and Destructor
   RegionConnectionMethod();
-  RegionConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  RegionConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~RegionConnectionMethod();
   
   //////////////////////
@@ -23,7 +23,6 @@ class RegionConnectionMethod : MPBaseObject {
   
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(std::istringstream& is) = 0;
   virtual void PrintUsage(ostream& _os) = 0;
   virtual void PrintValues(ostream& _os) = 0;
   ///Used in new MPProblem framework. \todo remove the "{ }" later
@@ -71,8 +70,8 @@ RegionConnectionMethod() {
 
 template <class CFG, class WEIGHT>
 RegionConnectionMethod<CFG,WEIGHT>::
-RegionConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-  MPBaseObject(in_pNode,in_pProblem) {
+RegionConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  MPBaseObject(in_Node,in_pProblem) {
 }
 
 

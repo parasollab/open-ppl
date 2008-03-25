@@ -71,8 +71,6 @@ class ObstBased: public NodeConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os); 
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -147,47 +145,6 @@ ObstBased<CFG,WEIGHT>::ObstBased():NodeConnectionMethod<CFG,WEIGHT>() {
 
 template <class CFG, class WEIGHT>
 ObstBased<CFG,WEIGHT>::~ObstBased() { 
-}
-
-
-template <class CFG, class WEIGHT>
-void ObstBased<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }    
-    if (c >= '0' && c <= '9') {
-      if (is >> k_other) {
-        if (k_other < 0)
-	  throw BadUsage();
-
-        c = is.peek();
-        while(c == ' ' || c == '\n') {
-          is.get();
-          c = is.peek();
-        }    
-        if (c >= '0' && c <= '9') {
-          if (is >> k_self) {
-	    if (k_self < 0)
-	      throw BadUsage();
-          } else
-            throw BadUsage();
-        }
-
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "Error in \'obstBased\' parameters" << endl;
-    PrintUsage(cerr);
-    exit(-1);
-  }
 }
 
 

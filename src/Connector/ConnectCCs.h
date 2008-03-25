@@ -28,7 +28,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   ConnectCCs();
-  ConnectCCs(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ConnectCCs(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
 		      DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
   virtual ~ConnectCCs();
@@ -40,7 +40,6 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // I/O methods
 
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
   ///Used in new MPProblem framework.
@@ -138,24 +137,17 @@ ConnectCCs<CFG,WEIGHT>::ConnectCCs():
 
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::
-ConnectCCs(TiXmlNode* in_pNode, MPProblem* in_pProblem):
-  ComponentConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
+ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem):
+  ComponentConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem) { 
   
   LOG_DEBUG_MSG("ConnectCCs::ConnectCCs()");
   this->element_name = "components"; 
   SetDefault();
    
-  int _kpairs;
-  int _smallcc;
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("kpairs",&_kpairs))
-  {
-    kpairs = _kpairs;
-  }  
-  
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("smallcc",&_smallcc))
-  {
-    smallcc = _smallcc;
-  }  
+  kpairs = in_Node.numberXMLParameter(string("kpairs"), true, 5,1,1000, 
+                                  string("kpairs value")); 
+  smallcc = in_Node.numberXMLParameter(string("smallcc"), true, 5,1,1000, 
+                                  string("smallcc value")); 
   
   LOG_DEBUG_MSG("~ConnectCCs::ConnectCCs()");
 }
@@ -172,47 +164,6 @@ ConnectCCs<CFG,WEIGHT>::ConnectCCs(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetectio
 
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::~ConnectCCs() { 
-}
-
-
-template <class CFG, class WEIGHT>
-void ConnectCCs<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }
-    if (c >= '0' && c <= '9') {
-      if (is >> kpairs) {
-        if (kpairs < 0)
-  	  throw BadUsage();
-
-        c = is.peek();
-        while(c == ' ' || c == '\n') {
-          is.get();
-          c = is.peek();
-        }
-        if (c >= '0' && c <='9') {
-          if (is >> smallcc) {
-    	    if (smallcc < 0)
-	      throw BadUsage();
-          } else
-            throw BadUsage();
-        }
-
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "Error in \'components\' parameters" << endl;
-    PrintUsage(cerr);
-    exit(-1);
-  }
 }
 
 

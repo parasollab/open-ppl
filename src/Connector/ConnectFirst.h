@@ -19,8 +19,6 @@ class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -56,33 +54,6 @@ ConnectFirst() : NodeConnectionMethod<CFG,WEIGHT>() {
 template <class CFG, class WEIGHT>
 ConnectFirst<CFG,WEIGHT>::
 ~ConnectFirst() { 
-}
-
-
-template <class CFG, class WEIGHT>
-void ConnectFirst<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }    
-    if (c >= '0' && c <= '9') {
-      if (is >> kfirst) {
-        if (kfirst < 0)
-          throw BadUsage();
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "ERROR in \'connectfirst\' parameters\n";
-    PrintUsage(cerr);
-    exit(-1);
-  }
 }
 
 

@@ -551,7 +551,7 @@ Input::PrintDefaults(){
    cout << endl << flush; 
 }
 
-
+/*
 //===================================================================
 //  Input class
 //  WritePreamble
@@ -620,3 +620,4 @@ void Input::ReadEnvFile(istream& _myistream) {
   }
 
 };
+*/

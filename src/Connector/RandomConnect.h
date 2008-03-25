@@ -44,7 +44,6 @@ class RandomConnect: public NodeConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
@@ -92,34 +91,6 @@ RandomConnect<CFG,WEIGHT>::RandomConnect():NodeConnectionMethod<CFG,WEIGHT>() {
 template <class CFG, class WEIGHT>
 RandomConnect<CFG,WEIGHT>::~RandomConnect() { 
 }
-
-
-template <class CFG, class WEIGHT>
-void RandomConnect<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }    
-    if (c >= '0' && c <= '9') {
-      if (is >> m_numEdges) {
-        if (m_numEdges < 0)
-	  throw BadUsage();
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "Error in \'random\' parameters" << endl;
-    PrintUsage(cerr);
-    exit(-1);
-  }
-}
-
 
 template <class CFG, class WEIGHT>
 void RandomConnect<CFG,WEIGHT>::SetDefault() {

@@ -10,7 +10,7 @@ class ComponentConnectionMethod : public MPBaseObject{
   //////////////////////
   // Constructors and Destructor
   ComponentConnectionMethod();
-  ComponentConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  ComponentConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~ComponentConnectionMethod();
   
   //////////////////////
@@ -20,7 +20,6 @@ class ComponentConnectionMethod : public MPBaseObject{
   
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(std::istringstream& is) = 0;
   virtual void PrintUsage(ostream& _os) = 0;
   virtual void PrintValues(ostream& _os) = 0;   
   ///Used in new MPProblem framework. \todo remove the "{ }" later
@@ -73,8 +72,8 @@ ComponentConnectionMethod() {
 
 template <class CFG, class WEIGHT>
 ComponentConnectionMethod<CFG,WEIGHT>::
-ComponentConnectionMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPBaseObject(in_pNode,in_pProblem){
+ComponentConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPBaseObject(in_Node,in_pProblem){
 }
 
 

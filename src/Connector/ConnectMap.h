@@ -2,7 +2,7 @@
 #define _ConnectMap_h_
 
 
-#include "Parameters.h"
+
 #include "Roadmap.h"
 #include "DistanceMetrics.h"
 #include "Clock_Class.h"
@@ -55,7 +55,7 @@ class ConnectMap : public MPBaseObject{
   //////////////////////
   // Constructors and destructor
   ConnectMap();
-  ConnectMap(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  ConnectMap(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ConnectMap(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
 	     DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
   virtual ~ConnectMap();
@@ -73,7 +73,6 @@ class ConnectMap : public MPBaseObject{
 
   //////////////////////
   // I/O methods
-  int ReadCommandLine(Input* input, Environment* env);
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
   void PrintDefaults(ostream& _os);
@@ -133,10 +132,8 @@ class ConnectMap : public MPBaseObject{
 
   vector<RegionConnectionMethod<CFG,WEIGHT> *> all_region_methods;
   vector<RegionConnectionMethod<CFG,WEIGHT> *> selected_region_methods;
-  
-  n_str_param options; //component connection options
 
-  void ParseXML(TiXmlNode* in_pNode);
+  void ParseXML(XMLNodeReader& in_Node);
   
  public:
   CDInfo cdInfo;
@@ -222,18 +219,14 @@ ConnectMap() {
 /*   all_region_methods.push_back(romc); */
 
   //Command-line-option string
-  options.PutDesc("STRING",
-   "\n\t\t\tPick any combo: default RayTracer targetOriented 1 10000 10000"
-   "\n\t\t\t\tRayTracer \tSTRING \tINT \tINT \tINT \tSTRING \tINT \tINT (bouncingMode:targetOriented maxRays:1 maxBounces:10000 maxRayLength:10000 \tschedulingMode:largestToSmallest scheduleMaxSize:20 sampleMaxSize:10)"
-   "\n\t\t\t  RRTcomponents  INT INT INT INT INT (iter:10 factor:3 cc:3 o_clr:2 node_clr:4)" );
 }
 
 template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::
-ConnectMap(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-  MPBaseObject(in_pNode, in_pProblem){
+ConnectMap(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+  MPBaseObject(in_Node, in_pProblem){
   LOG_DEBUG_MSG("ConnectMap::ConnectMap()");
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   
   
   if(selected_node_methods.size() < 1)
@@ -249,7 +242,7 @@ ConnectMap(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
 
 template <class CFG, class WEIGHT>
 void ConnectMap<CFG,WEIGHT>::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("ConnectMap::ParseXML()");
   
   connectionPosRes = GetMPProblem()->GetEnvironment()->GetPositionRes();
@@ -257,45 +250,49 @@ ParseXML(TiXmlNode* in_pNode) {
   connectionOriRes = GetMPProblem()->GetEnvironment()->GetOrientationRes();     
   cout << "connectionOriRes = " << connectionOriRes << endl;
 
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); 
-      pChild !=0; pChild = pChild->NextSibling()) {
-    if(string(pChild->Value()) == "Closest") {
+  XMLNodeReader::childiterator citr;
+
+  //Iterate over child nodes
+  
+  
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "Closest") {
       cout << "ConnectMap found Closest" << endl;
-      Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>(pChild,GetMPProblem());
+      Closest<CFG,WEIGHT>* closest = new Closest<CFG,WEIGHT>(*citr,GetMPProblem());
       closest->cdInfo = &cdInfo;
       closest->connectionPosRes = connectionPosRes;
       closest->connectionOriRes = connectionOriRes; 
       all_node_methods.push_back(closest);
       selected_node_methods.push_back(closest);
-    }else if(string(pChild->Value()) == "ClosestSF") {
+    } else if(citr->getName() == "ClosestSF") {
       cout << "ConnectMap found ClosestSF" << endl;
-      ClosestSF<CFG,WEIGHT>* closestsf = new ClosestSF<CFG,WEIGHT>(pChild,GetMPProblem());
+      ClosestSF<CFG,WEIGHT>* closestsf = new ClosestSF<CFG,WEIGHT>(*citr,GetMPProblem());
       closestsf->cdInfo = &cdInfo;
       closestsf->connectionPosRes = connectionPosRes;
       closestsf->connectionOriRes = connectionOriRes; 
       all_node_methods.push_back(closestsf);
       selected_node_methods.push_back(closestsf);
-    }  else if(string(pChild->Value()) == "ConnectCCs") {
+    }  else if(citr->getName() == "ConnectCCs") {
       cout << "ConnectMap found ConnectCCs" << endl;
-      ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>(pChild,GetMPProblem());
+      ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>(*citr,GetMPProblem());
       connectccs->cdInfo = &cdInfo;
       connectccs->connectionPosRes = connectionPosRes;
       connectccs->connectionOriRes = connectionOriRes; 
       all_component_methods.push_back(connectccs);
       selected_component_methods.push_back(connectccs);
-    } else if(string(pChild->Value()) == "AllPairs") {
+    } else if(citr->getName() == "AllPairs") {
       cout << "ConnectMap found AllPairs" << endl;
       AllPairsNodeConnection<CFG,WEIGHT>* allPairs = 
-          new AllPairsNodeConnection<CFG,WEIGHT>(pChild,GetMPProblem());
+          new AllPairsNodeConnection<CFG,WEIGHT>(*citr,GetMPProblem());
       allPairs->cdInfo = &cdInfo;
       allPairs->connectionPosRes = connectionPosRes;
       allPairs->connectionOriRes = connectionOriRes; 
       all_node_methods.push_back(allPairs);
       selected_node_methods.push_back(allPairs);
-    } else if(string(pChild->Value()) == "Disconnect") {
+    } else if(citr->getName() == "Disconnect") {
       cout << "ConnectMap found Disconnect" << endl;
       Disconnect<CFG,WEIGHT>* disconnect = 
-          new Disconnect< CFG,WEIGHT >(pChild,GetMPProblem());
+          new Disconnect< CFG,WEIGHT >(*citr,GetMPProblem());
       disconnect->cdInfo = &cdInfo;
       disconnect->connectionPosRes = connectionPosRes;
       disconnect->connectionOriRes = connectionOriRes; 
@@ -339,7 +336,7 @@ ParseXML(TiXmlNode* in_pNode) {
   all_component_methods.push_back(connectccs);
 
   ///\todo Fix closest .... for some reason doesnt match them up.
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
+  
   for(int i=0; i<all_component_methods.size(); ++i) {
   if(string(pChild->Value()) == all_component_methods[i]->GetName()) {
   cout << "ConnectionMethod selected = " << all_component_methods[i]->GetName() << endl;
@@ -356,8 +353,7 @@ ParseXML(TiXmlNode* in_pNode) {
 template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::
 ConnectMap(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetection* cd, 
-	   DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp) : 
-  options("-cComponents") {
+	   DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp) {
   ConnectMap();
 }
 
@@ -455,149 +451,6 @@ GetRegionDefault() {
   return tmp;
 }
 
-
-
-template <class CFG, class WEIGHT>
-int 
-ConnectMap<CFG,WEIGHT>::
-ReadCommandLine(Input* input, Environment* env) {
-  connectionPosRes = env->GetPositionRes();
-  connectionOriRes = env->GetOrientationRes();   
-  
-  typename vector<NodeConnectionMethod<CFG, WEIGHT>*>::iterator I;
-  for(I = selected_node_methods.begin(); 
-      I != selected_node_methods.end(); ++I)
-    delete *I;
-  selected_node_methods.clear();
-
-  typename vector<ComponentConnectionMethod<CFG, WEIGHT>*>::iterator J;
-  for(J = selected_component_methods.begin(); 
-      J != selected_component_methods.end(); ++J)
-    delete *J;
-  selected_component_methods.clear();  
-
-
-  typename vector<RegionConnectionMethod<CFG, WEIGHT>*>::iterator K;
-  for(K = selected_region_methods.begin(); 
-      K != selected_region_methods.end(); ++K)
-    delete *K;
-  selected_region_methods.clear();
-
-  //go through the command line looking for method names
-  for(int i=0; i<input->numCNs; ++i) {
-    std::istringstream _myistream(input->CNstrings[i]->GetValue());
-    char cnname[100];
-
-    while (_myistream >> cnname) {
-      bool found = FALSE;
-      try {
-        //go through the command line looking for method names
-        for(I = all_node_methods.begin(); 
-	    I != all_node_methods.end(); ++I) {
-          //If the method matches any of the supported methods ...
-	  if(!strcmp(cnname, (*I)->GetName())) {
-  	    // .. use the parser of the matching method
-	    (*I)->ParseCommandLine(_myistream);
-	    // .., set their parameters
-	    (*I)->cdInfo = &cdInfo;
-	    (*I)->connectionPosRes = connectionPosRes;
-	    (*I)->connectionOriRes = connectionOriRes; 
-	    //  and push it back into the list of selected methods.	  
-	    selected_node_methods.push_back((*I)->CreateCopy());	 
-	    (*I)->SetDefault();
-	    found = TRUE;
-	    break;
-	  } 
-        }
-
-        if(!found) {
-	  //go through the command line looking for method names
-	  for(J = all_component_methods.begin(); 
-	      J != all_component_methods.end(); ++J) {
-	    //If the method matches any of the supported methods ...
-	    if(!strcmp(cnname, (*J)->GetName())) {
-	      // .. use the parser of the matching method
-	      (*J)->ParseCommandLine(_myistream);
-	      // .., set their parameters
-	      (*J)->cdInfo = &cdInfo;
-	      (*J)->connectionPosRes = connectionPosRes;
-	      (*J)->connectionOriRes = connectionOriRes; 
-	      //  and push it back into the list of selected methods.	  
-	      selected_component_methods.push_back((*J)->CreateCopy());	 
-	      (*J)->SetDefault();
-	      found = TRUE;
-	      break;
-	    } 
-	  }
-	}
-	
-	if(!found) {
-	  //go through the command line looking for method names
-	  for(K = all_region_methods.begin(); 
-	      K != all_region_methods.end(); ++K) {
-	    //If the method matches any of the supported methods ...
-	    if(!strcmp(cnname, (*K)->GetName())) {
-	      // .. use the parser of the matching method
-	      (*K)->ParseCommandLine(_myistream);
-	      // .., set their parameters
-	      (*K)->cdInfo = &cdInfo;
-	      (*K)->connectionPosRes = connectionPosRes;
-	      (*K)->connectionOriRes = connectionOriRes; 	      
-	      //  and push it back into the list of selected methods.	  
-	      selected_region_methods.push_back((*K)->CreateCopy());	 
-	      (*K)->SetDefault();
-	      found = TRUE;
-	      break;
-	    } 
-	  }
-	}
-
-	if(!found)
-  	  throw BadUsage();
-	
-      } catch (BadUsage) {
-        cerr << "Command line error"<< endl;
-        PrintUsage(cerr);
-        exit(-1); 
-      }
-    }   
-  }
-
-  //when there was no node method selected, use the default
-  if(selected_node_methods.empty()) {
-    selected_node_methods = this->GetNodeDefault();
-    for(I = selected_node_methods.begin(); 
-	I != selected_node_methods.end(); ++I) {
-      (*I)->cdInfo = &cdInfo;
-      (*I)->connectionPosRes= connectionPosRes;
-      (*I)->connectionOriRes= connectionOriRes; 
-    }
-  }
-
-  //when there was no component method selected, use the default
-  if(selected_component_methods.empty()) {
-    selected_component_methods = this->GetComponentDefault();
-    for(J = selected_component_methods.begin(); 
-	J != selected_component_methods.end(); ++J) {
-      (*J)->cdInfo = &cdInfo;
-      (*J)->connectionPosRes= connectionPosRes;
-      (*J)->connectionOriRes= connectionOriRes; 
-    }
-  }
-
-  //when there was no region method selected, use the default
-  if(selected_region_methods.empty()) {
-    selected_region_methods = this->GetRegionDefault();
-    for(K = selected_region_methods.begin(); 
-	K != selected_region_methods.end(); ++K) {
-      (*K)->cdInfo = &cdInfo;
-      (*K)->connectionPosRes= connectionPosRes;
-      (*K)->connectionOriRes= connectionOriRes; 
-    }
-  }
-
-  return selected_node_methods.size() + selected_component_methods.size() + selected_region_methods.size();
-}
 
 template <class CFG, class WEIGHT>
 void

@@ -30,7 +30,7 @@ class CSpaceMAPRM : public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   CSpaceMAPRM();
-  CSpaceMAPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  CSpaceMAPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.
   virtual ~CSpaceMAPRM();
 
@@ -43,13 +43,10 @@ class CSpaceMAPRM : public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
-  virtual void ParseXML(TiXmlNode* in_pNode) { };
+  virtual void ParseXML(XMLNodeReader& in_Node) { };
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
@@ -73,11 +70,11 @@ class CSpaceMAPRM : public NodeGenerationMethod<CFG> {
   /**Number of rays for approx clearance calculation
    *@see Cfg::ApproxCSpaceClearance
    */
-  num_param<int> clearanceNum;
+  int clearanceNum;
   /**Number of rays for approx penetration calculation
    *@see Cfg::ApproxCSpaceClearance
    */
-  num_param<int> penetrationNum;
+  int penetrationNum;
 
   //Index for next node 
   //used in incremental map generation
@@ -97,21 +94,14 @@ int CSpaceMAPRM<CFG>::nextNodeIndex = 0;
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
 CSpaceMAPRM<CFG>::
-CSpaceMAPRM() : NodeGenerationMethod<CFG>(),
-  clearanceNum     ("clearance",         5,  1,   100),
-  penetrationNum   ("penetration",       5,  1,   100) {
-  clearanceNum.PutDesc("INT  ","(number of rays for approx clearance calulation, default 5)");
-  penetrationNum.PutDesc("INT  ","(number of rays for approx penetration calculation, default 5)");
+CSpaceMAPRM() : NodeGenerationMethod<CFG>() {
+  SetDefault();
 }
 
 template <class CFG>
 CSpaceMAPRM<CFG>::
-CSpaceMAPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) : NodeGenerationMethod<CFG>(in_pNode,in_pProblem),
-  clearanceNum     ("clearance",         10,  1,   100),///Modified for RoadmapComparision!!!! was 5.
-  penetrationNum   ("penetration",       5,  1,   100) {
-  clearanceNum.PutDesc("INT  ","(number of rays for approx clearance calulation, default 5)");
-  penetrationNum.PutDesc("INT  ","(number of rays for approx penetration calculation, default 5)");
-
+CSpaceMAPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) : NodeGenerationMethod<CFG>(in_Node,in_pProblem) {
+  SetDefault();
 }
 
 template <class CFG>
@@ -133,8 +123,8 @@ void
 CSpaceMAPRM<CFG>::
 SetDefault() {
   NodeGenerationMethod<CFG>::SetDefault();
-  clearanceNum.PutValue(10); ///Modified for RoadmapComparision!!!! was 5.
-  penetrationNum.PutValue(5);
+  clearanceNum = 10; ///Modified for RoadmapComparision!!!! was 5.
+  penetrationNum = 5;
 }
 
 
@@ -165,66 +155,13 @@ IncreaseNextNodeIndex(int numIncrease) {
 template <class CFG>
 void
 CSpaceMAPRM<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  for (int i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->chunkSize.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->exactNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (clearanceNum.AckCmdLine(&i, argc, argv) ) {
-    } else if (penetrationNum.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
-
-
-template <class CFG>
-void
-CSpaceMAPRM<CFG>::
-PrintUsage(ostream& _os) {
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os);
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
-  _os << "\n\t"; clearanceNum.PrintUsage(_os);
-  _os << "\n\t"; penetrationNum.PrintUsage(_os);
-  
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-
-template <class CFG>
-void
-CSpaceMAPRM<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  _os << clearanceNum.GetFlag() << " " << clearanceNum.GetValue() << " ";
-  _os << penetrationNum.GetFlag() << " " << penetrationNum.GetValue() << " ";
-  _os << endl;
-}
-
-template <class CFG>
-void
-CSpaceMAPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  out_os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
-  out_os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  out_os << clearanceNum.GetFlag() << " " << clearanceNum.GetValue() << " ";
-  out_os << penetrationNum.GetFlag() << " " << penetrationNum.GetValue() << " ";
+  out_os << "num nodes" << " " << this->numNodes << " ";
+  out_os << "chunk size" << " " << this->chunkSize << " ";
+  out_os << "exact" << " " << this->exactNodes << " ";
+  out_os << "clearanceNum" << " " << clearanceNum << " ";
+  out_os << "penetrationNum" << " " << penetrationNum << " ";
   out_os << endl;
 }
 
@@ -244,21 +181,21 @@ CSpaceMAPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd, 
 	      DistanceMetric *dm, vector<CFG>& nodes) {
 #ifndef QUIET
-  cout << "(numNodes="      << this->numNodes.GetValue()       << ", ";
-  cout << "(chunkSize="      << this->chunkSize.GetValue()       << ", ";
-  cout << "(exactNodes="      << this->exactNodes.GetValue()       << ", ";
-  cout << "clearanceNum="   << clearanceNum.GetValue()   << ", ";
-  cout << "penetrationNum=" << penetrationNum.GetValue() << ") ";
+  cout << "(numNodes="      << this->numNodes       << ", ";
+  cout << "(chunkSize="      << this->chunkSize       << ", ";
+  cout << "(exactNodes="      << this->exactNodes       << ", ";
+  cout << "clearanceNum="   << clearanceNum   << ", ";
+  cout << "penetrationNum=" << penetrationNum << ") ";
 #endif
 
   CDInfo cdInfo;
-  FreeMedialAxisSampler<CFG> ma_sampler(_env, Stats, cd, cdInfo, dm, clearanceNum.GetValue(), penetrationNum.GetValue());
+  FreeMedialAxisSampler<CFG> ma_sampler(_env, Stats, cd, cdInfo, dm, clearanceNum, penetrationNum);
   int nodes_offset = nodes.size();
 
-  for(int i=0; i<this->numNodes.GetValue(); ++i) {
+  for(int i=0; i<this->numNodes; ++i) {
     CFG tmp;
     tmp.GetRandomCfg(_env);
-    if(this->exactNodes.GetValue() == 1)
+    if(this->exactNodes == 1)
       while(!ma_sampler(tmp, nodes, 1)) {
         tmp.GetRandomCfg(_env);
       }

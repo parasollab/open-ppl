@@ -32,11 +32,11 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   BasicOBPRM();
-  BasicOBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  BasicOBPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.
   ~BasicOBPRM();
-  virtual void ParseXML(TiXmlNode* in_pNode);
-  virtual void ParseXMLshells(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
+  virtual void ParseXMLshells(XMLNodeReader& in_Node);
   //@}
 
   //////////////////////
@@ -51,9 +51,6 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
@@ -391,7 +388,7 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
    *from this list.
    *@see GenerateMapNodes::Shells 
    */
-  num_param<int> numShells;
+  int numShells;
   /// max. # of attempts at surface convergence	
   static const int MAX_CONVERGE;
 
@@ -419,54 +416,49 @@ int BasicOBPRM<CFG>::nextNodeIndex = 0;
 
 template <class CFG>
 BasicOBPRM<CFG>::
-BasicOBPRM() : NodeGenerationMethod<CFG>(),      
-  numShells        ("shells",            3,  1,   50) {
+BasicOBPRM() : NodeGenerationMethod<CFG>() {
   
 }
 
 template <class CFG>
 BasicOBPRM<CFG>::
-    BasicOBPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    NodeGenerationMethod<CFG>(in_pNode, in_pProblem),
-    numShells        ("shells",            3,  1,   50) {
+    BasicOBPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    NodeGenerationMethod<CFG>(in_Node, in_pProblem) {
   LOG_DEBUG_MSG("BasicOBPRM::BasicOBPRM()");
-  numShells.PutDesc("INTEGER","(number of shells, default 3)");
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   LOG_DEBUG_MSG("~BasicOBPRM::BasicOBPRM()");
 }
 
 template <class CFG>
 void BasicOBPRM<CFG>::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("BasicOBPRM::ParseXML()");
-  for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
-    pChild2 = pChild2->NextSibling()) {
-      if(string(pChild2->Value()) == "shells") {
-        ParseXMLshells(pChild2);
-      }
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "shells") {
+      ParseXMLshells(*citr);
+    } else {
+      //citr->warnUnknownNode();
+    }
   }
+  
+  m_balanced  = in_Node.numberXMLParameter(string("Balanced"), false, 
+                                                1,0,1, string("Balanced OBPRM"));
+  in_Node.warnUnrequestedAttributes();
 
-  int Balanced;
-  in_pNode->ToElement()->QueryIntAttribute("Balanced",&Balanced);
-  m_balanced = Balanced;
   LOG_DEBUG_MSG("~BasicOBPRM::ParseXML()");
 }
 
 template <class CFG>
 void BasicOBPRM<CFG>::
-ParseXMLshells(TiXmlNode* in_pNode) {
+ParseXMLshells(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("BasicOBPRM::ParseXMLshells()");
-  numShells.PutValue(3);
-  if(!in_pNode) {
-    LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
-  }
-  if(string(in_pNode->Value()) != "shells") {
-    LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
-  }
-  int shells;
-  in_pNode->ToElement()->QueryIntAttribute("number",&shells);
 
-  numShells.SetValue(shells);
+  in_Node.verifyName(string("shells"));
+  numShells = in_Node.numberXMLParameter(string("number"),true, 3,0,10,
+                                         string("Number of Shells"));
+  
+  in_Node.warnUnrequestedAttributes();
   LOG_DEBUG_MSG("~BasicOBPRM::ParseXMLshells()");
 }
 
@@ -489,7 +481,7 @@ void
 BasicOBPRM<CFG>::
 SetDefault() {
   NodeGenerationMethod<CFG>::SetDefault();
-  numShells.PutValue(3);
+  numShells = 3;
   m_balanced = 0;
 
   m_balColl=0;
@@ -521,61 +513,12 @@ IncreaseNextNodeIndex(int numIncrease) {
 template <class CFG>
 void
 BasicOBPRM<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  for (int i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
-    }else if (this->exactNodes.AckCmdLine(&i, argc, argv) ) {
-    }else if (this->chunkSize.AckCmdLine(&i, argc, argv) ) {
-    }else if (numShells.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
-
-
-template <class CFG>
-void
-BasicOBPRM<CFG>::
-PrintUsage(ostream& _os) {
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os);
-  _os << "\n\t"; numShells.PrintUsage(_os);
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-
-template <class CFG>
-void
-BasicOBPRM<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
-  _os << numShells.GetFlag() << " " << numShells.GetValue() << " ";
-  _os << endl;
-}
-
-template <class CFG>
-void
-BasicOBPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
-  out_os << " exact  = " << this->exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
-  out_os << " num shells = " << numShells.GetValue() << " ";
+  out_os << " num nodes = " << this->numNodes << " ";
+  out_os << " exact  = " << this->exactNodes << " ";
+  out_os << " chunk size = " << this->chunkSize << " ";
+  out_os << " num shells = " << numShells << " ";
   out_os << " Balanced = " << m_balanced << " ";
   out_os << endl;
 }
@@ -606,22 +549,22 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
   LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes()");
 #ifndef QUIET
-  cout << "(numNodes=" << this->numNodes.GetValue() << ", "<<flush;
-  cout << "(exactNodes=" << this->exactNodes.GetValue() << ", "<<flush;
-  cout << "(chunkSize=" << this->chunkSize.GetValue() << ", "<<flush;
-  cout << "numShells=" << numShells.GetValue() << ") "<<flush;
+  cout << "(numNodes=" << this->numNodes << ", "<<flush;
+  cout << "(exactNodes=" << this->exactNodes << ", "<<flush;
+  cout << "(chunkSize=" << this->chunkSize << ", "<<flush;
+  cout << "numShells=" << numShells << ") "<<flush;
 #endif
   
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
-  path.reserve(this->numNodes.GetValue());
+  path.reserve(this->numNodes);
 #endif
 
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-BasicOBPRM::GenerateNodes"); Callee = Callee+Method;}
 if(m_balanced == 0) {
   // generate in bounding box
-  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < this->numNodes.GetValue() ; attempts++) {
+  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < this->numNodes ; attempts++) {
     //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() attempts = " << attempts);
     CFG cfg1,last_free;
     cfg1.GetRandomCfg(_env);
@@ -674,7 +617,7 @@ if(m_balanced == 0) {
       } while (pushed_enough == false && outofbb == false);
     }
     
-    if (this->exactNodes.GetValue())
+    if (this->exactNodes)
       success_cntr = nodes.size();
     else
       success_cntr = attempts+1;
@@ -685,7 +628,7 @@ if(m_balanced == 0) {
   //m_balFree=0;
 
   // generate in bounding box
-  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < this->numNodes.GetValue() ; attempts++) {
+  for (int attempts=0,newNodes=0,success_cntr=0;  success_cntr < this->numNodes ; attempts++) {
     //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() attempts = " << attempts);
     CFG cfg1,last_free;
     cfg1.GetRandomCfg(_env);
@@ -742,7 +685,7 @@ if(m_balanced == 0) {
       } while (pushed_enough == false && outofbb == false);
     }
     
-    if (this->exactNodes.GetValue())
+    if (this->exactNodes)
       success_cntr = nodes.size();
     else
       success_cntr = attempts+1;
@@ -765,15 +708,15 @@ ComputeCSpaceShells(Environment* _env, Stat_Class& Stats,
                     CollisionDetection* cd, 
                     DistanceMetric *dm, CFG& _freeCfg, CFG& _incr, vector<CFG>& nodes) {
 
-  if(numShells.GetValue() < 1) {
+  if(numShells < 1) {
     cout << "ERROR, SHELLS must be larger than 0" << endl; exit(-1);
   }
-  if(numShells.GetValue() > 1) {
+  if(numShells > 1) {
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-BasicOBPRM::GenerateNodes"); Callee = Callee+Method;}
   CallCnt=" ComputeCSpaceShells"; 
   std::string tmpStr = Callee+CallCnt;
-  for(int i=0; i<numShells.GetValue(); ++i) {
+  for(int i=0; i<numShells; ++i) {
    if(!_freeCfg.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr) && _freeCfg.InBoundingBox(_env)) {
      nodes.push_back(CFG(_freeCfg));
    }
@@ -1000,7 +943,7 @@ GenCfgsFromCObst(Environment* env, Stat_Class& Stats,
       GenerateSurfaceCfg(env,Stats,cd,dm,robot,obstacle,obstSeeds[i],OutsideNode,clearanceFactor);
     
     // Choose as many as nshells
-    preshells = Shells(tmp, numShells.GetValue());
+    preshells = Shells(tmp, numShells);
     shells = InsideBoundingBox(env, preshells);
     preshells.erase(preshells.begin(), preshells.end());
     

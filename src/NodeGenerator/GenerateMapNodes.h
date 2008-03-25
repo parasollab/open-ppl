@@ -21,7 +21,6 @@
 // Include OBPRM headers
 #include "CollisionDetection.h"
 #include "Clock_Class.h"
-#include "Parameters.h"
 #include "GMSPolyhedron.h"
 
 //Include node generation methods
@@ -79,7 +78,7 @@ class GenerateMapNodes : public MPBaseObject{
 
   ///Default Constructor.
   GenerateMapNodes();
-  GenerateMapNodes(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  GenerateMapNodes(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.	
   virtual ~GenerateMapNodes();
   
@@ -93,9 +92,6 @@ class GenerateMapNodes : public MPBaseObject{
 
   //////////////////////
   // I/O methods
-  int ReadCommandLine(n_str_param* GNstrings[MAX_GN], int numGNs);
-  void PrintUsage(ostream& _os);
-  void PrintValues(ostream& _os);
   void PrintDefaults(ostream& _os);
   NodeGenerationMethod<CFG>* GetMethod(string& in_strLabel);
   
@@ -138,7 +134,7 @@ class GenerateMapNodes : public MPBaseObject{
    */
   bool addNodes2Map;
   private:
-    void ParseXML(TiXmlNode* in_pNode);
+    void ParseXML(XMLNodeReader& in_Node);
     void Reset();
 
 };
@@ -189,46 +185,48 @@ GenerateMapNodes() {
 
 template <class CFG>
 GenerateMapNodes<CFG>::
-GenerateMapNodes(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-     MPBaseObject(in_pNode,in_pProblem) {
+GenerateMapNodes(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+     MPBaseObject(in_Node,in_pProblem) {
   
   LOG_DEBUG_MSG("GenerateMapNodes::GenearteMapNodes()");
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   LOG_DEBUG_MSG("~GenerateMapNodes::GenearteMapNodes()");
 }
 
 template <class CFG>
 void GenerateMapNodes<CFG>::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("GenerateMapNodes::ParseXML()");
-  
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); 
-      pChild !=0; pChild = pChild->NextSibling()) {
-    if(string(pChild->Value()) == "BasicPRM") {
-      BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>(pChild, GetMPProblem());
+
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "BasicPRM") {
+      BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>(*citr, GetMPProblem());
       basicPRM->cdInfo = &cdInfo;
       selected.push_back(basicPRM);
-    } else if(string(pChild->Value()) == "BasicOBPRM") {
-      BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>(pChild, GetMPProblem());
+    } else if(citr->getName() == "BasicOBPRM") {
+      BasicOBPRM<CFG>* basicOBPRM = new BasicOBPRM<CFG>(*citr, GetMPProblem());
       basicOBPRM->cdInfo = &cdInfo;
       selected.push_back(basicOBPRM);
-    } else if(string(pChild->Value()) == "BridgeTestPRM") {
-      BridgeTestPRM<CFG>* bridgeTest = new BridgeTestPRM<CFG>(pChild, GetMPProblem());
+    } else if(citr->getName() == "BridgeTestPRM") {
+      BridgeTestPRM<CFG>* bridgeTest = new BridgeTestPRM<CFG>(*citr, GetMPProblem());
       bridgeTest->cdInfo = &cdInfo;
       selected.push_back(bridgeTest);
-    } else if(string(pChild->Value()) == "GaussPRM") {
-      GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>(pChild, GetMPProblem());
+    } else if(citr->getName() == "GaussPRM") {
+      GaussPRM<CFG>* gaussPRM = new GaussPRM<CFG>(*citr, GetMPProblem());
       gaussPRM->cdInfo = &cdInfo;
       selected.push_back(gaussPRM);
-    } else if(string(pChild->Value()) == "CSpaceMAPRM") {
-      CSpaceMAPRM<CFG>* cspaceMAPRM = new CSpaceMAPRM<CFG>(pChild, GetMPProblem());
+    } else if(citr->getName() == "CSpaceMAPRM") {
+      CSpaceMAPRM<CFG>* cspaceMAPRM = new CSpaceMAPRM<CFG>(*citr, GetMPProblem());
       cspaceMAPRM->cdInfo = &cdInfo;
       selected.push_back(cspaceMAPRM);
-    } else if(string(pChild->Value()) == "OBPRM") {
-      OBPRM<CFG>* obprm = new OBPRM<CFG>(pChild,GetMPProblem());
+    } else if(citr->getName() == "OBPRM") {
+      OBPRM<CFG>* obprm = new OBPRM<CFG>(*citr,GetMPProblem());
       //all.push_back(obprm);
       obprm->cdInfo = &cdInfo;
       selected.push_back(obprm);
+    } else {
+      citr->warnUnknownNode();
     }
   }
   
@@ -259,22 +257,7 @@ ParseXML(TiXmlNode* in_pNode) {
   */
   addNodes2Map = true;
   
-  /*
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    for(int i=0; i<all.size(); ++i) {
-      if(string(pChild->Value()) == all[i]->GetName()) {
-        for( TiXmlNode* pChild2 = pChild->FirstChild(); pChild2 !=0; pChild2 = pChild2->NextSibling()) {
-          if(string(pChild2->Value()) == "num_nodes") {
-            all[i]->ParseXMLnum_nodes(pChild2);
-          }
-          all[i]->cdInfo = &cdInfo;
-          selected.push_back(all[i]->CreateCopy());
-          
-        }
-      }
-    }
-  }
-  */
+  
   if(selected.size() < 1) {
     LOG_WARNING_MSG("GenerateMapNodes::ParseXML() -- No methods selected");
   }
@@ -331,114 +314,6 @@ GetDefault() {
 }
 
 
-template <class CFG>
-int 
-GenerateMapNodes<CFG>::
-ReadCommandLine(n_str_param* GNstrings[MAX_GN], int numGNs) {
-  typename vector<NodeGenerationMethod<CFG>*>::iterator I;
-
-  for(I=selected.begin(); I!=selected.end(); I++)
-    delete *I;
-  selected.clear();
-  
-  typename vector<NodeGenerationMethod<CFG>*>::iterator itr;
-
-  //go through the command line looking for method names
-  for(int i=0; i<numGNs; i++) {
-
-    std::istringstream _myistream(GNstrings[i]->GetValue());
-
-    int argc = 0;
-    char* argv[50];
-    char cmdFields[50][100]; 
-    while ( _myistream >> cmdFields[argc] ) {
-      argv[argc] = (char*)(&cmdFields[argc]); 
-      ++argc;
-    }
-
-    bool found = FALSE;
-    try {
-      int cmd_begin = 0;
-      int cmd_argc = 0;
-      char* cmd_argv[50];
-      do {
-	//go through the command line looking for method names
-	for (itr = all.begin(); itr != all.end(); itr++) {
-	  //If the method matches any of the supported methods ...
-	  if ( !strcmp( argv[cmd_begin], (*itr)->GetName()) ) {
-	    cmd_argc = 0;
-	    bool is_method_name = false;
-	    do {
-	      cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
-	      cmd_argc++;
-	      
-	      typename vector<NodeGenerationMethod<CFG>*>::iterator itr_names;
-	      is_method_name = false;
-	      for (itr_names = all.begin(); itr_names != all.end() &&cmd_begin+cmd_argc < argc; itr_names++)
-		if (!strcmp(argv[cmd_begin+cmd_argc],(*itr_names)->GetName())) {
-		  is_method_name = true;
-		  break;
-		}
-	    } while (! is_method_name && cmd_begin+cmd_argc < argc);	  
-
-	    // .. use the parser of the matching method
-	    (*itr)->ParseCommandLine(cmd_argc, cmd_argv);
-	    // .., set their parameters
-	    (*itr)->cdInfo = &cdInfo;
-	    //  and push it back into the list of selected methods.	  
-	    selected.push_back((*itr)->CreateCopy());	 
-	    (*itr)->SetDefault();
-	    found = TRUE;
-	    break;
-	  } 
-	}
-	if(!found)
-	  break;
-	cmd_begin = cmd_begin + cmd_argc;
-      } while (cmd_begin < argc);
-      if (!found)
-	throw BadUsage();
-    } catch (BadUsage) {
-      cerr << "Command line error" << endl;
-      PrintUsage(cerr);
-      exit(-1); 
-    }
-  }
-
-  //when there was no method selected, use the default
-  if(selected.size() == 0) {
-    selected = GenerateMapNodes<CFG>::GetDefault();
-    for (itr = selected.begin(); itr != selected.end(); itr++) {
-      (*itr)->cdInfo = &cdInfo;
-    }
-  }
-  //cout << "selected:\n";
-  //for(int j=0; j<selected.size(); j++)
-  //  selected[j]->PrintValues(cout);
-
-  return selected.size();
-}
-
-
-template <class CFG>
-void 
-GenerateMapNodes<CFG>::
-PrintUsage(ostream& _os) {
-  typename vector<NodeGenerationMethod<CFG>*>::iterator I;
-  for(I=all.begin(); I!=all.end(); I++)
-    (*I)->PrintUsage(_os);
-}
-
-
-template <class CFG>
-void 
-GenerateMapNodes<CFG>::
-PrintValues(ostream& _os) {
-  typename vector<NodeGenerationMethod<CFG>*>::iterator I;
-  for(I=selected.begin(); I!=selected.end(); I++)
-    (*I)->PrintValues(_os);
-}
-
 
 template <class CFG>
 void
@@ -448,7 +323,7 @@ PrintDefaults(ostream& _os) {
   Default = GetDefault();
   typename vector<NodeGenerationMethod<CFG>*>::iterator I;
   for(I=Default.begin(); I!=Default.end(); I++)
-    (*I)->PrintValues(_os);
+    (*I)->PrintOptions(_os);
 }
 
 

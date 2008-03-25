@@ -24,7 +24,6 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-  // ParseCommandLine derived
   virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
   // Core: Connection methods 

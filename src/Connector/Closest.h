@@ -36,7 +36,7 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   Closest();
-  Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  Closest(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   Closest(int k);
   Closest(int k, int m);
   virtual ~Closest();
@@ -47,13 +47,12 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   //////////////////////
   // Core: Connection method
@@ -102,12 +101,12 @@ Closest<CFG,WEIGHT>::Closest():NodeConnectionMethod<CFG,WEIGHT>() {
 }
 
 template <class CFG, class WEIGHT>
-Closest<CFG,WEIGHT>::Closest(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-    NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
+Closest<CFG,WEIGHT>::Closest(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+    NodeConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem) { 
   LOG_DEBUG_MSG("Closest::Closest()"); 
   this->element_name = "closest"; 
   SetDefault();
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   
   
   LOG_DEBUG_MSG("~Closest::Closest()"); 
@@ -137,62 +136,12 @@ Closest<CFG,WEIGHT>::~Closest() {
 
 
 template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::ParseXML(TiXmlNode* in_pNode) { 
-  
-  int k;
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("k",&k))
-  {
-    kclosest = k;
-  }
+void Closest<CFG,WEIGHT>::ParseXML(XMLNodeReader& in_Node) { 
  
+  kclosest = in_Node.numberXMLParameter(string("k"), true, 5,1,1000, 
+                                  string("k-closest value")); 
 }
 
-//If there are two parameters in the command line, 
-//  the first one is K, the second one is M;
-//If there is only one parameter, 
-//  we set M equal to K (this is identical to K-closest connection method)
-template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }
-    if (c >= '0' && c <= '9') {
-      if (is >> kclosest) {
-        if (kclosest < 0)
-  	  throw BadUsage();
-
-        c = is.peek();
-        while(c == ' ' || c == '\n') {
-          is.get();
-          c = is.peek();
-        }
-        if (c >= '0' && c <='9') {
-          if (is >> mfailure) {
-    	    if (mfailure < 0)
-	      throw BadUsage();
-          } else
-	      throw BadUsage();
-        } else 
-          mfailure = kclosest;  
-	  //set mfailure equals to kcloest if it is not specified in the command line
-
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "Error in \'closest\' parameters" << endl;
-    PrintUsage(cerr);
-    exit(-1);
-  }
-
-}
 
 
 template <class CFG, class WEIGHT>

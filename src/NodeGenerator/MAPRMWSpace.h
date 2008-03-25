@@ -23,9 +23,6 @@ class BasicMAPRM : public NodeGenerationMethod<CFG> {
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
 
@@ -54,8 +51,8 @@ class BasicMAPRM : public NodeGenerationMethod<CFG> {
   /////////////////////
   // Data
 
-  num_param<int> m_bApprox; //using approximation or exact computation
-  num_param<int> m_iRays; //number of shooting rays for approximation penetration.
+  int m_bApprox; //using approximation or exact computation
+  int m_iRays; //number of shooting rays for approximation penetration.
   //Index for next node 
   //used in incremental map generation
   static int nextNodeIndex;
@@ -84,11 +81,8 @@ float Ran3(long *idum);
 
 template <class CFG>
 BasicMAPRM<CFG>::
-BasicMAPRM() : NodeGenerationMethod<CFG>(),
-  m_bApprox ("approx",     1, 0,   1),
-  m_iRays   ("approx_ray",10, 1, 100) {
-  m_bApprox.PutDesc("INT  ","(using approximation or exact computation, default 1)");
-  m_iRays.PutDesc("INT  ","(number of rays for approximation penetration, default 10)");
+BasicMAPRM() : NodeGenerationMethod<CFG>() {
+  SetDefault();
 }
 
 
@@ -111,8 +105,8 @@ void
 BasicMAPRM<CFG>::
 SetDefault() {
   NodeGenerationMethod<CFG>::SetDefault();
-  m_bApprox.PutValue(1);
-  m_iRays.PutValue(10);
+  m_bApprox = 1;
+  m_iRays = 10;
 }
 
 
@@ -137,68 +131,17 @@ IncreaseNextNodeIndex(int numIncrease) {
   nextNodeIndex += numIncrease;
 }
 
-template <class CFG>
-void
-BasicMAPRM<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  for (int i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->chunkSize.AckCmdLine(&i, argc, argv) ) {
-    } else if (this->exactNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if (m_bApprox.AckCmdLine(&i, argc, argv) ) {
-    } else if (m_iRays.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr <<"\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
-
-
-template <class CFG>
-void
-BasicMAPRM<CFG>::
-PrintUsage(ostream& _os) {
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os);
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
-  _os << "\n\t"; m_bApprox.PrintUsage(_os);
-  _os << "\n\t"; m_iRays.PrintUsage(_os);
-  
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-template <class CFG>
-void
-BasicMAPRM<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  _os << m_bApprox.GetFlag() << " " << m_bApprox.GetValue() << " ";
-  _os << m_iRays.GetFlag() << " " << m_iRays.GetValue() << " ";
-  _os << endl;
-}
 
 template <class CFG>
 void
 BasicMAPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  out_os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
-  out_os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  out_os << m_bApprox.GetFlag() << " " << m_bApprox.GetValue() << " ";
-  out_os << m_iRays.GetFlag() << " " << m_iRays.GetValue() << " ";
+  out_os << "numNodes" << " " << this->numNodes << " ";
+  out_os << "chunkSize" << " " << this->chunkSize << " ";
+  out_os << "exactNodes" << " " << this->exactNodes << " ";
+  out_os << "m_bApprox" << " " << m_bApprox << " ";
+  out_os << "m_iRays" << " " << m_iRays << " ";
   out_os << endl;
 }
 
@@ -224,24 +167,24 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
 	      CallCnt("1");
 #ifndef QUIET
   cout << endl << "\t- Begin BasicMAPRM...\n";
-  if( m_bApprox.GetValue()==0 ){
+  if( m_bApprox==0 ){
     cout<<"\t\t- Use exact penetration\n";
   }else{
     cout<<"\t\t- Use approximate penetration\n";
-    cout<<"\t\t- " << m_iRays.GetValue() << " rays will be used to approximate penetration.\n";
+    cout<<"\t\t- " << m_iRays << " rays will be used to approximate penetration.\n";
   }
 
-  cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
+  cout << "(exactNodes=" << this->exactNodes << ") ";
 #endif
-  bool bExact = this->exactNodes.GetValue() == 1? true: false;
+  bool bExact = this->exactNodes == 1? true: false;
 
 #if INTERMEDIATE_FILES
   vector<CFG> path; 
-  path.reserve(this->numNodes.GetValue());
+  path.reserve(this->numNodes);
 #endif
   
 #ifdef USE_VCLIP
-  if( m_bApprox.GetValue()==0 ) //use exact penetration (VCLIP require). 
+  if( m_bApprox==0 ) //use exact penetration (VCLIP require). 
     BuildVCLIP(_env); //Make sure vclip is buid
 #endif
   
@@ -249,12 +192,12 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
   cout<<"- "<<flush;
 #endif
   std::string tmpStr;
-  for (int i=0; i < this->numNodes.GetValue(); i++){
+  for (int i=0; i < this->numNodes; i++){
     // Get a random configuration that STARTS in the bounding box of env
     cfg.GetRandomCfg(_env);  // should always be in bounding box
     
     //use approximate computation for moving out robot from obs
-    if( m_bApprox.GetValue() ){
+    if( m_bApprox ){
       this->cdInfo->ret_all_info = false;
       tmpStr = Callee+Method+CallCnt;
       collided = cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &tmpStr);
@@ -324,11 +267,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd,
     }
     
 #ifndef QUIET
-    if( i%80==0 && i!=0 ) cout<<"("<<i<<"/"<<this->numNodes.GetValue()<<")"<<endl<<"- ";
+    if( i%80==0 && i!=0 ) cout<<"("<<i<<"/"<<this->numNodes<<")"<<endl<<"- ";
     cout<<"#"<<flush;
 #endif
     
-  } // end for i = 1 to numNodes.GetValue()
+  } // end for i = 1 to numNodes
   
 #if INTERMEDIATE_FILES
   WritePathConfigurations("maprm.path", path, _env);
@@ -380,7 +323,7 @@ MoveOutObstacle(CFG& cfg, Environment* _env, Stat_Class& Stats,
   move_out_dir_cfg.GetRandomRay( min(_env->GetPositionRes(),
 				     _env->GetOrientationRes(), _env, dm);
   */
-  long num_rays = m_iRays.GetValue();  // how many rays do we try to get random cfg out of collision
+  long num_rays = m_iRays;  // how many rays do we try to get random cfg out of collision
   CFG* rays=new CFG[num_rays]; //testing directions
   CFG* pos=new CFG[num_rays];  //test position, will update each time by rays
   if( rays==NULL || pos==NULL ) return; //test if enough memory

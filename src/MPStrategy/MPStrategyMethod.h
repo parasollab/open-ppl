@@ -7,52 +7,28 @@
 class MPStrategyMethod : public MPBaseObject 
 {
   public:
-    MPStrategyMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-      MPBaseObject(in_pNode,in_pProblem) { 
-      m_baseSeed=0;
-      int seed;
-      if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("seed",&seed)) {
-        m_baseSeed = (long) seed;
-      } else {
-        LOG_DEBUG_MSG("MPStrategyMethod::No Seed Found");
-        struct timeval tv;
-        gettimeofday(&tv,NULL);
-        m_baseSeed = ((unsigned int) tv.tv_usec);
-        cout << "RANDOM SEED = " << m_baseSeed << endl;
-      }
+    MPStrategyMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+      MPBaseObject(in_Node,in_pProblem) { 
+            
+      struct timeval tv;
+      gettimeofday(&tv,NULL);
+      m_baseSeed = in_Node.numberXMLParameter(string("seed"), false,
+                                              int(tv.tv_usec),int(0),int(MAX_INT), 
+                                              string("Random Seed Value")); 
   
-      int iterations;
-      if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("iterations",&iterations)) {
-        m_iterations = iterations;
-      } else {
-        LOG_DEBUG_MSG("MPStrategyMethod::Iterations Found");
-      }
-      const char* filename;
-      filename= in_pNode->ToElement()->Attribute("filename");
-      if(filename) {
-        m_base_filename = string(filename);
-      } else {
-        LOG_DEBUG_MSG("MPStrategyMethod::No filename Found");
-      }
-      const char* no_output_files;
-      no_output_files= in_pNode->ToElement()->Attribute("no_output_files");
-      if(no_output_files) {
-        m_no_output_files = true;
-      } else {
-        m_no_output_files = false;
-      }
+      m_iterations = in_Node.numberXMLParameter(string("iterations"), true,
+                                              int(1),int(0),int(MAX_INT), 
+                                              string("Number of Iterations")); 
+      
+      m_base_filename = in_Node.stringXMLParameter(string("filename"), true,
+                                            string(""), 
+                                            string("Base output filename"));
+      
+      
       LOG_DEBUG_MSG("MPStrategyMethod::Seed is " << m_baseSeed);
-
-      m_reset_stats = false;
-      int reset_stats;
-      if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("reset_stats",&reset_stats)) {
-        if (reset_stats)
-          m_reset_stats = true;
-      }
-
     };
   virtual ~MPStrategyMethod() {}
-  virtual void ParseXML(TiXmlNode* in_pNode)=0;
+  virtual void ParseXML(XMLNodeReader& in_Node)=0;
   virtual void operator()()=0;
   virtual void operator()(int in_RegionID)=0;
   virtual void PrintOptions(ostream& out_os)=0;
@@ -66,8 +42,8 @@ class MPStrategyMethod : public MPBaseObject
 
  protected:
   int m_iterations;
-  bool m_reset_stats;
-  bool m_no_output_files;
+  //bool m_reset_stats;
+  //bool m_no_output_files;
 };
 
 #endif 

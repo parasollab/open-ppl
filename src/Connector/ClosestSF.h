@@ -36,7 +36,7 @@ class ClosestSF: public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   ClosestSF();
-  ClosestSF(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  ClosestSF(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ClosestSF(int k, int m);
   virtual ~ClosestSF();
  
@@ -46,13 +46,12 @@ class ClosestSF: public NodeConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   //////////////////////
   // Core: Connection method
@@ -101,12 +100,12 @@ ClosestSF<CFG,WEIGHT>::ClosestSF():NodeConnectionMethod<CFG,WEIGHT>() {
 }
 
 template <class CFG, class WEIGHT>
-ClosestSF<CFG,WEIGHT>::ClosestSF(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-    NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
+ClosestSF<CFG,WEIGHT>::ClosestSF(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+    NodeConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem) { 
   LOG_DEBUG_MSG("ClosestSF::ClosestSF()"); 
   this->element_name = "closestsf"; 
   SetDefault();
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   
   
   LOG_DEBUG_MSG("~ClosestSF::ClosestSF()"); 
@@ -127,67 +126,16 @@ ClosestSF<CFG,WEIGHT>::~ClosestSF() {
 
 
 template <class CFG, class WEIGHT>
-void ClosestSF<CFG,WEIGHT>::ParseXML(TiXmlNode* in_pNode) { 
+void ClosestSF<CFG,WEIGHT>::ParseXML(XMLNodeReader& in_Node) { 
   
-  int k;
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("success",&k))
-  {
-    ksuccess = k;
-  }
-  int fail;		
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("fail",&fail))
-  {
-    mfailure = fail;
-  }
- 
-}
+  ksuccess = in_Node.numberXMLParameter(string("success"), true, 0,1,1000, 
+                                  string("k-success value")); 
 
-//If there are two parameters in the command line, 
-//  the first one is K, the second one is M;
-//If there is only one parameter, 
-//  we set M equal to K (this is identical to K-closest connection method)
-template <class CFG, class WEIGHT>
-void ClosestSF<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }
-    if (c >= '0' && c <= '9') {
-      if (is >> ksuccess) {
-        if (ksuccess < 0)
-  	  throw BadUsage();
-
-        c = is.peek();
-        while(c == ' ' || c == '\n') {
-          is.get();
-          c = is.peek();
-        }
-        if (c >= '0' && c <='9') {
-          if (is >> mfailure) {
-    	    if (mfailure < 0)
-	      throw BadUsage();
-          } else
-	      throw BadUsage();
-        } else 
-          mfailure = ksuccess;  
-	  //set mfailure equals to kcloest if it is not specified in the command line
-
-      } else
-        throw BadUsage();
-    }
-
-  } catch (BadUsage) {
-    cerr << "Error in \'closest\' parameters" << endl;
-    PrintUsage(cerr);
-    exit(-1);
-  }
+  mfailure = in_Node.numberXMLParameter(string("fail"), true, 0,1,1000, 
+                                  string("k-fail value"));
 
 }
+
 
 
 template <class CFG, class WEIGHT>

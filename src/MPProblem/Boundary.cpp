@@ -1,6 +1,5 @@
 #include "Boundary.h"
 #include "MPProblem.h"
-#include "Parameters.h"
 
 Boundary::Boundary() {
 /*     cout << "Boundary(). TODO ALL " << endl; */
@@ -29,15 +28,12 @@ BoundingBox(int i_dofs, int i_pos_dofs ) :
 }
 
 BoundingBox::
-BoundingBox(TiXmlNode* in_pNode,MPProblem* in_pproblem)
+BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem)
   : dofs(in_pproblem->GetDOFs()),   
     pos_dofs(in_pproblem->GetPosDOFs()) {
       LOG_DEBUG_MSG("BoundingBox::BoundingBox()");
-  if(! (string(in_pNode->Value()) == "boundary")) {
-    cout << "Error: I have not ben given <boundary>" << endl;
-    exit(-1);
-  }
 
+  in_Node.verifyName(string("boundary"));
   bounding_box.clear();
   for (int i = 0; i < dofs; i++) {
     bounding_box.push_back(pair<double,double>(0.0,1.0));
@@ -46,32 +42,32 @@ BoundingBox(TiXmlNode* in_pNode,MPProblem* in_pproblem)
     else
       par_type.push_back(REVOLUTE);
   }
-
-  for (TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    if (string(pChild->Value()) == "parameter") {
+  
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if (citr->getName() == "parameter") {
      
-      int par_id;
-      pChild->ToElement()->QueryIntAttribute("id",&par_id);
-      string par_label = string(pChild->ToElement()->Attribute("Label")); //@todo par_label is not used in bbox parameters, may want to use it
-      double par_min, par_max;
-      pChild->ToElement()->QueryDoubleAttribute("min",&par_min);
-      pChild->ToElement()->QueryDoubleAttribute("max",&par_max);
+      int par_id = citr->numberXMLParameter(string("id"),true,0,0,MAX_INT,string("id"));
+      string par_label = citr->stringXMLParameter("Label",true,"","Label");
+          //@todo par_label is not used in bbox parameters, may want to use it
+      double par_min = citr->numberXMLParameter(string("min"),true,double(0),double(-1*MAX_INT),double(MAX_INT),string("min"));
+      double par_max = citr->numberXMLParameter(string("max"),true,double(0),double(-1*MAX_INT),double(MAX_INT),string("max"));
+      
       LOG_DEBUG_MSG("BoundingBox:: setting parameter par_id="<<par_id<<" par_min="
           <<par_min<<" par_max="<<par_max);
       
       SetParameter(par_id,par_min,par_max);
-      if (string(pChild->ToElement()->Attribute("type")) == "translational")
-	par_type[par_id] = TRANSLATIONAL;
+      string type = citr->stringXMLParameter("type",true,"","type");
+      if (type == "translational")
+        par_type[par_id] = TRANSLATIONAL;
       else
-	par_type[par_id] = REVOLUTE;
+        par_type[par_id] = REVOLUTE;
     } else {
-      if (!pChild->Type() == TiXmlNode::COMMENT) {
-	cout << "  I don't know: " << *pChild << endl;
-      }
+      citr->warnUnknownNode();
     }
   }
-  double translational_scale;
-  in_pNode->ToElement()->QueryDoubleAttribute("translational_scale", &translational_scale);
+  double translational_scale = in_Node.numberXMLParameter(string("translational_scale"),true,double(0),double(-1*MAX_INT),double(MAX_INT),string("translational_scale"));
+
   TranslationalScale(translational_scale);
   LOG_DEBUG_MSG("~BoundingBox::BoundingBox()");
 }
@@ -220,7 +216,7 @@ Print(std::ostream& _os, char range_sep, char par_sep) const {
   _os << " ]";
 }
 
-
+/*
 void
 BoundingBox::
 Parse(std::stringstream &i_bbox) {
@@ -263,7 +259,7 @@ Parse(std::stringstream &i_bbox) {
 }
   SetRanges(boundingBox);
 }
-
+*/
 void
 BoundingBox::
 TranslationalScale(double scale_factor) {

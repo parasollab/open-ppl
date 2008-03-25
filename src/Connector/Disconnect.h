@@ -11,7 +11,7 @@ class Disconnect: public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   Disconnect();
-  Disconnect(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  Disconnect(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~Disconnect();
  
   //////////////////////
@@ -20,13 +20,12 @@ class Disconnect: public NodeConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-  void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   //////////////////////
   // Core: Connection method
@@ -64,12 +63,12 @@ Disconnect<CFG,WEIGHT>::Disconnect():NodeConnectionMethod<CFG,WEIGHT>() {
 }
 
 template <class CFG, class WEIGHT>
-Disconnect<CFG,WEIGHT>::Disconnect(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-    NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
+Disconnect<CFG,WEIGHT>::Disconnect(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+    NodeConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem) { 
   LOG_DEBUG_MSG("Disconnect::Disconnect()"); 
   this->element_name = "disconnect"; 
   SetDefault();
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   
   
   LOG_DEBUG_MSG("~Disconnect::Disconnect()"); 
@@ -85,17 +84,10 @@ Disconnect<CFG,WEIGHT>::~Disconnect() {
 
 
 template <class CFG, class WEIGHT>
-void Disconnect<CFG,WEIGHT>::ParseXML(TiXmlNode* in_pNode) { 
+void Disconnect<CFG,WEIGHT>::ParseXML(XMLNodeReader& in_Node) { 
   
  
 }
-
-
-template <class CFG, class WEIGHT>
-void Disconnect<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-}
-
 
 template <class CFG, class WEIGHT>
 void Disconnect<CFG,WEIGHT>::SetDefault() {

@@ -30,7 +30,7 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   BridgeTestPRM();
-  BridgeTestPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  BridgeTestPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.
   virtual ~BridgeTestPRM();
 
@@ -44,13 +44,10 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
@@ -95,7 +92,7 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
   //////////////////////////////////////////////////////////////////////////////////////////
   /**Distance from surface
    */
-  num_param<double> bridge_d;
+  double bridge_d; ///< distance, default based on environment
   //Index for next node 
   //used in incremental map generation
   static int nextNodeIndex;
@@ -112,9 +109,8 @@ int BridgeTestPRM<CFG>::nextNodeIndex = 0;
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
 BridgeTestPRM<CFG>::
-BridgeTestPRM() : NodeGenerationMethod<CFG>(),
-  bridge_d          ("d",                 0,  0,   5000000) {
-  bridge_d.PutDesc("FLOAT  ","(distance, default based on environment)");
+BridgeTestPRM() : NodeGenerationMethod<CFG>()  {
+  SetDefault();
 }
 
 
@@ -125,12 +121,11 @@ BridgeTestPRM<CFG>::
 
 template <class CFG>
 BridgeTestPRM<CFG>::
-BridgeTestPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-NodeGenerationMethod<CFG>(in_pNode, in_pProblem), 
-  bridge_d          ("d",                 0,  0,   5000000) {
+BridgeTestPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+NodeGenerationMethod<CFG>(in_Node, in_pProblem) {
   LOG_DEBUG_MSG("BridgeTestPRM::BridgeTestPRM()");
   SetDefault();
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   LOG_DEBUG_MSG("~BridgeTestPRM::BridgeTestPRM()");
 }
 
@@ -144,27 +139,15 @@ GetName() {
 template <class CFG>
 void
 BridgeTestPRM<CFG>::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("BridgeTestPRM::ParseXML()");
 //  SetDefault();
-  if(!in_pNode) {
-    LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
-  }
-  if(string(in_pNode->Value()) != "BridgeTestPRM") {
-    LOG_ERROR_MSG("Error reading <BridgeTestPRM> tag...."); exit(-1);
-  }
-  double bridge;  
-  in_pNode->ToElement()->QueryDoubleAttribute("bridge_d",&bridge);
-
-  cout <<"BRIDGE DOULBE VALUE = " << bridge << endl;
+  in_Node.verifyName(string("BridgeTestPRM"));
   
-  bridge_d.SetValue(bridge);
+  bridge_d = in_Node.numberXMLParameter(string("bridge_d"),true,double(0.0),
+                          double(0.0),double(100000.0),string("bridge_d"));  
   
-  
-  PrintValues(cout);
-  
-  
-  //PrintValues(cout);
+  PrintOptions(cout);
   LOG_DEBUG_MSG("~BridgeTestPRM::ParseXML()");
 }
 
@@ -172,7 +155,7 @@ template <class CFG>
 void BridgeTestPRM<CFG>::
 SetDefault() {
   //NodeGenerationMethod<CFG>::SetDefault();
-  bridge_d.SetValue(0);
+  bridge_d = 0;
 }
 
 template <class CFG>
@@ -198,57 +181,6 @@ IncreaseNextNodeIndex(int numIncrease) {
 
 
 template <class CFG>
-void
-BridgeTestPRM<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  for (int i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if ( this->chunkSize.AckCmdLine(&i, argc, argv) ) {
-    } else if ( this->exactNodes.AckCmdLine(&i, argc, argv) ) {
-    }else if ( bridge_d.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
-
-
-template <class CFG>
-void
-BridgeTestPRM<CFG>::
-PrintUsage(ostream& _os){
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os);
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
-  _os << "\n\t"; bridge_d.PrintUsage(_os);
-  
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-
-template <class CFG>
-void
-BridgeTestPRM<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  _os << bridge_d.GetFlag() << " " << bridge_d.GetValue() << " ";
-  _os << endl;
-}
-
-
-template <class CFG>
 NodeGenerationMethod<CFG>* 
 BridgeTestPRM<CFG>::
 CreateCopy() {
@@ -261,10 +193,10 @@ void
 BridgeTestPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
-  out_os << " exact = " << this->exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
-  out_os << " bridge d = " << bridge_d.GetValue() << " ";
+  out_os << " num nodes = " << this->numNodes << " ";
+  out_os << " exact = " << this->exactNodes << " ";
+  out_os << " chunk size = " << this->chunkSize << " ";
+  out_os << " bridge d = " << bridge_d << " ";
   out_os << endl;
 }
 
@@ -277,24 +209,24 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
         vector<CFG>& nodes) {
   LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()");
 
-  if (bridge_d.GetValue() == 0)   //if no bridge_d value given (standard deviation), calculate from robot
-    bridge_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
+  if (bridge_d == 0)   //if no bridge_d value given (standard deviation), calculate from robot
+    bridge_d = ((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
 
 #ifndef QUIET
-  cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
-  cout << "(chunkSize=" << this->chunkSize.GetValue() << ") ";
-  cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
-  cout << "(d=" << bridge_d.GetValue() << ") ";
+  cout << "(numNodes=" << this->numNodes << ") ";
+  cout << "(chunkSize=" << this->chunkSize << ") ";
+  cout << "(exactNodes=" << this->exactNodes << ") ";
+  cout << "(d=" << bridge_d << ") ";
 #endif
 
   CDInfo cdInfo;
-  BridgeTestRandomFreeSampler<CFG> bridge_sampler(_env, Stats, cd, cdInfo, dm, bridge_d.GetValue());
+  BridgeTestRandomFreeSampler<CFG> bridge_sampler(_env, Stats, cd, cdInfo, dm, bridge_d);
   int nodes_offset = nodes.size();
 
-  for(int i=0; i<this->numNodes.GetValue(); ++i) {
+  for(int i=0; i<this->numNodes; ++i) {
     CFG tmp;
     tmp.GetRandomCfg(_env);
-    if(this->exactNodes.GetValue() == 1)
+    if(this->exactNodes == 1)
       while(!bridge_sampler(tmp, nodes, 1)) {
         tmp.GetRandomCfg(_env);
       }

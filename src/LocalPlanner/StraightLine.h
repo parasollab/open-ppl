@@ -21,13 +21,12 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 
   ///Default Constructor.
   StraightLine(cd_predefined _cdtype);
-  StraightLine(cd_predefined _cdtype, TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem);
 
   ///Destructor.  
   virtual ~StraightLine();
 
   //@}
-  virtual bool SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const;
 
   //////////////////////
   // Access
@@ -36,7 +35,6 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
   ///Used in new MPProblem framework.
@@ -163,9 +161,9 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
     */
   //usingClearance and lineSegment were static in the original LocalPlanner
   //bool usingClearance;
-  num_param<int> binarySearch;///<Mantain certain amount of clearance of Robot duing connection time.
-  //int lineSegmentLength;///< default is 0.
-  num_param<int>    lineSegmentLength;///< default is 0.
+  int binarySearch;///<Mantain certain amount of clearance of Robot duing connection time.
+  
+  int lineSegmentLength;///< default is 0.
 
   cd_predefined cdtype;
 };
@@ -178,41 +176,23 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 /////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
-StraightLine(cd_predefined _cdtype) : LocalPlannerMethod<CFG, WEIGHT>(),
-  lineSegmentLength      ("lineSegmentLength",        0,  0, 5000),
-  binarySearch   ("binarySearch",          0,  0,    1) {
-  lineSegmentLength.PutDesc      ("INTEGER","(lineSegmentLength, default 0");
-  binarySearch.PutDesc   ("INTEGER","(check line sequentially(0 default) or with a binary search(1)");
+StraightLine(cd_predefined _cdtype) : LocalPlannerMethod<CFG, WEIGHT>() {
   cdtype = _cdtype;
-
- 
-
-
 }
 
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
-StraightLine(cd_predefined _cdtype, TiXmlNode* in_pNode, MPProblem* in_pProblem) : LocalPlannerMethod<CFG, WEIGHT>(in_pNode,in_pProblem),
-  lineSegmentLength      ("lineSegmentLength",        0,  0, 5000),
-  binarySearch   ("binarySearch",          0,  0,    1) {
-  lineSegmentLength.PutDesc      ("INTEGER","(lineSegmentLength, default 0");
-  binarySearch.PutDesc   ("INTEGER","(check line sequentially(0 default) or with a binary search(1)");
+StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+      LocalPlannerMethod<CFG, WEIGHT>(in_Node,in_pProblem) {
+
   cdtype = _cdtype;
   LOG_DEBUG_MSG("StraightLine::StraightLine()");
 
-  int length; 
-  if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("length",&length)) {
-        lineSegmentLength.SetValue(length);
-      } else {
-        LOG_DEBUG_MSG("StraightLine::length not found");
-      }
- 
-  int binary_search;
-  if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryIntAttribute("binary_search",&binary_search)) {
-        binarySearch.SetValue(binary_search);
-      } else {
-        LOG_DEBUG_MSG("StraightLine::binary_search not Found");
-      }
+  lineSegmentLength = in_Node.numberXMLParameter(string("length"),false,0,0,5000, string("lineSegmentLength")); 
+  
+  binarySearch = in_Node.numberXMLParameter(string("binary_search"),false,0,0,1, string("binary search")); 
+  
+  in_Node.warnUnrequestedAttributes();
   LOG_DEBUG_MSG("~StraightLine::StraightLine()");
 }
 
@@ -222,17 +202,6 @@ StraightLine<CFG, WEIGHT>::
 ~StraightLine() {
 }
 
-
-template <class CFG, class WEIGHT>
-bool
-StraightLine<CFG, WEIGHT>::
-SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const {
-  bool result = false;
-  if (lineSegmentLength.GetValue() == ((StraightLine<CFG,WEIGHT>&) other).lineSegmentLength.GetValue() &&  
-      binarySearch.GetValue() == ((StraightLine<CFG,WEIGHT>&) other).binarySearch.GetValue())
-    result = true;
-  return result;
-}
 
 
 template <class CFG, class WEIGHT>
@@ -248,29 +217,10 @@ void
 StraightLine<CFG, WEIGHT>::
 SetDefault() {
   LocalPlannerMethod<CFG, WEIGHT>::SetDefault();
-  lineSegmentLength.PutValue(0);
-  binarySearch.PutValue(0);
+  lineSegmentLength = 0;
+  binarySearch = 0;
 }
 
-template <class CFG, class WEIGHT>
-void
-StraightLine<CFG, WEIGHT>::
-ParseCommandLine(int argc, char **argv) {
-  for (int i = 1; i < argc; ++i) {    
-    if( lineSegmentLength.AckCmdLine(&i, argc, argv) ) {
-    } 
-    else if ( binarySearch.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
 
 
 template <class CFG, class WEIGHT>
@@ -280,8 +230,8 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; lineSegmentLength.PrintUsage(_os);
-  _os << "\n\t"; binarySearch.PrintUsage(_os);
+  _os << "\n\t" << lineSegmentLength;
+  _os << "\n\t" << binarySearch;
  
   _os.setf(ios::right,ios::adjustfield);
 }
@@ -291,8 +241,8 @@ void
 StraightLine<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
   _os << GetName() << " ";
-  _os << lineSegmentLength.GetFlag() << " " << lineSegmentLength.GetValue() << " ";
-  _os << binarySearch.GetFlag() << " " << binarySearch.GetValue() << " ";
+  //_os << "lineSegmentLength" << " " << lineSegmentLength << " ";
+  //_os << "binarySearch" << " " << binarySearch << " ";
   _os << endl;
 }
 
@@ -302,8 +252,8 @@ void
 StraightLine<CFG, WEIGHT>::
 PrintOptions(ostream& out_os) {
   out_os << "    " << GetName() << "::  ";
-  out_os << "line segment length = " << " " << lineSegmentLength.GetValue() << " ";
-  out_os << "binary search = " << " " << binarySearch.GetValue() << " ";
+  out_os << "line segment length = " << " " << lineSegmentLength << " ";
+  out_os << "binary search = " << " " << binarySearch << " ";
   out_os << endl;
 }
 
@@ -336,14 +286,14 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
 
   ///\todo fix this bug ... CD count not right.
   ///\todo fix lineSegment implementation!  very poor for counting stats, etc.
-  if(lineSegmentLength.GetValue()) {
+  if(lineSegmentLength) {
     Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
     if( lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
        return false;  //not connected
     }
   }
     bool connected;
-    if(binarySearch.GetValue()) 
+    if(binarySearch) 
       connected = IsConnectedSLBinary(_env, Stats, cd, dm, _c1, _c2, lpOutput, 
                                       cd_cntr, positionRes, orientationRes, 
                                       checkCollision, savePath, saveFailedPath);
@@ -384,7 +334,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
     if(!success)
       return false;
     
-    if(binarySearch.GetValue()) {
+    if(binarySearch) {
       connected = (IsConnectedSLBinary(_env, Stats, cd, dm, 
 				       _c1, intermediate, 
 				       lpOutput, cd_cntr, 
@@ -446,7 +396,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
     }
   } else {
     cout << "orientations same\n";
-    if(binarySearch.GetValue()) {
+    if(binarySearch) {
       connected = IsConnectedSLBinary(_env, Stats, cd, dm,
 				      _c1, _c2,
 				      lpOutput, cd_cntr, 
@@ -538,7 +488,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     int steps = (int)(diff.PositionMagnitude()/positionRes);
     //delete diff;
     
-    if( steps <= lineSegmentLength.GetValue() )
+    if( steps <= lineSegmentLength )
       return false;
     
     //before really starting to connect the two cfgs, ie. _c1, _c2.

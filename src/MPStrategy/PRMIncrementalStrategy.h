@@ -7,7 +7,6 @@
 
 #include "OBPRMDef.h"
 #include "Roadmap.h"
-#include "Input.h"
 
 #include "Clock_Class.h"
 #include "Stat_Class.h"
@@ -32,17 +31,17 @@
 class PRMIncrementalStrategy : public MPStrategyMethod {
   public:
 
-  PRMIncrementalStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPStrategyMethod(in_pNode,in_pProblem) {
+  PRMIncrementalStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPStrategyMethod(in_Node,in_pProblem) {
     LOG_DEBUG_MSG("PRMIncrementalStrategy::PRMIncrementalStrategy()");
-    ParseXML(in_pNode);    
+    ParseXML(in_Node);    
     LOG_DEBUG_MSG("~PRMIncrementalStrategy::PRMIncrementalStrategy()");
     };
   virtual ~PRMIncrementalStrategy() {}
 
   virtual void PrintOptions(ostream& out_os) { };
 
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   virtual void operator()(int in_RegionID);
 

@@ -23,8 +23,7 @@ class ApproxSpheres: public LocalPlannerMethod<CFG, WEIGHT> {
   virtual ~ApproxSpheres();
 
   //@}
-  virtual bool SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const;
-
+  
   //////////////////////
   // Access
   virtual char* GetName() const;
@@ -32,7 +31,6 @@ class ApproxSpheres: public LocalPlannerMethod<CFG, WEIGHT> {
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
@@ -66,7 +64,7 @@ class ApproxSpheres: public LocalPlannerMethod<CFG, WEIGHT> {
   //
   //////////////////////////////////////////////////////////////////////////////////////////
  protected:
-  num_param<int> n;///< Number of times Cfg::ApproxCSpaceClearance will try to find clearance.
+  int n;///< Number of times Cfg::ApproxCSpaceClearance will try to find clearance.
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -78,26 +76,14 @@ class ApproxSpheres: public LocalPlannerMethod<CFG, WEIGHT> {
 
 template <class CFG, class WEIGHT>
 ApproxSpheres<CFG, WEIGHT>::
-ApproxSpheres() : LocalPlannerMethod<CFG, WEIGHT>(),
-  n      ("n",        3,  0, 5000) {
-  n.PutDesc      ("INTEGER","(n, default 3");
+ApproxSpheres() : LocalPlannerMethod<CFG, WEIGHT>(){
+  SetDefault();
 }
 
 
 template <class CFG, class WEIGHT>
 ApproxSpheres<CFG, WEIGHT>::
 ~ApproxSpheres() {
-}
-
-
-template <class CFG, class WEIGHT>
-bool
-ApproxSpheres<CFG, WEIGHT>::
-SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const {
-  bool result = false;
-  if (n.GetValue() == ((ApproxSpheres<CFG,WEIGHT>&) other).n.GetValue())
-    result = true;
-  return result;
 }
 
 
@@ -113,28 +99,9 @@ template <class CFG, class WEIGHT>
 void
 ApproxSpheres<CFG, WEIGHT>::
 SetDefault() {
-  LocalPlannerMethod<CFG, WEIGHT>::SetDefault();
-  n.PutValue(3);
+  n = 3;
 }
 
-
-template <class CFG, class WEIGHT>
-void
-ApproxSpheres<CFG, WEIGHT>::
-ParseCommandLine(int argc, char **argv) {
-  for (int i = 1; i < argc; ++i) {
-    if( n.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr <<"\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
 
 
 template <class CFG, class WEIGHT>
@@ -144,7 +111,7 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; n.PrintUsage(_os);
+  _os << "\n\t" << n;
  
   _os.setf(ios::right,ios::adjustfield);
 }
@@ -155,7 +122,7 @@ void
 ApproxSpheres<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
   _os  << GetName() << " ";
-  _os << n.GetFlag() << " " << n.GetValue() << " ";
+  _os << "n" << " " << n << " ";
   _os << endl;
 }
 
@@ -190,12 +157,12 @@ IsConnected(Environment *_env, Stat_Class& Stats,
     c1_clearance = _c1.clearance;
   else
     c1_clearance = _c1.ApproxCSpaceClearance(_env,Stats,cd,*this->cdInfo,
-					     dm,n.GetValue(),false);
+					     dm,n,false);
   if (_c2.clearance != -1)
     c2_clearance = _c2.clearance;
   else
     c2_clearance = _c2.ApproxCSpaceClearance(_env,Stats,cd,*this->cdInfo,
-					     dm,n.GetValue(),false);
+					     dm,n,false);
   
   Stats.IncLPCollDetCalls("ApproxSpheres", cd_cntr);
   if (c1_clearance + c2_clearance >= dist) {

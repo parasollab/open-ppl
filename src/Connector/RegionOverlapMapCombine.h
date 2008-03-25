@@ -14,7 +14,6 @@ class RegionOverlapMapCombine: public ConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
   virtual ConnectionMethod<CFG,WEIGHT>* CreateCopy();
@@ -79,13 +78,6 @@ template <class CFG, class WEIGHT>
 void
 RegionOverlapMapCombine<CFG,WEIGHT>::
 SetDefault() {
-
-}
-
-template <class CFG, class WEIGHT>
-void
-RegionOverlapMapCombine<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
 
 }
 

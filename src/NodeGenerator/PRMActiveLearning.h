@@ -28,7 +28,7 @@ class PRMActiveLearning: public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   PRMActiveLearning();
-  PRMActiveLearning(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  PRMActiveLearning(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.	
   virtual ~PRMActiveLearning();
 
@@ -40,13 +40,10 @@ class PRMActiveLearning: public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
@@ -65,8 +62,8 @@ class PRMActiveLearning: public NodeGenerationMethod<CFG> {
   //used in incremental map generation
   static int nextNodeIndex;
 
-  num_param<int> ksamples;
-  num_param<int> kneighbors;  
+  int ksamples; ///< number of samples to select from during each round, default 5
+  int kneighbors; ///< number of neighbors to look at when determining the probability a sample is free, default 10
 };
 
 
@@ -80,11 +77,8 @@ int PRMActiveLearning<CFG>::nextNodeIndex = 0;
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
 PRMActiveLearning<CFG>::
-PRMActiveLearning() : NodeGenerationMethod<CFG>(), 
-     ksamples ("ksamples", 5, 0, 5000000),
-     kneighbors ("kneighbors", 10, 0, 5000000) {
-  ksamples.PutDesc("INTEGER","(number of samples to select from during each round, default 5)");
-  kneighbors.PutDesc("INTEGER","(number of neighbors to look at when determining the probability a sample is free, default 10)");
+PRMActiveLearning() : NodeGenerationMethod<CFG>() {
+   // SetDefault();
 }
 
 
@@ -96,14 +90,10 @@ PRMActiveLearning<CFG>::
 
 template <class CFG>
 PRMActiveLearning<CFG>::
-PRMActiveLearning(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-NodeGenerationMethod<CFG>(in_pNode, in_pProblem),
-ksamples ("ksamples", 5, 0, 5000000),
-kneighbors ("kneighbors", 10, 0, 5000000) {
+PRMActiveLearning(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+NodeGenerationMethod<CFG>(in_Node, in_pProblem) {
   LOG_DEBUG_MSG("PRMActiveLearning::PRMActiveLearning()");
-  ksamples.PutDesc("INTEGER","(number of samples to select from during each round, default 5)");
-  kneighbors.PutDesc("INTEGER","(number of neighbors to look at when determining the probability a sample is free, default 10)");
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   LOG_DEBUG_MSG("~PRMActiveLearning::PRMActiveLearning()");
 }
 
@@ -119,27 +109,17 @@ GetName() {
 template <class CFG>
 void
 PRMActiveLearning<CFG>::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("PRMActiveLearning::ParseXML()");
-  ksamples.PutValue(5);
-  kneighbors.PutValue(10);
 
-  if(!in_pNode) {
-    LOG_ERROR_MSG("Error reading <shells> tag..."); exit(-1);
-  }
-  if(string(in_pNode->Value()) != "PRMActiveLearning") {
-    LOG_ERROR_MSG("Error reading <GaussPRM> tag..."); exit(-1);
-  }
+  in_Node.verifyName(string("PRMActiveLearning"));
+  
+  ksamples = in_Node.numberXMLParameter(string("ksamples"),true,5,1,MAX_INT,string("ksamples"));
 
-  int samples;
-  in_pNode->ToElement()->QueryIntAttribute("ksamples",&samples);
-  ksamples.SetValue(samples);
+  kneighbors = in_Node.numberXMLParameter(string("kneighbors"),
+                  true,10,1,MAX_INT,string("kneighbors"));
 
-  int neighbors;
-  in_pNode->ToElement()->QueryIntAttribute("kneighbors",&neighbors);
-  kneighbors.SetValue(neighbors);
-
-  PrintValues(cout);
+  PrintOptions(cout);
   LOG_DEBUG_MSG("~PRMActiveLearning::ParseXML()");
 }
 
@@ -169,60 +149,6 @@ IncreaseNextNodeIndex(int numIncrease) {
 
 
 template <class CFG>
-void
-PRMActiveLearning<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  int i;
-  for (i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) || 
-        this->chunkSize.AckCmdLine(&i, argc, argv) ||
-	this->exactNodes.AckCmdLine(&i, argc, argv) ||
-        ksamples.AckCmdLine(&i, argc, argv) ||
-        kneighbors.AckCmdLine(&i, argc, argv)) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
-
-
-template <class CFG>
-void
-PRMActiveLearning<CFG>::
-PrintUsage(ostream& _os){
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os); _os << " ";
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os); _os << " ";
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os); _os << " ";
-  _os << "\n\t"; this->ksamples.PrintUsage(_os); _os << " ";
-  _os << "\n\t"; this->kneighbors.PrintUsage(_os); _os << " ";
-
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-template <class CFG>
-void
-PRMActiveLearning<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " <<this->chunkSize.GetValue() << " ";
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  _os << this->ksamples.GetFlag() << " " << this->ksamples.GetValue() << " ";
-  _os << this->kneighbors.GetFlag() << " " << this->kneighbors.GetValue();
-  _os << endl;
-}
-
-
-template <class CFG>
 NodeGenerationMethod<CFG>* 
 PRMActiveLearning<CFG>::
 CreateCopy() {
@@ -236,12 +162,12 @@ void
 PRMActiveLearning<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
-  out_os << " exact = " << this->exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
+  out_os << " num nodes = " << this->numNodes << " ";
+  out_os << " exact = " << this->exactNodes << " ";
+  out_os << " chunk size = " << this->chunkSize << " ";
   out_os << " MaxCDCalls = " << this->m_nMaxCdCalls << " ";
-  out_os << " ksamples = " << this->ksamples.GetValue() << " ";
-  out_os << " kneighbors = " << this->kneighbors.GetValue() << " ";
+  out_os << " ksamples = " << this->ksamples << " ";
+  out_os << " kneighbors = " << this->kneighbors << " ";
   out_os << endl;
 }
 
@@ -313,22 +239,22 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   string callee("PRMActiveLearning::GenerateNodes");
   LOG_DEBUG_MSG("PRMActiveLearning::GenerateNodes()");	
 #ifndef QUIET
-  if (this->exactNodes.GetValue()==1)
-     cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
+  if (this->exactNodes==1)
+     cout << "(numNodes=" << this->numNodes << ") ";
   else
-    cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
+    cout << "(exactNodes=" << this->exactNodes << ") ";
 #endif
   
   vector<Cfg*> path;
 
   ApproximateCSpaceModel<CFG> model(_env, dm);
 
-  for(int i=0; i<this->numNodes.GetValue(); ++i) {
+  for(int i=0; i<this->numNodes; ++i) {
     Stats.IncNodes_Attempted();
 
     //generate a list of random samples to select the 1 with highest probability of being free
     vector<CFG> samples;
-    for(int j=0; j<ksamples.GetValue(); ++j) {
+    for(int j=0; j<ksamples; ++j) {
       CFG c;
       c.GetRandomCfg(_env);
       samples.push_back(c);
@@ -338,7 +264,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     vector<double> free_prob;
     for(typename vector<CFG>::const_iterator S = samples.begin(); 
 	S != samples.end(); ++S) {
-      free_prob.push_back(model.FreeProbability(*S, kneighbors.GetValue()));
+      free_prob.push_back(model.FreeProbability(*S, kneighbors));
     }
     
     //select the sample with the greatest probability
@@ -358,7 +284,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
       Stats.IncNodes_Generated();
     } else {
       model.AddSample(*S, 0);
-      if(this->exactNodes.GetValue() == 1)
+      if(this->exactNodes == 1)
 	i--;
     }
   }

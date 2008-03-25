@@ -196,10 +196,14 @@ WriteRoadmapForVizmo(ostream& myofstream) {
   myofstream << endl << GetMPProblem()->GetEnvFileName();
   myofstream << endl << "#####ENVFILESTOP#####";
   
-  GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->WriteLPs(myofstream);
-  GetMPProblem()->GetCollisionDetection()->WriteCDs(myofstream);
-  GetMPProblem()->GetDistanceMetric()->WriteDMs(myofstream);
-  GetRoadmap()->WriteRNGseed(myofstream);
+  //GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->WriteLPs(myofstream);
+  //GetMPProblem()->GetCollisionDetection()->WriteCDs(myofstream);
+  //GetMPProblem()->GetDistanceMetric()->WriteDMs(myofstream);
+  //GetRoadmap()->WriteRNGseed(myofstream);
+
+  GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->PrintOptions(myofstream);
+  GetMPProblem()->GetCollisionDetection()->PrintOptions(myofstream);
+  GetMPProblem()->GetDistanceMetric()->PrintOptions(myofstream);
 
   GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
   

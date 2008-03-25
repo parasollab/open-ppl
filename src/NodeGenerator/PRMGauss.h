@@ -30,7 +30,7 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   GaussPRM();
-  GaussPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  GaussPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.
   virtual ~GaussPRM();
 
@@ -44,14 +44,11 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
@@ -91,7 +88,7 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
   //////////////////////////////////////////////////////////////////////////////////////////
   /**Distance from surface to retain Gausian
    */
-  num_param<double> gauss_d;
+  double gauss_d; ///< distance, default based on environment
   //Index for next node 
   //used in incremental map generation
   static int nextNodeIndex;
@@ -109,9 +106,8 @@ int GaussPRM<CFG>::nextNodeIndex = 0;
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
 GaussPRM<CFG>::
-GaussPRM() : NodeGenerationMethod<CFG>(),
-  gauss_d          ("d",                 0,  0,   5000000) {
-  gauss_d.PutDesc("FLOAT  ","(distance, default based on environment)");
+GaussPRM() : NodeGenerationMethod<CFG>() {
+    SetDefault();
 }
 
 
@@ -122,12 +118,10 @@ GaussPRM<CFG>::
 
 template <class CFG>
 GaussPRM<CFG>::
-GaussPRM(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-NodeGenerationMethod<CFG>(in_pNode, in_pProblem),
-gauss_d          ("d",                 0,  0,   5000000) {
+GaussPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+NodeGenerationMethod<CFG>(in_Node, in_pProblem) {
   LOG_DEBUG_MSG("GaussPRM::GaussPRM()");
-  gauss_d.PutDesc("FLOAT  ","(distance, default based on environment)");
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   LOG_DEBUG_MSG("~GaussPRM::GaussPRM()");
 }
 
@@ -142,23 +136,14 @@ GetName() {
 template <class CFG>
 void
 GaussPRM<CFG>::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("GaussPRM::ParseXML()");
- // SetDefault();
-  gauss_d.PutValue(0);
-  if(!in_pNode) {
-    LOG_ERROR_MSG("Error reading <shells> tag...."); exit(-1);
-  }
-  if(string(in_pNode->Value()) != "GaussPRM") {
-    LOG_ERROR_MSG("Error reading <GaussPRM> tag...."); exit(-1);
-  }
-  double gauss;  
-  in_pNode->ToElement()->QueryDoubleAttribute("gauss_d",&gauss);
+
+  in_Node.verifyName(string("GaussPRM"));
+  gauss_d = in_Node.numberXMLParameter(string("gauss_d"),true,double(0.0),
+                          double(0.0),double(100000.0),string("gauss_d")); 
   
-  gauss_d.SetValue(gauss);
-  
-  
-  PrintValues(cout);
+  PrintOptions(cout);
   LOG_DEBUG_MSG("~GaussPRM::ParseXML()");
 }
 
@@ -167,7 +152,7 @@ template <class CFG>
 void GaussPRM<CFG>::
 SetDefault() {
   NodeGenerationMethod<CFG>::SetDefault();
-  gauss_d.PutValue(0);
+  gauss_d = double(0.0);
 }
 
 
@@ -194,57 +179,6 @@ IncreaseNextNodeIndex(int numIncrease) {
 
 
 template <class CFG>
-void
-GaussPRM<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  for (int i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if ( this->chunkSize.AckCmdLine(&i, argc, argv) ) {
-    } else if ( this->exactNodes.AckCmdLine(&i, argc, argv) ) {
-    } else if ( gauss_d.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
-
-
-template <class CFG>
-void
-GaussPRM<CFG>::
-PrintUsage(ostream& _os){
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os);
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os);
-  _os << "\n\t"; gauss_d.PrintUsage(_os);
-  
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-
-template <class CFG>
-void
-GaussPRM<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " << this->chunkSize.GetValue() << " ";
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  _os << gauss_d.GetFlag() << " " << gauss_d.GetValue() << " ";
-  _os << endl;
-}
-
-
-template <class CFG>
 NodeGenerationMethod<CFG>* 
 GaussPRM<CFG>::
 CreateCopy() {
@@ -257,10 +191,10 @@ void
 GaussPRM<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
-  out_os << " exact = " << this->exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
-  out_os << " gauss_d = " << this->gauss_d.GetValue() << " ";
+  out_os << " num nodes = " << this->numNodes << " ";
+  out_os << " exact = " << this->exactNodes << " ";
+  out_os << " chunk size = " << this->chunkSize << " ";
+  out_os << " gauss_d = " << this->gauss_d << " ";
   out_os << endl;
 }
 
@@ -272,24 +206,24 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      vector<CFG>& nodes) {
   LOG_DEBUG_MSG("GaussPRM::GenerateNodes()");	
 
-  if (gauss_d.GetValue() == 0)  //if no Gauss_d value given, calculate from robot
-    gauss_d.PutValue((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
+  if (gauss_d == double(0.0))  //if no Gauss_d value given, calculate from robot
+    gauss_d = ((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
 
 #ifndef QUIET
-  cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
-  cout << "(chunkSize=" << this->chunkSize.GetValue() << ") ";
-  cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
-  cout << "(d=" << gauss_d.GetValue() << ") ";
+  cout << "(numNodes=" << this->numNodes << ") ";
+  cout << "(chunkSize=" << this->chunkSize << ") ";
+  cout << "(exactNodes=" << this->exactNodes << ") ";
+  cout << "(d=" << gauss_d << ") ";
 #endif
 
   CDInfo cdInfo;
-  GaussRandomSampler<CFG,true> gauss_sampler(_env, Stats, cd, cdInfo, dm, gauss_d.GetValue());
+  GaussRandomSampler<CFG,true> gauss_sampler(_env, Stats, cd, cdInfo, dm, gauss_d);
   int nodes_offset = nodes.size();
 
-  for(int i=0; i<this->numNodes.GetValue(); ++i) {    
+  for(int i=0; i<this->numNodes; ++i) {    
     CFG tmp;
     tmp.GetRandomCfg(_env);
-    if(this->exactNodes.GetValue() == 1)
+    if(this->exactNodes == 1)
       while(!gauss_sampler(tmp, nodes, 1)) {
         tmp.GetRandomCfg(_env);
       }

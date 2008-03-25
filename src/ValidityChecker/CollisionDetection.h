@@ -118,13 +118,12 @@ const int Exact = 2;    ///<Type Exact: no collision sure; collision sure.
 class CollisionDetection : MPBaseObject {
  public:
   CollisionDetection();
-  CollisionDetection(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   CollisionDetection(vector<CollisionDetectionMethod*>& _selected);
   virtual ~CollisionDetection();
   
   static vector<CollisionDetectionMethod*> GetDefault();
   
-  int ReadCommandLine(n_str_param* CDstrings[MAX_CD], int numCDs);
   void PrintUsage(ostream& _os) const;
   void PrintValues(ostream& _os) const;
   void PrintDefaults(ostream& _os) const;
@@ -134,19 +133,19 @@ class CollisionDetection : MPBaseObject {
    *@param _fname filename for data file.
    *@see WriteCDs(ostream& _myostream)
    */
-  void WriteCDs(const char* _fname) const;
+  ///void WriteCDs(const char* _fname) const;
   
   /**Ouput information about all CD instances to ouputstream.
    *@note format: CD_NAME (a string) \n for each CD instance.
    *@see GetCDs
    */
-  void WriteCDs(ostream& _myostream) const;
+  //void WriteCDs(ostream& _myostream) const;
   
   /**Read information about CD instances from file.
    *@param _fname filename for data file.
    *@see ReadCDs(istream& _myistream)
    */
-  void ReadCDs(const char* _fname);
+  //void ReadCDs(const char* _fname);
   
   /**Read information about CD instances from input stream.
    *This methods read and add CD instances to universe.
@@ -156,7 +155,7 @@ class CollisionDetection : MPBaseObject {
    *input file format, then error message will be post to 
    *standard output.
    */
-  void ReadCDs(istream& _myistream);
+  //void ReadCDs(istream& _myistream);
 
   /**Check collision for Robot with all Obstacles in Environment.
    *

@@ -3,7 +3,6 @@
 
 #include "OBPRMDef.h"
 #include "Roadmap.h"
-#include "Input.h"
 
 #include "Clock_Class.h"
 #include "Stat_Class.h"
@@ -32,43 +31,28 @@
 
 void 
 PRMIncrementalStrategy::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("PRMIncrementalStrategy::ParseXML()");
   //OBPRM_srand(getSeed()); 
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-     if(string(pChild->Value()) == "node_generation_method") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      if(in_char) {
-        string node_generation_method(in_char);
-        m_vecStrNodeGenLabels.push_back(node_generation_method);
-      }
-    } else if(string(pChild->Value()) == "node_connection_method") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      LOG_DEBUG_MSG("PRMIncrementalStrategy::ParseXML() -- node_connection_method");
-      if(in_char) {
-        string connect_method(in_char);
-        m_vecStrNodeConnectionLabels.push_back(connect_method);
-      }
-    } else if(string(pChild->Value()) == "NodeCharacterizer") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      if(in_char) {
-        string node_char(in_char);
-        m_vecNodeCharacterizerLabels.push_back(node_char);
-      }
-    } else if(string(pChild->Value()) == "component_connection_method") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      LOG_DEBUG_MSG("PRMIncrementalStrategy::ParseXML() -- component_connection_method");
-      if(in_char) {
-        string connect_method(in_char);
-        m_vecStrComponentConnectionLabels.push_back(connect_method);
-      }
-    } else if(string(pChild->Value()) == "WitnessQuery") {
-      const char* in_char = pChild->ToElement()->Attribute("Filename");
-      if(in_char) {
-        string node_char(in_char);
-        m_strWitnessFilename = node_char;
-      }
-    } 
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+     if(citr->getName() == "node_generation_method") {
+      string node_gen_method = citr->stringXMLParameter("Method",true,"","Method");
+      m_vecStrNodeGenLabels.push_back(node_gen_method);
+    } else if(citr->getName() == "node_connection_method") {
+      string connect_method = citr->stringXMLParameter("Method",true,"","Method");
+      m_vecStrNodeConnectionLabels.push_back(connect_method);
+    } else if(citr->getName() == "NodeCharacterizer") {
+      string node_char = citr->stringXMLParameter("Method",true,"","Method");
+      m_vecNodeCharacterizerLabels.push_back(node_char);
+    } else if(citr->getName() == "component_connection_method") {
+      string connect_method = citr->stringXMLParameter("Method",true,"","Method");
+      m_vecStrComponentConnectionLabels.push_back(connect_method);
+    } else if(citr->getName() == "WitnessQuery") {
+      m_strWitnessFilename = citr->stringXMLParameter("Filename",true,"","Filename");
+    } else {
+      citr->warnUnknownNode();
+    }
   }
   
   //--------------------------

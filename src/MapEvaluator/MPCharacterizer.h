@@ -8,10 +8,10 @@ template<typename CFG,typename WEIGHT>
 class NodeCharacterizerMethod : public MPBaseObject 
 {
   public:
-    NodeCharacterizerMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-      MPBaseObject(in_pNode,in_pProblem) { };
+    NodeCharacterizerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+      MPBaseObject(in_Node,in_pProblem) { };
     virtual ~NodeCharacterizerMethod() {}
-    virtual void ParseXML(TiXmlNode* in_pNode)=0;
+    virtual void ParseXML(XMLNodeReader& in_Node)=0;
     virtual void Characterize(MPRegion<CFG,WEIGHT>*)=0;
     virtual void Characterize(MPRegion<CFG,WEIGHT>*, VID) {};
     virtual void PrintOptions(ostream& out_os)=0;
@@ -24,14 +24,14 @@ template<typename CFG,typename WEIGHT>
 class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 {
   public: 
-    CCExpandCharacterizer(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-      NodeCharacterizerMethod<CFG,WEIGHT>(in_pNode,in_pProblem) {
+    CCExpandCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+      NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
       LOG_DEBUG_MSG("CCExpandCharacterizer::LocalNodeInfoCharacterizer()");
-      ParseXML(in_pNode);    
+      ParseXML(in_Node);    
       LOG_DEBUG_MSG("~CCExpandCharacterizer::LocalNodeInfoCharacterizer()");
     };
     
-    virtual void ParseXML(TiXmlNode* in_pNode) {
+    virtual void ParseXML(XMLNodeReader& in_Node) {
       LOG_DEBUG_MSG("CCExpandCharacterizer::ParseXML()");
       LOG_DEBUG_MSG("~CCExpandCharacterizer::ParseXML()");
     };
@@ -91,27 +91,23 @@ template<typename CFG,typename WEIGHT>
 class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 {
   public: 
-    LocalNodeInfoCharacterizer(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-      NodeCharacterizerMethod<CFG,WEIGHT>(in_pNode,in_pProblem) {
+    LocalNodeInfoCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+      NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
       
       LOG_DEBUG_MSG("LocalNodeInfoCharacterizer::LocalNodeInfoCharacterizer()");
       m_dRadius = 0;
-      ParseXML(in_pNode);    
+      ParseXML(in_Node);    
       LOG_DEBUG_MSG("~LocalNodeInfoCharacterizer::LocalNodeInfoCharacterizer()");
     };
     
-    virtual void ParseXML(TiXmlNode* in_pNode) {
+    virtual void ParseXML(XMLNodeReader& in_Node) {
       LOG_DEBUG_MSG("LocalNodeInfoCharacterizer::ParseXML()");
       
-      double radius;
-      int query = in_pNode->ToElement()->QueryDoubleAttribute("radius", &radius);
-      if(query == TIXML_SUCCESS ) {
-        m_dRadius = radius;
-      }
-      else {
-          LOG_WARNING_MSG("LocalNodeInfoCharacterizer::  I don't know: "<< endl << *in_pNode);
-      }
-     
+
+      m_dRadius = in_Node.numberXMLParameter(string("radius"),true,double(0.5),
+                                          double(0.0),double(1000.0),
+                                          string("Radius Value")); 
+      
       LOG_DEBUG_MSG("~LocalNodeInfoCharacterizer::ParseXML()");
     };
       
@@ -192,29 +188,28 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 template<typename CFG, typename WEIGHT>
 class MPCharacterizer : public MPBaseObject {
 public:
-  MPCharacterizer(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-      MPBaseObject(in_pNode, in_pProblem) {
+  MPCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+      MPBaseObject(in_Node, in_pProblem) {
     LOG_DEBUG_MSG( "MPCharacterizer::MPCharacterizer()");
-    ParseXML(in_pNode);
+    ParseXML(in_Node);
     LOG_DEBUG_MSG( "~MPCharacterizer::MPCharacterizer()");
   }
   
-  void ParseXML(TiXmlNode* in_pNode) {
+  void ParseXML(XMLNodeReader& in_Node) {
     LOG_DEBUG_MSG("MPCharacterizer::ParseXML()");
-      
-    for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; 
-      pChild = pChild->NextSibling()) {
-      
-      if(string(pChild->Value()) == "LocalNodeInfoCharacterizer") {
+    
+    XMLNodeReader::childiterator citr;
+    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {   
+      if(citr->getName() == "LocalNodeInfoCharacterizer") {
         LocalNodeInfoCharacterizer<CFG,WEIGHT>* localnodeinfo = 
-            new LocalNodeInfoCharacterizer<CFG,WEIGHT>(pChild,this->GetMPProblem());
+            new LocalNodeInfoCharacterizer<CFG,WEIGHT>(*citr,this->GetMPProblem());
         all_NodeCharacterizerMethod.push_back(localnodeinfo);
-      } else if(string(pChild->Value()) == "CCExpandCharacterizer") {
+      } else if(citr->getName() == "CCExpandCharacterizer") {
         CCExpandCharacterizer<CFG,WEIGHT>* expandchar = 
-            new CCExpandCharacterizer<CFG,WEIGHT>(pChild,this->GetMPProblem());
+            new CCExpandCharacterizer<CFG,WEIGHT>(*citr,this->GetMPProblem());
         all_NodeCharacterizerMethod.push_back(expandchar);
       } else {
-        LOG_WARNING_MSG("MPCharacterizer::  I don't know: "<< endl << *pChild);
+        citr->warnUnrequestedAttributes();
       }
     }
     LOG_DEBUG_MSG("~MPCharacterizer::ParseXML()");

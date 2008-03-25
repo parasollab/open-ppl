@@ -22,23 +22,19 @@ class MapEvaluator : public MPBaseObject {
   MapEvaluator(const vector<MapEvaluationMethod<CFG,WEIGHT>*>& e) : 
     m_conditional_evaluators(e), MapEvaluator() {
   }
-  MapEvaluator(TiXmlNode* in_pNode, MPProblem* in_pProblem) {
+  MapEvaluator(XMLNodeReader& in_Node, MPProblem* in_pProblem) {
     LOG_DEBUG_MSG("MapEvaluator::MapEvaluator()");
-    if (!in_pNode) {
-      LOG_ERROR_MSG("MapEvaluator::MapEvaluator() error xml input");
-      exit(-1);
-    }
-    if (string(in_pNode->Value()) != "MPEvaluator_methods") {
-      LOG_ERROR_MSG("MaPEvaluator::MaPEvaluator() error xml input");
-    }
-
-    for (TiXmlNode* pChild=in_pNode->FirstChild(); pChild != NULL; pChild = pChild->NextSibling()) {
-      if (string(pChild->Value()) == "MPRegionComparers") {
-  ParseXMLComparers(pChild, in_pProblem);
-      } else if (string(pChild->Value()) == "MPRegionConditionalEvaluators") {
-  ParseXMLConditionalEvaluators(pChild, in_pProblem);
+    
+    in_Node.verifyName(string("MPEvaluator_methods"));
+    
+    XMLNodeReader::childiterator citr;
+    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+      if (citr->getName() == "MPRegionComparers") {
+        ParseXMLComparers(*citr, in_pProblem);
+      } else if (citr->getName() == "MPRegionConditionalEvaluators") {
+        ParseXMLConditionalEvaluators(*citr, in_pProblem);
       } else {
-  LOG_WARNING_MSG("MapEvaluator:: I don't know: " << endl << *pChild);
+        citr->warnUnknownNode();
       }
     }
   }
@@ -79,78 +75,48 @@ class MapEvaluator : public MPBaseObject {
     m_comparer_evaluators = me.m_comparer_evaluators; //use above when CreateCopy is implmented
   }
 
-  void ParseXMLComparers(TiXmlNode* in_pNode, MPProblem* in_pProblem) {
+  void ParseXMLComparers(XMLNodeReader& in_Node, MPProblem* in_pProblem) {
     LOG_DEBUG_MSG("MapEvaluator::ParseXMLComparers()");
-    if (!in_pNode) {
-      LOG_ERROR_MSG("MapEvaluator::ParseXMLComparers() error xml input");
-      exit(-1);
-    }
-    if (string(in_pNode->Value()) != "MPRegionComparers") {
-      LOG_ERROR_MSG("MapEvaluator::ParseXMLComparers() error xml input"); 
-      exit(-1);
-    }
-
+    
+    in_Node.verifyName(string("MPRegionComparers"));
+    
     m_comparer_evaluators.clear();
-    for (TiXmlNode* pChild = in_pNode->FirstChild(); pChild != NULL; pChild = pChild->NextSibling()) {
-      if (string(pChild->Value()) == "ConnectableComponentComparer") {
-  ConnectableComponentComparer<CFG,WEIGHT>* connectable_component_comparer = new ConnectableComponentComparer<CFG,WEIGHT>(pChild, in_pProblem);
-  m_comparer_evaluators.push_back(connectable_component_comparer);
+  
+    XMLNodeReader::childiterator citr;
+    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+      if (citr->getName() == "ConnectableComponentComparer") {
+        ConnectableComponentComparer<CFG,WEIGHT>* connectable_component_comparer = 
+                new ConnectableComponentComparer<CFG,WEIGHT>(*citr, in_pProblem);
+        m_comparer_evaluators.push_back(connectable_component_comparer);
       }
-      else if (string(pChild->Value()) == "RandomConnectComparer") {
-  RandomConnectComparer<CFG,WEIGHT>* random_query_comparer = new RandomConnectComparer<CFG,WEIGHT>(pChild, in_pProblem);
-  m_comparer_evaluators.push_back(random_query_comparer);
+      else if (citr->getName() == "RandomConnectComparer") {
+        RandomConnectComparer<CFG,WEIGHT>* random_query_comparer = 
+                new RandomConnectComparer<CFG,WEIGHT>(*citr, in_pProblem);
+        m_comparer_evaluators.push_back(random_query_comparer);
       } 
-      else if (string(pChild->Value()) == "RegionCoverageComparer") {
-  RegionCoverageComparer<CFG,WEIGHT>* coverage_comparer = 
-                  new RegionCoverageComparer<CFG,WEIGHT>(pChild, in_pProblem);
-  m_comparer_evaluators.push_back(coverage_comparer);
-      } else if (string(pChild->Value()) == "RegionSimilarity") {
-  RegionSimilarity<CFG,WEIGHT>* similar = 
-                  new RegionSimilarity<CFG,WEIGHT>(pChild, in_pProblem);
-  m_comparer_evaluators.push_back(similar);
+      else if (citr->getName() == "RegionCoverageComparer") {
+        RegionCoverageComparer<CFG,WEIGHT>* coverage_comparer = 
+                  new RegionCoverageComparer<CFG,WEIGHT>(*citr, in_pProblem);
+        m_comparer_evaluators.push_back(coverage_comparer);
+      } else if (citr->getName() == "RegionSimilarity") {
+        RegionSimilarity<CFG,WEIGHT>* similar = 
+                  new RegionSimilarity<CFG,WEIGHT>(*citr, in_pProblem);
+        m_comparer_evaluators.push_back(similar);
       } else {
-  LOG_DEBUG_MSG("I don't understand");
+        citr->warnUnknownNode();
       }
     }
   }
 
-  void ParseXMLConditionalEvaluators(TiXmlNode* in_pNode, MPProblem *in_pProblem) {
+  void ParseXMLConditionalEvaluators(XMLNodeReader& in_Node, MPProblem *in_pProblem) {
     LOG_DEBUG_MSG("MapEvaluator::ParseXMLConditionalEvaluators()");
-    if (!in_pNode) {
-      LOG_ERROR_MSG("MapEvaluator::ParseXMLConditionalEvaluators() error xml input");
-      exit(-1);
-    }
-    if (string(in_pNode->Value()) != "MPRegionConditionalEvaluators") {
-      LOG_ERROR_MSG("MapEvaluator::ParseXMLConditionalEvaluators() error xml input"); 
-      exit(-1);
-    }
-
+    
+    in_Node.verifyName(string("MPRegionConditionalEvaluators"));
+    
     m_conditional_evaluators.clear();
-    for (TiXmlNode* pChild = in_pNode->FirstChild(); pChild != NULL; pChild = pChild->NextSibling()) {
-
-      if (string(pChild->Value()) == "") { // remove when methods below are implemented
-/*       if (string(pChild->Value()) == "TestConditionalEvaluator") { */
-/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/*  m_conditional_evaluators.push_back(); */
-/*       } else  */
-/*       if (string(pChild->Value()) == "MaxFlowConditionalEvaluator") { */
-/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/*  m_conditional_evaluators.push_back(); */
-/*       } else if (string(pChild->Value()) == "CoverageConditionalEvaluator") { */
-/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/*  m_conditional_evaluators.push_back(); */
-/*       } else if (string(pChild->Value()) == "QueryConditionalEvaluator") { */
-/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/*  m_conditional_evaluators.push_back(); */
-/*       } else if (string(pChild->Value()) == "CCDistanceConditionalEvaluator") { */
-/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/*  m_conditional_evaluators.push_back(); */
-/*       } else if (string(pChild->Value()) == "CCDiameterConditionalEvaluator") { */
-/*  <CFG,WEIGHT>*  = new <CFG,WEIGHT>(pChild, in_pProblem); */
-/*  m_conditional_evaluators.push_back(); */
-      } else {
-  LOG_DEBUG_MSG("I don't understand");
-      }
+    XMLNodeReader::childiterator citr;
+    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+      citr->warnUnknownNode();
     }
   }
 
@@ -282,10 +248,10 @@ template <class CFG, class WEIGHT>
 class MapEvaluationMethod: public MPBaseObject {
  public:
   MapEvaluationMethod() {}
-  MapEvaluationMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-    MPBaseObject(in_pNode, in_pProblem) { }
+  MapEvaluationMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPBaseObject(in_Node, in_pProblem) { }
   virtual ~MapEvaluationMethod() {}
-  virtual void ParseXML(TiXmlNode* in_pNode) = 0;
+  virtual void ParseXML(XMLNodeReader& in_Node) = 0;
   virtual void operator() ()=0;
   virtual void operator() (int in_RegionID) = 0;
   // @todo evaluate may need to be replaced by the () operator
@@ -341,7 +307,7 @@ class TestEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     os.setf(ios::right,ios::adjustfield);
   }
 
-  virtual void ParseXML(TiXmlNode* in_pNode) {}
+  virtual void ParseXML(XMLNodeReader& in_Node) {}
   virtual void operator() () {};
   virtual void operator() (int in_RegionID) {};
 

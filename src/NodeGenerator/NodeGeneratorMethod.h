@@ -1,7 +1,6 @@
 #ifndef NodeGenerationMethod_h
 #define NodeGenerationMethod_h
 
-#include "Parameters.h"
 #include "util.h"
 #include "Stat_Class.h"
 #include "CfgTypes.h"
@@ -38,7 +37,7 @@ class NodeGenerationMethod : public MPBaseObject{
 
   ///Default Constructor.
   NodeGenerationMethod();
-  NodeGenerationMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  NodeGenerationMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.	
   virtual ~NodeGenerationMethod();
 
@@ -51,14 +50,11 @@ class NodeGenerationMethod : public MPBaseObject{
   virtual int GetNextNodeIndex() = 0;
   virtual void SetNextNodeIndex(int) = 0;
   virtual void IncreaseNextNodeIndex(int) = 0;
-  virtual void ParseXML(TiXmlNode* in_pNode) = 0;
-  void ParseXMLnum_nodes(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node) = 0;
+  void ParseXMLnum_nodes(XMLNodeReader& in_Node);
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv) = 0;
-  virtual void PrintUsage(ostream& _os) = 0;
-  virtual void PrintValues(ostream& _os) = 0;
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os) = 0;
   virtual NodeGenerationMethod<CFG>* CreateCopy() = 0;
@@ -86,15 +82,15 @@ class NodeGenerationMethod : public MPBaseObject{
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   ///Number of nodes to generate.
-  num_param<int> exactNodes;
-  num_param<int> numNodes;
-  num_param<int> chunkSize;
+  int exactNodes;
+  int numNodes;
+  int chunkSize;
   int m_nExactNodes;
   int m_nNumNodes;
   int m_nMaxCdCalls;
   int m_numCdCalls;
 
-//  num_param<int> numAttempts;
+
   CDInfo* cdInfo;
 #ifdef COLLISIONCFG
  vector< vector<CFG> >  m_vGeneratedCollisionConfiguration;
@@ -109,35 +105,22 @@ class NodeGenerationMethod : public MPBaseObject{
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
 NodeGenerationMethod<CFG>::
-NodeGenerationMethod():  
-  numNodes         ("nodes",            10,  1,   5000000),  
-  chunkSize        ("chunkSize",        10,  1,   5000000),
-  exactNodes ("exact", 0 ,0 ,1)
-{
-  numNodes.PutDesc("INTEGER","(number of nodes, default 10)");
-  chunkSize.PutDesc("INTEGER","(size of chunk, default 10)");
-  exactNodes.PutDesc("INTEGER","(whether to generate exact num of nodes, default 0");
+NodeGenerationMethod() {
   SetDefault();
 }
 
 template <class CFG>
 NodeGenerationMethod<CFG>::
-NodeGenerationMethod(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-     MPBaseObject(in_pNode,in_pProblem),
-  numNodes         ("nodes",            10,  1,   5000000),  
-  chunkSize        ("chunkSize",        10,  1,   5000000),
-  exactNodes ("exact", 0 ,0 ,1)  {
+NodeGenerationMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+     MPBaseObject(in_Node,in_pProblem) {
   LOG_DEBUG_MSG("NodeGenerationMethod::NodeGenerationMethod()");
-  
-  numNodes.PutDesc("INTEGER","(number of nodes, default 10)");
-  chunkSize.PutDesc("INTEGER","(size of chunk, default 10)");
-  exactNodes.PutDesc("INTEGER","(whether to generate exact num of nodes, default 0");
+
   SetDefault();
   
-  for( TiXmlNode* pChild2 = in_pNode->FirstChild(); pChild2 !=0; 
-    pChild2 = pChild2->NextSibling()) {
-    if(string(pChild2->Value()) == "num_nodes") {
-      ParseXMLnum_nodes(pChild2);
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "num_nodes") {
+      ParseXMLnum_nodes(*citr);
     }
   }
   
@@ -154,48 +137,36 @@ NodeGenerationMethod<CFG>::
 template <class CFG>
 void NodeGenerationMethod<CFG>::
 SetDefault() {
-  numNodes.PutValue(10);
-  chunkSize.PutValue(10);
-  exactNodes.PutValue(0);
+  numNodes = 10;
+  chunkSize = 10;
+  exactNodes = 0;
   m_nMaxCdCalls=MAX_INT;
 }
 
 template <class CFG>
 void NodeGenerationMethod<CFG>::
-ParseXMLnum_nodes(TiXmlNode* in_pNode) {
+ParseXMLnum_nodes(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("NodeGenerationMethod::ParseXMLnum_nodes()");
-  if(!in_pNode) {
-    LOG_ERROR_MSG("Error reading <num_nodes> tag....");exit(-1);
-  }
-  if(string(in_pNode->Value()) != "num_nodes") {
-    LOG_ERROR_MSG("Error reading <num_nodes> tag....");exit(-1);
-  }
+  
+  in_Node.verifyName(string("num_nodes"));
+  
 
   int nexactNodes, nnumNodes, nMaxCdCalls;
-    
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("number",&nnumNodes))
-  {numNodes.SetValue(nnumNodes);m_nNumNodes = nnumNodes;}
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("exact",&nexactNodes))
-  {exactNodes.SetValue(nexactNodes);m_nExactNodes = nexactNodes;}
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("max_cd_calls",&nMaxCdCalls))
-  {m_nMaxCdCalls = nMaxCdCalls;}
+  nnumNodes = in_Node.numberXMLParameter(string("number"), true, 10,0,MAX_INT,
+                                      string("number of nodes"));  
   
- // in_pNode->ToElement()->QueryIntAttribute("chunk_size",&nchunkSize);
-  
+  numNodes = nnumNodes;m_nNumNodes = nnumNodes;
+  nexactNodes = in_Node.numberXMLParameter(string("exact"), false,1,0,1,
+                                      string("exact"));
+  exactNodes = nexactNodes;m_nExactNodes = nexactNodes;
+  nMaxCdCalls = in_Node.numberXMLParameter(string("max_cd_calls"), false,MAX_INT,0,MAX_INT,
+                                      string("max num cd calls"));
+  m_nMaxCdCalls = nMaxCdCalls;
+
   
   ///\todo fix this hack, chunkSize should be removed in the future!
-  chunkSize.SetValue(nnumNodes);
-  
-  
-  
-  
-  
-  
-  ///\todo remove the comments when everything is ready!
-  //cout << "NodeGenerationMethod<CFG>::ParseXMLnum_nodes()" << endl;
-  //cout << "   num_nodes  = " << numNodes.GetValue() << endl;
-  //cout << "   exact      = " << exactNodes.GetValue() << endl;;
-  //cout << "   chunk_size = " << chunkSize.GetValue() << endl;
+  chunkSize = nnumNodes;
+
   LOG_DEBUG_MSG("~NodeGenerationMethod::ParseXMLnum_nodes()");
 }
  

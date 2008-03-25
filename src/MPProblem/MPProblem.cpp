@@ -2,10 +2,10 @@
 #include "MPStrategy.h"
 
 MPProblem::
-MPProblem(TiXmlNode* in_pNode) : MPBaseObject(in_pNode, this) {
+MPProblem(XMLNodeReader& in_Node) : MPBaseObject(in_Node, this) {
   LOG_DEBUG_MSG("MPProblem::MPProblem()");
   
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
  // rmp.environment = m_pEnvironment;
  // m_pStatClass = new Stat_Class;
   
@@ -16,31 +16,26 @@ MPProblem(TiXmlNode* in_pNode) : MPBaseObject(in_pNode, this) {
 
 
 void MPProblem::
-ParseXML(TiXmlNode* in_pNode) { 
+ParseXML(XMLNodeReader& in_Node) { 
   LOG_DEBUG_MSG("MPProblem::ParseXML()");
-  if(!in_pNode) {
-    LOG_ERROR_MSG("MPProblem::ParseXML() error xml input"); exit(-1);
-  }
-  if(string(in_pNode->Value()) != "MPProblem") {
-    LOG_ERROR_MSG("MPProblem::ParseXML() error xml input"); exit(-1);
-  }
 
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; 
-       pChild = pChild->NextSibling()) {
+  in_Node.verifyName("MPProblem");
 
-    if(string(pChild->Value()) == "file_io") {
-      ParseXMLFileIO(pChild);
-    } else if(string(pChild->Value()) == "environment") {
-      m_pEnvironment = new Environment(pChild, this);
-    } else  if(string(pChild->Value()) == "distance_metrics") {
-      m_pDistanceMetric = new DistanceMetric(pChild, this);
-    } else  if(string(pChild->Value()) == "collision_detection") {
-      m_pCollisionDetection = new CollisionDetection(pChild, this);
-    } else  if(string(pChild->Value()) == "MPRegions") {
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "file_io") {
+      ParseXMLFileIO(*citr);
+    } else if(citr->getName() == "environment") {
+      m_pEnvironment = new Environment(*citr, this);
+    } else  if(citr->getName() == "distance_metrics") {
+      m_pDistanceMetric = new DistanceMetric(*citr, this);
+    } else  if(citr->getName() == "collision_detection") {
+      m_pCollisionDetection = new CollisionDetection(*citr, this);
+    } else  if(citr->getName() == "MPRegions") {
       ///\Todo Parse MPRegions
       //m_output_dir = string(pChild->ToElement()->Attribute("dir_name"));
     }else {
-      LOG_WARNING_MSG("MPProblem::  I don't know: "<< endl << *pChild);
+      citr->warnUnknownNode();
     }
   }
 
@@ -48,22 +43,21 @@ ParseXML(TiXmlNode* in_pNode) {
 }
 
 void MPProblem::
-ParseXMLFileIO(TiXmlNode* in_pNode) {
+ParseXMLFileIO(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("MPProblem::ParseXMLFileIO()");
-  if(string(in_pNode->Value()) != "file_io") {
-    LOG_ERROR_MSG("MPProblem::ParseFileIO() error xml input"); exit(-1);
-  }
-
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; 
-       pChild = pChild->NextSibling()) {
-    if(string(pChild->Value()) == "input_env") {
-      m_input_env = string(pChild->ToElement()->Attribute("file_name"));
-    } else if(string(pChild->Value()) == "output_map") {
-      m_output_map = string(pChild->ToElement()->Attribute("file_name"));
-    } else  if(string(pChild->Value()) == "output_dir") {
-      m_output_dir = string(pChild->ToElement()->Attribute("dir_name"));
+  
+  in_Node.verifyName("file_io");
+  
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "input_env") {
+      m_input_env = citr->stringXMLParameter("file_name",true,"","file_name");
+    } else if(citr->getName() == "output_map") {
+      m_output_map = citr->stringXMLParameter("file_name",true,"","file_name");
+    } else  if(citr->getName() == "output_dir") {
+      m_output_dir = citr->stringXMLParameter("dir_name",true,"","dir_name");
     } else {
-      LOG_WARNING_MSG("MPProblem::  I don't know: "<< endl << *pChild);
+      citr->warnUnknownNode();
     }
   }
   LOG_DEBUG_MSG("~MPProblem::ParseXMLFileIO()");

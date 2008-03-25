@@ -20,13 +20,11 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
 
   ///Default Constructor.
   RotateAtS(cd_predefined _cdtype);
-  RotateAtS(cd_predefined _cdtype, TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  RotateAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ///Destructor.  
   virtual ~RotateAtS();
 
   //@}
-  virtual bool SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const;
-
   //////////////////////
   // Access
   virtual char* GetName() const;
@@ -34,7 +32,6 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
   virtual void PrintOptions(ostream& out_os);
@@ -69,7 +66,6 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
          bool savePath=false, bool saveFailedPath=false);
 
   //@{
-    num_param<double> sValue;
     double s_value;
     vector<double> s_values;
     bool isSymmetric;
@@ -83,29 +79,21 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
 /////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 RotateAtS<CFG, WEIGHT>::
-RotateAtS(cd_predefined _cdtype) : StraightLine<CFG, WEIGHT>(_cdtype),
-  sValue ("s", 0.5, 0, 1) {
-  sValue.PutDesc("FLOAT ", "(def, s=0.5)");
+RotateAtS(cd_predefined _cdtype) : StraightLine<CFG, WEIGHT>(_cdtype) {
   SetDefault(); 
 }
 
 template <class CFG, class WEIGHT>
 RotateAtS<CFG, WEIGHT>::
-RotateAtS(cd_predefined _cdtype, TiXmlNode* in_pNode, MPProblem* in_pProblem) : StraightLine<CFG, WEIGHT>(_cdtype, in_pNode,in_pProblem),
-  sValue ("s", 0.5, 0, 1) {
-  sValue.PutDesc("FLOAT ", "(def, s=0.5)");
+RotateAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem) : StraightLine<CFG, WEIGHT>(_cdtype, in_Node,in_pProblem) {
   this->cdtype = _cdtype;
   LOG_DEBUG_MSG("RotateAtS::RotateAtS()");
 
-  double  nSValue; 
-  if(TIXML_SUCCESS  == in_pNode->ToElement()->QueryDoubleAttribute("s",&nSValue)) {
-        
-        sValue.SetValue(nSValue);
-        //s_values_in.push_back(nSValue);
-        s_values.push_back(nSValue);
-      } else {
-        LOG_DEBUG_MSG("RotateAtS::s not found");
-      }
+  
+  double  nSValue = in_Node.numberXMLParameter(string("s"),true,double(0.5),
+                                            double(0.0),double(1.0),string("rotate at s value"));
+  s_values.push_back(nSValue);
+  
   LOG_DEBUG_MSG("~RotateAtS::RotateAtS()");
 }
 
@@ -121,24 +109,12 @@ void
 RotateAtS<CFG, WEIGHT>::
 PrintOptions(ostream& out_os) {
   out_os << "    " << GetName() << "::  ";
-  out_os << "line segment length = " << " " << this->lineSegmentLength.GetValue() << " ";
-  out_os << "binary search = " << " " << this->binarySearch.GetValue() << " ";
+  out_os << "line segment length = " << " " << this->lineSegmentLength << " ";
+  out_os << "binary search = " << " " << this->binarySearch << " ";
   out_os << "s_value = " << s_values[0];
   out_os << endl;
 }
 
-
-
-template <class CFG, class WEIGHT>
-bool
-RotateAtS<CFG, WEIGHT>::
-SameParameters(const LocalPlannerMethod<CFG,WEIGHT> &other) const {
-  bool result = false;
-  if( (StraightLine<CFG,WEIGHT>::SameParameters(other)) &&
-      (sValue.GetValue() == ((RotateAtS<CFG,WEIGHT>&) other).sValue.GetValue()) )
-    result = true;
-  return result;
-}
 
 
 template <class CFG, class WEIGHT>
@@ -153,62 +129,11 @@ void
 RotateAtS<CFG, WEIGHT>::
 SetDefault() {
   StraightLine<CFG, WEIGHT>::SetDefault();
-  sValue.PutValue(0.5);
   s_values.clear();
-  s_values.push_back(sValue.GetValue()); 
+  //s_values.push_back(sValue); 
   isSymmetric = true;
 }
 
-template <class CFG, class WEIGHT>
-void
-RotateAtS<CFG, WEIGHT>::
-ParseCommandLine(int argc, char **argv) {
-  s_values.clear();
-
-  for (int i = 1; i < argc; ++i) {
-    if( this->lineSegmentLength.AckCmdLine(&i, argc, argv) ) {
-    } else if( this->binarySearch.AckCmdLine(&i, argc, argv) ) {
-    } else if( sValue.AckCmdLine(&i, argc, argv) ) {
-      s_values.push_back(sValue.GetValue());
-
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-  if (s_values.size()<1){
-    SetDefault();
-  }
-  std::sort(s_values.begin (), s_values.end());
-  //s_values_in = s_values;
-  
-  if (s_values.size()>=1) {
-    if (s_values[0] < 0.0 || s_values[s_values.size()-1] > 1.0) {
-      cerr << "\nERROR ParseCommandLine: s values out of range (0.0,1.0) \"";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit(-1);
-    }
-  } else {
-      cerr << "\nERROR ParseCommandLine: no value of s inserted \"";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit(-1);
-  }
-
-  vector<double> reverse = s_values;
-  transform(reverse.begin(), reverse.end(), reverse.begin(), bind1st(minus<double>(), 1));
-  std::sort(reverse.begin(), reverse.end());
-  if(reverse == s_values)
-    isSymmetric = true;
-  else
-    isSymmetric = false;
-}
 
 
 template <class CFG, class WEIGHT>
@@ -218,9 +143,9 @@ PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
   _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->lineSegmentLength.PrintUsage(_os);
-  _os << "\n\t"; this->binarySearch.PrintUsage(_os);
-  _os << "\n\t"; sValue.PrintUsage(_os);
+  _os << "\n\t" << this->lineSegmentLength;
+  _os << "\n\t" << this->binarySearch;
+  _os << "\n\t" << s_values[0];
  
   _os.setf(ios::right,ios::adjustfield);
 }
@@ -231,10 +156,10 @@ void
 RotateAtS<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
   _os << GetName() << " ";
-  _os << this->lineSegmentLength.GetFlag() << " " << this->lineSegmentLength.GetValue() << " ";
-  _os << this->binarySearch.GetFlag() << " " << this->binarySearch.GetValue() << " ";
+  _os << "ineSegmentLength" << " " << this->lineSegmentLength << " ";
+  _os << "binarySearch" << " " << this->binarySearch << " ";
   for(int i=0; i<s_values.size(); i++){
-   _os << sValue.GetFlag() << " " << s_values[i] << " ";
+   _os << "s" << " " << s_values[i] << " ";
    }
  _os << endl;
 }
@@ -284,7 +209,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
   Stats.IncLPAttempts( RatS );
   int cd_cntr= 0;
    
-  if(this->lineSegmentLength.GetValue() && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, 
+  if(this->lineSegmentLength && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, 
 								  lpOutput, cd_cntr, positionRes)) {
     Stats.IncLPCollDetCalls( RatS, cd_cntr );
     return false;
@@ -313,7 +238,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
   //check intermediate nodes  
   if(connected) {
     for(int i=0; i<sequence.size()-1; ++i) {
-      if(this->binarySearch.GetValue()) 
+      if(this->binarySearch) 
         connected = IsConnectedSLBinary(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], 
 				        lpOutput, cd_cntr, positionRes, orientationRes, 
 				        checkCollision, savePath, saveFailedPath);

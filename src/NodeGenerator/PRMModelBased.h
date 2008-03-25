@@ -28,7 +28,7 @@ class PRMModelBased: public NodeGenerationMethod<CFG> {
 
   ///Default Constructor.
   PRMModelBased();
-  PRMModelBased(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+  PRMModelBased(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ~PRMModelBased();
 
   virtual char* GetName();
@@ -37,13 +37,10 @@ class PRMModelBased: public NodeGenerationMethod<CFG> {
   virtual int GetNextNodeIndex();
   virtual void SetNextNodeIndex(int);
   virtual void IncreaseNextNodeIndex(int);
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   //////////////////////
   // I/O methods
-  virtual void ParseCommandLine(int argc, char **argv);
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);
   virtual NodeGenerationMethod<CFG>* CreateCopy();
@@ -62,10 +59,10 @@ class PRMModelBased: public NodeGenerationMethod<CFG> {
   //used in incremental map generation
   static int nextNodeIndex;
 
-  num_param<int> initial_model_size;
-  num_param<int> sample_size;
-  num_param<int> reference_size;
-  num_param<double> k;
+  int initial_model_size; ///< 10, 1, 1000000 (initial model size, default 10)
+  int sample_size; ///<  10, 1, 1000000 (number of samples to choose from in each round, default 10)
+  int reference_size; ///< "reference", 10, 1, 1000000 (number of reference samples in each round for determining min variance sample, default 10)
+  double k; ///<  1, 0.0000001, 1000000 (smoothing parameter, default 1)
 
 protected:
   vector<double> Normalize(Environment* env, const vector<double>& v) const;
@@ -82,15 +79,8 @@ int PRMModelBased<CFG>::nextNodeIndex = 0;
 /////////////////////////////////////////////////////////////////////
 template <class CFG>
 PRMModelBased<CFG>::
-PRMModelBased() : NodeGenerationMethod<CFG>(),
-		  initial_model_size("init", 10, 1, 1000000),
-		  sample_size("sample", 10, 1, 1000000),
-		  reference_size("reference", 10, 1, 1000000),
-		  k("k", 1, 0.0000001, 1000000) {
-  initial_model_size.PutDesc("INT","(initial model size, default 10)");
-  sample_size.PutDesc("INT","(number of samples to choose from in each round, default 10)");
-  reference_size.PutDesc("INT","(number of reference samples in each round for determining min variance sample, default 10)");
-  k.PutDesc("FLOAT","(smoothing parameter, default 1)");
+PRMModelBased() : NodeGenerationMethod<CFG>() {
+  SetDefault();
 }
 
 template <class CFG>
@@ -101,18 +91,10 @@ PRMModelBased<CFG>::
 
 template <class CFG>
 PRMModelBased<CFG>::
-PRMModelBased(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-NodeGenerationMethod<CFG>(in_pNode, in_pProblem),
-initial_model_size("init", 10, 1, 1000000),
-sample_size("sample", 10, 1, 1000000),
-reference_size("reference", 10, 1, 1000000),
-k("k", 1, .0000001, 1000000) {
+PRMModelBased(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+NodeGenerationMethod<CFG>(in_Node, in_pProblem) {
   LOG_DEBUG_MSG("PRMModelBased::PRMModelBased()");
-  initial_model_size.PutDesc("INT","(initial model size, default 10)");
-  sample_size.PutDesc("INT","(number of samples to choose from in each round, default 10)");
-  reference_size.PutDesc("INT","(number of reference samples in each round for determining min variance sample, default 10)");
-  k.PutDesc("FLOAT","(smoothing parameter, default 1)");
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   LOG_DEBUG_MSG("~PRMModelBased::PRMModelBased()");
 }
 
@@ -130,31 +112,23 @@ GetName() {
 template <class CFG>
 void
 PRMModelBased<CFG>::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("PRMModelBased::ParseXML()");
-  initial_model_size.PutValue(10);
-  sample_size.PutValue(10);
-  reference_size.PutValue(10);
-  k.PutValue(1);
-  if(!in_pNode) {
-    LOG_ERROR_MSG("Error reading tags...."); exit(-1);
-  }
-  if(string(in_pNode->Value()) != "PRMModelBased") {
-    LOG_ERROR_MSG("Error reading <PRMModelBased> tag...."); exit(-1);
-  }
-  int init;
-  in_pNode->ToElement()->QueryIntAttribute("init",&init);
-  initial_model_size.SetValue(init);
-  int sample;
-  in_pNode->ToElement()->QueryIntAttribute("sample",&sample);
-  sample_size.SetValue(sample);
-  int reference;
-  in_pNode->ToElement()->QueryIntAttribute("referemce",&reference);
-  reference_size.SetValue(reference);
-  double _k;
-  in_pNode->ToElement()->QueryDoubleAttribute("k",&_k);
-  k.SetValue(_k);
-  PrintValues(cout);
+  in_Node.verifyName(string("PRMModelBased"));
+  
+  initial_model_size = in_Node.numberXMLParameter(string("init"),true,10,
+                          1,1000000,string("init"));
+  
+  sample_size = in_Node.numberXMLParameter(string("sample"),true,10,
+                          1,1000000,string("sample"));
+  
+  reference_size = in_Node.numberXMLParameter(string("referemce"),true,10,
+                          1,1000000,string("referemce"));
+  
+  k = in_Node.numberXMLParameter(string("k"),true,double(1),
+                          double(0.0000001),double(1000000),string("k"));;
+  
+  PrintOptions(cout);
   LOG_DEBUG_MSG("~PRMModelBased::ParseXML()");
 }
 
@@ -163,10 +137,10 @@ void
 PRMModelBased<CFG>::
 SetDefault() {
   NodeGenerationMethod<CFG>::SetDefault();
-  initial_model_size.PutValue(10);
-  sample_size.PutValue(10);
-  reference_size.PutValue(10);
-  k.PutValue(1);
+  initial_model_size = 10;
+  sample_size = 10;
+  reference_size = 10;
+  k = 1;
 }
 
 template <class CFG>
@@ -192,66 +166,6 @@ IncreaseNextNodeIndex(int numIncrease) {
 
 
 template <class CFG>
-void
-PRMModelBased<CFG>::
-ParseCommandLine(int argc, char **argv) {
-  int i;
-  for (i =1; i < argc; ++i) {
-    if( this->numNodes.AckCmdLine(&i, argc, argv) || 
-        this->chunkSize.AckCmdLine(&i, argc, argv) ||
-	this->exactNodes.AckCmdLine(&i, argc, argv) ||
-	initial_model_size.AckCmdLine(&i, argc, argv) ||
-	sample_size.AckCmdLine(&i, argc, argv) ||
-	reference_size.AckCmdLine(&i, argc, argv) ||
-	k.AckCmdLine(&i, argc, argv) ) {
-    } else {
-      cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-      for(int j=0; j<argc; j++)
-        cerr << argv[j] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit (-1);
-    }
-  }
-}
-
-
-template <class CFG>
-void
-PRMModelBased<CFG>::
-PrintUsage(ostream& _os){
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << GetName() << " ";
-  _os << "\n\t"; this->numNodes.PrintUsage(_os); 
-  _os << "\n\t"; this->chunkSize.PrintUsage(_os);
-  _os << "\n\t"; this->exactNodes.PrintUsage(_os); 
-  _os << "\n\t"; initial_model_size.PrintUsage(_os); 
-  _os << "\n\t"; sample_size.PrintUsage(_os);
-  _os << "\n\t"; reference_size.PrintUsage(_os);
-  _os << "\n\t"; k.PrintUsage(_os);
-
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-template <class CFG>
-void
-PRMModelBased<CFG>::
-PrintValues(ostream& _os){
-  _os << "\n" << GetName() << " ";
-  _os << this->numNodes.GetFlag() << " " << this->numNodes.GetValue() << " ";
-  _os << this->chunkSize.GetFlag() << " " <<this->chunkSize.GetValue() << " ";
-  _os << this->exactNodes.GetFlag() << " " << this->exactNodes.GetValue() << " ";
-  _os << initial_model_size.GetFlag() << " " << initial_model_size.GetValue() << " ";
-  _os << sample_size.GetFlag() << " " << sample_size.GetValue() << " ";
-  _os << reference_size.GetFlag() << " " << reference_size.GetValue() << " ";
-  _os << k.GetFlag() << " " << k.GetValue() << " ";
-  _os << endl;
-}
-
-
-template <class CFG>
 NodeGenerationMethod<CFG>* 
 PRMModelBased<CFG>::
 CreateCopy() {
@@ -264,13 +178,13 @@ void
 PRMModelBased<CFG>::
 PrintOptions(ostream& out_os){
   out_os << "    " << GetName() << ":: ";
-  out_os << " num nodes = " << this->numNodes.GetValue() << " ";
-  out_os << " exact = " << this->exactNodes.GetValue() << " ";
-  out_os << " chunk size = " << this->chunkSize.GetValue() << " ";
-  out_os << " initial model size = " << initial_model_size.GetValue() << " ";
-  out_os << " sample size = " << sample_size.GetValue() << " ";
-  out_os << " reference size = " << reference_size.GetValue() << " ";
-  out_os << " k = " << k.GetValue() << " ";
+  out_os << " num nodes = " << this->numNodes << " ";
+  out_os << " exact = " << this->exactNodes << " ";
+  out_os << " chunk size = " << this->chunkSize << " ";
+  out_os << " initial model size = " << initial_model_size << " ";
+  out_os << " sample size = " << sample_size << " ";
+  out_os << " reference size = " << reference_size << " ";
+  out_os << " k = " << k << " ";
   out_os << endl;
 }
 
@@ -338,13 +252,13 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   string callee("PRMModelBased::GenerateNodes");
   LOG_DEBUG_MSG("PRMModelBased::GenerateNodes()");	
 #ifndef QUIET
-  cout << "(numNodes=" << this->numNodes.GetValue() << ") ";
-  cout << "(chunkSize=" << this->chunkSize.GetValue() << ") ";
-  cout << "(exactNodes=" << this->exactNodes.GetValue() << ") ";
-  cout << "(init=" << initial_model_size.GetValue() << ") ";
-  cout << "(sample=" << sample_size.GetValue() << ") ";
-  cout << "(reference =" << reference_size.GetValue() << ") ";
-  cout << "(k=" << k.GetValue() << ") ";
+  cout << "(numNodes=" << this->numNodes << ") ";
+  cout << "(chunkSize=" << this->chunkSize << ") ";
+  cout << "(exactNodes=" << this->exactNodes << ") ";
+  cout << "(init=" << initial_model_size << ") ";
+  cout << "(sample=" << sample_size << ") ";
+  cout << "(reference =" << reference_size << ") ";
+  cout << "(k=" << k << ") ";
 #endif
 
   CFG __tmp;
@@ -353,7 +267,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   //generate an initial model with initial_model_size random samples
   vector<pair<vector<double>,double> > model;
   typedef vector<pair<vector<double>,double> >::const_iterator model_iterator;
-  for(int i=0; i<initial_model_size.GetValue(); ++i) {
+  for(int i=0; i<initial_model_size; ++i) {
     CFG x;
     x.GetRandomCfg(_env);
 
@@ -364,15 +278,15 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   }
 
   //generate nodes based on the model information
-  GaussianWeighting w(k.GetValue());
+  GaussianWeighting w(k);
   DotProduct<double> dot;
-  for(int i=0; i<this->numNodes.GetValue(); ++i) {
+  for(int i=0; i<this->numNodes; ++i) {
     //generate sample_size samples, select the one that maximizes expected model variance reduction over the reference set
 
     //generate reference set 
     vector<vector<double> > reference;
     typedef vector<vector<double> >::const_iterator reference_iterator;
-    for(int j=0; j<reference_size.GetValue(); ++j) {
+    for(int j=0; j<reference_size; ++j) {
       CFG r;
       r.GetRandomCfg(_env);
       reference.push_back(Normalize(_env,r.GetData()));
@@ -415,7 +329,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     //select sample that minimizes expected variance over reference set
     CFG min_x;
     double min_exp_var;
-    for(int j=0; j<sample_size.GetValue(); ++j) {
+    for(int j=0; j<sample_size; ++j) {
       //generate random sample
       CFG s;
       s.GetRandomCfg(_env);
@@ -518,7 +432,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
     if(!collision_check) //min_x is free
       nodes.push_back(min_x);	
     else 
-      if(this->exactNodes.GetValue()) 
+      if(this->exactNodes) 
 	i--;
 
     //add min_x to the model M

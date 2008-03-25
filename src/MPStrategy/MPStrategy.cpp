@@ -2,35 +2,31 @@
 #include "MPRegionComparerMethod.h"
 
 MPStrategy::
-MPStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem) : MPBaseObject(in_pNode,in_pProblem) {
+MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Node,in_pProblem) {
   LOG_DEBUG_MSG( "MPStrategy::MPStrategy()");
   ///\todo Find a home for "addPartialEdge" and "addAllEdges" or remove all together
   addPartialEdge=true;
   addAllEdges=false;
-  if(!in_pNode) {
-    LOG_ERROR_MSG("MPStrategy::MPStrategy() error xml input"); exit(-1);
-  }
-  if(string(in_pNode->Value()) != "MPStrategy") {
-    LOG_ERROR_MSG("MPStrategy::MPStrategy() error xml input"); exit(-1);
-  }
+  
+  in_Node.verifyName("MPStrategy");
 
-  m_Evaluator = NULL;     
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    if(string(pChild->Value()) == "node_generation_methods") {
-      m_pNodeGeneration = new GenerateMapNodes<CfgType>(pChild, GetMPProblem());
-    } else if(string(pChild->Value()) == "connection_methods") {
-      m_pConnection = new ConnectMap<CfgType, WeightType>(pChild, GetMPProblem());
-    } else if(string(pChild->Value()) == "lp_methods") {
-      m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(pChild, GetMPProblem());
-    } else if (string(pChild->Value()) == "MPEvaluator_methods") {
-      m_Evaluator = new MapEvaluator<CfgType, WeightType>(pChild, GetMPProblem());
-
-    } else if(string(pChild->Value()) == "MPStrategyMethod") {
-      ParseStrategyMethod(pChild);
-    } else if(string(pChild->Value()) == "MPCharacterizer") {
-      m_pCharacterizer = new MPCharacterizer<CfgType, WeightType>(pChild, GetMPProblem());
+  m_Evaluator = NULL;
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "node_generation_methods") {
+      m_pNodeGeneration = new GenerateMapNodes<CfgType>(*citr, GetMPProblem());
+    } else if(citr->getName() == "connection_methods") {
+      m_pConnection = new ConnectMap<CfgType, WeightType>(*citr, GetMPProblem());
+    } else if(citr->getName() == "lp_methods") {
+      m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(*citr, GetMPProblem());
+    } else if (citr->getName() == "MPEvaluator_methods") {
+      m_Evaluator = new MapEvaluator<CfgType, WeightType>(*citr, GetMPProblem());
+    } else if(citr->getName() == "MPStrategyMethod") {
+      ParseStrategyMethod(*citr);
+    } else if(citr->getName() == "MPCharacterizer") {
+      m_pCharacterizer = new MPCharacterizer<CfgType, WeightType>(*citr, GetMPProblem());
     } else {
-      LOG_WARNING_MSG("MPStrategy::  I don't know: "<< endl << *pChild);
+      citr->warnUnknownNode();
     }
   }
 
@@ -50,56 +46,43 @@ PrintOptions(ostream& out_os)
 }
 
 void MPStrategy::
-ParseStrategyMethod(TiXmlNode* in_pNode) {
-  if(!in_pNode) {
-    LOG_ERROR_MSG("MPStrategy::ParseStrategyMethod() error xml input"); exit(-1);
-  }
-  if(string(in_pNode->Value()) != "MPStrategyMethod") {
-    LOG_ERROR_MSG("MPStrategy::ParseStrategyMethod() require tag <MPStrategyMethod>");
-    exit(-1);
-  }
+ParseStrategyMethod(XMLNodeReader& in_Node) {
+  LOG_DEBUG_MSG( "MPStrategy::ParseStrategyMethod()");
+  in_Node.verifyName(string("MPStrategyMethod"));
   
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    if(string(pChild->Value()) == "PRMRoadmap") {
-      PRMRoadmap* prm = new PRMRoadmap(pChild,GetMPProblem());
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "PRMRoadmap") {
+      PRMRoadmap* prm = new PRMRoadmap(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( prm );
-    } else if(string(pChild->Value()) == "PRMOriginalRoadmap") {
-      PRMOriginalRoadmap* comp = new PRMOriginalRoadmap(pChild,GetMPProblem());
+    } else if(citr->getName() == "PRMOriginalRoadmap") {
+      PRMOriginalRoadmap* comp = new PRMOriginalRoadmap(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( comp );
-    } else if(string(pChild->Value()) == "Compare") {
-      MPComparer* comp = new MPComparer(pChild,GetMPProblem());
+    } else if(citr->getName() == "Compare") {
+      MPComparer* comp = new MPComparer(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( comp );
-    } else if(string(pChild->Value()) == "RoadmapClear") {
-      RoadmapClear* rmpclear = new RoadmapClear(pChild,GetMPProblem());
+    } else if(citr->getName() == "RoadmapClear") {
+      RoadmapClear* rmpclear = new RoadmapClear(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( rmpclear );
-    } else if(string(pChild->Value()) == "RoadmapInput") {
-      RoadmapInput* rmpinput = new RoadmapInput(pChild,GetMPProblem());
+    } else if(citr->getName() == "RoadmapInput") {
+      RoadmapInput* rmpinput = new RoadmapInput(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( rmpinput );
-    } else if(string(pChild->Value()) == "MPMultiStrategy") {
-      MPMultiStrategy* multistrategy = new MPMultiStrategy(pChild,GetMPProblem());
+    } else if(citr->getName() == "MPMultiStrategy") {
+      MPMultiStrategy* multistrategy = new MPMultiStrategy(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( multistrategy );
-    } else if(string(pChild->Value()) == "PRMIncrementalStrategy") {
-      PRMIncrementalStrategy* prminc = new PRMIncrementalStrategy(pChild,GetMPProblem());
+    } else if(citr->getName() == "PRMIncrementalStrategy") {
+      PRMIncrementalStrategy* prminc = new PRMIncrementalStrategy(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( prminc );
-    } else if(string(pChild->Value()) == "HybridPRM") {
-      HybridPRM* hprm = new HybridPRM(pChild,GetMPProblem());
+    } else if(citr->getName() == "HybridPRM") {
+      HybridPRM* hprm = new HybridPRM(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( hprm );
     } else {
-      LOG_WARNING_MSG("MPStrategy::  I don't know: "<< endl << *pChild);
+      citr->warnUnknownNode();
     }
   }
-  
-  
-  m_strController_MPStrategyMethod = "";
-  
-  if(in_pNode->Type() == TiXmlNode::ELEMENT) {
-    const char* carLabel = in_pNode->ToElement()->Attribute("Controller");
-    if(carLabel) {
-      m_strController_MPStrategyMethod =  string(carLabel);
-    }
-  } 
-  
-  
+
+  m_strController_MPStrategyMethod = in_Node.stringXMLParameter("Controller",true,"","Controller Method");
+  LOG_DEBUG_MSG( "~MPStrategy::ParseStrategyMethod()");
 }
 
 MPStrategyMethod* MPStrategy::
@@ -125,10 +108,10 @@ Solve() {
 
 
 MPComparer::
-MPComparer(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-  MPStrategyMethod(in_pNode,in_pProblem) {
+MPComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  MPStrategyMethod(in_Node,in_pProblem) {
   LOG_DEBUG_MSG("MPComparer::MPComparer()");
-  ParseXML(in_pNode);    
+  ParseXML(in_Node);    
   LOG_DEBUG_MSG("~MPComparer::MPComparer()");
 }
   
@@ -139,25 +122,19 @@ PrintOptions(ostream& out_os) {
   
 void 
 MPComparer::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("MPComparer::ParseXML()");
   
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    if(string(pChild->Value()) == "input") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      if(in_char) {
-	string strategy(in_char);
-	m_input_methods.push_back(strategy);
-      }
-    } else if (string(pChild->Value()) == "comparer_method") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      LOG_DEBUG_MSG("MPComparer::ParseXML() -- comparer_method");
-      if (in_char) {
-	string evaluator_method(in_char);
-	m_comparer_methods.push_back(evaluator_method);
-      }
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "input") {
+      string strategy = citr->stringXMLParameter("Method",true,"","Method");
+      m_input_methods.push_back(strategy);    
+    } else if (citr->getName() == "comparer_method") {
+      string evaluator_method = citr->stringXMLParameter("Method",true,"","Method");
+      m_comparer_methods.push_back(evaluator_method);
     } else {
-      LOG_WARNING_MSG("MPComparer::  I don't know: "<< endl << *pChild);
+      citr->warnUnknownNode();
     }
   }
   
@@ -210,10 +187,10 @@ operator()() {
 
 
 MPMultiStrategy::
-MPMultiStrategy(TiXmlNode* in_pNode, MPProblem* in_pProblem) :
-  MPStrategyMethod(in_pNode,in_pProblem) {
+MPMultiStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  MPStrategyMethod(in_Node,in_pProblem) {
   LOG_DEBUG_MSG("MPMultiStrategy::MPMultiStrategy()");
-  ParseXML(in_pNode);    
+  ParseXML(in_Node);    
   LOG_DEBUG_MSG("~MPMultiStrategy::MPMultiStrategy()");
 }
   
@@ -224,19 +201,16 @@ PrintOptions(ostream& out_os) {
   
 void 
 MPMultiStrategy::
-ParseXML(TiXmlNode* in_pNode) {
+ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("MPMultiStrategy::ParseXML()");
   
-  for( TiXmlNode* pChild = in_pNode->FirstChild(); pChild !=0; pChild = pChild->NextSibling()) {
-    if (string(pChild->Value()) == "strategy") {
-      const char* in_char = pChild->ToElement()->Attribute("Method");
-      LOG_DEBUG_MSG("MPMultiStrategy::ParseXML() -- strategy_method");
-      if (in_char) {
-	string strategy(in_char);
-	m_strategy_methods.push_back(strategy);
-      }
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if (citr->getName() == "strategy") {
+      string strategy = citr->stringXMLParameter("Method",true,"","Method");
+      m_strategy_methods.push_back(strategy);
     } else {
-      LOG_WARNING_MSG("MPMultiStrategy::  I don't know: "<< endl << *pChild);
+      citr->warnUnknownNode();
     }
   }
   

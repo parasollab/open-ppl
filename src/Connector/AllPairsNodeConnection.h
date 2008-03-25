@@ -34,7 +34,7 @@ class AllPairsNodeConnection: public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
    AllPairsNodeConnection();
-   AllPairsNodeConnection(TiXmlNode* in_pNode, MPProblem* in_pProblem);
+   AllPairsNodeConnection(XMLNodeReader& in_Node, MPProblem* in_pProblem);
    //AllPairsNodeConnection(int k);
    virtual ~AllPairsNodeConnection();
  
@@ -44,17 +44,16 @@ class AllPairsNodeConnection: public NodeConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
-   void ParseCommandLine(std::istringstream& is) {};
    virtual void PrintUsage(ostream& _os) {};
    virtual void PrintValues(ostream& _os) {};  
   ///Used in new MPProblem framework.
    virtual void PrintOptions(ostream& out_os) {
      out_os << "    " << "AllPairsNodeConnection::" 
-            << "    CheckIfSameCC = " << m_CheckIfSameCC << endl;;
+            << "    CheckIfSameCC = " << this->m_CheckIfSameCC << endl;;
   
    };  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
-  virtual void ParseXML(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   //////////////////////
   // Core: Connection method
@@ -83,7 +82,7 @@ class AllPairsNodeConnection: public NodeConnectionMethod<CFG,WEIGHT> {
  private:
   //////////////////////
   // Data
-   int m_CheckIfSameCC;
+   
  // int kclosest;
 };
 
@@ -97,12 +96,12 @@ AllPairsNodeConnection():NodeConnectionMethod<CFG,WEIGHT>() {
 
 template <class CFG, class WEIGHT>
 AllPairsNodeConnection<CFG,WEIGHT>::
-AllPairsNodeConnection(TiXmlNode* in_pNode, MPProblem* in_pProblem) : 
-    NodeConnectionMethod<CFG,WEIGHT>(in_pNode, in_pProblem) { 
+AllPairsNodeConnection(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+    NodeConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem) { 
   LOG_DEBUG_MSG("AllPairsNodeConnection::AllPairsNodeConnection()"); 
   this->element_name = "AllPairsNodeConnection"; 
   //SetDefault();
-  ParseXML(in_pNode);
+  ParseXML(in_Node);
   
   
   LOG_DEBUG_MSG("~AllPairsNodeConnection::AllPairsNodeConnection()"); 
@@ -127,84 +126,13 @@ AllPairsNodeConnection<CFG,WEIGHT>::
 
 template <class CFG, class WEIGHT>
 void AllPairsNodeConnection<CFG,WEIGHT>::
-ParseXML(TiXmlNode* in_pNode) { 
+ParseXML(XMLNodeReader& in_Node) { 
   
-  int check_same_cc;
-  if(TIXML_SUCCESS == in_pNode->ToElement()->QueryIntAttribute("CheckIfSameCC",&check_same_cc))
-  {
-    m_CheckIfSameCC = check_same_cc;
-  }
+
   
 }
 
-/*
-template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream& is) {
-  char c;
-  SetDefault();
-  try {
-    c = is.peek();
-    while(c == ' ' || c == '\n') {
-      is.get();
-      c = is.peek();
-    }    
-    if (c >= '0' && c <= '9') {
-      if (is >> kclosest) {
-        if (kclosest < 0)
-          throw BadUsage();
-      } else
-        throw BadUsage();
-    }
 
-  } catch (BadUsage) {
-    cerr << "ERROR in \'closest\' parameters\n";
-    PrintUsage(cerr);
-    exit(-1);
-  }
-}
-
-*/
-
-/*template <class CFG, class WEIGHT>
-void AllPairsNodeConnection<CFG,WEIGHT>::SetDefault() {
-  kclosest = KCLOSEST;
-}
-*/
-/*
-template <class CFG, class WEIGHT>
-void
-AllPairsNodeConnection<CFG, WEIGHT>::
-PrintUsage(ostream& _os){
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << this->GetName() << " ";
-  _os << "\tINTEGER (default " << KCLOSEST << ")";
-  _os << endl;
-  _os.setf(ios::right,ios::adjustfield);
-}
-*/
-
-/*
-template <class CFG, class WEIGHT>
-void
-Closest<CFG, WEIGHT>::
-PrintValues(ostream& _os){
-  _os << "\n" << this->GetName() << " kclosest = ";
-  _os << kclosest;
-  _os << endl;
-}
-*/
-/*
-template <class CFG, class WEIGHT>
-void
-Closest<CFG, WEIGHT>::
-PrintOptions(ostream& out_os){
-  out_os << "    " << this->GetName() << "::  kclosest = ";
-  out_os << kclosest;
-  out_os << endl;
-}
-*/
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>* 
@@ -247,7 +175,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       //cout << "(i,j) = (" << i << "," << j <<")" << endl;
       if(_rm->m_pRoadmap->IsEdge(verticesVID[i], verticesVID[j])) continue;
       
-      if (m_CheckIfSameCC) {
+      if (this->m_CheckIfSameCC) {
         if(IsSameCC(*(_rm->m_pRoadmap), verticesVID[i], verticesVID[j])) continue; 
       }
       Stats.IncConnections_Attempted();
@@ -303,7 +231,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if(v1[i] == v2[j]) continue;
       if(_rm->m_pRoadmap->IsEdge(v1[i], v2[j])) continue;
       
-      if (m_CheckIfSameCC) {
+      if (this->m_CheckIfSameCC) {
         if(IsSameCC(*(_rm->m_pRoadmap), v1[i], v2[j])) continue; 
       }
       Stats.IncConnections_Attempted();

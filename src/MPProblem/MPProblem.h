@@ -13,7 +13,7 @@ template <class CFG, class WEIGHT> class MPRegion;
 class MPProblem : public MPBaseObject
 {
 public:
-  MPProblem(TiXmlNode* in_pNode);
+  MPProblem(XMLNodeReader& in_Node);
   virtual ~MPProblem() {}
   
   void PrintOptions();
@@ -21,8 +21,8 @@ public:
   
 private:
   ///\todo Create constructors for distance_metrics, collision_detection, MPRegions
-  virtual void ParseXML(TiXmlNode* in_pNode); 
-  void ParseXMLFileIO(TiXmlNode* in_pNode);
+  virtual void ParseXML(XMLNodeReader& in_Node); 
+  void ParseXMLFileIO(XMLNodeReader& in_Node);
   
 public:
   ///\todo Finish these interfaces.
