@@ -62,7 +62,7 @@ ${QHULL_DIR}/libqhull.a:
 	cd ${QHULL_DIR}; ${MAKE} platform=${platform} debug=${debug}
 
 VCLIP_DIR = ${CD_DIR}/VCLIP
-VCLIP_LIB = -L${VCLIP_DIR}/lib -lvclip
+VCLIP_LIB = -L${VCLIP_DIR}/lib -lvclip -lvclip -L${QHULL_DIR} -lqhull
 VCLIP_INCL = -I${VCLIP_DIR}/include
 ${VCLIP_DIR}/lib/libvclip.a: ${QHULL_DIR}/libqhull.a
 	cd ${VCLIP_DIR}; ${MAKE} platform=${platform} debug=${debug}
