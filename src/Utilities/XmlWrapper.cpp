@@ -40,14 +40,16 @@ XMLNodeReader(const std::string& in_filename, TiXmlDocument& in_doc,
   }
   m_pnode = in_pNode;
   m_xmlfilename=in_filename;
+  m_bChildVecBuilt = false;
 }
 
 std::string
 XMLNodeReader::getName() const
 { 
-  ///\note DUMMY vars that are needed to prevent seg fault with g++ -O3
-  ///\todo find out why this is :(
-  std::string dummy("dummy");
+  if(m_pnode == NULL) {
+    std::cerr << "XMLNodeReader::getName() -- error" << std::endl << std::flush;
+    exit(-1);
+  }
   return m_pnode->ValueStr();
 }
  

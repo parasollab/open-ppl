@@ -69,12 +69,7 @@ int main(int argc, char** argv)
   MPStrategy* strategy;
   //Iterate over child nodes
   
-  ///\note DUMMY vars that are needed to prevent seg fault with g++ -O3
-  ///\todo find out why this is :(
-  string dummy = mp_node.getName();
-  XMLNodeReader::childiterator citr = mp_node.children_begin(); 
-  dummy = (*citr).getName();
-  for(; citr != mp_node.children_end(); ++citr) {
+  for(XMLNodeReader::childiterator citr = mp_node.children_begin(); citr != mp_node.children_end(); ++citr) {
     if(citr->getName() == "MPProblem") {
           problem = new MPProblem(*citr);
     } else if(citr->getName() == "MPStrategy") {
