@@ -557,24 +557,42 @@ void
 Roadmap<CFG, WEIGHT>::
 ReadRoadmapGRAPHONLY(const char* _fname) {
   cout << endl << "getting nodes from Read: " << _fname << endl;
-  
+
   ifstream  myifstream(_fname);
-  if (!myifstream) {
+  if(!myifstream) 
+  {
     cout << endl << "In ReadRoadmap: can't open infile: " << _fname ;
     return;
   }
-  
-  // skip over stuff up to and including RNGSEEDSTOP, next line should contain GRAPHSTART
-  char tagstring[400]; bool moreFile=true;
-  while(moreFile) {
-    myifstream  >> tagstring;
-    if ( strstr(tagstring,"RNGSEEDSTOP") ) 
+  char tagstring[400]; 
+  bool moreFile = true;
+  int count = 0;
+  while(moreFile && (myifstream >> tagstring)) 
+  {
+    count++;
+    if(strstr(tagstring,"GRAPHSTART")) 
       moreFile = false;
   }
-  
-  m_pRoadmap->ReadGraph(myifstream);           // reads verts & adj lists
-  
   myifstream.close();
+  
+  if(!moreFile)
+  {
+    ifstream myifstream2(_fname);
+    if(!myifstream2)
+    {
+      cout << endl << "In ReadRoadmap: can't open infile: " << _fname;
+      return;
+    }
+    for(int i=0; i<count-1; ++i)
+      myifstream2 >> tagstring;
+    m_pRoadmap->ReadGraph(myifstream2);
+    myifstream2.close();
+  }
+  else
+  {
+    cout << endl  << "In ReadRoadmap: didn't read GRAPHSTART tag right";
+    return;
+  }
 }
 
 
