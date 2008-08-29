@@ -49,6 +49,7 @@ public:
 #include "MPStrategy/RoadmapToolsStrategy.h"
 #include "MPStrategy/PRMIncrementalStrategy.h"
 #include "MPStrategy/HybridPRM.h"
+#include "MPStrategy/QueryStrategy.h"
 
 class MPComparer : public MPStrategyMethod {
   

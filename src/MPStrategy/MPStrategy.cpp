@@ -10,7 +10,11 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Nod
   
   in_Node.verifyName("MPStrategy");
 
+  m_pNodeGeneration = NULL;
+  m_pConnection = NULL;
+  m_pLocalPlanners = NULL;
   m_Evaluator = NULL;
+  m_pCharacterizer = NULL;
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
     if(citr->getName() == "node_generation_methods") {
@@ -38,9 +42,12 @@ void MPStrategy::
 PrintOptions(ostream& out_os)
 {
   out_os << "MPStrategy" << endl;
-  m_pNodeGeneration->PrintOptions(out_os);
-  m_pConnection->PrintOptions(out_os);
-  m_pLocalPlanners->PrintOptions(out_os);
+  if(m_pNodeGeneration)
+    m_pNodeGeneration->PrintOptions(out_os);
+  if(m_pConnection)
+    m_pConnection->PrintOptions(out_os);
+  if(m_pLocalPlanners)
+    m_pLocalPlanners->PrintOptions(out_os);
   if (m_Evaluator)
     m_Evaluator->PrintOptions(out_os);
 }
@@ -76,6 +83,9 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
     } else if(citr->getName() == "HybridPRM") {
       HybridPRM* hprm = new HybridPRM(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( hprm );
+    } else if(citr->getName() == "QueryStrategy") {
+      QueryStrategy* query = new QueryStrategy(*citr,GetMPProblem());
+      all_MPStrategyMethod.push_back( query );
     } else {
       citr->warnUnknownNode();
     }
