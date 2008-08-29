@@ -11,6 +11,7 @@ class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   ConnectFirst();
+  ConnectFirst(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~ConnectFirst();
  
   //////////////////////
@@ -19,8 +20,10 @@ class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // I/O methods
+  virtual void ParseXml(XMLNodeReader& in_Node);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
+  virtual void PrintOptions(ostream& _os);  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
 
   //////////////////////
@@ -53,6 +56,18 @@ ConnectFirst() : NodeConnectionMethod<CFG,WEIGHT>() {
 
 template <class CFG, class WEIGHT>
 ConnectFirst<CFG,WEIGHT>::
+ConnectFirst(XMLNodeReader& in_Node, MPProblem* in_pProblem) : NodeConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem)
+{
+  LOG_DEBUG_MSG("ConnectFirst::ConnectFirst()");
+  this->element_name = "connectfirst";
+  SetDefault();
+  this->ParseXML(in_Node);
+  LOG_DEBUG_MSG("~ConnectFirst::ConnectFirst()");
+}
+
+
+template <class CFG, class WEIGHT>
+ConnectFirst<CFG,WEIGHT>::
 ~ConnectFirst() { 
 }
 
@@ -63,6 +78,13 @@ SetDefault() {
   kfirst = 1;
 }
 
+
+template <class CFG, class WEIGHT>
+void ConnectFirst<CFG,WEIGHT>::
+ParseXml(XMLNodeReader& in_Node)
+{
+  kfirst = in_Node.numberXMLParameter(string("k"), true, 1, 1, 1000, string("connect first k value"));
+}
 
 template <class CFG, class WEIGHT>
 void
@@ -86,6 +108,14 @@ PrintValues(ostream& _os) {
   _os << endl;
 }
 
+
+template <class CFG, class WEIGHT>
+void
+ConnectFirst<CFG, WEIGHT>::
+PrintOptions(ostream& out_os)
+{
+  out_os << "    " << this->GetName() << "::  kfirst = " << kfirst << endl;
+}
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>* 

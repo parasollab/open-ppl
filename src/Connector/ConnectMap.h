@@ -298,6 +298,14 @@ ParseXML(XMLNodeReader& in_Node) {
       disconnect->connectionOriRes = connectionOriRes; 
       all_node_methods.push_back(disconnect);
       selected_node_methods.push_back(disconnect);
+    } else if(citr->getName() == "ConnectFirst") {
+      cout << "ConnectMap found ConnectFirst" << endl;
+      ConnectFirst<CFG,WEIGHT>* connect_first = new ConnectFirst<CFG, WEIGHT>(*citr, GetMPProblem());
+      connect_first->cdInfo = &cdInfo;
+      connect_first->connectionPosRes = connectionPosRes;
+      connect_first->connectionOriRes = connectionOriRes;
+      all_node_methods.push_back(connect_first);
+      selected_node_methods.push_back(connect_first);
     }
   }
   
