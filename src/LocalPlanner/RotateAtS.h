@@ -20,7 +20,7 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
 
   ///Default Constructor.
   RotateAtS(cd_predefined _cdtype);
-  RotateAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem);
+  RotateAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
   ///Destructor.  
   virtual ~RotateAtS();
 
@@ -85,15 +85,14 @@ RotateAtS(cd_predefined _cdtype) : StraightLine<CFG, WEIGHT>(_cdtype) {
 
 template <class CFG, class WEIGHT>
 RotateAtS<CFG, WEIGHT>::
-RotateAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem) : StraightLine<CFG, WEIGHT>(_cdtype, in_Node,in_pProblem) {
+RotateAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml) : StraightLine<CFG, WEIGHT>(_cdtype, in_Node, in_pProblem, false) 
+{
   this->cdtype = _cdtype;
   LOG_DEBUG_MSG("RotateAtS::RotateAtS()");
-
-  
-  double  nSValue = in_Node.numberXMLParameter(string("s"),true,double(0.5),
-                                            double(0.0),double(1.0),string("rotate at s value"));
+  double nSValue = in_Node.numberXMLParameter(string("s"), true, 0.5, 0.0, 1.0, string("rotate at s value"));
   s_values.push_back(nSValue);
-  
+  if(warnUnrequestedXml)
+    in_Node.warnUnrequestedAttributes();
   LOG_DEBUG_MSG("~RotateAtS::RotateAtS()");
 }
 

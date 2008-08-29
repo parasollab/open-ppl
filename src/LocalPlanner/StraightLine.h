@@ -21,7 +21,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 
   ///Default Constructor.
   StraightLine(cd_predefined _cdtype);
-  StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem);
+  StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
 
   ///Destructor.  
   virtual ~StraightLine();
@@ -182,20 +182,17 @@ StraightLine(cd_predefined _cdtype) : LocalPlannerMethod<CFG, WEIGHT>() {
 
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
-StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-      LocalPlannerMethod<CFG, WEIGHT>(in_Node,in_pProblem) {
-
+StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml) :
+      LocalPlannerMethod<CFG, WEIGHT>(in_Node,in_pProblem) 
+{
   cdtype = _cdtype;
   LOG_DEBUG_MSG("StraightLine::StraightLine()");
-
-  lineSegmentLength = in_Node.numberXMLParameter(string("length"),false,0,0,5000, string("lineSegmentLength")); 
-  
-  binarySearch = in_Node.numberXMLParameter(string("binary_search"),false,0,0,1, string("binary search")); 
-  
-  in_Node.warnUnrequestedAttributes();
+  lineSegmentLength = in_Node.numberXMLParameter(string("length"), false, 0, 0, 5000, string("lineSegmentLength")); 
+  binarySearch = in_Node.numberXMLParameter(string("binary_search"), false, 0, 0, 1, string("binary search")); 
+  if(warnUnrequestedXml)
+    in_Node.warnUnrequestedAttributes();
   LOG_DEBUG_MSG("~StraightLine::StraightLine()");
 }
-
 
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
