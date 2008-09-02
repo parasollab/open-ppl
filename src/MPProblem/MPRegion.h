@@ -195,15 +195,18 @@ WriteRoadmapForVizmo(ostream& myofstream) {
   myofstream << endl << "#####ENVFILESTART#####";
   myofstream << endl << GetMPProblem()->GetEnvFileName();
   myofstream << endl << "#####ENVFILESTOP#####";
-  
-  //GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->WriteLPs(myofstream);
-  //GetMPProblem()->GetCollisionDetection()->WriteCDs(myofstream);
-  //GetMPProblem()->GetDistanceMetric()->WriteDMs(myofstream);
-  //GetRoadmap()->WriteRNGseed(myofstream);
+  myofstream << endl;
 
-  GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->PrintOptions(myofstream);
-  GetMPProblem()->GetCollisionDetection()->PrintOptions(myofstream);
-  GetMPProblem()->GetDistanceMetric()->PrintOptions(myofstream);
+  ///TODO: fix so vizmo can understand the following 3 lines instead of the explicit printouts below
+  /*
+  GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->WriteLPsForVizmo(myofstream);
+  GetMPProblem()->GetCollisionDetection()->WriteCDsForVizmo(myofstream);
+  GetMPProblem()->GetDistanceMetric()->WriteDMsForVizmo(myofstream);
+  */
+  myofstream << "#####LPSTART#####" << endl << "0" << endl << "#####LPSTOP#####" << endl;
+  myofstream << "#####CDSTART#####" << endl << "0" << endl << "#####CDSTOP#####" << endl;
+  myofstream << "#####DMSTART#####" << endl << "0" << endl << "#####DMSTOP#####";
+  GetRoadmap()->WriteRNGseed(myofstream);
 
   GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
   
