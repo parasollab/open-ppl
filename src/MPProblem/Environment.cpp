@@ -212,10 +212,7 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : MPBaseObject(in_N
     in_Node.verifyName(string("environment"));
     
 
-    ///\todo fix hack.  This hack gets env_filename from environment xml tag
-    //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
-    const char* env_filename = GetMPProblem()->GetEnvFileName().c_str();
-    Read(env_filename, EXIT, "", RAPID, 1);
+    Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), EXIT, "", RAPID, 1);
     ///\todo fix hack. This hack assigns RAPID as the cd library and the main directory as "".
     //FindBoundingBox();
 
@@ -475,6 +472,8 @@ void
 Environment::
 Read(const char* in_filename, int action,
      const char* descDir, cd_predefined cdtype, int nprocs) {  
+  input_filename = string(in_filename);
+
   VerifyFileExists(in_filename,action);
   
   // open file and read first field

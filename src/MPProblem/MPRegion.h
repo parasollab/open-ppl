@@ -188,12 +188,12 @@ WriteRoadmapForVizmo(ostream& myofstream) {
   
   myofstream << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
   myofstream << endl << "#####PREAMBLESTART#####";
-  myofstream << endl << "../obprm -f " << GetMPProblem()->GetEnvFileName() << " ";//commandLine;
+  myofstream << endl << "../obprm -f " << GetMPProblem()->GetEnvironment()->GetEnvFileName() << " ";//commandLine;
   myofstream << " -bbox "; GetBoundingBox()->Print(myofstream, ',', ',');
   myofstream << endl << "#####PREAMBLESTOP#####";
   
   myofstream << endl << "#####ENVFILESTART#####";
-  myofstream << endl << GetMPProblem()->GetEnvFileName();
+  myofstream << endl << GetMPProblem()->GetEnvironment()->GetEnvFileName();
   myofstream << endl << "#####ENVFILESTOP#####";
   myofstream << endl;
 

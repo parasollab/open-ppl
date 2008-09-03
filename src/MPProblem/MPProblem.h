@@ -22,7 +22,6 @@ public:
 private:
   ///\todo Create constructors for distance_metrics, collision_detection, MPRegions
   virtual void ParseXML(XMLNodeReader& in_Node); 
-  void ParseXMLFileIO(XMLNodeReader& in_Node);
   
 public:
   ///\todo Finish these interfaces.
@@ -32,9 +31,6 @@ public:
   inline DistanceMetric* GetDistanceMetric() {return m_pDistanceMetric; };
   inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection; };
   inline Environment* GetEnvironment() {return m_pEnvironment; };
-  inline string& GetEnvFileName() {return m_input_env;};
-  inline string& GetOutputRoadmap() {return m_output_map;};
-  inline string& GetOutputDir() {return m_output_dir;};
   inline MPStrategy* GetMPStrategy() {return m_pMPStrategy;};
   //inline Stat_Class* GetStatClass() {return m_pStatClass;};
   
@@ -57,9 +53,6 @@ public:
 //
 //////////////
   private:
- 
-  string m_input_env, m_output_map, m_output_dir;
-  
   MPStrategy* m_pMPStrategy;
   DistanceMetric*     m_pDistanceMetric;
   CollisionDetection* m_pCollisionDetection;

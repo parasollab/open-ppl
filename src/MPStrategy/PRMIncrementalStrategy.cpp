@@ -129,7 +129,7 @@ operator()(int in_RegionID) {
   double running_time = double(0.0);
   
 
-  string envFileName = GetMPProblem()->GetEnvFileName();
+  string envFileName = GetMPProblem()->GetEnvironment()->GetEnvFileName();
   string firstNodeGen = *m_vecStrNodeGenLabels.begin();
   string firstConnection = *m_vecStrNodeConnectionLabels.begin();
   char_ofstream << "#env_file_name:node_gen:con_method:seed" << endl;

@@ -97,6 +97,8 @@ public:
   /**@name Access Methods*/
   //@{
 
+    string& GetEnvFileName() { return input_filename; }
+
     //////////////////////////////////////////////////////////////////////////////////////////
     //
     //  Path Version
@@ -267,6 +269,8 @@ public:
 
     bool copied_instance; //true if instance copied. Used for memory
 			  //management
+
+    string input_filename;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -152,7 +152,7 @@ operator()(int in_RegionID) {
   //-----------------------
   //Set up witness nodes
   //-----------------------
-  string envFileName = GetMPProblem()->GetEnvFileName();
+  string envFileName = GetMPProblem()->GetEnvironment()->GetEnvFileName();
   string firstNodeGen = *m_vecStrNodeGenLabels.begin();
   string firstConnection = *m_vecStrNodeConnectionLabels.begin();
   char_ofstream << "#env_file_name:seed:num_node_gen:node_gen_methods" << endl; // this could be better
