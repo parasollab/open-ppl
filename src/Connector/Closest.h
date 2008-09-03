@@ -212,7 +212,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 {
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
 #ifndef QUIET
-  cout << "closest(k="<< kclosest <<"): "<<flush;
+  cout << "closest(k="<< kclosest <<", mfailure=" << mfailure <<"): "<<flush;
 #endif
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
@@ -259,8 +259,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 {
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
 #ifndef QUIET
-  // cout << "closest*(k="<< kclosest <<"): "<<flush;
-  cout << "failure*(m="<< mfailure <<"): "<<flush;
+  cout << "closest(k="<< kclosest <<", mfailure="<< mfailure <<"): "<<flush;
 
 #endif
   
