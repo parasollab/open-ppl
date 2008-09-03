@@ -422,7 +422,6 @@ class Rapid: public CollisionDetectionMethod {
 #ifdef USE_PQP
 class Pqp : public CollisionDetectionMethod {
  public:
-
   Pqp();
   virtual ~Pqp();
 
@@ -432,16 +431,19 @@ class Pqp : public CollisionDetectionMethod {
 
   virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
 			     Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL);
-  
-  /**
-   * For given cfg, check if robot is completely inside obstacles.
-   * @see isInsideObstacle
-   */
-  virtual bool isInsideObstacle(const Cfg& cfg, Environment* env,  
-				CDInfo& _cdInfo);
-  PQP_Model* BuildPQPSegment(PQP_REAL dX, PQP_REAL dY, PQP_REAL dZ) const;
-  PQP_Model* m_pRay;
+};
 
+class Pqp_Solid : public Pqp {
+ public:
+  Pqp_Solid() : Pqp() {}
+  virtual ~Pqp_Solid() {}
+  virtual char* GetName() const { return "PQP_Solid"; }
+  virtual CollisionDetectionMethod* CreateCopy();
+  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle,
+			     Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL);
+  virtual bool isInsideObstacle(const Cfg& cfg, Environment* env);
+  virtual bool isInsideObstacle(Vector3D robot_pt, MultiBody* obstacle);
+  PQP_Model* BuildPQPSegment(PQP_REAL dX, PQP_REAL dY, PQP_REAL dZ) const;
 };
 #endif
   
