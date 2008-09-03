@@ -148,17 +148,12 @@ public:
       */
     void Read(char * _fileName);
 
-    /**CAll Read(char *) and buildCDstructure
-      *@see buildCDstructure
-      */
-    void Read(char* _fileName, cd_predefined cdtype, int nprocs);
-
     /**Read BYU format data from given inpustream. 
       *Call GMSPolyhedron::ReadBYU, calculate the bounding box, and then call buildCDstructure
       *to create auxilary data structure for collision detection.
       *@see GMSPolyhedron::ReadBYU, FindBoundingBox, buildCDstructure
       */
-    void ReadBYU(cd_predefined cdtype, istream & _is);
+    void ReadBYU(istream & _is);
 
     //@}
 

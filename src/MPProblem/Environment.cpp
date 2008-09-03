@@ -212,8 +212,8 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : MPBaseObject(in_N
     in_Node.verifyName(string("environment"));
     
 
-    Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), EXIT, "", RAPID, 1);
-    ///\todo fix hack. This hack assigns RAPID as the cd library and the main directory as "".
+    //Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), EXIT, "", RAPID, 1);
+    Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), EXIT, "");
     //FindBoundingBox();
 
       //compute RESOLUTION
@@ -470,8 +470,7 @@ Environment::GetBoundingBox() {
 
 void 
 Environment::
-Read(const char* in_filename, int action,
-     const char* descDir, cd_predefined cdtype, int nprocs) {  
+Read(const char* in_filename, int action, const char* descDir) {  
   input_filename = string(in_filename);
 
   VerifyFileExists(in_filename,action);
@@ -502,16 +501,14 @@ Read(const char* in_filename, int action,
       }
     } 
   }
-  Read(is, envFormatVersion, action, 
-       descDir, cdtype, nprocs);
+  Read(is, envFormatVersion, action, descDir);
   is.close();
 }
 
 
 void 
 Environment::
-Read(istream & _is, int envFormatVersion, int action,
-     const char* descDir, cd_predefined cdtype, int nprocs) {  
+Read(istream & _is, int envFormatVersion, int action, const char* descDir) {  
   switch(envFormatVersion) {
   case ENV_VER_20020327:
     break;
@@ -534,8 +531,16 @@ Read(istream & _is, int envFormatVersion, int action,
   _is >> multibodyCount;      // # of MultiBodys'
   for (int m=0; m<multibodyCount; m++) {    
     MultiBody * mb = new MultiBody(this);
-    mb->Read(_is, action, descDir, cdtype, nprocs);
+    mb->Read(_is, action, descDir);
     multibody.push_back(mb);
   }
 }
- 
+
+
+void
+Environment::
+buildCDstructure(cd_predefined cdtype, int nprocs)
+{
+  for(vector<MultiBody*>::iterator M = multibody.begin(); M != multibody.end(); ++M)
+    (*M)->buildCDstructure(cdtype, nprocs);
+}

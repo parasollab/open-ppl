@@ -511,7 +511,8 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     MultiBody * lineSegment = new MultiBody(_env);
     //Creat a FreeBody  for this triangle
     FreeBody fb(lineSegment);
-    fb.ReadBYU(cdtype, *((istream*)(&istr)));
+    fb.ReadBYU(*((istream*)(&istr)));
+    fb.buildCDstructure(cdtype);
     Transformation t=Transformation(Orientation(IdentityMatrix), center);
     fb.Configure(t);  //Transform it from (0,0,0) to center
     

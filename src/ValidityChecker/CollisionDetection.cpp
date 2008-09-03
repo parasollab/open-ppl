@@ -264,6 +264,29 @@ GetDefault() {
   return Default;
 }
 
+
+vector<cd_predefined>
+CollisionDetection::
+GetAllCDTypes() const
+{
+  vector<cd_predefined> cdtypes;
+  for(vector<CollisionDetectionMethod*>::const_iterator I = all.begin(); I != all.end(); ++I)
+    cdtypes.push_back((*I)->GetCDType());
+  return cdtypes;
+}
+
+
+vector<cd_predefined>
+CollisionDetection::
+GetSelectedCDTypes() const
+{
+  vector<cd_predefined> cdtypes;
+  for(vector<CollisionDetectionMethod*>::const_iterator I = selected.begin(); I != selected.end(); ++I)
+    cdtypes.push_back((*I)->GetCDType());
+  return cdtypes;
+}
+
+
 void
 CollisionDetectionMethod::
 SetDefault() {
@@ -680,6 +703,7 @@ AcceptablePenetration(Cfg& c, Environment* env, Stat_Class& Stats,
 
 CollisionDetectionMethod::
 CollisionDetectionMethod() {
+  cdtype = CD_USER1;
 }
 
 
@@ -736,6 +760,7 @@ isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo) {
 Cstk::
 Cstk() : CollisionDetectionMethod() {
   type = Exact;
+  cdtype = CSTK;
 }
 
 
@@ -884,6 +909,7 @@ cstkDistance(Stat_Class& Stats, MultiBody* robot, MultiBody* obstacle, std::stri
 Vclip::
 Vclip() : CollisionDetectionMethod() {
   type = Exact;
+  cdtype = VCLIP;
 }
 
 
@@ -1065,6 +1091,7 @@ GetVclipPose(const Transformation &myT, const Transformation &obstT) {
 Rapid::
 Rapid() : CollisionDetectionMethod() {
   type = Exact;
+  cdtype = RAPID;
 }
 
 
@@ -1148,6 +1175,7 @@ IsInCollision(MultiBody* robot, MultiBody* obstacle,
 Pqp::
 Pqp() : CollisionDetectionMethod() {
   type = Exact;
+  cdtype = PQP;
 }
 
 

@@ -233,6 +233,9 @@ class CollisionDetection : MPBaseObject {
   
   double penetration; // Penetration distance  
 
+  vector<cd_predefined> GetAllCDTypes() const;
+  vector<cd_predefined> GetSelectedCDTypes() const;
+
  protected:
   bool ParseCommandLine(int argc, char** argv);
 
@@ -288,8 +291,11 @@ class CollisionDetectionMethod {
 
   CDInfo cdInfo;            ///<No one use this??!!
 
+  cd_predefined GetCDType() const { return cdtype; }
+
  protected:
   int type; ///<Out, In, or Exact. Used to classify CD functions.
+  cd_predefined cdtype;
 };
 
 

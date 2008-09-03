@@ -36,6 +36,10 @@ ParseXML(XMLNodeReader& in_Node) {
     }
   }
 
+  vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();
+  for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
+    m_pEnvironment->buildCDstructure(*C, 1);
+
   LOG_DEBUG_MSG("~MPProblem::ParseXML()");
 }
 

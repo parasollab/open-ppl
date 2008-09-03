@@ -226,8 +226,8 @@ public:
       *@see FreeBody::Read, FixedBody::Read, Connection, FreeBody::Link, Connection::Read,
       *FixedBody::Link ,FindBoundingBox, and ComputeCenterOfMass
       */
-    virtual void Read(istream& is, int action, const char* descDir,
-		      cd_predefined cdtype, int nprocs);
+    virtual void Read(istream& is, int action, const char* descDir);
+    void buildCDstructure(cd_predefined cdtype, int nprocs = 1);
 
     //@}
 

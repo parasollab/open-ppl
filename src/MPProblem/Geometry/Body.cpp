@@ -236,7 +236,7 @@ void Body::RemoveBackwardConnection(Connection * _connection, int _delete) {
 //===================================================================
 //  Read
 //===================================================================
-void Body::ReadBYU(cd_predefined cdtype, istream & _is) {
+void Body::ReadBYU(istream & _is) {
     //---------------------------------------------------------------
     // Read polyhedron
     //---------------------------------------------------------------
@@ -244,24 +244,6 @@ void Body::ReadBYU(cd_predefined cdtype, istream & _is) {
     worldPolyhedron = polyhedron;
 
     FindBoundingBox();
-
-    //---------------------------------------------------------------
-    // Now create auxilary data structure for collision detection
-    //---------------------------------------------------------------
-    buildCDstructure(cdtype);
-}
-
-
-void Body::Read(char* _fileName, cd_predefined cdtype, int nprocs) {
-  //---------------------------------------------------------------
-  // Read polyhedron
-  //---------------------------------------------------------------
-  Read(_fileName);
-  
-  //---------------------------------------------------------------
-  // Now create auxilary data structure for collision detection
-  //---------------------------------------------------------------
-  buildCDstructure(cdtype, nprocs);
 }
 
 

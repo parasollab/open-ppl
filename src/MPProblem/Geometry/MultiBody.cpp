@@ -229,8 +229,7 @@ double MultiBody::ComputeDistance(Body * _body1, Body * _body2) {
 //===================================================================
 //  Read
 //===================================================================
-void MultiBody::Read(istream& _is, int action, const char* descDir, 
-		     cd_predefined cdtype, int nprocs) {
+void MultiBody::Read(istream& _is, int action, const char* descDir) {
   static const int FILENAME_LENGTH = 80;
 
   //get body info
@@ -281,7 +280,7 @@ void MultiBody::Read(istream& _is, int action, const char* descDir,
       Transformation transformation(bodyOrientation, bodyPosition);
       
       FixedBody* fix = new FixedBody(this);
-      fix->Read(bodyFileName, cdtype, nprocs);
+      fix->Read(bodyFileName);
       fix->PutWorldTransformation(transformation);
       fixAreas.push_back(fix->GetPolyhedron().area);
       fixSum += fix->GetPolyhedron().area;
@@ -300,7 +299,7 @@ void MultiBody::Read(istream& _is, int action, const char* descDir,
       }
 
       FreeBody* free = new FreeBody(this);
-      free->Read(bodyFileName, cdtype, nprocs);
+      free->Read(bodyFileName);
       freeAreas.push_back(free->GetPolyhedron().area);
       freeSum += free->GetPolyhedron().area;
       AddBody(free);
@@ -382,6 +381,15 @@ void MultiBody::Read(istream& _is, int action, const char* descDir,
 
   FindBoundingBox();
   ComputeCenterOfMass();
+}
+
+
+void MultiBody::buildCDstructure(cd_predefined cdtype, int nprocs)
+{
+  for(int i=0; i<FixedBodyCount; ++i)
+    fixedBody[i]->buildCDstructure(cdtype, nprocs);
+  for(int i=0; i<FreeBodyCount; ++i)
+    freeBody[i]->buildCDstructure(cdtype, nprocs);
 }
 
 

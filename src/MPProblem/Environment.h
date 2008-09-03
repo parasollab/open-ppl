@@ -215,11 +215,9 @@ public:
 
     /**Read data from Environment file and check version.
       */
-    void Read(const char* in_filename, int action,
-	      const char* descDir, cd_predefined cdtype, int nprocs);
-    void Read(istream & _is, int envFormatVersion,int action,
-	      const char* descDir, cd_predefined cdtype, int nprocs);
-    
+    void Read(const char* in_filename, int action, const char* descDir);
+    void Read(istream & _is, int envFormatVersion, int action, const char* descDir);
+    void buildCDstructure(cd_predefined cdtype, int nprocs = 1);
 
     /**Write the Input data for an environment into a given output stream.
       *2 things are output, Number of MultiBodys, and information about MultiBodys.
