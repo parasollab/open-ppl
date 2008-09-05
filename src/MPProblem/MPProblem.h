@@ -40,7 +40,11 @@ public:
   int CreateMPRegion();
   MPRegion<CfgType,WeightType>* GetMPRegion(int);
 
-  void SetNumOfJoints(int num_of_joints) {CfgType::setNumofJoints(num_of_joints);}
+  void SetNumOfJoints(int num_of_joints) 
+  {
+    CfgType::setNumofJoints(num_of_joints);
+    robot_cfg = CfgType();
+  }
   int GetDOFs() {return robot_cfg.DOF(); }
   int GetPosDOFs() {return robot_cfg.posDOF();}
   //void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
