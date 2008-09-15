@@ -37,9 +37,14 @@ class ScaledEuclideanDistance;
 class MinkowskiDistance;
 class ManhattanDistance;
 class CenterOfMassDistance;
+class RmsdDistance;
+class LPSweptDistance;
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 class ReachableDistance;
 #endif
+
+template <class CFG, class WEIGHT> class LocalPlannerMethod;
+#include "CfgTypes.h"
 
 const int CS = 0;   ///< Type CS: Configuration space distance metric
 const int WS = 1;   ///< Type WS: Workspace distance metric 
@@ -520,6 +525,42 @@ class CenterOfMassDistance : public DistanceMetricMethod {
   }
   virtual double Distance(const Cfg& _c1, const Cfg& _c2);
 };
+
+
+class RmsdDistance : public EuclideanDistance {
+ public:
+  RmsdDistance();
+  ~RmsdDistance();
+
+  virtual char* GetName() const;
+  virtual DistanceMetricMethod* CreateCopy();
+
+  virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
+  vector<Vector3D> GetCoordinatesForRMSD(const Cfg &c, Environment *env);
+  double RMSD(vector<Vector3D> x, vector<Vector3D> y, int dim);
+};
+
+
+class LPSweptDistance : public DistanceMetricMethod {
+ public:
+  LPSweptDistance();
+  LPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method);
+  LPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res, double ori_res, bool bbox);
+  ~LPSweptDistance();
+
+  virtual char* GetName() const;
+  virtual void SetDefault();
+  virtual DistanceMetricMethod* CreateCopy();
+
+  virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
+  double SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector<GMSPolyhedron>& poly2);
+
+ protected:
+  LocalPlannerMethod<CfgType, WeightType>* lp_method;
+  double positionRes, orientationRes;
+  bool use_bbox;
+};
+
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 class ReachableDistance : public DistanceMetricMethod {
@@ -1093,4 +1134,3 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
 
 
 #endif
-

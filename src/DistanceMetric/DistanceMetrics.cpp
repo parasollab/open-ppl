@@ -11,6 +11,8 @@
 //#include "GenerateMapNodes.h"
 #include "Environment.h"
 #include "util.h"
+#include "LocalPlanners.h"
+#include "MPProblem.h"
 
 
 DistanceMetric::
@@ -29,6 +31,12 @@ DistanceMetric() {
 
   CenterOfMassDistance* com = new CenterOfMassDistance();
   all.push_back(com);
+
+  RmsdDistance* rmsd = new RmsdDistance();
+  all.push_back(rmsd);
+
+  LPSweptDistance* lp_swept = new LPSweptDistance();
+  all.push_back(lp_swept);
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   ReachableDistance* rd = new ReachableDistance();
@@ -78,6 +86,31 @@ DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
       scaledEuclidean = new ScaledEuclideanDistance(par_scale);
       all.push_back(scaledEuclidean);
       selected.push_back(scaledEuclidean->CreateCopy());
+      citr->warnUnrequestedAttributes();
+    } else if(citr->getName() == "rmsd") {
+      RmsdDistance* rmsd = new RmsdDistance();
+      all.push_back(rmsd);
+      selected.push_back(rmsd->CreateCopy());
+      citr->warnUnrequestedAttributes();
+    } else if(citr->getName() == "lp_swept") {
+      double pos_res = citr->numberXMLParameter("pos_res", false, in_pProblem->GetEnvironment()->GetPositionRes(), 0.0, 1000.0, "position resolution");
+      double ori_res = citr->numberXMLParameter("ori_res", false, in_pProblem->GetEnvironment()->GetOrientationRes(), 0.0, 1000.0, "orientation resolution");
+      bool use_bbox = citr->boolXMLParameter("use_bbox", false, false, "use bbox instead of robot vertices"); 
+
+      LocalPlanners<CfgType, WeightType>* lp;
+      for(XMLNodeReader::childiterator citr2 = citr->children_begin(); citr2 != citr->children_end(); ++citr2)
+        if(citr2->getName() == "lp_methods")
+          lp = new LocalPlanners<CfgType, WeightType>(*citr2, in_pProblem);
+      if(lp->selected.size() != 1)
+      {
+        cout << "\n\nError in reading local planner method for rmsdLPDistance, there should only be 1 method selected\n\n";
+        exit(-1);
+      }
+      LPSweptDistance* lp_swept = new LPSweptDistance(lp->selected[0]->CreateCopy(), pos_res, ori_res, use_bbox);
+      all.push_back(lp_swept);
+      selected.push_back(lp_swept->CreateCopy());
+      cout << "LPSweptDistance: lp_method = " << lp->selected[0]->GetName() << ", pos_res = " << pos_res << ", ori_res = " << ori_res << ", use_bbox = " << use_bbox << endl;
+      //delete lp;
       citr->warnUnrequestedAttributes();
     } else {
       citr->warnUnknownNode();
@@ -886,6 +919,232 @@ Distance(const Cfg& _c1, const Cfg& _c2) {
 
 //////////
 
+RmsdDistance::
+RmsdDistance() : EuclideanDistance() {
+}
+
+RmsdDistance::
+~RmsdDistance() {
+}
+
+char*
+RmsdDistance::
+GetName() const {
+  return "rmsd";
+}
+
+DistanceMetricMethod*
+RmsdDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new RmsdDistance(*this);
+  return _copy;
+}
+
+vector<Vector3D>
+RmsdDistance::
+GetCoordinatesForRMSD(const Cfg& c, Environment* env) {
+  c.ConfigEnvironment(env);
+  MultiBody *robot = env->GetMultiBody(env->GetRobotIndex());
+  vector<Vector3D> coordinates;
+  for(int i=0 ; i<robot->GetFreeBodyCount(); i ++)
+    coordinates.push_back(robot->GetFreeBody(i)->WorldTransformation().position); 
+  return coordinates;
+}
+
+
+double
+RmsdDistance::
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
+  vector<Vector3D> x = GetCoordinatesForRMSD(_c1, env);
+  vector<Vector3D> y = GetCoordinatesForRMSD(_c2, env);
+  return RMSD(x,y,x.size());
+}
+
+double
+RmsdDistance::
+RMSD(vector<Vector3D> x, vector<Vector3D> y, int dim) {
+  if(x.size() < dim || y.size() < dim || dim <= 0) {
+    cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors"
+         << endl;
+    exit(101);
+  }
+  int n;
+  Vector3D sumx(0,0,0), sumy(0,0,0);
+  for(n=0; n<dim; ++n) {
+    sumx = sumx + x[n];
+    sumy = sumy + y[n];
+  }
+  for(n=0; n<dim; ++n) {
+    x[n] = x[n] - sumx/dim;
+    y[n] = y[n] - sumy/dim;
+  }
+
+  // now calc. E0 = 1/2*sum_of[xn^2 + yn^2]
+  double E0 = 0.0;
+  double R[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+  for(n=0; n<dim; ++n) {
+    E0 += x[n].normsqr() + y[n].normsqr();
+    for(int i=0; i<3; ++i) {
+      for(int j=0; j<3; ++j)
+        R[i][j] += y[n][i]*x[n][j]; // *weight[n] if needed.
+    }
+  }
+  E0 /= 2;
+  //let matrix R~*R = { a[0]   d    e
+  //                     d    a[1]  f
+  //                     e     f    a[2] };
+  //Now, decide this parameters.
+  //using a matrix here would be clearer, simply S = R.transpose()*R;
+  Vector3D col[3];
+  double a[3], d, e, f;
+  double detR; // determint of R, we need its sign later.
+  for(int i=0; i<3; ++i) {
+    col[i] = Vector3D(R[0][i], R[1][i], R[2][i]);
+    a[i] = col[i].normsqr();
+  }
+  d = col[0].dotProduct(col[1]);
+  e = col[0].dotProduct(col[2]);
+  f = col[1].dotProduct(col[2]);
+  Vector3D col1X2 = col[1].crossProduct(col[2]);
+  detR = col[0].dotProduct(col1X2);
+
+  // now solve for the eigenvalues of the matrix, since we
+  // know we have three non-negative eigenvalue, we can directly
+  // solve a cubic equation for the roots...
+  // the equation looks like: z^3 + a2*z^2 + a1*z + a0 = 0
+  // in our case,
+  double a2 = -(a[0] + a[1] + a[2]);
+  double a1 = a[0]*a[1] + a[1]*a[2] + a[2]*a[0] - d*d - e*e - f*f;
+  double a0 = a[0]*f*f + a[1]*e*e + a[2]*d*d - a[0]*a[1]*a[2] - 2*d*e*f;
+
+  // reference for cubic equation solution:
+  // http://mathworld.wolfram.com/CubicEquation.html
+  // following the symbols using there, define:
+  double Q = (3*a1 - a2*a2) / 9;
+  double RR = (9.0*a2*a1 - 27.0*a0 - 2*a2*a2*a2) / 54;
+
+  // if our case, since we know there are three real roots,
+  // so D = Q^3 + R^2 <= 0,
+  double z1, z2, z3;
+  if(Q == 0) { // which means three identical roots,
+    z1 = z2 = z3 = -a2/3;
+  } else { // Q < 0
+    double rootmq = sqrt(-Q);
+    double ceta = acos(-RR/Q/rootmq);
+    double cc3 = cos(ceta/3);      // = cos(ceta/3)
+    double sc3 = sqrt(1-cc3*cc3);  // = sin(ceta/3)
+    z1 = 2*rootmq*cc3 - a2/3;
+    z2 = rootmq*(-cc3 + sc3*1.7320508) - a2/3;
+    z3 = rootmq*(-cc3 - sc3*1.7320508) - a2/3;
+  }
+  if(z3 < 0) // small numercal error
+    z3 = 0;
+
+  int sign = detR > 0 ? 1 : -1;
+  double E = E0 - sqrt(z1) - sqrt(z2) - sqrt(z3)*sign;
+  if(E<0) // small numercal error
+    return 0;
+
+  // since E = 1/2 * sum_of[(Uxn - yn)^2], so rmsd is:
+  double rmsd = sqrt(E*2/dim);
+
+  return rmsd;
+}
+
+
+//////////
+
+LPSweptDistance::
+LPSweptDistance() : DistanceMetricMethod() {
+}
+
+LPSweptDistance::
+LPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method) : DistanceMetricMethod(), lp_method(_lp_method), positionRes(0.1), orientationRes(0.1), use_bbox(false) {
+}
+
+LPSweptDistance::
+LPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res, double ori_res, bool bbox) : DistanceMetricMethod(), lp_method(_lp_method), positionRes(pos_res), orientationRes(ori_res), use_bbox(bbox) {
+}
+
+LPSweptDistance::
+~LPSweptDistance() {
+}
+
+char*
+LPSweptDistance::
+GetName() const {
+  return "lp_swept";
+}
+
+void 
+LPSweptDistance::
+SetDefault() {
+}
+
+DistanceMetricMethod*
+LPSweptDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new LPSweptDistance(*this);
+  return _copy;
+}
+
+double
+LPSweptDistance::
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
+  Stat_Class Stats;
+  CollisionDetection cd;
+  DistanceMetric dm;
+  LPOutput<CfgType, WeightType> lpOutput;
+  if(lp_method == NULL)
+  {
+    cerr << "\n\nAttempting to call LPSweptDistance::Distance() without setting the appropriate LP method\n\n";
+    exit(-1);
+  }
+  lp_method->IsConnected(env, Stats, &cd, &dm, _c1, _c2, &lpOutput, positionRes, orientationRes, false, true);
+  vector<CfgType> cfgs = lpOutput.path;
+
+  double d = 0;
+  vector<GMSPolyhedron> poly2;
+  int robot = env->GetRobotIndex();
+  int body_count = env->GetMultiBody(robot)->GetFreeBodyCount();
+  cfgs.begin()->ConfigEnvironment(env);
+  for(int b=0; b<body_count; ++b)
+    if(use_bbox)
+      poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldBoundingBox());
+    else
+      poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldPolyhedron());
+  for(vector<CfgType>::const_iterator C = cfgs.begin(); C+1 != cfgs.end(); ++C)
+  {
+    vector<GMSPolyhedron> poly1(poly2);
+    poly2.clear();
+    (C+1)->ConfigEnvironment(env);
+    for(int b=0; b<body_count; ++b)
+      if(use_bbox)
+        poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldBoundingBox());
+      else
+        poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldPolyhedron());
+    double _d = SweptDistance(env, poly1, poly2);
+    d += SweptDistance(env, poly1, poly2);
+  }
+  return d;
+}
+
+double
+LPSweptDistance::
+SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector<GMSPolyhedron>& poly2) {
+  double d;
+  int count = 0;
+  for(int b=0; b<poly1.size(); ++b)
+    for(int i=0; i<poly1[b].numVertices; ++i)
+    {
+      d += (poly1[b].vertexList[i] - poly2[b].vertexList[i]).magnitude();
+      count++;
+    }
+  return d/(double)count;
+}
+
+
+//////////
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 #include "Cfg_reach_cc.h"
