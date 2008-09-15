@@ -27,7 +27,7 @@ GMSPolyhedron::GMSPolyhedron() {
 	minRadius = 0.0;
 }
 
-GMSPolyhedron::GMSPolyhedron(GMSPolyhedron & _p) {
+GMSPolyhedron::GMSPolyhedron(const GMSPolyhedron & _p) {
 
 	//Copy vertex size
     numVertices = _p.numVertices;

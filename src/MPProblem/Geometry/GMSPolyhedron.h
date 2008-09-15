@@ -139,7 +139,7 @@ public:
     GMSPolyhedron();
 
     ///Copy constructor
-    GMSPolyhedron(GMSPolyhedron & _p);
+    GMSPolyhedron(const GMSPolyhedron & _p);
 
     ///Destructor. delete vertex and polygon array.
     ~GMSPolyhedron();
