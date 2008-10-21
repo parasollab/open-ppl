@@ -80,6 +80,9 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
     } else if(citr->getName() == "PRMIncrementalStrategy") {
       PRMIncrementalStrategy* prminc = new PRMIncrementalStrategy(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( prminc );
+    } else if(citr->getName() == "IncrementalPRMStrategy") {
+      IncrementalPRMStrategy* prminc = new IncrementalPRMStrategy(*citr,GetMPProblem());
+      all_MPStrategyMethod.push_back( prminc );
     } else if(citr->getName() == "HybridPRM") {
       HybridPRM* hprm = new HybridPRM(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( hprm );
@@ -176,9 +179,7 @@ operator()(int in_RegionID_1, int in_RegionID_2) {
   // comparing region 1 to region 2 with each comparer
   typedef vector<string>::iterator Itrtr;
   for (Itrtr itrtr = m_comparer_methods.begin(); itrtr < m_comparer_methods.end(); itrtr++) {
-    MPRegionComparerMethod< CfgType, WeightType > * region_comparer;
-    region_comparer = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetComparerMethod(*itrtr);
-    region_comparer->Compare(in_RegionID_1, in_RegionID_2);
+    GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetComparerMethod(*itrtr)->Compare(in_RegionID_1, in_RegionID_2);
   }  
 }
 

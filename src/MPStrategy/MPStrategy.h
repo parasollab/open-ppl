@@ -48,6 +48,7 @@ public:
 #include "MPStrategy/PRMStrategy.h"
 #include "MPStrategy/RoadmapToolsStrategy.h"
 #include "MPStrategy/PRMIncrementalStrategy.h"
+#include "MPStrategy/IncrementalPRMStrategy.h"
 #include "MPStrategy/HybridPRM.h"
 #include "MPStrategy/QueryStrategy.h"
 
@@ -86,9 +87,5 @@ public:
   private:
   vector< string > m_strategy_methods;
 };
-
-
-
-
 
 #endif

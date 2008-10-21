@@ -1,6 +1,7 @@
 #ifndef MPStrategyMethod_h
 #define MPStrategyMethod_h
 
+#include <sys/time.h>
 #include "util.h"
 
 ///Will be used to derive IMP,PRM,RRT,metaplanner, etc.

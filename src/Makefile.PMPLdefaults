@@ -152,6 +152,7 @@ PMPL_OBJS = \
 	MPProblem/Boundary.o \
 	MPStrategy/MPStrategy.o \
 	MPStrategy/PRMIncrementalStrategy.o \
+	MPStrategy/IncrementalPRMStrategy.o \
 	MPStrategy/HybridPRM.o \
 	MPProblem/MPProblem.o 
 #	Haptic.o \

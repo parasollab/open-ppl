@@ -69,7 +69,19 @@ class ConnectMap : public MPBaseObject{
   NodeConnectionMethod<CFG,WEIGHT>* GetNodeMethod(string& in_strLabel);
   ComponentConnectionMethod<CFG,WEIGHT>* GetComponentMethod(string& in_strLabel);
   RegionConnectionMethod<CFG,WEIGHT>* GetRegionMethod(string& in_strLabel);
-  
+
+  void SetNodeConnectionMethods(vector<NodeConnectionMethod<CFG,WEIGHT>*>& methods)
+  {
+    selected_node_methods = methods;
+  }
+  void SetComponentConnectionMethods(vector<ComponentConnectionMethod<CFG,WEIGHT>*>& methods)
+  {
+    selected_component_methods = methods;
+  }
+  void SetRegionConnectionMethods(vector<RegionConnectionMethod<CFG,WEIGHT>*>& methods)
+  {
+    selected_region_methods = methods;
+  }
 
   //////////////////////
   // I/O methods
