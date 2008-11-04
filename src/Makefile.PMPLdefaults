@@ -154,6 +154,8 @@ PMPL_OBJS = \
 	MPStrategy/PRMIncrementalStrategy.o \
 	MPStrategy/IncrementalPRMStrategy.o \
 	MPStrategy/HybridPRM.o \
+	MPStrategy/QueryStrategy.o \
+	MPStrategy/SmoothQueryStrategy.o \
 	MPProblem/MPProblem.o 
 #	Haptic.o \
 #	Push.o \

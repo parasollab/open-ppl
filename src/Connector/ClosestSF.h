@@ -42,7 +42,7 @@ class ClosestSF: public NodeConnectionMethod<CFG,WEIGHT> {
  
   //////////////////////
   // Access
-  void SetDefault();
+  virtual void SetDefault();
 
   //////////////////////
   // I/O methods
@@ -127,7 +127,7 @@ ClosestSF<CFG,WEIGHT>::~ClosestSF() {
 
 template <class CFG, class WEIGHT>
 void ClosestSF<CFG,WEIGHT>::ParseXML(XMLNodeReader& in_Node) { 
-  
+  NodeConnectionMethod<CFG,WEIGHT>::ParseXML(in_Node); 
   ksuccess = in_Node.numberXMLParameter(string("success"), true, 0,1,1000, 
                                   string("k-success value")); 
 
@@ -171,9 +171,9 @@ template <class CFG, class WEIGHT>
 void
 ClosestSF<CFG, WEIGHT>::
 PrintOptions(ostream& out_os){
-  out_os << "    " << this->GetName() << "::  ksuccess = ";
-  out_os << ksuccess << "  mfailure = " << mfailure ;
-  out_os << endl;
+  NodeConnectionMethod<CFG,WEIGHT>::PrintOptions(out_os);
+  out_os << "      ksuccess = " << ksuccess << endl;
+  out_os << "      mfailure = " << mfailure << endl;
 }
 
 
@@ -307,12 +307,10 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         success++;
         continue;
       }
-      #if CHECKIFSAMECC
-      if(IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) {
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) {
         success++;
         continue;
       }
-      #endif
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm,
                _rm->m_pRoadmap->GetData(KP->first),
                _rm->m_pRoadmap->GetData(KP->second),

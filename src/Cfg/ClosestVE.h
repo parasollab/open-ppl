@@ -425,9 +425,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     // for each pair identified	
     for (typename vector<CfgVEType<CFG> >::iterator kp=KP.begin();kp<KP.end();++kp){
       
-#if CHECKIFSAMECC
-      if(IsSameCC(*(_rm->m_pRoadmap),kp->cfg1,kp->cfg2)) continue;
-#endif
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap),kp->cfg1,kp->cfg2)) continue;
       //-- if new edge is collision free
       if (!_rm->m_pRoadmap->IsEdge(kp->cfg1,kp->cfg2) 
           && lp->IsConnected(_rm->GetEnvironment(),Stats, cd,dm, 

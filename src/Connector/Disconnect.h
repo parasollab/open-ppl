@@ -16,16 +16,14 @@ class Disconnect: public NodeConnectionMethod<CFG,WEIGHT> {
  
   //////////////////////
   // Access
-  void SetDefault();
+  virtual void SetDefault();
 
   //////////////////////
   // I/O methods
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   ///Used in new MPProblem framework.
-  virtual void PrintOptions(ostream& out_os);  
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy();
-  virtual void ParseXML(XMLNodeReader& in_Node);
 
   //////////////////////
   // Core: Connection method
@@ -68,7 +66,7 @@ Disconnect<CFG,WEIGHT>::Disconnect(XMLNodeReader& in_Node, MPProblem* in_pProble
   LOG_DEBUG_MSG("Disconnect::Disconnect()"); 
   this->element_name = "disconnect"; 
   SetDefault();
-  ParseXML(in_Node);
+  this->ParseXML(in_Node);
   
   
   LOG_DEBUG_MSG("~Disconnect::Disconnect()"); 
@@ -82,12 +80,6 @@ template <class CFG, class WEIGHT>
 Disconnect<CFG,WEIGHT>::~Disconnect() { 
 }
 
-
-template <class CFG, class WEIGHT>
-void Disconnect<CFG,WEIGHT>::ParseXML(XMLNodeReader& in_Node) { 
-  
- 
-}
 
 template <class CFG, class WEIGHT>
 void Disconnect<CFG,WEIGHT>::SetDefault() {
@@ -112,14 +104,6 @@ Disconnect<CFG, WEIGHT>::
 PrintValues(ostream& _os){
   _os << "\n" << this->GetName();
   _os << endl;
-}
-
-template <class CFG, class WEIGHT>
-void
-Disconnect<CFG, WEIGHT>::
-PrintOptions(ostream& out_os){
-  out_os << "    " << this->GetName() ;
-  out_os << endl;
 }
 
 

@@ -51,6 +51,7 @@ public:
 #include "MPStrategy/IncrementalPRMStrategy.h"
 #include "MPStrategy/HybridPRM.h"
 #include "MPStrategy/QueryStrategy.h"
+#include "MPStrategy/SmoothQueryStrategy.h"
 
 class MPComparer : public MPStrategyMethod {
   

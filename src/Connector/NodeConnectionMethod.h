@@ -16,15 +16,20 @@ class NodeConnectionMethod : public MPBaseObject {
   
   //////////////////////
   // Access
-  virtual char* GetName();
+  char* GetName() const;
   virtual void SetDefault() = 0;
   
   //////////////////////
   // I/O methods
   virtual void PrintUsage(ostream& _os) = 0;
   virtual void PrintValues(ostream& _os) = 0;
-  ///Used in new MPProblem framework. \todo remove the "{ }" later
-  virtual void PrintOptions(ostream& out_os) { };
+  virtual void ParseXML(XMLNodeReader& in_Node) {
+    m_CheckIfSameCC = in_Node.boolXMLParameter(string("CheckIfSameCC"), false, true, string("check if same cc boolean"));
+  }
+  virtual void PrintOptions(ostream& out_os) { 
+    out_os << "    " << GetName() << "::\n";
+    out_os << "      CheckIfSameCC = " << m_CheckIfSameCC << endl;
+  }
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy() = 0;
   
   //////////////////////
@@ -80,7 +85,7 @@ struct CfgDist_Compare : public binary_function<pair<CFG,double>,
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>::
-NodeConnectionMethod() {
+NodeConnectionMethod() : m_CheckIfSameCC(false) {
 }
 
 
@@ -104,7 +109,7 @@ NodeConnectionMethod<CFG,WEIGHT>::
 template <class CFG, class WEIGHT>
 char* 
 NodeConnectionMethod<CFG,WEIGHT>::
-GetName() { 
+GetName() const { 
   return element_name; 
 }
 

@@ -181,9 +181,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     LPOutput<CFG,WEIGHT> lpOutput;
     for (int j=0; j < kp.size(); j++) {
       if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
-#if CHECKIFSAMECC
-      if(IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
-#endif	
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
       Stats.IncConnections_Attempted();
       if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
 			  _rm->m_pRoadmap->GetData(kp[j].first),
@@ -259,9 +257,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int j=0; j < kp.size(); j++) {
     if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
-#if CHECKIFSAMECC
-    if(IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
-#endif
+    if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
     if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
                         _rm->m_pRoadmap->GetData(kp[j].first),
                         _rm->m_pRoadmap->GetData(kp[j].second),
@@ -327,9 +323,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	LPOutput<CFG,WEIGHT> lpOutput;
 	for (int j=0; j < kp.size(); j++) {
 	  if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
-#if CHECKIFSAMECC
-	  if(IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
-#endif	
+	  if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
 	  Stats.IncConnections_Attempted();
 	  if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
 			      _rm->m_pRoadmap->GetData(kp[j].first),

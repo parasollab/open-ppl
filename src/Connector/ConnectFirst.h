@@ -16,11 +16,11 @@ class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
  
   //////////////////////
   // Access
-  void SetDefault();
+  virtual void SetDefault();
 
   //////////////////////
   // I/O methods
-  virtual void ParseXml(XMLNodeReader& in_Node);
+  virtual void ParseXML(XMLNodeReader& in_Node);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);  
   virtual void PrintOptions(ostream& _os);  
@@ -81,8 +81,9 @@ SetDefault() {
 
 template <class CFG, class WEIGHT>
 void ConnectFirst<CFG,WEIGHT>::
-ParseXml(XMLNodeReader& in_Node)
+ParseXML(XMLNodeReader& in_Node)
 {
+  NodeConnectionMethod<CFG,WEIGHT>::ParseXML(in_Node);
   kfirst = in_Node.numberXMLParameter(string("k"), true, 1, 1, 1000, string("connect first k value"));
 }
 
@@ -114,7 +115,8 @@ void
 ConnectFirst<CFG, WEIGHT>::
 PrintOptions(ostream& out_os)
 {
-  out_os << "    " << this->GetName() << "::  kfirst = " << kfirst << endl;
+  NodeConnectionMethod<CFG,WEIGHT>::PrintOptions(out_os);
+  out_os << "      kfirst = " << kfirst << endl;
 }
 
 template <class CFG, class WEIGHT>
@@ -168,9 +170,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     int numFound = 0;
     for(D = distances.begin(); (D != distances.end()) && (numFound < kfirst); 
 	++D) {
+      if(_rm->m_pRoadmap->IsEdge(*C1, D->first))
+        continue;
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), *C1, D->first))
+        continue;
       LPOutput<CFG,WEIGHT> _ci;
-      if(!_rm->m_pRoadmap->IsEdge(*C1, D->first) && 
-	 lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm, 
+      if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm, 
 			 _rm->m_pRoadmap->GetData(*C1), 
 			 _rm->m_pRoadmap->GetData(D->first), 
 			 &_ci, _rm->GetEnvironment()->GetPositionRes(), 

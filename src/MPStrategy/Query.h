@@ -343,25 +343,30 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
   bool connected = false;
   vector<pair<int,VID> >::const_iterator CC, ccsBegin = ccs.begin();
   for(CC = ccs.begin(); CC != ccs.end(); ++CC) {
-    //get cc vids
-      vector<VID> cc; 
-    GetCC(*(rdmp->m_pRoadmap), CC->second, cc);
+    //store cc vids if needed
+    vector<VID> cc; 
 
     //attempt to connect start and goal to cc
-    bool addPartialEdge = false; //??
-    bool addAllEdges = false; //??
+    if(IsSameCC(*(rdmp->m_pRoadmap), svid, CC->second)) 
+      cout << "start already connected to CC[" << distance(ccsBegin,CC)+1 << "]\n";
+    else
+    {
+      GetCC(*(rdmp->m_pRoadmap), CC->second, cc);
+      vector<VID> verticesList(1, svid);
+      cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
+      cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false, verticesList, cc);
+    }
 
-    vector<VID> verticesList(1, svid);
-    cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
-    //    cout << "CC size = " << CC->first << endl;
-    cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false,
-		     verticesList, cc);
-
-    cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
-    //    cout << "CC size = " << CC->first << endl;
-    verticesList[0] = gvid;
-    cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false,
-		     verticesList, cc);
+    if(IsSameCC(*(rdmp->m_pRoadmap), gvid, CC->second))
+      cout << "goal already connected to CC[" << distance(ccsBegin,CC)+1 << "]\n";
+    else
+    {
+      if(cc.empty())
+        GetCC(*(rdmp->m_pRoadmap), CC->second, cc);
+      cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
+      vector<VID> verticesList(1, gvid);
+      cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false, verticesList, cc);
+    }
 
     connected = false;
     vector<pair<CFG,WEIGHT> > rp;

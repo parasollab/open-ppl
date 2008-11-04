@@ -67,7 +67,7 @@ class ObstBased: public NodeConnectionMethod<CFG,WEIGHT> {
  
   //////////////////////
   // Access
-  void SetDefault();
+  virtual void SetDefault();
 
   //////////////////////
   // I/O methods
@@ -384,10 +384,7 @@ ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 							body[j], k);
       //-- check connections between pairs
       for (int m=0;m<kp.size();++m){
-#if CHECKIFSAMECC
-	if(IsSameCC(*(_rm->m_pRoadmap),kp[m].first,kp[m].second)) continue;
-#endif
-
+	if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap),kp[m].first,kp[m].second)) continue;
 	if (!_rm->m_pRoadmap->IsEdge(kp[m].first,kp[m].second)
 	    && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
 			       _rm->m_pRoadmap->GetData(kp[m].first),

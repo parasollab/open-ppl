@@ -40,7 +40,7 @@ class RandomConnect: public NodeConnectionMethod<CFG,WEIGHT> {
  
   //////////////////////
   // Access
-  void SetDefault();
+  virtual void SetDefault();
 
   //////////////////////
   // I/O methods

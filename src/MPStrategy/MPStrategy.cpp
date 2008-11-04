@@ -89,6 +89,9 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
     } else if(citr->getName() == "QueryStrategy") {
       QueryStrategy* query = new QueryStrategy(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( query );
+    } else if(citr->getName() == "SmoothQueryStrategy") {
+      SmoothQueryStrategy* smoothpath = new SmoothQueryStrategy(*citr,GetMPProblem());
+      all_MPStrategyMethod.push_back( smoothpath );
     } else {
       citr->warnUnknownNode();
     }

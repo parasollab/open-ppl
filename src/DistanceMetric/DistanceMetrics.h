@@ -1044,9 +1044,7 @@ KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp,
       continue; //don't check distance to same
     dist = Distance(env, cc, *vi);
     if (dist < kpairs_dist[max_index].second) {
-#if CHECKIFSAMECC
       if (!IsSameCC(*(rdmp->m_pRoadmap), cc,(*vi))) {
-#endif
   kpairs_dist[max_index] = pair<CFG,double>((*vi),dist);
   max_value = dist;
   //search for new max_index (faster O(k) than sort O(klogk))
@@ -1055,9 +1053,7 @@ KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp,
       max_value = kpairs_dist[i].second;
       max_index = i;
     }
-#if CHECKIFSAMECC
       }
-#endif
     }
   }
   sort (kpairs_dist.begin(), kpairs_dist.end(), CFG_DIST_COMPARE<CFG>());

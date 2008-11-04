@@ -5,7 +5,7 @@ endif
 
 # set default debug
 ifndef debug
-  debug = 1
+  debug = 0
 endif
 
 
@@ -28,12 +28,6 @@ include ${UTILS_DIR}/makefile_includes/Makefile.defaults
 include ${PMPL_DIR}/Makefile.PMPLdefaults
 
 
-# set default CHECKIFSAMECC
-ifndef CHECKIFSAMECC
-  CHECKIFSAMECC = 1
-endif
-
-
 # define robot type
 #ROBOT_DEF = -DPMPRigid
 ROBOT_DEF = -DPMPSerial
@@ -45,7 +39,7 @@ ROBOT_DEF = -DPMPSerial
 
 
 # macros
-DEFS += ${UTILS_DEF} ${ROBOT_DEF} -DCHECKIFSAMECC=${CHECKIFSAMECC} -DVERBOSE=0
+DEFS += ${UTILS_DEF} ${ROBOT_DEF} -DVERBOSE=0
 INCL = -I. ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL}
 LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${BOOST_LIB}
 

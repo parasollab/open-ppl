@@ -43,7 +43,7 @@ class ClosestUnconnected: public NodeConnectionMethod<CFG,WEIGHT> {
  
   //////////////////////
   // Access
-  void SetDefault();
+  virtual void SetDefault();
 
   //////////////////////
   // I/O methods
@@ -144,10 +144,9 @@ ClosestUnconnected<CFG,WEIGHT>::~ClosestUnconnected() {
 
 template <class CFG, class WEIGHT>
 void ClosestUnconnected<CFG,WEIGHT>::ParseXML(XMLNodeReader& in_Node) { 
-  
+  NodeConnectionMethod<CFG,WEIGHT>::ParseXML(in_Node); 
   kclosest = in_Node.numberXMLParameter(string("k"), true, 5,1,1000, 
                                   string("k-closest value"));
- 
 }
 
 
@@ -186,9 +185,9 @@ template <class CFG, class WEIGHT>
 void
 ClosestUnconnected<CFG, WEIGHT>::
 PrintOptions(ostream& out_os){
-  out_os << "    " << this->GetName() << "::  kclosest = ";
-  out_os << kclosest << "  mfailure = " << mfailure ;
-  out_os << endl;
+  NodeConnectionMethod<CFG,WEIGHT>::PrintOptions(out_os);
+  out_os << "      kclosest = " << kclosest << endl;
+  out_os << "      mfailure = " << mfailure << endl;
 }
 
 
@@ -325,10 +324,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) 
         continue;
 
-      #if CHECKIFSAMECC
-      if(IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) 
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) 
         continue;
-      #endif
 
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm,
 			 _rm->m_pRoadmap->GetData(KP->first),
