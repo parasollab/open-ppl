@@ -85,7 +85,7 @@ struct CfgDist_Compare : public binary_function<pair<CFG,double>,
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>::
-NodeConnectionMethod() : m_CheckIfSameCC(false) {
+NodeConnectionMethod() : m_CheckIfSameCC(true) {
 }
 
 
@@ -93,12 +93,10 @@ template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>::
 NodeConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   MPBaseObject(in_Node,in_pProblem) {
-
   m_CheckIfSameCC  = in_Node.boolXMLParameter(string("CheckIfSameCC"),false,
-                                              false,
+                                              true,
                                               string("Check if same CC"));
 }
-
 
 
 template <class CFG, class WEIGHT>
