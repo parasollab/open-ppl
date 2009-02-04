@@ -101,8 +101,7 @@ class GenerateMapNodes : public MPBaseObject{
    *@param nodes New created nodes are stored here.
    */
   template <class WEIGHT>
-  void GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		     CollisionDetection* cd, 
+  void GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
 		     DistanceMetric* dm, vector<CFG>& nodes);
 
   
@@ -199,6 +198,7 @@ ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("GenerateMapNodes::ParseXML()");
 
   XMLNodeReader::childiterator citr;
+  
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
     if(citr->getName() == "BasicPRM") {
       BasicPRM<CFG>* basicPRM = new BasicPRM<CFG>(*citr, GetMPProblem());
@@ -229,8 +229,8 @@ ParseXML(XMLNodeReader& in_Node) {
       citr->warnUnknownNode();
     }
   }
-  
 
+  
   
   
   
@@ -331,8 +331,7 @@ template <class CFG>
 template <class WEIGHT>
 void
 GenerateMapNodes<CFG>::
-GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	      CollisionDetection* cd, 
+GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
 	      DistanceMetric* dm, vector<CFG>& nodes) {
 
   LOG_DEBUG_MSG("GenerateMapNodes::GenerateNodes");
@@ -345,7 +344,7 @@ GenerateNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     clock.StartClock((*itr)->GetName());
     cout<<"\n  "; clock.PrintName(); cout << " " << flush;
 #endif	
-    (*itr)->GenerateNodes(_rm->GetEnvironment(), Stats, cd, dm, nodes);
+    (*itr)->GenerateNodes(_rm->GetEnvironment(), Stats, dm, nodes);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec  \n" << flush;

@@ -83,7 +83,7 @@ public:
 	virtual
 	  bool CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, 
 			       vector<pair<CFG,WEIGHT> >& attemptedPath,
-			       Stat_Class& Stats, CollisionDetection* cd, 
+			       Stat_Class& Stats, 
 			       LocalPlanners<CFG,WEIGHT>* lp, 
 			       DistanceMetric* dm, 
 			       vector<CFG>& recreatedPath);
@@ -110,7 +110,7 @@ public:
           */
         virtual 
 	bool PerformQuery
-        (Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, CollisionDetection *cd, ConnectMap<CFG, WEIGHT> *cn, LocalPlanners<CFG,WEIGHT> * lp,DistanceMetric * dm);
+        (Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, ConnectMap<CFG, WEIGHT> *cn, LocalPlanners<CFG,WEIGHT> * lp,DistanceMetric * dm);
 
         /**Query path for two given Cfgs.
           *Algorithm:
@@ -143,7 +143,6 @@ public:
 			  CFG _goal,
 			  Roadmap<CFG, WEIGHT>* rdmp,
 			  Stat_Class& Stats,
-			  CollisionDetection*,
 			  ConnectMap<CFG, WEIGHT>*, 
 			  LocalPlanners<CFG,WEIGHT>*, 
 			  DistanceMetric*, 
@@ -195,7 +194,7 @@ template <class CFG, class WEIGHT>
 class QueryConnect : public ConnectMap<CFG,WEIGHT> {
  public:
   QueryConnect() : ConnectMap<CFG,WEIGHT>() {}
-  QueryConnect(Roadmap<CFG,WEIGHT>* rm, CollisionDetection* cd,
+  QueryConnect(Roadmap<CFG,WEIGHT>* rm,
 	       DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp) :
     ConnectMap<CFG,WEIGHT>() {}
   ~QueryConnect() {
@@ -296,7 +295,7 @@ Query<CFG, WEIGHT>::
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
-PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, CollisionDetection* cd, ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm) 
+PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm) 
 {
   for(typename vector<CFG>::iterator Q = query.begin(); 
       (Q+1) != query.end(); ++Q) {
@@ -307,7 +306,7 @@ PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, CollisionDetection* 
     cout << "\nworking  ...     "
 	 << endl;
     
-    if ( !PerformQuery(*Q,*(Q+1),rdmp, Stats,cd,cn,lp,dm,&path) ) {
+    if ( !PerformQuery(*Q,*(Q+1),rdmp, Stats,cn,lp,dm,&path) ) {
       cout << endl << "In PerformQuery(): didn't connect";
       return false;
     } 
@@ -319,7 +318,7 @@ PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, CollisionDetection* 
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
-PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, CollisionDetection* cd,
+PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats,
 	     ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm, vector<CFG>* _path) {
 
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
@@ -354,7 +353,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       GetCC(*(rdmp->m_pRoadmap), CC->second, cc);
       vector<VID> verticesList(1, svid);
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
-      cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false, verticesList, cc);
+      cn->ConnectNodes(rdmp, Stats, dm, lp, false, false, verticesList, cc);
     }
 
     if(IsSameCC(*(rdmp->m_pRoadmap), gvid, CC->second))
@@ -365,7 +364,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
         GetCC(*(rdmp->m_pRoadmap), CC->second, cc);
       cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
       vector<VID> verticesList(1, gvid);
-      cn->ConnectNodes(rdmp, Stats, cd, dm, lp, false, false, verticesList, cc);
+      cn->ConnectNodes(rdmp, Stats, dm, lp, false, false, verticesList, cc);
     }
 
     connected = false;
@@ -382,7 +381,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
     
       //attempt to recreate path
       vector<CFG> recreatedPath;
-      if(CanRecreatePath(rdmp, rp, Stats, cd, lp, dm, recreatedPath)) {
+      if(CanRecreatePath(rdmp, rp, Stats, lp, dm, recreatedPath)) {
 	connected = true;
 	_path->insert(_path->end(), 
 		      recreatedPath.begin(), recreatedPath.end());
@@ -413,7 +412,7 @@ bool
 Query<CFG, WEIGHT>::
 CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, 
 		vector<pair<CFG,WEIGHT> >& attemptedPath, 
-		Stat_Class& Stats, CollisionDetection* cd, 
+		Stat_Class& Stats, 
 		LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm, 
 		vector<CFG>& recreatedPath) {
   LPOutput<CFG,WEIGHT> ci;
@@ -421,7 +420,7 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
   recreatedPath.push_back(attemptedPath.begin()->first);
   for(typename vector<pair<CFG,WEIGHT> >::iterator I = attemptedPath.begin(); 
       (I+1) != attemptedPath.end(); ++I) {
-    if(!(lp->GetPathSegment(rdmp->GetEnvironment(), Stats, cd, dm,
+    if(!(lp->GetPathSegment(rdmp->GetEnvironment(), Stats, dm,
 			    I->first, (I+1)->first, I->second, &ci,
 			    rdmp->GetEnvironment()->GetPositionRes(),
 			    rdmp->GetEnvironment()->GetOrientationRes(),

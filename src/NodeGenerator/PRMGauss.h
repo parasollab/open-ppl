@@ -73,8 +73,7 @@ class GaussPRM: public NodeGenerationMethod<CFG> {
    *@note If INTERMEDIATE_FILES is defined WritePathConfigurations will be
    *called.
    */
-  virtual void GenerateNodes(Environment* _env, Stat_Class&,
-			     CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class&, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
  
   virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs);
@@ -195,6 +194,7 @@ PrintOptions(ostream& out_os){
   out_os << " exact = " << this->exactNodes << " ";
   out_os << " chunk size = " << this->chunkSize << " ";
   out_os << " gauss_d = " << this->gauss_d << " ";
+  out_os << "validity method = " << this->vcMethod << " ";
   out_os << endl;
 }
 
@@ -202,10 +202,10 @@ template <class CFG>
 void
 GaussPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
-	      CollisionDetection* cd, DistanceMetric *dm,
-	      vector<CFG>& nodes) {
+	      DistanceMetric *dm, vector<CFG>& nodes) {
   LOG_DEBUG_MSG("GaussPRM::GenerateNodes()");	
-
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
   if (gauss_d == double(0.0))  //if no Gauss_d value given, calculate from robot
     gauss_d = ((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
 
@@ -214,10 +214,11 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   cout << "(chunkSize=" << this->chunkSize << ") ";
   cout << "(exactNodes=" << this->exactNodes << ") ";
   cout << "(d=" << gauss_d << ") ";
+  cout << "(validity method=" << this->vcMethod << ") ";
 #endif
 
   CDInfo cdInfo;
-  GaussRandomSampler<CFG,true> gauss_sampler(_env, Stats, cd, cdInfo, dm, gauss_d);
+  GaussRandomSampler<CFG,true> gauss_sampler(_env, Stats, vc, vcm, cdInfo, dm, gauss_d);
   int nodes_offset = nodes.size();
 
   for(int i=0; i<this->numNodes; ++i) {    
@@ -250,10 +251,9 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
  
   Environment* pEnv = in_pRegion;
   Stat_Class* pStatClass = in_pRegion->GetStatClass();
-  CollisionDetection* pCd = this->GetMPProblem()->GetCollisionDetection();
+  //CollisionDetection* pCd = this->GetMPProblem()->GetCollisionDetection();
   DistanceMetric *dm = this->GetMPProblem()->GetDistanceMetric();
- 
-  GenerateNodes(pEnv,*pStatClass, pCd, dm, outCfgs);
+  GenerateNodes(pEnv,*pStatClass, dm, outCfgs);
 }
 
 

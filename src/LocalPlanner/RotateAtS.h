@@ -39,7 +39,6 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
   virtual bool IsConnected(Environment *env, Stat_Class& Stats,
-         CollisionDetection *,
          DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
@@ -58,7 +57,6 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
  protected:
   virtual 
     bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
-         CollisionDetection *cd,
          DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
@@ -110,6 +108,7 @@ PrintOptions(ostream& out_os) {
   out_os << "    " << GetName() << "::  ";
   out_os << "line segment length = " << " " << this->lineSegmentLength << " ";
   out_os << "binary search = " << " " << this->binarySearch << " ";
+  out_os << "vcMethod = " << " " << this->vcMethod << " ";
   out_os << "s_value = " << s_values[0];
   out_os << endl;
 }
@@ -177,15 +176,15 @@ template <class CFG, class WEIGHT>
 bool
 RotateAtS<CFG,WEIGHT>::
 IsConnected(Environment *_env, Stat_Class& Stats,
-      CollisionDetection *cd, DistanceMetric *dm,
+      DistanceMetric *dm,
       const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
       double positionRes, double orientationRes,
       bool checkCollision, 
       bool savePath, bool saveFailedPath) {  
   bool connected = false;
-  connected = IsConnectedOneWay(_env, Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+  connected = IsConnectedOneWay(_env, Stats, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   if (!connected && !isSymmetric) { //try the other way
-    connected = IsConnectedOneWay(_env, Stats, cd, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+    connected = IsConnectedOneWay(_env, Stats, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
     if (savePath)
       reverse(lpOutput->path.begin(), lpOutput->path.end());
   }
@@ -196,11 +195,15 @@ IsConnected(Environment *_env, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 bool
 RotateAtS<CFG,WEIGHT>::
-IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, DistanceMetric *dm,
+IsConnectedOneWay(Environment *_env, Stat_Class& Stats, DistanceMetric *dm,
       const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
       double positionRes, double orientationRes,
       bool checkCollision, 
-      bool savePath, bool saveFailedPath) {  
+      bool savePath, bool saveFailedPath) {
+//  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+//  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+
   char RatS[50] = "Rotate_at_s";
   sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);
   for(int i=1; i<s_values.size(); ++i)
@@ -208,7 +211,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
   Stats.IncLPAttempts( RatS );
   int cd_cntr= 0;
    
-  if(this->lineSegmentLength && lineSegmentInCollision(_env, Stats, cd, dm, _c1, _c2, 
+  if(this->lineSegmentLength && lineSegmentInCollision(_env, Stats, dm, _c1, _c2, 
 								  lpOutput, cd_cntr, positionRes)) {
     Stats.IncLPCollDetCalls( RatS, cd_cntr );
     return false;
@@ -227,7 +230,9 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
     for(int i=1; i<sequence.size()-1; ++i) { //_c1 and _c2 not double checked
       cd_cntr++;
       if(!sequence[i]->InBoundingBox(_env) ||
-         sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))) {
+         sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))
+         //vc->IsValid(vcm, static_cast<CFG>(*(sequence[i])), _env, Stats, *this->cdInfo, Callee)
+        ) {
         connected = false;
         break;
       }
@@ -238,11 +243,11 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, 
   if(connected) {
     for(int i=0; i<sequence.size()-1; ++i) {
       if(this->binarySearch) 
-        connected = IsConnectedSLBinary(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], 
+        connected = IsConnectedSLBinary(_env, Stats, dm, *sequence[i], *sequence[i+1], 
 				        lpOutput, cd_cntr, positionRes, orientationRes, 
 				        checkCollision, savePath, saveFailedPath);
       else
-        connected = IsConnectedSLSequential(_env, Stats, cd, dm, *sequence[i], *sequence[i+1], 
+        connected = IsConnectedSLSequential(_env, Stats, dm, *sequence[i], *sequence[i+1], 
 				            lpOutput, cd_cntr, positionRes, orientationRes, 
 				            checkCollision, savePath, saveFailedPath);
 

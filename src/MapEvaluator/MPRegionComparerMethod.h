@@ -33,7 +33,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     LocalPlanners < CFG, WEIGHT > * lp = m_pProblem->GetMPStrategy()->GetLocalPlanners();
     LPOutput< CFG, WEIGHT > lp_output; 
     Environment * env = m_pProblem->GetEnvironment();
-    CollisionDetection * cd = m_pProblem->GetCollisionDetection();
+//    CollisionDetection * cd = m_pProblem->GetCollisionDetection();
     DistanceMetric * dm = m_pProblem->GetDistanceMetric();
     double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
@@ -51,7 +51,7 @@ class MPRegionComparerMethod: public MPBaseObject {
    
    sort(in_vec_cfg.begin(), in_vec_cfg.end(), CFG_CFG_DIST_COMPARE<CFG>(in_cfg, dm, env));
    for(CFG_ITRTR i_vec_cfg = in_vec_cfg.begin(); i_vec_cfg < in_vec_cfg.end(); i_vec_cfg++) {
-    if (lp->IsConnected(env, Stats, cd, dm, in_cfg, (*i_vec_cfg), 
+    if (lp->IsConnected(env, Stats, dm, in_cfg, (*i_vec_cfg), 
 			  &lp_output, pos_res, ori_res, true)) {
 	return true; // 	stop as soon in_cfg can connect to one cfg in in_vec_cfg
       }
@@ -64,7 +64,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     LocalPlanners < CFG, WEIGHT > * lp = m_pProblem->GetMPStrategy()->GetLocalPlanners();
     LPOutput< CFG, WEIGHT > lp_output; 
     Environment * env = m_pProblem->GetEnvironment();
-    CollisionDetection * cd = m_pProblem->GetCollisionDetection();
+//    CollisionDetection * cd = m_pProblem->GetCollisionDetection();
     DistanceMetric * dm = m_pProblem->GetDistanceMetric();
     double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
@@ -73,7 +73,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     typedef typename vector< CFG >::iterator CFG_ITRTR;
     for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
       for (CFG_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
-	if (lp->IsConnected(env, Stats, cd, dm, (*i_cc_a), (*i_cc_b), 
+	if (lp->IsConnected(env, Stats, dm, (*i_cc_a), (*i_cc_b), 
 			    &lp_output, pos_res, ori_res, true)) {
 	  return true; // st	op as soon as one cc in a can connect to a node in b
 	}

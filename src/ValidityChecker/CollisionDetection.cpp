@@ -154,7 +154,7 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
   selected.clear();
-
+/*
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
     for(int i=0; i<all.size(); ++i) {
@@ -164,7 +164,11 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
       }
     }
   }
-  
+*/  
+  selected.push_back(rapid);
+  selected.push_back(pqp);
+  selected.push_back(vclip);
+
   if(selected.size() < 1) {
     LOG_WARNING_MSG("No CollisionDetectionMethods selected!");
   }
@@ -239,6 +243,32 @@ CollisionDetection::
     delete directions[i];
 }
 
+CollisionDetectionMethod* 
+CollisionDetection::
+GetRAPID() {
+  vector<CollisionDetectionMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); ++I)
+    if ((*I)->GetName() == "RAPID")
+    return *I;	
+}
+
+CollisionDetectionMethod* 
+CollisionDetection::
+GetPQP() {
+  vector<CollisionDetectionMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); ++I)
+    if ((*I)->GetName() == "PQP")
+    return *I;	
+}
+
+CollisionDetectionMethod* 
+CollisionDetection::
+GetVCLIP() {
+  vector<CollisionDetectionMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); ++I)
+    if ((*I)->GetName() == "VCLIP")
+    return *I;	
+}
 
 void CollisionDetection::
 PrintOptions(ostream& out_os) {
@@ -930,7 +960,7 @@ Vclip::
 char*
 Vclip::
 GetName() const {
-  return "vclip";
+  return "VCLIP";
 }
 
 

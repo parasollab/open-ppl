@@ -83,11 +83,9 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
    * "divided by zero" run time error?!
    */
   virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
-			     CollisionDetection* cd, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
 
   virtual void ComputeCSpaceShells(Environment* _env, Stat_Class& Stats,
-			     CollisionDetection* cd, 
 			     DistanceMetric *dm, CFG& _freeCfg, CFG& _incr, vector<CFG>& nodes);
           
   virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &outCfgs);
@@ -115,7 +113,7 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
    *@see called by BasicOBPRM, GenSurfaceCfgs4ObstVERTEX.
    */
   vector<CFG> GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
-				 CollisionDetection* cd, DistanceMetric* dm,
+				 DistanceMetric* dm,
 				 int rob, int obst, 
 				 CFG& insideCfg, CFG& outsideCfg, double clearanceFactor = 1.0);
  protected:
@@ -151,7 +149,6 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
    *@see GenerateOutsideCfg
    */
   bool GenerateInsideCfg(Environment* _env, Stat_Class& Stats,
-			 CollisionDetection* _cd,
 			 int rob, int obst, CFG* insideNode);
 
   /**Get Cfg that is in CFree accroding to given
@@ -201,7 +198,6 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
    */
 
   CFG GenerateOutsideCfg(Environment* env, Stat_Class& Stats,
-			 CollisionDetection* cd, 
 			 int rob, int obst,
 			 CFG& InsideNode, CFG& incrCfg);
 
@@ -234,7 +230,6 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
    *@return a list of Free Cfgs which are near C-Obstacles.
    */
   vector<CFG> GenCfgsFromCObst(Environment* env, Stat_Class& Stats,
-			       CollisionDetection* cd,
 			       DistanceMetric* dm, 
 			       int obstacle, int nCfgs, 
 			       double clearanceFactor = 1.0);
@@ -363,13 +358,11 @@ class BasicOBPRM : public NodeGenerationMethod<CFG> {
    *to eact Free Cfgs.
    */
   vector<CFG> FirstFreeCfgs(Environment* env, Stat_Class& Stats,
-			    CollisionDetection* cd, 
 			    vector<CFG> cfgs, int n);
   /**Return all free cfgs in the given vector of cfgs.
    *@see FirstFreeCfgs(Environment *,CollisionDetection *, vector<Cfg>, GNInfo&, int)
    */
   vector<CFG> FirstFreeCfgs(Environment* env, Stat_Class& Stats,
-			    CollisionDetection* cd, 
 			    vector<CFG> cfgs);
 
  public:
@@ -520,6 +513,7 @@ PrintOptions(ostream& out_os){
   out_os << " chunk size = " << this->chunkSize << " ";
   out_os << " num shells = " << numShells << " ";
   out_os << " Balanced = " << m_balanced << " ";
+  out_os << " validity method = " << this->vcMethod << " ";
   out_os << endl;
 }
 
@@ -539,20 +533,23 @@ template <class CFG>
 void
 BasicOBPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats, 
-	      CollisionDetection* cd, DistanceMetric* dm, 
+	      DistanceMetric* dm, 
 	      vector<CFG>& nodes) {  
-         
-  
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection(); 
   m_balColl=0;
   m_balFree=0;
 
 
   LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes()");
 #ifndef QUIET
-  cout << "(numNodes=" << this->numNodes << ", "<<flush;
-  cout << "(exactNodes=" << this->exactNodes << ", "<<flush;
-  cout << "(chunkSize=" << this->chunkSize << ", "<<flush;
-  cout << "numShells=" << numShells << ") "<<flush;
+  cout << "(numNodes=" << this->numNodes << ", " <<flush;
+  cout << "(exactNodes=" << this->exactNodes << ", " <<flush;
+  cout << "(chunkSize=" << this->chunkSize << ", " <<flush;
+  cout << "numShells=" << numShells << ", " <<flush;
+  cout << "validity method = " << this->vcMethod << ") " << flush;
+
 #endif
   
 #if INTERMEDIATE_FILES
@@ -572,7 +569,9 @@ if(m_balanced == 0) {
     CallCnt=" 1st Sample"; 
     std::string tmpStr = Callee+CallCnt;
     
-    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+//    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+    bool cfg1_free = vc->IsValid(vcm, cfg1, _env, Stats, *this->cdInfo, true, &tmpStr);
+
     if (!cfg1_free) {  //push out of Obs
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push Out of Obs");
       CFG r_dir;
@@ -586,11 +585,12 @@ if(m_balanced == 0) {
         if(!cfg1.InBoundingBox(_env) ) {outofbb=true;continue;} //out of bounding box
         CallCnt=" PushOutOfObs"; 
         std::string tmpStr = Callee+CallCnt;
-        pushed_enough = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
-        if(pushed_enough) {
+//        pushed_enough = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+       pushed_enough = vc->IsValid(vcm, cfg1, _env, Stats, *this->cdInfo, true, &tmpStr);
+       if(pushed_enough) {
          // nodes.push_back(CFG(cfg1));
          // newNodes++;
-         ComputeCSpaceShells(_env, Stats, cd, dm, cfg1, r_dir, nodes);
+         ComputeCSpaceShells(_env, Stats, dm, cfg1, r_dir, nodes);
         }
       } while (pushed_enough == false && outofbb == false);
     } else {   //Push to Obs
@@ -607,12 +607,13 @@ if(m_balanced == 0) {
         if(!cfg1.InBoundingBox(_env) ) {outofbb=true;continue;} //out of bounding box
         CallCnt=" PushToObs"; 
         std::string tmpStr = Callee+CallCnt;
-        pushed_enough = cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+//      pushed_enough = cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+        pushed_enough = !vc->IsValid(vcm, cfg1, _env, Stats, *this->cdInfo, true, &tmpStr);
         if(pushed_enough) {
           //nodes.push_back(CFG(last_free));
           //newNodes++;
           r_dir.multiply(r_dir,double(-1));
-          ComputeCSpaceShells(_env, Stats, cd, dm, last_free, r_dir, nodes);
+          ComputeCSpaceShells(_env, Stats, dm, last_free, r_dir, nodes);
         }
       } while (pushed_enough == false && outofbb == false);
     }
@@ -636,7 +637,9 @@ if(m_balanced == 0) {
     CallCnt=" 1st Sample"; 
     std::string tmpStr = Callee+CallCnt;
     
-    bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+    //bool cfg1_free = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+    bool cfg1_free = vc->IsValid(vcm, cfg1, _env, Stats, *this->cdInfo, true, &tmpStr);
+
     if (!cfg1_free && (m_balColl <= m_balFree)) {  //push out of Obs
       ++m_balColl;
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push Out of Obs");
@@ -652,11 +655,13 @@ if(m_balanced == 0) {
         CallCnt=" PushOutOfObs"; 
         std::string tmpStr = Callee+CallCnt;
         ++m_balColl;
-        pushed_enough = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+       // pushed_enough = !cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+        pushed_enough = vc->IsValid(vcm, cfg1, _env, Stats, *this->cdInfo, true, &tmpStr);
+
         if(pushed_enough) {
          // nodes.push_back(CFG(cfg1));
          // newNodes++;
-         ComputeCSpaceShells(_env, Stats, cd, dm, cfg1, r_dir, nodes);
+         ComputeCSpaceShells(_env, Stats, dm, cfg1, r_dir, nodes);
         }
       } while (pushed_enough == false && outofbb == false);
     } else if(cfg1_free && (m_balColl >= m_balFree)){   //Push to Obs
@@ -675,12 +680,13 @@ if(m_balanced == 0) {
         CallCnt=" PushToObs"; 
         std::string tmpStr = Callee+CallCnt;
         ++m_balFree;
-        pushed_enough = cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+//        pushed_enough = cfg1.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr);
+        pushed_enough = !vc->IsValid(vcm, cfg1, _env, Stats, *this->cdInfo, true, &tmpStr);
         if(pushed_enough) {
           //nodes.push_back(CFG(last_free));
           //newNodes++;
           r_dir.multiply(r_dir,double(-1));
-          ComputeCSpaceShells(_env, Stats, cd, dm, last_free, r_dir, nodes);
+          ComputeCSpaceShells(_env, Stats, dm, last_free, r_dir, nodes);
         }
       } while (pushed_enough == false && outofbb == false);
     }
@@ -705,19 +711,23 @@ if(m_balanced == 0) {
 template <class CFG>
 void BasicOBPRM<CFG>::
 ComputeCSpaceShells(Environment* _env, Stat_Class& Stats,
-                    CollisionDetection* cd, 
                     DistanceMetric *dm, CFG& _freeCfg, CFG& _incr, vector<CFG>& nodes) {
 
   if(numShells < 1) {
     cout << "ERROR, SHELLS must be larger than 0" << endl; exit(-1);
   }
   if(numShells > 1) {
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
   std::string Callee(GetName()), CallCnt;
   {std::string Method("-BasicOBPRM::GenerateNodes"); Callee = Callee+Method;}
   CallCnt=" ComputeCSpaceShells"; 
   std::string tmpStr = Callee+CallCnt;
   for(int i=0; i<numShells; ++i) {
-   if(!_freeCfg.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr) && _freeCfg.InBoundingBox(_env)) {
+   if(// !_freeCfg.isCollision(_env,Stats,cd,*this->cdInfo, true, &tmpStr)
+      vc->IsValid(vcm, _freeCfg, _env, Stats, *this->cdInfo, true, &tmpStr)   
+      && _freeCfg.InBoundingBox(_env)
+     ) {
      nodes.push_back(CFG(_freeCfg));
    }
      _freeCfg.Increment(_incr);
@@ -735,10 +745,10 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &nodes) {
   
   Environment* _env = in_pRegion;
   Stat_Class& Stats = *(in_pRegion->GetStatClass());
-  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+//  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
   DistanceMetric* dm =  this->GetMPProblem()->GetDistanceMetric();
   
-  GenerateNodes(_env,  Stats,  cd,  dm, nodes);
+  GenerateNodes(_env,  Stats, dm, nodes);
 };
 
 
@@ -747,9 +757,8 @@ template <class CFG>
 bool
 BasicOBPRM<CFG>::
 GenerateInsideCfg(Environment* _env, Stat_Class& Stats, 
-		  CollisionDetection* _cd,
 		  int rob, int obst, CFG* insideNode) {
-  
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
   std::string Callee(GetName());
   {std::string Method("-BasicOBPRM::GenerateInsideCfg");Callee=Callee+Method;}
 
@@ -759,7 +768,7 @@ GenerateInsideCfg(Environment* _env, Stat_Class& Stats,
 					    insideNode);
   
   // check the cfg obtained by center of mass overlapping if valid
-  if (!insideNode->isCollision(_env, Stats, _cd, rob, obst,
+  if (!insideNode->isCollision(_env, Stats, cd, rob, obst,
 			       *this->cdInfo, true, &(Callee))) {
     
     // if center of mass does not work in getting the cfg in collision,
@@ -800,10 +809,9 @@ template <class CFG>
 CFG
 BasicOBPRM<CFG>::
 GenerateOutsideCfg(Environment* env, Stat_Class& Stats, 
-		   CollisionDetection* cd, 
 		   int rob, int obst,
                    CFG& InsideNode, CFG& incrCfg) {
-  
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection(); 
   int count = 0;
   CFG OutsideNode;
   std::string Callee(GetName());
@@ -853,10 +861,12 @@ template <class CFG>
 vector<CFG>
 BasicOBPRM<CFG>::
 GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
-		   CollisionDetection* cd, DistanceMetric* dm,
+		   DistanceMetric* dm,
 		   int rob, int obst, 
 		   CFG& insideCfg, CFG& outsideCfg, double clearanceFactor) {
-	
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();	
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();  
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
   const double PositionRes = env->GetPositionRes();
   vector<CFG> surface; 
   surface.reserve(MAX_CONVERGE);
@@ -895,8 +905,10 @@ GenerateSurfaceCfg(Environment* env, Stat_Class& Stats,
   // if converged save the cfgs that don't collide with the environment
   if(cnt < MAX_CONVERGE) {
     tmpStr = Callee+CallH;
-    if(!high.isCollision(env, Stats, cd, *this->cdInfo, true, &tmpStr)) {
-      surface = FirstFreeCfgs(env, Stats, cd,tmp);
+    if(// !high.isCollision(env, Stats, cd, *this->cdInfo, true, &tmpStr)
+       vc->IsValid(vcm, high, env, Stats, *this->cdInfo, true, &tmpStr)
+      ) {
+      surface = FirstFreeCfgs(env, Stats, tmp);
     }
   }
   return surface;
@@ -907,9 +919,11 @@ template <class CFG>
 vector<CFG>
 BasicOBPRM<CFG>::
 GenCfgsFromCObst(Environment* env, Stat_Class& Stats,
-		 CollisionDetection* cd, DistanceMetric* dm, 
+		 DistanceMetric* dm, 
 		 int obstacle, int nCfgs, double clearanceFactor) {
-  
+//  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();  
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
   int robot = env->GetRobotIndex();
   vector<CFG> surface, obstSeeds;
   Vector3D voidA, voidB;
@@ -923,7 +937,9 @@ GenCfgsFromCObst(Environment* env, Stat_Class& Stats,
     gen.GenerateOverlapCfg(env, robot, voidA, voidB, &gen);  // voidA, voidB is not used.
     
     ///check collision
-    if(gen.isCollision(env, Stats, cd, *this->cdInfo,true, &(Callee)))
+    if( // gen.isCollision(env, Stats, cd, *this->cdInfo,true, &(Callee))
+       !vc->IsValid(vcm, gen, env, Stats, *this->cdInfo, true, &Callee)
+      )
       obstSeeds.push_back(gen);
     else
       surface.push_back(gen);
@@ -936,11 +952,11 @@ GenCfgsFromCObst(Environment* env, Stat_Class& Stats,
     incrCfg.GetRandomRay(EXPANSION_FACTOR*env->GetPositionRes(), env, dm);
     
     CFG OutsideNode =
-      GenerateOutsideCfg(env,Stats,cd,robot,obstacle,obstSeeds[i],incrCfg);
+      GenerateOutsideCfg(env,Stats,robot,obstacle,obstSeeds[i],incrCfg);
     if(OutsideNode.AlmostEqual(obstSeeds[i])) continue; // can not find outside node.
     
     tmp =
-      GenerateSurfaceCfg(env,Stats,cd,dm,robot,obstacle,obstSeeds[i],OutsideNode,clearanceFactor);
+      GenerateSurfaceCfg(env,Stats,dm,robot,obstacle,obstSeeds[i],OutsideNode,clearanceFactor);
     
     // Choose as many as nshells
     preshells = Shells(tmp, numShells);
@@ -1217,9 +1233,10 @@ ChoosePointOnTriangle(Vector3D p, Vector3D q, Vector3D r) {
 template <class CFG>
 vector<CFG>
 BasicOBPRM<CFG>::
-FirstFreeCfgs(Environment* env, Stat_Class& Stats, CollisionDetection* cd, 
+FirstFreeCfgs(Environment* env, Stat_Class& Stats,
 	      vector<CFG> cfgs, int n) {
-  
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();  
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
   int size = cfgs.size();
   n = min(n,size);
   std::string Callee(GetName());
@@ -1229,7 +1246,9 @@ FirstFreeCfgs(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
   free.reserve(size);
   int i = 0; int cnt = 0;
   for (i = 0, cnt = 0; i < size && cnt < n; i++){
-    if(!cfgs[i].isCollision(env, Stats, cd, *this->cdInfo,true,&(Callee))){
+    if(// !cfgs[i].isCollision(env, Stats, cd, *this->cdInfo,true,&(Callee))
+       vc->IsValid(vcm, cfgs[i], env, Stats, *this->cdInfo, true, &Callee)
+      ){
       free.push_back(cfgs[i]);
       cnt++;
     }
@@ -1241,10 +1260,10 @@ FirstFreeCfgs(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
 template <class CFG>
 vector<CFG>
 BasicOBPRM<CFG>::
-FirstFreeCfgs(Environment* env, Stat_Class& Stats, CollisionDetection* cd, 
+FirstFreeCfgs(Environment* env, Stat_Class& Stats, 
 	      vector<CFG> cfgs) {
   int size = cfgs.size();
-  return FirstFreeCfgs(env, Stats, cd, cfgs, size);
+  return FirstFreeCfgs(env, Stats, cfgs, size);
 }
 
 #endif

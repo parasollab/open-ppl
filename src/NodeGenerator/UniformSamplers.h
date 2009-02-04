@@ -6,6 +6,7 @@ class Environment;
 class Stat_Class;
 class CollisionDetection;
 class CDInfo;
+template <typename CFG> class ValidityChecker;
 
 #include "my_program_options.hpp"
 #include <sstream>
@@ -92,17 +93,19 @@ class UniformRandomFreeSampler : public BaseSampler<CFG>
  private:
   Environment* env;
   Stat_Class& Stats;
-  CollisionDetection* cd;
+  //CollisionDetection* cd;
+  ValidityChecker<CFG>* vc;
+  std::string strVcmethod;
   CDInfo& cdInfo;
 
  public:
   UniformRandomFreeSampler(Environment* _env, Stat_Class& _Stats, 
-			   CollisionDetection* _cd, CDInfo& _cdInfo) :
-    env(_env), Stats(_Stats), cd(_cd), cdInfo(_cdInfo) {} 
+			   ValidityChecker<CFG>* _vc, std::string _strVcmethod, CDInfo& _cdInfo) :
+    env(_env), Stats(_Stats), vc(_vc), strVcmethod(_strVcmethod), cdInfo(_cdInfo) {} 
   UniformRandomFreeSampler(Environment* _env, Stat_Class& _Stats,
-			   CollisionDetection* _cd, CDInfo& _cdInfo,
+			   ValidityChecker<CFG>* _vc,  std::string _strVcmethod, CDInfo& _cdInfo,
 			   string params) :
-    env(_env), Stats(_Stats), cd(_cd), cdInfo(_cdInfo)
+    env(_env), Stats(_Stats), vc(_vc), strVcmethod(_strVcmethod), cdInfo(_cdInfo)
     {
       //create option description
       po::options_description options("UniformRandomFree Options");
@@ -153,7 +156,11 @@ class UniformRandomFreeSampler : public BaseSampler<CFG>
 	  
 	CFG tmp;
 	tmp.GetRandomCfg(env);
-	if(tmp.InBoundingBox(env) && !tmp.isCollision(env, Stats, cd, cdInfo, true, &callee)) {
+	if(tmp.InBoundingBox(env) && 
+		// !tmp.isCollision(env, Stats, cd, cdInfo, true, &callee)) 
+	vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, 
+		         Stats, cdInfo, true, &callee))
+	{
 	  Stats.IncNodes_Generated();
 	  generated = true;
 	  cfg_out.push_back(tmp);

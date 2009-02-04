@@ -77,8 +77,7 @@ class BridgeTestPRM: public NodeGenerationMethod<CFG> {
    *@note If INTERMEDIATE_FILES is defined WritePathConfigurations will be
    *called.
    */
-  virtual void GenerateNodes(Environment* _env, Stat_Class&,
-           CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class&, 
            DistanceMetric *dm, vector<CFG>& nodes);
 
   virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs);
@@ -197,6 +196,7 @@ PrintOptions(ostream& out_os){
   out_os << " exact = " << this->exactNodes << " ";
   out_os << " chunk size = " << this->chunkSize << " ";
   out_os << " bridge d = " << bridge_d << " ";
+  out_os << " validity method = " << this->vcMethod << " ";
   out_os << endl;
 }
 
@@ -205,10 +205,11 @@ template <class CFG>
 void
 BridgeTestPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
-        CollisionDetection* cd, DistanceMetric* dm,
-        vector<CFG>& nodes) {
+	      DistanceMetric* dm, vector<CFG>& nodes) {
   LOG_DEBUG_MSG("BridgeTestPRM::GenerateNodes()");
-
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
+  
   if (bridge_d == 0)   //if no bridge_d value given (standard deviation), calculate from robot
     bridge_d = ((_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange());
 
@@ -217,10 +218,12 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   cout << "(chunkSize=" << this->chunkSize << ") ";
   cout << "(exactNodes=" << this->exactNodes << ") ";
   cout << "(d=" << bridge_d << ") ";
+  cout << "(validity method=" << this->vcMethod << ") ";
 #endif
 
   CDInfo cdInfo;
-  BridgeTestRandomFreeSampler<CFG> bridge_sampler(_env, Stats, cd, cdInfo, dm, bridge_d);
+//  BridgeTestRandomFreeSampler<CFG> bridge_sampler(_env, Stats, cd, cdInfo, dm, bridge_d);
+  BridgeTestRandomFreeSampler<CFG> bridge_sampler(_env, Stats, vc, vcm, cdInfo, dm, bridge_d);
   int nodes_offset = nodes.size();
 
   for(int i=0; i<this->numNodes; ++i) {
@@ -253,10 +256,9 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
 
   Environment* pEnv = in_pRegion;
   Stat_Class* pStatClass = in_pRegion->GetStatClass(); 
-  CollisionDetection* pCd = this->GetMPProblem()->GetCollisionDetection();
   DistanceMetric *dm = this->GetMPProblem()->GetDistanceMetric();
  
-  GenerateNodes(pEnv,*pStatClass, pCd, dm, outCfgs);
+  GenerateNodes(pEnv,*pStatClass, dm, outCfgs);
 }
 
 

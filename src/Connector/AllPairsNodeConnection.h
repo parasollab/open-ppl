@@ -24,18 +24,18 @@ class AllPairsNodeConnection: public NodeConnectionMethod<CFG,WEIGHT> {
   void Connect();
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-             CollisionDetection*, DistanceMetric *,
+             DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges);  
   
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-             CollisionDetection*, DistanceMetric *,
+             DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
              vector<VID>& v1, vector<VID>& v2);
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-             CollisionDetection*, DistanceMetric*,
+             DistanceMetric*,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
              vector<vector<VID> >& verticesList) {
@@ -90,7 +90,6 @@ Connect() {
 template <class CFG, class WEIGHT>
 void AllPairsNodeConnection<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-            CollisionDetection* cd , 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
@@ -111,7 +110,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         if(IsSameCC(*(_rm->m_pRoadmap), verticesVID[i], verticesVID[j])) continue; 
       
       Stats.IncConnections_Attempted();
-      if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
+      if (lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
                           _rm->m_pRoadmap->GetData(verticesVID[i]),
                           _rm->m_pRoadmap->GetData(verticesVID[j]),
                           &lpOutput,
@@ -147,8 +146,7 @@ AllPairsNodeConnection(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void AllPairsNodeConnection<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-            CollisionDetection* cd , 
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
@@ -167,7 +165,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         if(IsSameCC(*(_rm->m_pRoadmap), v1[i], v2[j])) continue; 
       
       Stats.IncConnections_Attempted();
-      if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
+      if (lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
                           _rm->m_pRoadmap->GetData(v1[i]),
                           _rm->m_pRoadmap->GetData(v2[j]),
                           &lpOutput,

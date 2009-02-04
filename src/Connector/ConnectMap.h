@@ -56,7 +56,7 @@ class ConnectMap : public MPBaseObject{
   // Constructors and destructor
   ConnectMap();
   ConnectMap(XMLNodeReader& in_Node, MPProblem* in_pProblem);
-  ConnectMap(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
+  ConnectMap(Roadmap<CFG,WEIGHT>*, 
 	     DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
   virtual ~ConnectMap();
 
@@ -93,41 +93,41 @@ class ConnectMap : public MPBaseObject{
   //////////////////////
   // Core: Connection methods
   void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	       CollisionDetection* cd, DistanceMetric* dm,
+	       DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges);
 
   void ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		    CollisionDetection* cd, DistanceMetric * dm,
+		    DistanceMetric * dm,
 		    LocalPlanners<CFG,WEIGHT>* lp,
 		    bool addPartialEdge, bool addAllEdges);  
   void ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		    CollisionDetection* cd, DistanceMetric * dm,
+		    DistanceMetric * dm,
 		    LocalPlanners<CFG,WEIGHT>* lp,
 		    bool addPartialEdge, bool addAllEdges,
 		    vector<VID>& cfgs1, vector<VID>& cfgs2);  
   void ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		    CollisionDetection* cd, DistanceMetric * dm,
+		    DistanceMetric * dm,
 		    LocalPlanners<CFG,WEIGHT>* lp,
 		    bool addPartialEdge, bool addAllEdges,
 		    vector<vector<VID> >& cfgs);
   
   void ConnectComponents(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
-			 CollisionDetection* cd, DistanceMetric* dm,
+			 DistanceMetric* dm,
 			 LocalPlanners<CFG,WEIGHT>* lp,
 			 bool addPartialEdge, bool addAllEdges);
   void ConnectComponents(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
-			 CollisionDetection* cd, DistanceMetric* dm,
+			 DistanceMetric* dm,
 			 LocalPlanners<CFG,WEIGHT>* lp,
 			 bool addPartialEdge, bool addAllEdges,
 			 vector<VID>& vids1, vector<VID>& vids2);
   void ConnectComponents(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
-			 CollisionDetection* cd, DistanceMetric* dm,
+			 DistanceMetric* dm,
 			 LocalPlanners<CFG,WEIGHT>* lp,
 			 bool addPartialEdge, bool addAllEdges,
 			 vector<vector<VID> >& vids);
 
-  void ConnectRegions(CollisionDetection* cd, DistanceMetric* dm,
+  void ConnectRegions(DistanceMetric* dm,
 		      LocalPlanners<CFG,WEIGHT>* lp,
 		      bool addPartialEdge, bool addAllEdges,
 		      vector<MPRegion<CFG,WEIGHT>* > source_regions,
@@ -372,7 +372,7 @@ ParseXML(XMLNodeReader& in_Node) {
 
 template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::
-ConnectMap(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetection* cd, 
+ConnectMap(Roadmap<CFG,WEIGHT> * rdmp, 
 	   DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp) {
   ConnectMap();
 }
@@ -562,18 +562,18 @@ template <class CFG, class WEIGHT>
 void 
 ConnectMap<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	CollisionDetection* cd, DistanceMetric* dm,
+        DistanceMetric* dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
 	bool addPartialEdge, bool addAllEdges) {
-  ConnectNodes(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges);
-  ConnectComponents(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges);
+  ConnectNodes(_rm, Stats, dm, lp, addPartialEdge, addAllEdges);
+  ConnectComponents(_rm, Stats, dm, lp, addPartialEdge, addAllEdges);
 }
 
 template <class CFG, class WEIGHT>
 void 
 ConnectMap<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	     CollisionDetection* cd, DistanceMetric * dm,
+	     DistanceMetric * dm,
 	     LocalPlanners<CFG,WEIGHT>* lp,
 	     bool addPartialEdge, bool addAllEdges) {
   typename vector<NodeConnectionMethod<CFG,WEIGHT> *>::iterator itr;
@@ -587,7 +587,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
-    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges);
+    (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec, "
@@ -602,7 +602,7 @@ template <class CFG, class WEIGHT>
 void 
 ConnectMap<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	     CollisionDetection* cd, DistanceMetric * dm,
+	     DistanceMetric * dm,
 	     LocalPlanners<CFG,WEIGHT>* lp,
 	     bool addPartialEdge, bool addAllEdges,
 	     vector<VID>& cfgs1, vector<VID>& cfgs2) {
@@ -617,7 +617,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
-    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,cfgs1,cfgs2);
+    (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,cfgs1,cfgs2);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec, "
@@ -632,7 +632,7 @@ template <class CFG, class WEIGHT>
 void 
 ConnectMap<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	     CollisionDetection* cd, DistanceMetric * dm,
+	     DistanceMetric * dm,
 	     LocalPlanners<CFG,WEIGHT>* lp,
 	     bool addPartialEdge, bool addAllEdges,
 	     vector<vector<VID> >& cfgs) {
@@ -647,7 +647,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
-    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,cfgs);
+    (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,cfgs);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec, "
@@ -662,7 +662,7 @@ template <class CFG, class WEIGHT>
 void 
 ConnectMap<CFG,WEIGHT>::
 ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		  CollisionDetection* cd, DistanceMetric * dm,
+		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge, bool addAllEdges) {
   typename vector<ComponentConnectionMethod<CFG,WEIGHT> *>::iterator itr;
@@ -676,7 +676,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
-    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges);
+    (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec, "
@@ -691,7 +691,7 @@ template <class CFG, class WEIGHT>
 void 
 ConnectMap<CFG,WEIGHT>::
 ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		  CollisionDetection* cd, DistanceMetric * dm,
+		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge, bool addAllEdges,
 		  vector<VID>& vids1, vector<VID>& vids2) {
@@ -706,7 +706,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
-    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,vids1,vids2);
+    (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,vids1,vids2);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec, "
@@ -720,7 +720,7 @@ template <class CFG, class WEIGHT>
 void 
 ConnectMap<CFG,WEIGHT>::
 ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		  CollisionDetection* cd, DistanceMetric * dm,
+		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge, bool addAllEdges,
 		  vector<vector<VID> >& vids) {
@@ -735,7 +735,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //clock.PrintName();
     cout << flush;
 #endif
-    (*itr)->Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,vids);
+    (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,vids);
 #ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec, "
@@ -747,7 +747,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void ConnectMap<CFG,WEIGHT>::
-ConnectRegions(CollisionDetection* cd, DistanceMetric* dm,
+ConnectRegions(DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges,
 	       vector<MPRegion<CFG,WEIGHT>* > source_regions,
@@ -762,7 +762,7 @@ ConnectRegions(CollisionDetection* cd, DistanceMetric* dm,
     cout << " " << flush;
 #endif
     
-    (*itr)->Connect(target_region, source_regions, *this, *cd, *dm, *lp,
+    (*itr)->Connect(target_region, source_regions, *this, *dm, *lp,
 		    addPartialEdge, addAllEdges);
 #ifndef QUIET
     clock.StopClock();

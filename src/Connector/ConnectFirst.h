@@ -29,11 +29,11 @@ class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Core: Connection method
   void Connect(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats, 
-	       CollisionDetection* cd, DistanceMetric* dm,
+	       DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges);  
   void Connect(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats,
-	       CollisionDetection* cd, DistanceMetric* dm,
+	       DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges,
 	       vector<VID>& cfgs1, vector<VID>& cfgs2);
@@ -133,12 +133,12 @@ template <class CFG, class WEIGHT>
 void 
 ConnectFirst<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	CollisionDetection* cd, DistanceMetric* dm,
+        DistanceMetric* dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
 	bool addPartialEdge, bool addAllEdges) {
   vector<VID> cfgs;
   _rm->m_pRoadmap->GetVerticesVID(cfgs);
-  return Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,
+  return Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges,
 		 cfgs, cfgs);
 }
 
@@ -147,7 +147,7 @@ template <class CFG, class WEIGHT>
 void 
 ConnectFirst<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	CollisionDetection* cd, DistanceMetric* dm,
+	DistanceMetric* dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
 	bool addPartialEdge, bool addAllEdges,
 	vector<VID>& cfgs1, vector<VID>& cfgs2) {
@@ -175,7 +175,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), *C1, D->first))
         continue;
       LPOutput<CFG,WEIGHT> _ci;
-      if(lp->IsConnected(_rm->GetEnvironment(), Stats, cd, dm, 
+      if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm, 
 			 _rm->m_pRoadmap->GetData(*C1), 
 			 _rm->m_pRoadmap->GetData(D->first), 
 			 &_ci, _rm->GetEnvironment()->GetPositionRes(), 

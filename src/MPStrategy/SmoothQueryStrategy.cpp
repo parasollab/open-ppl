@@ -103,7 +103,7 @@ operator()(int in_RegionID)
   Clock_Class QueryClock;
   QueryClock.StartClock("Query");
   bool query_result = query.PerformQuery(rdmp, *pStatClass, 
-                                         GetMPProblem()->GetCollisionDetection(), 
+                                //         GetMPProblem()->GetCollisionDetection(), 
                                          &m_ConnectMap, 
                                          GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), 
                                          GetMPProblem()->GetDistanceMetric());
@@ -136,7 +136,7 @@ operator()(int in_RegionID)
       if(rdmp->m_pRoadmap->IsVertex(*I))
         path_vids.push_back(rdmp->m_pRoadmap->GetVID(*I));
     m_SmoothConnectMap.ConnectNodes(rdmp, *pStatClass,
-                           GetMPProblem()->GetCollisionDetection(),
+           //                GetMPProblem()->GetCollisionDetection(),
                            GetMPProblem()->GetDistanceMetric(),
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            false, false,
@@ -148,7 +148,7 @@ operator()(int in_RegionID)
     SmoothQueryClock.StartClock("Query Smoothed Path");
     query.path.clear();
     bool smooth_query_result = query.PerformQuery(rdmp, *pStatClass,
-                                                  GetMPProblem()->GetCollisionDetection(),
+      //                                            GetMPProblem()->GetCollisionDetection(),
                                                   &m_ConnectMap,
                                                   GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                                   GetMPProblem()->GetDistanceMetric());

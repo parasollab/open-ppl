@@ -50,7 +50,7 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       LocalPlanners < CFG, WEIGHT > * lp = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
       LPOutput< CFG, WEIGHT > lp_output; 
       Environment * env = this->GetMPProblem()->GetEnvironment();
-      CollisionDetection * cd = this->GetMPProblem()->GetCollisionDetection();
+//      CollisionDetection * cd = this->GetMPProblem()->GetCollisionDetection();
       DistanceMetric * dm = this->GetMPProblem()->GetDistanceMetric();
       double pos_res = this->GetMPProblem()->GetEnvironment()->GetPositionRes();
       double ori_res = this->GetMPProblem()->GetEnvironment()->GetOrientationRes();
@@ -67,7 +67,7 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       bool is_expansion = true;
       for(vector<VID>::iterator i_n = neighbor_neighbor.begin(); i_n !=neighbor_neighbor.end(); ++i_n)
       {  //test connection to each;
-        if(!(lp->IsConnected(env, Stats, cd, dm, 
+        if(!(lp->IsConnected(env, Stats, dm, 
                              pGraph->GetData(in_vid),
                              pGraph->GetData(*i_n),
                              &lp_output, pos_res, ori_res, true))) {

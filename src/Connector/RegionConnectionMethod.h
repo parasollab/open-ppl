@@ -35,14 +35,14 @@ class RegionConnectionMethod : MPBaseObject {
 		       MPRegion<CFG,WEIGHT>* &l_region, 
 		       MPRegion<CFG,WEIGHT>* &r_region, 
 		       ConnectMap<CFG, WEIGHT>& cm,
-		       CollisionDetection& cd, DistanceMetric& dm,
+		       DistanceMetric& dm,
 		       LocalPlanners<CFG,WEIGHT>& lp,
 		       bool addPartialEdge, bool addAllEdges) = 0;
 
   virtual void Connect(MPRegion<CFG,WEIGHT>* target_region,    // Output MPregion
 	       vector<MPRegion<CFG,WEIGHT>* > &source_regions, // regions to merge
 	       ConnectMap<CFG, WEIGHT>& cm,
-	       CollisionDetection& cd, DistanceMetric& dm,
+	       DistanceMetric& dm,
 	       LocalPlanners<CFG,WEIGHT>& lp,
 	       bool addPartialEdge, bool addAllEdges) = 0;
 

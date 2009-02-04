@@ -59,8 +59,7 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
    *@note If INTERMEDIATE_FILES is defined WritePathConfigurations will be
    *called.
    */
-  virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
-			     CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class& Stats, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
   
   virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs);
@@ -158,6 +157,7 @@ PrintOptions(ostream& out_os){
   out_os << " num nodes = " << this->numNodes << " ";
   out_os << " exact = " << this->exactNodes << " ";
   out_os << " chunk size = " << this->chunkSize << " ";
+  out_os << " validity method = " << this->vcMethod << " ";
   out_os << " MaxCDCalls = " << this->m_nMaxCdCalls << " ";
   out_os << endl;
 }
@@ -175,10 +175,9 @@ template <class CFG>
 void
 BasicPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
-	      CollisionDetection* cd, DistanceMetric *,
-	      vector<CFG>& nodes) {
+	      DistanceMetric *, vector<CFG>& nodes) {
   LOG_DEBUG_MSG("BasicPRM::GenerateNodes()");	
-
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
 #ifndef QUIET
   if (this->exactNodes==1)
      cout << "(numNodes=" << this->numNodes << ") ";
@@ -187,7 +186,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 #endif
   
   CDInfo cdInfo;
-  UniformRandomFreeSampler<CFG> uniform_sampler(_env, Stats, cd, cdInfo);
+  UniformRandomFreeSampler<CFG> uniform_sampler(_env, Stats, vc, this->vcMethod, cdInfo);
   int nodes_offset = nodes.size();
 
   if (this->exactNodes == 1) { // we want to obtain numNodes free nodes 
@@ -221,6 +220,7 @@ void
 BasicPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) {
 
+
 /*** note, duplicate code here, should call UniformRandomFreeSampler instead ***/
 
   LOG_DEBUG_MSG("BasicPRM::GenerateNodes()"); 
@@ -228,14 +228,15 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
   Environment* pEnv = in_pRegion;
   Stat_Class* pStatClass = in_pRegion->GetStatClass();
   CollisionDetection* pCd = this->GetMPProblem()->GetCollisionDetection();
-  
+  ValidityChecker<CFG>* pVc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker<CFG>::VCMethodPtr pVcm = pVc->GetVCMethod(this->vcMethod);
+ 	  
   if (this->exactNodes==1)
      cout << "(numNodes=" << this->numNodes << ") ";
   else
     cout << "(exactNodes=" << this->exactNodes << ") ";
   
-  
-  
+    
   int nNumCdCalls = 0;
   if(this->m_nExactNodes == 1) {  //Generate exactly num nodes
     int nFree = 0;
@@ -244,8 +245,8 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
       CFG sample;
       sample.SetLabel("BasicPRM",true);
       sample.GetRandomCfg(pEnv);
-
-      bool bCd = !sample.InBoundingBox(pEnv) || sample.isCollision(pEnv, *pStatClass, pCd, *this->cdInfo,true, &callee);
+      //bool bCd = !sample.InBoundingBox(pEnv) || sample.isCollision(pEnv, *pStatClass, pCd, *this->cdInfo,true, &callee);
+      bool bCd = !sample.InBoundingBox(pEnv) || !pVc->IsValid(pVcm, sample, pEnv, *pStatClass, *this->cdInfo, true, &callee);
       ++nNumCdCalls;
       if (!bCd) {
         ++nFree;
@@ -265,7 +266,8 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
       sample.SetLabel("BasicPRM",true);
       sample.GetRandomCfg(pEnv);
 
-      bool bCd = !sample.InBoundingBox(pEnv) || sample.isCollision(pEnv, *pStatClass, pCd, *this->cdInfo, true, &callee);
+//      bool bCd = !sample.InBoundingBox(pEnv) || sample.isCollision(pEnv, *pStatClass, pCd, *this->cdInfo,true, &callee);
+      bool bCd = !sample.InBoundingBox(pEnv) || !pVc->IsValid(pVcm, sample, pEnv, *pStatClass, *this->cdInfo, true, &callee);
       ++nNumCdCalls;
       ++nAttempts;
       if (!bCd) {

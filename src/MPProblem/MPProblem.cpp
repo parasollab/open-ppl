@@ -13,8 +13,6 @@ MPProblem(XMLNodeReader& in_Node) : MPBaseObject(in_Node, this) {
 }
 
 
-
-
 void MPProblem::
 ParseXML(XMLNodeReader& in_Node) { 
   LOG_DEBUG_MSG("MPProblem::ParseXML()");
@@ -29,6 +27,10 @@ ParseXML(XMLNodeReader& in_Node) {
       m_pDistanceMetric = new DistanceMetric(*citr, this);
     } else  if(citr->getName() == "collision_detection") {
       m_pCollisionDetection = new CollisionDetection(*citr, this);
+    } 
+      else  if(citr->getName() == "validity_test") {
+      m_pCollisionDetection = new CollisionDetection(*citr, this);
+      m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
     } else  if(citr->getName() == "MPRegions") {
       ///\Todo Parse MPRegions
     }else {

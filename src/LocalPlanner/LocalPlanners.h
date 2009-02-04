@@ -11,6 +11,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 #include "OBPRMDef.h"
 #include "CollisionDetection.h" //for CDINFO instance, so we can not use forward declaration.
+#include "ValidityChecker.hpp"
 #include "Cfg.h"    //for vector<Cfg>, so we can not use forward declaration.
 #include "Weight.h"
 #include "util.h"
@@ -61,21 +62,20 @@ class LocalPlanners : MPBaseObject{
   unsigned int GetCounter();
 
   bool IsConnected(Environment *env, Stat_Class& Stats,
-       CollisionDetection *, DistanceMetric *,
+       DistanceMetric *,
        CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput, 
        double positionRes, double orientationRes, 
        bool checkCollision=true, 
        bool savePath=false, bool saveFailedPath=false);
 
   bool IsConnected(Roadmap<CFG, WEIGHT> *rm, Stat_Class& Stats,
-       CollisionDetection *cd, DistanceMetric *dm,
+       DistanceMetric *dm,
        CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
        double positionRes, double orientationRes, 
        bool checkCollision=true, 
        bool savePath=false, bool saveFailedPath=false);
 
-  bool IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats,
-       CollisionDetection *cd, 
+  bool IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats, 
        DistanceMetric *dm,
        CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
        double positionRes, double orientationRes, 
@@ -84,8 +84,7 @@ class LocalPlanners : MPBaseObject{
 
   bool UsesPlannerOtherThan(char plannerName[]);
 
-  bool GetPathSegment(Environment *_env, Stat_Class& Stats,
-          CollisionDetection *cd, 
+  bool GetPathSegment(Environment *_env, Stat_Class& Stats, 
           DistanceMetric *dm, CFG _c1, CFG _c2, WEIGHT _weight, 
           LPOutput<CFG,WEIGHT>* _ci,      
           double positionRes, double orientationRes, 
@@ -392,7 +391,7 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 IsConnected(Environment *_env, Stat_Class& Stats, 
-      CollisionDetection *cd, DistanceMetric *dm,
+      DistanceMetric *dm,
       CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
       double positionRes, double orientationRes, 
       bool checkCollision, 
@@ -419,7 +418,7 @@ IsConnected(Environment *_env, Stat_Class& Stats,
       lpOutput->edge.first.SetWeight(0);
       lpOutput->edge.second.SetWeight(0);
       
-      connected = (*itr)->IsConnected(_env,Stats,cd,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+      connected = (*itr)->IsConnected(_env,Stats,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
       if (connected)
   connecting_lp = (*itr)->GetID();
     }
@@ -441,7 +440,7 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 IsConnected(Roadmap<CFG, WEIGHT> *rm, Stat_Class& Stats, 
-      CollisionDetection *cd, DistanceMetric *dm,
+      DistanceMetric *dm,
       CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
       double positionRes, double orientationRes, 
       bool checkCollision, 
@@ -451,7 +450,7 @@ IsConnected(Roadmap<CFG, WEIGHT> *rm, Stat_Class& Stats,
   if( rm->m_pRoadmap->IsEdge(_c1, _c2) )  // check they are already connected.
     connected = true;
   else
-    connected = IsConnected(rm->GetEnvironment(), Stats, cd, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+    connected = IsConnected(rm->GetEnvironment(), Stats, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
 
   return connected;
 }
@@ -461,12 +460,12 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats,
-      CollisionDetection *cd, DistanceMetric *dm,
+      DistanceMetric *dm,
       CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
       double positionRes, double orientationRes, 
       bool checkCollision, 
       bool savePath, bool saveFailedPath) {
-  return GetLocalPlanner(lpid)->IsConnected(_env,Stats,cd,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+  return GetLocalPlanner(lpid)->IsConnected(_env,Stats,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
 }
 
 
@@ -492,7 +491,7 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 GetPathSegment(Environment *_env, Stat_Class& Stats, 
-         CollisionDetection *cd, DistanceMetric *dm, 
+         DistanceMetric *dm, 
          CFG _c1, CFG _c2, WEIGHT _weight, 
          LPOutput<CFG,WEIGHT>* _ci,     
          double positionRes, double orientationRes, 
@@ -505,7 +504,7 @@ GetPathSegment(Environment *_env, Stat_Class& Stats,
       // clear possible old storage.  
       _ci->path.erase(_ci->path.begin(), _ci->path.end());
       //the local planner takes care of forward and backward connection
-      if ( IsConnected(lpid, _env,Stats,cd,dm,_c1,_c2, _ci, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) ) {
+      if ( IsConnected(lpid, _env,Stats,dm,_c1,_c2, _ci, positionRes, orientationRes, checkCollision, savePath, saveFailedPath) ) {
   connected = true;
       } else {                       // NEITHER!
   cout << "\n\n\t Planner: " << GetLocalPlanner(lpid)->GetName() << " FAILED!!! \n\n";

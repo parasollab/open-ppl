@@ -9,11 +9,12 @@
 #include "MultiBody.h"
 #include "Stat_Class.h"
 #include "util.h"
+#include "ValidityChecker.hpp"
 
 template <class CFG, class WEIGHT> struct LPOutput;
 
 template <class CFG, class WEIGHT>
-class LocalPlannerMethod : MPBaseObject{ 
+class LocalPlannerMethod : public MPBaseObject{ 
  public:
 
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -54,8 +55,7 @@ class LocalPlannerMethod : MPBaseObject{
   /**Determine whether two cfgs are connected according to method type, abstract.
    *@param LPOutput.
    */
-  virtual bool IsConnected(Environment* _env, Stat_Class& Stats,
-         CollisionDetection* cd, 
+  virtual bool IsConnected(Environment* _env, Stat_Class& Stats, 
          DistanceMetric *, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,

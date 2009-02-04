@@ -81,7 +81,6 @@ class OBPRM : public BasicOBPRM<CFG> {
    * "divided by zero" run time error?!
    */ 
   virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
-			     CollisionDetection* cd, 
 			     DistanceMetric *, vector<CFG>& nodes);
           
   virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion,vector<CFG>& nodes);
@@ -94,7 +93,6 @@ class OBPRM : public BasicOBPRM<CFG> {
    *@return Return values returned by the function called by this method.
    */
   vector<CFG> GenSurfaceCfgs4Obst(Environment* env, Stat_Class& Stats,
-				  CollisionDetection*,
 				  DistanceMetric* dm, int obstacle,
 				  int nCfgs, double clearanceFactor = 1.0);
 
@@ -120,7 +118,6 @@ class OBPRM : public BasicOBPRM<CFG> {
    *for generating Cfgs in C-Obstacle.
    */
   vector<CFG> GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
-					CollisionDetection*,
 					DistanceMetric* dm, int obstacle, 
 					int nCfgs, double clearanceFactor = 1.0);
 
@@ -184,7 +181,6 @@ class OBPRM : public BasicOBPRM<CFG> {
    *similar mannar.
    */
   vector<CFG> GenFreeCfgs4Obst(Environment* env, Stat_Class& Stats,
-			       CollisionDetection *,
 			       int obstacle, int nCfgs);
 
   /**Generate seeds in specified (user or default) manner.
@@ -208,7 +204,6 @@ class OBPRM : public BasicOBPRM<CFG> {
    *Cfg::GenerateOverlapCfg to get overlap Cfg.
    */
   void GenerateSeeds(Environment* env, Stat_Class& Stats, 
-		     CollisionDetection* cd,
 		     int obst, int nseeds,
 		     int selectRobot, int selectObstacle,
 		     vector<CFG>* seeds);
@@ -467,6 +462,7 @@ OBPRM<CFG>::
   _os << " exact  = " << this->exactNodes << " ";
   _os << " chunk size = " << this->chunkSize << " ";
   _os << " num shells = " << this->numShells << " ";
+  _os << " validity method = " << this->vcMethod << " ";  
   _os << endl << "                    ";
   _os << "  proportionSurface = " << proportionSurface << " ";
   _os << "  collPair = " << collPair.GetValue() << " ";
@@ -488,7 +484,7 @@ CreateCopy() {
 template <class CFG>
 void 
 OBPRM<CFG>::
-GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd, 
+GenerateNodes(Environment* _env, Stat_Class& Stats, 
 	      DistanceMetric *dm, vector<CFG>& nodes) {
 }
          
@@ -499,21 +495,22 @@ OBPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
   Environment* _env = in_pRegion;
   Stat_Class& Stats = *(in_pRegion->GetStatClass());
-  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+//  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
   DistanceMetric* dm =  this->GetMPProblem()->GetDistanceMetric();
          
   int origNumNodes = this->numNodes;        
          
          
 #ifndef QUIET
-  cout << "(numNodes="          << this->numNodes          << ", ";
-  cout << "(exactNodes="          << this->exactNodes          << ", ";
-  cout << "(chunkSize="          << this->chunkSize          << ", ";
-  cout << "\tproportionSurface="<< proportionSurface << ", ";
-  cout << "\nnumShells="        << this->numShells         << ", ";
-  cout << "collPair="           << collPair.GetValue()          << ", ";
-  cout << "freePair="           << freePair.GetValue()          << ", ";
-  cout << "clearanceFactor="    << clearanceFactor   << ") ";
+  cout << "(numNodes="          << this->numNodes      << ", ";
+  cout << "(exactNodes="        << this->exactNodes    << ", ";
+  cout << "(chunkSize="         << this->chunkSize     << ", ";
+  cout << "validity method = "  << this->vcMethod      << ", ";
+  cout << "\tproportionSurface="<< proportionSurface   << ", ";
+  cout << "\nnumShells="        << this->numShells     << ", ";
+  cout << "collPair="           << collPair.GetValue() << ", ";
+  cout << "freePair="           << freePair.GetValue() << ", ";
+  cout << "clearanceFactor="    << clearanceFactor     << ") ";
 #endif
   
   bool bExact = this->exactNodes == 1? true: false;
@@ -560,11 +557,11 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
       if(obstacle != robot) {
       
 	// Generate Surface Cfgs using Binary Search Procedure
-	obstSurface = GenSurfaceCfgs4Obst(_env, Stats, cd,dm, obstacle, NSEED,
+	obstSurface = GenSurfaceCfgs4Obst(_env, Stats,dm, obstacle, NSEED,
 					  clearanceFactor);
       
 	// Generate Free Cfgs using Ad Hoc procedure
-	obstFree = GenFreeCfgs4Obst(_env, Stats, cd, obstacle, NFREE);
+	obstFree = GenFreeCfgs4Obst(_env, Stats, obstacle, NFREE);
       
 	// Collect free & surface nodes for return
 	int i;
@@ -591,7 +588,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
       else 
 	//if(numMultiBody == 1) { //if robot is the only object
 	if(numExternalBody == 1) { //if robot is the only object
-	  vector<CFG> CobstNodes = this->GenCfgsFromCObst(_env, Stats, cd, dm, obstacle,
+	  vector<CFG> CobstNodes = this->GenCfgsFromCObst(_env, Stats, dm, obstacle,
 						    this->numNodes);
 	  for(int i=0; i<CobstNodes.size(); ++i){
 	    CobstNodes[i].obst = obstacle;
@@ -778,8 +775,10 @@ template <class CFG>
 vector<CFG>
 OBPRM<CFG>::
 GenSurfaceCfgs4Obst(Environment* env, Stat_Class& Stats,
-		    CollisionDetection* cd, DistanceMetric* dm, 
-		    int obstacle, int nCfgs, double clearanceFactor) {  
+		    DistanceMetric* dm, 
+		    int obstacle, int nCfgs, double clearanceFactor) {
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection(); 
+
   pair<int,int> seedSelect;
   ValidatePairs("seedSelect", collPair, &seedSelect);
   
@@ -799,7 +798,7 @@ GenSurfaceCfgs4Obst(Environment* env, Stat_Class& Stats,
     return result;
 
   } else
-    return GenSurfaceCfgs4ObstVERTEX(env, Stats, cd, dm, obstacle, 
+    return GenSurfaceCfgs4ObstVERTEX(env, Stats, dm, obstacle, 
 				     nCfgs, clearanceFactor);
 }
 
@@ -808,14 +807,16 @@ template <class CFG>
 vector<CFG>
 OBPRM<CFG>::
 GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats, 
-			  CollisionDetection* cd, DistanceMetric* dm, 
+			  DistanceMetric* dm, 
 			  int obstacle, int nCfgs, double clearanceFactor) {  
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection(); 
+
   pair<int,int> seedSelect;
   ValidatePairs("seedSelect", collPair, &seedSelect);
   
   vector<CFG> obstSeeds;
   
-  GenerateSeeds(env, Stats, cd, obstacle, nCfgs,
+  GenerateSeeds(env, Stats, obstacle, nCfgs,
 		seedSelect.first, seedSelect.second, &obstSeeds);
   
   int robot = env->GetRobotIndex();
@@ -824,7 +825,7 @@ GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
     //Generate Random direction
     CFG incrCfg = GenerateRandomDirection(env,dm,obstSeeds[i]);     
     // Generate outside cfg
-    CFG OutsideNode = GenerateOutsideCfg(env,Stats,cd,robot,obstacle,
+    CFG OutsideNode = GenerateOutsideCfg(env,Stats,robot,obstacle,
 					 obstSeeds[i],incrCfg);
     //move inside node to the bounding box if required
     bool inBB = PushCfgToBoundingBox(env,obstSeeds[i],OutsideNode);
@@ -837,7 +838,7 @@ GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
       continue; //no valid inside node was found
     
     // Generate surface cfgs
-    tmp = GenerateSurfaceCfg(env,Stats,cd,dm,
+    tmp = GenerateSurfaceCfg(env,Stats,dm,
 			     robot,obstacle,obstSeeds[i],OutsideNode,
 			     clearanceFactor);
     
@@ -856,8 +857,11 @@ GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
 template <class CFG>
 vector<CFG>
 OBPRM<CFG>::
-GenFreeCfgs4Obst(Environment* env, Stat_Class& Stats, CollisionDetection* cd, 
-		 int obstacle, int nCfgs) {  
+GenFreeCfgs4Obst(Environment* env, Stat_Class& Stats, 
+		 int obstacle, int nCfgs) { 
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();         
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
+
   pair<int,int> freeSelect;
   ValidatePairs("freeSelect", freePair, &freeSelect);
   
@@ -884,7 +888,9 @@ GenFreeCfgs4Obst(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
     if( cfg.GenerateOverlapCfg(env, robot, ptsRobot[i], ptsObstacle[i], &cfg) ) {
       // check if it is possible to generate a Cfg with this pose.
       //if(!cfg.isCollision(env, *this->cdInfo) && CfgInsideBB(env,cfg)) {
-      if(!cfg.isCollision(env, Stats, cd, *this->cdInfo,true, &Callee)) {
+      if( // !cfg.isCollision(env, Stats, cd, *this->cdInfo,true, &Callee)
+	  vc->IsValid(vcm, cfg, env, Stats, *this->cdInfo, true, &Callee)    
+	) {
 	free.push_back(cfg);
       }
     }
@@ -906,12 +912,14 @@ GenFreeCfgs4Obst(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
 template <class CFG>
 void
 OBPRM<CFG>::
-GenerateSeeds(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
+GenerateSeeds(Environment* env, Stat_Class& Stats,
               int obst, int nseeds,
               int selectRobot, int selectObstacle,
               vector<CFG>* seeds) {
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();           
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
+
   int rob = env->GetRobotIndex();
-  
   std::string Callee(GetName());
   {std::string Method("-OBPRM::GenerateSeeds");Callee=Callee+Method;}
 
@@ -924,7 +932,9 @@ GenerateSeeds(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
   for(int i = 0 ; i < nseeds ; i++){
     if(cfg.GenerateOverlapCfg(env, rob, ptsRobot[i], ptsObstacle[i], &cfg)){
       // check if it is possible to generate a Cfg with this pose.
-      if(cfg.isCollision(env, Stats, cd, *this->cdInfo,true,&Callee)) {
+      if( // cfg.isCollision(env, Stats, cd, *this->cdInfo,true,&Callee)
+          !vc->IsValid(vcm, cfg, env, Stats, *this->cdInfo, true, &Callee)
+	) {
 	seeds->push_back(cfg);
       }
     }

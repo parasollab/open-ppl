@@ -27,7 +27,7 @@ class ConnectkCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   ConnectkCCs();
-  ConnectkCCs(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
+  ConnectkCCs(Roadmap<CFG,WEIGHT>*, 
               DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
   virtual ~ConnectkCCs();
  
@@ -42,15 +42,13 @@ class ConnectkCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
 
   //Connect
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-         CollisionDetection*, 
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
          DistanceMetric *,
          LocalPlanners<CFG,WEIGHT>*,
          bool addPartialEdge,
          bool addAllEdges);
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-         CollisionDetection*, 
          DistanceMetric *,
          LocalPlanners<CFG,WEIGHT>*,
          bool addPartialEdge,
@@ -99,8 +97,8 @@ ConnectkCCs<CFG,WEIGHT>::ConnectkCCs():
 
 
 template <class CFG, class WEIGHT>
-ConnectkCCs<CFG,WEIGHT>::ConnectkCCs(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetection* cd, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp):
-  ComponentConnectionMethod<CFG,WEIGHT>(rdmp, cd, dm, lp) {
+ConnectkCCs<CFG,WEIGHT>::ConnectkCCs(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp):
+  ComponentConnectionMethod<CFG,WEIGHT>(rdmp, dm, lp) {
   this->element_name = string("k-components");
 
   SetDefault();
@@ -151,7 +149,6 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 void ConnectkCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-          CollisionDetection* cd , 
           DistanceMetric * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
@@ -193,7 +190,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
       //connect
       for(vector<int>::iterator v2=k2_ccid.begin();v2!=k2_ccid.end();v2++)
-          cl.Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,ccids[id],ccids[*v2]);
+          cl.Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,ccids[id],ccids[*v2]);
   }/*endfor V1*/
 }
 
@@ -201,7 +198,6 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 void ConnectkCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-          CollisionDetection* cd , 
           DistanceMetric * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
@@ -242,7 +238,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       get_K2_Pairs(id,k2_ccid);
       //connect
       for(vector<int>::iterator v2=k2_ccid.begin();v2!=k2_ccid.end();v2++)
-          cl.Connect(_rm,Stats,cd,dm,lp,addPartialEdge,addAllEdges,ccset1[id],ccset2[*v2]);
+          cl.Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,ccset1[id],ccset2[*v2]);
   }/*endfor V1*/
   //DisplayCCStats(*pMap); cout << endl;
 }

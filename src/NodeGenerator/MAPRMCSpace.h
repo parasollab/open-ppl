@@ -54,8 +54,7 @@ class CSpaceMAPRM : public NodeGenerationMethod<CFG> {
    *axis of the C-Space. It considers both free nodes and nodes in
    *collision.
    */
-  virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
-			     CollisionDetection* cd, 
+  virtual void GenerateNodes(Environment* _env, Stat_Class& Stats, 
 			     DistanceMetric *dm, vector<CFG>& nodes);
 
   virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &nodes);
@@ -162,6 +161,8 @@ PrintOptions(ostream& out_os){
   out_os << "exact" << " " << this->exactNodes << " ";
   out_os << "clearanceNum" << " " << clearanceNum << " ";
   out_os << "penetrationNum" << " " << penetrationNum << " ";
+ // out_os << "validity method = " << this->vcMethod << " ";
+
   out_os << endl;
 }
 
@@ -178,14 +179,16 @@ CreateCopy() {
 template <class CFG>
 void 
 CSpaceMAPRM<CFG>::
-GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd, 
+GenerateNodes(Environment* _env, Stat_Class& Stats, 
 	      DistanceMetric *dm, vector<CFG>& nodes) {
+CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
 #ifndef QUIET
   cout << "(numNodes="      << this->numNodes       << ", ";
   cout << "(chunkSize="      << this->chunkSize       << ", ";
   cout << "(exactNodes="      << this->exactNodes       << ", ";
   cout << "clearanceNum="   << clearanceNum   << ", ";
-  cout << "penetrationNum=" << penetrationNum << ") ";
+  cout << "penetrationNum=" << penetrationNum << ", ";
+//  cout << "validity method=" << this->vcMethod << ") ";
 #endif
 
   CDInfo cdInfo;
@@ -218,10 +221,9 @@ CSpaceMAPRM<CFG>::
 GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG > &nodes) {
   Environment* _env = in_pRegion;
   Stat_Class& Stats = *(in_pRegion->GetStatClass());
-  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
   DistanceMetric* dm =  this->GetMPProblem()->GetDistanceMetric();
   
-  GenerateNodes(_env,  Stats,  cd,  dm, nodes);
+  GenerateNodes(_env,  Stats, dm, nodes);
 };
 
 

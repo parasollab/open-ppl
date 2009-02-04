@@ -235,7 +235,9 @@ class CollisionDetection : MPBaseObject {
 
   vector<cd_predefined> GetAllCDTypes() const;
   vector<cd_predefined> GetSelectedCDTypes() const;
-
+  CollisionDetectionMethod* GetRAPID();
+  CollisionDetectionMethod* GetPQP();
+  CollisionDetectionMethod* GetVCLIP();
  protected:
   bool ParseCommandLine(int argc, char** argv);
 

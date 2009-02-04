@@ -13,6 +13,7 @@
 #include "Clock_Class.h"
 #include "Stat_Class.h"
 #include "CollisionDetection.h"
+#include "ValidityChecker.hpp"
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
@@ -58,7 +59,7 @@ class PRMRoadmap : public MPStrategyMethod {
         citr->warnUnrequestedAttributes();
       } else if(citr->getName() == "node_connection_method") {
         string connect_method = citr->stringXMLParameter(string("Method"), true,
-                                    string(""), string("Node Connection Method"));
+				    string(""), string("Node Connection Method"));
         m_vecStrNodeConnectionLabels.push_back(connect_method);
         citr->warnUnrequestedAttributes();
       } else if(citr->getName() == "component_connection_method") {
@@ -85,7 +86,7 @@ class PRMRoadmap : public MPStrategyMethod {
     
     LOG_DEBUG_MSG("~PRMRoadmap::ParseXML()");
   };
-   
+     
   virtual void operator()(int in_RegionID) {
     LOG_DEBUG_MSG("PRMRoadmap::()");
     OBPRM_srand(getSeed()); 
@@ -108,7 +109,7 @@ class PRMRoadmap : public MPStrategyMethod {
     {
     vector<CfgType> nodes;
     vector<VID> new_free_vids;
-    
+
     new_free_vids.erase(new_free_vids.begin(),new_free_vids.end());
     nodes.erase(nodes.begin(),nodes.end());
     NodeGenClock.StartClock("Node Generation");
@@ -120,7 +121,7 @@ class PRMRoadmap : public MPStrategyMethod {
       pNodeGen = GetMPProblem()->GetMPStrategy()->
           GetGenerateMapNodes()->GetMethod(*itr);
       pNodeGen->GenerateNodes(region, vectorCfgs); ///\todo this needs fixing bad.
-      cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
+      cout << "\nFinished ... I did this many : " << vectorCfgs.size() << endl;
       new_free_vids = region->AddToRoadmap(vectorCfgs);
     }
       
@@ -155,7 +156,6 @@ class PRMRoadmap : public MPStrategyMethod {
   // Connect roadmap nodes
   //---------------------------
     ConnectionClock.StartClock("Node Connection");
-    
     // get VID's from nodes in the roadmap  
     vector<VID> verticesVID;
     region->GetRoadmap()->m_pRoadmap->GetVerticesVID(verticesVID);
@@ -170,7 +170,7 @@ class PRMRoadmap : public MPStrategyMethod {
       pConnection = connectmap->GetNodeMethod(*itr);
       //connect new free vids to nodes that were already in the roadmap at itr-1
       pConnection->Connect(region->GetRoadmap(), *pStatClass, 
-                           GetMPProblem()->GetCollisionDetection(),
+                      //     GetMPProblem()->GetCollisionDetection(),
                            GetMPProblem()->GetDistanceMetric(), 
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 
@@ -200,7 +200,7 @@ class PRMRoadmap : public MPStrategyMethod {
       pConnection = connectmap->GetComponentMethod(*itr);
       
       pConnection->Connect(region->GetRoadmap(), *pStatClass, 
-                           GetMPProblem()->GetCollisionDetection(),
+              //             GetMPProblem()->GetCollisionDetection(),
                            GetMPProblem()->GetDistanceMetric(), 
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 
@@ -384,7 +384,7 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
       NodeConnectionMethod<CfgType,WeightType>* pConnection;
       pConnection = connectmap->GetNodeMethod(*itr);
       pConnection->Connect(region->GetRoadmap(), *pStatClass, 
-                           GetMPProblem()->GetCollisionDetection(),
+      //                     GetMPProblem()->GetCollisionDetection(),
                            GetMPProblem()->GetDistanceMetric(), 
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 
@@ -400,7 +400,7 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
       pConnection = connectmap->GetComponentMethod(*itr);
       
       pConnection->Connect(region->GetRoadmap(), *pStatClass, 
-                           GetMPProblem()->GetCollisionDetection(),
+       //                    GetMPProblem()->GetCollisionDetection(),
                            GetMPProblem()->GetDistanceMetric(), 
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 

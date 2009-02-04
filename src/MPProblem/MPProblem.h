@@ -7,6 +7,7 @@
 class MPStrategy;
 class DistanceMetric;
 class CollisionDetection;
+template<typename CFG> class ValidityChecker;
 class Environment;
 template <class CFG, class WEIGHT> class MPRegion;
 
@@ -29,7 +30,8 @@ public:
  
   void SetMPStrategy(MPStrategy* in_pStrategy) {m_pMPStrategy = in_pStrategy;};
   inline DistanceMetric* GetDistanceMetric() {return m_pDistanceMetric; };
-  inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection; };
+  inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection; }; 
+  inline ValidityChecker<CfgType>* GetValidityChecker() {return m_pValidityChecker; };
   inline Environment* GetEnvironment() {return m_pEnvironment; };
   inline MPStrategy* GetMPStrategy() {return m_pMPStrategy;};
   //inline Stat_Class* GetStatClass() {return m_pStatClass;};
@@ -60,6 +62,7 @@ public:
   MPStrategy* m_pMPStrategy;
   DistanceMetric*     m_pDistanceMetric;
   CollisionDetection* m_pCollisionDetection;
+  ValidityChecker<CfgType>* m_pValidityChecker;
   Environment* m_pEnvironment;
   //Roadmap<CfgType,WeightType> rmp;
   //Roadmap<CfgType,WeightType> rmp_col;

@@ -11,7 +11,7 @@ class CDInfo;
 class DistanceMetric;
 template <class CFG, class WEIGHT> class MPRegion;
 class MPProblem;
-
+//template<typename CFG> class ValidityChecker;
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -67,7 +67,6 @@ class NodeGenerationMethod : public MPBaseObject{
    *the name for this function was: GenerateNodes
    */
   virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
-                             CollisionDetection* cd, 
 			     DistanceMetric *, vector<CFG>& nodes) = 0;
 
   ///\todo remove the "{ }" and replace with "= 0" to force all methods 
@@ -85,11 +84,12 @@ class NodeGenerationMethod : public MPBaseObject{
   int exactNodes;
   int numNodes;
   int chunkSize;
+  std::string vcMethod;
   int m_nExactNodes;
   int m_nNumNodes;
   int m_nMaxCdCalls;
   int m_numCdCalls;
-
+  std::string m_VcMethod;
 
   CDInfo* cdInfo;
 #ifdef COLLISIONCFG
@@ -140,6 +140,8 @@ SetDefault() {
   numNodes = 10;
   chunkSize = 10;
   exactNodes = 0;
+  vcMethod = "cd1";
+  LOG_DEBUG_MSG("Validity Checker Method is set to be cd1 by default");
   m_nMaxCdCalls=MAX_INT;
 }
 
@@ -152,6 +154,7 @@ ParseXMLnum_nodes(XMLNodeReader& in_Node) {
   
 
   int nexactNodes, nnumNodes, nMaxCdCalls;
+  std::string svc_method;
   nnumNodes = in_Node.numberXMLParameter(string("number"), true, 10,0,MAX_INT,
                                       string("number of nodes"));  
   
@@ -159,6 +162,11 @@ ParseXMLnum_nodes(XMLNodeReader& in_Node) {
   nexactNodes = in_Node.numberXMLParameter(string("exact"), false,1,0,1,
                                       string("exact"));
   exactNodes = nexactNodes;m_nExactNodes = nexactNodes;
+  
+  svc_method = in_Node.stringXMLParameter(string("vc_method"), false,
+                                    string(""), string("Validity Test Method"));
+  vcMethod = svc_method;m_VcMethod = svc_method;
+  
   nMaxCdCalls = in_Node.numberXMLParameter(string("max_cd_calls"), false,MAX_INT,0,MAX_INT,
                                       string("max num cd calls"));
   m_nMaxCdCalls = nMaxCdCalls;

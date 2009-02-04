@@ -29,7 +29,6 @@ class BasicMAPRM : public NodeGenerationMethod<CFG> {
   //////////////////////
   // Core: Connection methods 
   virtual void GenerateNodes(Environment* _env, Stat_Class& Stats,
-			     CollisionDetection* cd, 
 			     DistanceMetric *, vector<CFG>& nodes);
 
   void MoveOutObstacle(CFG & cfg, Environment *_env, Stat_Class& Stats,
@@ -157,11 +156,11 @@ NodeGenerationMethod<CFG>* BasicMAPRM<CFG>::CreateCopy() {
 template <class CFG>
 void 
 BasicMAPRM<CFG>::
-GenerateNodes(Environment* _env, Stat_Class& Stats, CollisionDetection* cd, 
+GenerateNodes(Environment* _env, Stat_Class& Stats, 
 	      DistanceMetric* dm, vector<CFG>& nodes) {
   bool collided;
   CFG cfg;
-  
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
   std::string Callee(GetName()), 
               Method("::GenerateNodes"),
 	      CallCnt("1");

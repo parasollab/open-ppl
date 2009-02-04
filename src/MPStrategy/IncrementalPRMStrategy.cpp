@@ -157,7 +157,7 @@ connect_nodes(MPRegion<CfgType, WeightType>* region, vector<VID>& all_nodes_VID,
     vector<VID> nodes_VID(this_iteration_nodes_VID.begin(), this_iteration_nodes_VID.end());
     pNodeConnector->Connect(region->GetRoadmap(), 
                             *(region->GetStatClass()),
-                            GetMPProblem()->GetCollisionDetection(),
+                //            GetMPProblem()->GetCollisionDetection(),
                             GetMPProblem()->GetDistanceMetric(), 
                             GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                             GetMPProblem()->GetMPStrategy()->addPartialEdge, 
@@ -194,7 +194,7 @@ connect_components(MPRegion<CfgType, WeightType>* region)
     cout << "\n\t";
     pComponentConnector->Connect(region->GetRoadmap(), 
                                  *(region->GetStatClass()), //*region_stats,
-                                 GetMPProblem()->GetCollisionDetection(),
+//                                 GetMPProblem()->GetCollisionDetection(),
                                  GetMPProblem()->GetDistanceMetric(), 
                                  GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                  GetMPProblem()->GetMPStrategy()->addPartialEdge, 

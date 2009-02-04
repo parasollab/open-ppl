@@ -30,18 +30,18 @@ class Disconnect: public NodeConnectionMethod<CFG,WEIGHT> {
   void Connect();
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-             CollisionDetection*, DistanceMetric *,
+             DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges);  
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-             CollisionDetection*, DistanceMetric *,
+             DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
              vector<VID>& v1, vector<VID>& v2);
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-             CollisionDetection*, DistanceMetric*,
+             DistanceMetric*,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
              vector<vector<VID> >& verticesList);
@@ -127,8 +127,7 @@ Connect() {
 
 template <class CFG, class WEIGHT>
 void Disconnect<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-            CollisionDetection* cd , 
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
@@ -153,29 +152,27 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void Disconnect<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-            CollisionDetection* cd , 
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
             vector<vector<VID> >& verticesList)
 {
-  Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges);
+  Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges);
 }
 
 
 template <class CFG, class WEIGHT>
 void Disconnect<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-            CollisionDetection* cd , 
+Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
             vector<VID>& v1, vector<VID>& v2) 
 {
-  Connect(_rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges);
+  Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges);
 }
 
 #endif

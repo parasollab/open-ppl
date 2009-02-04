@@ -92,7 +92,7 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
   VID oriVertID = rmap->m_pRoadmap->getVertIDs(); //save vertexID counter
   
   bool queryResult = m_query.PerformQuery(rmap, m_stats, 
-                                        GetMPProblem()->GetCollisionDetection(), 
+                                    //    GetMPProblem()->GetCollisionDetection(), 
                                         &m_ConnectMap, lp, 
                                         GetMPProblem()->GetDistanceMetric());
   

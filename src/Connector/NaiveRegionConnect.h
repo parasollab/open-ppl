@@ -33,7 +33,7 @@ class NaiveRegionConnect: public RegionConnectionMethod<CFG,WEIGHT> {
 	       MPRegion<CFG,WEIGHT>* &l_region, ///< left subregion to connect
 	       MPRegion<CFG,WEIGHT>* &r_region, ///< right subregions) to merge
 	       ConnectMap<CFG, WEIGHT>& cm,
-	       CollisionDetection& cd, DistanceMetric& dm,
+	       DistanceMetric& dm,
 	       LocalPlanners<CFG,WEIGHT>& lp,
 	       bool addPartialEdge, bool addAllEdges);
 
@@ -46,7 +46,7 @@ class NaiveRegionConnect: public RegionConnectionMethod<CFG,WEIGHT> {
   void Connect(MPRegion<CFG,WEIGHT>* target_region,         // Output MPregion
 	       vector<MPRegion<CFG,WEIGHT>* > &source_regions, // regions to merge
 	       ConnectMap<CFG, WEIGHT>& cm,
-	       CollisionDetection& cd, DistanceMetric& dm,
+	       DistanceMetric& dm,
 	       LocalPlanners<CFG,WEIGHT>& lp,
 	       bool addPartialEdge, bool addAllEdges);
 
@@ -118,7 +118,7 @@ Connect(MPRegion<CFG,WEIGHT>* target_region,
 	MPRegion<CFG,WEIGHT>* &l_region,
 	MPRegion<CFG,WEIGHT>* &r_region,
 	ConnectMap<CFG, WEIGHT>& cm,
-	CollisionDetection& cd, DistanceMetric& dm,
+	DistanceMetric& dm,
 	LocalPlanners<CFG,WEIGHT>& lp,
 	bool addPartialEdge, bool addAllEdges) {
 
@@ -155,7 +155,7 @@ Connect(MPRegion<CFG,WEIGHT>* target_region,
 
   //Call connection method using our selected CFG
   cm.ConnectComponents(&(target_region->roadmap), target_region->combine_stats,
-		       &cd, &dm, &lp, addPartialEdge, addAllEdges, 
+		       &dm, &lp, addPartialEdge, addAllEdges, 
 		       selected_vertices);
 }
 
@@ -165,7 +165,7 @@ void NaiveRegionConnect<CFG,WEIGHT>::
 Connect(MPRegion<CFG,WEIGHT>* target_region, 
 	       vector<MPRegion<CFG,WEIGHT>* > &source_regions, 
 	       ConnectMap<CFG, WEIGHT>& cm,
-	       CollisionDetection& cd, DistanceMetric& dm,
+	       DistanceMetric& dm,
 	       LocalPlanners<CFG,WEIGHT>& lp,
 	       bool addPartialEdge, bool addAllEdges) {
   
@@ -174,7 +174,7 @@ Connect(MPRegion<CFG,WEIGHT>* target_region,
   //for all pairs of ranges in vector<MPRegion<CFG,WEIGHT>>
   for (int i=0;i<source_regions.size();++i) {
     for (int j=i+1; j<source_regions.size();++j) {
-      this->Connect(target_region, source_regions[i], source_regions[j],cm,cd,dm,lp,addPartialEdge,addAllEdges);
+      this->Connect(target_region, source_regions[i], source_regions[j],cm,dm,lp,addPartialEdge,addAllEdges);
     }
   }
 }

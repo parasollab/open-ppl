@@ -193,7 +193,7 @@ operator()(int in_RegionID) {
             new_free_vid.push_back(newVID);
             region->roadmap.m_pRoadmap->GetVerticesVID(map_vids);
             pConnection->Connect(region->GetRoadmap(), *pStatClass, 
-                                 GetMPProblem()->GetCollisionDetection(),
+                       //          GetMPProblem()->GetCollisionDetection(),
                                  GetMPProblem()->GetDistanceMetric(), 
                                  GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                  GetMPProblem()->GetMPStrategy()->addPartialEdge, 
@@ -416,7 +416,7 @@ Characterize(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_Class
       }
     }
 
-    if(!(lp->IsConnected(env, Stats, cd, dm, 
+    if(!(lp->IsConnected(env, Stats, dm, 
                          pGraph->GetData((*i_pair).first),
                          pGraph->GetData((*i_pair).second),
                          &lp_output, pos_res, ori_res, true))) {
@@ -661,7 +661,7 @@ CanConnectComponents(vector < CfgType > & cc_a, vector < CfgType > & cc_b, Stat_
   for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
     sort(cc_b.begin(), cc_b.end(), CFG_CFG_DIST_COMPARE<CfgType>(*i_cc_a,dm,env));
     for (CFG_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
-      if (lp->IsConnected(env, stat, cd, dm, (*i_cc_a), (*i_cc_b), 
+      if (lp->IsConnected(env, stat, dm, (*i_cc_a), (*i_cc_b), 
         &lp_output, pos_res, ori_res, true)) {
           return true; // st  op as soon as one cc in a can connect to a node in b
       }

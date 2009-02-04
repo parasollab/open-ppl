@@ -118,7 +118,7 @@ operator()(int in_RegionID)
   Clock_Class QueryClock;
   QueryClock.StartClock("Query");
   if(query.PerformQuery(rdmp, *pStatClass, 
-                        GetMPProblem()->GetCollisionDetection(), 
+                   //     GetMPProblem()->GetCollisionDetection(), 
                         &m_ConnectMap, 
                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                         GetMPProblem()->GetDistanceMetric()))

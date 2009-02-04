@@ -29,23 +29,23 @@ class ComponentConnectionMethod : public MPBaseObject{
   //////////////////////
   // Connection methods 
   virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
-		       CollisionDetection* cd, DistanceMetric* dm,
+		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       bool addPartialEdge, bool addAllEdges) = 0;
   virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
-		       CollisionDetection* cd, DistanceMetric* dm,
+		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       bool addPartialEdge, bool addAllEdges,
 		       vector<VID>& vids1, vector<VID>& vids2) = 0;
   virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
-		       CollisionDetection* cd, DistanceMetric* dm,
+		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       bool addPartialEdge, bool addAllEdges,
 		       vector<vector<VID> >& vids) {
     vector<vector<VID> >::iterator I, J;
     for(I = vids.begin(); I+1 != vids.end(); ++I) 
       for(J = I+1; J != vids.end(); ++J)
-	this->Connect(rm, Stats, cd, dm, lp, addPartialEdge, addAllEdges,
+	this->Connect(rm, Stats, dm, lp, addPartialEdge, addAllEdges,
 		      *I, *J);
   }
 

@@ -29,7 +29,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   // Constructors and Destructor
   ConnectCCs();
   ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem);
-  ConnectCCs(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
+  ConnectCCs(Roadmap<CFG,WEIGHT>*, 
 		      DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
   virtual ~ConnectCCs();
  
@@ -65,7 +65,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
         *@param _cc2id a node id which defines the second connected component.
         */
   void ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		       CollisionDetection *cd, LocalPlanners<CFG,WEIGHT>* lp,
+		       LocalPlanners<CFG,WEIGHT>* lp,
 		       DistanceMetric * dm, 
 		       vector<VID>& cc1vec, 
 		       vector<VID>& cc2vec,
@@ -94,7 +94,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
    *@param _cn _cn.GetKPairs define k above.
    */
   void ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		     CollisionDetection* cd, LocalPlanners<CFG,WEIGHT>* lp,
+		     LocalPlanners<CFG,WEIGHT>* lp,
 		     DistanceMetric* dm, vector<VID>& cc1vec, 
 		     vector<VID>& cc2vec,
 		     bool addPartialEdge, bool addAllEdges);
@@ -102,13 +102,11 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   //@}
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-		 CollisionDetection*, 
 		 DistanceMetric *,
 		 LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
 		 bool addAllEdges);
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-		 CollisionDetection*, 
 		 DistanceMetric *,
 		 LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
@@ -154,8 +152,8 @@ ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem):
 
 
 template <class CFG, class WEIGHT>
-ConnectCCs<CFG,WEIGHT>::ConnectCCs(Roadmap<CFG,WEIGHT> * rdmp, CollisionDetection* cd, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp):
-  ComponentConnectionMethod<CFG,WEIGHT>(rdmp, cd, dm, lp) {
+ConnectCCs<CFG,WEIGHT>::ConnectCCs(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp):
+  ComponentConnectionMethod<CFG,WEIGHT>(rdmp, dm, lp) {
   this->element_name = string("components");
 
   SetDefault();
@@ -225,7 +223,7 @@ template <class CFG, class WEIGHT>
 void
 ConnectCCs<CFG, WEIGHT>::
 ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		CollisionDetection *cd, LocalPlanners<CFG,WEIGHT>* lp,
+	        LocalPlanners<CFG,WEIGHT>* lp,
 		DistanceMetric* dm, 
 		vector<VID>& cc1vec, vector<VID>& cc2vec,
 		bool addPartialEdge, bool addAllEdges) {
@@ -241,7 +239,7 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       }
       Stats.IncConnections_Attempted();
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
-          && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
+          && lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
 			     pMap->GetData(cc1vec[c1]),
 			     pMap->GetData(cc2vec[c2]),
 			     &lpOutput, 
@@ -273,7 +271,7 @@ template <class CFG, class WEIGHT>
 void
 ConnectCCs<CFG, WEIGHT>::
 ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	      CollisionDetection *cd, LocalPlanners<CFG,WEIGHT>* lp, 
+	      LocalPlanners<CFG,WEIGHT>* lp, 
 	      DistanceMetric* dm, 
 	      vector<VID>& cc1vec, vector<VID>& cc2vec,
 	      bool addPartialEdge, bool addAllEdges) { 
@@ -294,7 +292,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     }
     Stats.IncConnections_Attempted();
     if(!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
-       && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
+       && lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
 			  pMap->GetData(kp[i].first),
 			  pMap->GetData(kp[i].second),
 			  &lpOutput, this->connectionPosRes, this->connectionOriRes, 
@@ -321,7 +319,6 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 void ConnectCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-          CollisionDetection* cd , 
           DistanceMetric * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
@@ -349,12 +346,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         GetCC(*pMap,C2->second,cc2);
 
         if(cc1.size() < smallcc && cc2.size() < smallcc ) {
-          ConnectSmallCCs(_rm,Stats,cd,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+          ConnectSmallCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
         } else {
           if(cc1.size() <= cc2.size())
-            ConnectBigCCs(_rm,Stats,cd,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+            ConnectBigCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
           else
-            ConnectBigCCs(_rm,Stats,cd,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
+            ConnectBigCCs(_rm,Stats,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
         }
       } 
     }/*endfor cc2*/ 
@@ -365,7 +362,6 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 void ConnectCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-          CollisionDetection* cd , 
           DistanceMetric * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
@@ -391,12 +387,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         GetCC(*pMap,*V2,cc2);
 
         if(cc1.size() < smallcc && cc2.size() < smallcc ) {
-          ConnectSmallCCs(_rm,Stats,cd,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+          ConnectSmallCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
         } else {
           if(cc1.size() <= cc2.size())
-            ConnectBigCCs(_rm,Stats,cd,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+            ConnectBigCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
           else
-            ConnectBigCCs(_rm,Stats,cd,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
+            ConnectBigCCs(_rm,Stats,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
         }
       } 
 

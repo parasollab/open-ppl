@@ -54,7 +54,6 @@ class OBMAPRM : public OBPRM<CFG> {
   /*OBPRM-CSpaceMAPRM Hybrid.
    */
   virtual void GenerateNodes(Environment* _env, Stat_Class& Stats, 
-			     CollisionDetection* cd, 
 			     DistanceMetric *, vector<CFG>& nodes);
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +158,7 @@ template <class CFG>
 void
 OBMAPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats, 
-	      CollisionDetection* cd, DistanceMetric* dm,
+	      DistanceMetric* dm,
 	      vector<CFG>& nodes) {
 #ifndef QUIET
   cout << "(numNodes="          << this->numNodes          << ", ";
@@ -173,7 +172,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
   cout << "freePair="           << this->freePair          << ", ";
   cout << "clearanceFactor="    << this->clearanceFactor   << ") ";
 #endif
-
+  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
   CDInfo cdInfo;
   ObstacleBasedSampler<CFG> ob_sampler(_env, Stats, cd, cdInfo, dm, this->numShells, 0);
   FreeMedialAxisSampler<CFG> ma_sampler(_env, Stats, cd, cdInfo, dm, clearanceNum, penetrationNum);

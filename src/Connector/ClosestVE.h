@@ -177,7 +177,8 @@ class ClosestVE: public NodeConnectionMethod<CFG,WEIGHT> {
 			 bool addAllEdges=false);
 
   void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
-	       CollisionDetection* cd, DistanceMetric* dm,
+//	       CollisionDetection* cd, DistanceMetric* dm,
+	       DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges,
 	       vector<CFG>& cfgs1, vector<CFG>& cfgs2);
@@ -369,7 +370,7 @@ FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
 template <class CFG, class WEIGHT>
 void ClosestVE<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-		  CollisionDetection* cd , 
+//		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge,
@@ -428,7 +429,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap),kp->cfg1,kp->cfg2)) continue;
       //-- if new edge is collision free
       if (!_rm->m_pRoadmap->IsEdge(kp->cfg1,kp->cfg2) 
-          && lp->IsConnected(_rm->GetEnvironment(),Stats, cd,dm, 
+//          && lp->IsConnected(_rm->GetEnvironment(),Stats, cd,dm, 
+          && lp->IsConnected(_rm->GetEnvironment(),Stats, dm, 
 			     kp->cfg1,kp->cfg2,
 	  	             &lpOutput,
 			     connectionPosRes, connectionOriRes, 
@@ -460,7 +462,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 void ClosestVE<CFG,WEIGHT>::
 Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
-	       CollisionDetection* cd, DistanceMetric* dm,
+//	       CollisionDetection* cd, DistanceMetric* dm,
+	       DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges,
 	       vector<CFG>& cfgs1, vector<CFG>& cfgs2){
