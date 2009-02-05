@@ -91,13 +91,13 @@ BoundingBox::
 unsigned int 
 BoundingBox::
 GetDOFs() const {
-  return bounding_box.size();
+  return dofs;//bounding_box.size();
 }
 
 unsigned int 
 BoundingBox::
 GetPosDOFs() const {
-  return bounding_box.size();
+  return pos_dofs;//bounding_box.size();
 }
 
 const std::pair<double,double> 
