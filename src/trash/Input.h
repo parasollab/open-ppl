@@ -222,7 +222,6 @@ public:
 #endif
 
         n_str_param       bbox;                 ///< Environment Bounding Box
-	n_str_param       bbox_ref;                 ///< Environment Bounding Box
         num_param<double> bbox_scale;           ///< Environment Bounding Box scale factor
 
         n_str_param      *GNstrings[MAX_GN];    ///< mapnode generators

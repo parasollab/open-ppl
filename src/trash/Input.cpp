@@ -42,7 +42,6 @@ Input::Input():
 #endif
         bbox_scale       ("-bbox_scale",       2.0,  -50000, 50000),
         bbox             ("-bbox",""),
-	bbox_ref         ("-bbox_ref",""),
         collPair         ("-collPair","cM rT "),    // center of Mass
         freePair         ("-freePair","cM rV "),    // center of Mass
 	numofJoints      ("-numofjoints", 0, 0, 1000000)
@@ -71,10 +70,6 @@ Input::Input():
     bbox.PutDesc       ("STRING ", "[Xmin,Xmax,Ymin,Ymax,Zmin,Zmax]"
                                     "\n\t\t\t(default calculated from environment)"
                                     "\n\t\t\tATTN: robust if no spaces are used.");
-
-    bbox_ref.PutDesc       ("STRING ", "[Xmin,Xmax,Ymin,Ymax,Zmin,Zmax]"
-			"\n\t\t\t(default calculated from environment)"
-			"\n\t\t\tATTN: robust if no spaces are used.");
 
     bbox_scale.PutDesc        ("FLOAT  ","");
     posres.PutDesc            ("FLOAT  "," *CALCULATED*   position    resolution");
@@ -273,7 +268,6 @@ void Input::ReadCommandLine(int argc, char** argv){
       } else if ( seedByChunk.AckCmdLine(&i, argc, argv) ) {
       } else if ( seed.AckCmdLine(&i, argc, argv) ) {
       } else if ( bbox.AckCmdLine(&i, argc, argv) ) {
-      } else if ( bbox_ref.AckCmdLine(&i, argc, argv) ) {
       } else if ( bbox_scale.AckCmdLine(&i, argc, argv) ) {
       } else if ( posres.AckCmdLine(&i, argc, argv) ) {
       } else if ( orires.AckCmdLine(&i, argc, argv) ) {
@@ -396,7 +390,6 @@ PrintUsage(ostream& _os,char *executablename){
 	_os << "\n  "; seedByChunk.PrintUsage(_os);
 	_os << "\n  "; seed.PrintUsage(_os);
         _os << "\n  "; bbox.PrintUsage(_os);
-	_os << "\n  "; bbox_ref.PrintUsage(_os);
         _os << "\n  "; bbox_scale.PrintUsage(_os);
         _os << "\n  "; posres.PrintUsage(_os);
         _os << "\n  "; orires.PrintUsage(_os);
@@ -440,7 +433,6 @@ PrintValues(ostream& _os){
   _os <<"\n"<<setw(FW)<<"seedByChunk"<<"\t"<<seedByChunk.GetValue();
   _os <<"\n"<<setw(FW)<<"seed"<<"\t"<<seed.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox"<<"\t"<<bbox.GetValue();
-  _os <<"\n"<<setw(FW)<<"bbox"<<"\t"<<bbox_ref.GetValue();
   _os <<"\n"<<setw(FW)<<"bbox_scale"<<"\t"<<bbox_scale.GetValue();
   _os <<"\n"<<setw(FW)<<"posres"<<"\t"<<posres.GetValue();
   _os <<"\n"<<setw(FW)<<"orires"<<"\t"<<orires.GetValue();
