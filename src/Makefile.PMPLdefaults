@@ -119,8 +119,8 @@ PMPL_OBJS = \
 	MPProblem/Geometry/FixedBody.o \
 	MPProblem/Geometry/Connection.o \
 	MPProblem/Geometry/Contact.o \
-	Cfg/DHparameters.o \
-	Cfg/Transformation.o \
+	MPProblem/Geometry/DHparameters.o \
+	MPProblem/Geometry/Transformation.o \
 	MPProblem/Geometry/Orientation.o \
 	MPProblem/Geometry/GMSPolyhedron.o \
 	Utilities/Matrix.o \
