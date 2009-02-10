@@ -128,7 +128,7 @@ OBPRM_srand(std::string methodName, int nextNodeIndex, long base, bool reset) {
   
   if (methodName != "NONE") {
     long methodID = 0;
-    for(int i=0; i<methodName.length(); i++){
+    for(size_t i=0; i<methodName.length(); i++){
       int tmp = methodName[i];
       methodID += tmp*(i+1)*(i+2);
     }
@@ -166,13 +166,13 @@ WritePathLinkConfigurations( char output_file[80],
   char cfgFile[100];
   sprintf(cfgFile, "%s%s", output_file, ".cfg");
   ofstream oc(cfgFile);
-  for(int i = 0 ; i < path.size() ; i++){
+  for(size_t i = 0 ; i < path.size() ; i++){
     // Translate all path configurations such that their resulting
     // center of gravity is what was saved (ie, the rover original)
     //path[i].print_vizmo_format_to_file(env,fp);
     vector<Vector6D> tmp;
     path[i]->printLinkConfigurations(env, tmp);
-    for(int j=0; j<tmp.size(); ++j) {
+    for(size_t j=0; j<tmp.size(); ++j) {
       fprintf(fp,"\n%f %f %f %f %f %f", tmp[j][0], tmp[j][1], tmp[j][2],
 	      tmp[j][3], tmp[j][4], tmp[j][5]);
     }	    
@@ -204,14 +204,14 @@ WritePathConfigurations( char output_file[80],
   fprintf(fp,"%d\n", 1);
   fprintf(fp,"%d \n", path.size());
   
-  for(int i = 0 ; i < path.size() ; i++){
+  for(size_t i = 0 ; i < path.size() ; i++){
     vector<double> tmp = path[i]->GetData();
     // Translate all path configurations such that their resulting
     // center of gravity is what was saved (ie, the rover original)
-    for(int j=0; j<tmp.size(); ++j) {
+    for(size_t j=0; j<tmp.size(); ++j) {
       fprintf(fp,"%f ",tmp[j]);
     }
-    if(i!=(path.size()-1))fprintf(fp,"\n");
+    if((int)i!=((int)path.size()-1))fprintf(fp,"\n");
     
   }
   fprintf(fp,"\n");
