@@ -1,0 +1,23 @@
+\subsection{Existing Interfaces}
+\begin{lstlisting}
+    virtual bool IsValid(CfgType& _cfg, Environment* env, Stat_Class& Stats, 
+	    CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName) = 0;
+\end{lstlisting}
+
+\subsection{Desired Interfaces}
+\begin{lstlisting}
+  //NOTE: CDInfo can be imbeded into cfg_bundle
+  //NOTE: penetration can be an XML paramater -- or another VC class
+  virtual bool IsValid(typename MPScenario::node_bundle_type& _cfg, 
+                       typename MPScenario::environment_type* env, 
+                       typename MPScenario::stat_class_type& Stats, 
+                       std::string *pCallName) = 0;
+\end{lstlisting}
+
+\subsection{Existing ValidityChecker}
+\begin{itemize}
+\item CollisionDetectionValidity$<$RAPID$>$
+\item CollisionDetectionValidity$<$PQP$>$
+\item CollisionDetectionValidity$<$VCLIP$>$
+\item ComposeValidity
+\end{itemize}

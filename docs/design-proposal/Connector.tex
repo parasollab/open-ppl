@@ -1,0 +1,106 @@
+% included from subsection "Connector"
+
+
+\subsection{Existing Interfaces}
+\subsubsection{NodeConnectionMethod}
+\begin{lstlisting}
+virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+		       DistanceMetricMethod<CFG,WEIGHT>* dm,
+		       LocalPlanners<CFG,WEIGHT>* lp,
+		       bool addPartialEdge, bool addAllEdges) = 0;
+virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+		       DistanceMetricMethod<CFG,WEIGHT>* dm,
+		       LocalPlanners<CFG,WEIGHT>* lp,
+		       bool addPartialEdge, bool addAllEdges,
+		       vector<VID>& cfgs1, vector<VID>& cfgs2) = 0;
+virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+		       DistanceMetricMethod<CFG,WEIGHT>* dm,
+		       LocalPlanners<CFG,WEIGHT>* lp,
+		       bool addPartialEdge, bool addAllEdges,
+		       vector<vector<VID> >& cfgs);
+\end{lstlisting}
+
+\subsubsection{ComponentConnectionMethod}
+\begin{lstlisting}
+virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+		       DistanceMetricMethod<CFG,WEIGHT>* dm,
+		       LocalPlanners<CFG,WEIGHT>* lp,
+		       bool addPartialEdge, bool addAllEdges) = 0;
+virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+		       DistanceMetricMethod<CFG,WEIGHT>* dm,
+		       LocalPlanners<CFG,WEIGHT>* lp,
+		       bool addPartialEdge, bool addAllEdges,
+		       vector<VID>& vids1, vector<VID>& vids2) = 0;
+virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+		       DistanceMetricMethod<CFG,WEIGHT>* dm,
+		       LocalPlanners<CFG,WEIGHT>* lp,
+		       bool addPartialEdge, bool addAllEdges,
+		       vector<vector<VID> >& vids);
+\end{lstlisting}  
+\subsection{Desired Interfaces}
+\subsubsection{NodeConnectionMethod}
+\begin{lstlisting}
+
+virtual void Connect(typename MPScenario::csspace_model_type, 
+                    typename MPScenario::stat_class_type& Stats) = 0;
+		       
+template<typename InputIterator1>
+virtual void Connect(typename MPScenario::csspace_model_type, 
+                    typename MPScenario::stat_class_type& Stats,
+		            InputIterator1 itr1begin, InputIterator1 itr1end) = 0;
+
+template<typename InputIterator1, typename InputIterator2>
+virtual void Connect(typename MPScenario::csspace_model_type, 
+                    typename MPScenario::stat_class_type& Stats
+		            InputIterator1 itr1begin, InputIterator1 itr1end,
+		            InputIterator2 itr2begin, InputIterator2 itr2end);
+\end{lstlisting}
+
+\subsubsection{ComponentConnectionMethod}
+
+\begin{lstlisting}
+    virtual void Connect(typename MPScenario::csspace_model_type, 
+                        typename MPScenario::stat_class_type& Stats) = 0;
+
+    template<typename InputIterator1>
+    virtual void Connect(typename MPScenario::csspace_model_type, 
+                        typename MPScenario::stat_class_type& Stats,
+    		            InputIterator1 itr1begin, InputIterator1 itr1end) = 0;
+
+    template<typename InputIterator1, typename InputIterator2>
+    virtual void Connect(typename MPScenario::csspace_model_type, 
+                        typename MPScenario::stat_class_type& Stats
+    		            InputIterator1 itr1begin, InputIterator1 itr1end,
+    		            InputIterator2 itr2begin, InputIterator2 itr2end);
+\end{lstlisting}
+%%Node Connectors
+
+\subsection{Existing Node Connectors}
+\begin{itemize}
+\item AllPairsNodeConnection
+\item NeighborhoodConnection: implements Closest, ClosestSF, ClosestUnconnected,
+UnconnectedClosest, RandomConnect
+\item ClosestVE
+\item ConnectFirst
+\item ObstBased
+\item MOVE: Disconnect -- more a roadmap tool strategy
+\end{itemize}
+
+%%Component Connectors
+
+\subsection{Existing Component Connectors}
+\begin{itemize}
+\item ConnectCCs: combine with ConnectkCCs
+\item RRTcomponents
+\end{itemize}
+
+%% To Remove
+
+\subsection{To move or remove}
+\begin{itemize}
+\item ToDelete: CombineCSpaceRegions
+\item MOVE: ModifiedLM This is a strategy -- similar to VisPRM.
+\item ToDelete: NaiveRegionConnect
+\item ToDelete: RegionConnectionMethod
+\item ToDelete: RegionOverlapMapCombine
+\end{itemize}

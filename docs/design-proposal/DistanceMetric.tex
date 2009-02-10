@@ -1,0 +1,29 @@
+% included from subsection "DistanceMetric"
+\subsection{Existing Interface}
+
+\begin{lstlisting}
+    virtual double Distance(Environment* env, const CFG& _c1, const CFG& _c2) = 0;
+    virtual void ScaleCFG(Environment* env, double length, CFG& o, CFG& c);
+\end{lstlisting}
+
+\subsection{Desired Interface}
+\begin{lstlisting}
+   virtual double Distance(typename MPScenario::environment_type* env, 
+                       const typename MPScenario::node_bundle_type CFG& _c1,
+                       const typename MPScenario::node_bundle_type CFG& _c2)= 0;
+   virtual void ScaleCFG(typename MPScenario::environment_type* env, 
+                        double length, 
+                        typename MPScenario::node_bundle_type CFG& o, 
+                        typename MPScenario::node_bundle_type CFG& c);
+\end{lstlisting}
+\subsection{Existing Distance Metrics}
+\begin{itemize}
+\item CenterOfMassDistance
+\item DistanceMetricMethod
+\item EuclideanDistance: combine with ScaledEuclideanDistance \& UniformEuclidean
+\item LPSweptDistance
+\item ManhattanDistance
+\item MinkowskiDistance
+\item ReachableDistance
+\item RmsdDistance
+\end{itemize}

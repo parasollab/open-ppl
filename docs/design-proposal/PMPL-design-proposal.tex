@@ -1,0 +1,103 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage[usenames]{color}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+%%%%%%%Begin listing package
+
+\usepackage{listings}
+\definecolor{LightGrey}{rgb}{0.9,0.9,0.9} 
+\lstdefinestyle{C++}{language=C++,%
+backgroundcolor=\color{LightGrey},
+showstringspaces=false,
+  columns=fullflexible,
+  escapechar=@,
+  basicstyle=\sffamily,
+%  commentstyle=\rmfamily\itshape,
+  moredelim=**[is][\color{white}]{~}{~},
+  literate={=>}{{$\Rightarrow\;$}}1 {->}{{$\rightarrow{}$}}1 %
+  {<-}{{$\leftarrow$}}1 {<:}{{$\subtype{}\ $}}1,
+}
+\lstdefinestyle{Haskell}{language=Haskell,%
+  literate={=>}{{$\Rightarrow\;$}}1 {->}{{$\rightarrow{}$}}1 {<-}{{$\leftarrow$}}1 {\\}{{$\lambda$}}1,
+  moredelim=**[is][\color{red}]{`}{`},
+  moredelim=**[is][\color{white}]{~}{~}
+}
+\lstdefinestyle{GJ}{language=Java,
+  moredelim=**[is][\color{red}]{`}{`},
+  moredelim=**[is][\color{white}]{~}{~}
+}
+\lstdefinestyle{Eiffel}{language=Eiffel,%
+  literate={->}{{$\rightarrow$}}1,
+  moredelim=**[is][\color{red}]{`}{`},
+  moredelim=**[is][\color{white}]{~}{~}
+}
+\lstdefinestyle{Csharp}{language=[Sharp]C,
+  morekeywords={where,require,type},
+  literate={->}{{$\rightarrow{}$}}1,
+  moredelim=**[is][\color{red}]{`}{`},
+  moredelim=**[is][\color{white}]{~}{~}
+}
+\lstdefinestyle{ML}{language=ML,%
+  literate={->}{{$\rightarrow{}$}}1,
+  moredelim=**[is][\color{red}]{`}{`},
+  moredelim=**[is][\color{white}]{~}{~}
+}
+
+%%%%%%%End listing package
+
+\title{PMPL: Design Proposal}
+\author{Legion}
+\date{2009.02}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+\lstset{style=C++}
+
+
+\section{Templating based on mp\_scenario}
+\input{MPScenario.tex}
+
+\newpage
+\section{Connector}
+\input{Connector.tex}
+
+\newpage
+\section{DistanceMetric}
+\input{DistanceMetric.tex}
+
+\newpage
+\section{LocalPlanner}
+\input{LocalPlanner.tex}
+
+\newpage
+\section{NodeGenerator}
+\input{NodeGenerator.tex}
+
+\newpage
+\section{ValidityChecker}
+\input{ValidityChecker.tex}
+
+\newpage
+\section{MapEvaluator}
+\input{MapEvaluator.tex}
+%\section{Cfg}
+%\input{Cfg.tex}
+%\section{MPProblem}
+%\input{MPProblem.tex}
+
+\newpage
+\section{MPStrategy}
+\input{MPStrategy.tex}
+%\section{Utilities}
+%\input{Utilities.tex}
+
+\end{document}

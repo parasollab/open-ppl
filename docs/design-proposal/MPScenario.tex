@@ -1,0 +1,111 @@
+\subsection{mp\_scenario\_traits}
+This class will hold traits about the motion planning `scenario' to be solved.
+
+\begin{lstlisting}
+class mp_scenario_traits {
+  typedef ... cfg_type;
+  typedef ... cfg_aux_type_list;
+  typedef ... node_bundle_type;
+  typedef ... weight_aux_type_list;
+  typedef ... edge_bundle_type;
+  
+  // Would these be helpful for Tag dispatching?
+  // Would need a predefined set of categories
+  typedef ... robot_category_tag;
+  
+  //explicitly list cspace_model -- may need to specialize for some
+  //applications, i.e. dynamics may need a directed tree
+  typedef RoadmapGraph<node_bundle_type, edge_bundle_type> cspace_model_type;
+  
+  //explicitly list compatable mp_methods
+  typedef boost::mpl::list<...> node_generator_method_list;
+  typedef boost::mpl::list<...> connector_method_list;
+  typedef boost::mpl::list<...> local_planner_method_list;
+  typedef boost::mpl::list<...> mp_strategy_method_list;
+  typedef boost::mpl::list<...> distance_metric_method_list;
+  typedef boost::mpl::list<...> map_evaluator_method_list;
+  typedef boost::mpl::list<...> neighborhood_finder_method_list;
+  //NOTE: CollisionDetectionValidity will be templated on CD class
+  typedef boost::mpl::list<...> validity_checker_method_list;
+  
+  //MPProblem & Environment type are related, is MPProblem needed?
+  typedef Environment environment_type;
+  typedef Stat_Class stat_class_type
+};
+\end{lstlisting}
+\newpage
+Different mp\_scenario\_trait classes
+\begin{itemize}
+    \item rigid\_2d
+    \item rigid\_3d
+    \item rigid\_3d\_convex -- do we even runtime check for convex?
+    \item multi\_rigid\_3d
+    \item articulated\_3d
+    \item articulated\_3d\_fixed
+    \item closedchain\_2d
+    \item closedchain\_3d
+    \item FUTURE: kinematic\_3d
+    \item FUTURE: dynamic\_3d
+\end{itemize}
+\subsection{mp\_library}
+The mp\_library is templated by mp\_scenario and will contain all 
+available methods in the library.  
+
+\begin{lstlisting}
+template< typename MPScenario>
+class mp_library {
+  node_generator<MPScenario>* m_node_generator;
+  connector<MPScenario>*  m_pconnector;
+  distance_metric<MPScenario>* m_pdistance_metric;
+  local_planner<MPScenario>* m_plocal_planner;
+  mp_strategy<MPScenario>* m_pmp_strategy;
+  mp_problem<MPScenario>* m_pmp_problem;
+  map_evaluator<MPScenario>* m_pmap_evaluator; //cspace_model_evaluator????
+  nighborhood_finder<MPScenario>* m_pneighborhood_finder;
+  validity_checker<MPScenario>* m_pvalidity_checker
+};
+\end{lstlisting}
+
+\subsection{node\_aux\_data}
+`Extra' method specific data stored in a sidecar.  Examples include:
+\begin{itemize}
+\item OBPRM: Obstacle id
+\item MAPRM: Penetration \& Clearance data
+\item Feature Sensitive data
+\end{itemize}
+
+\subsection{weight\_aux\_data}
+`Extra' method specific data stored in a sidecar.  Examples include:
+\begin{itemize}
+\item A* random seed
+\item \% free
+\end{itemize}
+
+\subsection{mp\_container\_base} 
+Base class for container classes.  Templated by a type list of types to create.
+
+\subsection{mp\_method\_bridge\_base}
+Base class for method bridge.  This abstracts out the code needed to `fake' 
+templated virtual member functions.  Will be derived from shared\_ptr.
+
+\section{Other Issues}
+\subsection{CFG helper functions}
+Helper functions like those used by OBPRM \& MAPRM need a home.  Possible 
+solution would be to create classes for each function and use tag
+dispatching to control functionality.  Would need tag categories for robots and possibly environment.
+
+\subsection{File Naming Convention}
+\begin{itemize}
+    \item hpp: header file
+    \item ipp: template implementation
+    \item cpp: explicit template instantiation for contain classes
+\end{itemize}
+
+\subsection{Namespace}
+Do we actually want to begin using namespaces?
+
+\subsection{enable\_if vs. tag dispatching}
+Tag dispatching seems to be a simpler mechanism.
+
+\subsection{Stat\_Class}
+We still lack a clean `distributed' solution for the Stat\_Class and the \emph{HORIBLE} std::string *pCallName passing.
