@@ -572,7 +572,7 @@ int Body::BackwardConnectionCount() const
 
 
 ///  GetForwardConnection
-Connection Body::GetForwardConnection(size_t _index) 
+Connection & Body::GetForwardConnection(size_t _index) 
 {
   if (_index < forwardConnection.size())
     return forwardConnection[_index];
@@ -585,7 +585,7 @@ Connection Body::GetForwardConnection(size_t _index)
 
 
 ///  GetBackwardConnection
-Connection Body::GetBackwardConnection(size_t _index) 
+Connection & Body::GetBackwardConnection(size_t _index) 
 {
   if (_index < backwardConnection.size())
     return backwardConnection[_index];

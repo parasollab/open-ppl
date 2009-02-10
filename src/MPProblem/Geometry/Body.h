@@ -255,9 +255,9 @@ public:
     int BackwardConnectionCount() const;
 
     ///Get Connection by index in forward direction
-    Connection GetForwardConnection(size_t _index);
+    Connection & GetForwardConnection(size_t _index);
     ///Get Connection by index in backward direction
-    Connection GetBackwardConnection(size_t _index);
+    Connection & GetBackwardConnection(size_t _index);
 
     ///Set up a forward connectionship with the given connection
     void AddForwardConnection(Connection _connection);
