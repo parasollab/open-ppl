@@ -116,7 +116,6 @@ void Connection::Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
   dhparameters = _dhparameters;  
   type = connectionType;
   
-  /*
 #ifndef QUIET
   cout << "transformationToBody2 = (" 
        << transformationToBody2.position.getX() << ", " 
@@ -133,7 +132,6 @@ void Connection::Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
        << dhparameters.theta << ")" 
        << endl;
 #endif 
-  */
 }
 
 

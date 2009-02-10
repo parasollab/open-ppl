@@ -303,18 +303,9 @@ protected:
 
     /*@name Connection Related Data*/
     //@{
-    //int forwardConnectionCount;             ///<Number of Forward connection
-    //Connection ** forwardConnection;        ///<Forward Connections
-    //int backwardConnectionCount;            ///<Number of Backward connection
-    //Connection ** backwardConnection;       ///<Backward Connections
     vector<Connection> forwardConnection;
     vector<Connection> backwardConnection;
     //@}
-
-    //int IsConvex;
-    //Material material;
-    //Uncertainty uncertainty;
-
 
 #ifdef USE_CSTK
     void * cstkBody[MAXPROCS];  ///<CSTK internal model (maybe?!)

@@ -319,15 +319,8 @@ private:
 
   Environment * environment;  ///Owner
 
-/*
-  int FixedBodyCount;
-  FixedBody ** fixedBody;
-  int FreeBodyCount;
-  FreeBody ** freeBody;
-  */
   vector<shared_ptr<FixedBody> > fixedBody;
   vector<shared_ptr<FreeBody> > freeBody;
-  //Equation motionEquation;
   
   Vector3D CenterOfMass;
   bool CenterOfMassAvailable;

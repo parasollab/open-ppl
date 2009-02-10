@@ -66,26 +66,3 @@ void FixedBody::Write(ostream & _os) {
     _os << endl;
 }
 
-
-/*
-bool FixedBody::operator==(const FixedBody& b) const
-{
-  return (multibody == b.multibody) && 
-         (worldTransformation == b.worldTransformation) &&
-         (polyhedron == b.polyhedron) &&
-         (worldPolyhedron == b.worldPolyhedron) &&
-         (CenterOfMassAvailable == b.CenterOfMassAvailable) &&
-         (CenterOfMass == b.CenterOfMass) &&
-         (boundingBox[0] == b.boundingBox[0]) &&
-         (boundingBox[1] == b.boundingBox[1]) &&
-         (boundingBox[2] == b.boundingBox[2]) &&
-         (boundingBox[3] == b.boundingBox[3]) &&
-         (boundingBox[4] == b.boundingBox[4]) &&
-         (boundingBox[5] == b.boundingBox[5]) &&
-         (bb_polyhedron == b.bb_polyhedron) &&
-         (bb_world_polyhedron == b.bb_world_polyhedron) &&
-         (forwardConnection == b.forwardConnection) &&
-         (backwardConnection == b.backwardConnection) &&
-         (contactCount == b.contactCount); 
-}
-*/
