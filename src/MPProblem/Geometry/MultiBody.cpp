@@ -23,6 +23,7 @@
 #include "MultiBody.h"
 #include "Transformation.h"
 #include "util.h"
+#include <numeric>
 
 #define MAXCONTACT  10
 
@@ -30,11 +31,11 @@
 // Global variable to be used for contact checking by C-Space Toolkit
 //
 
-
 //===================================================================
 //  ComputePUMAInverseKinematics
 //===================================================================
-void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, double _d3, double _a3, double _d4, double theta[8][6]) {
+void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, double _d3, double _a3, double _d4, double theta[8][6]) 
+{
     //---------------------------------------------------------------
     //  Compute theta1
     //---------------------------------------------------------------
@@ -125,38 +126,137 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
     }
 }
 
+
 //===================================================================
 //  Constructors and Destructor
 //===================================================================
-MultiBody::MultiBody(Environment * _owner) {
-    environment = _owner;
-    FreeBodyCount = 0;
-    FixedBodyCount = 0;
-    freeBody = 0;
-    fixedBody = 0;
-    CenterOfMassAvailable = false;
-    bInternal = false;
+MultiBody::MultiBody(Environment * _owner) 
+  : bInternal(false), environment(_owner), CenterOfMassAvailable(false) 
+{}
+
+MultiBody::~MultiBody() 
+{}
+
+
+//-------------------------------------------------------------------
+//  GetFreeBody
+//-------------------------------------------------------------------
+shared_ptr<FreeBody> MultiBody::GetFreeBody(int _index) const 
+{
+  if(_index < (int)freeBody.size())
+    return freeBody[_index];
+  else
+    return shared_ptr<FreeBody>();
 }
 
-MultiBody::~MultiBody() {
-    int i;
-    for (i=0; i < FreeBodyCount; i++)
-	delete freeBody[i];
-    for (i=0; i < FixedBodyCount; i++)
-	delete fixedBody[i];
+//-------------------------------------------------------------------
+//  GetFreeBodyCount
+//-------------------------------------------------------------------
+int MultiBody::GetFreeBodyCount() const
+{
+  return freeBody.size();
+}
+
+//-------------------------------------------------------------------
+//  GetFreeBodyIndex
+//-------------------------------------------------------------------
+int MultiBody::GetFreeBodyIndex(const FreeBody& _b) const {
+  for(size_t i=0; i<freeBody.size(); ++i)
+    if(_b == *freeBody[i].get())
+      return i;
+  return -1;
+}
+int MultiBody::GetFreeBodyIndex(const shared_ptr<FreeBody>& _b) const {
+  for(size_t i=0; i<freeBody.size(); ++i)
+    if(_b == freeBody[i])
+      return i;
+  return -1;
 }
 
 //===================================================================
-//  ConfigureJoint
-//
-//  Function: Configure the joint by the given amount of displacement
-//
+//  AddBody
 //===================================================================
-void MultiBody::ConfigureJoint(double * _s, int _dof) {
-   int  i;
+void MultiBody::AddBody(const FreeBody& _body) 
+{
+  AddBody(shared_ptr<FreeBody>(new FreeBody(_body)));
+}
+void MultiBody::AddBody(const shared_ptr<FreeBody>& _body) 
+{
+  freeBody.push_back(_body);
+}
 
-   for (i=0; i< _dof; i++)
-	GetFreeBody(i)->GetForwardConnection(0)->GetDHparameters().theta += _s[i];
+
+//-------------------------------------------------------------------
+//  GetFixedBody
+//-------------------------------------------------------------------
+shared_ptr<FixedBody> MultiBody::GetFixedBody(int _index) const
+{
+  if(_index < (int)fixedBody.size())
+    return fixedBody[_index];
+  else
+    return shared_ptr<FixedBody>();
+}
+
+//-------------------------------------------------------------------
+//  GetFixedBodyCount
+//-------------------------------------------------------------------
+int MultiBody::GetFixedBodyCount() const
+{
+  return fixedBody.size();
+}
+
+//-------------------------------------------------------------------
+//  GetFixedBodyIndex
+//-------------------------------------------------------------------
+int MultiBody::GetFixedBodyIndex(const FixedBody& _b) const 
+{
+  for(size_t i=0; i<fixedBody.size(); ++i)
+    if(_b == *fixedBody[i].get())
+      return i;
+  return -1;
+}
+int MultiBody::GetFixedBodyIndex(const shared_ptr<FixedBody>& _b) const 
+{
+  for(size_t i=0; i<fixedBody.size(); ++i)
+    if(_b == fixedBody[i])
+      return i;
+  return -1;
+}
+
+//===================================================================
+//  AddBody
+//===================================================================
+void MultiBody::AddBody(const FixedBody& _body) 
+{
+  AddBody(shared_ptr<FixedBody>(new FixedBody(_body)));
+}
+void MultiBody::AddBody(const shared_ptr<FixedBody>& _body) 
+{
+  fixedBody.push_back(_body);
+}
+
+//-------------------------------------------------------------------
+//  GetBody
+//-------------------------------------------------------------------
+shared_ptr<Body> MultiBody::GetBody(int _index) const
+{
+  if(_index < 0 || _index >= (int)(freeBody.size() + fixedBody.size())) {
+    cout << "Error in MultiBody::GetBody !!" << endl;
+    exit(-1);
+  } 
+  else
+    if(_index < (int)fixedBody.size())
+      return fixedBody[_index];
+    else
+      return freeBody[_index - fixedBody.size()];
+}
+
+//-------------------------------------------------------------------
+//  GetBodyCount
+//-------------------------------------------------------------------
+int MultiBody::GetBodyCount() const
+{
+  return freeBody.size() + fixedBody.size();
 }
 
 //===================================================================
@@ -169,34 +269,19 @@ void MultiBody::ConfigureJoint(double * _s, int _dof) {
 //  Output: The pointer to the body
 //
 //===================================================================
-Body * MultiBody::GetFirstBody() {
-    //  I assume that the first body in the list is the anchor body.
-    //  That is, all other bodies in the MultiBody are linked sequentially
-    //  in a "forward" direction (with possible branches) from this anchor.
-    if (FixedBodyCount > 0) {
-	return fixedBody[0];
-    } else if (FreeBodyCount > 0) {
-        return freeBody[0];
-    } else {
-        return 0;
-    }
+shared_ptr<Body> MultiBody::GetFirstBody() const
+{
+  //  I assume that the first body in the list is the anchor body.
+  //  That is, all other bodies in the MultiBody are linked sequentially
+  //  in a "forward" direction (with possible branches) from this anchor.
+  if(!fixedBody.empty())
+    return fixedBody.front();
+  else 
+    if(!freeBody.empty()) 
+      return freeBody.front();
+    else 
+      return shared_ptr<Body>();
 }
-
-//===================================================================
-//  AddBody
-//===================================================================
-void MultiBody::AddBody(FixedBody * _body) {
-    FixedBodyCount++;
-    fixedBody = (FixedBody **)realloc(fixedBody, FixedBodyCount * sizeof(FixedBody *));
-    fixedBody[FixedBodyCount-1] = _body;
-}
-
-void MultiBody::AddBody(FreeBody * _body) {
-    FreeBodyCount++;
-    freeBody = (FreeBody **)realloc(freeBody, FreeBodyCount * sizeof(FreeBody *));
-    freeBody[FreeBodyCount-1] = _body;
-}
-
 
 
 //===================================================================
@@ -204,32 +289,160 @@ void MultiBody::AddBody(FreeBody * _body) {
 //
 //  Output: The number of links in "this" MultiBody
 //===================================================================
-int MultiBody::GetNumberOfLinks() {
-    Body * b = GetFirstBody();
+int MultiBody::GetNumberOfLinks() const
+{
+  shared_ptr<Body> bb = GetFirstBody();
+  if(bb == shared_ptr<Body>())
+    return 0;
 
-    if (!b)
-        return 0;
-    int i = 1;
-    while (b->ForwardConnectionCount() > 0) {
-	b = b->GetForwardConnection(0)->GetNextBody();
-        i++;
-    }
+  shared_ptr<Body> b = bb;
+  int i = 1;
+  while (b->ForwardConnectionCount() > 0) {
+    b = b->GetForwardConnection(0).GetNextBody();
+    i++;
+  }
+  return i-1;
+}
 
-    return i-1;
+//-------------------------------------------------------------------
+//  IsManipulator
+///  Function: Determine if the MultiBody at hand is a manipulator.
+///            If there is no free body attached to it,
+///            it is considered to be a manipulator
+///
+///  Output:   True/False
+//-------------------------------------------------------------------
+bool MultiBody::IsManipulator() const
+{
+  return !freeBody.empty();
+}
+
+
+//-------------------------------------------------------------------
+//  GetCenterOfMass
+//-------------------------------------------------------------------
+Vector3D MultiBody::GetCenterOfMass()
+{
+  if(!CenterOfMassAvailable) 
+    ComputeCenterOfMass();
+  return CenterOfMass;
 }
 
 //===================================================================
-//  ComputeDistance
+//  GetMaxAxisRange
 //===================================================================
-double MultiBody::ComputeDistance(Body * _body1, Body * _body2) {
-    return 0.0;
+double MultiBody::GetMaxAxisRange() const
+{
+  return maxAxisRange;
+}
+
+//===================================================================
+//  GetBoundingBox
+//===================================================================
+const double * MultiBody::GetBoundingBox() const
+{
+  return boundingBox;
+}
+
+//===================================================================
+//  GetBoundingSphereRadius
+//    the maximum size of this multibody
+//===================================================================
+double MultiBody::GetBoundingSphereRadius() const
+{
+  double result = GetBody(0)->GetPolyhedron().maxRadius;
+  for(int i=1; i<GetBodyCount(); ++i)
+    result += GetBody(i)->GetPolyhedron().maxRadius * 2.0;
+  return result;
+}
+
+//===================================================================
+//  GetInsideSphere Radius
+//    the minimum size of the multibody
+//===================================================================
+double MultiBody::GetInsideSphereRadius() const 
+{
+  double result = GetBody(0)->GetPolyhedron().minRadius;
+  for(int i=1; i<GetBodyCount(); ++i)
+    if(GetBody(i)->GetPolyhedron().minRadius > result)
+      result = GetBody(i)->GetPolyhedron().minRadius;
+  return result;
+}
+
+
+//===================================================================
+//	Area Methods
+//===================================================================
+
+
+//===================================================================
+//  GetFixArea
+//===================================================================
+double MultiBody::GetFixArea() const
+{
+  return fixArea;
+}
+
+//===================================================================
+//  GetFixAreas
+//===================================================================
+vector<double> MultiBody::GetFixAreas() const
+{
+  return fixAreas;
+}
+
+//===================================================================
+//  GetFreeArea
+//===================================================================
+double MultiBody::GetFreeArea() const
+{
+  return freeArea;
+}
+
+//===================================================================
+//  GetFreeAreas
+//===================================================================
+vector<double> MultiBody::GetFreeAreas() const
+{
+  return freeAreas;
+}
+
+//===================================================================
+//  GetArea
+//===================================================================
+double MultiBody::GetArea() const
+{
+  return area;
+}
+
+//===================================================================
+// CalculateArea
+//===================================================================
+void MultiBody::CalculateArea()
+{
+  fixArea = freeArea = 0;
+  
+  for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I) 
+  {
+    fixAreas.push_back((*I)->GetPolyhedron().area);
+    fixArea += (*I)->GetPolyhedron().area;
+  }
+
+  for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I) 
+  {
+    freeAreas.push_back((*I)->GetPolyhedron().area);
+    freeArea += (*I)->GetPolyhedron().area;
+  }
+
+  area = fixArea + freeArea;
 }
 
 
 //===================================================================
 //  Read
 //===================================================================
-void MultiBody::Read(istream& _is, int action, const char* descDir) {
+void MultiBody::Read(istream& _is, int action, const char* descDir) 
+{
   static const int FILENAME_LENGTH = 80;
 
   //get body info
@@ -279,11 +492,11 @@ void MultiBody::Read(istream& _is, int action, const char* descDir) {
 				  origbodyOrientation[0]*TWOPI/360.0);
       Transformation transformation(bodyOrientation, bodyPosition);
       
-      FixedBody* fix = new FixedBody(this);
-      fix->Read(bodyFileName);
-      fix->PutWorldTransformation(transformation);
-      fixAreas.push_back(fix->GetPolyhedron().area);
-      fixSum += fix->GetPolyhedron().area;
+      FixedBody fix(this);
+      fix.Read(bodyFileName);
+      fix.PutWorldTransformation(transformation);
+      fixAreas.push_back(fix.GetPolyhedron().area);
+      fixSum += fix.GetPolyhedron().area;
       AddBody(fix);      
     } else { // FreeBody
       isFree.push_back(true);
@@ -298,10 +511,10 @@ void MultiBody::Read(istream& _is, int action, const char* descDir) {
 	Transformation transformation(bodyOrientation, bodyPosition);
       }
 
-      FreeBody* free = new FreeBody(this);
-      free->Read(bodyFileName);
-      freeAreas.push_back(free->GetPolyhedron().area);
-      freeSum += free->GetPolyhedron().area;
+      FreeBody free(this);
+      free.Read(bodyFileName);
+      freeAreas.push_back(free.GetPolyhedron().area);
+      freeSum += free.GetPolyhedron().area;
       AddBody(free);
     } // endelse FreeBody    
   } //endfor i
@@ -309,7 +522,6 @@ void MultiBody::Read(istream& _is, int action, const char* descDir) {
   fixArea = fixSum;
   freeArea = freeSum;
   area = fixArea + freeArea;
-
 
   //get connection info
   readfield(_is, &string);     // Tag, "Connection"
@@ -320,7 +532,6 @@ void MultiBody::Read(istream& _is, int action, const char* descDir) {
     int previousBodyIndex, nextBodyIndex;
     _is >> previousBodyIndex;              // first body
     _is >> nextBodyIndex;                  // second body
-
 
     readfield(_is, &string);             // Tag, "Actuated/NonActuated"
       
@@ -351,33 +562,32 @@ void MultiBody::Read(istream& _is, int action, const char* descDir) {
 						   angles[1]*TWOPI/360.0, 
 						   angles[0]*TWOPI/360.0);
     
-    Body* prevBody;
+    shared_ptr<Body> prevBody;
     if(isFree[previousBodyIndex]) {
       int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
-      prevBody = (Body*)GetFreeBody(numFreeBeforeIndex);
+      prevBody = GetFreeBody(numFreeBeforeIndex);
     } else {
       int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
-      prevBody = (Body*)GetFixedBody(previousBodyIndex - numFreeBeforeIndex);
+      prevBody = GetFixedBody(previousBodyIndex - numFreeBeforeIndex);
     }
     
-    Body* nextBody;
+    shared_ptr<Body> nextBody;
     if(isFree[nextBodyIndex]) {
       int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
-      nextBody = (Body*)GetFreeBody(numFreeBeforeIndex);
+      nextBody = GetFreeBody(numFreeBeforeIndex);
     } else {
       int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
-      nextBody = (Body*)GetFixedBody(nextBodyIndex - numFreeBeforeIndex);
+      nextBody = GetFixedBody(nextBodyIndex - numFreeBeforeIndex);
     }
     
-    Connection*c = new Connection(prevBody, nextBody);
-    c->Read(prevBody, nextBody,
+    Connection c(prevBody, nextBody);
+    c.Read(prevBody, nextBody,
 	    transformPosition, transformOrientation,
 	    positionToDHFrame, orientationToDHFrame,
 	    dhparameters, Connection::ConnectionType(connectionType));
 
     prevBody->Link(c);
   } //endfor i
-  
 
   FindBoundingBox();
   ComputeCenterOfMass();
@@ -386,45 +596,61 @@ void MultiBody::Read(istream& _is, int action, const char* descDir) {
 
 void MultiBody::buildCDstructure(cd_predefined cdtype, int nprocs)
 {
-  for(int i=0; i<FixedBodyCount; ++i)
-    fixedBody[i]->buildCDstructure(cdtype, nprocs);
-  for(int i=0; i<FreeBodyCount; ++i)
-    freeBody[i]->buildCDstructure(cdtype, nprocs);
+  for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
+    (*I)->buildCDstructure(cdtype, nprocs);
+  for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
+    (*I)->buildCDstructure(cdtype, nprocs);
 }
 
 
 //===================================================================
 //  Write
 //===================================================================
-void MultiBody::Write(ostream & _os) {
-    //---------------------------------------------------------------
-    // Write tag
-    //---------------------------------------------------------------
-    _os << "MultiBody" << endl;
-    //---------------------------------------------------------------
-    // Write bodies
-    //---------------------------------------------------------------
-    int i, j;
-    _os << FixedBodyCount << endl;
-    for (i=0; i < FixedBodyCount; i++)
-        GetFixedBody(i)->Write(_os);
-    _os << FreeBodyCount << endl;
-    for (i=0; i < FreeBodyCount; i++)
-        GetFreeBody(i)->Write(_os);
-    //---------------------------------------------------------------
-    // Write links
-    //---------------------------------------------------------------
-    for (i=0; i < FixedBodyCount; i++) {
-        _os << GetFixedBody(i)->ForwardConnectionCount() << endl;
-        for (j=0; j < GetFixedBody(i)->ForwardConnectionCount(); j++)
-	    GetFixedBody(i)->GetForwardConnection(j)->Write(_os);
-    }
-    for (i=0; i < FreeBodyCount; i++) {
-        _os << GetFreeBody(i)->ForwardConnectionCount() << endl;
-        for (j=0; j < GetFreeBody(i)->ForwardConnectionCount(); j++)
-	    GetFreeBody(i)->GetForwardConnection(j)->Write(_os);
-    }
+void MultiBody::Write(ostream & _os) 
+{
+  //---------------------------------------------------------------
+  // Write tag
+  //---------------------------------------------------------------
+  _os << "MultiBody" << endl;
+  
+  //---------------------------------------------------------------
+  // Write bodies
+  //---------------------------------------------------------------
+  _os << fixedBody.size() << endl;
+  for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
+      (*I)->Write(_os);
+  _os << freeBody.size() << endl;
+  for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
+      (*I)->Write(_os);
+  
+  //---------------------------------------------------------------
+  // Write links
+  //---------------------------------------------------------------
+  for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I) {
+      _os << (*I)->ForwardConnectionCount() << endl;
+      for(int j=0; j < (*I)->ForwardConnectionCount(); j++)
+	    (*I)->GetForwardConnection(j).Write(_os);
+  }
+  for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I) {
+      _os << (*I)->ForwardConnectionCount() << endl;
+      for(int j=0; j < (*I)->ForwardConnectionCount(); j++)
+	    (*I)->GetForwardConnection(j).Write(_os);
+  }
 }
+
+
+//===================================================================
+//  ConfigureJoint
+//
+//  Function: Configure the joint by the given amount of displacement
+//
+//===================================================================
+void MultiBody::ConfigureJoint(double * _s, int _dof) 
+{
+  for(size_t i = 0; i<(size_t)_dof; ++i)
+    freeBody[i]->GetForwardConnection(0).GetDHparameters().theta = _s[i];
+}
+
 
 //===================================================================
 //  ComputeCenterOfMass
@@ -434,24 +660,21 @@ void MultiBody::Write(ostream & _os) {
 //  modify this function to consider the mass of each body.
 // 
 //===================================================================
-void MultiBody::ComputeCenterOfMass(){
-
-  int  nfree  = GetFreeBodyCount();
-  int  nfixed = GetFixedBodyCount();
-
-  if ((nfree+nfixed) == 0) {
-        cout << "\nERROR: No MultiBodies to take MultiBody::CenterOfMass from...\n";
-  }else{
-  	Vector3D sum(0,0,0);
-        int i;
-  	for(i=0; i<nfree; i++){
-		sum = sum +GetFreeBody(i)->GetCenterOfMass();
-  	}
-  	for(    i=0; i<nfixed; i++){
-		sum = sum +GetFixedBody(i)->GetCenterOfMass();
-  	}
-  	CenterOfMass = sum/(nfree+nfixed);
-  	CenterOfMassAvailable = true;
+void MultiBody::ComputeCenterOfMass()
+{
+  if(freeBody.empty() && fixedBody.empty()) 
+  {
+    cout << "\nERROR: No MultiBodies to take MultiBody::CenterOfMass from...\n";
+  } 
+  else
+  {
+     Vector3D sum(0,0,0);
+     for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
+       sum = sum + (*I)->GetCenterOfMass();
+     for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
+       sum = sum + (*I)->GetCenterOfMass();
+     CenterOfMass = sum / (freeBody.size() + fixedBody.size());
+     CenterOfMassAvailable = true;
   }
 }
 
@@ -459,176 +682,60 @@ void MultiBody::ComputeCenterOfMass(){
 //===================================================================
 //  FindBoundingBox
 //===================================================================
-void MultiBody::FindBoundingBox(){
+void MultiBody::FindBoundingBox()
+{	
+  double minx, miny, minz, maxx, maxy, maxz;
 	
-    int i, nfree, nfixed;
-    double * tmp;
+  ///////////////////////////////////////////////////////////
+  //Check Free Bodys' Boudning Box
+  if(!freeBody.empty())
+  {
+    freeBody.front()->FindBoundingBox();
+    double* tmp = freeBody.front()->GetBoundingBox();
+    minx = tmp[0]; maxx = tmp[1];
+    miny = tmp[2]; maxy = tmp[3];
+    minz = tmp[4]; maxz = tmp[5];
 	
-    nfree = GetFreeBodyCount();
-    nfixed = GetFixedBodyCount();
-	
-	///////////////////////////////////////////////////////////
-	//Check Free Bodys' Boudning Box
-    double minx, miny, minz, maxx, maxy, maxz;
-    i = 0;
-    if(nfree > 0){
-		this->GetFreeBody(i)->FindBoundingBox();
-		tmp = this->GetFreeBody(i)->GetBoundingBox();
-		minx = tmp[0]; maxx = tmp[1];
-		miny = tmp[2]; maxy = tmp[3];
-		minz = tmp[4]; maxz = tmp[5];
-		
-		for(i = 1 ; i < nfree ; i++){
-			this->GetFreeBody(i)->FindBoundingBox();
-			tmp = this->GetFreeBody(i)->GetBoundingBox();
-			minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
-			miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
-			minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
-		}
+    for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin()+1; I != freeBody.end(); ++I)
+    {
+      (*I)->FindBoundingBox();
+      tmp = (*I)->GetBoundingBox();
+      minx = min(minx, tmp[0]); maxx = max(maxx, tmp[1]);
+      miny = min(miny, tmp[2]); maxy = max(maxy, tmp[3]);
+      minz = min(minz, tmp[4]); maxz = max(maxz, tmp[5]);
     }
-	
-	///////////////////////////////////////////////////////////
-	//Check Fixed Bodys' Boudning Box
-    i = 0;
-    if(nfixed > 0){
-		this->GetFixedBody(i)->FindBoundingBox();
-		tmp = this->GetFixedBody(i)->GetBoundingBox();
-		minx = tmp[0]; maxx = tmp[1];
-        miny = tmp[2]; maxy = tmp[3];
-        minz = tmp[4]; maxz = tmp[5];
-		
-		for(i = 1 ; i < nfixed ; i++){
-			this->GetFixedBody(i)->FindBoundingBox();
-			tmp = this->GetFixedBody(i)->GetBoundingBox();
-            minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
-            miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
-            minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
-        }
+  }
+    
+  ///////////////////////////////////////////////////////////
+  //Check Fixed Bodys' Boudning Box
+  if(!fixedBody.empty())
+  {
+    fixedBody.front()->FindBoundingBox();
+    double* tmp = fixedBody.front()->GetBoundingBox();
+    minx = tmp[0]; maxx = tmp[1];
+    miny = tmp[2]; maxy = tmp[3];
+    minz = tmp[4]; maxz = tmp[5];
+
+    for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin()+1; I != fixedBody.end(); ++I)
+    {
+      (*I)->FindBoundingBox();
+      tmp = (*I)->GetBoundingBox();
+      minx = min(minx, tmp[0]); maxx = max(maxx, tmp[1]);
+      miny = min(miny, tmp[2]); maxy = max(maxy, tmp[3]);
+      minz = min(minz, tmp[4]); maxz = max(maxz, tmp[5]);
     }
-
-	///////////////////////////////////////////////////////////
-	//Pack
-    boundingBox[0] = minx; boundingBox[1] = maxx;
-    boundingBox[2] = miny; boundingBox[3] = maxy;
-    boundingBox[4] = minz; boundingBox[5] = maxz;
-	
-	///////////////////////////////////////////////////////////
-	//By the way
-
-    // Find maxAxisRange
-    double rangex, rangey, rangez;
-    rangex = maxx - minx;
-    rangey = maxy - miny;
-    rangez = maxz - minz;
-    maxAxisRange = max(rangex, max(rangey,rangez));
-}
-
-
-//===================================================================
-//  GetBoundingBox
-//===================================================================
-double * MultiBody::GetBoundingBox(){
-    return boundingBox;
-}
-
-//===================================================================
-//  GetMaxAxisRange
-//===================================================================
-double MultiBody::GetMaxAxisRange(){
-    return maxAxisRange;
-}
-
-
-//===================================================================
-//	Area Methods
-//===================================================================
-
-//===================================================================
-//  GetNumBodies
-//===================================================================
-int MultiBody::GetNumBodies(){
-    return numBodies;
-}
-
-
-//===================================================================
-//  GetFixArea
-//===================================================================
-double MultiBody::GetFixArea(){
-    return fixArea;
-}
-
-
-//===================================================================
-//  GetFreeArea
-//===================================================================
-double MultiBody::GetFreeArea(){
-    return freeArea;
-}
-
-
-//===================================================================
-//  GetArea
-//===================================================================
-double MultiBody::GetArea(){
-    return area;
-}
-
-
-//===================================================================
-//  GetFixAreas
-//===================================================================
-vector<double> MultiBody::GetFixAreas(){
-    return fixAreas;
-}
-
-
-//===================================================================
-//  GetFreeAreas
-//===================================================================
-vector<double> MultiBody::GetFreeAreas(){
-    return freeAreas;
-}
-
-
-// the maximum size of this multibody
-double MultiBody::GetBoundingSphereRadius() {
-   double result = GetBody(0)->GetPolyhedron().maxRadius;
-   for(int i=1; i<GetBodyCount(); i++)
-	result += GetBody(i)->GetPolyhedron().maxRadius * 2.0;
-
-   return result;
-}
-
-
-//the minimum size of the multibody
-double MultiBody::GetInsideSphereRadius() {
-  double result = GetBody(0)->GetPolyhedron().minRadius;
-  for(int i=1; i<GetBodyCount(); i++)
-    if (GetBody(i)->GetPolyhedron().minRadius > result)
-      result = GetBody(i)->GetPolyhedron().minRadius;
-
-  return result;
-}
-
-//===================================================================
-// CalculateArea
-//===================================================================
-void MultiBody::CalculateArea(){
-  double fixSum = 0;
-  double freeSum = 0;
-  int i;
-  for(i=0; i<FixedBodyCount; i++) {
-    fixAreas.push_back(fixedBody[i]->GetPolyhedron().area);
-    fixSum += fixedBody[i]->GetPolyhedron().area;
   }
 
-  for(i=0; i<FreeBodyCount; i++) {
-    freeAreas.push_back(freeBody[i]->GetPolyhedron().area);
-    freeSum += freeBody[i]->GetPolyhedron().area;
-  }
-
-  fixArea = fixSum;
-  freeArea = freeSum;
-  area = fixArea + freeArea;
+  ///////////////////////////////////////////////////////////
+  //Pack
+  boundingBox[0] = minx; boundingBox[1] = maxx;
+  boundingBox[2] = miny; boundingBox[3] = maxy;
+  boundingBox[4] = minz; boundingBox[5] = maxz;
+	
+  ///////////////////////////////////////////////////////////
+  // Find maxAxisRange
+  double rangex = maxx - minx;
+  double rangey = maxy - miny;
+  double rangez = maxz - minz;
+  maxAxisRange = max(rangex, max(rangey,rangez));
 }

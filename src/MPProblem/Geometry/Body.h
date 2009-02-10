@@ -35,6 +35,9 @@
 #include "GMSPolyhedron.h"
 #include "Connection.h"
 
+#include "boost/shared_ptr.hpp"
+using boost::shared_ptr;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MultiBody;
 class Transformation;
@@ -64,12 +67,15 @@ public:
     /**Constructor. Set the owner of this instance to _owner and initialize data members to 
       *0 ,NULL, and false.
       */
-    Body(MultiBody * _owner);
+    Body(MultiBody* _owner);
     /**Constructor. Set owner and geometric information of this instance of Body. 
       *initialize data members to 0 ,NULL, and false.
       */
-    Body(MultiBody * _owner, GMSPolyhedron & _polyhedron);
+    Body(MultiBody* _owner, GMSPolyhedron & _polyhedron);
     ///Destructor. Free Forward (backward) connection information here.
+
+    Body(const Body& b);
+
     virtual ~Body();
     //@}
 
@@ -114,7 +120,7 @@ public:
 
 
         ///Get the owner of this Body which is set in constrcutor.
-        MultiBody * GetMultiBody();
+        MultiBody* GetMultiBody();
 
         /**Return a bounding box of this instance of Body.
           *@see FindBoundingBox
@@ -168,11 +174,6 @@ public:
     /**@name Helper Methods. Use these method to calculate auxilary infomation*/
     //@{
 
-    ///Increment the contact count
-    void AddContactCount();
-
-    ///Initialize or Reinitialize contact count (to 0)
-    void InitializeContact();
 
     ///Calculate Bounding Box of Polyhedron (in world coordinates).
     void FindBoundingBox();
@@ -198,7 +199,7 @@ public:
       *(by comparing all its forward and backward connection)
       *Facilitate robot self collision checking.
       */
-    bool isAdjacent(Body *);
+    bool isAdjacent(shared_ptr<Body> otherBody);
 
     //@}
 
@@ -227,13 +228,13 @@ public:
         void ** From_GMS_to_cstk(); // Convert from GMS format to CSTK format.
 #endif
 #ifdef USE_VCLIP
-        PolyTree * GetVclipBody();  ///<Return VCLIP internal model
+        shared_ptr<PolyTree> GetVclipBody();  ///<Return VCLIP internal model
 #endif
 #ifdef USE_RAPID
-        RAPID_model * GetRapidBody(); ///<Return RAPID internal model
+        shared_ptr<RAPID_model> GetRapidBody(); ///<Return RAPID internal model
 #endif
 #ifdef USE_PQP
-        PQP_Model * GetPqpBody(); ///<Return PQP internal model
+        shared_ptr<PQP_Model> GetPqpBody(); ///<Return PQP internal model
 #endif
     //@}
 
@@ -249,41 +250,33 @@ public:
     //@{
 
     ///Number of Forward connection (# of Body connected with this Body in Forward direction)
-    int ForwardConnectionCount();
+    int ForwardConnectionCount() const;
     ///Number of Backward connection (# of Body connected with this Body in Backward direction)
-    int BackwardConnectionCount();
+    int BackwardConnectionCount() const;
 
     ///Get Connection by index in forward direction
-    Connection * GetForwardConnection(int _index);
+    Connection GetForwardConnection(size_t _index);
     ///Get Connection by index in backward direction
-    Connection * GetBackwardConnection(int _index);
+    Connection GetBackwardConnection(size_t _index);
 
     ///Set up a forward connectionship with the given connection
-    void AddForwardConnection(Connection * _connection);
+    void AddForwardConnection(Connection _connection);
     ///Set up a backward connectionship with the given connection
-    void AddBackwardConnection(Connection * _connection);
-
-    /**Delete a given connection from forward connections.
-      *if _delete is true, then this connection will be deallocated
-      */
-    void RemoveForwardConnection(Connection * _connection, int _delete);
-    /**Delete a given connection from backward connections.
-      *if _delete is true, then this connection will be deallocated
-      */
-    void RemoveBackwardConnection(Connection * _connection, int _delete);
-
+    void AddBackwardConnection(Connection _connection);
 
     /**Create a connection use these given info.
       *@param _otherBody The next (forward) body connected with this instance.
       *@see Connection, Link(Connection *)
       */
-    void Link(Body * _otherBody, const Transformation & _transformationToBody2,
+    void Link(const shared_ptr<Body>& _otherBody, const Transformation & _transformationToBody2,
     const DHparameters & _dhparameters, const Transformation &_transformationToDHFrame);
     /*Add this connection to forward connection list in this body
      *and add this connection to backward connection list in next body (defined in connection)
      */
-    void Link(Connection * _c);
+    void Link(Connection _c);
     //@}
+
+    bool operator==(const Body& b) const;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -294,14 +287,13 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////
 protected:
 
-    MultiBody * multibody;                  ///<Owner of this Body
+    MultiBody* multibody;                  ///<Owner of this Body
     Transformation worldTransformation;     ///<World Transformation
 
     /*@name Geometry Related Data*/
     //@{
     GMSPolyhedron polyhedron;               ///<Geometry of this Body defined in local coordinate system.
     GMSPolyhedron worldPolyhedron;          ///<Geometry of this Body defined in world coordinate system.
-    char polyhedronFileName[32];            ///<File name of geometric data
     bool CenterOfMassAvailable;             ///<Is the center of mass valid?
     Vector3D CenterOfMass;                  ///<The center of mass of a given polyhedron
     double boundingBox[6];                  ///<The Box which enclose every sinlge point on this Body
@@ -311,11 +303,12 @@ protected:
 
     /*@name Connection Related Data*/
     //@{
-    int forwardConnectionCount;             ///<Number of Forward connection
-    Connection ** forwardConnection;        ///<Forward Connections
-    int backwardConnectionCount;            ///<Number of Backward connection
-    Connection ** backwardConnection;       ///<Backward Connections
-    int contactCount;
+    //int forwardConnectionCount;             ///<Number of Forward connection
+    //Connection ** forwardConnection;        ///<Forward Connections
+    //int backwardConnectionCount;            ///<Number of Backward connection
+    //Connection ** backwardConnection;       ///<Backward Connections
+    vector<Connection> forwardConnection;
+    vector<Connection> backwardConnection;
     //@}
 
     //int IsConvex;
@@ -327,13 +320,13 @@ protected:
     void * cstkBody[MAXPROCS];  ///<CSTK internal model (maybe?!)
 #endif
 #ifdef USE_VCLIP
-    PolyTree *vclipBody;    ///<VCLIP internal model
+    shared_ptr<PolyTree> vclipBody;    ///<VCLIP internal model
 #endif
 #ifdef USE_RAPID
-    RAPID_model *rapidBody; ///<RAPID internal model
+    shared_ptr<RAPID_model> rapidBody; ///<RAPID internal model
 #endif
 #ifdef USE_PQP
-    PQP_Model *pqpBody; ///<PQP internal model
+    shared_ptr<PQP_Model> pqpBody; ///<PQP internal model
 #endif
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -355,118 +348,5 @@ private:
 friend class MultiBody; //Owner
 friend class Connection;
 };
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-//
-//  Implementation of Body
-//
-//
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////////
-
-//===================================================================
-//  Inline functions
-//===================================================================
-
-/** isAdjacent:
- to check if two Body share same joint(adjacent) for a robot. */
-inline bool Body::isAdjacent(Body * otherBody) {
-    for(int i=0; i < forwardConnectionCount; i++)
-        if(forwardConnection[i]->GetNextBody() == otherBody)
-            return true;
-    for(int j=0; j < backwardConnectionCount; j++)
-        if(backwardConnection[j]->GetPreviousBody() == otherBody)
-            return true;
-
-    return (this == otherBody); // if the two are the same, return true too.
-}
-
-/** WorldTransformation
-
- If worldTransformation has been calculated(updated), this method should be used
- to avoid redundant calculation.
-*/ 
-inline Transformation & Body::WorldTransformation() {
-    return worldTransformation;
-}
-
-
-///  GetBoundingBox
-inline double * Body::GetBoundingBox(){
-    return boundingBox;
-}
-
-///  GetCenterOfMass
-inline Vector3D Body::GetCenterOfMass(){
-    if (!CenterOfMassAvailable) {
-        ComputeCenterOfMass();
-    }
-    return CenterOfMass;
-}
-
-///  GetMultiBody
-inline MultiBody * Body::GetMultiBody() {
-    return multibody;
-}
-
-//  ContactCount
-//inline int Body::GetContactCount() {
-//    return contactCount;
-//}
-
-///  ForwardConnectionCount
-inline int Body::ForwardConnectionCount() {
-    return forwardConnectionCount;
-}
-
-///  BackwardConnectionCount
-inline int Body::BackwardConnectionCount() {
-    return backwardConnectionCount;
-}
-
-//  GetContact
-//inline Contact * Body::GetContact(int _index) {
-//    if (_index < contactCount)
-//        return contact[_index];
-//    else
-//        return 0;
-//}
-
-///  GetForwardConnection
-inline Connection * Body::GetForwardConnection(int _index) {
-    if (_index < forwardConnectionCount)
-        return forwardConnection[_index];
-    else
-        return 0;
-}
-
-///  GetBackwardConnection
-inline Connection * Body::GetBackwardConnection(int _index) {
-    if (_index < backwardConnectionCount)
-        return backwardConnection[_index];
-    else
-        return 0;
-}
-
-/**  AddContactCount
-  Function: Increment the contact count
-*/  
-inline void Body::AddContactCount() {
-  contactCount++;
-}
-
-/**
-  PutWorldTransformation
-
-  Function: Assign the given transformation as a transformation
-            w.r.t the world for "this" body
-*/
-inline void Body::PutWorldTransformation(Transformation & _worldTransformation){
-  worldTransformation = _worldTransformation;
-}
 
 #endif

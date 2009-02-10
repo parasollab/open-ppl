@@ -73,7 +73,7 @@ Cfg_free::Cfg_free(const Cfg& _c) {
   posDof = 3;
   vector<double> _v;
   _v = _c.GetData();
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free::Cfg_free(Cfg&), ";
     cout << "size of vector is less than " << dof << endl;
     exit(-1);
@@ -95,7 +95,7 @@ Cfg_free::~Cfg_free() {}
 void Cfg_free::equals(const Cfg& c) {
   vector<double> _v;
   _v = c.GetData();
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free::equals(Cfg&), ";
     cout << "size of vector is less than " << dof << endl;
     exit(-1);
@@ -121,7 +121,7 @@ const char* Cfg_free::GetName() const {
 
 
 bool Cfg_free::ConfigEnvironment(Environment* env) const {
-  MultiBody* mb = env->GetMultiBody(env->GetRobotIndex());
+  shared_ptr<MultiBody> mb = env->GetMultiBody(env->GetRobotIndex());
   
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
@@ -234,14 +234,14 @@ void Cfg_free::GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats,
   surface.clear();
   int robot = env->GetRobotIndex();
   
-  GMSPolyhedron& polyRobot = env->GetMultiBody(robot)->GetFreeBody(0)->GetPolyhedron();
-  GMSPolyhedron& polyObst = env->GetMultiBody(obstacle)->GetFixedBody(0)->GetWorldPolyhedron();
+  const GMSPolyhedron& polyRobot = env->GetMultiBody(robot)->GetFreeBody(0)->GetPolyhedron();
+  const GMSPolyhedron& polyObst = env->GetMultiBody(obstacle)->GetFixedBody(0)->GetWorldPolyhedron();
   
   int num = 0;
   
   while(num < nCfgs) {
-    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.numPolygons);
-    int obstTriIndex = (int)(OBPRM_drand()*polyObst.numPolygons);
+    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.polygonList.size());
+    int obstTriIndex = (int)(OBPRM_drand()*polyObst.polygonList.size());
   
     vector<Cfg*> tmp;  
     GetCfgByOverlappingNormal(env, Stats, cd, polyRobot, polyObst,
@@ -251,7 +251,7 @@ void Cfg_free::GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats,
     
     if(!tmp.empty() && tmp[0]->InBoundingBox(env)) {
       surface.push_back(tmp[0]);
-      for(int i=1; i<tmp.size(); i++)
+      for(size_t i=1; i<tmp.size(); i++)
 	delete tmp[i];
       ++num;
     }
@@ -266,7 +266,7 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 					 const GMSPolyhedron &polyObst, 
 					 int robTri, int obsTri, 
 					 CDInfo& _cdInfo,
-					 MultiBody* onflyRobot, vector<Cfg*>& surface) const {
+					 shared_ptr<MultiBody> onflyRobot, vector<Cfg*>& surface) const {
   surface.clear();
   static const double posRes = env->GetPositionRes();
   Vector3D robotVertex[3], obstVertex[3], robotPoint, obstPoint, robotNormal, obstNormal;
@@ -276,16 +276,16 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   //Check if robTri and obsTri are in side the range
-  if(robTri < 0 || robTri >= polyRobot.numPolygons ||
-     obsTri < 0 || obsTri >= polyObst.numPolygons ) {
+  if(robTri < 0 || robTri >= (int)polyRobot.polygonList.size() ||
+     obsTri < 0 || obsTri >= (int)polyObst.polygonList.size() ) {
     cout << "out of range: Cfg_free::GetCfgByOverlappingNormal() " << endl;
     exit(10);
   }
   
   /////////////////////////////////////////////////////////////////////////////////////////////
   //Get polygon accroding to index
-  GMSPolygon* pRobot = &polyRobot.polygonList[robTri];
-  GMSPolygon* pObst = &polyObst.polygonList[obsTri];
+  const GMSPolygon* pRobot = &polyRobot.polygonList[robTri];
+  const GMSPolygon* pObst = &polyObst.polygonList[obsTri];
   
   /////////////////////////////////////////////////////////////////////////////////////////////
   //Get first three vertices of polygon, as a triangular
@@ -389,7 +389,7 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 bool Cfg_free::InNarrowPassage(Environment* env, Stat_Class& Stats,
 			       CollisionDetection* cd,
 			       CDInfo& _cdInfo, 
-			       MultiBody* onflyRobot) const {
+			       shared_ptr<MultiBody> onflyRobot) const {
   if(v.size() != 6) {
     cout << "Error in Cfg_free::InNarrowPassage, Cfg must be rigidbody type. " << endl;
     exit(1);
@@ -436,7 +436,7 @@ Cfg* Cfg_free::CreateNewCfg() const {
 
 Cfg* Cfg_free::CreateNewCfg(vector<double>& data) const {
   Vector6<double> _data;
-  if(data.size() < dof) {
+  if((int)data.size() < dof) {
     cout << "\n\nERROR in Cfg_free::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than " << dof << endl;
     exit(-1);

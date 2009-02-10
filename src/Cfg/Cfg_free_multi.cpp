@@ -41,7 +41,7 @@ Cfg_free_multi::Cfg_free_multi(const vector<double>& _v) {
   dof = 6*NumofRobots;
   posDof = dof/2;
   
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free_multi::Cfg_free_multi(const vector<double>&), ";
     cout << "size of vector is less than " << dof << endl;
     exit(-1);
@@ -61,7 +61,7 @@ Cfg_free_multi::Cfg_free_multi(const Cfg& _c) {
   posDof = dof/2;
   
   vector<double> _v = _c.GetData();
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free_multi::Cfg_free_multi(const vector<double>&), ";
     cout << "size of vector is less than " << dof << endl;
     exit(-1);
@@ -91,7 +91,7 @@ Cfg* Cfg_free_multi::CreateNewCfg() const {
 
 Cfg* Cfg_free_multi::CreateNewCfg(vector<double>& data) const {
   Vector6<double> _data;
-  if(data.size() < dof) {
+  if((int)data.size() < dof) {
     cout << "\n\nERROR in Cfg_free_multi::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than " << dof << endl;
     exit(-1);
@@ -119,7 +119,7 @@ Vector3D Cfg_free_multi::GetRobotCenterPosition() const {
 
 
 bool Cfg_free_multi::ConfigEnvironment(Environment* env) const {
-  MultiBody* mb = env->GetMultiBody(env->GetRobotIndex());
+  shared_ptr<MultiBody> mb = env->GetMultiBody(env->GetRobotIndex());
  
   for(int i=0; i<NumofRobots; ++i) {
     // configure the robot according to current Cfg: joint parameters

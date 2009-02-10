@@ -221,7 +221,7 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 				  const GMSPolyhedron &polyObst, 
 				  int robTri, int obsTri, 
 				  CDInfo& _cdInfo,
-				  MultiBody * onflyRobot,
+				  shared_ptr<MultiBody> onflyRobot,
 				  vector<Cfg*> surface) {
   surface.clear();
   static const double posRes = env->GetPositionRes();
@@ -232,16 +232,16 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
   
   /////////////////////////////////////////////////////////////////////////////////////////////
   //Check if robTri and obsTri are in side the range
-  if(robTri < 0 || robTri >= polyRobot.numPolygons ||
-     obsTri < 0 || obsTri >= polyObst.numPolygons ) {
+  if(robTri < 0 || robTri >= (int)polyRobot.polygonList.size() ||
+     obsTri < 0 || obsTri >= (int)polyObst.polygonList.size() ) {
     cout << "out of range: Cfg_2D::GetCfgByOverlappingNormal() " << endl;
     exit(10);
   }
   
   /////////////////////////////////////////////////////////////////////////////////////////////
   //Get polygon accroding to index
-  GMSPolygon *pRobot = &polyRobot.polygonList[robTri];
-  GMSPolygon *pObst = &polyObst.polygonList[obsTri];
+  const GMSPolygon *pRobot = &polyRobot.polygonList[robTri];
+  const GMSPolygon *pObst = &polyObst.polygonList[obsTri];
   
   /////////////////////////////////////////////////////////////////////////////////////////////
   //Get first three vertices of polygon, as a triangular
@@ -356,8 +356,8 @@ void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
   int num = 0;
   
   while(num < nCfgs) {
-    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.numPolygons);
-    int obstTriIndex = (int)(OBPRM_drand()*polyObst.numPolygons);
+    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.polygonList.size());
+    int obstTriIndex = (int)(OBPRM_drand()*polyObst.polygonList.size());
     
     vector<Cfg*> tmp;
     GetCfgByOverlappingNormal(env, Stats, cd, 
@@ -372,7 +372,7 @@ void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
       
       
       surface.push_back(tmp[0]);
-      for (int i= 1; i < tmp.size(); i ++)
+      for (size_t i= 1; i < tmp.size(); i ++)
 	delete tmp[i];
       ++num;			
     }

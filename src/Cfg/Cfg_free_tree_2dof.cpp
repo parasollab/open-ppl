@@ -57,7 +57,7 @@ Cfg_free_tree_2dof::Cfg_free_tree_2dof(const Vector6<double>& _v) {
 Cfg_free_tree_2dof::Cfg_free_tree_2dof(const vector<double> &_v){
   dof = 6 + NumofJoints;
   posDof = 3;
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(vector<double>), ";
     cout << "size of vector less than dof\n";
     exit(-1);
@@ -78,7 +78,7 @@ Cfg_free_tree_2dof::Cfg_free_tree_2dof(const Cfg& _c) {
   posDof = 3;
   vector<double> _v;
   _v = _c.GetData();
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(Cfg&), ";
     cout << "size of cfg data less than dof\n";
     exit(-1);
@@ -108,7 +108,7 @@ Cfg* Cfg_free_tree_2dof::CreateNewCfg() const {
 
 Cfg* Cfg_free_tree_2dof::CreateNewCfg(vector<double>& data) const {
   vector<double> _data;
-  if(data.size() < dof) {
+  if((int)data.size() < dof) {
     cout << "\n\nERROR in Cfg_free_tree_2dof::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than dof\n";
     exit(-1);
@@ -135,14 +135,14 @@ bool Cfg_free_tree_2dof::ConfigEnvironment(Environment *_env) const {
   int i;
   for( i=0; i<NumofJoints; i+=2) {
     _env->GetMultiBody(robot)->GetFreeBody(i/2+1)
-      ->GetBackwardConnection(0)->GetDHparameters().alpha = v[i+6]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().alpha = v[i+6]*360.0;
     _env->GetMultiBody(robot)->GetFreeBody(i/2+1)
-      ->GetBackwardConnection(0)->GetDHparameters().theta = v[i+1+6]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().theta = v[i+1+6]*360.0;
   }  // config the robot
   
   
   for(i=0; i<_env->GetMultiBody(robot)->GetFreeBodyCount(); i++) {
-    FreeBody * afb = _env->GetMultiBody(robot)->GetFreeBody(i);
+    shared_ptr<FreeBody> afb = _env->GetMultiBody(robot)->GetFreeBody(i);
     if(afb->ForwardConnectionCount() == 0)  // tree tips: leaves.
       afb->GetWorldTransformation();
   }

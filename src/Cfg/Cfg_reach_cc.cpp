@@ -180,7 +180,7 @@ isWithinResolution(const Cfg &c,
 		   double positionRes, 
 		   double orientationRes) const {
   //if orienation difference is 2 or -2, return false
-  for(int i=0; i<link_orientations.size(); ++i)
+  for(size_t i=0; i<link_orientations.size(); ++i)
     if(abs(link_orientations[i]-((Cfg_reach_cc&)c).link_orientations[i]) > 1)
       return false;
 
@@ -205,7 +205,7 @@ ConfigEnvironment(Environment* _env) const {
   _env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);  // update link 1.
   for(int i=0; i<NumofJoints; i++) {
     _env->GetMultiBody(robot)->GetFreeBody(i+1)
-      ->GetBackwardConnection(0)->GetDHparameters().theta = v[i+6]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().theta = v[i+6]*360.0;
   }  // config the robot
   
   //_env->GetMultiBody(robot)->GetFreeBody(_env->GetMultiBody(robot)->GetFreeBodyCount()-1)->GetWorldTransformation();
@@ -334,7 +334,7 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks) {
 		      link_lengths, n_ticks);
 
   link_orientations = ((Cfg_reach_cc&)_goal).link_orientations;
-  for(int i=0; i<link_orientations.size(); ++i) {
+  for(size_t i=0; i<link_orientations.size(); ++i) {
     int _start_ori = ((Cfg_reach_cc&)_start).link_orientations[i];
     int _goal_ori = ((Cfg_reach_cc&)_goal).link_orientations[i];
     if(_start_ori != _goal_ori) {
@@ -362,7 +362,7 @@ CreateNewCfg() const {
 Cfg* 
 Cfg_reach_cc::
 CreateNewCfg(vector<double>& _v) const {
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_reach_cc::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than dof\n";
     exit(-1);
@@ -384,7 +384,7 @@ StoreData() {
 
     //compute joint angles
     double sumExtAng = 0;
-    for(int i=1; i<actual_links.size(); ++i) {
+    for(size_t i=1; i<actual_links.size(); ++i) {
       double extAng = PI - CalculateJointAngle(actual_links[i-1], 
 					       actual_links[i]);
       sumExtAng += extAng;
@@ -427,7 +427,7 @@ GetIntermediate(const Cfg_reach_cc& c1,
 
   //compute deterministic seed for local planning/sampling
   double len = 0.0;
-  for(int i=0; i<c1.link_lengths.size(); ++i) 
+  for(size_t i=0; i<c1.link_lengths.size(); ++i) 
     len += c1.link_lengths[i]*(i+1)*(i+2) + c2.link_lengths[i]*(i+1)*(i+2);
   uint64_t seed = len +
     accumulate(c1.link_orientations.begin(), c1.link_orientations.end(), 0) + 
@@ -460,7 +460,7 @@ LengthDistance(const Cfg_reach_cc& c2) const {
   cout << endl;
   */
   vector<double> length_difference;
-  for(int i=0; i<link_lengths.size(); ++i) 
+  for(size_t i=0; i<link_lengths.size(); ++i) 
     if(ranges[i].Size() == 0)
       length_difference.push_back(0);
     else
@@ -480,7 +480,7 @@ double
 Cfg_reach_cc::
 OrientationDistance(const Cfg_reach_cc& c2) const {
   vector<double> ori_difference;
-  for(int i=0; i<link_orientations.size(); ++i)
+  for(size_t i=0; i<link_orientations.size(); ++i)
     ori_difference.push_back((double)(abs(link_orientations[i]-c2.link_orientations[i]))/2.0);
   /*
   cout << "ori_difference: ";

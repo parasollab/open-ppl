@@ -175,7 +175,7 @@ class CollisionDetection : MPBaseObject {
    *@see IsInCollision(Environment* , SID , CDInfo& , MultiBody* , MultiBody*)
    */
   bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
-		     MultiBody* lineRobot = NULL, bool enablePenetration=true, std::string *pCallName=NULL);
+		     shared_ptr<MultiBody> lineRobot = shared_ptr<MultiBody>(), bool enablePenetration=true, std::string *pCallName=NULL);
 
   /**Check collision by index of robot and obstacle.
    *This method retrives MultiBody instances from Environment insntace,
@@ -202,7 +202,7 @@ class CollisionDetection : MPBaseObject {
    *CDInfo::GetCollisionDetection
    */
   bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
-		     MultiBody* rob, MultiBody* obstacle, std::string *pCallName=NULL);
+		     shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obstacle, std::string *pCallName=NULL);
   
   /**Get minimum distance from Robot to Obstacles in environment.
    *@note This method could be invoked iff USE_CSTK is defined.
@@ -289,7 +289,7 @@ class CollisionDetectionMethod {
 
   /**Check collision between MultiBody of robot and obstacle.
    */
-  virtual bool IsInCollision(MultiBody* rob, MultiBody* obstacle, Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL) = 0;
+  virtual bool IsInCollision(shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obstacle, Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL) = 0;
 
   CDInfo cdInfo;            ///<No one use this??!!
 
@@ -317,7 +317,7 @@ class Cstk : public CollisionDetectionMethod {
   virtual bool clearanceAvailable();
 
   double cstkDistance(Stat_Class& Stats, 
-		      MultiBody* robot, MultiBody* obstacle, std::string *pCallName=NULL);
+		      shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, std::string *pCallName=NULL);
 
   /**Using CSTK to check collision between two MultiBodys.
    *Collision is checked in Body level between two MultiBodys,
@@ -331,7 +331,7 @@ class Cstk : public CollisionDetectionMethod {
    *@return true if Collision found. Otherwise false will be returned.
    *@see Body::GetCstkBody
    */
-  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL);
 	
   /// for cstk, used by IsInCollision
@@ -364,7 +364,7 @@ class Vclip : public CollisionDetectionMethod {
    *@see Body::GetVclipBody, and GetVclipPose.
    *@see IsInColl_AllInfo_vclip for get all info. 
    */
-  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL);
   
   /**Get VclipPose.
@@ -385,7 +385,7 @@ class Vclip : public CollisionDetectionMethod {
    *gets updated correctly.
    *@see IsInCollision(Environment*, SID, CDInfo& , MultiBody*)
    */
-  bool IsInColl_AllInfo_vclip(MultiBody* robot, MultiBody* obstacle, 
+  bool IsInColl_AllInfo_vclip(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 			      CDInfo& _cdInfo);
 };
 #endif
@@ -415,7 +415,7 @@ class Rapid: public CollisionDetectionMethod {
    *@return true if Collision found. Otherwise false will be returned.
    *@see Body::GetRapidBody
    */
-  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL);
 };
 #endif
@@ -431,7 +431,7 @@ class Pqp : public CollisionDetectionMethod {
 
   virtual CollisionDetectionMethod* CreateCopy();
 
-  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 			     Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL);
 };
 
@@ -441,10 +441,10 @@ class Pqp_Solid : public Pqp {
   virtual ~Pqp_Solid() {}
   virtual char* GetName() const { return "PQP_Solid"; }
   virtual CollisionDetectionMethod* CreateCopy();
-  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle,
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 			     Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL);
   virtual bool isInsideObstacle(const Cfg& cfg, Environment* env);
-  virtual bool isInsideObstacle(Vector3D robot_pt, MultiBody* obstacle);
+  virtual bool isInsideObstacle(Vector3D robot_pt, shared_ptr<MultiBody> obstacle);
   PQP_Model* BuildPQPSegment(PQP_REAL dX, PQP_REAL dY, PQP_REAL dZ) const;
 };
 #endif
@@ -460,7 +460,7 @@ class BoundingSpheres : public CollisionDetectionMethod {
 
   virtual CollisionDetectionMethod* CreateCopy();
   
-  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL);
 };
 
@@ -475,7 +475,7 @@ class InsideSpheres : public CollisionDetectionMethod {
 
   virtual CollisionDetectionMethod* CreateCopy();
 
-  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL);
 };
 
@@ -490,7 +490,7 @@ class Naive : public CollisionDetectionMethod {
 
   virtual CollisionDetectionMethod* CreateCopy();
 
-  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 			     Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL);
 };
 
@@ -505,7 +505,7 @@ class Quinlan : public CollisionDetectionMethod {
 
   virtual CollisionDetectionMethod* CreateCopy();
 
-  virtual bool IsInCollision(MultiBody* robot, MultiBody* obstacle, 
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
                              Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL);
 };
 

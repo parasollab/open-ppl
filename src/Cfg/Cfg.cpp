@@ -73,7 +73,7 @@ bool Cfg::AlmostEqual(const Cfg &_c) const {
 
 void Cfg::add(const Cfg& c1, const Cfg& c2) {
   vector<double> _v;
-  for(int i=0; i<c1.v.size(); ++i)
+  for(size_t i=0; i<c1.v.size(); ++i)
     _v.push_back(c1.v[i]+c2.v[i]);
   v = _v;
   Normalize_orientation();
@@ -82,7 +82,7 @@ void Cfg::add(const Cfg& c1, const Cfg& c2) {
 
 void Cfg::subtract(const Cfg& c1, const Cfg& c2) {
   vector<double> _v;
-  for(int i=0; i<c1.v.size(); ++i)
+  for(size_t i=0; i<c1.v.size(); ++i)
     _v.push_back(c1.v[i]-c2.v[i]);
   v = _v;
   Normalize_orientation();
@@ -91,8 +91,8 @@ void Cfg::subtract(const Cfg& c1, const Cfg& c2) {
 
 void Cfg::negative(const Cfg& c) {
   vector<double> _v;    
-  for(int i=0; i<c.v.size(); ++i)
-    _v.push_back(-c.v[i]);
+  for(vector<double>::const_iterator V = c.v.begin(); V != c.v.end(); ++V)
+    _v.push_back(-(*V));
   v = _v;
   Normalize_orientation();
 }
@@ -100,8 +100,8 @@ void Cfg::negative(const Cfg& c) {
 
 void Cfg::multiply(const Cfg& c, double s) {
   vector<double> _v;
-  for(int i=0; i<c.v.size(); ++i)
-    _v.push_back(c.v[i]*s);
+  for(vector<double>::const_iterator V = c.v.begin(); V != c.v.end(); ++V)
+    _v.push_back((*V)*s);
   v = _v;
   Normalize_orientation();
 }
@@ -109,8 +109,8 @@ void Cfg::multiply(const Cfg& c, double s) {
 
 void Cfg::divide(const Cfg& c, double s) {
   vector<double> _v;
-  for(int i=0; i<c.v.size(); ++i)
-    _v.push_back(c.v[i]/s);
+  for(vector<double>::const_iterator V = c.v.begin(); V != c.v.end(); ++V)
+    _v.push_back((*V)/s);
   v = _v;
   Normalize_orientation();
 }
@@ -118,7 +118,7 @@ void Cfg::divide(const Cfg& c, double s) {
 
 void Cfg::WeightedSum(const Cfg& first, const Cfg& second, double weight) {
   vector<double> _v;
-  for(int i=0; i<first.v.size(); ++i)
+  for(size_t i=0; i<first.v.size(); ++i)
     _v.push_back(first.v[i]*(1.-weight) + second.v[i]*weight);
   v = _v;
   Normalize_orientation();
@@ -154,9 +154,8 @@ ostream& operator<< (ostream& s, const Cfg& pt) {
 
 
 void Cfg::Write(ostream &os) const {
-  for(int i=0; i<v.size(); ++i) {
-    os << setw(4)<<v[i]<<' ';
-  }
+  for(vector<double>::const_iterator V = v.begin(); V != v.end(); ++V)
+    os << setw(4)<<*V<<' ';
 }
 
 
@@ -168,9 +167,8 @@ void Cfg::WriteInfo(ostream &os) const {
 
 
 void Cfg::Read(istream &is) {
-  for(int i=0; i<v.size(); ++i) {
-    is >> v[i];
-  }
+  for(vector<double>::iterator V = v.begin(); V != v.end(); ++V)
+    is >> (*V);
 }
 
 
@@ -347,7 +345,7 @@ bool Cfg::InBoundingBox(Environment *env) const {
     return false;
 
   // @todo: if there are multiple robots, this needs to be changed.
-  MultiBody *robot = env->GetMultiBody(env->GetRobotIndex());  
+  shared_ptr<MultiBody> robot = env->GetMultiBody(env->GetRobotIndex());  
 
   if (bb->GetClearance(GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
@@ -358,8 +356,8 @@ bool Cfg::InBoundingBox(Environment *env) const {
       
       GMSPolyhedron &bb_poly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
       bool bbox_check = true;
-      for(int j=0; j<bb_poly.numVertices; ++j)
-	if(!bb->IfSatisfiesConstraints(worldTransformation * bb_poly.vertexList[j])) {
+      for(vector<Vector3D>::const_iterator V = bb_poly.vertexList.begin(); V != bb_poly.vertexList.end(); ++V)
+	if(!bb->IfSatisfiesConstraints(worldTransformation * (*V))) {
 	  bbox_check = false;
 	  break;
 	}
@@ -367,8 +365,8 @@ bool Cfg::InBoundingBox(Environment *env) const {
 	continue;
       
       GMSPolyhedron &poly = robot->GetFreeBody(m)->GetPolyhedron();
-      for(int j=0; j<poly.numVertices; ++j) 
-        if(!bb->IfSatisfiesConstraints(worldTransformation * poly.vertexList[j]))
+      for(vector<Vector3D>::const_iterator V = poly.vertexList.begin(); V != poly.vertexList.end(); ++V)
+        if(!bb->IfSatisfiesConstraints(worldTransformation * (*V)))
 	  return false;      
     }
   }
@@ -423,8 +421,8 @@ void Cfg::GetMovingSequenceNodes(const Cfg& other, vector<double> s_value, vecto
 
   Cfg* weighted_sum = this->CreateNewCfg();
   double o_weight = 0.0;
-  for(int i=0; i<s_value.size(); ++i) {
-    weighted_sum->WeightedSum(*this, other, s_value[i]);
+  for(vector<double>::const_iterator S = s_value.begin(); S != s_value.end(); ++S) {
+    weighted_sum->WeightedSum(*this, other, *S);
 
     Cfg* s1 = this->CreateNewCfg();
     s1->GetPositionOrientationFrom2Cfg(*weighted_sum, *result.back());
@@ -524,8 +522,7 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
   //as increment
   Cfg* tmp = increment.CreateNewCfg();
   nList.push_back(tmp); 
-  int i;
-  for(i=0; i<dof; ++i) {
+  for(int i=0; i<dof; ++i) {
     if(i<posDof) {
       posOnly.push_back(increment.v[i]);
       oriOnly.push_back(0.0);
@@ -545,11 +542,11 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
   
   // find close neighbour in every dimension.
   vector<double> oneDim;
-  for(i=0; i< dof; i++)
+  for(int i=0; i< dof; i++)
     oneDim.push_back(0.0);
   
   Cfg* oneDimCfg, *oneDimCfgNegative;
-  for(i=0; i< dof; i++) { 
+  for(int i=0; i< dof; i++) { 
     oneDim[i] = increment.v[i];
 
     oneDimCfg = this->CreateNewCfg(oneDim);
@@ -564,9 +561,9 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
   
   /////////////////////////////////////////////////////////////////////
   //Validate Neighbors
-  if(noNeighbors > nList.size()) 
+  if(noNeighbors > (int)nList.size()) 
     noNeighbors = nList.size();
-  for(i=0;i<(noNeighbors);i++) {
+  for(int i=0;i<(noNeighbors);i++) {
     Cfg* tmp = this->CreateNewCfg();
     tmp->add(*this, *(nList[i]));
     
@@ -636,9 +633,9 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
    //Validate Neighbors
 
    /* Need to modify following code for the future cfgs */
-   if(noNeighbors > nList.size()) 
+   if(noNeighbors > (int)nList.size()) 
      noNeighbors = nList.size();
-   for(i=0;i<noNeighbors;++i) {
+   for(int i=0;i<noNeighbors;++i) {
      Cfg* tmp = this->CreateNewCfg();
      
      tmp->IncrementTowardsGoal(goal, *nList[i]); //The only difference~
@@ -649,13 +646,13 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
        delete tmp;
    }
 
-   for(i=0; i<nList.size(); i++)
-     delete nList[i];
+   for(vector<Cfg*>::iterator I = nList.begin(); I != nList.end(); ++I)
+     delete (*I);
 }
 
 
 void Cfg::Increment(const Cfg& _increment) {
-  for(int i=0; i<v.size(); ++i)
+  for(size_t i=0; i<v.size(); ++i)
     v[i] += _increment.v[i];
   Normalize_orientation();
   obst = -1;
@@ -1012,8 +1009,8 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
   
   if(!bComputePenetration == bInitState) { //don't need to compute clearance/penetration
     delete cfg;
-    for(int i=0; i<directions.size(); i++)
-      delete directions[i];
+    for(vector<Cfg*>::iterator D = directions.begin(); D != directions.end(); ++D)
+      delete *D;
     return;
   }
 
@@ -1041,7 +1038,7 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
   vector<bool> ignored(directions.size(), false);
   int stateChangedFlag = false;
   while(!stateChangedFlag) {
-    for(int i=0; i<directions.size(); i++) {
+    for(size_t i=0; i<directions.size(); i++) {
       if(ignored[i])
 	continue;
 
@@ -1057,7 +1054,7 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 	} else { //ignore bbox for penetration
 	  ignored[i] = true;
 	  if(count(ignored.begin(), ignored.end(), true) ==
-	     directions.size()) { //if no more directions left, exit loop
+	     (int)directions.size()) { //if no more directions left, exit loop
 	    clearInfo.setClearance(10000);
 	    Cfg* tmp3 = cfg->CreateNewCfg();
 	    clearInfo.setDirection(tmp3);
@@ -1071,7 +1068,7 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 	if((ignore_obstacle != -1) && (cdInfo.colliding_obst_index == ignore_obstacle)) {
 	  ignored[i] = true;
 	  if(count(ignored.begin(), ignored.end(), true) ==
-	     directions.size()) {
+	     (int)directions.size()) {
 	    clearInfo.setClearance(10000);
 	    Cfg* tmp3 = cfg->CreateNewCfg();
 	    clearInfo.setDirection(tmp3);
@@ -1103,12 +1100,12 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 
   //clean up allocated memory
   delete cfg;
-  for(int i=0; i<directions.size(); i++)
-    delete directions[i];
-  for(int i=0; i<tick.size(); i++)
-    delete tick[i];
-  for(int i=0; i<incr.size(); i++)
-    delete incr[i].first;
+  for(vector<Cfg*>::iterator I = directions.begin(); I != directions.end(); ++I)
+    delete *I;
+  for(vector<Cfg*>::iterator I = tick.begin(); I != tick.end(); ++I)
+    delete *I;
+  for(vector<pair<Cfg*, double> >::iterator I = incr.begin(); I != incr.end(); ++I)
+    delete I->first;
 
   return;
 }
@@ -1119,15 +1116,14 @@ void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
             CDInfo& cdInfo, vector<Cfg*>& contact_points) const {
 
   //initialize:
-  int i;
   Cfg* origin;
   vector<double> originVector;
   std::string Callee(GetName()),CallCnt;
   {std::string Method("-Cfg::ApproxCSpanceContactPoints");Callee=Callee+Method;}
   
-  for(i=0; i<dof; i++)
+  for(int i=0; i<dof; i++)
     originVector.push_back(0.0);
-  for(i=0; i<directions.size(); i++) {
+  for(size_t i=0; i<directions.size(); i++) {
     origin = this->CreateNewCfg(originVector);
     contact_points.push_back(origin);
   }
@@ -1142,7 +1138,7 @@ void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
   double incrBound = env->GetMultiBody(iRobot)->GetMaxAxisRange();
   
   //step out along each ray and record first cfg in collision:
-  for(i=0; i<contact_points.size(); i++) {
+  for(size_t i=0; i<contact_points.size(); i++) {
     
     int n_ticks;
     Cfg* tick = origin->CreateNewCfg();
@@ -1193,7 +1189,7 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
 
   // after updating the environment(multibodies), Ask ENVIRONMENT
   // to check collision! (this is more nature.)
-  bool answerFromEnvironment = cd->IsInCollision(env, Stats, _cdInfo, (MultiBody*)NULL, true, pCallName);
+  bool answerFromEnvironment = cd->IsInCollision(env, Stats, _cdInfo, shared_ptr<MultiBody>(), true, pCallName);
 
 #ifdef COLLISIONCFG
  if(answerFromEnvironment)
@@ -1252,7 +1248,7 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
 
 bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
           CollisionDetection* cd,
-          CDInfo& _cdInfo, MultiBody* onflyRobot,
+          CDInfo& _cdInfo, shared_ptr<MultiBody> onflyRobot,
           bool enablePenetration, std::string *pCallName) {
 
   Stats.IncCfgIsColl(pCallName);
@@ -1283,7 +1279,7 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
 // Normalize the orientation to the some range.
 void Cfg::Normalize_orientation(int index) {
   if(index == -1) {
-    for(int i=posDof; i<v.size(); ++i)
+    for(size_t i=posDof; i<v.size(); ++i)
       v[i] = v[i] - floor(v[i]);
   } else if(index >= posDof && index < dof) {  // orientation index
     v[index] = v[index] - floor(v[index]);

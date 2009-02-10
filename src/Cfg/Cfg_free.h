@@ -116,7 +116,7 @@ public:
 					 const GMSPolyhedron &polyObst,
 					 int robTri, int obsTri,
 					 CDInfo& _cdInfo,
-					 MultiBody*, vector<Cfg*>&) const;
+					 shared_ptr<MultiBody>, vector<Cfg*>&) const;
 
   //@}
 
@@ -136,7 +136,7 @@ public:
     */
   virtual bool InNarrowPassage(Environment* env, Stat_Class& Stats,
 			       CollisionDetection* cd, CDInfo& _cdInfo,
-			       MultiBody* onflyRobot) const;
+			       shared_ptr<MultiBody> onflyRobot) const;
   //@}
 
 

@@ -10,14 +10,12 @@
 //===================================================================
 //  Constructors and Destructor
 //===================================================================
-FixedBody::FixedBody(MultiBody * _owner) :
-    worldPolyhedronComputed(0),
+FixedBody::FixedBody(MultiBody* _owner) :
     Body(_owner)
 {
 }
 
-FixedBody::FixedBody(MultiBody * _owner, GMSPolyhedron & _polyhedron) :
-    worldPolyhedronComputed(0),
+FixedBody::FixedBody(MultiBody* _owner, GMSPolyhedron & _polyhedron) :
     Body(_owner, _polyhedron)
 {
 }
@@ -31,13 +29,6 @@ FixedBody::~FixedBody() {
 //  Need a mechanism to distinguish between an obstacle and an object
 //===================================================================
 GMSPolyhedron & FixedBody::GetWorldPolyhedron() {
- //GMSPolyhedron a;
-#if 0
-    if (!worldPolyhedronComputed) {
-        Body::GetWorldPolyhedron();
-        worldPolyhedronComputed = 1;
-    }
-#endif
    GetWorldTransformation();	///<----?????
    worldPolyhedron=Body::GetWorldPolyhedron();
    return worldPolyhedron;
@@ -75,3 +66,26 @@ void FixedBody::Write(ostream & _os) {
     _os << endl;
 }
 
+
+/*
+bool FixedBody::operator==(const FixedBody& b) const
+{
+  return (multibody == b.multibody) && 
+         (worldTransformation == b.worldTransformation) &&
+         (polyhedron == b.polyhedron) &&
+         (worldPolyhedron == b.worldPolyhedron) &&
+         (CenterOfMassAvailable == b.CenterOfMassAvailable) &&
+         (CenterOfMass == b.CenterOfMass) &&
+         (boundingBox[0] == b.boundingBox[0]) &&
+         (boundingBox[1] == b.boundingBox[1]) &&
+         (boundingBox[2] == b.boundingBox[2]) &&
+         (boundingBox[3] == b.boundingBox[3]) &&
+         (boundingBox[4] == b.boundingBox[4]) &&
+         (boundingBox[5] == b.boundingBox[5]) &&
+         (bb_polyhedron == b.bb_polyhedron) &&
+         (bb_world_polyhedron == b.bb_world_polyhedron) &&
+         (forwardConnection == b.forwardConnection) &&
+         (backwardConnection == b.backwardConnection) &&
+         (contactCount == b.contactCount); 
+}
+*/

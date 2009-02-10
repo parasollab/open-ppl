@@ -71,7 +71,7 @@ Cfg_fixed_tree::Cfg_fixed_tree(int _numofJoints) {
 Cfg_fixed_tree::Cfg_fixed_tree(const vector<double>& _data) {
   dof = NumofJoints;
   posDof = 0;
-  if(_data.size() < dof) {
+  if((int)_data.size() < dof) {
     cout << "\n\nERROR in Cfg_fixed_tree::Cfg_fixed_tree(vector<double>), ";
     cout << "size of vector is less than dof\n";
     exit(-1);
@@ -207,11 +207,11 @@ bool Cfg_fixed_tree::ConfigEnvironment(Environment *_env) const {
   int i;
   for(i=0; i<NumofJoints; i++) {
     _env->GetMultiBody(robot)->GetFreeBody(i)
-      ->GetBackwardConnection(0)->GetDHparameters().theta = v[i]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().theta = v[i]*360.0;
   }  // config the robot
   
   for(i=0; i<NumofJoints; i++) {
-    FreeBody * afb = _env->GetMultiBody(robot)->GetFreeBody(i);
+    shared_ptr<FreeBody> afb = _env->GetMultiBody(robot)->GetFreeBody(i);
     if(afb->ForwardConnectionCount() == 0)  // tree tips: leaves.
       afb->GetWorldTransformation();
   }
@@ -264,7 +264,7 @@ Cfg* Cfg_fixed_tree::CreateNewCfg() const {
 
 Cfg* Cfg_fixed_tree::CreateNewCfg(vector<double>& data) const {
   vector<double> _data;
-  if(data.size() < dof) {
+  if((int)data.size() < dof) {
     cout << "\n\nERROR in Cfg_fixed_tree::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than dof\n";
     exit(-1);

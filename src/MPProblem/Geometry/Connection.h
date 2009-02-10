@@ -15,9 +15,13 @@
 #include "DHparameters.h"
 #include "Transformation.h"
 
+#include "boost/shared_ptr.hpp"
+using boost::shared_ptr;
+
+
 /////////////////////////////////////////////////////////////////////
 class Body;
-/////////////////////////////////////////////////////////////////////
+
 
 /**This class stores information about connection from one body to another one.
   *The information stored in this class includes:
@@ -58,7 +62,7 @@ public:
       *@param _body1 One of this _body1's end joints is this connection.
       *@param _body2 One of this _body2's start joints is this connection.
       */
-    Connection(Body * _body1, Body * _body2 = 0);  // Second argument is optional
+    Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2 = shared_ptr<Body>());  // Second argument is optional
     
     /**You need to provide all information for Constructor.
       *@param _body1
@@ -67,7 +71,7 @@ public:
       *@param _dhparameters DHParameter
       *@param _transformationToBody2 Transform from DH-Frame to frame of body1
       **/
-    Connection(Body * _body1, Body * _body2, const Transformation & _transformationToBody2, 
+    Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2, const Transformation & _transformationToBody2, 
     const DHparameters & _dhparameters, const Transformation & _transformationToDHFrame);
      
     /**Destructor.
@@ -96,22 +100,22 @@ public:
       * with the address of first body.
       *@return True if _body is first body. Otherwise False is returned.
       */
-    int IsFirstBody(Body * _body);
+    bool IsFirstBody(const shared_ptr<Body>& _body) const;
     
     /**Get Previouse Body. (i.e first body)
       *@note only body[0] is returned.
       **/
-    Body * GetPreviousBody();    
+    shared_ptr<Body> GetPreviousBody();    
     
     /**Get Next Body. (i.e second body)
       *@note only body[1] is returned.
       */
-    Body * GetNextBody();
+    shared_ptr<Body> GetNextBody();
     
     /**Get the type of connection used in this Connection instance.
       *@see ConnectionType
       */
-    ConnectionType GetConnectionType();
+    ConnectionType GetConnectionType() const;
 
     ///Get a refecence of DHparameters used in this Connection instance.   
     DHparameters & GetDHparameters();
@@ -124,7 +128,7 @@ public:
     
     /** Set values for data member
       */
-    void Read(Body* body1, Body* body2,
+    void Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
 	      const Vector3D& transformPosition, const Orientation& transformOrientation,
 	      const Vector3D& positionToDHFrame, const Orientation& orientationToDHFrame,
 	      const DHparameters& _dhparameters, const ConnectionType& connectionType);
@@ -146,7 +150,9 @@ public:
     virtual void Write(ostream & _os);
 
     //@}
-    
+   
+  bool operator==(const Connection& c) const;
+
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -170,79 +176,12 @@ private:
     //---------------------------------------------------------------
     //  Data
     //---------------------------------------------------------------
-    Body *body[2];
+    shared_ptr<Body> body[2];
     Transformation transformationToBody2;
     Transformation transformationToDHFrame;
     DHparameters dhparameters;
     ConnectionType type;
-    int IsActuator;
 };
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-//
-//  Implementation of Connection
-//
-//
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////////
-
-//===================================================================
-//  Inline Functions
-//===================================================================
-
-//-------------------------------------------------------------------
-//  GetDHparameters
-//-------------------------------------------------------------------
-inline DHparameters & Connection::GetDHparameters() {
-    return dhparameters;
-}
-
-
-//-------------------------------------------------------------------
-//  IsFirstBody
-//-------------------------------------------------------------------
-inline int Connection::IsFirstBody(Body * _body) {
-    return body[0] == _body;
-}
-
-//-------------------------------------------------------------------
-//  GetNextBody
-//-------------------------------------------------------------------
-inline Body * Connection::GetNextBody() {
-    return body[1];
-}
-
-//-------------------------------------------------------------------
-//  GetPreviousBody
-//-------------------------------------------------------------------
-inline Body * Connection::GetPreviousBody() {
-    return body[0];
-}
-
-//-------------------------------------------------------------------
-//  GetTransformationToBody2
-//-------------------------------------------------------------------
-inline Transformation & Connection::GetTransformationToBody2() {
-    return transformationToBody2;
-}
-
-//-------------------------------------------------------------------
-//  GetTransformationToDHFrame
-//-------------------------------------------------------------------
-inline Transformation & Connection::GetTransformationToDHFrame() {
-    return transformationToDHFrame;
-}
-
-//-------------------------------------------------------------------
-//  GetConnectionType
-//-------------------------------------------------------------------
-inline Connection::ConnectionType Connection::GetConnectionType() {
-    return type;
-}
 
 #endif
 

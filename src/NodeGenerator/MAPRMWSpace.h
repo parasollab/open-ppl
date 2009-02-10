@@ -493,7 +493,7 @@ getCollisionInfo(CFG& cfg, Environment* _env, Stat_Class& Stats,
   //find cloest pt between robot and bbx
   for(int m=0; m<robot->GetFreeBodyCount(); m++) {
     GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
-    for(int j = 0 ; j < poly.numVertices ; j++){
+    for(size_t j = 0 ; j < poly.vertexList.size() ; j++){
       //cout<<j<<" "<<poly.vertexList[j]<<endl;
       bool change=false;
       bbx_range = bbx->GetRange(0);

@@ -6,7 +6,7 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "Orientation.h"
-#include <math.h>
+
 #define EPSILON  1.0e-6
 
 
@@ -30,14 +30,6 @@ Orientation::Orientation(OrientationType _type) {
                 else
 	            matrix[i][j] = 0.0;
     } else if (type == Quaternion) {
-        //-----------------------------------------------------------
-        // TODO
-        //-----------------------------------------------------------
-
-
-
-
-    } else if (type == Rodriques) {
         //-----------------------------------------------------------
         // TODO
         //-----------------------------------------------------------
@@ -160,16 +152,29 @@ Orientation & Orientation::operator=(const Orientation & _o) {
         //-----------------------------------------------------------
 	rotationAngle = _o.rotationAngle;
 	rotationAxis = _o.rotationAxis;
-    } else if (type == Rodriques) {
-        //-----------------------------------------------------------
-	// TODO
-        //-----------------------------------------------------------
     } else {
         alpha = _o.alpha;
 	beta  = _o.beta;
 	gamma = _o.gamma;
     }
     return *this;
+}
+
+bool Orientation::operator==(const Orientation& _o) const {
+  Orientation _o_copy(_o);
+  _o_copy.ConvertType(type);
+  
+  if(type == Matrix) {
+    for(int i=0; i<3; ++i)
+      for(int j=0; j<3; ++j)
+        if(matrix[i][j] != _o_copy.matrix[i][j])
+          return false;
+    return true;
+  } else if (type == Quaternion) {
+    return (rotationAngle == _o_copy.rotationAngle) && (rotationAxis == _o_copy.rotationAxis);
+  } else {
+    return (alpha == _o_copy.alpha) && (beta == _o_copy.beta) && (gamma == _o_copy.gamma);
+  }
 }
 
 //===================================================================
@@ -252,10 +257,6 @@ void Orientation::ConvertType(OrientationType _newType) {
             rotationAxis = Vector3D(x,y,z);
 	    break;
           }
-	  case Rodriques: {
-	    // TODO
-	    break;
-          }
 	  case EulerXYZ:
 	    beta = atan2(matrix[0][2], sqrt(matrix[1][2]*matrix[1][2] + matrix[2][2]*matrix[2][2]));
 	    if(cos(beta) > 0) {
@@ -303,9 +304,6 @@ void Orientation::ConvertType(OrientationType _newType) {
             matrix[2][2] = 1.0 - 2.0*x*x - 2.0*y*y;
 	    break;
           }
-	  case Rodriques:
-	    // TODO
-	    break;
 	  case EulerXYZ:
 	    ConvertType(Matrix);
 	    ConvertType(EulerXYZ);
@@ -320,11 +318,6 @@ void Orientation::ConvertType(OrientationType _newType) {
 	  // etc.
 	}
 	break;
-
-
-      case Rodriques:
-	// TODO
-        break;
 
       //-------------------------------------------------------------
       //  If none of the above, then must be Euler/Fixed angle type
@@ -388,9 +381,6 @@ void Orientation::ConvertType(OrientationType _newType) {
 	  case Quaternion:
 	    // TODO
 	    break;
-	  case Rodriques:
-	    // TODO
-	    break;
 	  default:
 	    // TODO
 	    break;
@@ -422,12 +412,5 @@ void Orientation::Write(ostream & _os) {
     _os << gamma << " ";
     _os << beta << " ";
     _os << alpha << " ";
-
-#if 0
-    //ConvertType(EulerXYZ); //comment out by Guang
-    _os << alpha << " ";
-    _os << beta << " ";
-    _os << gamma << " ";
-#endif
 }
 

@@ -90,6 +90,8 @@ public:
     virtual void Write(ostream & _os);
     //@}
 
+  //bool operator==(const FreeBody& b) const;
+
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -125,12 +127,6 @@ protected:
 
 private:
     Transformation & ComputeWorldTransformation(std::set<int, less<int> >& visited);
-
-    //-----------------------------------------------------------
-    //  Data
-    //-----------------------------------------------------------
-    double Mass;
-    double jointLimit;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////

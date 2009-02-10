@@ -804,14 +804,13 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   vector<double> p = pC->GetPosition(); // position values
   vector<double> o = pC->GetOrientation(); //orientation values
               
-  int i;
-  for(i=0; i<p.size(); i++) {
+  for(size_t i=0; i<p.size(); i++) {
     if(p[i] < 0) 
       p[i] = -p[i];
     pos += pow(p[i], r1);
   }
   
-  for(i=0;i<o.size();i++) {
+  for(size_t i=0;i<o.size();i++) {
     orient += pow(o[i], r2);
   }
   
@@ -864,7 +863,7 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   
   vector<double> dt = pC->GetData(); // position values
                
-  for(int i=0; i < dt.size(); i++) {
+  for(size_t i=0; i < dt.size(); i++) {
     if(dt[i] < 0) 
       dist = dist-dt[i];
     else
@@ -944,7 +943,7 @@ vector<Vector3D>
 RmsdDistance::
 GetCoordinatesForRMSD(const Cfg& c, Environment* env) {
   c.ConfigEnvironment(env);
-  MultiBody *robot = env->GetMultiBody(env->GetRobotIndex());
+  shared_ptr<MultiBody> robot = env->GetMultiBody(env->GetRobotIndex());
   vector<Vector3D> coordinates;
   for(int i=0 ; i<robot->GetFreeBodyCount(); i ++)
     coordinates.push_back(robot->GetFreeBody(i)->WorldTransformation().position); 
@@ -963,7 +962,7 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
 double
 RmsdDistance::
 RMSD(vector<Vector3D> x, vector<Vector3D> y, int dim) {
-  if(x.size() < dim || y.size() < dim || dim <= 0) {
+  if((int)x.size() < dim || (int)y.size() < dim || dim <= 0) {
     cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors"
          << endl;
     exit(101);
@@ -1138,8 +1137,8 @@ LPSweptDistance::
 SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector<GMSPolyhedron>& poly2) {
   double d = 0;
   int count = 0;
-  for(int b=0; b<poly1.size(); ++b)
-    for(int i=0; i<poly1[b].numVertices; ++i)
+  for(size_t b=0; b<poly1.size(); ++b)
+    for(size_t i=0; i<poly1[b].vertexList.size(); ++i)
     {
       d += (poly1[b].vertexList[i] - poly2[b].vertexList[i]).magnitude();
       count++;

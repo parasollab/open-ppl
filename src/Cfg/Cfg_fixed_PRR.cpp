@@ -78,7 +78,7 @@ Cfg_fixed_PRR::Cfg_fixed_PRR(const Cfg& _c) {
   posDof = 1;
   vector<double> _v;
   _v = _c.GetData();
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_fixed_PRR::Cfg_fixed_PRR(Cfg&), ";
     cout << "size of cfg data is less than 3\n";
     exit(-1);
@@ -193,11 +193,11 @@ bool Cfg_fixed_PRR::ConfigEnvironment(Environment *_env) const {
   double ceta1 = v[1]*360.0;
   double ceta2 = v[2]*360.0;
   _env->GetMultiBody(robot)->GetFreeBody(0)
-    ->GetBackwardConnection(0)->GetDHparameters().theta = ceta1;
+    ->GetBackwardConnection(0).GetDHparameters().theta = ceta1;
   _env->GetMultiBody(robot)->GetFreeBody(0)
-    ->GetBackwardConnection(0)->GetDHparameters().d = zz;
+    ->GetBackwardConnection(0).GetDHparameters().d = zz;
   _env->GetMultiBody(robot)->GetFreeBody(0)
-    ->GetForwardConnection(0)->GetDHparameters().theta = ceta2;
+    ->GetForwardConnection(0).GetDHparameters().theta = ceta2;
   
   // calculate WorldTransformation recursively from the very last link.
   _env->GetMultiBody(robot)->GetFreeBody(1)->GetWorldTransformation();
@@ -221,7 +221,7 @@ bool Cfg_fixed_PRR::GenerateOverlapCfg(Environment *env,  // although env and ro
   b = robot_start[1];
   r = sqrt(a*a+b*b);
   L1 = env->GetMultiBody(robot)->GetFreeBody(1)
-    ->GetBackwardConnection(0)->GetDHparameters().a;
+    ->GetBackwardConnection(0).GetDHparameters().a;
   c2 = ((x*x+y*y)-L1*L1-r*r)/(2.*L1*r);
   if(c2 >= 1.0 || c2 <= -1.0 ) return false;
   s2 = sqrt(1.-c2*c2);

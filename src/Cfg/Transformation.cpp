@@ -8,6 +8,7 @@
 #include "Transformation.h"
 #include "DHparameters.h"
 #include <math.h>
+
 #define DEGTORAD 3.1415926535/180.0
 
 //===================================================================
@@ -93,6 +94,11 @@ Transformation Transformation::operator*(const Transformation & _t) {
     return Transformation(orientation * _t.orientation, orientation * _t.position + position);
 }
 
+bool Transformation::operator==(const Transformation& t) const {
+  return position == t.position && orientation == t.orientation;
+}
+
+
 //===================================================================
 //  Inverse
 //
@@ -133,6 +139,4 @@ void Transformation::Write(ostream & _os) {
     position.Write(_os);
     orientation.Write(_os);
 }
-
-
 

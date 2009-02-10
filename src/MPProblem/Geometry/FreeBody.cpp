@@ -77,14 +77,14 @@ GetWorldTransformation() {
 Transformation& 
 FreeBody::
 ComputeWorldTransformation(std::set<int, less<int> >& visited) {
-  if(visited.find(multibody->GetFreeBodyIndex(this)) != visited.end()) {
+  if(visited.find(multibody->GetFreeBodyIndex(*this)) != visited.end()) {
     return worldTransformation;
 
   } else {
-    visited.insert(multibody->GetFreeBodyIndex(this));
+    visited.insert(multibody->GetFreeBodyIndex(*this));
 
     //for the case when the base is a freebody.
-    if(backwardConnectionCount == 0)   // base link
+    if(backwardConnection.empty()) //base link
 	return worldTransformation;
     
     ///////////////////////////////////////////////////////////////////////// 
@@ -104,12 +104,12 @@ ComputeWorldTransformation(std::set<int, less<int> >& visited) {
         * backwardConnection[0]->GetTransformationToBody2();
 */
 
-    Transformation dh(backwardConnection[0]->GetDHparameters());
+    Transformation dh(backwardConnection[0].GetDHparameters());
     worldTransformation =
-        ((FreeBody*)(backwardConnection[0]->GetPreviousBody()))->ComputeWorldTransformation(visited)
-        * backwardConnection[0]->GetTransformationToDHFrame()
+        ((FreeBody*)(backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited)
+        * backwardConnection[0].GetTransformationToDHFrame()
         * dh
-        * backwardConnection[0]->GetTransformationToBody2();
+        * backwardConnection[0].GetTransformationToBody2();
 
     return worldTransformation;
   }
@@ -124,3 +124,27 @@ void FreeBody::Write(ostream & _os) {
     Body::Write(_os);
     _os << endl;
 }
+
+
+/*
+bool FreeBody::operator==(const FreeBody& b) const
+{
+  return (multibody == b.multibody) && 
+         (worldTransformation == b.worldTransformation) &&
+         (polyhedron == b.polyhedron) &&
+         (worldPolyhedron == b.worldPolyhedron) &&
+         (CenterOfMassAvailable == b.CenterOfMassAvailable) &&
+         (CenterOfMass == b.CenterOfMass) &&
+         (boundingBox[0] == b.boundingBox[0]) &&
+         (boundingBox[1] == b.boundingBox[1]) &&
+         (boundingBox[2] == b.boundingBox[2]) &&
+         (boundingBox[3] == b.boundingBox[3]) &&
+         (boundingBox[4] == b.boundingBox[4]) &&
+         (boundingBox[5] == b.boundingBox[5]) &&
+         (bb_polyhedron == b.bb_polyhedron) &&
+         (bb_world_polyhedron == b.bb_world_polyhedron) &&
+         (forwardConnection == b.forwardConnection) &&
+         (backwardConnection == b.backwardConnection) &&
+         (contactCount == b.contactCount); 
+}
+*/

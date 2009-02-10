@@ -5,9 +5,7 @@
 #include "LocalPlannerMethod.h"
 #include "type_traits/is_closed_chain.h" //used to switch between default and specialized impl. of IsConnected
 #include "ValidityChecker.hpp"
-
-//template <typename CFG> ValidityChecker;
-
+ 
 template <class CFG, class WEIGHT>
 class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
  public:
@@ -177,8 +175,8 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
 StraightLine(cd_predefined _cdtype) : LocalPlannerMethod<CFG, WEIGHT>() {
-  cdtype = _cdtype;
 }
+
 
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
@@ -194,14 +192,14 @@ StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProbl
     in_Node.warnUnrequestedAttributes();
   LOG_DEBUG_MSG("~StraightLine::StraightLine()");
 }
+ 
 
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
 ~StraightLine() {
 }
-
-
-
+ 
+ 
 template <class CFG, class WEIGHT>
 char*
 StraightLine<CFG, WEIGHT>::
@@ -220,7 +218,6 @@ SetDefault() {
 }
 
 
-
 template <class CFG, class WEIGHT>
 void
 StraightLine<CFG, WEIGHT>::
@@ -230,7 +227,7 @@ PrintUsage(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << "\n\t" << lineSegmentLength;
   _os << "\n\t" << binarySearch;
- 
+  
   _os.setf(ios::right,ios::adjustfield);
 }
 
@@ -255,7 +252,7 @@ PrintOptions(ostream& out_os) {
   out_os << "vcMethod = " << " " << vcMethod << " ";
   out_os << endl;
 }
-
+ 
 
 template <class CFG, class WEIGHT>
 LocalPlannerMethod<CFG, WEIGHT>* 
@@ -277,10 +274,10 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
          double positionRes, double orientationRes,
          bool checkCollision, 
          bool savePath, bool saveFailedPath,
-	 typename boost::disable_if<is_closed_chain<Enable> >::type* dummy) 
+ 	 typename boost::disable_if<is_closed_chain<Enable> >::type* dummy) 
 { Stats.IncLPAttempts( "Straightline" );
   int cd_cntr = 0; 
-
+ 
   ///\todo fix this bug ... CD count not right.
   ///\todo fix lineSegment implementation!  very poor for counting stats, etc.
   if(lineSegmentLength) {
@@ -296,9 +293,8 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
                                       checkCollision, savePath, saveFailedPath);
     else
       connected = IsConnectedSLSequential(_env, Stats, dm, _c1, _c2, lpOutput, 
-                                          cd_cntr, positionRes, orientationRes, 
-                                          checkCollision, savePath, saveFailedPath);
-
+                                           cd_cntr, positionRes, orientationRes, 
+                                           checkCollision, savePath, saveFailedPath);
     if(connected)
       Stats.IncLPConnections( "Straightline" );
 
@@ -477,7 +473,7 @@ StraightLine<CFG, WEIGHT>::
 template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
-lineSegmentInCollision(Environment *_env, Stat_Class& Stats,  
+lineSegmentInCollision(Environment *_env, Stat_Class& Stats, 
            DistanceMetric* dm, const CFG &_c1, const CFG &_c2, 
            LPOutput<CFG,WEIGHT> *lpOutput, 
            int &cd_cntr, double positionRes) {
@@ -511,15 +507,16 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     std::istringstream istr(str);
     
     //Creat a MultiBody for this triangle
-    MultiBody * lineSegment = new MultiBody(_env);
+    shared_ptr<MultiBody> lineSegment(new MultiBody(_env));
     //Creat a FreeBody  for this triangle
-    FreeBody fb(lineSegment);
+    FreeBody fb(lineSegment.get());
     fb.ReadBYU(*((istream*)(&istr)));
     fb.buildCDstructure(cdtype);
     Transformation t=Transformation(Orientation(IdentityMatrix), center);
     fb.Configure(t);  //Transform it from (0,0,0) to center
     
-    lineSegment->AddBody(&fb);  //Add this free body to MultiBody
+    //lineSegment->AddBody(&fb);  //Add this free body to MultiBody
+    lineSegment->AddBody(fb);  //Add this free body to MultiBody
     
     cd_cntr++; //?
     
@@ -531,18 +528,15 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     BoundingBox *bb =  _env->GetBoundingBox();
     for(int m = 0; m<lineSegment->GetFreeBodyCount(); ++m) {
       GMSPolyhedron &poly = lineSegment->GetFreeBody(m)->GetWorldPolyhedron();
-      for(int j = 0 ; j < poly.numVertices ; j++){
+      for(size_t j = 0 ; j < poly.vertexList.size() ; j++){
         if (!bb->IfSatisfiesConstraints(poly.vertexList[j]))
-        delete lineSegment;
         return true; //Collide (out of Bounding Box)
       }
     }
 
     if(cd->IsInCollision(_env, Stats, *this->cdInfo, lineSegment, true, &Callee) ) {
-     delete lineSegment;
      return true; //Collide
    }
-   delete lineSegment;
    return false;  //No collision
 }
 
@@ -550,7 +544,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
-IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,  
+IsConnectedSLBinary(Environment *_env, Stat_Class& Stats, 
         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
         LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
         double positionRes, double orientationRes,  
@@ -562,8 +556,8 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
   
   if(!checkCollision)
     return IsConnectedSLSequential(_env, Stats, dm, _c1, _c2,
-				   lpOutput, cd_cntr, 
-				   positionRes, orientationRes,
+ 				   lpOutput, cd_cntr, 
+ 				   positionRes, orientationRes,
 				   checkCollision, savePath, saveFailedPath);
 
   std::string Callee(GetName());
@@ -574,7 +568,7 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
   CFG incr;
   incr.FindIncrement(_c1, _c2, &n_ticks, positionRes, orientationRes);
 
-  std::deque<pair<int,int> > Q;
+  deque<pair<int,int> > Q;
   Q.push_back(make_pair(0, n_ticks));
 
   while(!Q.empty()) {

@@ -221,7 +221,7 @@ class OBPRM : public BasicOBPRM<CFG> {
    *@return a list of generated points on the mbody.
    *@see PointOnBody
    */
-  static vector<Vector3D> PointsOnMultiBody(MultiBody* mbody, int npts, int select);
+  static vector<Vector3D> PointsOnMultiBody(shared_ptr<MultiBody> mbody, int npts, int select);
 
   /// generates random cfgs within a specified area around a given cfg
   static void Spread(CFG&, double, double, int, vector<CFG>*);
@@ -526,7 +526,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
   
   vector<CFG> tmp, preshells, shells;
   
-  int numMultiBody = _env->GetMultiBodyCount();
+  //int numMultiBody = _env->GetMultiBodyCount();
   int robot        = _env->GetRobotIndex();
   int numExternalBody = _env->GetExternalBodyCount();
   
@@ -564,12 +564,11 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
 	obstFree = GenFreeCfgs4Obst(_env, Stats, obstacle, NFREE);
       
 	// Collect free & surface nodes for return
-	int i;
-	for (i = 0; i < obstSurface.size(); i++) {
+	for (size_t i = 0; i < obstSurface.size(); i++) {
 	  obstSurface[i].obst = obstacle;
  	  nodesBuffer.push_back(obstSurface[i]); 
 	}
-	for (i = 0; i < obstFree.size(); i++) {
+	for (size_t i = 0; i < obstFree.size(); i++) {
 	  obstFree[i].obst = obstacle;
  	  nodesBuffer.push_back(obstFree[i]); 
 	}
@@ -590,7 +589,7 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector<CFG>& nodes) {
 	if(numExternalBody == 1) { //if robot is the only object
 	  vector<CFG> CobstNodes = this->GenCfgsFromCObst(_env, Stats, dm, obstacle,
 						    this->numNodes);
-	  for(int i=0; i<CobstNodes.size(); ++i){
+	  for(size_t i=0; i<CobstNodes.size(); ++i){
 	    CobstNodes[i].obst = obstacle;
  	    nodesBuffer.push_back(CobstNodes[i]); 
 	  }
@@ -731,22 +730,20 @@ TranslateOptionCode(char* mnemonic, n_str_param param) {
   
   const char *DISCLAIMER = "\n  ** Code for mnemonic not yet implemented **";
   
-  int i;
-  
   if (strlen(mnemonic)>0) {
     
     //-- Exhaustive search of tbl for field values
-    for (i=0;i<MM.size();++i)
+    for (size_t i=0;i<MM.size();++i)
       if (!strcmp(MM[i].GetFlag(),mnemonic)) return i;
     
     //-- Exhaustive search of "not implemented" tbl for field values
-    for (i=0;i<NI.size();++i){
+    for (size_t i=0;i<NI.size();++i){
       if (!strcmp(NI[i].GetFlag(),mnemonic)) {
 	cout << "\n\nSORRY, mnemonic \""
 	     << mnemonic << "\" is not yet implemented ";
 	cout << "\n  Implemented mnemonics are:";
-	for (i=0;i<MM.size();++i)
-	  cout << "\n\t" <<setw(5)<< MM[i].GetFlag() << "     " <<MM[i].GetValue();
+	for (size_t j=0;j<MM.size();++j)
+	  cout << "\n\t" <<setw(5)<< MM[j].GetFlag() << "     " <<MM[j].GetValue();
 	// return MM.size()+i;
 	return BasicOBPRM<CFG>::INVALID_OPTION;
       }
@@ -758,9 +755,9 @@ TranslateOptionCode(char* mnemonic, n_str_param param) {
   cout << "\n\nERROR: invalid mnemonic specified \""
        << param.GetFlag() << " " << param.GetValue() << "\"\n";
   cout << "\n  You must specify 2 of the following recognized mnemonics:";
-  for (i=0;i<MM.size();++i)
+  for (size_t i=0;i<MM.size();++i)
     cout << "\n\t" <<setw(5)<< MM[i].GetFlag() << "     " <<MM[i].GetValue();
-  for (i=0;i<NI.size();++i)
+  for (size_t i=0;i<NI.size();++i)
     cout << "\n\t" <<setw(5)<< NI[i].GetFlag() << "   **" <<NI[i].GetValue();
   cout << DISCLAIMER;
   cout << "\n\n  If you specify the flag option as \""<<
@@ -788,11 +785,10 @@ GenSurfaceCfgs4Obst(Environment* env, Stat_Class& Stats,
     cfg.GenSurfaceCfgs4ObstNORMAL(env, Stats, cd, obstacle, nCfgs, 
 				  *this->cdInfo, pResult);
     vector<CFG> result;
-    int i;
-    for(i = 0; i < pResult.size(); i++)
+    for(size_t i = 0; i < pResult.size(); i++)
       result.push_back((CFG)*pResult[i]);
 
-    for(i = 0; i < pResult.size(); i++)
+    for(size_t i = 0; i < pResult.size(); i++)
       delete pResult[i];
 
     return result;
@@ -821,7 +817,7 @@ GenSurfaceCfgs4ObstVERTEX(Environment* env, Stat_Class& Stats,
   
   int robot = env->GetRobotIndex();
   vector<CFG> tmp, preshells, shells, surface;
-  for(int i = 0 ; i < obstSeeds.size() ; i++) {
+  for(size_t i = 0 ; i < obstSeeds.size() ; i++) {
     //Generate Random direction
     CFG incrCfg = GenerateRandomDirection(env,dm,obstSeeds[i]);     
     // Generate outside cfg
@@ -947,8 +943,8 @@ GenerateSeeds(Environment* env, Stat_Class& Stats,
 template <class CFG>
 vector<Vector3D>
 OBPRM<CFG>::
-PointsOnMultiBody(MultiBody* mbody, int npts, int select) {
-  int nFree = mbody->GetFreeBodyCount();
+PointsOnMultiBody(shared_ptr<MultiBody> mbody, int npts, int select) {
+  int nFree = (int)mbody->GetFreeBodyCount();
   
   vector<Vector3D> pts;
   pts.reserve(npts);

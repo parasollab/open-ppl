@@ -89,7 +89,7 @@ public:
 					 const GMSPolyhedron &polyRobot, const GMSPolyhedron &polyObst,
 					 int robTri, int obsTri,
 					 CDInfo& _cdInfo,
-					 MultiBody *, vector<Cfg*>);
+					 shared_ptr<MultiBody>, vector<Cfg*>);
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //

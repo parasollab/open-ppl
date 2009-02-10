@@ -26,10 +26,10 @@ private:
   CollisionDetection* m_cd;
   
   bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
-		     MultiBody* rob, MultiBody* obst, std::string *pCallName);
+		     shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obst, std::string *pCallName);
   
   bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
-		     MultiBody* lineRobot, bool enablePenetration, std::string *pCallName);
+		     shared_ptr<MultiBody> lineRobot, bool enablePenetration, std::string *pCallName);
 };
 
 
@@ -87,7 +87,7 @@ IsValid(CFG& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
   // after updating the environment(multibodies), Ask ENVIRONMENT
   // to check collision! (this is more nature.)
   
-  bool answerFromEnvironment = IsInCollision(env, Stats, _cdInfo, (MultiBody*)NULL, true, pCallName);
+  bool answerFromEnvironment = IsInCollision(env, Stats, _cdInfo, shared_ptr<MultiBody>(), true, pCallName);
 #ifdef COLLISIONCFG
   if (answerFromEnvironment) {
     CollisionConfiguration[_cdInfo.colliding_obst_index].push_back(v);
@@ -117,7 +117,7 @@ template<typename CFG>
 bool
 CollisionDetectionValidity<CFG>::
 IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
-	      MultiBody* lineRobot, bool enablePenetration, std::string *pCallName) 
+	      shared_ptr<MultiBody> lineRobot, bool enablePenetration, std::string *pCallName) 
 {  
   int nmulti, robot;
   bool ret_val, collision_found; // needed to go thru ALL obstacles to get ALL info
@@ -125,7 +125,7 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
   nmulti = env->GetMultiBodyCount();
   robot = env->GetRobotIndex();
   
-  MultiBody* rob = env->GetMultiBody(robot);
+  shared_ptr<MultiBody> rob = env->GetMultiBody(robot);
   
   // A line Segment generated on the fly, to check if 'seemingly connectable'.
   /*
@@ -193,7 +193,7 @@ template<typename CFG>
 bool
 CollisionDetectionValidity<CFG>::
 IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
-	      MultiBody* rob, MultiBody* obst, std::string *pCallName) 
+	      shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obst, std::string *pCallName) 
 {
   int nFreeRobot;
   nFreeRobot = rob->GetFreeBodyCount();

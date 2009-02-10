@@ -2,7 +2,6 @@
 #define Environment_h
 
 ////////////////////////////////////////////////////////////////
-//#include "Defines.h"
 #include "util.h"
 
 #include "Boundary.h"
@@ -15,7 +14,8 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-
+#include "boost/shared_ptr.hpp"
+using boost::shared_ptr;
 
 class MultiBody;
 class MPProblem;
@@ -54,14 +54,14 @@ public:
      * initialize other data member to 0, NULL, and false. sets
      * default boundaries with passed number of dofs and pos_dofs.
      */
-    Environment(int dofs, int pos_dofs);
+    Environment(int dofs = 0, int pos_dofs = 0);
 
     /** 
      * Copy Constructor.
      * copies multibodies from usable_multibodies of from_env and
      * updates usable_multibodies accordingly.
      */
-    Environment(Environment &from_env);
+    Environment(const Environment &from_env);
     
     /** 
      * Copy Constructor. COPIES FROM MPPRoblem's Environment
@@ -74,7 +74,7 @@ public:
      * Copy Constructor.
      * uses i_boundaries instead of boundaries in from_env
      */
-    Environment(Environment &from_env, BoundingBox &i_boundaries);
+    Environment(const Environment &from_env, const BoundingBox &i_boundaries);
 
     ///\brief Constructor taking in an XML object
     Environment(XMLNodeReader& in_Node, MPProblem* in_pProblem);
@@ -115,16 +115,16 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
 
     ///Return the number of MultiBody's in the environment
-    virtual int GetMultiBodyCount();
+    virtual int GetMultiBodyCount() const;
 
     ///Return the number of External Body's in the environment;
-    virtual int GetExternalBodyCount();
+    virtual int GetExternalBodyCount() const;
 
     /**Return a pointer to MultiBody according to this given index.
       *If this index is out of the boundary of list, NULL will be returned.
       *@param _index the index for target, a MultiBody pointer
       */
-    virtual MultiBody * GetMultiBody(int _index);
+    virtual shared_ptr<MultiBody> GetMultiBody(size_t _index) const;
 
     void PrintOptions(ostream& out_os);
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -139,14 +139,14 @@ public:
       *@note FindBoundingBox also calculates defalut Position Resolution. If there is no
       *user input to overwrite this default value, default value will be returned. 
       */
-    inline double GetPositionRes() {return positionRes;}
+    inline double GetPositionRes() const { return positionRes; }
     inline void SetPositionRes(const double pRes) {positionRes=pRes;}
 
     /**Return the resolution for rotation.
       *This tells client how fine this workspace is descretized about rotation.
       *@see Get, this function reads this value from Input instance.
       */
-    inline double GetOrientationRes() {return orientationRes;};
+    inline double GetOrientationRes() const { return orientationRes; }
     inline void SetOrientationRes(const double rRes) {orientationRes=rRes;}
 
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +158,7 @@ public:
     /**Return the Index for Robot in environment. This index is the index for MultiBody list in
       *this Environment instance.
       */
-    virtual int GetRobotIndex(){return robotIndex;};
+    virtual int GetRobotIndex() const { return robotIndex; }
 
     //@}
 
@@ -194,7 +194,7 @@ public:
     /**Return a Bounding Box that encloses all MultiBodys added to this instance.
       *@see FindBoundingBox, Input::bbox_scale, and Input::bbox
       */
-    virtual BoundingBox * GetBoundingBox();
+    virtual BoundingBox * GetBoundingBox() const;
     
     /**Return manximu axis range of bounding box.
       *This value is calculated in FindBoundingBox.
@@ -216,9 +216,9 @@ public:
     /**Read data from Environment file and check version.
       */
     void Read(const char* in_filename, int action, const char* descDir);
-    void Read(istream & _is, int envFormatVersion, int action, const char* descDir);
+    void Read(istream & _is, int envFormatVersion,int action, const char* descDir);
     void buildCDstructure(cd_predefined cdtype, int nprocs = 1);
-
+ 
     /**Write the Input data for an environment into a given output stream.
       *2 things are output, Number of MultiBodys, and information about MultiBodys.
       *@see MultiBody::Write
@@ -252,10 +252,8 @@ public:
     //---------------------------------------------------------------
     int pathVersion;          /// Format version for path files
 
-    vector<MultiBody *> multibody;
-    int externalbodyCount;     // Bodies enclosing internal obstacles
-
-    vector<MultiBody *> usable_multibody;
+    vector<shared_ptr<MultiBody> > multibody;
+    vector<shared_ptr<MultiBody> > usable_multibody;
     int usable_externalbody_count;
 
     int robotIndex; //index of the robot in the usable_multibody vector
@@ -264,9 +262,6 @@ public:
     double positionRes;
     double orientationRes;
     double minmax_BodyAxisRange;    
-
-    bool copied_instance; //true if instance copied. Used for memory
-			  //management
 
     string input_filename;
 };
@@ -295,7 +290,7 @@ GetPathVersion() {
 
 inline int 
 Environment::
-GetExternalBodyCount() {
+GetExternalBodyCount() const {
   return usable_externalbody_count;
 }
 
@@ -306,7 +301,7 @@ GetExternalBodyCount() {
 //-------------------------------------------------------------------
 inline int 
 Environment::
-GetMultiBodyCount() {
+GetMultiBodyCount() const {
   return usable_multibody.size();
 }
 
@@ -314,14 +309,13 @@ GetMultiBodyCount() {
 ///  GetMultiBody
 ///  Output: A pointer to a MultiBody in the environment
 //-------------------------------------------------------------------
-inline MultiBody * 
+inline shared_ptr<MultiBody>
 Environment::
-GetMultiBody(int _index) {
-  if (_index < usable_multibody.size())
+GetMultiBody(size_t _index) const {
+  if(_index < usable_multibody.size())
     return usable_multibody[_index];
   else
-    return 0;
+    return shared_ptr<MultiBody>();
 }
-
 
 #endif

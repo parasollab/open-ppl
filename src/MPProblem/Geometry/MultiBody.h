@@ -12,11 +12,8 @@
 //include OBPRM headers
 #include "FixedBody.h"
 #include "FreeBody.h"
-
-//#ifndef VID
 #include "Graph.h"
-//#endif
-
+ 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 class Environment;
 class Transformation;
@@ -81,16 +78,21 @@ public:
     
     //added by Xinyu Tang
     //To say whether this multibody is external (fake obstacle);
-    bool IsInternal(){return bInternal;}; 
+    bool IsInternal() const
+    {
+      return bInternal;
+    } 
 
     ///Return a free body accroding to the given index. the index should be in [0,GetFreeBodyCount())
-    FreeBody * GetFreeBody(int _index);
+    shared_ptr<FreeBody> GetFreeBody(int _index) const;
     ///Number of free body in this mutilbody.
-    int GetFreeBodyCount();
+    int GetFreeBodyCount() const;
     ///Search index for given FreeBody, _b, if _b is not in this multibody, -1 is returned.
-    int GetFreeBodyIndex(FreeBody * _b);
+    int GetFreeBodyIndex(const FreeBody& _b) const;
+    int GetFreeBodyIndex(const shared_ptr<FreeBody>& _b) const;
     ///Add a Free Body
-    void AddBody(FreeBody * _body);
+    void AddBody(const FreeBody& _body);
+    void AddBody(const shared_ptr<FreeBody>& _body);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -99,13 +101,15 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
 
     ///Return a fixed body accroding to the given index. the index should be in [0,GetFixedBodyCount())
-    FixedBody * GetFixedBody(int _index);
+    shared_ptr<FixedBody> GetFixedBody(int _index) const;
     ///Number of fixed body in this mutilbody.
-    int GetFixedBodyCount();
+    int GetFixedBodyCount() const;
     ///Search index for given FixedBody, _b, if _b is not in this multibody, -1 is returned.
-    int GetFixedBodyIndex(FixedBody * _b);
+    int GetFixedBodyIndex(const FixedBody& _b) const;
+    int GetFixedBodyIndex(const shared_ptr<FixedBody>& _b) const;
     ///Add a Fixed Body
-    void AddBody(FixedBody * _body);
+    void AddBody(const FixedBody& _body);
+    void AddBody(const shared_ptr<FixedBody>& _body);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -119,23 +123,23 @@ public:
       *if _index is larger than GetFixedBodyCount(), then free body with (_index-GetFixedBodyCount())
       *index will be returned.
       */
-    Body * GetBody(int _index); // new
+    shared_ptr<Body> GetBody(int _index) const; // new
     ///return GetFreeBodyCount()+GetFixedBodyCount()
-    int GetBodyCount(); // new
+    int GetBodyCount() const; // new
     /**Get the very first body in a MultiBody.
      *It is a fixed base body, if the MultiBody is a manipualtor
      *Otherwise, it is the body itself.
      */
-    Body * GetFirstBody();
+    shared_ptr<Body> GetFirstBody() const;
 
     ///Get number of of links in "this" MultiBody by checking forward connection.
-    int GetNumberOfLinks();
+    int GetNumberOfLinks() const;
 
     /**Determine if the MultiBody at hand is a manipulator.
       *If there is no free body attached to it,
       *it is considered to be a manipulator
       */
-    int IsManipulator();
+    bool IsManipulator() const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -154,23 +158,23 @@ public:
       *Max Axis Range is max distance in X, Y, or Z direction in bounding box.
       *@see FindBoundingBox
       */
-    double GetMaxAxisRange();
+    double GetMaxAxisRange() const;
 
     /*Return bounding box of this multibody
      *@see FindBoundingBox
      */
-    double * GetBoundingBox();
+    const double * GetBoundingBox() const;
 
     /**Compute and return the maximum size of this multibody.
       *The maximum size is computed by (Radius of first link+ 2*Radius of second link+ ... )
       *@see GMSPolyhedron::maxRadius
       */
-    double GetBoundingSphereRadius();
+    double GetBoundingSphereRadius() const;
 
     /**Compute and return the minimum size of the multibody.
      *@see GMSPolyhedron::minRadius
      */
-    double GetInsideSphereRadius();
+    double GetInsideSphereRadius() const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -178,36 +182,33 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    ///@todo What is numBodies for?
-    int GetNumBodies();
-
     /**Get total area of fixed bodys in this instance. (computed in Get method)
       *@see Get, GetFixAreas
       */
-    double GetFixArea();
+    double GetFixArea() const;
 
     /**Get a list of areas of fixed bodys in this instance. 
       *(computed in Get method)
       *@see Get, GetFixArea
       */
-    vector<double> GetFixAreas();
+    vector<double> GetFixAreas() const;
 
     /**Get total area of free bodys in this instance. (computed in Get method)
       *@see Get, GetFreeAreas
       */
-    double GetFreeArea();
+    double GetFreeArea() const;
 
     /**Get a list of areas of free bodys in this instance. 
       *(computed in Get method)
       *@see Get, GetFreeArea
       */
-    vector<double> GetFreeAreas();
+    vector<double> GetFreeAreas() const;
 
     /**Get total area of free bodys and fixed bodys in this instance. 
       *(computed in Get method)
       *@see Get, GetFixArea, and GetFreeArea
       */
-    double GetArea();
+    double GetArea() const;
 
     /**Set area variables
      */
@@ -260,14 +261,9 @@ public:
     /**@name Help Methods*/
     //@{
 
-    /**Alway return 0.0
-      *@todo why 0.0?
-      */
-    double ComputeDistance(Body * _body1, Body * _body2);
-
     /** Ability needed to get the Environment from the Configuration 
     */
-    Environment* GetEnvironment() { return environment; }
+    Environment* GetEnvironment() const { return environment; }
 
     /**Configure the joint by the given amount of displacement.
       *@param _dof Number of Freebody that is going to be reconfigured (moved)
@@ -299,7 +295,6 @@ public:
 
 protected:    
   // Area Stuff
-  int numBodies;              ///< Total number of Bodies
   double fixArea;             ///< Area of FixedBodies
   double freeArea;            ///< Area of FreeBodies
   double area;                ///< Total Area of Bodies
@@ -324,10 +319,14 @@ private:
 
   Environment * environment;  ///Owner
 
+/*
   int FixedBodyCount;
   FixedBody ** fixedBody;
   int FreeBodyCount;
   FreeBody ** freeBody;
+  */
+  vector<shared_ptr<FixedBody> > fixedBody;
+  vector<shared_ptr<FreeBody> > freeBody;
   //Equation motionEquation;
   
   Vector3D CenterOfMass;
@@ -336,122 +335,5 @@ private:
   double boundingBox[6];
   double maxAxisRange;
 };
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-//
-//  Implementation of MultiBody
-//
-//
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////////
-
-//===================================================================
-///  Inline Functions
-//===================================================================
-
-//-------------------------------------------------------------------
-//  GetCenterOfMass
-//-------------------------------------------------------------------
-inline Vector3D MultiBody::GetCenterOfMass(){
-    if (!CenterOfMassAvailable) {
-        ComputeCenterOfMass();
-    }
-    return CenterOfMass;
-}
-
-//-------------------------------------------------------------------
-//  GetFixedBodyCount
-//-------------------------------------------------------------------
-inline int MultiBody::GetFixedBodyCount() {
-    return FixedBodyCount;
-}
-
-//-------------------------------------------------------------------
-//  GetFreeBodyCount
-//-------------------------------------------------------------------
-inline int MultiBody::GetFreeBodyCount() {
-    return FreeBodyCount;
-}
-
-//-------------------------------------------------------------------
-//  GetBodyCount
-//-------------------------------------------------------------------
-inline int MultiBody::GetBodyCount() {
-    return FreeBodyCount+FixedBodyCount;
-}
-//-------------------------------------------------------------------
-//  GetBody
-//-------------------------------------------------------------------
-inline Body * MultiBody::GetBody(int _index) {
-    if(_index < 0 || _index >= FreeBodyCount+FixedBodyCount) {
-        cout << "Error in MultiBody::GetBody !!" << endl;
-        exit(-1);
-    } else
-    if (_index < FixedBodyCount) {
-        return fixedBody[_index];
-    } else {
-        return freeBody[_index-FixedBodyCount];
-    }
-}
-
-//-------------------------------------------------------------------
-//  GetFixedBody
-//-------------------------------------------------------------------
-inline FixedBody * MultiBody::GetFixedBody(int _index) {
-    if (_index < FixedBodyCount)
-        return fixedBody[_index];
-    else
-        return 0;
-}
-
-//-------------------------------------------------------------------
-//  GetFreeBody
-//-------------------------------------------------------------------
-inline FreeBody * MultiBody::GetFreeBody(int _index) {
-    if (_index < FreeBodyCount)
-        return freeBody[_index];
-    else
-        return 0;
-}
-
-//-------------------------------------------------------------------
-//  GetFreeBodyIndex
-//-------------------------------------------------------------------
-inline int MultiBody::GetFreeBodyIndex(FreeBody * _b) {
-    for (int i=0; i < FreeBodyCount; i++)
-        if (_b == GetFreeBody(i))
-        return i;
-    // error
-    return -1;
-}
-
-//-------------------------------------------------------------------
-//  GetFixedBodyIndex
-//-------------------------------------------------------------------
-inline int MultiBody::GetFixedBodyIndex(FixedBody * _b) {
-    for (int i=0; i < FixedBodyCount; i++)
-        if (_b == GetFixedBody(i))
-        return i;
-    // error
-    return -1;
-}
-
-//-------------------------------------------------------------------
-//  IsManipulator
-///  Function: Determine if the MultiBody at hand is a manipulator.
-///            If there is no free body attached to it,
-///            it is considered to be a manipulator
-///
-///  Output:   True/False
-//-------------------------------------------------------------------
-inline int MultiBody::IsManipulator() {
-    return (FreeBodyCount > 0) ? 1 : 0;
-}
-
 
 #endif

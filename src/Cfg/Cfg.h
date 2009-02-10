@@ -28,6 +28,9 @@
 #include "Vectors.h"
 #include "BasicDefns.h"
 
+#include "boost/shared_ptr.hpp"
+using boost::shared_ptr;
+
 class Stat_Class;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -428,7 +431,7 @@ class Cfg {
          bool enablePenetration=true, std::string *pCallName = NULL);
   virtual bool isCollision(Environment* env, Stat_Class& Stats,
          CollisionDetection* cd, CDInfo& _cdInfo,
-         MultiBody*, bool enablePenetration=true, std::string *pCallName = NULL);
+         shared_ptr<MultiBody>, bool enablePenetration=true, std::string *pCallName = NULL);
     
   //@}
 

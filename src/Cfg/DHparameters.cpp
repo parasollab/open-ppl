@@ -50,10 +50,14 @@ void DHparameters::Read(ifstream & _is) {
 //===================================================================
 //  Write
 //===================================================================
-void DHparameters::Write(ostream & _os) {
+void DHparameters::Write(ostream & _os) const {
     _os << alpha << " ";
     _os << a << " ";
     _os << d << " ";
     _os << theta << " ";
+}
+
+bool DHparameters::operator==(const DHparameters& dh) const {
+  return alpha == dh.alpha && a == dh.a && d == dh.d && theta == dh.theta;
 }
 

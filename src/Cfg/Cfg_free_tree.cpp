@@ -70,7 +70,7 @@ Cfg_free_tree::Cfg_free_tree(const Vector6<double>& _v) {
 Cfg_free_tree::Cfg_free_tree(const vector<double> &_v){
   dof = 6 + NumofJoints;
   posDof = 3;
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free_tree::Cfg_free_tree(vector<double>), ";
     cout << "size of vector less than dof\n";
     exit(-1);
@@ -91,7 +91,7 @@ Cfg_free_tree::Cfg_free_tree(const Cfg& _c) {
   posDof = 3;
   vector<double> _v;
   _v = _c.GetData();
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free_tree::Cfg_free_tree(Cfg&), ";
     cout << "size of cfg data less than dof\n";
     exit(-1);
@@ -113,7 +113,7 @@ void Cfg_free_tree::GetRandomCfg(Environment* env) {
 void Cfg_free_tree::equals(const Cfg& c) {
   vector<double> _v;
   _v = c.GetData();
-  if(_v.size() < dof) {
+  if((int)_v.size() < dof) {
     cout << "\n\nERROR in Cfg_free_tree::equals(Cfg&), ";
     cout << "size of cfg data less than dof\n";
     exit(-1);
@@ -140,7 +140,7 @@ Cfg* Cfg_free_tree::CreateNewCfg() const {
 
 Cfg* Cfg_free_tree::CreateNewCfg(vector<double>& data) const {
   vector<double> _data;
-  if(data.size() < dof) {
+  if((int)data.size() < dof) {
     cout << "\n\nERROR in Cfg_free_tree::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than dof\n";
     exit(-1);
@@ -162,13 +162,13 @@ Vector3D Cfg_free_tree::GetRobotCenterofMass(Environment* env) const {
   ConfigEnvironment(env);
 
   Vector3D com(0,0,0);
-  MultiBody* mb = env->GetMultiBody(env->GetRobotIndex());
+  shared_ptr<MultiBody> mb = env->GetMultiBody(env->GetRobotIndex());
   for(int i=0; i<=NumofJoints; ++i) {
     GMSPolyhedron poly = mb->GetFreeBody(i)->GetWorldPolyhedron();
     Vector3D poly_com(0,0,0);
-    for(int j=0; j<poly.numVertices; ++j)
-      poly_com = poly_com + poly.vertexList[j];
-    poly_com = poly_com / poly.numVertices;
+    for(vector<Vector3D>::const_iterator V = poly.vertexList.begin(); V != poly.vertexList.end(); ++V)
+      poly_com = poly_com + (*V);
+    poly_com = poly_com / poly.vertexList.size();
     com = com + poly_com;
   }
   com = com / (NumofJoints+1);
@@ -240,12 +240,12 @@ bool Cfg_free_tree::ConfigEnvironment(Environment *_env) const {
   int i;
   for( i=0; i<NumofJoints; i++) {
     _env->GetMultiBody(robot)->GetFreeBody(i+1)
-      ->GetBackwardConnection(0)->GetDHparameters().theta = v[i+6]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().theta = v[i+6]*360.0;
   }  // config the robot
   
   
   for(i=0; i<_env->GetMultiBody(robot)->GetFreeBodyCount(); i++) {
-    FreeBody * afb = _env->GetMultiBody(robot)->GetFreeBody(i);
+    shared_ptr<FreeBody> afb = _env->GetMultiBody(robot)->GetFreeBody(i);
     if(afb->ForwardConnectionCount() == 0)  // tree tips: leaves.
       afb->GetWorldTransformation();
   }
@@ -303,12 +303,12 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
 //   int tries = 3 * num;
 //   int i = 0;
 
-  MultiBody * base = new MultiBody(env);
+  shared_ptr<MultiBody> base(new MultiBody(env));
   base->AddBody(env->GetMultiBody(robot)->GetFreeBody(0));
   
   while(num < nCfgs) {
-    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.numPolygons);
-    int obstTriIndex = (int)(OBPRM_drand()*polyObst.numPolygons);
+    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.polygonList.size());
+    int obstTriIndex = (int)(OBPRM_drand()*polyObst.polygonList.size());
     vector<Cfg*> tmp;
     GetCfgByOverlappingNormal(env, Stats, cd, 
 			      polyRobot, polyObst, 
@@ -319,8 +319,7 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
       vector<double> basePose = tmp[0]->GetData();
       for(int j=0; j<SIZE; ++j) {
 	vector<double> serialData = basePose;  // for clearness, have basePose tmp variable.
-	int i;
-	for(i=0; i<NumofJoints; ++i) {  // now add joint angles.
+	for(int i=0; i<NumofJoints; ++i) {  // now add joint angles.
 	  serialData.push_back(OBPRM_drand());
 	}
 	Cfg* serial = this->CreateNewCfg(serialData);
@@ -331,8 +330,8 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
 	}
 	else
 	  delete serial;
-	for (i = 0; i < tmp.size(); i++)
-	  delete tmp[i];
+        for(vector<Cfg*>::iterator I = tmp.begin(); I != tmp.end(); ++I)
+          delete *I;
       }
     }
     //i++;
