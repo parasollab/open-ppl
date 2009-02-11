@@ -491,8 +491,7 @@ void * Body::From_GMS_to_CSTK()
 
 bool Body::operator==(const Body& b) const
 {
-  return (multibody == b.multibody) &&
-         (worldTransformation == b.worldTransformation) &&
+  return (worldTransformation == b.worldTransformation) &&
          (polyhedron == b.polyhedron) &&
          (worldPolyhedron == b.worldPolyhedron) &&
          (CenterOfMassAvailable == b.CenterOfMassAvailable) &&

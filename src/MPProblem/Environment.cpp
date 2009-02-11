@@ -509,3 +509,29 @@ buildCDstructure(cd_predefined cdtype, int nprocs)
   for(vector<shared_ptr<MultiBody> >::iterator M = multibody.begin(); M != multibody.end(); ++M)
     (*M)->buildCDstructure(cdtype, nprocs);
 }
+
+
+bool
+Environment::
+operator==(const Environment& e) const
+{
+  if(multibody.size() != e.multibody.size())
+    return false;
+  for(size_t i=0; i<multibody.size(); ++i)
+    if(*(multibody[i]) != (*(e.multibody[i])))
+      return false;
+
+  if(usable_multibody.size() != e.usable_multibody.size())
+    return false;
+  for(size_t i=0; i<usable_multibody.size(); ++i)
+    if(*(usable_multibody[i]) != (*(e.usable_multibody[i])))
+      return false;
+
+  return (pathVersion == e.pathVersion) &&
+         (usable_externalbody_count == e.usable_externalbody_count) &&
+         (robotIndex == e.robotIndex) &&
+         (*boundaries == *e.boundaries) &&
+         (positionRes == e.positionRes) &&
+         (orientationRes == e.orientationRes) &&
+         (minmax_BodyAxisRange == e.minmax_BodyAxisRange);
+}

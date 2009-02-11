@@ -739,3 +739,33 @@ void MultiBody::FindBoundingBox()
   double rangez = maxz - minz;
   maxAxisRange = max(rangex, max(rangey,rangez));
 }
+
+
+//===================================================================
+//  operator==
+//===================================================================
+bool MultiBody::operator==(const MultiBody& mb) const
+{
+  if(fixedBody.size() != mb.fixedBody.size())
+    return false;
+  for(size_t i=0; i < fixedBody.size(); ++i)
+    if(*(fixedBody[i]) != *(mb.fixedBody[i]))
+      return false;
+
+  if(freeBody.size() != mb.freeBody.size())
+    return false;
+  for(size_t i=0; i < freeBody.size(); ++i)
+    if(*(freeBody[i]) != *(mb.freeBody[i]))
+      return false;
+
+  return (bInternal == mb.bInternal) &&
+         (CenterOfMass == mb.CenterOfMass) &&
+         (boundingBox[0] == mb.boundingBox[0]) &&
+         (boundingBox[1] == mb.boundingBox[1]) &&
+         (boundingBox[2] == mb.boundingBox[2]) &&
+         (boundingBox[3] == mb.boundingBox[3]) &&
+         (boundingBox[4] == mb.boundingBox[4]) &&
+         (boundingBox[5] == mb.boundingBox[5]) &&
+         (maxAxisRange == mb.maxAxisRange);
+}
+

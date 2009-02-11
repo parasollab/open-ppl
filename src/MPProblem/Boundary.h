@@ -21,6 +21,7 @@ class BoundingBox : public Boundary {
   BoundingBox(const BoundingBox &from_bbox);
   virtual ~BoundingBox();
 
+  bool operator==(const BoundingBox& bb) const;
 
   void Clear();
   void SetParameter(int par, double p_first, double p_second);

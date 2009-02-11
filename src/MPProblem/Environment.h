@@ -238,6 +238,9 @@ public:
     //@todo make private
     virtual void SelectUsableMultibodies();
 
+    bool operator==(const Environment& e) const;
+    bool operator!=(const Environment& e) const { return !(*this == e); }
+
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //

@@ -15,8 +15,8 @@ Boundary::~Boundary() {
 
 BoundingBox::
 BoundingBox(int i_dofs, int i_pos_dofs ) :
-  dofs(i_dofs), 
-  pos_dofs(i_pos_dofs) {
+  pos_dofs(i_pos_dofs),
+  dofs(i_dofs) { 
   bounding_box.clear();
   for (int i = 0; i < dofs; i++) {
     bounding_box.push_back(pair<double,double>(0.0,1.0));
@@ -29,8 +29,8 @@ BoundingBox(int i_dofs, int i_pos_dofs ) :
 
 BoundingBox::
 BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem)
-  : dofs(in_pproblem->GetDOFs()),   
-    pos_dofs(in_pproblem->GetPosDOFs()) {
+  : pos_dofs(in_pproblem->GetPosDOFs()),
+    dofs(in_pproblem->GetDOFs()) {
       LOG_DEBUG_MSG("BoundingBox::BoundingBox()");
 
   in_Node.verifyName(string("boundary"));
@@ -88,6 +88,16 @@ BoundingBox::
   //cout << " ~BoundingBox(). TODO ALL " << endl;
 }
 
+bool
+BoundingBox::
+operator==(const BoundingBox& bb) const
+{
+  return (bounding_box == bb.bounding_box) &&
+         (par_type == bb.par_type) &&
+         (pos_dofs == bb.pos_dofs) &&
+         (dofs == bb.dofs);
+}
+
 unsigned int 
 BoundingBox::
 GetDOFs() const {
@@ -137,7 +147,7 @@ void
 BoundingBox::
 SetRanges(std::vector<double> &ranges) {
   std::vector<double>::iterator itr;
-  unsigned int i = 0;
+  int i = 0;
   for (itr = ranges.begin(); itr < ranges.end() && i < dofs; itr = itr+2, i++) {
     SetParameter(i,*itr,*(itr+1));
   }
@@ -161,7 +171,7 @@ BoundingBox
 BoundingBox::
 GetCombination(BoundingBox &o_bounding_box) {
   BoundingBox combination(*this);
-  for (int par=0; par < o_bounding_box.GetDOFs() && par < combination.GetDOFs(); par++) {
+  for (size_t par=0; par < o_bounding_box.GetDOFs() && par < combination.GetDOFs(); par++) {
     combination.SetParameter(par,
 			     min(combination.bounding_box[par].first,
 				 o_bounding_box.bounding_box[par].first),
@@ -175,7 +185,7 @@ int
 BoundingBox::
 FindSplitParameter(BoundingBox &o_bounding_box) {
   int split_par = -1;
-  for (int par=0; par < bounding_box.size(); par++) {
+  for (size_t par=0; par < bounding_box.size(); par++) {
     if (bounding_box[par].first != o_bounding_box.bounding_box[par].first ||
 	bounding_box[par].second != o_bounding_box.bounding_box[par].second) {
       if (split_par == -1) { // check to see that only one parameter varies
@@ -283,7 +293,7 @@ GetRandomValueInParameter(int par) {
       (bounding_box[par].second - bounding_box[par].first)*OBPRM_drand();
   }
   else { // an orientation angle (not necessarily true for many robots)
-    if( par > bounding_box.size() ) { //when par is not valid
+    if( par > (int)bounding_box.size() ) { //when par is not valid
       v = OBPRM_drand(); 
     }
     else { // want something in range of orientation angles
@@ -335,7 +345,7 @@ IfSatisfiesConstraints(Vector3D point3d) const {
 bool
 BoundingBox::
 IfSatisfiesConstraints(vector<double> point) const {
-  for (int i = 0; i < point.size() && i < bounding_box.size(); i++) {
+  for (size_t i = 0; i < point.size() && i < bounding_box.size(); i++) {
     if (par_type[i] == REVOLUTE) {
       if (point[i] < 0 || point[i] > 1) {
 	cout << "Invalid range on REVOLUTE dof." << endl;

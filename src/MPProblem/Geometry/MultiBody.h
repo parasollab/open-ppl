@@ -284,6 +284,9 @@ public:
     void FindBoundingBox();
 
     //@}
+ 
+    bool operator==(const MultiBody& mb) const;
+    bool operator!=(const MultiBody& mb) const { return !(*this == mb); }
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
