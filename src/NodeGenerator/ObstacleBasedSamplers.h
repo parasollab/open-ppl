@@ -1,26 +1,29 @@
 #ifndef ObstacleBasedSamplers_h
 #define ObstacleBasedSamplers_h
 
-#include "BaseSampler.h"
+#include "SamplerMethod.h"
 class Environment;
 class Stat_Class;
 class CollisionDetection;
 class CDInfo;
 class DistanceMetric;
 
-#include "my_program_options.hpp"
+//#include "my_program_options.hpp"
 #include <sstream>
 
 template <typename CFG>
-class ObstacleBasedSampler : public BaseSampler<CFG>
+class ObstacleBasedSampler : public SamplerMethod<CFG>
 {
  private:
   Environment* env;
-  Stat_Class& Stats;
+  Stat_Class *Stats;
   CollisionDetection* cd;
-  CDInfo& cdInfo;
+  CDInfo *cdInfo;
   DistanceMetric* dm;
-  int n_shells_free, n_shells_coll;
+  ValidityChecker<CFG>* vc;
+  std::string strVcmethod;
+  std::string strLabel;
+  //int n_shells_free, n_shells_coll;
   double step_size;
 
  public:
@@ -28,51 +31,84 @@ class ObstacleBasedSampler : public BaseSampler<CFG>
 		       CollisionDetection* _cd, CDInfo& _cdInfo,
 		       DistanceMetric* _dm, int _free = 1, int _coll = 0, 
 		       double _step = 0) :
-    env(_env), Stats(_Stats), cd(_cd), cdInfo(_cdInfo), dm(_dm), 
-    n_shells_free(_free), n_shells_coll(_coll), step_size(_step) {
+  env(_env), Stats(_Stats), cd(_cd), cdInfo(_cdInfo), dm(_dm),step_size(_step){ 
+   /* n_shells_free(_free), n_shells_coll(_coll), step_size(_step) {*/
     if(step_size <= 0)
       step_size = min(env->GetPositionRes(), env->GetOrientationRes());
+  
+}// get above parameter from XML
+  int numShells,n_shells_coll,n_shells_free;
+  ObstacleBasedSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem)
+  {
+  LOG_DEBUG_MSG("ObstacleBasedSampler::ObstacleBasedSampler()");
+  ParseXML(in_Node);
+  //cout << "ObstacleBasedSampler";
+  strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
+                                    string(""), string("Validity Test Method"));
+  
+   cout << "strVcmethod = " << strVcmethod << endl;
+  vc = in_pProblem->GetValidityChecker();
+  dm = in_pProblem->GetDistanceMetric();
+  strLabel= this->ParseLabelXML( in_Node);
+  this->SetLabel(strLabel);
+  LOG_DEBUG_MSG("~ObstacleBasedSampler::ObstacleBasedSampler()");
   }
-  ObstacleBasedSampler(Environment* _env, Stat_Class& _Stats,
-		       CollisionDetection* _cd, CDInfo& _cdInfo,
-		       DistanceMetric* _dm, string params) :
-    env(_env), Stats(_Stats), cd(_cd), cdInfo(_cdInfo), dm(_dm)    
-    {
-      //create option description
-      po::options_description options("ObstacleBased Options");
-      options.add_options()
-	("free-shells,f", po::value<int>(&n_shells_free)->default_value(1), "number of free shells")
-	("coll-shells,c", po::value<int>(&n_shells_coll)->default_value(0), "number of collision shells")
-	("stepsize,s", po::value<double>(&step_size)->default_value(0), "obstacle boundary search stepsize")
-	;
-
-      //this is a hack here to prep args for commandline parser, fix later
-      istringstream iss(params);
-      int _argc = 0;
-      char* _argv[10];
-      string s;
-      _argv[_argc] = (char*)malloc(sizeof(char)*(strlen(name())+1));
-      strcpy(_argv[_argc], name());
-      _argc++;
-      while((iss >> s) && (_argc < 10)) {
-	_argv[_argc] = (char*)malloc(sizeof(char)*(s.size()+1));
-	strcpy(_argv[_argc], s.c_str());
-	_argc++;
-      }
-
-      //store the parsed options into a variables_map     
-      po::variables_map vm;
-      po::store(po::parse_command_line(_argc, _argv, options), vm);
-      po::notify(vm);
-        
-      //clean up memory
-      for(int i=0; i<_argc; ++i)
-        free(_argv[i]);
-
-      if(step_size <= 0)
-	step_size = min(env->GetPositionRes(), env->GetOrientationRes());
-    }
+  // fix this later
+  /*const int n_shells_free = 1, n_shells_coll = 1, numShells = 3;
+  const double step_size = 1;*/
   ~ObstacleBasedSampler() {}
+void  ParseXML(XMLNodeReader& in_Node) {
+  LOG_DEBUG_MSG("ObstacleBasedSampler::ParseXML()");
+  XMLNodeReader::childiterator citr;
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(citr->getName() == "n_shells_coll") {
+      ParseXMLcol(*citr);
+    } else if(citr->getName() == "n_shells_free") {
+      ParseXMLfree(*citr);
+    }else if(citr->getName() == "shells") {
+      ParseXMLshells(*citr);
+    }
+  }
+  
+  
+  
+  cout << "ObstacleBasedSampler";
+  LOG_DEBUG_MSG("~ObstacleBasedSampler::ParseXML()");
+}
+
+void ParseXMLshells(XMLNodeReader& in_Node) {
+  LOG_DEBUG_MSG("ObstacleBasedSampler::ParseXMLshells()");
+
+  in_Node.verifyName(string("shells"));
+  numShells = in_Node.numberXMLParameter(string("number"),true, 3,0,10,
+                                         string("Number of Shells"));
+  
+  in_Node.warnUnrequestedAttributes();
+  LOG_DEBUG_MSG("~ObstacleBasedSampler::ParseXMLshells()");
+}
+
+void ParseXMLcol(XMLNodeReader& in_Node) {
+  LOG_DEBUG_MSG("ObstacleBasedSampler::ParseXMLcol()");
+
+  in_Node.verifyName(string("n_shells_coll"));
+  n_shells_coll = in_Node.numberXMLParameter(string("number"),true, 3,0,10,
+                                         string("Number of Col Shells"));
+  
+  in_Node.warnUnrequestedAttributes();
+  LOG_DEBUG_MSG("~ObstacleBasedSampler::ParseXMLcol()");
+}
+
+void ParseXMLfree(XMLNodeReader& in_Node) {
+  LOG_DEBUG_MSG("ObstacleBasedSampler::ParseXMLfree()");
+
+  in_Node.verifyName(string("n_shells_free"));
+  n_shells_free = in_Node.numberXMLParameter(string("number"),true, 3,0,10,
+                                         string("Number of Free Shells"));
+  
+  in_Node.warnUnrequestedAttributes();
+  LOG_DEBUG_MSG("~ObstacleBasedSampler::ParseXMLfree()");
+}
+
 
   const char* name() const { return "ObstacleBasedSampler"; }
 
@@ -90,10 +126,14 @@ class ObstacleBasedSampler : public BaseSampler<CFG>
     {
       string callee(name());
       callee += "::GenerateShells";
+      cout << "n_shells_coll = " << n_shells_coll << endl;
       for(int i=0; i<n_shells_free; ++i) {
 	if(c_free.InBoundingBox(env) && 
-	   !c_free.isCollision(env, Stats, cd, cdInfo, true, &callee)) {
-	  Stats.IncNodes_Generated();
+	  // !c_free.isCollision(env, *Stats, cd, *cdInfo, true, &callee))
+             vc->IsValid(vc->GetVCMethod(strVcmethod), c_free, env, 
+		         *Stats, *cdInfo, true, &callee))
+        {
+	  Stats->IncNodes_Generated();
 	  *result = c_free;
 	  result++;
 	}
@@ -101,11 +141,15 @@ class ObstacleBasedSampler : public BaseSampler<CFG>
       }
       
       CFG tmp;
+      cout << "n_shells_coll = " << n_shells_coll << endl;
       incr.subtract(tmp, incr);
       for(int i=0; i<n_shells_coll; ++i) {
 	if(c_coll.InBoundingBox(env) && 
-	   c_coll.isCollision(env, Stats, cd, cdInfo, true, &callee)) {
-	  Stats.IncNodes_Generated();
+	   //c_coll.isCollision(env, *Stats, cd, *cdInfo, true, &callee)) {
+            !vc->IsValid(vc->GetVCMethod(strVcmethod), c_coll, env, 
+		         *Stats, *cdInfo, true, &callee))
+	{
+	  Stats->IncNodes_Generated();
 	  *result = c_coll;
 	  result++;
 	}
@@ -115,21 +159,25 @@ class ObstacleBasedSampler : public BaseSampler<CFG>
       return result;
     }
 
-  bool operator()(const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts)
+  bool sampler(Environment* env,Stat_Class& Stat,const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts)
     {  
       string callee(name());
-      callee += "::operator()";
-      
+      callee += "::sampler()";
+      CDInfo cdInfo;
       bool generated = false;
       int attempts = 0;
 
       do {
-	Stats.IncNodes_Attempted();
+	Stat.IncNodes_Attempted();
 	attempts++;
 
 	CFG c1 = cfg_in;
+	cout << "tmp b4 IsValid = " << c1 << endl;
 	bool c1_bbox = c1.InBoundingBox(env);
-	bool c1_free = !c1.isCollision(env, Stats, cd, cdInfo, true, &callee);
+	//bool c1_free = !c1.isCollision(env, Stat, cd, cdInfo, true, &callee);
+	bool c1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c1, env, 
+		         Stat, cdInfo, true, &callee);
+	cout << "tmp b5 IsValid = " << c1_free << endl;
 
 	CFG c2 = c1;
 	bool c2_bbox = c1_bbox;
@@ -137,14 +185,19 @@ class ObstacleBasedSampler : public BaseSampler<CFG>
 
 	CFG r;
 	r.GetRandomRay(step_size, env, dm);
-	while(c1_bbox && c2_bbox && (c1_free == c2_free)) {
+	while(c1_bbox && c2_bbox && (c1_free == c2_free)) { //sjacobs
+	//while(c1_bbox && c2_bbox){
 	  c1 = c2;
 	  c1_bbox = c2_bbox;
 	  c1_free = c2_free;
 	 
 	  c2.Increment(r);
 	  c2_bbox = c2.InBoundingBox(env);
-	  c2_free = !c2.isCollision(env, Stats, cd, cdInfo, true, &callee);
+	  c2_free = !c2.isCollision(env, Stat, cd, cdInfo, true, &callee);
+	  c2_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c2, env, 
+		         Stat, cdInfo, true, &callee);
+	 cout << "c2_free = " << c2_free << endl;
+	 // This look like an infinite loop
 	}
 
 	if(c1_bbox && c2_bbox) {
@@ -157,11 +210,47 @@ class ObstacleBasedSampler : public BaseSampler<CFG>
 	  } else 
 	    GenerateShells(c2, c1, r,
 			   back_insert_iterator<vector<CFG> >(cfg_out));
-	}
+	    }
       } while (!generated && (attempts < max_attempts));
       
       return generated;
     }
+    
+    template <typename OutputIterator>
+   OutputIterator Sample(Environment* env,Stat_Class& Stat,int num_nodes,OutputIterator result, int max_attempts)  
+   {       CFG my_cfg;
+	   do {
+	   my_cfg.GetRandomCfg(env);
+	   }while (!my_cfg.InBoundingBox(env));
+	   vector<CFG> out1;
+	  // cout << "num of nodes = " << num_nodes << endl;
+	   for (int i =0; i< num_nodes; i++){ 
+		 my_cfg.GetRandomCfg(env);  
+	       while(!sampler(env, Stat,my_cfg, out1, max_attempts)) {
+		       my_cfg.GetRandomCfg(env);
+                 
+               }	   
+	   
+	  }
+	   result = copy(out1.begin(), out1.end(), result);
+	  return result;
+    }
+   
+   
+   template <typename InputIterator, typename OutputIterator>
+   OutputIterator Sample(Environment* env,Stat_Class& Stat, InputIterator first, InputIterator last,
+	   OutputIterator result, int max_attempts) {
+   //cout << "max_attempts = " << max_attempts << endl;
+         while(first != last) {
+    vector<CFG> result_cfg;
+    if(sampler(env, Stat, *first, result_cfg, max_attempts)) {
+      result = copy(result_cfg.begin(), result_cfg.end(), result);
+    }
+    first++;
+  }
+  return result;
+     }
+	    
 };
 
 #endif
