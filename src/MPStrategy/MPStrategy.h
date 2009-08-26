@@ -6,7 +6,7 @@
 
 class MPProblem;
 template <class CFG, class WEIGHT> class LocalPlanners;
-template <class CFG> class GenerateMapNodes;
+template <class CFG> class Sampler;
 template <class CFG, class WEIGHT> class ConnectMap;
 template <class CFG, class WEIGHT> class MPCharacterizer;
 template <class CFG, class WEIGHT> class MapEvaluator;
@@ -21,7 +21,7 @@ public:
   void ParseStrategyMethod(XMLNodeReader& in_Node);
   
   LocalPlanners<CfgType, WeightType>* GetLocalPlanners() {return m_pLocalPlanners;};
-  GenerateMapNodes<CfgType>* GetGenerateMapNodes() {return m_pNodeGeneration;};
+  Sampler<CfgType>* GetSampler() {return m_pNodeGeneration;};
   ConnectMap<CfgType, WeightType>* GetConnectMap(){return m_pConnection;};
   MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
   MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_Evaluator;}; 
@@ -32,7 +32,7 @@ public:
   MPStrategyMethod* GetMPStrategyMethod(string& );////////////////////////
   ///@ToDo Move addPartialEdge, addAllEdges to ConnectMap
  private:
-  GenerateMapNodes<CfgType>* m_pNodeGeneration;
+  Sampler<CfgType>* m_pNodeGeneration;
   ConnectMap<CfgType, WeightType>* m_pConnection;
   LocalPlanners<CfgType, WeightType>* m_pLocalPlanners;
   //Characterization and Filtering

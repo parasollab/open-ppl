@@ -10,9 +10,9 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
+//#include "GenerateMapNodes.h"
 
-#include "GeneratePartitions.h"
+//#include "GeneratePartitions.h"
 
 /* util.h defines EXIT used in initializing the environment*/
 #include "util.h"
@@ -34,8 +34,11 @@ PRMIncrementalStrategy::
 ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("PRMIncrementalStrategy::ParseXML()");
   //OBPRM_srand(getSeed()); 
+  
+   cout << "input node label PRMIncrementalStrategy = " << in_Node.getName() << endl;
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+	cout << "PRMIncrementalStrategy children = " << in_Node.getName() << endl;  
      if(citr->getName() == "node_generation_method") {
       string node_gen_method = citr->stringXMLParameter("Method",true,"","Method");
       m_vecStrNodeGenLabels.push_back(node_gen_method);
@@ -110,6 +113,8 @@ operator()(int in_RegionID) {
   //-----------------------
   unsigned int witness_queries = m_vecWitnessNodes.size()*(m_vecWitnessNodes.size()-1)/2;
   cout << "witness_queries = " << witness_queries << endl;
+  cout << "TEST1" << endl;
+
 
   int neighbor_create, neighbor_merge, neighbor_expand, neighbor_over;
   double cc_create_clearance = 0;
@@ -132,6 +137,8 @@ operator()(int in_RegionID) {
   string envFileName = GetMPProblem()->GetEnvironment()->GetEnvFileName();
   string firstNodeGen = *m_vecStrNodeGenLabels.begin();
   string firstConnection = *m_vecStrNodeConnectionLabels.begin();
+  cout << "TEST2 = "  << endl;
+
   char_ofstream << "#env_file_name:node_gen:con_method:seed" << endl;
   char_ofstream << envFileName << ":" << firstNodeGen << ":" << firstConnection << ":" << getSeed() << endl;
   char_ofstream << "#numnodes" << ":" << "cc_create" 
@@ -147,15 +154,23 @@ operator()(int in_RegionID) {
   NodeGenClock.StartClock("Node Generation");
   typedef vector<string>::iterator I;
 //  for(int iterations=0; iterations < m_iterations; ++iterations)
-  while(!IsFinished())
+  while(!IsFinished()) //commented out Sam---continous loop
   for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
   { //For each node generation method mentioned.
-    vector< CfgType > vectorCfgs;
-    NodeGenerationMethod<CfgType> * pNodeGen;
+    vector< CfgType > vectorCfgs, in_nodes(10);
+    Sampler<CfgType>::SamplerPointer  pNodeGen;
     //Generate nodes given 1 node gen method
-    pNodeGen = GetMPProblem()->GetMPStrategy()->GetGenerateMapNodes()->GetMethod(*itr);
-    pNodeGen->GenerateNodes(region, vectorCfgs);
-    //cout << "NodeGen: " << *itr << "created " << vectorCfgs.size() << "(non)valid nodes" << endl;
+    cout << "Sampling Method B4 pNodeGen = " << *itr << endl;
+
+    pNodeGen = GetMPProblem()->GetMPStrategy()->
+          GetSampler()->GetSamplingMethod(*itr);
+     // pNodeGen->GenerateNodes(region, vectorCfgs); ///\todo this needs fixing bad.
+      cout << "Pnode Gen  = " << pNodeGen << endl;
+     pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),*pStatClass, in_nodes.begin(),in_nodes.end(),1,back_inserter(vectorCfgs));
+     //This is what we are going to use
+    // pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),pStatClass,in_nodes.begin(),in_nodes.end(),1,back_inserter(vectorCfgs));
+    // pNodeGen->GetSampler()->Sample(pNodeGen,100,1,back_inserter(vectorCfgs));
+    cout << "NodeGen: " << *itr << "created " << vectorCfgs.size() << "(non)valid nodes" << endl;
     //Add Nodes to roadmap one by one.
     for(vector<CfgType>::iterator itr_cfg = vectorCfgs.begin();
         itr_cfg != vectorCfgs.end(); ++itr_cfg) 

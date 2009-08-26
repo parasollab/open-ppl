@@ -10,9 +10,10 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
+//#include "GenerateMapNodes.h"
+#include "Sampler.h"
 
-#include "GeneratePartitions.h"
+//#include "GeneratePartitions.h"
 
 /* util.h defines EXIT used in initializing the environment*/
 #include "util.h"
@@ -192,7 +193,8 @@ operator()(int in_RegionID) {
     //Connect and Classify Node
     //Update weights based on node
     outputWeightMatrix(cout);
-    NodeGenerationMethod<CfgType> * pNodeGen;
+   // NodeGenerationMethod<CfgType> * pNodeGen;
+   Sampler<CfgType>::SamplerPointer  pNodeGen;
     //Generate nodes given 1 node gen method
 
 
@@ -205,11 +207,14 @@ operator()(int in_RegionID) {
 
       Clock_Class NodeGenClock;
       NodeGenClock.StartClock("Node Generation");
-      vector< CfgType > vectorCfgs;
+      vector< CfgType > vectorCfgs, in_nodes;
       cout << "About to get next pointer method = " <<next_node_gen<< endl;
-      pNodeGen = GetMPProblem()->GetMPStrategy()->GetGenerateMapNodes()->GetMethod(next_node_gen);
+     // pNodeGen = GetMPProblem()->GetMPStrategy()->GetGenerateMapNodes()->GetMethod(next_node_gen);
+     pNodeGen = GetMPProblem()->GetMPStrategy()->
+          GetSampler()->GetSamplingMethod(next_node_gen);
       unsigned long int num_cd_before = pStatClass->GetIsCollTotal();
-      pNodeGen->GenerateNodes(region, vectorCfgs);
+     // pNodeGen->GenerateNodes(region, vectorCfgs);
+     pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),*pStatClass,in_nodes.begin(),in_nodes.end(),1,back_inserter(vectorCfgs));
       
 
       for(int j=0; j<vectorCfgs.size(); ++j) {   //Loop through all nodes created by node gen

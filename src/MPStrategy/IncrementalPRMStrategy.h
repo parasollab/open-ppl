@@ -45,7 +45,8 @@ class IncrementalPRMStrategy : public MPStrategyMethod
 
 #include "MPProblem/MPRegion.h"
 #include "Utilities/Clock_Class.h"
-#include "NodeGenerator/NodeGeneratorMethod.h"
+//#include "NodeGenerator/NodeGeneratorMethod.h"
+#include "NodeGenerator/Sampler.h"
 #include "MPStrategy/MPStrategy.h"
 
 //implentations of template functions
@@ -55,29 +56,42 @@ IncrementalPRMStrategy::
 generate_nodes(MPRegion<CfgType, WeightType>* region, OutputIterator all_out, OutputIterator this_iteration_out)
 {
   Clock_Class NodeGenClock;
+  CDInfo cdInfo;
+  Stat_Class * pStatClass = region->GetStatClass();
   stringstream clock_name; clock_name << "Iteration " << m_current_iteration << ", Node Generation"; 
   NodeGenClock.StartClock(clock_name.str().c_str());
   
   for(vector<string>::iterator I = m_vecStrNodeGenerationLabels.begin(); I != m_vecStrNodeGenerationLabels.end(); ++I) //SLT: should be const_iterator
   {
-    NodeGenerationMethod<CfgType>* pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetGenerateMapNodes()->GetMethod(*I);
-    vector<CfgType> nodes;
+   // NodeGenerationMethod<CfgType>* pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetGenerateMapNodes()->GetMethod(*I);
+    //sjacobs
+    Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(*I);
+    vector<CfgType> out_nodes;
+    vector<CfgType> in_nodes(100);
         
     //generate nodes for this node generator method
     Clock_Class NodeGenSubClock;
-    stringstream generator_clock_name; generator_clock_name << "Iteration " << m_current_iteration << ", " << pNodeGenerator->GetName();
-    NodeGenSubClock.StartClock(generator_clock_name.str().c_str());
+    //check this
+   // stringstream generator_clock_name; generator_clock_name << "Iteration " << m_current_iteration << ", " << pNodeGenerator->GetName();
+   // NodeGenSubClock.StartClock(generator_clock_name.str().c_str());
     
     cout << "\n\t";
-    pNodeGenerator->GenerateNodes(region, nodes);
+   // pNodeGenerator->GenerateNodes(region, nodes);
+     pNodeGenerator->GetSampler()->Sample(pNodeGenerator,GetMPProblem()->GetEnvironment(),*pStatClass,in_nodes.begin(),in_nodes.end(),100, back_inserter(out_nodes));
    
     cout << "\n\t";
     NodeGenSubClock.StopPrintClock();
         
     //add valid nodes to roadmap
-    for(vector<CfgType>::iterator C = nodes.begin(); C != nodes.end(); ++C)
+    for(vector<CfgType>::iterator C = in_nodes.begin(); C != in_nodes.end(); ++C)
     {
+      //if((*C).IsLabel("VALID") && ((*C).GetLabel("VALID"))) {
+       //sjacobs- start
+       if(!(*C).IsLabel("VALID")){
+	C->isCollision(GetMPProblem()->GetEnvironment(),*(region->GetStatClass()),GetMPProblem()->GetCollisionDetection(), cdInfo);
+     }
       if((*C).IsLabel("VALID") && ((*C).GetLabel("VALID"))) {
+	      //sjacobs-end
         VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*C);
         //store value and increment iterator
         *this_iteration_out++ = vid;

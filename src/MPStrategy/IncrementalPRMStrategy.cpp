@@ -1,6 +1,6 @@
 #include "MPStrategy/IncrementalPRMStrategy.h"
 #include "MPProblem/MPRegion.h"
-#include "NodeGenerator/NodeGeneratorMethod.h"
+#include "NodeGenerator/SamplerMethod.h"
 #include "MPStrategy/MPStrategy.h"
 
 IncrementalPRMStrategy::

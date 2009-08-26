@@ -14,9 +14,10 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
+//#include "GenerateMapNodes.h"
+#include "Sampler.h"
 
-#include "GeneratePartitions.h"
+//#include "GeneratePartitions.h"
 
 /* util.h defines EXIT used in initializing the environment*/
 #include "util.h"

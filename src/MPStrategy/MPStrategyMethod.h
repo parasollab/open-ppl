@@ -20,6 +20,9 @@ class MPStrategyMethod : public MPBaseObject
       m_iterations = in_Node.numberXMLParameter(string("iterations"), true,
                                               int(1),int(0),int(MAX_INT), 
                                               string("Number of Iterations")); 
+      num_nodes = in_Node.numberXMLParameter(string("num_samples"), true,
+                                              int(100),int(10),int(MAX_INT), 
+                                              string("Number of Samples")); 
       
       m_base_filename = in_Node.stringXMLParameter(string("filename"), true,
                                             string(""), 
@@ -27,6 +30,7 @@ class MPStrategyMethod : public MPBaseObject
       
       
       LOG_DEBUG_MSG("MPStrategyMethod::Seed is " << m_baseSeed);
+      LOG_DEBUG_MSG("MPStrategyMethod::No of sample is " << num_nodes);
     };
   virtual ~MPStrategyMethod() {}
   virtual void ParseXML(XMLNodeReader& in_Node)=0;
@@ -43,6 +47,7 @@ class MPStrategyMethod : public MPBaseObject
 
  protected:
   int m_iterations;
+  int num_nodes;
   //bool m_reset_stats;
   //bool m_no_output_files;
 };

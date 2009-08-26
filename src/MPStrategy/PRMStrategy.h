@@ -17,9 +17,10 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
+//#include "GenerateMapNodes.h"
+#include "Sampler.h"
 
-#include "GeneratePartitions.h"
+//#include "GeneratePartitions.h"
 
 
 //#include "ExplicitInstantiation.h"
@@ -116,12 +117,21 @@ class PRMRoadmap : public MPStrategyMethod {
     typedef vector<string>::iterator I;
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
     {
-      vector< CfgType > vectorCfgs;
-      NodeGenerationMethod<CfgType> * pNodeGen;
+     // const int num_nodes = 100;
+    // int num_nodes;
+      vector< CfgType > vectorCfgs, in_nodes(1024);
+     // num_nodes = distance(in_nodes.begin(),in_nodes.end());
+      vectorCfgs.reserve(num_nodes);
+      Sampler<CfgType>::SamplerPointer  pNodeGen;
       pNodeGen = GetMPProblem()->GetMPStrategy()->
-          GetGenerateMapNodes()->GetMethod(*itr);
-      pNodeGen->GenerateNodes(region, vectorCfgs); ///\todo this needs fixing bad.
+          GetSampler()->GetSamplingMethod(*itr);
+     // pNodeGen->GenerateNodes(region, vectorCfgs); ///\todo this needs fixing bad.
+   // pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),*pStatClass,in_nodes.begin(),in_nodes.end(),100,back_inserter(vectorCfgs));
+    pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),*pStatClass,  num_nodes, 100, back_inserter(vectorCfgs));
+    // call the unbiased
+     
       cout << "\nFinished ... I did this many : " << vectorCfgs.size() << endl;
+      //sjacobs:: Re write this
       new_free_vids = region->AddToRoadmap(vectorCfgs);
     }
       
@@ -359,11 +369,13 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
     typedef vector<string>::iterator I;
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
     {
-      vector< CfgType > vectorCfgs;
-      NodeGenerationMethod<CfgType> * pNodeGen;
+      vector< CfgType > vectorCfgs, in_nodes;
+      //SamplerMethod<CfgType> * pNodeGen;
+      Sampler<CfgType>::SamplerPointer  pNodeGen;
       pNodeGen = GetMPProblem()->GetMPStrategy()->
-          GetGenerateMapNodes()->GetMethod(*itr);
-      pNodeGen->GenerateNodes(region, vectorCfgs); ///\todo this needs fixing bad.
+          GetSampler()->GetSamplingMethod(*itr);
+     // pNodeGen->GenerateNodes(region, vectorCfgs); ///\todo this needs fixing bad.
+     pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),*pStatClass,in_nodes.begin(),in_nodes.end(),1,back_inserter(vectorCfgs));
       cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
       region->AddToRoadmap(vectorCfgs);
     }

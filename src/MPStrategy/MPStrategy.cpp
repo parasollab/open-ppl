@@ -1,5 +1,6 @@
 #include "MPStrategy.h"
 #include "MPRegionComparerMethod.h"
+#include "Sampler.h"
 
 MPStrategy::
 MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Node,in_pProblem) {
@@ -16,9 +17,12 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Nod
   m_Evaluator = NULL;
   m_pCharacterizer = NULL;
   XMLNodeReader::childiterator citr;
+  LOG_DEBUG_MSG("MPStrategy::MPStrategy(XMLNodeReader)");
+      cout << "input node label MP Strategy = " << in_Node.getName() << endl;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
     if(citr->getName() == "node_generation_methods") {
-      m_pNodeGeneration = new GenerateMapNodes<CfgType>(*citr, GetMPProblem());
+     // m_pNodeGeneration = new GenerateMapNodes<CfgType>(*citr, GetMPProblem());
+      m_pNodeGeneration = new Sampler<CfgType>(*citr, GetMPProblem());
     } else if(citr->getName() == "connection_methods") {
       m_pConnection = new ConnectMap<CfgType, WeightType>(*citr, GetMPProblem());
     } else if(citr->getName() == "lp_methods") {
