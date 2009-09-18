@@ -147,7 +147,7 @@ int main(int argc, char** argv)
     mg.GenerateMap(&rmap,Stats,&cd,&dm,nodes,&lp, &input);
     clock.StopPrintClock();
     char name[100];
-    sprintf(name, "2arms.%d.map", rmap.m_pRoadmap->GetVertexCount());
+    sprintf(name, "2arms.%d.map", rmap.m_pRoadmap->get_num_vertices());
     rmap.WriteRoadmap(&input,&cd,&dm,&lp, name);
   } while (!query.PerformQuery(&rmap, Stats, &cd, &mg.cm, &lp, &dm));
   //} while (false);
@@ -191,8 +191,8 @@ int main(int argc, char** argv)
   MapGenClock.PrintName();
   cout << ": " << MapGenClock.GetClock_SEC()
        << " sec"
-    << ", "<<rmap.m_pRoadmap->GetVertexCount()<<" nodes"
-    << ", "<<rmap.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
+    << ", "<<rmap.m_pRoadmap->get_num_vertices()<<" nodes"
+    << ", "<<rmap.m_pRoadmap->get_num_edges()<<" edges\n"<< flush;
     Stats.PrintAllStats(&rmap);
 #endif
   
