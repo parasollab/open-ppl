@@ -33,6 +33,7 @@
 template <class CFG, class WEIGHT>
 class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
  public:
+  typedef typename RoadmapGraph<CFG, WEIGHT>::vertex_descriptor VID;
   //////////////////////
   // Constructors and Destructor
   Closest();
@@ -263,16 +264,16 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   vector< pair<VID,VID> > kp;
 
   if( v2.size() < kclosest) {//all pairs
-    for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
+    for(typename vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
       kp.clear();
-      for(vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J){
+      for(typename vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J){
         if(*I != *J)
           kp.push_back(make_pair<VID,VID>(*I, *J));
       }
       Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, kp);
     } //end of for I
   } else {
-    for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
+    for(typename vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
       kp.clear();
       vector<VID> v;
       v.push_back(*I);
@@ -297,7 +298,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     int failure = 0;   //actual failure attemp for this node 
     // for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
-    for(vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
+    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    for(typename vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
       //cout<<KP->first<<"->"<<KP->second<<endl;
       if(failure >= mfailure){
       //cout << "failure time equals the max allowed number."<<KP->first<<" fails: "<<failure<<endl;
@@ -311,11 +313,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       }
       if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) 
         continue;
-      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) 
+      cmap.reset();
+      if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap,KP->first, KP->second)) 
         continue;
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
-			 _rm->m_pRoadmap->GetData(KP->first),
-			 _rm->m_pRoadmap->GetData(KP->second),
+			 _rm->m_pRoadmap->find_vertex(KP->first).property(),
+			 _rm->m_pRoadmap->find_vertex(KP->second).property(),
 			 &lpOutput, this->connectionPosRes, this->connectionOriRes, 
 			 (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
