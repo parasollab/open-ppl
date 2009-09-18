@@ -272,13 +272,15 @@ int main(int argc, char** argv)
     //connect and evaluate each node, one by one
     double connection_time = 0.0;
     double evaluation_time = 0.0;
+    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
     expansion_ratio = 0.0;
     for(vector<CfgType>::iterator N = nodes.begin();
 	N != nodes.end(); ++N) {
-      int previous_cc_number = GetCCcount(*(rmap.m_pRoadmap));
+      cmap.reset();
+      int previous_cc_number = get_cc_count(*(rmap.m_pRoadmap),cmap);
       int previous_lp_attempts = Stats.LPAttempts[0];
       //int previous_lp_connects = Stats.LPConnections[0];
-      int previous_lp_connects = rmap.m_pRoadmap->GetEdgeCount()/2;
+      int previous_lp_connects = rmap.m_pRoadmap->get_num_edges()/2;
       //cout << "previous lp conn " << previous_lp_connects << endl;
       //cout << "previous lp att " << previous_lp_attempts << endl;
 
@@ -300,7 +302,8 @@ int main(int argc, char** argv)
       Clock_Class EvalClock;
       EvalClock.StartClock("Node Evaluation");
 
-      int current_cc_number = GetCCcount(*(rmap.m_pRoadmap));    
+      cmap.reset();
+      int current_cc_number = get_cc_count(*(rmap.m_pRoadmap),cmap);    
       //cout << "prev_cc_num = " << previous_cc_number 
       //   << " curr_cc_num = " << current_cc_number
       //   << endl;
@@ -315,9 +318,9 @@ int main(int argc, char** argv)
       } else { // either CC expand or CC oversample
 	int lp_attempts = Stats.LPAttempts[0] - previous_lp_attempts;
 	//int lp_connects = Stats.LPConnections[0] - previous_lp_connects;
-	int lp_connects = rmap.m_pRoadmap->GetEdgeCount()/2 - previous_lp_connects;
+	int lp_connects = rmap.m_pRoadmap->get_num_edges()/2 - previous_lp_connects;
 	////cout << "current lp conn " << Stats.LPConnections[0] << endl;
-	//cout << "current lp conn " << rmap.m_pRoadmap->GetEdgeCount()/2 << endl;
+	//cout << "current lp conn " << rmap.m_pRoadmap->Get EdgeCount()/2 << endl;
 	//cout << "current lp att " << Stats.LPAttempts[0] << endl;
 
 	//cout << "lp: " << lp_connects << " / " << lp_attempts << endl;
@@ -329,12 +332,12 @@ int main(int argc, char** argv)
 	//compute list of neighbor neighbors to vid:
 	//cout << "vid = " << vid << endl;
 	vector<VID> first_neighbors;
-	(rmap.m_pRoadmap)->GetSuccessors(vid, first_neighbors);
+	(rmap.m_pRoadmap)->get_successors(vid, first_neighbors);
 	vector<VID> second_neighbors;
 	for(vector<VID>::const_iterator FN = first_neighbors.begin();
 	    FN != first_neighbors.end(); ++FN) {
 	  vector<VID> adjacent;
-	  rmap.m_pRoadmap->GetSuccessors(*FN, adjacent);
+	  rmap.m_pRoadmap->get_successors(*FN, adjacent);
 	  second_neighbors.insert(second_neighbors.end(),
 				  adjacent.begin(), adjacent.end());
 	}
@@ -366,7 +369,7 @@ int main(int argc, char** argv)
 	    NN != neighbors.end(); ++NN) {
 	  LPOutput<CfgType, WeightType> lpOutput;
 	  if(!lp.IsConnected(&env, Stats, &cd, &dm,
-			     *N, rmap.m_pRoadmap->GetData(*NN),
+			     *N, rmap.m_pRoadmap->find_vertex(*NN).property(),
 			     &lpOutput,
 			     ConnectMap<CfgType,WeightType>::connectionPosRes,
 			     ConnectMap<CfgType,WeightType>::connectionOriRes)) {
@@ -409,8 +412,9 @@ int main(int argc, char** argv)
     total_nodes += nodes.size();
     expansion_ratio /= nodes.size(); //average expansion ratio over batch
 
-    vector < pair < int, VID > > components;
-    GetCCStats(*(rmap.m_pRoadmap), components);
+    vector < pair < size_t, VID > > components;
+    cmap.reset();
+    get_cc_stats(*(rmap.m_pRoadmap), cmap, components);
     sum_cc_diameter = 0;
     largest_cc_diameter = 0;
     for (int cc=0; cc < components.size(); ++cc) {
@@ -446,8 +450,8 @@ int main(int argc, char** argv)
   MapGenClock.PrintName();
   cout << ": " << MapGenClock.GetClock_SEC()
        << " sec"
-       << ", "<<rmap.m_pRoadmap->GetVertexCount()<<" nodes"
-       << ", "<<rmap.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
+       << ", "<<rmap.m_pRoadmap->get_num_vertices()<<" nodes"
+       << ", "<<rmap.m_pRoadmap->get_num_edges()<<" edges\n"<< flush;
   Stats.PrintAllStats(&rmap);
   cout << "\n  !!Bye!! \n";
 
