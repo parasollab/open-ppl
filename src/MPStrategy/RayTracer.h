@@ -708,8 +708,9 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
 
   cd_counts = 0;
 
-  vector< pair<int,VID> > ccs; //list of CCs in the roadmap
-  GetCCStats(*(rdmp->m_pRoadmap), ccs);//get the CCs
+  vector< pair<size_t,VID> > ccs; //list of CCs in the roadmap
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  get_cc_stats(*(rdmp->m_pRoadmap), cmap, ccs);//get the CCs
   
   bool path_found = false;
   
@@ -753,20 +754,27 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
 
   //trying to connect ccs in order defined by scheduling process  
   for (vector< pair<VID,VID> >::iterator cc_itrtr =cc_trl_schdl.begin(); cc_itrtr < cc_trl_schdl.end(); ++cc_itrtr) {
-    if (!IsSameCC(*(rdmp->m_pRoadmap),cc_itrtr->first, cc_itrtr->second)) {
+    cmap.reset();
+    if (!is_same_cc(*(rdmp->m_pRoadmap),cmap, cc_itrtr->first, cc_itrtr->second)) {
       
       Roadmap<CFG,WEIGHT> target_rdmp;
       target_rdmp.environment = rdmp->GetEnvironment();
       
       vector<CFG> cci_cfgs;
-      CFG cci_tmp = rdmp->m_pRoadmap->GetData(cc_itrtr->first);
-      GetCC(*(rdmp->m_pRoadmap), cci_tmp, cci_cfgs);
+      vector<VID> cci_cfgs_aux;
+      CFG cci_tmp = rdmp->m_pRoadmap->find_vertex(cc_itrtr->first).property();
+      cmap.reset();
+      get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->GetVID(cci_tmp), cci_cfgs_aux);
+      cci_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(cci_cfgs_aux);
       vector<CFG> rep_cci_cfgs;
       getBoundaryCfgs(cci_cfgs, rep_cci_cfgs, sample_max_size);
       
       vector<CFG> ccj_cfgs;
-      CFG ccj_tmp = rdmp->m_pRoadmap->GetData(cc_itrtr->second);
-      GetCC(*(rdmp->m_pRoadmap), ccj_tmp, ccj_cfgs);
+      vector<VID> ccj_cfgs_aux;
+      CFG ccj_tmp = rdmp->m_pRoadmap->find_vertex(cc_itrtr->second).property();
+      cmap.reset();
+      get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->GetVID(ccj_tmp), ccj_cfgs_aux);
+      ccj_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(ccj_cfgs_aux);
       vector<CFG> rep_ccj_cfgs;
       getBoundaryCfgs(ccj_cfgs, rep_ccj_cfgs, sample_max_size);      
       

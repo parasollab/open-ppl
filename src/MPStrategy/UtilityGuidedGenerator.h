@@ -234,10 +234,11 @@ GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 			    DistanceMetric* dm,
 			    double component_dist, double tao) {
   CFG q1, q2;
-
-  vector<pair<int,VID> > ccs;
-  if(GetCCStats(*rmap->m_pRoadmap, ccs) == 1) {
-    q1 = rmap->m_pRoadmap->GetData(ccs[0].second);
+  
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  vector<pair<size_t,VID> > ccs;
+  if(get_cc_stats(*rmap->m_pRoadmap, cmap, ccs) == 1) {
+    q1 = rmap->m_pRoadmap->find_vertex(ccs[0].second).property();
     q2.GetRandomCfg(rmap->GetEnvironment());
   } else {
     //randomly select 2 ccs that are within a threshold component_dist of each other
@@ -250,18 +251,20 @@ GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	cc2vid = ccs[(int)floor((double)OBPRM_drand()*(double)ccs.size())].second;
       } while (cc1vid == cc2vid);
       
-      GetCC(*rmap->m_pRoadmap, cc1vid, cc1);
-      GetCC(*rmap->m_pRoadmap, cc2vid, cc2);
+      cmap.reset();
+      get_cc(*rmap->m_pRoadmap, cmap, cc1vid, cc1);
+      cmap.reset();
+      get_cc(*rmap->m_pRoadmap, cmap, cc2vid, cc2);
       
       vector<pair<VID,VID> > kp = dm->FindKClosestPairs(rmap, cc1, cc2,1);
       dist = dm->Distance(rmap->GetEnvironment(), 
-			  rmap->m_pRoadmap->GetData(kp[0].first),
-			  rmap->m_pRoadmap->GetData(kp[1].second));
+			  rmap->m_pRoadmap->find_vertex(kp[0].first).property(),
+			  rmap->m_pRoadmap->find_vertex(kp[1].second).property());
     } while (dist > component_dist);
     
     //randomly select a node in each cc
-    q1 = rmap->m_pRoadmap->GetData(cc1[(int)floor((double)OBPRM_drand()*(double)cc1.size())]);
-    q2 = rmap->m_pRoadmap->GetData(cc2[(int)floor((double)OBPRM_drand()*(double)cc2.size())]);
+    q1 = rmap->m_pRoadmap->find_vertex(cc1[(int)floor((double)OBPRM_drand()*(double)cc1.size())]).property();
+    q2 = rmap->m_pRoadmap->find_vertex(cc2[(int)floor((double)OBPRM_drand()*(double)cc2.size())]).property();
   }
 
   //return perturbation of the midpoint between the two nodes
@@ -300,7 +303,7 @@ GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 
     //get number of nodes, if < 1, simply add a random sample to the roadmap
     CFG q;
-    if(rmap->m_pRoadmap->GetVertexCount() < 1) {
+    if(rmap->m_pRoadmap->get_num_vertices() < 1) {
       q.GetFreeRandomCfg(rmap->GetEnvironment(), Stats, cd, cdInfo);
       model.AddSample(q, 1);
       nodes.push_back(q);
@@ -338,7 +341,7 @@ GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
       nodes.push_back(q);
       VID qvid = rmap->m_pRoadmap->AddVertex(q);
       vector<VID> v1(1, qvid);
-      cout << "\tadding to roadmap (" << rmap->m_pRoadmap->GetVertexCount() << ")";
+      cout << "\tadding to roadmap (" << rmap->m_pRoadmap->get_num_vertices() << ")";
  
       connect_kclosest.Connect(rmap, Stats, cd, dm, lp, 
 			       input->addPartialEdge.GetValue(), 

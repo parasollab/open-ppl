@@ -531,7 +531,7 @@ LearnRegions(Environment* _env, DistanceMetric *dm,
   LowEntropy = _LowEntropy;
   KSamples = _KSamples;
   Tries = _Tries;
-  cout << " num regions: " << region_map.GetVertexCount() << endl;
+  cout << " num regions: " << region_map.get_num_vertices() << endl;
   cout << " Params: (LowEntropy,KSamples,Tries): " 
        << LowEntropy << ", " << KSamples << ", " << Tries << endl;
 
@@ -604,8 +604,8 @@ CModel<CFG>::
 BuildRegionMap(Environment* env, DistanceMetric* dm) {
   //give varying weight based on region types
   DoubleWeight w_default(1); 
-  DoubleWeight w_freeblocked( pow(region_map.GetVertexCount(), 4.0) ); 
-  DoubleWeight w_blockedblocked( pow(region_map.GetVertexCount(), 10.0) );
+  DoubleWeight w_freeblocked( pow(region_map.get_num_vertices(), 4.0) ); 
+  DoubleWeight w_blockedblocked( pow(region_map.get_num_vertices(), 10.0) );
   for(regionset_iterator R = region_map.begin(); R != region_map.end(); ++R) {
     //vector<regionset_const_iterator> neighbors;
     vector<regionset_iterator> neighbors;
@@ -637,7 +637,7 @@ MergeRegions(Environment* env, Stat_Class& Stats,
   //newstyle creates blobs
   //will probably be problems if region graph already made
   cout << " Number of initial regions generated: " 
-       << region_map.GetVertexCount() << endl;
+       << region_map.get_num_vertices() << endl;
 
   for(regionset_iterator I = region_map.begin(); I != region_map.end(); ++I) {
 
@@ -685,7 +685,7 @@ MergeRegions(Environment* env, Stat_Class& Stats,
 
 
   cout << " After merge. regions generated: " 
-       << region_map.GetVertexCount() << endl;
+       << region_map.get_num_vertices() << endl;
 
 }
 
@@ -814,8 +814,8 @@ MergeRegions(Environment* env, Stat_Class& Stats,
 	    merged.GetOverlappingRegionsReference(B, E,
 						  env, dm, new_neighbors);
 	    DoubleWeight w_default(1); 
-	    DoubleWeight w_freeblocked(pow(region_map.GetVertexCount(), 4.0)); 
-	    DoubleWeight w_blockedblocked(pow(region_map.GetVertexCount(), 10.0));
+	    DoubleWeight w_freeblocked(pow(region_map.Get VertexCount(), 4.0)); 
+	    DoubleWeight w_blockedblocked(pow(region_map.Get VertexCount(), 10.0));
 	    for(typename vector<region_const_iterator>::const_iterator new_N = new_neighbors.begin(); 
 		new_N != new_neighbors.end(); ++new_N) {
 	      if((*new_N)->data.type == BLOCKED && merged.type == BLOCKED)
@@ -842,7 +842,7 @@ MergeRegions(Environment* env, Stat_Class& Stats,
 
   //for testing
   cout << " Number of regions after merge: " 
-       << region_map.GetVertexCount() << endl;
+       << region_map.Get VertexCount() << endl;
   for(region_iterator R = region_map.begin(); R != region_map.end(); ++R)
     cout << " Region: " << R->data.ID << "\t size: " << R->data.size()
          << "\t entropy: " << R->data.entropy
