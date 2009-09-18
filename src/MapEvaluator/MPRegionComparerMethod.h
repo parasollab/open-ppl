@@ -11,6 +11,7 @@ class MPProblem;
 template <class CFG, class WEIGHT>
 class MPRegionComparerMethod: public MPBaseObject {
  public:
+  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   MPRegionComparerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPBaseObject(in_Node, in_pProblem) { 
     m_pProblem = in_pProblem;
@@ -89,23 +90,32 @@ class MPRegionComparerMethod: public MPBaseObject {
     int a_small_cc_size =0;
     int b_small_cc_size =0;
     
-    vector < pair< int, VID > > cc_a;
-    GetCCStats(*(rdmp_a->m_pRoadmap), cc_a);
+    vector < pair< size_t, VID > > cc_a;
+    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    get_cc_stats(*(rdmp_a->m_pRoadmap),cmap, cc_a);
     a_small_cc_size = int(double(cc_a[0].first) * double(0.01));
     cout << " Components in Roadmap A " << cc_a.size() << " small_cc_size " << a_small_cc_size << endl;
-    vector < pair< int, VID > > cc_b;
-    GetCCStats(*(rdmp_b->m_pRoadmap), cc_b);
+    vector < pair< size_t, VID > > cc_b;
+    cmap.reset();
+    get_cc_stats(*(rdmp_b->m_pRoadmap),cmap, cc_b);
     b_small_cc_size = int(double(cc_b[0].first) * double(0.01));
     cout << " Components in Roadmap B " << cc_b.size() << " small_cc_size " << b_small_cc_size << endl;
     
-    typedef typename vector < pair< int, VID > >::iterator CC_ITRTR;
+    typedef typename vector < pair< size_t, VID > >::iterator CC_ITRTR;
     
     int spanning_cc_a = 0; // components in A that can connect to B
     int not_small_cc_as = 0;
     // for each connected component cc_a in A
     for (CC_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
       vector < CFG > cc_a_cfgs;
-      GetCC(*(rdmp_a->m_pRoadmap), *(rdmp_a->m_pRoadmap->GetReferenceofData(i_cc_a->second)), cc_a_cfgs);
+      cc_a_cfgs.clear();
+      vector <VID> cc_a_cfgs_aux;
+      cc_a_cfgs_aux.clear();
+      cmap.reset();
+      get_cc(*(rdmp_a->m_pRoadmap), cmap, (rdmp_a->m_pRoadmap->find_vertex(i_cc_a->second).descriptor()), cc_a_cfgs_aux);
+  
+     for(typename vector<VID>::iterator itr=cc_a_cfgs_aux.begin(); itr!=cc_a_cfgs_aux.end(); ++itr)
+                cc_a_cfgs.push_back(rdmp_a->m_pRoadmap->find_vertex(*itr).property());
       
       if (cc_a_cfgs.size() >= a_small_cc_size) {
 	not_small_cc_as++;
@@ -113,7 +123,12 @@ class MPRegionComparerMethod: public MPBaseObject {
 	// for each connected component cc_b in B
 	for (CC_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
 	  vector <CFG > cc_b_cfgs;
-	  GetCC(*(rdmp_b->m_pRoadmap), *(rdmp_b->m_pRoadmap->GetReferenceofData(i_cc_b->second)), cc_b_cfgs);
+	  vector <VID> cc_b_cfgs_aux;
+	  cmap.reset();
+	  get_cc(*(rdmp_b->m_pRoadmap), cmap, (rdmp_b->m_pRoadmap->find_vertex(i_cc_b->second).descriptor()), cc_b_cfgs_aux);
+
+        for(typename vector<VID>::iterator itr=cc_b_cfgs_aux.begin(); itr!=cc_b_cfgs_aux.end(); ++itr)
+                cc_b_cfgs.push_back(rdmp_b->m_pRoadmap->find_vertex(*itr).property());
 	  
 	  if (cc_b_cfgs.size() >= b_small_cc_size) {
 	    // try to connect component A to component B
@@ -134,8 +149,9 @@ class MPRegionComparerMethod: public MPBaseObject {
   pair < unsigned int, unsigned int >
   ConnectionsWitnessToRoadmap(vector < CFG > & witness_cfgs, Roadmap< CFG, WEIGHT > *rdmp) {
     int small_cc_size =0;
-    vector < pair< int, VID > > cc;
-    GetCCStats(*(rdmp->m_pRoadmap), cc);
+    vector < pair< size_t, VID > > cc;
+    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    get_cc_stats(*(rdmp->m_pRoadmap), cmap, cc);
     small_cc_size = int(double(cc[0].first) * double(0.01));
     vector < vector< unsigned int > > connected_to_cc;
     vector < unsigned int > tmp_vector;
@@ -154,7 +170,15 @@ class MPRegionComparerMethod: public MPBaseObject {
       bool i_witness_can_connect = false;
       for (unsigned int j=0; j < cc.size(); j++) {
 	vector < CFG > cc_cfgs;
-	GetCC(*(rdmp->m_pRoadmap), *(new CFG(rdmp->m_pRoadmap->GetData(cc[j].second))), cc_cfgs);
+	vector <VID> cc_cfgs_aux;
+	cmap.reset();
+	//get_cc(*(rdmp->m_pRoadmap), cmap, *(new CFG(rdmp->m_pRoadmap->find_vertex(cc[j].second).descriptor())), cc_cfgs_aux);
+	//fix_lantao is following right?
+        //GetCC(*(rdmp->m_pRoadmap), *(new CFG(rdmp->m_pRoadmap->GetData(cc[j].second))), cc_cfgs);
+	get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->find_vertex(cc[j].second).descriptor(), cc_cfgs_aux);
+	for(typename vector<VID>::iterator itr=cc_cfgs_aux.begin(); itr!=cc_cfgs_aux.end(); ++itr)
+                cc_cfgs.push_back(rdmp->m_pRoadmap->find_vertex(*itr).property());
+
 	if (cc_cfgs.size() >= small_cc_size) {
 	  if ( CanConnectComponents(witness_test_cfg, cc_cfgs) ) {
 	    i_witness_can_connect = true;
@@ -295,6 +319,7 @@ template <class CFG, class WEIGHT>
 class RegionCoverageComparer : public MPRegionComparerMethod< CFG, WEIGHT > 
 {
 public:
+  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   RegionCoverageComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
     LOG_DEBUG_MSG("RegionCoverageComparer::IncrementalRegionComparer()");
@@ -314,10 +339,12 @@ public:
     int a_small_cc_size =0;
     int b_small_cc_size =0;
     
-    vector< pair <int,VID > > a_cc_stats;
-    GetCCStats (*(rdmp_a->m_pRoadmap),a_cc_stats);
-    vector< pair <int,VID > > b_cc_stats;
-    GetCCStats (*(rdmp_b->m_pRoadmap),b_cc_stats);
+    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    vector< pair <size_t,VID > > a_cc_stats;
+    get_cc_stats (*(rdmp_a->m_pRoadmap),cmap, a_cc_stats);
+    vector< pair <size_t,VID > > b_cc_stats;
+    cmap.reset();
+    get_cc_stats(*(rdmp_b->m_pRoadmap),cmap, b_cc_stats);
     a_small_cc_size = int(double(a_cc_stats[0].first) * double(0.01));
     b_small_cc_size = int(double(b_cc_stats[0].first) * double(0.01));
     cout << "RegionCoverageComparer::Compare: a_small_cc_size: " << a_small_cc_size << endl;
@@ -338,10 +365,11 @@ public:
 
     typename vector<VID>::iterator a_vid_itr;
     for(a_vid_itr = rdmp_a_vids.begin(); a_vid_itr!=rdmp_a_vids.end(); ++a_vid_itr) {
-      if(!CfgIsVisible(*(rdmp_a->m_pRoadmap->GetReferenceofData(*a_vid_itr)), rdmp_b_cfg)) {
+      if(!CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex(*a_vid_itr).property()), rdmp_b_cfg)) {
          // found a potential revealing/trapped node
         vector<VID> tmp_cc;
-        GetCC(*(rdmp_a->m_pRoadmap),(*a_vid_itr), tmp_cc);
+	cmap.reset();
+        get_cc(*(rdmp_a->m_pRoadmap),cmap,(*a_vid_itr), tmp_cc);
         if( tmp_cc.size() >= a_small_cc_size) { 
           // found a revealing node
           a_revealing_node++;
@@ -351,10 +379,11 @@ public:
 
     typename vector<VID>::iterator b_vid_itr;
     for(b_vid_itr = rdmp_b_vids.begin(); b_vid_itr!=rdmp_b_vids.end(); ++b_vid_itr) {
-     if(!CfgIsVisible(*(rdmp_b->m_pRoadmap->GetReferenceofData(*b_vid_itr)), rdmp_a_cfg)) {
+     if(!CfgIsVisible((rdmp_b->m_pRoadmap->find_vertex(*b_vid_itr).property()), rdmp_a_cfg)) {
         // found a potential revealing/trapped node
         vector<VID> tmp_cc;
-        GetCC(*(rdmp_b->m_pRoadmap),(*b_vid_itr), tmp_cc);
+	cmap.reset();
+        get_cc(*(rdmp_b->m_pRoadmap),cmap,(*b_vid_itr), tmp_cc);
         if( tmp_cc.size() >= b_small_cc_size) { 
           // found a revealing node
           b_revealing_node++;
@@ -379,6 +408,7 @@ template <class CFG, class WEIGHT>
 class RegionSimilarity : public MPRegionComparerMethod< CFG, WEIGHT > 
 {
 public:
+  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   RegionSimilarity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
     LOG_DEBUG_MSG("RegionSimilarity::IncrementalRegionComparer()");
@@ -398,10 +428,12 @@ public:
     int a_small_cc_size =0;
     int b_small_cc_size =0;
     
-    vector< pair <int,VID > > a_cc_stats;
-    GetCCStats (*(rdmp_a->m_pRoadmap),a_cc_stats);
-    vector< pair <int,VID > > b_cc_stats;
-    GetCCStats (*(rdmp_b->m_pRoadmap),b_cc_stats);
+    vector< pair <size_t,VID > > a_cc_stats;
+    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    get_cc_stats(*(rdmp_a->m_pRoadmap), cmap, a_cc_stats);
+    vector< pair <size_t,VID > > b_cc_stats;
+    cmap.reset();
+    get_cc_stats(*(rdmp_b->m_pRoadmap), cmap, b_cc_stats);
     a_small_cc_size = int(double(a_cc_stats[0].first) * double(0.01));
     b_small_cc_size = int(double(b_cc_stats[0].first) * double(0.01));
     cout << "RegionSimilarity::Compare: a_small_cc_size: " << a_small_cc_size << endl;
@@ -424,20 +456,22 @@ public:
     typename vector<VID>::iterator all_a_vid_itr;
     for(all_a_vid_itr = all_rdmp_a_vids.begin(); all_a_vid_itr!=all_rdmp_a_vids.end(); ++all_a_vid_itr) {
       vector<VID> tmp_cc;
-      GetCC(*(rdmp_a->m_pRoadmap),(*all_a_vid_itr), tmp_cc);
+      cmap.reset();
+      get_cc(*(rdmp_a->m_pRoadmap), cmap, (*all_a_vid_itr), tmp_cc);
       if( tmp_cc.size() >= a_small_cc_size) {
          usable_rdmp_a_vids.push_back((*all_a_vid_itr));
-         usable_rdmp_a_cfg.push_back(rdmp_a->m_pRoadmap->GetData((*all_a_vid_itr)));
+         usable_rdmp_a_cfg.push_back(rdmp_a->m_pRoadmap->find_vertex((*all_a_vid_itr)).property());
       } //else not usable!!
     }
 
     typename vector<VID>::iterator all_b_vid_itr;
     for(all_b_vid_itr = all_rdmp_b_vids.begin(); all_b_vid_itr!=all_rdmp_b_vids.end(); ++all_b_vid_itr) {
       vector<VID> tmp_cc;
-      GetCC(*(rdmp_b->m_pRoadmap),(*all_b_vid_itr), tmp_cc);
+      cmap.reset();
+      get_cc(*(rdmp_b->m_pRoadmap), cmap, (*all_b_vid_itr), tmp_cc);
       if( tmp_cc.size() >= b_small_cc_size) {
          usable_rdmp_b_vids.push_back((*all_b_vid_itr));
-         usable_rdmp_b_cfg.push_back(rdmp_b->m_pRoadmap->GetData((*all_b_vid_itr)));
+         usable_rdmp_b_cfg.push_back(rdmp_b->m_pRoadmap->find_vertex((*all_b_vid_itr)).property());
       } //else not usable!!
     }
 
@@ -452,9 +486,10 @@ public:
     for(usable_a_vid_itr = usable_rdmp_a_vids.begin(); 
               usable_a_vid_itr!=usable_rdmp_a_vids.end(); ++usable_a_vid_itr) {
         vector<VID> tmp_cc;
-        GetCC(*(rdmp_a->m_pRoadmap),(*usable_a_vid_itr), tmp_cc);
+        cmap.reset();
+        get_cc(*(rdmp_a->m_pRoadmap),cmap, (*usable_a_vid_itr), tmp_cc);
         if( tmp_cc.size() >= a_small_cc_size) {  // Make sure its a "usable" node
-          if(CfgIsVisible(*(rdmp_a->m_pRoadmap->GetReferenceofData(*usable_a_vid_itr)), usable_rdmp_b_cfg)) {
+          if(CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex(*usable_a_vid_itr).property()), usable_rdmp_b_cfg)) {
             ++node_a_visible_in_b;
           } else { ++node_a_not_visible_in_b; }
       }
@@ -464,9 +499,10 @@ public:
     for(usable_b_vid_itr = usable_rdmp_b_vids.begin(); 
               usable_b_vid_itr!=usable_rdmp_b_vids.end(); ++usable_b_vid_itr) {
         vector<VID> tmp_cc;
-        GetCC(*(rdmp_b->m_pRoadmap),(*usable_b_vid_itr), tmp_cc);
+  	cmap.reset();
+        get_cc(*(rdmp_b->m_pRoadmap), cmap, (*usable_b_vid_itr), tmp_cc);
         if( tmp_cc.size() >= b_small_cc_size) {  // Make sure its a "usable" node
-          if(CfgIsVisible(*(rdmp_b->m_pRoadmap->GetReferenceofData(*usable_b_vid_itr)), usable_rdmp_a_cfg)) {
+          if(CfgIsVisible((rdmp_b->m_pRoadmap->find_vertex(*usable_b_vid_itr).property()), usable_rdmp_a_cfg)) {
             ++node_b_visible_in_a;
           } else { ++node_b_not_visible_in_a; }
       }
@@ -480,29 +516,52 @@ public:
     int edge_b_visible_in_a = 0;
     int edge_b_not_visible_in_a = 0;
     vector< pair<VID,VID> > all_edges_a, all_edges_b;
-    rdmp_a->m_pRoadmap->GetEdges(all_edges_a);
-    rdmp_b->m_pRoadmap->GetEdges(all_edges_b);
+    //rdmp_a->m_pRoadmap->GetEdges(all_edges_a);
+    //rdmp_b->m_pRoadmap->GetEdges(all_edges_b);
+//    vector<GRAPH::edge_descriptor> v_ed;
+    RoadmapGraph<CFG, WEIGHT> ga = *(rdmp_a->m_pRoadmap);
+    RoadmapGraph<CFG, WEIGHT> gb = *(rdmp_b->m_pRoadmap);
 
-    typename vector< pair<VID,VID> >::iterator all_edges_a_itr;
-    for(all_edges_a_itr = all_edges_a.begin(); all_edges_a_itr != all_edges_a.end(); 
-           ++all_edges_a_itr) {
+/*
+for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); ei_a != ga.edges_end(); ++ei_a){
+  //all_edges_a.push_back(ei_a.property());
+  all_edges_a.push_back(pair<VID, VID>(ei_a.source(), ei_a.target()));
+  
+}
+*/
+
+    //typename vector< pair<VID,VID> >::iterator all_edges_a_itr;
+    //for(all_edges_a_itr = all_edges_a.begin(); all_edges_a_itr != all_edges_a.end(); 
+    //       ++all_edges_a_itr) {
+    typename RoadmapGraph<CFG, WEIGHT>::edge_iterator all_edges_a_itr;
+    for(all_edges_a_itr = ga.edges_begin(); all_edges_a_itr != ga.edges_end(); ++all_edges_a_itr) {
       vector<VID> tmp_cc;
-      GetCC(*(rdmp_a->m_pRoadmap),(*all_edges_a_itr).first, tmp_cc);
+      cmap.reset();
+      get_cc(*(rdmp_a->m_pRoadmap),cmap,all_edges_a_itr.source(), tmp_cc);
       if( tmp_cc.size() < a_small_cc_size) { continue; } // not a edge in "usable" component
       //for all connected components in rdmp_b....
-      vector< pair<int,VID> > all_cc_b;
-      GetCCStats(*(rdmp_b->m_pRoadmap), all_cc_b);
+      vector< pair<size_t,VID> > all_cc_b;
+      cmap.reset();
+      get_cc_stats(*(rdmp_b->m_pRoadmap), cmap, all_cc_b);
       bool found_edge_a_visible_in_b=false;
-      typename vector< pair<int,VID> >::iterator all_cc_b_itr;
+      typename vector< pair<size_t,VID> >::iterator all_cc_b_itr;
       for(all_cc_b_itr = all_cc_b.begin(); all_cc_b_itr != all_cc_b.end(); ++all_cc_b_itr) {
         if((*all_cc_b_itr).first < b_small_cc_size) { continue; } //not usable cc
         vector<CFG> usable_cc_in_b;
-        GetCC(*(rdmp_b->m_pRoadmap), 
-              *(rdmp_b->m_pRoadmap->GetReferenceofData((*all_cc_b_itr).second)), 
-              usable_cc_in_b);
-        if(CfgIsVisible(*(rdmp_a->m_pRoadmap->GetReferenceofData((*all_edges_a_itr).first)), 
+	usable_cc_in_b.clear();
+ 	vector<VID> usable_cc_in_b_aux;
+	usable_cc_in_b_aux.clear();
+	cmap.reset();
+        get_cc(*(rdmp_b->m_pRoadmap), cmap,
+              (rdmp_b->m_pRoadmap->find_vertex((*all_cc_b_itr).second).descriptor()), 
+              usable_cc_in_b_aux);
+	for(typename vector<VID>::iterator itr=usable_cc_in_b_aux.begin(); itr!=usable_cc_in_b_aux.end(); ++itr)
+		usable_cc_in_b.push_back(rdmp_b->m_pRoadmap->find_vertex(*itr).property());
+
+        //if(CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex((*all_edges_a_itr).first).property()), 
+        if(CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex(all_edges_a_itr.source()).property()), 
                         usable_cc_in_b)) {
-          if(CfgIsVisible(*(rdmp_a->m_pRoadmap->GetReferenceofData((*all_edges_a_itr).second)), 
+          if(CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex(all_edges_a_itr.target()).property()), 
                         usable_cc_in_b)) {
             ++edge_a_visible_in_b;
             found_edge_a_visible_in_b = true;
@@ -513,26 +572,36 @@ public:
     if(!found_edge_a_visible_in_b) {++edge_a_not_visible_in_b;}
   }
 
-  typename vector< pair<VID,VID> >::iterator all_edges_b_itr;
-  for(all_edges_b_itr = all_edges_b.begin(); all_edges_b_itr != all_edges_b.end(); 
-         ++all_edges_b_itr) {
+  //typename vector< pair<VID,VID> >::iterator all_edges_b_itr;
+  //for(all_edges_b_itr = all_edges_b.begin(); all_edges_b_itr != all_edges_b.end(); 
+  //       ++all_edges_b_itr) {
+  typename RoadmapGraph<CFG, WEIGHT>::edge_iterator all_edges_b_itr;
+  for(all_edges_b_itr = gb.edges_begin(); all_edges_b_itr != gb.edges_end(); ++all_edges_b_itr) {
     vector<VID> tmp_cc;
-    GetCC(*(rdmp_b->m_pRoadmap),(*all_edges_b_itr).first, tmp_cc);
+    cmap.reset();
+    //get_cc(*(rdmp_b->m_pRoadmap), cmap, (*all_edges_b_itr).first, tmp_cc);
+    get_cc(*(rdmp_b->m_pRoadmap), cmap, all_edges_b_itr.source(), tmp_cc);
     if( tmp_cc.size() < b_small_cc_size) { continue; } // not a edge in "usable" component
     //for all connected components in rdmp_a....
-    vector< pair<int,VID> > all_cc_a;
-    GetCCStats(*(rdmp_a->m_pRoadmap), all_cc_a);
-    typename vector< pair<int,VID> >::iterator all_cc_a_itr;
+    vector< pair<size_t,VID> > all_cc_a;
+    cmap.reset();
+    get_cc_stats(*(rdmp_a->m_pRoadmap),cmap, all_cc_a);
+    typename vector< pair<size_t,VID> >::iterator all_cc_a_itr;
     bool found_edge_b_visible_in_a = false;
     for(all_cc_a_itr = all_cc_a.begin(); all_cc_a_itr != all_cc_a.end(); ++all_cc_a_itr) {
       if((*all_cc_a_itr).first < a_small_cc_size) { continue; } //not usable cc
       vector<CFG> usable_cc_in_a;
-      GetCC(*(rdmp_a->m_pRoadmap), 
-            *(rdmp_a->m_pRoadmap->GetReferenceofData((*all_cc_a_itr).second)), 
-            usable_cc_in_a);
-      if(CfgIsVisible(*(rdmp_b->m_pRoadmap->GetReferenceofData((*all_edges_b_itr).first)), 
+      vector<VID> usable_cc_in_a_aux;
+      cmap.reset();
+      get_cc(*(rdmp_a->m_pRoadmap),cmap, 
+            (rdmp_a->m_pRoadmap->find_vertex((*all_cc_a_itr).second).descriptor()), 
+            usable_cc_in_a_aux);
+      for(typename vector<VID>::iterator itr=usable_cc_in_a_aux.begin(); itr!=usable_cc_in_a_aux.end(); ++itr)
+                usable_cc_in_a.push_back(rdmp_a->m_pRoadmap->find_vertex(*itr).property());
+
+      if(CfgIsVisible((rdmp_b->m_pRoadmap->find_vertex(all_edges_b_itr.source()).property()), 
                       usable_cc_in_a)) {
-        if(CfgIsVisible(*(rdmp_b->m_pRoadmap->GetReferenceofData((*all_edges_b_itr).second)), 
+        if(CfgIsVisible((rdmp_b->m_pRoadmap->find_vertex(all_edges_b_itr.target()).property()), 
                       usable_cc_in_a)) {
           ++edge_b_visible_in_a;
           found_edge_b_visible_in_a = true;
