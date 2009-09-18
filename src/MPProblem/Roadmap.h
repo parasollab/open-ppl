@@ -18,10 +18,10 @@
 #ifndef Roadmap_h
 #define Roadmap_h
 
-/////////////////////////////////////////////////////////////////////
-//Include OBPRM headers
 #include "OBPRMDef.h"              // Cfg type defined here
 #include "RoadmapGraph.h"       // graph class
+/////////////////////////////////////////////////////////////////////
+//Include OBPRM headers
 
 class Environment;        ///< Environment classes
 template <class CFG, class WEIGHT> class LocalPlanners;      ///< Local Planner       Algobase
@@ -152,7 +152,7 @@ class CollisionDetection; ///< Collision Detection Algobase
 template <class CFG, class WEIGHT>
 class Roadmap {
 public:
-  
+typedef typename RoadmapGraph<CFG, WEIGHT>::vertex_descriptor VID;  
   /////////////////////////////////////////////////////////////////////
   //
   //
@@ -460,26 +460,35 @@ Roadmap(Roadmap<CFG, WEIGHT> &from_rdmp)
 }
 
 template <class CFG, class WEIGHT>
-vector<VID>
+vector<typename Roadmap<CFG, WEIGHT>::VID>
 Roadmap<CFG, WEIGHT>::
 AppendRoadmap(Roadmap<CFG, WEIGHT> &from_rdmp) {
   vector<VID> from_vid, to_vids;
   from_rdmp.m_pRoadmap->GetVerticesVID(from_vid); // get vertices
-  vector<VID>::iterator vid_itrt;
+  typename vector<VID>::iterator vid_itrt;
   //copy vertices
   for (vid_itrt = from_vid.begin(); vid_itrt < from_vid.end(); vid_itrt++) {
-    CFG cfg = from_rdmp.m_pRoadmap->GetData(*vid_itrt);
+    CFG cfg = from_rdmp.m_pRoadmap->find_vertex(*vid_itrt).property();
     to_vids.push_back(m_pRoadmap->AddVertex(cfg));
   }
   vector< pair<pair<VID,VID>,WEIGHT> > edges;
   typename vector< pair<pair<VID,VID>,WEIGHT> >::iterator edge_itrt;
   for (vid_itrt = from_vid.begin(); vid_itrt < from_vid.end(); vid_itrt++) {
     edges.clear();
-    from_rdmp.m_pRoadmap->GetOutgoingEdges(*vid_itrt, edges); //get edges
+    //from_rdmp.m_pRoadmap->GetOutgoingEdges(*vid_itrt, edges); //get edges fix_lantao
+    //use iterator to traverse the adj edges and then put the data into edges
+    typename RoadmapGraph<CFG, WEIGHT>::vertex_iterator vi = from_rdmp.m_pRoadmap->find_vertex(*vid_itrt);
+    for(typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei =vi.begin(); ei!=vi.end(); ei++ ){
+	pair<pair<VID,VID>,WEIGHT> single_edge;
+	single_edge.first.first=ei.source();
+	single_edge.first.second=ei.target();
+	single_edge.second = ei.property();
+	edges.push_back(single_edge); //put the edge into edges
+    } 
     for (edge_itrt = edges.begin(); edge_itrt < edges.end(); edge_itrt++) {
       if (!m_pRoadmap->IsEdge((*edge_itrt).first.first, (*edge_itrt).first.second)) { //add an edge if it is not yet in m_pRoadmap
-  CFG cfg_a = from_rdmp.m_pRoadmap->GetData((*edge_itrt).first.first);
-  CFG cfg_b = from_rdmp.m_pRoadmap->GetData((*edge_itrt).first.second);
+  CFG cfg_a = from_rdmp.m_pRoadmap->find_vertex((*edge_itrt).first.first).property();
+  CFG cfg_b = from_rdmp.m_pRoadmap->find_vertex((*edge_itrt).first.second).property();
   m_pRoadmap->AddEdge(cfg_a,cfg_b,(*edge_itrt).second);
       }
     } //endfor edge_itrt  
@@ -585,7 +594,8 @@ ReadRoadmapGRAPHONLY(const char* _fname) {
     }
     for(int i=0; i<count-1; ++i)
       myifstream2 >> tagstring;
-    m_pRoadmap->ReadGraph(myifstream2);
+    //m_pRoadmap->ReadGraph(myifstream2);
+    stapl::read_graph(*m_pRoadmap, myifstream2);
     myifstream2.close();
   }
   else

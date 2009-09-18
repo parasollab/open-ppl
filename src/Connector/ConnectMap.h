@@ -51,7 +51,7 @@
 template <class CFG, class WEIGHT>
 class ConnectMap : public MPBaseObject{
  public:
-
+ typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   //////////////////////
   // Constructors and destructor
   ConnectMap();
@@ -577,6 +577,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	     LocalPlanners<CFG,WEIGHT>* lp,
 	     bool addPartialEdge, bool addAllEdges) {
   typename vector<NodeConnectionMethod<CFG,WEIGHT> *>::iterator itr;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   for(itr = selected_node_methods.begin(); 
       itr != selected_node_methods.end(); itr++) {
 #ifndef QUIET
@@ -590,8 +591,9 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges);
 #ifndef QUIET
     clock.StopClock();
+    cmap.reset();
     cout << clock.GetClock_SEC() << " sec, "
-	 << GetCCcount(*(_rm->m_pRoadmap)) 
+	 << get_cc_count(*(_rm->m_pRoadmap),cmap) 
 	 << " connected components\n"<< flush;
 #endif
   }
@@ -605,8 +607,9 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	     DistanceMetric * dm,
 	     LocalPlanners<CFG,WEIGHT>* lp,
 	     bool addPartialEdge, bool addAllEdges,
-	     vector<VID>& cfgs1, vector<VID>& cfgs2) {
+	     vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cfgs1, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cfgs2) {
   typename vector<NodeConnectionMethod<CFG,WEIGHT> *>::iterator itr;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   for(itr = selected_node_methods.begin(); 
       itr != selected_node_methods.end(); itr++) {
 #ifndef QUIET
@@ -620,8 +623,9 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,cfgs1,cfgs2);
 #ifndef QUIET
     clock.StopClock();
+    cmap.reset();
     cout << clock.GetClock_SEC() << " sec, "
-	 << GetCCcount(*(_rm->m_pRoadmap)) 
+	 << get_cc_count(*(_rm->m_pRoadmap), cmap) 
 	 << " connected components\n"<< flush;
 #endif
   }
@@ -635,8 +639,9 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	     DistanceMetric * dm,
 	     LocalPlanners<CFG,WEIGHT>* lp,
 	     bool addPartialEdge, bool addAllEdges,
-	     vector<vector<VID> >& cfgs) {
+	     vector<vector<typename RoadmapGraph<CFG, WEIGHT>::VID> >& cfgs) {
   typename vector<NodeConnectionMethod<CFG,WEIGHT> *>::iterator itr;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   for(itr = selected_node_methods.begin(); 
       itr != selected_node_methods.end(); itr++) {
 #ifndef QUIET
@@ -650,8 +655,9 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,cfgs);
 #ifndef QUIET
     clock.StopClock();
+    cmap.reset();
     cout << clock.GetClock_SEC() << " sec, "
-	 << GetCCcount(*(_rm->m_pRoadmap)) 
+	 << get_cc_count(*(_rm->m_pRoadmap),cmap) 
 	 << " connected components\n"<< flush;
 #endif
   }
@@ -666,6 +672,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge, bool addAllEdges) {
   typename vector<ComponentConnectionMethod<CFG,WEIGHT> *>::iterator itr;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   for(itr = selected_component_methods.begin(); 
       itr != selected_component_methods.end(); itr++) {
 #ifndef QUIET
@@ -679,8 +686,9 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges);
 #ifndef QUIET
     clock.StopClock();
+    cmap.reset();
     cout << clock.GetClock_SEC() << " sec, "
-	 << GetCCcount(*(_rm->m_pRoadmap)) 
+	 << get_cc_count(*(_rm->m_pRoadmap),cmap) 
 	 << " connected components\n"<< flush;
 #endif
   }
@@ -694,8 +702,9 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge, bool addAllEdges,
-		  vector<VID>& vids1, vector<VID>& vids2) {
+		  vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& vids1, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& vids2) {
   typename vector<ComponentConnectionMethod<CFG,WEIGHT> *>::iterator itr;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   for(itr = selected_component_methods.begin(); 
       itr != selected_component_methods.end(); itr++) {
 #ifndef QUIET
@@ -709,8 +718,9 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,vids1,vids2);
 #ifndef QUIET
     clock.StopClock();
+    cmap.reset();
     cout << clock.GetClock_SEC() << " sec, "
-	 << GetCCcount(*(_rm->m_pRoadmap)) 
+	 << get_cc_count(*(_rm->m_pRoadmap),cmap) 
 	 << " connected components\n"<< flush;
 #endif
   }
@@ -723,8 +733,9 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
 		  bool addPartialEdge, bool addAllEdges,
-		  vector<vector<VID> >& vids) {
+		  vector<vector<typename RoadmapGraph<CFG, WEIGHT>::VID> >& vids) {
   typename vector<ComponentConnectionMethod<CFG,WEIGHT> *>::iterator itr;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   for(itr = selected_component_methods.begin(); 
       itr != selected_component_methods.end(); itr++) {
 #ifndef QUIET
@@ -738,8 +749,9 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     (*itr)->Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,vids);
 #ifndef QUIET
     clock.StopClock();
+    cmap.reset();
     cout << clock.GetClock_SEC() << " sec, "
-	 << GetCCcount(*(_rm->m_pRoadmap)) 
+	 << get_cc_count(*(_rm->m_pRoadmap), cmap) 
 	 << " connected components\n"<< flush;
 #endif
   }

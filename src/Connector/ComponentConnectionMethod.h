@@ -1,12 +1,13 @@
 #ifndef ComponentConnectionMethod_h
 #define ComponentConnectionMethod_h
 #include "util.h"
+#include "RoadmapGraph.h"
 
 // Abstract Interface Class for node connection methods
 template <class CFG, class WEIGHT>
 class ComponentConnectionMethod : public MPBaseObject{ 
  public:
-  
+  typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;  
   //////////////////////
   // Constructors and Destructor
   ComponentConnectionMethod();
@@ -28,21 +29,21 @@ class ComponentConnectionMethod : public MPBaseObject{
   
   //////////////////////
   // Connection methods 
-  virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+  virtual void Connect(Roadmap<CFG,WEIGHT>* _rm, Stat_Class& Stats,
 		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       bool addPartialEdge, bool addAllEdges) = 0;
-  virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+  virtual void Connect(Roadmap<CFG,WEIGHT>* _rm, Stat_Class& Stats,
 		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       bool addPartialEdge, bool addAllEdges,
-		       vector<VID>& vids1, vector<VID>& vids2) = 0;
+		       vector<VID>& vids1, vector<VID>& vids2)=0;
   virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       bool addPartialEdge, bool addAllEdges,
 		       vector<vector<VID> >& vids) {
-    vector<vector<VID> >::iterator I, J;
+    typename vector<vector<VID> >::iterator I, J;
     for(I = vids.begin(); I+1 != vids.end(); ++I) 
       for(J = I+1; J != vids.end(); ++J)
 	this->Connect(rm, Stats, dm, lp, addPartialEdge, addAllEdges,
