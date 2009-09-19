@@ -179,11 +179,10 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
   // init counter
   int numCfgAdded  = 0;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-
+  
   //-- while (more than one CC remains *AND* added fewer new Cfgs than requested)
-  vector<pair<size_t, VID> > tempv;
-  while(get_cc_stats(*(_rm->m_pRoadmap),cmap, tempv) > 1 && numCfgAdded<requested) {
+  vector<pair<int, VID> > tempv;
+  while(GetCCStats(*(_rm->m_pRoadmap),tempv) > 1 && numCfgAdded<requested) {
     //init counter
     int numTries=0;
     
@@ -214,20 +213,16 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       int numofConnection=0;
       
       //-- get current connected components from roadmap
-      vector< pair<size_t,VID> > allCC;
-      cmap.reset();
-      get_cc_stats(*(_rm->m_pRoadmap), cmap, allCC);
+      vector< pair<int,VID> > allCC;
+      GetCCStats(*(_rm->m_pRoadmap), allCC);
       
       //-- for each connected component, CC
       LPOutput<CFG,WEIGHT> lpOutput;
 
       for(int i=0; i<allCC.size(); ++i) {	
-	CFG          tmp = _rm->m_pRoadmap->find_vertex(allCC[i].second).property();
+	CFG          tmp = _rm->m_pRoadmap->GetData(allCC[i].second);
 	vector<CFG>   CC;
-	vector<VID>  CC_aux;
-	cmap.reset();
-	get_cc(*(_rm->m_pRoadmap),cmap, tmp,CC_aux);
-	CC=_rm->m_pRoadmap->ConvertVIDs2Vertices(CC_aux);
+	GetCC(*(_rm->m_pRoadmap),tmp,CC);
 	
 	vector< pair<CFG,CFG> > kp = dm->FindKClosestPairs(env,
 							   cfg, CC, kclosest);
@@ -259,10 +254,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if(numofConnection == 1) {	
 	// get all cfg's in CC
 	vector<CFG> CC;
-	vector<VID> CC_aux;
-	cmap.reset();
-	get_cc(*(_rm->m_pRoadmap), cmap, edges[0].second,CC_aux);
-	CC = _rm->m_pRoadmap->ConvertVIDs2Vertices(CC_aux);
+	GetCC(*(_rm->m_pRoadmap), edges[0].second,CC);
 	// calculate CC's center (of mass), CCcenter
 	CFG CCcenter; // sum initialized to 0 by constructor.
 	int i;

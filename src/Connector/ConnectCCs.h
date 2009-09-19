@@ -11,8 +11,8 @@
     *connect all pairs of nodes.  If at least one of the components is 
     *large, we try to connect the "kpairs" closest pairs of nodes.
     *
-    *@see WeightedGraph ::Get CCStats, WeightedGraph ::Get CC, 
-    *WeightedGraph ::Is SameCC for information about connected 
+    *@see WeightedGraph ::GetCCStats, WeightedGraph ::GetCC, 
+    *WeightedGraph ::IsSameCC for information about connected 
     *component in graph,and ConnectSmallCCs, ConnectBigCCs for 
     *connecting between connected component.
     */
@@ -25,7 +25,6 @@
 template <class CFG, class WEIGHT>
 class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
  public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   //////////////////////
   // Constructors and Destructor
   ConnectCCs();
@@ -102,14 +101,14 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 
   //@}
 
-  void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		 DistanceMetric* dm,
-		 LocalPlanners<CFG,WEIGHT>* lp,
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+		 DistanceMetric *,
+		 LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
 		 bool addAllEdges);
-  void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		 DistanceMetric* dm,
-		 LocalPlanners<CFG,WEIGHT>* lp,
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+		 DistanceMetric *,
+		 LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
 		 bool addAllEdges,
 		 vector<VID>& vids1, vector<VID>& vids2);
@@ -226,12 +225,12 @@ ConnectCCs<CFG, WEIGHT>::
 ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	        LocalPlanners<CFG,WEIGHT>* lp,
 		DistanceMetric* dm, 
-		vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc1vec, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc2vec,
+		vector<VID>& cc1vec, vector<VID>& cc2vec,
 		bool addPartialEdge, bool addAllEdges) {
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
-  // created a temporary variable since Get CC requires &
+  // created a temporary variable since GetCC requires &
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int c1 = 0; c1 < cc1vec.size(); c1++){
     for (int c2 = 0; c2 < cc2vec.size(); c2++){
@@ -241,8 +240,8 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       Stats.IncConnections_Attempted();
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
           && lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
-			     pMap->find_vertex(cc1vec[c1]).property(),
-			     pMap->find_vertex(cc2vec[c2]).property(),
+			     pMap->GetData(cc1vec[c1]),
+			     pMap->GetData(cc2vec[c2]),
 			     &lpOutput, 
 			     this->connectionPosRes, this->connectionOriRes, 
 			     (!addAllEdges)) ) {
@@ -254,7 +253,7 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
 	for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
 	  CFG tmp = I->first.second;
-	  if(!tmp.AlmostEqual(pMap->find_vertex(cc1vec[c1]).property())) {
+	  if(!tmp.AlmostEqual(pMap->GetData(cc1vec[c1]))) {
 	    VID tmpVID = pMap->AddVertex(tmp);
 	    pMap->AddEdge(cc1vec[c1], tmpVID, I->second);
 	  }
@@ -274,7 +273,7 @@ ConnectCCs<CFG, WEIGHT>::
 ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	      LocalPlanners<CFG,WEIGHT>* lp, 
 	      DistanceMetric* dm, 
-	      vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc1vec, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc2vec,
+	      vector<VID>& cc1vec, vector<VID>& cc2vec,
 	      bool addPartialEdge, bool addAllEdges) { 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
@@ -294,8 +293,8 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     Stats.IncConnections_Attempted();
     if(!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
        && lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
-			  pMap->find_vertex(kp[i].first).property(),
-			  pMap->find_vertex(kp[i].second).property(),
+			  pMap->GetData(kp[i].first),
+			  pMap->GetData(kp[i].second),
 			  &lpOutput, this->connectionPosRes, this->connectionOriRes, 
 			  (!addAllEdges)) ) {
       pMap->AddEdge(kp[i].first, kp[i].second, lpOutput.edge); 
@@ -306,7 +305,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
       for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
 	CFG tmp = I->first.second;
-	if(!tmp.AlmostEqual(pMap->find_vertex(kp[i].first).property())) {
+	if(!tmp.AlmostEqual(pMap->GetData(kp[i].first))) {
 	  VID tmpVID = pMap->AddVertex(tmp);
 	  pMap->AddEdge(kp[i].first, tmpVID, I->second);
 	}
@@ -324,9 +323,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
 	  bool addAllEdges) {
-  vector< pair<size_t,VID> > ccs1;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-  get_cc_stats(*(_rm->m_pRoadmap),cmap,ccs1);
+  vector< pair<int,VID> > ccs1;
+  GetCCStats(*(_rm->m_pRoadmap),ccs1);
   
 #ifndef QUIET
   cout << "components(kpairs="<< kpairs ;
@@ -336,19 +334,16 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
   // process components from smallest to biggest  
-  typename vector<pair<size_t,VID> >::reverse_iterator C1, C2;
+  vector<pair<int,VID> >::reverse_iterator C1, C2;
   for(C1 = ccs1.rbegin(); C1+1 != ccs1.rend(); ++C1) {
     for(C2 = C1+1; C2 != ccs1.rend(); ++C2) {      
       // if cc1 & cc2 not already connected, try to connect them 
-      cmap.reset();
-      if ( !is_same_cc(*pMap,cmap,C1->second,C2->second) ) {
+      if ( !IsSameCC(*pMap,C1->second,C2->second) ) {
         vector<VID> cc1;
-	cmap.reset();
-        get_cc(*pMap,cmap,C1->second,cc1);
+        GetCC(*pMap,C1->second,cc1);
 
         vector<VID> cc2;
-	cmap.reset();
-        get_cc(*pMap,cmap,C2->second,cc2);
+        GetCC(*pMap,C2->second,cc2);
 
         if(cc1.size() < smallcc && cc2.size() < smallcc ) {
           ConnectSmallCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
@@ -372,28 +367,24 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
           bool addPartialEdge,
           bool addAllEdges,
 	  vector<VID> & vids1, vector<VID> & vids2) {
-	  //vector<typename RoadmapGraph<CFG, WEIGHT>::VID> & vids1, vector<typename RoadmapGraph<CFG, WEIGHT>::VID> & vids2) {
 #ifndef QUIET
   cout << "components(kpairs="<< kpairs ;
   cout << ", smallcc="<<smallcc <<"): "<<flush;
 #endif
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+
   //DisplayCCStats(*pMap); cout << endl;
 
-  typename vector<VID>::reverse_iterator V1, V2;
+  vector<VID>::reverse_iterator V1, V2;
   for(V1 = vids1.rbegin(); V1 != vids1.rend(); ++V1) {
     for(V2 = vids2.rbegin(); V2 != vids2.rend(); ++V2) {
       // if V1 & V2 not already connected, try to connect them 
-      cmap.reset();
-      if ( !is_same_cc(*pMap,cmap,*V1,*V2) ) {
+      if ( !IsSameCC(*pMap,*V1,*V2) ) {
         vector<VID> cc1;
-	cmap.reset();
-        get_cc(*pMap,cmap,*V1,cc1);
+        GetCC(*pMap,*V1,cc1);
 
         vector<VID> cc2;
-	cmap.reset();
-        get_cc(*pMap,cmap, *V2,cc2);
+        GetCC(*pMap,*V2,cc2);
 
         if(cc1.size() < smallcc && cc2.size() < smallcc ) {
           ConnectSmallCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);

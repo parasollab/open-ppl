@@ -13,8 +13,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include <Graph.h> //to get def for VID
-#include <GraphAlgo.h>
-#include <RoadmapGraph.h>
 #include <functional>
 
 #include "OBPRMDef.h"
@@ -22,7 +20,7 @@
 
 #include "Clock_Class.h"
 /////////////////////////////////////////////////////////////////////////////////////////
-//using stapl::VID;
+using stapl::VID;
 
 const double MAX_DIST =  1e10;
 
@@ -196,22 +194,20 @@ class DistanceMetric : MPBaseObject{
    */
   //static
   template <class CFG, class WEIGHT>
-  vector<pair<typename RoadmapGraph<CFG, WEIGHT>::VID, typename RoadmapGraph<CFG, WEIGHT>::VID> > 
-  FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
-             vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& vec1,
-             vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& vec2, int k);
+  vector<pair<VID,VID> > FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
+             vector<VID>& vec1,
+             vector<VID>& vec2, int k);
   template <class CFG, class WEIGHT>
-  vector<pair<typename RoadmapGraph<CFG, WEIGHT>::VID,typename RoadmapGraph<CFG, WEIGHT>::VID> > 
-  FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
-             vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& vec1,
+  vector<pair<VID,VID> > FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
+             vector<VID>& vec1,
              int k);
         
   template <class CFG, class WEIGHT>
-  vector<typename RoadmapGraph<CFG, WEIGHT>::VID> RangeQuery(Roadmap<CFG, WEIGHT>* rm,
-                   typename RoadmapGraph<CFG, WEIGHT>::VID in_query, double in_radius);
+  vector<VID> RangeQuery(Roadmap<CFG, WEIGHT>* rm,
+                   VID in_query, double in_radius);
   
   template <class CFG, class WEIGHT>
-  vector<typename RoadmapGraph<CFG, WEIGHT>::VID> RangeQuery(Roadmap<CFG, WEIGHT>* rm,
+  vector<VID> RangeQuery(Roadmap<CFG, WEIGHT>* rm,
                          CFG in_query, double in_radius);
 
   /**Find k pairs of closest Cfgs between the two input vectors of Cfgs.
@@ -263,22 +259,19 @@ class DistanceMetric : MPBaseObject{
 				  unsigned int k);
   
   template <class CFG, class WEIGHT>
-    vector<pair<typename RoadmapGraph<CFG, WEIGHT>::VID, typename RoadmapGraph<CFG, WEIGHT>::VID> > 
-    KClosest(Roadmap<CFG,WEIGHT>* rdmp,
+    vector<pair<VID,VID> > KClosest(Roadmap<CFG,WEIGHT>* rdmp,
             vector<CFG>& v1,
             vector<CFG>& v2,
             unsigned int k);
   template <class CFG, class WEIGHT>
-    vector<pair<typename RoadmapGraph<CFG, WEIGHT>::VID, typename RoadmapGraph<CFG, WEIGHT>::VID> > 
-    KClosest(Roadmap<CFG,WEIGHT>* rdmp,
+    vector<pair<VID,VID> > KClosest(Roadmap<CFG,WEIGHT>* rdmp,
             CFG& cc,
             vector<CFG>& v2,
             unsigned int k);
   
   ///\todo Fix this ... needs to conform to VID standard.
   template <class CFG, class WEIGHT>
-    vector<pair<typename RoadmapGraph<CFG, WEIGHT>::VID, typename RoadmapGraph<CFG, WEIGHT>::VID> > 
-    KUnconnectedClosest(Roadmap<CFG,WEIGHT>* rdmp,
+    vector<pair<VID,VID> > KUnconnectedClosest(Roadmap<CFG,WEIGHT>* rdmp,
             CFG& cc,
             vector<CFG>& v,
             unsigned int k);
@@ -687,11 +680,10 @@ FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
 // -- if k don't exist, return as many as do
 //----------------------------------------------------------------------
 template <class CFG, class WEIGHT>
-vector<pair<typename RoadmapGraph<CFG, WEIGHT>::VID, typename RoadmapGraph<CFG, WEIGHT>::VID> >
+vector<pair<VID,VID> >
 DistanceMetric::
 FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
-      vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& vec1, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& vec2, int k) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+      vector<VID>& vec1, vector<VID>& vec2, int k) {
   vector<pair<VID,VID> > pairs;
   // if valid number of pairs requested
   if (k<=0) 
@@ -712,19 +704,19 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
     vector< pair< pair< VID, VID >, double > > kall;
 
     // now go through all kp and find closest k
-    typename vector<VID>::iterator V1, V2;
+    vector<VID>::iterator V1, V2;
     for(V1 = vec1.begin(); V1 != vec1.end(); ++V1) {
 
       // initialize w/ k elements each with huge distance...
       vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
               max_value));
-      CFG v1 = pMap->find_vertex(*V1).property();
+      CFG v1 = pMap->GetData(*V1);
       for(V2 = vec2.begin(); V2 != vec2.end(); ++V2) {
   //marcom/08nov03 check if results in other functions is same
   if(*V1 == *V2)
     continue; //don't connect same
   
-  double dist = Distance(_env, v1, pMap->find_vertex(*V2).property());
+  double dist = Distance(_env, v1, pMap->GetData(*V2));
   if(dist < kp[max_index].second) { 
     kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
     max_value = dist;
@@ -760,11 +752,10 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
 // -- if k don't exist, return as many as do
 //----------------------------------------------------------------------
 template <class CFG, class WEIGHT>
-vector<pair<typename RoadmapGraph<CFG, WEIGHT>::VID, typename RoadmapGraph<CFG, WEIGHT>::VID> >
+vector<pair<VID,VID> >
 DistanceMetric::
 FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
-      vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& vec1, int k) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+      vector<VID>& vec1, int k) {
   vector<pair<VID,VID> > pairs;
   // if valid number of pairs requested
   if (k<=0) 
@@ -776,7 +767,7 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
   RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
   
   // now go through all kp and find closest k
-  typename vector<VID>::iterator V1, V2;
+  vector<VID>::iterator V1, V2;
   for(V1 = vec1.begin(); V1 != vec1.end(); ++V1) {
     // initialize w/ k elements each with huge distance...
     vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
@@ -784,13 +775,13 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
     int max_index = 0;
     double max_value = MAX_DIST;
  
-    CFG v1 = pMap->find_vertex(*V1).property();
+    CFG v1 = pMap->GetData(*V1);
 
     for(V2 = vec1.begin(); V2 != vec1.end(); ++V2) {
       if(*V1 == *V2)
   continue;
 
-      double dist = Distance(_env, v1, pMap->find_vertex(*V2).property());
+      double dist = Distance(_env, v1, pMap->GetData(*V2));
       if(dist < kp[max_index].second) { 
   kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
   max_value = dist;
@@ -981,11 +972,10 @@ KClosest(Environment *env,
 // Output: vector closest of pairs of k closest
 //-----------------------------------------------------------------------
 template <class CFG, class WEIGHT>
-vector< pair<typename RoadmapGraph<CFG, WEIGHT>::VID, typename RoadmapGraph<CFG, WEIGHT>::VID> >
+vector< pair<VID,VID> >
 DistanceMetric::
 KClosest(Roadmap<CFG,WEIGHT>* rdmp, 
    vector<CFG>& v1, vector<CFG>& v2, unsigned int k) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   vector< pair<VID,VID> > kpairs;
   vector< pair<VID,VID> > kpairs_i;
   typename vector<CFG>::iterator v1_i;
@@ -1003,11 +993,10 @@ KClosest(Roadmap<CFG,WEIGHT>* rdmp,
 // Output: vector of pairs (cc, cfgv) of k closest
 //-----------------------------------------------------------------------
 template <class CFG, class WEIGHT>
-vector< pair<typename RoadmapGraph<CFG, WEIGHT>::VID, typename RoadmapGraph<CFG, WEIGHT>::VID> >
+vector< pair<VID,VID> >
 DistanceMetric::
 KClosest(Roadmap<CFG,WEIGHT> *rdmp, 
    CFG &cc, vector<CFG>& v, unsigned int k) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   vector<pair<VID,VID> > kpairs;
   kpairs.reserve(k); //it won't grow bigger than k
   if (k<=0) //no valid number of pairs requested
@@ -1031,11 +1020,10 @@ KClosest(Roadmap<CFG,WEIGHT> *rdmp,
 // Output: vector of pairs (cc, cfgv) of k closest
 //-----------------------------------------------------------------------
 template <class CFG, class WEIGHT>
-vector< pair<typename RoadmapGraph<CFG, WEIGHT>::VID, typename RoadmapGraph<CFG, WEIGHT>::VID> >
+vector< pair<VID,VID> >
 DistanceMetric::
 KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp, 
    CFG &cc, vector<CFG>& v, unsigned int k) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   vector<pair<VID,VID> > kpairs;
   kpairs.reserve(k); //it won't grow bigger than k
   if (k<=0) //no valid number of pairs requested
@@ -1050,15 +1038,13 @@ KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp,
   int max_index = 0;
   double dist;
   Environment *env = rdmp->GetEnvironment();
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   typename vector<CFG>::iterator vi;
   for (vi = v.begin(); vi < v.end(); vi++) {
     if (cc == (*vi))
       continue; //don't check distance to same
     dist = Distance(env, cc, *vi);
     if (dist < kpairs_dist[max_index].second) {
-      cmap.reset();
-      if (!is_same_cc(*(rdmp->m_pRoadmap), cmap, cc,(*vi))) {
+      if (!IsSameCC(*(rdmp->m_pRoadmap), cc,(*vi))) {
   kpairs_dist[max_index] = pair<CFG,double>((*vi),dist);
   max_value = dist;
   //search for new max_index (faster O(k) than sort O(klogk))
@@ -1083,9 +1069,8 @@ KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp,
 }
 
 template <class CFG, class WEIGHT>
-vector<typename RoadmapGraph<CFG, WEIGHT>::VID> DistanceMetric::
-RangeQuery(Roadmap<CFG, WEIGHT>* rm, typename RoadmapGraph<CFG, WEIGHT>::VID in_query, double in_radius) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+vector<VID> DistanceMetric::
+RangeQuery(Roadmap<CFG, WEIGHT>* rm, VID in_query, double in_radius) {
   vector<VID> returnVec;
   RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
   Environment* _env = rm->GetEnvironment();
@@ -1101,7 +1086,7 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, typename RoadmapGraph<CFG, WEIGHT>::VID in_
   for(itr = vec_vids.begin(); itr != vec_vids.end(); ++itr)
   {
     if(in_query == *itr) continue;
-    double dist = Distance(_env, pMap->find_vertex(in_query).property(), pMap->find_vertex(*itr).property());
+    double dist = Distance(_env, pMap->GetData(in_query), pMap->GetData(*itr));
     //cout << "Distance = " << dist << " Radius = " << in_radius << endl;
     if( dist< in_radius) {
       returnVec.push_back(*itr);
@@ -1115,9 +1100,8 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, typename RoadmapGraph<CFG, WEIGHT>::VID in_
 
 
 template <class CFG, class WEIGHT>
-vector<typename RoadmapGraph<CFG, WEIGHT>::VID> DistanceMetric::
+vector<VID> DistanceMetric::
 RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   vector<VID> returnVec;
   RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
   Environment* _env = rm->GetEnvironment();
@@ -1132,8 +1116,8 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
   typename vector<VID>::iterator itr;
   for(itr = vec_vids.begin(); itr != vec_vids.end(); ++itr)
   {
-    if(in_query == pMap->find_vertex(*itr).property()) continue;
-    if(Distance(_env, in_query, pMap->find_vertex(*itr).property()) < in_radius) {
+    if(in_query == pMap->GetData(*itr)) continue;
+    if(Distance(_env, in_query, pMap->GetData(*itr)) < in_radius) {
       returnVec.push_back(*itr);
     }
   }

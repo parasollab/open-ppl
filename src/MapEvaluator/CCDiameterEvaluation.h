@@ -29,9 +29,8 @@ class CCDiameterEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     Environment* p_env = rmap->GetEnvironment();
     
     //get ccs
-    vector<pair<size_t,VID> > CCs;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-    get_cc_stats(*p_map,cmap, CCs);
+    vector<pair<int,VID> > CCs;
+    GetCCStats(*p_map, CCs);
     
     //filter out singletons
     vector<pair<int,VID> > filtered_ccs;
@@ -47,10 +46,9 @@ class CCDiameterEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     for(CC = filtered_ccs.begin(); CC != filtered_ccs.end(); ++CC) {
       cc_vids.clear();
       cc_data.clear();
-      cmap.reset();
-      get_cc(*p_map, cmap, CC->second, cc_vids);
+      GetCC(*p_map, CC->second, cc_vids);
       for(V = cc_vids.begin(); V != cc_vids.end(); ++V)
-        cc_data.push_back(p_map->find_vertex(*V).property());
+        cc_data.push_back(p_map->GetData(*V));
       new_diameters.push_back(CCdiameter(cc_data, p_env));
     }
     sort(new_diameters.begin(), new_diameters.end(), greater<double>());

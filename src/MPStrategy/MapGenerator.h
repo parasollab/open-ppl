@@ -304,7 +304,7 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	numChunks ++;
       vector<CFG> sub_nodes;
       vector<VID> sub_nodesVID;
-      cout << "current map has "<< rmap->m_pRoadmap->get_num_vertices()<<" nodes"<<endl;
+      cout << "current map has "<< rmap->m_pRoadmap->GetVertexCount()<<" nodes"<<endl;
       cout << "the chunk size is: " << chunkSize
 	   << ", and the number of chunks is: " << numChunks << endl;
       
@@ -330,7 +330,7 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	(*itr)->GenerateNodes(rmap->GetEnvironment(), Stats, cd, dm, sub_nodes);  //this is the original GenerateNodes function
 	genClock.StopClock();
 	
-        if (rmap->m_pRoadmap->get_num_vertices()  > 0 ) 
+        if (rmap->m_pRoadmap->GetVertexCount()  > 0 ) 
           isFirstChunk = false;
 	
 	
@@ -359,11 +359,9 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	else {
 	  //get VID sets that represent CCs in the roadmap
 	  //all newly generated VID will be put to vids2
-	  int numVertex = rmap->m_pRoadmap->get_num_vertices();
-	  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-	  vector< pair<size_t,VID> > ccs;
-	  cmap.reset();
-          get_cc_stats(*(rmap->m_pRoadmap),cmap,ccs);
+	  int numVertex = rmap->m_pRoadmap->GetVertexCount();
+	  vector< pair<int,VID> > ccs;
+          GetCCStats(*(rmap->m_pRoadmap),ccs);
 	  vector<VID> vids1, vids2;
 	  for(int j=0; j< ccs.size(); j++){
 	    if(ccs[j].second < numVertex - chunkSize)
@@ -417,8 +415,8 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 /*
     char mapname[256];
     sprintf(mapname, "%s.%d.%d.map", input->defaultFile.GetValue(),
-            rmap->m_pRoadmap->Get VertexCount(),
-            rmap->m_pRoadmap->Get EdgeCount());
+            rmap->m_pRoadmap->GetVertexCount(),
+            rmap->m_pRoadmap->GetEdgeCount());
     rmap->WriteRoadmap(input, cd, dm, lp, mapname);
 */
 
@@ -491,7 +489,7 @@ GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
            << " sec (ie, " << NodeGenClock.GetClock_USEC() << " usec),";
     }
     
-    cout << " "<<rmap->m_pRoadmap->get_num_vertices()<<" nodes\n"<< flush;
+    cout << " "<<rmap->m_pRoadmap->GetVertexCount()<<" nodes\n"<< flush;
   #endif
 
 

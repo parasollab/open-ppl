@@ -7,7 +7,7 @@
 template <class CFG, class WEIGHT>
 class NodeConnectionMethod : public MPBaseObject { 
  public:
- typedef typename RoadmapGraph<CFG, WEIGHT>::vertex_descriptor VID; 
+  
   //////////////////////
   // Constructors and Destructor
   NodeConnectionMethod();

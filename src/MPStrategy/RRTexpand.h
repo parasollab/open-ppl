@@ -247,7 +247,7 @@ ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,
   //-- get edges from _rm connected component and add to submap
   for (i=0;i<vids.size();++i) {
     vector< pair<pair<VID,VID>,WEIGHT> > edges; 
-    fromMap->m_pRoadmap->Get OutgoingEdges(vids[i], edges);
+    fromMap->m_pRoadmap->GetOutgoingEdges(vids[i], edges);
     
     for (int j=0;j<edges.size();++j) {
       CFG t1=fromMap->m_pRoadmap->GetData(edges[j].first.first),
@@ -459,10 +459,10 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 #if defined(_WIN32)
 	using namespace std;
 #endif
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-  vector< pair<size_t,VID> > ccvec;
-  get_cc_stats(*(_rm->m_pRoadmap),cmap, ccvec);
-  vector< pair<size_t,VID> >::iterator cc1=ccvec.begin();
+  //vector< pair<int,VID> > ccvec = _rm->m_pRoadmap->GetCCStats();
+  vector< pair<int,VID> > ccvec;
+  GetCCStats(*(_rm->m_pRoadmap),ccvec);
+  vector< pair<int,VID> >::iterator cc1=ccvec.begin();
   //-- submap = vertices & edges of current (cc1) connected component
 
 
@@ -470,8 +470,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     Roadmap<CFG,WEIGHT> submap1;
     submap1.environment = _rm->GetEnvironment();
     vector<VID> cc;
-    cmap.reset();
-    get_cc(*(_rm->m_pRoadmap),cmap,(*cc1).second ,cc);
+    GetCC(*(_rm->m_pRoadmap),(*cc1).second ,cc);
     submap1.m_pRoadmap->MergeRoadMap(_rm->m_pRoadmap,cc);
     vector<CFG> dummyU;
     if (cc.size()<= smallcc) {

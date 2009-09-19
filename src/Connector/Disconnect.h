@@ -2,13 +2,12 @@
 #define Disconnect_h
 #include "NodeConnectionMethod.h"
 #include "LocalPlanners.h"
-#include "RoadmapGraph.h"
+#include "GraphAlgo.h"
 
 
 template <class CFG, class WEIGHT>
 class Disconnect: public NodeConnectionMethod<CFG,WEIGHT> {
  public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   //////////////////////
   // Constructors and Destructor
   Disconnect();
@@ -141,29 +140,13 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
     vector<VID> vertices;
     RoadmapGraph< CFG, WEIGHT >* rGraph = _rm->m_pRoadmap;
-    RoadmapGraph< CFG, WEIGHT > g = *(_rm->m_pRoadmap);
     cout<< "\nTo delete edges " <<endl;
     rGraph->GetVerticesVID(vertices);
     cout << "from " << vertices.size() << "vertices" <<endl;
-
-/*
     for(int i=0; i<vertices.size(); ++i) {
-      //rGraph->DeleteAllEdges(vertices[i]);
+      rGraph->DeleteAllEdges(vertices[i]);
       cout<< "** DELETING EDGE from vertex "<< i << endl;
     }
-*/
-//to delete all edges, replace the DeleteAllEdges with either of following ways. fix_lantao
-/*
-    vector<typename Roadmap<CFG, WEIGHT>::edge_descriptor> eds;
-    for(typename Roadmap<CFG, WEIGHT>::vertex_iterator vi = rGraph.begin(); vi!=rGraph.end(); vi++)
-	for(typename Roadmap<CFG, WEIGHT>::adj_edge_iterator ei = vi.begin(); ei != vi.end(); ei++)
-		eds.push_back(ei.descriptor());
-    for(typename Roadmap<CFG, WEIGHT>::edge_iterator eitr= eds.begin(); eitr != eds.end(); eitr++) 	
- 	rGraph->delete_edge(eitr.descriptor());
-*/
-    for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei = g.edges_begin(); ei != g.edges_end(); ++ei)
-        rGraph->delete_edge(ei.descriptor());
-
 }
 
 

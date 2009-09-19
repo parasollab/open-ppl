@@ -1191,23 +1191,20 @@ PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
 		vector< vector<CFG> >& nodes) {
 
   cout << "------Starting Partitions-------" << endl;
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+
   vector<BoundingBox> subregion_boundaries;
   // Get free nodes
-  vector< pair<size_t,VID> > ccs1;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-  get_cc_stats(*(region->roadmap.m_pRoadmap), cmap, ccs1);
+  vector< pair<int,VID> > ccs1;
+  GetCCStats(*(region->roadmap.m_pRoadmap),ccs1);
   cout << " CCS1 (size) " << ccs1.size() << endl;
   vector<CFG> free_nodes;
-  for(typename vector< pair<size_t,VID> >::iterator itr=ccs1.begin(); itr<ccs1.end(); itr++) {
-    //free_nodes.push_back( region->m_pRoadmap->find_vertex((*itr).second).property() ); 
-    //vector<CFG> tCfg;
-    vector<VID> tCfg;
-    CFG cc1Cfg = region->roadmap.m_pRoadmap->find_vertex((*itr).second).property();
-    cmap.reset();
-    get_cc(*(region->roadmap.m_pRoadmap), cmap, cc1Cfg,tCfg);
-    for(typename vector<VID>::iterator itr2=tCfg.begin();itr2 != tCfg.end(); itr2++) 
-      free_nodes.push_back( region->roadmap.m_pRoadmap->find_vertex(*itr2).property() );
+  for(vector< pair<int,VID> >::iterator itr=ccs1.begin(); itr<ccs1.end(); itr++) {
+    //free_nodes.push_back( region->m_pRoadmap->GetData((*itr).second) ); 
+    vector<CFG> tCfg;
+    CFG cc1Cfg = region->roadmap.m_pRoadmap->GetData((*itr).second);
+    GetCC(*(region->roadmap.m_pRoadmap),cc1Cfg,tCfg);
+    for(typename vector<CFG>::iterator itr2=tCfg.begin();itr2<tCfg.end(); itr2++) 
+      free_nodes.push_back( *itr2 );
   }
   
   vector<CFG> coll_nodes;

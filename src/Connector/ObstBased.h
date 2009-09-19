@@ -204,8 +204,8 @@ struct Info_Compare : public binary_function<VID,VID,bool> {
   RoadmapGraph<CFG,WEIGHT>* pMap;
   Info_Compare(RoadmapGraph<CFG,WEIGHT>* graph) : pMap(graph) {} 
   bool operator()(const VID v1, const VID v2) {
-    CFG c1 = pMap->find_vertex(v1).property();
-    CFG c2 = pMap->find_vertex(v2).property();
+    CFG c1 = pMap->GetData(v1);
+    CFG c2 = pMap->GetData(v2);
     return(c1.obst < c1.obst);
   }
 };
@@ -230,7 +230,7 @@ Get_Cfgs_By_Obst(Roadmap<CFG,WEIGHT>* rm, vector<VID>& vert) {
   int  id, prev= -505;
   bool firstList=true;
   for (int i=0;i<vert.size();++i){
-    id = rm->m_pRoadmap->(find_vertex(vert[i]).property()).obst;
+    id = rm->m_pRoadmap->GetData(vert[i]).obst;
     if (id != prev)
       if (prev == -1) {
 	tmp.erase(tmp.begin(),tmp.end());
@@ -379,18 +379,16 @@ ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	return;
 
       LPOutput<CFG,WEIGHT> lpOutput;
-      stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
       // get closest pairs of nodes on obst to (possibly) another obstacle
       vector<pair<VID,VID> > kp = dm->FindKClosestPairs(_rm, body[i], 
 							body[j], k);
       //-- check connections between pairs
       for (int m=0;m<kp.size();++m){
-	cmap.reset();
-	if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, kp[m].first,kp[m].second)) continue;
+	if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap),kp[m].first,kp[m].second)) continue;
 	if (!_rm->m_pRoadmap->IsEdge(kp[m].first,kp[m].second)
 	    && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
-			       _rm->m_pRoadmap->find_vertex(kp[m].first).property(),
-			       _rm->m_pRoadmap->find_vertex(kp[m].second).property(),
+			       _rm->m_pRoadmap->GetData(kp[m].first),
+			       _rm->m_pRoadmap->GetData(kp[m].second),
 			       &lpOutput,connectionPosRes, connectionOriRes, 
 			       (!addAllEdges))){
 	  _rm->m_pRoadmap->AddEdge(kp[m].first,kp[m].second,lpOutput.edge);

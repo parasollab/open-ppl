@@ -13,7 +13,6 @@
 template <class CFG, class WEIGHT>
 class MPRegion : public Environment {
  public:
- typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   MPRegion(
 	   Environment &i_env, 	
 /* 	   GenerateMapNodes<CFG> &i_gn_map,  */
@@ -143,10 +142,9 @@ PrintValues(ostream& _os) {
 
 ///\todo this is a bad implementation only returns FREE vids ... we need COLORS!
 template <class CFG, class WEIGHT>
-vector<typename RoadmapGraph<CFG, WEIGHT>::VID> 
-MPRegion<CFG,WEIGHT>::
+vector<VID> MPRegion<CFG,WEIGHT>::
 AddToRoadmap(vector<CFG>& in_Cfgs) {
-  vector<typename RoadmapGraph<CFG, WEIGHT>::VID> returnVec;
+  vector<VID> returnVec;
   typename vector< CFG >::iterator I;
   for(I=in_Cfgs.begin(); I!=in_Cfgs.end(); I++) {
     if((*I).IsLabel("VALID")) {  
@@ -210,8 +208,7 @@ WriteRoadmapForVizmo(ostream& myofstream) {
   myofstream << "#####DMSTART#####" << endl << "0" << endl << "#####DMSTOP#####";
   GetRoadmap()->WriteRNGseed(myofstream);
 
-  //GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
-  write_graph(*(GetRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
+  GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
   
   LOG_DEBUG_MSG("~MPRegion::WriteRoadmapForVizmo()");
 }

@@ -302,7 +302,7 @@ GenerateNodes(Environment* _env, Stat_Class& Stats,
 
   // print regions ... just for testing
   cout << " Number of regions generated: " 
-       << cmodel.region_map.get_num_vertices() << endl;
+       << cmodel.region_map.GetVertexCount() << endl;
   bool local_verbose = true;
   int i=0;
   typedef typename Graph<UG<CRegionSet<CFG>, DoubleWeight>,
@@ -337,7 +337,7 @@ struct distance_compare : public binary_function<VID,VID,bool> {
   distance_compare(Roadmap<CFG,WEIGHT>* r, DistanceMetric* d, VID v) : 
     rm(r), dm(d) {
     env = rm->GetEnvironment();
-    c = rm->m_pRoadmap->find_vertex(v).property();
+    c = rm->m_pRoadmap->GetData(v);
   }
   distance_compare(Roadmap<CFG,WEIGHT>* r, DistanceMetric* d, CFG& cfg) : 
     rm(r), dm(d), c(cfg) {
@@ -346,8 +346,8 @@ struct distance_compare : public binary_function<VID,VID,bool> {
   ~distance_compare() {}
 
   bool operator()(const VID& v1, const VID& v2) const {
-    return (dm->Distance(env, c, rm->m_pRoadmap->find_vertex(v1).property()) <
-	    dm->Distance(env, c, rm->m_pRoadmap->find_vertex(v2).property()));
+    return (dm->Distance(env, c, rm->m_pRoadmap->GetData(v1)) <
+	    dm->Distance(env, c, rm->m_pRoadmap->GetData(v2)));
   }
   bool operator()(const CFG& c1, const CFG& c2) const {
     return (dm->Distance(env, c, c1) <
@@ -428,7 +428,7 @@ if(1) {
     cout << " Num neighbors: " << neighbors1.size();
     for(int J=0; J<neighbors1.size(); J++) {
 
-      CRegion<CFG> Reg1_neighbor = cmodel.region_map.find_vertex(neighbors1[J].first).property();
+      CRegion<CFG> Reg1_neighbor = cmodel.region_map.GetData(neighbors1[J].first);
       cout << " I: " << I << " J: " << J << " type: " << Reg1_neighbor.GetStringType() 
          << " reg_id: " << Reg1_neighbor.ID << endl;
 
@@ -533,7 +533,7 @@ Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
   /*
   // print regions ... just for testing
   cout << " Number of regions generated: " 
-       << cmodel.region_map.get_num_vertices() << endl;
+       << cmodel.region_map.GetVertexCount() << endl;
   bool local_verbose = true;
   int i=0;
   typedef typename Graph<UG<CRegionSet<CFG>, DoubleWeight>,
@@ -583,14 +583,14 @@ Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 		     addPartialEdge, addAllEdges,
 		     Rvids, Rvids);
   */
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap; 
+  
   for(regionset_iterator R = cmodel.region_map.begin(); 
       R != cmodel.region_map.end(); ++R) 
     ConnectWithinRegion(R->data, k_in_region.GetValue(), 
 			rm, Stats, cd, cdInfo, dm, lp, 
 			addPartialEdge, addAllEdges);
-  cmap.reset();
-  cout << get_cc_count(*(rm->m_pRoadmap),cmap) << " connected components\n";
+  
+  cout << GetCCcount(*(rm->m_pRoadmap)) << " connected components\n";
   //Stats.PrintAllStats(rm);
   
   //between regions, do component's like connection btw neighboring regions
@@ -605,7 +605,7 @@ Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
   connectCCs2.smallcc = smallcc_connect.GetValue();
   connectCCs2.Connect(rm, Stats, cd, dm, lp,
 		      addPartialEdge, addAllEdges);
-  cout << Get CCcount(*(rm->m_pRoadmap)) << " connected components\n";
+  cout << GetCCcount(*(rm->m_pRoadmap)) << " connected components\n";
   */
   
   for(regionset_iterator R = cmodel.region_map.begin(); 
@@ -618,14 +618,13 @@ Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
       vector<CRegionSet<CFG> > neighbors;
       for(vector<VID>::const_iterator N = neighborVIDS.begin();
 	  N != End; ++N)
-	neighbors.push_back(cmodel.region_map.find_vertex(*N).property());
+	neighbors.push_back(cmodel.region_map.GetData(*N));
       ConnectBetweenRegions(R->data, neighbors, k_btw_region.GetValue(),
 			    rm, Stats, cd, cdInfo, dm, lp, 
 			    addPartialEdge, addAllEdges);
     }
   }
-  cmap.reset();
-  cout << get_cc_count(*(rm->m_pRoadmap), cmap) << " connected components\n";
+  cout << GetCCcount(*(rm->m_pRoadmap)) << " connected components\n";
   
 
   //Stats.PrintAllStats(rm);
@@ -657,8 +656,7 @@ Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 	      Roadmap<CFG,WEIGHT> submap1;
 	      submap1.environment = rm->GetEnvironment();
 	      vector<VID> cc;
-	      cmap.reset();
-	      get_cc(*(rm->m_pRoadmap),cmap, S->vid, cc);
+	      GetCC(*(rm->m_pRoadmap), S->vid, cc);
 	      checked_vids.insert(checked_vids.end(), cc.begin(), cc.end());
 	      submap1.m_pRoadmap->MergeRoadMap(rm->m_pRoadmap, cc);
 	      vector<CFG> dummyU; bool dummyC = false;
@@ -681,8 +679,7 @@ Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
       }
     }
   }
-  cmap.reset();
-  cout << get_cc_count(*(rm->m_pRoadmap), cmap) << " connected components\n";
+  cout << GetCCcount(*(rm->m_pRoadmap)) << " connected components\n";
 
 
   //ConnectCCs<CFG,WEIGHT> connectCCs2;
@@ -693,8 +690,7 @@ Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
   connectCCs2.smallcc = smallcc_connect.GetValue();
   connectCCs2.Connect(rm, Stats, cd, dm, lp,
 		      addPartialEdge, addAllEdges);
-  cmap.reset();
-  cout << get_cc_count(*(rm->m_pRoadmap),cmap) << " connected components\n";
+  cout << GetCCcount(*(rm->m_pRoadmap)) << " connected components\n";
 };
 
 
@@ -846,7 +842,7 @@ template <class WEIGHT>
 int
 EntropyPRM<CFG>::
 AddNodesToRoadmap(Roadmap<CFG,WEIGHT>* rm) {
-  int initial_size = rm->m_pRoadmap->get_num_vertices();
+  int initial_size = rm->m_pRoadmap->GetVertexCount();
 
   typedef typename Graph<UG<CRegionSet<CFG>, DoubleWeight>,
     NMG<CRegionSet<CFG>, DoubleWeight>,
@@ -898,7 +894,7 @@ AddNodesToRoadmap(Roadmap<CFG,WEIGHT>* rm) {
 
   }//end for all regions
 
-  return (rm->m_pRoadmap->get_num_vertices() - initial_size);
+  return (rm->m_pRoadmap->GetVertexCount() - initial_size);
 }
 
 #endif

@@ -30,14 +30,13 @@ class CoverageEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
 
   virtual bool evaluate(Roadmap<CFG,WEIGHT>* rmap) {
     RoadmapGraph<CFG,WEIGHT>* pMap = rmap->m_pRoadmap;
-    //VID backupVID = pMap->getVertIDs();
+    VID backupVID = pMap->getVertIDs();
 
     connections = vector<vector<VID> >(samples.size());
 
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-    vector<pair<size_t,VID> > ccs;
-    vector<pair<size_t,VID> >::iterator CC;
-    get_cc_stats(*pMap,cmap, ccs);
+    vector<pair<int,VID> > ccs;
+    vector<pair<int,VID> >::iterator CC;
+    GetCCStats(*pMap, ccs);
 
     vector<VID> samplelist, cc;
     Stat_Class Stats;
@@ -48,8 +47,7 @@ class CoverageEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
 
       for(CC = ccs.begin(); CC != ccs.end(); ++CC) {
         cc.clear();
-	cmap.reset();
-        get_cc(*pMap, cmap, CC->second, cc);
+        GetCC(*pMap, CC->second, cc);
 
         int degree_before = pMap->GetVertexOutDegree(sampleVID);
 
@@ -66,7 +64,7 @@ class CoverageEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
       pMap->DeleteVertex(sampleVID);
     }
 
-    //pMap->setVertIDs(backupVID); 
+    pMap->setVertIDs(backupVID); 
 
     int num_connections = 0;
     for(int i=0; i<connections.size(); ++i)

@@ -330,8 +330,8 @@ FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
   
   //-- EDGES:
   for (int e1 = 0; e1 < edges.size(); e1++) {    
-    CFG endpt1 = _rm->m_pRoadmap->find_vertex(edges[e1].first.first).property();
-    CFG endpt2 = _rm->m_pRoadmap->find_vertex(edges[e1].first.second).property();
+    CFG endpt1 = _rm->m_pRoadmap->GetData(edges[e1].first.first);
+    CFG endpt2 = _rm->m_pRoadmap->GetData(edges[e1].first.second);
     CFG tmp;
     tmp.ClosestPtOnLineSegment(cfg,endpt1,endpt2);
     
@@ -404,19 +404,9 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   // Get edges	 
   // reserve extra space ...will update local copy for efficiency
   vector< pair<pair<VID,VID>,WEIGHT> > edges;
-  //vector<GRAPH::edge_descriptor> v_ed;
-  edges.reserve(_rm->m_pRoadmap->get_num_edges() + newV.size()*kclosest);
-  //_rm->m_pRoadmap->GetEdges(edges); //replace it with following loop fix_lantao
-  for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei = _rm->m_pRoadmap.edges_begin(); 
-		ei != _rm->m_pRoadmap.edges_end(); ++ei){
-    //all_edges_a.push_back(ei_a.property()); 
-    pair<pair<VID,VID>,WEIGHT> single_edge;
-    single_edge.first.first = ei.source();
-    single_edge.first.second = ei.target();
-    single_edge.second = ei.property();
-    edges.push_back(single_edge);
-  }
-
+  edges.reserve(_rm->m_pRoadmap->GetEdgeCount() + newV.size()*kclosest);
+  _rm->m_pRoadmap->GetEdges(edges);
+  
   // May have to adjust user's desired k wrt what is actually possible
   int k = (int)min(kclosest, oldV.size()+edges.size());  
   
@@ -427,7 +417,6 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
   // for each "real" cfg in roadmap
   LPOutput<CFG,WEIGHT> lpOutput;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   for (typename vector<CFG>::iterator v=newV.begin();v<newV.end();++v) {
     // Find k closest cfgs in the roadmap
     bool midpt_approx_of_closestPt = false;
@@ -436,8 +425,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 						   k, midpt_approx_of_closestPt);
     // for each pair identified	
     for (typename vector<CfgVEType<CFG> >::iterator kp=KP.begin();kp<KP.end();++kp){
-      cmap.reset();
-      if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, kp->cfg1,kp->cfg2)) continue;
+      
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap),kp->cfg1,kp->cfg2)) continue;
       //-- if new edge is collision free
       if (!_rm->m_pRoadmap->IsEdge(kp->cfg1,kp->cfg2) 
 //          && lp->IsConnected(_rm->GetEnvironment(),Stats, cd,dm, 

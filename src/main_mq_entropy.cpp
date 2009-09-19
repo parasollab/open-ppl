@@ -144,8 +144,8 @@ int main(int argc, char** argv)
     MapGenClock.PrintName();
     cout << ": " << MapGenClock.GetClock_SEC()
          << " sec"
- 	 << ", "<<rmap.m_pRoadmap->get_num_vertices()<<" nodes"
-         << ", "<<rmap.m_pRoadmap->get_num_edges()<<" edges\n"<< flush;
+ 	 << ", "<<rmap.m_pRoadmap->GetVertexCount()<<" nodes"
+         << ", "<<rmap.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush;
     Stats.PrintAllStats(&rmap);
   #endif
 

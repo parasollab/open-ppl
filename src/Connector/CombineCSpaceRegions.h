@@ -134,17 +134,17 @@ CombineRegions(Environment* _env, Stat_Class& Stats,
   cout << "Split parameter: " << DOF_split_point << "; Wrap?: " << anglewrap << endl;
 
 
-/*   vector<V ID> inputMap1_vertices; */
+/*   vector<VID> inputMap1_vertices; */
 /*   vector<CfgType> inputMap1_selectedVertices; */
 /*   vector<CfgType> inputMap1_selectedVertices2; */
-/*   inputMap1.m_pRoadmap->GetVerticesV ID( inputMap1_vertices ); */
+/*   inputMap1.m_pRoadmap->GetVerticesVID( inputMap1_vertices ); */
   
-/*   vector<V ID> inputMap2_vertices; */
+/*   vector<VID> inputMap2_vertices; */
 /*   vector<CfgType> inputMap2_selectedVertices; */
 /*   vector<CfgType> inputMap2_selectedVertices2; */
-/*   inputMap2.m_pRoadmap->GetVerticesV ID( inputMap2_vertices ); */
+/*   inputMap2.m_pRoadmap->GetVerticesVID( inputMap2_vertices ); */
   
-/*   vector<V ID> inputMap2_newVids; */
+/*   vector<VID> inputMap2_newVids; */
 /*   RRTexpand<CfgType,WeightType>* rrtexp = new RRTexpand<CfgType, WeightType> (); */
   
 /*   inputMap2_newVids = rrtexp->ModifyRoadMap(&inputMap1, &inputMap2,  */

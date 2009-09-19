@@ -2,7 +2,7 @@
 #define ClosestSF_h
 #include "NodeConnectionMethod.h"
 #include "LocalPlanners.h"
-#include "RoadmapGraph.h"
+#include "GraphAlgo.h"
 
 //Attempt K+M Closest neighbors and only allowed K success OR M failures
 //If M is not specified in command line, it is set as same as K
@@ -33,7 +33,6 @@
 template <class CFG, class WEIGHT>
 class ClosestSF: public NodeConnectionMethod<CFG,WEIGHT> {
  public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   //////////////////////
   // Constructors and Destructor
   ClosestSF();
@@ -258,16 +257,16 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   vector< pair<VID,VID> > kp;
 
   if( v2.size() < ksuccess+mfailure) {//all pairs
-    for(typename vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
+    for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
       kp.clear();
-      for(typename vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J){
+      for(vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J){
         if(*I != *J)
           kp.push_back(make_pair<VID,VID>(*I, *J));
       }
       Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, kp);
     } //end of for I
   } else {
-    for(typename vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
+    for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
       kp.clear();
       vector<VID> v;
       v.push_back(*I);
@@ -293,8 +292,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     
     // for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-    for(typename vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
+    for(vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
       //cout<<KP->first<<"->"<<KP->second<<endl;
       if(failure >= mfailure || success >= ksuccess){
       //cout << "mfailure/ksuccss equals the max allowed number."<<KP->first<<" fails: "<<failure<<", success: "<<success<<endl;
@@ -304,14 +302,13 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         success++;
         continue;
       }
-      cmap.reset();
-      if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, KP->first, KP->second)) {
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) {
         success++;
         continue;
       }
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
-               _rm->m_pRoadmap->find_vertex(KP->first).property(),
-               _rm->m_pRoadmap->find_vertex(KP->second).property(),
+               _rm->m_pRoadmap->GetData(KP->first),
+               _rm->m_pRoadmap->GetData(KP->second),
                &lpOutput, this->connectionPosRes, this->connectionOriRes, 
                (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);

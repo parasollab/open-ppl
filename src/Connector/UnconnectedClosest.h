@@ -176,17 +176,16 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	}
     }
     
-   stapl::vector_property_map< stapl::stapl_color<size_t> > cmap; 
+    
     //	 for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
     for (int j=0; j < kp.size(); j++) {
       if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
-      cmap.reset();
-      if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, kp[j].first,kp[j].second)) continue;
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
       Stats.IncConnections_Attempted();
       if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
-			  _rm->m_pRoadmap->find_vertex(kp[j].first).property(),
-			  _rm->m_pRoadmap->find_vertex(kp[j].second).property(),
+			  _rm->m_pRoadmap->GetData(kp[j].first),
+			  _rm->m_pRoadmap->GetData(kp[j].second),
 			  &lpOutput,
 			  connectionPosRes, connectionOriRes, 
 			  (!addAllEdges) )) {
@@ -258,10 +257,10 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int j=0; j < kp.size(); j++) {
     if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
-    if(this->m_CheckIfSameCC && Is SameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
+    if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
     if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
-                        _rm->m_pRoadmap->find_vertex(kp[j].first).property(),
-                        _rm->m_pRoadmap->find_vertex(kp[j].second).property(),
+                        _rm->m_pRoadmap->GetData(kp[j].first),
+                        _rm->m_pRoadmap->GetData(kp[j].second),
                         &lpOutput,
                         connectionPosRes, connectionOriRes, 
                         (!addAllEdges) )) {
@@ -322,15 +321,13 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   */
 	//	 for each pair identified
 	LPOutput<CFG,WEIGHT> lpOutput;
-        stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
 	for (int j=0; j < kp.size(); j++) {
 	  if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
-	  cmap.reset();
-	  if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, kp[j].first, kp[j].second)) continue;
+	  if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), kp[j].first,kp[j].second)) continue;
 	  Stats.IncConnections_Attempted();
 	  if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
-			      _rm->m_pRoadmap->find_vertex(kp[j].first).property(),
-			      _rm->m_pRoadmap->find_vertex(kp[j].second).property(),
+			      _rm->m_pRoadmap->GetData(kp[j].first),
+			      _rm->m_pRoadmap->GetData(kp[j].second),
 			      &lpOutput,
 			      connectionPosRes, connectionOriRes, 
 			      (!addAllEdges) )) {

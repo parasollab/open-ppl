@@ -9,7 +9,6 @@ class QueryEvaluation
   : public MapEvaluationMethod 
 {
  public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   QueryEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
   : MapEvaluationMethod(in_Node, in_pProblem)
   {
@@ -90,7 +89,7 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
   Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
   lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners(); //later change to have own lp
 
-  //VID oriVertID = rmap->m_pRoadmap->getVertIDs(); //save vertexID counter
+  VID oriVertID = rmap->m_pRoadmap->getVertIDs(); //save vertexID counter
   
   bool queryResult = m_query.PerformQuery(rmap, m_stats, 
                                     //    GetMPProblem()->GetCollisionDetection(), 
@@ -98,10 +97,9 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
                                         GetMPProblem()->GetDistanceMetric());
   
   for(typename vector<CFG>::iterator I = m_query.query.begin(); I != m_query.query.end(); ++I)
-    //rmap->m_pRoadmap->DeleteVertex(*I); //deleted added node from rmap
-    rmap->m_pRoadmap->delete_vertex(rmap->m_pRoadmap->GetVID(*I)); //deleted added node from rmap
+    rmap->m_pRoadmap->DeleteVertex(*I); //deleted added node from rmap
   
-  //rmap->m_pRoadmap->setVertIDs(oriVertID); //reset vertex ID counter
+  rmap->m_pRoadmap->setVertIDs(oriVertID); //reset vertex ID counter
 
   return queryResult;
 }

@@ -8,7 +8,6 @@
 template <class CFG, class WEIGHT>
 class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
  public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   //////////////////////
   // Constructors and Destructor
   ConnectFirst();
@@ -158,14 +157,13 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
   typename vector<VID>::iterator C1, C2;
   typename vector<pair<VID,double> >::iterator D;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   for(C1 = cfgs1.begin(); C1 != cfgs1.end(); ++C1) {
     // sort cfgs2 in by distance from C
     vector<pair<VID,double> > distances;
     for(C2 = cfgs2.begin(); C2 != cfgs2.end(); ++C2)
       distances.push_back(make_pair(*C2, dm->Distance(_rm->GetEnvironment(), 
-						      _rm->m_pRoadmap->find_vertex(*C1).property(), 
-						      _rm->m_pRoadmap->find_vertex(*C2).property())));
+						      _rm->m_pRoadmap->GetData(*C1), 
+						      _rm->m_pRoadmap->GetData(*C2))));
     sort(distances.begin(), distances.end(), CfgDist_Compare<VID>());
 
     //try to connect, return after failure or connect first k
@@ -174,13 +172,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	++D) {
       if(_rm->m_pRoadmap->IsEdge(*C1, D->first))
         continue;
-      cmap.reset();
-      if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, *C1, D->first))
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), *C1, D->first))
         continue;
       LPOutput<CFG,WEIGHT> _ci;
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm, 
-			 _rm->m_pRoadmap->find_vertex(*C1).property(), 
-			 _rm->m_pRoadmap->find_vertex(D->first).property(), 
+			 _rm->m_pRoadmap->GetData(*C1), 
+			 _rm->m_pRoadmap->GetData(D->first), 
 			 &_ci, _rm->GetEnvironment()->GetPositionRes(), 
 			 _rm->GetEnvironment()->GetOrientationRes(), 
 			 true, true)) {

@@ -33,7 +33,6 @@
 template <class CFG, class WEIGHT>
 class ClosestUnconnected: public NodeConnectionMethod<CFG,WEIGHT> {
  public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   //////////////////////
   // Constructors and Destructor
   ClosestUnconnected();
@@ -267,9 +266,9 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 #endif
   
   if( v2.size() < kclosest) {//all pairs
-    for(typename vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
+    for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
       vector<pair<VID,VID> > kp;
-      for(typename vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J) {
+      for(vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J) {
         if(*I != *J)
           kp.push_back(make_pair<VID,VID>(*I, *J));
       }
@@ -278,13 +277,13 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   } else {
     RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;  
     Environment* env = _rm->GetEnvironment();
-    for(typename vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I) {
+    for(vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I) {
       vector<pair<pair<VID,VID>,double> > kpd;
-      CFG Icfg = pMap->find_vertex(*I).property();
-      for(typename vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J) 
+      CFG Icfg = pMap->GetData(*I);
+      for(vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J) 
         if(*I != *J)
           kpd.push_back(make_pair(make_pair(*I, *J),
-                        dm->Distance(env, Icfg, pMap->find_vertex(*J).property())));
+                        dm->Distance(env, Icfg, pMap->GetData(*J))));
       sort(kpd.begin(), kpd.end(), DIST_Compare<VID>());
       Connect2(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, kpd);
     }
@@ -301,13 +300,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
-            vector<pair<VID, VID> > kp) 
+            vector<pair<VID,VID> > kp) 
 {
     int failure = 0;   //actual failure attemp for this node 
     // for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-    for(typename vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
+    for(vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
       if(failure >= mfailure){
         break;
       }
@@ -319,14 +317,13 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       }
       if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) 
         continue;
-     
-      cmap.reset();
-      if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, KP->first, KP->second)) 
+
+      if(this->m_CheckIfSameCC && IsSameCC(*(_rm->m_pRoadmap), KP->first, KP->second)) 
         continue;
 
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
-			 _rm->m_pRoadmap->find_vertex(KP->first).property(),
-			 _rm->m_pRoadmap->find_vertex(KP->second).property(),
+			 _rm->m_pRoadmap->GetData(KP->first),
+			 _rm->m_pRoadmap->GetData(KP->second),
 			 &lpOutput, this->connectionPosRes, this->connectionOriRes, 
 			 (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
@@ -348,15 +345,14 @@ Connect2(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
-            vector<pair<pair<VID, VID>,double> > kp) 
+            vector<pair<pair<VID,VID>,double> > kp) 
 {
     int failure = 0;   //actual failure attemp for this node 
     int attempt = 0;
 
     // for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-    for(typename vector<pair<pair<VID,VID>,double> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
+    for(vector<pair<pair<VID,VID>,double> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
       if(failure >= mfailure) {
         break;
       }
@@ -369,16 +365,15 @@ Connect2(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         continue;
       }
 
-      cmap.reset();
       if(_rm->m_pRoadmap->IsEdge(KP->first.first, KP->first.second) ||
-         is_same_cc(*(_rm->m_pRoadmap), cmap, KP->first.first, KP->first.second)) {
+         IsSameCC(*(_rm->m_pRoadmap), KP->first.first, KP->first.second)) {
         continue;
       }
 
       ++attempt;
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
-			 _rm->m_pRoadmap->find_vertex(KP->first.first).property(),
-			 _rm->m_pRoadmap->find_vertex(KP->first.second).property(),
+			 _rm->m_pRoadmap->GetData(KP->first.first),
+			 _rm->m_pRoadmap->GetData(KP->first.second),
 			 &lpOutput, this->connectionPosRes, this->connectionOriRes, 
 			 (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first.first, KP->first.second, lpOutput.edge);
