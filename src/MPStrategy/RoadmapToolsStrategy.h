@@ -16,9 +16,7 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-//#include "GenerateMapNodes.h"
 #include "Sampler.h"
-
 #include "GeneratePartitions.h"
 
 
@@ -105,7 +103,7 @@ class RoadmapClear : public MPStrategyMethod {
       OBPRM_srand(getSeed()); 
       
 
-      region->GetRoadmap()->m_pRoadmap->EraseGraph();
+      region->GetRoadmap()->m_pRoadmap->clear();
       region->GetStatClass()->ClearStats();
       
       LOG_DEBUG_MSG("~RoadmapClear::()");

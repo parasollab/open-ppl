@@ -41,11 +41,11 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
 				 vector< pair<int,VID> >& ccvec);
 
   // new component connection interface
-  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+  void Connect(Roadmap<CFG,WEIGHT>* _rm, Stat_Class& Stats,
 	       CollisionDetection* cd, DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges);
-  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+  void Connect(Roadmap<CFG,WEIGHT>* _rm, Stat_Class& Stats,
 	       CollisionDetection* cd, DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges,
@@ -97,9 +97,10 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 
   vector< pair<int,VID> >::iterator cc2=ccvec.begin();
 
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   vector<VID> vidvec;
 
-  GetCC(*(rm->m_pRoadmap),(*cc2).second ,vidvec);
+  get_cc(*(rm->m_pRoadmap),(*cc2).second ,cmap, vidvec);
   int i = 0; int index = 0;
   CFG vtemp;
   vector<CFG> centervec;
@@ -107,7 +108,7 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
   while(cc2<ccvec.end()) {
 
     while( i < vidvec.size() ) {
-      vtemp=rm->m_pRoadmap->GetData(vidvec[i]);
+      vtemp=rm->m_pRoadmap->find_vertex(vidvec[i]).property();
       if (i==0)
 	centervec.push_back(vtemp);
       else{
@@ -123,7 +124,8 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 
     cc2++; i = 0; index++;     
     vidvec.clear();
-    GetCC(*(rm->m_pRoadmap),(*cc2).second ,vidvec);
+    cmap.reset();
+    get_cc(*(rm->m_pRoadmap), cmap, (*cc2).second ,vidvec);
   } //while cc2<ccvec.end()
   vector<CFG> centvec; 
   for(i=1; i<centervec.size();i++) {
@@ -204,15 +206,16 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 #endif
 
   // process components from smallest to biggest
-  // vector< pair<int,VID> > ccvec = _rm->m_pRoadmap->GetCCStats();
-  vector< pair<int,VID> > ccvec;
-  GetCCStats(*(_rm->m_pRoadmap),ccvec);
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  vector< pair<size_t,VID> > ccvec;
+  get_cc_stats(*(_rm->m_pRoadmap),cmap, ccvec);
 
   vector< pair<int,VID> >::iterator cc1=ccvec.begin();
   for ( int z = 0; z <=1; z++) {
 
     vector< pair<int,VID> > tempccvec;
-    GetCCStats(*(_rm->m_pRoadmap),tempccvec);
+    cmap.reset();
+    get_cc_stats(*(_rm->m_pRoadmap), cmap, tempccvec);
 
     if( tempccvec.size() <= 1 ) continue;
 
@@ -230,12 +233,14 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     if (z == 0)
       while(cctemp!=ccvec.end()) {
 	vector<VID> cc;
-	GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cc);
+	cmap.reset();
+	get_cc(*(_rm->m_pRoadmap), cmap, (*cctemp).second,cc);
 	if ( cc.size()<= smallcc ) {
 	  Roadmap<CFG,WEIGHT> submap3;
 	  submap3.environment = _rm->GetEnvironment();
 	  vector<VID> cct;
-	  GetCC(*(_rm->m_pRoadmap),(*cctemp).second,cct);
+	  cmap.reset();
+	  get_cc(*(_rm->m_pRoadmap), cmap, (*cctemp).second,cct);
 	  ModifyRoadMap(&submap3,_rm,cct);
 	  bool toConnect = FALSE;
 	  
@@ -257,7 +262,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 
     if (( z == 1) && (ccvec.size()>2)) {
-      GetCCStats(*(_rm->m_pRoadmap),ccvec);
+      cmap.reset();
+      get_cc_stats(*(_rm->m_pRoadmap),cmap, ccvec);
       // Will put the first/largest CC at the end move everything
       // else up one spot
       vector< pair<int,VID> >::iterator startcciter = ccvec.begin();
@@ -283,11 +289,13 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       Roadmap<CFG,WEIGHT> submap2;
       submap2.environment = _rm->GetEnvironment();
       vector<VID> cct2;
-      GetCC(*(_rm->m_pRoadmap),(*cc2).second,cct2);
+      cmap.reset();
+      get_cc(*(_rm->m_pRoadmap),cmap, (*cc2).second,cct2);
       ModifyRoadMap(&submap2,_rm,cct2);
       submap1.environment = _rm->GetEnvironment();
       vector<VID> cc;
-      GetCC(*(_rm->m_pRoadmap),(*cc1).second,cc);
+      cmap.reset();
+      get_cc(*(_rm->m_pRoadmap),cmap, (*cc1).second,cc);
       ModifyRoadMap(&submap1,_rm,cc);
 
       VID cc2id = (*cc2).second;
@@ -300,20 +308,25 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
       bool toConnect = FALSE;
       vector<VID> cct3;
-      GetCC(*(_rm->m_pRoadmap),(*cc2).second,cct3);
+      cmap.reset();
+      get_cc(*(_rm->m_pRoadmap),cmap, (*cc2).second,cct3);
+      cmap.reset();
       if(cct3.size()>= smallcc)
-	while ( !IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id) 
+	while ( !is_same_cc(*(_rm->m_pRoadmap), cmap, cc1id,cc2id) 
                 && !toConnect
 		&& (i<iterations) ) {
 	  U.clear();
+ 	  cmap.reset();
           toConnect = FALSE;
 
+	  cmap.reset();
 	  while (!toConnect 
-		 && (!IsSameCC(*(_rm->m_pRoadmap),cc1id,cc2id))
+		 && (!is_same_cc(*(_rm->m_pRoadmap), cmap, cc1id,cc2id))
 		 && ( i <= iterations )) {
 
 
 	    U.clear();
+	    cmap.reset();
 	    i++; 
 	    if ((i % 2 )== 0) {
                 

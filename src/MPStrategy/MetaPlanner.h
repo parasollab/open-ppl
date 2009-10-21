@@ -378,7 +378,7 @@ MakeRegionRoadmap(MPRegion<CFG,WEIGHT>* region) {
   cout << "Node Generation: " << NodeGenClock.GetClock_SEC()
        << " sec (ie, " << NodeGenClock.GetClock_USEC() << " usec)";
 
-  cout << ", "<<region->roadmap.m_pRoadmap->GetVertexCount()<<" nodes\n"<< flush;
+  cout << ", "<<region->roadmap.m_pRoadmap->get_num_vertices()<<" nodes\n"<< flush;
 
   //---------------------------
   // Connect roadmap nodes
@@ -429,7 +429,7 @@ RunningStatsWrite(ostream& _os) {
 /*   ConnectionClock.PrintName(); */
 /*   _os << ": " << ConnectionClock.GetClock_SEC() */
 /*       << " se	c" */
-/*       << ", "<<rmap.m_pRoadmap->GetEdgeCount()<<" edges\n"<< flush; */
+/*       << ", "<<rmap.m_pRoadmap->Get EdgeCount()<<" edges\n"<< flush; */
 /*   Stats.PrintAllStats(&rmap); */
 }
 

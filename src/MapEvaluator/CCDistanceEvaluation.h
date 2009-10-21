@@ -26,8 +26,9 @@ class CCDistanceEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     Environment* p_env = rmap->GetEnvironment();
 
     //get ccs
-    vector< pair<int,VID> > ccs; 
-    GetCCStats(*(rmap->m_pRoadmap), ccs);
+    vector< pair<size_t,VID> > ccs; 
+    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    get_cc_stats(*(rmap->m_pRoadmap), ccs);
 
     //filter out singletons
     vector<pair<int,VID> > filtered_ccs;
@@ -39,17 +40,19 @@ class CCDistanceEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     //compute new inter cc distances
     for(cci = filtered_ccs.begin(); cci+1 < filtered_ccs.end(); ++cci) {
       vector<VID> cci_vids;
-      GetCC(*(p_map), cci->second, cci_vids);
+      cmap.reset();
+      get_cc(*(p_map), cmap, cci->second, cci_vids);
 
       for(ccj = cci+1; ccj != filtered_ccs.end(); ++ccj) {      
         vector<VID> ccj_vids;
-        GetCC(*(p_map), ccj->second, ccj_vids);
+	cmap.reset();
+        get_cc(*(p_map),cmap, ccj->second, ccj_vids);
         
         vector<pair<VID,VID> > pairs = 
           m_dm->FindKClosestPairs(rmap, cci_vids, ccj_vids, 1); 
         new_distances.push_back(m_dm->Distance(p_env,
-                                               p_map->GetData(pairs[0].first), 
-                                               p_map->GetData(pairs[0].second)));
+                                               p_map->find_vertex(pairs[0].first).property(), 
+                                               p_map->find_vertex(pairs[0].second).property()));
       }
     }    
     sort(new_distances.begin(), new_distances.end(), greater<double>());

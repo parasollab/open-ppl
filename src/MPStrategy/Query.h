@@ -27,7 +27,7 @@ template <class CFG, class WEIGHT>
 class Query {
 
 public:
-
+    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
@@ -80,9 +80,17 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
     /**@name Help methods*/
     //@{
-	virtual
+/*	virtual
 	  bool CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, 
 			       vector<pair<CFG,WEIGHT> >& attemptedPath,
+			       Stat_Class& Stats, 
+			       LocalPlanners<CFG,WEIGHT>* lp, 
+			       DistanceMetric* dm, 
+			       vector<CFG>& recreatedPath);
+*/
+	virtual
+	  bool CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, 
+			       vector<VID>& attemptedPath,
 			       Stat_Class& Stats, 
 			       LocalPlanners<CFG,WEIGHT>* lp, 
 			       DistanceMetric* dm, 
@@ -325,8 +333,9 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
   VID scvid, gcvid;
 
   //  vector<VID> cc; 
-  vector< pair<int,VID> > ccs;
-  GetCCStats(*(rdmp->m_pRoadmap),ccs);  
+  vector< pair<size_t,VID> > ccs;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  get_cc_stats(*(rdmp->m_pRoadmap),cmap,ccs);  
   
   VID svid;
   if(rdmp->m_pRoadmap->IsVertex(_start))
@@ -340,48 +349,58 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
     gvid = rdmp->m_pRoadmap->AddVertex(_goal);
 
   bool connected = false;
-  vector<pair<int,VID> >::const_iterator CC, ccsBegin = ccs.begin();
+  typename vector<pair<size_t,VID> >::const_iterator CC, ccsBegin = ccs.begin();
   for(CC = ccs.begin(); CC != ccs.end(); ++CC) {
     //store cc vids if needed
     vector<VID> cc; 
 
     //attempt to connect start and goal to cc
-    if(IsSameCC(*(rdmp->m_pRoadmap), svid, CC->second)) 
+    cmap.reset();
+    if(is_same_cc(*(rdmp->m_pRoadmap),cmap, svid, CC->second)) 
       cout << "start already connected to CC[" << distance(ccsBegin,CC)+1 << "]\n";
     else
     {
-      GetCC(*(rdmp->m_pRoadmap), CC->second, cc);
+      cmap.reset();
+      get_cc(*(rdmp->m_pRoadmap), cmap, CC->second, cc);
       vector<VID> verticesList(1, svid);
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
       cn->ConnectNodes(rdmp, Stats, dm, lp, false, false, verticesList, cc);
     }
 
-    if(IsSameCC(*(rdmp->m_pRoadmap), gvid, CC->second))
+   cmap.reset();
+    if(is_same_cc(*(rdmp->m_pRoadmap),cmap, gvid, CC->second))
       cout << "goal already connected to CC[" << distance(ccsBegin,CC)+1 << "]\n";
     else
     {
-      if(cc.empty())
-        GetCC(*(rdmp->m_pRoadmap), CC->second, cc);
+      if(cc.empty()){
+	cmap.reset();
+        get_cc(*(rdmp->m_pRoadmap), cmap, CC->second, cc);}
       cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
       vector<VID> verticesList(1, gvid);
       cn->ConnectNodes(rdmp, Stats, dm, lp, false, false, verticesList, cc);
     }
 
     connected = false;
-    vector<pair<CFG,WEIGHT> > rp;
-    while(IsSameCC(*(rdmp->m_pRoadmap), svid, gvid)) {
+    //vector<pair<CFG,WEIGHT> > rp;
+    vector<VID> _rp;
+    cmap.reset();
+    while(is_same_cc(*(rdmp->m_pRoadmap), cmap, svid, gvid)) {
       //get DSSP path
-      rp.clear();
-      FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, rp);
+      //rp.clear();
+      _rp.clear();
+      cmap.reset();
+      //FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, rp);
+      FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp); //fix_lantao , inside this function, edge_property vs double
 
-      cout << "\nStart(" << rdmp->m_pRoadmap->GetVID(rp[1].first)
-	   << ") and Goal(" << rdmp->m_pRoadmap->GetVID(rp[rp.size()-2].first)
+      cout << "\nStart(" << size_t(_rp[1]) //rdmp->m_pRoadmap->GetVID(rp[1].first)
+	   << ") and Goal(" << size_t(_rp[_rp.size()-2]) //rdmp->m_pRoadmap->GetVID(rp[rp.size()-2].first)
 	   << ") seem connected to same CC[" << distance(ccsBegin, CC)+1 
 	   << "]!" << endl;
     
       //attempt to recreate path
       vector<CFG> recreatedPath;
-      if(CanRecreatePath(rdmp, rp, Stats, lp, dm, recreatedPath)) {
+      //if(CanRecreatePath(rdmp, rp, Stats, lp, dm, recreatedPath)) {
+      if(CanRecreatePath(rdmp, _rp, Stats, lp, dm, recreatedPath)) {
 	connected = true;
 	_path->insert(_path->end(), 
 		      recreatedPath.begin(), recreatedPath.end());
@@ -394,10 +413,16 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       //Print out all start, all graph nodes, goal
       //ie, *NO* "ticks" from local planners
       vector<CFG> _mapcfgs;
+      for(typename vector<VID>::iterator I = _rp.begin(); 
+	  I != _rp.end(); ++I)
+        _mapcfgs.push_back(rdmp->m_pRoadmap->find_vertex(*I).property());
+      WritePathConfigurations("mapnodes.path", _mapcfgs, rdmp->GetEnvironment());
+/*
       for(typename vector<pair<CFG,WEIGHT> >::iterator I = rp.begin(); 
 	  I != rp.end(); ++I)
         _mapcfgs.push_back(I->first);
       WritePathConfigurations("mapnodes.path", _mapcfgs, rdmp->GetEnvironment());
+*/
 #endif
       break;    
     }
@@ -407,6 +432,46 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
 };
 
 
+//interface and inside modified, lantao
+template <class CFG, class WEIGHT>
+bool
+Query<CFG, WEIGHT>::
+CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
+                vector<VID >& attemptedPath,
+                Stat_Class& Stats,
+                LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm,
+                vector<CFG>& recreatedPath) {
+  LPOutput<CFG,WEIGHT> ci;
+
+  recreatedPath.push_back(rdmp->m_pRoadmap->find_vertex( *(attemptedPath.begin()) ).property());
+  for(typename vector<VID>::iterator I = attemptedPath.begin();
+      (I+1) != attemptedPath.end(); ++I) {
+    typename RoadmapGraph<CFG, WEIGHT>::vertex_iterator vi;
+    typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei;
+    typename RoadmapGraph<CFG, WEIGHT>::edge_descriptor ed(rdmp->m_pRoadmap->find_vertex(*I).descriptor(),rdmp->m_pRoadmap->find_vertex(*(I+1) ).descriptor());
+    rdmp->m_pRoadmap->find_edge(ed, vi, ei);
+    if(!(lp->GetPathSegment(rdmp->GetEnvironment(), Stats, dm,
+                            rdmp->m_pRoadmap->find_vertex(*I).property(), 
+			    rdmp->m_pRoadmap->find_vertex(*(I+1) ).property(), 
+			    ei.property(), //double check is it correct? fix_lantao
+			    &ci,
+                            rdmp->GetEnvironment()->GetPositionRes(),
+                            rdmp->GetEnvironment()->GetOrientationRes(),
+                            true, true))) {
+      //rdmp->m_pRoadmap->DeleteEdge(I->first, (I+1)->first);
+      rdmp->m_pRoadmap->delete_edge(*I, *(I+1));
+      return false;
+    } else {
+      recreatedPath.insert(recreatedPath.end(),
+                           ci.path.begin(), ci.path.end());
+      recreatedPath.push_back(rdmp->m_pRoadmap->find_vertex(*(I+1)).property());
+    }
+  }
+  return true;
+}
+
+//original func
+/*
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
@@ -425,7 +490,8 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
 			    rdmp->GetEnvironment()->GetPositionRes(),
 			    rdmp->GetEnvironment()->GetOrientationRes(),
 			    true, true))) {
-      rdmp->m_pRoadmap->DeleteEdge(I->first, (I+1)->first);
+      //rdmp->m_pRoadmap->DeleteEdge(I->first, (I+1)->first);
+      rdmp->m_pRoadmap->delete_edge(rdmp->m_pRoadmap->GetVID(I->first), rdmp->m_pRoadmap->GetVID((I+1)->first));
       return false;
     } else {
       recreatedPath.insert(recreatedPath.end(), 
@@ -435,7 +501,7 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
   }
   return true;
 }
-
+*/
 //===================================================================
 // Query class Methods: Display, Input, Output
 //===================================================================

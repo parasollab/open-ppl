@@ -10,10 +10,8 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-//#include "GenerateMapNodes.h"
 #include "Sampler.h"
 
-//#include "GeneratePartitions.h"
 
 /* util.h defines EXIT used in initializing the environment*/
 #include "util.h"
@@ -184,6 +182,7 @@ operator()(int in_RegionID) {
   Allstuff.StartClock("Everything");
  
   
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   cout << "I will do this many samples: " << m_iterations << endl;
   initializeWeightProb();
   CopyPlearnPuse();
@@ -193,7 +192,6 @@ operator()(int in_RegionID) {
     //Connect and Classify Node
     //Update weights based on node
     outputWeightMatrix(cout);
-   // NodeGenerationMethod<CfgType> * pNodeGen;
    Sampler<CfgType>::SamplerPointer  pNodeGen;
     //Generate nodes given 1 node gen method
 
@@ -209,12 +207,10 @@ operator()(int in_RegionID) {
       NodeGenClock.StartClock("Node Generation");
       vector< CfgType > vectorCfgs, in_nodes;
       cout << "About to get next pointer method = " <<next_node_gen<< endl;
-     // pNodeGen = GetMPProblem()->GetMPStrategy()->GetGenerateMapNodes()->GetMethod(next_node_gen);
      pNodeGen = GetMPProblem()->GetMPStrategy()->
           GetSampler()->GetSamplingMethod(next_node_gen);
       unsigned long int num_cd_before = pStatClass->GetIsCollTotal();
-     // pNodeGen->GenerateNodes(region, vectorCfgs);
-     pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),*pStatClass,in_nodes.begin(),in_nodes.end(),1,back_inserter(vectorCfgs));
+      pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),*pStatClass,in_nodes.begin(),in_nodes.end(),1,back_inserter(vectorCfgs));
       
 
       for(int j=0; j<vectorCfgs.size(); ++j) {   //Loop through all nodes created by node gen
@@ -222,7 +218,8 @@ operator()(int in_RegionID) {
 	if(vectorCfgs[j].IsLabel("VALID")) {
 	  if(vectorCfgs[j].GetLabel("VALID")) {  //Add to Free roadmap
 	    ++m_totalSamples;               //Increment total node counter for stop criteria
-	    int nNumPrevCCs = GetCCcount(*(region->roadmap.m_pRoadmap));
+	    cmap.reset();
+	    int nNumPrevCCs = get_cc_count(*(region->roadmap.m_pRoadmap), cmap);
 	    vector< CfgType > newCfg;
 	    newCfg.push_back(vectorCfgs[j]);
 	    int newVID = region->roadmap.m_pRoadmap->AddVertex(newCfg);
@@ -250,7 +247,8 @@ operator()(int in_RegionID) {
 	    }
 	    int lp_attempt_after = pStatClass->LPAttempts[0];
 	    int lp_connect_after = pStatClass->LPConnections[0];
-	    int nNumCurrCCs = GetCCcount(*(region->roadmap.m_pRoadmap));
+	    cmap.reset();
+	    int nNumCurrCCs = get_cc_count(*(region->roadmap.m_pRoadmap), cmap);
 	    unsigned long int num_cd_after = pStatClass->GetIsCollTotal();
 	    unsigned long int cost = num_cd_after - num_cd_before;
 	    cout << "Latest Cost = " << cost << endl;
@@ -313,8 +311,9 @@ operator()(int in_RegionID) {
 	//Calculate CC diameter information.
 	largest_cc_dia = sum_cc_dia = double(0.0);
 	double _cc_dia = double(0.0);
-	vector < pair< int, VID > > cc;
-	GetCCStats(*(region->roadmap.m_pRoadmap), cc);
+	vector < pair< size_t, VID > > cc;
+	cmap.reset();
+	get_cc_stats(*(region->roadmap.m_pRoadmap),cmap, cc);
 	for(int i=0; i<cc.size(); ++i) {
 	  _cc_dia = cc_diamater(region->roadmap.m_pRoadmap, cc[i].second);
 	  sum_cc_dia += _cc_dia;
@@ -354,8 +353,9 @@ operator()(int in_RegionID) {
   total_ofstream << "env: " << envFileName << endl;
   total_ofstream << "nodegen: " << firstNodeGen << endl;
   total_ofstream << "connection: " << firstConnection << endl;
-  total_ofstream << "nodes: " << region->roadmap.m_pRoadmap->GetVertexCount() << endl;
-  total_ofstream << "ccs: " << GetCCcount(*(region->roadmap.m_pRoadmap)) << endl;
+  total_ofstream << "nodes: " << region->roadmap.m_pRoadmap->get_num_vertices() << endl;
+  cmap.reset();
+  total_ofstream << "ccs: " << get_cc_count(*(region->roadmap.m_pRoadmap), cmap) << endl;
   total_ofstream << "iscoll: " <<  pStatClass->GetIsCollTotal() << endl;
   total_ofstream << "time: " << NodeGenTotalTime << endl;
   //---------------------------
@@ -434,7 +434,7 @@ double
 HybridPRM::
 cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc) {
  // vector<VID> cc_vids;
- // GetCC ( *pGraph, _cc, cc_vids);
+ // Get CC ( *pGraph, _cc, cc_vids);
   double return_val = 0.0;
   /*
   for(int i=0; i<cc_vids.size(); ++i) {
@@ -460,8 +460,9 @@ pair < unsigned int, unsigned int >
 HybridPRM::
 ConnectionsWitnessToRoadmap(vector < CfgType > & witness_cfgs, Roadmap< CfgType, WeightType > *rdmp, Stat_Class& stat) {
   int small_cc_size =0;
-  vector < pair< int, VID > > cc;
-  GetCCStats(*(rdmp->m_pRoadmap), cc);
+  vector < pair< size_t, VID > > cc;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  get_cc_stats(*(rdmp->m_pRoadmap),cmap, cc);
   // small_cc_size = int(double(cc[0].first) * double(0.01));
   vector < vector< unsigned int > > connected_to_cc;
   vector < unsigned int > tmp_vector;
@@ -480,9 +481,12 @@ ConnectionsWitnessToRoadmap(vector < CfgType > & witness_cfgs, Roadmap< CfgType,
     bool i_witness_can_connect = false;
     for (unsigned int j=0; j < cc.size(); j++) {
       vector < CfgType > cc_cfgs;
-      //GetCC(*(rdmp->m_pRoadmap), *(new CfgType(rdmp->m_pRoadmap->GetData(cc[j].second))), cc_cfgs);
-      CfgType * tmp_pointer = new CfgType(rdmp->m_pRoadmap->GetData(cc[j].second));
-      GetCC(*(rdmp->m_pRoadmap), *(tmp_pointer), cc_cfgs);
+      vector<VID> cc_cfgs_aux;
+      //Get CC(*(rdmp->m_pRoadmap), *(new CfgType(rdmp->m_pRoadmap->GetData(cc[j].second))), cc_cfgs);
+      CfgType * tmp_pointer = new CfgType(rdmp->m_pRoadmap->find_vertex(cc[j].second).property());
+      cmap.reset();
+      get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->GetVID(*(tmp_pointer)), cc_cfgs_aux);
+      cc_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(cc_cfgs_aux);
       delete tmp_pointer;
       if (cc_cfgs.size() >= small_cc_size) {
         if ( CanConnectComponents(witness_test_cfg, cc_cfgs, stat) ) {

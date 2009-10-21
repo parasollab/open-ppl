@@ -10,6 +10,7 @@
 template <class CFG, class WEIGHT>
 class AllPairsNodeConnection: public NodeConnectionMethod<CFG,WEIGHT> {
  public:
+  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   AllPairsNodeConnection();
   AllPairsNodeConnection(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~AllPairsNodeConnection();
@@ -98,6 +99,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   cout << "AllPairsNodeConnection::Connect()" << endl;
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   vector<VID> verticesVID;
   pMap->GetVerticesVID(verticesVID);
   LPOutput<CFG,WEIGHT> lpOutput;
@@ -105,14 +107,15 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     for(int j=i+1; j<verticesVID.size(); ++j) {
       //cout << "(i,j) = (" << i << "," << j <<")" << endl;
       if(_rm->m_pRoadmap->IsEdge(verticesVID[i], verticesVID[j])) continue;
-      
+	
+      cmap.reset();      
       if (this->m_CheckIfSameCC) 
-        if(IsSameCC(*(_rm->m_pRoadmap), verticesVID[i], verticesVID[j])) continue; 
+        if(is_same_cc(*(_rm->m_pRoadmap), cmap, verticesVID[i], verticesVID[j])) continue; 
       
       Stats.IncConnections_Attempted();
       if (lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
-                          _rm->m_pRoadmap->GetData(verticesVID[i]),
-                          _rm->m_pRoadmap->GetData(verticesVID[j]),
+                          _rm->m_pRoadmap->find_vertex(verticesVID[i]).property(),
+                          _rm->m_pRoadmap->find_vertex(verticesVID[j]).property(),
                           &lpOutput,
                           this->connectionPosRes, this->connectionOriRes, 
                           (!addAllEdges) )) {
@@ -154,6 +157,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             vector<VID>& v1, vector<VID>& v2) 
 {
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   LPOutput<CFG,WEIGHT> lpOutput;
   for(int i=0; i<v1.size(); ++i) {
     for(int j=0; j<v2.size(); ++j) {
@@ -161,13 +165,14 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       
       if(_rm->m_pRoadmap->IsEdge(v1[i], v2[j])) continue;
       
+      cmap.reset();
       if (this->m_CheckIfSameCC) 
-        if(IsSameCC(*(_rm->m_pRoadmap), v1[i], v2[j])) continue; 
+        if(is_same_cc(*(_rm->m_pRoadmap), cmap, v1[i], v2[j])) continue; 
       
       Stats.IncConnections_Attempted();
       if (lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
-                          _rm->m_pRoadmap->GetData(v1[i]),
-                          _rm->m_pRoadmap->GetData(v2[j]),
+                          _rm->m_pRoadmap->find_vertex(v1[i]).property(),
+                          _rm->m_pRoadmap->find_vertex(v2[j]).property(),
                           &lpOutput,
                           this->connectionPosRes, this->connectionOriRes, 
                           (!addAllEdges) )) {

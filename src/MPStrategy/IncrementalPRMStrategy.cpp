@@ -1,6 +1,6 @@
 #include "MPStrategy/IncrementalPRMStrategy.h"
 #include "MPProblem/MPRegion.h"
-#include "NodeGenerator/SamplerMethod.h"
+#include "NodeGenerator/NodeGeneratorMethod.h"
 #include "MPStrategy/MPStrategy.h"
 
 IncrementalPRMStrategy::
@@ -144,6 +144,7 @@ connect_nodes(MPRegion<CfgType, WeightType>* region, vector<VID>& all_nodes_VID,
   Clock_Class NodeConnClock;
   stringstream clock_name; clock_name << "Iteration " << m_current_iteration << ", Node Connection";
   NodeConnClock.StartClock(clock_name.str().c_str());
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   
   for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I) //SLT:: should be const_iterator
   {
@@ -164,8 +165,9 @@ connect_nodes(MPRegion<CfgType, WeightType>* region, vector<VID>& all_nodes_VID,
                             GetMPProblem()->GetMPStrategy()->addAllEdges,
                             nodes_VID, 
                             all_nodes_VID);
-    cout << region->GetRoadmap()->m_pRoadmap->GetEdgeCount() << " edges, " 
-         << GetCCcount(*(region->GetRoadmap()->m_pRoadmap)) << " connected components"
+    cmap.reset();
+    cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
+         << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
          << endl;
     
     cout << "\t";
@@ -182,7 +184,8 @@ connect_components(MPRegion<CfgType, WeightType>* region)
   Clock_Class ComponentConnClock;
   stringstream clock_name; clock_name << "Iteration " << m_current_iteration << ", Component Connection";
   ComponentConnClock.StartClock(clock_name.str().c_str());
-  
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+ 
   for(vector<string>::iterator I = m_vecStrComponentConnectionLabels.begin(); I != m_vecStrComponentConnectionLabels.end(); ++I) //SLT:: should be const_iterator
   {
     ComponentConnectionMethod<CfgType, WeightType>* pComponentConnector = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
@@ -199,8 +202,9 @@ connect_components(MPRegion<CfgType, WeightType>* region)
                                  GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                  GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                  GetMPProblem()->GetMPStrategy()->addAllEdges);
-    cout << region->GetRoadmap()->m_pRoadmap->GetEdgeCount() << " edges, " 
-         << GetCCcount(*(region->GetRoadmap()->m_pRoadmap)) << " connected components"
+    cmap.reset();
+    cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
+         << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
          << endl;
     
     cout << "\t";

@@ -7,6 +7,7 @@
 template <class CFG, class WEIGHT>
 class NaiveRegionConnect: public RegionConnectionMethod<CFG,WEIGHT> {
  public:
+  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   NaiveRegionConnect();
   virtual ~NaiveRegionConnect();
 

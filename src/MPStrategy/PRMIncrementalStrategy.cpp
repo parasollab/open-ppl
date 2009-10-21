@@ -10,9 +10,7 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-//#include "GenerateMapNodes.h"
 
-//#include "GeneratePartitions.h"
 
 /* util.h defines EXIT used in initializing the environment*/
 #include "util.h"
@@ -34,11 +32,8 @@ PRMIncrementalStrategy::
 ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("PRMIncrementalStrategy::ParseXML()");
   //OBPRM_srand(getSeed()); 
-  
-   cout << "input node label PRMIncrementalStrategy = " << in_Node.getName() << endl;
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-	cout << "PRMIncrementalStrategy children = " << in_Node.getName() << endl;  
      if(citr->getName() == "node_generation_method") {
       string node_gen_method = citr->stringXMLParameter("Method",true,"","Method");
       m_vecStrNodeGenLabels.push_back(node_gen_method);
@@ -113,8 +108,6 @@ operator()(int in_RegionID) {
   //-----------------------
   unsigned int witness_queries = m_vecWitnessNodes.size()*(m_vecWitnessNodes.size()-1)/2;
   cout << "witness_queries = " << witness_queries << endl;
-  cout << "TEST1" << endl;
-
 
   int neighbor_create, neighbor_merge, neighbor_expand, neighbor_over;
   double cc_create_clearance = 0;
@@ -137,8 +130,6 @@ operator()(int in_RegionID) {
   string envFileName = GetMPProblem()->GetEnvironment()->GetEnvFileName();
   string firstNodeGen = *m_vecStrNodeGenLabels.begin();
   string firstConnection = *m_vecStrNodeConnectionLabels.begin();
-  cout << "TEST2 = "  << endl;
-
   char_ofstream << "#env_file_name:node_gen:con_method:seed" << endl;
   char_ofstream << envFileName << ":" << firstNodeGen << ":" << firstConnection << ":" << getSeed() << endl;
   char_ofstream << "#numnodes" << ":" << "cc_create" 
@@ -153,25 +144,19 @@ operator()(int in_RegionID) {
   Allstuff.StartClock("Everything");
   NodeGenClock.StartClock("Node Generation");
   typedef vector<string>::iterator I;
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap; 
 //  for(int iterations=0; iterations < m_iterations; ++iterations)
-  while(!IsFinished()) //commented out Sam---continous loop
+  while(!IsFinished())
   for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
   { //For each node generation method mentioned.
     vector< CfgType > vectorCfgs, in_nodes(10);
     Sampler<CfgType>::SamplerPointer  pNodeGen;
-    //Generate nodes given 1 node gen method
-    cout << "Sampling Method B4 pNodeGen = " << *itr << endl;
-
     pNodeGen = GetMPProblem()->GetMPStrategy()->
           GetSampler()->GetSamplingMethod(*itr);
      // pNodeGen->GenerateNodes(region, vectorCfgs); ///\todo this needs fixing bad.
       cout << "Pnode Gen  = " << pNodeGen << endl;
      pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),*pStatClass, in_nodes.begin(),in_nodes.end(),1,back_inserter(vectorCfgs));
-     //This is what we are going to use
-    // pNodeGen->GetSampler()->Sample(pNodeGen,GetMPProblem()->GetEnvironment(),pStatClass,in_nodes.begin(),in_nodes.end(),1,back_inserter(vectorCfgs));
-    // pNodeGen->GetSampler()->Sample(pNodeGen,100,1,back_inserter(vectorCfgs));
-    cout << "NodeGen: " << *itr << "created " << vectorCfgs.size() << "(non)valid nodes" << endl;
-    //Add Nodes to roadmap one by one.
+     cout << "NodeGen: " << *itr << "created " << vectorCfgs.size() << "(non)valid nodes" << endl;
     for(vector<CfgType>::iterator itr_cfg = vectorCfgs.begin();
         itr_cfg != vectorCfgs.end(); ++itr_cfg) 
     {
@@ -185,9 +170,11 @@ operator()(int in_RegionID) {
           merged_cc_size = old_biggest_cc_size = 0;
           ratio_cc_size = 0.0;
           new_cc_dia =  old_cc_dia = ratio_cc_dia = 0.0;
-          int nNumPrevCCs = GetCCcount(*(region->roadmap.m_pRoadmap));
-          vector < pair< int, VID > > cc;
-          GetCCStats(*(region->roadmap.m_pRoadmap), cc);
+ 	  cmap.reset();
+          int nNumPrevCCs = get_cc_count(*(region->roadmap.m_pRoadmap),cmap);
+          vector < pair< size_t, VID > > cc;
+	  cmap.reset();
+          get_cc_stats(*(region->roadmap.m_pRoadmap),cmap, cc);
           if(cc.size() > 0) {
             old_biggest_cc_size = cc[0].first;
           } else { old_biggest_cc_size = 0; }
@@ -219,19 +206,20 @@ operator()(int in_RegionID) {
           //-------------------//
           // Classify New node //
           //-------------------//
-          int nNumCurCCs = GetCCcount(*(region->roadmap.m_pRoadmap));
+ 	  cmap.reset();
+          int nNumCurCCs = get_cc_count(*(region->roadmap.m_pRoadmap),cmap);
           if(nNumCurCCs < nNumPrevCCs) {
             //cc merge
             stat_ccmerge++;
             
-            region->roadmap.m_pRoadmap->GetReferenceofData(newVID)->SetLabel("CCMERGE",true);
+            region->roadmap.m_pRoadmap->find_vertex(newVID).property().SetLabel("CCMERGE",true);
             merge_node_stats(region,newVID,m_nodeOverheadStat);
 
-            new_cc_dia =  region->roadmap.m_pRoadmap->GetReferenceofData(newVID)->GetStat("NEW_CC_DIA");
-            old_cc_dia =  region->roadmap.m_pRoadmap->GetReferenceofData(newVID)->GetStat("OLD_CC_DIA");
-            ratio_cc_dia = region->roadmap.m_pRoadmap->GetReferenceofData(newVID)->GetStat("RATIO_CC_DIA");
+            new_cc_dia =  region->roadmap.m_pRoadmap->find_vertex(newVID).property().GetStat("NEW_CC_DIA");
+            old_cc_dia =  region->roadmap.m_pRoadmap->find_vertex(newVID).property().GetStat("OLD_CC_DIA");
+            ratio_cc_dia = region->roadmap.m_pRoadmap->find_vertex(newVID).property().GetStat("RATIO_CC_DIA");
             //vector<VID> my_cc;
-            //GetCC(*(region->roadmap.m_pRoadmap),newVID,my_cc);
+            //Get CC(*(region->roadmap.m_pRoadmap),newVID,my_cc);
             //merged_cc_size = my_cc.size();
             //ratio_cc_size = double(merged_cc_size) / double(old_biggest_cc_size);
 
@@ -284,7 +272,7 @@ operator()(int in_RegionID) {
           }
           one_node.StopClock();
           running_time+=one_node.GetClock_SEC();
-          int n_num_nodes_tmp = region->roadmap.m_pRoadmap->GetVertexCount();
+          int n_num_nodes_tmp = region->roadmap.m_pRoadmap->get_num_vertices();
           Clock_Class query_time;
           Clock_Class dia_time;
  
@@ -301,8 +289,9 @@ operator()(int in_RegionID) {
             //Calculate CC diameter information.
             largest_cc_dia = sum_cc_dia = double(0.0);
             double _cc_dia = double(0.0);
-            vector < pair< int, VID > > cc;
-            GetCCStats(*(region->roadmap.m_pRoadmap), cc);
+            vector < pair< size_t, VID > > cc;
+	    cmap.reset();
+            get_cc_stats(*(region->roadmap.m_pRoadmap), cmap, cc);
             for(int i=0; i<cc.size(); ++i) {
               _cc_dia = cc_diamater(region->roadmap.m_pRoadmap, cc[i].second);
               sum_cc_dia += _cc_dia;
@@ -314,7 +303,7 @@ operator()(int in_RegionID) {
           total_dia_time += dia_time.GetClock_SEC();
           if(out_qry==100) m_query_solved = true;
 
-          char_ofstream << region->roadmap.m_pRoadmap->GetVertexCount() << ":" << stat_cccreate 
+          char_ofstream << region->roadmap.m_pRoadmap->get_num_vertices() << ":" << stat_cccreate 
             << ":" << stat_ccmerge 
             << ":" << pStatClass->GetIsCollTotal()  
             << ":" << m_queryStat.GetIsCollTotal() << ":" << witness_converage
@@ -339,8 +328,9 @@ operator()(int in_RegionID) {
   total_ofstream << "env: " << envFileName << endl;
   total_ofstream << "nodegen: " << firstNodeGen << endl;
   total_ofstream << "connection: " << firstConnection << endl;
-  total_ofstream << "nodes: " << region->roadmap.m_pRoadmap->GetVertexCount() << endl;
-  total_ofstream << "ccs: " << GetCCcount(*(region->roadmap.m_pRoadmap)) << endl;
+  total_ofstream << "nodes: " << region->roadmap.m_pRoadmap->get_num_vertices() << endl;
+  cmap.reset();
+  total_ofstream << "ccs: " << get_cc_count(*(region->roadmap.m_pRoadmap),cmap) << endl;
   total_ofstream << "iscoll: " <<  pStatClass->GetIsCollTotal() << endl;
   total_ofstream << "time: " << NodeGenClock.GetClock_SEC() << endl;
   //---------------------------
@@ -405,12 +395,12 @@ Characterize(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_Class
   double ori_res = GetMPProblem()->GetEnvironment()->GetOrientationRes();
 
   vector<VID> neighbors;
-  if(pGraph->GetSuccessors(in_vid, neighbors) > 1) {
+  if(pGraph->get_successors(in_vid, neighbors) > 1) {
     //    cout << "Pls sort me first since your not using CHECKIF SMAE CC" << endl; exit(-1);
   }
   //Next find neighbor's neighbors
   vector<VID> neighbor_neighbor;
-  pGraph->GetSuccessors(neighbors[0],neighbor_neighbor);
+  pGraph->get_successors(neighbors[0],neighbor_neighbor);
   bool is_expansion = true;
   vector<VID> singleVID;
   singleVID.push_back(in_vid);
@@ -432,26 +422,27 @@ Characterize(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_Class
     }
 
     if(!(lp->IsConnected(env, Stats, dm, 
-                         pGraph->GetData((*i_pair).first),
-                         pGraph->GetData((*i_pair).second),
+                         pGraph->find_vertex((*i_pair).first).property(),
+                         pGraph->find_vertex((*i_pair).second).property(),
                          &lp_output, pos_res, ori_res, true))) {
       is_expansion = false; // cannot connect in_vid to neighbor_neighbor
     } else if(i_pair == kpairs.begin()) {
-      pGraph->GetReferenceofData(in_vid)->SetLabel("CCOVERSAMPLE_RELAX",true);
+      pGraph->find_vertex(in_vid).property().SetLabel("CCOVERSAMPLE_RELAX",true);
     }
   }
   if(!is_expansion) 
-    pGraph->GetReferenceofData(in_vid)->SetLabel("CCEXPAND",true);
+    pGraph->find_vertex(in_vid).property().SetLabel("CCEXPAND",true);
   else
-    pGraph->GetReferenceofData(in_vid)->SetLabel("CCOVERSAMPLE",true);
+    pGraph->find_vertex(in_vid).property().SetLabel("CCOVERSAMPLE",true);
   //  LOG_DEBUG_MSG("~CCExpandCharacterizer::Characterize()");
 }
 
-class is_same_cc {
+class Is_same_cc {
 public:
-  is_same_cc(RoadmapGraph<CfgType,WeightType> * _graph) {m_graph = _graph;}
+  Is_same_cc(RoadmapGraph<CfgType,WeightType> * _graph) {m_graph = _graph;}
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
 
-  bool operator()(VID _v1, VID _v2) { return IsSameCC(*(m_graph), _v1,_v2); }
+  bool operator()(VID _v1, VID _v2) { return is_same_cc(*(m_graph),cmap, _v1,_v2); }
 
 private: 
   RoadmapGraph<CfgType,WeightType> *m_graph;
@@ -461,7 +452,7 @@ double
 PRMIncrementalStrategy::
 cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc) {
  // vector<VID> cc_vids;
- // GetCC ( *pGraph, _cc, cc_vids);
+ // Get CC ( *pGraph, _cc, cc_vids);
   double return_val = 0.0;
   /*
   for(int i=0; i<cc_vids.size(); ++i) {
@@ -487,16 +478,17 @@ PRMIncrementalStrategy::
 cc_max_length(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc) {
   DistanceMetric* dm = GetMPProblem()->GetDistanceMetric();
   Environment* env = GetMPProblem()->GetEnvironment();
-
+  
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   vector<VID> cc_vids;
-  GetCC ( *pGraph, _cc, cc_vids);
+  get_cc( *pGraph, cmap, _cc, cc_vids);
   double return_val = 0.0;
   for(int i=0; i<cc_vids.size(); ++i) {
    for(int j=0; j<cc_vids.size(); ++j) { 
     double length =0.0;
     if( i == j) continue;
-    length = dm->Distance(env, pGraph->GetData(cc_vids[i]),
-                               pGraph->GetData(cc_vids[j]));
+    length = dm->Distance(env, pGraph->find_vertex(cc_vids[i]).property(),
+                               pGraph->find_vertex(cc_vids[j]).property());
     if(length > return_val) { return_val = length;}
     }
   }
@@ -517,33 +509,44 @@ merge_node_stats(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_C
   double ori_res = env->GetOrientationRes();
 
   vector<VID> successors;
-  pGraph->GetSuccessors(in_vid,successors);
-  
+  pGraph->get_successors(in_vid,successors);
+  typedef RoadmapGraph<CfgType, WeightType>::edge_descriptor ED;
+  typedef RoadmapGraph<CfgType, WeightType>::vertex_iterator VI;
+  typedef RoadmapGraph<CfgType, WeightType>::adj_edge_iterator EI;
   typedef pair<pair<VID,VID>, WeightType > vid_vid_weight;
+
   vector< vid_vid_weight > edge_history;
   map< pair<VID,VID> , WeightType> tempMap;
   
   for(int i=0; i<successors.size(); ++i) {
     //Save all weights and remove.
+    ED ed1(in_vid,successors[i]);
+    VI vi1; EI ei1;
+    pGraph->find_edge(ed1, vi1, ei1);
     vid_vid_weight first_edge = vid_vid_weight(pair<VID,VID>(in_vid,successors[i]),
-                                               pGraph->GetEdgeWeight(in_vid,successors[i]));
+                                               //pGraph->GetEdgeWeight(in_vid,successors[i]));
+                                               ei1.property() );
+    ED ed2(successors[i],in_vid);
+    VI vi2; EI ei2;
+    pGraph->find_edge(ed2, vi2, ei2);
     vid_vid_weight second_edge = vid_vid_weight(pair<VID,VID>(successors[i],in_vid),
-                                                pGraph->GetEdgeWeight(successors[i],in_vid));
-    tempMap[pair<VID,VID>(in_vid,successors[i])] =
-                  pGraph->GetEdgeWeight(in_vid,successors[i]);
-    tempMap[pair<VID,VID>(successors[i],in_vid)] =
-                  pGraph->GetEdgeWeight(successors[i],in_vid);
+                                                //pGraph->GetEdgeWeight(successors[i],in_vid));
+                                                ei2.property());
+    tempMap[pair<VID,VID>(in_vid,successors[i])] = ei1.property();
+                  //pGraph->GetEdgeWeight(in_vid,successors[i]);
+    tempMap[pair<VID,VID>(successors[i],in_vid)] = ei2.property();
+                  //pGraph->GetEdgeWeight(successors[i],in_vid);
     
     edge_history.push_back(first_edge);
     edge_history.push_back(second_edge);
     
-    pGraph->DeleteEdge(in_vid,VID(successors[i]));
-    pGraph->DeleteEdge(VID(successors[i]),in_vid);
+    pGraph->delete_edge(in_vid,VID(successors[i]));
+    pGraph->delete_edge(VID(successors[i]),in_vid);
   }
 
   successors.erase(std::unique(successors.begin(),
                                successors.end(),
-                               is_same_cc(pGraph)),
+                               Is_same_cc(pGraph)),
                    successors.end());
   
   vector< double > vec_dist;
@@ -585,12 +588,12 @@ merge_node_stats(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_C
   max+=  tempMap[pair<VID,VID>(in_vid,max_vid)].Weight();
   //max+=  tempMap[pair<VID,VID>(in_vid,vec_vid_dist[max_vid].first)].Weight();
 */
-  pGraph->GetReferenceofData(in_vid)->SetStat("NEW_CC_DIA", new_cc_dia);
-  pGraph->GetReferenceofData(in_vid)->SetStat("OLD_CC_DIA", old_cc_dia);
+  pGraph->find_vertex(in_vid).property().SetStat("NEW_CC_DIA", new_cc_dia);
+  pGraph->find_vertex(in_vid).property().SetStat("OLD_CC_DIA", old_cc_dia);
   if(old_cc_dia != double(0)) {
-    pGraph->GetReferenceofData(in_vid)->SetStat("RATIO_CC_DIA", new_cc_dia/old_cc_dia);
+    pGraph->find_vertex(in_vid).property().SetStat("RATIO_CC_DIA", new_cc_dia/old_cc_dia);
   } else {
-    pGraph->GetReferenceofData(in_vid)->SetStat("RATIO_CC_DIA", new_cc_dia/1);
+    pGraph->find_vertex(in_vid).property().SetStat("RATIO_CC_DIA", new_cc_dia/1);
   }
 }
 
@@ -624,26 +627,26 @@ cc_local_area(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_Clas
     if(kpairs[i].second == in_vid) {
       cout << "error incorrect vid" << endl; exit(-1);
     }
-    if(pGraph->GetReferenceofData(kpairs[i].second)->IsLabel("CCCREATE")) {
-      if(pGraph->GetReferenceofData(kpairs[i].second)->GetLabel("CCCREATE")) {
+    if(pGraph->find_vertex(kpairs[i].second).property().IsLabel("CCCREATE")) {
+      if(pGraph->find_vertex(kpairs[i].second).property().GetLabel("CCCREATE")) {
         ncreate++;
       }
     }
 
-    if(pGraph->GetReferenceofData(kpairs[i].second)->IsLabel("CCMERGE")) {
-      if(pGraph->GetReferenceofData(kpairs[i].second)->GetLabel("CCMERGE")) {
+    if(pGraph->find_vertex(kpairs[i].second).property().IsLabel("CCMERGE")) {
+      if(pGraph->find_vertex(kpairs[i].second).property().GetLabel("CCMERGE")) {
         nmerge++;
       }
     }
 
-    if(pGraph->GetReferenceofData(kpairs[i].second)->IsLabel("CCEXPAND")) {
-      if(pGraph->GetReferenceofData(kpairs[i].second)->GetLabel("CCEXPAND")) {
+    if(pGraph->find_vertex(kpairs[i].second).property().IsLabel("CCEXPAND")) {
+      if(pGraph->find_vertex(kpairs[i].second).property().GetLabel("CCEXPAND")) {
         nexpand++;
       }
     }
 
-    if(pGraph->GetReferenceofData(kpairs[i].second)->IsLabel("CCOVERSAMPLE")) {
-      if(pGraph->GetReferenceofData(kpairs[i].second)->GetLabel("CCOVERSAMPLE")) {
+    if(pGraph->find_vertex(kpairs[i].second).property().IsLabel("CCOVERSAMPLE")) {
+      if(pGraph->find_vertex(kpairs[i].second).property().GetLabel("CCOVERSAMPLE")) {
         nover++;
       }
     }
@@ -652,10 +655,10 @@ cc_local_area(MPRegion<CfgType,WeightType>* inout_pRegion, VID in_vid, Stat_Clas
   cout << "I am a CC-create node with neighborhood: create = " << ncreate 
        << " merge = " << nmerge << " expand = " << nexpand << " oversample " << nover << endl;
 
-  pGraph->GetReferenceofData(in_vid)->SetStat("NEIGHBOR_CREATE", ncreate);
-  pGraph->GetReferenceofData(in_vid)->SetStat("NEIGHBOR_MERGE", nmerge);
-  pGraph->GetReferenceofData(in_vid)->SetStat("NEIGHBOR_EXPAND", nexpand);
-  pGraph->GetReferenceofData(in_vid)->SetStat("NEIGHBOR_OVER", nover);
+  pGraph->find_vertex(in_vid).property().SetStat("NEIGHBOR_CREATE", ncreate);
+  pGraph->find_vertex(in_vid).property().SetStat("NEIGHBOR_MERGE", nmerge);
+  pGraph->find_vertex(in_vid).property().SetStat("NEIGHBOR_EXPAND", nexpand);
+  pGraph->find_vertex(in_vid).property().SetStat("NEIGHBOR_OVER", nover);
 
 }
 
@@ -692,8 +695,9 @@ pair < unsigned int, unsigned int >
 PRMIncrementalStrategy::
 ConnectionsWitnessToRoadmap(vector < CfgType > & witness_cfgs, Roadmap< CfgType, WeightType > *rdmp, Stat_Class& stat) {
   int small_cc_size =0;
-  vector < pair< int, VID > > cc;
-  GetCCStats(*(rdmp->m_pRoadmap), cc);
+  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  vector < pair< size_t, VID > > cc;
+  get_cc_stats(*(rdmp->m_pRoadmap), cmap, cc);
   // small_cc_size = int(double(cc[0].first) * double(0.01));
   vector < vector< unsigned int > > connected_to_cc;
   vector < unsigned int > tmp_vector;
@@ -712,9 +716,12 @@ ConnectionsWitnessToRoadmap(vector < CfgType > & witness_cfgs, Roadmap< CfgType,
     bool i_witness_can_connect = false;
     for (unsigned int j=0; j < cc.size(); j++) {
       vector < CfgType > cc_cfgs;
-      //GetCC(*(rdmp->m_pRoadmap), *(new CfgType(rdmp->m_pRoadmap->GetData(cc[j].second))), cc_cfgs);
-      CfgType * tmp_pointer = new CfgType(rdmp->m_pRoadmap->GetData(cc[j].second));
-      GetCC(*(rdmp->m_pRoadmap), *(tmp_pointer), cc_cfgs);
+      vector<VID> cc_cfgs_aux;
+      //Get CC(*(rdmp->m_pRoadmap), *(new CfgType(rdmp->m_pRoadmap->find_vertex(cc[j].second).property())), cc_cfgs);
+      CfgType * tmp_pointer = new CfgType(rdmp->m_pRoadmap->find_vertex(cc[j].second).property());
+      cmap.reset();
+      get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->GetVID(*(tmp_pointer)), cc_cfgs_aux);
+      cc_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(cc_cfgs_aux);
       delete tmp_pointer;
       if (cc_cfgs.size() >= small_cc_size) {
         if ( CanConnectComponents(witness_test_cfg, cc_cfgs, stat) ) {

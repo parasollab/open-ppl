@@ -49,7 +49,7 @@ class TestEvaluation
   virtual bool operator() (int in_RegionID) 
   {
     PrintOptions(cout);
-    return (GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->m_pRoadmap->GetVertexCount() >= size);
+    return (GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->m_pRoadmap->get_num_vertices() >= size);
   }
 };
 

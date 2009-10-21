@@ -9,6 +9,7 @@
 
 #include "OBPRMDef.h"
 #include "Roadmap.h"
+#include "RoadmapGraph.h"
 
 #include "Clock_Class.h"
 #include "Stat_Class.h"
@@ -22,7 +23,6 @@
 
 //#include "GeneratePartitions.h"
 
-
 //#include "ExplicitInstantiation.h"
 
 /* util.h defines EXIT used in initializing the environment*/
@@ -33,6 +33,10 @@
 #include "MapEvaluator.h"
 
 #include "MPStrategy/MPStrategyMethod.h"
+
+typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType, WeightType> GRAPH;
+typedef GRAPH::vertex_descriptor VID; 
+
 
 class PRMRoadmap : public MPStrategyMethod {
   public:
@@ -117,10 +121,9 @@ class PRMRoadmap : public MPStrategyMethod {
     typedef vector<string>::iterator I;
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
     {
-     // const int num_nodes = 100;
-    // int num_nodes;
+    
       vector< CfgType > vectorCfgs, in_nodes(1024);
-     // num_nodes = distance(in_nodes.begin(),in_nodes.end());
+     
       vectorCfgs.reserve(num_nodes);
       Sampler<CfgType>::SamplerPointer  pNodeGen;
       pNodeGen = GetMPProblem()->GetMPStrategy()->
@@ -169,6 +172,14 @@ class PRMRoadmap : public MPStrategyMethod {
     // get VID's from nodes in the roadmap  
     vector<VID> verticesVID;
     region->GetRoadmap()->m_pRoadmap->GetVerticesVID(verticesVID);
+/*
+    GRAPH::vertex_iterator vi;
+    GRAPH g = *(region->GetRoadmap()->m_pRoadmap);
+    //RoadmapGraph<CfgType, WeightType> g = *(region->GetRoadmap()->m_pRoadmap);
+    for(vi= g.begin();vi!=g.end();++vi)
+	verticesVID.push_back(vi.descriptor());
+*/
+
     LOG_DEBUG_MSG("PRMRoadmap:: all nodes: " << verticesVID.size() << "; new nodes: " << new_free_vids.size());
     ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
     typedef vector<string>::iterator J;
@@ -369,7 +380,7 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
     typedef vector<string>::iterator I;
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
     {
-      vector< CfgType > vectorCfgs, in_nodes;
+       vector< CfgType > vectorCfgs, in_nodes;
       //SamplerMethod<CfgType> * pNodeGen;
       Sampler<CfgType>::SamplerPointer  pNodeGen;
       pNodeGen = GetMPProblem()->GetMPStrategy()->
