@@ -10,12 +10,12 @@
 //===================================================================
 //  Constructors and Destructor
 //===================================================================
-FixedBody::FixedBody(MultiBody* _owner) :
+FixedBody::FixedBody(MultiBody * _owner) :
     Body(_owner)
 {
 }
 
-FixedBody::FixedBody(MultiBody* _owner, GMSPolyhedron & _polyhedron) :
+FixedBody::FixedBody(MultiBody * _owner, GMSPolyhedron & _polyhedron) :
     Body(_owner, _polyhedron)
 {
 }

@@ -30,6 +30,8 @@
 #include "GraphAlgo.h"
 #include "BasicDefns.h"
 
+#include "RoadmapVCS.h"
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 #define DEFAULT_EDGES_PER_VERTEX 10  ///< Slots to reserve in each edgelist
 
@@ -125,8 +127,8 @@ public stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> {
 public:
 
 typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
-//typedef stapl::Graph<stapl::DIRECTED, stapl::NONMULTIEDGES, stapl::WEIGHTED, VERTEX,WEIGHT> GRAPH;
 typedef typename GRAPH::vertex_descriptor VID;
+typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_iterator VI; ///<VI Vertex Iterator
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::const_vertex_iterator CVI; ///<CVI Constant Vertex Iterator
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::adj_edge_iterator EI;
@@ -264,6 +266,7 @@ typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT
    //typedef typename VERTEX_VECTOR::iterator VI; ///<VI Vertex Iterator
    //typedef typename VERTEX_VECTOR::const_iterator CVI; ///<CVI Constant Vertex Iterator
 
+   RoadmapVCS<VERTEX, WEIGHT> roadmapVCS;
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -293,6 +296,7 @@ private:
 template<class VERTEX, class WEIGHT>
 RoadmapGraph<VERTEX,WEIGHT>::
 RoadmapGraph() {
+  
 };
 
 template<class VERTEX, class WEIGHT>
@@ -338,8 +342,11 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddVertex(VERTEX& _v1) {
     CVI v1;
     if ( !IsVertex(_v1,&v1) ) {
-        //return GRAPH::AddVertex(_v1);
-        return GRAPH::add_vertex(_v1);
+        VID vertex_id = GRAPH::add_vertex(_v1);
+        ChangeEvent event(ChangeEvent::ADD_VERTEX, _v1, vertex_id);
+        //cout << "Adding through single" << endl;
+        roadmapVCS.addEvent(event);
+        return vertex_id;
     } else {
 #ifndef QUIETGRAPH
         cout << "\nIn AddVertex: vertex already in graph, not added";
@@ -359,10 +366,11 @@ AddVertex(vector<VERTEX>& _v) {
     VID vertex_id; //=this->GetNextVID(); fix_lantao
     for (int i = 0; i < _v.size(); i++){
         if (!IsVertex(_v[i])){
-        //if (!this->find_vertex(_v[i])){
-	  //GRAPH::AddVertex(_v[i]);
-	  vertex_id = GRAPH::add_vertex(_v[i]);
-	  added=true;
+          VID v_id = GRAPH::add_vertex(_v[i]);
+          ChangeEvent event(ChangeEvent::ADD_VERTEX, _v[i], v_id);
+          //cout << "Adding through vector" << endl;
+          roadmapVCS.addEvent(event);
+          added=true;
         } else {
 #ifndef QUIETGRAPH
             cout << "\nIn AddVertex: vertex already in graph, not added";

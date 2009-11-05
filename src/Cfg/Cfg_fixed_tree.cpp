@@ -20,11 +20,9 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "util.h"
+#include "DistanceMetrics.h"
 
 int Cfg_fixed_tree::NumofJoints;
-
-///@todo Document this!!
-#define DefaultRange 0.25
 
 Cfg_fixed_tree::Cfg_fixed_tree() {
   dof = NumofJoints;
@@ -125,12 +123,10 @@ const char* Cfg_fixed_tree::GetName() const {
 }
   
 void Cfg_fixed_tree::GetRandomCfg(double R, double rStep){
-  double jointAngle;
   v.clear();
   
   for(int i=0; i<NumofJoints; i++) {
-    jointAngle = (2.0*rStep)*OBPRM_drand() - rStep;
-    jointAngle = jointAngle*DefaultRange;
+    double jointAngle = (2.0*rStep)*OBPRM_drand() - rStep;
     v.push_back(jointAngle);
   }
   
@@ -146,16 +142,32 @@ void Cfg_fixed_tree::GetRandomCfg(Environment* env) {
 
 
 void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
+  //randomly sample params
+  v.clear();
+  for(int i=0; i<DOF(); ++i)
+    v.push_back( double(2.0)*OBPRM_drand() - double(1.0) );
+  
+  //scale to appropriate length
+  Cfg_fixed_tree origin;
+  dm->ScaleCfg(env, incr, origin, *this);
+  
+  Normalize_orientation();
+  
+  obst = -1;
+  tag = -1;
+  clearance = -1;
+}
+
+void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, DistanceMetricMethod* dm) {
   incr = 0.005;
   v.clear();
   
   for(int i=0; i<NumofJoints; i++)
-    v.push_back(OBPRM_drand()*DefaultRange*incr);
+    v.push_back(OBPRM_drand()*incr); //was multiplied by DefaultRange, probably an error
 }
 
 
 void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *env) {
-
   // Why following comments are here? This method suppose will generate
   // Cfg whose center of mass will inside a given bounding box....
   
@@ -165,7 +177,11 @@ void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *env) {
   // a little 'bigger' BB will contain all links. 
   v.clear();
   for(int i=0; i<dof; ++i) 
-    v.push_back(OBPRM_drand()*DefaultRange);
+    v.push_back(env->GetBoundingBox()->GetRandomValueInParameter(i));
+    
+  obst = -1;
+  tag = -1;
+  clearance = -1;
 }
 
 void Cfg_fixed_tree::GetMovingSequenceNodes(const Cfg& other, vector<double> s, vector<Cfg*>& result) const {
@@ -188,20 +204,7 @@ void Cfg_fixed_tree::GetMovingSequenceNodes(const Cfg& other, vector<double> s, 
 }
 
 
-bool Cfg_fixed_tree::isInRange() const {
-  //Normalize_orientation();
-  
-  for(int i=0; i<dof; i++) {
-    if(v[i] > DefaultRange)
-      return false;
-  }
-  return true;
-}
-
-
 bool Cfg_fixed_tree::ConfigEnvironment(Environment *_env) const {
-  if(! isInRange()) return false;
-  
   int robot = _env->GetRobotIndex();
   
   int i;
@@ -222,6 +225,7 @@ bool Cfg_fixed_tree::ConfigEnvironment(Environment *_env) const {
   
   // when all worldTransformations are recalculated by using new cfg, the
   // config of the whole robot is updated.
+  
   return true;
 }
 
@@ -233,7 +237,7 @@ bool Cfg_fixed_tree::GenerateOverlapCfg(Environment *env,  // although env and r
 
   vector<double> treeData;
   for(int i=0; i<NumofJoints; i++)
-    treeData.push_back(OBPRM_drand()*DefaultRange);
+    treeData.push_back(env->GetBoundingBox()->GetRandomValueInParameter(i));
   
   // pass back the Cfg for this pose.
   *resultCfg = Cfg_fixed_tree(treeData);

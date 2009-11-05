@@ -170,6 +170,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         if(is_same_cc(*(_rm->m_pRoadmap), cmap, v1[i], v2[j])) continue; 
       
       Stats.IncConnections_Attempted();
+
       if (lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
                           _rm->m_pRoadmap->find_vertex(v1[i]).property(),
                           _rm->m_pRoadmap->find_vertex(v2[j]).property(),

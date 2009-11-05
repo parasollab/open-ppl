@@ -106,14 +106,14 @@ class Sampler : private PMPL_Container_Base< SamplerMethod<CFG>,
      XMLNodeReader::childiterator citr;
     for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
 	   
-          cout << "input string label to add = " << citr->getName() << endl;
+          //cout << "input string label to add = " << citr->getName() << endl;
       if(citr->getName() == "UniformRandomSampler") {
         SamplerMethod<CFG>* sp = new UniformRandomSampler<CfgType>(*citr, in_pProblem);
 	// cout << "sp->GetObjectLabel = " << sp->GetObjectLabel() << endl;
         AddSamplingMethod(sp->GetObjectLabel(), SamplerPointer(sp));
       } else if(citr->getName() == "UniformRandomFreeSampler") {
         SamplerMethod<CFG>* sp = new UniformRandomFreeSampler<CfgType>(*citr, in_pProblem);
-	cout << "sp->GetObjectLabel = " << sp->GetObjectLabel() << endl;
+	//cout << "sp->GetObjectLabel = " << sp->GetObjectLabel() << endl;
         AddSamplingMethod(sp->GetObjectLabel(), SamplerPointer(sp));
       } else if(citr->getName() == "UniformRandomCollisionSampler") {
         SamplerMethod<CFG>* sp = new UniformRandomCollisionSampler<CfgType>(*citr, in_pProblem);

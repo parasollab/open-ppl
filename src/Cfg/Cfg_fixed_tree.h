@@ -81,8 +81,8 @@ class Cfg_fixed_tree : public Cfg {
   virtual void GetRandomCfg(Environment* env);
 
   ///Get a random vector. incr will always be reset to 0.005.
-  virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* 
-dm);
+  virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm);
+  virtual void GetRandomRay(double incr, Environment* env, DistanceMetricMethod* dm);
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////

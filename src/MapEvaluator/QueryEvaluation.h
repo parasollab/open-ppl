@@ -73,29 +73,26 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
 {
   PrintOptions(cout);
 
-  //setup m_ConnectMap
-  static bool connect_map_setup = false;
-  if(!connect_map_setup)
-  {
-    connect_map_setup = true;
-    vector<NodeConnectionMethod<CFG, WEIGHT>*> methods;
-    if(m_vecStrNodeConnectionLabels.empty())
-      methods.push_back(new ConnectFirst<CFG,WEIGHT>());
-    else
-      for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)
-        methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
-    m_ConnectMap.SetNodeConnectionMethods(methods);
+  vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer > methods;
+    
+  if(m_vecStrNodeConnectionLabels.empty()) {
+    methods.push_back(ConnectMap<CfgType, WeightType>::NodeConnectionPointer(new ConnectFirst<CfgType, WeightType>()));
   }
+  else
+    for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)
+      methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
+
 
   Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
   lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners(); //later change to have own lp
 
   //VID oriVertID = rmap->m_pRoadmap->getVertIDs(); //save vertexID counter
-  
+
   bool queryResult = m_query.PerformQuery(rmap, m_stats, 
-                                    //    GetMPProblem()->GetCollisionDetection(), 
-                                        &m_ConnectMap, lp, 
-                                        GetMPProblem()->GetDistanceMetric());
+                        &m_ConnectMap, 
+                        &methods,
+                        GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                        GetMPProblem()->GetDistanceMetric());
   
   for(typename vector<CFG>::iterator I = m_query.query.begin(); I != m_query.query.end(); ++I)
     //rmap->m_pRoadmap->DeleteVertex(*I); //deleted added node from rmap

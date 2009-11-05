@@ -116,6 +116,7 @@ class Body;
 class Environment;
 class CollisionDetection;
 class DistanceMetric;
+class DistanceMetricMethod;
 class CDInfo;
 class MultiBody;
 class Cfg {
@@ -343,7 +344,8 @@ class Cfg {
   virtual void GetRandomCfg(Environment* env, DistanceMetric* _dm,
           double length);
   virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm) = 0;
-    
+  virtual void GetRandomRay(double incr, Environment* env, DistanceMetricMethod* dm) = 0;
+
   /// generates random configuration that is in Free CSpace. 
   virtual void GetFreeRandomCfg(Environment* env, Stat_Class& Stats,
         CollisionDetection* cd, CDInfo& _cdInfo);

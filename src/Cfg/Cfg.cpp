@@ -947,8 +947,7 @@ MAPRMfree(Environment* _env, Stat_Class& Stats,
 
 double Cfg::Clearance(Environment *env, Stat_Class& Stats,
           CollisionDetection *cd ) const {
-  if(!ConfigEnvironment(env))
-    return -1;
+  ConfigEnvironment(env);
   return cd->Clearance(env, Stats);
 }
 
@@ -1053,7 +1052,7 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 	  stateChangedFlag = true;
 	} else { //ignore bbox for penetration
 	  ignored[i] = true;
-	  if(count(ignored.begin(), ignored.end(), true) ==
+	  if(size_t(count(ignored.begin(), ignored.end(), true)) ==
 	     (int)directions.size()) { //if no more directions left, exit loop
 	    clearInfo.setClearance(10000);
 	    Cfg* tmp3 = cfg->CreateNewCfg();
@@ -1067,7 +1066,7 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 	bool bCollision = tick[i]->isCollision(env, Stats, cd, cdInfo, true, &tmpStr);
 	if((ignore_obstacle != -1) && (cdInfo.colliding_obst_index == ignore_obstacle)) {
 	  ignored[i] = true;
-	  if(count(ignored.begin(), ignored.end(), true) ==
+	  if(size_t(count(ignored.begin(), ignored.end(), true)) ==
 	     (int)directions.size()) {
 	    clearInfo.setClearance(10000);
 	    Cfg* tmp3 = cfg->CreateNewCfg();
@@ -1178,11 +1177,7 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
           bool enablePenetration, std::string *pCallName) {
   Stats.IncCfgIsColl(pCallName);
 
-  if(!this->ConfigEnvironment(env))
-  {
-    SetLabel("VALID",!true);
-    return true;
-  } 
+  ConfigEnvironment(env);
   bool Clear = (pCallName) ? false : true; 
   if( !pCallName )
      pCallName = new std::string("isColl(e,s,cd,cdi,ep)");
@@ -1192,22 +1187,30 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
   bool answerFromEnvironment = cd->IsInCollision(env, Stats, _cdInfo, shared_ptr<MultiBody>(), true, pCallName);
 
 #ifdef COLLISIONCFG
- if(answerFromEnvironment)
-    {
+  if(answerFromEnvironment)
+  {
     CollisionConfiguration[_cdInfo.colliding_obst_index].push_back(v);
-    }
+  }
 #endif
 
-  if ( (answerFromEnvironment) && enablePenetration &&
-       (cd->penetration>=0)) {
+  if ((answerFromEnvironment) && enablePenetration && (cd->penetration>=0))
+  {
     Cfg* tmp = this->CreateNewCfg();
     bool result = !cd->AcceptablePenetration(*tmp, env, Stats, cd, _cdInfo);
     delete tmp;
-    if( Clear ) delete pCallName;
-    { SetLabel("VALID",!result); return result; }
+    if( Clear ) 
+      delete pCallName;
+    { 
+      SetLabel("VALID",!result); 
+      return result; 
+    }
   }
-  if( Clear ) delete pCallName;
-  { SetLabel("VALID",!answerFromEnvironment); return answerFromEnvironment;}
+  if( Clear ) 
+    delete pCallName;
+  {
+    SetLabel("VALID",!answerFromEnvironment); 
+    return answerFromEnvironment;
+  }
 }
 
 
@@ -1216,10 +1219,10 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
                       int robot, int obs, CDInfo& _cdInfo,
           bool enablePenetration, std::string *pCallName) {
   Stats.IncCfgIsColl(pCallName);
-
-  if(!this->ConfigEnvironment(env))
-   { SetLabel("VALID",!true); return true; }
-  bool Clear = (pCallName) ? false : true; 
+  
+  ConfigEnvironment(env);
+  bool Clear = (pCallName) ? false : true;
+  
   if( !pCallName )
      pCallName = new std::string("isColl(e,s,cd,r,o,cdi,ep)");
 

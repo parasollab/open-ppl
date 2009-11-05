@@ -30,14 +30,15 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   std::string strLabel;
   std::string strVcmethod;
 
+  DistanceMetricMethod* m_dmm;
  public:
  GaussRandomSampler(Environment* _env, Stat_Class& _Stats, 
 	                      CDInfo& _cdInfo, DistanceMetric* _dm, double _d = 0) :
     env(_env), Stats(_Stats), cdInfo(_cdInfo), dm(_dm), d(_d) {
+    m_dmm = new EuclideanDistance();
     if(d == 0)
       d = (env->GetMultiBody(env->GetRobotIndex()))->GetMaxAxisRange();
   }
- 
   
   GaussRandomSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) {
   LOG_DEBUG_MSG("GaussRandomSampler::GaussRandomSampler()");
@@ -54,9 +55,7 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   LOG_DEBUG_MSG("~GaussRandomSampler::GaussRandomSampler()");
   }
  
-   ~GaussRandomSampler() {}
-
- 
+   ~GaussRandomSampler() {} 
   
  void  ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("GaussRandomSampler::ParseXML()");
@@ -118,7 +117,7 @@ void ParseXMLd(XMLNodeReader& in_Node) {
 	  
 	CFG incr;
 	incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), 
-			      env, dm);
+			      env, m_dmm);
 	CFG cfg2;
 	//cout << "cfg2 is = " << cfg2 << endl;
 	cfg2.add(cfg1, incr);

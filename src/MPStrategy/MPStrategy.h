@@ -50,6 +50,7 @@ public:
 #include "MPStrategy/PRMIncrementalStrategy.h"
 #include "MPStrategy/IncrementalPRMStrategy.h"
 #include "MPStrategy/HybridPRM.h"
+#include "MPStrategy/NFComparer.h"
 #include "MPStrategy/QueryStrategy.h"
 #include "MPStrategy/SmoothQueryStrategy.h"
 

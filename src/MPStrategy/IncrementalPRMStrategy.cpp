@@ -148,28 +148,31 @@ connect_nodes(MPRegion<CfgType, WeightType>* region, vector<VID>& all_nodes_VID,
   
   for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I) //SLT:: should be const_iterator
   {
-    NodeConnectionMethod<CfgType, WeightType>* pNodeConnector = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I);
-        
+    //NodeConnectionMethod<CfgType, WeightType>* pNodeConnector = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I);
+    
+    ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
+    pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I);    
+    
     Clock_Class NodeConnSubClock;
-    stringstream connector_clock_name; connector_clock_name << "Iteration " << m_current_iteration << ", " << pNodeConnector->GetName();
+    stringstream connector_clock_name; connector_clock_name << "Iteration " << m_current_iteration << ", " << pConnection->GetName();
     NodeConnSubClock.StartClock(connector_clock_name.str().c_str());
     
     cout << "\n\t";
     vector<VID> nodes_VID(this_iteration_nodes_VID.begin(), this_iteration_nodes_VID.end());
-    pNodeConnector->Connect(region->GetRoadmap(), 
-                            *(region->GetStatClass()),
-                //            GetMPProblem()->GetCollisionDetection(),
+    GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectNodes(
+                            pConnection,
+                            region->GetRoadmap(), *(region->GetStatClass()),
                             GetMPProblem()->GetDistanceMetric(), 
                             GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                             GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                             GetMPProblem()->GetMPStrategy()->addAllEdges,
-                            nodes_VID, 
-                            all_nodes_VID);
+                            nodes_VID.begin(), nodes_VID.end(), 
+                            all_nodes_VID.begin(), all_nodes_VID.end());
     cmap.reset();
     cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
          << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
          << endl;
-    
+
     cout << "\t";
     NodeConnSubClock.StopPrintClock();
   }
@@ -188,20 +191,25 @@ connect_components(MPRegion<CfgType, WeightType>* region)
  
   for(vector<string>::iterator I = m_vecStrComponentConnectionLabels.begin(); I != m_vecStrComponentConnectionLabels.end(); ++I) //SLT:: should be const_iterator
   {
-    ComponentConnectionMethod<CfgType, WeightType>* pComponentConnector = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
+    ConnectMap<CfgType, WeightType>::ComponentConnectionPointer pConnection;
+    pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
+    //ComponentConnectionMethod<CfgType, WeightType>* pComponentConnector = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
     
     Clock_Class ComponentConnSubClock;
-    stringstream connector_clock_name; connector_clock_name << "Iteration " << m_current_iteration << ", " << pComponentConnector->GetName();
+    stringstream connector_clock_name; connector_clock_name << "Iteration " << m_current_iteration << ", " << pConnection->GetName();
     ComponentConnSubClock.StartClock(connector_clock_name.str().c_str());
     
     cout << "\n\t";
-    pComponentConnector->Connect(region->GetRoadmap(), 
+    GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectComponents(
+                                  pConnection,
+                                  region->GetRoadmap(), 
                                  *(region->GetStatClass()), //*region_stats,
 //                                 GetMPProblem()->GetCollisionDetection(),
                                  GetMPProblem()->GetDistanceMetric(), 
                                  GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                  GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                  GetMPProblem()->GetMPStrategy()->addAllEdges);
+
     cmap.reset();
     cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
          << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"

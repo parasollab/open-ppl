@@ -90,6 +90,7 @@ class ClosestSF: public NodeConnectionMethod<CFG,WEIGHT> {
 
   int ksuccess;
   int mfailure;
+  string m_nf;
 };
 
 
@@ -247,7 +248,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             bool addAllEdges,
             vector<VID>& v1, vector<VID>& v2) 
 {
-  //cout << "Connecting CCs with method: closest k="<< ksuccess << endl;
+  cout << "Connecting CCs with method: closest k="<< ksuccess << endl;
 #ifndef QUIET
   cout << "closest*(k="<< ksuccess <<"): "<<flush;
   cout << "failure*(m="<< mfailure <<"): "<<flush;
@@ -271,7 +272,9 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       kp.clear();
       vector<VID> v;
       v.push_back(*I);
-      kp = dm->FindKClosestPairs(_rm,v, v2, ksuccess+mfailure);
+      
+      kp = this->GetMPProblem()->GetNeighborhoodFinder()->FindKClosestPairs(_rm,v, v2, ksuccess+mfailure);
+      
       Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, kp);
     }
   }
@@ -295,9 +298,9 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     LPOutput<CFG,WEIGHT> lpOutput;
     stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
     for(typename vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
-      //cout<<KP->first<<"->"<<KP->second<<endl;
+      cout<<KP->first<<"->"<<KP->second<<endl;
       if(failure >= mfailure || success >= ksuccess){
-      //cout << "mfailure/ksuccss equals the max allowed number."<<KP->first<<" fails: "<<failure<<", success: "<<success<<endl;
+      cout << "mfailure/ksuccss equals the max allowed number."<<KP->first<<" fails: "<<failure<<", success: "<<success<<endl;
       break;
       }
       if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) {

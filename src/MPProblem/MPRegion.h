@@ -154,7 +154,9 @@ AddToRoadmap(vector<CFG>& in_Cfgs) {
         returnVec.push_back(roadmap.m_pRoadmap->AddVertex((*I)));
       } else {  //Add to Coll Roadmap 
         //LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- Adding Coll CFG");
-        col_roadmap.m_pRoadmap->AddVertex((*I));
+        
+        // commented by Bryan on 5/4/08, we only want one roadmap
+        //col_roadmap.m_pRoadmap->AddVertex((*I));
       }
     } else {LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- UNLABELED!!!!!!!");}
   }
@@ -209,6 +211,7 @@ WriteRoadmapForVizmo(ostream& myofstream) {
   myofstream << "#####CDSTART#####" << endl << "0" << endl << "#####CDSTOP#####" << endl;
   myofstream << "#####DMSTART#####" << endl << "0" << endl << "#####DMSTOP#####";
   GetRoadmap()->WriteRNGseed(myofstream);
+  myofstream << endl;
 
   //GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
   write_graph(*(GetRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists

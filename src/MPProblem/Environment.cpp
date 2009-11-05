@@ -58,7 +58,7 @@ Environment(int dofs, int pos_dofs, Input * _input) :
   boundaries = new BoundingBox(dofs, pos_dofs);
 
   if (_input != NULL) {
-    Read(_input->envFile.GetValue(), EXIT,
+    Read(_input->envFile.GetValue(), PMPL_EXIT,
 	 _input->descDir.GetValue(), _input->cdtype, _input->nprocs);
     FindBoundingBox();
     
@@ -188,8 +188,12 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
 
     in_Node.verifyName(string("environment"));
 
-    //Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), EXIT, "", RAPID, 1);
-    Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), EXIT, "");
+    ///\todo fix hack.  This hack gets env_filename from environment xml tag
+    //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
+    //const char* env_filename = GetMPProblem()->GetEnvFileName().c_str();
+    //Read(env_filename, PMPL_EXIT, "", RAPID, 1);
+    ///\todo fix hack. This hack assigns RAPID as the cd library and the main directory as "".
+    Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), PMPL_EXIT, "");
     //FindBoundingBox();
 
       //compute RESOLUTION
@@ -461,7 +465,7 @@ Read(const char* in_filename, int action, const char* descDir) {
 	cerr << "\n            something is wrong w/ the following\n"
 	     << "\n            "<<string1<<" "<<string2<<" "<<string3
 	     <<"\n\n";
-	if(action==EXIT)
+	if(action==PMPL_EXIT)
 	  exit(-1);
       }
     } 

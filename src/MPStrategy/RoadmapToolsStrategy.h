@@ -22,7 +22,7 @@
 
 //#include "ExplicitInstantiation.h"
 
-/* util.h defines EXIT used in initializing the environment*/
+/* util.h defines PMPL_EXIT used in initializing the environment*/
 #include "util.h"
 #include "MPProblem.h"
 #include "MPCharacterizer.h"

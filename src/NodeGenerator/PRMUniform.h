@@ -4,6 +4,8 @@
 #include "NodeGeneratorMethod.h"
 #include "UniformSamplers.h"
 
+#include "NeighborhoodFinder.h"
+
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -63,7 +65,7 @@ class BasicPRM: public NodeGenerationMethod<CFG> {
 			     DistanceMetric *dm, vector<CFG>& nodes);
   
   virtual void GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs);
-
+  
   //Index for next node 
   //used in incremental map generation
   static int nextNodeIndex;
@@ -223,14 +225,14 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
 
 /*** note, duplicate code here, should call UniformRandomFreeSampler instead ***/
 
-  LOG_DEBUG_MSG("BasicPRM::GenerateNodes()"); 
+  LOG_DEBUG_MSG("BasicPRM::GenerateNodes()");
   string callee("BasicPRM::GenerateNodes");
   Environment* pEnv = in_pRegion;
   Stat_Class* pStatClass = in_pRegion->GetStatClass();
   CollisionDetection* pCd = this->GetMPProblem()->GetCollisionDetection();
   ValidityChecker<CFG>* pVc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr pVcm = pVc->GetVCMethod(this->vcMethod);
- 	  
+
   if (this->exactNodes==1)
      cout << "(numNodes=" << this->numNodes << ") ";
   else
@@ -281,6 +283,82 @@ GenerateNodes(MPRegion<CFG,DefaultWeight>* in_pRegion, vector< CFG >  &outCfgs) 
     }
   }
   
+  //NeighborhoodFinder* nf = new NeighborhoodFinder();
+  
+  //nf->addCfgs<CFG>(outCfgs);
+  //nf->buildTree<CFG>(6);
+/*  
+  ANNkd_tree* kdTree;
+  ANNpointArray dataPts;
+  
+  int nPts = outCfgs.size();
+  int dim = outCfgs.at(outCfgs.size() - 1).DOF();
+  
+  // load data points for ANN from generated CFGs
+  dataPts = annAllocPts(nPts, dim);
+  
+  for (int i = 0; i < outCfgs.size(); i++) {
+    //cout << i << ": dof = " << outCfgs.at(i).DOF() << endl;
+    vector<double> data = outCfgs.at(i).GetData();
+    
+    ANNpoint p = annAllocPt(dim);
+    for (int j = 0; j < data.size(); j++) {
+      //cout << "\t" << data.at(j) << endl;
+      p[j] = data.at(j);
+    }   
+    dataPts[i] = p;
+  }
+  
+  // build kd-tree
+  kdTree = new ANNkd_tree(dataPts, nPts, dim);
+  
+  // create random query point
+  CFG query_cfg;
+  query_cfg.GetRandomCfg(pEnv);
+  
+  ANNpoint queryPt = annAllocPt(dim);
+  for (int i = 0; i < query_cfg.GetData().size(); i++)
+    queryPt[i] = query_cfg.GetData().at(i);
+  
+  int k;
+  double eps;
+  ANNidxArray nnIdx;
+  ANNdistArray dists;
+  
+  // run exact NN search
+  k = 10;
+  eps = 0;
+  nnIdx = new ANNidx[k];
+  dists = new ANNdist[k];
+  
+  kdTree->annkSearch(queryPt, k, nnIdx, dists, eps);
+  
+  // output results
+  //cout << "annkSearch: k = " << k << ", eps = " << eps << endl;
+  //cout << "NN:  Index  Distance \n";
+  for (int i = 0; i < k; i++) {
+      dists[i] = sqrt(dists[i]);
+      //cout << i << "  " << nnIdx[i] << "  " << dists[i] << "\n";
+  }
+ 
+  // run approx NN search
+  k = 10;
+  eps = 0.5;
+  nnIdx = new ANNidx[k];
+  dists = new ANNdist[k];
+  
+  kdTree->annkSearch(queryPt, k, nnIdx, dists, eps);
+  
+  // output results
+  //cout << "annkSearch: k = " << k << ", eps = " << eps << endl;
+  //cout << "NN:  Index  Distance \n";
+  for (int i = 0; i < k; i++) {
+      dists[i] = sqrt(dists[i]);
+      //cout << i << "  " << nnIdx[i] << "  " << dists[i] << "\n";
+  }
+  
+  //kdTree->getStats(
+*/
   LOG_DEBUG_MSG("~BasicPRM::GenerateNodes()"); 
   
   

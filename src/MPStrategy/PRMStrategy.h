@@ -25,7 +25,7 @@
 
 //#include "ExplicitInstantiation.h"
 
-/* util.h defines EXIT used in initializing the environment*/
+/* util.h defines PMPL_EXIT used in initializing the environment*/
 #include "util.h"
 #include "MPProblem.h"
 #include "MPCharacterizer.h"
@@ -112,6 +112,7 @@ class PRMRoadmap : public MPStrategyMethod {
   //---------------------------
     for(int it =1; it<= m_iterations; ++it)
     {
+
     vector<CfgType> nodes;
     vector<VID> new_free_vids;
 
@@ -152,7 +153,8 @@ class PRMRoadmap : public MPStrategyMethod {
       pNodeChar = characterize->GetNodeCharacterizerMethod(*itr);
       pNodeChar->Characterize(region);
     }
-      /*
+    
+    /*
     //Remove nodes that we don't want;
     RoadmapGraph<CfgType,WeightType>* pMap = region->GetRoadmap()->m_pRoadmap;
     vector<VID> map_vids;
@@ -164,74 +166,67 @@ class PRMRoadmap : public MPStrategyMethod {
         pMap->DeleteVertex(*itr);
     }
    */
-    
-  //---------------------------
-  // Connect roadmap nodes
-  //---------------------------
-    ConnectionClock.StartClock("Node Connection");
-    // get VID's from nodes in the roadmap  
-    vector<VID> verticesVID;
-    region->GetRoadmap()->m_pRoadmap->GetVerticesVID(verticesVID);
-/*
-    GRAPH::vertex_iterator vi;
-    GRAPH g = *(region->GetRoadmap()->m_pRoadmap);
-    //RoadmapGraph<CfgType, WeightType> g = *(region->GetRoadmap()->m_pRoadmap);
-    for(vi= g.begin();vi!=g.end();++vi)
-	verticesVID.push_back(vi.descriptor());
-*/
-
-    LOG_DEBUG_MSG("PRMRoadmap:: all nodes: " << verticesVID.size() << "; new nodes: " << new_free_vids.size());
-    ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
-    typedef vector<string>::iterator J;
-    for(J itr = m_vecStrNodeConnectionLabels.begin(); 
-        itr != m_vecStrNodeConnectionLabels.end(); ++itr)
-    {
-      LOG_DEBUG_MSG("PRMRoadmap:: " << *itr);
-      NodeConnectionMethod<CfgType,WeightType>* pConnection;
-      pConnection = connectmap->GetNodeMethod(*itr);
-      //connect new free vids to nodes that were already in the roadmap at itr-1
-      pConnection->Connect(region->GetRoadmap(), *pStatClass, 
-                      //     GetMPProblem()->GetCollisionDetection(),
-                           GetMPProblem()->GetDistanceMetric(), 
-                           GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                           GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-                           GetMPProblem()->GetMPStrategy()->addAllEdges,
-                           new_free_vids, verticesVID);
-      // @todo need to use ifSameCC
-      // @todo improve performance: copy new nodes to a temporary roadmap where connection is done.
-      // @todo Then,  copy nodes and edges back from the temporary roadmap into the "permanent" roadmap
-      // @todo connections in temporary roadmap can be done with IfSameCC option enabled 
-      // @todo ISameCC is as efficient as it could be because the temporary roadmap only contains a fraction
-      // @todo of the nodes of the "permanent" roadmap
-/*        pConnection->Connect(region->GetRoadmap(), *pStatClass,  */
-/*                         GetMPProblem()->GetCollisionDetection(), */
-/*                         GetMPProblem()->GetDistanceMetric(),  */
-/*                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), */
-/*                             GetMPProblem()->GetMPStrategy()->addPartialEdge,  */
-/*                         GetMPProblem()->GetMPStrategy()->addAllEdges, */
-/*                         new_free_vids, new_free_vids); */
-    }
       
-    typedef vector<string>::iterator K;
-    for(K itr = m_vecStrComponentConnectionLabels.begin(); 
-        itr != m_vecStrComponentConnectionLabels.end(); ++itr)
-    {
-      LOG_DEBUG_MSG("PRMRoadmap:: " << *itr);
-      ComponentConnectionMethod<CfgType,WeightType>* pConnection;
-      pConnection = connectmap->GetComponentMethod(*itr);
-      
-      pConnection->Connect(region->GetRoadmap(), *pStatClass, 
-              //             GetMPProblem()->GetCollisionDetection(),
-                           GetMPProblem()->GetDistanceMetric(), 
-                           GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                           GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-                           GetMPProblem()->GetMPStrategy()->addAllEdges);
-      
-    }
+    //---------------------------
+    // Connect roadmap nodes
+    //---------------------------
+      ConnectionClock.StartClock("Node Connection");
+      // get VID's from nodes in the roadmap  
+      vector<VID> verticesVID;
+      region->GetRoadmap()->m_pRoadmap->GetVerticesVID(verticesVID);
+      LOG_DEBUG_MSG("PRMRoadmap:: all nodes: " << verticesVID.size() << "; new nodes: " << new_free_vids.size());
+      ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
+      typedef vector<string>::iterator J;
+      for(J itr = m_vecStrNodeConnectionLabels.begin(); 
+          itr != m_vecStrNodeConnectionLabels.end(); ++itr)
+      {
+        LOG_DEBUG_MSG("PRMRoadmap:: " << *itr);
+        ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
+        pConnection = connectmap->GetNodeMethod(*itr);
+        //connect new free vids to nodes that were already in the roadmap at itr-1
+        GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectNodes(
+                             shared_ptr<NodeConnectionMethod<CfgType,WeightType> > (pConnection),
+                             region->GetRoadmap(), *pStatClass, 
+                             GetMPProblem()->GetDistanceMetric(),
+                             GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                             GetMPProblem()->GetMPStrategy()->addPartialEdge, 
+                             GetMPProblem()->GetMPStrategy()->addAllEdges,
+                             new_free_vids.begin(), new_free_vids.end());
+                             
+        // @todo need to use ifSameCC
+        // @todo improve performance: copy new nodes to a temporary roadmap where connection is done.
+        // @todo Then,  copy nodes and edges back from the temporary roadmap into the "permanent" roadmap
+        // @todo connections in temporary roadmap can be done with IfSameCC option enabled 
+        // @todo ISameCC is as efficient as it could be because the temporary roadmap only contains a fraction
+        // @todo of the nodes of the "permanent" roadmap
+        /*        pConnection->Connect(region->GetRoadmap(), *pStatClass,  */
+        /*                         GetMPProblem()->GetCollisionDetection(), */
+        /*                         GetMPProblem()->GetDistanceMetric(),  */
+        /*                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), */
+        /*                             GetMPProblem()->GetMPStrategy()->addPartialEdge,  */
+        /*                         GetMPProblem()->GetMPStrategy()->addAllEdges, */
+        /*                         new_free_vids, new_free_vids); */
+      }
       
       
-      
-    ConnectionClock.StopClock();
+      typedef vector<string>::iterator K;
+      for(K itr = m_vecStrComponentConnectionLabels.begin(); 
+          itr != m_vecStrComponentConnectionLabels.end(); ++itr)
+      {
+        LOG_DEBUG_MSG("PRMRoadmap:: " << *itr);
+        ConnectMap<CfgType,WeightType>::ComponentConnectionPointer pConnection;
+        pConnection = connectmap->GetComponentMethod(*itr);
+        connectmap->ConnectComponents(pConnection,region->GetRoadmap(), *pStatClass, 
+                             GetMPProblem()->GetDistanceMetric(),
+                             GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                             GetMPProblem()->GetMPStrategy()->addPartialEdge, 
+                             GetMPProblem()->GetMPStrategy()->addAllEdges);
+        
+      }
+        
+        
+        
+      ConnectionClock.StopClock();
       std::stringstream ss;
       ss << it;
       std::string str_index;
@@ -248,7 +243,7 @@ class PRMRoadmap : public MPStrategyMethod {
       std::string str_RandomSeed;
       ssRandomSeed >> str_RandomSeed; 
  
-      string output_base_filename =  getBaseFilename() +"." + str_RandomSeed +"." 
+      string output_base_filename = getBaseFilename() +"." + str_RandomSeed +"." 
                                               + str_index + "of" + str_Iterations;
       string outputFilename = output_base_filename+ ".map";
       string outStatname = output_base_filename+ ".stat";
@@ -264,6 +259,9 @@ class PRMRoadmap : public MPStrategyMethod {
       region->WriteRoadmapForVizmo(myofstream);
       myofstream.close();
     
+      NodeGenClock.PrintClock();
+      ConnectionClock.PrintClock();
+      Allstuff.StopPrintClock();
 
       std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later
       std::cout.rdbuf(stat_ofstream.rdbuf());   // redirect destination of std::cout
@@ -283,13 +281,10 @@ class PRMRoadmap : public MPStrategyMethod {
       
       std::cout.rdbuf(sbuf);  // restore original stream buffer 
       stat_ofstream.close();
-    // system call to gzip
-      string system_out_call(string("gzip -9 ") + outputFilename);
-      
-      system(system_out_call.c_str());
+
       cout << "Finished iteration " << str_index << " of " << str_Iterations << endl;
-     }
-     cout << "!!ALL FINISHED!!"<< endl;
+    }
+    cout << "!!ALL FINISHED!!"<< endl;
     LOG_DEBUG_MSG("~PRMRoadmap::()");
   }
   
@@ -373,9 +368,10 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
     Allstuff.StartClock("Everything");
     Clock_Class        NodeGenClock;
     Clock_Class        ConnectionClock;
-  //---------------------------
-  // Generate roadmap nodes
-  //---------------------------
+  
+    //---------------------------
+    // Generate roadmap nodes
+    //---------------------------
     NodeGenClock.StartClock("Node Generation");
     typedef vector<string>::iterator I;
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
@@ -397,21 +393,24 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
   // Connect roadmap nodes
   //---------------------------
     ConnectionClock.StartClock("Node Connection");
-      
+    vector<VID> allVIDS; //allVIDS.reserve(region->GetRoadmap()->m_pRoadmap->size());
+    region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allVIDS);
     ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
     typedef vector<string>::iterator J;
     for(J itr = m_vecStrNodeConnectionLabels.begin(); 
         itr != m_vecStrNodeConnectionLabels.end(); ++itr)
     {
       LOG_DEBUG_MSG("PRMOriginalRoadmap:: " << *itr);
-      NodeConnectionMethod<CfgType,WeightType>* pConnection;
+      
+      ConnectMap<CfgType,WeightType>::NodeConnectionPointer pConnection;
       pConnection = connectmap->GetNodeMethod(*itr);
-      pConnection->Connect(region->GetRoadmap(), *pStatClass, 
-      //                     GetMPProblem()->GetCollisionDetection(),
+      cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
+      connectmap->ConnectNodes(pConnection, region->GetRoadmap(), *pStatClass, 
                            GetMPProblem()->GetDistanceMetric(), 
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-                           GetMPProblem()->GetMPStrategy()->addAllEdges);
+                           GetMPProblem()->GetMPStrategy()->addAllEdges,
+                           allVIDS.begin(), allVIDS.end(), allVIDS.begin(), allVIDS.end());
     }
       
     typedef vector<string>::iterator K;
@@ -419,11 +418,10 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
         itr != m_vecStrComponentConnectionLabels.end(); ++itr)
     {
       LOG_DEBUG_MSG("PRMOriginalRoadmap:: " << *itr);
-      ComponentConnectionMethod<CfgType,WeightType>* pConnection;
+      ConnectMap<CfgType,WeightType>::ComponentConnectionPointer pConnection;
       pConnection = connectmap->GetComponentMethod(*itr);
       
-      pConnection->Connect(region->GetRoadmap(), *pStatClass, 
-       //                    GetMPProblem()->GetCollisionDetection(),
+      connectmap->ConnectComponents(pConnection, region->GetRoadmap(), *pStatClass, 
                            GetMPProblem()->GetDistanceMetric(), 
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 
@@ -438,9 +436,9 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
     //if (!m_no_output_files) {
  
       string outputFilename = getBaseFilename() + ".original.map";
-      string outStatname = getBaseFilename()+ ".original.stat";    
+      //string outStatname = getBaseFilename()+ ".original.stat";    
       ofstream  myofstream(outputFilename.c_str());
-      std::ofstream  stat_ofstream(outStatname.c_str());
+      //std::ofstream  stat_ofstream(outStatname.c_str());
     
       if (!myofstream) {
         LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
@@ -450,27 +448,27 @@ class PRMOriginalRoadmap : public MPStrategyMethod {
       myofstream.close();
     
 
-      std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later
-      std::cout.rdbuf(stat_ofstream.rdbuf());   // redirect destination of std::cout
+//      std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later
+//      std::cout.rdbuf(stat_ofstream.rdbuf());   // redirect destination of std::cout
       
       pStatClass->PrintAllStats(region->GetRoadmap());
       NodeGenClock.PrintClock();
       ConnectionClock.PrintClock();
       Allstuff.StopPrintClock();
       
-      pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(),
-                                       GetMPProblem()->GetDistanceMetric());
+//      pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(),
+//                                       GetMPProblem()->GetDistanceMetric());
 
-      pStatClass->ComputeInterCCFeatures(region->GetRoadmap(),
-                                         GetMPProblem()->GetDistanceMetric());
-      pStatClass->PrintFeatures();
+//      pStatClass->ComputeInterCCFeatures(region->GetRoadmap(),
+//                                         GetMPProblem()->GetDistanceMetric());
+//      pStatClass->PrintFeatures();
     
-      std::cout.rdbuf(sbuf);  // restore original stream buffer 
-      stat_ofstream.close();
+//      std::cout.rdbuf(sbuf);  // restore original stream buffer 
+//      stat_ofstream.close();
       // system call to gzip
-      string system_out_call(string("gzip -9 ") + outputFilename);
+//      string system_out_call(string("gzip -9 ") + outputFilename);
       
-      system(system_out_call.c_str());
+//      system(system_out_call.c_str());
     //}
 
     cout << "Finished map " << endl;

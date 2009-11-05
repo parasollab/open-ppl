@@ -83,6 +83,7 @@ public:
 
   ///Get a random vector whose magnitude is incr.
   virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm);
+  virtual void GetRandomRay(double incr, Environment* env, DistanceMetricMethod* dm);
   //@}
 
   virtual void GetRandomCfg(Environment* env);

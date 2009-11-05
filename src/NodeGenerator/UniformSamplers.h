@@ -67,7 +67,7 @@ class UniformRandomSampler : public SamplerMethod<CFG>
       bool generated = false;
       int attempts = 0;
       for (int i =0; i< num_nodes; i++){ 
-	  cout << "Node number  = " << i << endl;
+	  //cout << "Node number  = " << i << endl;
       do {
 	Stat.IncNodes_Attempted();
 	attempts++;

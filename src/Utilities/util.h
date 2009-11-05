@@ -186,16 +186,16 @@ double GaussianDistribution(double m, double s);
 /**@name File I/O Utility*/
 //@{
 
-    #define EXIT 1      ///< Actions for VerifyFileExists
+    #define PMPL_EXIT 1      ///< Actions for VerifyFileExists
     #define RETURN 2    ///< Actions for VerifyFileExists
 
     /**Check if or not this given filename exists.
       *@param _fname File name that is going to be checked.
       *@action What should be done if file not found.
-      *Its value should be EXIT or RETURN.
+      *Its value should be PMPL_EXIT or RETURN.
       *
       *@return true if file exists. If file dosen't exist 
-      *and action is EXIT, process will be terminated.
+      *and action is PMPL_EXIT, process will be terminated.
       *Otherwise false will be returned.
       */
     bool VerifyFileExists(const char *_fname,int action);
@@ -431,7 +431,7 @@ class MPBaseObject {
     string m_strLabel;
     /// want to add string m_strName;
     //      remove from below ... use in future
-      //if(level >= GetMessageLog().GetLevel()) 
+    //if(level >= GetMessageLog().GetLevel())
 
 };
 /*

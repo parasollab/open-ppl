@@ -1,8 +1,10 @@
 #ifndef Closest_h
 #define Closest_h
+
 #include "NodeConnectionMethod.h"
 #include "LocalPlanners.h"
 #include "GraphAlgo.h"
+#include "NeighborhoodFinder.h"
 
 //Connect K Closest only allowed M failures
 //If M is not specified in command line, it is set as same as K
@@ -57,32 +59,30 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // Core: Connection method
-  void Connect();
 
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-             DistanceMetric *,
-             LocalPlanners<CFG,WEIGHT>*,
-             bool addPartialEdge, bool addAllEdges);  
+  void ConnectNodes(
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        DistanceMetric * dm,
+        LocalPlanners<CFG,WEIGHT>* lp,
+        bool addPartialEdge, bool addAllEdges) ;
 
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
-             DistanceMetric *,
-             LocalPlanners<CFG,WEIGHT>*,
-             bool addPartialEdge, bool addAllEdges,
-             vector<VID>& v1, vector<VID>& v2);
+  template<typename InputIterator>
+  void ConnectNodes(
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        DistanceMetric * dm,
+        LocalPlanners<CFG,WEIGHT>* lp,
+        bool addPartialEdge, bool addAllEdges,
+        InputIterator _itr1_first, InputIterator _itr1_last) ;
 
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-             DistanceMetric*,
-             LocalPlanners<CFG,WEIGHT>*,
-             bool addPartialEdge, bool addAllEdges,
-             vector<vector<VID> >& verticesList);
+  template<typename InputIterator>
+  void ConnectNodes(
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        DistanceMetric * dm,
+        LocalPlanners<CFG,WEIGHT>* lp,
+        bool addPartialEdge, bool addAllEdges,
+        InputIterator _itr1_first, InputIterator _itr1_last,
+        InputIterator _itr2_first, InputIterator _itr2_last) ;
 
-  //function used in this class only
-  void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-            DistanceMetric * dm,
-            LocalPlanners<CFG,WEIGHT>* lp,
-            bool addPartialEdge,
-            bool addAllEdges,
-            vector< pair<VID,VID> > kp); 
 
 
  private:
@@ -91,6 +91,7 @@ class Closest: public NodeConnectionMethod<CFG,WEIGHT> {
 
   int kclosest;
   int mfailure;
+  string m_nf;
 };
 
 
@@ -134,12 +135,12 @@ template <class CFG, class WEIGHT>
 Closest<CFG,WEIGHT>::~Closest() { 
 }
 
-
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::ParseXML(XMLNodeReader& in_Node) { 
   NodeConnectionMethod<CFG,WEIGHT>::ParseXML(in_Node);
   kclosest = in_Node.numberXMLParameter(string("k"), true, 5,1,1000, 
                                   string("k-closest value")); 
+  m_nf = in_Node.stringXMLParameter("nf", true, "", "nf");
 }
 
 
@@ -193,22 +194,16 @@ CreateCopy() {
   return _copy;
 }
 
-template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
-Connect() {
-  //cout << "Connecting CCs with method: closest k="<< kclosest << endl ;
-  //cout << "DOING NOTHING" << endl;
-}
-
 
 template <class CFG, class WEIGHT>
 void Closest<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges) 
 {
+    cout << "Closest<CFG,WEIGHT>::ConnectNodes() - Roadmap Only" << endl << flush;
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
 #ifndef QUIET
   cout << "closest(k="<< kclosest <<", mfailure=" << mfailure <<"): "<<flush;
@@ -218,24 +213,62 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   vector<VID> vertices;
   pMap->GetVerticesVID(vertices);
   
-  Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, vertices, vertices);
-
+  ConnectNodes(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, 
+        vertices.begin(), vertices.end());
 }
 
 
 template <class CFG, class WEIGHT>
+template<typename InputIterator>
 void Closest<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
-            vector<vector<VID> >& verticesList)
+            InputIterator _itr1_first, InputIterator _itr1_last) 
 {
-  for(int i=0; i<verticesList.size()-1; ++i)
-    for(int j=i+1; j<verticesList.size(); ++j)
-      Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges,
-            verticesList[i], verticesList[j]);
+  cout << "Closest<CFG,WEIGHT>::ConnectNodes() - 1 pairs InputIterator" << endl << flush;
+
+
+  LPOutput<CFG,WEIGHT> lpOutput;
+  for(InputIterator itr1 = _itr1_first; itr1 != _itr1_last; ++itr1) {
+    CFG v_cfg = _rm->m_pRoadmap->GetData(*itr1);
+    vector<VID> closest(kclosest);
+    typename vector<VID>::iterator closest_iter = closest.begin();
+    NeighborhoodFinder::NeighborhoodFinderPointer nfptr;
+    nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf);
+    this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, v_cfg, kclosest, closest_iter);
+    for(typename vector<VID>::iterator itr2 = closest.begin(); itr2!= closest.end(); ++itr2) {
+      if(*itr1 == *itr2) continue; //don't connect the same ones!
+      if(_rm->IsCached(*itr1,*itr2)) {
+        if(!_rm->GetCache(*itr1,*itr2)) {
+        //cout << "Connect:: using failed cache" << endl;
+        continue;
+        }
+      }
+      Stats.IncConnections_Attempted();
+      if(_rm->m_pRoadmap->IsEdge(*itr1,*itr2)) 
+        continue;
+      #if CHECKIFSAMECC
+      if(IsSameCC(*(_rm->m_pRoadmap), *itr1,*itr2)) 
+        continue;
+      #endif
+      if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
+       _rm->m_pRoadmap->GetData(*itr1),
+       _rm->m_pRoadmap->GetData(*itr2),
+       &lpOutput, this->connectionPosRes, this->connectionOriRes, 
+       (!addAllEdges) )) {
+        _rm->m_pRoadmap->AddEdge(*itr1,*itr2, lpOutput.edge);
+        Stats.IncConnections_Made();
+        _rm->SetCache(*itr1,*itr2,true);
+      }
+      else {
+        _rm->SetCache(*itr1,*itr2,false);
+      }
+    } 
+  }
+
 }
 
 
@@ -246,92 +279,58 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
  * }
  */
 template <class CFG, class WEIGHT>
+template<typename InputIterator>
 void Closest<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
-            vector<VID>& v1, vector<VID>& v2) 
+            InputIterator _itr1_first, InputIterator _itr1_last,
+            InputIterator _itr2_first, InputIterator _itr2_last)
 {
-  //cout << "Connecting CCs with method: closest k="<< kclosest << std::endl;
-#ifndef QUIET
-  cout << "closest(k="<< kclosest <<", mfailure="<< mfailure <<"): "<<flush;
+  cout << "Closest<CFG,WEIGHT>::ConnectNodes() - 2 pairs InputIterator" << endl << flush;
 
-#endif
-  
-  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;  
-  vector< pair<VID,VID> > kp;
-
-  if( v2.size() < kclosest) {//all pairs
-    for(typename vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
-      kp.clear();
-      for(typename vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J){
-        if(*I != *J)
-          kp.push_back(make_pair<VID,VID>(*I, *J));
-      }
-      Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, kp);
-    } //end of for I
-  } else {
-    for(typename vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I){
-      kp.clear();
-      vector<VID> v;
-      v.push_back(*I);
-      kp = dm->FindKClosestPairs(_rm,v, v2, kclosest);
-      Connect(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, kp);
-    }
-  }
-}
-
-
-
-//connection for a given set of pairs and only allow mfailure 
-template <class CFG, class WEIGHT>
-void Closest<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-            DistanceMetric * dm,
-            LocalPlanners<CFG,WEIGHT>* lp,
-            bool addPartialEdge,
-            bool addAllEdges,
-            vector< pair<VID,VID> > kp) 
-{
-    int failure = 0;   //actual failure attemp for this node 
-    // for each pair identified
-    LPOutput<CFG,WEIGHT> lpOutput;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
-    for(typename vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
-      //cout<<KP->first<<"->"<<KP->second<<endl;
-      if(failure >= mfailure){
-      //cout << "failure time equals the max allowed number."<<KP->first<<" fails: "<<failure<<endl;
-      break;
-      }
-      if(_rm->IsCached(KP->first,KP->second)) {
-	if(!_rm->GetCache(KP->first,KP->second)) {
-	  //cout << "Connect:: using failed cache" << endl;
-	  continue;
-	}
-      }
-      if(_rm->m_pRoadmap->IsEdge(KP->first, KP->second)) 
+  LPOutput<CFG,WEIGHT> lpOutput;
+  for(InputIterator itr1 = _itr1_first; itr1 != _itr1_last; ++itr1) {
+    CFG v_cfg = _rm->m_pRoadmap->GetData(*itr1);
+    vector<VID> closest(kclosest);
+    typename vector<VID>::iterator closest_iter = closest.begin();
+    NeighborhoodFinder::NeighborhoodFinderPointer nfptr;
+    nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf);
+    this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, _itr2_first, 
+                                               _itr2_last, v_cfg, kclosest, closest_iter);
+    for(typename vector<VID>::iterator itr2 = closest.begin(); itr2!= closest.end(); ++itr2) {
+      if(*itr1 == *itr2) continue; //don't connect the same ones!
+      if(_rm->IsCached(*itr1,*itr2)) {
+        if(!_rm->GetCache(*itr1,*itr2)) {
+        //cout << "Connect:: using failed cache" << endl;
         continue;
-      cmap.reset();
-      if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap,KP->first, KP->second)) 
+        }
+      }
+
+      Stats.IncConnections_Attempted();
+      if(_rm->m_pRoadmap->IsEdge(*itr1,*itr2)) 
         continue;
+
+      #if CHECKIFSAMECC
+      if(IsSameCC(*(_rm->m_pRoadmap), *itr1,*itr2)) 
+        continue;
+      #endif
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
-			 _rm->m_pRoadmap->find_vertex(KP->first).property(),
-			 _rm->m_pRoadmap->find_vertex(KP->second).property(),
-			 &lpOutput, this->connectionPosRes, this->connectionOriRes, 
-			 (!addAllEdges) )) {
-        _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
-	Stats.IncConnections_Made();
-	_rm->SetCache(KP->first,KP->second,true);
+       _rm->m_pRoadmap->GetData(*itr1),
+       _rm->m_pRoadmap->GetData(*itr2),
+       &lpOutput, this->connectionPosRes, this->connectionOriRes, 
+       (!addAllEdges) )) {
+        _rm->m_pRoadmap->AddEdge(*itr1,*itr2, lpOutput.edge);
+        Stats.IncConnections_Made();
+        _rm->SetCache(*itr1,*itr2,true);
       }
       else {
-	_rm->SetCache(KP->first,KP->second,false);
-	failure++;
+        _rm->SetCache(*itr1,*itr2,false);
       }
     } 
+  }
 }
-
-
-
+ 
 #endif

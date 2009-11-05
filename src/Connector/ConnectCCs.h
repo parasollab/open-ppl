@@ -102,17 +102,21 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 
   //@}
 
-  void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		 DistanceMetric* dm,
-		 LocalPlanners<CFG,WEIGHT>* lp,
+  template <typename InputIterator>
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+		 DistanceMetric *,
+		 LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
 		 bool addAllEdges);
-  void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-		 DistanceMetric* dm,
-		 LocalPlanners<CFG,WEIGHT>* lp,
+	
+	template <typename InputIterator>
+  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+		 DistanceMetric *,
+		 LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
 		 bool addAllEdges,
-		 vector<VID>& vids1, vector<VID>& vids2);
+		 InputIterator _itr1_first, InputIterator _itr1_last,
+     InputIterator _itr2_first, InputIterator _itr2_last);
 
 // private:
   //////////////////////
@@ -282,8 +286,13 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
   //Clock_Class clock;
   //clock.StartClock("dm computation");  
-  vector<pair<VID,VID> > kp = 
-    dm->FindKClosestPairs(_rm,cc1vec,cc2vec,k);
+  //Old Interface
+  // vector<pair<VID,VID> > kp = 
+  //   dm->FindKClosestPairs(_rm,cc1vec,cc2vec,k);
+  //New Interface
+  vector<pair<VID,VID> > kp(k);
+  typename vector<pair<VID,VID> >::iterator kp_iter = kp.begin();
+  this->GetMPProblem()->GetNeighborhoodFinder()->KClosestPairs(_rm, cc1vec.begin(), cc1vec.end(), cc2vec.begin(),cc2vec.end(), kp_iter);
   //clock.StopPrintClock();
 
   LPOutput<CFG,WEIGHT> lpOutput;
@@ -318,6 +327,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 
 template <class CFG, class WEIGHT>
+template<typename InputIterator>
 void ConnectCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
           DistanceMetric * dm,
@@ -343,11 +353,11 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       cmap.reset();
       if ( !is_same_cc(*pMap,cmap,C1->second,C2->second) ) {
         vector<VID> cc1;
-	cmap.reset();
+	      cmap.reset();
         get_cc(*pMap,cmap,C1->second,cc1);
 
         vector<VID> cc2;
-	cmap.reset();
+	      cmap.reset();
         get_cc(*pMap,cmap,C2->second,cc2);
 
         if(cc1.size() < smallcc && cc2.size() < smallcc ) {
@@ -365,13 +375,16 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 
 template <class CFG, class WEIGHT>
+template<typename InputIterator>
 void ConnectCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
           DistanceMetric * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
           bool addAllEdges,
-	  vector<VID> & vids1, vector<VID> & vids2) {
+          InputIterator _itr1_first, InputIterator _itr1_last,
+          InputIterator _itr2_first, InputIterator _itr2_last) {
+//	  vector<VID> & vids1, vector<VID> & vids2) {
 	  //vector<typename RoadmapGraph<CFG, WEIGHT>::VID> & vids1, vector<typename RoadmapGraph<CFG, WEIGHT>::VID> & vids2) {
 #ifndef QUIET
   cout << "components(kpairs="<< kpairs ;
@@ -381,19 +394,18 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   //DisplayCCStats(*pMap); cout << endl;
 
-  typename vector<VID>::reverse_iterator V1, V2;
-  for(V1 = vids1.rbegin(); V1 != vids1.rend(); ++V1) {
-    for(V2 = vids2.rbegin(); V2 != vids2.rend(); ++V2) {
+  for (InputIterator itr1 = _itr1_last; itr1 != _itr1_first; --itr1) {
+    for (InputIterator itr2 = _itr2_last; itr2 != _itr2_first; --itr2) {
       // if V1 & V2 not already connected, try to connect them 
       cmap.reset();
-      if ( !is_same_cc(*pMap,cmap,*V1,*V2) ) {
+      if ( !is_same_cc(*pMap,cmap,*itr1,*itr2) ) {
         vector<VID> cc1;
-	cmap.reset();
-        get_cc(*pMap,cmap,*V1,cc1);
+	      cmap.reset();
+        get_cc(*pMap,cmap,*itr1,cc1);
 
         vector<VID> cc2;
-	cmap.reset();
-        get_cc(*pMap,cmap, *V2,cc2);
+	      cmap.reset();
+        get_cc(*pMap,cmap,*itr2,cc2);
 
         if(cc1.size() < smallcc && cc2.size() < smallcc ) {
           ConnectSmallCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);

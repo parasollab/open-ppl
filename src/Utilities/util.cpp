@@ -226,7 +226,7 @@ VerifyFileExists(const char *_fname,int action) {
   char ch;
   if (!is.get(ch)) {
     cout << "\nERROR: Can't open \"" << _fname << "\"" << endl;
-    if(action==EXIT)
+    if(action==PMPL_EXIT)
       exit(1);
     else return false;
   }                                                                             

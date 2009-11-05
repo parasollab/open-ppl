@@ -13,7 +13,7 @@
 #include "Sampler.h"
 
 
-/* util.h defines EXIT used in initializing the environment*/
+/* util.h defines PMPL_EXIT used in initializing the environment*/
 #include "util.h"
 #include "MPProblem.h"
 #include "MPCharacterizer.h"
@@ -230,20 +230,21 @@ operator()(int in_RegionID) {
 	    int lp_attempt_before = pStatClass->LPAttempts[0];
 	    int lp_connect_before = pStatClass->LPConnections[0];
 	    for(J itr = m_vecStrNodeConnectionLabels.begin(); itr != m_vecStrNodeConnectionLabels.end(); ++itr) {
-	      NodeConnectionMethod<CfgType,WeightType>* pConnection;
+	      ConnectMap<CfgType,WeightType>::NodeConnectionPointer pConnection;
 	      pConnection = connectmap->GetNodeMethod(*itr);
 	      //connect new free vid to nodes that were already in the roadmap at itr-1
 	      vector<VID> new_free_vid;
 	      vector<VID> map_vids;
 	      new_free_vid.push_back(newVID);
 	      region->roadmap.m_pRoadmap->GetVerticesVID(map_vids);
-	      pConnection->Connect(region->GetRoadmap(), *pStatClass, 
+	      connectmap->ConnectNodes(pConnection,region->GetRoadmap(), *pStatClass, 
 			//	   GetMPProblem()->GetCollisionDetection(),
 				   GetMPProblem()->GetDistanceMetric(), 
 				   GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
 				   GetMPProblem()->GetMPStrategy()->addPartialEdge, 
 				   GetMPProblem()->GetMPStrategy()->addAllEdges,
-				   new_free_vid, map_vids);
+				   new_free_vid.begin(), new_free_vid.end(), 
+           map_vids.begin(), map_vids.end());
 	    }
 	    int lp_attempt_after = pStatClass->LPAttempts[0];
 	    int lp_connect_after = pStatClass->LPConnections[0];

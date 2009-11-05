@@ -1,5 +1,6 @@
 #include "MPStrategy/SmoothQueryStrategy.h"
 #include "MPStrategy/MPStrategy.h"
+#include "AllPairsNodeConnection.h"
 //#include "boost/lambda/lambda.hpp"
 
 SmoothQueryStrategy::
@@ -84,29 +85,26 @@ operator()(int in_RegionID)
   Roadmap<CfgType,WeightType>* rdmp = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
   Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
   
-  //setup QueryConnectMap
-  static bool query_connect_map_setup = false;
-  if(!query_connect_map_setup)
-  {
-    query_connect_map_setup = true;
-    vector<NodeConnectionMethod<CfgType, WeightType>*> node_methods;
-    if(m_vecStrNodeConnectionLabels.empty())
-      node_methods.push_back(new ConnectFirst<CfgType, WeightType>());
-    else
-      for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)
-        node_methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
-    m_ConnectMap.SetNodeConnectionMethods(node_methods);
+  vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer > methods;
+    
+  if(m_vecStrNodeConnectionLabels.empty()) {
+    methods.push_back(ConnectMap<CfgType, WeightType>::NodeConnectionPointer(new ConnectFirst<CfgType, WeightType>()));
   }
+  else
+    for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)
+      methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
 
 
   //perform query
   Clock_Class QueryClock;
   QueryClock.StartClock("Query");
+  
   bool query_result = query.PerformQuery(rdmp, *pStatClass, 
-                                //         GetMPProblem()->GetCollisionDetection(), 
-                                         &m_ConnectMap, 
-                                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), 
-                                         GetMPProblem()->GetDistanceMetric());
+                       &m_ConnectMap, 
+                       &methods,
+                       GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                       GetMPProblem()->GetDistanceMetric());
+                                         
   QueryClock.StopPrintClock();
   
   if(query_result)
@@ -114,19 +112,15 @@ operator()(int in_RegionID)
     query.WritePath(rdmp);
     cout << "\tSUCCESSFUL query\n";
 
-    //setup SmoothConnectMap
-    static bool smooth_connect_map_setup = false;
-    if(!smooth_connect_map_setup)
-    {
-      smooth_connect_map_setup = true;
-      vector<NodeConnectionMethod<CfgType, WeightType>*> node_methods;
-      if(m_vecStrSmoothNodeConnectionLabels.empty())
-        node_methods.push_back(new AllPairsNodeConnection<CfgType, WeightType>());
-      else
-        for(vector<string>::iterator I = m_vecStrSmoothNodeConnectionLabels.begin(); I != m_vecStrSmoothNodeConnectionLabels.end(); ++I)
-          node_methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
-      m_SmoothConnectMap.SetNodeConnectionMethods(node_methods);
+    vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer > methods;
+
+    if(m_vecStrSmoothNodeConnectionLabels.empty()) {
+      // all pairs
+      methods.push_back(ConnectMap<CfgType, WeightType>::NodeConnectionPointer(new NeighborhoodConnection<CfgType, WeightType>(0)));
     }
+    else
+      for(vector<string>::iterator I = m_vecStrSmoothNodeConnectionLabels.begin(); I != m_vecStrSmoothNodeConnectionLabels.end(); ++I)
+        methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
 
     //redo connection among nodes in path
     Clock_Class SmoothClock;
@@ -135,12 +129,18 @@ operator()(int in_RegionID)
     for(vector<CfgType>::iterator I = query.path.begin(); I != query.path.end(); ++I)
       if(rdmp->m_pRoadmap->IsVertex(*I))
         path_vids.push_back(rdmp->m_pRoadmap->GetVID(*I));
-    m_SmoothConnectMap.ConnectNodes(rdmp, *pStatClass,
-           //                GetMPProblem()->GetCollisionDetection(),
+        
+    vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer >::iterator itr;
+    for (itr = methods.begin(); itr != methods.end(); itr++)
+      m_SmoothConnectMap.ConnectNodes(
+                           *itr,
+                           rdmp, *pStatClass,
                            GetMPProblem()->GetDistanceMetric(),
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            false, false,
-                           path_vids, path_vids);
+                           path_vids.begin(), path_vids.end(),
+                           path_vids.begin(), path_vids.end());
+                           
     SmoothClock.StopPrintClock();
 
     //reperform query
@@ -148,8 +148,8 @@ operator()(int in_RegionID)
     SmoothQueryClock.StartClock("Query Smoothed Path");
     query.path.clear();
     bool smooth_query_result = query.PerformQuery(rdmp, *pStatClass,
-      //                                            GetMPProblem()->GetCollisionDetection(),
                                                   &m_ConnectMap,
+                                                  &methods,
                                                   GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                                   GetMPProblem()->GetDistanceMetric());
     SmoothQueryClock.StopPrintClock();

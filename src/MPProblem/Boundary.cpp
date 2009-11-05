@@ -108,6 +108,7 @@ unsigned int
 BoundingBox::
 GetPosDOFs() const {
   return pos_dofs;//bounding_box.size();
+  ///\note This was a bug earlier?  why?  Roger 2008.04.28
 }
 
 const std::pair<double,double> 

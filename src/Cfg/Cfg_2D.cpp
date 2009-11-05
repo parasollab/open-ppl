@@ -138,6 +138,7 @@ bool Cfg_2D::ConfigEnvironment(Environment* env) const {
 				     Vector3D(v[0],v[1],v[2]));
   // update link 1.
   env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);
+  
   return true;
 }
 

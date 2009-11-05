@@ -3,6 +3,7 @@
 
 #include "ComponentConnectionMethod.h"
 #include "Closest.h"
+#include "NeighborhoodConnection.h"
 
 //ConnectkCCs
    /**Try to connect different connected components of the roadmap.
@@ -49,20 +50,24 @@ class ConnectkCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
          bool addPartialEdge,
          bool addAllEdges);
 
+  template <typename InputIterator>
   void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
          DistanceMetric* dm,
          LocalPlanners<CFG,WEIGHT>* lp,
          bool addPartialEdge,
          bool addAllEdges,
-         vector<VID>& vids1, vector<VID>& vids2);
+         InputIterator _itr1_first, InputIterator _itr1_last,
+         InputIterator _itr2_first, InputIterator _itr2_last);
 
 protected:
 
     // compute all pair distance between ccs.
     // approximated using coms of ccs
+    template <typename InputIterator>
     void compute_AllPairs_CCDist_com(Roadmap<CFG, WEIGHT>* _rm,
                                                    DistanceMetric * dm,
-                                                   vector<VID>& ccs1,vector<VID>& ccs2);
+                                                   InputIterator _ccs1_first, InputIterator _ccs1_last,
+                                                   InputIterator _ccs2_first, InputIterator _ccs2_last);
     // compute all pair distance between ccs.
     // shortest dist betweem ccs
     void compute_AllPairs_CCDist_closest(Roadmap<CFG, WEIGHT>* _rm,
@@ -206,51 +211,60 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 
 template <class CFG, class WEIGHT>
+template<typename InputIterator>
 void ConnectkCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
           DistanceMetric * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
           bool addAllEdges,
-      vector<VID> & vids1, vector<VID> & vids2) {
+          InputIterator _itr1_first, InputIterator _itr1_last,
+          InputIterator _itr2_first, InputIterator _itr2_last) {
 #ifndef QUIET
   cout << this->GetName()<<" (k1="<<k1<<", k2="<<k2<<"): "<<flush;
 #endif
 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  Closest<CFG,WEIGHT> cl(k1);
-  cl.cdInfo=this->cdInfo;
-  cl.connectionPosRes=this->connectionPosRes;
-  cl.connectionOriRes=this->connectionOriRes;
+  NeighborhoodConnection<CFG,WEIGHT> nc(k1);
+  nc.cdInfo=this->cdInfo;
+  nc.connectionPosRes=this->connectionPosRes;
+  nc.connectionOriRes=this->connectionOriRes;
 
   //DisplayCCStats(*pMap); cout << endl;
 
   stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   //getCC data
   vector< vector<VID> > ccset1, ccset2;
+  
   for(int j=0;j<2;j++){
-    vector<VID> & vids=(j==0)?vids1:vids2;
+    InputIterator vids_first = (j==0) ? _itr1_first : _itr2_first;
+    InputIterator vids_last = (j==0) ? _itr1_last : _itr2_last;
+    
+    //vector<VID> & vids = (j==0) ? vids1 : vids2;
     vector< vector<VID> >& ccset=(j==0)?ccset1:ccset2;
-    for(typename vector<VID>::iterator i=vids.begin();i!=vids.end();i++){
-        ccset.push_back(vector<VID>());  
-        cmap.reset();
-        get_cc(*pMap, cmap, *i, ccset.back());
+    
+    for(InputIterator i = vids_first; i != vids_last; i++){
+      ccset.push_back(vector<VID>());  
+      cmap.reset();
+      get_cc(*pMap, cmap, *i, ccset.back());
     }//end for i
   }//end for j
 
   //(1) compute all pair cc dists
-  compute_AllPairs_CCDist_com(_rm,dm,vids1,vids2);
+  compute_AllPairs_CCDist_com(_rm,dm, _itr1_first, _itr1_last, _itr2_first, _itr2_last);
   //compute_AllPairs_CCDist_closest(_rm,dm,vids1,vids2 );
   //(2) 
   typename vector<VID>::reverse_iterator V1;
-  for(V1 = vids1.rbegin(); V1 != vids1.rend(); ++V1) {
-      int id=vids1.rend()-V1-1;
+  for(InputIterator itr1 = _itr1_last; itr1 != _itr1_first; --itr1) {
+      int id = itr1 - _itr1_first - 1;
       //find k2 closest
       vector<int> k2_ccid;
       get_K2_Pairs(id,k2_ccid);
       //connect
       for(vector<int>::iterator v2=k2_ccid.begin();v2!=k2_ccid.end();v2++)
-          cl.Connect(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,ccset1[id],ccset2[*v2]);
+          nc.ConnectNodes(_rm,Stats,dm,lp,addPartialEdge,addAllEdges,
+                          ccset1[id].begin(), ccset1[id].end(),
+                          ccset2[*v2].begin(), ccset2[*v2].end());
   }/*endfor V1*/
   //DisplayCCStats(*pMap); cout << endl;
 }
@@ -306,7 +320,7 @@ compute_AllPairs_CCDist_closest
             double d=1e20;
             if((*i)!=(*j)){//if not the same cc
                 vector<VID> cc2;
-		cmap.reset();
+		            cmap.reset();
                 get_cc(*rmapG, cmap, *j, cc2);
                 d=closestInterCCDist(_rm,dm,cc1,cc2);
             }
@@ -338,20 +352,20 @@ vector<VID>& cc1, vector<VID>& cc2)
 // compute all pair distance between ccs.
 // approximated using com of cc
 template <class CFG, class WEIGHT>
+template <typename InputIterator>
 void ConnectkCCs<CFG,WEIGHT>::
-compute_AllPairs_CCDist_com
-(Roadmap<CFG, WEIGHT>* _rm,
- DistanceMetric * dm,
- vector<VID>& ccs1,vector<VID>& ccs2)
+compute_AllPairs_CCDist_com(Roadmap<CFG, WEIGHT>* _rm, DistanceMetric * dm,
+                            InputIterator _ccs1_first, InputIterator _ccs1_last,
+                            InputIterator _ccs2_first, InputIterator _ccs2_last)
 {
     RoadmapGraph<CFG,WEIGHT> * rmapG=_rm->m_pRoadmap;
     Environment * p_env=_rm->GetEnvironment();
     //compute com of ccs
     vector<CFG> com1,com2;
-    for(typename vector<VID>::iterator i=ccs1.begin();i!=ccs1.end();i++) 
-        com1.push_back(CC_com(rmapG,*i));
-    for(typename vector<VID>::iterator i=ccs2.begin();i!=ccs2.end();i++) 
-        com2.push_back(CC_com(rmapG,*i));
+    for (InputIterator i = _ccs1_first; i != _ccs1_last; i++) 
+      com1.push_back(CC_com(rmapG,*i));
+    for (InputIterator i = _ccs2_first; i != _ccs2_last; i++) 
+      com2.push_back(CC_com(rmapG,*i));
 
     //dist between ccs
     ccDist.clear();
@@ -360,7 +374,8 @@ compute_AllPairs_CCDist_com
         int id1=i-com1.begin();
         for(typename vector<CFG>::iterator j=com2.begin();j!=com2.end();j++){
             int id2=j-com2.begin();
-            if(ccs1[id1]!=ccs2[id2]) //not the same
+            if (*(_ccs1_first + id1) != *(_ccs2_first + id2))
+            //if(ccs1[id1]!=ccs2[id2]) //not the same
                 ccDist.back().push_back(dm->Distance(p_env,*i,*j));
             else //same cc
                 ccDist.back().push_back(1e20);

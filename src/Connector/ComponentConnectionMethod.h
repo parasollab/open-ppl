@@ -29,7 +29,7 @@ class ComponentConnectionMethod : public MPBaseObject{
   
   //////////////////////
   // Connection methods 
-  virtual void Connect(Roadmap<CFG,WEIGHT>* _rm, Stat_Class& Stats,
+  /*virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       bool addPartialEdge, bool addAllEdges) = 0;
@@ -48,7 +48,7 @@ class ComponentConnectionMethod : public MPBaseObject{
       for(J = I+1; J != vids.end(); ++J)
 	this->Connect(rm, Stats, dm, lp, addPartialEdge, addAllEdges,
 		      *I, *J);
-  }
+  }*/
 
  protected:
   //////////////////////

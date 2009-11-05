@@ -36,7 +36,7 @@
 
 #include "GeneratePartitions.h"
 
-/* util.h defines EXIT used in initializing the environment*/
+/* util.h defines PMPL_EXIT used in initializing the environment*/
 #include "util.h"
 
 
@@ -281,7 +281,7 @@ MetaPlanner(Input& input, int i_maximum_tree_height, double i_epsilon,
    */
   
 /*   Roadmap<CFG, WEIGHT> rmap(&input,  &cd, &dm, &lp); */
-/*   input.Read(EXIT); */
+/*   input.Read(PMPL_EXIT); */
 /*   env.Get(&input); */
 
   //CollisionDetection cd;

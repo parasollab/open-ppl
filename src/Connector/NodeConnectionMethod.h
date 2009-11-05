@@ -34,15 +34,16 @@ class NodeConnectionMethod : public MPBaseObject {
   
   //////////////////////
   // Connection methods 
-  virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+/*  virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
-		       bool addPartialEdge, bool addAllEdges) = 0;
-  virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+		       bool addPartialEdge, bool addAllEdges) = 0;*/
+/*  virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       bool addPartialEdge, bool addAllEdges,
-		       vector<VID>& cfgs1, vector<VID>& cfgs2) = 0;
+		       vector<VID>& cfgs1, vector<VID>& cfgs2) = 0;*/
+/*
   virtual void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 		       DistanceMetric* dm,
 		       LocalPlanners<CFG,WEIGHT>* lp,
@@ -54,7 +55,7 @@ class NodeConnectionMethod : public MPBaseObject {
 	this->Connect(rm, Stats, dm, lp, addPartialEdge, addAllEdges,
 		      *I, *J);
   }
-
+*/
  protected:
   //////////////////////
   // Data
@@ -95,7 +96,7 @@ NodeConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   MPBaseObject(in_Node,in_pProblem) {
   m_CheckIfSameCC  = in_Node.boolXMLParameter(string("CheckIfSameCC"),false,
                                               true,
-                                              string("Check if same CC"));
+                                              string("If true, do not connect if edges are in the same CC"));
 }
 
 

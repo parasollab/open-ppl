@@ -339,16 +339,16 @@ void Input::ReadCommandLine(int argc, char** argv){
     }
 
     if ( inmapFile.IsActivated() ){
-      VerifyFileExists(inmapFile.GetValue(),EXIT);
+      VerifyFileExists(inmapFile.GetValue(),PMPL_EXIT);
     }
     if ( inmapFile2.IsActivated() ){
-      VerifyFileExists(inmapFile2.GetValue(),EXIT);
+      VerifyFileExists(inmapFile2.GetValue(),PMPL_EXIT);
     }
 
     descDir.VerifyValidDirName();
     
     //-- Verify INPUT file exists
-    VerifyFileExists(envFile.GetValue(),EXIT);
+    VerifyFileExists(envFile.GetValue(),PMPL_EXIT);
 
 
   } //endtry

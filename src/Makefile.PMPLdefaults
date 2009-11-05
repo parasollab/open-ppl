@@ -3,7 +3,7 @@ ifeq (${platform}, LINUX_gcc) 	#linux/gcc
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL}
 	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB}
-  
+	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a
 
 	BOOST_INCL = -I/usr/include/boost
@@ -93,7 +93,18 @@ XML_LIBFILE = ${TINYXML_DIR}/libtinyxml.a
 # stapl macros
 STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools 
 
+#CGAL macros
+CGAL_INCL = -I${UTILS_DIR}/geom/CGAL-include
+CGAL_DEF = -DCGAL_NO_ASSERTIONS -DCGAL_NO_PRECONDITIONS
 
+#MPNN macros and targets
+MPNN_DIR = ${UTILS_DIR}/nearest_neighbors/MPNN
+MPNN_SRC = ${MPNN_DIR}/src
+MPNN_LIB = -L${MPNN_DIR}/src -lMPNN
+MPNN_INCL = -I${MPNN_DIR}/include
+MPNN_LIBFILE = ${MPNN_DIR}/src/libMPNN.a
+${MPNN_LIBFILE}:
+	cd ${MPNN_DIR}/src; ${MAKE} platform=${platform} debug=${debug}
 
 # pmpl macros
 PMPL_LIB = -L${PMPL_DIR} -lobprm
@@ -112,7 +123,8 @@ PMPL_INCL = \
 	-I${PMPL_DIR}/NodeGenerator \
 	-I${PMPL_DIR}/Utilities \
 	-I${PMPL_DIR}/ValidityChecker \
-	-I${PMPL_DIR}/trash 
+	-I${PMPL_DIR}/trash \
+	-I${PMPL_DIR}/NeighborhoodFinder
 
 PMPL_OBJS = \
 	MPProblem/Geometry/FreeBody.o \
@@ -156,6 +168,7 @@ PMPL_OBJS = \
 	MPStrategy/HybridPRM.o \
 	MPStrategy/QueryStrategy.o \
 	MPStrategy/SmoothQueryStrategy.o \
+        NeighborhoodFinder/MPNNWrapper.o \
 	MPProblem/MPProblem.o 
 #	Haptic.o \
 #	Push.o \

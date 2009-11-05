@@ -22,10 +22,15 @@ ifndef STAPL_DIR
   STAPL_DIR = ${UTILS_DIR}/stapl_release
 endif
 
-
 # include makefile defaults
 include ${UTILS_DIR}/makefile_includes/Makefile.defaults
 include ${PMPL_DIR}/Makefile.PMPLdefaults
+
+
+# set default CHECKIFSAMECC
+#ifndef CHECKIFSAMECC
+#  CHECKIFSAMECC = 0
+#endif
 
 
 # define robot type
@@ -39,17 +44,17 @@ ROBOT_DEF = -DPMPSerial
 
 
 # macros
-DEFS += ${UTILS_DEF} ${ROBOT_DEF} -DVERBOSE=0
-INCL = -I. ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL}
-LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${BOOST_LIB}
-
+DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} -DVERBOSE=0 #-D_LOG 
+INCL = -I. ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MPNN_INCL}
+LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${BOOST_LIB} ${MPNN_LIB}
 
 # targets
 default_target: libs
 
-utils: cd_libs xml_libs 
+utils: cd_libs xml_libs nn_libs
 cd_libs: ${CD_LIBFILE}
 xml_libs: ${XML_LIBFILE}
+nn_libs: ${MPNN_LIBFILE}
 
 objs: utils ${PMPL_OBJS}
 
@@ -81,6 +86,7 @@ reallyreallyclean:
 	@${MAKE} reallyclean
 	cd ${CD_DIR}; ${MAKE} clean
 	cd ${TINYXML_DIR}; ${MAKE} clean
+	cd ${MPNN_SRC}; ${MAKE} clean
 
 
 # include automatically generated dependencies

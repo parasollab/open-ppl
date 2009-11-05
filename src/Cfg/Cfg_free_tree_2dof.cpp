@@ -132,8 +132,7 @@ bool Cfg_free_tree_2dof::ConfigEnvironment(Environment *_env) const {
 				     Vector3D(v[0],v[1],v[2]));
   
   _env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);  // update link 1.
-  int i;
-  for( i=0; i<NumofJoints; i+=2) {
+  for(int i=0; i<NumofJoints; i+=2) {
     _env->GetMultiBody(robot)->GetFreeBody(i/2+1)
       ->GetBackwardConnection(0).GetDHparameters().alpha = v[i+6]*360.0;
     _env->GetMultiBody(robot)->GetFreeBody(i/2+1)
@@ -141,7 +140,7 @@ bool Cfg_free_tree_2dof::ConfigEnvironment(Environment *_env) const {
   }  // config the robot
   
   
-  for(i=0; i<_env->GetMultiBody(robot)->GetFreeBodyCount(); i++) {
+  for(int i=0; i<_env->GetMultiBody(robot)->GetFreeBodyCount(); i++) {
     shared_ptr<FreeBody> afb = _env->GetMultiBody(robot)->GetFreeBody(i);
     if(afb->ForwardConnectionCount() == 0)  // tree tips: leaves.
       afb->GetWorldTransformation();
@@ -153,5 +152,6 @@ bool Cfg_free_tree_2dof::ConfigEnvironment(Environment *_env) const {
   
   // when all worldTransformations are recalculated by using new cfg, the
   // config of the whole robot is updated.
+  
   return true;
 }

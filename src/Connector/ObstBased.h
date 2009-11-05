@@ -381,9 +381,17 @@ ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       LPOutput<CFG,WEIGHT> lpOutput;
       stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
       // get closest pairs of nodes on obst to (possibly) another obstacle
-      vector<pair<VID,VID> > kp = dm->FindKClosestPairs(_rm, body[i], 
-							body[j], k);
-      //-- check connections between pairs
+//Old Interface
+//      vector<pair<VID,VID> > kp = dm->FindKClosestPairs(_rm, body[i], 
+//							body[j], k);
+//New Interface
+vector<pair<VID,VID> > kp(k);
+ vector<pair<VID,VID> >::iterator kp_iter = kp.begin();
+ this->GetMPProblem()->GetNeighborhoodFinder()->KClosestPairs(_rm, body[i].begin(), body[i].end(), body[j].begin(),body[j].end(), kp_iter);
+
+							
+							
+//-- check connections between pairs
       for (int m=0;m<kp.size();++m){
 	cmap.reset();
 	if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, kp[m].first,kp[m].second)) continue;

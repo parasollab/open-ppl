@@ -642,9 +642,14 @@ if(m_balanced == 0) {
     if (!cfg1_free && (m_balColl <= m_balFree)) {  //push out of Obs
       ++m_balColl;
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push Out of Obs");
-      CFG r_dir;
-      r_dir.GetRandomRay(min(_env->GetPositionRes(),
-                         _env->GetOrientationRes()), _env, dm);
+      CFG r_cfg, r_dir;
+      r_cfg.GetRandomCfg(_env);
+      int n_ticks(0);
+      //NOOOOOOOO another problem when DM's change!!!!
+      //r_dir.GetRandomRay(min(_env->GetPositionRes(),
+      //                   _env->GetOrientationRes()), _env, dm);
+      r_dir.FindIncrement(cfg1, r_cfg, &n_ticks, _env->GetPositionRes(), _env->GetOrientationRes());
+
       bool pushed_enough = false;
       bool outofbb = false;
       do {
@@ -666,9 +671,13 @@ if(m_balanced == 0) {
     } else if(cfg1_free && (m_balColl >= m_balFree)){   //Push to Obs
       ++m_balFree;
       //LOG_DEBUG_MSG("BasicOBPRM::GenerateNodes() -- Push to Obs");
-      CFG r_dir;
-      r_dir.GetRandomRay(min(_env->GetPositionRes(),
-                         _env->GetOrientationRes()), _env, dm);
+      CFG r_cfg, r_dir;
+      r_cfg.GetRandomCfg(_env);
+      int n_ticks(0);
+      //NOOOOOOOO another problem when DM's change!!!!
+      //r_dir.GetRandomRay(min(_env->GetPositionRes(),
+      //                   _env->GetOrientationRes()), _env, dm);
+      r_dir.FindIncrement(cfg1, r_cfg, &n_ticks, _env->GetPositionRes(), _env->GetOrientationRes());
       bool pushed_enough = false;
       bool outofbb = false;
       do {

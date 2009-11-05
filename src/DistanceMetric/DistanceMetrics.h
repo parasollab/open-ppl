@@ -41,6 +41,7 @@ class ManhattanDistance;
 class CenterOfMassDistance;
 class RmsdDistance;
 class LPSweptDistance;
+class BinaryLPSweptDistance;
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 class ReachableDistance;
 #endif
@@ -62,11 +63,11 @@ class DistanceMetric : MPBaseObject{
   virtual ~DistanceMetric();
 
   DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem);
-  static vector<DistanceMetricMethod*> GetDefault();
+  vector<DistanceMetricMethod*> GetDefault();
 
   void PrintUsage(ostream& _os) const;
   void PrintValues(ostream& _os) const;
-  void PrintDefaults(ostream& _os) const;
+  void PrintDefaults(ostream& _os) ;
   void PrintOptions(ostream& _os) const;
 
   /**Read information about DistanceMetricMethods selected from file.
@@ -446,6 +447,65 @@ class ScaledEuclideanDistance : public EuclideanDistance {
 };
 
 
+/**This computes the euclidean distance between two cfgs.  This class is 
+  *derived off of DistanceMetricMethod.
+  */
+class UniformEuclideanDistance : public DistanceMetricMethod {
+ public:
+  UniformEuclideanDistance();
+  UniformEuclideanDistance(int _useRotational);
+  virtual ~UniformEuclideanDistance();
+
+  virtual char* GetName() const;
+  virtual void SetDefault();
+  virtual void PrintOptions(ostream& _os) const;
+  virtual DistanceMetricMethod* CreateCopy();
+
+  /**This method calculates 
+    *sqrt(
+    *      (c11-c21)^2+(c12-c22)^2+(c13-c23)^2
+              +   
+           MIN((c14-c24)^2, (1-abs(c14-c24))^2)....+MIN((c1n-c2n)^2, (1-(c1n-c2n))^2)
+         )
+    *
+    *Here c1i and c2i are elements for each dimension and both of them
+    *have n dimension. 
+    *
+    *@see Cfg::PositionMagnitude and OrientationMagnitude
+    */
+  virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
+  
+ protected:
+  bool useRotational;
+};
+
+
+/**This computes the pure euclidean distance between two cfgs.  This class is 
+  *derived off of DistanceMetricMethod.
+  */
+class PureEuclideanDistance : public DistanceMetricMethod {
+ public:
+  PureEuclideanDistance();
+  PureEuclideanDistance(int _useRotational);
+  virtual ~PureEuclideanDistance();
+
+  virtual char* GetName() const;
+  virtual void SetDefault();
+  virtual void PrintOptions(ostream& _os) const;
+  virtual DistanceMetricMethod* CreateCopy();
+
+  /**This method calculates 
+    *sqrt((c11-c21)^2+(c12-c22)^2+(c13-c23)^2....+(c1n-c2n)^2).
+    *
+    *Here c1i and c2i are elements for each dimension and both of them
+    *have n dimension. 
+    *
+    */
+    
+  virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
+};
+
+
 /**This computes the minkowski distance between two cfgs.  This class is 
   *derived off of DistanceMetricMethod.
   */
@@ -569,6 +629,30 @@ class LPSweptDistance : public DistanceMetricMethod {
 };
 
 
+class BinaryLPSweptDistance : public DistanceMetricMethod {
+ public:
+  BinaryLPSweptDistance();
+  BinaryLPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method);
+  BinaryLPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res, double ori_res, double tolerance, int max_attempts, bool bbox);
+  ~BinaryLPSweptDistance();
+
+  virtual char* GetName() const;
+  virtual void SetDefault();
+  virtual DistanceMetricMethod* CreateCopy();
+
+  virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
+  virtual double DistanceCalc(Environment* env, const Cfg& _c1, const Cfg& _c2, double pos_res, double ori_res);
+  double SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector<GMSPolyhedron>& poly2);
+
+ protected:
+  LocalPlannerMethod<CfgType, WeightType>* lp_method;
+  double positionRes, orientationRes, tolerance;
+  int max_attempts;
+  int dist_calls_count;
+  bool use_bbox;
+};
+
+
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 class ReachableDistance : public DistanceMetricMethod {
  public:
@@ -592,7 +676,7 @@ class ReachableDistance : public DistanceMetricMethod {
 
 /*
 //----------------------------------------------------------------------
-// Given: k and ONE cfg and ONE vector
+// Given: k and ONE cfg and ONE tector
 // Find : find k pairs of closest cfg from "cfg" to "vector"
 //----------------------------------------------------------------------
 template <class CFG, class WEIGHT>

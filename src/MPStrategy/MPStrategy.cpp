@@ -90,6 +90,20 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
     } else if(citr->getName() == "HybridPRM") {
       HybridPRM* hprm = new HybridPRM(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( hprm );
+//    } else if(citr->getName() == "NFTester") {
+//      NFTester* nft = new NFTester(*citr,GetMPProblem());
+//      all_MPStrategyMethod.push_back( nft );
+//    } else if(citr->getName() == "NFIncrementalRoadmap") {
+//      NFIncrementalRoadmap* nfir = new NFIncrementalRoadmap(*citr,GetMPProblem());
+//      all_MPStrategyMethod.push_back( nfir );
+    } else if(citr->getName() == "NFUnionRoadmap") {
+      NFUnionRoadmap* nfur = new NFUnionRoadmap(*citr,GetMPProblem());
+      all_MPStrategyMethod.push_back( nfur );
+      //nfir->ParseXML(*citr);
+//    } else if(citr->getName() == "NFRoadmapCompare") {
+//      NFRoadmapCompare* nfrc = new NFRoadmapCompare(*citr,GetMPProblem());
+//      all_MPStrategyMethod.push_back( nfrc );
+//      //nfir->ParseXML(*citr);
     } else if(citr->getName() == "QueryStrategy") {
       QueryStrategy* query = new QueryStrategy(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( query );
@@ -100,6 +114,8 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
       citr->warnUnknownNode();
     }
   }
+
+
 
   m_strController_MPStrategyMethod = in_Node.stringXMLParameter("Controller",true,"","Controller Method");
   LOG_DEBUG_MSG( "~MPStrategy::ParseStrategyMethod()");

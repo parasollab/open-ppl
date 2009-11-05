@@ -117,8 +117,13 @@ public:
           *@note path will be stored in #path.
           */
         virtual 
-	bool PerformQuery
-        (Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, ConnectMap<CFG, WEIGHT> *cn, LocalPlanners<CFG,WEIGHT> * lp,DistanceMetric * dm);
+	bool PerformQuery(
+	        Roadmap<CFG, WEIGHT>* rdmp, 
+	        Stat_Class& Stats, 
+	        ConnectMap<CFG, WEIGHT> *cn, 
+          vector<ConnectMap<CfgType, WeightType>::NodeConnectionPointer >* pConnections,
+          LocalPlanners<CFG,WEIGHT> * lp,
+          DistanceMetric * dm);
 
         /**Query path for two given Cfgs.
           *Algorithm:
@@ -147,11 +152,13 @@ public:
           *@sa GetPathSegment
           */
         virtual 
-	bool PerformQuery(CFG _start, 
+	bool PerformQuery(
+	      CFG _start, 
 			  CFG _goal,
 			  Roadmap<CFG, WEIGHT>* rdmp,
 			  Stat_Class& Stats,
 			  ConnectMap<CFG, WEIGHT>*, 
+        vector<ConnectMap<CfgType, WeightType>::NodeConnectionPointer >* pConnections,
 			  LocalPlanners<CFG,WEIGHT>*, 
 			  DistanceMetric*, 
 			  vector<CFG>* _path);
@@ -303,7 +310,9 @@ Query<CFG, WEIGHT>::
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
-PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm) 
+PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
+        ConnectMap<CFG, WEIGHT>* cn, vector<ConnectMap<CfgType, WeightType>::NodeConnectionPointer >* pConnections,
+        LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm) 
 {
   for(typename vector<CFG>::iterator Q = query.begin(); 
       (Q+1) != query.end(); ++Q) {
@@ -314,7 +323,7 @@ PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, ConnectMap<CFG, WEIG
     cout << "\nworking  ...     "
 	 << endl;
     
-    if ( !PerformQuery(*Q,*(Q+1),rdmp, Stats,cn,lp,dm,&path) ) {
+    if ( !PerformQuery(*Q,*(Q+1),rdmp, Stats,cn,pConnections,lp,dm,&path) ) {
       cout << endl << "In PerformQuery(): didn't connect";
       return false;
     } 
@@ -326,8 +335,9 @@ PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, ConnectMap<CFG, WEIG
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
-PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats,
-	     ConnectMap<CFG, WEIGHT>* cn, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm, vector<CFG>* _path) {
+PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
+	     ConnectMap<CFG, WEIGHT>* cn, vector<ConnectMap<CfgType, WeightType>::NodeConnectionPointer >* pConnections, 
+       LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm, vector<CFG>* _path) {
 
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
   VID scvid, gcvid;
@@ -354,6 +364,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
     //store cc vids if needed
     vector<VID> cc; 
 
+
     //attempt to connect start and goal to cc
     cmap.reset();
     if(is_same_cc(*(rdmp->m_pRoadmap),cmap, svid, CC->second)) 
@@ -364,7 +375,12 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       get_cc(*(rdmp->m_pRoadmap), cmap, CC->second, cc);
       vector<VID> verticesList(1, svid);
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
-      cn->ConnectNodes(rdmp, Stats, dm, lp, false, false, verticesList, cc);
+
+      vector< ConnectMap<CfgType,WeightType>::NodeConnectionPointer >::iterator itr;
+      for (itr = pConnections->begin(); itr != pConnections->end(); itr++) {
+        cn->ConnectNodes(*itr, rdmp, Stats, dm, lp, false, false, 
+                        verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
+      }
     }
 
    cmap.reset();
@@ -377,8 +393,14 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
         get_cc(*(rdmp->m_pRoadmap), cmap, CC->second, cc);}
       cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
       vector<VID> verticesList(1, gvid);
-      cn->ConnectNodes(rdmp, Stats, dm, lp, false, false, verticesList, cc);
+      
+      vector< ConnectMap<CfgType,WeightType>::NodeConnectionPointer >::iterator itr;
+      for (itr = pConnections->begin(); itr != pConnections->end(); itr++) {
+        cn->ConnectNodes(*itr, rdmp, Stats, dm, lp, false, false, 
+                        verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
+      }
     }
+    
 
     connected = false;
     //vector<pair<CFG,WEIGHT> > rp;

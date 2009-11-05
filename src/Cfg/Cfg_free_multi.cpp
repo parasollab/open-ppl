@@ -132,7 +132,7 @@ bool Cfg_free_multi::ConfigEnvironment(Environment* env) const {
     // update link i
     mb->GetFreeBody(i)->Configure(T1);
   }
-
+  
   return true;
 }
 

@@ -14,6 +14,11 @@
 #include "LocalPlanners.h"
 #include "MPProblem.h"
 
+//#include "ANN.h"
+
+#ifndef PI
+#define PI 3.1415926535897932385
+#endif
 
 DistanceMetric::
 DistanceMetric() {
@@ -22,6 +27,12 @@ DistanceMetric() {
 
   ScaledEuclideanDistance* scaledEuclidean = new ScaledEuclideanDistance();
   all.push_back(scaledEuclidean);
+
+  UniformEuclideanDistance* uniformEuclidean = new UniformEuclideanDistance();
+  all.push_back(uniformEuclidean);
+
+  PureEuclideanDistance* pureEuclidean = new PureEuclideanDistance();
+  all.push_back(pureEuclidean);
 
   MinkowskiDistance* minkowski = new MinkowskiDistance();
   all.push_back(minkowski);
@@ -37,6 +48,9 @@ DistanceMetric() {
 
   LPSweptDistance* lp_swept = new LPSweptDistance();
   all.push_back(lp_swept);
+  
+  BinaryLPSweptDistance* binary_lp_swept = new BinaryLPSweptDistance();
+  all.push_back(binary_lp_swept);
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   ReachableDistance* rd = new ReachableDistance();
@@ -87,6 +101,20 @@ DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
       all.push_back(scaledEuclidean);
       selected.push_back(scaledEuclidean->CreateCopy());
       citr->warnUnrequestedAttributes();
+    } else if(citr->getName() == "uniformEuclidean") {
+      int par_use_rotational;
+      UniformEuclideanDistance* uniformEuclidean;
+      par_use_rotational = citr->numberXMLParameter("use_rotational",false,int(0),
+                                          int(0),int(1),
+                                          "Rotational distances used");
+      uniformEuclidean = new UniformEuclideanDistance(par_use_rotational);
+      all.push_back(uniformEuclidean);
+      selected.push_back(uniformEuclidean->CreateCopy());
+    } else if(citr->getName() == "pureEuclidean") {
+      PureEuclideanDistance* pureEuclidean = new PureEuclideanDistance();
+      all.push_back(pureEuclidean);
+      selected.push_back(pureEuclidean->CreateCopy());
+      citr->warnUnrequestedAttributes();
     } else if(citr->getName() == "rmsd") {
       RmsdDistance* rmsd = new RmsdDistance();
       all.push_back(rmsd);
@@ -110,6 +138,28 @@ DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
       all.push_back(lp_swept);
       selected.push_back(lp_swept->CreateCopy());
       cout << "LPSweptDistance: lp_method = " << lp->selected[0]->GetName() << ", pos_res = " << pos_res << ", ori_res = " << ori_res << ", use_bbox = " << use_bbox << endl;
+      //delete lp;
+      citr->warnUnrequestedAttributes();
+    } else if(citr->getName() == "binary_lp_swept") {
+      double pos_res = citr->numberXMLParameter("pos_res", false, in_pProblem->GetEnvironment()->GetPositionRes() * 50, 0.0, 1000.0, "position resolution");
+      double ori_res = citr->numberXMLParameter("ori_res", false, in_pProblem->GetEnvironment()->GetOrientationRes() * 50, 0.0, 1000.0, "orientation resolution");
+      double tolerance = citr->numberXMLParameter("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
+      int max_attempts = citr->numberXMLParameter("max_attempts", false, 10, 1, 100, "maximum depth of lp_swept distance search");
+      bool use_bbox = citr->boolXMLParameter("use_bbox", false, false, "use bbox instead of robot vertices"); 
+
+      LocalPlanners<CfgType, WeightType>* lp;
+      for(XMLNodeReader::childiterator citr2 = citr->children_begin(); citr2 != citr->children_end(); ++citr2)
+        if(citr2->getName() == "lp_methods")
+          lp = new LocalPlanners<CfgType, WeightType>(*citr2, in_pProblem);
+      if(lp->selected.size() != 1)
+      {
+        cout << "\n\nError in reading local planner method for rmsdLPDistance, there should only be 1 method selected\n\n";
+        exit(-1);
+      }
+      BinaryLPSweptDistance* binary_lp_swept = new BinaryLPSweptDistance(lp->selected[0]->CreateCopy(), pos_res, ori_res, tolerance, max_attempts, use_bbox);
+      all.push_back(binary_lp_swept);
+      selected.push_back(binary_lp_swept->CreateCopy());
+      cout << "BinaryLPSweptDistance: lp_method = " << lp->selected[0]->GetName() << ", pos_res = " << pos_res << ", ori_res = " << ori_res << ", tolerance = " << tolerance << ", max_attempts = " << max_attempts << ", use_bbox = " << use_bbox << endl;
       //delete lp;
       citr->warnUnrequestedAttributes();
     } else {
@@ -138,10 +188,12 @@ DistanceMetric::
 vector<DistanceMetricMethod*> 
 DistanceMetric::
 GetDefault() {
-  vector<DistanceMetricMethod*> Default;
-  ScaledEuclideanDistance* scaledEuclidean = new ScaledEuclideanDistance(0.9);
-  Default.push_back(scaledEuclidean);
-  return Default;
+   ///\note temporaily changed by Roger, this will be replaced with Label stuff
+  //vector<DistanceMetricMethod*> Default;
+  //ScaledEuclideanDistance* scaledEuclidean = new ScaledEuclideanDistance(0.9);
+  //Default.push_back(scaledEuclidean);
+  //return Default;
+  return selected;
 }
 
 
@@ -210,7 +262,7 @@ PrintValues(ostream& _os) const {
 
 void 
 DistanceMetric::
-PrintDefaults(ostream& _os) const { 
+PrintDefaults(ostream& _os)  { 
   vector<DistanceMetricMethod*> Default;
   Default = GetDefault();
   vector<DistanceMetricMethod*>::iterator I;
@@ -474,8 +526,14 @@ CreateCopy() {
 double 
 EuclideanDistance::
 Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
-  double dist;
+  double dist(0.0);
   dist = sqrt(2.0)*ScaledDistance(env,_c1, _c2, 0.5);
+  //HACK to test same Euclidean distance as CGAL ... REMOVE BEFORE COMMITING!!!!!
+  //for(int i=0; i<_c1.DOF(); ++i) {
+  //   double diff = _c1.GetSingleParam(i) - _c2.GetSingleParam(i);
+  //   dist += diff * diff;
+  //}
+  //dist = sqrt(dist);
   return dist;
 }
 
@@ -654,6 +712,164 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
 }
 
 //////////
+
+
+UniformEuclideanDistance::
+UniformEuclideanDistance() : DistanceMetricMethod() {
+  type = CS;
+  useRotational = false;
+}
+
+
+UniformEuclideanDistance::
+UniformEuclideanDistance(int _useRotational) : DistanceMetricMethod() {
+  cout << "UniformEuclideanDistance::UniformEuclideanDistance() - useRotational = " << _useRotational << endl;
+  if((_useRotational != 0) && (_useRotational != 1)) {
+    cout << "\n\nERROR: use_rotational " << _useRotational << " invalid, must be either 0 or 1\n";
+    exit(-1);
+  }
+  type = CS;
+  useRotational = _useRotational;
+}
+
+
+UniformEuclideanDistance::
+~UniformEuclideanDistance() {
+}
+
+
+char* 
+UniformEuclideanDistance::
+GetName() const {
+  return "uniformEuclidean";
+}
+
+void 
+UniformEuclideanDistance::
+PrintOptions(ostream& _os) const {
+  _os << GetName() << ":: ";
+  _os << "useRotational = " << useRotational;
+  _os << endl;
+}
+
+void 
+UniformEuclideanDistance::
+SetDefault() {
+  useRotational = false;
+}
+
+
+DistanceMetricMethod* 
+UniformEuclideanDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new UniformEuclideanDistance(*this);
+  return _copy;
+}
+
+
+double 
+UniformEuclideanDistance::
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
+  double dist(0.0);
+  
+  double max_range(0.0);
+  for(int i=0; i< _c1.posDOF(); ++i) {
+    std::pair<double,double> range = env->GetBoundingBox()->GetRange(i);
+    double tmp_range = range.second-range.first;
+    if(tmp_range > max_range) max_range = tmp_range;
+  }
+
+  //cout << "useRotational = " << useRotational << endl;
+  //cout << "Calculating distance between " << _c1 << " and " << _c2 << endl;
+  for(int i=0; i<_c1.DOF(); ++i) {
+    
+    // calculate distance for positional coordinate
+    if (i < _c1.posDOF()) {
+      double diff = (_c1.GetSingleParam(i) - _c2.GetSingleParam(i))/max_range;
+      //cout << "  " << i + 1 << ": diff = " << diff << endl;
+      if(useRotational)
+        diff *= 2*PI;
+      dist += diff * diff;
+    }
+    // calculate distance for rotational coordinate
+    else {
+      if (useRotational) {  // multiplying by 2*PI to make this like MPNN
+        double diff1 = 2*PI*(_c1.GetSingleParam(i) - _c2.GetSingleParam(i));
+        if (diff1 < 0) diff1 *= -1;
+        double diff2 = 2*PI - diff1;
+        double diff = (diff1 < diff2) ? diff1 : diff2;
+        //cout << "  " << i + 1 << ": diff = " << diff << endl;
+        dist += diff * diff;
+      }
+      else {  // not multiplying by 2*PI to make this like CGAL
+        double diff = _c1.GetSingleParam(i) - _c2.GetSingleParam(i);
+        //cout << "  " << i + 1 << ": diff = " << diff << endl;
+        dist += diff * diff;
+      }
+    }
+  }
+  
+  dist = sqrt(dist);
+  //cout << "dist = " << dist << endl;
+  return dist;
+}
+
+
+//////////
+
+PureEuclideanDistance::
+PureEuclideanDistance() : DistanceMetricMethod() {
+  type = CS;
+}
+ 
+
+PureEuclideanDistance::
+~PureEuclideanDistance() {
+}
+
+
+char* 
+PureEuclideanDistance::
+GetName() const {
+  return "pureEuclidean";
+}
+
+void 
+PureEuclideanDistance::
+PrintOptions(ostream& _os) const {
+  _os << GetName();
+  _os << endl;
+}
+
+void 
+PureEuclideanDistance::
+SetDefault() {
+}
+
+
+DistanceMetricMethod* 
+PureEuclideanDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new PureEuclideanDistance(*this);
+  return _copy;
+}
+
+
+double 
+PureEuclideanDistance::
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
+  double dist(0.0);
+  for(int i=0; i<_c1.DOF(); ++i) {
+      double diff = _c1.GetSingleParam(i) - _c2.GetSingleParam(i);
+      dist += diff * diff;
+    }
+  dist = sqrt(dist);
+  return dist;
+}
+
+
+//////////
+
 
 MinkowskiDistance::
 MinkowskiDistance() : DistanceMetricMethod() {
@@ -915,7 +1131,6 @@ Distance(const Cfg& _c1, const Cfg& _c2) {
   return d.magnitude();
 }
 
-
 //////////
 
 RmsdDistance::
@@ -943,10 +1158,10 @@ vector<Vector3D>
 RmsdDistance::
 GetCoordinatesForRMSD(const Cfg& c, Environment* env) {
   c.ConfigEnvironment(env);
-  shared_ptr<MultiBody> robot = env->GetMultiBody(env->GetRobotIndex());
+  //MultiBody *robot = env->GetMultiBody(env->GetRobotIndex());
   vector<Vector3D> coordinates;
-  for(int i=0 ; i<robot->GetFreeBodyCount(); i ++)
-    coordinates.push_back(robot->GetFreeBody(i)->WorldTransformation().position); 
+  for(int i=0 ; i< env->GetMultiBody(env->GetRobotIndex())->GetFreeBodyCount(); i ++)
+    coordinates.push_back(env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(i)->WorldTransformation().position); 
   return coordinates;
 }
 
@@ -962,7 +1177,7 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
 double
 RmsdDistance::
 RMSD(vector<Vector3D> x, vector<Vector3D> y, int dim) {
-  if((int)x.size() < dim || (int)y.size() < dim || dim <= 0) {
+  if(x.size() < dim || y.size() < dim || dim <= 0) {
     cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors"
          << endl;
     exit(101);
@@ -1050,7 +1265,6 @@ RMSD(vector<Vector3D> x, vector<Vector3D> y, int dim) {
   return rmsd;
 }
 
-
 //////////
 
 LPSweptDistance::
@@ -1137,8 +1351,8 @@ LPSweptDistance::
 SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector<GMSPolyhedron>& poly2) {
   double d = 0;
   int count = 0;
-  for(size_t b=0; b<poly1.size(); ++b)
-    for(size_t i=0; i<poly1[b].vertexList.size(); ++i)
+  for(int b=0; b<poly1.size(); ++b)
+    for(int i=0; i<poly1[b].vertexList.size(); ++i)
     {
       d += (poly1[b].vertexList[i] - poly2[b].vertexList[i]).magnitude();
       count++;
@@ -1146,8 +1360,141 @@ SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector
   return d/(double)count;
 }
 
+//////////
+
+BinaryLPSweptDistance::
+BinaryLPSweptDistance() : DistanceMetricMethod() {
+}
+
+BinaryLPSweptDistance::
+BinaryLPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method) : DistanceMetricMethod(), lp_method(_lp_method), positionRes(0.1), orientationRes(0.1), tolerance(0.01), dist_calls_count(0), use_bbox(false) {
+}
+
+BinaryLPSweptDistance::
+BinaryLPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res, double ori_res, double tolerance, int max_attempts, bool bbox) : DistanceMetricMethod(), lp_method(_lp_method), positionRes(pos_res), orientationRes(ori_res), tolerance(tolerance), max_attempts(max_attempts), dist_calls_count(0), use_bbox(bbox) {
+}
+
+BinaryLPSweptDistance::
+~BinaryLPSweptDistance() {
+}
+
+char*
+BinaryLPSweptDistance::
+GetName() const {
+  return "binary_lp_swept";
+}
+
+void 
+BinaryLPSweptDistance::
+SetDefault() {
+}
+
+DistanceMetricMethod*
+BinaryLPSweptDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new BinaryLPSweptDistance(*this);
+  return _copy;
+}
+
+double
+BinaryLPSweptDistance::
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
+  double posRes = positionRes;
+  double oriRes = orientationRes;
+  double old_dist = DistanceCalc(env, _c1, _c2, posRes, oriRes);
+  double new_dist = 0.0;
+  int match_count = 1;
+//  cout << "  (" << posRes << " | " << oriRes << ") = " << old_dist << endl;
+  for (int i = 1; i < max_attempts; i++) {
+    posRes /= 2.0;
+    oriRes /= 2.0;
+    if (posRes < env->GetPositionRes())
+      posRes = env->GetPositionRes();
+    if (oriRes < env->GetOrientationRes())
+      oriRes = env->GetOrientationRes();
+      
+    new_dist = DistanceCalc(env, _c1, _c2, posRes, oriRes);
+//    cout << "  (" << posRes << " | " << oriRes << ") = " << new_dist << endl;
+    if (new_dist - old_dist < tolerance)
+      match_count++;
+    else
+      match_count = 1;
+      
+    if (match_count == 3)
+      break;
+    if (posRes == env->GetPositionRes() && oriRes == env->GetOrientationRes())
+      break;
+      
+    old_dist = new_dist;
+  }
+
+  return new_dist;
+}
+
+double
+BinaryLPSweptDistance::
+DistanceCalc(Environment* env, const Cfg& _c1, const Cfg& _c2, double posRes, double oriRes) {
+  //cout << "BinaryLPSweptDistance::DistanceCalc()" << endl;
+  Stat_Class Stats;
+  DistanceMetric dm;
+  LPOutput<CfgType, WeightType> lpOutput;
+  if(lp_method == NULL)
+  {
+    cerr << "\n\nAttempting to call LPSweptDistance::Distance() without setting the appropriate LP method\n\n";
+    exit(-1);
+  }
+  lp_method->IsConnected(env, Stats, &dm, _c1, _c2, &lpOutput, posRes, oriRes, false, true);
+  //vector<CfgType> cfgs = lpOutput.path;
+  //lpPath does not include _c1 and _c2, so adding them manually
+  vector<CfgType> cfgs(1, _c1);
+  cfgs.insert(cfgs.end(), lpOutput.path.begin(), lpOutput.path.end());
+  cfgs.push_back(_c2);
+
+  double d = 0;
+  vector<GMSPolyhedron> poly2;
+  int robot = env->GetRobotIndex();
+  int body_count = env->GetMultiBody(robot)->GetFreeBodyCount();
+  cfgs.begin()->ConfigEnvironment(env);
+  for(int b=0; b<body_count; ++b)
+    if(use_bbox)
+      poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldBoundingBox());
+    else
+      poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldPolyhedron());
+  for(vector<CfgType>::const_iterator C = cfgs.begin(); C+1 != cfgs.end(); ++C)
+  {
+    vector<GMSPolyhedron> poly1(poly2);
+    poly2.clear();
+    (C+1)->ConfigEnvironment(env);
+    for(int b=0; b<body_count; ++b)
+      if(use_bbox)
+        poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldBoundingBox());
+      else
+        poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldPolyhedron());
+    double _d = SweptDistance(env, poly1, poly2);
+    d += SweptDistance(env, poly1, poly2);
+  }
+//  cout << "\tDistance between " << _c1 << " and " << _c2 << " (" << posRes << " | " << oriRes << ") = " << d << endl;
+  dist_calls_count++;
+  return d;
+}
+
+double
+BinaryLPSweptDistance::
+SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector<GMSPolyhedron>& poly2) {
+  double d = 0;
+  int count = 0;
+  for(int b=0; b<poly1.size(); ++b) {
+    for(int i=0; i<poly1[b].vertexList.size(); ++i)
+    {
+      d += (poly1[b].vertexList[i] - poly2[b].vertexList[i]).magnitude();
+      count++;
+    }
+  }
+  return d/(double)count;
+}
 
 //////////
+
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 #include "Cfg_reach_cc.h"

@@ -212,7 +212,6 @@ ConfigEnvironment(Environment* _env) const {
   _env->GetMultiBody(robot)->GetFreeBody(0)->GetWorldTransformation();
   
   return true;
-  
 }
 
 void 

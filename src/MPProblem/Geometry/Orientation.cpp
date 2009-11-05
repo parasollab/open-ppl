@@ -280,6 +280,8 @@ void Orientation::ConvertType(OrientationType _newType) {
 	    // TODO
 	    break;
 	  // etc.
+		default: //shouldnt be here, Compiler warns without a default
+			break;
 	}
 	break;
 
@@ -316,6 +318,8 @@ void Orientation::ConvertType(OrientationType _newType) {
 	    // TODO
 	    break;
 	  // etc.
+		default: //shouldnt be here, Compiler warns without a default
+			break;
 	}
 	break;
 
@@ -360,6 +364,8 @@ void Orientation::ConvertType(OrientationType _newType) {
 	      //
 	      // etc.
 	      //
+   default: //shouldnt be here, Compiler warns without a default
+			break;
 	    }
 	    break;
 	  case EulerXYZ:
@@ -368,6 +374,8 @@ void Orientation::ConvertType(OrientationType _newType) {
 		ConvertType(Matrix);
 		ConvertType(EulerXYZ);
 		break;
+			default: //shouldnt be here, Compiler warns without a default
+			break;
 	    }
 	    break;
 	  case EulerZYX:
@@ -376,6 +384,8 @@ void Orientation::ConvertType(OrientationType _newType) {
 		ConvertType(Matrix);
 		ConvertType(EulerZYX);
 		break;
+			default: //shouldnt be here, Compiler warns without a default
+			break;
 	    }
 	    break;
 	  case Quaternion:
@@ -385,6 +395,7 @@ void Orientation::ConvertType(OrientationType _newType) {
 	    // TODO
 	    break;
 	}
+		
     }
 
     type = _newType;

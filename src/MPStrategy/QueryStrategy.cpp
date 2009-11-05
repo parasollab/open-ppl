@@ -100,26 +100,21 @@ operator()(int in_RegionID)
   Roadmap<CfgType,WeightType>* rdmp = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
   Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
 
-  //setup m_ConnectMap
-  static bool connect_map_setup = false;
-  if(!connect_map_setup)
-  {
-    connect_map_setup = true;
-    vector<NodeConnectionMethod<CfgType, WeightType>*> methods;
-    if(m_vecStrNodeConnectionLabels.empty())
-      methods.push_back(new ConnectFirst<CfgType, WeightType>());
-    else
-      for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)
-        methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
-    m_ConnectMap.SetNodeConnectionMethods(methods);
+  vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer > methods;
+    
+  if(m_vecStrNodeConnectionLabels.empty()) {
+    methods.push_back(ConnectMap<CfgType, WeightType>::NodeConnectionPointer(new ConnectFirst<CfgType, WeightType>()));
   }
+  else
+    for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)
+      methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
 
   //perform query
   Clock_Class QueryClock;
   QueryClock.StartClock("Query");
   if(query.PerformQuery(rdmp, *pStatClass, 
-                   //     GetMPProblem()->GetCollisionDetection(), 
                         &m_ConnectMap, 
+                        &methods,
                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                         GetMPProblem()->GetDistanceMetric()))
   {

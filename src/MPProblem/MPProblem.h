@@ -3,9 +3,12 @@
 
 #include "util.h"
 #include "CfgTypes.h"
+//#include "NeighborhoodFinder.h"
+
 
 class MPStrategy;
 class DistanceMetric;
+class NeighborhoodFinder;
 class CollisionDetection;
 template<typename CFG> class ValidityChecker;
 class Environment;
@@ -30,7 +33,8 @@ public:
  
   void SetMPStrategy(MPStrategy* in_pStrategy) {m_pMPStrategy = in_pStrategy;};
   inline DistanceMetric* GetDistanceMetric() {return m_pDistanceMetric; };
-  inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection; }; 
+  inline NeighborhoodFinder* GetNeighborhoodFinder() {return m_pNeighborhoodFinder; };
+  inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection; };
   inline ValidityChecker<CfgType>* GetValidityChecker() {return m_pValidityChecker; };
   inline Environment* GetEnvironment() {return m_pEnvironment; };
   inline MPStrategy* GetMPStrategy() {return m_pMPStrategy;};
@@ -42,8 +46,7 @@ public:
   int CreateMPRegion();
   MPRegion<CfgType,WeightType>* GetMPRegion(int);
 
-  void SetNumOfJoints(int num_of_joints) 
-  {
+  void SetNumOfJoints(int num_of_joints) {
     CfgType::setNumofJoints(num_of_joints);
     robot_cfg = CfgType();
   }
@@ -61,6 +64,7 @@ public:
   private:
   MPStrategy* m_pMPStrategy;
   DistanceMetric*     m_pDistanceMetric;
+  NeighborhoodFinder* m_pNeighborhoodFinder;
   CollisionDetection* m_pCollisionDetection;
   ValidityChecker<CfgType>* m_pValidityChecker;
   Environment* m_pEnvironment;

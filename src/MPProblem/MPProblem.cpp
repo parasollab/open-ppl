@@ -33,6 +33,8 @@ ParseXML(XMLNodeReader& in_Node) {
       m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
     } else  if(citr->getName() == "MPRegions") {
       ///\Todo Parse MPRegions
+    } else  if(citr->getName() == "NeighborhoodFinder") {
+      m_pNeighborhoodFinder = new NeighborhoodFinder(*citr,this);
     }else {
       citr->warnUnknownNode();
     }
