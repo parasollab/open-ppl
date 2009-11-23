@@ -94,7 +94,7 @@ XML_LIBFILE = ${TINYXML_DIR}/libtinyxml.a
 STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools 
 
 #CGAL macros
-CGAL_INCL = -I${UTILS_DIR}/geom/CGAL-include
+CGAL_INCL = -I${UTILS_DIR}/geom/CGAL-3.3.1/include
 CGAL_DEF = -DCGAL_NO_ASSERTIONS -DCGAL_NO_PRECONDITIONS
 
 #MPNN macros and targets
