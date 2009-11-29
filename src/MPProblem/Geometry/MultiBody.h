@@ -284,6 +284,9 @@ public:
       */
     void FindBoundingBox();
 
+    //polygonal approximation
+    void PolygonalApproximation();
+
     //@}
  
     bool operator==(const MultiBody& mb) const;
