@@ -769,3 +769,115 @@ bool MultiBody::operator==(const MultiBody& mb) const
          (maxAxisRange == mb.maxAxisRange);
 }
 
+
+//==================================================================
+//Polygonal Approximation
+void MultiBody::PolygonalApproximation()
+{
+  int i, nfree;
+  double * first;
+  double * second;
+
+  nfree = GetFreeBodyCount();
+
+  double min_1x, min_1y, min_1z, max_1x, max_1y, max_1z;
+  double min_2x, min_2y, min_2z, max_2x, max_2y, max_2z;
+  //i = 0;
+  if(nfree > 0)
+  {
+    for(i=0; i<nfree; i++)
+    {
+      //first = this->GetFreeBody(i)->GetWorldBoundingBox();
+      this->GetFreeBody(i)->GetWorldBoundingBox();
+      first = this->GetFreeBody(i)->GetBoundingBox();
+      min_1x = first[0];
+      max_1x = first[1];
+      min_1y = first[2];
+      max_1y = first[3];
+      min_1z = first[4];
+      max_1z = first[5];
+
+      //second = this->GetFreeBody(i)->GetForwardConnection(0)->GetNextBody()->GetWorldBoundingBox();
+      this->GetFreeBody(i)->GetForwardConnection(0).GetNextBody()->GetWorldBoundingBox();
+      second = this->GetFreeBody(i)->GetBoundingBox();
+      min_2x = second[0];
+      max_2x = second[1];
+      min_2y = second[2];
+      max_2y = second[3];
+      min_2z = second[4];
+      max_2z = second[5];
+
+      vector<Vector3D> before, after;
+      before[0] = (min_1x, min_1y, min_1z);
+      before[1] = (min_1x, min_1y, max_1z);
+      before[2] = (min_1x, max_1y, min_1z);
+      before[3] = (min_1x, max_1y, max_1z);
+      before[4] = (max_1x, min_1y, min_1z);
+      before[5] = (max_1x, min_1y, max_1z);
+      before[6] = (max_1x, max_1y, min_1z);
+      before[7] = (max_1x, max_1y, max_1z);
+      after[0] = (min_2x, min_2y, min_2z);
+      after[1] = (min_2x, min_2y, max_2z);
+      after[2] = (min_2x, max_2y, min_2z);
+      after[3] = (min_2x, max_2y, max_2z);
+      after[4] = (max_2x, min_2y, min_2z);
+      after[5] = (max_2x, min_2y, max_2z);
+      after[6] = (max_2x, max_2y, min_2z);
+      after[7] = (max_2x, max_2y, max_2z);
+
+      vector<double> dis;
+      vector<int> point;
+      int j, k;
+      //find the shortest distance for each vertex in one freebody to every vertex to the neighboring freebody and record the vertex pair
+      for(k=0; k<8; k++)
+      {
+        dis[k] = (before[k]-after[0]).magnitude();
+        point[k] = 0;
+        for(j=1; j<8; j++)
+        {
+	  if(((before[k]-after[j]).magnitude()) < (dis[k]))
+	  {
+	    dis[k] = (before[k]-after[j]).magnitude();
+	    point[k] = j;
+	  }
+	}
+      }
+
+      //find the 4 smallest distances
+      for(k=0; k<4; k++)
+      {
+        int tmp = 0;
+ 	for(j=1; j<8; j++)
+	{
+	  if(dis[tmp]<0 || dis[j]>dis[tmp])
+	    tmp = j;
+	}
+	dis[tmp] = -1;
+      }
+
+      double X, Y, Z;
+      X=0; 
+      Y=0;
+      Z=0;
+
+      //average the x, y, z coordinates for 8 vertices
+      for(j=0; j<8; j++)
+      {
+        if(dis[j]>0)
+	{
+
+	  X+=before[j].getX()+after[point[j]].getX();
+	  Y+=before[j].getY()+after[point[j]].getY();
+	  Z+=before[j].getZ()+after[point[j]].getZ();
+	}
+      }
+
+      X /= 8.0;
+      Y /= 8.0;
+      Z /= 8.0;
+
+      vector<Vector3D> joint;
+      joint[i] = (X, Y, Z);
+    }
+  }
+}
