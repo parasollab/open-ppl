@@ -466,6 +466,15 @@ class Cfg {
   double GetStat(string in_strStat);
   bool IsStat(string in_strStat);
   void SetStat(string in_strStat,double in_dstat);
+
+  //polygonal approximation
+  vector<Vector3D> PolyApprox(Environment *env)
+  {
+    vector<Vector3D> result;	//store the result after doing approximation
+    ConfigEnvironment(env);
+    env->GetMultiBody(env->GetRobotIndex())->PolygonalApproximation(result);
+    return result;
+  }
   
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
