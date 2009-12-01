@@ -285,7 +285,7 @@ public:
     void FindBoundingBox();
 
     //polygonal approximation
-    void PolygonalApproximation();
+    void PolygonalApproximation(vector<Vector3D>& result);
 
     //@}
  
