@@ -772,8 +772,9 @@ bool MultiBody::operator==(const MultiBody& mb) const
 
 //==================================================================
 //Polygonal Approximation
-void MultiBody::PolygonalApproximation()
+void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
 {
+  result.clear();
   int i, nfree;
   double * first;
   double * second;
