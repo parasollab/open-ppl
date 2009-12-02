@@ -877,8 +877,8 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
       Y /= 8.0;
       Z /= 8.0;
 
-      vector<Vector3D> joint;
-      joint[i] = (X, Y, Z);
+      //vector<Vector3D> joint;
+      result[i] = (X, Y, Z);
     }
   }
 }
