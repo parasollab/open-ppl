@@ -22,6 +22,7 @@
 #include <vector>
 #include <map>
 
+#include "Environment.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
@@ -468,7 +469,7 @@ class Cfg {
   void SetStat(string in_strStat,double in_dstat);
 
   //polygonal approximation
-  vector<Vector3D> PolyApprox(Environment *env)
+  vector<Vector3D> PolyApprox (Environment *env) const
   {
     vector<Vector3D> result;	//store the result after doing approximation
     ConfigEnvironment(env);
