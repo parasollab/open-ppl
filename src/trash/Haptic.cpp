@@ -82,7 +82,7 @@ vector <vector <Cfg> > create_list(cfig **c,int size)
      while(head!=NULL)
      {
       
-        v.push_back(Cfg(Vector6<double>(head->position[0],head->position[1],head->position[2],
+        v.push_back(Cfg(Vector6D(head->position[0],head->position[1],head->position[2],
 		      head->rotation[0],head->rotation[1],head->rotation[2])));
         head=head->next; 
      }

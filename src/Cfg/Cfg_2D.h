@@ -38,7 +38,7 @@ public:
   ///Degree of freedom is 6 and Degree of freedom for position part is 3.
   Cfg_2D();
   Cfg_2D(const Cfg&c);
-  Cfg_2D(const Vector6<double>& _v);
+  Cfg_2D(const Vector6D& _v);
   Cfg_2D(double, double, double, double, double, double);
 
   ///Do nothing

@@ -25,7 +25,8 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "OBPRMDef.h"
-#include "XmlWrapper.h" 
+#include "XmlWrapper.h"
+#include "Basic.h" 
 /////////////////////////////////////////////////////////////////////////////////////////
 class Cfg;
 class Environment;
@@ -50,6 +51,7 @@ class Environment;
   */
 double DirectedAngularDistance(double a,double b);
 
+#ifndef _H_UTILITY
 ///Return minimun between a and b.
 inline double min(double a, double b){
     return a < b ? a : b;
@@ -65,6 +67,7 @@ inline double sqr(double a)
 {
     return a*a;
 }
+#endif
 
 double GaussianDistribution(double m, double s);
 

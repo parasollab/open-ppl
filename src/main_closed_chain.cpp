@@ -86,7 +86,7 @@ int main(int argc, char** argv)
   */
 
   ifstream ifsb("start.base");
-  Vector6<double> start_base;
+  Vector6D start_base;
   start_base.Read(ifsb);
   ifstream ifsl("start.len");
   vector<double> start_len;
@@ -103,7 +103,7 @@ int main(int argc, char** argv)
   CfgType start(start_base, start_len, start_ori);
 
   ifstream ifgb("goal.base");
-  Vector6<double> goal_base;
+  Vector6D goal_base;
   goal_base.Read(ifgb);
   ifgb.close();
   ifstream ifgl("goal.len");

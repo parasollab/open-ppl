@@ -62,8 +62,8 @@ Cfg_free_tree::Cfg_free_tree(double x, double y, double z,
   exit(-1);
 }
 
-Cfg_free_tree::Cfg_free_tree(const Vector6<double>& _v) {
-  cout << "\n\nERROR in Cfg_free_tree::Cfg_free_tree(Vector6<double>), not implement yet.\n";
+Cfg_free_tree::Cfg_free_tree(const Vector6D& _v) {
+  cout << "\n\nERROR in Cfg_free_tree::Cfg_free_tree(Vector6D), not implement yet.\n";
   exit(-1);
 }
 
@@ -191,7 +191,7 @@ void Cfg_free_tree::GetRandomCfg(double R, double rStep){
   pitch = (2.0*rStep)*OBPRM_drand() - rStep;
   yaw = (2.0*rStep)*OBPRM_drand() - rStep;
   
-  Vector6<double> base(z1*cos(alpha),z1*sin(alpha),z,roll,pitch,yaw);
+  Vector6D base(z1*cos(alpha),z1*sin(alpha),z,roll,pitch,yaw);
   
   int i;
   v.clear();

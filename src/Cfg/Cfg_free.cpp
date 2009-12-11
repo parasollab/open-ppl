@@ -54,7 +54,7 @@ Cfg_free::Cfg_free(double x, double y, double z,
 }
 
 
-Cfg_free::Cfg_free(const Vector6<double>& _v) {
+Cfg_free::Cfg_free(const Vector6D& _v) {
   dof = 6;
   posDof = 3;
   v.clear();
@@ -328,7 +328,7 @@ void Cfg_free::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
     double cV = sqrt((1+dot)/2.0);
     double sV = sqrt((1-dot)/2.0);
     Vector3D vertical = robotNormal.crossProduct(obstNormal);
-    vertical.normalize();
+    vertical = vertical.normalize();
     orient = Orientation(cV, vertical*sV);
   }
   orient.ConvertType(Orientation::FixedXYZ);
@@ -417,7 +417,7 @@ bool Cfg_free::InNarrowPassage(Environment* env, Stat_Class& Stats,
   static const double posRes = env->GetPositionRes();
   double width = 2.0*posRes;
   int narrowpassageWeight = 0;
-  Vector6<double> tmp(0,0,0,0,0,0);
+  Vector6D tmp(0,0,0,0,0,0);
   
   std::string Callee(GetName()), CallL("(L)"), CallR("(R)");
   {std::string Method("-cfg_free::InNarrowPassage"); Callee = Callee+Method;}
@@ -453,7 +453,7 @@ Cfg* Cfg_free::CreateNewCfg() const {
 
 
 Cfg* Cfg_free::CreateNewCfg(vector<double>& data) const {
-  Vector6<double> _data;
+  Vector6D _data;
   if((int)data.size() < dof) {
     cout << "\n\nERROR in Cfg_free::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than " << dof << endl;

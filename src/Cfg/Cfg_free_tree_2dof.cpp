@@ -49,8 +49,8 @@ Cfg_free_tree_2dof::Cfg_free_tree_2dof(double x, double y, double z,
   exit(-1);
 }
 
-Cfg_free_tree_2dof::Cfg_free_tree_2dof(const Vector6<double>& _v) {
-  cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(Vector6<double>), not implement yet.\n";
+Cfg_free_tree_2dof::Cfg_free_tree_2dof(const Vector6D& _v) {
+  cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(Vector6D), not implement yet.\n";
   exit(-1);
 }
 

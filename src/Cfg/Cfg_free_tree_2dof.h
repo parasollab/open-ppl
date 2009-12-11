@@ -12,7 +12,7 @@ class Cfg_free_tree_2dof : public Cfg_free_tree {
 
   Cfg_free_tree_2dof();
   Cfg_free_tree_2dof(int _numofjoints);
-  Cfg_free_tree_2dof(const Vector6<double>& _v);
+  Cfg_free_tree_2dof(const Vector6D& _v);
   Cfg_free_tree_2dof(const vector<double>& _v);
   Cfg_free_tree_2dof(const Cfg&c);
   Cfg_free_tree_2dof(double x, double y, double z, 

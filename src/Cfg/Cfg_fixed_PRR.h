@@ -47,7 +47,7 @@ public:
   Cfg_fixed_PRR();
   Cfg_fixed_PRR(double zz, double ceta1, double ceta2);
   Cfg_fixed_PRR(double x, double y, double z, double roll, double pitch, double yaw);
-  Cfg_fixed_PRR(const Vector3<double>& _v);
+  Cfg_fixed_PRR(const Vector3D& _v);
   Cfg_fixed_PRR(const Cfg& c);
 
   ///Do nothing

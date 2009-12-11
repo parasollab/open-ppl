@@ -12,7 +12,7 @@ Cfg_reach_cc_fixed(int _numofjoints) : Cfg_reach_cc(_numofjoints) {
 }
 
 Cfg_reach_cc_fixed::
-Cfg_reach_cc_fixed(const Vector6<double>& _v) : Cfg_reach_cc(_v) {
+Cfg_reach_cc_fixed(const Vector6D& _v) : Cfg_reach_cc(_v) {
 }
 
 Cfg_reach_cc_fixed::

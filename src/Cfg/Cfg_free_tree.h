@@ -21,7 +21,7 @@ class Cfg_free_tree : public Cfg_free {
 
   Cfg_free_tree();
   Cfg_free_tree(int _numofjoints);
-  Cfg_free_tree(const Vector6<double>& _v);
+  Cfg_free_tree(const Vector6D& _v);
   Cfg_free_tree(const vector<double>& _v);
   Cfg_free_tree(const Cfg&c);
   Cfg_free_tree(double x, double y, double z, 

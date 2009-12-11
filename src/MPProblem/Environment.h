@@ -2,14 +2,15 @@
 #define Environment_h
 
 ////////////////////////////////////////////////////////////////
-#include "util.h"
-
 #include "Boundary.h"
 
 
 #include "MultiBody.h"
 #include "OBPRMDef.h" 
 #include "string.h"
+
+#include "util.h"
+
 
 #include <sstream>
 #include <iostream>

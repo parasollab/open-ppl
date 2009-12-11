@@ -74,9 +74,9 @@ double &jumpSize, Cfg inside, double incrCoord) {
      vector<Cfg> randomRay;
      vector<Cfg> startCfg;
      Vector3D Zaxis = direct;
-     Zaxis.normalize(); // Zaxis is Zaxis
+     Zaxis = Zaxis.normalize(); // Zaxis is Zaxis
      Vector3D Xaxis = Vector3D(0.0, -Zaxis.getZ(), Zaxis.getY()); // this makes Xaxis*Zaxis = 0.
-     Xaxis.normalize();
+     Xaxis = Xaxis.normalize();
      Vector3D Yaxis = Zaxis.crossProduct(Xaxis);
 
      double angle_step = 2.*3.1415926/testSize;
@@ -90,7 +90,7 @@ double &jumpSize, Cfg inside, double incrCoord) {
 	    //Cfg ray(Vector6<double>(0,0,0,0,0,0));
 //ray=Vector6<double>(direction[0], direction[1], direction[2], 0, 0, 0);
 	    //Cfg ray(Vector6<double>(direction[0], direction[1], direction[2], 0, 0, 0));
-	    Cfg ray(Vector6<double>(tmpx,tmpy,tmpz, 0, 0, 0));
+	    Cfg ray(Vector6D(tmpx,tmpy,tmpz, 0, 0, 0));
 	    randomRay.push_back(ray*stepSize);
 	    startCfg.push_back(inside+ray*jumpSize);
      }
@@ -156,7 +156,7 @@ void Push::ShortestPush(vector <Cfg> nodes)
   double incrCoord = EXPANSION_FACTOR*env->GetPositionRes();;
   Cfg direction;
   int i,k;
-  Cfg zero(Vector6<double>(0,0,0,0,0,0));
+  Cfg zero(Vector6D(0,0,0,0,0,0));
   std::string tmpStr;
   for(i=0;i<nodes.size();i++) {
     cout << "At node " << nodes[i] << endl << flush;
@@ -362,7 +362,7 @@ void Push::WorkspaceAssistedPush(vector <Cfg> seeds,int totalNodes)
   for(i=0;i<seeds.size();i++) {
     for(j=0;j<closestNodes.size();j++) {
             double tmpx=closestNodes[j].getX(), tmpy=closestNodes[j].getY(),tmpz= closestNodes[j].getZ();
-        Cfg ccc(Vector6<double>(tmpx,tmpy,tmpz,0,0,0));
+        Cfg ccc(Vector6D(tmpx,tmpy,tmpz,0,0,0));
 
         inter=GenerateOutsideCfg(env,cd, seeds[i],
 			ccc,
@@ -400,7 +400,7 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
   Cfg direction;
   int i,j,k;
   Cfg intermediate2;
-  Cfg zero(Vector6<double>(0,0,0,0,0,0));
+  Cfg zero(Vector6D(0,0,0,0,0,0));
   cout << "incord= " <<incrCoord << endl;
   cout << "Adding using as surface: " << numIntermediate <<" intermediate nodes\n";
   std::string Callee(GetName()),CallCnt;
@@ -460,7 +460,7 @@ void Push::SimplePush(vector <Cfg> nodes,int numIntermediate)
               cout << "\n inter " << inter << endl << flush;
               surface.push_back(inter);
  	      Vector3D tmp = (intermediate[k]-inside[j]).GetRobotCenterPosition();
-	      ccc = Cfg(Vector6<double>(tmp[0], tmp[1], tmp[2], 0.0, 0.0, 0.0));
+	      ccc = Cfg(Vector6D(tmp[0], tmp[1], tmp[2], 0.0, 0.0, 0.0));
               if(!ccc.AlmostEqual(zero)) {
                   cout << "\n Calling Generate outside for " << ccc << endl << flush;
                   inter=GenerateOutsideCfg(env,cd,inside[j],

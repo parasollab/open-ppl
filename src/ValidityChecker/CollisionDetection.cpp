@@ -165,9 +165,15 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     }
   }
 */  
+#ifdef USE_RAPID
   selected.push_back(rapid);
+#endif
+#ifdef USE_PQP
   selected.push_back(pqp);
+#endif
+#ifdef USE_VCLIP
   selected.push_back(vclip);
+#endif
 
   if(selected.size() < 1) {
     LOG_WARNING_MSG("No CollisionDetectionMethods selected!");

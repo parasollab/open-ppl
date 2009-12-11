@@ -89,9 +89,8 @@ Orientation::~Orientation() {
 //===================================================================
 Vector3D Orientation::operator*(const Vector3D & _v) {
     ConvertType(Matrix);
-
-    return Vector3D(
-       matrix[0][0]*_v.getX() + matrix[0][1]*_v.getY() + matrix[0][2]*_v.getZ(),
+   
+    return Vector3D( matrix[0][0]*_v.getX() + matrix[0][1]*_v.getY() + matrix[0][2]*_v.getZ(),
        matrix[1][0]*_v.getX() + matrix[1][1]*_v.getY() + matrix[1][2]*_v.getZ(),
        matrix[2][0]*_v.getX() + matrix[2][1]*_v.getY() + matrix[2][2]*_v.getZ());
 }

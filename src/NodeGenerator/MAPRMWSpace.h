@@ -371,7 +371,7 @@ MoveOutObstacle(CFG& cfg, Vector3D& dir, Environment* _env, Stat_Class& Stats,
   
   //Make smaller increament
   CFG trans_cfg; //increament
-  dir.normalize();
+  dir = dir.normalize();
   trans_cfg.SetSingleParam(0, dir[0]);
   trans_cfg.SetSingleParam(1, dir[1]);
   trans_cfg.SetSingleParam(2, dir[2]);
@@ -413,7 +413,7 @@ MoveToMedialAxis(CFG &cfg, vector<CFG>* path, Environment* _env, Stat_Class& Sta
   // find closest obstacle -- and collided better come back false!
   getCollisionInfo(cfg,_env,Stats,cd,*this->cdInfo);
   trans_dir=this->cdInfo->robot_point-this->cdInfo->object_point;	
-  trans_dir.normalize();
+  trans_dir = trans_dir.normalize();
   
   // And then scale arbitrarily 'small' - prefer to have scale determined by the _env
   trans_dir = trans_dir*0.2;

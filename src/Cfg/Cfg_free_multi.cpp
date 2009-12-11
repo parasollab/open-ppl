@@ -31,8 +31,8 @@ Cfg_free_multi::Cfg_free_multi(double x, double y, double z,
 }
 
 
-Cfg_free_multi::Cfg_free_multi(const Vector6<double>& _v) {
-  cout << "\n\nERROR in Cfg_free_multi::Cfg_free_multi(const Vector6<double>), not applicable\n";
+Cfg_free_multi::Cfg_free_multi(const Vector6D& _v) {
+  cout << "\n\nERROR in Cfg_free_multi::Cfg_free_multi(const Vector6D), not applicable\n";
   exit(-1);
 }
 
@@ -90,7 +90,7 @@ Cfg* Cfg_free_multi::CreateNewCfg() const {
 
 
 Cfg* Cfg_free_multi::CreateNewCfg(vector<double>& data) const {
-  Vector6<double> _data;
+  Vector6D _data;
   if((int)data.size() < dof) {
     cout << "\n\nERROR in Cfg_free_multi::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than " << dof << endl;

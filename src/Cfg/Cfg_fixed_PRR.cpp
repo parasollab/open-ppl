@@ -58,7 +58,7 @@ Cfg_fixed_PRR::Cfg_fixed_PRR(double zz, double ceta1, double ceta2) {
 }
 
 
-Cfg_fixed_PRR::Cfg_fixed_PRR(const Vector3<double>& _v) {
+Cfg_fixed_PRR::Cfg_fixed_PRR(const Vector3D& _v) {
   dof = 3;
   posDof = 1;
   v.clear();
@@ -279,7 +279,7 @@ Cfg* Cfg_fixed_PRR::CreateNewCfg() const {
 
 
 Cfg* Cfg_fixed_PRR::CreateNewCfg(vector<double>& data) const {
-  Vector3<double> _data;
+  Vector3D _data;
   if(data.size() < 3) {
     cout << "\n\nERROR in Cfg_fixed_PRR::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than 3\n";

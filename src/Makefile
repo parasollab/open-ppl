@@ -51,10 +51,11 @@ LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${BOOST_LIB} ${MPNN_LIB}
 # targets
 default_target: libs
 
-utils: cd_libs xml_libs nn_libs
+utils: cd_libs xml_libs nn_libs mathtool_lib
 cd_libs: ${CD_LIBFILE}
 xml_libs: ${XML_LIBFILE}
 nn_libs: ${MPNN_LIBFILE}
+mathtool_lib: ${MATHTOOL_LIBFILE}
 
 objs: utils ${PMPL_OBJS}
 
@@ -87,6 +88,7 @@ reallyreallyclean:
 	cd ${CD_DIR}; ${MAKE} clean
 	cd ${TINYXML_DIR}; ${MAKE} clean
 	cd ${MPNN_SRC}; ${MAKE} clean
+	cd ${MATHTOOL_DIR}; ${MAKE} clean
 
 
 # include automatically generated dependencies

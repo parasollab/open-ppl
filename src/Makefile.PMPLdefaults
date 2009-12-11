@@ -1,8 +1,8 @@
 #set platform specific variables
 ifeq (${platform}, LINUX_gcc) 	#linux/gcc
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
-	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB}
+	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB}
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a
 
@@ -12,10 +12,25 @@ ifeq (${platform}, LINUX_gcc) 	#linux/gcc
 	DEPS = -MMD -MF $*.d
 endif
 
+ifeq (${platform}, LINUX_gcc64) 	#linux/gcc
+	#UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
+	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
+	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB}
+  
+	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a
+
+	BOOST_INCL = -I/usr/include/boost
+	BOOST_LIB = -L/usr/lib -lboost_program_options
+
+	DEPS = -MMD -MF $*.d
+endif
+
+
 ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
-	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB}
+	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB}
   
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a
 
@@ -27,8 +42,8 @@ endif
 
 ifeq (${platform}, AIX_64_xlC)	#aix/64-bit/native compiler (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
-	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL}
-	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB}
+	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL}
+	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB}
   
 	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a
 
@@ -89,6 +104,15 @@ ${TINYXML_DIR}/libtinyxml.a:
 
 XML_LIBFILE = ${TINYXML_DIR}/libtinyxml.a
 
+# mathtool
+MATHTOOL_DIR = ${UTILS_DIR}/mathtool
+MATHTOOL_LIB = -L${MATHTOOL_DIR} -lmathtool
+MATHTOOL_INCL = -I${MATHTOOL_DIR}
+${MATHTOOL_DIR}/libmathtool.a: 
+	cd ${MATHTOOL_DIR}; ${MAKE} platform=${platform} debug=${debug}
+
+MATHTOOL_LIBFILE = ${MATHTOOL_DIR}/libmathtool.a
+
 
 # stapl macros
 STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools 
@@ -135,8 +159,6 @@ PMPL_OBJS = \
 	MPProblem/Geometry/Transformation.o \
 	MPProblem/Geometry/Orientation.o \
 	MPProblem/Geometry/GMSPolyhedron.o \
-	Utilities/Matrix.o \
-	Utilities/Vectors.o \
 	MPProblem/Geometry/Body.o \
 	MPProblem/Geometry/MultiBody.o \
 	trash/Parameters.o \
@@ -172,3 +194,5 @@ PMPL_OBJS = \
 	MPProblem/MPProblem.o 
 #	Haptic.o \
 #	Push.o \
+#	Utilities/Vectors.o 	
+#	Utilities/Matrix.o 

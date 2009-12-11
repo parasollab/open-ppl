@@ -13,7 +13,7 @@ public:
   //===================================================================
   Cfg_free_multi();
   Cfg_free_multi(double x, double y, double z, double roll, double pitch, double yaw);
-  Cfg_free_multi(const Vector6<double>& _v);
+  Cfg_free_multi(const Vector6D& _v);
   Cfg_free_multi(const vector<double>& _v);
   Cfg_free_multi(const Cfg& c);
   virtual ~Cfg_free_multi();

@@ -42,7 +42,7 @@ public:
   ///Degree of freedom is 6 and Degree of freedom for position part is 3.
   Cfg_free();
   Cfg_free(double x, double y, double z, double roll, double pitch, double yaw);
-  Cfg_free(const Vector6<double>& _v);
+  Cfg_free(const Vector6D& _v);
   Cfg_free(const Cfg& c);
   ///Do nothing
   virtual ~Cfg_free();

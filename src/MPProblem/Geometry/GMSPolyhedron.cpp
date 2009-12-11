@@ -68,7 +68,7 @@ void GMSPolyhedron::ComputeNormals()
     P->normal = v1.crossProduct(v2);
     P->area = (0.5) * P->normal.magnitude();
     sum += P->area;
-    P->normal.normalize();
+    P->normal = P->normal.normalize();
   }
   area = sum;
 }

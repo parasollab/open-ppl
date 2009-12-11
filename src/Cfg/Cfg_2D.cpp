@@ -67,7 +67,7 @@ Cfg_2D::Cfg_2D(const Cfg& _c) {
   clearance = _c.clearance;
 }
 
-Cfg_2D::Cfg_2D(const Vector6<double>& _v) {
+Cfg_2D::Cfg_2D(const Vector6D& _v) {
   dof = 6;
   posDof = 2;
   v.clear();
@@ -90,7 +90,7 @@ Cfg* Cfg_2D::CreateNewCfg() const {
 
 
 Cfg* Cfg_2D::CreateNewCfg(vector<double>& data) const {
-  Vector6<double> _data;
+  Vector6D _data;
   if(data.size() < 6) {
     cout << "\n\nERROR in Cfg_2D::CreateNewCfg(vector<double>), ";
     cout << "size of vector is less than 6\n";
@@ -267,7 +267,7 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
     double cV = sqrt((1+dot)/2.0);
     double sV = sqrt((1-dot)/2.0);
     Vector3D vertical = robotNormal.crossProduct(obstNormal);
-    vertical.normalize();
+    vertical = vertical.normalize();
     orient = Orientation(cV, vertical*sV);
   }
   orient.ConvertType(Orientation::FixedXYZ);
@@ -293,8 +293,8 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
     Vector3D direction(0,0,0);
     Vector3D disp = obstNormal*(posRes*0.5);  //0.01;
     
-    Cfg_2D displacement = Cfg_2D(Vector6<double>(disp[0], disp[1], disp[2], 0, 0, 0));
-    Cfg_2D cfgIn = Cfg_2D(Vector6<double>(robotCMS[0], robotCMS[1], robotCMS[2],
+    Cfg_2D displacement = Cfg_2D(Vector6D(disp[0], disp[1], disp[2], 0, 0, 0));
+    Cfg_2D cfgIn = Cfg_2D(Vector6D(robotCMS[0], robotCMS[1], robotCMS[2],
 					  gamma/TWOPI, beta/TWOPI, alpha/TWOPI));
     cfgIn.Increment(displacement);
     
@@ -312,7 +312,7 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
 	robotCMS = obstPoint - ( orient * robotPoint);
-	cfgIn = Cfg_2D(Vector6<double>(robotCMS[0], robotCMS[1], robotCMS[2],
+	cfgIn = Cfg_2D(Vector6D(robotCMS[0], robotCMS[1], robotCMS[2],
 				       gamma/TWOPI, (beta+PI)/TWOPI, (alpha+PI)/TWOPI));
 	cfgIn.Increment(displacement);
 	CallCnt="3";

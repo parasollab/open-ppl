@@ -23,7 +23,7 @@ Cfg_reach_cc(int _numofjoints) : Cfg_free_tree(_numofjoints) {
 }
 
 Cfg_reach_cc::
-Cfg_reach_cc(const Vector6<double>& _v) : Cfg_free_tree(_v) {
+Cfg_reach_cc(const Vector6D& _v) : Cfg_free_tree(_v) {
 }
 
 Cfg_reach_cc::
@@ -43,7 +43,7 @@ Cfg_reach_cc(double x, double y, double z,
 }
 
 Cfg_reach_cc::
-Cfg_reach_cc(const Vector6<double>& base,
+Cfg_reach_cc(const Vector6D& base,
 	     const vector<double>& len, 
 	     const vector<int>& ori) :
   link_lengths(len), link_orientations(ori) {
