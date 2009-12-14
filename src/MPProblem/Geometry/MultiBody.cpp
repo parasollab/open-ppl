@@ -769,62 +769,24 @@ bool MultiBody::operator==(const MultiBody& mb) const
          (maxAxisRange == mb.maxAxisRange);
 }
 
-
 //==================================================================
 //Polygonal Approximation
 void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
 {
   result.clear();
   int i, nfree;
-  double * first;
-  double * second;
 
   nfree = GetFreeBodyCount();
 
-  double min_1x, min_1y, min_1z, max_1x, max_1y, max_1z;
-  double min_2x, min_2y, min_2z, max_2x, max_2y, max_2z;
-  //i = 0;
   if(nfree > 0)
   {
-    for(i=0; i<nfree; i++)
+    for(i=0; i<nfree-1; i++)
     {
-      //first = this->GetFreeBody(i)->GetWorldBoundingBox();
-      this->GetFreeBody(i)->GetWorldBoundingBox();
-      first = this->GetFreeBody(i)->GetBoundingBox();
-      min_1x = first[0];
-      max_1x = first[1];
-      min_1y = first[2];
-      max_1y = first[3];
-      min_1z = first[4];
-      max_1z = first[5];
+      GMSPolyhedron first_bb = this->GetFreeBody(i)->GetWorldBoundingBox();
+      vector<Vector3D> first_vertices = first_bb.vertexList;
 
-      //second = this->GetFreeBody(i)->GetForwardConnection(0)->GetNextBody()->GetWorldBoundingBox();
-      this->GetFreeBody(i)->GetForwardConnection(0).GetNextBody()->GetWorldBoundingBox();
-      second = this->GetFreeBody(i)->GetBoundingBox();
-      min_2x = second[0];
-      max_2x = second[1];
-      min_2y = second[2];
-      max_2y = second[3];
-      min_2z = second[4];
-      max_2z = second[5];
-
-      vector<Vector3D> before, after;
-      before[0] = (min_1x, min_1y, min_1z);
-      before[1] = (min_1x, min_1y, max_1z);
-      before[2] = (min_1x, max_1y, min_1z);
-      before[3] = (min_1x, max_1y, max_1z);
-      before[4] = (max_1x, min_1y, min_1z);
-      before[5] = (max_1x, min_1y, max_1z);
-      before[6] = (max_1x, max_1y, min_1z);
-      before[7] = (max_1x, max_1y, max_1z);
-      after[0] = (min_2x, min_2y, min_2z);
-      after[1] = (min_2x, min_2y, max_2z);
-      after[2] = (min_2x, max_2y, min_2z);
-      after[3] = (min_2x, max_2y, max_2z);
-      after[4] = (max_2x, min_2y, min_2z);
-      after[5] = (max_2x, min_2y, max_2z);
-      after[6] = (max_2x, max_2y, min_2z);
-      after[7] = (max_2x, max_2y, max_2z);
+      GMSPolyhedron second_bb = this->GetFreeBody(i)->GetForwardConnection(0).GetNextBody()->GetWorldBoundingBox();
+      vector<Vector3D> second_vertices = second_bb.vertexList;
 
       vector<double> dis;
       vector<int> point;
@@ -832,53 +794,52 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
       //find the shortest distance for each vertex in one freebody to every vertex to the neighboring freebody and record the vertex pair
       for(k=0; k<8; k++)
       {
-        dis[k] = (before[k]-after[0]).magnitude();
-        point[k] = 0;
+        dis.push_back((first_vertices[k]-second_vertices[0]).magnitude());
+        point.push_back(0);
         for(j=1; j<8; j++)
         {
-	  if(((before[k]-after[j]).magnitude()) < (dis[k]))
-	  {
-	    dis[k] = (before[k]-after[j]).magnitude();
-	    point[k] = j;
-	  }
-	}
+          if(((first_vertices[k]-second_vertices[j]).magnitude()) < dis[k])
+          {
+            dis.push_back((first_vertices[k]-second_vertices[j]).magnitude());
+            point.push_back(j);
+          }
+        }
       }
 
       //find the 4 smallest distances
       for(k=0; k<4; k++)
       {
         int tmp = 0;
- 	for(j=1; j<8; j++)
-	{
-	  if(dis[tmp]<0 || dis[j]>dis[tmp])
-	    tmp = j;
-	}
-	dis[tmp] = -1;
+        for(j=1; j<8; j++)
+ 	{
+          if(dis[tmp]<0 || dis[j]>dis[tmp])
+            tmp = j;
+        }
+        dis[tmp] = -1;
       }
 
       double X, Y, Z;
-      X=0; 
+      X=0;
       Y=0;
       Z=0;
 
       //average the x, y, z coordinates for 8 vertices
       for(j=0; j<8; j++)
       {
-        if(dis[j]>0)
-	{
-
-	  X+=before[j].getX()+after[point[j]].getX();
-	  Y+=before[j].getY()+after[point[j]].getY();
-	  Z+=before[j].getZ()+after[point[j]].getZ();
-	}
+        if(dis[j]>=0)
+        {
+          X+=first_vertices[j].getX()+second_vertices[point[j]].getX();
+          Y+=first_vertices[j].getY()+second_vertices[point[j]].getY();
+          Z+=first_vertices[j].getZ()+second_vertices[point[j]].getZ();
+        }
       }
 
       X /= 8.0;
       Y /= 8.0;
       Z /= 8.0;
-
-      //vector<Vector3D> joint;
-      result[i] = (X, Y, Z);
+      Vector3D res(X, Y, Z);
+      result.push_back(res);
     }
   }
 }
+
