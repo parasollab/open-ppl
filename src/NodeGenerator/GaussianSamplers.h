@@ -30,6 +30,7 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   std::string strLabel;
   std::string strVcmethod;
 
+  
   DistanceMetricMethod* m_dmm;
  public:
  GaussRandomSampler(Environment* _env, Stat_Class& _Stats, 
@@ -117,7 +118,7 @@ void ParseXMLd(XMLNodeReader& in_Node) {
 	  
 	CFG incr;
 	incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), 
-			      env, m_dmm);
+			      env, dm);
 	CFG cfg2;
 	//cout << "cfg2 is = " << cfg2 << endl;
 	cfg2.add(cfg1, incr);
