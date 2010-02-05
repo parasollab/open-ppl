@@ -191,7 +191,7 @@ class PRMRoadmap : public MPStrategyMethod {
                              GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                              GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                              GetMPProblem()->GetMPStrategy()->addAllEdges,
-                             new_free_vids.begin(), new_free_vids.end());
+                             verticesVID.begin(), verticesVID.end());
                              
         // @todo need to use ifSameCC
         // @todo improve performance: copy new nodes to a temporary roadmap where connection is done.
