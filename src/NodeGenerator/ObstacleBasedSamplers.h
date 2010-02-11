@@ -33,9 +33,10 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
 		       double _step = 0) :
   env(_env), Stats(_Stats), cd(_cd), cdInfo(_cdInfo), dm(_dm),step_size(_step){ 
    /* n_shells_free(_free), n_shells_coll(_coll), step_size(_step) {*/
+   
     if(step_size <= 0)
       step_size = min(env->GetPositionRes(), env->GetOrientationRes());
-  
+     
 }// get above parameter from XML
   int numShells,n_shells_coll,n_shells_free;
   ObstacleBasedSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem)
@@ -46,11 +47,17 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
   strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
                                     string(""), string("Validity Test Method"));
   
-   cout << "strVcmethod = " << strVcmethod << endl;
+  
   vc = in_pProblem->GetValidityChecker();
   dm = in_pProblem->GetDistanceMetric();
+  env = in_pProblem->GetEnvironment();
+  
   strLabel= this->ParseLabelXML( in_Node);
   this->SetLabel(strLabel);
+  
+    if(step_size <= 0)
+      step_size = min(env->GetPositionRes(), env->GetOrientationRes());
+     
   LOG_DEBUG_MSG("~ObstacleBasedSampler::ObstacleBasedSampler()");
   }
   // fix this later
@@ -121,19 +128,19 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
     }
   
   template <typename OutputIterator>
-    OutputIterator GenerateShells(CFG c_free, CFG c_coll, CFG incr, 
+    OutputIterator GenerateShells(Stat_Class& Stats,CFG c_free, CFG c_coll, CFG incr, 
 				  OutputIterator result) 
     {
+      CDInfo cdInfo;
       string callee(name());
       callee += "::GenerateShells";
-      cout << "n_shells_coll = " << n_shells_coll << endl;
+     // cout << "n_shells_coll = " << n_shells_coll << endl;
       for(int i=0; i<n_shells_free; ++i) {
 	if(c_free.InBoundingBox(env) && 
-	  // !c_free.isCollision(env, *Stats, cd, *cdInfo, true, &callee))
-             vc->IsValid(vc->GetVCMethod(strVcmethod), c_free, env, 
-		         *Stats, *cdInfo, true, &callee))
+	  vc->IsValid(vc->GetVCMethod(strVcmethod), c_free, env, 
+		         Stats, cdInfo, true, &callee))
         {
-	  Stats->IncNodes_Generated();
+	  Stats.IncNodes_Generated();
 	  *result = c_free;
 	  result++;
 	}
@@ -141,15 +148,14 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
       }
       
       CFG tmp;
-      cout << "n_shells_coll = " << n_shells_coll << endl;
+     // cout << "n_shells_coll = " << n_shells_coll << endl;
       incr.subtract(tmp, incr);
       for(int i=0; i<n_shells_coll; ++i) {
 	if(c_coll.InBoundingBox(env) && 
-	   //c_coll.isCollision(env, *Stats, cd, *cdInfo, true, &callee)) {
-            !vc->IsValid(vc->GetVCMethod(strVcmethod), c_coll, env, 
-		         *Stats, *cdInfo, true, &callee))
+	   !vc->IsValid(vc->GetVCMethod(strVcmethod), c_coll, env, 
+		         Stats, cdInfo, true, &callee))
 	{
-	  Stats->IncNodes_Generated();
+	  Stats.IncNodes_Generated();
 	  *result = c_coll;
 	  result++;
 	}
@@ -172,12 +178,12 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 	attempts++;
 
 	CFG c1 = cfg_in;
-	cout << "tmp b4 IsValid = " << c1 << endl;
+	
 	bool c1_bbox = c1.InBoundingBox(env);
-	//bool c1_free = !c1.isCollision(env, Stat, cd, cdInfo, true, &callee);
+	
 	bool c1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c1, env, 
 		         Stat, cdInfo, true, &callee);
-	cout << "tmp b5 IsValid = " << c1_free << endl;
+	
 
 	CFG c2 = c1;
 	bool c2_bbox = c1_bbox;
@@ -185,7 +191,8 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 
 	CFG r;
 	r.GetRandomRay(step_size, env, dm);
-	while(c1_bbox && c2_bbox && (c1_free == c2_free)) { //sjacobs
+	
+	while(c1_bbox && c2_bbox && (c1_free == c2_free)) { 
 	//while(c1_bbox && c2_bbox){
 	  c1 = c2;
 	  c1_bbox = c2_bbox;
@@ -193,11 +200,10 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 	 
 	  c2.Increment(r);
 	  c2_bbox = c2.InBoundingBox(env);
-	  c2_free = !c2.isCollision(env, Stat, cd, cdInfo, true, &callee);
+	
 	  c2_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c2, env, 
 		         Stat, cdInfo, true, &callee);
-	 cout << "c2_free = " << c2_free << endl;
-	 // This look like an infinite loop
+	 
 	}
 
 	if(c1_bbox && c2_bbox) {
@@ -205,10 +211,10 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 	  if(c1_free) {
 	    CFG tmp;
 	    r.subtract(tmp, r);
-	    GenerateShells(c1, c2, r, 
+	    GenerateShells(Stat,c1, c2, r, 
 			   back_insert_iterator<vector<CFG> >(cfg_out));
 	  } else 
-	    GenerateShells(c2, c1, r,
+	    GenerateShells(Stat,c2, c1, r,
 			   back_insert_iterator<vector<CFG> >(cfg_out));
 	    }
       } while (!generated && (attempts < max_attempts));
@@ -223,7 +229,6 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 	   my_cfg.GetRandomCfg(env);
 	   }while (!my_cfg.InBoundingBox(env));
 	   vector<CFG> out1;
-	  // cout << "num of nodes = " << num_nodes << endl;
 	   for (int i =0; i< num_nodes; i++){ 
 		 my_cfg.GetRandomCfg(env);  
 	       while(!sampler(env, Stat,my_cfg, out1, max_attempts)) {
@@ -240,7 +245,7 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
    template <typename InputIterator, typename OutputIterator>
    OutputIterator Sample(Environment* env,Stat_Class& Stat, InputIterator first, InputIterator last,
 	   OutputIterator result, int max_attempts) {
-   //cout << "max_attempts = " << max_attempts << endl;
+   
          while(first != last) {
     vector<CFG> result_cfg;
     if(sampler(env, Stat, *first, result_cfg, max_attempts)) {
