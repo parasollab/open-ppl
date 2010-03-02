@@ -484,7 +484,7 @@ ConnectionsWitnessToRoadmap(vector < CfgType > & witness_cfgs, Roadmap< CfgType,
       vector < CfgType > cc_cfgs;
       vector<VID> cc_cfgs_aux;
       //Get CC(*(rdmp->m_pRoadmap), *(new CfgType(rdmp->m_pRoadmap->GetData(cc[j].second))), cc_cfgs);
-      CfgType * tmp_pointer = new CfgType(rdmp->m_pRoadmap->find_vertex(cc[j].second).property());
+      CfgType * tmp_pointer = new CfgType((*(rdmp->m_pRoadmap->find_vertex(cc[j].second))).property());
       cmap.reset();
       get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->GetVID(*(tmp_pointer)), cc_cfgs_aux);
       cc_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(cc_cfgs_aux);

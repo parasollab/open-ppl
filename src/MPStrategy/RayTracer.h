@@ -762,7 +762,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
       
       vector<CFG> cci_cfgs;
       vector<VID> cci_cfgs_aux;
-      CFG cci_tmp = rdmp->m_pRoadmap->find_vertex(cc_itrtr->first).property();
+      CFG cci_tmp = (*(rdmp->m_pRoadmap->find_vertex(cc_itrtr->first))).property();
       cmap.reset();
       get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->GetVID(cci_tmp), cci_cfgs_aux);
       cci_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(cci_cfgs_aux);
@@ -771,7 +771,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
       
       vector<CFG> ccj_cfgs;
       vector<VID> ccj_cfgs_aux;
-      CFG ccj_tmp = rdmp->m_pRoadmap->find_vertex(cc_itrtr->second).property();
+      CFG ccj_tmp = (*(rdmp->m_pRoadmap->find_vertex(cc_itrtr->second))).property();
       cmap.reset();
       get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->GetVID(ccj_tmp), ccj_cfgs_aux);
       ccj_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(ccj_cfgs_aux);

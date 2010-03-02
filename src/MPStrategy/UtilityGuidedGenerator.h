@@ -238,7 +238,7 @@ GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
   stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
   vector<pair<size_t,VID> > ccs;
   if(get_cc_stats(*rmap->m_pRoadmap, cmap, ccs) == 1) {
-    q1 = rmap->m_pRoadmap->find_vertex(ccs[0].second).property();
+    q1 = (*(rmap->m_pRoadmap->find_vertex(ccs[0].second))).property();
     q2.GetRandomCfg(rmap->GetEnvironment());
   } else {
     //randomly select 2 ccs that are within a threshold component_dist of each other
@@ -258,13 +258,13 @@ GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
       
       vector<pair<VID,VID> > kp = dm->FindKClosestPairs(rmap, cc1, cc2,1);
       dist = dm->Distance(rmap->GetEnvironment(), 
-			  rmap->m_pRoadmap->find_vertex(kp[0].first).property(),
-			  rmap->m_pRoadmap->find_vertex(kp[1].second).property());
+			  (*(rmap->m_pRoadmap->find_vertex(kp[0].first))).property(),
+			  (*(rmap->m_pRoadmap->find_vertex(kp[1].second))).property());
     } while (dist > component_dist);
     
     //randomly select a node in each cc
-    q1 = rmap->m_pRoadmap->find_vertex(cc1[(int)floor((double)OBPRM_drand()*(double)cc1.size())]).property();
-    q2 = rmap->m_pRoadmap->find_vertex(cc2[(int)floor((double)OBPRM_drand()*(double)cc2.size())]).property();
+    q1 = (*(rmap->m_pRoadmap->find_vertex(cc1[(int)floor((double)OBPRM_drand()*(double)cc1.size())]))).property();
+    q2 = (*(rmap->m_pRoadmap->find_vertex(cc2[(int)floor((double)OBPRM_drand()*(double)cc2.size())]))).property();
   }
 
   //return perturbation of the midpoint between the two nodes

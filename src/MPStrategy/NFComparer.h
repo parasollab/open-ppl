@@ -318,7 +318,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
       //cout<<"k="<<k<<endl;
       if (vi != rmp.m_pRoadmap->end()) {
         //cout<<"deleting vid="<<*iter<<endl;
-        rmp.m_pRoadmap->delete_vertex(vi.descriptor());
+        rmp.m_pRoadmap->delete_vertex((*vi).descriptor());
         //union_rmp.m_pRoadmap->DeleteVertex(*iter);
         removed ++;
         if(removed % _interval == 0){
@@ -377,7 +377,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
     GRAPH::vertex_iterator vi;
     vector<GRAPH::vertex_descriptor> v_vd;
     for (vi = rmp.m_pRoadmap->begin(); vi != rmp.m_pRoadmap->end(); ++vi) {
-      v_vd.push_back(vi.descriptor());
+      v_vd.push_back((*vi).descriptor());
     }
     
     for(int i=size; i < v_vd.size(); i++){
@@ -465,7 +465,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
     //rmp.m_pRoadmap->GetEdges(edges);
 
     for(GRAPH::edge_iterator ei = rmp.m_pRoadmap->edges_begin(); ei != rmp.m_pRoadmap->edges_end(); ++ei){
-      union_rmp.m_pRoadmap->add_edge(ei.source(), ei.target(), ei.property());
+      union_rmp.m_pRoadmap->add_edge((*ei).source(), (*ei).target(), (*ei).property());
     }
     //cout<<"exiting merge"<<endl;
   }
@@ -625,8 +625,8 @@ class NFRoadmapCompare : public MPStrategyMethod {
     double distance(Roadmap<CfgType,WeightType>& rmp,VID v1,VID v2){
       RoadmapGraph<CfgType,WeightType>* pMap = rmp.m_pRoadmap;
       //cout<<"getting cfg"<<endl;
-      CfgType cfg1 = pMap->find_vertex(v1).property();
-      CfgType cfg2 = pMap->find_vertex(v2).property();
+      CfgType cfg1 = (*(pMap->find_vertex(v1))).property();
+      CfgType cfg2 = (*(pMap->find_vertex(v2))).property();
       //cout<<"getting DMM"<<endl;
       //DistanceMetric* dmm=GetMPProblem()->GetDistanceMetric();
       //cout<<"getting Distance"<<endl;
@@ -1097,7 +1097,7 @@ private:
     OnlineStats to_return;
     RoadmapGraph<CfgType,WeightType>::VI vitr;
     for(vitr =_graph.begin(); vitr != _graph.end(); ++vitr) {
-      to_return.AddData(_graph.get_out_degree(vitr.descriptor()));
+      to_return.AddData(_graph.get_out_degree((*vitr).descriptor()));
     }
     return to_return;
   };
@@ -1110,8 +1110,8 @@ private:
     
     
     for(vitr = _graph.begin(); vitr != _graph.end(); ++vitr) {
-      for (eitr = vitr.begin(); eitr != vitr.end(); ++eitr) {
-        to_return.AddData(eitr.property().GetWeight());
+      for (eitr = (*vitr).begin(); eitr != (*vitr).end(); ++eitr) {
+        to_return.AddData((*(eitr)).property().GetWeight());
       }
     }
     return to_return;
@@ -1128,7 +1128,7 @@ private:
     
     for(int i=0; i<vec_cc.size(); ++i) {
       double dist = GetMPProblem()->GetDistanceMetric()->Distance(GetMPProblem()->GetEnvironment(),
-                              _test, _graph.find_vertex(vec_cc[i]).property());
+                              _test, (*(_graph.find_vertex(vec_cc[i]))).property());
       vec_dist_vid.push_back(make_pair(dist, vec_cc[i]));
     }
   
@@ -1139,7 +1139,7 @@ private:
       if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->
               IsConnected(GetMPProblem()->GetEnvironment(), _mystat, 
               GetMPProblem()->GetDistanceMetric(), 
-              _test, _graph.find_vertex(vec_dist_vid[i].second).property(),  &out_lp_output, 
+              _test, (*(_graph.find_vertex(vec_dist_vid[i].second))).property(),  &out_lp_output, 
               GetMPProblem()->GetEnvironment()->GetPositionRes(), 
               GetMPProblem()->GetEnvironment()->GetOrientationRes(),
               true, false, false)) {

@@ -412,7 +412,9 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       _rp.clear();
       cmap.reset();
       //FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, rp);
-      FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp); //fix_lantao , inside this function, edge_property vs double
+      FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, DefaultWeight::MaxWeight()); //fix_lantao , inside this function, edge_property vs double
+      //cout << "FindPathDijkstra:: size of vector<VID>" << _rp.size() << endl ;
+      
 
       cout << "\nStart(" << size_t(_rp[1]) //rdmp->m_pRoadmap->GetVID(rp[1].first)
 	   << ") and Goal(" << size_t(_rp[_rp.size()-2]) //rdmp->m_pRoadmap->GetVID(rp[rp.size()-2].first)
@@ -437,7 +439,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       vector<CFG> _mapcfgs;
       for(typename vector<VID>::iterator I = _rp.begin(); 
 	  I != _rp.end(); ++I)
-        _mapcfgs.push_back(rdmp->m_pRoadmap->find_vertex(*I).property());
+        _mapcfgs.push_back((*(rdmp->m_pRoadmap->find_vertex(*I))).property());
       WritePathConfigurations("mapnodes.path", _mapcfgs, rdmp->GetEnvironment());
 /*
       for(typename vector<pair<CFG,WEIGHT> >::iterator I = rp.begin(); 
@@ -465,17 +467,17 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
                 vector<CFG>& recreatedPath) {
   LPOutput<CFG,WEIGHT> ci;
 
-  recreatedPath.push_back(rdmp->m_pRoadmap->find_vertex( *(attemptedPath.begin()) ).property());
+  recreatedPath.push_back((*(rdmp->m_pRoadmap->find_vertex( *(attemptedPath.begin()) ))).property());
   for(typename vector<VID>::iterator I = attemptedPath.begin();
       (I+1) != attemptedPath.end(); ++I) {
     typename RoadmapGraph<CFG, WEIGHT>::vertex_iterator vi;
     typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei;
-    typename RoadmapGraph<CFG, WEIGHT>::edge_descriptor ed(rdmp->m_pRoadmap->find_vertex(*I).descriptor(),rdmp->m_pRoadmap->find_vertex(*(I+1) ).descriptor());
+    typename RoadmapGraph<CFG, WEIGHT>::edge_descriptor ed((*(rdmp->m_pRoadmap->find_vertex(*I))).descriptor(),(*(rdmp->m_pRoadmap->find_vertex(*(I+1) ))).descriptor());
     rdmp->m_pRoadmap->find_edge(ed, vi, ei);
     if(!(lp->GetPathSegment(rdmp->GetEnvironment(), Stats, dm,
-                            rdmp->m_pRoadmap->find_vertex(*I).property(), 
-			    rdmp->m_pRoadmap->find_vertex(*(I+1) ).property(), 
-			    ei.property(), //double check is it correct? fix_lantao
+                            (*(rdmp->m_pRoadmap->find_vertex(*I))).property(), 
+			    (*(rdmp->m_pRoadmap->find_vertex(*(I+1) ))).property(), 
+			    (*ei).property(), //double check is it correct? fix_lantao
 			    &ci,
                             rdmp->GetEnvironment()->GetPositionRes(),
                             rdmp->GetEnvironment()->GetOrientationRes(),
@@ -486,7 +488,7 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
     } else {
       recreatedPath.insert(recreatedPath.end(),
                            ci.path.begin(), ci.path.end());
-      recreatedPath.push_back(rdmp->m_pRoadmap->find_vertex(*(I+1)).property());
+      recreatedPath.push_back((*(rdmp->m_pRoadmap->find_vertex(*(I+1)))).property());
     }
   }
   return true;
