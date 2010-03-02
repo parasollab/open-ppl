@@ -802,13 +802,13 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
       // initialize w/ k elements each with huge distance...
       vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
               max_value));
-      CFG v1 = pMap->find_vertex(*V1).property();
+      CFG v1 = (*(pMap->find_vertex(*V1))).property();
       for(V2 = vec2.begin(); V2 != vec2.end(); ++V2) {
   //marcom/08nov03 check if results in other functions is same
   if(*V1 == *V2)
     continue; //don't connect same
   
-  double dist = Distance(_env, v1, pMap->find_vertex(*V2).property());
+  double dist = Distance(_env, v1, (*(pMap->find_vertex(*V2))).property());
   if(dist < kp[max_index].second) { 
     kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
     max_value = dist;
@@ -868,13 +868,13 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
     int max_index = 0;
     double max_value = MAX_DIST;
  
-    CFG v1 = pMap->find_vertex(*V1).property();
+    CFG v1 = (*(pMap->find_vertex(*V1))).property();
 
     for(V2 = vec1.begin(); V2 != vec1.end(); ++V2) {
       if(*V1 == *V2)
   continue;
 
-      double dist = Distance(_env, v1, pMap->find_vertex(*V2).property());
+      double dist = Distance(_env, v1, (*(pMap->find_vertex(*V2))).property());
       if(dist < kp[max_index].second) { 
   kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
   max_value = dist;
@@ -1185,7 +1185,7 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, typename RoadmapGraph<CFG, WEIGHT>::VID in_
   for(itr = vec_vids.begin(); itr != vec_vids.end(); ++itr)
   {
     if(in_query == *itr) continue;
-    double dist = Distance(_env, pMap->find_vertex(in_query).property(), pMap->find_vertex(*itr).property());
+    double dist = Distance(_env, (*(pMap->find_vertex(in_query))).property(), (*(pMap->find_vertex(*itr))).property());
     //cout << "Distance = " << dist << " Radius = " << in_radius << endl;
     if( dist< in_radius) {
       returnVec.push_back(*itr);
@@ -1216,8 +1216,8 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
   typename vector<VID>::iterator itr;
   for(itr = vec_vids.begin(); itr != vec_vids.end(); ++itr)
   {
-    if(in_query == pMap->find_vertex(*itr).property()) continue;
-    if(Distance(_env, in_query, pMap->find_vertex(*itr).property()) < in_radius) {
+    if(in_query == (*(pMap->find_vertex(*itr))).property()) continue;
+    if(Distance(_env, in_query, (*(pMap->find_vertex(*itr))).property()) < in_radius) {
       returnVec.push_back(*itr);
     }
   }
