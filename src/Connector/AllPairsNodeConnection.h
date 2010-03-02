@@ -114,8 +114,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       
       Stats.IncConnections_Attempted();
       if (lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
-                          _rm->m_pRoadmap->find_vertex(verticesVID[i]).property(),
-                          _rm->m_pRoadmap->find_vertex(verticesVID[j]).property(),
+                          (*(_rm->m_pRoadmap->find_vertex(verticesVID[i]))).property(),
+                          (*(_rm->m_pRoadmap->find_vertex(verticesVID[j]))).property(),
                           &lpOutput,
                           this->connectionPosRes, this->connectionOriRes, 
                           (!addAllEdges) )) {
@@ -172,8 +172,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       Stats.IncConnections_Attempted();
 
       if (lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
-                          _rm->m_pRoadmap->find_vertex(v1[i]).property(),
-                          _rm->m_pRoadmap->find_vertex(v2[j]).property(),
+                          (*(_rm->m_pRoadmap->find_vertex(v1[i]))).property(),
+                          (*(_rm->m_pRoadmap->find_vertex(v2[j]))).property(),
                           &lpOutput,
                           this->connectionPosRes, this->connectionOriRes, 
                           (!addAllEdges) )) {

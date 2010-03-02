@@ -339,9 +339,9 @@ vector<VID>& cc1, vector<VID>& cc2)
     typedef typename vector<VID>::iterator IT;
     double min_dist=1e20;
     for(IT i=cc1.begin();i!=cc1.end();i++){
-        const CFG& cfg1=rmapG->find_vertex(*i).property();
+        const CFG& cfg1=(*(rmapG->find_vertex(*i))).property();
         for(IT j=cc2.begin();j!=cc2.end();j++){
-            const CFG& cfg2=rmapG->find_vertex(*j).property();
+            const CFG& cfg2=(*(rmapG->find_vertex(*j))).property();
             double d=dm->Distance(p_env,cfg1,cfg2);
             if(d<min_dist) min_dist=d;
         }//end j
@@ -395,7 +395,7 @@ CFG ConnectkCCs<CFG,WEIGHT>::CC_com
     //compute com
     CFG com;
     for(typename vector<VID>::iterator i=ccvids.begin();i!=ccvids.end();i++)
-        com.add(com,rmapG->find_vertex(*i).property());
+        com.add(com,(*(rmapG->find_vertex(*i))).property());
     com.divide(com,ccvids.size());
 
     return com;

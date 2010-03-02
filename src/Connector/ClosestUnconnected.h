@@ -280,11 +280,11 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     Environment* env = _rm->GetEnvironment();
     for(typename vector<VID>::iterator I = v1.begin(); I != v1.end(); ++I) {
       vector<pair<pair<VID,VID>,double> > kpd;
-      CFG Icfg = pMap->find_vertex(*I).property();
+      CFG Icfg = (*(pMap->find_vertex(*I))).property();
       for(typename vector<VID>::iterator J = v2.begin(); J != v2.end(); ++J) 
         if(*I != *J)
           kpd.push_back(make_pair(make_pair(*I, *J),
-                        dm->Distance(env, Icfg, pMap->find_vertex(*J).property())));
+                        dm->Distance(env, Icfg, (*(pMap->find_vertex(*J))).property())));
       sort(kpd.begin(), kpd.end(), DIST_Compare<VID>());
       Connect2(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, kpd);
     }
@@ -325,8 +325,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         continue;
 
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
-			 _rm->m_pRoadmap->find_vertex(KP->first).property(),
-			 _rm->m_pRoadmap->find_vertex(KP->second).property(),
+			 (*(_rm->m_pRoadmap->find_vertex(KP->first))).property(),
+			 (*(_rm->m_pRoadmap->find_vertex(KP->second))).property(),
 			 &lpOutput, this->connectionPosRes, this->connectionOriRes, 
 			 (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);
@@ -377,8 +377,8 @@ Connect2(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
       ++attempt;
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
-			 _rm->m_pRoadmap->find_vertex(KP->first.first).property(),
-			 _rm->m_pRoadmap->find_vertex(KP->first.second).property(),
+			 (*(_rm->m_pRoadmap->find_vertex(KP->first.first))).property(),
+			 (*(_rm->m_pRoadmap->find_vertex(KP->first.second))).property(),
 			 &lpOutput, this->connectionPosRes, this->connectionOriRes, 
 			 (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first.first, KP->first.second, lpOutput.edge);

@@ -108,7 +108,7 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
   while(cc2<ccvec.end()) {
 
     while( i < vidvec.size() ) {
-      vtemp=rm->m_pRoadmap->find_vertex(vidvec[i]).property();
+      vtemp=(*(rm->m_pRoadmap->find_vertex(vidvec[i]))).property();
       if (i==0)
 	centervec.push_back(vtemp);
       else{

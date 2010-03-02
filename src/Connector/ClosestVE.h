@@ -330,8 +330,8 @@ FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
   
   //-- EDGES:
   for (int e1 = 0; e1 < edges.size(); e1++) {    
-    CFG endpt1 = _rm->m_pRoadmap->find_vertex(edges[e1].first.first).property();
-    CFG endpt2 = _rm->m_pRoadmap->find_vertex(edges[e1].first.second).property();
+    CFG endpt1 = (*(_rm->m_pRoadmap->find_vertex(edges[e1].first.first))).property();
+    CFG endpt2 = (*(_rm->m_pRoadmap->find_vertex(edges[e1].first.second))).property();
     CFG tmp;
     tmp.ClosestPtOnLineSegment(cfg,endpt1,endpt2);
     
@@ -411,9 +411,9 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		ei != _rm->m_pRoadmap.edges_end(); ++ei){
     //all_edges_a.push_back(ei_a.property()); 
     pair<pair<VID,VID>,WEIGHT> single_edge;
-    single_edge.first.first = ei.source();
-    single_edge.first.second = ei.target();
-    single_edge.second = ei.property();
+    single_edge.first.first = (*ei).source();
+    single_edge.first.second = (*ei).target();
+    single_edge.second = (*ei).property();
     edges.push_back(single_edge);
   }
 

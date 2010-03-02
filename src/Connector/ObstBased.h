@@ -204,8 +204,8 @@ struct Info_Compare : public binary_function<VID,VID,bool> {
   RoadmapGraph<CFG,WEIGHT>* pMap;
   Info_Compare(RoadmapGraph<CFG,WEIGHT>* graph) : pMap(graph) {} 
   bool operator()(const VID v1, const VID v2) {
-    CFG c1 = pMap->find_vertex(v1).property();
-    CFG c2 = pMap->find_vertex(v2).property();
+    CFG c1 = (*(pMap->find_vertex(v1))).property();
+    CFG c2 = (*(pMap->find_vertex(v2))).property();
     return(c1.obst < c1.obst);
   }
 };
@@ -397,8 +397,8 @@ vector<pair<VID,VID> > kp(k);
 	if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, kp[m].first,kp[m].second)) continue;
 	if (!_rm->m_pRoadmap->IsEdge(kp[m].first,kp[m].second)
 	    && lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
-			       _rm->m_pRoadmap->find_vertex(kp[m].first).property(),
-			       _rm->m_pRoadmap->find_vertex(kp[m].second).property(),
+			       (*(_rm->m_pRoadmap->find_vertex(kp[m].first))).property(),
+			       (*(_rm->m_pRoadmap->find_vertex(kp[m].second))).property(),
 			       &lpOutput,connectionPosRes, connectionOriRes, 
 			       (!addAllEdges))){
 	  _rm->m_pRoadmap->AddEdge(kp[m].first,kp[m].second,lpOutput.edge);

@@ -222,7 +222,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       LPOutput<CFG,WEIGHT> lpOutput;
 
       for(int i=0; i<allCC.size(); ++i) {	
-	CFG          tmp = _rm->m_pRoadmap->find_vertex(allCC[i].second).property();
+	CFG          tmp = (*(_rm->m_pRoadmap->find_vertex(allCC[i].second))).property();
 	vector<CFG>   CC;
 	vector<VID>  CC_aux;
 	cmap.reset();

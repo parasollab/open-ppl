@@ -245,8 +245,8 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       Stats.IncConnections_Attempted();
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
           && lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
-			     pMap->find_vertex(cc1vec[c1]).property(),
-			     pMap->find_vertex(cc2vec[c2]).property(),
+			     (*(pMap->find_vertex(cc1vec[c1]).property())),
+			     (*(pMap->find_vertex(cc2vec[c2]).property())),
 			     &lpOutput, 
 			     this->connectionPosRes, this->connectionOriRes, 
 			     (!addAllEdges)) ) {
@@ -258,7 +258,7 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
 	for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
 	  CFG tmp = I->first.second;
-	  if(!tmp.AlmostEqual(pMap->find_vertex(cc1vec[c1]).property())) {
+	  if(!tmp.AlmostEqual((*(pMap->find_vertex(cc1vec[c1]))).property())) {
 	    VID tmpVID = pMap->AddVertex(tmp);
 	    pMap->AddEdge(cc1vec[c1], tmpVID, I->second);
 	  }
@@ -303,8 +303,8 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     Stats.IncConnections_Attempted();
     if(!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
        && lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
-			  pMap->find_vertex(kp[i].first).property(),
-			  pMap->find_vertex(kp[i].second).property(),
+			  (*(pMap->find_vertex(kp[i].first))).property(),
+			  (*(pMap->find_vertex(kp[i].second))).property(),
 			  &lpOutput, this->connectionPosRes, this->connectionOriRes, 
 			  (!addAllEdges)) ) {
       pMap->AddEdge(kp[i].first, kp[i].second, lpOutput.edge); 
@@ -315,7 +315,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
       for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
 	CFG tmp = I->first.second;
-	if(!tmp.AlmostEqual(pMap->find_vertex(kp[i].first).property())) {
+	if(!tmp.AlmostEqual((*(pMap->find_vertex(kp[i].first))).property())) {
 	  VID tmpVID = pMap->AddVertex(tmp);
 	  pMap->AddEdge(kp[i].first, tmpVID, I->second);
 	}

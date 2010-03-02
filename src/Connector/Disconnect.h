@@ -162,7 +162,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
  	rGraph->delete_edge(eitr.descriptor());
 */
     for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei = g.edges_begin(); ei != g.edges_end(); ++ei)
-        rGraph->delete_edge(ei.descriptor());
+        rGraph->delete_edge(*ei.descriptor());
 
 }
 

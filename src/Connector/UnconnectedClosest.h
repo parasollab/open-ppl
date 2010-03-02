@@ -185,8 +185,8 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, kp[j].first,kp[j].second)) continue;
       Stats.IncConnections_Attempted();
       if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
-			  _rm->m_pRoadmap->find_vertex(kp[j].first).property(),
-			  _rm->m_pRoadmap->find_vertex(kp[j].second).property(),
+			  (*(_rm->m_pRoadmap->find_vertex(kp[j].first))).property(),
+			  (*(_rm->m_pRoadmap->find_vertex(kp[j].second))).property(),
 			  &lpOutput,
 			  connectionPosRes, connectionOriRes, 
 			  (!addAllEdges) )) {
@@ -329,8 +329,8 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	  if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, kp[j].first, kp[j].second)) continue;
 	  Stats.IncConnections_Attempted();
 	  if (lp->IsConnected(_rm->GetEnvironment(),Stats,cd,dm,
-			      _rm->m_pRoadmap->find_vertex(kp[j].first).property(),
-			      _rm->m_pRoadmap->find_vertex(kp[j].second).property(),
+			      (*(_rm->m_pRoadmap->find_vertex(kp[j].first))).property(),
+			      (*(_rm->m_pRoadmap->find_vertex(kp[j].second))).property(),
 			      &lpOutput,
 			      connectionPosRes, connectionOriRes, 
 			      (!addAllEdges) )) {

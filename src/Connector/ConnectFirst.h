@@ -164,8 +164,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     vector<pair<VID,double> > distances;
     for(C2 = cfgs2.begin(); C2 != cfgs2.end(); ++C2)
       distances.push_back(make_pair(*C2, dm->Distance(_rm->GetEnvironment(), 
-						      _rm->m_pRoadmap->find_vertex(*C1).property(), 
-						      _rm->m_pRoadmap->find_vertex(*C2).property())));
+						      (*(_rm->m_pRoadmap->find_vertex(*C1))).property(), 
+						      (*(_rm->m_pRoadmap->find_vertex(*C2))).property())));
     sort(distances.begin(), distances.end(), CfgDist_Compare<VID>());
 
     //try to connect, return after failure or connect first k
@@ -179,8 +179,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         continue;
       LPOutput<CFG,WEIGHT> _ci;
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm, 
-			 _rm->m_pRoadmap->find_vertex(*C1).property(), 
-			 _rm->m_pRoadmap->find_vertex(D->first).property(), 
+			 (*(_rm->m_pRoadmap->find_vertex(*C1))).property(), 
+			 (*(_rm->m_pRoadmap->find_vertex(D->first))).property(), 
 			 &_ci, _rm->GetEnvironment()->GetPositionRes(), 
 			 _rm->GetEnvironment()->GetOrientationRes(), 
 			 true, true)) {

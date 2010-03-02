@@ -313,8 +313,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         continue;
       }
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
-               _rm->m_pRoadmap->find_vertex(KP->first).property(),
-               _rm->m_pRoadmap->find_vertex(KP->second).property(),
+               (*(_rm->m_pRoadmap->find_vertex(KP->first))).property(),
+               (*(_rm->m_pRoadmap->find_vertex(KP->second))).property(),
                &lpOutput, this->connectionPosRes, this->connectionOriRes, 
                (!addAllEdges) )) {
         _rm->m_pRoadmap->AddEdge(KP->first, KP->second, lpOutput.edge);

@@ -324,7 +324,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     }
 
     // 1) get CFG pointed to by the iterator
-    CFG v_cfg = _rm->m_pRoadmap->find_vertex(*itr1).property();
+    CFG v_cfg = (*(_rm->m_pRoadmap->find_vertex(*itr1))).property();
     
     if (m_debug) cout << (itr1 - _itr1_first) << "\tAttempting connections: VID = " << *itr1 << "  --> " << v_cfg << endl;
     
@@ -404,7 +404,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       }
 
       // 1) get CFG pointed to by the iterator
-      CFG v_cfg = _rm->m_pRoadmap->find_vertex(*itr1).property();
+      CFG v_cfg = (*(_rm->m_pRoadmap->find_vertex(*itr1))).property();
       
       if (m_debug) cout << (itr1 - _itr1_first) << "\tAttempting connections: VID = " << *itr1 << "  --> " << v_cfg << endl;
       
@@ -458,7 +458,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     if (m_debug) cout << "\t(s,f) = (" << success << "," << failure << ")";
     if (m_debug) cout << " | VID = " << *itr2;
     if (m_debug) cout << " | dist = " << dm->Distance(
-            _rm->GetEnvironment(), _rm->m_pRoadmap->find_vertex(_vid).property(), _rm->m_pRoadmap->find_vertex(*itr2).property()
+            _rm->GetEnvironment(), (*(_rm->m_pRoadmap->find_vertex(_vid))).property(), (*(_rm->m_pRoadmap->find_vertex(*itr2))).property()
             );
     
     // stopping conditions
@@ -523,8 +523,8 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
     // attempt connection with the local planner
     if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
-                _rm->m_pRoadmap->find_vertex(_vid).property(),
-                _rm->m_pRoadmap->find_vertex(*itr2).property(),
+                (*(_rm->m_pRoadmap->find_vertex(_vid))).property(),
+                (*(_rm->m_pRoadmap->find_vertex(*itr2))).property(),
                 &lpOutput, this->connectionPosRes, this->connectionOriRes, 
                 (!addAllEdges) ))
     {
@@ -603,7 +603,7 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
   if (k == 0) {
     // we want an all-pairs comparison
     for(CVI itr = _rm->m_pRoadmap->begin(); itr != _rm->m_pRoadmap->end(); ++itr) {
-      *closest_iter = itr.descriptor();
+      *closest_iter = *itr.descriptor();
       closest_iter++;
     }
   }
@@ -614,7 +614,7 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
       // find k random neighbors
       for (int i = 0; i < k; i++) {
         int id = (int)(OBPRM_lrand()%(_rm->m_pRoadmap->end() - _rm->m_pRoadmap->begin()));
-        *closest_iter = (_rm->m_pRoadmap->begin() + id).descriptor();
+        *closest_iter = (*(_rm->m_pRoadmap->begin() + id)).descriptor();
         closest_iter++;
       }
     }
