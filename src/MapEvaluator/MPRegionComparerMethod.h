@@ -112,10 +112,10 @@ class MPRegionComparerMethod: public MPBaseObject {
       vector <VID> cc_a_cfgs_aux;
       cc_a_cfgs_aux.clear();
       cmap.reset();
-      get_cc(*(rdmp_a->m_pRoadmap), cmap, (rdmp_a->m_pRoadmap->find_vertex(i_cc_a->second).descriptor()), cc_a_cfgs_aux);
+      get_cc(*(rdmp_a->m_pRoadmap), cmap, ((*(rdmp_a->m_pRoadmap->find_vertex(i_cc_a->second))).descriptor()), cc_a_cfgs_aux);
   
      for(typename vector<VID>::iterator itr=cc_a_cfgs_aux.begin(); itr!=cc_a_cfgs_aux.end(); ++itr)
-                cc_a_cfgs.push_back(rdmp_a->m_pRoadmap->find_vertex(*itr).property());
+                cc_a_cfgs.push_back((*(rdmp_a->m_pRoadmap->find_vertex(*itr))).property());
       
       if (cc_a_cfgs.size() >= a_small_cc_size) {
 	not_small_cc_as++;
@@ -125,10 +125,10 @@ class MPRegionComparerMethod: public MPBaseObject {
 	  vector <CFG > cc_b_cfgs;
 	  vector <VID> cc_b_cfgs_aux;
 	  cmap.reset();
-	  get_cc(*(rdmp_b->m_pRoadmap), cmap, (rdmp_b->m_pRoadmap->find_vertex(i_cc_b->second).descriptor()), cc_b_cfgs_aux);
+	  get_cc(*(rdmp_b->m_pRoadmap), cmap, (*(rdmp_b->m_pRoadmap->find_vertex(i_cc_b->second))).descriptor(), cc_b_cfgs_aux);
 
         for(typename vector<VID>::iterator itr=cc_b_cfgs_aux.begin(); itr!=cc_b_cfgs_aux.end(); ++itr)
-                cc_b_cfgs.push_back(rdmp_b->m_pRoadmap->find_vertex(*itr).property());
+                cc_b_cfgs.push_back((*(rdmp_b->m_pRoadmap->find_vertex(*itr))).property());
 	  
 	  if (cc_b_cfgs.size() >= b_small_cc_size) {
 	    // try to connect component A to component B
@@ -175,9 +175,9 @@ class MPRegionComparerMethod: public MPBaseObject {
 	//get_cc(*(rdmp->m_pRoadmap), cmap, *(new CFG(rdmp->m_pRoadmap->find_vertex(cc[j].second).descriptor())), cc_cfgs_aux);
 	//fix_lantao is following right?
         //GetCC(*(rdmp->m_pRoadmap), *(new CFG(rdmp->m_pRoadmap->GetData(cc[j].second))), cc_cfgs);
-	get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->find_vertex(cc[j].second).descriptor(), cc_cfgs_aux);
+	get_cc(*(rdmp->m_pRoadmap), cmap, (*(rdmp->m_pRoadmap->find_vertex(cc[j].second))).descriptor(), cc_cfgs_aux);
 	for(typename vector<VID>::iterator itr=cc_cfgs_aux.begin(); itr!=cc_cfgs_aux.end(); ++itr)
-                cc_cfgs.push_back(rdmp->m_pRoadmap->find_vertex(*itr).property());
+                cc_cfgs.push_back((*(rdmp->m_pRoadmap->find_vertex(*itr))).property());
 
 	if (cc_cfgs.size() >= small_cc_size) {
 	  if ( CanConnectComponents(witness_test_cfg, cc_cfgs) ) {
@@ -365,7 +365,7 @@ public:
 
     typename vector<VID>::iterator a_vid_itr;
     for(a_vid_itr = rdmp_a_vids.begin(); a_vid_itr!=rdmp_a_vids.end(); ++a_vid_itr) {
-      if(!CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex(*a_vid_itr).property()), rdmp_b_cfg)) {
+      if(!CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex(*a_vid_itr))).property()), rdmp_b_cfg)) {
          // found a potential revealing/trapped node
         vector<VID> tmp_cc;
 	cmap.reset();
@@ -379,7 +379,7 @@ public:
 
     typename vector<VID>::iterator b_vid_itr;
     for(b_vid_itr = rdmp_b_vids.begin(); b_vid_itr!=rdmp_b_vids.end(); ++b_vid_itr) {
-     if(!CfgIsVisible((rdmp_b->m_pRoadmap->find_vertex(*b_vid_itr).property()), rdmp_a_cfg)) {
+     if(!CfgIsVisible(((*(rdmp_b->m_pRoadmap->find_vertex(*b_vid_itr))).property()), rdmp_a_cfg)) {
         // found a potential revealing/trapped node
         vector<VID> tmp_cc;
 	cmap.reset();
@@ -460,7 +460,7 @@ public:
       get_cc(*(rdmp_a->m_pRoadmap), cmap, (*all_a_vid_itr), tmp_cc);
       if( tmp_cc.size() >= a_small_cc_size) {
          usable_rdmp_a_vids.push_back((*all_a_vid_itr));
-         usable_rdmp_a_cfg.push_back(rdmp_a->m_pRoadmap->find_vertex((*all_a_vid_itr)).property());
+         usable_rdmp_a_cfg.push_back((*(rdmp_a->m_pRoadmap->find_vertex((*all_a_vid_itr)))).property());
       } //else not usable!!
     }
 
@@ -471,7 +471,7 @@ public:
       get_cc(*(rdmp_b->m_pRoadmap), cmap, (*all_b_vid_itr), tmp_cc);
       if( tmp_cc.size() >= b_small_cc_size) {
          usable_rdmp_b_vids.push_back((*all_b_vid_itr));
-         usable_rdmp_b_cfg.push_back(rdmp_b->m_pRoadmap->find_vertex((*all_b_vid_itr)).property());
+         usable_rdmp_b_cfg.push_back((*(rdmp_b->m_pRoadmap->find_vertex((*all_b_vid_itr)))).property());
       } //else not usable!!
     }
 
@@ -489,7 +489,7 @@ public:
         cmap.reset();
         get_cc(*(rdmp_a->m_pRoadmap),cmap, (*usable_a_vid_itr), tmp_cc);
         if( tmp_cc.size() >= a_small_cc_size) {  // Make sure its a "usable" node
-          if(CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex(*usable_a_vid_itr).property()), usable_rdmp_b_cfg)) {
+          if(CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex(*usable_a_vid_itr))).property()), usable_rdmp_b_cfg)) {
             ++node_a_visible_in_b;
           } else { ++node_a_not_visible_in_b; }
       }
@@ -502,7 +502,7 @@ public:
   	cmap.reset();
         get_cc(*(rdmp_b->m_pRoadmap), cmap, (*usable_b_vid_itr), tmp_cc);
         if( tmp_cc.size() >= b_small_cc_size) {  // Make sure its a "usable" node
-          if(CfgIsVisible((rdmp_b->m_pRoadmap->find_vertex(*usable_b_vid_itr).property()), usable_rdmp_a_cfg)) {
+          if(CfgIsVisible(((*(rdmp_b->m_pRoadmap->find_vertex(*usable_b_vid_itr))).property()), usable_rdmp_a_cfg)) {
             ++node_b_visible_in_a;
           } else { ++node_b_not_visible_in_a; }
       }
@@ -537,7 +537,7 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
     for(all_edges_a_itr = ga.edges_begin(); all_edges_a_itr != ga.edges_end(); ++all_edges_a_itr) {
       vector<VID> tmp_cc;
       cmap.reset();
-      get_cc(*(rdmp_a->m_pRoadmap),cmap,all_edges_a_itr.source(), tmp_cc);
+      get_cc(*(rdmp_a->m_pRoadmap),cmap,(*(all_edges_a_itr)).source(), tmp_cc);
       if( tmp_cc.size() < a_small_cc_size) { continue; } // not a edge in "usable" component
       //for all connected components in rdmp_b....
       vector< pair<size_t,VID> > all_cc_b;
@@ -553,15 +553,15 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
 	usable_cc_in_b_aux.clear();
 	cmap.reset();
         get_cc(*(rdmp_b->m_pRoadmap), cmap,
-              (rdmp_b->m_pRoadmap->find_vertex((*all_cc_b_itr).second).descriptor()), 
+              ((*(rdmp_b->m_pRoadmap->find_vertex((*all_cc_b_itr).second))).descriptor()), 
               usable_cc_in_b_aux);
 	for(typename vector<VID>::iterator itr=usable_cc_in_b_aux.begin(); itr!=usable_cc_in_b_aux.end(); ++itr)
-		usable_cc_in_b.push_back(rdmp_b->m_pRoadmap->find_vertex(*itr).property());
+		usable_cc_in_b.push_back((*(rdmp_b->m_pRoadmap->find_vertex(*itr))).property());
 
         //if(CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex((*all_edges_a_itr).first).property()), 
-        if(CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex(all_edges_a_itr.source()).property()), 
+        if(CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex((*(all_edges_a_itr)).source()))).property()), 
                         usable_cc_in_b)) {
-          if(CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex(all_edges_a_itr.target()).property()), 
+          if(CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex((*(all_edges_a_itr)).target()))).property()), 
                         usable_cc_in_b)) {
             ++edge_a_visible_in_b;
             found_edge_a_visible_in_b = true;
@@ -580,7 +580,7 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
     vector<VID> tmp_cc;
     cmap.reset();
     //get_cc(*(rdmp_b->m_pRoadmap), cmap, (*all_edges_b_itr).first, tmp_cc);
-    get_cc(*(rdmp_b->m_pRoadmap), cmap, all_edges_b_itr.source(), tmp_cc);
+    get_cc(*(rdmp_b->m_pRoadmap), cmap, (*(all_edges_b_itr)).source(), tmp_cc);
     if( tmp_cc.size() < b_small_cc_size) { continue; } // not a edge in "usable" component
     //for all connected components in rdmp_a....
     vector< pair<size_t,VID> > all_cc_a;
@@ -594,14 +594,14 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
       vector<VID> usable_cc_in_a_aux;
       cmap.reset();
       get_cc(*(rdmp_a->m_pRoadmap),cmap, 
-            (rdmp_a->m_pRoadmap->find_vertex((*all_cc_a_itr).second).descriptor()), 
+            (*(rdmp_a->m_pRoadmap->find_vertex((*all_cc_a_itr).second))).descriptor(), 
             usable_cc_in_a_aux);
       for(typename vector<VID>::iterator itr=usable_cc_in_a_aux.begin(); itr!=usable_cc_in_a_aux.end(); ++itr)
-                usable_cc_in_a.push_back(rdmp_a->m_pRoadmap->find_vertex(*itr).property());
+                usable_cc_in_a.push_back((*(rdmp_a->m_pRoadmap->find_vertex(*itr))).property());
 
-      if(CfgIsVisible((rdmp_b->m_pRoadmap->find_vertex(all_edges_b_itr.source()).property()), 
+      if(CfgIsVisible((*(rdmp_b->m_pRoadmap->find_vertex((*(all_edges_b_itr)).source()))).property(), 
                       usable_cc_in_a)) {
-        if(CfgIsVisible((rdmp_b->m_pRoadmap->find_vertex(all_edges_b_itr.target()).property()), 
+        if(CfgIsVisible((*(rdmp_b->m_pRoadmap->find_vertex((*(all_edges_b_itr)).target()))).property(), 
                       usable_cc_in_a)) {
           ++edge_b_visible_in_a;
           found_edge_b_visible_in_a = true;

@@ -51,8 +51,8 @@ class CCDistanceEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
         vector<pair<VID,VID> > pairs = 
           m_dm->FindKClosestPairs(rmap, cci_vids, ccj_vids, 1); 
         new_distances.push_back(m_dm->Distance(p_env,
-                                               p_map->find_vertex(pairs[0].first).property(), 
-                                               p_map->find_vertex(pairs[0].second).property()));
+                                               (*(p_map->find_vertex(pairs[0].first))).property(), 
+                                               (*(p_map->find_vertex(pairs[0].second))).property()));
       }
     }    
     sort(new_distances.begin(), new_distances.end(), greater<double>());

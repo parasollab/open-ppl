@@ -50,7 +50,7 @@ class CCDiameterEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
       cmap.reset();
       get_cc(*p_map, cmap, CC->second, cc_vids);
       for(V = cc_vids.begin(); V != cc_vids.end(); ++V)
-        cc_data.push_back(p_map->find_vertex(*V).property());
+        cc_data.push_back((*(p_map->find_vertex(*V))).property());
       new_diameters.push_back(CCdiameter(cc_data, p_env));
     }
     sort(new_diameters.begin(), new_diameters.end(), greater<double>());

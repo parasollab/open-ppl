@@ -71,16 +71,16 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       for(typename vector<VID>::iterator i_n = neighbor_neighbor.begin(); i_n !=neighbor_neighbor.end(); ++i_n)
       {  //test connection to each;
         if(!(lp->IsConnected(env, Stats, dm, 
-                             pGraph->find_vertex(in_vid).property(),
-                             pGraph->find_vertex(*i_n).property(),
+                             (*(pGraph->find_vertex(in_vid))).property(),
+                             (*(pGraph->find_vertex(*i_n))).property(),
                              &lp_output, pos_res, ori_res, true))) {
           is_expansion = false; // cannot connect in_vid to neighbor_neighbor
         }
       }
       if(is_expansion) 
-         (pGraph->find_vertex(in_vid).property()).SetLabel("CCEXPAND",true);
+         ((*(pGraph->find_vertex(in_vid))).property()).SetLabel("CCEXPAND",true);
       else
-         pGraph->find_vertex(in_vid).property().SetLabel("CCOVERSAMPLE",true);
+         (*(pGraph->find_vertex(in_vid))).property().SetLabel("CCOVERSAMPLE",true);
 
       LOG_DEBUG_MSG("~CCExpandCharacterizer::Characterize()");
     };
@@ -133,26 +133,26 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       for(itr = vids.begin(); itr != vids.end(); ++itr)
       {
         vector<VID> vids = this->GetMPProblem()->GetDistanceMetric()->RangeQuery(pRoadmap,*itr,m_dRadius);
-        vector<VID> col_vids = this->GetMPProblem()->GetDistanceMetric()->RangeQuery(pColRoadmap,pGraph->find_vertex(*itr).property(),m_dRadius);
+        vector<VID> col_vids = this->GetMPProblem()->GetDistanceMetric()->RangeQuery(pColRoadmap,(*(pGraph->find_vertex(*itr))).property(),m_dRadius);
         //cout << "VID = " << *itr << " has " << vids.size() 
         //<< "nodes in radius in Free Map and " 
         //<< col_vids.size() << " in Col Map " << endl;
         if(col_vids.size() >= 1) {
        //   cout << "Gauss-like node found" << endl;
-          pGraph->find_vertex(*itr).property().SetLabel("GaussLike",true);
+          (*(pGraph->find_vertex(*itr))).property().SetLabel("GaussLike",true);
         }
         if(col_vids.size() >= 2) {
           vector<CFG> tmpCFG;
           for(int z=0;z<col_vids.size(); ++z)
-            tmpCFG.push_back(pColGraph->find_vertex(col_vids[z]).property());
-          if(IsBridgeLike(pGraph->find_vertex(*itr).property(),tmpCFG)) {
+            tmpCFG.push_back((*(pColGraph->find_vertex(col_vids[z]))).property());
+          if(IsBridgeLike((*(pGraph->find_vertex(*itr))).property(),tmpCFG)) {
           cout << "Bridge-like node found" << endl;
-          pGraph->find_vertex(*itr).property().SetLabel("BridgeLike",true);
+          (*(pGraph->find_vertex(*itr))).property().SetLabel("BridgeLike",true);
           }
         }
         if(col_vids.size() > 2) {
          // cout << "Better than bridge node found" << endl;
-          pGraph->find_vertex(*itr).property().SetLabel("BetterThanBridge",true);
+          (*(pGraph->find_vertex(*itr))).property().SetLabel("BetterThanBridge",true);
         }
       }
       LOG_DEBUG_MSG("~LocalNodeInfoCharacterizer::Characterize()");
