@@ -44,9 +44,9 @@ DefaultWeight::InvalidWeight(){
   return INVALID_DBL;
 }
 
-double&
+DefaultWeight 
 DefaultWeight::MaxWeight(){
-  return MAX_WEIGHT;
+  return DefaultWeight(INVALID_LP,MAX_WEIGHT);
 }
 
 bool 
@@ -75,6 +75,14 @@ istream& operator>> (istream& _is, DefaultWeight& w){
   w.Input(_is);
   return _is;
 }
+
+DefaultWeight 
+DefaultWeight::operator+(const DefaultWeight& _other) const {
+    return DefaultWeight(weight+_other.weight);
+  }
+  bool DefaultWeight::operator<(const DefaultWeight& _other) const {
+	  return weight < _other.weight;
+  }
 
 void
 DefaultWeight::Input(istream& in){

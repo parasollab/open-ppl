@@ -468,7 +468,7 @@ AppendRoadmap(Roadmap<CFG, WEIGHT> &from_rdmp) {
   typename vector<VID>::iterator vid_itrt;
   //copy vertices
   for (vid_itrt = from_vid.begin(); vid_itrt < from_vid.end(); vid_itrt++) {
-    CFG cfg = from_rdmp.m_pRoadmap->find_vertex(*vid_itrt).property();
+    CFG cfg = (*(from_rdmp.m_pRoadmap->find_vertex(*vid_itrt))).property();
     to_vids.push_back(m_pRoadmap->AddVertex(cfg));
   }
   vector< pair<pair<VID,VID>,WEIGHT> > edges;
@@ -480,15 +480,15 @@ AppendRoadmap(Roadmap<CFG, WEIGHT> &from_rdmp) {
     typename RoadmapGraph<CFG, WEIGHT>::vertex_iterator vi = from_rdmp.m_pRoadmap->find_vertex(*vid_itrt);
     for(typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei =vi.begin(); ei!=vi.end(); ei++ ){
 	pair<pair<VID,VID>,WEIGHT> single_edge;
-	single_edge.first.first=ei.source();
-	single_edge.first.second=ei.target();
-	single_edge.second = ei.property();
+	single_edge.first.first=*ei.source();
+	single_edge.first.second=*ei.target();
+	single_edge.second = *ei.property();
 	edges.push_back(single_edge); //put the edge into edges
     } 
     for (edge_itrt = edges.begin(); edge_itrt < edges.end(); edge_itrt++) {
       if (!m_pRoadmap->IsEdge((*edge_itrt).first.first, (*edge_itrt).first.second)) { //add an edge if it is not yet in m_pRoadmap
-  CFG cfg_a = from_rdmp.m_pRoadmap->find_vertex((*edge_itrt).first.first).property();
-  CFG cfg_b = from_rdmp.m_pRoadmap->find_vertex((*edge_itrt).first.second).property();
+  CFG cfg_a = (*(from_rdmp.m_pRoadmap->find_vertex((*edge_itrt).first.first))).property();
+  CFG cfg_b = (*(from_rdmp.m_pRoadmap->find_vertex((*edge_itrt).first.second))).property();
   m_pRoadmap->AddEdge(cfg_a,cfg_b,(*edge_itrt).second);
       }
     } //endfor edge_itrt  

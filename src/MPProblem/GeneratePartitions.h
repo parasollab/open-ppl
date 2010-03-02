@@ -1203,11 +1203,11 @@ PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
     //free_nodes.push_back( region->m_pRoadmap->find_vertex((*itr).second).property() ); 
     //vector<CFG> tCfg;
     vector<VID> tCfg;
-    CFG cc1Cfg = region->roadmap.m_pRoadmap->find_vertex((*itr).second).property();
+    CFG cc1Cfg = (*(region->roadmap.m_pRoadmap->find_vertex((*itr).second))).property();
     cmap.reset();
     get_cc(*(region->roadmap.m_pRoadmap), cmap, cc1Cfg,tCfg);
     for(typename vector<VID>::iterator itr2=tCfg.begin();itr2 != tCfg.end(); itr2++) 
-      free_nodes.push_back( region->roadmap.m_pRoadmap->find_vertex(*itr2).property() );
+      (*(free_nodes.push_back( region->roadmap.m_pRoadmap->find_vertex(*itr2))).property() );
   }
   
   vector<CFG> coll_nodes;

@@ -37,10 +37,13 @@ class DefaultWeight {
   
   // Graph.h Interface
   static double InvalidWeight();
-  static double& MaxWeight(); // For Dijkstra's Alg
+  static DefaultWeight MaxWeight(); // For Dijkstra's Alg
   
   virtual bool operator== (const DefaultWeight& tmp) const;
   virtual const DefaultWeight& operator= (const DefaultWeight& w);
+   
+  virtual DefaultWeight operator+(const DefaultWeight& _other) const ;
+  virtual bool operator<(const DefaultWeight& _other) const ;
   
   // Read/Write values of datamember to given input/output stream.
   virtual inline void Output(ostream& out) const;

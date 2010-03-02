@@ -29,6 +29,7 @@
 #include "Graph.h"
 #include "GraphAlgo.h"
 #include "BasicDefns.h"
+#include "Weight.h"
 
 #include "RoadmapVCS.h"
 
@@ -44,9 +45,10 @@
 #endif
 
 
-using stapl::dkinfo;
-using stapl::dkinfo_compare;
+//using stapl::dkinfo;
+//using stapl::dkinfo_compare;
 //using stapl::VID;
+// store info for djistra algo i.e edgeweight etc
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //is it still being used? 
@@ -87,6 +89,73 @@ typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIG
    ///_wt The weight for _v1->_v2 
    WEIGHT edgewt;
 
+};
+
+
+template<class VD>
+class dkinfo{
+	public:
+  bool VertexValid; //Keeps track of whether the second vertex is valid or not
+  VD vd;        //This vertex ID
+  // If the VertexValid flag is set to false then the next two variables does not have any meaning and should not be used
+  
+  VD predvd; //ID of the previous vertex in the graph
+  double dist; //Distance between the two vertices.
+  
+  dkinfo()
+    {
+      VertexValid=false;
+      vd=0;
+      predvd=INVALID_VALUE;
+      dist=-1000;
+      // cout<<"Check initialization of dist "<<__LINE__<<" "<<__FILE__<<endl;
+    }
+  
+  dkinfo(bool flag,VD _vd, VD _pvd,double _dist)
+    {
+      VertexValid=flag;
+      vd=_vd;
+      predvd=_pvd;
+      dist=_dist;
+    }
+  
+  void print() const
+  {
+    std::cout<<"Vertex : "<<vd
+             <<"  Prev Vertex : "<<predvd
+             <<"  Distance : "<<dist
+             <<"  Valid ? "<<VertexValid<<std::endl;
+  }
+  bool valid() const  { return VertexValid; }  
+};
+
+
+// Remove worning: function decleared but never refernced
+// Removed #ifdef (
+template <class VD, class DKinfo, /*class Comparator,*/ typename Map>
+struct dkinfo_compare {
+  // Comparator comp;
+  Map* map;
+  dkinfo_compare(/*Comparator& comp_, */Map* map_) : /*comp(comp_),*/ map(map_) { }
+  bool operator() (const VD& d1, const VD& d2) const {
+    //(*map)[d1].print();
+    //(*map)[d2].print();
+    if ((!(*map)[d1].valid())&&(!(*map)[d2].valid())) {
+      //cout<<"Both d1 and d2 are not valid"<<endl;
+      //The returned value does not make much sense
+      return ( (*map)[d1].dist > (*map)[d2].dist );
+    } else if(!(*map)[d1].valid()) {
+      //cout<<"D1 not valid"<<endl;
+      //So d1.dist > d2.dist
+      return false;
+    } else if(!(*map)[d2].valid()) {
+      //cout<<"D2 is not valid"<<endl;
+      return true;
+    } else {
+      //cout<<"Both are valid"<<endl;                
+      return (*map)[d1].dist > (*map)[d2].dist;
+    }
+  }
 };
 
 
@@ -352,7 +421,7 @@ AddVertex(VERTEX& _v1) {
         cout << "\nIn AddVertex: vertex already in graph, not added";
 #endif
         //return (v1->vid); // return vertex id 
-        return (v1.descriptor()); // return vertex id 
+        return ((*v1).descriptor()); // return vertex id 
     }
 };
 
@@ -464,7 +533,7 @@ MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap,
 
   //Add vertex
   for (i=0;i<vids.size();++i) {
-    t=_fromMap->find_vertex(vids[i]).property();
+    t=(*(_fromMap->find_vertex(vids[i]))).property();
     
     newVids.push_back(this->AddVertex(t));
   } //endfor i
@@ -476,17 +545,17 @@ MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap,
     //_fromMap->GetOutgoingEdges(vids[i], edges); fix_lantao
     //use iterator to traverse the adj edges and then put the data into edges
     typename RoadmapGraph<VERTEX, WEIGHT>::vertex_iterator vi = _fromMap->find_vertex(vids[i]);
-    for(typename RoadmapGraph<VERTEX, WEIGHT>::adj_edge_iterator ei =vi.begin(); ei!=vi.end(); ei++ ){
+    for(typename RoadmapGraph<VERTEX, WEIGHT>::adj_edge_iterator ei = vi.begin(); ei!=vi.end(); ei++ ){
         pair<pair<VID,VID>,WEIGHT> single_edge;
-        single_edge.first.first=ei.source();
-        single_edge.first.second=ei.target();
-        single_edge.second = ei.property();
+        single_edge.first.first=*ei.source();
+        single_edge.first.second=*ei.target();
+        single_edge.second = *ei.property();
         edges.push_back(single_edge); //put the edge into edges
     }
 
     for (int j=0;j<edges.size();++j) {
-      VERTEX t1=_fromMap->find_vertex(edges[j].first.first).property();
-      VERTEX t2=_fromMap->find_vertex(edges[j].first.second).property();
+      VERTEX t1=(*(_fromMap->find_vertex(edges[j].first.first))).property();
+      VERTEX t2=(*(_fromMap->find_vertex(edges[j].first.second))).property();
       
       this->AddEdge(t1,t2, edges[j].second);
     } //endfor j
@@ -517,7 +586,7 @@ ConvertVIDs2Vertices(vector<VID>& vds){
   vector<VERTEX> vps;
   vps.reserve(sizeof(vds));
   for(typename vector<VID>::iterator itr = vds.begin(); itr!=vds.end(); itr++)
-	vps.push_back(this->find_vertex(*itr).property());
+	vps.push_back((*(this->find_vertex(*itr))).property());
   return vps;
 }
 
@@ -527,10 +596,10 @@ int
 RoadmapGraph<VERTEX,WEIGHT>::
 GetVerticesData(vector<VERTEX>& v_vp) const{
   v_vp.clear();
-  GRAPH g = *this;
+  GRAPH g = *this; 
   //verts.reserve( g.size() ); //g has no member size();
     for (CVI vi = g.begin(); vi!= g.end(); vi++) {
-        v_vp.push_back(vi.property());
+        v_vp.push_back((*vi).property());
     }
     return v_vp.size();
 }
@@ -540,10 +609,10 @@ int
 RoadmapGraph<VERTEX,WEIGHT>::
 GetVerticesVID(vector<VID>& v_vd) const{
   v_vd.clear();
-  GRAPH g = *this;
+   GRAPH g = *this; 
   //verts.reserve( g.size() ); //g has no member size();
     for (CVI vi = g.begin(); vi!= g.end(); vi++) {
-        v_vd.push_back(vi.descriptor());
+        v_vd.push_back((*vi).descriptor());
     }
     return v_vd.size();
 }
@@ -557,7 +626,7 @@ GetVID(VERTEX& _v1) {
     CVI v1;
     if ( IsVertex(_v1,&v1) ) {
         //return v1->vid;
-        return v1.descriptor();
+        return ((*v1).descriptor());
     } else {
         return INVALID_VID;
     }
@@ -598,7 +667,7 @@ bool
 RoadmapGraph<VERTEX,WEIGHT>::
 IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
 
-    RoadmapGraph<VERTEX, WEIGHT> g = *this;
+   RoadmapGraph<VERTEX, WEIGHT> g = *this; // copying graph-memory problem -
     //CVI v1 = find_if(g.begin(), g.end(), std::bind2nd(std::equal_to<VERTEX>(), _v1 ));
     //CVI v1=g.begin() ;//= find_if(g.begin(), g.end(), Vertex_equal_to<VERTEX, WEIGHT>(_v1) ); 
 
@@ -623,7 +692,7 @@ IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
     VI vi = g.begin();
     bool found = false;
     while(vi != g.end() && !found){
-	if(vi.property() == _v1)
+	if((*vi).property() == _v1)
 	  found = true;
 	else
 	  vi++;
@@ -746,7 +815,7 @@ double DijkstraSSSP(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, typena
 
   vector<VID> vec_cc;
   vector<dkinfo<VID> > pq; //The priority Queue
-  double  maxdist = g.get_num_vertices() * _w_.MaxWeight();
+  double  maxdist = g.get_num_vertices() * (_w_.MaxWeight()).Weight();
   double max_shortest_path_length=0;
   *far_vid = start_vid;
 
@@ -791,7 +860,7 @@ double DijkstraSSSP(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, typena
     	  typename GRAPH::vertex_iterator vi; 
 	  typename GRAPH::adj_edge_iterator ei;
     	  g.find_edge(ed, vi, ei); 
-          double wt = ei.property().Weight(); //g.GetEdgeWeight(u.vd,pq[j].vd).Weight(); fix_lantao
+          double wt = (*ei).property().Weight(); //g.GetEdgeWeight(u.vd,pq[j].vd).Weight(); fix_lantao
 
           if(!pq[j].valid())
           {
@@ -886,7 +955,7 @@ double ComponentDiameter(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, t
         typename GRAPH::vertex_iterator vi;
         typename GRAPH::adj_edge_iterator ei;
         g.find_edge(ed, vi, ei);
-        double wt = ei.property().Weight();
+        double wt = (*ei).property().Weight();
         
         if(!succ->valid()) {
           //relax = true;
