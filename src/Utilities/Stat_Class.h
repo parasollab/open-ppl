@@ -305,12 +305,12 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
     vector<VID> cci_cfgs_aux; //use this auxiliary vec to convert between VID and CFG
     vector<CFG> cci_cfgs; //configurations in cci
     //CFG cci_tmp = rdmp->m_pRoadmap->find_vertex(cci->second).property();//cci->second: vertex ID of first node in cci
-    VID cci_tmp = rdmp->m_pRoadmap->find_vertex(cci->second).descriptor();//cci->second: vertex ID of first node in cci
+    VID cci_tmp = (*(rdmp->m_pRoadmap->find_vertex(cci->second))).descriptor();//cci->second: vertex ID of first node in cci
     //GetCC(*(rdmp->m_pRoadmap), cci_tmp, cci_cfgs); //fill cci_cfgs
     cmap.reset();
     get_cc(*(rdmp->m_pRoadmap), cmap, cci_tmp, cci_cfgs_aux); //fill cci_cfgs
     for(typename vector<VID>::iterator itr = cci_cfgs_aux.begin(); itr!=cci_cfgs_aux.end(); itr++)
-	cci_cfgs.push_back(rdmp->m_pRoadmap->find_vertex(*itr).property());
+	cci_cfgs.push_back((*(rdmp->m_pRoadmap->find_vertex(*itr))).property());
 
     if (cci_cfgs.size() > 1) {
       //compute shortest, longest, mean, and std-dev (sigma) distances 
@@ -358,8 +358,8 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
       double cci_sigma_intracc_edge_s = 0;
       for (typename vector< pair<VID,VID> >::iterator e_iter = cci_edges.begin();
      e_iter < cci_edges.end(); e_iter++) {
-  CFG e_v1 = rdmp->m_pRoadmap->find_vertex(e_iter->first).property();
-  CFG e_v2 = rdmp->m_pRoadmap->find_vertex(e_iter->second).property();
+  CFG e_v1 = (*(rdmp->m_pRoadmap->find_vertex(e_iter->first))).property();
+  CFG e_v2 = (*(rdmp->m_pRoadmap->find_vertex(e_iter->second))).property();
   double e_dist = dm->Distance(rdmp->GetEnvironment(), e_v1, e_v2);
   if (e_dist > cci_max_intracc_edge_s)
     cci_max_intracc_edge_s = e_dist;
@@ -371,8 +371,8 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
   cci_mean_intracc_edge_s /= cci_edges.size();
       for (typename vector< pair<VID,VID> >::iterator e_iter = cci_edges.begin();
      e_iter < cci_edges.end(); e_iter++) {
-  CFG e_v1 = rdmp->m_pRoadmap->find_vertex(e_iter->first).property();
-  CFG e_v2 = rdmp->m_pRoadmap->find_vertex(e_iter->second).property();
+  CFG e_v1 = (*(rdmp->m_pRoadmap->find_vertex(e_iter->first))).property();
+  CFG e_v2 = (*(rdmp->m_pRoadmap->find_vertex(e_iter->second))).property();
   double e_dist = dm->Distance(rdmp->GetEnvironment(), e_v1, e_v2);
   cci_sigma_intracc_edge_s += pow(e_dist-cci_mean_intracc_edge_s, 2);
       }
@@ -510,8 +510,8 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
     cout << "size of edge list for cc:" << cce->second 
    << " "<< ccedges.size() << endl;
     for(typename vector< pair<VID,VID> >::iterator cciter=ccedges.begin(); cciter<ccedges.end();cciter++) {
-      CFG cciter_a = rdmp->m_pRoadmap->find_vertex(cciter->first).property();
-      CFG cciter_b = rdmp->m_pRoadmap->find_vertex(cciter->second).property();
+      CFG cciter_a = (*(rdmp->m_pRoadmap->find_vertex(cciter->first))).property();
+      CFG cciter_b = (*(rdmp->m_pRoadmap->find_vertex(cciter->second))).property();
       double dist =dm->Distance(rdmp->GetEnvironment(),
         cciter_a, cciter_b);
       total_size += dist;
@@ -579,8 +579,8 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
   	pairs[i].second = VID(pairs_tmp[i].second);
   }*/
   double tmp_dist = dm->Distance(rdmp->GetEnvironment(),
-               rdmp->m_pRoadmap->find_vertex(pairs[0].first).property(),  
-                         rdmp->m_pRoadmap->find_vertex(pairs[0].second).property() );
+               (*(rdmp->m_pRoadmap->find_vertex(pairs[0].first))).property(),  
+                         (*(rdmp->m_pRoadmap->find_vertex(pairs[0].second))).property() );
   //I don't know what the below statesment is used for, just comment it, lantao
   //    CFG cciter_b = rdmp->m_pRoadmap->find_vertex().property(cciter->second); 
   if(tmp_dist > max_intercc_dist) 
