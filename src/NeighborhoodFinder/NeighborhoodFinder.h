@@ -584,13 +584,13 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
       // initialize w/ k elements each with huge distance...
       vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
               max_value));
-      CFG v1 = pMap->find_vertex(*V1).property();
+      CFG v1 = (*(pMap->find_vertex(*V1))).property();
       for(V2 = vec2.begin(); V2 != vec2.end(); ++V2) {
   //marcom/08nov03 check if results in other functions is same
   if(*V1 == *V2)
     continue; //don't connect same
   
-  double dist = dm->Distance(_env, v1, pMap->find_vertex(*V2).property());
+  double dist = dm->Distance(_env, v1, (*(pMap->find_vertex(*V2))).property());
   if(dist < kp[max_index].second) { 
     kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
     max_value = dist;
@@ -652,13 +652,13 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
     int max_index = 0;
     double max_value = MAX_DIST;
  
-    CFG v1 = pMap->find_vertex(*V1).property();
+    CFG v1 = (*(pMap->find_vertex(*V1))).property();
 
     for(V2 = vec1.begin(); V2 != vec1.end(); ++V2) {
       if(*V1 == *V2)
   continue;
 
-      double dist = dm->Distance(_env, v1, pMap->find_vertex(*V2).property());
+      double dist = dm->Distance(_env, v1, (*(pMap->find_vertex(*V2))).property());
       if(dist < kp[max_index].second) { 
   kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
   max_value = dist;
@@ -1054,8 +1054,8 @@ RFD(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
    InputIterator V2 = _KNN_last;
    --V2;
    
-   CFG k_cfg = pMap->find_vertex(*V2).property();
-   CFG q_cfg = pMap->find_vertex(in_query).property();
+   CFG k_cfg = (*(pMap->find_vertex(*V2))).property();
+   CFG q_cfg = (*(pMap->find_vertex(in_query))).property();
 
    dist_k = dmm->Distance(_env, q_cfg, k_cfg);
    dist_k = (1 + _epsilon)*dist_k;
@@ -1063,7 +1063,7 @@ RFD(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
  
    InputIterator V1;
    for(V1 = _ANN_first; V1 != _ANN_last; ++V1){     
-     CFG a_cfg = pMap->find_vertex(*V1).property();
+     CFG a_cfg = (*(pMap->find_vertex(*V1))).property();
      dist_a = dmm->Distance(_env, q_cfg, a_cfg);
      if(dist_a > dist_k){
       ++rfd; 
@@ -1088,17 +1088,17 @@ RDE(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
    RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;  
    
    double rde = 0.0, dist_a = 0.0, dist_k = 0.0;  
-   CFG q_cfg = pMap->find_vertex(in_query).property();
+   CFG q_cfg = (*(pMap->find_vertex(in_query))).property();
    
    InputIterator V1;
    for(V1 = _ANN_first; V1 != _ANN_last; ++V1){
-    CFG a_cfg = pMap->find_vertex(*V1).property();
+    CFG a_cfg = (*(pMap->find_vertex(*V1))).property();
     dist_a += dmm->Distance(_env, q_cfg, a_cfg);
    }  
    
    InputIterator V2;
    for(V2 = _KNN_first; V2 != _KNN_last; ++V2){
-    CFG k_cfg = pMap->find_vertex(*V2).property();
+    CFG k_cfg = (*(pMap->find_vertex(*V2))).property();
     dist_k += dmm->Distance(_env, q_cfg, k_cfg);
    }
    
@@ -1121,12 +1121,12 @@ EDE(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
    
    double ede = 0.0, dist_a = 0.0, dist_k = 0.0;  
    int k = 0;
-   CFG q_cfg = pMap->find_vertex(in_query).property();
+   CFG q_cfg = (*(pMap->find_vertex(in_query))).property();
    
    InputIterator V1, V2;   
    for(V1 = _KNN_first, V2 = _ANN_first; V1 != _KNN_last, V2 != _ANN_last; ++V1, ++V2){
-    CFG k_cfg = pMap->find_vertex(*V1).property();
-    CFG a_cfg = pMap->find_vertex(*V2).property();
+    CFG k_cfg = (*(pMap->find_vertex(*V1))).property();
+    CFG a_cfg = (*(pMap->find_vertex(*V2))).property();
     
     dist_a += dmm->Distance(_env, q_cfg, a_cfg);
     dist_k += dmm->Distance(_env, q_cfg, k_cfg);
@@ -1157,12 +1157,12 @@ OEPS(Roadmap<CFG, WEIGHT>* _rmp, VID in_query,
    
   double oeps = 0.0, max_a = 0.0, max_k = 0.0;  
   int k = 0;
-  CFG q_cfg = pMap->find_vertex(in_query).property();  
+  CFG q_cfg = (*(pMap->find_vertex(in_query))).property();  
    
   InputIterator V1, V2;   
   for(V1 = _KNN_first, V2 = _ANN_first; V1 != _KNN_last, V2 != _ANN_last; ++V1, ++V2){
-    CFG k_cfg = pMap->find_vertex(*V1).property();
-    CFG a_cfg = pMap->find_vertex(*V2).property();
+    CFG k_cfg = (*(pMap->find_vertex(*V1))).property();
+    CFG a_cfg = (*(pMap->find_vertex(*V2))).property();
     
     double dist_a = dmm->Distance(_env, q_cfg, a_cfg);
     double dist_k = dmm->Distance(_env, q_cfg, k_cfg);
