@@ -130,7 +130,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     int k, OutputIterator _out) {
   //cout<<"in spill tree k closest fun"<<endl;
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property();
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
   return KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
 }
 
@@ -175,7 +175,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   VID _v, int k, OutputIterator _out) {
 
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property(); 
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property(); 
   return KClosest(_rmp, _v_cfg, k, _out);
 }
 

@@ -38,8 +38,8 @@ public:
       m_rmp = _rmp;
   }
 
-  CFG GetData() { return m_rmp->m_pRoadmap->find_vertex(m_vid).property();}
-  const CFG GetData() const { return m_rmp->m_pRoadmap->find_vertex(m_vid).property();}  
+  CFG GetData() { return (*(m_rmp->m_pRoadmap->find_vertex(m_vid))).property();}
+  const CFG GetData() const { return (*(m_rmp->m_pRoadmap->find_vertex(m_vid))).property();}  
    bool operator==(const VID_DPES_proxy<CFG,WEIGHT>& _p) {
     return (GetData() ==  _p.GetData());
  }
@@ -223,7 +223,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     InputIterator _input_first, InputIterator _input_last, VID _v, int k,
     OutputIterator _out) {
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property();
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
   return KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
 }
 
@@ -291,7 +291,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   VID _v, int k, OutputIterator _out) {
 
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property(); 
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property(); 
   return KClosest(_rmp, _v_cfg, k, _out);
 }
 

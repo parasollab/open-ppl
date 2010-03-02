@@ -242,7 +242,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     InputIterator _input_first, InputIterator _input_last, VID _v, int k,
     OutputIterator _out) {
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property();
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
   
   this->KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
   
@@ -285,7 +285,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   // add configurations from iterator into local kdtree
   InputIterator V1; 
   for (V1 = _input_first; V1 != _input_last; ++V1) {
-    CFG v1 = pMap->find_vertex(*V1).property();
+    CFG v1 = (*(pMap->find_vertex(*V1))).property();
     if (m_use_scaling) {
       v1.SetSingleParam(0, v1.GetSingleParam(0)/m_max_bbox_range * 2 * PI);
       v1.SetSingleParam(1, v1.GetSingleParam(1)/m_max_bbox_range * 2 * PI);
@@ -329,7 +329,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   VID _v, int k, OutputIterator _out) {
 
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _cfg = pMap->find_vertex(_v).property();
+  CFG _cfg = (*(pMap->find_vertex(_v))).property();
   
   this->KClosest(_rmp, _cfg, k, _out);
 }
@@ -393,7 +393,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
   // create local roadmap to hold [_in2_first ... _in2_last]
   //
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  int dim = pMap->find_vertex(*_in1_first).property().DOF(); 
+  int dim = (*(pMap->find_vertex(*_in1_first))).property().DOF(); 
   
   // NOTE: everything after the 3rd DOF is rotational.
   vector<int> topology(dim);
@@ -411,7 +411,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
   
   InputIterator v_iter;
   for (v_iter = _in2_first; v_iter != _in2_last; ++v_iter) {
-    CFG v_iter_cfg = pMap->find_vertex(*v_iter).property();
+    CFG v_iter_cfg = (*(pMap->find_vertex(*v_iter))).property();
     localKdtree->add_node(v_iter_cfg.GetData(), *v_iter);
   }
   //
@@ -426,7 +426,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
   for (v_iter = _in1_first; v_iter != _in1_last; ++v_iter) {
     vector< pair<VID, double> > iter_results(k, pair<VID, double>(-999, -999.9));
     
-    CFG query_pt = pMap->find_vertex(*v_iter).property();
+    CFG query_pt = (*(pMap->find_vertex(*v_iter))).property();
     localKdtree->KClosest(query_pt.GetData(), k, iter_results.begin());
     
     // push local results back to master list

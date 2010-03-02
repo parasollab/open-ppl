@@ -111,7 +111,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     InputIterator _input_first, InputIterator _input_last, VID _v,
     int k, OutputIterator _out) {
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property();
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
   return KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
 }
 
@@ -139,7 +139,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   int count = 0;
   for(V1 = _input_first; V1 != _input_last; ++V1) {
     count++;
-    CFG v1 = pMap->find_vertex(*V1).property();
+    CFG v1 = (*(pMap->find_vertex(*V1))).property();
     
     if(v1 == _cfg)
       continue; //don't connect same
@@ -185,7 +185,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   VID _v, int k, OutputIterator _out) {
 
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property();
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
   return KClosest(_rmp, _v_cfg, k, _out);
 }
 
@@ -216,7 +216,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   int count = 0;
   for(V1 = pMap->begin(); V1 != pMap->end(); ++V1) {
     count++;
-    CFG& v1 = V1.property();
+    CFG& v1 = (*V1).property();
     
     if(v1 == _cfg)
       continue; //don't connect same
@@ -224,7 +224,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     double dist = dmm->Distance(_env, _cfg, v1);
     
     if(dist < closest[max_index].second) { 
-      closest[max_index] = make_pair(V1.descriptor(), dist);
+      closest[max_index] = make_pair((*V1).descriptor(), dist);
       max_value = dist;
   
       //search for new max_index (faster O(k) than sort O(k log k) )
@@ -274,13 +274,13 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
     // initialize w/ k elements each with huge distance...                        
     vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
     max_value));
-    CFG v1 = pMap->find_vertex(*V1).property();
+    CFG v1 = (*(pMap->find_vertex(*V1))).property();
     for(V2 = _in2_first; V2 != _in2_last; ++V2) {
       //marcom/08nov03 check if results in other functions is same                      
       if(*V1 == *V2)
         continue; //don't connect same                                                  
     
-      double dist = dmm->Distance(_env, v1, pMap->find_vertex(*V2).property());
+      double dist = dmm->Distance(_env, v1, (*(pMap->find_vertex(*V2))).property());
       if(dist < kp[max_index].second) {
         kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
         max_value = dist;

@@ -101,8 +101,9 @@ class spillTree{
   
   bool isLeaf(VID node){
     //typename RoadmapGraph<CFGTYPE, WEIGHT>::vertex_iterator vi= tree->find_vertex(node);
-    //return (vi.size()==0);
-    return(tree->find_vertex(node).size()==0);
+    //return ((*vi).size()==0);
+   return((*(tree->find_vertex(node))).size()==0);
+    //return true;
   }
 
   VID getLChild(VID node){
@@ -118,7 +119,7 @@ class spillTree{
   }
 
   spillTreeNode<CFGTYPE,WEIGHT>* getNodeDataStructure(VID node){
-    return tree->find_vertex(node).property();
+    return (*(tree->find_vertex(node))).property();
   }
 
   VID createChild(VID parent, vector<VID> *vertexList){
@@ -144,7 +145,7 @@ class spillTree{
  
   vector<vertexDistance<CFGTYPE, WEIGHT> >* addIfClosest(const CFGTYPE &queryCFG, VID v,  vector<vertexDistance<CFGTYPE, WEIGHT> > *closest, int k){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    if(pMap->find_vertex(v).property() == queryCFG && !includeQueryCFG){
+    if((*(pMap->find_vertex(v))).property() == queryCFG && !includeQueryCFG){
       return closest;
     }
     //vertexDistance<CFGTYPE, WEIGHT> distance_v(v, distance(v,queryCFG));
@@ -216,7 +217,7 @@ class spillTree{
 
   vector<VID>* query(VID v, int k){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    return query(pMap->find_vertex(v).property(), k);
+    return query((*(pMap->find_vertex(v))).property(), k);
   }
 
   
@@ -224,23 +225,23 @@ class spillTree{
   
   double project(VID v1, VID v2, VID v3){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    CFGTYPE cfg1 = pMap->find_vertex(v1).property();
-    CFGTYPE cfg2 = pMap->find_vertex(v2).property();
-    CFGTYPE cfg3 = pMap->find_vertex(v3).property();
+    CFGTYPE cfg1 = (*(pMap->find_vertex(v1))).property();
+    CFGTYPE cfg2 = (*(pMap->find_vertex(v2))).property();
+    CFGTYPE cfg3 = (*(pMap->find_vertex(v3))).property();
     return project(cfg1, cfg2, cfg3);
   }
     
   
   double project(const CFGTYPE &cfg, VID v2, VID v3){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    CFGTYPE cfg2 = pMap->find_vertex(v2).property();
-    CFGTYPE cfg3 = pMap->find_vertex(v3).property();
+    CFGTYPE cfg2 = (*(pMap->find_vertex(v2))).property();
+    CFGTYPE cfg3 = (*(pMap->find_vertex(v3))).property();
     return project(cfg, cfg2, cfg3);
   }
       
   CGAL::Point_d< CGAL::Cartesian_d<double> > toCgalPoint(VID v){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    CFGTYPE cfg = pMap->find_vertex(v).property();
+    CFGTYPE cfg = (*(pMap->find_vertex(v))).property();
     return toCgalPoint(cfg);
   }
 
@@ -410,8 +411,8 @@ class spillTree{
 
   double distance(VID v1, VID v2){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    CFGTYPE cfg1 = pMap->find_vertex(v1).property();
-    CFGTYPE cfg2 = pMap->find_vertex(v2).property();
+    CFGTYPE cfg1 = (*(pMap->find_vertex(v1))).property();
+    CFGTYPE cfg2 = (*(pMap->find_vertex(v2))).property();
     return dmm->Distance(rmap->GetEnvironment(), cfg1, cfg2);
   }
 
@@ -422,14 +423,14 @@ class spillTree{
 
   double distance(VID v1, const CFGTYPE &cfg2){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    CFGTYPE cfg1 = pMap->find_vertex(v1).property();
+    CFGTYPE cfg1 = (*(pMap->find_vertex(v1))).property();
     return dmm->Distance(rmap->GetEnvironment(), cfg1, cfg2);
   }
 
   double euclideanDistance(VID v1, VID v2){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    CFGTYPE cfg1 = pMap->find_vertex(v1).property();
-    CFGTYPE cfg2 = pMap->find_vertex(v2).property();
+    CFGTYPE cfg1 = (*(pMap->find_vertex(v1))).property();
+    CFGTYPE cfg2 = (*(pMap->find_vertex(v2))).property();
     CGAL::Point_d< CGAL::Cartesian_d<double> > p1(cfg1.GetData().size(), cfg1.GetData().begin(),cfg1.GetData().end());
     CGAL::Point_d< CGAL::Cartesian_d<double> > p2(cfg2.GetData().size(), cfg2.GetData().begin(),cfg2.GetData().end());
     return CGAL::squared_distance(p1, p2);
@@ -491,7 +492,7 @@ class spillTree{
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
     CFGTYPE center;
     for(typename std::vector<VID>::iterator iter = verticies.begin(); iter != verticies.end(); ++iter) {
-      center.add(center,pMap->find_vertex(*iter).property());
+      center.add(center,(*(pMap->find_vertex(*iter))).property());
     }
     center.divide(center, verticies.size());
     return center;
@@ -543,7 +544,7 @@ class spillTree{
 
   bool isToLeftOfPartition(VID vertex, VID node){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    CFGTYPE cfg = pMap->find_vertex(vertex).property();
+    CFGTYPE cfg = (*(pMap->find_vertex(vertex))).property();
     return isToLeftOfPartition(cfg, node);
   }
   
@@ -585,8 +586,8 @@ class spillTree{
 
   double Euclidean(VID v1, VID v2){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
-    CFGTYPE cfg1 = pMap->find_vertex(v1).property();
-    CFGTYPE cfg2 = pMap->find_vertex(v2).property();
+    CFGTYPE cfg1 = (*(pMap->find_vertex(v1))).property();
+    CFGTYPE cfg2 = (*(pMap->find_vertex(v2))).property();
     return Euclidean(cfg1,cfg2);
   }
 

@@ -151,7 +151,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     InputIterator _input_first, InputIterator _input_last, VID _v,
     int k, OutputIterator _out) {
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property();
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
   return KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
 }
 
@@ -169,7 +169,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
 	VID _v = 0;
   int dim = _cfg.DOF();
 	for(V1 = _input_first; V1 != _input_last; ++V1){
-    CFG _v_cfg = _rmp->m_pRoadmap->find_vertex(*V1).property();
+    CFG _v_cfg = (*(_rmp->m_pRoadmap->find_vertex(*V1))).property();
     temptree.insert(Point_d(dim, _v, _v_cfg.GetData().begin(),_v_cfg.GetData().end()));
     ++_v;
 	}
@@ -180,7 +180,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   EndQueryTime();
 
 	for(Neighbor_search::iterator it = search.begin(); it != search.end(); ++it){
-    if(_rmp->m_pRoadmap->find_vertex(it->first.vid).property() == _cfg) continue;
+    if((*(_rmp->m_pRoadmap->find_vertex(it->first.vid))).property() == _cfg) continue;
 //    cout << std::sqrt(it->second) << " - VID = " << it->first.vid << endl;
 	  *_out++ = it->first.vid;
 	}
@@ -199,7 +199,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   VID _v, int k, OutputIterator _out) {
 
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property(); 
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property(); 
   return KClosest(_rmp, _v_cfg, k, _out);
 }
 
@@ -235,7 +235,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   EndQueryTime();
 
   for(Neighbor_search::iterator it = search.begin(); it != search.end(); ++it){
-    if(_rmp->m_pRoadmap->find_vertex(it->first.vid).property() == _cfg) continue;
+    if((*(_rmp->m_pRoadmap->find_vertex(it->first.vid))).property() == _cfg) continue;
     //cout << std::sqrt(it->second) << " - VID = " << it->first.vid << endl;
 	  *_out++ = it->first.vid;
 	}
@@ -290,7 +290,7 @@ UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
       CFG cfg_to_add;
       
       // scale roadmap CFGs
-      cfg_to_add = _rmp->m_pRoadmap->find_vertex(vid_to_add).property();
+      cfg_to_add = (*(_rmp->m_pRoadmap->find_vertex(vid_to_add))).property();
       
       //cout << "Adding VID = " << vid_to_add << " CFG = " << (*iter).second.GetAddVertexEvent()->GetCFG() << endl;
       //cout << "CFG: 0 " << cfg_to_add.GetSingleParam(0) << " -> " << cfg_data[0] << " ?=? " << cfg_to_add.GetSingleParam(0)/m_max_bbox_range << endl;
