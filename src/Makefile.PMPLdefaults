@@ -115,7 +115,9 @@ MATHTOOL_LIBFILE = ${MATHTOOL_DIR}/libmathtool.a
 
 
 # stapl macros
-STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools 
+#STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools 
+STAPL_INCL  = -I${STAPL_DIR}/include 
+
 
 #CGAL macros
 CGAL_INCL = -I${UTILS_DIR}/geom/CGAL-3.3.1/include
