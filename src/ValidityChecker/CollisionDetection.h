@@ -30,6 +30,9 @@
 #ifdef USE_PQP
 #include <PQP.h>
 #endif
+#ifdef USE_SOLID
+#include <SOLID.h>
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
@@ -238,6 +241,7 @@ class CollisionDetection : MPBaseObject {
   CollisionDetectionMethod* GetRAPID();
   CollisionDetectionMethod* GetPQP();
   CollisionDetectionMethod* GetVCLIP();
+  CollisionDetectionMethod* GetSOLID();
  protected:
   bool ParseCommandLine(int argc, char** argv);
 
@@ -371,6 +375,7 @@ class Vclip : public CollisionDetectionMethod {
    *@todo I don't really know what this is....
    */
   VclipPose GetVclipPose(const Transformation&, const Transformation&);
+
   
   /**Get all collsion information for given MultiBody.
    *Collision is checked in Body level between two MultiBodys,
@@ -449,6 +454,28 @@ class Pqp_Solid : public Pqp {
 };
 #endif
   
+
+#ifdef USE_SOLID
+class Solid : public CollisionDetectionMethod {
+ public:
+  Solid();
+  virtual ~Solid();
+  
+  virtual char* GetName() const;
+
+  virtual CollisionDetectionMethod* CreateCopy();
+
+  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
+                             Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL);
+
+
+
+
+};
+#endif
+
+
+
 
 class BoundingSpheres : public CollisionDetectionMethod {
  public:

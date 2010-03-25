@@ -26,9 +26,11 @@ using namespace std;
 #ifndef USE_VCLIP
 #ifndef USE_RAPID
 #ifndef USE_PQP
+#ifndef USE_SOLID
   #ifndef NO_CD_USE
     #error You have to specify at least one collision detection library.
   #endif
+#endif
 #endif
 #endif
 #endif
@@ -86,6 +88,12 @@ enum cd_predefined {
         PQP,
 #endif
 /**< enum PQP */
+
+/// SOLID
+#ifdef USE_SOLID
+        SOLID,
+#endif
+/**< enum SOLID */
 
 /// first user defined cd set, if any
         CD_USER1};    

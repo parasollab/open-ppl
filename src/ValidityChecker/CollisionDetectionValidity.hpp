@@ -50,6 +50,8 @@ CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     m_selected.push_back(cd->GetPQP());
   } else if (cd_label == "VCLIP") {
     m_selected.push_back(cd->GetVCLIP());
+  } else if (cd_label == "SOLID") {
+    m_selected.push_back(cd->GetSOLID());
   } else {
     std::cerr << "Unknown Label" << std::endl;
   }

@@ -284,6 +284,10 @@ public:
       */
     void FindBoundingBox();
 
+#ifdef USE_SOLID
+    void UpdateVertexBase();
+#endif
+
     //polygonal approximation
     void PolygonalApproximation(vector<Vector3D>& result);
 

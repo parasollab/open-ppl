@@ -34,8 +34,6 @@ CDInfo() {
 } // end constructor
 
 
-
-
 /////////////////////////////////////////////////////////////////////////
 // Destructor
 /////////////////////////////////////////////////////////////////////////
@@ -94,6 +92,11 @@ CollisionDetection() {
   all.push_back(pqp_solid);
 #endif
 
+#ifdef USE_SOLID
+  Solid* solid = new Solid();
+  all.push_back(solid);
+#endif
+
   BoundingSpheres* boundingSpheres = new BoundingSpheres();
   all.push_back(boundingSpheres);
 
@@ -138,6 +141,11 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   all.push_back(pqp_solid);
 #endif
 
+#ifdef USE_SOLID
+  Solid* solid = new Solid();
+  all.push_back(solid);
+#endif
+
   BoundingSpheres* boundingSpheres = new BoundingSpheres();
   all.push_back(boundingSpheres);
 
@@ -174,7 +182,9 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 #ifdef USE_VCLIP
   selected.push_back(vclip);
 #endif
-
+#ifdef USE_SOLID
+  selected.push_back(solid);
+#endif
   if(selected.size() < 1) {
     LOG_WARNING_MSG("No CollisionDetectionMethods selected!");
   }
@@ -215,6 +225,11 @@ CollisionDetection(vector<CollisionDetectionMethod*>& _selected) {
   
   Pqp_Solid* pqp_solid = new Pqp_Solid();
   all.push_back(pqp_solid);
+#endif
+
+#ifdef USE_SOLID
+  Solid* solid = new Solid();
+  all.push_back(solid);
 #endif
 
   BoundingSpheres* boundingSpheres = new BoundingSpheres();
@@ -282,6 +297,20 @@ GetVCLIP() {
   exit(-1);
 }
 
+
+CollisionDetectionMethod* 
+CollisionDetection::
+GetSOLID() {
+  vector<CollisionDetectionMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); ++I)
+    if ((*I)->GetName() == "SOLID")
+      return *I;	
+  cerr << "\n\nERROR in CollisionDetectin::GetSOLID(): SOLID not found in selected vector\n\n";
+  exit(-1);
+}
+
+
+
 void CollisionDetection::
 PrintOptions(ostream& out_os) {
   out_os << "  CollisionDetection" << endl;
@@ -307,8 +336,13 @@ GetDefault() {
   Pqp* pqp = new Pqp();
   Default.push_back(pqp);
 #else
+#ifdef USE_SOLID
+  Solid* solid = new Solid();
+  Default.push_back(solid);
+#else
   BoundingSpheres* boundingSpheres = new BoundingSpheres();
   Default.push_back(boundingSpheres);
+#endif
 #endif
 #endif
 #endif
@@ -986,6 +1020,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
   Stats.IncNumCollDetCalls( "vclip", pCallName);
   
+
   Real dist;
   VclipPose X12;
   Vect3 cp1, cp2;   // closest points between bodies, in local frame
@@ -996,6 +1031,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
     ret_val = IsInColl_AllInfo_vclip(robot, obstacle, _cdInfo);
     return ret_val;
   }
+
   
   for(int i=0 ; i<robot->GetFreeBodyCount(); i++) {
     
@@ -1014,7 +1050,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 			 obstacle->GetBody(j)->WorldTransformation());
       dist = PolyTree::vclip(rob.get(),obst.get(),X12,closestFeaturesHT, cp1, cp2);
       
-      if(dist < 0.0) { // once was < 0.001 ????
+      if(dist <= 0.0) { // once was < 0.001 ????
 	return true;
       }
     } // end for j
@@ -1043,6 +1079,8 @@ IsInColl_AllInfo_vclip(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstac
   Vect3 cp1, cp2;   // closest points between bodies, in local frame
   Vector3D robot_pt, obs_pt;
   bool ret_val;
+  _cdInfo.ResetVars();
+  _cdInfo.ret_all_info = true;
   
   ret_val = false;
   min_dist_so_far = MaxDist;  // =  1e10 by CollisionDetection.h
@@ -1062,15 +1100,16 @@ IsInColl_AllInfo_vclip(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstac
       X12 = GetVclipPose(robot->GetFreeBody(i)->WorldTransformation(),
 			 obstacle->GetBody(j)->WorldTransformation());
       dist = PolyTree::vclip(rob.get(),obst.get(),X12,closestFeaturesHT, cp1, cp2);
-      
-      if ( dist < 0.0 ) {
+
+      if ( dist <= 0.0 ) {
+	if (dist < min_dist_so_far)
+	  _cdInfo.colliding_obst_index = j;
 	ret_val = true;
       }
       
       if (dist < min_dist_so_far) {
 	min_dist_so_far = dist;
-	// _cdInfo.nearest_obst_index =  is set by IsInCollision()
-	// which called this function - look there for more info
+        _cdInfo.nearest_obst_index = j;
 	_cdInfo.min_dist = dist;
 	
 	// change a 3 elmt array to Vector3D class
@@ -1118,9 +1157,9 @@ GetVclipPose(const Transformation &myT, const Transformation &obstT) {
   // the above is for EulerXYZ.
   // For EulerZYX, or FixedXYZ, we should have the following instead,
   // i.e. Rotation = Rz(alpha) * Ry(beta) * Rx(gamma)
-  //Quat RPY         (diff.orientation.alpha,Vect3::K);
-  //RPY.postmult(Quat(diff.orientation.beta ,Vect3::J));
-  //RPY.postmult(Quat(diff.orientation.gamma,Vect3::I));
+  // Quat RPY         (diff.orientation.alpha,Vect3::K);
+  // RPY.postmult(Quat(diff.orientation.beta ,Vect3::J));
+  // RPY.postmult(Quat(diff.orientation.gamma,Vect3::I));
   
   return VclipPose(RPY,XYZ);
 }
@@ -1166,11 +1205,12 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 	
     if (_cdInfo.ret_all_info == true)
     {
-		cout << endl;
-		cout << "Currently unable to return ALL info using RAPID cd." << endl;
-		cout << "Defaulting to minimal information." << endl;
-	}
+	cout << endl;
+	cout << "Currently unable to return ALL info using RAPID cd." << endl;
+	cout << "Default/ing to minimal information." << endl;
+    }
 	
+
     for(int i=0 ; i<robot->GetFreeBodyCount(); i++){
 		
       shared_ptr<RAPID_model> rob = robot->GetFreeBody(i)->GetRapidBody();
@@ -1204,6 +1244,8 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 	
       }
     }
+
+
     return false;
 }
 #endif
@@ -1250,6 +1292,8 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_
   {
     PQP_DistanceResult res;
     double min_dist_so_far = MaxDist;
+    _cdInfo.ResetVars();
+    _cdInfo.ret_all_info = true;
     Vector3D robot_pt, obs_pt;
     bool ret_val=false;
 
@@ -1282,12 +1326,15 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_
           exit(1);
         }
 
-        if ( res.Distance() < 0.0 )  
+        if ( res.Distance() <= 0.0 ){
+	  if ( res.Distance() < min_dist_so_far)
+	    _cdInfo.colliding_obst_index = j;
           ret_val = true;
+	}
 
         if( res.Distance()<min_dist_so_far )
         {
-          // _cdInfo.nearest_obst_index =  is set by IsInCollision()
+          _cdInfo.nearest_obst_index = j; 
           // which called this function - look there for more info
           min_dist_so_far=res.Distance();
           _cdInfo.min_dist = min_dist_so_far;
@@ -1306,6 +1353,9 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_
         }
       }//end of each part of obs
     }//end of each part of robot
+
+
+
     return ret_val;
   } 
   else 
@@ -1505,7 +1555,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_
           exit(1);
         }
 
-        if ( res.Distance() < 0.0 )  
+        if ( res.Distance() <= 0.0 )  
           ret_val = true;
 
         if( res.Distance()<min_dist_so_far )
@@ -1580,6 +1630,163 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_
 
 
 //////////
+
+
+
+#ifdef USE_SOLID
+Solid::
+Solid() : CollisionDetectionMethod() {
+  type = Exact;
+  cdtype = SOLID;
+}
+
+
+Solid::
+~Solid() {
+}
+
+
+char*
+Solid::
+GetName() const {
+  return "SOLID";
+}
+
+
+CollisionDetectionMethod*
+Solid::
+CreateCopy() {
+  CollisionDetectionMethod* _copy = new Solid(*this);
+  return _copy;
+}
+
+
+bool
+Solid::
+IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
+	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
+  Stats.IncNumCollDetCalls( "solid", pCallName);
+ 
+  robot->UpdateVertexBase();
+
+  if(_cdInfo.ret_all_info == false){
+
+    for(int i=0 ; i<robot->GetFreeBodyCount(); i++) {
+
+      shared_ptr<DT_ObjectHandle> rob = robot->GetFreeBody(i)->GetSolidBody();
+
+      for(int j=0; j<obstacle->GetBodyCount(); j++) {
+
+        // if robot check self collision, skip adjacent links.
+        if(robot == obstacle &&
+                robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(j)) ) {
+                continue;
+        }
+
+        shared_ptr<DT_ObjectHandle> obst = obstacle->GetBody(j)->GetSolidBody();
+
+        MT_Vector3 cp1,cp2;
+        MT_Vector3 separation;
+        float tempdist;
+
+        if (DT_GetPenDepth(*rob, *obst, cp1, cp2)){// intersection 
+          separation = cp1 - cp2;
+          tempdist = cp1.distance(cp2);
+          return true;
+        }
+
+      } // end for j
+    } // end for i
+
+  return false;
+  }// _cdInfo.ret_all_info = false
+  else{
+
+    bool ret_val = false;
+    float dist = MaxDist;  // =  1e10 by CollisionDetection.h
+    float tempdist;
+
+    
+    // default _cdInfo contents
+    _cdInfo.ResetVars();
+    _cdInfo.ret_all_info = true;
+
+    for(int i=0 ; i<robot->GetFreeBodyCount(); i++) {
+
+      shared_ptr<DT_ObjectHandle> rob = robot->GetFreeBody(i)->GetSolidBody();
+
+      for(int j=0; j<obstacle->GetBodyCount(); j++) {
+
+        // if robot check self collision, skip adjacent links.
+        if(robot == obstacle &&
+                robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(j)) ) {
+                continue;
+        }
+
+        shared_ptr<DT_ObjectHandle> obst = obstacle->GetBody(j)->GetSolidBody();
+
+        MT_Vector3 cp1,cp2;
+        MT_Vector3 separation;
+
+        if (DT_GetPenDepth(*rob, *obst, cp1, cp2)){// intersection 
+          separation = cp1 - cp2;
+          tempdist = -cp1.distance(cp2);
+
+	  DT_GetPenDepth(*obst, *rob, cp1, cp2);
+          separation = cp1 - cp2;
+          tempdist = -cp1.distance(cp2);
+
+          ret_val = true;
+          if(tempdist < dist){
+            dist = tempdist;
+            _cdInfo.colliding_obst_index = j;
+            _cdInfo.nearest_obst_index = j;
+            _cdInfo.min_dist = dist;
+
+
+            _cdInfo.robot_point = robot->GetFreeBody(i)->WorldTransformation() * Vector3D(cp1[0],cp1[1],cp1[2]);
+            _cdInfo.object_point = obstacle->GetBody(j)->WorldTransformation() * Vector3D(cp2[0],cp2[1],cp2[2]);
+          }
+
+
+        }else{// no intersection
+          DT_GetClosestPair(*rob, *obst, cp1, cp2);
+          separation = cp2 - cp1;
+          tempdist = cp1.distance(cp2);
+          if(tempdist < dist){
+            dist = tempdist;
+            _cdInfo.nearest_obst_index = j;
+	    if(dist == 0){
+	      ret_val = true;
+	      _cdInfo.colliding_obst_index = j;
+	    }
+            _cdInfo.min_dist = dist;
+            _cdInfo.robot_point = robot->GetFreeBody(i)->WorldTransformation() * Vector3D(cp1[0],cp1[1],cp1[2]);
+            _cdInfo.object_point = obstacle->GetBody(j)->WorldTransformation() * Vector3D(cp2[0],cp2[1],cp2[2]);
+          }
+        }
+
+
+
+      } // end for j
+    } // end for i
+
+
+
+    return ret_val;
+  }// _cdInfo.ret_all_info = true
+
+
+} // end IsInCollision_solid()
+
+
+#endif
+
+
+//////////
+
+
+
 
 
 BoundingSpheres::

@@ -28,6 +28,11 @@
 #ifdef USE_RAPID
 #include <RAPID.H>
 #endif
+#ifdef USE_SOLID
+#include <SOLID.h>
+#include "DT_Polyhedron.h"
+#include "DT_Polytope.h"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include OBPRM headers
@@ -236,6 +241,13 @@ public:
 #ifdef USE_PQP
         shared_ptr<PQP_Model> GetPqpBody(); ///<Return PQP internal model
 #endif
+#ifdef USE_SOLID
+	shared_ptr<DT_ObjectHandle> GetSolidBody(); ///<Return SOLID internal model
+#endif
+
+#ifdef USE_SOLID
+	void UpdateVertexBase(); ///<Changes the VertexBase 
+#endif
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -320,6 +332,9 @@ protected:
 #ifdef USE_PQP
     shared_ptr<PQP_Model> pqpBody; ///<PQP internal model
 #endif
+#ifdef USE_SOLID
+    shared_ptr<DT_ObjectHandle> solidBody; ///<SOLID internal model
+#endif
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -339,6 +354,12 @@ private:
   //////////////////////////////////////////////////////////////////////////////////////////
 friend class MultiBody; //Owner
 friend class Connection;
+
+#ifdef USE_SOLID
+    DT_VertexBaseHandle base;			//handles SOLID vertices
+    MT_Point3* vertex;				//the actual SOLID vertex positions
+#endif
+
 };
 
 #endif

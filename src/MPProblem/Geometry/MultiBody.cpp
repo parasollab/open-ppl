@@ -769,6 +769,15 @@ bool MultiBody::operator==(const MultiBody& mb) const
          (maxAxisRange == mb.maxAxisRange);
 }
 
+#ifdef USE_SOLID
+  void MultiBody::UpdateVertexBase(){
+    for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
+      (*I)->UpdateVertexBase();
+    for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
+      (*I)->UpdateVertexBase();
+  }
+#endif
+
 //==================================================================
 //Polygonal Approximation
 void MultiBody::PolygonalApproximation(vector<Vector3D>& result)

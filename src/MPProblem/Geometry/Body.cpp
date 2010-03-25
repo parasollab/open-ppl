@@ -58,6 +58,12 @@ Body::Body(const Body& b) :
     else
       pqpBody = shared_ptr<PQP_Model>(new PQP_Model(*(b.pqpBody.get())));
 #endif
+#ifdef USE_SOLID
+    if(b.solidBody.get() == NULL)
+      solidBody = shared_ptr<DT_ObjectHandle>();
+    else
+      solidBody = shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(*(b.solidBody.get())));
+#endif
 }
 
 Body::~Body() {
@@ -186,18 +192,20 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 #ifdef USE_VCLIP
     if (cdtype == VCLIP) {
 	GMSPolyhedron poly = GetPolyhedron();
-	Polyhedron *vpoly = new Polyhedron;
+	Polyhedron* vpoly = new Polyhedron;
 	for(size_t v = 0 ; v < poly.vertexList.size() ; v++){
 		vpoly->addVertex("",
 			Vect3(poly.vertexList[v].getX(),
 			      poly.vertexList[v].getY(),
 			      poly.vertexList[v].getZ()
 			));
+
 	}
 
 	vpoly->buildHull();
 	vclipBody = shared_ptr<PolyTree>(new PolyTree);
 	vclipBody->setPoly(vpoly);
+
     } else
 #endif
 #ifdef USE_CSTK
@@ -249,6 +257,58 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 
     } else
 #endif
+#ifdef USE_SOLID
+      if (cdtype == SOLID){
+ 
+
+
+	GMSPolyhedron poly = GetWorldPolyhedron();
+
+	vertex = new MT_Point3[3*poly.polygonList.size()];
+	
+	for(size_t q=0; q < poly.polygonList.size(); q++) {
+	    int vertexNum[3];
+	    float point[3][3];
+	    for(int i=0; i<3; i++) {
+	       vertexNum[i] = poly.polygonList[q].vertexList[i];
+	       Vector3D tmp = poly.vertexList[vertexNum[i]];
+	       for(int j=0; j<3; j++)
+	           vertex[3*q+i][j] = tmp[j];
+	    }
+
+	}
+
+
+	base = DT_NewVertexBase(vertex[0],sizeof(vertex[0]));
+
+        DT_ShapeHandle shape = DT_NewComplexShape(base);
+	for(size_t q=0; q < poly.polygonList.size(); q++) {
+	    int vertexNum[3];
+	    float point[3][3];
+	    for(int i=0; i<3; i++) {
+	       vertexNum[i] = poly.polygonList[q].vertexList[i];
+	       Vector3D tmp = poly.vertexList[vertexNum[i]];
+	       for(int j=0; j<3; j++)
+	           point[i][j] = tmp[j];
+	    }
+	    
+	    DT_Begin();
+	    DT_VertexIndex(3*q+0);
+	    DT_VertexIndex(3*q+1);
+	    DT_VertexIndex(3*q+2);
+	    DT_End();
+
+	}
+	DT_EndComplexShape();
+
+        DT_ObjectHandle object = DT_CreateObject(NULL,shape);
+
+        solidBody = shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(object));
+
+
+
+    } else
+#endif
     {
 #ifndef NO_CD_USE
 	cout <<"\n\n\tERROR: all other cd type's undefined\n\n";
@@ -267,12 +327,41 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 #ifdef USE_PQP
 	cout <<"\n\nbut RAPID = " << PQP;
 #endif
-
+#ifdef USE_SOLID
+	cout <<"\n\nbut SOLID = " << SOLID;
+#endif
 #ifndef NO_CD_USE
 	exit(-1);
 #endif
     }
 }
+
+#ifdef USE_SOLID
+void Body::UpdateVertexBase(){
+ 
+
+
+
+        GMSPolyhedron poly = GetWorldPolyhedron();
+
+
+        for(size_t q=0; q < poly.polygonList.size(); q++) {
+            int vertexNum[3];
+            for(int i=0; i<3; i++) {
+               vertexNum[i] = poly.polygonList[q].vertexList[i];
+               Vector3D &tmp = poly.vertexList[vertexNum[i]];
+                   vertex[3*q+i][0]=tmp[0];
+                   vertex[3*q+i][1]=tmp[1];
+                   vertex[3*q+i][2]=tmp[2];
+            }
+        }
+
+
+
+        DT_ChangeVertexBase(base,vertex[0]);
+
+}
+#endif
 
 void Body::Read(char * _fileName) {
 
@@ -329,7 +418,7 @@ void Body::Write(ostream & _os) {
 //===================================================================
 //  ComputeCenterOfMass
 //  
-//  This function is automatically caeed by GetCenterOfMass()
+//  This function is automatically called by GetCenterOfMass()
 //  if it has never been computed. After computing it,
 //  this function will not be called again: rigid body.
 //
@@ -398,6 +487,12 @@ shared_ptr<RAPID_model> Body::GetRapidBody() {
 #ifdef USE_PQP
 shared_ptr<PQP_Model> Body::GetPqpBody() {
     return pqpBody;
+}
+#endif
+
+#ifdef USE_SOLID
+shared_ptr<DT_ObjectHandle> Body::GetSolidBody() {
+    return solidBody;
 }
 #endif
 
