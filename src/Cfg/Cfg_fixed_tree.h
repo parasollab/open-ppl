@@ -130,8 +130,6 @@ class Cfg_fixed_tree : public Cfg {
   /// methods for Cfg generation and collision checking.
   virtual bool ConfigEnvironment(Environment *env) const;
   
-  ///Check if every joint angle is in side a default range,DefaultRange.
-  virtual bool isInRange() const; 
   //@}
 
   //Since posDof=0, we need to override this function
