@@ -124,6 +124,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 
   int kpairs;
   int smallcc;
+  string nf_label;
 };
 
 
@@ -146,7 +147,8 @@ ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem):
   LOG_DEBUG_MSG("ConnectCCs::ConnectCCs()");
   this->element_name = "components"; 
   SetDefault();
-   
+
+  nf_label = in_Node.stringXMLParameter("nf", true, "", "nf");
   kpairs = in_Node.numberXMLParameter(string("kpairs"), true, 5,1,1000, 
                                   string("kpairs value")); 
   smallcc = in_Node.numberXMLParameter(string("smallcc"), true, 5,1,1000, 
@@ -245,8 +247,8 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       Stats.IncConnections_Attempted();
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
           && lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
-			     (*(pMap->find_vertex(cc1vec[c1]).property())),
-			     (*(pMap->find_vertex(cc2vec[c2]).property())),
+			     (*(pMap->find_vertex(cc1vec[c1]))).property(),
+			     (*(pMap->find_vertex(cc2vec[c2]))).property(),
 			     &lpOutput, 
 			     this->connectionPosRes, this->connectionOriRes, 
 			     (!addAllEdges)) ) {
@@ -284,16 +286,14 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
   int k = (int)min(kpairs, cc2vec.size());
 
-  //Clock_Class clock;
-  //clock.StartClock("dm computation");  
-  //Old Interface
-  // vector<pair<VID,VID> > kp = 
-  //   dm->FindKClosestPairs(_rm,cc1vec,cc2vec,k);
-  //New Interface
   vector<pair<VID,VID> > kp(k);
   typename vector<pair<VID,VID> >::iterator kp_iter = kp.begin();
-  this->GetMPProblem()->GetNeighborhoodFinder()->KClosestPairs(_rm, cc1vec.begin(), cc1vec.end(), cc2vec.begin(),cc2vec.end(), kp_iter);
-  //clock.StopPrintClock();
+  this->GetMPProblem()->GetNeighborhoodFinder()->KClosestPairs(
+                this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_label),
+                _rm, 
+                cc1vec.begin(), cc1vec.end(), 
+                cc2vec.begin(),cc2vec.end(), 
+                k, kp_iter);
 
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int i = 0; i < kp.size(); i++) {
