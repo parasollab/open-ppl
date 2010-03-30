@@ -20,8 +20,8 @@
 // Include LocalPlanners
 #include "StraightLine.h"
 #include "RotateAtS.h"
-#include "ApproxSpheres.h"
-#include "AStar.h" /*AStarDistance and AStarClearance defined here*/
+//#include "ApproxSpheres.h"
+//#include "AStar.h" /*AStarDistance and AStarClearance defined here*/
 
 class DistanceMetric;
 
@@ -165,14 +165,16 @@ LocalPlanners() {
   RotateAtS<CFG, WEIGHT>* rotate_at_s = new RotateAtS<CFG,WEIGHT>(cdtype);
   all.push_back(rotate_at_s);
  
+  /*
   AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>();
   all.push_back(a_star_distance);
   
   AStarClearance<CFG, WEIGHT>* a_star_clearance = new AStarClearance<CFG, WEIGHT>();
   all.push_back(a_star_clearance);
-  
+
   ApproxSpheres<CFG, WEIGHT>* approx_spheres = new ApproxSpheres<CFG,WEIGHT>();
   all.push_back(approx_spheres);
+  */
   
   ResetSelected();
 }
