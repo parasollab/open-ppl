@@ -38,7 +38,7 @@ class MapEvaluator : public MPBaseObject
     }
   }
   
-  ~MapEvaluator() {}
+  virtual ~MapEvaluator() {}
   
   void ParseXMLComparers(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
   {
@@ -58,7 +58,7 @@ class MapEvaluator : public MPBaseObject
     }
   }
   
-  void ParseXMLConditionalEvaluators(XMLNodeReader& in_Node, MPProblem *in_pProblem) 
+  virtual void ParseXMLConditionalEvaluators(XMLNodeReader& in_Node, MPProblem *in_pProblem) 
   {
     m_conditional_evaluators.clear();
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
