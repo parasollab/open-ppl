@@ -3,38 +3,40 @@
 #include "Sampler.h"
 
 MPStrategy::
-MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Node,in_pProblem) {
+MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPBaseObject(in_Node,in_pProblem) {
   LOG_DEBUG_MSG( "MPStrategy::MPStrategy()");
   ///\todo Find a home for "addPartialEdge" and "addAllEdges" or remove all together
   addPartialEdge=true;
   addAllEdges=false;
-  
-  in_Node.verifyName("MPStrategy");
 
-  m_pNodeGeneration = NULL;
-  m_pConnection = NULL;
-  m_pLocalPlanners = NULL;
-  m_Evaluator = NULL;
-  m_pCharacterizer = NULL;
-  XMLNodeReader::childiterator citr;
-  LOG_DEBUG_MSG("MPStrategy::MPStrategy(XMLNodeReader)");
-      cout << "input node label MP Strategy = " << in_Node.getName() << endl;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-    if(citr->getName() == "node_generation_methods") {
-     // m_pNodeGeneration = new GenerateMapNodes<CfgType>(*citr, GetMPProblem());
-      m_pNodeGeneration = new Sampler<CfgType>(*citr, GetMPProblem());
-    } else if(citr->getName() == "connection_methods") {
-      m_pConnection = new ConnectMap<CfgType, WeightType>(*citr, GetMPProblem());
-    } else if(citr->getName() == "lp_methods") {
-      m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(*citr, GetMPProblem());
-    } else if (citr->getName() == "MPEvaluator_methods") {
-      m_Evaluator = new MapEvaluator<CfgType, WeightType>(*citr, GetMPProblem());
-    } else if(citr->getName() == "MPStrategyMethod") {
-      ParseStrategyMethod(*citr);
-    } else if(citr->getName() == "MPCharacterizer") {
-      m_pCharacterizer = new MPCharacterizer<CfgType, WeightType>(*citr, GetMPProblem());
-    } else {
-      citr->warnUnknownNode();
+  if(parse_xml) {
+    in_Node.verifyName("MPStrategy");
+
+    m_pNodeGeneration = NULL;
+    m_pConnection = NULL;
+    m_pLocalPlanners = NULL;
+    m_Evaluator = NULL;
+    m_pCharacterizer = NULL;
+    XMLNodeReader::childiterator citr;
+    LOG_DEBUG_MSG("MPStrategy::MPStrategy(XMLNodeReader)");
+        cout << "input node label MP Strategy = " << in_Node.getName() << endl;
+    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+      if(citr->getName() == "node_generation_methods") {
+       // m_pNodeGeneration = new GenerateMapNodes<CfgType>(*citr, GetMPProblem());
+        m_pNodeGeneration = new Sampler<CfgType>(*citr, GetMPProblem());
+      } else if(citr->getName() == "connection_methods") {
+        m_pConnection = new ConnectMap<CfgType, WeightType>(*citr, GetMPProblem());
+      } else if(citr->getName() == "lp_methods") {
+        m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(*citr, GetMPProblem());
+      } else if (citr->getName() == "MPEvaluator_methods") {
+        m_Evaluator = new MapEvaluator<CfgType, WeightType>(*citr, GetMPProblem());
+      } else if(citr->getName() == "MPStrategyMethod") {
+        ParseStrategyMethod(*citr);
+      } else if(citr->getName() == "MPCharacterizer") {
+        m_pCharacterizer = new MPCharacterizer<CfgType, WeightType>(*citr, GetMPProblem());
+      } else {
+        citr->warnUnknownNode();
+      }
     }
   }
 

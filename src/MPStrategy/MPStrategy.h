@@ -12,13 +12,14 @@ template <class CFG, class WEIGHT> class MPCharacterizer;
 template <class CFG, class WEIGHT> class MapEvaluator;
 class MPStrategyMethod;
 
+
 class MPStrategy : public MPBaseObject
 {
 public: 
-  MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+  MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
   virtual ~MPStrategy () {}
   
-  void ParseStrategyMethod(XMLNodeReader& in_Node);
+  virtual void ParseStrategyMethod(XMLNodeReader& in_Node);
   
   LocalPlanners<CfgType, WeightType>* GetLocalPlanners() {return m_pLocalPlanners;};
   Sampler<CfgType>* GetSampler() {return m_pNodeGeneration;};
@@ -31,7 +32,7 @@ public:
   void Solve(); 
   MPStrategyMethod* GetMPStrategyMethod(string& );////////////////////////
   ///@ToDo Move addPartialEdge, addAllEdges to ConnectMap
- private:
+ protected:
   Sampler<CfgType>* m_pNodeGeneration;
   ConnectMap<CfgType, WeightType>* m_pConnection;
   LocalPlanners<CfgType, WeightType>* m_pLocalPlanners;
