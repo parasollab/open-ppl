@@ -121,7 +121,7 @@ public:
 	        Roadmap<CFG, WEIGHT>* rdmp, 
 	        Stat_Class& Stats, 
 	        ConnectMap<CFG, WEIGHT> *cn, 
-          vector<ConnectMap<CfgType, WeightType>::NodeConnectionPointer >* pConnections,
+          vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
           LocalPlanners<CFG,WEIGHT> * lp,
           DistanceMetric * dm);
 
@@ -158,7 +158,7 @@ public:
 			  Roadmap<CFG, WEIGHT>* rdmp,
 			  Stat_Class& Stats,
 			  ConnectMap<CFG, WEIGHT>*, 
-        vector<ConnectMap<CfgType, WeightType>::NodeConnectionPointer >* pConnections,
+        vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
 			  LocalPlanners<CFG,WEIGHT>*, 
 			  DistanceMetric*, 
 			  vector<CFG>* _path);
@@ -311,7 +311,7 @@ template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
 PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
-        ConnectMap<CFG, WEIGHT>* cn, vector<ConnectMap<CfgType, WeightType>::NodeConnectionPointer >* pConnections,
+        ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
         LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm) 
 {
   for(typename vector<CFG>::iterator Q = query.begin(); 
@@ -336,7 +336,7 @@ template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
 PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
-	     ConnectMap<CFG, WEIGHT>* cn, vector<ConnectMap<CfgType, WeightType>::NodeConnectionPointer >* pConnections, 
+	     ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections, 
        LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm, vector<CFG>* _path) {
 
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
@@ -376,8 +376,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       vector<VID> verticesList(1, svid);
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
 
-      vector< ConnectMap<CfgType,WeightType>::NodeConnectionPointer >::iterator itr;
-      for (itr = pConnections->begin(); itr != pConnections->end(); itr++) {
+      for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
         cn->ConnectNodes(*itr, rdmp, Stats, dm, lp, false, false, 
                         verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
@@ -394,8 +393,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
       vector<VID> verticesList(1, gvid);
       
-      vector< ConnectMap<CfgType,WeightType>::NodeConnectionPointer >::iterator itr;
-      for (itr = pConnections->begin(); itr != pConnections->end(); itr++) {
+      for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
         cn->ConnectNodes(*itr, rdmp, Stats, dm, lp, false, false, 
                         verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
@@ -412,7 +410,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       _rp.clear();
       cmap.reset();
       //FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, rp);
-      FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, DefaultWeight::MaxWeight()); //fix_lantao , inside this function, edge_property vs double
+      FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, WEIGHT::MaxWeight()); //fix_lantao , inside this function, edge_property vs double
       //cout << "FindPathDijkstra:: size of vector<VID>" << _rp.size() << endl ;
       
 
