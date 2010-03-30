@@ -5,7 +5,8 @@
 #include "LocalPlannerMethod.h"
 #include "type_traits/is_closed_chain.h" //used to switch between default and specialized impl. of IsConnected
 #include "ValidityChecker.hpp"
- 
+#include "Cfg_reach_cc.h"
+
 template <class CFG, class WEIGHT>
 class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
  public:
