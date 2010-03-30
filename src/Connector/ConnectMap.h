@@ -270,7 +270,7 @@ public:
     //cout << "ConnectMap::ConnectComponents() - Roadmap only" << endl;
   }
 
-  template<typename InputIterator, typename OutputIterator>
+  template<typename InputIterator>
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
        Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
        DistanceMetric* dm,
@@ -278,13 +278,13 @@ public:
        bool addPartialEdge, bool addAllEdges,
        InputIterator _itr1_first, InputIterator _itr1_last) {
     //cout << "ConnectMap::ConnectComponents()" << endl;
-      ConnectComponents(selected, rm, Stats,  dm, lp, addPartialEdge, addAllEdges,
+      _ConnectComponents(selected, rm, Stats,  dm, lp, addPartialEdge, addAllEdges,
         _itr1_first, _itr1_last,
           typename ComponentConnectionContainer::MethodTypes_begin(),
           typename ComponentConnectionContainer::MethodTypes_end());
   }
 
-  template<typename InputIterator, typename OutputIterator>
+  template<typename InputIterator>
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
        Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 			 DistanceMetric* dm,
@@ -293,7 +293,7 @@ public:
 			 InputIterator _itr1_first, InputIterator _itr1_last,
        InputIterator _itr2_first, InputIterator _itr2_last) {
     //cout << "ConnectMap::ConnectComponents()" << endl;
-      ConnectComponents(selected, rm, Stats, dm, lp, addPartialEdge, addAllEdges,
+      _ConnectComponents(selected, rm, Stats, dm, lp, addPartialEdge, addAllEdges,
         _itr1_first, _itr1_last, _itr2_first, _itr2_last,
           typename ComponentConnectionContainer::MethodTypes_begin(),
           typename ComponentConnectionContainer::MethodTypes_end());
@@ -301,7 +301,7 @@ public:
 
 private:
   //implements the function call dispatching (b/c no support for templated virtual functions)
-  template <typename InputIterator, typename OutputIterator, typename First, typename Last>
+  template <typename InputIterator, typename First, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
        Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
@@ -313,7 +313,7 @@ private:
        First, Last);
 
 
-  template <typename InputIterator, typename OutputIterator, typename Last>
+  template <typename InputIterator, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
        Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
@@ -328,7 +328,7 @@ private:
     }
 
   //implements the function call dispatching (b/c no support for templated virtual functions)
-  template <typename InputIterator, typename OutputIterator, typename First, typename Last>
+  template <typename InputIterator, typename First, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
        Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
@@ -339,7 +339,7 @@ private:
        First, Last);
 
 
-  template <typename InputIterator, typename OutputIterator, typename Last>
+  template <typename InputIterator, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
        Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
@@ -576,7 +576,7 @@ _ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected,
 }
 
 template <class CFG, class WEIGHT>
-template <typename InputIterator, typename OutputIterator, typename First, typename Last>
+template <typename InputIterator, typename First, typename Last>
 void
 ConnectMap<CFG,WEIGHT>::
 _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
@@ -610,7 +610,7 @@ _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected,
 
 
 template <class CFG, class WEIGHT>
-template <typename InputIterator, typename OutputIterator, typename First, typename Last>
+template <typename InputIterator, typename First, typename Last>
 void
 ConnectMap<CFG,WEIGHT>::
 _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
