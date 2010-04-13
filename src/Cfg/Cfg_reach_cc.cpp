@@ -384,7 +384,7 @@ StoreData() {
     //compute joint angles
     double sumExtAng = 0;
     for(size_t i=1; i<actual_links.size(); ++i) {
-      double extAng = PI - CalculateJointAngle(actual_links[i-1], 
+      double extAng = PI - Link::CalculateJointAngle(actual_links[i-1], 
 					       actual_links[i]);
       sumExtAng += extAng;
       v.push_back(extAng/TWO_PI);
