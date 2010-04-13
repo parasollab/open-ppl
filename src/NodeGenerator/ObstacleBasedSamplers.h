@@ -27,6 +27,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
   double step_size;
 
  public:
+  ObstacleBasedSampler() {}
   ObstacleBasedSampler(Environment* _env, Stat_Class& _Stats, 
 		       CollisionDetection* _cd, CDInfo& _cdInfo,
 		       DistanceMetric* _dm, int _free = 1, int _coll = 0, 
@@ -222,40 +223,71 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
       return generated;
     }
     
-    template <typename OutputIterator>
-   OutputIterator Sample(Environment* env,Stat_Class& Stat,int num_nodes,OutputIterator result, int max_attempts)  
-   {       CFG my_cfg;
-	   do {
-	   my_cfg.GetRandomCfg(env);
-	   }while (!my_cfg.InBoundingBox(env));
-	   vector<CFG> out1;
-	   for (int i =0; i< num_nodes; i++){ 
-		 my_cfg.GetRandomCfg(env);  
-	       while(!sampler(env, Stat,my_cfg, out1, max_attempts)) {
-		       my_cfg.GetRandomCfg(env);
-                 
-               }	   
-	   
-	  }
-	   result = copy(out1.begin(), out1.end(), result);
-	  return result;
+ private:
+  template <typename OutputIterator>
+  OutputIterator 
+  _Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
+          OutputIterator result)  
+  {
+    CFG my_cfg;
+    do {
+      my_cfg.GetRandomCfg(env);
+    } while (!my_cfg.InBoundingBox(env));
+    vector<CFG> out1;
+    for (int i =0; i< num_nodes; i++) {
+      my_cfg.GetRandomCfg(env);
+      while(!sampler(env, Stat,my_cfg, out1, max_attempts))
+        my_cfg.GetRandomCfg(env);
     }
-   
-   
-   template <typename InputIterator, typename OutputIterator>
-   OutputIterator Sample(Environment* env,Stat_Class& Stat, InputIterator first, InputIterator last,
-	   OutputIterator result, int max_attempts) {
-   
-         while(first != last) {
-    vector<CFG> result_cfg;
-    if(sampler(env, Stat, *first, result_cfg, max_attempts)) {
-      result = copy(result_cfg.begin(), result_cfg.end(), result);
-    }
-    first++;
+    result = copy(out1.begin(), out1.end(), result);
+    return result;
   }
-  return result;
-     }
-	    
+
+  template <typename InputIterator, typename OutputIterator>
+  OutputIterator 
+  _Sample(Environment* env, Stat_Class& Stat, InputIterator first, InputIterator last, int max_attempts,
+ 	  OutputIterator result)  
+  {
+    while(first != last) {
+      vector<CFG> result_cfg;
+      if(sampler(env, Stat, *first, result_cfg, max_attempts))
+        result = copy(result_cfg.begin(), result_cfg.end(), result);
+      first++;
+    }
+    return result;
+  }   
+
+ public:
+  //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
+  virtual back_insert_iterator<vector<CFG> > 
+  Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
+         back_insert_iterator<vector<CFG> > result)  
+  {
+    return _Sample(env, Stat, num_nodes, max_attempts, result);
+  }
+
+  virtual back_insert_iterator<vector<CFG> > 
+  Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
+	 back_insert_iterator<vector<CFG> > result)  
+  {
+    return _Sample(env, Stat, first, last, max_attempts, result);
+  }   
+  
+  //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
+  virtual typename vector<CFG>::iterator 
+  Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
+         typename vector<CFG>::iterator result)  
+  {
+    return _Sample(env, Stat, num_nodes, max_attempts, result);
+  }
+
+  virtual typename vector<CFG>::iterator 
+  Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
+	 typename vector<CFG>::iterator result)  
+  {
+    return _Sample(env, Stat, first, last, max_attempts, result);
+  }
 };
 
 #endif
+ 
