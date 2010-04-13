@@ -95,6 +95,10 @@ public:
     void AddBody(const FreeBody& _body);
     void AddBody(const shared_ptr<FreeBody>& _body);
 
+    void DeleteBody();
+
+    void SetFreeBodyCount(int i) { FreeBodyCount = i; }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //  Get/Set Fixed Body info
@@ -292,9 +296,12 @@ public:
     void PolygonalApproximation(vector<Vector3D>& result);
 
     //@}
+
+    void PolygonalApproximation();
  
     bool operator==(const MultiBody& mb) const;
     bool operator!=(const MultiBody& mb) const { return !(*this == mb); }
+
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -338,6 +345,7 @@ private:
   
   double boundingBox[6];
   double maxAxisRange;
+  int FreeBodyCount;
 };
 
 #endif
