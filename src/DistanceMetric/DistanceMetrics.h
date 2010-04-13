@@ -60,9 +60,11 @@ const int WS = 1;   ///< Type WS: Workspace distance metric
 class DistanceMetric : MPBaseObject{
  public:
   DistanceMetric();
+  DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
   virtual ~DistanceMetric();
 
-  DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+  bool ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr);
+  
   vector<DistanceMetricMethod*> GetDefault();
 
   void PrintUsage(ostream& _os) const;

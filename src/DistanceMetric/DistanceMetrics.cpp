@@ -63,30 +63,39 @@ DistanceMetric() {
 
 
 DistanceMetric::
-DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : 
     MPBaseObject(in_Node, in_pProblem){
   LOG_DEBUG_MSG("DistanceMetric::DistanceMetric()");
-  /*
-  EuclideanDistance* euclidean = new EuclideanDistance();
-  all.push_back(euclidean);
-
-  ScaledEuclideanDistance* scaledEuclidean = new ScaledEuclideanDistance();
-  all.push_back(scaledEuclidean);
-
-  MinkowskiDistance* minkowski = new MinkowskiDistance();
-  all.push_back(minkowski);
-
-  ManhattanDistance* manhattan = new ManhattanDistance();
-  all.push_back(manhattan);
-
-  CenterOfMassDistance* com = new CenterOfMassDistance();
-  all.push_back(com);
-  */
 
   in_Node.verifyName("distance_metrics");
 
-  XMLNodeReader::childiterator citr;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+  if(parse_xml)
+    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
+      if(!ParseXML(in_pProblem, citr))
+        citr->warnUnknownNode();
+
+  m_distance_time = 0;
+  LOG_DEBUG_MSG("~DistanceMetric::DistanceMetric()");
+}
+
+
+DistanceMetric::
+~DistanceMetric() {
+  vector<DistanceMetricMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++)
+    delete *I;
+  selected.clear();
+
+  for(I=all.begin(); I!=all.end(); I++)
+    delete *I;
+  all.clear();
+}
+
+
+bool
+DistanceMetric::
+ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
+{
     if(citr->getName() == "euclidean") {
       EuclideanDistance* euclidean = new EuclideanDistance();
       all.push_back(euclidean);
@@ -163,26 +172,10 @@ DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
       cout << "BinaryLPSweptDistance: lp_method = " << lp->selected[0]->GetName() << ", pos_res = " << pos_res << ", ori_res = " << ori_res << ", tolerance = " << tolerance << ", max_attempts = " << max_attempts << ", use_bbox = " << use_bbox << endl;
       //delete lp;
       citr->warnUnrequestedAttributes();
-    } else {
-      citr->warnUnknownNode();
-    }
-  }
+    } else
+      return false;
 
-  m_distance_time = 0;
-  LOG_DEBUG_MSG("~DistanceMetric::DistanceMetric()");
-}
-
-
-DistanceMetric::
-~DistanceMetric() {
-  vector<DistanceMetricMethod*>::iterator I;
-  for(I=selected.begin(); I!=selected.end(); I++)
-    delete *I;
-  selected.clear();
-
-  for(I=all.begin(); I!=all.end(); I++)
-    delete *I;
-  all.clear();
+  return true;
 }
 
 
