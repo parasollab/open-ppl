@@ -29,8 +29,9 @@
 
 #include "MPRegion.h"
 #include "MPProblem.h"
+#include "ClosedChainProblem.h"
 #include "MPStrategy.h"
-
+#include "ClosedChainStrategy.h"
 
 #include "CfgTypes.h"
 
