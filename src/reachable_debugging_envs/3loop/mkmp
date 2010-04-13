@@ -1,0 +1,7 @@
+../../closed_chain_multi_loop -f chain.tree -numofjoints 14 \
+	-cd RAPID -rdres 1 -gamma 1 \
+	-dm reachable \
+	-gNodes BasicPRM  nodes 5 chunkSize 5 exact 1  \
+	-cNodes closest 5 \
+	-lp straightline binarySearch 0 \
+	-bbox_scale 1 -bbox [-100,100,-100,100,-100,100]

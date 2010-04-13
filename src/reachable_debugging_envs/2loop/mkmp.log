@@ -1,0 +1,481 @@
+CfgType::NumofJoints = 14
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+straightline
+
+         defaultFile	chain.tree
+             descDir	
+             envFile	chain.tree.env
+             mapFile	chain.tree.map
+           inmapFile	
+          inmapFile2	
+       partitionType	
+     integrationType	
+      addPartialEdge	0
+         addAllEdges	0
+         seedByChunk	1
+                seed	305441741
+                bbox	[-100,100,-100,100,-100,100] 
+                bbox	
+          bbox_scale	1
+              posres	0.05
+              orires	0.05
+               rdres	1
+               gamma	1
+         numofjoints	14
+           GNstrings0	BasicPRM nodes 10 chunkSize 10 exact 1 
+           CNstrings0	closest 5 
+           LPstrings0	straightline binarySearch 0 
+           CDstrings0	RAPID 
+           DMstrings0	reachable 
+
+strData:RealLink
+myID:0 minRange:1 maxRange:1
+strData:RealLink
+myID:1 minRange:1 maxRange:1
+strData:RealLink
+myID:2 minRange:1 maxRange:1
+strData:RealLink
+myID:3 minRange:1 maxRange:1
+strData:RealLink
+myID:4 minRange:1 maxRange:1
+strData:RealLink
+myID:5 minRange:1 maxRange:1
+strData:RealLink
+myID:6 minRange:1 maxRange:1
+strData:RealLink
+myID:7 minRange:1 maxRange:1
+strData:RealLink
+myID:8 minRange:1 maxRange:1
+strData:RealLink
+myID:9 minRange:1 maxRange:1
+strData:RealLink
+myID:10 minRange:1 maxRange:1
+strData:VirtualLink
+myID: 11 lcID:7 rcID:8
+strData:VirtualLink
+myID: 12 lcID:9 rcID:10
+strData:VirtualLink
+myID: 13 lcID:11 rcID:12
+strData:VirtualLink
+myID: 14 lcID:6 rcID:13
+strData:Loop
+Loop: 0 1 2 3 4 5 
+strData:Loop
+Loop: 14 4 5 0 1 2 
+strData:CfgJoints
+reading joints: 
+0,1
+1,2
+2,3
+3,4
+4,5
+2,6
+6,7
+7,8
+8,9
+9,10
+strData:EarJoints
+reading ear joints: 
+6,2,3
+10,3,4
+strData:
+Partitioning loops into (unseen) (seen):
+	Loop 0: (0 1 2 3 4 5 ) ()
+	Loop 1: (6 7 8 9 10 ) (4 5 0 1 2 )
+Ear root ids:
+	Ear 0: 19
+	Ear 1: 14
+Tree 0
+(19(16,18))
+(16(0,15))
+(0)
+(15(1,2))
+(1)
+(2)
+(18(3,17))
+(3)
+(17(4,5))
+(4)
+(5)
+Tree 1
+(24(21,23))
+(21(14,20))
+(14(6,13))
+(6)
+(13(11,12))
+(11(7,8))
+(7)
+(8)
+(12(9,10))
+(9)
+(10)
+(20(4,5))
+(4)
+(5)
+(23(0,22))
+(0)
+(22(1,2))
+(1)
+(2)
+Sampling 10 configurations...
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 1.41363 0.761539    0
+	joint2 = 0.455462 0.475328    0
+	end_link3 = 0.466285 0.441321    0
+	end_link2 = 0.452666 1.03822    0
+	beta = 0.0356894
+	cross =    0    0   -1
+	beta2 = 0.0356894
+	beta3 = 0.0356667
+Tree 0
+length of tree 0:
+0 1.18939 1 0.766421 1 1 1.18939 1 0.47741 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.597051 0.809965 1 1 0.765042 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.0805649 0.374818 0.0908147 0.00703288 0.423277 
+MyCalculateJointAngle(2,6)
+	joint1 = 1.41363 0.761539    0
+	joint2 = 0.455462 0.475328    0
+	end_link3 = 0.466285 0.441321    0
+	end_link2 = 0.452666 1.03822    0
+	beta = 0.0356894
+	cross =    0    0   -1
+	beta2 = 0.0356894
+	beta3 = 0.0356667
+0.99432 0.937425 0.367278 0.00539099 0.375056 
+
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 1.94324 1.07995    0
+	joint2 = 0.943661 1.10888    0
+	end_link3 = 0.975387 0.828442    0
+	end_link2 = 1.41369 1.92823    0
+	beta = 0.283175
+	cross =   -0    0   -1
+	beta2 = -6.00001
+	beta3 = 0.272457
+Tree 0
+length of tree 0:
+0 1.80257 1 1.16737 1 1 1.80257 1 1.19434 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 1.18391 1.75539 1 1 1.58577 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.0372101 0.30161 0.156575 0.045887 0.296291 
+MyCalculateJointAngle(2,6)
+	joint1 = 1.94324 1.07995    0
+	joint2 = 0.943661 1.10888    0
+	end_link3 = 0.975387 0.828442    0
+	end_link2 = 1.41369 1.92823    0
+	beta = 0.283175
+	cross =   -0    0   -1
+	beta2 = -6.00001
+	beta3 = 0.272457
+0.954931 0.0997989 0.159081 0.201964 0.208579 
+
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 2.53463 1.12311    0
+	joint2 = 1.5404 1.23031    0
+	end_link3 = 1.54162 1.00514    0
+	end_link2 = 2.57698 2.12221    0
+	beta = 0.225649
+	cross =   -0    0   -1
+	beta2 = -6.05754
+	beta3 = 0.220114
+Tree 0
+length of tree 0:
+0 2.32403 1 1.52703 1 1 2.32403 1 1.61124 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 1.5231 0.250502 1 1 1.70372 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.0197865 0.223471 0.239647 0.0544591 0.201833 
+MyCalculateJointAngle(2,6)
+	joint1 = 2.53463 1.12311    0
+	joint2 = 1.5404 1.23031    0
+	end_link3 = 1.54162 1.00514    0
+	end_link2 = 2.57698 2.12221    0
+	beta = 0.225649
+	cross =   -0    0   -1
+	beta2 = -6.05754
+	beta3 = 0.220114
+0.964087 0.788421 0.460026 0.0687522 0.175476 
+
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 3.09917 1.05913    0
+	joint2 = 2.1104 0.909669    0
+	end_link3 = 3.08221 2.05899    0
+	end_link2 = 3.74236 1.82484    0
+	beta = 1.70386
+	cross =    0    0    1
+	beta2 = 4.57932
+	beta3 = 0.780958
+Tree 0
+length of tree 0:
+0 2.80668 1 1.9181 1 1 2.80668 1 1.84957 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.700444 0.42247 1 1 0.427032 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.0473976 0.0914078 0.385072 0.995835 0.124246 
+MyCalculateJointAngle(2,6)
+	joint1 = 3.09917 1.05913    0
+	joint2 = 2.1104 0.909669    0
+	end_link3 = 3.08221 2.05899    0
+	end_link2 = 3.74236 1.82484    0
+	beta = 1.70386
+	cross =    0    0    1
+	beta2 = 4.57932
+	beta3 = 0.780958
+0.271178 0.994515 0.432251 0.75956 0.431508 
+
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 3.01994 1.19882    0
+	joint2 = 2.02744 1.07654    0
+	end_link3 = 2.1652 1.71788    0
+	end_link2 = 3.62428 1.99555    0
+	beta = 0.668343
+	cross =    0    0    1
+	beta2 = 5.61484
+	beta3 = 0.554769
+Tree 0
+length of tree 0:
+0 2.79057 1 1.93582 1 1 2.79057 1 1.86869 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 1.48527 1.80369 1 1 0.702904 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.06586 0.0808577 0.372794 0.020208 0.115984 
+MyCalculateJointAngle(2,6)
+	joint1 = 3.01994 1.19882    0
+	joint2 = 2.02744 1.07654    0
+	end_link3 = 2.1652 1.71788    0
+	end_link2 = 3.62428 1.99555    0
+	beta = 0.668343
+	cross =    0    0    1
+	beta2 = 5.61484
+	beta3 = 0.554769
+0.10637 0.250793 0.142214 0.0900376 0.385688 
+
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 0.115028 0.892584    0
+	joint2 = -0.853877 0.645152    0
+	end_link3 = 0.735935 0.1087    0
+	end_link2 = -0.884517 0.862429    0
+	beta = 1.99067
+	cross =    0   -0   -1
+	beta2 = 1.99067
+	beta3 = 0.740028
+Tree 0
+length of tree 0:
+0 0.972064 1 1.64768 1 1 0.972064 1 1.49973 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 1.78717 0.24347 1 1 1.78353 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.312973 0.191827 0.0349933 0.274374 0.230117 
+MyCalculateJointAngle(2,6)
+	joint1 = 0.115028 0.892584    0
+	joint2 = -0.853877 0.645152    0
+	end_link3 = 0.735935 0.1087    0
+	end_link2 = -0.884517 0.862429    0
+	beta = 1.99067
+	cross =    0   -0   -1
+	beta2 = 1.99067
+	beta3 = 0.740028
+0.683176 0.958563 0.461154 0.953177 0.149466 
+
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 0.551586 0.0628829    0
+	joint2 = 0.336777 1.03954    0
+	end_link3 = 0.812767 -0.902407    0
+	end_link2 = 0.01917 -0.7836    0
+	beta = 3.09384
+	cross =   -0   -0    1
+	beta2 = -3.09384
+	beta3 = 0.0476949
+Tree 0
+length of tree 0:
+0 0.081335 1 0.950496 1 1 0.081335 1 1.05228 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.802441 0.0917836 1 1 0.79794 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.318284 0.342358 0.623814 0.328511 0.32364 
+MyCalculateJointAngle(2,6)
+	joint1 = 0.551586 0.0628829    0
+	joint2 = 0.336777 1.03954    0
+	end_link3 = 0.812767 -0.902407    0
+	end_link2 = 0.01917 -0.7836    0
+	beta = 3.09384
+	cross =   -0   -0    1
+	beta2 = -3.09384
+	beta3 = 0.0476949
+0.4924 0.83993 0.485387 0.82395 0.369368 
+
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 2.96769 1.11092    0
+	joint2 = 1.96769 1.10923    0
+	end_link3 = 3.35336 2.03356    0
+	end_link2 = 3.46552 1.9782    0
+	beta = 1.96842
+	cross =    0   -0    1
+	beta2 = 4.31477
+	beta3 = 0.74483
+Tree 0
+length of tree 0:
+0 2.70622 1 1.84072 1 1 2.70622 1 1.83971 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.125074 1.45915 1 1 1.48865 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.039171 0.127895 0.333202 0.0385796 0.128308 
+MyCalculateJointAngle(2,6)
+	joint1 = 2.96769 1.11092    0
+	joint2 = 1.96769 1.10923    0
+	end_link3 = 3.35336 2.03356    0
+	end_link2 = 3.46552 1.9782    0
+	beta = 1.96842
+	cross =    0   -0    1
+	beta2 = 4.31477
+	beta3 = 0.74483
+0.313283 0.858803 0.239718 0.250627 0.232771 
+
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 0.557491 0.130615    0
+	joint2 = -0.418977 0.34628    0
+	end_link3 = 0.777068 -0.84498    0
+	end_link2 = -0.0345039 -0.675326    0
+	beta = 2.00955
+	cross =   -0   -0   -1
+	beta2 = -4.27364
+	beta3 = 0.735726
+Tree 0
+length of tree 0:
+0 0.142708 1 0.951517 1 1 0.142708 1 0.982053 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.829115 0.573517 1 1 1.11369 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.306997 0.342174 0.816234 0.308932 0.336622 
+MyCalculateJointAngle(2,6)
+	joint1 = 0.557491 0.130615    0
+	joint2 = -0.418977 0.34628    0
+	end_link3 = 0.777068 -0.84498    0
+	end_link2 = -0.0345039 -0.675326    0
+	beta = 2.00955
+	cross =   -0   -0   -1
+	beta2 = -4.27364
+	beta3 = 0.735726
+0.68017 0.826488 0.407422 0.0115392 0.312012 
+
+	gamma = 1...
+
+MyCalculateJointAngle(2,6)
+	joint1 = 0.821222 1.54438    0
+	joint2 = -0.142131 1.27614    0
+	end_link3 = 0.479734 0.604494    0
+	end_link2 = -0.00992246 2.10044    0
+	beta = 0.950735
+	cross =    0    0   -1
+	beta2 = 0.950735
+	beta3 = 0.683125
+Tree 0
+length of tree 0:
+0 1.57743 1 1.68696 1 1 1.57743 1 1.42859 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 1.57404 0.910673 1 1 1.10579 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.225655 0.180502 0.137064 0.157602 0.246747 
+MyCalculateJointAngle(2,6)
+	joint1 = 0.821222 1.54438    0
+	joint2 = -0.142131 1.27614    0
+	end_link3 = 0.479734 0.604494    0
+	end_link2 = -0.00992246 2.10044    0
+	beta = 0.950735
+	cross =    0    0   -1
+	beta2 = 0.950735
+	beta3 = 0.683125
+0.848686 0.0989681 0.349519 0.884598 0.313523 
+
+Total sampling time: 0.017997
+Total collision time: 2.12203e-314
+Total time: 0.017997
+Attempts: 10

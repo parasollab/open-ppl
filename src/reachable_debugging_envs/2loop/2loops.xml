@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<motion_planning>
+  <MPProblem>
+    <environment input_env="chain.tree.env">
+      <robot Cfg_name="Cfg_free" num_joints="14" pos_dof="3" dofs="20">
+        <boundary type="bbox" translational_scale="1">
+          <parameter id="0" Label="x" type="translational" min="-15" max="15" />
+          <parameter id="1" Label="y" type="translational" min="-10" max="10" />
+          <parameter id="2" Label="z" type="translational" min="-15" max="15" />
+          <parameter id="3" Label="dof3" type="translational" min="0" max="6.3" />
+          <parameter id="4" Label="dof4" type="translational" min="0" max="6.3" />
+          <parameter id="5" Label="dof5" type="translational" min="0" max="6.3" />
+          <parameter id="6" Label="dof6" type="translational" min="0" max="6.3" />
+          <parameter id="7" Label="dof7" type="translational" min="0" max="6.3" />
+          <parameter id="8" Label="dof8" type="translational" min="0" max="6.3" />
+          <parameter id="9" Label="dof9" type="translational" min="0" max="6.3" />
+          <parameter id="10" Label="dof10" type="translational" min="0" max="6.3" />
+          <parameter id="11" Label="dof11" type="translational" min="0" max="6.3" />
+          <parameter id="12" Label="dof12" type="translational" min="0" max="6.3" />
+          <parameter id="13" Label="dof13" type="translational" min="0" max="6.3" />
+          <parameter id="14" Label="dof14" type="translational" min="0" max="6.3" />
+          <parameter id="15" Label="dof15" type="translational" min="0" max="6.3" />
+          <parameter id="16" Label="dof16" type="translational" min="0" max="6.3" />
+          <parameter id="17" Label="dof17" type="translational" min="0" max="6.3" />
+          <parameter id="18" Label="dof18" type="translational" min="0" max="6.3" />
+          <parameter id="19" Label="dof19" type="translational" min="0" max="6.3" />
+         
+        </boundary>
+      </robot>
+      <!-- <resolution pos_res="0.05" ori_res="0.05" / let the MP compute it-->
+    </environment>
+    <links_file filename = "chain.tree"/>
+    <distance_metrics>
+      <scaledEuclidean scale="0.5"/>
+    </distance_metrics>    
+    <validity_test>  <!-- (cd1 & cd2) || !(cd2 || cd3)-->    
+      <CollisionDetection Label="cd1" method="RAPID" />
+      <CollisionDetection Label="cd2" method="PQP" />
+      <CollisionDetection Label="cd3" method="VCLIP" />
+      <!--JointLimit Label="jl" min="0.1" max="1.0"/-->      
+      <ComposeValidity Label="com1" operator="and">
+              <vc_method method="cd1" />
+              <vc_method method="cd2" />
+      </ComposeValidity>
+      <ComposeValidity Label="com2" operator="or">
+                    <vc_method method="cd2" />
+                    <vc_method method="cd3" />
+      </ComposeValidity>
+      <NegateValidity Label ="notcom2" method ="com2" />
+      <ComposeValidity Label="com3" operator="or">
+              <vc_method method="com1" />
+              <vc_method method="com2" />
+      </ComposeValidity>
+    </validity_test>
+      
+  </MPProblem>
+  
+  <MPStrategy iterations = 10 gamma = 0>  
+          
+    
+  </MPStrategy>
+</motion_planning>
+

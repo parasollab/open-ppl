@@ -1,0 +1,73 @@
+numLinks 29
+
+RealLink 0 1 1
+RealLink 1 1 1
+RealLink 2 1 1
+RealLink 3 1 1
+RealLink 4 1 1
+RealLink 5 1 1
+RealLink 6 1 1
+RealLink 7 1 1
+RealLink 8 1 1
+RealLink 9 1 1
+RealLink 10 1 1
+RealLink 11 1 1
+RealLink 12 1 1
+RealLink 13 1 1
+RealLink 14 1 1
+RealLink 15 1 1
+RealLink 16 1 1
+RealLink 17 1 1
+RealLink 18 1 1
+
+VirtualLink 19 7 8
+VirtualLink 20 9 10
+VirtualLink 21 19 20
+VirtualLink 22 6 21
+
+VirtualLink 23 11 12
+VirtualLink 24 13 14
+VirtualLink 25 23 24
+
+VirtualLink 26 15 16
+VirtualLink 27 17 18
+VirtualLink 28 26 27
+
+Loop 6 0 1 2 3 4 5
+Loop 6 22 4 5 0 1 2
+Loop 9 25 7 8 9 10 4 5 0 1
+Loop 11 28 12 13 14 7 8 9 10 4 5 0
+
+CfgJoints 18
+0 1
+1 2
+2 3
+3 4
+4 5
+
+2 6
+6 7
+7 8
+8 9
+9 10
+
+1 11
+11 12
+12 13
+13 14
+
+0 15
+15 16
+16 17
+17 18
+
+EarJoints 6
+6 2 3
+10 3 4
+
+11 1 2
+14 6 7
+
+15 0 1
+18 11 12
+

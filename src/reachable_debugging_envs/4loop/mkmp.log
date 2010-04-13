@@ -1,0 +1,1329 @@
+CfgType::NumofJoints = 18
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+transformationToBody2 = (0.5, 0, 0, 0, 0, 0)
+dhparameters = (0, 1, 0, 0)
+straightline
+
+         defaultFile	chain.tree
+             descDir	
+             envFile	chain.tree.env
+             mapFile	chain.tree.map
+           inmapFile	
+          inmapFile2	
+       partitionType	
+     integrationType	
+      addPartialEdge	0
+         addAllEdges	0
+         seedByChunk	1
+                seed	305441741
+                bbox	[-100,100,-100,100,-100,100] 
+                bbox	
+          bbox_scale	1
+              posres	0.05
+              orires	0.05
+               rdres	1
+               gamma	1
+         numofjoints	18
+           GNstrings0	BasicPRM nodes 10 chunkSize 10 exact 1 
+           CNstrings0	closest 5 
+           LPstrings0	straightline binarySearch 0 
+           CDstrings0	RAPID 
+           DMstrings0	reachable 
+
+strData:RealLink
+myID:0 minRange:1 maxRange:1
+strData:RealLink
+myID:1 minRange:1 maxRange:1
+strData:RealLink
+myID:2 minRange:1 maxRange:1
+strData:RealLink
+myID:3 minRange:1 maxRange:1
+strData:RealLink
+myID:4 minRange:1 maxRange:1
+strData:RealLink
+myID:5 minRange:1 maxRange:1
+strData:RealLink
+myID:6 minRange:1 maxRange:1
+strData:RealLink
+myID:7 minRange:1 maxRange:1
+strData:RealLink
+myID:8 minRange:1 maxRange:1
+strData:RealLink
+myID:9 minRange:1 maxRange:1
+strData:RealLink
+myID:10 minRange:1 maxRange:1
+strData:RealLink
+myID:11 minRange:1 maxRange:1
+strData:RealLink
+myID:12 minRange:1 maxRange:1
+strData:RealLink
+myID:13 minRange:1 maxRange:1
+strData:RealLink
+myID:14 minRange:1 maxRange:1
+strData:RealLink
+myID:15 minRange:1 maxRange:1
+strData:RealLink
+myID:16 minRange:1 maxRange:1
+strData:RealLink
+myID:17 minRange:1 maxRange:1
+strData:RealLink
+myID:18 minRange:1 maxRange:1
+strData:VirtualLink
+myID: 19 lcID:7 rcID:8
+strData:VirtualLink
+myID: 20 lcID:9 rcID:10
+strData:VirtualLink
+myID: 21 lcID:19 rcID:20
+strData:VirtualLink
+myID: 22 lcID:6 rcID:21
+strData:VirtualLink
+myID: 23 lcID:11 rcID:12
+strData:VirtualLink
+myID: 24 lcID:13 rcID:14
+strData:VirtualLink
+myID: 25 lcID:23 rcID:24
+strData:VirtualLink
+myID: 26 lcID:15 rcID:16
+strData:VirtualLink
+myID: 27 lcID:17 rcID:18
+strData:VirtualLink
+myID: 28 lcID:26 rcID:27
+strData:Loop
+Loop: 0 1 2 3 4 5 
+strData:Loop
+Loop: 22 4 5 0 1 2 
+strData:Loop
+Loop: 25 7 8 9 10 4 5 0 1 
+strData:Loop
+Loop: 28 12 13 14 7 8 9 10 4 5 0 
+strData:CfgJoints
+reading joints: 
+0,1
+1,2
+2,3
+3,4
+4,5
+2,6
+6,7
+7,8
+8,9
+9,10
+1,11
+11,12
+12,13
+13,14
+0,15
+15,16
+16,17
+17,18
+strData:EarJoints
+reading ear joints: 
+6,2,3
+10,3,4
+11,1,2
+14,6,7
+15,0,1
+18,11,12
+strData:
+Partitioning loops into (unseen) (seen):
+	Loop 0: (0 1 2 3 4 5 ) ()
+	Loop 1: (6 7 8 9 10 ) (4 5 0 1 2 )
+	Loop 2: (11 12 13 14 ) (7 8 9 10 4 5 0 1 )
+	Loop 3: (15 16 17 18 ) (12 13 14 7 8 9 10 4 5 0 )
+Ear root ids:
+	Ear 0: 33
+	Ear 1: 22
+	Ear 2: 25
+	Ear 3: 28
+Tree 0
+(33(30,32))
+(30(0,29))
+(0)
+(29(1,2))
+(1)
+(2)
+(32(3,31))
+(3)
+(31(4,5))
+(4)
+(5)
+Tree 1
+(38(35,37))
+(35(22,34))
+(22(6,21))
+(6)
+(21(19,20))
+(19(7,8))
+(7)
+(8)
+(20(9,10))
+(9)
+(10)
+(34(4,5))
+(4)
+(5)
+(37(0,36))
+(0)
+(36(1,2))
+(1)
+(2)
+Tree 2
+(46(41,45))
+(41(39,40))
+(39(25,7))
+(25(23,24))
+(23(11,12))
+(11)
+(12)
+(24(13,14))
+(13)
+(14)
+(7)
+(40(8,9))
+(8)
+(9)
+(45(42,44))
+(42(10,4))
+(10)
+(4)
+(44(5,43))
+(5)
+(43(0,1))
+(0)
+(1)
+Tree 3
+(56(50,55))
+(50(47,49))
+(47(28,12))
+(28(26,27))
+(26(15,16))
+(15)
+(16)
+(27(17,18))
+(17)
+(18)
+(12)
+(49(13,48))
+(13)
+(48(14,7))
+(14)
+(7)
+(55(52,54))
+(52(8,51))
+(8)
+(51(9,10))
+(9)
+(10)
+(54(4,53))
+(4)
+(53(5,0))
+(5)
+(0)
+Sampling 10 configurations...
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.37459 0.484861    0
+	endpoints of link 2:	1.37459 0.484861    0	0.413629 0.761539    0
+	endpoints of link 3:	0.413629 0.761539    0	-0.544538 0.475328    0
+	endpoints of link 4:	-0.544538 0.475328    0	-1.48913 0.14707    0
+	endpoints of link 5:	-1.48913 0.14707    0	-2.37517 -0.316539    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.37459 0.484861    0
+	endpoints of link 2:	1.37459 0.484861    0	0.413629 0.761539    0
+	endpoints of link 3:	0.413629 0.761539    0	-0.544538 0.475328    0
+	endpoints of link 4:	-0.544538 0.475328    0	-1.48913 0.14707    0
+	endpoints of link 5:	-1.48913 0.14707    0	-2.37517 -0.316539    0
+Joint Coords for ear 1:
+	endpoints of link 6:	0.413629 0.761539    0	-0.53685 1.07233    0
+	endpoints of link 7:	-0.53685 1.07233    0	-1.29573 1.72356    0
+	endpoints of link 8:	-1.29573 1.72356    0	-1.26806 0.723938    0
+	endpoints of link 9:	-1.26806 0.723938    0	-1.20655 -0.274168    0
+	endpoints of link 10:	-1.20655 -0.274168    0	-0.544538 0.475328    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 1.99968	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.37459 0.484861    0
+	endpoints of link 2:	1.37459 0.484861    0	0.413629 0.761539    0
+	endpoints of link 3:	0.413629 0.761539    0	-0.544538 0.475328    0
+	endpoints of link 4:	-0.544538 0.475328    0	-1.48913 0.14707    0
+	endpoints of link 5:	-1.48913 0.14707    0	-2.37517 -0.316539    0
+Joint Coords for ear 1:
+	endpoints of link 6:	0.413629 0.761539    0	-0.53685 1.07233    0
+	endpoints of link 7:	-0.53685 1.07233    0	-1.29573 1.72356    0
+	endpoints of link 8:	-1.29573 1.72356    0	-1.26806 0.723938    0
+	endpoints of link 9:	-1.26806 0.723938    0	-1.20655 -0.274168    0
+	endpoints of link 10:	-1.20655 -0.274168    0	-0.544538 0.475328    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.37459 0.484861    0	1.61579 1.45534    0
+	endpoints of link 12:	1.61579 1.45534    0	0.616518 1.41729    0
+	endpoints of link 13:	0.616518 1.41729    0	-0.188992 2.00988    0
+	endpoints of link 14:	-0.188992 2.00988    0	-0.53685 1.07233    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 1.83385	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.37459 0.484861    0
+	endpoints of link 2:	1.37459 0.484861    0	0.413629 0.761539    0
+	endpoints of link 3:	0.413629 0.761539    0	-0.544538 0.475328    0
+	endpoints of link 4:	-0.544538 0.475328    0	-1.48913 0.14707    0
+	endpoints of link 5:	-1.48913 0.14707    0	-2.37517 -0.316539    0
+Joint Coords for ear 1:
+	endpoints of link 6:	0.413629 0.761539    0	-0.53685 1.07233    0
+	endpoints of link 7:	-0.53685 1.07233    0	-1.29573 1.72356    0
+	endpoints of link 8:	-1.29573 1.72356    0	-1.26806 0.723938    0
+	endpoints of link 9:	-1.26806 0.723938    0	-1.20655 -0.274168    0
+	endpoints of link 10:	-1.20655 -0.274168    0	-0.544538 0.475328    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.37459 0.484861    0	1.61579 1.45534    0
+	endpoints of link 12:	1.61579 1.45534    0	0.616518 1.41729    0
+	endpoints of link 13:	0.616518 1.41729    0	-0.188992 2.00988    0
+	endpoints of link 14:	-0.188992 2.00988    0	-0.53685 1.07233    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5 6.93889e-18    0	1.4636 -0.267338    0
+	endpoints of link 16:	1.4636 -0.267338    0	1.12483 0.673529    0
+	endpoints of link 17:	1.12483 0.673529    0	2.12155 0.592659    0
+	endpoints of link 18:	2.12155 0.592659    0	1.61579 1.45534    0
+Tree 0
+length of tree 0:
+0 1.18939 1 0.766421 1 1 1.18939 1 0.47741 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.597051 0.809965 1 1 0.765042 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 1.99968 1.20171 1 1 1.20385 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 1.83385 0.918721 1 1 0.923186 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.0805649 0.374818 0.0908147 0.00703288 0.423277 0.99432 0.937425 0.367278 0.00539099 0.375056 0.130664 0.294827 0.892998 0.2944 0.956928 0.348079 0.682108 0.347278 
+
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.19064 0.7232    0
+	endpoints of link 2:	1.19064 0.7232    0	1.54539 1.65816    0
+	endpoints of link 3:	1.54539 1.65816    0	0.607064 1.3124    0
+	endpoints of link 4:	0.607064 1.3124    0	-0.338465 0.986867    0
+	endpoints of link 5:	-0.338465 0.986867    0	0.135532 0.106341    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.19064 0.7232    0
+	endpoints of link 2:	1.19064 0.7232    0	1.54539 1.65816    0
+	endpoints of link 3:	1.54539 1.65816    0	0.607064 1.3124    0
+	endpoints of link 4:	0.607064 1.3124    0	-0.338465 0.986867    0
+	endpoints of link 5:	-0.338465 0.986867    0	0.135532 0.106341    0
+Joint Coords for ear 1:
+	endpoints of link 6:	1.54539 1.65816    0	1.54006 2.65815    0
+	endpoints of link 7:	1.54006 2.65815    0	2.48182 2.99445    0
+	endpoints of link 8:	2.48182 2.99445    0	1.48202 3.01438    0
+	endpoints of link 9:	1.48202 3.01438    0	0.786122 2.29624    0
+	endpoints of link 10:	0.786122 2.29624    0	0.607064 1.3124    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 1.96624	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.19064 0.7232    0
+	endpoints of link 2:	1.19064 0.7232    0	1.54539 1.65816    0
+	endpoints of link 3:	1.54539 1.65816    0	0.607064 1.3124    0
+	endpoints of link 4:	0.607064 1.3124    0	-0.338465 0.986867    0
+	endpoints of link 5:	-0.338465 0.986867    0	0.135532 0.106341    0
+Joint Coords for ear 1:
+	endpoints of link 6:	1.54539 1.65816    0	1.54006 2.65815    0
+	endpoints of link 7:	1.54006 2.65815    0	2.48182 2.99445    0
+	endpoints of link 8:	2.48182 2.99445    0	1.48202 3.01438    0
+	endpoints of link 9:	1.48202 3.01438    0	0.786122 2.29624    0
+	endpoints of link 10:	0.786122 2.29624    0	0.607064 1.3124    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.19064 0.7232    0	1.22486 -0.276215    0
+	endpoints of link 12:	1.22486 -0.276215    0	1.4401 0.700348    0
+	endpoints of link 13:	1.4401 0.700348    0	1.68796 1.66914    0
+	endpoints of link 14:	1.68796 1.66914    0	1.54006 2.65815    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 0.775705	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.19064 0.7232    0
+	endpoints of link 2:	1.19064 0.7232    0	1.54539 1.65816    0
+	endpoints of link 3:	1.54539 1.65816    0	0.607064 1.3124    0
+	endpoints of link 4:	0.607064 1.3124    0	-0.338465 0.986867    0
+	endpoints of link 5:	-0.338465 0.986867    0	0.135532 0.106341    0
+Joint Coords for ear 1:
+	endpoints of link 6:	1.54539 1.65816    0	1.54006 2.65815    0
+	endpoints of link 7:	1.54006 2.65815    0	2.48182 2.99445    0
+	endpoints of link 8:	2.48182 2.99445    0	1.48202 3.01438    0
+	endpoints of link 9:	1.48202 3.01438    0	0.786122 2.29624    0
+	endpoints of link 10:	0.786122 2.29624    0	0.607064 1.3124    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.19064 0.7232    0	1.22486 -0.276215    0
+	endpoints of link 12:	1.22486 -0.276215    0	1.4401 0.700348    0
+	endpoints of link 13:	1.4401 0.700348    0	1.68796 1.66914    0
+	endpoints of link 14:	1.68796 1.66914    0	1.54006 2.65815    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5 -2.77556e-17    0	0.625355 -0.992112    0
+	endpoints of link 16:	0.625355 -0.992112    0	1.37505 -1.6539    0
+	endpoints of link 17:	1.37505 -1.6539    0	2.01672 -0.886921    0
+	endpoints of link 18:	2.01672 -0.886921    0	1.22486 -0.276215    0
+Tree 0
+length of tree 0:
+0 2.63308 1 1.96019 1 1 2.63308 1 1.71697 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 1.63753 0.360936 1 1 1.91371 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 1.96624 0.250502 1 1 1.96035 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 0.775705 1.87112 1 1 1.38585 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.128665 0.0636185 0.363906 0.996583 0.171405 0.0585643 0.80374 0.442239 0.130677 0.0938439 0.626783 0.460026 0.994662 0.063488 0.770003 0.114895 0.254222 0.256322 
+
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.40737 -0.420338    0
+	endpoints of link 2:	1.40737 -0.420338    0	0.710487 0.296849    0
+	endpoints of link 3:	0.710487 0.296849    0	-0.289069 0.267028    0
+	endpoints of link 4:	-0.289069 0.267028    0	-1.1678 0.744337    0
+	endpoints of link 5:	-1.1678 0.744337    0	-2.10991 0.40901    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.40737 -0.420338    0
+	endpoints of link 2:	1.40737 -0.420338    0	0.710487 0.296849    0
+	endpoints of link 3:	0.710487 0.296849    0	-0.289069 0.267028    0
+	endpoints of link 4:	-0.289069 0.267028    0	-1.1678 0.744337    0
+	endpoints of link 5:	-1.1678 0.744337    0	-2.10991 0.40901    0
+Joint Coords for ear 1:
+	endpoints of link 6:	0.710487 0.296849    0	1.20448 1.16631    0
+	endpoints of link 7:	1.20448 1.16631    0	0.437211 1.80763    0
+	endpoints of link 8:	0.437211 1.80763    0	-0.561248 1.75214    0
+	endpoints of link 9:	-0.561248 1.75214    0	-1.07023 0.891363    0
+	endpoints of link 10:	-1.07023 0.891363    0	-0.289069 0.267028    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 1.59957	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.40737 -0.420338    0
+	endpoints of link 2:	1.40737 -0.420338    0	0.710487 0.296849    0
+	endpoints of link 3:	0.710487 0.296849    0	-0.289069 0.267028    0
+	endpoints of link 4:	-0.289069 0.267028    0	-1.1678 0.744337    0
+	endpoints of link 5:	-1.1678 0.744337    0	-2.10991 0.40901    0
+Joint Coords for ear 1:
+	endpoints of link 6:	0.710487 0.296849    0	1.20448 1.16631    0
+	endpoints of link 7:	1.20448 1.16631    0	0.437211 1.80763    0
+	endpoints of link 8:	0.437211 1.80763    0	-0.561248 1.75214    0
+	endpoints of link 9:	-0.561248 1.75214    0	-1.07023 0.891363    0
+	endpoints of link 10:	-1.07023 0.891363    0	-0.289069 0.267028    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.40737 -0.420338    0	 2.4 -0.541504    0
+	endpoints of link 12:	 2.4 -0.541504    0	2.39747 0.458493    0
+	endpoints of link 13:	2.39747 0.458493    0	2.16856 1.43194    0
+	endpoints of link 14:	2.16856 1.43194    0	1.20448 1.16631    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 1.97566	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.40737 -0.420338    0
+	endpoints of link 2:	1.40737 -0.420338    0	0.710487 0.296849    0
+	endpoints of link 3:	0.710487 0.296849    0	-0.289069 0.267028    0
+	endpoints of link 4:	-0.289069 0.267028    0	-1.1678 0.744337    0
+	endpoints of link 5:	-1.1678 0.744337    0	-2.10991 0.40901    0
+Joint Coords for ear 1:
+	endpoints of link 6:	0.710487 0.296849    0	1.20448 1.16631    0
+	endpoints of link 7:	1.20448 1.16631    0	0.437211 1.80763    0
+	endpoints of link 8:	0.437211 1.80763    0	-0.561248 1.75214    0
+	endpoints of link 9:	-0.561248 1.75214    0	-1.07023 0.891363    0
+	endpoints of link 10:	-1.07023 0.891363    0	-0.289069 0.267028    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.40737 -0.420338    0	 2.4 -0.541504    0
+	endpoints of link 12:	 2.4 -0.541504    0	2.39747 0.458493    0
+	endpoints of link 13:	2.39747 0.458493    0	2.16856 1.43194    0
+	endpoints of link 14:	2.16856 1.43194    0	1.20448 1.16631    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5    0    0	1.01954 -0.854447    0
+	endpoints of link 16:	1.01954 -0.854447    0	2.01098 -0.985003    0
+	endpoints of link 17:	2.01098 -0.985003    0	2.92381 -1.39334    0
+	endpoints of link 18:	2.92381 -1.39334    0	 2.4 -0.541504    0
+Tree 0
+length of tree 0:
+0 1.24635 1 0.363901 1 1 1.24635 1 0.340288 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 1.74339 1.86038 1 1 1.50985 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 1.59957 1.32388 1 1 1.38717 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 1.97566 1.80369 1 1 0.589939 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.930956 0.441759 0.132032 0.916059 0.445577 0.795053 0.221426 0.119642 0.156176 0.227673 0.0497126 0.269734 0.0363563 0.256031 0.836948 0.142214 0.953893 0.404691 
+
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.114573 0.922738    0
+	endpoints of link 2:	0.114573 0.922738    0	-0.884972 0.892584    0
+	endpoints of link 3:	-0.884972 0.892584    0	-1.85388 0.645152    0
+	endpoints of link 4:	-1.85388 0.645152    0	-1.46154 -0.274669    0
+	endpoints of link 5:	-1.46154 -0.274669    0	-1.33694 -1.26688    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.114573 0.922738    0
+	endpoints of link 2:	0.114573 0.922738    0	-0.884972 0.892584    0
+	endpoints of link 3:	-0.884972 0.892584    0	-1.85388 0.645152    0
+	endpoints of link 4:	-1.85388 0.645152    0	-1.46154 -0.274669    0
+	endpoints of link 5:	-1.46154 -0.274669    0	-1.33694 -1.26688    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.884972 0.892584    0	-0.505051 1.8176    0
+	endpoints of link 7:	-0.505051 1.8176    0	0.100191 2.61364    0
+	endpoints of link 8:	0.100191 2.61364    0	-0.679483 1.98746    0
+	endpoints of link 9:	-0.679483 1.98746    0	-1.60723 1.61426    0
+	endpoints of link 10:	-1.60723 1.61426    0	-1.85388 0.645152    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 1.08845	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.114573 0.922738    0
+	endpoints of link 2:	0.114573 0.922738    0	-0.884972 0.892584    0
+	endpoints of link 3:	-0.884972 0.892584    0	-1.85388 0.645152    0
+	endpoints of link 4:	-1.85388 0.645152    0	-1.46154 -0.274669    0
+	endpoints of link 5:	-1.46154 -0.274669    0	-1.33694 -1.26688    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.884972 0.892584    0	-0.505051 1.8176    0
+	endpoints of link 7:	-0.505051 1.8176    0	0.100191 2.61364    0
+	endpoints of link 8:	0.100191 2.61364    0	-0.679483 1.98746    0
+	endpoints of link 9:	-0.679483 1.98746    0	-1.60723 1.61426    0
+	endpoints of link 10:	-1.60723 1.61426    0	-1.85388 0.645152    0
+Joint Coords for ear 2:
+	endpoints of link 11:	0.114573 0.922738    0	0.0461917 -0.0749208    0
+	endpoints of link 12:	0.0461917 -0.0749208    0	0.168549 0.917565    0
+	endpoints of link 13:	0.168549 0.917565    0	0.493911 1.86315    0
+	endpoints of link 14:	0.493911 1.86315    0	-0.505051 1.8176    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 0.459951	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.114573 0.922738    0
+	endpoints of link 2:	0.114573 0.922738    0	-0.884972 0.892584    0
+	endpoints of link 3:	-0.884972 0.892584    0	-1.85388 0.645152    0
+	endpoints of link 4:	-1.85388 0.645152    0	-1.46154 -0.274669    0
+	endpoints of link 5:	-1.46154 -0.274669    0	-1.33694 -1.26688    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.884972 0.892584    0	-0.505051 1.8176    0
+	endpoints of link 7:	-0.505051 1.8176    0	0.100191 2.61364    0
+	endpoints of link 8:	0.100191 2.61364    0	-0.679483 1.98746    0
+	endpoints of link 9:	-0.679483 1.98746    0	-1.60723 1.61426    0
+	endpoints of link 10:	-1.60723 1.61426    0	-1.85388 0.645152    0
+Joint Coords for ear 2:
+	endpoints of link 11:	0.114573 0.922738    0	0.0461917 -0.0749208    0
+	endpoints of link 12:	0.0461917 -0.0749208    0	0.168549 0.917565    0
+	endpoints of link 13:	0.168549 0.917565    0	0.493911 1.86315    0
+	endpoints of link 14:	0.493911 1.86315    0	-0.505051 1.8176    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5    0    0	-0.0343936 0.845236    0
+	endpoints of link 16:	-0.0343936 0.845236    0	-0.972207 1.19237    0
+	endpoints of link 17:	-0.972207 1.19237    0	-0.916999 0.1939    0
+	endpoints of link 18:	-0.916999 0.1939    0	0.0461917 -0.0749208    0
+Tree 0
+length of tree 0:
+0 0.972064 1 1.64768 1 1 0.972064 1 1.49973 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 1.78717 0.24347 1 1 1.78353 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 1.08845 0.0542234 1 1 1.12419 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 0.459951 1.89451 1 1 1.62578 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.312973 0.191827 0.0349933 0.274374 0.230117 0.683176 0.958563 0.461154 0.953177 0.149466 0.426135 0.491369 0.96678 0.309995 0.33973 0.103847 0.315215 0.197892 
+
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.145118 0.934911    0
+	endpoints of link 2:	0.145118 0.934911    0	-0.439789 0.123811    0
+	endpoints of link 3:	-0.439789 0.123811    0	-1.43149 0.252391    0
+	endpoints of link 4:	-1.43149 0.252391    0	-1.19481 -0.719197    0
+	endpoints of link 5:	-1.19481 -0.719197    0	-1.72912 -1.56448    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.145118 0.934911    0
+	endpoints of link 2:	0.145118 0.934911    0	-0.439789 0.123811    0
+	endpoints of link 3:	-0.439789 0.123811    0	-1.43149 0.252391    0
+	endpoints of link 4:	-1.43149 0.252391    0	-1.19481 -0.719197    0
+	endpoints of link 5:	-1.19481 -0.719197    0	-1.72912 -1.56448    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.439789 0.123811    0	-0.96208 0.976578    0
+	endpoints of link 7:	-0.96208 0.976578    0	-0.750233 1.95388    0
+	endpoints of link 8:	-0.750233 1.95388    0	-1.35343 1.15629    0
+	endpoints of link 9:	-1.35343 1.15629    0	-2.28034 0.781016    0
+	endpoints of link 10:	-2.28034 0.781016    0	-1.43149 0.252391    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 1.10798	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.145118 0.934911    0
+	endpoints of link 2:	0.145118 0.934911    0	-0.439789 0.123811    0
+	endpoints of link 3:	-0.439789 0.123811    0	-1.43149 0.252391    0
+	endpoints of link 4:	-1.43149 0.252391    0	-1.19481 -0.719197    0
+	endpoints of link 5:	-1.19481 -0.719197    0	-1.72912 -1.56448    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.439789 0.123811    0	-0.96208 0.976578    0
+	endpoints of link 7:	-0.96208 0.976578    0	-0.750233 1.95388    0
+	endpoints of link 8:	-0.750233 1.95388    0	-1.35343 1.15629    0
+	endpoints of link 9:	-1.35343 1.15629    0	-2.28034 0.781016    0
+	endpoints of link 10:	-2.28034 0.781016    0	-1.43149 0.252391    0
+Joint Coords for ear 2:
+	endpoints of link 11:	0.145118 0.934911    0	0.45528 1.88559    0
+	endpoints of link 12:	0.45528 1.88559    0	-0.473396 2.25649    0
+	endpoints of link 13:	-0.473396 2.25649    0	-1.39834 1.8764    0
+	endpoints of link 14:	-1.39834 1.8764    0	-0.96208 0.976578    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 1.88613	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.145118 0.934911    0
+	endpoints of link 2:	0.145118 0.934911    0	-0.439789 0.123811    0
+	endpoints of link 3:	-0.439789 0.123811    0	-1.43149 0.252391    0
+	endpoints of link 4:	-1.43149 0.252391    0	-1.19481 -0.719197    0
+	endpoints of link 5:	-1.19481 -0.719197    0	-1.72912 -1.56448    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.439789 0.123811    0	-0.96208 0.976578    0
+	endpoints of link 7:	-0.96208 0.976578    0	-0.750233 1.95388    0
+	endpoints of link 8:	-0.750233 1.95388    0	-1.35343 1.15629    0
+	endpoints of link 9:	-1.35343 1.15629    0	-2.28034 0.781016    0
+	endpoints of link 10:	-2.28034 0.781016    0	-1.43149 0.252391    0
+Joint Coords for ear 2:
+	endpoints of link 11:	0.145118 0.934911    0	0.45528 1.88559    0
+	endpoints of link 12:	0.45528 1.88559    0	-0.473396 2.25649    0
+	endpoints of link 13:	-0.473396 2.25649    0	-1.39834 1.8764    0
+	endpoints of link 14:	-1.39834 1.8764    0	-0.96208 0.976578    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5    0    0	-0.144549 -0.764563    0
+	endpoints of link 16:	-0.144549 -0.764563    0	0.56974 -0.0647124    0
+	endpoints of link 17:	0.56974 -0.0647124    0	0.726152 0.92298    0
+	endpoints of link 18:	0.726152 0.92298    0	0.45528 1.88559    0
+Tree 0
+length of tree 0:
+0 0.137675 1 0.947909 1 1 0.137675 1 0.965076 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.863013 0.430638 1 1 0.907261 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 1.10798 1.45915 1 1 1.37003 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 1.88613 0.0951387 1 1 1.95366 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.307739 0.342826 0.828914 0.308551 0.339715 0.686896 0.878565 0.430921 0.914278 0.350129 0.892069 0.239718 0.122528 0.259796 0.638522 0.484852 0.101629 0.0686524 
+
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5 1.38778e-17    0	1.35177 -0.523921    0
+	endpoints of link 2:	1.35177 -0.523921    0	1.32788 0.475793    0
+	endpoints of link 3:	1.32788 0.475793    0	0.553704 1.10877    0
+	endpoints of link 4:	0.553704 1.10877    0	-0.440165 0.998208    0
+	endpoints of link 5:	-0.440165 0.998208    0	-0.270334 0.0127352    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5 1.38778e-17    0	1.35177 -0.523921    0
+	endpoints of link 2:	1.35177 -0.523921    0	1.32788 0.475793    0
+	endpoints of link 3:	1.32788 0.475793    0	0.553704 1.10877    0
+	endpoints of link 4:	0.553704 1.10877    0	-0.440165 0.998208    0
+	endpoints of link 5:	-0.440165 0.998208    0	-0.270334 0.0127352    0
+Joint Coords for ear 1:
+	endpoints of link 6:	1.32788 0.475793    0	1.30232 1.47547    0
+	endpoints of link 7:	1.30232 1.47547    0	0.719268 2.2879    0
+	endpoints of link 8:	0.719268 2.2879    0	0.253182 1.40317    0
+	endpoints of link 9:	0.253182 1.40317    0	-0.280688 0.557599    0
+	endpoints of link 10:	-0.280688 0.557599    0	0.553704 1.10877    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 2	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5 1.38778e-17    0	1.35177 -0.523921    0
+	endpoints of link 2:	1.35177 -0.523921    0	1.32788 0.475793    0
+	endpoints of link 3:	1.32788 0.475793    0	0.553704 1.10877    0
+	endpoints of link 4:	0.553704 1.10877    0	-0.440165 0.998208    0
+	endpoints of link 5:	-0.440165 0.998208    0	-0.270334 0.0127352    0
+Joint Coords for ear 1:
+	endpoints of link 6:	1.32788 0.475793    0	1.30232 1.47547    0
+	endpoints of link 7:	1.30232 1.47547    0	0.719268 2.2879    0
+	endpoints of link 8:	0.719268 2.2879    0	0.253182 1.40317    0
+	endpoints of link 9:	0.253182 1.40317    0	-0.280688 0.557599    0
+	endpoints of link 10:	-0.280688 0.557599    0	0.553704 1.10877    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.35177 -0.523921    0	2.32145 -0.768285    0
+	endpoints of link 12:	2.32145 -0.768285    0	1.89629 0.136833    0
+	endpoints of link 13:	1.89629 0.136833    0	2.22181 1.08237    0
+	endpoints of link 14:	2.22181 1.08237    0	1.30232 1.47547    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 1.97685	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5 1.38778e-17    0	1.35177 -0.523921    0
+	endpoints of link 2:	1.35177 -0.523921    0	1.32788 0.475793    0
+	endpoints of link 3:	1.32788 0.475793    0	0.553704 1.10877    0
+	endpoints of link 4:	0.553704 1.10877    0	-0.440165 0.998208    0
+	endpoints of link 5:	-0.440165 0.998208    0	-0.270334 0.0127352    0
+Joint Coords for ear 1:
+	endpoints of link 6:	1.32788 0.475793    0	1.30232 1.47547    0
+	endpoints of link 7:	1.30232 1.47547    0	0.719268 2.2879    0
+	endpoints of link 8:	0.719268 2.2879    0	0.253182 1.40317    0
+	endpoints of link 9:	0.253182 1.40317    0	-0.280688 0.557599    0
+	endpoints of link 10:	-0.280688 0.557599    0	0.553704 1.10877    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.35177 -0.523921    0	2.32145 -0.768285    0
+	endpoints of link 12:	2.32145 -0.768285    0	1.89629 0.136833    0
+	endpoints of link 13:	1.89629 0.136833    0	2.22181 1.08237    0
+	endpoints of link 14:	2.22181 1.08237    0	1.30232 1.47547    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5    0    0	-0.0528009 -0.833313    0
+	endpoints of link 16:	-0.0528009 -0.833313    0	0.946416 -0.793749    0
+	endpoints of link 17:	0.946416 -0.793749    0	1.64738 -1.50695    0
+	endpoints of link 18:	1.64738 -1.50695    0	2.32145 -0.768285    0
+Tree 0
+length of tree 0:
+0 1.88878 1 0.954859 1 1 1.88878 1 1.5296 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.833598 1.05162 1 1 0.420693 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 2 0.856214 1 1 1.4645 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 1.97685 0.910673 1 1 1.37527 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.912234 0.341569 0.137114 0.126716 0.222839 0.000265558 0.0950015 0.323762 0.987537 0.432541 0.0484761 0.359181 0.877339 0.238471 0.65678 0.349519 0.867324 0.258649 
+
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.49594 -0.0900298    0
+	endpoints of link 2:	1.49594 -0.0900298    0	2.04999 0.742452    0
+	endpoints of link 3:	2.04999 0.742452    0	1.12102 1.1126    0
+	endpoints of link 4:	1.12102 1.1126    0	0.206779 0.707435    0
+	endpoints of link 5:	0.206779 0.707435    0	1.13958 0.347033    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.49594 -0.0900298    0
+	endpoints of link 2:	1.49594 -0.0900298    0	2.04999 0.742452    0
+	endpoints of link 3:	2.04999 0.742452    0	1.12102 1.1126    0
+	endpoints of link 4:	1.12102 1.1126    0	0.206779 0.707435    0
+	endpoints of link 5:	0.206779 0.707435    0	1.13958 0.347033    0
+Joint Coords for ear 1:
+	endpoints of link 6:	2.04999 0.742452    0	1.37697 1.48207    0
+	endpoints of link 7:	1.37697 1.48207    0	0.79684 2.2966    0
+	endpoints of link 8:	0.79684 2.2966    0	0.311635 1.4222    0
+	endpoints of link 9:	0.311635 1.4222    0	0.394344 0.425623    0
+	endpoints of link 10:	0.394344 0.425623    0	1.12102 1.1126    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 1.5766	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.49594 -0.0900298    0
+	endpoints of link 2:	1.49594 -0.0900298    0	2.04999 0.742452    0
+	endpoints of link 3:	2.04999 0.742452    0	1.12102 1.1126    0
+	endpoints of link 4:	1.12102 1.1126    0	0.206779 0.707435    0
+	endpoints of link 5:	0.206779 0.707435    0	1.13958 0.347033    0
+Joint Coords for ear 1:
+	endpoints of link 6:	2.04999 0.742452    0	1.37697 1.48207    0
+	endpoints of link 7:	1.37697 1.48207    0	0.79684 2.2966    0
+	endpoints of link 8:	0.79684 2.2966    0	0.311635 1.4222    0
+	endpoints of link 9:	0.311635 1.4222    0	0.394344 0.425623    0
+	endpoints of link 10:	0.394344 0.425623    0	1.12102 1.1126    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.49594 -0.0900298    0	2.48864 -0.210598    0
+	endpoints of link 12:	2.48864 -0.210598    0	1.68242 0.381013    0
+	endpoints of link 13:	1.68242 0.381013    0	2.32055 1.15094    0
+	endpoints of link 14:	2.32055 1.15094    0	1.37697 1.48207    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 1.99976	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.49594 -0.0900298    0
+	endpoints of link 2:	1.49594 -0.0900298    0	2.04999 0.742452    0
+	endpoints of link 3:	2.04999 0.742452    0	1.12102 1.1126    0
+	endpoints of link 4:	1.12102 1.1126    0	0.206779 0.707435    0
+	endpoints of link 5:	0.206779 0.707435    0	1.13958 0.347033    0
+Joint Coords for ear 1:
+	endpoints of link 6:	2.04999 0.742452    0	1.37697 1.48207    0
+	endpoints of link 7:	1.37697 1.48207    0	0.79684 2.2966    0
+	endpoints of link 8:	0.79684 2.2966    0	0.311635 1.4222    0
+	endpoints of link 9:	0.311635 1.4222    0	0.394344 0.425623    0
+	endpoints of link 10:	0.394344 0.425623    0	1.12102 1.1126    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.49594 -0.0900298    0	2.48864 -0.210598    0
+	endpoints of link 12:	2.48864 -0.210598    0	1.68242 0.381013    0
+	endpoints of link 13:	1.68242 0.381013    0	2.32055 1.15094    0
+	endpoints of link 14:	2.32055 1.15094    0	1.37697 1.48207    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5 -2.77556e-17    0	0.365627 -0.990931    0
+	endpoints of link 16:	0.365627 -0.990931    0	0.743869 -0.065224    0
+	endpoints of link 17:	0.743869 -0.065224    0	1.57612 -0.619622    0
+	endpoints of link 18:	1.57612 -0.619622    0	2.48864 -0.210598    0
+Tree 0
+length of tree 0:
+0 2.65588 1 1.71864 1 1 2.65588 1 1.96611 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.449463 1.06701 1 1 0.866575 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 1.5766 0.506614 1 1 1.14264 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 1.99976 0.25244 1 1 1.75082 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.985652 0.170888 0.283113 0.126741 0.0586802 0.210962 0.980996 0.320874 0.093806 0.357353 0.995112 0.418482 0.740608 0.306431 0.728549 0.459715 0.71821 0.160591 
+
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.4842 -0.177066    0
+	endpoints of link 2:	1.4842 -0.177066    0	1.39364 0.818825    0
+	endpoints of link 3:	1.39364 0.818825    0	0.578427 1.39799    0
+	endpoints of link 4:	0.578427 1.39799    0	-0.332722 0.98591    0
+	endpoints of link 5:	-0.332722 0.98591    0	0.225966 0.156532    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.4842 -0.177066    0
+	endpoints of link 2:	1.4842 -0.177066    0	1.39364 0.818825    0
+	endpoints of link 3:	1.39364 0.818825    0	0.578427 1.39799    0
+	endpoints of link 4:	0.578427 1.39799    0	-0.332722 0.98591    0
+	endpoints of link 5:	-0.332722 0.98591    0	0.225966 0.156532    0
+Joint Coords for ear 1:
+	endpoints of link 6:	1.39364 0.818825    0	0.70981 1.54847    0
+	endpoints of link 7:	0.70981 1.54847    0	1.18273 2.42958    0
+	endpoints of link 8:	1.18273 2.42958    0	0.183383 2.46581    0
+	endpoints of link 9:	0.183383 2.46581    0	-0.390166 1.64664    0
+	endpoints of link 10:	-0.390166 1.64664    0	0.578427 1.39799    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 1.89133	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.4842 -0.177066    0
+	endpoints of link 2:	1.4842 -0.177066    0	1.39364 0.818825    0
+	endpoints of link 3:	1.39364 0.818825    0	0.578427 1.39799    0
+	endpoints of link 4:	0.578427 1.39799    0	-0.332722 0.98591    0
+	endpoints of link 5:	-0.332722 0.98591    0	0.225966 0.156532    0
+Joint Coords for ear 1:
+	endpoints of link 6:	1.39364 0.818825    0	0.70981 1.54847    0
+	endpoints of link 7:	0.70981 1.54847    0	1.18273 2.42958    0
+	endpoints of link 8:	1.18273 2.42958    0	0.183383 2.46581    0
+	endpoints of link 9:	0.183383 2.46581    0	-0.390166 1.64664    0
+	endpoints of link 10:	-0.390166 1.64664    0	0.578427 1.39799    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.4842 -0.177066    0	2.08072 -0.979666    0
+	endpoints of link 12:	2.08072 -0.979666    0	1.99521 0.0166717    0
+	endpoints of link 13:	1.99521 0.0166717    0	1.36657 0.794365    0
+	endpoints of link 14:	1.36657 0.794365    0	0.70981 1.54847    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 1.85968	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	1.4842 -0.177066    0
+	endpoints of link 2:	1.4842 -0.177066    0	1.39364 0.818825    0
+	endpoints of link 3:	1.39364 0.818825    0	0.578427 1.39799    0
+	endpoints of link 4:	0.578427 1.39799    0	-0.332722 0.98591    0
+	endpoints of link 5:	-0.332722 0.98591    0	0.225966 0.156532    0
+Joint Coords for ear 1:
+	endpoints of link 6:	1.39364 0.818825    0	0.70981 1.54847    0
+	endpoints of link 7:	0.70981 1.54847    0	1.18273 2.42958    0
+	endpoints of link 8:	1.18273 2.42958    0	0.183383 2.46581    0
+	endpoints of link 9:	0.183383 2.46581    0	-0.390166 1.64664    0
+	endpoints of link 10:	-0.390166 1.64664    0	0.578427 1.39799    0
+Joint Coords for ear 2:
+	endpoints of link 11:	1.4842 -0.177066    0	2.08072 -0.979666    0
+	endpoints of link 12:	2.08072 -0.979666    0	1.99521 0.0166717    0
+	endpoints of link 13:	1.99521 0.0166717    0	1.36657 0.794365    0
+	endpoints of link 14:	1.36657 0.794365    0	0.70981 1.54847    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5    0    0	0.349941 -0.988677    0
+	endpoints of link 16:	0.349941 -0.988677    0	1.32938 -1.19041    0
+	endpoints of link 17:	1.32938 -1.19041    0	1.95372 -1.97157    0
+	endpoints of link 18:	1.95372 -1.97157    0	2.08072 -0.979666    0
+Tree 0
+length of tree 0:
+0 2.06309 1 1.21205 1 1 2.06309 1 1.76561 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.199764 1.05766 1 1 1.13855 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 1.89133 0.546503 1 1 1.99966 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 1.85968 1.45085 1 1 0.780332 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.97167 0.292763 0.137257 0.165909 0.155652 0.10541 0.801757 0.322631 0.158551 0.307223 0.880055 0.411901 0.0945695 0.00584087 0.726027 0.241644 0.889644 0.372418 
+
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5 -2.77556e-17    0	0.330873 0.985594    0
+	endpoints of link 2:	0.330873 0.985594    0	-0.469593 0.386216    0
+	endpoints of link 3:	-0.469593 0.386216    0	-1.33657 -0.112125    0
+	endpoints of link 4:	-1.33657 -0.112125    0	-0.797855 -0.954611    0
+	endpoints of link 5:	-0.797855 -0.954611    0	-1.44164 -1.71982    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5 -2.77556e-17    0	0.330873 0.985594    0
+	endpoints of link 2:	0.330873 0.985594    0	-0.469593 0.386216    0
+	endpoints of link 3:	-0.469593 0.386216    0	-1.33657 -0.112125    0
+	endpoints of link 4:	-1.33657 -0.112125    0	-0.797855 -0.954611    0
+	endpoints of link 5:	-0.797855 -0.954611    0	-1.44164 -1.71982    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.469593 0.386216    0	-1.4594 0.243831    0
+	endpoints of link 7:	-1.4594 0.243831    0	-2.4382 0.0389742    0
+	endpoints of link 8:	-2.4382 0.0389742    0	-1.77692 -0.711165    0
+	endpoints of link 9:	-1.77692 -0.711165    0	-0.808752 -0.961481    0
+	endpoints of link 10:	-0.808752 -0.961481    0	-1.33657 -0.112125    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 1.93786	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5 -2.77556e-17    0	0.330873 0.985594    0
+	endpoints of link 2:	0.330873 0.985594    0	-0.469593 0.386216    0
+	endpoints of link 3:	-0.469593 0.386216    0	-1.33657 -0.112125    0
+	endpoints of link 4:	-1.33657 -0.112125    0	-0.797855 -0.954611    0
+	endpoints of link 5:	-0.797855 -0.954611    0	-1.44164 -1.71982    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.469593 0.386216    0	-1.4594 0.243831    0
+	endpoints of link 7:	-1.4594 0.243831    0	-2.4382 0.0389742    0
+	endpoints of link 8:	-2.4382 0.0389742    0	-1.77692 -0.711165    0
+	endpoints of link 9:	-1.77692 -0.711165    0	-0.808752 -0.961481    0
+	endpoints of link 10:	-0.808752 -0.961481    0	-1.33657 -0.112125    0
+Joint Coords for ear 2:
+	endpoints of link 11:	0.330873 0.985594    0	-0.0964987 1.88967    0
+	endpoints of link 12:	-0.0964987 1.88967    0	-0.615202 1.03472    0
+	endpoints of link 13:	-0.615202 1.03472    0	-1.59502 1.23459    0
+	endpoints of link 14:	-1.59502 1.23459    0	-1.4594 0.243831    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 1.98158	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5 -2.77556e-17    0	0.330873 0.985594    0
+	endpoints of link 2:	0.330873 0.985594    0	-0.469593 0.386216    0
+	endpoints of link 3:	-0.469593 0.386216    0	-1.33657 -0.112125    0
+	endpoints of link 4:	-1.33657 -0.112125    0	-0.797855 -0.954611    0
+	endpoints of link 5:	-0.797855 -0.954611    0	-1.44164 -1.71982    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.469593 0.386216    0	-1.4594 0.243831    0
+	endpoints of link 7:	-1.4594 0.243831    0	-2.4382 0.0389742    0
+	endpoints of link 8:	-2.4382 0.0389742    0	-1.77692 -0.711165    0
+	endpoints of link 9:	-1.77692 -0.711165    0	-0.808752 -0.961481    0
+	endpoints of link 10:	-0.808752 -0.961481    0	-1.33657 -0.112125    0
+Joint Coords for ear 2:
+	endpoints of link 11:	0.330873 0.985594    0	-0.0964987 1.88967    0
+	endpoints of link 12:	-0.0964987 1.88967    0	-0.615202 1.03472    0
+	endpoints of link 13:	-0.615202 1.03472    0	-1.59502 1.23459    0
+	endpoints of link 14:	-1.59502 1.23459    0	-1.4594 0.243831    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5    0    0	1.12062 -0.784115    0
+	endpoints of link 16:	1.12062 -0.784115    0	0.96638 0.203919    0
+	endpoints of link 17:	0.96638 0.203919    0	0.506384 1.09184    0
+	endpoints of link 18:	0.506384 1.09184    0	-0.0964987 1.88967    0
+Tree 0
+length of tree 0:
+0 0.387411 1 1.04368 1 1 0.387411 1 0.844054 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 0.376553 1.00639 1 1 0.743471 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 1.93786 0.947349 1 1 1.1568 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 1.98158 0.509012 1 1 1.99285 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.277047 0.325245 0.980736 0.257517 0.361319 0.920446 0.0100978 0.332157 0.0947395 0.378763 0.0432329 0.342927 0.804765 0.303678 0.856559 0.418087 0.0514287 0.0269161 
+
+	gamma = 1...
+	setting length: 0	for link 33
+Attempting to sample loop rooted at 33...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.0704564 0.903046    0
+	endpoints of link 2:	0.0704564 0.903046    0	-0.929369 0.884336    0
+	endpoints of link 3:	-0.929369 0.884336    0	-1.92936 0.879497    0
+	endpoints of link 4:	-1.92936 0.879497    0	-1.49972 -0.023507    0
+	endpoints of link 5:	-1.49972 -0.023507    0	-1.09144 -0.93636    0
+setting ear constraint for loop 1
+	ear_joint1: 6,2,3
+	ear_joint2: 10,3,4
+	setting length: 1	for link 22
+Attempting to sample loop rooted at 22...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.0704564 0.903046    0
+	endpoints of link 2:	0.0704564 0.903046    0	-0.929369 0.884336    0
+	endpoints of link 3:	-0.929369 0.884336    0	-1.92936 0.879497    0
+	endpoints of link 4:	-1.92936 0.879497    0	-1.49972 -0.023507    0
+	endpoints of link 5:	-1.49972 -0.023507    0	-1.09144 -0.93636    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.929369 0.884336    0	-0.875631 1.88289    0
+	endpoints of link 7:	-0.875631 1.88289    0	-1.79612 2.27365    0
+	endpoints of link 8:	-1.79612 2.27365    0	-2.42712 1.49787    0
+	endpoints of link 9:	-2.42712 1.49787    0	-2.89323 0.613138    0
+	endpoints of link 10:	-2.89323 0.613138    0	-1.92936 0.879497    0
+setting ear constraint for loop 2
+	ear_joint1: 11,1,2
+	ear_joint2: 14,6,7
+	setting length: 1.36205	for link 25
+Attempting to sample loop rooted at 25...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.0704564 0.903046    0
+	endpoints of link 2:	0.0704564 0.903046    0	-0.929369 0.884336    0
+	endpoints of link 3:	-0.929369 0.884336    0	-1.92936 0.879497    0
+	endpoints of link 4:	-1.92936 0.879497    0	-1.49972 -0.023507    0
+	endpoints of link 5:	-1.49972 -0.023507    0	-1.09144 -0.93636    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.929369 0.884336    0	-0.875631 1.88289    0
+	endpoints of link 7:	-0.875631 1.88289    0	-1.79612 2.27365    0
+	endpoints of link 8:	-1.79612 2.27365    0	-2.42712 1.49787    0
+	endpoints of link 9:	-2.42712 1.49787    0	-2.89323 0.613138    0
+	endpoints of link 10:	-2.89323 0.613138    0	-1.92936 0.879497    0
+Joint Coords for ear 2:
+	endpoints of link 11:	0.0704564 0.903046    0	1.01641 1.22735    0
+	endpoints of link 12:	1.01641 1.22735    0	0.413399 2.02508    0
+	endpoints of link 13:	0.413399 2.02508    0	-0.314586 2.71068    0
+	endpoints of link 14:	-0.314586 2.71068    0	-0.875631 1.88289    0
+setting ear constraint for loop 3
+	ear_joint1: 15,0,1
+	ear_joint2: 18,11,12
+	setting length: 1.33157	for link 28
+Attempting to sample loop rooted at 28...
+configuring successfully sampled ear
+Joint Coords for ear 0:
+	endpoints of link 0:	-0.5    0    0	 0.5    0    0
+	endpoints of link 1:	 0.5    0    0	0.0704564 0.903046    0
+	endpoints of link 2:	0.0704564 0.903046    0	-0.929369 0.884336    0
+	endpoints of link 3:	-0.929369 0.884336    0	-1.92936 0.879497    0
+	endpoints of link 4:	-1.92936 0.879497    0	-1.49972 -0.023507    0
+	endpoints of link 5:	-1.49972 -0.023507    0	-1.09144 -0.93636    0
+Joint Coords for ear 1:
+	endpoints of link 6:	-0.929369 0.884336    0	-0.875631 1.88289    0
+	endpoints of link 7:	-0.875631 1.88289    0	-1.79612 2.27365    0
+	endpoints of link 8:	-1.79612 2.27365    0	-2.42712 1.49787    0
+	endpoints of link 9:	-2.42712 1.49787    0	-2.89323 0.613138    0
+	endpoints of link 10:	-2.89323 0.613138    0	-1.92936 0.879497    0
+Joint Coords for ear 2:
+	endpoints of link 11:	0.0704564 0.903046    0	1.01641 1.22735    0
+	endpoints of link 12:	1.01641 1.22735    0	0.413399 2.02508    0
+	endpoints of link 13:	0.413399 2.02508    0	-0.314586 2.71068    0
+	endpoints of link 14:	-0.314586 2.71068    0	-0.875631 1.88289    0
+Joint Coords for ear 3:
+	endpoints of link 15:	 0.5    0    0	1.48936 0.145504    0
+	endpoints of link 16:	1.48936 0.145504    0	1.63377 1.13502    0
+	endpoints of link 17:	1.63377 1.13502    0	1.46561 2.12078    0
+	endpoints of link 18:	1.46561 2.12078    0	1.01641 1.22735    0
+Tree 0
+length of tree 0:
+0 0.98306 1 1.68082 1 1 0.98306 1 1.67827 1 1 
+convexities of tree 0:
+1 1 1 1 1 1 1 1 1 1 1 
+Tree 1
+length of tree 1:
+-1 -1 1 1 1.45504 1.59855 1 1 0.79382 1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 1:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 2
+length of tree 2:
+-1 -1 -1 1.36205 1.17328 1 1 1.29685 1 1 1 -1 1 1 -1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 2:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+Tree 3
+length of tree 3:
+-1 -1 -1 1.33157 1.60428 1 1 0.624221 1 1 1 -1 1 -1 1 1 -1 -1 1 -1 1 1 -1 1 -1 1 1 
+convexities of tree 3:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+0 0 0 0 0 0 0.320663 0.182315 0.997792 0.319908 0.183063 0.738465 0.194663 0.205216 0.0315052 0.370082 0.731902 0.300451 0.026755 0.275428 0.0232402 0.203696 0.0499548 0.398964 
+
+Total sampling time: 0.13398
+Total collision time: 6.61326e-270
+Total time: 0.13398
+Attempts: 10
