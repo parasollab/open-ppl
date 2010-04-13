@@ -17,7 +17,7 @@ template <class CFG, class WEIGHT> class MPRegion;
 class MPProblem : public MPBaseObject
 {
 public:
-  MPProblem(XMLNodeReader& in_Node);
+  MPProblem(XMLNodeReader& in_Node, bool parse_xml = true);
   virtual ~MPProblem() {}
   
   void PrintOptions();
@@ -61,7 +61,7 @@ public:
 //Data
 //
 //////////////
-  private:
+  protected:
   MPStrategy* m_pMPStrategy;
   DistanceMetric*     m_pDistanceMetric;
   NeighborhoodFinder* m_pNeighborhoodFinder;

@@ -2,10 +2,11 @@
 #include "MPStrategy.h"
 
 MPProblem::
-MPProblem(XMLNodeReader& in_Node) : MPBaseObject(in_Node, this) {
+MPProblem(XMLNodeReader& in_Node, bool parse_xml) : MPBaseObject(in_Node, this) {
   LOG_DEBUG_MSG("MPProblem::MPProblem()");
   
-  ParseXML(in_Node);
+  if(parse_xml)
+    ParseXML(in_Node);
  // rmp.environment = m_pEnvironment;
  // m_pStatClass = new Stat_Class;
   
