@@ -1,3 +1,5 @@
+#ifndef ClosedChainStrategy_cpp
+#define ClosedChainStrategy_cpp
 
 #include "ClosedChainStrategy.h"
 ClosedChainStrategy::ClosedChainStrategy(XMLNodeReader& in_Node, ClosedChainProblem* in_pProblem) : MPStrategy(in_Node, in_pProblem)
@@ -357,5 +359,5 @@ void ClosedChainStrategy::Solve(){
   cout << "Attempts: " << attempts << endl;
   //end move to solve function
 }
-
+#endif
 
