@@ -26,7 +26,6 @@ class MapEvaluator : public MPBaseObject
   
   MapEvaluator(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
   {
-    XMLNodeReader::childiterator citr;
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
     {
       if (citr->getName() == "MPRegionComparers")
