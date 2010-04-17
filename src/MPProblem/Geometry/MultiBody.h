@@ -95,9 +95,6 @@ public:
     void AddBody(const FreeBody& _body);
     void AddBody(const shared_ptr<FreeBody>& _body);
 
-    void DeleteBody();
-
-    void SetFreeBodyCount(int i) { FreeBodyCount = i; }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -345,7 +342,6 @@ private:
   
   double boundingBox[6];
   double maxAxisRange;
-  int FreeBodyCount;
 };
 
 #endif
