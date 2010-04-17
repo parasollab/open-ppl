@@ -242,7 +242,7 @@ void ClosedChainStrategy::Solve(){
 	      subsetOfRobot.get()->AddBody(freeBody);
 	    }
             get_actual_links_of(CCProblem->g_ear_roots[i], actual_ear_links);
-	    CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->SetFreeBodyCount(actual_ear_links.back());
+	    //CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->SetFreeBodyCount(actual_ear_links.back());
 	    //colliding = CCProblem->GetCollisionDetection()->IsInCollision(CCProblem->GetEnvironment(), Stats, _cdInfo, boost::shared_ptr<MultiBody>((MultiBody*)NULL), true, &CallName);
 	    colliding = CCProblem->GetCollisionDetection()->IsInCollision(CCProblem->GetEnvironment(), Stats, _cdInfo, subsetOfRobot, true, &CallName);
 	    //colliding=false;//debugging code
@@ -254,7 +254,7 @@ void ClosedChainStrategy::Solve(){
 	    }
 	    */
 	       
-            CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->SetFreeBodyCount(num_bodies);
+            //CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->SetFreeBodyCount(num_bodies);
 
             CollisionClock.StopClock();
             collision_time += CollisionClock.GetClock_SEC();
