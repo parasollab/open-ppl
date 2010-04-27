@@ -16,6 +16,8 @@ _timeb timebuffer;
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#include <string.h>
+
 struct rusage buf;
 #endif
 

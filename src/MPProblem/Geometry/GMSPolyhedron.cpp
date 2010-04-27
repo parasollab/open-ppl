@@ -7,6 +7,9 @@
 
 #include "GMSPolyhedron.h"
 #include <fstream>
+#include <string.h>
+
+using namespace std;
 
 GMSPolygon::GMSPolygon() 
   : area(0) 
