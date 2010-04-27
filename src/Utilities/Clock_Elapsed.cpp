@@ -15,7 +15,7 @@
 #include <sys/time.h>
 #endif
 
-#include <string.h>
+#include <cstring>
 #include "Clock_Elapsed.h"
 using namespace std;
 

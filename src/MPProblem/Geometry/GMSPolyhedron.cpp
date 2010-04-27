@@ -7,7 +7,7 @@
 
 #include "GMSPolyhedron.h"
 #include <fstream>
-#include <string.h>
+#include <cstring>
 
 using namespace std;
 

@@ -29,7 +29,8 @@ using namespace std;
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <string.h>
+#include <string>
+#include <cstring>
 //#include "Defines.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////

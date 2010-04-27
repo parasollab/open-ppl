@@ -16,7 +16,7 @@
 #include "MultiBody.h"
 //#include "GenerateMapNodes.h"
 //#include "ConnectMap.h"
-#include <string.h>
+#include <string>
 #include "util.h"
 #include "Transformation.h"
 #include "DistanceMetrics.h"
