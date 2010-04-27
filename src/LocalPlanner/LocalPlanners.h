@@ -39,7 +39,7 @@ class LocalPlanners : MPBaseObject{
  public:
   ///Default Constructor.
   LocalPlanners();
-  LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+  LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
   ///Destructor.  
   virtual ~LocalPlanners();
 
@@ -196,33 +196,34 @@ GetMethod(string& in_strLabel) {
 
 template <class CFG, class WEIGHT>
 LocalPlanners<CFG,WEIGHT>::
-LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : 
   MPBaseObject(in_Node,in_pProblem) {
-
   
   ///\todo Finish this parcer .... need to have binary search!
   
   LOG_DEBUG_MSG("LocalPlanners::LocalPlanners()");
   
   ResetSelected();
-  XMLNodeReader::childiterator citr;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-    if(citr->getName() == string("straightline")) {
-      StraightLine<CFG, WEIGHT>* straight_line = 
-          new StraightLine<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
-      straight_line->cdInfo = &cdInfo;
-      straight_line->SetID(GetNewID());
-      selected.push_back(straight_line);
-      all.push_back(straight_line);
-    } else if(citr->getName() == string("RotateAtS")) {
-      RotateAtS<CFG, WEIGHT>* rotate_at_s = 
-          new RotateAtS<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
-      rotate_at_s->cdInfo = &cdInfo;
-      rotate_at_s->SetID(GetNewID());
-      selected.push_back(rotate_at_s);
-      all.push_back(rotate_at_s);
-    } else {
-      citr->warnUnknownNode();
+  if(parse_xml)
+  {
+    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+      if(citr->getName() == string("straightline")) {
+        StraightLine<CFG, WEIGHT>* straight_line = 
+            new StraightLine<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
+        straight_line->cdInfo = &cdInfo;
+        straight_line->SetID(GetNewID());
+        selected.push_back(straight_line);
+        all.push_back(straight_line);
+      } else if(citr->getName() == string("RotateAtS")) {
+        RotateAtS<CFG, WEIGHT>* rotate_at_s = 
+            new RotateAtS<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
+        rotate_at_s->cdInfo = &cdInfo;
+        rotate_at_s->SetID(GetNewID());
+        selected.push_back(rotate_at_s);
+        all.push_back(rotate_at_s);
+      } else {
+        citr->warnUnknownNode();
+      }
     }
   }
   LOG_DEBUG_MSG("~LocalPlanners::LocalPlanners()");
