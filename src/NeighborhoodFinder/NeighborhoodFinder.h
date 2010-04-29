@@ -23,11 +23,13 @@
 //#include "Clock_Class.h"
 #include "Clock_Elapsed.h"
 #include "BFNF.hpp"
+#include "BFFNF.hpp"
 #include "DPESNF.hpp"
 #include "MPNNNF.hpp"
 #include "CGALNF.hpp"
 #include "STNF.hpp"
 #include "MTNF.hpp"
+//#include "DMNF.hpp"
 
 #include "PMPL_Container_Base.h"
 #include "CfgTypes.h"
@@ -44,12 +46,14 @@ template <class CFG, class WEIGHT> class Roadmap;
 
 namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
-    BFNF<CfgType,WeightType>, 
-    DPESNF<CfgType,WeightType>, 
+    BFNF<CfgType,WeightType>,
+    BFFNF<CfgType,WeightType>,
+    DPESNF<CfgType,WeightType>,
     MPNNNF<CfgType,WeightType>,
     CGALNF<CfgType,WeightType>,
     STNF<CfgType,WeightType>, 
-    MTNF<CfgType,WeightType> 
+    MTNF<CfgType,WeightType>
+   // DMNF<CfgType,WeightType>
     > NeighborhoodFinderMethodList;
 }
 
@@ -60,7 +64,8 @@ namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail names
 class NeighborhoodFinder : private PMPL_Container_Base< NeighborhoodFinderMethod, 
                     pmpl_detail::NeighborhoodFinderMethodList>, public MPBaseObject {
 
-  private:
+  
+private:
   typedef PMPL_Container_Base< NeighborhoodFinderMethod, pmpl_detail::NeighborhoodFinderMethodList> NeighborhoodFinderContainer;
     
   public:
@@ -73,10 +78,12 @@ class NeighborhoodFinder : private PMPL_Container_Base< NeighborhoodFinderMethod
   ///\name Constructors & Destructors
   ///
   //@{
-  NeighborhoodFinder() { };
+  NeighborhoodFinder() { 
+    //cout<<"in empty const"<<endl;
+};
   NeighborhoodFinder(XMLNodeReader& in_Node, MPProblem* in_pProblem)
     : MPBaseObject(in_pProblem) { 
-
+    //cout<<"in nf parse xml"<<endl;
     XMLNodeReader::childiterator citr;
     for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
       if(citr->getName() == "BFNF") {
@@ -85,9 +92,13 @@ class NeighborhoodFinder : private PMPL_Container_Base< NeighborhoodFinderMethod
       } else if(citr->getName() == "DPESNF") {
         NeighborhoodFinderMethod* nf = new DPESNF<CfgType,WeightType>(*citr, in_pProblem);
         AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+        } else if(citr->getName() == "BFFNF") {
+	cout<<"init bffnf"<<endl;
+        NeighborhoodFinderMethod* nf = new BFFNF<CfgType,WeightType>(*citr, in_pProblem);
+        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
       } else if(citr->getName() == "MPNNNF") {
         NeighborhoodFinderMethod* nf = new MPNNNF<CfgType,WeightType>(*citr, in_pProblem);
-        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));       
       } else if(citr->getName() == "CGALNF") {
         NeighborhoodFinderMethod* nf = new CGALNF<CfgType,WeightType>(*citr, in_pProblem);
         AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
@@ -97,6 +108,9 @@ class NeighborhoodFinder : private PMPL_Container_Base< NeighborhoodFinderMethod
       } else if(citr->getName() == "MTNF") {
         NeighborhoodFinderMethod* nf = new MTNF<CfgType,WeightType>(*citr, in_pProblem);
         AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+     // } else if(citr->getName() == "DMNF") {
+       // NeighborhoodFinderMethod* nf = new DMNF<CfgType,WeightType>(*citr, in_pProblem);
+       // AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf)); 
       }else {
         citr->warnUnknownNode();
       }
@@ -220,7 +234,7 @@ private:
 		if(MethodType* finder = dynamic_cast<MethodType*>(_nf.get()))
 		{
 			return finder->KClosest(_rmp, _input_first, _input_last, _cfg, _k, _out);
-			cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetObjectLabel();
+			//cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetObjectLabel();
 			return _out;
 		}
 		else 
