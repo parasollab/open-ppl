@@ -156,8 +156,11 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   VID _v, int k, OutputIterator _out) {
 cout<<"calling the 2nd one"<<endl;
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->find_vertex(_v).property();
+ // CFG _v_cfg = pMap->find_vertex(_v).property();
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
   return KClosest(_rmp, _v_cfg, k, _out);
+  
+ ;
 }
 
 template<typename CFG, typename WEIGHT>
