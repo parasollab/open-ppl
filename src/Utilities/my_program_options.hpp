@@ -11,7 +11,7 @@
 
 namespace po = boost::program_options;
 
-namespace internal {
+namespace pmpl_internal {
   using boost::false_type;
   using boost::true_type;
 
@@ -29,14 +29,14 @@ namespace internal {
 
 namespace boost { namespace program_options {
 
-using namespace internal;
+using namespace pmpl_internal;
 using boost::enable_if;
 using boost::disable_if;
 
 template <typename T>
 class ranged_value : public typed_value<T> {
 public:
-  typedef typename internal::value_type<T>::type v_type;
+  typedef typename pmpl_internal::value_type<T>::type v_type;
 
   ranged_value(const v_type& min, const v_type& max, T* store_to) :
     typed_value<T>(store_to), m_min(min), m_max(max) 
@@ -189,8 +189,8 @@ protected:
 
 template <typename T>
 ranged_value<T>*
-value_range(const typename internal::value_type<T>::type& min,
-	    const typename internal::value_type<T>::type& max,
+value_range(const typename pmpl_internal::value_type<T>::type& min,
+	    const typename pmpl_internal::value_type<T>::type& max,
 	    T* v)
 {
   ranged_value<T>* r = new ranged_value<T>(min, max, v);
@@ -199,8 +199,8 @@ value_range(const typename internal::value_type<T>::type& min,
 
 template <typename T>
 ranged_value<T>*
-value_range(const typename internal::value_type<T>::type& min,
-	    const typename internal::value_type<T>::type& max)
+value_range(const typename pmpl_internal::value_type<T>::type& min,
+	    const typename pmpl_internal::value_type<T>::type& max)
 {
   return value_range<T>(min, max, (T*)0);
 }
