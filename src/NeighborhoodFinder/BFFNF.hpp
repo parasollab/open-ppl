@@ -109,7 +109,7 @@ m_scale = in_Node.numberXMLParameter("k_2", true, double(0.0),
   KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
     InputIterator _in1_first, InputIterator _in1_last, 
     InputIterator _in2_first, InputIterator _in2_last, 
-    int k, OutputIterator _out);
+    int k, OutputIterator _out) {};
 
 
 private:
@@ -187,8 +187,19 @@ nf2->KClosest(_rmp,closest_iter,closest_iter2,_cfg,k,_out);
 for(int i =0;i<k;i++){
 cout<<"OUTPUT"<<*(_out++)<<endl;
 }*/
-
 }
 
+/*
+template<typename CFG, typename WEIGHT>
+template<typename InputIterator, typename OutputIterator>
+OutputIterator
+BFFNF<CFG,WEIGHT>::
+KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
+    InputIterator _in1_first, InputIterator _in1_last, 
+    InputIterator _in2_first, InputIterator _in2_last, 
+    int k, OutputIterator _out)
+{
+}
+*/
 
 #endif //end #ifndef _BRUTE_FORCE_FIND_NEIGHBORHOOD_FINDER_H_
