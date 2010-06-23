@@ -478,11 +478,11 @@ AppendRoadmap(Roadmap<CFG, WEIGHT> &from_rdmp) {
     //from_rdmp.m_pRoadmap->GetOutgoingEdges(*vid_itrt, edges); //get edges fix_lantao
     //use iterator to traverse the adj edges and then put the data into edges
     typename RoadmapGraph<CFG, WEIGHT>::vertex_iterator vi = from_rdmp.m_pRoadmap->find_vertex(*vid_itrt);
-    for(typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei =vi.begin(); ei!=vi.end(); ei++ ){
+    for(typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei =(*vi).begin(); ei!=(*vi).end(); ei++ ){
 	pair<pair<VID,VID>,WEIGHT> single_edge;
-	single_edge.first.first=*ei.source();
-	single_edge.first.second=*ei.target();
-	single_edge.second = *ei.property();
+	single_edge.first.first=(*ei).source();
+	single_edge.first.second=(*ei).target();
+	single_edge.second = (*ei).property();
 	edges.push_back(single_edge); //put the edge into edges
     } 
     for (edge_itrt = edges.begin(); edge_itrt < edges.end(); edge_itrt++) {

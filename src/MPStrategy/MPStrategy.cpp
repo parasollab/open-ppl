@@ -102,10 +102,25 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
       NFUnionRoadmap* nfur = new NFUnionRoadmap(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( nfur );
       //nfir->ParseXML(*citr);
-//    } else if(citr->getName() == "NFRoadmapCompare") {
-//      NFRoadmapCompare* nfrc = new NFRoadmapCompare(*citr,GetMPProblem());
-//      all_MPStrategyMethod.push_back( nfrc );
+    } else if(citr->getName() == "NFRoadmapCompare") {
+     NFRoadmapCompare* nfrc = new NFRoadmapCompare(*citr,GetMPProblem());
+     all_MPStrategyMethod.push_back( nfrc );
 //      //nfir->ParseXML(*citr);
+    } else if(citr->getName() == "ExpanderStats") {
+      EdgeExpanderStats* ees = new EdgeExpanderStats(*citr,GetMPProblem());
+      all_MPStrategyMethod.push_back( ees );
+      //nfir->ParseXML(*citr);
+   } else if(citr->getName() == "TimingStats") {
+      RoadmapTimingStats* tms = new RoadmapTimingStats(*citr,GetMPProblem());
+      all_MPStrategyMethod.push_back( tms );
+      //nfir->ParseXML(*citr);
+
+    } else if(citr->getName() == "BandsIncrementalRoadmap") {
+      BandsIncrementalRoadmap* bands = new BandsIncrementalRoadmap(*citr, GetMPProblem());
+      all_MPStrategyMethod.push_back( bands ); 
+    } else if(citr->getName() == "BandsStats") {
+      BandsStats* bandsStats = new BandsStats(*citr, GetMPProblem());
+      all_MPStrategyMethod.push_back( bandsStats );
     } else if(citr->getName() == "QueryStrategy") {
       QueryStrategy* query = new QueryStrategy(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( query );

@@ -29,6 +29,7 @@
 #include "CGALNF.hpp"
 #include "STNF.hpp"
 #include "MTNF.hpp"
+#include "BandsNF.hpp"
 //#include "DMNF.hpp"
 
 #include "PMPL_Container_Base.h"
@@ -52,7 +53,8 @@ namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail names
     MPNNNF<CfgType,WeightType>,
     CGALNF<CfgType,WeightType>,
     STNF<CfgType,WeightType>, 
-    MTNF<CfgType,WeightType>
+    MTNF<CfgType,WeightType>,
+    BandsNF<CfgType,WeightType>
    // DMNF<CfgType,WeightType>
     > NeighborhoodFinderMethodList;
 }
@@ -107,6 +109,9 @@ private:
         AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
       } else if(citr->getName() == "MTNF") {
         NeighborhoodFinderMethod* nf = new MTNF<CfgType,WeightType>(*citr, in_pProblem);
+        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+      } else if(citr->getName() == "BandsNF") {
+        NeighborhoodFinderMethod* nf = new BandsNF<CfgType,WeightType>(*citr, in_pProblem);
         AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
      // } else if(citr->getName() == "DMNF") {
        // NeighborhoodFinderMethod* nf = new DMNF<CfgType,WeightType>(*citr, in_pProblem);
