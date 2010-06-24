@@ -496,6 +496,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     // the edge already exists
     if (_rm->m_pRoadmap->IsEdge(_vid, *itr2)) {
       // if we're not in "unconnected" mode, count this as a success
+      Stats.IncConnections_Made();
       if (m_debug) cout << " | edge already exists in roadmap";
       if (!m_unconnected) {
         if (m_debug) cout << " | success incremented";
@@ -510,6 +511,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
       if (is_same_cc(*(_rm->m_pRoadmap), cmap, _vid, *itr2)) {
         // if we're not in "unconnected" mode, count this as a success
+        Stats.IncConnections_Made();
         if (m_debug) cout << " | nodes in the same connected component";
         if (!m_unconnected) {
           if (m_debug) cout << " | success incremented";
@@ -531,12 +533,12 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       // if connection was made, add edge and record the successful connection
       if (m_debug) cout << " | connection was successful";
       _rm->m_pRoadmap->AddEdge(_vid, *itr2, lpOutput.edge);
-      Stats.IncConnections_Made();
       
       // mark the successful connection in the roadmap's cache
       if (m_debug) cout << " | success incremented" << endl;
       _rm->SetCache(_vid,*itr2,true);
       success++;
+      Stats.IncConnections_Made();
     }
     else {
       // mark the failed connection in the roadmap's cache
