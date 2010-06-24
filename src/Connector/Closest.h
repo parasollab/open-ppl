@@ -248,11 +248,15 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         }
       }
       Stats.IncConnections_Attempted();
-      if(_rm->m_pRoadmap->IsEdge(*itr1,*itr2)) 
+      if(_rm->m_pRoadmap->IsEdge(*itr1,*itr2)) {
+        Stats.IncConnections_Made();
         continue;
+      }
       #if CHECKIFSAMECC
-      if(IsSameCC(*(_rm->m_pRoadmap), *itr1,*itr2)) 
+      if(IsSameCC(*(_rm->m_pRoadmap), *itr1,*itr2)) {
+        Stats.IncConnections_Made();
         continue;
+      }
       #endif
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
        _rm->m_pRoadmap->GetData(*itr1),
@@ -310,12 +314,15 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       }
 
       Stats.IncConnections_Attempted();
-      if(_rm->m_pRoadmap->IsEdge(*itr1,*itr2)) 
+      if(_rm->m_pRoadmap->IsEdge(*itr1,*itr2)) {
+        Stats.IncConnections_Made();
         continue;
-
+      }
       #if CHECKIFSAMECC
-      if(IsSameCC(*(_rm->m_pRoadmap), *itr1,*itr2)) 
+      if(IsSameCC(*(_rm->m_pRoadmap), *itr1,*itr2)) {
+        Stats.IncConnections_Made();
         continue;
+      }
       #endif
       if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
        _rm->m_pRoadmap->GetData(*itr1),
