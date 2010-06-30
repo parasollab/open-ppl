@@ -53,7 +53,7 @@ public:
     //@{
 
     ///Constructor. Set _owner as the owner of this MultiBody instance.
-    MultiBody(Environment * _owner);
+    MultiBody();
 
     ///Destrucot. Free memory allocated to all Bodys added to this multiBody.
     virtual ~MultiBody();
@@ -263,10 +263,6 @@ public:
     /**@name Help Methods*/
     //@{
 
-    /** Ability needed to get the Environment from the Configuration 
-    */
-    Environment* GetEnvironment() const { return environment; }
-
     /**Configure the joint by the given amount of displacement.
       *@param _dof Number of Freebody that is going to be reconfigured (moved)
       *@param _s An array of displacement value. The length of _s is _dof.
@@ -331,8 +327,6 @@ private:
   //added by Xinyu Tang
   // to say whether this multibody is Internal(fake obsbacle);
   bool bInternal;
-
-  Environment * environment;  ///Owner
 
   vector<shared_ptr<FixedBody> > fixedBody;
   vector<shared_ptr<FreeBody> > freeBody;

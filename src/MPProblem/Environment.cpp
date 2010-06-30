@@ -499,7 +499,7 @@ Read(istream & _is, int envFormatVersion, int action, const char* descDir) {
   int multibodyCount; 
   _is >> multibodyCount;      // # of MultiBodys'
   for (int m=0; m<multibodyCount; m++) {    
-    shared_ptr<MultiBody> mb(new MultiBody(this));
+    shared_ptr<MultiBody> mb(new MultiBody());
     mb->Read(_is, action, descDir);
     multibody.push_back(mb);
   }

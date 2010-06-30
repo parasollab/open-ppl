@@ -130,8 +130,8 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
 //===================================================================
 //  Constructors and Destructor
 //===================================================================
-MultiBody::MultiBody(Environment * _owner) 
-  : bInternal(false), environment(_owner), CenterOfMassAvailable(false) 
+MultiBody::MultiBody() 
+  : bInternal(false), CenterOfMassAvailable(false) 
 {}
 
 MultiBody::~MultiBody() 

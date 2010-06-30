@@ -41,28 +41,16 @@ Body::Body(const Body& b) :
     //void * cstkBody[MAXPROCS];  ///<CSTK internal model (maybe?!)
 #endif
 #ifdef USE_VCLIP
-    if(b.vclipBody.get() == NULL)
-      vclipBody = shared_ptr<PolyTree>();
-    else
-      vclipBody = shared_ptr<PolyTree>(new PolyTree(*(b.vclipBody.get())));
+    vclipBody = b.vclipBody;
 #endif
 #ifdef USE_RAPID
-    if(b.rapidBody.get() == NULL)
-      rapidBody = shared_ptr<RAPID_model>();
-    else
-      rapidBody = shared_ptr<RAPID_model>(new RAPID_model(*(b.rapidBody.get())));
+    rapidBody = b.rapidBody;
 #endif
 #ifdef USE_PQP
-    if(b.pqpBody.get() == NULL)
-      pqpBody = shared_ptr<PQP_Model>();
-    else
-      pqpBody = shared_ptr<PQP_Model>(new PQP_Model(*(b.pqpBody.get())));
+    pqpBody = b.pqpBody;
 #endif
 #ifdef USE_SOLID
-    if(b.solidBody.get() == NULL)
-      solidBody = shared_ptr<DT_ObjectHandle>();
-    else
-      solidBody = shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(*(b.solidBody.get())));
+    solidBody = b.solidBody;
 #endif
 }
 

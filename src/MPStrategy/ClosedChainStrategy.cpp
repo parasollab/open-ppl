@@ -231,7 +231,7 @@ void ClosedChainStrategy::Solve(){
             int num_bodies = CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->GetFreeBodyCount();
             vector<int> actual_ear_links;
 	    get_actual_links_of(CCProblem->g_ear_roots[i], actual_ear_links);
-	    boost::shared_ptr<MultiBody> subsetOfRobot =  boost::shared_ptr<MultiBody>(new MultiBody(CCProblem->GetEnvironment()));
+	    boost::shared_ptr<MultiBody> subsetOfRobot =  boost::shared_ptr<MultiBody>(new MultiBody());
 	    //MultiBody mb = *(CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex()).get());
 	    //boost::shared_ptr<MultiBody> subsetOfRobot =  boost::shared_ptr<MultiBody>(new MultiBody);
 	    //for(vector<int>::iterator iter = actual_ear_links.begin(); iter<actual_ear_links.end(); iter++){
@@ -319,7 +319,7 @@ void ClosedChainStrategy::Solve(){
      
       //colliding = CCProblem->GetCollisionDetection()->IsInCollision(CCProblem->GetEnvironment(), Stats, _cdInfo,  boost::shared_ptr<MultiBody>((MultiBody*)NULL), true, &CallName);
       //for(vector<int>::iterator iter = actual_ear_links.begin(); iter<actual_ear_links.end(); iter++){
-      boost::shared_ptr<MultiBody> subsetOfRobot =  boost::shared_ptr<MultiBody>(new MultiBody(CCProblem->GetEnvironment()));
+      boost::shared_ptr<MultiBody> subsetOfRobot =  boost::shared_ptr<MultiBody>(new MultiBody());
       for(int i=0; i<CCProblem->g_loopRoots.size(); ++i){
 	//cout<<"ear link ="<<*iter<<endl;
 	shared_ptr<FreeBody> freeBody = CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex()).get()->GetFreeBody(i);

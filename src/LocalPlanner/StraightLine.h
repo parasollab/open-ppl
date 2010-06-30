@@ -508,7 +508,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     std::istringstream istr(str);
     
     //Creat a MultiBody for this triangle
-    shared_ptr<MultiBody> lineSegment(new MultiBody(_env));
+    shared_ptr<MultiBody> lineSegment(new MultiBody());
     //Creat a FreeBody  for this triangle
     FreeBody fb(lineSegment.get());
     fb.ReadBYU(*((istream*)(&istr)));

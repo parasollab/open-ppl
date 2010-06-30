@@ -303,7 +303,7 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
 //   int tries = 3 * num;
 //   int i = 0;
 
-  shared_ptr<MultiBody> base(new MultiBody(env));
+  shared_ptr<MultiBody> base(new MultiBody());
   base->AddBody(env->GetMultiBody(robot)->GetFreeBody(0));
   
   while(num < nCfgs) {
