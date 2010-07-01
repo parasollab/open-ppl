@@ -39,12 +39,12 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
       step_size = min(env->GetPositionRes(), env->GetOrientationRes());
      
 }// get above parameter from XML
-  int numShells,n_shells_coll,n_shells_free;
+  int n_shells_coll,n_shells_free;
   ObstacleBasedSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem)
   {
   LOG_DEBUG_MSG("ObstacleBasedSampler::ObstacleBasedSampler()");
   ParseXML(in_Node);
-  //cout << "ObstacleBasedSampler";
+  cout << "ObstacleBasedSampler";
   strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
                                     string(""), string("Validity Test Method"));
   
@@ -55,8 +55,8 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
   
   strLabel= this->ParseLabelXML( in_Node);
   this->SetLabel(strLabel);
-  
-    if(step_size <= 0)
+    cout << "step_size = " << step_size << endl;
+    if(step_size <= 0.0)
       step_size = min(env->GetPositionRes(), env->GetOrientationRes());
      
   LOG_DEBUG_MSG("~ObstacleBasedSampler::ObstacleBasedSampler()");
@@ -73,8 +73,8 @@ void  ParseXML(XMLNodeReader& in_Node) {
       ParseXMLcol(*citr);
     } else if(citr->getName() == "n_shells_free") {
       ParseXMLfree(*citr);
-    }else if(citr->getName() == "shells") {
-      ParseXMLshells(*citr);
+    }else if(citr->getName() == "step_size") {
+      ParseXMLstep(*citr);
     }
   }
   
@@ -84,12 +84,12 @@ void  ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("~ObstacleBasedSampler::ParseXML()");
 }
 
-void ParseXMLshells(XMLNodeReader& in_Node) {
-  LOG_DEBUG_MSG("ObstacleBasedSampler::ParseXMLshells()");
+void ParseXMLstep(XMLNodeReader& in_Node) {
+  LOG_DEBUG_MSG("ObstacleBasedSampler::ParseXMLstep()");
 
-  in_Node.verifyName(string("shells"));
-  numShells = in_Node.numberXMLParameter(string("number"),true, 3,0,10,
-                                         string("Number of Shells"));
+  in_Node.verifyName(string("step_size"));
+  step_size = in_Node.numberXMLParameter(string("number"),true, 0.0,0.0,10.0,
+              string("step size used in increment of cfg position towards or away from obstacles"));
   
   in_Node.warnUnrequestedAttributes();
   LOG_DEBUG_MSG("~ObstacleBasedSampler::ParseXMLshells()");
@@ -173,7 +173,7 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
       CDInfo cdInfo;
       bool generated = false;
       int attempts = 0;
-
+     // print(cout);
       do {
 	Stat.IncNodes_Attempted();
 	attempts++;
@@ -230,15 +230,13 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
           OutputIterator result)  
   {
     CFG my_cfg;
-    do {
-      my_cfg.GetRandomCfg(env);
-    } while (!my_cfg.InBoundingBox(env));
+    
     vector<CFG> out1;
     for (int i =0; i< num_nodes; i++) {
       my_cfg.GetRandomCfg(env);
       while(!sampler(env, Stat,my_cfg, out1, max_attempts))
-        my_cfg.GetRandomCfg(env);
-    }
+	my_cfg.GetRandomCfg(env);
+      }
     result = copy(out1.begin(), out1.end(), result);
     return result;
   }
