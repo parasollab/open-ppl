@@ -16,10 +16,10 @@
 #include <GraphAlgo.h>
 #include <RoadmapGraph.h>
 #include <functional>
-#include "LabeledObject.h"
+
 #include "OBPRMDef.h"
 #include "util.h"
-#include "boost/shared_ptr.hpp"
+
 #include "Clock_Class.h"
 /////////////////////////////////////////////////////////////////////////////////////////
 //using stapl::VID;
@@ -42,7 +42,6 @@ class CenterOfMassDistance;
 class RmsdDistance;
 class LPSweptDistance;
 class BinaryLPSweptDistance;
-class KnotTheoryDistance;
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 class ReachableDistance;
 #endif
@@ -58,19 +57,13 @@ const int WS = 1;   ///< Type WS: Workspace distance metric
   *and selected.  all contains all of the different types of distance 
   *metric methods.  selected contains only those selected by the user.
   */
-class DistanceMetric : LabeledObject,MPBaseObject{
-  
-  //  private:
-   string strLabel;
-    
+class DistanceMetric : MPBaseObject{
  public:
   DistanceMetric();
   DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
   virtual ~DistanceMetric();
 
-typedef boost::shared_ptr<DistanceMetricMethod> DMMethodPtr;//chinwe
-
- bool ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr);
+  bool ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr);
   
   vector<DistanceMetricMethod*> GetDefault();
 
@@ -79,17 +72,6 @@ typedef boost::shared_ptr<DistanceMetricMethod> DMMethodPtr;//chinwe
   void PrintDefaults(ostream& _os) ;
   void PrintOptions(ostream& _os) const;
 
-
-  inline void AddDMMethod(std::string name, DMMethodPtr m){
-    m_map_dmmethods[name]= m;
-  }
-
-  inline DMMethodPtr GetDMMethod(std::string name){
-     return m_map_dmmethods[name];
-    }
- 
- public:
-    std::map<std::string, DMMethodPtr> m_map_dmmethods;
   /**Read information about DistanceMetricMethods selected from file.
     *@param _fname filename for data file.
     *@see ReadDMs(istream& _myistream)
@@ -309,7 +291,6 @@ typedef boost::shared_ptr<DistanceMetricMethod> DMMethodPtr;//chinwe
  protected:
   bool ParseCommandLine(int argc, char** argv);
 
-  //std::map<std::string, DMMethodPtr> m_map_dmmethods;
   vector<DistanceMetricMethod*> all;
   vector<DistanceMetricMethod*> selected;
 };
@@ -375,12 +356,11 @@ class CFG_CFG_DIST_COMPARE : public binary_function<const CFG, const CFG, bool> 
 /**This is the interface for all distance metric methods(euclidean, 
   *scaledEuclidean, minkowski, manhattan, com, etc.).
   */
-class DistanceMetricMethod:public LabeledObject,public MPBaseObject {
+class DistanceMetricMethod {
  public:
   DistanceMetricMethod();
-  DistanceMetricMethod(std::string in_strLabel, MPProblem* in_pProblem);//:LabeledObject(in_strLabel),
-  //                                                                      MPBaseObject(in_pProblem){}
   virtual ~DistanceMetricMethod();
+
   virtual char* GetName() const = 0;
   virtual void SetDefault() = 0;
 
@@ -397,7 +377,6 @@ class DistanceMetricMethod:public LabeledObject,public MPBaseObject {
 
  protected:
   int type; ///<WS or CS. Used to classify metrics.
-  string strLabel;
 };
 ostream& operator<< (ostream& _os, const DistanceMetricMethod& dm);
 
@@ -592,24 +571,7 @@ class ManhattanDistance : public DistanceMetricMethod {
   virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
 };
 
-///////
-class KnotTheoryDistance : public EuclideanDistance {
- public:
-  KnotTheoryDistance();
-  ~KnotTheoryDistance();
 
-  virtual char* GetName() const;
-  virtual void SetDefault();
-  virtual void PrintUsage(ostream&) const;
-  virtual void PrintValues(ostream&) const;
-  virtual DistanceMetricMethod* CreateCopy();
-  virtual void ParseCommandLine(int, char**);
-
-  virtual double Distance(Environment* env,const Cfg& _c1, const Cfg& _c2);
-  virtual double writheCalc(Vector3D ei1,Vector3D ei2, Vector3D ej1,Vector3D ej2);
-  //virtual double* distance() const;
-};
-//////
 /**This computes the euclidean distance of only the position part between 
   *two cfgs.  This class is derived off of DistanceMetricMethod.
   */
@@ -1042,7 +1004,6 @@ KClosestByIndex(Environment *env,
 
 
 // end sam's function
-
 
 //-----------------------------------------------------------------------
 // Input: CFG cc, vector of CFG v, and k
