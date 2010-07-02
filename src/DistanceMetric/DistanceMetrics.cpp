@@ -1,4 +1,4 @@
- /**
+/**
  * @file DistanceMetrics.c
  *
  * @author Daniel Vallejo
@@ -16,7 +16,6 @@
 #include "Cfg_reach_cc.h"
 
 //#include "ANN.h"
-
 
 #ifndef PI
 #define PI 3.1415926535897932385
@@ -54,9 +53,6 @@ DistanceMetric() {
   BinaryLPSweptDistance* binary_lp_swept = new BinaryLPSweptDistance();
   all.push_back(binary_lp_swept);
 
-  KnotTheoryDistance* knotTheory = new KnotTheoryDistance();
- all.push_back(knotTheory);
-
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   ReachableDistance* rd = new ReachableDistance();
   all.push_back(rd);
@@ -68,17 +64,11 @@ DistanceMetric() {
 
 DistanceMetric::
 DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : 
-    LabeledObject(strLabel),MPBaseObject(in_Node, in_pProblem){
-  
-    
-      // string par_label = citr->stringXMLParameter("Label",true,"","Label");
-      LOG_DEBUG_MSG("DistanceMetric::DistanceMetric()");
+    MPBaseObject(in_Node, in_pProblem){
+  LOG_DEBUG_MSG("DistanceMetric::DistanceMetric()");
 
   in_Node.verifyName("distance_metrics");
- 
-//strLabel= this->ParseLabelXML( in_Node);
-  //this->SetLabel(strLabel);
-  
+
   if(parse_xml)
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
       if(!ParseXML(in_pProblem, citr))
@@ -87,7 +77,6 @@ DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) :
   m_distance_time = 0;
   LOG_DEBUG_MSG("~DistanceMetric::DistanceMetric()");
 }
-
 
 
 DistanceMetric::
@@ -107,27 +96,10 @@ bool
 DistanceMetric::
 ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
 {
-  // string par_label = citr->stringXMLParameter("default",true,"","Label");
-   
-    if (citr->getName()=="knotTheory"){
-      KnotTheoryDistance* knotTheory = new KnotTheoryDistance();
-     
-     DMMethodPtr dm(new KnotTheoryDistance());
-     AddDMMethod(dm->GetObjectLabel(),dm);  
-    all.push_back(knotTheory);
-      selected.push_back(knotTheory->CreateCopy());
-      string par_label = citr->stringXMLParameter("Label",true,"","Label");
-     citr->warnUnrequestedAttributes();
-    } 
- 
-  
-    else if(citr->getName() == "euclidean") {
+    if(citr->getName() == "euclidean") {
       EuclideanDistance* euclidean = new EuclideanDistance();
-      DMMethodPtr dm(new EuclideanDistance());
-     AddDMMethod(dm->GetObjectLabel(),dm);  
       all.push_back(euclidean);
       selected.push_back(euclidean->CreateCopy());
-       string par_label = citr->stringXMLParameter("Label",true,"","Label");
       citr->warnUnrequestedAttributes();
     } else if(citr->getName() == "scaledEuclidean") {
       double par_scale;
@@ -136,11 +108,8 @@ ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
                                           double(0.0),double(1.0),
                                           "Scale Factor");
       scaledEuclidean = new ScaledEuclideanDistance(par_scale);
-      DMMethodPtr dm(new ScaledEuclideanDistance());
-     AddDMMethod(dm->GetObjectLabel(),dm);  
       all.push_back(scaledEuclidean);
       selected.push_back(scaledEuclidean->CreateCopy());
-       string par_label = citr->stringXMLParameter("Label",true,"","Label");
       citr->warnUnrequestedAttributes();
     } else if(citr->getName() == "uniformEuclidean") {
       int par_use_rotational;
@@ -156,19 +125,16 @@ ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
       all.push_back(pureEuclidean);
       selected.push_back(pureEuclidean->CreateCopy());
       citr->warnUnrequestedAttributes();
-       string par_label = citr->stringXMLParameter("Label",true,"","Label");
     } else if(citr->getName() == "rmsd") {
       RmsdDistance* rmsd = new RmsdDistance();
       all.push_back(rmsd);
       selected.push_back(rmsd->CreateCopy());
-       string par_label = citr->stringXMLParameter("Label",true,"","Label");
       citr->warnUnrequestedAttributes();
     } else if(citr->getName() == "lp_swept") {
       double pos_res = citr->numberXMLParameter("pos_res", false, in_pProblem->GetEnvironment()->GetPositionRes(), 0.0, 1000.0, "position resolution");
       double ori_res = citr->numberXMLParameter("ori_res", false, in_pProblem->GetEnvironment()->GetOrientationRes(), 0.0, 1000.0, "orientation resolution");
       bool use_bbox = citr->boolXMLParameter("use_bbox", false, false, "use bbox instead of robot vertices"); 
 
-       string par_label = citr->stringXMLParameter("Label",true,"","Label");
       LocalPlanners<CfgType, WeightType>* lp;
       for(XMLNodeReader::childiterator citr2 = citr->children_begin(); citr2 != citr->children_end(); ++citr2)
         if(citr2->getName() == "lp_methods")
@@ -426,14 +392,6 @@ DistanceMetricMethod::
 ~DistanceMetricMethod() {
 }
 
-DistanceMetricMethod::
- DistanceMetricMethod(std::string in_strLabel, MPProblem* in_pProblem):LabeledObject(in_strLabel),
-                                                                        MPBaseObject(in_pProblem)
-                                            {
-									  
- //strLabel= this->ParseLabelXML(in_Node);
-  //this->SetLabel(strLabel);			
-					    }
 
 bool
 DistanceMetricMethod::
@@ -1166,245 +1124,9 @@ Distance(const Cfg& _c1, const Cfg& _c2) {
   Vector3D d = _c1.GetRobotCenterPosition()-_c2.GetRobotCenterPosition();
   return d.magnitude();
 }
+
 //////////
-/*=============================================================
-Knot Theory Dm
-===============================================================*/
-KnotTheoryDistance::
-KnotTheoryDistance(): EuclideanDistance(){
-}
 
-KnotTheoryDistance::
-~KnotTheoryDistance(){
-}
-
-char* KnotTheoryDistance::GetName() const
-{ return "knotTheory"; }
-
-
-double
-KnotTheoryDistance ::
-Distance(Environment* env, const Cfg& _c1, const Cfg& _c2)
-{
-double dist;
-dist = EuclideanDistance::Distance(env, _c1,_c2);
-
-Cfg *c=_c1.CreateNewCfg();
-Cfg *o =_c2.CreateNewCfg();
-vector<Vector3D> c1=c->PolyApprox(env);
-
-vector<Vector3D> c2=o->PolyApprox(env); //_c2.GetData();
-
-  double w1 = 0.0, w1temp = 0.0;
-  double w2 = 0.0, w2temp  = 0.0;
-if (c1.size() == NULL)
-{
-return NULL;
-}
-
-
-   for(size_t i =3; i < c1.size()-1;i++){
-
-  int j=1;
-  if(j != i || i != (j-1)){
- 
-
- w1temp += writheCalc(c1[i-1],c1[i],c1[j],c1[j+1]);
-    j++ ;
-  }
-    }
-
- w1 += w1temp;    
-
-
-
-  //cout<<"w1 \n"<<w1<<endl;
-
-if(c2.size() == NULL){
-  return NULL;
-}
-
- for(size_t i =3; i< c2.size()-1; i++)
-   { 
-     
-
- int j=1;
-
-if(j != i || i != (j-1)){
-                 	  
- w2temp += writheCalc(c2[i-1],c2[i],c2[j],c2[j+1]);
-j++;	
-}
-   }  
-
-    w2 += w2temp;
-
-delete c;
-delete o;
-
-  double dist2;
-dist2 =2.0*w1-2.0*w2;
-
-if((dist2 < dist) &&( dist!=0 )  )
-return dist2 + dist;
-else 
-return dist;
-
-   }
-
-double
-KnotTheoryDistance ::
-writheCalc(Vector3D ei1,Vector3D ei2, Vector3D ej1, Vector3D ej2)
-{
-
-
-vector <Vector3D> unitVect(4);
-
-  double sum =0.0, sign = 0, temp1, temp2, temp3, temp4;
-
-  if((ej1-ei1).magnitude() != 0)
-    unitVect[0] = (ej1- ei1);
-  else
-    unitVect[0] = 0;
-
-  if((ei2-ej1).magnitude() != 0)
-    unitVect[1] = (ej2- ei1);
-  else
-    unitVect[1] = 0;
-
-  if((ej2-ei2).magnitude() != 0)
-    unitVect[2] = (ej2- ei2);
-  else
-    unitVect[2] =0;
-
-  if((ej2-ei1).magnitude() != 0)
-    unitVect[3] = (ej2- ei1);
-  else
-    unitVect[3] =0;
-
-
-  Vector3D n1, n2, n3, n4;
-
-  if((unitVect[0].crossProduct(unitVect[3])).magnitude() != 0)
-    n1= (unitVect[0].crossProduct(unitVect[3]))/
-      (unitVect[0].crossProduct(unitVect[3])).magnitude();
-  else
-    n1 = 0.0;
-
-  if( (unitVect[3].crossProduct(unitVect[2])).magnitude() != 0)
-    n2 = (unitVect[3].crossProduct(unitVect[2]))/
-      (unitVect[3].crossProduct(unitVect[2])).magnitude();
-  else
-    n2 = 0.0;
-
-  if((unitVect[2].crossProduct(unitVect[1])).magnitude() != 0)
-    n3 =  (unitVect[2].crossProduct(unitVect[1]))/
-      (unitVect[2].crossProduct(unitVect[1])).magnitude();
-  else
-    n3 = 0.0;
-
-  if((unitVect[1].crossProduct(unitVect[0])).magnitude() != 0)
-    n4 =  (unitVect[1].crossProduct(unitVect[0]))/
-      (unitVect[1].crossProduct(unitVect[0])).magnitude();
-  else
-    n4 = 0.0;
-
-  Vector3D n5 = ej2-ej1;
-  Vector3D n6 = ei2-ei1;
-
-  if(n1.dotProduct(n2)>1)
-     temp1 = 1.0;
-  else
-    temp1 = n1.dotProduct(n2);
-
-  if(n2.dotProduct(n3)>1)
-    temp2 = 1.0;
-  else
-    temp2 = n2.dotProduct(n3);
-
-  if(n3.dotProduct(n4)>1)
-    temp3 = 1.0;
-  else
-    temp3 = n3.dotProduct(n4);
-
-  if(n4.dotProduct(n1)>1)
-    temp4 = 1.0;
-  else
-    temp4 = n4.dotProduct(n1);
-
-
-
-  sum = asin(temp1) + asin(temp2) + asin(temp3) + asin(temp4);
-
-
-  sign =(n5.crossProduct(n6)).dotProduct(unitVect[0]); 
-
-int sign2 =sign > 0 ? 1:-1;
-
-return (sum/(4.0*PI))*sign;
-
-
-
- 
-
-}
-
-void
-KnotTheoryDistance::
-ParseCommandLine(int argc, char** argv) {
-  if(argc < 0 || argc > 2) {
-    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
-    for(int i=0; i<argc; i++)
-      cerr << argv[i] << " ";
-    cerr << "\"\n\n";
-    PrintUsage(cerr);
-    cerr << endl;
-    exit(-1);
-  }
-
-  if(argc == 2) { //read in sValue
-    std::istringstream is(argv[1]);
-      for(int i=0; i<argc; i++)
-        cerr << argv[i] << " ";
-      cerr << "\"\n\n";
-      PrintUsage(cerr);
-      cerr << endl;
-      exit(-1);
-  }
-}
-
-void
-KnotTheoryDistance::
-PrintUsage(ostream& _os) const {
-  _os.setf(ios::left,ios::adjustfield);
-
-  _os << "\n" << GetName() << " ";
- 
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-void
-KnotTheoryDistance::
-SetDefault() {
-}
-
-void
-KnotTheoryDistance::
-PrintValues(ostream& _os) const {
-  _os << "\n" << GetName() << " ";
-  _os << endl;
-}
-
-DistanceMetricMethod*
-KnotTheoryDistance::
-CreateCopy() {
-  DistanceMetricMethod* _copy = new KnotTheoryDistance(*this);
-  return _copy;
-}
-
-/////////////////////////////////////////////////////////////////////
-//End Knot Theory
-/////////////////////////////////////////////////////////////////////
 RmsdDistance::
 RmsdDistance() : EuclideanDistance() {
 }
@@ -1441,7 +1163,6 @@ GetCoordinatesForRMSD(const Cfg& c, Environment* env) {
 double
 RmsdDistance::
 Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
-
   vector<Vector3D> x = GetCoordinatesForRMSD(_c1, env);
   vector<Vector3D> y = GetCoordinatesForRMSD(_c2, env);
   return RMSD(x,y,x.size());
@@ -1455,8 +1176,7 @@ RMSD(vector<Vector3D> x, vector<Vector3D> y, int dim) {
          << endl;
     exit(101);
   }
-  
-int n;
+  int n;
   Vector3D sumx(0,0,0), sumy(0,0,0);
   for(n=0; n<dim; ++n) {
     sumx = sumx + x[n];
@@ -1527,6 +1247,7 @@ int n;
   }
   if(z3 < 0) // small numercal error
     z3 = 0;
+
   int sign = detR > 0 ? 1 : -1;
   double E = E0 - sqrt(z1) - sqrt(z2) - sqrt(z3)*sign;
   if(E<0) // small numercal error
@@ -1534,7 +1255,7 @@ int n;
 
   // since E = 1/2 * sum_of[(Uxn - yn)^2], so rmsd is:
   double rmsd = sqrt(E*2/dim);
- 
+
   return rmsd;
 }
 
