@@ -98,8 +98,11 @@ ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
 {
     if(citr->getName() == "euclidean") {
       EuclideanDistance* euclidean = new EuclideanDistance();
+      //DMMethodPtr dm(new EuclideanDistance());
+     //AddDMMethod(dm->GetObjectLabel(),dm);  
       all.push_back(euclidean);
       selected.push_back(euclidean->CreateCopy());
+       string par_label = citr->stringXMLParameter("Label",false,"","Label");
       citr->warnUnrequestedAttributes();
     } else if(citr->getName() == "scaledEuclidean") {
       double par_scale;
@@ -108,8 +111,11 @@ ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
                                           double(0.0),double(1.0),
                                           "Scale Factor");
       scaledEuclidean = new ScaledEuclideanDistance(par_scale);
+     // DMMethodPtr dm(new ScaledEuclideanDistance());
+    // AddDMMethod(dm->GetObjectLabel(),dm);  
       all.push_back(scaledEuclidean);
       selected.push_back(scaledEuclidean->CreateCopy());
+       string par_label = citr->stringXMLParameter("Label",false,"","Label");
       citr->warnUnrequestedAttributes();
     } else if(citr->getName() == "uniformEuclidean") {
       int par_use_rotational;
@@ -125,16 +131,20 @@ ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
       all.push_back(pureEuclidean);
       selected.push_back(pureEuclidean->CreateCopy());
       citr->warnUnrequestedAttributes();
+       string par_label = citr->stringXMLParameter("Label",false,"","Label");
     } else if(citr->getName() == "rmsd") {
       RmsdDistance* rmsd = new RmsdDistance();
       all.push_back(rmsd);
       selected.push_back(rmsd->CreateCopy());
+       string par_label = citr->stringXMLParameter("Label",false,"","Label");
       citr->warnUnrequestedAttributes();
     } else if(citr->getName() == "lp_swept") {
+       string par_label = citr->stringXMLParameter("Label",false,"","Label");
       double pos_res = citr->numberXMLParameter("pos_res", false, in_pProblem->GetEnvironment()->GetPositionRes(), 0.0, 1000.0, "position resolution");
       double ori_res = citr->numberXMLParameter("ori_res", false, in_pProblem->GetEnvironment()->GetOrientationRes(), 0.0, 1000.0, "orientation resolution");
       bool use_bbox = citr->boolXMLParameter("use_bbox", false, false, "use bbox instead of robot vertices"); 
 
+       
       LocalPlanners<CfgType, WeightType>* lp;
       for(XMLNodeReader::childiterator citr2 = citr->children_begin(); citr2 != citr->children_end(); ++citr2)
         if(citr2->getName() == "lp_methods")
@@ -151,6 +161,7 @@ ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
       //delete lp;
       citr->warnUnrequestedAttributes();
     } else if(citr->getName() == "binary_lp_swept") {
+      string par_label = citr->stringXMLParameter("Label",false,"","Label");
       double pos_res = citr->numberXMLParameter("pos_res", false, in_pProblem->GetEnvironment()->GetPositionRes() * 50, 0.0, 1000.0, "position resolution");
       double ori_res = citr->numberXMLParameter("ori_res", false, in_pProblem->GetEnvironment()->GetOrientationRes() * 50, 0.0, 1000.0, "orientation resolution");
       double tolerance = citr->numberXMLParameter("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
