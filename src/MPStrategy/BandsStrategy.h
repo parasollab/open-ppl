@@ -897,9 +897,9 @@ class BandsStats : public MPStrategyMethod {
 		}
 		
 		void distCalc() {
-			Roadmap<CfgType,WeightType> rmp;
+			Roadmap<CfgType,WeightType> rmp1;
       
-      rmp.ReadRoadmapGRAPHONLY(input_map_filename.c_str());
+      rmp1.ReadRoadmapGRAPHONLY(input_map_filename.c_str());
       
       int pos = out_filename_num_neighbors.find("num_neighbors");
     
@@ -909,7 +909,7 @@ class BandsStats : public MPStrategyMethod {
       ss << "dist." << dist << "_";
       string dist_str = ss.str();
       
-      rmps.push_back(&rmp);
+      rmps.push_back(&rmp1);
       out_filename_num_neighbors.insert(pos, dist_str);
       
       // note: BFNF neighborhood finder must be specified in XML file
@@ -920,9 +920,9 @@ class BandsStats : public MPStrategyMethod {
       Environment* _env = this->GetMPProblem()->GetEnvironment();
       
       for (int rmp_index = 0; rmp_index < rmps.size(); rmp_index++) {
-        Roadmap<CfgType,WeightType> rmp = *(rmps[rmp_index]);
+        Roadmap<CfgType,WeightType>* rmp = rmps[rmp_index];
         
-        rmp.SetEnvironment(_env);
+        rmp->SetEnvironment(_env);
 
         vector<double> dist_list;
         vector<int> valid_neighbor_count;
@@ -930,7 +930,7 @@ class BandsStats : public MPStrategyMethod {
         // iterate through all roadmap vertices, find:
         //   1) distance to the k-th closest neighbor.
         //   2) # neighbors within d
-        RoadmapGraph<CfgType,WeightType>* pMap = rmp.m_pRoadmap;
+        RoadmapGraph<CfgType,WeightType>* pMap = rmp->m_pRoadmap;
         RoadmapGraph<CfgType,WeightType>::VI vitr;
         RoadmapGraph<CfgType,WeightType>::VI vitr2;
         int ind = 0;
@@ -938,7 +938,7 @@ class BandsStats : public MPStrategyMethod {
           if (ind % 100 == 0) cout << ind << endl;
           vector<VID> neighbors(k);
           
-          this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, &rmp, (*vitr).descriptor(), k, neighbors.begin());
+          this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, rmp, (*vitr).descriptor(), k, neighbors.begin());
           double k_dist = dmm->Distance(_env, (*vitr).property(), (*(pMap->find_vertex(neighbors.back()))).property());
           dist_list.push_back(k_dist);
           
