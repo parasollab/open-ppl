@@ -212,14 +212,6 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
       bool checkCollision, 
       bool savePath, bool saveFailedPath) {  
   CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
-  //connected = IsConnectedOneWay(_env, Stats, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-/*
-  if (!connected && !isSymmetric) { //try the other way
-    connected = IsConnectedOneWay(_env, Stats, dm, _c2, _c1, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-    if (savePath)
-      reverse(lpOutput->path.begin(), lpOutput->path.end());
-  }
-*/
 
   int cd_cntr = 0;
   vector<double> start_data = _c1.GetData();
@@ -312,84 +304,4 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
 
 };
 
-/*
-template <class CFG, class WEIGHT>
-bool
-RotateAtS<CFG,WEIGHT>::
-IsConnectedOneWay(Environment *_env, Stat_Class& Stats, DistanceMetric *dm,
-      const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
-      double positionRes, double orientationRes,
-      bool checkCollision, 
-      bool savePath, bool saveFailedPath) {
-//  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-//  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
-  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
-
-  char RatS[50] = "Rotate_at_s";
-  sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);
-  for(int i=1; i<s_values.size(); ++i)
-    sprintf(RatS,"%s,%3.1f",RatS, s_values[i]);
-  Stats.IncLPAttempts( RatS );
-  int cd_cntr= 0;
-   
-  if(this->lineSegmentLength && lineSegmentInCollision(_env, Stats, dm, _c1, _c2, 
-								  lpOutput, cd_cntr, positionRes)) {
-    Stats.IncLPCollDetCalls( RatS, cd_cntr );
-    return false;
-  }
-  
-  vector<Cfg *> sequence;
-  _c1.GetMovingSequenceNodes(_c2, s_values, sequence);
-
-  bool connected = true;
-  
-  //check sequence nodes
-  if(checkCollision) {
-    std::string Callee(GetName());
-    std::string Method("-rotate_at_s::IsConnectedOneWay");
-    Callee = Callee + Method;
-    for(int i=1; i<sequence.size()-1; ++i) { //_c1 and _c2 not double checked
-      cd_cntr++;
-      if(!sequence[i]->InBoundingBox(_env) ||
-         sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))
-         //vc->IsValid(vcm, static_cast<CFG>(*(sequence[i])), _env, Stats, *this->cdInfo, Callee)
-        ) {
-        connected = false;
-        break;
-      }
-    }
-  }
-    
-  //check intermediate nodes  
-  if(connected) {
-    for(int i=0; i<sequence.size()-1; ++i) {
-      if(this->binarySearch) 
-        connected = IsConnectedSLBinary(_env, Stats, dm, *sequence[i], *sequence[i+1], 
-				        lpOutput, cd_cntr, positionRes, orientationRes, 
-				        checkCollision, savePath, saveFailedPath);
-      else
-        connected = IsConnectedSLSequential(_env, Stats, dm, *sequence[i], *sequence[i+1], 
-				            lpOutput, cd_cntr, positionRes, orientationRes, 
-				            checkCollision, savePath, saveFailedPath);
-
-      if((savePath || saveFailedPath) && (i+1 != sequence.size()-1)) //don't put _c2 on end
-        lpOutput->path.push_back(*sequence[i+1]);
-
-      if(!connected) 
-        break;
-    }
-  }
-
-  if(connected)
-    Stats.IncLPConnections( RatS );  
-  Stats.IncLPCollDetCalls( RatS, cd_cntr );
-  
-  // Since we use vector<Cfg*>, we need to delete it
-  for(int i=0; i<sequence.size(); ++i) 
-    if (sequence[i] != NULL)
-      delete sequence[i];
-  
-  return connected;
-};
-*/
 #endif
