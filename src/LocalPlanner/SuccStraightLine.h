@@ -216,6 +216,10 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
   int cd_cntr = 0;
   vector<double> start_data = _c1.GetData();
   vector<double> goal_data = _c2.GetData();
+  vector<double> tmp = _c1.GetData();
+  vector<double> half_position = _c1.GetData();
+
+  cout << "Start CFG positional DOF: " << _c1.posDOF() << "\n" << flush; 
 
   vector<Cfg*> sequence;  
 
@@ -234,20 +238,58 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     }
     Cfg* cfg_translate = _c1.CreateNewCfg(translate_data);
     sequence.push_back(cfg_translate);
+
+    // TMP for printing purposes
+    half_position = cfg_translate->GetData();
+    cout << "CT: ";
+    for(int j=0; j<half_position.size(); j++) {
+      cout << half_position[j] << ", ";
+    }
+    cout << "end \n" << flush;
   }
 
-  for(int i=0; i<_c1.posDOF(); ++i)
+  // TMP for printing purposes
+  tmp = _c1.GetData();
+  cout << "CS: ";
+  for(int j=0; j<tmp.size(); j++) {
+    cout << tmp[j] << ", ";
+  }
+  cout << "end \n" << flush;
+
+  translate_data = start_data;
+
+  for(int i=_c1.posDOF(); i<_c1.DOF(); ++i)
   {
     //create intermediate cfg, replacing dof i with goal dof
     vector<double> intermediate_data = translate_data;
+    intermediate_data[0] = half_position[0];
+    intermediate_data[1] = half_position[1];
+    intermediate_data[2] = half_position[2];
     intermediate_data[i] = goal_data[i];
     Cfg* cfg_intermediate = _c1.CreateNewCfg(intermediate_data);
     sequence.push_back(cfg_intermediate);
+
+    // TMP for printing purposes
+    tmp = cfg_intermediate->GetData();
+    cout << "C" << i << ": ";
+    for(int j=0; j<tmp.size(); j++) {
+      cout << tmp[j] << ", ";
+    } 
+    cout << "end \n" << flush;
+
     //save change of dof to translate_data
     translate_data[i] = goal_data[i];
   }
 
   sequence.push_back(_c2.CreateNewCfg());
+
+  // TMP for printing purposes
+  tmp = _c2.GetData();
+  cout << "CG: ";
+  for(int j=0; j<tmp.size(); j++) {
+    cout << tmp[j] << ", ";
+  }
+  cout << "end \n" << flush;
 
   bool connected = true;
 
