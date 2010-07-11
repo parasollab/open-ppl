@@ -290,8 +290,9 @@ public:
   Band(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool debug)
   {  
     m_debug = debug;
-    
-    dmm = in_pProblem->GetDistanceMetric()->GetDefault()[0];
+    // note: A temporary fix (hack) until distance metric is properly fixed. This picks the second listed
+    // distance metric from the xml file.
+    dmm = in_pProblem->GetDistanceMetric()->GetDefault()[1];
     m_min = in_Node.numberXMLParameter(string("min"), false, double(0.0), double(0.0), double(100000.0), "min");
     m_max = in_Node.numberXMLParameter(string("max"), false, DBL_MAX, double(0.0), DBL_MAX, "max");
     m_usePercent = in_Node.boolXMLParameter(string("usePercent"), false, false,
