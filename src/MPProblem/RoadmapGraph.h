@@ -609,9 +609,10 @@ int
 RoadmapGraph<VERTEX,WEIGHT>::
 GetVerticesVID(vector<VID>& v_vd) const{
   v_vd.clear();
-   GRAPH g = *this; 
+  // GRAPH g = *this; 
   //verts.reserve( g.size() ); //g has no member size();
-    for (CVI vi = g.begin(); vi!= g.end(); vi++) {
+   // for (CVI vi = this.begin(); vi!= g.end(); vi++) {
+	  for (CVI vi = this->begin(); vi!= this->end(); vi++) {  
         v_vd.push_back((*vi).descriptor());
     }
     return v_vd.size();
@@ -667,7 +668,7 @@ bool
 RoadmapGraph<VERTEX,WEIGHT>::
 IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
 
-   RoadmapGraph<VERTEX, WEIGHT> g = *this; // copying graph-memory problem -
+   //RoadmapGraph<VERTEX, WEIGHT> g = *this; // copying graph-memory problem -
     //CVI v1 = find_if(g.begin(), g.end(), std::bind2nd(std::equal_to<VERTEX>(), _v1 ));
     //CVI v1=g.begin() ;//= find_if(g.begin(), g.end(), Vertex_equal_to<VERTEX, WEIGHT>(_v1) ); 
 
@@ -689,16 +690,16 @@ IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
     return (vi);
 
 */
-    VI vi = g.begin();
+    VI vi = this->begin();
     bool found = false;
-    while(vi != g.end() && !found){
+    while(vi != this->end() && !found){
 	if((*vi).property() == _v1)
 	  found = true;
 	else
 	  vi++;
     }// end while
 
-    if (vi != g.end() ) {
+    if (vi != this->end() ) {
         *_v1ptr = vi;
         return true;
     } else {
