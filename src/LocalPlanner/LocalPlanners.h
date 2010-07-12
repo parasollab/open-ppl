@@ -218,6 +218,8 @@ LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) :
         straight_line->SetID(GetNewID());
         selected.push_back(straight_line);
         all.push_back(straight_line);
+        //if straightline, set saved_sl_id for add partial edge
+        saved_sl_id = straight_line->GetID();
       } else if(citr->getName() == string("RotateAtS")) {
         RotateAtS<CFG, WEIGHT>* rotate_at_s = 
             new RotateAtS<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
