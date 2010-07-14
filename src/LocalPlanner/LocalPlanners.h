@@ -20,7 +20,7 @@
 // Include LocalPlanners
 #include "StraightLine.h"
 #include "RotateAtS.h"
-#include "SuccStraightLine.h"
+#include "TransformAtS.h"
 //#include "ApproxSpheres.h"
 //#include "AStar.h" /*AStarDistance and AStarClearance defined here*/
 
@@ -166,8 +166,8 @@ LocalPlanners() {
   RotateAtS<CFG, WEIGHT>* rotate_at_s = new RotateAtS<CFG,WEIGHT>(cdtype);
   all.push_back(rotate_at_s);
 
-  SuccStraightLine<CFG, WEIGHT>* succ_straight_line = new SuccStraightLine<CFG, WEIGHT>(cdtype);
-  all.push_back(succ_straight_line);
+  TransformAtS<CFG, WEIGHT>* transform_at_s = new TransformAtS<CFG, WEIGHT>(cdtype);
+  all.push_back(transform_at_s);
  
   /*
   AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>();
@@ -227,13 +227,13 @@ LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) :
         rotate_at_s->SetID(GetNewID());
         selected.push_back(rotate_at_s);
         all.push_back(rotate_at_s);
-      } else if(citr->getName() == string("successive_straight_line")) {
-        SuccStraightLine<CFG, WEIGHT>* succ_straight_line =
-            new SuccStraightLine<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
-	succ_straight_line->cdInfo = &cdInfo;
-	succ_straight_line->SetID(GetNewID());
-	selected.push_back(succ_straight_line);
-	all.push_back(succ_straight_line);
+      } else if(citr->getName() == string("transform_at_s")) {
+        TransformAtS<CFG, WEIGHT>* transform_at_s = 
+	    new TransformAtS<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
+	transform_at_s->cdInfo = &cdInfo;
+	transform_at_s->SetID(GetNewID());
+	selected.push_back(transform_at_s);
+	all.push_back(transform_at_s);
       } else {
         citr->warnUnknownNode();
       }
@@ -270,8 +270,8 @@ GetDefault() {
   RotateAtS<CFG, WEIGHT>* rotate_at_s = new RotateAtS<CFG, WEIGHT>(cdtype);
   Default.push_back(rotate_at_s);
 
-  SuccStraightLine<CFG, WEIGHT>* succ_straight_line = new SuccStraightLine<CFG, WEIGHT>(cdtype);
-  Default.push_back(succ_straight_line);
+  TransformAtS<CFG, WEIGHT>* transform_at_s = new TransformAtS<CFG, WEIGHT>(cdtype);
+  Default.push_back(transform_at_s);
   
 /*    AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>();  */
 /*    Default.push_back(a_star_distance); */
