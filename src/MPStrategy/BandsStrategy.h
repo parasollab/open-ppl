@@ -93,6 +93,11 @@ struct unionStats{
   int sameCCSizes[5];
 };
 */
+
+template <class T>
+struct __CCVID_Compare : public std::binary_function<T, T, bool> {
+  bool operator()(T x, T y) { return x.first > y.first; }
+};
  
 class BandsIncrementalRoadmap : public MPStrategyMethod {
   public:
@@ -199,8 +204,11 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
     //write output file format
     stat_out << " #num_nodes \t num_edges \t lp_attempts \t lp_succ \t lp_cd  \t ng_time \t ng_cd \t con_time"
 //             << "\t nf_qry_time \t nf_const_time"
-             << "\t num_ccs \t max_cc_size \t min_cc_size \t solve_qry \t min_edge_len \t max_edge_len \t ave_edge_len \t std_edge_len"
-             << "\t min_degree \t max_degree \t ave_degree \t std_degree \t approx_dia"
+             << "\t num_ccs "
+	  //  << "\t max_cc_size \t min_cc_size"
+	    << "\t solve_qry \t min_edge_len \t max_edge_len \t ave_edge_len \t std_edge_len"
+             << "\t min_degree \t max_degree \t ave_degree \t std_degree "
+	  //   << "\t approx_dia"
              << endl;
 
 
@@ -308,7 +316,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       //pStatClass->PrintAllStats(region->GetRoadmap());
       
       QueryClock.StartClock("Query");
-      
+       cout << "BEGIN isSameCCC" << endl <<flush;  
       stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
       querySucceeded = is_same_cc(*region->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
 
@@ -323,12 +331,24 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       OnlineStats degree = calcDegreeStats(*region->GetRoadmap()->m_pRoadmap);
       OnlineStats edges = calcEdgeStats(*region->GetRoadmap()->m_pRoadmap);
       vector<pair<size_t, VID> > CCStats;
+      cmap.reset();
       get_cc_stats (*region->GetRoadmap()->m_pRoadmap, cmap, CCStats);
-      // run dia twice, start from largest component
-      VID far_vid(-1), far_vid2(-1); 
-      ComponentDiameter(*region->GetRoadmap()->m_pRoadmap,CCStats[0].second, &far_vid);
-      double diameter = ComponentDiameter(*region->GetRoadmap()->m_pRoadmap, far_vid,&far_vid2);
-     // stat_out << basefname.str()
+     // std::sort (CCStats.begin(),  CCStats.end(), __CCVID_Compare<std::pair<int,VID> >() );
+     // cout << "Begin run dia twice, start from largest component" << endl;
+      //cout << "CCStats.size" << CCStats.size()<< endl ;
+      //test
+      /*int ccnum = 0;
+       cout << "\nThere are " << CCStats.size() << " connected components:";
+       for (vector< pair<size_t,VID> >::iterator vi = CCStats.begin(); vi != CCStats.end(); vi++) {
+        cout << "\nCC[" << ccnum << "]: " << vi->first ;
+        cout << " (vid=" << size_t(vi->second) << ")";
+        ccnum++;
+      }*/
+     // VID far_vid(-1), far_vid2(-1); 
+       
+     //ComponentDiameter(*region->GetRoadmap()->m_pRoadmap,CCStats[0].second, &far_vid);
+     //double diameter = ComponentDiameter(*region->GetRoadmap()->m_pRoadmap, far_vid,&far_vid2);
+      // stat_out << basefname.str()
         stat_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices() - 2
         << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
         << "\t" << pStatClass->Connections_Attempted << "\t" << double(pStatClass->Connections_Made) / double(pStatClass->Connections_Attempted)
@@ -338,13 +358,14 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         << "\t" << ellapsed_con
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()- 2)
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-        << "\t" << CCStats.size() << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-        << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
+         << "\t" << CCStats.size()
+ //       << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+//        << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
         << "\t" << querySucceeded 
         << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
         << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
         << "\t" << degree.GetMean() << "\t" << degree.GetStandardDeviation() 
-        << "\t" << diameter
+//        << "\t" << diameter
         << endl;
 
 
@@ -363,13 +384,14 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         << "\t" << ellapsed_con
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-        << "\t" << CCStats.size() << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-        << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
+        << "\t" << CCStats.size()
+	// << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+       // << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
         << "\t" << querySucceeded
         << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
         << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
         << "\t" << degree.GetMean() << "\t" << degree.GetStandardDeviation() 
-        << "\t" << diameter
+       // << "\t" << diameter
         << endl;
 
         if (!map_out) {
@@ -519,6 +541,7 @@ private:
 // 2) for several values of d, a file containing a list of the # neighbors within d distance, sorted decreasing    
 //
 //  it also computes the connectivity stats and others (scale-free, expansion)
+//@note we are no longer computing 1 and 2 above by default , the compute_dist_neighbor need to be set to do this
 class BandsStats : public MPStrategyMethod {
  	private:
   	string input_map_filename;
@@ -526,7 +549,7 @@ class BandsStats : public MPStrategyMethod {
   	string out_filename;
   	string out_filename_dist;
     string out_filename_num_neighbors;
-  
+          bool compute_dist_neighbor;
 	  int interval;
 	  int k;
     double dist;
@@ -550,6 +573,8 @@ class BandsStats : public MPStrategyMethod {
       dist = in_Node.numberXMLParameter(string("dist"), true, 0.0, 0.0, 1000.0, string("dist for calculation"));
       out_filename_dist = in_Node.stringXMLParameter(string("out_filename_dist"), true, string(""),string("output filename - dist of k-th closest node"));
       out_filename_num_neighbors = in_Node.stringXMLParameter(string("out_filename_num_neighbors"), true, string(""),string("output filename - num neighbors inside dist"));
+      compute_dist_neighbor = in_Node.boolXMLParameter(string("compute_dist_neighbor"), false, false,
+                                         string("if true, the function to compute distance and num of neighbors will be called"));
 		}
 		
 		long scaleFree(Roadmap<CfgType,WeightType> &rmp) {
@@ -708,12 +733,34 @@ class BandsStats : public MPStrategyMethod {
 			//myofstream.close();
 			
 		}
+		
+		
+		double computeDiameter(Roadmap<CfgType,WeightType>& rmp){
+			
+	             vector<pair<size_t, VID> > CCStats;
+		     stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+                      get_cc_stats(*(rmp.m_pRoadmap), cmap, CCStats);
+                      std::sort (CCStats.begin(),  CCStats.end(), __CCVID_Compare<std::pair<int,VID> >() );
+                    // test 
+                   /* int ccnum = 0;
+                   cout << "\nThere are " << CCStats.size() << " connected components:";
+                  for (vector< pair<size_t,VID> >::iterator vi = CCStats.begin(); vi != CCStats.end(); vi++) {
+                  cout << "\nCC[" << ccnum << "]: " << vi->first ;
+                  cout << " (vid=" << size_t(vi->second) << ")";
+                  ccnum++;
+               }*/
+               VID far_vid(-1), far_vid2(-1); 
+              ComponentDiameter(*(rmp.m_pRoadmap),CCStats[0].second, &far_vid);
+              double diameter = ComponentDiameter(*(rmp.m_pRoadmap), far_vid,&far_vid2);
+	      return diameter;
+		}
 	
 		
 		void storeSameCCInfo(unionStats& stats, Roadmap<CfgType,WeightType>& rmp){
 			vector< pair<size_t, VID> > ccstats;
 			stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
 			get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats);
+			std::sort (ccstats.begin(),  ccstats.end(), __CCVID_Compare<std::pair<int,VID> >() );
 			vector< pair<size_t, VID> >::iterator iter = ccstats.begin();
 			//stats.sameCCSizes.reserve(5);
 			for(int i=0; i<5; i++){
@@ -740,18 +787,18 @@ class BandsStats : public MPStrategyMethod {
 			string statsFileName = input_map_filename + ".ccstats";
 				
 			ofstream  myofstream(statsFileName.c_str());
-			myofstream<<"#number of nodes, scale-free, sameCCPairs, difference to union sameCCPairs, ratio to union";
+			myofstream<<"#number of nodes, diameter, scale-free, sameCCPairs, difference to union sameCCPairs, ratio to union";
 			myofstream<<", size_largest_CC1,size_largest_CC2, size_largest_CC3,  size_largest_CC4, size_largest_CC5";
-                        myofstream<<", max_path_length";
+                       /* myofstream<<", max_path_length";
 			for(int i=0; i<ExpanderStatsClass->mpl;i++){
 			  myofstream<<"hop_graph_"<<i<<", ";
 			}
-                        myofstream<<", triangle participation length, triangle participation";
+                        myofstream<<", triangle participation length, triangle participation";*/
 			myofstream<<endl;
 			
 			int sameCCPair=fastCompareAllPairs(rmp);
 			long scale_free = scaleFree(rmp);
-		       
+		        double diameter = computeDiameter(rmp);
 			
                         vector<int> hop_graph_stats;
 			//hop_graph.resize(ExpanderStatsClass->mpl); 
@@ -844,6 +891,7 @@ class BandsStats : public MPStrategyMethod {
 			while(stats_iter>reverseStats.begin()){
 				stats_iter--;
 				myofstream<<stats_iter->n<<", ";
+				myofstream<<diameter<<", ";
 				myofstream<<scale_free<<", ";
 				myofstream<<stats_iter->sameCCPair<<", ";
 				myofstream<<stats_iter->differenceInSameCC<<", ";
@@ -853,18 +901,18 @@ class BandsStats : public MPStrategyMethod {
 				myofstream<<stats_iter->sameCCSizes[2]<<", ";
 				myofstream<<stats_iter->sameCCSizes[3]<<", ";
 				myofstream<<stats_iter->sameCCSizes[4]<<", ";
-				myofstream<<ExpanderStatsClass->mpl<<", ";
+				/*myofstream<<ExpanderStatsClass->mpl<<", ";
 				
 				
 				for(int i=0; i<ExpanderStatsClass->mpl;i++){				 
 				  myofstream<< hop_graph_stats[i]<<", ";
-				}
+				}*/
 				
                                 
-				myofstream<<triangle_participation.size()<<", ";
+				/*myofstream<<triangle_participation.size()<<", ";
 				for(int i=0; i<triangle_participation.size();i++){
 				  myofstream<< triangle_participation[i]<<", ";
-				}
+				}*/
 				
 				myofstream<<endl;
 			}
@@ -994,8 +1042,10 @@ class BandsStats : public MPStrategyMethod {
 		void operator()(){
 			cout << "BandsStats::BandsStats()" << endl;
 
-			// do dist/num_neighbors work
+			// do dist/num_neighbors work if flag is set from xml
+			if(compute_dist_neighbor){
 			distCalc();
+			}
 			
 			// do the other stats
 			Roadmap<CfgType, WeightType> ideal_rmp;
