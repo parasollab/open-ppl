@@ -794,7 +794,7 @@ class BandsStats : public MPStrategyMethod {
 				
 			ofstream  myofstream(statsFileName.c_str());
 			myofstream<<"#number of nodes, diameter, scale-free, sameCCPairs, difference to union sameCCPairs, ratio to union";
-			myofstream<<", size_largest_CC1,size_largest_CC2, size_largest_CC3,  size_largest_CC4, size_largest_CC5 avg_edge_length_dm max_edge_length_dm";
+			myofstream<<", size_largest_CC1,size_largest_CC2, size_largest_CC3,  size_largest_CC4, size_largest_CC5, avg_edge_length_dm, max_edge_length_dm";
                        /* myofstream<<", max_path_length";
 			for(int i=0; i<ExpanderStatsClass->mpl;i++){
 			  myofstream<<"hop_graph_"<<i<<", ";
