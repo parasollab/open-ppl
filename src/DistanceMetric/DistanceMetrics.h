@@ -605,7 +605,7 @@ class RmsdDistance : public EuclideanDistance {
   virtual DistanceMetricMethod* CreateCopy();
 
   virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
-  vector<Vector3D> GetCoordinatesForRMSD(const Cfg &c, Environment *env);
+  virtual vector<Vector3D> GetCoordinatesForRMSD(const Cfg &c, Environment *env);
   double RMSD(vector<Vector3D> x, vector<Vector3D> y, int dim);
 };
 
