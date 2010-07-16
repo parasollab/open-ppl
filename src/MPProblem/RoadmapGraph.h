@@ -956,8 +956,9 @@ double ComponentDiameter(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, t
         typename GRAPH::vertex_iterator vi;
         typename GRAPH::adj_edge_iterator ei;
         g.find_edge(ed, vi, ei);
-        double wt = (*ei).property().Weight();
-        
+       // double wt = (*ei).property().Weight();
+       //to do - fix this 
+        double wt = 1.0;
         if(!succ->valid()) {
           //relax = true;
           succ->dist = u->dist + wt;
