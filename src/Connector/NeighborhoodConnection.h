@@ -346,7 +346,12 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       KClosestClock.StartClock("kClosest");
       FindKNeighbors(_rm, v_cfg, rmp_vertices.begin(), rmp_vertices.end(), k_to_find, closest_iter);      
       KClosestClock.StopClock();
-    
+
+      //to fix bug with dbands
+      while(closest.back()==-999 && closest.size()>0){
+	closest.pop_back();
+      }
+
       ConnectNeighbors(_rm, Stats, dm, lp, addAllEdges, iter_success, iter_failure, 
               total_success, total_failure, *itr1, closest);
     } while (m_unconnected && iter_success < k_to_find && iter_failure < m_fail && k_to_find < iter_size);
@@ -426,7 +431,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         KClosestClock.StartClock("kClosest");
         FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, closest_iter);      
         KClosestClock.StopClock();
-      
+        
         ConnectNeighbors(_rm, Stats, dm, lp, addAllEdges, iter_success, iter_failure, 
                 total_success, total_failure, *itr1, closest);
       } while (m_unconnected && iter_success < k_to_find && iter_failure < m_fail && k_to_find < iter_size);

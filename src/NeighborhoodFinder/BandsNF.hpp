@@ -634,6 +634,13 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   InputIterator _input_first, InputIterator _input_last, CFG _cfg, 
   int k, OutputIterator _out)
 {
+  
+  OutputIterator out_iter=_out;
+  for(int i=0; i<k; i++){
+    *out_iter=-999;
+    ++out_iter;
+  }
+  
   IncrementNumQueries();
   StartTotalTime();
   StartQueryTime();
