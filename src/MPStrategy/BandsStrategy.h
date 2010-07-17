@@ -205,10 +205,10 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
     stat_out << " #num_nodes \t num_edges \t lp_attempts \t lp_succ \t lp_cd  \t ng_time \t ng_cd \t con_time"
 //             << "\t nf_qry_time \t nf_const_time"
              << "\t num_ccs "
-	  //  << "\t max_cc_size \t min_cc_size"
+	    << "\t max_cc_size \t min_cc_size"
 	    << "\t solve_qry \t min_edge_len \t max_edge_len \t ave_edge_len \t std_edge_len"
              << "\t min_degree \t max_degree \t ave_degree \t std_degree "
-	  //   << "\t approx_dia"
+	     << "\t approx_dia"
              << endl;
 
 
@@ -333,6 +333,8 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       vector<pair<size_t, VID> > CCStats;
       cmap.reset();
       get_cc_stats (*region->GetRoadmap()->m_pRoadmap, cmap, CCStats);
+      // diameter computed in BandStats
+      double diameter = 0.0;
      // std::sort (CCStats.begin(),  CCStats.end(), __CCVID_Compare<std::pair<int,VID> >() );
      // cout << "Begin run dia twice, start from largest component" << endl;
       //cout << "CCStats.size" << CCStats.size()<< endl ;
@@ -359,13 +361,13 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()- 2)
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
          << "\t" << CCStats.size()
- //       << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-//        << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
+        << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+        << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
         << "\t" << querySucceeded 
         << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
         << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
         << "\t" << degree.GetMean() << "\t" << degree.GetStandardDeviation() 
-//        << "\t" << diameter
+        << "\t" << diameter
         << endl;
 
 
@@ -385,13 +387,13 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
         << "\t" << CCStats.size()
-	// << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-       // << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
+	 << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+        << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
         << "\t" << querySucceeded
         << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
         << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
         << "\t" << degree.GetMean() << "\t" << degree.GetStandardDeviation() 
-       // << "\t" << diameter
+        << "\t" << diameter
         << endl;
 
         if (!map_out) {
