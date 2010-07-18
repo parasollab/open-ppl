@@ -787,8 +787,8 @@ class BandsStats : public MPStrategyMethod {
 		void printAllPairsAtInterval(Roadmap<CfgType,WeightType>& rmp, const vector<int>& union_pairs, int _interval){
 
 		  //todo: change compute edge length are each interval
-		  double avg_edge_length, max_edge_length;
-		  computeEdgeLengthFromdm(rmp,avg_edge_length, max_edge_length);
+		  double avg_edge_length, max_edge_length, average_max_edge_length;
+		  computeEdgeLengthFromdm(rmp,avg_edge_length, max_edge_length, average_max_edge_length);
 			
 			//int sameCCPairUnion = fastCompareAllPairs(union_rmp);
 			//cout<<"in print at interval"<<endl;    
@@ -796,7 +796,7 @@ class BandsStats : public MPStrategyMethod {
 				
 			ofstream  myofstream(statsFileName.c_str());
 			myofstream<<"#number of nodes, diameter, scale-free, sameCCPairs, difference to union sameCCPairs, ratio to union";
-			myofstream<<", size_largest_CC1,size_largest_CC2, size_largest_CC3,  size_largest_CC4, size_largest_CC5, avg_edge_length_dm, max_edge_length_dm";
+			myofstream<<", size_largest_CC1,size_largest_CC2, size_largest_CC3,  size_largest_CC4, size_largest_CC5, avg_edge_length_dm, max_edge_length_dm, average_max_edge_length_dm";
                        /* myofstream<<", max_path_length";
 			for(int i=0; i<ExpanderStatsClass->mpl;i++){
 			  myofstream<<"hop_graph_"<<i<<", ";
@@ -911,6 +911,8 @@ class BandsStats : public MPStrategyMethod {
 				myofstream<<stats_iter->sameCCSizes[4]<<", ";
 				myofstream<<avg_edge_length<<", ";
 				myofstream<<max_edge_length<<", ";
+				myofstream<<average_max_edge_length<<", ";
+
 				/*myofstream<<ExpanderStatsClass->mpl<<", ";
 				
 				
@@ -1079,17 +1081,20 @@ class BandsStats : public MPStrategyMethod {
 		virtual void PrintOptions(ostream& out_os) { }
 		virtual void operator()(int in_RegionID) { }
 
-		void computeEdgeLengthFromdm(Roadmap<CfgType, WeightType> rmp,double &avg_dist, double &max_dist){
+		void computeEdgeLengthFromdm(Roadmap<CfgType, WeightType> rmp,double &avg_dist, double &max_dist, double &avg_max_dist){
 
 		  max_dist=0;
 		  avg_dist=0;
+		  avg_max_dist=0;
 		  int count=0;
 		  RoadmapGraph<CfgType,WeightType>::VI iter;
-		  
+		  //todo: change to use count from rmp graph
+		  int nodes=0;
 		  for(iter=rmp.m_pRoadmap->begin(); iter<rmp.m_pRoadmap->end(); iter++){
-		    
+		    nodes++;
 		    vector<VID> succ;
 		    rmp.m_pRoadmap->get_successors((*iter).descriptor(), succ); 
+		    double max_for_node=0;
 		    for(vector<VID>::iterator iter2=succ.begin(); iter2<succ.end(); iter2++){
 		      RoadmapGraph<CfgType,WeightType>* pMap = rmp.m_pRoadmap;
 		      CfgType cfg1 = (pMap->find_vertex((*iter).descriptor()))->property();
@@ -1098,10 +1103,13 @@ class BandsStats : public MPStrategyMethod {
 		      double dist=dmm->Distance(rmp.GetEnvironment(), cfg1, cfg2);
 		      count++;
 		      max_dist=max(max_dist,dist);
+		      max_for_node=max(dist,max_for_node);
 		      avg_dist+=dist;
 		    }
+		    avg_max_dist+=max_for_node;
+
 		  }
-		  
+		  avg_max_dist/=nodes;
 		  avg_dist/=count;
 		}
 
