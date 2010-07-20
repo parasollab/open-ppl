@@ -74,14 +74,8 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
 
   //@{
     double s_value;
-    //vector<double> s_values;
-    //bool isSymmetric;
   //@}
 
-
-  //int binarySearch;
-  //int lineSegmentLength;
-  //std::string vcMethod;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -101,12 +95,7 @@ TransformAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProbl
 {
   this->cdtype = _cdtype;
   LOG_DEBUG_MSG("TransformAtS::TransformAtS()");
-  //double nSValue = in_Node.numberXMLParameter(string("s"), true, 0.5, 0.0, 1.0, string("rotate at s value"));
   s_value = in_Node.numberXMLParameter(string("s"), true, 0.5, 0.0, 1.0, string("transform at s value"));
-  //s_values.push_back(nSValue);
-  //lineSegmentLength = in_Node.numberXMLParameter(string("length"), false, 0, 0, 5000, string("lineSegmentLength"));
-  //binarySearch = in_Node. numberXMLParameter(string("binary_search"), false, 0, 0, 1, string("binary search"));
-  //vcMethod = in_Node.stringXMLParameter(string("vc_method"), false, string(""""), string("Validity Test Method"));
   if(warnUnrequestedXml)
     in_Node.warnUnrequestedAttributes();
   LOG_DEBUG_MSG("~TransformAtS::TransformAtS()");
@@ -127,7 +116,6 @@ PrintOptions(ostream& out_os) {
   out_os << "line segment length = " << " " << this->lineSegmentLength << " ";
   out_os << "binary search = " << " " << this->binarySearch << " ";
   out_os << "vcMethod = " << " " << this->vcMethod << " ";
-  //out_os << "s_value = " << s_values[0];
   out_os << "s_value = " << s_value;
   out_os << endl;
 }
@@ -146,10 +134,7 @@ void
 TransformAtS<CFG, WEIGHT>::
 SetDefault() {
   StraightLine<CFG, WEIGHT>::SetDefault();
-  //s_values.clear();
-  //s_values.push_back(sValue); 
   s_value = 0;
-  //isSymmetric = true;
 }
 
 
@@ -163,7 +148,6 @@ PrintUsage(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << "\n\t" << this->lineSegmentLength;
   _os << "\n\t" << this->binarySearch;
-  //_os << "\n\t" << s_values[0];
   _os << "\n\t" << s_value;
  
   _os.setf(ios::right,ios::adjustfield);
@@ -177,11 +161,6 @@ PrintValues(ostream& _os) {
   _os << GetName() << " ";
   _os << "ineSegmentLength" << " " << this->lineSegmentLength << " ";
   _os << "binarySearch" << " " << this->binarySearch << " ";
-/*
-  for(int i=0; i<s_values.size(); i++){
-   _os << "s" << " " << s_values[i] << " ";
-   }
-*/
   _os << "s" << " " << s_value << " ";
  _os << endl;
 }
@@ -207,13 +186,6 @@ IsConnected(Environment *_env, Stat_Class& Stats,
      bool savePath, bool saveFailedPath) {
   bool connected = false;
   connected = IsConnectedOneWay(_env, Stats, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-/*
-  if(!connected && !isSymmetric) {  //try the other way
-    //connected = IsConnectedOtherWay(_env, Stats, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-    if(savePath)
-      reverse(lpOutput->path.begin(), lpOutput->path.end());
-  }
-*/
   return connected;
 }
 
@@ -296,8 +268,6 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
       cd_cntr++;
       if((!sequence[i]->InBoundingBox(_env)) || (sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))))
       {
-        //connected = false;
-        //break;
 	connected = IsConnectedOtherWay(_env, Stats, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
       }
     }
@@ -320,8 +290,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
         lpOutput->path.push_back(*sequence[i+1]);
 
       if(!connected)
-        //break;
-	connected = IsConnectedOtherWay(_env, Stats, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+        break;
     }
   }
 
