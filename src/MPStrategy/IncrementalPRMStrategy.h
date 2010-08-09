@@ -81,7 +81,7 @@ generate_nodes(MPRegion<CfgType, WeightType>* region, OutputIterator all_out, Ou
     NodeGenSubClock.StopPrintClock();
         
     //add valid nodes to roadmap
-    for(vector<CfgType>::iterator C = in_nodes.begin(); C != in_nodes.end(); ++C)
+    for(vector<CfgType>::iterator C = out_nodes.begin(); C != out_nodes.end(); ++C)
     {
        //if((*C).IsLabel("VALID") && ((*C).GetLabel("VALID"))) {
        //sjacobs- start
