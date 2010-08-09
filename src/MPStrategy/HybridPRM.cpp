@@ -205,7 +205,7 @@ operator()(int in_RegionID) {
 
       Clock_Class NodeGenClock;
       NodeGenClock.StartClock("Node Generation");
-      vector< CfgType > vectorCfgs, in_nodes;
+      vector< CfgType > vectorCfgs, in_nodes(1);
       cout << "About to get next pointer method = " <<next_node_gen<< endl;
      pNodeGen = GetMPProblem()->GetMPStrategy()->
           GetSampler()->GetSamplingMethod(next_node_gen);
@@ -220,9 +220,7 @@ operator()(int in_RegionID) {
 	    ++m_totalSamples;               //Increment total node counter for stop criteria
 	    cmap.reset();
 	    int nNumPrevCCs = get_cc_count(*(region->roadmap.m_pRoadmap), cmap);
-	    vector< CfgType > newCfg;
-	    newCfg.push_back(vectorCfgs[j]);
-	    int newVID = region->roadmap.m_pRoadmap->AddVertex(newCfg);
+	    int newVID = region->roadmap.m_pRoadmap->AddVertex(vectorCfgs[j]);
 	    
 	    //Connect New node to roadmap.
 	    ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();

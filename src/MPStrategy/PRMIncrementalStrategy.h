@@ -71,6 +71,7 @@ private:
   vector<string> m_vecStrNodeConnectionLabels;
   vector<string> m_vecStrComponentConnectionLabels;
   vector<string> m_vecNodeCharacterizerLabels;
+  string m_strLocalPlannerLabel;
   string m_strWitnessFilename;
   vector<CfgType> m_vecWitnessNodes;
   
