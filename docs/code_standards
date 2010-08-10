@@ -4,6 +4,7 @@ Code Standards
 
 This file contains, for now, a set of discussion points for coding standards.  In the future, this file will describe the codeing standards established and agreed on by the group.
 
+
 Header (.h, .hpp) vs. Source (.c, .cpp) files
 ---------------------------------------------
 - We should give all header files the same extention.  Choices are .h and .hpp
@@ -15,6 +16,7 @@ Header (.h, .hpp) vs. Source (.c, .cpp) files
 - We should put the implementation for functions (stand alone or class member functions) in the source files, NOT the header files.  This will greatly improve compile times.  Execptions to this rule are:
   * templated functions - these must be implemented in the header files (as required by the compiler)
   * 1 line functions - these may be put in the header files, particularly if they are just wrapper redirects to other functions.
+
 
 Naming Conventions
 ------------------
@@ -29,6 +31,7 @@ Naming Conventions
 - We should standardize how class member variables are named in the code.  Choices currently are no standard, starting with "m_", starting with "m_<datatype>" where <datatype> indicates if the variable is a bool, int, vector, etc.
   * Preferences: Shawna = no preference
 
+
 Code Style Conventions
 ----------------------
 - We should standardize how the code is tabbed (i.e., with x spaces, with the \t character, etc).
@@ -42,5 +45,11 @@ Code Style Conventions
 - We should decide how we want to handle persistant/committed debugging statemets.  Choices are at compile time with a -D flag and correspoding macro, at run time where every method / component has a debugging flag variable which may nbe set on xml input, others?.  If we choose a compile time flag, we should decide if this is turned on automatically when debug=1, turned off automatically when debug=0, etc.
 
 - Every method/component should implement a PrintOptions(ostream&) function that simply prints the options availalbe as well as their default values.
+
+
+Commit Policies
+---------------
+- Code must be reviewed by another "approved" member of the group before it can be committed.  (This file is an execption to the rule.)
+
 
 
