@@ -3,6 +3,11 @@
 
 #include <sys/time.h>
 #include "util.h"
+#include "CfgTypes.h"
+#include "MPProblem/RoadmapGraph.h" //for VID typedef
+
+typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType, WeightType> GRAPH;
+typedef GRAPH::vertex_descriptor VID; 
 
 ///Will be used to derive IMP,PRM,RRT,metaplanner, etc.
 class MPStrategyMethod : public MPBaseObject 

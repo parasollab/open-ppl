@@ -46,10 +46,9 @@ public:
   string m_strController_MPStrategyMethod;
 };
 
-#include "MPStrategy/PRMStrategy.h"
+#include "MPStrategy/BasicPRMStrategy.h"
+#include "MPStrategy/ProbabilityPRMStrategy.h"
 #include "MPStrategy/RoadmapToolsStrategy.h"
-#include "MPStrategy/PRMIncrementalStrategy.h"
-#include "MPStrategy/IncrementalPRMStrategy.h"
 #include "MPStrategy/HybridPRM.h"
 #include "MPStrategy/ExpanderStats.h"
 #include "MPStrategy/TimingStats.h"

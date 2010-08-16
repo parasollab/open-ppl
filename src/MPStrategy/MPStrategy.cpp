@@ -65,13 +65,13 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
   
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-    if(citr->getName() == "PRMRoadmap") {
-      PRMRoadmap* prm = new PRMRoadmap(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( prm );
-    } else if(citr->getName() == "PRMOriginalRoadmap") {
-      PRMOriginalRoadmap* comp = new PRMOriginalRoadmap(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( comp );
-    } else if(citr->getName() == "Compare") {
+     if(citr->getName() == "BasicPRMStrategy"){
+        BasicPRMStrategy* bps = new BasicPRMStrategy(*citr, GetMPProblem());
+        all_MPStrategyMethod.push_back(bps);
+     }else if(citr->getName() == "ProbabilityPRMStrategy") {
+        ProbabilityPRMStrategy* pps = new ProbabilityPRMStrategy(*citr,GetMPProblem());
+        all_MPStrategyMethod.push_back(pps);
+    }else if(citr->getName() == "Compare") {
       MPComparer* comp = new MPComparer(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( comp );
     } else if(citr->getName() == "RoadmapClear") {
@@ -83,38 +83,21 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
     } else if(citr->getName() == "MPMultiStrategy") {
       MPMultiStrategy* multistrategy = new MPMultiStrategy(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( multistrategy );
-    } else if(citr->getName() == "PRMIncrementalStrategy") {
-      PRMIncrementalStrategy* prminc = new PRMIncrementalStrategy(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( prminc );
-    } else if(citr->getName() == "IncrementalPRMStrategy") {
-      IncrementalPRMStrategy* prminc = new IncrementalPRMStrategy(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( prminc );
     } else if(citr->getName() == "HybridPRM") {
       HybridPRM* hprm = new HybridPRM(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( hprm );
-//    } else if(citr->getName() == "NFTester") {
-//      NFTester* nft = new NFTester(*citr,GetMPProblem());
-//      all_MPStrategyMethod.push_back( nft );
-//    } else if(citr->getName() == "NFIncrementalRoadmap") {
-//      NFIncrementalRoadmap* nfir = new NFIncrementalRoadmap(*citr,GetMPProblem());
-//      all_MPStrategyMethod.push_back( nfir );
     } else if(citr->getName() == "NFUnionRoadmap") {
       NFUnionRoadmap* nfur = new NFUnionRoadmap(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( nfur );
-      //nfir->ParseXML(*citr);
     } else if(citr->getName() == "NFRoadmapCompare") {
      NFRoadmapCompare* nfrc = new NFRoadmapCompare(*citr,GetMPProblem());
      all_MPStrategyMethod.push_back( nfrc );
-//      //nfir->ParseXML(*citr);
     } else if(citr->getName() == "ExpanderStats") {
       EdgeExpanderStats* ees = new EdgeExpanderStats(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( ees );
-      //nfir->ParseXML(*citr);
    } else if(citr->getName() == "TimingStats") {
       RoadmapTimingStats* tms = new RoadmapTimingStats(*citr,GetMPProblem());
       all_MPStrategyMethod.push_back( tms );
-      //nfir->ParseXML(*citr);
-
     } else if(citr->getName() == "BandsIncrementalRoadmap") {
       BandsIncrementalRoadmap* bands = new BandsIncrementalRoadmap(*citr, GetMPProblem());
       all_MPStrategyMethod.push_back( bands ); 

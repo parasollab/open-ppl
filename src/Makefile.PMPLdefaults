@@ -194,8 +194,8 @@ PMPL_OBJS = \
 	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
 	MPStrategy/MPStrategy.o \
-	MPStrategy/PRMIncrementalStrategy.o \
-	MPStrategy/IncrementalPRMStrategy.o \
+	MPStrategy/BasicPRMStrategy.o \
+        MPStrategy/ProbabilityPRMStrategy.o \
 	MPStrategy/HybridPRM.o \
 	MPStrategy/QueryStrategy.o \
 	MPStrategy/SmoothQueryStrategy.o \
