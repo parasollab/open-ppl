@@ -14,7 +14,7 @@
 #include <functional>
 #include "Environment.h"
 #include <string>
-
+#include "trash/Parameters.h"
 //////////////////////////////////////////////////////////////////////////////////////////
 class Body;
 template <class CFG, class WEIGHT> class Roadmap;

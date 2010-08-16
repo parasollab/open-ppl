@@ -190,8 +190,8 @@ LocalPlanners<CFG,WEIGHT>::
 GetMethod(string& in_strLabel) {
   typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++) {
-    if(I->GetLabel() == in_strLabel) {
-      return &(*I);
+     if((*I)->GetLabel() == in_strLabel) {
+      return (*I);
     }
   }
   LOG_ERROR_MSG("LocalPlanners:: cannot find LocalPlannerMethod label = " << in_strLabel);
