@@ -268,6 +268,9 @@ public:
        LocalPlanners<CFG,WEIGHT>* lp,
        bool addPartialEdge, bool addAllEdges) {
     //cout << "ConnectMap::ConnectComponents() - Roadmap only" << endl;
+       _ConnectComponents(selected, rm, Stats,  dm, lp, addPartialEdge, addAllEdges,
+          typename ComponentConnectionContainer::MethodTypes_begin(),
+          typename ComponentConnectionContainer::MethodTypes_end());
   }
 
   template<typename InputIterator>
@@ -300,6 +303,29 @@ public:
   }
 
 private:
+  //implements the function call dispatching (b/c no support for templated virtual functions)
+  template <typename First, typename Last>
+  void
+  _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
+       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       DistanceMetric* dm,
+       LocalPlanners<CFG,WEIGHT>* lp,
+       bool addPartialEdge, bool addAllEdges,
+       First, Last);
+
+
+  template <typename Last>
+  void
+  _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
+       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       DistanceMetric* dm,
+       LocalPlanners<CFG,WEIGHT>* lp,
+       bool addPartialEdge, bool addAllEdges,
+       Last, Last){
+    cerr << "ERROR, dynamic_cast of ComponentConnectionMethod failed, method type not found!\n\n";
+    exit(-1);
+    }
+
   //implements the function call dispatching (b/c no support for templated virtual functions)
   template <typename InputIterator, typename First, typename Last>
   void
@@ -574,6 +600,36 @@ _ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected,
     
   }
 }
+
+
+template <class CFG, class WEIGHT>
+template <typename First, typename Last>
+void
+ConnectMap<CFG,WEIGHT>::
+_ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
+      Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+      DistanceMetric* dm,
+      LocalPlanners<CFG,WEIGHT>* lp,
+      bool addPartialEdge, bool addAllEdges,
+      First, Last) {
+
+
+  typedef typename boost::mpl::deref<First>::type MethodType;
+  if(MethodType* finder = dynamic_cast<MethodType*>(selected.get()))
+  {
+    //cout << "ConnectMap::_ConnectComponents 0 sets of InputIterator- " << finder->GetLabel() << endl;
+    finder->Connect(rm, Stats, dm, lp, addPartialEdge, addAllEdges);
+    return;
+  }
+  else 
+  {
+    typedef typename boost::mpl::next<First>::type Next;
+    _ConnectComponents(selected, rm, Stats, dm, lp, addPartialEdge, addAllEdges,
+                    Next(), Last());
+    return;
+  }
+}
+
 
 template <class CFG, class WEIGHT>
 template <typename InputIterator, typename First, typename Last>

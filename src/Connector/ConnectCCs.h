@@ -102,7 +102,6 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 
   //@}
 
-  template <typename InputIterator>
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
 		 DistanceMetric *,
 		 LocalPlanners<CFG,WEIGHT>*,
@@ -327,7 +326,6 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 
 template <class CFG, class WEIGHT>
-template<typename InputIterator>
 void ConnectCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
           DistanceMetric * dm,
