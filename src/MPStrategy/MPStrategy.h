@@ -29,7 +29,7 @@ public:
 
   bool addPartialEdge, addAllEdges; //move to connect map class
   void PrintOptions(ostream& out_os);
-  void Solve(); 
+  virtual void Solve(); 
   MPStrategyMethod* GetMPStrategyMethod(string& );////////////////////////
   ///@ToDo Move addPartialEdge, addAllEdges to ConnectMap
  protected:

@@ -29,7 +29,7 @@ class ClosedChainStrategy : public MPStrategy
     (*this)(GetMPProblem()->CreateMPRegion());
   }
   void operator()(int in_RegionID);
-  void Solve();
+  virtual void Solve();
 };
 
 #endif
