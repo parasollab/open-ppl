@@ -28,8 +28,8 @@
 
 
 #include "MPRegion.h"
-#include "MPProblem.h"
-#include "MPStrategy.h"
+#include "ClosedChainProblem.h"
+#include "ClosedChainStrategy.h"
 
 
 
@@ -72,9 +72,17 @@ int main(int argc, char** argv)
   
   for(XMLNodeReader::childiterator citr = mp_node.children_begin(); citr != mp_node.children_end(); ++citr) {
     if(citr->getName() == "MPProblem") {
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+          problem = new ClosedChainProblem(*citr);
+#else
           problem = new MPProblem(*citr);
+#endif
     } else if(citr->getName() == "MPStrategy") {
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+        strategy = new ClosedChainStrategy(*citr,(ClosedChainProblem*)problem);
+#else
         strategy = new MPStrategy(*citr,problem);
+#endif
         problem->SetMPStrategy(strategy);
     }
     else {
