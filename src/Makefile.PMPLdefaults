@@ -201,7 +201,9 @@ PMPL_OBJS = \
 	MPStrategy/SmoothQueryStrategy.o \
         NeighborhoodFinder/MPNNWrapper.o \
         MPStrategy/ClosedChainStrategy.o \
-	MPProblem/MPProblem.o  
+	MPProblem/MPProblem.o \
+	MapEvaluator/TestEvaluation.o \
+	MapEvaluator/PrintMapEvaluation.o 
 #	Haptic.o \
 #	Push.o \
 #	Utilities/Vectors.o 	

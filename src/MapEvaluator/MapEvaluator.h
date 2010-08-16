@@ -6,6 +6,9 @@ using boost::shared_ptr;
 
 #include "MapEvaluator/MapEvaluationMethod.h"
 #include "MapEvaluator/MPRegionComparerMethod.h"
+#include "MapEvaluator/TestEvaluation.h"
+#include "MapEvaluator/QueryEvaluation.h"
+#include "MapEvaluator/PrintMapEvaluation.h"
 
 
 template <class CFG, class WEIGHT>
@@ -66,6 +69,8 @@ class MapEvaluator : public MPBaseObject
         m_conditional_evaluators.push_back(conditional_type(new TestEvaluation(*citr, in_pProblem)));
       else if (citr->getName() == "QueryEvaluation")
         m_conditional_evaluators.push_back(conditional_type(new QueryEvaluation<CFG, WEIGHT>(*citr, in_pProblem))); 
+      else if (citr->getName() == "PrintMapEvaluation")
+        m_conditional_evaluators.push_back(conditional_type(new PrintMapEvaluation(*citr, in_pProblem))); 
       else
         citr->warnUnknownNode();
     }
