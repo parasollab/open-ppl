@@ -36,6 +36,7 @@ class BasicPRMStrategy : public MPStrategyMethod
    bool EvaluateMap(int in_RegionID);
 
    //data
+   vector<pair<string, int> > m_NodeGenerationLabels;
    vector<string> m_NodeConnectionLabels;
    vector<string> m_ComponentConnectionLabels;
    vector<string> m_EvaluatorLabels;
@@ -46,7 +47,6 @@ class BasicPRMStrategy : public MPStrategyMethod
    template <typename OutputIterator>
       void GenerateNodes(MPRegion<CfgType, WeightType>* region, OutputIterator allOut, OutputIterator thisIterationOut);
 
-   vector<pair<string, int> > m_NodeGenerationLabels;
 };
 
 #include "MPStrategy.h"
