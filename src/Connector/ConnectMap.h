@@ -13,6 +13,7 @@
 //node connection methods
 #include "NodeConnectionMethod.h"
 #include "NeighborhoodConnection.h"
+#include "PreferentialAttachment.h"
 #include "Closest.h"
 //#include "ClosestUnconnected.h"
 #include "ClosestSF.h"
@@ -54,7 +55,8 @@
 
 namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
-      NeighborhoodConnection<CfgType,WeightType>
+      NeighborhoodConnection<CfgType,WeightType>,
+      PreferentialAttachment<CfgType,WeightType>
 //    Closest<CfgType,WeightType>
 //    ,ClosestUnconnected<CfgType,WeightType>
 //    ,ClosestSF<CfgType,WeightType>
@@ -419,6 +421,9 @@ ConnectMap() {
   NeighborhoodConnection<CFG,WEIGHT>* neighborhoodconn = new NeighborhoodConnection<CFG,WEIGHT>();
   all_node_methods.push_back(neighborhoodconn);
 
+  PreferentialAttachment<CFG,WEIGHT>* prefconn = new PreferentialAttachment<CFG,WEIGHT>();
+  all_node_methods.push_back(prefconn);
+
   //setup component connection methods
   selected_component_methods.clear();
   all_component_methods.clear();
@@ -480,6 +485,14 @@ ParseXML(XMLNodeReader& in_Node) {
       neighborhoodconn->cdInfo = &cdInfo;
       neighborhoodconn->connectionPosRes = connectionPosRes;
       neighborhoodconn->connectionOriRes = connectionOriRes;
+    } if (citr->getName() == "PreferentialAttachment") {
+      cout << "ConnectMap found PreferentialAttachment" << endl;
+      PreferentialAttachment<CFG,WEIGHT>* prefconn
+                      = new PreferentialAttachment<CFG,WEIGHT>(*citr,GetMPProblem());
+      AddNodeMethod(prefconn->GetLabel(),NodeConnectionPointer(prefconn));
+      prefconn->cdInfo = &cdInfo;
+      prefconn->connectionPosRes = connectionPosRes;
+      prefconn->connectionOriRes = connectionOriRes;
     } else if(citr->getName() == "ConnectCCs") {
       cout << "ConnectMap found ConnectCCs" << endl;
       ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>(*citr,GetMPProblem());
