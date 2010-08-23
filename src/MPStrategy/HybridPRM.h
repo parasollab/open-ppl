@@ -2,261 +2,106 @@
 #define HybridPRM_h
 
 
-#include "SwitchDefines.h"
-#include <sys/time.h>
-
-#include "OBPRMDef.h"
-#include "Roadmap.h"
-
-#include "Clock_Class.h"
-#include "Stat_Class.h"
-#include "CollisionDetection.h"
-#include "ConnectMap.h"
-#include "DistanceMetrics.h"
-#include "LocalPlanners.h"
-//#include "GenerateMapNodes.h"
-#include "Sampler.h"
-
-#include "GeneratePartitions.h"
-
-/* util.h defines PMPL_EXIT used in initializing the environment*/
-#include "util.h"
+#include "MPStrategyMethod.h"
 #include "MPProblem.h"
-#include "MPCharacterizer.h"
-
-#include "MapEvaluator.h"
-
-#include "MPStrategy/MPStrategyMethod.h"
+#include "Roadmap.h"
+#include "Stat_Class.h"
 
 
-class HybridPRM : public MPStrategyMethod {
-  public:
+struct Visibility
+{ 
+  int attempts, connections;
+  
+  Visibility(int a = 0, int c = 0) : attempts(a), connections(c) {}
+  ~Visibility() {}
 
-  HybridPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    MPStrategyMethod(in_Node,in_pProblem) {
-    LOG_DEBUG_MSG("HybridPRM::HybridPRM()");
-    ParseXML(in_Node);
-   // m_percentage_random = double(0.5);
-    LOG_DEBUG_MSG("~HybridPRM::HybridPRM()");
-    };
-  virtual ~HybridPRM() {}
+  double ratio() const
+  {
+    if(attempts == 0)
+      return 0.0;
+    else
+      return (double)connections / (double)attempts;
+  }
+};
 
-  virtual void PrintOptions(ostream& out_os) { };
 
+struct NodeTypeCounts
+{
+  int num_cc_create, num_cc_merge, num_cc_expand, num_cc_oversample;
+
+  NodeTypeCounts() : num_cc_create(0), num_cc_merge(0), num_cc_expand(0), num_cc_oversample(0) {}
+  ~NodeTypeCounts() {}
+
+  friend ostream& operator<<(ostream& os, const NodeTypeCounts& nt);
+};
+
+
+class HybridPRM : public MPStrategyMethod 
+{
+ public:
+
+  HybridPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+  virtual ~HybridPRM();
+
+  virtual void PrintOptions(ostream& out_os);
   virtual void ParseXML(XMLNodeReader& in_Node);
 
-  virtual void operator()(int in_RegionID);
-
-  string GetNextNodeGenStr(bool learning) {
-    double pro_sum(0.0);
-    map<string,pair<double, double> > map_pro_range;
-    double max_probability=0.0;
-    string max_gen = "";
-    static string last_gen = "";
-    for(int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      string gen = m_vecStrNodeGenLabels[i];
-      
-      double gen_prob;
-      if (m_sampler_selection_distribution == "window_uniform" && learning) {
-	gen_prob = m_mapStrNodeGenProbabilityUniform[gen];
-      } else if (m_sampler_selection_distribution == "nowindow_adaptive") { 
-	gen_prob = m_mapStrNodeGenProbabilityUse[gen];
-      } else { //if (m_sampler_selection_distribution == "window_hybrid" {
-	gen_prob = m_mapStrNodeGenProbability[gen];
-      }
-      if (gen_prob >= max_probability) {
-	max_probability = gen_prob;
-	max_gen = gen;
-      }
-      double upper_bound;
-      if (i != m_vecStrNodeGenLabels.size()-1)
-	upper_bound = pro_sum + gen_prob;
-      else
-	upper_bound = 1.0; // do this only in the last number
-      pair<double,double> new_range(pro_sum,upper_bound);
-      map_pro_range[gen] = new_range;
-      pro_sum+= gen_prob;
-    }
-    cout << "m_sampler=" << m_sampler_selection_distribution << ";learning="<<learning <<";"<< endl;
-
-    if (!learning) {
-      if (m_sampler_selection_distribution == "highest") {
-	cout << "***	Highest sampler after learning :: " << max_gen << endl;
-	return max_gen;
-      } /*else if (m_sampler_selection_distribution == "window_hybrid") {
-	cout << "***    Last method used (during learning) :: " << last_gen << endl;
-	return last_gen;
-	}*/
-    }
-
-    // it gets here when learning or when not learning and the sampler
-    // distribution is neither of the tested in the previous if.
-    double random_num = OBPRM_drand();
-    for(int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      string gen = m_vecStrNodeGenLabels[i];
-      pair<double,double> range = map_pro_range[gen];
-      if(range.first < random_num && random_num < range.second) { //we have a winner
-        cout << "***   The next node generator is::  " << gen << endl;
-	last_gen = gen;
-        return gen;
-      }
-    }
-    cerr << endl << endl << "This can't be good";
-    cerr << endl;
-    for (int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      string gen = m_vecStrNodeGenLabels[i];
-      pair<double,double> range = map_pro_range[gen];
-      cerr << gen << ":: [" << range.first << ", " << range.second << "]" << endl;
-    }
-    cerr << "Random Number:: " << random_num << endl;
-    exit(-1);
-  };
-  
-  double sum_all_weights() {
-    double to_return(0.0);
-    for(int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      to_return += m_mapStrNodeGenWeight[m_vecStrNodeGenLabels[i]];
-    }
-    return to_return;
-  };
-
-  double sum_all_pro_costs() {
-    double to_return(0.0);
-    for(int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      double pro_no_cost = m_mapStrNodeGenProbabilityNoCost[m_vecStrNodeGenLabels[i]];
-      unsigned long int cost = m_mapStrNodeGenCost[m_vecStrNodeGenLabels[i]];
-      to_return += (pro_no_cost / double(cost));
-    }
-    //cerr << "Sum_all_pro_costs() = " << to_return << endl;
-    return to_return;
-  }
-
-  void RewardAndRecalcWeight(string _method, double _rew,unsigned long int _cost) {
-    int K = m_vecStrNodeGenLabels.size();
-    int num_samp_for_method = m_mapStrNodeGenNumSamp[_method];
-    int avg_cost_for_method = m_mapStrNodeGenCost[_method];
-    int new_cost_for_method((avg_cost_for_method * num_samp_for_method + _cost) / (num_samp_for_method +1));
-    if (m_fixed_cost != 1)
-      m_mapStrNodeGenCost[_method] = new_cost_for_method; 
-    m_mapStrNodeGenNumSamp[_method]++;
-    //cerr << "COST::   " << _method << " = " << _cost << endl;
-    for(int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      if(m_vecStrNodeGenLabels[i] != _method) { // set reward to 0 for all others
-        string gen = m_vecStrNodeGenLabels[i];
-        double rew_rew = double(0.0) / m_mapStrNodeGenProbabilityNoCost[gen];
-        double new_weight = m_mapStrNodeGenWeight[gen] * exp(double((m_percentage_random) * rew_rew / double(K)));
-        m_mapStrNodeGenWeight[gen] = new_weight;
-      } else { // reward this one
-        string gen = m_vecStrNodeGenLabels[i];
-        double rew_rew = double(_rew) / m_mapStrNodeGenProbabilityNoCost[gen];
-        double new_weight = m_mapStrNodeGenWeight[gen] * exp(double((m_percentage_random) * rew_rew / double(K)));
-        m_mapStrNodeGenWeight[gen] = new_weight;
-      }
-    }
-
-   //Calculate new probs from weights
-    double smallest_weight=-1; // for normalization
-    for(int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      string gen = m_vecStrNodeGenLabels[i];
-      double weight = m_mapStrNodeGenWeight[gen];
-      double pro_no_cost = (1 - m_percentage_random) * (weight / sum_all_weights()) + (m_percentage_random / K);
-      m_mapStrNodeGenProbabilityNoCost[gen] = pro_no_cost;
-      unsigned long int cost = m_mapStrNodeGenCost[m_vecStrNodeGenLabels[i]];
-      if(m_count_cost == 0) {
-        m_mapStrNodeGenProbability[gen] = m_mapStrNodeGenProbabilityNoCost[gen];
-      } else {
-        m_mapStrNodeGenProbability[gen] = ((pro_no_cost / double(cost)) / sum_all_pro_costs() );
-      }
-      if (weight < smallest_weight || smallest_weight == -1)
-	smallest_weight = weight;
-    }
-
-    // Normalize weights (not needed in original algorithm, but prevents infinite weights)
-    for (int i = 0; i < m_vecStrNodeGenLabels.size(); ++i) {
-      string gen = m_vecStrNodeGenLabels[i];
-      m_mapStrNodeGenWeight[gen] = m_mapStrNodeGenWeight[gen]/smallest_weight;
-    }
-
-  };
-
-   pair < unsigned int, unsigned int >
-    ConnectionsWitnessToRoadmap(vector < CfgType > & witness_cfgs, Roadmap< CfgType, WeightType > *rdmp, Stat_Class&);
-
-
-  bool CanConnectComponents(vector < CfgType > & cc_a, vector < CfgType > & cc_b, Stat_Class&);
-
-   void initializeWeightProb() {
-    m_mapStrNodeGenWeight.clear();
-    m_mapStrNodeGenProbability.clear();
-    m_mapStrNodeGenProbabilityUniform.clear();
-    for(int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      m_mapStrNodeGenWeight[m_vecStrNodeGenLabels[i]] = double(1.0);
-      m_mapStrNodeGenProbability[m_vecStrNodeGenLabels[i]] = double(1.0/m_vecStrNodeGenLabels.size());
-      m_mapStrNodeGenProbabilityUniform[m_vecStrNodeGenLabels[i]] = double(1.0/m_vecStrNodeGenLabels.size());
-      m_mapStrNodeGenProbabilityNoCost[m_vecStrNodeGenLabels[i]] = double(1.0/m_vecStrNodeGenLabels.size());
-      if (m_fixed_cost != 1)
-	m_mapStrNodeGenCost[m_vecStrNodeGenLabels[i]] = 1;
-    }
-  };
-
-
-   void CopyPlearnPuse() {
-    m_mapStrNodeGenProbabilityUse.clear();
-    for(int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      m_mapStrNodeGenProbabilityUse[m_vecStrNodeGenLabels[i]] = m_mapStrNodeGenProbability[m_vecStrNodeGenLabels[i]];
-    }
-  };
-
-  void outputWeightMatrix(std::ostream& _out) {
-      cout << endl;
-    for(int i=0; i<m_vecStrNodeGenLabels.size(); ++i) {
-      cout << m_vecStrNodeGenLabels[i] << ":: ";
-      cout << "Weight = " << m_mapStrNodeGenWeight[m_vecStrNodeGenLabels[i]] << ", ";
-      cout << "ProNoCost = " << m_mapStrNodeGenProbabilityNoCost[m_vecStrNodeGenLabels[i]] << ", ";
-      cout << "Pro = " << m_mapStrNodeGenProbability[m_vecStrNodeGenLabels[i]] << ",";
-      cout << "Cost = " << m_mapStrNodeGenCost[m_vecStrNodeGenLabels[i]] << endl;
-    }
-  }
-
-  virtual void operator()() {
+  virtual void operator()() 
+  {
     int newRegionId = GetMPProblem()->CreateMPRegion();
     (*this)(newRegionId);
-  };
+  }
+  virtual void operator()(int in_RegionID);
 
-  double cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc);
+  void initialize_weights_probabilities_costs();
+  void copy_learned_prob_to_prob_use();
+  void print_weights_probabilities_costs(ostream& _out);
+  
+  string select_next_sampling_method(bool learning);
+  
+  double compute_visibility_reward(string next_node_gen, double visibility, double threshold, int prev_cc_count, int curr_cc_count, NodeTypeCounts& node_types);
+  
+  bool in_learning_window(int totalSamples) const;
+  
+  void reward_and_update_weights_probabilities(string _method, double _rew,unsigned long int _cost);
+  
+  //pair<unsigned int, unsigned int> ConnectionsWitnessToRoadmap(vector < CfgType > & witness_cfgs, Roadmap< CfgType, WeightType > *rdmp, Stat_Class&);
+  //bool CanConnectComponents(vector < CfgType > & cc_a, vector < CfgType > & cc_b, Stat_Class&);
 
-private:
-  vector<string> m_vecStrNodeGenLabels;
-  vector<string> m_vecStrNodeConnectionLabels;
-  vector<string> m_vecStrComponentConnectionLabels;
-  vector<string> m_vecNodeCharacterizerLabels;
-  map<string,double> m_mapStrNodeGenWeight;
-  map<string,double> m_mapStrNodeGenProbability;
-  map<string,double> m_mapStrNodeGenProbabilityUniform;
-  map<string,double> m_mapStrNodeGenProbabilityUse;
-  map<string,double> m_mapStrNodeGenProbabilityNoCost;
-  map<string, unsigned long int> m_mapStrNodeGenCost;
-  map<string,int> m_mapStrNodeGenNumSamp;
-  map<string,int> m_mapStrNodeGenNumOversamples;
+  //double cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc);
 
-  Stat_Class m_nodeOverheadStat, m_queryStat;
-  string m_strBaseFilename;
+  bool evaluate_map(int in_RegionID);
 
-  string m_strWitnessFilename;
-  vector<CfgType> m_vecWitnessNodes;
+ protected:
+  vector<string> m_node_gen_labels;
+  vector<string> m_node_conn_labels;
+  //vector<string> m_component_conn_labels;
+  vector<string> m_evaluator_labels;
 
-  double m_percentage_random;
+  map<string,double> m_node_gen_weights;
+  
+  map<string,double> m_node_gen_probabilities;
+  map<string,double> m_node_gen_probabilities_uniform;
+  map<string,double> m_node_gen_probabilities_use;
+  map<string,double> m_node_gen_probabilities_no_cost;
+  
+  map<string, unsigned long int> m_node_gen_costs;
+  
+  map<string,int> m_node_gen_num_sampled;
+  map<string,int> m_node_gen_num_oversampled;
+
+  //Stat_Class m_query_stat;
+  //vector<CfgType> m_witness_nodes;
+
+  double m_percentage_random; //lambda
   double m_window_percent;
 
-  int m_totalSamples;
-  int m_count_cost;
-  int m_fixed_cost;
-  int m_resetting_learning;
+  bool m_count_cost;
+  bool m_fixed_cost;
+  bool m_resetting_learning;
   int m_bin_size;
 
   string m_sampler_selection_distribution;
 };
-
-
 
 #endif
