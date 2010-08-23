@@ -410,9 +410,6 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       }
     }
   
-    // record the attempted connection
-    Stats.IncConnections_Attempted();
-  
     // the edge already exists
     if (_rm->m_pRoadmap->IsEdge(_vid, *itr2)) {
       // if we're not in "unconnected" mode, count this as a success
@@ -440,6 +437,8 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       }
     }
 
+    // record the attempted connection
+    Stats.IncConnections_Attempted();
   
     // attempt connection with the local planner
     if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
@@ -452,6 +451,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if (m_debug) cout << " | connection was successful";
       _rm->m_pRoadmap->AddEdge(_vid, *itr2, lpOutput.edge);
       Stats.IncConnections_Made();
+      this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), true));
       
       // mark the successful connection in the roadmap's cache
       if (m_debug) cout << " | success incremented" << endl;
@@ -463,6 +463,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if (m_debug) cout << " | connection failed | failure incremented" << endl;
       _rm->SetCache(_vid,*itr2,false);
       total_failure++;
+      this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), false));
     }
   }
 }

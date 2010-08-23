@@ -56,10 +56,16 @@ class NodeConnectionMethod : public MPBaseObject {
 		      *I, *J);
   }
 */
+
+  typename vector<pair<pair<VID, VID>, bool> >::const_iterator connection_attempts_begin() const { return connection_attempts.begin(); }
+  typename vector<pair<pair<VID, VID>, bool> >::const_iterator connection_attempts_end() const { return connection_attempts.end(); }
+  void clear_connection_attempts() { connection_attempts.clear(); }
+  
  protected:
   //////////////////////
   // Data
   char* element_name; //Method name in the command line
+  vector<pair<pair<VID, VID>, bool> > connection_attempts;
  
   //////////////////////////////////////////////////////
   // 
