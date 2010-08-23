@@ -178,7 +178,12 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 	Stat.IncNodes_Attempted();
 	attempts++;
 
-	CFG c1 = cfg_in;
+   CFG c1;
+   if(cfg_in==CFG()){
+      c1.GetRandomCfg(env);
+   }
+   else
+      c1 = cfg_in;
 	
 	bool c1_bbox = c1.InBoundingBox(env);
 	
@@ -192,7 +197,7 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 
 	CFG r;
 	r.GetRandomRay(step_size, env, dm);
-	
+
 	while(c1_bbox && c2_bbox && (c1_free == c2_free)) { 
 	//while(c1_bbox && c2_bbox){
 	  c1 = c2;
@@ -206,7 +211,6 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 		         Stat, cdInfo, true, &callee);
 	 
 	}
-
 	if(c1_bbox && c2_bbox) {
 	  generated = true;
 	  if(c1_free) {
