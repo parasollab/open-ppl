@@ -342,33 +342,34 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 #endif
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  
-  // process components from smallest to biggest  
-  typename vector<pair<size_t,VID> >::reverse_iterator C1, C2;
-  for(C1 = ccs1.rbegin(); C1+1 != ccs1.rend(); ++C1) {
-    for(C2 = C1+1; C2 != ccs1.rend(); ++C2) {      
-      // if cc1 & cc2 not already connected, try to connect them 
-      cmap.reset();
-      if ( !is_same_cc(*pMap,cmap,C1->second,C2->second) ) {
-        vector<VID> cc1;
-	      cmap.reset();
-        get_cc(*pMap,cmap,C1->second,cc1);
-
-        vector<VID> cc2;
-	      cmap.reset();
-        get_cc(*pMap,cmap,C2->second,cc2);
-
-        if(cc1.size() < smallcc && cc2.size() < smallcc ) {
-          ConnectSmallCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
-        } else {
-          if(cc1.size() <= cc2.size())
-            ConnectBigCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
-          else
-            ConnectBigCCs(_rm,Stats,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
-        }
-      } 
-    }/*endfor cc2*/ 
-  }/*endfor cc1*/
+  if(ccs1.size()>1){
+     // process components from smallest to biggest  
+     typename vector<pair<size_t,VID> >::reverse_iterator C1, C2;
+     for(C1 = ccs1.rbegin(); C1+1 != ccs1.rend(); ++C1) {
+        for(C2 = C1+1; C2 != ccs1.rend(); ++C2) {      
+           // if cc1 & cc2 not already connected, try to connect them 
+           cmap.reset();
+           if ( !is_same_cc(*pMap,cmap,C1->second,C2->second) ) {
+              vector<VID> cc1;
+              cmap.reset();
+              get_cc(*pMap,cmap,C1->second,cc1);
+              
+              vector<VID> cc2;
+              cmap.reset();
+              get_cc(*pMap,cmap,C2->second,cc2);
+              
+              if(cc1.size() < smallcc && cc2.size() < smallcc ) {
+                 ConnectSmallCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+              } else {
+                 if(cc1.size() <= cc2.size())
+                    ConnectBigCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+                 else
+                    ConnectBigCCs(_rm,Stats,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
+              }
+           } 
+        }/*endfor cc2*/ 
+     }/*endfor cc1*/
+  }
 }
 
 
