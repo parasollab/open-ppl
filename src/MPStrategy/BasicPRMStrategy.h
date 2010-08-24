@@ -78,7 +78,7 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
 
       do{
          pNodeGenerator->GetSampler()->Sample(pNodeGenerator,GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),git->second*2, back_inserter(outNodes));
-      }while(outNodes.size()>0&&m_CurrentIteration==1);
+      }while(outNodes.size()<=0&&m_CurrentIteration==1);
 
       cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
       cout << "\n\t";
