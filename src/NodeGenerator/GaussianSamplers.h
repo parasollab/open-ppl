@@ -2,15 +2,6 @@
 #define GaussianSamplers_h
 
 #include "SamplerMethod.h"
-class Environment;
-class Stat_Class;
-class CollisionDetection;
-class CDInfo;
-class DistanceMetric;
-template <typename CFG> class ValidityChecker;
-#include "my_program_options.hpp"
-#include <sstream>
-#include <string>
 #include "util.h"
 
 
@@ -19,19 +10,16 @@ class GaussRandomSampler : public SamplerMethod<CFG>
 {
  private:
   Environment* env;
- // Stat_Class& Stats;
- Stat_Class *Stats;
-//  CollisionDetection* cd;
+  Stat_Class *Stats;
   ValidityChecker<CFG>* vc;
- // typename ValidityChecker<CFG>::VCMethodPtr vcm;
   CDInfo *cdInfo;
   DistanceMetric* dm;
   double d;
-  std::string strLabel;
-  std::string strVcmethod;
-
-  
+  bool useBBX;
+  string strLabel;
+  string strVcmethod;
   DistanceMetricMethod* m_dmm;
+
  public:
  GaussRandomSampler() {}
  GaussRandomSampler(Environment* _env, Stat_Class& _Stats, 
@@ -46,10 +34,7 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   LOG_DEBUG_MSG("GaussRandomSampler::GaussRandomSampler()");
   ParseXML(in_Node);
   cout << "GaussRandomSampler";
-  strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
-                                    string(""), string("Validity Test Method"));
-  //strVcmethod = svc_method;
-   cout << "strVcmethod = " << strVcmethod << endl;
+  cout << "strVcmethod = " << strVcmethod << endl;
   vc = in_pProblem->GetValidityChecker();
   dm = in_pProblem->GetDistanceMetric();
   strLabel= this->ParseLabelXML( in_Node);
@@ -61,34 +46,20 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   
  void  ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("GaussRandomSampler::ParseXML()");
-  //print(cout);
-  XMLNodeReader::childiterator citr;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-    if(citr->getName() == "gauss_d") {
-      ParseXMLd(*citr);
-    }
-  }
-  cout << "GaussRandomSampler";
-  LOG_DEBUG_MSG("~GaussRandomSampler::ParseXML()");
-}
-
-void ParseXMLd(XMLNodeReader& in_Node) {
-  LOG_DEBUG_MSG("GaussRandomSampler::ParseXMLd()");
-
-  in_Node.verifyName(string("gauss_d"));
-  d = in_Node.numberXMLParameter(string("number"),true,double(0.0),
-                          double(0.0),double(100000.0),string("gauss_d")); 
-  
+  strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
+                                    string(""), string("Validity Test Method"));
+  d = in_Node.numberXMLParameter(string("gauss_d"), true, (double)0, (double)0, (double)MAX_DBL, string("Gaussian D value"));
+  useBBX = in_Node.boolXMLParameter(string("usebbx"), true, false, string("Use bounding box as obstacle"));
   in_Node.warnUnrequestedAttributes();
-  LOG_DEBUG_MSG("~GaussRandomSampler::ParseXMLd()");
-}
+  LOG_DEBUG_MSG("~GaussRandomSampler::ParseXML()");
+ }
   
   virtual const char* name() const 
     { 
       if(KEEP_FREE)
-	return "GaussRandomFreeSampler";
+         return "GaussRandomFreeSampler";
       else
-	return "GaussRandomCollisionSampler";
+         return "GaussRandomCollisionSampler";
     }
   
   void print(ostream& os) const
@@ -106,39 +77,54 @@ void ParseXMLd(XMLNodeReader& in_Node) {
       bool generated = false;
       int attempts = 0;
       CDInfo cdInfo;
-	
       CFG cfg1 = cfg_in;
-     // cout << "d is = " << d<< endl;
-      bool cfg1_free = (cfg1.InBoundingBox(env) && 
-	// !cfg1.isCollision(env, Stats, cd, cdInfo, true, &callee);
-	vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env, 
-		         Stat, cdInfo, true, &callee));
+      bool cfg1_free;
+      if(!useBBX){
+         if(!cfg1.InBoundingBox(env))return false;
+         cfg1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env, 
+                                    Stat, cdInfo, true, &callee);
+      }
+      else{
+         cfg1_free = (cfg1.InBoundingBox(env) && 
+                      vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env, 
+                                  Stat, cdInfo, true, &callee));
+      }
       do {
-	Stat.IncNodes_Attempted();
-	attempts++;
-	  
-	CFG incr;
-	incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), 
-			      env, dm);
-	CFG cfg2;
-	//cout << "cfg2 is = " << cfg2 << endl;
-	cfg2.add(cfg1, incr);
-	bool cfg2_free = (cfg2.InBoundingBox(env) && 
-//	  !cfg2.isCollision(env, Stats, cd, cdInfo, true, &callee);
-	  vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee));
-
-	if(cfg1_free != cfg2_free) {
-	  Stat.IncNodes_Generated();
-	  generated = true;	
-	  if(cfg1_free == KEEP_FREE)
-	   cfg_out.push_back(cfg1);
-          //*result++ = cfg1;
-	  else
-	    cfg_out.push_back(cfg2);
-           //*result++ = cfg2;
-	}
+         Stat.IncNodes_Attempted();
+         attempts++;
+         CFG cfg2;
+         bool cfg2_free;
+         if(!useBBX){
+            do{
+               CFG incr;
+               incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), 
+                                 env, dm);
+               cfg2.add(cfg1, incr);
+            }while(!cfg2.InBoundingBox(env));
+            cfg2_free = vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, 
+                                         Stat, cdInfo, true, &callee);
+         }
+         else{
+            CFG incr;
+            incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), 
+                              env, dm);
+            CFG cfg2;
+            cfg2.add(cfg1, incr);
+            bool cfg2_free = (cfg2.InBoundingBox(env) && 
+                              vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, 
+                                          Stat, cdInfo, true, &callee));
+         }
+         
+         if(cfg1_free != cfg2_free) {
+            Stat.IncNodes_Generated();
+            generated = true;	
+            if(cfg1_free == KEEP_FREE)
+               cfg_out.push_back(cfg1);
+            else
+               cfg_out.push_back(cfg2);
+         }
       } while (!generated && (attempts < max_attempts));
-    
+      
       return generated;
    }
   
