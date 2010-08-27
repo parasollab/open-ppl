@@ -812,7 +812,8 @@ double DijkstraSSSP(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, typena
   typename GRAPH::edge_property _w_;
   typename GRAPH::const_vertex_iterator cv1;
   typename GRAPH::vertex_iterator v;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map<GRAPH,size_t> cmap;
+
 
   vector<VID> vec_cc;
   vector<dkinfo<VID> > pq; //The priority Queue
@@ -902,7 +903,7 @@ double ComponentDiameter(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, t
   typename GRAPH::edge_descriptor _w_;
   typename GRAPH::const_vertex_iterator cv1;
   typename GRAPH::vertex_iterator v1;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map<GRAPH,size_t> cmap;
 
   vector<VID> vec_cc;
   double  maxdist = 0;//g.get_num_vertices() * _w_.MaxWeight(); fix_lantao
