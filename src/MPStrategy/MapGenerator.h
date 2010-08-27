@@ -360,7 +360,7 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	  //get VID sets that represent CCs in the roadmap
 	  //all newly generated VID will be put to vids2
 	  int numVertex = rmap->m_pRoadmap->get_num_vertices();
-	  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+	  stapl::vector_property_map< GRAPH,size_t > cmap;
 	  vector< pair<size_t,VID> > ccs;
 	  cmap.reset();
           get_cc_stats(*(rmap->m_pRoadmap),cmap,ccs);

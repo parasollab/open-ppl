@@ -306,7 +306,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     int failure = 0;   //actual failure attemp for this node 
     // for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     for(typename vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
       if(failure >= mfailure){
         break;
@@ -355,7 +355,7 @@ Connect2(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
     // for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     for(typename vector<pair<pair<VID,VID>,double> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
       if(failure >= mfailure) {
         break;

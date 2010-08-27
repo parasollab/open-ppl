@@ -99,7 +99,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   cout << "AllPairsNodeConnection::Connect()" << endl;
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   vector<VID> verticesVID;
   pMap->GetVerticesVID(verticesVID);
   LPOutput<CFG,WEIGHT> lpOutput;
@@ -157,7 +157,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             vector<VID>& v1, vector<VID>& v2) 
 {
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   LPOutput<CFG,WEIGHT> lpOutput;
   for(int i=0; i<v1.size(); ++i) {
     for(int j=0; j<v2.size(); ++j) {

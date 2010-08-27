@@ -34,7 +34,7 @@ class CoverageEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
 
     connections = vector<vector<VID> >(samples.size());
 
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     vector<pair<size_t,VID> > ccs;
     vector<pair<size_t,VID> >::iterator CC;
     get_cc_stats(*pMap,cmap, ccs);

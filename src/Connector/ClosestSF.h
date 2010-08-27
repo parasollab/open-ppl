@@ -296,7 +296,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     
     // for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     for(typename vector<pair<VID,VID> >::iterator KP = kp.begin(); KP != kp.end(); ++KP) {
       cout<<KP->first<<"->"<<KP->second<<endl;
       if(failure >= mfailure || success >= ksuccess){

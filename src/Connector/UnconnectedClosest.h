@@ -176,7 +176,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	}
     }
     
-   stapl::vector_property_map< stapl::stapl_color<size_t> > cmap; 
+   stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap; 
     //	 for each pair identified
     LPOutput<CFG,WEIGHT> lpOutput;
     for (int j=0; j < kp.size(); j++) {
@@ -322,7 +322,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   */
 	//	 for each pair identified
 	LPOutput<CFG,WEIGHT> lpOutput;
-        stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+        stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
 	for (int j=0; j < kp.size(); j++) {
 	  if( _rm->m_pRoadmap->IsEdge(kp[j].first, kp[j].second)) continue;
 	  cmap.reset();

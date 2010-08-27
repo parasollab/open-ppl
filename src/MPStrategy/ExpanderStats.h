@@ -313,7 +313,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
 	  
 	  //vertex expansion
 	  vector< pair<size_t, VID> > ccstats;
-	  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+	  stapl::vector_property_map< GRAPH,size_t > cmap;
 	  vector <vector <VID> > ccs;
 	  get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats, ccs);
 	  vector<VID> cc1;

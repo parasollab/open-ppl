@@ -158,7 +158,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
   typename vector<VID>::iterator C1, C2;
   typename vector<pair<VID,double> >::iterator D;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   for(C1 = cfgs1.begin(); C1 != cfgs1.end(); ++C1) {
     // sort cfgs2 in by distance from C
     vector<pair<VID,double> > distances;

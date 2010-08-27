@@ -27,7 +27,7 @@ class CCDistanceEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
 
     //get ccs
     vector< pair<size_t,VID> > ccs; 
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     get_cc_stats(*(rmap->m_pRoadmap), ccs);
 
     //filter out singletons

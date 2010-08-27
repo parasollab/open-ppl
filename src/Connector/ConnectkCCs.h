@@ -168,7 +168,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   cl.connectionPosRes=this->connectionPosRes;
   cl.connectionOriRes=this->connectionOriRes;
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   vector< pair<size_t,VID> > ccs;
   int ccsize=get_cc_stats(*pMap, cmap, ccs);
 
@@ -232,7 +232,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
   //DisplayCCStats(*pMap); cout << endl;
 
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   //getCC data
   vector< vector<VID> > ccset1, ccset2;
   
@@ -310,7 +310,7 @@ compute_AllPairs_CCDist_closest
  vector<VID>& ccs1,vector<VID>& ccs2)
 {
     RoadmapGraph<CFG,WEIGHT> * rmapG=_rm->m_pRoadmap;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     ccDist.clear();
     for(typename vector<VID>::iterator i=ccs1.begin();i!=ccs1.end();i++){
         ccDist.push_back(vector<double>());
@@ -388,7 +388,7 @@ CFG ConnectkCCs<CFG,WEIGHT>::CC_com
 (RoadmapGraph<CFG, WEIGHT> *rmapG,VID vid)
 {
 // RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     vector<VID> ccvids;
     get_cc(*rmapG, cmap, vid, ccvids);
 

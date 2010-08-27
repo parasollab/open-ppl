@@ -179,7 +179,7 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
   // init counter
   int numCfgAdded  = 0;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
 
   //-- while (more than one CC remains *AND* added fewer new Cfgs than requested)
   vector<pair<size_t, VID> > tempv;

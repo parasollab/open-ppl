@@ -136,7 +136,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
     vector<VID> vertices;
     rmp.m_pRoadmap->GetVerticesVID(vertices);
 
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
     
     for(vector<VID>::iterator iter1 = vertices.begin(); iter1!= vertices.end(); ++iter1) {
       //cout<<"in loop outer"<<endl;
@@ -155,7 +155,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
   int fastCompareAllPairs(const Roadmap<CfgType,WeightType>& rmp){
     int sameCCPairs=0;
     vector< pair<size_t, VID> > ccstats;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
     get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats);
     for(vector< pair<size_t, VID> >::iterator iter = ccstats.begin(); iter < ccstats.end(); iter++){
       sameCCPairs+=iter->first*(iter->first-1)/2;      
@@ -168,7 +168,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
     //cout<<"in fastCompareAllPairs"<<endl;
     int sameCCPairs=0;
     vector< pair<size_t, VID> > ccstats;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
     get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats);
     //TODO:get cc for each stat
     //remove ones with VID > thresholdVID
@@ -247,7 +247,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
   
   void storeSameCCInfo(unionStats& stats, Roadmap<CfgType,WeightType>& rmp){
     vector< pair<size_t, VID> > ccstats;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
     get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats);
     vector< pair<size_t, VID> >::iterator iter = ccstats.begin();
     //stats.sameCCSizes.reserve(5);
@@ -609,7 +609,7 @@ class NFRoadmapCompare : public MPStrategyMethod {
     vector<int> getCCSizes(Roadmap<CfgType,WeightType>& rmp){
       vector<int> ccSizes;
       vector< pair<size_t, VID> > ccstats;
-      stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+      stapl::vector_property_map< GRAPH,size_t > cmap;
       
       get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats);
       cout<<" "<<ccstats.size();
@@ -1008,7 +1008,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       region->GetRoadmap()->m_pRoadmap->DeleteVertex(vid_goal);
       region->GetRoadmap()->m_pRoadmap->setVertIDs(oriVertID);
       */
-      stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+      stapl::vector_property_map< GRAPH,size_t > cmap;
       querySucceeded = is_same_cc(*region->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
       //CanSolveQuery(*region->GetRoadmap()->m_pRoadmap, m_vecWitnessNodes[0], m_vecWitnessNodes[1]);
 
@@ -1120,7 +1120,7 @@ private:
 
   bool CanConnectToComponent(RoadmapGraph<CfgType,WeightType>& _graph, VID _cc, CfgType _test) {
     vector<VID> vec_cc;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
     get_cc(_graph, cmap, _cc, vec_cc);
 
     vector<pair<double,VID> > vec_dist_vid;
@@ -1151,7 +1151,7 @@ private:
 
   bool CanSolveQuery(RoadmapGraph<CfgType,WeightType>& _graph, CfgType _start, CfgType _goal) {
     vector<pair<size_t, VID> > CCStats;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
     get_cc_stats(_graph, cmap, CCStats);
     for(int i=0; i<CCStats.size(); ++i) {
       if(CanConnectToComponent(_graph, CCStats[i].second, _start) 

@@ -239,9 +239,9 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *rmap, int show_column_h
 
    _myostream << rmap->m_pRoadmap->get_num_vertices() << " ";
    _myostream << rmap->m_pRoadmap->get_num_edges()   << " ";
-
+   
    typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
-   stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+   stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
    vector< pair<size_t,VID> > ccstats;
    get_cc_stats(*(rmap->m_pRoadmap), cmap, ccstats);
    _myostream << ccstats.size() << "  ";
@@ -296,7 +296,7 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
   
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
   vector< pair<size_t,VID> > ccs; //vector of connected components in the roadmap
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   stapl::get_cc_stats(*(rdmp->m_pRoadmap),cmap, ccs);//fill ccs from the roadmap
   cout << "in intra ccs portion" << endl;
   
@@ -478,9 +478,9 @@ template <class CFG, class WEIGHT>
 void
 Stat_Class::
 ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
-
+  
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   vector< pair<size_t,VID> > ccs; //connected components in the roadmap
   cout << "in inter ccs portion" << endl;
   get_cc_stats(*(rdmp->m_pRoadmap), cmap, ccs);//fill ccs
@@ -629,8 +629,9 @@ Stat_Class::
 DisplayCCStats(RoadmapGraph<CFG, WEIGHT>& g, int _maxCCprint=-1)  {
 
     ///Modified for VC
+    
     typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
 
     int maxCCprint;
 

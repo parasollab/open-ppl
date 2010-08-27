@@ -39,6 +39,7 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
   typedef typename RoadmapGraph<CFG, WEIGHT>::CVI CVI;
   typedef typename RoadmapGraph<CFG, WEIGHT>::VI VI;
   
+  
   //////////////////////
   // Constructors and Destructor
   NeighborhoodConnection();
@@ -509,7 +510,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     
     if (this->m_CheckIfSameCC) {
       // the nodes are in the same connected component
-      stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+      stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
       if (is_same_cc(*(_rm->m_pRoadmap), cmap, _vid, *itr2)) {
         // if we're not in "unconnected" mode, count this as a success
         if (m_debug) cout << " | nodes in the same connected component";

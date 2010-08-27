@@ -235,7 +235,7 @@ GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 			    double component_dist, double tao) {
   CFG q1, q2;
   
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map< GRAPH,size_t > cmap;
   vector<pair<size_t,VID> > ccs;
   if(get_cc_stats(*rmap->m_pRoadmap, cmap, ccs) == 1) {
     q1 = (*(rmap->m_pRoadmap->find_vertex(ccs[0].second))).property();

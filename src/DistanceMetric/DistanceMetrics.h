@@ -1136,7 +1136,7 @@ KUnconnectedClosest(Roadmap<CFG,WEIGHT> *rdmp,
   int max_index = 0;
   double dist;
   Environment *env = rdmp->GetEnvironment();
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map< RoadmapGraph<CFG, WEIGHT>,size_t > cmap;
   typename vector<CFG>::iterator vi;
   for (vi = v.begin(); vi < v.end(); vi++) {
     if (cc == (*vi))

@@ -317,7 +317,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       
       QueryClock.StartClock("Query");
        cout << "BEGIN isSameCCC" << endl <<flush;  
-      stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+      stapl::vector_property_map< GRAPH,size_t > cmap;
       querySucceeded = is_same_cc(*region->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
 
       QueryClock.StopClock();
@@ -462,7 +462,7 @@ private:
 
   bool CanConnectToComponent(RoadmapGraph<CfgType,WeightType>& _graph, VID _cc, CfgType _test) {
     vector<VID> vec_cc;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
     get_cc(_graph, cmap, _cc, vec_cc);
 
     vector<pair<double,VID> > vec_dist_vid;
@@ -493,7 +493,7 @@ private:
 
   bool CanSolveQuery(RoadmapGraph<CfgType,WeightType>& _graph, CfgType _start, CfgType _goal) {
     vector<pair<size_t, VID> > CCStats;
-    stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
     get_cc_stats(_graph, cmap, CCStats);
     for(int i=0; i<CCStats.size(); ++i) {
       if(CanConnectToComponent(_graph, CCStats[i].second, _start) 
@@ -606,7 +606,7 @@ class BandsStats : public MPStrategyMethod {
 			vector<VID> vertices;
 			rmp.m_pRoadmap->GetVerticesVID(vertices);
 	
-			stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+			stapl::vector_property_map< GRAPH,size_t > cmap;
 			
 			for(vector<VID>::iterator iter1 = vertices.begin(); iter1!= vertices.end(); ++iter1) {
 				//cout<<"in loop outer"<<endl;
@@ -625,7 +625,7 @@ class BandsStats : public MPStrategyMethod {
 		int fastCompareAllPairs(const Roadmap<CfgType,WeightType>& rmp){
 			int sameCCPairs=0;
 			vector< pair<size_t, VID> > ccstats;
-			stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+			stapl::vector_property_map< GRAPH,size_t > cmap;
 			get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats);
 			for(vector< pair<size_t, VID> >::iterator iter = ccstats.begin(); iter < ccstats.end(); iter++){
 				sameCCPairs+=iter->first*(iter->first-1)/2;      
@@ -638,7 +638,7 @@ class BandsStats : public MPStrategyMethod {
 			//cout<<"in fastCompareAllPairs"<<endl;
 			int sameCCPairs=0;
 			vector< pair<size_t, VID> > ccstats;
-			stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+			stapl::vector_property_map< GRAPH,size_t > cmap;
 			vector< vector<VID> > ccverts;
 			
 			get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats, ccverts);
@@ -742,7 +742,7 @@ class BandsStats : public MPStrategyMethod {
 		double computeDiameter(Roadmap<CfgType,WeightType>& rmp){
 			
 	             vector<pair<size_t, VID> > CCStats;
-		     stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+		     stapl::vector_property_map< GRAPH,size_t > cmap;
                       get_cc_stats(*(rmp.m_pRoadmap), cmap, CCStats);
                       std::sort (CCStats.begin(),  CCStats.end(), __CCVID_Compare<std::pair<int,VID> >() );
                     // test 
@@ -762,7 +762,7 @@ class BandsStats : public MPStrategyMethod {
 		
 		void storeSameCCInfo(unionStats& stats, Roadmap<CfgType,WeightType>& rmp){
 			vector< pair<size_t, VID> > ccstats;
-			stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+			stapl::vector_property_map< GRAPH,size_t > cmap;
 			get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats);
 			std::sort (ccstats.begin(),  ccstats.end(), __CCVID_Compare<std::pair<int,VID> >() );
 			vector< pair<size_t, VID> >::iterator iter = ccstats.begin();

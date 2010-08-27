@@ -143,7 +143,7 @@ operator()(int in_RegionID)
 
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
   Stat_Class* pStatClass = region->GetStatClass();
-  stapl::vector_property_map<stapl::stapl_color<size_t> > cmap;
+   stapl::vector_property_map< GRAPH,size_t > cmap;
 
   OBPRM_srand(getSeed()); 
   

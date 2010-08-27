@@ -344,7 +344,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
 
   //  vector<VID> cc; 
   vector< pair<size_t,VID> > ccs;
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+  stapl::vector_property_map< RoadmapGraph<CFG, WEIGHT>,size_t > cmap;
   get_cc_stats(*(rdmp->m_pRoadmap),cmap,ccs);  
   
   VID svid;
@@ -410,7 +410,8 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       _rp.clear();
       cmap.reset();
       //FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, rp);
-      FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, WEIGHT::MaxWeight()); //fix_lantao , inside this function, edge_property vs double
+      //FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, WEIGHT::MaxWeight()); // inside this function, edge_property vs double
+      find_path_dijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, WEIGHT::MaxWeight()); 
       //cout << "FindPathDijkstra:: size of vector<VID>" << _rp.size() << endl ;
       
 

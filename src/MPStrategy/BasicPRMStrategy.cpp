@@ -152,7 +152,7 @@ void BasicPRMStrategy::ConnectNodes(MPRegion<CfgType, WeightType>* region,
    Clock_Class NodeConnClock;
    stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Node Connection";
    NodeConnClock.StartClock(clockName.str().c_str());
-   stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
   
    for(vector<string>::iterator I = m_NodeConnectionLabels.begin(); 
        I != m_NodeConnectionLabels.end(); ++I){
@@ -191,7 +191,7 @@ void BasicPRMStrategy::ConnectComponents(MPRegion<CfgType, WeightType>* region)
    Clock_Class ComponentConnClock;
    stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Component Connection";
    ComponentConnClock.StartClock(clockName.str().c_str());
-   stapl::vector_property_map< stapl::stapl_color<size_t> > cmap;
+    stapl::vector_property_map< GRAPH,size_t > cmap;
  
    for(vector<string>::iterator I = m_ComponentConnectionLabels.begin(); 
        I != m_ComponentConnectionLabels.end(); ++I){
