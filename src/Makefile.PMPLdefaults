@@ -12,20 +12,18 @@ ifeq (${platform}, LINUX_gcc) 	#linux/gcc
 	DEPS = -MMD -MF $*.d
 endif
 
-ifeq (${platform}, LINUX_gcc64) 	#linux/gcc
-	#UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL
+ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
 	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
-  
+	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	BOOST_INCL = -I/usr/include/boost
-	BOOST_LIB = -L/usr/lib -lboost_program_options
+	BOOST_LIB = -L/usr/lib #-lboost_program_options
 
 	DEPS = -MMD -MF $*.d
 endif
-
 
 ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
