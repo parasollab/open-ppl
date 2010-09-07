@@ -219,13 +219,12 @@ ConfigEnvironment(Environment* _env) const {
 
 void 
 Cfg_reach_cc::
-GetRandomCfg(Environment*env,CollisionDetection* cd, bool is_gamma_random, CDInfo& _cdInfo){
-//  cerr << "Warning GetRandomCfg not implemented yet\n";
+GetRandomCfg(Environment*env,Stat_Class& Stats,CollisionDetection*cd , CDInfo& _cdInfo){
 
 std::string Callee(GetName());
 {std::string Method("Cfg_reach_cc::GetFreeRandomCfg");Callee=Callee+Method;}
  do {
-      getReachableCfg(env,cd,true);
+      getReachableCfg(env,cd);
     }while (this->isCollision(env,Stats,cd,_cdInfo,true,&Callee) );
      
 
