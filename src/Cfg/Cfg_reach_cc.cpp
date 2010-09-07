@@ -1,8 +1,10 @@
 #include "Cfg_reach_cc.h"
 #include <numeric>
-#include "Environment.h"
 #include "MultiBody.h"
+#include "Environment.h"
 #include "FreeBody.h"
+#include "CollisionDetection.h"
+#include "Stat_Class.h"
 #include "boost/lambda/lambda.hpp"
 #include "boost/random.hpp"
 
@@ -217,8 +219,17 @@ ConfigEnvironment(Environment* _env) const {
 
 void 
 Cfg_reach_cc::
-GetRandomCfg(double R, double rStep) {
-  cerr << "Warning GetRandomCfg not implemented yet\n";
+GetRandomCfg(Environment*env,CollisionDetection* cd, bool is_gamma_random, CDInfo& _cdInfo){
+//  cerr << "Warning GetRandomCfg not implemented yet\n";
+
+std::string Callee(GetName());
+{std::string Method("Cfg_reach_cc::GetFreeRandomCfg");Callee=Callee+Method;}
+ do {
+      getReachableCfg(env,cd,true);
+    }while (this->isCollision(env,Stats,cd,_cdInfo,true,&Callee) );
+     
+
+
 }
 
 void 
