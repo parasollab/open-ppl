@@ -224,7 +224,7 @@ GetRandomCfg(Environment*env,Stat_Class& Stats,CollisionDetection*cd , CDInfo& _
 std::string Callee(GetName());
 {std::string Method("Cfg_reach_cc::GetFreeRandomCfg");Callee=Callee+Method;}
  do {
-      getReachableCfg(env,cd);
+   getReachableCfg(env,cd,Stats, _cdInfo);
     }while (this->isCollision(env,Stats,cd,_cdInfo,true,&Callee) );
      
 
@@ -1096,7 +1096,7 @@ vector<double> Cfg_reach_cc::GetConfigurationVector(Environment* env){
 
 
 
-vector<double> Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetection* cd, bool is_gamma_random){
+vector<double> Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetection* cd, Stat_Class& Stats, CDInfo &_cdInfo, bool is_gamma_random){
      if(is_gamma_random)
         gamma = drand48();
       //cout << "\tgamma = " << gamma << "...\n";
@@ -1325,6 +1325,6 @@ vector<double> Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetectio
 }
 
 
-vector<double> Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetection* cd){
-  getReachableCfg(env, cd, true);
+vector<double> Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetection* cd, Stat_Class& Stats, CDInfo& _cdInfo){
+  getReachableCfg(env, cd, Stats, _cdInfo, true);
 }
