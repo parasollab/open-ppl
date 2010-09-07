@@ -158,8 +158,10 @@ class Cfg_reach_cc : public Cfg_free_tree {
   void ConfigEar(Environment* env, Link* ear_root, vector<int>& actual_ear_links, int base_link_id, double base_link_angle);
   void ConfigEar(Environment* env, Link* ear_root, Link* loop_root);
   void ConfigEar(Environment* env, Link* ear_root, Link* loop_root, double base_link_angle);
-  void getReachableCfg(Environment* env, CollisionDetection* cd, bool is_gamma_random);
-  void getReachableCfg(Environment* env, CollisionDetection* cd);
+
+  vector<double> GetConfigurationVector(Environment* env);
+  vector<double> getReachableCfg(Environment* env, CollisionDetection* cd, bool is_gamma_random);
+  vector<double> getReachableCfg(Environment* env, CollisionDetection* cd);
 
 
 

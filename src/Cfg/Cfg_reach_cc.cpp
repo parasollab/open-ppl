@@ -1067,9 +1067,26 @@ bool Cfg_reach_cc::ParseLinksFile(const char* linksFileName)
 }
 
 
+vector<double> Cfg_reach_cc::GetConfigurationVector(Environment* env){
+  //ofPath << "0 0 0 0 0 0 ";
+  vector<double> joint_angles;
+  for(size_t i=0; i<g_cfgJoints.size(); ++i)
+    {
+      double extAng = (PI - MyCalculateJointAngle(env, g_cfgJoints[i].first, g_cfgJoints[i].second)) / TWO_PI;
+      while(extAng < 0)
+        extAng += 1;
+      while(extAng > 1)
+        extAng -= 1;
+      joint_angles.push_back(extAng);
+      //ofPath << extAng << " ";
+    }
+  //ofPath << endl;
+  return joint_angles;
+}
 
 
-void Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetection* cd, bool is_gamma_random){
+
+vector<double> Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetection* cd, bool is_gamma_random){
      if(is_gamma_random)
         gamma = drand48();
       //cout << "\tgamma = " << gamma << "...\n";
@@ -1294,9 +1311,10 @@ void Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetection* cd, boo
           }
 	}
       }
+      return GetConfigurationVector(env);
 }
 
 
-void Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetection* cd){
+vector<double> Cfg_reach_cc::getReachableCfg(Environment* env, CollisionDetection* cd){
   getReachableCfg(env, cd, true);
 }
