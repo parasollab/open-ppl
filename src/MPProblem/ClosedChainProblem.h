@@ -1,3 +1,6 @@
+
+
+
 #ifndef ClosedChainProblem_h
 #define ClosedChainProblem_h
 
@@ -24,8 +27,11 @@
 #include "MPProblem/ClosedChainProblem.h"
 #include "VirtualLink.h"
 
-/* now defined in cfg class
-//Check for stl equivalent
+
+
+#ifndef reach_structs
+#define reach_structs
+#include "MPProblem.h"
 template <typename T, typename U, typename V>
 struct triple
 {
@@ -50,7 +56,7 @@ struct first_is : public unary_function<T, bool>
 
   F first;
 };
-*/
+#endif
 
 
 class ClosedChainProblem:public MPProblem{
