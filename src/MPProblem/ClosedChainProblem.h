@@ -24,6 +24,7 @@
 #include "MPProblem/ClosedChainProblem.h"
 #include "VirtualLink.h"
 
+/* now defined in cfg class
 //Check for stl equivalent
 template <typename T, typename U, typename V>
 struct triple
@@ -49,6 +50,8 @@ struct first_is : public unary_function<T, bool>
 
   F first;
 };
+*/
+
 
 class ClosedChainProblem:public MPProblem{
  public:
