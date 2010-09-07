@@ -67,7 +67,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
 
   virtual bool ConfigEnvironment(Environment*) const;
 
-  virtual void GetRandomCfg(Environment*env,CollisionDetection* cd,bool is_gamma_random,CDInfo&_cdInfo);
+  virtual void GetRandomCfg(Environment*env,Stat_Class& Stats,CollisionDetection*cd,CDInfo&_cdInfo);
   virtual void GetRandomCfg(Environment* env) {
     Cfg_free_tree::GetRandomCfg(env);
   }
