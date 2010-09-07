@@ -6,6 +6,8 @@
 #include "CollisionDetection.h"
 #include "Stat_Class.h"
 
+#ifndef reach_structs
+#define reach_structs
 template <typename T, typename U, typename V>
 struct triple
 {
@@ -30,6 +32,7 @@ struct first_is : public unary_function<T, bool>
 
   F first;
 };
+#endif
 
 
 class Cfg_reach_cc : public Cfg_free_tree {
@@ -160,8 +163,8 @@ class Cfg_reach_cc : public Cfg_free_tree {
   void ConfigEar(Environment* env, Link* ear_root, Link* loop_root, double base_link_angle);
 
   vector<double> GetConfigurationVector(Environment* env);
-  vector<double> getReachableCfg(Environment* env, CollisionDetection* cd, bool is_gamma_random);
-  vector<double> getReachableCfg(Environment* env, CollisionDetection* cd);
+  vector<double> getReachableCfg(Environment* env, CollisionDetection* cd, Stat_Class& Stats, CDInfo&_cdInfo, bool is_gamma_random);
+  vector<double> getReachableCfg(Environment* env, CollisionDetection* cd, Stat_Class& Stats, CDInfo&_cdInfo);
 
 
 
@@ -175,8 +178,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
   static Link* link_tree;
   static vector<Link*> actual_links;
 
-  Stat_Class Stats;
-  CDInfo _cdInfo;
+
   
   vector<Link *> g_baseLinks;
   vector<Link *> g_loopRoots;
