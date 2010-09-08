@@ -6,8 +6,7 @@
 #include "CollisionDetection.h"
 #include "Stat_Class.h"
 
-#ifndef reach_structs
-#define reach_structs
+
 template <typename T, typename U, typename V>
 struct triple
 {
@@ -32,7 +31,7 @@ struct first_is : public unary_function<T, bool>
 
   F first;
 };
-#endif
+
 
 
 class Cfg_reach_cc : public Cfg_free_tree {
@@ -70,7 +69,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
 
   virtual bool ConfigEnvironment(Environment*) const;
 
-  virtual void GetRandomCfg(Environment*env,Stat_Class& Stats,CollisionDetection*cd,CDInfo&_cdInfo);
+  void GetRandomCfg(Environment *env, Stat_Class& Stats, CollisionDetection *cd,CDInfo &_cdInfo);
   virtual void GetRandomCfg(Environment* env) {
     Cfg_free_tree::GetRandomCfg(env);
   }

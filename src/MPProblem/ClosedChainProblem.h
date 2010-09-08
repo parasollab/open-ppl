@@ -26,37 +26,8 @@
 #include "boost/lambda/lambda.hpp"
 #include "MPProblem/ClosedChainProblem.h"
 #include "VirtualLink.h"
+#include "Cfg_reach_cc.h"
 
-
-
-#ifndef reach_structs
-#define reach_structs
-#include "MPProblem.h"
-template <typename T, typename U, typename V>
-struct triple
-{
-  triple() {}
-  triple(const T& t, const U& u, const V& v) : first(t), second(u), third(v) {}
-  ~triple() {}
-
-  T first;
-  U second;
-  V third;
-};
-
-template<typename F, typename T>
-struct first_is : public unary_function<T, bool>
-{
-  first_is(const F& f) : first(f) {}
-  ~first_is() {}
-  bool operator()(const T& t) const 
-  {
-    return first == t.first;
-  }
-
-  F first;
-};
-#endif
 
 
 class ClosedChainProblem:public MPProblem{

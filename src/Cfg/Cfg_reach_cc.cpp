@@ -220,10 +220,11 @@ ConfigEnvironment(Environment* _env) const {
 void 
 Cfg_reach_cc::
 GetRandomCfg(Environment*env,Stat_Class& Stats,CollisionDetection*cd , CDInfo& _cdInfo){
-
+  cout<<" in get random function"<<endl;
 std::string Callee(GetName());
 {std::string Method("Cfg_reach_cc::GetFreeRandomCfg");Callee=Callee+Method;}
  do {
+   cout<<"before get reach"<<endl;
    getReachableCfg(env,cd,Stats, _cdInfo);
     }while (this->isCollision(env,Stats,cd,_cdInfo,true,&Callee) );
      
@@ -662,79 +663,8 @@ double Cfg_reach_cc::MyCalculateJointAngle(Environment* env, Link* link1, Link* 
 
 
 
-void Cfg_reach_cc::ParseXML(XMLNodeReader& in_Node) { 
-  
-  LOG_DEBUG_MSG("ClosedChainProblem::ParseXML()");
 
-  in_Node.verifyName("MPProblem");
 
-  XMLNodeReader::childiterator citr;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-    if(citr->getName() == "links_file") {
-      string filename = citr->stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
-      cout<<"filename="<<filename<<endl;
-      cout<<"parsing file"<<endl;
-      ParseLinksFile(filename.c_str());
-      cout<<"file "<<filename<<" has been parsed"<<endl;
-    } else {
-      citr->warnUnknownNode();
-    }
-    /*
-      else  if(citr->getName() == "distance_metrics") {
-      m_pDistanceMetric = new DistanceMetric(*citr, this);
-    } else  if(citr->getName() == "collision_detection") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-    } 
-      else  if(citr->getName() == "validity_test") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-      m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
-    } else  if(citr->getName() == "MPRegions") {
-      ///\Todo Parse MPRegions
-    } else  if(citr->getName() == "NeighborhoodFinder") {
-      m_pNeighborhoodFinder = new NeighborhoodFinder(*citr,this);
-    
-    }else {
-      citr->warnUnknownNode();
-    }
-    */
-    
-  }
-}
-
-/*
-void MPProblem::
-ParseXML(XMLNodeReader& in_Node) {
-  LOG_DEBUG_MSG("MPProblem::ParseXML()");
-
-  in_Node.verifyName("MPProblem");
-
-  XMLNodeReader::childiterator citr;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-    if(citr->getName() == "environment") {
-      m_pEnvironment = new Environment(*citr, this);
-    } else  if(citr->getName() == "distance_metrics") {
-      m_pDistanceMetric = new DistanceMetric(*citr, this);
-    } else  if(citr->getName() == "collision_detection") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-    }
-    else  if(citr->getName() == "validity_test") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-      m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
-    } else  if(citr->getName() == "MPRegions") {
-      ///\Todo Parse MPRegions
-    } else  if(citr->getName() == "NeighborhoodFinder") {
-      m_pNeighborhoodFinder = new NeighborhoodFinder(*citr,this);
-    }else {
-      citr->warnUnknownNode();
-    }
-  }
-
-  vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();
-  for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
-    m_pEnvironment->buildCDstructure(*C, 1);
-  LOG_DEBUG_MSG("~MPProblem::ParseXML()");
-}
-*/
 
 bool Cfg_reach_cc::ParseRealLink(ifstream &fin)
   {
