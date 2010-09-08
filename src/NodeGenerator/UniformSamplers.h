@@ -18,6 +18,7 @@ class UniformRandomSampler : public SamplerMethod<CFG>
   Environment* env;
   Stat_Class *Stats;
   std::string strLabel;
+  CFG cfg;
   
  public:
   UniformRandomSampler() {}
@@ -29,7 +30,7 @@ class UniformRandomSampler : public SamplerMethod<CFG>
   {
     LOG_DEBUG_MSG("UniformRandomSampler::UniformRandomSampler()");
     ParseXML(in_Node);
-    cout << "UniformRandomSampler";
+    cout << "UniformRandomSampler here";
     strLabel= this->ParseLabelXML( in_Node);
     this->SetLabel(strLabel);
     LOG_DEBUG_MSG("~UniformRandomSampler::UniformRandomSampler()");
@@ -44,6 +45,13 @@ class UniformRandomSampler : public SamplerMethod<CFG>
     LOG_DEBUG_MSG("UniformRandomSampler::ParseXML()");
     //print(cout);
     cout << "UniformRandomSampler";
+    string filename = in_Node.stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
+    cout<<"filename="<<filename<<endl;
+    cout<<"parsing file"<<endl;
+    if(filename!=""){
+      cfg.ParseLinksFile(filename.c_str());
+      cout<<"file "<<filename<<" has been parsed"<<endl; 
+    }
     LOG_DEBUG_MSG("~UniformRandomSampler::ParseXML()");
   }
 
@@ -58,6 +66,7 @@ class UniformRandomSampler : public SamplerMethod<CFG>
   _Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
           OutputIterator result)  
   {
+    cout<<"in urs"<<endl;
     LOG_DEBUG_MSG("UniformRandomSampler::UnbiasedSample()");
     /* string callee(name());
     callee += "::GenerateNode()";*/
@@ -71,17 +80,17 @@ class UniformRandomSampler : public SamplerMethod<CFG>
 	Stat.IncNodes_Attempted();
 	attempts++;
 	
-	CFG tmp;
-	
-	tmp.GetRandomCfg(env);
-	
-	if(tmp.InBoundingBox(env)) {
+	//CFG tmp;
+	cout<<"before ger ran"<<endl;
+	cfg.GetRandomCfg(env);
+	cout<<"after ger ran"<<endl;
+	if(cfg.InBoundingBox(env)) {
 		
 	  Stat.IncNodes_Generated();
 	  generated = true;
 	 
 	  // cfg_out.push_back(tmp);
-	  *result++ = tmp;
+	  *result++ = cfg;
 	
 	}
       } while (!generated && (attempts < max_attempts));
@@ -145,6 +154,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   std::string strVcmethod;
   CDInfo *cdInfo;
   std::string strLabel;
+  CFG cfg;
 
  public:
   UniformRandomFreeSampler() {}
@@ -172,6 +182,14 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   void ParseXML(XMLNodeReader& in_Node) 
   {
     LOG_DEBUG_MSG("UniformRandomFreeSampler::ParseXML()");
+    cout << "UniformRandomSampler";
+    string filename = in_Node.stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
+    cout<<"filename="<<filename<<endl;
+    cout<<"parsing file in urf"<<endl;
+    if(filename!=""){
+      cfg.ParseLinksFile(filename.c_str());
+      cout<<"file "<<filename<<" has been parsed"<<endl; 
+    }
     //print(cout);
     cout << "UniformRandomFreeSampler";
     LOG_DEBUG_MSG("~UniformRandomFreeSampler::ParseXML()");
@@ -190,6 +208,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   _Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
           OutputIterator result)   
   {
+    cout<<"in __sample"<<endl;
     string callee(name());
     callee += "::_Sample()";
     CDInfo cdInfo;
@@ -202,21 +221,24 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
 	Stat.IncNodes_Attempted();
 	attempts++;
 	  
-	CFG tmp;
+	//CFG tmp;
 	//need to set label here
 	//tmp.SetLabel("UniformRandomFree_Sampler",true);
-	tmp.GetRandomCfg(env);
+	cout<<"before get ran 2"<<endl;
+	cfg.GetRandomCfg(env, *Stats, cd, cdInfo);
+	//cfg.GetRandomCfg(env);
+	cout<<"after get ran 2"<<endl;
 	//cout << "RandomCfg::tmp = " << tmp << endl;
-	if(tmp.InBoundingBox(env) && 
+	if(cfg.InBoundingBox(env) && 
            //!tmp.isCollision(env, Stat, cd, cdInfo, true, &callee)) 
-	vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, 
+	vc->IsValid(vc->GetVCMethod(strVcmethod), cfg, env, 
 	            Stat, cdInfo, true, &callee))
 	//cout << "num of nodes after IsValid = " << num_nodes << endl;
 	{
 	  Stat.IncNodes_Generated();
 	  generated = true;
 	  // cfg_out.push_back(tmp);
-	  *result++ = tmp;
+	  *result++ = cfg;
 	}
       } while (!generated && (attempts < max_attempts));
       
@@ -230,7 +252,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
           OutputIterator result)  
   {
     int num_nodes = distance(first,last);
-    // cout << "_Sample2 num of nodes = " << num_nodes << endl;
+     cout << "_Sample2 num of nodes = " << num_nodes << endl;
     _Sample(env, Stat, num_nodes, max_attempts, result);
     return result;
   }
@@ -241,6 +263,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
          back_insert_iterator<vector<CFG> > result)   
   {
+    cout<<"in sample 1"<<endl;
     return _Sample(env, Stat, num_nodes, max_attempts, result);
   }
     
@@ -248,6 +271,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
          back_insert_iterator<vector<CFG> > result)  
   {
+    cout<<"in sample 2"<<endl;
     return _Sample(env, Stat, first, last, max_attempts, result);
   }
 
@@ -256,6 +280,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
          typename vector<CFG>::iterator result)
   {
+    cout<<" in sample 3"<<endl;
     return _Sample(env, Stat, num_nodes, max_attempts, result);
   }
     
@@ -263,6 +288,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
          typename vector<CFG>::iterator result)
   {
+    cout<<" in sample 4"<<endl;
     return _Sample(env, Stat, first, last, max_attempts, result);
   }
 };
@@ -277,6 +303,7 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   CollisionDetection* cd;
   CDInfo  *cdInfo;
   std::string strLabel;
+  CFG cfg;
 
  public:
   UniformRandomCollisionSampler() {}
@@ -297,6 +324,14 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   void ParseXML(XMLNodeReader& in_Node) 
   {
     LOG_DEBUG_MSG("UniformRandomCollisionSampler::ParseXML()");
+    cout << "UniformRandomSampler";
+    string filename = in_Node.stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
+    cout<<"filename="<<filename<<endl;
+    cout<<"parsing file"<<endl;
+    if(filename!=""){
+      cfg.ParseLinksFile(filename.c_str());
+      cout<<"file "<<filename<<" has been parsed"<<endl; 
+    }
     //print(cout);
     cout << "UniformRandomCollisionSampler";
     strLabel= this->ParseLabelXML( in_Node);
@@ -331,16 +366,16 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
         Stat.IncNodes_Attempted();
         attempts++;
 	  
-        CFG tmp;
-        tmp.GetRandomCfg(env);
+        //CFG tmp;
+        cfg.GetRandomCfg(env);
         //change to is valid
         // cout << "tmp b4 IsValid = " << tmp << endl;
-        if(tmp.InBoundingBox(env) && tmp.isCollision(env, Stat, cd, cdInfo, true, &callee)) {
+        if(cfg.InBoundingBox(env) && cfg.isCollision(env, Stat, cd, cdInfo, true, &callee)) {
           Stat.IncNodes_Generated();
           // cout << "tmp after IsValid = " << tmp << endl;
           generated = true;
           // cfg_out.push_back(tmp);
-          *result++ = tmp;
+          *result++ = cfg;
         }
       } while (!generated && (attempts < max_attempts));
     }
