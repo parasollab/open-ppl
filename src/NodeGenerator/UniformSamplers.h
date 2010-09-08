@@ -45,6 +45,7 @@ class UniformRandomSampler : public SamplerMethod<CFG>
     LOG_DEBUG_MSG("UniformRandomSampler::ParseXML()");
     //print(cout);
     cout << "UniformRandomSampler";
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     string filename = in_Node.stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
     cout<<"filename="<<filename<<endl;
     cout<<"parsing file"<<endl;
@@ -52,6 +53,7 @@ class UniformRandomSampler : public SamplerMethod<CFG>
       cfg.ParseLinksFile(filename.c_str());
       cout<<"file "<<filename<<" has been parsed"<<endl; 
     }
+#endif
     LOG_DEBUG_MSG("~UniformRandomSampler::ParseXML()");
   }
 
@@ -183,6 +185,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   {
     LOG_DEBUG_MSG("UniformRandomFreeSampler::ParseXML()");
     cout << "UniformRandomSampler";
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     string filename = in_Node.stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
     cout<<"filename="<<filename<<endl;
     cout<<"parsing file in urf"<<endl;
@@ -190,6 +193,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
       cfg.ParseLinksFile(filename.c_str());
       cout<<"file "<<filename<<" has been parsed"<<endl; 
     }
+#endif
     //print(cout);
     cout << "UniformRandomFreeSampler";
     LOG_DEBUG_MSG("~UniformRandomFreeSampler::ParseXML()");
@@ -325,6 +329,7 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   {
     LOG_DEBUG_MSG("UniformRandomCollisionSampler::ParseXML()");
     cout << "UniformRandomSampler";
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     string filename = in_Node.stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
     cout<<"filename="<<filename<<endl;
     cout<<"parsing file"<<endl;
@@ -332,6 +337,7 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
       cfg.ParseLinksFile(filename.c_str());
       cout<<"file "<<filename<<" has been parsed"<<endl; 
     }
+#endif
     //print(cout);
     cout << "UniformRandomCollisionSampler";
     strLabel= this->ParseLabelXML( in_Node);
