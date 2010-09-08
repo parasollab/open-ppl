@@ -479,6 +479,8 @@ class Cfg {
     env->GetMultiBody(env->GetRobotIndex())->PolygonalApproximation(result);
     return result;
   }
+
+  bool ParseLinksFile(const char* linksFileName){}  //this is a temporary hack to get the reachable sampler working
   
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
