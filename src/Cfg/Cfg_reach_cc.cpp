@@ -134,12 +134,31 @@ void
 Cfg_reach_cc::
 add(const Cfg&, const Cfg&) {
   cerr << "Warning, add not implmeneted yet\n";
+  exit(-1);
 }
 
 void 
 Cfg_reach_cc::
 subtract(const Cfg& c1, const Cfg& c2) {
   //cerr << "Warning, subtract not implemented yet\n";
+  //cout << "DEBUG::Cfg_reach_cc::subtract\n";
+  //cout << "\tc1 = "; ((Cfg_reach_cc&)c1).print(cout); cout << endl;
+  //cout << "\tc2 = "; ((Cfg_reach_cc&)c2).print(cout); cout << endl;
+  if(OrientationsDifferent((Cfg_reach_cc&)c1, (Cfg_reach_cc&)c2))
+  {
+    //cout << "\t\t-> orientation different\n";
+    vector<int>::const_iterator I = ((Cfg_reach_cc&)c1).link_orientations.begin();
+    vector<int>::const_iterator J = ((Cfg_reach_cc&)c2).link_orientations.begin();
+    for(; I != ((Cfg_reach_cc&)c1).link_orientations.end() && J != ((Cfg_reach_cc&)c2).link_orientations.end(); ++I, ++J)
+      if(abs(*I - *J) > 1)
+      {
+        cerr << "\n\nError in Cfg_reach_cc::subtract, subtracting cfgs with too great an orientation difference, exiting.\n";
+        cerr << "\tc1 = "; ((Cfg_reach_cc&)c1).print(cerr); cerr << endl;
+        cerr << "\tc2 = "; ((Cfg_reach_cc&)c2).print(cerr); cerr << endl;
+        exit(-1);
+      }
+  }
+  
   vector<double> _v1 = c1.GetData();
   vector<double> _v2 = c2.GetData();
   for(int i=0; i<6; ++i)
@@ -161,7 +180,6 @@ subtract(const Cfg& c1, const Cfg& c2) {
   */
   link_orientations = ((Cfg_reach_cc&)c1).link_orientations;
 
-
   StoreData();  
 }
 
@@ -169,6 +187,24 @@ void
 Cfg_reach_cc::
 negative(const Cfg& c) {
   //cerr << "Warning, negative not implemented yet\n";
+  //cout << "DEBUG::Cfg_reach_cc::negative\n";
+  //cout << "\this = "; print(cout); cout << endl;
+  //cout << "\tc = "; ((Cfg_reach_cc&)c).print(cout); cout << endl;
+  if(OrientationsDifferent(*this, (Cfg_reach_cc&)c))
+  {
+    //cout << "\t\t-> orientation different\n";
+    vector<int>::const_iterator I = link_orientations.begin();
+    vector<int>::const_iterator J = ((Cfg_reach_cc&)c).link_orientations.begin();
+    for(; I != link_orientations.end() && J != ((Cfg_reach_cc&)c).link_orientations.end(); ++I, ++J)
+      if(abs(*I - *J) > 1)
+      {
+        cerr << "\n\nError in Cfg_reach_cc::negative, negating cfgs with too great an orientation difference, exiting.\n";
+        cerr << "\tthis = "; print(cerr); cerr << endl;
+        cerr << "\tc = "; ((Cfg_reach_cc&)c).print(cerr); cerr << endl;
+        exit(-1);
+      }
+  }
+
   vector<double> _v = c.GetData();
   for(int i=0; i<6; ++i)
     v[i] = -1*_v[i];
@@ -188,24 +224,28 @@ void
 Cfg_reach_cc::
 multiply(const Cfg&, double) {
   cerr << "Warning, multiply not implemented yet\n";
+  exit(-1);
 }
 
 void 
 Cfg_reach_cc::
 divide(const Cfg&, double) {
   cerr << "Warning, divide not implemented yet\n";
+  exit(-1);
 }
 
 void 
 Cfg_reach_cc::
 WeightedSum(const Cfg&, const Cfg&, double weight) {
   cerr << "Warning, WeightedSum not implmeneted yet\n";
+  exit(-1);
 }
 
 void 
 Cfg_reach_cc::
 c1_towards_c2(const Cfg& cfg1, const Cfg& cfg2, double d) {
   cerr << "Warning, c1_towards_c2 not implemented yet\n";
+  exit(-1);
 }
 
 bool 
@@ -251,7 +291,8 @@ ConfigEnvironment(Environment* _env) const {
 void 
 Cfg_reach_cc::
 GetRandomCfg(double R, double rStep) {
-  cerr << "Warning GetRandomCfg not implemented yet\n";
+  cerr << "Warning GetRandomCfg(double, double) not implemented yet\n";
+  exit(-1);
 }
 
 void 
@@ -284,6 +325,7 @@ void
 Cfg_reach_cc::
 GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
   cerr << "Warning GetRandomRay not implemented yet\n";
+  exit(-1);
 }
 
 void 
@@ -292,6 +334,7 @@ FindNeighbors(Environment* env, Stat_Class& Stats, const Cfg& increment,
 	      CollisionDetection* cd, int noNeighbors, CDInfo& _cdInfo,
 	      vector<Cfg*>& cfgs) {
   cerr << "Warning, FindNeighbors not implemented yet\n";
+  exit(-1);
 }
 
 void 
@@ -300,11 +343,30 @@ FindNeighbors(Environment* env, Stat_Class& Stats, const Cfg& goal,
 	      const Cfg& increment, CollisionDetection* cd, int noNeighbors, 
 	      CDInfo& _cdInfo, vector<Cfg*>& cfgs) {
   cerr << "Warning, FindNeighbors not implemented yet\n";
+  exit(-1);
 }
 
 void 
 Cfg_reach_cc::
 Increment(const Cfg& _increment) {
+  //cout << "DEBUG::Cfg_reach_cc::Increment\n";
+  //cout << "\tthis = "; print(cout); cout << endl;
+  //cout << "\t_increment = "; ((Cfg_reach_cc&)_increment).print(cout); cout << endl;
+  if(OrientationsDifferent(*this, (Cfg_reach_cc&)_increment))
+  {
+    //cout << "\t\t-> orientation different\n";
+    vector<int>::const_iterator I = link_orientations.begin();
+    vector<int>::const_iterator J = ((Cfg_reach_cc&)_increment).link_orientations.begin();
+    for(; I != link_orientations.end() && J != ((Cfg_reach_cc&)_increment).link_orientations.end(); ++I, ++J)
+      if(abs(*I - *J) > 1)
+      {
+        cerr << "\n\nError in Cfg_reach_cc::Increment, incrementing cfgs with too great an orientation difference, exiting.\n";
+        cerr << "\tthis = "; print(cerr); cerr << endl;
+        cerr << "\tc = "; ((Cfg_reach_cc&)_increment).print(cerr); cerr << endl;
+        exit(-1);
+      }
+  }
+
   vector<double> _v = _increment.GetData();
   for(int i=0; i<6; ++i)
     v[i] += _v[i];
@@ -313,7 +375,9 @@ Increment(const Cfg& _increment) {
 	    link_lengths.begin(), 
 	    plus<double>());
   link_orientations = ((Cfg_reach_cc&)_increment).link_orientations;
+  
   StoreData();
+  
   obst = -1;
   tag = -1;
   clearance = -1;
@@ -323,6 +387,7 @@ void
 Cfg_reach_cc::
 IncrementTowardsGoal(const Cfg &goal, const Cfg &increment) {
   cerr << "Warning, IncrementTowardsGoal not implemented yet\n";
+  exit(-1);
 }
 
 void 
@@ -429,7 +494,7 @@ StoreData() {
       v.push_back((TWO_PI-sumExtAng)/TWO_PI);
 
   } else {
-//     cerr << "\n\n\tWARNING: Loop is broken!\n";
+    //cerr << "\n\n\tWARNING: Loop is broken!\n";
     v.resize(dof, 0);
   }
 
@@ -482,6 +547,10 @@ GetIntermediate(const Cfg_reach_cc& c1,
   if(!can_recursive_sample)
     return false;
   else {
+    vector<double> v1 = c1.GetData();
+    vector<double> v2 = c2.GetData();
+    for(int i=0; i<6; ++i)
+      v[i] = (v1[i] + v2[i]) / 2;
     link_lengths.clear();
     link_orientations.clear();
     link_tree->ExportTreeLinkLength(link_lengths, link_orientations);
@@ -554,8 +623,6 @@ print(ostream& os) const
   return os;
 }
 
-
-
 ostream&
 Cfg_reach_cc::
 print_base(ostream& os) const 
@@ -564,8 +631,6 @@ print_base(ostream& os) const
   return os;
 }
 
-
-
 ostream&
 Cfg_reach_cc::
 print_len(ostream& os) const 
@@ -573,8 +638,6 @@ print_len(ostream& os) const
   copy(link_lengths.begin(), link_lengths.end(), ostream_iterator<double>(os, " "));
   return os;
 }
-
-
 
 ostream&
 Cfg_reach_cc::
