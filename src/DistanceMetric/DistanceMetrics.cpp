@@ -183,6 +183,17 @@ ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
       cout << "BinaryLPSweptDistance: lp_method = " << lp->selected[0]->GetName() << ", pos_res = " << pos_res << ", ori_res = " << ori_res << ", tolerance = " << tolerance << ", max_attempts = " << max_attempts << ", use_bbox = " << use_bbox << endl;
       //delete lp;
       citr->warnUnrequestedAttributes();
+    } else if(citr->getName() == "reachable") {
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+      ReachableDistance* reachable = new ReachableDistance();
+      all.push_back(reachable);
+      selected.push_back(reachable->CreateCopy());
+      string par_label = citr->stringXMLParameter("Label",false,"","Label");
+      citr->warnUnrequestedAttributes();
+#else
+      cerr << "Error in DistanceMetric::ParseXML, attempting to use reachable distance with a non-reachable distance cfg type, exiting.\n";
+      exit(-1);
+#endif
     } else
       return false;
 

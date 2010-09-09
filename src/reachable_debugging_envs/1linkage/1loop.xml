@@ -15,8 +15,8 @@
     <links_file filename="chain.tree" closed_chain="false"/>
     
     <distance_metrics>
-      <scaledEuclidean scale="0.5"/>
-      <scaledEuclidean scale="0.5"/>
+      <reachable />
+      <reachable />
     </distance_metrics>    
     
     <validity_test>
