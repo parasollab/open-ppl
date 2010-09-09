@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<motion_planning>
+  <MPProblem>
+    <environment input_env="chain.tree.env">
+      <robot num_joints="5" pos_dof="3" dofs="11">
+        <boundary type="bbox" translational_scale="1">
+          <parameter id="0" Label="x" type="translational" min="-15" max="15" />
+          <parameter id="1" Label="y" type="translational" min="-10" max="10" />
+          <parameter id="2" Label="z" type="translational" min="-15" max="15" />
+        </boundary>
+      </robot>
+      <!-- <resolution pos_res="0.05" ori_res="0.05" / let the MP compute it-->
+    </environment>
+    
+    <links_file filename="chain.tree" closed_chain="false"/>
+    
+    <distance_metrics>
+      <scaledEuclidean scale="0.5"/>
+      <scaledEuclidean scale="0.5"/>
+    </distance_metrics>    
+    
+    <validity_test>
+      <CollisionDetection Label="cd1" method="RAPID" />
+      <CollisionDetection Label="cd2" method="PQP" />
+      <CollisionDetection Label="cd3" method="VCLIP" />
+    </validity_test>
+    
+    <NeighborhoodFinder>
+      <BFNF Label="BFNF"/>
+    </NeighborhoodFinder>
+    
+    <MPRegions/>
+      
+  </MPProblem>
+  
+  <MPStrategy iterations=1 gamma=0>  
+     <node_generation_methods>
+      <UniformRandomFreeSampler Label="UniformRandomFree" vc_method="cd1" />
+    </node_generation_methods>
+    
+    <connection_methods>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="10" CheckIfSameCC="false" />
+      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" nf="BFNF"/>
+    </connection_methods>
+
+    <lp_methods>
+      <straightline Label="sl" length="0" binary_search="0" vc_method="cd1"/>
+    </lp_methods>
+    
+    <MPEvaluator_methods>
+      <MPRegionConditionalEvaluators>
+        <TestEvaluation Label="TestEval" size="10" />
+      </MPRegionConditionalEvaluators>
+    </MPEvaluator_methods>
+    
+    <MPStrategyMethod Controller="PRM1">
+      <BasicPRMStrategy Label="PRM1" seed="1234567" filename="Basic" iterations="10" num_samples="10">
+        <node_generation_method Method="UniformRandomFree" Number="10"/>
+        <node_connection_method Method="Closest"/>
+        <!--
+        <component_connection_method Method="ConnectCCs"/>
+        -->
+        <evaluation_method Method="TestEval"/>
+      </BasicPRMStrategy>
+    </MPStrategyMethod>
+    
+  </MPStrategy>
+</motion_planning>
+

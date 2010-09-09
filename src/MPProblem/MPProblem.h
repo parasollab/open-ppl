@@ -21,7 +21,9 @@ public:
   virtual ~MPProblem() {}
   
   void PrintOptions();
-  
+ 
+protected:
+  bool ParseChild(XMLNodeReader::childiterator citr);
   
 private:
   ///\todo Create constructors for distance_metrics, collision_detection, MPRegions

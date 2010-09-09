@@ -14,31 +14,42 @@ MPProblem(XMLNodeReader& in_Node, bool parse_xml) : MPBaseObject(in_Node, this) 
 }
 
 
+bool MPProblem::
+ParseChild(XMLNodeReader::childiterator citr)
+{
+  if(citr->getName() == "environment") {
+    m_pEnvironment = new Environment(*citr, this);
+    return true;
+  } else  if(citr->getName() == "distance_metrics") {
+    m_pDistanceMetric = new DistanceMetric(*citr, this);
+    return true;
+  } else  if(citr->getName() == "collision_detection") {
+    m_pCollisionDetection = new CollisionDetection(*citr, this);
+    return true;
+  } else  if(citr->getName() == "validity_test") {
+    m_pCollisionDetection = new CollisionDetection(*citr, this);
+    m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
+    return true;
+  } else  if(citr->getName() == "MPRegions") {
+    ///\Todo Parse MPRegions
+    return true;
+  } else  if(citr->getName() == "NeighborhoodFinder") {
+    m_pNeighborhoodFinder = new NeighborhoodFinder(*citr,this);
+    return true;
+  } else
+    return false;
+}
+
+
 void MPProblem::
 ParseXML(XMLNodeReader& in_Node) { 
   LOG_DEBUG_MSG("MPProblem::ParseXML()");
 
   in_Node.verifyName("MPProblem");
 
-  XMLNodeReader::childiterator citr;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-    if(citr->getName() == "environment") {
-      m_pEnvironment = new Environment(*citr, this);
-    } else  if(citr->getName() == "distance_metrics") {
-      m_pDistanceMetric = new DistanceMetric(*citr, this);
-    } else  if(citr->getName() == "collision_detection") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-    } 
-      else  if(citr->getName() == "validity_test") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-      m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
-    } else  if(citr->getName() == "MPRegions") {
-      ///\Todo Parse MPRegions
-    } else  if(citr->getName() == "NeighborhoodFinder") {
-      m_pNeighborhoodFinder = new NeighborhoodFinder(*citr,this);
-    }else {
+  for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if(!ParseChild(citr))
       citr->warnUnknownNode();
-    }
   }
 
   vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();

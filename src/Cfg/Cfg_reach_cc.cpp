@@ -13,6 +13,8 @@ Link* Cfg_reach_cc::link_tree = NULL;
 vector<Link*> Cfg_reach_cc::actual_links;
 double Cfg_reach_cc::rdres = 0.05;
 double Cfg_reach_cc::gamma = 0.5;
+bool Cfg_reach_cc::is_closed_chain = true;
+
 
 Cfg_reach_cc::
 Cfg_reach_cc() : Cfg_free_tree() {
@@ -65,18 +67,46 @@ void
 Cfg_reach_cc::
 initialize_link_tree(const char* filename) {
   ifstream ifs(filename);
-  int num_links;
+  char strData[256];
+  if(!(ifs >> strData)) {
+    cerr << "Error while reading link values: can't read num_links\n";
+    exit(-1);
+  }
+  if(strcmp(strData, "numLinks") != 0) {
+    cerr << "Error while reading link values: can't read num_links\n";
+    exit(-1);
+  }
+  int num_links = 0;
   if(!(ifs >> num_links)) {
     cerr << "Error while reading link values: can't read num_links\n";
     exit(-1);
   }
+  
   for(int i=0; i<num_links; ++i) {
-    double length;
-    if(!(ifs >> length)) {
-      cerr << "Error while reading link " << i << " length\n";
+    if(!(ifs >> strData)) {
+      cerr << "Error while reading link " << i << " lengths\n";
       exit(-1);
     }
-    actual_links.push_back(new Link(length, length));
+    if(strcmp(strData, "RealLink") != 0) {
+      cerr << "Error while reading link " << i << " lengths\n";
+      exit(-1);
+    }
+    int link_id = -1;
+    if(!(ifs >> link_id)) {
+      cerr << "Error while reading link " << i << " id\n";
+      exit(-1);
+    }
+    double length1 = -1;
+    if(!(ifs >> length1)) {
+      cerr << "Error while reading link " << i << " min length\n";
+      exit(-1);
+    }
+    double length2 = -1;
+    if(!(ifs >> length2)) {
+      cerr << "Error while reading link " << i << " max length\n";
+      exit(-1);
+    }
+    actual_links.push_back(new Link(length1, length2));
   }
   ifs.close();
 
@@ -109,26 +139,30 @@ add(const Cfg&, const Cfg&) {
 void 
 Cfg_reach_cc::
 subtract(const Cfg& c1, const Cfg& c2) {
-  cerr << "Warning, subtract not implemented yet\n";
-  /*
+  //cerr << "Warning, subtract not implemented yet\n";
+  vector<double> _v1 = c1.GetData();
+  vector<double> _v2 = c2.GetData();
   for(int i=0; i<6; ++i)
-    v[i] = c1.v[i] - c2.v[i];
+    v[i] = _v1[i] - _v2[i];
 
   link_lengths.clear();
-  transform(c1.link_lengths.begin(), c1.link_lengths.end(),
-	    c2.link_lengths.begin(),
+  transform(((Cfg_reach_cc&)c1).link_lengths.begin(), ((Cfg_reach_cc&)c1).link_lengths.end(),
+	    ((Cfg_reach_cc&)c2).link_lengths.begin(),
 	    back_insert_iterator<vector<double> >(link_lengths),
 	    minus<double>());
 
-  //not sure what to do here...
+  //not sure what to do here...used for Increment in lp, so setting ori equal to c1 is probably ok
   link_orientations.clear();
-  transform(c1.link_orientations.begin(), c1.link_orientations.end(),
-	    c2.link_orientations.begin(),
+  /*
+  transform(((Cfg_reach_cc&)c1).link_orientations.begin(), ((Cfg_reach_cc&)c1).link_orientations.end(),
+	    ((Cfg_reach_cc&)c2).link_orientations.begin(),
 	    back_insert_iterator<vector<double> >(link_orientations),
 	    minus<int>());
+  */
+  link_orientations = ((Cfg_reach_cc&)c1).link_orientations;
+
 
   StoreData();  
-  */
 }
 
 void 
@@ -231,7 +265,10 @@ GetRandomCfg_CenterOfMass(Environment* env) {
   //v[5] = 0;
 
   link_tree->ResetTree();
-  link_tree->RecursiveSample(0, true, gamma);
+  if(is_closed_chain)
+    link_tree->RecursiveSample(0, true, gamma);
+  else
+    link_tree->RecursiveSample(-1, true, gamma);
   link_lengths.clear();
   link_orientations.clear();
   link_tree->ExportTreeLinkLength(link_lengths, link_orientations);
@@ -378,18 +415,18 @@ StoreData() {
   link_tree->ImportTreeLinkLength(link_lengths, link_orientations, 0);
 
   if(link_tree->CanRecursiveClose()) 
-    {
+  {
     v.resize(6);
 
     //compute joint angles
     double sumExtAng = 0;
     for(size_t i=1; i<actual_links.size(); ++i) {
-      double extAng = PI - Link::CalculateJointAngle(actual_links[i-1], 
-					       actual_links[i]);
+      double extAng = PI - Link::CalculateJointAngle(actual_links[i-1], actual_links[i]);
       sumExtAng += extAng;
       v.push_back(extAng/TWO_PI);
     }
-    v.push_back((TWO_PI-sumExtAng)/TWO_PI);
+    if(is_closed_chain)
+      v.push_back((TWO_PI-sumExtAng)/TWO_PI);
 
   } else {
 //     cerr << "\n\n\tWARNING: Loop is broken!\n";
@@ -436,7 +473,13 @@ GetIntermediate(const Cfg_reach_cc& c1,
   boost::variate_generator<boost::rand48&, boost::uniform_real<> >
     rand(generator, distribution);
   
-  if(!link_tree->RecursiveSample(rand, 0))
+  bool can_recursive_sample = true;
+  if(is_closed_chain)
+    can_recursive_sample = link_tree->RecursiveSample(rand, 0);
+  else
+    can_recursive_sample = link_tree->RecursiveSample(rand, -1);
+
+  if(!can_recursive_sample)
     return false;
   else {
     link_lengths.clear();

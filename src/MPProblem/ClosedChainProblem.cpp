@@ -2,6 +2,17 @@
 #define ClosedChainProblem_cpp
 
 #include "ClosedChainProblem.h"
+#include "CollisionDetection.h"
+
+ClosedChainProblem::
+ClosedChainProblem(XMLNodeReader& in_Node) : MPProblem(in_Node, false)
+{
+  ParseXML(in_Node);
+
+  vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();
+  for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
+    m_pEnvironment->buildCDstructure(*C, 1);
+}
 
 void ClosedChainProblem::
 ParseXML(XMLNodeReader& in_Node) { 
@@ -10,73 +21,28 @@ ParseXML(XMLNodeReader& in_Node) {
 
   in_Node.verifyName("MPProblem");
 
-  XMLNodeReader::childiterator citr;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-    if(citr->getName() == "links_file") {
-      string filename = citr->stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
-      cout<<"filename="<<filename<<endl;
-      cout<<"parsing file"<<endl;
-      ParseLinksFile(filename.c_str());
-      cout<<"file "<<filename<<" has been parsed"<<endl;
-    } else {
-      citr->warnUnknownNode();
-    }
-    /*
-      else  if(citr->getName() == "distance_metrics") {
-      m_pDistanceMetric = new DistanceMetric(*citr, this);
-    } else  if(citr->getName() == "collision_detection") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-    } 
-      else  if(citr->getName() == "validity_test") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-      m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
-    } else  if(citr->getName() == "MPRegions") {
-      ///\Todo Parse MPRegions
-    } else  if(citr->getName() == "NeighborhoodFinder") {
-      m_pNeighborhoodFinder = new NeighborhoodFinder(*citr,this);
-    
-    }else {
-      citr->warnUnknownNode();
-    }
-    */
-    
-  }
+  for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
+    if(!this->ParseChild(citr))
+      if(citr->getName() == "links_file") 
+      {
+        string filename = citr->stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
+        bool is_closed_chain = citr->boolXMLParameter("closed_chain", true, true, "Flag if tree represents a closed chain or not");
+
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+        cout<<"filename="<<filename<<endl;
+        cout<<"parsing file"<<endl;
+        //ParseLinksFile(filename.c_str());
+        CfgType::initialize_link_tree(filename.c_str());
+        CfgType::is_closed_chain = is_closed_chain;
+        cout<<"file "<<filename<<" has been parsed"<<endl;
+#else
+        cerr << "Warning, attempting to use ClosedChainProblem with a non-reachable distance cfg type, exiting.\n";
+        exit(-1);
+#endif
+      } else 
+        citr->warnUnknownNode();
 }
 
-/*
-void MPProblem::
-ParseXML(XMLNodeReader& in_Node) {
-  LOG_DEBUG_MSG("MPProblem::ParseXML()");
-
-  in_Node.verifyName("MPProblem");
-
-  XMLNodeReader::childiterator citr;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-    if(citr->getName() == "environment") {
-      m_pEnvironment = new Environment(*citr, this);
-    } else  if(citr->getName() == "distance_metrics") {
-      m_pDistanceMetric = new DistanceMetric(*citr, this);
-    } else  if(citr->getName() == "collision_detection") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-    }
-    else  if(citr->getName() == "validity_test") {
-      m_pCollisionDetection = new CollisionDetection(*citr, this);
-      m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
-    } else  if(citr->getName() == "MPRegions") {
-      ///\Todo Parse MPRegions
-    } else  if(citr->getName() == "NeighborhoodFinder") {
-      m_pNeighborhoodFinder = new NeighborhoodFinder(*citr,this);
-    }else {
-      citr->warnUnknownNode();
-    }
-  }
-
-  vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();
-  for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
-    m_pEnvironment->buildCDstructure(*C, 1);
-  LOG_DEBUG_MSG("~MPProblem::ParseXML()");
-}
-*/
 
 bool ClosedChainProblem::ParseRealLink(ifstream &fin)
   {
@@ -153,9 +119,6 @@ bool ClosedChainProblem::ParseLoop(ifstream &fin)
   copy(loopLinksID.begin(), loopLinksID.end(), ostream_iterator<int>(cout, " "));
   cout << endl;    
     
-  g_loopIDs.push_back(loopLinksID);
-  g_loopLinks.push_back(loopLinks);
-
   Link *newTree = BuildTree(0, loopLinks.size()-1, loopLinks);
   g_loopRoots.push_back(newTree);
 
@@ -437,7 +400,7 @@ bool ClosedChainProblem::ParseLinksFile(const char* linksFileName)
 
   //find ear virtual link roots
   g_ear_roots.clear();
-  g_ear_rootIDs.clear();
+  vector<int> g_ear_rootIDs;
   for(size_t i=0; i<g_loopRoots.size(); ++i)
   {
     Link* parent = get_parent_of(g_loopRoots[i], g_ears[i]);
@@ -556,16 +519,6 @@ void ClosedChainProblem::ConfigEar(Environment* env, Link* ear_root, vector<int>
   cout << endl;
   */
       vector<double> angles;
-      //angles.push_back(0.224901);
-      //angles.push_back(0.174489);
-      //angles.push_back(0.234719);
-      //angles.push_back(0.996904);
-      //angles.push_back(0.353242);
-      //angles.push_back(0.9114);
-      //angles.push_back(0.184605);
-      //angles.push_back(0.201133);
-      //angles.push_back(0.063889);
-      //angles.push_back(0.277942);
   //for each loop joint, configure link
   for(vector<pair<Link*, Link*> >::iterator J = g_cfgJoints.begin(); J != g_cfgJoints.end(); ++J)
     {
@@ -586,49 +539,6 @@ void ClosedChainProblem::ConfigEar(Environment* env, Link* ear_root, vector<int>
 	    angle = (PI - MyCalculateJointAngle(env, J->first, J->second)) / TWO_PI;
 	  while(angle < 0)
 	    angle += 1;
-	  /*
-	  if(J->first->GetID()==0 && J->second->GetID()==1){
-	    angle=0.224901;
-	    angle=0.75;
-	  }
-	  if(J->first->GetID()==1 && J->second->GetID()==2){
-	    angle=0.174489;
-	    angle=0;
-	  }
-	  if(J->first->GetID()==2 && J->second->GetID()==3){
-	    angle=0.234719;
-	    angle=0.75;
-	  }
-	  if(J->first->GetID()==3 && J->second->GetID()==4){
-	    angle=0.996904;
-	    angle=0.75;
-	  }
-	  if(J->first->GetID()==4 && J->second->GetID()==5){
-	    angle=0.353242;
-	    angle=0;
-	  }
-	  if(J->first->GetID()==2 && J->second->GetID()==6){
-	    angle=0.9114;
-	    angle=0;
-	  }
-	  if(J->first->GetID()==6 && J->second->GetID()==7){
-	    angle=0.184605;
-	    angle=0;
-	  }
-	  if(J->first->GetID()==7 && J->second->GetID()==8){
-	    angle=0.201133;
-	    angle=0.75;
-	  }
-	  if(J->first->GetID()==8 && J->second->GetID()==9){
-	    angle=0.063889;
-	    angle=0.75;
-	  }
-	  if(J->first->GetID()==9 && J->second->GetID()==10){
-	    angle=0.277942;
-	    angle=0;
-	  }
-	  */	 
-	  
 
 	  //find appropriate backward connection...
 	  FreeBody* link2 = env->GetMultiBody(robot)->GetFreeBody(J->second->GetID()).get();

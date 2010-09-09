@@ -22,14 +22,16 @@ class ClosedChainStrategy : public MPStrategy
   ~ClosedChainStrategy();
 
   void ParseXML(XMLNodeReader& in_Node);
-  void PrintOptions(ostream& out_os);
+  //void PrintOptions(ostream& out_os);
 
+  /*
   void operator()()
   {
     (*this)(GetMPProblem()->CreateMPRegion());
   }
   void operator()(int in_RegionID);
   virtual void Solve();
+  */
 };
 
 #endif

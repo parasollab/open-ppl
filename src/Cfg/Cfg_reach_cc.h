@@ -121,6 +121,9 @@ class Cfg_reach_cc : public Cfg_free_tree {
   vector<int> link_orientations;
   static Link* link_tree;
   static vector<Link*> actual_links;
+
+ public:
+  static bool is_closed_chain;
 };
 
 #endif
