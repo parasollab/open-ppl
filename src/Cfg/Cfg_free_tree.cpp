@@ -110,11 +110,6 @@ void Cfg_free_tree::GetRandomCfg(Environment* env) {
   Cfg::GetRandomCfg(env);
 }
 
-void Cfg_free_tree::GetRandomCfg(Environment* env, Stat_Class& Stats, CollisionDetection *cd , CDInfo& _cdInfo) {
-  cout<<"in cfg free tree get ran"<<endl;
-  Cfg::GetRandomCfg(env);
-}
-
 void Cfg_free_tree::equals(const Cfg& c) {
   vector<double> _v;
   _v = c.GetData();

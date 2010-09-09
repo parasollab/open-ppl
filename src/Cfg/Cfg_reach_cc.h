@@ -3,36 +3,6 @@
 
 #include "Cfg_free_tree.h"
 #include "VirtualLink.h"
-#include "CollisionDetection.h"
-#include "Stat_Class.h"
-
-
-template <typename T, typename U, typename V>
-struct triple
-{
-  triple() {}
-  triple(const T& t, const U& u, const V& v) : first(t), second(u), third(v) {}
-  ~triple() {}
-
-  T first;
-  U second;
-  V third;
-};
-
-template<typename F, typename T>
-struct first_is : public unary_function<T, bool>
-{
-  first_is(const F& f) : first(f) {}
-  ~first_is() {}
-  bool operator()(const T& t) const 
-  {
-    return first == t.first;
-  }
-
-  F first;
-};
-
-
 
 class Cfg_reach_cc : public Cfg_free_tree {
  public:
@@ -69,7 +39,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
 
   virtual bool ConfigEnvironment(Environment*) const;
 
-  void GetRandomCfg(Environment *env, Stat_Class& Stats, CollisionDetection *cd,CDInfo &_cdInfo);
+  virtual void GetRandomCfg(double R, double rStep);
   virtual void GetRandomCfg(Environment* env) {
     Cfg_free_tree::GetRandomCfg(env);
   }
@@ -142,31 +112,6 @@ class Cfg_reach_cc : public Cfg_free_tree {
   double LengthDistance(const Cfg_reach_cc& c2) const;
   double OrientationDistance(const Cfg_reach_cc& c2) const;
 
-
-  void ParseXML(XMLNodeReader& in_Node);
-  bool ParseRealLink(ifstream &fin);
-  bool ParseVirtualLink(ifstream &fin);
-  bool ParseLoop(ifstream &fin);
-  bool ParseCfgJoints(ifstream &fin);
-  bool ParseEarJoints(ifstream &fin);
-
-
-  double MyCalculateJointAngle(Environment* env, Link* link1, Link* link2);
-  bool ParseLinksFile(const char* linksFileName);
-
-  void ConfigBase(Environment* env, const vector<double>& v);
-  void ConfigBase(Environment* env){ConfigBase(env, vector<double>(6, 0));}
-
-  void ConfigEar(Environment* env, Link* ear_root, vector<int>& actual_ear_links, int base_link_id, double base_link_angle);
-  void ConfigEar(Environment* env, Link* ear_root, Link* loop_root);
-  void ConfigEar(Environment* env, Link* ear_root, Link* loop_root, double base_link_angle);
-
-  vector<double> GetConfigurationVector(Environment* env);
-  vector<double> getReachableCfg(Environment* env, CollisionDetection* cd, Stat_Class& Stats, CDInfo&_cdInfo, bool is_gamma_random);
-  vector<double> getReachableCfg(Environment* env, CollisionDetection* cd, Stat_Class& Stats, CDInfo&_cdInfo);
-
-
-
  protected:
   void StoreData();
 
@@ -176,20 +121,6 @@ class Cfg_reach_cc : public Cfg_free_tree {
   vector<int> link_orientations;
   static Link* link_tree;
   static vector<Link*> actual_links;
-
-
-  
-  vector<Link *> g_baseLinks;
-  vector<Link *> g_loopRoots;
-  vector<vector<int> > g_loopIDs;
-  vector<vector<Link *> > g_loopLinks;
-  vector<pair<Link *, Link *> > g_cfgJoints;
-  vector<triple<int,int,int> > g_earJoints;
-  vector<Link*> g_ear_roots;
-  vector<int> g_ear_rootIDs;
-  vector<vector<int> > g_ears;
-  vector<vector<int> > g_non_ears;
-  
 };
 
 #endif
