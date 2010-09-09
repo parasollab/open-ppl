@@ -23,9 +23,11 @@ void ClosedChainStrategy::ParseXML(XMLNodeReader& in_Node){
 
 }
 
+/*
 void ClosedChainStrategy::PrintOptions(ostream& out_os){
   out_os << "ClosedChainStrategy::PrintOptions:\n";
 }
+*/
 
 /*
 void ClosedChainStrategy::operator()()
@@ -34,7 +36,11 @@ void ClosedChainStrategy::operator()()
 }
 */
 
+/*
 void ClosedChainStrategy::operator()(int in_RegionID){}
+*/
+
+/*
 void ClosedChainStrategy::Solve(){
   cout<<"in ClosedChainStrategy::Solve()"<<endl;
   //num_iterations=10;//debugging code
@@ -77,11 +83,11 @@ void ClosedChainStrategy::Solve(){
             //compute ear required length
             triple<int,int,int> ear_joint1 = *(find_if(CCProblem->g_earJoints.begin(), CCProblem->g_earJoints.end(), first_is<int, triple<int,int,int> >(CCProblem->g_ears[i].front())));
             triple<int,int,int> ear_joint2 = *(find_if(CCProblem->g_earJoints.begin(), CCProblem->g_earJoints.end(), first_is<int, triple<int,int,int> >(CCProblem->g_ears[i].back())));
-            /*
+            // *
             cout << "setting ear constraint for loop " << i << endl;
             cout << "\tear_joint1: " << ear_joint1.first << "," << ear_joint1.second << "," << ear_joint1.third << endl;
             cout << "\tear_joint2: " << ear_joint2.first << "," << ear_joint2.second << "," << ear_joint2.third << endl;
-            */
+            * //
 
             Vector3D joint1, joint2;
             {
@@ -214,7 +220,7 @@ void ClosedChainStrategy::Solve(){
             //cout << "configuring successfully sampled ear\n";
             CCProblem->ConfigEar(CCProblem->GetEnvironment(), CCProblem->g_ear_roots[i], CCProblem->g_loopRoots[i]);
 	  
-            /*
+            // *
             {
               for(int e=0; e<=i; ++e)
               {
@@ -222,7 +228,7 @@ void ClosedChainStrategy::Solve(){
                 PrintEarJointCoords(&env, g_ear_roots[e]);
               }
             }
-            */
+            * //
             Clock_Class CollisionClock;
             CollisionClock.StartClock("Collision check");
             string CallName = "RandomSample";
@@ -248,11 +254,11 @@ void ClosedChainStrategy::Solve(){
 	    //colliding=false;//debugging code
             //reset num free bodies
       
-	    /*
+	    // *
 	    if(i<CCProblem->g_loopRoots.size()-1){
 	      colliding=false;
 	    }
-	    */
+	    * //
 	       
             //CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->SetFreeBodyCount(num_bodies);
 
@@ -274,13 +280,13 @@ void ClosedChainStrategy::Solve(){
 	//cout<<"out for loop"<<endl;
       }
       //cout<<"sample succeded"<<endl;
-      /*
+      // *
       //inport cfg
       for(size_t i=0; i<g_loopRoots.size(); ++i)
       {
         g_loopRoots[i]->ImportTreeLinkLength(input_lengths[count][i], input_convexities[count][i]);
       }
-      */
+      * //
     
       //export lengths/convexities  
       vector<vector<double> > lengths;  
@@ -297,7 +303,7 @@ void ClosedChainStrategy::Solve(){
       sampling_time += GenClock.GetClock_SEC();
 
       //output sampled cfg  
-      /*
+      // *
       for(size_t i=0; i<g_loopRoots.size(); ++i)  
       {  
         cout << "Tree " << i << endl;  
@@ -309,7 +315,7 @@ void ClosedChainStrategy::Solve(){
         cout << endl;  
       }
       PrintConfiguration(&env, cout); cout << endl;
-      */
+      * //
 
       //compute collision
       Clock_Class CollisionClock;
@@ -333,7 +339,7 @@ void ClosedChainStrategy::Solve(){
       
        
     }
-    /*
+    // *
     //output sampled cfg  
     for(size_t i=0; i<g_loopRoots.size(); ++i)  
     {  
@@ -349,7 +355,7 @@ void ClosedChainStrategy::Solve(){
       copy(c.begin(), c.end(), ostream_iterator<double>(cout, " "));  
       cout << endl;  
     }
-    */
+    * //
     CCProblem->PrintConfiguration(CCProblem->GetEnvironment(), cout);
 	  
   }
@@ -359,5 +365,6 @@ void ClosedChainStrategy::Solve(){
   cout << "Attempts: " << attempts << endl;
   //end move to solve function
 }
+*/
 #endif
 
