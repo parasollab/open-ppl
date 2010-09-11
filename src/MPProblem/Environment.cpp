@@ -223,7 +223,6 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
       positionRes = bodies_min_span * POSITION_RES_FACTOR;
       minmax_BodyAxisRange = bodies_min_span;
  
-      cout << "Position Resolution = " << positionRes << endl;
       // END compute RESOLUTION
  
       XMLNodeReader::childiterator citr;
@@ -243,13 +242,19 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
           }
   
         } else if(citr->getName() == "resolution") {
-          //pChild->ToElement()->QueryDoubleAttribute("pos_res",&positionRes);
-          //pChild->ToElement()->QueryDoubleAttribute("ori_res",&orientationRes);
+          double pos_res = citr->numberXMLParameter("pos_res", false, -1.0, -1.0, double(MAX_INT), "position resolution");
+          if(pos_res != -1.0)
+            positionRes = pos_res;
+          double ori_res = citr->numberXMLParameter("ori_res", false, -1.0, -1.0, double(MAX_INT), "orientation resolution");
+          if(ori_res != -1.0)
+            orientationRes = pos_res;
         } else {
           citr->warnUnknownNode();
         }
       }
  
+      cout << "Position Resolution = " << positionRes << endl;
+    
     SelectUsableMultibodies();
     LOG_DEBUG_MSG("~Environment::Environment()");
 }
