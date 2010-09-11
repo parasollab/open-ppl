@@ -27,6 +27,7 @@ ParseXML(XMLNodeReader& in_Node) {
       {
         string filename = citr->stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
         bool is_closed_chain = citr->boolXMLParameter("closed_chain", true, true, "Flag if tree represents a closed chain or not");
+        double rdres = citr->numberXMLParameter("rdres", false, 0.05, 0.0, 1000.0, "resolution for interpolating in reachable distance space");
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
         cout<<"filename="<<filename<<endl;
@@ -34,6 +35,7 @@ ParseXML(XMLNodeReader& in_Node) {
         //ParseLinksFile(filename.c_str());
         CfgType::initialize_link_tree(filename.c_str());
         CfgType::is_closed_chain = is_closed_chain;
+        CfgType::rdres = rdres;
         cout<<"file "<<filename<<" has been parsed"<<endl;
 #else
         cerr << "Warning, attempting to use ClosedChainProblem with a non-reachable distance cfg type, exiting.\n";
