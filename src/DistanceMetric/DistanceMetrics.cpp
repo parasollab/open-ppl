@@ -53,6 +53,9 @@ DistanceMetric() {
   BinaryLPSweptDistance* binary_lp_swept = new BinaryLPSweptDistance();
   all.push_back(binary_lp_swept);
 
+ KnotTheoryDistance* knotTheory = new KnotTheoryDistance();
+ all.push_back(knotTheory);
+
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   ReachableDistance* rd = new ReachableDistance();
   all.push_back(rd);
@@ -96,7 +99,19 @@ bool
 DistanceMetric::
 ParseXML(MPProblem* in_pProblem, XMLNodeReader::childiterator citr)
 {
-    if(citr->getName() == "euclidean") {
+    if (citr->getName()=="knotTheory"){
+      KnotTheoryDistance* knotTheory = new KnotTheoryDistance();
+      string par_label = citr->stringXMLParameter("Label",false,"","Label");
+   //  DMMethodPtr dm(new KnotTheoryDistance());
+     //AddDMMethod(dm->GetObjectLabel(),dm);
+    
+    all.push_back(knotTheory);
+      selected.push_back(knotTheory->CreateCopy());
+      
+     citr->warnUnrequestedAttributes();
+    } 
+ 
+   else if(citr->getName() == "euclidean") {
       EuclideanDistance* euclidean = new EuclideanDistance();
       //DMMethodPtr dm(new EuclideanDistance());
      //AddDMMethod(dm->GetObjectLabel(),dm);  
@@ -1053,6 +1068,153 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
 }
 
 //////////
+ /*=============================================================
+Knot Theory Dm
+===============================================================*/
+
+KnotTheoryDistance::
+KnotTheoryDistance(): EuclideanDistance(){
+}
+
+KnotTheoryDistance::
+~KnotTheoryDistance(){
+}
+
+char* KnotTheoryDistance::GetName() const
+{ return "KnotTheory"; }
+
+
+double
+KnotTheoryDistance ::
+Distance(Environment* env, const Cfg& _c1, const Cfg& _c2)
+{
+ double dist;
+
+ vector <Vector3D> unitVect(4);
+
+  double sum =0.0, sign = 0, temp1, temp2;
+
+dist = EuclideanDistance::Distance(env, _c1,_c2);
+
+Cfg *c=_c1.CreateNewCfg();
+Cfg *o =_c2.CreateNewCfg();
+vector<Vector3D> c1=c->PolyApprox(env);
+
+vector<Vector3D> c2=o->PolyApprox(env); 
+Vector3D n1,n2;
+
+if (c1.size() == NULL)
+{
+return NULL;
+}
+
+
+   for(size_t i =1; i < c1.size()-4;i++){
+
+   if((c1[i+1]-c1[i]).magnitude() != 0)
+    unitVect[0] = (c1[i+1]-c1[i]);
+  else
+    unitVect[0] = 0;
+
+    if((c2[i+3]-c2[i+2]).magnitude() !=0)
+       unitVect[1]= (c2[i+3]-c2[i+2]);
+
+       else unitVect[1]=0;
+         }
+cout<<"unitvector"<<unitVect[1]<<endl;
+        if((unitVect[0].crossProduct(unitVect[1])).magnitude() != 0)
+    n1= (unitVect[0].crossProduct(unitVect[1]))/
+      (unitVect[0].crossProduct(unitVect[1])).magnitude();
+  else
+    n1 = 0.0;
+
+
+
+  if((unitVect[1].crossProduct(unitVect[0])).magnitude() != 0)
+    n2 =  (unitVect[1].crossProduct(unitVect[0]))/
+      (unitVect[1].crossProduct(unitVect[0])).magnitude();
+  else
+    n2 = 0.0;
+
+ 
+
+  if(n1.dotProduct(n2)>1)
+     temp1 = 1.0;
+  else
+    temp1 = n1.dotProduct(n2);
+
+  sum = asin(temp1); 
+
+ 
+  sign =(n1.crossProduct(n2)).dotProduct(unitVect[0]); 
+
+int sign2 =sign > 0 ? 1:-1;
+ 
+
+return fabs((sum/(4.0*PI))*sign);
+
+}
+
+void
+KnotTheoryDistance::
+ParseCommandLine(int argc, char** argv) {
+  if(argc < 0 || argc > 2) {
+    cerr << "\nERROR ParseCommandLine: Don\'t understand \"";
+    for(int i=0; i<argc; i++)
+      cerr << argv[i] << " ";
+    cerr << "\"\n\n";
+    PrintUsage(cerr);
+    cerr << endl;
+    exit(-1);
+  }
+
+  if(argc == 2) { //read in sValue
+    std::istringstream is(argv[1]);
+      for(int i=0; i<argc; i++)
+        cerr << argv[i] << " ";
+      cerr << "\"\n\n";
+      PrintUsage(cerr);
+      cerr << endl;
+      exit(-1);
+  }
+}
+
+void
+KnotTheoryDistance::
+PrintUsage(ostream& _os) const {
+  _os.setf(ios::left,ios::adjustfield);
+
+  _os << "\n" << GetName() << " ";
+
+  _os.setf(ios::right,ios::adjustfield);
+}
+
+void
+KnotTheoryDistance::
+SetDefault() {
+}
+
+void
+KnotTheoryDistance::
+PrintValues(ostream& _os) const {
+  _os << "\n" << GetName() << " ";
+  _os << endl;
+}
+
+DistanceMetricMethod*
+KnotTheoryDistance::
+CreateCopy() {
+  DistanceMetricMethod* _copy = new KnotTheoryDistance(*this);
+  return _copy;
+}
+
+/////////////////////////////////////////////////////////////////////
+//End Knot Theory
+/////////////////////////////////////////////////////////////////////
+
+/////////
+
+/////////////
 
 ManhattanDistance::
 ManhattanDistance() : DistanceMetricMethod() {
