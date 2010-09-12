@@ -42,6 +42,7 @@ class CenterOfMassDistance;
 class RmsdDistance;
 class LPSweptDistance;
 class BinaryLPSweptDistance;
+class KnotTheoryDistance;
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 class ReachableDistance;
 #endif
@@ -452,6 +453,23 @@ class ScaledEuclideanDistance : public EuclideanDistance {
 /**This computes the euclidean distance between two cfgs.  This class is 
   *derived off of DistanceMetricMethod.
   */
+
+  ///////
+class KnotTheoryDistance : public EuclideanDistance {
+ public:
+  KnotTheoryDistance();
+  ~KnotTheoryDistance();
+
+  virtual char* GetName() const;
+  virtual void SetDefault();
+  virtual void PrintUsage(ostream&) const;
+  virtual void PrintValues(ostream&) const;
+  virtual DistanceMetricMethod* CreateCopy();
+  virtual void ParseCommandLine(int, char**);
+
+ virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
+ };
+
 class UniformEuclideanDistance : public DistanceMetricMethod {
  public:
   UniformEuclideanDistance();
