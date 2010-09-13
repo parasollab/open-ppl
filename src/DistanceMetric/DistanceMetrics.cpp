@@ -1081,7 +1081,7 @@ KnotTheoryDistance::
 }
 
 char* KnotTheoryDistance::GetName() const
-{ return "KnotTheory"; }
+{ return "knotTheory"; }
 
 
 double
