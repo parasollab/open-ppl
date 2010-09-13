@@ -407,6 +407,7 @@ class EuclideanDistance : public DistanceMetricMethod {
 
  protected:
   virtual double ScaledDistance(Environment* env, const Cfg& _c1, const Cfg& _c2, double sValue);
+  double _ScaledDistance(Environment* env, const Cfg& _c1, const Cfg& _c2, double sValue);
 };
 
 

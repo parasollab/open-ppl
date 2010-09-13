@@ -568,9 +568,27 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   return dist;
 }
 
+
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 double
 EuclideanDistance::
-ScaledDistance(Environment* env,const Cfg& _c1, const Cfg& _c2, double sValue) {
+ScaledDistance(Environment* env, const Cfg& _c1, const Cfg& _c2, double sValue) {
+  Cfg_free_tree _c1_linkage(_c1.GetData());
+  Cfg_free_tree _c2_linkage(_c2.GetData());
+  return _ScaledDistance(env, _c1_linkage, _c2_linkage, sValue);
+}
+#else
+double
+EuclideanDistance::
+ScaledDistance(Environment* env, const Cfg& _c1, const Cfg& _c2, double sValue) {
+  return _ScaledDistance(env, _c1, _c2, sValue);
+}
+#endif
+
+
+double
+EuclideanDistance::
+_ScaledDistance(Environment* env,const Cfg& _c1, const Cfg& _c2, double sValue) {
   Cfg *pTmp = _c1.CreateNewCfg();
   pTmp->subtract(_c1,_c2);
   //vector<double> normalized_vec;
@@ -601,6 +619,7 @@ ScaledDistance(Environment* env,const Cfg& _c1, const Cfg& _c2, double sValue) {
   delete pTmp;
   return dReturn;
 }
+
 
 void
 EuclideanDistance::
