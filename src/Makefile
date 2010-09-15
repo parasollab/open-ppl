@@ -47,7 +47,7 @@ ROBOT_DEF = -DPMPSerial
 # macros
 DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} -DVERBOSE=0 #-D_LOG 
 INCL = -I. ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MPNN_INCL}
-LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${BOOST_LIB} ${MPNN_LIB}
+LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB}
 
 # targets
 default_target: libs

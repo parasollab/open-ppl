@@ -7,7 +7,6 @@ ifeq (${platform}, LINUX_gcc) 	#linux/gcc
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	BOOST_INCL = -I/usr/include/boost
-	BOOST_LIB = -L/usr/lib #-lboost_program_options
 
 	DEPS = -MMD -MF $*.d
 endif
@@ -20,7 +19,6 @@ ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	BOOST_INCL = -I/usr/include/boost
-	BOOST_LIB = -L/usr/lib #-lboost_program_options
 
 	DEPS = -MMD -MF $*.d
 endif
@@ -33,7 +31,6 @@ ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
-	BOOST_LIB = -L/scratch/shawnat/usr/lib -lboost_program_options-xlc
 
 	DEPS = -MMD -MF $*.d
 endif	
@@ -46,7 +43,6 @@ ifeq (${platform}, AIX_64_xlC)	#aix/64-bit/native compiler (e.g., hydra.tamu.edu
 	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
-	BOOST_LIB = -L/scratch/shawnat/usr/lib -lboost_program_options-xlc
 
 	DEPS = -M -MF $*.d
 endif

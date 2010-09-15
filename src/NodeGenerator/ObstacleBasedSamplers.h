@@ -8,7 +8,6 @@ class CollisionDetection;
 class CDInfo;
 class DistanceMetric;
 
-//#include "my_program_options.hpp"
 #include <sstream>
 
 template <typename CFG>
