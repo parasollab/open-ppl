@@ -45,7 +45,10 @@ public:
     //dmm = in_pProblem->GetDistanceMetric()->GetDefault()[0];
     // note: A temporary fix (hack) until distance metric is properly fixed. This picks the second listed
     // distance metric from the xml file.
-    dmm = in_pProblem->GetDistanceMetric()->GetDefault()[1];
+    if(in_pProblem->GetDistanceMetric()->GetDefault().size() > 1)
+      dmm = in_pProblem->GetDistanceMetric()->GetDefault()[1];
+    else
+      dmm = in_pProblem->GetDistanceMetric()->GetDefault()[0];
   }
 
   BFNF(DistanceMetricMethod* _dmm, std::string _strLabel) :
