@@ -426,6 +426,7 @@ class MPBaseObject {
     
     inline MessageLogs& GetMessageLog() { return m_message_log; };
     inline MPProblem* GetMPProblem() { return m_pProblem;}
+    inline void SetMPProblem(MPProblem* m){m_pProblem=m;}
     virtual void PrintOptions(ostream& out_os) { };
     inline string& GetLabel() { return m_strLabel; };
   private:

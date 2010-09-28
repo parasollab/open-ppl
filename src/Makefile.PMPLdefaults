@@ -202,3 +202,45 @@ PMPL_OBJS = \
 #	Push.o \
 #	Utilities/Vectors.o 	
 #	Utilities/Matrix.o 
+
+#UAS compile macro
+UAS=0
+ifeq ($(UAS), 1)
+   UTILS_DEF+= -DUAS
+   PMPL_INCL+= \
+	-I${PMPL_DIR}/Partitioning \
+	-I${PMPL_DIR}/Partitioning/Kmeans \
+   -I${PMPL_DIR}/Partitioning/Features \
+   -I${PMPL_DIR}/Partitioning/PartitioningEvaluators
+
+   PMPL_OBJS+= \
+   MPStrategy/UAStrategy.o \
+   Partitioning/Partition.o \
+	Partitioning/PartitioningMethod.o \
+	Partitioning/KMeans.o \
+	Partitioning/GrowablePartitions.o \
+	Partitioning/HierarchicalClustering.o \
+	Partitioning/PGMeansClustering.o \
+	Partitioning/PartitioningMethods.o \
+   Partitioning/PartitionTree.o \
+	Partitioning/Kmeans/KCtree.o \
+   Partitioning/Kmeans/KMcenters.o \
+   Partitioning/Kmeans/KMfilterCenters.o \
+   Partitioning/Kmeans/kmlsample.o \
+   Partitioning/Kmeans/KMterm.o \
+   Partitioning/Kmeans/KCutil.o \
+   Partitioning/Kmeans/KMdata.o \
+   Partitioning/Kmeans/kmlminimal.o \
+   Partitioning/Kmeans/kmltest.o \
+   Partitioning/Kmeans/KM_ANN.o \
+   Partitioning/Kmeans/KMeans.o \
+   Partitioning/Kmeans/KMlocal.o \
+   Partitioning/Kmeans/KMrand.o \
+   Partitioning/Features/Features.o \
+   Partitioning/Features/CfgFeature.o \
+   Partitioning/Features/VisibilityFeature.o \
+	Partitioning/Features/ClearanceFeature.o \
+   Partitioning/PartitioningEvaluators/PartitioningEvaluators.o \
+   Partitioning/PartitioningEvaluators/STDEvaluator.o \
+   Partitioning/PartitioningEvaluators/AVGEvaluator.o
+endif

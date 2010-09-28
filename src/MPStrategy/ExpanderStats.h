@@ -353,31 +353,32 @@ class EdgeExpanderStats : public MPStrategyMethod {
       }
     }
     
-
-  void operator()(){
-    cout<<"*************in operator()***********************"<<endl;
-    if(files.size()==0){
-      cout<<"no files"<<endl;
-    }
-    ofstream myofstream(outfile.c_str());
-
-    for(vector<string>::iterator iter = files.begin(); iter!=files.end(); iter++){
-      cout<<"loading "<<iter->c_str()<<endl;
-      Roadmap<CfgType,WeightType> rmp;
-      rmp.ReadRoadmapGRAPHONLY(iter->c_str());
-      rmp.SetEnvironment(GetMPProblem()->GetEnvironment());
-      cout<<"computing stats for "<<iter->c_str()<<endl;
-      myofstream<<iter->c_str()<<endl;
-      print_expansion_properties(rmp,interval,&myofstream);
-
-    }
-    cout<<"returning"<<endl;
-    myofstream.close();
-  }
-
-
   virtual void PrintOptions(ostream& out_os) { }
-  virtual void operator()(int in_RegionID) { }
+
+   virtual void Initialize(int in_RegionID){}
+   virtual void Run(int in_RegionID){    
+      cout<<"*************in operator()***********************"<<endl;
+      if(files.size()==0){
+         cout<<"no files"<<endl;
+      }
+      ofstream myofstream(outfile.c_str());
+
+      for(vector<string>::iterator iter = files.begin(); iter!=files.end(); iter++){
+         cout<<"loading "<<iter->c_str()<<endl;
+         Roadmap<CfgType,WeightType> rmp;
+         rmp.ReadRoadmapGRAPHONLY(iter->c_str());
+         rmp.SetEnvironment(GetMPProblem()->GetEnvironment());
+         cout<<"computing stats for "<<iter->c_str()<<endl;
+         myofstream<<iter->c_str()<<endl;
+         print_expansion_properties(rmp,interval,&myofstream);
+
+      }
+      cout<<"returning"<<endl;
+      myofstream.close();
+
+   }
+   virtual void Finalize(int in_RegionID){}
+
 };
 
  

@@ -34,7 +34,19 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPB
         ParseStrategyMethod(*citr);
       } else if(citr->getName() == "MPCharacterizer") {
         m_pCharacterizer = new MPCharacterizer<CfgType, WeightType>(*citr, GetMPProblem());
-      } else {
+      } 
+#ifdef UAS
+      else if(citr->getName() == "features"){
+         m_Features = new Features(*citr, GetMPProblem());
+      }
+      else if(citr->getName() == "partitioning_methods"){
+         m_PartitioningMethods = new PartitioningMethods(*citr, GetMPProblem());
+      }
+      else if(citr->getName() == "partitioning_evaluators"){
+         m_PartitioningEvaluators = new PartitioningEvaluators(*citr, GetMPProblem());
+      }
+#endif
+      else {
         citr->warnUnknownNode();
       }
     }
@@ -65,79 +77,94 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
   
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-     if(citr->getName() == "BasicPRMStrategy"){
-        BasicPRMStrategy* bps = new BasicPRMStrategy(*citr, GetMPProblem());
-        all_MPStrategyMethod.push_back(bps);
-     }else if(citr->getName() == "ProbabilityPRMStrategy") {
-        ProbabilityPRMStrategy* pps = new ProbabilityPRMStrategy(*citr,GetMPProblem());
-        all_MPStrategyMethod.push_back(pps);
-    }else if(citr->getName() == "Compare") {
-      MPComparer* comp = new MPComparer(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( comp );
-    } else if(citr->getName() == "RoadmapClear") {
-      RoadmapClear* rmpclear = new RoadmapClear(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( rmpclear );
-    } else if(citr->getName() == "RoadmapInput") {
-      RoadmapInput* rmpinput = new RoadmapInput(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( rmpinput );
-    } else if(citr->getName() == "MPMultiStrategy") {
-      MPMultiStrategy* multistrategy = new MPMultiStrategy(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( multistrategy );
-    } else if(citr->getName() == "HybridPRM") {
-      HybridPRM* hprm = new HybridPRM(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( hprm );
-    } else if(citr->getName() == "NFUnionRoadmap") {
-      NFUnionRoadmap* nfur = new NFUnionRoadmap(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( nfur );
-    } else if(citr->getName() == "NFRoadmapCompare") {
-     NFRoadmapCompare* nfrc = new NFRoadmapCompare(*citr,GetMPProblem());
-     all_MPStrategyMethod.push_back( nfrc );
-    } else if(citr->getName() == "ExpanderStats") {
-      EdgeExpanderStats* ees = new EdgeExpanderStats(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( ees );
-   } else if(citr->getName() == "TimingStats") {
-      RoadmapTimingStats* tms = new RoadmapTimingStats(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( tms );
-    } else if(citr->getName() == "BandsIncrementalRoadmap") {
-      BandsIncrementalRoadmap* bands = new BandsIncrementalRoadmap(*citr, GetMPProblem());
-      all_MPStrategyMethod.push_back( bands ); 
-    } else if(citr->getName() == "BandsStats") {
-      BandsStats* bandsStats = new BandsStats(*citr, GetMPProblem());
-      all_MPStrategyMethod.push_back( bandsStats );
-    } else if(citr->getName() == "QueryStrategy") {
-      QueryStrategy* query = new QueryStrategy(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( query );
-    } else if(citr->getName() == "SmoothQueryStrategy") {
-      SmoothQueryStrategy* smoothpath = new SmoothQueryStrategy(*citr,GetMPProblem());
-      all_MPStrategyMethod.push_back( smoothpath );
-    } else {
-      citr->warnUnknownNode();
-    }
+      pair<MPStrategyMethod*, XMLNodeReader*> mpsm(CreateMPStrategyMethod(*citr), &*citr);
+      all_MPStrategyMethod.push_back(mpsm);
   }
 
-
-
-  m_strController_MPStrategyMethod = in_Node.stringXMLParameter("Controller",true,"","Controller Method");
+   m_strController_MPStrategyMethod = in_Node.stringXMLParameter("Controller",true,"","Controller Method");
   LOG_DEBUG_MSG( "~MPStrategy::ParseStrategyMethod()");
+}
+
+MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
+   MPStrategyMethod* mpsm = NULL;
+     if(citr.getName() == "BasicPRMStrategy"){
+         mpsm = new BasicPRMStrategy(citr, GetMPProblem());
+     }else if(citr.getName() == "ProbabilityPRMStrategy") {
+        mpsm = new ProbabilityPRMStrategy(citr,GetMPProblem());
+    }else if(citr.getName() == "Compare") {
+      mpsm = new MPComparer(citr,GetMPProblem());
+    } else if(citr.getName() == "RoadmapClear") {
+      mpsm = new RoadmapClear(citr,GetMPProblem());
+    } else if(citr.getName() == "RoadmapInput") {
+      mpsm = new RoadmapInput(citr,GetMPProblem());
+    } else if(citr.getName() == "MPMultiStrategy") {
+      mpsm = new MPMultiStrategy(citr,GetMPProblem());
+    } else if(citr.getName() == "HybridPRM") {
+      mpsm = new HybridPRM(citr,GetMPProblem());
+    } else if(citr.getName() == "NFUnionRoadmap") {
+      mpsm = new NFUnionRoadmap(citr,GetMPProblem());
+    } else if(citr.getName() == "NFRoadmapCompare") {
+      mpsm = new NFRoadmapCompare(citr,GetMPProblem());
+    } else if(citr.getName() == "ExpanderStats") {
+      mpsm = new EdgeExpanderStats(citr,GetMPProblem());
+   } else if(citr.getName() == "TimingStats") {
+      mpsm = new RoadmapTimingStats(citr,GetMPProblem());
+    } else if(citr.getName() == "BandsIncrementalRoadmap") {
+      mpsm = new BandsIncrementalRoadmap(citr, GetMPProblem());
+    } else if(citr.getName() == "BandsStats") {
+      mpsm = new BandsStats(citr, GetMPProblem());
+    } else if(citr.getName() == "QueryStrategy") {
+      mpsm = new QueryStrategy(citr,GetMPProblem());
+    } else if(citr.getName() == "SmoothQueryStrategy") {
+      mpsm = new SmoothQueryStrategy(citr,GetMPProblem());
+    } 
+    #ifdef UAS
+    else if(citr.getName() == "UAStrategy") {
+      mpsm = new UAStrategy(citr, GetMPProblem());
+    } 
+    #endif
+    else {
+      citr.warnUnknownNode();
+    }
+   return mpsm;
 }
 
 MPStrategyMethod* MPStrategy::
 GetMPStrategyMethod(string& in_strLabel) {
-  vector<MPStrategyMethod*>::iterator I;
+  vector<pair<MPStrategyMethod*, XMLNodeReader*> >::iterator I;
   for(I = all_MPStrategyMethod.begin(); 
       I != all_MPStrategyMethod.end(); ++I) {
-        if((*I)->GetLabel() == in_strLabel) {
+        if(I->first->GetLabel() == in_strLabel) {
     LOG_DEBUG_MSG("MPStrategyMethod::GetMPStrategyMethod(): found " << in_strLabel);
-          return (*I);
+          return I->first;
         }
       }
 }
+
+#ifdef UAS
+XMLNodeReader* MPStrategy::
+GetXMLNodeForStrategy(string& in_strLabel) {
+  vector<pair<MPStrategyMethod*, XMLNodeReader*> >::iterator I;
+  for(I = all_MPStrategyMethod.begin(); 
+      I != all_MPStrategyMethod.end(); ++I) {
+        if(I->first->GetLabel() == in_strLabel) {
+    LOG_DEBUG_MSG("MPStrategyMethod::GetMPStrategyMethod(): found " << in_strLabel);
+          return I->second;
+        }
+      }
+}
+#endif
 
 void MPStrategy::
 Solve() {
   LOG_DEBUG_MSG("MPStrategy::Solve()")
       LOG_DEBUG_MSG("MPStrategy::Solve() -- about to run " << m_strController_MPStrategyMethod);
-      (*(GetMPStrategyMethod(m_strController_MPStrategyMethod)))();
+     // (*(GetMPStrategyMethod(m_strController_MPStrategyMethod)))();
+     cout<<m_strController_MPStrategyMethod<<endl;
+     if(GetMPStrategyMethod(m_strController_MPStrategyMethod)==NULL){
+        cout<<"ISNULL"<<flush;
+     }
+     GetMPStrategyMethod(m_strController_MPStrategyMethod)->operator()();
   LOG_DEBUG_MSG("~MPStrategy::Solve()")
 };
 

@@ -182,7 +182,8 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
     cout << "leaving BandsIncrementalRoadmap" << endl;
   };
    
-  virtual void operator()(int in_RegionID) {
+  virtual void Initialize(int in_RegionID){}
+  virtual void Run(int in_RegionID){
     LOG_DEBUG_MSG("BandsIncrementalRoadmap::()");
 
     OBPRM_srand(getSeed()); 
@@ -427,11 +428,8 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
     region->WriteRoadmapForVizmo(map_out);
     map_out.close();
   }
-  
-  virtual void operator()() {
-    int newRegionId = GetMPProblem()->CreateMPRegion();
-    (*this)(newRegionId);      
-  };
+
+  virtual void Finalize(int in_RegionID){}
 
 private:
 
@@ -1080,6 +1078,10 @@ class BandsStats : public MPStrategyMethod {
 	
 		virtual void PrintOptions(ostream& out_os) { }
 		virtual void operator()(int in_RegionID) { }
+  virtual void Initialize(int in_RegionID){}
+  virtual void Run(int in_RegionID){}
+  virtual void Finalize(int in_RegionID){}
+
 
 		void computeEdgeLengthFromdm(Roadmap<CfgType, WeightType> rmp,double &avg_dist, double &max_dist, double &avg_max_dist){
 

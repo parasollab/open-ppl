@@ -19,6 +19,22 @@ class MapEvaluationMethod
   virtual bool operator() (int in_RegionID) = 0;
 };
 
+class TrueEvaluation : public MapEvaluationMethod
+{
+ public:
+   TrueEvaluation(XMLNodeReader& in_pNode, MPProblem* in_pProblem)
+      : MapEvaluationMethod(in_pNode, in_pProblem){}
+   virtual ~TrueEvaluation(){}
+
+   virtual char* GetName() const{return "TrueEvaluator";}
+   virtual void PrintOptions(ostream& out_os){
+      out_os<<"True Evaluator always returns true, no options present."<<endl;
+   }
+
+   virtual bool operator()(){return true;}
+   virtual bool operator()(int in_RegionID){return true;}
+};
+
 /*
 #include "CoverageEvaluation.h"
 #include "ConnectivityEvaluation.h"

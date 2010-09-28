@@ -73,8 +73,10 @@ ParseXML(XMLNodeReader& in_Node)
 
 void
 SmoothQueryStrategy::
-operator()(int in_RegionID) 
+Run(int in_RegionID) 
 {
+
+    GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strMapFileLabel.c_str());
   LOG_DEBUG_MSG("SmoothQueryStrategy::()");
 
   cout << "SmoothQueryStrategy::\n";

@@ -16,8 +16,9 @@ class ProbabilityPRMStrategy : public BasicPRMStrategy
    virtual void ParseXML(XMLNodeReader& in_Node);
    virtual void PrintOptions(ostream& out_os);
 
-   virtual void operator()() {(*this)(GetMPProblem()->CreateMPRegion());}
-   virtual void operator()(int in_RegionID);
+   virtual void Initialize(int in_RegionID){}
+   virtual void Run(int in_RegionID);
+   virtual void Finalize(int in_RegionID){}
 
  private:
    //helper functions for operator()

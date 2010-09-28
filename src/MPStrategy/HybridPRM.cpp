@@ -4,6 +4,7 @@
 
 #include "boost/lambda/lambda.hpp"
 
+int HybridPRM::instanceNumber=0;
 
 ostream& operator<<(ostream& os, const NodeTypeCounts& nt)
 {
@@ -47,38 +48,6 @@ ParseXML(XMLNodeReader& in_Node)
       m_node_conn_labels.push_back(connect_method);
       citr->warnUnrequestedAttributes();
     } 
-    /*
-    else if(citr->getName() == "component_connection_method") 
-    {
-      string connect_method = citr->stringXMLParameter("Method",true,"","Method");
-      m_component_conn_labels.push_back(connect_method);
-      citr->warnUnrequestedAttributes();
-    } 
-    */
-    /*
-    else if(citr->getName() == "WitnessQuery") 
-    {
-      string witness_filename = citr->stringXMLParameter("Filename",true,"","Filename");
-      citr->warnUnrequestedAttributes();
-
-      //Reading in witness queries
-      CfgType tempCfg;
-      ifstream myifstream(witness_filename.c_str());
-      if (!myifstream) 
-      {
-        cout << endl << "In PRMIncrementalStrategy: can't open witness file: " << witness_filename;
-        exit(-1);
-      }
-      while (1) 
-      {
-        tempCfg.Read(myifstream);
-        if(!myifstream) 
-          break;
-        m_witness_nodes.push_back(tempCfg);
-      }
-      myifstream.close();
-    }
-    */
     else if(citr->getName() == "evaluation_method")
     {
       string evalMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Evaluation Method"));
@@ -132,29 +101,24 @@ PrintOptions(ostream& out_os)
   //out_os << "\twitness_queries:\n"; for_each(m_witness_nodes.begin(), m_witness_nodes.end(), out_os << constant("\t\t") << _1 << " "); out_os << endl;
 }
 
+void HybridPRM::Initialize(int in_RegionID){
+   ostringstream oss;
+   oss<<"Hybrid PRM Initializing in region "<<in_RegionID<<endl;
+   LOG_DEBUG_MSG(oss.str());
 
-void 
-HybridPRM::
-operator()(int in_RegionID) 
-{
-  LOG_DEBUG_MSG("HybridPRM::()");
+   PrintOptions(cout);
 
-  PrintOptions(cout);
-
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-  Stat_Class* pStatClass = region->GetStatClass();
-   stapl::vector_property_map< GRAPH,size_t > cmap;
-
-  OBPRM_srand(getSeed()); 
-  
-  //set up base_filename for output filese
+   OBPRM_srand(getSeed()); 
+   //set up base_filename for output filese
   stringstream ssRandomSeed;
+  ssRandomSeed << instanceNumber << ".";
   ssRandomSeed << getSeed();
-  string base_filename = getBaseFilename() + "." + ssRandomSeed.str();
+  base_filename = getBaseFilename() + "." + ssRandomSeed.str();
+  instanceNumber++;
  
   //setup output of statistics
   string outCharname = base_filename + ".char";
-  std::ofstream char_ofstream(outCharname.c_str());
+  char_ofstream.open(outCharname.c_str());
   char_ofstream << "#env_file_name:seed:num_node_gen:node_gen_methods" << endl;
   char_ofstream << GetMPProblem()->GetEnvironment()->GetEnvFileName() << ":" << getSeed() << ":" << "HybridPRM" << ":" << *m_node_conn_labels.begin() << ":" <<  endl;
   char_ofstream << "#num_nodes:num_cd_calls:num_ccs";//:diameter_largest:diameter_sum";
@@ -169,18 +133,16 @@ operator()(int in_RegionID)
   for_each(m_node_gen_labels.begin(), m_node_gen_labels.end(), char_ofstream << constant(":") << _1 << "_num_cc_oversample");
   char_ofstream << endl;
 
-  Clock_Class Allstuff;
-  Allstuff.StartClock("Everything");
+   Allstuff.StartClock("Everything");
   
-  //initialize weights, probabilities, costs, set m_node_gen_probabilities_use = m_node_gen_probabilities
-  initialize_weights_probabilities_costs();
-  copy_learned_prob_to_prob_use();
-
+   //initialize weights, probabilities, costs, set m_node_gen_probabilities_use = m_node_gen_probabilities
+   initialize_weights_probabilities_costs();
+   copy_learned_prob_to_prob_use();
   //initialize visibility maps for calculating rewards for cc_expand nodes
-  map<VID, Visibility> vis_map;
+  //map<VID, Visibility> vis_map;
   
   //initialize node_types accounting for stats
-  NodeTypeCounts node_types;
+  //NodeTypeCounts node_types;
   //int num_vis_low(0), num_vis_medium(0), num_vis_high(0);
   
   //initialize diameter accounting for stats
@@ -189,9 +151,20 @@ operator()(int in_RegionID)
   //double witness_connectivity(0), witness_coverage(0), total_query_time(0);
   //unsigned int witness_queries = m_witness_nodes.size()*(m_witness_nodes.size()-1)/2;
 
-  int totalSamples = 0;
-  bool map_passed_evaluation = false;
-  double NodeGenTotalTime = 0;
+ 
+
+   LOG_DEBUG_MSG("End Hybrid PRM Initializing");
+}
+
+void HybridPRM::Run(int in_RegionID){
+   ostringstream oss;
+   oss<<"Hybrid PRM Running in region "<<in_RegionID<<endl;
+   LOG_DEBUG_MSG(oss.str());
+   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
+   Stat_Class* pStatClass = region->GetStatClass();
+   totalSamples = 0;
+   map_passed_evaluation = false;
+   NodeGenTotalTime = 0;
   while(!map_passed_evaluation)
   {
     cout << "\n\nStart of bin.\n";
@@ -389,24 +362,19 @@ operator()(int in_RegionID)
 
     map_passed_evaluation = evaluate_map(in_RegionID);
   } //end while !map_passed_evaluation
-  char_ofstream.close();
 
-  /*
-  //Print out totals
-  cmap.reset();
-  string outTotal = base_filename+ ".total";
-  std::ofstream  total_ofstream(outTotal.c_str());
-  total_ofstream << "env: " << GetMPProblem()->GetEnvironment()->GetEnvFileName() << endl;
-  total_ofstream << "nodegen: "; for_each(m_node_gen_labels.begin(), m_node_gen_labels.end(), total_ofstream << _1 << " "); total_ofstream << endl;
-  total_ofstream << "connection: "; for_each(m_node_conn_labels.begin(), m_node_conn_labels.end(), total_ofstream << _1 << " "); total_ofstream << endl;
-  total_ofstream << "nodes: " << region->roadmap.m_pRoadmap->get_num_vertices() << endl;
-  total_ofstream << "ccs: " << get_cc_count(*(region->roadmap.m_pRoadmap), cmap) << endl;
-  total_ofstream << "iscoll: " <<  pStatClass->GetIsCollTotal() << endl;
-  total_ofstream << "time: " << NodeGenTotalTime << endl;
-  total_ofstream.close();
-  */
+   LOG_DEBUG_MSG("End Hybrid PRM Running");
+}
 
-  //output map
+void HybridPRM::Finalize(int in_RegionID){
+   ostringstream oss;
+   oss<<"Hybrid PRM Finalizing in region "<<in_RegionID<<endl;
+   LOG_DEBUG_MSG(oss.str());
+   char_ofstream.close();
+   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
+   Stat_Class* pStatClass = region->GetStatClass();
+
+   //output map
   string outputFilename = base_filename+ ".map";
   ofstream myofstream(outputFilename.c_str());
   if(!myofstream) 
@@ -437,9 +405,9 @@ operator()(int in_RegionID)
   stat_ofstream.close();
 
   cout << "!!ALL FINISHED!!"<< endl;
-  LOG_DEBUG_MSG("~HybridPRM::()");
+ 
+   LOG_DEBUG_MSG("End Hybrid PRM Finalizing");
 }
-
 
 void
 HybridPRM::

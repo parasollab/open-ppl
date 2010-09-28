@@ -49,7 +49,7 @@ void ProbabilityPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
    }
   
    //output for debugging
-   double total=0;
+   double total=0.0;
    using boost::lambda::_1;
    cout << "\nProbabilityPRMStrategy::ParseXML:\n";
    cout << "\tnode_generation_methods: "; 
@@ -57,7 +57,7 @@ void ProbabilityPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
       cout<<I->first<<"\tProbability:"<<I->second<<" ";
       total+=I->second;
    }
-   if(total!=1.0){cout<<"Probabilities Do Not Add To 1"; exit(1);}
+   if(total!=1.0){cout<<"Probabilities Do Not Add To 1, total is "<<total<<endl; exit(1);}
    cout << endl;
    cout << "\tnode_connection_methods: "; for_each(m_NodeConnectionLabels.begin(), m_NodeConnectionLabels.end(), cout << _1 << " "); cout << endl;
    cout << "\tcomponent_connection_methods: "; for_each(m_ComponentConnectionLabels.begin(), m_ComponentConnectionLabels.end(), cout << _1 << " "); cout << endl;
@@ -95,7 +95,7 @@ void ProbabilityPRMStrategy::PrintOptions(ostream& out_os) {
    }
 }
 
-void ProbabilityPRMStrategy::operator()(int in_RegionID)
+void ProbabilityPRMStrategy::Run(int in_RegionID)
 {
    cout << "\n\nBeginning ProbabilityPRMStratgy::operator(" << in_RegionID << ")\n";
   

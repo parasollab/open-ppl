@@ -56,7 +56,8 @@ class RoadmapInput : public MPStrategyMethod {
       LOG_DEBUG_MSG("~RoadmapInput::ParseXML()");
     };
    
-    virtual void operator()(int in_RegionID) {
+   virtual void Initialize(int in_RegionID){}
+   virtual void Run(int in_RegionID){
       LOG_DEBUG_MSG("PRMInput::() -- Reading in file: " << m_strInputFileName);
       OBPRM_srand(getSeed()); 
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
@@ -65,11 +66,7 @@ class RoadmapInput : public MPStrategyMethod {
       
       LOG_DEBUG_MSG("~PRMInput::()");
     }
-  
-    virtual void operator()() {
-      int newRegionId = GetMPProblem()->CreateMPRegion();
-      (*this)(newRegionId);      
-    };
+   virtual void Finalize(int in_RegionID){}
 
   private:
     string m_strInputFileName;
@@ -97,7 +94,8 @@ class RoadmapClear : public MPStrategyMethod {
       LOG_DEBUG_MSG("~RoadmapClear::ParseXML()");
     };
    
-    virtual void operator()(int in_RegionID) {
+   virtual void Initialize(int in_RegionID){}
+   virtual void Run(int in_RegionID){
       LOG_DEBUG_MSG("RoadmapClear::() ");
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
       OBPRM_srand(getSeed()); 
@@ -108,11 +106,8 @@ class RoadmapClear : public MPStrategyMethod {
       
       LOG_DEBUG_MSG("~RoadmapClear::()");
     }
-  
-    virtual void operator()() {
-      int newRegionId = GetMPProblem()->CreateMPRegion();
-      (*this)(newRegionId);      
-    };
+   virtual void Finalize(int in_RegionID){}
+
 
   private:
    

@@ -89,21 +89,25 @@ void BasicPRMStrategy::PrintOptions(ostream& out_os) {
    }
 }
 
-void BasicPRMStrategy::operator()(int in_RegionID)
-{
-   cout << "\n\nBeginning BasicStratgy::operator(" << in_RegionID << ")\n";
-  
+void BasicPRMStrategy::Initialize(int in_RegionID){
+   cout<<"\nInitializing BasicPRMStrategy::"<<in_RegionID<<endl;
+
    //seed random number generator
    OBPRM_srand(getSeed()); 
-  
+ 
+   cout<<"\nEnding Initializing BasicPRMStrategy"<<endl;
+}
+
+void BasicPRMStrategy::Run(int in_RegionID){
+   cout<<"\nRunning BasicPRMStrategy::"<<in_RegionID<<endl;
+
    //setup region variables
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
    Stat_Class* regionStats = region->GetStatClass();
-  
+ 
    vector<VID> allNodesVID;
    region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
   
-   Clock_Class MapGenClock;
    MapGenClock.StartClock("Map Generation");
   
    bool mapPassedEvaluation = false;
@@ -122,7 +126,17 @@ void BasicPRMStrategy::operator()(int in_RegionID)
    }
   
    MapGenClock.StopPrintClock();
-  
+
+   cout<<"\nEnd Running BasicPRMStrategy::"<<in_RegionID<<endl;
+}
+
+void BasicPRMStrategy::Finalize(int in_RegionID){
+   cout<<"\nFinalizing BasicPRMStrategy::"<<in_RegionID<<endl;
+   
+   //setup region variables
+   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
+   Stat_Class* regionStats = region->GetStatClass();
+ 
    string str;
   
    //output final map
@@ -143,7 +157,7 @@ void BasicPRMStrategy::operator()(int in_RegionID)
    cout.rdbuf(sbuf);  // restore original stream buffer
    osStat.close();
 
-   cout << "Ending BasicStratgy::operator(" << in_RegionID << ")\n\n";
+   cout<<"\nEnd Finalizing BasicPRMStrategy"<<endl;
 }
 
 void BasicPRMStrategy::ConnectNodes(MPRegion<CfgType, WeightType>* region, 

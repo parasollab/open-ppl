@@ -106,6 +106,9 @@ class LocalPlanners : MPBaseObject{
 
   static int lp_counter;
   int saved_sl_id;
+
+  bool m_SaveEnv;
+  Environment* m_Env;
  public:
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -203,6 +206,13 @@ LocalPlanners<CFG,WEIGHT>::
 LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : 
   MPBaseObject(in_Node,in_pProblem) {
   
+  m_SaveEnv = in_Node.boolXMLParameter("SaveEnv", false, false, "Save the environment throughout the execution");
+  if(m_SaveEnv){
+     m_Env = new Environment(*(GetMPProblem()->GetEnvironment()), *(GetMPProblem()->GetEnvironment()->GetBoundingBox()));
+     cout<<"Saving Environment Bounds Are::"<<endl;
+     m_Env->GetBoundingBox()->Print(cout);
+  }
+ 
   ///\todo Finish this parcer .... need to have binary search!
   
   LOG_DEBUG_MSG("LocalPlanners::LocalPlanners()");
@@ -436,8 +446,12 @@ IsConnected(Environment *_env, Stat_Class& Stats,
       lpOutput->path.erase(lpOutput->path.begin(),lpOutput->path.end());      
       lpOutput->edge.first.SetWeight(0);
       lpOutput->edge.second.SetWeight(0);
-      
-      connected = (*itr)->IsConnected(_env,Stats,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+      if(m_SaveEnv){
+         connected = (*itr)->IsConnected(m_Env,Stats,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+      }
+      else{
+         connected = (*itr)->IsConnected(_env,Stats,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+      }
       if (connected)
   connecting_lp = (*itr)->GetID();
     }
@@ -484,6 +498,9 @@ IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats,
       double positionRes, double orientationRes, 
       bool checkCollision, 
       bool savePath, bool saveFailedPath) {
+   if(m_SaveEnv){
+      return GetLocalPlanner(lpid)->IsConnected(m_Env,Stats,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+   }
   return GetLocalPlanner(lpid)->IsConnected(_env,Stats,dm,_c1,_c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
 }
 

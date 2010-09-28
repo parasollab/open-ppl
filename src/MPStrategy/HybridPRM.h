@@ -46,12 +46,9 @@ class HybridPRM : public MPStrategyMethod
   virtual void PrintOptions(ostream& out_os);
   virtual void ParseXML(XMLNodeReader& in_Node);
 
-  virtual void operator()() 
-  {
-    int newRegionId = GetMPProblem()->CreateMPRegion();
-    (*this)(newRegionId);
-  }
-  virtual void operator()(int in_RegionID);
+   virtual void Initialize(int in_RegionID);
+   virtual void Run(int in_RegionID);
+   virtual void Finalize(int in_RegionID);
 
   void initialize_weights_probabilities_costs();
   void copy_learned_prob_to_prob_use();
@@ -102,6 +99,18 @@ class HybridPRM : public MPStrategyMethod
   int m_bin_size;
 
   string m_sampler_selection_distribution;
+
+ private:
+   string base_filename;
+   ofstream char_ofstream;
+   Clock_Class Allstuff;
+   stapl::vector_property_map< GRAPH,size_t > cmap;
+   map<VID, Visibility> vis_map;
+   NodeTypeCounts node_types;
+  int totalSamples;
+  bool map_passed_evaluation;
+  double NodeGenTotalTime;
+  static int instanceNumber;
 };
 
 #endif

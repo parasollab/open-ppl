@@ -149,7 +149,9 @@ class RoadmapTimingStats : public MPStrategyMethod {
       }
     }
 
-  void operator()(){
+  virtual void PrintOptions(ostream& out_os) { }
+   virtual void Initialize(int in_RegionID){}
+   virtual void Run(int in_RegionID){
       cout<<"*************in operator()***********************"<<endl;
       if(files.size()==0){
         cout<<"no files"<<endl;
@@ -166,10 +168,8 @@ class RoadmapTimingStats : public MPStrategyMethod {
       }
       cout<<"returning"<<endl;
   }
+   virtual void Finalize(int in_RegionID){}
 
-
-  virtual void PrintOptions(ostream& out_os) { }
-  virtual void operator()(int in_RegionID) { }
 };
 
  

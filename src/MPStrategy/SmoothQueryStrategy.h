@@ -12,14 +12,10 @@ class SmoothQueryStrategy : public QueryStrategy
   virtual void PrintOptions(ostream& out_os);
   
   virtual void ParseXML(XMLNodeReader& in_Node);
-   
-  virtual void operator()() 
-  {
-    int regionID = GetMPProblem()->CreateMPRegion(); 
-    GetMPProblem()->GetMPRegion(regionID)->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strMapFileLabel.c_str());
-    (*this)(regionID); 
-  }
-  virtual void operator()(int in_RegionID); 
+
+   virtual void Initialize(int in_RegionID){}
+   virtual void Run(int in_RegionID);
+   virtual void Finalize(int in_RegionID){}
 
  protected:
   string m_strSmoothPathFileLabel;

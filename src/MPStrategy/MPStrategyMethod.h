@@ -5,6 +5,7 @@
 #include "util.h"
 #include "CfgTypes.h"
 #include "MPProblem/RoadmapGraph.h" //for VID typedef
+#include "MPProblem.h"
 
 typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType, WeightType> GRAPH;
 typedef GRAPH::vertex_descriptor VID; 
@@ -39,8 +40,17 @@ class MPStrategyMethod : public MPBaseObject
     };
   virtual ~MPStrategyMethod() {}
   virtual void ParseXML(XMLNodeReader& in_Node)=0;
-  virtual void operator()()=0;
-  virtual void operator()(int in_RegionID)=0;
+  void operator()(){
+     (*this)(GetMPProblem()->CreateMPRegion());
+   }
+  void operator()(int in_RegionID){
+   Initialize(in_RegionID);
+   Run(in_RegionID);
+   Finalize(in_RegionID);
+  }
+  virtual void Initialize(int in_RegionID)=0;
+  virtual void Run(int in_RegionID)=0;
+  virtual void Finalize(int in_RegionID)=0;
   virtual void PrintOptions(ostream& out_os)=0;
   long getSeed(){return m_baseSeed;};
   string getBaseFilename(){return m_base_filename;};

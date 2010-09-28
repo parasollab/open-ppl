@@ -26,8 +26,10 @@ class BasicPRMStrategy : public MPStrategyMethod
    virtual void ParseXML(XMLNodeReader& in_Node);
    virtual void PrintOptions(ostream& out_os);
 
-   virtual void operator()() {(*this)(GetMPProblem()->CreateMPRegion());}
-   virtual void operator()(int in_RegionID);
+   virtual void Initialize(int in_RegionID);
+   virtual void Run(int in_RegionID);
+   virtual void Finalize(int in_RegionID);
+
 
  protected:
    //helper functions for operator()
@@ -46,6 +48,8 @@ class BasicPRMStrategy : public MPStrategyMethod
  private:
    template <typename OutputIterator>
       void GenerateNodes(MPRegion<CfgType, WeightType>* region, OutputIterator allOut, OutputIterator thisIterationOut);
+
+   Clock_Class MapGenClock;
 
 };
 
@@ -77,7 +81,7 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       cout << "\n\t";
 
       do{
-         pNodeGenerator->GetSampler()->Sample(pNodeGenerator,GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),git->second*2, back_inserter(outNodes));
+         pNodeGenerator->GetSampler()->Sample(pNodeGenerator,GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),git->second*2+400, back_inserter(outNodes));
       }while(outNodes.size()<=0&&m_CurrentIteration==1);
 
       cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;

@@ -71,6 +71,8 @@ class MapEvaluator : public MPBaseObject
         m_conditional_evaluators.push_back(conditional_type(new QueryEvaluation<CFG, WEIGHT>(*citr, in_pProblem))); 
       else if (citr->getName() == "PrintMapEvaluation")
         m_conditional_evaluators.push_back(conditional_type(new PrintMapEvaluation(*citr, in_pProblem))); 
+      else if (citr->getName() == "TrueEvaluation")
+         m_conditional_evaluators.push_back(conditional_type(new TrueEvaluation(*citr, in_pProblem)));
       else
         citr->warnUnknownNode();
     }

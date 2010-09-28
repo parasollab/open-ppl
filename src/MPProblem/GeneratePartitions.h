@@ -25,10 +25,10 @@ template <class CFG, class WEIGHT> class MPRegion;
 class BoundingBox;
 
 template <class CFG>
-class PartitioningMethod {
+class FSPartitioningMethod {
  public:
-  PartitioningMethod();
-  virtual ~PartitioningMethod();
+  FSPartitioningMethod();
+  virtual ~FSPartitioningMethod();
 
   // Access
   virtual char* GetName() = 0;
@@ -37,7 +37,7 @@ class PartitioningMethod {
   virtual void ParseCommandLine(int argc, char **argv) = 0;
   virtual void PrintUsage(ostream& _os) = 0;
   virtual void PrintValues(ostream& _os) = 0;
-  virtual PartitioningMethod<CFG>* CreateCopy() = 0;
+  virtual FSPartitioningMethod<CFG>* CreateCopy() = 0;
 
   virtual vector<BoundingBox>  PlaceBoundaries(Environment* _env, 
 					       Stat_Class& Stats,
@@ -58,25 +58,25 @@ class PartitioningMethod {
 };
 
 template <class CFG>
-PartitioningMethod<CFG>::
-PartitioningMethod():
+FSPartitioningMethod<CFG>::
+FSPartitioningMethod():
   dims (-1), n_partitions(2), epsilon(.15), percentage_p(0.66), bNormalizeRanges(true) {
   SetDefault();
 }
 
 template <class CFG>
-PartitioningMethod<CFG>::
-~PartitioningMethod() {
+FSPartitioningMethod<CFG>::
+~FSPartitioningMethod() {
 }
 
 template <class CFG>
-void PartitioningMethod<CFG>::
+void FSPartitioningMethod<CFG>::
 SetDefault() {
   //set default values for partitioning parameters
 }
 
 template <class CFG>
-void PartitioningMethod<CFG>::
+void FSPartitioningMethod<CFG>::
 DisplayDetails( string Strategy, int BoxSize, int DOF, int NumPartition) {
   cout << "Subdivision Strategy: " << Strategy << endl;
   cout << "Bounding Box size(" << BoxSize << ")" << endl;
@@ -90,7 +90,7 @@ DisplayDetails( string Strategy, int BoxSize, int DOF, int NumPartition) {
 
 
 template <class CFG>
-class RandomPartitioning: public PartitioningMethod<CFG> {
+class RandomPartitioning: public FSPartitioningMethod<CFG> {
  public:
   RandomPartitioning();
   ~RandomPartitioning();
@@ -100,7 +100,7 @@ class RandomPartitioning: public PartitioningMethod<CFG> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
-  virtual PartitioningMethod<CFG>* CreateCopy();
+  virtual FSPartitioningMethod<CFG>* CreateCopy();
 
   virtual vector<BoundingBox> PlaceBoundaries(Environment* _env, 
 					      Stat_Class& Stats,
@@ -112,7 +112,7 @@ class RandomPartitioning: public PartitioningMethod<CFG> {
 
 template <class CFG>
 RandomPartitioning<CFG>::
-RandomPartitioning() : PartitioningMethod<CFG>() {
+RandomPartitioning() : FSPartitioningMethod<CFG>() {
 }
 
 template <class CFG>
@@ -152,10 +152,10 @@ PrintValues(ostream& _os) {
 }
 
 template <class CFG>
-PartitioningMethod<CFG>*
+FSPartitioningMethod<CFG>*
 RandomPartitioning<CFG>::
 CreateCopy() {
-  PartitioningMethod<CFG> * _copy = new RandomPartitioning<CFG>(*this);
+  FSPartitioningMethod<CFG> * _copy = new RandomPartitioning<CFG>(*this);
   return _copy;
 }
 
@@ -214,7 +214,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
 
 
 template <class CFG>
-class GapPartitioning: public PartitioningMethod<CFG> {
+class GapPartitioning: public FSPartitioningMethod<CFG> {
  public:
   GapPartitioning();
   ~GapPartitioning();
@@ -224,7 +224,7 @@ class GapPartitioning: public PartitioningMethod<CFG> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
-  virtual PartitioningMethod<CFG>* CreateCopy();
+  virtual FSPartitioningMethod<CFG>* CreateCopy();
 
   virtual vector<BoundingBox> PlaceBoundaries(Environment* _env, 
 					      Stat_Class& Stats,
@@ -239,7 +239,7 @@ class GapPartitioning: public PartitioningMethod<CFG> {
 
 template <class CFG>
 GapPartitioning<CFG>::
-GapPartitioning() : PartitioningMethod<CFG>() {
+GapPartitioning() : FSPartitioningMethod<CFG>() {
 }
 
 template <class CFG>
@@ -279,10 +279,10 @@ PrintValues(ostream& _os) {
 }
 
 template <class CFG>
-PartitioningMethod<CFG>*
+FSPartitioningMethod<CFG>*
 GapPartitioning<CFG>::
 CreateCopy() {
-  PartitioningMethod<CFG> * _copy = new GapPartitioning<CFG>(*this);
+  FSPartitioningMethod<CFG> * _copy = new GapPartitioning<CFG>(*this);
   return _copy;
 }
 
@@ -630,7 +630,7 @@ FindMaxGapForDim(int Dim, vector<CFG>& nodes, double &gap_width)
 
 
 template <class CFG>
-class InformationGainPartitioning: public PartitioningMethod<CFG> {
+class InformationGainPartitioning: public FSPartitioningMethod<CFG> {
  public:
   InformationGainPartitioning();
   ~InformationGainPartitioning();
@@ -640,7 +640,7 @@ class InformationGainPartitioning: public PartitioningMethod<CFG> {
   virtual void ParseCommandLine(int argc, char **argv);
   virtual void PrintUsage(ostream& _os);
   virtual void PrintValues(ostream& _os);
-  virtual PartitioningMethod<CFG>* CreateCopy();
+  virtual FSPartitioningMethod<CFG>* CreateCopy();
 
   virtual vector<BoundingBox> PlaceBoundaries(Environment* _env, 
 					      Stat_Class& Stats,
@@ -661,7 +661,7 @@ class InformationGainPartitioning: public PartitioningMethod<CFG> {
 
 template <class CFG>
 InformationGainPartitioning<CFG>::
-InformationGainPartitioning() : PartitioningMethod<CFG>() {
+InformationGainPartitioning() : FSPartitioningMethod<CFG>() {
 }
 
 template <class CFG>
@@ -701,10 +701,10 @@ PrintValues(ostream& _os) {
 }
 
 template <class CFG>
-PartitioningMethod<CFG>*
+FSPartitioningMethod<CFG>*
 InformationGainPartitioning<CFG>::
 CreateCopy() {
-  PartitioningMethod<CFG> * _copy = new InformationGainPartitioning<CFG>(*this);
+  FSPartitioningMethod<CFG> * _copy = new InformationGainPartitioning<CFG>(*this);
   return _copy;
 }
 
@@ -1000,7 +1000,7 @@ class PartitionCSpaceRegion {
   PartitionCSpaceRegion();
   ~PartitionCSpaceRegion();
 
-  static vector<PartitioningMethod<CFG>*> GetDefault();
+  static vector<FSPartitioningMethod<CFG>*> GetDefault();
 
   int ReadCommandLine(str_param<char *> &partitionType);
   void PrintUsage(ostream& _os);
@@ -1021,10 +1021,10 @@ class PartitionCSpaceRegion {
  protected:
   //////////////////////
   // Data
-  vector<PartitioningMethod<CFG>*> all;
+  vector<FSPartitioningMethod<CFG>*> all;
 
  public:
-  vector<PartitioningMethod<CFG>*> selected;
+  vector<FSPartitioningMethod<CFG>*> selected;
 
 };
 
@@ -1044,7 +1044,7 @@ PartitionCSpaceRegion() {
 template <class CFG>
 PartitionCSpaceRegion<CFG>::
 ~PartitionCSpaceRegion() {
-  typename vector<PartitioningMethod<CFG>*>::iterator I;
+  typename vector<FSPartitioningMethod<CFG>*>::iterator I;
   for (I=selected.begin(); I!=selected.end(); I++)
     delete *I;
 
@@ -1053,10 +1053,10 @@ PartitionCSpaceRegion<CFG>::
 }
 
 template <class CFG>
-vector<PartitioningMethod<CFG>*> 
+vector<FSPartitioningMethod<CFG>*> 
 PartitionCSpaceRegion<CFG>::
 GetDefault() {
-  vector<PartitioningMethod<CFG>*> Default;
+  vector<FSPartitioningMethod<CFG>*> Default;
   RandomPartitioning<CFG>* random_partitioning = new RandomPartitioning<CFG>();
   Default.push_back(random_partitioning);
   return Default;
@@ -1067,7 +1067,7 @@ template <class CFG>
 int 
 PartitionCSpaceRegion<CFG>::
 ReadCommandLine(str_param<char *> &partitionType) {
-  typename vector<PartitioningMethod<CFG>*>::iterator I;
+  typename vector<FSPartitioningMethod<CFG>*>::iterator I;
 
   for(I=selected.begin(); I!=selected.end(); I++)
     delete *I;
@@ -1075,7 +1075,7 @@ ReadCommandLine(str_param<char *> &partitionType) {
 
     
   
-  typename vector<PartitioningMethod<CFG>*>::iterator itr;
+  typename vector<FSPartitioningMethod<CFG>*>::iterator itr;
 
   
   if (partitionType.IsActivated()) {
@@ -1105,7 +1105,7 @@ ReadCommandLine(str_param<char *> &partitionType) {
 	      cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
 	      cmd_argc++;
 	      
-	      typename vector<PartitioningMethod<CFG>*>::iterator itr_names;
+	      typename vector<FSPartitioningMethod<CFG>*>::iterator itr_names;
 	      is_method_name = false;
 	      for (itr_names = all.begin(); itr_names != all.end() &&cmd_begin+cmd_argc < argc; itr_names++)
 		if (!strcmp(argv[cmd_begin+cmd_argc],(*itr_names)->GetName())) {
@@ -1155,7 +1155,7 @@ template <class CFG>
 void 
 PartitionCSpaceRegion<CFG>::
 PrintUsage(ostream& _os) {
-  typename vector<PartitioningMethod<CFG>*>::iterator I;
+  typename vector<FSPartitioningMethod<CFG>*>::iterator I;
   for(I=all.begin(); I!=all.end(); I++)
     (*I)->PrintUsage(_os);
 }
@@ -1165,7 +1165,7 @@ template <class CFG>
 void 
 PartitionCSpaceRegion<CFG>::
 PrintValues(ostream& _os) {
-  typename vector<PartitioningMethod<CFG>*>::iterator I;
+  typename vector<FSPartitioningMethod<CFG>*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++)
     (*I)->PrintValues(_os);
 }
@@ -1175,9 +1175,9 @@ template <class CFG>
 void
 PartitionCSpaceRegion<CFG>::
 PrintDefaults(ostream& _os) {
-  vector<PartitioningMethod<CFG>*> Default;
+  vector<FSPartitioningMethod<CFG>*> Default;
   Default = GetDefault();
-  typename vector<PartitioningMethod<CFG>*>::iterator I;
+  typename vector<FSPartitioningMethod<CFG>*>::iterator I;
   for(I=Default.begin(); I!=Default.end(); I++)
     (*I)->PrintValues(_os);
 }
@@ -1218,7 +1218,7 @@ PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
   }
   cout << " free_nodes " << free_nodes.size() << " coll_nodes " << coll_nodes.size();
 
-  typename vector<PartitioningMethod<CFG>*>::iterator itr;
+  typename vector<FSPartitioningMethod<CFG>*>::iterator itr;
 
   for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
 #ifndef QUIET	
