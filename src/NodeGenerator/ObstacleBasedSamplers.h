@@ -24,7 +24,8 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
   std::string strLabel;
   //int n_shells_free, n_shells_coll;
   double step_size;
-
+  bool useBBX;
+  
  public:
   ObstacleBasedSampler() {}
   ObstacleBasedSampler(Environment* _env, Stat_Class& _Stats, 
@@ -67,6 +68,8 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
 void  ParseXML(XMLNodeReader& in_Node) {
   LOG_DEBUG_MSG("ObstacleBasedSampler::ParseXML()");
   XMLNodeReader::childiterator citr;
+   useBBX = in_Node.boolXMLParameter(string("usebbx"), true, false, string("Use bounding box as obstacle"));
+cout << "from parseXML,useBBX = " <<useBBX<< endl;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
     if(citr->getName() == "n_shells_coll") {
       ParseXMLcol(*citr);
@@ -179,8 +182,9 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 
    CFG c1;
    if(cfg_in==CFG()){
-      c1.GetRandomCfg(env);
+      c1.GetRandomCfg(env);//random configurations taken inside bounding box
    }
+
    else
       c1 = cfg_in;
 	
@@ -188,7 +192,6 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 	
 	bool c1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c1, env, 
 		         Stat, cdInfo, true, &callee);
-	
 
 	CFG c2 = c1;
 	bool c2_bbox = c1_bbox;
@@ -197,8 +200,8 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 	CFG r;
 	r.GetRandomRay(step_size, env, dm);
 
-	while(c1_bbox && c2_bbox && (c1_free == c2_free)) { 
-	//while(c1_bbox && c2_bbox){
+	while(c2_bbox && (c1_free == c2_free)) { 
+	
 	  c1 = c2;
 	  c1_bbox = c2_bbox;
 	  c1_free = c2_free;
@@ -210,19 +213,41 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 		         Stat, cdInfo, true, &callee);
 	 
 	}
-	if(c1_bbox && c2_bbox) {
-	  generated = true;
-	  if(c1_free) {
-	    CFG tmp;
-	    r.subtract(tmp, r);
-	    GenerateShells(Stat,c1, c2, r, 
-			   back_insert_iterator<vector<CFG> >(cfg_out));
-	  } else 
-	    GenerateShells(Stat,c2, c1, r,
-			   back_insert_iterator<vector<CFG> >(cfg_out));
-	    }
+	if(c2_bbox) 
+          {
+	        generated = true;
+                
+	  	if(c1_free)
+          	   {
+	  	      CFG tmp;
+	              r.subtract(tmp, r);
+	    	      GenerateShells(Stat,c1, c2, r, 
+  		      back_insert_iterator<vector<CFG> >(cfg_out));
+	           }
+           	else 
+	    	  GenerateShells(Stat,c2, c1, r,back_insert_iterator<vector<CFG> >(cfg_out));
+	  }
+        else if(c1_bbox && useBBX && c1_free && !c2_bbox)
+              {
+		      generated = true;
+		      CFG tmp;
+	              r.subtract(tmp, r);
+	    	      GenerateShells(Stat,c1, c2, r, 
+  		      back_insert_iterator<vector<CFG> >(cfg_out));
+
+              }
+      
+    
+
+   
+   
       } while (!generated && (attempts < max_attempts));
       
+     
+
+
+
+
       return generated;
     }
     
