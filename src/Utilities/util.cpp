@@ -147,7 +147,7 @@ OBPRM_srand(std::string methodName, int nextNodeIndex, long base, bool reset) {
 // Output to a file the sequence of cfgs.
 /////////////////////////////////////////////////////////////////////
 void
-WritePathLinkConfigurations( char output_file[80],
+WritePathLinkConfigurations( const char output_file[80],
 			     vector<Cfg*>& path,
 			     Environment *env ) { 
   FILE *fp;
@@ -189,7 +189,7 @@ WritePathLinkConfigurations( char output_file[80],
 
 
 void
-WritePathConfigurations( char output_file[80],
+WritePathConfigurations( const char output_file[80],
 			 vector<Cfg*>& path,
 			 Environment *env ) {
   FILE *fp;

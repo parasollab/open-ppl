@@ -142,11 +142,11 @@ double GaussianDistribution(double m, double s);
       *
       *@see Cfg::printLinkConfigurations
       */
-    void WritePathLinkConfigurations(char output_file[80], 
+    void WritePathLinkConfigurations(const char output_file[80], 
                                      vector<Cfg*>& path, 
                                      Environment *env);
     template <class CFG>
-    void WritePathLinkConfigurations(char output_file[80], 
+    void WritePathLinkConfigurations(const char output_file[80], 
                                      vector<CFG>& path, 
                                      Environment *env);
 
@@ -158,11 +158,11 @@ double GaussianDistribution(double m, double s);
       *@note if file couldn't be opened, error message will be post 
       *and process will be terminated.
       */   
-    void WritePathConfigurations(char output_file[80], 
+    void WritePathConfigurations(const char output_file[80], 
                                  vector<Cfg*>& path, 
                                  Environment *env);  
     template <class CFG>
-    void WritePathConfigurations(char output_file[80], 
+    void WritePathConfigurations(const char output_file[80], 
 				 vector<CFG>& path, 
                                  Environment *env);
 
@@ -306,7 +306,7 @@ double rint(double x);
 /////////////////////////////////////////////////////////////////////////////////////////
 
 template <class CFG>
-void WritePathLinkConfigurations(char output_file[80], 
+void WritePathLinkConfigurations(const char output_file[80], 
 				 vector<CFG>& path, 
 				 Environment *env) {
   vector<Cfg*> ppath;
@@ -317,7 +317,7 @@ void WritePathLinkConfigurations(char output_file[80],
 
 
 template <class CFG>
-void WritePathConfigurations(char output_file[80],
+void WritePathConfigurations(const char output_file[80],
 			     vector<CFG>& path,
 			     Environment *env) {
   vector<Cfg*> ppath;
