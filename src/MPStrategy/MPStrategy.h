@@ -45,7 +45,7 @@ public:
   Features* GetFeatures(){return m_Features;}
 
   XMLNodeReader* GetXMLNodeForStrategy(string& s);
-#endif UAS
+#endif
 
   bool addPartialEdge, addAllEdges; //move to connect map class
   void PrintOptions(ostream& out_os);
