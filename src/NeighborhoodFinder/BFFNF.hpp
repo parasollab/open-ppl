@@ -43,19 +43,21 @@ public:
   BFFNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node,in_pProblem) {
     m_scale = in_Node.numberXMLParameter("k_2", true, double(0.0), double(0.0), double(100.0), "K value for BFFNF");
-    string dm2_label = in_Node.stringXMLParameter(string("dm2_method"),false,string("default"),string("Distance Metric Method"));
+    string dm2_label = in_Node.stringXMLParameter(string("dm2_method"),true,string(""),string("Distance Metric Method the second one"));
     dmm2 = in_pProblem->GetDistanceMetric()->GetDMMethod(dm2_label);
+    
+      nf1 = new BFNF<CFG,WEIGHT>(dmm,"label");
+    nf2 = new BFNF<CFG,WEIGHT>(dmm2, "label");
   }
 
-  BFFNF(DistanceMetricMethod* _dmm,DistanceMetricMethod*_dmm2, std::string _strLabel) :
-    NeighborhoodFinderMethod(_strLabel) {
+  BFFNF(shared_ptr<DistanceMetricMethod> _dmm,shared_ptr<DistanceMetricMethod>_dmm2) :
+    NeighborhoodFinderMethod() {
 //cout<<"initiliazing other constructor "<<endl;
-      nf1 = new BFNF<CFG,WEIGHT>(_dmm ,"nf1");
-    nf2 = new BFNF<CFG,WEIGHT>(_dmm2 , "nf2");
+    
     dmm= _dmm ;
     dmm2=_dmm2;
 }
- 
+
 
   virtual const std::string GetName () const {
     return BFFNF::GetClassName();
@@ -107,8 +109,7 @@ public:
 
 
 private:
-
-  shared_ptr<DistanceMetricMethod> dmm2;
+ shared_ptr<DistanceMetricMethod> dmm2;
   BFNF<CFG,WEIGHT> *nf1;
   BFNF<CFG,WEIGHT> *nf2;
   double m_scale;
@@ -159,15 +160,11 @@ BFFNF<CFG,WEIGHT>::
 KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   CFG _cfg, int k, OutputIterator _out) {
 
-    vector<VID> closest(m_scale);
-    typename vector<VID>::iterator closest_iter = closest.begin();
-    typename vector<VID>::iterator closest_iter2=closest.end();
-   
-    typename vector<VID>::iterator myint;
-  
- nf1->KClosest(_rmp,_cfg,m_scale,closest_iter);
-nf2->KClosest(_rmp,closest_iter,closest_iter2,_cfg,k,_out);
+    vector<VID> closest;
  
+   // typename vector<VID>::iterator myint;
+   nf1->KClosest(_rmp,_cfg,m_scale,back_insert_iterator<vector<VID> >(closest));
+nf2->KClosest(_rmp,closest.begin(),closest.end(),_cfg,k,_out);
 
 }
 
