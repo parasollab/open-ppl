@@ -60,6 +60,11 @@ ParseXML(XMLNodeReader& in_Node)
       string connect_method = citr->stringXMLParameter(string("Method"), true, string(""), string("Smoothing Node Connection Method"));
       m_vecStrSmoothNodeConnectionLabels.push_back(connect_method);
       citr->warnUnrequestedAttributes();
+    } 
+    else if(citr->getName()=="dm_method")
+    {
+      dm_label =citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
+      citr->warnUnrequestedAttributes();
     }
     else 
     {
@@ -100,12 +105,12 @@ Run(int in_RegionID)
   //perform query
   Clock_Class QueryClock;
   QueryClock.StartClock("Query");
-  
+
   bool query_result = query.PerformQuery(rdmp, *pStatClass, 
                        &m_ConnectMap, 
                        &methods,
                        GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                       GetMPProblem()->GetDistanceMetric());
+                       GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
                                          
   QueryClock.StopPrintClock();
   
@@ -137,7 +142,6 @@ Run(int in_RegionID)
       m_SmoothConnectMap.ConnectNodes(
                            *itr,
                            rdmp, *pStatClass,
-                           GetMPProblem()->GetDistanceMetric(),
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            false, false,
                            path_vids.begin(), path_vids.end(),
@@ -153,7 +157,7 @@ Run(int in_RegionID)
                                                   &m_ConnectMap,
                                                   &methods,
                                                   GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                                                  GetMPProblem()->GetDistanceMetric());
+                                                  GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
     SmoothQueryClock.StopPrintClock();
 
     //output smoothed path

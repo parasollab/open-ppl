@@ -232,7 +232,7 @@ class CollisionDetection : MPBaseObject {
   /** Initialize n direction vectors  with the penetration length*/
   template <class CFG>
   void InitializePenetration(double times, int nCfgs,  Environment* env,
-			     DistanceMetric* dm, double ratio=0.5);
+			     DistanceMetricMethod* dm, double ratio=0.5);
   
   double penetration; // Penetration distance  
 
@@ -550,7 +550,7 @@ template <class CFG>
 void 
 CollisionDetection::
 InitializePenetration(double times, int nCfgs, Environment* env,
-		      DistanceMetric* dm, double ratio) {
+		      DistanceMetricMethod* dm, double ratio) {
   CFG origin;
   acceptableRatio = ratio; 
   // first find the environment resolution

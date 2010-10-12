@@ -292,7 +292,10 @@ public:
     m_debug = debug;
     // note: A temporary fix (hack) until distance metric is properly fixed. This picks the second listed
     // distance metric from the xml file.
-    dmm = in_pProblem->GetDistanceMetric()->GetDefault()[1];
+      
+     string dm2_label=in_Node.stringXMLParameter(string(" dm2 method"),true,string(""),string("Distance Metric Method"));
+     
+    dmm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm2_label);
     m_min = in_Node.numberXMLParameter(string("min"), false, double(0.0), double(0.0), double(100000.0), "min");
     m_max = in_Node.numberXMLParameter(string("max"), false, DBL_MAX, double(0.0), DBL_MAX, "max");
     m_usePercent = in_Node.boolXMLParameter(string("usePercent"), false, false,
@@ -390,7 +393,7 @@ protected:
   double m_min;
   double m_max;
   string m_type;
-  DistanceMetricMethod* dmm;
+shared_ptr<DistanceMetricMethod> dmm;
   Policy* m_policy;
 };
 
@@ -534,8 +537,8 @@ class BandsNF: public NeighborhoodFinderMethod {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
-  BandsNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) : NeighborhoodFinderMethod(ParseLabelXML(in_Node)) {
-    dmm = in_pProblem->GetDistanceMetric()->GetDefault()[0];
+  BandsNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) : NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node,in_pProblem) {
+
     m_debug = in_Node.boolXMLParameter(string("debug"), false, false, string(""));
     
     XMLNodeReader::childiterator citr;

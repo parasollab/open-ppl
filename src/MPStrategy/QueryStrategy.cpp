@@ -73,6 +73,11 @@ ParseXML(XMLNodeReader& in_Node, bool warn_unknown)
       m_strPathFileLabel = citr->stringXMLParameter(string("name"), true, string(""), string("Path Filename"));
       citr->warnUnrequestedAttributes();
     }
+    else if(citr->getName()=="dm_method")
+    {
+      dm_label =citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
+      citr->warnUnrequestedAttributes();
+    }
     else 
     {
       if(warn_unknown)
@@ -114,11 +119,12 @@ Run(int in_RegionID)
   //perform query
   Clock_Class QueryClock;
   QueryClock.StartClock("Query");
+   
   if(query.PerformQuery(rdmp, *pStatClass, 
                         &m_ConnectMap, 
                         &methods,
                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                        GetMPProblem()->GetDistanceMetric()))
+                        GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)))
   {
     query.WritePath(rdmp);
     cout << endl << "SUCCESSFUL query";

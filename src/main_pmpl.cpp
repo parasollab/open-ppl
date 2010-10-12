@@ -17,7 +17,6 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
 
 #include "GeneratePartitions.h"
 

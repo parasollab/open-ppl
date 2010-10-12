@@ -56,7 +56,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    */
   //// wrapper function to call appropriate impl based on CFG type
   virtual bool IsConnected(Environment *env, Stat_Class& Stats,
-         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
@@ -68,7 +68,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
   //// work function, default, non closed chains
   template <typename Enable>
   bool _IsConnected(Environment *_env, Stat_Class& Stats,
-         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
@@ -78,7 +78,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
   //// work function, specialization for closed chains
   template <typename Enable>
   bool _IsConnected(Environment *_env, Stat_Class& Stats,
-         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod>dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
@@ -109,7 +109,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    */
   virtual bool 
     IsConnectedSLSequential(Environment *env, Stat_Class& Stats,
-          DistanceMetric * dm, 
+          shared_ptr<DistanceMetricMethod > dm, 
           const CFG &_c1, const CFG &_c2, 
           LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
           double positionRes, double orientationRes,
@@ -128,7 +128,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    */
   virtual bool 
     lineSegmentInCollision(Environment *env, Stat_Class& Stats, 
-         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG,WEIGHT>* lpOutput, 
          int &cd_cntr, double positionRes);
 
@@ -140,7 +140,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    */
   virtual bool 
     IsConnectedSLBinary(Environment *env, Stat_Class& Stats, 
-      DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+      shared_ptr<DistanceMetricMethod> dm, const CFG &_c1, const CFG &_c2, 
       LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
       double positionRes, double orientationRes,  
       bool checkCollision=true, 
@@ -270,7 +270,7 @@ template <typename Enable>
 bool 
 StraightLine<CFG, WEIGHT>::
 _IsConnected(Environment *_env, Stat_Class& Stats,
-         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision, 
@@ -310,7 +310,7 @@ template <typename Enable>
 bool 
 StraightLine<CFG, WEIGHT>::
 _IsConnected(Environment *_env, Stat_Class& Stats,
-         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision, 
@@ -415,7 +415,7 @@ template <class CFG, class WEIGHT>
 bool
 StraightLine<CFG, WEIGHT>::
        IsConnectedSLSequential(Environment *_env, Stat_Class& Stats,
-      DistanceMetric * dm, 
+     shared_ptr< DistanceMetricMethod > dm, 
       const CFG &_c1, const CFG &_c2, 
       LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
       double positionRes, double orientationRes,
@@ -475,7 +475,7 @@ template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
 lineSegmentInCollision(Environment *_env, Stat_Class& Stats, 
-           DistanceMetric* dm, const CFG &_c1, const CFG &_c2, 
+          shared_ptr<DistanceMetricMethod> dm, const CFG &_c1, const CFG &_c2, 
            LPOutput<CFG,WEIGHT> *lpOutput, 
            int &cd_cntr, double positionRes) {
     CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
@@ -546,7 +546,7 @@ template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
 IsConnectedSLBinary(Environment *_env, Stat_Class& Stats, 
-        DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+       shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
         LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
         double positionRes, double orientationRes,  
         bool checkCollision, 

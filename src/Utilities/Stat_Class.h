@@ -75,10 +75,10 @@ public:
   void PrintParams();
 
   template <class CFG, class WEIGHT>
-  void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
+  void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> *rdmp, shared_ptr<DistanceMetricMethod> dm);
 
   template <class CFG, class WEIGHT>
-  void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *rdmp, DistanceMetric * dm);
+  void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *rdmp, shared_ptr<DistanceMetricMethod>  dm);
   void PrintFeatures();
   void IncNodes_Generated();
   void IncNodes_Attempted();
@@ -281,7 +281,7 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *rmap, int show_column_h
 template <class CFG, class WEIGHT>
 void
 Stat_Class::
-ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
+ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMethod> dm) {
   avg_min_intracc_dist = 0;
   avg_max_intracc_dist = 0;
   avg_mean_intracc_dist = 0;
@@ -477,7 +477,7 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
 template <class CFG, class WEIGHT>
 void
 Stat_Class::
-ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
+ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMethod> dm) {
   
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
   stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
@@ -541,7 +541,6 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
     sigma_cc_size/=total_components_dist;
   }
 
-
   typename vector< pair<size_t,VID> >::iterator cci; // cci is CC[i] hereafter
   if(ccs.size()>1)
     for (cci = ccs.begin(); cci < ccs.end(); cci++) {
@@ -570,9 +569,9 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
   for(typename vector<VID>::iterator itr = ccj_cfgs.begin(); itr!=ccj_cfgs.end(); ++itr)
         ccj_aux.push_back((size_t)(*itr));
 */
-  pairs = dm->FindKClosestPairs(rdmp, 
+  pairs = rdmp->GetEnvironment()->GetMPProblem()->GetNeighborhoodFinder()->FindKClosestPairs(rdmp, 
   //            cci_aux, ccj_aux, 1); 
-              cci_cfgs, ccj_cfgs, 1);
+              cci_cfgs, ccj_cfgs, 1); 
 /* 
   for(unsigned int i=0; i< pairs.size(); i++){
 	pairs[i].first = VID(pairs_tmp[i].first);
@@ -600,7 +599,6 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric * dm) {
   if (min_cc_distance_between_closest_pairs.size() > 1)
     sigma_intercc_dist /= min_cc_distance_between_closest_pairs.size() - 1;
   sigma_intercc_dist = sqrt(sigma_intercc_dist);
-
 
   CFG tcfg;
   //double norm = rdmp->GetEnvironment()->Getminmax_BodyAxisRange()*tcfg.DOF();

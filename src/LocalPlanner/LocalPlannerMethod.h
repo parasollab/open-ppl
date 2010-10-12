@@ -56,7 +56,7 @@ class LocalPlannerMethod : public MPBaseObject{
    *@param LPOutput.
    */
   virtual bool IsConnected(Environment* _env, Stat_Class& Stats, 
-         DistanceMetric *, const CFG &_c1, const CFG &_c2, 
+        shared_ptr<DistanceMetricMethod>, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 

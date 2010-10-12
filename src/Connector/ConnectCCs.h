@@ -31,7 +31,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   ConnectCCs();
   ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ConnectCCs(Roadmap<CFG,WEIGHT>*, 
-		      DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
+		      LocalPlanners<CFG,WEIGHT>*);
   virtual ~ConnectCCs();
  
   //////////////////////
@@ -67,7 +67,6 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
         */
   void ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		       LocalPlanners<CFG,WEIGHT>* lp,
-		       DistanceMetric * dm, 
 		       vector<VID>& cc1vec, 
 		       vector<VID>& cc2vec,
 		       bool addPartialEdge,
@@ -96,21 +95,19 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
    */
   void ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		     LocalPlanners<CFG,WEIGHT>* lp,
-		     DistanceMetric* dm, vector<VID>& cc1vec, 
+		     vector<VID>& cc1vec, 
 		     vector<VID>& cc2vec,
 		     bool addPartialEdge, bool addAllEdges);
 
   //@}
 
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-		 DistanceMetric *,
-		 LocalPlanners<CFG,WEIGHT>*,
+                LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
 		 bool addAllEdges);
 	
 	template <typename InputIterator>
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
-		 DistanceMetric *,
 		 LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
 		 bool addAllEdges,
@@ -158,8 +155,8 @@ ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem):
 
 
 template <class CFG, class WEIGHT>
-ConnectCCs<CFG,WEIGHT>::ConnectCCs(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp):
-  ComponentConnectionMethod<CFG,WEIGHT>(rdmp, dm, lp) {
+ConnectCCs<CFG,WEIGHT>::ConnectCCs(Roadmap<CFG,WEIGHT> * rdmp, LocalPlanners<CFG,WEIGHT>* lp):
+  ComponentConnectionMethod<CFG,WEIGHT>(rdmp, lp) {
   this->element_name = string("components");
 
   SetDefault();
@@ -230,7 +227,6 @@ void
 ConnectCCs<CFG, WEIGHT>::
 ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	        LocalPlanners<CFG,WEIGHT>* lp,
-		DistanceMetric* dm, 
 		vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc1vec, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc2vec,
 		bool addPartialEdge, bool addAllEdges) {
   
@@ -238,6 +234,7 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
   // created a temporary variable since Get CC requires &
   LPOutput<CFG,WEIGHT> lpOutput;
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_label)->GetDMMethod();
   for (int c1 = 0; c1 < cc1vec.size(); c1++){
     for (int c2 = 0; c2 < cc2vec.size(); c2++){
       if(_rm->IsCached(cc1vec[c1], cc2vec[c2]) && !_rm->GetCache(cc1vec[c1], cc2vec[c2])) {
@@ -278,7 +275,6 @@ void
 ConnectCCs<CFG, WEIGHT>::
 ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	      LocalPlanners<CFG,WEIGHT>* lp, 
-	      DistanceMetric* dm, 
 	      vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc1vec, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc2vec,
 	      bool addPartialEdge, bool addAllEdges) { 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
@@ -293,7 +289,8 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                 cc1vec.begin(), cc1vec.end(), 
                 cc2vec.begin(),cc2vec.end(), 
                 k, kp_iter);
-
+  
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_label)->GetDMMethod();
   LPOutput<CFG,WEIGHT> lpOutput;
   for (int i = 0; i < kp.size(); i++) {
     if(_rm->IsCached(kp[i].first, kp[i].second) && !_rm->GetCache(kp[i].first, kp[i].second)) {
@@ -328,7 +325,6 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 void ConnectCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-          DistanceMetric * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
 	  bool addAllEdges) {
@@ -359,12 +355,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
               get_cc(*pMap,cmap,C2->second,cc2);
               
               if(cc1.size() < smallcc && cc2.size() < smallcc ) {
-                 ConnectSmallCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+                 ConnectSmallCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges);
               } else {
                  if(cc1.size() <= cc2.size())
-                    ConnectBigCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+                    ConnectBigCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges);
                  else
-                    ConnectBigCCs(_rm,Stats,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
+                    ConnectBigCCs(_rm,Stats,lp,cc2,cc1,addPartialEdge,addAllEdges);
               }
            } 
         }/*endfor cc2*/ 
@@ -377,7 +373,6 @@ template <class CFG, class WEIGHT>
 template<typename InputIterator>
 void ConnectCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-          DistanceMetric * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
           bool addAllEdges,
@@ -407,12 +402,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         get_cc(*pMap,cmap,*itr2,cc2);
 
         if(cc1.size() < smallcc && cc2.size() < smallcc ) {
-          ConnectSmallCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+          ConnectSmallCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges);
         } else {
           if(cc1.size() <= cc2.size())
-            ConnectBigCCs(_rm,Stats,lp,dm,cc1,cc2,addPartialEdge,addAllEdges);
+            ConnectBigCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges);
           else
-            ConnectBigCCs(_rm,Stats,lp,dm,cc2,cc1,addPartialEdge,addAllEdges);
+            ConnectBigCCs(_rm,Stats,lp,cc2,cc1,addPartialEdge,addAllEdges);
         }
       } 
 

@@ -19,7 +19,7 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
   CollisionDetection* cd;
   ValidityChecker<CFG>* vc;
   CDInfo *cdInfo;
-  DistanceMetric* dm;
+  shared_ptr<DistanceMetricMethod> dm;
   int clearance, penetration;
   std::string strLabel;
   std::string strVcmethod;
@@ -27,7 +27,7 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
   FreeMedialAxisSampler() {}
   FreeMedialAxisSampler(Environment* _env, Stat_Class* _Stats, 
 			CollisionDetection* _cd, CDInfo* _cdInfo, 
-			DistanceMetric* _dm, int _c, int _p) :
+			shared_ptr<DistanceMetricMethod> _dm, int _c, int _p) :
     env(_env), Stats(_Stats), cd(_cd), cdInfo(_cdInfo), dm(_dm),
     clearance(_c), penetration(_p) {} 
   FreeMedialAxisSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) {
@@ -39,7 +39,8 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
   //strVcmethod = svc_method;
    cout << "strVcmethod = " << strVcmethod << endl;
   vc = in_pProblem->GetValidityChecker();
-  dm = in_pProblem->GetDistanceMetric();
+  string dm_label = in_Node.stringXMLParameter(string("dm_method"),true,string(""),string("Distance metric"));
+  dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
   cd = in_pProblem->GetCollisionDetection();
   strLabel= this->ParseLabelXML( in_Node);
   this->SetLabel(strLabel);

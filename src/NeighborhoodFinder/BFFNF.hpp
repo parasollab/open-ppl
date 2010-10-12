@@ -41,24 +41,18 @@ public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
   BFFNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(ParseLabelXML(in_Node)) {
-  cout<<"initialising BFFNF "<<endl;
-   dmm1 = in_pProblem->GetDistanceMetric()->GetDefault()[0];
-dmm2 = in_pProblem->GetDistanceMetric()->GetDefault()[1];
-m_scale = in_Node.numberXMLParameter("k_2", true, double(0.0),
-                                                  double(0.0), double(100.0),
-                                                  "K value for BFFNF");
-   // dmm1 = new EuclideanDistance();                     
-     // dmm2 = new RmsdDistance();
-
-    nf1 = new BFNF<CFG,WEIGHT>(dmm1 ,"nf1");
-    nf2 = new BFNF<CFG,WEIGHT>(dmm2 , "nf2");
+    NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node,in_pProblem) {
+    m_scale = in_Node.numberXMLParameter("k_2", true, double(0.0), double(0.0), double(100.0), "K value for BFFNF");
+    string dm2_label = in_Node.stringXMLParameter(string("dm2_method"),false,string("default"),string("Distance Metric Method"));
+    dmm2 = in_pProblem->GetDistanceMetric()->GetDMMethod(dm2_label);
   }
 
-  BFFNF(DistanceMetricMethod* _dmm1,DistanceMetricMethod*_dmm2, std::string _strLabel) :
+  BFFNF(DistanceMetricMethod* _dmm,DistanceMetricMethod*_dmm2, std::string _strLabel) :
     NeighborhoodFinderMethod(_strLabel) {
 //cout<<"initiliazing other constructor "<<endl;
-    dmm1= _dmm1 ;
+      nf1 = new BFNF<CFG,WEIGHT>(_dmm ,"nf1");
+    nf2 = new BFNF<CFG,WEIGHT>(_dmm2 , "nf2");
+    dmm= _dmm ;
     dmm2=_dmm2;
 }
  
@@ -113,16 +107,11 @@ m_scale = in_Node.numberXMLParameter("k_2", true, double(0.0),
 
 
 private:
-  //DistanceMetricMethod* dmm; ///\todo change to a nice typedef later!
-DistanceMetricMethod* dmm2;
-  DistanceMetricMethod* dmm1; ///\todo change to a nice typedef later!
-  BFNF<CFG,WEIGHT> *nf1;
 
-//http://www.centos.org/firefox/
+  shared_ptr<DistanceMetricMethod> dmm2;
+  BFNF<CFG,WEIGHT> *nf1;
   BFNF<CFG,WEIGHT> *nf2;
-     double m_scale;
-   
-        
+  double m_scale;
 };
 
 template<typename CFG, typename WEIGHT>
@@ -143,7 +132,7 @@ BFFNF<CFG,WEIGHT>::
 KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
   InputIterator _input_first, InputIterator _input_last, CFG _cfg, 
   int k, OutputIterator _out) {
-//cout<<"calling this KClosest"<<endl;
+
 
   
 }
@@ -169,7 +158,7 @@ OutputIterator
 BFFNF<CFG,WEIGHT>::
 KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   CFG _cfg, int k, OutputIterator _out) {
-//cout<<"calling the third one "<<endl;
+
     vector<VID> closest(m_scale);
     typename vector<VID>::iterator closest_iter = closest.begin();
     typename vector<VID>::iterator closest_iter2=closest.end();
@@ -179,27 +168,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
  nf1->KClosest(_rmp,_cfg,m_scale,closest_iter);
 nf2->KClosest(_rmp,closest_iter,closest_iter2,_cfg,k,_out);
  
-  /*for(myint=closest_iter;myint !=closest_iter2;myint++)
-   {
-  cout<<"output_k" <<*myint<<endl;
-  
-}
-for(int i =0;i<k;i++){
-cout<<"OUTPUT"<<*(_out++)<<endl;
-}*/
-}
 
-/*
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-BFFNF<CFG,WEIGHT>::
-KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _in1_first, InputIterator _in1_last, 
-    InputIterator _in2_first, InputIterator _in2_last, 
-    int k, OutputIterator _out)
-{
 }
-*/
 
 #endif //end #ifndef _BRUTE_FORCE_FIND_NEIGHBORHOOD_FINDER_H_

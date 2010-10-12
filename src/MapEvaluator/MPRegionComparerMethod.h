@@ -18,6 +18,10 @@ class MPRegionComparerMethod: public MPBaseObject {
     
     string filename = in_Node.stringXMLParameter(string("witness_file"),false,
                                     string(""),string("Witness Filename"));
+				    
+    dm_label = in_Node.stringXMLParameter(string("dm_method"), false, string("default"), string("Distance Metric Method"));
+    dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
+      
     if (filename.length() > 0) {
       Roadmap< CFG, WEIGHT > tmp_roadmap;
       tmp_roadmap.ReadRoadmapGRAPHONLY(filename.c_str());
@@ -35,7 +39,6 @@ class MPRegionComparerMethod: public MPBaseObject {
     LPOutput< CFG, WEIGHT > lp_output; 
     Environment * env = m_pProblem->GetEnvironment();
 //    CollisionDetection * cd = m_pProblem->GetCollisionDetection();
-    DistanceMetric * dm = m_pProblem->GetDistanceMetric();
     double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
     Stat_Class Stats;
@@ -66,7 +69,6 @@ class MPRegionComparerMethod: public MPBaseObject {
     LPOutput< CFG, WEIGHT > lp_output; 
     Environment * env = m_pProblem->GetEnvironment();
 //    CollisionDetection * cd = m_pProblem->GetCollisionDetection();
-    DistanceMetric * dm = m_pProblem->GetDistanceMetric();
     double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
     Stat_Class Stats;
@@ -236,6 +238,8 @@ class MPRegionComparerMethod: public MPBaseObject {
 
   MPProblem * m_pProblem;
   vector< CFG > m_witness_cfgs;
+  shared_ptr< DistanceMetricMethod> dm;
+  string dm_label;
 };
 
 
@@ -271,7 +275,8 @@ public:
 
 
 private:
-
+  string dm_label;
+  shared_ptr<DistanceMetricMethod> dm;
 };
 
 
@@ -628,7 +633,8 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
   }
 
 private:
-
+  string dm_label;
+  shared_ptr<DistanceMetricMethod> dm;
 };
 
 #endif /* _MPREGIONCOMPARERMETHOD_H_ */

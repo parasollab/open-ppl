@@ -21,7 +21,6 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
 #include "Query.h"
 
 #include "GeneratePartitions.h"
@@ -283,7 +282,6 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         pConnection = connectmap->GetNodeMethod(*itr);
         //cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
         connectmap->ConnectNodes(pConnection, region->GetRoadmap(), *pStatClass, 
-                             GetMPProblem()->GetDistanceMetric(), 
                              GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                              GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                              GetMPProblem()->GetMPStrategy()->addAllEdges,
@@ -467,7 +465,7 @@ private:
     vec_dist_vid.reserve(vec_cc.size());
     
     for(int i=0; i<vec_cc.size(); ++i) {
-      double dist = GetMPProblem()->GetDistanceMetric()->Distance(GetMPProblem()->GetEnvironment(),
+      double dist = dm->Distance(GetMPProblem()->GetEnvironment(),
                               _test, (*(_graph.find_vertex(vec_cc[i]))).property());
       vec_dist_vid.push_back(make_pair(dist, vec_cc[i]));
     }
@@ -477,8 +475,7 @@ private:
     LPOutput<CfgType,WeightType> out_lp_output;
     for(int i=0; i<vec_dist_vid.size(); ++i) {
       if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->
-              IsConnected(GetMPProblem()->GetEnvironment(), _mystat, 
-              GetMPProblem()->GetDistanceMetric(), 
+              IsConnected(GetMPProblem()->GetEnvironment(), _mystat, dm, 
               _test, (*(_graph.find_vertex(vec_dist_vid[i].second))).property(),  &out_lp_output, 
               GetMPProblem()->GetEnvironment()->GetPositionRes(), 
               GetMPProblem()->GetEnvironment()->GetOrientationRes(),
@@ -528,6 +525,7 @@ private:
   double m_posRes;
   int m_RegionNdx;
   bool resize_bbox;
+  shared_ptr<DistanceMetricMethod> dm;
   
 };
 
@@ -973,7 +971,7 @@ class BandsStats : public MPStrategyMethod {
       // note: BFNF neighborhood finder must be specified in XML file
       NeighborhoodFinder::NeighborhoodFinderPointer nfptr;
       nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod("BFNF");
-      DistanceMetricMethod *dmm = this->GetMPProblem()->GetDistanceMetric()->GetDefault()[0];
+      shared_ptr<DistanceMetricMethod> dmm = nfptr->GetDMMethod();
       
       Environment* _env = this->GetMPProblem()->GetEnvironment();
       
@@ -1101,7 +1099,7 @@ class BandsStats : public MPStrategyMethod {
 		      RoadmapGraph<CfgType,WeightType>* pMap = rmp.m_pRoadmap;
 		      CfgType cfg1 = (pMap->find_vertex((*iter).descriptor()))->property();
 		      CfgType cfg2 = (pMap->find_vertex(*iter2))->property();
-		      DistanceMetricMethod *dmm = this->GetMPProblem()->GetDistanceMetric()->GetDefault()[0];
+		      shared_ptr<DistanceMetricMethod>dmm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod("BFNF")->GetDMMethod();
 		      double dist=dmm->Distance(rmp.GetEnvironment(), cfg1, cfg2);
 		      count++;
 		      max_dist=max(max_dist,dist);

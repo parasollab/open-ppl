@@ -49,7 +49,7 @@ class ApproxSpheres: public LocalPlannerMethod<CFG, WEIGHT> {
   virtual 
     bool IsConnected(Environment *_env, Stat_Class& Stats,
 		     CollisionDetection *cd,
-		     DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+		     shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
 		     LPOutput<CFG, WEIGHT>* lpOutput,
 		     double positionRes, double orientationRes,
 		     bool checkCollision=true, 
@@ -140,7 +140,7 @@ template <class CFG, class WEIGHT>
 bool
 ApproxSpheres<CFG,WEIGHT>::
 IsConnected(Environment *_env, Stat_Class& Stats,
-	    CollisionDetection *cd, DistanceMetric *dm,
+	    CollisionDetection *cd, shared_ptr<DistanceMetricMethod >dm,
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
 	    bool checkCollision, 

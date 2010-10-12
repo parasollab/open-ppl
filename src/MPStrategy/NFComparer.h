@@ -21,7 +21,6 @@
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
-#include "GenerateMapNodes.h"
 #include "Query.h"
 
 #include "GeneratePartitions.h"
@@ -96,6 +95,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
       string outfile;
       int interval;
       int queries;
+      string dm_label;
    public:
       typedef RoadmapGraph<CfgType, WeightType>::VID VID;
 
@@ -123,6 +123,9 @@ class NFUnionRoadmap : public MPStrategyMethod {
                //cout<<"interval="<<interval<<endl;
                files.push_back(filename);
                //interval = citr->numberXMLParameter(string("interval"), true, 100, 1, 1000000, string("Same CC Printout Interval"));
+             }else if(citr->getName()=="dm_method"){
+               dm_label =citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
+               citr->warnUnrequestedAttributes();
             } else {
                citr->warnUnknownNode();
             }
@@ -565,6 +568,7 @@ class NFRoadmapCompare : public MPStrategyMethod {
       string outfile;
       int interval;
       int queries;
+      string dm_label;
    public:
       typedef RoadmapGraph<CfgType, WeightType>::VID VID;
 
@@ -629,7 +633,7 @@ class NFRoadmapCompare : public MPStrategyMethod {
          //cout<<"getting DMM"<<endl;
          //DistanceMetric* dmm=GetMPProblem()->GetDistanceMetric();
          //cout<<"getting Distance"<<endl;
-         double dist=GetMPProblem()->GetDistanceMetric()->Distance(GetMPProblem()->GetEnvironment(),cfg1,cfg2);
+         double dist=GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)->Distance(GetMPProblem()->GetEnvironment(),cfg1,cfg2);
          //cout<<"got Distance"<<endl;     
          return dist;
          //return dmm->Distance(rmp.GetEnvironment(), cfg1, cfg2);
@@ -948,7 +952,6 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
                pConnection = connectmap->GetNodeMethod(*itr);
                cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
                connectmap->ConnectNodes(pConnection, region->GetRoadmap(), *pStatClass, 
-                     GetMPProblem()->GetDistanceMetric(), 
                      GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                      GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                      GetMPProblem()->GetMPStrategy()->addAllEdges,
@@ -1088,6 +1091,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       virtual void Finalize(int in_RegionID){}
 
    private:
+      string dm_label;
 
       OnlineStats calcDegreeStats(RoadmapGraph<CfgType,WeightType>& _graph) {
          OnlineStats to_return;
@@ -1123,7 +1127,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
          vec_dist_vid.reserve(vec_cc.size());
 
          for(int i=0; i<vec_cc.size(); ++i) {
-            double dist = GetMPProblem()->GetDistanceMetric()->Distance(GetMPProblem()->GetEnvironment(),
+            double dist = GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)->Distance(GetMPProblem()->GetEnvironment(),
                   _test, (*(_graph.find_vertex(vec_cc[i]))).property());
             vec_dist_vid.push_back(make_pair(dist, vec_cc[i]));
          }
@@ -1134,7 +1138,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
          for(int i=0; i<vec_dist_vid.size(); ++i) {
             if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->
                   IsConnected(GetMPProblem()->GetEnvironment(), _mystat, 
-                     GetMPProblem()->GetDistanceMetric(), 
+                     GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label), 
                      _test, (*(_graph.find_vertex(vec_dist_vid[i].second))).property(),  &out_lp_output, 
                      GetMPProblem()->GetEnvironment()->GetPositionRes(), 
                      GetMPProblem()->GetEnvironment()->GetOrientationRes(),
@@ -1228,7 +1232,7 @@ class NFTester : public MPStrategyMethod {
          // Generate roadmap nodes
          //---------------------------
          NodeGenClock.StartClock("Node Generation");
-
+         
          typedef vector<string>::iterator I;
          for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
          {
@@ -1236,7 +1240,7 @@ class NFTester : public MPStrategyMethod {
             Sampler<CfgType>::SamplerPointer pNodeGen;
             pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(*itr);
             pNodeGen->GetSampler()->Sample(pNodeGen, GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 2*num_nodes, back_inserter(vectorCfgs));  
-
+            
             cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
             //for (int i = 0; i < vectorCfgs.size(); i++) {
             //  
@@ -1305,7 +1309,7 @@ class NFTester : public MPStrategyMethod {
                double ede = nf->EDE(region->GetRoadmap(),
                      query_point,baseline_closest.begin(), baseline_closest.end(),
                      nf_vids.begin(), nf_vids.end(), 
-                     GetMPProblem()->GetDistanceMetric()->GetDefault()[0]);
+                     GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
                //      cout << "EDE between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << ede << endl;
 
 
@@ -1313,20 +1317,20 @@ class NFTester : public MPStrategyMethod {
                double rde = nf->RDE(region->GetRoadmap(),
                      query_point, baseline_closest.begin(), baseline_closest.end(),
                      nf_vids.begin(), nf_vids.end(), 
-                     GetMPProblem()->GetDistanceMetric()->GetDefault()[0]);
+                     GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
                //      cout << "RDE between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << rde << endl;
 
 
                double rfd = nf->RFD(region->GetRoadmap(),
                      query_point, baseline_closest.begin(), baseline_closest.end(),
                      nf_vids.begin(), nf_vids.end(), 
-                     GetMPProblem()->GetDistanceMetric()->GetDefault()[0], 0.001);
+                     GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label), 0.001);
                //      cout << "RFD between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << rfd << endl;
 
                double oeps = nf->OEPS(region->GetRoadmap(),
                      query_point, baseline_closest.begin(), baseline_closest.end(),
                      nf_vids.begin(), nf_vids.end(),
-                     GetMPProblem()->GetDistanceMetric()->GetDefault()[0]);      
+                     GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));      
                //      cout << "OEPS between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << oeps << endl;
 
                m_map_nfp_RDE[(*nfitr)].AddData(rde);
@@ -1366,7 +1370,7 @@ class NFTester : public MPStrategyMethod {
             cout << "Number of Nodes: " << roadmap_vids.size() << endl;
             cout << "Number of Queries: " << m_BaselineNF->GetNumQueries() << endl;
             cout << "KClosest: " << m_kclosest << endl;
-            cout << "DistnaceMetric: "; GetMPProblem()->GetDistanceMetric()->GetDefault()[0]->PrintOptions(cout);
+            cout << "DistanceMetric: "; GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label);
             cout << "Baseline NF: "; m_BaselineNF->PrintOptions(cout);
             cout << "Test NF: "; (*nfitr)->PrintOptions(cout);
             /*  cout << "#AveBaseTotalTime, AveBaseQryTime, AveNFTotalTime, AveNFQryTime, MinEDE, MaxEDE, AveEDE, StdEDE, MinRDE, MaxRDE, "
@@ -1420,6 +1424,7 @@ class NFTester : public MPStrategyMethod {
       virtual void Finalize(int in_RegionID){}
 
    private:
+      string dm_label;
       int m_kclosest;
       vector<string> m_vecStrNodeGenLabels;
       vector<NeighborhoodFinder::NeighborhoodFinderPointer> m_vecNF;

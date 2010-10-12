@@ -20,7 +20,7 @@ class SmoothQueryStrategy : public QueryStrategy
  protected:
   string m_strSmoothPathFileLabel;
   vector<string> m_vecStrSmoothNodeConnectionLabels;
-
+  string dm_label;
   ConnectMap<CfgType, WeightType> m_SmoothConnectMap;
 };
 

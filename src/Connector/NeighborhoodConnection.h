@@ -73,14 +73,12 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
   // operates over all nodes in a roadmap
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        DistanceMetric * dm,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges) ;
 
   template<typename InputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        DistanceMetric * dm,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last) ;
@@ -89,7 +87,6 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
   template<typename InputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        DistanceMetric * dm,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
@@ -97,7 +94,6 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
     
   void ConnectNeighbors(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-        DistanceMetric * dm,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addAllEdges, 
         int &iter_success, int &iter_failure,
@@ -262,7 +258,6 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 void NeighborhoodConnection<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-            DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges) 
@@ -277,7 +272,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   vector<VID> vertices;
   pMap->GetVerticesVID(vertices);
   
-  ConnectNodes(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, 
+  ConnectNodes(_rm, Stats, lp, addPartialEdge, addAllEdges, 
         vertices.begin(), vertices.end());
 }
 
@@ -286,7 +281,6 @@ template <class CFG, class WEIGHT>
 template<typename InputIterator>
 void NeighborhoodConnection<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-            DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
@@ -353,7 +347,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	closest.pop_back();
       }
 
-      ConnectNeighbors(_rm, Stats, dm, lp, addAllEdges, iter_success, iter_failure, 
+      ConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, 
               total_success, total_failure, *itr1, closest);
     } while (m_unconnected && iter_success < k_to_find && iter_failure < m_fail && k_to_find < iter_size);
   }
@@ -374,7 +368,6 @@ template <class CFG, class WEIGHT>
 template<typename InputIterator>
 void NeighborhoodConnection<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-            DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
@@ -433,7 +426,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, closest_iter);      
         KClosestClock.StopClock();
         
-        ConnectNeighbors(_rm, Stats, dm, lp, addAllEdges, iter_success, iter_failure, 
+        ConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, 
                 total_success, total_failure, *itr1, closest);
       } while (m_unconnected && iter_success < k_to_find && iter_failure < m_fail && k_to_find < iter_size);
     }
@@ -446,13 +439,14 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 void NeighborhoodConnection<CFG,WEIGHT>::
 ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-            DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addAllEdges,
             int &iter_success, int &iter_failure, 
             int &total_success, int &total_failure,
             VID _vid, vector<VID> closest)
 {
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf)->GetDMMethod();
+  
   LPOutput<CFG,WEIGHT> lpOutput;
   
   int success = iter_success;

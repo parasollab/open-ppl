@@ -13,19 +13,17 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   Stat_Class *Stats;
   ValidityChecker<CFG>* vc;
   CDInfo *cdInfo;
-  DistanceMetric* dm;
+  shared_ptr<DistanceMetricMethod> dm;
   double d;
   bool useBBX;
   string strLabel;
   string strVcmethod;
-  DistanceMetricMethod* m_dmm;
 
  public:
  GaussRandomSampler() {}
  GaussRandomSampler(Environment* _env, Stat_Class& _Stats, 
-	                      CDInfo& _cdInfo, DistanceMetric* _dm, double _d = 0) :
+	                      CDInfo& _cdInfo, shared_ptr<DistanceMetric>_dm, double _d = 0) :
     env(_env), Stats(_Stats), cdInfo(_cdInfo), dm(_dm), d(_d) {
-    m_dmm = new EuclideanDistance();
     if(d == 0)
       d = (env->GetMultiBody(env->GetRobotIndex()))->GetMaxAxisRange();
   }
@@ -36,7 +34,8 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   cout << "GaussRandomSampler";
   cout << "strVcmethod = " << strVcmethod << endl;
   vc = in_pProblem->GetValidityChecker();
-  dm = in_pProblem->GetDistanceMetric();
+  string dm_label =in_Node.stringXMLParameter(string("dm_method"), true, string("default"), string("Distance Metric Method"));
+  dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label); 
   strLabel= this->ParseLabelXML( in_Node);
   this->SetLabel(strLabel);
   LOG_DEBUG_MSG("~GaussRandomSampler::GaussRandomSampler()");
@@ -204,7 +203,7 @@ class BridgeTestRandomFreeSampler : public SamplerMethod<CFG>
   ValidityChecker<CFG>* vc;
  // typename ValidityChecker<CFG>::VCMethodPtr vcm;
   CDInfo *cdInfo;
-  DistanceMetric* dm;
+  shared_ptr<DistanceMetricMethod> dm;
   double d;
   std::string strLabel;
   std::string strVcmethod;
@@ -212,7 +211,7 @@ class BridgeTestRandomFreeSampler : public SamplerMethod<CFG>
  public:
  BridgeTestRandomFreeSampler() {}
  BridgeTestRandomFreeSampler(Environment* _env, Stat_Class* _Stats, 
-	                      CDInfo* _cdInfo, DistanceMetric* _dm, double _d = 0) :
+	                      CDInfo* _cdInfo, shared_ptr<DistanceMetric> _dm, double _d = 0) :
     env(_env), Stats(_Stats), cdInfo(_cdInfo), dm(_dm), d(_d) {
     if(d == 0)
       d = (env->GetMultiBody(env->GetRobotIndex()))->GetMaxAxisRange();
@@ -225,9 +224,11 @@ class BridgeTestRandomFreeSampler : public SamplerMethod<CFG>
   strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
                                     string(""), string("Validity Test Method"));
   //strVcmethod = svc_method;
-   cout << "strVcmethod = " << strVcmethod << endl;
+  cout << "strVcmethod = " << strVcmethod << endl;
   vc = in_pProblem->GetValidityChecker();
-  dm = in_pProblem->GetDistanceMetric();
+  string dm_label = in_Node.stringXMLParameter(string("dm_method"), true, string("default"), string("Distance Metric Method"));
+  dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label); 
+ 
   strLabel= this->ParseLabelXML( in_Node);
   this->SetLabel(strLabel);
   LOG_DEBUG_MSG("~BridgeTestRandomFreeSampler::BridgeTestRandomFreeSampler()");

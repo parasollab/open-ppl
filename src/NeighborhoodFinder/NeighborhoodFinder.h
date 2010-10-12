@@ -29,7 +29,7 @@
 #include "CGALNF.hpp"
 #include "STNF.hpp"
 #include "MTNF.hpp"
-#include "BandsNF.hpp"
+#include "BandsNF.hpp" 
 //#include "DMNF.hpp"
 
 #include "PMPL_Container_Base.h"
@@ -54,7 +54,7 @@ namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail names
     CGALNF<CfgType,WeightType>,
     STNF<CfgType,WeightType>, 
     MTNF<CfgType,WeightType>,
-    BandsNF<CfgType,WeightType>
+    BandsNF<CfgType,WeightType> 
    // DMNF<CfgType,WeightType>
     > NeighborhoodFinderMethodList;
 }
@@ -94,8 +94,7 @@ private:
       } else if(citr->getName() == "DPESNF") {
         NeighborhoodFinderMethod* nf = new DPESNF<CfgType,WeightType>(*citr, in_pProblem);
         AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
-        } else if(citr->getName() == "BFFNF") {
-	cout<<"init bffnf"<<endl;
+      } else if(citr->getName() == "BFFNF") {
         NeighborhoodFinderMethod* nf = new BFFNF<CfgType,WeightType>(*citr, in_pProblem);
         AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
       } else if(citr->getName() == "MPNNNF") {
@@ -113,9 +112,9 @@ private:
       } else if(citr->getName() == "BandsNF") {
         NeighborhoodFinderMethod* nf = new BandsNF<CfgType,WeightType>(*citr, in_pProblem);
         AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
-     // } else if(citr->getName() == "DMNF") {
-       // NeighborhoodFinderMethod* nf = new DMNF<CfgType,WeightType>(*citr, in_pProblem);
-       // AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf)); 
+      //} else if(citr->getName() == "DMNF") {
+      //  NeighborhoodFinderMethod* nf = new DMNF<CfgType,WeightType>(*citr, in_pProblem);
+      //  AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf)); //Chinwe 
       }else {
         citr->warnUnknownNode();
       }
@@ -412,7 +411,6 @@ public:
   KClosest( Environment* _env, 
     InputIterator _intput_first, InputIterator _input_last, CFG _cfg, int k,
     OutputIterator _out);
-
   
   
   
@@ -476,33 +474,32 @@ public:
   RFD(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
       InputIterator _KNN_first, InputIterator _KNN_last,
       InputIterator _ANN_first, InputIterator _ANN_last,
-      DistanceMetricMethod* dmm, double _epsilon = double(0.0));
+      shared_ptr <DistanceMetricMethod> dmm, double _epsilon = double(0.0));
 
   template <typename InputIterator, typename CFG, typename WEIGHT, typename VID>
   double
   RDE(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
     InputIterator _KNN_first, InputIterator _KNN_last,
     InputIterator _ANN_first, InputIterator _ANN_last,
-    DistanceMetricMethod* dmm);
+    shared_ptr<DistanceMetricMethod> dmm);
 
   template <typename InputIterator, typename CFG, typename WEIGHT, typename VID>
   double
   EDE(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
     InputIterator _KNN_first, InputIterator _KNN_last,
     InputIterator _ANN_first, InputIterator _ANN_last,
-    DistanceMetricMethod* dmm);    
+    shared_ptr<DistanceMetricMethod> dmm);    
   
   template <typename InputIterator, typename CFG, typename WEIGHT, typename VID>
   double
   OEPS(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
     InputIterator _KNN_first, InputIterator _KNN_last,
     InputIterator _ANN_first, InputIterator _ANN_last,
-    DistanceMetricMethod* dmm);
+    shared_ptr <DistanceMetricMethod> dmm);
   
-  protected:
-    
-    DistanceMetric* dm;
-};
+ protected :
+   shared_ptr<DistanceMetricMethod> dm;
+ };
 
 
 
@@ -1046,7 +1043,7 @@ NeighborhoodFinder::
 RFD(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
     InputIterator _KNN_first, InputIterator _KNN_last,
     InputIterator _ANN_first, InputIterator _ANN_last,
-    DistanceMetricMethod* dmm, double _epsilon){
+    shared_ptr<DistanceMetricMethod> dmm, double _epsilon){
       /*cout << "NeighborhoodFinder::RFD()" << endl;
       cout << "KNN = ";
       for(InputIterator k_itr = _KNN_first; k_itr != _KNN_last; ++k_itr) {
@@ -1101,7 +1098,7 @@ NeighborhoodFinder::
 RDE(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
     InputIterator _KNN_first, InputIterator _KNN_last,
     InputIterator _ANN_first, InputIterator _ANN_last,
-    DistanceMetricMethod* dmm){
+    shared_ptr<DistanceMetricMethod> dmm){
     
    Environment* _env = _rmp->GetEnvironment();
    RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;  
@@ -1133,7 +1130,7 @@ NeighborhoodFinder::
 EDE(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
     InputIterator _KNN_first, InputIterator _KNN_last,
     InputIterator _ANN_first, InputIterator _ANN_last,
-    DistanceMetricMethod* dmm){
+    shared_ptr<DistanceMetricMethod> dmm){
       
    Environment* _env = _rmp->GetEnvironment();
    RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;  
@@ -1169,7 +1166,7 @@ NeighborhoodFinder::
 OEPS(Roadmap<CFG, WEIGHT>* _rmp, VID in_query,
     InputIterator _KNN_first, InputIterator _KNN_last,
     InputIterator _ANN_first, InputIterator _ANN_last,
-    DistanceMetricMethod* dmm){
+    shared_ptr< DistanceMetricMethod> dmm){
 
   Environment* _env = _rmp->GetEnvironment();
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;  

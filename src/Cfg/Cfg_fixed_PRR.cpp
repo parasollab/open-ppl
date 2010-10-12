@@ -158,7 +158,7 @@ void Cfg_fixed_PRR::GetRandomRay(double incr, Environment* env, DistanceMetric* 
   clearance = -1;
 }
 
-void Cfg_fixed_PRR::GetRandomRay(double incr, Environment* env, DistanceMetricMethod* dm) {
+void Cfg_fixed_PRR::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
   double alpha,beta,z, z1;
   
   alpha = 2.0*M_PI*OBPRM_drand();

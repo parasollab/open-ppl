@@ -43,6 +43,7 @@ class BasicPRMStrategy : public MPStrategyMethod
    vector<string> m_ComponentConnectionLabels;
    vector<string> m_EvaluatorLabels;
    string m_LPMethod;
+   string dm_label;
    int m_CurrentIteration;
 
  private:

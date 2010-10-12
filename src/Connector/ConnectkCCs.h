@@ -30,7 +30,7 @@ class ConnectkCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   // Constructors and Destructor
   ConnectkCCs();
   ConnectkCCs(Roadmap<CFG,WEIGHT>*, 
-              DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
+              DistanceMetricMethod*, LocalPlanners<CFG,WEIGHT>*);
   virtual ~ConnectkCCs();
  
   //////////////////////
@@ -45,14 +45,14 @@ class ConnectkCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 
   //Connect
   void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-         DistanceMetric* dm,
+         DistanceMetricMethod* dm,
          LocalPlanners<CFG,WEIGHT>* lp ,
          bool addPartialEdge,
          bool addAllEdges);
 
   template <typename InputIterator>
   void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-         DistanceMetric* dm,
+         DistanceMetricMethod* dm,
          LocalPlanners<CFG,WEIGHT>* lp,
          bool addPartialEdge,
          bool addAllEdges,
@@ -65,13 +65,13 @@ protected:
     // approximated using coms of ccs
     template <typename InputIterator>
     void compute_AllPairs_CCDist_com(Roadmap<CFG, WEIGHT>* _rm,
-                                                   DistanceMetric * dm,
+                                                   DistanceMetricMethod * dm,
                                                    InputIterator _ccs1_first, InputIterator _ccs1_last,
                                                    InputIterator _ccs2_first, InputIterator _ccs2_last);
     // compute all pair distance between ccs.
     // shortest dist betweem ccs
     void compute_AllPairs_CCDist_closest(Roadmap<CFG, WEIGHT>* _rm,
-                                                       DistanceMetric * dm,
+                                                       DistanceMetricMethod * dm,
                                                        vector<VID>& ccs1,vector<VID>& ccs2);
 
     //get k2 closest pairs
@@ -80,7 +80,7 @@ protected:
     CFG CC_com(RoadmapGraph<CFG, WEIGHT> *rmapG,VID vid);
 
     // get closest dist between two given CCs
-    double closestInterCCDist( Roadmap<CFG, WEIGHT>* _rm, DistanceMetric * dm,
+    double closestInterCCDist( Roadmap<CFG, WEIGHT>* _rm, DistanceMetricMethod * dm,
                                         vector<VID>& cc1, vector<VID>& cc2);
  private:
   //////////////////////
@@ -103,7 +103,7 @@ ConnectkCCs<CFG,WEIGHT>::ConnectkCCs():
 
 
 template <class CFG, class WEIGHT>
-ConnectkCCs<CFG,WEIGHT>::ConnectkCCs(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp):
+ConnectkCCs<CFG,WEIGHT>::ConnectkCCs(Roadmap<CFG,WEIGHT> * rdmp, DistanceMetricMethod* dm, LocalPlanners<CFG,WEIGHT>* lp):
   ComponentConnectionMethod<CFG,WEIGHT>(rdmp, dm, lp) {
   this->element_name = string("k-components");
 
@@ -155,7 +155,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 void ConnectkCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-          DistanceMetric * dm,
+          DistanceMetricMethod * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
       bool addAllEdges) {
@@ -214,7 +214,7 @@ template <class CFG, class WEIGHT>
 template<typename InputIterator>
 void ConnectkCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-          DistanceMetric * dm,
+          DistanceMetricMethod * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
           bool addAllEdges,
@@ -306,7 +306,7 @@ template <class CFG, class WEIGHT>
 void ConnectkCCs<CFG,WEIGHT>::
 compute_AllPairs_CCDist_closest
 (Roadmap<CFG, WEIGHT>* _rm,
- DistanceMetric * dm,
+ DistanceMetricMethod * dm,
  vector<VID>& ccs1,vector<VID>& ccs2)
 {
     RoadmapGraph<CFG,WEIGHT> * rmapG=_rm->m_pRoadmap;
@@ -331,7 +331,7 @@ compute_AllPairs_CCDist_closest
 
 template <class CFG, class WEIGHT>
 double ConnectkCCs<CFG,WEIGHT>::
-closestInterCCDist( Roadmap<CFG, WEIGHT>* _rm, DistanceMetric * dm,
+closestInterCCDist( Roadmap<CFG, WEIGHT>* _rm, DistanceMetricMethod * dm,
 vector<VID>& cc1, vector<VID>& cc2)
 {
     RoadmapGraph<CFG,WEIGHT> * rmapG=_rm->m_pRoadmap;
@@ -354,7 +354,7 @@ vector<VID>& cc1, vector<VID>& cc2)
 template <class CFG, class WEIGHT>
 template <typename InputIterator>
 void ConnectkCCs<CFG,WEIGHT>::
-compute_AllPairs_CCDist_com(Roadmap<CFG, WEIGHT>* _rm, DistanceMetric * dm,
+compute_AllPairs_CCDist_com(Roadmap<CFG, WEIGHT>* _rm, DistanceMetricMethod * dm,
                             InputIterator _ccs1_first, InputIterator _ccs1_last,
                             InputIterator _ccs2_first, InputIterator _ccs2_last)
 {

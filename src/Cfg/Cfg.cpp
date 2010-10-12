@@ -765,7 +765,7 @@ void Cfg::GetRandomCfg(Environment* env) {
 
 	
 // generates a random cfg with a given length 
-void Cfg::GetRandomCfg(Environment* env, DistanceMetric* dm, double length) {
+void Cfg::GetRandomCfg(Environment* env, shared_ptr<DistanceMetricMethod>dm, double length) {
   v = vector<double>(dof, 0);
   Cfg* origin = this->CreateNewCfg();
 
@@ -815,7 +815,7 @@ void
 Cfg::
 GetMedialAxisCfg(Environment* _env, Stat_Class& Stats,
 		 CollisionDetection* _cd,
-		 CDInfo& _cdInfo, DistanceMetric* _dm,
+		 CDInfo& _cdInfo, shared_ptr< DistanceMetricMethod> _dm,
 		 int clearance_n, int penetration_n) { 
   this->GetRandomCfg(_env);
   this->PushToMedialAxis(_env, Stats, _cd, _cdInfo, _dm, 
@@ -828,7 +828,7 @@ void
 Cfg::
 PushToMedialAxis(Environment *_env, Stat_Class& Stats,
 		 CollisionDetection *cd,
-		 CDInfo& cdInfo, DistanceMetric *dm,
+		 CDInfo& cdInfo, shared_ptr<DistanceMetricMethod>dm,
 		 int clearance_n, int penetration_n) {
   std::string Callee(GetName()),CallCnt("1");
   std::string Method("-Cfg::PushToMedialAxis");
@@ -854,7 +854,7 @@ void
 Cfg::
 MAPRMfree(Environment* _env, Stat_Class& Stats, 
 	  CollisionDetection* cd,
-	  CDInfo& cdInfo, DistanceMetric* dm,
+	  CDInfo& cdInfo, shared_ptr<DistanceMetricMethod> dm,
 	  int n) {
   //get clearance to c-obst
   ClearanceInfo clearInfo;
@@ -957,7 +957,7 @@ double
 Cfg::
 ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 		      CollisionDetection *cd, CDInfo& cdInfo,
-		      DistanceMetric* dm, 
+		      shared_ptr<DistanceMetricMethod> dm, 
 		      int n, bool bComputePenetration,
 		      int ignore_obstacle) const {
   ClearanceInfo clearInfo;
@@ -972,7 +972,7 @@ void
 Cfg::
 ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 		      CollisionDetection* cd, CDInfo& cdInfo,
-		      DistanceMetric* dm, 
+		      shared_ptr<DistanceMetricMethod> dm, 
 		      int n, ClearanceInfo& clearInfo,
 		      bool bComputePenetration,
 		      int ignore_obstacle) const {

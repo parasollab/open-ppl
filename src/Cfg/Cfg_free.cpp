@@ -204,7 +204,7 @@ void Cfg_free::GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
 }
 
 
-void Cfg_free::GetRandomRay(double incr, Environment* env, DistanceMetricMethod* dm) {
+void Cfg_free::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
   //randomly sample params
   v.clear();
   for(int i=0; i<DOF(); ++i)

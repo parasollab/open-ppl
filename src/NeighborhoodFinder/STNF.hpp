@@ -32,8 +32,8 @@ public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
   STNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(ParseLabelXML(in_Node)) {
-    dmm = in_pProblem->GetDistanceMetric()->GetDefault()[0];
+    NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node,in_pProblem) {
+  
 
     overlapDistance = in_Node.numberXMLParameter("overlapDistance", false, double(0.0),
             double(0.0), double(100.0),

@@ -18,7 +18,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
   Stat_Class *Stats;
   CollisionDetection* cd;
   CDInfo *cdInfo;
-  DistanceMetric* dm;
+  shared_ptr<DistanceMetricMethod >dm;
   ValidityChecker<CFG>* vc;
   std::string strVcmethod;
   std::string strLabel;
@@ -30,7 +30,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
   ObstacleBasedSampler() {}
   ObstacleBasedSampler(Environment* _env, Stat_Class& _Stats, 
 		       CollisionDetection* _cd, CDInfo& _cdInfo,
-		       DistanceMetric* _dm, int _free = 1, int _coll = 0, 
+		       shared_ptr<DistanceMetricMethod> _dm, int _free = 1, int _coll = 0, 
 		       double _step = 0) :
   env(_env), Stats(_Stats), cd(_cd), cdInfo(_cdInfo), dm(_dm),step_size(_step){ 
    /* n_shells_free(_free), n_shells_coll(_coll), step_size(_step) {*/
@@ -50,7 +50,8 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
   
   
   vc = in_pProblem->GetValidityChecker();
-  dm = in_pProblem->GetDistanceMetric();
+  string dm_label = in_Node.stringXMLParameter(string("dm_method"), true, string("default"), string("Distance Metric Method"));
+  dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
   env = in_pProblem->GetEnvironment();
   
   strLabel= this->ParseLabelXML( in_Node);
@@ -58,7 +59,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
     cout << "step_size = " << step_size << endl;
     if(step_size <= 0.0)
       step_size = min(env->GetPositionRes(), env->GetOrientationRes());
-     
+  
   LOG_DEBUG_MSG("~ObstacleBasedSampler::ObstacleBasedSampler()");
   }
   // fix this later

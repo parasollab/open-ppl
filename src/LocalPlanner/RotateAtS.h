@@ -39,7 +39,7 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
   virtual bool IsConnected(Environment *env, Stat_Class& Stats,
-         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
@@ -57,7 +57,7 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
  protected:
   virtual 
     bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
-         DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
@@ -176,7 +176,7 @@ template <class CFG, class WEIGHT>
 bool
 RotateAtS<CFG,WEIGHT>::
 IsConnected(Environment *_env, Stat_Class& Stats,
-      DistanceMetric *dm,
+     shared_ptr< DistanceMetricMethod>dm,
       const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
       double positionRes, double orientationRes,
       bool checkCollision, 
@@ -195,7 +195,7 @@ IsConnected(Environment *_env, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 bool
 RotateAtS<CFG,WEIGHT>::
-IsConnectedOneWay(Environment *_env, Stat_Class& Stats, DistanceMetric *dm,
+IsConnectedOneWay(Environment *_env, Stat_Class& Stats,shared_ptr< DistanceMetricMethod >dm,
       const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
       double positionRes, double orientationRes,
       bool checkCollision, 

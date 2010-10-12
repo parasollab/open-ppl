@@ -345,10 +345,10 @@ class Cfg {
   virtual void BinarySearch(Environment* env, DistanceMetric* dm, double length,
 			    const Cfg& low, const Cfg& high);
   */
-  virtual void GetRandomCfg(Environment* env, DistanceMetric* _dm,
+  virtual void GetRandomCfg(Environment* env, shared_ptr<DistanceMetricMethod> _dm,
           double length);
   virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm) = 0;
-  virtual void GetRandomRay(double incr, Environment* env, DistanceMetricMethod* dm) = 0;
+  virtual void GetRandomRay(double incr, Environment* env,  shared_ptr<DistanceMetricMethod> dm) = 0;
 
   /// generates random configuration that is in Free CSpace. 
   virtual void GetFreeRandomCfg(Environment* env, Stat_Class& Stats,
@@ -362,17 +362,17 @@ class Cfg {
   /// free c-space
   void GetMedialAxisCfg(Environment* _env, Stat_Class& Stats,
       CollisionDetection* _cd, CDInfo& _cdInfo, 
-      DistanceMetric* _dm, 
+      shared_ptr<DistanceMetricMethod>_dm, 
       int clearnce_n, int penetration_n);
   /// pushes a node towards the medial axis
   void PushToMedialAxis(Environment* _env, Stat_Class& Stats,
       CollisionDetection* cd, CDInfo& cdInfo, 
-      DistanceMetric* dm, 
+      shared_ptr<DistanceMetricMethod> dm, 
       int clearance_n, int penetration_n);
   /// pushes a free node towards the medial axis
   virtual void MAPRMfree(Environment* _env, Stat_Class& Stats,
        CollisionDetection* cd, CDInfo& cdInfo, 
-       DistanceMetric* dm, int n);
+       shared_ptr<DistanceMetricMethod> dm, int n);
     
 
   virtual bool GenerateOverlapCfg(Environment* env, int robot,
@@ -407,13 +407,13 @@ class Cfg {
   /// returns clearance in c-space
   double ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 			       CollisionDetection* cd, CDInfo& cdInfo, 
-			       DistanceMetric* dm, int n,
+			       shared_ptr<DistanceMetricMethod> dm, int n,
 			       bool bComputePenetration,
 			       int ignore_obstacle = -1) const;
   /// clearance and the direction set via ClearanceInfo
   void ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 			     CollisionDetection* cd, CDInfo& cdInfo,
-			     DistanceMetric* dm, int n,
+			     shared_ptr<DistanceMetricMethod> dm, int n,
 			     ClearanceInfo& clearInfo, 
 			     bool bComputePenetration,
 			     int ignore_obstacle = -1) const;

@@ -69,14 +69,12 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
   // operates over all nodes in a roadmap
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        DistanceMetric * dm,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges) ;
 
   template<typename InputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        DistanceMetric * dm,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last) ;
@@ -85,15 +83,13 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
   template<typename InputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        DistanceMetric * dm,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
-        InputIterator _itr2_first, InputIterator _itr2_last) ;
+        InputIterator _itr2_first, InputIterator _itr2_last) ; 
     
   void ConnectNeighbors(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-        DistanceMetric * dm,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addAllEdges, 
         int &total_success, int &total_failure,
@@ -118,6 +114,8 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
   bool m_unconnected;
   bool m_random;
   bool m_debug;
+  string dm_label;
+  shared_ptr<DistanceMetricMethod> dm;
 };
 
 
@@ -181,6 +179,8 @@ void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNodeReader& in_Node) {
   m_random = in_Node.boolXMLParameter(string("random"), false, false,
                                          string("if true, find k random configurations from destination vector"));
   m_debug = in_Node.boolXMLParameter(string("debug"), false, false, string(""));
+  dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
+                                    string("default"), string("Distance Metric Method"));
   
   
   XMLNodeReader::childiterator citr;
@@ -252,7 +252,6 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 void PreferentialAttachment<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-            DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges) 
@@ -267,7 +266,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   vector<VID> vertices;
   pMap->GetVerticesVID(vertices);
   
-  ConnectNodes(_rm, Stats, dm, lp, addPartialEdge, addAllEdges, 
+  ConnectNodes(_rm, Stats, lp, addPartialEdge, addAllEdges, 
         vertices.begin(), vertices.end());
 }
 
@@ -294,7 +293,6 @@ template <class CFG, class WEIGHT>
 template<typename InputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-            DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
@@ -330,7 +328,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
           KClosestClock.StopClock();
           if (m_debug) cout << "\tAttempting connections: VID = " << input_vertices[n] << "  --> " << candidate[0] << endl;
-          ConnectNeighbors(_rm, Stats, dm, lp, addAllEdges, total_success, total_failure, input_vertices[n], candidate);
+          ConnectNeighbors(_rm, Stats, lp, addAllEdges, total_success, total_failure, input_vertices[n], candidate);
           KClosestClock.StartClock("kClosest");
 
           attempts += 1;
@@ -359,7 +357,6 @@ template <class CFG, class WEIGHT>
 template<typename InputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-            DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
@@ -374,7 +371,6 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 void PreferentialAttachment<CFG,WEIGHT>::
 ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-            DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addAllEdges,
             int &total_success, int &total_failure,
@@ -439,7 +435,8 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
     // record the attempted connection
     Stats.IncConnections_Attempted();
-  
+
+    shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label);
     // attempt connection with the local planner
     if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
                 (*(_rm->m_pRoadmap->find_vertex(_vid))).property(),

@@ -40,7 +40,10 @@ void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
       else if(citr->getName() == "lp_method"){
          m_LPMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Local Planning Method"));
          citr->warnUnrequestedAttributes();
-      } 
+      } else if(citr->getName()=="dm_method"){
+         dm_label =citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
+         citr->warnUnrequestedAttributes();
+      }
       else
          citr->warnUnknownNode();
    }
@@ -183,8 +186,7 @@ void BasicPRMStrategy::ConnectNodes(MPRegion<CfgType, WeightType>* region,
       GetMPProblem()->GetMPStrategy()->
          GetConnectMap()->ConnectNodes(pConnection,
                                        region->GetRoadmap(), *(region->GetStatClass()),
-                                       GetMPProblem()->GetDistanceMetric(), 
-                                       GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+				       GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                        GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                        GetMPProblem()->GetMPStrategy()->addAllEdges,
                                        nodesVID.begin(), nodesVID.end(), 
@@ -221,7 +223,6 @@ void BasicPRMStrategy::ConnectComponents(MPRegion<CfgType, WeightType>* region)
          GetConnectMap()->ConnectComponents(pConnection,
                                             region->GetRoadmap(), 
                                             *(region->GetStatClass()),
-                                            GetMPProblem()->GetDistanceMetric(), 
                                             GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                             GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                             GetMPProblem()->GetMPStrategy()->addAllEdges);

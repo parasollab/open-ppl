@@ -5,7 +5,6 @@
 #include "OBPRMDef.h"
 #include "DistanceMetrics.h"
 #include "util.h"
-#include "MPProblem.h"
 
 #include "Clock_Class.h"
 #include <vector>
@@ -41,17 +40,10 @@ public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
   BFNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(ParseLabelXML(in_Node)) {
-    //dmm = in_pProblem->GetDistanceMetric()->GetDefault()[0];
-    // note: A temporary fix (hack) until distance metric is properly fixed. This picks the second listed
-    // distance metric from the xml file.
-    if(in_pProblem->GetDistanceMetric()->GetDefault().size() > 1)
-      dmm = in_pProblem->GetDistanceMetric()->GetDefault()[1];
-    else
-      dmm = in_pProblem->GetDistanceMetric()->GetDefault()[0];
-  }
+    NeighborhoodFinderMethod(ParseLabelXML(in_Node), in_Node, in_pProblem) {
+}
 
-  BFNF(DistanceMetricMethod* _dmm, std::string _strLabel) :
+  BFNF(DistanceMetricMethod*_dmm, std::string _strLabel) :
     NeighborhoodFinderMethod(_strLabel) {
     dmm = _dmm;
   }
@@ -104,9 +96,6 @@ public:
     InputIterator _in2_first, InputIterator _in2_last, 
     int k, OutputIterator _out);
 
-
-private:
-  DistanceMetricMethod* dmm; ///\todo change to a nice typedef later!
 };
 
 template<typename CFG, typename WEIGHT>

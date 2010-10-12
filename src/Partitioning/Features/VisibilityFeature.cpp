@@ -17,6 +17,7 @@ void VisibilityFeature::ParseXML(XMLNodeReader& in_Node){
    SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("Feature Value")));
    k = in_Node.numberXMLParameter(string("k"), true, 0, 0, MAX_INT, string("k value"));
    in_Node.warnUnrequestedAttributes();
+   string dm_label=in_Node.stringXMLParameter(string("dm_method"),true,string("default"),string("Distance Metric Method"));
 }
 
 vector<double> VisibilityFeature::Collect(vector<VID>& vids){
@@ -25,7 +26,7 @@ vector<double> VisibilityFeature::Collect(vector<VID>& vids){
    LocalPlanners<CfgType, WeightType>* sl=GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
    Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
    Environment *env = GetMPProblem()->GetEnvironment();
-   DistanceMetric *dm = GetMPProblem()->GetDistanceMetric();
+  shared_ptr <DistanceMetricMethod>dm = GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label);
    LPOutput<CfgType, WeightType> lp;
 
    vector<CfgType> cfgs;

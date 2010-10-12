@@ -54,6 +54,11 @@ ParseXML(XMLNodeReader& in_Node)
       m_evaluator_labels.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
     }
+    else if(citr->getName() == "stat_dm_method") 
+    {
+      dm_label = citr->stringXMLParameter(string("Method"),true, string(""),string("Distance Metric Method for Stats computations"));
+      citr->warnUnrequestedAttributes();
+    } 
     else 
       citr->warnUnknownNode();
   }
@@ -216,7 +221,6 @@ void HybridPRM::Run(int in_RegionID){
             ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
             connectmap->GetNodeMethod(*itr)->clear_connection_attempts();
             connectmap->ConnectNodes(connectmap->GetNodeMethod(*itr), region->GetRoadmap(), *pStatClass, 
-                                     GetMPProblem()->GetDistanceMetric(),
                                      GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), 
                                      GetMPProblem()->GetMPStrategy()->addPartialEdge,
                                      GetMPProblem()->GetMPStrategy()->addAllEdges,
@@ -386,8 +390,8 @@ void HybridPRM::Finalize(int in_RegionID){
   myofstream.close();
 
   //output stats
-  pStatClass->ComputeInterCCFeatures(&(region->roadmap), GetMPProblem()->GetDistanceMetric());
-  pStatClass->ComputeIntraCCFeatures(&(region->roadmap), GetMPProblem()->GetDistanceMetric());
+  pStatClass->ComputeInterCCFeatures(&(region->roadmap), GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
+  pStatClass->ComputeIntraCCFeatures(&(region->roadmap), GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
   string outStatname = base_filename+ ".stat";
   std::ofstream  stat_ofstream(outStatname.c_str());
   std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later

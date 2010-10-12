@@ -24,7 +24,7 @@
 //#include "ApproxSpheres.h"
 //#include "AStar.h" /*AStarDistance and AStarClearance defined here*/
 
-class DistanceMetric;
+class DistanceMetricMethod;
 
 
 template <class CFG, class WEIGHT>
@@ -63,21 +63,21 @@ class LocalPlanners : MPBaseObject{
   unsigned int GetCounter();
 
   bool IsConnected(Environment *env, Stat_Class& Stats,
-       DistanceMetric *,
+       shared_ptr<DistanceMetricMethod>,
        CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput, 
        double positionRes, double orientationRes, 
        bool checkCollision=true, 
        bool savePath=false, bool saveFailedPath=false);
 
   bool IsConnected(Roadmap<CFG, WEIGHT> *rm, Stat_Class& Stats,
-       DistanceMetric *dm,
+       shared_ptr <DistanceMetricMethod>dm,
        CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
        double positionRes, double orientationRes, 
        bool checkCollision=true, 
        bool savePath=false, bool saveFailedPath=false);
 
   bool IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats, 
-       DistanceMetric *dm,
+       shared_ptr<DistanceMetricMethod>dm,
        CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
        double positionRes, double orientationRes, 
        bool checkCollision=true, 
@@ -86,7 +86,7 @@ class LocalPlanners : MPBaseObject{
   bool UsesPlannerOtherThan(char plannerName[]);
 
   bool GetPathSegment(Environment *_env, Stat_Class& Stats, 
-          DistanceMetric *dm, CFG _c1, CFG _c2, WEIGHT _weight, 
+          shared_ptr<DistanceMetricMethod>dm, CFG _c1, CFG _c2, WEIGHT _weight, 
           LPOutput<CFG,WEIGHT>* _ci,      
           double positionRes, double orientationRes, 
           bool checkCollision=true, 
@@ -101,6 +101,7 @@ class LocalPlanners : MPBaseObject{
 
   //////////////////////
   // Data
+  
   vector<LocalPlannerMethod<CFG, WEIGHT>*> all;
   vector<LocalPlannerMethod<CFG, WEIGHT>*> selected;
 
@@ -420,7 +421,7 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 IsConnected(Environment *_env, Stat_Class& Stats, 
-      DistanceMetric *dm,
+     shared_ptr< DistanceMetricMethod> dm,
       CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
       double positionRes, double orientationRes, 
       bool checkCollision, 
@@ -473,7 +474,7 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 IsConnected(Roadmap<CFG, WEIGHT> *rm, Stat_Class& Stats, 
-      DistanceMetric *dm,
+     shared_ptr< DistanceMetricMethod> dm,
       CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
       double positionRes, double orientationRes, 
       bool checkCollision, 
@@ -493,7 +494,7 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats,
-      DistanceMetric *dm,
+     shared_ptr< DistanceMetricMethod>dm,
       CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
       double positionRes, double orientationRes, 
       bool checkCollision, 
@@ -527,7 +528,7 @@ template <class CFG, class WEIGHT>
 bool
 LocalPlanners<CFG,WEIGHT>::
 GetPathSegment(Environment *_env, Stat_Class& Stats, 
-         DistanceMetric *dm, 
+         shared_ptr<DistanceMetricMethod>dm, 
          CFG _c1, CFG _c2, WEIGHT _weight, 
          LPOutput<CFG,WEIGHT>* _ci,     
          double positionRes, double orientationRes, 

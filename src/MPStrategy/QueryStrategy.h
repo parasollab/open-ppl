@@ -27,7 +27,7 @@ protected:
   string m_strMapFileLabel;
   string m_strQueryFileLabel;
   string m_strPathFileLabel;
-  
+  string dm_label;
   Query<CfgType, WeightType> query;
   ConnectMap<CfgType, WeightType> m_ConnectMap;
 };

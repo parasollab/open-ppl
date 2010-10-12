@@ -48,7 +48,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
                             double length);
   */
   virtual void GetRandomCfg_CenterOfMass(Environment* env);
-  virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm);
+  virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm);
 
   /*
   virtual void MAPRMfree(Environment* _env, Stat_Class& Stats,

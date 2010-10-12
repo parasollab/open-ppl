@@ -93,7 +93,7 @@ public:
 			       vector<VID>& attemptedPath,
 			       Stat_Class& Stats, 
 			       LocalPlanners<CFG,WEIGHT>* lp, 
-			       DistanceMetric* dm, 
+			       shared_ptr< DistanceMetricMethod> dm, 
 			       vector<CFG>& recreatedPath);
     //@}
 
@@ -123,7 +123,7 @@ public:
 	        ConnectMap<CFG, WEIGHT> *cn, 
           vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
           LocalPlanners<CFG,WEIGHT> * lp,
-          DistanceMetric * dm);
+          shared_ptr< DistanceMetricMethod > dm);
 
         /**Query path for two given Cfgs.
           *Algorithm:
@@ -160,7 +160,7 @@ public:
 			  ConnectMap<CFG, WEIGHT>*, 
         vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
 			  LocalPlanners<CFG,WEIGHT>*, 
-			  DistanceMetric*, 
+			  shared_ptr<DistanceMetricMethod>, 
 			  vector<CFG>* _path);
 
     //@}
@@ -210,7 +210,7 @@ class QueryConnect : public ConnectMap<CFG,WEIGHT> {
  public:
   QueryConnect() : ConnectMap<CFG,WEIGHT>() {}
   QueryConnect(Roadmap<CFG,WEIGHT>* rm,
-	       DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp) :
+	       shared_ptr< DistanceMetricMethod> dm, LocalPlanners<CFG,WEIGHT>* lp) :
     ConnectMap<CFG,WEIGHT>() {}
   ~QueryConnect() {
     this->selected_node_methods.clear();
@@ -312,7 +312,7 @@ bool
 Query<CFG, WEIGHT>::
 PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
         ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
-        LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm) 
+        LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm) 
 {
   for(typename vector<CFG>::iterator Q = query.begin(); 
       (Q+1) != query.end(); ++Q) {
@@ -337,7 +337,7 @@ bool
 Query<CFG, WEIGHT>::
 PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
 	     ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections, 
-       LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm, vector<CFG>* _path) {
+       LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm, vector<CFG>* _path) {
 
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
   VID scvid, gcvid;
@@ -377,7 +377,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
 
       for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
-        cn->ConnectNodes(*itr, rdmp, Stats, dm, lp, false, false, 
+        cn->ConnectNodes(*itr, rdmp, Stats, lp, false, false, 
                         verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
     }
@@ -394,7 +394,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       vector<VID> verticesList(1, gvid);
       
       for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
-        cn->ConnectNodes(*itr, rdmp, Stats, dm, lp, false, false, 
+        cn->ConnectNodes(*itr, rdmp, Stats, lp, false, false, 
                         verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
     }
@@ -425,9 +425,9 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       //if(CanRecreatePath(rdmp, rp, Stats, lp, dm, recreatedPath)) {
       if(CanRecreatePath(rdmp, _rp, Stats, lp, dm, recreatedPath)) {
 	connected = true;
-	_path->insert(_path->end(), 
-		      recreatedPath.begin(), recreatedPath.end());
-	break;
+       _path->insert(_path->end(),
+                     recreatedPath.begin(), recreatedPath.end());
+       break;
       } else
         cout << endl << "Failed to recreate path\n";
     }
@@ -436,8 +436,8 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       //Print out all start, all graph nodes, goal
       //ie, *NO* "ticks" from local planners
       vector<CFG> _mapcfgs;
-      for(typename vector<VID>::iterator I = _rp.begin(); 
-	  I != _rp.end(); ++I)
+      for(typename vector<VID>::iterator I = _rp.begin();
+          I != _rp.end(); ++I)
         _mapcfgs.push_back((*(rdmp->m_pRoadmap->find_vertex(*I))).property());
       WritePathConfigurations("mapnodes.path", _mapcfgs, rdmp->GetEnvironment());
 /*
@@ -462,7 +462,7 @@ Query<CFG, WEIGHT>::
 CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
                 vector<VID >& attemptedPath,
                 Stat_Class& Stats,
-                LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm,
+                LocalPlanners<CFG,WEIGHT>* lp, shared_ptr< DistanceMetricMethod> dm,
                 vector<CFG>& recreatedPath) {
   LPOutput<CFG,WEIGHT> ci;
 

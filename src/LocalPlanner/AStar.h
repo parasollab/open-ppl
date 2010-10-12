@@ -49,7 +49,7 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
   virtual 
     bool IsConnected(Environment *env, Stat_Class& Stats,
 		     CollisionDetection *cd,
-		     DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+		     shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
 		     LPOutput<CFG, WEIGHT>* lpOutput,
 		     double positionRes, double orientationRes,
 		     bool checkCollision=true, 
@@ -58,13 +58,13 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
   virtual 
     bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
 			   CollisionDetection *cd,
-			   DistanceMetric *dm, const CFG &_c1, const CFG &_c2, 
+			   shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
 			   LPOutput<CFG, WEIGHT>* lpOutput,
 			   double positionRes, double orientationRes,
 			   bool checkCollision=true, 
 			   bool savePath=false, bool saveFailedPath=false);
 
-  virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, DistanceMetric *dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) = 0;
+  virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CollisionDetection *cd,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) = 0;
   //@}
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -139,7 +139,7 @@ template <class CFG, class WEIGHT>
 bool
 AStar<CFG,WEIGHT>::
 IsConnected(Environment *_env, Stat_Class& Stats, 
-	    CollisionDetection *cd, DistanceMetric *dm, 
+	    CollisionDetection *cd,shared_ptr< DistanceMetricMethod >dm, 
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
 	    bool checkCollision, 
@@ -159,7 +159,7 @@ template <class CFG, class WEIGHT>
 bool
 AStar<CFG,WEIGHT>::
 IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
-		  CollisionDetection *cd, DistanceMetric *dm, 
+		  CollisionDetection *cd,shared_ptr< DistanceMetric >dm, 
 		  const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 		  double positionRes, double orientationRes,
 		  bool checkCollision, 
@@ -260,7 +260,7 @@ class AStarDistance: public AStar<CFG, WEIGHT> {
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
   virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
-				    CollisionDetection *cd, DistanceMetric *dm,
+				    CollisionDetection *cd, shared_ptr<DistanceMetricMethod >dm,
 				    const CFG &_c1, const CFG &_c2,
 				    vector<Cfg*> &neighbors); 
 };
@@ -296,7 +296,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 int
 AStarDistance<CFG, WEIGHT>::
-ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, DistanceMetric *dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
+ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CollisionDetection *cd,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
   double minDistance=MAXFLOAT;
   int retPosition=0;
   double value = 0;
@@ -325,7 +325,7 @@ class AStarClearance: public AStar<CFG, WEIGHT> {
 
   virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
 				    CollisionDetection *cd,
-				    DistanceMetric *dm, 
+				    shared_ptr<DistanceMetricMethod >dm, 
 				    const CFG &_c1, const CFG &_c2,
 				    vector<Cfg*> &neighbors); 
 };
@@ -361,7 +361,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 int
 AStarClearance<CFG, WEIGHT>::
-ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CollisionDetection *cd, DistanceMetric *dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
+ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CollisionDetection *cd,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
   double maxClearance=-MAXFLOAT;
   int retPosition=0;
   double value = 0;

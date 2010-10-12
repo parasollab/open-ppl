@@ -4,12 +4,18 @@
 #include <string>
 #include <iostream>
 #include "LabeledObject.h"
+#include "MPProblem.h"
 
 class NeighborhoodFinderMethod : public LabeledObject  {
 
 public:
-  NeighborhoodFinderMethod(std::string in_strLabel) : 
-        LabeledObject(in_strLabel), m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) { }
+  NeighborhoodFinderMethod(std::string in_strLabel, XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
+        LabeledObject(in_strLabel), m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) 
+  { 
+    string dm_label = in_Node.stringXMLParameter(string("dm_method"), true, string("default"), string("Distance Metric Method"));
+    dmm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
+  }
+  
   NeighborhoodFinderMethod() : m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) { }
   virtual const std::string GetName () const = 0;
   virtual void PrintOptions(std::ostream& out_os) const = 0;
@@ -18,8 +24,9 @@ public:
   double GetTotalTime() const { return m_total_time; }
   double GetConstructionTime() const { return m_construction_time; }
   int GetNumQueries() const { return m_num_queries; }
-  
-  
+
+  shared_ptr<DistanceMetricMethod> GetDMMethod() { return dmm; }
+ 
 /*
 
 The following methods are not in the base class because we want 
@@ -67,6 +74,7 @@ protected:
   
   void IncrementNumQueries() { ++m_num_queries; }
 
+  shared_ptr<DistanceMetricMethod> dmm;
 };
 
 #endif //end #ifndef _NEIGHBORHOOD_FINDER_METHOD_H_
