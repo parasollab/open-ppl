@@ -46,19 +46,20 @@ public:
     string dm2_label = in_Node.stringXMLParameter(string("dm2_method"),true,string(""),string("Distance Metric Method the second one"));
     dmm2 = in_pProblem->GetDistanceMetric()->GetDMMethod(dm2_label);
     
-      nf1 = new BFNF<CFG,WEIGHT>(dmm,"label");
-    nf2 = new BFNF<CFG,WEIGHT>(dmm2, "label");
+      nf1 = new BFNF<CFG,WEIGHT>(dmm);
+    nf2 = new BFNF<CFG,WEIGHT>(dmm2);
   }
-
-  BFFNF(shared_ptr<DistanceMetricMethod> _dmm,shared_ptr<DistanceMetricMethod>_dmm2) :
+ BFFNF(shared_ptr<DistanceMetricMethod> _dmm,shared_ptr<DistanceMetricMethod>_dmm2,double _k2) :
     NeighborhoodFinderMethod() {
-//cout<<"initiliazing other constructor "<<endl;
-    
+//cout<<"initializing other constructor "<<endl;
+
+   nf1 = new BFNF<CFG,WEIGHT>(_dmm);
+    nf2 = new BFNF<CFG,WEIGHT>(_dmm2);
+
+    m_scale=_k2;
     dmm= _dmm ;
     dmm2=_dmm2;
 }
-
-
   virtual const std::string GetName () const {
     return BFFNF::GetClassName();
   }

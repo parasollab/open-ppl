@@ -43,7 +43,7 @@ public:
     NeighborhoodFinderMethod(ParseLabelXML(in_Node), in_Node, in_pProblem) {
 }
 
-  BFNF(shared_ptr<DistanceMetricMethod>_dmm, std::string _strLabel) :
+  BFNF(shared_ptr<DistanceMetricMethod>_dmm) :
     NeighborhoodFinderMethod() {
     dmm = _dmm;
   }
