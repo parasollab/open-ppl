@@ -236,9 +236,60 @@ divide(const Cfg&, double) {
 
 void 
 Cfg_reach_cc::
-WeightedSum(const Cfg&, const Cfg&, double weight) {
-  cerr << "Warning, WeightedSum not implmeneted yet\n";
-  exit(-1);
+WeightedSum(const Cfg& c1, const Cfg& c2, double weight) {
+  //check if the input weight parameter is between 0 and 1
+  if(!((weight >= 0) && (weight <= 1)))
+  {
+    cerr << "\n\n Error in Cfg_reach_cc::WeightedSum, weight is not feasible, exiting.\n";
+    exit(-1);
+  }
+  //check if link orientations differ by more than concave/convec <-> flat
+  if(OrientationsDifferent((Cfg_reach_cc&)c1, (Cfg_reach_cc&)c2))
+  {
+    vector<int>::const_iterator I = ((Cfg_reach_cc&)c1).link_orientations.begin();
+    vector<int>::const_iterator J = ((Cfg_reach_cc&)c2).link_orientations.begin();
+    for(; I != ((Cfg_reach_cc&)c1).link_orientations.end() && J != ((Cfg_reach_cc&)c2).link_orientations.end(); ++I, ++J)
+    {
+      if(abs(*I - *J) > 1)
+      {
+        cerr << "\n\nError in Cfg_reach_cc::WeightedSum, weighting cfgs with too great an orientation difference, exiting.\n";
+        cerr << "\tc1 = "; ((Cfg_reach_cc&)c1).print(cerr); cerr << endl;
+        cerr << "\tc2 = "; ((Cfg_reach_cc&)c2).print(cerr); cerr << endl;
+        exit(-1);
+      }  
+    }
+  }
+
+  vector<double> _v1 = c1.GetData();
+  vector<double> _v2 = c2.GetData();
+  for(int i=0; i<6; ++i)
+    v[i] = _v1[i]*(1-weight) + _v2[i]*weight;
+
+  //compute link lengths
+  link_lengths.clear();
+  vector<double>::const_iterator I = ((Cfg_reach_cc&)c1).link_lengths.begin();
+  vector<double>::const_iterator J = ((Cfg_reach_cc&)c2).link_lengths.begin();
+  for(; I != ((Cfg_reach_cc&)c1).link_lengths.end() && J != ((Cfg_reach_cc&)c2).link_lengths.end(); ++I, ++J)
+  {
+    link_lengths.push_back((*I)*(1-weight) + (*J)*weight);
+  }
+
+  //compute link orientations
+  link_orientations.clear();
+
+  for(size_t i=0; i<min((((Cfg_reach_cc&)c1).link_orientations.size()), ((Cfg_reach_cc&)c2).link_orientations.size()); ++i)
+  {
+    if((((Cfg_reach_cc&)c1).link_orientations[i]) == (((Cfg_reach_cc&)c2).link_orientations[i]))
+      link_orientations.push_back(((Cfg_reach_cc&)c1).link_orientations[i]);
+    //take the non-flat value from first cfg or second cfg
+    else if (((Cfg_reach_cc&)c1).link_orientations[i] != 0)
+      link_orientations.push_back(((Cfg_reach_cc&)c1).link_orientations[i]);
+    else
+      link_orientations.push_back(((Cfg_reach_cc&)c2).link_orientations[i]);
+  }
+
+  //convert lengths and orientations into joint angles
+  StoreData();
 }
 
 void 
