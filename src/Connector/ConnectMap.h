@@ -14,12 +14,6 @@
 #include "NodeConnectionMethod.h"
 #include "NeighborhoodConnection.h"
 #include "PreferentialAttachment.h"
-#include "Closest.h"
-//#include "ClosestUnconnected.h"
-#include "ClosestSF.h"
-//#include "AllPairsNodeConnection.h"
-//#include "UnconnectedClosest.h"
-//#include "RandomConnect.h"
 
 // look these over before updating
 //#include "ModifiedLM.h"
@@ -27,7 +21,6 @@
 //#include "ClosestVE.h"
 //#include "RRTexpand.h"
 //#include "RayTracer.h"
-#include "ConnectFirst.h"
 
 //component connection methods
 #include "ComponentConnectionMethod.h"
@@ -57,9 +50,6 @@ namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail names
   typedef boost::mpl::list<
       NeighborhoodConnection<CfgType,WeightType>,
       PreferentialAttachment<CfgType,WeightType>
-//    Closest<CfgType,WeightType>
-//    ,ClosestUnconnected<CfgType,WeightType>
-//    ,ClosestSF<CfgType,WeightType>
     > NodeConnectorMethodList;
 
   typedef boost::mpl::list<

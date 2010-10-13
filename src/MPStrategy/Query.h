@@ -225,8 +225,7 @@ class QueryConnect : public ConnectMap<CFG,WEIGHT> {
 
   virtual vector<NodeConnectionMethod<CFG,WEIGHT>*> GetNodeDefault() {
     vector<NodeConnectionMethod<CFG,WEIGHT>*> tmp;
-    ConnectFirst<CFG,WEIGHT>* connectFirst = new ConnectFirst<CFG,WEIGHT>();
-    connectFirst->SetDefault();
+    NeighborhoodConnection<CFG,WEIGHT>* connectFirst = new NeighborhoodConnection<CFG,WEIGHT>(1, 1, false, true, false);
     tmp.push_back(connectFirst);
     return tmp;
   }

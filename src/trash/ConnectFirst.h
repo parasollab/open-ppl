@@ -30,11 +30,11 @@ class ConnectFirst : public NodeConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Core: Connection method
   void Connect(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats, 
-	       DistanceMetricMethod* dm,
+	       DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges);  
   void Connect(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats,
-	       DistanceMetricMethod* dm,
+	       DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges,
 	       vector<VID>& cfgs1, vector<VID>& cfgs2);
@@ -134,7 +134,7 @@ template <class CFG, class WEIGHT>
 void 
 ConnectFirst<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        DistanceMetricMethod* dm,
+        DistanceMetric* dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
 	bool addPartialEdge, bool addAllEdges) {
   vector<VID> cfgs;
@@ -148,7 +148,7 @@ template <class CFG, class WEIGHT>
 void 
 ConnectFirst<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-	DistanceMetricMethod* dm,
+	DistanceMetric* dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
 	bool addPartialEdge, bool addAllEdges,
 	vector<VID>& cfgs1, vector<VID>& cfgs2) {
