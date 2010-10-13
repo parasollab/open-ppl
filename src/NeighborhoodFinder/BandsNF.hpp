@@ -70,7 +70,7 @@ public:
     
     int max_index = 0;
     double max_value = MAX_DIST;
-    vector< pair<VID, double> > neighbors(getK(), make_pair(-1, max_value));
+    vector< pair<VID, double> > neighbors(getK(), make_pair(INVALID_VID, max_value));
         
     for (VEC_ITR itr = _candidates_first; itr != _candidates_last; ++itr) {
       
@@ -82,7 +82,7 @@ public:
         max_value = dist;
 
         //search for new max_index (faster O(k) than sort O(k log k) )
-        for (size_t p = 0; p < getK(); ++p) {
+        for (int p = 0; p < getK(); ++p) {
           if (max_value < neighbors[p].second) {
             max_value = neighbors[p].second;
             max_index = p;
@@ -640,7 +640,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   
   OutputIterator out_iter=_out;
   for(int i=0; i<k; i++){
-    *out_iter=-999;
+    *out_iter= INVALID_VID;
     ++out_iter;
   }
   
@@ -668,7 +668,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     
     typename vector< pair<VID, double> >::iterator itr;
     for (itr = band_neighbors.begin(); itr != band_neighbors.end(); ++itr) {
-      if ((*itr).first != -1) {
+      if ((*itr).first != INVALID_VID) {
         if (m_debug) cout << "neighbor: VID = " << (*itr).first << " | dist = " << (*itr).second << endl;
         neighbors.push_back(*itr);
       }
@@ -679,7 +679,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     
   // now add VIDs from neighbors to output
   for (size_t p = 0; p < neighbors.size(); p++) {
-    if (neighbors[p].first != VID(-999)) {
+    if (neighbors[p].first != INVALID_VID) {
       if (m_debug) cout << "\tVID = " << neighbors[p].first << " | dist = " << neighbors[p].second << endl;
       *_out = neighbors[p].first;
       ++_out;
@@ -852,7 +852,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   
   int max_index = 0;
   double max_value = MAX_DIST;
-  vector< pair< VID, double > > closest(k, make_pair(-999, max_value));
+  vector< pair< VID, double > > closest(k, make_pair(INVALID_VID, max_value));
 
   // iterate and find closest k
   typename RoadmapGraph<CFG,WEIGHT>::VI V1;
@@ -887,7 +887,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   EndConstructionTime();
   // now add VIDs from closest to
   for (int p = 0; p < closest.size(); p++) {
-    if (closest[p].first != -999) {
+    if (closest[p].first != INVALID_VID) {
       *_out = closest[p].first;
       ++_out;
     }
@@ -917,7 +917,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _in1_first, InputIterato
   InputIterator V1, V2;
   for(V1 = _in1_first; V1 != _in1_last; ++V1) {
     // initialize w/ k elements each with huge distance...                        
-    vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
+    vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(INVALID_VID,INVALID_VID),
     max_value));
     CFG v1 = (*(pMap->find_vertex(*V1))).property();
     for(V2 = _in2_first; V2 != _in2_last; ++V2) {
@@ -931,7 +931,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _in1_first, InputIterato
         max_value = dist;
       
         //search for new max_index (faster O(k) than sort O(k log k) )                  
-        for (int p = 0; p < kp.size(); ++p) {
+        for (size_t p = 0; p < kp.size(); ++p) {
           if (max_value < kp[p].second) {
             max_value = kp[p].second;
             max_index = p;
@@ -945,7 +945,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _in1_first, InputIterato
   sort(kall.begin(), kall.end(), DIST_Compare<VID>());
   
   for (int p = 0; p < k; ++p) {
-    if (kall[p].first.first != -999 && kall[p].first.second != -999){
+    if (kall[p].first.first != INVALID_VID && kall[p].first.second != INVALID_VID){
       *_out = kall[p].first;
       ++_out;
     }
