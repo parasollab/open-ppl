@@ -96,10 +96,12 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
             cit->isCollision(GetMPProblem()->GetEnvironment(),*(region->GetStatClass()),GetMPProblem()->GetCollisionDetection(), cdInfo);
          }
          if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
-            VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
-            //store value and increment iterator
-            *thisIterationOut++ = vid;
-            *allOut++ = vid;
+            if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+              VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
+              //store value and increment iterator
+              *thisIterationOut++ = vid;
+              *allOut++ = vid;
+            }
          }
       }
    }
