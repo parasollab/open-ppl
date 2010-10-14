@@ -132,11 +132,52 @@ equals(const Cfg& c) {
 
 void 
 Cfg_reach_cc::
-add(const Cfg&, const Cfg&) {
-  cerr << "Warning, add not implmeneted yet\n";
-  exit(-1);
-}
+add(const Cfg& c1, const Cfg& c2) {
+  
+  if(OrientationsDifferent((Cfg_reach_cc&)c1, (Cfg_reach_cc&)c2))
+  {
 
+    vector<int>::const_iterator I = ((Cfg_reach_cc&)c1).link_orientations.begin();
+    vector<int>::const_iterator J = ((Cfg_reach_cc&)c2).link_orientations.begin();
+    for(; I != ((Cfg_reach_cc&)c1).link_orientations.end() && J != ((Cfg_reach_cc&)c2).link_orientations.end(); ++I, ++J)
+      if(abs(*I - *J) > 1)
+      {
+        cerr << "\n\nError in Cfg_reach_cc::add, adding cfgs with too great an orientation difference, exiting.\n";
+        cerr << "\tc1 = "; ((Cfg_reach_cc&)c1).print(cerr); cerr << endl;
+        cerr << "\tc2 = "; ((Cfg_reach_cc&)c2).print(cerr); cerr << endl;
+        exit(-1);
+      }
+  }
+  
+  vector<double> _v1 = c1.GetData();
+  vector<double> _v2 = c2.GetData();
+  for(int i=0; i<6; ++i)
+    v[i] = _v1[i] + _v2[i];
+
+  link_lengths.clear();
+  transform(((Cfg_reach_cc&)c1).link_lengths.begin(), ((Cfg_reach_cc&)c1).link_lengths.end(),
+	    ((Cfg_reach_cc&)c2).link_lengths.begin(),
+	    back_insert_iterator<vector<double> >(link_lengths),
+	    plus<double>());
+
+  link_orientations.clear();
+ 
+
+    for(size_t i=0; i<min(((Cfg_reach_cc&)c1).link_orientations.size(),
+((Cfg_reach_cc&)c2).link_orientations.size()); ++i)
+      {
+           if(  ((Cfg_reach_cc&)c1).link_orientations[i] == ((Cfg_reach_cc&)c2).link_orientations[i] )
+           link_orientations.push_back(  ( (Cfg_reach_cc&)c1).link_orientations[i] );
+           else if ( ((Cfg_reach_cc&)c1).link_orientations[i]!=0)
+           link_orientations.push_back(  ( (Cfg_reach_cc&)c1).link_orientations[i] );   
+           else 
+           link_orientations.push_back(  ( (Cfg_reach_cc&)c2).link_orientations[i] );
+      }
+
+  StoreData();  
+
+
+}
 void 
 Cfg_reach_cc::
 subtract(const Cfg& c1, const Cfg& c2) {
