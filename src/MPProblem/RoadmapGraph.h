@@ -159,6 +159,58 @@ struct dkinfo_compare {
 };
 
 
+
+template <typename VI>
+class vertex_descriptor_iterator
+{
+ private:
+  VI vertex_iterator;
+  typedef typename VI::vertex_descriptor descriptor_type;
+
+ public:
+  vertex_descriptor_iterator() {}
+  vertex_descriptor_iterator(const VI& vi) : vertex_iterator(vi) {}
+  vertex_descriptor_iterator(const vertex_descriptor_iterator& vdi) : vertex_iterator(vdi.vertex_iterator) {}
+  ~vertex_descriptor_iterator() {}
+
+  bool operator==(const vertex_descriptor_iterator& other) const { return vertex_iterator == other.vertex_iterator; }
+  bool operator!=(const vertex_descriptor_iterator& other) const { return vertex_iterator != other.vertex_iterator; }
+
+  bool operator<(const vertex_descriptor_iterator& other) const { return vertex_iterator < other.vertex_iterator; }
+  bool operator<=(const vertex_descriptor_iterator& other) const { return vertex_iterator <= other.vertex_iterator; }
+  
+  bool operator>(const vertex_descriptor_iterator& other) const { return vertex_iterator > other.vertex_iterator; }
+  bool operator>=(const vertex_descriptor_iterator& other) const { return vertex_iterator >= other.vertex_iterator; }
+
+  vertex_descriptor_iterator operator++() 
+  { 
+    vertex_iterator++; 
+    return *this; 
+  }
+  vertex_descriptor_iterator operator++(int) 
+  { 
+    vertex_descriptor_iterator tmp = *this; 
+    ++vertex_iterator; 
+    return tmp; 
+  }
+ 
+  vertex_descriptor_iterator operator--() 
+  { 
+    vertex_iterator--; 
+    return *this; 
+  }
+  vertex_descriptor_iterator operator--(int) 
+  { 
+    vertex_descriptor_iterator tmp = *this; 
+    --vertex_iterator; 
+    return tmp; 
+  }
+ 
+  const descriptor_type& operator*() const { return (*vertex_iterator).descriptor(); }
+  descriptor_type* operator->() { return &((*vertex_iterator).descriptor()); }
+};
+
+
 /////////////////////////////////////////////////////////////////////
 //
 //
@@ -201,6 +253,8 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_iterator VI; ///<VI Vertex Iterator
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::const_vertex_iterator CVI; ///<CVI Constant Vertex Iterator
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::adj_edge_iterator EI;
+typedef vertex_descriptor_iterator<VI> VDI;
+
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -321,19 +375,10 @@ typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT
        vector<VID> MergeRoadMap(RoadmapGraph<VERTEX,WEIGHT>*, 
 				 vector<VID> vids);
      //@}
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Protected data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //protected:
 
-   //typedef stapl::WtVertexType<VERTEX,WEIGHT> Vertex;
-   //typedef vector< Vertex > VERTEX_VECTOR;
-   //typedef typename VERTEX_VECTOR::iterator VI; ///<VI Vertex Iterator
-   //typedef typename VERTEX_VECTOR::const_iterator CVI; ///<CVI Constant Vertex Iterator
+
+   VDI descriptor_begin() { return VDI(this->begin()); }
+   VDI descriptor_end() { return VDI(this->end()); }
 
    RoadmapVCS<VERTEX, WEIGHT> roadmapVCS;
   ///////////////////////////////////////////////////////////////////////////////////////////
