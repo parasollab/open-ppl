@@ -34,63 +34,6 @@ class T_DIST_Compare : public binary_function<const pair<T,double>,
 };
 
 
-namespace pmpl_detail
-{ 
-  //helper function to call dereferece on an iterator whose value_type is VID and convert to CfgType
-  template <typename T>
-  struct get_cfg
-    : public unary_function<T, CfgType&>
-  {
-    const RoadmapGraph<CfgType, WeightType>* pMap;
-    
-    get_cfg(const RoadmapGraph<CfgType, WeightType>* _pMap) : pMap(_pMap) {}
-    ~get_cfg() {}
-
-    CfgType operator()(const T& t) const
-    {
-      return (pMap->find_vertex(*t))->property();
-    }
-  };
-  //specialization for a roadmap graph iterator, calls property()
-  template <>
-  struct get_cfg<RoadmapGraph<CfgType, WeightType>::VI>
-    : public unary_function<RoadmapGraph<CfgType, WeightType>::VI, CfgType&>
-  {
-    const RoadmapGraph<CfgType, WeightType>* pMap;
-    
-    get_cfg(const RoadmapGraph<CfgType, WeightType>* _pMap) : pMap(_pMap) {}
-    ~get_cfg() {}
-    
-    CfgType operator()(const RoadmapGraph<CfgType, WeightType>::VI& t) const
-    {
-      return t->property();
-    }
-  };
-
-  //helper function to call dereferece on an iterator whose value_type is VID
-  //needed to get around the fact that a roadmap graph iterator requires an extra descriptor() call
-  template <typename T>
-  struct get_vid
-    : public unary_function<T, RoadmapGraph<CfgType, WeightType>::vertex_descriptor>
-  {
-    RoadmapGraph<CfgType, WeightType>::vertex_descriptor operator()(const T& t) const
-    {
-      return *t;
-    }
-  };
-  //specialization for a roadmap graph iterator, calls descriptor()
-  template <>
-  struct get_vid<RoadmapGraph<CfgType, WeightType>::VI>
-    : public unary_function<RoadmapGraph<CfgType, WeightType>::VI, RoadmapGraph<CfgType, WeightType>::vertex_descriptor>
-  {
-    RoadmapGraph<CfgType, WeightType>::vertex_descriptor operator()(const RoadmapGraph<CfgType, WeightType>::VI& t) const
-    {
-      return t->descriptor();
-    }
-  };
-}
-
-
 template<typename CFG, typename WEIGHT>
 class BFNF: public NeighborhoodFinderMethod {
 
@@ -186,11 +129,10 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   vector< pair< VID, double > > closest(k, make_pair(-999, max_value));
 
   // now go through all kp and find closest k
-  InputIterator V1;
   int count = 0;
-  for(V1 = _input_first; V1 != _input_last; ++V1) {
+  for(InputIterator V1 = _input_first; V1 != _input_last; ++V1) {
     count++;
-    CFG v1 = pmpl_detail::get_cfg<InputIterator>(pMap)(V1);
+    CFG v1 = (*(pMap->find_vertex(*V1))).property();
     
     if(v1 == _cfg)
       continue; //don't connect same
@@ -198,7 +140,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     double dist = dmm->Distance(_env, _cfg, v1);
     
     if(dist < closest[max_index].second) { 
-      closest[max_index] = make_pair(pmpl_detail::get_vid<InputIterator>()(V1), dist);
+      closest[max_index] = make_pair(*V1, dist);
       max_value = dist;
   
       //search for new max_index (faster O(k) than sort O(k log k) )
@@ -242,7 +184,8 @@ OutputIterator
 BFNF<CFG,WEIGHT>::
 KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
   CFG _cfg, int k, OutputIterator _out) {
-  return KClosest(_rmp, _rmp->m_pRoadmap->begin(), _rmp->m_pRoadmap->end(), _cfg, k, _out);
+  //return KClosest(_rmp, _rmp->m_pRoadmap->begin(), _rmp->m_pRoadmap->end(), _cfg, k, _out);
+  return KClosest(_rmp, _rmp->m_pRoadmap->descriptor_begin(), _rmp->m_pRoadmap->descriptor_end(), _cfg, k, _out);
 }
 
 

@@ -315,12 +315,11 @@ class NFUnionRoadmap : public MPStrategyMethod {
          int number_intervals_printed=1;
          //cout<<"before loop"<<endl;
 
-         GRAPH::vertex_iterator vi;
-         for (vi = rmp.m_pRoadmap->end(); vi != rmp.m_pRoadmap->begin(); --vi) {    
+         for (RoadmapGraph<CfgType,WeightType>::VDI vi = rmp.m_pRoadmap->descriptor_end(); vi != rmp.m_pRoadmap->descriptor_begin(); --vi) {    
             //cout<<"k="<<k<<endl;
-            if (vi != rmp.m_pRoadmap->end()) {
+            if (vi != rmp.m_pRoadmap->descriptor_end()) {
                //cout<<"deleting vid="<<*iter<<endl;
-               rmp.m_pRoadmap->delete_vertex((*vi).descriptor());
+               rmp.m_pRoadmap->delete_vertex(*vi);
                //union_rmp.m_pRoadmap->DeleteVertex(*iter);
                removed ++;
                if(removed % _interval == 0){
@@ -376,10 +375,9 @@ class NFUnionRoadmap : public MPStrategyMethod {
       //removes nodes untile rmp has specified size
       void trim(Roadmap<CfgType,WeightType>& rmp, int size){
 
-         GRAPH::vertex_iterator vi;
          vector<GRAPH::vertex_descriptor> v_vd;
-         for (vi = rmp.m_pRoadmap->begin(); vi != rmp.m_pRoadmap->end(); ++vi) {
-            v_vd.push_back((*vi).descriptor());
+         for (RoadmapGraph<CfgType,WeightType>::VDI vi = rmp.m_pRoadmap->descriptor_begin(); vi != rmp.m_pRoadmap->descriptor_end(); ++vi) {
+            v_vd.push_back(*vi);
          }
 
          for(int i=size; i < v_vd.size(); i++){
@@ -1095,9 +1093,8 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
 
       OnlineStats calcDegreeStats(RoadmapGraph<CfgType,WeightType>& _graph) {
          OnlineStats to_return;
-         RoadmapGraph<CfgType,WeightType>::VI vitr;
-         for(vitr =_graph.begin(); vitr != _graph.end(); ++vitr) {
-            to_return.AddData(_graph.get_out_degree((*vitr).descriptor()));
+         for(RoadmapGraph<CfgType,WeightType>::VDI vitr =_graph.descriptor_begin(); vitr != _graph.descriptor_end(); ++vitr) {
+            to_return.AddData(_graph.get_out_degree(*vitr));
          }
          return to_return;
       };

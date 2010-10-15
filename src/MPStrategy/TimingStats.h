@@ -112,15 +112,14 @@ class RoadmapTimingStats : public MPStrategyMethod {
 	    nfmp = nf->GetNFMethod(*iter);
 	    //double time_bf=nfmp->GetTotalTime();
             RoadmapGraph<CfgType,WeightType>* pMap = rmp.m_pRoadmap;
-            RoadmapGraph<CfgType,WeightType>::VI vitr;
 	    double time_el_total=0;
-            for(vitr = pMap->begin(); vitr != pMap->end(); ++vitr) {
+            for(RoadmapGraph<CfgType,WeightType>::VDI vitr = pMap->descriptor_begin(); vitr != pMap->descriptor_end(); ++vitr) {
 	      vector<VID> neighbors(k)
 		;	    double time_bf=nfmp->GetTotalTime();
-	      nf->KClosest(nfmp, &rmp, vertices.begin(), vertices.end(), (*vitr).descriptor(), k, neighbors.begin());
+	      nf->KClosest(nfmp, &rmp, vertices.begin(), vertices.end(), *vitr, k, neighbors.begin());
 	      double time_el=nfmp->GetTotalTime()-time_bf;
 	      time_el_total+=time_el;
-	      //nf->KClosest(nfmp, &rmp, vitr.descriptor(), k, neighbors.begin());
+	      //nf->KClosest(nfmp, &rmp, *vitr, k, neighbors.begin());
 	    }
 	    //double time_el=nfmp->GetTotalTime()-time_bf;
 	    cout<<"time_el_total ="<<time_el_total<<endl;

@@ -433,9 +433,8 @@ private:
 
   OnlineStats calcDegreeStats(RoadmapGraph<CfgType,WeightType>& _graph) {
     OnlineStats to_return;
-    RoadmapGraph<CfgType,WeightType>::VI vitr;
-    for(vitr =_graph.begin(); vitr != _graph.end(); ++vitr) {
-      to_return.AddData(_graph.get_out_degree((*vitr).descriptor()));
+    for(RoadmapGraph<CfgType,WeightType>::VDI vitr =_graph.descriptor_begin(); vitr != _graph.descriptor_end(); ++vitr) {
+      to_return.AddData(_graph.get_out_degree(*vitr));
     }
     return to_return;
   };
@@ -579,16 +578,15 @@ class BandsStats : public MPStrategyMethod {
 		
 		long scaleFree(Roadmap<CfgType,WeightType> &rmp) {
 			RoadmapGraph<CfgType,WeightType>* pMap = rmp.m_pRoadmap;
-      RoadmapGraph<CfgType,WeightType>::VI vitr;
       
       int scaleFreeMetric = 0;
       
-      for(vitr = pMap->begin(); vitr != pMap->end(); ++vitr) {
+      for(RoadmapGraph<CfgType,WeightType>::VDI vitr = pMap->descriptor_begin(); vitr != pMap->descriptor_end(); ++vitr) {
         vector<VID> adj_verts;
-        pMap->get_successors((*vitr).descriptor(), adj_verts);
+        pMap->get_successors(*vitr, adj_verts);
         for(vector<VID>::iterator iter2 = adj_verts.begin(); iter2 != adj_verts.end(); iter2++) {    
 	   			vector<VID> adj_verts2;
-          pMap->get_successors((*vitr).descriptor(), adj_verts2);
+          pMap->get_successors(*vitr, adj_verts2);
           scaleFreeMetric += adj_verts.size()*adj_verts2.size();
 				}
       }
@@ -853,12 +851,11 @@ class BandsStats : public MPStrategyMethod {
 			//cout<<"before loop"<<endl;
 			
 			//for(vector<VID>::iterator iter = vertices.end(); iter!= vertices.begin(); iter--) {
-			GRAPH::vertex_iterator vi;
-			for (vi = rmp.m_pRoadmap->end(); vi != rmp.m_pRoadmap->begin(); --vi) {    
+			for (RoadmapGraph<CfgType,WeightType>::VDI vi = rmp.m_pRoadmap->descriptor_end(); vi != rmp.m_pRoadmap->descriptor_begin(); --vi) {    
 				//cout<<"k="<<k<<endl;
-				if (vi != rmp.m_pRoadmap->end()) {
+				if (vi != rmp.m_pRoadmap->descriptor_end()) {
 					//cout<<"deleting vid="<<*iter<<endl;
-					rmp.m_pRoadmap->delete_vertex((*vi).descriptor());
+					rmp.m_pRoadmap->delete_vertex(*vi);
 					//union_rmp.m_pRoadmap->DeleteVertex(*iter);
 					removed++;
 					if(removed % _interval == 0){
@@ -932,10 +929,9 @@ class BandsStats : public MPStrategyMethod {
 		//removes nodes untile rmp has specified size
 		void trim(Roadmap<CfgType,WeightType>& rmp, int size){
 			
-			GRAPH::vertex_iterator vi;
 			vector<GRAPH::vertex_descriptor> v_vd;
-			for (vi = rmp.m_pRoadmap->begin(); vi != rmp.m_pRoadmap->end(); ++vi) {
-				v_vd.push_back((*vi).descriptor());
+			for (RoadmapGraph<CfgType,WeightType>::VDI vi = rmp.m_pRoadmap->descriptor_begin(); vi != rmp.m_pRoadmap->descriptor_end(); ++vi) {
+				v_vd.push_back(*vi);
 			}
 			
 			for(int i=size; i < v_vd.size(); i++){
@@ -1087,17 +1083,16 @@ class BandsStats : public MPStrategyMethod {
 		  avg_dist=0;
 		  avg_max_dist=0;
 		  int count=0;
-		  RoadmapGraph<CfgType,WeightType>::VI iter;
 		  //todo: change to use count from rmp graph
 		  int nodes=0;
-		  for(iter=rmp.m_pRoadmap->begin(); iter<rmp.m_pRoadmap->end(); iter++){
+		  for(RoadmapGraph<CfgType,WeightType>::VDI iter=rmp.m_pRoadmap->descriptor_begin(); iter<rmp.m_pRoadmap->descriptor_end(); iter++){
 		    nodes++;
 		    vector<VID> succ;
-		    rmp.m_pRoadmap->get_successors((*iter).descriptor(), succ); 
+		    rmp.m_pRoadmap->get_successors(*iter, succ); 
 		    double max_for_node=0;
 		    for(vector<VID>::iterator iter2=succ.begin(); iter2<succ.end(); iter2++){
 		      RoadmapGraph<CfgType,WeightType>* pMap = rmp.m_pRoadmap;
-		      CfgType cfg1 = (pMap->find_vertex((*iter).descriptor()))->property();
+		      CfgType cfg1 = (pMap->find_vertex(*iter))->property();
 		      CfgType cfg2 = (pMap->find_vertex(*iter2))->property();
 		      shared_ptr<DistanceMetricMethod>dmm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod("BFNF")->GetDMMethod();
 		      double dist=dmm->Distance(rmp.GetEnvironment(), cfg1, cfg2);
