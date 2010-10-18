@@ -22,13 +22,15 @@
 #include "CollisionDetection.h"
 #include "Stat_Class.h"
 #include "util.h"
-
-
+#include "ValidityChecker.hpp"
+#include "CfgTypes.h"
+#include "MPProblem.h"
 
 //class Cfg_free;
 //typedef Cfg_free CfgType;
 
 int Cfg::NumofJoints;
+
 
 #ifdef COLLISIONCFG
 extern  vector < vector < vector <  double > > > CollisionConfiguration;
@@ -813,12 +815,12 @@ void Cfg::GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
 // the free c-space
 void 
 Cfg::
-GetMedialAxisCfg(Environment* _env, Stat_Class& Stats,
-		 CollisionDetection* _cd,
-		 CDInfo& _cdInfo, shared_ptr< DistanceMetricMethod> _dm,
+GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
+		 string _vc, CollisionDetection* _cd,
+		 CDInfo& _cdInfo, string _dm,
 		 int clearance_n, int penetration_n) { 
   this->GetRandomCfg(_env);
-  this->PushToMedialAxis(_env, Stats, _cd, _cdInfo, _dm, 
+  this->PushToMedialAxis(mp, _env, Stats, _vc, _cd, _cdInfo, _dm, 
 			 clearance_n, penetration_n);
 }
 
@@ -826,18 +828,21 @@ GetMedialAxisCfg(Environment* _env, Stat_Class& Stats,
 // pushes node towards c-space medial axis
 void 
 Cfg::
-PushToMedialAxis(Environment *_env, Stat_Class& Stats,
-		 CollisionDetection *cd,
-		 CDInfo& cdInfo, shared_ptr<DistanceMetricMethod>dm,
+PushToMedialAxis(MPProblem* mp, Environment *_env, Stat_Class& Stats,
+		 string vc,
+       CollisionDetection* cd,
+		 CDInfo& cdInfo, string dm,
 		 int clearance_n, int penetration_n) {
   std::string Callee(GetName()),CallCnt("1");
   std::string Method("-Cfg::PushToMedialAxis");
   Callee=Callee+Method;
 
-  //if(!this->InBoundingBox(_env) || this->isCollision(_env, Stats, cd, cdInfo,true, &(Callee))) { //not needed if called from GetMedialAxisCfg
-  if(this->isCollision(_env, Stats, cd, cdInfo,true, &(Callee))) {
+   string callee = "Cfg::PushToMedialAxis";
+   Cfg* cfg = this->CreateNewCfg();  //Adapting method to use ValidityChecker
+   CfgType* ctype = dynamic_cast<CfgType*>(cfg); 
+  if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, _env, Stats, cdInfo, true, &callee)) {
     ClearanceInfo clearInfo;
-    this->ApproxCSpaceClearance(_env, Stats, cd, cdInfo, dm, 
+    this->ApproxCSpaceClearance(mp, _env, Stats, vc, cdInfo, dm, 
 				penetration_n, clearInfo, 1);
     this->v = (clearInfo.getDirection())->v;
   }
@@ -845,20 +850,20 @@ PushToMedialAxis(Environment *_env, Stat_Class& Stats,
   CallCnt="2";
   std::string tmpStr = Callee+CallCnt;
   if(this->InBoundingBox(_env) && !this->isCollision(_env, Stats, cd, cdInfo,true,&tmpStr)) 
-    this->MAPRMfree(_env, Stats, cd, cdInfo, dm, clearance_n);
+    this->MAPRMfree(mp, _env, Stats, vc, cd, cdInfo, dm, clearance_n);
 }
 
 
 // pushes free node towards c-space medial axis
 void 
 Cfg::
-MAPRMfree(Environment* _env, Stat_Class& Stats, 
-	  CollisionDetection* cd,
-	  CDInfo& cdInfo, shared_ptr<DistanceMetricMethod> dm,
+MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats, 
+	  string vc, CollisionDetection* cd,
+	  CDInfo& cdInfo, string dm,
 	  int n) {
   //get clearance to c-obst
   ClearanceInfo clearInfo;
-  this->ApproxCSpaceClearance(_env, Stats, cd, cdInfo, dm,
+  this->ApproxCSpaceClearance(mp, _env, Stats, vc, cdInfo, dm,
 			      n, clearInfo, false);
   if(clearInfo.getDirection() == NULL) //unable to compute clearance
     return;
@@ -867,7 +872,8 @@ MAPRMfree(Environment* _env, Stat_Class& Stats,
   
   //get normalized direction to c-obst
   Cfg* dir = clearInfo.getDirection()->CreateNewCfg();
-  dm->ScaleCfg(_env, 1, *this, *dir);
+   shared_ptr <DistanceMetricMethod> d_m = mp->GetDistanceMetric()->GetDMMethod(dm);
+  d_m->ScaleCfg(_env, 1, *this, *dir);
   dir->subtract(*dir, *this);
   
   /// find max. clearance point by stepping out:
@@ -881,7 +887,7 @@ MAPRMfree(Environment* _env, Stat_Class& Stats,
 	(newCfg->InBoundingBox(_env))) {    
     tmpCfg->multiply(*dir, -1*stepSize);
     tmpCfg->add(*newCfg, *tmpCfg);
-    tmpCfg->clearance = tmpCfg->ApproxCSpaceClearance(_env, Stats, cd, cdInfo,
+    tmpCfg->clearance = tmpCfg->ApproxCSpaceClearance(mp, _env, Stats, vc, cdInfo,
 						      dm, n, false, colliding_obst);
     if(tmpCfg->clearance < 0) {//unable to compute clearance...
       tmpCfg->clearance = 0;
@@ -909,7 +915,7 @@ MAPRMfree(Environment* _env, Stat_Class& Stats,
       //midpoint between newCfg and oldCfg
       midCfg->add(*newCfg, *oldCfg);
       midCfg->divide(*midCfg, 2);
-      midCfg->clearance = midCfg->ApproxCSpaceClearance(_env, Stats, cd, 
+      midCfg->clearance = midCfg->ApproxCSpaceClearance(mp, _env, Stats, vc, 
 							cdInfo, dm, n, false);
       if(midCfg->clearance < 0) { //unable to compute...keep oldCfg
 	if(newCfg->clearance > oldCfg->clearance) 
@@ -933,7 +939,7 @@ MAPRMfree(Environment* _env, Stat_Class& Stats,
       } else {
 	newCfg->equals(*midCfg);
       }      
-    } while ((dm->Distance(_env, *newCfg, *oldCfg) > minDistance) &&
+    } while ((d_m->Distance(_env, *newCfg, *oldCfg) > minDistance) &&
 	     (++i <= maxNumSteps));
     delete midCfg;
   }
@@ -953,32 +959,35 @@ double Cfg::Clearance(Environment *env, Stat_Class& Stats,
 
 
 //Approximate C-Space Clearance
-double 
+
+double
 Cfg::
-ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
-		      CollisionDetection *cd, CDInfo& cdInfo,
-		      shared_ptr<DistanceMetricMethod> dm, 
+ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
+		      string vc, CDInfo& cdInfo,
+		      string m_dm, 
 		      int n, bool bComputePenetration,
 		      int ignore_obstacle) const {
   ClearanceInfo clearInfo;
-  ApproxCSpaceClearance(env, Stats, cd, cdInfo, dm, 
+  ApproxCSpaceClearance(mp, env, Stats, vc, cdInfo, m_dm, 
 			n, clearInfo, bComputePenetration, ignore_obstacle);
   return clearInfo.getClearance();
 }
 
 
 //Approximate C-Space Clearance
+
+
 void 
 Cfg::
-ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
-		      CollisionDetection* cd, CDInfo& cdInfo,
-		      shared_ptr<DistanceMetricMethod> dm, 
+ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
+		      string vc, CDInfo& cdInfo,
+		      string m_dm, 
 		      int n, ClearanceInfo& clearInfo,
 		      bool bComputePenetration,
 		      int ignore_obstacle) const {
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
-    
+  shared_ptr <DistanceMetricMethod> dm = mp->GetDistanceMetric()->GetDMMethod(m_dm);
   //generate n random directions at a distance dist away from this
   double dist = 100 * min(positionRes, orientationRes);
   vector<Cfg*> directions;
@@ -998,14 +1007,15 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
   std::string Callee(GetName()), CallCnt;
   std::string Method("Cfg::ApproxCSpaceClearance");
   Callee=Callee+Method;
+  string callee = "Cfg::ApproxCSpaceClearance";
 
   //if collide, set to true. Otherwise, set to false
   CallCnt="1";
   std::string tmpStr = Callee+CallCnt;
   Cfg* cfg = this->CreateNewCfg();  //have to make a copy because method is const
+   CfgType* ctype = dynamic_cast<CfgType*>(cfg);
   bool bInitState = !cfg->InBoundingBox(env) ||  
-    cfg->isCollision( env, Stats, cd, cdInfo, true, &tmpStr );
-  
+     mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, env, Stats, cdInfo, true, &callee);
   if(!bComputePenetration == bInitState) { //don't need to compute clearance/penetration
     delete cfg;
     for(vector<Cfg*>::iterator D = directions.begin(); D != directions.end(); ++D)
@@ -1063,7 +1073,8 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
       } else {
 	if(ignore_obstacle != -1)
 	  cdInfo.ResetVars();
-	bool bCollision = tick[i]->isCollision(env, Stats, cd, cdInfo, true, &tmpStr);
+   CfgType* ctype2 = dynamic_cast<CfgType*>(tick[i]);
+	bool bCollision = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype2, env, Stats, cdInfo, true, &callee);
 	if((ignore_obstacle != -1) && (cdInfo.colliding_obst_index == ignore_obstacle)) {
 	  ignored[i] = true;
 	  if(size_t(count(ignored.begin(), ignored.end(), true)) ==
@@ -1108,7 +1119,6 @@ ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
 
   return;
 }
-
 
 void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
             Stat_Class& Stats, CollisionDetection* cd, 

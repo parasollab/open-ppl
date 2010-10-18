@@ -20,6 +20,8 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
   ValidityChecker<CFG>* vc;
   CDInfo *cdInfo;
   shared_ptr<DistanceMetricMethod> dm;
+  string dmstring;
+  MPProblem* mp;
   int clearance, penetration;
   std::string strLabel;
   std::string strVcmethod;
@@ -34,12 +36,14 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
   LOG_DEBUG_MSG("FreeMedialAxisSampler::FreeMedialAxisSampler()");
   ParseXML(in_Node);
   cout << "FreeMedialAxisSampler";
+   mp = in_pProblem;
   strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
                                     string(""), string("Validity Test Method"));
   //strVcmethod = svc_method;
    cout << "strVcmethod = " << strVcmethod << endl;
   vc = in_pProblem->GetValidityChecker();
   string dm_label = in_Node.stringXMLParameter(string("dm_method"),true,string(""),string("Distance metric"));
+  dmstring = dm_label;
   dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
   cd = in_pProblem->GetCollisionDetection();
   strLabel= this->ParseLabelXML( in_Node);
@@ -110,7 +114,7 @@ void ParseXMLpenetration(XMLNodeReader& in_Node) {
 	attempts++;
 	
 	CFG tmp = cfg_in;
-	tmp.PushToMedialAxis(env, Stat, cd, cdInfo, dm, clearance, penetration);
+	tmp.PushToMedialAxis(mp, env, Stat, strVcmethod, cd, cdInfo, dmstring, clearance, penetration);
 	if(tmp.InBoundingBox(env) && 
 		vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, Stat, cdInfo, true, &callee)){
 	  Stat.IncNodes_Generated();

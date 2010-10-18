@@ -9,6 +9,7 @@
 #include "CfgFeature.h"
 #include "VisibilityFeature.h"
 #include "ClearanceFeature.h"
+#include "CSpaceClearanceFeature.h"
 
 class Features{
  public:

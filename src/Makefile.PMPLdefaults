@@ -204,7 +204,7 @@ PMPL_OBJS = \
 #	Utilities/Matrix.o 
 
 #UAS compile macro
-UAS=0
+UAS=1
 ifeq ($(UAS), 1)
    UTILS_DEF+= -DUAS
    PMPL_INCL+= \
@@ -239,7 +239,8 @@ ifeq ($(UAS), 1)
    Partitioning/Features/Features.o \
    Partitioning/Features/CfgFeature.o \
    Partitioning/Features/VisibilityFeature.o \
-	Partitioning/Features/ClearanceFeature.o \
+   Partitioning/Features/ClearanceFeature.o \
+        Partitioning/Features/CSpaceClearanceFeature.o \
    Partitioning/PartitioningEvaluators/PartitioningEvaluators.o \
    Partitioning/PartitioningEvaluators/STDEvaluator.o \
    Partitioning/PartitioningEvaluators/AVGEvaluator.o

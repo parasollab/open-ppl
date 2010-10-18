@@ -123,8 +123,12 @@ class DistanceMetric;
 class DistanceMetricMethod;
 class CDInfo;
 class MultiBody;
+class MPProblem;
+
+typedef
 class Cfg {
  public:
+
     
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -331,7 +335,8 @@ class Cfg {
    */
   virtual void GetRandomCfg(double R, double rStep) = 0;
   /** 
-   * generates random configuration where workspace robot's EVERY VERTEX
+   * generates random confiasking Jory and Shawna to oversee/advise him on this.
+guration where workspace robot's EVERY VERTEX
    * is guaranteed to lie within the environment specified bounding box
    * @param maxTries Try maxTries time to rondomly generate Cfg and check if
    * every vertex is in environment specified bounding box. If
@@ -360,19 +365,19 @@ class Cfg {
 
   /// generates random configuration and pushes it to the medial axis of the
   /// free c-space
-  void GetMedialAxisCfg(Environment* _env, Stat_Class& Stats,
-      CollisionDetection* _cd, CDInfo& _cdInfo, 
-      shared_ptr<DistanceMetricMethod>_dm, 
+  void GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
+      string _vc, CollisionDetection* cd, CDInfo& _cdInfo, 
+      string _dm, 
       int clearnce_n, int penetration_n);
   /// pushes a node towards the medial axis
-  void PushToMedialAxis(Environment* _env, Stat_Class& Stats,
-      CollisionDetection* cd, CDInfo& cdInfo, 
-      shared_ptr<DistanceMetricMethod> dm, 
+  void PushToMedialAxis(MPProblem* mp, Environment* _env, Stat_Class& Stats,
+      string vc, CollisionDetection* cd, CDInfo& cdInfo, 
+      string dm, 
       int clearance_n, int penetration_n);
   /// pushes a free node towards the medial axis
-  virtual void MAPRMfree(Environment* _env, Stat_Class& Stats,
-       CollisionDetection* cd, CDInfo& cdInfo, 
-       shared_ptr<DistanceMetricMethod> dm, int n);
+  virtual void MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats,
+       string vc, CollisionDetection* cd, CDInfo& cdInfo, 
+       string dm, int n);
     
 
   virtual bool GenerateOverlapCfg(Environment* env, int robot,
@@ -405,18 +410,20 @@ class Cfg {
        CollisionDetection* cd) const;
   ///Approximate C-Space Clearance.
   /// returns clearance in c-space
-  double ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
-			       CollisionDetection* cd, CDInfo& cdInfo, 
-			       shared_ptr<DistanceMetricMethod> dm, int n,
-			       bool bComputePenetration,
-			       int ignore_obstacle = -1) const;
+   double ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
+                string vc,
+                CDInfo& cdInfo,
+                string m_dm, int n,
+                bool bComputePenetration,
+                int ignore_obstacle = -1) const;
   /// clearance and the direction set via ClearanceInfo
-  void ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
-			     CollisionDetection* cd, CDInfo& cdInfo,
-			     shared_ptr<DistanceMetricMethod> dm, int n,
+  void ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
+			     string vc, CDInfo& cdInfo,
+			     string m_dm, int n,
 			     ClearanceInfo& clearInfo, 
 			     bool bComputePenetration,
 			     int ignore_obstacle = -1) const;
+ 
 
   ///Approximate C-Space Contact Points
   /// given an origin Cfg and a vector of directions

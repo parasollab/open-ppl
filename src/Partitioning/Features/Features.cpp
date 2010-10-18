@@ -23,6 +23,10 @@ Features::Features(XMLNodeReader& in_Node, MPProblem* mp){
          ClearanceFeature* clf = new ClearanceFeature(*citr, mp);
          selected.push_back(clf);
       }
+      else if (citr->getName()=="CSpaceClearanceFeature"){
+         CSpaceClearanceFeature* csc = new CSpaceClearanceFeature(*citr, mp);
+         selected.push_back(csc);
+      }
       citr->warnUnrequestedAttributes();
    }
 }
