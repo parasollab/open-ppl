@@ -849,7 +849,7 @@ PushToMedialAxis(MPProblem* mp, Environment *_env, Stat_Class& Stats,
 
   CallCnt="2";
   std::string tmpStr = Callee+CallCnt;
-  if(this->InBoundingBox(_env) && !this->isCollision(_env, Stats, cd, cdInfo,true,&tmpStr)) 
+  if(this->InBoundingBox(_env) && mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, _env, Stats, cdInfo, true, &callee)) 
     this->MAPRMfree(mp, _env, Stats, vc, cd, cdInfo, dm, clearance_n);
 }
 
