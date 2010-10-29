@@ -55,8 +55,9 @@ public:
 
   virtual void GetRandomCfg(double R, double rStep);
   virtual void GetRandomCfg(Environment *env);
-  virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm);
-
+  //virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm);
+  virtual void GetRandomRay(double incr, Environment* env, shared_ptr< DistanceMetricMethod> dm);
+  
   virtual void equals(const Cfg&);
 
   ///The center position is get from param, c, configuration. (The position part of c)
