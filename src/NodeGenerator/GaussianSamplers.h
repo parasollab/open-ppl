@@ -77,15 +77,17 @@ class GaussRandomSampler : public SamplerMethod<CFG>
       int attempts = 0;
       CDInfo cdInfo;
       CFG cfg1 = cfg_in;
+      if(cfg1 == CFG())
+        cfg1.GetRandomCfg(env);
       bool cfg1_free;
       if(!useBBX){
          if(!cfg1.InBoundingBox(env))return false;
-         cfg1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env, 
+         cfg1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env,
                                     Stat, cdInfo, true, &callee);
       }
       else{
-         cfg1_free = (cfg1.InBoundingBox(env) && 
-                      vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env, 
+         cfg1_free = (cfg1.InBoundingBox(env) &&
+                      vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env,
                                   Stat, cdInfo, true, &callee));
       }
       do {
@@ -107,7 +109,6 @@ class GaussRandomSampler : public SamplerMethod<CFG>
             CFG incr;
             incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), 
                               env, dm);
-            CFG cfg2;
             cfg2.add(cfg1, incr);
             bool cfg2_free = (cfg2.InBoundingBox(env) && 
                               vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, 
@@ -150,10 +151,8 @@ class GaussRandomSampler : public SamplerMethod<CFG>
  	  OutputIterator result)  
   {
     while(first != last) {
-      CFG cfg_in = *first;
       vector<CFG> result_cfg;
-      cfg_in.GetRandomCfg(env);
-      if(sampler(env, Stat,cfg_in, result_cfg, max_attempts)) 
+      if(sampler(env, Stat,*first,result_cfg, max_attempts)) 
         result = copy(result_cfg.begin(), result_cfg.end(), result);
       first++;
     }
