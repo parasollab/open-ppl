@@ -173,11 +173,6 @@ void Cfg_2D::GetRandomCfg(double R, double rStep){
   ForceItTo2D();
 }
 
-/*void Cfg_2D::GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
-   Cfg_free::GetRandomRay(incr, env, dm);
-   ForceItTo2D();
-}*/
-
 void Cfg_2D::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
    Cfg_free::GetRandomRay(incr, env, dm);
    ForceItTo2D();

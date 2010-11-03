@@ -131,7 +131,8 @@ class LocalPlanners : MPBaseObject{
   //Check the following variable against 
   static cd_predefined cdtype; ///< Used for building line segment. (lineSegmentInCollision)
   
-  friend class DistanceMetric;
+  friend class LPSweptDistance;
+  friend class BinaryLPSweptDistance;
 };
 
 

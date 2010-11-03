@@ -1063,7 +1063,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
 	} else { //ignore bbox for penetration
 	  ignored[i] = true;
 	  if(size_t(count(ignored.begin(), ignored.end(), true)) ==
-	     (int)directions.size()) { //if no more directions left, exit loop
+	     directions.size()) { //if no more directions left, exit loop
 	    clearInfo.setClearance(10000);
 	    Cfg* tmp3 = cfg->CreateNewCfg();
 	    clearInfo.setDirection(tmp3);
@@ -1078,7 +1078,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
 	if((ignore_obstacle != -1) && (cdInfo.colliding_obst_index == ignore_obstacle)) {
 	  ignored[i] = true;
 	  if(size_t(count(ignored.begin(), ignored.end(), true)) ==
-	     (int)directions.size()) {
+	     directions.size()) {
 	    clearInfo.setClearance(10000);
 	    Cfg* tmp3 = cfg->CreateNewCfg();
 	    clearInfo.setDirection(tmp3);
@@ -1352,5 +1352,12 @@ bool Cfg::IsStat(string in_strStat) {
  
 void Cfg::SetStat(string in_strStat,double in_dStat) {
   m_StatMap[in_strStat] = in_dStat;
+}
+
+vector<Vector3D> Cfg::PolyApprox(Environment* env) const {
+  vector<Vector3D> result;
+  ConfigEnvironment(env);
+  env->GetMultiBody(env->GetRobotIndex())->PolygonalApproximation(result);
+  return result;
 }
 

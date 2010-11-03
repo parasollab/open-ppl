@@ -37,22 +37,16 @@
 //////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "OBPRMDef.h"
+#include "DistanceMetricMethod.h"
 #include "Cfg.h"
+#include "util.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
-#include "util.h"
-
-class DistanceMetric;
-class Input;
 class Environment;
-template <class CFG> class GenerateMapNodes;
-template <class CFG, class WEIGHT> class ConnectMap;
 class MultiBody;
 class Transformation;
-
 class CollisionDetectionMethod;
-class n_str_param;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -536,8 +530,6 @@ class Quinlan : public CollisionDetectionMethod {
                              Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL);
 };
 
-
-#include "DistanceMetrics.h"
 
 //////////////////////////////////////////////////////////////////////////
 // InitializePenetration

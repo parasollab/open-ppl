@@ -8,6 +8,30 @@ class MPProblem;
 #include "LocalPlanners.h"
 #include "MPStrategy.h"
 
+template <class CFG>
+class compare_distance : public binary_function<const CFG, const CFG, bool>
+{
+ public:
+  compare_distance(CFG& start_cfg, shared_ptr<DistanceMetricMethod> _dm, Environment* _env)
+   : m_cfg(start_cfg), m_dm(_dm), m_env(_env)
+  {}
+
+  bool operator()(const CFG& _cc1, const CFG& _cc2)
+  {
+    double dcc1 = m_dm->Distance(m_env, m_cfg, _cc1);
+    double dcc2 = m_dm->Distance(m_env, m_cfg, _cc2);
+    return dcc1 < dcc2;
+  }
+  
+ private:
+  compare_distance() {}
+
+  CFG& m_cfg;
+  shared_ptr<DistanceMetricMethod> m_dm;
+  Environment* m_env;
+};
+
+
 template <class CFG, class WEIGHT>
 class MPRegionComparerMethod: public MPBaseObject {
  public:
@@ -43,7 +67,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
     Stat_Class Stats;
 
-    //CFG_CFG_DIST_COMPARE<CFG> mydistcompare(in_cfg, dm, env);
+    //compare_distance<CFG> mydistcompare(in_cfg, dm, env);
    
     
     typedef typename vector< CFG >::iterator CFG_ITRTR;
@@ -53,7 +77,7 @@ class MPRegionComparerMethod: public MPBaseObject {
       }
     }
    
-   sort(in_vec_cfg.begin(), in_vec_cfg.end(), CFG_CFG_DIST_COMPARE<CFG>(in_cfg, dm, env));
+   sort(in_vec_cfg.begin(), in_vec_cfg.end(), compare_distance<CFG>(in_cfg, dm, env));
    for(CFG_ITRTR i_vec_cfg = in_vec_cfg.begin(); i_vec_cfg < in_vec_cfg.end(); i_vec_cfg++) {
     if (lp->IsConnected(env, Stats, dm, in_cfg, (*i_vec_cfg), 
 			  &lp_output, pos_res, ori_res, true)) {
@@ -230,7 +254,7 @@ class MPRegionComparerMethod: public MPBaseObject {
 /*   virtual void operator() () = 0; */
 /*   virtual void operator() (int in_RegionID_a, int in_RegionID_b) = 0; */
 
-  virtual bool Compare(int in_region_a, int in_region_b) = 0;
+  virtual void Compare(int in_region_a, int in_region_b) = 0;
 
   virtual void PrintOptions(ostream& out_os) {
     out_os << "    " << GetLabel() << ":: ";
@@ -258,7 +282,7 @@ public:
   }
 
 
-  virtual bool Compare(int in_region_a, int in_region_b) {
+  virtual void Compare(int in_region_a, int in_region_b) {
     LOG_DEBUG_MSG("ConnectableComponentComparer::Compare(region_a, region_b)");
 
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
@@ -293,7 +317,7 @@ public:
     LOG_DEBUG_MSG("RandomConnectComparer::RandomconnectComparer() end");    
   }
 
-  virtual bool Compare(int in_region_a, int in_region_b) {
+  virtual void Compare(int in_region_a, int in_region_b) {
     LOG_DEBUG_MSG("RandomConnectComparer::Compare(region_a, region_b)");    
 
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
@@ -334,7 +358,7 @@ public:
     LOG_DEBUG_MSG("~RegionCoverageComparer::RegionCoverageComparer()");    
   }
 
-  virtual bool Compare(int in_region_a, int in_region_b) {
+  virtual void Compare(int in_region_a, int in_region_b) {
     LOG_DEBUG_MSG("RegionCoverageComparer::Compare(region_a, region_b)");    
 
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
@@ -375,7 +399,7 @@ public:
         vector<VID> tmp_cc;
 	cmap.reset();
         get_cc(*(rdmp_a->m_pRoadmap),cmap,(*a_vid_itr), tmp_cc);
-        if( tmp_cc.size() >= a_small_cc_size) { 
+        if( (int)tmp_cc.size() >= a_small_cc_size) { 
           // found a revealing node
           a_revealing_node++;
         } else { a_trapped_node++;} //found a trapped node.
@@ -389,7 +413,7 @@ public:
         vector<VID> tmp_cc;
 	cmap.reset();
         get_cc(*(rdmp_b->m_pRoadmap),cmap,(*b_vid_itr), tmp_cc);
-        if( tmp_cc.size() >= b_small_cc_size) { 
+        if( (int)tmp_cc.size() >= b_small_cc_size) { 
           // found a revealing node
           b_revealing_node++;
         } else { b_trapped_node++;} //found a trapped node.
@@ -423,7 +447,7 @@ public:
     LOG_DEBUG_MSG("~RegionSimilarity::RegionSimilarity()");    
   }
 
-  virtual bool Compare(int in_region_a, int in_region_b) {
+  virtual void Compare(int in_region_a, int in_region_b) {
     LOG_DEBUG_MSG("RegionSimilarity::Compare(region_a, region_b)");    
 
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
@@ -448,10 +472,6 @@ public:
     vector<CFG> usable_rdmp_a_cfg, usable_rdmp_b_cfg;  ///\todo implement this better with iterators.
     vector<VID> all_rdmp_a_vids, all_rdmp_b_vids;
     vector<VID> usable_rdmp_a_vids, usable_rdmp_b_vids;
-    int a_revealing_node =0;
-    int a_trapped_node =0;
-    int b_revealing_node =0;
-    int b_trapped_node =0;
 
     rdmp_a->m_pRoadmap->GetVerticesVID(all_rdmp_a_vids);
     rdmp_b->m_pRoadmap->GetVerticesVID(all_rdmp_b_vids);
@@ -463,7 +483,7 @@ public:
       vector<VID> tmp_cc;
       cmap.reset();
       get_cc(*(rdmp_a->m_pRoadmap), cmap, (*all_a_vid_itr), tmp_cc);
-      if( tmp_cc.size() >= a_small_cc_size) {
+      if( (int)tmp_cc.size() >= a_small_cc_size) {
          usable_rdmp_a_vids.push_back((*all_a_vid_itr));
          usable_rdmp_a_cfg.push_back((*(rdmp_a->m_pRoadmap->find_vertex((*all_a_vid_itr)))).property());
       } //else not usable!!
@@ -474,7 +494,7 @@ public:
       vector<VID> tmp_cc;
       cmap.reset();
       get_cc(*(rdmp_b->m_pRoadmap), cmap, (*all_b_vid_itr), tmp_cc);
-      if( tmp_cc.size() >= b_small_cc_size) {
+      if( (int)tmp_cc.size() >= b_small_cc_size) {
          usable_rdmp_b_vids.push_back((*all_b_vid_itr));
          usable_rdmp_b_cfg.push_back((*(rdmp_b->m_pRoadmap->find_vertex((*all_b_vid_itr)))).property());
       } //else not usable!!
@@ -493,7 +513,7 @@ public:
         vector<VID> tmp_cc;
         cmap.reset();
         get_cc(*(rdmp_a->m_pRoadmap),cmap, (*usable_a_vid_itr), tmp_cc);
-        if( tmp_cc.size() >= a_small_cc_size) {  // Make sure its a "usable" node
+        if( (int)tmp_cc.size() >= a_small_cc_size) {  // Make sure its a "usable" node
           if(CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex(*usable_a_vid_itr))).property()), usable_rdmp_b_cfg)) {
             ++node_a_visible_in_b;
           } else { ++node_a_not_visible_in_b; }
@@ -506,7 +526,7 @@ public:
         vector<VID> tmp_cc;
   	cmap.reset();
         get_cc(*(rdmp_b->m_pRoadmap), cmap, (*usable_b_vid_itr), tmp_cc);
-        if( tmp_cc.size() >= b_small_cc_size) {  // Make sure its a "usable" node
+        if( (int)tmp_cc.size() >= b_small_cc_size) {  // Make sure its a "usable" node
           if(CfgIsVisible(((*(rdmp_b->m_pRoadmap->find_vertex(*usable_b_vid_itr))).property()), usable_rdmp_a_cfg)) {
             ++node_b_visible_in_a;
           } else { ++node_b_not_visible_in_a; }
@@ -543,7 +563,7 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
       vector<VID> tmp_cc;
       cmap.reset();
       get_cc(*(rdmp_a->m_pRoadmap),cmap,(*(all_edges_a_itr)).source(), tmp_cc);
-      if( tmp_cc.size() < a_small_cc_size) { continue; } // not a edge in "usable" component
+      if( (int)tmp_cc.size() < a_small_cc_size) { continue; } // not a edge in "usable" component
       //for all connected components in rdmp_b....
       vector< pair<size_t,VID> > all_cc_b;
       cmap.reset();
@@ -586,7 +606,7 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
     cmap.reset();
     //get_cc(*(rdmp_b->m_pRoadmap), cmap, (*all_edges_b_itr).first, tmp_cc);
     get_cc(*(rdmp_b->m_pRoadmap), cmap, (*(all_edges_b_itr)).source(), tmp_cc);
-    if( tmp_cc.size() < b_small_cc_size) { continue; } // not a edge in "usable" component
+    if( (int)tmp_cc.size() < b_small_cc_size) { continue; } // not a edge in "usable" component
     //for all connected components in rdmp_a....
     vector< pair<size_t,VID> > all_cc_a;
     cmap.reset();

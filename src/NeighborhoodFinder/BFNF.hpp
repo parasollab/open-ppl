@@ -2,36 +2,12 @@
 #define _BRUTE_FORCE_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "OBPRMDef.h"
-#include "DistanceMetrics.h"
 #include "util.h"
+#include "Environment.h"
 
-#include "Clock_Class.h"
 #include <vector>
 #include <functional>
-
-class Cfg;
-class MultiBody;
-class Input;
-class Environment;
-class n_str_param;
-class MPProblem;
-template <class CFG, class WEIGHT> class Roadmap;
-
 using namespace std;
-/**Compare two distances in DIST_TYPE instances.
- *return (_cc1.second < _cc2.second)
- */
-template <class T>
-class T_DIST_Compare : public binary_function<const pair<T,double>,
-              const pair<T,double>,
-              bool> {
- public:
-  bool operator()(const pair<T,double> _cc1,
-      const pair<T,double> _cc2) {
-    return (_cc1.second < _cc2.second);
-  }
-};
 
 
 template<typename CFG, typename WEIGHT>
@@ -48,6 +24,8 @@ public:
     NeighborhoodFinderMethod() {
     dmm = _dmm;
   }
+
+  virtual ~BFNF() {}
 
   virtual const std::string GetName () const {
     return BFNF::GetClassName();
@@ -153,7 +131,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     }
   }
  
-  sort(closest.begin(), closest.end(), T_DIST_Compare<VID>());
+  sort(closest.begin(), closest.end(), compare_second<VID, double>());
     
   // now add VIDs from closest to output
   for (size_t p = 0; p < closest.size(); p++) {
@@ -233,7 +211,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
     kall.insert(kall.end(),kp.begin(),kp.end());
   }//endfor c1                                                                    
  
-  sort(kall.begin(), kall.end(), DIST_Compare<VID>());
+  sort(kall.begin(), kall.end(), compare_second<pair<VID, VID>, double>());
   
   for (int p = 0; p < k; ++p) {
     if (kall[p].first.first != -999 && kall[p].first.second != -999){

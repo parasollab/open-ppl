@@ -156,7 +156,7 @@ PrintValues(ostream& _os) {
   _os << GetName() << " ";
   _os << "ineSegmentLength" << " " << this->lineSegmentLength << " ";
   _os << "binarySearch" << " " << this->binarySearch << " ";
-  for(int i=0; i<s_values.size(); i++){
+  for(size_t i=0; i<s_values.size(); i++){
    _os << "s" << " " << s_values[i] << " ";
    }
  _os << endl;
@@ -206,7 +206,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,shared_ptr< DistanceMetri
 
   char RatS[50] = "Rotate_at_s";
   sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);
-  for(int i=1; i<s_values.size(); ++i)
+  for(size_t i=1; i<s_values.size(); ++i)
     sprintf(RatS,"%s,%3.1f",RatS, s_values[i]);
   Stats.IncLPAttempts( RatS );
   int cd_cntr= 0;
@@ -227,7 +227,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,shared_ptr< DistanceMetri
     std::string Callee(GetName());
     std::string Method("-rotate_at_s::IsConnectedOneWay");
     Callee = Callee + Method;
-    for(int i=1; i<sequence.size()-1; ++i) { //_c1 and _c2 not double checked
+    for(size_t i=1; i<sequence.size()-1; ++i) { //_c1 and _c2 not double checked
       cd_cntr++;
       if(!sequence[i]->InBoundingBox(_env) ||
          sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))
@@ -241,7 +241,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,shared_ptr< DistanceMetri
     
   //check intermediate nodes  
   if(connected) {
-    for(int i=0; i<sequence.size()-1; ++i) {
+    for(size_t i=0; i<sequence.size()-1; ++i) {
       if(this->binarySearch) 
         connected = IsConnectedSLBinary(_env, Stats, dm, *sequence[i], *sequence[i+1], 
 				        lpOutput, cd_cntr, positionRes, orientationRes, 
@@ -264,7 +264,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,shared_ptr< DistanceMetri
   Stats.IncLPCollDetCalls( RatS, cd_cntr );
   
   // Since we use vector<Cfg*>, we need to delete it
-  for(int i=0; i<sequence.size(); ++i) 
+  for(size_t i=0; i<sequence.size(); ++i) 
     if (sequence[i] != NULL)
       delete sequence[i];
   

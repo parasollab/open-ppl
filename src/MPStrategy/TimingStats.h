@@ -1,38 +1,13 @@
-
-
-
-
 #ifndef TimingStats
 #define TimingStats
 
+//#include<sys/time.h>
+//#include <math.h>
 
-
-
-#include "SwitchDefines.h"
-#include<sys/time.h>
-
-#include "OBPRMDef.h"
+#include "MPStrategyMethod.h"
 #include "Roadmap.h"
-#include "GraphAlgo.h"
-
-#include "Clock_Class.h"
-#include "Stat_Class.h"
-#include "CollisionDetection.h"
-#include "ConnectMap.h"
-#include "DistanceMetrics.h"
-#include "LocalPlanners.h"
-#include "Query.h"
-#include "GeneratePartitions.h"
-#include <limits>
-
-//#include "ExplicitInstantiation.h"
-// util.h defines PMPL_EXIT used in initializing the environment
 #include "util.h"
 #include "MPProblem.h"
-#include "MPCharacterizer.h"
-#include "MapEvaluator.h"
-#include "MPStrategy/MPStrategyMethod.h"
-#include <math.h>
 
 
 class RoadmapTimingStats : public MPStrategyMethod {
@@ -98,9 +73,9 @@ class RoadmapTimingStats : public MPStrategyMethod {
       vector<VID> vertices;
       vector<int> intervals;
       vector<vector<double> > times;
-      while(vertices.size()!=queries && vertices.size()>0){
+      while((int)vertices.size()!=queries && (int)vertices.size()>0){
         //cout<<"n verticies ="<<vertices.size()<<endl;;
-        if(((vertices.size()-queries) % _interval == 0 && getOnlyAt==-1)||(vertices.size()-queries)==getOnlyAt){
+        if((((int)vertices.size()-queries) % _interval == 0 && getOnlyAt==-1)||((int)vertices.size()-queries)==getOnlyAt){
 	  //cout<<"computing times at interval"<<vertices.size()-queries<<endl;
 	  intervals.push_back(vertices.size()-queries);
 	  //compute timing stuff here
@@ -130,7 +105,7 @@ class RoadmapTimingStats : public MPStrategyMethod {
 
 	}
 	//rmp.m_pRoadmap->delete_vertex(vertices.back());
-	if((vertices.size()-queries)==getOnlyAt){
+	if(((int)vertices.size()-queries)==getOnlyAt){
 	  break;
         }
 	vertices.pop_back();

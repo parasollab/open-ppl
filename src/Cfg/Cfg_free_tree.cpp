@@ -18,7 +18,7 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "util.h"
-#include "DistanceMetrics.h"
+#include "DistanceMetricMethod.h"
 
 int Cfg_free_tree::NumofJoints;
 

@@ -180,7 +180,7 @@ class spillTree{
 
   void query(const CFGTYPE &queryCFG, int k, VID node, vector<vertexDistance<CFGTYPE, WEIGHT> > *closest){
     if(isLeaf(node)){
-      vector<VID> *v2=getNodeDataStructure(node)->verticies;
+      //vector<VID> *v2=getNodeDataStructure(node)->verticies;
       //cout<<"finding closest"<<endl;
       findClosest(queryCFG, k, node, closest);   
     }else{
@@ -188,7 +188,7 @@ class spillTree{
         //cout<<"query left"<<endl;
         query(queryCFG, k, getLChild(node), closest);
         //cout<<"done query left"<<endl;
-        if(closest->size()<k || (!(getNodeDataStructure(node)->isSpillTreeNode) && !canPrune(queryCFG,k, getRChild(node), closest))){
+        if((int)closest->size()<k || (!(getNodeDataStructure(node)->isSpillTreeNode) && !canPrune(queryCFG,k, getRChild(node), closest))){
    query(queryCFG, k, getRChild(node), closest);
    //cout<<"not pruined"<<endl;
  }
@@ -196,7 +196,7 @@ class spillTree{
         //cout<<"query right"<<endl;
         query(queryCFG, k, getRChild(node), closest);
         //cout<<"done query right"<<endl;
-        if(closest->size()<k || (!(getNodeDataStructure(node)->isSpillTreeNode) && !canPrune(queryCFG,k, getLChild(node), closest))){
+        if((int)closest->size()<k || (!(getNodeDataStructure(node)->isSpillTreeNode) && !canPrune(queryCFG,k, getLChild(node), closest))){
    //cout<<"not pruined"<<endl;
           query(queryCFG, k, getLChild(node), closest);
         }
@@ -509,7 +509,7 @@ class spillTree{
    //cout<<"getting max dist"<<endl;
    temp->maxDistance=getMaxDistance(temp->center, verticies);
    VID _root = tree->add_vertex(temp);
-   if(verticies.size()>maxLeafSize){
+   if((int)verticies.size()>maxLeafSize){
      //cout<<"in if stmt"<<endl;
       vector<VID> lSublist;
       vector<VID> rSublist;

@@ -3,7 +3,6 @@
 
 
 
-#include "DistanceMetrics.h"
 #include "Roadmap.h"
 #include "Environment.h"
 #include "MultiBody.h"
@@ -12,6 +11,7 @@
 #include "ValidityChecker.hpp"
 
 template <class CFG, class WEIGHT> struct LPOutput;
+class DistanceMetricMethod;
 
 template <class CFG, class WEIGHT>
 class LocalPlannerMethod : public MPBaseObject{ 

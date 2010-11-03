@@ -226,7 +226,7 @@ KClosestBF_Euclidean(vector<double> _cfg,
     if(dist < closest[max_index].second) { 
       closest[max_index] = make_pair(V1, dist);
       max_value = dist;
-      for (int p = 0; p < closest.size(); ++p) {
+      for (size_t p = 0; p < closest.size(); ++p) {
         if (max_value < closest[p].second) {
           max_value = closest[p].second;
           max_index = p;
@@ -234,9 +234,9 @@ KClosestBF_Euclidean(vector<double> _cfg,
       }
     }
   }
-  sort(closest.begin(), closest.end(), T_DIST_Compare<int>());
+  sort(closest.begin(), closest.end(), compare_second<int, double>());
 
-  for (int p = 0; p < closest.size(); ++p)
+  for (size_t p = 0; p < closest.size(); ++p)
       if (closest[p].first != -999){
 //        *_out = closest[p].first;
         *_out = make_pair(closest[p].first, closest[p].second);
@@ -283,7 +283,7 @@ KClosestBF_RMSD(SPROXY _cfg,
     }
   }
  
-  sort(closest.begin(), closest.end(), T_DIST_Compare<int>());
+  sort(closest.begin(), closest.end(), compare_second<int, double>());
     
   for (int p = 0; p < closest.size(); ++p)
       if (closest[p].first != -999)
@@ -323,7 +323,7 @@ KClosestBF_RMSD_PIVOT(PIVOT _cfg,
       closest[max_index] = make_pair(*V1, dist);
       max_value = dist;
   
-      for (int p = 0; p < closest.size(); ++p) {
+      for (size_t p = 0; p < closest.size(); ++p) {
         if (max_value < closest[p].second) {
           max_value = closest[p].second;
           max_index = p;
@@ -332,9 +332,9 @@ KClosestBF_RMSD_PIVOT(PIVOT _cfg,
     }
   }
  
-  sort(closest.begin(), closest.end(), T_DIST_Compare<int>());
+  sort(closest.begin(), closest.end(), compare_second<int, double>());
     
-    for (int p = 0; p < closest.size(); ++p)
+    for (size_t p = 0; p < closest.size(); ++p)
       if (closest[p].first != -999)
       {
 //        *_out = closest[p].first;

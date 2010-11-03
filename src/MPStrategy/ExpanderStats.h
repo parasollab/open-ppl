@@ -1,39 +1,13 @@
-
-
-
-
 #ifndef ExpanderStats
 #define ExpanderStats
 
+//#include <sys/time.h>
+//#include <math.h>
 
-
-
-#include "SwitchDefines.h"
-#include<sys/time.h>
-
-#include "OBPRMDef.h"
-#include "Roadmap.h"
-#include "GraphAlgo.h"
-
-#include "Clock_Class.h"
-#include "Stat_Class.h"
-#include "CollisionDetection.h"
-#include "ConnectMap.h"
-#include "DistanceMetrics.h"
-#include "LocalPlanners.h"
-#include "Query.h"
-#include "GeneratePartitions.h"
-#include <limits>
-
-//#include "ExplicitInstantiation.h"
-// util.h defines PMPL_EXIT used in initializing the environment
+#include "MPStrategyMethod.h"
 #include "util.h"
+#include "Roadmap.h"
 #include "MPProblem.h"
-#include "MPCharacterizer.h"
-#include "MapEvaluator.h"
-#include "MPStrategy/MPStrategyMethod.h"
-#include <math.h>
-#include <algorithm>
 
 
 class EdgeExpanderStats : public MPStrategyMethod {
@@ -240,7 +214,6 @@ class EdgeExpanderStats : public MPStrategyMethod {
       vector<int> participation;
       participation.resize(d*(d-1)/2,0);
       for(vector<VID>::iterator iter=vertices.begin(); iter<vertices.end(); iter++){
-	int partivipation_vertex=0;
 	vector<VID> succ;
 	succ.reserve(d); 
 	rmp.m_pRoadmap->get_successors(*iter, succ);
@@ -256,7 +229,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
 	participation[sum]++;
       }
       int return_size=0;
-      for(int i=0; i<participation.size(); i++){
+      for(size_t i=0; i<participation.size(); i++){
         if(participation[i]>0){
 	  return_size=i+1;            
         }
@@ -280,7 +253,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
       for(vector<VID>::iterator iter = vertices.begin(); iter!= vertices.end(); iter++) {
         vector<VID> succ;
         rmp.m_pRoadmap->get_successors(*iter, succ);
-        d=max(d,succ.size());
+        d=max(d,(int)succ.size());
       }
       return triangleParticipation(rmp,vertices,d);
     }
@@ -295,7 +268,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
       for(vector<VID>::iterator iter = vertices.begin(); iter!= vertices.end(); iter++) {
         vector<VID> succ;
         rmp.m_pRoadmap->get_successors(*iter, succ);
-	d=max(d,succ.size());
+	d=max(d,(int)succ.size());
       }
       //rmp.m_pRoadmap->GetVerticesVID(vertices);
       //vector<expanderStats> stats;
@@ -304,9 +277,9 @@ class EdgeExpanderStats : public MPStrategyMethod {
       vector<double> vertexExpander;
       vector<vector<int> > hop_graph_stats;
       vector<vector<int> > triangleParticipation_stats;
-      while(vertices.size()!=queries && vertices.size()>0){
-        if((vertices.size()-queries) % _interval == 0){
-	  intervals.push_back(vertices.size()-queries);
+      while((int)vertices.size()!=queries && (int)vertices.size()>0){
+        if(((int)vertices.size()-queries) % _interval == 0){
+	  intervals.push_back((int)vertices.size()-queries);
 	  long sf= scaleFree(rmp,vertices);
 	  scaleFreeStats.push_back(sf);
 	  
@@ -343,7 +316,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
       *myofstream<<"interval triangle_participation "<<endl;
       while(!intervalsTriangle.empty()){
         *myofstream<<intervalsTriangle.back();
-	for(int i=1; i<triangleParticipation_stats.back().size(); i++){
+	for(size_t i=1; i<triangleParticipation_stats.back().size(); i++){
 	  *myofstream<<" "<<triangleParticipation_stats.back()[i];
 	}
 	*myofstream<<endl;

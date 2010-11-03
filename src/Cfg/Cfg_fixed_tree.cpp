@@ -20,7 +20,7 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "util.h"
-#include "DistanceMetrics.h"
+#include "DistanceMetricMethod.h"
 
 int Cfg_fixed_tree::NumofJoints;
 
@@ -141,7 +141,7 @@ void Cfg_fixed_tree::GetRandomCfg(Environment* env) {
 }
 
 
-void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
+void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
   //randomly sample params
   v.clear();
   for(int i=0; i<DOF(); ++i)
@@ -158,6 +158,7 @@ void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, DistanceMetric*
   clearance = -1;
 }
 
+/*
 void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
   incr = 0.005;
   v.clear();
@@ -165,6 +166,7 @@ void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<Dist
   for(int i=0; i<NumofJoints; i++)
     v.push_back(OBPRM_drand()*incr); //was multiplied by DefaultRange, probably an error
 }
+*/
 
 
 void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *env) {

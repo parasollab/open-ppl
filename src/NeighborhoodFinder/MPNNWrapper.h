@@ -86,7 +86,7 @@ KClosest(vector<double> point, int k, OutputIterator _out)
   }
   
   ANNpoint query_pt = annAllocPt(point.size());
-  for (int i = 0; i < point.size(); i++)
+  for (size_t i = 0; i < point.size(); i++)
     query_pt[i] = point.at(i);
   
   double *d_best_list = new double[max_neighbors];
@@ -111,7 +111,7 @@ KClosest(vector<double> point, int k, OutputIterator _out)
     //   this point out, if that is the case
     bool foundQueryPoint = true;
     ANNpoint resultPoint = data_pts[resultIndex];
-    for (int j = 0; j < point.size(); j++) {
+    for (size_t j = 0; j < point.size(); j++) {
       if (resultPoint[j] != query_pt[j]) {
         foundQueryPoint = false;
         break;

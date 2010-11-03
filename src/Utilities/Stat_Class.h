@@ -3,6 +3,7 @@
 
 #include "Roadmap.h"
 #include <iomanip>
+#include "DistanceMetricMethod.h"
 
 
 // Maximum number of connected components to keep track of

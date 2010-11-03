@@ -182,6 +182,7 @@ PMPL_OBJS = \
 	Utilities/Clock_Elapsed.o \
 	Utilities/Stat_Class.o \
 	Utilities/XmlWrapper.o \
+	DistanceMetric/DistanceMetricMethod.o \
 	DistanceMetric/DistanceMetrics.o \
 	ValidityChecker/CollisionDetection.o \
 	trash/QueryCmds.o \
@@ -193,6 +194,7 @@ PMPL_OBJS = \
 	MPStrategy/HybridPRM.o \
 	MPStrategy/QueryStrategy.o \
 	MPStrategy/SmoothQueryStrategy.o \
+	NeighborhoodFinder/NeighborhoodFinderMethod.o \
         NeighborhoodFinder/MPNNWrapper.o \
         MPStrategy/ClosedChainStrategy.o \
 	MPProblem/MPProblem.o \

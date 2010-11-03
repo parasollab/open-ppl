@@ -3,26 +3,14 @@
 #define _ST_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "OBPRMDef.h"
-#include "DistanceMetrics.h"
 #include "util.h"
 #include "MPProblem.h"
 
-#include "Clock_Class.h"
-#include <vector>
-#include <functional>
 #include <spillTree.hpp>
-#include "Graph.h"
 #include <math.h>
 
-class Cfg;
-class MultiBody;
-class Input;
-class Environment;
-class n_str_param;
-class MPProblem;
-template <class CFG, class WEIGHT> class Roadmap;
-
+#include <vector>
+#include <functional>
 using namespace std;
 
 
@@ -55,7 +43,7 @@ public:
     overlapDistance=.05;
   }
 
-  
+  virtual ~STNF() {}
 
   virtual const std::string GetName () const {
     return STNF::GetClassName();
@@ -268,7 +256,7 @@ UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
   typename RoadmapVCS<CFG, WEIGHT>::cce_iter iter;
   
   CFG temp_cfg;
-  int dim = temp_cfg.DOF();
+  //int dim = temp_cfg.DOF();
  // cout << "CGALNF::UpdateInternalModel - dim = " << dim << endl;
   //VID _v = 0;
   for (iter = start; iter != end; iter++) {

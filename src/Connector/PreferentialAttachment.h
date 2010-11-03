@@ -300,7 +300,6 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 {
   cout << "PreferentialAttachment<CFG,WEIGHT>::ConnectNodes() - 1 pairs InputIterator" << endl << flush;
 
-  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   Clock_Class KClosestClock;
   
   int total_success = 0;
@@ -308,7 +307,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
   vector<VID> input_vertices(_itr1_first, _itr1_last);
   
-  for (int n = 2; n < input_vertices.size(); n++) {
+  for (size_t n = 2; n < input_vertices.size(); n++) {
     if (m_debug) {
       cout << "***************************************************************\n";
       cout << "VID - input_vertices[" << n << "] = " << input_vertices[n] << endl;
@@ -317,7 +316,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
     KClosestClock.StartClock("kClosest");
     while (attempts < min(m_k, n-1)) {
-      for (int i = 0; i < n-1; i++) {
+      for (size_t i = 0; i < n-1; i++) {
         double drand = OBPRM_drand();
         double prob = pref_prob(_rm, input_vertices[i], n);
         if (m_debug) cout << "attempts = " << attempts << ", drand = " << drand << ", prob = " << prob << endl;

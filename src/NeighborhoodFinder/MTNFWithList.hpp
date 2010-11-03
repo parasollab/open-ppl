@@ -4,7 +4,6 @@
 
 #include "NeighborhoodFinderMethod.hpp"
 #include "OBPRMDef.h"
-#include "DistanceMetrics.h"
 #include "util.h"
 #include "MPProblem.h"
 

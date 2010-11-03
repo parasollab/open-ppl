@@ -151,7 +151,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
         }
         if(col_vids.size() >= 2) {
           vector<CFG> tmpCFG;
-          for(int z=0;z<col_vids.size(); ++z)
+          for(size_t z=0;z<col_vids.size(); ++z)
             tmpCFG.push_back((*(pColGraph->find_vertex(col_vids[z]))).property());
           if(IsBridgeLike((*(pGraph->find_vertex(*itr))).property(),tmpCFG)) {
           cout << "Bridge-like node found" << endl;

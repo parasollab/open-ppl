@@ -2,36 +2,13 @@
 #define _BANDS_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "OBPRMDef.h"
-#include "DistanceMetrics.h"
 #include "util.h"
 #include "MPProblem.h"
 
-#include "Clock_Class.h"
 #include <vector>
 #include <functional>
-
-class Cfg;
-class MultiBody;
-class Input;
-class Environment;
-class n_str_param;
-class MPProblem;
-template <class CFG, class WEIGHT> class Roadmap;
-
 using namespace std;
 
-
-
-template <class T>
-class Bands_DIST_Compare : public binary_function<const pair<T,double>,
-              const pair<T,double>, bool> {
- public:
-  bool operator() (const pair<T, double> _p1,
-      const pair<T, double> _p2) {
-    return (_p1.second < _p2.second);
-  }
-};
 
 /////// Policy definitions
 class Policy {
@@ -47,6 +24,8 @@ public:
     m_debug = debug;
   }
   
+  virtual ~Policy() {}
+
   virtual vector< pair<VID, double> >
     SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last) = 0;
   
@@ -62,7 +41,8 @@ class ClosestPolicy : public Policy {
 public:
   ClosestPolicy() : Policy() { }
   ClosestPolicy(int k, bool debug) : Policy(k, debug) { }
-  
+  virtual ~ClosestPolicy() {}
+
   vector< pair<VID, double> >
   SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last)
   {
@@ -101,7 +81,8 @@ class RandomPolicy : public Policy {
 public:
   RandomPolicy() : Policy() { }
   RandomPolicy(int k, bool debug) : Policy(k, debug) { }
-  
+  virtual ~RandomPolicy() {}
+
   vector< pair<VID, double> >
   SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last)
   {
@@ -149,7 +130,8 @@ class RankWeightedRandomPolicy : public Policy {
 public:  
   RankWeightedRandomPolicy() : Policy() { }
   RankWeightedRandomPolicy(int k, bool debug) : Policy(k, debug) { }
-  
+  virtual ~RankWeightedRandomPolicy() {}
+
   vector< pair<VID, double> >
   SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last)
   {
@@ -215,7 +197,8 @@ class DistanceWeightedRandomPolicy : public Policy {
 public:
   DistanceWeightedRandomPolicy() : Policy() { }
   DistanceWeightedRandomPolicy(int k, bool debug) : Policy(k, debug) { }
-  
+  virtual ~DistanceWeightedRandomPolicy() {}
+
   vector< pair<VID, double> >
   SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last)
   {
@@ -383,7 +366,7 @@ protected:
       dist_list.push_back(p);
     }
     
-    sort(dist_list.begin(), dist_list.end(), Bands_DIST_Compare<VID>());
+    sort(dist_list.begin(), dist_list.end(), compare_second<VID, double>());
     
     return dist_list;
   }
@@ -675,7 +658,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     }
   }
    
-  sort(neighbors.begin(), neighbors.end(), T_DIST_Compare<VID>());
+  sort(neighbors.begin(), neighbors.end(), compare_second<VID, double>());
     
   // now add VIDs from neighbors to output
   for (size_t p = 0; p < neighbors.size(); p++) {
@@ -882,7 +865,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     }
   }
  
-  sort(closest.begin(), closest.end(), T_DIST_Compare<VID>());
+  sort(closest.begin(), closest.end(), compare_second<VID, double>());
   EndQueryTime(); 
   EndConstructionTime();
   // now add VIDs from closest to
@@ -942,7 +925,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _in1_first, InputIterato
     kall.insert(kall.end(),kp.begin(),kp.end());
   }//endfor c1                                                                    
  
-  sort(kall.begin(), kall.end(), DIST_Compare<VID>());
+  sort(kall.begin(), kall.end(), compare_second<pair<VID, VID>, double>());
   
   for (int p = 0; p < k; ++p) {
     if (kall[p].first.first != INVALID_VID && kall[p].first.second != INVALID_VID){

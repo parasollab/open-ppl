@@ -465,7 +465,7 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
       ids.insert(_rm->m_pRoadmap->GetVID(cfg));
       k++;
     }
-    for (size_t i = ids.size(); i < k; i++) {
+    for (size_t i = ids.size(); (int)i < k; i++) {
       int id = 0;
       do {
         id = (int)(OBPRM_lrand()%(_itr2_last - _itr2_first));
@@ -479,7 +479,7 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
   else {
     // find the k-closest neighbors
     NeighborhoodFinder::NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf);
-    if (_itr2_last - _itr2_first == _rm->m_pRoadmap->get_num_vertices()) 
+    if (_itr2_last - _itr2_first == (int)_rm->m_pRoadmap->get_num_vertices()) 
       this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, cfg, k, closest_iter);
     else 
       this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, _itr2_first, _itr2_last, cfg, k, closest_iter);

@@ -1,42 +1,19 @@
-
-
-
-
 #ifndef NFComparer
 #define NFComparer
 
+//#include<sys/time.h>
 
-
-
-#include "SwitchDefines.h"
-#include<sys/time.h>
-
-#include "OBPRMDef.h"
-#include "Roadmap.h"
-#include "GraphAlgo.h"
-
+#include "MPStrategyMethod.h"
+#include "util.h"
 #include "Clock_Class.h"
-#include "Stat_Class.h"
-#include "CollisionDetection.h"
+#include "LocalPlanners.h"
+#include "MPProblem.h"
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
-#include "LocalPlanners.h"
-#include "Query.h"
+#include "Stat_Class.h"
+#include "Roadmap.h"
 
-#include "GeneratePartitions.h"
 #include <limits>
-
-
-//#include "ExplicitInstantiation.h"
-
-// util.h defines PMPL_EXIT used in initializing the environment
-#include "util.h"
-#include "MPProblem.h"
-#include "MPCharacterizer.h"
-
-#include "MapEvaluator.h"
-
-#include "MPStrategy/MPStrategyMethod.h"
 
 class OnlineStats {
    public:
@@ -167,7 +144,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
       }
 
       //returns same cc pairs of nodes in roadmap rmp (thresholdVID is inclusive)
-      int fastCompareAllPairs(const Roadmap<CfgType,WeightType>& rmp, int thresholdVID){
+      int fastCompareAllPairs(const Roadmap<CfgType,WeightType>& rmp, VID thresholdVID){
          //cout<<"in fastCompareAllPairs"<<endl;
          int sameCCPairs=0;
          vector< pair<size_t, VID> > ccstats;
@@ -194,7 +171,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
       vector<int> getSameCCStatsInUnion(const Roadmap<CfgType,WeightType>& unionrmp, int _interval){
          //cout<<"in getSameCCStatsInUnion"<<endl;
          vector<int> sameCCStats;
-         for(int i = 0; i < unionrmp.m_pRoadmap->get_num_vertices(); i++){
+         for(size_t i = 0; i < unionrmp.m_pRoadmap->get_num_vertices(); i++){
             if(i % _interval == 0){
                int ccStats=fastCompareAllPairs(unionrmp, unionrmp.m_pRoadmap->get_num_vertices()-i);
                sameCCStats.push_back(ccStats);
@@ -380,7 +357,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
             v_vd.push_back(*vi);
          }
 
-         for(int i=size; i < v_vd.size(); i++){
+         for(size_t i=size; i < v_vd.size(); i++){
             //cout<<"size="<<size<<"rmpsize = "<<vertices.size()<<"i="<<i<<endl;
             rmp.m_pRoadmap->delete_vertex(v_vd[i]);
          }
@@ -404,7 +381,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
          //cout<<"union map, "<<sameCCPairUnion<<", 0"<<endl;
          //cout<<"all pairsconnectivity of union map = "<<sameCCPairUnion<<endl;
          //todo, place previously loaded roadmaps in a vector to avoid having to reload them
-         int j=0;
+         //int j=0;
          for(vector<string>::iterator iter = _files.begin(); iter!=_files.end(); iter++){
             //cout<<"j-"<<j<<endl;
             //char* filename = iter->c_str();
@@ -600,7 +577,7 @@ class NFRoadmapCompare : public MPStrategyMethod {
       void trim(Roadmap<CfgType,WeightType>& rmp, int size){
          vector<VID> vertices;
          rmp.m_pRoadmap->GetVerticesVID(vertices);
-         for(int i=size; i<vertices.size(); i++){
+         for(size_t i=size; i<vertices.size(); i++){
             rmp.m_pRoadmap->delete_vertex(vertices[i]);
          }
       }
@@ -925,7 +902,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
                vector<VID> vids =  region->AddToRoadmap(vectorCfgs);
                nodes_added += vids.size();
                cout << " - total VIDS: " << nodes_added << endl;
-               for(int i=0; i<vids.size(); ++i) {
+               for(size_t i=0; i<vids.size(); ++i) {
                   newVids.push_back(vids[i]);
                }
             }
@@ -1123,7 +1100,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
          vector<pair<double,VID> > vec_dist_vid;
          vec_dist_vid.reserve(vec_cc.size());
 
-         for(int i=0; i<vec_cc.size(); ++i) {
+         for(size_t i=0; i<vec_cc.size(); ++i) {
             double dist = GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)->Distance(GetMPProblem()->GetEnvironment(),
                   _test, (*(_graph.find_vertex(vec_cc[i]))).property());
             vec_dist_vid.push_back(make_pair(dist, vec_cc[i]));
@@ -1132,7 +1109,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
          sort(vec_dist_vid.begin(), vec_dist_vid.end());
          Stat_Class _mystat;
          LPOutput<CfgType,WeightType> out_lp_output;
-         for(int i=0; i<vec_dist_vid.size(); ++i) {
+         for(size_t i=0; i<vec_dist_vid.size(); ++i) {
             if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->
                   IsConnected(GetMPProblem()->GetEnvironment(), _mystat, 
                      GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label), 
@@ -1150,7 +1127,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
          vector<pair<size_t, VID> > CCStats;
          stapl::vector_property_map< GRAPH,size_t > cmap;
          get_cc_stats(_graph, cmap, CCStats);
-         for(int i=0; i<CCStats.size(); ++i) {
+         for(size_t i=0; i<CCStats.size(); ++i) {
             if(CanConnectToComponent(_graph, CCStats[i].second, _start) 
                   && CanConnectToComponent(_graph, CCStats[i].second, _goal)) {
                return true;
@@ -1249,7 +1226,7 @@ class NFTester : public MPStrategyMethod {
          vector< VID > roadmap_vids;
          region->GetRoadmap()->m_pRoadmap->GetVerticesVID(roadmap_vids);
          cout << "Finished ... I did this many : " << roadmap_vids.size() << endl; 
-         for (int i = 0; i < roadmap_vids.size(); i++) {
+         for (size_t i = 0; i < roadmap_vids.size(); i++) {
             cout << "\t" << roadmap_vids[i] << endl;
          }
          //int kclosest = 10;

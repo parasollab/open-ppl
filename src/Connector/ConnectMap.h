@@ -4,7 +4,6 @@
 
 
 #include "Roadmap.h"
-#include "DistanceMetrics.h"
 #include "Clock_Class.h"
 #include "util.h"
 

@@ -7,18 +7,16 @@
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "OBPRMDef.h"
-#include "DistanceMetrics.h"
 #include "util.h"
 #include "MPProblem.h"
 
-#include "Clock_Class.h"
 #include <vector>
 #include <functional>
-
+using namespace std;
 
 
 typedef CGAL::Cartesian_d<double> K;
+
 
 class PMPL_Point_d : public K::Point_d {
  public:
@@ -33,20 +31,12 @@ class PMPL_Point_d : public K::Point_d {
     int vid;
 }; //class PMPL_Point_d
 
+
 typedef CGAL::Search_traits<K::FT, PMPL_Point_d, K::Cartesian_const_iterator_d, K::Construct_cartesian_const_iterator_d> TreeTraits;
 typedef CGAL::Orthogonal_k_neighbor_search<TreeTraits> Neighbor_search;
 typedef Neighbor_search::Tree Tree;
 typedef PMPL_Point_d Point_d;
 
-class Cfg;
-class MultiBody;
-class Input;
-class Environment;
-class n_str_param;
-class MPProblem;
-template <class CFG, class WEIGHT> class Roadmap;
-
-using namespace std;
 
 template<typename CFG, typename WEIGHT>
 class CGALNF: public NeighborhoodFinderMethod {
@@ -82,6 +72,8 @@ public:
     m_use_scaling = 0;
     m_cur_roadmap_version = -1;
   }
+
+  virtual ~CGALNF() {}
 
   virtual const std::string GetName () const {
     return CGALNF::GetClassName();

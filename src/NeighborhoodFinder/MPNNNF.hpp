@@ -2,38 +2,14 @@
 #define _MPNN_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "OBPRMDef.h"
-#include "DistanceMetrics.h"
 #include "util.h"
 #include "MPProblem.h"
 #include "MPNNWrapper.h"
 
-#include "Clock_Class.h"
 #include <vector>
 #include <functional>
-
-class Cfg;
-class MultiBody;
-class Input;
-class Environment;
-class n_str_param;
-class MPProblem;
-template <class CFG, class WEIGHT> class Roadmap;
-
 using namespace std;
-/**Compare two distances in DIST_TYPE instances.
- *return (_cc1.second < _cc2.second)
- */
-template <class T>
-class T_PAIR_DIST_Compare : public binary_function<const pair< pair<T,T>,double >,
-              const pair< pair<T,T>,double >,
-              bool> {
- public:
-  bool operator()(const pair< pair<T,T>,double > _cc1,
-      const pair< pair<T,T>,double > _cc2) {
-    return (_cc1.second < _cc2.second);
-  }
-};
+
 
 template<typename CFG, typename WEIGHT>
 class MPNNNF: public NeighborhoodFinderMethod {
@@ -93,7 +69,7 @@ public:
     int dim = temp.DOF();
     // NOTE: everything after the 3rd DOF is rotational.
     vector<int> topology(dim);
-    for (int i = 0; i < topology.size(); i++) {
+    for (size_t i = 0; i < topology.size(); i++) {
       if (i < temp.posDOF())
         topology[i] = 1;
       else
@@ -145,6 +121,8 @@ public:
     m_cur_roadmap_version = -1;
   }
 
+  virtual ~MPNNNF() {}
+
   virtual const std::string GetName () const {
     return MPNNNF::GetClassName();
   }
@@ -157,7 +135,7 @@ public:
 
   // this may end up being a private function used to create an internal
   // CGAL kdtree that will be populated by a roadmap in the future
-  int
+  void 
   AddPoint(CFG _cfg, VID _v);
 
   
@@ -224,7 +202,7 @@ private:
 
 
 template <typename CFG, typename WEIGHT>
-int
+void
 MPNNNF<CFG, WEIGHT>::AddPoint(CFG _cfg, VID _v)
 {
   kdtree->add_node(_cfg.GetData(), _v);
@@ -269,7 +247,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   
   // NOTE: everything after the 3rd DOF is rotational.
   vector<int> topology(dim);
-  for (int i = 0; i < topology.size(); i++) {
+  for (size_t i = 0; i < topology.size(); i++) {
     if (i < 3)
       topology[i] = 1;
     else
@@ -306,7 +284,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   localKdtree->KClosest(_cfg.GetData(), k, results.begin());
   EndQueryTime();
 
-  for (int i = 0; i < results.size(); i++) {
+  for (size_t i = 0; i < results.size(); i++) {
     *_out = results[i].first;
     //cout << results[i].second << " - VID = " << results[i].first << endl;
     ++_out;
@@ -364,7 +342,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   EndQueryTime();
 
 
-  for (int i = 0; i < results.size(); i++) {
+  for (size_t i = 0; i < results.size(); i++) {
     *_out = results[i].first;
     //cout << results[i].second << " - VID = " << results[i].first
     //     << "\t\t" << _cfg << " to " << _rmp->m_pRoadmap->find_vertex(results[i].first).property() << endl;
@@ -442,7 +420,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
     }
   }
   
-  sort(query_results.begin(), query_results.end(), T_PAIR_DIST_Compare<VID>());
+  sort(query_results.begin(), query_results.end(), compare_second<pair<VID, VID>, double>());
   
   typename vector< pair< pair<VID, VID>, double> >::iterator q_iter;
   int count = 0;

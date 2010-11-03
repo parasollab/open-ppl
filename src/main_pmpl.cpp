@@ -15,7 +15,6 @@
 #include "CollisionDetection.h"
 #include "ValidityChecker.hpp"
 #include "ConnectMap.h"
-#include "DistanceMetrics.h"
 #include "LocalPlanners.h"
 
 #include "GeneratePartitions.h"

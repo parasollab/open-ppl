@@ -993,7 +993,7 @@ double ComponentDiameter(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, t
     g.get_adjacent_vertices(u->vd,adj);
 
     // check all u's successors
-    for (int i = 0; i < adj.size(); i++)
+    for (size_t i = 0; i < adj.size(); i++)
     {
       if(vid_dk_map.count(adj[i]) > 0) {
         dkinfo<VID>* succ= vid_dk_map[adj[i]];

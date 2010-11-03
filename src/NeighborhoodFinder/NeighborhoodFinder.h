@@ -13,15 +13,9 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
-
-#include <functional>
-
-#include "OBPRMDef.h"
-#include "DistanceMetrics.h"
+#include "DistanceMetricMethod.h"
 #include "util.h"
-
-//#include "Clock_Class.h"
-#include "Clock_Elapsed.h"
+#include "Clock_Class.h"
 #include "BFNF.hpp"
 #include "BFFNF.hpp"
 #include "DPESNF.hpp"
@@ -31,19 +25,12 @@
 #include "MTNF.hpp"
 #include "BandsNF.hpp" 
 //#include "DMNF.hpp"
-
 #include "PMPL_Container_Base.h"
 #include "CfgTypes.h"
+
+#include <functional>
+
 /////////////////////////////////////////////////////////////////////////////////////////
-
-
-class MultiBody;
-class Input;
-class Environment;
-class n_str_param;
-class MPProblem;
-template <class CFG, class WEIGHT> class Roadmap;
-
 
 namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
@@ -547,7 +534,7 @@ KClosest( Environment* _env,
   }
     }
   }
-  sort (kpairs_dist.begin(), kpairs_dist.end(), CFG_DIST_COMPARE<CFG>());
+  sort (kpairs_dist.begin(), kpairs_dist.end(), compare_second<CFG, double>());
   // return only cfgs
   typename vector<pair<CFG,double> >::iterator c_iter;
   for (c_iter = kpairs_dist.begin(); c_iter < kpairs_dist.end(); ++c_iter) 
@@ -624,7 +611,7 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
       kall.insert(kall.end(),kp.begin(),kp.end());
     }//endfor c1
 
-    sort(kall.begin(), kall.end(), DIST_Compare<VID>());
+    sort(kall.begin(), kall.end(), compare_second<pair<VID, VID>, double>());
     
     // now construct vector of k pairs to return (don't need distances...)
     for (int p = 0; p < kall.size(); p++)
@@ -690,7 +677,7 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
       }
     }//endfor c2
   
-    sort(kp.begin(), kp.end(), DIST_Compare<VID>());
+    sort(kp.begin(), kp.end(), compare_second<pair<VID, VID>, double>());
   
     // now construct vector of k pairs to return (don't need distances...)
     for (int p = 0; p < k && p < kp.size(); ++p)
@@ -1172,7 +1159,6 @@ OEPS(Roadmap<CFG, WEIGHT>* _rmp, VID in_query,
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;  
    
   double oeps = 0.0, max_a = 0.0, max_k = 0.0;  
-  int k = 0;
   CFG q_cfg = (*(pMap->find_vertex(in_query))).property();  
    
   InputIterator V1, V2;   

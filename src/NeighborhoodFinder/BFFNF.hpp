@@ -2,24 +2,13 @@
 #define _BRUTE_FORCE_FIND_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "OBPRMDef.h"
-#include "DistanceMetrics.h"
 #include "util.h"
-#include "MPProblem.h"
+#include "DistanceMetrics.h"
 
-#include "Clock_Class.h"
 #include <vector>
 #include <functional>
-
-class Cfg;
-class MultiBody;
-class Input;
-class Environment;
-class n_str_param;
-class MPProblem;
-template <class CFG, class WEIGHT> class Roadmap;
-
 using namespace std;
+
 /**Compare two distances in DIST_TYPE instances.
  *return (_cc1.second < _cc2.second)
  */
@@ -34,6 +23,7 @@ class T_DIST_Compare2 : public binary_function<const pair<T,double>,
   }
 };
 
+
 template<typename CFG, typename WEIGHT>
 class BFFNF: public NeighborhoodFinderMethod {
 
@@ -42,14 +32,14 @@ public:
   
   BFFNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node,in_pProblem) {
-    m_scale = in_Node.numberXMLParameter("k_2", true, double(0.0), double(0.0), double(100.0), "K value for BFFNF");
+    m_scale = in_Node.numberXMLParameter("k_2", true, 0, 0, 100, "K value for BFFNF");
     string dm2_label = in_Node.stringXMLParameter(string("dm2_method"),true,string(""),string("Distance Metric Method the second one"));
     dmm2 = in_pProblem->GetDistanceMetric()->GetDMMethod(dm2_label);
     
       nf1 = new BFNF<CFG,WEIGHT>(dmm);
     nf2 = new BFNF<CFG,WEIGHT>(dmm2);
   }
- BFFNF(shared_ptr<DistanceMetricMethod> _dmm,shared_ptr<DistanceMetricMethod>_dmm2,double _k2) :
+ BFFNF(shared_ptr<DistanceMetricMethod> _dmm,shared_ptr<DistanceMetricMethod>_dmm2,int _k2) :
     NeighborhoodFinderMethod() {
 //cout<<"initializing other constructor "<<endl;
 
@@ -60,6 +50,9 @@ public:
     dmm= _dmm ;
     dmm2=_dmm2;
 }
+  
+  virtual ~BFFNF() {}
+  
   virtual const std::string GetName () const {
     return BFFNF::GetClassName();
   }
@@ -113,7 +106,7 @@ private:
  shared_ptr<DistanceMetricMethod> dmm2;
   BFNF<CFG,WEIGHT> *nf1;
   BFNF<CFG,WEIGHT> *nf2;
-  double m_scale;
+  int m_scale;
 };
 
 template<typename CFG, typename WEIGHT>

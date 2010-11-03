@@ -339,7 +339,6 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
        LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm, vector<CFG>* _path) {
 
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
-  VID scvid, gcvid;
 
   //  vector<VID> cc; 
   vector< pair<size_t,VID> > ccs;
@@ -564,7 +563,7 @@ void
 Query<CFG, WEIGHT>::
 WritePath(Roadmap<CFG, WEIGHT>* rdmp, char* _filename ) {
   vector<Cfg*> ppath;
-  for(int i=0; i<path.size(); i++)
+  for(size_t i=0; i<path.size(); i++)
     ppath.push_back(&path[i]);
   WritePathConfigurations(_filename, ppath, rdmp->GetEnvironment());
 }

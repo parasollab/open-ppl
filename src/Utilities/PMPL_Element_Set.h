@@ -70,6 +70,9 @@ class element_set
     return m_elements[name];
   }
 
+  typename map<string, boost::shared_ptr<Element> >::const_iterator elements_begin() const { return m_elements.begin(); }
+  typename map<string, boost::shared_ptr<Element> >::const_iterator elements_end() const { return m_elements.end(); }
+
  protected:
   template <typename Last>
   void

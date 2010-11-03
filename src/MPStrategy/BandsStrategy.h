@@ -1,43 +1,19 @@
-
-
-
-
 #ifndef BandsStrategy
 #define BandsStrategy
 
+//#include<sys/time.h>
 
-
-
-#include "SwitchDefines.h"
-#include<sys/time.h>
-
-#include "OBPRMDef.h"
-#include "Roadmap.h"
-#include "GraphAlgo.h"
-
-#include "Clock_Class.h"
-#include "Stat_Class.h"
-#include "CollisionDetection.h"
-#include "ConnectMap.h"
-#include "DistanceMetrics.h"
-#include "LocalPlanners.h"
-#include "Query.h"
-
-#include "GeneratePartitions.h"
-#include <limits>
-
-
-//#include "ExplicitInstantiation.h"
-
-// util.h defines PMPL_EXIT used in initializing the environment
+#include "MPStrategyMethod.h"
+#include "ExpanderStats.h"
 #include "util.h"
 #include "MPProblem.h"
-#include "MPCharacterizer.h"
+#include "Roadmap.h"
+#include "Clock_Class.h"
+#include "Stat_Class.h"
+#include "ConnectMap.h"
+#include "DistanceMetricMethod.h"
+#include "LocalPlanners.h"
 
-#include "MapEvaluator.h"
-
-#include "MPStrategy/MPStrategyMethod.h"
-#include "MPStrategy/ExpanderStats.h"
 
 //extern vector< vector< double > > g_Min, g_Max;
 /*
@@ -253,7 +229,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         vector<VID> vids =  region->AddToRoadmap(vectorCfgs);
         nodes_added += vids.size();
         cout << " - total VIDS: " << nodes_added << endl;
-        for(int i=0; i<vids.size(); ++i) {
+        for(size_t i=0; i<vids.size(); ++i) {
           newVids.push_back(vids[i]);
         }
       }
@@ -326,7 +302,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       
       ///////////////////
       //Output stat info
-      NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
+      //NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
       OnlineStats degree = calcDegreeStats(*region->GetRoadmap()->m_pRoadmap);
       OnlineStats edges = calcEdgeStats(*region->GetRoadmap()->m_pRoadmap);
       vector<pair<size_t, VID> > CCStats;
@@ -463,7 +439,7 @@ private:
     vector<pair<double,VID> > vec_dist_vid;
     vec_dist_vid.reserve(vec_cc.size());
     
-    for(int i=0; i<vec_cc.size(); ++i) {
+    for(size_t i=0; i<vec_cc.size(); ++i) {
       double dist = dm->Distance(GetMPProblem()->GetEnvironment(),
                               _test, (*(_graph.find_vertex(vec_cc[i]))).property());
       vec_dist_vid.push_back(make_pair(dist, vec_cc[i]));
@@ -472,7 +448,7 @@ private:
     sort(vec_dist_vid.begin(), vec_dist_vid.end());
     Stat_Class _mystat;
     LPOutput<CfgType,WeightType> out_lp_output;
-    for(int i=0; i<vec_dist_vid.size(); ++i) {
+    for(size_t i=0; i<vec_dist_vid.size(); ++i) {
       if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->
               IsConnected(GetMPProblem()->GetEnvironment(), _mystat, dm, 
               _test, (*(_graph.find_vertex(vec_dist_vid[i].second))).property(),  &out_lp_output, 
@@ -489,7 +465,7 @@ private:
     vector<pair<size_t, VID> > CCStats;
     stapl::vector_property_map< GRAPH,size_t > cmap;
     get_cc_stats(_graph, cmap, CCStats);
-    for(int i=0; i<CCStats.size(); ++i) {
+    for(size_t i=0; i<CCStats.size(); ++i) {
       if(CanConnectToComponent(_graph, CCStats[i].second, _start) 
           && CanConnectToComponent(_graph, CCStats[i].second, _goal)) {
         return true;
@@ -628,7 +604,7 @@ class BandsStats : public MPStrategyMethod {
 		}
 	
 		//returns same cc pairs of nodes in roadmap rmp (thresholdVID is inclusive)
-		int fastCompareAllPairs(const Roadmap<CfgType,WeightType>& rmp, int thresholdVID){
+		int fastCompareAllPairs(const Roadmap<CfgType,WeightType>& rmp, size_t thresholdVID){
 			//cout<<"in fastCompareAllPairs"<<endl;
 			int sameCCPairs=0;
 			vector< pair<size_t, VID> > ccstats;
@@ -678,7 +654,7 @@ class BandsStats : public MPStrategyMethod {
 		vector<int> getSameCCStatsInUnion(const Roadmap<CfgType,WeightType>& unionrmp, int _interval){
 			//cout<<"in getSameCCStatsInUnion... numVertices = " << unionrmp.m_pRoadmap->get_num_vertices() << endl;
 			vector<int> sameCCStats;
-			for(int i = 0; i < unionrmp.m_pRoadmap->get_num_vertices(); i++){
+			for(size_t i = 0; i < unionrmp.m_pRoadmap->get_num_vertices(); i++){
 				if(i % _interval == 0){
 					int ccStats=fastCompareAllPairs(unionrmp, unionrmp.m_pRoadmap->get_num_vertices()-i);
 					sameCCStats.push_back(ccStats);
@@ -934,7 +910,7 @@ class BandsStats : public MPStrategyMethod {
 				v_vd.push_back(*vi);
 			}
 			
-			for(int i=size; i < v_vd.size(); i++){
+			for(size_t i=size; i < v_vd.size(); i++){
 				//cout<<"size="<<size<<"rmpsize = "<<vertices.size()<<"i="<<i<<endl;
 				rmp.m_pRoadmap->delete_vertex(v_vd[i]);
 			}
@@ -971,7 +947,7 @@ class BandsStats : public MPStrategyMethod {
       
       Environment* _env = this->GetMPProblem()->GetEnvironment();
       
-      for (int rmp_index = 0; rmp_index < rmps.size(); rmp_index++) {
+      for (size_t rmp_index = 0; rmp_index < rmps.size(); rmp_index++) {
         Roadmap<CfgType,WeightType>* rmp = rmps[rmp_index];
         
         rmp->SetEnvironment(_env);

@@ -20,13 +20,7 @@
 
 #include "OBPRMDef.h"              // Cfg type defined here
 #include "RoadmapGraph.h"       // graph class
-/////////////////////////////////////////////////////////////////////
-//Include OBPRM headers
-
-class Environment;        ///< Environment classes
-template <class CFG, class WEIGHT> class LocalPlanners;      ///< Local Planner       Algobase
-class DistanceMetric;     ///< Distance Metrics    Algobase
-class CollisionDetection; ///< Collision Detection Algobase
+#include "Environment.h"
 
 
 /////////////////////////////////////////////////////////////////////
@@ -420,12 +414,6 @@ typedef typename RoadmapGraph<CFG, WEIGHT>::vertex_descriptor VID;
   std::map<std::pair<VID,VID>,bool> m_lpcache;
 };
 
-
-#include "BasicDefns.h"
-#include "Environment.h"
-#include "DistanceMetrics.h"
-#include "util.h"
-#include "CollisionDetection.h"
 
 //===================================================================
 //  Roadmap class Methods: Constructors and Destructor

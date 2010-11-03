@@ -5,18 +5,15 @@
 #include <iostream>
 #include "LabeledObject.h"
 #include "MPProblem.h"
+#include "Clock_Elapsed.h"
+
 
 class NeighborhoodFinderMethod : public LabeledObject  {
 
 public:
-  NeighborhoodFinderMethod(std::string in_strLabel, XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
-        LabeledObject(in_strLabel), m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) 
-  { 
-    string dm_label = in_Node.stringXMLParameter(string("dm_method"), true, string("default"), string("Distance Metric Method"));
-    dmm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
-  }
-  
+  NeighborhoodFinderMethod(std::string in_strLabel, XMLNodeReader& in_Node, MPProblem* in_pProblem);
   NeighborhoodFinderMethod() : m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) { }
+  virtual ~NeighborhoodFinderMethod() {}
   virtual const std::string GetName () const = 0;
   virtual void PrintOptions(std::ostream& out_os) const = 0;
   
@@ -76,5 +73,17 @@ protected:
 
   shared_ptr<DistanceMetricMethod> dmm;
 };
+
+
+template <typename T, typename U>
+class compare_second : public binary_function<const pair<T, U>, const pair<T, U>, bool>
+{
+ public:
+  bool operator()(const pair<T, U>& _cc1, const pair<T, U>& _cc2) const
+  {
+    return _cc1.second < _cc2.second;
+  }
+};
+
 
 #endif //end #ifndef _NEIGHBORHOOD_FINDER_METHOD_H_

@@ -246,11 +246,11 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
   }
 
   sequence.push_back(_c2.CreateNewCfg());
-  for(int j=0; j<sequence.size(); j++)
+  for(size_t j=0; j<sequence.size(); j++)
   {
     tmp = sequence[j]->GetData();
     cout << "C" << j << ": ";
-    for(int k=0; k<tmp.size(); k++) {
+    for(size_t k=0; k<tmp.size(); k++) {
       cout << tmp[k] << ", ";
     }
     cout << "end \n" << flush;
@@ -263,7 +263,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     std::string Callee(GetName());
     std::string Method("-transform_at_s::IsConnected");
     Callee = Callee + Method;
-    for(int i=1; i<sequence.size()-1; ++i)
+    for(size_t i=1; i<sequence.size()-1; ++i)
     {
       cd_cntr++;
       if((!sequence[i]->InBoundingBox(_env)) || (sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))))
@@ -275,7 +275,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
 
   if(connected)
   {
-    for(int i=0; i<sequence.size()-1; ++i)
+    for(size_t i=0; i<sequence.size()-1; ++i)
     {
       if(this->binarySearch)
         connected = IsConnectedSLBinary(_env, Stats, dm, *sequence[i], *sequence[i+1],
@@ -300,7 +300,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
   }
   Stats.IncLPCollDetCalls("Transform_At_Se", cd_cntr);
 
-  for(int i=0; i<sequence.size(); ++i)
+  for(size_t i=0; i<sequence.size(); ++i)
   {
     if(sequence[i] != NULL)
       delete sequence[i];
@@ -369,7 +369,7 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
   }
 
   sequence.push_back(_c2.CreateNewCfg());
-  for(int j=0; j<sequence.size(); j++)
+  for(size_t j=0; j<sequence.size(); j++)
   {
     tmp = sequence[j]->GetData();
     cout << "C" << j << ": ";
@@ -386,7 +386,7 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
     std::string Callee(GetName());
     std::string Method("-transform_at_s::IsConnected");
     Callee = Callee + Method;
-    for(int i=1; i<sequence.size()-1; ++i)
+    for(size_t i=1; i<sequence.size()-1; ++i)
     {
       cd_cntr++;
       if((!sequence[i]->InBoundingBox(_env)) || (sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))))
@@ -399,7 +399,7 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
 
   if(connected)
   {
-    for(int i=0; i<sequence.size()-1; ++i)
+    for(size_t i=0; i<sequence.size()-1; ++i)
     {
       if(this->binarySearch)
         connected = IsConnectedSLBinary(_env, Stats, dm, *sequence[i], *sequence[i+1],
@@ -424,7 +424,7 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
   }
   Stats.IncLPCollDetCalls("Transform_At_S", cd_cntr);
 
-  for(int i=0; i<sequence.size(); ++i)
+  for(size_t i=0; i<sequence.size(); ++i)
   {
     if(sequence[i] != NULL)
       delete sequence[i];

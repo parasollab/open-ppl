@@ -2,30 +2,14 @@
 #define _DPES_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "OBPRMDef.h"
-#include "DistanceMetrics.h"
 #include "util.h"
 #include "MPProblem.h"
 #include "DPES.h"
 
-#include "Clock_Class.h"
 #include <vector>
 #include <functional>
-
-class Cfg;
-class MultiBody;
-class Input;
-class Environment;
-class n_str_param;
-class MPProblem;
-template <class CFG, class WEIGHT> class Roadmap;
-
 using namespace std;
-/**Compare two distances in DIST_TYPE instances.
- *return (_cc1.second < _cc2.second)
- */
 
- 
 
 template<typename CFG, typename WEIGHT>
 class VID_DPES_proxy{
@@ -121,8 +105,7 @@ typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
        
 public:
   DPESNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node, in_pProblem), m_dpes(NULL),
-    m_dprox(NULL) {
+    NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node, in_pProblem), m_dprox(NULL), m_dpes(NULL) {
   
     
     m_m = in_Node.numberXMLParameter("m", false, int(3),
@@ -132,20 +115,17 @@ public:
                                                   int(5), int(1000),
                                                   "l value for DPES");
     m_cur_roadmap_version= -1;
-    //m_dpes = NULL;
-    //m_dprox = NULL;
   }
 
   DPESNF(DistanceMetricMethod* _dmm, std::string _strLabel) :
-    NeighborhoodFinderMethod(_strLabel), m_dpes(NULL), m_dprox(NULL) {
+    NeighborhoodFinderMethod(_strLabel), m_dprox(NULL), m_dpes(NULL) {
     dmm = _dmm;
     m_cur_roadmap_version = -1;
     m_m = 3;
     m_l = 50;
-    
-    //m_dpes = NULL;
-    //m_dprox = NULL;
   }
+
+  virtual ~DPESNF() {}
 
   virtual const std::string GetName () const {
     return DPESNF::GetClassName();

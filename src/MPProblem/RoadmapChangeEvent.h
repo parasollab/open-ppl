@@ -31,6 +31,7 @@ class RoadmapChangeEvent {
     class BaseChangeEvent
     {
       public:
+        virtual ~BaseChangeEvent() {}
         virtual ChangeType GetType() const = 0;
       
       protected:
@@ -46,6 +47,7 @@ class RoadmapChangeEvent {
           vid = _vid;
           this->item_type = ADD_VERTEX;
         }
+        virtual ~AddVertexEvent() {}
 
         ChangeType GetType() const { return this->item_type; }
         const CFG& GetCFG() const { return cfg; }

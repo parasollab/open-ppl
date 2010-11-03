@@ -140,24 +140,6 @@ void Cfg_fixed_PRR::GetRandomCfg(double R, double rStep){
 }
 
 
-void Cfg_fixed_PRR::GetRandomRay(double incr, Environment* env, DistanceMetric* dm) {
-  double alpha,beta,z, z1;
-  
-  alpha = 2.0*M_PI*OBPRM_drand();
-  beta  = 2.0*M_PI*OBPRM_drand();
-  z = incr*cos(beta);
-  z1 = incr*sin(beta);
-   
-  v.clear();
-  v.push_back(z1*cos(alpha));
-  v.push_back(z1*sin(alpha));
-  v.push_back(z);
-  
-  obst = -1;
-  tag = -1;
-  clearance = -1;
-}
-
 void Cfg_fixed_PRR::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
   double alpha,beta,z, z1;
   

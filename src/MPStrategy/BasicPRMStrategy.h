@@ -8,7 +8,6 @@
 #include "CollisionDetection.h"
 #include "ValidityChecker.hpp"
 #include "ConnectMap.h"
-#include "DistanceMetrics.h"
 #include "LocalPlanners.h"
 #include "MPStrategy/MPStrategyMethod.h"
 #include "MPProblem/MPProblem.h"

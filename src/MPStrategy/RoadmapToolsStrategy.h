@@ -14,7 +14,6 @@
 #include "Stat_Class.h"
 #include "CollisionDetection.h"
 #include "ConnectMap.h"
-#include "DistanceMetrics.h"
 #include "LocalPlanners.h"
 #include "Sampler.h"
 #include "GeneratePartitions.h"

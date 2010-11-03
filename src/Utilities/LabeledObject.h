@@ -2,7 +2,7 @@
 #define _LABELED_OBJECT_H_
 
 #include "XmlWrapper.h"
-
+#include <string>
 
 /// Base class for Labeled Objects.
 ///
@@ -20,7 +20,7 @@ public:
   ///\name Access Methods
   //@{
   ///Returns the object's label as a string
-  inline const string& GetObjectLabel() const { return m_strLabel; }
+  inline const std::string& GetObjectLabel() const { return m_strLabel; }
   ///Sets the object's label manually
   inline void SetLabel(const std::string& in_strLabel) { m_strLabel = in_strLabel; }
   //@}
@@ -31,10 +31,10 @@ protected:
   /// \note This function requires that the XML node has an attribute called 
   ///  "Label."  If this is missing, then the program will warn and exit.
   std::string ParseLabelXML (XMLNodeReader& in_Node) const {
-    return in_Node.stringXMLParameter(string("Label"),
+    return in_Node.stringXMLParameter(std::string("Label"),
                                       true,
-                                      string(""),
-                                      string("Label Identifier"));
+                                      std::string(""),
+                                      std::string("Label Identifier"));
   }
    
 

@@ -26,8 +26,6 @@
 //Include mathtool vec
 #include "Vector.h"
 
-#include "Environment.h"
-
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "BasicDefns.h"
@@ -35,14 +33,21 @@
 #include "boost/shared_ptr.hpp"
 using boost::shared_ptr;
 
+class Cfg;
 class Stat_Class;
+class Environment;
+class CollisionDetection;
+class DistanceMetricMethod;
+class CDInfo;
+class MultiBody;
+class MPProblem;
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 //
 /// Information about the clearance of a cfg.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////
-class Cfg;
 class ClearanceInfo {
 
  private:
@@ -116,16 +121,6 @@ class ClearanceInfo {
   *
   *@see CfgManager, Cfg_free, Cfg_free_serial, Cfg_fixed_tree, Cfg_fixed_PRR.
   */
-class Body;
-class Environment;
-class CollisionDetection;
-class DistanceMetric;
-class DistanceMetricMethod;
-class CDInfo;
-class MultiBody;
-class MPProblem;
-
-typedef
 class Cfg {
  public:
 
@@ -352,7 +347,6 @@ guration where workspace robot's EVERY VERTEX
   */
   virtual void GetRandomCfg(Environment* env, shared_ptr<DistanceMetricMethod> _dm,
           double length);
-  virtual void GetRandomRay(double incr, Environment* env, DistanceMetric* dm) = 0;
   virtual void GetRandomRay(double incr, Environment* env,  shared_ptr<DistanceMetricMethod> dm) = 0;
 
   /// generates random configuration that is in Free CSpace. 
@@ -479,13 +473,7 @@ guration where workspace robot's EVERY VERTEX
   void SetStat(string in_strStat,double in_dstat);
 
   //polygonal approximation
-  vector<Vector3D> PolyApprox (Environment *env) const
-  {
-    vector<Vector3D> result;	//store the result after doing approximation
-    ConfigEnvironment(env);
-    env->GetMultiBody(env->GetRobotIndex())->PolygonalApproximation(result);
-    return result;
-  }
+  vector<Vector3D> PolyApprox (Environment *env) const;
   
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
