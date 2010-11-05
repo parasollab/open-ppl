@@ -99,7 +99,7 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
         VID _vid, vector<VID>& closest) ;
 
   template <typename InputIterator, typename OutputIterator>
-  void FindKNeighbors(
+  OutputIterator FindKNeighbors(
         Roadmap<CFG, WEIGHT>* _rm, CFG cfg, 
         InputIterator _itr2_first, InputIterator _itr2_last, 
         int k, const vector<VID>& iter_neighbors, OutputIterator closest_iter) ;
@@ -271,7 +271,6 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             InputIterator _itr2_first, InputIterator _itr2_last)
 {   
     if (m_debug) { cout << endl; PrintOptions(cout); }
-    
     // the vertices in this iteration are the source for the connection operation
     Clock_Class KClosestClock;
     
@@ -280,7 +279,6 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     
     for(InputIterator itr1 = _itr1_first; itr1 != _itr1_last; ++itr1) {
       int iter_size = _itr2_last - _itr2_first;
-
       // calculate the number of neighbors to retrieve at each iteration
       int k_to_find = m_k;
       if(m_count_failures) //add m_fail to attempts since they will be counted
@@ -307,14 +305,16 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
         KClosestClock.StartClock("kClosest");
         vector<VID> closest;
-        FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, iter_neighbors, back_insert_iterator<vector<VID> >(closest)); 
-        copy(closest.begin(), closest.end(), back_insert_iterator<vector<VID> >(iter_neighbors));
+	back_insert_iterator<vector<VID> > iter_begin(closest);
+        back_insert_iterator<vector<VID> > iter_end = FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, iter_neighbors, iter_begin);      
+        copy(closest.begin(), closest.end(), iter_end);
+ 
         KClosestClock.StopClock();
         if (m_debug)
         {
-          cout << "neighbors: ";
+          
           copy(closest.begin(), closest.end(), ostream_iterator<VID>(cout, " "));
-          cout << endl;
+          
         }
         
         ConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, total_success, total_failure, *itr1, closest);
@@ -353,7 +353,8 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                                            
   // connect the found k-closest to the current iteration's CFG
   for(typename vector<VID>::iterator itr2 = closest.begin(); itr2!= closest.end(); ++itr2) {
-    
+    if(*itr2==INVALID_VID)
+      continue;
     if (m_debug) cout << "\t(s,f) = (" << success << "," << failure << ")";
     if (m_debug) cout << " | VID = " << *itr2;
     if (m_debug) cout << " | dist = " << dm->Distance(_rm->GetEnvironment(), (*(_rm->m_pRoadmap->find_vertex(_vid))).property(), (*(_rm->m_pRoadmap->find_vertex(*itr2))).property());
@@ -452,7 +453,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 template <typename InputIterator, typename OutputIterator>
-void NeighborhoodConnection<CFG, WEIGHT>::
+OutputIterator NeighborhoodConnection<CFG, WEIGHT>::
 FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg, 
               InputIterator _itr2_first, InputIterator _itr2_last, 
               int k, const vector<VID>& iter_neighbors, OutputIterator closest_iter)
@@ -480,9 +481,9 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
     // find the k-closest neighbors
     NeighborhoodFinder::NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf);
     if (_itr2_last - _itr2_first == (int)_rm->m_pRoadmap->get_num_vertices()) 
-      this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, cfg, k, closest_iter);
+      return this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, cfg, k, closest_iter);
     else 
-      this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, _itr2_first, _itr2_last, cfg, k, closest_iter);
+      return this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, _itr2_first, _itr2_last, cfg, k, closest_iter);
   }                                           
 }              
 
