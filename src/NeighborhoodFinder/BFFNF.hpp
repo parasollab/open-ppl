@@ -157,8 +157,9 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     vector<VID> closest;
  
    // typename vector<VID>::iterator myint;
-   nf1->KClosest(_rmp,_cfg,m_scale,back_insert_iterator<vector<VID> >(closest));
-nf2->KClosest(_rmp,closest.begin(),closest.end(),_cfg,k,_out);
+   back_insert_iterator<vector<VID> > b_iter = nf1->KClosest(_rmp,_cfg,m_scale,back_insert_iterator<vector<VID> >(closest));
+   copy(closest.begin(), closest.end(),b_iter);
+   return nf2->KClosest(_rmp,closest.begin(),closest.end(),_cfg,k,_out);
 
 }
 
