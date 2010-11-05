@@ -50,22 +50,30 @@ public:
     
     int max_index = 0;
     double max_value = MAX_DIST;
-    vector< pair<VID, double> > neighbors(getK(), make_pair(INVALID_VID, max_value));
+    vector< pair<VID, double> > neighbors;
         
     for (VEC_ITR itr = _candidates_first; itr != _candidates_last; ++itr) {
       
       double dist = (*itr).second;
-      
-      // if this distance is less than the existing max, we'll replace it 
-      if(dist < neighbors[max_index].second) { 
-        neighbors[max_index] = *itr;
-        max_value = dist;
+      if(neighbors.size()< getK()){
+        for(vector< pair<VID, double> >::iterator iter2 = neighbors.begin(); iter2!=neighbors.end();iter2++){
+	  if((*iter2).second > (*itr).second) {
+	    swap(*itr,*iter2);
+	  }
+	}
+	neighbors.push_back(*itr);
+      }else{
+        // if this distance is less than the existing max, we'll replace it 
+        if(dist < neighbors[max_index].second) { 
+          neighbors[max_index] = *itr;
+          max_value = dist;
 
-        //search for new max_index (faster O(k) than sort O(k log k) )
-        for (int p = 0; p < getK(); ++p) {
-          if (max_value < neighbors[p].second) {
-            max_value = neighbors[p].second;
-            max_index = p;
+          //search for new max_index (faster O(k) than sort O(k log k) )
+          for (int p = 0; p < getK(); ++p) {
+            if (max_value < neighbors[p].second) {
+              max_value = neighbors[p].second;
+              max_index = p;
+            }
           }
         }
       }
@@ -119,7 +127,7 @@ public:
       neighbors.push_back(p);
       if (m_debug) cout << " | added!" << endl;
     }
-    
+  
     return neighbors;
   }
   
@@ -276,7 +284,7 @@ public:
     // note: A temporary fix (hack) until distance metric is properly fixed. This picks the second listed
     // distance metric from the xml file.
       
-     string dm2_label=in_Node.stringXMLParameter(string(" dm2 method"),true,string(""),string("Distance Metric Method"));
+     string dm2_label=in_Node.stringXMLParameter(string("dm2_method"),true,string(""),string("Distance Metric Method"));
      
     dmm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm2_label);
     m_min = in_Node.numberXMLParameter(string("min"), false, double(0.0), double(0.0), double(100000.0), "min");
@@ -436,7 +444,7 @@ private:
         candidates.push_back(*V1);
       }
       if (getDebug()) cout << endl;
-      //if (getDebug()) cout << "Candidate: VID = " << (*V1).first << " | dist = " << (*V1).second << endl;
+      if (getDebug()) cout << "Candidate: VID = " << (*V1).first << " | dist = " << (*V1).second << endl;
     }
     
     return candidates;
@@ -621,11 +629,8 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   int k, OutputIterator _out)
 {
   
-  OutputIterator out_iter=_out;
-  for(int i=0; i<k; i++){
-    *out_iter= INVALID_VID;
-    ++out_iter;
-  }
+  
+ 
   
   IncrementNumQueries();
   StartTotalTime();
@@ -659,11 +664,11 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   }
    
   sort(neighbors.begin(), neighbors.end(), compare_second<VID, double>());
-    
   // now add VIDs from neighbors to output
   for (size_t p = 0; p < neighbors.size(); p++) {
     if (neighbors[p].first != INVALID_VID) {
       if (m_debug) cout << "\tVID = " << neighbors[p].first << " | dist = " << neighbors[p].second << endl;
+     
       *_out = neighbors[p].first;
       ++_out;
     }
