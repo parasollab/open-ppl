@@ -78,7 +78,7 @@ class spillTree{
   double maxPerBranch;
   bool divideAtMedian;
   Roadmap<CFGTYPE,WEIGHT>* rmap;
-  DistanceMetricMethod* dmm;
+  shared_ptr<DistanceMetricMethod> dmm;
   graphType *tree;
   VID root;
   Environment *env;
@@ -401,7 +401,7 @@ class spillTree{
   }
 
 
-  void setDistanceMetric(DistanceMetricMethod* _dmm){
+  void setDistanceMetric(shared_ptr<DistanceMetricMethod> _dmm){
     dmm=_dmm;
   }
 

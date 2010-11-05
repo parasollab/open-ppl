@@ -32,7 +32,6 @@ public:
 
   MTNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     NeighborhoodFinderMethod(ParseLabelXML(in_Node)) {
-    dmm = in_pProblem->GetDistanceMetric()->GetDefault()[0];
 
     m_epsilon = in_Node.numberXMLParameter("epsilon", false, double(0.0),
 					   double(0.0), double(100.0),
@@ -44,7 +43,7 @@ public:
     //spillTreePtr=&sTree;
   }
 
-  MTNF(DistanceMetricMethod* _dmm, std::string _strLabel) :
+  MTNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) :
     NeighborhoodFinderMethod(_strLabel) {
     dmm = _dmm;
     m_epsilon = 0.0;
@@ -108,7 +107,6 @@ public:
     
 private:
   //spillTree<CFG, WEIGHT> *spillTreePtr;
-  DistanceMetricMethod* dmm; ///\todo change to a nice typedef later!
   double m_epsilon; // appr
   //Treem_tree;
   int m_cur_roadmap_version; // used when updating internal model

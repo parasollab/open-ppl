@@ -65,7 +65,7 @@ public:
     }
   }
 
-  CGALNF(DistanceMetricMethod* _dmm, std::string _strLabel) :
+  CGALNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) :
     NeighborhoodFinderMethod(_strLabel) {
     dmm = _dmm;
     m_epsilon = 0.0;

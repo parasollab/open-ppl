@@ -92,7 +92,7 @@ public:
     
   }
 
-  MPNNNF(DistanceMetricMethod* _dmm, std::string _strLabel) :
+  MPNNNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) :
     NeighborhoodFinderMethod(_strLabel) {
     dmm = _dmm;
     
@@ -196,7 +196,6 @@ private:
   int m_max_points; // maximum number of points the internal kd-tree can store
   int m_max_neighbors; // maximum number of neighbors the internal kd-tree can find
   
-  DistanceMetricMethod* dmm; ///\todo change to a nice typedef later!
   MPNNWrapper *kdtree; // set up by the AddPoint function
 };
 

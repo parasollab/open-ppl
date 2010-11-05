@@ -61,7 +61,7 @@ class DistanceMetric_DPES_proxy {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
-  DistanceMetric_DPES_proxy(DistanceMetricMethod* dm, Environment* env) { 
+  DistanceMetric_DPES_proxy(shared_ptr<DistanceMetricMethod> dm, Environment* env) { 
     //if(m_dm == NULL)
       m_dm = dm; 
     //if(m_env == NULL)
@@ -86,7 +86,7 @@ public:
 
 
 private:
-   DistanceMetricMethod* m_dm;
+   shared_ptr<DistanceMetricMethod> m_dm;
    Environment* m_env;
 }; 
  
@@ -117,7 +117,7 @@ public:
     m_cur_roadmap_version= -1;
   }
 
-  DPESNF(DistanceMetricMethod* _dmm, std::string _strLabel) :
+  DPESNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) :
     NeighborhoodFinderMethod(_strLabel), m_dprox(NULL), m_dpes(NULL) {
     dmm = _dmm;
     m_cur_roadmap_version = -1;
@@ -179,7 +179,6 @@ public:
     int getL(size_t _k)  const {return m_l; }
 
 private:
-  DistanceMetricMethod* dmm; ///\todo change to a nice typedef later!  
   DM_PROXY* m_dprox;//(dmm, _rmp->GetEnvironment());
   DPES_TYPE* m_dpes;//(dprox, dprox);
   int m_cur_roadmap_version;
@@ -256,7 +255,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   // 3) Make DistanceMetric_proxy
   //    -- compare VID_DPES_proxy VID_DPES_proxy
   //    -- compare CFG_DPES_pivot_proxy VID_DPES_proxy
-  //    -- use DistanceMetricMethod* dmm received from constructor
+  //    -- use shared_ptr<DistanceMetricMethod> dmm received from constructor
    //return _input_first;
    EndTotalTime();
    return _out;

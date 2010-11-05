@@ -546,7 +546,7 @@ public:
     }
   }
 
-  BandsNF(DistanceMetricMethod* _dmm, std::string _strLabel) : NeighborhoodFinderMethod(_strLabel) {
+  BandsNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) : NeighborhoodFinderMethod(_strLabel) {
     dmm = _dmm;
     m_debug = false;
   }
@@ -602,7 +602,6 @@ public:
 
 private:
   
-  DistanceMetricMethod* dmm; ///\todo change to a nice typedef later!
   bool m_debug;
   vector<Band<CFG, WEIGHT>* > m_bands;
   
