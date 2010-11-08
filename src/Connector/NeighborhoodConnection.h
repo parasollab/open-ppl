@@ -307,7 +307,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         vector<VID> closest;
 	back_insert_iterator<vector<VID> > iter_begin(closest);
         back_insert_iterator<vector<VID> > iter_end = FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, iter_neighbors, iter_begin);      
-        copy(closest.begin(), closest.end(), iter_end);
+        //copy(closest.begin(), closest.end(), iter_end);
  
         KClosestClock.StopClock();
         if (m_debug)
