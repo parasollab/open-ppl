@@ -31,7 +31,7 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
       LOG_DEBUG_MSG("CCExpandCharacterizer::LocalNodeInfoCharacterizer()");
       ParseXML(in_Node);    
-      dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
+      string dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
 
       dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
@@ -89,7 +89,6 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
     };
     virtual void PrintOptions(ostream& out_os) {};
   private:
-    string dm_label;
     shared_ptr<DistanceMetricMethod> dm;
 };
 
@@ -106,7 +105,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       LOG_DEBUG_MSG("LocalNodeInfoCharacterizer::LocalNodeInfoCharacterizer()");
       m_dRadius = 0;
       ParseXML(in_Node);    
-      dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
+      string dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
       dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
       LOG_DEBUG_MSG("~LocalNodeInfoCharacterizer::LocalNodeInfoCharacterizer()");
@@ -140,8 +139,8 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       typename vector<VID>::iterator itr;
       for(itr = vids.begin(); itr != vids.end(); ++itr)
       {
-        vector<VID> vids = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)->RangeQuery(pRoadmap,*itr,m_dRadius);
-        vector<VID> col_vids = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)->RangeQuery(pColRoadmap,(*(pGraph->find_vertex(*itr))).property(),m_dRadius);
+        vector<VID> vids = dm->RangeQuery(pRoadmap,*itr,m_dRadius);
+        vector<VID> col_vids = dm->RangeQuery(pColRoadmap,(*(pGraph->find_vertex(*itr))).property(),m_dRadius);
         //cout << "VID = " << *itr << " has " << vids.size() 
         //<< "nodes in radius in Free Map and " 
         //<< col_vids.size() << " in Col Map " << endl;
@@ -168,7 +167,6 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
     
     virtual void PrintOptions(ostream& out_os) {};
   private:
-    string dm_label;
     shared_ptr< DistanceMetricMethod> dm;
     
     bool IsBridgeLike(CFG free_cfg,vector<CFG> vec_col) {
