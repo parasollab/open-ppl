@@ -43,7 +43,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     string filename = in_Node.stringXMLParameter(string("witness_file"),false,
                                     string(""),string("Witness Filename"));
 				    
-    dm_label = in_Node.stringXMLParameter(string("dm_method"), false, string("default"), string("Distance Metric Method"));
+    string dm_label = in_Node.stringXMLParameter(string("dm_method"), false, string("default"), string("Distance Metric Method"));
     dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
       
     if (filename.length() > 0) {
@@ -263,7 +263,6 @@ class MPRegionComparerMethod: public MPBaseObject {
   MPProblem * m_pProblem;
   vector< CFG > m_witness_cfgs;
   shared_ptr< DistanceMetricMethod> dm;
-  string dm_label;
 };
 
 
@@ -299,8 +298,6 @@ public:
 
 
 private:
-  string dm_label;
-  shared_ptr<DistanceMetricMethod> dm;
 };
 
 
@@ -653,8 +650,6 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
   }
 
 private:
-  string dm_label;
-  shared_ptr<DistanceMetricMethod> dm;
 };
 
 #endif /* _MPREGIONCOMPARERMETHOD_H_ */
