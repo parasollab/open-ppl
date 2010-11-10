@@ -115,7 +115,6 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
   bool m_random;
   bool m_debug;
   string dm_label;
-  shared_ptr<DistanceMetricMethod> dm;
 };
 
 
@@ -376,6 +375,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             VID _vid, vector<VID> closest)
 { 
   LPOutput<CFG,WEIGHT> lpOutput;
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label);
   
   // connect the found k-closest to the current iteration's CFG
   for(typename vector<VID>::iterator itr2 = closest.begin(); itr2!= closest.end(); ++itr2) {
@@ -435,7 +435,6 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     // record the attempted connection
     Stats.IncConnections_Attempted();
 
-    shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label);
     // attempt connection with the local planner
     if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
                 (*(_rm->m_pRoadmap->find_vertex(_vid))).property(),
