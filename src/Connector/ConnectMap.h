@@ -120,19 +120,6 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
   }
   
 
-  void SetNodeConnectionMethods(vector<NodeConnectionMethod<CFG,WEIGHT>*>& methods)
-  {
-    selected_node_methods = methods;
-  }
-  void SetComponentConnectionMethods(vector<ComponentConnectionMethod<CFG,WEIGHT>*>& methods)
-  {
-    selected_component_methods = methods;
-  }
-  //void SetRegionConnectionMethods(vector<RegionConnectionMethod<CFG,WEIGHT>*>& methods)
-  //{
-  //  selected_region_methods = methods;
-  //}
-
   //////////////////////
   // I/O methods
   void PrintOptions(ostream& out_os);
@@ -362,17 +349,11 @@ private:
 
 
  protected:
-  //////////////////////
-  // Data
-  vector<NodeConnectionMethod<CFG,WEIGHT> *> all_node_methods;
-  vector<NodeConnectionMethod<CFG,WEIGHT> *> selected_node_methods;
-
-  vector<ComponentConnectionMethod<CFG,WEIGHT> *> all_component_methods;
-  vector<ComponentConnectionMethod<CFG,WEIGHT> *> selected_component_methods;
-
   void ParseXML(XMLNodeReader& in_Node);
   
  public:
+  //////////////////////
+  // Data
   CDInfo cdInfo;
   static double connectionPosRes, ///< Position resolution for node connection
          connectionOriRes; ///< Orientation resolution for node connection
@@ -390,34 +371,6 @@ double ConnectMap<CFG, WEIGHT>::connectionOriRes = 0.05;
 template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::
 ConnectMap() {
-
-  NeighborhoodConnection<CFG,WEIGHT>* neighborhoodconn = new NeighborhoodConnection<CFG,WEIGHT>();
-  all_node_methods.push_back(neighborhoodconn);
-
-  PreferentialAttachment<CFG,WEIGHT>* prefconn = new PreferentialAttachment<CFG,WEIGHT>();
-  all_node_methods.push_back(prefconn);
-
-  //setup component connection methods
-  selected_component_methods.clear();
-  all_component_methods.clear();
-
-  ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>();
-  all_component_methods.push_back(connectccs);
-
-  ConnectkCCs<CFG,WEIGHT>* connectkccs = new ConnectkCCs<CFG,WEIGHT>();
-  all_component_methods.push_back(connectkccs);
-
-
-/*   RRTexpand<CFG,WEIGHT>* rrtexpand = new RRTexpand<CFG,WEIGHT>(); */
-/*   all_component_methods.push_back(rrtexpand); */
-
-/*   RRTcomponents<CFG,WEIGHT>* rrtcomp = new RRTcomponents<CFG,WEIGHT>(); */
-/*   all_component_methods.push_back(rrtcomp); */
-
-  //RayTracer<CFG,WEIGHT>* rt = new RayTracer<CFG,WEIGHT>();
-  //all_component_methods.push_back(rt);
-
-
 }
 
 template <class CFG, class WEIGHT>
@@ -426,11 +379,6 @@ ConnectMap(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   MPBaseObject(in_Node, in_pProblem){
   LOG_DEBUG_MSG("ConnectMap::ConnectMap()");
   ParseXML(in_Node);
-  
-  
-  if(selected_node_methods.size() < 1)
-    LOG_WARNING_MSG("No Connection Methods selected!");
-
   LOG_DEBUG_MSG("~ConnectMap::ConnectMap()");
 }
 
@@ -490,12 +438,6 @@ ConnectMap(Roadmap<CFG,WEIGHT> * rdmp,
 template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::
 ~ConnectMap() {
-  selected_node_methods.clear();
-  all_node_methods.clear();
-
-  selected_component_methods.clear();
-  all_component_methods.clear();
-
 }
 
 
@@ -508,14 +450,6 @@ void
 ConnectMap<CFG,WEIGHT>::
 PrintOptions(ostream& out_os) {
   out_os << "  Connection Methods" << endl;
-  typename vector<NodeConnectionMethod<CFG,WEIGHT>*>::iterator I;
-  for(I = all_node_methods.begin(); I != all_node_methods.end(); ++I)
-    (*I)->PrintOptions(out_os);
-
-  typename vector<ComponentConnectionMethod<CFG,WEIGHT>*>::iterator J;
-  for(J = all_component_methods.begin(); J != all_component_methods.end(); ++J)
-    (*J)->PrintOptions(out_os);
-
 }
 
 
