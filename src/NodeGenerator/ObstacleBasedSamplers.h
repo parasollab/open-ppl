@@ -21,7 +21,6 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
   shared_ptr<DistanceMetricMethod >dm;
   ValidityChecker<CFG>* vc;
   std::string strVcmethod;
-  std::string strLabel;
   //int n_shells_free, n_shells_coll;
   double step_size;
   bool useBBX;
@@ -54,7 +53,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG>
   dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
   env = in_pProblem->GetEnvironment();
   
-  strLabel= this->ParseLabelXML( in_Node);
+  string strLabel= this->ParseLabelXML( in_Node);
   this->SetLabel(strLabel);
     cout << "step_size = " << step_size << endl;
     if(step_size <= 0.0)

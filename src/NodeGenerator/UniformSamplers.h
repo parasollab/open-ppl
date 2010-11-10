@@ -17,7 +17,6 @@ class UniformRandomSampler : public SamplerMethod<CFG>
  private:
   Environment* env;
   Stat_Class *Stats;
-  std::string strLabel;
   
  public:
   UniformRandomSampler() {}
@@ -30,7 +29,7 @@ class UniformRandomSampler : public SamplerMethod<CFG>
     LOG_DEBUG_MSG("UniformRandomSampler::UniformRandomSampler()");
     ParseXML(in_Node);
     cout << "UniformRandomSampler";
-    strLabel= this->ParseLabelXML( in_Node);
+    string strLabel= this->ParseLabelXML( in_Node);
     this->SetLabel(strLabel);
     LOG_DEBUG_MSG("~UniformRandomSampler::UniformRandomSampler()");
   }
@@ -144,7 +143,6 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   ValidityChecker<CFG>* vc;
   std::string strVcmethod;
   CDInfo *cdInfo;
-  std::string strLabel;
 
  public:
   UniformRandomFreeSampler() {}
@@ -162,7 +160,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
                                              string(""), string("Validity Test Method"));
     cout << "strVcmethod = " << strVcmethod << endl;
     vc = in_pProblem->GetValidityChecker();
-    strLabel= this->ParseLabelXML( in_Node);
+    string strLabel= this->ParseLabelXML( in_Node);
     this->SetLabel(strLabel);
     LOG_DEBUG_MSG("~UniformRandomFreeSampler::UniformRandomFreeSampler()");
   }
@@ -276,7 +274,6 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   Stat_Class  *Stats;
   CollisionDetection* cd;
   CDInfo  *cdInfo;
-  std::string strLabel;
 
  public:
   UniformRandomCollisionSampler() {}
@@ -299,7 +296,7 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
     LOG_DEBUG_MSG("UniformRandomCollisionSampler::ParseXML()");
     //print(cout);
     cout << "UniformRandomCollisionSampler";
-    strLabel= this->ParseLabelXML( in_Node);
+    string strLabel= this->ParseLabelXML( in_Node);
     this->SetLabel(strLabel);
     LOG_DEBUG_MSG("~UniformRandomCollisionSampler::ParseXML()");
   }

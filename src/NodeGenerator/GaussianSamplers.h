@@ -16,7 +16,6 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   shared_ptr<DistanceMetricMethod> dm;
   double d;
   bool useBBX;
-  string strLabel;
   string strVcmethod;
 
  public:
@@ -36,7 +35,7 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   vc = in_pProblem->GetValidityChecker();
   string dm_label =in_Node.stringXMLParameter(string("dm_method"), true, string("default"), string("Distance Metric Method"));
   dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label); 
-  strLabel= this->ParseLabelXML( in_Node);
+  string strLabel= this->ParseLabelXML( in_Node);
   this->SetLabel(strLabel);
   LOG_DEBUG_MSG("~GaussRandomSampler::GaussRandomSampler()");
   }
@@ -204,7 +203,6 @@ class BridgeTestRandomFreeSampler : public SamplerMethod<CFG>
   CDInfo *cdInfo;
   shared_ptr<DistanceMetricMethod> dm;
   double d;
-  std::string strLabel;
   std::string strVcmethod;
 
  public:
@@ -228,7 +226,7 @@ class BridgeTestRandomFreeSampler : public SamplerMethod<CFG>
   string dm_label = in_Node.stringXMLParameter(string("dm_method"), true, string("default"), string("Distance Metric Method"));
   dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label); 
  
-  strLabel= this->ParseLabelXML( in_Node);
+  string strLabel= this->ParseLabelXML( in_Node);
   this->SetLabel(strLabel);
   LOG_DEBUG_MSG("~BridgeTestRandomFreeSampler::BridgeTestRandomFreeSampler()");
   }

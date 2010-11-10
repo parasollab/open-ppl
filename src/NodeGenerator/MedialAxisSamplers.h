@@ -23,7 +23,6 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
   string dmstring;
   MPProblem* mp;
   int clearance, penetration;
-  std::string strLabel;
   std::string strVcmethod;
 
   FreeMedialAxisSampler() {}
@@ -46,7 +45,7 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
   dmstring = dm_label;
   dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
   cd = in_pProblem->GetCollisionDetection();
-  strLabel= this->ParseLabelXML( in_Node);
+  string strLabel= this->ParseLabelXML( in_Node);
   this->SetLabel(strLabel);
   //To do:: set clearance and penetration here
   LOG_DEBUG_MSG("~FreeMedialAxisSampler::FreeMedialAxisSampler()");
