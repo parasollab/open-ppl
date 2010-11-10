@@ -18,7 +18,7 @@ class QueryEvaluation
     m_query_filename = in_Node.stringXMLParameter("filename", true, string(""), string("Query Filename"));
     m_query = Query<CFG, WEIGHT>(m_query_filename.c_str());
     
-    dm_label = in_Node.stringXMLParameter(string("dm_method"), false, string("default"), string("Distance Metric Method"));
+    string dm_label = in_Node.stringXMLParameter(string("dm_method"), false, string("default"), string("Distance Metric Method"));
     dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
 
     for (XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
@@ -43,7 +43,6 @@ class QueryEvaluation
   
  private:
   string m_query_filename;
-  string dm_label;
   Query<CFG, WEIGHT> m_query;
   Stat_Class m_stats;
   LocalPlanners<CFG, WEIGHT>* lp;
