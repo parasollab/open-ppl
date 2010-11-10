@@ -896,7 +896,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
                vector< CfgType > vectorCfgs;
                Sampler<CfgType>::SamplerPointer pNodeGen;
                pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(*itr);
-               pNodeGen->GetSampler()->Sample(pNodeGen, GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 2*num_nodes, back_inserter(vectorCfgs));  
+               pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 2*num_nodes, back_inserter(vectorCfgs));  
 
                cout << "Finished ... I did this many : " << vectorCfgs.size();
                vector<VID> vids =  region->AddToRoadmap(vectorCfgs);
@@ -1213,7 +1213,7 @@ class NFTester : public MPStrategyMethod {
             vector< CfgType > vectorCfgs;
             Sampler<CfgType>::SamplerPointer pNodeGen;
             pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(*itr);
-            pNodeGen->GetSampler()->Sample(pNodeGen, GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 2*num_nodes, back_inserter(vectorCfgs));  
+            pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 2*num_nodes, back_inserter(vectorCfgs));  
             
             cout << "Finished ... I did this many : " << vectorCfgs.size() << endl;
             //for (int i = 0; i < vectorCfgs.size(); i++) {

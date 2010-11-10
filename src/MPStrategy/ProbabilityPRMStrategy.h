@@ -53,7 +53,7 @@ void ProbabilityPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region
    NodeGenSubClock.StartClock(generatorClockName.str().c_str());
     
    cout << "\n\t";
-   pNodeGenerator->GetSampler()->Sample(pNodeGenerator,GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),100, back_inserter(outNodes));
+   pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),100, back_inserter(outNodes));
    
    cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
 

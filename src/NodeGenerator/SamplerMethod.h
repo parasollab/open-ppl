@@ -15,7 +15,6 @@ class DistanceMetric;
 template <class CFG> class Sampler;
 template <class CFG, class WEIGHT> class MPRegion;
 class MPProblem;
-//template<typename CFG> class ValidityChecker;
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -28,10 +27,6 @@ class MPProblem;
  */
 template< typename CFG>
 class SamplerMethod : public LabeledObject, public MPBaseObject { 
- private:
- Sampler<CFG>* my_sampler;
- string strLabel;
- 
  public:
 
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -47,19 +42,13 @@ class SamplerMethod : public LabeledObject, public MPBaseObject {
   ///Default Constructor.
   SamplerMethod() { }
   SamplerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) { 
-  strLabel= this->ParseLabelXML( in_Node);
-  this->SetLabel(strLabel);
+    string strLabel= this->ParseLabelXML( in_Node);
+    this->SetLabel(strLabel);
   }
   ///Destructor.	
   virtual ~SamplerMethod() { };
 
   //@}
-
- 
-  Sampler<CFG>* GetSampler() {
-  LOG_DEBUG_MSG("SamplerMethod::GetSampler()");
-  return my_sampler;
-  };
 
   
   /**Generate nodes according to method type, abstract.
@@ -80,17 +69,5 @@ class SamplerMethod : public LabeledObject, public MPBaseObject {
   virtual typename vector<CFG>::iterator Sample(Environment*, Stat_Class&, typename vector<CFG>::iterator _in_first, typename vector<CFG>::iterator _in_last, int _attempts, typename vector<CFG>::iterator _out) = 0;
   virtual typename vector<CFG>::iterator Sample(Environment*, Stat_Class&, int _num_nodes, int _attempts, typename vector<CFG>::iterator _out) = 0;
 };
-
-
-
-
-
-
-
-
-
- 
-
-
 
 #endif

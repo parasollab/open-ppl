@@ -195,7 +195,7 @@ void HybridPRM::Run(int in_RegionID){
       unsigned long int num_cd_before_gen = pStatClass->GetIsCollTotal();
       vector<CfgType> vectorCfgs, in_nodes(1);
       Sampler<CfgType>::SamplerPointer pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(next_node_gen);
-      pNodeGen->GetSampler()->Sample(pNodeGen, GetMPProblem()->GetEnvironment(), *pStatClass, in_nodes.begin(), in_nodes.end(), 1, back_inserter(vectorCfgs));
+      pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, in_nodes.begin(), in_nodes.end(), 1, back_inserter(vectorCfgs));
       unsigned long int num_cd_after_gen = pStatClass->GetIsCollTotal();
 
       //for each valid sampled node, connect it to the roadmap, record reward and cost, update sampler probabilities

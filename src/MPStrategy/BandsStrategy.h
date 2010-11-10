@@ -223,7 +223,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         Sampler<CfgType>::SamplerPointer pNodeGen;
         cout << "reading sampler with label: " << *itr << endl;
         pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(*itr);
-        pNodeGen->GetSampler()->Sample(pNodeGen, GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 100*num_nodes, back_inserter(vectorCfgs));  
+        pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 100*num_nodes, back_inserter(vectorCfgs));  
         
         cout << "Finished : " << vectorCfgs.size();
         vector<VID> vids =  region->AddToRoadmap(vectorCfgs);
