@@ -80,7 +80,7 @@ class DistanceMetric : private element_set<DistanceMetricMethod>, public MPBaseO
   void ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c);
 
  public:
-  double m_distance_time;
+  //double m_distance_time;
   string par_label;
 };
 
