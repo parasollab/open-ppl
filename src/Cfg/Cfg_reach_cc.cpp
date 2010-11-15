@@ -3,6 +3,7 @@
 #include "Environment.h"
 #include "MultiBody.h"
 #include "FreeBody.h"
+#include  "DistanceMetrics.h"
 #include "boost/lambda/lambda.hpp"
 #include "boost/random.hpp"
 
@@ -413,12 +414,42 @@ GetRandomCfg_CenterOfMass(Environment* env) {
   clearance = -1;
 }
 
-void 
+void
 Cfg_reach_cc::
-GetRandomRay(double incr, Environment* env,shared_ptr<DistanceMetricMethod> dm) {
-  cerr << "Warning GetRandomRay not implemented yet\n";
-  exit(-1);
+GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm)
+{
+
+  int n_ticks= 0;
+ double positionRes=env->GetPositionRes();
+ double orientationRes=env->GetOrientationRes();
+
+  vector<int>origin_link_orientations;
+   Cfg_reach_cc c1;
+   c1.GetRandomCfg(env);
+
+        vector<Range> ranges;
+        vector<double>origin_link_lengths;
+  link_tree->ExportTreeLinkReachableRange(ranges);
+
+  for(size_t i=0; i<ranges.size(); ++i)
+        {
+        origin_link_lengths.push_back((ranges[i].min + ranges[i].max)*0.5);
+        origin_link_orientations.push_back(0);
+        }
+
+    Cfg_reach_cc origin((0,0,0,0,0,0),origin_link_lengths,origin_link_orientations);
+    Cfg_reach_cc incr2;
+   incr2.FindIncrement(origin,c1,&n_ticks,positionRes,orientationRes);
+
+        Cfg_reach_cc tick =origin;
+         while(dm->Distance(env,origin,tick)< incr)
+  {
+    tick.Increment(incr2);
+  }
+   *this=tick;
 }
+
+
 
 void 
 Cfg_reach_cc::
