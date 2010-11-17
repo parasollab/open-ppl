@@ -359,7 +359,7 @@ guration where workspace robot's EVERY VERTEX
 
   /// generates random configuration and pushes it to the medial axis of the
   /// free c-space
-  void GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
+  bool GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
       string _vc, CollisionDetection* cd, CDInfo& _cdInfo, 
       string _dm, 
       int clearnce_n, int penetration_n);
@@ -484,7 +484,7 @@ guration where workspace robot's EVERY VERTEX
   //////////////////////////////////////////////////////////////////////////////////////////
  protected:
   
-  std::vector<double> v;   
+  vector<double> v;   
   int dof;
   int posDof;
 
