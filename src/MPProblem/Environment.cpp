@@ -260,6 +260,51 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
 }
 
 
+
+///////////////////////////////
+
+Environment::
+Environment(const Environment& from_env, string filename) : 
+  pathVersion(PATHVER_20001125),
+  usable_externalbody_count(0),
+  robotIndex(0),
+  positionRes(from_env.positionRes),
+  orientationRes(from_env.orientationRes),
+  minmax_BodyAxisRange(0),
+  input_filename(filename)
+{
+  boundaries = new BoundingBox(*(from_env.GetBoundingBox()));
+  if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
+    cout << "FOUND EMPTY BBOX! (Environment copy constructor)\n";
+         
+  Read(filename.c_str(), PMPL_EXIT, "");
+  FindBoundingBox();
+
+  //compute RESOLUTION
+  multibody[robotIndex]->FindBoundingBox();
+  double bodies_min_span = multibody[robotIndex]->GetMaxAxisRange();
+    
+  bool first = true;
+  for(size_t i = 0 ; i < multibody.size() ; i++){
+    if((int)i != robotIndex){
+      if(first){
+        multibody[i]->FindBoundingBox();
+        first = false;
+        bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+      }
+      else{
+        multibody[i]->FindBoundingBox();
+        bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+      } 
+    }
+  }
+  minmax_BodyAxisRange = bodies_min_span;
+  // END compute RESOLUTION
+
+  SelectUsableMultibodies();
+}
+
+
 void Environment::
 PrintOptions(ostream& out_os) {
   out_os << "  Environment" << endl;
