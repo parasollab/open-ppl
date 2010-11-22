@@ -79,6 +79,8 @@ public:
 
     ///\brief Constructor taking in an XML object
     Environment(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+
+    Environment(const Environment &from_env, string filename);
      
     /**
      * Destructor.
