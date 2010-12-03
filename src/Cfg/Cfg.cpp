@@ -812,252 +812,201 @@ void Cfg::GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
 };
 
 
-// generates random configuration and then pushes it to the medial axis of
-// the free c-space
+// Generates random configuration and pushes it to the c-space medial axis
 bool 
 Cfg::
 GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
 		 string _vc, CollisionDetection* _cd,
 		 CDInfo& _cdInfo, string _dm,
 		 int clearance_n, int penetration_n) { 
+  
+  // Save tmp to test agaist pushed configuration
   this->GetRandomCfg(_env);
   CfgType tmp = CfgType(*this);
-
   this->PushToMedialAxis(mp, _env, Stats, _vc, _cd, _cdInfo, _dm, 
 			 clearance_n, penetration_n);
-
-if (tmp == *this)
-{
-    
-  cout << "IGNORE" << endl;
-   return false;
-   }
-  cout << "FINAL cfg pushed to medial axis: " << *this << endl;
+  
+  // If not pushed, fail
+  if (tmp == *this)
+    return false;
   return true;
 }
 
-
-// pushes node towards c-space medial axis
+// Pushes verified configuraion towards c-space medial axis
 void 
 Cfg::
 PushToMedialAxis(MPProblem* mp, Environment *_env, Stat_Class& Stats,
-      string vc,
-      CollisionDetection* cd,
-      CDInfo& cdInfo, string dm,
-      int clearance_n, int penetration_n) {
-   cout << "In Cfg::PushToMedialAxis: \n  Clearance: " << clearance_n << ", Penetration: " << penetration_n << endl;
-
+		 string vc,
+		 CollisionDetection* cd,
+		 CDInfo& cdInfo, string dm,
+		 int clearance_n, int penetration_n) {
+  
   std::string Callee(GetName()),CallCnt("1");
   std::string Method("-Cfg::PushToMedialAxis");
   Callee=Callee+Method;
-
-  Cfg* cfg = this->CreateNewCfg();  //have to make a copy because method is const
+  Cfg* cfg = this->CreateNewCfg();
   CfgType* ctype = dynamic_cast<CfgType*>(cfg);
-  if(!(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, _env, Stats, cdInfo, true, &Callee))) {
-    ClearanceInfo clearInfo;
-    cfg->ApproxCSpaceClearance(mp, _env, Stats, vc, cdInfo, dm, 
-				penetration_n, clearInfo, 1);
-    if (clearInfo.getDirection() != NULL){
-    cout << "COLLISION ClearInfo.GetClearance = " << clearInfo.getClearance() << endl << flush;
-    cfg->v = (clearInfo.getDirection())->v;
-    }
-  }
-  else {
-  CallCnt="2";
-  std::string tmpStr = Callee+CallCnt; 
+  bool valid_cfg = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, _env, Stats, cdInfo, true, &Callee);
+  
+  if(valid_cfg)
     this->MAPRMfree(mp, _env, Stats, vc, cd, cdInfo, dm, clearance_n);
-  }
+  
 }
 
 
-// pushes free node towards c-space medial axis
+// Pushes configuration towards c-space medial axis
 void 
 Cfg::
 MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats, 
-      string vc, CollisionDetection* cd,
-      CDInfo& cdInfo, string dm,
-      int n) {
-   
+	  string vc, CollisionDetection* cd,
+	  CDInfo& cdInfo, string dm,
+	  int n) {
+  
   shared_ptr <DistanceMetricMethod> _dm = mp->GetDistanceMetric()->GetDMMethod(dm);
-  cout << "In Cfg::MAPRMfree: \n  This CFG: ";
-  this->Write(cout);
-    Cfg* cfg = this->CreateNewCfg();  //have to make a copy because method is const
-    CfgType* ctype = dynamic_cast<CfgType*>(cfg);
-    string callee = "Cfg::MAPRMfree";
-    if (mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, _env, Stats, cdInfo, true, &callee))
-       cout << "This Cfg is Valid" << endl;
-       else{
-         cout << "This Cfg is Not valid " << endl;
-         return;
-}
-
-  cout << endl << "  Approximate The Clearance " << endl;
-
-  //get clearance to c-obst
+  Cfg* cfg = this->CreateNewCfg();
+  CfgType* ctype = dynamic_cast<CfgType*>(cfg);
+  string Callee = "Cfg::MAPRMfree";
+  
+  // Approximate clearance
   ClearanceInfo clearInfo;
-
-  this->ApproxCSpaceClearance(mp, _env, Stats, vc, cdInfo, dm,
-			      n, clearInfo, false);
-  if(clearInfo.getDirection() == NULL) //unable to compute clearance
+  this->ApproxCSpaceClearance(mp, _env, Stats, vc, cdInfo, dm, n, clearInfo, false);
+  if(clearInfo.getDirection() == NULL)
     return;
   this->clearance = clearInfo.getClearance();
   int colliding_obst = clearInfo.getObstacleId();
-
-  //get normalized direction to c-obst
-  cout << "  Finished Approximating The Clearance " << endl;
-
+  
+  // Get direction towards closest c-obstacle
   Cfg* dir = clearInfo.getDirection()->CreateNewCfg();
-  cout << "    Location  : ";
-  dir->Write(cout);
-  cout << endl;  
-
   dir->subtract(*dir, *this);
-  cout << "    Direction : ";
-  dir->Write(cout);
-  cout << endl;  
- 
- if (*dir != CfgType()){
-  _dm->ScaleCfg(_env, 1, *this, *dir);
-  cout << "  Post Scale Dir  : ";
-  dir->Write(cout);
-  cout << endl;
-  } 
+  
+  if (*dir != CfgType())
+    _dm->ScaleCfg(_env, 1, *this, *dir);
   else
-     return;
-
-  /// find max. clearance point by stepping out:
-  double stepSize = this->clearance*2;
-   if (this->clearance < .0001)
-      stepSize = .0001;
-  cout << "  Default step size: " << stepSize << endl;
-
+    return;
+  
+  // Find max clearance point by stepping out
+  double stepSize = this->clearance;
+  if (this->clearance < 0.001)
+    stepSize = 0.001;
+  if (this->clearance < 0.25)
+    stepSize = 0.25;
+  
   Cfg* oldCfg = this->CreateNewCfg();
   Cfg* newCfg = this->CreateNewCfg();
   Cfg* tmpCfg = dir->CreateNewCfg();
-  Cfg* lowCfg = oldCfg->CreateNewCfg();
+  bool found_gap = false;
+  
   while((stepSize > 0) && 
 	(newCfg->clearance >= oldCfg->clearance) && 
-	(newCfg->InBoundingBox(_env))) {    
-    cout << "\nOldCFG Clearance = " << oldCfg->clearance << "Location: ";
-    oldCfg->Write(cout);
-    cout << "\nNewCFG Clearance = " << newCfg->clearance << "Location: ";  
-    newCfg->Write(cout);
+	(newCfg->InBoundingBox(_env))) {
+
     tmpCfg->multiply(*dir, -1*stepSize);
     tmpCfg->add(*newCfg, *tmpCfg);
-    tmpCfg->clearance = tmpCfg->ApproxCSpaceClearance(mp, _env, Stats, vc, cdInfo,
-						      dm, n, false, colliding_obst);
-    cout << "\nTmpCFG Clearance = " << tmpCfg->clearance << " Location: ";  
-    tmpCfg->Write(cout);
+    
+    // Test if tmpCfg is valid                                                                                                                                                  
+    Cfg* cfg = tmpCfg->CreateNewCfg();
+    CfgType* ctype = dynamic_cast<CfgType*>(cfg);
+    bool valid_cfg = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, _env, Stats, cdInfo, true, &Callee);
 
-    if(tmpCfg->clearance < 0) {//unable to compute clearance...
-      cout << "Unable to compute tmpCfg clearance";
-      tmpCfg->clearance = 0;
-    } else {
-      lowCfg->equals(*oldCfg);
+    // If valid, calculate clearance and shift, else reduce step till a valid gap is found                                                                                       
+    if (valid_cfg) {
+      found_gap = true;
+      tmpCfg->clearance = tmpCfg->ApproxCSpaceClearance(mp, _env, Stats, vc, cdInfo,
+                                                        dm, n, false, colliding_obst);
+      if (tmpCfg->clearance > stepSize)
+        stepSize = tmpCfg->clearance;
+      else
+        stepSize = stepSize*2;// base 1.25
       oldCfg->equals(*newCfg);
       newCfg->equals(*tmpCfg);
+    } else {
+      if (!found_gap)
+        stepSize = stepSize*0.9;// base 0.8                                                                                                                                      
+      else
+        stepSize = 0;
     }
-    //stepSize =tmpCfg-> clearance*0.75;
-   stepSize = stepSize*0.75;
-    cout << "New step size: " << stepSize << endl;
-   
   }
-  cout << "  On to [Old,New] binary search..." << endl;
-  //newCfg->equals(*oldCfg);
-  oldCfg->equals(*lowCfg);
 
   delete tmpCfg;
-  delete lowCfg;
   delete dir;
-
+  
+  oldCfg = this->CreateNewCfg();  
+  bool no_peak = false;
+  
   if(newCfg->clearance > 0 && newCfg->InBoundingBox(_env)) {
-    ///binary search between oldCfg and newCfg to find max clearance:
+
+    // Modified binary search between oldCfg and newCfg to find max clearance:
     Cfg* midCfg = this->CreateNewCfg();
     Cfg* omidCfg = this->CreateNewCfg();
     Cfg* nmidCfg = this->CreateNewCfg();
-    double minDistance = _env->GetPositionRes() + 
-      _env->GetOrientationRes();
-    minDistance = 0.0001; //arbitrary
-    int maxNumSteps = 5000; //arbitrary
+    double minDistance = _env->GetPositionRes() + _env->GetOrientationRes();
+    minDistance = 0.001; //arbitrary
+    int maxNumSteps = 100; //arbitrary
     int i=0;
+
     do {
-      cout << "Step: " << i+1 << endl;
-      //midpoint between newCfg and oldCfg
+      // Midpoint between newCfg and oldCfg
       midCfg->add(*newCfg, *oldCfg);
       midCfg->divide(*midCfg, 2);
       midCfg->clearance = midCfg->ApproxCSpaceClearance(mp, _env, Stats, vc, 
 							cdInfo, dm, n, false);
-      //midpoint between newCfg and midCfg
+      // Midpoint between newCfg and midCfg
       nmidCfg->add(*newCfg, *midCfg);
       nmidCfg->divide(*nmidCfg, 2);
       nmidCfg->clearance = nmidCfg->ApproxCSpaceClearance(mp, _env, Stats, vc, 
 							  cdInfo, dm, n, false);
-      //midpoint between oldCfg and midCfg
+      // Midpoint between oldCfg and midCfg
       omidCfg->add(*oldCfg, *midCfg);
       omidCfg->divide(*omidCfg, 2);
       omidCfg->clearance = omidCfg->ApproxCSpaceClearance(mp, _env, Stats, vc, 
 							  cdInfo, dm, n, false);
-
-
-    cout << "\nOldCFG Clearance = " << oldCfg->clearance << endl << flush;
-    oldCfg->Write(cout);
-    cout << "\nMidOld Clearance = " << omidCfg->clearance << endl << flush;  
-    omidCfg->Write(cout);
-    cout << "\nMidCFG Clearance = " << midCfg->clearance << endl << flush;  
-    midCfg->Write(cout);
-    cout << "\nMidNew Clearance = " << nmidCfg->clearance << endl << flush;  
-    nmidCfg->Write(cout);
-    cout << "\nNewCFG Clearance = " << newCfg->clearance << endl << flush;
-    newCfg->Write(cout);
-    cout << endl;
-
-
-      if(midCfg->clearance < 0) { //unable to compute...keep oldCfg
-	if(newCfg->clearance > oldCfg->clearance) {
-	  oldCfg->equals(*newCfg);
-	  cout << "Old becomes New..." << endl;
-	}
-	else cout << "Old stays the same..." << endl;
- 	break;
-      }
-      if((midCfg->clearance > oldCfg->clearance) && 
-	 (midCfg->clearance > newCfg->clearance)) {
-	if(oldCfg->clearance > newCfg->clearance) {
-	  newCfg->equals(*midCfg);
-	  cout << "New becomes Mid..." << endl;
-	}
-	else {
-	  oldCfg->equals(*midCfg);
-	  cout << "Old becomes Mid..." << endl;
-	}
-      } else if((midCfg->clearance < oldCfg->clearance) &&
-		(midCfg->clearance < newCfg->clearance)) {
-	if(oldCfg->clearance > newCfg->clearance) {
-	  newCfg->equals(*oldCfg);
-	  cout << "New becomes Old..." << endl;
-	}
-	else {
-	  oldCfg->equals(*newCfg);
-	  cout << "Old becomes New..." << endl;
-	}
-      } else if(midCfg->clearance > oldCfg->clearance) {
-	oldCfg->equals(*midCfg);
-	cout << "Old becomes Mid..." << endl;
-      } else {
+      
+      //cout << "OldCFG Clearance = " << oldCfg->clearance  << " Location: " << *oldCfg  << endl;
+      //cout << "MidOld Clearance = " << omidCfg->clearance << " Location: " << *omidCfg << endl;
+      //cout << "MidCFG Clearance = " << midCfg->clearance  << " Location: " << *midCfg  << endl;
+      //cout << "MidNew Clearance = " << nmidCfg->clearance << " Location: " << *nmidCfg << endl;
+      //cout << "NewCfg Clearance = " << newCfg->clearance  << " Location: " << *newCfg  << endl;
+      
+      // Find slopes/differences in the clearances
+      double d1 = omidCfg->clearance - oldCfg->clearance;
+      double d2 = midCfg->clearance  - omidCfg->clearance;
+      double d3 = nmidCfg->clearance - midCfg->clearance;
+      double d4 = newCfg->clearance  - nmidCfg->clearance;
+     
+      // Determine which 2 define the peak 
+      if (d1 > 0 && d2 < 0) {
+	//cout << "Medial Axis Between OldCfg and MidCfg \n";
 	newCfg->equals(*midCfg);
-	cout << "Mid becomes New..." << endl;
       }
+      else if (d2 > 0 && d3 < 0) {
+	//cout << "Medial Axis Between OldMid and NewMid \n";
+	oldCfg->equals(*omidCfg);
+	newCfg->equals(*nmidCfg);
+      }
+      else if (d3 > 0 && d4 < 0) {
+	//cout << "Medial Axis Between MidCfg and NewCfg \n";
+	oldCfg->equals(*midCfg);
+      }
+      else {
+	//cout << "NO MEDIAL AXIS PEAK FOUND (bad c-space clearnace approx) \n";
+	no_peak = true;
+	break;
+      }
+      
     } while ((_dm->Distance(_env, *newCfg, *oldCfg) > minDistance) &&
 	     (++i <= maxNumSteps));
+
     delete midCfg;
+    delete omidCfg;
+    delete nmidCfg;
   }
   
-  this->equals(*oldCfg);
-  cout << "OldCFG FINAL Clearance = " << oldCfg->clearance << endl << flush;
+  if (!no_peak)
+    this->equals(*oldCfg);
 
   delete oldCfg;
   delete newCfg;
-
+  
 }
 
 
@@ -1247,7 +1196,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
 
       }//end for
    } //end while
-   cout << "Candidates Out/In: " << cand_out.size() << "/" << cand_in.size() << endl << flush;
+   //cout << "Candidates Out/In: " << cand_out.size() << "/" << cand_in.size() << endl << flush;
 
       Cfg* innerCfg =  cand_in[0]->CreateNewCfg();
       Cfg* outerCfg = cand_out[0]->CreateNewCfg();
