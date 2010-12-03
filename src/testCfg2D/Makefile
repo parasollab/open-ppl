@@ -1,2 +1,2 @@
 clean:: 
-	rm -f *.map *.path *.cfgs *.log LOG.*
+	rm -f *.map *.path *.cfgs *.log *.stat
