@@ -43,10 +43,5 @@ PrintOptions(ostream& out_os) const
 }
 
 
-void
-DistanceMetric::
-ScaleCfg(Environment*env, double length, Cfg& o, Cfg& c) 
-{
-  return this->GetDMMethod(par_label)->ScaleCfg(env, length, o, c);
-}
+
 
