@@ -426,28 +426,44 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm)
   vector<int>origin_link_orientations;
    Cfg_reach_cc c1;
    c1.GetRandomCfg(env);
-
+ // link_orientations = ((Cfg_reach_cc&)c1).link_orientations;
+   Cfg_reach_cc c1_origin;
+   
+  //StoreData();
         vector<Range> ranges;
         vector<double>origin_link_lengths;
   link_tree->ExportTreeLinkReachableRange(ranges);
 
   for(size_t i=0; i<ranges.size(); ++i)
-        {
+  {
         origin_link_lengths.push_back((ranges[i].min + ranges[i].max)*0.5);
         origin_link_orientations.push_back(0);
-        }
-
+        
+  }
     Cfg_reach_cc origin((0,0,0,0,0,0),origin_link_lengths,origin_link_orientations);
     Cfg_reach_cc incr2;
-   incr2.FindIncrement(origin,c1,&n_ticks,positionRes,orientationRes);
+   
+    c1_origin.GetIntermediate(origin,c1);
 
+   incr2.FindIncrement(origin,c1_origin,&n_ticks,positionRes,orientationRes);
+    
         Cfg_reach_cc tick =origin;
-         while(dm->Distance(env,origin,tick)< incr)
+        while(dm->Distance(env,origin,tick)< incr)
   {
-    tick.Increment(incr2);
+  // if(dm->Distance(env,origin,tick) > 0.3)
+    //{
+     //incr2.GetIntermediate(origin,c1);
+    //tick.Increment(incr2);
+    // }
+      //else
+      tick.Increment(incr2);
+   
   }
-   *this=tick;
-}
+
+   // dm->ScaleCfg(env, incr, origin, tick);
+  *this=tick;
+   
+ }
 
 
 
