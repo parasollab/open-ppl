@@ -25,29 +25,21 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
       int clearance, penetration;
       std::string strLabel;
       std::string strVcmethod;
+      bool m_debug;
 
-      FreeMedialAxisSampler() {}
+      FreeMedialAxisSampler() : m_debug(false) {}
       FreeMedialAxisSampler(Environment* _env, Stat_Class* _Stats, 
             CollisionDetection* _cd, CDInfo* _cdInfo, 
             shared_ptr<DistanceMetricMethod> _dm, int _c, int _p) :
          env(_env), Stats(_Stats), cd(_cd), cdInfo(_cdInfo), dm(_dm),
-         clearance(_c), penetration(_p) {} 
+         clearance(_c), penetration(_p), m_debug(false) {} 
       FreeMedialAxisSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) {
          LOG_DEBUG_MSG("FreeMedialAxisSampler::FreeMedialAxisSampler()");
          ParseXML(in_Node);
-         cout << "FreeMedialAxisSampler";
          mp = in_pProblem;
-         strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
-               string(""), string("Validity Test Method"));
-         cout << "strVcmethod = " << strVcmethod << endl;
          vc = in_pProblem->GetValidityChecker();
-         string dm_label = in_Node.stringXMLParameter(string("dm_method"),true,string(""),string("Distance metric"));
-         dmstring=dm_label;
-         dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
          cd = in_pProblem->GetCollisionDetection();
-         strLabel= this->ParseLabelXML( in_Node);
-         this->SetLabel(strLabel);
-         //To do:: set clearance and penetration here
+         dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dmstring);
          LOG_DEBUG_MSG("~FreeMedialAxisSampler::FreeMedialAxisSampler()");
       }
 
@@ -57,39 +49,24 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
 
       void  ParseXML(XMLNodeReader& in_Node) {
          LOG_DEBUG_MSG("FreeMedialAxisSampler::ParseXML()");
-         //print(cout);
-         XMLNodeReader::childiterator citr;
-         for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-            if(citr->getName() == "clearance") {
-               ParseXMLclearance(*citr);
-            } else if(citr->getName() == "penetration") {
-               ParseXMLpenetration(*citr);
-            }
-         }
-         cout << "FreeMedialAxisSampler";
+         cout << "FreeMedialAxisSampler ";
+ 
+         strVcmethod = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
+         cout << "strVcmethod = " << strVcmethod << endl;
+         
+         dmstring = in_Node.stringXMLParameter("dm_method", true, "", "Distance metric");
+         
+         strLabel = this->ParseLabelXML(in_Node);
+         this->SetLabel(strLabel);
+         
+         clearance = in_Node.numberXMLParameter("clearance", false, 10, 0, 1000, "Clearance Number");
+         penetration = in_Node.numberXMLParameter("penetration", false, 5, 0, 1000, "Penetration Number");
+         
+         m_debug = in_Node.boolXMLParameter("debug", false, false, "debugging flag");
+        
+         print(cout);
+
          LOG_DEBUG_MSG("~FreeMedialAxisSampler::ParseXML()");
-      }
-
-      void ParseXMLclearance(XMLNodeReader& in_Node) {
-         LOG_DEBUG_MSG("FreeMedialAxisSampler::ParseXMLclearance()");
-
-         in_Node.verifyName(string("clearance"));
-         clearance = in_Node.numberXMLParameter(string("number"),true, 10,0,1000,
-               string("Clearance Number"));
-
-         in_Node.warnUnrequestedAttributes();
-         LOG_DEBUG_MSG("~FreeMedialAxisSampler::ParseXMLclearance()");
-      }
-
-      void ParseXMLpenetration(XMLNodeReader& in_Node) {
-         LOG_DEBUG_MSG("FreeMedialAxisSampler::ParseXMLpenetration()");
-
-         in_Node.verifyName(string("penetration"));
-         penetration = in_Node.numberXMLParameter(string("number"),true, 5,0,1000,
-               string("Penetration Number"));
-
-         in_Node.warnUnrequestedAttributes();
-         LOG_DEBUG_MSG("~FreeMedialAxisSampler::ParseXMLpenetration()");
       }
 
       void print(ostream& os) const
@@ -108,18 +85,22 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
             int attempts = 0;
             CDInfo cdInfo;
             cdInfo.ret_all_info = true;
-            cout << "\n\n***********************************************\n" 
-               << "In MedialAxisSamplers::sampler !! NEW SAMPLE !!\n"
-               << "***********************************************\n"; 
-            print(cout);
-            cout << flush;
+            if(m_debug)
+            {
+              cout << "\n\n***********************************************\n" 
+                 << "In MedialAxisSamplers::sampler !! NEW SAMPLE !!\n"
+                 << "***********************************************\n"; 
+              print(cout);
+              cout << flush;
+            }
             do {
                Stat.IncNodes_Attempted();
                attempts++;
 
                CFG tmp = cfg_in;
                CFG tmp2 = tmp;
-               cout << "Attempt: " << attempts << "... About to Call PushToMedialAxis" << endl;
+               if(m_debug)
+                 cout << "Attempt: " << attempts << "... About to Call PushToMedialAxis" << endl;
 
              bool check = tmp.GetMedialAxisCfg(mp, env, Stat, strVcmethod, cd,  cdInfo, dmstring, clearance, penetration);
 
@@ -129,7 +110,8 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
                   generated = true;
                   cfg_out.push_back(tmp);
                }
-               cout << flush;
+               if(m_debug)
+                 cout << flush;
             } while (!generated && (attempts < max_attempts));
 
             return generated;
