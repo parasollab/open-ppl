@@ -54,6 +54,14 @@ public:
   virtual ~Cfg_fixed_PRR();
 
   //@}
+  
+  #ifdef _PARALLEL
+    void define_type(stapl::typer &t)  
+    {
+      Cfg::define_type(t);
+      
+    }
+#endif
 
 
   ///////////////////////////////////////////////////////////////////////////////////////////

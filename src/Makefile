@@ -1,6 +1,6 @@
 # set default platform
 ifndef platform
-  platform = LINUX_gcc
+  platform = LINUX_gcc_mh
 endif
 
 
@@ -9,6 +9,9 @@ ifndef debug
   debug = 0
 endif
 
+ifndef parallel
+  parallel = 0
+endif 
 
 # set directory paths
 ifndef PMPL_DIR
@@ -45,9 +48,9 @@ ROBOT_DEF = -DPMPSerial
 
 
 # macros
-DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} -DVERBOSE=0 #-D_LOG 
+DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF} -DVERBOSE=0 #-D_LOG 
 INCL = -I. ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MPNN_INCL}
-LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB}
+LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 
 # targets
 default_target: libs

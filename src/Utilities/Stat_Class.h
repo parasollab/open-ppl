@@ -22,6 +22,13 @@ const int MaxCD=    10;
 
    @date 1/27/99
    @author Chris Jones 
+   @note the current (naive) implementation of parallel PRM is not using
+         most of the functions provided by this (Stat) class primarily
+	 because p_graph does not have all of the algo that sequential graph
+	 provides, changes will be made to this class as more pgraph algo are
+	 available
+   @author sjacobs 
+   @date 11/11/2010
 */
 
 class Stat_Class {
@@ -161,6 +168,7 @@ template <class CFG, class WEIGHT>
 void
 Stat_Class::
 PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
+	#ifndef _PARALLEL
   int i;
   std::map<std::string, unsigned long int>::const_iterator iter;
   int total=0;
@@ -225,6 +233,7 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
 
   }
   cout << "Total Cfg::isCollision() = " << IsCollTotal << endl << endl;
+  #endif
 
 }
 
@@ -232,7 +241,7 @@ template <class CFG, class WEIGHT>
 void
 Stat_Class::
 PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *rmap, int show_column_headers) {
-
+   #ifndef _PARALLEL
    // Default is to NOT print out column headers
    if (show_column_headers){
         _myostream <<"\nV  E #CC 1 2 3 4 5 6 7 8 9 10 #iso CD  LPattSum LPcdSum\n";
@@ -275,6 +284,7 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *rmap, int show_column_h
    _myostream << sumAtt << " ";
    _myostream << sumCD  << " ";
    ccstats.clear();
+   #endif
 }
 
 
@@ -283,6 +293,7 @@ template <class CFG, class WEIGHT>
 void
 Stat_Class::
 ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMethod> dm) {
+	#ifndef _PARALLEL
   avg_min_intracc_dist = 0;
   avg_max_intracc_dist = 0;
   avg_mean_intracc_dist = 0;
@@ -470,6 +481,7 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
   avg_mean_intracc_dist_to_cm /= norm;
   avg_sigma_intracc_dist_to_cm /= norm;
   */
+  #endif
 }
 
 // Compute inter-connected-component statistics
@@ -479,7 +491,7 @@ template <class CFG, class WEIGHT>
 void
 Stat_Class::
 ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMethod> dm) {
-  
+  #ifndef _PARALLEL
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
   stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   vector< pair<size_t,VID> > ccs; //connected components in the roadmap
@@ -613,6 +625,7 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
   avg_intercc_dist /= norm;
   sigma_intercc_dist /= norm;
   */
+  #endif
 }
 
 
@@ -628,6 +641,8 @@ Stat_Class::
 DisplayCCStats(RoadmapGraph<CFG, WEIGHT>& g, int _maxCCprint=-1)  {
 
     ///Modified for VC
+    //temporary ifdef because of color map and get_cc_stats, we need a pDisplayCCStats
+    #ifndef _PARALLEL
     
     typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
     stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
@@ -650,6 +665,7 @@ DisplayCCStats(RoadmapGraph<CFG, WEIGHT>& g, int _maxCCprint=-1)  {
         ccnum++;
         if (ccnum > maxCCprint) return;
     }
+    #endif
 }
 
 

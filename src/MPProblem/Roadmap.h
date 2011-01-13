@@ -549,6 +549,9 @@ GetEnvironment() {
 //========================================================================
 // Roadmap class Methods: Display, Input, Output
 //========================================================================
+//read_graph not implemented in parallel yet, the ifdef will be removed when we have
+//read_graph algo for p_graph
+#ifndef _PARALLEL
 template <class CFG, class WEIGHT>
 void 
 Roadmap<CFG, WEIGHT>::
@@ -592,6 +595,8 @@ ReadRoadmapGRAPHONLY(const char* _fname) {
     return;
   }
 }
+
+#endif
 
 
 //

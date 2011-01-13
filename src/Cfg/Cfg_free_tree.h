@@ -27,6 +27,14 @@ class Cfg_free_tree : public Cfg_free {
   Cfg_free_tree(double x, double y, double z, 
 		double roll, double pitch, double yaw);
   virtual ~Cfg_free_tree();
+  
+  #ifdef _PARALLEL
+    void define_type(stapl::typer &t)  
+    {
+      Cfg_free::define_type(t);
+      
+    }
+#endif
 
   static int  getNumofJoints() { return NumofJoints; }
 

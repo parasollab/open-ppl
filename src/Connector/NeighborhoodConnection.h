@@ -89,6 +89,15 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
         InputIterator _itr2_first, InputIterator _itr2_last) ;
+  
+  template<typename InputIterator1, typename InputIterator2>
+  void pConnectNodes(
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        LocalPlanners<CFG,WEIGHT>* lp,
+        bool addPartialEdge, bool addAllEdges,
+        InputIterator1 _itr1_first, InputIterator1 _itr1_last,
+        InputIterator2 _itr2_first, InputIterator2 _itr2_last) ;
+    
     
   void ConnectNeighbors(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
@@ -97,6 +106,14 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
         int &iter_success, int &iter_failure,
         int &total_success, int &total_failure,
         VID _vid, vector<VID>& closest) ;
+  
+  void pConnectNeighbors(
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+        LocalPlanners<CFG,WEIGHT>* lp,
+        bool addAllEdges, 
+        int &iter_success, int &iter_failure,
+        int &total_success, int &total_failure,
+        VID _vid, vector<VID>& closest, CFG _cfg) ;
 
   template <typename InputIterator, typename OutputIterator>
   OutputIterator FindKNeighbors(
@@ -227,7 +244,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             bool addPartialEdge,
             bool addAllEdges) 
 {
-  vector<VID> vertices;
+   vector<VID> vertices;
   _rm->m_pRoadmap->GetVerticesVID(vertices);
   
   ConnectNodes(_rm, Stats, lp, addPartialEdge, addAllEdges, 
@@ -278,6 +295,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     int total_failure = 0;
     
     for(InputIterator itr1 = _itr1_first; itr1 != _itr1_last; ++itr1) {
+
       int iter_size = _itr2_last - _itr2_first;
       // calculate the number of neighbors to retrieve at each iteration
       int k_to_find = m_k;
@@ -286,7 +304,8 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       if(m_k == 0) //all pairs
         k_to_find = iter_size;
       k_to_find = min(k_to_find, iter_size); //cap k_to_find at iter_size
-
+      
+      
       // find cfg pointed to by itr1
       CFG v_cfg = (*(_rm->m_pRoadmap->find_vertex(*itr1))).property();
       
@@ -306,7 +325,8 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         KClosestClock.StartClock("kClosest");
         vector<VID> closest;
 	back_insert_iterator<vector<VID> > iter_begin(closest);
-        back_insert_iterator<vector<VID> > iter_end = FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, iter_neighbors, iter_begin);      
+        back_insert_iterator<vector<VID> > iter_end = FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, iter_neighbors, iter_begin);   
+	
         //copy(closest.begin(), closest.end(), iter_end);
  
         KClosestClock.StopClock();
@@ -318,7 +338,86 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         }
         
         ConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, total_success, total_failure, *itr1, closest);
+        enough_connected = true;
+        if(iter_success < m_k)
+        {
+          if(m_count_failures)
+            enough_connected = !(iter_failure < m_fail);
+          else 
+            enough_connected = false;
+        }
+      } while (m_unconnected && !enough_connected && k_to_find < iter_size);
+    }
+  
+    if (m_debug) cout << "*** kClosest Time = " << KClosestClock.GetClock_SEC() << endl;
+    if (m_debug) cout << "*** total_success = " << total_success << endl;
+    if (m_debug) cout << "*** total_failure = " << total_failure << endl;
+}
 
+
+ /* This version is used in parallel PRM where iterator 1 and 2 are of different types */
+template <class CFG, class WEIGHT>
+template<typename InputIterator1, typename InputIterator2>
+void NeighborhoodConnection<CFG,WEIGHT>::
+pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+            LocalPlanners<CFG,WEIGHT>* lp,
+            bool addPartialEdge,
+            bool addAllEdges,
+            InputIterator1 _itr1_first, InputIterator1 _itr1_last,
+            InputIterator2 _itr2_first, InputIterator2 _itr2_last)
+{ 
+    LOG_DEBUG_MSG("NeighborhoodConnection::pConnectNodes()");
+    if (m_debug) { cout << endl; PrintOptions(cout); }
+    // the vertices in this iteration are the source for the connection operation
+    Clock_Class KClosestClock;
+    
+    int total_success = 0;
+    int total_failure = 0;
+    
+    for(InputIterator1 itr1 = _itr1_first; itr1 != _itr1_last; ++itr1) {
+	    
+      int iter_size = _itr2_last - _itr2_first;
+      // calculate the number of neighbors to retrieve at each iteration
+      int k_to_find = m_k;
+      if(m_count_failures) //add m_fail to attempts since they will be counted
+        k_to_find += m_fail;
+      if(m_k == 0) //all pairs
+        k_to_find = iter_size;
+      k_to_find = min(k_to_find, iter_size); //cap k_to_find at iter_size
+      
+      
+      // just grab the cfg & vid from the STAPL view (p_graph iterator), find_vertex() is expensive in parallel
+      CFG v_cfg = (*(itr1)).property();
+      VID v_vid = (*(itr1)).descriptor();
+      
+      //cout << stapl::get_location_id() << "> " << " pConnectNodes vid: " << v_vid <<"cfg:" << v_cfg << endl;
+      
+      bool enough_connected = true;
+      int iter_success = 0;
+      int iter_failure = 0;
+      vector<VID> iter_neighbors;
+      do 
+      {
+        if (m_unconnected)
+          k_to_find = min(2 * k_to_find, iter_size);
+
+        if (m_debug) cout << "k_to_find = " << k_to_find << endl;
+
+        KClosestClock.StartClock("kClosest");
+        vector<VID> closest;
+	back_insert_iterator<vector<VID> > iter_begin(closest);
+        back_insert_iterator<vector<VID> > iter_end = FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, iter_neighbors, iter_begin);   
+	
+        KClosestClock.StopClock();
+        if (m_debug)
+        {
+          
+          copy(closest.begin(), closest.end(), ostream_iterator<VID>(cout, " "));
+          
+        }
+        
+	pConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, total_success, total_failure, v_vid, closest,v_cfg);
+	
         enough_connected = true;
         if(iter_success < m_k)
         {
@@ -450,6 +549,106 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   iter_failure = failure;
 }
 
+template <class CFG, class WEIGHT>
+void NeighborhoodConnection<CFG,WEIGHT>::
+pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+            LocalPlanners<CFG,WEIGHT>* lp,
+            bool addAllEdges,
+            int &iter_success, int &iter_failure, 
+            int &total_success, int &total_failure,
+            VID _vid, vector<VID>& closest, CFG _cfg)
+{
+  LOG_DEBUG_MSG("NeighborhoodConnection::pConnectNeighbors()");
+	
+  shared_ptr<DistanceMetricMethod> dm =  this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf)->GetDMMethod();
+  
+  LPOutput<CFG,WEIGHT> lpOutput;
+  
+  int success(iter_success);
+  int failure(iter_failure);
+                                           
+  // connect the found k-closest to the current iteration's CFG
+  for(typename vector<VID>::iterator itr2 = closest.begin(); itr2!= closest.end(); ++itr2) {
+    if(*itr2==INVALID_VID)
+      continue;
+    //cout << stapl::get_location_id() << "> " << "pConnectNeighbors vid: " << *itr2  << endl;
+    // stopping conditions
+    if (m_count_failures && failure >= m_fail) {
+      if (m_debug) cout << " | stopping... failures exceeded" << endl;
+      break;
+    }
+    if (m_k > 0 && success >= m_k) {
+      if (m_debug) cout << " | stopping... successes met" << endl;
+      break;
+    }
+    
+    // don't attempt an edge between the same nodes
+    if (_vid == *itr2) {
+      if (m_debug) cout << " | skipping... same nodes" << endl;
+      continue;
+    }
+  
+    // don't attempt the connection if it already failed once before
+    if (_rm->IsCached(_vid,*itr2)) {
+      if (!_rm->GetCache(_vid,*itr2)) {
+        if (m_debug) cout << " | skipping... this connection already failed once";
+          if (m_debug) cout << " | failure incremented";
+          failure++;
+        if (m_debug) cout << endl;
+        continue;
+      }
+    }
+  
+    // the edge already exists, but why are we checking in two places?
+    if (_rm->m_pRoadmap->IsEdge(_vid, *itr2)) {
+      // if we're not in "unconnected" mode, count this as a success
+      if (m_debug) cout << " | edge already exists in roadmap";
+      if (!m_unconnected) {
+        if (m_debug) cout << " | success incremented";
+        success++;
+      }
+      if (m_debug) cout << endl;
+      continue;
+    }
+
+    // record the attempted connection
+    Stats.IncConnections_Attempted();
+  
+    // attempt connection with the local planner
+    if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
+                _cfg,
+                (*(_rm->m_pRoadmap->find_vertex(*itr2))).property(),
+                &lpOutput, this->connectionPosRes, this->connectionOriRes, 
+                (!addAllEdges) ))
+    {
+      // if connection was made, add edge and record the successful connection
+      //do we add the same edge twice?
+      if (m_debug) cout << " | connection was successful";
+      _rm->m_pRoadmap->add_edge_async(_vid, *itr2, lpOutput.edge.first);
+      
+      // mark the successful connection in the roadmap's cache
+      if (m_debug) cout << " | success incremented" << endl;
+      _rm->SetCache(_vid,*itr2,true);
+      success++;
+      Stats.IncConnections_Made();
+      this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), true));
+    }
+    else {
+      // mark the failed connection in the roadmap's cache
+      if (m_debug) cout << " | connection failed | failure incremented" << endl;
+      _rm->SetCache(_vid,*itr2,false);
+      failure++;
+      this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), false));
+    }
+  }
+  
+  total_success += (success - iter_success);
+  total_failure += (failure - iter_failure);
+  
+  iter_success = success;
+  iter_failure = failure;
+}
+
 
 template <class CFG, class WEIGHT>
 template <typename InputIterator, typename OutputIterator>
@@ -458,6 +657,8 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
               InputIterator _itr2_first, InputIterator _itr2_last, 
               int k, const vector<VID>& iter_neighbors, OutputIterator closest_iter)
 {
+  LOG_DEBUG_MSG("NeighborhoodConnection::FindKNeighbors()");
+  #ifndef _PARALLEL 
   if (m_random) {
     // find k random (unique) neighbors
     set<int> ids(iter_neighbors.begin(), iter_neighbors.end());
@@ -484,7 +685,12 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
       return this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, cfg, k, closest_iter);
     else 
       return this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, _itr2_first, _itr2_last, cfg, k, closest_iter);
-  }                                           
-}              
+  } 
+  #else
+  // find k-closest using just brute force
+  BFNF<CFG,WEIGHT>* bf_finder = new BFNF<CFG,WEIGHT>(this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf)->GetDMMethod());
+  return bf_finder->KClosest(_rm, _itr2_first, _itr2_last, cfg, k, closest_iter);
+  #endif
+}            
 
 #endif

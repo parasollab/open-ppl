@@ -87,6 +87,14 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
         InputIterator _itr2_first, InputIterator _itr2_last) ; 
+  
+  template<typename InputIterator1, typename InputIterator2>
+  void pConnectNodes(
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        LocalPlanners<CFG,WEIGHT>* lp,
+        bool addPartialEdge, bool addAllEdges,
+        InputIterator1 _itr1_first, InputIterator1 _itr1_last,
+        InputIterator2 _itr2_first, InputIterator2 _itr2_last) ;
     
   void ConnectNeighbors(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
@@ -364,6 +372,22 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     cout << "PreferentialAttachment<CFG,WEIGHT>::ConnectNodes() - 2 pairs InputIterator" << endl << flush;
     cout << "*** Preferential Attachment for 2 pairs InputIterator isn't supported. ***" << endl << flush;
   
+}
+
+ /* This version is used in parallel PRM where iterator 1 and 2 are of different types */
+template <class CFG, class WEIGHT>
+template<typename InputIterator1, typename InputIterator2>
+void PreferentialAttachment<CFG,WEIGHT>::
+pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+            LocalPlanners<CFG,WEIGHT>* lp,
+            bool addPartialEdge,
+            bool addAllEdges,
+            InputIterator1 _itr1_first, InputIterator1 _itr1_last,
+            InputIterator2 _itr2_first, InputIterator2 _itr2_last)
+{   
+	cout << "PreferentialAttachment<CFG,WEIGHT>::pConnectNodes() - 2 pairs InputIterator" << endl << flush;
+        cout << "*** Preferential Attachment for 2 pairs InputIterator isn't supported. ***" << endl << flush;
+
 }
 
 template <class CFG, class WEIGHT>

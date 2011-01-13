@@ -17,6 +17,14 @@ public:
   Cfg_free_multi(const vector<double>& _v);
   Cfg_free_multi(const Cfg& c);
   virtual ~Cfg_free_multi();
+  
+  #ifdef _PARALLEL
+    void define_type(stapl::typer &t)  
+    {
+      Cfg_free::define_type(t);
+      
+    }
+  #endif
 
   static int getNumofRobots() { return NumofRobots; }
   static void setNumofRobots(int robots) { NumofRobots = robots; }

@@ -190,7 +190,7 @@ double GaussianDistribution(double m, double s);
 //@{
 
     #define PMPL_EXIT 1      ///< Actions for VerifyFileExists
-    #define RETURN 2    ///< Actions for VerifyFileExists
+   
 
     /**Check if or not this given filename exists.
       *@param _fname File name that is going to be checked.

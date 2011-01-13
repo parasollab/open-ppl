@@ -4,8 +4,13 @@
 #include "util.h"
 
 // Abstract Interface Class for node connection methods
+template <class CFG, class WEIGHT> class ConnectMap;
+
 template <class CFG, class WEIGHT>
-class NodeConnectionMethod : public MPBaseObject { 
+class NodeConnectionMethod : public MPBaseObject {
+ private:
+ ConnectMap<CFG,WEIGHT>* my_connect;
+ 
  public:
  typedef typename RoadmapGraph<CFG, WEIGHT>::vertex_descriptor VID; 
   //////////////////////
@@ -13,6 +18,12 @@ class NodeConnectionMethod : public MPBaseObject {
   NodeConnectionMethod();
   NodeConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~NodeConnectionMethod();
+  
+  
+  ConnectMap<CFG,WEIGHT>* GetConnectMap() {
+  LOG_DEBUG_MSG("NodeConnectionMethod::ConnectMap()");
+  return my_connect;
+  };
   
   //////////////////////
   // Access

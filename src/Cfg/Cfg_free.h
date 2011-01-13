@@ -47,6 +47,13 @@ public:
   ///Do nothing
   virtual ~Cfg_free();
   //@}
+  
+  #ifdef _PARALLEL
+    void define_type(stapl::typer &t)  
+    {
+      Cfg::define_type(t);
+    }
+#endif
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //

@@ -26,8 +26,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ///OBPRM Headers
+#ifdef _PARALLEL
+#include "p_graph.h"
+#else
 #include "Graph.h"
 #include "GraphAlgo.h"
+#endif
+
 #include "BasicDefns.h"
 #include "Weight.h"
 
@@ -55,7 +60,11 @@
 template<class VERTEX, class WEIGHT>
 class EdgeInfo {
 public:
+#ifdef _PARALLEL
+typedef typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor VID;
+#else 
 typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor VID;
+#endif 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -240,20 +249,33 @@ class vertex_descriptor_iterator
 
 
 
+#ifdef _PARALLEL
+template<class VERTEX, class WEIGHT>
+class RoadmapGraph : 
+public stapl::p_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> {
+#else 
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : 
 public stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> {
-//public stapl::Graph<stapl::DIRECTED,stapl::NONMULTIEDGES,stapl::WEIGHTED, VERTEX,WEIGHT> {
+#endif 
 
 public:
 
+#ifdef _PARALLEL
+typedef stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
+typedef typename GRAPH::vertex_descriptor VID;
+typedef typename stapl::p_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_iterator VI; ///<VI Vertex Iterator
+typedef typename stapl::p_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::const_vertex_iterator CVI; ///< not sure CVI Constant Vertex Iterator
+typedef typename stapl::p_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::adj_edge_iterator EI;
+#else 
 typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 typedef typename GRAPH::vertex_descriptor VID;
-typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_iterator VI; ///<VI Vertex Iterator
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::const_vertex_iterator CVI; ///<CVI Constant Vertex Iterator
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::adj_edge_iterator EI;
+#endif 
 typedef vertex_descriptor_iterator<VI> VDI;
+typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -450,10 +472,15 @@ Init(const int _numNodes, const int _numEdges) {
 
 // require that VERTEX data (configuration) is unique
 template<class VERTEX, class WEIGHT>
-//VID
-typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_descriptor
+#ifdef _PARALLEL
+typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor 
 RoadmapGraph<VERTEX,WEIGHT>::
 AddVertex(VERTEX& _v1) {
+#else 
+typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor 
+RoadmapGraph<VERTEX,WEIGHT>::
+AddVertex(VERTEX& _v1) {
+#endif
     CVI v1;
     if ( !IsVertex(_v1,&v1) ) {
         VID vertex_id = GRAPH::add_vertex(_v1);
@@ -472,10 +499,15 @@ AddVertex(VERTEX& _v1) {
 
 // require that VERTEX data (configuration) is unique
 template<class VERTEX, class WEIGHT>
-//VID
-typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_descriptor
+#ifdef _PARALLEL
+typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor 
 RoadmapGraph<VERTEX,WEIGHT>::
 AddVertex(vector<VERTEX>& _v) {
+#else 
+typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor 
+RoadmapGraph<VERTEX,WEIGHT>::
+AddVertex(vector<VERTEX>& _v) {
+#endif
     bool added=false;
     VID vertex_id; //=this->GetNextVID(); fix_lantao
     for (int i = 0; i < _v.size(); i++){
@@ -567,11 +599,18 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT*,WEIGHT*>& _w) {
 }
 
 template <class VERTEX, class WEIGHT>
-//typename vector<VID> 
-vector<typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_descriptor> 
+#ifdef _PARALLEL
+vector<typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor> 
 RoadmapGraph<VERTEX,WEIGHT>::
 MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap, 
 	      vector<VID> vids) {
+#else 
+vector<typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor> 
+RoadmapGraph<VERTEX,WEIGHT>::
+MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap, 
+	      vector<VID> vids) {
+#endif
+
   VERTEX t;
   int i;
   vector<VID> newVids;
@@ -614,14 +653,24 @@ MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap,
 }
 
 template <class VERTEX, class WEIGHT>
-vector<typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_descriptor>
+#ifdef _PARALLEL
+vector<typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor> 
 RoadmapGraph<VERTEX,WEIGHT>::
 ConvertVertices2VIDs(vector<VERTEX>& vps){
+#else 
+vector<typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor> 
+RoadmapGraph<VERTEX,WEIGHT>::
+ConvertVertices2VIDs(vector<VERTEX>& vps){
+#endif
+  
   vector<VID> vds;
+  #ifndef _PARALLEL
   vds.reserve(sizeof(vps));
   for(typename vector<VERTEX>::iterator itr = vps.begin(); itr != vps.end(); itr++)
 	vds.push_back(this->GetVID(*itr));
+  #endif
   return vds;
+     
 }
 
 template <class VERTEX, class WEIGHT>
@@ -629,9 +678,11 @@ vector<VERTEX>
 RoadmapGraph<VERTEX,WEIGHT>::
 ConvertVIDs2Vertices(vector<VID>& vds){
   vector<VERTEX> vps;
+  #ifndef _PARALLEL
   vps.reserve(sizeof(vds));
   for(typename vector<VID>::iterator itr = vds.begin(); itr!=vds.end(); itr++)
 	vps.push_back((*(this->find_vertex(*itr))).property());
+  #endif
   return vps;
 }
 
@@ -640,12 +691,14 @@ template <class VERTEX, class WEIGHT>
 int
 RoadmapGraph<VERTEX,WEIGHT>::
 GetVerticesData(vector<VERTEX>& v_vp) const{
+  #ifndef _PARALLEL
   v_vp.clear();
   GRAPH g = *this; 
   //verts.reserve( g.size() ); //g has no member size();
     for (CVI vi = g.begin(); vi!= g.end(); vi++) {
         v_vp.push_back((*vi).property());
     }
+    #endif
     return v_vp.size();
 }
 
@@ -653,13 +706,14 @@ template <class VERTEX, class WEIGHT>
 int
 RoadmapGraph<VERTEX,WEIGHT>::
 GetVerticesVID(vector<VID>& v_vd) const{
+  #ifndef _PARALLEL
   v_vd.clear();
-  // GRAPH g = *this; 
+   GRAPH g = *this; 
   //verts.reserve( g.size() ); //g has no member size();
-   // for (CVI vi = this.begin(); vi!= g.end(); vi++) {
-	  for (CVI vi = this->begin(); vi!= this->end(); vi++) {  
+    for (CVI vi = g.begin(); vi!= g.end(); vi++) {
         v_vd.push_back((*vi).descriptor());
     }
+    #endif
     return v_vd.size();
 }
 
@@ -735,7 +789,7 @@ IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
     return (vi);
 
 */
-    VI vi = this->begin();
+     VI vi = this->begin();
     bool found = false;
     while(vi != this->end() && !found){
 	if((*vi).property() == _v1)
@@ -743,13 +797,16 @@ IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
 	else
 	  vi++;
     }// end while
-
+    #ifndef _PARALLEL
     if (vi != this->end() ) {
         *_v1ptr = vi;
-        return true;
+        //return true;
+	found = true;
     } else {
-        return false;
+        found = false;
     }
+    #endif 
+    return found;
 }
 
 
@@ -781,6 +838,7 @@ return IsEdge(v1, v2);
 
 
 //static bool dkinfo_ptr_compare (const dkinfo<VID>* d1, const dkinfo<VID>* d2)
+#ifndef _PARALLEL
 template<class DKINFO>
 static bool dkinfo_ptr_compare (const DKINFO* d1, const DKINFO* d2)
 {
@@ -1030,5 +1088,6 @@ double ComponentDiameter(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, t
   return max_shortest_path_length;
 
 }
+#endif
 
 #endif

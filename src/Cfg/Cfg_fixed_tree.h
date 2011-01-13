@@ -51,6 +51,14 @@ class Cfg_fixed_tree : public Cfg {
   virtual ~Cfg_fixed_tree();
 
   //@}
+  
+  #ifdef _PARALLEL
+    void define_type(stapl::typer &t)  
+    {
+      Cfg::define_type(t);
+      
+    }
+#endif
 
   static int  getNumofJoints() {return NumofJoints;};
   static void setNumofJoints(int _numofjoints) {NumofJoints = _numofjoints;}

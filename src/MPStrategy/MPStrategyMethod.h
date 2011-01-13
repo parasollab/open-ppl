@@ -41,9 +41,11 @@ class MPStrategyMethod : public MPBaseObject
   virtual ~MPStrategyMethod() {}
   virtual void ParseXML(XMLNodeReader& in_Node)=0;
   void operator()(){
+     LOG_DEBUG_MSG("MPStrategyMethod::operator()() ");
      (*this)(GetMPProblem()->CreateMPRegion());
    }
   void operator()(int in_RegionID){
+   LOG_DEBUG_MSG("MPStrategyMethod::operator() " << in_RegionID);
    Initialize(in_RegionID);
    Run(in_RegionID);
    Finalize(in_RegionID);

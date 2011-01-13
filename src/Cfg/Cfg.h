@@ -18,7 +18,7 @@
 #ifdef HPUX
 #include <sys/io.h>
 #endif
-
+#include "views/proxy.h"
 #include <vector>
 #include <map>
 
@@ -30,7 +30,11 @@
 //Include OBPRM headers
 #include "BasicDefns.h"
 
+
+
 #include "boost/shared_ptr.hpp"
+//#include "boost/serialization/vector.hpp"
+#include "boost/serialization/map.hpp"
 using boost::shared_ptr;
 
 class Cfg;
@@ -484,13 +488,16 @@ guration where workspace robot's EVERY VERTEX
   //////////////////////////////////////////////////////////////////////////////////////////
  protected:
   
-  vector<double> v;   
+  std::vector<double> v;   
   int dof;
   int posDof;
-
+/** @To do- there is still problem with (un)packing map
+   *uncomment the ifdef after fix
+   */
+  #ifndef _PARALLEL
   std::map<string,bool> m_LabelMap;
   std::map<string,double> m_StatMap;
-  
+  #endif
  public:
   //Info:
   /**From which Obstacle this Cfg is generated.
@@ -508,6 +515,23 @@ guration where workspace robot's EVERY VERTEX
 
  protected:
   static int NumofJoints;
+  
+  public:
+//changed local to member
+  #ifdef _PARALLEL
+    void define_type(stapl::typer &t)  
+    {
+      t.member(v);
+      t.member(dof);
+      t.member(posDof);
+      //t.member(m_LabelMap);
+      //t.member(m_StatMap);
+      t.member(obst);
+      t.member(tag);
+      t.member(clearance);
+    }
+  #endif
+
 
 }; // class Cfg
 

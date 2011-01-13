@@ -1454,6 +1454,7 @@ void Cfg::setNumofJoints(int _numofjoints) {
 }
 
 bool Cfg::GetLabel(string in_strLabel) {
+  #ifndef _PARALLEL
   if(IsLabel(in_strLabel))
   {
     return m_LabelMap[in_strLabel];
@@ -1463,21 +1464,27 @@ bool Cfg::GetLabel(string in_strLabel) {
     cout << "Cfg::GetLabel -- I cannot find Label =  " << in_strLabel << endl;
     exit(-1);
   }
+  #endif
 }
 
 bool Cfg::IsLabel(string in_strLabel) {
+   #ifndef _PARALLEL
    if(m_LabelMap.count(in_strLabel) > 0)
     { return true ; }
    else
     { return false; }
+   #endif
 }
  
 void Cfg::SetLabel(string in_strLabel,bool in_bool) {
+  #ifndef _PARALLEL
   m_LabelMap[in_strLabel] = in_bool;
+  #endif
 }
 
 
 double Cfg::GetStat(string in_strStat) {
+  #ifndef _PARALLEL
   if(IsStat(in_strStat))
   {
     return m_StatMap[in_strStat];
@@ -1487,17 +1494,22 @@ double Cfg::GetStat(string in_strStat) {
     cout << "Cfg::GetStat -- I cannot find Stat =  " << in_strStat << endl;
     exit(-1);
   }
+  #endif
 }
 
 bool Cfg::IsStat(string in_strStat) {
+   #ifndef _PARALLEL
    if(m_StatMap.count(in_strStat) > 0)
     { return true ; }
    else
     { return false; }
+   #endif
 }
  
 void Cfg::SetStat(string in_strStat,double in_dStat) {
+  #ifndef _PARALLEL
   m_StatMap[in_strStat] = in_dStat;
+  #endif  
 }
 
 vector<Vector3D> Cfg::PolyApprox(Environment* env) const {

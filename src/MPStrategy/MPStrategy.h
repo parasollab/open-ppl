@@ -14,8 +14,10 @@ class MPProblem;
 template <class CFG, class WEIGHT> class LocalPlanners;
 template <class CFG> class Sampler;
 template <class CFG, class WEIGHT> class ConnectMap;
+#ifndef _PARALLEL
 template <class CFG, class WEIGHT> class MPCharacterizer;
 template <class CFG, class WEIGHT> class MapEvaluator;
+#endif
 class MPStrategyMethod;
 
 #ifdef UAS
@@ -36,8 +38,10 @@ public:
   LocalPlanners<CfgType, WeightType>* GetLocalPlanners() {return m_pLocalPlanners;};
   Sampler<CfgType>* GetSampler() {return m_pNodeGeneration;};
   ConnectMap<CfgType, WeightType>* GetConnectMap(){return m_pConnection;};
+  #ifndef _PARALLEL
   MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
   MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_Evaluator;}; 
+  #endif
 
 #ifdef UAS
   PartitioningMethods* GetPartitioningMethods(){return m_PartitioningMethods;}
@@ -56,11 +60,14 @@ public:
   Sampler<CfgType>* m_pNodeGeneration;
   ConnectMap<CfgType, WeightType>* m_pConnection;
   LocalPlanners<CfgType, WeightType>* m_pLocalPlanners;
+  
   //Characterization and Filtering
+  #ifndef _PARALLEL
   MPCharacterizer<CfgType, WeightType>* m_pCharacterizer;
   
   //Map_Evaluation
   MapEvaluator<CfgType, WeightType>* m_Evaluator;
+  #endif
 
 #ifdef UAS
   //UAS items
@@ -72,7 +79,9 @@ public:
   vector< pair<MPStrategyMethod*, XMLNodeReader*> > all_MPStrategyMethod;
   string m_strController_MPStrategyMethod;
 };
-
+#ifdef _PARALLEL
+#include "MPStrategy/ParallelPRMStrategy.h"
+#else
 #include "MPStrategy/BasicPRMStrategy.h"
 #include "MPStrategy/ProbabilityPRMStrategy.h"
 #include "MPStrategy/RoadmapToolsStrategy.h"
@@ -83,10 +92,12 @@ public:
 #include "MPStrategy/BandsStrategy.h"
 #include "MPStrategy/QueryStrategy.h"
 #include "MPStrategy/SmoothQueryStrategy.h"
+#endif
 
 #ifdef UAS
 #include "MPStrategy/UAStrategy.h"
 #endif
+
 
 class MPComparer : public MPStrategyMethod {
   
@@ -97,8 +108,9 @@ public:
   virtual void PrintOptions(ostream& out_os);  
   virtual void ParseXML(XMLNodeReader& in_Node);
 
-  virtual void operator()(int in_RegionID);   
+  virtual void operator()(int in_RegionID);
   virtual void operator()(int in_RegionID_1, int in_RegionID_2);
+  
   virtual void operator()();
    virtual void Initialize(int in_RegionID){}
    virtual void Run(int in_RegionID){}

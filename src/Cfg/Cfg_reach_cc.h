@@ -16,6 +16,14 @@ class Cfg_reach_cc : public Cfg_free_tree {
   Cfg_reach_cc(const Vector6D& base,
 	       const vector<double>& len, const vector<int>& ori);
   virtual ~Cfg_reach_cc();
+  
+  #ifdef _PARALLEL
+    void define_type(stapl::typer &t)  
+    {
+      Cfg_free_tree::define_type(t);
+      
+    }
+ #endif
 
   static int getNumofJoints() { return NumofJoints; }
   static void setNumofJoints(int _numofjoints);

@@ -11,6 +11,26 @@ ifeq (${platform}, LINUX_gcc) 	#linux/gcc
 	DEPS = -MMD -MF $*.d
 endif
 
+ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
+        #temporarily remove VCLIP - does not compile because of hash map
+	UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
+	UTILS_INCL =   ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
+	UTILS_LIB =   ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
+	
+	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
+
+	#BOOST_INCL = -I/usr/include/boost
+	
+	#use same boost as used in STAPL
+        BOOST_ROOT = /usr/local
+        BOOST_INCL = -I$(BOOST_ROOT)/include
+        Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
+	#Boost_LIBRARIES = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+	BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+
+	DEPS = -MMD -MF $*.d
+endif
+
 ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
@@ -18,7 +38,13 @@ ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
-	BOOST_INCL = -I/usr/include/boost
+	#BOOST_INCL = -I/usr/include/boost
+	
+	#use same boost as used in STAPL
+        BOOST_ROOT = /usr/local
+        BOOST_INCL = -I$(BOOST_ROOT)/include
+        Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
+	BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
 
 	DEPS = -MMD -MF $*.d
 endif
@@ -116,8 +142,15 @@ MATHTOOL_LIBFILE = ${MATHTOOL_DIR}/libmathtool.a
 
 # stapl macros
 #STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools 
-STAPL_INCL  = -I${STAPL_DIR}/include 
-
+#STAPL_INCL  = -I${STAPL_DIR}/include 
+#set parallel PRM options
+ifeq (${parallel}, 0)
+	STAPL_INCL  = -I${STAPL_DIR}/include 
+else
+	STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools  -I${STAPL_DIR}/tools/libstdc++/4.4.4/
+        STAPL_DEF = -D_PARALLEL -D_STAPL -D_STAPL_MPI -D_PGRAPH -DDYNAMIC_GRAPH
+        STAPL_LIB = ${STAPL_DIR}/lib/runtime.o -lrt $(BOOST_LIB)
+endif
 
 #CGAL macros
 CGAL_INCL = -I${UTILS_DIR}/geom/CGAL-3.3.1/include
@@ -189,24 +222,26 @@ PMPL_OBJS = \
 	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
 	MPStrategy/MPStrategy.o \
+	NeighborhoodFinder/NeighborhoodFinderMethod.o \
+        MPProblem/MPProblem.o \
+	NeighborhoodFinder/MPNNWrapper.o 
+ifeq (${parallel}, 0)
+	PMPL_OBJS+= \
 	MPStrategy/BasicPRMStrategy.o \
         MPStrategy/ProbabilityPRMStrategy.o \
 	MPStrategy/HybridPRM.o \
 	MPStrategy/QueryStrategy.o \
 	MPStrategy/SmoothQueryStrategy.o \
-	NeighborhoodFinder/NeighborhoodFinderMethod.o \
-        NeighborhoodFinder/MPNNWrapper.o \
         MPStrategy/ClosedChainStrategy.o \
-	MPProblem/MPProblem.o \
 	MapEvaluator/TestEvaluation.o \
 	MapEvaluator/PrintMapEvaluation.o 
 #	Haptic.o \
 #	Push.o \
 #	Utilities/Vectors.o 	
 #	Utilities/Matrix.o 
-
+endif
 #UAS compile macro
-UAS=1
+UAS=0
 ifeq ($(UAS), 1)
    UTILS_DEF+= -DUAS
    PMPL_INCL+= \

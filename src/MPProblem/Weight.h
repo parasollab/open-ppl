@@ -15,7 +15,7 @@
 #define _OBPRM_WEIGHT_H_
 using namespace std;
 #include <iostream>
-
+#include "views/proxy.h"
 //#include "Defines.h"
 
 
@@ -65,6 +65,16 @@ class DefaultWeight {
   double weight;
 
   static double MAX_WEIGHT;
+  
+   public:
+//changed local to member
+#ifdef _PARALLEL
+    void define_type(stapl::typer &t)  
+    {
+      t.member(weight);
+      t.member(lp);
+    }
+#endif
 };
 
 

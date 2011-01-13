@@ -1,5 +1,7 @@
 #include "MPStrategy.h"
+#ifndef _PARALLEL
 #include "MPRegionComparerMethod.h"
+#endif
 #include "Sampler.h"
 
 MPStrategy::
@@ -15,8 +17,10 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPB
     m_pNodeGeneration = NULL;
     m_pConnection = NULL;
     m_pLocalPlanners = NULL;
+    #ifndef _PARALLEL
     m_Evaluator = NULL;
     m_pCharacterizer = NULL;
+    #endif 
     XMLNodeReader::childiterator citr;
     LOG_DEBUG_MSG("MPStrategy::MPStrategy(XMLNodeReader)");
         cout << "input node label MP Strategy = " << in_Node.getName() << endl;
@@ -28,12 +32,16 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPB
         m_pConnection = new ConnectMap<CfgType, WeightType>(*citr, GetMPProblem());
       } else if(citr->getName() == "lp_methods") {
         m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(*citr, GetMPProblem());
-      } else if (citr->getName() == "MPEvaluator_methods") {
-        m_Evaluator = new MapEvaluator<CfgType, WeightType>(*citr, GetMPProblem());
       } else if(citr->getName() == "MPStrategyMethod") {
         ParseStrategyMethod(*citr);
+	#ifndef _PARALLEL
+      } else if (citr->getName() == "MPEvaluator_methods") {
+        m_Evaluator = new MapEvaluator<CfgType, WeightType>(*citr, GetMPProblem());
+      /*} else if(citr->getName() == "MPStrategyMethod") {
+        ParseStrategyMethod(*citr);*/
       } else if(citr->getName() == "MPCharacterizer") {
         m_pCharacterizer = new MPCharacterizer<CfgType, WeightType>(*citr, GetMPProblem());
+	#endif
       } 
 #ifdef UAS
       else if(citr->getName() == "features"){
@@ -66,8 +74,10 @@ PrintOptions(ostream& out_os)
     m_pConnection->PrintOptions(out_os);
   if(m_pLocalPlanners)
     m_pLocalPlanners->PrintOptions(out_os);
+  #ifndef _PARALLEL
   if (m_Evaluator)
     m_Evaluator->PrintOptions(out_os);
+  #endif
 }
 
 void MPStrategy::
@@ -87,6 +97,11 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
 
 MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
    MPStrategyMethod* mpsm = NULL;
+   #ifdef _PARALLEL
+     if(citr.getName() == "ParallelPRMRoadmap"){
+         mpsm = new ParallelPRMRoadmap(citr, GetMPProblem());
+     }
+   #else
      if(citr.getName() == "BasicPRMStrategy"){
          mpsm = new BasicPRMStrategy(citr, GetMPProblem());
      }else if(citr.getName() == "ProbabilityPRMStrategy") {
@@ -122,6 +137,7 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
     else if(citr.getName() == "UAStrategy") {
       mpsm = new UAStrategy(citr, GetMPProblem());
     } 
+    #endif
     #endif
     else {
       citr.warnUnknownNode();
@@ -210,10 +226,12 @@ operator()(int in_RegionID) {
 }
    
 // @todo make the parameter be a vector<int> in_region_ids and loop through it to map regions
+
 void 
 MPComparer::
 operator()(int in_RegionID_1, int in_RegionID_2) { 
   OBPRM_srand(getSeed()); 
+  #ifndef _PARALLEL
   // mapping region 1
   LOG_DEBUG_MSG("MPComparer::() -- executing "<< m_input_methods[0]);
   MPStrategyMethod* input1 = GetMPProblem()->GetMPStrategy()->
@@ -230,8 +248,10 @@ operator()(int in_RegionID_1, int in_RegionID_2) {
   typedef vector<string>::iterator Itrtr;
   for (Itrtr itrtr = m_comparer_methods.begin(); itrtr < m_comparer_methods.end(); itrtr++) {
     GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetComparerMethod(*itrtr)->Compare(in_RegionID_1, in_RegionID_2);
-  }  
+  } 
+  #endif
 }
+
 
 void 
 MPComparer::

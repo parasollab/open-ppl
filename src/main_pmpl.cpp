@@ -45,7 +45,11 @@ using namespace std;
 
 
 
+#ifdef _PARALLEL
+void stapl_main(int argc, char *argv[])
+#else 
 int main(int argc, char** argv)
+#endif
 {
   
   
@@ -80,6 +84,7 @@ int main(int argc, char** argv)
         strategy = new ClosedChainStrategy(*citr,(ClosedChainProblem*)problem);
 #else
         strategy = new MPStrategy(*citr,problem);
+	
 #endif
         problem->SetMPStrategy(strategy);
     }
@@ -101,7 +106,9 @@ int main(int argc, char** argv)
   } else {
     cerr << "I don't have a MPStrategy" << endl << flush;
   }
+   #ifndef _PARALLEL
     return 0;
+    #endif
 }
 
 
