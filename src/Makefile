@@ -1,6 +1,6 @@
 # set default platform
 ifndef platform
-  platform = LINUX_gcc_mh
+  platform = LINUX_64_gcc
 endif
 
 
