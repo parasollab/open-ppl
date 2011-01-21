@@ -21,6 +21,8 @@ class Cfg_reach_cc : public Cfg_free_tree {
     void define_type(stapl::typer &t)  
     {
       Cfg_free_tree::define_type(t);
+      t.member(link_lengths);
+      t.member(link_orientations);
       
     }
  #endif

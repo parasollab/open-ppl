@@ -1464,16 +1464,22 @@ bool Cfg::GetLabel(string in_strLabel) {
     cout << "Cfg::GetLabel -- I cannot find Label =  " << in_strLabel << endl;
     exit(-1);
   }
+  #else 
+   cout << "Cfg::GetLabel -- Map define type not implemented yet"<< endl;
+   exit(-1);
   #endif
+  
 }
 
 bool Cfg::IsLabel(string in_strLabel) {
+   bool label = false;
    #ifndef _PARALLEL
    if(m_LabelMap.count(in_strLabel) > 0)
-    { return true ; }
+    { label= true ; }
    else
-    { return false; }
+    { label= false; }
    #endif
+   return label;
 }
  
 void Cfg::SetLabel(string in_strLabel,bool in_bool) {
@@ -1494,16 +1500,22 @@ double Cfg::GetStat(string in_strStat) {
     cout << "Cfg::GetStat -- I cannot find Stat =  " << in_strStat << endl;
     exit(-1);
   }
+  #else 
+  cout << "Cfg::GetStat -- Map define type not implemented yet"<< endl;
+    exit(-1);
   #endif
+  
 }
 
 bool Cfg::IsStat(string in_strStat) {
+   bool stat = false;
    #ifndef _PARALLEL
    if(m_StatMap.count(in_strStat) > 0)
-    { return true ; }
+    { stat= true ; }
    else
-    { return false; }
+    { stat=false; }
    #endif
+   return stat;
 }
  
 void Cfg::SetStat(string in_strStat,double in_dStat) {
