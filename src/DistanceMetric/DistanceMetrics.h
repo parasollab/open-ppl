@@ -54,6 +54,14 @@ class DistanceMetric : private element_set<DistanceMetricMethod>, public MPBaseO
   typedef element_set<DistanceMetricMethod>::method_pointer DistanceMetricPointer;
 
  public:
+
+  template<typename MethodList>
+  DistanceMetric() : element_set<DistanceMetricMethod>(MethodList()) {}
+
+  DistanceMetric() : element_set<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()) {
+  
+
+}
   
   template <typename MethodList>
   DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&, bool parse_xml = true)

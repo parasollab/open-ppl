@@ -20,6 +20,7 @@ class RotateAtS: public StraightLine<CFG, WEIGHT> {
 
   ///Default Constructor.
   RotateAtS(cd_predefined _cdtype);
+  RotateAtS(cd_predefined _cdtype, double _s_val, vector<double> _s_vals, bool isSym);
   RotateAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
   ///Destructor.  
   virtual ~RotateAtS();
@@ -80,6 +81,12 @@ RotateAtS<CFG, WEIGHT>::
 RotateAtS(cd_predefined _cdtype) : StraightLine<CFG, WEIGHT>(_cdtype) {
   SetDefault(); 
 }
+
+template <class CFG, class WEIGHT>
+RotateAtS<CFG, WEIGHT>::
+RotateAtS(cd_predefined _cdtype, double _s_val, vector<double> _s_vals, bool isSym) : StraightLine<CFG, WEIGHT>(_cdtype), s_value(_s_val), s_values(_s_vals), isSymmetric(isSym) {
+SetDefault();
+};
 
 template <class CFG, class WEIGHT>
 RotateAtS<CFG, WEIGHT>::

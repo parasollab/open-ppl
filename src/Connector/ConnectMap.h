@@ -80,6 +80,7 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
   //////////////////////
   // Constructors and destructor
   ConnectMap();
+  ConnectMap(CDInfo cd);
   ConnectMap(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ConnectMap(Roadmap<CFG,WEIGHT>*, 
             LocalPlanners<CFG,WEIGHT>*);
@@ -409,6 +410,10 @@ template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::
 ConnectMap() {
 }
+
+template <class CFG, class WEIGHT>
+ConnectMap<CFG, WEIGHT>::
+ConnectMap(CDInfo cd) : cdInfo(cd) {}
 
 template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::

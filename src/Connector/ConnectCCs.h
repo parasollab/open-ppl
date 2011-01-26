@@ -29,6 +29,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   ConnectCCs();
+  ConnectCCs(int k, int cc, string nf);
   ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ConnectCCs(Roadmap<CFG,WEIGHT>*, 
 		      LocalPlanners<CFG,WEIGHT>*);
@@ -134,6 +135,11 @@ ConnectCCs<CFG,WEIGHT>::ConnectCCs():
   SetDefault();
 }
 
+template <class CFG, class WEIGHT>
+ConnectCCs<CFG,WEIGHT>::
+ConnectCCs(int k, int cc, string nf) : kpairs(k), smallcc(cc), nf_label(nf) {
+SetDefault();
+}
 
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::

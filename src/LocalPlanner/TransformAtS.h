@@ -19,7 +19,7 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
   //@{
 
   ///Default Constructor.
-  TransformAtS(cd_predefined _cdtype);
+  TransformAtS(cd_predefined _cdtype, int s);
   TransformAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
   ///Destructor.  
   virtual ~TransformAtS();
@@ -85,7 +85,7 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
 /////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 TransformAtS<CFG, WEIGHT>::
-TransformAtS(cd_predefined _cdtype) : StraightLine<CFG, WEIGHT>(_cdtype) {
+TransformAtS(cd_predefined _cdtype, int s) : StraightLine<CFG, WEIGHT>(_cdtype), s_value(s) {
   SetDefault(); 
 }
 

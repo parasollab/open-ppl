@@ -11,6 +11,7 @@ class ComponentConnectionMethod : public MPBaseObject{
   //////////////////////
   // Constructors and Destructor
   ComponentConnectionMethod();
+  ComponentConnectionMethod(char* elem_name, CDInfo* cd, double connPosRes, double connOriRes);
   ComponentConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~ComponentConnectionMethod();
   
@@ -70,6 +71,10 @@ template <class CFG, class WEIGHT>
 ComponentConnectionMethod<CFG,WEIGHT>::
 ComponentConnectionMethod() {
 }
+
+template <class CFG, class WEIGHT>
+ComponentConnectionMethod<CFG,WEIGHT>::
+ComponentConnectionMethod(char* elem_name, CDInfo* cd, double connPosRes, double connOriRes) : element_name(elem_name), cdInfo(cd), connectionPosRes(connPosRes), connectionOriRes(connOriRes) {}
 
 template <class CFG, class WEIGHT>
 ComponentConnectionMethod<CFG,WEIGHT>::

@@ -29,6 +29,7 @@ class LocalPlannerMethod : public MPBaseObject{
 
   ///Default Constructor.
   LocalPlannerMethod();
+  LocalPlannerMethod(CDInfo* cd, int lp);
   LocalPlannerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   
   ///Destructor.  
@@ -106,6 +107,11 @@ LocalPlannerMethod() {
   SetDefault();
 }
 
+template <class CFG, class WEIGHT>
+LocalPlannerMethod<CFG, WEIGHT>::
+LocalPlannerMethod(CDInfo* cd, int lp = -1) : lp_id(lp), cdInfo(cd) {
+  SetDefault();
+}
 
 template <class CFG, class WEIGHT>
 LocalPlannerMethod<CFG, WEIGHT>::

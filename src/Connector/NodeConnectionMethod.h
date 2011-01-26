@@ -16,6 +16,7 @@ class NodeConnectionMethod : public MPBaseObject {
   //////////////////////
   // Constructors and Destructor
   NodeConnectionMethod();
+  NodeConnectionMethod(char* elem_name, vector<pair<pair<VID, VID>, bool> > conn_attempts, CDInfo* cd, double connPosRes, double connOriRes, bool checkCC ); 
   NodeConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~NodeConnectionMethod();
   
@@ -106,6 +107,12 @@ NodeConnectionMethod<CFG,WEIGHT>::
 NodeConnectionMethod() : m_CheckIfSameCC(true) {
 }
 
+
+template <class CFG, class WEIGHT>
+NodeConnectionMethod<CFG,WEIGHT>::
+NodeConnectionMethod(char* elem_name, vector<pair<pair<VID, VID>, bool> > conn_attempts, CDInfo* cd, double connPosRes, double connOriRes, bool checkCC = true ) : element_name(elem_name),
+connection_attempts(conn_attempts), cdInfo(cd), connectionPosRes(connPosRes), connectionOriRes(connOriRes), m_CheckIfSameCC(checkCC)
+{}
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>::

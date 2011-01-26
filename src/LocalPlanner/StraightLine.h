@@ -23,6 +23,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 
   ///Default Constructor.
   StraightLine(cd_predefined _cdtype);
+  StraightLine(int bin, int length, string vc, cd_predefined _cdtype);
   StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
 
   ///Destructor.  
@@ -178,6 +179,9 @@ StraightLine<CFG, WEIGHT>::
 StraightLine(cd_predefined _cdtype) : LocalPlannerMethod<CFG, WEIGHT>() {
 }
 
+template <class CFG, class WEIGHT>
+StraightLine<CFG, WEIGHT>::
+StraightLine(int bin, int length, string vc, cd_predefined _cdtype) : binarySearch(bin), lineSegmentLength(length), vcMethod(vc), cdtype(_cdtype) {}
 
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::

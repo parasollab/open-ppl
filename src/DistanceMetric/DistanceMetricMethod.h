@@ -25,6 +25,7 @@ const int WS = 1;   ///< Type WS: Workspace distance metric
 class DistanceMetricMethod  : public LabeledObject {
  public:
   DistanceMetricMethod();
+  DistanceMetricMethod(double m_time, int t) : m_distance_time(m_time), type(t) {};
   DistanceMetricMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~DistanceMetricMethod();
 
@@ -41,6 +42,7 @@ class DistanceMetricMethod  : public LabeledObject {
                    typename RoadmapGraph<CFG, WEIGHT>::VID in_query, double in_radius);
   
   template <class CFG, class WEIGHT>
+
   vector<typename RoadmapGraph<CFG, WEIGHT>::VID> RangeQuery(Roadmap<CFG, WEIGHT>* rm,
                          CFG in_query, double in_radius); 
   
@@ -122,6 +124,7 @@ class KnotTheoryDistance : public EuclideanDistance {
 class ScaledEuclideanDistance : public EuclideanDistance {
  public:
   ScaledEuclideanDistance();
+  ScaledEuclideanDistance(double s) : sValue(s) {}
   ScaledEuclideanDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~ScaledEuclideanDistance();
 
@@ -217,6 +220,7 @@ class PureEuclideanDistance : public DistanceMetricMethod {
 class MinkowskiDistance : public DistanceMetricMethod {
  public:
   MinkowskiDistance();
+  MinkowskiDistance(double ri, double rii, double riii) : r1(ri), r2(rii), r3(riii) {}
   MinkowskiDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~MinkowskiDistance();
 
