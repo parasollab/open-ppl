@@ -10,6 +10,25 @@ class QueryEvaluation
 {
  public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+  QueryEvaluation(
+  string filename,
+  Query<CFG, WEIGHT> query,
+  Stat_Class stats,
+  LocalPlanners<CFG, WEIGHT>* _lp,
+  vector<string> vecStrNodes,
+  ConnectMap<CFG, WEIGHT> ConnectMap,
+  shared_ptr<DistanceMetricMethod> _dm) : 
+  MapEvaluationMethod(),
+  m_query_filename(filename),
+  m_query(query),
+  m_stats(stats),
+  lp(_lp),
+  m_vecStrNodeConnectionLabels(vecStrNodes),
+  m_ConnectMap(ConnectMap),
+  dm(_dm)
+  {}
+
+
   QueryEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
   : MapEvaluationMethod(in_Node, in_pProblem)
   {

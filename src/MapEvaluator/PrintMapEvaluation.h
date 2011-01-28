@@ -9,6 +9,7 @@ class PrintMapEvaluation
   : public MapEvaluationMethod 
 {
  public:
+  PrintMapEvaluation(string _base_name) : base_name(_base_name){};
   PrintMapEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem); 
   virtual ~PrintMapEvaluation();
   

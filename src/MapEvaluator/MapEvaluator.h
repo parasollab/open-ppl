@@ -23,8 +23,8 @@ class MapEvaluator : public MPBaseObject
 
   MapEvaluator() {}
   
-  MapEvaluator(const vector<conditional_type>& e) 
-  : m_conditional_evaluators(e)
+  MapEvaluator(const vector<conditional_type>& e, vector<comparer_type> _m_comparer_evaluators) 
+  : m_conditional_evaluators(e), m_comparer_evaluators(_m_comparer_evaluators)
   {}
   
   MapEvaluator(XMLNodeReader& in_Node, MPProblem* in_pProblem) 

@@ -81,7 +81,7 @@ public:
     Environment(XMLNodeReader& in_Node, MPProblem* in_pProblem);
 
     Environment(const Environment &from_env, string filename);
-     
+
     /**
      * Destructor.
      * Free memory for every added MultiBody instance if this instance

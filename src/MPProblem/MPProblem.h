@@ -17,6 +17,7 @@ template <class CFG, class WEIGHT> class MPRegion;
 class MPProblem : public MPBaseObject
 {
 public:
+MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, CollisionDetection* _m_pCollisionDetection, ValidityChecker<CfgType>* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder);
   MPProblem(XMLNodeReader& in_Node, bool parse_xml = true);
   virtual ~MPProblem() {}
   

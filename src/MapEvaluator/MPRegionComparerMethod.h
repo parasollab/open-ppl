@@ -36,6 +36,7 @@ template <class CFG, class WEIGHT>
 class MPRegionComparerMethod: public MPBaseObject {
  public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+  MPRegionComparerMethod(MPProblem * _m_pProblem, vector<CFG> _m_witness_cfgs, shared_ptr<DistanceMetricMethod> _dm) : m_pProblem(_m_pProblem), m_witness_cfgs(_m_witness_cfgs), dm(_dm) {}
   MPRegionComparerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPBaseObject(in_Node, in_pProblem) { 
     m_pProblem = in_pProblem;

@@ -11,6 +11,7 @@ class NodeCharacterizerMethod : public MPBaseObject
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
     NodeCharacterizerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
       MPBaseObject(in_Node,in_pProblem) { };
+    NodeCharacterizerMethod() {};
     virtual ~NodeCharacterizerMethod() {}
     virtual void ParseXML(XMLNodeReader& in_Node)=0;
     virtual void Characterize(MPRegion<CFG,WEIGHT>*)=0;
@@ -24,8 +25,11 @@ class NodeCharacterizerMethod : public MPBaseObject
 template<typename CFG,typename WEIGHT>
 class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 {
-  public: 
+  public:
+     
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID; 
+
+    CCExpandCharacterizer(shared_ptr<DistanceMetricMethod> _dm) : dm(_dm) {} 
 
     CCExpandCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
       NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
@@ -99,6 +103,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 {
   public: 
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+    LocalNodeInfoCharacterizer(shared_ptr<DistanceMetricMethod> _dm, double dRadius) : NodeCharacterizerMethod<CFG,WEIGHT>(), dm(_dm), m_dRadius(dRadius)  {}
     LocalNodeInfoCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
       NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
       
@@ -199,6 +204,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 template<typename CFG, typename WEIGHT>
 class MPCharacterizer : public MPBaseObject {
 public:
+  MPCharacterizer(vector< NodeCharacterizerMethod<CFG,WEIGHT>* > all) : all_NodeCharacterizerMethod(all) {};
   MPCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
       MPBaseObject(in_Node, in_pProblem) {
     LOG_DEBUG_MSG( "MPCharacterizer::MPCharacterizer()");

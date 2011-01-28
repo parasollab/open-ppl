@@ -1,6 +1,9 @@
 #include "TestEvaluation.h"
 #include "MPRegion.h"
 
+TestEvaluation::
+TestEvaluation (int s) : size(s) {} 
+
 
 TestEvaluation::
 TestEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem, int s) 

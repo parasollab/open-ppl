@@ -13,6 +13,9 @@ MPProblem(XMLNodeReader& in_Node, bool parse_xml) : MPBaseObject(in_Node, this) 
   LOG_DEBUG_MSG("~MPProblem::MPProblem()");
 }
 
+MPProblem::
+MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, CollisionDetection* _m_pCollisionDetection, ValidityChecker<CfgType>* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder) : m_pEnvironment(_m_pEnvironment), m_pDistanceMetric(_m_pDistanceMetric), m_pCollisionDetection(_m_pCollisionDetection), m_pValidityChecker(_m_pValidityChecker), m_pNeighborhoodFinder(_m_pNeighborhoodFinder) {};
+
 
 bool MPProblem::
 ParseChild(XMLNodeReader::childiterator citr)

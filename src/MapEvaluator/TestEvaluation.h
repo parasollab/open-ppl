@@ -8,6 +8,8 @@ class TestEvaluation
   : public MapEvaluationMethod 
 {
  public:
+
+  TestEvaluation(int s);
   TestEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem, int s = 500); 
   virtual ~TestEvaluation(); 
   

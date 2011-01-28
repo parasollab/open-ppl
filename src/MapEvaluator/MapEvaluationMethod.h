@@ -7,6 +7,7 @@ class MapEvaluationMethod
   : public MPBaseObject 
 {
  public:
+  MapEvaluationMethod() {}
   MapEvaluationMethod(XMLNodeReader& in_pNode, MPProblem* in_pProblem) 
     :  MPBaseObject(in_pNode, in_pProblem) 
     {}
@@ -22,6 +23,7 @@ class MapEvaluationMethod
 class TrueEvaluation : public MapEvaluationMethod
 {
  public:
+   TrueEvaluation() : MapEvaluationMethod() {}
    TrueEvaluation(XMLNodeReader& in_pNode, MPProblem* in_pProblem)
       : MapEvaluationMethod(in_pNode, in_pProblem){}
    virtual ~TrueEvaluation(){}
