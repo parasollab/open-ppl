@@ -11,7 +11,7 @@ class VisibilityFeature : public MPFeature {
  public:
    VisibilityFeature();
    VisibilityFeature(XMLNodeReader& in_Node, MPProblem* mp);
-   ~VisibilityFeature(){}
+   virtual ~VisibilityFeature(){}
    
    virtual void ParseXML(XMLNodeReader& in_Node);
    

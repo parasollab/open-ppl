@@ -34,7 +34,7 @@ class MPRegion : public Environment {
   Stat_Class* GetStatClass() {return &StatClass;};
   vector<VID> AddToRoadmap(vector<CFG >& in_Cfgs);
   void WriteRoadmapForVizmo();
-  void WriteRoadmapForVizmo(ostream& out_os);
+  void WriteRoadmapForVizmo(ostream& out_os, vector<BoundingBox*>* bboxes);
   
   ~MPRegion();
 
@@ -184,7 +184,7 @@ WriteRoadmapForVizmo() {
 };
 template <class CFG, class WEIGHT>
 void MPRegion<CFG,WEIGHT>::
-WriteRoadmapForVizmo(ostream& myofstream) {
+WriteRoadmapForVizmo(ostream& myofstream, vector<BoundingBox*>* bboxes = NULL) {
 
   LOG_DEBUG_MSG("MPRegion::WriteRoadmapForVizmo()");
   
@@ -194,6 +194,12 @@ WriteRoadmapForVizmo(ostream& myofstream) {
   myofstream << endl << "#####PREAMBLESTART#####";
   myofstream << endl << "../obprm -f " << GetMPProblem()->GetEnvironment()->GetEnvFileName() << " ";//commandLine;
   myofstream << " -bbox "; GetBoundingBox()->Print(myofstream, ',', ',');
+  if(bboxes!=NULL){
+     typedef vector<BoundingBox*>::iterator BIT;
+     for(BIT bit = bboxes->begin(); bit!=bboxes->end(); bit++){
+        myofstream << " -bbox "; (*bit)->Print(myofstream, ',', ',');
+     }
+  }
   myofstream << endl << "#####PREAMBLESTOP#####";
   
   myofstream << endl << "#####ENVFILESTART#####";

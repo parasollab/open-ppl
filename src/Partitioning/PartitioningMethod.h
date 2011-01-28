@@ -18,7 +18,7 @@ class PartitioningMethod
  public:
   PartitioningMethod();
   PartitioningMethod(string s, MPProblem * mp);
-  ~PartitioningMethod();
+  virtual ~PartitioningMethod();
 
   virtual void ParseXML(XMLNodeReader& in_Node)=0;
 

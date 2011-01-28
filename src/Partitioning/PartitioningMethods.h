@@ -4,11 +4,7 @@
 #ifndef PARTITIONINGMETHODS_H_
 #define PARTITIONINGMETHODS_H_
 
-#include "PartitioningMethod.h"
-#include "GrowablePartitions.h"
-#include "KMeans.h"
-#include "HierarchicalClustering.h"
-#include "PGMeansClustering.h"
+#include "util.h"
 
 class PartitioningMethod;
 

@@ -245,22 +245,23 @@ UAS=0
 ifeq ($(UAS), 1)
    UTILS_DEF+= -DUAS
    PMPL_INCL+= \
-	-I${PMPL_DIR}/Partitioning \
-	-I${PMPL_DIR}/Partitioning/Kmeans \
+   -I${PMPL_DIR}/Partitioning \
+   -I${PMPL_DIR}/Partitioning/Kmeans \
    -I${PMPL_DIR}/Partitioning/Features \
    -I${PMPL_DIR}/Partitioning/PartitioningEvaluators
 
    PMPL_OBJS+= \
    MPStrategy/UAStrategy.o \
    Partitioning/Partition.o \
-	Partitioning/PartitioningMethod.o \
-	Partitioning/KMeans.o \
-	Partitioning/GrowablePartitions.o \
-	Partitioning/HierarchicalClustering.o \
-	Partitioning/PGMeansClustering.o \
-	Partitioning/PartitioningMethods.o \
+   Partitioning/PartitioningMethod.o \
+   Partitioning/KMeans.o \
+   Partitioning/GrowablePartitions.o \
+   Partitioning/HierarchicalClustering.o \
+   Partitioning/PGMeansClustering.o \
+   Partitioning/SuccessiveClustering.o \
+   Partitioning/PartitioningMethods.o \
    Partitioning/PartitionTree.o \
-	Partitioning/Kmeans/KCtree.o \
+   Partitioning/Kmeans/KCtree.o \
    Partitioning/Kmeans/KMcenters.o \
    Partitioning/Kmeans/KMfilterCenters.o \
    Partitioning/Kmeans/kmlsample.o \
@@ -277,7 +278,7 @@ ifeq ($(UAS), 1)
    Partitioning/Features/CfgFeature.o \
    Partitioning/Features/VisibilityFeature.o \
    Partitioning/Features/ClearanceFeature.o \
-        Partitioning/Features/CSpaceClearanceFeature.o \
+   Partitioning/Features/CSpaceClearanceFeature.o \
    Partitioning/PartitioningEvaluators/PartitioningEvaluators.o \
    Partitioning/PartitioningEvaluators/STDEvaluator.o \
    Partitioning/PartitioningEvaluators/AVGEvaluator.o

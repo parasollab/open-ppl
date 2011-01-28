@@ -21,13 +21,14 @@ class UAStrategy : public MPStrategyMethod {
  protected:
    void IdentifyRegions();
    void CollectMinMaxBBX();
+   void OverlapBBX();
    void IntToStr(int myInt, string &myString);
    int GetRandRegion(vector<double> probs);
    vector<double> GetProbabilities();
    void UpdateBBToRange(int region);
    void RestoreBB();
    vector<Partition*> GetPartitions();
-   vector<vector<VID> > GetPartitionsVID();
+   vector<vector<VID>* > GetPartitionsVID();
    void EvaluatePartitions();
    bool EvaluateMap(int in_RegionID);
    
@@ -39,6 +40,7 @@ class UAStrategy : public MPStrategyMethod {
    string m_DistributionFeature;
    PartitionTree* m_pt;
    string m_TrainingStrategy;
+   string m_OverlapMethod;
    vector<string> m_RegionStrategies;
    vector<vector<double> > m_min, m_max;
    vector<pair<double,double> > m_hold;

@@ -8,7 +8,7 @@ class AVGEvaluator : public PartitioningEvaluator{
  public: 
    AVGEvaluator();
    AVGEvaluator(XMLNodeReader& in_Node, MPProblem* mp);
-   ~AVGEvaluator(){}
+   virtual ~AVGEvaluator(){}
 
    virtual void ParseXML(XMLNodeReader& in_Node);
 

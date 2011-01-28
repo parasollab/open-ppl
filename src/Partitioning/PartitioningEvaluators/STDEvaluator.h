@@ -8,7 +8,7 @@ class STDEvaluator : public PartitioningEvaluator{
  public: 
    STDEvaluator();
    STDEvaluator(XMLNodeReader& in_Node, MPProblem* mp);
-   ~STDEvaluator(){}
+   virtual ~STDEvaluator(){}
 
    virtual void ParseXML(XMLNodeReader& in_Node);
 

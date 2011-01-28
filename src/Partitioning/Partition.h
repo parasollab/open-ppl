@@ -13,7 +13,7 @@ class Partition
  public:
   Partition();
   Partition(Roadmap<CfgType,WeightType> *rdmp, int i);
-  Partition(Roadmap<CfgType,WeightType> *rdmp, vector<VID> vid):m_rdmp(rdmp), m_vvid(vid), m_id(0){}
+  Partition(Roadmap<CfgType,WeightType> *rdmp, vector<VID> vid):m_rdmp(rdmp), m_id(0), m_vvid(vid){}
   Partition(Partition & p);
   ~Partition();
   

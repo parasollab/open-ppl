@@ -51,10 +51,10 @@ void PartitionNode::SetChildren(vector<PartitionNode*> vn){
 }
 
 Roadmap<CfgType, WeightType> PartitionNode::GetPartitialRDMP(){
-   vector<VID> vvid = GetVIDs();
+   vector<VID>* vvid = GetVIDs();
    Roadmap<CfgType, WeightType> rdmp;
    typedef vector<VID>::iterator VIT;
-   for(VIT vit = vvid.begin(); vit!=vvid.end(); vit++){
+   for(VIT vit = vvid->begin(); vit!=vvid->end(); vit++){
       rdmp.m_pRoadmap->AddVertex(GetRDMP()->m_pRoadmap->find_vertex(*vit)->property());
    }
    return rdmp;
@@ -68,7 +68,7 @@ InternalPartitionNode::InternalPartitionNode(PartitionNode* parent, vector<Parti
 
 Partition* InternalPartitionNode::GetPartition(){
    Partition temp(GetRDMP(), 1);
-   temp.SetVID(GetVIDs());
+   temp.SetVID(*GetVIDs());
    return new Partition(temp);
 };
 
@@ -80,14 +80,14 @@ BoundingBox InternalPartitionNode::GetBoundingBox(){
    return GetPartition()->GetBoundingBox();
 };
 
-vector<VID> InternalPartitionNode::GetVIDs(){
-   vector<VID> temp;
+vector<VID>* InternalPartitionNode::GetVIDs(){
+   vector<VID>* temp = new vector<VID>();
    typedef vector<PartitionNode*>::iterator PIT;
    typedef vector<VID>::iterator VIT;
    for(PIT pit = m_Children.begin(); pit!=m_Children.end(); pit++){
-      vector<VID> vids = (*pit)->GetVIDs();
-      for(VIT vit = vids.begin(); vit!=vids.end(); vit++){
-         temp.push_back(*vit);
+      vector<VID>* vids = (*pit)->GetVIDs();
+      for(VIT vit = vids->begin(); vit!=vids->end(); vit++){
+         temp->push_back(*vit);
       }
    }
    return temp;
@@ -108,7 +108,7 @@ BoundingBox LeafPartitionNode::GetBoundingBox(){return m_Partition->GetBoundingB
 
 Roadmap<CfgType, WeightType>* LeafPartitionNode::GetRDMP(){return m_Partition->GetRoadmap();};
 
-vector<VID> LeafPartitionNode::GetVIDs(){return m_Partition->GetVID();};
+vector<VID>* LeafPartitionNode::GetVIDs(){return &(m_Partition->GetVID());};
 
 PartitionTree::PartitionTree(LeafPartitionNode root){
    m_Root= new LeafPartitionNode(root);
@@ -157,21 +157,46 @@ inline void IntToStr(int myInt, string &myString) {
 	ss >> myString;
 };
 
-void PartitionTree::WritePartitions(MPProblem* pMPProblem, string base){
+void PartitionTree::WritePartitions(MPProblem* pMPProblem, string base, vector<vector<double> >&
+min, vector<vector<double> >& max){
    string baseFileName = base;
-   MPRegion<CfgType,WeightType> eachRgn(10, pMPProblem);
+   MPRegion<CfgType,WeightType> eachRgn(*(pMPProblem->GetEnvironment()), *(pMPProblem->GetEnvironment()->GetBoundingBox()), 10, NULL);
+   eachRgn.SetMPProblem(pMPProblem);
    RoadmapGraph<CfgType,WeightType>* rg = pMPProblem->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
    vector<PartitionNode*> pnodes = m_Root->GetChildren();
+   vector<VID> allVIDS;
    typedef vector<PartitionNode*>::iterator PIT;
    for (PIT pit=pnodes.begin(); pit!=pnodes.end(); pit++) {
       vector<VID> vi = (*pit)->GetPartition()->GetVID();
+      vector<VID> newVIDS;
       typedef vector<VID>::iterator VIT;
       for(VIT vit = vi.begin(); vit!=vi.end(); vit++){
-         eachRgn.GetRoadmap()->m_pRoadmap->AddVertex(rg->find_vertex(*vit)->property());
+         bool alter = false;
+         if(find(allVIDS.begin(), allVIDS.end(), *vit)!=allVIDS.end())
+            alter=true;
+         else
+            allVIDS.push_back(*vit);
+         CfgType cfg = rg->find_vertex(*vit)->property();
+         if(alter){
+            cfg.IncSingleParam(0,0.01);
+         }
+         newVIDS.push_back(eachRgn.GetRoadmap()->m_pRoadmap->AddVertex(cfg));
       }
-      for(unsigned int k = 0; k<vi.size()-1; k++){
-         eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(rg->find_vertex(vi[k])->property(),rg->find_vertex(vi[k+1])->property(),0);
+      for(unsigned int k = 0; k<newVIDS.size(); k++){
+         eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(newVIDS[k],newVIDS[k+1],0);
       }
+      eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(newVIDS[newVIDS.size()-1],newVIDS[0],0);
+   }
+   vector<BoundingBox*>* bboxes = new vector<BoundingBox*>();
+   for(unsigned int i = 0; i<min.size(); i++){
+      BoundingBox* bb = new BoundingBox(6,3);
+      bb->SetParameter(0, min[i][0], max[i][0]);
+      bb->SetParameter(1, min[i][1], max[i][1]);
+      bb->SetParameter(2, min[i][2], max[i][2]);
+      bb->SetParameter(3, 0, 1);
+      bb->SetParameter(4, 0, 1);
+      bb->SetParameter(5, 0, 1);
+      bboxes->push_back(bb);
    }
    string outputFilename = baseFileName+".map";
    ofstream  myofstream(outputFilename.c_str());    
@@ -179,6 +204,7 @@ void PartitionTree::WritePartitions(MPProblem* pMPProblem, string base){
       LOG_ERROR_MSG("print_feature_maps::WriteRoadmapForVizmo: can't open outfile: ");
       exit(-1);
    } 
-   eachRgn.WriteRoadmapForVizmo(myofstream);
+   eachRgn.WriteRoadmapForVizmo(myofstream, bboxes);
    myofstream.close();
+   delete bboxes;
 };

@@ -1,10 +1,18 @@
 #include "PartitioningMethods.h"
 
+#include "PartitioningMethod.h"
+#include "GrowablePartitions.h"
+#include "KMeans.h"
+#include "HierarchicalClustering.h"
+#include "PGMeansClustering.h"
+#include "SuccessiveClustering.h"
+
 PartitioningMethods::PartitioningMethods(){
    all.push_back(new KMeans());
    all.push_back(new GrowablePartitions());
    all.push_back(new HierarchicalClustering());
    all.push_back(new PGMeansClustering());
+   all.push_back(new SuccessiveClustering());
 };
 
 PartitioningMethods::PartitioningMethods(XMLNodeReader& in_Node, MPProblem* in_pProblem){
@@ -26,6 +34,10 @@ PartitioningMethods::PartitioningMethods(XMLNodeReader& in_Node, MPProblem* in_p
       else if(citr->getName()=="PGmeans"){
          PGMeansClustering* pg = new PGMeansClustering(*citr, in_pProblem);
          selected.push_back(pg);
+      }
+      else if(citr->getName()=="Successive"){
+         SuccessiveClustering* sc = new SuccessiveClustering(*citr, in_pProblem);
+         selected.push_back(sc);
       }
       citr->warnUnrequestedAttributes();
    }

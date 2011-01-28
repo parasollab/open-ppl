@@ -9,7 +9,7 @@ class MPFeature {
  public:
    MPFeature(){m_pProblem=NULL;}
    MPFeature(MPProblem* mp){m_pProblem=mp;}
-   ~MPFeature(){}
+   virtual ~MPFeature(){}
    
    virtual void ParseXML(XMLNodeReader& in_Node)=0;
 

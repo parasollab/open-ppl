@@ -8,7 +8,7 @@ class ClearanceFeature : public MPFeature {
 public:
 	ClearanceFeature();
 	ClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_PProblem);
-	~ClearanceFeature(){}
+	virtual ~ClearanceFeature(){}
 
 	virtual void ParseXML(XMLNodeReader& in_Node);
 

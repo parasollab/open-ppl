@@ -33,10 +33,10 @@ class PartitionNode {
    void SetChildren(vector<PartitionNode*> vn);
    void AddChild(PartitionNode* child){m_Children.push_back(child);}
 
-   virtual Partition* GetPartition(){}
-   virtual Roadmap<CfgType, WeightType>* GetRDMP(){}
-   virtual BoundingBox GetBoundingBox(){}
-   virtual vector<VID> GetVIDs(){}
+   virtual Partition* GetPartition(){return NULL;}
+   virtual Roadmap<CfgType, WeightType>* GetRDMP(){return NULL;}
+   virtual BoundingBox GetBoundingBox(){return BoundingBox(0,0);}
+   virtual vector<VID>* GetVIDs(){return new vector<VID>();}
    Roadmap<CfgType, WeightType> GetPartitialRDMP();
 
  protected:
@@ -66,7 +66,7 @@ class InternalPartitionNode : public PartitionNode {
   
    //calls all childrens getVIDs method to compose one collection of 
    //VID for this level of the partitio
-   virtual vector<VID> GetVIDs();
+   virtual vector<VID>* GetVIDs();
 };
 
 //holds the partition and controls access to the partition
@@ -81,7 +81,7 @@ class LeafPartitionNode : public PartitionNode {
    virtual Partition* GetPartition();
    virtual Roadmap<CfgType, WeightType>* GetRDMP();
    virtual BoundingBox GetBoundingBox();
-   virtual vector<VID> GetVIDs();
+   virtual vector<VID>* GetVIDs();
  protected:
    Partition* m_Partition;//all leaf nodes contain their partition which stores all the basic information
 };
@@ -95,7 +95,8 @@ class PartitionTree{
    ~PartitionTree(){}
 
    //writes partitions to a .map file for reading from vizmo
-   void WritePartitions(MPProblem* pMPProblem, string base);
+   void WritePartitions(MPProblem* pMPProblem, string base, vector<vector<double> >& min,
+   vector<vector<double> >& max);
 
    //auto creates a tree into internal PartitionNode and leaf nodes for use
    void CreateTree(PartitioningMethod *pm, LeafPartitionNode* p, InternalPartitionNode* ipn);

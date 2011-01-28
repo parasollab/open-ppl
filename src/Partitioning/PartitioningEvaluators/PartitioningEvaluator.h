@@ -8,7 +8,7 @@ class PartitioningEvaluator {
  public:
    PartitioningEvaluator(){}
    PartitioningEvaluator(MPProblem* mp){m_pProblem=mp;}
-   ~PartitioningEvaluator(){}
+   virtual ~PartitioningEvaluator(){}
 
    virtual void ParseXML(XMLNodeReader& in_Node)=0;
 

@@ -9,7 +9,7 @@ class CfgFeature : public MPFeature {
  public:
    CfgFeature();
    CfgFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem);
-   ~CfgFeature(){}
+   virtual ~CfgFeature(){}
 
    virtual void ParseXML(XMLNodeReader& in_Node);
 

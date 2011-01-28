@@ -21,6 +21,9 @@ void UAStrategy::ParseXML(XMLNodeReader& in_Node){
       else if(citr->getName()=="region_identifier"){
          m_PartitioningMethod = citr->stringXMLParameter("Method", true, "", "Region Identification Method");
       }
+      else if(citr->getName()=="overlap_method"){
+         m_OverlapMethod = citr->stringXMLParameter("Method", false, "default", "Forced Overlap Method");
+      }
       else if(citr->getName()=="distribution_feature"){
          m_DistributionFeature = citr->stringXMLParameter("Feature", true, "", "Probability Distribution Feature");
       }
@@ -53,9 +56,17 @@ void UAStrategy::Run(int in_RegionID){
    
    //identify regions
    IdentifyRegions();
-   EvaluatePartitions();
+   LOG_DEBUG_MSG("START PARTITION EVALUATION");
+   if(GetMPProblem()->GetMPStrategy()->GetPartitioningEvaluators()!=NULL)
+      EvaluatePartitions();
+   LOG_DEBUG_MSG("END PARTITION EVALUATION");
    CollectMinMaxBBX();
+   OverlapBBX();
    vector<double> probabilities = GetProbabilities(); 
+   WriteRegionsSeparate();
+   m_pt->WritePartitions(GetMPProblem(),
+   GetMPProblem()->GetMPStrategy()->GetPartitioningMethods()->GetPartitioningMethod(m_PartitioningMethod)->GetClusteringDestination()+"region.",
+   m_min, m_max);
 
    //initialize all the region strategies
    vector<vector<MPStrategyMethod*> > regionStrategyMethods;
@@ -162,19 +173,14 @@ void UAStrategy::IdentifyRegions(){
    LOG_DEBUG_MSG("START PARTITIONING");
    m_pt->CreateTree(GetMPProblem()->GetMPStrategy()->GetPartitioningMethods()->GetPartitioningMethod(m_PartitioningMethod), dynamic_cast<LeafPartitionNode*>(m_pt->GetRoot()), new InternalPartitionNode());
    LOG_DEBUG_MSG("END PARTITIONING");
-   LOG_DEBUG_MSG("START PARTITION EVALUATION");
-   if(GetMPProblem()->GetMPStrategy()->GetPartitioningEvaluators()!=NULL)
-      EvaluatePartitions();
-   LOG_DEBUG_MSG("END PARTITION EVALUATION");
-   m_pt->WritePartitions(GetMPProblem(), GetMPProblem()->GetMPStrategy()->GetPartitioningMethods()->GetPartitioningMethod(m_PartitioningMethod)->GetClusteringDestination()+"region.");
 }
 
 void UAStrategy::CollectMinMaxBBX(){
    m_min.clear();
    m_max.clear();
    
-   vector< vector< VID > > Clusters = GetPartitionsVID();
-   typedef vector< vector< VID > >::iterator CIT;
+   vector< vector< VID >* > Clusters = GetPartitionsVID();
+   typedef vector< vector< VID >* >::iterator CIT;
    typedef vector< VID >::iterator NIT;
 
    Roadmap < CfgType, WeightType > * rm = GetMPProblem()->GetMPRegion(0)->GetRoadmap();
@@ -193,7 +199,7 @@ void UAStrategy::CollectMinMaxBBX(){
       Min[2] = 1.7e308;
       Max[0] = Max[1] = Max[2] = -(1.7e308);
       
-      if( itrCluster->size() < 1 ){ 
+      if( (*itrCluster)->size() < 1 ){ 
          Max[0] = Max[1] = Max[2] = Min[0] = Min[1] = Min[2] = 0;
       }
       else{
@@ -201,7 +207,7 @@ void UAStrategy::CollectMinMaxBBX(){
          // At least 1 node in the cluster,
          // so grab it and use as the basis for the min/max values.
          //
-         NIT itrNode = itrCluster->begin();
+         NIT itrNode = (*itrCluster)->begin();
          NodeData = rm->m_pRoadmap->find_vertex(*itrNode)->property();
          CurrPos = NodeData.GetPosition();
          
@@ -217,7 +223,7 @@ void UAStrategy::CollectMinMaxBBX(){
          //
          // Loop through remaining nodes to find min/max values.
          //
-         while( itrNode != itrCluster->end() ){
+         while( itrNode != (*itrCluster)->end() ){
             NodeData = rm->m_pRoadmap->find_vertex(*itrNode)->property();
             CurrPos = NodeData.GetPosition();
             
@@ -240,11 +246,182 @@ void UAStrategy::CollectMinMaxBBX(){
       m_min.push_back(Min);
       m_max.push_back(Max); 
    }
+}
 
+bool sortRegionFunc(pair<VID, double> p1, pair<VID, double> p2){return p1.second<p2.second;}
+
+void UAStrategy::OverlapBBX(){
    Environment *env = GetMPProblem()->GetEnvironment();
    BoundingBox *bb = GetMPProblem()->GetMPRegion(0)->GetBoundingBox();
-   double robot_radius = env->GetMultiBody(env->GetRobotIndex())->GetBoundingSphereRadius();
+   double robot_radius = 1.25*env->GetMultiBody(env->GetRobotIndex())->GetBoundingSphereRadius();
    
+   if(m_OverlapMethod=="default"){ 
+      for(int x = 0; x<3; x++){
+         vector<int> indx;
+         for(int i =0; i<m_min.size();i++)indx.push_back(i);
+         bool swapped;
+         do{
+            swapped=false;
+            for(int i = 0; i<m_min.size()-1; i++){
+               if(m_min[indx[i]][x]>m_min[indx[i+1]][x]){
+                  int temp = indx[i];
+                  indx[i]=indx[i+1];
+                  indx[i+1]=temp;
+                  swapped=true;
+               }
+            }
+         }while(swapped);
+         for(int i=0;i<indx.size()-1;i++){
+            if(m_max[indx[i]][x]<m_min[indx[i+1]][x]){
+               double temp = m_max[indx[i]][x];
+               double diff = m_min[indx[i+1]][x]-temp;
+               if(m_min[indx[i+1]][x]-diff<bb->GetRange(x).first)
+                  m_min[indx[i+1]][x]=bb->GetRange(x).first;
+               else
+                  m_min[indx[i+1]][x]=m_min[indx[i+1]][x]-diff;
+               if(temp+diff>bb->GetRange(x).second)
+                  m_max[indx[i]][x]=bb->GetRange(x).second;
+               else
+                  m_max[indx[i]][x]=temp+diff;
+            }
+         }
+      }
+   }
+   else if(m_OverlapMethod=="MSTOverlap"||m_OverlapMethod=="MSTNewRegions"){
+      //calculate mst of region graph//
+      typedef stapl::graph<stapl::UNDIRECTED, stapl::NONMULTIEDGES, int, double> Graph;
+      Graph g;
+      Roadmap < CfgType, WeightType > * rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap();
+      vector< vector< VID >* > Clusters = GetPartitionsVID();
+      typedef vector<vector<VID>* >::iterator VIT;
+      typedef vector<VID>::iterator VVIT;
+      int i = -1;
+      vector<vector<double> > centers;
+      for(VIT vit = Clusters.begin(); vit!=Clusters.end(); vit++){
+         i++;
+         int node=i;
+         double x=0, y=0, z=0;
+         for(VVIT vvit = (*vit)->begin(); vvit!=(*vit)->end(); vvit++){
+            CfgType cfg = rdmp->m_pRoadmap->find_vertex(*vvit)->property();
+            vector<double> pos = cfg.GetPosition();
+            x+=pos[0];
+            y+=pos[1];
+            z+=pos[2];
+         }
+         vector<double> v;
+         x/=(*vit)->size();
+         y/=(*vit)->size();
+         z/=(*vit)->size();
+         v.push_back(x);
+         v.push_back(y);
+         v.push_back(z);
+         centers.push_back(v);
+         g.add_vertex(node);
+      }
+      for(int j = 0; j<Clusters.size(); j++){
+         for(int k = j; k<Clusters.size(); k++){
+            vector<double> centerA = centers[j];
+            vector<double> centerB = centers[k];
+            double weight = sqrt((centerB[0]-centerA[0])*(centerB[0]-centerA[0])+
+                                 (centerB[1]-centerA[1])*(centerB[1]-centerA[1])+
+                                 (centerB[2]-centerA[2])*(centerB[2]-centerA[2])); 
+            g.add_edge(j, k, weight);
+         }
+      }
+      
+      Graph mst_g;
+      stapl::mst_kruskals(g, mst_g, 0);
+      //perform swapping//
+      if(m_OverlapMethod=="MSTOverlap"){
+         for(int j = 0; j<mst_g.get_num_vertices(); j++){
+            //get adjacent edgesi
+            for(Graph::adj_edge_iterator e = mst_g.find_vertex(j)->begin(); e!=mst_g.find_vertex(j)->end(); e++){
+               //use edge
+               const int v1 = (*e).target();
+               const int v2 = (*e).source();
+               int swapRegion;
+               if(v1!=j){
+                  swapRegion = v1;
+               }
+               else{
+                  swapRegion = v2;
+               }
+               vector<pair<VID, double> > regionDists;
+               vector<double> centerA=centers[j];
+               for(VVIT svit = Clusters[swapRegion]->begin(); svit!=Clusters[swapRegion]->end(); svit++){
+                  CfgType cfg = rdmp->m_pRoadmap->find_vertex(*svit)->property();
+                  vector<double> centerB = cfg.GetPosition();
+                  double weight = sqrt((centerB[0]-centerA[0])*(centerB[0]-centerA[0])+
+                        (centerB[1]-centerA[1])*(centerB[1]-centerA[1])+
+                        (centerB[2]-centerA[2])*(centerB[2]-centerA[2])); 
+                  regionDists.push_back(pair<VID, double>(*svit, weight));
+               }
+               sort(regionDists.begin(), regionDists.end(), sortRegionFunc);
+               int top10 = (float)regionDists.size()/10.0;
+               //int indx = rand()%top10;
+               Clusters[i]->push_back(regionDists[top10].first);
+            }
+         }
+      }
+      else if(m_OverlapMethod=="MSTNewRegions"){
+         vector<pair<int, int> > visitedEdges;
+         typedef vector<pair<int, int> >::iterator PIT;
+         for(Graph::edge_iterator e = mst_g.edges_begin(); e!=mst_g.edges_end(); e++){
+            const int v1 = (*e).target();
+            const int v2 = (*e).source();
+            bool found = false;
+            for(PIT pit = visitedEdges.begin(); pit!=visitedEdges.end(); pit++){
+               if(pit->first==v1&&pit->second==v2){
+                  found=true;
+                  break;
+               }
+            }
+            if(found){continue;}
+            cout<<"FOUND!!!!!!!!!!!"<<endl;
+            visitedEdges.push_back(pair<int,int>(v1,v2));
+            visitedEdges.push_back(pair<int,int>(v2,v1));
+            vector<pair<VID, double> > regionDistsA;
+            vector<double> centerA=centers[v1];
+            vector<pair<VID, double> > regionDistsB;
+            vector<double> centerB=centers[v2];
+            vector<double> centerN;
+            centerN.push_back((centerA[0]+centerB[0])/2.0);
+            centerN.push_back((centerA[1]+centerB[1])/2.0);
+            centerN.push_back((centerA[2]+centerB[2])/2.0);
+            for(VVIT svit = Clusters[v1]->begin(); svit!=Clusters[v1]->end(); svit++){
+               CfgType cfg = rdmp->m_pRoadmap->find_vertex(*svit)->property();
+               vector<double> centB = cfg.GetPosition();
+               double weight = sqrt((centB[0]-centerN[0])*(centB[0]-centerN[0])+
+                     (centB[1]-centerN[1])*(centB[1]-centerN[1])+
+                     (centB[2]-centerN[2])*(centB[2]-centerN[2])); 
+               regionDistsA.push_back(pair<VID, double>(*svit, weight));
+            }
+            for(VVIT svit = Clusters[v2]->begin(); svit!=Clusters[v2]->end(); svit++){
+               CfgType cfg = rdmp->m_pRoadmap->find_vertex(*svit)->property();
+               vector<double> centB = cfg.GetPosition();
+               double weight = sqrt((centB[0]-centerN[0])*(centB[0]-centerN[0])+
+                     (centB[1]-centerN[1])*(centB[1]-centerN[1])+
+                     (centB[2]-centerN[2])*(centB[2]-centerN[2])); 
+               regionDistsB.push_back(pair<VID, double>(*svit, weight));
+            }
+            sort(regionDistsA.begin(), regionDistsA.end(), sortRegionFunc);
+            sort(regionDistsB.begin(), regionDistsB.end(), sortRegionFunc);
+            int top10A = (float)regionDistsA.size()/10.0;
+            int indxA = rand()%top10A;
+            int top10B = (float)regionDistsB.size()/10.0;
+            int indxB = rand()%top10B;
+            vector<VID> vecVID;
+            vecVID.push_back(regionDistsA[top10A].first);
+            vecVID.push_back(regionDistsB[top10B].first);
+            //m_pt->GetRoot()->AddChild(new LeafPartitionNode(m_pt->GetRoot(), new Partition(rdmp, vecVID)));
+            m_pt->GetRoot()->AddChild(new LeafPartitionNode(new Partition(rdmp, vecVID)));
+         }
+      }
+      CollectMinMaxBBX();
+   }
+   else{cout<<"NEED OVERLAP METHOD"<<endl; exit(1);}
+
+//all methods need to extend region by a robot radius
    for(int x= 0; x<3; x++){
       for(int i = 0; i<m_min.size();i++){
          double maxbb = bb->GetRange(x).second;
@@ -260,36 +437,6 @@ void UAStrategy::CollectMinMaxBBX(){
          }
          else{
             m_max[i][x]=maxbb;
-         }
-      }
-   }
-   for(int x = 0; x<3; x++){
-      vector<int> indx;
-      for(int i =0; i<m_min.size();i++)indx.push_back(i);
-      bool swapped;
-      do{
-         swapped=false;
-         for(int i = 0; i<m_min.size()-1; i++){
-            if(m_min[indx[i]][x]>m_min[indx[i+1]][x]){
-               int temp = indx[i];
-               indx[i]=indx[i+1];
-               indx[i+1]=temp;
-               swapped=true;
-            }
-         }
-      }while(swapped);
-      for(int i=0;i<indx.size()-1;i++){
-         if(m_max[indx[i]][x]<m_min[indx[i+1]][x]){
-            double temp = m_max[indx[i]][x];
-            double diff = m_min[indx[i+1]][x]-temp;
-            if(m_min[indx[i+1]][x]-diff<bb->GetRange(x).first)
-               m_min[indx[i+1]][x]=bb->GetRange(x).first;
-            else
-               m_min[indx[i+1]][x]=m_min[indx[i+1]][x]-diff;
-            if(temp+diff>bb->GetRange(x).second)
-               m_max[indx[i]][x]=bb->GetRange(x).second;
-            else
-               m_max[indx[i]][x]=temp+diff;
          }
       }
    }
@@ -318,16 +465,16 @@ int UAStrategy::GetRandRegion(vector<double> probs){
 }
 
 vector<double> UAStrategy::GetProbabilities(){
-   vector<vector<VID> > Clusters = GetPartitionsVID();
+   vector<vector<VID>* > Clusters = GetPartitionsVID();
 
    cout<<"Beginning to redistribute nodes"<<endl;
 
    vector<double> averages;
 
-   typedef vector<vector<VID> >::iterator CIT;
+   typedef vector<vector<VID>* >::iterator CIT;
    typedef vector<double>::iterator DIT;
    for(CIT cit = Clusters.begin(); cit!=Clusters.end(); cit++){
-      vector<double> features = GetMPProblem()->GetMPStrategy()->GetFeatures()->GetFeature(m_DistributionFeature)->Collect(*cit);
+      vector<double> features = GetMPProblem()->GetMPStrategy()->GetFeatures()->GetFeature(m_DistributionFeature)->Collect(**cit);
       double average = 0;
       for(DIT dit = features.begin(); dit!=features.end(); dit++){
          average+=(*dit);
@@ -415,8 +562,8 @@ vector<Partition*> UAStrategy::GetPartitions(){
    return parts;
 }
 
-vector<vector<VID> > UAStrategy::GetPartitionsVID(){
-   vector<vector<VID> > Clusters;
+vector<vector<VID>* > UAStrategy::GetPartitionsVID(){
+   vector<vector<VID>* > Clusters;
    for(int itrCluster =0; itrCluster < m_pt->GetRoot()->GetChildren().size(); ++itrCluster){
       Clusters.push_back( m_pt->GetRoot()->GetChildren()[itrCluster]->GetVIDs() );
    }
@@ -467,11 +614,12 @@ bool UAStrategy::EvaluateMap(int in_RegionID){
 void UAStrategy::WriteRegionsSeparate(){
    string baseFileName = getBaseFilename();
    int count=0;
+   RoadmapGraph<CfgType,WeightType>* rg = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
    vector<PartitionNode*> pnodes = m_pt->GetRoot()->GetChildren();
    typedef vector<PartitionNode*>::iterator PIT;
    for (PIT pit=pnodes.begin(); pit!=pnodes.end(); pit++, count++) {
       vector<VID> vi = (*pit)->GetPartition()->GetVID();
-      BoundingBox bb(6,3);// = (*pit)->GetPartition()->GetBoundingBox();
+      BoundingBox bb(6,3);
       for(int i = 0; i <3; i++){
          bb.SetParameter(i, m_min[count][i], m_max[count][i]);
       }
@@ -479,21 +627,19 @@ void UAStrategy::WriteRegionsSeparate(){
       eachRgn.SetMPProblem(GetMPProblem());
       typedef vector<VID>::iterator VIT;
       for(VIT vit = vi.begin(); vit!=vi.end(); vit++){
-         //vector<VID> tmp;
-         //tmp.push_back(*vit);
-         CfgType cfg = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap->find_vertex(*vit)->property();
-         //vector<CfgType> vcfg = GetMPProblem()->GetMPRegion(0)->GetCfgFromVID(GetMPProblem()->GetMPRegion(0)->GetRoadmap(), tmp);
+         CfgType cfg = rg->find_vertex(*vit)->property();
          eachRgn.GetRoadmap()->m_pRoadmap->AddVertex(cfg);
       }
       for(unsigned int k = 0; k<vi.size()-1; k++){
-         //vector<VID> tmp;
-         //tmp.push_back(vi[k]);
-         //tmp.push_back(vi[k+1]);
-         //vector<CfgType> vcfg = GetMPProblem()->GetMPRegion(0)->GetCfgFromVID(GetMPProblem()->GetMPRegion(0)->GetRoadmap(), tmp);
-         CfgType cfg1 = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap->find_vertex(vi[k])->property();
-         CfgType cfg2 = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap->find_vertex(vi[k+1])->property();
+         CfgType cfg1 = rg->find_vertex(vi[k])->property();
+         CfgType cfg2 = rg->find_vertex(vi[k+1])->property();
          eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg1,cfg2,0);
+         //eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg2,cfg1,0);
       }
+      CfgType cfg1 = rg->find_vertex(vi[0])->property();
+      CfgType cfg2 = rg->find_vertex(vi[vi.size()-1])->property();
+      //eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg1,cfg2,0);
+      //eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg2,cfg1,0);
       ostringstream oss;
       oss<<baseFileName<<"."<<count<<".map";
       ofstream  myofstream(oss.str().c_str());    
@@ -505,4 +651,5 @@ void UAStrategy::WriteRegionsSeparate(){
       myofstream.close();
    }
 };
+
 
