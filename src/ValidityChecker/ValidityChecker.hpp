@@ -17,6 +17,9 @@ public:
   typedef boost::shared_ptr<ValidityCheckerMethod> VCMethodPtr;
   
   ValidityChecker() { }
+  ValidityChecker(std::map<std::string, VCMethodPtr> _map) : m_map_vcmethods(_map) {};
+
+
   ValidityChecker(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem) { 
     LOG_DEBUG_MSG("ValidityChecker::ValidityChecker()");
     in_Node.verifyName(std::string("validity_test"));

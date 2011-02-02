@@ -10,6 +10,9 @@
 
 CSpaceClearanceFeature::CSpaceClearanceFeature():MPFeature(){}
 
+CSpaceClearanceFeature::CSpaceClearanceFeature(string vc, string dm) : MPFeature(), m_vc(vc), m_dm(dm) {};
+
+
 CSpaceClearanceFeature::CSpaceClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_pProblem){
 	ParseXML(in_Node);
 }

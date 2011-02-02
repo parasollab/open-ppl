@@ -10,6 +10,7 @@
 class VisibilityFeature : public MPFeature {
  public:
    VisibilityFeature();
+   VisibilityFeature(int _k, string _nf, string _dm);
    VisibilityFeature(XMLNodeReader& in_Node, MPProblem* mp);
    virtual ~VisibilityFeature(){}
    

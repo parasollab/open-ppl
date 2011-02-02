@@ -67,7 +67,7 @@ private:
   ///\name Constructors & Destructors
   ///
   //@{
-  NeighborhoodFinder() { 
+  NeighborhoodFinder(bool check, int _k, shared_ptr<DistanceMetricMethod> _dm) : check_connectivity(check), k(_k), dm(_dm){  
     //cout<<"in empty const"<<endl;
 };
   NeighborhoodFinder(XMLNodeReader& in_Node, MPProblem* in_pProblem)

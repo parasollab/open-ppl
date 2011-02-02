@@ -7,6 +7,7 @@
 class ClearanceFeature : public MPFeature {
 public:
 	ClearanceFeature();
+	ClearanceFeature(string _vc);
 	ClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_PProblem);
 	virtual ~ClearanceFeature(){}
 

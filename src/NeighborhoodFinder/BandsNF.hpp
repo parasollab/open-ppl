@@ -277,7 +277,9 @@ class Band {
 
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  
+ 
+  Band(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) : NeighborhoodFinderMethod(_strLabel), dmm(_dmm) {}
+ 
   Band(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool debug)
   {  
     m_debug = debug;

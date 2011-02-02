@@ -4,6 +4,8 @@ CfgFeature::CfgFeature():MPFeature(){
    m_index = 0;
 }
 
+CfgFeature::CfgFeature(int index = 0) : MPFeature(), m_index(index) {}
+
 CfgFeature::CfgFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_pProblem){
    ParseXML(in_Node);
 }

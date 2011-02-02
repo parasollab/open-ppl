@@ -8,6 +8,7 @@
 class CSpaceClearanceFeature : public MPFeature {
 public:
 	CSpaceClearanceFeature();
+	CSpaceClearanceFeature(string vc, string dm);
 	CSpaceClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_PProblem);
 	virtual ~CSpaceClearanceFeature(){}
 

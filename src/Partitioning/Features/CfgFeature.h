@@ -8,6 +8,7 @@
 class CfgFeature : public MPFeature {
  public:
    CfgFeature();
+   CfgFeature(int index);
    CfgFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem);
    virtual ~CfgFeature(){}
 

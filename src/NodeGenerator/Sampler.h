@@ -66,7 +66,9 @@ class Sampler : private element_set<SamplerMethod<CFG> >, public MPBaseObject
 {			 
  public:
   typedef typename element_set<SamplerMethod<CFG> >::method_pointer SamplerPointer;
-    
+  template <typename MethodList>
+  Sampler() : element_set<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()) {}
+  Sampler() : element_set<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()) {}    
   template <typename MethodList>
   Sampler(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&)
     : element_set<SamplerMethod<CFG> >(MethodList()), MPBaseObject(in_pProblem) 

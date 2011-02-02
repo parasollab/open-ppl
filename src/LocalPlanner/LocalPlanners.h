@@ -40,6 +40,7 @@ class LocalPlanners : MPBaseObject{
  public:
   ///Default Constructor.
   LocalPlanners();
+  LocalPlanners(vector<LocalPlannerMethod<CFG, WEIGHT>*> _all, vector<LocalPlannerMethod<CFG, WEIGHT>*> _selected, int saved, bool saveEnv, Environment* m_Env);
   LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
   ///Destructor.  
   virtual ~LocalPlanners();
@@ -188,6 +189,9 @@ LocalPlanners() {
   ResetSelected();
 }
 
+template <class CFG, class WEIGHT>
+LocalPlanners<CFG, WEIGHT>::
+LocalPlanners(vector<LocalPlannerMethod<CFG, WEIGHT>*> _all, vector<LocalPlannerMethod<CFG, WEIGHT>*> _selected, int saved, bool saveEnv, Environment* m_Env) : all(_all), selected(_selected), saved_sl_id(saved), m_SaveEnv(m_Env) {};
 
 template <class CFG, class WEIGHT>
 LocalPlannerMethod<CFG, WEIGHT>* 

@@ -9,7 +9,7 @@
 #include "CollisionDetection.h"
 
 ClearanceFeature::ClearanceFeature():MPFeature(){}
-
+ClearanceFeature::ClearanceFeature(string _vc):MPFeature(), m_vc(_vc) {}
 ClearanceFeature::ClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_pProblem){
 	ParseXML(in_Node);
 }

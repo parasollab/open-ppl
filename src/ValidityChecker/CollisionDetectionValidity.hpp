@@ -14,6 +14,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod
 {
 public:
   CollisionDetectionValidity() { }
+  CollisionDetectionValidity(vector<CollisionDetectionMethod*> selected, CollisionDetection* cd) : m_selected(selected), m_cd(cd) {}
   CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem);   
   virtual ~CollisionDetectionValidity() { }
   

@@ -27,6 +27,12 @@ public:
   typedef typename std::vector<typename ValidityChecker<CFG>::VCMethodPtr>::iterator InputIterator;
   
   ComposeValidity() { }
+  ComposeValidity(en_logical_operator _m_logical_operator,
+  std::vector<std::string> _m_vec_vcLabel,
+  std::vector<typename ValidityChecker<CFG>::VCMethodPtr> _m_vec_vcMethod,
+  Compose<InputIterator, logical_and<bool>, ComposeFunctor<CFG> > _com_and,
+  Compose<InputIterator, logical_or<bool>,  ComposeFunctor<CFG> > _com_or);
+
   ComposeValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem);   
   ~ComposeValidity() { }
   
@@ -41,6 +47,14 @@ private:
   Compose<InputIterator, logical_and<bool>, ComposeFunctor<CFG> > com_and;
   Compose<InputIterator, logical_or<bool>,  ComposeFunctor<CFG> > com_or;
 };
+
+template<typename CFG>
+ComposeValidity<CFG>::
+ComposeValidity(en_logical_operator _m_logical_operator,
+  std::vector<std::string> _m_vec_vcLabel,
+  std::vector<typename ValidityChecker<CFG>::VCMethodPtr> _m_vec_vcMethod,
+  Compose<InputIterator, logical_and<bool>, ComposeFunctor<CFG> > _com_and,
+  Compose<InputIterator, logical_or<bool>,  ComposeFunctor<CFG> > _com_or) : ValidityCheckerMethod(), m_logical_operator(_m_logical_operator), m_vec_vcLabel(_m_vec_vcLabel), com_and(_com_and), com_or(_com_or) {};
 
 
 template<typename CFG>

@@ -9,6 +9,8 @@
 VisibilityFeature::VisibilityFeature():MPFeature(NULL){
 }
 
+VisibilityFeature::VisibilityFeature(int _k, string _nf, string _dm)  : MPFeature(NULL), k(_k), nfLabel(_nf), dmLabel(_dm) {}
+
 VisibilityFeature::VisibilityFeature(XMLNodeReader& in_Node, MPProblem* mp):MPFeature(mp){
    ParseXML(in_Node);
 }

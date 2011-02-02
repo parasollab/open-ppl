@@ -11,6 +11,7 @@
 class NeighborhoodFinderMethod : public LabeledObject  {
 
 public:
+  NeighborhoodFinderMethod(shared_ptr<DistanceMetricMethod> dm);
   NeighborhoodFinderMethod(std::string in_strLabel, XMLNodeReader& in_Node, MPProblem* in_pProblem);
   NeighborhoodFinderMethod() : m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) { }
   virtual ~NeighborhoodFinderMethod() {}
