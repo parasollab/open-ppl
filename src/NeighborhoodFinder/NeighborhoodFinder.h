@@ -67,7 +67,7 @@ private:
   ///\name Constructors & Destructors
   ///
   //@{
-  NeighborhoodFinder(bool check, int _k, shared_ptr<DistanceMetricMethod> _dm) : check_connectivity(check), k(_k), dm(_dm){  
+  NeighborhoodFinder(shared_ptr<DistanceMetricMethod> _dm) : dm(_dm){  
     //cout<<"in empty const"<<endl;
 };
   NeighborhoodFinder(XMLNodeReader& in_Node, MPProblem* in_pProblem)
@@ -450,11 +450,6 @@ public:
   template <class CFG, class WEIGHT, typename VID>
   vector<VID>
   RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius);	  
-  
-  
-  // TODO: move this to protected, provide accessor functions
-  bool check_connectivity;
-  int k;
   
   template <typename InputIterator, typename CFG, typename WEIGHT, typename VID>
   double 
