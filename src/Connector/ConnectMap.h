@@ -91,7 +91,7 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
 
 
 
-  NodeConnectionPointer GetNodeMethod(string& in_strLabel) {
+  NodeConnectionPointer GetNodeMethod(const string& in_strLabel) {
     NodeConnectionPointer to_return = 
                             NodeConnectionContainer::GetMethod(in_strLabel);
     if(to_return.get() == NULL) {
@@ -102,7 +102,7 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
     return to_return;
   }
 
-  ComponentConnectionPointer GetComponentMethod(string& in_strLabel) {
+  ComponentConnectionPointer GetComponentMethod(const string& in_strLabel) {
     ComponentConnectionPointer to_return = 
                         ComponentConnectionContainer::GetMethod(in_strLabel);
     if(to_return.get() == NULL) {

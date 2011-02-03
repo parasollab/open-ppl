@@ -104,7 +104,7 @@ class MapEvaluator : public MPBaseObject
     return true;
   }
 
-  conditional_type GetConditionalMethod(string& in_label)
+  conditional_type GetConditionalMethod(const string& in_label)
   {
     for (conditional_iterator I = m_conditional_evaluators.begin(); I != m_conditional_evaluators.end(); ++I)
       if ((*I)->GetLabel() == in_label)
@@ -114,7 +114,7 @@ class MapEvaluator : public MPBaseObject
     exit(-1);
   }
 
-  comparer_type GetComparerMethod(string& in_label) 
+  comparer_type GetComparerMethod(const string& in_label) 
   {
     for (comparer_iterator I = m_comparer_evaluators.begin(); I != m_comparer_evaluators.end(); ++I) 
       if ((*I)->GetLabel() == in_label)
