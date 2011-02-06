@@ -540,7 +540,6 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
     total_components_dist+=total_size;
   }
   avg_cc_size /= ccs.size();
-
   sigma_cc_size = 0;
   for (int j = 0; j < ccsizes.size(); j++)
     sigma_cc_size  += pow(ccsizes[j]-avg_cc_size, 2);
@@ -584,7 +583,7 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
 */
   pairs = rdmp->GetEnvironment()->GetMPProblem()->GetNeighborhoodFinder()->FindKClosestPairs(rdmp, 
   //            cci_aux, ccj_aux, 1); 
-              cci_cfgs, ccj_cfgs, 1); 
+              cci_cfgs, ccj_cfgs, 1, dm); 
 /* 
   for(unsigned int i=0; i< pairs.size(); i++){
 	pairs[i].first = VID(pairs_tmp[i].first);
@@ -604,6 +603,7 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
   pairs_checked++;
       }
     }
+
   if (pairs_checked > 0)
     avg_intercc_dist /= pairs_checked;
   for (int j = 0; j < min_cc_distance_between_closest_pairs.size(); j++)

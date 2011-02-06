@@ -390,8 +390,8 @@ void HybridPRM::Finalize(int in_RegionID){
   myofstream.close();
 
   //output stats
-  pStatClass->ComputeInterCCFeatures(&(region->roadmap), GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
-  pStatClass->ComputeIntraCCFeatures(&(region->roadmap), GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
+  pStatClass->ComputeInterCCFeatures(region->GetRoadmap(), GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
+  pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(), GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
   string outStatname = base_filename+ ".stat";
   std::ofstream  stat_ofstream(outStatname.c_str());
   std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later

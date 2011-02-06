@@ -406,7 +406,7 @@ public:
   vector<pair<VID,VID> >
   FindKClosestPairs(Roadmap<CFG, WEIGHT>* rm,
           vector<VID>& vec1,
-          vector<VID>& vec2, int k);
+          vector<VID>& vec2, int k, shared_ptr<DistanceMetricMethod> dm_method);
   
   template <class CFG, class WEIGHT, typename VID>
   vector<pair<VID,VID> >
@@ -555,7 +555,7 @@ NeighborhoodFinder::
 // TODO: do we want to change the method signature to pass DistanceMetric
 //       or store a local copy in the class?
 FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
-      vector<VID>& vec1, vector<VID>& vec2, int k) {
+      vector<VID>& vec1, vector<VID>& vec2, int k, shared_ptr<DistanceMetricMethod> dm_method) {
   vector<pair<VID,VID> > pairs;
   // if valid number of pairs requested
   if (k<=0) 
@@ -588,7 +588,7 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
   if(*V1 == *V2)
     continue; //don't connect same
   
-  double dist = dm->Distance(_env, v1, (*(pMap->find_vertex(*V2))).property());
+  double dist = dm_method->Distance(_env, v1, (*(pMap->find_vertex(*V2))).property());
   if(dist < kp[max_index].second) { 
     kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
     max_value = dist;
@@ -616,7 +616,7 @@ FindKClosestPairs(Roadmap<CFG,WEIGHT>* rm,
   
   distance_time.StopClock();
   cout << "TIME ELAPSED: " << distance_time.GetClock_SEC();
-  dm->m_distance_time += distance_time.GetClock_SEC();
+  dm_method->m_distance_time += distance_time.GetClock_SEC();
   return pairs;
 }
 
