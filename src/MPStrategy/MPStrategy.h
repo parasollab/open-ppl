@@ -83,6 +83,7 @@ public:
 #include "MPStrategy/ParallelPRMStrategy.h"
 #else
 #include "MPStrategy/BasicPRMStrategy.h"
+#include "MPStrategy/BasicRRTStrategy.h"
 #include "MPStrategy/ProbabilityPRMStrategy.h"
 #include "MPStrategy/RoadmapToolsStrategy.h"
 #include "MPStrategy/HybridPRM.h"

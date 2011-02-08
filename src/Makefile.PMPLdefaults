@@ -228,6 +228,7 @@ PMPL_OBJS = \
 ifeq (${parallel}, 0)
 	PMPL_OBJS+= \
 	MPStrategy/BasicPRMStrategy.o \
+	MPStrategy/BasicRRTStrategy.o \
         MPStrategy/ProbabilityPRMStrategy.o \
 	MPStrategy/HybridPRM.o \
 	MPStrategy/QueryStrategy.o \

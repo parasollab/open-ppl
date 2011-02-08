@@ -96,53 +96,55 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
 }
 
 MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
-   MPStrategyMethod* mpsm = NULL;
-   #ifdef _PARALLEL
-     if(citr.getName() == "ParallelPRMRoadmap"){
-         mpsm = new ParallelPRMRoadmap(citr, GetMPProblem());
-     }
-   #else
-     if(citr.getName() == "BasicPRMStrategy"){
-         mpsm = new BasicPRMStrategy(citr, GetMPProblem());
-     }else if(citr.getName() == "ProbabilityPRMStrategy") {
-        mpsm = new ProbabilityPRMStrategy(citr,GetMPProblem());
-    }else if(citr.getName() == "Compare") {
-      mpsm = new MPComparer(citr,GetMPProblem());
-    } else if(citr.getName() == "RoadmapClear") {
-      mpsm = new RoadmapClear(citr,GetMPProblem());
-    } else if(citr.getName() == "RoadmapInput") {
-      mpsm = new RoadmapInput(citr,GetMPProblem());
-    } else if(citr.getName() == "MPMultiStrategy") {
-      mpsm = new MPMultiStrategy(citr,GetMPProblem());
-    } else if(citr.getName() == "HybridPRM") {
-      mpsm = new HybridPRM(citr,GetMPProblem());
-    } else if(citr.getName() == "NFUnionRoadmap") {
-      mpsm = new NFUnionRoadmap(citr,GetMPProblem());
-    } else if(citr.getName() == "NFRoadmapCompare") {
-      mpsm = new NFRoadmapCompare(citr,GetMPProblem());
-    } else if(citr.getName() == "ExpanderStats") {
-      mpsm = new EdgeExpanderStats(citr,GetMPProblem());
-   } else if(citr.getName() == "TimingStats") {
-      mpsm = new RoadmapTimingStats(citr,GetMPProblem());
-    } else if(citr.getName() == "BandsIncrementalRoadmap") {
-      mpsm = new BandsIncrementalRoadmap(citr, GetMPProblem());
-    } else if(citr.getName() == "BandsStats") {
-      mpsm = new BandsStats(citr, GetMPProblem());
-    } else if(citr.getName() == "QueryStrategy") {
-      mpsm = new QueryStrategy(citr,GetMPProblem());
-    } else if(citr.getName() == "SmoothQueryStrategy") {
-      mpsm = new SmoothQueryStrategy(citr,GetMPProblem());
-    } 
-    #ifdef UAS
-    else if(citr.getName() == "UAStrategy") {
-      mpsm = new UAStrategy(citr, GetMPProblem());
-    } 
-    #endif
-    #endif
-    else {
-      citr.warnUnknownNode();
-    }
-   return mpsm;
+  MPStrategyMethod* mpsm = NULL;
+#ifdef _PARALLEL
+  if(citr.getName() == "ParallelPRMRoadmap"){
+    mpsm = new ParallelPRMRoadmap(citr, GetMPProblem());
+  }
+#else
+  if(citr.getName() == "BasicPRMStrategy"){
+    mpsm = new BasicPRMStrategy(citr, GetMPProblem());
+  } else if(citr.getName() == "BasicRRTStrategy"){
+    mpsm = new BasicRRTStrategy(citr, GetMPProblem());
+  } else if(citr.getName() == "ProbabilityPRMStrategy") {
+    mpsm = new ProbabilityPRMStrategy(citr,GetMPProblem());
+  } else if(citr.getName() == "Compare") {
+    mpsm = new MPComparer(citr,GetMPProblem());
+  } else if(citr.getName() == "RoadmapClear") {
+    mpsm = new RoadmapClear(citr,GetMPProblem());
+  } else if(citr.getName() == "RoadmapInput") {
+    mpsm = new RoadmapInput(citr,GetMPProblem());
+  } else if(citr.getName() == "MPMultiStrategy") {
+    mpsm = new MPMultiStrategy(citr,GetMPProblem());
+  } else if(citr.getName() == "HybridPRM") {
+    mpsm = new HybridPRM(citr,GetMPProblem());
+  } else if(citr.getName() == "NFUnionRoadmap") {
+    mpsm = new NFUnionRoadmap(citr,GetMPProblem());
+  } else if(citr.getName() == "NFRoadmapCompare") {
+    mpsm = new NFRoadmapCompare(citr,GetMPProblem());
+  } else if(citr.getName() == "ExpanderStats") {
+    mpsm = new EdgeExpanderStats(citr,GetMPProblem());
+  } else if(citr.getName() == "TimingStats") {
+    mpsm = new RoadmapTimingStats(citr,GetMPProblem());
+  } else if(citr.getName() == "BandsIncrementalRoadmap") {
+    mpsm = new BandsIncrementalRoadmap(citr, GetMPProblem());
+  } else if(citr.getName() == "BandsStats") {
+    mpsm = new BandsStats(citr, GetMPProblem());
+  } else if(citr.getName() == "QueryStrategy") {
+    mpsm = new QueryStrategy(citr,GetMPProblem());
+  } else if(citr.getName() == "SmoothQueryStrategy") {
+    mpsm = new SmoothQueryStrategy(citr,GetMPProblem());
+  } 
+#ifdef UAS
+  else if(citr.getName() == "UAStrategy") {
+    mpsm = new UAStrategy(citr, GetMPProblem());
+  } 
+#endif
+#endif
+  else {
+    citr.warnUnknownNode();
+  }
+  return mpsm;
 }
 
 MPStrategyMethod* MPStrategy::
