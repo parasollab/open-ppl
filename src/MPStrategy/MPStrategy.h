@@ -85,6 +85,7 @@ public:
 #include "MPStrategy/BasicPRMStrategy.h"
 #include "MPStrategy/BasicRRTStrategy.h"
 #include "MPStrategy/ProbabilityPRMStrategy.h"
+#include "MPStrategy/TogglePRMStrategy.h"
 #include "MPStrategy/RoadmapToolsStrategy.h"
 #include "MPStrategy/HybridPRM.h"
 #include "MPStrategy/ExpanderStats.h"

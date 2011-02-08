@@ -375,8 +375,10 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
 
       for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
+         vector<CFG> collision;
         cn->ConnectNodes(*itr, rdmp, Stats, lp, false, false, 
-                        verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
+                        verticesList.begin(), verticesList.end(), cc.begin(), cc.end(),
+                        back_insert_iterator<vector<CFG> >(collision));
       }
     }
 
@@ -392,8 +394,10 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       vector<VID> verticesList(1, gvid);
       
       for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
+         vector<CFG> collision;
         cn->ConnectNodes(*itr, rdmp, Stats, lp, false, false, 
-                        verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
+                        verticesList.begin(), verticesList.end(), cc.begin(), cc.end(),
+                        back_insert_iterator<vector<CFG> >(collision));
       }
     }
     

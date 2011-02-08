@@ -984,7 +984,8 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
     cerr << "\n\nAttempting to call LPSweptDistance::Distance() without setting the appropriate LP method\n\n";
     exit(-1);
   }
-  lp_method->IsConnected(env, Stats, dm, _c1, _c2, &lpOutput, positionRes, orientationRes, false, true);
+  CfgType dummy;
+  lp_method->IsConnected(env, Stats, dm, _c1, _c2, dummy, &lpOutput, positionRes, orientationRes, false, true);
   //vector<CfgType> cfgs = lpOutput.path;
   //lpPath does not include _c1 and _c2, so adding them manually
   vector<CfgType> cfgs(1, _c1);
@@ -1152,7 +1153,8 @@ DistanceCalc(Environment* env, const Cfg& _c1, const Cfg& _c2, double posRes, do
     cerr << "\n\nAttempting to call LPSweptDistance::Distance() without setting the appropriate LP method\n\n";
     exit(-1);
   }
-  lp_method->IsConnected(env, Stats, dm, _c1, _c2, &lpOutput, posRes, oriRes, false, true);
+  CfgType _col;
+  lp_method->IsConnected(env, Stats, dm, _c1, _c2, _col, &lpOutput, posRes, oriRes, false, true);
   //vector<CfgType> cfgs = lpOutput.path;
   //lpPath does not include _c1 and _c2, so adding them manually
   vector<CfgType> cfgs(1, _c1);

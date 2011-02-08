@@ -66,12 +66,14 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
    *@param _cc1id a node id which defines the first connected component.
         *@param _cc2id a node id which defines the second connected component.
         */
+   template<typename OutputIterator>
   void ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		       LocalPlanners<CFG,WEIGHT>* lp,
 		       vector<VID>& cc1vec, 
 		       vector<VID>& cc2vec,
 		       bool addPartialEdge,
-		       bool addAllEdges);  
+		       bool addAllEdges,
+                       OutputIterator collision);  
   /**Connect two big connected components.
    *Algorithm:
    *   -# find k pairs of closest Cfgs from cc1 to cc2.
@@ -94,26 +96,28 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
    *@param _cc2id a node id which defines the second connected component.
    *@param _cn _cn.GetKPairs define k above.
    */
+   template<typename OutputIterator>
   void ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		     LocalPlanners<CFG,WEIGHT>* lp,
 		     vector<VID>& cc1vec, 
 		     vector<VID>& cc2vec,
-		     bool addPartialEdge, bool addAllEdges);
+		     bool addPartialEdge, bool addAllEdges,
+                     OutputIterator collision);
 
   //@}
-
+   template<typename OutputIterator>
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
                 LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
-		 bool addAllEdges);
+		 bool addAllEdges, OutputIterator collision);
 	
-	template <typename InputIterator>
+	template <typename InputIterator, typename OutputIterator>
   void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
 		 LocalPlanners<CFG,WEIGHT>*,
 		 bool addPartialEdge,
 		 bool addAllEdges,
 		 InputIterator _itr1_first, InputIterator _itr1_last,
-     InputIterator _itr2_first, InputIterator _itr2_last);
+                 InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision);
 
 // private:
   //////////////////////
@@ -229,12 +233,13 @@ CreateCopy() {
 // try to connect all pairs of cfgs in the two CCs
 //
 template <class CFG, class WEIGHT>
+template <typename OutputIterator>
 void
 ConnectCCs<CFG, WEIGHT>::
 ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	        LocalPlanners<CFG,WEIGHT>* lp,
 		vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc1vec, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc2vec,
-		bool addPartialEdge, bool addAllEdges) {
+		bool addPartialEdge, bool addAllEdges, OutputIterator collision) {
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
@@ -247,11 +252,12 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         continue;
       }
       Stats.IncConnections_Attempted();
+      CfgType _col;
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
           && lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
 			     (*(pMap->find_vertex(cc1vec[c1]))).property(),
 			     (*(pMap->find_vertex(cc2vec[c2]))).property(),
-			     &lpOutput, 
+			     _col, &lpOutput, 
 			     this->connectionPosRes, this->connectionOriRes, 
 			     (!addAllEdges)) ) {
 	Stats.IncConnections_Made();
@@ -268,6 +274,8 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	  }
 	}
       }
+      if(_col != CfgType())
+         *collision++ = _col;
     }//end for c2
   }//end for c1
 }
@@ -277,12 +285,13 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 // try to connect kclosest pairs of cfgs in the two CCs
 //
 template <class CFG, class WEIGHT>
+template <typename OutputIterator>
 void
 ConnectCCs<CFG, WEIGHT>::
 ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	      LocalPlanners<CFG,WEIGHT>* lp, 
 	      vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc1vec, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc2vec,
-	      bool addPartialEdge, bool addAllEdges) { 
+	      bool addPartialEdge, bool addAllEdges, OutputIterator collision) { 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
   int k = (int)min(kpairs, cc2vec.size());
@@ -303,11 +312,12 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       continue;
     }
     Stats.IncConnections_Attempted();
+    CfgType _col;
     if(!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
        && lp->IsConnected(_rm->GetEnvironment(),Stats,dm,
 			  (*(pMap->find_vertex(kp[i].first))).property(),
 			  (*(pMap->find_vertex(kp[i].second))).property(),
-			  &lpOutput, this->connectionPosRes, this->connectionOriRes, 
+			  _col, &lpOutput, this->connectionPosRes, this->connectionOriRes, 
 			  (!addAllEdges)) ) {
       pMap->AddEdge(kp[i].first, kp[i].second, lpOutput.edge); 
       Stats.IncConnections_Made();
@@ -322,18 +332,21 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	  pMap->AddEdge(kp[i].first, tmpVID, I->second);
 	}
       }
-    }//end for c2
+    }
+    if(_col != CfgType())
+         *collision++ = _col;
   }//end for c1
 }
 
 
 
 template <class CFG, class WEIGHT>
+template <typename OutputIterator>
 void ConnectCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
-	  bool addAllEdges) {
+	  bool addAllEdges, OutputIterator collision) {
   vector< pair<size_t,VID> > ccs1;
   stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   get_cc_stats(*(_rm->m_pRoadmap),cmap,ccs1);
@@ -361,12 +374,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
               get_cc(*pMap,cmap,C2->second,cc2);
               
               if(cc1.size() < smallcc && cc2.size() < smallcc ) {
-                 ConnectSmallCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges);
+                 ConnectSmallCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges, collision);
               } else {
                  if(cc1.size() <= cc2.size())
-                    ConnectBigCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges);
+                    ConnectBigCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges, collision);
                  else
-                    ConnectBigCCs(_rm,Stats,lp,cc2,cc1,addPartialEdge,addAllEdges);
+                    ConnectBigCCs(_rm,Stats,lp,cc2,cc1,addPartialEdge,addAllEdges, collision);
               }
            } 
         }/*endfor cc2*/ 
@@ -376,14 +389,14 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 
 template <class CFG, class WEIGHT>
-template<typename InputIterator>
+template<typename InputIterator, typename OutputIterator>
 void ConnectCCs<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
           bool addAllEdges,
           InputIterator _itr1_first, InputIterator _itr1_last,
-          InputIterator _itr2_first, InputIterator _itr2_last) {
+          InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision) {
 //	  vector<VID> & vids1, vector<VID> & vids2) {
 	  //vector<typename RoadmapGraph<CFG, WEIGHT>::VID> & vids1, vector<typename RoadmapGraph<CFG, WEIGHT>::VID> & vids2) {
 #ifndef QUIET
@@ -408,12 +421,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         get_cc(*pMap,cmap,*itr2,cc2);
 
         if(cc1.size() < smallcc && cc2.size() < smallcc ) {
-          ConnectSmallCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges);
+          ConnectSmallCCs(_rm,Stats,lp,cc1,cc2, addPartialEdge,addAllEdges, collision);
         } else {
           if(cc1.size() <= cc2.size())
-            ConnectBigCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges);
+            ConnectBigCCs(_rm,Stats,lp,cc1,cc2,addPartialEdge,addAllEdges, collision);
           else
-            ConnectBigCCs(_rm,Stats,lp,cc2,cc1,addPartialEdge,addAllEdges);
+            ConnectBigCCs(_rm,Stats,lp,cc2,cc1,addPartialEdge,addAllEdges, collision);
         }
       } 
 

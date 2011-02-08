@@ -77,10 +77,11 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       bool is_expansion = true;
       for(typename vector<VID>::iterator i_n = neighbor_neighbor.begin(); i_n !=neighbor_neighbor.end(); ++i_n)
       {  //test connection to each;
+      CfgType dummy;
         if(!(lp->IsConnected(env, Stats, dm, 
                              (*(pGraph->find_vertex(in_vid))).property(),
                              (*(pGraph->find_vertex(*i_n))).property(),
-                             &lp_output, pos_res, ori_res, true))) {
+                             dummy, &lp_output, pos_res, ori_res, true))) {
           is_expansion = false; // cannot connect in_vid to neighbor_neighbor
         }
       }

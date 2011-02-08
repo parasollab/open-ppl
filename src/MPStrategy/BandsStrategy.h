@@ -219,11 +219,12 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       typedef vector<string>::iterator I;
       for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
       {
-        vector< CfgType > vectorCfgs;
+        vector< CfgType > vectorCfgs, collisionNodes;
         Sampler<CfgType>::SamplerPointer pNodeGen;
         cout << "reading sampler with label: " << *itr << endl;
         pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(*itr);
-        pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 100*num_nodes, back_inserter(vectorCfgs));  
+        pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 100*num_nodes,
+        back_inserter(vectorCfgs), back_inserter(collisionNodes));  
         
         cout << "Finished : " << vectorCfgs.size();
         vector<VID> vids =  region->AddToRoadmap(vectorCfgs);
@@ -257,11 +258,12 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         ConnectMap<CfgType,WeightType>::NodeConnectionPointer pConnection;
         pConnection = connectmap->GetNodeMethod(*itr);
         //cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
+        vector<CfgType> collision;
         connectmap->ConnectNodes(pConnection, region->GetRoadmap(), *pStatClass, 
                              GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                              GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                              GetMPProblem()->GetMPStrategy()->addAllEdges,
-                             newVids.begin(), newVids.end());
+                             newVids.begin(), newVids.end(), back_inserter(collision));
       }
       
       //Now Restore bounding box
@@ -449,9 +451,10 @@ private:
     Stat_Class _mystat;
     LPOutput<CfgType,WeightType> out_lp_output;
     for(size_t i=0; i<vec_dist_vid.size(); ++i) {
+       CfgType dummy;
       if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->
               IsConnected(GetMPProblem()->GetEnvironment(), _mystat, dm, 
-              _test, (*(_graph.find_vertex(vec_dist_vid[i].second))).property(),  &out_lp_output, 
+              _test, (*(_graph.find_vertex(vec_dist_vid[i].second))).property(), dummy, &out_lp_output, 
               GetMPProblem()->GetEnvironment()->GetPositionRes(), 
               GetMPProblem()->GetEnvironment()->GetOrientationRes(),
               true, false, false)) {

@@ -153,14 +153,14 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
       //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
       virtual back_insert_iterator<vector<CFG> > 
          Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-               back_insert_iterator<vector<CFG> > result)  
+               back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
          {
             return _Sample(env, Stat, num_nodes, max_attempts, result);
          }
 
       virtual back_insert_iterator<vector<CFG> > 
          Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-               back_insert_iterator<vector<CFG> > result)  
+               back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
          {
             return _Sample(env, Stat, first, last, max_attempts, result);
          }   
@@ -168,14 +168,14 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
       //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
       virtual typename vector<CFG>::iterator 
          Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
-               typename vector<CFG>::iterator result)  
+               typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
          {
             return _Sample(env, Stat, num_nodes, max_attempts, result);
          }
 
       virtual typename vector<CFG>::iterator 
          Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-               typename vector<CFG>::iterator result)  
+               typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
          {
             return _Sample(env, Stat, first, last, max_attempts, result);
          }

@@ -55,7 +55,7 @@ class UniformRandomSampler : public SamplerMethod<CFG>
   template <typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-          OutputIterator result)  
+          OutputIterator result, OutputIterator collision)  
   {
     LOG_DEBUG_MSG("UniformRandomSampler::UnbiasedSample()");
     /* string callee(name());
@@ -81,6 +81,7 @@ class UniformRandomSampler : public SamplerMethod<CFG>
 	 
 	  // cfg_out.push_back(tmp);
 	  *result++ = tmp;
+          *collision++ = tmp;
 	
 	}
       } while (!generated && (attempts < max_attempts));
@@ -92,11 +93,11 @@ class UniformRandomSampler : public SamplerMethod<CFG>
   template <typename InputIterator, typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, InputIterator first, InputIterator last, int max_attempts,
- 	  OutputIterator result)  
+ 	  OutputIterator result, OutputIterator collision)  
   {
     LOG_DEBUG_MSG("UniformRandomSampler::BiasedSample()");
     int num_nodes = distance(first,last);
-    _Sample(env, Stat, num_nodes, max_attempts, result);
+    _Sample(env, Stat, num_nodes, max_attempts, result, collision);
     return result;
   }   
 
@@ -104,31 +105,31 @@ class UniformRandomSampler : public SamplerMethod<CFG>
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-         back_insert_iterator<vector<CFG> > result)  
+         back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
 
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 back_insert_iterator<vector<CFG> > result)  
+	 back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }   
   
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
-         typename vector<CFG>::iterator result)  
+         typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
 
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 typename vector<CFG>::iterator result)  
+	 typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }
 };
 
@@ -186,7 +187,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   template <typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
-          OutputIterator result)   
+          OutputIterator result, OutputIterator collision)   
   {
     string callee(name());
     callee += "::_Sample()";
@@ -205,17 +206,20 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
 	//tmp.SetLabel("UniformRandomFree_Sampler",true);
 	tmp.GetRandomCfg(env);
 	//cout << "RandomCfg::tmp = " << tmp << endl;
-	if(tmp.InBoundingBox(env) && 
-           //!tmp.isCollision(env, Stat, cd, cdInfo, true, &callee)) 
-	vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, 
+	if(tmp.InBoundingBox(env)){
+	 if(vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, 
 	            Stat, cdInfo, true, &callee))
 	//cout << "num of nodes after IsValid = " << num_nodes << endl;
-	{
-	  Stat.IncNodes_Generated();
-	  generated = true;
-	  // cfg_out.push_back(tmp);
-	  *result++ = tmp;
-	}
+         {
+            Stat.IncNodes_Generated();
+            generated = true;
+            // cfg_out.push_back(tmp);
+            *result++ = tmp;
+         }
+         else{
+            *collision++ = tmp;
+         }
+        }
       } while (!generated && (attempts < max_attempts));
       
     }
@@ -225,11 +229,11 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   template <typename InputIterator, typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, InputIterator first, InputIterator last, int max_attempts,
-          OutputIterator result)  
+          OutputIterator result, OutputIterator collision)  
   {
     int num_nodes = distance(first,last);
     // cout << "_Sample2 num of nodes = " << num_nodes << endl;
-    _Sample(env, Stat, num_nodes, max_attempts, result);
+    _Sample(env, Stat, num_nodes, max_attempts, result, collision);
     return result;
   }
 
@@ -237,31 +241,31 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
-         back_insert_iterator<vector<CFG> > result)   
+         back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)   
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
     
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-         back_insert_iterator<vector<CFG> > result)  
+         back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }
 
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
-         typename vector<CFG>::iterator result)
+         typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
     
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-         typename vector<CFG>::iterator result)
+         typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }
 };
 
@@ -314,7 +318,7 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   template <typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-         OutputIterator result)   
+         OutputIterator result, OutputIterator collision)   
   {
     string callee(name());
     callee += "::_Sample()";
@@ -332,12 +336,17 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
         tmp.GetRandomCfg(env);
         //change to is valid
         // cout << "tmp b4 IsValid = " << tmp << endl;
-        if(tmp.InBoundingBox(env) && tmp.isCollision(env, Stat, cd, cdInfo, true, &callee)) {
+        if(tmp.InBoundingBox(env)){
+           if(tmp.isCollision(env, Stat, cd, cdInfo, true, &callee)) {
           Stat.IncNodes_Generated();
           // cout << "tmp after IsValid = " << tmp << endl;
           generated = true;
           // cfg_out.push_back(tmp);
           *result++ = tmp;
+           }
+           else{
+              *collision++ = tmp;
+           }
         }
       } while (!generated && (attempts < max_attempts));
     }
@@ -347,10 +356,10 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   template <typename InputIterator, typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, InputIterator first, InputIterator last, int max_attempts,
-	 OutputIterator result)  
+	 OutputIterator result, OutputIterator collision)  
   {
     int num_nodes = distance(first,last);
-    _Sample(env, Stat, num_nodes, max_attempts, result);
+    _Sample(env, Stat, num_nodes, max_attempts, result, collision);
     return result;
   }
 
@@ -358,31 +367,31 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-         back_insert_iterator<vector<CFG> > result)   
+         back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)   
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
     
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 back_insert_iterator<vector<CFG> > result)  
+	 back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }
     
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
-         typename vector<CFG>::iterator result)   
+         typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)   
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
     
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 typename vector<CFG>::iterator result)  
+	 typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }
 };
 

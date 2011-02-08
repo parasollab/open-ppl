@@ -193,9 +193,10 @@ void HybridPRM::Run(int in_RegionID){
       Clock_Class NodeGenClock;
       NodeGenClock.StartClock("Node Generation");
       unsigned long int num_cd_before_gen = pStatClass->GetIsCollTotal();
-      vector<CfgType> vectorCfgs, in_nodes(1);
+      vector<CfgType> vectorCfgs, collisionNodes, in_nodes(1);
       Sampler<CfgType>::SamplerPointer pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(next_node_gen);
-      pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, in_nodes.begin(), in_nodes.end(), 1, back_inserter(vectorCfgs));
+      pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, in_nodes.begin(),
+      in_nodes.end(), 1, back_inserter(vectorCfgs), back_inserter(collisionNodes));
       unsigned long int num_cd_after_gen = pStatClass->GetIsCollTotal();
 
       //for each valid sampled node, connect it to the roadmap, record reward and cost, update sampler probabilities
@@ -220,12 +221,14 @@ void HybridPRM::Run(int in_RegionID){
 
             ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
             connectmap->GetNodeMethod(*itr)->clear_connection_attempts();
+            vector<CfgType> collision;
             connectmap->ConnectNodes(connectmap->GetNodeMethod(*itr), region->GetRoadmap(), *pStatClass, 
                                      GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), 
                                      GetMPProblem()->GetMPStrategy()->addPartialEdge,
                                      GetMPProblem()->GetMPStrategy()->addAllEdges,
                                      new_free_vid.begin(), new_free_vid.end(),
-                                     map_vids.begin(), map_vids.end()); 
+                                     map_vids.begin(), map_vids.end(),
+                                     back_inserter(collision)); 
             connection_attempts.insert(connection_attempts.end(), 
                                        connectmap->GetNodeMethod(*itr)->connection_attempts_begin(), 
                                        connectmap->GetNodeMethod(*itr)->connection_attempts_end());

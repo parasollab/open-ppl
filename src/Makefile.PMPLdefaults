@@ -230,6 +230,7 @@ ifeq (${parallel}, 0)
 	MPStrategy/BasicPRMStrategy.o \
 	MPStrategy/BasicRRTStrategy.o \
         MPStrategy/ProbabilityPRMStrategy.o \
+        MPStrategy/TogglePRMStrategy.o \
 	MPStrategy/HybridPRM.o \
 	MPStrategy/QueryStrategy.o \
 	MPStrategy/SmoothQueryStrategy.o \

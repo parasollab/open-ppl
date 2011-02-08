@@ -57,19 +57,19 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    */
   //// wrapper function to call appropriate impl based on CFG type
   virtual bool IsConnected(Environment *env, Stat_Class& Stats,
-         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
          bool savePath=false, bool saveFailedPath=false) {
-    return _IsConnected<CFG>(env, Stats, dm, _c1, _c2,
+    return _IsConnected<CFG>(env, Stats, dm, _c1, _c2, _col,
 			     lpOutput, positionRes, orientationRes,
 			     checkCollision, savePath, saveFailedPath);
   }
   //// work function, default, non closed chains
   template <typename Enable>
   bool _IsConnected(Environment *_env, Stat_Class& Stats,
-         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col,
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
@@ -79,7 +79,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
   //// work function, specialization for closed chains
   template <typename Enable>
   bool _IsConnected(Environment *_env, Stat_Class& Stats,
-         shared_ptr<DistanceMetricMethod>dm, const CFG &_c1, const CFG &_c2, 
+         shared_ptr<DistanceMetricMethod>dm, const CFG &_c1, const CFG &_c2, CFG &_col,
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
@@ -111,7 +111,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
   virtual bool 
     IsConnectedSLSequential(Environment *env, Stat_Class& Stats,
           shared_ptr<DistanceMetricMethod > dm, 
-          const CFG &_c1, const CFG &_c2, 
+          const CFG &_c1, const CFG &_c2, CFG &_col,
           LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
           double positionRes, double orientationRes,
           bool checkCollision=true, 
@@ -142,7 +142,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
   virtual bool 
     IsConnectedSLBinary(Environment *env, Stat_Class& Stats, 
       shared_ptr<DistanceMetricMethod> dm, const CFG &_c1, const CFG &_c2, 
-      LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
+      CFG &_col, LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
       double positionRes, double orientationRes,  
       bool checkCollision=true, 
       bool savePath=false, bool saveFailedPath=false);
@@ -275,7 +275,7 @@ bool
 StraightLine<CFG, WEIGHT>::
 _IsConnected(Environment *_env, Stat_Class& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
-         LPOutput<CFG, WEIGHT>* lpOutput,
+         CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision, 
          bool savePath, bool saveFailedPath,
@@ -293,11 +293,11 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
   }
     bool connected;
     if(binarySearch) 
-      connected = IsConnectedSLBinary(_env, Stats, dm, _c1, _c2, lpOutput, 
+      connected = IsConnectedSLBinary(_env, Stats, dm, _c1, _c2, _col, lpOutput, 
                                       cd_cntr, positionRes, orientationRes, 
                                       checkCollision, savePath, saveFailedPath);
     else
-      connected = IsConnectedSLSequential(_env, Stats, dm, _c1, _c2, lpOutput, 
+      connected = IsConnectedSLSequential(_env, Stats, dm, _c1, _c2, _col, lpOutput, 
                                            cd_cntr, positionRes, orientationRes, 
                                            checkCollision, savePath, saveFailedPath);
     if(connected)
@@ -315,7 +315,7 @@ bool
 StraightLine<CFG, WEIGHT>::
 _IsConnected(Environment *_env, Stat_Class& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
-         LPOutput<CFG, WEIGHT>* lpOutput,
+         CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision, 
          bool savePath, bool saveFailedPath,
@@ -334,26 +334,26 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
     if(binarySearch) {
       connected = (IsConnectedSLBinary(_env, Stats, dm, 
 				       _c1, intermediate, 
-				       lpOutput, cd_cntr, 
+				       _col, lpOutput, cd_cntr, 
 				       positionRes, orientationRes, 
 				       checkCollision, savePath, saveFailedPath) 
 		   &&
 		   IsConnectedSLBinary(_env, Stats, dm,
 				       intermediate, _c2,
-				       lpOutput, cd_cntr, 
+				       _col, lpOutput, cd_cntr, 
 				       positionRes, orientationRes, 
 				       checkCollision, savePath, saveFailedPath)
 		   );
       if(!connected) { //attempt other direction
 	connected = (IsConnectedSLBinary(_env, Stats, dm, 
 					 _c2, intermediate, 
-					 lpOutput, cd_cntr, 
+					 _col, lpOutput, cd_cntr, 
 					 positionRes, orientationRes, 
 					 checkCollision, savePath, saveFailedPath) 
 		     &&
 		     IsConnectedSLBinary(_env, Stats, dm,
 					 intermediate, _c1,
-					 lpOutput, cd_cntr, 
+					 _col, lpOutput, cd_cntr, 
 					 positionRes, orientationRes, 
 					 checkCollision, savePath, saveFailedPath)
 		     );
@@ -363,13 +363,13 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
     } else {
       connected = (IsConnectedSLSequential(_env, Stats, dm, 
 					   _c1, intermediate, 
-					   lpOutput, cd_cntr, 
+					   _col, lpOutput, cd_cntr, 
 					   positionRes, orientationRes, 
 					   checkCollision, savePath, saveFailedPath) 
 		   &&
 		   IsConnectedSLSequential(_env, Stats, dm, 
 					   intermediate, _c2, 
-					   lpOutput, cd_cntr, 
+					   _col, lpOutput, cd_cntr, 
 					   positionRes, orientationRes, 
 					   checkCollision, savePath, saveFailedPath)
 		   );
@@ -377,13 +377,13 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
       if(!connected) { //attempt other direction
 	connected = (IsConnectedSLSequential(_env, Stats, dm, 
 					     _c2, intermediate, 
-					     lpOutput, cd_cntr, 
+					     _col, lpOutput, cd_cntr, 
 					     positionRes, orientationRes, 
 					     checkCollision, savePath, saveFailedPath) 
 		     &&
 		     IsConnectedSLSequential(_env, Stats, dm, 
 					     intermediate, _c1, 
-					     lpOutput, cd_cntr, 
+					     _col, lpOutput, cd_cntr, 
 					     positionRes, orientationRes, 
 					     checkCollision, savePath, saveFailedPath)
 		     );
@@ -396,13 +396,13 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
     if(binarySearch) {
       connected = IsConnectedSLBinary(_env, Stats, dm,
 				      _c1, _c2,
-				      lpOutput, cd_cntr, 
+				      _col, lpOutput, cd_cntr, 
 				      positionRes, orientationRes, 
 				      checkCollision, savePath, saveFailedPath);
     } else {
       connected = IsConnectedSLSequential(_env, Stats, dm,
 					  _c1, _c2,
-					  lpOutput, cd_cntr, 
+					  _col, lpOutput, cd_cntr, 
 					  positionRes, orientationRes, 
 					  checkCollision, savePath, saveFailedPath);
     }
@@ -420,7 +420,7 @@ bool
 StraightLine<CFG, WEIGHT>::
        IsConnectedSLSequential(Environment *_env, Stat_Class& Stats,
      shared_ptr< DistanceMetricMethod > dm, 
-      const CFG &_c1, const CFG &_c2, 
+      const CFG &_c1, const CFG &_c2, CFG &_col,
       LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
       double positionRes, double orientationRes,
       bool checkCollision, 
@@ -449,6 +449,9 @@ StraightLine<CFG, WEIGHT>::
         // tick.isCollision(_env,Stats,cd,*this->cdInfo,true,&(Callee))
          !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee)
         ) {
+         if(tick.InBoundingBox(_env) && 
+            !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee))
+            _col = tick;
         CFG neg_incr;
   neg_incr = incr; 
   neg_incr.negative(incr);
@@ -551,7 +554,7 @@ bool
 StraightLine<CFG, WEIGHT>::
 IsConnectedSLBinary(Environment *_env, Stat_Class& Stats, 
        shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
-        LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
+        CFG &_col, LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
         double positionRes, double orientationRes,  
         bool checkCollision, 
         bool savePath, bool saveFailedPath) {
@@ -561,7 +564,7 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
   
   if(!checkCollision)
     return IsConnectedSLSequential(_env, Stats, dm, _c1, _c2,
- 				   lpOutput, cd_cntr, 
+ 				   _col, lpOutput, cd_cntr, 
  				   positionRes, orientationRes,
 				   checkCollision, savePath, saveFailedPath);
 
@@ -602,6 +605,10 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
       // mid_cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))
        !vc->IsValid(vcm, mid_cfg, _env, Stats, *this->cdInfo, true, &Callee)
       ) {
+         if(mid_cfg.InBoundingBox(_env) &&
+         // mid_cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))
+            !vc->IsValid(vcm, mid_cfg, _env, Stats, *this->cdInfo, true, &Callee))
+            _col=mid_cfg;
       return false;
     } else {
       if(i+1 != mid) 

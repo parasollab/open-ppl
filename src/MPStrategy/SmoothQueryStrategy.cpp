@@ -138,15 +138,17 @@ Run(int in_RegionID)
         path_vids.push_back(rdmp->m_pRoadmap->GetVID(*I));
         
     vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer >::iterator itr;
-    for (itr = methods.begin(); itr != methods.end(); itr++)
+    for (itr = methods.begin(); itr != methods.end(); itr++){
+       vector<CfgType> collision;
       m_SmoothConnectMap.ConnectNodes(
                            *itr,
                            rdmp, *pStatClass,
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            false, false,
                            path_vids.begin(), path_vids.end(),
-                           path_vids.begin(), path_vids.end());
-                           
+                           path_vids.begin(), path_vids.end(),
+                           back_inserter(collision));
+    }
     SmoothClock.StopPrintClock();
 
     //reperform query

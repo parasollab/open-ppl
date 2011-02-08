@@ -62,12 +62,19 @@ class SamplerMethod : public LabeledObject, public MPBaseObject {
   virtual const char* name() const = 0; 
 
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
-  virtual back_insert_iterator<vector<CFG> > Sample(Environment*, Stat_Class&, typename vector<CFG>::iterator _in_first, typename vector<CFG>::iterator _in_last, int _attempts, back_insert_iterator<vector<CFG> > _out) = 0;
-  virtual back_insert_iterator<vector<CFG> > Sample(Environment*, Stat_Class&, int _num_nodes, int _attempts, back_insert_iterator<vector<CFG> > _out) = 0;
+  virtual back_insert_iterator<vector<CFG> > Sample(Environment*, Stat_Class&, typename
+   vector<CFG>::iterator _in_first, typename vector<CFG>::iterator _in_last, int _attempts,
+   back_insert_iterator<vector<CFG> > _out, back_insert_iterator<vector<CFG> > _out_collision) = 0;
+  virtual back_insert_iterator<vector<CFG> > Sample(Environment*, Stat_Class&, int _num_nodes, int
+   _attempts, back_insert_iterator<vector<CFG> > _out, back_insert_iterator<vector<CFG> >
+   _out_collision) = 0;
  
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = typename vector<CFG>::iterator
-  virtual typename vector<CFG>::iterator Sample(Environment*, Stat_Class&, typename vector<CFG>::iterator _in_first, typename vector<CFG>::iterator _in_last, int _attempts, typename vector<CFG>::iterator _out) = 0;
-  virtual typename vector<CFG>::iterator Sample(Environment*, Stat_Class&, int _num_nodes, int _attempts, typename vector<CFG>::iterator _out) = 0;
+  virtual typename vector<CFG>::iterator Sample(Environment*, Stat_Class&, typename
+   vector<CFG>::iterator _in_first, typename vector<CFG>::iterator _in_last, int _attempts, typename
+   vector<CFG>::iterator _out, typename vector<CFG>::iterator _out_collision) = 0;
+  virtual typename vector<CFG>::iterator Sample(Environment*, Stat_Class&, int _num_nodes, int
+   _attempts, typename vector<CFG>::iterator _out, typename vector<CFG>::iterator _out_collision) = 0;
 };
 
 #endif

@@ -106,29 +106,35 @@ class Sampler : private element_set<SamplerMethod<CFG> >, public MPBaseObject
 
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   back_insert_iterator<vector<CFG> >
-  Sample(SamplerPointer _sp, Environment* env, Stat_Class& Stats, typename vector<CFG>::iterator _input_first, typename vector<CFG>::iterator _input_last, int _attempts, back_insert_iterator<vector<CFG> > _out) 
+  Sample(SamplerPointer _sp, Environment* env, Stat_Class& Stats, typename vector<CFG>::iterator
+  _input_first, typename vector<CFG>::iterator _input_last, int _attempts,
+  back_insert_iterator<vector<CFG> > _out, back_insert_iterator<vector<CFG> > _out_collision) 
   {
-    return _sp->Sample(env, Stats, _input_first, _input_last, _attempts, _out);
+    return _sp->Sample(env, Stats, _input_first, _input_last, _attempts, _out, _out_collision);
   }
   
   back_insert_iterator<vector<CFG> >
-  Sample(SamplerPointer _sp, Environment* env, Stat_Class& Stats, int _num_nodes, int _attempts, back_insert_iterator<vector<CFG> > _out) 
+  Sample(SamplerPointer _sp, Environment* env, Stat_Class& Stats, int _num_nodes, int _attempts,
+  back_insert_iterator<vector<CFG> > _out, back_insert_iterator<vector<CFG> > _out_collision) 
   {
-    return _sp->Sample(env, Stats, _num_nodes, _attempts, _out);
+    return _sp->Sample(env, Stats, _num_nodes, _attempts, _out, _out_collision);
   }
 
 
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
   typename vector<CFG>::iterator
-  Sample(SamplerPointer _sp, Environment* env, Stat_Class& Stats, typename vector<CFG>::iterator _input_first, typename vector<CFG>::iterator _input_last, int _attempts, typename vector<CFG>::iterator _out) 
+  Sample(SamplerPointer _sp, Environment* env, Stat_Class& Stats, typename vector<CFG>::iterator
+  _input_first, typename vector<CFG>::iterator _input_last, int _attempts, typename
+  vector<CFG>::iterator _out, typename vector<CFG>::iterator _out_collision) 
   {
-    return _sp->Sample(env, Stats, _input_first, _input_last, _attempts, _out);
+    return _sp->Sample(env, Stats, _input_first, _input_last, _attempts, _out, _out_collision);
   }
   
   typename vector<CFG>::iterator
-  Sample(SamplerPointer _sp, Environment* env, Stat_Class& Stats, int _num_nodes, int _attempts, typename vector<CFG>::iterator _out) 
+  Sample(SamplerPointer _sp, Environment* env, Stat_Class& Stats, int _num_nodes, int _attempts,
+  typename vector<CFG>::iterator _out, typename vector<CFG>::iterator _out_collision) 
   {
-    return _sp->Sample(env, Stats, _num_nodes, _attempts, _out);
+    return _sp->Sample(env, Stats, _num_nodes, _attempts, _out, _out_collision);
   }
 
 };

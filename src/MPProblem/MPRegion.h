@@ -31,10 +31,12 @@ class MPRegion : public Environment {
   MPRegion(int in_RegionId, MPProblem* in_pProblem);
   Roadmap<CFG,WEIGHT>* GetRoadmap() { return &roadmap;};
   Roadmap<CFG,WEIGHT>* GetColRoadmap() { return &col_roadmap;};
+  Roadmap<CFG,WEIGHT>* GetBlockRoadmap() { return &block_roadmap;};
   Stat_Class* GetStatClass() {return &StatClass;};
   vector<VID> AddToRoadmap(vector<CFG >& in_Cfgs);
+  vector<VID> AddToBlockRoadmap(vector<CFG >& in_Cfgs);
   void WriteRoadmapForVizmo();
-  void WriteRoadmapForVizmo(ostream& out_os, vector<BoundingBox*>* bboxes);
+  void WriteRoadmapForVizmo(ostream& out_os, vector<BoundingBox*>* bboxes, bool block);
   
   ~MPRegion();
 
@@ -49,6 +51,7 @@ class MPRegion : public Environment {
   Roadmap<CFG,WEIGHT> roadmap;
   Roadmap<CFG,WEIGHT> feature_roadmap;
   Roadmap<CFG,WEIGHT> col_roadmap;
+  Roadmap<CFG,WEIGHT> block_roadmap;
 
   
   ///\todo May need a reall region id into MPProblem later.
@@ -78,6 +81,7 @@ MPRegion<CFG,WEIGHT>::
   // empty initial roadmaps
   roadmap.SetEnvironment(this);
   feature_roadmap.SetEnvironment(this);
+  block_roadmap.SetEnvironment(this);
 
   // set region_tag
   std::stringstream ss;
@@ -102,6 +106,7 @@ MPRegion(int in_RegionId, MPProblem* in_pProblem) :
     roadmap.SetEnvironment(this);
     //feature_roadmap.SetEnvironment(this);
     col_roadmap.SetEnvironment(this);
+    block_roadmap.SetEnvironment(this);
 
     
     m_RegionId = in_RegionId;
@@ -157,6 +162,24 @@ AddToRoadmap(vector<CFG>& in_Cfgs) {
         
         // commented by Bryan on 5/4/08, we only want one roadmap
         //col_roadmap.m_pRoadmap->AddVertex((*I));
+
+      }
+    } else {LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- UNLABELED!!!!!!!");}
+  }
+  return returnVec;
+}
+
+///\todo this is a bad implementation only returns FREE vids ... we need COLORS!
+template <class CFG, class WEIGHT>
+vector<typename RoadmapGraph<CFG, WEIGHT>::VID> 
+MPRegion<CFG,WEIGHT>::
+AddToBlockRoadmap(vector<CFG>& in_Cfgs) {
+  vector<typename RoadmapGraph<CFG, WEIGHT>::VID> returnVec;
+  typename vector< CFG >::iterator I;
+  for(I=in_Cfgs.begin(); I!=in_Cfgs.end(); I++) {
+    if((*I).IsLabel("INVALID")) {  
+      if((*I).GetLabel("INVALID")) {//Add to Free roadmap
+        returnVec.push_back(roadmap.m_pRoadmap->AddVertex((*I)));
       }
     } else {LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- UNLABELED!!!!!!!");}
   }
@@ -184,7 +207,7 @@ WriteRoadmapForVizmo() {
 };
 template <class CFG, class WEIGHT>
 void MPRegion<CFG,WEIGHT>::
-WriteRoadmapForVizmo(ostream& myofstream, vector<BoundingBox*>* bboxes = NULL) {
+WriteRoadmapForVizmo(ostream& myofstream, vector<BoundingBox*>* bboxes = NULL, bool block = false) {
 
   LOG_DEBUG_MSG("MPRegion::WriteRoadmapForVizmo()");
   
@@ -220,7 +243,10 @@ WriteRoadmapForVizmo(ostream& myofstream, vector<BoundingBox*>* bboxes = NULL) {
   myofstream << endl;
 
   //GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
-  write_graph(*(GetRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
+  if(!block)
+   write_graph(*(GetRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
+  else 
+   write_graph(*(GetBlockRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
   
   LOG_DEBUG_MSG("~MPRegion::WriteRoadmapForVizmo()");
 }

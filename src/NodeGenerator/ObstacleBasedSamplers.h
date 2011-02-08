@@ -168,116 +168,114 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
       return result;
     }
 
-  bool sampler(Environment* env,Stat_Class& Stat,const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts)
-    {  
-      string callee(name());
-      callee += "::sampler()";
-      CDInfo cdInfo;
-      bool generated = false;
-      int attempts = 0;
-     // print(cout);
-      do {
-	Stat.IncNodes_Attempted();
-	attempts++;
+  bool sampler(Environment* env,Stat_Class& Stat,const CFG& cfg_in, vector<CFG>& cfg_out, int
+  max_attempts, vector<CFG>& cfg_out_collision)
+{  
+   string callee(name());
+   callee += "::sampler()";
+   CDInfo cdInfo;
+   bool generated = false;
+   int attempts = 0;
+   // print(cout);
+   do {
+      Stat.IncNodes_Attempted();
+      attempts++;
 
-   CFG c1;
-   if(cfg_in==CFG()){
-      c1.GetRandomCfg(env);//random configurations taken inside bounding box
-   }
+      CFG c1;
+      if(cfg_in==CFG()){
+         c1.GetRandomCfg(env);//random configurations taken inside bounding box
+      }
 
-   else
-      c1 = cfg_in;
-	
-	bool c1_bbox = c1.InBoundingBox(env);
-	
-	bool c1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c1, env, 
-		         Stat, cdInfo, true, &callee);
+      else
+         c1 = cfg_in;
 
-	CFG c2 = c1;
-	bool c2_bbox = c1_bbox;
-	bool c2_free = c1_free;
+      bool c1_bbox = c1.InBoundingBox(env);
 
-	CFG r;
-	r.GetRandomRay(step_size, env, dm);
+      bool c1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c1, env, 
+            Stat, cdInfo, true, &callee);
 
-	while(c2_bbox && (c1_free == c2_free)) { 
-	
-	  c1 = c2;
-	  c1_bbox = c2_bbox;
-	  c1_free = c2_free;
-	 
-	  c2.Increment(r);
-	  c2_bbox = c2.InBoundingBox(env);
-	
-	  c2_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c2, env, 
-		         Stat, cdInfo, true, &callee);
-	 
-	}
-	if(c2_bbox) 
-          {
-	        generated = true;
-                
-	  	if(c1_free)
-          	   {
-	  	      CFG tmp;
-	              r.subtract(tmp, r);
-	    	      GenerateShells(Stat,c1, c2, r, 
-  		      back_insert_iterator<vector<CFG> >(cfg_out));
-	           }
-           	else 
-	    	  GenerateShells(Stat,c2, c1, r,back_insert_iterator<vector<CFG> >(cfg_out));
-	  }
-        else if(c1_bbox && useBBX && c1_free && !c2_bbox)
-              {
-		      generated = true;
-		      CFG tmp;
-	              r.subtract(tmp, r);
-	    	      GenerateShells(Stat,c1, c2, r, 
-  		      back_insert_iterator<vector<CFG> >(cfg_out));
+      CFG c2 = c1;
+      bool c2_bbox = c1_bbox;
+      bool c2_free = c1_free;
 
-              }
-      
-    
+      CFG r;
+      r.GetRandomRay(step_size, env, dm);
 
-   
-   
-      } while (!generated && (attempts < max_attempts));
-      
-     
+      while(c2_bbox && (c1_free == c2_free)) { 
 
+         c1 = c2;
+         c1_bbox = c2_bbox;
+         c1_free = c2_free;
 
+         c2.Increment(r);
+         c2_bbox = c2.InBoundingBox(env);
 
+         c2_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c2, env, 
+               Stat, cdInfo, true, &callee);
 
-      return generated;
-    }
+      }
+      if(c2_bbox) 
+      {
+         generated = true;
+
+         if(c1_free)
+         {
+            CFG tmp;
+            r.subtract(tmp, r);
+            GenerateShells(Stat,c1, c2, r, 
+                  back_insert_iterator<vector<CFG> >(cfg_out));
+            cfg_out_collision.push_back(c2);
+         }
+         else {
+            GenerateShells(Stat,c2, c1, r,back_insert_iterator<vector<CFG> >(cfg_out));
+            cfg_out_collision.push_back(c1);
+         }
+      }
+      else if(c1_bbox && useBBX && c1_free && !c2_bbox)
+      {
+         generated = true;
+         CFG tmp;
+         r.subtract(tmp, r);
+         GenerateShells(Stat,c1, c2, r, 
+               back_insert_iterator<vector<CFG> >(cfg_out));
+         cfg_out_collision.push_back(c2);
+      }
+
+   } while (!generated && (attempts < max_attempts));
+
+   return generated;
+}
     
  private:
   template <typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-          OutputIterator result)  
+          OutputIterator result, OutputIterator collision)  
   {
     CFG my_cfg;
     
-    vector<CFG> out1;
+    vector<CFG> out1, collision_out;
     for (int i =0; i< num_nodes; i++) {
       my_cfg.GetRandomCfg(env);
-      while(!sampler(env, Stat,my_cfg, out1, max_attempts))
+      while(!sampler(env, Stat,my_cfg, out1, max_attempts, collision_out))
 	my_cfg.GetRandomCfg(env);
       }
     result = copy(out1.begin(), out1.end(), result);
+    collision = copy(collision_out.begin(), collision_out.end(), collision);
     return result;
   }
 
   template <typename InputIterator, typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, InputIterator first, InputIterator last, int max_attempts,
- 	  OutputIterator result)  
+ 	  OutputIterator result, OutputIterator collision)  
   {
     while(first != last) {
-      vector<CFG> result_cfg;
-      if(sampler(env, Stat, *first, result_cfg, max_attempts))
+      vector<CFG> result_cfg, collision_cfg;
+      if(sampler(env, Stat, *first, result_cfg, max_attempts, collision_cfg)){
         result = copy(result_cfg.begin(), result_cfg.end(), result);
+        collision = copy(collision_cfg.begin(), collision_cfg.begin(), collision);
+      }
       first++;
     }
     return result;
@@ -287,31 +285,31 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-         back_insert_iterator<vector<CFG> > result)  
+         back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
 
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 back_insert_iterator<vector<CFG> > result)  
+	 back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }   
   
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
-         typename vector<CFG>::iterator result)  
+         typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
 
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 typename vector<CFG>::iterator result)  
+	 typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }
 };
 

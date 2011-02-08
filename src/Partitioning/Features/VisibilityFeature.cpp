@@ -53,8 +53,12 @@ vector<double> VisibilityFeature::Collect(vector<VID>& vids){
       get_cc_stats(*(rdmp),cmap,ccs);
       typedef vector<VID>::iterator IIT;
       for(IIT vit2 = kclosest.begin(); vit2!=kclosest.end(); vit2++){
+         CfgType _col;
          if(is_same_cc(*rdmp, cmap, *vit, allVIDs[*vit2]))visibility+=1;
-         else if(sl->IsConnected(env, *pStatClass, GetMPProblem()->GetDistanceMetric()->GetDMMethod(dmLabel), rdmp->find_vertex(*vit)->property(), rdmp->find_vertex(allVIDs[*vit2])->property(),&lp, .1, .1))
+         else if(sl->IsConnected(env, *pStatClass,
+            GetMPProblem()->GetDistanceMetric()->GetDMMethod(dmLabel),
+            rdmp->find_vertex(*vit)->property(), rdmp->find_vertex(allVIDs[*vit2])->property(),
+            _col, &lp, .1, .1))
             visibility+=1;
       }
       visibility/=(double)kclosest.size();

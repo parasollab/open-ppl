@@ -69,51 +69,53 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
   //
   
   // operates over all nodes in a roadmap
+  template <typename OutputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         LocalPlanners<CFG,WEIGHT>* lp,
-        bool addPartialEdge, bool addAllEdges) ;
+        bool addPartialEdge, bool addAllEdges, OutputIterator collision) ;
 
-  template<typename InputIterator>
+  template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
-        InputIterator _itr1_first, InputIterator _itr1_last) ;
+        InputIterator _itr1_first, InputIterator _itr1_last, OutputIterator collision) ;
 
 
-  template<typename InputIterator>
+  template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
-        InputIterator _itr2_first, InputIterator _itr2_last) ;
+        InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision) ;
   
-  template<typename InputIterator1, typename InputIterator2>
+  template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
   void pConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
         InputIterator1 _itr1_first, InputIterator1 _itr1_last,
-        InputIterator2 _itr2_first, InputIterator2 _itr2_last) ;
+        InputIterator2 _itr2_first, InputIterator2 _itr2_last, OutputIterator collision) ;
     
-    
+   template<typename OutputIterator>
   void ConnectNeighbors(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addAllEdges, 
         int &iter_success, int &iter_failure,
         int &total_success, int &total_failure,
-        VID _vid, vector<VID>& closest) ;
+        VID _vid, vector<VID>& closest, OutputIterator collision) ;
   
+  template<typename OutputIterator>
   void pConnectNeighbors(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addAllEdges, 
         int &iter_success, int &iter_failure,
         int &total_success, int &total_failure,
-        VID _vid, vector<VID>& closest, CFG _cfg) ;
+        VID _vid, vector<VID>& closest, CFG _cfg, OutputIterator collision) ;
 
   template <typename InputIterator, typename OutputIterator>
   OutputIterator FindKNeighbors(
@@ -238,36 +240,37 @@ CreateCopy() {
 //    the special case where we want to perform connections over all nodes
 //    in the roadmap.
 template <class CFG, class WEIGHT>
+template<typename OutputIterator>
 void NeighborhoodConnection<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
-            bool addAllEdges) 
+            bool addAllEdges, OutputIterator collision) 
 {
    vector<VID> vertices;
   _rm->m_pRoadmap->GetVerticesVID(vertices);
   
   ConnectNodes(_rm, Stats, lp, addPartialEdge, addAllEdges, 
         vertices.begin(), vertices.end(),
-        vertices.begin(), vertices.end());
+        vertices.begin(), vertices.end(), collision);
 }
 
 
 template <class CFG, class WEIGHT>
-template<typename InputIterator>
+template<typename InputIterator, typename OutputIterator>
 void NeighborhoodConnection<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
-            InputIterator _itr1_first, InputIterator _itr1_last) 
+            InputIterator _itr1_first, InputIterator _itr1_last, OutputIterator collision) 
 {
   vector<VID> vertices;
   _rm->m_pRoadmap->GetVerticesVID(vertices);
         
   ConnectNodes(_rm, Stats, lp, addPartialEdge, addAllEdges, 
         _itr1_first, _itr1_last,
-        vertices.begin(), vertices.end());
+        vertices.begin(), vertices.end(), collision);
 }
 
 
@@ -278,14 +281,14 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
  * }
  */
 template <class CFG, class WEIGHT>
-template<typename InputIterator>
+template<typename InputIterator, typename OutputIterator>
 void NeighborhoodConnection<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
             InputIterator _itr1_first, InputIterator _itr1_last,
-            InputIterator _itr2_first, InputIterator _itr2_last)
+            InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision)
 {   
     if (m_debug) { cout << endl; PrintOptions(cout); }
     // the vertices in this iteration are the source for the connection operation
@@ -337,7 +340,8 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
           
         }
         
-        ConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, total_success, total_failure, *itr1, closest);
+        ConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, total_success,
+        total_failure, *itr1, closest, collision);
         enough_connected = true;
         if(iter_success < m_k)
         {
@@ -357,14 +361,14 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
  /* This version is used in parallel PRM where iterator 1 and 2 are of different types */
 template <class CFG, class WEIGHT>
-template<typename InputIterator1, typename InputIterator2>
+template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void NeighborhoodConnection<CFG,WEIGHT>::
 pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
             InputIterator1 _itr1_first, InputIterator1 _itr1_last,
-            InputIterator2 _itr2_first, InputIterator2 _itr2_last)
+            InputIterator2 _itr2_first, InputIterator2 _itr2_last, OutputIterator collision)
 { 
     LOG_DEBUG_MSG("NeighborhoodConnection::pConnectNodes()");
     if (m_debug) { cout << endl; PrintOptions(cout); }
@@ -416,7 +420,8 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
           
         }
         
-	pConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, total_success, total_failure, v_vid, closest,v_cfg);
+	pConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, total_success,
+        total_failure, v_vid, closest,v_cfg, collision);
 	
         enough_connected = true;
         if(iter_success < m_k)
@@ -435,13 +440,14 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 }
 
 template <class CFG, class WEIGHT>
+template <typename OutputIterator>
 void NeighborhoodConnection<CFG,WEIGHT>::
 ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addAllEdges,
             int &iter_success, int &iter_failure, 
             int &total_success, int &total_failure,
-            VID _vid, vector<VID>& closest)
+            VID _vid, vector<VID>& closest, OutputIterator collision)
 {
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf)->GetDMMethod();
   
@@ -516,10 +522,11 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     Stats.IncConnections_Attempted();
   
     // attempt connection with the local planner
+    CfgType _col;
     if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
                 (*(_rm->m_pRoadmap->find_vertex(_vid))).property(),
                 (*(_rm->m_pRoadmap->find_vertex(*itr2))).property(),
-                &lpOutput, this->connectionPosRes, this->connectionOriRes, 
+                _col, &lpOutput, this->connectionPosRes, this->connectionOriRes, 
                 (!addAllEdges) ))
     {
       // if connection was made, add edge and record the successful connection
@@ -540,6 +547,8 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       failure++;
       this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), false));
     }
+    if(_col != CfgType())
+       *collision++ = _col;
   }
   
   total_success += (success - iter_success);
@@ -550,13 +559,14 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 }
 
 template <class CFG, class WEIGHT>
+template <typename OutputIterator>
 void NeighborhoodConnection<CFG,WEIGHT>::
 pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addAllEdges,
             int &iter_success, int &iter_failure, 
             int &total_success, int &total_failure,
-            VID _vid, vector<VID>& closest, CFG _cfg)
+            VID _vid, vector<VID>& closest, CFG _cfg, OutputIterator collision)
 {
   LOG_DEBUG_MSG("NeighborhoodConnection::pConnectNeighbors()");
 	
@@ -615,10 +625,11 @@ pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     Stats.IncConnections_Attempted();
   
     // attempt connection with the local planner
+    CfgType _col;
     if(lp->IsConnected(_rm->GetEnvironment(), Stats, dm,
                 _cfg,
                 (*(_rm->m_pRoadmap->find_vertex(*itr2))).property(),
-                &lpOutput, this->connectionPosRes, this->connectionOriRes, 
+                _col, &lpOutput, this->connectionPosRes, this->connectionOriRes, 
                 (!addAllEdges) ))
     {
       // if connection was made, add edge and record the successful connection
@@ -640,6 +651,8 @@ pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       failure++;
       this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), false));
     }
+    if(_col != CfgType())
+       *collision++ = _col;
   }
   
   total_success += (success - iter_success);

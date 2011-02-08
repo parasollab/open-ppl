@@ -40,7 +40,7 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
 
   virtual bool IsConnected(Environment *env, Stat_Class& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
-         LPOutput<CFG, WEIGHT>* lpOutput,
+         CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
          bool savePath=false, bool saveFailedPath=false);
@@ -59,7 +59,7 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
   virtual 
     bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
-         LPOutput<CFG, WEIGHT>* lpOutput,
+         CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
          bool checkCollision=true, 
          bool savePath=false, bool saveFailedPath=false);
@@ -67,7 +67,7 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
   virtual 
     bool IsConnectedOtherWay(Environment *env, Stat_Class& Stats,
 	 shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2,
-	 LPOutput<CFG, WEIGHT>* lpOutput,
+	 CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
 	 double positionRes, double orientationRes,
 	 bool checkCollision=true,
 	 bool savePath=false, bool saveFailedPath=false);  
@@ -180,12 +180,12 @@ bool
 TransformAtS<CFG, WEIGHT>::
 IsConnected(Environment *_env, Stat_Class& Stats,
      shared_ptr<DistanceMetricMethod >dm,
-     const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
+     const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
      double positionRes, double orientationRes,
      bool checkCollision,
      bool savePath, bool saveFailedPath) {
   bool connected = false;
-  connected = IsConnectedOneWay(_env, Stats, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+  connected = IsConnectedOneWay(_env, Stats, dm, _c1, _c2, _col, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   return connected;
 }
 
@@ -194,7 +194,7 @@ bool
 TransformAtS<CFG,WEIGHT>::
 IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
       shared_ptr<DistanceMetricMethod >dm,
-      const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
+      const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
       double positionRes, double orientationRes,
       bool checkCollision, 
       bool savePath, bool saveFailedPath) {  
@@ -268,7 +268,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
       cd_cntr++;
       if((!sequence[i]->InBoundingBox(_env)) || (sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))))
       {
-	connected = IsConnectedOtherWay(_env, Stats, dm, _c1, _c2, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+	connected = IsConnectedOtherWay(_env, Stats, dm, _c1, _c2, _col, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
       }
     }
   }
@@ -279,11 +279,11 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     {
       if(this->binarySearch)
         connected = IsConnectedSLBinary(_env, Stats, dm, *sequence[i], *sequence[i+1],
-					lpOutput, cd_cntr, positionRes, orientationRes,
+					_col, lpOutput, cd_cntr, positionRes, orientationRes,
       					checkCollision, savePath, saveFailedPath);
       else
         connected = IsConnectedSLSequential(_env, Stats, dm, *sequence[i], *sequence[i+1],
-					   lpOutput, cd_cntr, positionRes, orientationRes,
+					   _col, lpOutput, cd_cntr, positionRes, orientationRes,
 					   checkCollision, savePath, saveFailedPath);
 
       if((savePath || saveFailedPath) && (i+1 != sequence.size()-1))
@@ -315,7 +315,7 @@ bool
 TransformAtS<CFG, WEIGHT>::
 IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
       shared_ptr<DistanceMetricMethod >dm,
-      const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
+      const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
       double positionRes, double orientationRes,
       bool checkCollision,
       bool savePath, bool saveFailedPath) {
@@ -391,6 +391,8 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
       cd_cntr++;
       if((!sequence[i]->InBoundingBox(_env)) || (sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))))
       {
+         if((sequence[i]->InBoundingBox(_env)) && (sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))))
+            _col = *sequence[i];
         connected = false;
         break;
       }
@@ -403,11 +405,11 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
     {
       if(this->binarySearch)
         connected = IsConnectedSLBinary(_env, Stats, dm, *sequence[i], *sequence[i+1],
-					lpOutput, cd_cntr, positionRes, orientationRes,
+					_col, lpOutput, cd_cntr, positionRes, orientationRes,
       					checkCollision, savePath, saveFailedPath);
       else
         connected = IsConnectedSLSequential(_env, Stats, dm, *sequence[i], *sequence[i+1],
-					   lpOutput, cd_cntr, positionRes, orientationRes,
+					   _col, lpOutput, cd_cntr, positionRes, orientationRes,
 					   checkCollision, savePath, saveFailedPath);
 
       if((savePath || saveFailedPath) && (i+1 != sequence.size()-1))

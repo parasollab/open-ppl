@@ -1,5 +1,5 @@
-#ifndef BasicPRMStrategy_h
-#define BasicPRMStrategy_h
+#ifndef TogglePRMStrategy_h
+#define TogglePRMStrategy_h
 
 #include "Roadmap.h"
 #include "MPProblem/RoadmapGraph.h" //for VID typedef
@@ -16,11 +16,11 @@
 #include "Sampler.h"
 
 
-class BasicPRMStrategy : public MPStrategyMethod 
+class TogglePRMStrategy : public MPStrategyMethod 
 {
  public:
-   BasicPRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited=false);
-   virtual ~BasicPRMStrategy();
+   TogglePRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited=false);
+   virtual ~TogglePRMStrategy();
 
    virtual void ParseXML(XMLNodeReader& in_Node);
    virtual void PrintOptions(ostream& out_os);
@@ -32,8 +32,10 @@ class BasicPRMStrategy : public MPStrategyMethod
 
  protected:
    //helper functions for operator()
-   void ConnectNodes(MPRegion<CfgType, WeightType>* region, vector<VID>& allNodesVID, vector<VID>& thisIterationNodesVID);
-   void ConnectComponents(MPRegion<CfgType, WeightType>* region);
+   void ConnectNodes(MPRegion<CfgType, WeightType>* region, vector<VID>& allNodesVID, vector<VID>&
+   thisIterationNodesVID, vector<VID>& allCollisionVID, vector<VID>& thisIterationCollisionNodes);
+   void ConnectComponents(MPRegion<CfgType, WeightType>* region, vector<VID>& allNodesVID,
+   vector<VID>& allCollisionNodesVID);
    bool EvaluateMap(int in_RegionID);
 
    //data
@@ -47,9 +49,13 @@ class BasicPRMStrategy : public MPStrategyMethod
 
  private:
    template <typename OutputIterator>
-      void GenerateNodes(MPRegion<CfgType, WeightType>* region, OutputIterator allOut, OutputIterator thisIterationOut);
+      void GenerateNodes(MPRegion<CfgType, WeightType>* region, OutputIterator allOut,
+      OutputIterator thisIterationOut, OutputIterator allCollisionOut, OutputIterator
+      thisIterationCollisionOut);
 
    Clock_Class MapGenClock;
+
+   int m_ConnectIterations;
 
 };
 
@@ -57,8 +63,9 @@ class BasicPRMStrategy : public MPStrategyMethod
 #include "MapEvaluator.h"
 //implentations of template functions
 template <typename OutputIterator>
-void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region, 
-                                  OutputIterator allOut, OutputIterator thisIterationOut){
+void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region, 
+                                  OutputIterator allOut, OutputIterator thisIterationOut,
+                                  OutputIterator allCollisionOut, OutputIterator thisIterationCollisionOut){
    Clock_Class NodeGenClock;
    CDInfo cdInfo;
    Stat_Class * pStatClass = region->GetStatClass();
@@ -92,9 +99,7 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       //add valid nodes to roadmap
       typedef vector<CfgType>::iterator CIT;
       for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
-         if(!(*cit).IsLabel("VALID")){
-            cit->isCollision(GetMPProblem()->GetEnvironment(),*(region->GetStatClass()),GetMPProblem()->GetCollisionDetection(), cdInfo);
-         }
+         //out nodes mean valid then add them to the real roadmap
          if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
             if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
               VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
@@ -103,6 +108,35 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
               *allOut++ = vid;
             }
          }
+         //else invalid add to block map
+         else{
+            if(!region->GetBlockRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+              VID vid = region->GetBlockRoadmap()->m_pRoadmap->AddVertex(*cit);
+              //store value and increment iterator
+              *thisIterationOut++ = vid;
+              *allOut++ = vid;
+            }
+         }
+      }
+      for(CIT cit=outCollisionNodes.begin(); cit!=outCollisionNodes.end(); ++cit){
+         //outCollisionNodes mean INVALID then add to block map
+         if((*cit).IsLabel("VALID") && !((*cit).GetLabel("VALID"))) {
+            if(!region->GetBlockRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+              VID vid = region->GetBlockRoadmap()->m_pRoadmap->AddVertex(*cit);
+              //store value and increment iterator
+              *thisIterationCollisionOut++ = vid;
+              *allCollisionOut++ = vid;
+            }
+         }
+         //else valid add to real map
+         else{
+            if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+              VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
+              //store value and increment iterator
+              *thisIterationCollisionOut++ = vid;
+              *allCollisionOut++ = vid;
+            }
+         }  
       }
    }
    NodeGenClock.StopPrintClock();

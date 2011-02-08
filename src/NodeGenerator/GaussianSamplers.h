@@ -66,7 +66,8 @@ class GaussRandomSampler : public SamplerMethod<CFG>
 	 << " (d = " << d << ")";
     }
   
-  bool sampler(Environment* env,Stat_Class& Stat, const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts)
+  bool sampler(Environment* env,Stat_Class& Stat, const CFG& cfg_in, vector<CFG>& cfg_out, int
+  max_attempts, vector<CFG>& cfg_out_collision)
     {
       string callee(name());
       callee += "::sampler()";
@@ -117,10 +118,14 @@ class GaussRandomSampler : public SamplerMethod<CFG>
          if(cfg1_free != cfg2_free) {
             Stat.IncNodes_Generated();
             generated = true;	
-            if(cfg1_free == KEEP_FREE)
+            if(cfg1_free == KEEP_FREE){
                cfg_out.push_back(cfg1);
-            else
+               cfg_out_collision.push_back(cfg2);
+            }
+            else{
                cfg_out.push_back(cfg2);
+               cfg_out_collision.push_back(cfg1);
+            }
          }
       } while (!generated && (attempts < max_attempts));
       
@@ -131,28 +136,31 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   template <typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-          OutputIterator result)  
+          OutputIterator result, OutputIterator collision)  
   {
     CFG my_cfg;
-    vector<CFG> out1;
+    vector<CFG> out1, collision_cfg;
     for (int i =0; i< num_nodes; ++i) {
       my_cfg.GetRandomCfg(env);
-      while(!sampler(env, Stat,my_cfg, out1, max_attempts)) 
+      while(!sampler(env, Stat,my_cfg, out1, max_attempts, collision_cfg)) 
         my_cfg.GetRandomCfg(env);
     }
     result = copy(out1.begin(), out1.end(), result);
+    collision = copy(collision_cfg.begin(), collision_cfg.end(), collision);
     return result;
   }
 
   template <typename InputIterator, typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, InputIterator first, InputIterator last, int max_attempts,
- 	  OutputIterator result)  
+ 	  OutputIterator result, OutputIterator collision)  
   {
     while(first != last) {
-      vector<CFG> result_cfg;
-      if(sampler(env, Stat,*first,result_cfg, max_attempts)) 
+      vector<CFG> result_cfg, collision_cfg;
+      if(sampler(env, Stat,*first,result_cfg, max_attempts, collision_cfg)){ 
         result = copy(result_cfg.begin(), result_cfg.end(), result);
+        collision = copy(collision_cfg.begin(), collision_cfg.end(), result);
+      }
       first++;
     }
     return result;
@@ -162,31 +170,31 @@ class GaussRandomSampler : public SamplerMethod<CFG>
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-         back_insert_iterator<vector<CFG> > result)  
+         back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
 
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 back_insert_iterator<vector<CFG> > result)  
+	 back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }   
   
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
-         typename vector<CFG>::iterator result)  
+         typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
 
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 typename vector<CFG>::iterator result)  
+	 typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }
 };
 
@@ -267,7 +275,8 @@ void ParseXMLd(XMLNodeReader& in_Node) {
     }
   
   
-   bool sampler(Environment* env,Stat_Class& Stat,const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts)  
+   bool sampler(Environment* env,Stat_Class& Stat,const CFG& cfg_in, vector<CFG>& cfg_out, int
+   max_attempts, vector<CFG>& cfg_collision_out)  
     {
      
       string callee(name());
@@ -308,6 +317,8 @@ void ParseXMLd(XMLNodeReader& in_Node) {
 	      Stat.IncNodes_Generated();
 	      generated = true;
 	     cfg_out.push_back(cfg_in);
+             cfg_collision_out.push_back(cfg1);
+             cfg_collision_out.push_back(cfg2);
 	     
 	    }
 	  }
@@ -331,6 +342,8 @@ void ParseXMLd(XMLNodeReader& in_Node) {
 	       Stat.IncNodes_Generated();
 	       generated = true;
 	       cfg_out.push_back(mid);
+               cfg_collision_out.push_back(cfg1);
+               cfg_collision_out.push_back(cfg2);
 	     }
 	  }
 	}
@@ -343,29 +356,32 @@ void ParseXMLd(XMLNodeReader& in_Node) {
   template <typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-          OutputIterator result)  
+          OutputIterator result, OutputIterator collision)  
   {
     CFG my_cfg;
-    vector<CFG> out1;
+    vector<CFG> out1, collision_out;
     // cout << "num of nodes = " << num_nodes << endl;
     for (int i =0; i< num_nodes; i++){ 
       my_cfg.GetRandomCfg(env);   
-      while(!sampler(env, Stat,my_cfg, out1, max_attempts)) 
+      while(!sampler(env, Stat,my_cfg, out1, max_attempts, collision_out)) 
         my_cfg.GetRandomCfg(env);
     }
     result = copy(out1.begin(), out1.end(), result);
+    collision = copy(collision_out.begin(), collision_out.end(), collision);
     return result;
   }
 
   template <typename InputIterator, typename OutputIterator>
   OutputIterator 
   _Sample(Environment* env, Stat_Class& Stat, InputIterator first, InputIterator last, int max_attempts,
- 	  OutputIterator result)  
+ 	  OutputIterator result, OutputIterator collision)  
   {
     while(first != last) {
-      vector<CFG> result_cfg;
-      if(sampler(env, Stat,*first, result_cfg, max_attempts)) 
+      vector<CFG> result_cfg, collision_cfg;
+      if(sampler(env, Stat,*first, result_cfg, max_attempts, collision_cfg)){
         result = copy(result_cfg.begin(), result_cfg.end(), result);
+        collision = copy(collision_cfg.begin(), collision_cfg.end(), collision);
+        }
       first++;
     }
     return result;
@@ -375,31 +391,31 @@ void ParseXMLd(XMLNodeReader& in_Node) {
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
-         back_insert_iterator<vector<CFG> > result)  
+         back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
 
   virtual back_insert_iterator<vector<CFG> > 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 back_insert_iterator<vector<CFG> > result)  
+	 back_insert_iterator<vector<CFG> > result, back_insert_iterator<vector<CFG> > collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }   
   
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
-         typename vector<CFG>::iterator result)  
+         typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
-    return _Sample(env, Stat, num_nodes, max_attempts, result);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision);
   }
 
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
-	 typename vector<CFG>::iterator result)  
+	 typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
-    return _Sample(env, Stat, first, last, max_attempts, result);
+    return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }
 };
 

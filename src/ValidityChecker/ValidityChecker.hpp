@@ -23,6 +23,8 @@ public:
   ValidityChecker(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem) { 
     LOG_DEBUG_MSG("ValidityChecker::ValidityChecker()");
     in_Node.verifyName(std::string("validity_test"));
+
+    m_Validity=true;
     
     XMLNodeReader::childiterator citr;
     for(citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr) {    
@@ -46,10 +48,16 @@ public:
   }
   
   ~ValidityChecker() {}
+   
+   bool GetValidity(){return m_Validity;}
+  void ToggleValidity(){m_Validity=!m_Validity;}
   
   inline bool IsValid(VCMethodPtr _vc, CFG& _cfg, Environment* env, Stat_Class& Stats, 
 		      CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName = NULL) {
-    return _vc->IsValid(_cfg, env, Stats, _cdInfo, enablePenetration, pCallName);
+      if(m_Validity)
+         return _vc->IsValid(_cfg, env, Stats, _cdInfo, enablePenetration, pCallName);
+      else
+         return !_vc->IsValid(_cfg, env, Stats, _cdInfo, enablePenetration, pCallName);
   }
   
   inline void AddVCMethod(std::string name, VCMethodPtr m) {
@@ -62,6 +70,7 @@ public:
   
 protected:
   std::map<std::string, VCMethodPtr> m_map_vcmethods;
+  bool m_Validity;
 };
 
 

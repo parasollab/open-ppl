@@ -273,10 +273,11 @@ void BasicRRTStrategy::RRT(int in_RegionID, vector<CfgType> RRTQueue) {
       }
       
       // If good to go, add to roadmap
+      CfgType collNode;
       if (cfgs[0].InBoundingBox(env)
 	  && vc->IsValid(vc->GetVCMethod(strVcmethod), cfgs[0], env, *regionStats, cdInfo, true, &callee)
 	  && (_dm->Distance(env, cfgs[0], nearest) >= minDist)
-	  && lp->GetMethod(m_LPMethod)->IsConnected(env, *regionStats, _dm, nearest, cfgs[0], &lpOutput,
+	  && lp->GetMethod(m_LPMethod)->IsConnected(env, *regionStats, _dm, nearest, cfgs[0], collNode, &lpOutput,
 						    positionRes, orientationRes, checkCollision, savePath, saveFailed)) {
 	region->GetRoadmap()->m_pRoadmap->AddVertex(cfgs[0]);
 	region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, cfgs[0], lpOutput.edge);
@@ -341,13 +342,15 @@ void BasicRRTStrategy::ConnectComponents(MPRegion<CfgType, WeightType>* region) 
     ComponentConnSubClock.StartClock(connectorClockName.str().c_str());
     
     cout << "\n\t";
+    vector<CfgType> collision;
     GetMPProblem()->GetMPStrategy()->
       GetConnectMap()->ConnectComponents(pConnection,
 					 region->GetRoadmap(), 
 					 *(region->GetStatClass()),
 					 GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
 					 GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-					 GetMPProblem()->GetMPStrategy()->addAllEdges);
+					 GetMPProblem()->GetMPStrategy()->addAllEdges,
+                                         back_inserter(collision));
     
     cmap.reset();
     cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
