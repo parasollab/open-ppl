@@ -14,7 +14,7 @@ public:
 									   MPBaseObject(in_pProblem) { }
   virtual ~ValidityCheckerMethod() { }
   
-  virtual bool IsValid(CfgType& _cfg, Environment* env, Stat_Class& Stats, 
+  virtual bool IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, 
 		       CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName) = 0; 
 };
 

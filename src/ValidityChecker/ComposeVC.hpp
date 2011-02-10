@@ -37,7 +37,7 @@ public:
   ~ComposeValidity() { }
   
   virtual bool 
-  IsValid(CFG& _cfg, Environment* env, Stat_Class& Stats, 
+  IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, 
 	  CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName);
   
 private:
@@ -90,7 +90,7 @@ ComposeValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 template<typename CFG>
 bool
 ComposeValidity<CFG>::
-IsValid(CFG& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 	bool enablePenetration, std::string *pCallName = NULL) 
 {
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
@@ -118,7 +118,7 @@ template<typename CFG>
 class ComposeFunctor 
 {	    
 public:
-  ComposeFunctor(ValidityChecker<CFG>* vc, CFG& _cfg, Environment* env, Stat_Class& Stats, 
+  ComposeFunctor(ValidityChecker<CFG>* vc, Cfg& _cfg, Environment* env, Stat_Class& Stats, 
 		 CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName) : 
     m_vc(vc), m_cfg(_cfg), m_env(env), m_Stats(Stats), m_cdInfo(_cdInfo), 
     m_enablePenetration(enablePenetration), m_pCallName(pCallName) { }
@@ -132,7 +132,7 @@ public:
   
 private:
   ValidityChecker<CFG>* m_vc;  
-  CFG& m_cfg; 
+  Cfg& m_cfg; 
   Environment* m_env; 
   Stat_Class& m_Stats; 
   CDInfo& m_cdInfo; 

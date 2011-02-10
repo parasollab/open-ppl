@@ -571,7 +571,7 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
     tmp->add(*this, *(nList[i]));
     
     if(!this->AlmostEqual(*tmp) && 
-       !tmp->isCollision(_env,Stats,cd,_cdInfo,true,&(Callee)) ) 
+       !tmp->isCollision(_env,Stats,cd,_cdInfo,true,&(Callee)) )
       ret.push_back(tmp);
     else
       delete tmp;
@@ -844,9 +844,7 @@ PushToMedialAxis(MPProblem* mp, Environment *_env, Stat_Class& Stats,
   std::string Callee(GetName()),CallCnt("1");
   std::string Method("-Cfg::PushToMedialAxis");
   Callee=Callee+Method;
-  Cfg* cfg = this->CreateNewCfg();
-  CfgType* ctype = dynamic_cast<CfgType*>(cfg);
-  bool valid_cfg = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, _env, Stats, cdInfo, true, &Callee);
+  bool valid_cfg = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *this, _env, Stats, cdInfo, true, &Callee);
   
   if(valid_cfg)
     this->MAPRMfree(mp, _env, Stats, vc, cd, cdInfo, dm, clearance_n);
@@ -864,7 +862,6 @@ MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats,
   
   shared_ptr <DistanceMetricMethod> _dm = mp->GetDistanceMetric()->GetDMMethod(dm);
   Cfg* cfg = this->CreateNewCfg();
-  CfgType* ctype = dynamic_cast<CfgType*>(cfg);
   string Callee = "Cfg::MAPRMfree";
   
   // Approximate clearance
@@ -904,9 +901,7 @@ MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats,
     tmpCfg->add(*newCfg, *tmpCfg);
     
     // Test if tmpCfg is valid                                                                                                                                                  
-    Cfg* cfg = tmpCfg->CreateNewCfg();
-    CfgType* ctype = dynamic_cast<CfgType*>(cfg);
-    bool valid_cfg = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, _env, Stats, cdInfo, true, &Callee);
+    bool valid_cfg = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *tmpCfg, _env, Stats, cdInfo, true, &Callee);
 
     // If valid, calculate clearance and shift, else reduce step till a valid gap is found                                                                                       
     if (valid_cfg) {
@@ -1078,12 +1073,10 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
    //if collide, set to true. Otherwise, set to false
    CallCnt="1";
    std::string tmpStr = Callee+CallCnt;
-   Cfg* cfg = this->CreateNewCfg();  //have to make a copy because method is const
-   CfgType* ctype = dynamic_cast<CfgType*>(cfg);
-   bool bInitState = !(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype, env, Stats, cdInfo, true, &callee));
+   Cfg* cfg = this->CreateNewCfg();
+   bool bInitState = !(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *cfg, env, Stats, cdInfo, true, &callee));
   // cout << "  This CFG in-collision/out-of-bbx: " << bInitState << endl;
    if(!bComputePenetration == bInitState) { //don't need to compute clearance/penetration
-      delete cfg;
       for(vector<Cfg*>::iterator D = directions.begin(); D != directions.end(); ++D)
          delete *D;
       return;
@@ -1149,8 +1142,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
          } else {
             if(ignore_obstacle != -1)
                cdInfo.ResetVars();
-            CfgType* ctype2 = dynamic_cast<CfgType*>(tick[i]);
-            bool bCollision = !(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype2, env, Stats, cdInfo, true, &callee));
+            bool bCollision = !(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *tick[i], env, Stats, cdInfo, true, &callee));
             if((ignore_obstacle != -1) && (cdInfo.colliding_obst_index == ignore_obstacle)) {
 
                if (lastLapIndex != i)
@@ -1218,8 +1210,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
             // Calculate new midpoint                                                                                                                              
             midCfg->add(*innerCfg, *outerCfg);
             midCfg->divide(*midCfg, 2);
-            CfgType* ctype3 = dynamic_cast<CfgType*>(midCfg);
-            bool midInCollision = !(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *ctype3, env, Stats, cdInfo, true, &tmpStr));
+            bool midInCollision = !(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *midCfg, env, Stats, cdInfo, true, &tmpStr));
             if(!(midCfg->InBoundingBox(env)) || midInCollision) { //outside bbox or in collision                                                                   
                outerCfg->equals(*midCfg);
             } else {

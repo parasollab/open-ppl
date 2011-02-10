@@ -18,7 +18,7 @@ public:
   CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem);   
   virtual ~CollisionDetectionValidity() { }
   
-  virtual bool IsValid(CFG& _cfg, Environment* env, 
+  virtual bool IsValid(Cfg& _cfg, Environment* env, 
 		       Stat_Class& Stats, CDInfo& _cdInfo, 
 		       bool enablePenetration, std::string *pCallName);    
   
@@ -72,7 +72,7 @@ CollisionDetectionValidity<CFG>::
 template<typename CFG>
 bool
 CollisionDetectionValidity<CFG>::
-IsValid(CFG& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 	bool enablePenetration, std::string *pCallName = NULL) 
 {
   Stats.IncCfgIsColl(pCallName);

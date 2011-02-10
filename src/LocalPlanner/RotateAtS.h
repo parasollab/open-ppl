@@ -238,12 +238,12 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,shared_ptr< DistanceMetri
       cd_cntr++;
       if(!sequence[i]->InBoundingBox(_env) ||
          //sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))
-         !vc->IsValid(vcm, (*(dynamic_cast<CfgType*>(sequence[i]))), _env, Stats, *this->cdInfo,
+         !vc->IsValid(vcm, *sequence[i], _env, Stats, *this->cdInfo,
          false, &Callee)
         ) {
          if(sequence[i]->InBoundingBox(_env) &&
             //sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee)))
-            !vc->IsValid(vcm, (*(dynamic_cast<CfgType*>(sequence[i]))), _env, Stats, *this->cdInfo, false,
+            !vc->IsValid(vcm, *sequence[i], _env, Stats, *this->cdInfo, false,
             &Callee))
             _col = *sequence[i];
         connected = false;
