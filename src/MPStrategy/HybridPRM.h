@@ -111,7 +111,7 @@ class HybridPRM : public MPStrategyMethod
   bool map_passed_evaluation;
   double NodeGenTotalTime;
   static int instanceNumber;
-  string dm_label;
+  string nf_label;
 };
 
 #endif

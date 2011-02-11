@@ -54,9 +54,9 @@ ParseXML(XMLNodeReader& in_Node)
       m_evaluator_labels.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
     }
-    else if(citr->getName() == "stat_dm_method") 
+    else if(citr->getName() == "stat_nf_method") 
     {
-      dm_label = citr->stringXMLParameter(string("Method"),true, string(""),string("Distance Metric Method for Stats computations"));
+      nf_label = citr->stringXMLParameter(string("Method"),true, string(""),string("Neighborhood Finder Method for Stats computations"));
       citr->warnUnrequestedAttributes();
     } 
     else 
@@ -393,8 +393,8 @@ void HybridPRM::Finalize(int in_RegionID){
   myofstream.close();
 
   //output stats
-  pStatClass->ComputeInterCCFeatures(region->GetRoadmap(), GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
-  pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(), GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
+  pStatClass->ComputeInterCCFeatures(region->GetRoadmap(), GetMPProblem()->GetNeighborhoodFinder(), nf_label);
+  pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(), GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_label)->GetDMMethod());
   string outStatname = base_filename+ ".stat";
   std::ofstream  stat_ofstream(outStatname.c_str());
   std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later

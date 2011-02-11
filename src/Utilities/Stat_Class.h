@@ -4,6 +4,7 @@
 #include "Roadmap.h"
 #include <iomanip>
 #include "DistanceMetricMethod.h"
+#include "NeighborhoodFinder.h"
 
 
 // Maximum number of connected components to keep track of
@@ -86,7 +87,7 @@ public:
   void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> *rdmp, shared_ptr<DistanceMetricMethod> dm);
 
   template <class CFG, class WEIGHT>
-  void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *rdmp, shared_ptr<DistanceMetricMethod>  dm);
+  void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *rdmp, NeighborhoodFinder* nf, string nf_method);
   void PrintFeatures();
   void IncNodes_Generated();
   void IncNodes_Attempted();
@@ -490,8 +491,9 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
 template <class CFG, class WEIGHT>
 void
 Stat_Class::
-ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMethod> dm) {
+ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, NeighborhoodFinder* nf, string nf_method) {
   #ifndef _PARALLEL
+  shared_ptr<DistanceMetricMethod> dm = nf->GetNFMethod(nf_method)->GetDMMethod();
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
   stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   vector< pair<size_t,VID> > ccs; //connected components in the roadmap
@@ -525,7 +527,7 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
     for(typename vector< pair<VID,VID> >::iterator cciter=ccedges.begin(); cciter<ccedges.end();cciter++) {
       CFG cciter_a = (*(rdmp->m_pRoadmap->find_vertex(cciter->first))).property();
       CFG cciter_b = (*(rdmp->m_pRoadmap->find_vertex(cciter->second))).property();
-      double dist =dm->Distance(rdmp->GetEnvironment(),
+      double dist = dm->Distance(rdmp->GetEnvironment(),
         cciter_a, cciter_b);
       total_size += dist;
     }     
@@ -581,9 +583,9 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
   for(typename vector<VID>::iterator itr = ccj_cfgs.begin(); itr!=ccj_cfgs.end(); ++itr)
         ccj_aux.push_back((size_t)(*itr));
 */
-  pairs = rdmp->GetEnvironment()->GetMPProblem()->GetNeighborhoodFinder()->FindKClosestPairs(rdmp, 
+  nf->KClosestPairs(nf->GetNFMethod(nf_method), rdmp,
   //            cci_aux, ccj_aux, 1); 
-              cci_cfgs, ccj_cfgs, 1, dm); 
+              cci_cfgs.begin(), cci_cfgs.end(), ccj_cfgs.begin(), ccj_cfgs.end(), 1, back_inserter(pairs)); 
 /* 
   for(unsigned int i=0; i< pairs.size(); i++){
 	pairs[i].first = VID(pairs_tmp[i].first);
