@@ -16,6 +16,11 @@
 #include <iostream>
 #include <fstream>
 #include "boost/shared_ptr.hpp"
+
+#ifdef _PARALLEL
+#include "runtime.h"
+#endif
+
 using boost::shared_ptr;
 
 class MultiBody;
@@ -35,8 +40,11 @@ class MPProblem;
 //@}
 
 
-
-class Environment : public MPBaseObject {
+#ifdef _PARALLEL 
+class Environment : public stapl::p_object, public MPBaseObject{
+#else 
+class Environment : public MPBaseObject{
+#endif
 public:
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +89,7 @@ public:
     Environment(XMLNodeReader& in_Node, MPProblem* in_pProblem);
 
     Environment(const Environment &from_env, string filename);
-
+     
     /**
      * Destructor.
      * Free memory for every added MultiBody instance if this instance

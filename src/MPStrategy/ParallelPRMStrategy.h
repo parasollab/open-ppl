@@ -63,6 +63,10 @@ class sample_wf
 		env = _penv;
 		
 	}
+	void define_type(stapl::typer &t)  
+	{
+		t.member(region);
+	}
 	
 	sample_wf(const sample_wf& _wf, std::size_t offset)  {} 
 	
@@ -72,15 +76,13 @@ class sample_wf
 		
 		int num_nodes = view.size();
 		vector<CfgType> outNodes;
-		vector<CfgType> inNodes(num_nodes);
+		vector<CfgType> inNodes(num_nodes),outCollisionNodes;
 		LOG_DEBUG_MSG("ParallelPRMStrategy::sample_wf- view.size= " << view.size());
-		
-		
-		
 		
 		Environment* _env = const_cast<Environment*>(env);
 		
-		pNodeGen->Sample(_env,*(region->GetStatClass()),inNodes.begin(),inNodes.end(), 100, back_inserter(outNodes));
+		pNodeGen->Sample(_env,*(region->GetStatClass()),inNodes.begin(),inNodes.end(), 100, 
+			         back_inserter(outNodes),back_inserter(outCollisionNodes));
 		
 		size_t j(0);
 		typedef vector<CfgType>::iterator VIT;
@@ -89,8 +91,7 @@ class sample_wf
 			CfgType tmp = *vit;
 			VID NEW = region->GetRoadmap()->m_pRoadmap->add_vertex(tmp);
 			
-			
-		}
+			}
 		
 	}
 	
@@ -113,16 +114,23 @@ class connect_wf {
 		region = _mpr;
 		lp = _plp;
 	}
-	template <typename OverlapView, typename PartitionedView>
-	void operator()(OverlapView v1, PartitionedView v2) const {
-		LOG_DEBUG_MSG("ParallelPRMStrategy::connect_wf- native view.size= " << v2.size());
+	void define_type(stapl::typer &t)  
+	{
 		
-		typename OverlapView::vertex_iterator ov_first = v1.begin();
-		typename OverlapView::vertex_iterator ov_last = v1.end();
-		typename PartitionedView::vertex_iterator pv_first = v2.begin();
-		typename PartitionedView::vertex_iterator pv_last = v2.end();
+		t.member(region);
+	}
+	template <typename PartitionedView, typename OverlapView>
+	void operator()(PartitionedView v1, OverlapView v2) const {
+		LOG_DEBUG_MSG("ParallelPRMStrategy::connect_wf- native view.size= " << v1.size());
+		LOG_DEBUG_MSG("ParallelPRMStrategy::connect_wf- overlap view.size= " << v2.size())
+		
+		typename PartitionedView::vertex_iterator pv_first = v1.begin();
+		typename PartitionedView::vertex_iterator pv_last = v1.end();
+		typename OverlapView::vertex_iterator ov_first = v2.begin();
+		typename OverlapView::vertex_iterator ov_last = v2.end();
 		
 		LocalPlanners<CfgType,WeightType>* __lp = const_cast<LocalPlanners<CfgType,WeightType>*>(lp);
+		vector<CfgType> collision;
 		
 		
 		pNodeCon->GetConnectMap()->pConnectNodes(pNodeCon,
@@ -131,7 +139,7 @@ class connect_wf {
 			lp,
 			false,false,
 			pv_first,pv_last,
-			ov_first, ov_last);	    
+			ov_first, ov_last,back_inserter(collision));
 		
 	}
 	
@@ -147,19 +155,20 @@ void p_sample(View& view, Sampler<CfgType>::SamplerPointer _ng, MPRegion<CfgType
 	stapl::map_func(wf,stapl::balance_view(view,stapl::get_num_locations()));
 	
 	
+	
 }
 
 
 
-template<typename OverlapView, typename PartitionedView>
-void p_connect(OverlapView& v1, PartitionedView& v2, ConnectMap<CfgType, WeightType>::NodeConnectionPointer _ncm, MPRegion<CfgType,WeightType>* _region, 
+template<typename PartitionedView, typename OverlapView>
+void p_connect(PartitionedView& v1,OverlapView& v2, ConnectMap<CfgType, WeightType>::NodeConnectionPointer _ncm, MPRegion<CfgType,WeightType>* _region, 
 	LocalPlanners<CfgType, WeightType>* _lp)
 {
 	connect_wf wf(_ncm,_region,_lp);
 	
 	LOG_DEBUG_MSG("ParallelPRMStrategy::p_connect()");
-	
 	stapl::map_func(wf, v1, v2);
+	
 	
 	
 }
@@ -233,7 +242,7 @@ class ParallelPRMRoadmap : public MPStrategyMethod {
 		
 		
 		for(int it =1; it<= m_iterations; ++it)
-		{
+		{       
 			
 			typedef vector<pair<string, int> >::iterator I;
 			
@@ -276,15 +285,17 @@ class ParallelPRMRoadmap : public MPStrategyMethod {
 				ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
 				pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*itr);
 				typedef stapl::p_graph_view_base<RoadmapGraph<CfgType,WeightType> >   VType;
-				VType g_view(rmg);
+				VType g_view(*rmg);
 				stapl::replicated_view<stapl::replicated_container<VType> > voverlap =
                                 stapl::replicate(g_view);
 				stapl::part_native_view<VType>::view_type vnative = 
 				stapl::part_native_view<VType>()(g_view);
 				
 				t2.start();
-				p_connect(voverlap,vnative,pConnection,region,pLp);
+				p_connect(vnative,voverlap,pConnection,region,pLp);
 				connect_timer = t2.stop();
+				for (VI vi=region->GetRoadmap()->m_pRoadmap->begin(); vi!= region->GetRoadmap()->m_pRoadmap->end(); ++vi){  
+				}
 				cout<<"\n processor #["<<stapl::get_location_id()<<"] NodeConnection time  = "  << connect_timer << endl; 
 				
 			}

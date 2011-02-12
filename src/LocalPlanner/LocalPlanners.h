@@ -15,7 +15,9 @@
 #include "Cfg.h"    //for vector<Cfg>, so we can not use forward declaration.
 #include "Weight.h"
 #include "util.h"
-
+#ifdef _PARALLEL
+#include "runtime.h"
+#endif
 
 // Include LocalPlanners
 #include "StraightLine.h"
@@ -36,7 +38,11 @@ struct LPOutput {
 
    
 template <class CFG, class WEIGHT>
+#ifdef _PARALLEL
+class LocalPlanners : public MPBaseObject, public stapl::p_object{
+#else
 class LocalPlanners : MPBaseObject{
+#endif
  public:
   ///Default Constructor.
   LocalPlanners();

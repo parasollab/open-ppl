@@ -7,6 +7,9 @@
 #include "Stat_Class.h"
 #include "CfgTypes.h"
 #include "LabeledObject.h"
+#ifdef _PARALLEL
+#include "runtime.h"
+#endif
 
 class Environment;
 class CollisionDetection;
@@ -26,7 +29,11 @@ class MPProblem;
 /**This is the interface for all node generation methods (prm, obprm, maprm, etc.).
  */
 template< typename CFG>
+#ifdef _PARALLEL
+class SamplerMethod : public LabeledObject, public MPBaseObject,public stapl::p_object { 
+#else
 class SamplerMethod : public LabeledObject, public MPBaseObject { 
+#endif
  public:
 
   //////////////////////////////////////////////////////////////////////////////////////////
