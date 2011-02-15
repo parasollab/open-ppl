@@ -219,12 +219,12 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       typedef vector<string>::iterator I;
       for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
       {
-        vector< CfgType > vectorCfgs, collisionNodes;
+        vector< CfgType > vectorCfgs;
         Sampler<CfgType>::SamplerPointer pNodeGen;
         cout << "reading sampler with label: " << *itr << endl;
         pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(*itr);
         pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, num_nodes, 100*num_nodes,
-        back_inserter(vectorCfgs), back_inserter(collisionNodes));  
+        back_inserter(vectorCfgs));  
         
         cout << "Finished : " << vectorCfgs.size();
         vector<VID> vids =  region->AddToRoadmap(vectorCfgs);
@@ -451,10 +451,9 @@ private:
     Stat_Class _mystat;
     LPOutput<CfgType,WeightType> out_lp_output;
     for(size_t i=0; i<vec_dist_vid.size(); ++i) {
-       CfgType dummy;
       if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->
               IsConnected(GetMPProblem()->GetEnvironment(), _mystat, dm, 
-              _test, (*(_graph.find_vertex(vec_dist_vid[i].second))).property(), dummy, &out_lp_output, 
+              _test, (*(_graph.find_vertex(vec_dist_vid[i].second))).property(), &out_lp_output, 
               GetMPProblem()->GetEnvironment()->GetPositionRes(), 
               GetMPProblem()->GetEnvironment()->GetOrientationRes(),
               true, false, false)) {

@@ -80,8 +80,7 @@ class MPRegionComparerMethod: public MPBaseObject {
    
    sort(in_vec_cfg.begin(), in_vec_cfg.end(), compare_distance<CFG>(in_cfg, dm, env));
    for(CFG_ITRTR i_vec_cfg = in_vec_cfg.begin(); i_vec_cfg < in_vec_cfg.end(); i_vec_cfg++) {
-      CfgType dummy;
-    if (lp->IsConnected(env, Stats, dm, in_cfg, (*i_vec_cfg), dummy,
+    if (lp->IsConnected(env, Stats, dm, in_cfg, (*i_vec_cfg), 
 			  &lp_output, pos_res, ori_res, true)) {
 	return true; // 	stop as soon in_cfg can connect to one cfg in in_vec_cfg
       }
@@ -102,8 +101,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     typedef typename vector< CFG >::iterator CFG_ITRTR;
     for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
       for (CFG_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
-         CfgType dummy;
-	if (lp->IsConnected(env, Stats, dm, (*i_cc_a), (*i_cc_b), dummy,
+	if (lp->IsConnected(env, Stats, dm, (*i_cc_a), (*i_cc_b), 
 			    &lp_output, pos_res, ori_res, true)) {
 	  return true; // st	op as soon as one cc in a can connect to a node in b
 	}

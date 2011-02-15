@@ -69,7 +69,7 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
    typedef vector<pair<string, int> >::iterator GIT;
    for(GIT git = m_NodeGenerationLabels.begin(); git != m_NodeGenerationLabels.end(); ++git){
       Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(git->first);
-      vector<CfgType> outNodes, outCollisionNodes;
+      vector<CfgType> outNodes;
       vector<CfgType> inNodes(git->second);
         
       //generate nodes for this node generator method
@@ -82,7 +82,7 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
 
       do{
          pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),git->second*2+400,
-         back_inserter(outNodes), back_inserter(outCollisionNodes));
+         back_inserter(outNodes));
       }while(outNodes.size()<=0&&m_CurrentIteration==1);
 
       cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;

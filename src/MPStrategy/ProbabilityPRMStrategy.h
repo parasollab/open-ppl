@@ -43,7 +43,7 @@ void ProbabilityPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region
    string NextNodeGen = PickNextSampler();
    Sampler<CfgType>::SamplerPointer pNodeGenerator; 
    pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(NextNodeGen);
-   vector<CfgType> outNodes, outCollisionNodes;
+   vector<CfgType> outNodes;
    vector<CfgType> inNodes(1);
         
    //generate nodes for this node generator method
@@ -54,7 +54,7 @@ void ProbabilityPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region
     
    cout << "\n\t";
    pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),100,
-   back_inserter(outNodes), back_inserter(outCollisionNodes));
+   back_inserter(outNodes));
    
    cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
 

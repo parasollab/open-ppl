@@ -165,6 +165,20 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
             return _Sample(env, Stat, first, last, max_attempts, result);
          }   
 
+      virtual back_insert_iterator<vector<CFG> > 
+         Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
+               back_insert_iterator<vector<CFG> > result)  
+         {
+            return _Sample(env, Stat, num_nodes, max_attempts, result);
+         }
+
+      virtual back_insert_iterator<vector<CFG> > 
+         Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
+               back_insert_iterator<vector<CFG> > result)  
+         {
+            return _Sample(env, Stat, first, last, max_attempts, result);
+         }   
+
       //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
       virtual typename vector<CFG>::iterator 
          Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
@@ -176,6 +190,20 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
       virtual typename vector<CFG>::iterator 
          Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
                typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
+         {
+            return _Sample(env, Stat, first, last, max_attempts, result);
+         }
+         
+      virtual typename vector<CFG>::iterator 
+         Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
+               typename vector<CFG>::iterator result)  
+         {
+            return _Sample(env, Stat, num_nodes, max_attempts, result);
+         }
+
+      virtual typename vector<CFG>::iterator 
+         Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
+               typename vector<CFG>::iterator result)  
          {
             return _Sample(env, Stat, first, last, max_attempts, result);
          }

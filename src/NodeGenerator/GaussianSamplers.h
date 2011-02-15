@@ -182,6 +182,22 @@ class GaussRandomSampler : public SamplerMethod<CFG>
     return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }   
   
+  virtual back_insert_iterator<vector<CFG> > 
+  Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
+         back_insert_iterator<vector<CFG> > result)  
+  {
+    vector<CFG> collision;
+    return _Sample(env, Stat, num_nodes, max_attempts, result, back_inserter(collision));
+  }
+
+  virtual back_insert_iterator<vector<CFG> > 
+  Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
+	 back_insert_iterator<vector<CFG> > result)  
+  {
+    vector<CFG> collision;
+    return _Sample(env, Stat, first, last, max_attempts, result, back_inserter(collision));
+  }   
+
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
@@ -195,6 +211,22 @@ class GaussRandomSampler : public SamplerMethod<CFG>
 	 typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
     return _Sample(env, Stat, first, last, max_attempts, result, collision);
+  }
+  
+  virtual typename vector<CFG>::iterator 
+  Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
+         typename vector<CFG>::iterator result)  
+  {
+    vector<CFG> collision(max_attempts * num_nodes);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision.begin());
+  }
+
+  virtual typename vector<CFG>::iterator 
+  Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
+	 typename vector<CFG>::iterator result)  
+  {
+    vector<CFG> collision(max_attempts * distance(first, last));
+    return _Sample(env, Stat, first, last, max_attempts, result, collision.begin());
   }
 };
 
@@ -402,7 +434,23 @@ void ParseXMLd(XMLNodeReader& in_Node) {
   {
     return _Sample(env, Stat, first, last, max_attempts, result, collision);
   }   
-  
+ 
+  virtual back_insert_iterator<vector<CFG> > 
+  Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts, 
+         back_insert_iterator<vector<CFG> > result)  
+  {
+    vector<CFG> collision;
+    return _Sample(env, Stat, num_nodes, max_attempts, result, back_inserter(collision));
+  }
+
+  virtual back_insert_iterator<vector<CFG> > 
+  Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
+	 back_insert_iterator<vector<CFG> > result)  
+  {
+    vector<CFG> collision;
+    return _Sample(env, Stat, first, last, max_attempts, result, back_inserter(collision));
+  }   
+ 
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
   virtual typename vector<CFG>::iterator 
   Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
@@ -416,6 +464,22 @@ void ParseXMLd(XMLNodeReader& in_Node) {
 	 typename vector<CFG>::iterator result, typename vector<CFG>::iterator collision)  
   {
     return _Sample(env, Stat, first, last, max_attempts, result, collision);
+  }
+  
+  virtual typename vector<CFG>::iterator 
+  Sample(Environment* env, Stat_Class& Stat, int num_nodes, int max_attempts,
+         typename vector<CFG>::iterator result)  
+  {
+    vector<CFG> collision(max_attempts * num_nodes);
+    return _Sample(env, Stat, num_nodes, max_attempts, result, collision.begin());
+  }
+
+  virtual typename vector<CFG>::iterator 
+  Sample(Environment* env, Stat_Class& Stat, typename vector<CFG>::iterator first, typename vector<CFG>::iterator last, int max_attempts,
+	 typename vector<CFG>::iterator result)  
+  {
+    vector<CFG> collision(max_attempts * distance(first, last));
+    return _Sample(env, Stat, first, last, max_attempts, result, collision.begin());
   }
 };
 

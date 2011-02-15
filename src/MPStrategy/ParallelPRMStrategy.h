@@ -76,13 +76,13 @@ class sample_wf
 		
 		int num_nodes = view.size();
 		vector<CfgType> outNodes;
-		vector<CfgType> inNodes(num_nodes),outCollisionNodes;
+		vector<CfgType> inNodes(num_nodes);
 		LOG_DEBUG_MSG("ParallelPRMStrategy::sample_wf- view.size= " << view.size());
 		
 		Environment* _env = const_cast<Environment*>(env);
 		
 		pNodeGen->Sample(_env,*(region->GetStatClass()),inNodes.begin(),inNodes.end(), 100, 
-			         back_inserter(outNodes),back_inserter(outCollisionNodes));
+			         back_inserter(outNodes));
 		
 		size_t j(0);
 		typedef vector<CfgType>::iterator VIT;

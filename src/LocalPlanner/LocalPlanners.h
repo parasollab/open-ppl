@@ -76,6 +76,17 @@ class LocalPlanners : MPBaseObject{
        bool checkCollision=true, 
        bool savePath=false, bool saveFailedPath=false);
 
+  bool IsConnected(Environment *env, Stat_Class& Stats,
+       shared_ptr<DistanceMetricMethod> dm,
+       CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput, 
+       double positionRes, double orientationRes, 
+       bool checkCollision=true, 
+       bool savePath=false, bool saveFailedPath=false)
+  {
+    CFG _col;
+    return IsConnected(env, Stats, dm, _c1, _c2, _col, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+  }
+
   bool IsConnected(Roadmap<CFG, WEIGHT> *rm, Stat_Class& Stats,
        shared_ptr <DistanceMetricMethod>dm,
        CFG _c1, CFG _c2, CFG &_col, LPOutput<CFG, WEIGHT> *lpOutput,
@@ -83,12 +94,34 @@ class LocalPlanners : MPBaseObject{
        bool checkCollision=true, 
        bool savePath=false, bool saveFailedPath=false);
 
+  bool IsConnected(Roadmap<CFG, WEIGHT> *rm, Stat_Class& Stats,
+       shared_ptr <DistanceMetricMethod>dm,
+       CFG _c1, CFG _c2, LPOutput<CFG, WEIGHT> *lpOutput,
+       double positionRes, double orientationRes, 
+       bool checkCollision=true, 
+       bool savePath=false, bool saveFailedPath=false)
+  {
+    CFG _col;
+    return IsConnected(rm, Stats, dm, _c1, _c2, _col, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+  }
+
   bool IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats, 
        shared_ptr<DistanceMetricMethod>dm,
        CFG _c1, CFG _c2, CFG &_col, LPOutput<CFG,WEIGHT>* lpOutput,
        double positionRes, double orientationRes, 
        bool checkCollision=true, 
        bool savePath=false, bool saveFailedPath=false);
+
+  bool IsConnected(unsigned int lpid, Environment *_env, Stat_Class& Stats, 
+       shared_ptr<DistanceMetricMethod>dm,
+       CFG _c1, CFG _c2, LPOutput<CFG,WEIGHT>* lpOutput,
+       double positionRes, double orientationRes, 
+       bool checkCollision=true, 
+       bool savePath=false, bool saveFailedPath=false)
+  {
+    CFG _col;
+    return IsConnected(lpid, _env, Stats, dm, _c1, _c2, _col, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+  }
 
   bool UsesPlannerOtherThan(char plannerName[]);
 
