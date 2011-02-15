@@ -221,14 +221,12 @@ void HybridPRM::Run(int in_RegionID){
 
             ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
             connectmap->GetNodeMethod(*itr)->clear_connection_attempts();
-            vector<CfgType> collision;
             connectmap->ConnectNodes(connectmap->GetNodeMethod(*itr), region->GetRoadmap(), *pStatClass, 
                                      GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), 
                                      GetMPProblem()->GetMPStrategy()->addPartialEdge,
                                      GetMPProblem()->GetMPStrategy()->addAllEdges,
                                      new_free_vid.begin(), new_free_vid.end(),
-                                     map_vids.begin(), map_vids.end(),
-                                     back_inserter(collision)); 
+                                     map_vids.begin(), map_vids.end()); 
             connection_attempts.insert(connection_attempts.end(), 
                                        connectmap->GetNodeMethod(*itr)->connection_attempts_begin(), 
                                        connectmap->GetNodeMethod(*itr)->connection_attempts_end());

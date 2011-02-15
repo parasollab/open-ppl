@@ -139,15 +139,13 @@ Run(int in_RegionID)
         
     vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer >::iterator itr;
     for (itr = methods.begin(); itr != methods.end(); itr++){
-       vector<CfgType> collision;
       m_SmoothConnectMap.ConnectNodes(
                            *itr,
                            rdmp, *pStatClass,
                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            false, false,
                            path_vids.begin(), path_vids.end(),
-                           path_vids.begin(), path_vids.end(),
-                           back_inserter(collision));
+                           path_vids.begin(), path_vids.end());
     }
     SmoothClock.StopPrintClock();
 

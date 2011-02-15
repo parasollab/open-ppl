@@ -342,15 +342,13 @@ void BasicRRTStrategy::ConnectComponents(MPRegion<CfgType, WeightType>* region) 
     ComponentConnSubClock.StartClock(connectorClockName.str().c_str());
     
     cout << "\n\t";
-    vector<CfgType> collision;
     GetMPProblem()->GetMPStrategy()->
       GetConnectMap()->ConnectComponents(pConnection,
 					 region->GetRoadmap(), 
 					 *(region->GetStatClass()),
 					 GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
 					 GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-					 GetMPProblem()->GetMPStrategy()->addAllEdges,
-                                         back_inserter(collision));
+					 GetMPProblem()->GetMPStrategy()->addAllEdges);
     
     cmap.reset();
     cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 

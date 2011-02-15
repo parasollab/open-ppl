@@ -135,13 +135,22 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
 ///
 ///
 
-   template<typename OutputIterator>
+  template<typename OutputIterator>
   void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges, OutputIterator collision) {
       //cout << "ConnectMap::ConnectNodes() - Roadmap only" << endl;
- }
+  }
+
+  void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        LocalPlanners<CFG,WEIGHT>* lp,
+        bool addPartialEdge, bool addAllEdges) 
+  {
+    vector<CFG> collision;
+    return ConnectNodes(selected, _rm, Stats, lp, addPartialEdge, addAllEdges, back_inserter(collision));
+  }
 
   template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
@@ -154,8 +163,18 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
                     _itr1_first, _itr1_last, collision,
                     typename NodeConnectionContainer::MethodTypes_begin(), 
                     typename NodeConnectionContainer::MethodTypes_end());
- }
+  }
 
+  template<typename InputIterator>
+  void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        LocalPlanners<CFG,WEIGHT>* lp,
+        bool addPartialEdge, bool addAllEdges,
+        InputIterator _itr1_first, InputIterator _itr1_last) 
+  {
+    vector<CFG> collision;
+    return ConnectNodes(selected, _rm, Stats, lp, addPartialEdge, addAllEdges, _itr1_first, _itr1_last, back_inserter(collision));
+  }
 
   template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
@@ -169,9 +188,21 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
                     _itr1_first, _itr1_last, _itr2_first, _itr2_last, collision,
                     typename NodeConnectionContainer::MethodTypes_begin(), 
                     typename NodeConnectionContainer::MethodTypes_end());
- }
+  }
  
- template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
+  template<typename InputIterator>
+  void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+                   LocalPlanners<CFG,WEIGHT>* lp, 
+		    bool addPartialEdge, bool addAllEdges,
+		    InputIterator _itr1_first, InputIterator _itr1_last,
+        InputIterator _itr2_first, InputIterator _itr2_last) 
+  {
+    vector<CFG> collision;
+    return ConnectNodes(selected, _rm, Stats, lp, addPartialEdge, addAllEdges, _itr1_first, _itr1_last, back_inserter(collision));
+  }
+ 
+  template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
   void pConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                    LocalPlanners<CFG,WEIGHT>* lp, 
@@ -183,11 +214,21 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
                     _itr1_first, _itr1_last, _itr2_first, _itr2_last, collision,
                     typename NodeConnectionContainer::MethodTypes_begin(), 
                     typename NodeConnectionContainer::MethodTypes_end());
- }
+  }
 
+  template<typename InputIterator1, typename InputIterator2>
+  void pConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
+        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+                   LocalPlanners<CFG,WEIGHT>* lp, 
+		    bool addPartialEdge, bool addAllEdges,
+		    InputIterator1 _itr1_first, InputIterator1 _itr1_last,
+        InputIterator2 _itr2_first, InputIterator2 _itr2_last) 
+  {
+    vector<CFG> collision;
+    return pConnectNodes(selected, _rm, Stats, lp, addPartialEdge, addAllEdges, _itr1_first, _itr1_last, _itr2_first, _itr2_last, back_inserter(collision));
+  }
 
-
-  private:
+ private:
   
   //implements the function call dispatching (b/c no support for templated virtual functions)
   template <typename InputIterator, typename OutputIterator, typename First, typename Last>
@@ -272,7 +313,7 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
 ///
 
 public:
-   template<typename OutputIterator>
+  template<typename OutputIterator>
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
        Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
        LocalPlanners<CFG,WEIGHT>* lp,
@@ -281,6 +322,15 @@ public:
        _ConnectComponents(selected, rm, Stats, lp, addPartialEdge, addAllEdges, collision,
           typename ComponentConnectionContainer::MethodTypes_begin(),
           typename ComponentConnectionContainer::MethodTypes_end());
+  }
+
+  void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
+       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       LocalPlanners<CFG,WEIGHT>* lp,
+       bool addPartialEdge, bool addAllEdges) 
+  {
+    vector<CFG> collision;
+    return ConnectComponents(selected, rm, Stats, lp, addPartialEdge, addAllEdges, back_inserter(collision));
   }
 
   template<typename InputIterator, typename OutputIterator>
@@ -296,6 +346,17 @@ public:
           typename ComponentConnectionContainer::MethodTypes_end());
   }
 
+  template<typename InputIterator>
+  void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
+       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       LocalPlanners<CFG,WEIGHT>* lp,
+       bool addPartialEdge, bool addAllEdges,
+       InputIterator _itr1_first, InputIterator _itr1_last) 
+  {
+    vector<CFG> collision;
+    return ConnectComponents(selected, rm, Stats, lp, addPartialEdge, addAllEdges, _itr1_first, _itr1_last, back_inserter(collision));
+  }
+  
   template<typename InputIterator, typename OutputIterator>
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
        Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
@@ -308,6 +369,18 @@ public:
         _itr1_first, _itr1_last, _itr2_first, _itr2_last, collision,
           typename ComponentConnectionContainer::MethodTypes_begin(),
           typename ComponentConnectionContainer::MethodTypes_end());
+  }
+ 
+  template<typename InputIterator>
+  void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
+       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+	        	 LocalPlanners<CFG,WEIGHT>* lp,
+			 bool addPartialEdge, bool addAllEdges,
+			 InputIterator _itr1_first, InputIterator _itr1_last,
+       InputIterator _itr2_first, InputIterator _itr2_last) 
+  {
+    vector<CFG> collision;
+    return ConnectComponents(selected, rm, Stats, lp, addPartialEdge, addAllEdges, _itr1_first, _itr1_last, _itr2_first, _itr2_last, back_inserter(collision));
   }
 
 private:

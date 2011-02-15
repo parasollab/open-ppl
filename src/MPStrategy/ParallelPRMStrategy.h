@@ -130,7 +130,6 @@ class connect_wf {
 		typename OverlapView::vertex_iterator ov_last = v2.end();
 		
 		LocalPlanners<CfgType,WeightType>* __lp = const_cast<LocalPlanners<CfgType,WeightType>*>(lp);
-		vector<CfgType> collision;
 		
 		
 		pNodeCon->GetConnectMap()->pConnectNodes(pNodeCon,
@@ -139,7 +138,7 @@ class connect_wf {
 			lp,
 			false,false,
 			pv_first,pv_last,
-			ov_first, ov_last,back_inserter(collision));
+			ov_first, ov_last);
 		
 	}
 	

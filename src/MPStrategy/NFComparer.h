@@ -927,12 +927,11 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
                ConnectMap<CfgType,WeightType>::NodeConnectionPointer pConnection;
                pConnection = connectmap->GetNodeMethod(*itr);
                cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
-               vector<CfgType> collision;
                connectmap->ConnectNodes(pConnection, region->GetRoadmap(), *pStatClass, 
                      GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                      GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                      GetMPProblem()->GetMPStrategy()->addAllEdges,
-                     newVids.begin(), newVids.end(), back_inserter(collision));
+                     newVids.begin(), newVids.end());
             }
 
             ConnectionClock.StopClock();

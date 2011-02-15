@@ -183,7 +183,6 @@ void BasicPRMStrategy::ConnectNodes(MPRegion<CfgType, WeightType>* region,
     
       cout << "\n\t";
       vector<VID> nodesVID(thisIterationNodesVID.begin(), thisIterationNodesVID.end());
-      vector<CfgType> collision;
       GetMPProblem()->GetMPStrategy()->
          GetConnectMap()->ConnectNodes(pConnection,
                                        region->GetRoadmap(), *(region->GetStatClass()),
@@ -191,8 +190,7 @@ void BasicPRMStrategy::ConnectNodes(MPRegion<CfgType, WeightType>* region,
                                        GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                        GetMPProblem()->GetMPStrategy()->addAllEdges,
                                        nodesVID.begin(), nodesVID.end(), 
-                                       allNodesVID.begin(), allNodesVID.end(),
-                                       back_inserter(collision));
+                                       allNodesVID.begin(), allNodesVID.end());
       cmap.reset();
       cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
            << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
@@ -221,15 +219,13 @@ void BasicPRMStrategy::ConnectComponents(MPRegion<CfgType, WeightType>* region)
       ComponentConnSubClock.StartClock(connectorClockName.str().c_str());
     
       cout << "\n\t";
-      vector<CfgType> collision;
       GetMPProblem()->GetMPStrategy()->
          GetConnectMap()->ConnectComponents(pConnection,
                                             region->GetRoadmap(), 
                                             *(region->GetStatClass()),
                                             GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                             GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-                                            GetMPProblem()->GetMPStrategy()->addAllEdges,
-                                            back_inserter(collision));
+                                            GetMPProblem()->GetMPStrategy()->addAllEdges);
       
       cmap.reset();
       cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
