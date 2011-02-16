@@ -46,7 +46,7 @@ public:
   
   //inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
   //inline Roadmap<CfgType,WeightType>* GetColRoadmap() {return &rmp_col;};
-  int CreateMPRegion();
+  virtual int CreateMPRegion();
   MPRegion<CfgType,WeightType>* GetMPRegion(int);
 
   void SetNumOfJoints(int num_of_joints) {
