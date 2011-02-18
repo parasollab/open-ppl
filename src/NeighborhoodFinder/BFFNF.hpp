@@ -153,6 +153,8 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
   InputIterator _in1_first, InputIterator _in1_last,
   InputIterator _in2_first, InputIterator _in2_last,
   int k, OutputIterator _out) {
+  cerr << "Warning, KClosestPairs not  implemented yet\n";
+  exit(-1);
 }
 
 #endif //end #ifndef _BRUTE_FORCE_FIND_NEIGHBORHOOD_FINDER_H_
