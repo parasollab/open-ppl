@@ -9,6 +9,21 @@
 #include "Roadmap.h"
 #include "MPProblem.h"
 
+class EESContainer : public MPSMContainer {
+public:
+  EESContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+    vector<string> files;
+    string outfile;
+    int interval;
+    int queries;
+    double resolution;
+    double epsilon;
+    double mu;
+    MPSMContainer parent;
+
+};
+
+
 
 class EdgeExpanderStats : public MPStrategyMethod {
   private:
@@ -24,7 +39,16 @@ class EdgeExpanderStats : public MPStrategyMethod {
   public:
     int mpl;
     typedef RoadmapGraph<CfgType, WeightType>::VID VID;
-    
+    EdgeExpanderStats(EESContainer cont) : MPStrategyMethod(cont) {
+    files = cont.files;;
+    outfile = cont.outfile;
+    interval = cont.interval;
+    queries = cont.queries;
+    resolution = cont.resolution;
+    epsilon = cont.epsilon;
+    mu = cont.mu;
+
+}
     EdgeExpanderStats(XMLNodeReader& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
       ParseXML(in_Node);
     }

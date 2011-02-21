@@ -73,11 +73,49 @@ template <class T>
 struct __CCVID_Compare : public std::binary_function<T, T, bool> {
   bool operator()(T x, T y) { return x.first > y.first; }
 };
+
+class BIRContainer : public MPSMContainer {
+public:
+  BIRContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+  vector<string> m_vecStrNodeGenLabels;
+  vector<string> m_vecStrNodeConnectionLabels;
+  vector<string> m_vecStrComponentConnectionLabels;
+  vector<string> m_vecNodeCharacterizerLabels;
+  NeighborhoodFinder::NeighborhoodFinderPointer m_NF;
+  string m_strLocalPlannerLabel;
+//  string m_nfStats;
+  vector<CfgType> m_vecWitnessNodes;
+  string m_queryFilename;
+  int m_stepSize;
+  double m_posRes;
+  int m_RegionNdx;
+  bool resize_bbox;
+  shared_ptr<DistanceMetricMethod> dm;
+  MPSMContainer parent;
+
+};
+
  
 class BandsIncrementalRoadmap : public MPStrategyMethod {
   public:
    typedef RoadmapGraph<CfgType, WeightType>::VID VID;   
-    
+  BandsIncrementalRoadmap(BIRContainer cont) : MPStrategyMethod(cont.parent) {
+  m_vecStrNodeGenLabels = cont.m_vecStrNodeGenLabels;
+  m_vecStrNodeConnectionLabels = cont.m_vecStrNodeConnectionLabels;
+  m_vecStrComponentConnectionLabels = cont.m_vecStrComponentConnectionLabels;
+  m_vecNodeCharacterizerLabels = cont.m_vecNodeCharacterizerLabels;
+  m_NF = cont.m_NF;
+  m_strLocalPlannerLabel = cont.m_strLocalPlannerLabel;
+//  string m_nfStats;
+  m_vecWitnessNodes = cont.m_vecWitnessNodes;
+  m_queryFilename = cont.m_queryFilename;
+  m_stepSize = cont.m_stepSize;
+  m_posRes = cont.m_posRes;
+  m_RegionNdx = cont.m_RegionNdx;
+  resize_bbox = cont.resize_bbox;
+  dm = cont.dm;
+
+}  
   BandsIncrementalRoadmap(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPStrategyMethod(in_Node,in_pProblem) {
     LOG_DEBUG_MSG("BandsIncrementalRoadmap::BandsIncrementalRoadmap()");
@@ -518,6 +556,24 @@ private:
 //
 //  it also computes the connectivity stats and others (scale-free, expansion)
 //@note we are no longer computing 1 and 2 above by default , the compute_dist_neighbor need to be set to do this
+
+class BSContainer : public MPSMContainer {
+public:
+  BSContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+    string input_map_filename;
+    string ideal_map_filename;
+    string out_filename;
+    string out_filename_dist;
+    string out_filename_num_neighbors;
+    bool compute_dist_neighbor;
+    int interval;
+    int k;
+    double dist;
+    EdgeExpanderStats *ExpanderStatsClass;
+    MPSMContainer parent;
+
+};
+
 class BandsStats : public MPStrategyMethod {
  	private:
   	string input_map_filename;
@@ -532,7 +588,20 @@ class BandsStats : public MPStrategyMethod {
     EdgeExpanderStats *ExpanderStatsClass;
 	public:
   	typedef RoadmapGraph<CfgType, WeightType>::VID VID;
-  
+       BandsStats(BSContainer cont) : MPStrategyMethod(cont.parent) {
+        input_map_filename = cont.input_map_filename;
+   	ideal_map_filename = cont.ideal_map_filename;
+    	out_filename = cont.out_filename;
+    	out_filename_dist = cont.out_filename_dist;
+    	out_filename_num_neighbors = cont.out_filename_num_neighbors;
+    	compute_dist_neighbor = cont.compute_dist_neighbor;
+    	interval = cont.interval;
+    	k = cont.k;
+    	dist = cont.dist;
+    	ExpanderStatsClass = cont.ExpanderStatsClass;
+
+ 
+}
 		BandsStats(XMLNodeReader& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
 			ParseXML(in_Node);   
 			ExpanderStatsClass = new EdgeExpanderStats(in_Node, problem);

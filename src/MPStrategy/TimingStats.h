@@ -9,6 +9,19 @@
 #include "util.h"
 #include "MPProblem.h"
 
+class RTSContainer : public MPSMContainer {
+public:
+  RTSContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+    vector<string> files;
+    vector<string> method_names;
+    string outfile;
+    int interval;
+    int queries;
+    int k;
+    int getOnlyAt;
+    MPSMContainer parent;
+
+};
 
 class RoadmapTimingStats : public MPStrategyMethod {
   private:
@@ -22,7 +35,15 @@ class RoadmapTimingStats : public MPStrategyMethod {
 
   public:
     typedef RoadmapGraph<CfgType, WeightType>::VID VID;
-    
+    RoadmapTimingStats(RTSContainer cont) : MPStrategyMethod(cont.parent) {
+      files = cont.files;
+      method_names = cont.method_names;
+      outfile = cont.outfile;
+      interval = cont.interval;
+      queries = cont.queries;
+      k = cont.k;
+      getOnlyAt = cont.getOnlyAt;
+}
     RoadmapTimingStats(XMLNodeReader& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
       ParseXML(in_Node);
     }

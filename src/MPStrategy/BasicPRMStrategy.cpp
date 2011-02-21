@@ -2,6 +2,8 @@
 #include "MPProblem/MPRegion.h"
 #include "MPStrategy/MPStrategy.h"
 
+BasicPRMStrategy::
+
 BasicPRMStrategy::BasicPRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited) :
    MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
    //read input

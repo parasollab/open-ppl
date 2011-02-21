@@ -15,10 +15,37 @@
 #include "MPRegion.h"
 #include "Sampler.h"
 
+class BPSContainer : public MPSMContainer {
+public:
+  BPSContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+  vector<pair<string, int> > m_NodeGenerationLabels;
+   vector<string> m_NodeConnectionLabels;
+   vector<string> m_ComponentConnectionLabels;
+   vector<string> m_EvaluatorLabels;
+   string m_LPMethod;
+   string dm_label;
+   int m_CurrentIteration;
+   Clock_Class MapGenClock;
+   MPSMContainer parent;
+
+};
+
 
 class BasicPRMStrategy : public MPStrategyMethod 
 {
  public:
+  BasicPRMStrategy(BPSContainer cont) : MPStrategyMethod(cont.parent) {
+   m_NodeGenerationLabels = cont.m_NodeGenerationLabels;
+   m_NodeConnectionLabels = cont.m_NodeConnectionLabels;
+   m_ComponentConnectionLabels = cont.m_ComponentConnectionLabels;
+   m_EvaluatorLabels = cont.m_EvaluatorLabels;
+   m_LPMethod = cont.m_LPMethod;
+   dm_label = cont.dm_label;
+   m_CurrentIteration = cont.m_CurrentIteration;
+   MapGenClock = cont.MapGenClock;
+
+};
+
    BasicPRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited=false);
    virtual ~BasicPRMStrategy();
 

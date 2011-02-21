@@ -30,11 +30,22 @@
 
 #include "MPStrategy/MPStrategyMethod.h"
 
+    class RIContainer : public MPSMContainer {
+public:
+   RIContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+   string m_strInputFileName;
+   MPSMContainer parent;
+
+};
+
+
 class RoadmapInput : public MPStrategyMethod {
   public:
     
-    
-  RoadmapInput(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+   RoadmapInput(RIContainer cont) : MPStrategyMethod(cont.parent) {
+    m_strInputFileName = cont.m_strInputFileName;
+} 
+   RoadmapInput(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPStrategyMethod(in_Node,in_pProblem) {
     LOG_DEBUG_MSG("RoadmapInput::RoadmapInput()");
     ParseXML(in_Node);    
@@ -61,7 +72,7 @@ class RoadmapInput : public MPStrategyMethod {
       OBPRM_srand(getSeed()); 
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
       
-      region->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strInputFileName.c_str());
+     
       
       LOG_DEBUG_MSG("~PRMInput::()");
     }
@@ -75,7 +86,7 @@ class RoadmapInput : public MPStrategyMethod {
 
 class RoadmapClear : public MPStrategyMethod {
  public:
-    
+  RoadmapClear(MPSMContainer cont) : MPStrategyMethod(cont) {}  
   RoadmapClear(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPStrategyMethod(in_Node,in_pProblem) {
     LOG_DEBUG_MSG("RoadmapClear::RoadmapClear()");

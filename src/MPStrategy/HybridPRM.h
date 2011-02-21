@@ -36,10 +36,56 @@ struct NodeTypeCounts
 };
 
 
+
+class HContainer : public MPSMContainer {
+public:
+ HContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+  vector<string> m_node_gen_labels;
+  vector<string> m_node_conn_labels;
+  vector<string> m_evaluator_labels;
+  map<string,double> m_node_gen_weights;
+  map<string,double> m_node_gen_probabilities;
+  map<string,double> m_node_gen_probabilities_uniform;
+  map<string,double> m_node_gen_probabilities_use;
+  map<string,double> m_node_gen_probabilities_no_cost;
+  map<string, unsigned long int> m_node_gen_costs;
+  map<string,int> m_node_gen_num_sampled;
+  map<string,int> m_node_gen_num_oversampled;
+  double m_percentage_random; //lambda
+  double m_window_percent;
+  bool m_count_cost;
+  bool m_fixed_cost;
+  bool m_resetting_learning;
+  int m_bin_size;
+  string m_sampler_selection_distribution;
+  MPSMContainer parent;
+};
+
+
 class HybridPRM : public MPStrategyMethod 
 {
  public:
+  HybridPRM(HContainer cont) : MPStrategyMethod(cont.parent) {
+  m_node_gen_labels = cont.m_node_gen_labels;
+  m_node_conn_labels = cont.m_node_conn_labels;
+  m_evaluator_labels = cont.m_evaluator_labels;
+  m_node_gen_weights = cont.m_node_gen_weights;
+  m_node_gen_probabilities = cont.m_node_gen_probabilities;
+  m_node_gen_probabilities_uniform = cont.m_node_gen_probabilities_uniform;
+  m_node_gen_probabilities_use = cont.m_node_gen_probabilities_use;
+  m_node_gen_probabilities_no_cost = cont.m_node_gen_probabilities_no_cost;
+  m_node_gen_costs = cont.m_node_gen_costs;
+  m_node_gen_num_sampled = cont.m_node_gen_num_sampled;
+  m_node_gen_num_oversampled = cont.m_node_gen_num_oversampled;
+  m_percentage_random = cont.m_percentage_random; //lambda
+  m_window_percent = cont.m_window_percent;
+  m_count_cost = cont.m_count_cost;
+  m_fixed_cost = cont.m_fixed_cost;
+  m_resetting_learning = cont.m_resetting_learning;
+  m_bin_size = cont.m_bin_size;
+  m_sampler_selection_distribution = cont.m_sampler_selection_distribution;
 
+  }
   HybridPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~HybridPRM();
 

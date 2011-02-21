@@ -65,6 +65,19 @@ struct unionStats{
    int sameCCSizes[5];
 };
 
+class NFURContainer : public MPSMContainer {
+public:
+  NFURContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+      vector<string> files;
+      string outfile;
+      int interval;
+      int queries;
+      string dm_label;
+      MPSMContainer parent;
+
+};
+
+
 //NFUnionRoadmap
 class NFUnionRoadmap : public MPStrategyMethod {
    private:
@@ -75,7 +88,14 @@ class NFUnionRoadmap : public MPStrategyMethod {
       string dm_label;
    public:
       typedef RoadmapGraph<CfgType, WeightType>::VID VID;
+      NFUnionRoadmap(NFURContainer cont) : MPStrategyMethod(cont.parent) {
+      files = cont.files;
+      outfile = cont.outfile;
+      interval = cont.interval;
+      queries = cont.queries;
+      dm_label = cont.dm_label;
 
+}
       NFUnionRoadmap(XMLNodeReader& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
          ParseXML(in_Node);   
       }
@@ -535,6 +555,16 @@ class NFUnionRoadmap : public MPStrategyMethod {
       virtual void Finalize(int in_RegionID){}
 
 };
+class NFRCContainer : public MPSMContainer {
+public:
+      NFRCContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+      vector<string> files;
+      string outfile;
+      int interval;
+      int queries;
+      string dm_label;
+      MPSMContainer parent;
+};
 
 
 class NFRoadmapCompare : public MPStrategyMethod {
@@ -546,7 +576,14 @@ class NFRoadmapCompare : public MPStrategyMethod {
       string dm_label;
    public:
       typedef RoadmapGraph<CfgType, WeightType>::VID VID;
+      NFRoadmapCompare(NFRCContainer cont) : MPStrategyMethod(cont) {
+      files = cont.files;
+      outfile = cont.outfile;
+      interval = cont.interval;
+      queries = cont.queries;
+      dm_label = cont.dm_label;
 
+}
       NFRoadmapCompare(XMLNodeReader& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
          ParseXML(in_Node);
       }

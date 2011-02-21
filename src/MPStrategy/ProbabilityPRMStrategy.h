@@ -7,9 +7,20 @@
 #include "Sampler.h"
 #include "MPStrategy/MPStrategy.h"
 
+class PPRMSContainer : public BPSContainer {
+public:
+  PPRMSContainer (BPSContainer cont = BPSContainer()) : BPSContainer(cont), parent(cont.parent) {} //Container for more readabble MPStrategyMethod constructor
+	vector<pair<string, double> > m_NodeGenerationLabels;
+	BPSContainer parent;
+};
+
+
 class ProbabilityPRMStrategy : public BasicPRMStrategy
 {
  public:
+   ProbabilityPRMStrategy(PPRMSContainer cont) : BasicPRMStrategy(cont.parent) {
+   m_NodeGenerationLabels = cont.m_NodeGenerationLabels;
+} 
    ProbabilityPRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem);
    virtual ~ProbabilityPRMStrategy();
 

@@ -28,7 +28,9 @@ class Features;
 
 class MPStrategy : public MPBaseObject
 {
-public: 
+public:
+/*  MPStrategy(Sampler<CfgType> _m_pNodeGeneration, ConnectMap<CfgType, WeightType> _m_pConnection, LocalPlanners<CfgType, WeightType> _m_pLocalPlanners, MapEvaluator<CfgType, WeightType> _m_Evaluator, MPCharacterizer<CfgType, WeightType> _m_pCharacterizer, Features* _m_Features, PartitioningMethods* _m_PartitioningMethods, PartitioningEvaluators* _m_PartitioningEvaluators);
+ */
   MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
   virtual ~MPStrategy () {}
   
@@ -100,10 +102,27 @@ public:
 #include "MPStrategy/UAStrategy.h"
 #endif
 
+class MPCContainer : public MPSMContainer {
+public:
+  MPCContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+   vector<string> m_input_methods;
+   vector<string> m_comparer_methods;
+   MPSMContainer parent;
+
+};
+
 
 class MPComparer : public MPStrategyMethod {
-  
+ 
+
+
+ 
 public: 
+  MPComparer(MPCContainer cont) : MPStrategyMethod(cont.parent) {
+  m_input_methods = cont.m_input_methods;
+  m_comparer_methods = cont.m_comparer_methods;
+
+}
   MPComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~MPComparer() {}
   
@@ -123,11 +142,21 @@ public:
   vector<string> m_comparer_methods;
 };
 
+class MPMSContainer : public MPSMContainer {
+public:
+  MPMSContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+  vector< string > m_strategy_methods; 
+  MPSMContainer parent;
+
+};
 
 
 class MPMultiStrategy : public MPStrategyMethod {
   
 public: 
+  MPMultiStrategy(MPMSContainer cont) : MPStrategyMethod(cont.parent) {
+  m_strategy_methods = cont.m_strategy_methods;
+}
   MPMultiStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~MPMultiStrategy() {}
   
