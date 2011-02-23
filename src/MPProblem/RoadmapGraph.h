@@ -168,55 +168,35 @@ struct dkinfo_compare {
 };
 
 
-
-template <typename VI>
+template <typename VertexIterator>
 class vertex_descriptor_iterator
+  : public boost::iterator_adaptor<
+                                   vertex_descriptor_iterator<VertexIterator>   //Derived
+                                   , VertexIterator                             //Base
+                                   , typename VertexIterator::vertex_descriptor //Value
+                                   , boost::use_default                         //CategoryOrTraversal
+                                   , typename VertexIterator::vertex_descriptor //Reference
+                                  >
 {
- private:
-  VI vertex_iterator;
-  typedef typename VI::vertex_descriptor descriptor_type;
-
  public:
-  vertex_descriptor_iterator() {}
-  vertex_descriptor_iterator(const VI& vi) : vertex_iterator(vi) {}
-  vertex_descriptor_iterator(const vertex_descriptor_iterator& vdi) : vertex_iterator(vdi.vertex_iterator) {}
-  ~vertex_descriptor_iterator() {}
-
-  bool operator==(const vertex_descriptor_iterator& other) const { return vertex_iterator == other.vertex_iterator; }
-  bool operator!=(const vertex_descriptor_iterator& other) const { return vertex_iterator != other.vertex_iterator; }
-
-  bool operator<(const vertex_descriptor_iterator& other) const { return vertex_iterator < other.vertex_iterator; }
-  bool operator<=(const vertex_descriptor_iterator& other) const { return vertex_iterator <= other.vertex_iterator; }
+  vertex_descriptor_iterator()
+    : vertex_descriptor_iterator::iterator_adaptor_() 
+  {}
   
-  bool operator>(const vertex_descriptor_iterator& other) const { return vertex_iterator > other.vertex_iterator; }
-  bool operator>=(const vertex_descriptor_iterator& other) const { return vertex_iterator >= other.vertex_iterator; }
+  explicit vertex_descriptor_iterator(VertexIterator vi)
+    : vertex_descriptor_iterator::iterator_adaptor_(vi)
+  {}
+  
+  template <typename OtherVertexIterator>
+  vertex_descriptor_iterator(vertex_descriptor_iterator<OtherVertexIterator> const other)
+    : vertex_descriptor_iterator::iterator_adaptor_(other.base())
+  {}
 
-  vertex_descriptor_iterator operator++() 
+  //overload dereference to call descriptor() instead
+  typename VertexIterator::vertex_descriptor dereference() const
   { 
-    vertex_iterator++; 
-    return *this; 
+    return this->base()->descriptor(); 
   }
-  vertex_descriptor_iterator operator++(int) 
-  { 
-    vertex_descriptor_iterator tmp = *this; 
-    ++vertex_iterator; 
-    return tmp; 
-  }
- 
-  vertex_descriptor_iterator operator--() 
-  { 
-    vertex_iterator--; 
-    return *this; 
-  }
-  vertex_descriptor_iterator operator--(int) 
-  { 
-    vertex_descriptor_iterator tmp = *this; 
-    --vertex_iterator; 
-    return tmp; 
-  }
- 
-  const descriptor_type& operator*() const { return (*vertex_iterator).descriptor(); }
-  descriptor_type* operator->() { return &((*vertex_iterator).descriptor()); }
 };
 
 
@@ -275,6 +255,7 @@ typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT
 typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::adj_edge_iterator EI;
 #endif 
 typedef vertex_descriptor_iterator<VI> VDI;
+typedef vertex_descriptor_iterator<CVI> CVDI;
 typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -401,6 +382,8 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
 
    VDI descriptor_begin() { return VDI(this->begin()); }
    VDI descriptor_end() { return VDI(this->end()); }
+   CVDI descriptor_begin() const { return CVDI(this->begin()); }
+   CVDI descriptor_end() const { return CVDI(this->end()); }
 
    RoadmapVCS<VERTEX, WEIGHT> roadmapVCS;
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -509,14 +492,15 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddVertex(vector<VERTEX>& _v) {
 #endif
     bool added=false;
-    VID vertex_id; //=this->GetNextVID(); fix_lantao
-    for (int i = 0; i < _v.size(); i++){
+    VID vertex_id = INVALID_VID; //=this->GetNextVID(); fix_lantao
+    for (size_t i = 0; i < _v.size(); i++){
         if (!IsVertex(_v[i])){
           VID v_id = GRAPH::add_vertex(_v[i]);
           ChangeEvent event(ChangeEvent::ADD_VERTEX, _v[i], v_id);
           //cout << "Adding through vector" << endl;
           roadmapVCS.addEvent(event);
           added=true;
+          vertex_id = v_id;
         } else {
 #ifndef QUIETGRAPH
             cout << "\nIn AddVertex: vertex already in graph, not added";
