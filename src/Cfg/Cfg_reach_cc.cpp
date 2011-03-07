@@ -58,6 +58,8 @@ Cfg_reach_cc(const Vector6D& base,
   v.push_back(base.getPitch());
   v.push_back(base.getYaw());
   StoreData();
+  
+  cout<<"checking this place too "<<endl;
 }
 
 Cfg_reach_cc::
@@ -112,7 +114,8 @@ initialize_link_tree(const char* filename) {
   ifs.close();
 
   link_tree = BuildTree(0, actual_links.size()-1, actual_links);
-  //link_tree->PrintTree(cout);
+  link_tree->PrintTree(cout);
+  //link_tree->PrintLink(cout);
 }
 
 void 
@@ -177,7 +180,7 @@ add(const Cfg& c1, const Cfg& c2) {
 
   StoreData();  
 
-
+ cout<<"checking 2:"<<endl;
 }
 void 
 Cfg_reach_cc::
@@ -360,8 +363,8 @@ bool
 Cfg_reach_cc::
 ConfigEnvironment(Environment* _env) const {
   int robot = _env->GetRobotIndex();
-     
-  // configure the robot according to current Cfg: joint parameters
+  
+     // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
   Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
 						 v[5]*TWOPI, 
@@ -369,14 +372,29 @@ ConfigEnvironment(Environment* _env) const {
 						 v[3]*TWOPI), // RPY
 				     Vector3D(v[0],v[1],v[2]));
   
+  
   _env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);  // update link 1.
   for(int i=0; i<NumofJoints; i++) {
     _env->GetMultiBody(robot)->GetFreeBody(i+1)
       ->GetBackwardConnection(0).GetDHparameters().theta = v[i+6]*360.0;
+     
   }  // config the robot
   
-  //_env->GetMultiBody(robot)->GetFreeBody(_env->GetMultiBody(robot)->GetFreeBodyCount()-1)->GetWorldTransformation();
-  _env->GetMultiBody(robot)->GetFreeBody(0)->GetWorldTransformation();
+  //_env->GetMultiBody(robot)->GetFreeBody(_env->GetMultiBody(robot)->GetFreeBodyCount()-1)->GetWorldTransformation(); //on end effector
+  //_env->GetMultiBody(robot)->GetFreeBody(0)->GetWorldTransformation(); //on base link
+  
+  vector<int> link_ids;
+  for(int i=0; i<_env->GetMultiBody(robot)->GetFreeBodyCount(); ++i)
+  {
+    link_ids.push_back( _env->GetMultiBody(robot)->GetFreeBodyIndex( _env->GetMultiBody(robot)->GetFreeBody(i) ) );
+  }
+  set<int> visited;
+  for(vector<int>::const_iterator L = link_ids.begin(); L != link_ids.end(); ++L)
+  {
+    _env->GetMultiBody(robot)->GetFreeBody(*L)->ComputeWorldTransformation(visited);
+  }
+
+  // cout<<"getting the robot information"<<endl; 
   
   return true;
 }
@@ -633,7 +651,7 @@ StoreData() {
       v.push_back((TWO_PI-sumExtAng)/TWO_PI);
 
   } else {
-    //cerr << "\n\n\tWARNING: Loop is broken!\n";
+  //  cerr << "\n\n\tWARNING: Loop is broken!\n";
     v.resize(dof, 0);
   }
 
@@ -703,23 +721,23 @@ Cfg_reach_cc::
 LengthDistance(const Cfg_reach_cc& c2) const {
   vector<Range> ranges;
   link_tree->ExportTreeLinkReachableRange(ranges);
-  /*
+  
   cout << "ranges:";
   for(vector<Range>::const_iterator R = ranges.begin(); R != ranges.end(); ++R) 
     cout << " " << R->Size();
   cout << endl;
-  */
+  
   vector<double> length_difference;
   for(size_t i=0; i<link_lengths.size(); ++i) 
     if(ranges[i].Size() == 0)
       length_difference.push_back(0);
     else
       length_difference.push_back(fabs(link_lengths[i]-c2.link_lengths[i])/ranges[i].Size());
-  /*
+  
   cout << "length_difference: ";
   copy(length_difference.begin(), length_difference.end(), ostream_iterator<double>(cout, " "));
   cout << endl; 
-  */
+  
 
   return sqrt(inner_product(length_difference.begin(), length_difference.end(),
 			    length_difference.begin(),
@@ -732,11 +750,11 @@ OrientationDistance(const Cfg_reach_cc& c2) const {
   vector<double> ori_difference;
   for(size_t i=0; i<link_orientations.size(); ++i)
     ori_difference.push_back((double)(abs(link_orientations[i]-c2.link_orientations[i]))/2.0);
-  /*
+  
   cout << "ori_difference: ";
   copy(ori_difference.begin(), ori_difference.end(), ostream_iterator<double>(cout, " "));
   cout << endl;
-  */
+  
 
   return sqrt(inner_product(ori_difference.begin(), ori_difference.end(),
 			    ori_difference.begin(),
