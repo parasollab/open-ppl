@@ -722,10 +722,10 @@ LengthDistance(const Cfg_reach_cc& c2) const {
   vector<Range> ranges;
   link_tree->ExportTreeLinkReachableRange(ranges);
   
-  cout << "ranges:";
+ /*cout << "ranges:";
   for(vector<Range>::const_iterator R = ranges.begin(); R != ranges.end(); ++R) 
     cout << " " << R->Size();
-  cout << endl;
+  cout << endl;*/
   
   vector<double> length_difference;
   for(size_t i=0; i<link_lengths.size(); ++i) 
@@ -734,9 +734,9 @@ LengthDistance(const Cfg_reach_cc& c2) const {
     else
       length_difference.push_back(fabs(link_lengths[i]-c2.link_lengths[i])/ranges[i].Size());
   
-  cout << "length_difference: ";
+ /*cout << "length_difference: ";
   copy(length_difference.begin(), length_difference.end(), ostream_iterator<double>(cout, " "));
-  cout << endl; 
+  cout << endl; */
   
 
   return sqrt(inner_product(length_difference.begin(), length_difference.end(),
@@ -751,9 +751,9 @@ OrientationDistance(const Cfg_reach_cc& c2) const {
   for(size_t i=0; i<link_orientations.size(); ++i)
     ori_difference.push_back((double)(abs(link_orientations[i]-c2.link_orientations[i]))/2.0);
   
-  cout << "ori_difference: ";
+  /*cout << "ori_difference: ";
   copy(ori_difference.begin(), ori_difference.end(), ostream_iterator<double>(cout, " "));
-  cout << endl;
+  cout << endl;*/
   
 
   return sqrt(inner_product(ori_difference.begin(), ori_difference.end(),
