@@ -957,6 +957,7 @@ MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats,
          if (!found_gap) {
             //cout << "REDUCE STEP SIZE" << endl;
             stepSize = stepSize*0.9;// base 0.8                                                                                                                                      
+            if(stepSize<1e-20)stepSize=0;
          }
          else
             stepSize = 0;
