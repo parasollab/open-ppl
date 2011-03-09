@@ -58,8 +58,6 @@ Cfg_reach_cc(const Vector6D& base,
   v.push_back(base.getPitch());
   v.push_back(base.getYaw());
   StoreData();
-  
-  cout<<"checking this place too "<<endl;
 }
 
 Cfg_reach_cc::
@@ -115,7 +113,6 @@ initialize_link_tree(const char* filename) {
 
   link_tree = BuildTree(0, actual_links.size()-1, actual_links);
   link_tree->PrintTree(cout);
-  //link_tree->PrintLink(cout);
 }
 
 void 
@@ -180,7 +177,6 @@ add(const Cfg& c1, const Cfg& c2) {
 
   StoreData();  
 
- cout<<"checking 2:"<<endl;
 }
 void 
 Cfg_reach_cc::
@@ -364,7 +360,7 @@ Cfg_reach_cc::
 ConfigEnvironment(Environment* _env) const {
   int robot = _env->GetRobotIndex();
   
-     // configure the robot according to current Cfg: joint parameters
+  // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
   Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
 						 v[5]*TWOPI, 
@@ -380,22 +376,13 @@ ConfigEnvironment(Environment* _env) const {
      
   }  // config the robot
   
-  //_env->GetMultiBody(robot)->GetFreeBody(_env->GetMultiBody(robot)->GetFreeBodyCount()-1)->GetWorldTransformation(); //on end effector
-  //_env->GetMultiBody(robot)->GetFreeBody(0)->GetWorldTransformation(); //on base link
-  
   vector<int> link_ids;
   for(int i=0; i<_env->GetMultiBody(robot)->GetFreeBodyCount(); ++i)
-  {
     link_ids.push_back( _env->GetMultiBody(robot)->GetFreeBodyIndex( _env->GetMultiBody(robot)->GetFreeBody(i) ) );
-  }
   set<int> visited;
   for(vector<int>::const_iterator L = link_ids.begin(); L != link_ids.end(); ++L)
-  {
     _env->GetMultiBody(robot)->GetFreeBody(*L)->ComputeWorldTransformation(visited);
-  }
 
-  // cout<<"getting the robot information"<<endl; 
-  
   return true;
 }
 

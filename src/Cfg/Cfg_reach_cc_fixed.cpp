@@ -47,7 +47,6 @@ GetRandomCfg(double R, double rStep) {
 void 
 Cfg_reach_cc_fixed::
 GetRandomCfg_CenterOfMass(Environment* env) {
-  
   for(int i=0; i<6; ++i)
     v[i] = 0;
 
@@ -56,7 +55,6 @@ GetRandomCfg_CenterOfMass(Environment* env) {
     link_tree->RecursiveSample(0, true, gamma);
   else
     link_tree->RecursiveSample(-1, true, gamma);
- // link_tree->RecursiveSample(0, true, gamma);
   link_lengths.clear();
   link_orientations.clear();
   link_tree->ExportTreeLinkLength(link_lengths, link_orientations);
