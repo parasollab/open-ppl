@@ -422,7 +422,8 @@ template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>::
 Roadmap() 
   :  environment(NULL), 
-     RoadmapVersionNumber(RDMPVER_CURRENT) {
+     RoadmapVersionNumber(RDMPVER_CURRENT),
+     RNGseed(0) {
   m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
 }
 
@@ -441,7 +442,8 @@ Roadmap(Input* input, CollisionDetection* cd, DistanceMetric* dm,
 template <class CFG, class WEIGHT>
 Roadmap<CFG, WEIGHT>:: 
 Roadmap(Roadmap<CFG, WEIGHT> &from_rdmp)
-  :  RoadmapVersionNumber(from_rdmp.RoadmapVersionNumber) {
+  :  RoadmapVersionNumber(from_rdmp.RoadmapVersionNumber),
+     RNGseed(from_rdmp.RNGseed) {
   environment = from_rdmp.GetEnvironment();
   m_pRoadmap = new RoadmapGraph<CFG, WEIGHT>;
   AppendRoadmap(from_rdmp);
