@@ -1,5 +1,5 @@
 #set platform specific variables
-ifeq (${platform}, LINUX_gcc) 	#linux/gcc
+ifeq (${platform}, LINUX_gcc) 	#linux/gcc on 32 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
 	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
@@ -12,38 +12,34 @@ ifeq (${platform}, LINUX_gcc) 	#linux/gcc
 endif
 
 ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
-        #temporarily remove VCLIP - does not compile because of hash map
+	#temporarily remove VCLIP - does not compile because of hash map
 	UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL =   ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
 	UTILS_LIB =   ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
-	#BOOST_INCL = -I/usr/include/boost
-	
 	#use same boost as used in STAPL
-        BOOST_ROOT = /usr/local
-        BOOST_INCL = -I$(BOOST_ROOT)/include
-        Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
+	BOOST_ROOT = /usr/local
+	BOOST_INCL = -I$(BOOST_ROOT)/include
+	Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
 	#Boost_LIBRARIES = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
 	BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
 
 	DEPS = -MMD -MF $*.d
 endif
 
-ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc
+ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc on 64 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
 	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
-	#BOOST_INCL = -I/usr/include/boost
-	
 	#use same boost as used in STAPL
-        BOOST_ROOT = /usr/local
-        BOOST_INCL = -I$(BOOST_ROOT)/include
-        Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
+	BOOST_ROOT = /usr
+	BOOST_INCL = -I$(BOOST_ROOT)/include
+	Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib64
 	BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
 
 	DEPS = -MMD -MF $*.d
@@ -53,7 +49,7 @@ ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
 	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
-  
+
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
@@ -65,7 +61,7 @@ ifeq (${platform}, AIX_64_xlC)	#aix/64-bit/native compiler (e.g., hydra.tamu.edu
 	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
 	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
-  
+
 	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
@@ -97,7 +93,7 @@ ${QHULL_DIR}/libqhull.a:
 	cd ${QHULL_DIR}; ${MAKE} platform=${platform} debug=${debug}
 
 VCLIP_DIR = ${CD_DIR}/VCLIP
-VCLIP_LIB = -L${VCLIP_DIR}/lib -lvclip -lvclip -L${QHULL_DIR} -lqhull
+VCLIP_LIB = -L${VCLIP_DIR}/lib -lvclip -L${QHULL_DIR} -lqhull
 VCLIP_INCL = -I${VCLIP_DIR}/include
 ${VCLIP_DIR}/lib/libvclip.a: ${QHULL_DIR}/libqhull.a
 	cd ${VCLIP_DIR}; ${MAKE} platform=${platform} debug=${debug}
@@ -209,7 +205,7 @@ PMPL_OBJS = \
 	Cfg/Cfg_reach_cc_fixed.o \
 	Cfg/Cfg_free_multi.o \
 	MPProblem/Environment.o \
-        MPProblem/ClosedChainProblem.o \
+	MPProblem/ClosedChainProblem.o \
 	Utilities/util.o \
 	Utilities/Clock_Class.o \
 	Utilities/Clock_Elapsed.o \
@@ -223,25 +219,23 @@ PMPL_OBJS = \
 	MPProblem/Boundary.o \
 	MPStrategy/MPStrategy.o \
 	NeighborhoodFinder/NeighborhoodFinderMethod.o \
-        MPProblem/MPProblem.o \
+	MPProblem/MPProblem.o \
 	NeighborhoodFinder/MPNNWrapper.o 
+
 ifeq (${parallel}, 0)
 	PMPL_OBJS+= \
 	MPStrategy/BasicPRMStrategy.o \
 	MPStrategy/BasicRRTStrategy.o \
-        MPStrategy/ProbabilityPRMStrategy.o \
-        MPStrategy/TogglePRMStrategy.o \
+	MPStrategy/ProbabilityPRMStrategy.o \
+	MPStrategy/TogglePRMStrategy.o \
 	MPStrategy/HybridPRM.o \
 	MPStrategy/QueryStrategy.o \
 	MPStrategy/SmoothQueryStrategy.o \
-        MPStrategy/ClosedChainStrategy.o \
+	MPStrategy/ClosedChainStrategy.o \
 	MapEvaluator/TestEvaluation.o \
 	MapEvaluator/PrintMapEvaluation.o 
-#	Haptic.o \
-#	Push.o \
-#	Utilities/Vectors.o 	
-#	Utilities/Matrix.o 
 endif
+
 #UAS compile macro
 UAS=0
 ifeq ($(UAS), 1)
