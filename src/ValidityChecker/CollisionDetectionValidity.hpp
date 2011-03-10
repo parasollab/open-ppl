@@ -16,7 +16,11 @@ public:
   CollisionDetectionValidity() { }
   CollisionDetectionValidity(vector<CollisionDetectionMethod*> selected, CollisionDetection* cd) : m_selected(selected), m_cd(cd) {}
   CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem);   
-  virtual ~CollisionDetectionValidity() { }
+  virtual ~CollisionDetectionValidity() 
+  {
+    if(m_cd != NULL)
+      delete m_cd;
+  }
   
   virtual bool IsValid(Cfg& _cfg, Environment* env, 
 		       Stat_Class& Stats, CDInfo& _cdInfo, 
@@ -59,15 +63,6 @@ CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   m_cd = new CollisionDetection(m_selected);
 }
 
-/*
-template<typename CFG>
-CollisionDetectionValidity<CFG>::
-~CollisionDetectionValidity() {
-  for(std::vector<CollisionDetectionMethod*>::iterator I = m_selected.begin(); I != m_selected.end(); ++I)
-    delete *I;
-  delete *m_cd;
-}
-*/
 
 template<typename CFG>
 bool
