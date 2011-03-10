@@ -205,7 +205,7 @@ public:
     /**Return a Bounding Box that encloses all MultiBodys added to this instance.
       *@see FindBoundingBox, Input::bbox_scale, and Input::bbox
       */
-    virtual BoundingBox * GetBoundingBox() const;
+    virtual shared_ptr<BoundingBox> GetBoundingBox() const;
     
     /**Return manximu axis range of bounding box.
       *This value is calculated in FindBoundingBox.
@@ -271,7 +271,7 @@ public:
     int usable_externalbody_count;
 
     int robotIndex; //index of the robot in the usable_multibody vector
-    BoundingBox* boundaries;
+    shared_ptr<BoundingBox> boundaries;
 
     double positionRes;
     double orientationRes;

@@ -179,7 +179,7 @@ void Cfg_2D::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetr
 }
 
 void Cfg_2D::GetRandomCfg_CenterOfMass(Environment *env) {
-  BoundingBox *boundingBox = env->GetBoundingBox();
+  shared_ptr<BoundingBox> boundingBox = env->GetBoundingBox();
   v.clear();
   
   for(int i=0; i<dof; ++i)

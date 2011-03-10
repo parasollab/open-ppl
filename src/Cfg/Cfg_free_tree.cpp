@@ -214,7 +214,7 @@ void Cfg_free_tree::GetRandomCfg_CenterOfMass(Environment *env) {
   // but here only the base link is taken care of. It is almost fine since
   // a little 'bigger' BB will contain all links.
   
-  BoundingBox* boundingBox = env->GetBoundingBox();
+  shared_ptr<BoundingBox> boundingBox = env->GetBoundingBox();
   v.clear();
   for (int i = 0 ; i < dof ; ++i)
     v.push_back(boundingBox->GetRandomValueInParameter(i));
@@ -268,7 +268,7 @@ GenerateOverlapCfg(Environment *env,
   int i;
   Vector3D diff = robot_goal - robot_start;
 
-  BoundingBox *bbox = env->GetBoundingBox();
+  shared_ptr<BoundingBox> bbox = env->GetBoundingBox();
 
   vector<double> result;
   for(i=0; i<3; ++i)

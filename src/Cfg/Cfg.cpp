@@ -341,7 +341,7 @@ void Cfg::InvalidData() {
 // tests whether or not robot in this configuration has every vertex inside
 // the environment specified bounding box
 bool Cfg::InBoundingBox(Environment *env) const {
-  BoundingBox *bb =  env->GetBoundingBox();
+  shared_ptr<BoundingBox> bb =  env->GetBoundingBox();
 
   if(!bb->IfSatisfiesConstraints(v)) 
     return false;

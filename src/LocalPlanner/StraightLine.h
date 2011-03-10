@@ -533,7 +533,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     std::string Callee(GetName()),Method("-StraightLine::lineSegmentInCollision");
     Callee+=Method;
 
-    BoundingBox *bb =  _env->GetBoundingBox();
+    shared_ptr<BoundingBox> bb =  _env->GetBoundingBox();
     for(int m = 0; m<lineSegment->GetFreeBodyCount(); ++m) {
       GMSPolyhedron &poly = lineSegment->GetFreeBody(m)->GetWorldPolyhedron();
       for(size_t j = 0 ; j < poly.vertexList.size() ; j++){

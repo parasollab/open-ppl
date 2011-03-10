@@ -40,7 +40,7 @@ Environment(int dofs, int pos_dofs) :
   minmax_BodyAxisRange(0),
   input_filename("")
 {
-  boundaries = new BoundingBox(dofs, pos_dofs);
+  boundaries = shared_ptr<BoundingBox>(new BoundingBox(dofs, pos_dofs));
 }
 
 
@@ -103,7 +103,7 @@ Environment(const Environment &from_env) :
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
   input_filename(from_env.input_filename)
 {
-  boundaries = new BoundingBox(*(from_env.GetBoundingBox()));
+  boundaries = shared_ptr<BoundingBox>(new BoundingBox(*(from_env.GetBoundingBox())));
   if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
     cout << "FOUND EMPTY BBOX! (Environment copy constructor)\n";
 
@@ -133,7 +133,7 @@ Environment(MPProblem* in_pProblem) :
 {
   Environment& from_env = *(in_pProblem->GetEnvironment());
   
-  boundaries = new BoundingBox(*(from_env.GetBoundingBox()));
+  boundaries = shared_ptr<BoundingBox>(new BoundingBox(*(from_env.GetBoundingBox())));
   if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
     cout << "FOUND EMPTY BBOX! (MPProblem constructor) \n";
 
@@ -160,7 +160,7 @@ Environment(const Environment &from_env, const BoundingBox &i_boundaries) :
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
   input_filename(from_env.input_filename)
 {
-  boundaries = new BoundingBox(i_boundaries);
+  boundaries = shared_ptr<BoundingBox>(new BoundingBox(i_boundaries));
 
   for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
     multibody.push_back(from_env.GetMultiBody(i));
@@ -234,7 +234,7 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
           XMLNodeReader::childiterator citr2;
           for(citr2 = citr->children_begin(); citr2!= citr->children_end(); ++citr2) {
             if (citr2->getName() == "boundary") {
-              boundaries = new BoundingBox(*citr2,in_pProblem); 
+              boundaries = shared_ptr<BoundingBox>(new BoundingBox(*citr2,in_pProblem)); 
               //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
             } else {
               citr2->warnUnknownNode();
@@ -273,7 +273,7 @@ Environment(const Environment& from_env, string filename) :
   minmax_BodyAxisRange(0),
   input_filename(filename)
 {
-  boundaries = new BoundingBox(*(from_env.GetBoundingBox()));
+  boundaries = shared_ptr<BoundingBox>(new BoundingBox(*(from_env.GetBoundingBox())));
   if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
     cout << "FOUND EMPTY BBOX! (Environment copy constructor)\n";
          
@@ -481,7 +481,7 @@ Getminmax_BodyAxisRange(){
     return minmax_BodyAxisRange;
 }
 
-BoundingBox *
+shared_ptr<BoundingBox>
 Environment::GetBoundingBox() const {
   return boundaries;
 }

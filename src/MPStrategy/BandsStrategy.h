@@ -517,7 +517,7 @@ private:
   
   void ResizeBbox(ostream& out_os, double scale_factor){
 	 cout<<"BandsStrategy::Resize Bounding box"<<endl<<flush;
-         BoundingBox *pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
+         shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
 	 pBoundBox->Print(out_os);
 	 pBoundBox->TranslationalScale(scale_factor);
 	 cout<<"BandsStrategy::After Resize Bounding Box"<<endl<<flush;

@@ -213,7 +213,7 @@ GenerateOverlapCfg(Environment *env,
   Vector3D diff = robot_goal - robot_start;
   
   // pass back the Cfg for this pose.
-  BoundingBox * bbox = env->GetBoundingBox();
+  shared_ptr<BoundingBox> bbox = env->GetBoundingBox();
   *resultCfg = Cfg_free(diff[0], diff[1], diff[2], 
 			bbox->GetRandomValueInParameter(3), 
 			bbox->GetRandomValueInParameter(4), 
@@ -449,7 +449,7 @@ Cfg* Cfg_free::CreateNewCfg(vector<double>& data) const {
 
 
 void Cfg_free::GetRandomCfg_CenterOfMass(Environment *env) {
-  BoundingBox *boundingBox =env->GetBoundingBox();
+  shared_ptr<BoundingBox> boundingBox =env->GetBoundingBox();
   
   v.clear();
   for(int i=0; i<dof; ++i)
