@@ -1,7 +1,9 @@
 #include "MPStrategy/SmoothQueryStrategy.h"
 #include "MPStrategy/MPStrategy.h"
 #include "AllPairsNodeConnection.h"
-//#include "boost/lambda/lambda.hpp"
+
+#include "boost/lambda/lambda.hpp"
+
 
 SmoothQueryStrategy::
 SmoothQueryStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) 

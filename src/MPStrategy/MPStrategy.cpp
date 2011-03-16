@@ -1,8 +1,30 @@
 #include "MPStrategy.h"
-#ifndef _PARALLEL
+
+#ifdef _PARALLEL
+#include "ParallelPRMStrategy.h"
+#else
 #include "MPRegionComparerMethod.h"
+#include "BasicPRMStrategy.h"
+#include "BasicRRTStrategy.h"
+#include "ProbabilityPRMStrategy.h"
+#include "TogglePRMStrategy.h"
+#include "RoadmapToolsStrategy.h"
+#include "HybridPRM.h"
+#include "ExpanderStats.h"
+#include "TimingStats.h"
+#include "NFComparer.h"
+#include "BandsStrategy.h"
+#include "QueryStrategy.h"
+#include "SmoothQueryStrategy.h"
+#include "EvaluateMapStrategy.h"
 #endif
+
+#ifdef UAS
+#include "UAStrategy.h"
+#endif
+
 #include "Sampler.h"
+
 
 MPStrategy::
 MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPBaseObject(in_Node,in_pProblem) {
@@ -136,6 +158,8 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
     mpsm = new QueryStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "SmoothQueryStrategy") {
     mpsm = new SmoothQueryStrategy(citr,GetMPProblem());
+  } else if(citr.getName() == "EvaluateMapStrategy") {
+    mpsm = new EvaluateMapStrategy(citr,GetMPProblem());
   } 
 #ifdef UAS
   else if(citr.getName() == "UAStrategy") {

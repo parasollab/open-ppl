@@ -1,10 +1,10 @@
 #ifndef ClosedChainStrategy_h
 #define ClosedChainStrategy_h
 
-
 #include "MPStrategy/MPStrategy.h"
 #include "MPProblem/ClosedChainProblem.h"
-//#include "MPProblem/RoadmapGraph.h" //for VID typedef
+#include "Stat_Class.h"
+#include "CollisionDetection.h"
 
 
 class ClosedChainStrategy : public MPStrategy

@@ -1,5 +1,9 @@
 #include "MPProblem.h"
 #include "MPStrategy.h"
+#include "DistanceMetrics.h"
+#include "ValidityChecker.hpp"
+#include "MPRegion.h"
+
 
 MPProblem::
 MPProblem(XMLNodeReader& in_Node, bool parse_xml) : MPBaseObject(in_Node, this) {

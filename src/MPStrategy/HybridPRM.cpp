@@ -1,6 +1,9 @@
 #include "HybridPRM.h"
 #include "MPRegion.h"
 #include "MPStrategy.h"
+#include "Sampler.h"
+#include "ConnectMap.h"
+#include "MapEvaluator.h"
 
 #include "boost/lambda/lambda.hpp"
 

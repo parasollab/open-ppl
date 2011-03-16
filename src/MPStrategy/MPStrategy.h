@@ -81,26 +81,9 @@ public:
   vector< pair<MPStrategyMethod*, XMLNodeReader*> > all_MPStrategyMethod;
   string m_strController_MPStrategyMethod;
 };
-#ifdef _PARALLEL
-#include "MPStrategy/ParallelPRMStrategy.h"
-#else
-#include "MPStrategy/BasicPRMStrategy.h"
-#include "MPStrategy/BasicRRTStrategy.h"
-#include "MPStrategy/ProbabilityPRMStrategy.h"
-#include "MPStrategy/TogglePRMStrategy.h"
-#include "MPStrategy/RoadmapToolsStrategy.h"
-#include "MPStrategy/HybridPRM.h"
-#include "MPStrategy/ExpanderStats.h"
-#include "MPStrategy/TimingStats.h"
-#include "MPStrategy/NFComparer.h"
-#include "MPStrategy/BandsStrategy.h"
-#include "MPStrategy/QueryStrategy.h"
-#include "MPStrategy/SmoothQueryStrategy.h"
-#endif
 
-#ifdef UAS
-#include "MPStrategy/UAStrategy.h"
-#endif
+#include "MPStrategyMethod.h"
+
 
 class MPCContainer : public MPSMContainer {
 public:

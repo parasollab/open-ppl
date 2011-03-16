@@ -1,6 +1,9 @@
 #include "MPStrategy/QueryStrategy.h"
 #include "MPStrategy/MPStrategy.h"
 
+#include "boost/lambda/lambda.hpp"
+
+
 QueryStrategy::
 QueryStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml)
  : MPStrategyMethod(in_Node,in_pProblem) 
