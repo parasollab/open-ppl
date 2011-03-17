@@ -713,7 +713,13 @@ LengthDistance(const Cfg_reach_cc& c2) const {
   for(vector<Range>::const_iterator R = ranges.begin(); R != ranges.end(); ++R) 
     cout << " " << R->Size();
   cout << endl;*/
-  
+ 
+  if(link_lengths.size() != c2.link_lengths.size())
+  {
+    cerr << "\n\nERROR in Cfg_reach_cc::LengthDistance, link_lengths.size (" << link_lengths.size() << ") != c2.link_lengths.size (" << c2.link_lengths.size() << ", exiting.\n";
+    exit(-1);
+  }
+
   vector<double> length_difference;
   for(size_t i=0; i<link_lengths.size(); ++i) 
     if(ranges[i].Size() == 0)
