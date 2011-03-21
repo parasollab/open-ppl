@@ -16,6 +16,7 @@
 #include "BandsStrategy.h"
 #include "QueryStrategy.h"
 #include "SmoothQueryStrategy.h"
+#include "ResamplePointStrategy.h"
 #include "EvaluateMapStrategy.h"
 #endif
 
@@ -160,7 +161,9 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
     mpsm = new SmoothQueryStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "EvaluateMapStrategy") {
     mpsm = new EvaluateMapStrategy(citr,GetMPProblem());
-  } 
+  } else if(citr.getName() == "ResamplePointStrategy") {
+    mpsm = new ResamplePointStrategy(citr,GetMPProblem());
+  }  
 #ifdef UAS
   else if(citr.getName() == "UAStrategy") {
     mpsm = new UAStrategy(citr, GetMPProblem());

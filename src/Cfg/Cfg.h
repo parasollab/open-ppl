@@ -352,6 +352,8 @@ guration where workspace robot's EVERY VERTEX
   virtual void GetRandomCfg(Environment* env, shared_ptr<DistanceMetricMethod> _dm,
           double length);
   virtual void GetRandomRay(double incr, Environment* env,  shared_ptr<DistanceMetricMethod> dm) = 0;
+  virtual double GetSmoothingValue(MPProblem* mp, Environment *_env,Stat_Class& Stats,
+	    string vc, CDInfo& cdInfo, string dm,int n, bool bl );
 
   /// generates random configuration that is in Free CSpace. 
   virtual void GetFreeRandomCfg(Environment* env, Stat_Class& Stats,

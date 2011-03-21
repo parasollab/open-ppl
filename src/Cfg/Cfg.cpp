@@ -1621,3 +1621,8 @@ vector<Vector3D> Cfg::PolyApprox(Environment* env) const {
   return result;
 }
 
+double Cfg::GetSmoothingValue(MPProblem* mp, Environment *_env,Stat_Class& Stats,
+	    string vc, CDInfo& cdInfo, string dm,int n, bool bl ){
+return ApproxCSpaceClearance(mp,_env, Stats, vc, cdInfo, dm, n, bl);
+
+}
