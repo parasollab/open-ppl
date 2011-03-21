@@ -110,15 +110,20 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
   lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners(); //later change to have own lp
 
   //VID oriVertID = rmap->m_pRoadmap->getVertIDs(); //save vertexID counter
+  
+  vector<bool> already_in_roadmap;
+  for(typename vector<CFG>::iterator I = m_query.query.begin(); I != m_query.query.end(); ++I)
+    already_in_roadmap.push_back(rmap->m_pRoadmap->IsVertex(*I));
+
   bool queryResult = m_query.PerformQuery(rmap, m_stats, 
                         &m_ConnectMap, 
                         &methods,
                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                         dm);
   
-  for(typename vector<CFG>::iterator I = m_query.query.begin(); I != m_query.query.end(); ++I)
-    //rmap->m_pRoadmap->DeleteVertex(*I); //deleted added node from rmap
-    rmap->m_pRoadmap->delete_vertex(rmap->m_pRoadmap->GetVID(*I)); //deleted added node from rmap
+  for(size_t i=0; i<already_in_roadmap.size(); ++i)
+    if(!already_in_roadmap[i])
+      rmap->m_pRoadmap->delete_vertex(rmap->m_pRoadmap->GetVID(m_query.query[i])); //deleted added node from rmap
   
   //rmap->m_pRoadmap->setVertIDs(oriVertID); //reset vertex ID counter
 
