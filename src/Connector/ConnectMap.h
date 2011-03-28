@@ -199,7 +199,7 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
         InputIterator _itr2_first, InputIterator _itr2_last) 
   {
     vector<CFG> collision;
-    return ConnectNodes(selected, _rm, Stats, lp, addPartialEdge, addAllEdges, _itr1_first, _itr1_last, back_inserter(collision));
+    return ConnectNodes(selected, _rm, Stats, lp, addPartialEdge, addAllEdges, _itr1_first, _itr1_last, _itr2_first, _itr2_last, back_inserter(collision));
   }
  
   template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
