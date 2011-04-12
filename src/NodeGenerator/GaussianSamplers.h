@@ -60,7 +60,7 @@ class GaussRandomSampler : public SamplerMethod<CFG>
          return "GaussRandomCollisionSampler";
     }
   
-  void print(ostream& os) const
+  virtual void print(ostream& os) const
     {
       os << name() 
 	 << " (d = " << d << ")";
@@ -300,7 +300,7 @@ void ParseXMLd(XMLNodeReader& in_Node) {
 }
 
   
-  void print(ostream& os) const
+  virtual void print(ostream& os) const
     {
       os << name()
 	 << " (d = " << d << ")";

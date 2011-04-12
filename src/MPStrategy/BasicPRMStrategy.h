@@ -96,6 +96,7 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
    typedef vector<pair<string, int> >::iterator GIT;
    for(GIT git = m_NodeGenerationLabels.begin(); git != m_NodeGenerationLabels.end(); ++git){
       Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(git->first);
+      pNodeGenerator->print(cout);
       vector<CfgType> outNodes;
       vector<CfgType> inNodes(git->second);
         

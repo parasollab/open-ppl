@@ -67,6 +67,7 @@ class SamplerMethod : public LabeledObject, public MPBaseObject {
  
 
   virtual const char* name() const = 0; 
+  virtual void print(ostream& os) const { os << name(); }
 
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   virtual 

@@ -69,7 +69,7 @@ class FreeMedialAxisSampler : public SamplerMethod<CFG>
          LOG_DEBUG_MSG("~FreeMedialAxisSampler::ParseXML()");
       }
 
-      void print(ostream& os) const
+      virtual void print(ostream& os) const
       {
          os << name() 
             << " (clearance = " << clearance 

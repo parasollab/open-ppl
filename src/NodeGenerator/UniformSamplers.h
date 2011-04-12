@@ -45,11 +45,6 @@ class UniformRandomSampler : public SamplerMethod<CFG>
     cout << "UniformRandomSampler";
     LOG_DEBUG_MSG("~UniformRandomSampler::ParseXML()");
   }
-
-  void print(ostream& os) const 
-  {
-    os << name();
-  }
   
  private:
   template <typename OutputIterator>
@@ -210,11 +205,6 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
   
   virtual const char* name() const { return "UniformRandomFreeSampler"; }
 
-  void print(ostream& os) const
-  {
-    os << name();
-  }
- 
  private:
   template <typename OutputIterator>
   OutputIterator 
@@ -373,11 +363,6 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   ~UniformRandomCollisionSampler() {}
 
   virtual const char* name() const { return "UniformRandomCollisionSampler"; }
-
-  void print(ostream& os) const
-  {
-    os << name();
-  }
 
  private:
   template <typename OutputIterator>

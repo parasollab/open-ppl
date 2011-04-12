@@ -122,7 +122,7 @@ void ParseXMLfree(XMLNodeReader& in_Node) {
 
   const char* name() const { return "ObstacleBasedSampler"; }
 
-  void print(ostream& os) const
+  virtual void print(ostream& os) const
     {
       os << name() 
 	 << " (n_shells_free = " << n_shells_free 
