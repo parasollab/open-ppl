@@ -1,4 +1,5 @@
 #include "UAStrategy.h"
+#include "MapEvaluator.h"
 
 UAStrategy::UAStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
    LOG_DEBUG_MSG("UAStrategy::UAStrategy()");
@@ -252,7 +253,7 @@ bool sortRegionFunc(pair<VID, double> p1, pair<VID, double> p2){return p1.second
 
 void UAStrategy::OverlapBBX(){
    Environment *env = GetMPProblem()->GetEnvironment();
-   BoundingBox *bb = GetMPProblem()->GetMPRegion(0)->GetBoundingBox();
+   boost::shared_ptr<BoundingBox> bb = GetMPProblem()->GetMPRegion(0)->GetBoundingBox();
    double robot_radius = 1.25*env->GetMultiBody(env->GetRobotIndex())->GetBoundingSphereRadius();
    
    if(m_OverlapMethod=="default"){ 
@@ -510,8 +511,8 @@ void UAStrategy::UpdateBBToRange(int region){
    LOG_DEBUG_MSG("UAS::Enter UpdateBBToRange");
    m_hold.clear();
    if( region >=0 && region < m_min.size() ){
-      BoundingBox *pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
-      BoundingBox *pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
+      boost::shared_ptr<BoundingBox> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
+      boost::shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
       
       int size = (m_min.at(region)).size();
       for(int i=0; i < size;i++){
@@ -535,8 +536,8 @@ void UAStrategy::UpdateBBToRange(int region){
 
 void UAStrategy::RestoreBB(){
    LOG_DEBUG_MSG("UAS::Enter RestoreBB");
-   BoundingBox *pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
-   BoundingBox *pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
+   boost::shared_ptr<BoundingBox> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
+   boost::shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
 	int i=0;
    for(i=0; i<m_hold.size();i++){
       pBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
