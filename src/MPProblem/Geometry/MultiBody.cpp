@@ -778,76 +778,97 @@ bool MultiBody::operator==(const MultiBody& mb) const
   }
 #endif
 
+
+struct vertex_index_distance
+{
+  size_t first_index, second_index;
+  double distance;
+
+  vertex_index_distance(size_t i1 = MAX_INT, size_t i2 = MAX_INT, double d = MAX_INT) : first_index(i1), second_index(i2), distance(d) {}
+  ~vertex_index_distance() {}
+
+  bool operator<(const vertex_index_distance& v) const { return distance < v.distance; }
+};
+
 //==================================================================
 //Polygonal Approximation
 void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
 {
   result.clear();
-  int i, nfree;
 
-  nfree = GetFreeBodyCount();
+  int nfree = GetFreeBodyCount();
 
-  if(nfree > 0)
+  if(nfree == 1)
   {
-    for(i=0; i<nfree-1; i++)
+    //rigid body, return the line between the first 4 vertices and the second 4 vertices of the world bounding box
+    GMSPolyhedron bbox = this->GetFreeBody(0)->GetWorldBoundingBox();
+
+    Vector3D joint(0, 0, 0);
+    for(size_t i = 0; i<4; ++i)
+      joint = joint + bbox.vertexList[i];
+    joint = joint / 4;
+    result.push_back(joint);
+    
+    joint = Vector3D(0, 0, 0);
+    for(size_t i = 4; i<8; ++i)
+      joint = joint + bbox.vertexList[i];
+    joint = joint / 4;
+    result.push_back(joint);
+  }
+  else 
+  {
+    if(nfree > 0)
     {
-      GMSPolyhedron first_bb = this->GetFreeBody(i)->GetWorldBoundingBox();
-      vector<Vector3D> first_vertices = first_bb.vertexList;
-
-      GMSPolyhedron second_bb = this->GetFreeBody(i)->GetForwardConnection(0).GetNextBody()->GetWorldBoundingBox();
-      vector<Vector3D> second_vertices = second_bb.vertexList;
-
-      vector<double> dis;
-      vector<int> point;
-      int j, k;
-      //find the shortest distance for each vertex in one freebody to every vertex to the neighboring freebody and record the vertex pair
-      for(k=0; k<8; k++)
+      for(int i=0; i<nfree-1; i++)
       {
-        dis.push_back((first_vertices[k]-second_vertices[0]).magnitude());
-        point.push_back(0);
-        for(j=1; j<8; j++)
+        GMSPolyhedron first_bbox = this->GetFreeBody(i)->GetWorldBoundingBox();
+        GMSPolyhedron second_bbox = this->GetFreeBody(i)->GetForwardConnection(0).GetNextBody()->GetWorldBoundingBox();
+          
+        //find the shortest distance for each vertex in one freebody to every vertex to the neighboring freebody and record the vertex pair
+        vector<vertex_index_distance> first_closest_vertices(first_bbox.vertexList.size());
+        for(size_t k=0; k<first_bbox.vertexList.size(); ++k)
+          for(size_t j=0; j<second_bbox.vertexList.size(); ++j)
+            if((first_bbox.vertexList[k] - second_bbox.vertexList[j]).magnitude() < first_closest_vertices[k].distance) 
+              first_closest_vertices[k] = vertex_index_distance(k, j, (first_bbox.vertexList[k] - second_bbox.vertexList[j]).magnitude());
+        vector<vertex_index_distance> second_closest_vertices(second_bbox.vertexList.size());
+        for(size_t k=0; k<second_bbox.vertexList.size(); ++k)
+          for(size_t j=0; j<first_bbox.vertexList.size(); ++j)
+            if((second_bbox.vertexList[k] - first_bbox.vertexList[j]).magnitude() < second_closest_vertices[k].distance) 
+              second_closest_vertices[k] = vertex_index_distance(k, j, (second_bbox.vertexList[k] - first_bbox.vertexList[j]).magnitude());
+  
+        //sort by distance
+        sort(first_closest_vertices.begin(), first_closest_vertices.end());
+        sort(second_closest_vertices.begin(), second_closest_vertices.end());
+ 
+        if(i == 0) 
         {
-          if(((first_vertices[k]-second_vertices[j]).magnitude()) < dis[k])
-          {
-            dis.push_back((first_vertices[k]-second_vertices[j]).magnitude());
-            point.push_back(j);
-          }
+          //first body in linkage, add the endpoint of linkage 1 that is not closest to linkage 2
+          Vector3D other_joint(0, 0, 0);
+          for(size_t k = 4; k<8; ++k)
+            other_joint = other_joint + first_bbox.vertexList[first_closest_vertices[k].first_index];
+          other_joint = other_joint / 4;
+          result.push_back(other_joint);
         }
-      }
-
-      //find the 4 smallest distances
-      for(k=0; k<4; k++)
-      {
-        int tmp = 0;
-        for(j=1; j<8; j++)
- 	{
-          if(dis[tmp]<0 || dis[j]>dis[tmp])
-            tmp = j;
-        }
-        dis[tmp] = -1;
-      }
-
-      double X, Y, Z;
-      X=0;
-      Y=0;
-      Z=0;
-
-      //average the x, y, z coordinates for 8 vertices
-      for(j=0; j<8; j++)
-      {
-        if(dis[j]>=0)
+ 
+        //compute the joint as the closest 4 vertices from linkage 1 and linkage 2
+        Vector3D joint(0, 0, 0);
+        for(size_t k = 0; k<4; ++k)
+          joint = joint + first_bbox.vertexList[first_closest_vertices[k].first_index];
+        for(size_t k = 0; k<4; ++k)
+          joint = joint + second_bbox.vertexList[second_closest_vertices[k].first_index];
+        joint = joint / 8;
+        result.push_back(joint);
+        
+        if(i == nfree-2)
         {
-          X+=first_vertices[j].getX()+second_vertices[point[j]].getX();
-          Y+=first_vertices[j].getY()+second_vertices[point[j]].getY();
-          Z+=first_vertices[j].getZ()+second_vertices[point[j]].getZ();
+          //last body in linkage, add endpoint of linkage 2 that is not closest to linkage 1
+          Vector3D other_joint(0, 0, 0);
+          for(size_t k = 4; k<8; ++i)
+            other_joint = other_joint + second_bbox.vertexList[second_closest_vertices[k].first_index];
+          other_joint = other_joint / 4;
+          result.push_back(other_joint);
         }
       }
-
-      X /= 8.0;
-      Y /= 8.0;
-      Z /= 8.0;
-      Vector3D res(X, Y, Z);
-      result.push_back(res);
     }
   }
 }
