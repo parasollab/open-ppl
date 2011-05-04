@@ -24,7 +24,7 @@
 #include "RotateAtS.h"
 #include "TransformAtS.h"
 //#include "ApproxSpheres.h"
-//#include "AStar.h" /*AStarDistance and AStarClearance defined here*/
+#include "AStar.h" /*AStarDistance and AStarClearance defined here*/
 
 class DistanceMetricMethod;
 
@@ -214,13 +214,15 @@ LocalPlanners() {
   TransformAtS<CFG, WEIGHT>* transform_at_s = new TransformAtS<CFG, WEIGHT>(cdtype);
   all.push_back(transform_at_s);
  
-  /*
-  AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>();
+  AStar<CFG, WEIGHT>* a_star = new AStar<CFG,WEIGHT>(cdtype);
+  all.push_back(a_star);
+  
+  AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>(cdtype);
   all.push_back(a_star_distance);
   
-  AStarClearance<CFG, WEIGHT>* a_star_clearance = new AStarClearance<CFG, WEIGHT>();
+  AStarClearance<CFG, WEIGHT>* a_star_clearance = new AStarClearance<CFG, WEIGHT>(cdtype);
   all.push_back(a_star_clearance);
-
+/*
   ApproxSpheres<CFG, WEIGHT>* approx_spheres = new ApproxSpheres<CFG,WEIGHT>();
   all.push_back(approx_spheres);
   */
@@ -289,7 +291,24 @@ LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) :
 	transform_at_s->SetID(GetNewID());
 	selected.push_back(transform_at_s);
 	all.push_back(transform_at_s);
-      } else {
+      }else if(citr->getName() == string("a_star_distance")) {
+        AStarDistance<CFG, WEIGHT>* a_star_distance= 
+	    new AStarDistance<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
+	a_star_distance->cdInfo = &cdInfo;
+	a_star_distance->SetID(GetNewID());
+	selected.push_back(a_star_distance);
+	all.push_back(a_star_distance);
+	
+      }else if(citr->getName() == string("a_star_clearance")) {
+        AStarClearance<CFG, WEIGHT>* a_star_clearance= 
+	    new AStarClearance<CFG, WEIGHT>(cdtype, *citr, GetMPProblem());
+	a_star_clearance->cdInfo = &cdInfo;
+	a_star_clearance->SetID(GetNewID());
+	selected.push_back(a_star_clearance);
+	all.push_back(a_star_clearance);
+	
+      } 
+      else {
         citr->warnUnknownNode();
       }
     }
@@ -328,9 +347,14 @@ GetDefault() {
   TransformAtS<CFG, WEIGHT>* transform_at_s = new TransformAtS<CFG, WEIGHT>(cdtype);
   Default.push_back(transform_at_s);
   
-/*    AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>();  */
-/*    Default.push_back(a_star_distance); */
+  //AStar<CFG, WEIGHT>* a_star = new AStar<CFG,WEIGHT>(cdtype);  
+   // Default.push_back(a_star); 
+    
+   AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>(cdtype);  
+    Default.push_back(a_star_distance); 
 
+ AStarClearance<CFG, WEIGHT>* a_star_clearance = new AStarClearance<CFG,WEIGHT>(cdtype);  
+    Default.push_back(a_star_clearance); 
   return Default;
 }
 
