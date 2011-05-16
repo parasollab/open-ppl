@@ -214,9 +214,6 @@ LocalPlanners() {
   TransformAtS<CFG, WEIGHT>* transform_at_s = new TransformAtS<CFG, WEIGHT>(cdtype);
   all.push_back(transform_at_s);
  
-  AStar<CFG, WEIGHT>* a_star = new AStar<CFG,WEIGHT>(cdtype);
-  all.push_back(a_star);
-  
   AStarDistance<CFG, WEIGHT>* a_star_distance = new AStarDistance<CFG,WEIGHT>(cdtype);
   all.push_back(a_star_distance);
   
