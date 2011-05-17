@@ -275,7 +275,7 @@ bool connected = true;
 	break;
       }
       p = *(neighbors[ ChooseOptimalNeighbor(_env, Stats,_col, dm, _c1, _c2, neighbors) ]);
-      cout<<"p"<<p<<endl;
+     
   
      double values;
     
@@ -408,12 +408,10 @@ ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CFG &_col,shared_ptr
   double minDistance= MAXFLOAT;
   int retPosition=0;
   double value = 0;
- // cout<<"neighbors.size_2"<<neighbors.size()<<endl;
-  for(int i=0;i<neighbors.size();i++) {
+ for(int i=0;i<neighbors.size();i++) {
     value=dm->Distance(_env,*neighbors[i],_c2);
     
-//    cout<<"value from optimal"<<value<<endl;
-    if (value<minDistance) {
+     if (value<minDistance) {
       retPosition=i;
       minDistance=value;
        
@@ -518,7 +516,7 @@ ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,CFG &_col,shared_ptr<
   int retPosition=0;
   double value = 0;
   MPProblem *mp = this->GetMPProblem();
-  //CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+  
   for(int i=0;i<neighbors.size();i++) {
     
   value=neighbors[i]-> ApproxCSpaceClearance(mp,_env,Stats,vcMethod,*this->cdInfo,dm_label,
@@ -531,14 +529,5 @@ ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,CFG &_col,shared_ptr<
   }
   return retPosition;
 }
-/*
-//**** Print Edge.path File ****
-              stringstream f_out;
-                  f_out << "SS_Edge." << rand()%100+1 << ".path";
-         
-                    cout << "SS Edge Path File: " << f_out.str() << endl << flush;
-                         WritePathConfigurations( f_out.str().c_str(),
-                                                      lpOutput->path, _env);
-                  // **** END Edge.path Print  ****
-*/
+
 #endif
