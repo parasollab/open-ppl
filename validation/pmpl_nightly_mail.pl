@@ -48,6 +48,7 @@ $message  = "\n";
 $errcode = max($errcode, &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.rigid.debug0.parallel0.out", "Configuration: gcc 4.4.5 (platform=LINUX_64_gcc, robot=rigid, debug=0, parallel=0)"));
 $errcode = max($errcode, &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.rigid.debug1.parallel0.out", "Configuration: gcc 4.4.5 (platform=LINUX_64_gcc, robot=rigid, debug=1, parallel=0)"));
 $errcode = max($errcode, &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.serial.debug0.parallel0.out", "Configuration: gcc 4.4.5 (platform=LINUX_64_gcc, robot=serial, debug=0, parallel=0)"));
+$errcode = max($errcode, &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.reach.debug0.parallel0.out", "Configuration: gcc 4.4.5 (platform=LINUX_64_gcc, robot=reach, debug=0, parallel=0)"));
 
 #
 # Send out e-mail
