@@ -332,6 +332,8 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   Environment* env;
   Stat_Class  *Stats;
   CollisionDetection* cd;
+  ValidityChecker<CFG>* vc;
+  std::string strVcmethod;
   CDInfo  *cdInfo;
 
  public:
@@ -345,8 +347,11 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
   {
     LOG_DEBUG_MSG("UniformRandomCollisionSampler::UniformRandomCollisionSampler()");
     ParseXML(in_Node);
-    cd = in_pProblem->GetCollisionDetection();
+    //cd = in_pProblem->GetCollisionDetection();
     cout << "UniformRandomCollisionSampler";
+    strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("Validity Test Method"));
+    cout << "strVcmethod = " << strVcmethod << endl;
+    vc = in_pProblem->GetValidityChecker();
     LOG_DEBUG_MSG("~UniformRandomCollisionSampler::UniformRandomCollisionSampler()");
   }
   
@@ -387,7 +392,8 @@ class UniformRandomCollisionSampler : public SamplerMethod<CFG>
         //change to is valid
         // cout << "tmp b4 IsValid = " << tmp << endl;
         if(tmp.InBoundingBox(env)){
-           if(tmp.isCollision(env, Stat, cd, cdInfo, true, &callee)) {
+           //if(tmp.isCollision(env, Stat, cd, cdInfo, true, &callee)) {
+           if(!vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, Stat, cdInfo, true, &callee)) {
           Stat.IncNodes_Generated();
           // cout << "tmp after IsValid = " << tmp << endl;
           generated = true;

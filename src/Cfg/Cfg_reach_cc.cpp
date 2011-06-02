@@ -6,6 +6,10 @@
 #include  "DistanceMetrics.h"
 #include "boost/lambda/lambda.hpp"
 #include "boost/random.hpp"
+#include "DistanceMetricMethod.h"
+#include "MPProblem.h"
+#include "ValidityChecker.hpp"
+
 
 #define TWO_PI 6.2831853072
 
@@ -474,8 +478,8 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm)
 
 void 
 Cfg_reach_cc::
-FindNeighbors(Environment* env, Stat_Class& Stats, const Cfg& increment,
-	      CollisionDetection* cd, int noNeighbors, CDInfo& _cdInfo,
+FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats, const Cfg& increment,
+	      string vc_method, int noNeighbors, CDInfo& _cdInfo,
 	      vector<Cfg*>& cfgs) {
   cerr << "Warning, FindNeighbors not implemented yet\n";
   exit(-1);
@@ -483,8 +487,8 @@ FindNeighbors(Environment* env, Stat_Class& Stats, const Cfg& increment,
 
 void 
 Cfg_reach_cc::
-FindNeighbors(Environment* env, Stat_Class& Stats, const Cfg& goal, 
-	      const Cfg& increment, CollisionDetection* cd, int noNeighbors, 
+FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats, const Cfg& goal, 
+	      const Cfg& increment, string vc_method, int noNeighbors, 
 	      CDInfo& _cdInfo, vector<Cfg*>& cfgs) {
   cerr << "Warning, FindNeighbors not implemented yet\n";
   exit(-1);

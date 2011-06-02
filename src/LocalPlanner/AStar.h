@@ -261,9 +261,10 @@ bool connected = true;
     } else {
       
       neighbors.clear();
-      p.FindNeighbors(_env, Stats,  _c2, incr, cd,n_neighbors,
-		       *this->cdInfo, neighbors); // what is the replacement for this function. I'm thinking it should be getneighbors
-  
+      //p.FindNeighbors(_env, Stats,  _c2, incr, cd,n_neighbors,
+		       //*this->cdInfo, neighbors); // what is the replacement for this function. I'm thinking it should be getneighbors
+      p.FindNeighbors(this->GetMPProblem(), _env, Stats, _c2, incr, tmpStr, n_neighbors, *this->cdInfo, neighbors); 
+ 
       if (neighbors.size()==0) { 
 	connected = false;
         pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > tmp;

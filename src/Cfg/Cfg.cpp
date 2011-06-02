@@ -508,9 +508,10 @@ void Cfg::ClosestPtOnLineSegment(const Cfg& current, const Cfg& pt1, const Cfg& 
 }
 
 
-void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
+void Cfg::FindNeighbors(MPProblem* mp, Environment* _env, Stat_Class& Stats,
       const Cfg& increment,
-      CollisionDetection* cd, int noNeighbors,
+      string vc_method,
+      int noNeighbors,
       CDInfo& _cdInfo, 
       vector<Cfg*>& ret) {  
   vector<Cfg*> nList;
@@ -570,7 +571,7 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
     tmp->add(*this, *(nList[i]));
     
     if(!this->AlmostEqual(*tmp) && 
-       !tmp->isCollision(_env,Stats,cd,_cdInfo,true,&(Callee)) )
+       mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *tmp, _env, Stats, _cdInfo, true, &Callee) )
       ret.push_back(tmp);
     else
       delete tmp;
@@ -578,9 +579,10 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
 }
 
 
-void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
+void Cfg::FindNeighbors(MPProblem* mp, Environment* _env, Stat_Class& Stats,
       const Cfg& goal, const Cfg& increment,
-      CollisionDetection* cd, int noNeighbors,
+      string vc_method,
+      int noNeighbors,
       CDInfo& _cdInfo,
       vector<Cfg*>& ret) {
    vector<Cfg*> nList;  
@@ -642,7 +644,7 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
      
      tmp->IncrementTowardsGoal(goal, *nList[i]); //The only difference~
      if(!this->AlmostEqual(*tmp) && 
-        !tmp->isCollision(_env,Stats,cd,_cdInfo,true,&(Callee)) ) {
+        mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *tmp, _env, Stats, _cdInfo, true, &Callee) ) {
        ret.push_back(tmp);
      } else 
        delete tmp;
@@ -782,21 +784,22 @@ void Cfg::GetRandomCfg(Environment* env, shared_ptr<DistanceMetricMethod>dm, dou
 }
 
 
-void Cfg::GetFreeRandomCfg(Environment* env, Stat_Class& Stats,
-         CollisionDetection* cd, 
+void Cfg::GetFreeRandomCfg(MPProblem* mp, Environment* env, Stat_Class& Stats,
+	 string vc_method,
          CDInfo& _cdInfo) {
 
   std::string Callee(GetName());
   {std::string Method("Cfg::GetFreeRandomCfg");Callee=Callee+Method;}
   do {
     this->GetRandomCfg(env);
-  } while ( this->isCollision(env, Stats, cd, _cdInfo,true,&Callee) );
+  } while (!(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *this, env, Stats, _cdInfo, true, &Callee)));
   
 }
 
 
-void Cfg::GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
-           Stat_Class& Stats, CollisionDetection* cd,  
+void Cfg::GetNFreeRandomCfgs(MPProblem* mp, vector<Cfg*>& nodes, Environment* env,
+           Stat_Class& Stats, 
+	   string vc_method,
            CDInfo& _cdInfo, int num) const {
   Cfg* tmp;
   std::string Callee(GetName());
@@ -805,7 +808,7 @@ void Cfg::GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
     tmp = this->CreateNewCfg();
     do {
       tmp->GetRandomCfg(env);
-    } while ( tmp->isCollision(env, Stats, cd, _cdInfo,true,&(Callee)) );
+    } while (!(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *tmp, env, Stats, _cdInfo, true, &Callee)));
     nodes.push_back(tmp);
    }
 };
@@ -1356,8 +1359,9 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
 }
 
 
-void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
-            Stat_Class& Stats, CollisionDetection* cd, 
+void Cfg::ApproxCSpaceContactPoints(MPProblem* mp, vector<Cfg*>& directions, Environment* env,
+            Stat_Class& Stats, 
+	    string vc_method,
             CDInfo& cdInfo, vector<Cfg*>& contact_points) const {
 
   //initialize:
@@ -1376,7 +1380,7 @@ void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
   double orientationRes = env->GetOrientationRes();
   CallCnt="1";
   std::string tmpStr = Callee+CallCnt;
-  bool bInitState = !origin->InBoundingBox(env) || origin->isCollision(env, Stats, cd, cdInfo,true,&tmpStr);
+  bool bInitState = !origin->InBoundingBox(env) || !(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *origin, env, Stats, cdInfo, true, &tmpStr));
   
   //find max step size:
   int iRobot = env->GetRobotIndex();
@@ -1398,7 +1402,7 @@ void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
       tick->Increment(*incr);
       CallCnt="2";
       tmpStr = Callee+CallCnt;
-      bool bCurrentState = !tick->InBoundingBox(env) || tick->isCollision(env, Stats, cd, cdInfo,true, &tmpStr);
+      bool bCurrentState = !tick->InBoundingBox(env) || ! (mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *tick, env, Stats, cdInfo, true, &tmpStr));
       //double currentDist;
       
       // if state was changed or this cfg is out of bounding box
@@ -1417,7 +1421,7 @@ void Cfg::ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* env,
   }
 }
 
-
+/*
 bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
           CollisionDetection* cd, CDInfo& _cdInfo, 
           bool enablePenetration, std::string *pCallName) {
@@ -1523,7 +1527,7 @@ bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
     if(Clear) delete pCallName;
     {SetLabel("VALID",!answer); return answer;}
 }
-
+*/
 
 // Normalize the orientation to the some range.
 void Cfg::Normalize_orientation(int index) {

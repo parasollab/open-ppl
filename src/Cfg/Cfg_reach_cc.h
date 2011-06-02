@@ -75,15 +75,15 @@ class Cfg_reach_cc : public Cfg_free_tree {
 					 vector<Cfg*>& nodes) const;
   */
 
-  virtual void FindNeighbors(Environment* env, Stat_Class& Stats,
+  virtual void FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats,
 			     const Cfg& increment,
-			     CollisionDetection*,
+			     string vc_method,
 			     int noNeighbors, 
 			     CDInfo& _cdInfo,
 			     vector<Cfg*>& cfgs);
-  virtual void FindNeighbors(Environment* env, Stat_Class& Stats,
+  virtual void FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats,
 			     const Cfg& goal, const Cfg& increment, 
-			     CollisionDetection*,
+			     string vc_method,
 			     int noNeighbors, 
 			     CDInfo& _cdInfo,
 			     vector<Cfg*>& cfgs);

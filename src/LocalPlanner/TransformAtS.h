@@ -74,6 +74,7 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
 
   //@{
     double s_value;
+    std::string vcMethod;
   //@}
 
 };
@@ -193,12 +194,14 @@ template <class CFG, class WEIGHT>
 bool
 TransformAtS<CFG,WEIGHT>::
 IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
-      shared_ptr<DistanceMetricMethod >dm,
+      shared_ptr<DistanceMetricMethod >dm, 
       const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
       double positionRes, double orientationRes,
       bool checkCollision, 
       bool savePath, bool saveFailedPath) {  
-  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+  //CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
 
   int cd_cntr = 0;
   vector<double> start_data = _c1.GetData();
@@ -266,7 +269,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     for(size_t i=1; i<sequence.size()-1; ++i)
     {
       cd_cntr++;
-      if((!sequence[i]->InBoundingBox(_env)) || (sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))))
+      if((!sequence[i]->InBoundingBox(_env)) || (!vc->IsValid(vcm, *sequence[i], _env, Stats, *this->cdInfo, true, &Callee)))
       {
 	connected = IsConnectedOtherWay(_env, Stats, dm, _c1, _c2, _col, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
       }
@@ -320,7 +323,9 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
       bool checkCollision,
       bool savePath, bool saveFailedPath) {
   cout << "Check the other direction:\n" << flush;
-  CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+  //CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
 
   int cd_cntr = 0;
   vector<double> start_data = _c1.GetData();
@@ -389,9 +394,9 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
     for(size_t i=1; i<sequence.size()-1; ++i)
     {
       cd_cntr++;
-      if((!sequence[i]->InBoundingBox(_env)) || (sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))))
+      if((!sequence[i]->InBoundingBox(_env)) || (!vc->IsValid(vcm, *sequence[i], _env, Stats, *this->cdInfo, true, &Callee)))
       {
-         if((sequence[i]->InBoundingBox(_env)) && (sequence[i]->isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))))
+         if((sequence[i]->InBoundingBox(_env)) && (!vc->IsValid(vcm, *sequence[i], _env, Stats, *this->cdInfo, true, &Callee)))
             _col = *sequence[i];
         connected = false;
         break;

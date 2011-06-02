@@ -21,6 +21,9 @@
 #include "Environment.h"
 #include "util.h"
 #include "DistanceMetricMethod.h"
+#include "MPProblem.h"
+#include "ValidityChecker.hpp"
+
 
 int Cfg_fixed_tree::NumofJoints;
 
@@ -251,9 +254,9 @@ bool Cfg_fixed_tree::GenerateOverlapCfg(Environment *env,  // although env and r
 //      generate nodes by overlapping two triangles' normal.
 // Guang Song 08/24/99
 //===================================================================
-void Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL(Environment * env,
+void Cfg_fixed_tree::GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env,
 					       Stat_Class& Stats,
-					       CollisionDetection* cd, 
+					       string vc_method,
 					       int obstacle, int nCfgs, 
 					       CDInfo& _cdInfo, 
 					       vector<Cfg*>& surface) const {
