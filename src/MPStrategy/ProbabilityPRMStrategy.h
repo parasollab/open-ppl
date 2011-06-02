@@ -6,7 +6,6 @@
 #include "MPRegion.h"
 #include "Sampler.h"
 #include "MPStrategy/MPStrategy.h"
-#include "ValidityChecker.hpp"
 
 class PPRMSContainer : public BPSContainer {
 public:
@@ -40,7 +39,6 @@ class ProbabilityPRMStrategy : public BasicPRMStrategy
 
    //data
    vector<pair<string, double> > m_NodeGenerationLabels;
-   string vcMethod;
 };
 
 //implentations of template functions
@@ -58,7 +56,6 @@ void ProbabilityPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region
    pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(NextNodeGen);
    vector<CfgType> outNodes;
    vector<CfgType> inNodes(1);
-   string Callee("ProbabilityPRMStrategy::GenerateNodes");
         
    //generate nodes for this node generator method
    Clock_Class NodeGenSubClock;
@@ -79,8 +76,7 @@ void ProbabilityPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region
    typedef vector<CfgType>::iterator CIT;
    for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
       if(!(*cit).IsLabel("VALID")){
-         //cit->isCollision(GetMPProblem()->GetEnvironment(),*(region->GetStatClass()),GetMPProblem()->GetCollisionDetection(), cdInfo);
-         !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), *cit, GetMPProblem()->GetEnvironment(), *(region->GetStatClass()), cdInfo, true, &Callee));
+         cit->isCollision(GetMPProblem()->GetEnvironment(),*(region->GetStatClass()),GetMPProblem()->GetCollisionDetection(), cdInfo);
       }
       if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
          if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit))

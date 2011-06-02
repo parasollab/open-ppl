@@ -88,13 +88,13 @@ public:
 				  Vector3D robot_start, Vector3D robot_goal, 
 				  Cfg *resultCfg);
 
-  virtual void GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, Stat_Class& Stats,
-					 string vc_method,
+  virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
+					 CollisionDetection *,
 					 int obstacle, int nCfgs, 
 					 CDInfo& _cdInfo, vector<Cfg*>&);
 
-  virtual void GetCfgByOverlappingNormal(MPProblem* mp, Environment * env, Stat_Class& Stats,
-					 string vc_method,
+  virtual void GetCfgByOverlappingNormal(Environment * env, Stat_Class& Stats,
+					 CollisionDetection* cd,
 					 const GMSPolyhedron &polyRobot, const GMSPolyhedron &polyObst,
 					 int robTri, int obsTri,
 					 CDInfo& _cdInfo,

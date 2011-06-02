@@ -19,9 +19,6 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "util.h"
-#include "DistanceMetricMethod.h"
-#include "MPProblem.h"
-#include "ValidityChecker.hpp"
 
 
 Cfg_fixed_PRR::Cfg_fixed_PRR() {
@@ -245,9 +242,9 @@ bool Cfg_fixed_PRR::GenerateOverlapCfg(Environment *env,  // although env and ro
 // GenSurfaceCfgs4ObstNORMAL
 //      generate nodes by overlapping two triangles' normal.
 //===================================================================
-void Cfg_fixed_PRR::GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, 
+void Cfg_fixed_PRR::GenSurfaceCfgs4ObstNORMAL(Environment * env, 
 					      Stat_Class& Stats, 
-					      string vc_method,
+					      CollisionDetection* cd, 
 					      int obstacle, int nCfgs, 
 					      CDInfo& _cdInfo, 
 					      vector<Cfg*>& surface) const {

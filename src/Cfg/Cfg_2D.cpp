@@ -20,9 +20,7 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "util.h"
-#include "DistanceMetricMethod.h"
-#include "MPProblem.h"
-#include "ValidityChecker.hpp"
+
 
 // for safety & compatiaility, use 6 elements for cfg.
 Cfg_2D::Cfg_2D(){
@@ -218,8 +216,8 @@ bool Cfg_2D::GenerateOverlapCfg(Environment *env,  // although env and robot is 
 }
 
 void
-Cfg_2D::GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_Class& Stats,
-				  string vc_method,
+Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
+				  CollisionDetection* cd, 
 				  const GMSPolyhedron &polyRobot, 
 				  const GMSPolyhedron &polyObst, 
 				  int robTri, int obsTri, 
@@ -234,7 +232,7 @@ Cfg_2D::GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_Class& S
   Vector3D robotVertex[3], obstVertex[3], robotPoint, obstPoint, robotNormal, obstNormal;
   
   /////////////////////////////////////////////////////////////////////////////////////////////
-  ////Check if robTri and obsTri are in side the range
+  //Check if robTri and obsTri are in side the range
   if(robTri < 0 || robTri >= (int)polyRobot.polygonList.size() ||
      obsTri < 0 || obsTri >= (int)polyObst.polygonList.size() ) {
     cout << "out of range: Cfg_2D::GetCfgByOverlappingNormal() " << endl;
@@ -301,7 +299,7 @@ Cfg_2D::GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_Class& S
     cfgIn.Increment(displacement);
     
     std::string tmpStr = Callee+CallCnt;
-    if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
+    if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
       direction = obstNormal;
     } else {
       cfgIn.subtract(cfgIn,displacement);
@@ -309,7 +307,7 @@ Cfg_2D::GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_Class& S
       
       CallCnt="2";
       tmpStr = Callee+CallCnt;
-      if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
+      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
 	direction = -obstNormal;
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
@@ -319,14 +317,14 @@ Cfg_2D::GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_Class& S
 	cfgIn.Increment(displacement);
 	CallCnt="3";
 	tmpStr = Callee+CallCnt;
-	if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
+	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot, true, &tmpStr) ) {
 	  direction = obstNormal;
 	} else {
 	  cfgIn.subtract(cfgIn,displacement);
 	  cfgIn.subtract(cfgIn,displacement);
 	  CallCnt="4";
 	  tmpStr = Callee+CallCnt;
-	  if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
+	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
 	    direction = -obstNormal;
 	  }
 	}
@@ -344,15 +342,15 @@ Cfg_2D::GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_Class& S
 
 
 
-void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, Stat_Class& Stats,
-				       string vc_method,
+void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
+				       CollisionDetection* cd, 
 				       int obstacle, int nCfgs, 
 				       CDInfo& _cdInfo,
 				       vector<Cfg*>& surface){
   
   surface.clear();
   int robot = env->GetRobotIndex();
-
+  
   GMSPolyhedron &polyRobot = env->GetMultiBody(robot)->GetFreeBody(0)->GetPolyhedron();
   GMSPolyhedron &polyObst = env->GetMultiBody(obstacle)->GetFixedBody(0)->GetWorldPolyhedron();
   
@@ -363,11 +361,12 @@ void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, Stat_Cl
     int obstTriIndex = (int)(OBPRM_drand()*polyObst.polygonList.size());
     
     vector<Cfg*> tmp;
-    GetCfgByOverlappingNormal(mp, env, Stats, vc_method,
+    GetCfgByOverlappingNormal(env, Stats, cd, 
 			      polyRobot, polyObst,
-			      robotTriIndex, obstTriIndex,
-			      _cdInfo, env->GetMultiBody(robot), tmp);
-
+			      robotTriIndex, obstTriIndex, 
+			      _cdInfo,
+			      env->GetMultiBody(robot),
+			      tmp);
     
     if(!tmp.empty() && tmp[0]->InBoundingBox(env)) {
       ((Cfg_2D*)tmp[0])->ForceItTo2D();

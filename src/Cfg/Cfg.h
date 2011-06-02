@@ -296,16 +296,16 @@ class Cfg {
   void ClosestPtOnLineSegment(const Cfg&, const Cfg&, const Cfg&);
                
   /// methods for nodes connection. 
-  virtual void FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats,
+  virtual void FindNeighbors(Environment* env, Stat_Class& Stats,
            const Cfg& increment,
-	   string vc_method,
+           CollisionDetection*,
            int noNeighbors, 
            CDInfo& _cdInfo,
            vector<Cfg*>& cfgs);
   /// methods for nodes connection. 
-  virtual void FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats,
+  virtual void FindNeighbors(Environment* env, Stat_Class& Stats,
            const Cfg& goal, const Cfg& increment, 
-	   string vc_method,
+           CollisionDetection*,
            int noNeighbors, 
            CDInfo& _cdInfo,
            vector<Cfg*>& cfgs);
@@ -356,12 +356,11 @@ guration where workspace robot's EVERY VERTEX
 	    string vc, CDInfo& cdInfo, string dm,int n, bool bl );
 
   /// generates random configuration that is in Free CSpace. 
-  virtual void GetFreeRandomCfg(MPProblem* mp, Environment* env, Stat_Class& Stats,
-        string vc_method, CDInfo& _cdInfo);
+  virtual void GetFreeRandomCfg(Environment* env, Stat_Class& Stats,
+        CollisionDetection* cd, CDInfo& _cdInfo);
   /// generates N random configurations
-  virtual void GetNFreeRandomCfgs(MPProblem* mp, vector<Cfg*>& nodes, Environment* env,
-          Stat_Class& Stats, 
-	  string vc_method,
+  virtual void GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
+          Stat_Class& Stats, CollisionDetection* cd,  
           CDInfo& _cdInfo, int num) const;
 
   /// generates random configuration and pushes it to the medial axis of the
@@ -384,8 +383,8 @@ guration where workspace robot's EVERY VERTEX
   virtual bool GenerateOverlapCfg(Environment* env, int robot,
           Vector3D robot_start, Vector3D robot_goal, 
           Cfg* resultCfg) = 0;  // OBPRM and BasicOBPRM
-  virtual void GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment* env, Stat_Class& Stats,
-	   string vc_method,
+  virtual void GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats,
+           CollisionDetection*,
            int obstacle, int nCfgs,
            CDInfo& _cdInfo,
            vector<Cfg*>& nodes) const = 0;
@@ -430,11 +429,11 @@ guration where workspace robot's EVERY VERTEX
   /// given an origin Cfg and a vector of directions
   /// returns the obstacle contact point for each direction from origin
   /// (contact points are in-collision)
-  void ApproxCSpaceContactPoints(MPProblem* mp, vector<Cfg*>& directions, Environment* _env,
+  void ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* _env,
          Stat_Class& Stats,
-         string vc_method, CDInfo &cdInfo,
+         CollisionDetection* cd, CDInfo &cdInfo,
          vector<Cfg*>& contact_points) const;    
- /* 
+  
   virtual bool isCollision(Environment* env, Stat_Class& Stats,
          CollisionDetection* cd, CDInfo& _cdInfo,
          bool enablePenetration=true, std::string *pCallName = NULL);
@@ -446,7 +445,7 @@ guration where workspace robot's EVERY VERTEX
   virtual bool isCollision(Environment* env, Stat_Class& Stats,
          CollisionDetection* cd, CDInfo& _cdInfo,
          shared_ptr<MultiBody>, bool enablePenetration=true, std::string *pCallName = NULL);
- */   
+    
   //@}
 
   virtual Cfg* CreateNewCfg() const = 0;

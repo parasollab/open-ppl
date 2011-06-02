@@ -114,8 +114,8 @@ public:
   /** Node Generation methods: NORMAL
     * Not implemented yet.
     */
-  virtual void GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, Stat_Class& Stats,
-         string vc_method, int obstacle, int nCfgs,
+  virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
+         CollisionDetection *,int obstacle, int nCfgs,
     CDInfo& _cdInfo, vector<Cfg*>&) const;
  
   //@}

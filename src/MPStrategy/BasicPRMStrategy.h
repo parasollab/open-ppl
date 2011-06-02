@@ -70,7 +70,6 @@ class BasicPRMStrategy : public MPStrategyMethod
    vector<string> m_EvaluatorLabels;
    string m_LPMethod;
    string dm_label;
-   string vcMethod;
    int m_CurrentIteration;
 
  private:
@@ -93,7 +92,6 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
    stringstream clockName; 
    clockName << "Iteration " << m_CurrentIteration << ", Node Generation"; 
    NodeGenClock.StartClock(clockName.str().c_str());
-   string Callee("BasicPRMStrategy::GenerateNodes");
 
    typedef vector<pair<string, int> >::iterator GIT;
    for(GIT git = m_NodeGenerationLabels.begin(); git != m_NodeGenerationLabels.end(); ++git){
@@ -123,8 +121,7 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       typedef vector<CfgType>::iterator CIT;
       for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
          if(!(*cit).IsLabel("VALID")){
-            //cit->isCollision(GetMPProblem()->GetEnvironment(),*(region->GetStatClass()),GetMPProblem()->GetCollisionDetection(), cdInfo);
-            !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), *cit, GetMPProblem()->GetEnvironment(), *(region->GetStatClass()), cdInfo, true, &Callee));
+            cit->isCollision(GetMPProblem()->GetEnvironment(),*(region->GetStatClass()),GetMPProblem()->GetCollisionDetection(), cdInfo);
          }
          if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
             if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {

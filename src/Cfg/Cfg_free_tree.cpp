@@ -19,9 +19,6 @@
 #include "Environment.h"
 #include "util.h"
 #include "DistanceMetricMethod.h"
-#include "MPProblem.h"
-#include "ValidityChecker.hpp"
-
 
 int Cfg_free_tree::NumofJoints;
 
@@ -289,7 +286,7 @@ GenerateOverlapCfg(Environment *env,
 //      generate nodes by overlapping two triangles' normal.
 //===================================================================
 void Cfg_free_tree::GenSurfaceCfgs4ObstNORMAL
-(MPProblem* mp, Environment * env, Stat_Class& Stats, string vc_method, int obstacle, int nCfgs, 
+(Environment * env, Stat_Class& Stats, CollisionDetection* cd, int obstacle, int nCfgs, 
 CDInfo& _cdInfo, vector<Cfg*>& surface){
   surface.clear();
   static const int SIZE = 1;
@@ -313,10 +310,9 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
     int robotTriIndex = (int)(OBPRM_drand()*polyRobot.polygonList.size());
     int obstTriIndex = (int)(OBPRM_drand()*polyObst.polygonList.size());
     vector<Cfg*> tmp;
-
-    GetCfgByOverlappingNormal(mp, env, Stats, vc_method,
-			      polyRobot, polyObst,
-			      robotTriIndex, obstTriIndex,
+    GetCfgByOverlappingNormal(env, Stats, cd, 
+			      polyRobot, polyObst, 
+			      robotTriIndex, obstTriIndex, 
 			      _cdInfo,
 			      base, tmp);
     if(!tmp.empty()) {
@@ -327,7 +323,7 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
 	  serialData.push_back(OBPRM_drand());
 	}
 	Cfg* serial = this->CreateNewCfg(serialData);
-        if((mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *serial, env, Stats, _cdInfo, true, &Callee)) && serial->InBoundingBox(env)) {
+	if(!serial->isCollision(env,Stats,cd,_cdInfo) && serial->InBoundingBox(env)) {
 	  
 	  surface.push_back(serial);
 	  ++num;

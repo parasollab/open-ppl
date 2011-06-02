@@ -20,8 +20,6 @@
 #include "util.h"
 #include "Transformation.h"
 #include "Stat_Class.h"
-#include "ValidityChecker.hpp"
-#include "MPProblem.h"
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -749,9 +747,8 @@ vector<Cfg*> acceptable;
 bool 
 CollisionDetection::
 AcceptablePenetration(Cfg& c, Environment* env, Stat_Class& Stats,
-		      /*CollisionDetection* cd, */
+		      CollisionDetection* cd, 
 		      CDInfo& cdInfo) {
-  //ValidityChecker<Cfg>* vc = this->GetMPProblem()->GetValidityChecker();
   int numOkCfgs=0;
   std::string Callee(c.GetName());
   {std::string Method("-collisiondetection::AcceptablePenetration"); Callee = Callee+Method; }
@@ -760,9 +757,7 @@ AcceptablePenetration(Cfg& c, Environment* env, Stat_Class& Stats,
     Cfg* next = c.CreateNewCfg();
     next->add(c, *(*I));
     
-    //if (!next->isCollision(env, Stats, cd, cdInfo, false)) {
-    //if(vc->IsValid(vc->GetVCMethod(vcMethod), *next, env, Stats, cdInfo, false, &Callee)) {
-    if(this->GetMPProblem()->GetValidityChecker()->IsValid(this->GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), *next, env, Stats, cdInfo, false, &Callee)) {
+    if (!next->isCollision(env, Stats, cd, cdInfo, false)) {
       numOkCfgs++;
       if ((numOkCfgs*1.0/directions.size()) > acceptableRatio) {
 #ifdef DEBUG

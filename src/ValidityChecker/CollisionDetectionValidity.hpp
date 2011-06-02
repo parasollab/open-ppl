@@ -95,7 +95,7 @@ IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
   if ( (answerFromEnvironment) && enablePenetration &&
        (m_cd->penetration>=0)) {
     Cfg* tmp = _cfg.CreateNewCfg();
-    bool result = !m_cd->AcceptablePenetration(*tmp, env, Stats, /*m_cd,*/ _cdInfo);
+    bool result = !m_cd->AcceptablePenetration(*tmp, env, Stats, m_cd, _cdInfo);
     delete tmp;
     if( Clear ) 
       delete pCallName;
