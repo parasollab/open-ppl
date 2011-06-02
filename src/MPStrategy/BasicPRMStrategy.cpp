@@ -4,11 +4,10 @@
 
 BasicPRMStrategy::
 
-BasicPRMStrategy::BasicPRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited) :
-   MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
+BasicPRMStrategy::BasicPRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+   MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0), useProbability(false){
    //read input
-   if(!isInherited)
-      ParseXML(in_Node);
+   ParseXML(in_Node);
 }
 
 BasicPRMStrategy::~BasicPRMStrategy(){
@@ -19,31 +18,37 @@ BasicPRMStrategy::~BasicPRMStrategy(){
 void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr){
       if(citr->getName() == "node_generation_method") {
-         string generationMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Node Connection Method"));
-         int numPerIteration = citr->numberXMLParameter(string("Number"), true, int(1), int(0), MAX_INT, string("Number of samples"));
+         string generationMethod = citr->stringXMLParameter("Method", true, "", "Node Connection Method");
+         int numPerIteration = citr->numberXMLParameter("Number", true, 1, 0, MAX_INT, "Number of samples");
+         double probPerIteration = 0;
+         if(numPerIteration == 0){
+          probPerIteration = citr->numberXMLParameter("Probability", true, 0.0, 0.0, 1.0, "Number of samples");
+          useProbability = true;
+         }
          m_NodeGenerationLabels.push_back(pair<string, int>(generationMethod, numPerIteration));
+         m_ProbGenerationLabels.push_back(pair<string, double>(generationMethod, probPerIteration));
          citr->warnUnrequestedAttributes();
       } 
       else if(citr->getName() == "node_connection_method"){
-         string connectMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Node Connection Method"));
+         string connectMethod = citr->stringXMLParameter("Method", true, "", "Node Connection Method");
          m_NodeConnectionLabels.push_back(connectMethod);
          citr->warnUnrequestedAttributes();
       } 
       else if(citr->getName() == "component_connection_method"){
-         string connectMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Component Connection Method"));
+         string connectMethod = citr->stringXMLParameter("Method", true, "", "Component Connection Method");
          m_ComponentConnectionLabels.push_back(connectMethod);
          citr->warnUnrequestedAttributes();
       } 
       else if(citr->getName() == "evaluation_method"){
-         string evalMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Evaluation Method"));
+         string evalMethod = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
          m_EvaluatorLabels.push_back(evalMethod);
          citr->warnUnrequestedAttributes();
       }
       else if(citr->getName() == "lp_method"){
-         m_LPMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Local Planning Method"));
+         m_LPMethod = citr->stringXMLParameter("Method", true, "", "Local Planning Method");
          citr->warnUnrequestedAttributes();
       } else if(citr->getName()=="dm_method"){
-         dm_label =citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
+         dm_label =citr->stringXMLParameter("Method",true,"","Distance Metric");
          citr->warnUnrequestedAttributes();
       }
       else
@@ -51,12 +56,23 @@ void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
    }
   
    //output for debugging
+   double total=0.0;
    using boost::lambda::_1;
    cout << "\nBasicPRMStrategy::ParseXML:\n";
    cout << "\tnode_generation_methods: "; 
-   for(vector<pair<string, int> >::iterator I = m_NodeGenerationLabels.begin(); I!=m_NodeGenerationLabels.end(); I++){
-      cout<<I->first<<"\tNumber:"<<I->second<<" ";
+   if(!useProbability){
+     for(vector<pair<string, int> >::iterator I = m_NodeGenerationLabels.begin(); I!=m_NodeGenerationLabels.end(); I++){
+       cout<<I->first<<"\tNumber:"<<I->second<<" ";
+     }
+     total=1.0;
    }
+   else{
+     for(vector<pair<string, double> >::iterator I = m_ProbGenerationLabels.begin(); I!=m_ProbGenerationLabels.end(); I++){
+       cout<<I->first<<"\tProbability:"<<I->second<<" ";
+       total+=I->second;
+     }
+   }
+   if(total<0.999 || total>1.001){cout<<"Probabilities Do Not Add To 1, total is "<<total<<endl; exit(1);}
    cout << endl;
    cout << "\tnode_connection_methods: "; for_each(m_NodeConnectionLabels.begin(), m_NodeConnectionLabels.end(), cout << _1 << " "); cout << endl;
    cout << "\tcomponent_connection_methods: "; for_each(m_ComponentConnectionLabels.begin(), m_ComponentConnectionLabels.end(), cout << _1 << " "); cout << endl;
@@ -68,11 +84,20 @@ void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
 void BasicPRMStrategy::PrintOptions(ostream& out_os) {
    out_os<<"BasicPRMStrategy::PrintOptions()\n";
    out_os<<"\nNodeGenerators\n";
-   typedef vector<pair<string,int> >::iterator PIT;
    typedef vector<string>::iterator SIT;
-   for(PIT pit=m_NodeGenerationLabels.begin(); pit!=m_NodeGenerationLabels.end(); pit++){
-      out_os<<"\t"<<pit->first<<"\tNumber of Samples Per Iteration:"<<pit->second<<"\tOptions:\n";
-      GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(pit->first)->PrintOptions(out_os);
+   if(!useProbability){
+     typedef vector<pair<string,int> >::iterator PIT;
+     for(PIT pit=m_NodeGenerationLabels.begin(); pit!=m_NodeGenerationLabels.end(); pit++){
+       out_os<<"\t"<<pit->first<<"\tNumber of Samples Per Iteration:"<<pit->second<<"\tOptions:\n";
+       GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(pit->first)->PrintOptions(out_os);
+     }
+   }
+   else{
+     typedef vector<pair<string,double> >::iterator PIT;
+     for(PIT pit=m_ProbGenerationLabels.begin(); pit!=m_ProbGenerationLabels.end(); pit++){
+       out_os<<"\t"<<pit->first<<"\tProbability of Choosing Sampler:"<<pit->second<<"\tOptions:\n";
+       GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(pit->first)->PrintOptions(out_os);
+     }
    }
    out_os<<"\nNodeConnectors\n";
    for(SIT sit=m_NodeConnectionLabels.begin(); sit!=m_NodeConnectionLabels.end(); sit++){
@@ -108,7 +133,7 @@ void BasicPRMStrategy::Run(int in_RegionID){
 
    //setup region variables
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-   Stat_Class* regionStats = region->GetStatClass();
+   //Stat_Class* regionStats = region->GetStatClass();
  
    vector<VID> allNodesVID;
    region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
@@ -274,5 +299,23 @@ bool BasicPRMStrategy::EvaluateMap(int in_RegionID)
    }
    else{mapPassedEvaluation=true;}//avoid the infinite loop
    return mapPassedEvaluation;
+}
+
+string BasicPRMStrategy::PickNextSampler(){
+   double rand = OBPRM_drand();
+   double total = 0;
+   int index=-1;
+   typedef vector<pair<string, double> >::iterator GIT;
+   for(GIT git = m_ProbGenerationLabels.begin(); git!=m_ProbGenerationLabels.end(); git++){
+      if(rand<=total){
+         break;
+      }
+      else{
+         total+=git->second;
+         index++;
+      }
+   }
+   cout<<"Choosing "<<m_ProbGenerationLabels[index].first<<" as the next node generator"<<endl;
+   return m_ProbGenerationLabels[index].first;
 }
 

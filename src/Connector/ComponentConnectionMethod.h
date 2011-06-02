@@ -11,13 +11,12 @@ class ComponentConnectionMethod : public MPBaseObject{
   //////////////////////
   // Constructors and Destructor
   ComponentConnectionMethod();
-  ComponentConnectionMethod(char* elem_name, CDInfo* cd, double connPosRes, double connOriRes);
+  ComponentConnectionMethod(string elem_name, CDInfo* cd, double connPosRes, double connOriRes);
   ComponentConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~ComponentConnectionMethod();
   
   //////////////////////
   // Access
-  virtual char* GetName();
   virtual void SetDefault() = 0;
   
   //////////////////////
@@ -51,11 +50,6 @@ class ComponentConnectionMethod : public MPBaseObject{
 		      *I, *J);
   }*/
 
- protected:
-  //////////////////////
-  // Data
-  char* element_name; //Method name in the command line
- 
   //////////////////////////////////////////////////////
   // 
   // Public Data
@@ -74,7 +68,9 @@ ComponentConnectionMethod() {
 
 template <class CFG, class WEIGHT>
 ComponentConnectionMethod<CFG,WEIGHT>::
-ComponentConnectionMethod(char* elem_name, CDInfo* cd, double connPosRes, double connOriRes) : element_name(elem_name), cdInfo(cd), connectionPosRes(connPosRes), connectionOriRes(connOriRes) {}
+ComponentConnectionMethod(string elem_name, CDInfo* cd, double connPosRes, double connOriRes): cdInfo(cd), connectionPosRes(connPosRes), connectionOriRes(connOriRes) {
+  this->SetName(elem_name);
+}
 
 template <class CFG, class WEIGHT>
 ComponentConnectionMethod<CFG,WEIGHT>::
@@ -88,13 +84,6 @@ ComponentConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 template <class CFG, class WEIGHT>
 ComponentConnectionMethod<CFG,WEIGHT>::
 ~ComponentConnectionMethod() {
-}
-
-template <class CFG, class WEIGHT>
-char* 
-ComponentConnectionMethod<CFG,WEIGHT>::
-GetName() { 
-  return element_name; 
 }
 
 #endif

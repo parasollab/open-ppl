@@ -16,7 +16,7 @@ class NodeConnectionMethod : public MPBaseObject {
   //////////////////////
   // Constructors and Destructor
   NodeConnectionMethod();
-  NodeConnectionMethod(char* elem_name, vector<pair<pair<VID, VID>, bool> > conn_attempts, CDInfo* cd, double connPosRes, double connOriRes, bool checkCC ); 
+  NodeConnectionMethod(string elem_name, vector<pair<pair<VID, VID>, bool> > conn_attempts, CDInfo* cd, double connPosRes, double connOriRes, bool checkCC ); 
   NodeConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~NodeConnectionMethod();
   
@@ -28,7 +28,6 @@ class NodeConnectionMethod : public MPBaseObject {
   
   //////////////////////
   // Access
-  char* GetName() const;
   virtual void SetDefault() = 0;
   
   //////////////////////
@@ -39,7 +38,7 @@ class NodeConnectionMethod : public MPBaseObject {
     m_CheckIfSameCC = in_Node.boolXMLParameter(string("CheckIfSameCC"), false, true, string("check if same cc boolean"));
   }
   virtual void PrintOptions(ostream& out_os) { 
-    out_os << "    " << GetName() << "::\n";
+    out_os << "    " << this->GetName() << "::\n";
     out_os << "      CheckIfSameCC = " << m_CheckIfSameCC << endl;
   }
   virtual NodeConnectionMethod<CFG, WEIGHT>* CreateCopy() = 0;
@@ -76,7 +75,6 @@ class NodeConnectionMethod : public MPBaseObject {
  protected:
   //////////////////////
   // Data
-  char* element_name; //Method name in the command line
   vector<pair<pair<VID, VID>, bool> > connection_attempts;
  
   //////////////////////////////////////////////////////
@@ -110,9 +108,11 @@ NodeConnectionMethod() : m_CheckIfSameCC(true) {
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>::
-NodeConnectionMethod(char* elem_name, vector<pair<pair<VID, VID>, bool> > conn_attempts, CDInfo* cd, double connPosRes, double connOriRes, bool checkCC = true ) : element_name(elem_name),
-connection_attempts(conn_attempts), cdInfo(cd), connectionPosRes(connPosRes), connectionOriRes(connOriRes), m_CheckIfSameCC(checkCC)
-{}
+NodeConnectionMethod(string elem_name, vector<pair<pair<VID, VID>, bool> > conn_attempts, CDInfo* cd, double connPosRes,
+double connOriRes, bool checkCC = true ) : connection_attempts(conn_attempts), cdInfo(cd), connectionPosRes(connPosRes), connectionOriRes(connOriRes), m_CheckIfSameCC(checkCC)
+{
+  this->SetName(elem_name);
+}
 
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>::
@@ -127,13 +127,6 @@ NodeConnectionMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>::
 ~NodeConnectionMethod() {
-}
-
-template <class CFG, class WEIGHT>
-char* 
-NodeConnectionMethod<CFG,WEIGHT>::
-GetName() const { 
-  return element_name; 
 }
 
 #endif

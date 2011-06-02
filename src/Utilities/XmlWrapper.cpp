@@ -166,7 +166,7 @@ boolXMLParameter (const std::string& in_strName, bool in_req,
   } else {
     printAttrWrongType(in_strName,in_strDesc);
   }
-  
+ return false; 
 }
 
 void 

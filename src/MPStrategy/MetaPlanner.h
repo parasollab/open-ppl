@@ -20,10 +20,8 @@
  * It defines functions for creating roadmaps with a library of methods
  */
 
-#include "SwitchDefines.h"
 #include<sys/time.h>
 
-#include "OBPRMDef.h"
 #include "Roadmap.h"
 
 #include "Clock_Class.h"

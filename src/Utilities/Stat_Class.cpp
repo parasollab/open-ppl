@@ -54,7 +54,7 @@ ClearStats() {
   // initialize the number of collision detection calls to 0
   for(i=0;i<MaxCD;i++) {
     NumCollDetCalls[i]=0;
-    strcpy(CDNameList[i],"empty");
+    CDNameList[i] = "empty";
   }
 
   // initialize each local planners successful connections, attempts,
@@ -63,7 +63,7 @@ ClearStats() {
     LPConnections[i]=0;
     LPAttempts[i]=0;
     LPCollDetCalls[i]=0;
-    strcpy(LPNameList[i],"empty");
+    LPNameList[i] = "empty";
   }
 
   Connections_Attempted = 0;
@@ -188,7 +188,7 @@ SetSizeCC( int CC, int Size ) {
     return(SizeCC[CC]);
   }
   else
-    return(-1);
+    return -1;
 };
 
 //----------------------------------------
@@ -198,18 +198,18 @@ SetSizeCC( int CC, int Size ) {
 //----------------------------------------
 int 
 Stat_Class::
-FindCD( char *CDName ) {
+FindCD( string CDName ) {
   int i;
 
   for(i=0;i<MaxCD;i++)
-    if (strcmp(CDNameList[i],CDName) == 0)
-      return(i);
+    if (CDNameList[i] == CDName)
+      return i;
     else
-      if (strcmp(CDNameList[i],"empty") == 0) {
-        strcpy(CDNameList[i],CDName);
-        return(i);
+      if (CDNameList[i] == "empty") {
+        CDNameList[i] = CDName;
+        return i;
       }
-  return(-1);
+  return -1;
 };
 
 //----------------------------------------
@@ -218,7 +218,7 @@ FindCD( char *CDName ) {
 //----------------------------------------
 int
 Stat_Class::
-IncNumCollDetCalls( char *CDName, std::string *pCallName){
+IncNumCollDetCalls( string CDName, string *pCallName){
   int CD;
 
   CD=FindCD( CDName );
@@ -231,7 +231,7 @@ IncNumCollDetCalls( char *CDName, std::string *pCallName){
   if( pCallName )
   { CollDetCountByName[*pCallName]++; }
 
-  return(NumCollDetCalls[CD]);
+  return NumCollDetCalls[CD];
 };
 
 //----------------------------------------
@@ -240,11 +240,11 @@ IncNumCollDetCalls( char *CDName, std::string *pCallName){
 //----------------------------------------
 void
 Stat_Class::
-IncCfgIsColl( std::string *pCallName) {
+IncCfgIsColl( string *pCallName) {
 
  if( pCallName )
   { IsCollByName[*pCallName]++; }
-  else { IsCollByName[string("UNKNOWN")]++; }
+  else { IsCollByName["UNKNOWN"]++; }
 
   IsCollTotal++;
 
@@ -257,18 +257,18 @@ IncCfgIsColl( std::string *pCallName) {
 //----------------------------------------
 int
 Stat_Class::
-FindLP( char *LPName ) {
+FindLP( string LPName ) {
   int i;
 
   for(i=0;i<MaxLP;i++)
-    if (strcmp(LPNameList[i],LPName) == 0)
-      return(i);
+    if (LPNameList[i] == LPName)
+      return i;
     else
-      if (strcmp(LPNameList[i],"empty") == 0) {
-        strcpy(LPNameList[i],LPName);
-        return(i);
+      if (LPNameList[i] == "empty") {
+        LPNameList[i] = LPName;
+        return i;
       }
-  return(-1);
+  return -1;
 };
 
 //----------------------------------------
@@ -277,12 +277,12 @@ FindLP( char *LPName ) {
 //----------------------------------------
 int 
 Stat_Class::
-IncLPConnections( char *LPName ) {
+IncLPConnections( string LPName ) {
   int LP;
 
   LP=FindLP( LPName );
   LPConnections[LP]++;
-  return(LPConnections[LP]);
+  return LPConnections[LP];
 };
 
 //----------------------------------------
@@ -291,12 +291,12 @@ IncLPConnections( char *LPName ) {
 //----------------------------------------
 int
 Stat_Class::
-IncLPConnections( char *LPName ,int incr) {
+IncLPConnections( string LPName ,int incr) {
   int LP;
 
   LP=FindLP( LPName );
   LPConnections[LP] += incr;
-  return(LPConnections[LP]);
+  return LPConnections[LP];
 };
 
 //----------------------------------------
@@ -305,12 +305,12 @@ IncLPConnections( char *LPName ,int incr) {
 //----------------------------------------
 int
 Stat_Class::
-DecLPConnections( char *LPName ) {
+DecLPConnections(string LPName) {
   int LP;
  
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPConnections[LP]--;
-  return(LPConnections[LP]);
+  return LPConnections[LP];
 };
 
 //----------------------------------------
@@ -319,12 +319,12 @@ DecLPConnections( char *LPName ) {
 //----------------------------------------
 int
 Stat_Class::
-DecLPConnections( char *LPName, int decr ) {
+DecLPConnections(string LPName, int decr) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPConnections[LP] -= decr;
-  return(LPConnections[LP]);
+  return LPConnections[LP];
 };
 
 
@@ -334,12 +334,12 @@ DecLPConnections( char *LPName, int decr ) {
 //----------------------------------------
 int 
 Stat_Class::
-SetLPConnections( char *LPName, int Connections ) {
+SetLPConnections(string LPName, int Connections) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPConnections[LP]=Connections;
-  return(LPConnections[LP]);
+  return LPConnections[LP];
 };
 
 //----------------------------------------
@@ -348,12 +348,12 @@ SetLPConnections( char *LPName, int Connections ) {
 //----------------------------------------
 int
 Stat_Class::
-IncLPAttempts( char *LPName , int incr) {
+IncLPAttempts(string LPName , int incr) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPAttempts[LP] += incr;
-  return(LPAttempts[LP]);
+  return LPAttempts[LP];
 };
 
 //----------------------------------------
@@ -362,12 +362,12 @@ IncLPAttempts( char *LPName , int incr) {
 //----------------------------------------
 int
 Stat_Class::
-IncLPAttempts( char *LPName ) {
+IncLPAttempts(string LPName ) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPAttempts[LP]++;
-  return(LPAttempts[LP]);
+  return LPAttempts[LP];
 };
 
 //----------------------------------------
@@ -376,12 +376,12 @@ IncLPAttempts( char *LPName ) {
 //----------------------------------------
 int
 Stat_Class::
-DecLPAttempts( char *LPName ) {
+DecLPAttempts(string LPName) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPAttempts[LP]--;
-  return(LPAttempts[LP]);
+  return LPAttempts[LP];
 };
 
 //----------------------------------------
@@ -390,12 +390,12 @@ DecLPAttempts( char *LPName ) {
 //----------------------------------------
 int
 Stat_Class::
-DecLPAttempts( char *LPName ,int decr) {
+DecLPAttempts(string LPName ,int decr) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPAttempts[LP] -= decr;
-  return(LPAttempts[LP]);
+  return LPAttempts[LP];
 };
 
 //----------------------------------------
@@ -404,12 +404,12 @@ DecLPAttempts( char *LPName ,int decr) {
 //----------------------------------------
 int
 Stat_Class::
-SetLPAttempts( char *LPName, int Attempts ) {
+SetLPAttempts(string LPName, int Attempts) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPAttempts[LP]=Attempts;
-  return(LPAttempts[LP]);
+  return LPAttempts[LP];
 };
 
 //----------------------------------------
@@ -419,12 +419,12 @@ SetLPAttempts( char *LPName, int Attempts ) {
 //----------------------------------------
 int 
 Stat_Class::
-IncLPCollDetCalls( char *LPName ) {
+IncLPCollDetCalls(string LPName) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPCollDetCalls[LP]++;
-  return(LPCollDetCalls[LP]);
+  return LPCollDetCalls[LP];
 };
 
 //----------------------------------------
@@ -434,12 +434,12 @@ IncLPCollDetCalls( char *LPName ) {
 //----------------------------------------
 int
 Stat_Class::
-IncLPCollDetCalls( char *LPName, int incr ) {
+IncLPCollDetCalls(string LPName, int incr) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPCollDetCalls[LP] += incr;
-  return(LPCollDetCalls[LP]);
+  return LPCollDetCalls[LP];
 };
 
 //----------------------------------------
@@ -449,12 +449,12 @@ IncLPCollDetCalls( char *LPName, int incr ) {
 //----------------------------------------
 int
 Stat_Class::
-DecLPCollDetCalls( char *LPName ) {
+DecLPCollDetCalls(string LPName) {
   int LP;
  
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPCollDetCalls[LP]--;
-  return(LPCollDetCalls[LP]);
+  return LPCollDetCalls[LP];
 };
 
 //----------------------------------------
@@ -464,12 +464,12 @@ DecLPCollDetCalls( char *LPName ) {
 //----------------------------------------
 int
 Stat_Class::
-DecLPCollDetCalls( char *LPName, int decr ) {
+DecLPCollDetCalls(string LPName, int decr) {
   int LP;
 
-  LP=FindLP( LPName );
+  LP=FindLP(LPName);
   LPCollDetCalls[LP] -= decr;
-  return(LPCollDetCalls[LP]);
+  return LPCollDetCalls[LP];
 };
 
 

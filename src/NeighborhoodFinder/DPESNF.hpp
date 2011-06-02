@@ -322,7 +322,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
   int k, OutputIterator _out) {
 
   // need to provide an implementation of this
-
+  return _out;
 }
 
 

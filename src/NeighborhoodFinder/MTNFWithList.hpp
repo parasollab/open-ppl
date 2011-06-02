@@ -3,7 +3,6 @@
 #define _MT_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "OBPRMDef.h"
 #include "util.h"
 #include "MPProblem.h"
 

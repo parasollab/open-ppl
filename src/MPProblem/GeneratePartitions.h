@@ -548,7 +548,11 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
       cout << "Right box " ;
       rightbox.Print(cout);
     }
-  
+  vector<BoundingBox> vb;
+  vb.push_back(leftbox);
+  vb.push_back(centerbox);
+  vb.push_back(rightbox);
+  return vb; 
 }
 
 
@@ -817,6 +821,7 @@ PlaceBoundaries(Environment* _env, Stat_Class& Stats,
     this->DisplayDetails(p_type, boundingBox->GetDOFs(), this->dims, 2);
     partitions[0]->Print(cout);
     partitions[1]->Print(cout);
+    return partitions;
     //DisplayBoundBox( rightbox , 2);
   }
 
@@ -1089,7 +1094,7 @@ ReadCommandLine(str_param<char *> &partitionType) {
       ++argc;
     }
 
-    bool found = FALSE;
+    bool found = false;
     try {
       int cmd_begin = 0;
       int cmd_argc = 0;
@@ -1121,7 +1126,7 @@ ReadCommandLine(str_param<char *> &partitionType) {
 	    //  and push it back into the list of selected methods.	  
 	    selected.push_back((*itr)->CreateCopy());	 
 	    (*itr)->SetDefault();
-	    found = TRUE;
+	    found = true;
 	    break;
 	  } 
 	}

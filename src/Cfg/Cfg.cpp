@@ -815,7 +815,7 @@ void Cfg::GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
 bool 
 Cfg::
 GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
-		 string _vc, CollisionDetection* _cd,
+		 string _vc,
 		 CDInfo& _cdInfo, string _dm,
 		 int clearance_n, int penetration_n) { 
   
@@ -824,7 +824,7 @@ GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
   this->GetRandomCfg(_env);
   CfgType tmp = CfgType(*this);
   //cout << "Initial CFG: " << tmp << endl;
-  this->PushToMedialAxis(mp, _env, Stats, _vc, _cd, _cdInfo, _dm, 
+  this->PushToMedialAxis(mp, _env, Stats, _vc, _cdInfo, _dm, 
 			 clearance_n, penetration_n);
   //cout << "bout to check if good in getmedialaxiscfg" << endl;
   // If not pushed, fail
@@ -840,7 +840,7 @@ GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
 void 
 Cfg::
 PushToMedialAxis(MPProblem* mp, Environment *_env, Stat_Class& Stats,
-		 string vc, CollisionDetection* cd, CDInfo& cdInfo, 
+		 string vc, CDInfo& cdInfo, 
                  string dm, int clearance_n, int penetration_n) {
 
    // Check if valid
@@ -866,13 +866,13 @@ PushToMedialAxis(MPProblem* mp, Environment *_env, Stat_Class& Stats,
       //cout << " Cfg = clearInfo.getDirection()" << endl;
       //cout << "         Cfg: " << *this << endl;
       // Push to medial axis
-      this->MAPRMfree(mp, _env, Stats, vc, cd, cdInfo, dm, clearance_n);
+      this->MAPRMfree(mp, _env, Stats, vc, cdInfo, dm, clearance_n);
       if(*this == *tmp2)
          this->equals(*tmp3);
    } else {
       //cout << " Cfg::PushToMedialAxis Valid" << endl;
       // Push to medial axis
-      this->MAPRMfree(mp, _env, Stats, vc, cd, cdInfo, dm, clearance_n);
+      this->MAPRMfree(mp, _env, Stats, vc, cdInfo, dm, clearance_n);
    }
    //cout << "All Done PUSHTOMEDIALAXIS" << endl;
 }
@@ -882,11 +882,11 @@ PushToMedialAxis(MPProblem* mp, Environment *_env, Stat_Class& Stats,
 void 
 Cfg::
 MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats, 
-	  string vc, CollisionDetection* cd,
+	  string vc,
           CDInfo& cdInfo, string dm, int n) {
 
    shared_ptr <DistanceMetricMethod> _dm = mp->GetDistanceMetric()->GetDMMethod(dm);
-   Cfg* cfg = this->CreateNewCfg();
+   //Cfg* cfg = this->CreateNewCfg();
    string Callee = "Cfg::MAPRMfree";
 
    // Approximate clearance
@@ -917,7 +917,7 @@ MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats,
    double stepSize = this->clearance;
 
    double positionRes = _env->GetPositionRes();
-   double orientationRes = _env->GetOrientationRes();
+   //double orientationRes = _env->GetOrientationRes();
 
    //cout << "pRes and oRes: " << positionRes << " " << orientationRes << endl;
 
@@ -965,7 +965,7 @@ MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats,
       //cout<<"newCfg->clearance::"<<newCfg->clearance<<"\toldCfg->clearance::"<<oldCfg->clearance<<endl;
    }
 
-   bool valid_cfg = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *tmpCfg, _env, Stats, cdInfo, true, &Callee);
+   //bool valid_cfg = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *tmpCfg, _env, Stats, cdInfo, true, &Callee);
    //cout << "FINAL Valid and in BBX: " << valid_cfg << " " << newCfg->InBoundingBox(_env) << endl;
 
    delete tmpCfg;
@@ -1086,7 +1086,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
 		      ClearanceInfo& clearInfo, bool bComputePenetration,
 		      int ignore_obstacle) const {
 
-  bool change = false;
+  //bool change = false;
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
   shared_ptr <DistanceMetricMethod> dm = mp->GetDistanceMetric()->GetDMMethod(m_dm);
@@ -1100,7 +1100,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
   vector<Cfg*> cand_in;
   vector<Cfg*> cand_out;
   Cfg* tmp;
-  double dist_from = 0.0;  
+  //double dist_from = 0.0;  
 
   for(int i=0; i<n; i++) {
     tmp = this->CreateNewCfg();
@@ -1179,7 +1179,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
        tick[i]->Increment(*incr[i].first);
        
        if(!(tick[i]->InBoundingBox(env))) { // Outside BBX
-	 if (lastLapIndex !=i) {
+	 if (lastLapIndex !=(int)i) {
 	   Cfg* cand_o = tick[i]->CreateNewCfg();
 	   Cfg* cand_i = tick[i]->CreateNewCfg();
 	   cand_i->subtract(*cand_i, *incr[i].first);
@@ -1196,7 +1196,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
 	   cdInfo.ResetVars();
 	 bool bValid = mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc), *tick[i], env, Stats, cdInfo, true, &callee);
 	 if((ignore_obstacle != -1) && (cdInfo.colliding_obst_index == ignore_obstacle)) { // Check if need to ignore obs
-	   if (lastLapIndex != i) {
+	   if (lastLapIndex != (int)i) {
 	     Cfg* cand_o = tick[i]->CreateNewCfg();
 	     Cfg* cand_i = tick[i]->CreateNewCfg();
 	     cand_i->subtract(*cand_i, *incr[i].first);
@@ -1210,7 +1210,7 @@ ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
 	 } else {
 	   if (bValid != bInitState) { // Validity state changed
 	     //cout << "Collision Change (" << iterations << "," << i << ")" << endl;
-	     if (lastLapIndex != i) {
+	     if (lastLapIndex != (int)i) {
 	       Cfg* cand_o = tick[i]->CreateNewCfg();
 	       Cfg* cand_i = tick[i]->CreateNewCfg();
 	       cand_i->subtract(*cand_i, *incr[i].first);

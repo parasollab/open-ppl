@@ -48,18 +48,19 @@ ROBOT_DEF = -DPMPRigid
 
 
 # macros
-DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF} -DVERBOSE=0 #-D_LOG 
+DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF} #-DVERBOSE=0 -D_LOG 
 INCL = -I. ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MPNN_INCL}
 LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 
 # targets
 default_target: libs
 
-utils: cd_libs xml_libs nn_libs mathtool_lib
+utils: cd_libs xml_libs nn_libs mathtool_lib kmeans_lib
 cd_libs: ${CD_LIBFILE}
 xml_libs: ${XML_LIBFILE}
 nn_libs: ${MPNN_LIBFILE}
 mathtool_lib: ${MATHTOOL_LIBFILE}
+kmeans_lib: ${KMEANS_LIBFILE}
 
 objs: utils ${PMPL_OBJS}
 
@@ -93,6 +94,7 @@ reallyreallyclean:
 	cd ${TINYXML_DIR}; ${MAKE} clean
 	cd ${MPNN_SRC}; ${MAKE} clean
 	cd ${MATHTOOL_DIR}; ${MAKE} clean
+	cd ${KMEANS_DIR}; ${MAKE} clean
 
 
 # include automatically generated dependencies

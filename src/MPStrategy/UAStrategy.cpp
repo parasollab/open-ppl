@@ -1,5 +1,8 @@
 #include "UAStrategy.h"
+#include "PartitionTree.h"
 #include "MapEvaluator.h"
+#include "Partition.h"
+#include "MPFeature.h"
 
 UAStrategy::UAStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
    LOG_DEBUG_MSG("UAStrategy::UAStrategy()");
@@ -259,11 +262,11 @@ void UAStrategy::OverlapBBX(){
    if(m_OverlapMethod=="default"){ 
       for(int x = 0; x<3; x++){
          vector<int> indx;
-         for(int i =0; i<m_min.size();i++)indx.push_back(i);
+         for(size_t i =0; i<m_min.size();i++)indx.push_back(i);
          bool swapped;
          do{
             swapped=false;
-            for(int i = 0; i<m_min.size()-1; i++){
+            for(size_t i = 0; i<m_min.size()-1; i++){
                if(m_min[indx[i]][x]>m_min[indx[i+1]][x]){
                   int temp = indx[i];
                   indx[i]=indx[i+1];
@@ -272,7 +275,7 @@ void UAStrategy::OverlapBBX(){
                }
             }
          }while(swapped);
-         for(int i=0;i<indx.size()-1;i++){
+         for(size_t i=0;i<indx.size()-1;i++){
             if(m_max[indx[i]][x]<m_min[indx[i+1]][x]){
                double temp = m_max[indx[i]][x];
                double diff = m_min[indx[i+1]][x]-temp;
@@ -319,8 +322,8 @@ void UAStrategy::OverlapBBX(){
          centers.push_back(v);
          g.add_vertex(node);
       }
-      for(int j = 0; j<Clusters.size(); j++){
-         for(int k = j; k<Clusters.size(); k++){
+      for(size_t j = 0; j<Clusters.size(); j++){
+         for(size_t k = j; k<Clusters.size(); k++){
             vector<double> centerA = centers[j];
             vector<double> centerB = centers[k];
             double weight = sqrt((centerB[0]-centerA[0])*(centerB[0]-centerA[0])+
@@ -334,12 +337,12 @@ void UAStrategy::OverlapBBX(){
       stapl::mst_kruskals(g, mst_g, 0);
       //perform swapping//
       if(m_OverlapMethod=="MSTOverlap"){
-         for(int j = 0; j<mst_g.get_num_vertices(); j++){
+         for(size_t j = 0; j<mst_g.get_num_vertices(); j++){
             //get adjacent edgesi
             for(Graph::adj_edge_iterator e = mst_g.find_vertex(j)->begin(); e!=mst_g.find_vertex(j)->end(); e++){
                //use edge
-               const int v1 = (*e).target();
-               const int v2 = (*e).source();
+               const size_t v1 = (*e).target();
+               const size_t v2 = (*e).source();
                int swapRegion;
                if(v1!=j){
                   swapRegion = v1;
@@ -408,9 +411,7 @@ void UAStrategy::OverlapBBX(){
             sort(regionDistsA.begin(), regionDistsA.end(), sortRegionFunc);
             sort(regionDistsB.begin(), regionDistsB.end(), sortRegionFunc);
             int top10A = (float)regionDistsA.size()/10.0;
-            int indxA = rand()%top10A;
             int top10B = (float)regionDistsB.size()/10.0;
-            int indxB = rand()%top10B;
             vector<VID> vecVID;
             vecVID.push_back(regionDistsA[top10A].first);
             vecVID.push_back(regionDistsB[top10B].first);
@@ -424,7 +425,7 @@ void UAStrategy::OverlapBBX(){
 
 //all methods need to extend region by a robot radius
    for(int x= 0; x<3; x++){
-      for(int i = 0; i<m_min.size();i++){
+      for(size_t i = 0; i<m_min.size();i++){
          double maxbb = bb->GetRange(x).second;
          double minbb = bb->GetRange(x).first;
          if(m_min[i][x]-robot_radius>minbb){
@@ -487,11 +488,11 @@ vector<double> UAStrategy::GetProbabilities(){
    double sum=0;
    vector<double> result;
    
-   for(int RegionID = 0; RegionID<averages.size();RegionID++){
+   for(size_t RegionID = 0; RegionID<averages.size();RegionID++){
       
       cout<<"doing the redistribiution now"<<endl;
       sum=0;
-      for(int i=0;i<averages.size(); i++){
+      for(size_t i=0;i<averages.size(); i++){
          sum += (1-averages[i])*(1-averages[i]);
       }
       double VisibilityOfRegion = averages[RegionID];
@@ -500,14 +501,14 @@ vector<double> UAStrategy::GetProbabilities(){
    }
    
    cout<<"done with redistribute now display results"<<result.size()<<endl<<flush;
-   for(int probs = 0; probs<result.size(); probs++){
+   for(size_t probs = 0; probs<result.size(); probs++){
       cout<<probs<<" = "<<result[probs]<<endl<<flush;
    }
 
    return result;
 }
 
-void UAStrategy::UpdateBBToRange(int region){
+void UAStrategy::UpdateBBToRange(size_t region){
    LOG_DEBUG_MSG("UAS::Enter UpdateBBToRange");
    m_hold.clear();
    if( region >=0 && region < m_min.size() ){
@@ -538,7 +539,7 @@ void UAStrategy::RestoreBB(){
    LOG_DEBUG_MSG("UAS::Enter RestoreBB");
    boost::shared_ptr<BoundingBox> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
    boost::shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
-	int i=0;
+   size_t i=0;
    for(i=0; i<m_hold.size();i++){
       pBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
       pMPEBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
@@ -565,7 +566,7 @@ vector<Partition*> UAStrategy::GetPartitions(){
 
 vector<vector<VID>* > UAStrategy::GetPartitionsVID(){
    vector<vector<VID>* > Clusters;
-   for(int itrCluster =0; itrCluster < m_pt->GetRoot()->GetChildren().size(); ++itrCluster){
+   for(size_t itrCluster =0; itrCluster < m_pt->GetRoot()->GetChildren().size(); ++itrCluster){
       Clusters.push_back( m_pt->GetRoot()->GetChildren()[itrCluster]->GetVIDs() );
    }
    return Clusters;

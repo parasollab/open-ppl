@@ -13,7 +13,6 @@ class TestEvaluation
   TestEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem, int s = 500); 
   virtual ~TestEvaluation(); 
   
-  virtual char* GetName() const; 
   virtual void PrintOptions(ostream& out_os);
   
   virtual bool operator() () 

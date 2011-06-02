@@ -2,12 +2,6 @@
 #define _NEGATE_VALIDITY_HPP_
 
 //////////////////////////////////////////////////////////////////////////////////////////
-#include "ValidityChecker.hpp"
-#include "ValidityCheckerMethod.hpp"
-#include "LabeledObject.h"
-#include "Compose.hpp"
-#include "ComposeVC.hpp"
-#include <string>
 //////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename CFG> class ValidityChecker;
@@ -18,10 +12,10 @@ class NegateValidity : public ValidityCheckerMethod
 {
 public:
   
-  typedef typename std::vector<typename ValidityChecker<CFG>::VCMethodPtr>::iterator InputIterator;
+  typedef typename vector<typename ValidityChecker<CFG>::VCMethodPtr>::iterator InputIterator;
   
   NegateValidity() { }
-  NegateValidity(string label, std::vector<typename ValidityChecker<CFG>::VCMethodPtr> vec, Compose_Negate<InputIterator, ComposeFunctor<CFG> > _com_neg);
+  NegateValidity(string label, vector<typename ValidityChecker<CFG>::VCMethodPtr> vec, Compose_Negate<InputIterator, ComposeFunctor<CFG> > _com_neg);
   NegateValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem);   
   ~NegateValidity() { }
   
@@ -30,8 +24,8 @@ public:
 	  CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName);
   
 private:
-  std::string m_vcLabel;
-  std::vector<typename ValidityChecker<CFG>::VCMethodPtr> m_vec_vcMethod;
+  string m_vcLabel;
+  vector<typename ValidityChecker<CFG>::VCMethodPtr> m_vec_vcMethod;
   Compose_Negate<InputIterator, ComposeFunctor<CFG> > com_neg;
 };
 

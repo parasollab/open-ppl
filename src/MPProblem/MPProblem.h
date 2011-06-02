@@ -5,7 +5,6 @@
 #include "CfgTypes.h"
 //#include "NeighborhoodFinder.h"
 
-
 class MPStrategy;
 class DistanceMetric;
 class NeighborhoodFinder;
@@ -66,11 +65,11 @@ public:
 //////////////
   protected:
   MPStrategy* m_pMPStrategy;
+  Environment* m_pEnvironment;
   DistanceMetric*     m_pDistanceMetric;
-  NeighborhoodFinder* m_pNeighborhoodFinder;
   CollisionDetection* m_pCollisionDetection;
   ValidityChecker<CfgType>* m_pValidityChecker;
-  Environment* m_pEnvironment;
+  NeighborhoodFinder* m_pNeighborhoodFinder;
   //Roadmap<CfgType,WeightType> rmp;
   //Roadmap<CfgType,WeightType> rmp_col;
   vector< MPRegion<CfgType,WeightType>* > m_vecMPRegions; 

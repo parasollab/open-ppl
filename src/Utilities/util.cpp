@@ -44,13 +44,11 @@ double DirectedAngularDistance(double a,double b) {
 double
 GaussianDistribution(double m, double s) 
 {
-  double x1, x2, w, r, r1;
+  double x1, x2, w, r;
   do {
-    r1 = (double)rand();
-    r = ((double)(r1 / (RAND_MAX+1))) * -1;
+    r = OBPRM_drand();
     x1 = 2. * r - 1.;
-    r1 = (double)rand();
-    r = ((double)(r1 / (RAND_MAX+1))) * -1;
+    r = OBPRM_drand();
     x2 = 2. * r - 1.;
     w = x1 * x1 + x2 * x2;
   } while(w >= 1. || w < 1E-30);
@@ -161,7 +159,7 @@ WritePathLinkConfigurations( const char output_file[80],
   fprintf(fp,"VIZMO_PATH_FILE   Path Version %d\n", PATHVER_20001022);
   int numofLink = env->GetMultiBody(env->GetRobotIndex())->GetFreeBodyCount();
   fprintf(fp,"%d\n", numofLink);
-  fprintf(fp,"%d",path.size());
+  fprintf(fp,"%zu",path.size());
   
   char cfgFile[100];
   sprintf(cfgFile, "%s%s", output_file, ".cfg");
@@ -202,7 +200,7 @@ WritePathConfigurations( const char output_file[80],
   //Cfg::print_preamble_to_file(env, fp, path.size());        
   fprintf(fp,"VIZMO_PATH_FILE   Path Version %d\n", PATHVER_20001125);
   fprintf(fp,"%d\n", 1);
-  fprintf(fp,"%d \n", path.size());
+  fprintf(fp,"%zu \n", path.size());
   
   for(size_t i = 0 ; i < path.size() ; i++){
     vector<double> tmp = path[i]->GetData();

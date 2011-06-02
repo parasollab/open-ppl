@@ -1,13 +1,8 @@
 #ifndef RoadmapToolsStrategy_h
 #define RoadmapToolsStrategy_h
 
-
-
-
-#include "SwitchDefines.h"
 #include<sys/time.h>
 
-#include "OBPRMDef.h"
 #include "Roadmap.h"
 
 #include "Clock_Class.h"
@@ -70,10 +65,6 @@ class RoadmapInput : public MPStrategyMethod {
    virtual void Run(int in_RegionID){
       LOG_DEBUG_MSG("PRMInput::() -- Reading in file: " << m_strInputFileName);
       OBPRM_srand(getSeed()); 
-      MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-      
-     
-      
       LOG_DEBUG_MSG("~PRMInput::()");
     }
    virtual void Finalize(int in_RegionID){}

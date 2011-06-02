@@ -2,7 +2,7 @@
 ifeq (${platform}, LINUX_gcc) 	#linux/gcc on 32 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -15,7 +15,7 @@ ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
 	#temporarily remove VCLIP - does not compile because of hash map
 	UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL =   ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB =   ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
+	UTILS_LIB =   ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB}${KMEANS_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -32,7 +32,7 @@ endif
 ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc on 64 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -48,7 +48,7 @@ endif
 ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -60,7 +60,7 @@ endif
 ifeq (${platform}, AIX_64_xlC)	#aix/64-bit/native compiler (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
+	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 
 	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -72,10 +72,8 @@ endif
 
 #set debug specific variables
 ifeq (${debug}, 0)
-	DEFS += -DINTERMEDIATE_FILES=0
 else
 	ifeq (${debug}, 1)
-		DEFS += -DINTERMEDIATE_FILES=1
 	else
 		@echo ""
 		@echo "Invalid debug value: ${debug}"
@@ -135,6 +133,14 @@ ${MATHTOOL_DIR}/libmathtool.a:
 
 MATHTOOL_LIBFILE = ${MATHTOOL_DIR}/libmathtool.a
 
+#kmeans
+KMEANS_DIR = ${UTILS_DIR}/Kmeans
+KMEANS_LIB = -L${KMEANS_DIR} -lkmeans
+KMEANS_INCL = -I${KMEANS_DIR}
+${KMEANS_DIR}/libkmeans.a:
+	cd ${KMEANS_DIR}; ${MAKE} platform=${platform} debug=${debug}
+
+KMEANS_LIBFILE = ${KMEANS_DIR}/libkmeans.a
 
 # stapl macros
 #STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools 
@@ -178,8 +184,10 @@ PMPL_INCL = \
 	-I${PMPL_DIR}/NodeGenerator \
 	-I${PMPL_DIR}/Utilities \
 	-I${PMPL_DIR}/ValidityChecker \
-	-I${PMPL_DIR}/trash \
-	-I${PMPL_DIR}/NeighborhoodFinder
+	-I${PMPL_DIR}/NeighborhoodFinder \
+	-I${PMPL_DIR}/Partitioning \
+	-I${PMPL_DIR}/Partitioning/Features \
+	-I${PMPL_DIR}/Partitioning/PartitioningEvaluators
 
 PMPL_OBJS = \
 	MPProblem/Geometry/FreeBody.o \
@@ -192,7 +200,6 @@ PMPL_OBJS = \
 	MPProblem/Geometry/GMSPolyhedron.o \
 	MPProblem/Geometry/Body.o \
 	MPProblem/Geometry/MultiBody.o \
-	trash/Parameters.o \
 	Cfg/Cfg.o \
 	Cfg/Cfg_free.o \
 	Cfg/Cfg_fixed_PRR.o \
@@ -214,19 +221,18 @@ PMPL_OBJS = \
 	DistanceMetric/DistanceMetricMethod.o \
 	DistanceMetric/DistanceMetrics.o \
 	ValidityChecker/CollisionDetection.o \
-	trash/QueryCmds.o \
 	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
 	MPStrategy/MPStrategy.o \
 	NeighborhoodFinder/NeighborhoodFinderMethod.o \
 	MPProblem/MPProblem.o \
-	NeighborhoodFinder/MPNNWrapper.o 
+	NeighborhoodFinder/MPNNWrapper.o \
+        Utilities/MPProblemAccess.o
 
 ifeq (${parallel}, 0)
 	PMPL_OBJS+= \
 	MPStrategy/BasicPRMStrategy.o \
 	MPStrategy/BasicRRTStrategy.o \
-	MPStrategy/ProbabilityPRMStrategy.o \
 	MPStrategy/TogglePRMStrategy.o \
 	MPStrategy/HybridPRM.o \
 	MPStrategy/QueryStrategy.o \
@@ -234,50 +240,24 @@ ifeq (${parallel}, 0)
         MPStrategy/ResamplePointStrategy.o \
 	MPStrategy/EvaluateMapStrategy.o \
 	MPStrategy/ClosedChainStrategy.o \
+	MPStrategy/UAStrategy.o \
 	MapEvaluator/TestEvaluation.o \
-	MapEvaluator/PrintMapEvaluation.o 
+	MapEvaluator/PrintMapEvaluation.o \
+	Partitioning/Partition.o \
+	Partitioning/PartitioningMethod.o \
+	Partitioning/KMeans.o \
+	Partitioning/GrowablePartitions.o \
+	Partitioning/HierarchicalClustering.o \
+	Partitioning/PGMeansClustering.o \
+	Partitioning/SuccessiveClustering.o \
+	Partitioning/PartitioningMethods.o \
+	Partitioning/PartitionTree.o \
+	Partitioning/Features/Features.o \
+	Partitioning/Features/CfgFeature.o \
+	Partitioning/Features/VisibilityFeature.o \
+	Partitioning/Features/ClearanceFeature.o \
+	Partitioning/PartitioningEvaluators/PartitioningEvaluators.o \
+	Partitioning/PartitioningEvaluators/STDEvaluator.o \
+	Partitioning/PartitioningEvaluators/AVGEvaluator.o
 endif
 
-#UAS compile macro
-UAS=0
-ifeq ($(UAS), 1)
-   UTILS_DEF+= -DUAS
-   PMPL_INCL+= \
-   -I${PMPL_DIR}/Partitioning \
-   -I${PMPL_DIR}/Partitioning/Kmeans \
-   -I${PMPL_DIR}/Partitioning/Features \
-   -I${PMPL_DIR}/Partitioning/PartitioningEvaluators
-
-   PMPL_OBJS+= \
-   MPStrategy/UAStrategy.o \
-   Partitioning/Partition.o \
-   Partitioning/PartitioningMethod.o \
-   Partitioning/KMeans.o \
-   Partitioning/GrowablePartitions.o \
-   Partitioning/HierarchicalClustering.o \
-   Partitioning/PGMeansClustering.o \
-   Partitioning/SuccessiveClustering.o \
-   Partitioning/PartitioningMethods.o \
-   Partitioning/PartitionTree.o \
-   Partitioning/Kmeans/KCtree.o \
-   Partitioning/Kmeans/KMcenters.o \
-   Partitioning/Kmeans/KMfilterCenters.o \
-   Partitioning/Kmeans/kmlsample.o \
-   Partitioning/Kmeans/KMterm.o \
-   Partitioning/Kmeans/KCutil.o \
-   Partitioning/Kmeans/KMdata.o \
-   Partitioning/Kmeans/kmlminimal.o \
-   Partitioning/Kmeans/kmltest.o \
-   Partitioning/Kmeans/KM_ANN.o \
-   Partitioning/Kmeans/KMeans.o \
-   Partitioning/Kmeans/KMlocal.o \
-   Partitioning/Kmeans/KMrand.o \
-   Partitioning/Features/Features.o \
-   Partitioning/Features/CfgFeature.o \
-   Partitioning/Features/VisibilityFeature.o \
-   Partitioning/Features/ClearanceFeature.o \
-   Partitioning/Features/CSpaceClearanceFeature.o \
-   Partitioning/PartitioningEvaluators/PartitioningEvaluators.o \
-   Partitioning/PartitioningEvaluators/STDEvaluator.o \
-   Partitioning/PartitioningEvaluators/AVGEvaluator.o
-endif

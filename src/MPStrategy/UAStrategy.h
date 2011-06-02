@@ -2,23 +2,27 @@
 #define UASTRATEGY_H_
 
 #include "MPStrategy.h"
-#include "PartitionTree.h"
+#include "PartitioningMethods.h"
+#include "PartitioningEvaluators.h"
+#include "Features.h"
+
 class PartitionTree;
+class Partition;
 
 class UASContainer : public MPSMContainer {
-public:
-  UASContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
-      vector<string> m_EvaluatorLabels;
-      string m_PartitioningMethod;
-      string m_DistributionFeature;
-      PartitionTree* m_pt;
-      string m_TrainingStrategy;
-      string m_OverlapMethod;
-      vector<string> m_RegionStrategies;
-      vector<vector<double> > m_min, m_max;
-      vector<pair<double,double> > m_hold;
-      int m_CurrentIteration;
-      MPSMContainer parent;
+  public:
+    UASContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
+    vector<string> m_EvaluatorLabels;
+    string m_PartitioningMethod;
+    string m_DistributionFeature;
+    PartitionTree* m_pt;
+    string m_TrainingStrategy;
+    string m_OverlapMethod;
+    vector<string> m_RegionStrategies;
+    vector<vector<double> > m_min, m_max;
+    vector<pair<double,double> > m_hold;
+    int m_CurrentIteration;
+    MPSMContainer parent;
 
 };
 
@@ -55,7 +59,7 @@ class UAStrategy : public MPStrategyMethod {
    void IntToStr(int myInt, string &myString);
    int GetRandRegion(vector<double> probs);
    vector<double> GetProbabilities();
-   void UpdateBBToRange(int region);
+   void UpdateBBToRange(size_t region);
    void RestoreBB();
    vector<Partition*> GetPartitions();
    vector<vector<VID>* > GetPartitionsVID();

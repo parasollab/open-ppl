@@ -33,7 +33,6 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 
   //////////////////////
   // Access
-  virtual char* GetName() const;
   virtual void SetDefault();
 
   //////////////////////
@@ -177,17 +176,21 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
 StraightLine(cd_predefined _cdtype) : LocalPlannerMethod<CFG, WEIGHT>() {
+  this->SetName("straightLine");
 }
 
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
-StraightLine(int bin, int length, string vc, cd_predefined _cdtype) : binarySearch(bin), lineSegmentLength(length), vcMethod(vc), cdtype(_cdtype) {}
+StraightLine(int bin, int length, string vc, cd_predefined _cdtype) : binarySearch(bin), lineSegmentLength(length), vcMethod(vc), cdtype(_cdtype) {
+  this->SetName("straightLine");
+}
 
 template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
 StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml) :
       LocalPlannerMethod<CFG, WEIGHT>(in_Node,in_pProblem) 
 {
+  this->SetName("straightLine");
   cdtype = _cdtype;
   LOG_DEBUG_MSG("StraightLine::StraightLine()");
   lineSegmentLength = in_Node.numberXMLParameter(string("length"), false, 0, 0, 5000, string("lineSegmentLength")); 
@@ -203,15 +206,6 @@ template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::
 ~StraightLine() {
 }
- 
- 
-template <class CFG, class WEIGHT>
-char*
-StraightLine<CFG, WEIGHT>::
-GetName() const {
-  return "straightline";
-}
-
 
 template <class CFG, class WEIGHT>
 void
@@ -222,14 +216,13 @@ SetDefault() {
   binarySearch = 0;
 }
 
-
 template <class CFG, class WEIGHT>
 void
 StraightLine<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << "\n\t" << lineSegmentLength;
   _os << "\n\t" << binarySearch;
   
@@ -240,25 +233,23 @@ template <class CFG, class WEIGHT>
 void
 StraightLine<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
-  _os << GetName() << " ";
+  _os << this->GetName() << " ";
   //_os << "lineSegmentLength" << " " << lineSegmentLength << " ";
   //_os << "binarySearch" << " " << binarySearch << " ";
   _os << endl;
 }
 
-
 template <class CFG, class WEIGHT>
 void
 StraightLine<CFG, WEIGHT>::
 PrintOptions(ostream& out_os) {
-  out_os << "    " << GetName() << "::  ";
+  out_os << "    " << this->GetName() << "::  ";
   out_os << "line segment length = " << " " << lineSegmentLength << " ";
   out_os << "binary search = " << " " << binarySearch << " ";
   out_os << "vcMethod = " << " " << vcMethod << " ";
   out_os << endl;
 }
  
-
 template <class CFG, class WEIGHT>
 LocalPlannerMethod<CFG, WEIGHT>* 
 StraightLine<CFG, WEIGHT>::
@@ -266,7 +257,6 @@ CreateCopy() {
   LocalPlannerMethod<CFG, WEIGHT> * _copy = new StraightLine<CFG, WEIGHT>(*this);
   return _copy;
 }
-
 
 //// default implementation for non closed chains
 template <class CFG, class WEIGHT>
@@ -280,13 +270,14 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
          bool checkCollision, 
          bool savePath, bool saveFailedPath,
  	 typename boost::disable_if<is_closed_chain<Enable> >::type* dummy) 
-{ Stats.IncLPAttempts( "Straightline" );
+{ 
+  Stats.IncLPAttempts("Straightline");
   int cd_cntr = 0; 
  
   ///\todo fix this bug ... CD count not right.
   ///\todo fix lineSegment implementation!  very poor for counting stats, etc.
   if(lineSegmentLength) {
-    Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
+    Stats.IncLPCollDetCalls("Straightline", cd_cntr );
     if( lineSegmentInCollision(_env, Stats, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
        return false;  //not connected
     }
@@ -301,9 +292,9 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
                                            cd_cntr, positionRes, orientationRes, 
                                            checkCollision, savePath, saveFailedPath);
     if(connected)
-      Stats.IncLPConnections( "Straightline" );
+      Stats.IncLPConnections("Straightline");
 
-    Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
+    Stats.IncLPCollDetCalls("Straightline", cd_cntr );
     return connected;
 }
 
@@ -321,7 +312,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
          bool savePath, bool saveFailedPath,
 	 typename boost::enable_if<is_closed_chain<Enable> >::type* dummy)
 {
-  Stats.IncLPAttempts( "Straightline" );
+  Stats.IncLPAttempts("Straightline");
   int cd_cntr = 0; 
   
   bool connected;
@@ -432,8 +423,9 @@ StraightLine<CFG, WEIGHT>::
   tick = _c1; 
   CFG incr;
   incr.FindIncrement(_c1,_c2,&n_ticks,positionRes,orientationRes);
-  std::string Callee(GetName());
-  {std::string Method("-straightline::IsConnectedSLSequential");Callee=Callee+Method;}
+  string Callee(this->GetName());
+  string Method("-straightline::IsConnectedSLSequential");
+  Callee=Callee+Method;
   
 
   int nTicks = 0;
@@ -530,7 +522,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
     
     //Check collision
     //if( cd->IsInCollision(_env, Stats, *this->cdInfo, lineSegment) )
-    std::string Callee(GetName()),Method("-StraightLine::lineSegmentInCollision");
+    string Callee(this->GetName()),Method("-StraightLine::lineSegmentInCollision");
     Callee+=Method;
 
     shared_ptr<BoundingBox> bb =  _env->GetBoundingBox();
@@ -568,8 +560,8 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
  				   positionRes, orientationRes,
 				   checkCollision, savePath, saveFailedPath);
 
-  std::string Callee(GetName());
-  std::string Method("-straightline::IsConnectedSLBinary");
+  string Callee(this->GetName());
+  string Method("-straightline::IsConnectedSLBinary");
   Callee=Callee+Method;
 
   int n_ticks;

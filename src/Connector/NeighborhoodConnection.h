@@ -144,7 +144,7 @@ NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(int k, int m, bool _c
     NodeConnectionMethod<CFG,WEIGHT>(), 
     m_k(k), m_fail(m), m_count_failures(_count_failures), m_unconnected(_unconnected), m_random(_random), m_debug(false)
 {
-  this->element_name = "NeighborhoodConnection"; 
+  this->SetName("NeighborhoodConnection"); 
 }
 
 
@@ -154,7 +154,7 @@ NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(XMLNodeReader& in_Nod
     m_k(KCLOSEST), m_fail(MFAILURE), m_count_failures(false), m_unconnected(false), m_random(false), m_debug(false)
 {
   LOG_DEBUG_MSG("NeighborhoodConnection::NeighborhoodConnection()"); 
-  this->element_name = "NeighborhoodConnection"; 
+  this->SetName("NeighborhoodConnection"); 
   ParseXML(in_Node);
   LOG_DEBUG_MSG("~NeighborhoodConnection::NeighborhoodConnection()"); 
 }
@@ -229,8 +229,7 @@ template <class CFG, class WEIGHT>
 NodeConnectionMethod<CFG,WEIGHT>* 
 NeighborhoodConnection<CFG,WEIGHT>::
 CreateCopy() {
-  NodeConnectionMethod<CFG,WEIGHT>* _copy = 
-           new NeighborhoodConnection<CFG,WEIGHT>(*this);
+  NodeConnectionMethod<CFG,WEIGHT>* _copy = new NeighborhoodConnection<CFG,WEIGHT>(*this);
   return _copy;
 }
 
@@ -415,9 +414,7 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         KClosestClock.StopClock();
         if (m_debug)
         {
-          
           copy(closest.begin(), closest.end(), ostream_iterator<VID>(cout, " "));
-          
         }
         
 	pConnectNeighbors(_rm, Stats, lp, addAllEdges, iter_success, iter_failure, total_success,
@@ -690,6 +687,7 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
       *closest_iter = *(_itr2_first + id);
       closest_iter++;
     }
+    return closest_iter;
   }
   else {
     // find the k-closest neighbors

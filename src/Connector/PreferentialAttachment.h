@@ -130,7 +130,7 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
 
 template <class CFG, class WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment():NodeConnectionMethod<CFG,WEIGHT>() { 
-  this->element_name = "PreferentialAttachment"; 
+  this->SetName("PreferentialAttachment"); 
   SetDefault();
 }
 
@@ -138,7 +138,7 @@ template <class CFG, class WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
     NodeConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem) { 
   LOG_DEBUG_MSG("PreferentialAttachment::PreferentialAttachment()"); 
-  this->element_name = "PreferentialAttachment"; 
+  this->SetName("PreferentialAttachment"); 
   SetDefault();
   ParseXML(in_Node);
   
@@ -152,7 +152,7 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNodeReader& in_Nod
 template <class CFG, class WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int k) : 
     NodeConnectionMethod<CFG,WEIGHT>() { 
-  this->element_name = "PreferentialAttachment"; 
+  this->SetName("PreferentialAttachment"); 
   m_k = k;
   m_fail = k;
   m_unconnected = false;
@@ -163,7 +163,7 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int k) :
 template <class CFG, class WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int k, int m) : 
     NodeConnectionMethod<CFG,WEIGHT>() { 
-  this->element_name = "PreferentialAttachment"; 
+  this->SetName("PreferentialAttachment"); 
   m_k = k;
   m_fail = m;
   m_unconnected = false;

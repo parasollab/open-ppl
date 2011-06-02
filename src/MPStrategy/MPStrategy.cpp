@@ -6,7 +6,6 @@
 #include "MPRegionComparerMethod.h"
 #include "BasicPRMStrategy.h"
 #include "BasicRRTStrategy.h"
-#include "ProbabilityPRMStrategy.h"
 #include "TogglePRMStrategy.h"
 #include "RoadmapToolsStrategy.h"
 #include "HybridPRM.h"
@@ -18,9 +17,6 @@
 #include "SmoothQueryStrategy.h"
 #include "ResamplePointStrategy.h"
 #include "EvaluateMapStrategy.h"
-#endif
-
-#ifdef UAS
 #include "UAStrategy.h"
 #endif
 
@@ -57,16 +53,14 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPB
         m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(*citr, GetMPProblem());
       } else if(citr->getName() == "MPStrategyMethod") {
         ParseStrategyMethod(*citr);
-	#ifndef _PARALLEL
+#ifndef _PARALLEL
       } else if (citr->getName() == "MPEvaluator_methods") {
         m_Evaluator = new MapEvaluator<CfgType, WeightType>(*citr, GetMPProblem());
       /*} else if(citr->getName() == "MPStrategyMethod") {
         ParseStrategyMethod(*citr);*/
       } else if(citr->getName() == "MPCharacterizer") {
         m_pCharacterizer = new MPCharacterizer<CfgType, WeightType>(*citr, GetMPProblem());
-	#endif
       } 
-#ifdef UAS
       else if(citr->getName() == "features"){
          m_Features = new Features(*citr, GetMPProblem());
       }
@@ -75,8 +69,8 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPB
       }
       else if(citr->getName() == "partitioning_evaluators"){
          m_PartitioningEvaluators = new PartitioningEvaluators(*citr, GetMPProblem());
-      }
 #endif
+      }
       else {
         citr->warnUnknownNode();
       }
@@ -129,8 +123,6 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
     mpsm = new BasicPRMStrategy(citr, GetMPProblem());
   } else if(citr.getName() == "BasicRRTStrategy"){
     mpsm = new BasicRRTStrategy(citr, GetMPProblem());
-  } else if(citr.getName() == "ProbabilityPRMStrategy") {
-    mpsm = new ProbabilityPRMStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "TogglePRMStrategy") {
     mpsm = new TogglePRMStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "Compare") {
@@ -163,12 +155,9 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
     mpsm = new EvaluateMapStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "ResamplePointStrategy") {
     mpsm = new ResamplePointStrategy(citr,GetMPProblem());
-  }  
-#ifdef UAS
-  else if(citr.getName() == "UAStrategy") {
+  } else if(citr.getName() == "UAStrategy") {
     mpsm = new UAStrategy(citr, GetMPProblem());
   } 
-#endif
 #endif
   else {
     citr.warnUnknownNode();
@@ -186,21 +175,20 @@ GetMPStrategyMethod(string& in_strLabel) {
           return I->first;
         }
       }
+  return NULL;
 }
 
-#ifdef UAS
 XMLNodeReader* MPStrategy::
 GetXMLNodeForStrategy(string& in_strLabel) {
   vector<pair<MPStrategyMethod*, XMLNodeReader*> >::iterator I;
-  for(I = all_MPStrategyMethod.begin(); 
-      I != all_MPStrategyMethod.end(); ++I) {
-        if(I->first->GetLabel() == in_strLabel) {
-    LOG_DEBUG_MSG("MPStrategyMethod::GetMPStrategyMethod(): found " << in_strLabel);
-          return I->second;
-        }
-      }
+  for(I = all_MPStrategyMethod.begin(); I != all_MPStrategyMethod.end(); ++I) {
+    if(I->first->GetLabel() == in_strLabel) {
+      LOG_DEBUG_MSG("MPStrategyMethod::GetMPStrategyMethod(): found " << in_strLabel);
+      return I->second;
+    }
+  }
+  return NULL;
 }
-#endif
 
 void MPStrategy::
 Solve() {

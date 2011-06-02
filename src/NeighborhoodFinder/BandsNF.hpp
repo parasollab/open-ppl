@@ -55,7 +55,7 @@ public:
     for (VEC_ITR itr = _candidates_first; itr != _candidates_last; ++itr) {
       
       double dist = (*itr).second;
-      if(neighbors.size()< getK()){
+      if((int) neighbors.size()< getK()){
         for(vector< pair<VID, double> >::iterator iter2 = neighbors.begin(); iter2!=neighbors.end();iter2++){
 	  if((*iter2).second > (*itr).second) {
 	    swap(*itr,*iter2);

@@ -29,7 +29,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   ConnectCCs();
-  ConnectCCs(int k, int cc, string nf);
+  ConnectCCs(int k, size_t cc, string nf);
   ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   ConnectCCs(Roadmap<CFG,WEIGHT>*, 
 		      LocalPlanners<CFG,WEIGHT>*);
@@ -124,7 +124,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   // Data
 
   int kpairs;
-  int smallcc;
+  size_t smallcc;
   string nf_label;
 };
 
@@ -134,14 +134,14 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::ConnectCCs():
   ComponentConnectionMethod<CFG,WEIGHT>() { 
-  this->element_name = "components"; 
+  this->SetName("components"); 
 
   SetDefault();
 }
 
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::
-ConnectCCs(int k, int cc, string nf) : kpairs(k), smallcc(cc), nf_label(nf) {
+ConnectCCs(int k, size_t cc, string nf) : kpairs(k), smallcc(cc), nf_label(nf) {
 SetDefault();
 }
 
@@ -151,14 +151,13 @@ ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem):
   ComponentConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem) { 
   
   LOG_DEBUG_MSG("ConnectCCs::ConnectCCs()");
-  this->element_name = "components"; 
+  this->SetName("components"); 
   SetDefault();
 
   nf_label = in_Node.stringXMLParameter("nf", true, "", "nf");
   kpairs = in_Node.numberXMLParameter(string("kpairs"), true, 5,1,1000, 
                                   string("kpairs value")); 
-  smallcc = in_Node.numberXMLParameter(string("smallcc"), true, 5,1,1000, 
-                                  string("smallcc value")); 
+  smallcc = in_Node.numberXMLParameter("smallcc", true, 5,1,1000,  "smallcc value"); 
   
   LOG_DEBUG_MSG("~ConnectCCs::ConnectCCs()");
 }
@@ -167,7 +166,7 @@ ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem):
 template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::ConnectCCs(Roadmap<CFG,WEIGHT> * rdmp, LocalPlanners<CFG,WEIGHT>* lp):
   ComponentConnectionMethod<CFG,WEIGHT>(rdmp, lp) {
-  this->element_name = string("components");
+  this->SetName("components");
 
   SetDefault();
 }
@@ -246,8 +245,8 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   // created a temporary variable since Get CC requires &
   LPOutput<CFG,WEIGHT> lpOutput;
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_label)->GetDMMethod();
-  for (int c1 = 0; c1 < cc1vec.size(); c1++){
-    for (int c2 = 0; c2 < cc2vec.size(); c2++){
+  for (size_t c1 = 0; c1 < cc1vec.size(); c1++){
+    for (size_t c2 = 0; c2 < cc2vec.size(); c2++){
       if(_rm->IsCached(cc1vec[c1], cc2vec[c2]) && !_rm->GetCache(cc1vec[c1], cc2vec[c2])) {
         continue;
       }
@@ -294,7 +293,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	      bool addPartialEdge, bool addAllEdges, OutputIterator collision) { 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
-  int k = (int)min(kpairs, cc2vec.size());
+  size_t k = min(kpairs, cc2vec.size());
 
   vector<pair<VID,VID> > kp(k);
   typename vector<pair<VID,VID> >::iterator kp_iter = kp.begin();
@@ -307,7 +306,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_label)->GetDMMethod();
   LPOutput<CFG,WEIGHT> lpOutput;
-  for (int i = 0; i < kp.size(); i++) {
+  for (size_t i = 0; i < kp.size(); i++) {
     if(_rm->IsCached(kp[i].first, kp[i].second) && !_rm->GetCache(kp[i].first, kp[i].second)) {
       continue;
     }

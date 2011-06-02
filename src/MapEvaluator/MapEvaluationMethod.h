@@ -13,7 +13,6 @@ class MapEvaluationMethod
     {}
   virtual ~MapEvaluationMethod() {}
   
-  virtual char* GetName() const = 0;
   virtual void PrintOptions(ostream& out_os) = 0;
   
   virtual bool operator() () = 0;
@@ -23,12 +22,11 @@ class MapEvaluationMethod
 class TrueEvaluation : public MapEvaluationMethod
 {
  public:
-   TrueEvaluation() : MapEvaluationMethod() {}
+   TrueEvaluation() : MapEvaluationMethod() {this->SetName("TrueEvaluator");}
    TrueEvaluation(XMLNodeReader& in_pNode, MPProblem* in_pProblem)
-      : MapEvaluationMethod(in_pNode, in_pProblem){}
+      : MapEvaluationMethod(in_pNode, in_pProblem){this->SetName("TrueEvaluator");}
    virtual ~TrueEvaluation(){}
 
-   virtual char* GetName() const{return "TrueEvaluator";}
    virtual void PrintOptions(ostream& out_os){
       out_os<<"True Evaluator always returns true, no options present."<<endl;
    }

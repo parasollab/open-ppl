@@ -156,12 +156,12 @@ class spillTree{
         return closest;  
       if(distance_v.distance<(*iter).distance){
         closest->insert(iter,distance_v);
-        if(closest->size()>k)
+        if((int)closest->size()>k)
           closest->pop_back();
         return closest;
       }
     }
-    if(closest->size()<k)
+    if((int)closest->size()<k)
       closest->push_back(distance_v);
     return closest;
   }
@@ -550,7 +550,7 @@ class spillTree{
   
   void addVertexToLeaf(VID newVertex, VID leaf){
     getNodeDataStructure(leaf)->verticies->push_back(newVertex);
-    if(getNodeDataStructure(leaf)->verticies->size()>maxLeafSize){
+    if((int)getNodeDataStructure(leaf)->verticies->size()>maxLeafSize){
       vector<VID> lSublist;
       vector<VID> rSublist;
       rSublist.reserve(getNodeDataStructure(leaf)->verticies->size());

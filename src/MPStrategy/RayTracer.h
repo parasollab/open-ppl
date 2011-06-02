@@ -24,7 +24,6 @@ enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTH
 
 #include "Cfg.h"
 #include "Roadmap.h"
-#include "OBPRMDef.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
 

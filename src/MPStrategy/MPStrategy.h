@@ -4,12 +4,6 @@
 #include "util.h"
 #include "CfgTypes.h"
 
-#ifdef UAS
-#include "PartitioningMethods.h"
-#include "PartitioningEvaluators.h"
-#include "Features.h"
-#endif
-
 class MPProblem;
 template <class CFG, class WEIGHT> class LocalPlanners;
 template <class CFG> class Sampler;
@@ -17,14 +11,11 @@ template <class CFG, class WEIGHT> class ConnectMap;
 #ifndef _PARALLEL
 template <class CFG, class WEIGHT> class MPCharacterizer;
 template <class CFG, class WEIGHT> class MapEvaluator;
-#endif
-class MPStrategyMethod;
-
-#ifdef UAS
 class PartitioningMethods;
 class PartitioningEvaluators;
 class Features;
 #endif
+class MPStrategyMethod;
 
 class MPStrategy : public MPBaseObject
 {
@@ -43,15 +34,12 @@ public:
   #ifndef _PARALLEL
   MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
   MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_Evaluator;}; 
-  #endif
-
-#ifdef UAS
   PartitioningMethods* GetPartitioningMethods(){return m_PartitioningMethods;}
   PartitioningEvaluators* GetPartitioningEvaluators(){return m_PartitioningEvaluators;}
   Features* GetFeatures(){return m_Features;}
 
   XMLNodeReader* GetXMLNodeForStrategy(string& s);
-#endif
+  #endif
 
   bool addPartialEdge, addAllEdges; //move to connect map class
   void PrintOptions(ostream& out_os);
@@ -64,14 +52,12 @@ public:
   LocalPlanners<CfgType, WeightType>* m_pLocalPlanners;
   
   //Characterization and Filtering
-  #ifndef _PARALLEL
+#ifndef _PARALLEL
   MPCharacterizer<CfgType, WeightType>* m_pCharacterizer;
   
   //Map_Evaluation
   MapEvaluator<CfgType, WeightType>* m_Evaluator;
-  #endif
-
-#ifdef UAS
+  
   //UAS items
   PartitioningMethods* m_PartitioningMethods;
   PartitioningEvaluators* m_PartitioningEvaluators;

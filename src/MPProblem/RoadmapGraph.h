@@ -519,7 +519,7 @@ AddEdges( vector<EdgeInfo<VERTEX, WEIGHT> >& _e) {
     for (unsigned int i=0; i < _e.size(); i++){
         GRAPH::add_edge(_e[i].v1, _e[i].v2, _e[i].edgewt);
     }
-    return OK;
+    return 0;
 }
 
 template <class VERTEX, class WEIGHT>
@@ -528,7 +528,7 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VID _v1, VID _v2, WEIGHT _w) {
   //return GRAPH::add_edge(_v1,_v2,_w);
   GRAPH::add_edge(_v1,_v2,_w);
-  return OK;  //fix_lantao  the return type and the following AddEdge funcs.
+  return 0;  //fix_lantao  the return type and the following AddEdge funcs.
 }
 
 template <class VERTEX, class WEIGHT>
@@ -537,7 +537,7 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _w) {
   //return GRAPH::add_edge(_v1,_v2,_w);
   GRAPH::add_edge(GetVID(_v1),GetVID(_v2),_w);
-  return OK;
+  return 0;
 }
 
 template <class VERTEX, class WEIGHT>
@@ -547,7 +547,7 @@ AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w) {
   GRAPH::add_edge(_v1,_v2,_w.first);
   //return GRAPH::add_edge(_v2,_v1,_w.second);
   GRAPH::add_edge(_v2,_v1,_w.second);
-  return OK;
+  return 0;
 }
 
 template <class VERTEX, class WEIGHT>
@@ -557,7 +557,7 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT>& _w) {
   GRAPH::add_edge(GetVID(_v1),GetVID(_v2),_w.first);
   //return GRAPH::add_edge(_v2,_v1,_w.second);
   GRAPH::add_edge(GetVID(_v2),GetVID(_v1),_w.second);
-  return OK;
+  return 0;
 }
 
 template <class VERTEX, class WEIGHT>
@@ -568,7 +568,7 @@ AddEdge(VID _v1, VID _v2, pair<WEIGHT*,WEIGHT*>& _w) {
   tmp.first = *_w.first;
   tmp.second = *_w.second;
   AddEdge(_v1,_v2,tmp);
-  return OK;
+  return 0;
 }
 
 template <class VERTEX, class WEIGHT>
@@ -579,7 +579,7 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT*,WEIGHT*>& _w) {
   tmp.first = *_w.first;
   tmp.second = *_w.second;
   AddEdge(_v1,_v2,tmp);
-  return OK;
+  return 0;
 }
 
 template <class VERTEX, class WEIGHT>

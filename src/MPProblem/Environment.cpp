@@ -219,7 +219,6 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
         }
       }
   
-      double min_clearance = robot_span/3.0;
       positionRes = bodies_min_span * POSITION_RES_FACTOR;
       minmax_BodyAxisRange = bodies_min_span;
  

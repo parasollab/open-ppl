@@ -70,7 +70,7 @@ public:
     // NOTE: everything after the 3rd DOF is rotational.
     vector<int> topology(dim);
     for (size_t i = 0; i < topology.size(); i++) {
-      if (i < temp.posDOF())
+      if (i < (size_t)temp.posDOF())
         topology[i] = 1;
       else
         if (m_use_rotational)
@@ -309,6 +309,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   CFG _cfg = (*(pMap->find_vertex(_v))).property();
   
   this->KClosest(_rmp, _cfg, k, _out);
+  return _out;
 }
 
 
@@ -374,7 +375,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
   
   // NOTE: everything after the 3rd DOF is rotational.
   vector<int> topology(dim);
-  for (int i = 0; i < topology.size(); i++) {
+  for (size_t i = 0; i < topology.size(); i++) {
     if (i < 3)
       topology[i] = 1;
     else

@@ -193,12 +193,6 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 }
 
 
-
-
-
-
-
-
 CollisionDetection::
 CollisionDetection(vector<CollisionDetectionMethod*>& _selected) {
   penetration = -1;
@@ -422,7 +416,7 @@ PrintOptions(ostream& _os) const {
 bool
 CollisionDetection::
 ParseCommandLine(int argc, char** argv) {
-  bool found = FALSE;
+  bool found = false;
   vector<CollisionDetectionMethod*>::iterator itr;
 
   int cmd_begin = 0;
@@ -430,7 +424,7 @@ ParseCommandLine(int argc, char** argv) {
   char* cmd_argv[50];
   do {
     for(itr=all.begin(); itr!=all.end(); itr++) {
-      if( !strcmp(argv[cmd_begin], (*itr)->GetName()) ) {
+      if( !strcmp(argv[cmd_begin], (*itr)->GetName().c_str()) ) {
         cmd_argc = 0;
         bool is_method_name = false;
         do {
@@ -440,7 +434,7 @@ ParseCommandLine(int argc, char** argv) {
           vector<CollisionDetectionMethod*>::iterator itr_names;
           is_method_name = false;
           for(itr_names=all.begin(); itr_names!=all.end() && cmd_begin+cmd_argc < argc; itr_names++)
-            if( !strcmp(argv[cmd_begin+cmd_argc], (*itr_names)->GetName())) {
+            if( !strcmp(argv[cmd_begin+cmd_argc], (*itr_names)->GetName().c_str())) {
               is_method_name = true;
               break;
             }
@@ -449,7 +443,7 @@ ParseCommandLine(int argc, char** argv) {
         (*itr)->ParseCommandLine(cmd_argc, cmd_argv);
         selected.push_back((*itr)->CreateCopy());
         (*itr)->SetDefault();
-        found = TRUE;
+        found = true;
         break;
       }
     }
@@ -794,7 +788,7 @@ CollisionDetectionMethod::
 bool
 CollisionDetectionMethod::
 operator==(const CollisionDetectionMethod& cd) const {
-  return ( !(strcmp(GetName(), cd.GetName())) );
+  return GetName() == cd.GetName();
 }
 
 
@@ -838,6 +832,7 @@ isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo) {
 #ifdef USE_CSTK
 Cstk::
 Cstk() : CollisionDetectionMethod() {
+  name = "cstk";
   type = Exact;
   cdtype = CSTK;
 }
@@ -846,14 +841,6 @@ Cstk() : CollisionDetectionMethod() {
 Cstk::
 ~Cstk() {
 }
-
-
-char*
-Cstk::
-GetName() const {
-  return "cstk";
-}
-
 
 CollisionDetectionMethod*
 Cstk::
@@ -915,7 +902,7 @@ bool
 Cstk::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName){
-  Stats.IncNumCollDetCalls( "cstk", pCallName);
+  Stats.IncNumCollDetCalls(GetName(), pCallName);
   
   // Identity in row-major order
   double linTrans[12] = {1,0,0,0, 0,1,0,0, 0,0,1,0};
@@ -956,7 +943,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 double
 Cstk::
 cstkDistance(Stat_Class& Stats, shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, std::string *pCallName){
-  Stats.IncNumCollDetCalls( "cstkDistance", pCallName );
+  Stats.IncNumCollDetCalls(GetName()+"distance", pCallName );
   
   double linTrans[12] = {1,0,0,0, 0,1,0,0, 0,0,1,0};  // Identity in row-major order
   
@@ -986,6 +973,7 @@ cstkDistance(Stat_Class& Stats, shared_ptr<MultiBody> robot, shared_ptr<MultiBod
 #ifdef USE_VCLIP
 Vclip::
 Vclip() : CollisionDetectionMethod() {
+  name = "VCLIP";
   type = Exact;
   cdtype = VCLIP;
 }
@@ -994,14 +982,6 @@ Vclip() : CollisionDetectionMethod() {
 Vclip::
 ~Vclip() {
 }
-
-
-char*
-Vclip::
-GetName() const {
-  return "VCLIP";
-}
-
 
 CollisionDetectionMethod*
 Vclip::
@@ -1017,7 +997,7 @@ bool
 Vclip::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
-  Stats.IncNumCollDetCalls( "vclip", pCallName);
+  Stats.IncNumCollDetCalls(GetName(), pCallName);
   
 
   Real dist;
@@ -1171,6 +1151,7 @@ GetVclipPose(const Transformation &myT, const Transformation &obstT) {
 #ifdef USE_RAPID
 Rapid::
 Rapid() : CollisionDetectionMethod() {
+  name = "RAPID";
   type = Exact;
   cdtype = RAPID;
 }
@@ -1179,14 +1160,6 @@ Rapid() : CollisionDetectionMethod() {
 Rapid::
 ~Rapid() {
 }
-
-
-char*
-Rapid::
-GetName() const {
-  return "RAPID";
-}
-
 
 CollisionDetectionMethod*
 Rapid::
@@ -1200,7 +1173,7 @@ bool
 Rapid::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
-    Stats.IncNumCollDetCalls( "RAPID", pCallName);
+    Stats.IncNumCollDetCalls(GetName(), pCallName);
 	
     if (_cdInfo.ret_all_info == true)
     {
@@ -1256,6 +1229,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 #ifdef USE_PQP
 Pqp::
 Pqp() : CollisionDetectionMethod() {
+  name = "PQP";
   type = Exact;
   cdtype = PQP;
 }
@@ -1264,14 +1238,6 @@ Pqp() : CollisionDetectionMethod() {
 Pqp::
 ~Pqp() {
 }
-
-
-char*
-Pqp::
-GetName() const {
-  return "PQP";
-}
-
 
 CollisionDetectionMethod*
 Pqp::
@@ -1285,7 +1251,7 @@ bool
 Pqp::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) 
 {
-  Stats.IncNumCollDetCalls( "PQP", pCallName);
+  Stats.IncNumCollDetCalls(GetName(), pCallName);
 
   if (_cdInfo.ret_all_info == true)
   {
@@ -1514,7 +1480,7 @@ bool
 Pqp_Solid::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) 
 {
-  Stats.IncNumCollDetCalls( "PQP", pCallName);
+  Stats.IncNumCollDetCalls(GetName(), pCallName);
 
   PQP_CollideResult result;
 
@@ -1635,6 +1601,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_
 #ifdef USE_SOLID
 Solid::
 Solid() : CollisionDetectionMethod() {
+  name = "SOLID";
   type = Exact;
   cdtype = SOLID;
 }
@@ -1642,13 +1609,6 @@ Solid() : CollisionDetectionMethod() {
 
 Solid::
 ~Solid() {
-}
-
-
-char*
-Solid::
-GetName() const {
-  return "SOLID";
 }
 
 
@@ -1664,7 +1624,7 @@ bool
 Solid::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
-  Stats.IncNumCollDetCalls( "solid", pCallName);
+  Stats.IncNumCollDetCalls(GetName(), pCallName);
  
   robot->UpdateVertexBase();
 
@@ -1790,6 +1750,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 
 BoundingSpheres::
 BoundingSpheres() : CollisionDetectionMethod() {
+  name = "boundingSpheres";
   type = Out;
 }
 
@@ -1797,14 +1758,6 @@ BoundingSpheres() : CollisionDetectionMethod() {
 BoundingSpheres::
 ~BoundingSpheres() {
 }
-
-
-char*
-BoundingSpheres::
-GetName() const {
-  return "boundingSpheres";
-}
-
 
 CollisionDetectionMethod*
 BoundingSpheres::
@@ -1819,7 +1772,7 @@ BoundingSpheres::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
   //cout << endl << "boundingSpheres Collision Check invocation" << flush;
-  Stats.IncNumCollDetCalls( "boundingSpheres", pCallName );
+  Stats.IncNumCollDetCalls(GetName(), pCallName );
   
   Vector3D robot_com = robot->GetCenterOfMass();
   Vector3D obst_com  = obstacle->GetCenterOfMass();
@@ -1848,19 +1801,13 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 
 InsideSpheres::
 InsideSpheres() : CollisionDetectionMethod() {
+  name = "insideSpheres";
   type = In;
 }
 
 
 InsideSpheres::
 ~InsideSpheres() {
-}
-
-
-char*
-InsideSpheres::
-GetName() const {
-  return "insideSpheres";
 }
 
 CollisionDetectionMethod*
@@ -1876,7 +1823,7 @@ InsideSpheres::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
   //cout << endl << "insideSpheres Collision Check invocation";
-  Stats.IncNumCollDetCalls( "insideSpheres",pCallName );
+  Stats.IncNumCollDetCalls(GetName(),pCallName );
   
   Vector3D robot_com = robot->GetCenterOfMass();
   Vector3D obst_com  = obstacle->GetCenterOfMass();
@@ -1905,6 +1852,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 
 Naive::
 Naive() : CollisionDetectionMethod() {
+  name = "naive";
   type = Exact;
 }
 
@@ -1912,14 +1860,6 @@ Naive() : CollisionDetectionMethod() {
 Naive::
 ~Naive() {
 }
-
-
-char*
-Naive::
-GetName() const {
-  return "naive";
-}
-
 
 CollisionDetectionMethod*
 Naive::
@@ -1934,7 +1874,7 @@ Naive::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
   cout << endl << "naive Collision Check invocation";
-  Stats.IncNumCollDetCalls( "naive", pCallName );
+  Stats.IncNumCollDetCalls(GetName(), pCallName );
   return false;
 }
 
@@ -1944,6 +1884,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 
 Quinlan::
 Quinlan() : CollisionDetectionMethod() {
+  name = "quinlan";
   type = Exact;
 }
 
@@ -1951,14 +1892,6 @@ Quinlan() : CollisionDetectionMethod() {
 Quinlan::
 ~Quinlan() {
 }
-
-
-char* 
-Quinlan::
-GetName() const {
-  return "quinlan";
-}
-
 
 CollisionDetectionMethod*
 Quinlan::
@@ -1973,7 +1906,7 @@ Quinlan::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
 	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName) {
   cout << endl << "Quinlan Collision Check invocation";
-  Stats.IncNumCollDetCalls( "quinlan", pCallName );
+  Stats.IncNumCollDetCalls(GetName(), pCallName );
   return false;
 }
 

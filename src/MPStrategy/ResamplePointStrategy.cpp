@@ -56,7 +56,6 @@ ParseXML(XMLNodeReader& in_Node)
    step_size= in_Node.numberXMLParameter("step_size", false, 0.0, 0.0,2.0, "distance of a resampled node from existing one, default = 0");
    user_value= in_Node.numberXMLParameter("user_value", false, 0.3, 0.0, 2000000.0, "distance of a resampled node from existing one, default = .01,   range .01-2000000");
    type_name = in_Node.stringXMLParameter("type_name", true, "", "type of the CFG task");
-   char tname[40]="MAX_CLEARANCE";
    m_vc = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("CD Library"));
    m_dm = in_Node.stringXMLParameter("dm_method", true, "", "Distance metric");
    in_Node.warnUnrequestedAttributes();
@@ -82,8 +81,7 @@ void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp,MPProblem
    bool secondConnectFlag;
    VID vid1;
    VID vid2;
-   VID svid;
-   std::string strVcmethod;
+   string strVcmethod;
    string callee;
    LPOutput<CfgType,WeightType> lpOutput;
    oldConfigurationWeight= GetValue( c, mp, env, Stats, m_vc, cdInfo, m_dm, x,bl);
@@ -92,7 +90,8 @@ void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp,MPProblem
       r.GetRandomRay(step_size, env, dm );
       c2.add(r,c); 
       newConfigurationWeight=GetValue(c2, mp, env, Stats, m_vc, cdInfo, m_dm, x,bl);
-      if(newConfigurationWeight>oldConfigurationWeight && type_name.compare("MAX_CLEARANCE")==0 || newConfigurationWeight<oldConfigurationWeight && type_name.compare("PROTEIN_ENERGY")==0 ) {
+      if((newConfigurationWeight>oldConfigurationWeight && type_name.compare("MAX_CLEARANCE")==0) ||
+        (newConfigurationWeight<oldConfigurationWeight && type_name.compare("PROTEIN_ENERGY")==0)) {
         firstConnectFlag= lp->IsConnected(env, Stats, dm, previous,c2,
                            &lpOutput, rdmp->GetEnvironment()->GetPositionRes(),
                            rdmp->GetEnvironment()->GetOrientationRes(),
@@ -137,12 +136,10 @@ Run(int in_RegionID)
    LOG_DEBUG_MSG("ResamplePointStrategy::()");
    PrintOptions(cout);
    double currentConfigurationWeight=0.0;
-   double newConfigurationWeight=0.0,temp=0.0;
-   int attempts=0;
+   double temp=0.0;
    int  max_attempts=1000;
    int len; 
    char buff[5000];
-   VID svid;
    OBPRM_srand(getSeed()); 
    len=type_name.copy(buff,100);
    buff[len]='\0';
@@ -176,7 +173,6 @@ Run(int in_RegionID)
    }
    in_path.close();
    vector<VID> path_vids;
-   int x=0;
    double smoothingValues[10000];
    int index =0;
    Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
@@ -200,7 +196,8 @@ Run(int in_RegionID)
       currentConfigurationWeight = GetValue( *C, GetMPProblem(), rdmp->GetEnvironment(), *pStatClass,
       m_vc, cdInfo, m_dm, 5000,false);
       cout<<currentConfigurationWeight<<";";
-      if(currentConfigurationWeight > user_value && type_name.compare("PROTEIN_ENERGY")==0 || currentConfigurationWeight < user_value && type_name.compare("MAX_CLEARANCE")==0) {
+      if((currentConfigurationWeight > user_value && type_name.compare("PROTEIN_ENERGY")==0) ||
+        (currentConfigurationWeight < user_value && type_name.compare("MAX_CLEARANCE")==0)) {
         
          vector< pair <CfgType,double> > sampledNeighbors;
          

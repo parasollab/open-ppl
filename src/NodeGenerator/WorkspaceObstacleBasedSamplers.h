@@ -7,25 +7,30 @@
 template <typename CFG>
 class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
 {
- private:
-  std::string pointSelection;  
+  string pointSelection;  
 
  public:
-  WorkspaceObstacleBasedSampler() {}
-  WorkspaceObstacleBasedSampler(Environment* _env, Stat_Class& _Stats, 
-                                CollisionDetection* _cd, CDInfo& _cdInfo,
+  WorkspaceObstacleBasedSampler() {
+    this->SetName("WorkspaceObstacleBasedSampler");
+  }
+  
+  WorkspaceObstacleBasedSampler(Environment* _env,
                                 shared_ptr<DistanceMetricMethod> _dm, int _free = 1, int _coll = 0, 
                                 double _step = 0, string _pointSelection="rW")
-    : ObstacleBasedSampler<CFG>( _env, _Stats, _cd, _cdInfo, _dm,  _free ,  _coll , _step ) 
+    : ObstacleBasedSampler<CFG>( _env,  _dm,  _free ,  _coll , _step ) 
   {
+    this->SetName("WorkspaceObstacleBasedSampler");
      pointSelection=_pointSelection;
   }
  
   WorkspaceObstacleBasedSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem)
     : ObstacleBasedSampler<CFG>(in_Node,  in_pProblem)
   {
-    pointSelection = in_Node.stringXMLParameter(string("point_selection"), true, string(""), string("point selection strategy"));
-    if(!( pointSelection.compare("cM")==0 || pointSelection.compare("rV")==0 || pointSelection.compare("rT")==0 || pointSelection.compare("rW")==0 || pointSelection.compare("eV")==0 || pointSelection.compare("rV_rT")==0 || pointSelection.compare("rV_rW")==0 || pointSelection.compare("all")==0 )) 
+    this->SetName("WorkspaceObstacleBasedSampler");
+    pointSelection = in_Node.stringXMLParameter("point_selection", true, "", "point selection strategy");
+    if(!( pointSelection.compare("cM")==0 || pointSelection.compare("rV")==0 || pointSelection.compare("rT")==0 || 
+      pointSelection.compare("rW")==0 || pointSelection.compare("eV")==0 || pointSelection.compare("rV_rT")==0 || 
+      pointSelection.compare("rV_rW")==0 || pointSelection.compare("all")==0 )) 
     {
       cerr << "Select a valid point selection type first. cM, rV ,rT, rW, eV, rV_rT, rV_rW, all are valid selection types. exiting.\n";
       exit(-1);
@@ -33,8 +38,6 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
   }
 
   ~WorkspaceObstacleBasedSampler() {}
-
-  const char* name() const { return "WorkspaceObstacleBasedSampler"; }
 
   virtual void print(ostream& os) const
   {

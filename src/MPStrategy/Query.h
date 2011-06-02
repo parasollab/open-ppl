@@ -21,7 +21,6 @@
 #include "util.h"
 
 #include "ConnectMap.h"
-class QueryCmds;
 
 template <class CFG, class WEIGHT>
 class Query {
@@ -43,12 +42,6 @@ public:
          *This is useful when client needs to init data member by themself.
          */
         Query();
-
-        /**
-          *Preferred*, fills input.
-          */
-        Query
-        (QueryCmds*);  
 
         /**
          * Read in query from a file and set every thing else to NULL. 
@@ -116,14 +109,14 @@ public:
           *@return true if path is found. Otherwise false will be returned.
           *@note path will be stored in #path.
           */
-        virtual 
-	bool PerformQuery(
-	        Roadmap<CFG, WEIGHT>* rdmp, 
-	        Stat_Class& Stats, 
-	        ConnectMap<CFG, WEIGHT> *cn, 
-          vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
-          LocalPlanners<CFG,WEIGHT> * lp,
-          shared_ptr< DistanceMetricMethod > dm);
+        virtual bool PerformQuery(
+            Roadmap<CFG, WEIGHT>* rdmp, 
+            Stat_Class& Stats, 
+            ConnectMap<CFG, WEIGHT> *cn, 
+            vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
+            LocalPlanners<CFG,WEIGHT> * lp,
+            shared_ptr< DistanceMetricMethod > dm,
+            bool intermediateFiles = false);
 
         /**Query path for two given Cfgs.
           *Algorithm:
@@ -151,17 +144,17 @@ public:
           *@return true if path is found. Otherwise false will be returned.
           *@sa GetPathSegment
           */
-        virtual 
-	bool PerformQuery(
-	      CFG _start, 
-			  CFG _goal,
-			  Roadmap<CFG, WEIGHT>* rdmp,
-			  Stat_Class& Stats,
-			  ConnectMap<CFG, WEIGHT>*, 
-        vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
-			  LocalPlanners<CFG,WEIGHT>*, 
-			  shared_ptr<DistanceMetricMethod>, 
-			  vector<CFG>* _path);
+        virtual bool PerformQuery(
+            CFG _start, 
+            CFG _goal,
+            Roadmap<CFG, WEIGHT>* rdmp,
+            Stat_Class& Stats,
+            ConnectMap<CFG, WEIGHT>*, 
+            vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
+            LocalPlanners<CFG,WEIGHT>*, 
+            shared_ptr<DistanceMetricMethod>, 
+            vector<CFG>* _path, 
+            bool intermediateFiles = false);
 
     //@}
 
@@ -246,7 +239,6 @@ class QueryConnect : public ConnectMap<CFG,WEIGHT> {
 
 #include "Environment.h"
 #include "GraphAlgo.h"
-#include "QueryCmds.h"
 /////////////////////////////////////////////////////////////////////
 //
 //  METHODS for class Query
@@ -261,16 +253,6 @@ Query<CFG, WEIGHT>::
 Query() 
 {
   outputPathFile=NULL;
-}
-
-template <class CFG, class WEIGHT>
-Query<CFG, WEIGHT>::
-Query(QueryCmds* Qinput)  
-{
-    ReadQuery( Qinput->queryFile.GetValue() );
-    
-    outputPathFile = new char[strlen(Qinput->pathFile.GetValue())+1];
-    strcpy(outputPathFile,Qinput->pathFile.GetValue());
 }
 
 template <class CFG, class WEIGHT> 
@@ -311,7 +293,7 @@ bool
 Query<CFG, WEIGHT>::
 PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
         ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
-        LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm) 
+        LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm, bool intermediateFiles) 
 {
   for(typename vector<CFG>::iterator Q = query.begin(); 
       (Q+1) != query.end(); ++Q) {
@@ -322,7 +304,7 @@ PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats,
     cout << "\nworking  ...     "
 	 << endl;
     
-    if ( !PerformQuery(*Q,*(Q+1),rdmp, Stats,cn,pConnections,lp,dm,&path) ) {
+    if ( !PerformQuery(*Q,*(Q+1),rdmp, Stats,cn,pConnections,lp,dm,&path, intermediateFiles) ) {
       cout << endl << "In PerformQuery(): didn't connect";
       return false;
     } 
@@ -336,7 +318,7 @@ bool
 Query<CFG, WEIGHT>::
 PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
 	     ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections, 
-       LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm, vector<CFG>* _path) {
+       LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm, vector<CFG>* _path, bool intermediateFiles) {
 
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
 
@@ -430,21 +412,15 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
         cout << endl << "Failed to recreate path\n";
     }
     if(connected) {
-#if INTERMEDIATE_FILES
-      //Print out all start, all graph nodes, goal
-      //ie, *NO* "ticks" from local planners
-      vector<CFG> _mapcfgs;
-      for(typename vector<VID>::iterator I = _rp.begin();
-          I != _rp.end(); ++I)
-        _mapcfgs.push_back((*(rdmp->m_pRoadmap->find_vertex(*I))).property());
-      WritePathConfigurations("mapnodes.path", _mapcfgs, rdmp->GetEnvironment());
-/*
-      for(typename vector<pair<CFG,WEIGHT> >::iterator I = rp.begin(); 
-	  I != rp.end(); ++I)
-        _mapcfgs.push_back(I->first);
-      WritePathConfigurations("mapnodes.path", _mapcfgs, rdmp->GetEnvironment());
-*/
-#endif
+      if(intermediateFiles){
+        //Print out all start, all graph nodes, goal
+        //ie, *NO* "ticks" from local planners
+        vector<CFG> _mapcfgs;
+        for(typename vector<VID>::iterator I = _rp.begin();
+            I != _rp.end(); ++I)
+          _mapcfgs.push_back((*(rdmp->m_pRoadmap->find_vertex(*I))).property());
+        WritePathConfigurations("mapnodes.path", _mapcfgs, rdmp->GetEnvironment());
+      }
       break;    
     }
   }

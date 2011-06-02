@@ -16,13 +16,11 @@ _timeb timebuffer;
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
-#include <cstring>
 
 struct rusage buf;
 #endif
 
 #include "Clock_Class.h"
-using namespace std;
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -64,7 +62,7 @@ ClearClock() {
   u_time=0;
   s_utime=0;
   u_utime=0;
-  return(1);
+  return 1;
 };
 
 //----------------------------------------
@@ -72,9 +70,7 @@ ClearClock() {
 //----------------------------------------
 int
 Clock_Class::
-
-StartClock(const char *Name) {
-
+StartClock(const string Name) {
 ///Modified for VC
 #if defined(_WIN32)
   _ftime( &timebuffer );
@@ -86,8 +82,8 @@ StartClock(const char *Name) {
   s_time = buf.ru_utime.tv_sec;
 #endif
 
-  strcpy(ClockName,Name);
-  return(1);
+  ClockName = Name;
+  return 1;
 };
 
 //----------------------------------------
@@ -96,7 +92,6 @@ StartClock(const char *Name) {
 int
 Clock_Class::
 StopClock() {
-
 ///Modified for VC
 #if defined(_WIN32)
   _ftime( &timebuffer );
@@ -108,7 +103,7 @@ StopClock() {
   u_time = buf.ru_utime.tv_sec - s_time;
 #endif
 
-  return(1);
+  return 1;
 };
 
 //----------------------------------------
@@ -119,7 +114,7 @@ Clock_Class::
 StopPrintClock() {
   StopClock();
   PrintClock();
-  return(1);
+  return 1;
 };
 
 //----------------------------------------
@@ -137,7 +132,7 @@ PrintClock() {
 int
 Clock_Class::
 GetClock() {
-  return(u_time);
+  return u_time;
 };
 
 //----------------------------------------

@@ -1,93 +1,88 @@
- #ifndef AStar_h
+#ifndef AStar_h
 #define AStar_h
 
 #include "LocalPlannerMethod.h"
 
 template <class CFG, class WEIGHT>
 class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
- public:
-  
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Constructors and Destructor*/
-  //@{
+  public:
 
-  ///Default Constructor.
-  AStar(cd_predefined _cdtype);
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Constructors and Destructor
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
+    /**@name Constructors and Destructor*/
+    //@{
+
+    ///Default Constructor.
+    AStar(cd_predefined _cdtype);
     AStar(cd_predefined _cdtype,int n_tries,int n_neighbors);
- AStar(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml=true);
+    AStar(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml=true);
 
- ///Destructor.
-virtual ~AStar();
+    ///Destructor.
+    virtual ~AStar();
 
-  //@}
-  
-  //////////////////////
-  // Access
-  virtual char* GetName() const = 0 ;
-  virtual void SetDefault();
+    //@}
 
-  //////////////////////
-  // I/O methods
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
-  virtual void PrintOptions(ostream& out_os);
-  virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy()=0 ;
-      /**Roughly check if two Cfgs could be connected using clearance.
-        *Algorithm is given here:
-        *   -# set clearance1 as clearance for _c1
-        *   -# set clearance2 as clearance for _c2
-        *   -# set dist as distance from _c1 to c2
-        *   -# if clearance1+clearance2 > dist
-        *       -# connected
-        *   -# else
-        *       -# not connected
-        *
-        *@see Cfg::ApproxCSpaceClearance and Cfg::Clearance
-        */
-  virtual 
-    bool IsConnected(Environment *env, Stat_Class& Stats,
-		     shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
-		     LPOutput<CFG, WEIGHT>* lpOutput,
-		     double positionRes, double orientationRes,
-		     bool checkCollision=true, 
-		     bool savePath=false, bool saveFailedPath=false);
+    //////////////////////
+    // Access
+    virtual void SetDefault();
 
-
-protected:
-  virtual 
-    bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
-         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
-         CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
-         double positionRes, double orientationRes,
-         bool checkCollision=true, 
-         bool savePath=false, bool saveFailedPath=false);
-    
-    
-
-  virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, //CollisionDetection *cd,
-				    CFG &_col,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2,vector<Cfg*> &neighbors) = 0;
-  //@}
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Public Data
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //@{
-  int    n_tries;       ///< How many time will be tried to connect to goal. (not used!?)
- int    n_neighbors; 
-   cd_predefined  cdtype;                ///< How many neighbors will be seached abound current Cfg. (not used?!)
-  //@}
-std::string vcMethod;
+    //////////////////////
+    // I/O methods
+    virtual void PrintUsage(ostream& _os);
+    virtual void PrintValues(ostream& _os);
+    virtual void PrintOptions(ostream& out_os);
+    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy()=0 ;
+    /**Roughly check if two Cfgs could be connected using clearance.
+     *Algorithm is given here:
+     *   -# set clearance1 as clearance for _c1
+     *   -# set clearance2 as clearance for _c2
+     *   -# set dist as distance from _c1 to c2
+     *   -# if clearance1+clearance2 > dist
+     *       -# connected
+     *   -# else
+     *       -# not connected
+     *
+     *@see Cfg::ApproxCSpaceClearance and Cfg::Clearance
+     */
+    virtual 
+      bool IsConnected(Environment *env, Stat_Class& Stats,
+          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
+          LPOutput<CFG, WEIGHT>* lpOutput,
+          double positionRes, double orientationRes,
+          bool checkCollision=true, 
+          bool savePath=false, bool saveFailedPath=false);
 
 
+  protected:
+    virtual 
+      bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
+          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
+          CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
+          double positionRes, double orientationRes,
+          bool checkCollision=true, 
+          bool savePath=false, bool saveFailedPath=false);
+
+
+
+    virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, //CollisionDetection *cd,
+        CFG &_col,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2,vector<Cfg*> &neighbors) = 0;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Public Data
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
+    int    n_tries;       ///< How many time will be tried to connect to goal. (not used!?)
+    int    n_neighbors; 
+    cd_predefined  cdtype;                ///< How many neighbors will be seached abound current Cfg. (not used?!)
+    std::string vcMethod;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -101,31 +96,35 @@ template <class CFG, class WEIGHT>
 AStar<CFG, WEIGHT>::
 AStar(cd_predefined _cdtype) : LocalPlannerMethod<CFG, WEIGHT>() {
   SetDefault();
+  this->SetName("aStar");
 }
 
 template <class CFG, class WEIGHT>
 AStar<CFG, WEIGHT>::
  AStar(cd_predefined _cdtype,int n_tries,int n_neighbors)//:
 //     LocalPlannerMethod<CFG,WEIGHT>(CDInfo* cd, int lp)
- {
-   SetDefault();
+{
+  SetDefault();
+  this->SetName("aStar");
 }
+
 template <class CFG, class WEIGHT>
 AStar<CFG, WEIGHT>::
 AStar(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml ):
      LocalPlannerMethod<CFG,WEIGHT>(in_Node,in_pProblem)
 
 {
-//cd_predefined cdtype;
+  this->SetName("aStar");
+  //cd_predefined cdtype;
 
-cdtype= _cdtype;
-vcMethod = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("Validity Test Method"));
-n_tries = in_Node.numberXMLParameter(string("n_tries"), true, 0.5, 0.0, 10.0, string("n_tries"));
- n_neighbors = in_Node.numberXMLParameter(string("n_neighbors"), true, 0.5, 0.0, 10.0, string("n_neighbors"));
-LOG_DEBUG_MSG("AStar::AStar()");
-if(warnUnrequestedXml)
-in_Node.warnUnrequestedAttributes();
-LOG_DEBUG_MSG("~AStar::AStar()");
+  cdtype= _cdtype;
+  vcMethod = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("Validity Test Method"));
+  n_tries = in_Node.numberXMLParameter(string("n_tries"), true, 0.5, 0.0, 10.0, string("n_tries"));
+  n_neighbors = in_Node.numberXMLParameter(string("n_neighbors"), true, 0.5, 0.0, 10.0, string("n_neighbors"));
+  LOG_DEBUG_MSG("AStar::AStar()");
+  if(warnUnrequestedXml)
+    in_Node.warnUnrequestedAttributes();
+  LOG_DEBUG_MSG("~AStar::AStar()");
 
 }
 
@@ -134,7 +133,6 @@ template <class CFG, class WEIGHT>
 AStar<CFG, WEIGHT>::
 ~AStar() {
 }
-
 
 template <class CFG, class WEIGHT>
 void
@@ -145,27 +143,24 @@ SetDefault() {
   n_neighbors = 3;
 }
 
-
-
 template <class CFG, class WEIGHT>
 void
 AStar<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << "\n\t" << n_tries;
   _os << "\n\t" << n_neighbors;
  
   _os.setf(ios::right,ios::adjustfield);
 }
 
-
 template <class CFG, class WEIGHT>
 void
 AStar<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
-  _os << GetName() << " ";
+  _os << this->GetName() << " ";
   //_os << "n_tries" << " " << n_tries << " ";
  // _os << "n_neighbors" << " " << n_neighbors << " ";
   _os << endl;
@@ -175,8 +170,8 @@ template <class CFG, class WEIGHT>
 void
 AStar<CFG, WEIGHT>::
 PrintOptions(ostream& out_os) {
-  out_os << "    " << GetName() << "::  ";
- out_os << "n_tries" << " " <<n_tries << " ";
+  out_os << "    " << this->GetName() << "::  ";
+  out_os << "n_tries" << " " <<n_tries << " ";
   out_os << "n_neighbors" << " " <<n_neighbors << " ";
   out_os << "vcMethod = " << " " << vcMethod << " ";
   out_os << endl;
@@ -231,7 +226,7 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
   int n_ticks;
-bool connected = true;
+  bool connected = true;
   int noTries=0;
   int nTicks = 0;
   
@@ -277,7 +272,7 @@ bool connected = true;
       p = *(neighbors[ ChooseOptimalNeighbor(_env, Stats,_col, dm, _c1, _c2, neighbors) ]);
      
   
-     double values;
+     //double values;
     
 
      }
@@ -314,7 +309,7 @@ bool connected = true;
   if(connected)
     Stats.IncLPConnections( "AStar" );
   
-  for(int i=0; i<neighbors.size();i++) {
+  for(size_t i=0; i<neighbors.size();i++) {
       if (neighbors[i] != NULL)
         delete neighbors[i];
   }
@@ -328,67 +323,52 @@ bool connected = true;
 
 template <class CFG, class WEIGHT>
 class AStarDistance: public AStar<CFG, WEIGHT> {
- public:
-//  AStarDistance();
- AStarDistance(cd_predefined _cdtype);
- AStarDistance(cd_predefined _cdtype,int n_tries,int n_neighbors);
- AStarDistance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
+  public:
+    //  AStarDistance();
+    AStarDistance(cd_predefined _cdtype);
+    AStarDistance(cd_predefined _cdtype,int n_tries,int n_neighbors);
+    AStarDistance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
 
-  virtual ~AStarDistance();
+    virtual ~AStarDistance();
 
-  virtual char* GetName() const;
-  virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
+    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-  virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
-				    CFG &_col, shared_ptr<DistanceMetricMethod >dm,
-				    const CFG &_c1, const CFG &_c2,
-				    vector<Cfg*> &neighbors); 
-  
-  
+    virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
+        CFG &_col, shared_ptr<DistanceMetricMethod >dm,
+        const CFG &_c1, const CFG &_c2,
+        vector<Cfg*> &neighbors); 
 };
  
 template <class CFG, class WEIGHT>
 AStarDistance<CFG, WEIGHT>::
 AStarDistance(cd_predefined _cdtype) : AStar<CFG, WEIGHT>(_cdtype) {
-  
- AStar<CFG, WEIGHT>::SetDefault();
+  this->SetName("a_star_distance");
+  AStar<CFG, WEIGHT>::SetDefault();
 }
 
 template <class CFG, class WEIGHT>
 AStarDistance<CFG, WEIGHT>::
  AStarDistance(cd_predefined _cdtype,int n_tries,int n_neighbors):AStar<CFG,WEIGHT>( _cdtype, n_tries,n_neighbors) {
-  
+  this->SetName("a_star_distance");
 }
 
 template <class CFG, class WEIGHT>
 AStarDistance<CFG, WEIGHT>::
 AStarDistance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml ):
      AStar<CFG,WEIGHT>(_cdtype,in_Node,in_pProblem,false)
-
 {
-
-this->cdtype= _cdtype;
-LOG_DEBUG_MSG("AStarDistance::AStarDistance()");
- if(warnUnrequestedXml)
-in_Node.warnUnrequestedAttributes();
-LOG_DEBUG_MSG("~AStarDistance::AStarDistance()");
-
+  this->SetName("a_star_distance");
+  this->cdtype= _cdtype;
+  LOG_DEBUG_MSG("AStarDistance::AStarDistance()");
+  if(warnUnrequestedXml)
+    in_Node.warnUnrequestedAttributes();
+  LOG_DEBUG_MSG("~AStarDistance::AStarDistance()");
 }
 
 template <class CFG, class WEIGHT>
 AStarDistance<CFG, WEIGHT>::
 ~AStarDistance() {
-
 }
-
-template <class CFG, class WEIGHT>
-char*
-AStarDistance<CFG, WEIGHT>::
-GetName() const {
-  return "a_star_distance";
-}
-
-
 
 
 template <class CFG, class WEIGHT>
@@ -408,7 +388,7 @@ ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CFG &_col,shared_ptr
   double minDistance= MAXFLOAT;
   int retPosition=0;
   double value = 0;
- for(int i=0;i<neighbors.size();i++) {
+ for(size_t i=0;i<neighbors.size();i++) {
     value=dm->Distance(_env,*neighbors[i],_c2);
     
      if (value<minDistance) {
@@ -417,9 +397,6 @@ ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CFG &_col,shared_ptr
        
     }    
   }
-   
-
- 
   
   return retPosition;
 }
@@ -430,73 +407,58 @@ ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CFG &_col,shared_ptr
 
 template <class CFG, class WEIGHT>
 class AStarClearance: public AStar<CFG, WEIGHT> {
- public:
-  //AStarClearance();
- 
-  AStarClearance(cd_predefined _cdtype);
- AStarClearance(cd_predefined _cdtype,int n_tries,int n_neighbors);
- AStarClearance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
+  public:
+    AStarClearance(cd_predefined _cdtype);
+    AStarClearance(cd_predefined _cdtype,int n_tries,int n_neighbors);
+    AStarClearance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
 
-  virtual ~AStarClearance();
+    virtual ~AStarClearance();
 
-  virtual char* GetName() const;
-  virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
+    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-  virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
-				    CFG &_col,
-				    shared_ptr<DistanceMetricMethod >dm, 
-				    const CFG &_c1, const CFG &_c2,
-				    vector<Cfg*> &neighbors); 
-  
-  std::string dm_label;
-  string vcMethod;
-  int penetration;
+    virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
+        CFG &_col,
+        shared_ptr<DistanceMetricMethod >dm, 
+        const CFG &_c1, const CFG &_c2,
+        vector<Cfg*> &neighbors); 
+
+    std::string dm_label;
+    string vcMethod;
+    int penetration;
 };
 
 template <class CFG, class WEIGHT>
 AStarClearance<CFG, WEIGHT>::
 AStarClearance(cd_predefined _cdtype) : AStar<CFG, WEIGHT>(_cdtype) {
-
+  this->SetName("aStarClearance");
 }
-
 
 template <class CFG, class WEIGHT>
 AStarClearance<CFG, WEIGHT>::
  AStarClearance(cd_predefined _cdtype,int n_tries,int n_neighbors):AStar<CFG,WEIGHT>( _cdtype, n_tries,n_neighbors) {
- 
+  this->SetName("aStarClearance");
 }
 
 template <class CFG, class WEIGHT>
 AStarClearance<CFG, WEIGHT>::
 AStarClearance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml ):
      AStar<CFG,WEIGHT>(_cdtype,in_Node,in_pProblem,false)
-
 {
-
-this->cdtype= _cdtype;
-LOG_DEBUG_MSG("AStarClearance::AStarClearance()");
- dm_label = in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
- vcMethod = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("Validity Test Method"));
+  this->SetName("aStarClearance");
+  this->cdtype= _cdtype;
+  LOG_DEBUG_MSG("AStarClearance::AStarClearance()");
+  dm_label = in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
+  vcMethod = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("Validity Test Method"));
   penetration = in_Node.numberXMLParameter("penetration", false, 5, 0, 1000, "Penetration Number");
-if(warnUnrequestedXml)
-in_Node.warnUnrequestedAttributes();
-LOG_DEBUG_MSG("~AStarClearance::AStarClearance()");
-
+  if(warnUnrequestedXml)
+    in_Node.warnUnrequestedAttributes();
+  LOG_DEBUG_MSG("~AStarClearance::AStarClearance()");
 }
-
-
 
 template <class CFG, class WEIGHT>
 AStarClearance<CFG, WEIGHT>::
 ~AStarClearance() {
 
-}
-
-template <class CFG, class WEIGHT>
-char*
-AStarClearance<CFG, WEIGHT>::
-GetName() const {
-  return "a_star_clearance";
 }
 
 template <class CFG, class WEIGHT>
@@ -513,15 +475,15 @@ int
 AStarClearance<CFG, WEIGHT>::
 ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,CFG &_col,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
   double maxClearance=-MAXFLOAT;
-  int retPosition=0;
+  size_t retPosition=0;
   double value = 0;
   MPProblem *mp = this->GetMPProblem();
-  
-  for(int i=0;i<neighbors.size();i++) {
-    
-  value=neighbors[i]-> ApproxCSpaceClearance(mp,_env,Stats,vcMethod,*this->cdInfo,dm_label,
-					penetration,false,0);
-   
+
+  for(size_t i=0;i<neighbors.size();i++) {
+
+    value=neighbors[i]-> ApproxCSpaceClearance(mp,_env,Stats,vcMethod,*this->cdInfo,dm_label,
+        penetration,false,0);
+
     if (value>maxClearance) {
       retPosition=i;
       maxClearance=value;

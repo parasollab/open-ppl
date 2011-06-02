@@ -29,8 +29,7 @@ class DistanceMetricMethod  : public LabeledObject {
   DistanceMetricMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~DistanceMetricMethod();
 
-  virtual char* GetName() const = 0;
-  char* name() const {return GetName(); }
+  string GetName() const {return name;}
   virtual void SetDefault() = 0;
 
   virtual bool operator==(const DistanceMetricMethod& dm) const;
@@ -56,6 +55,7 @@ public:
 
  protected:
   int type; ///<WS or CS. Used to classify metrics.
+  string name;
 };
 ostream& operator<< (ostream& _os, const DistanceMetricMethod& dm);
 
@@ -69,7 +69,6 @@ class EuclideanDistance : public DistanceMetricMethod {
   EuclideanDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~EuclideanDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
   virtual DistanceMetricMethod* CreateCopy();
   
@@ -98,7 +97,6 @@ class KnotTheoryDistance : public EuclideanDistance {
   KnotTheoryDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
    ~KnotTheoryDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
   virtual void PrintOptions(ostream&)const;
   virtual DistanceMetricMethod* CreateCopy();
@@ -128,7 +126,6 @@ class ScaledEuclideanDistance : public EuclideanDistance {
   ScaledEuclideanDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~ScaledEuclideanDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
 
   virtual bool operator==(const ScaledEuclideanDistance& dm) const;
@@ -164,7 +161,6 @@ class UniformEuclideanDistance : public DistanceMetricMethod {
   UniformEuclideanDistance(bool _useRotational = false);
   virtual ~UniformEuclideanDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
   virtual void PrintOptions(ostream& _os) const;
   virtual DistanceMetricMethod* CreateCopy();
@@ -197,7 +193,6 @@ class PureEuclideanDistance : public DistanceMetricMethod {
   PureEuclideanDistance(string in_strLabel, int _useRotational);
   virtual ~PureEuclideanDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
   virtual void PrintOptions(ostream& _os) const;
   virtual DistanceMetricMethod *CreateCopy();
@@ -224,7 +219,6 @@ class MinkowskiDistance : public DistanceMetricMethod {
   MinkowskiDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~MinkowskiDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
 
   bool operator==(const MinkowskiDistance& dm) const;
@@ -264,7 +258,6 @@ class ManhattanDistance : public DistanceMetricMethod {
   ManhattanDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~ManhattanDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
   virtual DistanceMetricMethod* CreateCopy();
   
@@ -288,7 +281,6 @@ class CenterOfMassDistance : public DistanceMetricMethod {
   CenterOfMassDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~CenterOfMassDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
   virtual DistanceMetricMethod* CreateCopy();
 
@@ -312,7 +304,6 @@ class RmsdDistance : public EuclideanDistance {
   RmsdDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   ~RmsdDistance();
 
-  virtual char* GetName() const;
   virtual DistanceMetricMethod* CreateCopy();
 
   virtual double Distance(Environment* env, const Cfg& _c1, const Cfg& _c2);
@@ -328,7 +319,6 @@ class LPSweptDistance : public DistanceMetricMethod {
   LPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res = 0.1, double ori_res = 0.1, bool bbox = false);
   ~LPSweptDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
   virtual DistanceMetricMethod* CreateCopy();
 
@@ -351,7 +341,6 @@ class BinaryLPSweptDistance : public DistanceMetricMethod {
   BinaryLPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res = 0.1, double ori_res = 0.1, double tolerance = 0.01, int max_attempts = 100, bool bbox = false);
   ~BinaryLPSweptDistance();
 
-  virtual char* GetName() const;
   virtual void SetDefault();
   virtual DistanceMetricMethod* CreateCopy();
 
@@ -376,9 +365,9 @@ class ReachableDistance : public DistanceMetricMethod {
   ReachableDistance() {}
   ReachableDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true) : DistanceMetricMethod(in_Node, in_pProblem, warn) {
     type = CS;
+    name = "reachable";
   }
   virtual ~ReachableDistance() {}
-  virtual char* GetName() const { return "reachable"; }
   virtual void SetDefault() {}
   virtual DistanceMetricMethod* CreateCopy() {
     DistanceMetricMethod* _copy = new ReachableDistance(*this);

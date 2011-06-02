@@ -113,7 +113,6 @@ void TogglePRMStrategy::Run(int in_RegionID){
 
    //setup region variables
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-   Stat_Class* regionStats = region->GetStatClass();
  
    vector<VID> allNodesVID, allCollisionNodesVID;
    region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);

@@ -47,8 +47,8 @@ class SamplerMethod : public LabeledObject, public MPBaseObject {
   //@{
 
   ///Default Constructor.
-  SamplerMethod() { }
-  SamplerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) { 
+  SamplerMethod():MPBaseObject() { }
+  SamplerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPBaseObject(in_Node, in_pProblem) { 
     string strLabel= this->ParseLabelXML( in_Node);
     this->SetLabel(strLabel);
   }
@@ -65,9 +65,7 @@ class SamplerMethod : public LabeledObject, public MPBaseObject {
    * method for the code to compile
    */
  
-
-  virtual const char* name() const = 0; 
-  virtual void print(ostream& os) const { os << name(); }
+  virtual void print(ostream& os) const { os << this->GetName(); }
 
   //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
   virtual 

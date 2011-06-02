@@ -445,7 +445,7 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm)
         origin_link_orientations.push_back(0);
         
   }
-    Cfg_reach_cc origin((0,0,0,0,0,0),origin_link_lengths,origin_link_orientations);
+    Cfg_reach_cc origin(Vector6D(0,0,0,0,0,0),origin_link_lengths,origin_link_orientations);
     Cfg_reach_cc incr2;
    
     c1_origin.GetIntermediate(origin,c1);

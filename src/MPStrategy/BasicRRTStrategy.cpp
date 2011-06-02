@@ -71,9 +71,9 @@ void BasicRRTStrategy::ParseXML(XMLNodeReader& in_Node) {
   cout << endl;
   cout << "\tdelta:      " << delta << endl;
   cout << "\tminDist:    " << minDist << endl;
-  cout << "\obsDist:     " << obsDist << endl;
-  cout << "\numRoots:    " << roots << endl;
-  cout << "\growthFocus: " << growthFocus << endl;
+  cout << "\tobsDist:     " << obsDist << endl;
+  cout << "\tnumRoots:    " << roots << endl;
+  cout << "\tgrowthFocus: " << growthFocus << endl;
   cout << "\tnode_connection_methods: "; for_each(m_NodeConnectionLabels.begin(), m_NodeConnectionLabels.end(), cout << _1 << " "); cout << endl;
   cout << "\tcomponent_connection_methods: "; for_each(m_ComponentConnectionLabels.begin(), m_ComponentConnectionLabels.end(), cout << _1 << " "); cout << endl;
   cout << "\tevaluator_methods: "; for_each(m_EvaluatorLabels.begin(), m_EvaluatorLabels.end(), cout << _1 << " "); cout << endl;
@@ -162,7 +162,6 @@ void BasicRRTStrategy::RRT(int in_RegionID, vector<CfgType> RRTQueue) {
   shared_ptr <DistanceMetricMethod>  _dm = GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label);
   LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
   ValidityChecker<CfgType>*          vc = GetMPProblem()->GetValidityChecker();
-  CollisionDetection*                cd = GetMPProblem()->GetCollisionDetection();
   LPOutput<CfgType,WeightType>       lpOutput;
   CDInfo                             cdInfo;
   cdInfo.ret_all_info = true;
@@ -170,9 +169,9 @@ void BasicRRTStrategy::RRT(int in_RegionID, vector<CfgType> RRTQueue) {
   
   // Setup RRT Variables
   CfgType tmp, dir;
-  bool connecting=true, checkCollision=false, savePath=false, saveFailed=false, mapPassed=false;
+  bool checkCollision=false, savePath=false, saveFailed=false, mapPassed=false;
   vector<bool> found;
-  for (int j=0; j<RRTQueue.size(); ++j)
+  for (size_t j=0; j<RRTQueue.size(); ++j)
     found.push_back(false);
   
   MapGenClock.StartClock("RRT Generation");
@@ -197,7 +196,7 @@ void BasicRRTStrategy::RRT(int in_RegionID, vector<CfgType> RRTQueue) {
       bool done = true;
       if (found.size() == 0)
 	done = false;
-      for (int j=0; j<found.size(); ++j)
+      for (size_t j=0; j<found.size(); ++j)
 	done = (done && found[j]);
       if (done){
 	cout << "RRT FOUND ALL GOALS... We can call it doneziez" << endl;
@@ -219,7 +218,7 @@ void BasicRRTStrategy::RRT(int in_RegionID, vector<CfgType> RRTQueue) {
       
       if ( (RRTQueue.size() > 0) && (randomRatio<growthFocus)) {
 	if ( found[goalNum] ) {
-	  for (int j=0; j<found.size(); j++) {
+	  for (size_t j=0; j<found.size(); j++) {
 	    if ( !(found[j]))
 	      goalNum = j;
 	  }

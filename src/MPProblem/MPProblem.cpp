@@ -89,7 +89,7 @@ CreateMPRegion() {
 MPRegion<CfgType,WeightType>* 
 MPProblem::
 GetMPRegion(int in_RegionId) {
-  if( in_RegionId >= m_vecMPRegions.size()) 
+  if( in_RegionId >= (int)m_vecMPRegions.size()) 
   {  
     LOG_ERROR_MSG("MPProblem:: I dont have region id = " << in_RegionId);
     exit(-1);

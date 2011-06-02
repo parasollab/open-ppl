@@ -48,29 +48,29 @@ public:
   int IncSizeCC( int CC );
   int SetSizeCC( int CC, int Size );
 
-  int IncNumCollDetCalls( char *CDName , std::string *pCallName = NULL);
+  int IncNumCollDetCalls( string CDName , string *pCallName = NULL);
   unsigned long int GetIsCollTotal() { return IsCollTotal; }
 
   void IncCfgIsColl( std::string *pCallName = NULL);
 
 
-  int FindCD( char *CDName );
+  int FindCD( string CDName );
 
-  int FindLP( char *LPName );
-  int IncLPConnections( char *LPName , int);
-  int IncLPConnections( char *LPName );
-  int DecLPConnections( char *LPName , int);
-  int DecLPConnections( char *LPName );
-  int SetLPConnections( char *LPName, int Connections );
-  int IncLPAttempts( char *LPName ,int );
-  int IncLPAttempts( char *LPName );
-  int DecLPAttempts( char *LPName ,int );
-  int DecLPAttempts( char *LPName );
-  int SetLPAttempts( char *LPName, int Attempts );
-  int IncLPCollDetCalls( char *LPName );
-  int IncLPCollDetCalls( char *LPName ,int);
-  int DecLPCollDetCalls( char *LPName ); 
-  int DecLPCollDetCalls( char *LPName ,int); 
+  int FindLP( string LPName );
+  int IncLPConnections( string LPName , int);
+  int IncLPConnections( string LPName );
+  int DecLPConnections( string LPName , int);
+  int DecLPConnections( string LPName );
+  int SetLPConnections( string LPName, int Connections );
+  int IncLPAttempts( string LPName ,int );
+  int IncLPAttempts( string LPName );
+  int DecLPAttempts( string LPName ,int );
+  int DecLPAttempts( string LPName );
+  int SetLPAttempts( string LPName, int Attempts );
+  int IncLPCollDetCalls( string LPName );
+  int IncLPCollDetCalls( string LPName ,int);
+  int DecLPCollDetCalls( string LPName ); 
+  int DecLPCollDetCalls( string LPName ,int); 
 
 
   static const int ALL;
@@ -140,20 +140,20 @@ protected:
   int NumCC;
 
   unsigned long int NumCollDetCalls[MaxCD];
-  char CDNameList[MaxCD][50];
+  string CDNameList[MaxCD];
 
   int SizeCC[MaxCC];
 public:
-  char LPNameList[MaxLP][50];
+  string LPNameList[MaxLP];
   unsigned long int LPConnections[MaxLP];
   unsigned long int LPAttempts[MaxLP];
   unsigned long int LPCollDetCalls[MaxLP];
 
-  std::map<std::string, unsigned long int> CollDetCountByName;
+  std::map<string, unsigned long int> CollDetCountByName;
 
   ///IsColl simply counts the number of times a Cfg is tested for Collision.
   ///\see Cfg::isCollision
-  std::map<std::string, unsigned long int> IsCollByName;
+  std::map<string, unsigned long int> IsCollByName;
   unsigned long int IsCollTotal;
 };
 
@@ -171,8 +171,8 @@ Stat_Class::
 PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
 	#ifndef _PARALLEL
   int i;
-  std::map<std::string, unsigned long int>::const_iterator iter;
-  int total=0;
+  std::map<string, unsigned long int>::const_iterator iter;
+  //int total=0;
 
   cout << endl << endl << "Local Planners:" << endl;
   cout << setw(20) << "Name"
@@ -181,7 +181,7 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* rmap, int numCCs) {
   <<setw(15) << "Coll Det Calls" << endl;
  
   for(i=0;i<MaxLP;i++)
-    if (strcmp(LPNameList[i],"empty")!=0) {
+    if (LPNameList[i] != "empty") {
       cout << setw(20) << LPNameList[i];
       cout << setw(15) << LPConnections[i];
       cout << setw(15) << LPAttempts[i];
@@ -270,14 +270,14 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *rmap, int show_column_h
 
    int sumCDcalls=0;
    for(i=0;i<MaxCD;i++)
-     if (strcmp(CDNameList[i],"empty")!=0)
+     if (CDNameList[i] != "empty")
         sumCDcalls += NumCollDetCalls[i];
    _myostream << sumCDcalls << " ";
 
    int sumAtt=0;
    int sumCD =0;
    for(i=0;i<MaxLP;i++){
-     if (strcmp(LPNameList[i],"empty")!=0) {
+     if (LPNameList[i] != "empty") {
        sumAtt += LPAttempts[i];
        sumCD  += LPCollDetCalls[i];
      }//endif
@@ -395,7 +395,7 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
 
       //get center of mass of all Cfgs in current CC
       CFG center_of_mass = cci_cfgs[0];
-      for (int j = 1; j < cci_cfgs.size(); ++j)
+      for (size_t j = 1; j < cci_cfgs.size(); ++j)
   center_of_mass.add(center_of_mass, cci_cfgs[j]);
       center_of_mass.divide(center_of_mass, cci_cfgs.size());
     
@@ -404,7 +404,7 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
       double cci_max_intracc_dist_to_cm = 0;
       double cci_mean_intracc_dist_to_cm = 0;
       double cci_sigma_intracc_dist_to_cm = 0;
-      for (int j = 0; j < cci_cfgs.size(); ++j) {
+      for (size_t j = 0; j < cci_cfgs.size(); ++j) {
   CFG tmp = cci_cfgs[j];
   double e_dist = dm->Distance(rdmp->GetEnvironment(), 
              center_of_mass, tmp);
@@ -416,7 +416,7 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, shared_ptr<DistanceMetricMeth
       }
       if (cci_cfgs.size() > 0 )
   cci_mean_intracc_dist_to_cm /= cci_cfgs.size();
-      for (int j = 0; j < cci_cfgs.size(); ++j) {
+      for (size_t j = 0; j < cci_cfgs.size(); ++j) {
   CFG tmp = cci_cfgs[j];
   double e_dist = dm->Distance(rdmp->GetEnvironment(), 
              center_of_mass, tmp);
@@ -543,7 +543,7 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, NeighborhoodFinder* nf, strin
   }
   avg_cc_size /= ccs.size();
   sigma_cc_size = 0;
-  for (int j = 0; j < ccsizes.size(); j++)
+  for (size_t j = 0; j < ccsizes.size(); j++)
     sigma_cc_size  += pow(ccsizes[j]-avg_cc_size, 2);
   if (ccsizes.size() > 1)
     sigma_cc_size /= (ccsizes.size()-1);
@@ -608,7 +608,7 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * rdmp, NeighborhoodFinder* nf, strin
 
   if (pairs_checked > 0)
     avg_intercc_dist /= pairs_checked;
-  for (int j = 0; j < min_cc_distance_between_closest_pairs.size(); j++)
+  for (size_t j = 0; j < min_cc_distance_between_closest_pairs.size(); j++)
     sigma_intercc_dist += pow(min_cc_distance_between_closest_pairs[j]-
         avg_intercc_dist , 2);
   if (min_cc_distance_between_closest_pairs.size() > 1)

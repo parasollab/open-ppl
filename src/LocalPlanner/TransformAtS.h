@@ -16,7 +16,6 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   /**@name Constructors and Destructor*/
-  //@{
 
   ///Default Constructor.
   TransformAtS(cd_predefined _cdtype, int s = 0.5);
@@ -24,10 +23,8 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
   ///Destructor.  
   virtual ~TransformAtS();
 
-  //@}
   //////////////////////
   // Access
-  virtual char* GetName() const;
   virtual void SetDefault();
 
   //////////////////////
@@ -72,10 +69,7 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
 	 bool checkCollision=true,
 	 bool savePath=false, bool saveFailedPath=false);  
 
-  //@{
-    double s_value;
-  //@}
-
+  double s_value;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -87,12 +81,14 @@ template <class CFG, class WEIGHT>
 TransformAtS<CFG, WEIGHT>::
 TransformAtS(cd_predefined _cdtype, int s) : StraightLine<CFG, WEIGHT>(_cdtype), s_value(s) {
   SetDefault(); 
+  this->SetName("transformAtS");
 }
 
 template <class CFG, class WEIGHT>
 TransformAtS<CFG, WEIGHT>::
 TransformAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml) : StraightLine<CFG, WEIGHT>(_cdtype, in_Node, in_pProblem, false) 
 {
+  this->SetName("transformAtS");
   this->cdtype = _cdtype;
   LOG_DEBUG_MSG("TransformAtS::TransformAtS()");
   s_value = in_Node.numberXMLParameter(string("s"), true, 0.5, 0.0, 1.0, string("transform at s value"));
@@ -112,21 +108,12 @@ template <class CFG, class WEIGHT>
 void
 TransformAtS<CFG, WEIGHT>::
 PrintOptions(ostream& out_os) {
-  out_os << "    " << GetName() << "::  ";
+  out_os << "    " << this->GetName() << "::  ";
   out_os << "line segment length = " << " " << this->lineSegmentLength << " ";
   out_os << "binary search = " << " " << this->binarySearch << " ";
   out_os << "vcMethod = " << " " << this->vcMethod << " ";
   out_os << "s_value = " << s_value;
   out_os << endl;
-}
-
-
-
-template <class CFG, class WEIGHT>
-char*
-TransformAtS<CFG, WEIGHT>::
-GetName() const {
-  return "transform_at_s";
 }
 
 template <class CFG, class WEIGHT>
@@ -137,15 +124,13 @@ SetDefault() {
   s_value = 0.5;
 }
 
-
-
 template <class CFG, class WEIGHT>
 void
 TransformAtS<CFG, WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
   
-  _os << "\n" << GetName() << " ";
+  _os << "\n" << this->GetName() << " ";
   _os << "\n\t" << this->lineSegmentLength;
   _os << "\n\t" << this->binarySearch;
   _os << "\n\t" << s_value;
@@ -153,18 +138,16 @@ PrintUsage(ostream& _os){
   _os.setf(ios::right,ios::adjustfield);
 }
 
-
 template <class CFG, class WEIGHT>
 void
 TransformAtS<CFG, WEIGHT>::
 PrintValues(ostream& _os) {
-  _os << GetName() << " ";
+  _os << this->GetName() << " ";
   _os << "ineSegmentLength" << " " << this->lineSegmentLength << " ";
   _os << "binarySearch" << " " << this->binarySearch << " ";
   _os << "s" << " " << s_value << " ";
  _os << endl;
 }
-
 
 template <class CFG, class WEIGHT>
 LocalPlannerMethod<CFG, WEIGHT>* 
@@ -260,8 +243,8 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
 
   if(checkCollision)
   {
-    std::string Callee(GetName());
-    std::string Method("-transform_at_s::IsConnected");
+    string Callee(this->GetName());
+    string Method("-transform_at_s::IsConnected");
     Callee = Callee + Method;
     for(size_t i=1; i<sequence.size()-1; ++i)
     {
@@ -373,7 +356,7 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
   {
     tmp = sequence[j]->GetData();
     cout << "C" << j << ": ";
-    for(int k=0; k<tmp.size(); k++) {
+    for(size_t k=0; k<tmp.size(); k++) {
       cout << tmp[k] << ", ";
     }
     cout << "end \n" << flush;
@@ -383,8 +366,8 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
   
   if(checkCollision)
   {
-    std::string Callee(GetName());
-    std::string Method("-transform_at_s::IsConnected");
+    string Callee(this->GetName());
+    string Method("-transform_at_s::IsConnected");
     Callee = Callee + Method;
     for(size_t i=1; i<sequence.size()-1; ++i)
     {

@@ -36,7 +36,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include OBPRM headers
-#include "SwitchDefines.h"
 #include "GMSPolyhedron.h"
 #include "Connection.h"
 
@@ -320,9 +319,6 @@ protected:
     vector<Connection> backwardConnection;
     //@}
 
-#ifdef USE_CSTK
-    void * cstkBody[MAXPROCS];  ///<CSTK internal model (maybe?!)
-#endif
 #ifdef USE_VCLIP
     shared_ptr<PolyTree> vclipBody;    ///<VCLIP internal model
 #endif

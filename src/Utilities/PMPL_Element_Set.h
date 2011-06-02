@@ -84,7 +84,7 @@ class element_set
   add_to_universe(First, Last)
   {
     typename boost::mpl::deref<First>::type first;
-    m_universe[first.name()] = element_factory<typename boost::mpl::deref<First>::type>();
+    m_universe[first.GetName()] = element_factory<typename boost::mpl::deref<First>::type>();
     add_to_universe(typename boost::mpl::next<First>::type(), Last());
   }
 };

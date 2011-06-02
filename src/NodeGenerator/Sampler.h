@@ -19,14 +19,15 @@
 #include "CollisionDetection.h"
 #include "Clock_Class.h"
 #include "GMSPolyhedron.h"
-#include  "UniformSamplers.h"
-#include  "MedialAxisSamplers.h"
-#include  "GaussianSamplers.h"
-#include  "ObstacleBasedSamplers.h"
-#include  "WorkspaceObstacleBasedSamplers.h"
+#include "UniformSamplers.h"
+#include "MedialAxisSamplers.h"
+#include "GaussianSamplers.h"
+#include "ObstacleBasedSamplers.h"
+#include "WorkspaceObstacleBasedSamplers.h"
+#include "NegateSampler.h"
 #include "util.h"
 #include "CfgTypes.h"
-#include <sstream>
+//#include <sstream>
 #include "SamplerMethod.h"
 
 
@@ -52,13 +53,12 @@ namespace pmpl_detail { //hide SamplerMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
     UniformRandomSampler<CfgType>,
     UniformRandomFreeSampler<CfgType>,
-    UniformRandomCollisionSampler<CfgType>,
-    GaussRandomSampler<CfgType, true>,
-    GaussRandomSampler<CfgType, false>,
-    BridgeTestRandomFreeSampler<CfgType>,
+    GaussianSampler<CfgType>,
+    BridgeTestSampler<CfgType>,
     ObstacleBasedSampler<CfgType>,
     WorkspaceObstacleBasedSampler<CfgType>,
-    FreeMedialAxisSampler<CfgType>
+    MedialAxisSampler<CfgType>,
+    NegateSampler<CfgType>
     > SamplerMethodList;
 }
 
@@ -73,7 +73,7 @@ class Sampler : private element_set<SamplerMethod<CFG> >, public MPBaseObject
   Sampler() : element_set<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()) {}    
   template <typename MethodList>
   Sampler(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&)
-    : element_set<SamplerMethod<CFG> >(MethodList()), MPBaseObject(in_pProblem) 
+    : element_set<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()), MPBaseObject(in_pProblem) 
   { 
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
       if(!element_set<SamplerMethod<CFG> >::add_element(citr->getName(), *citr, in_pProblem))

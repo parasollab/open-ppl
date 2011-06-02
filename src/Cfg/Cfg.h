@@ -366,17 +366,17 @@ guration where workspace robot's EVERY VERTEX
   /// generates random configuration and pushes it to the medial axis of the
   /// free c-space
   bool GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
-      string _vc, CollisionDetection* cd, CDInfo& _cdInfo, 
+      string _vc, CDInfo& _cdInfo, 
       string _dm, 
       int clearnce_n, int penetration_n);
   /// pushes a node towards the medial axis
   void PushToMedialAxis(MPProblem* mp, Environment* _env, Stat_Class& Stats,
-      string vc, CollisionDetection* cd, CDInfo& cdInfo, 
+      string vc, CDInfo& cdInfo, 
       string dm, 
       int clearance_n, int penetration_n);
   /// pushes a free node towards the medial axis
   virtual void MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats,
-       string vc, CollisionDetection* cd, CDInfo& cdInfo, 
+       string vc, CDInfo& cdInfo, 
        string dm, int n);
     
 

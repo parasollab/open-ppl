@@ -210,7 +210,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
         max_value = dist;
       
         //search for new max_index (faster O(k) than sort O(k log k) )                  
-        for (int p = 0; p < kp.size(); ++p) {
+        for (size_t p = 0; p < kp.size(); ++p) {
           if (max_value < kp[p].second) {
             max_value = kp[p].second;
             max_index = p;
@@ -224,7 +224,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
   sort(kall.begin(), kall.end(), compare_second<pair<VID, VID>, double>());
   
   for (int p = 0; p < k; ++p) {
-    if (kall[p].first.first != -999 && kall[p].first.second != -999){
+    if (kall[p].first.first != (VID)-999 && kall[p].first.second != (VID)-999){
       *_out = kall[p].first;
       ++_out;
     }

@@ -24,7 +24,6 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
-#include "OBPRMDef.h"
 #include "XmlWrapper.h"
 #include "Basic.h" 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +320,7 @@ void WritePathConfigurations(const char output_file[80],
 			     vector<CFG>& path,
 			     Environment *env) {
   vector<Cfg*> ppath;
-  for(int i=0; i<path.size(); i++) 
+  for(size_t i=0; i<path.size(); i++) 
     ppath.push_back(&path[i]);
   WritePathConfigurations(output_file, ppath, env);
 }
@@ -387,18 +386,18 @@ class MessageLogs {
   public:
     MessageLogs() {
       bOutput = false;
-      level = VERBOSE;
+      //level = VERBOSE;
     };
     
-    inline int GetLevel() { return level; };
-    inline void SetLevel(int in_level) { level = in_level; };
+    //inline int GetLevel() { return level; };
+    //inline void SetLevel(int in_level) { level = in_level; };
     inline void operator << (ostream& io_os) { 
       if(!bOutput)
         cout << io_os << endl;;
     };
     
   private:
-    int level;
+    //int level;
     bool bOutput;
     
 
@@ -406,7 +405,6 @@ class MessageLogs {
 
 class MPProblem;
 class MPBaseObject {
-
   public: 
     MPBaseObject(){ m_pProblem = NULL;};
     MPBaseObject(MPProblem* in_pProblem){ m_pProblem = in_pProblem;};
@@ -421,7 +419,6 @@ class MPBaseObject {
                                               false, 
                                               string(""),
                                               string("Label Identifier"));
-   
     };
     
     inline MessageLogs& GetMessageLog() { return m_message_log; };
@@ -429,14 +426,16 @@ class MPBaseObject {
     inline void SetMPProblem(MPProblem* m){m_pProblem=m;}
     virtual void PrintOptions(ostream& out_os) { };
     inline string& GetLabel() { return m_strLabel; };
+    inline string GetName() const {return m_name;}
+
+  protected:
+    inline void SetName(string s){m_name = s;}
+    string m_name;
+
   private:
     MessageLogs m_message_log;
     MPProblem* m_pProblem;
     string m_strLabel;
-    /// want to add string m_strName;
-    //      remove from below ... use in future
-    //if(level >= GetMessageLog().GetLevel())
-
 };
 /*
 

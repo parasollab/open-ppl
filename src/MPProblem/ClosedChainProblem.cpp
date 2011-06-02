@@ -22,14 +22,14 @@ ParseXML(XMLNodeReader& in_Node) {
   in_Node.verifyName("MPProblem");
 
   for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
-    if(!this->ParseChild(citr))
+    if(!this->ParseChild(citr)){
       if(citr->getName() == "links_file") 
       {
         string filename = citr->stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
-        bool is_closed_chain = citr->boolXMLParameter("closed_chain", true, true, "Flag if tree represents a closed chain or not");
-        double rdres = citr->numberXMLParameter("rdres", false, 0.05, 0.0, 1000.0, "resolution for interpolating in reachable distance space");
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+        bool is_closed_chain = citr->boolXMLParameter("closed_chain", true, true, "Flag if tree represents a closed chain or not");
+        double rdres = citr->numberXMLParameter("rdres", false, 0.05, 0.0, 1000.0, "resolution for interpolating in reachable distance space");
         cout<<"filename="<<filename<<endl;
         cout<<"parsing file"<<endl;
         //ParseLinksFile(filename.c_str());
@@ -43,6 +43,7 @@ ParseXML(XMLNodeReader& in_Node) {
 #endif
       } else 
         citr->warnUnknownNode();
+    }
 }
 
 

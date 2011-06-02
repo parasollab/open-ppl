@@ -9,6 +9,8 @@
 #ifndef _CLOCK_CLASS_H_
 #define _CLOCK_CLASS_H_
 
+#include <string>
+using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**Provide timing information.
@@ -55,7 +57,7 @@ public:
       int ClearClock();
 
       ///Start the clock and the name is identity of this clock.
-      int StartClock(const char *Name );
+      int StartClock(const string Name );
 
       ///Stop the clock and calculate the total running time.
       int StopClock();
@@ -124,7 +126,7 @@ private:
 
   int s_time, u_time;
   int s_utime, u_utime;
-  char ClockName[50];
+  string ClockName;
 };
 
 #endif // _CLOCK_CLASS_H_

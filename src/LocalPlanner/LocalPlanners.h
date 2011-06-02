@@ -9,7 +9,6 @@
 #define LocalPlanners_h
 
 //////////////////////////////////////////////////////////////////////////////////////////
-#include "OBPRMDef.h"
 #include "CollisionDetection.h" //for CDINFO instance, so we can not use forward declaration.
 #include "ValidityChecker.hpp"
 #include "Cfg.h"    //for vector<Cfg>, so we can not use forward declaration.
@@ -603,8 +602,8 @@ GetPathSegment(Environment *_env, Stat_Class& Stats,
          bool savePath, bool saveFailedPath) {
   bool connected = false;
 
-  if (_weight.GetLP() >= 1 && _weight.GetLP() <= selected.size()) {         
-    for (int lpid = _weight.GetLP(); !connected && lpid <= selected.size(); lpid++) {
+  if (_weight.GetLP() >= 1 && _weight.GetLP() <= (int)selected.size()) {         
+    for (int lpid = _weight.GetLP(); !connected && lpid <= (int)selected.size(); lpid++) {
       // clear possible old storage.  
       _ci->path.erase(_ci->path.begin(), _ci->path.end());
       //the local planner takes care of forward and backward connection
@@ -631,12 +630,12 @@ GetLocalPlanner(unsigned int lpid) {
   LocalPlannerMethod<CFG, WEIGHT>* lp = NULL;
   if (lpid <= 0 || lpid > selected.size()) //out of bounds
     lp = NULL;
-  else if (selected[lpid-1]->GetID() == lpid)
+  else if ((unsigned int)selected[lpid-1]->GetID() == lpid)
     lp = selected[lpid-1];
   else {   //Otherwise search the selected vector for the proper local planner
     typename vector<LocalPlannerMethod<CFG, WEIGHT>*>::iterator itr;
     for (itr = selected.begin(); itr != selected.end(); itr++) {
-      if ( (*itr)->GetID() == lpid ) {
+      if ( (unsigned int)(*itr)->GetID() == lpid ) {
   lp = (*itr);
   break;
       }

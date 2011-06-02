@@ -56,7 +56,7 @@ AckCmdLine(int *i, int argc, char** argv){
 
     if (  strlen(flag)==strlen(argv[*i]) &&
         !strncmp(argv[*i],flag,strlen(flag))  ) {
-       SetValue("");      // overwrite any default that was set
+       SetValue((char*)"");      // overwrite any default that was set
        bool stop = false;
        int currNumStrings = 0;
        while (!stop) {

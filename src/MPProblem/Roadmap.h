@@ -18,7 +18,6 @@
 #ifndef Roadmap_h
 #define Roadmap_h
 
-#include "OBPRMDef.h"              // Cfg type defined here
 #include "RoadmapGraph.h"       // graph class
 #include "Environment.h"
 

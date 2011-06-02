@@ -1,5 +1,3 @@
-// $Id$
-
 /**@file BasicDefns.h.
    This is a set of VERY BASIC useful definitions.
    They shouldn't be particularly specific to any application.
@@ -7,18 +5,17 @@
    @author Lucia K. Dale
 */
 
-
 #ifndef BasicDefns_h
 #define BasicDefns_h
 
+/////////////////////////////////////////////////////////////////////
+//Include standard headers
+#ifdef HPUX
+#include <sys/io.h>
+#endif
+
 using namespace std;
 #include <iostream>
-
-///////////////////////////////////////////////////////////////////////////
-#ifndef PI
-#define PI              3.141592653589793
-#endif
-#define TWOPI           (PI*2.0)
 
 //////////////////////////////////////////////////////////////////////////
 // Check which CD library will be used
@@ -35,30 +32,6 @@ using namespace std;
 #endif
 #endif
 #endif
-
-/////////////////////////////////////////////////////////////////////////
-#define TRUE 1
-#define FALSE 0
-
-#ifndef OK
-#define OK  0
-#endif
-
-//#ifndef ERROR
-//#define ERROR 1
-//#endif
-
-//////////////////////////////////////////////////////////////////////////
-#ifndef MAXFLOAT
-#define MAXFLOAT 99999999999999999.99999
-#endif
-
-//////////////////////////////////////////////////////////////////////////
-/**@name General data structures*/
-//@{
-typedef short SID;///< set id type
-typedef int EID;///< element id type
-//@}
 
 /// Legal Types of Collision Detecters
 enum cd_predefined {
@@ -98,5 +71,32 @@ enum cd_predefined {
 /// first user defined cd set, if any
         CD_USER1};    
 /**< enum CD_USER1 */
+
+/////////////////////////////////////////////////////////////////////
+//-----------------------------------
+// Constants
+//---------------------------------
+/** @name Constants used in OBPRM.*/
+//@{
+///////////////////////////////////////////////////////////////////////////
+#ifndef PI
+#define PI              3.141592653589793
+#endif
+#define TWOPI           (PI*2.0)
+
+/////////////////////////////////////////////////////////////////////////
+#define ORIENTATION_RES             0.05    ///<Resolution for Orientation
+#define POSITION_RES_FACTOR         0.05    ///<Resolution for Position
+
+#define NULL_WT_INFO -999               ///< to pad weight fields for graph conversions
+
+#define INVALID_LP -999                 ///< invalid local planner id
+#define INVALID_RNGSEED -999            ///< invalid seed value for Random Number Generator
+
+#define MAX_INT  999999999
+#define INVALID_INT -999
+#define MAX_DBL  999999999.99999
+#define INVALID_DBL -999
+//@}
 
 #endif

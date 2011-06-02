@@ -13,7 +13,6 @@ class PrintMapEvaluation
   PrintMapEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem); 
   virtual ~PrintMapEvaluation();
   
-  virtual char* GetName() const { return "PrintMap"; }
   virtual void PrintOptions(ostream& out_os);
   
   virtual bool operator() () 

@@ -658,17 +658,17 @@ VerifyValidValue(TYPE _val){
 template<class TYPE> str_param<TYPE>::
 str_param():param<TYPE>(){
     this->tvalue = new char[300];
-    SetValue("");
+    SetValue((char*)"");
     this->tdefault = new char[300];
-    SetDefault("");
+    SetDefault((char*)"");
 };
 template<class TYPE> str_param<TYPE>::
 str_param(char *_flag)
         :param<TYPE>(_flag){
     this->tvalue = new char[300];
-    SetValue("");
+    SetValue((char*)"");
     this->tdefault = new char[300];
-    SetDefault("");
+    SetDefault((char*)"");
 };
 template<class TYPE> str_param<TYPE>::
 str_param(char *_flag, char *_initialValue)

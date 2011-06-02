@@ -25,25 +25,30 @@ class QueryEvaluation
   lp(_lp),
   m_vecStrNodeConnectionLabels(vecStrNodes),
   m_ConnectMap(ConnectMap),
-  dm(_dm)
-  {}
-
+  dm(_dm),
+  intermediateFiles(false)
+  {
+    this->SetName("QueryEvaluator");
+  }
 
   QueryEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
   : MapEvaluationMethod(in_Node, in_pProblem)
   {
+    this->SetName("QueryEvaluator");
     //lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners(); //later change to have own lp
 
-    m_query_filename = in_Node.stringXMLParameter("filename", true, string(""), string("Query Filename"));
+    m_query_filename = in_Node.stringXMLParameter("filename", true, "", "Query Filename");
     m_query = Query<CFG, WEIGHT>(m_query_filename.c_str());
     
-    string dm_label = in_Node.stringXMLParameter(string("dm_method"), false, string("default"), string("Distance Metric Method"));
+    string dm_label = in_Node.stringXMLParameter("dm_method", false, "default", "Distance Metric Method");
     dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
+
+    intermediateFiles = in_Node.boolXMLParameter("intermediate_files", false, false, "Determines output of intermediate file mapnodes.path");
 
     for (XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
       if (citr->getName() == "node_connection_method")
       {
-        string connect_method = citr->stringXMLParameter(string("Method"), true, string(""), string("Node Connection Method"));
+        string connect_method = citr->stringXMLParameter("Method", true, "", "Node Connection Method");
         m_vecStrNodeConnectionLabels.push_back(connect_method);
         citr->warnUnrequestedAttributes();
       } else
@@ -51,7 +56,6 @@ class QueryEvaluation
   }
   virtual ~QueryEvaluation() {}
 
-  virtual char* GetName() const {return "query evaluation"; }
   virtual void PrintOptions(ostream& out_os);
 
   virtual bool operator() ()
@@ -67,7 +71,8 @@ class QueryEvaluation
   LocalPlanners<CFG, WEIGHT>* lp;
   vector<string> m_vecStrNodeConnectionLabels;
   ConnectMap<CFG, WEIGHT> m_ConnectMap;
-  shared_ptr<DistanceMetricMethod >dm ;
+  shared_ptr<DistanceMetricMethod >dm;
+  bool intermediateFiles;
 };
 
 
@@ -76,7 +81,7 @@ void
 QueryEvaluation<CFG, WEIGHT>::PrintOptions(ostream& out_os)
 {
   using boost::lambda::_1;
-  out_os << GetName() << "::";
+  out_os << this->GetName() << "::";
   out_os << "\n\tquery file = \'" << m_query_filename << "\'";
   out_os << "\n\t"; GetMPProblem()->GetCollisionDetection()->PrintOptions(out_os);
   if(m_vecStrNodeConnectionLabels.empty())
@@ -116,10 +121,9 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
     already_in_roadmap.push_back(rmap->m_pRoadmap->IsVertex(*I));
 
   bool queryResult = m_query.PerformQuery(rmap, m_stats, 
-                        &m_ConnectMap, 
-                        &methods,
+                        &m_ConnectMap, &methods,
                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                        dm);
+                        dm, intermediateFiles);
   
   for(size_t i=0; i<already_in_roadmap.size(); ++i)
     if(!already_in_roadmap[i])

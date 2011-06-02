@@ -78,10 +78,10 @@ public:
 
     /// INPUT  filename for road map
     str_param<char*> mapFile;
-    /// INPUT  filename for query configurations
-    str_param<char*> queryFile;
     /// OUTPUT filename for path(s)
     str_param<char*> pathFile;
+    /// INPUT  filename for query configurations
+    str_param<char*> queryFile;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

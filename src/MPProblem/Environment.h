@@ -6,7 +6,6 @@
 
 
 #include "MultiBody.h"
-#include "OBPRMDef.h" 
 #include <string>
 
 #include "util.h"

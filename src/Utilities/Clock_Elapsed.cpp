@@ -15,9 +15,7 @@
 #include <sys/time.h>
 #endif
 
-#include <cstring>
 #include "Clock_Elapsed.h"
-using namespace std;
 
 
 /////////////////////////////////////////////////////////////////////
@@ -58,7 +56,7 @@ ClearClock() {
   timerclear(&s_time);
   timerclear(&u_time);
   timerclear(&elapsed);
-  return(1);
+  return 1;
 };
 
 //----------------------------------------
@@ -67,11 +65,11 @@ ClearClock() {
 int
 Clock_Elapsed::
 
-StartClock(char *Name) {
+StartClock(string Name) {
   struct timezone tz;
   gettimeofday(&s_time, &tz);
-  strcpy(ClockName,Name);
-  return(1);
+  ClockName = Name;
+  return 1;
 };
 
 //----------------------------------------
@@ -99,7 +97,7 @@ StopClock() {
     elapsed.tv_sec++;
   }
 
-  return(1);
+  return 1;
 };
 
 //----------------------------------------
@@ -110,7 +108,7 @@ Clock_Elapsed::
 StopPrintClock() {
   StopClock();
   PrintClock();
-  return(1);
+  return 1;
 };
 
 //----------------------------------------
@@ -128,7 +126,7 @@ PrintClock() {
 int
 Clock_Elapsed::
 GetClock() {
-  return(elapsed.tv_sec);
+  return elapsed.tv_sec;
 };
 
 //----------------------------------------
@@ -138,7 +136,7 @@ GetClock() {
 void
 Clock_Elapsed::
 PrintName() {
-    cout << ClockName ;
+    cout << ClockName;
 };
 
 //----------------------------------------

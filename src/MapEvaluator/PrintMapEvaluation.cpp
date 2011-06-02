@@ -6,6 +6,7 @@ PrintMapEvaluation::
 PrintMapEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
  : MapEvaluationMethod(in_Node, in_pProblem) 
 {
+  this->SetName("PrintMapEvaluator");
   base_name = in_Node.stringXMLParameter("base_name", true, "", "base filename for map output");
 }
 
@@ -19,7 +20,7 @@ void
 PrintMapEvaluation::
 PrintOptions(ostream& out_os)
 {
-  out_os << GetName() << "::  base_name = " << base_name << endl;
+  out_os << this->GetName() << "::  base_name = " << base_name << endl;
 }
   
 

@@ -9,6 +9,8 @@
 #ifndef _CLOCK_ELAPSED_H_
 #define _CLOCK_ELAPSED_H_
 
+#include <string>
+using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**Provide timing information.
@@ -55,7 +57,7 @@ public:
       int ClearClock();
 
       ///Start the clock and the name is identity of this clock.
-      int StartClock( char *Name );
+      int StartClock(string Name);
 
       ///Stop the clock and calculate the total running time.
       int StopClock();
@@ -126,7 +128,7 @@ private:
       struct timeval u_time;
       struct timeval elapsed;
       //struct timezone tz;
-      char ClockName[50];
+      string ClockName;
 };
 
 #endif // _CLOCK_ELAPSED_H_

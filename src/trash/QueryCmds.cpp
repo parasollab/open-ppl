@@ -13,11 +13,11 @@
 //  Constructors and Destructor
 //===================================================================
 QueryCmds::QueryCmds():
-        defaultFile    ("-f"),
+        defaultFile    ((char*)"-f"),
 
-        mapFile        ("-inmapFile"),
-        pathFile       ("-pathFile"),
-        queryFile      ("-queryFile")
+        mapFile        ((char*)"-inmapFile"),
+        pathFile       ((char*)"-pathFile"),
+        queryFile      ((char*)"-queryFile")
 	{
 }
 
@@ -93,7 +93,7 @@ ReadCommandLine(int *argc, char **argv){
 
 
   //-- copy (possibly) modified command line back
-  for (int j=0;j<cmd.size(); ++j)
+  for (size_t j=0;j<cmd.size(); ++j)
 	argv[j] = cmd[j];
   *argc = cmd.size();
 

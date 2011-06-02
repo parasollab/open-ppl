@@ -41,7 +41,6 @@ class LocalPlannerMethod : public MPBaseObject{
 
   //////////////////////
   // Access
-  virtual char* GetName() const = 0;
   virtual void SetDefault();
 
   //////////////////////
@@ -81,17 +80,12 @@ class LocalPlannerMethod : public MPBaseObject{
   //
   //////////////////////////////////////////////////////////////////////////////////////////
  protected:
-  //@}
-
   int lp_id;
+
  public:
   void SetID(int new_id);
   int GetID() const;
-  
   CDInfo* cdInfo;
-
-  
-
 };
 
 

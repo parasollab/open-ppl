@@ -144,7 +144,7 @@ class MPRegionComparerMethod: public MPBaseObject {
      for(typename vector<VID>::iterator itr=cc_a_cfgs_aux.begin(); itr!=cc_a_cfgs_aux.end(); ++itr)
                 cc_a_cfgs.push_back((*(rdmp_a->m_pRoadmap->find_vertex(*itr))).property());
       
-      if (cc_a_cfgs.size() >= a_small_cc_size) {
+      if ((int)cc_a_cfgs.size() >= a_small_cc_size) {
 	not_small_cc_as++;
 	int connectable_cc_a_to_b = 0;
 	// for each connected component cc_b in B
@@ -157,7 +157,7 @@ class MPRegionComparerMethod: public MPBaseObject {
         for(typename vector<VID>::iterator itr=cc_b_cfgs_aux.begin(); itr!=cc_b_cfgs_aux.end(); ++itr)
                 cc_b_cfgs.push_back((*(rdmp_b->m_pRoadmap->find_vertex(*itr))).property());
 	  
-	  if (cc_b_cfgs.size() >= b_small_cc_size) {
+	  if ((int)cc_b_cfgs.size() >= b_small_cc_size) {
 	    // try to connect component A to component B
 	    if (CanConnectComponents(cc_a_cfgs, cc_b_cfgs)) {
 	      connectable_cc_a_to_b++;
@@ -193,7 +193,7 @@ class MPRegionComparerMethod: public MPBaseObject {
       witness_test_cfg.push_back(witness_cfgs[i]);
 
       typedef typename vector < pair< int, VID > >::iterator CC_ITRTR;
-      unsigned int j=0;
+      //unsigned int j=0;
       bool i_witness_can_connect = false;
       for (unsigned int j=0; j < cc.size(); j++) {
 	vector < CFG > cc_cfgs;
@@ -206,7 +206,7 @@ class MPRegionComparerMethod: public MPBaseObject {
 	for(typename vector<VID>::iterator itr=cc_cfgs_aux.begin(); itr!=cc_cfgs_aux.end(); ++itr)
                 cc_cfgs.push_back((*(rdmp->m_pRoadmap->find_vertex(*itr))).property());
 
-	if (cc_cfgs.size() >= small_cc_size) {
+	if ((int)cc_cfgs.size() >= small_cc_size) {
 	  if ( CanConnectComponents(witness_test_cfg, cc_cfgs) ) {
 	    i_witness_can_connect = true;
 	    connected_to_cc[j].push_back(i);
@@ -569,7 +569,7 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
       bool found_edge_a_visible_in_b=false;
       typename vector< pair<size_t,VID> >::iterator all_cc_b_itr;
       for(all_cc_b_itr = all_cc_b.begin(); all_cc_b_itr != all_cc_b.end(); ++all_cc_b_itr) {
-        if((*all_cc_b_itr).first < b_small_cc_size) { continue; } //not usable cc
+        if((int)(*all_cc_b_itr).first < b_small_cc_size) { continue; } //not usable cc
         vector<CFG> usable_cc_in_b;
 	usable_cc_in_b.clear();
  	vector<VID> usable_cc_in_b_aux;
@@ -612,7 +612,7 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
     typename vector< pair<size_t,VID> >::iterator all_cc_a_itr;
     bool found_edge_b_visible_in_a = false;
     for(all_cc_a_itr = all_cc_a.begin(); all_cc_a_itr != all_cc_a.end(); ++all_cc_a_itr) {
-      if((*all_cc_a_itr).first < a_small_cc_size) { continue; } //not usable cc
+      if((int)(*all_cc_a_itr).first < a_small_cc_size) { continue; } //not usable cc
       vector<CFG> usable_cc_in_a;
       vector<VID> usable_cc_in_a_aux;
       cmap.reset();

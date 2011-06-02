@@ -12,9 +12,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include standard headers
 
-//Modified for VC
-#include <sstream>
-
 ///////////////////////////////////////////////////////////////////////////////
 ///CD libraries
 #ifdef USE_CSTK
@@ -36,7 +33,6 @@
 
 //////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
-#include "OBPRMDef.h"
 #include "DistanceMetricMethod.h"
 #include "Cfg.h"
 #include "util.h"
@@ -252,7 +248,7 @@ class CollisionDetectionMethod {
   CollisionDetectionMethod();
   virtual ~CollisionDetectionMethod();
 
-  virtual char* GetName() const = 0;
+  string GetName() const {return name;}
   virtual void SetDefault();
 
   virtual bool operator==(const CollisionDetectionMethod& cd) const;
@@ -296,6 +292,7 @@ class CollisionDetectionMethod {
  protected:
   int type; ///<Out, In, or Exact. Used to classify CD functions.
   cd_predefined cdtype;
+  string name;
 };
 
 
@@ -305,8 +302,6 @@ class Cstk : public CollisionDetectionMethod {
 
   Cstk();
   ~Cstk();
-
-  virtual char* GetName() const;
 
   virtual CollisionDetectionMethod* CreateCopy();
 
@@ -344,8 +339,6 @@ class Vclip : public CollisionDetectionMethod {
 
   Vclip();
   virtual ~Vclip();
-
-  virtual char* GetName() const;
 
   virtual CollisionDetectionMethod* CreateCopy();
   
@@ -397,8 +390,6 @@ class Rapid: public CollisionDetectionMethod {
   Rapid();
   virtual ~Rapid();
 
-  virtual char* GetName() const;
-
   virtual CollisionDetectionMethod* CreateCopy();
   
   /**Using RAPID to check collision between two MultiBodys.
@@ -426,8 +417,6 @@ class Pqp : public CollisionDetectionMethod {
   Pqp();
   virtual ~Pqp();
 
-  virtual char* GetName() const;
-
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
@@ -436,9 +425,8 @@ class Pqp : public CollisionDetectionMethod {
 
 class Pqp_Solid : public Pqp {
  public:
-  Pqp_Solid() : Pqp() {}
+  Pqp_Solid() : Pqp() {name = "PQP_solid";}
   virtual ~Pqp_Solid() {}
-  virtual char* GetName() const { return "PQP_Solid"; }
   virtual CollisionDetectionMethod* CreateCopy();
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 			     Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL);
@@ -454,8 +442,6 @@ class Solid : public CollisionDetectionMethod {
  public:
   Solid();
   virtual ~Solid();
-  
-  virtual char* GetName() const;
 
   virtual CollisionDetectionMethod* CreateCopy();
 
@@ -477,8 +463,6 @@ class BoundingSpheres : public CollisionDetectionMethod {
   BoundingSpheres();
   virtual ~BoundingSpheres();
 
-  virtual char* GetName() const;
-
   virtual CollisionDetectionMethod* CreateCopy();
   
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
@@ -491,8 +475,6 @@ class InsideSpheres : public CollisionDetectionMethod {
 
   InsideSpheres();
   virtual ~InsideSpheres();
-
-  virtual char* GetName() const;
 
   virtual CollisionDetectionMethod* CreateCopy();
 
@@ -507,8 +489,6 @@ class Naive : public CollisionDetectionMethod {
   Naive();
   virtual ~Naive();
 
-  virtual char* GetName() const;
-
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
@@ -521,8 +501,6 @@ class Quinlan : public CollisionDetectionMethod {
 
   Quinlan();
   virtual ~Quinlan();
-
-  virtual char* GetName() const;
 
   virtual CollisionDetectionMethod* CreateCopy();
 

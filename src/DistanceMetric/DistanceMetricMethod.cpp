@@ -30,7 +30,7 @@ DistanceMetricMethod::
 bool
 DistanceMetricMethod::
 operator==(const DistanceMetricMethod& dm) const {
-  return ( !(strcmp(GetName(), dm.GetName())) );
+  return GetName() == dm.GetName();
 }
 
 
@@ -81,6 +81,7 @@ ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c) {
 EuclideanDistance::
 EuclideanDistance() : DistanceMetricMethod() {
   type = CS;
+  name = "euclidean";
 }
 
 
@@ -88,20 +89,13 @@ EuclideanDistance::
 EuclideanDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : DistanceMetricMethod(in_Node, in_pProblem, warn)
 {
   type = CS;
+  name = "euclidean";
 }
 
 
 EuclideanDistance::
 ~EuclideanDistance() {
 }
-
-
-char* 
-EuclideanDistance::
-GetName() const {
-  return "euclidean";
-}
-
 
 void 
 EuclideanDistance::
@@ -209,12 +203,15 @@ ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c) {
 
 ScaledEuclideanDistance::
 ScaledEuclideanDistance() : EuclideanDistance(), sValue(0.5)
-{}
+{
+  name = "scaledEuclidean";
+}
 
 
 ScaledEuclideanDistance::
 ScaledEuclideanDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : EuclideanDistance(in_Node, in_pProblem, false)
 {
+  name = "scaledEuclidean";
   sValue = in_Node.numberXMLParameter("scale", false, 0.5, 0.0, 1.0, "Scale Factor");
   if(warn)
     in_Node.warnUnrequestedAttributes();
@@ -223,13 +220,6 @@ ScaledEuclideanDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool war
 
 ScaledEuclideanDistance::
 ~ScaledEuclideanDistance() {
-}
-
-
-char* 
-ScaledEuclideanDistance::
-GetName() const {
-  return "scaledEuclidean";
 }
 
 
@@ -243,7 +233,7 @@ SetDefault() {
 bool
 ScaledEuclideanDistance::
 operator==(const ScaledEuclideanDistance& dm) const {
-  if( strcmp(GetName(), dm.GetName()) ) {
+  if(GetName() != dm.GetName()) {
     return false;
   } else {
     return ((sValue-dm.GetS() < 0.000000001) && 
@@ -284,19 +274,18 @@ Knot Theory Dm
 
 KnotTheoryDistance::
 KnotTheoryDistance() : EuclideanDistance()
-{}
+{
+  name = "KnotTheory";  
+}
 
 KnotTheoryDistance::
 KnotTheoryDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn): EuclideanDistance(in_Node, in_pProblem, warn){
+  name = "KnotTheory";  
 }
 
 KnotTheoryDistance::
 ~KnotTheoryDistance(){
 }
-
-char* KnotTheoryDistance::GetName() const
-{ return "KnotTheory"; }
-
 
 double
 KnotTheoryDistance ::
@@ -399,19 +388,13 @@ CreateCopy() {
 UniformEuclideanDistance::
 UniformEuclideanDistance(bool _useRotational) : DistanceMetricMethod(), useRotational(_useRotational) {
   cout << "UniformEuclideanDistance::UniformEuclideanDistance() - useRotational = " << _useRotational << endl;
+  name = "uniformEuclidean";
   type = CS;
 }
 
 
 UniformEuclideanDistance::
 ~UniformEuclideanDistance() {
-}
-
-
-char* 
-UniformEuclideanDistance::
-GetName() const {
-  return "uniformEuclidean";
 }
 
 void 
@@ -490,19 +473,13 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
 PureEuclideanDistance::
 PureEuclideanDistance() : DistanceMetricMethod() 
 {
+  name = "pureEuclidean";
   type = CS;
 }
  
  
 PureEuclideanDistance::
 ~PureEuclideanDistance() {
-}
-
-
-char* 
-PureEuclideanDistance::
-GetName() const {
-  return "pureEuclidean";
 }
 
 void 
@@ -544,6 +521,7 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
 
 MinkowskiDistance::
 MinkowskiDistance() : DistanceMetricMethod() {
+  name = "minkowski";
   type = CS;
   r1 = 3;
   r2 = 3;
@@ -553,6 +531,7 @@ MinkowskiDistance() : DistanceMetricMethod() {
 
 MinkowskiDistance::
 MinkowskiDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : DistanceMetricMethod(in_Node, in_pProblem, false) {
+  name = "minkowski";
   type = CS;
   r1 = in_Node.numberXMLParameter("r1", false, 3.0, 0.0, 1000.0, "r1");
   r2 = in_Node.numberXMLParameter("r2", false, 3.0, 0.0, 1000.0, "r2");
@@ -566,14 +545,6 @@ MinkowskiDistance::
 ~MinkowskiDistance() {
 }
 
-
-char* 
-MinkowskiDistance::
-GetName() const {
-  return "minkowski";
-}
-
-
 void 
 MinkowskiDistance::
 SetDefault() {
@@ -586,7 +557,7 @@ SetDefault() {
 bool
 MinkowskiDistance::
 operator==(const MinkowskiDistance& dm) const {
-  if( strcmp(GetName(), dm.GetName()) ) {
+  if(GetName() != dm.GetName()) {
     return false;
   } else {
     return ( ((r1-dm.GetR1() < 0.000000001) && (r1-dm.GetR1() > -0.000000001)) &&
@@ -643,12 +614,14 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
 
 ManhattanDistance::
 ManhattanDistance() : DistanceMetricMethod() {
+  name = "manhattan";
   type = CS;
 }
 
 
 ManhattanDistance::
 ManhattanDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : DistanceMetricMethod(in_Node, in_pProblem, warn) {
+  name = "manhattan";
   type = CS;
 }
 
@@ -656,13 +629,6 @@ ManhattanDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : D
 ManhattanDistance::
 ~ManhattanDistance() {
 }
-
-char* 
-ManhattanDistance::
-GetName() const {
-  return "manhattan";
-}
-
 
 void 
 ManhattanDistance::
@@ -711,11 +677,13 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
 CenterOfMassDistance::  
 CenterOfMassDistance() : DistanceMetricMethod() 
 {
+  name = "com";
   type = WS;
 }
 
 CenterOfMassDistance::  
 CenterOfMassDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : DistanceMetricMethod(in_Node, in_pProblem, warn) {
+  name = "com";
   type = WS;
 }
 
@@ -723,14 +691,6 @@ CenterOfMassDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) 
 CenterOfMassDistance::
 ~CenterOfMassDistance() {
 }
-
-
-char* 
-CenterOfMassDistance::
-GetName() const {
-  return "com";
-}
-
 
 void 
 CenterOfMassDistance::
@@ -766,20 +726,16 @@ Distance(const Cfg& _c1, const Cfg& _c2) {
 RmsdDistance::
 RmsdDistance() : EuclideanDistance() 
 {
+  name = "rmsd";
 }
 
 RmsdDistance::
 RmsdDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : EuclideanDistance(in_Node, in_pProblem, warn) {
+  name = "rmsd";
 }
 
 RmsdDistance::
 ~RmsdDistance() {
-}
-
-char*
-RmsdDistance::
-GetName() const {
-  return "rmsd";
 }
 
 DistanceMetricMethod*
@@ -904,11 +860,14 @@ RMSD(vector<Vector3D> x, vector<Vector3D> y, int dim) {
 
 LPSweptDistance::
 LPSweptDistance() : DistanceMetricMethod() 
-{}
+{
+  name = "lp_swept";
+}
 
 LPSweptDistance::
 LPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : DistanceMetricMethod(in_Node, in_pProblem, false) 
 {
+  name = "lp_swept";
   positionRes = in_Node.numberXMLParameter("pos_res", false, in_pProblem->GetEnvironment()->GetPositionRes(), 0.0, 1000.0, "position resolution");
   orientationRes = in_Node.numberXMLParameter("ori_res", false, in_pProblem->GetEnvironment()->GetOrientationRes(), 0.0, 1000.0, "orientation resolution");
   use_bbox = in_Node.boolXMLParameter("use_bbox", false, false, "use bbox instead of robot vertices");
@@ -938,12 +897,6 @@ LPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_
 
 LPSweptDistance::
 ~LPSweptDistance() {
-}
-
-char*
-LPSweptDistance::
-GetName() const {
-  return "lp_swept";
 }
 
 void 
@@ -1035,16 +988,20 @@ SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector
 
 BinaryLPSweptDistance::
 BinaryLPSweptDistance() : DistanceMetricMethod() 
-{}
+{
+  name = "binary_lp_swept";
+}
 
 
 BinaryLPSweptDistance::
 BinaryLPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res, double ori_res, double tolerance, int max_attempts, bool bbox) : DistanceMetricMethod(), lp_method(_lp_method), positionRes(pos_res), orientationRes(ori_res), tolerance(tolerance), max_attempts(max_attempts), dist_calls_count(0), use_bbox(bbox) {
+  name = "binary_lp_swept";
 }
 
 BinaryLPSweptDistance::
 BinaryLPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : DistanceMetricMethod(in_Node, in_pProblem, false) 
 {
+  name = "binary_lp_swept";
   positionRes = in_Node.numberXMLParameter("pos_res", false, in_pProblem->GetEnvironment()->GetPositionRes() * 50, 0.0, 1000.0, "position resolution");
   orientationRes = in_Node.numberXMLParameter("ori_res", false, in_pProblem->GetEnvironment()->GetOrientationRes() * 50, 0.0, 1000.0, "orientation resolution");
   tolerance = in_Node.numberXMLParameter("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
@@ -1072,12 +1029,6 @@ BinaryLPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn)
 
 BinaryLPSweptDistance::
 ~BinaryLPSweptDistance() {
-}
-
-char*
-BinaryLPSweptDistance::
-GetName() const {
-  return "binary_lp_swept";
 }
 
 void 

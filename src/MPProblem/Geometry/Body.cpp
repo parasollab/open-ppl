@@ -37,9 +37,6 @@ Body::Body(const Body& b) :
   for(int i=0; i<6; ++i)
     boundingBox[i] = b.boundingBox[i];
 
-#ifdef USE_CSTK
-    //void * cstkBody[MAXPROCS];  ///<CSTK internal model (maybe?!)
-#endif
 #ifdef USE_VCLIP
     vclipBody = b.vclipBody;
 #endif
