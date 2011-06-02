@@ -1,32 +1,17 @@
 #include "PGMeansClustering.h"
 #include "MPStrategy.h"
+#include "Features.h"
+#include "Partition.h"
 
-using namespace std;
-
-PGMeansClustering::PGMeansClustering():PartitioningMethod("PGMeansClustering", NULL){
+PGMeansClustering::PGMeansClustering():PartitioningMethod(){
 };
 
-PGMeansClustering::PGMeansClustering(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod("PGMeansClustering", in_pProblem){
+PGMeansClustering::PGMeansClustering(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
+  this->SetName("PGMeansClustering");
    ParseXML(in_Node);
 };
 
 PGMeansClustering::~PGMeansClustering(){};
-
-void PGMeansClustering::ParseXML(XMLNodeReader& in_Node){
-
-   XMLNodeReader::childiterator citr;
-   for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
-      if(citr->getName()=="Feature"){
-         string name = citr->stringXMLParameter(string("Name"), true, string(""), string("FeatureName"));
-         double weight = citr->numberXMLParameter(string("Weight"), true, 1.0, 0.0, 1.0, string("FeatureWeight"));
-         m_Features.push_back(pair<string, double>(name, weight));
-      }
-   }
-
-   SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("PartitioningMethod")));
-   SetClusteringDestination(in_Node.stringXMLParameter(string("destination"), true, string(""), string("PartitioningMethod")));
-   in_Node.warnUnrequestedAttributes();
-}
 
 vector<Partition*> PGMeansClustering::MakePartitions(Partition &p){
    LOG_DEBUG_MSG("START PGMeans Clustering::MAKEPARTITIONS()");
@@ -36,10 +21,10 @@ vector<Partition*> PGMeansClustering::MakePartitions(Partition &p){
    for(FIT fit=m_Features.begin(); fit!=m_Features.end(); fit++){
       features.push_back(fit->first);
    }
-   vector<vector<double> > vidData = m_pProblem->GetMPStrategy()->GetFeatures()->Collect(features, p.GetVID());
+   vector<vector<double> > vidData = GetMPProblem()->GetMPStrategy()->GetFeatures()->Collect(features, p.GetVID());
    Cluster(p.GetVID(), Clusters, vidData);
    vector<Partition*> vp;
-   for(unsigned int i =0 ; i<Clusters.size(); i++){
+   for(size_t i =0 ; i<Clusters.size(); i++){
       vp.push_back(new Partition(p.GetRoadmap(), p.GetID()+i));
       vp[i]->SetVID(Clusters[i]);
       vp[i]->GetBoundingBox().Print(cout);
@@ -63,20 +48,8 @@ void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &Ret
    int featureIndex=0;
 
    for(VIT vit=features.begin(); vit!=features.end(); vit++){
-      int nodeIndex = 0;
-      for(DIT dit=vit->begin();dit!=vit->end();dit++){
-
-         if( nodeIndex == 0 ){
-            FeatureMinMax[featureIndex].second = *dit;
-            FeatureMinMax[featureIndex].first = *dit;
-            nodeIndex++;
-         }
-         else if( *dit > FeatureMinMax[featureIndex].second )
-            FeatureMinMax[featureIndex].second = *dit;
-         else if( *dit < FeatureMinMax[featureIndex].first )
-            FeatureMinMax[featureIndex].first = *dit;
-      }
-      featureIndex++;
+      FeatureMinMax[featureIndex].first = *min_element(vit->begin(), vit->end());
+      FeatureMinMax[featureIndex].second = *max_element(vit->begin(), vit->end());
    }
 
    //this exit is for IdSet being too small
@@ -93,7 +66,7 @@ void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &Ret
 
    //print out the feature min/max values
 
-   for(int featureNdx=0;featureNdx<features.size();featureNdx++){
+   for(size_t featureNdx=0;featureNdx<features.size();featureNdx++){
       cout << featureNdx << ") MIN: "<< FeatureMinMax[featureNdx].first <<"  \tMAX: " <<FeatureMinMax[featureNdx].second << endl <<flush;
    }
 
@@ -104,8 +77,8 @@ void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &Ret
 	tempFileName = m_ClusteringDestination+"/SampleDataPoints.txt";
    outfile.open(tempFileName.c_str());
    if( IdSet.size() > 1 ){ 
-      for(int PtNdx = 0; PtNdx < IdSet.size(); PtNdx++){
-         for(int featureNdx=0;featureNdx<features.size();featureNdx++){
+      for(size_t PtNdx = 0; PtNdx < IdSet.size(); PtNdx++){
+         for(size_t featureNdx=0;featureNdx<features.size();featureNdx++){
             features[featureNdx][PtNdx]=m_Features[featureNdx].second*
                (features[featureNdx][PtNdx] - FeatureMinMax[featureNdx].first) / 
                (FeatureMinMax[featureNdx].second - FeatureMinMax[featureNdx].first );
@@ -119,7 +92,6 @@ void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &Ret
    outfile.close();
 
    if( IdSet.size() > 0 ){
-
       //execute matlab code
       char currentWorkingDirectory[1024];
       getcwd(currentWorkingDirectory,PATH_MAX);
@@ -153,7 +125,7 @@ void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &Ret
       ifstream inFile(tempFileName.c_str());
       vector<int> tempClusters;
       RetClusters = vector< vector< VID > >(NumClusters);
-      for(int i =0;i<IdSet.size();i++){
+      for(size_t i =0;i<IdSet.size();i++){
          inFile>>readData;
          cout<<"Reading: "<<readData<<flush;
          RetClusters[readData-1].push_back(i);

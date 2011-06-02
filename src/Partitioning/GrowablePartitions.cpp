@@ -1,31 +1,17 @@
 #include "GrowablePartitions.h"
 #include "MPStrategy.h"
+#include "MPRegion.h"
+#include "Features.h"
+#include "Partition.h"
 
-GrowablePartitions::GrowablePartitions():PartitioningMethod("growable",NULL){
-};
+GrowablePartitions::GrowablePartitions():PartitioningMethod(){};
 
-GrowablePartitions::GrowablePartitions(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod("growable", in_pProblem){
+GrowablePartitions::GrowablePartitions(XMLNodeReader& in_Node, MPProblem* in_pProblem) : PartitioningMethod(in_Node, in_pProblem){
+  this->SetName("growable");
    ParseXML(in_Node);
 };
 
 GrowablePartitions::~GrowablePartitions(){};
-
-void GrowablePartitions::ParseXML(XMLNodeReader& in_Node){
-
-   XMLNodeReader::childiterator citr;
-   for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
-      if(citr->getName()=="Feature"){
-         string name = citr->stringXMLParameter(string("Name"), true, string(""), string("FeatureName"));
-         double weight = citr->numberXMLParameter(string("Weight"), true, 1.0, 0.0, 1.0, string("FeatureWeight"));
-         m_Features.push_back(pair<string, double>(name, weight));
-      }
-   }
-
-   SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("PartitioningMethod")));
-   SetClusteringDestination(in_Node.stringXMLParameter(string("destination"), true, string(""), string("PartitioningMethod")));
-   in_Node.warnUnrequestedAttributes();
-
-}
 
 vector<Partition*> GrowablePartitions::MakePartitions(Partition &p){
    vector<string> featureLabels;
@@ -33,7 +19,7 @@ vector<Partition*> GrowablePartitions::MakePartitions(Partition &p){
    for(FIT fit=m_Features.begin(); fit!=m_Features.end(); fit++){
       featureLabels.push_back(fit->first);
    }
-   vector<vector<double> > features = m_pProblem->GetMPStrategy()->GetFeatures()->Collect(featureLabels, p.GetVID());
+   vector<vector<double> > features = GetMPProblem()->GetMPStrategy()->GetFeatures()->Collect(featureLabels, p.GetVID());
    vector<double> vidData;
    vector<double> minF, maxF;
    typedef vector<vector<double> >::iterator VDIT;
@@ -122,7 +108,7 @@ int GrowablePartitions::FindClosestPartition(vector<pair<double, Partition*> > &
    typedef vector<pair<double, Partition*> >::iterator PIT;
    typedef vector<VID>::iterator VIT;
 
-   Roadmap<CfgType, WeightType> *rdmp= m_pProblem->GetMPRegion(0)->GetRoadmap();
+   Roadmap<CfgType, WeightType> *rdmp= GetMPProblem()->GetMPRegion(0)->GetRoadmap();
    vector< pair<size_t,VID> > ccs;
    stapl::vector_property_map< RoadmapGraph<CfgType, WeightType>,size_t > cmap;
    get_cc_stats(*(rdmp->m_pRoadmap),cmap,ccs);  
@@ -148,7 +134,7 @@ int GrowablePartitions::FindClosestPartition(vector<pair<double, Partition*> > &
       if(!(*p==*(pit->second))){
          vector<double> centerA = GetCenterOfPartition(pit->second);
          double total=0;
-         for(int j=0; j<center.size(); j++){
+         for(size_t j=0; j<center.size(); j++){
             total+=(center[j]-centerA[j])*(center[j]-centerA[j]);
          }
          if(total<closestdistance){

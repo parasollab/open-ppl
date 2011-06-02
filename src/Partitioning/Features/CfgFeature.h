@@ -2,8 +2,6 @@
 #define CFGFEATURE_H_
 
 #include "MPFeature.h"
-#include "MPProblem.h"
-#include "MPRegion.h"
 
 class CfgFeature : public MPFeature {
  public:

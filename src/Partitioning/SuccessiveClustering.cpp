@@ -1,20 +1,19 @@
 #include "SuccessiveClustering.h"
 #include "MPStrategy.h"
+#include "PartitioningMethods.h"
+#include "Partition.h"
 
-using namespace std;
-
-SuccessiveClustering::SuccessiveClustering():PartitioningMethod("successive", NULL){
+SuccessiveClustering::SuccessiveClustering():PartitioningMethod(){
 };
 
-SuccessiveClustering::SuccessiveClustering(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod("successive", in_pProblem){
+SuccessiveClustering::SuccessiveClustering(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
+  this->SetName("successive");
    ParseXML(in_Node);
 };
 
-SuccessiveClustering::~SuccessiveClustering(){
-};
+SuccessiveClustering::~SuccessiveClustering(){};
 
 void SuccessiveClustering::ParseXML(XMLNodeReader& in_Node){
-
    XMLNodeReader::childiterator citr;
    for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
       if(citr->getName()=="PartitioningMethod"){
@@ -22,8 +21,7 @@ void SuccessiveClustering::ParseXML(XMLNodeReader& in_Node){
          m_PartitioningMethods.push_back(name);
       }
    }
-   
-   SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("PartitioningMethod Label")));
+   //SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("PartitioningMethod Label")));
    SetClusteringDestination(in_Node.stringXMLParameter(string("destination"), true, string(""), string("PartitioningMethod Destination")));
    in_Node.warnUnrequestedAttributes();
 }
@@ -38,7 +36,7 @@ vector<Partition*> SuccessiveClustering::MakePartitions(Partition &p){
       cout<<"Starting Method::"<<*sit<<endl;
       vector<Partition*> tmp;
       for(PIT pit = parts.begin(); pit!=parts.end(); pit++){
-         vector<Partition*> vp = m_pProblem->GetMPStrategy()->GetPartitioningMethods()->GetPartitioningMethod(*sit)->MakePartitions(**pit);
+         vector<Partition*> vp = GetMPProblem()->GetMPStrategy()->GetPartitioningMethods()->GetPartitioningMethod(*sit)->MakePartitions(**pit);
          cout<<"Made "<<vp.size()<<"regions"<<endl;
          for(PIT pit2 = vp.begin(); pit2!=vp.end(); pit2++){
             tmp.push_back(*pit2);

@@ -1,4 +1,7 @@
 #include "PartitionTree.h"
+#include "Partition.h"
+#include "MPRegion.h"
+
 
 PartitionNode::PartitionNode(){
    m_Parent=NULL;

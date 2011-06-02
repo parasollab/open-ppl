@@ -2,7 +2,6 @@
 #define _PGMEANS_H
 
 #include "PartitioningMethod.h"
-#include "Partition.h"   
 
 class PGMeansClustering : public PartitioningMethod
 {
@@ -11,13 +10,10 @@ class PGMeansClustering : public PartitioningMethod
    PGMeansClustering(XMLNodeReader& in_Node, MPProblem * in_pProblem);
    ~PGMeansClustering();
 
-   virtual void ParseXML(XMLNodeReader& in_Node);
-
    virtual vector<Partition*> MakePartitions(Partition &p);
 
-   void Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, vector<vector<double> >& features);
-
  private:
+   void Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, vector<vector<double> >& features);
 };
 
 #endif

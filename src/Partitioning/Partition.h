@@ -3,14 +3,13 @@
 
 
 #include "Roadmap.h"
-#include "RoadmapGraph.h"
 #include "CfgTypes.h"
-#include "Weight.h"
+
 //define what a partition is
-typedef RoadmapGraph<CfgType,WeightType>::vertex_descriptor VID;
 class Partition
 {
  public:
+  typedef RoadmapGraph<CfgType, WeightType>::VID VID;
   Partition();
   Partition(Roadmap<CfgType,WeightType> *rdmp, int i);
   Partition(Roadmap<CfgType,WeightType> *rdmp, vector<VID> vid):m_rdmp(rdmp), m_id(0), m_vvid(vid){}

@@ -1,33 +1,17 @@
 #include "KMeans.h"
 #include "MPStrategy.h"
+#include "../../utils/Kmeans/KMlocal.h"
+#include "Features.h"
+#include "Partition.h"
 
-using namespace std;
+KMeans::KMeans():PartitioningMethod(){};
 
-KMeans::KMeans():PartitioningMethod("kmeans", NULL){
-};
-
-KMeans::KMeans(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod("kmeans", in_pProblem){
+KMeans::KMeans(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
+  this->SetName("kmeans");
    ParseXML(in_Node);
 };
 
-KMeans::~KMeans(){
-};
-
-void KMeans::ParseXML(XMLNodeReader& in_Node){
-
-   XMLNodeReader::childiterator citr;
-   for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
-      if(citr->getName()=="Feature"){
-         string name = citr->stringXMLParameter(string("Name"), true, string(""), string("FeatureName"));
-         double weight = citr->numberXMLParameter(string("Weight"), true, 1.0, 0.0, 1.0, string("FeatureWeight"));
-         m_Features.push_back(pair<string, double>(name, weight));
-      }
-   }
-   
-   SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("PartitioningMethod")));
-   SetClusteringDestination(in_Node.stringXMLParameter(string("destination"), true, string(""), string("PartitioningMethod")));
-   in_Node.warnUnrequestedAttributes();
-}
+KMeans::~KMeans(){};
 
 vector<Partition*> KMeans::MakePartitions(Partition &p){
    LOG_DEBUG_MSG("START KMEANS::MAKEPARTITIONS()");
@@ -37,10 +21,10 @@ vector<Partition*> KMeans::MakePartitions(Partition &p){
    for(FIT fit=m_Features.begin(); fit!=m_Features.end(); fit++){
       features.push_back(fit->first);
    }
-   vector<vector<double> > vidData = m_pProblem->GetMPStrategy()->GetFeatures()->Collect(features, p.GetVID());
+   vector<vector<double> > vidData = GetMPProblem()->GetMPStrategy()->GetFeatures()->Collect(features, p.GetVID());
    Cluster(p.GetVID(), Clusters, vidData);
    vector<Partition*> vp;
-   for(int i =0 ; i<Clusters.size(); i++){
+   for(size_t i =0 ; i<Clusters.size(); i++){
       vp.push_back(new Partition(p.GetRoadmap(), p.GetID()+i));
       vp[i]->SetVID(Clusters[i]);
       vp[i]->GetBoundingBox().Print(cout);
@@ -91,18 +75,10 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
 
    for(VIT vit=features.begin(); vit!=features.end(); vit++){
       int nodeIndex=0;
+      FeatureMinMax[featureIndex].first = *min_element(vit->begin(), vit->end());
+      FeatureMinMax[featureIndex].second = *max_element(vit->begin(), vit->end());
       for(DIT dit=vit->begin();dit!=vit->end();dit++){
          dataPts[nodeIndex][featureIndex]=*dit;
-
-         if( nodeIndex == 0 ){
-            FeatureMinMax[featureIndex].second = *dit;
-            FeatureMinMax[featureIndex].first = *dit;
-         }
-         else if( *dit > FeatureMinMax[featureIndex].second )
-            FeatureMinMax[featureIndex].second = *dit;
-         else if( *dit < FeatureMinMax[featureIndex].first )
-            FeatureMinMax[featureIndex].first = *dit;
-         
          nodeIndex++;
       }
       featureIndex++;
@@ -153,18 +129,18 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
 
       //take the first derivative of the distortion data
       vector<double> firstD;
-      for(int i = 0; i<data_set.size()-1; i++){
+      for(size_t i = 0; i<data_set.size()-1; i++){
          firstD.push_back(data_set[i+1]-data_set[i]);
       }
 
       //second derivative
       vector<double> secondD;
-      for(int i = 0; i<firstD.size()-1; i++){
+      for(size_t i = 0; i<firstD.size()-1; i++){
          secondD.push_back(firstD[i+1]-firstD[i]);
       }
       //find the max gain in information to determine the optimal number of clusters
-      int max = 0;
-      for(int i = 0; i<secondD.size(); i++){
+      size_t max = 0;
+      for(size_t i = 0; i<secondD.size(); i++){
          if(secondD[i]>secondD[max]){
             max=i;
          }

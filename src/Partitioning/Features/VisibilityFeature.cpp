@@ -1,26 +1,24 @@
 #include "VisibilityFeature.h"
-
 #include "MPProblem.h"
 #include "MPRegion.h"
 #include "MPStrategy.h"
 #include "LocalPlanners.h"
-#include "RoadmapGraph.h"
 
-VisibilityFeature::VisibilityFeature():MPFeature(NULL){
+VisibilityFeature::VisibilityFeature():MPFeature(){
 }
 
-VisibilityFeature::VisibilityFeature(int _k, string _nf, string _dm)  : MPFeature(NULL), k(_k), nfLabel(_nf), dmLabel(_dm) {}
+VisibilityFeature::VisibilityFeature(int _k, string _nf, string _dm)  : MPFeature(), k(_k), nfLabel(_nf), dmLabel(_dm) {}
 
-VisibilityFeature::VisibilityFeature(XMLNodeReader& in_Node, MPProblem* mp):MPFeature(mp){
+VisibilityFeature::VisibilityFeature(XMLNodeReader& in_Node, MPProblem* mp):MPFeature(in_Node, mp){
    ParseXML(in_Node);
 }
 
 void VisibilityFeature::ParseXML(XMLNodeReader& in_Node){
-   SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("Feature Value")));
+   //SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("Feature Value")));
    k = in_Node.numberXMLParameter(string("k"), true, 0, 0, MAX_INT, string("k value"));
-   in_Node.warnUnrequestedAttributes();
    nfLabel=in_Node.stringXMLParameter(string("nf_method"),true,string(""),string("Neighborhood Finder Method"));
    dmLabel=in_Node.stringXMLParameter(string("dm_method"),false,string("default"),string("Neighborhood Finder Method"));
+   in_Node.warnUnrequestedAttributes();
 }
 
 vector<double> VisibilityFeature::Collect(vector<VID>& vids){

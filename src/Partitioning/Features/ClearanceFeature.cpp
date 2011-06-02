@@ -1,42 +1,73 @@
 #include "ClearanceFeature.h"
-
-#include "MPStrategy.h"
-#include "LocalPlanners.h"
+#include "MPProblem.h"
 #include "Roadmap.h"
 #include "CfgTypes.h"
-#include "Weight.h"
 #include "MPRegion.h"
-#include "CollisionDetection.h"
+#include "ValidityChecker.hpp"
 
 ClearanceFeature::ClearanceFeature():MPFeature(){}
+
 ClearanceFeature::ClearanceFeature(string _vc):MPFeature(), m_vc(_vc) {}
-ClearanceFeature::ClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_pProblem){
-	ParseXML(in_Node);
+
+ClearanceFeature::ClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_Node, in_pProblem){
+  ParseXML(in_Node);
 }
 
 void ClearanceFeature::ParseXML(XMLNodeReader& in_Node){
-   SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("Feature Value")));
-   m_vc = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("CD Library"));
-   in_Node.warnUnrequestedAttributes();
+  m_vc = in_Node.stringXMLParameter("vc_method", true, "", "CD Library");
+  in_Node.warnUnrequestedAttributes();
 }
 
 vector<double> ClearanceFeature::Collect(vector<VID>& vids) {
-   vector<double> clearance;
-   
-   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
-   Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
-   Environment *env = GetMPProblem()->GetEnvironment();
-   ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
-   
-   typedef vector<VID>::iterator VIT;
-   for(VIT vit = vids.begin(); vit!=vids.end(); vit++){
-     CDInfo _cdInfo;
-     _cdInfo.ret_all_info=true;
-     CfgType cfg=rdmp->find_vertex(*vit)->property();
-     string callee = "ClearanceFeature::Collect";
-     vc->IsValid(cfg, env, *pStatClass, _cdInfo, true, &callee);
-     clearance.push_back(_cdInfo.min_dist);
-   }
+  vector<double> clearance;
 
-   return clearance;
+  RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
+  Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
+  Environment *env = GetMPProblem()->GetEnvironment();
+  ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
+
+  typedef vector<VID>::iterator VIT;
+  for(VIT vit = vids.begin(); vit!=vids.end(); vit++){
+    CDInfo _cdInfo;
+    _cdInfo.ret_all_info=true;
+    CfgType cfg=rdmp->find_vertex(*vit)->property();
+    string callee = "ClearanceFeature::Collect";
+    vc->IsValid(cfg, env, *pStatClass, _cdInfo, true, &callee);
+    clearance.push_back(_cdInfo.min_dist);
+  }
+
+  return clearance;
 }
+
+CSpaceClearanceFeature::CSpaceClearanceFeature():MPFeature(){}
+
+CSpaceClearanceFeature::CSpaceClearanceFeature(string vc, string dm) : MPFeature(), m_vc(vc), m_dm(dm) {};
+
+CSpaceClearanceFeature::CSpaceClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_Node, in_pProblem){
+  ParseXML(in_Node);
+}
+
+void CSpaceClearanceFeature::ParseXML(XMLNodeReader& in_Node){
+  m_vc = in_Node.stringXMLParameter("vc_method", true, "", "CD Library");
+  m_dm = in_Node.stringXMLParameter("distance_metric", true, "", "Distance Metric");
+  in_Node.warnUnrequestedAttributes();
+}
+
+vector<double> CSpaceClearanceFeature::Collect(vector<VID>& vids) {
+  vector<double> clearance;
+
+  RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
+  Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
+  Environment *env = GetMPProblem()->GetEnvironment();
+  ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
+
+  typedef vector<VID>::iterator VIT;
+  for(VIT vit = vids.begin(); vit!=vids.end(); vit++){
+    CDInfo _cdInfo;
+    _cdInfo.ret_all_info=true;
+    CfgType cfg=rdmp->find_vertex(*vit)->property();
+    clearance.push_back(cfg.ApproxCSpaceClearance(GetMPProblem(), env, *pStatClass, m_vc, _cdInfo, m_dm, 20, true));
+  }
+  return clearance;
+}
+

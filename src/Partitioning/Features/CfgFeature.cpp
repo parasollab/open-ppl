@@ -1,4 +1,6 @@
 #include "CfgFeature.h"
+#include "MPProblem.h"
+#include "MPRegion.h"
 
 CfgFeature::CfgFeature():MPFeature(){
    m_index = 0;
@@ -6,13 +8,12 @@ CfgFeature::CfgFeature():MPFeature(){
 
 CfgFeature::CfgFeature(int index = 0) : MPFeature(), m_index(index) {}
 
-CfgFeature::CfgFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_pProblem){
+CfgFeature::CfgFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_Node, in_pProblem){
    ParseXML(in_Node);
 }
 
 void CfgFeature::ParseXML(XMLNodeReader& in_Node){
-   SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("Feature Value")));
-   m_index = in_Node.numberXMLParameter(string("index"), true, 0, 0, MAX_INT, string("index"));
+   m_index = in_Node.numberXMLParameter("index", true, 0, 0, MAX_INT, "index");
    in_Node.warnUnrequestedAttributes();
 }
 

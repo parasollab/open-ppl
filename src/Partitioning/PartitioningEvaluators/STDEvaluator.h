@@ -2,7 +2,6 @@
 #define STDEVALUATOR_H_
 
 #include "PartitioningEvaluator.h"
-#include "Partition.h"
 
 class STDEvaluator : public PartitioningEvaluator{
  public: 

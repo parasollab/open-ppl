@@ -1,23 +1,18 @@
 #ifndef PARTITIONEVALUATOR_H_
 #define PARTITIONEVALUATOR_H_
 
+#include "util.h"
 #include "Partition.h"
-#include "Features.h"
 
-class PartitioningEvaluator {
+class PartitioningEvaluator : public MPBaseObject{
  public:
-   PartitioningEvaluator(){}
-   PartitioningEvaluator(MPProblem* mp){m_pProblem=mp;}
+   PartitioningEvaluator():MPBaseObject(){}
+   PartitioningEvaluator(XMLNodeReader& in_Node, MPProblem* mp):MPBaseObject(in_Node, mp){}
    virtual ~PartitioningEvaluator(){}
 
    virtual void ParseXML(XMLNodeReader& in_Node)=0;
 
    virtual vector<double> Evaluate(vector<Partition*> part)=0;
-
-   string GetLabel(){return m_label;}
-   void SetLabel(string s){m_label=s;}
-
-   MPProblem* GetMPProblem(){return m_pProblem;}
 
    string GetFeature(){return m_Feature;}
    void SetFeature(string f){m_Feature = f;}
@@ -25,8 +20,6 @@ class PartitioningEvaluator {
  protected:
 
    string m_Feature;
-   string m_label;
-   MPProblem* m_pProblem;
 };
 
 #endif

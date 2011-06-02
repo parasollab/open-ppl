@@ -21,7 +21,7 @@ Partition::~Partition(){
 BoundingBox Partition::GetBoundingBox(){
   BoundingBox bb(3,3);
   double minX=1e6, maxX=-1e6, minY=1e6, maxY=-1e6, minZ=1e6, maxZ=-1e6;
-  for(int i=0; i<m_vvid.size() ; i++){
+  for(size_t i=0; i<m_vvid.size() ; i++){
      CfgType cfg = m_rdmp->m_pRoadmap->find_vertex(m_vvid[i])->property();
     vector<double> position = cfg.GetPosition();
     if(position[0]<minX)minX=position[0];

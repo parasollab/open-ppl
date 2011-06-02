@@ -3,14 +3,11 @@
 
 #include "Roadmap.h"
 #include "CfgTypes.h"
-#include "Weight.h"
-#include "MPProblem.h"
-#include "MPStrategy.h"
-#include "MPRegion.h"
-#include "Partition.h"
 #include "PartitioningMethod.h" 
 
 extern double g_UAS_avgRegionStd;
+
+typedef RoadmapGraph<CfgType, WeightType>::VID VID;
 
 //general PartitionNode class to handle basic node relations such 
 //as parents and children

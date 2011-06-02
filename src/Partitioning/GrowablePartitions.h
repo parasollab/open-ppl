@@ -1,7 +1,6 @@
 #ifndef _GROWABLEPARTITIONS_H
 #define _GROWABLEPARTITIONS_H
 
-#include "Partition.h"
 #include "PartitioningMethod.h"
 
 class GrowablePartitions: public PartitioningMethod
@@ -10,8 +9,6 @@ class GrowablePartitions: public PartitioningMethod
   GrowablePartitions();
   GrowablePartitions(XMLNodeReader& in_Node, MPProblem  *m);
   ~GrowablePartitions();
-
-  virtual void ParseXML(XMLNodeReader& in_Node);
 
   virtual vector<Partition*> MakePartitions(Partition &p);
 

@@ -2,7 +2,6 @@
 #define _SUCCESSIVECLUSTERING_H
 
 #include "PartitioningMethod.h"
-#include "Partition.h"
 
 class SuccessiveClustering : public PartitioningMethod
 {

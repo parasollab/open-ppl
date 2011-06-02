@@ -1,16 +1,12 @@
 #ifndef PARTITIONINGEVALUATORS_H_
 #define PARTITIONINGEVALUATORS_H_
 
-#include "PartitioningEvaluator.h"
-#include "Partition.h"
-#include "MPProblem.h"
-
-#include "STDEvaluator.h"
-#include "AVGEvaluator.h"
+#include "util.h"
 
 class PartitioningEvaluator;
+class Partition;
 
-class PartitioningEvaluators{
+class PartitioningEvaluators : public MPBaseObject{
  public:
    PartitioningEvaluators();
    PartitioningEvaluators(XMLNodeReader& in_Node, MPProblem* mp);

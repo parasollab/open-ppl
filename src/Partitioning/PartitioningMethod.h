@@ -1,34 +1,24 @@
 #ifndef _PARTITIONMETHOD_H
 #define _PARTITIONMETHOD_H
 
+#include "util.h"
 #include "Roadmap.h"
 #include "CfgTypes.h"
-#include "Weight.h"
-#include "Partition.h"
 
-#include "Features.h"
-
-//#include "IncrementalSamplingMetrics.h"
-template<typename CFG, typename WEIGHT>
-  class IncrementalSamplingMetrics;
 class Partition;
 
-class PartitioningMethod
+class PartitioningMethod : public MPBaseObject
 {
  public:
+  typedef RoadmapGraph<CfgType, WeightType>::VID VID;
+  
   PartitioningMethod();
-  PartitioningMethod(string s, MPProblem * mp);
+  PartitioningMethod(XMLNodeReader& in_Node, MPProblem * mp);
   virtual ~PartitioningMethod();
 
-  virtual void ParseXML(XMLNodeReader& in_Node)=0;
+  virtual void ParseXML(XMLNodeReader& in_Node);
 
   virtual vector<Partition*> MakePartitions(Partition &p)=0;
-
-  string GetName(){return m_Name;}
-  void SetName(string s){m_Name=s;}
-
-  string GetLabel(){return m_Label;}
-  void SetLabel(string s){m_Label=s;}
 
   string GetClusteringDestination(){return m_ClusteringDestination;}
   void SetClusteringDestination(string s){m_ClusteringDestination=s;}
@@ -39,11 +29,8 @@ class PartitioningMethod
   void SetFeatures(vector<pair<string, double> > f){m_Features = f;}
   
  protected:
-  MPProblem* m_pProblem;
-  string m_Name;
-  string m_Label;
-  vector<Partition*> m_Partitions;
   string m_ClusteringDestination;
+  vector<Partition*> m_Partitions;
   vector<pair<string, double> > m_Features;
 };
 

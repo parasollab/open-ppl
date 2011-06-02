@@ -3,26 +3,18 @@
 
 #include "Roadmap.h"
 #include "CfgTypes.h"
-#include "Weight.h"
-typedef RoadmapGraph<CfgType,WeightType>::vertex_descriptor VID;
-class MPFeature {
- public:
-   MPFeature(){m_pProblem=NULL;}
-   MPFeature(MPProblem* mp){m_pProblem=mp;}
-   virtual ~MPFeature(){}
-   
-   virtual void ParseXML(XMLNodeReader& in_Node)=0;
 
-   virtual vector<double> Collect(vector<VID>& vids)=0;
-   
-   string GetLabel(){return m_label;}
-   void SetLabel(string s){m_label=s;}
-   
-   MPProblem* GetMPProblem(){return m_pProblem;}
- 
- private:
-   string m_label;
-   MPProblem* m_pProblem;
+typedef RoadmapGraph<CfgType,WeightType>::VID VID;
+
+class MPFeature : public MPBaseObject {
+  public:
+    MPFeature():MPBaseObject(){}
+    MPFeature(XMLNodeReader& in_Node, MPProblem* mp):MPBaseObject(in_Node, mp){}
+    virtual ~MPFeature(){}
+
+    virtual void ParseXML(XMLNodeReader& in_Node){}
+
+    virtual vector<double> Collect(vector<VID>& vids)=0;
 };
 
 #endif

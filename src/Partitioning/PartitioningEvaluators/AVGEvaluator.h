@@ -2,7 +2,6 @@
 #define AVGEVALUATOR_H_
 
 #include "PartitioningEvaluator.h"
-#include "Partition.h"
 
 class AVGEvaluator : public PartitioningEvaluator{
  public: 

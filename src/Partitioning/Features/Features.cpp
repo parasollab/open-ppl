@@ -1,30 +1,37 @@
 #include "Features.h"
+#include "CfgFeature.h"
+#include "VisibilityFeature.h"
+#include "ClearanceFeature.h"
 
-Features::Features(){
+Features::Features():MPBaseObject(){
    //push_back all different Features into Feature
    all.push_back(new CfgFeature());
    all.push_back(new VisibilityFeature());
    all.push_back(new ClearanceFeature());
 }
 
-Features::Features(XMLNodeReader& in_Node, MPProblem* mp){
+Features::Features(XMLNodeReader& in_Node, MPProblem* mp): MPBaseObject(in_Node, mp){
+  ParseXML(in_Node);
+}
+
+void Features::ParseXML(XMLNodeReader& in_Node){
    //read from the xml and push onto selected
    XMLNodeReader::childiterator citr;
    for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
       if(citr->getName()=="CfgFeature"){
-         CfgFeature* cf = new CfgFeature(*citr, mp);
+         CfgFeature* cf = new CfgFeature(*citr, GetMPProblem());
          selected.push_back(cf);
       }
       else if(citr->getName()=="VisibilityFeature"){
-         VisibilityFeature* vf = new VisibilityFeature(*citr, mp);
+         VisibilityFeature* vf = new VisibilityFeature(*citr, GetMPProblem());
          selected.push_back(vf);
       }
       else if(citr->getName()=="ClearanceFeature"){
-         ClearanceFeature* clf = new ClearanceFeature(*citr, mp);
+         ClearanceFeature* clf = new ClearanceFeature(*citr, GetMPProblem());
          selected.push_back(clf);
       }
       else if (citr->getName()=="CSpaceClearanceFeature"){
-         CSpaceClearanceFeature* csc = new CSpaceClearanceFeature(*citr, mp);
+         CSpaceClearanceFeature* csc = new CSpaceClearanceFeature(*citr, GetMPProblem());
          selected.push_back(csc);
       }
       citr->warnUnrequestedAttributes();
@@ -38,6 +45,7 @@ MPFeature* Features::GetFeature(string s){
          return *fit;
       }
    }
+   return NULL;
 }
 
 int Features::GetFeatureIndex(string s){

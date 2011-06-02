@@ -1,11 +1,14 @@
 #include "PartitioningEvaluators.h"
+#include "PartitioningEvaluator.h"
+#include "STDEvaluator.h"
+#include "AVGEvaluator.h"
 
-PartitioningEvaluators::PartitioningEvaluators(){
+PartitioningEvaluators::PartitioningEvaluators(): MPBaseObject(){
    all.push_back(new STDEvaluator());
    all.push_back(new AVGEvaluator());
 }
 
-PartitioningEvaluators::PartitioningEvaluators(XMLNodeReader& in_Node, MPProblem* mp){
+PartitioningEvaluators::PartitioningEvaluators(XMLNodeReader& in_Node, MPProblem* mp) : MPBaseObject(in_Node, mp){
    //read from the xml and push onto selected
    XMLNodeReader::childiterator citr;
    for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
@@ -27,6 +30,7 @@ PartitioningEvaluator* PartitioningEvaluators::GetEvaluator(string s){
          return *pit;
       }
    }
+   return NULL;
 }
 
 vector<vector<double> > PartitioningEvaluators::Evaluate(string filename, vector<Partition*> vp){

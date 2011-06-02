@@ -8,7 +8,7 @@
 
 class PartitioningMethod;
 
-class PartitioningMethods {
+class PartitioningMethods : public MPBaseObject {
  public:
    PartitioningMethods();
    PartitioningMethods(XMLNodeReader& in_Node, MPProblem* in_pProblem);

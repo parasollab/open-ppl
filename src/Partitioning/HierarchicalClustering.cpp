@@ -1,35 +1,19 @@
 #include "HierarchicalClustering.h"
 #include "MPStrategy.h"
+#include "Features.h"
+#include "Partition.h"
 
-using namespace std;
-
-HierarchicalClustering::HierarchicalClustering():PartitioningMethod("HierarchicalClustering", NULL){
+HierarchicalClustering::HierarchicalClustering():PartitioningMethod(){
 };
 
-HierarchicalClustering::HierarchicalClustering(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod("HierarchicalClustering", in_pProblem){
+HierarchicalClustering::HierarchicalClustering(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
+  this->SetName("HierarchicalClustering");
    ParseXML(in_Node);
 };
 
 HierarchicalClustering::~HierarchicalClustering(){};
 
-void HierarchicalClustering::ParseXML(XMLNodeReader& in_Node){
-   
-   XMLNodeReader::childiterator citr;
-   for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
-      if(citr->getName()=="Feature"){
-         string name = citr->stringXMLParameter(string("Name"), true, string(""), string("FeatureName"));
-         double weight = citr->numberXMLParameter(string("Weight"), true, 1.0, 0.0, 1.0, string("FeatureWeight"));
-         m_Features.push_back(pair<string, double>(name, weight));
-      }
-   }
-
-   SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("PartitioningMethod")));
-   SetClusteringDestination(in_Node.stringXMLParameter(string("destination"), true, string(""), string("PartitioningMethod")));
-   in_Node.warnUnrequestedAttributes();
-}
-
-vector<Partition*> HierarchicalClustering::MakePartitions(Partition &p)
-{
+vector<Partition*> HierarchicalClustering::MakePartitions(Partition &p){
    LOG_DEBUG_MSG("START Hierarchical Clustering::MAKEPARTITIONS()");
    vector< vector<VID> > Clusters;
    vector<string> features;
@@ -37,10 +21,10 @@ vector<Partition*> HierarchicalClustering::MakePartitions(Partition &p)
    for(FIT fit=m_Features.begin(); fit!=m_Features.end(); fit++){
       features.push_back(fit->first);
    }
-   vector<vector<double> > vidData = m_pProblem->GetMPStrategy()->GetFeatures()->Collect(features, p.GetVID());
+   vector<vector<double> > vidData = GetMPProblem()->GetMPStrategy()->GetFeatures()->Collect(features, p.GetVID());
    Cluster(p.GetVID(), Clusters, vidData);
    vector<Partition*> vp;
-   for(int i =0 ; i<Clusters.size(); i++){
+   for(size_t i =0 ; i<Clusters.size(); i++){
       vp.push_back(new Partition(p.GetRoadmap(), p.GetID()+i));
       vp[i]->SetVID(Clusters[i]);
       vp[i]->GetBoundingBox().Print(cout);
@@ -64,20 +48,8 @@ void HierarchicalClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > >
    int featureIndex=0;
 
    for(VIT vit=features.begin(); vit!=features.end(); vit++){
-      int nodeIndex = 0;
-      for(DIT dit=vit->begin();dit!=vit->end();dit++){
-
-         if( nodeIndex == 0 ){
-            FeatureMinMax[featureIndex].second = *dit;
-            FeatureMinMax[featureIndex].first = *dit;
-            nodeIndex++;
-         }
-         else if( *dit > FeatureMinMax[featureIndex].second )
-            FeatureMinMax[featureIndex].second = *dit;
-         else if( *dit < FeatureMinMax[featureIndex].first )
-            FeatureMinMax[featureIndex].first = *dit;
-      }
-      featureIndex++;
+      FeatureMinMax[featureIndex].first = *min_element(vit->begin(), vit->end());
+      FeatureMinMax[featureIndex].second = *max_element(vit->begin(), vit->end());
    }
 
    //this exit is for IdSet being too small
@@ -94,7 +66,7 @@ void HierarchicalClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > >
 
    //print out the feature min/max values
 
-   for(int featureNdx=0;featureNdx<features.size();featureNdx++){
+   for(size_t featureNdx=0;featureNdx<features.size();featureNdx++){
       cout << featureNdx << ") MIN: "<< FeatureMinMax[featureNdx].first <<"  \tMAX: " <<FeatureMinMax[featureNdx].second << endl <<flush;
    }
 
@@ -105,8 +77,8 @@ void HierarchicalClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > >
 	tempFileName = m_ClusteringDestination+"/SampleDataPoints.txt";
    outfile.open(tempFileName.c_str());
    if( IdSet.size() > 1 ){ 
-      for(int PtNdx = 0; PtNdx < IdSet.size(); PtNdx++){
-         for(int featureNdx=0;featureNdx<features.size();featureNdx++){
+      for(size_t PtNdx = 0; PtNdx < IdSet.size(); PtNdx++){
+         for(size_t featureNdx=0;featureNdx<features.size();featureNdx++){
             features[featureNdx][PtNdx]=m_Features[featureNdx].second*
                (features[featureNdx][PtNdx] - FeatureMinMax[featureNdx].first) / 
                (FeatureMinMax[featureNdx].second - FeatureMinMax[featureNdx].first );
@@ -128,19 +100,15 @@ void HierarchicalClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > >
       cout<<"Checking if processor is available..."<<endl;
       if (system(NULL)) puts ("System Ok");
       else exit (1);
-      //FIXME:: add a makefile parameter for this so that we can switch between bigspring and matlock
       //for bigspring
       setenv("LD_LIBRARY_PATH","/usr/lib:/lib:/share/apps/matlab704/bin/glnx86:/usr/java/jdk1.6.0_01/jre/lib/i386/client:/usr/java/jdk1.6.0_01/jre/lib/i386:.:/share/apps/matlab704/bin/glnx86/../../sys/os/glnx86/",1);
       //for matlock
       //  setenv("LD_LIBRARY_PATH","/usr/lib:/lib:/export/research/matlock/matlab704/bin/glnx86:/usr/java/jdk1.6.0_01/jre/lib/i386/client:/usr/java/jdk1.6.0_01/jre/lib/i386:/users/anshula/Documents/icra10Stuff/code/partitioning/Problems/HierarchicalClusteringExecutable:.",1);
       oss<<currentWorkingDirectory<<"/../hierarchicalClusteringExecutable/hierarchicalClustering "<<currentWorkingDirectory<<"/"<<m_ClusteringDestination<<"/";
-
       cout<<"Executing the following system command => "<<oss.str()<<endl<<flush;
       string buffer = oss.str();
       system(buffer.c_str());
       cout<<flush;
-      
-      //	delete currentWorkingDirectory; 
 
       //input the number of clusters
       tempFileName=m_ClusteringDestination+"/numClusters.txt";
@@ -157,7 +125,7 @@ void HierarchicalClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > >
       ifstream inFile(tempFileName.c_str());
       RetClusters.clear();
       RetClusters = vector< vector< VID > >(NumClusters);
-      for(int i =0;i<IdSet.size();i++){
+      for(size_t i =0;i<IdSet.size();i++){
          inFile>>readData;
          cout<<"Reading: "<<readData<<endl<<flush;
          RetClusters[readData-1].push_back(i);
