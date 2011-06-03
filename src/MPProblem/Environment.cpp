@@ -196,33 +196,23 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
     Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), PMPL_EXIT, "");
     //FindBoundingBox();
 
-      //compute RESOLUTION
+    //compute RESOLUTION
 
-        double robot_span;
-        multibody[robotIndex]->FindBoundingBox();
-        robot_span = multibody[robotIndex]->GetMaxAxisRange();
-        double bodies_min_span;
-        bodies_min_span = robot_span;
+    multibody[robotIndex]->FindBoundingBox();
+    double robot_span = multibody[robotIndex]->GetMaxAxisRange();
+    double bodies_min_span = robot_span;
     
-        bool first = true;
-        for(size_t i = 0 ; i < multibody.size() ; i++){
-        if((int)i != robotIndex){
-          if(first){
-            multibody[i]->FindBoundingBox();
-            first = false;
-            bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
-          }
-          else{
-            multibody[i]->FindBoundingBox();
-            bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
-          } 
-        }
+    for(size_t i = 0 ; i < multibody.size() ; i++){
+      if((int)i != robotIndex){
+        multibody[i]->FindBoundingBox();
+        bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
       }
+    }
   
-      positionRes = bodies_min_span * POSITION_RES_FACTOR;
-      minmax_BodyAxisRange = bodies_min_span;
+    positionRes = bodies_min_span * POSITION_RES_FACTOR;
+    minmax_BodyAxisRange = bodies_min_span;
  
-      // END compute RESOLUTION
+    // END compute RESOLUTION
  
       XMLNodeReader::childiterator citr;
       for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
