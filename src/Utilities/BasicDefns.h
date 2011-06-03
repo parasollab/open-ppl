@@ -19,7 +19,6 @@ using namespace std;
 
 //////////////////////////////////////////////////////////////////////////
 // Check which CD library will be used
-#ifndef USE_CSTK
 #ifndef USE_VCLIP
 #ifndef USE_RAPID
 #ifndef USE_PQP
@@ -31,17 +30,9 @@ using namespace std;
 #endif
 #endif
 #endif
-#endif
 
 /// Legal Types of Collision Detecters
 enum cd_predefined {
-
-/// c-space toolkit
-#ifdef USE_CSTK
-        CSTK,    
-#endif
-/**< enum CSTK */
-
 
 /// voronoi clip
 #ifdef USE_VCLIP

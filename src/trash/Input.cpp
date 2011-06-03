@@ -179,9 +179,6 @@ Input::Input():
         );
     CDstrings[0]->PutDesc("STRING",
         "\n\t\t\tPick one: default is the first in the list "
-#ifdef USE_CSTK
-        "\n\t\t\t  cstk"
-#endif
 #ifdef USE_RAPID
     "\n\t\t\t  RAPID"
 #endif
@@ -206,8 +203,6 @@ Input::Input():
     MEstrings[0]->PutDesc("STRING","\n\t\t  specify map evaluators");
 
     strcpy(commandLine,"");
-
-   nprocs = 1;
 };
 
 Input::~Input() {
@@ -221,9 +216,7 @@ void Input::ReadCommandLine(int argc, char** argv){
     strcat(commandLine," ");
   }
   
-  #if defined USE_CSTK
-    cdtype = CSTK;
-  #elif defined USE_RAPID
+  #if defined USE_RAPID
     cdtype = RAPID;
   #elif defined USE_PQP
     cdtype = PQP;
@@ -284,15 +277,7 @@ void Input::ReadCommandLine(int argc, char** argv){
       } else if ( LPstrings[numLPs]->AckCmdLine(&i, argc, argv) ) {
 	numLPs++;
       } else if ( CDstrings[numCDs]->AckCmdLine(&i, argc, argv) ) {
-        if (!(strncmp(CDstrings[numCDs]->GetValue(),"cstk",4))) {
-          #ifdef USE_CSTK
-	    cdtype = CSTK;
-          #else
-	    cout << "CSTK is not supported by current collision detection library. \n Please recompile with  CSTK .\n";
-	    exit(5);	  
-          #endif
-	  
-        }else if (!(strncmp(CDstrings[numCDs]->GetValue(),"vclip",5))) {
+        if (!(strncmp(CDstrings[numCDs]->GetValue(),"vclip",5))) {
 	  
           #ifdef USE_VCLIP
 	    cdtype = VCLIP;

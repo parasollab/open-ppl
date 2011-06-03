@@ -59,7 +59,7 @@ Environment(int dofs, int pos_dofs, Input * _input) :
 
   if (_input != NULL) {
     Read(_input->envFile.GetValue(), PMPL_EXIT,
-	 _input->descDir.GetValue(), _input->cdtype, _input->nprocs);
+	 _input->descDir.GetValue(), _input->cdtype);
     FindBoundingBox();
     
     //   if user supplied a bounding box, use it instead
@@ -547,10 +547,10 @@ Read(istream & _is, int envFormatVersion, int action, const char* descDir) {
 
 void
 Environment::
-buildCDstructure(cd_predefined cdtype, int nprocs)
+buildCDstructure(cd_predefined cdtype)
 {
   for(vector<shared_ptr<MultiBody> >::iterator M = multibody.begin(); M != multibody.end(); ++M)
-    (*M)->buildCDstructure(cdtype, nprocs);
+    (*M)->buildCDstructure(cdtype);
 }
 
 

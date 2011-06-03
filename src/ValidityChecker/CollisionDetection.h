@@ -14,10 +14,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///CD libraries
-#ifdef USE_CSTK
-#include <cstkSmallAPI.h>
-#include <cstk_global.h>
-#endif
 #ifdef USE_VCLIP
 #include <vclip.h>
 #endif
@@ -197,14 +193,6 @@ class CollisionDetection : MPBaseObject {
   bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 		     shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obstacle, std::string *pCallName=NULL);
   
-  /**Get minimum distance from Robot to Obstacles in environment.
-   *@note This method could be invoked iff USE_CSTK is defined.
-   *if USE_CSTK is undefined, then process will be terminiated.
-   */
-  double Clearance(Environment* env, Stat_Class& Stats);
-
-  bool clearanceAvailable();
-
   bool isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo);
 
   /**Set penetration depth  
@@ -261,12 +249,6 @@ class CollisionDetectionMethod {
   virtual void PrintOptions(ostream& _os) const;
   virtual CollisionDetectionMethod* CreateCopy() = 0;
 
-  /**Get minimum distance from Robot to Obstacles in environment.
-   *@note This method could be invoked iff USE_CSTK is defined.
-   *if USE_CSTK is undefined, then process will be terminiated.
-   */
-  virtual double Clearance(Environment* env, Stat_Class& Stats);
-  
   /**
    * Check if robot in given cfg is complete inside or outside obstacle.
    * @warning The precondition is that robot is collision free
@@ -277,10 +259,6 @@ class CollisionDetectionMethod {
   virtual bool isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo);
   //@}
   
-  /**True if clearance function provided by the cd package
-   */
-  virtual bool clearanceAvailable();
-
   /**Check collision between MultiBody of robot and obstacle.
    */
   virtual bool IsInCollision(shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obstacle, Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL) = 0;
@@ -294,43 +272,6 @@ class CollisionDetectionMethod {
   cd_predefined cdtype;
   string name;
 };
-
-
-#ifdef USE_CSTK
-class Cstk : public CollisionDetectionMethod {
- public:
-
-  Cstk();
-  ~Cstk();
-
-  virtual CollisionDetectionMethod* CreateCopy();
-
-  virtual double Clearance(Environment* env, Stat_Class& Stats);
-
-  virtual bool clearanceAvailable();
-
-  double cstkDistance(Stat_Class& Stats, 
-		      shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, std::string *pCallName=NULL);
-
-  /**Using CSTK to check collision between two MultiBodys.
-   *Collision is checked in Body level between two MultiBodys,
-   *if any of Body from Robot collides with any of Body from obstacle,
-   *true will be returned.
-   *
-   *@note This method doesn't support "Return all info", if 
-   *_cdInfo.ret_all_info is true, it's just ignored.
-   *
-   *@note collision between two ajacent links will be ignore.
-   *@return true if Collision found. Otherwise false will be returned.
-   *@see Body::GetCstkBody
-   */
-  virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL);
-	
-  /// for cstk, used by IsInCollision
-  void SetLineTransformation(const Transformation&, double linTrans[12]); 
-};
-#endif
 
 
 #ifdef USE_VCLIP

@@ -15,10 +15,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include CD headers
-#ifdef USE_CSTK
-#include <cstkSmallAPI.h>
-#include <cstk_global.h>
-#endif
 #ifdef USE_VCLIP
 #include <vclip.h>
 #endif
@@ -221,16 +217,9 @@ public:
     /**This method build collision detection model for specified collision detection library.
       *Each collision detection library has its own internal representation.
       *@param cdtype Which kind of collision detection library and model will be used.
-      *@param nprocs used when USE_CSTK is specified in cdtype. Numer of times calling From_GMS_to_cstk.
       */
-    void buildCDstructure(cd_predefined cdtype, int nprocs = 1);
+    void buildCDstructure(cd_predefined cdtype);
 
-#ifdef USE_CSTK
-        void * GetCstkBody();
-        void * GetCstkBody(int);
-        void * From_GMS_to_CSTK();  // Convert from GMS format to CSTK format.
-        void ** From_GMS_to_cstk(); // Convert from GMS format to CSTK format.
-#endif
 #ifdef USE_VCLIP
         shared_ptr<PolyTree> GetVclipBody();  ///<Return VCLIP internal model
 #endif

@@ -39,7 +39,6 @@
 //---------------------------------------------------------------
                         // Collision Detecters
 enum cd_predefined {    //--------------------
-        CSTK,           // c-space toolkit
         VCLIP,          // voronoi clip 
         CD_USER1};      // first user defined cd set, if any
 

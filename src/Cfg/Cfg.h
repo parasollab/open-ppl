@@ -401,13 +401,6 @@ guration where workspace robot's EVERY VERTEX
   /**@name Helper Methods */
   //@{
   
-  /**
-   *Set Robot's Cfg as this Cfg instance and 
-   *check Robot's clearance.
-   *@see CollisionDetection::Clearance
-   */
-  double Clearance(Environment *env, Stat_Class& Stats, 
-       CollisionDetection* cd) const;
   ///Approximate C-Space Clearance.
   /// returns clearance in c-space
    double ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,

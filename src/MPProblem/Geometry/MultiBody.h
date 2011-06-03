@@ -230,7 +230,7 @@ public:
       *FixedBody::Link ,FindBoundingBox, and ComputeCenterOfMass
       */
     virtual void Read(istream& is, int action, const char* descDir);
-    void buildCDstructure(cd_predefined cdtype, int nprocs = 1);
+    void buildCDstructure(cd_predefined cdtype);
 
     //@}
 

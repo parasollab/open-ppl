@@ -237,13 +237,8 @@ public:
 	n_str_param *MEstrings[MAX_GN];
 	int numMEs;
 
-        /// choose collision detection (cstk or vclip) from beginning
+        /// choose collision detection from beginning
         cd_predefined  cdtype;
-
-        /**This is used when USE_CSTK is specified in cdtype.
-          *@see Body::buildCDstructure
-          */
-        int nprocs;
 
         /**CfgManager's name.
           *Could be "Cfg_free_rigid", "Cfg_fixed_PRR", 

@@ -68,11 +68,6 @@ CollisionDetection::
 CollisionDetection() { 
   penetration = -1;
 
-#ifdef USE_CSTK
-  Cstk* cstk = new Cstk();
-  all.push_back(cstk);
-#endif
-
 #ifdef USE_VCLIP
   Vclip* vclip = new Vclip();
   all.push_back(vclip);
@@ -116,11 +111,6 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPBaseObject(in_Node, in_pProblem) { 
   LOG_DEBUG_MSG("CollisionDetection::CollisionDetection()");
   penetration = -1;
-
-#ifdef USE_CSTK
-  Cstk* cstk = new Cstk();
-  all.push_back(cstk);
-#endif
 
 #ifdef USE_VCLIP
   Vclip* vclip = new Vclip();
@@ -196,11 +186,6 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 CollisionDetection::
 CollisionDetection(vector<CollisionDetectionMethod*>& _selected) {
   penetration = -1;
-
-#ifdef USE_CSTK
-  Cstk* cstk = new Cstk();
-  all.push_back(cstk);
-#endif
 
 #ifdef USE_VCLIP
   Vclip* vclip = new Vclip();
@@ -700,20 +685,6 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 }
 
 
-double
-CollisionDetection::
-Clearance(Environment* env, Stat_Class& Stats) {
-  return selected[0]->Clearance(env, Stats);
-}
-
-
-bool
-CollisionDetection::
-clearanceAvailable() {
-  return selected[0]->clearanceAvailable();
-}
-
-
 bool
 CollisionDetection::
 isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo) {
@@ -799,24 +770,6 @@ GetType() {
 }
 
 
-double
-CollisionDetectionMethod::
-Clearance(Environment* env, Stat_Class& Stats) {
-  cout << "Clearance function is not supported by "
-       << "current collision detection library." << endl
-       << "Please recompile with a supporting library.\n";
-  exit(5);
-  return -1;
-}
-
-
-bool
-CollisionDetectionMethod::
-clearanceAvailable() {
-  return false;
-};
-
-
 bool 
 CollisionDetectionMethod::
 isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo) {
@@ -824,147 +777,6 @@ isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo) {
   exit(1);
   return false;
 }
-
-
-//////////
-
-
-#ifdef USE_CSTK
-Cstk::
-Cstk() : CollisionDetectionMethod() {
-  name = "cstk";
-  type = Exact;
-  cdtype = CSTK;
-}
-
-
-Cstk::
-~Cstk() {
-}
-
-CollisionDetectionMethod*
-Cstk::
-CreateCopy() {
-  CollisionDetectionMethod* _copy = new Cstk(*this);
-  return _copy;
-}
-
-
-double
-Cstk::
-Clearance(Environment* env, Stat_Class& Stats) {
-  int nmulti, robot;
-  nmulti = env->GetMultiBodyCount();
-  robot = env->GetRobotIndex();
-  
-  shared_ptr<MultiBody> rob = env->GetMultiBody(robot);
-  
-  double tmp, dist = MaxDist;
-  for(int i = 0 ; i < nmulti ; i++) {
-    if(i != robot) {
-      shared_ptr<MultiBody> obst = env->GetMultiBody(i);
-      tmp = cstkDistance(Stats, rob, obst);
-      if(tmp < dist) {
-	dist = tmp;
-      }
-    }
-  }
-  return dist;
-}
-
-
-//----------------------------------------------------------------------
-// SetLineTransformation
-// set linTrans[12], which is used by cstk collision checker.
-//----------------------------------------------------------------------
-void 
-Cstk::
-SetLineTransformation(const Transformation& trans, double linTrans[12]) {
-  Transformation tmp = trans;
-  tmp.orientation.ConvertType(Orientation::Matrix);
-  for(int n=0; n<3; n++) {
-    for(int j=0; j<3; j++) {
-      linTrans[4*n+j]=tmp.orientation.matrix[n][j];
-    }
-    linTrans[4*n+3]=tmp.position[n];
-  }
-}
-
-
-bool
-Cstk::
-clearanceAvailable() {
-  return true;
-};
-
-
-bool
-Cstk::
-IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName){
-  Stats.IncNumCollDetCalls(GetName(), pCallName);
-  
-  // Identity in row-major order
-  double linTrans[12] = {1,0,0,0, 0,1,0,0, 0,0,1,0};
-  
-  void *rob, *obst;
-  cstkReal tolerance = 0.001;
-  cstkReal dist;
-  
-  for(int i = 0 ; i < robot->GetFreeBodyCount(); i++){
-    
-    rob = robot->GetFreeBody(i)->GetCstkBody();
-    SetLineTransformation(robot->GetFreeBody(i)->WorldTransformation(), linTrans);
-    cstkUpdateLMovableBody(rob, linTrans);
-    
-    for(int k = 0 ; k < obstacle->GetBodyCount(); k++){
-      
-      // if robot check self collision, skip adjacent links.
-      if(robot == obstacle &&
-	 robot->GetFreeBody(i)->isAdjacent(obstacle->GetBody(k)) )
-	continue;
-      
-      obst = obstacle->GetBody(k)->GetCstkBody();
-      if(!obstacle->GetBody(k)->IsFixedBody()) { // FreeBody, cstkUpdate
-	SetLineTransformation(obstacle->GetBody(k)->WorldTransformation(), linTrans);
-	cstkUpdateLMovableBody(obst, linTrans);
-      }
-      
-      dist = cstkBodyBodyDist(rob, obst, 500, 0, NULL, 0, NULL);
-      if(dist < tolerance){
-	return (true);
-      }
-    }
-  }
-  return false;
-}
-
-
-double
-Cstk::
-cstkDistance(Stat_Class& Stats, shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, std::string *pCallName){
-  Stats.IncNumCollDetCalls(GetName()+"distance", pCallName );
-  
-  double linTrans[12] = {1,0,0,0, 0,1,0,0, 0,0,1,0};  // Identity in row-major order
-  
-  void *rob, *obst;
-  cstkReal tmp, dist = MaxDist;
-  
-  for(int i = 0 ; i < robot->GetFreeBodyCount(); i++){
-    rob = robot->GetFreeBody(i)->GetCstkBody();
-    SetLineTransformation(robot->GetFreeBody(i)->WorldTransformation(), linTrans);
-    cstkUpdateLMovableBody(rob, linTrans);
-    for(int k = 0 ; k < obstacle->GetFixedBodyCount(); k++){
-      obst = obstacle->GetFixedBody(k)->GetCstkBody();
-      tmp = cstkBodyBodyDist(rob, obst, 500, 0, NULL, 0, NULL);
-      if(tmp < dist){
-	dist = tmp;
-      }
-    }
-  }
-  return dist;
-}
-#endif
 
 
 //////////

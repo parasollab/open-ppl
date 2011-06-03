@@ -1054,14 +1054,6 @@ MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats,
    //cout << "Finished..." << endl;
 }
 
-
-double Cfg::Clearance(Environment *env, Stat_Class& Stats,
-      CollisionDetection *cd ) const {
-   ConfigEnvironment(env);
-   return cd->Clearance(env, Stats);
-}
-
-
 //Approximate C-Space Clearance
 
 double

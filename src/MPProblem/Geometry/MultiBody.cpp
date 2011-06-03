@@ -12,12 +12,6 @@
 #ifdef HPUX
 #include <sys/io.h>
 #endif
-#ifdef USE_CSTK
-#include <three_d.h>
-#include <wrappers.h>
-#include <distance.h>
-#include <witnesses.h>
-#endif
 
 //////////////////////////////////////////////////////////////////////////////////
 #include "MultiBody.h"
@@ -594,12 +588,12 @@ void MultiBody::Read(istream& _is, int action, const char* descDir)
 }
 
 
-void MultiBody::buildCDstructure(cd_predefined cdtype, int nprocs)
+void MultiBody::buildCDstructure(cd_predefined cdtype)
 {
   for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
-    (*I)->buildCDstructure(cdtype, nprocs);
+    (*I)->buildCDstructure(cdtype);
   for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
-    (*I)->buildCDstructure(cdtype, nprocs);
+    (*I)->buildCDstructure(cdtype);
 }
 
 

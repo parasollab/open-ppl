@@ -172,7 +172,7 @@ void Body::ReadBYU(istream & _is) {
 }
 
 
-void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
+void Body::buildCDstructure(cd_predefined cdtype) {
 
 #ifdef USE_VCLIP
     if (cdtype == VCLIP) {
@@ -191,13 +191,6 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 	vclipBody = shared_ptr<PolyTree>(new PolyTree);
 	vclipBody->setPoly(vpoly);
 
-    } else
-#endif
-#ifdef USE_CSTK
-    if (cdtype == CSTK){
-
-        for (int p=0; p<nprocs; ++p)
-           cstkBody[p] = From_GMS_to_CSTK();
     } else
 #endif
 #ifdef USE_RAPID
@@ -305,9 +298,6 @@ void Body::buildCDstructure(cd_predefined cdtype, int nprocs) {
 #endif
 #ifdef USE_RAPID
 	cout <<"\n\nbut RAPID = " << RAPID;
-#endif
-#ifdef USE_CSTK
-	cout <<"\n\nbut CSTK  = " << CSTK ;
 #endif
 #ifdef USE_PQP
 	cout <<"\n\nbut RAPID = " << PQP;
@@ -479,93 +469,6 @@ shared_ptr<PQP_Model> Body::GetPqpBody() {
 shared_ptr<DT_ObjectHandle> Body::GetSolidBody() {
     return solidBody;
 }
-#endif
-
-//===================================================================
-//  GetCstkBody
-//===================================================================
-#ifdef USE_CSTK
-void * Body::GetCstkBody(){
-    return cstkBody[0];
-}
-void * Body::GetCstkBody(int proc_id){
-    return cstkBody[proc_id];
-}
-
-#endif
-
-
-#ifdef USE_CSTK
-
-/////////////////////////////////////////////////////////////////////
-//
-// Convert GMS model to CSTK model.
-//
-/////////////////////////////////////////////////////////////////////
-void** Body::From_GMS_to_cstk()
-{
-    GMSPolyhedron poly = GetWorldPolyhedron();
-
-    int i, numVerts, numTris, vnum[3];
-    void *tverts[3];
-    void **verts, **tris;
-
-    // Read in number of vertices
-    numVerts = poly.numVertices;
-
-    // Read in vertices
-    verts = (void **) new char[sizeof(void *) * numVerts];
-    for(i = 0 ; i < numVerts ; i++){
-        cstkReal pt[3];
-
-    	pt[0] = poly.vertexList[i].getX();
-    	pt[1] = poly.vertexList[i].getY();
-    	pt[2] = poly.vertexList[i].getZ();
-    	verts[i] = cstkMake3DVertex(pt);
-    }
-
-    // Read in number of triangles
-    numTris = poly.numPolygons;
-
-    // Read in triangles
-    tris = (void **) new char[sizeof(void *) * (numTris + 1)];
-    for(i = 0 ; i < numTris ; i++){
-    	vnum[0] = poly.polygonList[i].vertexList[0];
-    	vnum[1] = poly.polygonList[i].vertexList[1];
-    	vnum[2] = poly.polygonList[i].vertexList[2];
-
-    	tverts[0] = verts[vnum[0]];
-    	tverts[1] = verts[vnum[1]];
-    	tverts[2] = verts[vnum[2]];
-    	tris[i] = cstkMake3DPolygon(tverts, 3);
-    }
-    tris[numTris] = NULL;
-
-    delete verts; // Just an array of (void *), so no destructors called.
-
-    return tris;
-}
-
-
-/////////////////////////////////////////////////////////////////////
-//
-// Convert GMS body to CSTK body.
-//
-/////////////////////////////////////////////////////////////////////
-void * Body::From_GMS_to_CSTK()
-{
-    void **tmpPolys = NULL;
-    tmpPolys = From_GMS_to_cstk();
-
-    int triCount;
-    for (triCount = 0; tmpPolys[triCount]; triCount++);
-    void *sub = cstkMakeBodyFromPolys(tmpPolys, triCount);
-    delete tmpPolys;   // Just an array of (void *), so no destructors called.
-    void *robot = cstkMakeLMovableBody(sub);
-
-    return robot;
-}
-
 #endif
 
 

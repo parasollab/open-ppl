@@ -178,10 +178,7 @@ class LocalPlanners : MPBaseObject{
 template <class CFG, class WEIGHT>
 int LocalPlanners<CFG,WEIGHT>::lp_counter = -1;
 
-#if defined USE_CSTK
-  template <class CFG, class WEIGHT> 
-  cd_predefined LocalPlanners<CFG,WEIGHT>::cdtype = CSTK;
-#elif defined USE_RAPID
+#if defined USE_RAPID
   template <class CFG, class WEIGHT> 
   cd_predefined LocalPlanners<CFG,WEIGHT>::cdtype = RAPID;
 #elif defined USE_PQP

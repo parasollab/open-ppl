@@ -11,7 +11,7 @@ ClosedChainProblem(XMLNodeReader& in_Node) : MPProblem(in_Node, false)
 
   vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();
   for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
-    m_pEnvironment->buildCDstructure(*C, 1);
+    m_pEnvironment->buildCDstructure(*C);
 }
 
 void ClosedChainProblem::
