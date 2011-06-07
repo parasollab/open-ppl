@@ -68,12 +68,15 @@ class Sampler : private element_set<SamplerMethod<CFG> >, public MPBaseObject
 {			 
  public:
   typedef typename element_set<SamplerMethod<CFG> >::method_pointer SamplerPointer;
+  
   template <typename MethodList>
-  Sampler() : element_set<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()) {}
+  Sampler() : element_set<SamplerMethod<CFG> >(MethodList()) {}
+  
   Sampler() : element_set<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()) {}    
+  
   template <typename MethodList>
   Sampler(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&)
-    : element_set<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()), MPBaseObject(in_pProblem) 
+    : element_set<SamplerMethod<CFG> >(MethodList()), MPBaseObject(in_pProblem) 
   { 
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
       if(!element_set<SamplerMethod<CFG> >::add_element(citr->getName(), *citr, in_pProblem))
