@@ -98,13 +98,13 @@ operator==(const BoundingBox& bb) const
          (dofs == bb.dofs);
 }
 
-unsigned int 
+int 
 BoundingBox::
 GetDOFs() const {
   return dofs;//bounding_box.size();
 }
 
-unsigned int 
+int 
 BoundingBox::
 GetPosDOFs() const {
   return pos_dofs;//bounding_box.size();
@@ -172,7 +172,7 @@ BoundingBox
 BoundingBox::
 GetCombination(BoundingBox &o_bounding_box) {
   BoundingBox combination(*this);
-  for (size_t par=0; par < o_bounding_box.GetDOFs() && par < combination.GetDOFs(); par++) {
+  for (int par=0; par < o_bounding_box.GetDOFs() && par < combination.GetDOFs(); par++) {
     combination.SetParameter(par,
 			     min(combination.bounding_box[par].first,
 				 o_bounding_box.bounding_box[par].first),

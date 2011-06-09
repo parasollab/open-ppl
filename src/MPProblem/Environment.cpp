@@ -357,39 +357,47 @@ SelectUsableMultibodies() {
     usable_externalbody_count++;
   }
 
-  if(boundaries->GetDOFs() < 3)
+  if(boundaries->GetPosDOFs() < CfgType().posDOF())
     return;
 
   // get workspace bounding box
-  double minx = boundaries->GetRange(0).first; 
-  double maxx = boundaries->GetRange(0).second;
-  double miny = boundaries->GetRange(1).first; 
-  double maxy = boundaries->GetRange(1).second;
-  double minz = boundaries->GetRange(2).first; 
-  double maxz = boundaries->GetRange(2).second;  
+  double minx, maxx, miny, maxy, minz, maxz;
+
+  minx = boundaries->GetRange(0).first; 
+  maxx = boundaries->GetRange(0).second;
+  miny = boundaries->GetRange(1).first; 
+  maxy = boundaries->GetRange(1).second;
+  
+  if(boundaries->GetPosDOFs() < 3){
+    minz = 0;
+    maxz = 0;
+  }
+  else{
+    minz = boundaries->GetRange(2).first; 
+    maxz = boundaries->GetRange(2).second;
+  }
 
   for (size_t i = 0; i < multibody.size(); i++) 
     if((int)i != original_robotIndex) { // @todo: need a test function in multibody to
       //see if bounding box of multibody overlaps BB
       multibody[i]->FindBoundingBox();
       const double *obb = multibody[i]->GetBoundingBox();
-      
-      if (((obb[0] <= maxx && obb[0] >= minx) || (obb[1] <= maxx && obb[1] >= minx)) &&
-          ((obb[2] <= maxy && obb[2] >= miny) || (obb[3] <= maxy && obb[3] >= miny)) &&
-          ((obb[4] <= maxz && obb[4] >= minz) || (obb[5] <= maxz && obb[5] >= minz))) {
-        // any point in obstacle's bbox inside boundaries => obstacle is usable
-        usable_multibody.push_back(multibody[i]);
-        if (!(multibody[i]->IsInternal()))
-          usable_externalbody_count++;
-      } else { // bounding boxes cross each other 
-        if (!(obb[0] > maxx || obb[1] < minx || 
-              obb[2] > maxy || obb[3] < miny || 
-              obb[4] > maxz || obb[5] < minz)) {
+        if (((obb[0] <= maxx && obb[0] >= minx) || (obb[1] <= maxx && obb[1] >= minx)) &&
+            ((obb[2] <= maxy && obb[2] >= miny) || (obb[3] <= maxy && obb[3] >= miny)) &&
+            ((obb[4] <= maxz && obb[4] >= minz) || (obb[5] <= maxz && obb[5] >= minz))) {
+          // any point in obstacle's bbox inside boundaries => obstacle is usable
           usable_multibody.push_back(multibody[i]);
           if (!(multibody[i]->IsInternal()))
             usable_externalbody_count++;
+        } else { // bounding boxes cross each other 
+          if (!(obb[0] > maxx || obb[1] < minx || 
+                obb[2] > maxy || obb[3] < miny || 
+                obb[4] > maxz || obb[5] < minz)) {
+            usable_multibody.push_back(multibody[i]);
+            if (!(multibody[i]->IsInternal()))
+              usable_externalbody_count++;
+          }
         }
-      }
     }
 }
 

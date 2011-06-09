@@ -27,6 +27,12 @@ typedef Cfg_2D CfgType;
 typedef DefaultWeight WeightType;
 #endif
 
+#ifdef PMPCfg2DWithRot
+#include "Cfg_2D_withRot.h"
+typedef Cfg_2D_withRot CfgType;
+typedef DefaultWeight WeightType;
+#endif
+
 #ifdef PMPReachDistCC
 #include "Cfg_reach_cc.h"
 typedef Cfg_reach_cc CfgType;

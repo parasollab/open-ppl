@@ -36,8 +36,8 @@ class BoundingBox : public Boundary {
 
   BoundingBox GetCombination(BoundingBox &o_bounding_box);
   double GetRandomValueInParameter(int par);
-  unsigned int GetDOFs() const;
-  unsigned int GetPosDOFs() const;
+  int GetDOFs() const;
+  int GetPosDOFs() const;
   const std::pair<double,double> GetRange(int par) const;
   double GetClearance(Vector3D point3d) const;
   parameter_type GetType(int par) const;

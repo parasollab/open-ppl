@@ -194,10 +194,10 @@ class Cfg {
   friend ostream& operator<< (ostream&, const Cfg&);
   friend istream& operator>> (istream&, Cfg&);
   ///Write configuration to output stream
-  void Write(ostream& os) const;
+  virtual void Write(ostream& os) const;
   virtual void WriteInfo(ostream& os) const;
   ///Read configuration from input stream
-  void Read(istream& is);
+  virtual void Read(istream& is);
   virtual void ReadInfo(istream& is);
  
   virtual void printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs) const;
@@ -237,12 +237,12 @@ class Cfg {
    * @param param the parameter number to set.
    * @param value the value to set the parameter as
    */
-  int SetSingleParam(int param, double value);    
+  virtual int SetSingleParam(int param, double value);    
   /** Increment a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to set.
    * @param value the value to increment the parameter by.
    */
-  int IncSingleParam(int param, double value);  
+  virtual int IncSingleParam(int param, double value);  
   /** Retreive a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to retreive
    */

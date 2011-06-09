@@ -171,27 +171,47 @@ void Body::ReadBYU(istream & _is) {
     FindBoundingBox();
 }
 
-
+#ifdef USE_VCLIP
+#include "CfgTypes.h"
+#endif
 void Body::buildCDstructure(cd_predefined cdtype) {
 
 #ifdef USE_VCLIP
-    if (cdtype == VCLIP) {
-	GMSPolyhedron poly = GetPolyhedron();
-	Polyhedron* vpoly = new Polyhedron;
-	for(size_t v = 0 ; v < poly.vertexList.size() ; v++){
-		vpoly->addVertex("",
-			Vect3(poly.vertexList[v].getX(),
-			      poly.vertexList[v].getY(),
-			      poly.vertexList[v].getZ()
-			));
+  if (cdtype == VCLIP) {
+    GMSPolyhedron poly = GetPolyhedron();
+    Polyhedron* vpoly = new Polyhedron;
 
-	}
+    if(CfgType().posDOF()==2){
+      for(size_t v = 0 ; v < poly.vertexList.size() ; v++){
+        vpoly->addVertex("",
+            Vect3(poly.vertexList[v].getX(),
+              poly.vertexList[v].getY(),
+              poly.vertexList[v].getZ()-0.001
+              ));
+      }
+      for(size_t v = 0 ; v < poly.vertexList.size() ; v++){
+        vpoly->addVertex("",
+            Vect3(poly.vertexList[v].getX(),
+              poly.vertexList[v].getY(),
+              poly.vertexList[v].getZ()+0.001
+              ));
+      }
+    }
+    else{
+      for(size_t v = 0 ; v < poly.vertexList.size() ; v++){
+        vpoly->addVertex("",
+            Vect3(poly.vertexList[v].getX(),
+              poly.vertexList[v].getY(),
+              poly.vertexList[v].getZ()
+              ));
+      }
+    }
 
-	vpoly->buildHull();
-	vclipBody = shared_ptr<PolyTree>(new PolyTree);
-	vclipBody->setPoly(vpoly);
+    vpoly->buildHull();
+    vclipBody = shared_ptr<PolyTree>(new PolyTree);
+    vclipBody->setPoly(vpoly);
 
-    } else
+  } else
 #endif
 #ifdef USE_RAPID
       if (cdtype == RAPID){

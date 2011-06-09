@@ -1,29 +1,30 @@
-// $Id$
-/**@file Cfg_2D.h
-  *A derived class from Cfg. It provides some specific
-  *implementation for a 2-dof rigid-body moving in a 2-D work space.
+// $Id: Cfg_2D_withRot.h 2836 2011-06-02 15:58:23Z sthomas $
+
+/**@file Cfg_2D_withRot.h
+  *A derived class from CfgManager. It provides some specific
+  *implementation for a 6-dof rigid-body moving in a 3-D work space.
   *
-  *@date 6/6/11
-  *@author Jory Denny
+  *@date 08/31/99
+  *@author Guang Song
   */
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef Cfg_2D_h
-#define Cfg_2D_h
+#ifndef Cfg_2D_withRot_h
+#define Cfg_2D_withRot_h
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include obprm headers
-#include "Cfg.h"
-#include "Point.h"
-using namespace mathtool;
+#include "Cfg_2D.h"
+
+////////////////////////////////////////////////////////////////////////////////////////////
 class GMSPolyhedron;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /**
-  *A derived class from Cfg_free. It provides some specific
-  *implementation for a 3-dof rigid-body moving in a 2-D work space.
+  *A derived class from CfgManager. It provides some specific
+  *implementation for a 6-dof rigid-body moving in a 3-D work space.
   */
-class Cfg_2D : public Cfg {
+class Cfg_2D_withRot : public Cfg_2D {
 public:
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -39,23 +40,22 @@ public:
   //===================================================================
   //@{
   ///Degree of freedom is 6 and Degree of freedom for position part is 3.
-  Cfg_2D();
-  Cfg_2D(const Cfg&c);
-  Cfg_2D(const Vector2d& _v);
-  Cfg_2D(double, double);
-  Cfg_2D(const Point2d _p);
-
+  Cfg_2D_withRot();
+  Cfg_2D_withRot(double x, double y, double theta);
+  Cfg_2D_withRot(const Vector3d& _v);
+  Cfg_2D_withRot(const Cfg& c);
+  Cfg_2D_withRot(const Point2d _p, double theta);
+  
   ///Do nothing
-  virtual ~Cfg_2D();
+  virtual ~Cfg_2D_withRot();
   //@}
   
   #ifdef _PARALLEL
     void define_type(stapl::typer &t)  
     {
-      Cfg_free::define_type(t);
-      
+      Cfg::define_type(t);
     }
-  #endif
+#endif
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -68,40 +68,14 @@ public:
   virtual void Write(ostream& os) const;
   ///Read configuration from input stream
   virtual void Read(istream& is);
-
-  virtual void GetRandomCfg(double R, double rStep);
-  virtual void GetRandomCfg(Environment *env);
-  
-  virtual void GetRandomRay(double incr, Environment* env, shared_ptr< DistanceMetricMethod> dm);
-  
-  virtual void add(const Cfg&, const Cfg&);
-  virtual void subtract(const Cfg&, const Cfg&);
-  virtual void negative(const Cfg&);
-  virtual void multiply(const Cfg&, double);
-  virtual void divide(const Cfg&, double);
-   
-  virtual void equals(const Cfg&);
-
-  virtual void WeightedSum(const Cfg&, const Cfg&, double weight = 0.5);       
-  
-  /** Set a single parameter in the configuration (i.e., x,y,z,roll...)
-   * @param param the parameter number to set.
-   * @param value the value to set the parameter as
-   */
-  virtual int SetSingleParam(int param, double value);    
-  
-  /** Increment a single parameter in the configuration (i.e., x,y,z,roll...)
-   * @param param the parameter number to set.
-   * @param value the value to increment the parameter by.
-   */
-  virtual int IncSingleParam(int param, double value);  
  
-  ///Increase every value in this instance in each dimention by the value in _increment
-  virtual void Increment(const Cfg& _increment);
-  virtual void IncrementTowardsGoal(const Cfg &goal, const Cfg &increment);
-  virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks, 
-           double positionRes, double orientationRes);
-  virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks);
+  double GetRot() const {return v[2];}
+  void SetRot(double d) {v[2]=d;}
+
+  /**@name Access Methods*/
+  //@{
+
+  virtual void equals(const Cfg&);
 
   ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition() const;
@@ -111,9 +85,17 @@ public:
   ///Move the (the first link of)  robot in enviroment to the given configuration.
   virtual bool ConfigEnvironment(Environment*) const;
 
-  //Get position in the form of Point2d
-  Point2d getPos() const {return p;}
-  void setPos(Point2d _p){ v[0]=_p[0]; v[1]=_p[1]; p=_p;}
+  /**Randomly generate a Cfg
+    *@param R This new Cfg will have distance (position) R from origin
+    *@param rStep
+    *@todo what is rStep?
+    */
+  virtual void GetRandomCfg(double R, double rStep);
+  virtual void GetRandomCfg(Environment* env);
+
+  ///Get a random vector whose magnitude is incr (note. the orienatation of of this Cfg is 0)
+  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm);
+  //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -122,22 +104,38 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
+  /**@name Node Generation*/
+  //@{
 
-  virtual bool GenerateOverlapCfg(Environment *env, int robot,
+  /**Node Generation methods: OBPRM.
+    *Generate a new Cfg, and put it in resultCfg.
+    *The position of new cfg is from (robot_goal-robot_start)
+    *The orientation of new cfg is generated randomly.
+    */
+  virtual bool GenerateOverlapCfg(Environment* env, int robot,
 				  Vector3D robot_start, Vector3D robot_goal, 
-				  Cfg *resultCfg);
+				  Cfg* resultCfg);
 
-  virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
+  /**Node Generation methods: NORMAL
+    *generate nodes by overlapping two triangles' normal.
+    */
+  virtual void GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats, 
 					 CollisionDetection *,
-					 int obstacle, int nCfgs, 
-					 CDInfo& _cdInfo, vector<Cfg*>&) const;
-
-  virtual void GetCfgByOverlappingNormal(Environment * env, Stat_Class& Stats,
+					 int obstacle, int nCfgs,
+					 CDInfo& _cdInfo,
+					 vector<Cfg*>&) const;
+  
+  /**@todo Document this
+    */
+  virtual void GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 					 CollisionDetection* cd,
-					 const GMSPolyhedron &polyRobot, const GMSPolyhedron &polyObst,
+					 const GMSPolyhedron &polyRobot, 
+					 const GMSPolyhedron &polyObst,
 					 int robTri, int obsTri,
 					 CDInfo& _cdInfo,
-					 shared_ptr<MultiBody>, vector<Cfg*>) const;
+					 shared_ptr<MultiBody>, vector<Cfg*>&) const;
+
+  //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -146,13 +144,21 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
+  /*@name Helper functions*/
+  //@{
+
+  /**Check if a given configuration c is inside narrow passage.
+    *This is done by moving c a little bit and check for collision.
+    *return true if inside narrow passage.
+    */
   virtual bool InNarrowPassage(Environment* env, Stat_Class& Stats,
 			       CollisionDetection* cd, CDInfo& _cdInfo,
 			       shared_ptr<MultiBody> onflyRobot) const;
-  
+  //@}
+
+
   virtual Cfg* CreateNewCfg() const;
   virtual Cfg* CreateNewCfg(vector<double>&) const;
-
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -160,12 +166,19 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
+
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
   virtual void GetRandomCfg_CenterOfMass(Environment* env);
-  
- private:
-  Point2d p;
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    private Data member and member methods
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  private:
 
 };
 
