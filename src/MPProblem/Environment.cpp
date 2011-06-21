@@ -483,6 +483,9 @@ Environment::GetBoundingBox() const {
   return boundaries;
 }
 
+void Environment::SetBoundingBox(shared_ptr<BoundingBox> b){
+  boundaries = b;
+}
 
 
 void 

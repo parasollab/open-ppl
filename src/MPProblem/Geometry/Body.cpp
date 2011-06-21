@@ -6,6 +6,7 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "Body.h"
+#include <sstream>
 
 //===================================================================
 //  Constructors and Destructor
@@ -359,7 +360,6 @@ void Body::UpdateVertexBase(){
 #endif
 
 void Body::Read(char * _fileName) {
-
     //---------------------------------------------------------------
     // Read polyhedron
     //---------------------------------------------------------------
@@ -402,11 +402,17 @@ void Body::Read(char * _fileName) {
     FindBoundingBox();
 }
 
-
 //===================================================================
 //  Write
 //===================================================================
 void Body::Write(ostream & _os) {
+  static int numBody = 0;
+  ostringstream oss;
+  oss<<"Obj"<<numBody++<<".g";
+  _os<<oss.str()<<" ";
+  ofstream ofs(oss.str().c_str());
+  polyhedron.WriteBYU(ofs);
+  ofs.close();
 }
 
 

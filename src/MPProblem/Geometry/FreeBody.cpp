@@ -120,8 +120,9 @@ ComputeWorldTransformation(std::set<int, less<int> >& visited) {
 //  Write               
 //===================================================================
 void FreeBody::Write(ostream & _os) {
-    _os << "FreeBody" << endl;
+    _os << "FreeBody 0 " << endl;
     Body::Write(_os);
+    worldTransformation.Write(_os);
     _os << endl;
 }
 

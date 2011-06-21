@@ -605,30 +605,40 @@ void MultiBody::Write(ostream & _os)
   //---------------------------------------------------------------
   // Write tag
   //---------------------------------------------------------------
-  _os << "MultiBody" << endl;
-  
+  _os << "MultiBody ";
+  if(freeBody.size()>0)
+    _os << "Active"<<endl;
+  else
+    _os << "Passive"<<endl;
+
   //---------------------------------------------------------------
   // Write bodies
   //---------------------------------------------------------------
-  _os << fixedBody.size() << endl;
-  for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
+  if(fixedBody.size()>0){
+    _os << fixedBody.size() << endl;
+    for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I){
       (*I)->Write(_os);
-  _os << freeBody.size() << endl;
-  for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
+    }
+  }
+  if(freeBody.size()>0){
+    _os << freeBody.size() << endl;
+    for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I){
       (*I)->Write(_os);
-  
+    }
+  }
+  _os << "Connection" << endl;
   //---------------------------------------------------------------
   // Write links
   //---------------------------------------------------------------
   for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I) {
-      _os << (*I)->ForwardConnectionCount() << endl;
-      for(int j=0; j < (*I)->ForwardConnectionCount(); j++)
-	    (*I)->GetForwardConnection(j).Write(_os);
+    _os << (*I)->ForwardConnectionCount() << endl;
+    for(int j=0; j < (*I)->ForwardConnectionCount(); j++)
+      (*I)->GetForwardConnection(j).Write(_os);
   }
   for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I) {
-      _os << (*I)->ForwardConnectionCount() << endl;
-      for(int j=0; j < (*I)->ForwardConnectionCount(); j++)
-	    (*I)->GetForwardConnection(j).Write(_os);
+    _os << (*I)->ForwardConnectionCount() << endl;
+    for(int j=0; j < (*I)->ForwardConnectionCount(); j++)
+      (*I)->GetForwardConnection(j).Write(_os);
   }
 }
 

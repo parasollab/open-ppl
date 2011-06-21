@@ -205,6 +205,7 @@ public:
       *@see FindBoundingBox, Input::bbox_scale, and Input::bbox
       */
     virtual shared_ptr<BoundingBox> GetBoundingBox() const;
+    virtual void SetBoundingBox(shared_ptr<BoundingBox> b);
     
     /**Return manximu axis range of bounding box.
       *This value is calculated in FindBoundingBox.

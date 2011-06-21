@@ -60,7 +60,7 @@ void FixedBody::Configure(Transformation & _transformation){
 //  Write               
 //===================================================================
 void FixedBody::Write(ostream & _os) {
-    _os << "FixedBody" << endl;
+    _os << "FixedBody 0 " << endl;
     Body::Write(_os);
     worldTransformation.Write(_os);
     _os << endl;

@@ -419,8 +419,9 @@ void Orientation::Read(istream & _is) {
 void Orientation::Write(ostream & _os) {
     ConvertType(EulerZYX);
 
-    _os << gamma << " ";
-    _os << beta << " ";
-    _os << alpha << " ";
+    _os << setprecision(4) << fixed << gamma*360.0/TWOPI << " ";
+    _os << setprecision(4) << fixed << beta*360.0/TWOPI << " ";
+    _os << setprecision(4) << fixed << alpha*360.0/TWOPI << " ";
+    _os.unsetf(ios_base::fixed);
 }
 
