@@ -102,6 +102,29 @@ CollisionDetection() {
 
   Quinlan* quinlan = new Quinlan();
   all.push_back(quinlan);
+  
+  vector<CollisionDetectionMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); I++)
+    delete *I;
+  selected.clear();
+
+#ifdef USE_RAPID
+  selected.push_back(rapid);
+#endif
+#ifdef USE_PQP
+  selected.push_back(pqp);
+#endif
+#ifdef USE_VCLIP
+  selected.push_back(vclip);
+#endif
+#ifdef USE_SOLID
+  selected.push_back(solid);
+#endif
+  if(selected.size() < 1) {
+    LOG_WARNING_MSG("No CollisionDetectionMethods selected!");
+  }
+  
+ 
 }
 
 
