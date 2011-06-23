@@ -162,7 +162,6 @@ template <typename CFG>
 class UniformRandomFreeSampler : public SamplerMethod<CFG>
 {
  private:
-  Environment* env;
   ValidityChecker<CFG>* vc;
   std::string strVcmethod;
 
@@ -171,8 +170,8 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG>
     this->SetName("UniformRandomFreeSampler");
   }
   
-  UniformRandomFreeSampler(Environment* _env) :
-    env(_env) {
+  UniformRandomFreeSampler(ValidityChecker<CFG>* v, string vcMethod) :
+    vc(v), strVcmethod(vcMethod) {
       this->SetName("UniformRandomFreeSampler");
   } 
   
