@@ -126,6 +126,15 @@ public:
     _out << *(this->m_pnode);
     return _out;
   }
+
+  bool operator==(const XMLNodeReader& in_Node) const
+  {
+    return (m_pnode == in_Node.m_pnode) &&
+           (m_bChildVecBuilt == in_Node.m_bChildVecBuilt) &&
+           (m_vec_children == in_Node.m_vec_children) &&
+           (m_vec_req_attributes == in_Node.m_vec_req_attributes);
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   //  Private Methods
   /////////////////////////////////////////////////////////////////////////////
