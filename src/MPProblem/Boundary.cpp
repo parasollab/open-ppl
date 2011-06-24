@@ -114,6 +114,11 @@ GetPosDOFs() const {
 const std::pair<double,double> 
 BoundingBox::
 GetRange(int par) const {
+  if(par >= (int)bounding_box.size())
+  {
+    cerr << "\n\n\tERROR in BoundingBox::GetRange(): attempting to get range of parameter " << par << ", but bounding_box is of size " << bounding_box.size() << ", exiting.\n\n";
+    exit(-1);
+  }
   return bounding_box[par];
 }
 
