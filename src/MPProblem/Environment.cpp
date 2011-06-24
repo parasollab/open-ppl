@@ -264,7 +264,7 @@ Environment(const Environment& from_env, string filename) :
 {
   boundaries = shared_ptr<BoundingBox>(new BoundingBox(*(from_env.GetBoundingBox())));
   if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
-    cout << "FOUND EMPTY BBOX! (Environment copy constructor)\n";
+    cout << "FOUND EMPTY BBOX! (Environment copy constructor, with filename)\n";
          
   Read(filename.c_str(), PMPL_EXIT, "");
   FindBoundingBox();
@@ -357,7 +357,7 @@ SelectUsableMultibodies() {
     usable_externalbody_count++;
   }
 
-  if(boundaries->GetPosDOFs() < CfgType().posDOF())
+  if((boundaries->GetPosDOFs() < CfgType().posDOF()) || (boundaries->GetDOFs() < CfgType().DOF()))
     return;
 
   // get workspace bounding box
