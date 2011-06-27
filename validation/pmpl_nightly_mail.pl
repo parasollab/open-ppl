@@ -13,9 +13,9 @@ use List::Util qw(min max);
 # configuration
 #
 $outputdir = "/tmp/pmpl_nightly_logs";
-$cron_machine = "hardyboys.cse.tamu.edu";
+$cron_machine = "antibes.cse.tamu.edu";
 $MAILTO = "OBPRM\@listserv.tamu.edu";
-#$MAILTO = "sthomas\@cs.tamu.edu";
+#$MAILTO = "jdenny\@cs.tamu.edu";
 $ENV{'PATH'}    = '/usr/local/bin/:/usr/X11R6/bin/:'.$ENV{'PATH'};
 $ENV{'DISPLAY'} = '';
 
