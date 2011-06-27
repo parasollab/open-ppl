@@ -16,6 +16,10 @@ public:
   
   virtual bool IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, 
 		       CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName) = 0; 
+  virtual bool isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo) {
+    cerr << "error: isInsideObstacle() not defined." << endl;
+		exit(-1);
+  };
+	
 };
-
-#endif //end #ifndef _VALIDITY_CHECKER_METHOD_HPP_
+#endif // End #ifndef _VALIDITY_CHECKER_METHOD_HPP_

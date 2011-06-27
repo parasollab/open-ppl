@@ -363,23 +363,6 @@ guration where workspace robot's EVERY VERTEX
           Stat_Class& Stats, CollisionDetection* cd,  
           CDInfo& _cdInfo, int num) const;
 
-  /// generates random configuration and pushes it to the medial axis of the
-  /// free c-space
-  bool GetMedialAxisCfg(MPProblem* mp, Environment* _env, Stat_Class& Stats,
-      string _vc, CDInfo& _cdInfo, 
-      string _dm, 
-      int clearnce_n, int penetration_n);
-  /// pushes a node towards the medial axis
-  void PushToMedialAxis(MPProblem* mp, Environment* _env, Stat_Class& Stats,
-      string vc, CDInfo& cdInfo, 
-      string dm, 
-      int clearance_n, int penetration_n);
-  /// pushes a free node towards the medial axis
-  virtual void MAPRMfree(MPProblem* mp, Environment* _env, Stat_Class& Stats,
-       string vc, CDInfo& cdInfo, 
-       string dm, int n);
-    
-
   virtual bool GenerateOverlapCfg(Environment* env, int robot,
           Vector3D robot_start, Vector3D robot_goal, 
           Cfg* resultCfg) = 0;  // OBPRM and BasicOBPRM
@@ -400,33 +383,7 @@ guration where workspace robot's EVERY VERTEX
   //////////////////////////////////////////////////////////////////////////////////////////
   /**@name Helper Methods */
   //@{
-  
-  ///Approximate C-Space Clearance.
-  /// returns clearance in c-space
-   double ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
-                string vc,
-                CDInfo& cdInfo,
-                string m_dm, int n,
-                bool bComputePenetration,
-                int ignore_obstacle = -1) const;
-  /// clearance and the direction set via ClearanceInfo
-  void ApproxCSpaceClearance(MPProblem* mp, Environment* env, Stat_Class& Stats,
-			     string vc, CDInfo& cdInfo,
-			     string m_dm, int n,
-			     ClearanceInfo& clearInfo, 
-			     bool bComputePenetration,
-			     int ignore_obstacle = -1) const;
- 
 
-  ///Approximate C-Space Contact Points
-  /// given an origin Cfg and a vector of directions
-  /// returns the obstacle contact point for each direction from origin
-  /// (contact points are in-collision)
-  void ApproxCSpaceContactPoints(vector<Cfg*>& directions, Environment* _env,
-         Stat_Class& Stats,
-         CollisionDetection* cd, CDInfo &cdInfo,
-         vector<Cfg*>& contact_points) const;    
-  
   virtual bool isCollision(Environment* env, Stat_Class& Stats,
          CollisionDetection* cd, CDInfo& _cdInfo,
          bool enablePenetration=true, std::string *pCallName = NULL);

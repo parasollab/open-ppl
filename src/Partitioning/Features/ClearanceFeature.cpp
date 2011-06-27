@@ -4,6 +4,7 @@
 #include "CfgTypes.h"
 #include "MPRegion.h"
 #include "ValidityChecker.hpp"
+#include "MedialAxisUtility.h"
 
 ClearanceFeature::ClearanceFeature():MPFeature(){}
 
@@ -54,19 +55,21 @@ void CSpaceClearanceFeature::ParseXML(XMLNodeReader& in_Node){
 }
 
 vector<double> CSpaceClearanceFeature::Collect(vector<VID>& vids) {
-  vector<double> clearance;
 
+  vector<double> clearance;
+	CDInfo tmp_info;
   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
   Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
   Environment *env = GetMPProblem()->GetEnvironment();
   ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
-
   typedef vector<VID>::iterator VIT;
+
   for(VIT vit = vids.begin(); vit!=vids.end(); vit++){
     CDInfo _cdInfo;
     _cdInfo.ret_all_info=true;
     CfgType cfg=rdmp->find_vertex(*vit)->property();
-    clearance.push_back(cfg.ApproxCSpaceClearance(GetMPProblem(), env, *pStatClass, m_vc, _cdInfo, m_dm, 20, true));
+		GetApproxCollisionInfo(GetMPProblem(),cfg,env,*pStatClass,_cdInfo,m_vc,m_dm,20,20,true);
+		clearance.push_back(_cdInfo.min_dist);
   }
   return clearance;
 }

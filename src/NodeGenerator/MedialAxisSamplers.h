@@ -2,6 +2,9 @@
 #define MedialAxisSamplers_h
 
 #include "SamplerMethod.h"
+#include "MedialAxisUtility.h"
+#include <sstream>
+
 class Environment;
 class Stat_Class;
 class CDInfo;
@@ -10,105 +13,91 @@ class DistanceMetric;
 template <typename CFG>
 class MedialAxisSampler : public SamplerMethod<CFG>
 {
-  public:
-    ValidityChecker<CFG>* vc;
-    shared_ptr<DistanceMetricMethod> dm;
-    string dmstring;
-    MPProblem* mp;
-    int clearance, penetration;
-    string strLabel;
-    string strVcmethod;
-    bool m_debug;
+ public:
+  MPProblem* mp;
+  ValidityChecker<CFG>* vc;
+  shared_ptr<DistanceMetricMethod> dm;
+  bool m_debug,use_bbx;
+  int clearance,penetration;
+  string str_dm,str_vcm,str_c,str_p;
+	
+ MedialAxisSampler(MPProblem* _mp, ValidityChecker<CFG>*_vc, shared_ptr<DistanceMetricMethod> _dm, 
+									 bool debug, bool _use_bbx, string _str_dm, string _str_vcm, int _c, int _p, string _str_c, string _str_p) : 
+	mp(_mp),vc(_vc),dm(_dm),m_debug(debug),use_bbx(_use_bbx),str_dm(_str_dm),str_vcm(_str_vcm),clearance(_c),penetration(_p),str_c(_str_c),str_p(_str_p) {
+		this->SetName("MedialAxisSampler");
+	}
+	
+	MedialAxisSampler() {
+		this->SetName("MedialAxisSampler");
+	}
+	
+	MedialAxisSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) {
+		LOG_DEBUG_MSG("MedialAxisSampler::MedialAxisSampler()");
+		this->SetName("MedialAxisSampler");
+		ParseXML(in_Node);
+		mp = in_pProblem;
+		vc = in_pProblem->GetValidityChecker();
+		dm = in_pProblem->GetDistanceMetric()->GetDMMethod(str_dm);
+		LOG_DEBUG_MSG("~MedialAxisSampler::MedialAxisSampler()");
+	}
+	
+	~MedialAxisSampler() {}
+	
+	void ParseXML(XMLNodeReader& in_Node) {
+		LOG_DEBUG_MSG("MedialAxisSampler::ParseXML()");		
+		this->SetLabel(this->ParseLabelXML(in_Node));
 
-    MedialAxisSampler() : m_debug(false) {
-      this->SetName("MedialAxisSampler");
-    }
-    MedialAxisSampler(shared_ptr<DistanceMetricMethod> _dm, int _c, int _p) : dm(_dm),
-    clearance(_c), penetration(_p), m_debug(false) {
-      this->SetName("MedialAxisSampler");
-    }
+		str_vcm     = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
+		str_dm      = in_Node.stringXMLParameter("dm_method", true, "", "Distance metric");
+		str_c       = in_Node.stringXMLParameter("clearance_type", true, "", "Clearance Computation (exact or approx)");
+    str_p       = in_Node.stringXMLParameter("penetration_type", true, "", "Penetration Computation (exact or approx)");		
+		clearance   = in_Node.numberXMLParameter("clearance_rays", false, 10, 1, 1000, "Clearance Number");
+		penetration = in_Node.numberXMLParameter("penetration_rays", false, 10, 1, 1000, "Penetration Number");		
+		m_debug     = in_Node.boolXMLParameter("debug", false, false, "debugging flag");
+		use_bbx     = in_Node.boolXMLParameter("use_bbx", false, true, "Use the Bounding Box as an Obstacle");		
+		print(cout);
+		LOG_DEBUG_MSG("~MedialAxisSampler::ParseXML()");
+	}
+	
+	virtual void print(ostream& os) const {
+    os << "MedialAxisSampler"
+       << "\n strVcmethod = " << str_vcm
+       << "\n dmstring = " << str_dm
+       << "\n clearance_type = " << str_c
+       << "\n penetration_type = " << str_p
+       << "\n (clearance_rays = " << clearance
+       << ", penetration_rays = " << penetration
+       << ")\n use_bbx = " << use_bbx << endl;
+	}
+	
+	bool sampler(Environment* env,Stat_Class& Stat, const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts) {
+		bool generated = false, c_exact, p_exact;
+		int attempts = 0;
+		CFG blank_cfg;
 
-    MedialAxisSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) {
-      LOG_DEBUG_MSG("MedialAxisSampler::MedialAxisSampler()");
-      this->SetName("MedialAxisSampler");
-      ParseXML(in_Node);
-      mp = in_pProblem;
-      vc = in_pProblem->GetValidityChecker();
-      dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dmstring);
-      LOG_DEBUG_MSG("~MedialAxisSampler::MedialAxisSampler()");
-    }
+    // Determine if performing exact computation
+    c_exact = (str_c.compare("exact")==0)?true:false;
+    p_exact = (str_p.compare("exact")==0)?true:false;
 
-    ~MedialAxisSampler() {}
-
-    void  ParseXML(XMLNodeReader& in_Node) {
-      LOG_DEBUG_MSG("MedialAxisSampler::ParseXML()");
-      cout << "MedialAxisSampler ";
-
-      strVcmethod = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
-      cout << "strVcmethod = " << strVcmethod << endl;
-
-      dmstring = in_Node.stringXMLParameter("dm_method", true, "", "Distance metric");
-
-      strLabel = this->ParseLabelXML(in_Node);
-      this->SetLabel(strLabel);
-
-      clearance = in_Node.numberXMLParameter("clearance", false, 10, 0, 1000, "Clearance Number");
-      penetration = in_Node.numberXMLParameter("penetration", false, 5, 0, 1000, "Penetration Number");
-
-      m_debug = in_Node.boolXMLParameter("debug", false, false, "debugging flag");
-
-      print(cout);
-
-      LOG_DEBUG_MSG("~MedialAxisSampler::ParseXML()");
-    }
-
-    virtual void print(ostream& os) const
-    {
-      os << this->GetName() 
-        << " (clearance = " << clearance 
-        << ", penetration = " << penetration << ")";
-    }
-
-    bool sampler(Environment* env,Stat_Class& Stat, const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts)  
-    {
-      string callee(this->GetName());
-      callee += "::sampler()";
-      bool generated = false;
-      int attempts = 0;
-      CDInfo cdInfo;
-      cdInfo.ret_all_info = true;
-      if(m_debug)
-      {
-        cout << "\n\n***********************************************\n" 
-          << "In MedialAxisSamplers::sampler !! NEW SAMPLE !!\n"
-          << "***********************************************\n"; 
-        print(cout);
-        cout << flush;
-      }
-      do {
-        Stat.IncNodes_Attempted();
-        attempts++;
-
-        CFG tmp = cfg_in;
-        CFG tmp2 = tmp;
-        if(m_debug)
-          cout << "Attempt: " << attempts << "... About to Call PushToMedialAxis" << endl;
-
-        bool check = tmp.GetMedialAxisCfg(mp, env, Stat, strVcmethod, cdInfo, dmstring, clearance, penetration);
-
-
-        if(vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, Stat, cdInfo, true, &callee) && check){
-          Stat.IncNodes_Generated();
-          generated = true;
-          cfg_out.push_back(tmp);
-        }
-        if(m_debug)
-          cout << flush;
-      } while (!generated && (attempts < max_attempts));
-
-      return generated;
-    }
-
+		do {
+			Stat.IncNodes_Attempted();
+			attempts++;
+			
+			// If just a new cfg, get a random CFG
+			CFG tmp_cfg = cfg_in;
+			if (tmp_cfg == blank_cfg)
+				tmp_cfg.GetRandomCfg(env);
+			
+			// If pushed properly, increment generated
+			if ( PushToMedialAxis(mp, env, tmp_cfg, Stat, str_vcm, str_dm, c_exact, clearance, p_exact, penetration, use_bbx) ) {
+				Stat.IncNodes_Generated();
+				generated = true;
+				cfg_out.push_back(tmp_cfg);
+			}
+		} while (!generated && (attempts < max_attempts));
+		return generated;
+	}
+	
   private:
     template <typename OutputIterator>
       OutputIterator 

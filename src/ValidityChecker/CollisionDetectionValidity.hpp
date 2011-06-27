@@ -25,6 +25,7 @@ public:
   virtual bool IsValid(Cfg& _cfg, Environment* env, 
 		       Stat_Class& Stats, CDInfo& _cdInfo, 
 		       bool enablePenetration, std::string *pCallName);    
+	virtual  bool isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo); 
   
 private:
   std::vector<CollisionDetectionMethod*> m_selected;
@@ -35,6 +36,7 @@ private:
   
   bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 		     shared_ptr<MultiBody> lineRobot, bool enablePenetration, std::string *pCallName);
+
 };
 
 
@@ -218,5 +220,12 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
   return true;
 }
 
+template<typename CFG>
+bool
+CollisionDetectionValidity<CFG>::
+isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo)
+{
+	return Pqp_Solid().isInsideObstacle(cfg, env);
+}
 
 #endif // #ifndef _COLLISION_DETECTION_VALIDITY_HPP_

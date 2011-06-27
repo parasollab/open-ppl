@@ -2,6 +2,7 @@
 #define AStar_h
 
 #include "LocalPlannerMethod.h"
+#include "MedialAxisUtility.h"
 
 template <class CFG, class WEIGHT>
 class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
@@ -478,12 +479,10 @@ ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,CFG &_col,shared_ptr<
   size_t retPosition=0;
   double value = 0;
   MPProblem *mp = this->GetMPProblem();
-
+	CDInfo tmp_info;
   for(size_t i=0;i<neighbors.size();i++) {
-
-    value=neighbors[i]-> ApproxCSpaceClearance(mp,_env,Stats,vcMethod,*this->cdInfo,dm_label,
-        penetration,false,0);
-
+		GetApproxCollisionInfo(mp,*((CfgType*)neighbors[i]),_env,Stats,tmp_info,vcMethod,dm_label,penetration,penetration,true);
+		value = tmp_info.min_dist;
     if (value>maxClearance) {
       retPosition=i;
       maxClearance=value;
