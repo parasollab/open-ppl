@@ -18,6 +18,9 @@
 #include "Environment.h"
 #include "util.h"
 #include "DistanceMetricMethod.h"
+#include "MPProblem.h"
+#include "ValidityChecker.hpp"
+
 
 Cfg_2D_withRot::Cfg_2D_withRot(){
   dof = 3;
@@ -243,8 +246,8 @@ GenerateOverlapCfg(Environment *env,
 // GenSurfaceCfgs4ObstNORMAL
 //      generate nodes by overlapping two triangles' normal.
 //===================================================================
-void Cfg_2D_withRot::GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats,
-					 CollisionDetection* cd, 
+void Cfg_2D_withRot::GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment* env, Stat_Class& Stats,
+					 string vc_method, 
 					 int obstacle, int nCfgs, 
 					 CDInfo& _cdInfo, 
 					 vector<Cfg*>& surface) const {
@@ -261,7 +264,7 @@ void Cfg_2D_withRot::GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Sta
     int obstTriIndex = (int)(OBPRM_drand()*polyObst.polygonList.size());
   
     vector<Cfg*> tmp;  
-    GetCfgByOverlappingNormal(env, Stats, cd, polyRobot, polyObst,
+    GetCfgByOverlappingNormal(mp, env, Stats, vc_method, polyRobot, polyObst,
 			      robotTriIndex, obstTriIndex, 
 			      _cdInfo, env->GetMultiBody(robot), 
 			      tmp);
@@ -277,8 +280,8 @@ void Cfg_2D_withRot::GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Sta
 }
 
 
-void Cfg_2D_withRot::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
-					 CollisionDetection* cd, 
+void Cfg_2D_withRot::GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_Class& Stats,
+					 string vc_method, 
 					 const GMSPolyhedron &polyRobot, 
 					 const GMSPolyhedron &polyObst, 
 					 int robTri, int obsTri, 
@@ -359,7 +362,7 @@ void Cfg_2D_withRot::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Sta
     
     CallCnt="1";
     std::string tmpStr = Callee+CallCnt;
-    if(! cfgIn.isCollision(env, Stats, cd,_cdInfo, onflyRobot,true, &tmpStr) ) {
+    if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
       direction = obstNormal;
     } else {
       //cfgIn = cfgIn - displacement - displacement;
@@ -367,7 +370,7 @@ void Cfg_2D_withRot::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Sta
       cfgIn.subtract(cfgIn, displacement);  
       CallCnt="2";
       tmpStr = Callee+CallCnt;
-      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
+      if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
 	direction = -obstNormal;
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
@@ -376,7 +379,7 @@ void Cfg_2D_withRot::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Sta
 	cfgIn.Increment(displacement);
 	CallCnt="3";
 	tmpStr = Callee+CallCnt;
-	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
+        if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
 	  direction = obstNormal;
 	} else {
 	  //cfgIn = cfgIn - displacement - displacement;
@@ -384,7 +387,7 @@ void Cfg_2D_withRot::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Sta
 	  cfgIn.subtract(cfgIn, displacement);
 	  CallCnt="4";
 	  tmpStr = Callee+CallCnt;
-	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
+	  if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
 	    direction = -obstNormal;
 	  }
 	}
@@ -400,8 +403,8 @@ void Cfg_2D_withRot::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Sta
 }
 
 
-bool Cfg_2D_withRot::InNarrowPassage(Environment* env, Stat_Class& Stats,
-			       CollisionDetection* cd,
+bool Cfg_2D_withRot::InNarrowPassage(MPProblem* mp, Environment* env, Stat_Class& Stats,
+			       string vc_method,
 			       CDInfo& _cdInfo, 
 			       shared_ptr<MultiBody> onflyRobot) const {
   if(v.size() != 3) {
@@ -428,8 +431,8 @@ bool Cfg_2D_withRot::InNarrowPassage(Environment* env, Stat_Class& Stats,
     tmp[i] = 0.0;
     std::string tmpStr1 = Callee+CallL;
     std::string tmpStr2 = Callee+CallR;
-    if(shiftL.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&tmpStr1) &&
-       shiftR.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&tmpStr2) ) { // Inside Narrow Passage !
+    if((!(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), shiftL, env, Stats, _cdInfo, true, &tmpStr1))) &&
+       (!(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), shiftR, env, Stats, _cdInfo, true, &tmpStr2)))) { // Inside Narrow Passage !
       narrowpassageWeight++;
     }
   }

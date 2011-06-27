@@ -20,6 +20,9 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "util.h"
+#include "DistanceMetricMethod.h"
+#include "MPProblem.h"
+#include "ValidityChecker.hpp"
 #include "DistanceMetrics.h"
 
 
@@ -310,8 +313,8 @@ bool Cfg_2D::GenerateOverlapCfg(Environment *env,  // although env and robot is 
 }
 
 void
-Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
-				  CollisionDetection* cd, 
+Cfg_2D::GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_Class& Stats, 
+				  string vc_method,
 				  const GMSPolyhedron &polyRobot, 
 				  const GMSPolyhedron &polyObst, 
 				  int robTri, int obsTri, 
@@ -392,7 +395,7 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
     cfgIn.Increment(displacement);
     
     std::string tmpStr = Callee+CallCnt;
-    if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
+    if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
       direction = obstNormal;
     } else {
       cfgIn.subtract(cfgIn,displacement);
@@ -400,7 +403,7 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
       
       CallCnt="2";
       tmpStr = Callee+CallCnt;
-      if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
+      if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
 	direction = -obstNormal;
       } else {
 	orient = Orientation(Orientation::FixedXYZ, alpha+PI, beta+PI, gamma);
@@ -409,14 +412,14 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 	cfgIn.Increment(displacement);
 	CallCnt="3";
 	tmpStr = Callee+CallCnt;
-	if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot, true, &tmpStr) ) {
+        if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
 	  direction = obstNormal;
 	} else {
 	  cfgIn.subtract(cfgIn,displacement);
 	  cfgIn.subtract(cfgIn,displacement);
 	  CallCnt="4";
 	  tmpStr = Callee+CallCnt;
-	  if(! cfgIn.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true, &tmpStr) ) {
+	  if(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), cfgIn, env, Stats, _cdInfo, true, &tmpStr)) {
 	    direction = -obstNormal;
 	  }
 	}
@@ -433,8 +436,8 @@ Cfg_2D::GetCfgByOverlappingNormal(Environment* env, Stat_Class& Stats,
 
 
 
-void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
-				       CollisionDetection* cd, 
+void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, Stat_Class& Stats,
+				       string vc_method,
 				       int obstacle, int nCfgs, 
 				       CDInfo& _cdInfo,
 				       vector<Cfg*>& surface) const{
@@ -452,7 +455,7 @@ void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
     int obstTriIndex = (int)(OBPRM_drand()*polyObst.polygonList.size());
     
     vector<Cfg*> tmp;
-    GetCfgByOverlappingNormal(env, Stats, cd, 
+    GetCfgByOverlappingNormal(mp, env, Stats, vc_method, 
 			      polyRobot, polyObst,
 			      robotTriIndex, obstTriIndex, 
 			      _cdInfo,
@@ -468,8 +471,8 @@ void Cfg_2D::GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
   }
 }
 
-bool Cfg_2D::InNarrowPassage(Environment* env, Stat_Class& Stats,
-			       CollisionDetection* cd,
+bool Cfg_2D::InNarrowPassage(MPProblem* mp, Environment* env, Stat_Class& Stats,
+			       string vc_method,
 			       CDInfo& _cdInfo, 
 			       shared_ptr<MultiBody> onflyRobot) const {
   if(v.size() != 6) {
@@ -496,8 +499,8 @@ bool Cfg_2D::InNarrowPassage(Environment* env, Stat_Class& Stats,
     tmp[i] = 0.0;
     std::string tmpStr1 = Callee+CallL;
     std::string tmpStr2 = Callee+CallR;
-    if(shiftL.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&tmpStr1) &&
-       shiftR.isCollision(env, Stats, cd, _cdInfo, onflyRobot,true,&tmpStr2) ) { // Inside Narrow Passage !
+    if((!(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), shiftL, env, Stats, _cdInfo, true, &tmpStr1))) &&
+       (!(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), shiftR, env, Stats, _cdInfo, true, &tmpStr2)))) { // Inside Narrow Passage
       narrowpassageWeight++;
     }
   }

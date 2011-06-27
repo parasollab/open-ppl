@@ -127,13 +127,13 @@ public:
 				  Vector3D robot_start, Vector3D robot_goal, 
 				  Cfg *resultCfg);
 
-  virtual void GenSurfaceCfgs4ObstNORMAL(Environment * env, Stat_Class& Stats,
-					 CollisionDetection *,
+  virtual void GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, Stat_Class& Stats,
+					 string vc_method,
 					 int obstacle, int nCfgs, 
 					 CDInfo& _cdInfo, vector<Cfg*>&) const;
 
-  virtual void GetCfgByOverlappingNormal(Environment * env, Stat_Class& Stats,
-					 CollisionDetection* cd,
+  virtual void GetCfgByOverlappingNormal(MPProblem* mp, Environment * env, Stat_Class& Stats,
+					 string vc_method,
 					 const GMSPolyhedron &polyRobot, const GMSPolyhedron &polyObst,
 					 int robTri, int obsTri,
 					 CDInfo& _cdInfo,
@@ -146,8 +146,8 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-  virtual bool InNarrowPassage(Environment* env, Stat_Class& Stats,
-			       CollisionDetection* cd, CDInfo& _cdInfo,
+  virtual bool InNarrowPassage(MPProblem* mp, Environment* env, Stat_Class& Stats,
+			       string vc_method, CDInfo& _cdInfo,
 			       shared_ptr<MultiBody> onflyRobot) const;
   
   virtual Cfg* CreateNewCfg() const;

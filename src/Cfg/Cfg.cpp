@@ -509,9 +509,10 @@ void Cfg::ClosestPtOnLineSegment(const Cfg& current, const Cfg& pt1, const Cfg& 
 }
 
 
-void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
+void Cfg::FindNeighbors(MPProblem* mp, Environment* _env, Stat_Class& Stats,
       const Cfg& increment,
-      CollisionDetection* cd, int noNeighbors,
+      string vc_method,
+      int noNeighbors,
       CDInfo& _cdInfo, 
       vector<Cfg*>& ret) {  
   vector<Cfg*> nList;
@@ -571,7 +572,7 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
     tmp->add(*this, *(nList[i]));
     
     if(!this->AlmostEqual(*tmp) && 
-       !tmp->isCollision(_env,Stats,cd,_cdInfo,true,&(Callee)) )
+       mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *tmp, _env, Stats, _cdInfo, true, &Callee) )
       ret.push_back(tmp);
     else
       delete tmp;
@@ -579,9 +580,10 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
 }
 
 
-void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
+void Cfg::FindNeighbors(MPProblem* mp, Environment* _env, Stat_Class& Stats,
       const Cfg& goal, const Cfg& increment,
-      CollisionDetection* cd, int noNeighbors,
+      string vc_method,
+      int noNeighbors,
       CDInfo& _cdInfo,
       vector<Cfg*>& ret) {
    vector<Cfg*> nList;  
@@ -643,7 +645,7 @@ void Cfg::FindNeighbors(Environment* _env, Stat_Class& Stats,
      
      tmp->IncrementTowardsGoal(goal, *nList[i]); //The only difference~
      if(!this->AlmostEqual(*tmp) && 
-        !tmp->isCollision(_env,Stats,cd,_cdInfo,true,&(Callee)) ) {
+	mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *tmp, _env, Stats, _cdInfo, true, &Callee) ) {
        ret.push_back(tmp);
      } else 
        delete tmp;
@@ -783,21 +785,22 @@ void Cfg::GetRandomCfg(Environment* env, shared_ptr<DistanceMetricMethod>dm, dou
 }
 
 
-void Cfg::GetFreeRandomCfg(Environment* env, Stat_Class& Stats,
-         CollisionDetection* cd, 
+void Cfg::GetFreeRandomCfg(MPProblem* mp, Environment* env, Stat_Class& Stats,
+         string vc_method,
          CDInfo& _cdInfo) {
 
   std::string Callee(GetName());
   {std::string Method("Cfg::GetFreeRandomCfg");Callee=Callee+Method;}
   do {
     this->GetRandomCfg(env);
-  } while ( this->isCollision(env, Stats, cd, _cdInfo,true,&Callee) );
+  } while (!(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *this, env, Stats, _cdInfo, true, &Callee)));
   
 }
 
 
-void Cfg::GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
-           Stat_Class& Stats, CollisionDetection* cd,  
+void Cfg::GetNFreeRandomCfgs(MPProblem* mp, vector<Cfg*>& nodes, Environment* env,
+           Stat_Class& Stats, 
+	   string vc_method,
            CDInfo& _cdInfo, int num) const {
   Cfg* tmp;
   std::string Callee(GetName());
@@ -806,116 +809,10 @@ void Cfg::GetNFreeRandomCfgs(vector<Cfg*>& nodes, Environment* env,
     tmp = this->CreateNewCfg();
     do {
       tmp->GetRandomCfg(env);
-    } while ( tmp->isCollision(env, Stats, cd, _cdInfo,true,&(Callee)) );
+    } while (!(mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *tmp, env, Stats, _cdInfo, true, &Callee)));
     nodes.push_back(tmp);
    }
 };
-
-bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
-          CollisionDetection* cd, CDInfo& _cdInfo, 
-          bool enablePenetration, std::string *pCallName) {
-  Stats.IncCfgIsColl(pCallName);
-
-  ConfigEnvironment(env);
-  bool Clear = (pCallName) ? false : true; 
-  if( !pCallName )
-     pCallName = new std::string("isColl(e,s,cd,cdi,ep)");
-
-  // after updating the environment(multibodies), Ask ENVIRONMENT
-  // to check collision! (this is more nature.)
-  bool answerFromEnvironment = cd->IsInCollision(env, Stats, _cdInfo, shared_ptr<MultiBody>(), true, pCallName);
-
-#ifdef COLLISIONCFG
-  if(answerFromEnvironment)
-  {
-    CollisionConfiguration[_cdInfo.colliding_obst_index].push_back(v);
-  }
-#endif
-
-  if ((answerFromEnvironment) && enablePenetration && (cd->penetration>=0))
-  {
-    Cfg* tmp = this->CreateNewCfg();
-    bool result = !cd->AcceptablePenetration(*tmp, env, Stats, cd, _cdInfo);
-    delete tmp;
-    if( Clear ) 
-      delete pCallName;
-    { 
-      SetLabel("VALID",!result); 
-      return result; 
-    }
-  }
-  if( Clear ) 
-    delete pCallName;
-  {
-    SetLabel("VALID",!answerFromEnvironment); 
-    return answerFromEnvironment;
-  }
-}
-
-
-bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
-          CollisionDetection* cd,
-                      int robot, int obs, CDInfo& _cdInfo,
-          bool enablePenetration, std::string *pCallName) {
-  Stats.IncCfgIsColl(pCallName);
-  
-  ConfigEnvironment(env);
-  bool Clear = (pCallName) ? false : true;
-  
-  if( !pCallName )
-     pCallName = new std::string("isColl(e,s,cd,r,o,cdi,ep)");
-
-  
-  // ask CollisionDetection class directly.
-  bool answerFromCD = cd->IsInCollision(env, Stats, _cdInfo, robot, obs, pCallName);
-#ifdef COLLISIONCFG
-  if(answerFromCD)
-    {
-      CollisionConfiguration[_cdInfo.colliding_obst_index].push_back(v);
-    }
-#endif
-
-  if ( (answerFromCD) && enablePenetration &&
-       (cd->penetration>=0)) {
-    Cfg* tmp = this->CreateNewCfg();
-    bool result = !cd->AcceptablePenetration(*tmp, env, Stats, cd, _cdInfo);
-    delete tmp;
-    if(Clear) delete pCallName;
-    {SetLabel("VALID",!result); return result;}
-  }
-  if(Clear) delete pCallName;
-  {SetLabel("VALID",!answerFromCD); return answerFromCD;}
-}
-
-
-bool Cfg::isCollision(Environment* env, Stat_Class& Stats,
-          CollisionDetection* cd,
-          CDInfo& _cdInfo, shared_ptr<MultiBody> onflyRobot,
-          bool enablePenetration, std::string *pCallName) {
-
-  Stats.IncCfgIsColl(pCallName);
-    this->ConfigEnvironment(env);
-  bool Clear = (pCallName) ? false : true; 
-  if( !pCallName )
-     pCallName = new std::string("isColl(e,s,cd,cdi,mb,ep)");
-
-  bool answer = cd->IsInCollision(env, Stats, _cdInfo, onflyRobot, true, pCallName);
-#ifdef COLLISIONCFG
-  if(answer)
-    {
-      CollisionConfiguration[_cdInfo.colliding_obst_index].push_back(v);
-    }
-#endif
-    if ( (answer) && enablePenetration && (cd->penetration>=0)) {
-      Cfg* tmp = this->CreateNewCfg();
-      bool result = !cd->AcceptablePenetration(*tmp, env, Stats, cd, _cdInfo);
-      delete tmp;
-      if(Clear) delete pCallName;
-      {SetLabel("VALID",!result); return result;}
-    }
-    if(Clear) delete pCallName;
-    {SetLabel("VALID",!answer); return answer;}
-}
 
 
 // Normalize the orientation to the some range.

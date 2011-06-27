@@ -205,7 +205,7 @@ class CollisionDetection : MPBaseObject {
    * i.e., the penetration is within the penetration range
    */
   bool AcceptablePenetration(Cfg& c, Environment* env, Stat_Class& Stats,
-			     CollisionDetection* cd, CDInfo& cdInfo);
+			     CDInfo& cdInfo);
   
   /** Initialize n direction vectors  with the penetration length*/
   template <class CFG>
@@ -228,6 +228,7 @@ class CollisionDetection : MPBaseObject {
 
   vector<Cfg*> directions;
   double acceptableRatio;
+  std::string vcMethod;
 };
 
 
