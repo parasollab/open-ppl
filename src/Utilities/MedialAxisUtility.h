@@ -167,7 +167,7 @@ bool DetermineMedialAxisGap(MPProblem* mp, CFG& startcfg, CFG& endcfg, Environme
   CDInfo   tmpInfo, oldInfo, peekInfo;
   CFG      trans_cfg, held_cfg, tmp_cfg, peek_cfg;
 	double   step_size=1, step_inc=2.0, step_dec=0.9;
-	bool     found_gap=false, in_bbx=true, good_tmp=true, good_peek=true, good=true, valid;
+	bool     found_gap=false, in_bbx=true, good_tmp=true, good_peek=true, valid;
 	double   res = env->GetPositionRes();
 	bool     inside = vcm->isInsideObstacle(startcfg,env,peekInfo);
 
@@ -489,7 +489,8 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 	// Setup to step out along each direction:
 	vector<bool> ignored(directions.size(), false);
 	bool stateChangedFlag = false, curr_validity;
-	int lastLapIndex = -1, iterations = 0, max_iterations=100;
+	size_t lastLapIndex = -1, end_index = -1;
+	int iterations = 0, max_iterations=100;
 
 	// Shoot out each ray to determine the candidates
 	while ( !stateChangedFlag && iterations < max_iterations) {
@@ -512,7 +513,7 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 						cand_in.push_back(cand_i);
 					} else
 						stateChangedFlag = true; // lastLapIndex == i, made full pass
-					if ( lastLapIndex == -1 )  // Set lastLapIndex to first ray changing state
+					if ( lastLapIndex == end_index )  // Set lastLapIndex to first ray changing state
 						lastLapIndex = i;
 				}
 			} else {
@@ -525,7 +526,7 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 						cand_in.push_back(cand_i);
 					} else
 						stateChangedFlag = true; // lastLapIndex == i, made full pass
-					if ( lastLapIndex == -1 )  // Set lastLapIndex to first ray changing state
+					if ( lastLapIndex == end_index )  // Set lastLapIndex to first ray changing state
 						lastLapIndex = i;
 				}
 			}

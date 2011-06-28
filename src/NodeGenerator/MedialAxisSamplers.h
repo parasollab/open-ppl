@@ -71,9 +71,11 @@ class MedialAxisSampler : public SamplerMethod<CFG>
 	}
 	
 	bool sampler(Environment* env,Stat_Class& Stat, const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts) {
+		string call("MedialAxisSampler::sampler()");
 		bool generated = false, c_exact, p_exact;
 		int attempts = 0;
 		CFG blank_cfg;
+		CDInfo cdInfo;
 
     // Determine if performing exact computation
     c_exact = (str_c.compare("exact")==0)?true:false;
@@ -90,9 +92,11 @@ class MedialAxisSampler : public SamplerMethod<CFG>
 			
 			// If pushed properly, increment generated
 			if ( PushToMedialAxis(mp, env, tmp_cfg, Stat, str_vcm, str_dm, c_exact, clearance, p_exact, penetration, use_bbx) ) {
-				Stat.IncNodes_Generated();
-				generated = true;
-				cfg_out.push_back(tmp_cfg);
+				if ( vc->IsValid(vc->GetVCMethod(str_vcm), tmp_cfg, env, Stat, cdInfo, true, &call) ) {
+					Stat.IncNodes_Generated();
+					generated = true;
+					cfg_out.push_back(tmp_cfg);
+				}
 			}
 		} while (!generated && (attempts < max_attempts));
 		return generated;
