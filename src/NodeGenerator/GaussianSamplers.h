@@ -105,9 +105,15 @@ class GaussianSampler : public SamplerMethod<CFG>
 
       if(cfg1_free != cfg2_free) {
         Stat.IncNodes_Generated();
-        generated = true;	
-        cfg_out.push_back(cfg1);
-        cfg_out_collision.push_back(cfg2);
+        generated = true;
+        if(cfg1_free){
+          cfg_out.push_back(cfg1);
+          cfg_out_collision.push_back(cfg2);
+        }
+        else{
+          cfg_out.push_back(cfg2);
+          cfg_out_collision.push_back(cfg1);
+        }
       }
     } while (!generated && (attempts < max_attempts));
     return generated;
@@ -140,7 +146,7 @@ class GaussianSampler : public SamplerMethod<CFG>
       vector<CFG> result_cfg, collision_cfg;
       if(sampler(env, Stat,*first,result_cfg, max_attempts, collision_cfg)){ 
         result = copy(result_cfg.begin(), result_cfg.end(), result);
-        collision = copy(collision_cfg.begin(), collision_cfg.end(), result);
+        collision = copy(collision_cfg.begin(), collision_cfg.end(), collision);
       }
       first++;
     }
@@ -272,7 +278,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
       string callee(this->GetName());
       callee += "::sampler()";
       CDInfo cdInfo;
-			CFG blank_cfg;
+      CFG blank_cfg;
 
       bool generated = false;
       int attempts = 0;
@@ -280,79 +286,79 @@ class BridgeTestSampler : public SamplerMethod<CFG>
       do {
         Stat.IncNodes_Attempted();
         attempts++;
-				CFG tmp = cfg_in;
-				if (tmp == blank_cfg)
-					tmp.GetRandomCfg(env);
-				if ( use_bbx ) {
-					if ( tmp.InBoundingBox(env) && 
-							 vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, Stat, cdInfo, true, &callee)) { 
-						CFG mid = cfg_in, incr, cfg1;
-						incr.GetRandomRay(fabs(GaussianDistribution(d, d))/2, env, dm);
-						cfg1.subtract(mid, incr);
-						if ( !cfg1.InBoundingBox(env) || 
-								 !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env, Stat, cdInfo, true, &callee)) {
-							CFG cfg2;
-							cfg2.add(mid, incr);
-							if(!cfg2.InBoundingBox(env) || 
-								 !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee)) {
-								Stat.IncNodes_Generated();
-								generated = true;
-								cfg_out.push_back(cfg_in);
-								cfg_collision_out.push_back(cfg1);
-								cfg_collision_out.push_back(cfg2);
-							}
-						}
-					} else {
-						CFG cfg1 = cfg_in, incr, cfg2;
-						incr.GetRandomRay(fabs(GaussianDistribution(d, d)), env, dm);
-						cfg2.add(cfg1, incr);
-						if ( !cfg2.InBoundingBox(env) || 
-							   !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee)) {
-							CFG mid;
-							mid.WeightedSum(cfg1, cfg2, 0.5);
-							if ( mid.InBoundingBox(env) && 
-									 (vc->IsValid(vc->GetVCMethod(strVcmethod), mid, env, Stat, cdInfo, true, &callee))) {
-								Stat.IncNodes_Generated();
-								generated = true;
-								cfg_out.push_back(mid);
-								cfg_collision_out.push_back(cfg1);
-								cfg_collision_out.push_back(cfg2);
-							}
-						}
-					}
-				} else {
-					if ( vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, Stat, cdInfo, true, &callee) ) { 
-						CFG mid = cfg_in, incr, cfg1;
-						incr.GetRandomRay(fabs(GaussianDistribution(d, d))/2, env, dm);
-						cfg1.subtract(mid, incr);
-						if( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env, Stat, cdInfo, true, &callee) ) {
-							CFG cfg2;
-							cfg2.add(mid, incr);
-							if( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee)) {
-								Stat.IncNodes_Generated();
-								generated = true;
-								cfg_out.push_back(cfg_in);
-								cfg_collision_out.push_back(cfg1);
-								cfg_collision_out.push_back(cfg2);
-							}
-						}
-					} else {
-						CFG cfg1 = cfg_in, incr, cfg2;
-						incr.GetRandomRay(fabs(GaussianDistribution(d, d)), env, dm);
-						cfg2.add(cfg1, incr);
-						if ( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee)) {
-							CFG mid;
-							mid.WeightedSum(cfg1, cfg2, 0.5);
-							if( (vc->IsValid(vc->GetVCMethod(strVcmethod), mid, env, Stat, cdInfo, true, &callee)) ) {
-								Stat.IncNodes_Generated();
-								generated = true;
-								cfg_out.push_back(mid);
-								cfg_collision_out.push_back(cfg1);
-								cfg_collision_out.push_back(cfg2);
-							}
-						}
-					}	
-				}
+        CFG tmp = cfg_in;
+        if (tmp == blank_cfg)
+          tmp.GetRandomCfg(env);
+        if ( use_bbx ) {
+          if ( tmp.InBoundingBox(env) && 
+              vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, Stat, cdInfo, true, &callee)) { 
+            CFG mid = tmp, incr, cfg1;
+            incr.GetRandomRay(fabs(GaussianDistribution(d, d))/2, env, dm);
+            cfg1.subtract(mid, incr);
+            if ( !cfg1.InBoundingBox(env) || 
+                !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env, Stat, cdInfo, true, &callee)) {
+              CFG cfg2;
+              cfg2.add(mid, incr);
+              if(!cfg2.InBoundingBox(env) || 
+                  !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee)) {
+                Stat.IncNodes_Generated();
+                generated = true;
+                cfg_out.push_back(tmp);
+                cfg_collision_out.push_back(cfg1);
+                cfg_collision_out.push_back(cfg2);
+              }
+            }
+          } else {
+            CFG cfg1 = cfg_in, incr, cfg2;
+            incr.GetRandomRay(fabs(GaussianDistribution(d, d)), env, dm);
+            cfg2.add(cfg1, incr);
+            if ( !cfg2.InBoundingBox(env) || 
+                !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee)) {
+              CFG mid;
+              mid.WeightedSum(cfg1, cfg2, 0.5);
+              if ( mid.InBoundingBox(env) && 
+                  (vc->IsValid(vc->GetVCMethod(strVcmethod), mid, env, Stat, cdInfo, true, &callee))) {
+                Stat.IncNodes_Generated();
+                generated = true;
+                cfg_out.push_back(mid);
+                cfg_collision_out.push_back(cfg1);
+                cfg_collision_out.push_back(cfg2);
+              }
+            }
+          }
+        } else {
+          if ( vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, Stat, cdInfo, true, &callee) ) { 
+            CFG mid = tmp, incr, cfg1;
+            incr.GetRandomRay(fabs(GaussianDistribution(d, d))/2, env, dm);
+            cfg1.subtract(mid, incr);
+            if( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env, Stat, cdInfo, true, &callee) ) {
+              CFG cfg2;
+              cfg2.add(mid, incr);
+              if( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee)) {
+                Stat.IncNodes_Generated();
+                generated = true;
+                cfg_out.push_back(tmp);
+                cfg_collision_out.push_back(cfg1);
+                cfg_collision_out.push_back(cfg2);
+              }
+            }
+          } else {
+            CFG cfg1 = cfg_in, incr, cfg2;
+            incr.GetRandomRay(fabs(GaussianDistribution(d, d)), env, dm);
+            cfg2.add(cfg1, incr);
+            if ( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee)) {
+              CFG mid;
+              mid.WeightedSum(cfg1, cfg2, 0.5);
+              if( (vc->IsValid(vc->GetVCMethod(strVcmethod), mid, env, Stat, cdInfo, true, &callee)) ) {
+                Stat.IncNodes_Generated();
+                generated = true;
+                cfg_out.push_back(mid);
+                cfg_collision_out.push_back(cfg1);
+                cfg_collision_out.push_back(cfg2);
+              }
+            }
+          }	
+        }
       } while (!generated && (attempts < max_attempts));
       return generated;
     }
