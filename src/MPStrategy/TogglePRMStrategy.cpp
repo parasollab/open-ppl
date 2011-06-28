@@ -2,6 +2,8 @@
 #include "MPProblem/MPRegion.h"
 #include "MPStrategy/MPStrategy.h"
 
+bool done;
+
 TogglePRMStrategy::TogglePRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited) :
    MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
    //read input
@@ -32,6 +34,16 @@ void TogglePRMStrategy::ParseXML(XMLNodeReader& in_Node) {
          m_ComponentConnectionLabels.push_back(connectMethod);
          citr->warnUnrequestedAttributes();
       } 
+      else if(citr->getName() == "col_node_connection_method"){
+         string connectMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Node Connection Method"));
+         m_ColNodeConnectionLabels.push_back(connectMethod);
+         citr->warnUnrequestedAttributes();
+      } 
+      else if(citr->getName() == "col_component_connection_method"){
+         string connectMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Component Connection Method"));
+         m_ColComponentConnectionLabels.push_back(connectMethod);
+         citr->warnUnrequestedAttributes();
+      } 
       else if(citr->getName() == "evaluation_method"){
          string evalMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Evaluation Method"));
          m_EvaluatorLabels.push_back(evalMethod);
@@ -40,15 +52,15 @@ void TogglePRMStrategy::ParseXML(XMLNodeReader& in_Node) {
       else if(citr->getName() == "lp_method"){
          m_LPMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Local Planning Method"));
          citr->warnUnrequestedAttributes();
-      } else if(citr->getName()=="dm_method"){
+      } 
+      else if(citr->getName()=="dm_method"){
          dm_label =citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
          citr->warnUnrequestedAttributes();
       }
       else
          citr->warnUnknownNode();
    }
-
-   m_ConnectIterations = in_Node.numberXMLParameter(string("conn_iter"), true, 5, 0, 1000, string("Connection Iterations"));
+   
    in_Node.warnUnrequestedAttributes();
   
    //output for debugging
@@ -61,9 +73,10 @@ void TogglePRMStrategy::ParseXML(XMLNodeReader& in_Node) {
    cout << endl;
    cout << "\tnode_connection_methods: "; for_each(m_NodeConnectionLabels.begin(), m_NodeConnectionLabels.end(), cout << _1 << " "); cout << endl;
    cout << "\tcomponent_connection_methods: "; for_each(m_ComponentConnectionLabels.begin(), m_ComponentConnectionLabels.end(), cout << _1 << " "); cout << endl;
+   cout << "\tcol_node_connection_methods: "; for_each(m_ColNodeConnectionLabels.begin(), m_ColNodeConnectionLabels.end(), cout << _1 << " "); cout << endl;
+   cout << "\tcol_component_connection_methods: "; for_each(m_ColComponentConnectionLabels.begin(), m_ColComponentConnectionLabels.end(), cout << _1 << " "); cout << endl;
    cout << "\tevaluator_methods: "; for_each(m_EvaluatorLabels.begin(), m_EvaluatorLabels.end(), cout << _1 << " "); cout << endl;
    cout << "\tlp_method: " << m_LPMethod;
-   cout << "\tConnectionIterations: " << m_ConnectIterations;
    cout << endl;
 }
 
@@ -81,6 +94,11 @@ void TogglePRMStrategy::PrintOptions(ostream& out_os) {
       out_os<<"\t"<<*sit<<"\tOptions:\n";
       GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*sit)->PrintOptions(out_os);
    }
+   out_os<<"\nColNodeConnectors\n";
+   for(SIT sit=m_ColNodeConnectionLabels.begin(); sit!=m_ColNodeConnectionLabels.end(); sit++){
+      out_os<<"\t"<<*sit<<"\tOptions:\n";
+      GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*sit)->PrintOptions(out_os);
+   }
    out_os<<"\nLocalPlanner\n";
    out_os<<"\t"<<m_LPMethod<<"\tOptions:\n";
    GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_LPMethod)->PrintOptions(out_os);
@@ -89,12 +107,16 @@ void TogglePRMStrategy::PrintOptions(ostream& out_os) {
       out_os<<"\t"<<*sit<<"\tOptions:\n";
       GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*sit)->PrintOptions(out_os);
    }
+   out_os<<"\nColComponentConnectors\n";
+   for(SIT sit=m_ColComponentConnectionLabels.begin(); sit!=m_ColComponentConnectionLabels.end(); sit++){
+      out_os<<"\t"<<*sit<<"\tOptions:\n";
+      GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*sit)->PrintOptions(out_os);
+   }
    out_os<<"\nMapEvaluators\n";
    for(SIT sit=m_EvaluatorLabels.begin(); sit!=m_EvaluatorLabels.end(); sit++){
       out_os<<"\t"<<*sit<<"\tOptions:\n";
       GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*sit)->PrintOptions(out_os);
    }
-   out_os<<"\nConnectionIterations\n"<<"\t"<<m_ConnectIterations<<"\n";
 }
 
 void TogglePRMStrategy::Initialize(int in_RegionID){
@@ -113,38 +135,56 @@ void TogglePRMStrategy::Run(int in_RegionID){
 
    //setup region variables
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
+   Stat_Class* regionStats = region->GetStatClass();
  
    vector<VID> allNodesVID, allCollisionNodesVID;
    region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
-  
+   vector<VID> thisIterationNodesVID, thisIterationCollisionNodesVID;
+
+   deque<pair<string, VID> > queue;
+
    MapGenClock.StartClock("Map Generation");
-  
+   done=false;
    bool mapPassedEvaluation = false;
-   while(!mapPassedEvaluation){
+   while(!EvaluateMap(in_RegionID)&&!done){
       m_CurrentIteration++;
-      vector<VID> thisIterationNodesVID, thisIterationCollisionNodesVID;
       cout << "\ngenerating nodes: ";
       GenerateNodes(region, 
             back_insert_iterator<vector<VID> >(allNodesVID), 
             back_insert_iterator<vector<VID> >(thisIterationNodesVID),
             back_insert_iterator<vector<VID> >(allCollisionNodesVID),
-            back_insert_iterator<vector<VID> >(thisIterationCollisionNodesVID));
-      GetMPProblem()->GetValidityChecker()->ToggleValidity();
+            back_insert_iterator<vector<VID> >(thisIterationCollisionNodesVID),
+            queue);
+      /*GetMPProblem()->GetValidityChecker()->ToggleValidity();
       GenerateNodes(region, 
             back_insert_iterator<vector<VID> >(allCollisionNodesVID),
             back_insert_iterator<vector<VID> >(thisIterationCollisionNodesVID),
             back_insert_iterator<vector<VID> >(allNodesVID),
             back_insert_iterator<vector<VID> >(thisIterationNodesVID));
       GetMPProblem()->GetValidityChecker()->ToggleValidity();
-      for(int i = 0; i<m_ConnectIterations; i++){
-         cout << "\nConnection Iteration " << i << endl;
-         cout << "\nconnecting nodes: ";
-         ConnectNodes(region, allNodesVID, thisIterationNodesVID, allCollisionNodesVID,
-         thisIterationCollisionNodesVID);
-         ConnectComponents(region, allNodesVID, allCollisionNodesVID);
-         cout << "\nevaluating roadmap: ";
-         mapPassedEvaluation = EvaluateMap(in_RegionID);
-         if(mapPassedEvaluation) break;
+      */
+      while(!EvaluateMap(in_RegionID) && queue.size()>0 && !done){
+         /*cout<<"size of queue::"<<queue.size()<<endl;
+         cout<<"size of allVID::"<<allNodesVID.capacity()<<endl;
+         cout<<"size of allColVID::"<<allCollisionNodesVID.capacity()<<endl;
+         cout<<"size of thisVID::"<<thisIterationNodesVID.capacity()<<endl;
+         cout<<"size of thisColVID::"<<thisIterationCollisionNodesVID.capacity()<<endl;
+         cout<<"size of g_free::"<<region->GetRoadmap()->m_pRoadmap->get_num_vertices()<<"\t"<<region->GetRoadmap()->m_pRoadmap->get_num_edges()<<endl;
+         cout<<"size of g_obst::"<<region->GetBlockRoadmap()->m_pRoadmap->get_num_vertices()<<"\t"<<region->GetBlockRoadmap()->m_pRoadmap->get_num_edges()<<endl;*/
+         pair<string, VID> p = queue.front();
+         queue.pop_front();
+         string validity = p.first;
+         VID vid = p.second;
+         cout<<"validity - " << validity<<endl;
+         cout<<"vid - "<<vid<<endl;
+         if(validity=="valid"){
+            Connect(region, p, allNodesVID, allNodesVID, allCollisionNodesVID, queue);
+         }
+         else if(validity=="invalid"){
+            GetMPProblem()->GetValidityChecker()->ToggleValidity();
+            Connect(region, p, allCollisionNodesVID, allNodesVID, allCollisionNodesVID, queue);
+            GetMPProblem()->GetValidityChecker()->ToggleValidity();
+         }
       }
    }
   
@@ -188,11 +228,8 @@ void TogglePRMStrategy::Finalize(int in_RegionID){
    cout<<"\nEnd Finalizing TogglePRMStrategy"<<endl;
 }
 
-void TogglePRMStrategy::ConnectNodes(MPRegion<CfgType, WeightType>* region, 
-                                 vector<VID>& allNodesVID, vector<VID>& thisIterationNodesVID,
-                                 vector<VID>& allCollisionNodesVID, vector<VID>&
-                                 thisIterationCollisionNodesVID)
-{
+void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<string, VID> pvid, vector<VID>& allVID, vector<VID>& allNodesVID, vector<VID>&
+allCollisionNodesVID, deque<pair<string, VID> >& queue){
    Clock_Class NodeConnClock;
    stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Node Connection";
    NodeConnClock.StartClock(clockName.str().c_str());
@@ -209,51 +246,53 @@ void TogglePRMStrategy::ConnectNodes(MPRegion<CfgType, WeightType>* region,
       NodeConnSubClock.StartClock(connectorClockName.str().c_str());
     
       cout << "\n\t";
-      vector<VID> nodesVID(thisIterationNodesVID.begin(), thisIterationNodesVID.end());
-      vector<VID> collisionNodesVID(thisIterationCollisionNodesVID.begin(), thisIterationCollisionNodesVID.end());
+      vector<VID> nodesVID;
+      nodesVID.push_back(pvid.second);
       vector<CfgType> collision, valid;
-      GetMPProblem()->GetMPStrategy()->
-         GetConnectMap()->ConnectNodes(pConnection,
+      if(pvid.first=="valid")
+         GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectNodes(pConnection,
                                        region->GetRoadmap(), *(region->GetStatClass()),
 				       GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                        GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                        GetMPProblem()->GetMPStrategy()->addAllEdges,
-                                       //nodesVID.begin(), nodesVID.end(), 
-                                       allNodesVID.begin(), allNodesVID.end(),
-                                       allNodesVID.begin(), allNodesVID.end(),
+                                       nodesVID.begin(), nodesVID.end(), 
+                                       allVID.begin(), allVID.end(),
                                        back_inserter(collision));
-      cout<<"Collision Nodes from connecting::"<<collision.size()<<endl;
-      typedef vector<CfgType>::iterator CIT;
-      for(CIT cit=collision.begin(); cit!=collision.end(); ++cit){
-         //outCollisionNodes mean INVALID then add to block map
-         if((*cit).IsLabel("VALID") && !((*cit).GetLabel("VALID"))) {
-            if(!region->GetBlockRoadmap()->m_pRoadmap->IsVertex(*cit)) {
-              VID vid = region->GetBlockRoadmap()->m_pRoadmap->AddVertex(*cit);
-              allCollisionNodesVID.push_back(vid);
-              thisIterationCollisionNodesVID.push_back(vid);
-            }
-         }
-      }
-      GetMPProblem()->GetValidityChecker()->ToggleValidity();
-      cout<<"Connecting Blocked Map"<<endl;
-      GetMPProblem()->GetMPStrategy()->
-         GetConnectMap()->ConnectNodes(pConnection,
+      else
+         GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectNodes(pConnection,
                                        region->GetBlockRoadmap(), *(region->GetStatClass()),
 				       GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                        GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                        GetMPProblem()->GetMPStrategy()->addAllEdges,
-                                       //collisionNodesVID.begin(), collisionNodesVID.end(), 
-                                       allCollisionNodesVID.begin(), allCollisionNodesVID.end(),
-                                       allCollisionNodesVID.begin(), allCollisionNodesVID.end(),
-                                       back_inserter(valid));
-      GetMPProblem()->GetValidityChecker()->ToggleValidity();
-      for(CIT cit=valid.begin(); cit!=valid.end(); ++cit){
-         //outCollisionNodes mean INVALID then add to block map
-         if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
+                                       nodesVID.begin(), nodesVID.end(), 
+                                       allVID.begin(), allVID.end(),
+                                       back_inserter(collision));
+      
+      cout<<"\nCollision Nodes from connecting::"<<collision.size()<<endl;
+      //filter(region->GetBlockRoadmap()->m_pRoadmap, collision);
+      cout<<"Adding "<<collision.size()<<" collision nodes"<<endl;
+      typedef vector<CfgType>::iterator CIT;
+      int i =0;
+      //random_shuffle(collision.begin(), collision.end());
+      for(CIT cit=collision.begin(); cit!=collision.end(); ++cit){
+         //if(region->GetRoadmap()->m_pRoadmap->get_num_vertices()+
+            //region->GetBlockRoadmap()->m_pRoadmap->get_num_vertices()>=1000){done=true;return;}
+         if(cit->IsLabel("VALID") && cit->GetLabel("VALID")){
             if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
               VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
               allNodesVID.push_back(vid);
-              thisIterationNodesVID.push_back(vid);
+              i++;
+              queue.push_front(make_pair("valid", vid));
+              //queue.push_back(make_pair("valid", vid));
+            }
+         }
+         //outCollisionNodes mean INVALID then add to block map
+         else if(cit->IsLabel("VALID") && !cit->GetLabel("VALID")) {
+            if(!region->GetBlockRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+              VID vid = region->GetBlockRoadmap()->m_pRoadmap->AddVertex(*cit);
+              allCollisionNodesVID.push_back(vid);
+              i++;
+              queue.push_back(make_pair("invalid", vid));
             }
          }
       }
@@ -265,77 +304,8 @@ void TogglePRMStrategy::ConnectNodes(MPRegion<CfgType, WeightType>* region,
       cout << "\t";
       NodeConnSubClock.StopPrintClock();
    }
-   NodeConnClock.StopPrintClock();
+  NodeConnClock.StopPrintClock();
 }
-
-void TogglePRMStrategy::ConnectComponents(MPRegion<CfgType, WeightType>* region, vector<VID>&
-allNodesVID, vector<VID>& allCollisionNodesVID)
-{
-   Clock_Class ComponentConnClock;
-   stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Component Connection";
-   ComponentConnClock.StartClock(clockName.str().c_str());
-    stapl::vector_property_map< GRAPH,size_t > cmap;
- 
-   for(vector<string>::iterator I = m_ComponentConnectionLabels.begin(); 
-       I != m_ComponentConnectionLabels.end(); ++I){
-      ConnectMap<CfgType, WeightType>::ComponentConnectionPointer pConnection;
-      pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
-    
-      Clock_Class ComponentConnSubClock;
-      stringstream connectorClockName; connectorClockName << "Iteration " << m_CurrentIteration << ", " << pConnection->GetName();
-      ComponentConnSubClock.StartClock(connectorClockName.str().c_str());
-    
-      cout << "\n\t";
-      vector<CfgType> collision, valid;
-      GetMPProblem()->GetMPStrategy()->
-         GetConnectMap()->ConnectComponents(pConnection,
-                                            region->GetRoadmap(), 
-                                            *(region->GetStatClass()),
-                                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-                                            GetMPProblem()->GetMPStrategy()->addAllEdges,
-                                            back_inserter(collision));
-      cout<<"Collision Nodes from connection::"<<collision.size()<<endl; 
-      typedef vector<CfgType>::iterator CIT;
-      for(CIT cit=collision.begin(); cit!=collision.end(); ++cit){
-         //outCollisionNodes mean INVALID then add to block map
-         if((*cit).IsLabel("VALID") && !((*cit).GetLabel("VALID"))) {
-            if(!region->GetBlockRoadmap()->m_pRoadmap->IsVertex(*cit)) {
-              VID vid = region->GetBlockRoadmap()->m_pRoadmap->AddVertex(*cit);
-              allCollisionNodesVID.push_back(vid);
-            }
-         }
-      }
-      GetMPProblem()->GetValidityChecker()->ToggleValidity();
-      GetMPProblem()->GetMPStrategy()->
-         GetConnectMap()->ConnectComponents(pConnection,
-                                            region->GetBlockRoadmap(), 
-                                            *(region->GetStatClass()),
-                                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                                            GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-                                            GetMPProblem()->GetMPStrategy()->addAllEdges,
-                                            back_inserter(valid));
-      GetMPProblem()->GetValidityChecker()->ToggleValidity();
-      for(CIT cit=valid.begin(); cit!=valid.end(); ++cit){
-         //outCollisionNodes mean INVALID then add to block map
-         if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
-            if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
-              VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
-              allNodesVID.push_back(vid);
-            }
-         }
-      }
-      cmap.reset();
-      cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
-           << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
-           << endl;
-    
-      cout << "\t";
-      ComponentConnSubClock.StopPrintClock();
-   }
-   ComponentConnClock.StopPrintClock();
-}
-
 
 bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
 {
@@ -359,8 +329,10 @@ bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
          
          cout << "\t";
          EvalSubClock.StopPrintClock();
-         if(mapPassedEvaluation)
+         if(mapPassedEvaluation){
+            //return true;
             cout << "\t  (passed)\n";
+         }
          else
             cout << "\t  (failed)\n";
          if(!mapPassedEvaluation)

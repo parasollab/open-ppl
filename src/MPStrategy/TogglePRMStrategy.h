@@ -15,6 +15,7 @@
 #include "MPRegion.h"
 #include "Sampler.h"
 
+extern bool done;
 
 class TogglePRMStrategy : public MPStrategyMethod 
 {
@@ -32,16 +33,16 @@ class TogglePRMStrategy : public MPStrategyMethod
 
  protected:
    //helper functions for operator()
-   void ConnectNodes(MPRegion<CfgType, WeightType>* region, vector<VID>& allNodesVID, vector<VID>&
-   thisIterationNodesVID, vector<VID>& allCollisionVID, vector<VID>& thisIterationCollisionNodes);
-   void ConnectComponents(MPRegion<CfgType, WeightType>* region, vector<VID>& allNodesVID,
-   vector<VID>& allCollisionNodesVID);
+   void Connect(MPRegion<CfgType, WeightType>* region, pair<string, VID> vid, vector<VID>& allVID, vector<VID>& allNodesVID,
+   vector<VID>& allCollisionNodesVID, deque<pair<string, VID> >& queue);
    bool EvaluateMap(int in_RegionID);
 
    //data
    vector<pair<string, int> > m_NodeGenerationLabels;
    vector<string> m_NodeConnectionLabels;
+   vector<string> m_ColNodeConnectionLabels;
    vector<string> m_ComponentConnectionLabels;
+   vector<string> m_ColComponentConnectionLabels;
    vector<string> m_EvaluatorLabels;
    string m_LPMethod;
    string dm_label;
@@ -51,12 +52,9 @@ class TogglePRMStrategy : public MPStrategyMethod
    template <typename OutputIterator>
       void GenerateNodes(MPRegion<CfgType, WeightType>* region, OutputIterator allOut,
       OutputIterator thisIterationOut, OutputIterator allCollisionOut, OutputIterator
-      thisIterationCollisionOut);
+      thisIterationCollisionOut, deque<pair<string, VID> >& queue);
 
    Clock_Class MapGenClock;
-
-   int m_ConnectIterations;
-
 };
 
 #include "MPStrategy.h"
@@ -65,7 +63,8 @@ class TogglePRMStrategy : public MPStrategyMethod
 template <typename OutputIterator>
 void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region, 
                                   OutputIterator allOut, OutputIterator thisIterationOut,
-                                  OutputIterator allCollisionOut, OutputIterator thisIterationCollisionOut){
+                                  OutputIterator allCollisionOut, OutputIterator thisIterationCollisionOut,
+                                  deque<pair<string, VID> >& queue){
    Clock_Class NodeGenClock;
    CDInfo cdInfo;
    Stat_Class * pStatClass = region->GetStatClass();
@@ -88,7 +87,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       cout << "\n\t";
 
       do{
-         pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),git->second*2+400,
+         pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),git->second*2+20,
          back_inserter(outNodes), back_inserter(outCollisionNodes));
       }while(outNodes.size()<=0&&m_CurrentIteration==1);
 
@@ -99,13 +98,18 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       //add valid nodes to roadmap
       typedef vector<CfgType>::iterator CIT;
       for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
+         //if(region->GetRoadmap()->m_pRoadmap->get_num_vertices()+
+            //region->GetBlockRoadmap()->m_pRoadmap->get_num_vertices()>=1000){done=true;return;}
          //out nodes mean valid then add them to the real roadmap
          if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
             if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+               //if(region->GetRoadmap()->m_pRoadmap->get_num_vertices() >= 1000) return;
               VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
               //store value and increment iterator
               *thisIterationOut++ = vid;
               *allOut++ = vid;
+              queue.push_front(make_pair("valid", vid));
+              //queue.push_back(make_pair("valid", vid));
             }
          }
          //else invalid add to block map
@@ -115,6 +119,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
               //store value and increment iterator
               *thisIterationOut++ = vid;
               *allOut++ = vid;
+              queue.push_back(make_pair("invalid", vid));
             }
          }
       }
@@ -126,6 +131,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
               //store value and increment iterator
               *thisIterationCollisionOut++ = vid;
               *allCollisionOut++ = vid;
+              queue.push_back(make_pair("invalid", vid));
             }
          }
          //else valid add to real map
@@ -135,6 +141,8 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
               //store value and increment iterator
               *thisIterationCollisionOut++ = vid;
               *allCollisionOut++ = vid;
+              queue.push_front(make_pair("valid", vid));
+              //queue.push_back(make_pair("valid", vid));
             }
          }  
       }
