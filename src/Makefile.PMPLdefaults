@@ -6,7 +6,7 @@ ifeq (${platform}, LINUX_gcc) 	#linux/gcc on 32 bit machine
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
-	BOOST_INCL = -I/usr/include/boost
+	BOOST_INCL = -isystem/usr/include
 
 	DEPS = -MMD -MF $*.d
 endif
