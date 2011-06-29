@@ -193,8 +193,9 @@ bool DetermineMedialAxisGap(MPProblem* mp, CFG& startcfg, CFG& endcfg, Environme
 	peekInfo = tmpInfo;
 
 	// Determine gap for medial axis
-  while ( (tmpInfo.min_dist  >= oldInfo.min_dist) ||
-					(peekInfo.min_dist >= oldInfo.min_dist) ) {
+  while ( step_size > res/100 && 
+					((tmpInfo.min_dist  >= oldInfo.min_dist) ||
+					 (peekInfo.min_dist >= oldInfo.min_dist)) ) {
 		oldInfo = tmpInfo;
 		tmp_cfg.multiply(trans_cfg,step_size);
 		tmp_cfg.add(endcfg, tmp_cfg);
@@ -262,7 +263,7 @@ bool DetermineMedialAxisCfg(MPProblem* mp, CFG& startcfg, CFG& endcfg, CFG& fina
 	CDInfo tmpInfo;
 	CFG mid1cfg, mid2cfg, mid3cfg;
 	int peak=-1, bad_peaks=0, attempts=0;
-	int max_attempts=25, max_bad_peaks=5;
+	int max_attempts=50, max_bad_peaks=5;
 	double max_dist=0.0, gap_dist=0.0; 
 	double res=env->GetPositionRes(), eps=(c_exact)?res/10.0:res;
 	bool get_info=true, peaked=false;
@@ -373,20 +374,19 @@ template <class CFG>
 bool GetExactCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class& stats,
 													 CDInfo& cdInfo, string str_vcm, bool use_bbx) {
 	// Setup Validity Checker
-	std::string call("MedialAxisUtility::getExactCollisionInfo");
-	ValidityChecker<CFG>*             vc  = mp->GetValidityChecker();
+  std::string call("MedialAxisUtility::getExactCollisionInfo");
+  ValidityChecker<CFG>*             vc  = mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(str_vcm);
   cdInfo.ResetVars();
   cdInfo.ret_all_info = true;
 	
 	// If not in BBX or valid, return false
-	if ( !cfg.InBoundingBox(env) || 
+  if ( !cfg.InBoundingBox(env) || 
 			 !(vc->IsValid(vcm,cfg,env,stats,cdInfo,true,&call)) ) 
-		return false;
-	
+    return false;
 	// If not using the bbx, done
-	if ( !use_bbx )
-		return true;
+  if ( !use_bbx )
+    return true;
 
 	// CFG is now know as good, get BBX and ROBOT info                                                                                                      
 	boost::shared_ptr<BoundingBox> bbx = env->GetBoundingBox();
@@ -412,6 +412,7 @@ bool GetExactCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class
 			}
 		}
 	}
+	
 	return (cdInfo.min_dist>=0)?true:false;
 } // END getExactCollisionInfo
 
@@ -544,7 +545,7 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 
 	// If no candidates found, return false;
 	if (cand_in.size() == 0) {
-		cout << "cand_in.size = 0" << endl;
+		cout << "ERROR: ApproxCSpace:Candidates:size = 0" << endl;
 		return false;
 	}
 
