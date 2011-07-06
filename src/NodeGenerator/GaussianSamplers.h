@@ -287,8 +287,9 @@ class BridgeTestSampler : public SamplerMethod<CFG>
         Stat.IncNodes_Attempted();
         attempts++;
         CFG tmp = cfg_in;
-        if (tmp == blank_cfg)
+        if (tmp == blank_cfg){
           tmp.GetRandomCfg(env);
+        }
         if ( use_bbx ) {
           if ( tmp.InBoundingBox(env) && 
               vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, env, Stat, cdInfo, true, &callee)) { 
@@ -309,7 +310,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
               }
             }
           } else {
-            CFG cfg1 = cfg_in, incr, cfg2;
+            CFG cfg1 = tmp, incr, cfg2;
             incr.GetRandomRay(fabs(GaussianDistribution(d, d)), env, dm);
             cfg2.add(cfg1, incr);
             if ( !cfg2.InBoundingBox(env) || 
@@ -343,7 +344,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
               }
             }
           } else {
-            CFG cfg1 = cfg_in, incr, cfg2;
+            CFG cfg1 = tmp, incr, cfg2;
             incr.GetRandomRay(fabs(GaussianDistribution(d, d)), env, dm);
             cfg2.add(cfg1, incr);
             if ( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, Stat, cdInfo, true, &callee)) {
