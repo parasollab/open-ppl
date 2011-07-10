@@ -100,7 +100,6 @@ class KnotTheoryDistance : public EuclideanDistance {
   virtual void SetDefault();
   virtual void PrintOptions(ostream&)const;
   virtual DistanceMetricMethod* CreateCopy();
- 
  /**This method calculates 
     *sqrt((c11-c21)^2+(c12-c22)^2+(c13-c23)^2....+(c1n-c2n)^2).
     *
