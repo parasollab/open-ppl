@@ -267,8 +267,7 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   return dist;
 }
 
-
-  /*=============================================================
+/*=============================================================
 Knot Theory Dm
 ===============================================================*/
 
@@ -292,72 +291,74 @@ KnotTheoryDistance ::
 Distance(Environment* env, const Cfg& _c1, const Cfg& _c2)
 {
  double dist;
+ double sum =0.0, sign = 0,sign_2 =0, temp1;
+   vector <Vector3D> unitVect(3000), unitVect2(3000);
+  double  dist2,writhe1,writhe2, temp2;
+  dist =EuclideanDistance::Distance(env, _c1,_c2);
+    Vector3D n1,n2;
+ double n_2;
+  vector<Vector3D> c11;
+   vector<Vector3D> c21 ;
+    
+ 
 
- vector <Vector3D> unitVect(4);
+     vector<Vector3D> c1=_c1.PolyApprox(env);
+     vector<Vector3D> c2=_c2.PolyApprox(env);
 
-  double sum =0.0, sign = 0, temp1;
 
-dist = EuclideanDistance::Distance(env, _c1,_c2);
 
-Cfg *c=_c1.CreateNewCfg();
-Cfg *o =_c2.CreateNewCfg();
-vector<Vector3D> c1=c->PolyApprox(env);
-
-vector<Vector3D> c2=o->PolyApprox(env); 
-Vector3D n1,n2;
-
-if (c1.empty())
+if (c1.empty()|| c1.size()<2)
 {
-  cerr << "\n\nError in KnotTheoryDistance::Distance(), c1 is empty, exiting.\n";
+  cerr << "\n\nError in KnotTheoryDistance::Distance(), c1 has too few links, exiting.\n";
   exit(-1);
 }
 
 
-   for(size_t i =1; i < c1.size()-4;i++){
+   for(size_t i =0; i < c1.size()-1;i++){
 
    if((c1[i+1]-c1[i]).magnitude() != 0)
-    unitVect[0] = (c1[i+1]-c1[i]);
+    unitVect[i] = (c1[i+1]+c1[i]);
   else
-    unitVect[0] = 0;
+    unitVect[i] = 0;
 
-    if((c2[i+3]-c2[i+2]).magnitude() !=0)
-       unitVect[1]= (c2[i+3]-c2[i+2]);
+    if((c2[i+1]-c2[i]).magnitude() !=0)
+       unitVect2[i]= (c2[i+1]+c2[i]);
 
-       else unitVect[1]=0;
-         }
-cout<<"unitvector"<<unitVect[1]<<endl;
-        if((unitVect[0].crossProduct(unitVect[1])).magnitude() != 0)
-    n1= (unitVect[0].crossProduct(unitVect[1]))/
-      (unitVect[0].crossProduct(unitVect[1])).magnitude();
+       else unitVect2[i]=0;
+
+        if((unitVect[i].crossProduct(unitVect2[i])).magnitude() != 0)
+    n1= (unitVect[i].crossProduct(unitVect2[i]))/
+      (unitVect[i].crossProduct(unitVect2[i])).magnitude();
+
   else
     n1 = 0.0;
+  n_2 =unitVect[i].crossProduct(unitVect2[i]).magnitude();
 
-
-
-  if((unitVect[1].crossProduct(unitVect[0])).magnitude() != 0)
-    n2 =  (unitVect[1].crossProduct(unitVect[0]))/
-      (unitVect[1].crossProduct(unitVect[0])).magnitude();
+  if((unitVect2[i].crossProduct(unitVect[i])).magnitude() != 0)
+    n2 =  (unitVect2[i].crossProduct(unitVect[i]))/
+      (unitVect2[i].crossProduct(unitVect[i])).magnitude();
   else
     n2 = 0.0;
 
- 
-
-  if(n1.dotProduct(n2)>1)
+ if(n1.dotProduct(n2)>1)
      temp1 = 1.0;
   else
     temp1 = n1.dotProduct(n2);
 
-  sum = asin(temp1); 
 
+ sign =(n1.crossProduct(n2)).dotProduct(unitVect[i]); 
+  sum += n_2; 
+                                       }
+  
+sign_2 = sign/fabs(sign);
+
+return  fabs((sum/(4.0))*sign_2); 
  
-  sign =(n1.crossProduct(n2)).dotProduct(unitVect[0]); 
-
-//int sign2 =sign > 0 ? 1:-1;
- 
-
-return fabs((sum/(4.0*PI))*sign);
 
 }
+
+
+
 
 void
 KnotTheoryDistance::
@@ -383,7 +384,6 @@ CreateCopy() {
 /////////////////////////////////////////////////////////////////////
 
 /////////
-
 
 UniformEuclideanDistance::
 UniformEuclideanDistance(bool _useRotational) : DistanceMetricMethod(), useRotational(_useRotational) {
