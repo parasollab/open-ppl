@@ -22,8 +22,8 @@ class Stat_Class;
 // Main Push To Medial Axis Function //
 //***********************************//
 template <class CFG>
-bool PushToMedialAxis(MPProblem* mp, Environment* env, CFG& cfg, Stat_Class& stats, string str_vcm, 
-											string str_dm, bool c_exact, int clearance, bool p_exact, int penetration, bool use_bbx) {
+bool PushToMedialAxis(MPProblem* mp, Environment* env, CFG& cfg, Stat_Class& stats, string str_vcm, string str_dm, 
+                      bool c_exact, int clearance, bool p_exact, int penetration, bool use_bbx, double eps) {
 
 	// Initialization
 	std::string call("MedialAxisUtility::PushToMedialAxis()");
@@ -33,7 +33,7 @@ bool PushToMedialAxis(MPProblem* mp, Environment* env, CFG& cfg, Stat_Class& sta
 
 	// Variable Initialization
   CDInfo   tmpInfo;
-  bool     inside, found, pushed=true, to_wall=false;
+  bool     inside, found, pushed=true, to_wall=false, alter_comp=false, in_collision;
 
   // Reset cdInfo and set flag to return all info, setup origin
   tmpInfo.ResetVars();
@@ -41,12 +41,13 @@ bool PushToMedialAxis(MPProblem* mp, Environment* env, CFG& cfg, Stat_Class& sta
 
 	// If inside an obstacle, push to the outside
 	inside = vcm->isInsideObstacle(cfg,env,tmpInfo);
-	if (inside)
+	in_collision = !(vc->IsValid(vcm,cfg,env,stats,tmpInfo,true,&call));
+	if (inside || in_collision)
 		pushed = PushFromInsideObstacle(mp,cfg,env,stats,str_vcm,str_dm,p_exact,penetration,to_wall);
 	if ( !pushed ) return false;
 
 	// Now that cfg is free, find medial axis
-	found = FindMedialAxisCfg(mp,cfg,env,stats,str_vcm,str_dm,c_exact,clearance,use_bbx);
+	found = FindMedialAxisCfg(mp,cfg,env,stats,str_vcm,str_dm,c_exact,clearance,use_bbx,alter_comp,eps);
 	if ( !found )  return false;
 	return true;
 } // END pushToMedialAxis
@@ -60,9 +61,10 @@ bool PushToMedialAxis(MPProblem* mp, Environment* env, CFG& cfg, Stat_Class& sta
 //***************************************************************//
 template <class CFG>
 bool PushFromInsideObstacle(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class& stats,
-														string str_vcm, string str_dm, bool p_exact, int penetration, bool to_wall) {	
+                            string str_vcm, string str_dm, bool p_exact, int penetration, bool to_wall) {	
 	// Initialization
-	string call("MedialAxisUtility::pushFromInsideObstacle");
+	string call("MedialAxisUtility::PushFromInsideObstacle");
+  //cout << call << endl;
   shared_ptr<DistanceMetricMethod>  dm  = mp->GetDistanceMetric()->GetDMMethod(str_dm);
 	ValidityChecker<CFG>*             vc  = mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(str_vcm);
@@ -71,9 +73,15 @@ bool PushFromInsideObstacle(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
   CDInfo   tmpInfo;
   Vector3D trans_dir;
   CFG      tmp_cfg=cfg, held_cfg=cfg, trans_cfg=cfg;
-  bool     valid, in_bbx, inside=true, tmp_inside=true;
-	double   step_size=1.0, step_inc=2.0, step_dec=0.5;
+  bool     valid, in_bbx, tmp_inside=true, alter_comp=false;
+	double   step_size=1.0, step_inc=2.0, step_dec=0.5, step_def=1.0;
 	double   res = env->GetPositionRes();
+	bool init_validity = vc->IsValid(vcm,cfg,env,stats,tmpInfo,true,&call);
+  bool tmp_validity = init_validity;
+
+	// If in collision, must use approx
+	if ( init_validity == false )
+    p_exact = false;
 
 	// Origin and tmpInfo Setup
   tmpInfo.ResetVars();
@@ -86,40 +94,51 @@ bool PushFromInsideObstacle(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 	if (!valid)	return false;
 
 	trans_dir = tmpInfo.object_point - tmpInfo.robot_point;
-	if (trans_dir[0] == 0 &&
-			trans_dir[1] == 0 )
-		return false;
-
 	trans_cfg.SetSingleParam(0, trans_dir[0]);
 	trans_cfg.SetSingleParam(1, trans_dir[1]);
 	trans_cfg.SetSingleParam(2, trans_dir[2]);	
 	dm->ScaleCfg(env, res, *orig, trans_cfg);
 	
 	// Determine gap for medial axis
-  while ( tmp_inside ) {
-		held_cfg.equals(tmp_cfg);
-		tmp_cfg.multiply(trans_cfg,step_size);
-		tmp_cfg.add(cfg, tmp_cfg);
-		tmp_inside = vcm->isInsideObstacle(tmp_cfg,env,tmpInfo);
-		in_bbx = tmp_cfg.InBoundingBox(env);
-
-		// If tmp is valid, move gap on to next step
-		if ( vc->IsValid(vcm,tmp_cfg,env,stats,tmpInfo,true,&call) && in_bbx ) {
-			step_size *= step_inc;
-		} else { // Else reduce step size or fall out of the loop
-			if ( in_bbx ) {
-				if ( inside ) step_size *= step_inc;
-				else          step_size *= step_dec;
-			} else {
-				if ( inside ) return false;	// Straight from obstacle to out of BBX			
-				else          step_size *= step_dec;
-			}
+  if ( !init_validity ) {
+    while ( tmp_validity == init_validity ) {
+		  held_cfg.equals(tmp_cfg);
+		  tmp_cfg.multiply(trans_cfg,step_size);
+		  tmp_cfg.add(cfg, tmp_cfg);
+      tmp_validity = vc->IsValid(vcm,tmp_cfg,env,stats,tmpInfo,true,&call);
+		  in_bbx = tmp_cfg.InBoundingBox(env);
+		  if ( !in_bbx ) return false;
+      step_size += 1.0;
 		}
-	}
-	
-	// If specified, push back to the wall
-	if (to_wall) { } // TODO::MAY COME IN HANDY
+	} else {
+    while ( tmp_inside ) {
+		  held_cfg.equals(tmp_cfg);
+		  tmp_cfg.multiply(trans_cfg,step_size);
+		  tmp_cfg.add(cfg, tmp_cfg);
+		  tmp_inside = vcm->isInsideObstacle(tmp_cfg,env,tmpInfo);
+		  in_bbx = tmp_cfg.InBoundingBox(env);
 
+		  if ( !alter_comp ) {
+		    // If tmp is valid, move gap on to next step
+		    if ( vc->IsValid(vcm,tmp_cfg,env,stats,tmpInfo,true,&call) || in_bbx )
+          step_size += 1.0;
+		    else return false;
+		  } else {
+		    // If tmp is valid, move gap on to next step
+		    if ( vc->IsValid(vcm,tmp_cfg,env,stats,tmpInfo,true,&call) && in_bbx ) {
+			    step_size *= step_inc;
+		    } else { // Else reduce step size or fall out of the loop
+			    if ( in_bbx ) {
+				    if ( tmp_inside ) step_size *= step_inc;
+				    else          step_size *= step_dec;
+			    } else {
+				    if ( tmp_inside ) return false;	// Straight from obstacle to out of BBX			
+				    else          step_size *= step_dec;
+			    }
+		    }
+		  }
+	  }
+	}
 	// Broke out between held_cfg and 
 	cfg.equals(tmp_cfg);
 	return true;
@@ -132,19 +151,24 @@ bool PushFromInsideObstacle(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 //***************************************************************//
 template <class CFG>
 bool FindMedialAxisCfg(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class& stats,
-											 string str_vcm, string str_dm, bool c_exact, int clearance, bool use_bbx) {
+                       string str_vcm, string str_dm, bool c_exact, int clearance, bool use_bbx, bool alter_comp, double eps) {
 	// Variables
 	bool gap, found;
 	CFG startcfg, endcfg;
 	startcfg.equals(cfg);
 	endcfg.equals(cfg);
 
-	// Find gap and determine medial axis cfg
-	gap = DetermineMedialAxisGap(mp,startcfg,endcfg,env,stats,str_vcm,str_dm,c_exact,clearance,use_bbx);
-	if ( !gap )	  return false;
-	found = DetermineMedialAxisCfg(mp,startcfg,endcfg,cfg,env,stats,str_vcm,str_dm,c_exact,clearance,use_bbx);
-	if ( !found )	return false;
-	return true;
+	if ( alter_comp ) {
+	  // Find gap and determine medial axis cfg
+	  gap = DetermineMedialAxisGap(mp,startcfg,endcfg,env,stats,str_vcm,str_dm,c_exact,clearance,use_bbx);
+	  if ( !gap )	  return false;
+	  found = DetermineMedialAxisCfg(mp,startcfg,endcfg,cfg,env,stats,str_vcm,str_dm,c_exact,clearance,use_bbx,eps);
+	  if ( !found )	return false;
+  } else {
+    found = PushCfgToMedialAxis(mp,cfg,env,stats,str_vcm,str_dm,c_exact,clearance,use_bbx,eps);
+    if ( !found ) return false;
+  }
+	  return true;
 }
 
 //***************************************************************//
@@ -155,9 +179,9 @@ bool FindMedialAxisCfg(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class& st
 //***************************************************************//
 template <class CFG>
 bool DetermineMedialAxisGap(MPProblem* mp, CFG& startcfg, CFG& endcfg, Environment* env, Stat_Class& stats,
-														string str_vcm, string str_dm, bool c_exact, int clearance, bool use_bbx) {
+                            string str_vcm, string str_dm, bool c_exact, int clearance, bool use_bbx) {
 	// Initialization
-	string call("MedialAxisUtility::determineMedialAxisGap");
+	string call("MedialAxisUtility::DetermineMedialAxisGap");
   shared_ptr<DistanceMetricMethod>  dm  = mp->GetDistanceMetric()->GetDMMethod(str_dm);
 	ValidityChecker<CFG>*             vc  = mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(str_vcm);
@@ -181,8 +205,7 @@ bool DetermineMedialAxisGap(MPProblem* mp, CFG& startcfg, CFG& endcfg, Environme
 	valid = CalculateCollisionInfo(mp,startcfg,env,stats,tmpInfo,str_vcm,str_dm,c_exact,clearance,0,use_bbx);
 	if (!valid)	return false;
 	trans_dir = tmpInfo.robot_point - tmpInfo.object_point;
-	if (trans_dir[0] == 0 && trans_dir[1] == 0 )
-		return false;
+
 	trans_cfg.SetSingleParam(0, trans_dir[0]);
 	trans_cfg.SetSingleParam(1, trans_dir[1]);
 	trans_cfg.SetSingleParam(2, trans_dir[2]);	
@@ -199,8 +222,10 @@ bool DetermineMedialAxisGap(MPProblem* mp, CFG& startcfg, CFG& endcfg, Environme
 		oldInfo = tmpInfo;
 		tmp_cfg.multiply(trans_cfg,step_size);
 		tmp_cfg.add(endcfg, tmp_cfg);
+
 		peek_cfg.multiply(trans_cfg,step_size+res);
 		peek_cfg.add(endcfg, peek_cfg);
+
 		inside = vcm->isInsideObstacle(tmp_cfg,env,tmpInfo);
 		in_bbx = tmp_cfg.InBoundingBox(env);
 
@@ -252,9 +277,9 @@ bool DetermineMedialAxisGap(MPProblem* mp, CFG& startcfg, CFG& endcfg, Environme
 //*************************************************************************//
 template <class CFG>
 bool DetermineMedialAxisCfg(MPProblem* mp, CFG& startcfg, CFG& endcfg, CFG& finalcfg, Environment* env, 
-														Stat_Class& stats, string str_vcm, string str_dm, bool c_exact, int clearance, bool use_bbx) {
+                            Stat_Class& stats, string str_vcm, string str_dm, bool c_exact, int clearance, bool use_bbx, double eps) {
 	// Initialization
-	string call("MedialAxisUtility::determineMedialAxisCfg");
+	string call("MedialAxisUtility::DetermineMedialAxisCfg");
   shared_ptr<DistanceMetricMethod>  dm  = mp->GetDistanceMetric()->GetDMMethod(str_dm);
 	ValidityChecker<CFG>*             vc  = mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(str_vcm);
@@ -265,7 +290,7 @@ bool DetermineMedialAxisCfg(MPProblem* mp, CFG& startcfg, CFG& endcfg, CFG& fina
 	int peak=-1, bad_peaks=0, attempts=0;
 	int max_attempts=50, max_bad_peaks=5;
 	double max_dist=0.0, gap_dist=0.0; 
-	double res=env->GetPositionRes(), eps=(c_exact)?res/10.0:res;
+	double res=env->GetPositionRes();
 	bool get_info=true, peaked=false;
 	vector<double> dists(5,0), deltas(4,0);
 
@@ -350,6 +375,122 @@ bool DetermineMedialAxisCfg(MPProblem* mp, CFG& startcfg, CFG& endcfg, CFG& fina
 	return (bad_peaks==max_bad_peaks)?false:true;
 }
 
+//***************************************************************//
+// Push Cfg To Medial Axis                                       //
+//   This function is to perform a regular push to medial axis   //
+// algorithm stepping out at the resolution till the medial axis //
+// is found, determined by the clearance.                        //
+//***************************************************************//
+template <class CFG>
+bool PushCfgToMedialAxis(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class& stats,
+                         string str_vcm, string str_dm, bool c_exact, int clearance, bool use_bbx, double eps) {
+	// Initialization
+	string call("MedialAxisUtility::PushCfgToMedialAxis");
+  shared_ptr<DistanceMetricMethod>  dm  = mp->GetDistanceMetric()->GetDMMethod(str_dm);
+	ValidityChecker<CFG>*             vc  = mp->GetValidityChecker();
+  shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(str_vcm);
+	
+	// Variables
+  Vector3D trans_dir;
+  CDInfo   tmpInfo, oldInfo, peekInfo;
+  CFG      trans_cfg, tmp_cfg, peek_cfg, held_cfg;
+	double   step_size=1.0;
+	bool     found_gap=false, in_bbx=true, good_tmp=true, good_peek=true, valid;
+	double   res=env->GetPositionRes();
+	bool     inside = vcm->isInsideObstacle(cfg,env,peekInfo);
+
+	// tmpInfo and Origin Setup
+  tmpInfo.ResetVars();
+  tmpInfo.ret_all_info = true;
+	tmp_cfg.equals(cfg);
+	Cfg* orig = trans_cfg.CreateNewCfg();
+	orig->subtract( *orig, *orig);
+
+	// Determine direction to move, set trans_cfg, and scale by resolution
+	valid = CalculateCollisionInfo(mp,cfg,env,stats,tmpInfo,str_vcm,str_dm,c_exact,clearance,0,use_bbx);
+	if (!valid)	return false;
+	trans_dir = tmpInfo.robot_point - tmpInfo.object_point;
+	
+	trans_cfg.SetSingleParam(0, trans_dir[0]);
+	trans_cfg.SetSingleParam(1, trans_dir[1]);
+	trans_cfg.SetSingleParam(2, trans_dir[2]);	
+	dm->ScaleCfg(env, res, *orig, trans_cfg);
+
+	// Initialize temp Info
+	oldInfo = tmpInfo;
+	peekInfo = tmpInfo;
+
+	// Determine gap for medial axis
+  while (	((tmpInfo.min_dist  > oldInfo.min_dist) ||
+					 (peekInfo.min_dist >= oldInfo.min_dist)) ) {
+
+		oldInfo = tmpInfo;
+    held_cfg.equals(tmp_cfg);
+
+		tmp_cfg.multiply(trans_cfg,step_size);
+		tmp_cfg.add(cfg, tmp_cfg);
+		peek_cfg.multiply(trans_cfg,step_size+1.0);
+		peek_cfg.add(cfg, peek_cfg);
+
+		inside = vcm->isInsideObstacle(tmp_cfg,env,tmpInfo);
+		in_bbx = tmp_cfg.InBoundingBox(env);
+
+		// If inside obstacle or out of the bbx, step back
+		if ( inside || !in_bbx) {
+      return false;
+		} else {
+			// If tmp is valid, move gap on to next step
+			if ( vc->IsValid(vcm,tmp_cfg,env,stats,tmpInfo,true,&call) ) {
+				good_tmp  = CalculateCollisionInfo(mp,tmp_cfg,env,stats,tmpInfo,str_vcm,str_dm,c_exact,clearance,0,use_bbx);
+				if ( !c_exact ) // If approx, use previous computation of peek if better
+          if (peekInfo.min_dist < tmpInfo.min_dist)
+            tmpInfo.min_dist = peekInfo.min_dist;
+				good_peek = CalculateCollisionInfo(mp,peek_cfg,env,stats,peekInfo,str_vcm,str_dm,c_exact,clearance,0,use_bbx);
+				if (!good_tmp || !good_peek) return false;
+				step_size += 1.0;
+			} else { // Else reduce step size or fall out of the loop
+				return false;
+			}
+		}
+	}
+	
+	// Variables for binary search
+  CFG start_cfg, mid_cfg, end_cfg;
+	double max_dist=0.0, gap_dist=0.0, prev_gap, start_d, mid_d, end_d;
+	bool get_info=true, peaked=false;
+
+	// Setup binary search CFGs
+  mid_cfg.equals(held_cfg);
+  mid_d = oldInfo.min_dist;
+  end_cfg.equals(tmp_cfg);
+  end_d = tmpInfo.min_dist;
+  start_cfg.multiply(trans_cfg,-1.0);
+	start_cfg.add(held_cfg,start_cfg);
+	CalculateCollisionInfo(mp,start_cfg,env,stats,tmpInfo,str_vcm,str_dm,c_exact,clearance,0,use_bbx);
+  start_d = tmpInfo.min_dist;
+  gap_dist = dm->Distance(env,start_cfg,end_cfg);
+  prev_gap = gap_dist;
+
+	while (gap_dist > eps) {
+    if ( start_d > end_d ) {
+      end_cfg.equals(mid_cfg);
+      end_d = mid_d;
+		} else {
+      start_cfg.equals(mid_cfg);
+      start_d = mid_d;
+		}
+    mid_cfg.add(start_cfg,end_cfg); 
+    mid_cfg.divide(mid_cfg,2);
+	  CalculateCollisionInfo(mp,mid_cfg,env,stats,tmpInfo,str_vcm,str_dm,c_exact,clearance,0,use_bbx);
+    mid_d = tmpInfo.min_dist;
+		gap_dist = dm->Distance(env,start_cfg,end_cfg);
+    if ( gap_dist > prev_gap ) return false;
+    else                       prev_gap = gap_dist;
+	}
+	cfg.equals(mid_cfg);
+	return true;
+}
+
 //*********************************************************************//
 // Calculate Collision Information                                     //
 //   This is a wrapper function for getting the collision information  //
@@ -357,7 +498,7 @@ bool DetermineMedialAxisCfg(MPProblem* mp, CFG& startcfg, CFG& endcfg, CFG& fina
 //*********************************************************************//
 template <class CFG>
 bool CalculateCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class& stats, CDInfo& cdInfo, 
-														string str_vcm, string str_dm, bool exact, int clearance, int penetration, bool use_bbx) {
+                            string str_vcm, string str_dm, bool exact, int clearance, int penetration, bool use_bbx) {
 	if ( exact )
 		return GetExactCollisionInfo(mp,cfg,env,stats,cdInfo,str_vcm,use_bbx);
 	else
@@ -372,7 +513,7 @@ bool CalculateCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 //*********************************************************************//
 template <class CFG>
 bool GetExactCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class& stats,
-													 CDInfo& cdInfo, string str_vcm, bool use_bbx) {
+                           CDInfo& cdInfo, string str_vcm, bool use_bbx) {
 	// Setup Validity Checker
   std::string call("MedialAxisUtility::getExactCollisionInfo");
   ValidityChecker<CFG>*             vc  = mp->GetValidityChecker();
@@ -424,8 +565,8 @@ bool GetExactCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class
 //*********************************************************************//
 template <class CFG>
 bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Class& stats,
-														CDInfo& cdInfo, string str_vcm, string str_dm, 
-														int clearance, int penetration, bool use_bbx) {
+                            CDInfo& cdInfo, string str_vcm, string str_dm, 
+                            int clearance, int penetration, bool use_bbx) {
 	
 	// Initialization
   string call = "MedialAxisUtility::getApproxCollisionInfo";
@@ -442,10 +583,8 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 	// Check validity to get cdInfo, return false if not valid
   cdInfo.ResetVars();
   cdInfo.ret_all_info = true;
-	if ( !(vc->IsValid(vcm,cfg,env,stats,cdInfo,true,&call)) ) {
-		cdInfo.min_dist = 0;
-		return false;
-	}
+  bool init_inside   = vcm->isInsideObstacle(cfg,env,cdInfo);                  // Initially Inside Obst
+  bool init_validity = vc->IsValid(vcm,cfg,env,stats,cdInfo,true,&call);       // Initial Validity
 
 	// Set Robot point
 	cdInfo.robot_point[0] = cfg.GetSingleParam(0);
@@ -455,12 +594,13 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 	// Setup Major Variables and Constants:
 	CDInfo tmpInfo;                                                               // Temp CDInfo
 	double res = env->GetPositionRes();                                           // Resolution
-  bool init_validity = vc->IsValid(vcm,cfg,env,stats,tmpInfo,true,&call);       // Initial Validity
 	double incr_max = env->GetMultiBody(env->GetRobotIndex())->GetMaxAxisRange(); // Max Step Size
 	int maxNumSteps = 25;                                                         // Max Steps (Refinement)
 	
   // Generate 'num_rays' random directions at a distance 'dist' away from 'cfg'
-	int num_rays = (vcm->isInsideObstacle(cfg,env,tmpInfo))?penetration:clearance;
+	int num_rays;
+  if ( init_validity ) num_rays = (init_inside)?penetration:clearance;
+  else                 num_rays = penetration;    
   double dist = 100*res;
   vector<Cfg*> directions, cand_in, cand_out;
   Cfg* tmp;
@@ -486,7 +626,7 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 														 tmp->OrientationMagnitude() +
 														 tmp->PositionMagnitude()));
 	}
-	
+
 	// Setup to step out along each direction:
 	vector<bool> ignored(directions.size(), false);
 	bool stateChangedFlag = false, curr_validity;
@@ -496,12 +636,16 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 	// Shoot out each ray to determine the candidates
 	while ( !stateChangedFlag && iterations < max_iterations) {
 		iterations++;
+
 		// For Eact Ray
 		for ( size_t i=0; i<directions.size(); ++i ) {
 			// If ignored, continue on to next ray, else increment
 			if ( ignored[i] ) continue;
 			tick[i]->Increment(*incr[i].first);
-			curr_validity = vc->IsValid(vcm,*tick[i],env,stats,tmpInfo,true,&call);				
+			curr_validity = (!vcm->isInsideObstacle(cfg,env,cdInfo) &&
+                       vc->IsValid(vcm,*tick[i],env,stats,tmpInfo,true,&call));
+			if ( use_bbx ) curr_validity = (curr_validity && tick[i]->InBoundingBox(env));
+
 			// Determine tick status
 			if ( !use_bbx ) {
 				if ( (curr_validity != init_validity) &&
@@ -542,10 +686,8 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 			}
 		} // End for
 	} // End while
-
 	// If no candidates found, return false;
 	if (cand_in.size() == 0) {
-		cout << "ERROR: ApproxCSpace:Candidates:size = 0" << endl;
 		return false;
 	}
 
@@ -590,7 +732,7 @@ bool GetApproxCollisionInfo(MPProblem* mp, CFG& cfg, Environment* env, Stat_Clas
 			} else
 				cdInfo.min_dist = 0;
 		}
-	}	 
+	}
 
 	// Clean up allocated memory
 	delete innerCfg;

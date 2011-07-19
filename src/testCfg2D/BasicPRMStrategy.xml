@@ -48,7 +48,10 @@
       </ObstacleBasedSampler>
       <GaussianSampler Label="Gauss" vc_method="cd1" gauss_d="0.01" usebbx="false" dm_method="euclidean"/>
       <BridgeTestSampler Label="Bridge" vc_method="cd1" bridge_d="0.2" dm_method="euclidean"/>
-      <MedialAxisSampler Label="MAPRM" vc_method="cd3" dm_method="euclidean" clearance="10" penetration="5"/>
+      <MedialAxisSampler Label="MAPRM" vc_method="cd2" dm_method="euclidean"
+                         clearance_type="exact" penetration_type="exact"
+                         clearance_rays="10" penetration_rays="10"
+                         use_bbx="true" epsilon="0.1"/>
       <NegateSampler Label="negateFree" Method="UniformRandomFree"/>
     </node_generation_methods>
     
