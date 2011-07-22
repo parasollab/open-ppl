@@ -677,7 +677,7 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
       ids.insert(_rm->m_pRoadmap->GetVID(cfg));
       k++;
     }
-    for (size_t i = ids.size(); (int)i < k; i++) {
+    for (size_t i = ids.size(); (int)i < k && i<(_itr2_last-_itr2_first); i++) {
       int id = 0;
       do {
         id = (int)(OBPRM_lrand()%(_itr2_last - _itr2_first));

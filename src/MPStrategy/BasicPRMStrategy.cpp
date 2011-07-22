@@ -47,8 +47,13 @@ void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
       else if(citr->getName() == "lp_method"){
          m_LPMethod = citr->stringXMLParameter("Method", true, "", "Local Planning Method");
          citr->warnUnrequestedAttributes();
-      } else if(citr->getName()=="dm_method"){
+      } 
+      else if(citr->getName()=="dm_method"){
          dm_label =citr->stringXMLParameter("Method",true,"","Distance Metric");
+         citr->warnUnrequestedAttributes();
+      } 
+      else if(citr->getName()=="vc_method"){
+         vcMethod =citr->stringXMLParameter("Method",true,"","ValidityCheckerMethod");
          citr->warnUnrequestedAttributes();
       }
       else

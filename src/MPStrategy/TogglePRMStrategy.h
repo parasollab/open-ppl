@@ -20,7 +20,7 @@ extern bool done;
 class TogglePRMStrategy : public MPStrategyMethod 
 {
  public:
-   TogglePRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited=false);
+   TogglePRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem);
    virtual ~TogglePRMStrategy();
 
    virtual void ParseXML(XMLNodeReader& in_Node);
@@ -34,7 +34,8 @@ class TogglePRMStrategy : public MPStrategyMethod
  protected:
    //helper functions for operator()
    void Connect(MPRegion<CfgType, WeightType>* region, pair<string, VID> vid, vector<VID>& allVID, vector<VID>& allNodesVID,
-   vector<VID>& allCollisionNodesVID, deque<pair<string, VID> >& queue);
+   //vector<VID>& allCollisionNodesVID, deque<pair<string, VID> >& queue);
+   vector<VID>& allCollisionNodesVID, deque<pair<string, CfgType> >& queue);
    bool EvaluateMap(int in_RegionID);
 
    //data
@@ -46,13 +47,16 @@ class TogglePRMStrategy : public MPStrategyMethod
    vector<string> m_EvaluatorLabels;
    string m_LPMethod;
    string dm_label;
+   string vcMethod;
    int m_CurrentIteration;
+   bool priority;
 
  private:
    template <typename OutputIterator>
       void GenerateNodes(MPRegion<CfgType, WeightType>* region, OutputIterator allOut,
       OutputIterator thisIterationOut, OutputIterator allCollisionOut, OutputIterator
-      thisIterationCollisionOut, deque<pair<string, VID> >& queue);
+      //thisIterationCollisionOut, deque<pair<string, VID> >& queue);
+      thisIterationCollisionOut, deque<pair<string, CfgType> >& queue);
 
    Clock_Class MapGenClock;
 };
@@ -64,7 +68,7 @@ template <typename OutputIterator>
 void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region, 
                                   OutputIterator allOut, OutputIterator thisIterationOut,
                                   OutputIterator allCollisionOut, OutputIterator thisIterationCollisionOut,
-                                  deque<pair<string, VID> >& queue){
+                                  deque<pair<string, CfgType> >& queue){
    Clock_Class NodeGenClock;
    CDInfo cdInfo;
    Stat_Class * pStatClass = region->GetStatClass();
@@ -77,7 +81,8 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(git->first);
       vector<CfgType> outNodes, outCollisionNodes;
       vector<CfgType> inNodes(git->second);
-        
+       
+       string Callee = "TogglePRM::GenerateNodes";
       //generate nodes for this node generator method
       Clock_Class NodeGenSubClock;
       stringstream generatorClockName; 
@@ -87,7 +92,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       cout << "\n\t";
 
       do{
-         pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),git->second*2+20,
+         pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),git->second,
          back_inserter(outNodes), back_inserter(outCollisionNodes));
       }while(outNodes.size()<=0&&m_CurrentIteration==1);
 
@@ -95,56 +100,43 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       cout << "\n\t";
       NodeGenSubClock.StopPrintClock();
         
-      //add valid nodes to roadmap
+      //add nodes to queue
       typedef vector<CfgType>::iterator CIT;
       for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
-         //if(region->GetRoadmap()->m_pRoadmap->get_num_vertices()+
-            //region->GetBlockRoadmap()->m_pRoadmap->get_num_vertices()>=1000){done=true;return;}
-         //out nodes mean valid then add them to the real roadmap
-         if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
-            if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
-               //if(region->GetRoadmap()->m_pRoadmap->get_num_vertices() >= 1000) return;
-              VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
-              //store value and increment iterator
-              *thisIterationOut++ = vid;
-              *allOut++ = vid;
-              queue.push_front(make_pair("valid", vid));
-              //queue.push_back(make_pair("valid", vid));
-            }
-         }
-         //else invalid add to block map
-         else{
-            if(!region->GetBlockRoadmap()->m_pRoadmap->IsVertex(*cit)) {
-              VID vid = region->GetBlockRoadmap()->m_pRoadmap->AddVertex(*cit);
-              //store value and increment iterator
-              *thisIterationOut++ = vid;
-              *allOut++ = vid;
-              queue.push_back(make_pair("invalid", vid));
-            }
-         }
+        if(!(*cit).IsLabel("VALID")){
+          !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), 
+                *cit, GetMPProblem()->GetEnvironment(), *(region->GetStatClass()), 
+                cdInfo, true, &Callee));
+        }
+        //out nodes mean valid then add them to the real roadmap
+        if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
+          if(priority)
+            queue.push_front(make_pair("valid", *cit));
+          else
+            queue.push_back(make_pair("valid", *cit));
+        }
+        //else invalid add to block map
+        else{
+          queue.push_back(make_pair("invalid", *cit));
+        }
       }
       for(CIT cit=outCollisionNodes.begin(); cit!=outCollisionNodes.end(); ++cit){
-         //outCollisionNodes mean INVALID then add to block map
-         if((*cit).IsLabel("VALID") && !((*cit).GetLabel("VALID"))) {
-            if(!region->GetBlockRoadmap()->m_pRoadmap->IsVertex(*cit)) {
-              VID vid = region->GetBlockRoadmap()->m_pRoadmap->AddVertex(*cit);
-              //store value and increment iterator
-              *thisIterationCollisionOut++ = vid;
-              *allCollisionOut++ = vid;
-              queue.push_back(make_pair("invalid", vid));
-            }
-         }
-         //else valid add to real map
-         else{
-            if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
-              VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
-              //store value and increment iterator
-              *thisIterationCollisionOut++ = vid;
-              *allCollisionOut++ = vid;
-              queue.push_front(make_pair("valid", vid));
-              //queue.push_back(make_pair("valid", vid));
-            }
-         }  
+        if(!(*cit).IsLabel("VALID")){
+          !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), 
+                *cit, GetMPProblem()->GetEnvironment(), *(region->GetStatClass()), 
+                cdInfo, true, &Callee));
+        }
+        //outCollisionNodes mean INVALID then add to block map
+        if((*cit).IsLabel("VALID") && !((*cit).GetLabel("VALID"))) {
+          queue.push_back(make_pair("invalid", *cit));
+        }
+        //else valid add to real map
+        else{
+          if(priority)
+            queue.push_front(make_pair("valid", *cit));
+          else
+            queue.push_back(make_pair("valid", *cit));
+        }  
       }
    }
    NodeGenClock.StopPrintClock();
