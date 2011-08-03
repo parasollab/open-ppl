@@ -1,8 +1,8 @@
-#include "MPStrategy/BasicPRMStrategy.h"
-#include "MPProblem/MPRegion.h"
-#include "MPStrategy/MPStrategy.h"
-
-BasicPRMStrategy::
+#include "BasicPRMStrategy.h"
+#include "MPRegion.h"
+#include "MPStrategy.h"
+#include "MapEvaluator.h"
+#include "boost/lambda/lambda.hpp"
 
 BasicPRMStrategy::BasicPRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
    MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0), useProbability(false){
@@ -13,20 +13,19 @@ BasicPRMStrategy::BasicPRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProble
 BasicPRMStrategy::~BasicPRMStrategy(){
 }
 
-#include "boost/lambda/lambda.hpp"
-
 void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr){
       if(citr->getName() == "node_generation_method") {
          string generationMethod = citr->stringXMLParameter("Method", true, "", "Node Connection Method");
          int numPerIteration = citr->numberXMLParameter("Number", true, 1, 0, MAX_INT, "Number of samples");
+         int attemptsPerIteration = citr->numberXMLParameter("Attempts", false, 1, 0, MAX_INT, "Number of attempts per sample");
          double probPerIteration = 0;
          if(numPerIteration == 0){
           probPerIteration = citr->numberXMLParameter("Probability", true, 0.0, 0.0, 1.0, "Number of samples");
           useProbability = true;
          }
-         m_NodeGenerationLabels.push_back(pair<string, int>(generationMethod, numPerIteration));
-         m_ProbGenerationLabels.push_back(pair<string, double>(generationMethod, probPerIteration));
+         m_NodeGenerationLabels[generationMethod] = make_pair(numPerIteration, attemptsPerIteration);
+         m_ProbGenerationLabels[generationMethod] = make_pair(probPerIteration, attemptsPerIteration);
          citr->warnUnrequestedAttributes();
       } 
       else if(citr->getName() == "node_connection_method"){
@@ -44,14 +43,6 @@ void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
          m_EvaluatorLabels.push_back(evalMethod);
          citr->warnUnrequestedAttributes();
       }
-      else if(citr->getName() == "lp_method"){
-         m_LPMethod = citr->stringXMLParameter("Method", true, "", "Local Planning Method");
-         citr->warnUnrequestedAttributes();
-      } 
-      else if(citr->getName()=="dm_method"){
-         dm_label =citr->stringXMLParameter("Method",true,"","Distance Metric");
-         citr->warnUnrequestedAttributes();
-      } 
       else if(citr->getName()=="vc_method"){
          vcMethod =citr->stringXMLParameter("Method",true,"","ValidityCheckerMethod");
          citr->warnUnrequestedAttributes();
@@ -64,17 +55,17 @@ void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
    double total=0.0;
    using boost::lambda::_1;
    cout << "\nBasicPRMStrategy::ParseXML:\n";
-   cout << "\tnode_generation_methods: "; 
+   cout << "\tnode_generation_methods: \n"; 
    if(!useProbability){
-     for(vector<pair<string, int> >::iterator I = m_NodeGenerationLabels.begin(); I!=m_NodeGenerationLabels.end(); I++){
-       cout<<I->first<<"\tNumber:"<<I->second<<" ";
+     for(map<string, pair<int, int> >::iterator I = m_NodeGenerationLabels.begin(); I!=m_NodeGenerationLabels.end(); I++){
+       cout<<"\t\t"<<I->first<<"\tNumber:"<<I->second.first<<"\tAttempts:"<<I->second.second<<endl;
      }
      total=1.0;
    }
    else{
-     for(vector<pair<string, double> >::iterator I = m_ProbGenerationLabels.begin(); I!=m_ProbGenerationLabels.end(); I++){
-       cout<<I->first<<"\tProbability:"<<I->second<<" ";
-       total+=I->second;
+     for(map<string, pair<double, int> >::iterator I = m_ProbGenerationLabels.begin(); I!=m_ProbGenerationLabels.end(); I++){
+       cout<<"\t\t"<<I->first<<"\tProbability:"<<I->second.first<<"\tAttempts:"<<I->second.second<<endl;
+       total+=I->second.first;
      }
    }
    if(total<0.999 || total>1.001){cout<<"Probabilities Do Not Add To 1, total is "<<total<<endl; exit(1);}
@@ -82,7 +73,6 @@ void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
    cout << "\tnode_connection_methods: "; for_each(m_NodeConnectionLabels.begin(), m_NodeConnectionLabels.end(), cout << _1 << " "); cout << endl;
    cout << "\tcomponent_connection_methods: "; for_each(m_ComponentConnectionLabels.begin(), m_ComponentConnectionLabels.end(), cout << _1 << " "); cout << endl;
    cout << "\tevaluator_methods: "; for_each(m_EvaluatorLabels.begin(), m_EvaluatorLabels.end(), cout << _1 << " "); cout << endl;
-   cout << "\tlp_method: " << m_LPMethod;
    cout << endl;
 }
 
@@ -91,16 +81,16 @@ void BasicPRMStrategy::PrintOptions(ostream& out_os) {
    out_os<<"\nNodeGenerators\n";
    typedef vector<string>::iterator SIT;
    if(!useProbability){
-     typedef vector<pair<string,int> >::iterator PIT;
+     typedef map<string, pair<int,int> >::iterator PIT;
      for(PIT pit=m_NodeGenerationLabels.begin(); pit!=m_NodeGenerationLabels.end(); pit++){
-       out_os<<"\t"<<pit->first<<"\tNumber of Samples Per Iteration:"<<pit->second<<"\tOptions:\n";
+       out_os<<"\t"<<pit->first<<"\tNumber:"<<pit->second.first<<"\tAttempts:"<<pit->second.second<<"\tOptions:\n";
        GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(pit->first)->PrintOptions(out_os);
      }
    }
    else{
-     typedef vector<pair<string,double> >::iterator PIT;
+     typedef map<string, pair<double,int> >::iterator PIT;
      for(PIT pit=m_ProbGenerationLabels.begin(); pit!=m_ProbGenerationLabels.end(); pit++){
-       out_os<<"\t"<<pit->first<<"\tProbability of Choosing Sampler:"<<pit->second<<"\tOptions:\n";
+       out_os<<"\t"<<pit->first<<"\tProbability:"<<pit->second.first<<"\tAttempts:"<<pit->second.second<<"\tOptions:\n";
        GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(pit->first)->PrintOptions(out_os);
      }
    }
@@ -109,9 +99,6 @@ void BasicPRMStrategy::PrintOptions(ostream& out_os) {
       out_os<<"\t"<<*sit<<"\tOptions:\n";
       GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*sit)->PrintOptions(out_os);
    }
-   out_os<<"\nLocalPlanner\n";
-   out_os<<"\t"<<m_LPMethod<<"\tOptions:\n";
-   GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_LPMethod)->PrintOptions(out_os);
    out_os<<"\nComponentConnectors\n";
    for(SIT sit=m_ComponentConnectionLabels.begin(); sit!=m_ComponentConnectionLabels.end(); sit++){
       out_os<<"\t"<<*sit<<"\tOptions:\n";
@@ -138,7 +125,6 @@ void BasicPRMStrategy::Run(int in_RegionID){
 
    //setup region variables
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-   //Stat_Class* regionStats = region->GetStatClass();
  
    vector<VID> allNodesVID;
    region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
@@ -188,7 +174,6 @@ void BasicPRMStrategy::Finalize(int in_RegionID){
    cout << "NodeGen+Connection Stats" << endl;
    regionStats->PrintAllStats(region->GetRoadmap());
    MapGenClock.PrintClock();
-   //regionStats->PrintFeatures();
    cout.rdbuf(sbuf);  // restore original stream buffer
    osStat.close();
 
@@ -308,19 +293,95 @@ bool BasicPRMStrategy::EvaluateMap(int in_RegionID)
 
 string BasicPRMStrategy::PickNextSampler(){
    double rand = OBPRM_drand();
-   double total = 0;
-   int index=-1;
-   typedef vector<pair<string, double> >::iterator GIT;
+   double total = 1.0;
+   string index = "";
+   typedef map<string, pair<double,int> >::iterator GIT;
    for(GIT git = m_ProbGenerationLabels.begin(); git!=m_ProbGenerationLabels.end(); git++){
-      if(rand<=total){
+      if(rand>=total){
          break;
       }
       else{
-         total+=git->second;
-         index++;
+        index = git->first;
+         total-=git->second.first;
       }
    }
-   cout<<"Choosing "<<m_ProbGenerationLabels[index].first<<" as the next node generator"<<endl;
-   return m_ProbGenerationLabels[index].first;
+   cout<<"Choosing "<<index<<" as the next node generator"<<endl;
+   return index;
 }
 
+template <typename OutputIterator>
+void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region, 
+    OutputIterator allOut, OutputIterator thisIterationOut){
+  Clock_Class NodeGenClock;
+  CDInfo cdInfo;
+  Stat_Class * pStatClass = region->GetStatClass();
+  stringstream clockName; 
+  clockName << "Iteration " << m_CurrentIteration << ", Node Generation"; 
+  NodeGenClock.StartClock(clockName.str().c_str());
+  string Callee("BasicPRMStrategy::GenerateNodes");
+
+  typedef map<string, pair<int, int> >::iterator GIT;
+  vector<CfgType> outNodes;
+  if(!useProbability){
+    for(GIT git = m_NodeGenerationLabels.begin(); git != m_NodeGenerationLabels.end(); ++git){
+      Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(git->first);
+      pNodeGenerator->print(cout);
+      vector<CfgType> inNodes(git->second.first);
+
+      //generate nodes for this node generator method
+      Clock_Class NodeGenSubClock;
+      stringstream generatorClockName; 
+      generatorClockName << "Iteration " << m_CurrentIteration << ", " << git->first;
+      NodeGenSubClock.StartClock(generatorClockName.str().c_str());
+
+      cout << "\n\t";
+
+      do{
+        pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,
+            inNodes.begin(),inNodes.end(),git->second.second, back_inserter(outNodes));
+      }while(outNodes.size()<=0&&m_CurrentIteration==1);
+
+      cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
+      cout << "\n\t";
+      NodeGenSubClock.StopPrintClock();
+
+    }
+  }
+  else{
+    string NextNodeGen = PickNextSampler();
+    Sampler<CfgType>::SamplerPointer pNodeGenerator; 
+    pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(NextNodeGen);
+    pNodeGenerator->print(cout);
+    vector<CfgType> inNodes(1);
+
+    //generate nodes for this node generator method
+    Clock_Class NodeGenSubClock;
+    stringstream generatorClockName; 
+    generatorClockName << "Iteration " << m_CurrentIteration << ", " << NextNodeGen;
+    NodeGenSubClock.StartClock(generatorClockName.str().c_str());
+
+    cout << "\n\t";
+    pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),m_ProbGenerationLabels[NextNodeGen].second, back_inserter(outNodes));
+
+    cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
+
+    cout << "\n\t";
+    NodeGenSubClock.StopPrintClock();
+  }
+  //add valid nodes to roadmap
+  typedef vector<CfgType>::iterator CIT;
+  for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
+    if(!(*cit).IsLabel("VALID")){
+      !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), *cit, GetMPProblem()->GetEnvironment(), *(region->GetStatClass()), cdInfo, true, &Callee));
+    }
+    if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
+      if(!region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+        VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
+        //store value and increment iterator
+        *thisIterationOut++ = vid;
+        *allOut++ = vid;
+      }
+    }
+  }
+  NodeGenClock.StopPrintClock();
+}
