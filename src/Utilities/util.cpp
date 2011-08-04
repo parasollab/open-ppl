@@ -401,11 +401,13 @@ extern "C" {
 }//End of extern "C"
 #endif //endif _WIn32
 
-CfgType GetCentroid(RoadmapGraph<CfgType, WeightType>* graph, vector<RoadmapGraph<CfgType,WeightType>::VID>& cc){
-  CfgType center;
+template<class CFG, class WEIGHT>
+CFG
+GetCentroid(RoadmapGraph<CFG, WEIGHT>* graph, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc){
+  CFG center;
   for(size_t i = 0; i < cc.size(); i++) {
 
-    CfgType cfg = (*(graph->find_vertex(cc[i]))).property();
+    CFG cfg = (*(graph->find_vertex(cc[i]))).property();
     center.add(center, cfg);
   }
   center.divide(center, cc.size());

@@ -26,7 +26,6 @@ using namespace std;
 //Include OBPRM headers
 #include "XmlWrapper.h"
 #include "Basic.h"
-#include "CfgTypes.h"
 #include "RoadmapGraph.h"
 /////////////////////////////////////////////////////////////////////////////////////////
 class Cfg;
@@ -473,7 +472,8 @@ private:
 };
 
 */
-
-CfgType GetCentroid(RoadmapGraph<CfgType, WeightType>* graph, vector<RoadmapGraph<CfgType, WeightType>::VID>& cc);
+template<class CFG, class WEIGHT>
+CFG
+GetCentroid(RoadmapGraph<CFG, WEIGHT>* graph, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc);
 
 #endif
