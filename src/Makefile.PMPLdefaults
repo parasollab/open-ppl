@@ -219,6 +219,7 @@ PMPL_OBJS = \
 	Utilities/Clock_Elapsed.o \
 	Utilities/Stat_Class.o \
 	Utilities/XmlWrapper.o \
+	Utilities/VizmoDebugOutput.o \
 	DistanceMetric/DistanceMetricMethod.o \
 	DistanceMetric/DistanceMetrics.o \
 	ValidityChecker/CollisionDetection.o \

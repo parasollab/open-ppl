@@ -27,6 +27,7 @@ using namespace std;
 #include "XmlWrapper.h"
 #include "Basic.h"
 #include "RoadmapGraph.h"
+#include "VizmoDebugOutput.h"
 /////////////////////////////////////////////////////////////////////////////////////////
 class Cfg;
 class Environment;

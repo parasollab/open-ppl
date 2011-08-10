@@ -65,9 +65,9 @@ int main(int argc, char** argv)
   }
 
   XMLNodeReader mp_node(std::string(argv[2]),doc, string("motion_planning"));
-
   MPProblem* problem;
   MPStrategy* strategy;
+  string vdFilename = "";
   //Iterate over child nodes
   
   for(XMLNodeReader::childiterator citr = mp_node.children_begin(); citr != mp_node.children_end(); ++citr) {
@@ -85,11 +85,16 @@ int main(int argc, char** argv)
 	
 #endif
         problem->SetMPStrategy(strategy);
+    } else if(citr->getName() == "VizmoDebug"){
+      vdFilename = citr->stringXMLParameter("filename", true, "vizmodebug", "Vizmo Debug Output File");
+      vdFilename += ".vd";
     }
     else {
       citr->warnUnknownNode();
     } 
   }
+      
+  VDInit(vdFilename);
   
   //Output whats about to go on
   if(problem != NULL) {
@@ -104,6 +109,9 @@ int main(int argc, char** argv)
   } else {
     cerr << "I don't have a MPStrategy" << endl << flush;
   }
+
+  VDClose();
+
    #ifndef _PARALLEL
     return 0;
     #endif

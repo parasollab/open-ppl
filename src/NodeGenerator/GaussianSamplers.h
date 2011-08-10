@@ -79,6 +79,7 @@ class GaussianSampler : public SamplerMethod<CFG>
           vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, env,
             Stat, cdInfo, true, &callee));
     }
+    VDAddTempCfg(cfg1, cfg1_free);
     do {
       Stat.IncNodes_Attempted();
       attempts++;
@@ -89,6 +90,7 @@ class GaussianSampler : public SamplerMethod<CFG>
           CFG incr;
           incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), env, dm);
           cfg2.add(cfg1, incr);
+          VDAddTempRay(incr);
         }while(!cfg2.InBoundingBox(env));
         cfg2_free = vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, 
             Stat, cdInfo, true, &callee);
@@ -98,22 +100,27 @@ class GaussianSampler : public SamplerMethod<CFG>
         incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), 
             env, dm);
         cfg2.add(cfg1, incr);
+        VDAddTempRay(incr);
         cfg2_free = (cfg2.InBoundingBox(env) && 
             vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, env, 
               Stat, cdInfo, true, &callee));
       }
-
+      VDAddTempCfg(cfg2, cfg2_free);
       if(cfg1_free != cfg2_free) {
         Stat.IncNodes_Generated();
         generated = true;
+        ostringstream oss;
         if(cfg1_free){
+          oss<<"Gaussian node generated: "<<cfg1;
           cfg_out.push_back(cfg1);
           cfg_out_collision.push_back(cfg2);
         }
         else{
+          oss<<"Gaussian node generated: "<<cfg2;
           cfg_out.push_back(cfg2);
           cfg_out_collision.push_back(cfg1);
         }
+        VDComment(oss.str());
       }
     } while (!generated && (attempts < max_attempts));
     return generated;

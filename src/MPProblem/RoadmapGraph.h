@@ -35,6 +35,7 @@
 
 #include "BasicDefns.h"
 #include "Weight.h"
+#include "VizmoDebugOutput.h"
 
 #include "RoadmapVCS.h"
 
@@ -467,6 +468,7 @@ AddVertex(VERTEX& _v1) {
     CVI v1;
     if ( !IsVertex(_v1,&v1) ) {
         VID vertex_id = GRAPH::add_vertex(_v1);
+        VDAddNode(_v1);
         ChangeEvent event(ChangeEvent::ADD_VERTEX, _v1, vertex_id);
         //cout << "Adding through single" << endl;
         roadmapVCS.addEvent(event);
@@ -496,6 +498,7 @@ AddVertex(vector<VERTEX>& _v) {
     for (size_t i = 0; i < _v.size(); i++){
         if (!IsVertex(_v[i])){
           VID v_id = GRAPH::add_vertex(_v[i]);
+          VDAddNode(_v[i]);
           ChangeEvent event(ChangeEvent::ADD_VERTEX, _v[i], v_id);
           //cout << "Adding through vector" << endl;
           roadmapVCS.addEvent(event);
@@ -518,6 +521,7 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddEdges( vector<EdgeInfo<VERTEX, WEIGHT> >& _e) {
     for (unsigned int i=0; i < _e.size(); i++){
         GRAPH::add_edge(_e[i].v1, _e[i].v2, _e[i].edgewt);
+        VDAddEdge(find_vertex(_e[i].v1)->property(), find_vertex(_e[i].v2)->property());
     }
     return 0;
 }
@@ -528,6 +532,7 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VID _v1, VID _v2, WEIGHT _w) {
   //return GRAPH::add_edge(_v1,_v2,_w);
   GRAPH::add_edge(_v1,_v2,_w);
+  VDAddEdge(find_vertex(_v1)->property(), find_vertex(_v2)->property());
   return 0;  //fix_lantao  the return type and the following AddEdge funcs.
 }
 
@@ -537,6 +542,7 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _w) {
   //return GRAPH::add_edge(_v1,_v2,_w);
   GRAPH::add_edge(GetVID(_v1),GetVID(_v2),_w);
+  VDAddEdge(_v1, _v2);
   return 0;
 }
 
@@ -547,6 +553,7 @@ AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w) {
   GRAPH::add_edge(_v1,_v2,_w.first);
   //return GRAPH::add_edge(_v2,_v1,_w.second);
   GRAPH::add_edge(_v2,_v1,_w.second);
+  VDAddEdge(find_vertex(_v1)->property(), find_vertex(_v2)->property());
   return 0;
 }
 
@@ -557,6 +564,7 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT>& _w) {
   GRAPH::add_edge(GetVID(_v1),GetVID(_v2),_w.first);
   //return GRAPH::add_edge(_v2,_v1,_w.second);
   GRAPH::add_edge(GetVID(_v2),GetVID(_v1),_w.second);
+  VDAddEdge(_v1, _v2);
   return 0;
 }
 
@@ -579,6 +587,7 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT*,WEIGHT*>& _w) {
   tmp.first = *_w.first;
   tmp.second = *_w.second;
   AddEdge(_v1,_v2,tmp);
+  VDAddEdge(_v1, _v2);
   return 0;
 }
 

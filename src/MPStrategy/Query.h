@@ -319,7 +319,7 @@ Query<CFG, WEIGHT>::
 PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
 	     ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections, 
        LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm, vector<CFG>* _path, bool intermediateFiles) {
-
+  VDComment("Begin Query");
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
 
   //  vector<VID> cc; 
@@ -424,7 +424,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       break;    
     }
   }
-  
+  VDComment("End Query");
   return connected;
 };
 
