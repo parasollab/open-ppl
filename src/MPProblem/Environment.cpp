@@ -20,9 +20,9 @@
 //           so it would not try to generate nodes on the surfaces of the internal
 //           obstacles, which might save a lot of time for obprm;
 #define ENV_VER_20020327                   20020327
-
 #define ENV_VER_20001022                   20001022
 #define ENV_VER_LEGACY                     0
+#define ENV_RES_DEFAULT                    0.05
 //@}
 
 
@@ -35,8 +35,10 @@ Environment(int dofs, int pos_dofs) :
   pathVersion(PATHVER_20001125),
   usable_externalbody_count(0),
   robotIndex(0),
-  positionRes(POSITION_RES_FACTOR),
-  orientationRes(ORIENTATION_RES),
+  positionRes(ENV_RES_DEFAULT),
+  orientationRes(ENV_RES_DEFAULT),
+  positionResFactor(ENV_RES_DEFAULT),
+  orientationResFactor(ENV_RES_DEFAULT),
   minmax_BodyAxisRange(0),
   input_filename("")
 {
@@ -100,6 +102,8 @@ Environment(const Environment &from_env) :
   robotIndex(from_env.robotIndex),
   positionRes(from_env.positionRes),
   orientationRes(from_env.orientationRes),
+  positionResFactor(from_env.positionResFactor),
+  orientationResFactor(from_env.orientationResFactor),
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
   input_filename(from_env.input_filename)
 {
@@ -128,6 +132,8 @@ Environment(MPProblem* in_pProblem) :
   robotIndex(in_pProblem->GetEnvironment()->robotIndex),
   positionRes(in_pProblem->GetEnvironment()->positionRes),
   orientationRes(in_pProblem->GetEnvironment()->orientationRes),
+  positionResFactor(in_pProblem->GetEnvironment()->positionResFactor),
+  orientationResFactor(in_pProblem->GetEnvironment()->orientationResFactor),
   minmax_BodyAxisRange(in_pProblem->GetEnvironment()->minmax_BodyAxisRange),
   input_filename(in_pProblem->GetEnvironment()->input_filename)
 {
@@ -157,6 +163,8 @@ Environment(const Environment &from_env, const BoundingBox &i_boundaries) :
   robotIndex(from_env.robotIndex),
   positionRes(from_env.positionRes),
   orientationRes(from_env.orientationRes),
+  positionResFactor(from_env.positionResFactor),
+  orientationResFactor(from_env.orientationResFactor),
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
   input_filename(from_env.input_filename)
 {
@@ -179,73 +187,79 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   pathVersion(PATHVER_20001125),
   usable_externalbody_count(0),
   robotIndex(0),
-  positionRes(POSITION_RES_FACTOR),
-  orientationRes(ORIENTATION_RES),
+  positionRes(ENV_RES_DEFAULT),
+  orientationRes(ENV_RES_DEFAULT),
+  positionResFactor(ENV_RES_DEFAULT),
+  orientationResFactor(ENV_RES_DEFAULT),
   minmax_BodyAxisRange(0),
   input_filename("")
 {
-    LOG_DEBUG_MSG("Environment::Environment()");
+  LOG_DEBUG_MSG("Environment::Environment()");
+  in_Node.verifyName(string("environment"));
 
-    in_Node.verifyName(string("environment"));
+  double pos_res = -1.0, ori_res=-1.0;
 
-    ///\todo fix hack.  This hack gets env_filename from environment xml tag
-    //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
-    //const char* env_filename = GetMPProblem()->GetEnvFileName().c_str();
-    //Read(env_filename, PMPL_EXIT, "", RAPID, 1);
-    ///\todo fix hack. This hack assigns RAPID as the cd library and the main directory as "".
-    Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), PMPL_EXIT, "");
-    //FindBoundingBox();
+  ///\todo fix hack.  This hack gets env_filename from environment xml tag
+  //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
+  //const char* env_filename = GetMPProblem()->GetEnvFileName().c_str();
+  //Read(env_filename, PMPL_EXIT, "", RAPID, 1);
+  ///\todo fix hack. This hack assigns RAPID as the cd library and the main directory as "".
+  Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), PMPL_EXIT, "");
+  //FindBoundingBox();
 
-    //compute RESOLUTION
+  XMLNodeReader::childiterator citr;
+  for ( citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr ) {
+    if ( citr->getName() == "robot") {
+      int num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
+      in_pProblem->SetNumOfJoints(num_joints);
 
-    multibody[robotIndex]->FindBoundingBox();
-    double robot_span = multibody[robotIndex]->GetMaxAxisRange();
-    double bodies_min_span = robot_span;
-    
-    for(size_t i = 0 ; i < multibody.size() ; i++){
-      if((int)i != robotIndex){
-        multibody[i]->FindBoundingBox();
-        bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
-      }
-    }
-  
-    positionRes = bodies_min_span * POSITION_RES_FACTOR;
-    minmax_BodyAxisRange = bodies_min_span;
- 
-    // END compute RESOLUTION
- 
-      XMLNodeReader::childiterator citr;
-      for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-        if(citr->getName() == "robot") {
-          int num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
-          in_pProblem->SetNumOfJoints(num_joints);
-         
-          XMLNodeReader::childiterator citr2;
-          for(citr2 = citr->children_begin(); citr2!= citr->children_end(); ++citr2) {
-            if (citr2->getName() == "boundary") {
-              boundaries = shared_ptr<BoundingBox>(new BoundingBox(*citr2,in_pProblem)); 
-              //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
-            } else {
-              citr2->warnUnknownNode();
-            }
-          }
-  
-        } else if(citr->getName() == "resolution") {
-          double pos_res = citr->numberXMLParameter("pos_res", false, -1.0, -1.0, double(MAX_INT), "position resolution");
-          if(pos_res != -1.0)
-            positionRes = pos_res;
-          double ori_res = citr->numberXMLParameter("ori_res", false, -1.0, -1.0, double(MAX_INT), "orientation resolution");
-          if(ori_res != -1.0)
-            orientationRes = pos_res;
+      XMLNodeReader::childiterator citr2;
+      for ( citr2 = citr->children_begin(); citr2!= citr->children_end(); ++citr2 ) {
+        if ( citr2->getName() == "boundary" ) {
+          boundaries = shared_ptr<BoundingBox>(new BoundingBox(*citr2,in_pProblem)); 
+          //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
         } else {
-          citr->warnUnknownNode();
+          citr2->warnUnknownNode();
         }
       }
+    } else if ( citr->getName() == "resolution" ) {
+      pos_res = citr->numberXMLParameter("pos_res", false, -1.0, -1.0, MAX_DBL, "position resolution");
+      ori_res = citr->numberXMLParameter("ori_res", false, -1.0, -1.0, MAX_DBL, "orientation resolution");
+      positionResFactor    = citr->numberXMLParameter("pos_res_factor", false, 0.05, 0.0, MAX_DBL, "position resolution factor");
+      orientationResFactor = citr->numberXMLParameter("ori_res_factor", false, 0.05, 0.0, MAX_DBL, "orientation resolution factor");
+    } else {
+      citr->warnUnknownNode();
+    }
+  }
  
-      cout << "Position Resolution = " << positionRes << endl;
+  // Compute RESOLUTION
+  // NOTE: orientationResFactor is valid input, but not used.
+
+  multibody[robotIndex]->FindBoundingBox();
+  double robot_span = multibody[robotIndex]->GetMaxAxisRange();
+  double bodies_min_span = robot_span;
     
-    SelectUsableMultibodies();
-    LOG_DEBUG_MSG("~Environment::Environment()");
+  for(size_t i = 0 ; i < multibody.size() ; i++){
+    if((int)i != robotIndex){
+      multibody[i]->FindBoundingBox();
+      bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+    }
+  }
+
+  // Set to XML input resolution if specified, else compute resolution factor
+  if ( pos_res != -1.0 ) positionRes = pos_res;
+  else                   positionRes = bodies_min_span * positionResFactor;
+
+  if ( ori_res != -1.0 ) orientationRes = ori_res;
+
+  minmax_BodyAxisRange = bodies_min_span;
+ 
+  // END Compute RESOLUTION
+ 
+  cout << "Position Resolution = " << positionRes << endl;
+    
+  SelectUsableMultibodies();
+  LOG_DEBUG_MSG("~Environment::Environment()");
 }
 
 
@@ -259,6 +273,8 @@ Environment(const Environment& from_env, string filename) :
   robotIndex(0),
   positionRes(from_env.positionRes),
   orientationRes(from_env.orientationRes),
+  positionResFactor(from_env.positionResFactor),
+  orientationResFactor(from_env.orientationResFactor),
   minmax_BodyAxisRange(0),
   input_filename(filename)
 {
@@ -298,6 +314,7 @@ void Environment::
 PrintOptions(ostream& out_os) {
   out_os << "  Environment" << endl;
   out_os << "    positionRes = " << positionRes << "; orientationRes = " << orientationRes << endl;
+  out_os << "    positionResFactor = " << positionResFactor << "; orientationResFactor = " << orientationResFactor << endl;
   out_os << "    bbox = ";
   boundaries->Print(out_os);
   out_os << endl;
@@ -465,7 +482,7 @@ FindBoundingBox(){
   boundaries->TranslationalScale(2); ///\todo fix this default.
   //defaults bbox_scale to 2 when no bbox is defined.
 
-  positionRes = bodies_min_span * POSITION_RES_FACTOR;
+  positionRes = bodies_min_span * positionResFactor;
   minmax_BodyAxisRange = bodies_min_span;
 }
 

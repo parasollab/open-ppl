@@ -76,9 +76,6 @@ enum cd_predefined {
 #define TWOPI           (PI*2.0)
 
 /////////////////////////////////////////////////////////////////////////
-#define ORIENTATION_RES             0.05    ///<Resolution for Orientation
-#define POSITION_RES_FACTOR         0.05    ///<Resolution for Position
-
 #define NULL_WT_INFO -999               ///< to pad weight fields for graph conversions
 
 #define INVALID_LP -999                 ///< invalid local planner id

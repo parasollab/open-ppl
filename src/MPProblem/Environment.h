@@ -275,6 +275,8 @@ public:
 
     double positionRes;
     double orientationRes;
+    double positionResFactor;
+    double orientationResFactor;
     double minmax_BodyAxisRange;    
 
     string input_filename;
