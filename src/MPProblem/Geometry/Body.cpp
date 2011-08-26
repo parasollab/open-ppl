@@ -532,6 +532,37 @@ bool Body::isAdjacent(shared_ptr<Body> otherBody)
 }
 
 
+bool Body::isWithinIHelper(Body* body1, Body* body2, int i, Body* prevBody){
+  if(*body1 == *body2){
+    return true;
+  }
+  if(i==0){
+    return false;
+  }
+  for(vector<Connection>::iterator C = body1->forwardConnection.begin(); C != body1->forwardConnection.end(); ++C)
+    //if(*(C->GetNextBody().get())==*prevBody)
+      if(isWithinIHelper(C->GetNextBody().get(), body2, i-1, body1) )
+        return true;
+  for(vector<Connection>::iterator C =body1->backwardConnection.begin(); C != body1->backwardConnection.end(); ++C)
+    //if(*(C->GetPreviousBody().get())==*prevBody)
+      if(isWithinIHelper(C->GetPreviousBody().get(),body2,i-1, body1) )
+        return true;
+  
+  return false;
+}
+
+bool Body::isWithinI(shared_ptr<Body> otherBody, int i)
+{
+  
+  if(*this == *(otherBody.get()))
+    return true;
+  if(i==0){
+    return false;
+  }
+  return isWithinIHelper(this,otherBody.get(),i,NULL);
+}
+
+
 /** WorldTransformation
  If worldTransformation has been calculated(updated), this method should be used
  to avoid redundant calculation.

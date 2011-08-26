@@ -200,7 +200,8 @@ public:
       *Facilitate robot self collision checking.
       */
     bool isAdjacent(shared_ptr<Body> otherBody);
-
+    bool isWithinI(shared_ptr<Body> otherBody,int i);
+    bool isWithinIHelper(Body* body1, Body* body2, int i,Body* prevBody);
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////

@@ -36,6 +36,7 @@ private:
   
   bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
 		     shared_ptr<MultiBody> lineRobot, bool enablePenetration, std::string *pCallName);
+  int ignore_i_adjacent_links;
 
 };
 
@@ -51,6 +52,11 @@ CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   m_selected.clear(); 
   CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection(); 
   std::string cd_label = in_Node.stringXMLParameter("method",true,"","method");
+  ignore_i_adjacent_links  = in_Node.numberXMLParameter("ignore_i_adjacent_links", false, int(1),
+						int(0), int(100),
+					       "number of links to ignore for linkages");
+  
+
   if (cd_label == "RAPID") {
     m_selected.push_back(cd->GetRAPID());	    
   } else if (cd_label == "PQP") {
@@ -189,6 +195,8 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 } // end IsInCollision ( 4 params, 4th defaults to NULL)
 
 
+
+
 template<typename CFG>
 bool
 CollisionDetectionValidity<CFG>::
@@ -202,18 +210,18 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
   for(I=m_selected.begin(); I!=m_selected.end(); I++) {
     int tp = (*I)->GetType();
     // Type Out: no collision sure; collision unsure.
-    if((tp == Out) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName) == false)) {
+    if((tp == Out) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName, ignore_i_adjacent_links) == false)) {
       return false;
     }
     
     // Type In: no collision unsure; collision sure.
-    if ((tp == In) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName) == true)) {
+    if ((tp == In) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName, ignore_i_adjacent_links) == true)) {
       return true;
     }
     
     // Type Exact: no collision sure; collision sure.
     if(tp == Exact) {
-      return (*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName);
+      return (*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName, ignore_i_adjacent_links);
     }
   }
   
