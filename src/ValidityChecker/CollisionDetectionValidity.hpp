@@ -30,6 +30,7 @@ public:
 private:
   std::vector<CollisionDetectionMethod*> m_selected;
   CollisionDetection* m_cd;
+  bool ignoreSelfCollision;
   
   bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 		     shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obst, std::string *pCallName);
@@ -50,6 +51,7 @@ CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   for(I=m_selected.begin(); I!=m_selected.end(); ++I)
     delete *I;
   m_selected.clear(); 
+ignoreSelfCollision = in_Node.boolXMLParameter("ignoreSelfCollision", false, false, "Check for self collision"); 
   CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection(); 
   std::string cd_label = in_Node.stringXMLParameter("method",true,"","method");
   ignore_i_adjacent_links  = in_Node.numberXMLParameter("ignore_i_adjacent_links", false, int(1),
@@ -158,7 +160,8 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 	
 	// Be certain that IsInCollision set _cdInfo.min_dist
 	// Check new mins against old, reset *_points if needed
-	// Store everything in local_cd_info, copy back to _cdInfo at end of function
+	// Store everything in local_cd_info, copy back to _cdInfo at end of function.
+  
 	if (_cdInfo.min_dist < local_cd_info.min_dist) {
 	  local_cd_info.nearest_obst_index = i;
 	  local_cd_info.min_dist = _cdInfo.min_dist;
@@ -167,6 +170,20 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 	} // end updating local_cd_info
       }
     } else {
+if(ignoreSelfCollision){
+	//robot self checking turned off
+	if (_cdInfo.ret_all_info) {
+    // local_cd_info should contain "all the info" across all objects
+    // _cdInfo only contains info for the last one processed above
+    _cdInfo = local_cd_info;
+  }
+	 
+	 ret_val =false;
+}
+	  
+      //}
+      else {
+
       // robot self checking. Warning: rob and env->GetMultiBody(robot) may NOT be the same.
       if ( (rob->GetBodyCount() > 1) && 
 	   (IsInCollision(env, Stats, _cdInfo, rob, rob, pCallName)) ) {
@@ -180,7 +197,9 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 	}
 	
 	return true;
+      
       }
+  }
     } // end  if-else i == robot
     
   } // end for i
