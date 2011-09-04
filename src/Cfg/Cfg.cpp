@@ -814,6 +814,21 @@ void Cfg::GetNFreeRandomCfgs(MPProblem* mp, vector<Cfg*>& nodes, Environment* en
    }
 };
 
+void Cfg::GetRandomRayPos(double incr, Environment* env) {
+  // Create random positional ray and scale
+  double length=abs(incr), dist=0.0;
+  v.clear();
+  for(int i=0; i<DOF(); ++i)
+    if (i < posDOF()) {
+      v.push_back( 2.0*OBPRM_drand() - 1.0 );
+      dist += pow(v[i],2);
+    } else v.push_back( 0.0 );
+  this->multiply(*this,length/sqrt(dist));
+
+  obst = -1;
+  tag = -1;
+  clearance = -1;
+}
 
 // Normalize the orientation to the some range.
 void Cfg::Normalize_orientation(int index) {

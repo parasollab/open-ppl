@@ -18,13 +18,14 @@ class MedialAxisSampler : public SamplerMethod<CFG>
   ValidityChecker<CFG>* vc;
   shared_ptr<DistanceMetricMethod> dm;
   bool m_debug,use_bbx;
-  int clearance,penetration;
+  int clearance,penetration,history_len;
   string str_dm,str_vcm,str_c,str_p;
   double epsilon;
 
  MedialAxisSampler(MPProblem* _mp, ValidityChecker<CFG>*_vc, shared_ptr<DistanceMetricMethod> _dm, 
-									 bool debug, bool _use_bbx, string _str_dm, string _str_vcm, int _c, int _p, string _str_c, string _str_p, double _e) : 
-	mp(_mp),vc(_vc),dm(_dm),m_debug(debug),use_bbx(_use_bbx),str_dm(_str_dm),str_vcm(_str_vcm),clearance(_c),penetration(_p),str_c(_str_c),str_p(_str_p),epsilon(_e) {
+									 bool debug, bool _use_bbx, string _str_dm, string _str_vcm, int _c, int _p, 
+                   string _str_c, string _str_p, double _e, int _h) : 
+	mp(_mp),vc(_vc),dm(_dm),m_debug(debug),use_bbx(_use_bbx),str_dm(_str_dm),str_vcm(_str_vcm),clearance(_c),penetration(_p),str_c(_str_c),str_p(_str_p),epsilon(_e),history_len(_h) {
 		this->SetName("MedialAxisSampler");
 	}
 	
@@ -55,6 +56,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
 		clearance   = in_Node.numberXMLParameter("clearance_rays", false, 10, 1, 1000, "Clearance Number");
 	  penetration = in_Node.numberXMLParameter("penetration_rays", false, 10, 1, 1000, "Penetration Number");
 		epsilon     = in_Node.numberXMLParameter("epsilon", false, 0.1, 0.0, 1.0, "Epsilon-Close to the MA (fraction of the resolution)");		
+	  history_len = in_Node.numberXMLParameter("history_len", false, 5, 3, 100, "History Length");
 		m_debug     = in_Node.boolXMLParameter("debug", false, false, "debugging flag");
 		use_bbx     = in_Node.boolXMLParameter("use_bbx", false, true, "Use the Bounding Box as an Obstacle");		
 		print(cout);
@@ -70,7 +72,8 @@ class MedialAxisSampler : public SamplerMethod<CFG>
        << "\n  penetration_type = " << str_p
        << "\n  (clearance_rays = " << clearance
        << ", penetration_rays = " << penetration
-       << ")\n  use_bbx = " << use_bbx << endl;
+       << ")\n  use_bbx = " << use_bbx
+       << "\n  history_len = " << history_len << endl;
 	}
 	
 	bool sampler(Environment* env,Stat_Class& Stat, const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts) {
@@ -94,7 +97,8 @@ class MedialAxisSampler : public SamplerMethod<CFG>
 				tmp_cfg.GetRandomCfg(env);
 			
 			// If pushed properly, increment generated
-			if ( PushToMedialAxis(mp, env, tmp_cfg, Stat, str_vcm, str_dm, c_exact, clearance, p_exact, penetration, use_bbx, epsilon) ) {
+			if ( PushToMedialAxis(mp, env, tmp_cfg, Stat, str_vcm, str_dm, c_exact, clearance, 
+                            p_exact, penetration, use_bbx, epsilon, history_len, m_debug) ) {
 				if ( vc->IsValid(vc->GetVCMethod(str_vcm), tmp_cfg, env, Stat, cdInfo, true, &call) ) {
 					Stat.IncNodes_Generated();
 					generated = true;
