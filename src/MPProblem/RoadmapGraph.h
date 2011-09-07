@@ -62,10 +62,11 @@ template<class VERTEX, class WEIGHT>
 class EdgeInfo {
 public:
 #ifdef _PARALLEL
-typedef typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor VID;
+typedef typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 #else 
-typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor VID;
+typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 #endif 
+typedef typename GRAPH::vertex_descriptor VID;
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -229,7 +230,6 @@ class vertex_descriptor_iterator
   */
 
 
-
 #ifdef _PARALLEL
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : 
@@ -244,17 +244,14 @@ public:
 
 #ifdef _PARALLEL
 typedef stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
-typedef typename GRAPH::vertex_descriptor VID;
-typedef typename stapl::p_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_iterator VI; ///<VI Vertex Iterator
-typedef typename stapl::p_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::const_vertex_iterator CVI; ///< not sure CVI Constant Vertex Iterator
-typedef typename stapl::p_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::adj_edge_iterator EI;
 #else 
 typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
-typedef typename GRAPH::vertex_descriptor VID;
-typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::vertex_iterator VI; ///<VI Vertex Iterator
-typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::const_vertex_iterator CVI; ///<CVI Constant Vertex Iterator
-typedef typename stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>::adj_edge_iterator EI;
 #endif 
+typedef typename GRAPH::vertex_descriptor VID;
+typedef typename GRAPH::edge_descriptor EID;
+typedef typename GRAPH::vertex_iterator VI; ///<VI Vertex Iterator
+typedef typename GRAPH::const_vertex_iterator CVI; ///< not sure CVI Constant Vertex Iterator
+typedef typename GRAPH::adj_edge_iterator EI;
 typedef vertex_descriptor_iterator<VI> VDI;
 typedef vertex_descriptor_iterator<CVI> CVDI;
 typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
@@ -456,15 +453,9 @@ Init(const int _numNodes, const int _numEdges) {
 
 // require that VERTEX data (configuration) is unique
 template<class VERTEX, class WEIGHT>
-#ifdef _PARALLEL
-typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor 
+typename RoadmapGraph<VERTEX, WEIGHT>::VID
 RoadmapGraph<VERTEX,WEIGHT>::
 AddVertex(VERTEX& _v1) {
-#else 
-typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor 
-RoadmapGraph<VERTEX,WEIGHT>::
-AddVertex(VERTEX& _v1) {
-#endif
     CVI v1;
     if ( !IsVertex(_v1,&v1) ) {
         VID vertex_id = GRAPH::add_vertex(_v1);
@@ -484,15 +475,9 @@ AddVertex(VERTEX& _v1) {
 
 // require that VERTEX data (configuration) is unique
 template<class VERTEX, class WEIGHT>
-#ifdef _PARALLEL
-typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor 
+typename RoadmapGraph<VERTEX,WEIGHT>::VID
 RoadmapGraph<VERTEX,WEIGHT>::
 AddVertex(vector<VERTEX>& _v) {
-#else 
-typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor 
-RoadmapGraph<VERTEX,WEIGHT>::
-AddVertex(vector<VERTEX>& _v) {
-#endif
     bool added=false;
     VID vertex_id = INVALID_VID; //=this->GetNextVID(); fix_lantao
     for (size_t i = 0; i < _v.size(); i++){
@@ -592,18 +577,10 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT*,WEIGHT*>& _w) {
 }
 
 template <class VERTEX, class WEIGHT>
-#ifdef _PARALLEL
-vector<typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor> 
+vector<typename RoadmapGraph<VERTEX, WEIGHT>::VID> 
 RoadmapGraph<VERTEX,WEIGHT>::
 MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap, 
 	      vector<VID> vids) {
-#else 
-vector<typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor> 
-RoadmapGraph<VERTEX,WEIGHT>::
-MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap, 
-	      vector<VID> vids) {
-#endif
-
   VERTEX t;
   int i;
   vector<VID> newVids;
@@ -621,8 +598,8 @@ MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap,
     vector< pair<pair<VID,VID>,WEIGHT> > edges; 
     //_fromMap->GetOutgoingEdges(vids[i], edges); fix_lantao
     //use iterator to traverse the adj edges and then put the data into edges
-    typename RoadmapGraph<VERTEX, WEIGHT>::vertex_iterator vi = _fromMap->find_vertex(vids[i]);
-    for(typename RoadmapGraph<VERTEX, WEIGHT>::adj_edge_iterator ei = vi.begin(); ei!=vi.end(); ei++ ){
+    typename RoadmapGraph<VERTEX, WEIGHT>::VI vi = _fromMap->find_vertex(vids[i]);
+    for(typename RoadmapGraph<VERTEX, WEIGHT>::EI ei = vi.begin(); ei!=vi.end(); ei++ ){
         pair<pair<VID,VID>,WEIGHT> single_edge;
         single_edge.first.first=*ei.source();
         single_edge.first.second=*ei.target();
@@ -646,15 +623,9 @@ MergeRoadMap(RoadmapGraph<VERTEX, WEIGHT>* _fromMap,
 }
 
 template <class VERTEX, class WEIGHT>
-#ifdef _PARALLEL
-vector<typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor> 
+vector<typename RoadmapGraph<VERTEX, WEIGHT>::VID> 
 RoadmapGraph<VERTEX,WEIGHT>::
 ConvertVertices2VIDs(vector<VERTEX>& vps){
-#else 
-vector<typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT>::vertex_descriptor> 
-RoadmapGraph<VERTEX,WEIGHT>::
-ConvertVertices2VIDs(vector<VERTEX>& vps){
-#endif
   
   vector<VID> vds;
   #ifndef _PARALLEL
@@ -808,9 +779,9 @@ bool
 RoadmapGraph<VERTEX,WEIGHT>::
 IsEdge(VID vid1, VID vid2){
 bool is_edge;
-typename RoadmapGraph<VERTEX, WEIGHT>::vertex_iterator vi;
-typename RoadmapGraph<VERTEX, WEIGHT>::adj_edge_iterator ei;
-typename RoadmapGraph<VERTEX, WEIGHT>::edge_descriptor ed(vid1,vid2);
+typename RoadmapGraph<VERTEX, WEIGHT>::VI vi;
+typename RoadmapGraph<VERTEX, WEIGHT>::EI ei;
+typename RoadmapGraph<VERTEX, WEIGHT>::EID ed(vid1,vid2);
 is_edge=find_edge(ed, vi, ei);
 return is_edge;
 }
