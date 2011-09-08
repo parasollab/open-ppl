@@ -116,7 +116,9 @@ Environment(const Environment &from_env) :
     multibody.push_back(from_env.GetMultiBody(i));
     //usable_multibody.push_back(from_env.GetMultiBody(i));
   }
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=from_env.GetRdRes();
+#endif
   SelectUsableMultibodies();
 }
 
@@ -147,7 +149,9 @@ Environment(MPProblem* in_pProblem) :
     multibody.push_back(from_env.GetMultiBody(i));
     //usable_multibody.push_back(from_env.GetMultiBody(i));
   }
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=from_env.GetRdRes();
+#endif
   SelectUsableMultibodies();
 }
 
@@ -173,7 +177,9 @@ Environment(const Environment &from_env, const BoundingBox &i_boundaries) :
   for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
     multibody.push_back(from_env.GetMultiBody(i));
   }
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=from_env.GetRdRes();
+#endif
   SelectUsableMultibodies(); // select usable multibodies
 }
 
