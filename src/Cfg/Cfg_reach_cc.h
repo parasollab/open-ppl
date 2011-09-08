@@ -92,7 +92,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
   virtual void IncrementTowardsGoal(const Cfg &goal, const Cfg &increment);
   virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, 
 			     int* n_ticks, 
-			     double positionRes, double orientationRes);
+			     double positionRes, double orientationRes, double rd_res = .05);
   virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks);
 
   virtual Cfg* CreateNewCfg() const;

@@ -160,6 +160,7 @@ add(const Cfg& c1, const Cfg& c2) {
     v[i] = _v1[i] + _v2[i];
 
   link_lengths.clear();
+ 
   transform(((Cfg_reach_cc&)c1).link_lengths.begin(), ((Cfg_reach_cc&)c1).link_lengths.end(),
 	    ((Cfg_reach_cc&)c2).link_lengths.begin(),
 	    back_insert_iterator<vector<double> >(link_lengths),
@@ -541,7 +542,7 @@ IncrementTowardsGoal(const Cfg &goal, const Cfg &increment) {
 void 
 Cfg_reach_cc::
 FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks, 
-	      double positionRes, double orientationRes) {
+	      double positionRes, double orientationRes, double rd_res) {
   //length_diff = _start.link_lengths - _goal.link_lengths
   vector<double> length_diff;
   transform(((Cfg_reach_cc&)_start).link_lengths.begin(), 
@@ -553,8 +554,7 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks,
   double mag = sqrt(inner_product(length_diff.begin(), length_diff.end(),
 				  length_diff.begin(), 0.0,
 				  plus<double>(), multiplies<double>()));
-
-  int rd_ticks = (int)(mag/rdres) + 2; //adding two makdes a rough ceiling...
+  int rd_ticks = (int)(mag/rd_res) + 2; //adding two makdes a rough ceiling...
 
   vector<double> v_g = _goal.GetData();
   Cfg_free g(v_g[0],v_g[1],v_g[2],v_g[3],v_g[4],v_g[5]);
@@ -710,9 +710,12 @@ GetIntermediate(const Cfg_reach_cc& c1,
 double
 Cfg_reach_cc::
 LengthDistance(const Cfg_reach_cc& c2) const {
+  //cout<<"in lenght dist "<<c2.link_lengths.size()<<"__"<<endl;
   vector<Range> ranges;
+ 
   link_tree->ExportTreeLinkReachableRange(ranges);
-  
+
+
  /*cout << "ranges:";
   for(vector<Range>::const_iterator R = ranges.begin(); R != ranges.end(); ++R) 
     cout << " " << R->Size();
@@ -725,17 +728,22 @@ LengthDistance(const Cfg_reach_cc& c2) const {
   }
 
   vector<double> length_difference;
-  for(size_t i=0; i<link_lengths.size(); ++i) 
-    if(ranges[i].Size() == 0)
-      length_difference.push_back(0);
-    else
-      length_difference.push_back(fabs(link_lengths[i]-c2.link_lengths[i])/ranges[i].Size());
+  for(size_t i=0; i<link_lengths.size(); ++i) {
   
+    if(ranges[i].Size() == 0){
+   
+      length_difference.push_back(0);
+    }else{
+     
+      length_difference.push_back(fabs(link_lengths[i]-c2.link_lengths[i])/ranges[i].Size());
+    }
+    
+  }
  /*cout << "length_difference: ";
   copy(length_difference.begin(), length_difference.end(), ostream_iterator<double>(cout, " "));
   cout << endl; */
   
-
+  
   return sqrt(inner_product(length_difference.begin(), length_difference.end(),
 			    length_difference.begin(),
 			    0.0, plus<double>(), multiplies<double>()));
