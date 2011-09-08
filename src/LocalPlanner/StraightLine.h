@@ -422,12 +422,16 @@ StraightLine<CFG, WEIGHT>::
   CFG tick;
   tick = _c1; 
   CFG incr;
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+  incr.FindIncrement(_c1,_c2,&n_ticks,positionRes,orientationRes, _env->GetRdRes());
+#else
   incr.FindIncrement(_c1,_c2,&n_ticks,positionRes,orientationRes);
+#endif
   string Callee(this->GetName());
   string Method("-straightline::IsConnectedSLSequential");
   Callee=Callee+Method;
   
-
+  
   int nTicks = 0;
   for(int i = 1; i < n_ticks; i++){ //don't need to check the ends, _c1 and _c2
     tick.Increment(incr);
@@ -442,7 +446,7 @@ StraightLine<CFG, WEIGHT>::
          !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee)
         ) {
          if(tick.InBoundingBox(_env) && 
-            !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee))
+            !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee))   
             _col = tick;
         CFG neg_incr;
   neg_incr = incr; 
@@ -566,8 +570,11 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 
   int n_ticks;
   CFG incr;
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+  incr.FindIncrement(_c1,_c2,&n_ticks,positionRes,orientationRes, _env->GetRdRes());
+#else
   incr.FindIncrement(_c1, _c2, &n_ticks, positionRes, orientationRes);
-
+#endif
   deque<pair<int,int> > Q;
   Q.push_back(make_pair(0, n_ticks));
 
