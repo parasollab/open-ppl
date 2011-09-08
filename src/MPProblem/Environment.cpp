@@ -116,7 +116,7 @@ Environment(const Environment &from_env) :
     multibody.push_back(from_env.GetMultiBody(i));
     //usable_multibody.push_back(from_env.GetMultiBody(i));
   }
-  
+  rd_res=from_env.GetRdRes();
   SelectUsableMultibodies();
 }
 
@@ -147,7 +147,7 @@ Environment(MPProblem* in_pProblem) :
     multibody.push_back(from_env.GetMultiBody(i));
     //usable_multibody.push_back(from_env.GetMultiBody(i));
   }
-  
+  rd_res=from_env.GetRdRes();
   SelectUsableMultibodies();
 }
 
@@ -173,7 +173,7 @@ Environment(const Environment &from_env, const BoundingBox &i_boundaries) :
   for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
     multibody.push_back(from_env.GetMultiBody(i));
   }
-  
+  rd_res=from_env.GetRdRes();
   SelectUsableMultibodies(); // select usable multibodies
 }
 
@@ -197,8 +197,10 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   LOG_DEBUG_MSG("Environment::Environment()");
   in_Node.verifyName(string("environment"));
 
-  double pos_res = -1.0, ori_res=-1.0;
-
+  double pos_res = -1.0, ori_res=-1.0l;
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+  rd_res=.15;
+#endif
   ///\todo fix hack.  This hack gets env_filename from environment xml tag
   //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
   //const char* env_filename = GetMPProblem()->GetEnvFileName().c_str();
@@ -225,6 +227,10 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
     } else if ( citr->getName() == "resolution" ) {
       pos_res = citr->numberXMLParameter("pos_res", false, -1.0, -1.0, MAX_DBL, "position resolution");
       ori_res = citr->numberXMLParameter("ori_res", false, -1.0, -1.0, MAX_DBL, "orientation resolution");
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+      rd_res = citr->numberXMLParameter("rd_res", false, .05, .001, MAX_DBL, "reachable distance resolution");
+      cout<<"rd_res = "<<rd_res<<endl;
+#endif
       positionResFactor    = citr->numberXMLParameter("pos_res_factor", false, 0.05, 0.0, MAX_DBL, "position resolution factor");
       orientationResFactor = citr->numberXMLParameter("ori_res_factor", false, 0.05, 0.0, MAX_DBL, "orientation resolution factor");
     } else {

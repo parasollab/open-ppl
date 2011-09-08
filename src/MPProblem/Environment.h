@@ -152,6 +152,9 @@ public:
     inline double GetPositionRes() const { return positionRes; }
     inline void SetPositionRes(const double pRes) {positionRes=pRes;}
 
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+    inline double GetRdRes() const {return rd_res;} 
+#endif
     /**Return the resolution for rotation.
       *This tells client how fine this workspace is descretized about rotation.
       *@see Get, this function reads this value from Input instance.
@@ -272,7 +275,9 @@ public:
 
     int robotIndex; //index of the robot in the usable_multibody vector
     shared_ptr<BoundingBox> boundaries;
-
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+    double rd_res;
+#endif
     double positionRes;
     double orientationRes;
     double positionResFactor;
