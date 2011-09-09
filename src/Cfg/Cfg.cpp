@@ -717,6 +717,16 @@ void Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal,
   for(int i=0; i<dof; ++i) {
     if(i<posDof) 
       incr.push_back((_goal.v[i] - _start.v[i])/n_ticks);
+    else if(i>=dof-CfgType::getNumofJoints()){
+      double a = _start.v[i];
+      double b = _goal.v[i];
+      // normalize both a and b to [0, 1)
+      a = a - floor(a);
+      b = b - floor(b);
+      if(a>=0.5)a-=1.0;
+      if(b>=0.5)b-=1.0;
+      incr.push_back((b-a)/n_ticks);
+    }
     else
       incr.push_back(DirectedAngularDistance(_start.v[i], _goal.v[i])/n_ticks);
   }
