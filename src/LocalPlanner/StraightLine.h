@@ -312,6 +312,12 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
          bool savePath, bool saveFailedPath,
 	 typename boost::enable_if<is_closed_chain<Enable> >::type* dummy)
 {
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
+  string Callee(this->GetName());
+  string Method("-straightline::IsConnectedSLSequential");
+  Callee=Callee+Method;
+  
   Stats.IncLPAttempts("Straightline");
   int cd_cntr = 0; 
   
@@ -319,6 +325,14 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
   if(CFG::OrientationsDifferent(_c1, _c2)) {
     CFG intermediate;
     bool success = intermediate.GetIntermediate(_c1, _c2); 
+    if(checkCollision){
+      cd_cntr ++;
+      if(!intermediate.InBoundingBox(_env) || 
+          !vc->IsValid(vcm, intermediate, _env, Stats, *this->cdInfo, true, &Callee)
+        ) {
+        return false;
+      }
+    }
     if(!success)
       return false;
     
@@ -335,7 +349,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
 				       positionRes, orientationRes, 
 				       checkCollision, savePath, saveFailedPath)
 		   );
-      if(!connected) { //attempt other direction
+      /*if(!connected) { //attempt other direction
 	connected = (IsConnectedSLBinary(_env, Stats, dm, 
 					 _c2, intermediate, 
 					 _col, lpOutput, cd_cntr, 
@@ -350,7 +364,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
 		     );
 	if(savePath)
 	  reverse(lpOutput->path.begin(), lpOutput->path.end());
-      }
+      }*/
     } else {
       connected = (IsConnectedSLSequential(_env, Stats, dm, 
 					   _c1, intermediate, 
@@ -365,7 +379,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
 					   checkCollision, savePath, saveFailedPath)
 		   );
       
-      if(!connected) { //attempt other direction
+      /*if(!connected) { //attempt other direction
 	connected = (IsConnectedSLSequential(_env, Stats, dm, 
 					     _c2, intermediate, 
 					     _col, lpOutput, cd_cntr, 
@@ -380,10 +394,10 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
 		     );
 	if(savePath)
 	  reverse(lpOutput->path.begin(), lpOutput->path.end());
-      }
+      }*/
     }
   } else {
-    cout << "orientations same\n";
+    //cout << "orientations same\n";
     if(binarySearch) {
       connected = IsConnectedSLBinary(_env, Stats, dm,
 				      _c1, _c2,
@@ -401,7 +415,6 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
   if(connected)
     Stats.IncLPConnections( "Straightline" );
   Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
-  
   return connected;
 }
 
@@ -437,30 +450,25 @@ StraightLine<CFG, WEIGHT>::
     tick.Increment(incr);
     cd_cntr ++;
     if(checkCollision){
-      //bool bbox_check = tick.InBoundingBox(_env);
-      //bool col_check = tick.isCollision(_env,Stats,cd, *cdInfo,true,&(Callee));  
-      //if(!bbox_check || col_check){  ///changed to precompute bool vals,
-                                     ///compiler was optimizing and counts got screwed up --roger 9.17.2005
       if(!tick.InBoundingBox(_env) || 
-        // tick.isCollision(_env,Stats,cd,*this->cdInfo,true,&(Callee))
-         !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee)
+          !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee)
         ) {
-         if(tick.InBoundingBox(_env) && 
+        if(tick.InBoundingBox(_env) && 
             !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee))   
-            _col = tick;
+          _col = tick;
         CFG neg_incr;
-  neg_incr = incr; 
-  neg_incr.negative(incr);
-  tick.Increment(neg_incr);
-  lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + nTicks);
-  lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + nTicks);
+        neg_incr = incr; 
+        neg_incr.negative(incr);
+        tick.Increment(neg_incr);
+        lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + nTicks);
+        lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + nTicks);
         pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > tmp;
         tmp.first.first = _c1;
         tmp.first.second = tick;
         tmp.second.first = lpOutput->edge.first;
         tmp.second.second = lpOutput->edge.second;
-  lpOutput->savedEdge.push_back(tmp);
-  return false;
+        lpOutput->savedEdge.push_back(tmp);
+        return false;
       }
     }
     if(savePath || saveFailedPath){
@@ -601,11 +609,9 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
     
     cd_cntr++;
     if(!mid_cfg.InBoundingBox(_env) ||
-      // mid_cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))
        !vc->IsValid(vcm, mid_cfg, _env, Stats, *this->cdInfo, true, &Callee)
       ) {
          if(mid_cfg.InBoundingBox(_env) &&
-         // mid_cfg.isCollision(_env, Stats, cd, *this->cdInfo, true, &(Callee))
             !vc->IsValid(vcm, mid_cfg, _env, Stats, *this->cdInfo, true, &Callee))
             _col=mid_cfg;
       return false;
