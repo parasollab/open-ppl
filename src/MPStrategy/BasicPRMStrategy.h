@@ -70,6 +70,8 @@ class BasicPRMStrategy : public MPStrategyMethod
    int m_CurrentIteration;
    bool useProbability;
    Clock_Class MapGenClock;
+   string inputMapFilename;
+   enum {NODE_GENERATION, NODE_CONNECTION, COMPONENT_CONNECTION, MAP_EVALUATION} startAt;
 
  private:
    template <typename OutputIterator>

@@ -5,7 +5,7 @@
 #include "boost/lambda/lambda.hpp"
 
 BasicPRMStrategy::BasicPRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-   MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0), useProbability(false){
+   MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0), useProbability(false), inputMapFilename(""), startAt(NODE_GENERATION) {
    //read input
    ParseXML(in_Node);
 }
@@ -14,6 +14,22 @@ BasicPRMStrategy::~BasicPRMStrategy(){
 }
 
 void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
+   inputMapFilename = in_Node.stringXMLParameter("inputMap", false, "", "filename of roadmap to start from");
+   string startAt_string = in_Node.stringXMLParameter("startAt", false, "node generation", "point of algorithm where to begin at: \"node generation\" (default), \"node connection\", \"component connection\", \"map evaluation\"");
+   if(startAt_string == "node generation")
+      startAt = NODE_GENERATION;
+   else if(startAt_string == "node connection")
+      startAt = NODE_CONNECTION;
+   else if(startAt_string == "component connection")
+      startAt = COMPONENT_CONNECTION;
+   else if(startAt_string == "map evaluation")
+      startAt = MAP_EVALUATION;
+   else
+   {
+      cerr << "\n\ndo not understand startAt = \"" << startAt_string << "\", choices are: 'node generation', 'node connection', 'component connection', and 'map evaluation', exiting.\n";
+      exit(-1);
+   }
+
    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr){
       if(citr->getName() == "node_generation_method") {
          string generationMethod = citr->stringXMLParameter("Method", true, "", "Node Connection Method");
@@ -55,6 +71,15 @@ void BasicPRMStrategy::ParseXML(XMLNodeReader& in_Node) {
    double total=0.0;
    using boost::lambda::_1;
    cout << "\nBasicPRMStrategy::ParseXML:\n";
+   cout << "\tinputMapFilename: \"" << inputMapFilename << "\"\n";
+   cout << "\tstartAt: ";
+   switch(startAt)
+   {
+      case NODE_GENERATION: cout << "node generation\n"; break;
+      case NODE_CONNECTION: cout << "node connection\n"; break;
+      case COMPONENT_CONNECTION: cout << "component connection\n"; break;
+      case MAP_EVALUATION: cout << "map evaluation\n"; break;
+   }
    cout << "\tnode_generation_methods: \n"; 
    if(!useProbability){
      for(map<string, pair<int, int> >::iterator I = m_NodeGenerationLabels.begin(); I!=m_NodeGenerationLabels.end(); I++){
@@ -116,6 +141,26 @@ void BasicPRMStrategy::Initialize(int in_RegionID){
 
    //seed random number generator
    OBPRM_srand(getSeed()); 
+
+   //read in and reload roadmap and evaluators
+   if(inputMapFilename != "")
+   {
+      Roadmap<CfgType, WeightType>* rmap = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
+      cout << "\tLoading roadmap from \"" << inputMapFilename << "\"...";
+      rmap->ReadRoadmapGRAPHONLY(inputMapFilename.c_str());
+      for(RoadmapGraph<CfgType, WeightType>::VI vi = rmap->m_pRoadmap->begin(); vi != rmap->m_pRoadmap->end(); ++vi)
+        VDAddNode(vi->property());
+      cout << "\troadmap has " << rmap->m_pRoadmap->get_num_vertices() << " nodes and " << rmap->m_pRoadmap->get_num_edges() << " edges\n";
+
+      cout << "\n\tResetting map evaluator states...\n";
+      for(vector<string>::iterator I = m_EvaluatorLabels.begin(); I != m_EvaluatorLabels.end(); ++I)
+      {
+         MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
+         if(pEvaluator->HasState())
+            pEvaluator->operator()(in_RegionID);
+      }
+      cout << "\tdone.\n";
+   }
  
    cout<<"\nEnding Initializing BasicPRMStrategy"<<endl;
 }
@@ -135,15 +180,31 @@ void BasicPRMStrategy::Run(int in_RegionID){
    while(!mapPassedEvaluation){
       m_CurrentIteration++;
       vector<VID> thisIterationNodesVID;
-      cout << "\ngenerating nodes: ";
-      GenerateNodes(region, 
-                    back_insert_iterator<vector<VID> >(allNodesVID), 
-                    back_insert_iterator<vector<VID> >(thisIterationNodesVID));
-      cout << "\nconnecting nodes: ";
-      ConnectNodes(region, allNodesVID, thisIterationNodesVID);
-      ConnectComponents(region);
-      cout << "\nevaluating roadmap: ";
-      mapPassedEvaluation = EvaluateMap(in_RegionID);
+      if(startAt <= NODE_GENERATION)
+      {
+         cout << "\ngenerating nodes: ";
+         GenerateNodes(region, 
+                       back_insert_iterator<vector<VID> >(allNodesVID), 
+                       back_insert_iterator<vector<VID> >(thisIterationNodesVID));
+      }
+      else
+        region->GetRoadmap()->m_pRoadmap->GetVerticesVID(thisIterationNodesVID);
+      if(startAt <= NODE_CONNECTION)
+      {
+         cout << "\nconnecting nodes: ";
+         ConnectNodes(region, allNodesVID, thisIterationNodesVID);
+      }
+      if(startAt <= COMPONENT_CONNECTION)
+      {
+         cout << "\nconnecting components: ";
+         ConnectComponents(region);
+      }
+      if(startAt <= MAP_EVALUATION)
+      {
+         cout << "\nevaluating roadmap: ";
+         mapPassedEvaluation = EvaluateMap(in_RegionID);
+      }
+      startAt = NODE_GENERATION;
    }
   
    MapGenClock.StopPrintClock();
