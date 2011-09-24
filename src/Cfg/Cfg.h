@@ -18,7 +18,9 @@
 #ifdef HPUX
 #include <sys/io.h>
 #endif
+#ifdef _PARALLEL
 #include "views/proxy.h"
+#endif 
 #include <vector>
 #include <map>
 

@@ -15,7 +15,9 @@
 #define _OBPRM_WEIGHT_H_
 using namespace std;
 #include <iostream>
+#ifdef _PARALLEL
 #include "views/proxy.h"
+#endif
 //#include "Defines.h"
 
 
