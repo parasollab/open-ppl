@@ -293,7 +293,7 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2)
  double dist;
  double sum =0.0, sign = 0,sign_2 =0, temp1;
    vector <Vector3D> unitVect(3000), unitVect2(3000);
-  double  dist2,writhe1,writhe2, temp2;
+  //double  dist2,writhe1,writhe2, temp2;
   dist =EuclideanDistance::Distance(env, _c1,_c2);
     Vector3D n1,n2;
  double n_2;

@@ -247,7 +247,6 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     diagonal.IncrementTowardsGoal(_c2,incr);
   
     cd_cntr++;
-    CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
     Callee=diagonal.GetName();
     
     if(diagonal.InBoundingBox(_env)&& !vc->IsValid(vcm, diagonal, _env, Stats, *this->cdInfo, true, &tmpStr)){
