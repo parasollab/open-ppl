@@ -8,7 +8,7 @@ getopts('c:r:d:p:');
 #
 $outputdir = "/tmp/pmpl_nightly_logs";
 $ADMIN_MAILTO = "jdenny\@cs.tamu.edu";
-$workdir  = "/scratch/antibes/jdenny/pmpl_nightly";
+$workdir  = "/scratch/zenigata/jdenny/pmpl_nightly";
 
 #
 # find out which platform is used 
@@ -106,7 +106,7 @@ close(OUT);
 open(MAIL, "|/usr/lib/sendmail -t"); 
 print MAIL "To: $ADMIN_MAILTO\n";
 print MAIL "From: pmpl_nightly\@tamu.edu\n";
-print MAIL "Subject: PMPL nightly - anitbes.cse.tamu.edu pmpl.$opt_c.$opt_r.debug$opt_d.parallel$opt_p\n";
+print MAIL "Subject: PMPL nightly - zenigata.cse.tamu.edu pmpl.$opt_c.$opt_r.debug$opt_d.parallel$opt_p\n";
 print MAIL "Done, output written to $outfile\n";
 close(MAIL);
 
