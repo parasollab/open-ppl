@@ -20,6 +20,7 @@ class QueryEvaluation
   shared_ptr<DistanceMetricMethod> _dm) : 
   MapEvaluationMethod(),
   m_query_filename(filename),
+  m_query_pathname(filename),
   m_query(query),
   m_stats(stats),
   lp(_lp),
@@ -38,6 +39,7 @@ class QueryEvaluation
     //lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners(); //later change to have own lp
 
     m_query_filename = in_Node.stringXMLParameter("filename", true, "", "Query Filename");
+    m_query_pathname = in_Node.stringXMLParameter("outpath", false, "", "Query output path filename");
     m_query = Query<CFG, WEIGHT>(m_query_filename.c_str());
     
     string dm_label = in_Node.stringXMLParameter("dm_method", false, "default", "Distance Metric Method");
@@ -66,6 +68,7 @@ class QueryEvaluation
   
  private:
   string m_query_filename;
+  string m_query_pathname;
   Query<CFG, WEIGHT> m_query;
   Stat_Class m_stats;
   LocalPlanners<CFG, WEIGHT>* lp;
@@ -113,8 +116,8 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
 
   Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
   lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners(); //later change to have own lp
-
   //VID oriVertID = rmap->m_pRoadmap->getVertIDs(); //save vertexID counter
+ 
   
   vector<bool> already_in_roadmap;
   for(typename vector<CFG>::iterator I = m_query.query.begin(); I != m_query.query.end(); ++I)
@@ -123,14 +126,18 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
   bool queryResult = m_query.PerformQuery(rmap, m_stats, 
                         &m_ConnectMap, &methods,
                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                        dm, intermediateFiles);
-  
+                       dm, intermediateFiles);
+  if(queryResult==true && m_query_pathname.length()>0){
+     cout<<"in query Eval";
+     char path_filename[100];
+     sprintf(path_filename, "%s.path", m_query_pathname.c_str());
+     
+     m_query.WritePath(rmap,path_filename );
+  }
   for(size_t i=0; i<already_in_roadmap.size(); ++i)
     if(!already_in_roadmap[i])
       rmap->m_pRoadmap->delete_vertex(rmap->m_pRoadmap->GetVID(m_query.query[i])); //deleted added node from rmap
-  
   //rmap->m_pRoadmap->setVertIDs(oriVertID); //reset vertex ID counter
-
   return queryResult;
 }
 
