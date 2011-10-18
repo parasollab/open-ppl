@@ -1,0 +1,81 @@
+\documentclass[12pt]{article}
+
+\usepackage[top=0.5in,left=0.5in,right=0.5in, bottom=0.5in]{geometry}
+\usepackage{amssymb}
+\usepackage{algorithm,algorithmic}
+
+\title{\Large \bf Standards and Procedures of PMPL}
+\author{Jory Denny}
+
+\begin{document}
+\thispagestyle{empty}
+\pagestyle{empty}
+\maketitle
+
+This document outlines the standards for all procedures within PMPL. This ranges from coding standards, to testing
+standards, to documentation standards, etc. Everyone will be expected to adhere to these standards.
+
+\section{Check-in Procedure}
+The following procedure will occur anytime a check-in will take place within PMPL.
+\begin{algorithmic}[1]
+\STATE One person will check over correctness and testing for proposed code.
+\STATE A separate person shall check over the coding and documentation standards set forth within this document.
+\STATE Back up validation shall occur during the PMPL nightly tests, person who checks in the code is responsible for
+fixing warnings and errors caused by the check-in
+\end{algorithmic}
+
+\section{Coding Standards}
+
+\subsection{.h/.cpp}
+All classes and files will be split between .h/.cpp format when possible. Exceptions are templated functions, and templated
+classes (avoided when possible). All .h files should have \#define guards with the name of the file in all caps with
+\_H\_ at the end (e.g., for ExampleClass.h -- EXAMPLECLASS\_H\_).
+
+\subsection{Classes}
+\subsubsection{Class Names}
+All class names will begin with a capitol letter and each successive word will be capitalized. Ex. class MyPMPLClass.
+
+\subsubsection{Class Variables}
+Class variables should be indicated with m\_ (e.g., m\_variableName). No type specification is necessary (i.e.,
+m\_pVariable for a pointer).
+
+\subsubsection{Function Parameter Names}
+Function parameters should be indicated with an \_ (e.g., \_variableName).
+
+\subsection{All variable/function/class names}
+All variables will be named in CamelCasing. Class names and function names should begin with a capitol letter (i.e.,
+MyClass or MyFunction) while variables should begin with a lower case letter (i.e., m\_classVariable,
+\_functionParameter, or tempVar).
+
+\subsection{Spaces/Tabbing}
+All tab characters should be represented by 2 spaces (easy to make default in all editors, vim is recommended).
+
+\subsection{Curly Braces}
+Curly braces used in control flow, function definitions, or class definitions should be placed on the same line as the
+statement (e.g., class MyClass $\{$, void MyFunction()$\{$, while(1)$\{$).
+
+\subsection{Function Call/Declaration}
+Function calls or declarations which are "long" should be split between multiple lines when necessary to aid in reading
+the code.
+
+\subsection{m\_Debug}
+There will be a variable, m\_Debug in the PMPL base class which will be used to determine when output occurs. This means
+that there will be no \#Define statements for debug output, all debug output should be surrounded by:
+
+if(m\_debug) cout$<<$"My debug statement";
+
+\subsection{PrintOptions}
+In all classes one function PrintOptions should be implemented which displays the values of the class variables at the
+time of calling. This function can be called after XML initialization, but should not be called else where (at least in
+checked-in code).
+
+\subsection{Example Class}
+Example class is located in ExampleClass.h/.cpp within this same folder.
+
+\section{Documentation}
+All documentation should be done with DOxygen. DOxygen standards used within PMPL are not decided upon yet.
+
+\section{Testing}
+Currently only nightly compilation testing occurs nightly. This should be expanded in the future.
+
+\end{document}
