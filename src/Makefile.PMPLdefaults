@@ -220,6 +220,9 @@ PMPL_OBJS = \
 	Utilities/Stat_Class.o \
 	Utilities/XmlWrapper.o \
 	Utilities/VizmoDebugOutput.o \
+        Utilities/MetricUtils.o \
+        Utilities/IOUtils.o \
+        Utilities/MPUtils.o \
 	DistanceMetric/DistanceMetricMethod.o \
 	DistanceMetric/DistanceMetrics.o \
 	ValidityChecker/CollisionDetection.o \
