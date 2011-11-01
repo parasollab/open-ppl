@@ -14,10 +14,10 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
     this->SetName("WorkspaceObstacleBasedSampler");
   }
   
-  WorkspaceObstacleBasedSampler(Environment* _env,
+  WorkspaceObstacleBasedSampler(Environment* _env, 
                                 shared_ptr<DistanceMetricMethod> _dm, int _free = 1, int _coll = 0, 
                                 double _step = 0, string _pointSelection="rW")
-    : ObstacleBasedSampler<CFG>( _env,  _dm,  _free ,  _coll , _step ) 
+    : ObstacleBasedSampler<CFG>(_env, _dm,  _free ,  _coll , _step) 
   {
     this->SetName("WorkspaceObstacleBasedSampler");
      pointSelection=_pointSelection;
@@ -39,9 +39,9 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
 
   ~WorkspaceObstacleBasedSampler() {}
 
-  virtual void print(ostream& os) const
+  virtual void Print(ostream& os) const
   {
-    ObstacleBasedSampler<CFG>::print(os); 
+    ObstacleBasedSampler<CFG>::Print(os); 
     os << "  pointSelectionStrategy = " << pointSelection<< ")";
   }
 

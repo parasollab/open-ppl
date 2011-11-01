@@ -386,7 +386,7 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
   if(!useProbability){
     for(GIT git = m_NodeGenerationLabels.begin(); git != m_NodeGenerationLabels.end(); ++git){
       Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(git->first);
-      pNodeGenerator->print(cout);
+      pNodeGenerator->Print(cout);
       vector<CfgType> inNodes(git->second.first);
 
       //generate nodes for this node generator method
@@ -412,7 +412,7 @@ void BasicPRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
     string NextNodeGen = PickNextSampler();
     Sampler<CfgType>::SamplerPointer pNodeGenerator; 
     pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(NextNodeGen);
-    pNodeGenerator->print(cout);
+    pNodeGenerator->Print(cout);
     vector<CfgType> inNodes(1);
 
     //generate nodes for this node generator method
