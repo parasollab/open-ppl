@@ -36,17 +36,17 @@ include ${PMPL_DIR}/Makefile.PMPLdefaults
 #  CHECKIFSAMECC = 0
 #endif
 
-
-# define robot type
-ROBOT_DEF = -DPMPRigid
-#ROBOT_DEF = -DPMPSerial
-#ROBOT_DEF = -DPMPSerial2DOF
-#ROBOT_DEF = -DPMPCfg2D
-#ROBOT_DEF = -DPMPCfg2DWithRot
-#ROBOT_DEF = -DPMPReachDistCC
-#ROBOT_DEF = -DPMPReachDistCCFixed
-#ROBOT_DEF = -DPMPRigidMulti
-
+ifndef ROBOT_DEF
+  # define robot type
+  ROBOT_DEF = -DPMPRigid
+  #ROBOT_DEF = -DPMPSerial
+  #ROBOT_DEF = -DPMPSerial2DOF
+  #ROBOT_DEF = -DPMPCfg2D
+  #ROBOT_DEF = -DPMPCfg2DWithRot
+  #ROBOT_DEF = -DPMPReachDistCC
+  #ROBOT_DEF = -DPMPReachDistCCFixed
+  #ROBOT_DEF = -DPMPRigidMulti
+endif
 
 # macros
 DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF} #-DVERBOSE=0 -D_LOG 
