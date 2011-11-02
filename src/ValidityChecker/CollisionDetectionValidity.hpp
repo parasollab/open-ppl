@@ -255,7 +255,8 @@ isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo)
 #ifdef USE_PQP
   return Pqp_Solid().isInsideObstacle(cfg, env);
 #else
-  return false;
+  cerr << "Recompile with PQP to use CollisionDetectionValidity::isInsideObstacle" <<endl;
+  exit(1);
 #endif
 }
 
