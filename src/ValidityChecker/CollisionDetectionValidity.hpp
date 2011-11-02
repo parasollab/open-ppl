@@ -252,7 +252,11 @@ bool
 CollisionDetectionValidity<CFG>::
 isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo)
 {
-	return Pqp_Solid().isInsideObstacle(cfg, env);
+#ifdef USE_PQP
+  return Pqp_Solid().isInsideObstacle(cfg, env);
+#else
+  return false;
+#endif
 }
 
 #endif // #ifndef _COLLISION_DETECTION_VALIDITY_HPP_
