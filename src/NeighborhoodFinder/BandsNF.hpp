@@ -27,7 +27,7 @@ public:
   virtual ~Policy() {}
 
   virtual vector< pair<VID, double> >
-    SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last) = 0;
+    SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last) = 0;
   
   int getK() { return m_k; }
   
@@ -44,7 +44,7 @@ public:
   virtual ~ClosestPolicy() {}
 
   vector< pair<VID, double> >
-  SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last)
+  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
   {
     if (m_debug) cout << "ClosestPolicy::SelectNeighbors()" << endl;
     
@@ -92,7 +92,7 @@ public:
   virtual ~RandomPolicy() {}
 
   vector< pair<VID, double> >
-  SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last)
+  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
   {
     if (m_debug) cout << "RandomPolicy::SelectNeighbors()" << endl;
     
@@ -133,15 +133,97 @@ public:
   
 };
 
+class PreferentialPolicy : public Policy {
+
+public:
+  PreferentialPolicy() : Policy() { }
+  PreferentialPolicy(int k, bool debug) : Policy(k, debug) { }
+  virtual ~PreferentialPolicy() {}
+
+  vector< pair<VID, double> >
+  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
+  {
+    if (m_debug) cout << "PreferentialPolicy::SelectNeighbors()" << endl;
+    
+    vector< pair<VID, double> > neighbors;
+   
+    int found = 0;
+    int max_iter = getK();
+    if (_candidates_last - _candidates_first < max_iter)
+      max_iter = _candidates_last - _candidates_first;
+
+    int set_degree = candidate_set_degree(_rmp, _candidates_first, _candidates_last);
+      
+    while (found < max_iter) {
+      // iterate through candidate set, adding as neighbor with probability = pref_prob(_rmp, v, n)
+      for (VEC_ITR itr = _candidates_first; itr != _candidates_last; ++itr) {
+        double drand = OBPRM_drand();
+        pair<VID, double> p = *itr;
+        VID v = p.first;
+        double prob = pref_prob(_rmp, v, _candidates_last - _candidates_first, set_degree);
+        if (m_debug) cout << "found = " << found << ", VID = " << v << ", drand = " << drand << ", prob = " << prob;
+        if (drand < prob) {
+          if (m_debug) cout << " ||| ";
+
+          bool exists = false;
+          for (VEC_ITR n_itr = neighbors.begin(); n_itr != neighbors.end(); ++n_itr) {
+            if ((*n_itr).first == v) {
+              if (m_debug) cout << " already in set...";
+              exists = true;
+            }
+          } 
+
+          if (!exists) {
+            neighbors.push_back(p);
+            if (m_debug) cout << " added!";
+            found++;
+          }
+        }
+        if (m_debug) cout << endl;
+        if (found == max_iter) {
+          break;
+        }
+      }
+    }  
+  
+    return neighbors;
+  }
+  
+  //////////////////////
+  // Probability function
+  double pref_prob(
+          Roadmap<CfgType, WeightType>* _rm, VID _vid, int _n, int _tot_degree) {
+    int candidate_degree = _rm->m_pRoadmap->get_degree(_vid);
+    int total_degree = _tot_degree;
+    if (_tot_degree == -1) total_degree = _rm->m_pRoadmap->get_num_edges(); 
+    if (m_debug) cout << "pref_prob(" << _vid << ", " << _n << ") = " << 1 + candidate_degree << " / " << _n + total_degree << endl;
+    return ((double)(1 + candidate_degree) / (double)(_n + total_degree));
+  }
+
+  //////////////////////
+  // Get the total degree of the candidate set
+  int candidate_set_degree(
+          Roadmap<CfgType, WeightType>* _rm, VEC_ITR _candidates_first, VEC_ITR _candidates_last) {
+    int total_degree = 0;
+    for (VEC_ITR itr = _candidates_first; itr != _candidates_last; ++itr) {
+      pair<VID, double> p = *itr;
+      int candidate_degree = _rm->m_pRoadmap->get_degree(p.first);
+      total_degree += candidate_degree;
+      if (m_debug) cout << "candidate_set_degree += " << candidate_degree << endl;
+    }
+    return total_degree;
+  }
+};
+
 class RankWeightedRandomPolicy : public Policy {
 
 public:  
   RankWeightedRandomPolicy() : Policy() { }
-  RankWeightedRandomPolicy(int k, bool debug) : Policy(k, debug) { }
+  RankWeightedRandomPolicy(int k, double alpha, bool debug) : Policy(k, debug) { m_alpha = alpha; }
   virtual ~RankWeightedRandomPolicy() {}
 
   vector< pair<VID, double> >
-  SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last)
+  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
   {
     if (m_debug) cout << "RankWeightedRandomPolicy::SelectNeighbors()" << endl;
     
@@ -173,7 +255,7 @@ public:
             
         if (done == true) {
           // if it hasn't been added, add it with some probability
-          double prob = pow((max_rank - id) / (max_rank), 1.5);
+          double prob = pow((max_rank - id) / (max_rank), m_alpha);
           double roll = OBPRM_drand();
 
           // if we are taking less than K (every neighbor in the candidate set), set prob to 1
@@ -181,7 +263,7 @@ public:
             prob = 1.0;
           }
 
-          if (m_debug) cout << "\t\t\trank = " << id << ", prob = " << prob << ", roll = " << roll;
+          if (m_debug) cout << "\t\t\trank = " << id << ", prob = " << prob << ", alpha = " << m_alpha << ", roll = " << roll;
           
           if (roll < prob) {
             neighbors.push_back(p);
@@ -198,17 +280,19 @@ public:
     return neighbors;
   }
   
+  double m_alpha;
+
 };
 
 class DistanceWeightedRandomPolicy : public Policy {
 
 public:
   DistanceWeightedRandomPolicy() : Policy() { }
-  DistanceWeightedRandomPolicy(int k, bool debug) : Policy(k, debug) { }
+  DistanceWeightedRandomPolicy(int k, double alpha, bool debug) : Policy(k, debug) { m_alpha = alpha; }
   virtual ~DistanceWeightedRandomPolicy() {}
 
   vector< pair<VID, double> >
-  SelectNeighbors(VEC_ITR _candidates_first, VEC_ITR _candidates_last)
+  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
   {
     if (m_debug) cout << "DistanceWeightedRandomPolicy::SelectNeighbors()" << endl;
     
@@ -243,7 +327,7 @@ public:
             
         if (done == true) {
           // if it hasn't been added, add it with some probability
-          double prob = pow((max_dist - p.second) / (max_dist - min_dist), 1.5);
+          double prob = pow((max_dist - p.second) / (max_dist - min_dist), m_alpha);
           double roll = OBPRM_drand();
           
           // if we are taking less than K (every neighbor in the candidate set), set prob to 1
@@ -268,6 +352,8 @@ public:
     return neighbors;
   }
   
+  double m_alpha;
+
 };
 
 
@@ -294,6 +380,8 @@ public:
     m_usePercent = in_Node.boolXMLParameter(string("usePercent"), false, false,
                           string("treat min and max as a percentage of the total number of vertices in the roadmap"));
     
+    double alpha = in_Node.numberXMLParameter(string("alpha"), false, double(1.0), double(0.0), double(100.0), "alpha");
+
     string policy = in_Node.stringXMLParameter(string("policy"), true, string("closest"), string("selection policy"));
     int k = in_Node.numberXMLParameter(string("k"), true, int(1), int(0), int(10000), "k");
     
@@ -306,11 +394,17 @@ public:
       m_policy = new RandomPolicy(k, debug);
     } else
     if (policy == "RWR") {
-      m_policy = new RankWeightedRandomPolicy(k, debug);
+      m_policy = new RankWeightedRandomPolicy(k, alpha, debug);
     } else
     if (policy == "DWR") {
-      m_policy = new DistanceWeightedRandomPolicy(k, debug);
-    }
+      m_policy = new DistanceWeightedRandomPolicy(k, alpha, debug);
+    } else
+    if (policy == "preferential") {
+      m_policy = new PreferentialPolicy(k, debug);
+    } else {
+		cout << "policy \"" << policy << "\" is not a valid option.  Exiting..." << endl;
+		exit(-1);
+	}
     
     m_type = "";
   }
@@ -413,7 +507,7 @@ public:
     if (m_debug) cout << "  num_candidates = " << candidate_set.size() << endl;
     
     // get neighbors from candidate set using policy
-    vector< pair<VID, double> > neighbors = m_policy->SelectNeighbors(candidate_set.begin(), candidate_set.end());
+    vector< pair<VID, double> > neighbors = m_policy->SelectNeighbors(_rmp, candidate_set.begin(), candidate_set.end());
     return neighbors; 
   }
 
@@ -477,7 +571,7 @@ public:
     if (m_debug) cout << "  num_candidates = " << candidate_set.size() << endl;
     
     // get neighbors from candidate set using policy
-    vector< pair<VID, double> > neighbors = m_policy->SelectNeighbors(candidate_set.begin(), candidate_set.end());
+    vector< pair<VID, double> > neighbors = m_policy->SelectNeighbors(_rmp, candidate_set.begin(), candidate_set.end());
     return neighbors; 
   }
 
