@@ -259,7 +259,7 @@ public:
           double roll = OBPRM_drand();
 
           // if we are taking less than K (every neighbor in the candidate set), set prob to 1
-          if (max_iter <= getK()) {
+          if (max_iter < getK()) {
             prob = 1.0;
           }
 
@@ -331,7 +331,7 @@ public:
           double roll = OBPRM_drand();
           
           // if we are taking less than K (every neighbor in the candidate set), set prob to 1
-          if (max_iter <= getK()) {
+          if (max_iter < getK()) {
             prob = 1.0;
           }
           
