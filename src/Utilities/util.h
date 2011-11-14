@@ -24,10 +24,9 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
-#include "XmlWrapper.h"
+#include "IOUtils.h"
 #include "Basic.h"
 #include "RoadmapGraph.h"
-#include "VizmoDebugOutput.h"
 /////////////////////////////////////////////////////////////////////////////////////////
 class Cfg;
 class Environment;
@@ -113,111 +112,6 @@ double GaussianDistribution(double m, double s);
    */
   long OBPRM_srand(std::string methodName, int nextNodeIndex, long base = 0x1234ABCD, bool reset = false);
 
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-// Cfgs input & output from/to files.
-//
-//
-//
-/////////////////////////////////////////////////////////////////////////////////////////
-/**@name Cfgs I/O Utility*/
-//@{
-
-    /**Write a list of Cfgs in a give path and path size 
-      *to file with given filename.
-      *
-      *This method writes number of links of robot,
-      *path size to output_file. Then Cfgs for
-      *each link in robot will be output to file 
-      *named "output_file".cfg
-      *
-      *
-      *@param filename Filename for Cfg data.
-      *@param path All Gfgs will be written to file.
-      *@param env is used to get "robot link" information.
-      *@note if file couldn't be opened, error message will be post 
-      *and process will be terminated.
-      *
-      *@see Cfg::printLinkConfigurations
-      */
-    void WritePathLinkConfigurations(const char output_file[80], 
-                                     vector<Cfg*>& path, 
-                                     Environment *env);
-    template <class CFG>
-    void WritePathLinkConfigurations(const char output_file[80], 
-                                     vector<CFG>& path, 
-                                     Environment *env);
-
-    /**Write a list of Cfgs in a give path and path size 
-      *to file with given filename.
-      *@param filename Filename for Cfg data.
-      *@param path All Gfgs will be written to file.
-      *@param env is not used.
-      *@note if file couldn't be opened, error message will be post 
-      *and process will be terminated.
-      */   
-    void WritePathConfigurations(const char output_file[80], 
-                                 vector<Cfg*>& path, 
-                                 Environment *env);  
-    template <class CFG>
-    void WritePathConfigurations(const char output_file[80], 
-				 vector<CFG>& path, 
-                                 Environment *env);
-
-    /**Read a list of Cfgs from file with given filename.
-      *@param filename Filename for Cfg data.
-      *@param cfgs All new Gfg will be inserted to this list.
-      *@note if file couldn't be opened, error message will be post.
-      *@see Cfg::Read
-      */
-    template <class CFG>
-    void ReadCfgs(char *filename, vector<CFG>& cfgs);
-
-//@}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-// Files input & output from/to files.
-//
-//
-//
-/////////////////////////////////////////////////////////////////////////////////////////
-/**@name File I/O Utility*/
-//@{
-
-    #define PMPL_EXIT 1      ///< Actions for VerifyFileExists
-   
-
-    /**Check if or not this given filename exists.
-      *@param _fname File name that is going to be checked.
-      *@action What should be done if file not found.
-      *Its value should be PMPL_EXIT or RETURN.
-      *
-      *@return true if file exists. If file dosen't exist 
-      *and action is PMPL_EXIT, process will be terminated.
-      *Otherwise false will be returned.
-      */
-    bool VerifyFileExists(const char *_fname,int action);
-
-
-    /**Read data for element from input stream.
-      *This method throws away comments starting from "#", and
-      *find out read data for element.
-      *
-      *@param element An element which will read data from file.
-      *@note type T should have istream>> overloading.
-      *@note >> overloading should return 0 (NULL or false)
-      *if data couldn't be read correctly.
-      */
-    template <class T> bool readfield (istream &_is, T *element);
-
-//@}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -227,43 +121,6 @@ double GaussianDistribution(double m, double s);
 //
 //
 /////////////////////////////////////////////////////////////////////////////////////////
-
-///The character to distinguish commnets.
-#define COMMENT_DELIMITER '#'
-///The maximum number of characters in each line.
-#define LINEMAX 256
-    
-template <class T> bool readfield (istream &_is, T *element,vector <char *> &comment) {
-    char c;
-    char ThrowAwayLine[LINEMAX];
-    
-    while ( _is.get(c) ) {
-        if (c == '#') {
-            _is.getline(ThrowAwayLine,LINEMAX,'\n');
-            comment.push_back(strdup(ThrowAwayLine));
-        }
-        else if (! isspace(c) ) {
-            _is.putback(c);
-            if (_is >> *element) {
-              return true;
-            } else {
-            break;
-            }
-        }
-    }
-    
-    // could not read correctly ...
-    cout << "Error in reading!!! at util::readfield. " << endl;
-    return false;
-}
-
-template <class T> bool readfield (istream &_is, T *element) {
-    vector <char  *> comment;
-    bool ret=readfield(_is,element,comment);
-    comment.clear();
-    return ret;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 //Modified for VC
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -306,105 +163,6 @@ double rint(double x);
 #endif //_WIN32
 /////////////////////////////////////////////////////////////////////////////////////////
 
-template <class CFG>
-void WritePathLinkConfigurations(const char output_file[80], 
-				 vector<CFG>& path, 
-				 Environment *env) {
-  vector<Cfg*> ppath;
-  for(int i=0; i<path.size(); i++)
-    ppath.push_back(&path[i]);
-  WritePathLinkConfigurations(output_file, ppath, env);
-}
-
-
-template <class CFG>
-void WritePathConfigurations(const char output_file[80],
-			     vector<CFG>& path,
-			     Environment *env) {
-  vector<Cfg*> ppath;
-  for(size_t i=0; i<path.size(); i++) 
-    ppath.push_back(&path[i]);
-  WritePathConfigurations(output_file, ppath, env);
-}
-
-
-// read cfgs from a file into a vector.
-template <class CFG>
-void ReadCfgs(char * filename,  vector<CFG>& cfgs) {
-  ifstream  is(filename);
-  if (!is) {
-    cout << "\nWarning: in util::ReadCfgs: can't open infile: " << filename << endl;
-    return;
-  }
-  
-  CFG tempCfg;
-  while (1) {
-    tempCfg.Read(is);
-    if(!is) break;
-    cfgs.push_back(tempCfg);
-  }
-}
-
-/////////////////
-//
-//Logging + XML stuff
-//
-/////////////////
-//#define DEBUG_MSG 1
-//#define WARNING_MSG 2
-//#define ERROR_MSG 3
-
-#ifdef _LOG
-
-#define LOG_DEBUG_MSG( msg ) \
-{ \
-        cout << "DEBUG: " << msg << endl ; \
-}
-
-#define LOG_WARNING_MSG( msg ) \
-{ \
-        cout << "WARNING: " << msg << endl ; \
-}
-
-#define LOG_ERROR_MSG( msg ) \
-{ \
-        cout << "ERROR: " << msg << endl ; \
-}
-
-#else 
-
-#define LOG_DEBUG_MSG( msg ) { }
-#define LOG_WARNING_MSG( msg ) { }
-#define LOG_ERROR_MSG( msg ) { }
-#endif //_LOG
-
-
-
-
-
-
-class MessageLogs {
-
-  public:
-    MessageLogs() {
-      bOutput = false;
-      //level = VERBOSE;
-    };
-    
-    //inline int GetLevel() { return level; };
-    //inline void SetLevel(int in_level) { level = in_level; };
-    inline void operator << (ostream& io_os) { 
-      if(!bOutput)
-        cout << io_os << endl;;
-    };
-    
-  private:
-    //int level;
-    bool bOutput;
-    
-
-};
-
 class MPProblem;
 class MPBaseObject {
   public: 
@@ -423,7 +181,6 @@ class MPBaseObject {
                                               string("Label Identifier"));
     };
     
-    inline MessageLogs& GetMessageLog() { return m_message_log; };
     inline MPProblem* GetMPProblem() { return m_pProblem;}
     inline void SetMPProblem(MPProblem* m){m_pProblem=m;}
     virtual void PrintOptions(ostream& out_os) { };
@@ -435,44 +192,10 @@ class MPBaseObject {
     string m_name;
 
   private:
-    MessageLogs m_message_log;
     MPProblem* m_pProblem;
     string m_strLabel;
 };
-/*
 
-class MPFileIO : public MPBaseObject {
-public:
-  MPFileIO(string& in_strFileName) {
-    constructed = true;
-    m_strFileName = in_strFilename;
-  };
-    
-  MPFileIO() { constructed = false;}
-    
-  //May need to add reference counting through
-  //copy constrctor later;
-    
-  string& GetFileName() {return m_strFileName; };
-  
-  ostream& GetFileStream() {
-    if(!constructed) {
-      LOG_ERROR_MSG("file_name_io::I dont have a filename"); exit(-1);
-    }
-  
-    if(!fileOpened) {
-      m_fstream = new fstream(m_strFileName);
-    }
-    return *m_fstream; 
-  };
-
-private:
-  bool fileOpened, constructed; 
-  string m_strFileName;
-  fstream* m_fstream;
-};
-
-*/
 template<class CFG, class WEIGHT>
 CFG
 GetCentroid(RoadmapGraph<CFG, WEIGHT>* graph, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc);

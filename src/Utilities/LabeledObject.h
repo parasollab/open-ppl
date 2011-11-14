@@ -1,7 +1,7 @@
 #ifndef _LABELED_OBJECT_H_
 #define _LABELED_OBJECT_H_
 
-#include "XmlWrapper.h"
+#include "IOUtils.h"
 #include <string>
 
 /// Base class for Labeled Objects.

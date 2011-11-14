@@ -441,8 +441,8 @@ void MultiBody::Read(istream& _is, int action, const char* descDir)
 
   //get body info
   char string[32];
-  readfield(_is, &string); //read "MultiBody"
-  readfield(_is, &string); //read "Active/Passive"
+  ReadField(_is, &string); //read "MultiBody"
+  ReadField(_is, &string); //read "Active/Passive"
 
   char cPeek = _is.peek();
   while((cPeek == ' ') || (cPeek == '\n')) {
@@ -452,20 +452,20 @@ void MultiBody::Read(istream& _is, int action, const char* descDir)
 
   bInternal = false;    
   if(cPeek =='I') {
-    readfield(_is, &string);
+    ReadField(_is, &string);
     if (!strncmp(string, "Internal", 8)) 
       bInternal = true;
   }
 
   int bodyCount;
-  readfield(_is, &bodyCount);
+  ReadField(_is, &bodyCount);
   vector<bool> isFree;
 
   double fixSum = 0;
   double freeSum = 0;
   for(int i=0; i<bodyCount; ++i) {
     vector<char*> comments;
-    readfield(_is, &string, comments); //Tag FixedBody or FreeBody
+    ReadField(_is, &string, comments); //Tag FixedBody or FreeBody
     int BodyIndex;
     _is >> BodyIndex;
 
@@ -518,7 +518,7 @@ void MultiBody::Read(istream& _is, int action, const char* descDir)
   area = fixArea + freeArea;
 
   //get connection info
-  readfield(_is, &string);     // Tag, "Connection"
+  ReadField(_is, &string);     // Tag, "Connection"
   int connectionCount;
   _is >> connectionCount;   // # of connections
 
@@ -527,7 +527,7 @@ void MultiBody::Read(istream& _is, int action, const char* descDir)
     _is >> previousBodyIndex;              // first body
     _is >> nextBodyIndex;                  // second body
 
-    readfield(_is, &string);             // Tag, "Actuated/NonActuated"
+    ReadField(_is, &string);             // Tag, "Actuated/NonActuated"
       
     Vector3D transformPosition(_is);
     Vector3D angles(_is);
@@ -542,7 +542,7 @@ void MultiBody::Read(istream& _is, int action, const char* descDir)
     _is >> dhparameters.d;              // DH parameter, d
     _is >> dhparameters.theta;          // DH parameter, theta
     
-    readfield(_is, &string);   // Tag, "Revolute" or "Prismatic"
+    ReadField(_is, &string);   // Tag, "Revolute" or "Prismatic"
     int connectionType;
     if (!strncmp(string, "Revolute", 9))
       connectionType = 0;              // Revolute type
