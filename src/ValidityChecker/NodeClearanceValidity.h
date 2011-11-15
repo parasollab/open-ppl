@@ -18,9 +18,9 @@ class NodeClearanceValidity : public ValidityCheckerMethod {
           CDInfo& _cdInfo, bool _enablePenetration, string *_callName);
 
   private:
+    double m_delta;
     string m_dmLabel;
     string m_nfLabel;
-    double m_delta;
 };
 
 #endif
