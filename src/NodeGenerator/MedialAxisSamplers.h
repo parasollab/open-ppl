@@ -33,22 +33,17 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       this->SetName("MedialAxisSampler");
     }
 
-    MedialAxisSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) {
-      LOG_DEBUG_MSG("MedialAxisSampler::MedialAxisSampler()");
+    MedialAxisSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
       this->SetName("MedialAxisSampler");
       ParseXML(in_Node);
       mp = in_pProblem;
       vc = in_pProblem->GetValidityChecker();
       dm = in_pProblem->GetDistanceMetric()->GetDMMethod(str_dm);
-      LOG_DEBUG_MSG("~MedialAxisSampler::MedialAxisSampler()");
     }
 
     ~MedialAxisSampler() {}
 
     void ParseXML(XMLNodeReader& in_Node) {
-      LOG_DEBUG_MSG("MedialAxisSampler::ParseXML()");		
-      this->SetLabel(this->ParseLabelXML(in_Node));
-
       str_vcm     = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
       str_dm      = in_Node.stringXMLParameter("dm_method", true, "", "Distance metric");
       str_c       = in_Node.stringXMLParameter("clearance_type", true, "", "Clearance Computation (exact or approx)");
@@ -60,7 +55,6 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       m_debug     = in_Node.boolXMLParameter("debug", false, false, "debugging flag");
       use_bbx     = in_Node.boolXMLParameter("use_bbx", false, true, "Use the Bounding Box as an Obstacle");		
       Print(cout);
-      LOG_DEBUG_MSG("~MedialAxisSampler::ParseXML()");
     }
 
     virtual void Print(ostream& os) const {

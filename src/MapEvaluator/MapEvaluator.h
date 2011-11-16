@@ -110,7 +110,7 @@ class MapEvaluator : public MPBaseObject
       if ((*I)->GetLabel() == in_label)
         return *I;
 
-    LOG_ERROR_MSG( "MapEvaluator:: cannot find ConditionalMethod = " << in_label);
+    cerr << "MapEvaluator:: cannot find ConditionalMethod = " << in_label << endl;
     exit(-1);
   }
 
@@ -120,7 +120,7 @@ class MapEvaluator : public MPBaseObject
       if ((*I)->GetLabel() == in_label)
         return *I;
       
-    LOG_ERROR_MSG( "MapEvaluator:: cannot find ComparerMethod = " << in_label);
+    cerr << "MapEvaluator:: cannot find ComparerMethod = " << in_label << endl;
     exit(-1);
   }
   

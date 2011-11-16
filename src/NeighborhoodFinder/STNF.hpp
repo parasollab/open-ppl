@@ -20,7 +20,7 @@ public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
   STNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node,in_pProblem) {
+    NeighborhoodFinderMethod(in_Node,in_pProblem) {
   
 
     overlapDistance = in_Node.numberXMLParameter("overlapDistance", false, double(0.0),

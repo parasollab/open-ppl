@@ -1,7 +1,7 @@
 #ifndef PARTITIONINGEVALUATORS_H_
 #define PARTITIONINGEVALUATORS_H_
 
-#include "util.h"
+#include "MPUtils.h"
 
 class PartitioningEvaluator;
 class Partition;

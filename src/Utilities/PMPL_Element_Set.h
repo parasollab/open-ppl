@@ -51,17 +51,17 @@ class element_set
     if(m_universe.find(str) != m_universe.end())
     {
       boost::shared_ptr<Element> e = m_universe[str](in_Node, in_pProblem);
-      return add_element(e->GetObjectLabel(), e);
+      return add_element(e->GetLabel(), e);
     }
     return false;
   }
 
   bool add_element(string const& str, boost::shared_ptr<Element> e) 
   {
-    if(m_elements.find(e->GetObjectLabel()) == m_elements.end())
-      m_elements[e->GetObjectLabel()] = e;
+    if(m_elements.find(e->GetLabel()) == m_elements.end())
+      m_elements[e->GetLabel()] = e;
     else
-      cerr << "\nWarning, method list already has a pointer associated with \"" << e->GetObjectLabel() << "\", not added\n";
+      cerr << "\nWarning, method list already has a pointer associated with \"" << e->GetLabel() << "\", not added\n";
     return true;
   }
 

@@ -164,7 +164,7 @@ AddToRoadmap(vector<CFG>& in_Cfgs) {
         //col_roadmap.m_pRoadmap->AddVertex((*I));
 
       }
-    } else {LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- UNLABELED!!!!!!!");}
+    } else {if(m_debug) cout << "MPRegion::AddToRoadmap() -- UNLABELED!!!!!!!" << endl;}
   }
   return returnVec;
 }
@@ -181,7 +181,7 @@ AddToBlockRoadmap(vector<CFG>& in_Cfgs) {
       if((*I).GetLabel("INVALID")) {//Add to Free roadmap
         returnVec.push_back(roadmap.m_pRoadmap->AddVertex((*I)));
       }
-    } else {LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- UNLABELED!!!!!!!");}
+    } else {if(m_debug) cout << "MPRegion::AddToRoadmap() -- UNLABELED!!!!!!!" << endl;}
   }
   return returnVec;
 }
@@ -199,7 +199,7 @@ WriteRoadmapForVizmo() {
   ofstream  myofstream(outputFilename.c_str());
   
   if (!myofstream) {
-    LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
+    cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
     exit(-1);
   }
   WriteRoadmapForVizmo(myofstream);
@@ -208,11 +208,6 @@ WriteRoadmapForVizmo() {
 template <class CFG, class WEIGHT>
 void MPRegion<CFG,WEIGHT>::
 WriteRoadmapForVizmo(ostream& myofstream, vector<BoundingBox*>* bboxes = NULL, bool block = false) {
-
-  LOG_DEBUG_MSG("MPRegion::WriteRoadmapForVizmo()");
-  
-  
-  
   myofstream << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
   myofstream << endl << "#####PREAMBLESTART#####";
   myofstream << endl << "../obprm -f " << GetMPProblem()->GetEnvironment()->GetEnvFileName() << " ";//commandLine;
@@ -247,8 +242,6 @@ WriteRoadmapForVizmo(ostream& myofstream, vector<BoundingBox*>* bboxes = NULL, b
    write_graph(*(GetRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
   else 
    write_graph(*(GetBlockRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
-  
-  LOG_DEBUG_MSG("~MPRegion::WriteRoadmapForVizmo()");
 }
 
 

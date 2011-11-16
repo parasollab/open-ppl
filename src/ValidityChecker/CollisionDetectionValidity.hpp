@@ -4,7 +4,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 #include "ValidityCheckerMethod.hpp"
 #include "CollisionDetection.h"
-#include "LabeledObject.h"
 #include "Stat_Class.h"
 #include <string>
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +44,7 @@ private:
 template<typename CFG>
 CollisionDetectionValidity<CFG>::
 CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-  ValidityCheckerMethod(ParseLabelXML(in_Node), in_pProblem) 
+  ValidityCheckerMethod(in_Node, in_pProblem) 
 {
   std::vector<CollisionDetectionMethod*>::iterator I;
   for(I=m_selected.begin(); I!=m_selected.end(); ++I)

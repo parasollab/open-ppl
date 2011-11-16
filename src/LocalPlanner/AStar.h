@@ -122,11 +122,8 @@ AStar(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, boo
   vcMethod = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("Validity Test Method"));
   n_tries = in_Node.numberXMLParameter(string("n_tries"), true, 0.5, 0.0, 10.0, string("n_tries"));
   n_neighbors = in_Node.numberXMLParameter(string("n_neighbors"), true, 0.5, 0.0, 10.0, string("n_neighbors"));
-  LOG_DEBUG_MSG("AStar::AStar()");
   if(warnUnrequestedXml)
     in_Node.warnUnrequestedAttributes();
-  LOG_DEBUG_MSG("~AStar::AStar()");
-
 }
 
  
@@ -358,10 +355,8 @@ AStarDistance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProb
 {
   this->SetName("a_star_distance");
   this->cdtype= _cdtype;
-  LOG_DEBUG_MSG("AStarDistance::AStarDistance()");
   if(warnUnrequestedXml)
     in_Node.warnUnrequestedAttributes();
-  LOG_DEBUG_MSG("~AStarDistance::AStarDistance()");
 }
 
 template <class CFG, class WEIGHT>
@@ -445,13 +440,11 @@ AStarClearance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pPro
 {
   this->SetName("aStarClearance");
   this->cdtype= _cdtype;
-  LOG_DEBUG_MSG("AStarClearance::AStarClearance()");
   dm_label = in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
   vcMethod = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("Validity Test Method"));
   penetration = in_Node.numberXMLParameter("penetration", false, 5, 0, 1000, "Penetration Number");
   if(warnUnrequestedXml)
     in_Node.warnUnrequestedAttributes();
-  LOG_DEBUG_MSG("~AStarClearance::AStarClearance()");
 }
 
 template <class CFG, class WEIGHT>

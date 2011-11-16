@@ -1,5 +1,6 @@
 #include "Boundary.h"
 #include "MPProblem.h"
+#include "util.h"
 
 Boundary::Boundary() {
 /*     cout << "Boundary(). TODO ALL " << endl; */
@@ -31,7 +32,6 @@ BoundingBox::
 BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem)
   : pos_dofs(in_pproblem->GetPosDOFs()),
     dofs(in_pproblem->GetDOFs()) {
-      LOG_DEBUG_MSG("BoundingBox::BoundingBox()");
 
   in_Node.verifyName(string("boundary"));
   bounding_box.clear();
@@ -47,14 +47,13 @@ BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem)
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
     if (citr->getName() == "parameter") {
      
-      int par_id = citr->numberXMLParameter(string("id"),true,0,0,MAX_INT,string("id"));
+      int par_id = citr->numberXMLParameter("id",true,0,0,MAX_INT,"id");
       string par_label = citr->stringXMLParameter("Label",true,"","Label");
           //@todo par_label is not used in bbox parameters, may want to use it
-      double par_min = citr->numberXMLParameter(string("min"),true,double(0),double(-1*MAX_INT),double(MAX_INT),string("min"));
-      double par_max = citr->numberXMLParameter(string("max"),true,double(0),double(-1*MAX_INT),double(MAX_INT),string("max"));
+      double par_min = citr->numberXMLParameter("min",true,0.0,-1.0*MAX_DBL,MAX_DBL,"min");
+      double par_max = citr->numberXMLParameter("max",true,0.0,-1.0*MAX_DBL,MAX_DBL,"max");
       
-      LOG_DEBUG_MSG("BoundingBox:: setting parameter par_id="<<par_id<<" par_min="
-          <<par_min<<" par_max="<<par_max);
+      if(m_debug) cout<<"BoundingBox:: setting parameter par_id="<<par_id<<" par_min=" <<par_min<<" par_max="<<par_max;
       
       SetParameter(par_id,par_min,par_max);
       string type = citr->stringXMLParameter("type",true,"","type");
@@ -69,7 +68,6 @@ BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem)
   double translational_scale = in_Node.numberXMLParameter(string("translational_scale"),true,double(0),double(-1*MAX_INT),double(MAX_INT),string("translational_scale"));
 
   TranslationalScale(translational_scale);
-  LOG_DEBUG_MSG("~BoundingBox::BoundingBox()");
 }
 
 BoundingBox::

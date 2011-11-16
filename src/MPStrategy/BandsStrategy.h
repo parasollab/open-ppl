@@ -118,9 +118,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 }  
   BandsIncrementalRoadmap(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPStrategyMethod(in_Node,in_pProblem) {
-    LOG_DEBUG_MSG("BandsIncrementalRoadmap::BandsIncrementalRoadmap()");
     ParseXML(in_Node);    
-    LOG_DEBUG_MSG("~BandsIncrementalRoadmap::BandsIncrementalRoadmap()");
     };
   virtual ~BandsIncrementalRoadmap() {}
     
@@ -128,7 +126,6 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
   
   virtual void ParseXML(XMLNodeReader& in_Node) {
     cout << "BandsIncrementalRoadmap::ParseXML()" << endl;
-    LOG_DEBUG_MSG("BandsIncrementalRoadmap::ParseXML()");
     //OBPRM_srand(getSeed());
     XMLNodeReader::childiterator citr;
     for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
@@ -191,13 +188,11 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
     myifstream.close();
     
     
-    LOG_DEBUG_MSG("~BandsIncrementalRoadmap::ParseXML()");
     cout << "leaving BandsIncrementalRoadmap" << endl;
   };
    
   virtual void Initialize(int in_RegionID){}
   virtual void Run(int in_RegionID){
-    LOG_DEBUG_MSG("BandsIncrementalRoadmap::()");
 
     OBPRM_srand(getSeed()); 
     MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
@@ -291,7 +286,6 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       for(J itr = m_vecStrNodeConnectionLabels.begin(); 
           itr != m_vecStrNodeConnectionLabels.end(); ++itr)
       {
-        LOG_DEBUG_MSG("BandsIncrementalRoadmap:: " << *itr);
         
         ConnectMap<CfgType,WeightType>::NodeConnectionPointer pConnection;
         pConnection = connectmap->GetNodeMethod(*itr);
@@ -411,7 +405,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         << endl;
 
         if (!map_out) {
-          LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
+          cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
           exit(-1);
         }
 
@@ -436,7 +430,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
     }
     
     cout << "Finished map " << endl;
-    LOG_DEBUG_MSG("~BandsIncrementalRoadmap::()");
+    cout << "~BandsIncrementalRoadmap::()" << endl;
     
     region->WriteRoadmapForVizmo(map_out);
     map_out.close();
@@ -609,7 +603,6 @@ class BandsStats : public MPStrategyMethod {
 
 		void ParseXML(XMLNodeReader& in_Node) {
 			cout << "BandsStats::ParseXML()" << endl;
-			LOG_DEBUG_MSG("BandsStats::ParseXML()");
 				
 			input_map_filename = in_Node.stringXMLParameter(string("input_map_filename"), true, string(""),string("input .map filename"));
 			ideal_map_filename = in_Node.stringXMLParameter(string("ideal_map_filename"), true, string(""),string("all-pairs .map filename"));
@@ -1061,11 +1054,11 @@ class BandsStats : public MPStrategyMethod {
         ofstream myofstream2(out_filename_num_neighbors.c_str());
       
         if (!myofstream) {
-          LOG_ERROR_MSG("can't open out_filename_dist");
+          cerr << "can't open out_filename_dist" << endl;
           exit(-1);
         }
         if (!myofstream2) {
-          LOG_ERROR_MSG("can't open out_filename_num_neighbors");
+          cerr << "can't open out_filename_num_neighbors" << endl;
           exit(-1);
         }
       

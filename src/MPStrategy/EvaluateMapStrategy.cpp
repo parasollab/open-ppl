@@ -8,10 +8,8 @@ EvaluateMapStrategy::
 EvaluateMapStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml)
  : MPStrategyMethod(in_Node, in_pProblem) 
 {
-  LOG_DEBUG_MSG("EvaluateMapStrategy::EvaluateMapStrategy()");
   if(parse_xml)
     ParseXML(in_Node); 
-  LOG_DEBUG_MSG("~EvaluateMapStrategy::EvaluateMapStrategy()");
 }
 
 
@@ -31,7 +29,6 @@ void
 EvaluateMapStrategy::
 ParseXML(XMLNodeReader& in_Node, bool warn_unknown) 
 {
-  LOG_DEBUG_MSG("EvaluateMapStrategy::ParseXML()");
 
   string default_map_filename = getBaseFilename() + ".map";
   map_filename = in_Node.stringXMLParameter("map_filename", false, default_map_filename, "Map Filename");
@@ -51,7 +48,6 @@ ParseXML(XMLNodeReader& in_Node, bool warn_unknown)
 
   in_Node.warnUnrequestedAttributes();
   
-  LOG_DEBUG_MSG("~EvaluateMapStrategy::ParseXML()");
 }
   
 

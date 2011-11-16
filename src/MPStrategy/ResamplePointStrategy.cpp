@@ -43,7 +43,6 @@ void
 ResamplePointStrategy::
 ParseXML(XMLNodeReader& in_Node) 
 {
-   LOG_DEBUG_MSG("ResamplePointStrategy::ParseXML()");
    m_input_path_filename = in_Node.stringXMLParameter("input_path", true, "", "filename containing path to be resampled");
    m_output_path_filename = in_Node.stringXMLParameter("output_path", false, "", "filename to output resampled path to, default = input_path");
    if(m_output_path_filename == "")
@@ -59,7 +58,6 @@ ParseXML(XMLNodeReader& in_Node)
    m_vc = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("CD Library"));
    m_dm = in_Node.stringXMLParameter("dm_method", true, "", "Distance metric");
    in_Node.warnUnrequestedAttributes();
-   LOG_DEBUG_MSG("~ResamplePointStrategy::ParseXML()");
 }
 
 
@@ -133,7 +131,6 @@ void
 ResamplePointStrategy::
 Run(int in_RegionID) 
 {
-   LOG_DEBUG_MSG("ResamplePointStrategy::()");
    PrintOptions(cout);
    double currentConfigurationWeight=0.0;
    double temp=0.0;
@@ -265,10 +262,6 @@ Run(int in_RegionID)
   ofstream os_map(m_output_map_filename.c_str());
   GetMPProblem()->GetMPRegion(in_RegionID)->WriteRoadmapForVizmo(os_map);
   os_map.close();
- 
-  
- 
-  LOG_DEBUG_MSG("~ResamplePointStrategy::()");
 }
 
 

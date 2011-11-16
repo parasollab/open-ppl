@@ -143,7 +143,6 @@ void PartitionTree::RemoveNode(PartitionNode* pn){
 };
 
 void PartitionTree::CreateTree(PartitioningMethod *pm, LeafPartitionNode* p, InternalPartitionNode* ipn){
-   LOG_DEBUG_MSG("START PARTITIONTREE::CREATETREE()");
    vector<Partition*> vp= pm->MakePartitions(*(p->GetPartition()));
    typedef vector<Partition*>::iterator PIT;
    for(PIT pit = vp.begin(); pit!=vp.end(); pit++){
@@ -151,7 +150,6 @@ void PartitionTree::CreateTree(PartitioningMethod *pm, LeafPartitionNode* p, Int
       AddNode(lpn);
    }
    ReplaceNode(p,ipn);   
-   LOG_DEBUG_MSG("END PARTITIONTREE::CREATETREE()");
 };
 
 inline void IntToStr(int myInt, string &myString) {
@@ -204,7 +202,7 @@ min, vector<vector<double> >& max){
    string outputFilename = baseFileName+".map";
    ofstream  myofstream(outputFilename.c_str());    
    if (!myofstream) {
-      LOG_ERROR_MSG("print_feature_maps::WriteRoadmapForVizmo: can't open outfile: ");
+      cerr << "print_feature_maps::WriteRoadmapForVizmo: can't open outfile: " << endl;
       exit(-1);
    } 
    eachRgn.WriteRoadmapForVizmo(myofstream, bboxes);

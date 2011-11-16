@@ -5,17 +5,8 @@
 
 
 SmoothQueryStrategy::
-SmoothQueryStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
-  : QueryStrategy(in_Node, in_pProblem, false) 
-{
-    LOG_DEBUG_MSG("SmoothQueryStrategy::SmoothQueryStrategy()");
-    ParseXML(in_Node); 
-    /*
-    query.ReadQuery(m_strQueryFileLabel.c_str());
-    query.outputPathFile = new char[strlen(m_strPathFileLabel.c_str())+1];
-    strcpy(query.outputPathFile, m_strPathFileLabel.c_str());
-    */
-    LOG_DEBUG_MSG("~SmoothQueryStrategy::SmoothQueryStrategy()");
+SmoothQueryStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) : QueryStrategy(in_Node, in_pProblem, false) {
+  ParseXML(in_Node); 
 }
 
 SmoothQueryStrategy::
@@ -44,8 +35,6 @@ void
 SmoothQueryStrategy::
 ParseXML(XMLNodeReader& in_Node) 
 {
-  LOG_DEBUG_MSG("SmoothQueryStrategy::ParseXML()");
-
   QueryStrategy::ParseXML(in_Node, false);
   
   XMLNodeReader::childiterator citr;
@@ -74,16 +63,13 @@ ParseXML(XMLNodeReader& in_Node)
         citr->warnUnknownNode();
     }
   }
-  LOG_DEBUG_MSG("~SmoothQueryStrategy::ParseXML()");
 }
 
 void
 SmoothQueryStrategy::
 Run(int in_RegionID) 
 {
-
-    GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strMapFileLabel.c_str());
-  LOG_DEBUG_MSG("SmoothQueryStrategy::()");
+  GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strMapFileLabel.c_str());
 
   cout << "SmoothQueryStrategy::\n";
   PrintOptions(cout);
@@ -172,8 +158,5 @@ Run(int in_RegionID)
   }
   else
     cout << "\tUNSUCCESSFUL query\n";
-
-
-  LOG_DEBUG_MSG("~SmoothQueryStrategy::()");
 }
 

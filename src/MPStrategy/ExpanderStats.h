@@ -55,7 +55,6 @@ class EdgeExpanderStats : public MPStrategyMethod {
 
     void ParseXML(XMLNodeReader& in_Node) {
       cout << "edgeExpanderStats::ParseXML()" << endl;
-      LOG_DEBUG_MSG("edgeExpanderStats::ParseXML()");
       interval = 100;
       queries=2;
       outfile="outfile.stats";

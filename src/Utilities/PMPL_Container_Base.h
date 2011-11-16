@@ -59,7 +59,6 @@ class PMPL_Container_Base
 			methods[name] = m;
 	}
 	shared_ptr<Method> GetMethod(const string name) { 
-	      LOG_DEBUG_MSG("PMPL_Container_Base::GetMethod()");
               return methods[name]; 
 	}
 	

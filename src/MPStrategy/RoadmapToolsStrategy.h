@@ -42,9 +42,7 @@ class RoadmapInput : public MPStrategyMethod {
 } 
    RoadmapInput(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPStrategyMethod(in_Node,in_pProblem) {
-    LOG_DEBUG_MSG("RoadmapInput::RoadmapInput()");
     ParseXML(in_Node);    
-    LOG_DEBUG_MSG("~RoadmapInput::RoadmapInput()");
     };
    
 
@@ -53,19 +51,12 @@ class RoadmapInput : public MPStrategyMethod {
     virtual void PrintOptions(ostream& out_os) { };
   
     virtual void ParseXML(XMLNodeReader& in_Node) {
-      LOG_DEBUG_MSG("RoadmapInput::ParseXML()");
-      
-      m_strInputFileName = in_Node.stringXMLParameter(string("input_map"), true,
-                                      string(""), string("Input roadmap file"));
-    
-      LOG_DEBUG_MSG("~RoadmapInput::ParseXML()");
+      m_strInputFileName = in_Node.stringXMLParameter("input_map", true, "", "Input roadmap file");
     };
    
    virtual void Initialize(int in_RegionID){}
    virtual void Run(int in_RegionID){
-      LOG_DEBUG_MSG("PRMInput::() -- Reading in file: " << m_strInputFileName);
       OBPRM_srand(getSeed()); 
-      LOG_DEBUG_MSG("~PRMInput::()");
     }
    virtual void Finalize(int in_RegionID){}
 
@@ -80,32 +71,21 @@ class RoadmapClear : public MPStrategyMethod {
   RoadmapClear(MPSMContainer cont) : MPStrategyMethod(cont) {}  
   RoadmapClear(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPStrategyMethod(in_Node,in_pProblem) {
-    LOG_DEBUG_MSG("RoadmapClear::RoadmapClear()");
     ParseXML(in_Node);    
-    LOG_DEBUG_MSG("~RoadmapClear::RoadmapClear()");
     };
 
     virtual ~RoadmapClear() {}
 
     virtual void PrintOptions(ostream& out_os) { };
   
-    virtual void ParseXML(XMLNodeReader& in_Node) {
-      LOG_DEBUG_MSG("RoadmapClear::ParseXML()");
-    
-      LOG_DEBUG_MSG("~RoadmapClear::ParseXML()");
-    };
+    virtual void ParseXML(XMLNodeReader& in_Node) {};
    
    virtual void Initialize(int in_RegionID){}
    virtual void Run(int in_RegionID){
-      LOG_DEBUG_MSG("RoadmapClear::() ");
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
       OBPRM_srand(getSeed()); 
-      
-
       region->GetRoadmap()->m_pRoadmap->clear();
       region->GetStatClass()->ClearStats();
-      
-      LOG_DEBUG_MSG("~RoadmapClear::()");
     }
    virtual void Finalize(int in_RegionID){}
 

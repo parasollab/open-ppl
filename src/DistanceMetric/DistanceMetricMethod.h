@@ -1,7 +1,7 @@
 #ifndef DistanceMetricMethod_h
 #define DistanceMetricMethod_h
 
-#include "LabeledObject.h"
+#include "MPUtils.h"
 #include "Roadmap.h"
 #include "Clock_Class.h"
 #include "CfgTypes.h"
@@ -22,7 +22,7 @@ const int WS = 1;   ///< Type WS: Workspace distance metric
 /**This is the interface for all distance metric methods(euclidean, 
   *scaledEuclidean, minkowski, manhattan, com, etc.).
   */
-class DistanceMetricMethod  : public LabeledObject {
+class DistanceMetricMethod  : public MPBaseObject {
  public:
   DistanceMetricMethod();
   DistanceMetricMethod(double m_time, int t) : m_distance_time(m_time), type(t) {};

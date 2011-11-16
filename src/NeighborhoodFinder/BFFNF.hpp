@@ -20,7 +20,7 @@ public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
   BFFNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node,in_pProblem) {
+    NeighborhoodFinderMethod(in_Node,in_pProblem) {
     m_scale = in_Node.numberXMLParameter("k_2", true, 0, 0, 100, "K value for BFFNF");
     string dm2_label = in_Node.stringXMLParameter(string("dm2_method"),true,string(""),string("Distance Metric Method the second one"));
     dmm2 = in_pProblem->GetDistanceMetric()->GetDMMethod(dm2_label);

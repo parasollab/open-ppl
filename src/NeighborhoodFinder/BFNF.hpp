@@ -17,7 +17,7 @@ public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
   BFNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(ParseLabelXML(in_Node), in_Node, in_pProblem) {
+    NeighborhoodFinderMethod(in_Node, in_pProblem) {
 }
   
   BFNF(shared_ptr<DistanceMetricMethod>_dmm) :

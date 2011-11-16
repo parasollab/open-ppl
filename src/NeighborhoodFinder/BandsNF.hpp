@@ -624,7 +624,7 @@ class BandsNF: public NeighborhoodFinderMethod {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
-  BandsNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) : NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node,in_pProblem) {
+  BandsNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) : NeighborhoodFinderMethod(in_Node,in_pProblem) {
 
     m_debug = in_Node.boolXMLParameter(string("debug"), false, false, string(""));
     

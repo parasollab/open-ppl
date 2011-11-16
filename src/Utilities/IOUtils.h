@@ -409,39 +409,4 @@ template <class T> bool ReadField(istream& _is, T* _element){
   return ret;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-//  Logging
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _LOG
-
-#define LOG_DEBUG_MSG( msg ) \
-{ \
-  cout << "DEBUG: " << msg << endl ; \
-}
-
-#define LOG_WARNING_MSG( msg ) \
-{ \
-  cout << "WARNING: " << msg << endl ; \
-}
-
-#define LOG_ERROR_MSG( msg ) \
-{ \
-  cout << "ERROR: " << msg << endl ; \
-}
-
-#else 
-
-#define LOG_DEBUG_MSG( msg ) { }
-#define LOG_WARNING_MSG( msg ) { }
-#define LOG_ERROR_MSG( msg ) { }
-#endif //_LOG
-
-
-#endif
+#endif 

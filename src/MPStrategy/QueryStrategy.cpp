@@ -8,10 +8,8 @@ QueryStrategy::
 QueryStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml)
  : MPStrategyMethod(in_Node,in_pProblem) 
 {
-  LOG_DEBUG_MSG("QueryStrategy::QueryStrategy()");
   if(parse_xml)
     ParseXML(in_Node); 
-  LOG_DEBUG_MSG("~QueryStrategy::QueryStrategy()");
 }
 
 QueryStrategy::
@@ -43,8 +41,6 @@ void
 QueryStrategy::
 ParseXML(XMLNodeReader& in_Node, bool warn_unknown) 
 {
-  LOG_DEBUG_MSG("QueryStrategy::ParseXML()");
-  
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
   {
@@ -91,17 +87,13 @@ ParseXML(XMLNodeReader& in_Node, bool warn_unknown)
   query.ReadQuery(m_strQueryFileLabel.c_str());
   query.outputPathFile = new char[strlen(m_strPathFileLabel.c_str())+1];
   strcpy(query.outputPathFile, m_strPathFileLabel.c_str());
-  
-  LOG_DEBUG_MSG("~QueryStrategy::ParseXML()");
 }
    
 void 
 QueryStrategy::
 Run(int in_RegionID) 
 {
-
-    GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strMapFileLabel.c_str());
-  LOG_DEBUG_MSG("QueryStrategy::()");
+  GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->ReadRoadmapGRAPHONLY(m_strMapFileLabel.c_str());
 
   PrintOptions(cout);
 
@@ -143,7 +135,5 @@ Run(int in_RegionID)
   cout << ":" << QueryClock.GetClock_SEC() << " sec (ie, " << QueryClock.GetClock_USEC() << " usec)";
 #endif
   cout << endl;
-
-  LOG_DEBUG_MSG("~QueryStrategy::()");
 }
 

@@ -91,11 +91,9 @@ TransformAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProbl
 {
   this->SetName("transformAtS");
   this->cdtype = _cdtype;
-  LOG_DEBUG_MSG("TransformAtS::TransformAtS()");
   s_value = in_Node.numberXMLParameter(string("s"), true, 0.5, 0.0, 1.0, string("transform at s value"));
   if(warnUnrequestedXml)
     in_Node.warnUnrequestedAttributes();
-  LOG_DEBUG_MSG("~TransformAtS::TransformAtS()");
 }
 
 template <class CFG, class WEIGHT>

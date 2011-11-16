@@ -163,41 +163,4 @@ double rint(double x);
 #endif //_WIN32
 /////////////////////////////////////////////////////////////////////////////////////////
 
-class MPProblem;
-class MPBaseObject {
-  public: 
-    MPBaseObject(){ m_pProblem = NULL;};
-    MPBaseObject(MPProblem* in_pProblem){ m_pProblem = in_pProblem;};
-    MPBaseObject(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
-         m_strLabel("") { 
-      m_pProblem = in_pProblem;
-      ParseXML(in_Node); 
-    };
-    virtual ~MPBaseObject() {}
-    virtual void ParseXML(XMLNodeReader& in_Node) {
-      m_strLabel = in_Node.stringXMLParameter(string("Label"),
-                                              false, 
-                                              string(""),
-                                              string("Label Identifier"));
-    };
-    
-    inline MPProblem* GetMPProblem() { return m_pProblem;}
-    inline void SetMPProblem(MPProblem* m){m_pProblem=m;}
-    virtual void PrintOptions(ostream& out_os) { };
-    inline string& GetLabel() { return m_strLabel; };
-    inline string GetName() const {return m_name;}
-
-  protected:
-    inline void SetName(string s){m_name = s;}
-    string m_name;
-
-  private:
-    MPProblem* m_pProblem;
-    string m_strLabel;
-};
-
-template<class CFG, class WEIGHT>
-CFG
-GetCentroid(RoadmapGraph<CFG, WEIGHT>* graph, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc);
-
 #endif

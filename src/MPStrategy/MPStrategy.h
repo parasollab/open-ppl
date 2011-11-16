@@ -1,7 +1,7 @@
 #ifndef MPStrategy_h
 #define MPStrategy_h
 
-#include "util.h"
+#include "MPUtils.h"
 #include "CfgTypes.h"
 
 class MPProblem;

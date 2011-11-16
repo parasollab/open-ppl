@@ -34,9 +34,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         step_size = min(_env->GetPositionRes(), _env->GetOrientationRes());
     }
 
-    ObstacleBasedSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem)
-    {
-      LOG_DEBUG_MSG("ObstacleBasedSampler::ObstacleBasedSampler()");
+    ObstacleBasedSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
       this->SetName("ObstacleBasedSampler");
       ParseXML(in_Node);
       cout << "ObstacleBasedSampler";
@@ -45,21 +43,15 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       string dm_label = in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
       dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
       Environment* env = in_pProblem->GetEnvironment(); 
-
-      string strLabel= this->ParseLabelXML( in_Node);
-      this->SetLabel(strLabel);
       cout << "step_size = " << step_size << endl;
       if(step_size <= 0.0)
         step_size = min(env->GetPositionRes(), env->GetOrientationRes());
-
-      LOG_DEBUG_MSG("~ObstacleBasedSampler::ObstacleBasedSampler()");
     }
 
     ~ObstacleBasedSampler() {}
 
     void  ParseXML(XMLNodeReader& in_Node) 
     {
-      LOG_DEBUG_MSG("ObstacleBasedSampler::ParseXML()");
       XMLNodeReader::childiterator citr;
       useBBX = in_Node.boolXMLParameter("usebbx", true, false, "Use bounding box as obstacle");
       cout << "from parseXML,useBBX = " <<useBBX<< endl;
@@ -77,7 +69,6 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         }
       }
       cout << "ObstacleBasedSampler";
-      LOG_DEBUG_MSG("~ObstacleBasedSampler::ParseXML()");
     }
 
     virtual void Print(ostream& os) const {

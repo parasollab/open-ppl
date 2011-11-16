@@ -4,7 +4,7 @@
 #ifndef PARTITIONINGMETHODS_H_
 #define PARTITIONINGMETHODS_H_
 
-#include "util.h"
+#include "MPUtils.h"
 
 class PartitioningMethod;
 

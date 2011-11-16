@@ -14,7 +14,6 @@ PGMeansClustering::PGMeansClustering(XMLNodeReader& in_Node, MPProblem* in_pProb
 PGMeansClustering::~PGMeansClustering(){};
 
 vector<Partition*> PGMeansClustering::MakePartitions(Partition &p){
-   LOG_DEBUG_MSG("START PGMeans Clustering::MAKEPARTITIONS()");
    vector< vector<VID> > Clusters;
    vector<string> features;
    typedef vector<pair<string, double> >::iterator FIT;
@@ -29,7 +28,6 @@ vector<Partition*> PGMeansClustering::MakePartitions(Partition &p){
       vp[i]->SetVID(Clusters[i]);
       vp[i]->GetBoundingBox().Print(cout);
    }
-   LOG_DEBUG_MSG("END PGMeans Clustering::MAKEPARTITIONS()");
    return vp;
 };
 

@@ -93,12 +93,10 @@ RotateAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem,
 {
   this->SetName("rotateAtS");
   this->cdtype = _cdtype;
-  LOG_DEBUG_MSG("RotateAtS::RotateAtS()");
   double nSValue = in_Node.numberXMLParameter(string("s"), true, 0.5, 0.0, 1.0, string("rotate at s value"));
   s_values.push_back(nSValue);
   if(warnUnrequestedXml)
     in_Node.warnUnrequestedAttributes();
-  LOG_DEBUG_MSG("~RotateAtS::RotateAtS()");
 }
 
 template <class CFG, class WEIGHT>

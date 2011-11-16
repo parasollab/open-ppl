@@ -8,7 +8,7 @@
 #include "MultiBody.h"
 #include <string>
 
-#include "util.h"
+#include "MPUtils.h"
 
 
 #include <sstream>

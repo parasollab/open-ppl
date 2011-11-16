@@ -6,7 +6,6 @@
 #include <iostream>
 #include "Stat_Class.h"
 #include "CfgTypes.h"
-#include "LabeledObject.h"
 #ifdef _PARALLEL
 #include "runtime.h"
 #endif
@@ -31,9 +30,9 @@ template <class CFG> class NegateSampler;
  */
 template< typename CFG>
 #ifdef _PARALLEL
-class SamplerMethod : public LabeledObject, public MPBaseObject,public stapl::p_object 
+class SamplerMethod : public MPBaseObject,public stapl::p_object 
 #else
-class SamplerMethod : public LabeledObject, public MPBaseObject
+class SamplerMethod : public MPBaseObject
 #endif
 {
   public:
@@ -49,11 +48,8 @@ class SamplerMethod : public LabeledObject, public MPBaseObject
     //@{
 
     ///Default Constructor.
-    SamplerMethod():MPBaseObject() { }
-    SamplerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPBaseObject(in_Node, in_pProblem) { 
-      string strLabel= this->ParseLabelXML( in_Node);
-      this->SetLabel(strLabel);
-    }
+    SamplerMethod():MPBaseObject() {}
+    SamplerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPBaseObject(in_Node, in_pProblem) {}
     ///Destructor.	
     virtual ~SamplerMethod() { };
 

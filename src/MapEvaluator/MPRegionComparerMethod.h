@@ -51,7 +51,6 @@ class MPRegionComparerMethod: public MPBaseObject {
       Roadmap< CFG, WEIGHT > tmp_roadmap;
       tmp_roadmap.ReadRoadmapGRAPHONLY(filename.c_str());
       tmp_roadmap.m_pRoadmap->GetVerticesData(m_witness_cfgs);
-      LOG_DEBUG_MSG("MPRegionComparerMethod:: input cfgs: " << m_witness_cfgs.size());
       
     }
     
@@ -274,16 +273,13 @@ public:
 
   ConnectableComponentComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
-    LOG_DEBUG_MSG("ConnectableComponentComparer::ConnectableComponentComparer()");
    
     in_Node.verifyName(string("ConnectableComponentComparer"));
    
-    LOG_DEBUG_MSG("ConnectableComponentComparer::ConnectableComponentComparer() end");    
   }
 
 
   virtual void Compare(int in_region_a, int in_region_b) {
-    LOG_DEBUG_MSG("ConnectableComponentComparer::Compare(region_a, region_b)");
 
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
     Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
@@ -308,15 +304,12 @@ class RandomConnectComparer : public MPRegionComparerMethod< CFG, WEIGHT >
 public:
   RandomConnectComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
-    LOG_DEBUG_MSG("RandomConnectComparer::RandomConnectComparer()");
     
     in_Node.verifyName(string("RandomConnectComparer"));
     
-    LOG_DEBUG_MSG("RandomConnectComparer::RandomconnectComparer() end");    
   }
 
   virtual void Compare(int in_region_a, int in_region_b) {
-    LOG_DEBUG_MSG("RandomConnectComparer::Compare(region_a, region_b)");    
 
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
     Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
@@ -349,15 +342,12 @@ public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   RegionCoverageComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
-    LOG_DEBUG_MSG("RegionCoverageComparer::IncrementalRegionComparer()");
 
     in_Node.verifyName(string("RegionCoverageComparer"));
     
-    LOG_DEBUG_MSG("~RegionCoverageComparer::RegionCoverageComparer()");    
   }
 
   virtual void Compare(int in_region_a, int in_region_b) {
-    LOG_DEBUG_MSG("RegionCoverageComparer::Compare(region_a, region_b)");    
 
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
     Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
@@ -423,7 +413,6 @@ public:
     cout << "RegionCoverageComparer::Compare: b_revealing_node: " << b_revealing_node << endl;
     cout << "RegionCoverageComparer::Compare: b_trapped_node: " << b_trapped_node << endl;
 
-   LOG_DEBUG_MSG("~RegionCoverageComparer::Compare(region_a, region_b)");    
   }
 
 private:
@@ -438,15 +427,12 @@ public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   RegionSimilarity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
-    LOG_DEBUG_MSG("RegionSimilarity::IncrementalRegionComparer()");
     
     in_Node.verifyName(string("RegionSimilarity"));
     
-    LOG_DEBUG_MSG("~RegionSimilarity::RegionSimilarity()");    
   }
 
   virtual void Compare(int in_region_a, int in_region_b) {
-    LOG_DEBUG_MSG("RegionSimilarity::Compare(region_a, region_b)");    
 
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
     Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
@@ -647,7 +633,6 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
   cout << "edge_b_visible_in_a = " << edge_b_visible_in_a << endl;
   cout << "edge_b_not_visible_in_a = " << edge_b_not_visible_in_a << endl;
   
-  LOG_DEBUG_MSG("~RegionSimilarity::Compare(region_a, region_b)");    
   }
 
 private:

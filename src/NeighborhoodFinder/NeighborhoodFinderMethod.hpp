@@ -3,16 +3,16 @@
 
 #include <string>
 #include <iostream>
-#include "LabeledObject.h"
+#include "MPUtils.h"
 #include "MPProblem.h"
 #include "Clock_Elapsed.h"
 
 
-class NeighborhoodFinderMethod : public LabeledObject  {
+class NeighborhoodFinderMethod : public MPBaseObject  {
 
 public:
   NeighborhoodFinderMethod(shared_ptr<DistanceMetricMethod> dm);
-  NeighborhoodFinderMethod(std::string in_strLabel, XMLNodeReader& in_Node, MPProblem* in_pProblem);
+  NeighborhoodFinderMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   NeighborhoodFinderMethod() : m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) { }
   virtual ~NeighborhoodFinderMethod() {}
   virtual const std::string GetName () const = 0;

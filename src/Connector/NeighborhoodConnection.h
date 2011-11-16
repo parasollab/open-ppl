@@ -133,8 +133,6 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
   bool m_count_failures;
   bool m_unconnected;
   bool m_random;
-  bool m_debug;
-  
   string m_nf;
 };
 
@@ -142,7 +140,7 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
 template <class CFG, class WEIGHT>
 NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(int k, int m, bool _count_failures, bool _unconnected, bool _random) : 
     NodeConnectionMethod<CFG,WEIGHT>(), 
-    m_k(k), m_fail(m), m_count_failures(_count_failures), m_unconnected(_unconnected), m_random(_random), m_debug(false)
+    m_k(k), m_fail(m), m_count_failures(_count_failures), m_unconnected(_unconnected), m_random(_random)
 {
   this->SetName("NeighborhoodConnection"); 
 }
@@ -151,12 +149,10 @@ NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(int k, int m, bool _c
 template <class CFG, class WEIGHT>
 NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
     NodeConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem), 
-    m_k(KCLOSEST), m_fail(MFAILURE), m_count_failures(false), m_unconnected(false), m_random(false), m_debug(false)
+    m_k(KCLOSEST), m_fail(MFAILURE), m_count_failures(false), m_unconnected(false), m_random(false)
 {
-  LOG_DEBUG_MSG("NeighborhoodConnection::NeighborhoodConnection()"); 
   this->SetName("NeighborhoodConnection"); 
   ParseXML(in_Node);
-  LOG_DEBUG_MSG("~NeighborhoodConnection::NeighborhoodConnection()"); 
 }
 
 
@@ -176,8 +172,6 @@ void NeighborhoodConnection<CFG,WEIGHT>::ParseXML(XMLNodeReader& in_Node) {
   m_unconnected = in_Node.boolXMLParameter(string("unconnected"), false, false, string("if true, do not count existing connections towards k"));
   
   m_random = in_Node.boolXMLParameter(string("random"), false, false, string("if true, find k random configurations from destination vector"));
-  
-  m_debug = in_Node.boolXMLParameter(string("debug"), false, false, string(""));
  
   in_Node.warnUnrequestedAttributes();
 }
@@ -190,7 +184,6 @@ void NeighborhoodConnection<CFG,WEIGHT>::SetDefault() {
   m_count_failures = false;
   m_unconnected = false;
   m_random = false;
-  m_debug = false;
 }
 
 
@@ -289,7 +282,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             InputIterator _itr1_first, InputIterator _itr1_last,
             InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision)
 {   
-    if (m_debug) { cout << endl; PrintOptions(cout); }
+    if (this->m_debug) { cout << endl; PrintOptions(cout); }
     // the vertices in this iteration are the source for the connection operation
     Clock_Class KClosestClock;
     
@@ -311,7 +304,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       // find cfg pointed to by itr1
       CFG v_cfg = (*(_rm->m_pRoadmap->find_vertex(*itr1))).property();
       
-      if (m_debug) cout << (itr1 - _itr1_first) << "\tAttempting connections: VID = " << *itr1 << "  --> " << v_cfg << endl;
+      if (this->m_debug) cout << (itr1 - _itr1_first) << "\tAttempting connections: VID = " << *itr1 << "  --> " << v_cfg << endl;
       
       bool enough_connected = true;
       int iter_success = 0;
@@ -322,7 +315,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         if (m_unconnected)
           k_to_find = min(2 * k_to_find, iter_size);
 
-        if (m_debug) cout << "k_to_find = " << k_to_find << endl;
+        if (this->m_debug) cout << "k_to_find = " << k_to_find << endl;
 
         KClosestClock.StartClock("kClosest");
         vector<VID> closest;
@@ -332,7 +325,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         //copy(closest.begin(), closest.end(), iter_end);
  
         KClosestClock.StopClock();
-        if (m_debug)
+        if (this->m_debug)
         {
           
           copy(closest.begin(), closest.end(), ostream_iterator<VID>(cout, " "));
@@ -352,9 +345,9 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       } while (m_unconnected && !enough_connected && k_to_find < iter_size);
     }
   
-    if (m_debug) cout << "*** kClosest Time = " << KClosestClock.GetClock_SEC() << endl;
-    if (m_debug) cout << "*** total_success = " << total_success << endl;
-    if (m_debug) cout << "*** total_failure = " << total_failure << endl;
+    if (this->m_debug) cout << "*** kClosest Time = " << KClosestClock.GetClock_SEC() << endl;
+    if (this->m_debug) cout << "*** total_success = " << total_success << endl;
+    if (this->m_debug) cout << "*** total_failure = " << total_failure << endl;
 }
 
 
@@ -369,8 +362,7 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             InputIterator1 _itr1_first, InputIterator1 _itr1_last,
             InputIterator2 _itr2_first, InputIterator2 _itr2_last, OutputIterator collision)
 { 
-    LOG_DEBUG_MSG("NeighborhoodConnection::pConnectNodes()");
-    if (m_debug) { cout << endl; PrintOptions(cout); }
+    if (this->m_debug) { cout << endl; PrintOptions(cout); }
     // the vertices in this iteration are the source for the connection operation
     Clock_Class KClosestClock;
     
@@ -404,7 +396,7 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         if (m_unconnected)
           k_to_find = min(2 * k_to_find, iter_size);
 
-        if (m_debug) cout << "k_to_find = " << k_to_find << endl;
+        if (this->m_debug) cout << "k_to_find = " << k_to_find << endl;
 
         KClosestClock.StartClock("kClosest");
         vector<VID> closest;
@@ -412,7 +404,7 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
         back_insert_iterator<vector<VID> > iter_end = FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, iter_neighbors, iter_begin);   
 	
         KClosestClock.StopClock();
-        if (m_debug)
+        if (this->m_debug)
         {
           copy(closest.begin(), closest.end(), ostream_iterator<VID>(cout, " "));
         }
@@ -431,9 +423,9 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       } while (m_unconnected && !enough_connected && k_to_find < iter_size);
     }
   
-    if (m_debug) cout << "*** kClosest Time = " << KClosestClock.GetClock_SEC() << endl;
-    if (m_debug) cout << "*** total_success = " << total_success << endl;
-    if (m_debug) cout << "*** total_failure = " << total_failure << endl;
+    if (this->m_debug) cout << "*** kClosest Time = " << KClosestClock.GetClock_SEC() << endl;
+    if (this->m_debug) cout << "*** total_success = " << total_success << endl;
+    if (this->m_debug) cout << "*** total_failure = " << total_failure << endl;
 }
 
 template <class CFG, class WEIGHT>
@@ -457,33 +449,33 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   for(typename vector<VID>::iterator itr2 = closest.begin(); itr2!= closest.end(); ++itr2) {
     if(*itr2==INVALID_VID)
       continue;
-    if (m_debug) cout << "\t(s,f) = (" << success << "," << failure << ")";
-    if (m_debug) cout << " | VID = " << *itr2;
-    if (m_debug) cout << " | dist = " << dm->Distance(_rm->GetEnvironment(), (*(_rm->m_pRoadmap->find_vertex(_vid))).property(), (*(_rm->m_pRoadmap->find_vertex(*itr2))).property());
+    if (this->m_debug) cout << "\t(s,f) = (" << success << "," << failure << ")";
+    if (this->m_debug) cout << " | VID = " << *itr2;
+    if (this->m_debug) cout << " | dist = " << dm->Distance(_rm->GetEnvironment(), (*(_rm->m_pRoadmap->find_vertex(_vid))).property(), (*(_rm->m_pRoadmap->find_vertex(*itr2))).property());
     
     // stopping conditions
     if (m_count_failures && failure >= m_fail) {
-      if (m_debug) cout << " | stopping... failures exceeded" << endl;
+      if (this->m_debug) cout << " | stopping... failures exceeded" << endl;
       break;
     }
     if (m_k > 0 && success >= m_k) {
-      if (m_debug) cout << " | stopping... successes met" << endl;
+      if (this->m_debug) cout << " | stopping... successes met" << endl;
       break;
     }
     
     // don't attempt an edge between the same nodes
     if (_vid == *itr2) {
-      if (m_debug) cout << " | skipping... same nodes" << endl;
+      if (this->m_debug) cout << " | skipping... same nodes" << endl;
       continue;
     }
   
     // don't attempt the connection if it already failed once before
     if (_rm->IsCached(_vid,*itr2)) {
       if (!_rm->GetCache(_vid,*itr2)) {
-        if (m_debug) cout << " | skipping... this connection already failed once";
-          if (m_debug) cout << " | failure incremented";
+        if (this->m_debug) cout << " | skipping... this connection already failed once";
+          if (this->m_debug) cout << " | failure incremented";
           failure++;
-        if (m_debug) cout << endl;
+        if (this->m_debug) cout << endl;
         continue;
       }
     }
@@ -491,12 +483,12 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     // the edge already exists
     if (_rm->m_pRoadmap->IsEdge(_vid, *itr2)) {
       // if we're not in "unconnected" mode, count this as a success
-      if (m_debug) cout << " | edge already exists in roadmap";
+      if (this->m_debug) cout << " | edge already exists in roadmap";
       if (!m_unconnected) {
-        if (m_debug) cout << " | success incremented";
+        if (this->m_debug) cout << " | success incremented";
         success++;
       }
-      if (m_debug) cout << endl;
+      if (this->m_debug) cout << endl;
       continue;
     }
     
@@ -505,12 +497,12 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
       if (is_same_cc(*(_rm->m_pRoadmap), cmap, _vid, *itr2)) {
         // if we're not in "unconnected" mode, count this as a success
-        if (m_debug) cout << " | nodes in the same connected component";
+        if (this->m_debug) cout << " | nodes in the same connected component";
         if (!m_unconnected) {
-          if (m_debug) cout << " | success incremented";
+          if (this->m_debug) cout << " | success incremented";
           success++;
         }
-        if (m_debug) cout << endl;
+        if (this->m_debug) cout << endl;
         continue;
       }
     }
@@ -527,11 +519,11 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
                 (!addAllEdges) ))
     {
       // if connection was made, add edge and record the successful connection
-      if (m_debug) cout << " | connection was successful";
+      if (this->m_debug) cout << " | connection was successful";
       _rm->m_pRoadmap->AddEdge(_vid, *itr2, lpOutput.edge);
       
       // mark the successful connection in the roadmap's cache
-      if (m_debug) cout << " | success incremented" << endl;
+      if (this->m_debug) cout << " | success incremented" << endl;
       _rm->SetCache(_vid,*itr2,true);
       success++;
       Stats.IncConnections_Made();
@@ -539,7 +531,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     }
     else {
       // mark the failed connection in the roadmap's cache
-      if (m_debug) cout << " | connection failed | failure incremented" << endl;
+      if (this->m_debug) cout << " | connection failed | failure incremented" << endl;
       _rm->SetCache(_vid,*itr2,false);
       failure++;
       this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), false));
@@ -565,8 +557,6 @@ pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             int &total_success, int &total_failure,
             VID _vid, vector<VID>& closest, CFG _cfg, OutputIterator collision)
 {
-  LOG_DEBUG_MSG("NeighborhoodConnection::pConnectNeighbors()");
-	
   shared_ptr<DistanceMetricMethod> dm =  this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf)->GetDMMethod();
   
   LPOutput<CFG,WEIGHT> lpOutput;
@@ -581,27 +571,27 @@ pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     //cout << stapl::get_location_id() << "> " << "pConnectNeighbors vid: " << *itr2  << endl;
     // stopping conditions
     if (m_count_failures && failure >= m_fail) {
-      if (m_debug) cout << " | stopping... failures exceeded" << endl;
+      if (this->m_debug) cout << " | stopping... failures exceeded" << endl;
       break;
     }
     if (m_k > 0 && success >= m_k) {
-      if (m_debug) cout << " | stopping... successes met" << endl;
+      if (this->m_debug) cout << " | stopping... successes met" << endl;
       break;
     }
     
     // don't attempt an edge between the same nodes
     if (_vid == *itr2) {
-      if (m_debug) cout << " | skipping... same nodes" << endl;
+      if (this->m_debug) cout << " | skipping... same nodes" << endl;
       continue;
     }
   
     // don't attempt the connection if it already failed once before
     if (_rm->IsCached(_vid,*itr2)) {
       if (!_rm->GetCache(_vid,*itr2)) {
-        if (m_debug) cout << " | skipping... this connection already failed once";
-          if (m_debug) cout << " | failure incremented";
+        if (this->m_debug) cout << " | skipping... this connection already failed once";
+          if (this->m_debug) cout << " | failure incremented";
           failure++;
-        if (m_debug) cout << endl;
+        if (this->m_debug) cout << endl;
         continue;
       }
     }
@@ -609,12 +599,12 @@ pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     // the edge already exists, but why are we checking in two places?
     if (_rm->m_pRoadmap->IsEdge(_vid, *itr2)) {
       // if we're not in "unconnected" mode, count this as a success
-      if (m_debug) cout << " | edge already exists in roadmap";
+      if (this->m_debug) cout << " | edge already exists in roadmap";
       if (!m_unconnected) {
-        if (m_debug) cout << " | success incremented";
+        if (this->m_debug) cout << " | success incremented";
         success++;
       }
-      if (m_debug) cout << endl;
+      if (this->m_debug) cout << endl;
       continue;
     }
 
@@ -631,11 +621,11 @@ pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     {
       // if connection was made, add edge and record the successful connection
       //do we add the same edge twice?
-      if (m_debug) cout << " | connection was successful";
+      if (this->m_debug) cout << " | connection was successful";
       _rm->m_pRoadmap->add_edge_async(_vid, *itr2, lpOutput.edge.first);
       
       // mark the successful connection in the roadmap's cache
-      if (m_debug) cout << " | success incremented" << endl;
+      if (this->m_debug) cout << " | success incremented" << endl;
       _rm->SetCache(_vid,*itr2,true);
       success++;
       Stats.IncConnections_Made();
@@ -643,7 +633,7 @@ pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     }
     else {
       // mark the failed connection in the roadmap's cache
-      if (m_debug) cout << " | connection failed | failure incremented" << endl;
+      if (this->m_debug) cout << " | connection failed | failure incremented" << endl;
       _rm->SetCache(_vid,*itr2,false);
       failure++;
       this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), false));
@@ -667,7 +657,6 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
               InputIterator _itr2_first, InputIterator _itr2_last, 
               int k, const vector<VID>& iter_neighbors, OutputIterator closest_iter)
 {
-  LOG_DEBUG_MSG("NeighborhoodConnection::FindKNeighbors()");
   #ifndef _PARALLEL 
   if (m_random) {
     // find k random (unique) neighbors

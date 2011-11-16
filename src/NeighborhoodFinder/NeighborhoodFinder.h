@@ -77,31 +77,31 @@ private:
     for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
       if(citr->getName() == "BFNF") {
         NeighborhoodFinderMethod* nf = new BFNF<CfgType,WeightType>(*citr, in_pProblem);
-        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+        AddNFMethod(nf->GetLabel(), NeighborhoodFinderPointer(nf));
       } else if(citr->getName() == "DPESNF") {
         NeighborhoodFinderMethod* nf = new DPESNF<CfgType,WeightType>(*citr, in_pProblem);
-        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+        AddNFMethod(nf->GetLabel(), NeighborhoodFinderPointer(nf));
       } else if(citr->getName() == "BFFNF") {
         NeighborhoodFinderMethod* nf = new BFFNF<CfgType,WeightType>(*citr, in_pProblem);
-        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+        AddNFMethod(nf->GetLabel(), NeighborhoodFinderPointer(nf));
       } else if(citr->getName() == "MPNNNF") {
         NeighborhoodFinderMethod* nf = new MPNNNF<CfgType,WeightType>(*citr, in_pProblem);
-        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));       
+        AddNFMethod(nf->GetLabel(), NeighborhoodFinderPointer(nf));       
       } else if(citr->getName() == "CGALNF") {
         NeighborhoodFinderMethod* nf = new CGALNF<CfgType,WeightType>(*citr, in_pProblem);
-        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+        AddNFMethod(nf->GetLabel(), NeighborhoodFinderPointer(nf));
       } else if(citr->getName() == "STNF") {
         NeighborhoodFinderMethod* nf = new STNF<CfgType,WeightType>(*citr, in_pProblem);
-        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+        AddNFMethod(nf->GetLabel(), NeighborhoodFinderPointer(nf));
       } else if(citr->getName() == "MTNF") {
         NeighborhoodFinderMethod* nf = new MTNF<CfgType,WeightType>(*citr, in_pProblem);
-        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+        AddNFMethod(nf->GetLabel(), NeighborhoodFinderPointer(nf));
       } else if(citr->getName() == "BandsNF") {
         NeighborhoodFinderMethod* nf = new BandsNF<CfgType,WeightType>(*citr, in_pProblem);
-        AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf));
+        AddNFMethod(nf->GetLabel(), NeighborhoodFinderPointer(nf));
       //} else if(citr->getName() == "DMNF") {
       //  NeighborhoodFinderMethod* nf = new DMNF<CfgType,WeightType>(*citr, in_pProblem);
-      //  AddNFMethod(nf->GetObjectLabel(), NeighborhoodFinderPointer(nf)); //Chinwe 
+      //  AddNFMethod(nf->GetLabel(), NeighborhoodFinderPointer(nf)); //Chinwe 
       }else {
         citr->warnUnknownNode();
       }
@@ -225,7 +225,7 @@ private:
 		if(MethodType* finder = dynamic_cast<MethodType*>(_nf.get()))
 		{
 			return finder->KClosest(_rmp, _input_first, _input_last, _cfg, _k, _out);
-			//cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetObjectLabel();
+			//cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetLabel();
 			return _out;
 		}
 		else 
@@ -260,7 +260,7 @@ private:
 		if(MethodType* finder = dynamic_cast<MethodType*>(_nf.get()))
 		{
 			return finder->KClosest(_rmp, _input_first, _input_last, _v, _k, _out);
-			cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetObjectLabel();
+			cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetLabel();
 			return _out;
 		}
 		else 
@@ -294,7 +294,7 @@ private:
 		if(MethodType* finder = dynamic_cast<MethodType*>(_nf.get()))
 		{
 			return finder->KClosest(_rmp, _vid, _k, _out);
-			cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetObjectLabel();
+			cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetLabel();
 			return _out;
 		}
 		else 
@@ -327,7 +327,7 @@ private:
 		if(MethodType* finder = dynamic_cast<MethodType*>(_nf.get()))
 		{
 			return finder->KClosest(_rmp, _cfg, _k, _out);
-			cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetObjectLabel();
+			cout << "NeighborhoodFinder::_KClosest 1 set InputIterator- " << _nf->GetLabel();
 			return _out;
 		}
 		else 
@@ -362,7 +362,7 @@ private:
 		if(MethodType* finder = dynamic_cast<MethodType*>(_nf.get()))
 		{
 			return finder->KClosestPairs(_rmp, _in1_first, _in1_last, _in2_first, _in2_last, k, _out);
-      cout << "NeighborhoodFinder::_KClosestPairs 2 set InputIterator- " << _nf->GetObjectLabel();
+      cout << "NeighborhoodFinder::_KClosestPairs 2 set InputIterator- " << _nf->GetLabel();
 			return _out;
 		}
 		else 

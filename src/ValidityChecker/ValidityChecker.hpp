@@ -22,7 +22,7 @@ public:
 
 
   ValidityChecker(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem) { 
-    LOG_DEBUG_MSG("ValidityChecker::ValidityChecker()");
+    if(m_debug) cout << "ValidityChecker::ValidityChecker()" << endl;
     in_Node.verifyName(std::string("validity_test"));
 
     m_Validity=true;
@@ -31,24 +31,24 @@ public:
     for(citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr) {    
       if(citr->getName() == "CollisionDetection") {
         VCMethodPtr vc(new CollisionDetectionValidity<CFG>(*citr, in_pProblem));
-        AddVCMethod(vc->GetObjectLabel(), vc);
+        AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "JointLimit") {
 	//VCMethodPtr vc(new JointLimit<CFG>(*citr, in_pProblem));
         //AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "ComposeValidity") {
         VCMethodPtr vc(new ComposeValidity<CFG>(*citr, in_pProblem));
-        AddVCMethod(vc->GetObjectLabel(), vc);
+        AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "NodeClearance") {
         VCMethodPtr vc(new NodeClearanceValidity(*citr, in_pProblem));
-        AddVCMethod(vc->GetObjectLabel(), vc);
+        AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "NegateValidity") {
         VCMethodPtr vc(new NegateValidity<CFG>(*citr, in_pProblem));
-        AddVCMethod(vc->GetObjectLabel(), vc);
+        AddVCMethod(vc->GetLabel(), vc);
       } else {
         citr->warnUnknownNode();
       }
     }    
-    LOG_DEBUG_MSG("~ValidityChecker::ValidityChecker()");
+    if(m_debug) cout << "~ValidityChecker::ValidityChecker()" << endl;
   }
   
   ~ValidityChecker() {}

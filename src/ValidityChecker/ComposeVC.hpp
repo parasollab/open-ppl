@@ -6,7 +6,6 @@
 #include "ValidityCheckerMethod.hpp"
 #include "Compose.hpp"
 #include "boost/bind.hpp"
-#include "LabeledObject.h"
 #include <vector>
 #include <string>
 #include <functional>
@@ -60,7 +59,7 @@ ComposeValidity(en_logical_operator _m_logical_operator,
 template<typename CFG>
 ComposeValidity<CFG>::
 ComposeValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-  ValidityCheckerMethod(ParseLabelXML(in_Node), in_pProblem) 
+  ValidityCheckerMethod(in_Node, in_pProblem) 
 {
   in_Node.verifyName("ComposeValidity");
   

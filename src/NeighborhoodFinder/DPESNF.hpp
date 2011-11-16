@@ -105,7 +105,7 @@ typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
        
 public:
   DPESNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(ParseLabelXML(in_Node),in_Node, in_pProblem), m_dprox(NULL), m_dpes(NULL) {
+    NeighborhoodFinderMethod(in_Node, in_pProblem), m_dprox(NULL), m_dpes(NULL) {
   
     
     m_m = in_Node.numberXMLParameter("m", false, int(3),

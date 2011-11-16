@@ -18,36 +18,29 @@ class GaussianSampler : public SamplerMethod<CFG>
     GaussianSampler() {
       this->SetName("GaussianSampler");
     }
-    GaussianSampler(Environment* env, shared_ptr<DistanceMetric>_dm, double _d = 0) :
-      dm(_dm), d(_d) {
-        this->SetName("GaussianSampler");
-        if(d == 0)
-          d = (env->GetMultiBody(env->GetRobotIndex()))->GetMaxAxisRange();
-      }
+    GaussianSampler(Environment* env, shared_ptr<DistanceMetric>_dm, double _d = 0) : dm(_dm), d(_d) {
+      this->SetName("GaussianSampler");
+      if(d == 0)
+        d = (env->GetMultiBody(env->GetRobotIndex()))->GetMaxAxisRange();
+    }
 
     GaussianSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem):SamplerMethod<CFG>(in_Node, in_pProblem) {
       this->SetName("GaussianSampler");
-      LOG_DEBUG_MSG("GaussianSampler::GaussianSampler()");
       ParseXML(in_Node);
       cout << "GaussianSampler";
       cout << "strVcmethod = " << strVcmethod << endl;
       vc = in_pProblem->GetValidityChecker();
       dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label); 
-      string strLabel= this->ParseLabelXML( in_Node);
-      this->SetLabel(strLabel);
-      LOG_DEBUG_MSG("~GaussianSampler::GaussianSampler()");
     }
 
     ~GaussianSampler() {} 
 
     void  ParseXML(XMLNodeReader& in_Node) {
-      LOG_DEBUG_MSG("GaussianSampler::ParseXML()");
       dm_label =in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
       strVcmethod = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
       d = in_Node.numberXMLParameter("gauss_d", true, 0.0, 0.0, MAX_DBL, "Gaussian D value");
       useBBX = in_Node.boolXMLParameter("usebbx", true, false, "Use bounding box as obstacle");
       in_Node.warnUnrequestedAttributes();
-      LOG_DEBUG_MSG("~GaussianSampler::ParseXML()");
     }
 
     virtual void Print(ostream& os) const {
@@ -148,28 +141,22 @@ class BridgeTestSampler : public SamplerMethod<CFG>
         d = (env->GetMultiBody(env->GetRobotIndex()))->GetMaxAxisRange();
     }
 
-    BridgeTestSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) {
+    BridgeTestSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
       this->SetName("BridgeTestSampler");
-      LOG_DEBUG_MSG("BridgeTestSampler::BridgeTestSampler()");
       ParseXML(in_Node);
       dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label); 
       cout << "BridgeTestSampler";
       cout << "strVcmethod = " << strVcmethod << endl;
       vc = in_pProblem->GetValidityChecker();
-      LOG_DEBUG_MSG("~BridgeTestSampler::BridgeTestSampler()");
     }
 
     ~BridgeTestSampler() {}
 
     void  ParseXML(XMLNodeReader& in_Node) {
-      LOG_DEBUG_MSG("BridgeTestSampler::ParseXML()");
       strVcmethod = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
       dm_label    = in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
       d           = in_Node.numberXMLParameter("bridge_d",true, 0.0, 0.0,100.0,"bridge_d"); 
       use_bbx     = in_Node.boolXMLParameter("use_bbx", false, true, "Use the Bounding Box as an Obstacle");
-      string strLabel= this->ParseLabelXML( in_Node);
-      this->SetLabel(strLabel);
-      LOG_DEBUG_MSG("~BridgeTestRandomFreeSampler::ParseXML()");
     }
 
     virtual void Print(ostream& os) const

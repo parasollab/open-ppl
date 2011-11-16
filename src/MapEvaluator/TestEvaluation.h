@@ -4,8 +4,7 @@
 #include "MapEvaluationMethod.h"
 #include "MPProblem.h"
 
-class TestEvaluation 
-  : public MapEvaluationMethod 
+class TestEvaluation : public MapEvaluationMethod 
 {
  public:
 

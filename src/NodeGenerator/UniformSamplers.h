@@ -14,25 +14,18 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
       this->SetName("UniformRandomSampler");
     }
 
-    UniformRandomSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
-    {
+    UniformRandomSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
       this->SetName("UniformRandomSampler");
-      LOG_DEBUG_MSG("UniformRandomSampler::UniformRandomSampler()");
       ParseXML(in_Node);
       cout << "UniformRandomSampler";
-      string strLabel= this->ParseLabelXML( in_Node);
-      this->SetLabel(strLabel);
-      LOG_DEBUG_MSG("~UniformRandomSampler::UniformRandomSampler()");
     }
 
     ~UniformRandomSampler() {}
 
     void ParseXML(XMLNodeReader& in_Node) 
     {
-      LOG_DEBUG_MSG("UniformRandomSampler::ParseXML()");
       SamplerMethod<CFG>::Print(cout);
       cout << "UniformRandomSampler";
-      LOG_DEBUG_MSG("~UniformRandomSampler::ParseXML()");
     }
 
     virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG _cfgCol, int _maxAttempts) {
@@ -69,34 +62,26 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG> {
       this->SetName("UniformRandomFreeSampler");
     }
 
-    UniformRandomFreeSampler(ValidityChecker<CFG>* v, string vcMethod) :
-      vc(v), strVcmethod(vcMethod) {
-        this->SetName("UniformRandomFreeSampler");
-      } 
-
-    UniformRandomFreeSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem)
-    {
+    UniformRandomFreeSampler(ValidityChecker<CFG>* v, string vcMethod) : vc(v), strVcmethod(vcMethod) {
       this->SetName("UniformRandomFreeSampler");
-      LOG_DEBUG_MSG("UniformRandomFreeSampler::UniformRandomFreeSampler()");
+    } 
+
+    UniformRandomFreeSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
+      this->SetName("UniformRandomFreeSampler");
       ParseXML(in_Node);
       cout << "UniformRandomFreeSampler";
       strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
           string(""), string("Validity Test Method"));
       cout << "strVcmethod = " << strVcmethod << endl;
       vc = in_pProblem->GetValidityChecker();
-      string strLabel= this->ParseLabelXML( in_Node);
-      this->SetLabel(strLabel);
-      LOG_DEBUG_MSG("~UniformRandomFreeSampler::UniformRandomFreeSampler()");
     }
 
     ~UniformRandomFreeSampler() {}
 
     void ParseXML(XMLNodeReader& in_Node) 
     {
-      LOG_DEBUG_MSG("UniformRandomFreeSampler::ParseXML()");
       SamplerMethod<CFG>::Print(cout);
       cout << "UniformRandomFreeSampler";
-      LOG_DEBUG_MSG("~UniformRandomFreeSampler::ParseXML()");
     }
 
   protected:

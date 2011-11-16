@@ -14,7 +14,6 @@ KMeans::KMeans(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMetho
 KMeans::~KMeans(){};
 
 vector<Partition*> KMeans::MakePartitions(Partition &p){
-   LOG_DEBUG_MSG("START KMEANS::MAKEPARTITIONS()");
    vector< vector<VID> > Clusters;
    vector<string> features;
    typedef vector<pair<string, double> >::iterator FIT;
@@ -29,7 +28,6 @@ vector<Partition*> KMeans::MakePartitions(Partition &p){
       vp[i]->SetVID(Clusters[i]);
       vp[i]->GetBoundingBox().Print(cout);
    }
-   LOG_DEBUG_MSG("END KMEANS::MAKEPARTITIONS()");
    return vp;
 };
 

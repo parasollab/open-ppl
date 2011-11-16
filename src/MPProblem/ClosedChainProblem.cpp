@@ -16,9 +16,6 @@ ClosedChainProblem(XMLNodeReader& in_Node) : MPProblem(in_Node, false)
 
 void ClosedChainProblem::
 ParseXML(XMLNodeReader& in_Node) { 
-  
-  LOG_DEBUG_MSG("ClosedChainProblem::ParseXML()");
-
   in_Node.verifyName("MPProblem");
 
   for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 

@@ -7,14 +7,8 @@
 
 MPProblem::
 MPProblem(XMLNodeReader& in_Node, bool parse_xml) : MPBaseObject(in_Node, this) {
-  LOG_DEBUG_MSG("MPProblem::MPProblem()");
-  
   if(parse_xml)
     ParseXML(in_Node);
- // rmp.environment = m_pEnvironment;
- // m_pStatClass = new Stat_Class;
-  
-  LOG_DEBUG_MSG("~MPProblem::MPProblem()");
 }
 
 MPProblem::
@@ -50,8 +44,6 @@ ParseChild(XMLNodeReader::childiterator citr)
 
 void MPProblem::
 ParseXML(XMLNodeReader& in_Node) { 
-  LOG_DEBUG_MSG("MPProblem::ParseXML()");
-
   in_Node.verifyName("MPProblem");
 
   for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
@@ -62,8 +54,6 @@ ParseXML(XMLNodeReader& in_Node) {
   vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();
   for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
     m_pEnvironment->buildCDstructure(*C);
-
-  LOG_DEBUG_MSG("~MPProblem::ParseXML()");
 }
 
 
@@ -89,9 +79,8 @@ CreateMPRegion() {
 MPRegion<CfgType,WeightType>* 
 MPProblem::
 GetMPRegion(int in_RegionId) {
-  if( in_RegionId >= (int)m_vecMPRegions.size()) 
-  {  
-    LOG_ERROR_MSG("MPProblem:: I dont have region id = " << in_RegionId);
+  if( in_RegionId >= (int)m_vecMPRegions.size()) {  
+    cerr << "MPProblem:: I dont have region id = " << in_RegionId << endl;
     exit(-1);
   }
   

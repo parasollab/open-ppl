@@ -1,7 +1,7 @@
 #ifndef NodeConnectionMethod_h
 #define NodeConnectionMethod_h
 
-#include "util.h"
+#include "MPUtils.h"
 
 // Abstract Interface Class for node connection methods
 template <class CFG, class WEIGHT> class ConnectMap;
@@ -22,7 +22,6 @@ class NodeConnectionMethod : public MPBaseObject {
   
   
   ConnectMap<CFG,WEIGHT>* GetConnectMap() {
-  LOG_DEBUG_MSG("NodeConnectionMethod::ConnectMap()");
   return my_connect;
   };
   

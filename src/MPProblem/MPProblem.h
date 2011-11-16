@@ -1,7 +1,7 @@
 #ifndef MPProblem_h
 #define MPProblem_h
 
-#include "util.h"
+#include "MPUtils.h"
 #include "CfgTypes.h"
 //#include "NeighborhoodFinder.h"
 

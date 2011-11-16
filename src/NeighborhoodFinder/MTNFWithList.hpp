@@ -30,7 +30,7 @@ class MTNF: public NeighborhoodFinderMethod {
 public:
 
   MTNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(ParseLabelXML(in_Node)) {
+    NeighborhoodFinderMethod(in_Node, in_pProblem) {
 
     m_epsilon = in_Node.numberXMLParameter("epsilon", false, double(0.0),
 					   double(0.0), double(100.0),

@@ -123,7 +123,7 @@ CollisionDetection() {
   selected.push_back(solid);
 #endif
   if(selected.size() < 1) {
-    LOG_WARNING_MSG("No CollisionDetectionMethods selected!");
+    cerr << "No CollisionDetectionMethods selected!" << endl;
   }
   
  
@@ -134,7 +134,6 @@ CollisionDetection() {
 CollisionDetection::
 CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
     MPBaseObject(in_Node, in_pProblem) { 
-  LOG_DEBUG_MSG("CollisionDetection::CollisionDetection()");
   penetration = -1;
 
 #ifdef USE_VCLIP
@@ -200,11 +199,8 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   selected.push_back(solid);
 #endif
   if(selected.size() < 1) {
-    LOG_WARNING_MSG("No CollisionDetectionMethods selected!");
+    cerr << "No CollisionDetectionMethods selected!" << endl;
   }
-  
-  
-  LOG_DEBUG_MSG("~CollisionDetection::CollisionDetection()");
 }
 
 

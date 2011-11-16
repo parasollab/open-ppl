@@ -19,9 +19,7 @@ ostream& operator<<(ostream& os, const NodeTypeCounts& nt)
 HybridPRM::
 HybridPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPStrategyMethod(in_Node,in_pProblem) 
 {
-  LOG_DEBUG_MSG("HybridPRM::HybridPRM()");
   ParseXML(in_Node);
-  LOG_DEBUG_MSG("~HybridPRM::HybridPRM()");
 }
 
 
@@ -34,7 +32,6 @@ void
 HybridPRM::
 ParseXML(XMLNodeReader& in_Node) 
 {
-  LOG_DEBUG_MSG("HybridPRM::ParseXML()");
   for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
   {
     if(citr->getName() == "node_generation_method") 
@@ -53,36 +50,28 @@ ParseXML(XMLNodeReader& in_Node)
     } 
     else if(citr->getName() == "evaluation_method")
     {
-      string evalMethod = citr->stringXMLParameter(string("Method"), true, string(""), string("Evaluation Method"));
+      string evalMethod = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
       m_evaluator_labels.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
     }
     else if(citr->getName() == "stat_nf_method") 
     {
-      nf_label = citr->stringXMLParameter(string("Method"),true, string(""),string("Neighborhood Finder Method for Stats computations"));
+      nf_label = citr->stringXMLParameter("Method",true, "", "Neighborhood Finder Method for Stats computations");
       citr->warnUnrequestedAttributes();
     } 
     else 
       citr->warnUnknownNode();
   }
   
-  m_percentage_random = in_Node.numberXMLParameter("percent_random",true,double(0.5),double(0),double(1),"percent_random");
-  
-  m_bin_size = in_Node.numberXMLParameter("bin_size",true,5,1,MAX_INT,"bin_size");
-
-  m_window_percent = in_Node.numberXMLParameter("window_percent",true,double(0.5),double(0),double(1),"window_percent");
-
-  m_count_cost = in_Node.boolXMLParameter("Count_Cost",true,true,"Count_Cost");
-
-  m_fixed_cost = in_Node.boolXMLParameter("fixed_cost",true,false,"fixed_cost");
-
-  m_resetting_learning = in_Node.boolXMLParameter("resetting_learning",true,false,"resetting_learning");
-
-  m_sampler_selection_distribution = in_Node.stringXMLParameter("sampler_selection_distribution",false,"","sampler_selection_distribution");
+  m_percentage_random = in_Node.numberXMLParameter("percent_random", true, 0.5, 0.0, 1.0, "percent_random");
+  m_bin_size = in_Node.numberXMLParameter("bin_size", true, 5, 1, MAX_INT, "bin_size");
+  m_window_percent = in_Node.numberXMLParameter("window_percent", true, 0.5, 0.0, 1.0, "window_percent");
+  m_count_cost = in_Node.boolXMLParameter("Count_Cost", true, true, "Count_Cost");
+  m_fixed_cost = in_Node.boolXMLParameter("fixed_cost", true, false, "fixed_cost");
+  m_resetting_learning = in_Node.boolXMLParameter("resetting_learning", true, false, "resetting_learning");
+  m_sampler_selection_distribution = in_Node.stringXMLParameter("sampler_selection_distribution", false, "", "sampler_selection_distribution");
   if (m_sampler_selection_distribution == "nowindow")
     m_window_percent = 1.0; // 100% of the time learning
-
-  LOG_DEBUG_MSG("~HybridPRM::ParseXML()");
 }
 
 
@@ -110,10 +99,6 @@ PrintOptions(ostream& out_os)
 }
 
 void HybridPRM::Initialize(int in_RegionID){
-   ostringstream oss;
-   oss<<"Hybrid PRM Initializing in region "<<in_RegionID<<endl;
-   LOG_DEBUG_MSG(oss.str());
-
    PrintOptions(cout);
 
    OBPRM_srand(getSeed()); 
@@ -158,16 +143,9 @@ void HybridPRM::Initialize(int in_RegionID){
     
   //double witness_connectivity(0), witness_coverage(0), total_query_time(0);
   //unsigned int witness_queries = m_witness_nodes.size()*(m_witness_nodes.size()-1)/2;
-
- 
-
-   LOG_DEBUG_MSG("End Hybrid PRM Initializing");
 }
 
 void HybridPRM::Run(int in_RegionID){
-   ostringstream oss;
-   oss<<"Hybrid PRM Running in region "<<in_RegionID<<endl;
-   LOG_DEBUG_MSG(oss.str());
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
    Stat_Class* pStatClass = region->GetStatClass();
    totalSamples = 0;
@@ -370,14 +348,9 @@ void HybridPRM::Run(int in_RegionID){
 
     map_passed_evaluation = evaluate_map(in_RegionID);
   } //end while !map_passed_evaluation
-
-   LOG_DEBUG_MSG("End Hybrid PRM Running");
 }
 
 void HybridPRM::Finalize(int in_RegionID){
-   ostringstream oss;
-   oss<<"Hybrid PRM Finalizing in region "<<in_RegionID<<endl;
-   LOG_DEBUG_MSG(oss.str());
    char_ofstream.close();
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
    Stat_Class* pStatClass = region->GetStatClass();
@@ -385,9 +358,8 @@ void HybridPRM::Finalize(int in_RegionID){
    //output map
   string outputFilename = base_filename+ ".map";
   ofstream myofstream(outputFilename.c_str());
-  if(!myofstream) 
-  {
-    LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
+  if(!myofstream) {
+    cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
     exit(-1);
   }
   region->WriteRoadmapForVizmo(myofstream);
@@ -413,8 +385,6 @@ void HybridPRM::Finalize(int in_RegionID){
   stat_ofstream.close();
 
   cout << "!!ALL FINISHED!!"<< endl;
- 
-   LOG_DEBUG_MSG("End Hybrid PRM Finalizing");
 }
 
 void

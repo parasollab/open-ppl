@@ -149,17 +149,12 @@ template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::
 ConnectCCs(XMLNodeReader& in_Node, MPProblem* in_pProblem):
   ComponentConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem) { 
-  
-  LOG_DEBUG_MSG("ConnectCCs::ConnectCCs()");
   this->SetName("components"); 
   SetDefault();
 
   nf_label = in_Node.stringXMLParameter("nf", true, "", "nf");
-  kpairs = in_Node.numberXMLParameter(string("kpairs"), true, 5,1,1000, 
-                                  string("kpairs value")); 
+  kpairs = in_Node.numberXMLParameter("kpairs", true, 5,1,1000, "kpairs value"); 
   smallcc = in_Node.numberXMLParameter("smallcc", true, 5,1,1000,  "smallcc value"); 
-  
-  LOG_DEBUG_MSG("~ConnectCCs::ConnectCCs()");
 }
 
 

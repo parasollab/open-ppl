@@ -192,13 +192,11 @@ StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProbl
 {
   this->SetName("straightLine");
   cdtype = _cdtype;
-  LOG_DEBUG_MSG("StraightLine::StraightLine()");
   lineSegmentLength = in_Node.numberXMLParameter(string("length"), false, 0, 0, 5000, string("lineSegmentLength")); 
   binarySearch = in_Node.numberXMLParameter(string("binary_search"), false, 0, 0, 1, string("binary search")); 
   vcMethod = in_Node.stringXMLParameter(string("vc_method"), false, string(""), string("Validity Test Method"));
   if(warnUnrequestedXml)
     in_Node.warnUnrequestedAttributes();
-  LOG_DEBUG_MSG("~StraightLine::StraightLine()");
 }
  
 

@@ -14,7 +14,6 @@ HierarchicalClustering::HierarchicalClustering(XMLNodeReader& in_Node, MPProblem
 HierarchicalClustering::~HierarchicalClustering(){};
 
 vector<Partition*> HierarchicalClustering::MakePartitions(Partition &p){
-   LOG_DEBUG_MSG("START Hierarchical Clustering::MAKEPARTITIONS()");
    vector< vector<VID> > Clusters;
    vector<string> features;
    typedef vector<pair<string, double> >::iterator FIT;
@@ -29,7 +28,6 @@ vector<Partition*> HierarchicalClustering::MakePartitions(Partition &p){
       vp[i]->SetVID(Clusters[i]);
       vp[i]->GetBoundingBox().Print(cout);
    }
-   LOG_DEBUG_MSG("END Hierarchical Clustering::MAKEPARTITIONS()");
    return vp;
 };
 

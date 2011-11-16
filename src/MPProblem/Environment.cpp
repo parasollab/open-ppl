@@ -200,7 +200,6 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   minmax_BodyAxisRange(0),
   input_filename("")
 {
-  LOG_DEBUG_MSG("Environment::Environment()");
   in_Node.verifyName(string("environment"));
 
   double pos_res = -1.0, ori_res=-1.0l;
@@ -271,7 +270,6 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   cout << "Position Resolution = " << positionRes << endl;
     
   SelectUsableMultibodies();
-  LOG_DEBUG_MSG("~Environment::Environment()");
 }
 
 
@@ -338,8 +336,6 @@ PrintOptions(ostream& out_os) {
 //===================================================================
 Environment::
 ~Environment() {
-  LOG_DEBUG_MSG("Environment::~Environment()");
-  LOG_DEBUG_MSG("~Environment::~Environment()");
 }
 
 

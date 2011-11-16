@@ -5,11 +5,7 @@
 #include "MPFeature.h"
 
 UAStrategy::UAStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
-   LOG_DEBUG_MSG("UAStrategy::UAStrategy()");
-   
-   ParseXML(in_Node);
-   
-   LOG_DEBUG_MSG("~UAStrategy::UAStrategy()");
+  ParseXML(in_Node);
 }
    
 void UAStrategy::ParseXML(XMLNodeReader& in_Node){
@@ -60,10 +56,8 @@ void UAStrategy::Run(int in_RegionID){
    
    //identify regions
    IdentifyRegions();
-   LOG_DEBUG_MSG("START PARTITION EVALUATION");
    if(GetMPProblem()->GetMPStrategy()->GetPartitioningEvaluators()!=NULL)
       EvaluatePartitions();
-   LOG_DEBUG_MSG("END PARTITION EVALUATION");
    CollectMinMaxBBX();
    OverlapBBX();
    vector<double> probabilities = GetProbabilities(); 
@@ -168,15 +162,11 @@ void UAStrategy::PrintOptions(ostream& out_os){
 }
 
 void UAStrategy::IdentifyRegions(){   
-   LOG_DEBUG_MSG("CREATE PARTITIONTREE");
    Partition* p=new Partition(GetMPProblem()->GetMPRegion(0)->GetRoadmap(), 0);
    LeafPartitionNode lp(p);
    m_pt = new PartitionTree(lp);
-   LOG_DEBUG_MSG("END PARTITION TREE CREATION");	
    cout<<GetMPProblem()->GetMPStrategy()->GetPartitioningMethods()->GetPartitioningMethod(m_PartitioningMethod)->GetName()<<endl<<flush;
-   LOG_DEBUG_MSG("START PARTITIONING");
    m_pt->CreateTree(GetMPProblem()->GetMPStrategy()->GetPartitioningMethods()->GetPartitioningMethod(m_PartitioningMethod), dynamic_cast<LeafPartitionNode*>(m_pt->GetRoot()), new InternalPartitionNode());
-   LOG_DEBUG_MSG("END PARTITIONING");
 }
 
 void UAStrategy::CollectMinMaxBBX(){
@@ -509,47 +499,42 @@ vector<double> UAStrategy::GetProbabilities(){
 }
 
 void UAStrategy::UpdateBBToRange(size_t region){
-   LOG_DEBUG_MSG("UAS::Enter UpdateBBToRange");
-   m_hold.clear();
-   if( region >=0 && region < m_min.size() ){
-      boost::shared_ptr<BoundingBox> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
-      boost::shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
-      
-      int size = (m_min.at(region)).size();
-      for(int i=0; i < size;i++){
-         pBoundBox->GetRange(i);
-         pair< double, double> tmp( pBoundBox->GetRange(i));
-         m_hold.push_back(tmp);
-         if(i==0){
-            pBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
-            pMPEBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
-         }
-         else{
-            pBoundBox->SetParameter(i, (m_min.at(region)).at(i), (m_max.at(region)).at(i));
-            pMPEBoundBox->SetParameter(i, (m_min.at(region)).at(i), (m_max.at(region)).at(i));
-         }
+  m_hold.clear();
+  if( region >=0 && region < m_min.size() ){
+    boost::shared_ptr<BoundingBox> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
+    boost::shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
+
+    int size = (m_min.at(region)).size();
+    for(int i=0; i < size;i++){
+      pBoundBox->GetRange(i);
+      pair< double, double> tmp( pBoundBox->GetRange(i));
+      m_hold.push_back(tmp);
+      if(i==0){
+        pBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
+        pMPEBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
       }
-      cout<<"START RESIZE BOUNDING BOX (NODE GENERATION/MAP PRINTING) TO:"<<endl<<flush;
-      pBoundBox->Print(cout, ':', ';');
-   }
-   LOG_DEBUG_MSG("UAS::Exit UpdateBBToRange");
+      else{
+        pBoundBox->SetParameter(i, (m_min.at(region)).at(i), (m_max.at(region)).at(i));
+        pMPEBoundBox->SetParameter(i, (m_min.at(region)).at(i), (m_max.at(region)).at(i));
+      }
+    }
+    cout<<"START RESIZE BOUNDING BOX (NODE GENERATION/MAP PRINTING) TO:"<<endl<<flush;
+    pBoundBox->Print(cout, ':', ';');
+  }
 }
 
 void UAStrategy::RestoreBB(){
-   LOG_DEBUG_MSG("UAS::Enter RestoreBB");
-   boost::shared_ptr<BoundingBox> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
-   boost::shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
-   size_t i=0;
-   for(i=0; i<m_hold.size();i++){
-      pBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
-      pMPEBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
-   }
-	if(i>0){
-      cout<<"START RESTORE BOUNDING BOX (CONNECTION) TO:"<<endl<<flush;
-      pBoundBox->Print(cout, ':', ';');
-	}
-   
-   LOG_DEBUG_MSG("UAS::Exit RestoreBB");
+  boost::shared_ptr<BoundingBox> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
+  boost::shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
+  size_t i=0;
+  for(i=0; i<m_hold.size();i++){
+    pBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
+    pMPEBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
+  }
+  if(i>0){
+    cout<<"START RESTORE BOUNDING BOX (CONNECTION) TO:"<<endl<<flush;
+    pBoundBox->Print(cout, ':', ';');
+  }
 }
 
 vector<Partition*> UAStrategy::GetPartitions(){
@@ -646,7 +631,7 @@ void UAStrategy::WriteRegionsSeparate(){
       oss<<baseFileName<<"."<<count<<".map";
       ofstream  myofstream(oss.str().c_str());    
       if (!myofstream) {
-         LOG_ERROR_MSG("print_feature_maps::WriteRoadmapForVizmo: can't open outfile: ");
+         cerr << "print_feature_maps::WriteRoadmapForVizmo: can't open outfile: " << endl;
          exit(-1);
       } 
       eachRgn.WriteRoadmapForVizmo(myofstream);

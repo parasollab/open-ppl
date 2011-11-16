@@ -27,7 +27,6 @@ void SuccessiveClustering::ParseXML(XMLNodeReader& in_Node){
 }
 
 vector<Partition*> SuccessiveClustering::MakePartitions(Partition &p){
-   LOG_DEBUG_MSG("START SUCCESSIVE::MAKEPARTITIONS()");
    vector<Partition*> parts;
    parts.push_back(new Partition(p));
    typedef vector<Partition*>::iterator PIT;
@@ -54,7 +53,6 @@ vector<Partition*> SuccessiveClustering::MakePartitions(Partition &p){
       vp[vp.size()-1]->SetVID((*pit)->GetVID());
       vp[vp.size()-1]->GetBoundingBox().Print(cout);
    }
-   LOG_DEBUG_MSG("END SUCCESSIVE::MAKEPARTITIONS()");
    return vp;
 };
 

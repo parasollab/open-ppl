@@ -1,10 +1,9 @@
 #ifndef _MAP_EVALUATION_METHOD_H
 #define _MAP_EVALUATION_METHOD_H
 
-#include "Utilities/util.h"
+#include "MPUtils.h"
 
-class MapEvaluationMethod
-  : public MPBaseObject 
+class MapEvaluationMethod : public MPBaseObject 
 {
  public:
   MapEvaluationMethod() {}

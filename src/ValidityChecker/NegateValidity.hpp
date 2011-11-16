@@ -38,7 +38,7 @@ NegateValidity(string label, std::vector<typename ValidityChecker<CFG>::VCMethod
 template<typename CFG>
 NegateValidity<CFG>::
 NegateValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-  ValidityCheckerMethod(ParseLabelXML(in_Node), in_pProblem) 
+  ValidityCheckerMethod(in_Node, in_pProblem) 
 {
   in_Node.verifyName("NegateValidity");
   m_vcLabel = in_Node.stringXMLParameter("method",true,"","method");    

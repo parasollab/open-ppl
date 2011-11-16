@@ -494,17 +494,13 @@ template <class CFG, class WEIGHT>
 ConnectMap<CFG,WEIGHT>::
 ConnectMap(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
   MPBaseObject(in_Node, in_pProblem){
-  LOG_DEBUG_MSG("ConnectMap::ConnectMap()");
   ParseXML(in_Node);
-  LOG_DEBUG_MSG("~ConnectMap::ConnectMap()");
 }
 
 
 template <class CFG, class WEIGHT>
 void ConnectMap<CFG,WEIGHT>::
 ParseXML(XMLNodeReader& in_Node) {
-  LOG_DEBUG_MSG("ConnectMap::ParseXML()");
-  
   connectionPosRes = GetMPProblem()->GetEnvironment()->GetPositionRes();
   cout << "connectionPosRes = " << connectionPosRes << endl;
   connectionOriRes = GetMPProblem()->GetEnvironment()->GetOrientationRes();     
@@ -540,8 +536,6 @@ ParseXML(XMLNodeReader& in_Node) {
       connectccs->connectionOriRes = connectionOriRes; 
     } 
   }
-  
-  LOG_DEBUG_MSG("~ConnectMap::ParseXML()");
 }
 
 template <class CFG, class WEIGHT>

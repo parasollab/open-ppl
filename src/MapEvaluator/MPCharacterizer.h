@@ -33,29 +33,22 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 
     CCExpandCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
       NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
-      LOG_DEBUG_MSG("CCExpandCharacterizer::LocalNodeInfoCharacterizer()");
       ParseXML(in_Node);    
       string dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
 
       dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
-      LOG_DEBUG_MSG("~CCExpandCharacterizer::LocalNodeInfoCharacterizer()");
     };
     
     virtual void ParseXML(XMLNodeReader& in_Node) {
-      LOG_DEBUG_MSG("CCExpandCharacterizer::ParseXML()");
-      LOG_DEBUG_MSG("~CCExpandCharacterizer::ParseXML()");
     };
       
     virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion) {
-      LOG_DEBUG_MSG("CCExpandCharacterizer::Characterize()");
       cout << "CCExpandCharacterizer::Characterize(MPRegion*) Not implemented" << endl;
       exit(-1);
-      LOG_DEBUG_MSG("~CCExpandCharacterizer::Characterize()");
     };
     
     virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion, VID in_vid) {
-      LOG_DEBUG_MSG("CCExpandCharacterizer::Characterize()");
       Roadmap<CFG,WEIGHT>* pRoadmap = inout_pRegion->GetRoadmap();
       RoadmapGraph<CFG,WEIGHT>* pGraph = pRoadmap->m_pRoadmap;
       LocalPlanners < CFG, WEIGHT > * lp = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
@@ -89,7 +82,6 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       else
          (*(pGraph->find_vertex(in_vid))).property().SetLabel("CCOVERSAMPLE",true);
 
-      LOG_DEBUG_MSG("~CCExpandCharacterizer::Characterize()");
     };
     virtual void PrintOptions(ostream& out_os) {};
   private:
@@ -107,28 +99,23 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
     LocalNodeInfoCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
       NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
       
-      LOG_DEBUG_MSG("LocalNodeInfoCharacterizer::LocalNodeInfoCharacterizer()");
       m_dRadius = 0;
       ParseXML(in_Node);    
       string dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
       dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
-      LOG_DEBUG_MSG("~LocalNodeInfoCharacterizer::LocalNodeInfoCharacterizer()");
     };
     
     virtual void ParseXML(XMLNodeReader& in_Node) {
-      LOG_DEBUG_MSG("LocalNodeInfoCharacterizer::ParseXML()");
       
 
       m_dRadius = in_Node.numberXMLParameter(string("radius"),true,double(0.5),
                                           double(0.0),double(1000.0),
                                           string("Radius Value")); 
       
-      LOG_DEBUG_MSG("~LocalNodeInfoCharacterizer::ParseXML()");
     };
       
     virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion) {
-      LOG_DEBUG_MSG("LocalNodeInfoCharacterizer::Characterize()");
       cout << "*********LocalNodeInfoCharacterizer:: m_dRadius = " << m_dRadius << endl;
       Roadmap<CFG,WEIGHT>* pRoadmap = inout_pRegion->GetRoadmap();
       Roadmap<CFG,WEIGHT>* pColRoadmap = inout_pRegion->GetColRoadmap();
@@ -167,7 +154,6 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
           (*(pGraph->find_vertex(*itr))).property().SetLabel("BetterThanBridge",true);
         }
       }
-      LOG_DEBUG_MSG("~LocalNodeInfoCharacterizer::Characterize()");
     };
     
     virtual void PrintOptions(ostream& out_os) {};
@@ -207,13 +193,10 @@ public:
   MPCharacterizer(vector< NodeCharacterizerMethod<CFG,WEIGHT>* > all) : all_NodeCharacterizerMethod(all) {};
   MPCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
       MPBaseObject(in_Node, in_pProblem) {
-    LOG_DEBUG_MSG( "MPCharacterizer::MPCharacterizer()");
     ParseXML(in_Node);
-    LOG_DEBUG_MSG( "~MPCharacterizer::MPCharacterizer()");
   }
   
   void ParseXML(XMLNodeReader& in_Node) {
-    LOG_DEBUG_MSG("MPCharacterizer::ParseXML()");
     
     XMLNodeReader::childiterator citr;
     for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {   
@@ -229,7 +212,6 @@ public:
         citr->warnUnrequestedAttributes();
       }
     }
-    LOG_DEBUG_MSG("~MPCharacterizer::ParseXML()");
   }
 
 

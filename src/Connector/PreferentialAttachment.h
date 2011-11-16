@@ -137,13 +137,9 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment():NodeConnectionMetho
 template <class CFG, class WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
     NodeConnectionMethod<CFG,WEIGHT>(in_Node, in_pProblem) { 
-  LOG_DEBUG_MSG("PreferentialAttachment::PreferentialAttachment()"); 
   this->SetName("PreferentialAttachment"); 
   SetDefault();
   ParseXML(in_Node);
-  
-  
-  LOG_DEBUG_MSG("~PreferentialAttachment::PreferentialAttachment()"); 
 }
 
 

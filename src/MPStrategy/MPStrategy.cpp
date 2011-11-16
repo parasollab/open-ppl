@@ -25,7 +25,6 @@
 
 MPStrategy::
 MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPBaseObject(in_Node,in_pProblem) {
-  LOG_DEBUG_MSG( "MPStrategy::MPStrategy()");
   ///\todo Find a home for "addPartialEdge" and "addAllEdges" or remove all together
   addPartialEdge=true;
   addAllEdges=false;
@@ -41,7 +40,6 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPB
     m_pCharacterizer = NULL;
     #endif 
     XMLNodeReader::childiterator citr;
-    LOG_DEBUG_MSG("MPStrategy::MPStrategy(XMLNodeReader)");
         cout << "input node label MP Strategy = " << in_Node.getName() << endl;
     for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
       if(citr->getName() == "node_generation_methods") {
@@ -76,8 +74,6 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPB
       }
     }
   }
-
-  LOG_DEBUG_MSG( "~MPStrategy::MPStrategy()");
 }
 
 
@@ -99,7 +95,6 @@ PrintOptions(ostream& out_os)
 
 void MPStrategy::
 ParseStrategyMethod(XMLNodeReader& in_Node) {
-  LOG_DEBUG_MSG( "MPStrategy::ParseStrategyMethod()");
   in_Node.verifyName(string("MPStrategyMethod"));
   
   XMLNodeReader::childiterator citr;
@@ -109,7 +104,6 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
   }
 
    m_strController_MPStrategyMethod = in_Node.stringXMLParameter("Controller",true,"","Controller Method");
-  LOG_DEBUG_MSG( "~MPStrategy::ParseStrategyMethod()");
 }
 
 MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
@@ -171,7 +165,6 @@ GetMPStrategyMethod(string& in_strLabel) {
   for(I = all_MPStrategyMethod.begin(); 
       I != all_MPStrategyMethod.end(); ++I) {
         if(I->first->GetLabel() == in_strLabel) {
-    LOG_DEBUG_MSG("MPStrategyMethod::GetMPStrategyMethod(): found " << in_strLabel);
           return I->first;
         }
       }
@@ -183,7 +176,6 @@ GetXMLNodeForStrategy(string& in_strLabel) {
   vector<pair<MPStrategyMethod*, XMLNodeReader*> >::iterator I;
   for(I = all_MPStrategyMethod.begin(); I != all_MPStrategyMethod.end(); ++I) {
     if(I->first->GetLabel() == in_strLabel) {
-      LOG_DEBUG_MSG("MPStrategyMethod::GetMPStrategyMethod(): found " << in_strLabel);
       return I->second;
     }
   }
@@ -192,15 +184,12 @@ GetXMLNodeForStrategy(string& in_strLabel) {
 
 void MPStrategy::
 Solve() {
-  LOG_DEBUG_MSG("MPStrategy::Solve()")
-      LOG_DEBUG_MSG("MPStrategy::Solve() -- about to run " << m_strController_MPStrategyMethod);
      // (*(GetMPStrategyMethod(m_strController_MPStrategyMethod)))();
      cout<<m_strController_MPStrategyMethod<<endl;
      if(GetMPStrategyMethod(m_strController_MPStrategyMethod)==NULL){
         cout<<"ISNULL"<<flush;
      }
      GetMPStrategyMethod(m_strController_MPStrategyMethod)->operator()();
-  LOG_DEBUG_MSG("~MPStrategy::Solve()")
 };
 
 
@@ -208,9 +197,7 @@ Solve() {
 MPComparer::
 MPComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   MPStrategyMethod(in_Node,in_pProblem) {
-  LOG_DEBUG_MSG("MPComparer::MPComparer()");
   ParseXML(in_Node);    
-  LOG_DEBUG_MSG("~MPComparer::MPComparer()");
 }
   
 void 
@@ -221,7 +208,6 @@ PrintOptions(ostream& out_os) {
 void 
 MPComparer::
 ParseXML(XMLNodeReader& in_Node) {
-  LOG_DEBUG_MSG("MPComparer::ParseXML()");
   
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
@@ -235,8 +221,6 @@ ParseXML(XMLNodeReader& in_Node) {
       citr->warnUnknownNode();
     }
   }
-  
-  LOG_DEBUG_MSG("~MPComparer::ParseXML()");
 }
 
 void 
@@ -252,13 +236,11 @@ operator()(int in_RegionID_1, int in_RegionID_2) {
   OBPRM_srand(getSeed()); 
   #ifndef _PARALLEL
   // mapping region 1
-  LOG_DEBUG_MSG("MPComparer::() -- executing "<< m_input_methods[0]);
   MPStrategyMethod* input1 = GetMPProblem()->GetMPStrategy()->
     GetMPStrategyMethod(m_input_methods[0]);
   (*input1)(in_RegionID_1);
   
   // mapping region 2
-  LOG_DEBUG_MSG("MPComparer::() -- executing "<< m_input_methods[1]);
   MPStrategyMethod* input2 = GetMPProblem()->GetMPStrategy()->
     GetMPStrategyMethod(m_input_methods[1]);
   (*input2)(in_RegionID_2); 
@@ -275,23 +257,17 @@ operator()(int in_RegionID_1, int in_RegionID_2) {
 void 
 MPComparer::
 operator()() {
-  LOG_DEBUG_MSG("MPComparer::()");
-  
   int Input1RegionId = GetMPProblem()->CreateMPRegion();
   int Input2RegionId = GetMPProblem()->CreateMPRegion();
   
   (*this)(Input1RegionId, Input2RegionId);
-  
-  LOG_DEBUG_MSG("MPComparer::()");  
 }
 
 
 MPMultiStrategy::
 MPMultiStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   MPStrategyMethod(in_Node,in_pProblem) {
-  LOG_DEBUG_MSG("MPMultiStrategy::MPMultiStrategy()");
   ParseXML(in_Node);    
-  LOG_DEBUG_MSG("~MPMultiStrategy::MPMultiStrategy()");
 }
   
 void 
@@ -302,8 +278,6 @@ PrintOptions(ostream& out_os) {
 void 
 MPMultiStrategy::
 ParseXML(XMLNodeReader& in_Node) {
-  LOG_DEBUG_MSG("MPMultiStrategy::ParseXML()");
-  
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
     if (citr->getName() == "strategy") {
@@ -313,8 +287,6 @@ ParseXML(XMLNodeReader& in_Node) {
       citr->warnUnknownNode();
     }
   }
-  
-  LOG_DEBUG_MSG("~MPMultiStrategy::ParseXML()");
 }
 
 void 
@@ -323,7 +295,6 @@ operator()(int in_RegionID) {
   // initializing region from input
   typedef vector< string >::iterator VITRTR;
   for (VITRTR s_itrtr = m_strategy_methods.begin(); s_itrtr < m_strategy_methods.end(); s_itrtr++) { 
-    LOG_DEBUG_MSG("MPMultiStrategy::() -- executing "<< (*s_itrtr));
     MPStrategyMethod* strategy = GetMPProblem()->GetMPStrategy()->
       GetMPStrategyMethod(*s_itrtr);
     (*strategy)(in_RegionID);
@@ -333,10 +304,6 @@ operator()(int in_RegionID) {
 void 
 MPMultiStrategy::
 operator()() {
-  LOG_DEBUG_MSG("MPMultiStrategy::()");
-  
   int RegionId = GetMPProblem()->CreateMPRegion();    
   (*this)(RegionId);
-  
-  LOG_DEBUG_MSG("MPMultiStrategy::()");
 }

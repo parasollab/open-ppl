@@ -237,7 +237,7 @@ GetMethod(string& in_strLabel) {
       return (*I);
     }
   }
-  LOG_ERROR_MSG("LocalPlanners:: cannot find LocalPlannerMethod label = " << in_strLabel);
+  cerr << "LocalPlanners:: cannot find LocalPlannerMethod label = " << in_strLabel << endl;
   exit(-1);
 }
 
@@ -254,8 +254,6 @@ LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) :
   }
  
   ///\todo Finish this parcer .... need to have binary search!
-  
-  LOG_DEBUG_MSG("LocalPlanners::LocalPlanners()");
   
   ResetSelected();
   if(parse_xml)
@@ -306,7 +304,6 @@ LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) :
       }
     }
   }
-  LOG_DEBUG_MSG("~LocalPlanners::LocalPlanners()");
 }
 
 

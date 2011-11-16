@@ -102,7 +102,6 @@ class NFUnionRoadmap : public MPStrategyMethod {
 
       void ParseXML(XMLNodeReader& in_Node) {
          cout << "NFUnionRoadmap::ParseXML()" << endl;
-         LOG_DEBUG_MSG("NFUnionRoadmap::ParseXML()");
          interval = 100;
          queries=2;
          outfile="outfile.unionstats";
@@ -520,7 +519,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
          ofstream  myofstream(outfile.c_str());
 
          if (!myofstream) {
-            LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
+            cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
             exit(-1);
          }
          region.WriteRoadmapForVizmo(myofstream);
@@ -590,7 +589,6 @@ class NFRoadmapCompare : public MPStrategyMethod {
 
       void ParseXML(XMLNodeReader& in_Node) {
          cout << "NFRoadmapCompare::ParseXML()" << endl;
-         LOG_DEBUG_MSG("NFRoadmapCompare::ParseXML()");
          interval = 100;
          queries=2;
          outfile="outfile.stats";
@@ -803,9 +801,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
 
       NFIncrementalRoadmap(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
          MPStrategyMethod(in_Node,in_pProblem) {
-            LOG_DEBUG_MSG("NFIncrementalRoadmap::NFIncrementalRoadmap()");
             ParseXML(in_Node);    
-            LOG_DEBUG_MSG("~NFIncrementalRoadmap::NFIncrementalRoadmap()");
          };
       virtual ~NFIncrementalRoadmap() {}
 
@@ -813,7 +809,6 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
 
       virtual void ParseXML(XMLNodeReader& in_Node) {
          cout << "NFIncrementalRoadmap::ParseXML()" << endl;
-         LOG_DEBUG_MSG("NFIncrementalRoadmap::ParseXML()");
          //OBPRM_srand(getSeed());
          XMLNodeReader::childiterator citr;
          for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
@@ -870,14 +865,12 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
          myifstream.close();
 
 
-         LOG_DEBUG_MSG("~NFIncrementalRoadmap::ParseXML()");
          cout << "leaving NFIncrementalRoadmap" << endl;
       };
 
       virtual void Initialize(int in_RegionID){}
       virtual void Run(int in_RegionID){
          cout << "NFIncrementalRoadmap::()" << endl;
-         LOG_DEBUG_MSG("NFIncrementalRoadmap::()");
 
          OBPRM_srand(getSeed()); 
          MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
@@ -959,8 +952,6 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
             for(J itr = m_vecStrNodeConnectionLabels.begin(); 
                   itr != m_vecStrNodeConnectionLabels.end(); ++itr)
             {
-               LOG_DEBUG_MSG("NFIncrementalRoadmap:: " << *itr);
-
                ConnectMap<CfgType,WeightType>::NodeConnectionPointer pConnection;
                pConnection = connectmap->GetNodeMethod(*itr);
                cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
@@ -1082,7 +1073,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
                   << endl;
 
                if (!map_out) {
-                  LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
+                  cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
                   exit(-1);
                }
 
@@ -1096,7 +1087,6 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
          }
 
          cout << "Finished map " << endl;
-         LOG_DEBUG_MSG("~NFIncrementalRoadmap::()");
 
          region->WriteRoadmapForVizmo(map_out);
          map_out.close();
@@ -1194,16 +1184,13 @@ class NFTester : public MPStrategyMethod {
 
       NFTester( XMLNodeReader& in_Node, MPProblem* in_pProblem) :
          MPStrategyMethod(in_Node,in_pProblem) {
-            LOG_DEBUG_MSG("NFTester::NFTester()");
             ParseXML(in_Node);    
-            LOG_DEBUG_MSG("~NFTester::NFTester()");
          };
       virtual ~NFTester() {}
 
       virtual void PrintOptions(ostream& out_os) { };
 
       virtual void ParseXML(XMLNodeReader& in_Node) {
-         LOG_DEBUG_MSG("NFTester::ParseXML()");
          //OBPRM_srand(getSeed());
          XMLNodeReader::childiterator citr;
          for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
@@ -1228,12 +1215,10 @@ class NFTester : public MPStrategyMethod {
          m_BaselineNF = GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_method);
          m_kclosest = in_Node.numberXMLParameter("kclosest", true, int(10), int(0), int(MAX_INT), 
                "Number of K-Closest");
-         LOG_DEBUG_MSG("~NFTester::ParseXML()");
       };
 
       virtual void Initialize(int in_RegionID){}
       virtual void Run(int in_RegionID){
-         LOG_DEBUG_MSG("NFTester::()");
          OBPRM_srand(getSeed()); 
          MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
          NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
@@ -1275,7 +1260,7 @@ class NFTester : public MPStrategyMethod {
          for(vector<VID>::iterator iter = roadmap_vids.begin(); iter != roadmap_vids.end(); ++iter){
             query_point = *iter;
             cout << "Query point = VID: " << query_point << endl;
-            cout << "CALLING:: Baseline NF-Method = " << m_BaselineNF->GetObjectLabel() << endl;
+            cout << "CALLING:: Baseline NF-Method = " << m_BaselineNF->GetLabel() << endl;
 
             nf->KClosest(m_BaselineNF, region->GetRoadmap(), 
                   //roadmap_vids.begin(), roadmap_vids.end(), 
@@ -1432,7 +1417,6 @@ class NFTester : public MPStrategyMethod {
          }
 
          cout << "Finished!!" << endl;
-         LOG_DEBUG_MSG("~NFTester::()");
       }
       virtual void Finalize(int in_RegionID){}
 

@@ -8,15 +8,11 @@
 
 
 DistanceMetricMethod::
-DistanceMetricMethod() 
-{}
+DistanceMetricMethod() {}
 
 
 DistanceMetricMethod::
-DistanceMetricMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn)
-{
-  string label = ParseLabelXML(in_Node);
-  SetLabel(label);
+DistanceMetricMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : MPBaseObject(in_Node, in_pProblem) {
   if(warn)
     in_Node.warnUnrequestedAttributes();
 }

@@ -7,7 +7,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "BasicDefns.h"
-#include "util.h"
+#include "MPUtils.h"
 
 ///\todo add MPBaseObject defautl constructor
 class Boundary : public MPBaseObject{

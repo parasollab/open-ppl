@@ -50,7 +50,6 @@ class RoadmapTimingStats : public MPStrategyMethod {
 
     void ParseXML(XMLNodeReader& in_Node) {
       cout << "TimingStats::ParseXML()" << endl;
-      LOG_DEBUG_MSG("TimingStats::ParseXML()");
       interval = 100;
       queries=2;
       outfile="outfile.stats";
