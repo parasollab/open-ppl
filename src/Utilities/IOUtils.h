@@ -313,7 +313,7 @@ void WritePathLinkConfigurations(const string _outputFile,
     vector<CFG>& _path, 
     Environment* _env){
   vector<Cfg*> ppath;
-  for(int i=0; i<_path.size(); i++)
+  for(size_t i=0; i<_path.size(); i++)
     ppath.push_back(&_path[i]);
   WritePathLinkConfigurations(_outputFile, ppath, _env);
 }
