@@ -203,7 +203,6 @@ void HybridPRM::Run(int in_RegionID){
             ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
             connectmap->GetNodeMethod(*itr)->clear_connection_attempts();
             connectmap->ConnectNodes(connectmap->GetNodeMethod(*itr), region->GetRoadmap(), *pStatClass, 
-                                     GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), 
                                      GetMPProblem()->GetMPStrategy()->addPartialEdge,
                                      GetMPProblem()->GetMPStrategy()->addAllEdges,
                                      new_free_vid.begin(), new_free_vid.end(),

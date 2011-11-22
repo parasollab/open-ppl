@@ -14,7 +14,8 @@ class QueryEvaluation
   string filename,
   Query<CFG, WEIGHT> query,
   Stat_Class stats,
-  LocalPlanners<CFG, WEIGHT>* _lp,
+  //LocalPlanners<CFG, WEIGHT>* _lp,
+  string _m_lp_label,
   vector<string> vecStrNodes,
   ConnectMap<CFG, WEIGHT> ConnectMap,
   shared_ptr<DistanceMetricMethod> _dm) : 
@@ -23,7 +24,8 @@ class QueryEvaluation
   m_query_pathname(filename),
   m_query(query),
   m_stats(stats),
-  lp(_lp),
+		//lp(_lp),
+  m_lp_label(_m_lp_label),
   m_vecStrNodeConnectionLabels(vecStrNodes),
   m_ConnectMap(ConnectMap),
   dm(_dm),
@@ -43,6 +45,7 @@ class QueryEvaluation
     m_query = Query<CFG, WEIGHT>(m_query_filename.c_str());
     
     string dm_label = in_Node.stringXMLParameter("dm_method", false, "default", "Distance Metric Method");
+    m_lp_label = in_Node.stringXMLParameter("lp_method", true, "", "Local Planner Method");
     dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
 
     intermediateFiles = in_Node.boolXMLParameter("intermediate_files", false, false, "Determines output of intermediate file mapnodes.path");
@@ -71,7 +74,8 @@ class QueryEvaluation
   string m_query_pathname;
   Query<CFG, WEIGHT> m_query;
   Stat_Class m_stats;
-  LocalPlanners<CFG, WEIGHT>* lp;
+  //LocalPlanners<CFG, WEIGHT>* lp;
+  string m_lp_label;
   vector<string> m_vecStrNodeConnectionLabels;
   ConnectMap<CFG, WEIGHT> m_ConnectMap;
   shared_ptr<DistanceMetricMethod >dm;
@@ -86,15 +90,10 @@ QueryEvaluation<CFG, WEIGHT>::PrintOptions(ostream& out_os)
   using boost::lambda::_1;
   out_os << this->GetName() << "::";
   out_os << "\n\tquery file = \'" << m_query_filename << "\'";
-  out_os << "\n\t"; GetMPProblem()->GetCollisionDetection()->PrintOptions(out_os);
-  if(m_vecStrNodeConnectionLabels.empty())
-    out_os << "\tnode_connection_methods: ConnectFirst (default)";
-  else
-  {
-    out_os << "\tnode_connection_methods: "; for_each(m_vecStrNodeConnectionLabels.begin(), m_vecStrNodeConnectionLabels.end(), cout << _1 << " ");
-  }
-  out_os << "\n\t"; GetMPProblem()->GetDistanceMetric()->PrintOptions(out_os);
-  out_os << "\tLocalPlanners "; GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->PrintOptions(out_os);
+  out_os << "\n\tpath file = \'" << m_query_pathname << "\'";
+  out_os << "\n\tdistance metric = "; 
+  dm->PrintOptions(out_os);
+  out_os << "\tlocal planner = " << m_lp_label << endl;
 }
 
 
@@ -115,7 +114,7 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
 
 
   Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
-  lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners(); //later change to have own lp
+  //lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners(); //later change to have own lp
   //VID oriVertID = rmap->m_pRoadmap->getVertIDs(); //save vertexID counter
  
   
@@ -125,7 +124,8 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
 
   bool queryResult = m_query.PerformQuery(rmap, m_stats, 
                         &m_ConnectMap, &methods,
-                        GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+											 GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), 
+                       m_lp_label,
                        dm, intermediateFiles);
   if(queryResult==true && m_query_pathname.length()>0){
      cout<<"in query Eval";

@@ -17,8 +17,6 @@ class NodeCharacterizerMethod : public MPBaseObject
     virtual void Characterize(MPRegion<CFG,WEIGHT>*)=0;
     virtual void Characterize(MPRegion<CFG,WEIGHT>*, VID) {};
     virtual void PrintOptions(ostream& out_os)=0;
-  private:
-  
 };
 
 
@@ -36,12 +34,11 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       ParseXML(in_Node);    
       string dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
-
+      m_lp = in_Node.stringXMLParameter(string("lp_method"), false, string("default"), string("Local Planner"));
       dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
     };
     
-    virtual void ParseXML(XMLNodeReader& in_Node) {
-    };
+    virtual void ParseXML(XMLNodeReader& in_Node) { };
       
     virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion) {
       cout << "CCExpandCharacterizer::Characterize(MPRegion*) Not implemented" << endl;
@@ -54,7 +51,6 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       LocalPlanners < CFG, WEIGHT > * lp = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
       LPOutput< CFG, WEIGHT > lp_output; 
       Environment * env = this->GetMPProblem()->GetEnvironment();
-//      CollisionDetection * cd = this->GetMPProblem()->GetCollisionDetection();
       double pos_res = this->GetMPProblem()->GetEnvironment()->GetPositionRes();
       double ori_res = this->GetMPProblem()->GetEnvironment()->GetOrientationRes();
       Stat_Class Stats;
@@ -70,10 +66,11 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       bool is_expansion = true;
       for(typename vector<VID>::iterator i_n = neighbor_neighbor.begin(); i_n !=neighbor_neighbor.end(); ++i_n)
       {  //test connection to each;
-        if(!(lp->IsConnected(env, Stats, dm, 
-                             (*(pGraph->find_vertex(in_vid))).property(),
-                             (*(pGraph->find_vertex(*i_n))).property(),
-                             &lp_output, pos_res, ori_res, true))) {
+        if(!(lp->GetLocalPlannerMethod(m_lp)->
+               IsConnected(env, Stats, dm, 
+                           (*(pGraph->find_vertex(in_vid))).property(),
+                           (*(pGraph->find_vertex(*i_n))).property(),
+                           &lp_output, pos_res, ori_res, true))) {
           is_expansion = false; // cannot connect in_vid to neighbor_neighbor
         }
       }
@@ -86,6 +83,7 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
     virtual void PrintOptions(ostream& out_os) {};
   private:
     shared_ptr<DistanceMetricMethod> dm;
+    string m_lp;
 };
 
 
@@ -107,6 +105,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
     };
     
     virtual void ParseXML(XMLNodeReader& in_Node) {
+
       
 
       m_dRadius = in_Node.numberXMLParameter(string("radius"),true,double(0.5),

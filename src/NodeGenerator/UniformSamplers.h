@@ -17,7 +17,6 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
     UniformRandomSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
       this->SetName("UniformRandomSampler");
       ParseXML(in_Node);
-      cout << "UniformRandomSampler";
     }
 
     ~UniformRandomSampler() {}
@@ -25,7 +24,6 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
     void ParseXML(XMLNodeReader& in_Node) 
     {
       SamplerMethod<CFG>::Print(cout);
-      cout << "UniformRandomSampler";
     }
 
     virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG _cfgCol, int _maxAttempts) {
@@ -69,10 +67,8 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG> {
     UniformRandomFreeSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
       this->SetName("UniformRandomFreeSampler");
       ParseXML(in_Node);
-      cout << "UniformRandomFreeSampler";
       strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
           string(""), string("Validity Test Method"));
-      cout << "strVcmethod = " << strVcmethod << endl;
       vc = in_pProblem->GetValidityChecker();
     }
 

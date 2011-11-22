@@ -18,17 +18,18 @@ void VisibilityFeature::ParseXML(XMLNodeReader& in_Node){
    k = in_Node.numberXMLParameter(string("k"), true, 0, 0, MAX_INT, string("k value"));
    nfLabel=in_Node.stringXMLParameter(string("nf_method"),true,string(""),string("Neighborhood Finder Method"));
    dmLabel=in_Node.stringXMLParameter(string("dm_method"),false,string("default"),string("Neighborhood Finder Method"));
+   m_lpLabel = in_Node.stringXMLParameter(string("lp_method"),false,string("default"),string("Local Planner Method"));
    in_Node.warnUnrequestedAttributes();
 }
 
 vector<double> VisibilityFeature::Collect(vector<VID>& vids){
    RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
    typedef vector<VID>::iterator VIT;
-   LocalPlanners<CfgType, WeightType>* sl=GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
+   LocalPlanners<CfgType, WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
    Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
    Environment *env = GetMPProblem()->GetEnvironment();
    NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
-   LPOutput<CfgType, WeightType> lp;
+   LPOutput<CfgType, WeightType> lpOutput;
 
    vector<CfgType> cfgs;
    vector<VID> allVIDs;
@@ -53,10 +54,10 @@ vector<double> VisibilityFeature::Collect(vector<VID>& vids){
       for(IIT vit2 = kclosest.begin(); vit2!=kclosest.end(); vit2++){
          CfgType _col;
          if(is_same_cc(*rdmp, cmap, *vit, allVIDs[*vit2]))visibility+=1;
-         else if(sl->IsConnected(env, *pStatClass,
-            GetMPProblem()->GetDistanceMetric()->GetDMMethod(dmLabel),
-            rdmp->find_vertex(*vit)->property(), rdmp->find_vertex(allVIDs[*vit2])->property(),
-            _col, &lp, .1, .1))
+         else if(lp->GetLocalPlannerMethod(m_lpLabel)->
+                   IsConnected(env, *pStatClass,GetMPProblem()->GetDistanceMetric()->GetDMMethod(dmLabel),
+                               rdmp->find_vertex(*vit)->property(), rdmp->find_vertex(allVIDs[*vit2])->property(),
+                               _col, &lpOutput, .1, .1))
             visibility+=1;
       }
       visibility/=(double)kclosest.size();

@@ -1,5 +1,5 @@
-#ifndef TransformAtS_h
-#define TransformAtS_h
+#ifndef TRANSFORMATS_H_
+#define TRANSFORMATS_H_
 
 #include "StraightLine.h"
 
@@ -7,101 +7,48 @@ template <class CFG, class WEIGHT>
 class TransformAtS: public StraightLine<CFG, WEIGHT> {
 
  public:
-  
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Constructors and Destructor*/
-
-  ///Default Constructor.
-  TransformAtS(cd_predefined _cdtype, int s = 0.5);
-  TransformAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
-  ///Destructor.  
+  TransformAtS();
+  TransformAtS(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~TransformAtS();
 
-  //////////////////////
-  // Access
-  virtual void SetDefault();
-
-  //////////////////////
-  // I/O methods
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
   virtual void PrintOptions(ostream& out_os);
-
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
   virtual bool IsConnected(Environment *env, Stat_Class& Stats,
-         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
-         CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
-         double positionRes, double orientationRes,
-         bool checkCollision=true, 
-         bool savePath=false, bool saveFailedPath=false);
-
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Public Data
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
+    LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
+    bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);
 
  protected:
 
-  virtual 
-    bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
-         shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
-         CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
-         double positionRes, double orientationRes,
-         bool checkCollision=true, 
-         bool savePath=false, bool saveFailedPath=false);
+  virtual bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
+    shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
+    LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
+    bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);
 
-  virtual 
-    bool IsConnectedOtherWay(Environment *env, Stat_Class& Stats,
-	 shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2,
-	 CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
-	 double positionRes, double orientationRes,
-	 bool checkCollision=true,
-	 bool savePath=false, bool saveFailedPath=false);  
+  virtual bool IsConnectedOtherWay(Environment *env, Stat_Class& Stats,
+	  shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
+    LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
+	  bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);  
 
   double s_value;
   std::string vcMethod;
 };
 
-/////////////////////////////////////////////////////////////////////
-//
-//  definitions for class RotateAtS declarations
-//
-/////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
-TransformAtS<CFG, WEIGHT>::
-TransformAtS(cd_predefined _cdtype, int s) : StraightLine<CFG, WEIGHT>(_cdtype), s_value(s) {
-  SetDefault(); 
-  this->SetName("transformAtS");
+TransformAtS<CFG, WEIGHT>::TransformAtS(): 
+StraightLine<CFG, WEIGHT>(){
+  this->SetName("TransformAtS");
 }
 
 template <class CFG, class WEIGHT>
 TransformAtS<CFG, WEIGHT>::
-TransformAtS(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml) : StraightLine<CFG, WEIGHT>(_cdtype, in_Node, in_pProblem, false) 
-{
-  this->SetName("transformAtS");
-  this->cdtype = _cdtype;
+TransformAtS(XMLNodeReader& in_Node, MPProblem* in_pProblem) : StraightLine<CFG, WEIGHT>(in_Node, in_pProblem) {
+  this->SetName("TransformAtS");
   s_value = in_Node.numberXMLParameter(string("s"), true, 0.5, 0.0, 1.0, string("transform at s value"));
-  if(warnUnrequestedXml)
-    in_Node.warnUnrequestedAttributes();
 }
 
-template <class CFG, class WEIGHT>
-TransformAtS<CFG, WEIGHT>::
-~TransformAtS() {
-}
-
-
+template <class CFG, class WEIGHT> TransformAtS<CFG, WEIGHT>::~TransformAtS() { }
 
 template <class CFG, class WEIGHT>
 void
@@ -116,70 +63,28 @@ PrintOptions(ostream& out_os) {
 }
 
 template <class CFG, class WEIGHT>
-void
-TransformAtS<CFG, WEIGHT>::
-SetDefault() {
-  StraightLine<CFG, WEIGHT>::SetDefault();
-  s_value = 0.5;
-}
-
-template <class CFG, class WEIGHT>
-void
-TransformAtS<CFG, WEIGHT>::
-PrintUsage(ostream& _os){
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << this->GetName() << " ";
-  _os << "\n\t" << this->lineSegmentLength;
-  _os << "\n\t" << this->binarySearch;
-  _os << "\n\t" << s_value;
- 
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-template <class CFG, class WEIGHT>
-void
-TransformAtS<CFG, WEIGHT>::
-PrintValues(ostream& _os) {
-  _os << this->GetName() << " ";
-  _os << "ineSegmentLength" << " " << this->lineSegmentLength << " ";
-  _os << "binarySearch" << " " << this->binarySearch << " ";
-  _os << "s" << " " << s_value << " ";
- _os << endl;
-}
-
-template <class CFG, class WEIGHT>
 LocalPlannerMethod<CFG, WEIGHT>* 
 TransformAtS<CFG, WEIGHT>::
 CreateCopy() {
   LocalPlannerMethod<CFG, WEIGHT> * _copy = new TransformAtS<CFG, WEIGHT>(*this);
   return _copy;
-
 }
 
-template <class CFG, class WEIGHT>
-bool
-TransformAtS<CFG, WEIGHT>::
-IsConnected(Environment *_env, Stat_Class& Stats,
-     shared_ptr<DistanceMetricMethod >dm,
-     const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
-     double positionRes, double orientationRes,
-     bool checkCollision,
-     bool savePath, bool saveFailedPath) {
+template <class CFG, class WEIGHT> bool
+TransformAtS<CFG, WEIGHT>:: IsConnected(Environment *_env, Stat_Class& _stats,
+shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
+LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
+bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   bool connected = false;
-  connected = IsConnectedOneWay(_env, Stats, dm, _c1, _c2, _col, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
+  connected = IsConnectedOneWay(_env,_stats,_dm,_c1,_c2,_col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
   return connected;
 }
 
-template <class CFG, class WEIGHT>
-bool
-TransformAtS<CFG,WEIGHT>::
-IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
-      shared_ptr<DistanceMetricMethod >dm,
-      const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
-      double positionRes, double orientationRes,
-      bool checkCollision, 
-      bool savePath, bool saveFailedPath) {  
+template <class CFG, class WEIGHT> bool
+TransformAtS<CFG,WEIGHT>:: IsConnectedOneWay(Environment *_env, Stat_Class& _stats,
+shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
+LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
+bool _checkCollision, bool _savePath, bool _saveFailedPath) {  
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
 
@@ -196,16 +101,14 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
   sequence.push_back(_c1.CreateNewCfg());
 
   vector<double> translate_data = start_data;
-  if(_c1.posDOF() > 0)
-  {
-    //translate the robot base s_value way between start and goal, keeping orientation fixed
+  if (_c1.posDOF() > 0 ) {
+    // Translate the robot base s_value way between start and goal, keeping orientation fixed
     Cfg* cfg_average = _c1.CreateNewCfg();
     cfg_average->WeightedSum(_c1, _c2, s_value);
     vector<double> average_data = cfg_average->GetData();
-    for(int i=0; i<_c1.posDOF(); ++i)
-    {
+    for ( int i=0; i<_c1.posDOF(); ++i )
       translate_data[i] = average_data[i];
-    }
+
     Cfg* cfg_translate = _c1.CreateNewCfg(translate_data);
     sequence.push_back(cfg_translate);
 
@@ -229,87 +132,71 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
   }
 
   sequence.push_back(_c2.CreateNewCfg());
-  for(size_t j=0; j<sequence.size(); j++)
-  {
+  for (size_t j=0; j<sequence.size(); j++) {
     tmp = sequence[j]->GetData();
     cout << "C" << j << ": ";
-    for(size_t k=0; k<tmp.size(); k++) {
+    for (size_t k=0; k<tmp.size(); k++)
       cout << tmp[k] << ", ";
-    }
     cout << "end \n" << flush;
   }
 
   bool connected = true;
 
-  if(checkCollision)
-  {
+  if ( _checkCollision ) {
     string Callee(this->GetName());
     string Method("-transform_at_s::IsConnected");
+    CDInfo cdInfo;
     Callee = Callee + Method;
-    for(size_t i=1; i<sequence.size()-1; ++i)
-    {
+    for(size_t i=1; i<sequence.size()-1; ++i) {
       cd_cntr++;
-      if((!sequence[i]->InBoundingBox(_env)) || (!vc->IsValid(vcm, *sequence[i], _env, Stats, *this->cdInfo, true, &Callee)))
-      {
-	connected = IsConnectedOtherWay(_env, Stats, dm, _c1, _c2, _col, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
-      }
+      if ( (!sequence[i]->InBoundingBox(_env)) || 
+           (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &Callee)))
+        connected = IsConnectedOtherWay(_env,_stats,_dm,_c1,_c2,_col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
     }
   }
 
-  if(connected)
-  {
-    for(size_t i=0; i<sequence.size()-1; ++i)
-    {
-      if(this->binarySearch)
-        connected = IsConnectedSLBinary(_env, Stats, dm, *sequence[i], *sequence[i+1],
-					_col, lpOutput, cd_cntr, positionRes, orientationRes,
-      					checkCollision, savePath, saveFailedPath);
+  if ( connected ) {
+    for ( size_t i=0; i<sequence.size()-1; ++i) {
+      if ( this->binarySearch )
+        connected = IsConnectedSLBinary(_env, _stats, _dm, *sequence[i], *sequence[i+1],
+                                        _col, _lpOutput, cd_cntr, _posRes, _oriRes,
+                                        _checkCollision, _savePath, _saveFailedPath);
       else
-        connected = IsConnectedSLSequential(_env, Stats, dm, *sequence[i], *sequence[i+1],
-					   _col, lpOutput, cd_cntr, positionRes, orientationRes,
-					   checkCollision, savePath, saveFailedPath);
+        connected = IsConnectedSLSequential(_env, _stats, _dm, *sequence[i], *sequence[i+1],
+                                            _col, _lpOutput, cd_cntr, _posRes, _oriRes,
+                                            _checkCollision, _savePath, _saveFailedPath);
 
-      if((savePath || saveFailedPath) && (i+1 != sequence.size()-1))
-        lpOutput->path.push_back(*sequence[i+1]);
+      if ((_savePath || _saveFailedPath) && (i+1 != sequence.size()-1))
+        _lpOutput->path.push_back(*sequence[i+1]);
 
-      if(!connected)
+      if ( !connected )
         break;
     }
   }
 
-  if(connected)
-  {
-    Stats.IncLPConnections("Transform_At_S");
-  }
-  Stats.IncLPCollDetCalls("Transform_At_Se", cd_cntr);
+  if ( connected ) _stats.IncLPConnections("Transform_At_S");
+  _stats.IncLPCollDetCalls("Transform_At_Se", cd_cntr);
 
   for(size_t i=0; i<sequence.size(); ++i)
-  {
     if(sequence[i] != NULL)
       delete sequence[i];
-  }
 
   return connected;
-
 }
 
-template <class CFG, class WEIGHT>
-bool
-TransformAtS<CFG, WEIGHT>::
-IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
-      shared_ptr<DistanceMetricMethod >dm,
-      const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
-      double positionRes, double orientationRes,
-      bool checkCollision,
-      bool savePath, bool saveFailedPath) {
+template <class CFG, class WEIGHT> bool
+TransformAtS<CFG, WEIGHT>::IsConnectedOtherWay(Environment *_env, Stat_Class& _stats,
+shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
+LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
+bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   cout << "Check the other direction:\n" << flush;
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
 
   int cd_cntr = 0;
-  vector<double> start_data = _c1.GetData();
-  vector<double> goal_data = _c2.GetData();
-  vector<double> tmp = _c1.GetData();
+  vector<double> start_data    = _c1.GetData();
+  vector<double> goal_data     = _c2.GetData();
+  vector<double> tmp           = _c1.GetData();
   vector<double> half_position = _c1.GetData();
 
   cout << "Start CFG positional DOF: " << _c1.posDOF() << "\n" << flush;
@@ -319,16 +206,14 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
   sequence.push_back(_c1.CreateNewCfg());
 
   vector<double> translate_data = start_data;
-  if(_c1.posDOF() > 0) 
-  {
+  if(_c1.posDOF() > 0) {
     //translate the robot base s_value way between start and goal, keeping orientation fixed
     Cfg* cfg_average = _c1.CreateNewCfg();
     cfg_average->WeightedSum(_c1, _c2, s_value);
     vector<double> average_data = cfg_average->GetData();
     for(int i=0; i<_c1.posDOF(); ++i)
-    {
       translate_data[i] = average_data[i];
-    }
+
     Cfg* cfg_translate = _c1.CreateNewCfg(translate_data);
     sequence.push_back(cfg_translate);
 
@@ -353,71 +238,61 @@ IsConnectedOtherWay(Environment *_env, Stat_Class& Stats,
   }
 
   sequence.push_back(_c2.CreateNewCfg());
-  for(size_t j=0; j<sequence.size(); j++)
-  {
+  for(size_t j=0; j<sequence.size(); j++) {
     tmp = sequence[j]->GetData();
     cout << "C" << j << ": ";
-    for(size_t k=0; k<tmp.size(); k++) {
+    for(size_t k=0; k<tmp.size(); k++)
       cout << tmp[k] << ", ";
-    }
+
     cout << "end \n" << flush;
   }
 
   bool connected = true;
   
-  if(checkCollision)
-  {
+  if ( _checkCollision ) {
     string Callee(this->GetName());
     string Method("-transform_at_s::IsConnected");
+    CDInfo cdInfo;
     Callee = Callee + Method;
-    for(size_t i=1; i<sequence.size()-1; ++i)
-    {
+    for(size_t i=1; i<sequence.size()-1; ++i) {
       cd_cntr++;
-      if((!sequence[i]->InBoundingBox(_env)) || (!vc->IsValid(vcm, *sequence[i], _env, Stats, *this->cdInfo, true, &Callee)))
-      {
-	 if((sequence[i]->InBoundingBox(_env)) && (!vc->IsValid(vcm, *sequence[i], _env, Stats, *this->cdInfo, true, &Callee)))
-            _col = *sequence[i];
+      if ( (!sequence[i]->InBoundingBox(_env)) || 
+           (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &Callee))) {
+        if ( (sequence[i]->InBoundingBox(_env)) && 
+             (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &Callee)))
+          _col = *sequence[i];
         connected = false;
         break;
       }
     }
   }
 
-  if(connected)
-  {
-    for(size_t i=0; i<sequence.size()-1; ++i)
-    {
-      if(this->binarySearch)
-        connected = IsConnectedSLBinary(_env, Stats, dm, *sequence[i], *sequence[i+1],
-					_col, lpOutput, cd_cntr, positionRes, orientationRes,
-      					checkCollision, savePath, saveFailedPath);
+  if ( connected ) {
+    for(size_t i=0; i<sequence.size()-1; ++i) {
+      if (this->binarySearch)
+        connected = IsConnectedSLBinary(_env, _stats, _dm, *sequence[i], *sequence[i+1],
+                                        _col, _lpOutput, cd_cntr, _posRes, _oriRes,
+                                        _checkCollision, _savePath, _saveFailedPath);
       else
-        connected = IsConnectedSLSequential(_env, Stats, dm, *sequence[i], *sequence[i+1],
-					   _col, lpOutput, cd_cntr, positionRes, orientationRes,
-					   checkCollision, savePath, saveFailedPath);
+        connected = IsConnectedSLSequential(_env, _stats, _dm, *sequence[i], *sequence[i+1],
+                                            _col, _lpOutput, cd_cntr, _posRes, _oriRes,
+                                            _checkCollision, _savePath, _saveFailedPath);
 
-      if((savePath || saveFailedPath) && (i+1 != sequence.size()-1))
-        lpOutput->path.push_back(*sequence[i+1]);
+      if ((_savePath || _saveFailedPath) && (i+1 != sequence.size()-1))
+        _lpOutput->path.push_back(*sequence[i+1]);
 
-      if(!connected)
+      if ( !connected )
         break;
     }
   }
 
-  if(connected)
-  {
-    Stats.IncLPConnections("Transform_At_S");
-  }
-  Stats.IncLPCollDetCalls("Transform_At_S", cd_cntr);
+  if ( connected ) _stats.IncLPConnections("Transform_At_S");
+  _stats.IncLPCollDetCalls("Transform_At_S", cd_cntr);
 
   for(size_t i=0; i<sequence.size(); ++i)
-  {
     if(sequence[i] != NULL)
       delete sequence[i];
-  }
 
   return connected;
-
 };
-
 #endif

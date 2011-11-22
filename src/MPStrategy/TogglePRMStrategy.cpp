@@ -289,7 +289,6 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
     if(pvid.first=="valid")
       GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectNodes(pConnection,
           region->GetRoadmap(), *(region->GetStatClass()),
-          GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
           GetMPProblem()->GetMPStrategy()->addPartialEdge, 
           GetMPProblem()->GetMPStrategy()->addAllEdges,
           nodesVID.begin(), nodesVID.end(), 
@@ -298,7 +297,6 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
     else
       GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectNodes(pConnection,
           region->GetBlockRoadmap(), *(region->GetStatClass()),
-          GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
           GetMPProblem()->GetMPStrategy()->addPartialEdge, 
           GetMPProblem()->GetMPStrategy()->addAllEdges,
           nodesVID.begin(), nodesVID.end(), 

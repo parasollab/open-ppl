@@ -5,10 +5,11 @@
 #include "Roadmap.h"
 #include "Clock_Class.h"
 #include "CfgTypes.h"
-
 #include <boost/mpl/list.hpp>
+#include "PMPL_Element_Set.h"
 using namespace std;
 
+template <class CFG, class WEIGHT> class LocalPlanners;
 template <class CFG, class WEIGHT> class LocalPlannerMethod;
 class GMSPolyhedron;
 class MPProblem;
@@ -28,6 +29,8 @@ class DistanceMetricMethod  : public MPBaseObject {
   DistanceMetricMethod(double m_time, int t) : m_distance_time(m_time), type(t) {};
   DistanceMetricMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~DistanceMetricMethod();
+
+  typedef element_set<LocalPlannerMethod<CfgType,WeightType> >::method_pointer LocalPlannerPointer;
 
   string GetName() const {return name;}
   virtual void SetDefault() = 0;
@@ -315,7 +318,7 @@ class LPSweptDistance : public DistanceMetricMethod {
  public:
   LPSweptDistance();
   LPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
-  LPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res = 0.1, double ori_res = 0.1, bool bbox = false);
+  LPSweptDistance(LocalPlannerPointer _lp_method, double pos_res = 0.1, double ori_res = 0.1, bool bbox = false);
   ~LPSweptDistance();
 
   virtual void SetDefault();
@@ -327,7 +330,7 @@ class LPSweptDistance : public DistanceMetricMethod {
   double SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector<GMSPolyhedron>& poly2);
 
  protected:
-  LocalPlannerMethod<CfgType, WeightType>* lp_method;
+  LocalPlannerPointer lp_method;
   double positionRes, orientationRes;
   bool use_bbox;
 };
@@ -337,7 +340,7 @@ class BinaryLPSweptDistance : public DistanceMetricMethod {
  public:
   BinaryLPSweptDistance();
   BinaryLPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
-  BinaryLPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res = 0.1, double ori_res = 0.1, double tolerance = 0.01, int max_attempts = 100, bool bbox = false);
+  BinaryLPSweptDistance(LocalPlannerPointer _lp_method, double pos_res = 0.1, double ori_res = 0.1, double tolerance = 0.01, int max_attempts = 100, bool bbox = false);
   ~BinaryLPSweptDistance();
 
   virtual void SetDefault();
@@ -350,7 +353,7 @@ class BinaryLPSweptDistance : public DistanceMetricMethod {
   double SweptDistance(Environment* env, const vector<GMSPolyhedron>& poly1, const vector<GMSPolyhedron>& poly2);
 
  protected:
-  LocalPlannerMethod<CfgType, WeightType>* lp_method;
+  LocalPlannerPointer lp_method;
   double positionRes, orientationRes, tolerance;
   int max_attempts;
   int dist_calls_count;

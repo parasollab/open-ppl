@@ -57,6 +57,7 @@ ParseXML(XMLNodeReader& in_Node)
    type_name = in_Node.stringXMLParameter("type_name", true, "", "type of the CFG task");
    m_vc = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("CD Library"));
    m_dm = in_Node.stringXMLParameter("dm_method", true, "", "Distance metric");
+   m_lp = in_Node.stringXMLParameter("lp_method", true, "", "Local Planner");
    in_Node.warnUnrequestedAttributes();
 }
 
@@ -71,7 +72,12 @@ double GetValue(CfgType C, MPProblem* mp, Environment* env, Stat_Class& Stats,
 }
 
 
-void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp,MPProblem* mp,Environment *env,LocalPlanners<CfgType,WeightType>* lp, shared_ptr <DistanceMetricMethod>dm, Stat_Class& Stats, CollisionDetection* cd, CDInfo& cdInfo, string m_vc, string m_dm, int x, int bl, CfgType previous,CfgType c,CfgType next,double step_size,double user_value,int max_attempt, int numOfSamples,vector< pair<CfgType,double> > &result) {
+void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp, MPProblem* mp,
+                   Environment *env, LocalPlanners<CfgType,WeightType>* lp, 
+                   shared_ptr <DistanceMetricMethod> dm, Stat_Class& Stats, 
+                   CollisionDetection* cd, CDInfo& cdInfo, string m_vc, string m_dm, string m_lp,
+                   int x, int bl, CfgType previous, CfgType c, CfgType next, double step_size,
+                   double user_value, int max_attempt, int numOfSamples, vector< pair<CfgType,double> > &result) {
   
    double newConfigurationWeight;
    double oldConfigurationWeight;
@@ -90,14 +96,14 @@ void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp,MPProblem
       newConfigurationWeight=GetValue(c2, mp, env, Stats, m_vc, cdInfo, m_dm, x,bl);
       if((newConfigurationWeight>oldConfigurationWeight && type_name.compare("MAX_CLEARANCE")==0) ||
         (newConfigurationWeight<oldConfigurationWeight && type_name.compare("PROTEIN_ENERGY")==0)) {
-        firstConnectFlag= lp->IsConnected(env, Stats, dm, previous,c2,
-                           &lpOutput, rdmp->GetEnvironment()->GetPositionRes(),
-                           rdmp->GetEnvironment()->GetOrientationRes(),
-         true);
-  	 secondConnectFlag= lp->IsConnected(env, Stats, dm, c2,next,
-	                    &lpOutput, rdmp->GetEnvironment()->GetPositionRes(),
-			    rdmp->GetEnvironment()->GetOrientationRes(),
-			    true);
+        firstConnectFlag = lp->GetLocalPlannerMethod(m_lp)->
+                               IsConnected(env, Stats, dm, previous, c2, &lpOutput, 
+                               rdmp->GetEnvironment()->GetPositionRes(),
+                               rdmp->GetEnvironment()->GetOrientationRes(),true);
+				secondConnectFlag = lp->GetLocalPlannerMethod(m_lp)->
+                                IsConnected(env, Stats, dm, c2,next, &lpOutput, 
+                                rdmp->GetEnvironment()->GetPositionRes(),
+                                rdmp->GetEnvironment()->GetOrientationRes(), true);
 
 	 vid1=rdmp->m_pRoadmap->GetVID(previous);
          vid2=rdmp->m_pRoadmap->GetVID(c2);
@@ -205,9 +211,11 @@ Run(int in_RegionID)
          nxt++;
          CfgType current=*C;
          CfgType next=*nxt;
-         findNeighbour(type_name, rdmp,GetMPProblem(),rdmp->GetEnvironment(),lp, GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dm),*pStatClass,
-         GetMPProblem()->GetCollisionDetection(), cdInfo,
-         m_vc, m_dm, 5000, false, previous,current,next,step_size,user_value,max_attempts,m_num_resamples,sampledNeighbors); 
+         findNeighbour(type_name, rdmp,GetMPProblem(),rdmp->GetEnvironment(), lp,
+                       GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dm),*pStatClass,
+                       GetMPProblem()->GetCollisionDetection(), cdInfo, m_vc, m_dm, m_lp,
+                       5000, false, previous, current, next, step_size, user_value,
+                       max_attempts, m_num_resamples, sampledNeighbors); 
         
          if(sampledNeighbors.size()>0) {
 	    vector<pair<CfgType,double> >::iterator N = sampledNeighbors.begin();

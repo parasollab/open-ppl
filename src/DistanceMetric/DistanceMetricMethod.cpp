@@ -1,11 +1,10 @@
 #include "DistanceMetricMethod.h"
 #include "Cfg.h"
 #include "Environment.h"
+#include "MPProblem.h"
 #include "Stat_Class.h"
 #include "CollisionDetection.h"
 #include "LocalPlanners.h"
-#include "MPProblem.h"
-
 
 DistanceMetricMethod::
 DistanceMetricMethod() {}
@@ -869,15 +868,10 @@ LPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : Dis
   use_bbox = in_Node.boolXMLParameter("use_bbox", false, false, "use bbox instead of robot vertices");
 
   for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
-    if(citr->getName() == "lp_methods")
-    {
+    if(citr->getName() == "lp_methods") {
       LocalPlanners<CfgType, WeightType>* lp = new LocalPlanners<CfgType, WeightType>(*citr, in_pProblem);
-      if(lp->selected.size() != 1)
-      {
-        cout << "\n\nError in reading local planner method for lpSweptDistance, there should be only 1 method selected\n\n";
-        exit(-1);
-      }
-      lp_method = lp->selected[0]->CreateCopy();
+      lp_method = lp->GetLocalPlannerMethod("dm_lp");
+      
     } else {
       if(warn)
         citr->warnUnknownNode();
@@ -888,7 +882,7 @@ LPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : Dis
 }
 
 LPSweptDistance::
-LPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res, double ori_res, bool bbox) : DistanceMetricMethod(), lp_method(_lp_method), positionRes(pos_res), orientationRes(ori_res), use_bbox(bbox) {
+LPSweptDistance(LocalPlannerPointer _lp_method, double pos_res, double ori_res, bool bbox) : DistanceMetricMethod(), lp_method(_lp_method), positionRes(pos_res), orientationRes(ori_res), use_bbox(bbox) {
 }
 
 LPSweptDistance::
@@ -912,8 +906,9 @@ void
 LPSweptDistance::
 PrintOptions(ostream& os) const
 {
-  os << "    " << GetName() << "::  ";
-  os << "\tlp_method = "; lp_method->PrintOptions(os);
+  os << "    " << this->GetName() << "::  ";
+  os << "\tlp_method = "; 
+  lp_method->PrintOptions(os);
   os << "\tpositionRes = " << positionRes;
   os << "\torientationRes = " << orientationRes;
   os << "\tuse_bbox = " << use_bbox;
@@ -990,7 +985,7 @@ BinaryLPSweptDistance() : DistanceMetricMethod()
 
 
 BinaryLPSweptDistance::
-BinaryLPSweptDistance(LocalPlannerMethod<CfgType, WeightType>* _lp_method, double pos_res, double ori_res, double tolerance, int max_attempts, bool bbox) : DistanceMetricMethod(), lp_method(_lp_method), positionRes(pos_res), orientationRes(ori_res), tolerance(tolerance), max_attempts(max_attempts), dist_calls_count(0), use_bbox(bbox) {
+BinaryLPSweptDistance(LocalPlannerPointer _lp_method, double pos_res, double ori_res, double tolerance, int max_attempts, bool bbox) : DistanceMetricMethod(), lp_method(_lp_method), positionRes(pos_res), orientationRes(ori_res), tolerance(tolerance), max_attempts(max_attempts), dist_calls_count(0), use_bbox(bbox) {
   name = "binary_lp_swept";
 }
 
@@ -1005,15 +1000,9 @@ BinaryLPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn)
   use_bbox = in_Node.boolXMLParameter("use_bbox", false, false, "use bbox instead of robot vertices");
 
   for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
-    if(citr->getName() == "lp_methods")
-    {
+    if (citr->getName() == "lp_methods") {
       LocalPlanners<CfgType, WeightType>* lp = new LocalPlanners<CfgType, WeightType>(*citr, in_pProblem);
-      if(lp->selected.size() != 1)
-      {
-        cout << "\n\nError in reading local planner method for lpSweptDistance, there should be only 1 method selected\n\n";
-        exit(-1);
-      }
-      lp_method = lp->selected[0]->CreateCopy();
+      lp_method = lp->GetLocalPlannerMethod("dm_lp");      
     } else {
       if(warn)
         citr->warnUnknownNode();
@@ -1043,7 +1032,7 @@ void
 BinaryLPSweptDistance::
 PrintOptions(ostream& os) const
 {
-  os << "    " << GetName() << "::  ";
+  os << "    " << this->GetName() << "::  ";
   os << "\tlp_method = "; lp_method->PrintOptions(os);
   os << "\tpositionRes = " << positionRes;
   os << "\torientationRes = " << orientationRes;

@@ -291,10 +291,9 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         pConnection = connectmap->GetNodeMethod(*itr);
         //cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
         connectmap->ConnectNodes(pConnection, region->GetRoadmap(), *pStatClass, 
-                             GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-                             GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-                             GetMPProblem()->GetMPStrategy()->addAllEdges,
-                             newVids.begin(), newVids.end());
+                                 GetMPProblem()->GetMPStrategy()->addPartialEdge, 
+                                 GetMPProblem()->GetMPStrategy()->addAllEdges,
+                                 newVids.begin(), newVids.end());
       }
       
       //Now Restore bounding box
@@ -481,13 +480,13 @@ private:
     sort(vec_dist_vid.begin(), vec_dist_vid.end());
     Stat_Class _mystat;
     LPOutput<CfgType,WeightType> out_lp_output;
-    for(size_t i=0; i<vec_dist_vid.size(); ++i) {
-      if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->
-              IsConnected(GetMPProblem()->GetEnvironment(), _mystat, dm, 
-              _test, (*(_graph.find_vertex(vec_dist_vid[i].second))).property(), &out_lp_output, 
-              GetMPProblem()->GetEnvironment()->GetPositionRes(), 
-              GetMPProblem()->GetEnvironment()->GetOrientationRes(),
-              true, false, false)) {
+    for ( size_t i=0; i<vec_dist_vid.size(); ++i) {
+      if ( GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_strLocalPlannerLabel)->
+             IsConnected ( GetMPProblem()->GetEnvironment(), _mystat, dm, _test, 
+                           (*(_graph.find_vertex(vec_dist_vid[i].second))).property(), &out_lp_output, 
+                           GetMPProblem()->GetEnvironment()->GetPositionRes(), 
+                           GetMPProblem()->GetEnvironment()->GetOrientationRes(),
+                           true, false, false)) {
         return true;
       }
     }

@@ -1,6 +1,5 @@
 #include "DistanceMetrics.h"
 #include "Environment.h"
-#include "LocalPlanners.h"
 
 
 DistanceMetric::

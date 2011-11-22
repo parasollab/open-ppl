@@ -9,6 +9,7 @@ public:
   string m_strSmoothPathFileLabel;
   vector<string> m_vecStrSmoothNodeConnectionLabels;
   string dm_label;
+  string m_lp_label;
   ConnectMap<CfgType, WeightType> m_SmoothConnectMap;
   MPSMContainer parent;
 
@@ -40,6 +41,7 @@ class SmoothQueryStrategy : public QueryStrategy
   string m_strSmoothPathFileLabel;
   vector<string> m_vecStrSmoothNodeConnectionLabels;
   string dm_label;
+  string m_lp_label;
   ConnectMap<CfgType, WeightType> m_SmoothConnectMap;
 };
 

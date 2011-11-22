@@ -22,6 +22,7 @@ class VisibilityFeature : public MPFeature {
    int k;
    string nfLabel;
    string dmLabel;
+   string m_lpLabel;
 };
 
 #endif

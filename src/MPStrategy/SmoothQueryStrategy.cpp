@@ -40,24 +40,20 @@ ParseXML(XMLNodeReader& in_Node)
   XMLNodeReader::childiterator citr;
   for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
   {
-    if(citr->getName() == "smooth_path_file")
-    {
+    if(citr->getName() == "smooth_path_file") {
       m_strSmoothPathFileLabel = citr->stringXMLParameter(string("name"), true, string(""), string("Smoothed Path Filename"));
       citr->warnUnrequestedAttributes();
-    }    
-    else if(citr->getName() == "smooth_node_connection_method") 
-    {
+    } else if(citr->getName() == "smooth_node_connection_method") {
       string connect_method = citr->stringXMLParameter(string("Method"), true, string(""), string("Smoothing Node Connection Method"));
       m_vecStrSmoothNodeConnectionLabels.push_back(connect_method);
       citr->warnUnrequestedAttributes();
-    } 
-    else if(citr->getName()=="dm_method")
-    {
+    } else if(citr->getName() == "dm_method") {
       dm_label =citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
       citr->warnUnrequestedAttributes();
-    }
-    else 
-    {
+    } else if(citr->getName() == "lp_method") {
+      m_lp_label =citr->stringXMLParameter(string("lp_method"),true,string(""),string("Local Planner Method"));
+      citr->warnUnrequestedAttributes();
+    } else {
       string str = citr->getName();
       if(str != "map_file" && str != "query_file" && str != "path_file" && str != "node_connection_method")
         citr->warnUnknownNode();
@@ -96,7 +92,7 @@ Run(int in_RegionID)
   bool query_result = query.PerformQuery(rdmp, *pStatClass, 
                        &m_ConnectMap, 
                        &methods,
-                       GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                       GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
                        GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
                                          
   QueryClock.StopPrintClock();
@@ -129,7 +125,6 @@ Run(int in_RegionID)
       m_SmoothConnectMap.ConnectNodes(
                            *itr,
                            rdmp, *pStatClass,
-                           GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                            false, false,
                            path_vids.begin(), path_vids.end(),
                            path_vids.begin(), path_vids.end());
@@ -143,7 +138,7 @@ Run(int in_RegionID)
     bool smooth_query_result = query.PerformQuery(rdmp, *pStatClass,
                                                   &m_ConnectMap,
                                                   &methods,
-                                                  GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                                                  GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
                                                   GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
     SmoothQueryClock.StopPrintClock();
 

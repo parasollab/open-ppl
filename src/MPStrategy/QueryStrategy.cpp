@@ -42,43 +42,27 @@ QueryStrategy::
 ParseXML(XMLNodeReader& in_Node, bool warn_unknown) 
 {
   XMLNodeReader::childiterator citr;
-  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
-  {
-    if(citr->getName() == "node_connection_method") 
-    {
+  for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    if (citr->getName() == "node_connection_method") {
       string connect_method = citr->stringXMLParameter(string("Method"), true, string(""), string("Node Connection Method"));
       m_vecStrNodeConnectionLabels.push_back(connect_method);
       citr->warnUnrequestedAttributes();
-    } 
-    /*
-    else if(citr->getName() == "lp_method") 
-    {
-      m_strLocalPlannerLabel = citr->stringXMLParameter(string("Method"), true, string(""), string("Local Planner Method"));
-      citr->warnUnrequestedAttributes();
-    }
-    */
-    else if(citr->getName() == "map_file")
-    {
+    } else if(citr->getName() == "map_file") {
       m_strMapFileLabel = citr->stringXMLParameter(string("name"), true, string(""), string("Map Filename"));
       citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "query_file")
-    {
+    } else if(citr->getName() == "query_file") {
       m_strQueryFileLabel = citr->stringXMLParameter(string("name"), true, string(""), string("Query Filename"));
       citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "path_file")
-    {
+    } else if(citr->getName() == "path_file") {
       m_strPathFileLabel = citr->stringXMLParameter(string("name"), true, string(""), string("Path Filename"));
       citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName()=="dm_method")
-    {
+    } else if(citr->getName()=="dm_method") {
       dm_label =citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
       citr->warnUnrequestedAttributes();
-    }
-    else 
-    {
+    } else if(citr->getName()=="lp_method") {
+      m_lp_label =citr->stringXMLParameter(string("lp_method"),true,string(""),string("Local Planner Method"));
+      citr->warnUnrequestedAttributes();
+    } else {
       if(warn_unknown)
         citr->warnUnknownNode();
     }
@@ -118,7 +102,7 @@ Run(int in_RegionID)
   if(query.PerformQuery(rdmp, *pStatClass, 
                         &m_ConnectMap, 
                         &methods,
-                        GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
+                        GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
                         GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)))
   {
     query.WritePath(rdmp);

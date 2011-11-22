@@ -17,7 +17,6 @@
 #include "CollisionDetection.h"
 #include "ValidityChecker.hpp"
 #include "ConnectMap.h"
-#include "LocalPlanners.h"
 #include "MPStrategy/MPStrategyMethod.h"
 #include "MPProblem/MPProblem.h"
 #include "MPCharacterizer.h"

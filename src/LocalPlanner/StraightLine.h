@@ -1,5 +1,13 @@
-#ifndef StraightLine_h
-#define StraightLine_h
+/**
+ * StraightLine.h
+ * This class performs straight line local planning which is used by a variety of computations,
+ * including other local planners.
+ *
+ * Last Updated : 11/15/11
+ * Update Author: Kasra Manavi
+ */
+#ifndef STRAIGHTLINE_H_
+#define STRAIGHTLINE_H_
 
 #include <deque>
 #include "LocalPlannerMethod.h"
@@ -11,39 +19,18 @@ template <class CFG, class WEIGHT>
 class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
  public:
   
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Constructors and Destructor*/
-  //@{
-
-  ///Default Constructor.
-  StraightLine(cd_predefined _cdtype);
-  StraightLine(int bin, int length, string vc, cd_predefined _cdtype);
-  StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml = true);
-
-  ///Destructor.  
+  /** @name Constructors and Destructor */
+  // @{
+  StraightLine();
+  StraightLine(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~StraightLine();
+  // @}
 
-  //@}
-
-  //////////////////////
-  // Access
-  virtual void SetDefault();
-
-  //////////////////////
-  // I/O methods
-  virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);
-  ///Used in new MPProblem framework.
   virtual void PrintOptions(ostream& out_os);
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-  /**Check if two Cfgs could be connected by straight line.
+  /**
+   * Check if two Cfgs could be connected by straight line.
    *   -# First, if lineSegmentLength is not zero, 
    *      this method calls lineSegmentInCollision to make sure 
    *      _c1 and _c2 could see each other. If the answer is No,
@@ -51,10 +38,10 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    *   -# Second, IsConnected_straightline_simple is called
    *      and return what it returns.
    *
-   *@return See description above.
-   *@see lineSegmentInCollision and IsConnected_straightline_simple
+   * @return See description above.
+   * @see lineSegmentInCollision and IsConnected_straightline_simple
    */
-  //// wrapper function to call appropriate impl based on CFG type
+  // Wrapper function to call appropriate impl based on CFG type
   virtual bool IsConnected(Environment *env, Stat_Class& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
          LPOutput<CFG, WEIGHT>* lpOutput,
@@ -65,7 +52,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 			     lpOutput, positionRes, orientationRes,
 			     checkCollision, savePath, saveFailedPath);
   }
-  //// work function, default, non closed chains
+  // Default for non closed chains
   template <typename Enable>
   bool _IsConnected(Environment *_env, Stat_Class& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col,
@@ -75,7 +62,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
          bool savePath=false, bool saveFailedPath=false,
 	 typename boost::disable_if<is_closed_chain<Enable> >::type* dummy = 0
 	);
-  //// work function, specialization for closed chains
+  // Specialization for closed chains
   template <typename Enable>
   bool _IsConnected(Environment *_env, Stat_Class& Stats,
          shared_ptr<DistanceMetricMethod>dm, const CFG &_c1, const CFG &_c2, CFG &_col,
@@ -87,25 +74,25 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 	);
 
  protected:
-  /**Check if two Cfgs could be connected by straight line.
-   *This method implements straight line connection local planner
-   *by checking collision of each Cfg along the line.
-   *If the is any Cfg causes Robot collides with any obstacle,
-   *false will be returned.
+  /**
+   * Check if two Cfgs could be connected by straight line.
+   * This method implements straight line connection local planner
+   * by checking collision of each Cfg along the line.
+   * If the is any Cfg causes Robot collides with any obstacle,
+   * false will be returned.
    *
-   *@note if usingClearance is true, then the call will
-   *be redirect to IsConnected_SLclearance
+   * @note if usingClearance is true, then the call will
+   *       be redirect to IsConnected_SLclearance
    *
-   *@param env Used for isCollision
-   *@param dm Used for IsConnected_SLclearance
-   *@param _c1 start Cfg
-   *@param _c2 goal Cfg
-   *@param _lp Used for IsConnected_SLclearance 
-   *@param lpOutput Used to record path information, such
-   *as length of path...
+   * @param env Used for isCollision
+   * @param dm Used for IsConnected_SLclearance
+   * @param _c1 start Cfg
+   * @param _c2 goal Cfg
+   * @param _lp Used for IsConnected_SLclearance 
+   * @param lpOutput Used to record path information, such as length of path...
    *
-   *@return true if all Cfg are collision free.
-   *@see IsConnected_straightline and Cfg::FindIncrement.
+   * @return true if all Cfg are collision free.
+   * @see IsConnected_straightline and Cfg::FindIncrement.
    */
   virtual bool 
     IsConnectedSLSequential(Environment *env, Stat_Class& Stats,
@@ -115,16 +102,17 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
           double positionRes, double orientationRes,
           bool checkCollision=true, 
           bool savePath=false, bool saveFailedPath=false);
-  /**Check if the line, _c1->_c2, collides with any obstacle or not.
-   *This is done by create a MultiBody, which is a triangle approximating
-   *line segment _c1->_c2, and check collision of this triangle and other
-   *obstacles in envronment.
-   *@return True if there is collision. Following cases return false:
+  /**
+   * Check if the line, _c1->_c2, collides with any obstacle or not.
+   * This is done by create a MultiBody, which is a triangle approximating
+   * line segment _c1->_c2, and check collision of this triangle and other
+   * obstacles in envronment.
+   * @return True if there is collision. Following cases return false:
    *   -# the distance between _c1 and _c2 are shorter than lineSegmentLength
    *      (?maybe because this is too short so more expensive methods are used?)
    *   -# There is not collision between this triangle and other obstacles.
    *
-   *@see CollisionDetection::IsInCollision
+   * @see CollisionDetection::IsInCollision
    */
   virtual bool 
     lineSegmentInCollision(Environment *env, Stat_Class& Stats, 
@@ -132,11 +120,12 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
          LPOutput<CFG,WEIGHT>* lpOutput, 
          int &cd_cntr, double positionRes);
 
-  /**Check if two Cfgs could be connected by straight line with certain cleanrance.
-   *This method uses binary search to check clearances of Cfgs between _c1 and 
-   *_c2. If any Cfg with clearance less than 0.001 was found, false will be returned.
+  /**
+   * Check if two Cfgs could be connected by straight line with certain cleanrance.
+   * This method uses binary search to check clearances of Cfgs between _c1 and 
+   * _c2. If any Cfg with clearance less than 0.001 was found, false will be returned.
    *
-   *@return true if no Cfg whose cleanrance is less than 0.001. Otherwise, false will be returned.
+   * @return true if no Cfg whose cleanrance is less than 0.001. Otherwise, false will be returned.
    */
   virtual bool 
     IsConnectedSLBinary(Environment *env, Stat_Class& Stats, 
@@ -146,24 +135,9 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
       bool checkCollision=true, 
       bool savePath=false, bool saveFailedPath=false);
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Public Data
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**If true, local planner will check clearances of all Cfgs along path. 
-    *(default is false)
-    */
-  //usingClearance and lineSegment were static in the original LocalPlanner
-  //bool usingClearance;
-  int binarySearch;///<Mantain certain amount of clearance of Robot duing connection time.
-  
-  int lineSegmentLength;///< default is 0.
-
+  int binarySearch;
+  int lineSegmentLength;// Default is 0
   std::string vcMethod;
-    
   cd_predefined cdtype;
 };
 
@@ -174,73 +148,25 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 //
 /////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
-StraightLine<CFG, WEIGHT>::
-StraightLine(cd_predefined _cdtype) : LocalPlannerMethod<CFG, WEIGHT>() {
-  this->SetName("straightLine");
+StraightLine<CFG, WEIGHT>::StraightLine() : 
+ LocalPlannerMethod<CFG, WEIGHT>() {
+  this->SetName("StraightLine");
 }
 
 template <class CFG, class WEIGHT>
-StraightLine<CFG, WEIGHT>::
-StraightLine(int bin, int length, string vc, cd_predefined _cdtype) : binarySearch(bin), lineSegmentLength(length), vcMethod(vc), cdtype(_cdtype) {
-  this->SetName("straightLine");
-}
-
-template <class CFG, class WEIGHT>
-StraightLine<CFG, WEIGHT>::
-StraightLine(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml) :
-      LocalPlannerMethod<CFG, WEIGHT>(in_Node,in_pProblem) 
-{
-  this->SetName("straightLine");
-  cdtype = _cdtype;
+StraightLine<CFG, WEIGHT>::StraightLine(XMLNodeReader& in_Node, MPProblem* in_pProblem)  :
+ LocalPlannerMethod<CFG, WEIGHT>(in_Node,in_pProblem) {
+  this->SetName("StraightLine");
   lineSegmentLength = in_Node.numberXMLParameter(string("length"), false, 0, 0, 5000, string("lineSegmentLength")); 
   binarySearch = in_Node.numberXMLParameter(string("binary_search"), false, 0, 0, 1, string("binary search")); 
   vcMethod = in_Node.stringXMLParameter(string("vc_method"), false, string(""), string("Validity Test Method"));
-  if(warnUnrequestedXml)
-    in_Node.warnUnrequestedAttributes();
-}
- 
-
-template <class CFG, class WEIGHT>
-StraightLine<CFG, WEIGHT>::
-~StraightLine() {
 }
 
-template <class CFG, class WEIGHT>
-void
-StraightLine<CFG, WEIGHT>::
-SetDefault() {
-  LocalPlannerMethod<CFG, WEIGHT>::SetDefault();
-  lineSegmentLength = 0;
-  binarySearch = 0;
-}
+template <class CFG, class WEIGHT> 
+StraightLine<CFG, WEIGHT>::~StraightLine() { }
 
-template <class CFG, class WEIGHT>
-void
-StraightLine<CFG, WEIGHT>::
-PrintUsage(ostream& _os){
-  _os.setf(ios::left,ios::adjustfield);
-  
-  _os << "\n" << this->GetName() << " ";
-  _os << "\n\t" << lineSegmentLength;
-  _os << "\n\t" << binarySearch;
-  
-  _os.setf(ios::right,ios::adjustfield);
-}
-
-template <class CFG, class WEIGHT>
-void
-StraightLine<CFG, WEIGHT>::
-PrintValues(ostream& _os) {
-  _os << this->GetName() << " ";
-  //_os << "lineSegmentLength" << " " << lineSegmentLength << " ";
-  //_os << "binarySearch" << " " << binarySearch << " ";
-  _os << endl;
-}
-
-template <class CFG, class WEIGHT>
-void
-StraightLine<CFG, WEIGHT>::
-PrintOptions(ostream& out_os) {
+template <class CFG, class WEIGHT> void
+StraightLine<CFG, WEIGHT>::PrintOptions(ostream& out_os) {
   out_os << "    " << this->GetName() << "::  ";
   out_os << "line segment length = " << " " << lineSegmentLength << " ";
   out_os << "binary search = " << " " << binarySearch << " ";
@@ -314,6 +240,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
   string Callee(this->GetName());
   string Method("-straightline::IsConnectedSLSequential");
+  CDInfo cdInfo;
   Callee=Callee+Method;
   
   Stats.IncLPAttempts("Straightline");
@@ -326,7 +253,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
     if(checkCollision){
       cd_cntr ++;
       if(!intermediate.InBoundingBox(_env) || 
-          !vc->IsValid(vcm, intermediate, _env, Stats, *this->cdInfo, true, &Callee)
+          !vc->IsValid(vcm, intermediate, _env, Stats, cdInfo, true, &Callee)
         ) {
         return false;
       }
@@ -440,6 +367,7 @@ StraightLine<CFG, WEIGHT>::
 #endif
   string Callee(this->GetName());
   string Method("-straightline::IsConnectedSLSequential");
+  CDInfo cdInfo;
   Callee=Callee+Method;
   
   
@@ -449,10 +377,10 @@ StraightLine<CFG, WEIGHT>::
     cd_cntr ++;
     if(checkCollision){
       if(!tick.InBoundingBox(_env) || 
-          !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee)
+          !vc->IsValid(vcm, tick, _env, Stats, cdInfo, true, &Callee)
         ) {
         if(tick.InBoundingBox(_env) && 
-            !vc->IsValid(vcm, tick, _env, Stats, *this->cdInfo, true, &Callee))   
+            !vc->IsValid(vcm, tick, _env, Stats, cdInfo, true, &Callee))   
           _col = tick;
         CFG neg_incr;
         neg_incr = incr; 
@@ -480,6 +408,7 @@ StraightLine<CFG, WEIGHT>::
   return true;
 };
 
+// TODO::Remove depreciated function
 template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
@@ -489,6 +418,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
            int &cd_cntr, double positionRes) {
     CollisionDetection* cd = this->GetMPProblem()->GetCollisionDetection();
     CFG diff;
+    CDInfo cdInfo;
     //diff = _c1.CreateNewCfg();
     diff.subtract(_c1, _c2);
     int steps = (int)(diff.PositionMagnitude()/positionRes);
@@ -544,7 +474,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
       }
     }
 
-    if(cd->IsInCollision(_env, Stats, *this->cdInfo, lineSegment, true, &Callee) ) {
+    if(cd->IsInCollision(_env, Stats, cdInfo, lineSegment, true, &Callee) ) {
      return true; //Collide
    }
    return false;  //No collision
@@ -572,6 +502,7 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 
   string Callee(this->GetName());
   string Method("-straightline::IsConnectedSLBinary");
+  CDInfo cdInfo;
   Callee=Callee+Method;
 
   int n_ticks;
@@ -607,11 +538,10 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
     
     cd_cntr++;
     if(!mid_cfg.InBoundingBox(_env) ||
-       !vc->IsValid(vcm, mid_cfg, _env, Stats, *this->cdInfo, true, &Callee)
-      ) {
-         if(mid_cfg.InBoundingBox(_env) &&
-            !vc->IsValid(vcm, mid_cfg, _env, Stats, *this->cdInfo, true, &Callee))
-            _col=mid_cfg;
+       !vc->IsValid(vcm, mid_cfg, _env, Stats, cdInfo, true, &Callee) ) {
+      if(mid_cfg.InBoundingBox(_env) &&
+         !vc->IsValid(vcm, mid_cfg, _env, Stats, cdInfo, true, &Callee))
+        _col=mid_cfg;
       return false;
     } else {
       if(i+1 != mid) 

@@ -21,7 +21,7 @@
 #endif
 
 #include "Sampler.h"
-
+//#include "LocalPlanners.h"
 
 MPStrategy::
 MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPBaseObject(in_Node,in_pProblem) {

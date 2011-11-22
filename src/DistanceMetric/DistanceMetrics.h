@@ -58,10 +58,7 @@ class DistanceMetric : private element_set<DistanceMetricMethod>, public MPBaseO
   template<typename MethodList>
   DistanceMetric() : element_set<DistanceMetricMethod>(MethodList()) {}
 
-  DistanceMetric() : element_set<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()) {
-  
-
-}
+  DistanceMetric() : element_set<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()) {}
   
   template <typename MethodList>
   DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&, bool parse_xml = true)
@@ -74,9 +71,10 @@ class DistanceMetric : private element_set<DistanceMetricMethod>, public MPBaseO
   DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true)
    : element_set<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()), MPBaseObject(in_pProblem) 
   {
-    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
+    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
       if(!element_set<DistanceMetricMethod>::add_element(citr->getName(), *citr, in_pProblem))
         citr->warnUnknownNode();
+    }
   }
   virtual ~DistanceMetric();
 

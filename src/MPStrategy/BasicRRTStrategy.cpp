@@ -100,7 +100,7 @@ void BasicRRTStrategy::PrintOptions(ostream& out_os) {
   }
   out_os<<"\nLocalPlanner\n";
   out_os<<"\t"<<m_LPMethod<<"\tOptions:\n";
-  GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_LPMethod)->PrintOptions(out_os);
+  GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_LPMethod)->PrintOptions(out_os);
   out_os<<"\nComponentConnectors\n";
   for(SIT sit=m_ComponentConnectionLabels.begin(); sit!=m_ComponentConnectionLabels.end(); sit++){
     out_os<<"\t"<<*sit<<"\tOptions:\n";
@@ -259,7 +259,7 @@ void BasicRRTStrategy::RRT(int in_RegionID, vector<CfgType> RRTQueue) {
       if (new_cfg.InBoundingBox(env)
 	  && vc->IsValid(vc->GetVCMethod(strVcmethod), new_cfg, env, *regionStats, cdInfo, true, &callee)
 	  && (_dm->Distance(env, new_cfg, nearest) >= minDist)
-	  && lp->GetMethod(m_LPMethod)->IsConnected(env, *regionStats, _dm, nearest, new_cfg, collNode, &lpOutput,
+	  && lp->GetLocalPlannerMethod(m_LPMethod)->IsConnected(env, *regionStats, _dm, nearest, new_cfg, collNode, &lpOutput,
 						    positionRes, orientationRes, checkCollision, savePath, saveFailed)) {
 	region->GetRoadmap()->m_pRoadmap->AddVertex(new_cfg);
 	region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, new_cfg, lpOutput.edge);
@@ -328,7 +328,6 @@ void BasicRRTStrategy::ConnectComponents(MPRegion<CfgType, WeightType>* region) 
       GetConnectMap()->ConnectComponents(pConnection,
 					 region->GetRoadmap(), 
 					 *(region->GetStatClass()),
-					 GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
 					 GetMPProblem()->GetMPStrategy()->addPartialEdge, 
 					 GetMPProblem()->GetMPStrategy()->addAllEdges);
     

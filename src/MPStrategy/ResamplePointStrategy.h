@@ -25,6 +25,7 @@ class ResamplePointStrategy : public MPStrategyMethod
   string type_name;
   string m_vc;
   string m_dm;
+  string m_lp;
   int m_num_resamples;
   double step_size;
   double user_value;

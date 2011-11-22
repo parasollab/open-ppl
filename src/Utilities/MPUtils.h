@@ -36,9 +36,9 @@ class MPBaseObject {
     MPProblem* GetMPProblem() {return m_problem;}
     void SetMPProblem(MPProblem* _m){m_problem = _m;}
     virtual void PrintOptions(ostream& _os) {};
-    string GetLabel() const {return m_label;};
-    string GetName() const {return m_name;}
-    void SetName(string _s) {m_name = _s;}
+    string GetLabel() const {return m_label;}
+    string GetName()  const {return m_name; }
+    void SetName (string _s) {m_name  = _s;}
 
   private:
     MPProblem* m_problem;

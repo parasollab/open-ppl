@@ -25,7 +25,7 @@ class compare_distance : public binary_function<const CFG, const CFG, bool>
   
  private:
   compare_distance() {}
-
+  string m_lp;
   CFG& m_cfg;
   shared_ptr<DistanceMetricMethod> m_dm;
   Environment* m_env;
@@ -34,24 +34,26 @@ class compare_distance : public binary_function<const CFG, const CFG, bool>
 
 template <class CFG, class WEIGHT>
 class MPRegionComparerMethod: public MPBaseObject {
+ private:
+  string m_lp;
+
  public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  MPRegionComparerMethod(MPProblem * _m_pProblem, vector<CFG> _m_witness_cfgs, shared_ptr<DistanceMetricMethod> _dm) : m_pProblem(_m_pProblem), m_witness_cfgs(_m_witness_cfgs), dm(_dm) {}
-  MPRegionComparerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  MPRegionComparerMethod(MPProblem * _m_pProblem, vector<CFG> _m_witness_cfgs, shared_ptr<DistanceMetricMethod> _dm) : 
+    m_pProblem(_m_pProblem), m_witness_cfgs(_m_witness_cfgs), dm(_dm) {}
+    MPRegionComparerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
     MPBaseObject(in_Node, in_pProblem) { 
     m_pProblem = in_pProblem;
-    
-    string filename = in_Node.stringXMLParameter(string("witness_file"),false,
-                                    string(""),string("Witness Filename"));
-				    
-    string dm_label = in_Node.stringXMLParameter(string("dm_method"), false, string("default"), string("Distance Metric Method"));
+
+    string filename = in_Node.stringXMLParameter("witness_file",false,"","Witness Filename");
+    string dm_label = in_Node.stringXMLParameter("dm_method", false, "default", "Distance Metric Method");
+    string m_lp     = in_Node.stringXMLParameter("lp_method", true, "", "Local Planner Method");
     dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
-      
+
     if (filename.length() > 0) {
       Roadmap< CFG, WEIGHT > tmp_roadmap;
       tmp_roadmap.ReadRoadmapGRAPHONLY(filename.c_str());
-      tmp_roadmap.m_pRoadmap->GetVerticesData(m_witness_cfgs);
-      
+      tmp_roadmap.m_pRoadmap->GetVerticesData(m_witness_cfgs);  
     }
     
   }
@@ -79,8 +81,9 @@ class MPRegionComparerMethod: public MPBaseObject {
    
    sort(in_vec_cfg.begin(), in_vec_cfg.end(), compare_distance<CFG>(in_cfg, dm, env));
    for(CFG_ITRTR i_vec_cfg = in_vec_cfg.begin(); i_vec_cfg < in_vec_cfg.end(); i_vec_cfg++) {
-    if (lp->IsConnected(env, Stats, dm, in_cfg, (*i_vec_cfg), 
-			  &lp_output, pos_res, ori_res, true)) {
+		 if (lp->GetLocalPlannerMethod(m_lp)->
+           IsConnected(env, Stats, dm, in_cfg, (*i_vec_cfg), 
+                       &lp_output, pos_res, ori_res, true)) {
 	return true; // 	stop as soon in_cfg can connect to one cfg in in_vec_cfg
       }
    }
@@ -100,8 +103,9 @@ class MPRegionComparerMethod: public MPBaseObject {
     typedef typename vector< CFG >::iterator CFG_ITRTR;
     for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {
       for (CFG_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) {
-	if (lp->IsConnected(env, Stats, dm, (*i_cc_a), (*i_cc_b), 
-			    &lp_output, pos_res, ori_res, true)) {
+				if (lp->GetLocalPlannerMethod(m_lp)->
+              IsConnected(env, Stats, dm, (*i_cc_a), (*i_cc_b), 
+			                    &lp_output, pos_res, ori_res, true)) {
 	  return true; // st	op as soon as one cc in a can connect to a node in b
 	}
       }

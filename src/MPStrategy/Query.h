@@ -84,8 +84,9 @@ public:
 	virtual
 	  bool CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, 
 			       vector<VID>& attemptedPath,
-			       Stat_Class& Stats, 
-			       LocalPlanners<CFG,WEIGHT>* lp, 
+			       Stat_Class& Stats,  
+						 LocalPlanners<CFG,WEIGHT>* lp, 
+             string _lp_label,
 			       shared_ptr< DistanceMetricMethod> dm, 
 			       vector<CFG>& recreatedPath);
     //@}
@@ -114,7 +115,8 @@ public:
             Stat_Class& Stats, 
             ConnectMap<CFG, WEIGHT> *cn, 
             vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
-            LocalPlanners<CFG,WEIGHT> * lp,
+            LocalPlanners<CFG,WEIGHT> * lp, 
+            string _lp_label,
             shared_ptr< DistanceMetricMethod > dm,
             bool intermediateFiles = false);
 
@@ -152,6 +154,7 @@ public:
             ConnectMap<CFG, WEIGHT>*, 
             vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
             LocalPlanners<CFG,WEIGHT>*, 
+            string _lp_label,
             shared_ptr<DistanceMetricMethod>, 
             vector<CFG>* _path, 
             bool intermediateFiles = false);
@@ -203,7 +206,7 @@ class QueryConnect : public ConnectMap<CFG,WEIGHT> {
  public:
   QueryConnect() : ConnectMap<CFG,WEIGHT>() {}
   QueryConnect(Roadmap<CFG,WEIGHT>* rm,
-	       shared_ptr< DistanceMetricMethod> dm, LocalPlanners<CFG,WEIGHT>* lp) :
+               shared_ptr< DistanceMetricMethod> dm) ://, LocalPlanners<CFG,WEIGHT>* lp) :
     ConnectMap<CFG,WEIGHT>() {}
   ~QueryConnect() {
     this->selected_node_methods.clear();
@@ -293,8 +296,8 @@ bool
 Query<CFG, WEIGHT>::
 PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
         ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
-        LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm, bool intermediateFiles) 
-{
+				LocalPlanners<CFG,WEIGHT>* lp, 
+        string _lp_label, shared_ptr<DistanceMetricMethod> dm, bool intermediateFiles) {
   for(typename vector<CFG>::iterator Q = query.begin(); 
       (Q+1) != query.end(); ++Q) {
     cout << "\nquery is ...     ";
@@ -304,7 +307,8 @@ PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats,
     cout << "\nworking  ...     "
 	 << endl;
     
-    if ( !PerformQuery(*Q,*(Q+1),rdmp, Stats,cn,pConnections,lp,dm,&path, intermediateFiles) ) {
+    if ( !PerformQuery(*Q,*(Q+1),rdmp, Stats,cn,pConnections,lp,
+                       _lp_label,dm,&path, intermediateFiles) ) {
       cout << endl << "In PerformQuery(): didn't connect";
       return false;
     } 
@@ -318,7 +322,8 @@ bool
 Query<CFG, WEIGHT>::
 PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
 	     ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections, 
-       LocalPlanners<CFG,WEIGHT>* lp, shared_ptr<DistanceMetricMethod> dm, vector<CFG>* _path, bool intermediateFiles) {
+			 LocalPlanners<CFG,WEIGHT>* lp, 
+       string _lp_label, shared_ptr<DistanceMetricMethod> dm, vector<CFG>* _path, bool intermediateFiles) {
   VDComment("Begin Query");
   LPOutput<CFG,WEIGHT> sci, gci;   // connection info for start, goal nodes
 
@@ -357,7 +362,8 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
 
       for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
-        cn->ConnectNodes(*itr, rdmp, Stats, lp, false, false, 
+        cn->ConnectNodes(*itr, rdmp, Stats, //lp, 
+                         false, false, 
                         verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
     }
@@ -374,7 +380,8 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       vector<VID> verticesList(1, gvid);
       
       for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
-        cn->ConnectNodes(*itr, rdmp, Stats, lp, false, false, 
+        cn->ConnectNodes(*itr, rdmp, Stats, //lp, 
+                         false, false, 
                         verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
     }
@@ -403,7 +410,8 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       //attempt to recreate path
       vector<CFG> recreatedPath;
       //if(CanRecreatePath(rdmp, rp, Stats, lp, dm, recreatedPath)) {
-      if(CanRecreatePath(rdmp, _rp, Stats, lp, dm, recreatedPath)) {
+      if(CanRecreatePath(rdmp, _rp, Stats, lp, 
+                         _lp_label, dm, recreatedPath)) {
 	connected = true;
        _path->insert(_path->end(),
                      recreatedPath.begin(), recreatedPath.end());
@@ -436,7 +444,9 @@ Query<CFG, WEIGHT>::
 CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
                 vector<VID >& attemptedPath,
                 Stat_Class& Stats,
-                LocalPlanners<CFG,WEIGHT>* lp, shared_ptr< DistanceMetricMethod> dm,
+                LocalPlanners<CFG,WEIGHT>* lp, 
+                string _lp_label,
+                shared_ptr< DistanceMetricMethod> dm,
                 vector<CFG>& recreatedPath) {
   LPOutput<CFG,WEIGHT> ci;
 
@@ -447,14 +457,12 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
     typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei;
     typename RoadmapGraph<CFG, WEIGHT>::edge_descriptor ed((*(rdmp->m_pRoadmap->find_vertex(*I))).descriptor(),(*(rdmp->m_pRoadmap->find_vertex(*(I+1) ))).descriptor());
     rdmp->m_pRoadmap->find_edge(ed, vi, ei);
-    if(!(lp->GetPathSegment(rdmp->GetEnvironment(), Stats, dm,
-                            (*(rdmp->m_pRoadmap->find_vertex(*I))).property(), 
-			    (*(rdmp->m_pRoadmap->find_vertex(*(I+1) ))).property(), 
-			    (*ei).property(), //double check is it correct? fix_lantao
-			    &ci,
-                            rdmp->GetEnvironment()->GetPositionRes(),
-                            rdmp->GetEnvironment()->GetOrientationRes(),
-                            true, true))) {
+    if(!(lp->GetLocalPlannerMethod(_lp_label)->
+         IsConnected(rdmp->GetEnvironment(), Stats, dm,
+                     (*(rdmp->m_pRoadmap->find_vertex(*I))).property(), 
+                     (*(rdmp->m_pRoadmap->find_vertex(*(I+1) ))).property(), 
+                     &ci, rdmp->GetEnvironment()->GetPositionRes(),
+                     rdmp->GetEnvironment()->GetOrientationRes(),true, true))) {
       //rdmp->m_pRoadmap->DeleteEdge(I->first, (I+1)->first);
       rdmp->m_pRoadmap->delete_edge(*I, *(I+1));
       return false;

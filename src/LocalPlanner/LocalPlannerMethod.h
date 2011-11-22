@@ -1,7 +1,12 @@
-#ifndef LocalPlannerMethod_h
-#define LocalPlannerMethod_h
-
-
+/**
+ * LocalPlannerMethod.h
+ * This class is a base class for all local planner methods
+ * 
+ * Last Updated      : 11/15/11
+ * Last Update Author: Kasra Manavi
+ */
+#ifndef LOCALPLANNERMETHOD_H_
+#define LOCALPLANNERMETHOD_H_
 
 #include "Roadmap.h"
 #include "Environment.h"
@@ -9,135 +14,31 @@
 #include "Stat_Class.h"
 #include "util.h"
 #include "ValidityChecker.hpp"
-
-template <class CFG, class WEIGHT> struct LPOutput;
 class DistanceMetricMethod;
+template <class CFG, class WEIGHT> struct LPOutput;
 
-template <class CFG, class WEIGHT>
-class LocalPlannerMethod : public MPBaseObject{ 
+template <class CFG, class WEIGHT> class LocalPlannerMethod : public MPBaseObject {
  public:
 
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Constructors and Destructor*/
-  //@{
-
-  ///Default Constructor.
-  LocalPlannerMethod();
-  LocalPlannerMethod(CDInfo* cd, int lp);
-  LocalPlannerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
-  
-  ///Destructor.  
+  LocalPlannerMethod():MPBaseObject() { }
+  LocalPlannerMethod(XMLNodeReader& _in_Node, MPProblem* _in_pProblem):MPBaseObject(_in_Node, _in_pProblem) { }
   virtual ~LocalPlannerMethod();
 
-  //@}
-
-//  virtual bool operator == (const LocalPlannerMethod<CFG,WEIGHT> &other) const;
-
-  //////////////////////
-  // Access
-  virtual void SetDefault();
-
-  //////////////////////
-  // I/O methods
-  virtual void PrintUsage(ostream& _os) = 0;
-  virtual void PrintValues(ostream& _os) = 0;
-  ///Used in new MPProblem framework. \todo remove the "{ }" later
   virtual void PrintOptions(ostream& out_os) { };
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy() = 0;
-
-
-  /**Determine whether two cfgs are connected according to method type, abstract.
-   *@param LPOutput.
-   */
-  virtual bool IsConnected(Environment* _env, Stat_Class& Stats, 
-        shared_ptr<DistanceMetricMethod>, const CFG &_c1, const CFG &_c2, CFG &_col, 
-         LPOutput<CFG, WEIGHT>* lpOutput,
-         double positionRes, double orientationRes,
-         bool checkCollision=true, 
-         bool savePath=false, bool saveFailedPath=false) = 0;
-
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Public Data
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Protected Data members and Member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
- protected:
-  int lp_id;
-
- public:
-  void SetID(int new_id);
-  int GetID() const;
-  CDInfo* cdInfo;
+  virtual bool IsConnected(Environment* _env, Stat_Class& _stats, shared_ptr<DistanceMetricMethod> _dm, 
+                           const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
+                           double _posRes, double _oriRes, bool _checkCollision=true, 
+                           bool _savePath=false, bool _saveFailedPath=false) = 0;
+  virtual bool IsConnected(Environment* _env, Stat_Class& _stats, shared_ptr<DistanceMetricMethod> _dm, 
+                           const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* _lpOutput,
+                           double _posRes, double _oriRes, bool _checkCollision=true, 
+                           bool _savePath=false, bool _saveFailedPath=false) {
+    CFG col;
+    return IsConnected(_env,_stats,_dm,_c1,_c2,col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
+  }
 };
 
-
-/////////////////////////////////////////////////////////////////////
-//
-//  definitions for class LocalPlannerMethod declarations
-//
-/////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>::
-LocalPlannerMethod() {
-  lp_id = -1;
-  SetDefault();
-}
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>::
-LocalPlannerMethod(CDInfo* cd, int lp = -1) : lp_id(lp), cdInfo(cd) {
-  SetDefault();
-}
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>::
-LocalPlannerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
-    MPBaseObject(in_Node,in_pProblem) {
-  lp_id = -1;
-  SetDefault();
-}
-
-
-
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>::
-~LocalPlannerMethod() {
-}
-
-template <class CFG, class WEIGHT>
-void LocalPlannerMethod<CFG, WEIGHT>::
-SetDefault() {
-}
-
-template <class CFG, class WEIGHT>
-void LocalPlannerMethod<CFG, WEIGHT>::
-SetID(int new_id) {
-  lp_id = new_id;
-}
-
-template <class CFG, class WEIGHT>
-int LocalPlannerMethod<CFG, WEIGHT>::
-GetID() const {
-  return lp_id;
-}
-
+template <class CFG, class WEIGHT> 
+LocalPlannerMethod<CFG, WEIGHT>::~LocalPlannerMethod() { }
 #endif

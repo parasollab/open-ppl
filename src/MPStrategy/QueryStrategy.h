@@ -12,6 +12,7 @@ public:
   string m_strMapFileLabel;
   string m_strQueryFileLabel;
   string m_strPathFileLabel;
+  string m_lp_label;
   string dm_label;
   Query<CfgType, WeightType> query;
   ConnectMap<CfgType, WeightType> m_ConnectMap;
@@ -28,12 +29,12 @@ class QueryStrategy : public MPStrategyMethod
   m_strMapFileLabel = cont.m_strMapFileLabel;
   m_strQueryFileLabel = cont.m_strQueryFileLabel;
   m_strPathFileLabel = cont.m_strPathFileLabel;
+  m_lp_label = cont.m_lp_label;
   dm_label = cont.dm_label;
   query = cont.query;
   m_ConnectMap = cont.m_ConnectMap;
+}
 
-
-}   
   QueryStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
   virtual ~QueryStrategy();
 
@@ -54,6 +55,7 @@ protected:
   string m_strMapFileLabel;
   string m_strQueryFileLabel;
   string m_strPathFileLabel;
+  string m_lp_label;
   string dm_label;
   Query<CfgType, WeightType> query;
   ConnectMap<CfgType, WeightType> m_ConnectMap;

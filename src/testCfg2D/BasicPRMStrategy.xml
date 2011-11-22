@@ -16,13 +16,13 @@
        <rmsd Label="rmsd" />
        <lp_swept Label="lp_swept" pos_res='5' ori_res='5' use_bbox="true">
             <lp_methods>
-               <straightline Label="dm_lp" length="0" binary_search="0"/>
+               <StraightLine Label="dm_lp" length="0" binary_search="0"/>
             </lp_methods>
         </lp_swept>      
            
         <binary_lp_swept Label="bp_swept" pos_res='5' ori_res='5' use_bbox="true">
            <lp_methods>
-              <straightline Label="dm_lp" length="0" binary_search="0"/>
+              <StraightLine Label="dm_lp" length="0" binary_search="0"/>
             </lp_methods>
         </binary_lp_swept> 
 
@@ -56,19 +56,22 @@
     </node_generation_methods>
     
     <connection_methods>
-      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false"/>
-      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" nf="BFNF"/>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="ras"/>
+      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" nf="BFNF" lp_method="ras"/>
     </connection_methods>
 
     <lp_methods>
-      <straightline Label="sl" length="0" binary_search="1" vc_method="cd1"/>
+      <StraightLine Label="sl" length="0" binary_search="1" vc_method="cd1"/>
+      <RotateAtS    Label="ras" length="0" binary_search="1" vc_method="cd2" s="0.5" />
+      <TransformAtS Label="tas" length="0" binary_search="1" vc_method="cd2" s="0.5" />
+      <AStar        Label="as"  vc_method="cd2" n_tries="1.0" n_neighbors="5.0" />
     </lp_methods>
     
     <MPEvaluator_methods>
       <MPRegionConditionalEvaluators>
-        <TestEvaluation Label="TestEval" size="100" dm_method="euclidean"/>
-        <PrintMapEvaluation Label="PrintMap" base_name="Basic" dm_method="euclidean"/>
-        <QueryEvaluation Label="Query" filename="narrow.query">
+        <TestEvaluation Label="TestEval" size="100" dm_method="euclidean" lp_method="ras"/>
+        <PrintMapEvaluation Label="PrintMap" base_name="Basic" dm_method="euclidean" lp_method="ras"/>
+        <QueryEvaluation Label="Query" filename="narrow.query" lp_method="ras">
          <node_connection_method Method="Closest"/>
         </QueryEvaluation>
       </MPRegionConditionalEvaluators>
@@ -78,8 +81,8 @@
       <BasicPRMStrategy Label="PRM1" seed="1234567" filename="Basic" iterations="1" num_samples="10" dm_method="euclidean">
         <!--node_generation_method Method="Gauss" Number="10"/-->
         <!--node_generation_method Method="OBPRM" Number="10"/-->
-        <node_generation_method Method="MAPRM" Number="10"/>
-        <!--node_generation_method Method="UniformRandomFree" Number="10"/-->
+        <!--node_generation_method Method="MAPRM" Number="10"/-->
+        <node_generation_method Method="UniformRandomFree" Number="10"/>
         <node_connection_method Method="Closest"/>
         <component_connection_method Method="ConnectCCs"/>
         <evaluation_method Method="TestEval"/>

@@ -264,7 +264,6 @@ void BasicPRMStrategy::ConnectNodes(MPRegion<CfgType, WeightType>* region,
       GetMPProblem()->GetMPStrategy()->
          GetConnectMap()->ConnectNodes(pConnection,
                                        region->GetRoadmap(), *(region->GetStatClass()),
-				       GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                        GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                        GetMPProblem()->GetMPStrategy()->addAllEdges,
                                        nodesVID.begin(), nodesVID.end(), 
@@ -301,7 +300,6 @@ void BasicPRMStrategy::ConnectComponents(MPRegion<CfgType, WeightType>* region)
          GetConnectMap()->ConnectComponents(pConnection,
                                             region->GetRoadmap(), 
                                             *(region->GetStatClass()),
-                                            GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
                                             GetMPProblem()->GetMPStrategy()->addPartialEdge, 
                                             GetMPProblem()->GetMPStrategy()->addAllEdges);
       
