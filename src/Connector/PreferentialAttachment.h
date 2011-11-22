@@ -70,13 +70,11 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
   template<typename OutputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        //LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges, OutputIterator collision) ;
 
   template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        //LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last, OutputIterator collision) ;
 
@@ -84,7 +82,6 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
   template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        //LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
         InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision) ; 
@@ -92,7 +89,6 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
   template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
   void pConnectNodes(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-        //LocalPlanners<CFG,WEIGHT>* lp,
         bool addPartialEdge, bool addAllEdges,
         InputIterator1 _itr1_first, InputIterator1 _itr1_last,
         InputIterator2 _itr2_first, InputIterator2 _itr2_last, OutputIterator collision) ;
@@ -100,7 +96,6 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
    template<typename OutputIterator>
   void ConnectNeighbors(
         Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-        //LocalPlanners<CFG,WEIGHT>* lp,
         bool addAllEdges, 
         int &total_success, int &total_failure,
         VID _vid, vector<VID> closest, OutputIterator collision) ;
@@ -260,7 +255,6 @@ template <class CFG, class WEIGHT>
 template <typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-						 //LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges, OutputIterator collision) 
 {
@@ -274,9 +268,8 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   vector<VID> vertices;
   pMap->GetVerticesVID(vertices);
   
-  ConnectNodes(_rm, Stats, //lp, 
-               addPartialEdge, addAllEdges, 
-        vertices.begin(), vertices.end(), collision);
+  ConnectNodes(_rm, Stats, addPartialEdge, addAllEdges, 
+               vertices.begin(), vertices.end(), collision);
 }
 
 /**
@@ -302,7 +295,6 @@ template <class CFG, class WEIGHT>
 template<typename InputIterator, typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
-						 //LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
             InputIterator _itr1_first, InputIterator _itr1_last, OutputIterator collision) 
@@ -336,9 +328,8 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
           KClosestClock.StopClock();
           if (m_debug) cout << "\tAttempting connections: VID = " << input_vertices[n] << "  --> " << candidate[0] << endl;
-          ConnectNeighbors(_rm, Stats, //lp, 
-                           addAllEdges, total_success, total_failure,
-          input_vertices[n], candidate, collision);
+          ConnectNeighbors(_rm, Stats, addAllEdges, total_success, total_failure,
+                           input_vertices[n], candidate, collision);
           KClosestClock.StartClock("kClosest");
 
           attempts += 1;
@@ -367,7 +358,6 @@ template <class CFG, class WEIGHT>
 template<typename InputIterator, typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
 ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-						 //LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
             InputIterator _itr1_first, InputIterator _itr1_last,
@@ -383,7 +373,6 @@ template <class CFG, class WEIGHT>
 template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
 pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-							//LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
             bool addAllEdges,
             InputIterator1 _itr1_first, InputIterator1 _itr1_last,
@@ -398,7 +387,6 @@ template <class CFG, class WEIGHT>
 template <typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
 ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
-								 //LocalPlanners<CFG,WEIGHT>* lp,
             bool addAllEdges,
             int &total_success, int &total_failure,
             VID _vid, vector<VID> closest, OutputIterator collision)
@@ -466,7 +454,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
     // attempt connection with the local planner
     CfgType _col;
-		if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
+    if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
          IsConnected(_rm->GetEnvironment(), Stats, dm,
                      (*(_rm->m_pRoadmap->find_vertex(_vid))).property(),
                      (*(_rm->m_pRoadmap->find_vertex(*itr2))).property(),
