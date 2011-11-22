@@ -23,6 +23,7 @@
 #include "MPCharacterizer.h"
 #include "MPRegion.h"
 #include "Sampler.h"
+//#include "Connector/RRTConnect.h"
 
 class BasicRRTStrategy : public MPStrategyMethod {
  

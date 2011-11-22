@@ -10,6 +10,7 @@
 #include "MPStrategy/BasicRRTStrategy.h"
 #include "MPProblem/MPRegion.h"
 #include "MPStrategy/MPStrategy.h"
+#include "Utilities/MPUtils.h"
 
 BasicRRTStrategy::BasicRRTStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited) :
   MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
@@ -237,49 +238,31 @@ void BasicRRTStrategy::RRT(int in_RegionID, vector<CfgType> RRTQueue) {
       GetMPProblem()->GetNeighborhoodFinder()->KClosest( GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_label),
 							 region->GetRoadmap(), dir, 1, back_inserter(kClosest));     
       CfgType nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
+      CfgType new_cfg;
       
-      // Increment towards direction
-      CfgType cfg  = CfgType(nearest);
-      CfgType incr, tick = cfg;
-      bool collision = false;
-      double positionRes    = env->GetPositionRes();
-      double orientationRes = env->GetOrientationRes();
-      int nTicks, ticker = 0;	 
-      incr.FindIncrement(cfg,dir,&nTicks,positionRes,orientationRes);
-      
-      while(!collision && 
-	    (_dm->Distance(env,cfg,tick) < (delta+obsDist)) ) {
-	cfgs.push_back( CfgType(tick) );
-	if ( _dm->Distance(env, cfgs[0], cfgs[cfgs.size()-1]) > obsDist ) {
-	  startCIterator = cfgs.begin();
-	  cfgs.erase( startCIterator );
-	}
-	tick.Increment(incr);
-	if(!(tick.InBoundingBox(env)) || 
-	   !(vc->IsValid(vc->GetVCMethod(strVcmethod), tick, env, *regionStats, cdInfo, true, &callee)))
-	  collision = true;
-	++ticker;
-	if (ticker == nTicks) {
-	  cfgs[0] = CfgType(tick);
-	  break;
-	}
+      if(!RRTExpand(GetMPProblem(), in_RegionID, strVcmethod, dm_label, nearest, dir, new_cfg, delta, obsDist)) {
+        continue;
       }
-      
+
       // Check if goal has been found
-      if (usingQueue && _dm->Distance(env, dir, cfgs[0]) < (delta)/100) {
-	cfgs[0] = dir;
+      if (usingQueue && _dm->Distance(env, dir, new_cfg) < (delta)/100) {
+	new_cfg = dir;
 	found[goalNum] = true;
       }
-      
+     
+
+
       // If good to go, add to roadmap
+      double positionRes    = env->GetPositionRes();
+      double orientationRes = env->GetOrientationRes();
       CfgType collNode;
-      if (cfgs[0].InBoundingBox(env)
-	  && vc->IsValid(vc->GetVCMethod(strVcmethod), cfgs[0], env, *regionStats, cdInfo, true, &callee)
-	  && (_dm->Distance(env, cfgs[0], nearest) >= minDist)
-	  && lp->GetMethod(m_LPMethod)->IsConnected(env, *regionStats, _dm, nearest, cfgs[0], collNode, &lpOutput,
+      if (new_cfg.InBoundingBox(env)
+	  && vc->IsValid(vc->GetVCMethod(strVcmethod), new_cfg, env, *regionStats, cdInfo, true, &callee)
+	  && (_dm->Distance(env, new_cfg, nearest) >= minDist)
+	  && lp->GetMethod(m_LPMethod)->IsConnected(env, *regionStats, _dm, nearest, new_cfg, collNode, &lpOutput,
 						    positionRes, orientationRes, checkCollision, savePath, saveFailed)) {
-	region->GetRoadmap()->m_pRoadmap->AddVertex(cfgs[0]);
-	region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, cfgs[0], lpOutput.edge);
+	region->GetRoadmap()->m_pRoadmap->AddVertex(new_cfg);
+	region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, new_cfg, lpOutput.edge);
       } else 
 	--i;
     }
