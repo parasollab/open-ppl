@@ -10,58 +10,41 @@
 #ifndef BasicRRTStrategy_h
 #define BasicRRTStrategy_h
 
-#include "Roadmap.h"
-#include "MPProblem/RoadmapGraph.h" //for VID typedef
-#include "Clock_Class.h"
 #include "Stat_Class.h"
-#include "CollisionDetection.h"
-#include "ValidityChecker.hpp"
-#include "ConnectMap.h"
-#include "MPStrategy/MPStrategyMethod.h"
-#include "MPProblem/MPProblem.h"
-#include "MPCharacterizer.h"
-#include "MPRegion.h"
-#include "Sampler.h"
-//#include "Connector/RRTConnect.h"
+#include "IOUtils.h"
+#include "CfgTypes.h"
+#include "MPStrategyMethod.h"
+
+template<typename CFG, typename WEIGHT> class MPRegion;
 
 class BasicRRTStrategy : public MPStrategyMethod {
- 
- public:
+  public:
+    BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem);
+    virtual ~BasicRRTStrategy() {}
+    
+    virtual void ParseXML(XMLNodeReader& _node);
 
-   BasicRRTStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited=false);
-   virtual ~BasicRRTStrategy();
-   virtual void ParseXML(XMLNodeReader& in_Node);
-   virtual void Initialize(int in_RegionID);
-   virtual void Run(int in_RegionID);
-   virtual void Finalize(int in_RegionID);
-   virtual void PrintOptions(ostream& out_os);
-   virtual void RRT(int in_RegionID, vector<CfgType>);
+    virtual void Initialize(int _regionID);
+    virtual void Run(int _regionID);
+    virtual void Finalize(int _regionID);
+    virtual void PrintOptions(ostream& _os);
 
- protected:
-   
-   // Helper functions
-   void ConnectComponents(MPRegion<CfgType, WeightType>* region);
-   bool EvaluateMap(int in_RegionID);
+  protected:
+    // Helper functions
+    void ConnectComponents(int _regionID);
+    bool EvaluateMap(int _regionID);
 
-   // Data
-   vector<pair<string, int> > m_NodeGenerationLabels;
-   vector<string> m_NodeConnectionLabels;
-   vector<string> m_ComponentConnectionLabels;
-   vector<string> m_EvaluatorLabels;
-   string m_LPMethod;
-   string dm_label;
-   string nf_label;
-   string strVcmethod;
-   double delta, minDist, obsDist, roots, growthFocus;
-   int m_CurrentIteration;
-
- private:
-
-   Clock_Class MapGenClock;
-   
+  private:
+    vector<string> m_componentConnectors;
+    vector<string> m_evaluators;
+    string m_sampler;
+    string m_lp;
+    string m_dm;
+    string m_nf;
+    string m_vc;
+    string m_query;
+    double m_delta, m_minDist, m_growthFocus;
+    int m_roots, m_currentIteration;
 };
-
-#include "MPStrategy.h"
-#include "MapEvaluator.h"
 
 #endif

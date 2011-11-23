@@ -3,6 +3,7 @@
 
 #include <sys/time.h>
 #include "util.h"
+#include "Clock_Class.h"
 #include "CfgTypes.h"
 #include "MPProblem/RoadmapGraph.h" //for VID typedef
 #include "MPProblem.h"
@@ -70,6 +71,7 @@ class MPStrategyMethod : public MPBaseObject {
   protected:
     int m_iterations;
     int num_nodes;
+    Clock_Class m_strategyClock;
     //bool m_reset_stats;
     //bool m_no_output_files;
 };

@@ -30,7 +30,7 @@ bool
 TestEvaluation::
 operator() (int in_RegionID) 
 {
-  PrintOptions(cout);
+  if(m_debug) PrintOptions(cout);
   return ((int)GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->m_pRoadmap->get_num_vertices() >= size);
 }
 

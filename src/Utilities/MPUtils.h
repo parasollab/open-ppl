@@ -81,10 +81,7 @@ GetCentroid(RoadmapGraph<CFG, WEIGHT>* graph, vector<typename RoadmapGraph<CFG, 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-
-
-bool RRTExpand( MPProblem* _mp, int _in_RegionID, string _strVcmethod, string _dm_label, CfgType _start,
-CfgType _dir, CfgType& _new_cfg, double _delta, double _obsDist);
+bool RRTExpand(MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta);
 
 #endif
 
