@@ -44,30 +44,25 @@ class CGALNF: public NeighborhoodFinderMethod {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
-  CGALNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(in_Node,in_pProblem) {
+  CGALNF(XMLNodeReader& _node, MPProblem* _problem) :
+    NeighborhoodFinderMethod(_node, _problem) {
 
     
-    m_epsilon = in_Node.numberXMLParameter("epsilon", false, double(0.0),
-                                                  double(0.0), double(100.0),
-                                                  "Epsilon value for CGAL");
-    m_use_scaling = in_Node.numberXMLParameter("use_scaling",false,int(0),
-                                                  int(0),int(1),
-                                                  "Bounding-box scaling used on pos DOFs");
+    m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for CGAL");
+    m_use_scaling = _node.numberXMLParameter("use_scaling",false,0, 0,1, "Bounding-box scaling used on pos DOFs");
     
     m_cur_roadmap_version = -1;
     CFG temp;
-    m_max_bbox_range = double(0.0);
+    m_max_bbox_range = 0.0;
     for(int i=0; i< temp.posDOF(); ++i) {
-      std::pair<double,double> range = in_pProblem->GetEnvironment()->GetBoundingBox()->GetRange(i);
+      std::pair<double,double> range = _problem->GetEnvironment()->GetBoundingBox()->GetRange(i);
       double tmp_range = range.second-range.first;
       if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;
     }
   }
 
-  CGALNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) :
-    NeighborhoodFinderMethod(_strLabel) {
-    dmm = _dmm;
+  CGALNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
+    NeighborhoodFinderMethod(_dmm, _label) {
     m_epsilon = 0.0;
     m_use_scaling = 0;
     m_cur_roadmap_version = -1;

@@ -19,26 +19,18 @@ class MTNF: public NeighborhoodFinderMethod {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
-  MTNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(in_Node,in_pProblem) {
-    m_epsilon = in_Node.numberXMLParameter("epsilon", false, double(0.0),
-            double(0.0), double(100.0),
-            "Epsilon value for CGAL");
-
+  MTNF(XMLNodeReader& _node, MPProblem* _problem) :
+    NeighborhoodFinderMethod(_node,_problem) {
+    m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for CGAL");
     m_cur_roadmap_version = -1;
     spillTreeNotCreated=true;
-    //spillTree<CFG, WEIGHT> sTree(5000,.1,.6,true,false);
-    //spillTreePtr=&sTree;
   }
 
-  MTNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) :
-    NeighborhoodFinderMethod(_strLabel) {
-    dmm = _dmm;
+  MTNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
+    NeighborhoodFinderMethod(_dmm, _label) {
     m_epsilon = 0.0;
     m_cur_roadmap_version = -1;
     spillTreeNotCreated=true;
-    //spillTree<CFG, WEIGHT> sTree(5000,.1,.6,true,false);
-    //spillTreePtr=&sTree;
   }
 
   virtual ~MTNF() {}  

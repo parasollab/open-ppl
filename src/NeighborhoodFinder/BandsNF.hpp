@@ -359,54 +359,64 @@ public:
 
 /////// Band definitions
 template<typename CFG, typename WEIGHT>
-class Band {
+class Band : public NeighborhoodFinderMethod {
 
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
  
-  Band(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) : NeighborhoodFinderMethod(_strLabel), dmm(_dmm) {}
+  Band(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) : NeighborhoodFinderMethod(_dmm, _label) {}
  
-  Band(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool debug)
+  Band(XMLNodeReader& _inNode, MPProblem* _inProblem, bool _debug): NeighborhoodFinderMethod(_inNode, _inProblem)
   {  
-    m_debug = debug;
+    m_debug = _debug;
     // note: A temporary fix (hack) until distance metric is properly fixed. This picks the second listed
     // distance metric from the xml file.
       
-     string dm2_label=in_Node.stringXMLParameter(string("dm2_method"),true,string(""),string("Distance Metric Method"));
-     
-    dmm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm2_label);
-    m_min = in_Node.numberXMLParameter(string("min"), false, double(0.0), double(0.0), double(100000.0), "min");
-    m_max = in_Node.numberXMLParameter(string("max"), false, DBL_MAX, double(0.0), DBL_MAX, "max");
-    m_usePercent = in_Node.boolXMLParameter(string("usePercent"), false, false,
-                          string("treat min and max as a percentage of the total number of vertices in the roadmap"));
+    m_min = _inNode.numberXMLParameter("min", false, 0.0, 0.0, 100000.0, "min");
+    m_max = _inNode.numberXMLParameter("max", false, DBL_MAX, 0.0, DBL_MAX, "max");
+    m_usePercent = _inNode.boolXMLParameter("usePercent", false, false,
+                          "treat min and max as a percentage of the total number of vertices in the roadmap");
     
-    double alpha = in_Node.numberXMLParameter(string("alpha"), false, double(1.0), double(0.0), double(100.0), "alpha");
+    double alpha = _inNode.numberXMLParameter("alpha", false, 1.0, 0.0, 100.0, "alpha");
 
-    string policy = in_Node.stringXMLParameter(string("policy"), true, string("closest"), string("selection policy"));
-    int k = in_Node.numberXMLParameter(string("k"), true, int(1), int(0), int(10000), "k");
+    string policy = _inNode.stringXMLParameter("policy", true, "closest", "selection policy");
+    int k = _inNode.numberXMLParameter("k", true, 1, 0, 10000, "k");
     
     cout << "Band : Params found - min = " << m_min << " | max = " << m_max << " | k = " << k << " | policy = " << policy << endl;
     
     if (policy == "closest") {
-      m_policy = new ClosestPolicy(k, debug);
+      m_policy = new ClosestPolicy(k, _debug);
     } else
     if (policy == "random") {
-      m_policy = new RandomPolicy(k, debug);
+      m_policy = new RandomPolicy(k, _debug);
     } else
     if (policy == "RWR") {
-      m_policy = new RankWeightedRandomPolicy(k, alpha, debug);
+      m_policy = new RankWeightedRandomPolicy(k, alpha, _debug);
     } else
     if (policy == "DWR") {
-      m_policy = new DistanceWeightedRandomPolicy(k, alpha, debug);
+      m_policy = new DistanceWeightedRandomPolicy(k, alpha, _debug);
     } else
     if (policy == "preferential") {
-      m_policy = new PreferentialPolicy(k, debug);
+      m_policy = new PreferentialPolicy(k, _debug);
     } else {
 		cout << "policy \"" << policy << "\" is not a valid option.  Exiting..." << endl;
 		exit(-1);
 	}
     
     m_type = "";
+  }
+
+  virtual const std::string GetName() const {
+    return Band::GetClassName();
+  }
+  
+  static const std::string GetClassName() {
+    return "Band";
+  }
+
+  virtual void PrintOptions(std::ostream& _os) const {
+    //Andy G: I'm not sure what should be printed, so TODO will be placed here
+    _os << this->GetClassName() << ":: TODO" << std::endl;
   }
   
   // given initial set V (_input_first --> _input_last), and CFG v1, return V_n.
@@ -490,8 +500,8 @@ class DBand : public Band<CfgType, WeightType> {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
-  DBand(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool debug)
-    : Band<CfgType, WeightType>(in_Node, in_pProblem, debug)
+  DBand(XMLNodeReader& _node, MPProblem* _problem, bool debug)
+    : Band<CfgType, WeightType>(_node, _problem, debug)
   { 
     if (debug) cout << "DBand::DBand()" << endl; 
     m_type = "DBand";
@@ -509,6 +519,19 @@ public:
     // get neighbors from candidate set using policy
     vector< pair<VID, double> > neighbors = m_policy->SelectNeighbors(_rmp, candidate_set.begin(), candidate_set.end());
     return neighbors; 
+  }
+
+  virtual const std::string GetName() const {
+    return DBand::GetClassName();
+  }
+  
+  static const std::string GetClassName() {
+    return "DBand";
+  }
+
+  virtual void PrintOptions(std::ostream& _os) const {
+    //Andy G: I'm not sure what should be printed, so TODO will be placed here
+    _os << this->GetClassName() << ":: TODO" << std::endl;
   }
 
 private:
@@ -554,8 +577,8 @@ class RBand : public Band<CfgType, WeightType> {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
-  RBand(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool debug)
-    : Band<CfgType, WeightType>(in_Node, in_pProblem, debug)
+  RBand(XMLNodeReader& _node, MPProblem* _problem, bool debug)
+    : Band<CfgType, WeightType>(_node, _problem, debug)
   { 
     if (debug) cout << "RBand::RBand()" << endl; 
     m_type = "RBand";
@@ -573,6 +596,19 @@ public:
     // get neighbors from candidate set using policy
     vector< pair<VID, double> > neighbors = m_policy->SelectNeighbors(_rmp, candidate_set.begin(), candidate_set.end());
     return neighbors; 
+  }
+
+  virtual const std::string GetName() const {
+    return RBand::GetClassName();
+  }
+  
+  static const std::string GetClassName() {
+    return "RBand";
+  }
+
+  virtual void PrintOptions(std::ostream& _os) const {
+    //Andy G: I'm not sure what should be printed, so TODO will be placed here
+    _os << this->GetClassName() << ":: TODO" << std::endl;
   }
 
 private:
@@ -624,26 +660,25 @@ class BandsNF: public NeighborhoodFinderMethod {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
-  BandsNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) : NeighborhoodFinderMethod(in_Node,in_pProblem) {
+  BandsNF(XMLNodeReader& _node, MPProblem* _problem) : NeighborhoodFinderMethod(_node, _problem) {
 
-    m_debug = in_Node.boolXMLParameter(string("debug"), false, false, string(""));
+    m_debug = _node.boolXMLParameter("debug", false, false, "");
     
     XMLNodeReader::childiterator citr;
-    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
       if (citr->getName() == "DBand") {
         cout << "DBand found" << endl;
-        Band<CFG,WEIGHT>* dband = new DBand<CFG,WEIGHT>(*citr, in_pProblem, m_debug);
+        Band<CFG,WEIGHT>* dband = new DBand<CFG,WEIGHT>(*citr, _problem, m_debug);
         m_bands.push_back(dband);
       } else if(citr->getName() == "RBand") {
         cout << "RBand found" << endl;
-        Band<CFG,WEIGHT>* rband = new RBand<CFG,WEIGHT>(*citr, in_pProblem, m_debug);
+        Band<CFG,WEIGHT>* rband = new RBand<CFG,WEIGHT>(*citr, _problem, m_debug);
         m_bands.push_back(rband);
       } 
     }
   }
 
-  BandsNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) : NeighborhoodFinderMethod(_strLabel) {
-    dmm = _dmm;
+  BandsNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) : NeighborhoodFinderMethod(_dmm,_label) {
     m_debug = false;
   }
 

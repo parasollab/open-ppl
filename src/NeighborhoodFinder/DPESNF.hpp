@@ -104,22 +104,17 @@ typedef DPES<VID_DPES_proxy<CFG,WEIGHT>,
 typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;       
        
 public:
-  DPESNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(in_Node, in_pProblem), m_dprox(NULL), m_dpes(NULL) {
+  DPESNF(XMLNodeReader& _node, MPProblem* _problem) :
+    NeighborhoodFinderMethod(_node, _problem), m_dprox(NULL), m_dpes(NULL) {
   
     
-    m_m = in_Node.numberXMLParameter("m", false, int(3),
-                                                  int(1), int(6),
-                                                  "m value for DPES");
-    m_l = in_Node.numberXMLParameter("l", false, int(50),
-                                                  int(5), int(1000),
-                                                  "l value for DPES");
+    m_m = _node.numberXMLParameter("m", false, 3, 1, 6, "m value for DPES");
+    m_l = _node.numberXMLParameter("l", false, 50, 5, 1000, "l value for DPES");
     m_cur_roadmap_version= -1;
   }
 
-  DPESNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) :
-    NeighborhoodFinderMethod(_strLabel), m_dprox(NULL), m_dpes(NULL) {
-    dmm = _dmm;
+  DPESNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
+    NeighborhoodFinderMethod(_dmm,_label), m_dprox(NULL), m_dpes(NULL) {
     m_cur_roadmap_version = -1;
     m_m = 3;
     m_l = 50;
@@ -361,23 +356,6 @@ UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
   m_dpes->UpdateProjected();
   m_cur_roadmap_version = new_version;
   }
-  /*
-  RoadmapChangeLog::cce_iter start = _rmp->m_pRoadmap->roadmapChangeLog->iter_at(latest_version);
-  RoadmapChangeLog::cce_iter end = _rmp->m_pRoadmap->roadmapChangeLog->end();
-  RoadmapChangeLog::cce_iter iter;
-  CFG temp_cfg;
-  VID _v = 0;
-  for(iter = start; iter != end; iter++) {
-    if((*iter).second.IsTypeAddVertex()) {
-        //m_dpes->Add....
-      //this->AddPoint(NULL, (*iter).second->GetEvent()->GetVID());
-//      tree.insert(Point_d(temp_cfg.DOF(), _v, (*iter).second->GetEvent()->GetCFG().GetData().begin(), 
-//                                              (*iter).second->GetEvent()->GetCFG().GetData().end()));
-
-//need to update S and VS.
-    }
-  }
-  */
 }
 
 

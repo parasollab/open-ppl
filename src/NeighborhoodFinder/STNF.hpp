@@ -19,22 +19,19 @@ class STNF: public NeighborhoodFinderMethod {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
-  STNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(in_Node,in_pProblem) {
+  STNF(XMLNodeReader& _node, MPProblem* _problem) :
+    NeighborhoodFinderMethod(_node, _problem) {
   
 
-    overlapDistance = in_Node.numberXMLParameter("overlapDistance", false, double(0.0),
-            double(0.0), double(100.0),
-            "overlap distance for spilltree");
+    overlapDistance = _node.numberXMLParameter("overlapDistance", false, 0.0, 0.0, 100.0, "overlap distance for spilltree");
     m_cur_roadmap_version = -1;
     spillTreeNotCreated=true;
     //spillTree<CFG, WEIGHT> sTree(5000,.1,.6,true,false);
     //spillTreePtr=&sTree;
   }
 
-  STNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) :
-    NeighborhoodFinderMethod(_strLabel) {
-    dmm = _dmm;
+  STNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
+    NeighborhoodFinderMethod(_dmm, _label) {
     m_epsilon = 0.0;
     m_cur_roadmap_version = -1;
     spillTreeNotCreated=true;

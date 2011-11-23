@@ -45,25 +45,15 @@ public:
     m_cur_roadmap_version = -1;
   }
 
-  MPNNNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(in_Node, in_pProblem) {
+  MPNNNF(XMLNodeReader& _node, MPProblem* _problem) :
+    NeighborhoodFinderMethod(_node, _problem) {
   
     
-    m_epsilon = in_Node.numberXMLParameter("epsilon", false, double(0.0),
-                                                  double(0.0), double(100.0),
-                                                  "Epsilon value for MPNN");
-    m_use_scaling = in_Node.numberXMLParameter("use_scaling",true,int(0),
-                                                  int(0),int(1),
-                                                  "Bounding-box scaling used on pos DOFs");
-    m_use_rotational = in_Node.numberXMLParameter("use_rotational",true,int(0),
-                                                  int(0),int(1),
-                                                  "Use rotational-coordinate topology");                                                  
-    m_max_points = in_Node.numberXMLParameter("max_points", false, int(50000),
-                                                  int(0), int(1000000),
-                                                  "Max points for MPNN");
-    m_max_neighbors = in_Node.numberXMLParameter("max_k", false, int(1000),
-                                                  int(0), int(10000),
-                                                  "Max neighbors for MPNN");
+    m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for MPNN");
+    m_use_scaling = _node.numberXMLParameter("use_scaling", true, 0, 0, 1, "Bounding-box scaling used on pos DOFs");
+    m_use_rotational = _node.numberXMLParameter("use_rotational", true, 0, 0, 1, "Use rotational-coordinate topology"); 
+    m_max_points = _node.numberXMLParameter("max_points", false, 50000, 0, 1000000, "Max points for MPNN");
+    m_max_neighbors = _node.numberXMLParameter("max_k", false, 1000, 0, 10000,"Max neighbors for MPNN");
     
     CFG temp;
     int dim = temp.DOF();
@@ -83,18 +73,17 @@ public:
     
     m_cur_roadmap_version = -1;
 
-    m_max_bbox_range = double(0.0);
+    m_max_bbox_range = 0.0;
     for(int i=0; i< temp.posDOF(); ++i) {
-      std::pair<double,double> range = in_pProblem->GetEnvironment()->GetBoundingBox()->GetRange(i);
+      std::pair<double,double> range = _problem->GetEnvironment()->GetBoundingBox()->GetRange(i);
       double tmp_range = range.second-range.first;
       if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;
     }
     
   }
 
-  MPNNNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _strLabel) :
-    NeighborhoodFinderMethod(_strLabel) {
-    dmm = _dmm;
+  MPNNNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
+    NeighborhoodFinderMethod(_dmm, _label) {
     
     m_epsilon = 0.0;
     m_use_scaling = 0;

@@ -7,7 +7,6 @@
 
 #include <vector>
 #include <functional>
-using namespace std;
 
 /**Compare two distances in DIST_TYPE instances.
  *return (_cc1.second < _cc2.second)
@@ -19,26 +18,23 @@ class BFFNF: public NeighborhoodFinderMethod {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   
-  BFFNF(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-    NeighborhoodFinderMethod(in_Node,in_pProblem) {
-    m_scale = in_Node.numberXMLParameter("k_2", true, 0, 0, 100, "K value for BFFNF");
-    string dm2_label = in_Node.stringXMLParameter(string("dm2_method"),true,string(""),string("Distance Metric Method the second one"));
-    dmm2 = in_pProblem->GetDistanceMetric()->GetDMMethod(dm2_label);
+  BFFNF(XMLNodeReader& _node, MPProblem* _problem) :
+    NeighborhoodFinderMethod(_node,_problem) {
+    m_scale = _node.numberXMLParameter("k_2", true, 0, 0, 100, "K value for BFFNF");
+    string dm2_label = _node.stringXMLParameter("dm2_method",true,"","Distance Metric Method the second one");
+    dmm2 = _problem->GetDistanceMetric()->GetDMMethod(dm2_label);
     
       nf1 = new BFNF<CFG,WEIGHT>(dmm);
       nf2 = new BFNF<CFG,WEIGHT>(dmm2);
   }
- BFFNF(shared_ptr<DistanceMetricMethod> _dmm,shared_ptr<DistanceMetricMethod>_dmm2,int _k2) :
-    NeighborhoodFinderMethod() {
-//cout<<"initializing other constructor "<<endl;
+  BFFNF(shared_ptr<DistanceMetricMethod> _dmm,shared_ptr<DistanceMetricMethod>_dmm2,int _k2) : NeighborhoodFinderMethod(_dmm) {
 
-   nf1 = new BFNF<CFG,WEIGHT>(_dmm);
+    nf1 = new BFNF<CFG,WEIGHT>(_dmm);
     nf2 = new BFNF<CFG,WEIGHT>(_dmm2);
 
     m_scale=_k2;
-    dmm= _dmm ;
     dmm2=_dmm2;
-}
+  }
   
   virtual ~BFFNF() {}
   
@@ -48,8 +44,8 @@ public:
   static const std::string GetClassName() {
     return "BFFNF";
   }
-  virtual void PrintOptions(std::ostream& out_os) const {
-    out_os << this->GetClassName() << std::endl;
+  virtual void PrintOptions(std::ostream& _os) const {
+    _os << this->GetClassName() << std::endl;
   }
 
 

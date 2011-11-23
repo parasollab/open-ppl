@@ -11,9 +11,9 @@
 class NeighborhoodFinderMethod : public MPBaseObject  {
 
 public:
-  NeighborhoodFinderMethod(shared_ptr<DistanceMetricMethod> dm);
-  NeighborhoodFinderMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem);
-  NeighborhoodFinderMethod() : m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) { }
+  NeighborhoodFinderMethod(shared_ptr<DistanceMetricMethod> dm, string _label="",  MPProblem* _problem = NULL);
+  NeighborhoodFinderMethod(XMLNodeReader& _node, MPProblem* _problem);
+  NeighborhoodFinderMethod();
   virtual ~NeighborhoodFinderMethod() {}
   virtual const std::string GetName () const = 0;
   virtual void PrintOptions(std::ostream& out_os) const = 0;
@@ -36,6 +36,8 @@ functions.
 .....
 
 */
+private:
+  void Init();
 protected:
   double m_total_time, m_query_time, m_construction_time;
   int m_num_queries;
