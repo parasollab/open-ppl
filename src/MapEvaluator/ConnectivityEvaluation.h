@@ -4,45 +4,62 @@
 #include "CoverageEvaluation.h"
 
 template <class CFG, class WEIGHT>
-class ConnectivityEvaluation : public CoverageEvaluation<CFG,WEIGHT> {
- public:
-  ConnectivityEvaluation(double t, ConnectMap<CFG,WEIGHT>* CM,
-                         LocalPlanners<CFG,WEIGHT>* LP,
-                         CollisionDetection* CD,
-                         DistanceMetric* DM,
-                         vector<CFG>& S) {
-    CoverageEvaluation<CFG,WEIGHT>::m_threshold = t; 
-    CoverageEvaluation<CFG,WEIGHT>::cm = CM;
-    CoverageEvaluation<CFG,WEIGHT>::lp = LP; 
-    CoverageEvaluation<CFG,WEIGHT>::cd = CD; 
-    CoverageEvaluation<CFG,WEIGHT>::dm = DM; 
-    CoverageEvaluation<CFG,WEIGHT>::samples = S;
-    CoverageEvaluation<CFG,WEIGHT>::all_data = true;
-  }
-
-  virtual bool evaluate(Roadmap<CFG,WEIGHT>* rmap) {
-    CoverageEvaluation<CFG,WEIGHT>::evaluate(rmap);
-
-    int num_queries = 0;
-    for(int i=0; i<CoverageEvaluation<CFG,WEIGHT>::connections.size(); ++i)
-      sort(CoverageEvaluation<CFG,WEIGHT>::connections[i].begin(), 
-           CoverageEvaluation<CFG,WEIGHT>::connections[i].end());
-    for(int i=0; i<CoverageEvaluation<CFG,WEIGHT>::connections.size()-1; ++i)
-      for(int j=i+1; j<CoverageEvaluation<CFG,WEIGHT>::connections.size(); ++j) {
-        vector<VID> intersection;
-        set_intersection(CoverageEvaluation<CFG,WEIGHT>::connections[i].begin(), 
-                         CoverageEvaluation<CFG,WEIGHT>::connections[i].end(),
-                         CoverageEvaluation<CFG,WEIGHT>::connections[j].begin(), 
-                         CoverageEvaluation<CFG,WEIGHT>::connections[j].end(),
-                         back_insert_iterator<vector<VID> >(intersection));
-        if(!(intersection.empty()))
-          num_queries ++;
+class ConnectivityMetric : public CoverageMetric<CFG, WEIGHT>
+{
+  public:
+    ConnectivityMetric(vector<CFG> s = vector<CFG>(), bool computeAllCCs = false)
+      :CoverageMetric<CFG, WEIGHT>(s,computeAllCCs) {
       }
-    double p_queries = ((double)num_queries) / 
-                       ((double)(CoverageEvaluation<CFG,WEIGHT>::connections.size()*(CoverageEvaluation<CFG,WEIGHT>::connections.size()-1)/2));
-    cout << "% Queries Solved: " << p_queries << endl;
-    return (p_queries >= CoverageEvaluation<CFG,WEIGHT>::m_threshold);
-  }
+    ~ConnectivityMetric(){}
+
+    double operator()(int _regionID, MPProblem* _mp, vector<string>& _nodeConnectionLabels){
+      CoverageMetric<CFG, WEIGHT>::operator()(_regionID, _mp, _nodeConnectionLabels);
+
+      int numQueries = 0;
+      for(size_t i=0; i<this->m_connections.size(); ++i)
+        sort(this->m_connections[i].begin(), this->m_connections[i].end());
+      for(size_t i=0; i<this->m_connections.size()-1; ++i)
+        for(size_t j=i+1; j<this->m_connections.size(); ++j) {
+          vector<VID> intersection;
+          set_intersection(this->m_connections[i].begin(),
+              this->m_connections[i].end(),
+              this->m_connections[j].begin(),
+              this->m_connections[j].end(),
+              back_insert_iterator<vector<VID> >(intersection));
+          if(!(intersection.empty()))
+            numQueries ++; 
+        }   
+      double pQueries = ((double)numQueries) / 
+        ((double)(this->m_connections.size()*(this->m_connections.size()-1))/2.0);
+      //cout << "% Queries Solved: " << pQueries << endl;
+      return pQueries;
+    }
+};
+
+template <class CFG, class WEIGHT>
+class ConnectivityEvaluation : public CoverageEvaluation<CFG, WEIGHT> 
+{
+  public:
+    ConnectivityEvaluation(vector<CFG>& _s, double _t, vector<string> _nodeConnection, bool _computeAllCCs = true)
+      : CoverageEvaluation<CFG, WEIGHT>(_s, _t, _nodeConnection, _computeAllCCs) {
+        this->SetName("ConnectivityEvaluator");
+      }
+
+    ConnectivityEvaluation(XMLNodeReader& _node, MPProblem* _problem, bool _defaultAllData = true)
+      : CoverageEvaluation<CFG, WEIGHT>(_node, _problem, _defaultAllData) {
+        this->SetName("ConnectivityEvaluator");
+      }
+
+    virtual ~ConnectivityEvaluation(){} 
+
+    virtual bool operator()(){
+      return operator()(this->GetMPProblem()->CreateMPRegion());
+    }
+
+    virtual bool operator()(int _regionID){
+      ConnectivityMetric<CFG, WEIGHT> connectivity(this->m_samples, this->m_allData);
+      return (connectivity(_regionID, this->GetMPProblem(), this->m_nodeConnectionLabels) >= this->m_threshold);
+    }
 };
 
 #endif

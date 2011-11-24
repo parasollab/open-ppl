@@ -4,12 +4,13 @@
 #include "boost/shared_ptr.hpp"
 using boost::shared_ptr;
 
-#include "MapEvaluator/MapEvaluationMethod.h"
-#include "MapEvaluator/MPRegionComparerMethod.h"
-#include "MapEvaluator/TestEvaluation.h"
-#include "MapEvaluator/QueryEvaluation.h"
-#include "MapEvaluator/PrintMapEvaluation.h"
-
+#include "MapEvaluationMethod.h"
+#include "MPRegionComparerMethod.h"
+#include "TestEvaluation.h"
+#include "QueryEvaluation.h"
+#include "PrintMapEvaluation.h"
+#include "CoverageEvaluation.h"
+#include "ConnectivityEvaluation.h"
 
 template <class CFG, class WEIGHT>
 class MapEvaluator : public MPBaseObject 
@@ -73,6 +74,10 @@ class MapEvaluator : public MPBaseObject
         m_conditional_evaluators.push_back(conditional_type(new PrintMapEvaluation(*citr, in_pProblem))); 
       else if (citr->getName() == "TrueEvaluation")
          m_conditional_evaluators.push_back(conditional_type(new TrueEvaluation(*citr, in_pProblem)));
+      else if (citr->getName() == "CoverageEvaluation")
+        m_conditional_evaluators.push_back(conditional_type(new CoverageEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
+      else if (citr->getName() == "ConnectivityEvaluation")
+        m_conditional_evaluators.push_back(conditional_type(new ConnectivityEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
       else
         citr->warnUnknownNode();
     }

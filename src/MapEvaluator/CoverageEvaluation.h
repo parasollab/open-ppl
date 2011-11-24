@@ -3,78 +3,156 @@
 
 /////////////////////////
 // evaluate the coverage of a given roadmap
-#include "NodeGeneratorMethod.h"
+#include "MapEvaluationMethod.h"
 
-template <class CFG, class WEIGHT> 
-class CoverageEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
- public:
-  double m_threshold;
-  vector<CFG> samples;
-  vector<vector<VID> > connections;
-  ConnectMap<CFG,WEIGHT>* cm;
-  LocalPlanners<CFG,WEIGHT>* lp;
-  CollisionDetection* cd;
-  DistanceMetric* dm;
-  bool all_data;
+template<class CFG, class WEIGHT>
+class CoverageMetric
+{
+  public:
+    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
-  CoverageEvaluation() {}
+    CoverageMetric(vector<CFG> _s = vector<CFG>(), bool _computeAllCCs = false): 
+      m_samples(_s), m_allData(_computeAllCCs){}
+    virtual ~CoverageMetric(){}
 
-  CoverageEvaluation(double t, ConnectMap<CFG,WEIGHT>* CM,
-                     LocalPlanners<CFG,WEIGHT>* LP,
-                     CollisionDetection* CD,
-                     DistanceMetric* DM,
-                     vector<CFG>& S) :
-    m_threshold(t), cm(CM), lp(LP), cd(CD), dm(DM), samples(S) {
-    all_data = false;
-  }
+    virtual double operator()(int _regionID, MPProblem* _mp, vector<string>& _nodeConnectionLabels){
+      Roadmap<CFG, WEIGHT>* rmap = _mp->GetMPRegion(_regionID)->GetRoadmap();
+      RoadmapGraph<CFG,WEIGHT>* pMap = rmap->m_pRoadmap;
+      ConnectMap<CFG, WEIGHT>* cm = _mp->GetMPStrategy()->GetConnectMap();
 
-  virtual bool evaluate(Roadmap<CFG,WEIGHT>* rmap) {
-    RoadmapGraph<CFG,WEIGHT>* pMap = rmap->m_pRoadmap;
-    //VID backupVID = pMap->getVertIDs();
+      //VID backupVID = rmap->m_pRoadmap->getVertIDs();
 
-    connections = vector<vector<VID> >(samples.size());
+      m_connections = vector<vector<VID> >(m_samples.size());
 
-    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
-    vector<pair<size_t,VID> > ccs;
-    vector<pair<size_t,VID> >::iterator CC;
-    get_cc_stats(*pMap,cmap, ccs);
+      stapl::vector_property_map< RoadmapGraph<CFG, WEIGHT>,size_t > cmap;
+      vector<pair<size_t,VID> > ccs;
+      typename vector<pair<size_t,VID> >::iterator CC;
+      get_cc_stats(*pMap, cmap, ccs);
 
-    vector<VID> samplelist, cc;
-    Stat_Class Stats;
-    for(int i=0; i<samples.size(); ++i) {
-      VID sampleVID = pMap->AddVertex(samples[i]);
-      samplelist.clear();
-      samplelist.push_back(sampleVID);
+      vector<VID> sampleList, cc;
+      Stat_Class Stats;
+      for(size_t i=0; i<m_samples.size(); ++i) {
+        VID sampleVID = rmap->m_pRoadmap->AddVertex(m_samples[i]);
+        sampleList.clear();
+        sampleList.push_back(sampleVID);
 
-      for(CC = ccs.begin(); CC != ccs.end(); ++CC) {
-        cc.clear();
-	cmap.reset();
-        get_cc(*pMap, cmap, CC->second, cc);
+        for(CC = ccs.begin(); CC != ccs.end(); ++CC) {
+          cc.clear();
+          cmap.reset();
+          get_cc(*pMap, cmap, CC->second, cc);
 
-        int degree_before = pMap->GetVertexOutDegree(sampleVID);
+          size_t degreeBefore = pMap->get_out_degree(sampleVID);
 
-        cm->ConnectNodes(rmap, Stats, cd,  dm,  lp, false, false,
-                         samplelist, cc);
-        
-        if(pMap->GetVertexOutDegree(sampleVID) > degree_before) {
-          connections[i].push_back(CC->second);
-          if(!all_data) 
-            break;
+          for(vector<string>::iterator I = _nodeConnectionLabels.begin(); I != _nodeConnectionLabels.end(); ++I){
+            typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer connectionMethod = cm->GetNodeMethod(*I);
+            cm->ConnectNodes(connectionMethod,
+                rmap, Stats, false,
+                false, sampleList.begin(),
+                sampleList.end(),
+                cc.begin(), cc.end());
+          }
+
+          if(pMap->get_out_degree(sampleVID)
+              > degreeBefore){
+            m_connections[i].push_back(CC->second);
+            if(!m_allData)
+              break;
+          }
         }
+
+        rmap->m_pRoadmap->delete_vertex(sampleVID);
       }
-      
-      pMap->DeleteVertex(sampleVID);
+
+      //rmap->m_pRoadmap->setVertIDs(backupVID); 
+
+      int numConnections = 0;
+      for(size_t i=0; i<m_connections.size(); ++i){
+        if(!(m_connections[i].empty()))
+          numConnections++;
+      }
+      //cout << "Connection %: "<<((double)numConnections)/((double)m_connections.size())<<endl;
+      return ((double)numConnections)/((double)m_connections.size());
     }
 
-    //pMap->setVertIDs(backupVID); 
+  protected:
+    //input
+    vector<CFG> m_samples;
+    bool m_allData;
 
-    int num_connections = 0;
-    for(int i=0; i<connections.size(); ++i)
-      if(!(connections[i].empty()))
-        num_connections++;
-    cout << "Connection %: " << ((double)num_connections)/((double)connections.size()) << endl;
-    return (((double)num_connections)/((double)connections.size()) >= m_threshold);
-  }
+    //storage
+    vector<vector<VID> > m_connections;
+};
+
+
+template <class CFG, class WEIGHT> 
+class CoverageEvaluation : public MapEvaluationMethod {
+  public:
+
+    CoverageEvaluation(vector<CFG>& _s, double _t, vector<string> _nodeConnection, bool _computeAllCCs = false) 
+      : m_samples(_s), m_threshold(_t), m_nodeConnectionLabels(_nodeConnection), m_allData(_computeAllCCs){
+        this->SetName("CoverageEvaluator");
+      }
+
+    CoverageEvaluation(XMLNodeReader& _node, MPProblem* _problem, bool _defaultAllData = false)
+      : MapEvaluationMethod(_node, _problem) {
+        this->SetName("CoverageEvaluator");
+
+        m_threshold = _node.numberXMLParameter("threshold", false, 0.8, 0.0, 1.0, "percentage coverage required to pass evaluation");
+
+        m_filename = _node.stringXMLParameter("samples", true, "", "filename containing witness samples");
+        //read in samples
+        m_samples.clear();
+        ifstream is(m_filename.c_str());
+        copy(istream_iterator<CFG>(is), istream_iterator<CFG>(), back_insert_iterator<vector<CFG> >(m_samples));
+        is.close();
+
+        m_allData = _node.boolXMLParameter("compute_all_ccs", false, _defaultAllData, 
+            "flag when set to true computes coverage to all ccs, not just the first connectable cc");
+
+        m_nodeConnectionLabels.clear();
+        for(XMLNodeReader::childiterator I = _node.children_begin(); I != _node.children_end(); ++I)
+        {
+          if(I->getName() == "node_connection_method"){
+            m_nodeConnectionLabels.push_back(I->stringXMLParameter("Method", true, "", "connection method label"));
+            I->warnUnrequestedAttributes();
+          }
+          else{
+            I->warnUnknownNode();
+            exit(-1);
+          }
+        }
+        if(m_nodeConnectionLabels.empty()){
+          //instead, would be nice to read labels from the strategy in which it is used... fix later
+          cerr << "CoverageEvaluation::ParseXML(): you must specify at least one node connection method for this evaluator.\n";
+          exit(-1);
+        }
+      }
+
+    virtual void PrintOptions(ostream& _os){
+      _os << this->GetName() << "::\n";
+      _os << "\twitness samples from \"" << m_filename << "\"\n";
+      _os << "\tthreshold = " << m_threshold << endl;
+      _os << "\tall_data = " << m_allData << endl;
+      _os << "\tnode_connection_labels = ";  copy(m_nodeConnectionLabels.begin(),
+          m_nodeConnectionLabels.end(), ostream_iterator<string>(_os, " "));  _os << endl;
+    }
+
+    virtual bool operator() (){
+      return operator()(this->GetMPProblem()->CreateMPRegion());
+    }
+
+    virtual bool operator() (int _regionID) {
+      CoverageMetric<CFG, WEIGHT> coverage(m_samples, m_allData);
+      return (coverage(_regionID, GetMPProblem(), m_nodeConnectionLabels) >= m_threshold);
+    }
+
+  protected:
+    //input
+    vector<CFG> m_samples;
+    double m_threshold;
+    vector<string> m_nodeConnectionLabels;
+    bool m_allData;
+    string m_filename;
 };
 
 #endif
