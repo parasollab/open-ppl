@@ -90,7 +90,7 @@ void BasicRRTStrategy::Run(int _regionID) {
   LPOutput<CfgType,WeightType> lpOutput;
   CDInfo cdInfo;
   string callee = "BasicRRTStrategy::RRT";
-  bool checkCollision=false, savePath=false, saveFailed=false, mapPassed=false;
+  bool checkCollision=false, savePath=false, saveFailed=false;
 
   m_strategyClock.StartClock("RRT Generation");
 
