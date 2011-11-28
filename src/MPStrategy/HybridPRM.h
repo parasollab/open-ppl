@@ -5,7 +5,7 @@
 #include "MPStrategyMethod.h"
 #include "MPProblem.h"
 #include "Roadmap.h"
-#include "Stat_Class.h"
+#include "Clock_Class.h"
 
 
 struct Visibility

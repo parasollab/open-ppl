@@ -11,8 +11,8 @@
 #include "Roadmap.h"
 #include "Environment.h"
 #include "MultiBody.h"
-#include "Stat_Class.h"
-#include "util.h"
+#include "MetricUtils.h"
+#include "MPUtils.h"
 #include "ValidityChecker.hpp"
 class DistanceMetricMethod;
 template <class CFG, class WEIGHT> struct LPOutput;

@@ -1,10 +1,10 @@
 #ifndef _MPREGIONCOMPARERMETHOD_H_
 #define _MPREGIONCOMPARERMETHOD_H_
 
-#include "util.h"
+#include "MPUtils.h"
 class MPProblem;
 #include "Roadmap.h"
-#include "Stat_Class.h"
+#include "MetricUtils.h"
 #include "LocalPlanners.h"
 #include "MPStrategy.h"
 

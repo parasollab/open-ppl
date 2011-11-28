@@ -217,7 +217,6 @@ PMPL_OBJS = \
 	Utilities/util.o \
 	Utilities/Clock_Class.o \
 	Utilities/Clock_Elapsed.o \
-	Utilities/Stat_Class.o \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
         Utilities/MPUtils.o \

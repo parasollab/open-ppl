@@ -20,7 +20,7 @@
 #include "Environment.h"
 #include "DistanceMetrics.h"
 #include "CollisionDetection.h"
-#include "Stat_Class.h"
+#include "MetricUtils.h"
 #include "util.h"
 #include "ValidityChecker.hpp"
 #include "CfgTypes.h"

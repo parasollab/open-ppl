@@ -4,7 +4,6 @@
 #include "Roadmap.h"
 #include "MPProblem/RoadmapGraph.h" //for VID typedef
 #include "Clock_Class.h"
-#include "Stat_Class.h"
 #include "CollisionDetection.h"
 #include "ValidityChecker.hpp"
 #include "ConnectMap.h"

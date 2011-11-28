@@ -25,7 +25,6 @@
 #include "Roadmap.h"
 
 #include "Clock_Class.h"
-#include "Stat_Class.h"
 #include "CollisionDetection.h"
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
@@ -33,9 +32,6 @@
 #include "GenerateMapNodes.h"
 
 #include "GeneratePartitions.h"
-
-/* util.h defines PMPL_EXIT used in initializing the environment*/
-#include "util.h"
 
 
 #include "MPRegion.h"

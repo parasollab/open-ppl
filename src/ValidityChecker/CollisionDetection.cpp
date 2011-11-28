@@ -17,9 +17,8 @@
 //#include "GenerateMapNodes.h"
 //#include "ConnectMap.h"
 #include <string>
-#include "util.h"
 #include "Transformation.h"
-#include "Stat_Class.h"
+#include "MetricUtils.h"
 #include "ValidityChecker.hpp"
 #include "MPProblem.h"
 

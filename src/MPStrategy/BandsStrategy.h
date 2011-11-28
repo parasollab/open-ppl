@@ -9,7 +9,7 @@
 #include "MPProblem.h"
 #include "Roadmap.h"
 #include "Clock_Class.h"
-#include "Stat_Class.h"
+#include "MetricUtils.h"
 #include "ConnectMap.h"
 #include "DistanceMetricMethod.h"
 #include "LocalPlanners.h"
@@ -361,9 +361,9 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         stat_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices() - 2
         << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
         << "\t" << pStatClass->Connections_Attempted << "\t" << double(pStatClass->Connections_Made) / double(pStatClass->Connections_Attempted)
-        << "\t" << pStatClass->IsCollByName["straightline-straightline::IsConnectedSLBinary"]
-        << "\t" << elappsed_ng << "\t" <<  pStatClass->IsCollTotal -
-                                pStatClass->IsCollByName["straightline-straightline::IsConnectedSLBinary"]
+        << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
+        << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
+                                pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
         << "\t" << ellapsed_con
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()- 2)
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
@@ -387,9 +387,9 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 	total_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2 
         << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
         << "\t" << pStatClass->Connections_Attempted << "\t" << double(pStatClass->Connections_Made) / double(pStatClass->Connections_Attempted)
-        << "\t" << pStatClass->IsCollByName["straightline-straightline::IsConnectedSLBinary"]
-        << "\t" << elappsed_ng << "\t" <<  pStatClass->IsCollTotal -
-                                pStatClass->IsCollByName["straightline-straightline::IsConnectedSLBinary"]
+        << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
+        << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
+                                pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
         << "\t" << ellapsed_con
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
 //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)

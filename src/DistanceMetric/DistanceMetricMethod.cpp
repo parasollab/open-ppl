@@ -1,8 +1,8 @@
 #include "DistanceMetricMethod.h"
 #include "Cfg.h"
 #include "Environment.h"
+#include "MetricUtils.h"
 #include "MPProblem.h"
-#include "Stat_Class.h"
 #include "CollisionDetection.h"
 #include "LocalPlanners.h"
 

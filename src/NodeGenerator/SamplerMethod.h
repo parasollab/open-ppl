@@ -1,10 +1,9 @@
 #ifndef SamplerMethod_h
 #define SamplerMethod_h
 
-#include "util.h"
 #include <string>
 #include <iostream>
-#include "Stat_Class.h"
+#include "MetricUtils.h"
 #include "CfgTypes.h"
 #ifdef _PARALLEL
 #include "runtime.h"

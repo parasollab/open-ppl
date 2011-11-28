@@ -10,7 +10,6 @@
 #ifndef BasicRRTStrategy_h
 #define BasicRRTStrategy_h
 
-#include "Stat_Class.h"
 #include "IOUtils.h"
 #include "CfgTypes.h"
 #include "MPStrategyMethod.h"

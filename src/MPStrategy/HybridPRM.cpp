@@ -4,6 +4,7 @@
 #include "Sampler.h"
 #include "ConnectMap.h"
 #include "MapEvaluator.h"
+#include "MetricUtils.h"
 
 #include "boost/lambda/lambda.hpp"
 

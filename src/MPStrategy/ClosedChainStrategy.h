@@ -3,7 +3,7 @@
 
 #include "MPStrategy/MPStrategy.h"
 #include "MPProblem/ClosedChainProblem.h"
-#include "Stat_Class.h"
+#include "MetricUtils.h"
 #include "CollisionDetection.h"
 
 
