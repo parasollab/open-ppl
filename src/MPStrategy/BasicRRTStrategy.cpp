@@ -168,11 +168,7 @@ void BasicRRTStrategy::Run(int _regionID) {
     double positionRes    = env->GetPositionRes();
     double orientationRes = env->GetOrientationRes();
     CfgType col;
-    if (newCfg.InBoundingBox(env)
-        && vc->IsValid(vc->GetVCMethod(m_vc), newCfg, env, *regionStats, cdInfo, true, &callee)
-        && (dm->Distance(env, newCfg, nearest) >= m_minDist)
-        && lp->GetLocalPlannerMethod(m_lp)->IsConnected(env, *regionStats, dm, nearest, newCfg, col, &lpOutput,
-          positionRes, orientationRes, checkCollision, savePath, saveFailed)) {
+    if(dm->Distance(env, newCfg, nearest) >= m_minDist) {
       region->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
       region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, lpOutput.edge);
     } 
