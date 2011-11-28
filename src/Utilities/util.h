@@ -51,24 +51,6 @@ class Environment;
   */
 double DirectedAngularDistance(double a,double b);
 
-#ifndef _H_UTILITY
-///Return minimun between a and b.
-inline double min(double a, double b){
-    return a < b ? a : b;
-}
-
-///Return maximun between a and b.
-inline double max(double a, double b){
-    return a > b ? a : b;
-}
-
-/// Return the square of a.
-inline double sqr(double a)
-{
-    return a*a;
-}
-#endif
-
 double GaussianDistribution(double m, double s);
 
 //@}

@@ -1,6 +1,6 @@
 #include "MPUtils.h"
 #include "Clock_Class.h"
-#include "Stat_Class.h"
+#include "MetricUtils.h"
 #include "ValidityChecker.hpp"
 #include "MPStrategy/MPStrategyMethod.h"
 #include "MPProblem/MPProblem.h"
