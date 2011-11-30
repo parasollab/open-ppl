@@ -380,7 +380,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
       vector<VID> verticesList(1, gvid);
       
       for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
-        cn->ConnectNodes(*itr, rdmp, Stats, //lp, 
+        cn->ConnectNodes(*itr, rdmp, Stats,  
                          false, false, 
                         verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
@@ -388,28 +388,22 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stat
     
 
     connected = false;
-    //vector<pair<CFG,WEIGHT> > rp;
     vector<VID> _rp;
     cmap.reset();
     while(is_same_cc(*(rdmp->m_pRoadmap), cmap, svid, gvid)) {
       //get DSSP path
-      //rp.clear();
       _rp.clear();
       cmap.reset();
-      //FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, rp);
-      //FindPathDijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, WEIGHT::MaxWeight()); // inside this function, edge_property vs double
       find_path_dijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, WEIGHT::MaxWeight()); 
       //cout << "FindPathDijkstra:: size of vector<VID>" << _rp.size() << endl ;
-      
 
-      cout << "\nStart(" << size_t(_rp[1]) //rdmp->m_pRoadmap->GetVID(rp[1].first)
-	   << ") and Goal(" << size_t(_rp[_rp.size()-2]) //rdmp->m_pRoadmap->GetVID(rp[rp.size()-2].first)
+      cout << "\nStart(" << size_t(_rp[1]) 
+	   << ") and Goal(" << size_t(_rp[_rp.size()-2]) 
 	   << ") seem connected to same CC[" << distance(ccsBegin, CC)+1 
 	   << "]!" << endl;
     
       //attempt to recreate path
       vector<CFG> recreatedPath;
-      //if(CanRecreatePath(rdmp, rp, Stats, lp, dm, recreatedPath)) {
       if(CanRecreatePath(rdmp, _rp, Stats, lp, 
                          _lp_label, dm, recreatedPath)) {
 	connected = true;
@@ -448,11 +442,11 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
                 string _lp_label,
                 shared_ptr< DistanceMetricMethod> dm,
                 vector<CFG>& recreatedPath) {
-  LPOutput<CFG,WEIGHT> ci;
 
   recreatedPath.push_back((*(rdmp->m_pRoadmap->find_vertex( *(attemptedPath.begin()) ))).property());
   for(typename vector<VID>::iterator I = attemptedPath.begin();
       (I+1) != attemptedPath.end(); ++I) {
+    LPOutput<CFG,WEIGHT> ci;
     typename RoadmapGraph<CFG, WEIGHT>::vertex_iterator vi;
     typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei;
     typename RoadmapGraph<CFG, WEIGHT>::edge_descriptor ed((*(rdmp->m_pRoadmap->find_vertex(*I))).descriptor(),(*(rdmp->m_pRoadmap->find_vertex(*(I+1) ))).descriptor());
@@ -463,7 +457,6 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
                      (*(rdmp->m_pRoadmap->find_vertex(*(I+1) ))).property(), 
                      &ci, rdmp->GetEnvironment()->GetPositionRes(),
                      rdmp->GetEnvironment()->GetOrientationRes(),true, true))) {
-      //rdmp->m_pRoadmap->DeleteEdge(I->first, (I+1)->first);
       rdmp->m_pRoadmap->delete_edge(*I, *(I+1));
       return false;
     } else {
@@ -475,38 +468,6 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
   return true;
 }
 
-//original func
-/*
-template <class CFG, class WEIGHT>
-bool 
-Query<CFG, WEIGHT>::
-CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, 
-		vector<pair<CFG,WEIGHT> >& attemptedPath, 
-		Stat_Class& Stats, 
-		LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric* dm, 
-		vector<CFG>& recreatedPath) {
-  LPOutput<CFG,WEIGHT> ci;
-
-  recreatedPath.push_back(attemptedPath.begin()->first);
-  for(typename vector<pair<CFG,WEIGHT> >::iterator I = attemptedPath.begin(); 
-      (I+1) != attemptedPath.end(); ++I) {
-    if(!(lp->GetPathSegment(rdmp->GetEnvironment(), Stats, dm,
-			    I->first, (I+1)->first, I->second, &ci,
-			    rdmp->GetEnvironment()->GetPositionRes(),
-			    rdmp->GetEnvironment()->GetOrientationRes(),
-			    true, true))) {
-      //rdmp->m_pRoadmap->DeleteEdge(I->first, (I+1)->first);
-      rdmp->m_pRoadmap->delete_edge(rdmp->m_pRoadmap->GetVID(I->first), rdmp->m_pRoadmap->GetVID((I+1)->first));
-      return false;
-    } else {
-      recreatedPath.insert(recreatedPath.end(), 
-			   ci.path.begin(), ci.path.end());
-      recreatedPath.push_back((I+1)->first);
-    } 
-  }
-  return true;
-}
-*/
 //===================================================================
 // Query class Methods: Display, Input, Output
 //===================================================================
