@@ -2,7 +2,7 @@
 #define MedialAxisSamplers_h
 
 #include "SamplerMethod.h"
-#include "MedialAxisUtility.h"
+#include "MPUtils.h"
 #include <sstream>
 
 class Environment;

@@ -1,7 +1,6 @@
 #ifndef FEATURES_H_
 #define FEATURES_H_
 
-#include "util.h"
 #include "MPFeature.h"
 
 class Features: public MPBaseObject{

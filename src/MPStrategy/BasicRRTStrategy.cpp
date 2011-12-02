@@ -72,7 +72,7 @@ void BasicRRTStrategy::PrintOptions(ostream& _os) {
 
 void BasicRRTStrategy::Initialize(int _regionID){
   if(m_debug) cout<<"\nInitializing BasicRRTStrategy::"<<_regionID<<endl;
-  OBPRM_srand(getSeed()); 
+  SRand(getSeed()); 
   if(m_debug) cout<<"\nEnding Initializing BasicRRTStrategy"<<endl;
 }
 
@@ -129,14 +129,14 @@ void BasicRRTStrategy::Run(int _regionID) {
   while(!mapPassedEvaluation){
     // Determine direction, make sure goal not found
     tmp.GetRandomCfg(env);
-    double randomRatio = OBPRM_drand();
+    double randomRatio = DRand();
     bool usingQueue = false;
     int goalNum = 0;
 
     if (goals.size() == 0)
       goalNum = -1;
     else if(goals.size()>1);
-      goalNum = OBPRM_lrand()%goals.size();
+      goalNum = LRand()%goals.size();
     if (goals.size()>0 && randomRatio<m_growthFocus) {
       if ( found[goalNum] ) {
         for (size_t i=0; i<found.size(); i++) {

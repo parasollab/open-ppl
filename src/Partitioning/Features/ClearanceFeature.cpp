@@ -4,7 +4,7 @@
 #include "CfgTypes.h"
 #include "MPRegion.h"
 #include "ValidityChecker.hpp"
-#include "MedialAxisUtility.h"
+#include "MPUtils.h"
 
 ClearanceFeature::ClearanceFeature():MPFeature(){}
 

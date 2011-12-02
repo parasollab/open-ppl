@@ -5,7 +5,6 @@
 //#include <math.h>
 
 #include "MPStrategyMethod.h"
-#include "util.h"
 #include "Roadmap.h"
 #include "MPProblem.h"
 

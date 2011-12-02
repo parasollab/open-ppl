@@ -15,9 +15,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include standard headers
-#ifdef HPUX
-#include <sys/io.h>
-#endif
 #ifdef _PARALLEL
 #include "views/proxy.h"
 #endif 
@@ -28,14 +25,7 @@
 //Include mathtool vec
 #include "Vector.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////
-//Include OBPRM headers
-#include "BasicDefns.h"
-
-
-
 #include "boost/shared_ptr.hpp"
-//#include "boost/serialization/vector.hpp"
 #include "boost/serialization/map.hpp"
 using boost::shared_ptr;
 

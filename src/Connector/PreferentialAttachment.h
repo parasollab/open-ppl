@@ -318,7 +318,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     KClosestClock.StartClock("kClosest");
     while (attempts < min(m_k, n-1)) {
       for (size_t i = 0; i < n-1; i++) {
-        double drand = OBPRM_drand();
+        double drand = DRand();
         double prob = pref_prob(_rm, input_vertices[i], n);
         if (m_debug) cout << "attempts = " << attempts << ", drand = " << drand << ", prob = " << prob << endl;
         if (drand < prob) {

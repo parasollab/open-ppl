@@ -5,7 +5,6 @@
 
 #include "MPStrategyMethod.h"
 #include "ExpanderStats.h"
-#include "util.h"
 #include "MPProblem.h"
 #include "Roadmap.h"
 #include "Clock_Class.h"
@@ -126,7 +125,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
   
   virtual void ParseXML(XMLNodeReader& in_Node) {
     cout << "BandsIncrementalRoadmap::ParseXML()" << endl;
-    //OBPRM_srand(getSeed());
+    //SRand(getSeed());
     XMLNodeReader::childiterator citr;
     for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
       if(citr->getName() == "node_generation_method") {
@@ -194,7 +193,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
   virtual void Initialize(int in_RegionID){}
   virtual void Run(int in_RegionID){
 
-    OBPRM_srand(getSeed()); 
+    SRand(getSeed()); 
     MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
     Stat_Class * pStatClass = region->GetStatClass();
     

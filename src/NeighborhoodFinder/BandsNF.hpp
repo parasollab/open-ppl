@@ -2,7 +2,6 @@
 #define _BANDS_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "util.h"
 #include "MPProblem.h"
 
 #include <vector>
@@ -110,7 +109,7 @@ public:
       bool done = false;
       while (!done) {
         
-        int id = (int)(OBPRM_lrand()%(_candidates_last - _candidates_first));
+        int id = (int)(LRand()%(_candidates_last - _candidates_first));
         p = *(_candidates_first + id);
 
         VID v = p.first;        
@@ -157,7 +156,7 @@ public:
     while (found < max_iter) {
       // iterate through candidate set, adding as neighbor with probability = pref_prob(_rmp, v, n)
       for (VEC_ITR itr = _candidates_first; itr != _candidates_last; ++itr) {
-        double drand = OBPRM_drand();
+        double drand = DRand();
         pair<VID, double> p = *itr;
         VID v = p.first;
         double prob = pref_prob(_rmp, v, _candidates_last - _candidates_first, set_degree);
@@ -244,7 +243,7 @@ public:
       bool done = false;
       while (!done) {
         
-        int id = (int)(OBPRM_lrand()%(_candidates_last - _candidates_first));
+        int id = (int)(LRand()%(_candidates_last - _candidates_first));
         p = *(_candidates_first + id);
         
         // check to see if this VID has been added
@@ -256,7 +255,7 @@ public:
         if (done == true) {
           // if it hasn't been added, add it with some probability
           double prob = pow((max_rank - id) / (max_rank), m_alpha);
-          double roll = OBPRM_drand();
+          double roll = DRand();
 
           // if we are taking less than K (every neighbor in the candidate set), set prob to 1
           if (max_iter < getK()) {
@@ -316,7 +315,7 @@ public:
       bool done = false;
       while (!done) {
         
-        int id = (int)(OBPRM_lrand()%(_candidates_last - _candidates_first));
+        int id = (int)(LRand()%(_candidates_last - _candidates_first));
         p = *(_candidates_first + id);
         
         // check to see if this VID has been added
@@ -328,7 +327,7 @@ public:
         if (done == true) {
           // if it hasn't been added, add it with some probability
           double prob = pow((max_dist - p.second) / (max_dist - min_dist), m_alpha);
-          double roll = OBPRM_drand();
+          double roll = DRand();
           
           // if we are taking less than K (every neighbor in the candidate set), set prob to 1
           if (max_iter < getK()) {

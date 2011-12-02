@@ -9,14 +9,8 @@
 #include "CollisionDetection.h"
 #include "ConnectMap.h"
 #include "LocalPlanners.h"
-
 #include "Sampler.h"
-
-
-
-#include "util.h"
 #include "MPProblem.h"
-
 #include "MPStrategy/MPStrategyMethod.h"
 #include "runtime.h"
 #include "runtime/counter/default_counters.h"
@@ -24,9 +18,7 @@
 #include "p_array.h"
 #include "views/view_base.hpp"
 #include "views/balance_view.hpp"
-
 #include "RoadmapGraph.h"
-
 #include "pContainers/pgraph/view/p_graph_view.h"
 #include "views/native_partition.hpp"
 #include "views/replicated_view.hpp"
@@ -217,7 +209,7 @@ class ParallelPRMRoadmap : public MPStrategyMethod {
 	
 	virtual void Run(int in_RegionID) {
 		LOG_DEBUG_MSG("ParallelPRMRoadmap::Run()");
-		OBPRM_srand(getSeed()); 
+		SRand(getSeed()); 
 		region = GetMPProblem()->GetMPRegion(in_RegionID);
 		pStatClass = region->GetStatClass();
 		CollisionDetection *  pCd = GetMPProblem()->GetCollisionDetection();

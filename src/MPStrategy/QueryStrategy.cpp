@@ -81,7 +81,7 @@ Run(int in_RegionID)
 
   PrintOptions(cout);
 
-  OBPRM_srand(getSeed()); 
+  SRand(getSeed()); 
   
   Roadmap<CfgType,WeightType>* rdmp = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
   Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();

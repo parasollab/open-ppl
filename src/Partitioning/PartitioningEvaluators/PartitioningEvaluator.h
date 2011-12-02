@@ -1,7 +1,6 @@
 #ifndef PARTITIONEVALUATOR_H_
 #define PARTITIONEVALUATOR_H_
 
-#include "util.h"
 #include "Partition.h"
 
 class PartitioningEvaluator : public MPBaseObject{

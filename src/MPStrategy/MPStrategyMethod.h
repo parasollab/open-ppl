@@ -2,7 +2,6 @@
 #define MPStrategyMethod_h
 
 #include <sys/time.h>
-#include "util.h"
 #include "Clock_Class.h"
 #include "CfgTypes.h"
 #include "MPProblem/RoadmapGraph.h" //for VID typedef

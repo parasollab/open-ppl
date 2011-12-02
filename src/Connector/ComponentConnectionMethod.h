@@ -1,6 +1,5 @@
 #ifndef ComponentConnectionMethod_h
 #define ComponentConnectionMethod_h
-#include "util.h"
 #include "RoadmapGraph.h"
 
 // Abstract Interface Class for node connection methods

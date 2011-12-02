@@ -15,7 +15,7 @@ public:
   typedef typename vector<typename ValidityChecker<CFG>::VCMethodPtr>::iterator InputIterator;
   
   NegateValidity() { }
-  NegateValidity(string label, vector<typename ValidityChecker<CFG>::VCMethodPtr> vec, Compose_Negate<InputIterator, ComposeFunctor<CFG> > _com_neg);
+  NegateValidity(string label, vector<typename ValidityChecker<CFG>::VCMethodPtr> vec, ComposeNegate<InputIterator, ComposeFunctor<CFG> > _com_neg);
   NegateValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem);   
   ~NegateValidity() { }
   
@@ -26,12 +26,12 @@ public:
 private:
   string m_vcLabel;
   vector<typename ValidityChecker<CFG>::VCMethodPtr> m_vec_vcMethod;
-  Compose_Negate<InputIterator, ComposeFunctor<CFG> > com_neg;
+  ComposeNegate<InputIterator, ComposeFunctor<CFG> > com_neg;
 };
 
 template<typename CFG>
 NegateValidity<CFG>::
-NegateValidity(string label, std::vector<typename ValidityChecker<CFG>::VCMethodPtr> vec, Compose_Negate<InputIterator, ComposeFunctor<CFG> > _com_neg) : m_vcLabel(label), m_vec_vcMethod(vec), com_neg(_com_neg) {}
+NegateValidity(string label, std::vector<typename ValidityChecker<CFG>::VCMethodPtr> vec, ComposeNegate<InputIterator, ComposeFunctor<CFG> > _com_neg) : m_vcLabel(label), m_vec_vcMethod(vec), com_neg(_com_neg) {}
 
 
 

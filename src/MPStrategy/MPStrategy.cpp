@@ -233,7 +233,7 @@ operator()(int in_RegionID) {
 void 
 MPComparer::
 operator()(int in_RegionID_1, int in_RegionID_2) { 
-  OBPRM_srand(getSeed()); 
+  SRand(getSeed()); 
   #ifndef _PARALLEL
   // mapping region 1
   MPStrategyMethod* input1 = GetMPProblem()->GetMPStrategy()->

@@ -143,7 +143,7 @@ Run(int in_RegionID)
    int  max_attempts=1000;
    int len; 
    char buff[5000];
-   OBPRM_srand(getSeed()); 
+   SRand(getSeed()); 
    len=type_name.copy(buff,100);
    buff[len]='\0';
    char names[3][5000]={"PROTEIN_ENERGY","MAX_CLEARANCE",""};

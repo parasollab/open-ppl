@@ -1,7 +1,6 @@
 #ifndef _PARTITIONMETHOD_H
 #define _PARTITIONMETHOD_H
 
-#include "util.h"
 #include "Roadmap.h"
 #include "CfgTypes.h"
 

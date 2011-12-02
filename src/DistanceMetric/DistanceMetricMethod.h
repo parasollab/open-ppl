@@ -6,7 +6,6 @@
 #include "Clock_Class.h"
 #include "CfgTypes.h"
 #include <boost/mpl/list.hpp>
-#include "PMPL_Element_Set.h"
 using namespace std;
 
 template <class CFG, class WEIGHT> class LocalPlanners;
@@ -30,7 +29,7 @@ class DistanceMetricMethod  : public MPBaseObject {
   DistanceMetricMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true);
   virtual ~DistanceMetricMethod();
 
-  typedef element_set<LocalPlannerMethod<CfgType,WeightType> >::method_pointer LocalPlannerPointer;
+  typedef ElementSet<LocalPlannerMethod<CfgType,WeightType> >::MethodPointer LocalPlannerPointer;
 
   string GetName() const {return name;}
   virtual void SetDefault() = 0;

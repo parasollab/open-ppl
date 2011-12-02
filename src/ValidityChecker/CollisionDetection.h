@@ -31,7 +31,7 @@
 //Include OBPRM headers
 #include "DistanceMetricMethod.h"
 #include "Cfg.h"
-#include "util.h"
+#include "MPUtils.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -480,7 +480,7 @@ InitializePenetration(double times, int nCfgs, Environment* env,
   CFG* tmp;
   for(int i=0; i < nCfgs; i++) {
     tmp = new CFG;
-    tmp->GetRandomCfg(env, dm, penetration*OBPRM_drand());
+    tmp->GetRandomCfg(env, dm, penetration*DRand());
     directions.push_back(tmp);
     cout <<"Added Cfg\n"<<flush;
   }

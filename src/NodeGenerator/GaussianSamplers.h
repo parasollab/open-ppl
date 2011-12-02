@@ -2,7 +2,6 @@
 #define GaussianSamplers_h
 
 #include "SamplerMethod.h"
-#include "util.h"
 
 template <typename CFG>
 class GaussianSampler : public SamplerMethod<CFG>

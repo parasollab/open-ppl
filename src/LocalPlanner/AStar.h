@@ -9,7 +9,7 @@
 #define ASTAR_H_
 
 #include "LocalPlannerMethod.h"
-#include "MedialAxisUtility.h"
+#include "MPUtils.h"
 
 template <class CFG, class WEIGHT>
 class AStar: public LocalPlannerMethod<CFG, WEIGHT> {

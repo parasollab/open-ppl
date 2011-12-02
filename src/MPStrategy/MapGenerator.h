@@ -84,7 +84,7 @@ MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
 /*
  Set NextNodeIndex for each method we already used
  Set RNGseed for rmap
- Seed RNG using RNGseed, call OBPRM_srand()
+ Seed RNG using RNGseed, call SRand()
  Update current command line 
  Backup the old map
 */
@@ -134,11 +134,11 @@ SetupFromMap(Input* input, Roadmap<CFG, WEIGHT>* rmap)
     
     //update data member in rmap
     rmap->SetRNGseed(RNGseed);
-    //reset seed for OBPRM_srand
+    //reset seed for SRand
     if(RNGseed == INVALID_RNGSEED)
-      OBPRM_srand(); //seed RNG using the default value
+      SRand(); //seed RNG using the default value
     else
-      OBPRM_srand(RNGseed); //seed RNG using this seed
+      SRand(RNGseed); //seed RNG using this seed
 
     //set NextNodeIndex for each method used in the existing map
     vector<std::string> gens;  //including "-gNodes"
@@ -324,7 +324,7 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	nextNodeIndex += chunkSize;
 	
 	(*itr)->numNodes.PutValue (chunkSize);
-        OBPRM_srand((*itr)->GetName(), (*itr)->GetNextNodeIndex());
+        SRand((*itr)->GetName(), (*itr)->GetNextNodeIndex());
 	
 	genClock.StartClock(genClockName);
 	(*itr)->GenerateNodes(rmap->GetEnvironment(), Stats, cd, dm, sub_nodes);  //this is the original GenerateNodes function

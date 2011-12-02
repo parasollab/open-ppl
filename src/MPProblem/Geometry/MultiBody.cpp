@@ -16,7 +16,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 #include "MultiBody.h"
 #include "Transformation.h"
-#include "util.h"
 #include <numeric>
 
 #define MAXCONTACT  10

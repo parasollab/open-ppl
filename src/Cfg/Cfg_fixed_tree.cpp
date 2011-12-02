@@ -19,7 +19,6 @@
 
 #include "MultiBody.h"
 #include "Environment.h"
-#include "util.h"
 #include "DistanceMetricMethod.h"
 #include "MPProblem.h"
 #include "ValidityChecker.hpp"
@@ -129,7 +128,7 @@ void Cfg_fixed_tree::GetRandomCfg(double R, double rStep){
   v.clear();
   
   for(int i=0; i<NumofJoints; i++) {
-    double jointAngle = (2.0*rStep)*OBPRM_drand() - rStep;
+    double jointAngle = (2.0*rStep)*DRand() - rStep;
     v.push_back(jointAngle);
   }
   
@@ -148,7 +147,7 @@ void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<Dist
   //randomly sample params
   v.clear();
   for(int i=0; i<DOF(); ++i)
-    v.push_back( double(2.0)*OBPRM_drand() - double(1.0) );
+    v.push_back( double(2.0)*DRand() - double(1.0) );
   
   //scale to appropriate length
   Cfg_fixed_tree origin;
@@ -167,7 +166,7 @@ void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<Dist
   v.clear();
   
   for(int i=0; i<NumofJoints; i++)
-    v.push_back(OBPRM_drand()*incr); //was multiplied by DefaultRange, probably an error
+    v.push_back(DRand()*incr); //was multiplied by DefaultRange, probably an error
 }
 */
 

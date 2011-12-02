@@ -2,7 +2,7 @@
 #define NegateSampler_h
 
 #include "SamplerMethod.h"
-#include "MPProblemAccess.h"
+#include "MPUtils.h"
 
 template <typename CFG> class ValidityChecker;
 

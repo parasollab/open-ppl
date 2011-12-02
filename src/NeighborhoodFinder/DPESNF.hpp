@@ -2,7 +2,6 @@
 #define _DPES_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "util.h"
 #include "MPProblem.h"
 #include "DPES.h"
 

@@ -2,11 +2,10 @@
 #define LOCALPLANNERS_H_
 
 #include <boost/mpl/list.hpp>
-#include "PMPL_Element_Set.h"
+#include "MPUtils.h"
 #include "CollisionDetection.h"
 #include "ValidityChecker.hpp"
 #include "Weight.h"
-#include "util.h"
 #include "LocalPlannerMethod.h"
 
 #include "StraightLine.h"
@@ -42,37 +41,37 @@ namespace pmpl_detail {
 
 template <class CFG, class WEIGHT>
 #ifdef _PARALLEL
-class LocalPlanners : private element_set<LocalPlannerMethod<CFG,WEIGHT> >, public MPBaseObject, public stapl::p_object {
+class LocalPlanners : private ElementSet<LocalPlannerMethod<CFG,WEIGHT> >, public MPBaseObject, public stapl::p_object {
 #else
-class LocalPlanners : private element_set<LocalPlannerMethod<CFG,WEIGHT> >, public MPBaseObject {
+class LocalPlanners : private ElementSet<LocalPlannerMethod<CFG,WEIGHT> >, public MPBaseObject {
 #endif
  public:
-	typedef typename element_set<LocalPlannerMethod<CFG,WEIGHT> >::method_pointer LocalPlannerPointer;
+	typedef typename ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::MethodPointer LocalPlannerPointer;
 
   template <typename MethodList>
-	LocalPlanners() : element_set<LocalPlannerMethod<CFG,WEIGHT> >(MethodList()) {}
-	LocalPlanners() : element_set<LocalPlannerMethod<CFG,WEIGHT> >(pmpl_detail::LocalPlannerMethodList()) {}
+	LocalPlanners() : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(MethodList()) {}
+	LocalPlanners() : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(pmpl_detail::LocalPlannerMethodList()) {}
   virtual ~LocalPlanners() {};
 
   template <typename MethodList>
   LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&)
-  : element_set<LocalPlannerMethod<CFG,WEIGHT> >(MethodList()), MPBaseObject(in_pProblem) {
+  : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(MethodList()), MPBaseObject(in_pProblem) {
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
-      if(!element_set<LocalPlannerMethod<CFG,WEIGHT> >::add_element(citr->getName(), *citr, in_pProblem))
+      if(!ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::AddElement(citr->getName(), *citr, in_pProblem))
         citr->warnUnknownNode();
     PrintOptions(cout);
   }
 
   LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem)
-  : element_set<LocalPlannerMethod<CFG,WEIGHT> >(pmpl_detail::LocalPlannerMethodList()), MPBaseObject(in_pProblem) {
+  : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(pmpl_detail::LocalPlannerMethodList()), MPBaseObject(in_pProblem) {
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
-      if(!element_set<LocalPlannerMethod<CFG,WEIGHT> >::add_element(citr->getName(), *citr, in_pProblem))
+      if(!ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::AddElement(citr->getName(), *citr, in_pProblem))
         citr->warnUnknownNode();
     PrintOptions(cout);
   }
 
   LocalPlannerPointer GetLocalPlannerMethod(string in_strLabel) {
-    LocalPlannerPointer to_return = element_set<LocalPlannerMethod<CFG,WEIGHT> >::get_element(in_strLabel);
+    LocalPlannerPointer to_return = ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::GetElement(in_strLabel);
       if ( to_return.get() == NULL ) {
         cout << "LocalPlanners::GetLocalPlannerMethod::ERROR: could not find " << in_strLabel << endl;
         exit(-1);
@@ -81,13 +80,13 @@ class LocalPlanners : private element_set<LocalPlannerMethod<CFG,WEIGHT> >, publ
   }
 
   void AddLocalPlannerMethod(string in_strLabel, LocalPlannerPointer in_ptr) {
-    element_set<LocalPlannerMethod<CFG,WEIGHT> >::add_element(in_strLabel, in_ptr);
+    ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::AddElement(in_strLabel, in_ptr);
   }
 
   virtual void PrintOptions(ostream& out_os) { 
     out_os << "  Local Planners" << endl;
-    for ( typename std::map<string,shared_ptr<LocalPlannerMethod<CFG,WEIGHT> > >::const_iterator M = this->elements_begin(); 
-          M != this->elements_end(); 
+    for ( typename std::map<string,shared_ptr<LocalPlannerMethod<CFG,WEIGHT> > >::const_iterator M = this->ElementsBegin(); 
+          M != this->ElementsEnd(); 
           ++M )
       out_os <<"\t\"" << M->first << "\" (" << M->second->GetName() << ")" << endl;
   }

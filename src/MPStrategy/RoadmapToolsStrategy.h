@@ -14,8 +14,6 @@
 
 //#include "ExplicitInstantiation.h"
 
-/* util.h defines PMPL_EXIT used in initializing the environment*/
-#include "util.h"
 #include "MPProblem.h"
 #include "MPCharacterizer.h"
 
@@ -54,7 +52,7 @@ class RoadmapInput : public MPStrategyMethod {
    
    virtual void Initialize(int in_RegionID){}
    virtual void Run(int in_RegionID){
-      OBPRM_srand(getSeed()); 
+      SRand(getSeed()); 
     }
    virtual void Finalize(int in_RegionID){}
 
@@ -81,7 +79,7 @@ class RoadmapClear : public MPStrategyMethod {
    virtual void Initialize(int in_RegionID){}
    virtual void Run(int in_RegionID){
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-      OBPRM_srand(getSeed()); 
+      SRand(getSeed()); 
       region->GetRoadmap()->m_pRoadmap->clear();
       region->GetStatClass()->ClearStats();
     }

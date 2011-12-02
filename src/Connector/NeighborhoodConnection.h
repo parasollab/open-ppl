@@ -660,7 +660,7 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
     for (int i = ids.size(); i < k && i<(_itr2_last-_itr2_first); i++) {
       int id = 0;
       do {
-        id = (int)(OBPRM_lrand()%(_itr2_last - _itr2_first));
+        id = (int)(LRand()%(_itr2_last - _itr2_first));
       } while (ids.find(id) != ids.end());
       ids.insert(id);
 

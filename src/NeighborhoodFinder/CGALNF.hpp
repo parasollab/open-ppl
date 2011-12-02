@@ -7,7 +7,6 @@
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "util.h"
 #include "MPProblem.h"
 
 #include <vector>

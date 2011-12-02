@@ -16,7 +16,6 @@
 
 #include "MultiBody.h"
 #include "Environment.h"
-#include "util.h"
 #include "DistanceMetricMethod.h"
 #include "MPProblem.h"
 #include "ValidityChecker.hpp"
@@ -143,15 +142,15 @@ bool Cfg_free::ConfigEnvironment(Environment* env) const {
 void Cfg_free::GetRandomCfg(double R, double rStep) {
   double alpha, beta, z, z1;
   
-  alpha = 2.0*M_PI*OBPRM_drand();
-  beta  = 2.0*M_PI*OBPRM_drand();
+  alpha = 2.0*M_PI*DRand();
+  beta  = 2.0*M_PI*DRand();
   z = R*cos(beta);
   z1 = R*sin(beta);
   
   double roll, pitch, yaw;
-  roll = (2.0*rStep)*OBPRM_drand() - rStep;
-  pitch = (2.0*rStep)*OBPRM_drand() - rStep;
-  yaw = (2.0*rStep)*OBPRM_drand() - rStep;
+  roll = (2.0*rStep)*DRand() - rStep;
+  pitch = (2.0*rStep)*DRand() - rStep;
+  yaw = (2.0*rStep)*DRand() - rStep;
   
   v.clear();
   v.push_back(z1*cos(alpha));
@@ -176,30 +175,13 @@ void Cfg_free::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMe
   //randomly sample params
   v.clear();
   for(int i=0; i<DOF(); ++i)
-    v.push_back( double(2.0)*OBPRM_drand() - double(1.0) );
+    v.push_back(2.0*DRand()-1.0);
 
   //scale to appropriate length
   Cfg_free origin;
   dm->ScaleCfg(env, incr, origin, *this);
 
   Normalize_orientation();
-
-  /*
-  double alpha, beta, z, z1;
-  
-  alpha = 2.0*M_PI*OBPRM_drand();
-  beta  = 2.0*M_PI*OBPRM_drand();
-  z = incr*cos(beta);
-  z1 = incr*sin(beta);
-  
-  v.clear();
-  v.push_back(z1*cos(alpha));
-  v.push_back(z1*sin(alpha));
-  v.push_back(z);
-  v.push_back(0.0);
-  v.push_back(0.0);
-  v.push_back(0.0);
-  */
 
   obst = -1;
   tag = -1;
@@ -243,8 +225,8 @@ void Cfg_free::GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment* env, Stat_C
   int num = 0;
   
   while(num < nCfgs) {
-    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.polygonList.size());
-    int obstTriIndex = (int)(OBPRM_drand()*polyObst.polygonList.size());
+    int robotTriIndex = (int)(DRand()*polyRobot.polygonList.size());
+    int obstTriIndex = (int)(DRand()*polyObst.polygonList.size());
   
     vector<Cfg*> tmp;  
     GetCfgByOverlappingNormal(mp, env, Stats, vc_method, polyRobot, polyObst,
@@ -327,12 +309,12 @@ void Cfg_free::GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_C
     // find a point on robot's facet and one on obstacle's facet(one of the triangles).
     
     // points on edge.
-    double ran1 = OBPRM_drand();
-    double ran2 = OBPRM_drand();
+    double ran1 = DRand();
+    double ran2 = DRand();
     //random interpolation between two random points (vertices) (robot)
-    robotPoint = robotVertex[OBPRM_lrand()%3]*ran1 + robotVertex[OBPRM_lrand()%3]*(1.-ran1);
+    robotPoint = robotVertex[LRand()%3]*ran1 + robotVertex[LRand()%3]*(1.-ran1);
     //random interpolation between two random points (vertices) (obstacle)
-    obstPoint = obstVertex[OBPRM_lrand()%3]*ran2 + obstVertex[OBPRM_lrand()%3]*(1.-ran2);
+    obstPoint = obstVertex[LRand()%3]*ran2 + obstVertex[LRand()%3]*(1.-ran2);
     
     ///I can't see what's goning on next???
     Vector3D robotCMS = obstPoint - ( orient * robotPoint);
@@ -424,7 +406,7 @@ bool Cfg_free::InNarrowPassage(MPProblem* mp, Environment* env, Stat_Class& Stat
   }
   
   double THROWpercentage = 0.5; // (0.5:walls) (0.97:alpha) (1.0:flange)
-  if(narrowpassageWeight < 2  && OBPRM_drand() < THROWpercentage)
+  if(narrowpassageWeight < 2  && DRand() < THROWpercentage)
     return false; // throw most of No-inside-narrow nodes away.
   return true;
 }

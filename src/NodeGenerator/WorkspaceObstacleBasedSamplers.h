@@ -63,7 +63,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
       polyhedron = mBody->GetBody(0)->GetPolyhedron();
     else           
       polyhedron = mBody->GetBody(0)->GetWorldPolyhedron();
-    Vector3D x =polyhedron.vertexList[(int)(OBPRM_drand()*polyhedron.vertexList.size())];
+    Vector3D x =polyhedron.vertexList[(int)(DRand()*polyhedron.vertexList.size())];
  
     CFG tmp;
     for(int i=0;i<3;i++)
@@ -80,11 +80,11 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
     u = q - p;
     v = r - p;
  
-    double s = OBPRM_drand(); 
-    double t = OBPRM_drand();
+    double s = DRand(); 
+    double t = DRand();
     while(s + t > 1)
     {
-      t = OBPRM_drand();
+      t = DRand();
     }
     return (p + u*s + v*t);
   }
@@ -99,7 +99,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
     double area;
     area = mBody->GetBody(0)->GetPolyhedron().area;
  
-    double targetArea = area * OBPRM_drand();
+    double targetArea = area * DRand();
  
     int index, i;
     double sum;
@@ -139,7 +139,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
       polyhedron = mBody->GetBody(0)->GetPolyhedron();
     else 
       polyhedron = mBody->GetBody(0)->GetWorldPolyhedron();
-    GMSPolygon *poly = &polyhedron.polygonList[(int)(OBPRM_drand()*polyhedron.polygonList.size())];
+    GMSPolygon *poly = &polyhedron.polygonList[(int)(DRand()*polyhedron.polygonList.size())];
     Vector3D p, q, r;
     p = polyhedron.vertexList[poly->vertexList[0]];
     q = polyhedron.vertexList[poly->vertexList[1]];
@@ -195,7 +195,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
     }
   
     // Choose an extreme random vertex at random
-    int index = OBPRM_lrand() % 6;
+    int index = LRand() % 6;
     Vector3D x= polyhedron.vertexList[indexVert[index]];
     CFG tmp;
     for(int i=0;i<3;i++)
@@ -212,7 +212,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
    int obstacleIndex;
    do
    {
-     obstacleIndex=OBPRM_lrand() % N;   
+     obstacleIndex=LRand() % N;   
    } while(obstacleIndex==roboindex);
    return env->GetMultiBody(obstacleIndex);// choose a multiBody randomly
  }
@@ -235,7 +235,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
       temp  = ChooseExtremeVertex(mBody,isFreeBody);
     else if(pointSelection.compare("cM_rV")==0 )
     { 
-      int opt = OBPRM_lrand() % 2;
+      int opt = LRand() % 2;
       if(opt == 0)
         temp  = ChooseCenterOfMass(mBody);
       else 
@@ -243,7 +243,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
     }
     else if(pointSelection.compare("rV_rT")==0 )
     {
-      int opt = OBPRM_lrand() % 2;
+      int opt = LRand() % 2;
       if(opt == 0)
         temp  = ChooseRandomTriangle(mBody,isFreeBody);
       else 
@@ -251,7 +251,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
     }
     else if(pointSelection.compare("rV_rW")==0 )
     {
-      int opt = OBPRM_lrand() % 2;
+      int opt = LRand() % 2;
       if(opt == 0)
         temp  = ChooseRandomVertex(mBody,isFreeBody);
       else
@@ -259,7 +259,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
     }
     else if(pointSelection.compare("all")==0 )
     {
-      int opt = OBPRM_lrand() % 5;
+      int opt = LRand() % 5;
       if(opt == 0)
         temp  = ChooseCenterOfMass(mBody);
       else if(opt == 1)

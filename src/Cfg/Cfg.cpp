@@ -15,23 +15,17 @@
 
 /////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
+#include "CfgTypes.h"
 #include "Cfg.h"
 #include "MultiBody.h"
 #include "Environment.h"
 #include "DistanceMetrics.h"
 #include "CollisionDetection.h"
 #include "MetricUtils.h"
-#include "util.h"
 #include "ValidityChecker.hpp"
-#include "CfgTypes.h"
 #include "MPProblem.h"
-#include "MedialAxisUtility.h"
-
-//class Cfg_free;
-//typedef Cfg_free CfgType;
 
 int Cfg::NumofJoints;
-
 
 #ifdef COLLISIONCFG
 extern  vector < vector < vector <  double > > > CollisionConfiguration;
@@ -830,7 +824,7 @@ void Cfg::GetRandomRayPos(double incr, Environment* env) {
   v.clear();
   for(int i=0; i<DOF(); ++i)
     if (i < posDOF()) {
-      v.push_back( 2.0*OBPRM_drand() - 1.0 );
+      v.push_back( 2.0*DRand() - 1.0 );
       dist += pow(v[i],2);
     } else v.push_back( 0.0 );
   this->multiply(*this,length/sqrt(dist));

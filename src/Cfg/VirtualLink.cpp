@@ -1,7 +1,7 @@
 #include "math.h"
 #include <iostream> 
-#include "util.h"
 #include "VirtualLink.h"
+#include "MPUtils.h"
 
 // #define XINYU_DEBUG 1
 
@@ -109,7 +109,7 @@ double Link::SampleLength(bool bSampleConvex, double gama)
     return -1;
   }
   
-  SetLength(availableRange.min + (availableRange.max - availableRange.min)*OBPRM_drand());
+  SetLength(availableRange.min + (availableRange.max - availableRange.min)*DRand());
 #ifdef XINYU_DEBUG
   cout << "length:" << length << endl;
 #endif
@@ -118,7 +118,7 @@ double Link::SampleLength(bool bSampleConvex, double gama)
   {
     //Later on convexity will be added to familyInfo (actually LoopInfo)
     //and the convexity not only depends on links, but also depends on which loop we are looking at
-    double dSample = OBPRM_drand(); //todoInfo
+    double dSample = DRand(); //todoInfo
     convexity = dSample < gama ? 1: -1; //todoInfo
   }
   

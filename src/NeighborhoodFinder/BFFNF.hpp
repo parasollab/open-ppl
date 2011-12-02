@@ -2,7 +2,6 @@
 #define _BRUTE_FORCE_FIND_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.hpp"
-#include "util.h"
 #include "DistanceMetrics.h"
 
 #include <vector>

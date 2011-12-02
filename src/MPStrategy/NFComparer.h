@@ -4,7 +4,6 @@
 //#include<sys/time.h>
 
 #include "MPStrategyMethod.h"
-#include "util.h"
 #include "Clock_Class.h"
 #include "LocalPlanners.h"
 #include "MPProblem.h"
@@ -105,7 +104,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
          interval = 100;
          queries=2;
          outfile="outfile.unionstats";
-         //OBPRM_srand(getSeed());
+         //SRand(getSeed());
          //_____change error messages
          outfile = in_Node.stringXMLParameter(string("outfile"), true, string(""),string("Node Union Method"));
          interval = in_Node.numberXMLParameter(string("interval"), true, 100, 1, 1000000, string("Same CC Printout Interval"));
@@ -809,7 +808,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
 
       virtual void ParseXML(XMLNodeReader& in_Node) {
          cout << "NFIncrementalRoadmap::ParseXML()" << endl;
-         //OBPRM_srand(getSeed());
+         //SRand(getSeed());
          XMLNodeReader::childiterator citr;
          for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
             if(citr->getName() == "node_generation_method") {
@@ -872,7 +871,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       virtual void Run(int in_RegionID){
          cout << "NFIncrementalRoadmap::()" << endl;
 
-         OBPRM_srand(getSeed()); 
+         SRand(getSeed()); 
          MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
          Stat_Class * pStatClass = region->GetStatClass();
 
@@ -1191,7 +1190,7 @@ class NFTester : public MPStrategyMethod {
       virtual void PrintOptions(ostream& out_os) { };
 
       virtual void ParseXML(XMLNodeReader& in_Node) {
-         //OBPRM_srand(getSeed());
+         //SRand(getSeed());
          XMLNodeReader::childiterator citr;
          for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
             if(citr->getName() == "node_generation_method") {
@@ -1219,7 +1218,7 @@ class NFTester : public MPStrategyMethod {
 
       virtual void Initialize(int in_RegionID){}
       virtual void Run(int in_RegionID){
-         OBPRM_srand(getSeed()); 
+         SRand(getSeed()); 
          MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
          NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
          Stat_Class * pStatClass = region->GetStatClass();

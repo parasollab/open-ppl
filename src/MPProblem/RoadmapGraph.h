@@ -33,7 +33,7 @@
 #include "GraphAlgo.h"
 #endif
 
-#include "BasicDefns.h"
+#include "MPUtils.h"
 #include "Weight.h"
 #include "IOUtils.h"
 

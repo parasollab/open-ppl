@@ -5,7 +5,6 @@
 
 #include "Roadmap.h"
 #include "Clock_Class.h"
-#include "util.h"
 
 #include <sstream>
 
@@ -36,8 +35,6 @@
 #include "MPRegion.h"
 //class MPRegion;
 #include "MPProblem.h"
-#include "util.h"
-#include "PMPL_Container_Base.h"
 
 // region connection methods
 //#include "RegionConnectionMethod.h"
@@ -60,20 +57,20 @@ namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail names
 //#############################################################################
 // A collection of component connection methods
 template <class CFG, class WEIGHT>
-class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>, 
+class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>, 
                     pmpl_detail::NodeConnectorMethodList>, 
-              public PMPL_Container_Base< ComponentConnectionMethod<CFG,WEIGHT>, 
+              public ContainerBase< ComponentConnectionMethod<CFG,WEIGHT>, 
                     pmpl_detail::ComponentConnectorMethodList >, 
               public MPBaseObject{
   private:
-  typedef PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>, 
+  typedef ContainerBase< NodeConnectionMethod<CFG,WEIGHT>, 
        pmpl_detail::NodeConnectorMethodList> NodeConnectionContainer;
-  typedef PMPL_Container_Base< ComponentConnectionMethod<CFG,WEIGHT>, 
+  typedef ContainerBase< ComponentConnectionMethod<CFG,WEIGHT>, 
        pmpl_detail::ComponentConnectorMethodList > ComponentConnectionContainer;
  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   public:
-    typedef typename NodeConnectionContainer::method_pointer NodeConnectionPointer;
-    typedef typename ComponentConnectionContainer::method_pointer ComponentConnectionPointer;
+    typedef typename NodeConnectionContainer::MethodPointer NodeConnectionPointer;
+    typedef typename ComponentConnectionContainer::MethodPointer ComponentConnectionPointer;
 
   
 
@@ -159,8 +156,8 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
     _ConnectNodes(selected, _rm, Stats,
                   addPartialEdge,addAllEdges,
                    _itr1_first, _itr1_last, collision,
-                   typename NodeConnectionContainer::MethodTypes_begin(), 
-                   typename NodeConnectionContainer::MethodTypes_end());
+                   typename NodeConnectionContainer::MethodTypesBegin(), 
+                   typename NodeConnectionContainer::MethodTypesEnd());
   }
 
   template<typename InputIterator>
@@ -184,8 +181,8 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
     _ConnectNodes(selected, _rm, Stats,
                   addPartialEdge,addAllEdges,
                    _itr1_first, _itr1_last, _itr2_first, _itr2_last, collision,
-                   typename NodeConnectionContainer::MethodTypes_begin(), 
-                   typename NodeConnectionContainer::MethodTypes_end());
+                   typename NodeConnectionContainer::MethodTypesBegin(), 
+                   typename NodeConnectionContainer::MethodTypesEnd());
   }
  
   template<typename InputIterator>
@@ -210,8 +207,8 @@ class ConnectMap : public PMPL_Container_Base< NodeConnectionMethod<CFG,WEIGHT>,
     _pConnectNodes(selected, _rm, Stats,
                    addPartialEdge,addAllEdges,
                    _itr1_first, _itr1_last, _itr2_first, _itr2_last, collision,
-                   typename NodeConnectionContainer::MethodTypes_begin(), 
-                   typename NodeConnectionContainer::MethodTypes_end());
+                   typename NodeConnectionContainer::MethodTypesBegin(), 
+                   typename NodeConnectionContainer::MethodTypesEnd());
   }
 
   template<typename InputIterator1, typename InputIterator2>
@@ -312,8 +309,8 @@ public:
     //cout << "ConnectMap::ConnectComponents() - Roadmap only" << endl;
     _ConnectComponents(selected, rm, Stats,
                        addPartialEdge, addAllEdges, collision,
-                       typename ComponentConnectionContainer::MethodTypes_begin(),
-                       typename ComponentConnectionContainer::MethodTypes_end());
+                       typename ComponentConnectionContainer::MethodTypesBegin(),
+                       typename ComponentConnectionContainer::MethodTypesEnd());
   }
 
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
@@ -332,8 +329,8 @@ public:
     //cout << "ConnectMap::ConnectComponents()" << endl;
     _ConnectComponents(selected, rm, Stats, addPartialEdge, addAllEdges,
                        _itr1_first, _itr1_last, collision,
-                       typename ComponentConnectionContainer::MethodTypes_begin(),
-                       typename ComponentConnectionContainer::MethodTypes_end());
+                       typename ComponentConnectionContainer::MethodTypesBegin(),
+                       typename ComponentConnectionContainer::MethodTypesEnd());
   }
 
   template<typename InputIterator>
@@ -356,8 +353,8 @@ public:
     //cout << "ConnectMap::ConnectComponents()" << endl;
     _ConnectComponents(selected, rm, Stats, addPartialEdge, addAllEdges,
                        _itr1_first, _itr1_last, _itr2_first, _itr2_last, collision,
-                       typename ComponentConnectionContainer::MethodTypes_begin(),
-                       typename ComponentConnectionContainer::MethodTypes_end());
+                       typename ComponentConnectionContainer::MethodTypesBegin(),
+                       typename ComponentConnectionContainer::MethodTypesEnd());
   }
  
   template<typename InputIterator>

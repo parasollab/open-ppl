@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "DistanceMetricMethod.h"
-#include "util.h"
+#include "MPUtils.h"
 #include "Clock_Class.h"
 #include "BFNF.hpp"
 #include "BFFNF.hpp"
@@ -25,7 +25,6 @@
 #include "MTNF.hpp"
 #include "BandsNF.hpp" 
 //#include "DMNF.hpp"
-#include "PMPL_Container_Base.h"
 #include "CfgTypes.h"
 
 #include <functional>
@@ -50,15 +49,15 @@ namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail names
   *and selected.  all contains all of the different types of distance 
   *metric methods.  selected contains only those selected by the user.
   */
-class NeighborhoodFinder : private PMPL_Container_Base< NeighborhoodFinderMethod, 
+class NeighborhoodFinder : private ContainerBase< NeighborhoodFinderMethod, 
                     pmpl_detail::NeighborhoodFinderMethodList>, public MPBaseObject {
 
   
 private:
-  typedef PMPL_Container_Base< NeighborhoodFinderMethod, pmpl_detail::NeighborhoodFinderMethodList> NeighborhoodFinderContainer;
+  typedef ContainerBase< NeighborhoodFinderMethod, pmpl_detail::NeighborhoodFinderMethodList> NeighborhoodFinderContainer;
     
   public:
-    typedef NeighborhoodFinderContainer::method_pointer NeighborhoodFinderPointer;
+    typedef NeighborhoodFinderContainer::MethodPointer NeighborhoodFinderPointer;
     
 
   public:
@@ -151,8 +150,8 @@ private:
     InputIterator _input_first, InputIterator _input_last, VID _v, int _k,
     OutputIterator _out) {
     return _KClosest(_nf, _rmp, _input_first, _input_last, _v, _k, _out,
-        typename NeighborhoodFinderContainer::MethodTypes_begin(),
-        typename NeighborhoodFinderContainer::MethodTypes_end());
+        typename NeighborhoodFinderContainer::MethodTypesBegin(),
+        typename NeighborhoodFinderContainer::MethodTypesEnd());
   }
   
   template <typename InputIterator, typename OutputIterator, typename CFG, typename WEIGHT>
@@ -162,8 +161,8 @@ private:
     OutputIterator _out) {
     //cout << "NeighborhoodFinder::KClosest - 1 set of InputIterators & CFG" << endl;
     return _KClosest(_nf, _rmp, _input_first, _input_last, _cfg, _k, _out,
-        typename NeighborhoodFinderContainer::MethodTypes_begin(),
-        typename NeighborhoodFinderContainer::MethodTypes_end());
+        typename NeighborhoodFinderContainer::MethodTypesBegin(),
+        typename NeighborhoodFinderContainer::MethodTypesEnd());
 
   }
   //@}
@@ -178,8 +177,8 @@ private:
   KClosest( NeighborhoodFinderPointer _nf, Roadmap<CFG,WEIGHT>* _rmp, 
     VID _v, int _k, OutputIterator _out) {
 		return _KClosest(_nf, _rmp, _v, _k, _out,
-        typename NeighborhoodFinderContainer::MethodTypes_begin(),
-        typename NeighborhoodFinderContainer::MethodTypes_end());
+        typename NeighborhoodFinderContainer::MethodTypesBegin(),
+        typename NeighborhoodFinderContainer::MethodTypesEnd());
 	}
   
   template <typename OutputIterator, typename CFG, typename WEIGHT>
@@ -187,8 +186,8 @@ private:
   KClosest( NeighborhoodFinderPointer _nf, Roadmap<CFG,WEIGHT>* _rmp, 
     CFG _cfg, int _k, OutputIterator _out) {
 		return _KClosest(_nf, _rmp, _cfg, _k, _out,
-        typename NeighborhoodFinderContainer::MethodTypes_begin(),
-        typename NeighborhoodFinderContainer::MethodTypes_end());
+        typename NeighborhoodFinderContainer::MethodTypesBegin(),
+        typename NeighborhoodFinderContainer::MethodTypesEnd());
 	}
   //@}
 
@@ -203,8 +202,8 @@ private:
     InputIterator _in2_first, InputIterator _in2_last, 
     int k, OutputIterator _out) {
     return _KClosestPairs(_nf, _rmp, _in1_first, _in1_last, _in2_first, _in2_last, k, _out,
-        typename NeighborhoodFinderContainer::MethodTypes_begin(),
-        typename NeighborhoodFinderContainer::MethodTypes_end());
+        typename NeighborhoodFinderContainer::MethodTypesBegin(),
+        typename NeighborhoodFinderContainer::MethodTypesEnd());
   }
 
 /////////

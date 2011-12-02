@@ -15,30 +15,18 @@
 #define Sampler_h
 
 #include <boost/mpl/list.hpp>
-#include "PMPL_Element_Set.h"
-#include "CollisionDetection.h"
-#include "Clock_Class.h"
-#include "GMSPolyhedron.h"
+#include "MPUtils.h"
 #include "UniformSamplers.h"
 #include "MedialAxisSamplers.h"
 #include "GaussianSamplers.h"
 #include "ObstacleBasedSamplers.h"
 #include "WorkspaceObstacleBasedSamplers.h"
 #include "NegateSampler.h"
-#include "util.h"
 #include "CfgTypes.h"
-//#include <sstream>
 #include "SamplerMethod.h"
 
-
-class Body;
 class MPProblem;
-class n_str_param;
-class MultiBody;
-class Input;
 class Environment;
-template <class CFG, class WEIGHT> class Roadmap;
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -64,30 +52,30 @@ namespace pmpl_detail { //hide SamplerMethodList in pmpl_detail namespace
 
 
 template <class CFG>
-class Sampler : private element_set<SamplerMethod<CFG> >, public MPBaseObject
+class Sampler : private ElementSet<SamplerMethod<CFG> >, public MPBaseObject
 {			 
  public:
-  typedef typename element_set<SamplerMethod<CFG> >::method_pointer SamplerPointer;
+  typedef typename ElementSet<SamplerMethod<CFG> >::MethodPointer SamplerPointer;
   
   template <typename MethodList>
-  Sampler() : element_set<SamplerMethod<CFG> >(MethodList()) {}
+  Sampler() : ElementSet<SamplerMethod<CFG> >(MethodList()) {}
   
-  Sampler() : element_set<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()) {}    
+  Sampler() : ElementSet<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()) {}    
   
   template <typename MethodList>
   Sampler(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&)
-    : element_set<SamplerMethod<CFG> >(MethodList()), MPBaseObject(in_pProblem) 
+    : ElementSet<SamplerMethod<CFG> >(MethodList()), MPBaseObject(in_pProblem) 
   { 
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
-      if(!element_set<SamplerMethod<CFG> >::add_element(citr->getName(), *citr, in_pProblem))
+      if(!ElementSet<SamplerMethod<CFG> >::AddElement(citr->getName(), *citr, in_pProblem))
         citr->warnUnknownNode();
   }
 
   Sampler(XMLNodeReader& in_Node, MPProblem* in_pProblem)
-    : element_set<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()), MPBaseObject(in_pProblem) 
+    : ElementSet<SamplerMethod<CFG> >(pmpl_detail::SamplerMethodList()), MPBaseObject(in_pProblem) 
   { 
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-      if(!element_set<SamplerMethod<CFG> >::add_element(citr->getName(), *citr, in_pProblem))
+      if(!ElementSet<SamplerMethod<CFG> >::AddElement(citr->getName(), *citr, in_pProblem))
         citr->warnUnknownNode();
     }
   }
@@ -96,7 +84,7 @@ class Sampler : private element_set<SamplerMethod<CFG> >, public MPBaseObject
   
   SamplerPointer GetSamplingMethod(string in_strLabel) 
   {
-    SamplerPointer to_return = element_set<SamplerMethod<CFG> >::get_element(in_strLabel);
+    SamplerPointer to_return = ElementSet<SamplerMethod<CFG> >::GetElement(in_strLabel);
     if(to_return.get() == NULL) 
       exit(-1);
     return to_return;
@@ -104,7 +92,7 @@ class Sampler : private element_set<SamplerMethod<CFG> >, public MPBaseObject
 
   void AddSamplingMethod(string in_strLabel, SamplerPointer in_ptr) 
   {
-    element_set<SamplerMethod<CFG> >::add_element(in_strLabel, in_ptr);
+    ElementSet<SamplerMethod<CFG> >::AddElement(in_strLabel, in_ptr);
   }
   
   virtual void PrintOptions(ostream& out_os) { }

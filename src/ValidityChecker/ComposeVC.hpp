@@ -4,7 +4,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 #include "ValidityChecker.hpp"
 #include "ValidityCheckerMethod.hpp"
-#include "Compose.hpp"
+#include "MPUtils.h"
 #include "boost/bind.hpp"
 #include <vector>
 #include <string>

@@ -1,7 +1,6 @@
 #ifndef MPCharacterizer_h
 #define MPCharacterizer_h
 
-#include "util.h"
 class MPProblem;
 
 template<typename CFG,typename WEIGHT>

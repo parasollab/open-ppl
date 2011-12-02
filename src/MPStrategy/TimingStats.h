@@ -1,12 +1,8 @@
 #ifndef TimingStats
 #define TimingStats
 
-//#include<sys/time.h>
-//#include <math.h>
-
 #include "MPStrategyMethod.h"
 #include "Roadmap.h"
-#include "util.h"
 #include "MPProblem.h"
 
 class RTSContainer : public MPSMContainer {

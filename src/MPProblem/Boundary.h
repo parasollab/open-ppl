@@ -6,7 +6,6 @@
 #include "Vector.h"
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
-#include "BasicDefns.h"
 #include "MPUtils.h"
 
 ///\todo add MPBaseObject defautl constructor

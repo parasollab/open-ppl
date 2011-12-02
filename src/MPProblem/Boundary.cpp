@@ -1,6 +1,5 @@
 #include "Boundary.h"
 #include "MPProblem.h"
-#include "util.h"
 
 Boundary::Boundary() {
 /*     cout << "Boundary(). TODO ALL " << endl; */
@@ -294,26 +293,26 @@ GetRandomValueInParameter(int par) {
   double v;
   if (par < pos_dofs) {
     v = bounding_box[par].first + 
-      (bounding_box[par].second - bounding_box[par].first)*OBPRM_drand();
+      (bounding_box[par].second - bounding_box[par].first)*DRand();
   }
   else { // an orientation angle (not necessarily true for many robots)
     if( par > (int)bounding_box.size() ) { //when par is not valid
-      v = OBPRM_drand(); 
+      v = DRand(); 
     }
     else { // want something in range of orientation angles
       if (bounding_box[par].first < bounding_box[par].second) { // regularly
 	v = bounding_box[par].first + 
-	  (bounding_box[par].second - bounding_box[par].first)*OBPRM_drand();
+	  (bounding_box[par].second - bounding_box[par].first)*DRand();
       }
       else { // check the other way, the angle loops around 1
 	v = bounding_box[par].first + 
-	  (1-(bounding_box[par].first - bounding_box[par].second))*OBPRM_drand();
+	  (1-(bounding_box[par].first - bounding_box[par].second))*DRand();
 	if (v > 1) 
 	  v = v - 1;
 	else if (v < 0) 
-	  v = OBPRM_drand();
+	  v = DRand();
 	if (v > 1) // only possible if first not in the range of 0-1, wrong
-	  v = OBPRM_drand();
+	  v = DRand();
       }
     }      
   }

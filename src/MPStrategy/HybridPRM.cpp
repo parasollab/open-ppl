@@ -102,7 +102,7 @@ PrintOptions(ostream& out_os)
 void HybridPRM::Initialize(int in_RegionID){
    PrintOptions(cout);
 
-   OBPRM_srand(getSeed()); 
+   SRand(getSeed()); 
    //set up base_filename for output filese
   stringstream ssRandomSeed;
   ssRandomSeed << instanceNumber << ".";
@@ -483,7 +483,7 @@ select_next_sampling_method(bool learning)
   else 
   {
     //select sampler based on probability ranges
-    double random_num = OBPRM_drand();
+    double random_num = DRand();
     for(vector<string>::const_iterator NG = m_node_gen_labels.begin(); NG != m_node_gen_labels.end(); ++NG)
       if(map_pro_range[*NG].first < random_num && random_num < map_pro_range[*NG].second) 
       { //we have a winner

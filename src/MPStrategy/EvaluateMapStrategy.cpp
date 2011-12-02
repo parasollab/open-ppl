@@ -57,7 +57,7 @@ Run(int region_id)
 {
   PrintOptions(cout);
   
-  OBPRM_srand(getSeed()); 
+  SRand(getSeed()); 
 
   GetMPProblem()->GetMPRegion(region_id)->GetRoadmap()->ReadRoadmapGRAPHONLY(map_filename.c_str());
   

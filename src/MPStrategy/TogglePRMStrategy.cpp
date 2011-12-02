@@ -88,7 +88,7 @@ void TogglePRMStrategy::Initialize(int in_RegionID){
   cout<<"\nInitializing TogglePRMStrategy::"<<in_RegionID<<endl;
 
   //seed random number generator
-  OBPRM_srand(getSeed());
+  SRand(getSeed());
 
   cout<<"\nEnding Initializing TogglePRMStrategy"<<endl;
 }

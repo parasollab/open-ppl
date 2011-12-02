@@ -11,8 +11,7 @@
 #define DistanceMetrics_h
 
 #include "DistanceMetricMethod.h"
-#include "PMPL_Element_Set.h"
-#include "util.h"
+#include "MPUtils.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,31 +47,31 @@ namespace pmpl_detail { //hide DistanceMetricMethodList in pmpl_detail namespace
 }
 
 
-class DistanceMetric : private element_set<DistanceMetricMethod>, public MPBaseObject 
+class DistanceMetric : private ElementSet<DistanceMetricMethod>, public MPBaseObject 
 {
  public:
-  typedef element_set<DistanceMetricMethod>::method_pointer DistanceMetricPointer;
+  typedef MethodPointer DistanceMetricPointer;
 
  public:
 
   template<typename MethodList>
-  DistanceMetric() : element_set<DistanceMetricMethod>(MethodList()) {}
+  DistanceMetric() : ElementSet<DistanceMetricMethod>(MethodList()) {}
 
-  DistanceMetric() : element_set<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()) {}
+  DistanceMetric() : ElementSet<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()) {}
   
   template <typename MethodList>
   DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&, bool parse_xml = true)
-   : element_set<DistanceMetricMethod>(MethodList()), MPBaseObject(in_pProblem) 
+   : ElementSet<DistanceMetricMethod>(MethodList()), MPBaseObject(in_pProblem) 
   {
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
-      if(!element_set<DistanceMetricMethod>::add_element(citr->getName(), *citr, in_pProblem))
+      if(!AddElement(citr->getName(), *citr, in_pProblem))
         citr->warnUnknownNode();
   }
   DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true)
-   : element_set<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()), MPBaseObject(in_pProblem) 
+   : ElementSet<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()), MPBaseObject(in_pProblem) 
   {
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-      if(!element_set<DistanceMetricMethod>::add_element(citr->getName(), *citr, in_pProblem))
+      if(!AddElement(citr->getName(), *citr, in_pProblem))
         citr->warnUnknownNode();
     }
   }

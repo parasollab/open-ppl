@@ -17,7 +17,6 @@
 #include "Cfg_free.h"
 #include "MultiBody.h"
 #include "Environment.h"
-#include "util.h"
 #include "DistanceMetricMethod.h"
 #include "MPProblem.h"
 #include "ValidityChecker.hpp"
@@ -184,15 +183,15 @@ void Cfg_free_tree::GetRandomCfg(double R, double rStep){
   double alpha,beta,z, z1;
   double jointAngle;
   
-  alpha = 2.0*M_PI*OBPRM_drand();
-  beta  = 2.0*M_PI*OBPRM_drand();
+  alpha = 2.0*M_PI*DRand();
+  beta  = 2.0*M_PI*DRand();
   z = R*cos(beta);
   z1 = R*sin(beta);
 
   double roll, pitch, yaw;
-  roll = (2.0*rStep)*OBPRM_drand() - rStep;
-  pitch = (2.0*rStep)*OBPRM_drand() - rStep;
-  yaw = (2.0*rStep)*OBPRM_drand() - rStep;
+  roll = (2.0*rStep)*DRand() - rStep;
+  pitch = (2.0*rStep)*DRand() - rStep;
+  yaw = (2.0*rStep)*DRand() - rStep;
   
   Vector6D base(z1*cos(alpha),z1*sin(alpha),z,roll,pitch,yaw);
   
@@ -201,7 +200,7 @@ void Cfg_free_tree::GetRandomCfg(double R, double rStep){
   for( i=0; i<6; ++i)
     v.push_back(base[i]);
   for(i=0; i<NumofJoints; i++) {
-    jointAngle = (2.0*rStep)*OBPRM_drand() - rStep;
+    jointAngle = (2.0*rStep)*DRand() - rStep;
     // or: jointAngle = 0.0; I am not sure which is more reasonable now. Guang
     v.push_back(jointAngle);
   }
@@ -310,8 +309,8 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
   base->AddBody(env->GetMultiBody(robot)->GetFreeBody(0));
   
   while(num < nCfgs) {
-    int robotTriIndex = (int)(OBPRM_drand()*polyRobot.polygonList.size());
-    int obstTriIndex = (int)(OBPRM_drand()*polyObst.polygonList.size());
+    int robotTriIndex = (int)(DRand()*polyRobot.polygonList.size());
+    int obstTriIndex = (int)(DRand()*polyObst.polygonList.size());
     vector<Cfg*> tmp;
     GetCfgByOverlappingNormal(mp, env, Stats, vc_method, 
 			      polyRobot, polyObst, 
@@ -323,7 +322,7 @@ CDInfo& _cdInfo, vector<Cfg*>& surface){
       for(int j=0; j<SIZE; ++j) {
 	vector<double> serialData = basePose;  // for clearness, have basePose tmp variable.
 	for(int i=0; i<NumofJoints; ++i) {  // now add joint angles.
-	  serialData.push_back(OBPRM_drand());
+	  serialData.push_back(DRand());
 	}
 	Cfg* serial = this->CreateNewCfg(serialData);
 	if((mp->GetValidityChecker()->IsValid(mp->GetValidityChecker()->GetVCMethod(vc_method), *serial, env, Stats, _cdInfo, true, &Callee)) && serial->InBoundingBox(env)) {

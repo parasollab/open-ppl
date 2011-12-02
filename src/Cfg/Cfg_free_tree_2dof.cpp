@@ -4,7 +4,6 @@
 #include "Cfg_free.h"
 #include "MultiBody.h"
 #include "Environment.h"
-#include "util.h"
 #include "DistanceMetricMethod.h"
 
 int Cfg_free_tree_2dof::NumofJoints;

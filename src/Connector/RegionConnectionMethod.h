@@ -1,8 +1,6 @@
 #ifndef RegionConnectionMethod_h
 #define RegionConnectionMethod_h
 
-#include "util.h"
-
 #include "MPRegion.h"
 
 // Abstract Interface Class for node connection methods

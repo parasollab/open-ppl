@@ -140,7 +140,7 @@ void BasicPRMStrategy::Initialize(int in_RegionID){
    cout<<"\nInitializing BasicPRMStrategy::"<<in_RegionID<<endl;
 
    //seed random number generator
-   OBPRM_srand(getSeed()); 
+   SRand(getSeed()); 
 
    //read in and reload roadmap and evaluators
    if(inputMapFilename != "")
@@ -351,7 +351,7 @@ bool BasicPRMStrategy::EvaluateMap(int in_RegionID)
 }
 
 string BasicPRMStrategy::PickNextSampler(){
-   double rand = OBPRM_drand();
+   double rand = DRand();
    double total = 1.0;
    string index = "";
    typedef map<string, pair<double,int> >::iterator GIT;

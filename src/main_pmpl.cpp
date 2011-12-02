@@ -2,37 +2,8 @@
  * @brief main function to use the feature sensitive meta-planner
  */
 
-#include <iostream>
-#include <sstream>
-#include<sys/time.h>
-
-#include "Roadmap.h"
-
-#include "Clock_Class.h"
-#include "MetricUtils.h"
-#include "CollisionDetection.h"
-#include "ValidityChecker.hpp"
-#include "ConnectMap.h"
-#include "LocalPlanners.h"
-
-#include "GeneratePartitions.h"
-
-//#include "ExplicitInstantiation.h"
-
-/* util.h defines PMPL_EXIT used in initializing the environment*/
-#include "util.h"
-
-
-#include "MPRegion.h"
 #include "ClosedChainProblem.h"
 #include "ClosedChainStrategy.h"
-
-
-
-#include "CfgTypes.h"
-
-#include "Weight.h"
-
 
 using namespace std;
 

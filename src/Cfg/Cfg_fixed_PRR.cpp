@@ -18,7 +18,6 @@
 
 #include "MultiBody.h"
 #include "Environment.h"
-#include "util.h"
 #include "DistanceMetricMethod.h"
 #include "MPProblem.h"
 #include "ValidityChecker.hpp"
@@ -123,14 +122,14 @@ const char* Cfg_fixed_PRR::GetName() const {
   
 void Cfg_fixed_PRR::GetRandomCfg(double R, double rStep){
   double zz;
-  if(OBPRM_drand() > 0.5)
+  if(DRand() > 0.5)
     zz = R;
   else
     zz = -R;
   
   double ceta1, ceta2;
-  ceta1 = (2.0*rStep)*OBPRM_drand() - rStep;
-  ceta2 = (2.0*rStep)*OBPRM_drand() - rStep;
+  ceta1 = (2.0*rStep)*DRand() - rStep;
+  ceta2 = (2.0*rStep)*DRand() - rStep;
   
   v.clear();
   v.push_back(zz);
@@ -146,8 +145,8 @@ void Cfg_fixed_PRR::GetRandomCfg(double R, double rStep){
 void Cfg_fixed_PRR::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
   double alpha,beta,z, z1;
   
-  alpha = 2.0*M_PI*OBPRM_drand();
-  beta  = 2.0*M_PI*OBPRM_drand();
+  alpha = 2.0*M_PI*DRand();
+  beta  = 2.0*M_PI*DRand();
   z = incr*cos(beta);
   z1 = incr*sin(beta);
    
@@ -173,8 +172,8 @@ void Cfg_fixed_PRR::GetRandomCfg_CenterOfMass(Environment *env) {
   shared_ptr<BoundingBox> boundingBox = env->GetBoundingBox();
   double zz = boundingBox->GetRandomValueInParameter(2);
   
-  double ceta1 =1.0 * OBPRM_drand();
-  double ceta2 =1.0 * OBPRM_drand();
+  double ceta1 =1.0 * DRand();
+  double ceta2 =1.0 * DRand();
   
   v.clear();
   v.push_back(zz);
