@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<motion_planning>
+  <MPProblem>
+    <environment input_env="narrow.env">
+      <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
+        <boundary type="bbox" translational_scale="1">
+      	 <parameter id="0" Label="x" type="translational" min="-15" max="15" />
+      	 <parameter id="1" Label="y" type="translational" min="-15" max="15" />
+        </boundary>
+      </robot>
+    </environment>
+    <distance_metrics>
+       <euclidean Label="euclidean"/>
+    </distance_metrics>    
+    <validity_test>    
+      <CollisionDetection Label="cd" method="RAPID" />
+    </validity_test>
+    <NeighborhoodFinder>
+      <BFNF Label="BFNF" dm_method="euclidean"/>
+    </NeighborhoodFinder>
+  <MPRegions/>
+  </MPProblem>
+  <MPStrategy>  
+    <node_generation_methods>
+      <UniformRandomFreeSampler Label="UniformRandomFree" vc_method="cd"/>
+    </node_generation_methods>
+    <connection_methods>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
+    </connection_methods>
+    <lp_methods>
+      <StraightLine    Label="sl" length="0" binary_search="1" vc_method="cd" s="0.5" />
+    </lp_methods>
+    <MPEvaluator_methods>
+      <MPRegionConditionalEvaluators>
+        <TestEvaluation Label="TestEval" size="100" dm_method="euclidean" lp_method="sl"/>
+      </MPRegionConditionalEvaluators>
+    </MPEvaluator_methods>
+    <MPStrategyMethod Controller="BasicPRM">
+      <BasicPRMStrategy Label="BasicPRM" seed="1234567" filename="Basic" iterations="1" num_samples="10" dm_method="euclidean">
+        <node_generation_method Method="UniformRandomFree" Number="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="TestEval"/>
+      </BasicPRMStrategy>
+    </MPStrategyMethod>
+  </MPStrategy>
+</motion_planning>
+
