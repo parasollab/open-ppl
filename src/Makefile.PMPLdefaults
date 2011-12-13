@@ -232,7 +232,7 @@ PMPL_OBJS = \
 
 ifeq (${parallel}, 0)
 	PMPL_OBJS+= \
-	MPStrategy/BasicPRMStrategy.o \
+	MPStrategy/BasicPRM.o \
 	MPStrategy/BasicRRTStrategy.o \
 	MPStrategy/TogglePRMStrategy.o \
 	MPStrategy/HybridPRM.o \

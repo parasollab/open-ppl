@@ -2,10 +2,14 @@
 #define _CONNECTIVITY_EVALUATION_H
 
 #include "CoverageEvaluation.h"
+#include "RoadmapGraph.h"
+#include "Roadmap.h"
+#include "CfgTypes.h"
 
 template <class CFG, class WEIGHT>
 class ConnectivityMetric : public CoverageMetric<CFG, WEIGHT>
 {
+  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   public:
     ConnectivityMetric(vector<CFG> s = vector<CFG>(), bool computeAllCCs = false)
       :CoverageMetric<CFG, WEIGHT>(s,computeAllCCs) {

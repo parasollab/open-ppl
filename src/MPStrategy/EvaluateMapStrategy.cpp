@@ -30,7 +30,7 @@ EvaluateMapStrategy::
 ParseXML(XMLNodeReader& in_Node, bool warn_unknown) 
 {
 
-  string default_map_filename = getBaseFilename() + ".map";
+  string default_map_filename = GetBaseFilename() + ".map";
   map_filename = in_Node.stringXMLParameter("map_filename", false, default_map_filename, "Map Filename");
   
   for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
@@ -57,8 +57,6 @@ Run(int region_id)
 {
   PrintOptions(cout);
   
-  SRand(getSeed()); 
-
   GetMPProblem()->GetMPRegion(region_id)->GetRoadmap()->ReadRoadmapGRAPHONLY(map_filename.c_str());
   
   for(vector<string>::const_iterator I = evaluator_labels.begin(); I != evaluator_labels.end(); ++I)

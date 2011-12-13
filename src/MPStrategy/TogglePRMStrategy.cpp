@@ -87,9 +87,6 @@ void TogglePRMStrategy::PrintOptions(ostream& out_os) {
 void TogglePRMStrategy::Initialize(int in_RegionID){
   cout<<"\nInitializing TogglePRMStrategy::"<<in_RegionID<<endl;
 
-  //seed random number generator
-  SRand(getSeed());
-
   cout<<"\nEnding Initializing TogglePRMStrategy"<<endl;
 }
 
@@ -159,18 +156,18 @@ void TogglePRMStrategy::Finalize(int in_RegionID){
   string str;
 
   //output final map
-  str = getBaseFilename() + ".map";
+  str = GetBaseFilename() + ".map";
   ofstream osMap(str.c_str());
   region->WriteRoadmapForVizmo(osMap);
   osMap.close();
 
-  str = getBaseFilename() + ".block.map";
+  str = GetBaseFilename() + ".block.map";
   ofstream osMap2(str.c_str());
   region->WriteRoadmapForVizmo(osMap2, NULL, true);
   osMap2.close();
 
   //output stats
-  str = getBaseFilename() + ".stat";
+  str = GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   streambuf* sbuf = cout.rdbuf(); // to be restored later
   cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout

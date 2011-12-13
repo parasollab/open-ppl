@@ -121,13 +121,13 @@ void UAStrategy::Finalize(int in_RegionID){
    string str;
   
    //output final map
-   str = getBaseFilename() + ".map";
+   str = GetBaseFilename() + ".map";
    ofstream osMap(str.c_str());
    region->WriteRoadmapForVizmo(osMap);
    osMap.close();
   
    //output stats
-   str = getBaseFilename() + ".stat";
+   str = GetBaseFilename() + ".stat";
    ofstream  osStat(str.c_str());
    streambuf* sbuf = cout.rdbuf(); // to be restored later
    cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
@@ -558,7 +558,7 @@ vector<vector<VID>* > UAStrategy::GetPartitionsVID(){
 }
 
 void UAStrategy::EvaluatePartitions(){   
-   string filename=getBaseFilename()+".partitions";
+   string filename=GetBaseFilename()+".partitions";
    vector<vector<double> > eval=GetMPProblem()->GetMPStrategy()->GetPartitioningEvaluators()->Evaluate(filename, GetPartitions());
 }
 
@@ -599,7 +599,7 @@ bool UAStrategy::EvaluateMap(int in_RegionID){
 }
 
 void UAStrategy::WriteRegionsSeparate(){
-   string baseFileName = getBaseFilename();
+   string baseFileName = GetBaseFilename();
    int count=0;
    RoadmapGraph<CfgType,WeightType>* rg = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
    vector<PartitionNode*> pnodes = m_pt->GetRoot()->GetChildren();

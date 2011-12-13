@@ -78,7 +78,8 @@ void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp, MPProble
                    CollisionDetection* cd, CDInfo& cdInfo, string m_vc, string m_dm, string m_lp,
                    int x, int bl, CfgType previous, CfgType c, CfgType next, double step_size,
                    double user_value, int max_attempt, int numOfSamples, vector< pair<CfgType,double> > &result) {
-  
+     
+   typedef RoadmapGraph<CfgType, WeightType>::VID VID;   
    double newConfigurationWeight;
    double oldConfigurationWeight;
    bool firstConnectFlag;
@@ -143,7 +144,6 @@ Run(int in_RegionID)
    int  max_attempts=1000;
    int len; 
    char buff[5000];
-   SRand(getSeed()); 
    len=type_name.copy(buff,100);
    buff[len]='\0';
    char names[3][5000]={"PROTEIN_ENERGY","MAX_CLEARANCE",""};

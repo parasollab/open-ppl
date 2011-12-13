@@ -70,8 +70,6 @@ Run(int in_RegionID)
   cout << "SmoothQueryStrategy::\n";
   PrintOptions(cout);
 
-  SRand(getSeed()); 
-  
   Roadmap<CfgType,WeightType>* rdmp = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
   Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
   

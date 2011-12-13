@@ -102,19 +102,18 @@ PrintOptions(ostream& out_os)
 void HybridPRM::Initialize(int in_RegionID){
    PrintOptions(cout);
 
-   SRand(getSeed()); 
    //set up base_filename for output filese
   stringstream ssRandomSeed;
   ssRandomSeed << instanceNumber << ".";
-  ssRandomSeed << getSeed();
-  base_filename = getBaseFilename() + "." + ssRandomSeed.str();
+  ssRandomSeed << GetBaseSeed();
+  base_filename = GetBaseFilename() + "." + ssRandomSeed.str();
   instanceNumber++;
  
   //setup output of statistics
   string outCharname = base_filename + ".char";
   char_ofstream.open(outCharname.c_str());
   char_ofstream << "#env_file_name:seed:num_node_gen:node_gen_methods" << endl;
-  char_ofstream << GetMPProblem()->GetEnvironment()->GetEnvFileName() << ":" << getSeed() << ":" << "HybridPRM" << ":" << *m_node_conn_labels.begin() << ":" <<  endl;
+  char_ofstream << GetMPProblem()->GetEnvironment()->GetEnvFileName() << ":" << GetBaseSeed() << ":" << "HybridPRM" << ":" << *m_node_conn_labels.begin() << ":" <<  endl;
   char_ofstream << "#num_nodes:num_cd_calls:num_ccs";//:diameter_largest:diameter_sum";
   char_ofstream << ":num_cc_create:num_cc_merge:num_cc_expand:num_cc_oversample";
   //char_ofstream << ":query_solved";

@@ -1,78 +1,59 @@
-#ifndef MPStrategyMethod_h
-#define MPStrategyMethod_h
+#ifndef MPSTRATEGYMETHOD_H
+#define MPSTRATEGYMETHOD_H
 
 #include <sys/time.h>
 #include "Clock_Class.h"
 #include "CfgTypes.h"
-#include "MPProblem/RoadmapGraph.h" //for VID typedef
+#include "MPUtils.h"
 #include "MPProblem.h"
+#include "MPProblem/RoadmapGraph.h"
 
-typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType, WeightType> GRAPH;
-typedef GRAPH::vertex_descriptor VID; 
-
-class MPSMContainer {
-public:
-  MPSMContainer () {} //Container for more readabble MPStrategyMethod constructor
-
-  long m_baseSeed;
-  string m_base_filename;
-  int m_iterations;
-  int num_nodes;
+struct MPSMContainer {
+  long m_seed;
+  string m_baseFilename;
 };
 
-
-///Will be used to derive IMP,PRM,RRT,metaplanner, etc.
 class MPStrategyMethod : public MPBaseObject {
   public:
-    MPStrategyMethod() {};
-    MPStrategyMethod(MPSMContainer cont) {
-      m_baseSeed = cont.m_baseSeed;
-      m_base_filename = cont.m_base_filename;
-      m_iterations = cont.m_iterations;
-      num_nodes = cont.num_nodes;
-    }
-
-
-    MPStrategyMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Node,in_pProblem) { 
+    MPStrategyMethod(MPSMContainer& _cont) : m_baseSeed(_cont.m_seed), m_baseFilename(_cont.m_baseFilename) {}
+    MPStrategyMethod(XMLNodeReader& _node, MPProblem* _problem) : MPBaseObject(_node, _problem) {
+      ParseXML(_node);
+    };
+    virtual ~MPStrategyMethod() {}
+    
+    virtual void ParseXML(XMLNodeReader& _node){
       struct timeval tv;
       gettimeofday(&tv,NULL);
-      m_baseSeed = in_Node.numberXMLParameter("seed", false, (int)tv.tv_usec, 0, MAX_INT, "Random Seed Value"); 
-      m_iterations = in_Node.numberXMLParameter("iterations", true, 1, 0, MAX_INT, "Number of Iterations"); 
-      num_nodes = in_Node.numberXMLParameter("num_samples", true, 100, 10, MAX_INT, "Number of Samples"); 
-      m_base_filename = in_Node.stringXMLParameter("filename", true, "", "Base output filename");
+      m_baseSeed = _node.numberXMLParameter("seed", false, (int)tv.tv_usec, 0, MAX_INT, "Random Seed Value"); 
+      m_baseFilename = _node.stringXMLParameter("filename", true, "", "Base output filename");
+      SRand(m_baseSeed); 
     };
-
-    virtual ~MPStrategyMethod() {}
-    virtual void ParseXML(XMLNodeReader& in_Node)=0;
+    
     void operator()(){
       (*this)(GetMPProblem()->CreateMPRegion());
     }
-
-    void operator()(int in_RegionID){
-      Initialize(in_RegionID);
-      Run(in_RegionID);
-      Finalize(in_RegionID);
+    void operator()(int _regionID){
+      Initialize(_regionID);
+      Run(_regionID);
+      Finalize(_regionID);
     }
 
-    virtual void Initialize(int in_RegionID)=0;
-    virtual void Run(int in_RegionID)=0;
-    virtual void Finalize(int in_RegionID)=0;
-    virtual void PrintOptions(ostream& out_os)=0;
+    virtual void Initialize(int _regionID)=0;
+    virtual void Run(int _regionID)=0;
+    virtual void Finalize(int _regionID)=0;
+    virtual void PrintOptions(ostream& _os)=0;
 
-    long getSeed(){return m_baseSeed;};
-    string getBaseFilename(){return m_base_filename;};
-    void setSeed(long in_seed){m_baseSeed = in_seed;};
-  private:
-
-    long m_baseSeed;
-    string m_base_filename;
-
+    string GetBaseFilename(){return m_baseFilename;}
+    long GetBaseSeed() {return m_baseSeed;} 
   protected:
-    int m_iterations;
-    int num_nodes;
     Clock_Class m_strategyClock;
-    //bool m_reset_stats;
-    //bool m_no_output_files;
+    typedef RoadmapGraph<CfgType, WeightType>::GRAPH GRAPH;
+    typedef RoadmapGraph<CfgType, WeightType>::VID VID; 
+
+
+  private:
+    long m_baseSeed;
+    string m_baseFilename;
 };
 
 #endif 

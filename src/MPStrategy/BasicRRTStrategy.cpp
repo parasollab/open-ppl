@@ -72,7 +72,6 @@ void BasicRRTStrategy::PrintOptions(ostream& _os) {
 
 void BasicRRTStrategy::Initialize(int _regionID){
   if(m_debug) cout<<"\nInitializing BasicRRTStrategy::"<<_regionID<<endl;
-  SRand(getSeed()); 
   if(m_debug) cout<<"\nEnding Initializing BasicRRTStrategy"<<endl;
 }
 
@@ -219,13 +218,13 @@ void BasicRRTStrategy::Finalize(int _regionID) {
   string str;
 
   //output final map
-  str = getBaseFilename() + ".map";
+  str = GetBaseFilename() + ".map";
   ofstream osMap(str.c_str());
   region->WriteRoadmapForVizmo(osMap);
   osMap.close();
 
   //output stats
-  str = getBaseFilename() + ".stat";
+  str = GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   streambuf* sbuf = cout.rdbuf(); // to be restored later
   cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
