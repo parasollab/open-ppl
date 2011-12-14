@@ -36,11 +36,11 @@
       </MPRegionConditionalEvaluators>
     </MPEvaluator_methods>
     <MPStrategyMethod Controller="BasicPRM">
-      <BasicPRMStrategy Label="BasicPRM" seed="1234567" filename="Basic" iterations="1" num_samples="10" dm_method="euclidean">
+      <BasicPRM Label="BasicPRM" seed="1234567" filename="Basic" iterations="1" num_samples="10" dm_method="euclidean">
         <node_generation_method Method="UniformRandomFree" Number="10"/>
         <node_connection_method Method="Closest"/>
         <evaluation_method Method="TestEval"/>
-      </BasicPRMStrategy>
+      </BasicPRM>
     </MPStrategyMethod>
   </MPStrategy>
 </motion_planning>
