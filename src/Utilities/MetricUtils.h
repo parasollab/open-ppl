@@ -133,6 +133,7 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
   std::map<string, unsigned long int>::const_iterator iter1, iter2, iter3;
   for(iter1 = m_lpConnections.begin(), iter2 = m_lpAttempts.begin(), iter3 = m_lpCollDetCalls.begin(); 
       iter1 != m_lpConnections.end() || iter2 !=m_lpAttempts.end() || iter3 != m_lpCollDetCalls.end(); ++iter1, ++iter2, ++iter3) {
+    cout << setw(20) << iter->first;
     cout << setw(15) << iter1->second;
     cout << setw(15) << iter2->second;
     cout << setw(15) << iter3->second << endl;
