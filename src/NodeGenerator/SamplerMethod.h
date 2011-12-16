@@ -152,7 +152,7 @@ class SamplerMethod : public MPBaseObject
         return _result;
       }  
   protected:
-    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG _cfgCol, int _maxAttempts) = 0;
+    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) = 0;
 };
 
 #endif

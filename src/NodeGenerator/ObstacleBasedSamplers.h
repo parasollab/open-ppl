@@ -115,7 +115,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         return result;
       }
 
-    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::sampler()";
       CDInfo cdInfo;

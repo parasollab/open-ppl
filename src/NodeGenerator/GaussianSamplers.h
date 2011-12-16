@@ -46,7 +46,7 @@ class GaussianSampler : public SamplerMethod<CFG>
       os << this->GetName() << " (d = " << d << ")";
     }
 
-    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
 
       string callee(this->GetName());
       callee += "::sampler()";
@@ -165,7 +165,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
         << ", use_bbx = " << use_bbx << ")" << endl;
     }
 
-    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
 
       string callee(this->GetName());
       callee += "::sampler()";

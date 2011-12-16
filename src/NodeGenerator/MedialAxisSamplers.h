@@ -71,7 +71,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
     }
 
     //bool sampler(Environment* env,Stat_Class& Stat, const CFG& cfg_in, vector<CFG>& cfg_out, int max_attempts) {
-    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       
       string call("MedialAxisSampler::sampler()");
       bool generated = false, c_exact, p_exact;
