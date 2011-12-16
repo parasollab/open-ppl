@@ -69,13 +69,11 @@ public:
   ///Read configuration from input stream
   virtual void Read(istream& is);
  
-  double GetRot() const {return v[2];}
-  void SetRot(double d) {v[2]=d;}
+  double GetRot() const {return m_v[2];}
+  void SetRot(double d) {m_v[2]=d;}
 
   /**@name Access Methods*/
   //@{
-
-  virtual void equals(const Cfg&);
 
   ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition() const;
@@ -96,69 +94,6 @@ public:
   ///Get a random vector whose magnitude is incr (note. the orienatation of of this Cfg is 0)
   virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm);
   //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    methods for nodes generation 
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Node Generation*/
-  //@{
-
-  /**Node Generation methods: OBPRM.
-    *Generate a new Cfg, and put it in resultCfg.
-    *The position of new cfg is from (robot_goal-robot_start)
-    *The orientation of new cfg is generated randomly.
-    */
-  virtual bool GenerateOverlapCfg(Environment* env, int robot,
-				  Vector3D robot_start, Vector3D robot_goal, 
-				  Cfg* resultCfg);
-
-  /**Node Generation methods: NORMAL
-    *generate nodes by overlapping two triangles' normal.
-    */
-  virtual void GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment* env, Stat_Class& Stats, 
-					 string vc_method,
-					 int obstacle, int nCfgs,
-					 CDInfo& _cdInfo,
-					 vector<Cfg*>&) const;
-  
-  /**@todo Document this
-    */
-  virtual void GetCfgByOverlappingNormal(MPProblem* mp, Environment* env, Stat_Class& Stats,
-					 string vc_method,
-					 const GMSPolyhedron &polyRobot, 
-					 const GMSPolyhedron &polyObst,
-					 int robTri, int obsTri,
-					 CDInfo& _cdInfo,
-					 shared_ptr<MultiBody>, vector<Cfg*>&) const;
-
-  //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Helper functions
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /*@name Helper functions*/
-  //@{
-
-  /**Check if a given configuration c is inside narrow passage.
-    *This is done by moving c a little bit and check for collision.
-    *return true if inside narrow passage.
-    */
-  virtual bool InNarrowPassage(MPProblem* mp, Environment* env, Stat_Class& Stats,
-			       string vc_method, CDInfo& _cdInfo,
-			       shared_ptr<MultiBody> onflyRobot) const;
-  //@}
-
-
-  virtual Cfg* CreateNewCfg() const;
-  virtual Cfg* CreateNewCfg(vector<double>&) const;
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //

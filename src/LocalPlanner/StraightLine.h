@@ -157,9 +157,9 @@ template <class CFG, class WEIGHT>
 StraightLine<CFG, WEIGHT>::StraightLine(XMLNodeReader& in_Node, MPProblem* in_pProblem)  :
  LocalPlannerMethod<CFG, WEIGHT>(in_Node,in_pProblem) {
   this->SetName("StraightLine");
-  lineSegmentLength = in_Node.numberXMLParameter(string("length"), false, 0, 0, 5000, string("lineSegmentLength")); 
-  binarySearch = in_Node.numberXMLParameter(string("binary_search"), false, 0, 0, 1, string("binary search")); 
-  vcMethod = in_Node.stringXMLParameter(string("vc_method"), false, string(""), string("Validity Test Method"));
+  lineSegmentLength = in_Node.numberXMLParameter("length", false, 0, 0, 5000, "lineSegmentLength"); 
+  binarySearch = in_Node.numberXMLParameter("binary_search", false, 0, 0, 1, "binary search"); 
+  vcMethod = in_Node.stringXMLParameter("vc_method", false, "", "Validity Test Method");
 }
 
 template <class CFG, class WEIGHT> 

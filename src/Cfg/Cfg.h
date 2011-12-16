@@ -56,14 +56,14 @@ class ClearanceInfo {
   /**Clearance of this Cfg.
    * Closet distance from this Cfg to any Obstacle in C-Space
    */
-  double clearance;
+  double m_clearance;
   
   /**Direction of clearance, or "witness pair".
    *This Cfg is closest to the c-obst.
    */
-  Cfg* direction;
+  Cfg* m_direction;
     
-  int obstacle_id;
+  int m_obstacleId;
 
  public:
   
@@ -75,8 +75,8 @@ class ClearanceInfo {
   /**@name Constructors and Destructor*/
   //@{  
   ClearanceInfo(Cfg* _direction = NULL, double _clearance = -1e10) {
-    clearance = _clearance;
-    direction = _direction;
+    m_clearance = _clearance;
+    m_direction = _direction;
   }
   ~ClearanceInfo();
   //@}
@@ -88,14 +88,14 @@ class ClearanceInfo {
   /////////////////////////////////////////////////////////////////////////////
   /**@name Access Method*/
   //@{
-  double getClearance() {return clearance;};
-  void setClearance(double _clearance) {clearance = _clearance;};
+  double GetClearance() {return m_clearance;};
+  void SetClearance(double _clearance) {m_clearance = _clearance;};
   
-  Cfg* getDirection() {return direction;};
-  void setDirection(Cfg* _direction) {direction = _direction;};
+  Cfg* GetDirection() {return m_direction;};
+  void SetDirection(Cfg* _direction) {m_direction = _direction;};
 
-  int getObstacleId() { return obstacle_id;};
-  void setObstacleId(int id) { obstacle_id = id;};
+  int GetObstacleId() { return m_obstacleId;};
+  void SetObstacleId(int _id) { m_obstacleId = _id;};
   //@}
     
 };
@@ -157,7 +157,7 @@ class Cfg {
   virtual void multiply(const Cfg&, double);
   virtual void divide(const Cfg&, double);
 
-  virtual void equals(const Cfg&) = 0;
+  virtual Cfg& operator=(const Cfg&);
     
   /**create a new Cfg instance whose configuration is weighted summation of the
    *first and the second Cfg.
@@ -165,8 +165,8 @@ class Cfg {
    *@param weight should between [0,1]. this weight is for thesecond Cfg. 
    * The weight for the first Cfg is (1-weight)
    */
-  virtual void WeightedSum(const Cfg&, const Cfg&, double weight = 0.5);       
-  virtual bool isWithinResolution(const Cfg &c, double positionRes, double orientationRes) const;
+  virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);       
+  virtual bool IsWithinResolution(const Cfg& _c, double _positionRes, double _orientationRes) const;
     
   //@}
   
@@ -186,14 +186,13 @@ class Cfg {
   friend ostream& operator<< (ostream&, const Cfg&);
   friend istream& operator>> (istream&, Cfg&);
   ///Write configuration to output stream
-  virtual void Write(ostream& os) const;
-  virtual void WriteInfo(ostream& os) const;
+  virtual void Write(ostream& _os) const;
+  virtual void WriteInfo(ostream& _os) const;
   ///Read configuration from input stream
-  virtual void Read(istream& is);
-  virtual void ReadInfo(istream& is);
+  virtual void Read(istream& _is);
+  virtual void ReadInfo(istream& _is);
  
-  virtual void printLinkConfigurations(Environment *env, vector<Vector6D> &cfigs) const;
-  virtual void print_preamble_to_file(Environment *env, FILE *_fp, int numofCfg);
+  virtual void PrintLinkConfigurations(Environment* _env, vector<Vector6D>& _cfigs) const;
   //@}
     
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -208,37 +207,26 @@ class Cfg {
   ///Get internal storage of configuration
   const vector<double>& GetData() const;
   virtual Vector3D GetRobotCenterPosition() const = 0;
-  virtual Vector3D GetRobotCenterofMass(Environment* env) const {
-    return GetRobotCenterPosition();
-  }
+
   /// Return the number of degrees of freedom for the configuration class
   int DOF() const;
-  int posDOF() const;
+  int PosDOF() const;
   virtual const char* GetName() const = 0;
     
-  /** Return the range of a single parameter of the configuration (i.e., range of x)
-   * @param param the parameter to get the range for.
-   *
-   * @note In the future, this function should get the range for x,y,z by the bounding box
-   * Currently it assumes the range for a position parameter to be -10000 to 10000
-   * and the range for an orientation parameter to be 0 to 1, which should
-   * also be changed to reflect any self collision in a linked robot
-   */
-  virtual pair<double,double> SingleParamRange(int param);  
   /** Set a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to set.
    * @param value the value to set the parameter as
    */
-  virtual int SetSingleParam(int param, double value);    
+  virtual int SetSingleParam(int _param, double _value);    
   /** Increment a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to set.
    * @param value the value to increment the parameter by.
    */
-  virtual int IncSingleParam(int param, double value);  
+  virtual int IncSingleParam(int _param, double _value);  
   /** Retreive a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to retreive
    */
-  double GetSingleParam(int param) const;
+  double GetSingleParam(int _param) const;
     
   /// methods for Distance Metric.
   virtual vector<double> GetPosition() const;
@@ -247,15 +235,14 @@ class Cfg {
   virtual double PositionMagnitude() const;
   //@}
   
-  virtual void InvalidData();
 
-  virtual bool ConfigEnvironment(Environment* env) const = 0;
+  virtual bool ConfigEnvironment(Environment* _env) const = 0;
 
   /** 
    * tests whether or not robot in this configuration has every vertex inside
    * the environment specified bounding box
    */    
-  bool InBoundingBox(Environment* env) const;
+  bool InBoundingBox(Environment* _env) const;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -267,47 +254,41 @@ class Cfg {
   //////////////////////////////////////////////////////////////////////////////////////////
   /**@name Connection Related Methods*/
   //@{
-  /**Return a Cfg whose cofiguration is d-resolution toward cfg2 from cfg1
-   *in each dimension.
-   */
-  virtual void c1_towards_c2(const Cfg& cfg1, const Cfg& cfg2, double d);
-
   void GetResolutionCfg(Environment*);
 
   virtual void GetPositionOrientationFrom2Cfg(const Cfg&, const Cfg&);
 
   /// for rotate-at-s Local Planner. 
-  virtual void GetMovingSequenceNodes(const Cfg& other, vector<double> s_value, vector<Cfg*>& cfgs) const;
+  virtual void GetMovingSequenceNodes(const Cfg& _other, vector<double> _sValue, vector<Cfg*>& _cfgs) const;
 
- virtual void GetMovingSequenceNodes(const Cfg& other, double s, vector<Cfg*>& cfgs) const;
+  virtual void GetMovingSequenceNodes(const Cfg& _other, double _s, vector<Cfg*>& _cfgs) const;
 
   /** pt1 & pt2 are two endpts of a line segment
    * find the closest point to the current cfg on that line segment
    * it could be one of the two endpoints of course
    */
   void ClosestPtOnLineSegment(const Cfg&, const Cfg&, const Cfg&);
+
+  /// methods for nodes connection. 
+  virtual void FindNeighbors(MPProblem* _mp, Environment* _env, Stat_Class& _stats,
+           const Cfg& _increment,
+           string _vcMethod,
+           int _noNeighbors, 
+           CDInfo& _cdInfo,
+           vector<Cfg*>& _cfgs);
+  /// methods for nodes connection. 
+  virtual void FindNeighbors(MPProblem* _mp, Environment* _env, Stat_Class& _stats,
+           const Cfg& _goal, const Cfg& _increment, 
+           string _vcMethod,
+           int _noNeighbors, 
+           CDInfo& _cdInfo,
+           vector<Cfg*>& _cfgs);
                
-  /// methods for nodes connection. 
-  virtual void FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats,
-           const Cfg& increment,
-           string vc_method,
-           int noNeighbors, 
-           CDInfo& _cdInfo,
-           vector<Cfg*>& cfgs);
-  /// methods for nodes connection. 
-  virtual void FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats,
-           const Cfg& goal, const Cfg& increment, 
-           string vc_method,
-           int noNeighbors, 
-           CDInfo& _cdInfo,
-           vector<Cfg*>& cfgs);
-    
   ///Increase every value in this instance in each dimention by the value in _increment
   virtual void Increment(const Cfg& _increment);
-  virtual void IncrementTowardsGoal(const Cfg &goal, const Cfg &increment);
-  virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks, 
-           double positionRes, double orientationRes);
-  virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks);
+  virtual void IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment);
+  virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _positionRes, double _orientationRes);
+  virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks);
   //@}
   
   
@@ -324,47 +305,28 @@ class Cfg {
   /** 
    * generates a random configuration without consideration of bounding box restrictions
    */
-  virtual void GetRandomCfg(double R, double rStep) = 0;
+  virtual void GetRandomCfg(double _r, double _rStep) = 0;
   /** 
    * generates random confiasking Jory and Shawna to oversee/advise him on this.
 guration where workspace robot's EVERY VERTEX
    * is guaranteed to lie within the environment specified bounding box
-   * @param maxTries Try maxTries time to rondomly generate Cfg and check if
+   * @param _maxTries Try _maxTries time to rondomly generate Cfg and check if
    * every vertex is in environment specified bounding box. If
    * no this cfg could be found. The program will be abort.
    */
-  virtual void GetRandomCfg(Environment* env, int maxTries);
+  virtual void GetRandomCfg(Environment* _env, int _maxTries);
+
   /// ditto, but with a default number of tries (10).
-  virtual void GetRandomCfg(Environment* env);
+  virtual void GetRandomCfg(Environment* _env);
+
   /// Generates a random configuration with approximate length
-  /*
-  virtual void BinarySearch(Environment* env, DistanceMetric* dm, double length,
-			    const Cfg& low, const Cfg& high);
-  */
-  virtual void GetRandomCfg(Environment* env, shared_ptr<DistanceMetricMethod> _dm,
-          double length);
-  virtual void GetRandomRay(double incr, Environment* env,  shared_ptr<DistanceMetricMethod> dm) = 0;
-  virtual void GetRandomRayPos(double incr, Environment* env);
-  virtual double GetSmoothingValue(MPProblem* mp, Environment *_env,Stat_Class& Stats,
-	    string vc, CDInfo& cdInfo, string dm,int n, bool bl );
+  virtual void GetRandomCfg(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, double _length);
 
-  /// generates random configuration that is in Free CSpace. 
-  virtual void GetFreeRandomCfg(MPProblem* mp, Environment* env, Stat_Class& Stats,
-        string vc_method, CDInfo& _cdInfo);
-  /// generates N random configurations
-  virtual void GetNFreeRandomCfgs(MPProblem* mp, vector<Cfg*>& nodes, Environment* env,
-          Stat_Class& Stats, 
-  	  string vc_method,  
-          CDInfo& _cdInfo, int num) const;
+  virtual void GetRandomRay(double _incr, Environment* _env,  shared_ptr<DistanceMetricMethod> _dm) = 0;
+  virtual void GetRandomRayPos(double _incr, Environment* _env);
+  virtual double GetSmoothingValue(MPProblem* _mp, Environment *_env,Stat_Class& _stats,
+	    string _vc, CDInfo& _cdInfo, string _dm, int _n, bool _bl );
 
-  virtual bool GenerateOverlapCfg(Environment* env, int robot,
-          Vector3D robot_start, Vector3D robot_goal, 
-          Cfg* resultCfg) = 0;  // OBPRM and BasicOBPRM
-  virtual void GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment* env, Stat_Class& Stats,
-           string vc_method,
-           int obstacle, int nCfgs,
-           CDInfo& _cdInfo,
-           vector<Cfg*>& nodes) const = 0;
   //@}
     
   
@@ -380,38 +342,38 @@ guration where workspace robot's EVERY VERTEX
 
   //@}
 
-  virtual Cfg* CreateNewCfg() const = 0;
-  virtual Cfg* CreateNewCfg(vector<double>&) const = 0;
+  virtual Cfg* CreateNewCfg() const;
+  virtual Cfg* CreateNewCfg(vector<double>&) const;
 
   
  public:  
   /** Normalize the orientation to the some range.
-   * call CfgManager's Normalize_orientation.
+   * call CfgManager's NormalizeOrientation.
    */
-  virtual void Normalize_orientation(int index = -1);
+  virtual void NormalizeOrientation(int _index = -1);
      
   /**
    * generates random configuration where workspace robot's CENTER OF MASS
    * is guaranteed to lie within the environment specified bounding box
    * Call CfgManager::GetRandomCfg_CenterOfMass
    */
-  virtual void GetRandomCfg_CenterOfMass(Environment *env) = 0;
+  virtual void GetRandomCfg_CenterOfMass(Environment *_env) = 0;
 
-  static int  getNumofJoints();
+  static int  GetNumOfJoints();
 
   // setNumofJoints should be consistent in every class
-  static void setNumofJoints(int _numofjoints);
+  static void SetNumOfJoints(int _numOfJoints);
 
-  bool GetLabel(string in_strLabel);
-  bool IsLabel(string in_strLabel);
-  void SetLabel(string in_strLabel,bool in_bool);
+  bool GetLabel(string _label);
+  bool IsLabel(string _label);
+  void SetLabel(string _label,bool _value);
 
-  double GetStat(string in_strStat);
-  bool IsStat(string in_strStat);
-  void SetStat(string in_strStat,double in_dstat);
+  double GetStat(string _stat);
+  bool IsStat(string _stat);
+  void SetStat(string _stat, double _value);
 
   //polygonal approximation
-  vector<Vector3D> PolyApprox (Environment *env) const;
+  vector<Vector3D> PolyApprox (Environment* _env) const;
   
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -422,47 +384,28 @@ guration where workspace robot's EVERY VERTEX
   //////////////////////////////////////////////////////////////////////////////////////////
  protected:
   
-  std::vector<double> v;   
-  int dof;
-  int posDof;
+  std::vector<double> m_v;   
+  int m_dof;
+  int m_posDof;
 /** @To do- there is still problem with (un)packing map
    *uncomment the ifdef after fix
    */
   #ifndef _PARALLEL
-  std::map<string,bool> m_LabelMap;
-  std::map<string,double> m_StatMap;
+  std::map<string,bool> m_labelMap;
+  std::map<string,double> m_statMap;
   #endif
- public:
-  //Info:
-  /**From which Obstacle this Cfg is generated.
-   *@see GenerateMapNodes::GausePRM, GenerateMapNodes::BasicOBPRM
-   *GenerateMapNodes::OBPRM
-   */
-  int obst;
-
-  double tag;
-
-  /**Clearance of this Cfg.
-   *Closest distance from this Cfg to any Obstacle in Environment
-   */
-  double clearance;
 
  protected:
-  static int NumofJoints;
+  static int m_numOfJoints;
   
   public:
 //changed local to member
   #ifdef _PARALLEL
-    void define_type(stapl::typer &t)  
+    void define_type(stapl::typer &_t)  
     {
-      t.member(v);
-      t.member(dof);
-      t.member(posDof);
-      //t.member(m_LabelMap);
-      //t.member(m_StatMap);
-      t.member(obst);
-      t.member(tag);
-      t.member(clearance);
+      _t.member(m_v);
+      _t.member(m_dof);
+      _t.member(m_posDof);
     }
   #endif
 

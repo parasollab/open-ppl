@@ -53,7 +53,7 @@ public:
     m_cur_roadmap_version = -1;
     CFG temp;
     m_max_bbox_range = 0.0;
-    for(int i=0; i< temp.posDOF(); ++i) {
+    for(int i=0; i< temp.PosDOF(); ++i) {
       std::pair<double,double> range = _problem->GetEnvironment()->GetBoundingBox()->GetRange(i);
       double tmp_range = range.second-range.first;
       if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;

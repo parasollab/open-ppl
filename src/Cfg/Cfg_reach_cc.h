@@ -27,19 +27,18 @@ class Cfg_reach_cc : public Cfg_free_tree {
     }
  #endif
 
-  static int getNumofJoints() { return NumofJoints; }
-  static void setNumofJoints(int _numofjoints);
+  static int GetNumOfJoints() { return m_numOfJoints; }
+  static void SetNumOfJoints(int _numofjoints);
   static void initialize_link_tree(const char* filename);
 
   virtual const char* GetName() const { return "Cfg_reach_cc"; }
-
-  virtual void equals(const Cfg&);
 
   virtual void add(const Cfg&, const Cfg&);
   virtual void subtract(const Cfg&, const Cfg&);
   virtual void negative(const Cfg&);
   virtual void multiply(const Cfg&, double);
   virtual void divide(const Cfg&, double);
+  virtual Cfg& operator=(const Cfg&);
   virtual void WeightedSum(const Cfg&, const Cfg&, double weight = 0.5); 
   virtual void c1_towards_c2(const Cfg& cfg1, const Cfg& cfg2, double d);
 
@@ -95,9 +94,6 @@ class Cfg_reach_cc : public Cfg_free_tree {
 			     double positionRes, double orientationRes, double rd_res = .05);
   virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks);
 
-  virtual Cfg* CreateNewCfg() const;
-  virtual Cfg* CreateNewCfg(vector<double>&) const;
-
   ostream& print(ostream& os) const;
   ostream& print_base(ostream& os) const;
   ostream& print_len(ostream& os) const;
@@ -125,7 +121,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
  protected:
   void StoreData();
 
-  static   int NumofJoints;
+  static int m_numOfJoints;
 
   vector<double> link_lengths;
   vector<int> link_orientations;

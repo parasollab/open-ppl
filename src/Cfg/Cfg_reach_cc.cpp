@@ -10,10 +10,7 @@
 #include "MPProblem.h"
 #include "ValidityChecker.hpp"
 
-
-#define TWO_PI 6.2831853072
-
-int Cfg_reach_cc::NumofJoints;
+int Cfg_reach_cc::m_numOfJoints;
 Link* Cfg_reach_cc::link_tree = NULL;
 vector<Link*> Cfg_reach_cc::actual_links;
 double Cfg_reach_cc::rdres = 0.05;
@@ -54,13 +51,13 @@ Cfg_reach_cc(const Vector6D& base,
 	     const vector<double>& len, 
 	     const vector<int>& ori) :
   link_lengths(len), link_orientations(ori) {
-  v.clear();
-  v.push_back(base.getX());
-  v.push_back(base.getY());
-  v.push_back(base.getZ());
-  v.push_back(base.getRoll());
-  v.push_back(base.getPitch());
-  v.push_back(base.getYaw());
+  m_v.clear();
+  m_v.push_back(base.getX());
+  m_v.push_back(base.getY());
+  m_v.push_back(base.getZ());
+  m_v.push_back(base.getRoll());
+  m_v.push_back(base.getPitch());
+  m_v.push_back(base.getYaw());
   StoreData();
 }
 
@@ -121,18 +118,17 @@ initialize_link_tree(const char* filename) {
 
 void 
 Cfg_reach_cc::
-setNumofJoints(int _numofjoints) { 
-  NumofJoints = _numofjoints; 
-  Cfg_free_tree::setNumofJoints(_numofjoints);
-  Cfg::setNumofJoints(_numofjoints);
+SetNumOfJoints(int _numofjoints) { 
+  m_numOfJoints = _numofjoints; 
+  Cfg_free_tree::SetNumOfJoints(_numofjoints);
 }
 
-void 
+Cfg& 
 Cfg_reach_cc::
-equals(const Cfg& c) {
-  Cfg_free_tree::equals(c);
-  link_lengths = ((Cfg_reach_cc&)c).link_lengths;
-  link_orientations = ((Cfg_reach_cc&)c).link_orientations;
+operator=(const Cfg& _c) {
+  link_lengths = ((Cfg_reach_cc&)_c).link_lengths;
+  link_orientations = ((Cfg_reach_cc&)_c).link_orientations;
+  return Cfg::operator=(_c);
 }
 
 void 
@@ -157,7 +153,7 @@ add(const Cfg& c1, const Cfg& c2) {
   vector<double> _v1 = c1.GetData();
   vector<double> _v2 = c2.GetData();
   for(int i=0; i<6; ++i)
-    v[i] = _v1[i] + _v2[i];
+    m_v[i] = _v1[i] + _v2[i];
 
   link_lengths.clear();
  
@@ -208,7 +204,7 @@ subtract(const Cfg& c1, const Cfg& c2) {
   vector<double> _v1 = c1.GetData();
   vector<double> _v2 = c2.GetData();
   for(int i=0; i<6; ++i)
-    v[i] = _v1[i] - _v2[i];
+    m_v[i] = _v1[i] - _v2[i];
 
   link_lengths.clear();
   transform(((Cfg_reach_cc&)c1).link_lengths.begin(), ((Cfg_reach_cc&)c1).link_lengths.end(),
@@ -253,7 +249,7 @@ negative(const Cfg& c) {
 
   vector<double> _v = c.GetData();
   for(int i=0; i<6; ++i)
-    v[i] = -1*_v[i];
+    m_v[i] = -1*_v[i];
 
   link_lengths.clear();
   transform(((Cfg_reach_cc&)c).link_lengths.begin(), ((Cfg_reach_cc&)c).link_lengths.end(),
@@ -309,7 +305,7 @@ WeightedSum(const Cfg& c1, const Cfg& c2, double weight) {
   vector<double> _v1 = c1.GetData();
   vector<double> _v2 = c2.GetData();
   for(int i=0; i<6; ++i)
-    v[i] = _v1[i]*(1-weight) + _v2[i]*weight;
+    m_v[i] = _v1[i]*(1-weight) + _v2[i]*weight;
 
   //compute link lengths
   link_lengths.clear();
@@ -368,16 +364,16 @@ ConfigEnvironment(Environment* _env) const {
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
   Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
-						 v[5]*TWOPI, 
-						 v[4]*TWOPI, 
-						 v[3]*TWOPI), // RPY
-				     Vector3D(v[0],v[1],v[2]));
+						 m_v[5]*TWOPI, 
+						 m_v[4]*TWOPI, 
+						 m_v[3]*TWOPI), // RPY
+				     Vector3D(m_v[0],m_v[1],m_v[2]));
   
   
   _env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);  // update link 1.
-  for(int i=0; i<NumofJoints; i++) {
+  for(int i=0; i<m_numOfJoints; i++) {
     _env->GetMultiBody(robot)->GetFreeBody(i+1)
-      ->GetBackwardConnection(0).GetDHparameters().theta = v[i+6]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().theta = m_v[i+6]*360.0;
      
   }  // config the robot
   
@@ -402,11 +398,11 @@ void
 Cfg_reach_cc::
 GetRandomCfg_CenterOfMass(Environment* env) {
   for(int i=0; i<6; ++i)
-    v[i] = env->GetBoundingBox()->GetRandomValueInParameter(i);
+    m_v[i] = env->GetBoundingBox()->GetRandomValueInParameter(i);
   //fix to xz plane:
-  //v[1] = 0;
-  //v[3] = 0;
-  //v[5] = 0;
+  //m_v[1] = 0;
+  //m_v[3] = 0;
+  //m_v[5] = 0;
 
   link_tree->ResetTree();
   if(is_closed_chain)
@@ -418,10 +414,6 @@ GetRandomCfg_CenterOfMass(Environment* env) {
   link_tree->ExportTreeLinkLength(link_lengths, link_orientations);
 
   StoreData();
-  
-  obst = -1;
-  tag = -1;
-  clearance = -1;
 }
 
 void
@@ -518,7 +510,7 @@ Increment(const Cfg& _increment) {
 
   vector<double> _v = _increment.GetData();
   for(int i=0; i<6; ++i)
-    v[i] += _v[i];
+    m_v[i] += _v[i];
   transform(link_lengths.begin(), link_lengths.end(),
 	    ((Cfg_reach_cc&)_increment).link_lengths.begin(),
 	    link_lengths.begin(), 
@@ -526,10 +518,6 @@ Increment(const Cfg& _increment) {
   link_orientations = ((Cfg_reach_cc&)_increment).link_orientations;
   
   StoreData();
-  
-  obst = -1;
-  tag = -1;
-  clearance = -1;
 }
 
 void 
@@ -575,7 +563,7 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks) {
   vector<double> v_start = _start.GetData();
   vector<double> v_goal = _goal.GetData();
   for(int i=0; i<6; ++i)
-    v[i] = (v_goal[i]-v_start[i])/n_ticks;
+    m_v[i] = (v_goal[i]-v_start[i])/n_ticks;
 
   link_lengths.clear();
   Link::FindIncrement(((Cfg_reach_cc&)_start).link_lengths,
@@ -601,26 +589,6 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks) {
   StoreData();
 }
 
-Cfg* 
-Cfg_reach_cc::
-CreateNewCfg() const {
-  Cfg* tmp = new Cfg_reach_cc(*this);
-  return tmp;
-}
-
-Cfg* 
-Cfg_reach_cc::
-CreateNewCfg(vector<double>& _v) const {
-  if((int)_v.size() < dof) {
-    cout << "\n\nERROR in Cfg_reach_cc::CreateNewCfg(vector<double>), ";
-    cout << "size of vector is less than dof\n";
-    exit(-1);
-  }
-  vector<double> _data(_v.begin(), _v.begin()+dof);
-  Cfg* tmp = new Cfg_reach_cc(_data);
-  return tmp;
-}
-
 void
 Cfg_reach_cc::
 StoreData() {
@@ -629,24 +597,24 @@ StoreData() {
 
   if(link_tree->CanRecursiveClose()) 
   {
-    v.resize(6);
+    m_v.resize(6);
 
     //compute joint angles
     double sumExtAng = 0;
     for(size_t i=1; i<actual_links.size(); ++i) {
       double extAng = PI - Link::CalculateJointAngle(actual_links[i-1], actual_links[i]);
       sumExtAng += extAng;
-      v.push_back(extAng/TWO_PI);
+      m_v.push_back(extAng/TWO_PI);
     }
     if(is_closed_chain)
-      v.push_back((TWO_PI-sumExtAng)/TWO_PI);
+      m_v.push_back((TWO_PI-sumExtAng)/TWO_PI);
 
   } else {
   //  cerr << "\n\n\tWARNING: Loop is broken!\n";
-    v.resize(dof, 0);
+    m_v.resize(m_dof, 0);
   }
 
-  Normalize_orientation();
+  NormalizeOrientation();
 }
 
 
@@ -698,7 +666,7 @@ GetIntermediate(const Cfg_reach_cc& c1,
     vector<double> v1 = c1.GetData();
     vector<double> v2 = c2.GetData();
     for(int i=0; i<6; ++i)
-      v[i] = (v1[i] + v2[i]) / 2;
+      m_v[i] = (v1[i] + v2[i]) / 2;
     link_lengths.clear();
     link_orientations.clear();
     link_tree->ExportTreeLinkLength(link_lengths, link_orientations);
@@ -756,11 +724,6 @@ OrientationDistance(const Cfg_reach_cc& c2) const {
   for(size_t i=0; i<link_orientations.size(); ++i)
     ori_difference.push_back((double)(abs(link_orientations[i]-c2.link_orientations[i]))/2.0);
   
-  /*cout << "ori_difference: ";
-  copy(ori_difference.begin(), ori_difference.end(), ostream_iterator<double>(cout, " "));
-  cout << endl;*/
-  
-
   return sqrt(inner_product(ori_difference.begin(), ori_difference.end(),
 			    ori_difference.begin(),
 			    0.0, plus<double>(), multiplies<double>()));
@@ -771,7 +734,7 @@ Cfg_reach_cc::
 print(ostream& os) const 
 {
   os << "\tv: ";
-  copy(v.begin(), v.end(), ostream_iterator<double>(os, " "));
+  copy(m_v.begin(), m_v.end(), ostream_iterator<double>(os, " "));
   os << endl;
 
   os << "\tlengths: ";
@@ -789,7 +752,7 @@ ostream&
 Cfg_reach_cc::
 print_base(ostream& os) const 
 {
-  copy(v.begin(), v.begin()+6, ostream_iterator<double>(os, " "));
+  copy(m_v.begin(), m_v.begin()+6, ostream_iterator<double>(os, " "));
   return os;
 }
 

@@ -49,11 +49,11 @@ public:
   MPRegion<CfgType,WeightType>* GetMPRegion(int);
 
   void SetNumOfJoints(int num_of_joints) {
-    CfgType::setNumofJoints(num_of_joints);
+    CfgType::SetNumOfJoints(num_of_joints);
     robot_cfg = CfgType();
   }
   int GetDOFs() {return robot_cfg.DOF(); }
-  int GetPosDOFs() {return robot_cfg.posDOF();}
+  int GetPosDOFs() {return robot_cfg.PosDOF();}
   //void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
   void PrintOptions(ostream& out_os);
   //ostream& GetFileStreamByLabel(string& in_strLabel);

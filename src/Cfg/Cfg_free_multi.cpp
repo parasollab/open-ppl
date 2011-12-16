@@ -7,16 +7,12 @@
 int Cfg_free_multi::NumofRobots;
 
 Cfg_free_multi::Cfg_free_multi() {
-  dof = 6*NumofRobots;
-  posDof = dof/2;
+  m_dof = 6*NumofRobots;
+  m_posDof = m_dof/2;
 
-  v.clear();
-  for(int i=0; i<dof; i++)
-    v.push_back(0);
-
-  obst = -1;
-  tag = -1;
-  clearance = -1;
+  m_v.clear();
+  for(int i=0; i<m_dof; i++)
+    m_v.push_back(0);
 }
 
 
@@ -37,42 +33,34 @@ Cfg_free_multi::Cfg_free_multi(const Vector6D& _v) {
 
 
 Cfg_free_multi::Cfg_free_multi(const vector<double>& _v) {
-  dof = 6*NumofRobots;
-  posDof = dof/2;
+  m_dof = 6*NumofRobots;
+  m_posDof = m_dof/2;
   
-  if((int)_v.size() < dof) {
+  if((int)_v.size() < m_dof) {
     cout << "\n\nERROR in Cfg_free_multi::Cfg_free_multi(const vector<double>&), ";
-    cout << "size of vector is less than " << dof << endl;
+    cout << "size of vector is less than " << m_dof << endl;
     exit(-1);
   }
-  v.clear();
-  v.insert(v.end(), _v.begin(), _v.begin()+dof);
+  m_v.clear();
+  m_v.insert(m_v.end(), _v.begin(), _v.begin()+m_dof);
   
-  Normalize_orientation();
-
-  obst = -1;
-  tag = -1;
-  clearance = -1;
+  NormalizeOrientation();
 }
 
 Cfg_free_multi::Cfg_free_multi(const Cfg& _c) {
-  dof = 6*NumofRobots;
-  posDof = dof/2;
+  m_dof = 6*NumofRobots;
+  m_posDof = m_dof/2;
   
   vector<double> _v = _c.GetData();
-  if((int)_v.size() < dof) {
+  if((int)_v.size() < m_dof) {
     cout << "\n\nERROR in Cfg_free_multi::Cfg_free_multi(const vector<double>&), ";
-    cout << "size of vector is less than " << dof << endl;
+    cout << "size of vector is less than " << m_dof << endl;
     exit(-1);
   }
-  v.clear();
-  v.insert(v.end(), _v.begin(), _v.begin()+dof);
+  m_v.clear();
+  m_v.insert(m_v.end(), _v.begin(), _v.begin()+m_dof);
   
-  Normalize_orientation();
- 
-  obst = _c.obst;
-  tag = _c.tag;
-  clearance = _c.clearance;
+  NormalizeOrientation();
 }
 
 
@@ -80,37 +68,15 @@ const char* Cfg_free_multi::GetName() const {
   return "Cfg_free_multi";
 }
 
-
-Cfg* Cfg_free_multi::CreateNewCfg() const {
-  Cfg* tmp = new Cfg_free_multi();
-  tmp->equals(*this);
-  return tmp;
-}
-
-
-Cfg* Cfg_free_multi::CreateNewCfg(vector<double>& data) const {
-  Vector6D _data;
-  if((int)data.size() < dof) {
-    cout << "\n\nERROR in Cfg_free_multi::CreateNewCfg(vector<double>), ";
-    cout << "size of vector is less than " << dof << endl;
-    exit(-1);
-  }
-  for(int i=0; i<dof; i++)
-    _data[i] = data[i];
-  Cfg* tmp = new Cfg_free_multi(_data);
-  return tmp;
-}
-
-
 Vector3D Cfg_free_multi::GetRobotCenterPosition() const {
   double x = 0;
   double y = 0;
   double z = 0;
 
   for(int i=0; i<NumofRobots; ++i) {
-    x += v[i*3+0];
-    y += v[i*3+1];
-    z += v[i*3+2];
+    x += m_v[i*3+0];
+    y += m_v[i*3+1];
+    z += m_v[i*3+2];
   }
 
   return Vector3D(x/NumofRobots, y/NumofRobots, z/NumofRobots);
@@ -124,10 +90,10 @@ bool Cfg_free_multi::ConfigEnvironment(Environment* env) const {
     // configure the robot according to current Cfg: joint parameters
     // (and base locations/orientations for free flying robots.)
     Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
-						   v[posDof+i*3+2]*TWOPI, 
-						   v[posDof+i*3+1]*TWOPI, 
-						   v[posDof+i*3+0]*TWOPI),
-				       Vector3D(v[i*3+0],v[i*3+1],v[i*3+2]));
+						   m_v[m_posDof+i*3+2]*TWOPI, 
+						   m_v[m_posDof+i*3+1]*TWOPI, 
+						   m_v[m_posDof+i*3+0]*TWOPI),
+				       Vector3D(m_v[i*3+0],m_v[i*3+1],m_v[i*3+2]));
     // update link i
     mb->GetFreeBody(i)->Configure(T1);
   }

@@ -364,7 +364,7 @@ WritePathLinkConfigurations(const string _outputFile,
     // center of gravity is what was saved (ie, the rover original)
     //path[i].print_vizmo_format_to_file(env,fp);
     vector<Vector6D> tmp;
-    _path[i]->printLinkConfigurations(_env, tmp);
+    _path[i]->PrintLinkConfigurations(_env, tmp);
     for(size_t j=0; j<tmp.size(); ++j) {
       ofs << tmp[j][0] << " " << tmp[j][1] << " " << tmp[j][2] << " " 
           << tmp[j][3] << " " << tmp[j][4] << " " << tmp[j][5] << endl;

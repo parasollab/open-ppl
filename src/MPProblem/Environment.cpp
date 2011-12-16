@@ -381,7 +381,7 @@ SelectUsableMultibodies() {
     usable_externalbody_count++;
   }
 
-  if((boundaries->GetPosDOFs() < CfgType().posDOF()) || (boundaries->GetDOFs() < CfgType().DOF()))
+  if((boundaries->GetPosDOFs() < CfgType().PosDOF()) || (boundaries->GetDOFs() < CfgType().DOF()))
     return;
 
   // get workspace bounding box

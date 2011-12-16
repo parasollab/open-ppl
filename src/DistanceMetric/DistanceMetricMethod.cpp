@@ -55,9 +55,9 @@ ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c) {
     if( (magnitude >= length*0.9) && (magnitude <= length*1.1)) 
       break;
     if(magnitude>length) 
-      aboveCfg->equals(*currentCfg);
+      *aboveCfg = *currentCfg;
     else 
-      belowCfg->equals(*currentCfg); 
+      *belowCfg = *currentCfg; 
   }
   for(int i=0; i<c.DOF(); ++i)
     c.SetSingleParam(i, currentCfg->GetSingleParam(i));
@@ -153,7 +153,7 @@ _ScaledDistance(Environment* env,const Cfg& _c1, const Cfg& _c2, double sValue) 
   //vector<double> normalized_vec;
   double pos_mag(0.0);
   double max_range(0.0);
-  for(int i=0; i< pTmp->posDOF(); ++i) {
+  for(int i=0; i< pTmp->PosDOF(); ++i) {
     std::pair<double,double> range = env->GetBoundingBox()->GetRange(i);
     double tmp_range = range.second-range.first;
     if(tmp_range > max_range) max_range = tmp_range;
@@ -162,7 +162,7 @@ _ScaledDistance(Environment* env,const Cfg& _c1, const Cfg& _c2, double sValue) 
   //cout << *pTmp << endl;
   //cout << "Max range = " << max_range << endl;
 
-  for(int i=0; i< pTmp->posDOF(); ++i) {
+  for(int i=0; i< pTmp->PosDOF(); ++i) {
     //std::pair<double,double> range = env->GetBoundingBox()->GetRange(i);
     //normalized_vec.push_back(pTmp->GetSingleParam(i) / (range.second - range.first));
      pos_mag += sqr(pTmp->GetSingleParam(i) / max_range);
@@ -421,7 +421,7 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   double dist(0.0);
   
   double max_range(0.0);
-  for(int i=0; i< _c1.posDOF(); ++i) {
+  for(int i=0; i< _c1.PosDOF(); ++i) {
     std::pair<double,double> range = env->GetBoundingBox()->GetRange(i);
     double tmp_range = range.second-range.first;
     if(tmp_range > max_range) max_range = tmp_range;
@@ -432,7 +432,7 @@ Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
   for(int i=0; i<_c1.DOF(); ++i) {
     
     // calculate distance for positional coordinate
-    if (i < _c1.posDOF()) {
+    if (i < _c1.PosDOF()) {
       double diff = (_c1.GetSingleParam(i) - _c2.GetSingleParam(i))/max_range;
       //cout << "  " << i + 1 << ": diff = " << diff << endl;
       if(useRotational)

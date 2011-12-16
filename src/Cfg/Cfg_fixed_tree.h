@@ -60,8 +60,8 @@ class Cfg_fixed_tree : public Cfg {
     }
 #endif
 
-  static int  getNumofJoints() {return NumofJoints;};
-  static void setNumofJoints(int _numofjoints) {NumofJoints = _numofjoints;}
+  static int  GetNumOfJoints() {return m_numOfJoints;};
+  static void SetNumOfJoints(int _numofjoints) {m_numOfJoints = _numofjoints;}
     
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -72,8 +72,6 @@ class Cfg_fixed_tree : public Cfg {
   //////////////////////////////////////////////////////////////////////////////////////////
   /**@name Access Methods*/
   //@{
-  
-  virtual void equals(const Cfg&);
   
   ///The center position is (0, 0, 0)
   virtual Vector3D GetRobotCenterPosition() const;
@@ -111,19 +109,6 @@ class Cfg_fixed_tree : public Cfg {
     */
   virtual void GetMovingSequenceNodes(const Cfg& other, vector<double> s, vector<Cfg*>& result) const;
 
-  ///Just like GetRandomCfg.
-  virtual bool GenerateOverlapCfg(Environment *env, int robot, 
-				  Vector3D robot_start, Vector3D robot_goal, 
-				  Cfg *resultCfg); // OBPRM 
-
-  ///Not implemented yet.
-  virtual void GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, Stat_Class& Stats, 
-					 string vc_method,
-					 int obstacle, int nCfgs,  
-					 CDInfo& _cdInfo, vector<Cfg*>&) const; // NORMAL
-
-  //@}
-
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -136,29 +121,21 @@ class Cfg_fixed_tree : public Cfg {
 
   /// methods for Cfg generation and collision checking.
   virtual bool ConfigEnvironment(Environment *env) const;
-  
-  //@}
 
-  //Since posDof=0, we need to override this function
-  virtual void c1_towards_c2(const Cfg& cfg1, const Cfg& cfg2, double d);
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
   //    protected Data member and member methods
   //
   //     
   //////////////////////////////////////////////////////////////////////////////////////////
-     
-  virtual Cfg* CreateNewCfg() const;
-  virtual Cfg* CreateNewCfg(vector<double>&) const;
 
 protected:
 
   ///Just like GetRandomCfg.
   virtual void GetRandomCfg_CenterOfMass(Environment *env);
 
-  static int NumofJoints;  ///< # of Joints
+  static int m_numOfJoints;  ///< # of Joints
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 //

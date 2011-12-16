@@ -1,45 +1,33 @@
 #include "Cfg_free_tree_2dof.h"
-
-#include "Cfg.h"
-#include "Cfg_free.h"
 #include "MultiBody.h"
 #include "Environment.h"
-#include "DistanceMetricMethod.h"
 
-int Cfg_free_tree_2dof::NumofJoints;
+int Cfg_free_tree_2dof::m_numOfJoints;
 
 Cfg_free_tree_2dof::Cfg_free_tree_2dof(){
-  dof = 6 + NumofJoints;
-  posDof = 3;
-  v.clear();
-  for(int i=0; i<dof; i++)
-    v.push_back(0);
-
-  obst = -1;
-  tag = -1;
-  clearance = -1;
+  m_dof = 6 + m_numOfJoints;
+  m_posDof = 3;
+  m_v.clear();
+  for(int i=0; i<m_dof; i++)
+    m_v.push_back(0);
 };
 
 Cfg_free_tree_2dof::~Cfg_free_tree_2dof(){}
 
 Cfg_free_tree_2dof::Cfg_free_tree_2dof(int _numofJoints) {
-  if(NumofJoints != _numofJoints ) {
+  if(m_numOfJoints != _numofJoints ) {
     cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(int), cannot change numofJoints\n";
     exit(-1);
   }
   
-  dof = 6 + NumofJoints;
-  posDof = 3;
+  m_dof = 6 + m_numOfJoints;
+  m_posDof = 3;
   
-  v.clear();
-  for(int i=0; i<dof; i++)
-    v.push_back(0);
+  m_v.clear();
+  for(int i=0; i<m_dof; i++)
+    m_v.push_back(0);
   
-  Normalize_orientation(); 
-
-  obst = -1;
-  tag = -1;
-  clearance = -1;
+  NormalizeOrientation(); 
 }
 
 Cfg_free_tree_2dof::Cfg_free_tree_2dof(double x, double y, double z, 
@@ -54,42 +42,34 @@ Cfg_free_tree_2dof::Cfg_free_tree_2dof(const Vector6D& _v) {
 }
 
 Cfg_free_tree_2dof::Cfg_free_tree_2dof(const vector<double> &_v){
-  dof = 6 + NumofJoints;
-  posDof = 3;
-  if((int)_v.size() < dof) {
+  m_dof = 6 + m_numOfJoints;
+  m_posDof = 3;
+  if((int)_v.size() < m_dof) {
     cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(vector<double>), ";
-    cout << "size of vector less than dof\n";
+    cout << "size of vector less than m_dof\n";
     exit(-1);
   }
-  v.clear();
-  for(int i=0; i<dof; i++)
-    v.push_back(_v[i]);
-  Normalize_orientation();
-
-  obst = -1;
-  tag = -1;
-  clearance = -1;
+  m_v.clear();
+  for(int i=0; i<m_dof; i++)
+    m_v.push_back(_v[i]);
+  NormalizeOrientation();
 
 };
 
 Cfg_free_tree_2dof::Cfg_free_tree_2dof(const Cfg& _c) {
-  dof = 6 + NumofJoints;
-  posDof = 3;
+  m_dof = 6 + m_numOfJoints;
+  m_posDof = 3;
   vector<double> _v;
   _v = _c.GetData();
-  if((int)_v.size() < dof) {
+  if((int)_v.size() < m_dof) {
     cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(Cfg&), ";
-    cout << "size of cfg data less than dof\n";
+    cout << "size of cfg data less than m_dof\n";
     exit(-1);
   }
-  v.clear();
-  for(int i=0; i<dof; i++)
-    v.push_back(_v[i]);
-  Normalize_orientation();
-
-  obst = _c.obst;
-  tag = _c.tag;
-  clearance = _c.clearance;
+  m_v.clear();
+  for(int i=0; i<m_dof; i++)
+    m_v.push_back(_v[i]);
+  NormalizeOrientation();
 }
 
 
@@ -97,45 +77,23 @@ const char* Cfg_free_tree_2dof::GetName() const {
   return "Cfg_free_tree_2dof";
 }
 
-
-Cfg* Cfg_free_tree_2dof::CreateNewCfg() const {
-  Cfg* tmp = new Cfg_free_tree_2dof();
-  tmp->equals(*this);
-  return tmp;
-}
-
-
-Cfg* Cfg_free_tree_2dof::CreateNewCfg(vector<double>& data) const {
-  vector<double> _data;
-  if((int)data.size() < dof) {
-    cout << "\n\nERROR in Cfg_free_tree_2dof::CreateNewCfg(vector<double>), ";
-    cout << "size of vector is less than dof\n";
-    exit(-1);
-  }
-  for(int i=0; i<dof; i++)
-    _data.push_back(data[i]);
-  Cfg* tmp = new Cfg_free_tree_2dof(_data);
-  return tmp;
-}
-
-
 bool Cfg_free_tree_2dof::ConfigEnvironment(Environment *_env) const {
   int robot = _env->GetRobotIndex();
      
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
   Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
-						 v[5]*TWOPI, 
-						 v[4]*TWOPI, 
-						 v[3]*TWOPI), // RPY
-				     Vector3D(v[0],v[1],v[2]));
+						 m_v[5]*TWOPI, 
+						 m_v[4]*TWOPI, 
+						 m_v[3]*TWOPI), // RPY
+				     Vector3D(m_v[0],m_v[1],m_v[2]));
   
   _env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);  // update link 1.
-  for(int i=0; i<NumofJoints; i+=2) {
+  for(int i=0; i<m_numOfJoints; i+=2) {
     _env->GetMultiBody(robot)->GetFreeBody(i/2+1)
-      ->GetBackwardConnection(0).GetDHparameters().alpha = v[i+6]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().alpha = m_v[i+6]*360.0;
     _env->GetMultiBody(robot)->GetFreeBody(i/2+1)
-      ->GetBackwardConnection(0).GetDHparameters().theta = v[i+1+6]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().theta = m_v[i+1+6]*360.0;
   }  // config the robot
   
   

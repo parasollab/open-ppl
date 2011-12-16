@@ -36,10 +36,10 @@ class Cfg_free_tree : public Cfg_free {
     }
 #endif
 
-  static int  getNumofJoints() { return NumofJoints; }
+  static int  GetNumOfJoints() { return m_numOfJoints; }
 
   // setNumofJoints should be consistent in every class
-  static void setNumofJoints(int _numofjoints) { NumofJoints = _numofjoints; }
+  static void SetNumOfJoints(int _numofjoints) { m_numOfJoints = _numofjoints; }
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -50,8 +50,6 @@ class Cfg_free_tree : public Cfg_free {
   //////////////////////////////////////////////////////////////////////////////////////////
   /**@name Access Methods*/
   //@{
-
-  virtual void equals(const Cfg&);
 
   ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition() const;
@@ -67,27 +65,11 @@ class Cfg_free_tree : public Cfg_free {
   virtual void GetRandomCfg(double R, double rStep);
   virtual void GetRandomCfg(Environment* env);
 
-  /// Node Generation methods: OBPRM
-  virtual bool GenerateOverlapCfg(Environment *env, int robot,
-				  Vector3D robot_start, Vector3D robot_goal, 
-				  Cfg *resultCfg);
-
-  /// Node Generation methods: NORMAL
-  virtual void GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, Stat_Class& Stats,
-					 string vc_method,
-					 int obstacle, int nCfgs,
-					 CDInfo& _cdInfo, 
-					 vector<Cfg*>&surface);
-
-  virtual Cfg* CreateNewCfg() const;
-  virtual Cfg* CreateNewCfg(vector<double>&) const;
-
-
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
   virtual void GetRandomCfg_CenterOfMass(Environment* env);
 
-  static   int NumofJoints;
+  static int m_numOfJoints;
 
  private:
 };

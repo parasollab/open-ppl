@@ -36,9 +36,6 @@ public:
   virtual bool ConfigEnvironment(Environment*) const;
 
   virtual void GetRandomCfg(Environment* env);
-  
-  virtual Cfg* CreateNewCfg() const;
-  virtual Cfg* CreateNewCfg(vector<double>&) const;
 
  protected:
   static int NumofRobots;

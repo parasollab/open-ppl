@@ -289,7 +289,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
   // Determine direction to move
   transDir = tmpInfo.object_point - tmpInfo.robot_point;
   for (int i=0; i<transCfg.DOF(); i++) {
-    if ( i < transCfg.posDOF() ) 
+    if ( i < transCfg.PosDOF() ) 
       transCfg.SetSingleParam(i, transDir[i]);
     else                          
       transCfg.SetSingleParam(i, 0.0);
@@ -303,7 +303,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
 
   // Check if valid and outside obstacle
   while ( !tmpValidity ) {
-    heldCfg.equals(tmpCfg);
+    heldCfg = tmpCfg;
     tmpCfg.multiply(transCfg,stepSize);
     tmpCfg.add(_cfg, tmpCfg);
     tmpValidity = vc->IsValid(vcm,tmpCfg,_env,_stats,tmpInfo,true,&call);
@@ -320,7 +320,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
     }
     stepSize += 1.0;
   }
-  _cfg.equals(tmpCfg);
+  _cfg = tmpCfg;
   if (_debug) cout << "FINAL CfgType: " << _cfg << " steps: " << stepSize-1.0 << endl << call << "::END " << endl;
   return true;
 }
@@ -353,7 +353,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
   // tmpInfo and Origin Setup
   tmpInfo.ResetVars();
   tmpInfo.ret_all_info = true;
-  tmpCfg.equals(_cfg);
+  tmpCfg = _cfg;
 
   // Determine direction to move and clearance
   valid = CalculateCollisionInfo(_mp,_cfg,_env,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX);
@@ -362,7 +362,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
 
   transDir = tmpInfo.robot_point - tmpInfo.object_point;
   for (int i=0; i<transCfg.DOF(); i++) {
-    if ( i < transCfg.posDOF() ) 
+    if ( i < transCfg.PosDOF() ) 
       transCfg.SetSingleParam(i, transDir[i]);
     else                          
       transCfg.SetSingleParam(i, 0.0);
@@ -457,8 +457,8 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
   vector<double> dists(5,0), deltas(4,0);
 
   // Setup start, middle and end CfgTypes  
-  startCfg.equals(segCfgs[0]);
-  endingCfg.equals(segCfgs[segCfgs.size()-1]);
+  startCfg = segCfgs[0];
+  endingCfg = segCfgs[segCfgs.size()-1];
   midMCfg.add(startCfg, endingCfg);
   midMCfg.divide(midMCfg,2);
   CalculateCollisionInfo(_mp,startCfg,_env,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX);
@@ -485,7 +485,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
   difCfg->subtract(startCfg,endingCfg);
   gDif.clear();
   for(int i=0; i<startCfg.DOF(); ++i) {
-    if ( i < startCfg.posDOF() ) 
+    if ( i < startCfg.PosDOF() ) 
       gapDist += (startCfg.GetSingleParam(i) - endingCfg.GetSingleParam(i))*
         (startCfg.GetSingleParam(i) - endingCfg.GetSingleParam(i));
     else                          
@@ -522,37 +522,37 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
     // Determine Peak
     if ( deltas[0] > 0 && deltas[1] < 0 && dists[1] == maxDist) {
       peak = 1;
-      endingCfg.equals(midMCfg);
-      midMCfg.equals(midSCfg);
+      endingCfg = midMCfg;
+      midMCfg = midSCfg;
       dists[4] = dists[2];
       dists[2] = dists[1];
     } 
     else if ( deltas[1] > 0 && deltas[2] < 0 && dists[2] == maxDist) {
       peak = 2;
-      startCfg.equals(midSCfg);
-      endingCfg.equals(midECfg);
+      startCfg = midSCfg;
+      endingCfg = midECfg;
       dists[0] = dists[1];
       dists[4] = dists[3];
     } 
     else if ( deltas[2] > 0 && deltas[3] < 0 && dists[3] == maxDist) {
       peak = 3;
-      startCfg.equals(midMCfg);
-      midMCfg.equals(midECfg);
+      startCfg = midMCfg;
+      midMCfg = midECfg;
       dists[0] = dists[2];
       dists[2] = dists[3];
     } 
     else {
       if ( deltas[0] > 0 && deltas[1] > 0 && deltas[2] > 0 && deltas[3] > 0) {
         peak = 3;
-        startCfg.equals(midMCfg);
-        midMCfg.equals(midECfg);
+        startCfg = midMCfg;
+        midMCfg = midECfg;
         dists[0] = dists[2];
         dists[2] = dists[3];
       } 
       else if ( deltas[0] < 0 && deltas[1] < 0 && deltas[2] < 0 && deltas[3] < 0) {
         peak = 1;
-        endingCfg.equals(midMCfg);
-        midMCfg.equals(midSCfg);
+        endingCfg = midMCfg;
+        midMCfg = midSCfg;
         dists[4] = dists[2];
         dists[2] = dists[1];
       } 
@@ -575,7 +575,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
     gDif.clear(); 
     gapDist = 0.0;
     for(int i=0; i<startCfg.DOF(); ++i) {
-      if ( i < startCfg.posDOF() ) gapDist += (startCfg.GetSingleParam(i) - endingCfg.GetSingleParam(i))*
+      if ( i < startCfg.PosDOF() ) gapDist += (startCfg.GetSingleParam(i) - endingCfg.GetSingleParam(i))*
         (startCfg.GetSingleParam(i) - endingCfg.GetSingleParam(i));
       else                          
         gapDist += (DirectedAngularDistance(startCfg.GetSingleParam(i), endingCfg.GetSingleParam(i)))*
@@ -589,7 +589,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
 
   } while ( !peaked && attempts < maxAttempts && badPeaks < maxBadPeaks );
 
-  _cfg.equals(midMCfg);
+  _cfg = midMCfg;
   if (_debug) cout << "FINAL CfgType: " << _cfg << " steps: " << stepSize << endl;
   return true;
 }
@@ -639,7 +639,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Sta
   for(int m=0; m < robot->GetFreeBodyCount(); m++) {
     GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
     for(size_t j = 0 ; j < poly.vertexList.size() ; j++){
-      for (int k=0; k<_cfg.posDOF(); k++) { // For all positional DOFs
+      for (int k=0; k<_cfg.PosDOF(); k++) { // For all positional DOFs
         bbxRange = bbx->GetRange(k);
         if ( (poly.vertexList[j][k]-bbxRange.first) < _cdInfo.min_dist ) {
           _cdInfo.object_point[k] = bbxRange.first; // Lower Bound
@@ -685,7 +685,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
     initValidity = (initValidity && initInBBX);
 
   // Set Robot point in positional space // TODO: Higher DOF
-  for (int i=0; i<_cfg.posDOF(); i++)
+  for (int i=0; i<_cfg.PosDOF(); i++)
     _cdInfo.robot_point[i] = _cfg.GetSingleParam(i);
 
   // Setup Major Variables and Constants:
@@ -775,28 +775,28 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
 
       if ( !(midCfg->InBoundingBox(_env)) || (midValidity != initValidity) ) { // If Outside BBX or Validity has changed
         if ( initValidity ) 
-          outerCfg->equals(*midCfg);
+          *outerCfg = *midCfg;
         else                 
-          innerCfg->equals(*midCfg);
+          *innerCfg = *midCfg;
       } else {
         if ( initValidity ) 
-          innerCfg->equals(*midCfg);
+          *innerCfg = *midCfg;
         else                 
-          outerCfg->equals(*midCfg);
+          *outerCfg = *midCfg;
       }
 
       // Compute Real Dist
       difCfg->subtract(*innerCfg,*outerCfg);
       tmpDist = 0.0;
-      for (int j=0; j<_cfg.posDOF(); j++)
+      for (int j=0; j<_cfg.PosDOF(); j++)
         tmpDist += difCfg->GetSingleParam(j)*difCfg->GetSingleParam(j);
       tmpDist = sqrt(tmpDist);
     } while ((tmpDist > res/100.0) && (++j <= maxNumSteps));
 
-    midCfg->equals((initValidity)?*innerCfg:*outerCfg);
+    *midCfg = (initValidity)?*innerCfg:*outerCfg;
     difCfg->subtract(*midCfg,_cfg);
     tmpDist = 0.0;
-    for (int j=0; j<_cfg.posDOF(); j++)
+    for (int j=0; j<_cfg.PosDOF(); j++)
       tmpDist += difCfg->GetSingleParam(j)*difCfg->GetSingleParam(j);
     tmpDist = sqrt(tmpDist);
 
@@ -804,7 +804,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
     if ( _cdInfo.min_dist > tmpDist ) {
       if ( midCfg->InBoundingBox(_env) ) {
         _cdInfo.min_dist = tmpDist;
-        for (int j=0; j<midCfg->posDOF();j++)
+        for (int j=0; j<midCfg->PosDOF();j++)
           _cdInfo.object_point[j] = midCfg->GetSingleParam(j);
       } 
       else 

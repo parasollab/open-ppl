@@ -48,7 +48,7 @@ void
 Cfg_reach_cc_fixed::
 GetRandomCfg_CenterOfMass(Environment* env) {
   for(int i=0; i<6; ++i)
-    v[i] = 0;
+    m_v[i] = 0;
 
   link_tree->ResetTree();
    if(is_closed_chain)
@@ -60,10 +60,6 @@ GetRandomCfg_CenterOfMass(Environment* env) {
   link_tree->ExportTreeLinkLength(link_lengths, link_orientations);
 
   StoreData();
-  
-  obst = -1;
-  tag = -1;
-  clearance = -1;
 }
 
 void 
@@ -72,23 +68,3 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm)
   cerr << "Warning GetRandomRay not implemented yet\n";
 }
 
-Cfg* 
-Cfg_reach_cc_fixed::
-CreateNewCfg() const {
-  Cfg* tmp = new Cfg_reach_cc_fixed(*this);
-  return tmp;
-}
-
-Cfg* 
-Cfg_reach_cc_fixed::
-CreateNewCfg(vector<double>& _v) const {
-  if((int)_v.size() < dof) {
-    cout << "\n\nERROR in Cfg_reach_cc_fixed::CreateNewCfg(vector<double>), ";
-    cout << "size of vector is less than dof\n";
-    exit(-1);
-  }
-  vector<double> _data(_v.begin(), _v.begin()+dof);
-  Cfg* tmp = new Cfg_reach_cc_fixed(_data);
- 
-  return tmp;
-}

@@ -182,7 +182,7 @@ void Body::buildCDstructure(cd_predefined cdtype) {
     GMSPolyhedron poly = GetPolyhedron();
     Polyhedron* vpoly = new Polyhedron;
 
-    if(CfgType().posDOF()==2){
+    if(CfgType().PosDOF()==2){
       for(size_t v = 0 ; v < poly.vertexList.size() ; v++){
         vpoly->addVertex("",
             Vect3(poly.vertexList[v].getX(),

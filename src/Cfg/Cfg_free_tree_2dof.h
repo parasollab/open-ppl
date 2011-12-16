@@ -27,23 +27,20 @@ class Cfg_free_tree_2dof : public Cfg_free_tree {
     }
   #endif
 
-  static int  getNumofJoints() { return NumofJoints; }
+  static int  GetNumOfJoints() { return m_numOfJoints; }
 
   // setNumofJoints should be consistent in every class
-  static void setNumofJoints(int _numofjoints) { 
-    Cfg::setNumofJoints(_numofjoints);
-    NumofJoints = _numofjoints; 
+  static void SetNumOfJoints(int _numofjoints) { 
+    Cfg::SetNumOfJoints(_numofjoints);
+    m_numOfJoints = _numofjoints; 
   }
 
   virtual const char* GetName() const;
 
   virtual bool ConfigEnvironment(Environment*) const;
 
-  virtual Cfg* CreateNewCfg() const;
-  virtual Cfg* CreateNewCfg(vector<double>&) const;
-
  protected:
-  static   int NumofJoints;
+  static int m_numOfJoints;
 
  private:
 };

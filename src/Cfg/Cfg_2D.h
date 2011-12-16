@@ -16,7 +16,6 @@
 #include "Cfg.h"
 #include "Point.h"
 using namespace mathtool;
-class GMSPolyhedron;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -80,7 +79,7 @@ public:
   virtual void multiply(const Cfg&, double);
   virtual void divide(const Cfg&, double);
    
-  virtual void equals(const Cfg&);
+  virtual Cfg& operator=(const Cfg&);
 
   virtual void WeightedSum(const Cfg&, const Cfg&, double weight = 0.5);       
   
@@ -113,46 +112,8 @@ public:
 
   //Get position in the form of Point2d
   Point2d getPos() const {return p;}
-  void setPos(Point2d _p){ v[0]=_p[0]; v[1]=_p[1]; p=_p;}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    methods for nodes generation 
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-  virtual bool GenerateOverlapCfg(Environment *env, int robot,
-				  Vector3D robot_start, Vector3D robot_goal, 
-				  Cfg *resultCfg);
-
-  virtual void GenSurfaceCfgs4ObstNORMAL(MPProblem* mp, Environment * env, Stat_Class& Stats,
-					 string vc_method,
-					 int obstacle, int nCfgs, 
-					 CDInfo& _cdInfo, vector<Cfg*>&) const;
-
-  virtual void GetCfgByOverlappingNormal(MPProblem* mp, Environment * env, Stat_Class& Stats,
-					 string vc_method,
-					 const GMSPolyhedron &polyRobot, const GMSPolyhedron &polyObst,
-					 int robTri, int obsTri,
-					 CDInfo& _cdInfo,
-					 shared_ptr<MultiBody>, vector<Cfg*>) const;
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Helper functions
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  virtual bool InNarrowPassage(MPProblem* mp, Environment* env, Stat_Class& Stats,
-			       string vc_method, CDInfo& _cdInfo,
-			       shared_ptr<MultiBody> onflyRobot) const;
-  
-  virtual Cfg* CreateNewCfg() const;
-  virtual Cfg* CreateNewCfg(vector<double>&) const;
-
+  void setPos(Point2d _p){ m_v[0]=_p[0]; m_v[1]=_p[1]; p=_p;}
+ 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //

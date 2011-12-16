@@ -45,7 +45,7 @@ template <class CFG, class WEIGHT>
 TransformAtS<CFG, WEIGHT>::
 TransformAtS(XMLNodeReader& in_Node, MPProblem* in_pProblem) : StraightLine<CFG, WEIGHT>(in_Node, in_pProblem) {
   this->SetName("TransformAtS");
-  s_value = in_Node.numberXMLParameter(string("s"), true, 0.5, 0.0, 1.0, string("transform at s value"));
+  s_value = in_Node.numberXMLParameter("s", true, 0.5, 0.0, 1.0,"transform at s value");
 }
 
 template <class CFG, class WEIGHT> TransformAtS<CFG, WEIGHT>::~TransformAtS() { }
@@ -94,19 +94,19 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   vector<double> tmp = _c1.GetData();
   vector<double> half_position = _c1.GetData();
 
-  cout << "Start CFG positional DOF: " << _c1.posDOF() << "\n" << flush; 
+  cout << "Start CFG positional DOF: " << _c1.PosDOF() << "\n" << flush; 
 
   vector<Cfg*> sequence;  
 
   sequence.push_back(_c1.CreateNewCfg());
 
   vector<double> translate_data = start_data;
-  if (_c1.posDOF() > 0 ) {
+  if (_c1.PosDOF() > 0 ) {
     // Translate the robot base s_value way between start and goal, keeping orientation fixed
     Cfg* cfg_average = _c1.CreateNewCfg();
     cfg_average->WeightedSum(_c1, _c2, s_value);
     vector<double> average_data = cfg_average->GetData();
-    for ( int i=0; i<_c1.posDOF(); ++i )
+    for ( int i=0; i<_c1.PosDOF(); ++i )
       translate_data[i] = average_data[i];
 
     Cfg* cfg_translate = _c1.CreateNewCfg(translate_data);
@@ -116,7 +116,7 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   }
   translate_data = start_data;
 
-  for(int i=_c1.posDOF(); i<_c1.DOF(); ++i)
+  for(int i=_c1.PosDOF(); i<_c1.DOF(); ++i)
   {
     //create intermediate cfg, replacing dof i with goal dof
     vector<double> intermediate_data = translate_data;
@@ -199,19 +199,19 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   vector<double> tmp           = _c1.GetData();
   vector<double> half_position = _c1.GetData();
 
-  cout << "Start CFG positional DOF: " << _c1.posDOF() << "\n" << flush;
+  cout << "Start CFG positional DOF: " << _c1.PosDOF() << "\n" << flush;
 
   vector<Cfg*> sequence;
 
   sequence.push_back(_c1.CreateNewCfg());
 
   vector<double> translate_data = start_data;
-  if(_c1.posDOF() > 0) {
+  if(_c1.PosDOF() > 0) {
     //translate the robot base s_value way between start and goal, keeping orientation fixed
     Cfg* cfg_average = _c1.CreateNewCfg();
     cfg_average->WeightedSum(_c1, _c2, s_value);
     vector<double> average_data = cfg_average->GetData();
-    for(int i=0; i<_c1.posDOF(); ++i)
+    for(int i=0; i<_c1.PosDOF(); ++i)
       translate_data[i] = average_data[i];
 
     Cfg* cfg_translate = _c1.CreateNewCfg(translate_data);
@@ -222,7 +222,7 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 
   translate_data = start_data;
 
-  for(int i=_c1.DOF()-1; i>_c1.posDOF()-1; --i)
+  for(int i=_c1.DOF()-1; i>_c1.PosDOF()-1; --i)
   {
     //create intermediate cfg, replacing dof i with goal dof
     vector<double> intermediate_data = translate_data;

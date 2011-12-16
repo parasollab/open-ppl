@@ -202,7 +202,6 @@ PMPL_OBJS = \
 	MPProblem/Geometry/MultiBody.o \
 	Cfg/Cfg.o \
 	Cfg/Cfg_free.o \
-	Cfg/Cfg_fixed_PRR.o \
 	Cfg/Cfg_free_tree.o \
 	Cfg/Cfg_free_tree_2dof.o \
 	Cfg/Cfg_fixed_tree.o \
