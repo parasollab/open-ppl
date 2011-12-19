@@ -77,8 +77,6 @@ class GridSampler : public SamplerMethod<CFG> {
       if(tmp==CFG())
         tmp.GetRandomCfg(_env);
 
-      bool tmp_bbox = tmp.InBoundingBox(_env);
-
       for (map<size_t, size_t>::iterator it=m_numPoints.begin() ; it != m_numPoints.end(); it++ ) {
         int index = it->first;
         int numPoints = it->second;

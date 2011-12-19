@@ -124,6 +124,7 @@ Cfg& Cfg::operator=(const Cfg& _c){
   m_labelMap = _c.m_labelMap;
   m_statMap = _c.m_statMap;
 #endif
+  return *this;
 }
 
 void Cfg::WeightedSum(const Cfg& _first, const Cfg& _second, double _weight) {
@@ -718,7 +719,7 @@ Cfg* Cfg::CreateNewCfg() const{
 }
 
 Cfg* Cfg::CreateNewCfg(vector<double>& _data) const {
-  if(_data.size() != m_dof) {
+  if((int)_data.size() != m_dof) {
     cout << "\n\nERROR in Cfg::CreateNewCfg(vector<double>), ";
     cout << "size of vector does not equal dof " << _data.size() << "\t!=\t" << m_dof << endl;
     exit(-1);
