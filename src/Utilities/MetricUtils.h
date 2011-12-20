@@ -645,16 +645,16 @@ public:
   //-----------------------------------------------------------
   //@{
   ///Set every thing to zero
-  int ClearClock();
+  void ClearClock();
 
   ///Start the clock and the name is identity of this clock.
-  int StartClock(string _name);
+  void StartClock(string _name);
 
   ///Stop the clock and calculate the total running time.
-  int StopClock();
+  void StopClock();
 
   ///Call StopClock and PrintClock.
-  int StopPrintClock();
+  void StopPrintClock();
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -708,10 +708,9 @@ public:
   //
   ///////////////////////////////////////////////////////////////////////////////////////////
 private:
-  struct timeval m_sTime;
-  struct timeval m_uTime;
-  struct timeval m_elapsed;
-   string m_clockName;
+  int m_sTime, m_uTime;
+  int m_suTime, m_uuTime;
+  string m_clockName;
 };
 
 

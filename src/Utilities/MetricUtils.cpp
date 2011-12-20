@@ -361,9 +361,7 @@ IncConnections_Made(){
 //----------------------------------------
 ClockClass::
 ClockClass() {
-  timerclear(&m_sTime);
-  timerclear(&m_uTime);
-  timerclear(&m_elapsed);
+  ClearClock();
 };
 
 //----------------------------------------
@@ -376,64 +374,46 @@ ClockClass::
 //----------------------------------------
 // Clear the clock
 //----------------------------------------
-int
+void
 ClockClass::
 ClearClock() {
-  timerclear(&m_sTime);
-  timerclear(&m_uTime);
-  timerclear(&m_elapsed);
-  return 1;
+  m_sTime=0;
+  m_uTime=0;
+  m_suTime=0;
+  m_uuTime=0;
 };
 
 //----------------------------------------
 // Start a clock and give it a name of Name
 //----------------------------------------
-int
+void
 ClockClass::
 StartClock(string _name) {
-  struct timezone tz;
-  gettimeofday(&m_sTime, &tz);
+  getrusage(RUSAGE_SELF, &buf);
+  m_suTime = buf.ru_utime.tv_usec;
+  m_sTime = buf.ru_utime.tv_sec;
   m_clockName = _name;
-  return 1;
 };
 
 //----------------------------------------
 // Stop the clock
 //----------------------------------------
-int
+void
 ClockClass::
 StopClock() {
-  struct timezone tz;
-  gettimeofday(&m_uTime, &tz);
-
-  struct timeval diff;
-  if(m_sTime.tv_usec > m_uTime.tv_usec) {
-    m_uTime.tv_usec += 1000000;
-    m_uTime.tv_sec--;
-  }
-
-  diff.tv_usec = m_uTime.tv_usec - m_sTime.tv_usec;
-  diff.tv_sec = m_uTime.tv_sec - m_sTime.tv_sec;
-
-  m_elapsed.tv_usec += diff.tv_usec;
-  m_elapsed.tv_sec += diff.tv_sec;
-  if(m_elapsed.tv_usec > 1000000) {
-    m_elapsed.tv_usec -= 1000000;
-    m_elapsed.tv_sec++;
-  }
-
-  return 1;
+  getrusage(RUSAGE_SELF, &buf);
+  m_uuTime = buf.ru_utime.tv_usec - m_suTime;
+  m_uTime = buf.ru_utime.tv_sec - m_sTime;
 };
 
 //----------------------------------------
 // Stop the clock and Print its current value
 //----------------------------------------
-int
+void
 ClockClass::
 StopPrintClock() {
   StopClock();
   PrintClock();
-  return 1;
 };
 
 //----------------------------------------
@@ -451,7 +431,7 @@ PrintClock() {
 int
 ClockClass::
 GetClock() {
-  return m_elapsed.tv_sec;
+  return m_uTime;
 };
 
 //----------------------------------------
@@ -470,7 +450,7 @@ PrintName() {
 double
 ClockClass::
 GetSeconds() {
-  return (double)(m_elapsed.tv_sec + m_elapsed.tv_usec/1e6);
+  return (double)m_uuTime/1e6+m_uTime;
 };
 
 //----------------------------------------
@@ -479,6 +459,6 @@ GetSeconds() {
 int
 ClockClass::
 GetUSeconds() {
-  return (int)(m_elapsed.tv_sec*1e6 + m_elapsed.tv_usec);
+  return (int)(m_uTime*1e6+m_uuTime);
 };
 
