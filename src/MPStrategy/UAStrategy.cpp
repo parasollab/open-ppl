@@ -565,7 +565,7 @@ void UAStrategy::EvaluatePartitions(){
 bool UAStrategy::EvaluateMap(int in_RegionID){
    bool mapPassedEvaluation = false;
    if(!m_EvaluatorLabels.empty()){
-      Clock_Class EvalClock;
+      ClockClass EvalClock;
       stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation"; 
       EvalClock.StartClock(clockName.str().c_str());
       
@@ -574,7 +574,7 @@ bool UAStrategy::EvaluateMap(int in_RegionID){
           I != m_EvaluatorLabels.end(); ++I){
          MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator;
          pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-         Clock_Class EvalSubClock;
+         ClockClass EvalSubClock;
          stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_CurrentIteration << ", " << pEvaluator->GetName();
          EvalSubClock.StartClock(evaluatorClockName.str().c_str());
          

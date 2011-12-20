@@ -2,7 +2,7 @@
 #define TogglePRMStrategy_h
 
 #include "MPProblem/RoadmapGraph.h" //for VID typedef
-#include "Clock_Class.h"
+#include "MetricUtils.h"
 #include "MPStrategy/MPStrategyMethod.h"
 #include "MPRegion.h"
 
@@ -42,7 +42,7 @@ class TogglePRMStrategy : public MPStrategyMethod
       OutputIterator thisIterationOut, OutputIterator allCollisionOut, OutputIterator
       thisIterationCollisionOut, deque<pair<string, CfgType> >& queue);
 
-   Clock_Class MapGenClock;
+   ClockClass MapGenClock;
 };
 
 #endif

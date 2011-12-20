@@ -213,8 +213,6 @@ PMPL_OBJS = \
 	Cfg/Cfg_free_multi.o \
 	MPProblem/Environment.o \
 	MPProblem/ClosedChainProblem.o \
-	Utilities/Clock_Class.o \
-	Utilities/Clock_Elapsed.o \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
         Utilities/MPUtils.o \

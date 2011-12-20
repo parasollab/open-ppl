@@ -277,7 +277,7 @@ CombineRegions(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
   for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
 #ifndef QUIET	
-    Clock_Class clock;
+    ClockClass clock;
     clock.StartClock((*itr)->GetName());
     cout<<"\n  "; clock.PrintName(); cout << " " << flush;
 #endif	

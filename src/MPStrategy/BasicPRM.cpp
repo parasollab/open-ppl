@@ -220,7 +220,7 @@ void BasicPRM::Finalize(int _regionID){
 void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region, 
     vector<VID>& allNodesVID, vector<VID>& thisIterationNodesVID)
 {
-  Clock_Class nodeConnClock;
+  ClockClass nodeConnClock;
   stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Node Connection";
   nodeConnClock.StartClock(clockName.str().c_str());
   stapl::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
@@ -231,7 +231,7 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
     ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
     pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I);    
 
-    Clock_Class nodeConnSubClock;
+    ClockClass nodeConnSubClock;
     stringstream connectorClockName; connectorClockName << "Iteration " << m_currentIteration << ", " << pConnection->GetName();
     nodeConnSubClock.StartClock(connectorClockName.str().c_str());
 
@@ -260,7 +260,7 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
 }
 
 void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
-  Clock_Class componentConnClock;
+  ClockClass componentConnClock;
   stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Component Connection";
   componentConnClock.StartClock(clockName.str().c_str());
   stapl::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
@@ -270,7 +270,7 @@ void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
     ConnectMap<CfgType, WeightType>::ComponentConnectionPointer pConnection;
     pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
 
-    Clock_Class componentConnSubClock;
+    ClockClass componentConnSubClock;
     stringstream connectorClockName; connectorClockName << "Iteration " << m_currentIteration << ", " << pConnection->GetName();
     componentConnSubClock.StartClock(connectorClockName.str().c_str());
 
@@ -300,7 +300,7 @@ bool BasicPRM::EvaluateMap(int _regionID)
 {
   bool mapPassedEvaluation = false;
   if(!m_evaluatorLabels.empty()){
-    Clock_Class evalClock;
+    ClockClass evalClock;
     stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Map Evaluation"; 
     evalClock.StartClock(clockName.str().c_str());
 
@@ -309,7 +309,7 @@ bool BasicPRM::EvaluateMap(int _regionID)
         I != m_evaluatorLabels.end(); ++I){
       MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator;
       pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      Clock_Class evalSubClock;
+      ClockClass evalSubClock;
       stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_currentIteration << ", " << pEvaluator->GetName();
       evalSubClock.StartClock(evaluatorClockName.str().c_str());
 
@@ -356,7 +356,7 @@ string BasicPRM::PickNextSampler(){
 template <typename OutputIterator>
 void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region, 
     OutputIterator _allOut, OutputIterator _thisIterationOut){
-  Clock_Class nodeGenClock;
+  ClockClass nodeGenClock;
   CDInfo cdInfo;
   Stat_Class * pStatClass = _region->GetStatClass();
   stringstream clockName; 
@@ -373,7 +373,7 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
       vector<CfgType> inNodes(git->second.first);
 
       //generate nodes for this node generator method
-      Clock_Class nodeGenSubClock;
+      ClockClass nodeGenSubClock;
       stringstream generatorClockName; 
       generatorClockName << "Iteration " << m_currentIteration << ", " << git->first;
       nodeGenSubClock.StartClock(generatorClockName.str().c_str());
@@ -402,7 +402,7 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
     vector<CfgType> inNodes(1);
 
     //generate nodes for this node generator method
-    Clock_Class nodeGenSubClock;
+    ClockClass nodeGenSubClock;
     stringstream generatorClockName; 
     generatorClockName << "Iteration " << m_currentIteration << ", " << NextNodeGen;
     nodeGenSubClock.StartClock(generatorClockName.str().c_str());

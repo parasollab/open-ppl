@@ -1,7 +1,7 @@
 #if !defined(_MAP_GENERATOR_H_)
 #define _MAP_GENERATOR_H_
 
-#include "Clock_Class.h"
+#include "MetricUtils.h"
 #include "GenerateMapNodes.h"
 #include "ConnectMap.h"
 #include "MapEvaluator.h"
@@ -311,8 +311,8 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
       //generate nodes chunk by chunk and seed for each chunk
       //perform connection chunk by chunk:
       for (int i=0; i<numChunks; i++) {
-	Clock_Class genClock;
-	Clock_Class conClock;
+	ClockClass genClock;
+	ClockClass conClock;
 	char genClockName[100], conClockName[100];      
 	sprintf(genClockName, "%s%d%s", "Node generation time in chunk ", i, ": ");
 	sprintf(conClockName, "%s%d%s", "Node connection time in chunk ", i, ": ");
@@ -381,13 +381,13 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	(*itr)->SetNextNodeIndex(nextNodeIndex);
 	
 	//keep track of gen/con time
-	genTime += genClock.GetClock_SEC();
-	conTime += conClock.GetClock_SEC();
+	genTime += genClock.GetSeconds();
+	conTime += conClock.GetSeconds();
 #ifndef QUIET
         cout<<"\n "; genClock.PrintName(); cout << " ";
-        cout << genClock.GetClock_SEC() << " sec  ";
+        cout << genClock.GetSeconds() << " sec  ";
 	cout<<"\n "; conClock.PrintName(); cout << " ";
-        cout << conClock.GetClock_SEC() << " sec  \n";
+        cout << conClock.GetSeconds() << " sec  \n";
 #endif
 	
       } //end for numChunks
@@ -422,14 +422,14 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
     rmap->WriteRoadmap(input, cd, dm, lp, mapname);
 */
 
-    Clock_Class evaluationClock;
+    ClockClass evaluationClock;
     evaluationClock.StartClock("Evaluation time");
     finished = stop(rmap);
     evaluationClock.StopClock();
-    totalEvalTime += evaluationClock.GetClock_SEC();
+    totalEvalTime += evaluationClock.GetSeconds();
 
 #ifndef QUIET
-    cout << "Evaluation time: " << evaluationClock.GetClock_SEC() << endl;
+    cout << "Evaluation time: " << evaluationClock.GetSeconds() << endl;
 
     if(!finished)
       cout << "\nMap failed evaluation test\n";
@@ -460,8 +460,8 @@ GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	    bool addPartialEdge,
 	    bool addAllEdges){
 
-  Clock_Class        NodeGenClock;
-  Clock_Class        ConnectionClock;
+  ClockClass        NodeGenClock;
+  ClockClass        ConnectionClock;
   nodes.erase(nodes.begin(),nodes.end());
 
    
@@ -487,8 +487,8 @@ GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
     if ( input->inmapFile.IsActivated() ){
       cout << "Read nodes from the existing map:";
     } else{
-      cout << "Node Generation: " << NodeGenClock.GetClock_SEC()
-           << " sec (ie, " << NodeGenClock.GetClock_USEC() << " usec),";
+      cout << "Node Generation: " << NodeGenClock.GetSeconds()
+           << " sec (ie, " << NodeGenClock.GetUSeconds() << " usec),";
     }
     
     cout << " "<<rmap->m_pRoadmap->get_num_vertices()<<" nodes\n"<< flush;

@@ -1,3 +1,11 @@
+#include <iostream>
+
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
+
+struct rusage buf;
+
 #include "MetricUtils.h"
 #include "GraphAlgo.h"
 /////////////////////////////////////////////////////////////////////
@@ -339,4 +347,138 @@ IncConnections_Made(){
   Connections_Made++;
 };
 
+/////////////////////////////////////////////////////////////////////
+//
+//  ClockClass
+//
+//  General Description
+//      This class provides methods to handle clocks to time events.
+//
+/////////////////////////////////////////////////////////////////////
+
+//----------------------------------------
+// ClockClass constructor
+//----------------------------------------
+ClockClass::
+ClockClass() {
+  timerclear(&m_sTime);
+  timerclear(&m_uTime);
+  timerclear(&m_elapsed);
+};
+
+//----------------------------------------
+// ClockClass Destructor
+//----------------------------------------
+ClockClass::
+~ClockClass() {
+};
+
+//----------------------------------------
+// Clear the clock
+//----------------------------------------
+int
+ClockClass::
+ClearClock() {
+  timerclear(&m_sTime);
+  timerclear(&m_uTime);
+  timerclear(&m_elapsed);
+  return 1;
+};
+
+//----------------------------------------
+// Start a clock and give it a name of Name
+//----------------------------------------
+int
+ClockClass::
+StartClock(string _name) {
+  struct timezone tz;
+  gettimeofday(&m_sTime, &tz);
+  m_clockName = _name;
+  return 1;
+};
+
+//----------------------------------------
+// Stop the clock
+//----------------------------------------
+int
+ClockClass::
+StopClock() {
+  struct timezone tz;
+  gettimeofday(&m_uTime, &tz);
+
+  struct timeval diff;
+  if(m_sTime.tv_usec > m_uTime.tv_usec) {
+    m_uTime.tv_usec += 1000000;
+    m_uTime.tv_sec--;
+  }
+
+  diff.tv_usec = m_uTime.tv_usec - m_sTime.tv_usec;
+  diff.tv_sec = m_uTime.tv_sec - m_sTime.tv_sec;
+
+  m_elapsed.tv_usec += diff.tv_usec;
+  m_elapsed.tv_sec += diff.tv_sec;
+  if(m_elapsed.tv_usec > 1000000) {
+    m_elapsed.tv_usec -= 1000000;
+    m_elapsed.tv_sec++;
+  }
+
+  return 1;
+};
+
+//----------------------------------------
+// Stop the clock and Print its current value
+//----------------------------------------
+int
+ClockClass::
+StopPrintClock() {
+  StopClock();
+  PrintClock();
+  return 1;
+};
+
+//----------------------------------------
+// Print the current value of the clock
+//----------------------------------------
+void
+ClockClass::
+PrintClock() {
+  cout << m_clockName << ": " << GetSeconds() << " sec" <<endl;
+};
+
+//----------------------------------------
+// Retrieve the current value of the clock
+//----------------------------------------
+int
+ClockClass::
+GetClock() {
+  return m_elapsed.tv_sec;
+};
+
+//----------------------------------------
+// Print the name of the clock provided in the
+// call to StartClock
+//----------------------------------------
+void
+ClockClass::
+PrintName() {
+    cout << m_clockName;
+};
+
+//----------------------------------------
+// Retrieve the seconds on the clock
+//----------------------------------------
+double
+ClockClass::
+GetSeconds() {
+  return (double)(m_elapsed.tv_sec + m_elapsed.tv_usec/1e6);
+};
+
+//----------------------------------------
+// Retrieve the u seconds on the clock
+//----------------------------------------
+int
+ClockClass::
+GetUSeconds() {
+  return (int)(m_elapsed.tv_sec*1e6 + m_elapsed.tv_usec);
+};
 

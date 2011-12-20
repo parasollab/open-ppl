@@ -10,7 +10,7 @@
 #ifndef PARTITIONSCHEMA_H
 #define PARTITIONSCHEMA_H
 
-#include "Clock_Class.h"
+#include "MetricUtils.h"
 #include <functional>
 #include "Environment.h"
 #include <string>
@@ -1227,7 +1227,7 @@ PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
 
   for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
 #ifndef QUIET	
-    Clock_Class clock;
+    ClockClass clock;
     clock.StartClock((*itr)->GetName());
     cout<<"\n  "; clock.PrintName(); cout << " " << flush;
 #endif	
@@ -1235,7 +1235,7 @@ PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
     subregion_boundaries = (*itr)->PlaceBoundaries(region->roadmap.GetEnvironment(), region->feature_stats, *(region->GetBoundingBox()), free_nodes, coll_nodes);
 #ifndef QUIET
     clock.StopClock();
-    cout << clock.GetClock_SEC() << " sec  \n" << flush;
+    cout << clock.GetSeconds() << " sec  \n" << flush;
 #endif
   }
   cout << "------Stopping Partitions-------" << endl;

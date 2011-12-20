@@ -182,7 +182,7 @@ Run(int in_RegionID)
    CDInfo cdInfo;
    LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
    vector<CfgType>::iterator C = path_cfgs.begin();
-   Clock_Class ResamplingClock;
+   ClockClass ResamplingClock;
    ResamplingClock.StartClock("Resampling started");
    opath_cfgs.push_back(*C);
    CfgType previous;

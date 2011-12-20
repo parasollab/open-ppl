@@ -185,7 +185,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
     OutputIterator allOut, OutputIterator thisIterationOut,
     OutputIterator allCollisionOut, OutputIterator thisIterationCollisionOut,
     deque<pair<string, CfgType> >& queue){
-  Clock_Class NodeGenClock;
+  ClockClass NodeGenClock;
   CDInfo cdInfo;
   Stat_Class * pStatClass = region->GetStatClass();
   stringstream clockName; 
@@ -200,7 +200,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
 
     string Callee = "TogglePRM::GenerateNodes";
     //generate nodes for this node generator method
-    Clock_Class NodeGenSubClock;
+    ClockClass NodeGenSubClock;
     stringstream generatorClockName; 
     generatorClockName << "Iteration " << m_CurrentIteration << ", " << git->first;
     NodeGenSubClock.StartClock(generatorClockName.str().c_str());
@@ -260,7 +260,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
 void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<string, VID> pvid, 
     vector<VID>& allVID, vector<VID>& allNodesVID, vector<VID>&
     allCollisionNodesVID, deque<pair<string, CfgType> >& queue){
-  Clock_Class NodeConnClock;
+  ClockClass NodeConnClock;
   stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Node Connection";
   NodeConnClock.StartClock(clockName.str().c_str());
   stapl::vector_property_map< GRAPH,size_t > cmap;
@@ -274,7 +274,7 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
     ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
     pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I);    
 
-    Clock_Class NodeConnSubClock;
+    ClockClass NodeConnSubClock;
     stringstream connectorClockName; 
     connectorClockName<<"Iteration "<<m_CurrentIteration<<", "<<pConnection->GetName();
     NodeConnSubClock.StartClock(connectorClockName.str().c_str());
@@ -329,7 +329,7 @@ bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
 {
   bool mapPassedEvaluation = false;
   if(!m_EvaluatorLabels.empty()){
-    Clock_Class EvalClock;
+    ClockClass EvalClock;
     stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation"; 
     EvalClock.StartClock(clockName.str().c_str());
 
@@ -337,7 +337,7 @@ bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
     for(vector<string>::iterator I = m_EvaluatorLabels.begin(); I != m_EvaluatorLabels.end(); ++I){
       MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator;
       pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      Clock_Class EvalSubClock;
+      ClockClass EvalSubClock;
       stringstream evaluatorClockName; 
       evaluatorClockName << "Iteration " << m_CurrentIteration << ", " << pEvaluator->GetName();
       EvalSubClock.StartClock(evaluatorClockName.str().c_str());

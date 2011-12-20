@@ -84,7 +84,7 @@ Run(int in_RegionID)
 
 
   //perform query
-  Clock_Class QueryClock;
+  ClockClass QueryClock;
   QueryClock.StartClock("Query");
 
   bool query_result = query.PerformQuery(rdmp, *pStatClass, 
@@ -111,7 +111,7 @@ Run(int in_RegionID)
         methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
 
     //redo connection among nodes in path
-    Clock_Class SmoothClock;
+    ClockClass SmoothClock;
     SmoothClock.StartClock("Smooth Path");
     vector<VID> path_vids;
     for(vector<CfgType>::iterator I = query.path.begin(); I != query.path.end(); ++I)
@@ -130,7 +130,7 @@ Run(int in_RegionID)
     SmoothClock.StopPrintClock();
 
     //reperform query
-    Clock_Class SmoothQueryClock;
+    ClockClass SmoothQueryClock;
     SmoothQueryClock.StartClock("Query Smoothed Path");
     query.path.clear();
     bool smooth_query_result = query.PerformQuery(rdmp, *pStatClass,

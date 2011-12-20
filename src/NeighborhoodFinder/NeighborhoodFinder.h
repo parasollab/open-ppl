@@ -15,7 +15,7 @@
 //Include OBPRM headers
 #include "DistanceMetricMethod.h"
 #include "MPUtils.h"
-#include "Clock_Class.h"
+#include "MetricUtils.h"
 #include "BFNF.hpp"
 #include "BFFNF.hpp"
 #include "DPESNF.hpp"

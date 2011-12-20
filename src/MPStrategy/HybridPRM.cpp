@@ -171,7 +171,7 @@ void HybridPRM::Run(int in_RegionID){
       cout << "selecting sampler \"" << next_node_gen << "\"\n";
 
       //generate 1 sample
-      Clock_Class NodeGenClock;
+      ClockClass NodeGenClock;
       NodeGenClock.StartClock("Node Generation");
       unsigned long int num_cd_before_gen = pStatClass->GetIsCollTotal();
       vector<CfgType> vectorCfgs, in_nodes(1);
@@ -341,7 +341,7 @@ void HybridPRM::Run(int in_RegionID){
       } //endfor vectorCfgs
 
       NodeGenClock.StopClock();
-      NodeGenTotalTime += NodeGenClock.GetClock_SEC();
+      NodeGenTotalTime += NodeGenClock.GetSeconds();
 
     } while((totalSamples % m_bin_size) > 0); // (totalSamples % m_bin_size) > (m_bin_size * m_window_percent));
 
@@ -749,14 +749,14 @@ evaluate_map(int in_RegionID)
     return true;
   else
   {
-    Clock_Class EvalClock;
+    ClockClass EvalClock;
     EvalClock.StartClock("Map Evaluation");
 
     bool mapPassedEvaluation = true;
     for(vector<string>::iterator I = m_evaluator_labels.begin(); I != m_evaluator_labels.end(); ++I)
     {
       MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      Clock_Class EvalSubClock;
+      ClockClass EvalSubClock;
       EvalSubClock.StartClock(pEvaluator->GetName());
 
       cout << "\n\t";

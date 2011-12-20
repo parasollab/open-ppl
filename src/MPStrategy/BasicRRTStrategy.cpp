@@ -241,7 +241,7 @@ void BasicRRTStrategy::Finalize(int _regionID) {
 void BasicRRTStrategy::ConnectComponents(int _regionID) {
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
   MPStrategy* mps = GetMPProblem()->GetMPStrategy();
-  Clock_Class componentConnClock;
+  ClockClass componentConnClock;
   stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Component Connection";
   componentConnClock.StartClock(clockName.str().c_str());
   stapl::vector_property_map< GRAPH,size_t > cmap;
@@ -250,7 +250,7 @@ void BasicRRTStrategy::ConnectComponents(int _regionID) {
     ConnectMap<CfgType, WeightType>::ComponentConnectionPointer connector;
     connector = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
 
-    Clock_Class componentConnSubClock;
+    ClockClass componentConnSubClock;
     stringstream connectorClockName; connectorClockName << "Iteration " << m_currentIteration << ", " << connector->GetName();
     componentConnSubClock.StartClock(connectorClockName.str().c_str());
 
@@ -280,7 +280,7 @@ bool BasicRRTStrategy::EvaluateMap(int _regionID) {
   }
   else{
     bool mapPassedEvaluation = false;
-    Clock_Class evalClock;
+    ClockClass evalClock;
     stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Map Evaluation"; 
     evalClock.StartClock(clockName.str().c_str());
     mapPassedEvaluation = true;
@@ -288,7 +288,7 @@ bool BasicRRTStrategy::EvaluateMap(int _regionID) {
     for (vector<string>::iterator I = m_evaluators.begin(); I != m_evaluators.end(); ++I) {
       MapEvaluator<CfgType, WeightType>::conditional_type evaluator;
       evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      Clock_Class evalSubClock;
+      ClockClass evalSubClock;
       stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_currentIteration << ", " << evaluator->GetName();
       evalSubClock.StartClock(evaluatorClockName.str().c_str());
       if(m_debug) cout << "\n\t";

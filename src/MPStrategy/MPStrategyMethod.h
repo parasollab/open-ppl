@@ -2,7 +2,7 @@
 #define MPSTRATEGYMETHOD_H
 
 #include <sys/time.h>
-#include "Clock_Class.h"
+#include "MetricUtils.h"
 #include "CfgTypes.h"
 #include "MPUtils.h"
 #include "MPProblem.h"
@@ -46,7 +46,7 @@ class MPStrategyMethod : public MPBaseObject {
     string GetBaseFilename(){return m_baseFilename;}
     long GetBaseSeed() {return m_baseSeed;} 
   protected:
-    Clock_Class m_strategyClock;
+    ClockClass m_strategyClock;
     typedef RoadmapGraph<CfgType, WeightType>::GRAPH GRAPH;
     typedef RoadmapGraph<CfgType, WeightType>::VID VID; 
 

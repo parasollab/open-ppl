@@ -5,7 +5,6 @@
 #include <iostream>
 #include "MPUtils.h"
 #include "MPProblem.h"
-#include "Clock_Elapsed.h"
 
 
 class NeighborhoodFinderMethod : public MPBaseObject  {
@@ -41,37 +40,14 @@ private:
 protected:
   double m_total_time, m_query_time, m_construction_time;
   int m_num_queries;
-  Clock_Elapsed m_clock_total, m_clock_query, m_clock_cons;
-  void StartTotalTime(){  
-    m_clock_total.ClearClock();
-    m_clock_total.StartClock("");    
-  }
-  
-  void EndTotalTime(){
-    m_clock_total.StopClock();
-    m_total_time += m_clock_total.GetClock_SEC();
-  }
-  
-  void StartQueryTime(){
-    m_clock_query.ClearClock();
-    m_clock_query.StartClock(""); 
-  }
-  
-  void EndQueryTime(){
-    m_clock_query.StopClock();
-    m_query_time += m_clock_query.GetClock_SEC();
-  }
 
-  void StartConstructionTime(){  
-    m_clock_cons.ClearClock();
-    m_clock_cons.StartClock("");    
-  }
-  
-  void EndConstructionTime(){
-    m_clock_cons.StopClock();
-    m_construction_time += m_clock_cons.GetClock_SEC();
-  }
-  
+  void StartTotalTime();
+  void EndTotalTime();
+  void StartQueryTime();
+  void EndQueryTime();
+  void StartConstructionTime();
+  void EndConstructionTime();
+
   void IncrementNumQueries() { ++m_num_queries; }
 
   shared_ptr<DistanceMetricMethod> dmm;

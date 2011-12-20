@@ -7,7 +7,6 @@
 #include "ExpanderStats.h"
 #include "MPProblem.h"
 #include "Roadmap.h"
-#include "Clock_Class.h"
 #include "MetricUtils.h"
 #include "ConnectMap.h"
 #include "DistanceMetricMethod.h"
@@ -200,7 +199,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
       pStatClass->ClearStats();
 
-      Clock_Class Allstuff;
+      ClockClass Allstuff;
       //string base_filename = "itr_test_";
 
       //open output file for stats
@@ -234,11 +233,11 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[1]);
       while(iteration < m_iterations) {
         cout << "--------------" << endl << "iter " << iteration << " of " << m_iterations << endl;
-        Clock_Class        NodeGenClock;
-        Clock_Class        ConnectionClock;
-        Clock_Class        IterationClock;
-        Clock_Class        QueryClock;
-        Clock_Class        StatClock;
+        ClockClass        NodeGenClock;
+        ClockClass        ConnectionClock;
+        ClockClass        IterationClock;
+        ClockClass        QueryClock;
+        ClockClass        StatClock;
         cout << "defined clocks" << endl;
         IterationClock.StartClock("Iteration");
         cout << "started clock" << endl;
@@ -273,7 +272,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         }
 
         NodeGenClock.StopClock();
-        elappsed_ng += NodeGenClock.GetClock_SEC();
+        elappsed_ng += NodeGenClock.GetSeconds();
 
         //---------------------------
         // Connect roadmap nodes
@@ -302,7 +301,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           ResizeBbox(std::cout,0.5);
         }
         ConnectionClock.StopClock();
-        ellapsed_con += ConnectionClock.GetClock_SEC();
+        ellapsed_con += ConnectionClock.GetSeconds();
 
 
 

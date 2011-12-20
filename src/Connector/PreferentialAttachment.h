@@ -2,7 +2,7 @@
 #define PreferentialAttachment_h
 #include "NodeConnectionMethod.h"
 #include "LocalPlanners.h"
-#include "Clock_Class.h"
+#include "MetricUtils.h"
 #include "GraphAlgo.h"
 #include "NeighborhoodFinder.h"
 
@@ -301,7 +301,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 {
   cout << "PreferentialAttachment<CFG,WEIGHT>::ConnectNodes() - 1 pairs InputIterator" << endl << flush;
 
-  Clock_Class KClosestClock;
+  ClockClass KClosestClock;
   
   int total_success = 0;
   int total_failure = 0;
@@ -342,7 +342,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
     KClosestClock.StopClock();
   }
 
-  if (m_debug) cout << "*** kClosest Time = " << KClosestClock.GetClock_SEC() << endl;
+  if (m_debug) cout << "*** kClosest Time = " << KClosestClock.GetSeconds() << endl;
   if (m_debug) cout << "*** total_success = " << total_success << endl;
   if (m_debug) cout << "*** total_failure = " << total_failure << endl;
 }

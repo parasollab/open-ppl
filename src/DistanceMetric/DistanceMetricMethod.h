@@ -3,7 +3,6 @@
 
 #include "MPUtils.h"
 #include "Roadmap.h"
-#include "Clock_Class.h"
 #include "CfgTypes.h"
 #include <boost/mpl/list.hpp>
 using namespace std;
@@ -389,8 +388,6 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, typename RoadmapGraph<CFG, WEIGHT>::VID in_
   Environment* _env = rm->GetEnvironment();
 
 
-  Clock_Class distance_time;
-  distance_time.StartClock("distance_time");
 
   vector<VID> vec_vids;
   pMap->GetVerticesVID(vec_vids);
@@ -404,8 +401,6 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, typename RoadmapGraph<CFG, WEIGHT>::VID in_
       returnVec.push_back(*itr);
     }
   }
-  distance_time.StopClock();
-  m_distance_time += distance_time.GetClock_SEC();
 
   return returnVec;
 }
@@ -419,8 +414,6 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
   RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
   Environment* _env = rm->GetEnvironment();
   
-  Clock_Class distance_time;
-  distance_time.StartClock("distance_time");
   
 
 
@@ -435,8 +428,6 @@ RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
       returnVec.push_back(*itr);
     }
   }
-  distance_time.StopClock();
-  m_distance_time += distance_time.GetClock_SEC();
 
   return returnVec;
 }

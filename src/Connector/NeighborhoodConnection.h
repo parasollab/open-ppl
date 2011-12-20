@@ -3,7 +3,7 @@
 
 #include "NodeConnectionMethod.h"
 #include "LocalPlanners.h"
-#include "Clock_Class.h"
+#include "MetricUtils.h"
 #include "GraphAlgo.h"
 #include "NeighborhoodFinder.h"
 
@@ -278,7 +278,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 {   
     if (this->m_debug) { cout << endl; PrintOptions(cout); }
     // the vertices in this iteration are the source for the connection operation
-    Clock_Class KClosestClock;
+    ClockClass KClosestClock;
     
     int total_success = 0;
     int total_failure = 0;
@@ -339,7 +339,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       } while (m_unconnected && !enough_connected && k_to_find < iter_size);
     }
   
-    if (this->m_debug) cout << "*** kClosest Time = " << KClosestClock.GetClock_SEC() << endl;
+    if (this->m_debug) cout << "*** kClosest Time = " << KClosestClock.GetSeconds() << endl;
     if (this->m_debug) cout << "*** total_success = " << total_success << endl;
     if (this->m_debug) cout << "*** total_failure = " << total_failure << endl;
 }
@@ -357,7 +357,7 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 { 
     if (this->m_debug) { cout << endl; PrintOptions(cout); }
     // the vertices in this iteration are the source for the connection operation
-    Clock_Class KClosestClock;
+    ClockClass KClosestClock;
     
     int total_success = 0;
     int total_failure = 0;
@@ -415,7 +415,7 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
       } while (m_unconnected && !enough_connected && k_to_find < iter_size);
     }
   
-    if (this->m_debug) cout << "*** kClosest Time = " << KClosestClock.GetClock_SEC() << endl;
+    if (this->m_debug) cout << "*** kClosest Time = " << KClosestClock.GetSeconds() << endl;
     if (this->m_debug) cout << "*** total_success = " << total_success << endl;
     if (this->m_debug) cout << "*** total_failure = " << total_failure << endl;
 }

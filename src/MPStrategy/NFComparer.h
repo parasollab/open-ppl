@@ -4,7 +4,6 @@
 //#include<sys/time.h>
 
 #include "MPStrategyMethod.h"
-#include "Clock_Class.h"
 #include "LocalPlanners.h"
 #include "MPProblem.h"
 #include "ConnectMap.h"
@@ -888,7 +887,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       //if (m_reset_stats)
       pStatClass->ClearStats();
 
-      Clock_Class Allstuff;
+      ClockClass Allstuff;
       //string base_filename = "itr_test_";
 
       //open output file for stats
@@ -919,8 +918,8 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[1]);
       while(iteration < m_iterations) {
         cout << "Iteration #" << iteration << " of " << m_iterations << endl;
-        Clock_Class        NodeGenClock;
-        Clock_Class        ConnectionClock;
+        ClockClass        NodeGenClock;
+        ClockClass        ConnectionClock;
         //---------------------------
         // Generate roadmap nodes
         //---------------------------
@@ -947,7 +946,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         }
 
         NodeGenClock.StopClock();
-        elappsed_ng += NodeGenClock.GetClock_SEC();
+        elappsed_ng += NodeGenClock.GetSeconds();
 
         //---------------------------
         // Connect roadmap nodes
@@ -971,7 +970,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         }
 
         ConnectionClock.StopClock();
-        ellapsed_con += ConnectionClock.GetClock_SEC();
+        ellapsed_con += ConnectionClock.GetSeconds();
 
         /*string outputFilename = getBaseFilename() + ".map"; 
           ofstream  myofstream(outputFilename.c_str());
@@ -1233,7 +1232,7 @@ class NFTester : public MPStrategyMethod {
       NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
       Stat_Class * pStatClass = region->GetStatClass();
       pStatClass->ClearStats(); 
-      Clock_Class NodeGenClock;
+      ClockClass NodeGenClock;
       //---------------------------
       // Generate roadmap nodes
       //---------------------------

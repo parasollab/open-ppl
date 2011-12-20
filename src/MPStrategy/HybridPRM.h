@@ -5,7 +5,7 @@
 #include "MPStrategyMethod.h"
 #include "MPProblem.h"
 #include "Roadmap.h"
-#include "Clock_Class.h"
+#include "MetricUtils.h"
 
 
 struct Visibility
@@ -149,7 +149,7 @@ class HybridPRM : public MPStrategyMethod
  private:
    string base_filename;
    ofstream char_ofstream;
-   Clock_Class Allstuff;
+   ClockClass Allstuff;
    stapl::vector_property_map< GRAPH,size_t > cmap;
    map<VID, Visibility> vis_map;
    NodeTypeCounts node_types;

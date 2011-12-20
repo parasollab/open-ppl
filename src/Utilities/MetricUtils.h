@@ -4,6 +4,7 @@
 #include "Roadmap.h"
 #include "DistanceMetricMethod.h"
 #include "NeighborhoodFinder.h"
+#include <string>
 
 class Stat_Class {
 public:
@@ -603,6 +604,116 @@ DisplayCCStats(RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1)  {
   }
   #endif
 }
+
+/**Provide timing information.
+  *This class is used to measure the running time between StartClock and 
+  *StopClock. Client side could provide clock name, when StopClock is called 
+  *the name will be print out, and running time as well.
+  */
+class ClockClass {
+public:
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Constructors and Destructor
+  //
+  //
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  //-----------------------------------------------------------
+  /**@name Constructors and Destructor.*/
+  //-----------------------------------------------------------
+  //@{
+  ///Default constructor. Set every thing to zero
+  ClockClass();
+
+  ///Destructor. Do nothing
+  ~ClockClass();
+  //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Clock methods
+  //
+  //
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  //----------------------------------------------------------
+  /**@name Clock Methods.*/
+  //-----------------------------------------------------------
+  //@{
+  ///Set every thing to zero
+  int ClearClock();
+
+  ///Start the clock and the name is identity of this clock.
+  int StartClock(string _name);
+
+  ///Stop the clock and calculate the total running time.
+  int StopClock();
+
+  ///Call StopClock and PrintClock.
+  int StopPrintClock();
+  //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    I/O
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+
+  //-----------------------------------------------------------
+  /**@name Input and Output Methods.*/
+  //-----------------------------------------------------------
+  //@{
+  /**Output the clock name given in StartClock and running time accosited with this name
+    *to the standard output.
+    */
+  void PrintClock();
+
+  ///Output the clock name given in StartClock to the standard output
+  void PrintName();
+  //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Access Methods
+  //
+  //
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  //-----------------------------------------------------------
+  /**@name Access Methods.*/
+  //-----------------------------------------------------------
+  //@{
+  ///Get how many seconds of running time are. (integer, without fraction part!!)
+  int GetClock();
+
+  ///Get how many seconds of running time are.
+  double GetSeconds();
+
+  ///Get how many 1e-6 seconds of running time are.
+  int GetUSeconds();
+  //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Private Data Members and MEmber Methods Methods (Undocumented)
+  //
+  //
+  ///////////////////////////////////////////////////////////////////////////////////////////
+private:
+  struct timeval m_sTime;
+  struct timeval m_uTime;
+  struct timeval m_elapsed;
+   string m_clockName;
+};
+
 
 #ifndef _H_UTILITY
 ///Return minimun between a and b.

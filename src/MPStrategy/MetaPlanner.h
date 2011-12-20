@@ -24,7 +24,7 @@
 
 #include "Roadmap.h"
 
-#include "Clock_Class.h"
+#include "MetricUtils.h"
 #include "CollisionDetection.h"
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
@@ -153,8 +153,8 @@ class CSpaceCharacterizer {
 
   bool addPartialEdge, addAllEdges;
 
-  Clock_Class        NodeGenClock;
-  Clock_Class        ConnectionClock;
+  ClockClass        NodeGenClock;
+  ClockClass        ConnectionClock;
 
   //temporary variable
 #ifdef COLLISIONCFG
@@ -219,8 +219,8 @@ class MetaPlanner {
   CollisionDetection cd; //@todo replace by MPProblem::m_pProblem::...
   Environment env;
 
-  Clock_Class        NodeGenClock;
-  Clock_Class        ConnectionClock;
+  ClockClass        NodeGenClock;
+  ClockClass        ConnectionClock;
 
 
   // Specific for FSMP
@@ -369,8 +369,8 @@ MakeRegionRoadmap(MPRegion<CFG,WEIGHT>* region) {
   gn_map.GenerateNodes(&(region->roadmap),region->map_stats,&cd,&dm,nodes);
   NodeGenClock.StopClock();
   cout << "\n";
-  cout << "Node Generation: " << NodeGenClock.GetClock_SEC()
-       << " sec (ie, " << NodeGenClock.GetClock_USEC() << " usec)";
+  cout << "Node Generation: " << NodeGenClock.GetSeconds()
+       << " sec (ie, " << NodeGenClock.GetUSeconds() << " usec)";
 
   cout << ", "<<region->roadmap.m_pRoadmap->get_num_vertices()<<" nodes\n"<< flush;
 
