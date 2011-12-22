@@ -27,6 +27,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
   // @}
 
   virtual void PrintOptions(ostream& out_os);
+  virtual string GetVCMethod();
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
   /**
@@ -72,6 +73,8 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
          bool savePath=false, bool saveFailedPath=false,
 	 typename boost::enable_if<is_closed_chain<Enable> >::type* dummy = 0
 	);
+
+  string m_vcMethod;
 
  protected:
   /**
@@ -137,7 +140,6 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 
   int binarySearch;
   int lineSegmentLength;// Default is 0
-  std::string vcMethod;
   cd_predefined cdtype;
 };
 
@@ -159,7 +161,7 @@ StraightLine<CFG, WEIGHT>::StraightLine(XMLNodeReader& in_Node, MPProblem* in_pP
   this->SetName("StraightLine");
   lineSegmentLength = in_Node.numberXMLParameter("length", false, 0, 0, 5000, "lineSegmentLength"); 
   binarySearch = in_Node.numberXMLParameter("binary_search", false, 0, 0, 1, "binary search"); 
-  vcMethod = in_Node.stringXMLParameter("vc_method", false, "", "Validity Test Method");
+  m_vcMethod = in_Node.stringXMLParameter("vc_method", false, "", "Validity Test Method");
 }
 
 template <class CFG, class WEIGHT> 
@@ -170,8 +172,13 @@ StraightLine<CFG, WEIGHT>::PrintOptions(ostream& out_os) {
   out_os << "    " << this->GetName() << "::  ";
   out_os << "line segment length = " << " " << lineSegmentLength << " ";
   out_os << "binary search = " << " " << binarySearch << " ";
-  out_os << "vcMethod = " << " " << vcMethod << " ";
+  out_os << "vcMethod = " << " " << m_vcMethod << " ";
   out_os << endl;
+}
+
+template <class CFG, class WEIGHT> string
+StraightLine<CFG, WEIGHT>::GetVCMethod() {
+  return m_vcMethod;
 }
  
 template <class CFG, class WEIGHT>
@@ -237,7 +244,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
 	 typename boost::enable_if<is_closed_chain<Enable> >::type* dummy)
 {
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
   string Callee(this->GetName());
   string Method("-straightline::IsConnectedSLSequential");
   CDInfo cdInfo;
@@ -355,7 +362,7 @@ StraightLine<CFG, WEIGHT>::
       bool checkCollision, 
       bool savePath, bool saveFailedPath) { 
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
   int n_ticks;
   CFG tick;
   tick = _c1; 
@@ -492,7 +499,7 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
         bool savePath, bool saveFailedPath) {
 
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
   
   if(!checkCollision)
     return IsConnectedSLSequential(_env, Stats, dm, _c1, _c2,
@@ -512,6 +519,15 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 #else
   incr.FindIncrement(_c1, _c2, &n_ticks, positionRes, orientationRes);
 #endif
+
+  if(savePath || saveFailedPath) {
+    CFG tick = _c1;
+    for(int n=1; n<n_ticks; ++n) {
+      tick.Increment(incr);
+      lpOutput->path.push_back(tick);
+    }
+  }
+
   deque<pair<int,int> > Q;
   Q.push_back(make_pair(0, n_ticks));
 
@@ -539,8 +555,8 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
     cd_cntr++;
     if(!mid_cfg.InBoundingBox(_env) ||
        !vc->IsValid(vcm, mid_cfg, _env, Stats, cdInfo, true, &Callee) ) {
-      if(mid_cfg.InBoundingBox(_env) &&
-         !vc->IsValid(vcm, mid_cfg, _env, Stats, cdInfo, true, &Callee))
+      //if(mid_cfg.InBoundingBox(_env) &&
+      //   !vc->IsValid(vcm, mid_cfg, _env, Stats, cdInfo, true, &Callee))
         _col=mid_cfg;
       return false;
     } else {
@@ -548,14 +564,6 @@ IsConnectedSLBinary(Environment *_env, Stat_Class& Stats,
 	Q.push_back(make_pair(i, mid));
       if(mid+1 != j) 
 	Q.push_back(make_pair(mid, j));      
-    }
-  }
-
-  if(savePath || saveFailedPath) {
-    CFG tick = _c1;
-    for(int n=1; n<n_ticks; ++n) {
-      tick.Increment(incr);
-      lpOutput->path.push_back(tick);
     }
   }
 

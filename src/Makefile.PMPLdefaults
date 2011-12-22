@@ -220,6 +220,7 @@ PMPL_OBJS = \
 	DistanceMetric/DistanceMetrics.o \
 	ValidityChecker/CollisionDetection.o \
 	ValidityChecker/NodeClearanceValidity.o \
+  ValidityChecker/MedialAxisClearanceValidity.o \
 	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
 	MPStrategy/MPStrategy.o \

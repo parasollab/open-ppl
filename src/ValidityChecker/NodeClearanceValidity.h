@@ -17,6 +17,9 @@ class NodeClearanceValidity : public ValidityCheckerMethod {
       IsValid(Cfg& _cfg, Environment* _env, Stat_Class& _stats, 
           CDInfo& _cdInfo, bool _enablePenetration, string *_callName);
 
+    virtual vector< pair<CfgType,CfgType> > GetHistory();
+    virtual void ClearHistory();
+
   private:
     double m_delta;
     string m_dmLabel;

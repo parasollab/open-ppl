@@ -8,9 +8,11 @@
 #include "Weight.h"
 #include "LocalPlannerMethod.h"
 
+
 #include "StraightLine.h"
 #include "RotateAtS.h"
 #include "TransformAtS.h"
+#include "MedialAxisLP.h"
 #include "AStar.h"
 //#include "ApproxSpheres.h"
 
@@ -35,6 +37,7 @@ namespace pmpl_detail {
     StraightLine<CfgType,WeightType>,
     RotateAtS<CfgType,WeightType>,
     TransformAtS<CfgType,WeightType>,
+		MedialAxisLP<CfgType,WeightType>,
     AStar<CfgType,WeightType>
     > LocalPlannerMethodList;
 }

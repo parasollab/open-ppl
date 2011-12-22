@@ -344,8 +344,8 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
   Vector3D transDir, dif;
   vector<double> gDif;
   CDInfo   tmpInfo;
-  CfgType      transCfg, tmpCfg, peekCfg, heldCfg;
-  double   stepSize=1.0, factor, res=_env->GetPositionRes();// TODO: ori_res=env->GetOrientationRes();
+  CfgType  transCfg, tmpCfg, heldCfg;
+  double   stepSize=0.0, cbStepSize=0.0, factor=0.0, res=_env->GetPositionRes();// TODO: ori_res=env->GetOrientationRes();
   bool     inBBX=true, goodTmp=true, valid, inside=vcm->isInsideObstacle(_cfg,_env,tmpInfo);
   if ( inside ) 
     return false;
@@ -375,20 +375,26 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
   if (_debug) cout << "TRANS CfgType: " << transCfg << endl;
 
   // Initialize temp Info
-  int segLen=_hLen, posCnt, negCnt, stepsTaken;
-  bool peekFound = false, broke=false;
+  int segLen=_hLen, posCnt=0, negCnt=0, zroCnt=0, stepsTaken, tcc=0;
+  bool peakFound = false, broke=false, checkBack=false;
   //vector<double> segDists(segLen,0), seg_deltas(segLen-1,0);
-  vector<double> segDists;
-  vector<CfgType> segCfgs;
+  deque<double> segDists;
+  deque<CfgType> segCfgs;
   double maxDist=0.0;
 
   // Determine gap for medial axis
-  while ( !peekFound ) {
+  while ( !peakFound ) {
 
-    tmpCfg.multiply(transCfg,stepSize);
+    // Increment
+		if ( checkBack ) tmpCfg.multiply(transCfg,cbStepSize);
+    else             tmpCfg.multiply(transCfg,stepSize);
     tmpCfg.add(_cfg, tmpCfg);
     inside = vcm->isInsideObstacle(tmpCfg,_env,tmpInfo);
     inBBX = tmpCfg.InBoundingBox(_env);
+
+    bool tmpVal = (inside || !inBBX);
+    VDAddTempCfg(tmpCfg, tmpVal);
+    tcc++;
 
     // If inside obstacle or out of the bbx, step back
     if ( inside || !inBBX) {
@@ -414,39 +420,70 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
             segDists.erase(segDists.begin());
             segCfgs.erase(segCfgs.begin());
           }
-          segDists.push_back(tmpInfo.min_dist);
-          segCfgs.push_back(tmpCfg);
+          if ( checkBack ) {
+            segDists.push_front(tmpInfo.min_dist);
+            segCfgs.push_front(tmpCfg);
+          } else {
+            segDists.push_back(tmpInfo.min_dist);
+            segCfgs.push_back(tmpCfg);
+            checkBack=false;
+          }
         } 
         else {
           if (_debug) cout << "BROKE!" << endl;
+          return false;
         }
         stepSize += 1.0;
 
-        maxDist = segDists[0]; posCnt=0; negCnt=0;
+        maxDist = segDists[0]; posCnt=0; negCnt=0; zroCnt=0;
         for ( int i=0; i<int(segDists.size())-1; i++ ) {
           double tmp = segDists[i+1] - segDists[i];
-          if ( tmp > 0.0 ) 
-            ++posCnt;
-          if ( tmp < 0.0 ) 
-            ++negCnt;
+
+          if      ( tmp > 0.0 ) ++posCnt;
+          else if ( tmp < 0.0 ) ++negCnt;
+          else                  ++zroCnt;
           maxDist = (maxDist>segDists[i+1])?maxDist:segDists[i+1];
         }
-        if (_debug) cout << "  Pos/Neg counts: " << posCnt << "/" << negCnt << endl;
-        if (negCnt > 0 && negCnt >= posCnt && segDists[0] >= segDists[segDists.size()-1]) {
-          peekFound = true;
-          if (_debug) {
-            cout << "Found peek!  Dists: ";
-            for (int i=0; i<int(segDists.size()); i++)
-              cout << segDists[i] << " ";
-            cout << endl;
+        if (_debug) cout << "  Pos/Zero/Neg counts: " << posCnt << "/" << zroCnt << "/" << negCnt << endl;
+        if ( (negCnt > 0) && (negCnt >= posCnt) ) {
+          if (posCnt < 1 && zroCnt < 1) { // Only see negative, check back
+            --cbStepSize;
+            checkBack = true;
+          } else {
+            peakFound = true;
+            if (_debug) {
+              cout << "Found peak!  Dists: ";
+              for (int i=0; i<int(segDists.size()); i++)
+                cout << segDists[i] << " ";
+              cout << endl;
+            }
           }
+        } else if ( (zroCnt > 0) && (zroCnt >= posCnt) ) {
+          if (posCnt < 1 && zroCnt < 1) { // Only see zeros, check back
+            --cbStepSize;
+            checkBack = true;
+          } else {
+            peakFound = true;
+            if (_debug) {
+              cout << "Found peak!  Dists: ";
+              for (int i=0; i<int(segDists.size()); i++)
+                cout << segDists[i] << " ";
+              cout << endl;
+            }
+          }
+        } else {
+          checkBack = false;
         }
+
       } 
       else { // Else reduce step size or fall out of the loop
         return false;
       }
     }
   }
+
+  for (int i=0; i<tcc; i++)
+    VDClearLastTemp();
 
   // Variables for modified binary search
   CfgType startCfg, midSCfg, midMCfg, midECfg, endingCfg;
@@ -481,6 +518,8 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
       cout << dists[i] << " ";
     cout << endl;
   }
+
+  // TODO: Update to DIST, not GAP
   // Get collision info and gap distance
   difCfg->subtract(startCfg,endingCfg);
   gDif.clear();
@@ -495,7 +534,14 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
   gapDist = sqrt(gapDist);
   prevGap = gapDist;
 
-  do { // Modified Binomial search to find peaks                                                                                                           
+  do { // Modified Binomial search to find peaks
+    ostringstream strs;
+    strs << "Peak Clearance: " << dists[2];
+    VDComment(strs.str());
+    VDAddTempCfg(midMCfg, true);
+    VDClearLastTemp();
+    VDClearComments();
+
     attempts++;
     midSCfg.add(startCfg, midMCfg); 
     midSCfg.divide(midSCfg,2);
@@ -520,21 +566,21 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
     if (_debug) cout << endl;
 
     // Determine Peak
-    if ( deltas[0] > 0 && deltas[1] < 0 && dists[1] == maxDist) {
+    if ( deltas[0] > 0 && deltas[1] <= 0 && dists[1] == maxDist) {
       peak = 1;
       endingCfg = midMCfg;
       midMCfg = midSCfg;
       dists[4] = dists[2];
       dists[2] = dists[1];
     } 
-    else if ( deltas[1] > 0 && deltas[2] < 0 && dists[2] == maxDist) {
+    else if ( deltas[1] > 0 && deltas[2] <= 0 && dists[2] == maxDist) {
       peak = 2;
       startCfg = midSCfg;
       endingCfg = midECfg;
       dists[0] = dists[1];
       dists[4] = dists[3];
     } 
-    else if ( deltas[2] > 0 && deltas[3] < 0 && dists[3] == maxDist) {
+    else if ( deltas[2] > 0 && deltas[3] <= 0 && dists[3] == maxDist) {
       peak = 3;
       startCfg = midMCfg;
       midMCfg = midECfg;
@@ -560,16 +606,20 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
         // No peak found, recalculate old, mid and new clearance
         badPeaks++;
         peak = -1;
-        if ( CalculateCollisionInfo(_mp,startCfg,_env,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX) && dists[0] >= tmpInfo.min_dist )
+        if ( CalculateCollisionInfo(_mp,startCfg,_env,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX) 
+             && dists[0] >= tmpInfo.min_dist )
           dists[0] = tmpInfo.min_dist;
-        if ( CalculateCollisionInfo(_mp,midMCfg,_env,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX) && dists[2] >= tmpInfo.min_dist )
+        if ( CalculateCollisionInfo(_mp,midMCfg,_env,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX) 
+             && dists[2] >= tmpInfo.min_dist )
           dists[2] = tmpInfo.min_dist;
-        if ( CalculateCollisionInfo(_mp,endingCfg,_env,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX) && dists[4] >= tmpInfo.min_dist )
+        if ( CalculateCollisionInfo(_mp,endingCfg,_env,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX) 
+             && dists[4] >= tmpInfo.min_dist )
           dists[4] = tmpInfo.min_dist;
       }
     }
     if (_debug) cout << " peak: " << peak << "  cfg: " << midMCfg;
 
+    // TODO: Update to DIST, not GAP
     // Check if minimum gap distance has been acheived
     difCfg->subtract(startCfg,endingCfg);
     gDif.clear(); 
@@ -617,7 +667,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Sta
     CDInfo& _cdInfo, string _vc, bool _useBBX) {
   // Setup Validity Checker
   string call("MedialAxisUtility::getExactCollisionInfo");
-  ValidityChecker<CfgType>*             vc  = _mp->GetValidityChecker();
+  ValidityChecker<CfgType>*         vc  = _mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(_vc);
   _cdInfo.ResetVars();
   _cdInfo.ret_all_info = true;
@@ -630,11 +680,12 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Sta
   if ( !_useBBX )
     return true;
 
-  // CfgType is now know as good, get BBX and ROBOT info                                                                                                      
+  // CfgType is now know as good, get BBX and ROBOT info
   boost::shared_ptr<BoundingBox> bbx = _env->GetBoundingBox();
   boost::shared_ptr<MultiBody> robot = _env->GetMultiBody(_env->GetRobotIndex());
   std::pair<double,double> bbxRange;
 
+  // TODO: Update to use DIST, not literal
   // Find closest point between robot and bbx, set if less than min dist from obstacles
   for(int m=0; m < robot->GetFreeBodyCount(); m++) {
     GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
@@ -642,11 +693,19 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Sta
       for (int k=0; k<_cfg.PosDOF(); k++) { // For all positional DOFs
         bbxRange = bbx->GetRange(k);
         if ( (poly.vertexList[j][k]-bbxRange.first) < _cdInfo.min_dist ) {
+          for (int l=0; l<_cfg.PosDOF(); l++) {// Save new closest point
+            _cdInfo.robot_point[l]  = poly.vertexList[j][l];
+            _cdInfo.object_point[l] = poly.vertexList[j][l];
+          }
           _cdInfo.object_point[k] = bbxRange.first; // Lower Bound
           _cdInfo.min_dist = poly.vertexList[j][k]-bbxRange.first;
           _cdInfo.nearest_obst_index = -(k+1); // Different bbx face
         }
         if ( (bbxRange.second-poly.vertexList[j][k]) < _cdInfo.min_dist ) {
+          for (int l=0; l<_cfg.PosDOF(); l++) {// Save new closest point
+            _cdInfo.robot_point[l]  = poly.vertexList[j][l];
+            _cdInfo.object_point[l] = poly.vertexList[j][l];
+          }
           _cdInfo.object_point[k] = bbxRange.second; // Upper Bound
           _cdInfo.min_dist = bbxRange.second-poly.vertexList[j][k];
           _cdInfo.nearest_obst_index = -(k+1);
@@ -669,7 +728,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
   // Initialization
   string call = "MedialAxisUtility::getApproxCollisionInfo";
   shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetDMMethod(_dm);
-  ValidityChecker<CfgType>*             vc  = _mp->GetValidityChecker();
+  ValidityChecker<CfgType>*         vc  = _mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(_vc);
 
   // If in BBX, check validity to get _cdInfo, return false if not valid
@@ -785,6 +844,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
           *outerCfg = *midCfg;
       }
 
+      // TODO: Update to use DIST, not literal
       // Compute Real Dist
       difCfg->subtract(*innerCfg,*outerCfg);
       tmpDist = 0.0;

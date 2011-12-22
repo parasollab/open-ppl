@@ -390,9 +390,13 @@ WritePathConfigurations(const string _outputFile,
     vector<double> tmp = _path[i]->GetData();
     // Translate all path configurations such that their resulting
     // center of gravity is what was saved (ie, the rover original)
-    for(size_t j=0; j<tmp.size(); ++j) {
-      ofs << tmp[j] << " ";
-    }
+    //for(size_t j=0; j<tmp.size(); ++j) {
+    //  ofs << tmp[j] << " ";
+    //}
+    for(size_t j=0; j<6; ++j) {
+      if (j < tmp.size() ) ofs << tmp[j] << " ";
+      else                 ofs << "0.0" << " ";
+		}
     ofs << endl;
   }
   ofs.close();

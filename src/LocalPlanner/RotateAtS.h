@@ -60,7 +60,7 @@ RotateAtS<CFG, WEIGHT>::PrintOptions(ostream& out_os) {
   out_os << "    " << this->GetName() << " ::"
          << " line_segment_length=" << this->lineSegmentLength
          << " binary_search=" << this->binarySearch
-         << " vcMethod=" << this->vcMethod
+         << " vcMethod=" << this->m_vcMethod
          << " s_value=" << s_values[0] << endl;
 }
 
@@ -93,7 +93,7 @@ shared_ptr< DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_co
 LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
 bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->vcMethod);
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->m_vcMethod);
 
   char RatS[50] = "Rotate_at_s";
   sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);

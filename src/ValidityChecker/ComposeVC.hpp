@@ -38,6 +38,9 @@ public:
   virtual bool 
   IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, 
 	  CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName);
+
+  virtual vector< pair<CfgType,CfgType> > GetHistory();
+  virtual void ClearHistory();
   
 private:
   en_logical_operator m_logical_operator;
@@ -111,6 +114,17 @@ IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
     return false;
   }        
 }
+
+template<typename CFG>
+vector< pair<CfgType,CfgType> >
+ComposeValidity<CFG>::GetHistory() {
+  vector< pair<CfgType,CfgType> > empty;
+  return empty;
+}
+
+template<typename CFG>
+void
+ComposeValidity<CFG>::ClearHistory() { }
 
 
 template<typename CFG>

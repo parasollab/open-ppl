@@ -6,6 +6,7 @@
 #include "ValidityCheckerMethod.hpp"
 #include "CollisionDetectionValidity.hpp"
 #include "NodeClearanceValidity.h"
+#include "MedialAxisClearanceValidity.h"
 #include "ComposeVC.hpp"
 #include "NegateValidity.hpp"
 #include "boost/shared_ptr.hpp"
@@ -40,6 +41,9 @@ public:
         AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "NodeClearance") {
         VCMethodPtr vc(new NodeClearanceValidity(*citr, in_pProblem));
+        AddVCMethod(vc->GetLabel(), vc);
+      } else if(citr->getName() == "MedialAxisClearance") {
+        VCMethodPtr vc(new MedialAxisClearanceValidity(*citr, in_pProblem));
         AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "NegateValidity") {
         VCMethodPtr vc(new NegateValidity<CFG>(*citr, in_pProblem));

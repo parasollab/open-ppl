@@ -32,7 +32,7 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
 	  bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);  
 
   double s_value;
-  std::string vcMethod;
+  //std::string vcMethod;
 };
 
 template <class CFG, class WEIGHT>
@@ -57,7 +57,7 @@ PrintOptions(ostream& out_os) {
   out_os << "    " << this->GetName() << "::  ";
   out_os << "line segment length = " << " " << this->lineSegmentLength << " ";
   out_os << "binary search = " << " " << this->binarySearch << " ";
-  out_os << "vcMethod = " << " " << this->vcMethod << " ";
+  out_os << "vcMethod = " << " " << this->m_vcMethod << " ";
   out_os << "s_value = " << s_value;
   out_os << endl;
 }
@@ -86,7 +86,7 @@ shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col
 LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
 bool _checkCollision, bool _savePath, bool _saveFailedPath) {  
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->m_vcMethod);
 
   int cd_cntr = 0;
   vector<double> start_data = _c1.GetData();
@@ -191,7 +191,7 @@ LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
 bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   cout << "Check the other direction:\n" << flush;
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(vcMethod);
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->m_vcMethod);
 
   int cd_cntr = 0;
   vector<double> start_data    = _c1.GetData();

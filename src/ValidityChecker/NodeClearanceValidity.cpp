@@ -40,3 +40,10 @@ bool NodeClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, Stat_Class& _s
   return result;
 }
 
+vector< pair<CfgType,CfgType> > 
+NodeClearanceValidity::GetHistory() {
+  vector< pair<CfgType,CfgType> > empty;
+  return empty;
+}
+
+void NodeClearanceValidity::ClearHistory() { }
