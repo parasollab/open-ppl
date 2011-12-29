@@ -6,7 +6,7 @@
 #include "MetricUtils.h"
 #include "GraphAlgo.h"
 #include "NeighborhoodFinder.h"
-
+#include "MPStrategy.h"
 //Connect K Closest only allowed M failures
 //If M is not specified in command line, it is set as same as K
 /**Connect nodes in map to their k closest neighbors.
