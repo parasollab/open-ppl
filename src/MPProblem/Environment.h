@@ -21,8 +21,6 @@
 #endif
 
 using boost::shared_ptr;
-
-class MultiBody;
 class MPProblem;
 ////////////////////////////////////////////////////////////////
 
