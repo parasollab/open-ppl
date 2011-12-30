@@ -75,6 +75,11 @@ TransformAtS<CFG, WEIGHT>:: IsConnected(Environment *_env, Stat_Class& _stats,
 shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
 LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
 bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+  //clear _lpOutput
+  _lpOutput->path.clear();
+  _lpOutput->edge.first.SetWeight(0);
+  _lpOutput->edge.second.SetWeight(0);
+  _lpOutput->savedEdge.clear();
   bool connected = false;
   connected = IsConnectedOneWay(_env,_stats,_dm,_c1,_c2,_col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
   return connected;

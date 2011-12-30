@@ -49,6 +49,11 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
          double positionRes, double orientationRes,
          bool checkCollision=true, 
          bool savePath=false, bool saveFailedPath=false) {
+    //clear lpOutput
+    lpOutput->path.clear();
+    lpOutput->edge.first.SetWeight(0);
+    lpOutput->edge.second.SetWeight(0);
+    lpOutput->savedEdge.clear();
     return _IsConnected<CFG>(env, Stats, dm, _c1, _c2, _col,
 			     lpOutput, positionRes, orientationRes,
 			     checkCollision, savePath, saveFailedPath);

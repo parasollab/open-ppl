@@ -131,6 +131,11 @@ IsConnected(Environment *_env, Stat_Class& Stats,
 	    double positionRes, double orientationRes,
 	    bool checkCollision, 
 	    bool savePath, bool saveFailedPath) {
+  //clear lpOutput
+  lpOutput->path.clear();
+  lpOutput->edge.first.SetWeight(0);
+  lpOutput->edge.second.SetWeight(0);
+  lpOutput->savedEdge.clear();
   bool connected = false;
 //CollisionDetection *cd;
   
