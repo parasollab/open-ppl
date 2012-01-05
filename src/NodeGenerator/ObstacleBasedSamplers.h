@@ -77,6 +77,13 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         << ", n_shells_coll = " << n_shells_coll 
         << ", stepsize = " << step_size << ")";
     }
+   
+   virtual CFG ChooseASample(CFG cfg_in, Environment* env){
+     CFG c1=cfg_in;
+     if(c1==CFG())
+       c1.GetRandomCfg(env);//random configurations taken inside bounding box
+     return c1;
+   }
 
     template <typename OutputIterator>
       OutputIterator GenerateShells(Environment* _env, Stat_Class& Stats,CFG c_free, CFG c_coll, CFG incr, 
@@ -126,9 +133,8 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         _stats.IncNodes_Attempted();
         attempts++;
 
-        CFG c1 = _cfgIn;
-        if(c1==CFG())
-          c1.GetRandomCfg(_env);//random configurations taken inside bounding box
+        CFG c1 ;
+        c1=ChooseASample( _cfgIn, _env);
 
         bool c1_bbox = c1.InBoundingBox(_env);
 
