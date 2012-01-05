@@ -121,16 +121,16 @@ GetRange(int par) const {
 
 double 
 BoundingBox::
-GetClearance(Vector3D point3d) const {
-  double min_clearance = -1;
+GetClearance(Vector3D _point3d) const {
+  double minClearance = -1;
   double clearance = 0;
   for (int i = 0; i < pos_dofs; ++i) {
-    clearance = min(abs((int)( point3d[i] - bounding_box[i].first)), 
-			abs((int)( bounding_box[i].second - point3d[i])));
-    if (clearance < min_clearance || i == 0)
-      min_clearance = clearance;
+    clearance = min((_point3d[i] - bounding_box[i].first ), 
+                    (bounding_box[i].second - _point3d[i]));
+    if (clearance < minClearance || i == 0)
+      minClearance = clearance;
   }
-  return min_clearance;
+  return minClearance;
 }
 
 BoundingBox::parameter_type 
