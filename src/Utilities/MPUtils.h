@@ -400,8 +400,6 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
 template<class CFG> class SamplerMethod;
 template<class CFG, class WEIGHT> class LocalPlannerMethod;
 
-boost::shared_ptr<SamplerMethod<CfgType> > GetSamplingMethod(MPProblem* _mp, string _s);
-
 boost::shared_ptr<LocalPlannerMethod<CfgType, WeightType> > GetLPMethod(MPProblem* _mp, string _s);
 
 ///////////////////////////////////////////////////////////////////////////////

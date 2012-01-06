@@ -1,38 +1,34 @@
-#ifndef GRIDSAMPLER_h_
-#define GRIDSAMPLER_h_
+#ifndef GRIDSAMPLER_H_
+#define GRIDSAMPLER_H_
 
 #include "SamplerMethod.h"
 
 template <typename CFG>
 class GridSampler : public SamplerMethod<CFG> {
-
-  ValidityChecker<CFG>* m_vc;
   string m_vcm;
   map<size_t, size_t> m_numPoints;
   bool m_useBBX;
 
   public:
-  GridSampler(){
+  GridSampler() : m_vcm(""), m_useBBX("false") {
     this->SetName("GridSampler");
   }
 
-  GridSampler(ValidityChecker<CFG>* _vc, string _vcm, map<size_t, size_t> _numPoints, bool _useBBX) 
-    : m_vc(_vc), m_vcm(_vcm), m_numPoints(_numPoints), m_useBBX(_useBBX) {
-      this->SetName("GridSampler");
-    }
+  GridSampler(string _vcm, map<size_t, size_t> _numPoints, bool _useBBX) 
+    : m_vcm(_vcm), m_numPoints(_numPoints), m_useBBX(_useBBX) {
+    this->SetName("GridSampler");
+  }
 
-  GridSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem){
+  GridSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
     this->SetName("GridSampler");
     ParseXML(_node);
-    m_vc = _problem->GetValidityChecker();
   }
 
   ~GridSampler(){}
 
-  void  ParseXML(XMLNodeReader& _node){
-    XMLNodeReader::childiterator citr;
-    for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-      if(citr->getName() == "dimension"){
+  void  ParseXML(XMLNodeReader& _node) {
+    for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
+      if(citr->getName() == "dimension") {
         size_t points = citr->numberXMLParameter("points", true, 10, 0, MAXINT, "Number of grid points excluding min & max");
         size_t index = citr->numberXMLParameter("index", true, 0, 0, MAXINT, "Index in BBX");
         m_numPoints[index] = points;
@@ -44,19 +40,16 @@ class GridSampler : public SamplerMethod<CFG> {
     m_useBBX = _node.boolXMLParameter("usebbx", true, false, "Use bounding box as obstacle");
     
     _node.warnUnrequestedAttributes();
-    
-    Print(cout);
   }
 
-  virtual void Print(ostream& _os) const {
-    _os << this->GetName()
-      << "\n  m_vcm = " << m_vcm
-      << "\n  m_useBBX = " << m_useBBX
-      << "\n  m_numPoints (index, points):";  
-
-    for (map<size_t, size_t>::const_iterator it = m_numPoints.begin() ; it != m_numPoints.end(); it++ ) {
-      _os << "\n    " << it->first << ", " << it->second;
-    }
+  virtual void PrintOptions(ostream& _os) const {
+    SamplerMethod<CFG>::PrintOptions(_os);
+    _os << "\tm_vcm = " << m_vcm << endl;
+    _os << "\tm_useBBX = " << m_useBBX << endl;
+    _os << "\tm_numPoints (index, points):";
+    for(map<size_t, size_t>::const_iterator it = m_numPoints.begin() ; it != m_numPoints.end(); it++ ) 
+      _os << "\n\t\t" << it->first << ", " << it->second;
+    _os << endl;
   }
 
   virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
@@ -67,6 +60,7 @@ class GridSampler : public SamplerMethod<CFG> {
     bool generated = false;
     string callee(this->GetName());
     callee += "::sampler()";
+    ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
     CDInfo cdInfo;
 
     int attempts = 0;
@@ -107,7 +101,7 @@ class GridSampler : public SamplerMethod<CFG> {
         tmp.SetSingleParam(index,gridp);
       }
 
-      bool tmpFree = tmp.InBoundingBox(_env) && m_vc->IsValid(m_vc->GetVCMethod(m_vcm), tmp, _env, _stats, cdInfo, true, &callee);
+      bool tmpFree = tmp.InBoundingBox(_env) && vc->IsValid(vc->GetVCMethod(m_vcm), tmp, _env, _stats, cdInfo, true, &callee);
 
       if(tmpFree){
         _cfgOut.push_back(tmp);

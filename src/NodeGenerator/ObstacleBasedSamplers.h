@@ -71,11 +71,11 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       cout << "ObstacleBasedSampler";
     }
 
-    virtual void Print(ostream& os) const {
+    virtual void PrintOptions(ostream& os) const {
       os << this->GetName() 
         << " (n_shells_free = " << n_shells_free 
         << ", n_shells_coll = " << n_shells_coll 
-        << ", stepsize = " << step_size << ")";
+        << ", stepsize = " << step_size << ")\n";
     }
    
    virtual CFG ChooseASample(CFG cfg_in, Environment* env){

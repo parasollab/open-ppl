@@ -1,7 +1,8 @@
-#ifndef UniformSampler_h
-#define UniformSampler_h
+#ifndef UNIFORMSAMPLERS_H_
+#define UNIFORMSAMPLERS_H_
 
 #include "SamplerMethod.h"
+
 class Environment;
 class Stat_Class;
 class CDInfo;
@@ -14,20 +15,16 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
       this->SetName("UniformRandomSampler");
     }
 
-    UniformRandomSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
+    UniformRandomSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
       this->SetName("UniformRandomSampler");
-      ParseXML(in_Node);
+      ParseXML(_node);
     }
 
     ~UniformRandomSampler() {}
 
-    void ParseXML(XMLNodeReader& in_Node) 
-    {
-      SamplerMethod<CFG>::Print(cout);
-    }
+    void ParseXML(XMLNodeReader& _node) {}
 
     virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
-
       bool generated = false;
       int attempts = 0;
 
@@ -52,39 +49,37 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
 template <typename CFG>
 class UniformRandomFreeSampler : public SamplerMethod<CFG> {
   private:
-    ValidityChecker<CFG>* vc;
-    std::string strVcmethod;
+    std::string m_vcLabel;
 
   public:
-    UniformRandomFreeSampler() {
+    UniformRandomFreeSampler() : m_vcLabel("") {
       this->SetName("UniformRandomFreeSampler");
     }
 
-    UniformRandomFreeSampler(ValidityChecker<CFG>* v, string vcMethod) : vc(v), strVcmethod(vcMethod) {
+    UniformRandomFreeSampler(string _vcLabel) : m_vcLabel(_vcLabel) {
       this->SetName("UniformRandomFreeSampler");
     } 
 
-    UniformRandomFreeSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
+    UniformRandomFreeSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
       this->SetName("UniformRandomFreeSampler");
-      ParseXML(in_Node);
-      strVcmethod = in_Node.stringXMLParameter(string("vc_method"), true,
-          string(""), string("Validity Test Method"));
-      vc = in_pProblem->GetValidityChecker();
+      ParseXML(_node);
+      m_vcLabel = _node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
     }
 
     ~UniformRandomFreeSampler() {}
 
-    void ParseXML(XMLNodeReader& in_Node) 
-    {
-      SamplerMethod<CFG>::Print(cout);
-      cout << "UniformRandomFreeSampler";
+    void ParseXML(XMLNodeReader& _node) {}
+
+    virtual void PrintOptions(ostream& _out) const {
+      SamplerMethod<CFG>::PrintOptions(_out);
+      _out << "\tm_vcLabel = " << m_vcLabel << endl;
     }
 
   protected:
     virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
-
       string callee(this->GetName());
-      callee += "::_Sample()";
+      callee += "::SampleImpl()";
+      ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
       CDInfo cdInfo;
       bool generated = false;
       int attempts = 0;
@@ -94,15 +89,13 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG> {
         attempts++;
         CFG tmp;
         tmp.GetRandomCfg(_env);
-        if(tmp.InBoundingBox(_env)){
-          if(vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, _env, 
-                _stats, cdInfo, true, &callee))
-          {
+        if(tmp.InBoundingBox(_env)) {
+          if(vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, 
+                         _stats, cdInfo, true, &callee)) {
             _stats.IncNodes_Generated();
             generated = true;
             _cfgOut.push_back(tmp);
-          }
-          else{
+          } else {
             _cfgCol = tmp;
           }
         }

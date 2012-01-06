@@ -194,7 +194,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
 
   typedef map<string, pair<int,int> >::iterator GIT;
   for(GIT git = m_NodeGenerationLabels.begin(); git != m_NodeGenerationLabels.end(); ++git){
-    Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(git->first);
+    Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(git->first);
     vector<CfgType> outNodes, outCollisionNodes;
     vector<CfgType> inNodes(git->second.first);
 

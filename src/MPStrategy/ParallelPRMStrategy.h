@@ -240,7 +240,7 @@ class ParallelPRMRoadmap : public MPStrategyMethod {
 			{
 				
 				Sampler<CfgType>::SamplerPointer  pNodeGen;
-				pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(itr->first);
+				pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(itr->first);
 				
 				
 				

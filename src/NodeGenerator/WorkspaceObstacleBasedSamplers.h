@@ -39,9 +39,9 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
 
   ~WorkspaceObstacleBasedSampler() {}
 
-  virtual void Print(ostream& os) const
+  virtual void PrintOptions(ostream& os) const
   {
-    ObstacleBasedSampler<CFG>::Print(os); 
+    ObstacleBasedSampler<CFG>::PrintOptions(os); 
     os << "  pointSelectionStrategy = " << pointSelection<< ")";
   }
 

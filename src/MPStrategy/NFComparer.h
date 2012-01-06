@@ -932,7 +932,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         {
           vector< CfgType > vectorCfgs;
           Sampler<CfgType>::SamplerPointer pNodeGen;
-          pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(*itr);
+          pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(*itr);
           pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, m_numNodes,
               2*m_numNodes, back_inserter(vectorCfgs));  
 
@@ -1243,7 +1243,7 @@ class NFTester : public MPStrategyMethod {
       {
         vector< CfgType > vectorCfgs;
         Sampler<CfgType>::SamplerPointer pNodeGen;
-        pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(*itr);
+        pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(*itr);
         pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, m_numNodes, 2*m_numNodes,
             back_inserter(vectorCfgs));  
 

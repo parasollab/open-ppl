@@ -93,13 +93,13 @@ void BasicPRM::PrintOptions(ostream& _os) {
   if(!m_useProbability){
     for(MIT mit=m_nodeGenerationLabels.begin(); mit!=m_nodeGenerationLabels.end(); mit++){
       _os<<"\t"<<mit->first<<"\tNumber:"<<mit->second.first<<"\tAttempts:"<<mit->second.second<<"\tOptions:\n";
-      GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(mit->first)->PrintOptions(_os);
+      GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(mit->first)->PrintOptions(_os);
     }
   }
   else{
     for(PIT pit=m_probGenerationLabels.begin(); pit!=m_probGenerationLabels.end(); pit++){
       _os<<"\t"<<pit->first<<"\tProbability:"<<pit->second.first<<"\tAttempts:"<<pit->second.second<<"\tOptions:\n";
-      GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(pit->first)->PrintOptions(_os);
+      GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(pit->first)->PrintOptions(_os);
     }
   }
   _os<<"\nNodeConnectors\n";
@@ -368,8 +368,8 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
   vector<CfgType> outNodes;
   if(!m_useProbability){
     for(GIT git = m_nodeGenerationLabels.begin(); git != m_nodeGenerationLabels.end(); ++git){
-      Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(git->first);
-     if(m_debug) pNodeGenerator->Print(cout);
+      Sampler<CfgType>::SamplerPointer pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(git->first);
+     if(m_debug) pNodeGenerator->PrintOptions(cout);
       vector<CfgType> inNodes(git->second.first);
 
       //generate nodes for this node generator method
@@ -397,8 +397,8 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
   else{
     string NextNodeGen = PickNextSampler();
     Sampler<CfgType>::SamplerPointer pNodeGenerator; 
-    pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(NextNodeGen);
-    if(m_debug) pNodeGenerator->Print(cout);
+    pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(NextNodeGen);
+    if(m_debug) pNodeGenerator->PrintOptions(cout);
     vector<CfgType> inNodes(1);
 
     //generate nodes for this node generator method

@@ -175,7 +175,7 @@ void HybridPRM::Run(int in_RegionID){
       NodeGenClock.StartClock("Node Generation");
       unsigned long int num_cd_before_gen = pStatClass->GetIsCollTotal();
       vector<CfgType> vectorCfgs, in_nodes(1);
-      Sampler<CfgType>::SamplerPointer pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetSamplingMethod(next_node_gen);
+      Sampler<CfgType>::SamplerPointer pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(next_node_gen);
       pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, in_nodes.begin(),
       in_nodes.end(), 1, back_inserter(vectorCfgs));
       unsigned long int num_cd_after_gen = pStatClass->GetIsCollTotal();

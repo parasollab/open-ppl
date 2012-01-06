@@ -1,5 +1,5 @@
-#ifndef GaussianSamplers_h
-#define GaussianSamplers_h
+#ifndef GAUSSIANSAMPLERS_H_
+#define GAUSSIANSAMPLERS_H_
 
 #include "SamplerMethod.h"
 
@@ -7,106 +7,105 @@ template <typename CFG>
 class GaussianSampler : public SamplerMethod<CFG>
 {
   private:
-    ValidityChecker<CFG>* vc;
-    shared_ptr<DistanceMetricMethod> dm;
-    double d;
-    bool useBBX;
-    string strVcmethod, dm_label;
+    double m_d;
+    bool m_useBoundingBox;
+    string m_vcLabel, m_dmLabel;
 
   public:
-    GaussianSampler() {
+    GaussianSampler() : m_d(0), m_useBoundingBox(false), m_vcLabel(""), m_dmLabel("") {
       this->SetName("GaussianSampler");
     }
-    GaussianSampler(Environment* env, shared_ptr<DistanceMetric>_dm, double _d = 0) : dm(_dm), d(_d) {
+    
+    GaussianSampler(Environment* _env, string _vcLabel, string _dmLabel, double _d = 0, bool _useBoundingBox = false)
+      : m_d(_d), m_useBoundingBox(_useBoundingBox), m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
       this->SetName("GaussianSampler");
-      if(d == 0)
-        d = (env->GetMultiBody(env->GetRobotIndex()))->GetMaxAxisRange();
+      if(m_d == 0)
+        m_d = (_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange();
     }
 
-    GaussianSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem):SamplerMethod<CFG>(in_Node, in_pProblem) {
+    GaussianSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
       this->SetName("GaussianSampler");
-      ParseXML(in_Node);
-      cout << "GaussianSampler";
-      cout << "strVcmethod = " << strVcmethod << endl;
-      vc = in_pProblem->GetValidityChecker();
-      dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label); 
+      ParseXML(_node);
     }
 
     ~GaussianSampler() {} 
 
-    void  ParseXML(XMLNodeReader& in_Node) {
-      dm_label =in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
-      strVcmethod = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
-      d = in_Node.numberXMLParameter("gauss_d", true, 0.0, 0.0, MAX_DBL, "Gaussian D value");
-      useBBX = in_Node.boolXMLParameter("usebbx", true, false, "Use bounding box as obstacle");
-      in_Node.warnUnrequestedAttributes();
+    void  ParseXML(XMLNodeReader& _node) {
+      m_d = _node.numberXMLParameter("gauss_d", true, 0.0, 0.0, MAX_DBL, "Gaussian D value");
+      m_useBoundingBox = _node.boolXMLParameter("usebbx", true, false, "Use bounding box as obstacle");
+      m_vcLabel = _node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
+      m_dmLabel =_node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
+      
+      _node.warnUnrequestedAttributes();
     }
 
-    virtual void Print(ostream& os) const {
-      os << this->GetName() << " (d = " << d << ")";
+    virtual void PrintOptions(ostream& _out) const {
+      SamplerMethod<CFG>::PrintOptions(_out);
+      _out << "\td = " << m_d << endl; 
+      _out << "\tuseBoundingBox = " << m_useBoundingBox << endl; 
+      _out << "\tvcLabel = " << m_vcLabel << endl; 
+      _out << "\tdmLabel = " << m_dmLabel << endl; 
     }
 
     virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
-
       string callee(this->GetName());
       callee += "::sampler()";
       bool generated = false;
       int attempts = 0;
+      ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
       CDInfo cdInfo;
+      shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dmLabel); 
 
       CFG cfg1 = _cfgIn;
       if(cfg1 == CFG())
         cfg1.GetRandomCfg(_env);
-      bool cfg1_free;
-      if(!useBBX){
-        if(!cfg1.InBoundingBox(_env))return false;
-        cfg1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, _env,
-            _stats, cdInfo, true, &callee);
+      bool cfg1Free;
+      if(!m_useBoundingBox) {
+        if(!cfg1.InBoundingBox(_env))
+          return false;
+        cfg1Free = vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env,
+                               _stats, cdInfo, true, &callee);
+      } else {
+        cfg1Free = (cfg1.InBoundingBox(_env) &&
+                    vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env,
+                                _stats, cdInfo, true, &callee));
       }
-      else{
-        cfg1_free = (cfg1.InBoundingBox(_env) &&
-            vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, _env,
-              _stats, cdInfo, true, &callee));
-      }
-      VDAddTempCfg(cfg1, cfg1_free);
+      VDAddTempCfg(cfg1, cfg1Free);
 
       do {
         _stats.IncNodes_Attempted();
         attempts++;
         CFG cfg2;
-        bool cfg2_free;
-        if(!useBBX){
-          do{
+        bool cfg2Free;
+        if(!m_useBoundingBox) {
+          do {
             CFG incr;
-            incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), _env, dm);
+            incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
             cfg2.add(cfg1, incr);
             VDAddTempRay(incr);
-          }while(!cfg2.InBoundingBox(_env));
-          cfg2_free = vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, _env, 
-              _stats, cdInfo, true, &callee);
-        }
-        else{
+          } while(!cfg2.InBoundingBox(_env));
+          cfg2Free = vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, 
+                                 _stats, cdInfo, true, &callee);
+        } else {
           CFG incr;
-          incr.GetRandomRay(fabs(GaussianDistribution(fabs(d), fabs(d))), 
-              _env, dm);
+          incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
           cfg2.add(cfg1, incr);
           VDAddTempRay(incr);
-          cfg2_free = (cfg2.InBoundingBox(_env) && 
-              vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, _env, 
-                _stats, cdInfo, true, &callee));
+          cfg2Free = (cfg2.InBoundingBox(_env) && 
+                      vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, 
+                                  _stats, cdInfo, true, &callee));
         }
-        VDAddTempCfg(cfg2, cfg2_free);
-        if(cfg1_free != cfg2_free) {
+        VDAddTempCfg(cfg2, cfg2Free);
+        if(cfg1Free != cfg2Free) {
           _stats.IncNodes_Generated();
           generated = true;
           ostringstream oss;
-          if(cfg1_free){
-            oss<<"Gaussian node generated: "<<cfg1;
+          if(cfg1Free) {
+            oss << "Gaussian node generated: " << cfg1;
             _cfgOut.push_back(cfg1);
             _cfgCol = cfg2;
-          }
-          else{
-            oss<<"Gaussian node generated: "<<cfg2;
+          } else {
+            oss << "Gaussian node generated: " << cfg2;
             _cfgOut.push_back(cfg2);
             _cfgCol = cfg1;
           }
@@ -122,55 +121,53 @@ template <typename CFG>
 class BridgeTestSampler : public SamplerMethod<CFG>
 {
   private:
-    ValidityChecker<CFG>* vc;
-    shared_ptr<DistanceMetricMethod> dm;
-    string dm_label;
-    double d;
-    string strVcmethod;
-    bool use_bbx;
+    double m_d;
+    bool m_useBoundingBox;
+    string m_vcLabel, m_dmLabel;
 
   public:
-    BridgeTestSampler() {
+    BridgeTestSampler() : m_d(0), m_useBoundingBox(false), m_vcLabel(""), m_dmLabel("") {
       this->SetName("BridgeTestSampler");
     }
 
-    BridgeTestSampler(Environment* env, shared_ptr<DistanceMetric> _dm, double _d = 0) : dm(_dm), d(_d) {
+    BridgeTestSampler(Environment* _env, string _vcLabel, string _dmLabel, double _d = 0, bool _useBoundingBox = false)
+      : m_d(_d), m_useBoundingBox(_useBoundingBox), m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
       this->SetName("BridgeTestSampler");
-      if(d == 0)
-        d = (env->GetMultiBody(env->GetRobotIndex()))->GetMaxAxisRange();
+      if(m_d == 0)
+        m_d = (_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange();
     }
 
-    BridgeTestSampler(XMLNodeReader& in_Node, MPProblem* in_pProblem) : SamplerMethod<CFG>(in_Node, in_pProblem) {
+    BridgeTestSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
       this->SetName("BridgeTestSampler");
-      ParseXML(in_Node);
-      dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label); 
-      cout << "BridgeTestSampler";
-      cout << "strVcmethod = " << strVcmethod << endl;
-      vc = in_pProblem->GetValidityChecker();
+      ParseXML(_node);
     }
 
     ~BridgeTestSampler() {}
 
-    void  ParseXML(XMLNodeReader& in_Node) {
-      strVcmethod = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
-      dm_label    = in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
-      d           = in_Node.numberXMLParameter("bridge_d",true, 0.0, 0.0,100.0,"bridge_d"); 
-      use_bbx     = in_Node.boolXMLParameter("use_bbx", false, true, "Use the Bounding Box as an Obstacle");
+    void  ParseXML(XMLNodeReader& _node) {
+      m_d = _node.numberXMLParameter("bridge_d",true, 0.0, 0.0,100.0,"bridge_d"); 
+      m_useBoundingBox = _node.boolXMLParameter("use_bbx", false, true, "Use the Bounding Box as an Obstacle");
+      m_vcLabel = _node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
+      m_dmLabel = _node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
+
+      _node.warnUnrequestedAttributes();
     }
 
-    virtual void Print(ostream& os) const
-    {
-      os << this->GetName()
-        << " (d = " << d 
-        << ", use_bbx = " << use_bbx << ")" << endl;
+    virtual void PrintOptions(ostream& _out) const {
+      SamplerMethod<CFG>::PrintOptions(_out);
+      _out << "\td = " << m_d << endl; 
+      _out << "\tuseBoundingBox = " << m_useBoundingBox << endl; 
+      _out << "\tvcLabel = " << m_vcLabel << endl; 
+      _out << "\tdmLabel = " << m_dmLabel << endl; 
     }
 
     virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
-
       string callee(this->GetName());
       callee += "::sampler()";
+      ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
       CDInfo cdInfo;
-      CFG blank_cfg;
+      shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dmLabel); 
+      CFG blankCfg;
       bool generated = false;
       int attempts = 0;
 
@@ -178,21 +175,21 @@ class BridgeTestSampler : public SamplerMethod<CFG>
         _stats.IncNodes_Attempted();
         attempts++;
         CFG tmp = _cfgIn;
-        if (tmp == blank_cfg){
+        if (tmp == blankCfg) {
           tmp.GetRandomCfg(_env);
         }
-        if ( use_bbx ) {
+        if ( m_useBoundingBox ) {
           if ( tmp.InBoundingBox(_env) && 
-              vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, _env, _stats, cdInfo, true, &callee)) { 
+              vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, _stats, cdInfo, true, &callee)) { 
             CFG mid = tmp, incr, cfg1;
-            incr.GetRandomRay(fabs(GaussianDistribution(d, d))/2, _env, dm);
+            incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
             cfg1.subtract(mid, incr);
             if ( !cfg1.InBoundingBox(_env) || 
-                !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, _env, _stats, cdInfo, true, &callee)) {
+                !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env, _stats, cdInfo, true, &callee)) {
               CFG cfg2;
               cfg2.add(mid, incr);
               if(!cfg2.InBoundingBox(_env) || 
-                  !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, _env, _stats, cdInfo, true, &callee)) {
+                 !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
                 _stats.IncNodes_Generated();
                 generated = true;
                 _cfgOut.push_back(tmp);
@@ -202,14 +199,14 @@ class BridgeTestSampler : public SamplerMethod<CFG>
             }
           } else {
             CFG cfg1 = tmp, incr, cfg2;
-            incr.GetRandomRay(fabs(GaussianDistribution(d, d)), _env, dm);
+            incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d)), _env, dm);
             cfg2.add(cfg1, incr);
             if ( !cfg2.InBoundingBox(_env) || 
-                !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, _env, _stats, cdInfo, true, &callee)) {
+                !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
               CFG mid;
               mid.WeightedSum(cfg1, cfg2, 0.5);
               if ( mid.InBoundingBox(_env) && 
-                  (vc->IsValid(vc->GetVCMethod(strVcmethod), mid, _env, _stats, cdInfo, true, &callee))) {
+                  (vc->IsValid(vc->GetVCMethod(m_vcLabel), mid, _env, _stats, cdInfo, true, &callee))) {
                 _stats.IncNodes_Generated();
                 generated = true;
                 _cfgOut.push_back(mid);
@@ -219,14 +216,14 @@ class BridgeTestSampler : public SamplerMethod<CFG>
             }
           }
         } else {
-          if ( vc->IsValid(vc->GetVCMethod(strVcmethod), tmp, _env, _stats, cdInfo, true, &callee) ) { 
+          if ( vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, _stats, cdInfo, true, &callee) ) { 
             CFG mid = tmp, incr, cfg1;
-            incr.GetRandomRay(fabs(GaussianDistribution(d, d))/2, _env, dm);
+            incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
             cfg1.subtract(mid, incr);
-            if( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg1, _env, _stats, cdInfo, true, &callee) ) {
+            if( !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env, _stats, cdInfo, true, &callee) ) {
               CFG cfg2;
               cfg2.add(mid, incr);
-              if( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, _env, _stats, cdInfo, true, &callee)) {
+              if( !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
                 _stats.IncNodes_Generated();
                 generated = true;
                 _cfgOut.push_back(tmp);
@@ -236,12 +233,12 @@ class BridgeTestSampler : public SamplerMethod<CFG>
             }
           } else {
             CFG cfg1 = tmp, incr, cfg2;
-            incr.GetRandomRay(fabs(GaussianDistribution(d, d)), _env, dm);
+            incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d)), _env, dm);
             cfg2.add(cfg1, incr);
-            if ( !vc->IsValid(vc->GetVCMethod(strVcmethod), cfg2, _env, _stats, cdInfo, true, &callee)) {
+            if ( !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
               CFG mid;
               mid.WeightedSum(cfg1, cfg2, 0.5);
-              if( (vc->IsValid(vc->GetVCMethod(strVcmethod), mid, _env, _stats, cdInfo, true, &callee)) ) {
+              if( (vc->IsValid(vc->GetVCMethod(m_vcLabel), mid, _env, _stats, cdInfo, true, &callee)) ) {
                 _stats.IncNodes_Generated();
                 generated = true;
                 _cfgOut.push_back(mid);
