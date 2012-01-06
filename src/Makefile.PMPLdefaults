@@ -181,7 +181,7 @@ PMPL_INCL = \
 	-I${PMPL_DIR}/MPStrategy/Entropy \
 	-I${PMPL_DIR}/MPProblem/Geometry \
 	-I${PMPL_DIR}/MPStrategy \
-	-I${PMPL_DIR}/NodeGenerator \
+	-I${PMPL_DIR}/Samplers \
 	-I${PMPL_DIR}/Utilities \
 	-I${PMPL_DIR}/ValidityChecker \
 	-I${PMPL_DIR}/NeighborhoodFinder \
