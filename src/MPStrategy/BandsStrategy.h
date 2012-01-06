@@ -168,8 +168,8 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       resize_bbox = in_Node.boolXMLParameter(string("resize_bbox"), false, false,
           string("if true, bounding box size will be doubled"));
 
-      m_numNodes = in_Node.numberXMLParameter(string("num_samples"), true, 1,1,1, "Number of Samples");
-      m_iterations = in_Node.numberXMLParameter("iterations", true, 1,1,1, "Number of Iterations");
+      m_numNodes = in_Node.numberXMLParameter(string("num_samples"), true, 1,0,MAX_INT, "Number of Samples");
+      m_iterations = in_Node.numberXMLParameter("iterations", true, 1,0,MAX_INT, "Number of Iterations");
 
       //--------------------------
       //Reading in witness queries
