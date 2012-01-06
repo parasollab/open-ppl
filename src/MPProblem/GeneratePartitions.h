@@ -14,7 +14,7 @@
 #include <functional>
 #include "Environment.h"
 #include <string>
-#include "trash/Parameters.h"
+
 //////////////////////////////////////////////////////////////////////////////////////////
 class Body;
 template <class CFG, class WEIGHT> class Roadmap;
@@ -1007,7 +1007,7 @@ class PartitionCSpaceRegion {
 
   static vector<FSPartitioningMethod<CFG>*> GetDefault();
 
-  int ReadCommandLine(str_param<char *> &partitionType);
+  //int ReadCommandLine(str_param<char *> &partitionType);
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
   void PrintDefaults(ostream& _os);
@@ -1068,6 +1068,7 @@ GetDefault() {
 }
 
 
+/*
 template <class CFG>
 int 
 PartitionCSpaceRegion<CFG>::
@@ -1122,7 +1123,7 @@ ReadCommandLine(str_param<char *> &partitionType) {
 	    // .. use the parser of the matching method
 	    (*itr)->ParseCommandLine(cmd_argc, cmd_argv);
 	    // .., set their parameters	
-/* 	    (*itr)->cdInfo = &cdInfo; */
+/ * 	    (*itr)->cdInfo = &cdInfo; * /
 	    //  and push it back into the list of selected methods.	  
 	    selected.push_back((*itr)->CreateCopy());	 
 	    (*itr)->SetDefault();
@@ -1146,15 +1147,15 @@ ReadCommandLine(str_param<char *> &partitionType) {
   //when there was no method selected, use the default
   if(selected.size() == 0) {
     selected = PartitionCSpaceRegion<CFG>::GetDefault();
-/*     for (itr = selected.begin(); itr != selected.end(); itr++) { */
-/*       (*itr)->cdInfo = &cdInfo; */
-/*     } */
+/ *     for (itr = selected.begin(); itr != selected.end(); itr++) { * /
+/ *       (*itr)->cdInfo = &cdInfo; * /
+/ *     } * /
   }
   //cout << "selected:\n";
   //for(int j=0; j<selected.size(); j++)
   //  selected[j]->PrintValues(cout);
 }
-
+*/
 
 template <class CFG>
 void 
