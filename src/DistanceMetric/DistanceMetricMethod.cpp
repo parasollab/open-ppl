@@ -32,7 +32,7 @@ operator==(const DistanceMetricMethod& dm) const {
 void
 DistanceMetricMethod::
 ScaleCfg(Environment* env, double length, Cfg& o, Cfg& c) {
-  length = abs((int)length); //a distance must be positive
+  length = fabs(length); //a distance must be positive
 
   Cfg* origin = &o;//o.CreateNewCfg();
   Cfg* outsideCfg = c.CreateNewCfg();
