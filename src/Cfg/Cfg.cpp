@@ -112,7 +112,7 @@ void Cfg::divide(const Cfg& _c, double _s) {
 
 Cfg& Cfg::operator=(const Cfg& _c){
   if(_c.DOF() != m_dof || _c.PosDOF()!= m_posDof) {
-    cout << "\n\nERROR in Cfg_free::equals(Cfg&), ";
+    cout << "\n\nERROR in Cfg::operator=(Cfg&), ";
     cout << "DOF of Cfgs are not equal " << _c.DOF() << "\t!=\t" << m_dof 
          << "\nor posDOF are not equal " << _c.PosDOF() << "\t!=\t" << m_posDof << endl;
     exit(-1);
