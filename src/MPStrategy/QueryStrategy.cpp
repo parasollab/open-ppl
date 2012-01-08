@@ -112,10 +112,7 @@ Run(int in_RegionID)
   }
   QueryClock.StopClock();
 
-#if QUIET
-#else
   cout << ":" << QueryClock.GetSeconds() << " sec (ie, " << QueryClock.GetUSeconds() << " usec)";
-#endif
   cout << endl;
 }
 

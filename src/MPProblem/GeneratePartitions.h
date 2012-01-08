@@ -1227,17 +1227,13 @@ PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
   typename vector<FSPartitioningMethod<CFG>*>::iterator itr;
 
   for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
-#ifndef QUIET	
     ClockClass clock;
     clock.StartClock((*itr)->GetName());
     cout<<"\n  "; clock.PrintName(); cout << " " << flush;
-#endif	
     
     subregion_boundaries = (*itr)->PlaceBoundaries(region->roadmap.GetEnvironment(), region->feature_stats, *(region->GetBoundingBox()), free_nodes, coll_nodes);
-#ifndef QUIET
     clock.StopClock();
     cout << clock.GetSeconds() << " sec  \n" << flush;
-#endif
   }
   cout << "------Stopping Partitions-------" << endl;
 

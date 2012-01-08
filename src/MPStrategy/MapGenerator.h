@@ -290,9 +290,7 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
     typename vector<NodeGenerationMethod<CFG>*>::iterator itr;
     for ( itr = gn.selected.begin(); itr != gn.selected.end(); itr++ ) {
       
-#ifndef QUIET
       cout<<endl<< (*itr)->GetName()<<endl;
-#endif
       
       double genTime = 0.0;    //this selected method
       double conTime = 0.0;    //this selected method
@@ -383,20 +381,16 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 	//keep track of gen/con time
 	genTime += genClock.GetSeconds();
 	conTime += conClock.GetSeconds();
-#ifndef QUIET
         cout<<"\n "; genClock.PrintName(); cout << " ";
         cout << genClock.GetSeconds() << " sec  ";
 	cout<<"\n "; conClock.PrintName(); cout << " ";
         cout << conClock.GetSeconds() << " sec  \n";
-#endif
 	
       } //end for numChunks
       
-#ifndef QUIET
       cout<<endl<< (*itr)->GetName()<<endl;
       cout <<" Subtotal node generation time: "<<genTime << " sec  \n";
       cout <<" Subtotal node connection time: "<<conTime << " sec  \n";
-#endif
 
       (*itr)->numNodes.PutValue(oriNumNodes);
       
@@ -408,10 +402,8 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
       
     } //end of for itr = gn.selected
 
-#ifndef QUIET
     cout <<endl<<"Total node generation time for expansion round: "<<expandGenTime << " sec  \n";
     cout <<"Total node connection time for expansion round: "<<expandConTime << " sec  \n";
-#endif
 
     //output map
 /*
@@ -428,22 +420,18 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
     evaluationClock.StopClock();
     totalEvalTime += evaluationClock.GetSeconds();
 
-#ifndef QUIET
     cout << "Evaluation time: " << evaluationClock.GetSeconds() << endl;
 
     if(!finished)
       cout << "\nMap failed evaluation test\n";
-#endif
   } while(!finished);
 
-#ifndef QUIET
   cout << "\nMap passed evaluation test\n";
 
   cout << endl << "Total node generation time: " << totalGenTime << " sec  \n";
   cout << "Total node connection time: " << totalConTime << " sec  \n";
   cout << "Total evaluation time: " << totalEvalTime << " sec  \n";
-#endif
-  }
+}
 
 
 //This is the regular method we use: 
@@ -481,18 +469,15 @@ GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
   }
 
 
-  #ifdef QUIET
-  #else
-    cout << "\n";
-    if ( input->inmapFile.IsActivated() ){
-      cout << "Read nodes from the existing map:";
-    } else{
-      cout << "Node Generation: " << NodeGenClock.GetSeconds()
-           << " sec (ie, " << NodeGenClock.GetUSeconds() << " usec),";
-    }
-    
-    cout << " "<<rmap->m_pRoadmap->get_num_vertices()<<" nodes\n"<< flush;
-  #endif
+  cout << "\n";
+  if ( input->inmapFile.IsActivated() ){
+    cout << "Read nodes from the existing map:";
+  } else{
+    cout << "Node Generation: " << NodeGenClock.GetSeconds()
+         << " sec (ie, " << NodeGenClock.GetUSeconds() << " usec),";
+  }
+  
+  cout << " "<<rmap->m_pRoadmap->get_num_vertices()<<" nodes\n"<< flush;
 
 
   //---------------------------

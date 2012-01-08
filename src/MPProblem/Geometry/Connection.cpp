@@ -106,7 +106,8 @@ Transformation & Connection::GetTransformationToDHFrame()
 void Connection::Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
 		      const Vector3D& transformPosition, const Orientation& transformOrientation,
 		      const Vector3D& positionToDHFrame, const Orientation& orientationToDHFrame,
-		      const DHparameters& _dhparameters, const ConnectionType& connectionType) 
+		      const DHparameters& _dhparameters, const ConnectionType& connectionType,
+                      bool _debug) 
 {
   body[0] = body1;
   body[1] = body2;
@@ -116,22 +117,22 @@ void Connection::Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
   dhparameters = _dhparameters;  
   type = connectionType;
   
-#ifndef QUIET
-  cout << "transformationToBody2 = (" 
-       << transformationToBody2.position.getX() << ", " 
-       << transformationToBody2.position.getY() << ", " 
-       << transformationToBody2.position.getZ() << ", " 
-       << transformationToBody2.orientation.alpha << ", " 
-       << transformationToBody2.orientation.beta << ", " 
-       << transformationToBody2.orientation.gamma << ")" << endl;
-  
-  cout << "dhparameters = (" 
-       << dhparameters.alpha << ", " 
-       << dhparameters.a << ", " 
-       << dhparameters.d << ", " 
-       << dhparameters.theta << ")" 
-       << endl;
-#endif 
+  if(_debug) {
+    cout << "transformationToBody2 = (" 
+         << transformationToBody2.position.getX() << ", " 
+         << transformationToBody2.position.getY() << ", " 
+         << transformationToBody2.position.getZ() << ", " 
+         << transformationToBody2.orientation.alpha << ", " 
+         << transformationToBody2.orientation.beta << ", " 
+         << transformationToBody2.orientation.gamma << ")" << endl;
+    
+    cout << "dhparameters = (" 
+         << dhparameters.alpha << ", " 
+         << dhparameters.a << ", " 
+         << dhparameters.d << ", " 
+         << dhparameters.theta << ")" 
+         << endl;
+  }
 }
 
 

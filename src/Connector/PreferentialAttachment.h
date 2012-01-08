@@ -260,9 +260,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 {
   //cout << "PreferentialAttachment<CFG,WEIGHT>::ConnectNodes() - Roadmap Only" << endl << flush;
   //cout << "Connecting CCs with method: closest k="<< k << endl;
-#ifndef QUIET
   cout << "closest(k="<< m_k <<"): "<<flush;
-#endif
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   vector<VID> vertices;

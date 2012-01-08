@@ -340,10 +340,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
   stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   get_cc_stats(*(_rm->m_pRoadmap),cmap,ccs1);
   
-#ifndef QUIET
   cout << "components(kpairs="<< kpairs ;
   cout << ", smallcc="<<smallcc <<"): "<<flush;
-#endif
   
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   if(ccs1.size()>1){
@@ -387,10 +385,8 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
           InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision) {
 //	  vector<VID> & vids1, vector<VID> & vids2) {
 	  //vector<typename RoadmapGraph<CFG, WEIGHT>::VID> & vids1, vector<typename RoadmapGraph<CFG, WEIGHT>::VID> & vids2) {
-#ifndef QUIET
   cout << "components(kpairs="<< kpairs ;
   cout << ", smallcc="<<smallcc <<"): "<<flush;
-#endif
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   //DisplayCCStats(*pMap); cout << endl;

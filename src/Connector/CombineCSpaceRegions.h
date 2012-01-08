@@ -276,17 +276,13 @@ CombineRegions(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 
   for ( itr = selected.begin(); itr != selected.end(); itr++ ) {
-#ifndef QUIET	
     ClockClass clock;
     clock.StartClock((*itr)->GetName());
     cout<<"\n  "; clock.PrintName(); cout << " " << flush;
-#endif	
     
     (*itr)->CombineRegions(_rm->GetEnvironment(), Stats, c_boundary, free_nodes, coll_nodes);
-#ifndef QUIET
     clock.StopClock();
     cout << clock.GetClock_SEC() << " sec  \n" << flush;
-#endif
   }
 
   cout << "------Stopping Combinations-------" << endl;

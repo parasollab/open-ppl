@@ -135,9 +135,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
             bool addAllEdges) 
 {
   //cout << "Connecting CCs with method: closest k="<< kclosest << endl;
-#ifndef QUIET
   cout << "disconnect" << flush;
-#endif
   
     vector<VID> vertices;
     RoadmapGraph< CFG, WEIGHT >* rGraph = _rm->m_pRoadmap;

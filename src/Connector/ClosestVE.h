@@ -376,9 +376,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  bool addPartialEdge,
 		  bool addAllEdges) {
 
-#ifndef QUIET
   cout << "closestVE(k="<< kclosest <<"): "<<flush;
-#endif
   if (lp->UsesPlannerOtherThan("straightline")){
     cout <<"\n\nWARNING: Skipping call to ClosestVE."
 	 <<  "\n         'straightline' ONLY local planner "

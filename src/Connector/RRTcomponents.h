@@ -191,14 +191,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	bool addAllEdges) {
   // display information specific to method
 
-#ifndef QUIET
   cout << "RRTcomponents(iterations = "<< iterations
        << ", stepFactor= "<< stepFactor
        << ", smallcc   = "<< smallcc
        << ", oclearance = " << o_clearance
        << ", node_clearance = " << clearance_from_node
        <<"): " <<flush;
-#endif
  
   ///Modified for VC
 #if defined(_WIN32)

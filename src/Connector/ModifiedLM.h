@@ -160,13 +160,11 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  bool addPartialEdge,
 		  bool addAllEdges) {
   cout << "Connecting with modifiedLM" << endl;
-  #ifndef QUIET
-    // display information specific to method
-    cout << "(kclosest=" << kclosest;
-    cout << ", maxNum=" << maxNum;
-    cout << ", rfactor=" << rfactor<< "): "<<flush;
-  #endif
-    const int requested = maxNum;
+  // display information specific to method
+  cout << "(kclosest=" << kclosest;
+  cout << ", maxNum=" << maxNum;
+  cout << ", rfactor=" << rfactor<< "): "<<flush;
+  const int requested = maxNum;
 
   // get local copies of necessary data
   Environment *env = _rm->GetEnvironment();

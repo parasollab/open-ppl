@@ -160,9 +160,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
           bool addPartialEdge,
       bool addAllEdges) {
   
-#ifndef QUIET
   cout << this->GetName()<<" (k1="<<k1<<", k2="<<k2<<"): "<<flush;
-#endif
   Closest<CFG,WEIGHT> cl(k1);
   cl.cdInfo=this->cdInfo;
   cl.connectionPosRes=this->connectionPosRes;
@@ -220,9 +218,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
           bool addAllEdges,
           InputIterator _itr1_first, InputIterator _itr1_last,
           InputIterator _itr2_first, InputIterator _itr2_last) {
-#ifndef QUIET
   cout << this->GetName()<<" (k1="<<k1<<", k2="<<k2<<"): "<<flush;
-#endif
 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   NeighborhoodConnection<CFG,WEIGHT> nc(k1);

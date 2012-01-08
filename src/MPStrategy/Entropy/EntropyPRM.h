@@ -277,13 +277,11 @@ EntropyPRM<CFG>::
 GenerateNodes(Environment* _env, Stat_Class& Stats,
 	      CollisionDetection* cd, CDInfo* cdInfo, DistanceMetric * dm,
 	      vector<CFG>& nodes) {
-#ifndef QUIET
   cout << "(numNodes=" << numNodes.GetValue() 
        << " ksamples=" << ksamples.GetValue()
        << " tries=" << tries.GetValue()
        << " kclosest=" << kclosest.GetValue()
        << ") " << endl << flush;
-#endif
   
   // Generate Model Nodes
   cout << "Generating Models Nodes" << endl;

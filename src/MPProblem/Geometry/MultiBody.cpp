@@ -434,7 +434,7 @@ void MultiBody::CalculateArea()
 //===================================================================
 //  Read
 //===================================================================
-void MultiBody::Read(istream& _is, int action, const char* descDir) 
+void MultiBody::Read(istream& _is, int action, const char* descDir, bool _debug) 
 {
   static const int FILENAME_LENGTH = 80;
 
@@ -577,7 +577,7 @@ void MultiBody::Read(istream& _is, int action, const char* descDir)
     c.Read(prevBody, nextBody,
 	    transformPosition, transformOrientation,
 	    positionToDHFrame, orientationToDHFrame,
-	    dhparameters, Connection::ConnectionType(connectionType));
+	    dhparameters, Connection::ConnectionType(connectionType), _debug);
 
     prevBody->Link(c);
   } //endfor i

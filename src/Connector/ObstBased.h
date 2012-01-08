@@ -259,10 +259,8 @@ Get_Cfgs_By_Obst(Roadmap<CFG,WEIGHT>* rm, vector<VID>& vert) {
 template <class CFG, class WEIGHT>
 void ObstBased<CFG,WEIGHT>::
 Connect() {
-  #ifndef QUIET
   cout << "obstBased(k_other="<<k_other
        << ", k_self="<<k_self<<"): "<<flush;
-  #endif
   cout << "DONOTHING" <<endl;
 }
 

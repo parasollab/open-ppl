@@ -576,16 +576,14 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 		  LocalPlanners<CFG,WEIGHT>* _lp,
 		  bool addPartialEdge,
 		  bool addAllEdges) {
-  #ifndef QUIET
-    cout << "RayTracer (RayTbouncingMode=" << RayTbouncingMode
-         << ", RayTmaxRays=" << RayTmaxRays
-         << ", RayTmaxBounces=" << RayTmaxBounces
-         << ", RayTmaxRayLength=" << RayTmaxRayLength
-         << ", SchedulingMode=" << SchedulingMode
-         << ", ScheduleMaxSize=" << ScheduleMaxSize
-         << ", SampleMaxSize=" << SampleMaxSize
-         << "): " << flush;
-  #endif
+  cout << "RayTracer (RayTbouncingMode=" << RayTbouncingMode
+       << ", RayTmaxRays=" << RayTmaxRays
+       << ", RayTmaxBounces=" << RayTmaxBounces
+       << ", RayTmaxRayLength=" << RayTmaxRayLength
+       << ", SchedulingMode=" << SchedulingMode
+       << ", ScheduleMaxSize=" << ScheduleMaxSize
+       << ", SampleMaxSize=" << SampleMaxSize
+       << "): " << flush;
 
   rdmp = _rm;
   cd = _cd;

@@ -446,14 +446,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	bool addPartialEdge,
 	bool addAllEdges) {
   // display information specific to method
-  #ifndef QUIET
   cout << "RRTexpand(iterations = "<< iterations
        << ", stepFactor= "<< stepFactor
        << ", smallcc   = "<< smallcc
        << ", oclearance = " << o_clearance
        << ", node_clearance = " << clearance_from_node
        <<"): " <<flush;
-  #endif
  
 ///Modified for VC
 #if defined(_WIN32)
@@ -503,14 +501,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 	bool addAllEdges,
 	vector<VID>& vids1, vector<VID>& vids2) {
   // display information specific to method
-#ifndef QUIET
   cout << "RRTexpand(iterations = "<< iterations
        << ", stepFactor= "<< stepFactor
        << ", smallcc   = "<< smallcc
        << ", oclearance = " << o_clearance
        << ", node_clearance = " << clearance_from_node
        <<"): " <<flush;
-#endif
  
   ///Modified for VC
 #if defined(_WIN32)

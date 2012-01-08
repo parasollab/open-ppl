@@ -131,7 +131,8 @@ public:
     void Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
 	      const Vector3D& transformPosition, const Orientation& transformOrientation,
 	      const Vector3D& positionToDHFrame, const Orientation& orientationToDHFrame,
-	      const DHparameters& _dhparameters, const ConnectionType& connectionType);
+	      const DHparameters& _dhparameters, const ConnectionType& connectionType,
+              bool _debug = false);
     //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
