@@ -50,10 +50,12 @@ public:
 
   void SetNumOfJoints(int num_of_joints) {
     CfgType::SetNumOfJoints(num_of_joints);
-    robot_cfg = CfgType();
+    CfgType robot_cfg;
+    m_dof = robot_cfg.DOF();
+    m_posDof = robot_cfg.PosDOF();
   }
-  int GetDOFs() {return robot_cfg.DOF(); }
-  int GetPosDOFs() {return robot_cfg.PosDOF();}
+  int GetDOFs() {return m_dof; } 
+  int GetPosDOFs() {return m_posDof; }
   //void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
   void PrintOptions(ostream& out_os);
   //ostream& GetFileStreamByLabel(string& in_strLabel);
@@ -76,7 +78,7 @@ public:
   //Stat_Class* m_pStatClass;
   //map<string,MPFileIO> m_mapLabelFile;
   // temporary variable to deal with posDOFs() and DOFs()
-  CfgType robot_cfg;  // @todo may want to replace by real robot class
+  int m_dof, m_posDof;
 };
 
 
