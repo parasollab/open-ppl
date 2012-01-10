@@ -10,7 +10,7 @@ struct rusage buf;
 #include "GraphAlgo.h"
 /////////////////////////////////////////////////////////////////////
 //
-//  Stat_Class.c
+//  StatClass.c
 //
 //  General Description
 //      This class lets you keep statistics on various aspects of
@@ -25,24 +25,24 @@ struct rusage buf;
 ///////////////////////////////////////////////////////////////////////
 // Static Data Member init
 
-const int Stat_Class::ALL= -1;
+const int StatClass::ALL= -1;
 
-// Stat_Class Class Constructor
-Stat_Class::
-Stat_Class() {
+// StatClass Class Constructor
+StatClass::
+StatClass() {
   ClearStats();
 };
 
-// Stat_Class Class Deconstructor
-Stat_Class::
-~Stat_Class() {
+// StatClass Class Deconstructor
+StatClass::
+~StatClass() {
 };
 
 //----------------------------------------
 //  Clear all stats
 //----------------------------------------
 void
-Stat_Class::
+StatClass::
 ClearStats() {
 
   // initialize the number of collision detection calls to 0
@@ -96,7 +96,7 @@ ClearStats() {
 // calls for the method by the name of CDName
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 IncNumCollDetCalls( string _cdName, string *_pCallName){
   m_numCollDetCalls[_cdName]++;
 
@@ -115,7 +115,7 @@ IncNumCollDetCalls( string _cdName, string *_pCallName){
 // calls 
 //---------------------------------------- 
 void
-Stat_Class::
+StatClass::
 IncCfgIsColl( string *_pCallName) {
 
   if( _pCallName )
@@ -131,7 +131,7 @@ IncCfgIsColl( string *_pCallName) {
 // by local planning method named LPName
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 IncLPConnections( string _lpName ) {
   m_lpConnections[_lpName]++;
   return m_lpConnections[_lpName];
@@ -142,7 +142,7 @@ IncLPConnections( string _lpName ) {
 // by local planning method named LPName by incr
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 IncLPConnections( string _lpName ,int _incr) {
   m_lpConnections[_lpName] += _incr;
   return m_lpConnections[_lpName];
@@ -153,7 +153,7 @@ IncLPConnections( string _lpName ,int _incr) {
 // by local planning method named LPName
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 DecLPConnections(string _lpName) {
   m_lpConnections[_lpName]--;
   return m_lpConnections[_lpName];
@@ -164,7 +164,7 @@ DecLPConnections(string _lpName) {
 // by local planning method named LPName by decr
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 DecLPConnections(string _lpName, int _decr) {
   m_lpConnections[_lpName] -= _decr;
   return m_lpConnections[_lpName];
@@ -176,7 +176,7 @@ DecLPConnections(string _lpName, int _decr) {
 // planning method LPName to Connections
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 SetLPConnections(string _lpName, int _connections) {
   m_lpConnections[_lpName]=_connections;
   return m_lpConnections[_lpName];
@@ -187,7 +187,7 @@ SetLPConnections(string _lpName, int _connections) {
 // local planning method named LPName by incr
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 IncLPAttempts(string _lpName , int _incr) {
   m_lpAttempts[_lpName] += _incr;
   return m_lpAttempts[_lpName];
@@ -198,7 +198,7 @@ IncLPAttempts(string _lpName , int _incr) {
 // local planning method named LPName
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 IncLPAttempts(string _lpName ) {
   m_lpAttempts[_lpName]++;
   return m_lpAttempts[_lpName];
@@ -209,7 +209,7 @@ IncLPAttempts(string _lpName ) {
 // local planning method named LPName
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 DecLPAttempts(string _lpName) {
   m_lpAttempts[_lpName]--;
   return m_lpAttempts[_lpName];
@@ -220,7 +220,7 @@ DecLPAttempts(string _lpName) {
 // local planning method named LPName by decr
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 DecLPAttempts(string _lpName ,int _decr) {
   m_lpAttempts[_lpName] -= _decr;
   return m_lpAttempts[_lpName];
@@ -231,7 +231,7 @@ DecLPAttempts(string _lpName ,int _decr) {
 // planning method LPName to Attempts
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 SetLPAttempts(string _lpName, int _attempts) {
   m_lpAttempts[_lpName]=_attempts;
   return m_lpAttempts[_lpName];
@@ -243,7 +243,7 @@ SetLPAttempts(string _lpName, int _attempts) {
 // LPName
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 IncLPCollDetCalls(string _lpName) {
   m_lpCollDetCalls[_lpName]++;
   return m_lpCollDetCalls[_lpName];
@@ -255,7 +255,7 @@ IncLPCollDetCalls(string _lpName) {
 // LPName by incr
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 IncLPCollDetCalls(string _lpName, int _incr) {
   m_lpCollDetCalls[_lpName] += _incr;
   return m_lpCollDetCalls[_lpName];
@@ -267,7 +267,7 @@ IncLPCollDetCalls(string _lpName, int _incr) {
 // LPName
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 DecLPCollDetCalls(string _lpName) {
   m_lpCollDetCalls[_lpName]--;
   return m_lpCollDetCalls[_lpName];
@@ -279,14 +279,14 @@ DecLPCollDetCalls(string _lpName) {
 // LPName by decr
 //----------------------------------------
 int
-Stat_Class::
+StatClass::
 DecLPCollDetCalls(string _lpName, int _decr) {
   m_lpCollDetCalls[_lpName] -= _decr;
   return m_lpCollDetCalls[_lpName];
 };
 
 void
-Stat_Class::
+StatClass::
 PrintFeatures() {
   cout << "General features:" << endl;
   //cout << "\tNodes_Attempted: " << Nodes_Attempted << endl;
@@ -325,24 +325,24 @@ PrintFeatures() {
 }
 
 void
-Stat_Class::
+StatClass::
 IncNodes_Generated(){
   Nodes_Generated++;
 };
 
 void
-Stat_Class::
+StatClass::
 IncNodes_Attempted(){
   Nodes_Attempted++;
 };
 void
-Stat_Class::
+StatClass::
 IncConnections_Attempted(){
   Connections_Attempted++;
 };
 
 void
-Stat_Class::
+StatClass::
 IncConnections_Made(){
   Connections_Made++;
 };

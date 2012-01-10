@@ -11,7 +11,7 @@
 #include "CollisionDetection.h"
 #include "Input.h"
 
-#include "Stat_Class.h"
+#include "StatClass.h"
 #include "Clock_Class.h"
 #include "GraphAlgo.h"
 #include "Weight.h"
@@ -23,7 +23,7 @@ typedef DefaultWeight WeightType;
 
 Input input;
 QueryCmds Qinput;
-Stat_Class Stats;
+StatClass Stats;
 
 //========================================================================
 //  main

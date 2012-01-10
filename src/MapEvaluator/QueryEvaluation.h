@@ -13,7 +13,7 @@ class QueryEvaluation
   QueryEvaluation(
   string filename,
   Query<CFG, WEIGHT> query,
-  Stat_Class stats,
+  StatClass stats,
   //LocalPlanners<CFG, WEIGHT>* _lp,
   string _m_lp_label,
   vector<string> vecStrNodes,
@@ -73,7 +73,7 @@ class QueryEvaluation
   string m_query_filename;
   string m_query_pathname;
   Query<CFG, WEIGHT> m_query;
-  Stat_Class m_stats;
+  StatClass m_stats;
   //LocalPlanners<CFG, WEIGHT>* lp;
   string m_lp_label;
   vector<string> m_vecStrNodeConnectionLabels;

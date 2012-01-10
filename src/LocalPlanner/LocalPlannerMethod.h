@@ -2,8 +2,8 @@
  * LocalPlannerMethod.h
  * This class is a base class for all local planner methods
  * 
- * Last Updated      : 11/15/11
- * Last Update Author: Kasra Manavi
+ * Last Updated      : 1/10/12
+ * Last Update Author: Andrew Giese
  */
 #ifndef LOCALPLANNERMETHOD_H_
 #define LOCALPLANNERMETHOD_H_
@@ -20,18 +20,18 @@ template <class CFG, class WEIGHT> struct LPOutput;
 template <class CFG, class WEIGHT> class LocalPlannerMethod : public MPBaseObject {
  public:
 
-  LocalPlannerMethod():MPBaseObject() { }
+  LocalPlannerMethod() { }
   LocalPlannerMethod(XMLNodeReader& _in_Node, MPProblem* _in_pProblem):MPBaseObject(_in_Node, _in_pProblem) { }
   virtual ~LocalPlannerMethod();
 
   virtual void PrintOptions(ostream& out_os) { };
   virtual string GetVCMethod() { };
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy() = 0;
-  virtual bool IsConnected(Environment* _env, Stat_Class& _stats, shared_ptr<DistanceMetricMethod> _dm, 
+  virtual bool IsConnected(Environment* _env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm, 
                            const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
                            double _posRes, double _oriRes, bool _checkCollision=true, 
                            bool _savePath=false, bool _saveFailedPath=false) = 0;
-  virtual bool IsConnected(Environment* _env, Stat_Class& _stats, shared_ptr<DistanceMetricMethod> _dm, 
+  virtual bool IsConnected(Environment* _env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm, 
                            const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* _lpOutput,
                            double _posRes, double _oriRes, bool _checkCollision=true, 
                            bool _savePath=false, bool _saveFailedPath=false) {

@@ -40,7 +40,7 @@ class FSPartitioningMethod {
   virtual FSPartitioningMethod<CFG>* CreateCopy() = 0;
 
   virtual vector<BoundingBox>  PlaceBoundaries(Environment* _env, 
-					       Stat_Class& Stats,
+					       StatClass& Stats,
 					       BoundingBox &c_boundary,
 					       vector<CFG>& free_nodes,
 					       vector<CFG>& coll_nodes) = 0;
@@ -103,7 +103,7 @@ class RandomPartitioning: public FSPartitioningMethod<CFG> {
   virtual FSPartitioningMethod<CFG>* CreateCopy();
 
   virtual vector<BoundingBox> PlaceBoundaries(Environment* _env, 
-					      Stat_Class& Stats,
+					      StatClass& Stats,
 					      BoundingBox &c_boundary,
 					      vector<CFG>& free_nodes, 
 					      vector<CFG>& coll_nodes);
@@ -161,7 +161,7 @@ CreateCopy() {
 
 template <class CFG>
 vector<BoundingBox> RandomPartitioning<CFG>::
-PlaceBoundaries(Environment* _env, Stat_Class& Stats,
+PlaceBoundaries(Environment* _env, StatClass& Stats,
 		BoundingBox &c_boundary,
 		vector<CFG>& free_nodes,
 		vector<CFG>& coll_nodes) {
@@ -227,7 +227,7 @@ class GapPartitioning: public FSPartitioningMethod<CFG> {
   virtual FSPartitioningMethod<CFG>* CreateCopy();
 
   virtual vector<BoundingBox> PlaceBoundaries(Environment* _env, 
-					      Stat_Class& Stats,
+					      StatClass& Stats,
 					      BoundingBox &c_boundary,
 					      vector<CFG>& free_nodes,
 					      vector<CFG>& coll_nodes);
@@ -288,7 +288,7 @@ CreateCopy() {
 
 template <class CFG>
 vector<BoundingBox> GapPartitioning<CFG>::
-PlaceBoundaries(Environment* _env, Stat_Class& Stats,
+PlaceBoundaries(Environment* _env, StatClass& Stats,
 		BoundingBox &c_boundary,
 		vector<CFG>& free_nodes,
 		vector<CFG>& coll_nodes) {
@@ -647,7 +647,7 @@ class InformationGainPartitioning: public FSPartitioningMethod<CFG> {
   virtual FSPartitioningMethod<CFG>* CreateCopy();
 
   virtual vector<BoundingBox> PlaceBoundaries(Environment* _env, 
-					      Stat_Class& Stats,
+					      StatClass& Stats,
 					      BoundingBox &c_boundary,
 					      vector<CFG>& free_nodes, 
 					      vector<CFG>& coll_nodes);
@@ -714,7 +714,7 @@ CreateCopy() {
 
 template <class CFG>
 vector<BoundingBox> InformationGainPartitioning<CFG>::
-PlaceBoundaries(Environment* _env, Stat_Class& Stats,
+PlaceBoundaries(Environment* _env, StatClass& Stats,
 		BoundingBox &c_boundary,
 		vector<CFG>& free_nodes, vector<CFG>& coll_nodes) {
   BoundingBox * boundingBox = _env->GetBoundingBox();

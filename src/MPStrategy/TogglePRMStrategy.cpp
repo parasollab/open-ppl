@@ -151,7 +151,7 @@ void TogglePRMStrategy::Finalize(int in_RegionID){
 
   //setup region variables
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-  Stat_Class* regionStats = region->GetStatClass();
+  StatClass* regionStats = region->GetStatClass();
 
   string str;
 
@@ -187,7 +187,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
     deque<pair<string, CfgType> >& queue){
   ClockClass NodeGenClock;
   CDInfo cdInfo;
-  Stat_Class * pStatClass = region->GetStatClass();
+  StatClass * pStatClass = region->GetStatClass();
   stringstream clockName; 
   clockName << "Iteration " << m_CurrentIteration << ", Node Generation"; 
   NodeGenClock.StartClock(clockName.str().c_str());

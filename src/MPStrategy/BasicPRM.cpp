@@ -193,7 +193,7 @@ void BasicPRM::Finalize(int _regionID){
 
   //setup region variables
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  Stat_Class* regionStats = region->GetStatClass();
+  StatClass* regionStats = region->GetStatClass();
 
   string str;
 
@@ -358,7 +358,7 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
     OutputIterator _allOut, OutputIterator _thisIterationOut){
   ClockClass nodeGenClock;
   CDInfo cdInfo;
-  Stat_Class * pStatClass = _region->GetStatClass();
+  StatClass * pStatClass = _region->GetStatClass();
   stringstream clockName; 
   clockName << "Iteration " << m_currentIteration << ", Node Generation"; 
   nodeGenClock.StartClock(clockName.str().c_str());

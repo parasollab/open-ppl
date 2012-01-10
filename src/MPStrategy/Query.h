@@ -83,7 +83,7 @@ public:
 	virtual
 	  bool CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp, 
 			       vector<VID>& attemptedPath,
-			       Stat_Class& Stats,  
+			       StatClass& Stats,  
 						 LocalPlanners<CFG,WEIGHT>* lp, 
              string _lp_label,
 			       shared_ptr< DistanceMetricMethod> dm, 
@@ -111,7 +111,7 @@ public:
           */
         virtual bool PerformQuery(
             Roadmap<CFG, WEIGHT>* rdmp, 
-            Stat_Class& Stats, 
+            StatClass& Stats, 
             ConnectMap<CFG, WEIGHT> *cn, 
             vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
             LocalPlanners<CFG,WEIGHT> * lp, 
@@ -149,7 +149,7 @@ public:
             CFG _start, 
             CFG _goal,
             Roadmap<CFG, WEIGHT>* rdmp,
-            Stat_Class& Stats,
+            StatClass& Stats,
             ConnectMap<CFG, WEIGHT>*, 
             vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
             LocalPlanners<CFG,WEIGHT>*, 
@@ -293,7 +293,7 @@ Query<CFG, WEIGHT>::
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
-PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
+PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats, 
         ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
 				LocalPlanners<CFG,WEIGHT>* lp, 
         string _lp_label, shared_ptr<DistanceMetricMethod> dm, bool intermediateFiles) {
@@ -319,7 +319,7 @@ PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
-PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, Stat_Class& Stats, 
+PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats, 
 	     ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections, 
 			 LocalPlanners<CFG,WEIGHT>* lp, 
        string _lp_label, shared_ptr<DistanceMetricMethod> dm, vector<CFG>* _path, bool intermediateFiles) {
@@ -436,7 +436,7 @@ bool
 Query<CFG, WEIGHT>::
 CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
                 vector<VID >& attemptedPath,
-                Stat_Class& Stats,
+                StatClass& Stats,
                 LocalPlanners<CFG,WEIGHT>* lp, 
                 string _lp_label,
                 shared_ptr< DistanceMetricMethod> dm,

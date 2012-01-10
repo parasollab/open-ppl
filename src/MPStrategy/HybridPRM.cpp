@@ -147,7 +147,7 @@ void HybridPRM::Initialize(int in_RegionID){
 
 void HybridPRM::Run(int in_RegionID){
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-   Stat_Class* pStatClass = region->GetStatClass();
+   StatClass* pStatClass = region->GetStatClass();
    totalSamples = 0;
    map_passed_evaluation = false;
    NodeGenTotalTime = 0;
@@ -352,7 +352,7 @@ void HybridPRM::Run(int in_RegionID){
 void HybridPRM::Finalize(int in_RegionID){
    char_ofstream.close();
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-   Stat_Class* pStatClass = region->GetStatClass();
+   StatClass* pStatClass = region->GetStatClass();
 
    //output map
   string outputFilename = base_filename+ ".map";

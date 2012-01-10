@@ -86,7 +86,10 @@ class RoadmapChangeEvent {
     
     // RemoveVertexEvent constructor
     RoadmapChangeEvent(ChangeType type, VID _vid);
-    
+
+    //destructor
+    ~RoadmapChangeEvent();
+
     bool IsTypeAddVertex() const;
     bool IsTypeRemoveVertex() const;
 
@@ -136,6 +139,13 @@ RoadmapChangeEvent(ChangeType type, VID _vid)
   }
 }
 
+template<typename CFG, typename WEIGHT>
+RoadmapChangeEvent<CFG, WEIGHT>::
+~RoadmapChangeEvent()
+{
+    delete event;
+}
+  
 template<typename CFG, typename WEIGHT>
 bool
 RoadmapChangeEvent<CFG, WEIGHT>::

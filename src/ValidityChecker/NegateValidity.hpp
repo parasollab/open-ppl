@@ -20,7 +20,7 @@ public:
   ~NegateValidity() { }
   
   virtual bool 
-  IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, 
+  IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, 
 	  CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName);
 
   virtual vector< pair<CfgType,CfgType> > GetHistory();
@@ -52,7 +52,7 @@ NegateValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 template<typename CFG>
 bool
 NegateValidity<CFG>::
-IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 	bool enablePenetration, std::string *pCallName = NULL) 
 {
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();

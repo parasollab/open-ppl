@@ -169,14 +169,14 @@ class ClosestVE: public NodeConnectionMethod<CFG,WEIGHT> {
    *@see RoadmapGraph::GetEdges
    */
   //@}
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+  void Connect(Roadmap<CFG, WEIGHT>*, StatClass& Stats, 
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
 			 bool addPartialEdge=false,
 			 bool addAllEdges=false);
 
-  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+  void Connect(Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
 //	       CollisionDetection* cd, DistanceMetric* dm,
 	       DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
@@ -369,7 +369,7 @@ FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
 // ------------------------------------------------------------------
 template <class CFG, class WEIGHT>
 void ClosestVE<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
 //		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,
@@ -470,7 +470,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void ClosestVE<CFG,WEIGHT>::
-Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+Connect(Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
 //	       CollisionDetection* cd, DistanceMetric* dm,
 	       DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,

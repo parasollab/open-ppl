@@ -14,7 +14,7 @@ class NodeClearanceValidity : public ValidityCheckerMethod {
     ~NodeClearanceValidity() { }
 
     virtual bool 
-      IsValid(Cfg& _cfg, Environment* _env, Stat_Class& _stats, 
+      IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
           CDInfo& _cdInfo, bool _enablePenetration, string *_callName);
 
     virtual vector< pair<CfgType,CfgType> > GetHistory();

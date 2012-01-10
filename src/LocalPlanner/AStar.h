@@ -38,19 +38,19 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
    *
    * @see Cfg::ApproxCSpaceClearance and Cfg::Clearance
 	 */
-    virtual bool IsConnected(Environment *env, Stat_Class& Stats,
+    virtual bool IsConnected(Environment *env, StatClass& Stats,
       shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
       LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
       bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);
 
 
  protected:
-  virtual bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
+  virtual bool IsConnectedOneWay(Environment *env, StatClass& Stats,
     shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
     LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
     bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);
 
-  virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, //CollisionDetection *cd,
+  virtual int ChooseOptimalNeighbor(Environment *_env, StatClass& Stats, //CollisionDetection *cd,
     CFG &_col,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2,vector<Cfg*> &neighbors);
 
   int    n_tries;     // How many time will be tried to connect to goal. (not used!?)
@@ -93,7 +93,7 @@ CreateCopy() {
 
 //find Cfg closest to goal. ASTAR_DISTANCE                                                                                                 
 template <class CFG, class WEIGHT> 
-int AStar<CFG, WEIGHT>::ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CFG &_col,
+int AStar<CFG, WEIGHT>::ChooseOptimalNeighbor(Environment *_env, StatClass& Stats, CFG &_col,
                                               shared_ptr<DistanceMetricMethod > dm, 
                                               const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
   double minDistance= MAXFLOAT;
@@ -124,8 +124,7 @@ PrintOptions(ostream& out_os) {
 template <class CFG, class WEIGHT>
 bool
 AStar<CFG,WEIGHT>::
-IsConnected(Environment *_env, Stat_Class& Stats, 
-	   // CollisionDetection *cd,
+IsConnected(Environment *_env, StatClass& Stats, 
 	    shared_ptr< DistanceMetricMethod >dm, 
 	    const CFG &_c1, const CFG &_c2,CFG &_col,LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,
@@ -137,8 +136,6 @@ IsConnected(Environment *_env, Stat_Class& Stats,
   lpOutput->edge.second.SetWeight(0);
   lpOutput->savedEdge.clear();
   bool connected = false;
-//CollisionDetection *cd;
-  
   
   connected = IsConnectedOneWay(_env, Stats, dm, _c1, _c2,_col, lpOutput, positionRes, orientationRes, checkCollision, savePath, saveFailedPath);
   if (!connected) { //try the other way
@@ -155,7 +152,7 @@ IsConnected(Environment *_env, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 bool
 AStar<CFG,WEIGHT>::
-IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
+IsConnectedOneWay(Environment *_env, StatClass& Stats,
 		 shared_ptr< DistanceMetricMethod>dm, 
 		  const CFG &_c1, const CFG &_c2,CFG &_col,LPOutput<CFG, WEIGHT>* lpOutput,
 		  double positionRes, double orientationRes,
@@ -183,9 +180,9 @@ IsConnectedOneWay(Environment *_env, Stat_Class& Stats,
     std::string tmpStr = Callee+Method;
   
   incr.FindIncrement(_c1,_c2,&n_ticks,positionRes,orientationRes);
- if( !vc->IsValid(vcm, incr,_env, Stats, cdInfo, true, &tmpStr))
-   connected=false; 
- 
+ //if( !vc->IsValid(vcm, incr,_env, Stats, cdInfo, true, &tmpStr))
+   //connected=false; 
+ connected = vc->IsValid(vcm, incr, _env, Stats, cdInfo, true, &tmpStr);
   
   
 
@@ -280,7 +277,7 @@ class AStarDistance: public AStar<CFG, WEIGHT> {
 
     virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-    virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
+    virtual int ChooseOptimalNeighbor(Environment *_env, StatClass& Stats,
         CFG &_col, shared_ptr<DistanceMetricMethod >dm,
         const CFG &_c1, const CFG &_c2,
         vector<Cfg*> &neighbors); 
@@ -329,7 +326,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 int
 AStarDistance<CFG, WEIGHT>::
-ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats, CFG &_col,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
+ChooseOptimalNeighbor(Environment *_env, StatClass& Stats, CFG &_col,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
   double minDistance= MAXFLOAT;
   int retPosition=0;
   double value = 0;
@@ -361,7 +358,7 @@ class AStarClearance: public AStar<CFG, WEIGHT> {
 
     virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-    virtual int ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,
+    virtual int ChooseOptimalNeighbor(Environment *_env, StatClass& Stats,
         CFG &_col,
         shared_ptr<DistanceMetricMethod >dm, 
         const CFG &_c1, const CFG &_c2,
@@ -416,7 +413,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 int
 AStarClearance<CFG, WEIGHT>::
-ChooseOptimalNeighbor(Environment *_env, Stat_Class& Stats,CFG &_col,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
+ChooseOptimalNeighbor(Environment *_env, StatClass& Stats,CFG &_col,shared_ptr< DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, vector<Cfg*> &neighbors) {
   double maxClearance=-MAXFLOAT;
   size_t retPosition=0;
   double value = 0;

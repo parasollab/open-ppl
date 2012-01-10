@@ -20,7 +20,7 @@ class RegionOverlapMapCombine: public ConnectionMethod<CFG,WEIGHT> {
 
 
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, StatClass& Stats, 
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
@@ -116,7 +116,7 @@ ConnectComponents() {
 
 template <class CFG, class WEIGHT>
 void RegionOverlapMapCombine<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		  CollisionDetection* cd , 
 		  DistanceMetric * dm,
 		  LocalPlanners<CFG,WEIGHT>* lp,

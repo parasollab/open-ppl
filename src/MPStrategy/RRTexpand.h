@@ -42,7 +42,7 @@ class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
 			    Roadmap<CFG, WEIGHT>* fromMap, 
 			    vector<VID> vids);
   */
-  void RRT(Roadmap<CFG, WEIGHT>* rm, Stat_Class& Stats,
+  void RRT(Roadmap<CFG, WEIGHT>* rm, StatClass& Stats,
 	   int K, double deltaT, int o_clearance, 
 	   int clearance_from_node,vector<CFG>& U,
 	   CollisionDetection*, LocalPlanners<CFG,WEIGHT>*,
@@ -52,11 +52,11 @@ class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
 
 
   // new component connection interface
-  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+  void Connect(Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
 	       CollisionDetection* cd, DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges);
-  void Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+  void Connect(Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
 	       CollisionDetection* cd, DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges,
@@ -266,7 +266,7 @@ ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,
 template<class CFG, class WEIGHT>
 void 
 RRTexpand<CFG,WEIGHT>::
-RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
+RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
      int o_clearance, int clearance_from_node, vector<CFG>&U,
      CollisionDetection* cd, LocalPlanners<CFG,WEIGHT>* lp, DistanceMetric * dm,
      bool & toConnect,bool connecting,
@@ -439,7 +439,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, Stat_Class& Stats, int K, double deltaT,
 
 template <class CFG, class WEIGHT>
 void RRTexpand<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 	CollisionDetection* cd , 
 	DistanceMetric * dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
@@ -493,7 +493,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void RRTexpand<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 	CollisionDetection* cd , 
 	DistanceMetric * dm,
 	LocalPlanners<CFG,WEIGHT>* lp,

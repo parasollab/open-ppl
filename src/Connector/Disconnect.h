@@ -30,18 +30,18 @@ class Disconnect: public NodeConnectionMethod<CFG,WEIGHT> {
   // Core: Connection method
   void Connect();
 
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+  void Connect(Roadmap<CFG, WEIGHT>*, StatClass& Stats, 
              DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges);  
 
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+  void Connect(Roadmap<CFG, WEIGHT>*, StatClass& Stats, 
              DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
              vector<VID>& v1, vector<VID>& v2);
 
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+  void Connect(Roadmap<CFG, WEIGHT>*, StatClass& Stats,
              DistanceMetric*,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
@@ -128,7 +128,7 @@ Connect() {
 
 template <class CFG, class WEIGHT>
 void Disconnect<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
@@ -167,7 +167,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void Disconnect<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,
@@ -180,7 +180,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void Disconnect<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
             bool addPartialEdge,

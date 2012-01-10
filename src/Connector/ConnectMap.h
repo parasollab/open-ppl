@@ -133,13 +133,13 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
 
   template<typename OutputIterator>
   void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges, OutputIterator collision) {
       //cout << "ConnectMap::ConnectNodes() - Roadmap only" << endl;
   }
 
   void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges) 
   {
     vector<CFG> collision;
@@ -149,7 +149,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
 
   template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last, OutputIterator collision) {
       //cout << "ConnectMap::ConnectNodes() - 1 pair InputIterator" << endl;
@@ -162,7 +162,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
 
   template<typename InputIterator>
   void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last) 
   {
@@ -173,7 +173,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
 
   template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		    bool addPartialEdge, bool addAllEdges,
 		    InputIterator _itr1_first, InputIterator _itr1_last,
         InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision) {
@@ -187,7 +187,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
  
   template<typename InputIterator>
   void ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		    bool addPartialEdge, bool addAllEdges,
 		    InputIterator _itr1_first, InputIterator _itr1_last,
         InputIterator _itr2_first, InputIterator _itr2_last) 
@@ -199,7 +199,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
  
   template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
   void pConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		    bool addPartialEdge, bool addAllEdges,
 		    InputIterator1 _itr1_first, InputIterator1 _itr1_last,
         InputIterator2 _itr2_first, InputIterator2 _itr2_last, OutputIterator collision) {
@@ -213,7 +213,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
 
   template<typename InputIterator1, typename InputIterator2>
   void pConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		    bool addPartialEdge, bool addAllEdges,
 		    InputIterator1 _itr1_first, InputIterator1 _itr1_last,
         InputIterator2 _itr2_first, InputIterator2 _itr2_last) 
@@ -229,7 +229,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
   template <typename InputIterator, typename OutputIterator, typename First, typename Last>
   void 
   _ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
         InputIterator _itr2_first, InputIterator _itr2_last, 
@@ -237,7 +237,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
   template <typename InputIterator, typename OutputIterator, typename Last>
   void
   _ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
         InputIterator _itr2_first, InputIterator _itr2_last, 
@@ -250,7 +250,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
   template <typename InputIterator1,typename InputIterator2, typename OutputIterator, typename First, typename Last>
   void 
   _pConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator1 _itr1_first, InputIterator1 _itr1_last,
         InputIterator2 _itr2_first, InputIterator2 _itr2_last, 
@@ -258,7 +258,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
   template <typename InputIterator1, typename InputIterator2, typename OutputIterator, typename Last>
   void
   _pConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator1 _itr1_first, InputIterator1 _itr1_last,
         InputIterator2 _itr2_first, InputIterator2 _itr2_last, 
@@ -272,7 +272,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
   template <typename InputIterator, typename OutputIterator, typename First, typename Last>
   void 
   _ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
         OutputIterator collision, First, Last); 
@@ -280,7 +280,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
   template <typename InputIterator, typename OutputIterator, typename Last>
   void
   _ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
         OutputIterator collision, Last, Last) {
@@ -304,7 +304,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
 public:
   template<typename OutputIterator>
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges, OutputIterator collision) {
     //cout << "ConnectMap::ConnectComponents() - Roadmap only" << endl;
     _ConnectComponents(selected, rm, Stats,
@@ -314,7 +314,7 @@ public:
   }
 
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges) 
   {
     vector<CFG> collision;
@@ -323,7 +323,7 @@ public:
 
   template<typename InputIterator, typename OutputIterator>
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges,
        InputIterator _itr1_first, InputIterator _itr1_last, OutputIterator collision) {
     //cout << "ConnectMap::ConnectComponents()" << endl;
@@ -335,7 +335,7 @@ public:
 
   template<typename InputIterator>
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges,
        InputIterator _itr1_first, InputIterator _itr1_last) 
   {
@@ -346,7 +346,7 @@ public:
   
   template<typename InputIterator, typename OutputIterator>
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
 			 bool addPartialEdge, bool addAllEdges,
 			 InputIterator _itr1_first, InputIterator _itr1_last,
        InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision) {
@@ -359,7 +359,7 @@ public:
  
   template<typename InputIterator>
   void ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
 			 bool addPartialEdge, bool addAllEdges,
 			 InputIterator _itr1_first, InputIterator _itr1_last,
        InputIterator _itr2_first, InputIterator _itr2_last) 
@@ -374,7 +374,7 @@ private:
   template <typename OutputIterator, typename First, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges, OutputIterator collision,
        First, Last);
 
@@ -382,7 +382,7 @@ private:
   template <typename OutputIterator, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges,
        OutputIterator collision, Last, Last){
     cerr << "ERROR, dynamic_cast of ComponentConnectionMethod failed, method type not found!\n\n";
@@ -393,7 +393,7 @@ private:
   template <typename InputIterator, typename OutputIterator, typename First, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges,
        InputIterator _itr1_first, InputIterator _itr1_last,
        InputIterator _itr2_first, InputIterator _itr2_last, 
@@ -403,7 +403,7 @@ private:
   template <typename InputIterator, typename OutputIterator, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges,
        InputIterator _itr1_first, InputIterator _itr1_last,
        InputIterator _itr2_first, InputIterator _itr2_last, 
@@ -416,7 +416,7 @@ private:
   template <typename InputIterator, typename OutputIterator, typename First, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges,
        InputIterator _itr1_first, InputIterator _itr1_last,
        OutputIterator collision, First, Last);
@@ -425,7 +425,7 @@ private:
   template <typename InputIterator, typename OutputIterator, typename Last>
   void
   _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-       Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+       Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
        bool addPartialEdge, bool addAllEdges,
        InputIterator _itr1_first, InputIterator _itr1_last,
        OutputIterator collision, Last, Last){
@@ -549,7 +549,7 @@ template <typename InputIterator, typename OutputIterator, typename First, typen
 void 
 ConnectMap<CFG,WEIGHT>::
 _ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-      Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+      Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       bool addPartialEdge, bool addAllEdges,
       InputIterator _itr1_first, InputIterator _itr1_last,
       InputIterator _itr2_first, InputIterator _itr2_last, 
@@ -584,7 +584,7 @@ template <typename InputIterator1, typename InputIterator2, typename OutputItera
 void 
 ConnectMap<CFG,WEIGHT>::
 _pConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-      Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+      Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       bool addPartialEdge, bool addAllEdges,
       InputIterator1 _itr1_first, InputIterator1 _itr1_last,
       InputIterator2 _itr2_first, InputIterator2 _itr2_last, 
@@ -620,7 +620,7 @@ template <typename InputIterator, typename OutputIterator, typename First, typen
 void 
 ConnectMap<CFG,WEIGHT>::
 _ConnectNodes(shared_ptr<NodeConnectionMethod<CFG,WEIGHT> > selected, 
-      Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+      Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       bool addPartialEdge, bool addAllEdges,
       InputIterator _itr1_first, InputIterator _itr1_last,
       OutputIterator collision, First, Last) {
@@ -652,7 +652,7 @@ template <typename OutputIterator, typename First, typename Last>
 void
 ConnectMap<CFG,WEIGHT>::
 _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-      Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+      Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
       bool addPartialEdge, bool addAllEdges,
       OutputIterator collision, First, Last) {
 
@@ -679,7 +679,7 @@ template <typename InputIterator, typename OutputIterator, typename First, typen
 void
 ConnectMap<CFG,WEIGHT>::
 _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-      Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+      Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
       bool addPartialEdge, bool addAllEdges,
       InputIterator _itr1_first, InputIterator _itr1_last,
       InputIterator _itr2_first, InputIterator _itr2_last, 
@@ -713,7 +713,7 @@ template <typename InputIterator, typename OutputIterator, typename First, typen
 void
 ConnectMap<CFG,WEIGHT>::
 _ConnectComponents(shared_ptr<ComponentConnectionMethod<CFG,WEIGHT> > selected, 
-      Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
+      Roadmap<CFG,WEIGHT>* rm, StatClass& Stats,
       bool addPartialEdge, bool addAllEdges,
       InputIterator _itr1_first, InputIterator _itr1_last,
       OutputIterator collision, First, Last) {

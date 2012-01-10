@@ -116,7 +116,7 @@ void UAStrategy::Finalize(int in_RegionID){
  
    //setup region variables
    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-   Stat_Class* regionStats = region->GetStatClass();
+   StatClass* regionStats = region->GetStatClass();
  
    string str;
   

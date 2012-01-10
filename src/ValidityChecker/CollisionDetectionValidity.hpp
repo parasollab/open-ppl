@@ -17,12 +17,18 @@ public:
   CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem);   
   virtual ~CollisionDetectionValidity() 
   {
-    if(m_cd != NULL)
-      delete m_cd;
+    delete m_cd;
+    m_cd = NULL;
+
+    std::vector<CollisionDetectionMethod*>::iterator delIter;
+    for (delIter = m_selected.begin(); delIter != m_selected.end(); delIter = m_selected.erase(delIter)){
+      delete *delIter;
+      *delIter = NULL;
+    }
   }
   
   virtual bool IsValid(Cfg& _cfg, Environment* env, 
-		       Stat_Class& Stats, CDInfo& _cdInfo, 
+		       StatClass& Stats, CDInfo& _cdInfo, 
 		       bool enablePenetration, std::string *pCallName);    
 	virtual  bool isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo); 
   
@@ -31,10 +37,10 @@ private:
   CollisionDetection* m_cd;
   bool ignoreSelfCollision;
   
-  bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
+  bool IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo,
 		     shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obst, std::string *pCallName);
   
-  bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+  bool IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 		     shared_ptr<MultiBody> lineRobot, bool enablePenetration, std::string *pCallName);
 
   virtual vector< pair<CfgType,CfgType> > GetHistory();
@@ -80,7 +86,7 @@ ignoreSelfCollision = in_Node.boolXMLParameter("ignoreSelfCollision", false, fal
 template<typename CFG>
 bool
 CollisionDetectionValidity<CFG>::
-IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 	bool enablePenetration, std::string *pCallName = NULL) 
 {
   Stats.IncCfgIsColl(pCallName);
@@ -127,7 +133,7 @@ IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 template<typename CFG>
 bool
 CollisionDetectionValidity<CFG>::
-IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 	      shared_ptr<MultiBody> lineRobot, bool enablePenetration, std::string *pCallName) 
 {  
   int nmulti, robot;
@@ -222,7 +228,7 @@ if(ignoreSelfCollision){
 template<typename CFG>
 bool
 CollisionDetectionValidity<CFG>::
-IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
+IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo,
 	      shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obst, std::string *pCallName) 
 {
   int nFreeRobot;

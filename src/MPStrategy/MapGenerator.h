@@ -32,14 +32,14 @@ class MapGenerator {
   //main wrapper, called by main_obprm.cpp
   //if input.seedByChunk, calls GenerateIncrementalMap()
   //otherwise, calls GenerateNormalMap
-  void GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+  void GenerateMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
 		     CollisionDetection* cd, 
 		     DistanceMetric* dm, vector<CFG>& nodes, 
 		     LocalPlanners<CFG,WEIGHT>* lp,
 		     Input* input); 
   protected:
   
-  virtual void GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+  virtual void GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
 		     CollisionDetection* cd, 
 		     DistanceMetric* dm, vector<CFG>& nodes, 
 		     LocalPlanners<CFG,WEIGHT>* lp,
@@ -47,7 +47,7 @@ class MapGenerator {
 		     bool addPartialEdge,
 		     bool addAllEdges); 
 
-  void GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+  void GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
 		     CollisionDetection* cd, 
 		     DistanceMetric* dm, vector<CFG>& nodes, 
 		     LocalPlanners<CFG,WEIGHT>* lp,
@@ -221,7 +221,7 @@ SetupFromMap(Input* input, Roadmap<CFG, WEIGHT>* rmap)
 template <class CFG, class WEIGHT, class GMN, class CM, class ME>
 void 
 MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
-GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+GenerateMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
 	     CollisionDetection* cd, 
 	     DistanceMetric* dm, vector<CFG>& nodes, 
 	     LocalPlanners<CFG,WEIGHT>* lp,
@@ -247,7 +247,7 @@ GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 template <class CFG, class WEIGHT, class GMN, class CM, class ME>
 void 
 MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
-GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
             CollisionDetection* cd, 
             DistanceMetric* dm, vector<CFG>& nodes, 
 	    LocalPlanners<CFG,WEIGHT>* lp,
@@ -440,7 +440,7 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 template <class CFG, class WEIGHT, class GMN, class CM, class ME>
 void 
 MapGenerator<CFG, WEIGHT, GMN, CM, ME>::
-GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+GenerateNormalMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
             CollisionDetection* cd, 
             DistanceMetric* dm, vector<CFG>& nodes, 
 	    LocalPlanners<CFG,WEIGHT>* lp,

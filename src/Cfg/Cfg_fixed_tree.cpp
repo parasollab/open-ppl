@@ -61,7 +61,7 @@ Cfg_fixed_tree::Cfg_fixed_tree(const vector<double>& _data) {
   m_posDof = 0;
   if((int)_data.size() < m_dof) {
     cout << "\n\nERROR in Cfg_fixed_tree::Cfg_fixed_tree(vector<double>), ";
-    cout << "size of vector is less than dof\n";
+    cout << "size of vector is less than m_dof\n";
     exit(-1);
   }
   m_v.clear();

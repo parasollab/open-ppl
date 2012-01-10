@@ -6,10 +6,10 @@
 #include "NeighborhoodFinder.h"
 #include <string>
 
-class Stat_Class {
+class StatClass {
 public:
-  Stat_Class();
-  ~Stat_Class();
+  StatClass();
+  ~StatClass();
 
   void ClearStats();
 
@@ -111,14 +111,14 @@ public:
 //definitions of templated functions
 template <class CFG, class WEIGHT>
 void
-Stat_Class::
+StatClass::
 PrintAllStats( Roadmap<CFG, WEIGHT>* _rmap) {
   PrintAllStats(_rmap, ALL);
 }
 
 template <class CFG, class WEIGHT>
 void
-Stat_Class::
+StatClass::
 PrintAllStats( Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
         #ifndef _PARALLEL
   size_t i;
@@ -191,7 +191,7 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
 
 template <class CFG, class WEIGHT>
 void
-Stat_Class::
+StatClass::
 PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *_rmap, int _showColumnHeaders) {
   #ifndef _PARALLEL
   // Default is to NOT print out column headers
@@ -242,7 +242,7 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *_rmap, int _showColumnH
 // Compute intra-connected-component statistics
 template <class CFG, class WEIGHT>
 void
-Stat_Class::
+StatClass::
 ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, shared_ptr<DistanceMetricMethod> _dm) {
   #ifndef _PARALLEL
   avg_min_intracc_dist = 0;
@@ -432,7 +432,7 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, shared_ptr<DistanceMetricMet
 // between the closest pairs of ccs
 template <class CFG, class WEIGHT>
 void
-Stat_Class::
+StatClass::
 ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, NeighborhoodFinder* _nf, string _nfMethod) {
   #ifndef _PARALLEL
   shared_ptr<DistanceMetricMethod> dm = _nf->GetNFMethod(_nfMethod)->GetDMMethod();
@@ -575,7 +575,7 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, NeighborhoodFinder* _nf, str
  */
 template <class CFG, class WEIGHT>
 void
-Stat_Class::
+StatClass::
 DisplayCCStats(RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1)  {
 
   ///Modified for VC

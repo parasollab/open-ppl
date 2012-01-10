@@ -44,6 +44,7 @@ class ClosedChainProblem:public MPProblem{
   vector<vector<int> > g_non_ears;
 
   ClosedChainProblem(XMLNodeReader& in_Node);
+  ~ClosedChainProblem();
   
   void ParseXML(XMLNodeReader& in_Node);
   bool ParseRealLink(ifstream &fin);

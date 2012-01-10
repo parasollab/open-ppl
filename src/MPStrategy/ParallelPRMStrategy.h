@@ -321,7 +321,7 @@ class ParallelPRMRoadmap : public MPStrategyMethod {
 	vector<pair<string, int> > m_vecStrNodeGenLabels;
 	vector<string> m_vecStrNodeConnectionLabels;
 	MPRegion<CfgType,WeightType>* region;
-	Stat_Class * pStatClass;
+	StatClass * pStatClass;
 	
 	
 };

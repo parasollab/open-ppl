@@ -14,7 +14,7 @@ class ClosedChainStrategy : public MPStrategy
   int num_iterations;
   bool is_gamma_random;
   double gamma;
-  Stat_Class Stats;
+  StatClass Stats;
   CDInfo _cdInfo;
  public:
   typedef RoadmapGraph<CfgType, WeightType>::VID VID;

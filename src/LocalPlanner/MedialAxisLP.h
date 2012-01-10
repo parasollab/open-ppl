@@ -25,7 +25,7 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public StraightLine<CFG, 
   virtual void PrintOptions(ostream& out_os);
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-  virtual bool IsConnected(Environment *env, Stat_Class& Stats,
+  virtual bool IsConnected(Environment *env, StatClass& Stats,
     shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
     CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, 
     double orientationRes, bool checkCollision=true, 
@@ -39,7 +39,7 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public StraightLine<CFG, 
 
  protected:
   virtual bool 
-    IsConnectedOneWay(Environment *env, Stat_Class& Stats,
+    IsConnectedOneWay(Environment *env, StatClass& Stats,
                       shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
                       CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
                       double positionRes, double orientationRes,
@@ -47,13 +47,13 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public StraightLine<CFG, 
                       bool saveFailedPath=false);
 
   virtual bool 
-    IsConnectedRec(Environment *_env, Stat_Class& _stats,
+    IsConnectedRec(Environment *_env, StatClass& _stats,
                    shared_ptr<DistanceMetricMethod> _dm, const CFG &_c1, const CFG &_c2, 
                    CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
                    double _posRes, double _oriRes, int _itr=0);
 
   virtual bool
-	  EpsilonClosePath(Environment *_env, Stat_Class& _stats, shared_ptr<DistanceMetricMethod> _dm,
+	  EpsilonClosePath(Environment *_env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm,
 		  							 const CFG &_c1, const CFG &_c2, CFG &_mid, LPOutput<CFG, WEIGHT>* _lpOutput,
                      double _posRes, double _oriRes);
 
@@ -125,7 +125,7 @@ template <class CFG, class WEIGHT> LocalPlannerMethod<CFG, WEIGHT>* MedialAxisLP
 
 // Main IsConnected Function
 template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
- IsConnected(Environment *_env, Stat_Class& Stats,
+ IsConnected(Environment *_env, StatClass& Stats,
              shared_ptr< DistanceMetricMethod>dm,
              const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
              double positionRes, double orientationRes,
@@ -165,7 +165,7 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
 }
 
 template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
- IsConnectedOneWay(Environment *_env, Stat_Class& Stats,shared_ptr< DistanceMetricMethod >dm,
+ IsConnectedOneWay(Environment *_env, StatClass& Stats,shared_ptr< DistanceMetricMethod >dm,
                    const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
                    double positionRes, double orientationRes, bool checkCollision, 
                    bool savePath, bool saveFailedPath) {
@@ -174,7 +174,7 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
 
 // Recursive IsConnected function
 template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
- IsConnectedRec(Environment *_env, Stat_Class& _stats, shared_ptr<DistanceMetricMethod> _dm,
+ IsConnectedRec(Environment *_env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm,
                 const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
                 double _posRes, double _oriRes, int _itr) {
 
@@ -246,7 +246,7 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
 };
 
 template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
- EpsilonClosePath( Environment *_env, Stat_Class& _stats, shared_ptr<DistanceMetricMethod> _dm,
+ EpsilonClosePath( Environment *_env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm,
                    const CFG &_c1, const CFG &_c2, CFG &_mid, LPOutput<CFG, WEIGHT>* _lpOutput,
                    double _posRes, double _oriRes) {
 

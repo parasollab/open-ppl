@@ -66,7 +66,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
         *@param _cc2id a node id which defines the second connected component.
         */
    template<typename OutputIterator>
-  void ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+  void ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		       vector<VID>& cc1vec, 
 		       vector<VID>& cc2vec,
 		       bool addPartialEdge,
@@ -95,7 +95,7 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
    *@param _cn _cn.GetKPairs define k above.
    */
    template<typename OutputIterator>
-  void ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+  void ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		     vector<VID>& cc1vec, 
 		     vector<VID>& cc2vec,
 		     bool addPartialEdge, bool addAllEdges,
@@ -103,12 +103,12 @@ class ConnectCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
 
   //@}
    template<typename OutputIterator>
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+  void Connect(Roadmap<CFG, WEIGHT>*, StatClass& Stats,
 		 bool addPartialEdge,
 		 bool addAllEdges, OutputIterator collision);
 	
 	template <typename InputIterator, typename OutputIterator>
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+  void Connect(Roadmap<CFG, WEIGHT>*, StatClass& Stats,
 		 bool addPartialEdge,
 		 bool addAllEdges,
 		 InputIterator _itr1_first, InputIterator _itr1_last,
@@ -227,7 +227,7 @@ template <class CFG, class WEIGHT>
 template <typename OutputIterator>
 void
 ConnectCCs<CFG, WEIGHT>::
-ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc1vec, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc2vec,
 		bool addPartialEdge, bool addAllEdges, OutputIterator collision) {
   
@@ -278,7 +278,7 @@ template <class CFG, class WEIGHT>
 template <typename OutputIterator>
 void
 ConnectCCs<CFG, WEIGHT>::
-ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 	      vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc1vec, vector<typename RoadmapGraph<CFG, WEIGHT>::VID>& cc2vec,
 	      bool addPartialEdge, bool addAllEdges, OutputIterator collision) { 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
@@ -333,7 +333,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 template <typename OutputIterator>
 void ConnectCCs<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
           bool addPartialEdge,
 	  bool addAllEdges, OutputIterator collision) {
   vector< pair<size_t,VID> > ccs1;
@@ -378,7 +378,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 template<typename InputIterator, typename OutputIterator>
 void ConnectCCs<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
           bool addPartialEdge,
           bool addAllEdges,
           InputIterator _itr1_first, InputIterator _itr1_last,

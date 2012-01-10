@@ -17,7 +17,7 @@ NodeClearanceValidity::NodeClearanceValidity (XMLNodeReader& _node, MPProblem* _
     m_nfLabel = _node.stringXMLParameter("nf_method",true,"","Neighborhood Finder to be used");    
   }
 
-bool NodeClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, Stat_Class& _stats, 
+bool NodeClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
     CDInfo& _cdInfo, bool _enablePenetration, string * _callName){
   typedef RoadmapGraph<CfgType, WeightType>::VID VID; 
   

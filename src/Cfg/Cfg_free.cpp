@@ -71,6 +71,7 @@ Cfg_free::Cfg_free(const Cfg& _c) {
 }
 
 
+
 Cfg_free::~Cfg_free() {}
 
 Vector3D Cfg_free::GetRobotCenterPosition() const {

@@ -11,7 +11,7 @@
 
 
 #include "Clock_Class.h"
-#include "Stat_Class.h"
+#include "StatClass.h"
 #include "CollisionDetection.h"
 #include "ConnectMap.h"
 #include "DistanceMetrics.h"
@@ -25,7 +25,7 @@ typedef Cfg_free_tree CfgType;
 typedef DefaultWeight WeightType;
 
 Input input;
-Stat_Class Stats; 
+StatClass Stats; 
 
 void PrintRawLine( ostream& _os,
         Roadmap<CfgType, WeightType> *rmap, Clock_Class *MapGenClock,

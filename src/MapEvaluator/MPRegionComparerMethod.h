@@ -67,7 +67,7 @@ class MPRegionComparerMethod: public MPBaseObject {
 //    CollisionDetection * cd = m_pProblem->GetCollisionDetection();
     double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
-    Stat_Class Stats;
+    StatClass Stats;
 
     //compare_distance<CFG> mydistcompare(in_cfg, dm, env);
    
@@ -98,7 +98,7 @@ class MPRegionComparerMethod: public MPBaseObject {
 //    CollisionDetection * cd = m_pProblem->GetCollisionDetection();
     double pos_res = m_pProblem->GetEnvironment()->GetPositionRes();
     double ori_res = m_pProblem->GetEnvironment()->GetOrientationRes();
-    Stat_Class Stats;
+    StatClass Stats;
     
     typedef typename vector< CFG >::iterator CFG_ITRTR;
     for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) {

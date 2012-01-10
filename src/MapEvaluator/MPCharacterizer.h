@@ -52,7 +52,7 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       Environment * env = this->GetMPProblem()->GetEnvironment();
       double pos_res = this->GetMPProblem()->GetEnvironment()->GetPositionRes();
       double ori_res = this->GetMPProblem()->GetEnvironment()->GetOrientationRes();
-      Stat_Class Stats;
+      StatClass Stats;
 
       vector<VID> neighbors;
       if(pGraph->get_successors(in_vid, neighbors) > 1)

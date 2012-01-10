@@ -13,7 +13,7 @@ public:
   ValidityCheckerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem) { }
   virtual ~ValidityCheckerMethod() { }
   
-  virtual bool IsValid(Cfg& _cfg, Environment* env, Stat_Class& Stats, 
+  virtual bool IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, 
 		       CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName) = 0; 
   virtual bool isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo) {
     cerr << "error: isInsideObstacle() not defined." << endl;

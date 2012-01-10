@@ -572,7 +572,7 @@ ReadCDs(istream& _myistream) {
 
 bool
 CollisionDetection::
-IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 	      int robot, int obstacle, std::string *pCallName) {
   return IsInCollision(env, Stats, _cdInfo, env->GetMultiBody(robot), env->GetMultiBody(obstacle), pCallName);
 }
@@ -601,7 +601,7 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 //////////////////////////////////////////////////////////////////////////
 bool
 CollisionDetection::
-IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 	      shared_ptr<MultiBody> lineRobot, bool enablePenetration, std::string *pCallName) {
   int nmulti, robot;
   bool ret_val, collision_found; // needed to go thru ALL obstacles to get ALL info
@@ -677,7 +677,7 @@ IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
 
 bool
 CollisionDetection::
-IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo,
+IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo,
 	      shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obst, std::string *pCallName) {
   int nFreeRobot;
   nFreeRobot = rob->GetFreeBodyCount();
@@ -732,7 +732,7 @@ vector<Cfg*> acceptable;
 /////////////////////////////////////////////
 bool 
 CollisionDetection::
-AcceptablePenetration(Cfg& c, Environment* env, Stat_Class& Stats,
+AcceptablePenetration(Cfg& c, Environment* env, StatClass& Stats,
 		      CDInfo& cdInfo) {
   int numOkCfgs=0;
   std::string Callee(c.GetName());
@@ -828,7 +828,7 @@ ClosestFeaturesHT closestFeaturesHT(3000);
 bool
 Vclip::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) {
+	      StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) {
   Stats.IncNumCollDetCalls(GetName(), pCallName);
   
 
@@ -1004,7 +1004,7 @@ CreateCopy() {
 bool
 Rapid::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) {
+	      StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) {
     Stats.IncNumCollDetCalls(GetName(), pCallName);
 	
     if (_cdInfo.ret_all_info == true)
@@ -1082,7 +1082,7 @@ CreateCopy() {
 
 bool
 Pqp::
-IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) 
+IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) 
 {
   Stats.IncNumCollDetCalls(GetName(), pCallName);
 
@@ -1311,7 +1311,7 @@ isInsideObstacle(Vector3D robot_pt, shared_ptr<MultiBody> obstacle)
 
 bool
 Pqp_Solid::
-IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies)
+IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies)
 {
   Stats.IncNumCollDetCalls(GetName(), pCallName);
 
@@ -1457,7 +1457,7 @@ CreateCopy() {
 bool
 Solid::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) {
+	      StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) {
   Stats.IncNumCollDetCalls(GetName(), pCallName);
  
   robot->UpdateVertexBase();
@@ -1604,7 +1604,7 @@ CreateCopy() {
 bool
 BoundingSpheres::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) {
+	      StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName, int ignore_i_adjacent_multibodies) {
   //cout << endl << "boundingSpheres Collision Check invocation" << flush;
   Stats.IncNumCollDetCalls(GetName(), pCallName );
   
@@ -1655,7 +1655,7 @@ CreateCopy() {
 bool
 InsideSpheres::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName,  int ignore_i_adjacent_multibodies) {
+	      StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName,  int ignore_i_adjacent_multibodies) {
   //cout << endl << "insideSpheres Collision Check invocation";
   Stats.IncNumCollDetCalls(GetName(),pCallName );
   
@@ -1706,7 +1706,7 @@ CreateCopy() {
 bool
 Naive::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName,  int ignore_i_adjacent_multibodies) {
+	      StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName,  int ignore_i_adjacent_multibodies) {
   cout << endl << "naive Collision Check invocation";
   Stats.IncNumCollDetCalls(GetName(), pCallName );
   return false;
@@ -1738,7 +1738,7 @@ CreateCopy() {
 bool
 Quinlan::
 IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-	      Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName,  int ignore_i_adjacent_multibodies) {
+	      StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName,  int ignore_i_adjacent_multibodies) {
   cout << endl << "Quinlan Collision Check invocation";
   Stats.IncNumCollDetCalls(GetName(), pCallName );
   return false;

@@ -28,12 +28,12 @@ class UtilityGuidedGenerator {
   void PrintValues(ostream& _os);
   void PrintOptions(ostream& out_os){};
 
-  CFG GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+  CFG GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
 				  CollisionDetection* cd, CDInfo& cdInfo, 
 				  DistanceMetric* dm,
 				  double component_dist, double tao);
 
-  void GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+  void GenerateMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
 		     CollisionDetection* cd, 
 		     DistanceMetric* dm, vector<CFG>& nodes, 
 		     LocalPlanners<CFG,WEIGHT>* lp,
@@ -229,7 +229,7 @@ struct ApproximateCSpaceModel {
 template <class CFG, class WEIGHT>
 CFG
 UtilityGuidedGenerator<CFG,WEIGHT>::
-GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
                             CollisionDetection* cd, CDInfo& cdInfo, 
 			    DistanceMetric* dm,
 			    double component_dist, double tao) {
@@ -281,7 +281,7 @@ GenerateEntropyGuidedSample(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 void 
 UtilityGuidedGenerator<CFG,WEIGHT>::
-GenerateMap(Roadmap<CFG, WEIGHT>* rmap, Stat_Class& Stats,
+GenerateMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
 	    CollisionDetection* cd, 
 	    DistanceMetric* dm, vector<CFG>& nodes, 
 	    LocalPlanners<CFG,WEIGHT>* lp,

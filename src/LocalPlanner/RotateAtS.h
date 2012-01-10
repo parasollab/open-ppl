@@ -23,13 +23,13 @@ template <class CFG, class WEIGHT> class RotateAtS: public StraightLine<CFG, WEI
   virtual void PrintOptions(ostream& out_os);
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-  virtual bool IsConnected(Environment *env, Stat_Class& Stats,
+  virtual bool IsConnected(Environment *env, StatClass& Stats,
     shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
     LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
     bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
 
  protected:
-  virtual bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
+  virtual bool IsConnectedOneWay(Environment *env, StatClass& Stats,
     shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
     LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
     bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);
@@ -73,7 +73,7 @@ CreateCopy() {
 }
 
 template <class CFG, class WEIGHT> bool
-RotateAtS<CFG,WEIGHT>::IsConnected(Environment *_env, Stat_Class& _stats,
+RotateAtS<CFG,WEIGHT>::IsConnected(Environment *_env, StatClass& _stats,
 shared_ptr< DistanceMetricMethod> _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
 LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
 bool _checkCollision, bool _savePath, bool _saveFailedPath) { 
@@ -93,7 +93,7 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 }
 
 template <class CFG, class WEIGHT> bool
-RotateAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment *_env, Stat_Class& _stats,
+RotateAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment *_env, StatClass& _stats,
 shared_ptr< DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
 LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
 bool _checkCollision, bool _savePath, bool _saveFailedPath) {

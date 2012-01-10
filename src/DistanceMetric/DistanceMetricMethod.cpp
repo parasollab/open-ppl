@@ -919,7 +919,7 @@ PrintOptions(ostream& os) const
 double
 LPSweptDistance::
 Distance(Environment* env, const Cfg& _c1, const Cfg& _c2) {
-  Stat_Class Stats;
+  StatClass Stats;
   CollisionDetection cd;
   shared_ptr<DistanceMetricMethod > dm;
   LPOutput<CfgType, WeightType> lpOutput;
@@ -1081,7 +1081,7 @@ double
 BinaryLPSweptDistance::
 DistanceCalc(Environment* env, const Cfg& _c1, const Cfg& _c2, double posRes, double oriRes) {
   //cout << "BinaryLPSweptDistance::DistanceCalc()" << endl;
-  Stat_Class Stats;
+  StatClass Stats;
   shared_ptr<DistanceMetricMethod > dm;
   LPOutput<CfgType, WeightType> lpOutput;
   if(lp_method == NULL)

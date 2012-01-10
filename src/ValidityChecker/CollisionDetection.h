@@ -104,7 +104,7 @@ const int In = 1;       ///<Type In: no collision unsure; collision sure.
 const int Exact = 2;    ///<Type Exact: no collision sure; collision sure.
 
 
-class CollisionDetection : MPBaseObject {
+class CollisionDetection : public  MPBaseObject {
  public:
   CollisionDetection();
   CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem);
@@ -163,7 +163,7 @@ class CollisionDetection : MPBaseObject {
    *@note if self collision of Robot is found, _cdInfo will be set to odd value.
    *@see IsInCollision(Environment* , SID , CDInfo& , MultiBody* , MultiBody*)
    */
-  bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+  bool IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 		     shared_ptr<MultiBody> lineRobot = shared_ptr<MultiBody>(), bool enablePenetration=true, std::string *pCallName=NULL);
 
   /**Check collision by index of robot and obstacle.
@@ -172,7 +172,7 @@ class CollisionDetection : MPBaseObject {
    *to detect collision.
    *@see IsInCollision(Environment* , SID , CDInfo& , MultiBody* , MultiBody*)
    */
-  bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+  bool IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 		     int robot, int obstacle, std::string *pCallName=NULL);
 
   /**Check collision between MultiBody of robot and obstacle.
@@ -190,7 +190,7 @@ class CollisionDetection : MPBaseObject {
    *@see Collision detection core functions, CDInfo::GetType, and 
    *CDInfo::GetCollisionDetection
    */
-  bool IsInCollision(Environment* env, Stat_Class& Stats, CDInfo& _cdInfo, 
+  bool IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 		     shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obstacle, std::string *pCallName=NULL);
   
   bool isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo);
@@ -204,7 +204,7 @@ class CollisionDetection : MPBaseObject {
   /** Check if there is a collision but it is in permissible range,
    * i.e., the penetration is within the penetration range
    */
-  bool AcceptablePenetration(Cfg& c, Environment* env, Stat_Class& Stats,
+  bool AcceptablePenetration(Cfg& c, Environment* env, StatClass& Stats,
 			     CDInfo& cdInfo);
   
   /** Initialize n direction vectors  with the penetration length*/
@@ -262,7 +262,7 @@ class CollisionDetectionMethod {
   
   /**Check collision between MultiBody of robot and obstacle.
    */
-  virtual bool IsInCollision(shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obstacle, Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1) = 0;
+  virtual bool IsInCollision(shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obstacle, StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1) = 0;
 
   CDInfo cdInfo;            ///<No one use this??!!
 
@@ -298,7 +298,7 @@ class Vclip : public CollisionDetectionMethod {
    *@see IsInColl_AllInfo_vclip for get all info. 
    */
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
+			     StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
   
   /**Get VclipPose.
    *@todo I don't really know what this is....
@@ -348,7 +348,7 @@ class Rapid: public CollisionDetectionMethod {
    *@see Body::GetRapidBody
    */
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
+			     StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
 };
 #endif
 
@@ -362,7 +362,7 @@ class Pqp : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-			     Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
+			     StatClass& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
 };
 
 class Pqp_Solid : public Pqp {
@@ -371,7 +371,7 @@ class Pqp_Solid : public Pqp {
   virtual ~Pqp_Solid() {}
   virtual CollisionDetectionMethod* CreateCopy();
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
-			     Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
+			     StatClass& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
   virtual bool isInsideObstacle(const Cfg& cfg, Environment* env);
   virtual bool isInsideObstacle(Vector3D robot_pt, shared_ptr<MultiBody> obstacle);
   PQP_Model* BuildPQPSegment(PQP_REAL dX, PQP_REAL dY, PQP_REAL dZ) const;
@@ -388,7 +388,7 @@ class Solid : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-                             Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
+                             StatClass& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL, int ignore_i_adjacent_multibodies=1);
 
 
 
@@ -408,7 +408,7 @@ class BoundingSpheres : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
   
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL,  int ignore_i_adjacent_multibodies=1);
+			     StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL,  int ignore_i_adjacent_multibodies=1);
 };
 
 
@@ -421,7 +421,7 @@ class InsideSpheres : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-			     Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL,  int ignore_i_adjacent_multibodies=1);
+			     StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL,  int ignore_i_adjacent_multibodies=1);
 };
 
 
@@ -434,7 +434,7 @@ class Naive : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-			     Stat_Class& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL,  int ignore_i_adjacent_multibodies=1);
+			     StatClass& Stats, CDInfo& _cdInfo,std::string *pCallName=NULL,  int ignore_i_adjacent_multibodies=1);
 };
 
 
@@ -447,7 +447,7 @@ class Quinlan : public CollisionDetectionMethod {
   virtual CollisionDetectionMethod* CreateCopy();
 
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, 
-                             Stat_Class& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL,  int ignore_i_adjacent_multibodies=1);
+                             StatClass& Stats, CDInfo& _cdInfo, std::string *pCallName=NULL,  int ignore_i_adjacent_multibodies=1);
 };
 
 

@@ -6,7 +6,7 @@
 #include <sstream>
 
 class Environment;
-class Stat_Class;
+class StatClass;
 class CDInfo;
 class DistanceMetric;
 
@@ -80,7 +80,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       _os << "\thistoryLength = " << m_historyLength << endl;
     }
 
-    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       string call("MedialAxisSampler::sampler()");
       bool generated = false;
       int attempts = 0;

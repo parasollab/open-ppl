@@ -96,26 +96,26 @@ class ObstBased: public NodeConnectionMethod<CFG,WEIGHT> {
 					       vector<VID>& vert);
 
   void Connect();
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+  void Connect(Roadmap<CFG, WEIGHT>*, StatClass& Stats,
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
 			 bool addPartialEdge,
 			 bool addAllEdges);
 
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+  void Connect(Roadmap<CFG, WEIGHT>*, StatClass& Stats, 
              CollisionDetection*, DistanceMetric *,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
              vector<CFG>& v1, vector<CFG>& v2);
 
-  void Connect(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats,
+  void Connect(Roadmap<CFG, WEIGHT>*, StatClass& Stats,
              CollisionDetection*, DistanceMetric*,
              LocalPlanners<CFG,WEIGHT>*,
              bool addPartialEdge, bool addAllEdges,
              vector<vector<CFG> >& verticesList);
 
-  void ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+  void ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 				 CollisionDetection* cd , 
 				 DistanceMetric * dm,
 				 LocalPlanners<CFG,WEIGHT>* lp,
@@ -285,7 +285,7 @@ For example:
 ---------------------------------------------------------------*/ 
 template <class CFG, class WEIGHT>
 		       void ObstBased<CFG,WEIGHT>::
-		       Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+		       Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 			       CollisionDetection* cd , 
 			       DistanceMetric * dm,
 			       LocalPlanners<CFG,WEIGHT>* lp,
@@ -305,7 +305,7 @@ template <class CFG, class WEIGHT>
 
 template <class CFG, class WEIGHT>
 void ObstBased<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
@@ -332,7 +332,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void ObstBased<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,
@@ -353,7 +353,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void ObstBased<CFG,WEIGHT>::
-ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
             CollisionDetection* cd , 
             DistanceMetric * dm,
             LocalPlanners<CFG,WEIGHT>* lp,

@@ -80,7 +80,7 @@ void BasicRRTStrategy::Run(int _regionID) {
 
   // Setup MP Variables
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  Stat_Class* regionStats = region->GetStatClass();
+  StatClass* regionStats = region->GetStatClass();
   Environment* env = region->GetRoadmap()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dm);
   LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
@@ -214,7 +214,7 @@ void BasicRRTStrategy::Finalize(int _regionID) {
 
   //setup region variables
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  Stat_Class* regionStats = region->GetStatClass();
+  StatClass* regionStats = region->GetStatClass();
   string str;
 
   //output final map

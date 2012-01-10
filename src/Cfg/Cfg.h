@@ -30,7 +30,7 @@
 using boost::shared_ptr;
 
 class Cfg;
-class Stat_Class;
+class StatClass;
 class Environment;
 class CollisionDetection;
 class DistanceMetricMethod;
@@ -270,14 +270,14 @@ class Cfg {
   void ClosestPtOnLineSegment(const Cfg&, const Cfg&, const Cfg&);
 
   /// methods for nodes connection. 
-  virtual void FindNeighbors(MPProblem* _mp, Environment* _env, Stat_Class& _stats,
+  virtual void FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats,
            const Cfg& _increment,
            string _vcMethod,
            int _noNeighbors, 
            CDInfo& _cdInfo,
            vector<Cfg*>& _cfgs);
   /// methods for nodes connection. 
-  virtual void FindNeighbors(MPProblem* _mp, Environment* _env, Stat_Class& _stats,
+  virtual void FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats,
            const Cfg& _goal, const Cfg& _increment, 
            string _vcMethod,
            int _noNeighbors, 
@@ -324,7 +324,7 @@ guration where workspace robot's EVERY VERTEX
 
   virtual void GetRandomRay(double _incr, Environment* _env,  shared_ptr<DistanceMetricMethod> _dm) = 0;
   virtual void GetRandomRayPos(double _incr, Environment* _env);
-  virtual double GetSmoothingValue(MPProblem* _mp, Environment *_env,Stat_Class& _stats,
+  virtual double GetSmoothingValue(MPProblem* _mp, Environment *_env,StatClass& _stats,
 	    string _vc, CDInfo& _cdInfo, string _dm, int _n, bool _bl );
 
   //@}

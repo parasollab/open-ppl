@@ -76,7 +76,7 @@ class LocalPlanners : private ElementSet<LocalPlannerMethod<CFG,WEIGHT> >, publi
   LocalPlannerPointer GetLocalPlannerMethod(string in_strLabel) {
     LocalPlannerPointer to_return = ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::GetElement(in_strLabel);
       if ( to_return.get() == NULL ) {
-        cout << "LocalPlanners::GetLocalPlannerMethod::ERROR: could not find " << in_strLabel << endl;
+        cerr << "LocalPlanners::GetLocalPlannerMethod::ERROR: could not find " << in_strLabel << endl;
         exit(-1);
       }
     return to_return;

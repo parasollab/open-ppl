@@ -12,6 +12,7 @@
 class Boundary : public MPBaseObject{
  public:
   Boundary();
+  Boundary(XMLNodeReader& in_Node,MPProblem* in_pproblem);
   virtual ~Boundary();
  private:
 };
@@ -27,7 +28,6 @@ class BoundingBox : public Boundary {
 
   bool operator==(const BoundingBox& bb) const;
 
-  void Clear();
   void SetParameter(int par, double p_first, double p_second);
   std::vector<BoundingBox> Partition(int par, double p_point, double epsilon);
 

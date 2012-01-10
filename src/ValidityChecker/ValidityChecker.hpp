@@ -60,7 +60,7 @@ public:
    bool GetValidity(){return m_Validity;}
   void ToggleValidity(){m_Validity=!m_Validity;}
   
-  inline bool IsValid(VCMethodPtr _vc, Cfg& _cfg, Environment* env, Stat_Class& Stats, 
+  inline bool IsValid(VCMethodPtr _vc, Cfg& _cfg, Environment* env, StatClass& Stats, 
 		      CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName = NULL) {
       if(m_Validity)
          return _vc->IsValid(_cfg, env, Stats, _cdInfo, enablePenetration, pCallName);

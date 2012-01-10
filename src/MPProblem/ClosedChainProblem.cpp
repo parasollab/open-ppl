@@ -14,6 +14,33 @@ ClosedChainProblem(XMLNodeReader& in_Node) : MPProblem(in_Node, false)
     m_pEnvironment->buildCDstructure(*C);
 }
 
+ClosedChainProblem::
+~ClosedChainProblem()
+{
+  //deallocate all vectors of pointers
+  vector<Link*>::iterator linkDel;
+  for (linkDel = g_baseLinks.begin(); linkDel != g_baseLinks.end(); linkDel++){
+    delete *linkDel;
+    *linkDel = NULL;
+  }
+  for (linkDel = g_loopRoots.begin(); linkDel != g_loopRoots.end(); linkDel++){
+    *linkDel = NULL;
+    delete *linkDel;
+  }
+  for (linkDel = g_ear_roots.begin(); linkDel != g_ear_roots.end(); linkDel++){
+    delete *linkDel;
+    *linkDel = NULL;
+  }
+
+  vector<pair<Link*,Link*> >::iterator pairDelIter;
+  for (pairDelIter = g_cfgJoints.begin(); pairDelIter != g_cfgJoints.end(); pairDelIter++){
+    delete (*pairDelIter).first;
+    (*pairDelIter).first = NULL;
+    delete (*pairDelIter).second;
+    (*pairDelIter).second = NULL;
+  }
+}
+
 void ClosedChainProblem::
 ParseXML(XMLNodeReader& in_Node) { 
   in_Node.verifyName("MPProblem");

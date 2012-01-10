@@ -60,27 +60,27 @@ class Cfg_reach_cc : public Cfg_free_tree {
   virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm);
 
   /*
-  virtual void MAPRMfree(Environment* _env, Stat_Class& Stats,
+  virtual void MAPRMfree(Environment* _env, StatClass& Stats,
 			 CollisionDetection* cd, CDInfo& cdInfo, 
 			 DistanceMetric* dm, int n);
 
   virtual bool GenerateOverlapCfg(Environment* env, int robot,
 				  Vector3D robot_start, Vector3D robot_goal, 
 				  Cfg* resultCfg);
-  virtual void GenSurfaceCfgs4ObstNORMAL(Environment* env, Stat_Class& Stats,
+  virtual void GenSurfaceCfgs4ObstNORMAL(Environment* env, StatClass& Stats,
 					 CollisionDetection*,
 					 int obstacle, int nCfgs,
 					 CDInfo& _cdInfo,
 					 vector<Cfg*>& nodes) const;
   */
 
-  virtual void FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats,
+  virtual void FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats,
 			     const Cfg& increment,
 			     string vc_method,
 			     int noNeighbors, 
 			     CDInfo& _cdInfo,
 			     vector<Cfg*>& cfgs);
-  virtual void FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats,
+  virtual void FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats,
 			     const Cfg& goal, const Cfg& increment, 
 			     string vc_method,
 			     int noNeighbors, 

@@ -406,7 +406,7 @@ void Cfg::GetMovingSequenceNodes(const Cfg& _other, double _s, vector<Cfg*>& _re
 }
 
 
-// pt1 & pt2 are two endpts of a line segment
+// _pt1 & _pt2 are two endpts of a line segment
 // find the closest point to the current cfg on that line segment
 // it could be one of the two endpoints of course
 void Cfg::ClosestPtOnLineSegment(const Cfg& _current, const Cfg& _pt1, const Cfg& _pt2) {
@@ -433,7 +433,6 @@ void Cfg::ClosestPtOnLineSegment(const Cfg& _current, const Cfg& _pt1, const Cfg
     //return pt2;
     *this = _pt2;
   } else {
-    //return pt1 + B*(B_dot_C/B_squared);
     this->multiply(*B, B_dot_C/B_squared);
     this->add(_pt1, *this);
   }
@@ -443,7 +442,7 @@ void Cfg::ClosestPtOnLineSegment(const Cfg& _current, const Cfg& _pt1, const Cfg
 }
 
 
-void Cfg::FindNeighbors(MPProblem* _mp, Environment* _env, Stat_Class& _stats, 
+void Cfg::FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats, 
       const Cfg& _increment, string _vcMethod, int _noNeighbors, CDInfo& _cdInfo, vector<Cfg*>& _ret) {  
   vector<Cfg*> nList;
   vector<double> posOnly, oriOnly;
@@ -510,7 +509,7 @@ void Cfg::FindNeighbors(MPProblem* _mp, Environment* _env, Stat_Class& _stats,
 }
 
 
-void Cfg::FindNeighbors(MPProblem* _mp, Environment* _env, Stat_Class& _stats, const Cfg& _goal, const Cfg& _increment, string _vcMethod,
+void Cfg::FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats, const Cfg& _goal, const Cfg& _increment, string _vcMethod,
       int _noNeighbors, CDInfo& _cdInfo, vector<Cfg*>& _ret) {
    vector<Cfg*> nList;  
    vector<double> posOnly, oriOnly;
@@ -825,7 +824,7 @@ vector<Vector3D> Cfg::PolyApprox(Environment* _env) const {
   return result;
 }
 
-double Cfg::GetSmoothingValue(MPProblem* _mp, Environment *_env,Stat_Class& _stats,
+double Cfg::GetSmoothingValue(MPProblem* _mp, Environment *_env,StatClass& _stats,
     string _vc, CDInfo& _cdInfo, string _dm, int _n, bool _bl ){
   GetApproxCollisionInfo(_mp, *((CfgType*)this), _env, _stats, _cdInfo, _vc, _dm, _n, _n, true);
   return _cdInfo.min_dist;

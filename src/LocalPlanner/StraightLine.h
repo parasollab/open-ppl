@@ -43,7 +43,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    * @see lineSegmentInCollision and IsConnected_straightline_simple
    */
   // Wrapper function to call appropriate impl based on CFG type
-  virtual bool IsConnected(Environment *env, Stat_Class& Stats,
+  virtual bool IsConnected(Environment *env, StatClass& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
@@ -60,7 +60,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
   }
   // Default for non closed chains
   template <typename Enable>
-  bool _IsConnected(Environment *_env, Stat_Class& Stats,
+  bool _IsConnected(Environment *_env, StatClass& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col,
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
@@ -70,7 +70,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 	);
   // Specialization for closed chains
   template <typename Enable>
-  bool _IsConnected(Environment *_env, Stat_Class& Stats,
+  bool _IsConnected(Environment *_env, StatClass& Stats,
          shared_ptr<DistanceMetricMethod>dm, const CFG &_c1, const CFG &_c2, CFG &_col,
          LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
@@ -103,7 +103,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    * @see IsConnected_straightline and Cfg::FindIncrement.
    */
   virtual bool 
-    IsConnectedSLSequential(Environment *env, Stat_Class& Stats,
+    IsConnectedSLSequential(Environment *env, StatClass& Stats,
           shared_ptr<DistanceMetricMethod > dm, 
           const CFG &_c1, const CFG &_c2, CFG &_col,
           LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
@@ -123,7 +123,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    * @see CollisionDetection::IsInCollision
    */
   virtual bool 
-    lineSegmentInCollision(Environment *env, Stat_Class& Stats, 
+    lineSegmentInCollision(Environment *env, StatClass& Stats, 
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          LPOutput<CFG,WEIGHT>* lpOutput, 
          int &cd_cntr, double positionRes);
@@ -136,7 +136,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
    * @return true if no Cfg whose cleanrance is less than 0.001. Otherwise, false will be returned.
    */
   virtual bool 
-    IsConnectedSLBinary(Environment *env, Stat_Class& Stats, 
+    IsConnectedSLBinary(Environment *env, StatClass& Stats, 
       shared_ptr<DistanceMetricMethod> dm, const CFG &_c1, const CFG &_c2, 
       CFG &_col, LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
       double positionRes, double orientationRes,  
@@ -199,7 +199,7 @@ template <class CFG, class WEIGHT>
 template <typename Enable>
 bool 
 StraightLine<CFG, WEIGHT>::
-_IsConnected(Environment *_env, Stat_Class& Stats,
+_IsConnected(Environment *_env, StatClass& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
@@ -240,7 +240,7 @@ template <class CFG, class WEIGHT>
 template <typename Enable>
 bool 
 StraightLine<CFG, WEIGHT>::
-_IsConnected(Environment *_env, Stat_Class& Stats,
+_IsConnected(Environment *_env, StatClass& Stats,
          shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
          CFG &_col, LPOutput<CFG, WEIGHT>* lpOutput,
          double positionRes, double orientationRes,
@@ -359,7 +359,7 @@ _IsConnected(Environment *_env, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 bool
 StraightLine<CFG, WEIGHT>::
-       IsConnectedSLSequential(Environment *_env, Stat_Class& Stats,
+       IsConnectedSLSequential(Environment *_env, StatClass& Stats,
      shared_ptr< DistanceMetricMethod > dm, 
       const CFG &_c1, const CFG &_c2, CFG &_col,
       LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
@@ -424,7 +424,7 @@ StraightLine<CFG, WEIGHT>::
 template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
-lineSegmentInCollision(Environment *_env, Stat_Class& Stats, 
+lineSegmentInCollision(Environment *_env, StatClass& Stats, 
           shared_ptr<DistanceMetricMethod> dm, const CFG &_c1, const CFG &_c2, 
            LPOutput<CFG,WEIGHT> *lpOutput, 
            int &cd_cntr, double positionRes) {
@@ -496,7 +496,7 @@ lineSegmentInCollision(Environment *_env, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
-IsConnectedSLBinary(Environment *_env, Stat_Class& Stats, 
+IsConnectedSLBinary(Environment *_env, StatClass& Stats, 
        shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
         CFG &_col, LPOutput<CFG,WEIGHT>* lpOutput, int &cd_cntr,
         double positionRes, double orientationRes,  

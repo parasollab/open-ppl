@@ -69,33 +69,33 @@ class PreferentialAttachment: public NodeConnectionMethod<CFG,WEIGHT> {
   // operates over all nodes in a roadmap
   template<typename OutputIterator>
   void ConnectNodes(
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges, OutputIterator collision) ;
 
   template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last, OutputIterator collision) ;
 
 
   template<typename InputIterator, typename OutputIterator>
   void ConnectNodes(
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator _itr1_first, InputIterator _itr1_last,
         InputIterator _itr2_first, InputIterator _itr2_last, OutputIterator collision) ; 
   
   template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
   void pConnectNodes(
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         bool addPartialEdge, bool addAllEdges,
         InputIterator1 _itr1_first, InputIterator1 _itr1_last,
         InputIterator2 _itr2_first, InputIterator2 _itr2_last, OutputIterator collision) ;
     
    template<typename OutputIterator>
   void ConnectNeighbors(
-        Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+        Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
         bool addAllEdges, 
         int &total_success, int &total_failure,
         VID _vid, vector<VID> closest, OutputIterator collision) ;
@@ -254,7 +254,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 template <typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
-ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
             bool addPartialEdge,
             bool addAllEdges, OutputIterator collision) 
 {
@@ -292,7 +292,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 template<typename InputIterator, typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
-ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
             bool addPartialEdge,
             bool addAllEdges,
             InputIterator _itr1_first, InputIterator _itr1_last, OutputIterator collision) 
@@ -355,7 +355,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 template<typename InputIterator, typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
-ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
             bool addPartialEdge,
             bool addAllEdges,
             InputIterator _itr1_first, InputIterator _itr1_last,
@@ -370,7 +370,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
-pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
             bool addPartialEdge,
             bool addAllEdges,
             InputIterator1 _itr1_first, InputIterator1 _itr1_last,
@@ -384,7 +384,7 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 template <typename OutputIterator>
 void PreferentialAttachment<CFG,WEIGHT>::
-ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
             bool addAllEdges,
             int &total_success, int &total_failure,
             VID _vid, vector<VID> closest, OutputIterator collision)

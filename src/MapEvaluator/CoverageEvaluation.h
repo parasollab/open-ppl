@@ -30,7 +30,7 @@ class CoverageMetric
       get_cc_stats(*pMap, cmap, ccs);
 
       vector<VID> sampleList, cc;
-      Stat_Class Stats;
+      StatClass Stats;
       for(size_t i=0; i<m_samples.size(); ++i) {
         VID sampleVID = rmap->m_pRoadmap->AddVertex(m_samples[i]);
         sampleList.clear();

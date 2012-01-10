@@ -47,7 +47,7 @@ class ApproxSpheres: public LocalPlannerMethod<CFG, WEIGHT> {
         *@see Cfg::ApproxCSpaceClearance and Cfg::Clearance
         */
   virtual 
-    bool IsConnected(Environment *_env, Stat_Class& Stats,
+    bool IsConnected(Environment *_env, StatClass& Stats,
 		     CollisionDetection *cd,
 		     shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, 
 		     LPOutput<CFG, WEIGHT>* lpOutput,
@@ -139,7 +139,7 @@ CreateCopy() {
 template <class CFG, class WEIGHT>
 bool
 ApproxSpheres<CFG,WEIGHT>::
-IsConnected(Environment *_env, Stat_Class& Stats,
+IsConnected(Environment *_env, StatClass& Stats,
 	    CollisionDetection *cd, shared_ptr<DistanceMetricMethod >dm,
 	    const CFG &_c1, const CFG &_c2, LPOutput<CFG, WEIGHT>* lpOutput,
 	    double positionRes, double orientationRes,

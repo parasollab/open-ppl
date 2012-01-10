@@ -32,7 +32,7 @@ class MPRegion : public Environment {
   Roadmap<CFG,WEIGHT>* GetRoadmap() { return &roadmap;};
   Roadmap<CFG,WEIGHT>* GetColRoadmap() { return &col_roadmap;};
   Roadmap<CFG,WEIGHT>* GetBlockRoadmap() { return &block_roadmap;};
-  Stat_Class* GetStatClass() {return &StatClass;};
+  StatClass* GetStatClass() {return &m_statClass;};
   vector<VID> AddToRoadmap(vector<CFG >& in_Cfgs);
   vector<VID> AddToBlockRoadmap(vector<CFG >& in_Cfgs);
   void WriteRoadmapForVizmo();
@@ -44,10 +44,10 @@ class MPRegion : public Environment {
 /*   Environment* GetEnvironment(); */
 
  public:
-  Stat_Class feature_stats, map_stats, combine_stats;
+  StatClass feature_stats, map_stats, combine_stats;
   
   
-  Stat_Class StatClass;
+  StatClass m_statClass;
   Roadmap<CFG,WEIGHT> roadmap;
   Roadmap<CFG,WEIGHT> feature_roadmap;
   Roadmap<CFG,WEIGHT> col_roadmap;
@@ -59,10 +59,6 @@ class MPRegion : public Environment {
 
   int m_RegionId;
  private:
-  //Environment &env;
-  //vector<RoadmapFeature> features;
-  //string characterization;
-   ///\todo remove w/ Marco's approval 
   MPRegion<CFG,WEIGHT>* parent;
   ///\todo Change to a typedeffed or sub class called MPSubRegion.
   ///Also, would be much better if not a vector of pointers
@@ -134,6 +130,19 @@ template <class CFG, class WEIGHT>
 MPRegion<CFG,WEIGHT>::
 ~MPRegion() {
   cout << " ~MPRegion() . TODO ALL " << endl;
+  //Andy G: From what I understand, MPRegion is a tree with an arbitrary # of children at each node
+  //parent points to this' parent node in the tree, and the vector subregions contains all the children of this node
+  //Since the vector is a vector of pointers, we need to iterate through subregions, calling delete on each one
+  //but we should not delete parent because only parents are responsible for themselves and their children
+  //the following commented out destructor is a possibility for this class
+
+/*  typename vector< MPRegion<CFG,WEIGHT>* >::iterator delIter;
+  for(delIter = subregions.begin(); delIter != subregions.end(); delIter = subregions.erase(delIter))
+  {
+    //deallocate memory at this pointer, then iterate to next item in list
+    delete *delIter;
+    *delIter = NULL;
+  }*/
 }
 
 template <class CFG, class WEIGHT>

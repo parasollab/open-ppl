@@ -23,7 +23,7 @@ class CombinationMethod {
   virtual CombinationMethod<CFG>* CreateCopy() = 0;
 
   virtual void CombineRegions(Environment* _env, 
-			      Stat_Class& Stats,
+			      StatClass& Stats,
 			      BoundingBox &c_boundary,
 			      vector<CFG>& free_nodes,
 			      vector<CFG>& coll_nodes) = 0;
@@ -64,7 +64,7 @@ class BruteForceCombination: public CombinationMethod<CFG> {
   virtual CombinationMethod<CFG>* CreateCopy();
 
   virtual void CombineRegions(Environment* _env, 
-					      Stat_Class& Stats,
+					      StatClass& Stats,
 					      BoundingBox &c_boundary,
 					      vector<CFG>& free_nodes, 
 					      vector<CFG>& coll_nodes);
@@ -118,7 +118,7 @@ CreateCopy() {
 
 template <class CFG>
 void BruteForceCombination<CFG>::
-CombineRegions(Environment* _env, Stat_Class& Stats,
+CombineRegions(Environment* _env, StatClass& Stats,
 	       MPRegion<> l_region, MPRegion<> r_region) {
 
   cout << "get selected vertices from left map " << endl;
@@ -175,7 +175,7 @@ class CombineCSpaceRegions {
    */
   template <class WEIGHT>
   void CombineRegions(Roadmap<CFG, WEIGHT>* _rm, 
-				      Stat_Class& Stats,
+				      StatClass& Stats,
 				      BoundingBox &c_boundary,
 				      vector< vector<CFG> >& nodes);
 
@@ -263,7 +263,7 @@ template <class CFG>
 template <class WEIGHT>
 void
 CombineCSpaceRegions<CFG>::
-CombineRegions(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+CombineRegions(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		BoundingBox &c_boundary,
 		vector< vector<CFG> >& nodes) {
 

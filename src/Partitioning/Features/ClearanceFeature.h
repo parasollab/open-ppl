@@ -30,7 +30,7 @@ class CSpaceClearanceFeature : public MPFeature {
     virtual vector<double> Collect(vector<VID>& vids);
 
 
-    double ApproxCSpaceClearance(Environment* env, Stat_Class& Stats,
+    double ApproxCSpaceClearance(Environment* env, StatClass& Stats,
         CDInfo& cdInfo, 
         DistanceMetric* dm, int n,
         bool bComputePenetration,

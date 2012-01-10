@@ -62,7 +62,7 @@ ParseXML(XMLNodeReader& in_Node)
 }
 
 
-double GetValue(CfgType C, MPProblem* mp, Environment* env, Stat_Class& Stats,
+double GetValue(CfgType C, MPProblem* mp, Environment* env, StatClass& Stats,
      string m_vc, CDInfo& cdInfo, string m_dm, int x,int bl){
  
     return C.GetSmoothingValue(mp, env, Stats,
@@ -74,7 +74,7 @@ double GetValue(CfgType C, MPProblem* mp, Environment* env, Stat_Class& Stats,
 
 void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp, MPProblem* mp,
                    Environment *env, LocalPlanners<CfgType,WeightType>* lp, 
-                   shared_ptr <DistanceMetricMethod> dm, Stat_Class& Stats, 
+                   shared_ptr <DistanceMetricMethod> dm, StatClass& Stats, 
                    CollisionDetection* cd, CDInfo& cdInfo, string m_vc, string m_dm, string m_lp,
                    int x, int bl, CfgType previous, CfgType c, CfgType next, double step_size,
                    double user_value, int max_attempt, int numOfSamples, vector< pair<CfgType,double> > &result) {
@@ -178,7 +178,7 @@ Run(int in_RegionID)
    vector<VID> path_vids;
    double smoothingValues[10000];
    int index =0;
-   Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
+   StatClass* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
    CDInfo cdInfo;
    LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
    vector<CfgType>::iterator C = path_cfgs.begin();

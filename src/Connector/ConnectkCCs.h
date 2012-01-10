@@ -44,14 +44,14 @@ class ConnectkCCs: public ComponentConnectionMethod<CFG,WEIGHT> {
   virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
 
   //Connect
-  void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+  void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
          DistanceMetricMethod* dm,
          LocalPlanners<CFG,WEIGHT>* lp ,
          bool addPartialEdge,
          bool addAllEdges);
 
   template <typename InputIterator>
-  void Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+  void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
          DistanceMetricMethod* dm,
          LocalPlanners<CFG,WEIGHT>* lp,
          bool addPartialEdge,
@@ -154,7 +154,7 @@ CreateCopy() {
 
 template <class CFG, class WEIGHT>
 void ConnectkCCs<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
           DistanceMetricMethod * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,
@@ -211,7 +211,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 template <class CFG, class WEIGHT>
 template<typename InputIterator>
 void ConnectkCCs<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, 
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats, 
           DistanceMetricMethod * dm,
           LocalPlanners<CFG,WEIGHT>* lp,
           bool addPartialEdge,

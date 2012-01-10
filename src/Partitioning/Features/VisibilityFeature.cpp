@@ -26,7 +26,7 @@ vector<double> VisibilityFeature::Collect(vector<VID>& vids){
    RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
    typedef vector<VID>::iterator VIT;
    LocalPlanners<CfgType, WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
-   Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
+   StatClass* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
    Environment *env = GetMPProblem()->GetEnvironment();
    NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
    LPOutput<CfgType, WeightType> lpOutput;

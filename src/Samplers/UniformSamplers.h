@@ -4,7 +4,7 @@
 #include "SamplerMethod.h"
 
 class Environment;
-class Stat_Class;
+class StatClass;
 class CDInfo;
 template <typename CFG> class ValidityChecker;
 
@@ -24,7 +24,7 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
 
     void ParseXML(XMLNodeReader& _node) {}
 
-    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       bool generated = false;
       int attempts = 0;
 
@@ -76,7 +76,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG> {
     }
 
   protected:
-    virtual bool Sampler(Environment* _env, Stat_Class& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::SampleImpl()";
       ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();

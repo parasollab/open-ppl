@@ -37,14 +37,14 @@ class RayCSpace {
   void bounce(CFG direction);//Stores point in list and changes direction
 
   //This function has to call a collision detection routine (throug cfg)
-  bool collide(Environment *env, Stat_Class& Stats, CollisionDetection *cd,
+  bool collide(Environment *env, StatClass& Stats, CollisionDetection *cd,
 	       CDInfo& cdInfo, DistanceMetric *dm,
 	       double maxLength, int &cd_counts);//Check for collision in the environment
-  bool connectTarget (Environment *env, Stat_Class& Stats, 
+  bool connectTarget (Environment *env, StatClass& Stats, 
 		      CollisionDetection *cd,
 		      CDInfo& cdInfo, DistanceMetric *dm,
 		      CFG &dir, int &cd_counts);
-  bool connectTarget (Environment *env, Stat_Class& Stats,
+  bool connectTarget (Environment *env, StatClass& Stats,
 		      CollisionDetection *cd,
 		      CDInfo& cdInfo, DistanceMetric *dm,
 		      int &cd_counts);
@@ -53,7 +53,7 @@ class RayCSpace {
   void writePathConfigurations(char output_file[80],
 			       vector<CFG> path, Environment *env);
   template <class WEIGHT>
-    void addRoadmapNodes(Roadmap<CFG,WEIGHT> &rdmp, Stat_Class& Stats, 
+    void addRoadmapNodes(Roadmap<CFG,WEIGHT> &rdmp, StatClass& Stats, 
 			 LocalPlanners<CFG,WEIGHT> *lp, 
 			 CollisionDetection *cd, DistanceMetric *dm);
   void setTargetVector(vector<CFG> *target_vector);
@@ -120,7 +120,7 @@ void RayCSpace<CFG>::bounce(CFG direction) {
 
 //Based on Cfg::ApproxCspaceClearance:
 template <class CFG>
-bool RayCSpace<CFG>::collide(Environment *env, Stat_Class& Stats,
+bool RayCSpace<CFG>::collide(Environment *env, StatClass& Stats,
 			     CollisionDetection *cd,
 			     CDInfo& cdInfo, DistanceMetric *dm,
 			     double maxLength, int &cd_counts) {
@@ -163,7 +163,7 @@ bool RayCSpace<CFG>::collide(Environment *env, Stat_Class& Stats,
 }
 
 template <class CFG>
-bool RayCSpace<CFG>::connectTarget(Environment *env, Stat_Class& Stats,
+bool RayCSpace<CFG>::connectTarget(Environment *env, StatClass& Stats,
 				   CollisionDetection *cd,
 				   CDInfo& cdInfo, DistanceMetric *dm,
 				   int &cd_counts) {
@@ -180,7 +180,7 @@ bool RayCSpace<CFG>::connectTarget(Environment *env, Stat_Class& Stats,
 }
 //Based on code by Shawna (Cfg::cAproxCspaceClearance:
 template <class CFG>
-bool RayCSpace<CFG>::connectTarget(Environment *env, Stat_Class& Stats,
+bool RayCSpace<CFG>::connectTarget(Environment *env, StatClass& Stats,
 				   CollisionDetection *cd,
 				   CDInfo& cdInfo, DistanceMetric *dm,
 				   CFG &dir, int &cd_counts) {
@@ -264,7 +264,7 @@ void RayCSpace<CFG>::writePathConfigurations(char output_file[80],
 //This works assuming that the ray is a single thread that can be stretched
 template <class CFG>
 template <class WEIGHT>
-void RayCSpace<CFG>::addRoadmapNodes(Roadmap<CFG,WEIGHT> &rdmp, Stat_Class& Stats, LocalPlanners<CFG,WEIGHT> *lp, CollisionDetection *cd, DistanceMetric *dm) {
+void RayCSpace<CFG>::addRoadmapNodes(Roadmap<CFG,WEIGHT> &rdmp, StatClass& Stats, LocalPlanners<CFG,WEIGHT> *lp, CollisionDetection *cd, DistanceMetric *dm) {
   VID current, previous;
 
   LPOutput<CFG,WEIGHT> lpOutput;
@@ -323,18 +323,18 @@ class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Core: Connection methods 
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, Stat_Class& Stats, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, StatClass& Stats, 
 			 CollisionDetection*, 
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
 			 bool addPartialEdge,
 			 bool addAllEdges);
 
-  void connectCCs(SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size, Stat_Class& Stats);
-  bool connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VID ccj_id, vector<CFG> &rep_ccj_cfgs, Roadmap<CFG,WEIGHT> &target_rdmp, Stat_Class& Stats, bool try_backwards=false);
-  bool trace(Roadmap<CFG,WEIGHT> &ray_rdmp, Stat_Class& Stats);//trace a ray in the established direction
-  bool findPath(CFG &source, CFG &target, Roadmap<CFG,WEIGHT> &ray_rdmp, Stat_Class& Stats);
-  bool findPath(CFG &source, CFG &target, vector<CFG> *target_cfgs, Roadmap<CFG,WEIGHT> &ray_rdmp, Stat_Class& Stats);
+  void connectCCs(SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size, StatClass& Stats);
+  bool connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VID ccj_id, vector<CFG> &rep_ccj_cfgs, Roadmap<CFG,WEIGHT> &target_rdmp, StatClass& Stats, bool try_backwards=false);
+  bool trace(Roadmap<CFG,WEIGHT> &ray_rdmp, StatClass& Stats);//trace a ray in the established direction
+  bool findPath(CFG &source, CFG &target, Roadmap<CFG,WEIGHT> &ray_rdmp, StatClass& Stats);
+  bool findPath(CFG &source, CFG &target, vector<CFG> *target_cfgs, Roadmap<CFG,WEIGHT> &ray_rdmp, StatClass& Stats);
 
  private:
   void getBoundaryCfgs(const vector<CFG> &input, vector<CFG> &output, unsigned int k); // move to ConnectionMethod base class
@@ -570,7 +570,7 @@ void RayTracer<CFG,WEIGHT>::ConnectComponents() {
 
 template <class CFG, class WEIGHT>
 void RayTracer<CFG,WEIGHT>::
-ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		  CollisionDetection* _cd , 
 		  DistanceMetric * _dm,
 		  LocalPlanners<CFG,WEIGHT>* _lp,
@@ -699,7 +699,7 @@ bool RayTracer<CFG,WEIGHT>::exhausted() {
 
 
 template <class CFG, class WEIGHT>
-void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size, Stat_Class& Stats) {
+void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned int schedule_max_size, unsigned int sample_max_size, StatClass& Stats) {
 
   //cout << "RayTracer: (scheduling_mode: " << scheduling_mode << "; schedule_max_size: " << schedule_max_size << "; sample_max_size: " << sample_max_size << ")"<<endl;
 
@@ -789,7 +789,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
 
 
 template <class CFG, class WEIGHT>
-bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VID ccj_id, vector<CFG> &rep_ccj_cfgs, Roadmap<CFG,WEIGHT> &target_rdmp, Stat_Class& Stats, bool try_backwards) {
+bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VID ccj_id, vector<CFG> &rep_ccj_cfgs, Roadmap<CFG,WEIGHT> &target_rdmp, StatClass& Stats, bool try_backwards) {
   bool path_found = false;
 
   //cout << endl << "!!!connecting CC " << cci_id << " To CC " << ccj_id << endl;
@@ -847,7 +847,7 @@ bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VI
 //  bool RayTracer::trace(CollisionDetection *cd, CDInfo& cdinfo, 
 //  		      DistanceMetric * dm) {
 template <class CFG, class WEIGHT>
-bool RayTracer<CFG,WEIGHT>::trace(Roadmap<CFG,WEIGHT> &ray_rdmp, Stat_Class& Stats) {
+bool RayTracer<CFG,WEIGHT>::trace(Roadmap<CFG,WEIGHT> &ray_rdmp, StatClass& Stats) {
   bool path_found = false; //true if a path has been found, false otherwise
   long number_bouncings = 0; //number of bouncings of the ray
   double ray_length = 0; //length of the ray (depending on metrics, I suppose)
@@ -889,14 +889,14 @@ bool RayTracer<CFG,WEIGHT>::trace(Roadmap<CFG,WEIGHT> &ray_rdmp, Stat_Class& Sta
 
 
 template <class CFG, class WEIGHT>
-bool RayTracer<CFG,WEIGHT>::findPath(CFG &source, CFG &target, vector<CFG> *target_cfgs, Roadmap<CFG,WEIGHT> &ray_rdmp, Stat_Class& Stats) {
+bool RayTracer<CFG,WEIGHT>::findPath(CFG &source, CFG &target, vector<CFG> *target_cfgs, Roadmap<CFG,WEIGHT> &ray_rdmp, StatClass& Stats) {
   setTargetCfgs(target_cfgs);
   return findPath(source,target, ray_rdmp, Stats);
 }
 
 
 template <class CFG, class WEIGHT>
-bool RayTracer<CFG,WEIGHT>::findPath(CFG &source, CFG &target, Roadmap<CFG,WEIGHT> &ray_rdmp, Stat_Class& Stats) {
+bool RayTracer<CFG,WEIGHT>::findPath(CFG &source, CFG &target, Roadmap<CFG,WEIGHT> &ray_rdmp, StatClass& Stats) {
   bool path_found = false;
   setSource(source);
   setTarget(target);  

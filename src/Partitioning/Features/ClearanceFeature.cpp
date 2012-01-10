@@ -23,7 +23,7 @@ vector<double> ClearanceFeature::Collect(vector<VID>& vids) {
   vector<double> clearance;
 
   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
-  Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
+  StatClass* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
   Environment *env = GetMPProblem()->GetEnvironment();
   ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
 
@@ -59,7 +59,7 @@ vector<double> CSpaceClearanceFeature::Collect(vector<VID>& vids) {
   vector<double> clearance;
 	CDInfo tmp_info;
   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
-  Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
+  StatClass* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
   Environment *env = GetMPProblem()->GetEnvironment();
   ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
   typedef vector<VID>::iterator VIT;

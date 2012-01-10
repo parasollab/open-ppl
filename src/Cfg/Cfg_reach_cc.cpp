@@ -471,7 +471,7 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm)
 
 void 
 Cfg_reach_cc::
-FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats, const Cfg& increment,
+FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats, const Cfg& increment,
 	      string vc_method, int noNeighbors, CDInfo& _cdInfo,
 	      vector<Cfg*>& cfgs) {
   cerr << "Warning, FindNeighbors not implemented yet\n";
@@ -480,7 +480,7 @@ FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats, const Cfg& inc
 
 void 
 Cfg_reach_cc::
-FindNeighbors(MPProblem* mp, Environment* env, Stat_Class& Stats, const Cfg& goal, 
+FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats, const Cfg& goal, 
 	      const Cfg& increment, string vc_method, int noNeighbors, 
 	      CDInfo& _cdInfo, vector<Cfg*>& cfgs) {
   cerr << "Warning, FindNeighbors not implemented yet\n";

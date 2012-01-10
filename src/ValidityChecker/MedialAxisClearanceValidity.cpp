@@ -26,7 +26,7 @@ MedialAxisClearanceValidity::MedialAxisClearanceValidity(XMLNodeReader& _node, M
 
   }
 
-bool MedialAxisClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, Stat_Class& _stats, 
+bool MedialAxisClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
   CDInfo& _cdInfo, bool _enablePenetration, string * _callName) {
 
     DistanceMetric::DistanceMetricPointer dm = GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dmLabel);

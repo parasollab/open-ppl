@@ -82,7 +82,7 @@ Run(int in_RegionID)
   PrintOptions(cout);
 
   Roadmap<CfgType,WeightType>* rdmp = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
-  Stat_Class* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
+  StatClass* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
 
   vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer > methods;
     

@@ -195,7 +195,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
     virtual void Run(int in_RegionID){
 
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-      Stat_Class * pStatClass = region->GetStatClass();
+      StatClass * pStatClass = region->GetStatClass();
 
       pStatClass->ClearStats();
 
@@ -477,7 +477,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       }
 
       sort(vec_dist_vid.begin(), vec_dist_vid.end());
-      Stat_Class _mystat;
+      StatClass _mystat;
       LPOutput<CfgType,WeightType> out_lp_output;
       for ( size_t i=0; i<vec_dist_vid.size(); ++i) {
         if ( GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_strLocalPlannerLabel)->

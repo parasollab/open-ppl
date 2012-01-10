@@ -14,19 +14,19 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
   virtual void PrintOptions(ostream& out_os);
   virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-  virtual bool IsConnected(Environment *env, Stat_Class& Stats,
+  virtual bool IsConnected(Environment *env, StatClass& Stats,
     shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
     LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
     bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);
 
  protected:
 
-  virtual bool IsConnectedOneWay(Environment *env, Stat_Class& Stats,
+  virtual bool IsConnectedOneWay(Environment *env, StatClass& Stats,
     shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
     LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
     bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);
 
-  virtual bool IsConnectedOtherWay(Environment *env, Stat_Class& Stats,
+  virtual bool IsConnectedOtherWay(Environment *env, StatClass& Stats,
 	  shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
     LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
 	  bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);  
@@ -71,7 +71,7 @@ CreateCopy() {
 }
 
 template <class CFG, class WEIGHT> bool
-TransformAtS<CFG, WEIGHT>:: IsConnected(Environment *_env, Stat_Class& _stats,
+TransformAtS<CFG, WEIGHT>:: IsConnected(Environment *_env, StatClass& _stats,
 shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
 LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
 bool _checkCollision, bool _savePath, bool _saveFailedPath) {
@@ -86,7 +86,7 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 }
 
 template <class CFG, class WEIGHT> bool
-TransformAtS<CFG,WEIGHT>:: IsConnectedOneWay(Environment *_env, Stat_Class& _stats,
+TransformAtS<CFG,WEIGHT>:: IsConnectedOneWay(Environment *_env, StatClass& _stats,
 shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
 LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
 bool _checkCollision, bool _savePath, bool _saveFailedPath) {  
@@ -190,7 +190,7 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 }
 
 template <class CFG, class WEIGHT> bool
-TransformAtS<CFG, WEIGHT>::IsConnectedOtherWay(Environment *_env, Stat_Class& _stats,
+TransformAtS<CFG, WEIGHT>::IsConnectedOtherWay(Environment *_env, StatClass& _stats,
 shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
 LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
 bool _checkCollision, bool _savePath, bool _saveFailedPath) {

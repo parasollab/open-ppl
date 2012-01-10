@@ -40,7 +40,6 @@ public:
   inline ValidityChecker<CfgType>* GetValidityChecker() {return m_pValidityChecker; };
   inline Environment* GetEnvironment() {return m_pEnvironment; };
   inline MPStrategy* GetMPStrategy() {return m_pMPStrategy;};
-  //inline Stat_Class* GetStatClass() {return m_pStatClass;};
   
   
   //inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
@@ -75,7 +74,6 @@ public:
   //Roadmap<CfgType,WeightType> rmp;
   //Roadmap<CfgType,WeightType> rmp_col;
   vector< MPRegion<CfgType,WeightType>* > m_vecMPRegions; 
-  //Stat_Class* m_pStatClass;
   //map<string,MPFileIO> m_mapLabelFile;
   // temporary variable to deal with posDOFs() and DOFs()
   int m_dof, m_posDof;

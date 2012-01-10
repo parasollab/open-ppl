@@ -41,11 +41,11 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
 				 vector< pair<int,VID> >& ccvec);
 
   // new component connection interface
-  void Connect(Roadmap<CFG,WEIGHT>* _rm, Stat_Class& Stats,
+  void Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& Stats,
 	       CollisionDetection* cd, DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges);
-  void Connect(Roadmap<CFG,WEIGHT>* _rm, Stat_Class& Stats,
+  void Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& Stats,
 	       CollisionDetection* cd, DistanceMetric* dm,
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges,
@@ -157,7 +157,7 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 
 template <class CFG, class WEIGHT>
 void RRTcomponents<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 	CollisionDetection* cd , 
 	DistanceMetric * dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
@@ -183,7 +183,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
 
 template <class CFG, class WEIGHT>
 void RRTcomponents<CFG,WEIGHT>::
-Connect(Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats,
+Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 	CollisionDetection* cd , 
 	DistanceMetric * dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
