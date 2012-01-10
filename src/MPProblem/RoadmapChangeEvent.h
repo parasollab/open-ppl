@@ -139,7 +139,6 @@ RoadmapChangeEvent(ChangeType type, VID _vid)
 template<typename CFG, typename WEIGHT>
 RoadmapChangeEvent<CFG, WEIGHT>::
 ~RoadmapChangeEvent() {
-    delete event;
 }
   
 template<typename CFG, typename WEIGHT>
