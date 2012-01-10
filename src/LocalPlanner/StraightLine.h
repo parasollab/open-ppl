@@ -11,7 +11,6 @@
 
 #include <deque>
 #include "LocalPlannerMethod.h"
-#include "type_traits/is_closed_chain.h" //used to switch between default and specialized impl. of IsConnected
 #include "ValidityChecker.hpp"
 #include "Cfg_reach_cc.h"
 
@@ -66,7 +65,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
          double positionRes, double orientationRes,
          bool checkCollision=true, 
          bool savePath=false, bool saveFailedPath=false,
-	 typename boost::disable_if<is_closed_chain<Enable> >::type* dummy = 0
+	 typename boost::disable_if<IsClosedChain<Enable> >::type* dummy = 0
 	);
   // Specialization for closed chains
   template <typename Enable>
@@ -76,7 +75,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
          double positionRes, double orientationRes,
          bool checkCollision=true, 
          bool savePath=false, bool saveFailedPath=false,
-	 typename boost::enable_if<is_closed_chain<Enable> >::type* dummy = 0
+	 typename boost::enable_if<IsClosedChain<Enable> >::type* dummy = 0
 	);
 
   string m_vcMethod;
@@ -205,7 +204,7 @@ _IsConnected(Environment *_env, StatClass& Stats,
          double positionRes, double orientationRes,
          bool checkCollision, 
          bool savePath, bool saveFailedPath,
- 	 typename boost::disable_if<is_closed_chain<Enable> >::type* dummy) 
+ 	 typename boost::disable_if<IsClosedChain<Enable> >::type* dummy) 
 { 
   Stats.IncLPAttempts("Straightline");
   int cd_cntr = 0; 
@@ -246,7 +245,7 @@ _IsConnected(Environment *_env, StatClass& Stats,
          double positionRes, double orientationRes,
          bool checkCollision, 
          bool savePath, bool saveFailedPath,
-	 typename boost::enable_if<is_closed_chain<Enable> >::type* dummy)
+	 typename boost::enable_if<IsClosedChain<Enable> >::type* dummy)
 {
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
