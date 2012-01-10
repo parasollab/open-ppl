@@ -180,10 +180,7 @@ IsConnectedOneWay(Environment *_env, StatClass& Stats,
     std::string tmpStr = Callee+Method;
   
   incr.FindIncrement(_c1,_c2,&n_ticks,positionRes,orientationRes);
- //if( !vc->IsValid(vcm, incr,_env, Stats, cdInfo, true, &tmpStr))
-   //connected=false; 
- connected = vc->IsValid(vcm, incr, _env, Stats, cdInfo, true, &tmpStr);
-  
+  connected = vc->IsValid(vcm, incr, _env, Stats, cdInfo, true, &tmpStr);
   
 
   do {

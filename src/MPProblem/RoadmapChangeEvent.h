@@ -28,8 +28,7 @@ class RoadmapChangeEvent {
     
     enum ChangeType { ADD_VERTEX, REMOVE_VERTEX };
     
-    class BaseChangeEvent
-    {
+    class BaseChangeEvent {
       public:
         virtual ~BaseChangeEvent() {}
         virtual ChangeType GetType() const = 0;
@@ -38,11 +37,9 @@ class RoadmapChangeEvent {
         ChangeType item_type;
     };
     
-    class AddVertexEvent : public BaseChangeEvent
-    {
+    class AddVertexEvent : public BaseChangeEvent {
       public: 
-        AddVertexEvent(CFG _cfg, VID _vid)
-        {
+        AddVertexEvent(CFG _cfg, VID _vid) {
           cfg = _cfg;
           vid = _vid;
           this->item_type = ADD_VERTEX;
@@ -141,16 +138,14 @@ RoadmapChangeEvent(ChangeType type, VID _vid)
 
 template<typename CFG, typename WEIGHT>
 RoadmapChangeEvent<CFG, WEIGHT>::
-~RoadmapChangeEvent()
-{
+~RoadmapChangeEvent() {
     delete event;
 }
   
 template<typename CFG, typename WEIGHT>
 bool
 RoadmapChangeEvent<CFG, WEIGHT>::
-IsTypeAddVertex() const
-{
+IsTypeAddVertex() const {
   if (event->GetType() == ADD_VERTEX)
     return true;
   else
@@ -159,8 +154,7 @@ IsTypeAddVertex() const
 
 template<typename CFG, typename WEIGHT>
 bool
-RoadmapChangeEvent<CFG, WEIGHT>::IsTypeRemoveVertex() const
-{
+RoadmapChangeEvent<CFG, WEIGHT>::IsTypeRemoveVertex() const {
   if (event->GetType() == REMOVE_VERTEX)
     return true;
   else
@@ -170,16 +164,14 @@ RoadmapChangeEvent<CFG, WEIGHT>::IsTypeRemoveVertex() const
 template<typename CFG, typename WEIGHT>
 const typename RoadmapChangeEvent<CFG, WEIGHT>::BaseChangeEvent*
 RoadmapChangeEvent<CFG, WEIGHT>::
-GetEvent() const
-{
+GetEvent() const {
   return event;
 }
 
 template<typename CFG, typename WEIGHT>
 const typename RoadmapChangeEvent<CFG, WEIGHT>::AddVertexEvent*
 RoadmapChangeEvent<CFG, WEIGHT>::
-GetAddVertexEvent() const
-{
+GetAddVertexEvent() const {
   if (this->IsTypeAddVertex())
     return (AddVertexEvent*)event;
   else {
@@ -191,8 +183,7 @@ GetAddVertexEvent() const
 template<typename CFG, typename WEIGHT>
 const typename RoadmapChangeEvent<CFG, WEIGHT>::RemoveVertexEvent*
 RoadmapChangeEvent<CFG, WEIGHT>::
-GetRemoveVertexEvent() const
-{
+GetRemoveVertexEvent() const {
   if (this->IsTypeRemoveVertex())
     return (RemoveVertexEvent*)event;
   else {

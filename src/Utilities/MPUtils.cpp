@@ -162,7 +162,7 @@ boost::shared_ptr<LocalPlannerMethod<CfgType, WeightType> > GetLPMethod(MPProble
 bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta){
   //Setup...primarily for collision checks that occur later on
   MPRegion<CfgType,WeightType>*      region = _mp->GetMPRegion(_regionID);
-  Stat_Class*                        regionStats = region->GetStatClass();
+  StatClass*                        regionStats = region->GetStatClass();
   Environment*                       env = region->GetRoadmap()->GetEnvironment();
   shared_ptr <DistanceMetricMethod>  dm = _mp->GetDistanceMetric()->GetDMMethod(_dm);
   ValidityChecker<CfgType>*          vc = _mp->GetValidityChecker();
@@ -215,7 +215,7 @@ bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _
 //***********************************//
 // Main Push To Medial Axis Function //
 //***********************************//
-bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, Stat_Class& _stats, string _vc, string _dm, 
+bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClass& _stats, string _vc, string _dm, 
     bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, int _hLen, bool _debug) {
   // Initialization
   string call("MedialAxisUtility::PushToMedialAxis()");
@@ -253,7 +253,7 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, Stat_Cla
 // A direction is determined to move the cfg outside of the      //
 // obstacle and is pushed till outside.                          //
 //***************************************************************//
-bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_Class& _stats,
+bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     string _vc, string _dm, bool _pExact, int _penetration, bool _debug) {	
   // Initialization
   string call("MedialAxisUtility::PushFromInsideObstacle");
@@ -327,7 +327,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
 // algorithm stepping out at the resolution till the medial axis //
 // is found, determined by the clearance.                        //
 //***************************************************************//
-bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_Class& _stats,
+bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, bool _debug) {
   // Initialization
   string call("MedialAxisUtility::PushCfgToMedialAxis");
@@ -645,7 +645,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_
 //   This is a wrapper function for getting the collision information  //
 // for the medial axis computation, calls either approx or exact       //
 //*********************************************************************//
-bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_Class& _stats, CDInfo& _cdInfo, 
+bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
     string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX) {
   if ( _exact ) 
     return GetExactCollisionInfo(_mp,_cfg,_env,_stats,_cdInfo,_vc,_useBBX);
@@ -659,7 +659,7 @@ bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
 // checker results against obstacles to the bounding box to get a      //
 // complete solution                                                   //
 //*********************************************************************//
-bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_Class& _stats,
+bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     CDInfo& _cdInfo, string _vc, bool _useBBX) {
   // Setup Validity Checker
   string call("MedialAxisUtility::getExactCollisionInfo");
@@ -718,7 +718,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Sta
 // specified number of rays are sent out till they change in validity. //
 // The shortest ray is then considered the best calididate.            //
 //*********************************************************************//
-bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Stat_Class& _stats,
+bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX) {
 
   // Initialization
