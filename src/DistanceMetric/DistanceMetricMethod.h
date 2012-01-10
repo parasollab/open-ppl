@@ -362,7 +362,10 @@ class BinaryLPSweptDistance : public DistanceMetricMethod {
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 class ReachableDistance : public DistanceMetricMethod {
  public:
-  ReachableDistance() {}
+  ReachableDistance() {
+    type = CS;
+    name = "reachable";
+  }
   ReachableDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn = true) : DistanceMetricMethod(in_Node, in_pProblem, warn) {
     type = CS;
     name = "reachable";
