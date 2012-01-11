@@ -19,6 +19,7 @@
 #include "UniformSamplers.h"
 #include "MedialAxisSamplers.h"
 #include "GaussianSamplers.h"
+#include "BridgeTestSampler.h"
 #include "ObstacleBasedSamplers.h"
 #include "WorkspaceObstacleBasedSamplers.h"
 #include "NegateSampler.h"
