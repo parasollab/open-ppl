@@ -46,7 +46,7 @@ class MPStrategyMethod : public MPBaseObject {
     virtual void PrintOptions(ostream& _os)=0;
 
     string GetBaseFilename(){return m_baseFilename;}
-    void setBoundary(shared_ptr<BoundingBox> bb){m_boundary=bb;};
+    void SetBoundary(shared_ptr<BoundingBox> bb){m_boundary=bb;};
     long GetBaseSeed() {return m_baseSeed;} 
   protected:
     ClockClass m_strategyClock;

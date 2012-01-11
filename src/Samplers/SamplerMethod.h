@@ -174,14 +174,6 @@ class SamplerMethod : public MPBaseObject {
   private:
     template <typename OutputIterator>
     OutputIterator 
-    SampleImpl(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts, 
-            OutputIterator _result, OutputIterator _collision) {
-
-      return SampleImpl(_env, _env->GetBoundingBox(),  _stats, _numNodes, _maxAttempts, _result, _collision);
-    }
-
-    template <typename OutputIterator>
-    OutputIterator 
     SampleImpl(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, int _numNodes, int _maxAttempts, 
             OutputIterator _result, OutputIterator _collision) {
       CFG myCfg;
@@ -195,15 +187,6 @@ class SamplerMethod : public MPBaseObject {
       _result = copy(out1.begin(), out1.end(), _result);
       *_collision++ = collisionOut;
       return _result;
-    }
-
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator 
-    SampleImpl(Environment* _env,  StatClass& _stats, InputIterator _first, InputIterator _last, int _maxAttempts,
-            OutputIterator _result, OutputIterator _collision) {
-      return SampleImpl( _env, _env->GetBoundingBox(), _stats, _first, _last, _maxAttempts,
-            _result, _collision);
-
     }
 
     template <typename InputIterator, typename OutputIterator>
@@ -224,7 +207,6 @@ class SamplerMethod : public MPBaseObject {
     }  
   
   protected:
-    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) = 0;
     virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) = 0;
 };
 

@@ -122,12 +122,6 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         return result;
       }
 
-    template <typename OutputIterator>
-      OutputIterator GenerateShells(Environment* _env, StatClass& Stats,CFG c_free, CFG c_coll, CFG incr, 
-          OutputIterator result) {
-        return GenerateShells(_env, _env->GetBoundingBox(), Stats, c_free, c_coll, incr, result);
-    }
-
     virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::sampler()";
@@ -194,10 +188,6 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       } while (!generated && (attempts < _maxAttempts));
 
       return generated;
-    }
-
-    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
-      return Sampler(_env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
     }
 };
 

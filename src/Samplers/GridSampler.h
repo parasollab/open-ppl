@@ -112,11 +112,6 @@ class GridSampler : public SamplerMethod<CFG> {
 
     return generated;
   }
-
-  virtual bool Sampler(Environment* _env,  StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, 
-                       CFG& _cfgCol, int _maxAttempts){   
-    return Sampler( _env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
-  }
 };
 
 #endif
