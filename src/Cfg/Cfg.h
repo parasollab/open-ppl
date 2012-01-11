@@ -37,7 +37,7 @@ class DistanceMetricMethod;
 class CDInfo;
 class MultiBody;
 class MPProblem;
-
+class BoundingBox;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -243,7 +243,7 @@ class Cfg {
    * the environment specified bounding box
    */    
   bool InBoundingBox(Environment* _env) const;
-
+  bool InBoundingBox(Environment* _env,shared_ptr<BoundingBox> bb) const;
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -315,13 +315,13 @@ guration where workspace robot's EVERY VERTEX
    * no this cfg could be found. The program will be abort.
    */
   virtual void GetRandomCfg(Environment* _env, int _maxTries);
-
+  virtual void GetRandomCfg(Environment* _env, shared_ptr<BoundingBox> bb, int _maxTries);
   /// ditto, but with a default number of tries (10).
   virtual void GetRandomCfg(Environment* _env);
-
+  virtual void GetRandomCfg(Environment* _env, shared_ptr<BoundingBox> bb);
   /// Generates a random configuration with approximate length
   virtual void GetRandomCfg(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, double _length);
-
+  
   virtual void GetRandomRay(double _incr, Environment* _env,  shared_ptr<DistanceMetricMethod> _dm) = 0;
   virtual void GetRandomRayPos(double _incr, Environment* _env);
   virtual double GetSmoothingValue(MPProblem* _mp, Environment *_env,StatClass& _stats,
@@ -358,7 +358,7 @@ guration where workspace robot's EVERY VERTEX
    * Call CfgManager::GetRandomCfg_CenterOfMass
    */
   virtual void GetRandomCfg_CenterOfMass(Environment *_env) = 0;
-
+  virtual void GetRandomCfg_CenterOfMass(Environment *_env, shared_ptr<BoundingBox> bb) = 0;
   static int  GetNumOfJoints();
 
   // setNumofJoints should be consistent in every class

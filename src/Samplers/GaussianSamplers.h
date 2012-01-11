@@ -47,7 +47,7 @@ class GaussianSampler : public SamplerMethod<CFG>
       _out << "\tdmLabel = " << m_dmLabel << endl; 
     }
 
-    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::sampler()";
       bool generated = false;
@@ -58,15 +58,15 @@ class GaussianSampler : public SamplerMethod<CFG>
 
       CFG cfg1 = _cfgIn;
       if(cfg1 == CFG())
-        cfg1.GetRandomCfg(_env);
+        cfg1.GetRandomCfg(_env,_bb);
       bool cfg1Free;
       if(!m_useBoundingBox) {
-        if(!cfg1.InBoundingBox(_env))
+        if(!cfg1.InBoundingBox(_env,_bb))
           return false;
         cfg1Free = vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env,
                                _stats, cdInfo, true, &callee);
       } else {
-        cfg1Free = (cfg1.InBoundingBox(_env) &&
+        cfg1Free = (cfg1.InBoundingBox(_env,_bb) &&
                     vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env,
                                 _stats, cdInfo, true, &callee));
       }
@@ -83,7 +83,7 @@ class GaussianSampler : public SamplerMethod<CFG>
             incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
             cfg2.add(cfg1, incr);
             VDAddTempRay(incr);
-          } while(!cfg2.InBoundingBox(_env));
+          } while(!cfg2.InBoundingBox(_env,_bb));
           cfg2Free = vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, 
                                  _stats, cdInfo, true, &callee);
         } else {
@@ -91,7 +91,7 @@ class GaussianSampler : public SamplerMethod<CFG>
           incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
           cfg2.add(cfg1, incr);
           VDAddTempRay(incr);
-          cfg2Free = (cfg2.InBoundingBox(_env) && 
+          cfg2Free = (cfg2.InBoundingBox(_env,_bb) && 
                       vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, 
                                   _stats, cdInfo, true, &callee));
         }
@@ -113,6 +113,10 @@ class GaussianSampler : public SamplerMethod<CFG>
         }
       } while (!generated && (attempts < _maxAttempts));
       return generated;
+    }
+
+    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+      return Sampler( _env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
     }
 };
 
@@ -161,7 +165,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
       _out << "\tdmLabel = " << m_dmLabel << endl; 
     }
 
-    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::sampler()";
       ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
@@ -176,19 +180,19 @@ class BridgeTestSampler : public SamplerMethod<CFG>
         attempts++;
         CFG tmp = _cfgIn;
         if (tmp == blankCfg) {
-          tmp.GetRandomCfg(_env);
+          tmp.GetRandomCfg(_env,_bb);
         }
         if ( m_useBoundingBox ) {
-          if ( tmp.InBoundingBox(_env) && 
+          if ( tmp.InBoundingBox(_env,_bb) && 
               vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, _stats, cdInfo, true, &callee)) { 
             CFG mid = tmp, incr, cfg1;
             incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
             cfg1.subtract(mid, incr);
-            if ( !cfg1.InBoundingBox(_env) || 
+            if ( !cfg1.InBoundingBox(_env,_bb) || 
                 !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env, _stats, cdInfo, true, &callee)) {
               CFG cfg2;
               cfg2.add(mid, incr);
-              if(!cfg2.InBoundingBox(_env) || 
+              if(!cfg2.InBoundingBox(_env,_bb) || 
                  !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
                 _stats.IncNodes_Generated();
                 generated = true;
@@ -201,11 +205,11 @@ class BridgeTestSampler : public SamplerMethod<CFG>
             CFG cfg1 = tmp, incr, cfg2;
             incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d)), _env, dm);
             cfg2.add(cfg1, incr);
-            if ( !cfg2.InBoundingBox(_env) || 
+            if ( !cfg2.InBoundingBox(_env,_bb) || 
                 !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
               CFG mid;
               mid.WeightedSum(cfg1, cfg2, 0.5);
-              if ( mid.InBoundingBox(_env) && 
+              if ( mid.InBoundingBox(_env,_bb) && 
                   (vc->IsValid(vc->GetVCMethod(m_vcLabel), mid, _env, _stats, cdInfo, true, &callee))) {
                 _stats.IncNodes_Generated();
                 generated = true;
@@ -250,6 +254,10 @@ class BridgeTestSampler : public SamplerMethod<CFG>
         }
       } while (!generated && (attempts < _maxAttempts));
       return generated;
+    }
+
+    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+      return Sampler(_env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
     }
 };
 

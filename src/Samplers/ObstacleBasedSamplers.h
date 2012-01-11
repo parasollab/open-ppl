@@ -78,22 +78,22 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         << ", stepsize = " << step_size << ")\n";
     }
    
-   virtual CFG ChooseASample(CFG cfg_in, Environment* env){
+   virtual CFG ChooseASample(CFG cfg_in, Environment* env, shared_ptr<BoundingBox> _bb){
      CFG c1=cfg_in;
      if(c1==CFG())
-       c1.GetRandomCfg(env);//random configurations taken inside bounding box
+       c1.GetRandomCfg(env,_bb);//random configurations taken inside bounding box
      return c1;
    }
 
     template <typename OutputIterator>
-      OutputIterator GenerateShells(Environment* _env, StatClass& Stats,CFG c_free, CFG c_coll, CFG incr, 
+      OutputIterator GenerateShells(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& Stats,CFG c_free, CFG c_coll, CFG incr, 
           OutputIterator result) {
         CDInfo cdInfo;
         string callee(this->GetName());
         callee += "::GenerateShells";
         // cout << "n_shells_coll = " << n_shells_coll << endl;
         for(int i=0; i<n_shells_free; ++i) {
-          if(c_free.InBoundingBox(_env) && 
+          if(c_free.InBoundingBox(_env,_bb) && 
               vc->IsValid(vc->GetVCMethod(strVcmethod), c_free, _env, 
                 Stats, cdInfo, true, &callee))
           {
@@ -108,7 +108,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         // cout << "n_shells_coll = " << n_shells_coll << endl;
         incr.subtract(tmp, incr);
         for(int i=0; i<n_shells_coll; ++i) {
-          if(c_coll.InBoundingBox(_env) && 
+          if(c_coll.InBoundingBox(_env,_bb) && 
               !vc->IsValid(vc->GetVCMethod(strVcmethod), c_coll, _env, 
                 Stats, cdInfo, true, &callee))
           {
@@ -122,7 +122,13 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         return result;
       }
 
-    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    template <typename OutputIterator>
+      OutputIterator GenerateShells(Environment* _env, StatClass& Stats,CFG c_free, CFG c_coll, CFG incr, 
+          OutputIterator result) {
+        return GenerateShells(_env, _env->GetBoundingBox(), Stats, c_free, c_coll, incr, result);
+    }
+
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::sampler()";
       CDInfo cdInfo;
@@ -134,9 +140,9 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         attempts++;
 
         CFG c1 ;
-        c1=ChooseASample( _cfgIn, _env);
+        c1=ChooseASample( _cfgIn, _env, _bb);
 
-        bool c1_bbox = c1.InBoundingBox(_env);
+        bool c1_bbox = c1.InBoundingBox(_env,_bb);
 
         bool c1_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c1, _env, 
             _stats, cdInfo, true, &callee);
@@ -154,7 +160,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
           c1_free = c2_free;
 
           c2.Increment(r);
-          c2_bbox = c2.InBoundingBox(_env);
+          c2_bbox = c2.InBoundingBox(_env,_bb);
 
           c2_free = vc->IsValid(vc->GetVCMethod(strVcmethod), c2, _env, 
               _stats, cdInfo, true, &callee);
@@ -168,12 +174,12 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
           {
             CFG tmp;
             r.subtract(tmp, r);
-            GenerateShells(_env, _stats,c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
+            GenerateShells(_env, _bb, _stats,c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
             _cfgCol = c2;
           }
           else 
           {
-            GenerateShells(_env, _stats,c2, c1, r,back_insert_iterator<vector<CFG> >(_cfgOut));
+            GenerateShells(_env, _bb, _stats,c2, c1, r,back_insert_iterator<vector<CFG> >(_cfgOut));
             _cfgCol = c1;
           }
         }
@@ -182,12 +188,16 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
           generated = true;
           CFG tmp;
           r.subtract(tmp, r);
-          GenerateShells(_env, _stats,c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
+          GenerateShells(_env, _bb, _stats,c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
           _cfgCol = c2;
         }
       } while (!generated && (attempts < _maxAttempts));
 
       return generated;
+    }
+
+    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+      return Sampler(_env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
     }
 };
 

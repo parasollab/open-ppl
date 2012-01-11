@@ -85,8 +85,12 @@ Cfg_free_tree::Cfg_free_tree(const Cfg& _c) {
   NormalizeOrientation();
 }
 
-void Cfg_free_tree::GetRandomCfg(Environment* env) {
-  Cfg::GetRandomCfg(env);
+void Cfg_free_tree::GetRandomCfg(Environment* _env,shared_ptr<BoundingBox> _bb) {
+  Cfg::GetRandomCfg(_env,_bb);
+}
+
+void Cfg_free_tree::GetRandomCfg(Environment* _env) {
+  GetRandomCfg(_env, _env->GetBoundingBox());
 }
 
 const char* Cfg_free_tree::GetName() const {
@@ -144,16 +148,19 @@ void Cfg_free_tree::GetRandomCfg(double R, double rStep){
   }
 }
 
-void Cfg_free_tree::GetRandomCfg_CenterOfMass(Environment *env) {
+void Cfg_free_tree::GetRandomCfg_CenterOfMass(Environment *_env,shared_ptr<BoundingBox> _bb) {
   // this is not EXACTLY accurate, ok with most cases ... TO DO
   // To be accurate, one has to make sure every link is inside the given BB,
   // but here only the base link is taken care of. It is almost fine since
-  // a little 'bigger' BB will contain all links.
-  
-  shared_ptr<BoundingBox> boundingBox = env->GetBoundingBox();
+  // a little 'bigger' BB will contain all links.  
+
   m_v.clear();
   for (int i = 0 ; i < m_dof ; ++i)
-    m_v.push_back(boundingBox->GetRandomValueInParameter(i));
+    m_v.push_back(_bb->GetRandomValueInParameter(i));
+}
+
+void Cfg_free_tree::GetRandomCfg_CenterOfMass(Environment* _env) {
+  GetRandomCfg_CenterOfMass(_env, _env->GetBoundingBox());
 }
 
 

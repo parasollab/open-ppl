@@ -188,8 +188,12 @@ bool Cfg_2D::ConfigEnvironment(Environment* env) const {
   return true;
 }
 
-void Cfg_2D::GetRandomCfg(Environment* env) {
-  Cfg::GetRandomCfg(env);
+void Cfg_2D::GetRandomCfg(Environment* _env,shared_ptr<BoundingBox> _bb) {
+  Cfg::GetRandomCfg(_env,_bb);
+}
+
+void Cfg_2D::GetRandomCfg(Environment* _env) {
+  GetRandomCfg(_env, _env->GetBoundingBox());
 }
 
 void Cfg_2D::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
@@ -219,13 +223,16 @@ void Cfg_2D::GetRandomCfg(double R, double rStep){
   setPos(Point2d(m_v[0], m_v[1]));
 }
 
-void Cfg_2D::GetRandomCfg_CenterOfMass(Environment *env) {
-  shared_ptr<BoundingBox> boundingBox = env->GetBoundingBox();
+void Cfg_2D::GetRandomCfg_CenterOfMass(Environment *_env, shared_ptr<BoundingBox> _bb) {
   m_v.clear();
   
   for(int i=0; i<m_dof; ++i)
-    m_v.push_back(boundingBox->GetRandomValueInParameter(i));
+    m_v.push_back(_bb->GetRandomValueInParameter(i));
 
   setPos(Point2d(m_v[0], m_v[1]));
+}
+
+void Cfg_2D::GetRandomCfg_CenterOfMass(Environment *_env) {
+  GetRandomCfg_CenterOfMass(_env, _env->GetBoundingBox());
 }
 

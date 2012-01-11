@@ -396,9 +396,9 @@ GetRandomCfg(double R, double rStep) {
 
 void 
 Cfg_reach_cc::
-GetRandomCfg_CenterOfMass(Environment* env) {
+GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<BoundingBox> _bb) {
   for(int i=0; i<6; ++i)
-    m_v[i] = env->GetBoundingBox()->GetRandomValueInParameter(i);
+    m_v[i] = _bb->GetRandomValueInParameter(i);
   //fix to xz plane:
   //m_v[1] = 0;
   //m_v[3] = 0;
@@ -414,6 +414,10 @@ GetRandomCfg_CenterOfMass(Environment* env) {
   link_tree->ExportTreeLinkLength(link_lengths, link_orientations);
 
   StoreData();
+}
+
+void Cfg_reach_cc::GetRandomCfg_CenterOfMass(Environment *_env) {
+  GetRandomCfg_CenterOfMass(_env, _env->GetBoundingBox());
 }
 
 void

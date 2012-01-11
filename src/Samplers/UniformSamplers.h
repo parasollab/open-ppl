@@ -24,7 +24,7 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
 
     void ParseXML(XMLNodeReader& _node) {}
 
-    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       bool generated = false;
       int attempts = 0;
 
@@ -32,8 +32,8 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
         _stats.IncNodes_Attempted();
         attempts++;
         CFG tmp;
-        tmp.GetRandomCfg(_env);
-        if(tmp.InBoundingBox(_env)) {
+        tmp.GetRandomCfg(_env,_bb);
+        if(tmp.InBoundingBox(_env,_bb)) {
           _stats.IncNodes_Generated();
           generated = true;
           _cfgOut.push_back(tmp);
@@ -43,6 +43,10 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
 
       return generated;
     }
+
+   virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+     return Sampler(_env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
+   }
 };
 
 
@@ -76,7 +80,7 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG> {
     }
 
   protected:
-    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::SampleImpl()";
       ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
@@ -88,8 +92,8 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG> {
         _stats.IncNodes_Attempted();
         attempts++;
         CFG tmp;
-        tmp.GetRandomCfg(_env);
-        if(tmp.InBoundingBox(_env)) {
+        tmp.GetRandomCfg(_env,_bb);
+        if(tmp.InBoundingBox(_env,_bb)) {
           if(vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, 
                          _stats, cdInfo, true, &callee)) {
             _stats.IncNodes_Generated();
@@ -102,6 +106,10 @@ class UniformRandomFreeSampler : public SamplerMethod<CFG> {
       } while (!generated && (attempts < _maxAttempts));
 
       return generated;
+    }
+
+    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+      return  Sampler(_env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
     }
 };
 

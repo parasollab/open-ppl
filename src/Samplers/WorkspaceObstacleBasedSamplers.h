@@ -217,7 +217,7 @@ class WorkspaceObstacleBasedSampler : public ObstacleBasedSampler<CFG>
    return env->GetMultiBody(obstacleIndex);// choose a multiBody randomly
  }
  
-  virtual CFG ChooseASample(CFG cfg_in, Environment* env)
+  virtual CFG ChooseASample(CFG cfg_in, Environment* env, shared_ptr<BoundingBox> _bb)
   {
     shared_ptr<MultiBody> mBody = initializeBody(env);
     bool isFreeBody = false;

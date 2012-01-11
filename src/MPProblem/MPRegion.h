@@ -36,7 +36,7 @@ class MPRegion : public Environment {
   vector<VID> AddToRoadmap(vector<CFG >& in_Cfgs);
   vector<VID> AddToBlockRoadmap(vector<CFG >& in_Cfgs);
   void WriteRoadmapForVizmo();
-  void WriteRoadmapForVizmo(ostream& out_os, vector<BoundingBox*>* bboxes, bool block);
+  void WriteRoadmapForVizmo(ostream& out_os, vector<shared_ptr<BoundingBox> >* bboxes, bool block);
   
   ~MPRegion();
 
@@ -216,13 +216,13 @@ WriteRoadmapForVizmo() {
 };
 template <class CFG, class WEIGHT>
 void MPRegion<CFG,WEIGHT>::
-WriteRoadmapForVizmo(ostream& myofstream, vector<BoundingBox*>* bboxes = NULL, bool block = false) {
+WriteRoadmapForVizmo(ostream& myofstream, vector<shared_ptr<BoundingBox> >* bboxes = NULL, bool block = false) {
   myofstream << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
   myofstream << endl << "#####PREAMBLESTART#####";
   myofstream << endl << "../obprm -f " << GetMPProblem()->GetEnvironment()->GetEnvFileName() << " ";//commandLine;
   myofstream << " -bbox "; GetBoundingBox()->Print(myofstream, ',', ',');
   if(bboxes!=NULL){
-     typedef vector<BoundingBox*>::iterator BIT;
+     typedef vector<shared_ptr<BoundingBox> >::iterator BIT;
      for(BIT bit = bboxes->begin(); bit!=bboxes->end(); bit++){
         myofstream << " -bbox "; (*bit)->Print(myofstream, ',', ',');
      }
@@ -252,7 +252,6 @@ WriteRoadmapForVizmo(ostream& myofstream, vector<BoundingBox*>* bboxes = NULL, b
   else 
    write_graph(*(GetBlockRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
 }
-
 
 
 

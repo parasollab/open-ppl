@@ -70,7 +70,8 @@ public:
 
   virtual void GetRandomCfg(double R, double rStep);
   virtual void GetRandomCfg(Environment *env);
-  
+  virtual void GetRandomCfg(Environment *env,shared_ptr<BoundingBox> bb);
+
   virtual void GetRandomRay(double incr, Environment* env, shared_ptr< DistanceMetricMethod> dm);
   
   virtual void add(const Cfg&, const Cfg&);
@@ -124,7 +125,8 @@ public:
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
   virtual void GetRandomCfg_CenterOfMass(Environment* env);
-  
+  virtual void GetRandomCfg_CenterOfMass(Environment* env,shared_ptr<BoundingBox> bb);
+
  private:
   Point2d p;
 

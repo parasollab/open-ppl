@@ -52,7 +52,7 @@ class GridSampler : public SamplerMethod<CFG> {
     _os << endl;
   }
 
-  virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+  virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
     // When using grid sampler, set the TestEval to a number 
     // that is a no more than 70-80% of the total number of 
     // possible grid points. Otherwise a very long time may pass
@@ -69,14 +69,14 @@ class GridSampler : public SamplerMethod<CFG> {
 
       CFG tmp = _cfgIn;
       if(tmp==CFG())
-        tmp.GetRandomCfg(_env);
+        tmp.GetRandomCfg(_env,_bb);
 
       for (map<size_t, size_t>::iterator it=m_numPoints.begin() ; it != m_numPoints.end(); it++ ) {
         int index = it->first;
         int numPoints = it->second;
 
-        double min = _env->GetBoundingBox()->GetRange(index).first; 
-        double max = _env->GetBoundingBox()->GetRange(index).second;
+        double min = _bb->GetRange(index).first; 
+        double max = _bb->GetRange(index).second;
 
         double givenp = tmp.GetData()[index];
 
@@ -101,7 +101,7 @@ class GridSampler : public SamplerMethod<CFG> {
         tmp.SetSingleParam(index,gridp);
       }
 
-      bool tmpFree = tmp.InBoundingBox(_env) && vc->IsValid(vc->GetVCMethod(m_vcm), tmp, _env, _stats, cdInfo, true, &callee);
+      bool tmpFree = tmp.InBoundingBox(_env,_bb) && vc->IsValid(vc->GetVCMethod(m_vcm), tmp, _env, _stats, cdInfo, true, &callee);
 
       if(tmpFree){
         _cfgOut.push_back(tmp);
@@ -111,6 +111,11 @@ class GridSampler : public SamplerMethod<CFG> {
     } while (!generated && (attempts < _maxAttempts));
 
     return generated;
+  }
+
+  virtual bool Sampler(Environment* _env,  StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, 
+                       CFG& _cfgCol, int _maxAttempts){   
+    return Sampler( _env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
   }
 };
 

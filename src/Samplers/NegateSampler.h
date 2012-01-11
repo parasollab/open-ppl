@@ -30,12 +30,17 @@ class NegateSampler : public SamplerMethod<CFG> {
       samplingMethod = _node.stringXMLParameter("Method", true, "", "Sampling method to collect collision nodes for");
     }
   
-    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, 
+                         CFG& _cfgCol, int _maxAttempts) {
       this->GetMPProblem()->GetValidityChecker()->ToggleValidity();
-      bool result = this->GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(samplingMethod)->Sampler(_env, _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
+      bool result = this->GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(samplingMethod)->Sampler(_env, _bb, _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
       this->GetMPProblem()->GetValidityChecker()->ToggleValidity();
       return result;
     }
+
+   virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+     return Sampler(_env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
+   }
 };
 
 #endif

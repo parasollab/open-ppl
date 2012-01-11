@@ -36,7 +36,7 @@ public:
   virtual bool ConfigEnvironment(Environment*) const;
 
   virtual void GetRandomCfg(Environment* env);
-
+  virtual void GetRandomCfg(Environment *env,shared_ptr<BoundingBox> bb);
  protected:
   static int NumofRobots;
   

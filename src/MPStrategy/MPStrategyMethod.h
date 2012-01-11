@@ -17,6 +17,8 @@ class MPStrategyMethod : public MPBaseObject {
   public:
     MPStrategyMethod(MPSMContainer& _cont) : m_baseSeed(_cont.m_seed), m_baseFilename(_cont.m_baseFilename) {}
     MPStrategyMethod(XMLNodeReader& _node, MPProblem* _problem) : MPBaseObject(_node, _problem) {
+      if(m_boundary==NULL)
+        m_boundary = GetMPProblem()->GetEnvironment()->GetBoundingBox();
       ParseXML(_node);
     };
     virtual ~MPStrategyMethod() {}
@@ -44,12 +46,13 @@ class MPStrategyMethod : public MPBaseObject {
     virtual void PrintOptions(ostream& _os)=0;
 
     string GetBaseFilename(){return m_baseFilename;}
+    void setBoundary(shared_ptr<BoundingBox> bb){m_boundary=bb;};
     long GetBaseSeed() {return m_baseSeed;} 
   protected:
     ClockClass m_strategyClock;
     typedef RoadmapGraph<CfgType, WeightType>::GRAPH GRAPH;
     typedef RoadmapGraph<CfgType, WeightType>::VID VID; 
-
+    shared_ptr<BoundingBox> m_boundary; 
 
   private:
     long m_baseSeed;

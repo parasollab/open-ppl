@@ -294,16 +294,16 @@ double Cfg::OrientationMagnitude() const {
 
 // tests whether or not robot in this configuration has every vertex inside
 // the environment specified bounding box
-bool Cfg::InBoundingBox(Environment* _env) const {
-  shared_ptr<BoundingBox> bb =  _env->GetBoundingBox();
+bool Cfg::InBoundingBox(Environment* _env,shared_ptr<BoundingBox> _bb) const {
+  //shared_ptr<BoundingBox> bb =  _env->GetBoundingBox();
 
-  if(!bb->IfSatisfiesConstraints(m_v)) 
+  if(!_bb->IfSatisfiesConstraints(m_v)) 
     return false;
 
   // @todo: if there are multiple robots, this needs to be changed.
   shared_ptr<MultiBody> robot = _env->GetMultiBody(_env->GetRobotIndex());  
 
-  if (bb->GetClearance(GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
+  if (_bb->GetClearance(GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
     ConfigEnvironment(_env); // Config the Environment(robot indeed).
 
@@ -313,7 +313,7 @@ bool Cfg::InBoundingBox(Environment* _env) const {
       GMSPolyhedron &bb_poly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
       bool bbox_check = true;
       for(vector<Vector3D>::const_iterator V = bb_poly.vertexList.begin(); V != bb_poly.vertexList.end(); ++V)
-	if(!bb->IfSatisfiesConstraints(worldTransformation * (*V))) {
+	if(!_bb->IfSatisfiesConstraints(worldTransformation * (*V))) {
 	  bbox_check = false;
 	  break;
 	}
@@ -322,12 +322,16 @@ bool Cfg::InBoundingBox(Environment* _env) const {
       
       GMSPolyhedron &poly = robot->GetFreeBody(m)->GetPolyhedron();
       for(vector<Vector3D>::const_iterator V = poly.vertexList.begin(); V != poly.vertexList.end(); ++V)
-        if(!bb->IfSatisfiesConstraints(worldTransformation * (*V)))
+        if(!_bb->IfSatisfiesConstraints(worldTransformation * (*V)))
 	  return false;      
     }
   }
 
   return true; 
+}
+
+bool Cfg::InBoundingBox(Environment* _env) const {
+  return InBoundingBox(_env,_env->GetBoundingBox());
 }
 
 void Cfg::GetResolutionCfg(Environment* _env) {
@@ -656,7 +660,7 @@ void Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
 
 // generates random configuration where workspace robot's EVERY VERTEX
 // is guaranteed to lie within the environment specified bounding box
-void Cfg::GetRandomCfg(Environment* _env, int _maxTries) {
+void Cfg::GetRandomCfg(Environment* _env, shared_ptr<BoundingBox> _bb, int _maxTries) {
   
   // Probably should do something smarter than 3 strikes and exit.
   // eg, if it fails once, check size of bounding box vs robot radius
@@ -664,9 +668,9 @@ void Cfg::GetRandomCfg(Environment* _env, int _maxTries) {
   // box specified
   
   while (_maxTries-- > 0) {
-    this->GetRandomCfg_CenterOfMass(_env);
+    this->GetRandomCfg_CenterOfMass(_env,_bb);
    
-    if (this->InBoundingBox(_env))
+    if (this->InBoundingBox(_env,_bb))
       return;
   }//endwhile
   
@@ -675,16 +679,24 @@ void Cfg::GetRandomCfg(Environment* _env, int _maxTries) {
   cout << "\n\nERROR: GetRandomCfg not able to find anything in bounding box."
        <<   "\n       robot radius is "
        << _env->GetMultiBody(_env->GetRobotIndex())->GetBoundingSphereRadius();
-  (_env->GetBoundingBox())->Print(cout);
+  _bb->Print(cout);
   exit(-1);
+}
+
+void Cfg::GetRandomCfg(Environment* _env, int _maxTries) {
+  GetRandomCfg( _env, _env->GetBoundingBox(), _maxTries);
 }
 
 
 
-// ditto, but with a default number of tries (10)
-void Cfg::GetRandomCfg(Environment* _env) {
+// ditto, but with a default number of tries (100)
+void Cfg::GetRandomCfg(Environment* _env,shared_ptr<BoundingBox> _bb) {
   int default_maxTries = 100;
-  this->GetRandomCfg(_env, default_maxTries);
+  this->GetRandomCfg(_env, _bb, default_maxTries);
+}
+
+void Cfg::GetRandomCfg(Environment* _env) {
+  GetRandomCfg(_env,_env->GetBoundingBox());
 }
 
 	

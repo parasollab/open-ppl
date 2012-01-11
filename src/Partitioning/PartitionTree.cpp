@@ -188,9 +188,9 @@ min, vector<vector<double> >& max){
       }
       eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(newVIDS[newVIDS.size()-1],newVIDS[0],0);
    }
-   vector<BoundingBox*>* bboxes = new vector<BoundingBox*>();
+   vector<shared_ptr<BoundingBox> >* bboxes = new vector<shared_ptr<BoundingBox> >();
    for(unsigned int i = 0; i<min.size(); i++){
-      BoundingBox* bb = new BoundingBox(6,3);
+      shared_ptr<BoundingBox> bb;
       bb->SetParameter(0, min[i][0], max[i][0]);
       bb->SetParameter(1, min[i][1], max[i][1]);
       bb->SetParameter(2, min[i][2], max[i][2]);

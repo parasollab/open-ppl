@@ -49,14 +49,16 @@ class Cfg_reach_cc : public Cfg_free_tree {
   virtual bool ConfigEnvironment(Environment*) const;
 
   virtual void GetRandomCfg(double R, double rStep);
-  virtual void GetRandomCfg(Environment* env) {
-    Cfg_free_tree::GetRandomCfg(env);
+  virtual void GetRandomCfg(Environment* env,shared_ptr<BoundingBox> bb) {
+    Cfg_free_tree::GetRandomCfg(env,bb);
   }
+  virtual void GetRandomCfg(Environment* env); 
   /*
   virtual void GetRandomCfg(Environment* env, DistanceMetric* _dm, 
                             double length);
   */
   virtual void GetRandomCfg_CenterOfMass(Environment* env);
+  virtual void GetRandomCfg_CenterOfMass(Environment* env,shared_ptr<BoundingBox> bb);
   virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm);
 
   /*

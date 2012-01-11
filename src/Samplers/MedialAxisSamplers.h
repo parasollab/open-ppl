@@ -80,7 +80,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       _os << "\thistoryLength = " << m_historyLength << endl;
     }
 
-    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
       string call("MedialAxisSampler::sampler()");
       bool generated = false;
       int attempts = 0;
@@ -95,10 +95,10 @@ class MedialAxisSampler : public SamplerMethod<CFG>
         // If just a new cfg, get a random CFG
         CFG tmpCfg = _cfgIn;
         if(tmpCfg == blankCfg)
-          tmpCfg.GetRandomCfg(_env);
+          tmpCfg.GetRandomCfg(_env,_bb);
 
         // If pushed properly, increment generated
-        if(PushToMedialAxis(this->GetMPProblem(), _env, tmpCfg, _stats, m_vcLabel, m_dmLabel, m_exactClearance, m_clearanceRays, 
+        if(PushToMedialAxis(this->GetMPProblem(), _env, _bb, tmpCfg, _stats, m_vcLabel, m_dmLabel, m_exactClearance, m_clearanceRays, 
                             m_exactPenetration, m_penetrationRays, m_useBBX, m_epsilon, m_historyLength, this->m_debug)) {
           if(vc->IsValid(vc->GetVCMethod(m_vcLabel), tmpCfg, _env, _stats, cdInfo, true, &call)) {
             _stats.IncNodes_Generated();
@@ -108,6 +108,10 @@ class MedialAxisSampler : public SamplerMethod<CFG>
         }
       } while (!generated && (attempts < _maxAttempts));
       return generated;
+    }
+
+    virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+      return Sampler(_env, _env->GetBoundingBox(), _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
     }
 };
 

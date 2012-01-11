@@ -71,54 +71,104 @@ class SamplerMethod : public MPBaseObject {
     virtual back_insert_iterator<vector<CFG> > 
     Sample(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts, 
            back_insert_iterator<vector<CFG> > _result, back_insert_iterator<vector<CFG> > _collision) {
-      return SampleImpl(_env, _stats, _numNodes, _maxAttempts, _result, _collision);
+      return Sample(_env, _env->GetBoundingBox(), _stats, _numNodes, _maxAttempts, _result, _collision);
+    }
+
+    virtual back_insert_iterator<vector<CFG> > 
+    Sample(Environment* _env, shared_ptr<BoundingBox> _bb,  StatClass& _stats, int _numNodes, int _maxAttempts, 
+           back_insert_iterator<vector<CFG> > _result, back_insert_iterator<vector<CFG> > _collision) {
+      return SampleImpl(_env, _bb, _stats, _numNodes, _maxAttempts, _result, _collision);
     }
 
     virtual back_insert_iterator<vector<CFG> > 
     Sample(Environment* _env, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
            back_insert_iterator<vector<CFG> > _result, back_insert_iterator<vector<CFG> > _collision) {
-      return SampleImpl(_env, _stats, _first, _last, _maxAttempts, _result, _collision);
-    }   
+      return Sample(_env, _env->GetBoundingBox(), _stats, _first, _last, _maxAttempts, _result, _collision);
+    }
 
     virtual back_insert_iterator<vector<CFG> > 
+    Sample(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
+           back_insert_iterator<vector<CFG> > _result, back_insert_iterator<vector<CFG> > _collision) {
+      return SampleImpl(_env, _bb, _stats, _first, _last, _maxAttempts, _result, _collision);
+    }  
+
+   virtual back_insert_iterator<vector<CFG> > 
     Sample(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts, 
+           back_insert_iterator<vector<CFG> > _result) { 
+      return Sample(_env, _env->GetBoundingBox(), _stats, _numNodes, _maxAttempts, _result);
+    }
+
+    virtual back_insert_iterator<vector<CFG> > 
+    Sample(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, int _numNodes, int _maxAttempts, 
            back_insert_iterator<vector<CFG> > _result) {
       vector<CFG> _collision;
-      return SampleImpl(_env, _stats, _numNodes, _maxAttempts, _result, back_inserter(_collision));
+      return SampleImpl(_env, _bb, _stats, _numNodes, _maxAttempts, _result, back_inserter(_collision));
     }
 
     virtual back_insert_iterator<vector<CFG> > 
     Sample(Environment* _env, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
            back_insert_iterator<vector<CFG> > _result) {
+      return Sample(_env, _env->GetBoundingBox(), _stats, _first, _last, _maxAttempts, _result);
+     }
+
+    virtual back_insert_iterator<vector<CFG> > 
+    Sample(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
+           back_insert_iterator<vector<CFG> > _result) {
       vector<CFG> _collision;
-      return SampleImpl(_env, _stats, _first, _last, _maxAttempts, _result, back_inserter(_collision));
+      return SampleImpl(_env, _bb, _stats, _first, _last, _maxAttempts, _result, back_inserter(_collision));
     }   
 
     //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
     virtual typename vector<CFG>::iterator 
     Sample(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts,
            typename vector<CFG>::iterator _result, typename vector<CFG>::iterator _collision) {
-      return SampleImpl(_env, _stats, _numNodes, _maxAttempts, _result, _collision);
+      return Sample(_env, _env->GetBoundingBox(), _stats, _numNodes, _maxAttempts, _result, _collision);
+    }
+
+   virtual typename vector<CFG>::iterator 
+    Sample(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, int _numNodes, int _maxAttempts,
+           typename vector<CFG>::iterator _result, typename vector<CFG>::iterator _collision) {
+      return SampleImpl(_env, _bb, _stats, _numNodes, _maxAttempts, _result, _collision);
     }
 
     virtual typename vector<CFG>::iterator 
     Sample(Environment* _env, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
            typename vector<CFG>::iterator _result, typename vector<CFG>::iterator _collision) {
-      return SampleImpl(_env, _stats, _first, _last, _maxAttempts, _result, _collision);
+      return Sample(_env, _env->GetBoundingBox(), _stats, _first, _last, _maxAttempts, _result, _collision);
+    }
+
+    virtual typename vector<CFG>::iterator 
+    Sample(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, typename vector<CFG>::iterator _first,
+           typename vector<CFG>::iterator _last,   int _maxAttempts,
+           typename vector<CFG>::iterator _result, typename vector<CFG>::iterator _collision) {
+      return SampleImpl(_env, _bb, _stats, _first, _last, _maxAttempts, _result, _collision);
     }
 
     virtual typename vector<CFG>::iterator 
     Sample(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts,
+           typename vector<CFG>::iterator _result) {      
+      return Sample(_env, _env->GetBoundingBox(), _stats, _numNodes, _maxAttempts, _result);
+    }
+
+    virtual typename vector<CFG>::iterator 
+    Sample(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, int _numNodes, int _maxAttempts,
            typename vector<CFG>::iterator _result) {
       vector<CFG> _collision(_maxAttempts * _numNodes);
-      return SampleImpl(_env, _stats, _numNodes, _maxAttempts, _result, _collision.begin());
+      return SampleImpl(_env, _bb, _stats, _numNodes, _maxAttempts, _result, _collision.begin());
     }
 
     virtual typename vector<CFG>::iterator 
     Sample(Environment* _env, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
+           typename vector<CFG>::iterator _result) {      
+      return Sample(_env, _env->GetBoundingBox(), _stats, _first, _last, _maxAttempts, _result);
+    }
+
+    virtual typename vector<CFG>::iterator 
+    Sample(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, typename vector<CFG>::iterator _first,
+           typename vector<CFG>::iterator _last, int _maxAttempts,
            typename vector<CFG>::iterator _result) {
       vector<CFG> _collision(_maxAttempts * distance(_first, _last));
-      return SampleImpl(_env, _stats, _first, _last, _maxAttempts, _result, _collision.begin());
+      return SampleImpl(_env, _bb, _stats, _first, _last, _maxAttempts, _result, _collision.begin());
     }
 
   private:
@@ -126,13 +176,21 @@ class SamplerMethod : public MPBaseObject {
     OutputIterator 
     SampleImpl(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts, 
             OutputIterator _result, OutputIterator _collision) {
+
+      return SampleImpl(_env, _env->GetBoundingBox(),  _stats, _numNodes, _maxAttempts, _result, _collision);
+    }
+
+    template <typename OutputIterator>
+    OutputIterator 
+    SampleImpl(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, int _numNodes, int _maxAttempts, 
+            OutputIterator _result, OutputIterator _collision) {
       CFG myCfg;
       vector<CFG> out1;
       CFG collisionOut;
       for (int i =0; i< _numNodes; i++) {
-        myCfg.GetRandomCfg(_env);
-        while(!this->Sampler(_env, _stats, myCfg, out1, collisionOut, _maxAttempts))
-          myCfg.GetRandomCfg(_env);
+        myCfg.GetRandomCfg(_env,_bb);
+        while(!this->Sampler(_env, _bb, _stats, myCfg, out1, collisionOut, _maxAttempts))
+          myCfg.GetRandomCfg(_env,_bb);
       }
       _result = copy(out1.begin(), out1.end(), _result);
       *_collision++ = collisionOut;
@@ -141,13 +199,22 @@ class SamplerMethod : public MPBaseObject {
 
     template <typename InputIterator, typename OutputIterator>
     OutputIterator 
-    SampleImpl(Environment* _env, StatClass& _stats, InputIterator _first, InputIterator _last, int _maxAttempts,
+    SampleImpl(Environment* _env,  StatClass& _stats, InputIterator _first, InputIterator _last, int _maxAttempts,
+            OutputIterator _result, OutputIterator _collision) {
+      return SampleImpl( _env, _env->GetBoundingBox(), _stats, _first, _last, _maxAttempts,
+            _result, _collision);
+
+    }
+
+    template <typename InputIterator, typename OutputIterator>
+    OutputIterator 
+    SampleImpl(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, InputIterator _first, InputIterator _last, int _maxAttempts,
             OutputIterator _result, OutputIterator _collision)  
     {
       while(_first != _last) {
         vector<CFG> resultCfg; 
         CFG collisionCfg;
-        if(this->Sampler(_env, _stats, *_first, resultCfg, collisionCfg, _maxAttempts)){
+        if(this->Sampler(_env, _bb, _stats, *_first, resultCfg, collisionCfg, _maxAttempts)){
           _result = copy(resultCfg.begin(), resultCfg.end(), _result);
           *_collision++ = collisionCfg;
         }
@@ -158,6 +225,7 @@ class SamplerMethod : public MPBaseObject {
   
   protected:
     virtual bool Sampler(Environment* _env, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) = 0;
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) = 0;
 };
 
 #endif

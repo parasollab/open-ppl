@@ -429,6 +429,8 @@ bool RRTExpand(MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _s
 //***********************************//
 bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClass& _stats, string _vc, string _dm, 
     bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, int _hLen, bool _debug); 
+bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox> _bb, CfgType& _cfg, StatClass& _stats, string _vc, string _dm, 
+    bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, int _hLen, bool _debug); 
 
 //***************************************************************//
 // Push From Inside Obstacle                                     //
@@ -438,6 +440,8 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClas
 //***************************************************************//
 bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     string _vc, string _dm, bool _pExact, int _penetration, bool _debug);	
+bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
+    string _vc, string _dm, bool _pExact, int _penetration, bool _debug);
 
 //***************************************************************//
 // Push Cfg To Medial Axis                                       //
@@ -447,6 +451,8 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
 //***************************************************************//
 bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, StatClass& _stats,
     string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, bool _debug);
+bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
+    string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, bool _debug);
 
 //*********************************************************************//
 // Calculate Collision Information                                     //
@@ -454,6 +460,8 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, StatCl
 // for the medial axis computation, calls either approx or exact       //
 //*********************************************************************//
 bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
+    string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX);
+bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, 
     string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX);
 
 //*********************************************************************//
@@ -464,6 +472,8 @@ bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
 //*********************************************************************//
 bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     CDInfo& _cdInfo, string _vc, bool _useBBX);
+bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
+    CDInfo& _cdInfo, string _vc, bool _useBBX);
 
 //*********************************************************************//
 // Get Approximate Collision Information Function                      //
@@ -473,6 +483,8 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Sta
 //*********************************************************************//
 bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX);	
+bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
+    CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX);
 
 #endif
 

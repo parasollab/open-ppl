@@ -381,7 +381,7 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
       if(m_debug) cout << "\n\t";
 
       do{
-        pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,
+        pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),m_boundary,*pStatClass,
             inNodes.begin(),inNodes.end(),git->second.second, back_inserter(outNodes));
       }while(outNodes.size()<=0&&m_currentIteration==1);
 
@@ -408,7 +408,7 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
     nodeGenSubClock.StartClock(generatorClockName.str().c_str());
 
     if(m_debug) cout << "\n\t";
-    pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),*pStatClass,inNodes.begin(),inNodes.end(),m_probGenerationLabels[NextNodeGen].second, back_inserter(outNodes));
+    pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),m_boundary,*pStatClass,inNodes.begin(),inNodes.end(),m_probGenerationLabels[NextNodeGen].second, back_inserter(outNodes));
 
     if (m_debug) {
       cout << _region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
