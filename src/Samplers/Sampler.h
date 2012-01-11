@@ -18,7 +18,7 @@
 #include "MPUtils.h"
 #include "UniformSamplers.h"
 #include "MedialAxisSamplers.h"
-#include "GaussianSamplers.h"
+#include "GaussianSampler.h"
 #include "BridgeTestSampler.h"
 #include "ObstacleBasedSamplers.h"
 #include "WorkspaceObstacleBasedSamplers.h"
