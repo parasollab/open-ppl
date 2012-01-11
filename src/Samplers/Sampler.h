@@ -42,7 +42,6 @@ class Environment;
 namespace pmpl_detail { //hide SamplerMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
     UniformRandomSampler<CfgType>,
-    UniformRandomFreeSampler<CfgType>,
     GaussianSampler<CfgType>,
     BridgeTestSampler<CfgType>,
     ObstacleBasedSampler<CfgType>,

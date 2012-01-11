@@ -1,5 +1,5 @@
-#ifndef UNIFORMSAMPLERS_H_
-#define UNIFORMSAMPLERS_H_
+#ifndef UNIFORMSAMPLER_H_
+#define UNIFORMSAMPLER_H_
 
 #include "SamplerMethod.h"
 
@@ -10,63 +10,25 @@ template <typename CFG> class ValidityChecker;
 
 template <typename CFG>
 class UniformRandomSampler : public SamplerMethod<CFG> {
-  public:
-    UniformRandomSampler() {
-      this->SetName("UniformRandomSampler");
-    }
-
-    UniformRandomSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
-      this->SetName("UniformRandomSampler");
-      ParseXML(_node);
-    }
-
-    ~UniformRandomSampler() {}
-
-    void ParseXML(XMLNodeReader& _node) {}
-
-    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
-      bool generated = false;
-      int attempts = 0;
-
-      do {
-        _stats.IncNodes_Attempted();
-        attempts++;
-        CFG tmp;
-        tmp.GetRandomCfg(_env,_bb);
-        if(tmp.InBoundingBox(_env,_bb)) {
-          _stats.IncNodes_Generated();
-          generated = true;
-          _cfgOut.push_back(tmp);
-          _cfgCol = tmp;
-        }
-      } while (!generated && (attempts < _maxAttempts));
-
-      return generated;
-    }  
-};
-
-
-template <typename CFG>
-class UniformRandomFreeSampler : public SamplerMethod<CFG> {
   private:
     std::string m_vcLabel;
 
   public:
-    UniformRandomFreeSampler() : m_vcLabel("") {
-      this->SetName("UniformRandomFreeSampler");
+    UniformRandomSampler() : m_vcLabel("") {
+      this->SetName("UniformRandomSampler");
     }
 
-    UniformRandomFreeSampler(string _vcLabel) : m_vcLabel(_vcLabel) {
-      this->SetName("UniformRandomFreeSampler");
+    UniformRandomSampler(string _vcLabel) : m_vcLabel(_vcLabel) {
+      this->SetName("UniformRandomSampler");
     } 
 
-    UniformRandomFreeSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
-      this->SetName("UniformRandomFreeSampler");
+    UniformRandomSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
+      this->SetName("UniformRandomSampler");
       ParseXML(_node);
       m_vcLabel = _node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
     }
 
-    ~UniformRandomFreeSampler() {}
+    ~UniformRandomSampler() {}
 
     void ParseXML(XMLNodeReader& _node) {}
 
