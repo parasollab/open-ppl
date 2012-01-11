@@ -9,6 +9,7 @@
 #include "MedialAxisClearanceValidity.h"
 #include "ComposeVC.hpp"
 #include "NegateValidity.hpp"
+#include "AlwaysTrueValidity.h"
 #include "boost/shared_ptr.hpp"
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,6 +48,9 @@ public:
         AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "NegateValidity") {
         VCMethodPtr vc(new NegateValidity<CFG>(*citr, in_pProblem));
+        AddVCMethod(vc->GetLabel(), vc);
+      } else if(citr->getName() == "AlwaysTrueValidity") {
+        VCMethodPtr vc(new AlwaysTrueValidity<CFG>(*citr, in_pProblem));
         AddVCMethod(vc->GetLabel(), vc);
       } else {
         citr->warnUnknownNode();
