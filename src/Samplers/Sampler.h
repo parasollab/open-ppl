@@ -16,7 +16,7 @@
 
 #include <boost/mpl/list.hpp>
 #include "MPUtils.h"
-#include "UniformSamplers.h"
+#include "UniformRandomSampler.h"
 #include "MedialAxisSamplers.h"
 #include "GaussianSampler.h"
 #include "BridgeTestSampler.h"

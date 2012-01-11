@@ -1,5 +1,5 @@
-#ifndef UNIFORMSAMPLER_H_
-#define UNIFORMSAMPLER_H_
+#ifndef UNIFORMRANDOMSAMPLER_H_
+#define UNIFORMRANDOMSAMPLER_H_
 
 #include "SamplerMethod.h"
 
