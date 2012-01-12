@@ -266,6 +266,7 @@ _IsConnected(Environment *_env, StatClass& Stats,
       if(!intermediate.InBoundingBox(_env) || 
           !vc->IsValid(vcm, intermediate, _env, Stats, cdInfo, true, &Callee)
         ) {
+        _col = intermediate;
         return false;
       }
     }
@@ -501,7 +502,6 @@ IsConnectedSLBinary(Environment *_env, StatClass& Stats,
         double positionRes, double orientationRes,  
         bool checkCollision, 
         bool savePath, bool saveFailedPath) {
-
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
   
