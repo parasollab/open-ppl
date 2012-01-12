@@ -157,14 +157,19 @@ PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
     _os << setw(15) << iter3->second << endl;
   }
 
-  _os<<"\n\n Local Planner Statistics:\n\n";
-  _os<< setw(40) << "Statistic"
+  //output for local planner statistics. Only output if map is populated
+  if(m_lpStats.size()>0){
+    _os<<"\n\n Local Planner Statistics:\n\n";
+    _os<< setw(40) << "Statistic"
       << setw(40) << "Value" << endl << endl;;
-  typedef map<string, double>::iterator LPSIT;
-  for(LPSIT lpsit=m_lpStats.begin(); lpsit!=m_lpStats.end(); lpsit++){
-    _os << setw(40) << lpsit->first
+    typedef map<string, double>::iterator LPSIT;
+    for(LPSIT lpsit=m_lpStats.begin(); lpsit!=m_lpStats.end(); lpsit++){
+      _os << setw(40) << lpsit->first
         << setw(40) << lpsit->second << endl;
+    }
   }
+
+  //output history statistics
   typedef map<string, vector<double> >::iterator HIT;
   for(HIT hit = m_histories.begin(); hit!=m_histories.end(); hit++){
     ofstream ofs((m_auxFileDest+"."+hit->first+".hist").c_str());
