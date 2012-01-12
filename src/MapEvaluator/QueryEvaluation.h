@@ -106,7 +106,7 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
   vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer > methods;
     
   if(m_vecStrNodeConnectionLabels.empty()) {
-    methods.push_back(ConnectMap<CfgType, WeightType>::NodeConnectionPointer(new NeighborhoodConnection<CfgType, WeightType>(1, 1, false, true, false)));
+    methods.push_back(ConnectMap<CfgType, WeightType>::NodeConnectionPointer(new NeighborhoodConnection<CfgType, WeightType>("", 1, 1, false, true, false)));
   }
   else
     for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)

@@ -43,7 +43,7 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
   
   //////////////////////
   // Constructors and Destructor
-  NeighborhoodConnection(int k = KCLOSEST, int m = MFAILURE, bool _count_failures = false, bool _unconnected = false, bool _random = false);
+  NeighborhoodConnection(string _nf, int k = KCLOSEST, int m = MFAILURE, bool _count_failures = false, bool _unconnected = false, bool _random = false);
   NeighborhoodConnection(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~NeighborhoodConnection();
  
@@ -133,9 +133,9 @@ class NeighborhoodConnection: public NodeConnectionMethod<CFG,WEIGHT> {
 
 
 template <class CFG, class WEIGHT>
-NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(int k, int m, bool _count_failures, bool _unconnected, bool _random) : 
+NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(string _nf, int k, int m, bool _count_failures, bool _unconnected, bool _random) : 
     NodeConnectionMethod<CFG,WEIGHT>(), 
-    m_k(k), m_fail(m), m_count_failures(_count_failures), m_unconnected(_unconnected), m_random(_random)
+    m_k(k), m_fail(m), m_count_failures(_count_failures), m_unconnected(_unconnected), m_random(_random), m_nf(_nf)
 {
   this->SetName("NeighborhoodConnection"); 
 }
