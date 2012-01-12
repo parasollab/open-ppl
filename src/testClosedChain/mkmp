@@ -1,7 +1,0 @@
-../closed_chain -f loop_20 -numofjoints 19 \
-	-cd RAPID -rdres 1 \
-	-dm reachable \
-	-gNodes BasicPRM  nodes 10 chunkSize 10 exact 1  \
-	-cNodes closest 5 \
-	-lp straightline binarySearch 0 \
-	-bbox_scale 1 -bbox [-100,100,-100,100,-100,100]
