@@ -76,9 +76,9 @@ template <class CFG, class WEIGHT>
 AStar<CFG, WEIGHT>::AStar(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 LocalPlannerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
   this->SetName("AStar");
-  vcMethod = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("Validity Test Method"));
-  n_tries = in_Node.numberXMLParameter(string("n_tries"), true, 0.5, 0.0, 10.0, string("n_tries"));
-  n_neighbors = in_Node.numberXMLParameter(string("n_neighbors"), true, 0.5, 0.0, 10.0, string("n_neighbors"));
+  vcMethod = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
+  n_tries = in_Node.numberXMLParameter("n_tries", true, 0, 0, 10, "n_tries");
+  n_neighbors = in_Node.numberXMLParameter("n_neighbors", true, 0, 0, 10, "n_neighbors");
 }
  
 template <class CFG, class WEIGHT> AStar<CFG, WEIGHT>::~AStar() {}
