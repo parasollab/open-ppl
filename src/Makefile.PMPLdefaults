@@ -220,7 +220,7 @@ PMPL_OBJS = \
 	DistanceMetric/DistanceMetrics.o \
 	ValidityChecker/CollisionDetection.o \
 	ValidityChecker/NodeClearanceValidity.o \
-  ValidityChecker/MedialAxisClearanceValidity.o \
+        ValidityChecker/MedialAxisClearanceValidity.o \
 	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
 	MPStrategy/MPStrategy.o \
@@ -240,7 +240,8 @@ ifeq (${parallel}, 0)
 	MPStrategy/EvaluateMapStrategy.o \
 	MPStrategy/ClosedChainStrategy.o \
 	MPStrategy/UAStrategy.o \
-	MapEvaluator/TestEvaluation.o \
+	MapEvaluator/NumNodesEvaluation.o \
+	MapEvaluator/NumEdgesEvaluation.o \
 	MapEvaluator/PrintMapEvaluation.o \
 	Partitioning/Partition.o \
 	Partitioning/PartitioningMethod.o \

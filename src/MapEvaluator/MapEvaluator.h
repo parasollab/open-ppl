@@ -6,7 +6,8 @@ using boost::shared_ptr;
 
 #include "MapEvaluationMethod.h"
 #include "MPRegionComparerMethod.h"
-#include "TestEvaluation.h"
+#include "NumNodesEvaluation.h"
+#include "NumEdgesEvaluation.h"
 #include "QueryEvaluation.h"
 #include "PrintMapEvaluation.h"
 #include "CoverageEvaluation.h"
@@ -66,8 +67,10 @@ class MapEvaluator : public MPBaseObject
     m_conditional_evaluators.clear();
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
     {
-      if (citr->getName() == "TestEvaluation")
-        m_conditional_evaluators.push_back(conditional_type(new TestEvaluation(*citr, in_pProblem)));
+      if (citr->getName() == "NumNodesEvaluation")
+        m_conditional_evaluators.push_back(conditional_type(new NumNodesEvaluation(*citr, in_pProblem)));
+      else if (citr->getName() == "NumEdgesEvaluation")
+        m_conditional_evaluators.push_back(conditional_type(new NumEdgesEvaluation(*citr, in_pProblem)));
       else if (citr->getName() == "QueryEvaluation")
         m_conditional_evaluators.push_back(conditional_type(new QueryEvaluation<CFG, WEIGHT>(*citr, in_pProblem))); 
       else if (citr->getName() == "PrintMapEvaluation")

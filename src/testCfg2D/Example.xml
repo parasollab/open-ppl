@@ -22,24 +22,24 @@
   </MPProblem>
   <MPStrategy>  
     <node_generation_methods>
-      <UniformRandomFreeSampler Label="UniformRandomFree" vc_method="cd"/>
+      <UniformRandomSampler Label="UniformRandom" vc_method="cd"/>
     </node_generation_methods>
     <connection_methods>
-      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl"/>
     </connection_methods>
     <lp_methods>
-      <StraightLine    Label="sl" length="0" binary_search="1" vc_method="cd" s="0.5" />
+      <StraightLine Label="sl" length="0" binary_search="1" vc_method="cd"/>
     </lp_methods>
     <MPEvaluator_methods>
       <MPRegionConditionalEvaluators>
-        <TestEvaluation Label="TestEval" size="100" dm_method="euclidean" lp_method="sl"/>
+        <NumNodesEvaluation Label="NodesEval" size="100"/>
       </MPRegionConditionalEvaluators>
     </MPEvaluator_methods>
     <MPStrategyMethod Controller="BasicPRM">
       <BasicPRM Label="BasicPRM" seed="1234567" filename="Basic" iterations="1" num_samples="10" dm_method="euclidean">
-        <node_generation_method Method="UniformRandomFree" Number="10"/>
+        <node_generation_method Method="UniformRandom" Number="1"/>
         <node_connection_method Method="Closest"/>
-        <evaluation_method Method="TestEval"/>
+        <evaluation_method Method="NodesEval"/>
       </BasicPRM>
     </MPStrategyMethod>
   </MPStrategy>
