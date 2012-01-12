@@ -81,10 +81,7 @@ class Sampler : private ElementSet<SamplerMethod<CFG> >, public MPBaseObject {
     ~Sampler() {}
     
     SamplerPointer GetMethod(string _label) {
-      SamplerPointer toReturn = ElementSet<SamplerMethod<CFG> >::GetElement(_label);
-      if(toReturn.get() == NULL) 
-        exit(-1);
-      return toReturn;
+      return ElementSet<SamplerMethod<CFG> >::GetElement(_label);
     }
   
     virtual void PrintOptions(ostream& _out) {

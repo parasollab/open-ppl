@@ -74,12 +74,7 @@ class LocalPlanners : private ElementSet<LocalPlannerMethod<CFG,WEIGHT> >, publi
   }
 
   LocalPlannerPointer GetLocalPlannerMethod(string in_strLabel) {
-    LocalPlannerPointer to_return = ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::GetElement(in_strLabel);
-      if ( to_return.get() == NULL ) {
-        cerr << "LocalPlanners::GetLocalPlannerMethod::ERROR: could not find " << in_strLabel << endl;
-        exit(-1);
-      }
-    return to_return;
+    return ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::GetElement(in_strLabel);
   }
 
   void AddLocalPlannerMethod(string in_strLabel, LocalPlannerPointer in_ptr) {

@@ -278,12 +278,13 @@ class ElementSet {
 
     map<string, FactoryType> m_universe;
     map<string, boost::shared_ptr<Element> > m_elements;
+    string m_default;
 
   public:
     typedef boost::shared_ptr<Element> MethodPointer;
 
     template <typename ElementTypeList>
-      ElementSet(ElementTypeList const& _etl) {
+      ElementSet(ElementTypeList const& _etl) : m_default("") {
         AddToUniverse(typename boost::mpl::begin<ElementTypeList>::type(), typename boost::mpl::end<ElementTypeList>::type());
       }
 
@@ -296,6 +297,8 @@ class ElementSet {
     }
 
     bool AddElement(string const& _str, boost::shared_ptr<Element> _e) {
+      if(m_elements.empty())
+        m_default = _str;
       if(m_elements.find(_e->GetLabel()) == m_elements.end())
         m_elements[_e->GetLabel()] = _e;
       else
@@ -304,7 +307,21 @@ class ElementSet {
     }
 
     boost::shared_ptr<Element> GetElement(string const& _name) {
-      return m_elements[_name];
+      boost::shared_ptr<Element> element;
+      if(_name == "") 
+        element = m_elements[m_default];
+      else
+        element = m_elements[_name];
+      if(element.get() == NULL) {
+        cerr << "\n\tError, requesting element with name \"" << _name << "\" which does not exist in the element list.\n";
+        cerr << "\t\tPossible choices are:";
+        for(typename map<string, boost::shared_ptr<Element> >::const_iterator E = m_elements.begin(); E != m_elements.end(); ++E)
+          if(E->second.get() != NULL)
+            cerr << " \"" << E->first << "\"";
+        cerr << "\n\texiting.\n";
+        exit(-1);
+      }
+      return element;
     }
 
     typename map<string, boost::shared_ptr<Element> >::const_iterator ElementsBegin() const { return m_elements.begin(); }
