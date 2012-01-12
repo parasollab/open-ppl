@@ -14,7 +14,7 @@
     <links_file filename="chain.tree" closed_chain="false"/>
     
     <distance_metrics>
-      <reachable Label="default"/>
+      <reachable Label="ReachableDistance"/>
     </distance_metrics>    
     
     <validity_test>
@@ -22,7 +22,7 @@
     </validity_test>
     
     <NeighborhoodFinder>
-      <BFNF Label="BFNF" dm_method="default"/>
+      <BFNF Label="BFNF" dm_method="ReachableDistance"/>
     </NeighborhoodFinder>
     
     <MPRegions/>
@@ -30,33 +30,22 @@
   </MPProblem>
   
   <MPStrategy iterations=1 gamma=0>  
-     <node_generation_methods>
-      <UniformRandomFreeSampler Label="UniformRandomFree" vc_method="cd" />
+    <node_generation_methods>
+      <UniformRandomSampler Label="UniformRandomFree" vc_method="cd" />
     </node_generation_methods>
     
     <connection_methods>
-      <NeighborhoodConnection Label="Closest" nf="BFNF" k="10" CheckIfSameCC="false" lp_method="sl"/>
-      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" nf="BFNF" lp_method="sl"/>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
     </connection_methods>
 
     <lp_methods>
       <StraightLine Label="sl" length="0" binary_search="0" vc_method="cd"/>
     </lp_methods>
     
-    <MPEvaluator_methods>
-      <MPRegionConditionalEvaluators>
-        <TestEvaluation Label="TestEval" size="1" />
-      </MPRegionConditionalEvaluators>
-    </MPEvaluator_methods>
-    
     <MPStrategyMethod Controller="PRM1">
-      <BasicPRM Label="PRM1" seed="1234567" filename="Basic" iterations="1" num_samples="10">
-        <node_generation_method Method="UniformRandomFree" Number="10"/>
+      <BasicPRM Label="PRM1" seed="1234567" filename="Basic" iterations="1">
+        <node_generation_method Method="UniformRandomFree" Number="20"/>
         <node_connection_method Method="Closest"/>
-        <!--
-        <component_connection_method Method="ConnectCCs"/>
-        -->
-        <evaluation_method Method="TestEval"/>
       </BasicPRM>
     </MPStrategyMethod>
     
