@@ -369,18 +369,18 @@ void HybridPRM::Finalize(int in_RegionID){
   pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(), GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_label)->GetDMMethod());
   string outStatname = base_filename+ ".stat";
   std::ofstream  stat_ofstream(outStatname.c_str());
+  stat_ofstream << "NodeGen+Connection Stats" << endl;
+  pStatClass->PrintAllStats(stat_ofstream, region->GetRoadmap());
   std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later
   std::cout.rdbuf(stat_ofstream.rdbuf());   // redirect destination of std::cout
-  cout << "NodeGen+Connection Stats" << endl;
-  pStatClass->PrintAllStats(region->GetRoadmap());
   cout << "Node Gen = " << NodeGenTotalTime << endl;
   Allstuff.StopPrintClock();
-  pStatClass->PrintFeatures();
   /*
   cout << "Query Stats" << endl;
   m_query_stat.PrintAllStats(region->GetRoadmap());
   */
   std::cout.rdbuf(sbuf);  // restore original stream buffer 
+  pStatClass->PrintFeatures(stat_ofstream);
   stat_ofstream.close();
 
   cout << "!!ALL FINISHED!!"<< endl;

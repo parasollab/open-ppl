@@ -223,6 +223,7 @@ PMPL_OBJS = \
         ValidityChecker/MedialAxisClearanceValidity.o \
 	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
+	MPStrategy/MPStrategyMethod.o \
 	MPStrategy/MPStrategy.o \
 	NeighborhoodFinder/NeighborhoodFinderMethod.o \
 	MPProblem/MPProblem.o \

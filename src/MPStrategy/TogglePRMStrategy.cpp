@@ -56,8 +56,8 @@ void TogglePRMStrategy::ParseXML(XMLNodeReader& in_Node) {
       citr->warnUnknownNode();
   }
 
-  in_Node.warnUnrequestedAttributes();
   priority = in_Node.boolXMLParameter("priority", false, false, "Priority Queue");
+  in_Node.warnUnrequestedAttributes();
 
   PrintOptions(cout);
 }
@@ -169,10 +169,10 @@ void TogglePRMStrategy::Finalize(int in_RegionID){
   //output stats
   str = GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
+  osStat << "NodeGen+Connection Stats" << endl;
+  regionStats->PrintAllStats(osStat, region->GetRoadmap());
   streambuf* sbuf = cout.rdbuf(); // to be restored later
   cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
-  cout << "NodeGen+Connection Stats" << endl;
-  regionStats->PrintAllStats(region->GetRoadmap());
   MapGenClock.PrintClock();
   cout.rdbuf(sbuf);  // restore original stream buffer
   osStat.close();
@@ -348,13 +348,13 @@ bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
       cout << "\t";
       EvalSubClock.StopPrintClock();
       if(mapPassedEvaluation){
-        //return true;
+        return true;
         cout << "\t  (passed)\n";
       }
       else
         cout << "\t  (failed)\n";
-      if(!mapPassedEvaluation)
-        break;
+      //if(!mapPassedEvaluation)
+        //break;
     }
     EvalClock.StopPrintClock();
   }

@@ -206,12 +206,14 @@ void BasicPRM::Finalize(int _regionID){
   //output stats
   str = GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
+  osStat << "NodeGen+Connection Stats" << endl;
+  regionStats->PrintAllStats(osStat, region->GetRoadmap());
+  
   streambuf* sbuf = cout.rdbuf(); // to be restored later
   cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
-  cout << "NodeGen+Connection Stats" << endl;
-  regionStats->PrintAllStats(region->GetRoadmap());
   m_strategyClock.PrintClock();
   cout.rdbuf(sbuf);  // restore original stream buffer
+  
   osStat.close();
 
   if (m_debug) cout<<"\nEnd Finalizing BasicPRM"<<endl;

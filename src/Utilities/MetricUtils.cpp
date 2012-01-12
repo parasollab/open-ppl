@@ -287,41 +287,41 @@ DecLPCollDetCalls(string _lpName, int _decr) {
 
 void
 StatClass::
-PrintFeatures() {
-  cout << "General features:" << endl;
-  //cout << "\tNodes_Attempted: " << Nodes_Attempted << endl;
-  //cout << "\tNodes_Generated: " << Nodes_Generated << endl;
-  //cout << "\tpct_free_nodes: " << ((double)Nodes_Generated)/Nodes_Attempted << endl;
-  cout << "\tcc_number: " << cc_number << endl;
-  cout << "\tConnections_Attempted: " << Connections_Attempted << endl;
-  cout << "\tConnections_Made: " << Connections_Made << endl;
-  cout << "\tpct_succesful_connections: " << ((double)Connections_Made)/Connections_Attempted << endl;
+PrintFeatures(ostream& _os) {
+  _os << "General features:" << endl;
+  //_os << "\tNodes_Attempted: " << Nodes_Attempted << endl;
+  //_os << "\tNodes_Generated: " << Nodes_Generated << endl;
+  //_os << "\tpct_free_nodes: " << ((double)Nodes_Generated)/Nodes_Attempted << endl;
+  _os << "\tcc_number: " << cc_number << endl;
+  _os << "\tConnections_Attempted: " << Connections_Attempted << endl;
+  _os << "\tConnections_Made: " << Connections_Made << endl;
+  _os << "\tpct_succesful_connections: " << ((double)Connections_Made)/Connections_Attempted << endl;
 
-  cout << "Intra-cc features:" << endl;
-  cout << "\tavg_min_intracc_dist: " << avg_min_intracc_dist << endl;
-  cout << "\tavg_max_intracc_dist: " << avg_max_intracc_dist << endl;
-  cout << "\tavg_mean_intracc_dist: " << avg_mean_intracc_dist << endl;
-  cout << "\tavg_sigma_intracc_dist: " << avg_sigma_intracc_dist << endl;
-  cout << "\tavg_min_intracc_edge_s: " << avg_min_intracc_edge_s << endl;
-  cout << "\tavg_max_intracc_edge_s: " << avg_max_intracc_edge_s << endl;
-  cout << "\tavg_mean_intracc_edge_s: " << avg_mean_intracc_edge_s << endl;
-  cout << "\tavg_sigma_intracc_edge_s: " << avg_sigma_intracc_edge_s << endl;
+  _os << "Intra-cc features:" << endl;
+  _os << "\tavg_min_intracc_dist: " << avg_min_intracc_dist << endl;
+  _os << "\tavg_max_intracc_dist: " << avg_max_intracc_dist << endl;
+  _os << "\tavg_mean_intracc_dist: " << avg_mean_intracc_dist << endl;
+  _os << "\tavg_sigma_intracc_dist: " << avg_sigma_intracc_dist << endl;
+  _os << "\tavg_min_intracc_edge_s: " << avg_min_intracc_edge_s << endl;
+  _os << "\tavg_max_intracc_edge_s: " << avg_max_intracc_edge_s << endl;
+  _os << "\tavg_mean_intracc_edge_s: " << avg_mean_intracc_edge_s << endl;
+  _os << "\tavg_sigma_intracc_edge_s: " << avg_sigma_intracc_edge_s << endl;
 
-  cout << "\tavg_max_intracc_dist_to_cm: " << avg_max_intracc_dist_to_cm << endl;
-  cout << "\tavg_min_intracc_dist_to_cm: " << avg_min_intracc_dist_to_cm << endl;
-  cout << "\tavg_mean_intracc_dist_to_cm: " << avg_mean_intracc_dist_to_cm << endl;
-  cout << "\tavg_sigma_intracc_dist_to_cm: " << avg_sigma_intracc_dist_to_cm << endl;
+  _os << "\tavg_max_intracc_dist_to_cm: " << avg_max_intracc_dist_to_cm << endl;
+  _os << "\tavg_min_intracc_dist_to_cm: " << avg_min_intracc_dist_to_cm << endl;
+  _os << "\tavg_mean_intracc_dist_to_cm: " << avg_mean_intracc_dist_to_cm << endl;
+  _os << "\tavg_sigma_intracc_dist_to_cm: " << avg_sigma_intracc_dist_to_cm << endl;
 
-  cout << "Inter-cc features:" << endl;
-  cout << "\tmax_intercc_dist: " << max_intercc_dist << endl;
-  cout << "\tmin_intercc_dist: " << min_intercc_dist << endl;
-  cout << "\tavg_intercc_dist: " << avg_intercc_dist << endl;
-  cout << "\tsigma_intercc_dist: " << sigma_intercc_dist <<endl<<endl;
+  _os << "Inter-cc features:" << endl;
+  _os << "\tmax_intercc_dist: " << max_intercc_dist << endl;
+  _os << "\tmin_intercc_dist: " << min_intercc_dist << endl;
+  _os << "\tavg_intercc_dist: " << avg_intercc_dist << endl;
+  _os << "\tsigma_intercc_dist: " << sigma_intercc_dist <<endl<<endl;
 
-  cout << "\tmin_cc_size: " << min_cc_size << endl;
-  cout << "\tmax_cc_size: " << max_cc_size << endl;
-  cout << "\tavg_cc_size: " << avg_cc_size << endl;
-  cout << "\tsigma_cc_size: " << sigma_cc_size << endl;
+  _os << "\tmin_cc_size: " << min_cc_size << endl;
+  _os << "\tmax_cc_size: " << max_cc_size << endl;
+  _os << "\tavg_cc_size: " << avg_cc_size << endl;
+  _os << "\tsigma_cc_size: " << sigma_cc_size << endl;
 }
 
 void

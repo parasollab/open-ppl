@@ -36,9 +36,9 @@ public:
 
   static const int ALL;
   template <class CFG, class WEIGHT>
-  void PrintAllStats( Roadmap<CFG, WEIGHT> *_rmap);
+  void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT> *_rmap);
   template <class CFG, class WEIGHT>
-  void PrintAllStats( Roadmap<CFG, WEIGHT> *_rmap, int _numCCs);
+  void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT> *_rmap, int _numCCs);
 
   template <class CFG, class WEIGHT>
   void PrintDataLine(ostream&, Roadmap<CFG, WEIGHT>* , int _showColumnHeaders=0);
@@ -48,7 +48,7 @@ public:
 
   template <class CFG, class WEIGHT>
   void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *_rdmp, NeighborhoodFinder* _nf, string _nfMethod);
-  void PrintFeatures();
+  void PrintFeatures(ostream& _os);
   void IncNodes_Generated();
   void IncNodes_Attempted();
   void IncConnections_Attempted();
@@ -56,7 +56,7 @@ public:
 
   //help
   template <class CFG, class WEIGHT>
-  void DisplayCCStats(RoadmapGraph<CFG, WEIGHT>&, int);
+  void DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>&, int);
   
   //features
   int Connections_Attempted;
@@ -106,27 +106,43 @@ public:
   ///\see Cfg::isCollision
   std::map<string, unsigned long int> m_isCollByName;
   unsigned long int m_isCollTotal;
+
+
+private:
+  //LP Statistics
+  map<string, double> m_lpStats;
+  map<string, vector<double> > m_histories;
+  string m_auxFileDest;
+
+public:
+
+  double GetLPStat(string _s){return m_lpStats[_s];}
+  void SetLPStat(string _s, double _v) {m_lpStats[_s]=_v;}
+  void IncLPStat(string _s, double _v) {m_lpStats[_s]+=_v;}
+  vector<double>& GetHistory(string _s){return m_histories[_s];}
+  void AddToHistory(string _s, double _v){m_histories[_s].push_back(_v);}
+  void SetAuxDest(string _s) {m_auxFileDest = _s;}
 };
 
 //definitions of templated functions
 template <class CFG, class WEIGHT>
 void
 StatClass::
-PrintAllStats( Roadmap<CFG, WEIGHT>* _rmap) {
-  PrintAllStats(_rmap, ALL);
+PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap) {
+  PrintAllStats(_os, _rmap, ALL);
 }
 
 template <class CFG, class WEIGHT>
 void
 StatClass::
-PrintAllStats( Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
+PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
         #ifndef _PARALLEL
   size_t i;
   std::map<string, unsigned long int>::const_iterator iter;
   //int total=0;
 
-  cout << endl << endl << "Local Planners:" << endl;
-  cout << setw(20) << "Name"
+  _os << endl << endl << "Local Planners:" << endl;
+  _os << setw(20) << "Name"
   <<setw(15) << "Connections"
   <<setw(15) << "Attempts"
   <<setw(15) << "Coll Det Calls" << endl;
@@ -135,31 +151,46 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
   for(iter1 = m_lpConnections.begin(), iter2 = m_lpAttempts.begin(), iter3 = m_lpCollDetCalls.begin(); 
       iter1 != m_lpConnections.end() || iter2 !=m_lpAttempts.end() || iter3 != m_lpCollDetCalls.end(); 
       ++iter1, ++iter2, ++iter3) {
-    cout << setw(20) << iter1->first;
-    cout << setw(15) << iter1->second;
-    cout << setw(15) << iter2->second;
-    cout << setw(15) << iter3->second << endl;
+    _os << setw(20) << iter1->first;
+    _os << setw(15) << iter1->second;
+    _os << setw(15) << iter2->second;
+    _os << setw(15) << iter3->second << endl;
   }
 
-  cout << endl << endl;
-  cout << "Number of Nodes: " << _rmap->m_pRoadmap->get_num_vertices() << endl;
-  cout << "Number of Edges: " << _rmap->m_pRoadmap->get_num_edges() << endl;
+  _os<<"\n\n Local Planner Statistics:\n\n";
+  _os<< setw(40) << "Statistic"
+      << setw(40) << "Value" << endl << endl;;
+  typedef map<string, double>::iterator LPSIT;
+  for(LPSIT lpsit=m_lpStats.begin(); lpsit!=m_lpStats.end(); lpsit++){
+    _os << setw(40) << lpsit->first
+        << setw(40) << lpsit->second << endl;
+  }
+  typedef map<string, vector<double> >::iterator HIT;
+  for(HIT hit = m_histories.begin(); hit!=m_histories.end(); hit++){
+    ofstream ofs((m_auxFileDest+"."+hit->first+".hist").c_str());
+    typedef vector<double>::iterator DIT;
+    for(DIT dit = hit->second.begin(); dit!=hit->second.end(); dit++){
+      ofs << *dit << endl;
+    }
+    ofs.close();
+  }
+
+  _os << endl << endl;
+  _os << "Number of Nodes: " << _rmap->m_pRoadmap->get_num_vertices() << endl;
+  _os << "Number of Edges: " << _rmap->m_pRoadmap->get_num_edges() << endl;
 /*  Removed by Roger for reasons given below
-  cout << "Number of Collision Detection Calls: " << endl;
+  _os << "Number of Collision Detection Calls: " << endl;
   for(i=0;i<MaxCD;i++)
     if (strcmp(CDNameList[i],"empty")!=0)
-      cout << setw(20) << CDNameList[i] 
+      _os << setw(20) << CDNameList[i] 
         << setw(15) << NumCollDetCalls[i] << endl;
 */
 
-  #if VERBOSE
-  #endif
+  _os << endl;
 
-  cout << endl;
-
-  if (_numCCs==ALL)    {DisplayCCStats(*(_rmap->m_pRoadmap));      }
-  else if (_numCCs==0) {DisplayCCStats(*(_rmap->m_pRoadmap),0);     }
-  else                {DisplayCCStats(*(_rmap->m_pRoadmap),_numCCs);}
+  if (_numCCs==ALL)    {DisplayCCStats(_os, *(_rmap->m_pRoadmap));      }
+  else if (_numCCs==0) {DisplayCCStats(_os, *(_rmap->m_pRoadmap),0);     }
+  else                {DisplayCCStats(_os, *(_rmap->m_pRoadmap),_numCCs);}
 
 
   ///Below removed b/c it counts Coll Detection too fine grained.  We have decided 
@@ -167,24 +198,24 @@ PrintAllStats( Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
   ///free node the same as a collision node.  Will be added back after collision detection
   ///counting is properly fixed     --Roger 9/17/2005
 /*
-  cout << endl << endl << "Collision Detection Exact Counts:" << endl;
+  _os << endl << endl << "Collision Detection Exact Counts:" << endl;
   for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++) 
   {
     total+=iter->second;
-    cout << i << ") " << iter->second << " ";
-    cout << flush;
+    _os << i << ") " << iter->second << " ";
+    _os << flush;
     printf("%s\n", iter->first.data()); //K2 does not have the << operator defined for string
     fflush(stdout);
   }
   
-  cout << "total " << total << endl;
+  _os << "total " << total << endl;
 */
   
-  cout << endl << endl << "Cfg::isCollision() Exact Counts:" << endl;
+  _os << endl << endl << "Cfg::isCollision() Exact Counts:" << endl;
   for (i=0, iter=m_isCollByName.begin(); iter != m_isCollByName.end(); iter++, i++){
-    cout << i << ") " << iter->second << " " << iter->first << endl;;
+    _os << i << ") " << iter->second << " " << iter->first << endl;;
   }
-  cout << "Total Cfg::isCollision() = " << m_isCollTotal << endl << endl;
+  _os << "Total Cfg::isCollision() = " << m_isCollTotal << endl << endl;
   #endif
 
 }
@@ -576,7 +607,7 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, NeighborhoodFinder* _nf, str
 template <class CFG, class WEIGHT>
 void
 StatClass::
-DisplayCCStats(RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1)  {
+DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1)  {
 
   ///Modified for VC
   //temporary ifdef because of color map and get_cc_stats, we need a pDisplayCCStats
@@ -596,10 +627,10 @@ DisplayCCStats(RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1)  {
   }
 
   int ccnum = 1;
-  cout << "\nThere are " << ccstats.size() << " connected components:";
+  _os << "\nThere are " << ccstats.size() << " connected components:";
   for (typename vector< pair<size_t,VID> >::iterator vi = ccstats.begin(); vi != ccstats.end(); vi++) {
-    cout << "\nCC[" << ccnum << "]: " << vi->first ;
-    cout << " (vid=" << size_t(vi->second) << ")";
+    _os << "\nCC[" << ccnum << "]: " << vi->first ;
+    _os << " (vid=" << size_t(vi->second) << ")";
     ccnum++;
     if (ccnum > maxCCprint) return;
   }
