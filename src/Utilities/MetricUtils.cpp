@@ -54,36 +54,36 @@ ClearStats() {
   m_lpAttempts.clear();
   m_lpCollDetCalls.clear();
 
-  Connections_Attempted = 0;
-  Connections_Made = 0;
-  Nodes_Attempted = 0;
-  Nodes_Generated = 0;
-  cc_number = 0;
+  m_connectionsAttempted = 0;
+  m_connectionsMade = 0;
+  m_nodesAttempted = 0;
+  m_nodesGenerated = 0;
+  m_ccNumber = 0;
 
-  avg_min_intracc_dist = 0;
-  avg_max_intracc_dist = 0;
-  avg_mean_intracc_dist = 0;
-  avg_sigma_intracc_dist = 0;
+  m_avgMinIntraCCDist = 0;
+  m_avgMaxIntraCCDist = 0;
+  m_avgMeanIntraCCDist = 0;
+  m_avgSigmaIntraCCDist = 0;
 
-  avg_min_intracc_edge_s = 0;
-  avg_max_intracc_edge_s = 0;
-  avg_mean_intracc_edge_s = 0;
-  avg_sigma_intracc_edge_s = 0;
+  m_avgMinIntraCCEdge = 0;
+  m_avgMaxIntraCCEdge = 0;
+  m_avgMeanIntraCCEdge = 0;
+  m_avgSigmaIntraCCEdge = 0;
 
-  avg_max_intracc_dist_to_cm = 0;
-  avg_min_intracc_dist_to_cm = 0;
-  avg_mean_intracc_dist_to_cm = 0;
-  avg_sigma_intracc_dist_to_cm = 0;
+  m_avgMaxIntraCCDistToCm = 0;
+  m_avgMinIntraCCDistToCm = 0;
+  m_avgMeanIntraCCDistToCm = 0;
+  m_avgSigmaIntraCCDistToCm = 0;
 
-  max_intercc_dist = 0.0;
-  avg_intercc_dist = 0.0;
-  sigma_intercc_dist = 0.0;
-  min_intercc_dist = 100000.0;
+  m_maxInterCCDist = 0.0;
+  m_avgInterCCDist = 0.0;
+  m_sigmaInterCCDist = 0.0;
+  m_minInterCCDist = 100000.0;
 
-  max_cc_size = 0.0;
-  min_cc_size = 0.0;
-  avg_cc_size = 0.0;
-  sigma_cc_size = 0.0;
+  m_maxCCSize = 0.0;
+  m_minCCSize = 0.0;
+  m_avgCCSize = 0.0;
+  m_sigmaCCSize = 0.0;
 
   m_collDetCountByName.clear();
 
@@ -289,62 +289,58 @@ void
 StatClass::
 PrintFeatures(ostream& _os) {
   _os << "General features:" << endl;
-  //_os << "\tNodes_Attempted: " << Nodes_Attempted << endl;
-  //_os << "\tNodes_Generated: " << Nodes_Generated << endl;
-  //_os << "\tpct_free_nodes: " << ((double)Nodes_Generated)/Nodes_Attempted << endl;
-  _os << "\tcc_number: " << cc_number << endl;
-  _os << "\tConnections_Attempted: " << Connections_Attempted << endl;
-  _os << "\tConnections_Made: " << Connections_Made << endl;
-  _os << "\tpct_succesful_connections: " << ((double)Connections_Made)/Connections_Attempted << endl;
+  _os << "\tm_ccNumber: " << m_ccNumber << endl;
+  _os << "\tm_connectionsAttempted: " << m_connectionsAttempted << endl;
+  _os << "\tm_connectionsMade: " << m_connectionsMade << endl;
+  _os << "\tpct_succesful_connections: " << ((double)m_connectionsMade)/m_connectionsAttempted << endl;
 
+  _os << "General features:" << endl;
   _os << "Intra-cc features:" << endl;
-  _os << "\tavg_min_intracc_dist: " << avg_min_intracc_dist << endl;
-  _os << "\tavg_max_intracc_dist: " << avg_max_intracc_dist << endl;
-  _os << "\tavg_mean_intracc_dist: " << avg_mean_intracc_dist << endl;
-  _os << "\tavg_sigma_intracc_dist: " << avg_sigma_intracc_dist << endl;
-  _os << "\tavg_min_intracc_edge_s: " << avg_min_intracc_edge_s << endl;
-  _os << "\tavg_max_intracc_edge_s: " << avg_max_intracc_edge_s << endl;
-  _os << "\tavg_mean_intracc_edge_s: " << avg_mean_intracc_edge_s << endl;
-  _os << "\tavg_sigma_intracc_edge_s: " << avg_sigma_intracc_edge_s << endl;
-
-  _os << "\tavg_max_intracc_dist_to_cm: " << avg_max_intracc_dist_to_cm << endl;
-  _os << "\tavg_min_intracc_dist_to_cm: " << avg_min_intracc_dist_to_cm << endl;
-  _os << "\tavg_mean_intracc_dist_to_cm: " << avg_mean_intracc_dist_to_cm << endl;
-  _os << "\tavg_sigma_intracc_dist_to_cm: " << avg_sigma_intracc_dist_to_cm << endl;
+  _os << "\tm_avgMinIntraCCDist: " << m_avgMinIntraCCDist << endl;
+  _os << "\tm_avgMaxIntraCCDist: " << m_avgMaxIntraCCDist << endl;
+  _os << "\tm_avgMeanIntraCCDist: " << m_avgMeanIntraCCDist << endl;
+  _os << "\tm_avgSigmaIntraCCDist: " << m_avgSigmaIntraCCDist << endl;
+  _os << "\tm_avgMinIntraCCEdge: " << m_avgMinIntraCCEdge << endl;
+  _os << "\tm_avgMaxIntraCCEdge: " << m_avgMaxIntraCCEdge << endl;
+  _os << "\tm_avgMeanIntraCCEdge: " << m_avgMeanIntraCCEdge << endl;
+  _os << "\tm_avgSigmaIntraCCEdge: " << m_avgSigmaIntraCCEdge << endl;
+  _os << "\tm_avgMaxIntraCCDistToCm: " << m_avgMaxIntraCCDistToCm << endl;
+  _os << "\tm_avgMinIntraCCDistToCm: " << m_avgMinIntraCCDistToCm << endl;
+  _os << "\tm_avgMeanIntraCCDistToCm: " << m_avgMeanIntraCCDistToCm << endl;
+  _os << "\tm_avgSigmaIntraCCDistToCm: " << m_avgSigmaIntraCCDistToCm << endl;
 
   _os << "Inter-cc features:" << endl;
-  _os << "\tmax_intercc_dist: " << max_intercc_dist << endl;
-  _os << "\tmin_intercc_dist: " << min_intercc_dist << endl;
-  _os << "\tavg_intercc_dist: " << avg_intercc_dist << endl;
-  _os << "\tsigma_intercc_dist: " << sigma_intercc_dist <<endl<<endl;
-
-  _os << "\tmin_cc_size: " << min_cc_size << endl;
-  _os << "\tmax_cc_size: " << max_cc_size << endl;
-  _os << "\tavg_cc_size: " << avg_cc_size << endl;
-  _os << "\tsigma_cc_size: " << sigma_cc_size << endl;
+  _os << "\tm_maxInterCCDist: " << m_maxInterCCDist << endl;
+  _os << "\tm_minInterCCDist: " << m_minInterCCDist << endl;
+  _os << "\tm_avgInterCCDist: " << m_avgInterCCDist << endl;
+  _os << "\tm_sigmaInterCCDist: " << m_sigmaInterCCDist << endl << endl;
+  _os << "\tm_minCCSize: " << m_minCCSize << endl;
+  _os << "\tm_maxCCSize: " << m_maxCCSize << endl;
+  _os << "\tm_avgCCSize: " << m_avgCCSize << endl;
+  _os << "\tm_sigmaCCSize: " << m_sigmaCCSize << endl;
 }
 
 void
 StatClass::
 IncNodes_Generated(){
-  Nodes_Generated++;
+  m_nodesGenerated++;
 };
 
 void
 StatClass::
 IncNodes_Attempted(){
-  Nodes_Attempted++;
+  m_nodesAttempted++;
 };
 void
 StatClass::
 IncConnections_Attempted(){
-  Connections_Attempted++;
+  m_connectionsAttempted++;
 };
 
 void
 StatClass::
 IncConnections_Made(){
-  Connections_Made++;
+  m_connectionsMade++;
 };
 
 /////////////////////////////////////////////////////////////////////

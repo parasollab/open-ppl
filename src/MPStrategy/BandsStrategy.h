@@ -359,7 +359,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         // stat_out << basefname.str()
         stat_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices() - 2
           << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
-          << "\t" << pStatClass->Connections_Attempted << "\t" << double(pStatClass->Connections_Made) / double(pStatClass->Connections_Attempted)
+          << "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
           << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
           << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
           pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
@@ -385,7 +385,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           //total_out << basefname.str()
           total_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2 
             << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
-            << "\t" << pStatClass->Connections_Attempted << "\t" << double(pStatClass->Connections_Made) / double(pStatClass->Connections_Attempted)
+            << "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
             << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
             << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
             pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
