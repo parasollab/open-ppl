@@ -97,7 +97,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
               vc->IsValid(vc->GetVCMethod(strVcmethod), c_free, _env, 
                 Stats, cdInfo, true, &callee))
           {
-            Stats.IncNodes_Generated();
+            Stats.IncNodesGenerated();
             *result = c_free;
             result++;
           }
@@ -112,7 +112,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
               !vc->IsValid(vc->GetVCMethod(strVcmethod), c_coll, _env, 
                 Stats, cdInfo, true, &callee))
           {
-            Stats.IncNodes_Generated();
+            Stats.IncNodesGenerated();
             *result = c_coll;
             result++;
           }
@@ -130,7 +130,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
 
       int attempts = 0;
       do {
-        _stats.IncNodes_Attempted();
+        _stats.IncNodesAttempted();
         attempts++;
 
         CFG c1 ;

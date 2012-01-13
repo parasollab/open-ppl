@@ -498,9 +498,6 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       }
     }
 
-    // record the attempted connection
-    Stats.IncConnections_Attempted();
-  
     // attempt connection with the local planner
     CfgType _col;
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
@@ -518,7 +515,6 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       if (this->m_debug) cout << " | success incremented" << endl;
       _rm->SetCache(_vid,*itr2,true);
       success++;
-      Stats.IncConnections_Made();
       this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), true));
     }
     else {
@@ -599,9 +595,6 @@ pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       continue;
     }
 
-    // record the attempted connection
-    Stats.IncConnections_Attempted();
-  
     // attempt connection with the local planner
     CfgType _col;
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
@@ -619,7 +612,6 @@ pConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       if (this->m_debug) cout << " | success incremented" << endl;
       _rm->SetCache(_vid,*itr2,true);
       success++;
-      Stats.IncConnections_Made();
       this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), true));
     }
     else {

@@ -73,7 +73,7 @@ class GaussianSampler : public SamplerMethod<CFG>
       VDAddTempCfg(cfg1, cfg1Free);
 
       do {
-        _stats.IncNodes_Attempted();
+        _stats.IncNodesAttempted();
         attempts++;
         CFG cfg2;
         bool cfg2Free;
@@ -97,7 +97,7 @@ class GaussianSampler : public SamplerMethod<CFG>
         }
         VDAddTempCfg(cfg2, cfg2Free);
         if(cfg1Free != cfg2Free) {
-          _stats.IncNodes_Generated();
+          _stats.IncNodesGenerated();
           generated = true;
           ostringstream oss;
           if(cfg1Free) {

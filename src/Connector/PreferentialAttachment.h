@@ -447,9 +447,6 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       }
     }
 
-    // record the attempted connection
-    Stats.IncConnections_Attempted();
-
     // attempt connection with the local planner
     CfgType _col;
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
@@ -462,7 +459,6 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       // if connection was made, add edge and record the successful connection
       if (m_debug) cout << " | connection was successful";
       _rm->m_pRoadmap->AddEdge(_vid, *itr2, lpOutput.edge);
-      Stats.IncConnections_Made();
       this->connection_attempts.push_back(make_pair(make_pair(_vid, *itr2), true));
       
       // mark the successful connection in the roadmap's cache

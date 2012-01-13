@@ -241,7 +241,6 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       if(_rm->IsCached(cc1vec[c1], cc2vec[c2]) && !_rm->GetCache(cc1vec[c1], cc2vec[c2])) {
         continue;
       }
-      Stats.IncConnections_Attempted();
       CfgType _col;
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
           && this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
@@ -250,7 +249,6 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
                            (*(pMap->find_vertex(cc2vec[c2]))).property(),
                            _col, &lpOutput, this->connectionPosRes, 
                            this->connectionOriRes, (!addAllEdges)) ) {
-	Stats.IncConnections_Made();
 	pMap->AddEdge(cc1vec[c1], cc2vec[c2], lpOutput.edge);
 	return;
       }
@@ -300,7 +298,6 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
     if(_rm->IsCached(kp[i].first, kp[i].second) && !_rm->GetCache(kp[i].first, kp[i].second)) {
       continue;
     }
-    Stats.IncConnections_Attempted();
     CfgType _col;
     if(!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
        && this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
@@ -310,7 +307,6 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
                         _col, &lpOutput, this->connectionPosRes, 
                         this->connectionOriRes, (!addAllEdges)) ) {
       pMap->AddEdge(kp[i].first, kp[i].second, lpOutput.edge); 
-      Stats.IncConnections_Made();
       return;
     }
     else if(addPartialEdge) {

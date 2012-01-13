@@ -89,7 +89,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       CDInfo cdInfo;
 
       do {
-        _stats.IncNodes_Attempted();
+        _stats.IncNodesAttempted();
         attempts++;
 
         // If just a new cfg, get a random CFG
@@ -101,7 +101,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
         if(PushToMedialAxis(this->GetMPProblem(), _env, _bb, tmpCfg, _stats, m_vcLabel, m_dmLabel, m_exactClearance, m_clearanceRays, 
                             m_exactPenetration, m_penetrationRays, m_useBBX, m_epsilon, m_historyLength, this->m_debug)) {
           if(vc->IsValid(vc->GetVCMethod(m_vcLabel), tmpCfg, _env, _stats, cdInfo, true, &call)) {
-            _stats.IncNodes_Generated();
+            _stats.IncNodesGenerated();
             generated = true;
             _cfgOut.push_back(tmpCfg);
           }

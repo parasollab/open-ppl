@@ -54,8 +54,6 @@ ClearStats() {
   m_lpAttempts.clear();
   m_lpCollDetCalls.clear();
 
-  m_connectionsAttempted = 0;
-  m_connectionsMade = 0;
   m_nodesAttempted = 0;
   m_nodesGenerated = 0;
   m_ccNumber = 0;
@@ -126,16 +124,6 @@ IncCfgIsColl( string *_pCallName) {
 
 };
 
-//----------------------------------------
-// Increment the number of connections made
-// by local planning method named LPName
-//----------------------------------------
-int
-StatClass::
-IncLPConnections( string _lpName ) {
-  m_lpConnections[_lpName]++;
-  return m_lpConnections[_lpName];
-};
 
 //----------------------------------------
 // Increment the number of connections made
@@ -145,28 +133,6 @@ int
 StatClass::
 IncLPConnections( string _lpName ,int _incr) {
   m_lpConnections[_lpName] += _incr;
-  return m_lpConnections[_lpName];
-};
-
-//----------------------------------------
-// Decrement the number of connections made
-// by local planning method named LPName
-//----------------------------------------
-int
-StatClass::
-DecLPConnections(string _lpName) {
-  m_lpConnections[_lpName]--;
-  return m_lpConnections[_lpName];
-};
-
-//----------------------------------------
-// Increment the number of connections made
-// by local planning method named LPName by decr
-//----------------------------------------
-int
-StatClass::
-DecLPConnections(string _lpName, int _decr) {
-  m_lpConnections[_lpName] -= _decr;
   return m_lpConnections[_lpName];
 };
 
@@ -193,38 +159,6 @@ IncLPAttempts(string _lpName , int _incr) {
   return m_lpAttempts[_lpName];
 };
 
-//----------------------------------------
-// Increment the number attempts made by the
-// local planning method named LPName
-//----------------------------------------
-int
-StatClass::
-IncLPAttempts(string _lpName ) {
-  m_lpAttempts[_lpName]++;
-  return m_lpAttempts[_lpName];
-};
-
-//----------------------------------------
-// Decrement the number attempts made by the
-// local planning method named LPName
-//----------------------------------------
-int
-StatClass::
-DecLPAttempts(string _lpName) {
-  m_lpAttempts[_lpName]--;
-  return m_lpAttempts[_lpName];
-};
-
-//----------------------------------------
-// Decrement the number attempts made by the
-// local planning method named LPName by decr
-//----------------------------------------
-int
-StatClass::
-DecLPAttempts(string _lpName ,int _decr) {
-  m_lpAttempts[_lpName] -= _decr;
-  return m_lpAttempts[_lpName];
-};
 
 //----------------------------------------
 // Set the number of attempts made by local
@@ -240,18 +174,6 @@ SetLPAttempts(string _lpName, int _attempts) {
 //----------------------------------------
 // Increment the number of collision detection
 // calls made by local planning method named
-// LPName
-//----------------------------------------
-int
-StatClass::
-IncLPCollDetCalls(string _lpName) {
-  m_lpCollDetCalls[_lpName]++;
-  return m_lpCollDetCalls[_lpName];
-};
-
-//----------------------------------------
-// Increment the number of collision detection
-// calls made by local planning method named
 // LPName by incr
 //----------------------------------------
 int
@@ -261,38 +183,23 @@ IncLPCollDetCalls(string _lpName, int _incr) {
   return m_lpCollDetCalls[_lpName];
 };
 
-//----------------------------------------
-// Decrement the number of collision detection
-// calls made by local planning method named
-// LPName
-//----------------------------------------
-int
-StatClass::
-DecLPCollDetCalls(string _lpName) {
-  m_lpCollDetCalls[_lpName]--;
-  return m_lpCollDetCalls[_lpName];
-};
-
-//----------------------------------------
-// Decrement the number of collision detection
-// calls made by local planning method named
-// LPName by decr
-//----------------------------------------
-int
-StatClass::
-DecLPCollDetCalls(string _lpName, int _decr) {
-  m_lpCollDetCalls[_lpName] -= _decr;
-  return m_lpCollDetCalls[_lpName];
-};
 
 void
 StatClass::
 PrintFeatures(ostream& _os) {
+  unsigned long int connectionsAttempted = 0, connectionsMade=0;
+  std::map<std::string, unsigned long int>::iterator sumIter;
+  for (sumIter=m_lpConnections.begin();sumIter!=m_lpConnections.end();sumIter++)
+    connectionsMade += sumIter->second;
+  for(sumIter=m_lpAttempts.begin();sumIter!=m_lpAttempts.end();sumIter++)
+    connectionsAttempted += sumIter->second;
+  
+
   _os << "General features:" << endl;
   _os << "\tm_ccNumber: " << m_ccNumber << endl;
-  _os << "\tm_connectionsAttempted: " << m_connectionsAttempted << endl;
-  _os << "\tm_connectionsMade: " << m_connectionsMade << endl;
-  _os << "\tpct_succesful_connections: " << ((double)m_connectionsMade)/m_connectionsAttempted << endl;
+  _os << "\tm_connectionsAttempted: " << connectionsAttempted << endl;
+  _os << "\tm_connectionsMade: " << connectionsMade << endl;
+  _os << "\tpct_succesful_connections: " << ((double)connectionsMade)/connectionsAttempted << endl;
 
   _os << "General features:" << endl;
   _os << "Intra-cc features:" << endl;
@@ -322,25 +229,14 @@ PrintFeatures(ostream& _os) {
 
 void
 StatClass::
-IncNodes_Generated(){
+IncNodesGenerated(){
   m_nodesGenerated++;
 };
 
 void
 StatClass::
-IncNodes_Attempted(){
+IncNodesAttempted(){
   m_nodesAttempted++;
-};
-void
-StatClass::
-IncConnections_Attempted(){
-  m_connectionsAttempted++;
-};
-
-void
-StatClass::
-IncConnections_Made(){
-  m_connectionsMade++;
 };
 
 /////////////////////////////////////////////////////////////////////

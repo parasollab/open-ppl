@@ -18,21 +18,11 @@ public:
 
   void IncCfgIsColl( std::string *_pCallName = NULL);
 
-  int IncLPConnections( string _lpName , int);
-  int IncLPConnections( string _lpName );
-  int DecLPConnections( string _lpName , int);
-  int DecLPConnections( string _lpName );
+  int IncLPConnections( string _lpName , int _incr=1);
   int SetLPConnections( string _lpName, int _connections );
-  int IncLPAttempts( string _lpName ,int );
-  int IncLPAttempts( string _lpName );
-  int DecLPAttempts( string _lpName ,int );
-  int DecLPAttempts( string _lpName );
+  int IncLPAttempts( string _lpName, int _incr=1 );
   int SetLPAttempts( string _lpName, int _attempts );
-  int IncLPCollDetCalls( string _lpName );
-  int IncLPCollDetCalls( string _lpName ,int);
-  int DecLPCollDetCalls( string _lpName );
-  int DecLPCollDetCalls( string _lpName ,int);
-
+  int IncLPCollDetCalls( string _lpName, int _incr=1);
 
   static const int ALL;
   template <class CFG, class WEIGHT>
@@ -49,15 +39,31 @@ public:
   template <class CFG, class WEIGHT>
   void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *_rdmp, NeighborhoodFinder* _nf, string _nfMethod);
   void PrintFeatures(ostream& _os);
-  void IncNodes_Generated();
-  void IncNodes_Attempted();
-  void IncConnections_Attempted();
-  void IncConnections_Made();
+  void IncNodesGenerated();
+  void IncNodesAttempted();
+
+  double GetLPStat(string _s){return m_lpStats[_s];}
+  void SetLPStat(string _s, double _v) {m_lpStats[_s]=_v;}
+  void IncLPStat(string _s, double _v) {m_lpStats[_s]+=_v;}
+
+  vector<double>& GetHistory(string _s){return m_histories[_s];}
+  void AddToHistory(string _s, double _v){m_histories[_s].push_back(_v);}
+  void SetAuxDest(string _s) {m_auxFileDest = _s;}
 
   //help
   template <class CFG, class WEIGHT>
   void DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>&, int);
-  
+
+  map<string, unsigned long int> m_lpConnections;
+  map<string, unsigned long int> m_lpAttempts;
+  map<string, unsigned long int> m_lpCollDetCalls;
+  map<string, unsigned long int> m_collDetCountByName;
+
+  ///IsColl simply counts the number of times a Cfg is tested for Collision.
+  ///\see Cfg::isCollision
+  std::map<string, unsigned long int> m_isCollByName;
+  unsigned long int m_isCollTotal;
+
   //features
   int m_connectionsAttempted;
   int m_connectionsMade;
@@ -95,33 +101,12 @@ public:
 protected:
   map<string, unsigned long int> m_numCollDetCalls;
 
-public:
-  map<string, unsigned long int> m_lpConnections;
-  map<string, unsigned long int> m_lpAttempts;
-  map<string, unsigned long int> m_lpCollDetCalls;
-
-  std::map<string, unsigned long int> m_collDetCountByName;
-
-  ///IsColl simply counts the number of times a Cfg is tested for Collision.
-  ///\see Cfg::isCollision
-  std::map<string, unsigned long int> m_isCollByName;
-  unsigned long int m_isCollTotal;
-
-
 private:
   //LP Statistics
   map<string, double> m_lpStats;
   map<string, vector<double> > m_histories;
   string m_auxFileDest;
 
-public:
-
-  double GetLPStat(string _s){return m_lpStats[_s];}
-  void SetLPStat(string _s, double _v) {m_lpStats[_s]=_v;}
-  void IncLPStat(string _s, double _v) {m_lpStats[_s]+=_v;}
-  vector<double>& GetHistory(string _s){return m_histories[_s];}
-  void AddToHistory(string _s, double _v){m_histories[_s].push_back(_v);}
-  void SetAuxDest(string _s) {m_auxFileDest = _s;}
 };
 
 //definitions of templated functions
