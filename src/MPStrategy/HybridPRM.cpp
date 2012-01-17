@@ -126,7 +126,7 @@ void HybridPRM::Initialize(int in_RegionID){
   for_each(m_node_gen_labels.begin(), m_node_gen_labels.end(), char_ofstream << constant(":") << _1 << "_num_cc_oversample");
   char_ofstream << endl;
 
-   Allstuff.StartClock("Everything");
+  GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass()->StartClock("Everything");
   
    //initialize weights, probabilities, costs, set m_node_gen_probabilities_use = m_node_gen_probabilities
    initialize_weights_probabilities_costs();
@@ -171,8 +171,7 @@ void HybridPRM::Run(int in_RegionID){
       cout << "selecting sampler \"" << next_node_gen << "\"\n";
 
       //generate 1 sample
-      ClockClass NodeGenClock;
-      NodeGenClock.StartClock("Node Generation");
+      pStatClass->StartClock("Node Generation");
       unsigned long int num_cd_before_gen = pStatClass->GetIsCollTotal();
       vector<CfgType> vectorCfgs, in_nodes(1);
       Sampler<CfgType>::SamplerPointer pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(next_node_gen);
@@ -340,8 +339,8 @@ void HybridPRM::Run(int in_RegionID){
       	} //endif GetLabel && IsLabel
       } //endfor vectorCfgs
 
-      NodeGenClock.StopClock();
-      NodeGenTotalTime += NodeGenClock.GetSeconds();
+      pStatClass->StopClock("Node Generation");
+      NodeGenTotalTime += pStatClass->GetSeconds("Node Generation");
 
     } while((totalSamples % m_bin_size) > 0); // (totalSamples % m_bin_size) > (m_bin_size * m_window_percent));
 
@@ -374,7 +373,7 @@ void HybridPRM::Finalize(int in_RegionID){
   std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later
   std::cout.rdbuf(stat_ofstream.rdbuf());   // redirect destination of std::cout
   cout << "Node Gen = " << NodeGenTotalTime << endl;
-  Allstuff.StopPrintClock();
+  pStatClass->StopPrintClock("Everything");
   /*
   cout << "Query Stats" << endl;
   m_query_stat.PrintAllStats(region->GetRoadmap());
@@ -603,7 +602,7 @@ reward_and_update_weights_probabilities(string node_gen_selected, double reward,
 /*
 bool 
 HybridPRM::
-CanConnectComponents(vector<CfgType>& cc_a, vector<CfgType>& cc_b, Stat_Class& stat) 
+CanConnectComponents(vector<CfgType>& cc_a, vector<CfgType>& cc_b, StatClass& stat) 
 {
   // variables needed for the local planner call in loop
   LocalPlanners <CfgType, WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
@@ -613,7 +612,7 @@ CanConnectComponents(vector<CfgType>& cc_a, vector<CfgType>& cc_b, Stat_Class& s
   DistanceMetric* dm = GetMPProblem()->GetDistanceMetric();
   double pos_res = GetMPProblem()->GetEnvironment()->GetPositionRes();
   double ori_res = GetMPProblem()->GetEnvironment()->GetOrientationRes();
-  //Stat_Class Stats;
+  //StatClass Stats;
 
   typedef vector< CfgType >::iterator CFG_ITRTR;
   for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) 
@@ -658,7 +657,7 @@ cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc)
 /*
 pair<unsigned int, unsigned int>
 HybridPRM::
-ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, WeightType>* rdmp, Stat_Class& stat) 
+ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, WeightType>* rdmp, StatClass& stat) 
 {
   int small_cc_size = 0;
   
@@ -749,21 +748,20 @@ evaluate_map(int in_RegionID)
     return true;
   else
   {
-    ClockClass EvalClock;
-    EvalClock.StartClock("Map Evaluation");
+    StatClass* stats = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
+    stats->StartClock("Map Evaluation");
 
     bool mapPassedEvaluation = true;
     for(vector<string>::iterator I = m_evaluator_labels.begin(); I != m_evaluator_labels.end(); ++I)
     {
       MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      ClockClass EvalSubClock;
-      EvalSubClock.StartClock(pEvaluator->GetName());
+      stats->StartClock(pEvaluator->GetName());
 
       cout << "\n\t";
       mapPassedEvaluation = pEvaluator->operator()(in_RegionID);
 
       cout << "\t";
-      EvalSubClock.StopPrintClock();
+      stats->StopPrintClock(pEvaluator->GetName());
       if(mapPassedEvaluation)
         cout << "\t  (passed)\n";
       else
@@ -771,7 +769,7 @@ evaluate_map(int in_RegionID)
       if(!mapPassedEvaluation)
         break;
     }
-    EvalClock.StopPrintClock();
+    stats->StopPrintClock("Map Evaluation");
     return mapPassedEvaluation;
   }
 }

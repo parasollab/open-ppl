@@ -887,7 +887,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       //if (m_reset_stats)
       pStatClass->ClearStats();
 
-      ClockClass Allstuff;
+     
       //string base_filename = "itr_test_";
 
       //open output file for stats
@@ -905,7 +905,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         << endl;
 
 
-      Allstuff.StartClock("Everything");
+      pStatClass->StartClock("Everything");
 
       double elappsed_ng(0.0), ellapsed_con(0.0);
       bool querySucceeded = false;
@@ -918,14 +918,12 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[1]);
       while(iteration < m_iterations) {
         cout << "Iteration #" << iteration << " of " << m_iterations << endl;
-        ClockClass        NodeGenClock;
-        ClockClass        ConnectionClock;
         //---------------------------
         // Generate roadmap nodes
         //---------------------------
         cout << "GENERATE ROADMAP NODES" << endl;
 
-        NodeGenClock.StartClock("Node Generation");
+        pStatClass->StartClock("Node Generation");
         vector<VID> newVids;
         typedef vector<string>::iterator I;
         for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
@@ -945,15 +943,15 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
           }
         }
 
-        NodeGenClock.StopClock();
-        elappsed_ng += NodeGenClock.GetSeconds();
+        pStatClass->StopClock("Node Generation");
+        elappsed_ng += pStatClass->GetSeconds("Node Generation");
 
         //---------------------------
         // Connect roadmap nodes
         //---------------------------
         cout << "CONNECT ROADMAP NODES" << endl;
 
-        ConnectionClock.StartClock("Node Connection");
+        pStatClass->StartClock("Node Connection");
         ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
         typedef vector<string>::iterator J;
         for(J itr = m_vecStrNodeConnectionLabels.begin(); 
@@ -969,8 +967,8 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
               newVids.begin(), newVids.end());
         }
 
-        ConnectionClock.StopClock();
-        ellapsed_con += ConnectionClock.GetSeconds();
+        pStatClass->StopClock("Node Generation");
+        ellapsed_con += pStatClass->GetSeconds("Node Generation");
 
         /*string outputFilename = getBaseFilename() + ".map"; 
           ofstream  myofstream(outputFilename.c_str());
@@ -987,7 +985,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
 
         //pStatClass->PrintAllStats(region->GetRoadmap());
         //NodeGenClock.PrintClock();
-        ConnectionClock.PrintClock();
+        pStatClass->PrintClock("Node Generation");
         //Allstuff.StopPrintClock();
 
 
@@ -1232,11 +1230,10 @@ class NFTester : public MPStrategyMethod {
       NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
       StatClass * pStatClass = region->GetStatClass();
       pStatClass->ClearStats(); 
-      ClockClass NodeGenClock;
       //---------------------------
       // Generate roadmap nodes
       //---------------------------
-      NodeGenClock.StartClock("Node Generation");
+      pStatClass->StartClock("Node Generation");
 
       typedef vector<string>::iterator I;
       for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
@@ -1254,7 +1251,7 @@ class NFTester : public MPStrategyMethod {
         region->AddToRoadmap(vectorCfgs);
       }
 
-      NodeGenClock.StopClock();
+      pStatClass->StopClock("Node Generation");
       vector< VID > roadmap_vids;
       region->GetRoadmap()->m_pRoadmap->GetVerticesVID(roadmap_vids);
       cout << "Finished ... I did this many : " << roadmap_vids.size() << endl; 

@@ -278,7 +278,6 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 {   
     if (this->m_debug) { cout << endl; PrintOptions(cout); }
     // the vertices in this iteration are the source for the connection operation
-    ClockClass KClosestClock;
     
     int total_success = 0;
     int total_failure = 0;
@@ -311,14 +310,14 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 
         if (this->m_debug) cout << "k_to_find = " << k_to_find << endl;
 
-        KClosestClock.StartClock("kClosest");
+        Stats.StartClock("kClosest");
         vector<VID> closest;
 	back_insert_iterator<vector<VID> > iter_begin(closest);
         back_insert_iterator<vector<VID> > iter_end = FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, iter_neighbors, iter_begin);   
 	
         //copy(closest.begin(), closest.end(), iter_end);
  
-        KClosestClock.StopClock();
+        Stats.StopClock("kClosest");
         if (this->m_debug)
         {
           
@@ -339,7 +338,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       } while (m_unconnected && !enough_connected && k_to_find < iter_size);
     }
   
-    if (this->m_debug) cout << "*** kClosest Time = " << KClosestClock.GetSeconds() << endl;
+    if (this->m_debug) cout << "*** kClosest Time = " << Stats.GetSeconds("kClosest") << endl;
     if (this->m_debug) cout << "*** total_success = " << total_success << endl;
     if (this->m_debug) cout << "*** total_failure = " << total_failure << endl;
 }
@@ -357,7 +356,7 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 { 
     if (this->m_debug) { cout << endl; PrintOptions(cout); }
     // the vertices in this iteration are the source for the connection operation
-    ClockClass KClosestClock;
+   
     
     int total_success = 0;
     int total_failure = 0;
@@ -391,12 +390,12 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 
         if (this->m_debug) cout << "k_to_find = " << k_to_find << endl;
 
-        KClosestClock.StartClock("kClosest");
+        Stats.StartClock("kClosest");
         vector<VID> closest;
 	back_insert_iterator<vector<VID> > iter_begin(closest);
         back_insert_iterator<vector<VID> > iter_end = FindKNeighbors(_rm, v_cfg, _itr2_first, _itr2_last, k_to_find, iter_neighbors, iter_begin);   
 	
-        KClosestClock.StopClock();
+        Stats.StopClock("kClosest");
         if (this->m_debug)
         {
           copy(closest.begin(), closest.end(), ostream_iterator<VID>(cout, " "));
@@ -415,7 +414,7 @@ pConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       } while (m_unconnected && !enough_connected && k_to_find < iter_size);
     }
   
-    if (this->m_debug) cout << "*** kClosest Time = " << KClosestClock.GetSeconds() << endl;
+    
     if (this->m_debug) cout << "*** total_success = " << total_success << endl;
     if (this->m_debug) cout << "*** total_failure = " << total_failure << endl;
 }

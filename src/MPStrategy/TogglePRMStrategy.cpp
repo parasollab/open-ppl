@@ -95,6 +95,7 @@ void TogglePRMStrategy::Run(int in_RegionID){
 
   //setup region variables
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
+  StatClass* stats = region->GetStatClass();
 
   vector<VID> allNodesVID, allCollisionNodesVID;
   region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
@@ -102,7 +103,7 @@ void TogglePRMStrategy::Run(int in_RegionID){
 
   deque<pair<string, CfgType> > queue;
 
-  MapGenClock.StartClock("Map Generation");
+  stats->StartClock("Map Generation");
 
   bool done=false;
 
@@ -141,7 +142,7 @@ void TogglePRMStrategy::Run(int in_RegionID){
     }
   }
 
-  MapGenClock.StopPrintClock();
+  stats->StopPrintClock("Map Generation");
 
   cout<<"\nEnd Running TogglePRMStrategy::"<<in_RegionID<<endl;
 }
@@ -173,7 +174,7 @@ void TogglePRMStrategy::Finalize(int in_RegionID){
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
   streambuf* sbuf = cout.rdbuf(); // to be restored later
   cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
-  MapGenClock.PrintClock();
+  regionStats->PrintClock("Map Generation");
   cout.rdbuf(sbuf);  // restore original stream buffer
   osStat.close();
 
@@ -185,12 +186,11 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
     OutputIterator allOut, OutputIterator thisIterationOut,
     OutputIterator allCollisionOut, OutputIterator thisIterationCollisionOut,
     deque<pair<string, CfgType> >& queue){
-  ClockClass NodeGenClock;
   CDInfo cdInfo;
   StatClass * pStatClass = region->GetStatClass();
   stringstream clockName; 
   clockName << "Iteration " << m_CurrentIteration << ", Node Generation"; 
-  NodeGenClock.StartClock(clockName.str().c_str());
+  pStatClass->StartClock(clockName.str());
 
   typedef map<string, pair<int,int> >::iterator GIT;
   for(GIT git = m_NodeGenerationLabels.begin(); git != m_NodeGenerationLabels.end(); ++git){
@@ -200,10 +200,9 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
 
     string Callee = "TogglePRM::GenerateNodes";
     //generate nodes for this node generator method
-    ClockClass NodeGenSubClock;
     stringstream generatorClockName; 
     generatorClockName << "Iteration " << m_CurrentIteration << ", " << git->first;
-    NodeGenSubClock.StartClock(generatorClockName.str().c_str());
+    pStatClass->StartClock(generatorClockName.str());
 
     cout << "\n\t";
 
@@ -215,7 +214,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
 
     cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
     cout << "\n\t";
-    NodeGenSubClock.StopPrintClock();
+    pStatClass->StopPrintClock(generatorClockName.str());
 
     //add nodes to queue
     typedef vector<CfgType>::iterator CIT;
@@ -254,15 +253,15 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       }  
     }
   }
-  NodeGenClock.StopPrintClock();
+ pStatClass->StopPrintClock(clockName.str());
 }
 
 void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<string, VID> pvid, 
     vector<VID>& allVID, vector<VID>& allNodesVID, vector<VID>&
     allCollisionNodesVID, deque<pair<string, CfgType> >& queue){
-  ClockClass NodeConnClock;
+  StatClass* pStatClass = region->GetStatClass();
   stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Node Connection";
-  NodeConnClock.StartClock(clockName.str().c_str());
+  pStatClass->StartClock(clockName.str());
   stapl::vector_property_map< GRAPH,size_t > cmap;
   vector<string> NodeConnectionLabels;
   if(pvid.first=="valid")
@@ -274,10 +273,9 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
     ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
     pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I);    
 
-    ClockClass NodeConnSubClock;
     stringstream connectorClockName; 
     connectorClockName<<"Iteration "<<m_CurrentIteration<<", "<<pConnection->GetName();
-    NodeConnSubClock.StartClock(connectorClockName.str().c_str());
+    pStatClass->StartClock(connectorClockName.str());
 
     cout << "\n\t";
     vector<VID> nodesVID;
@@ -320,33 +318,32 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
       << endl;
 
     cout << "\t";
-    NodeConnSubClock.StopPrintClock();
+    pStatClass->StopPrintClock(connectorClockName.str());
   }
-  NodeConnClock.StopPrintClock();
+  pStatClass->StopPrintClock(clockName.str());
 }
 
 bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
 {
   bool mapPassedEvaluation = false;
   if(!m_EvaluatorLabels.empty()){
-    ClockClass EvalClock;
-    stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation"; 
-    EvalClock.StartClock(clockName.str().c_str());
+    stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation";
+   StatClass* stats = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
+   stats->StartClock(clockName.str());
 
     mapPassedEvaluation = true;
     for(vector<string>::iterator I = m_EvaluatorLabels.begin(); I != m_EvaluatorLabels.end(); ++I){
       MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator;
       pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      ClockClass EvalSubClock;
       stringstream evaluatorClockName; 
       evaluatorClockName << "Iteration " << m_CurrentIteration << ", " << pEvaluator->GetName();
-      EvalSubClock.StartClock(evaluatorClockName.str().c_str());
+      stats->StartClock(evaluatorClockName.str());
 
       cout << "\n\t";
       mapPassedEvaluation = pEvaluator->operator()(in_RegionID);
 
       cout << "\t";
-      EvalSubClock.StopPrintClock();
+      stats->StopPrintClock(evaluatorClockName.str());
       if(mapPassedEvaluation){
         return true;
         cout << "\t  (passed)\n";
@@ -356,7 +353,7 @@ bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
       //if(!mapPassedEvaluation)
         //break;
     }
-    EvalClock.StopPrintClock();
+    stats->StopPrintClock(clockName.str());
   }
   else{mapPassedEvaluation=true;}//avoid the infinite loop
   return mapPassedEvaluation;

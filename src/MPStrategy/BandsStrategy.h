@@ -199,7 +199,6 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
       pStatClass->ClearStats();
 
-      ClockClass Allstuff;
       //string base_filename = "itr_test_";
 
       //open output file for stats
@@ -220,7 +219,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         << endl;
 
 
-      Allstuff.StartClock("Everything");
+      pStatClass->StartClock("Everything");
 
       double elappsed_ng(0.0), ellapsed_con(0.0);
       bool querySucceeded = false;
@@ -233,20 +232,15 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[1]);
       while(iteration < m_iterations) {
         cout << "--------------" << endl << "iter " << iteration << " of " << m_iterations << endl;
-        ClockClass        NodeGenClock;
-        ClockClass        ConnectionClock;
-        ClockClass        IterationClock;
-        ClockClass        QueryClock;
-        ClockClass        StatClock;
         cout << "defined clocks" << endl;
-        IterationClock.StartClock("Iteration");
+        pStatClass->StartClock("Iteration");
         cout << "started clock" << endl;
         //---------------------------
         // Generate roadmap nodes
         //---------------------------
         cout << "GENERATE ROADMAP NODES - ";
 
-        NodeGenClock.StartClock("Node Generation");
+        pStatClass->StartClock("Node Generation");
         vector<VID> newVids;
         typedef vector<string>::iterator I;
         for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr)
@@ -271,15 +265,17 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           ResizeBbox(std::cout,2.0);
         }
 
-        NodeGenClock.StopClock();
-        elappsed_ng += NodeGenClock.GetSeconds();
+        pStatClass->StopClock("Node Generation");
+        elappsed_ng += pStatClass->GetSeconds("Node Generation");
 
         //---------------------------
         // Connect roadmap nodes
-        //---------------------------
+        //----------
+        //
+        //-----------------
         cout << "CONNECT ROADMAP NODES" << endl;   
 
-        ConnectionClock.StartClock("Node Connection");
+        pStatClass->StartClock("Node Connection");
         ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
         typedef vector<string>::iterator J;
         for(J itr = m_vecStrNodeConnectionLabels.begin(); 
@@ -300,8 +296,8 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         if(resize_bbox){
           ResizeBbox(std::cout,0.5);
         }
-        ConnectionClock.StopClock();
-        ellapsed_con += ConnectionClock.GetSeconds();
+        pStatClass->StopClock("Node Connection");
+        ellapsed_con += pStatClass->GetSeconds("Node Generation");
 
 
 
@@ -317,19 +313,19 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           myofstream.close();
          */
 
-        IterationClock.StopClock();
+        pStatClass->StopClock("Iteration");
 
         //pStatClass->PrintAllStats(region->GetRoadmap());
 
-        QueryClock.StartClock("Query");
+        pStatClass->StartClock("Query");
         cout << "BEGIN isSameCCC" << endl <<flush;  
         stapl::vector_property_map< GRAPH,size_t > cmap;
         querySucceeded = is_same_cc(*region->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
 
-        QueryClock.StopClock();
+        pStatClass->StopClock("Query");
 
 
-        StatClock.StartClock("Stats Output");
+        pStatClass->StartClock("Stats Output");
 
         ///////////////////
         //Output stat info
@@ -413,14 +409,14 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
         }
 
-        StatClock.StopClock();
+        pStatClass->StopClock("Stats Output");
 
-        NodeGenClock.PrintClock();
-        ConnectionClock.PrintClock();
-        QueryClock.PrintClock();
-        StatClock.PrintClock();
-        IterationClock.PrintClock();
-        Allstuff.StopPrintClock();
+        pStatClass->PrintClock("Node Generation");
+        pStatClass->PrintClock("Node Connection");
+        pStatClass->PrintClock("Query Time");
+        pStatClass->PrintClock("Stats Output");
+        pStatClass->PrintClock("Iteration");
+        pStatClass->StopPrintClock("Everything");
 
 
         iteration++;

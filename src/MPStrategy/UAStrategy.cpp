@@ -565,24 +565,24 @@ void UAStrategy::EvaluatePartitions(){
 bool UAStrategy::EvaluateMap(int in_RegionID){
    bool mapPassedEvaluation = false;
    if(!m_EvaluatorLabels.empty()){
-      ClockClass EvalClock;
-      stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation"; 
-      EvalClock.StartClock(clockName.str().c_str());
+     // Stat_Class EvalClock;
+      stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation";
+      StatClass* stats = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
+      stats->StartClock(clockName.str());
       
       mapPassedEvaluation = true;
       for(vector<string>::iterator I = m_EvaluatorLabels.begin(); 
           I != m_EvaluatorLabels.end(); ++I){
          MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator;
          pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-         ClockClass EvalSubClock;
          stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_CurrentIteration << ", " << pEvaluator->GetName();
-         EvalSubClock.StartClock(evaluatorClockName.str().c_str());
+         stats->StartClock(evaluatorClockName.str());
          
          cout << "\n\t";
          mapPassedEvaluation = pEvaluator->operator()(in_RegionID);
          
          cout << "\t";
-         EvalSubClock.StopPrintClock();
+         stats->StopPrintClock(evaluatorClockName.str());
          if(mapPassedEvaluation){
             cout << "\t  (passed)\n";
             return true;
@@ -592,7 +592,7 @@ bool UAStrategy::EvaluateMap(int in_RegionID){
          //if(!mapPassedEvaluation)
             //break;
       }
-      EvalClock.StopPrintClock();
+      stats->StopPrintClock(clockName.str());
    }
    else{mapPassedEvaluation=true;}//avoid the infinite loop
    return mapPassedEvaluation;

@@ -182,8 +182,7 @@ Run(int in_RegionID)
    CDInfo cdInfo;
    LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
    vector<CfgType>::iterator C = path_cfgs.begin();
-   ClockClass ResamplingClock;
-   ResamplingClock.StartClock("Resampling started");
+   pStatClass->StartClock("Resampling started");
    opath_cfgs.push_back(*C);
    CfgType previous;
    temp=GetValue( *C, GetMPProblem(), rdmp->GetEnvironment(), *pStatClass,
@@ -252,7 +251,7 @@ Run(int in_RegionID)
    index++;
    opath_cfgs.push_back(*C);
        
-    ResamplingClock.StopPrintClock(); 
+    pStatClass->StopPrintClock("Resampling started"); 
    
    cout << endl;
    cout<<"newsmoothingvalues:"<<endl;

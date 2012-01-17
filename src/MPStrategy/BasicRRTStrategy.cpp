@@ -91,7 +91,7 @@ void BasicRRTStrategy::Run(int _regionID) {
   string callee = "BasicRRTStrategy::RRT";
   bool checkCollision=false, savePath=false, saveFailed=false;
 
-  m_strategyClock.StartClock("RRT Generation");
+  regionStats->StartClock("RRT Generation");
 
   // Setup RRT Variables
   CfgType tmp, dir;
@@ -201,9 +201,9 @@ void BasicRRTStrategy::Run(int _regionID) {
     }
  }
 
-  m_strategyClock.StopClock();
+  regionStats->StopClock("RRT Generation");
   if(m_debug) {
-    m_strategyClock.PrintClock();
+    regionStats->PrintClock("RRT Generation");
     cout<<"\nEnd Running BasicRRTStrategy::" << _regionID << endl;  
   }
 }
@@ -230,7 +230,7 @@ void BasicRRTStrategy::Finalize(int _regionID) {
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
   streambuf* sbuf = cout.rdbuf(); // to be restored later
   cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
-  m_strategyClock.PrintClock();
+  regionStats->PrintClock("RRT Generation");
   cout.rdbuf(sbuf);  // restore original stream buffer
   osStat.close();
 
@@ -239,19 +239,18 @@ void BasicRRTStrategy::Finalize(int _regionID) {
 
 void BasicRRTStrategy::ConnectComponents(int _regionID) {
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
+  StatClass* stats = region->GetStatClass();
   MPStrategy* mps = GetMPProblem()->GetMPStrategy();
-  ClockClass componentConnClock;
   stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Component Connection";
-  componentConnClock.StartClock(clockName.str().c_str());
+  stats->StartClock(clockName.str());
   stapl::vector_property_map< GRAPH,size_t > cmap;
 
   for(vector<string>::iterator I = m_componentConnectors.begin(); I != m_componentConnectors.end(); ++I) {
     ConnectMap<CfgType, WeightType>::ComponentConnectionPointer connector;
     connector = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
 
-    ClockClass componentConnSubClock;
     stringstream connectorClockName; connectorClockName << "Iteration " << m_currentIteration << ", " << connector->GetName();
-    componentConnSubClock.StartClock(connectorClockName.str().c_str());
+    stats->StartClock(connectorClockName.str());
 
     if(m_debug) cout << "\n\t";
     mps->GetConnectMap()->ConnectComponents(connector, 
@@ -266,11 +265,11 @@ void BasicRRTStrategy::ConnectComponents(int _regionID) {
         << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
         << "\n\t";
 
-    componentConnSubClock.StopClock();
-    if(m_debug) componentConnSubClock.PrintClock();
+    stats->StopClock(connectorClockName.str());
+    if(m_debug) stats->PrintClock(connectorClockName.str());
   }
-  componentConnClock.StopClock();
-  if(m_debug) componentConnClock.PrintClock();
+  stats->StopClock(clockName.str());
+  if(m_debug) stats->PrintClock(clockName.str());
 }
 
 bool BasicRRTStrategy::EvaluateMap(int _regionID) {
@@ -278,23 +277,24 @@ bool BasicRRTStrategy::EvaluateMap(int _regionID) {
     return true;
   }
   else{
+    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
+    StatClass* stats = region->GetStatClass();
+    
     bool mapPassedEvaluation = false;
-    ClockClass evalClock;
     stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Map Evaluation"; 
-    evalClock.StartClock(clockName.str().c_str());
+    stats->StartClock(clockName.str());
     mapPassedEvaluation = true;
 
     for (vector<string>::iterator I = m_evaluators.begin(); I != m_evaluators.end(); ++I) {
       MapEvaluator<CfgType, WeightType>::conditional_type evaluator;
       evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      ClockClass evalSubClock;
       stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_currentIteration << ", " << evaluator->GetName();
-      evalSubClock.StartClock(evaluatorClockName.str().c_str());
+      stats->StartClock(evaluatorClockName.str());
       if(m_debug) cout << "\n\t";
       mapPassedEvaluation = evaluator->operator()(_regionID);
       if(m_debug) cout << "\t";
-      evalSubClock.StopClock();
-      if(m_debug) evalSubClock.PrintClock();
+      stats->StopClock(evaluatorClockName.str());
+      if(m_debug) stats->PrintClock(evaluatorClockName.str());
       if(mapPassedEvaluation){
         if(m_debug) cout << "\t  (passed)\n";
       }
@@ -304,8 +304,8 @@ bool BasicRRTStrategy::EvaluateMap(int _regionID) {
       if(!mapPassedEvaluation)
         break;
     }
-    evalClock.StopClock();
-    if(m_debug) evalClock.PrintClock();
+    stats->StopClock(clockName.str());
+    if(m_debug) stats->PrintClock(clockName.str());
     return mapPassedEvaluation;
   } 
 }

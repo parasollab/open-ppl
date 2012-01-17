@@ -34,7 +34,6 @@ class MPStrategyMethod : public MPBaseObject {
     long GetBaseSeed() {return m_baseSeed;} 
 
   protected:
-    ClockClass m_strategyClock;
     typedef RoadmapGraph<CfgType, WeightType>::GRAPH GRAPH;
     typedef RoadmapGraph<CfgType, WeightType>::VID VID; 
     shared_ptr<BoundingBox> m_boundary; 

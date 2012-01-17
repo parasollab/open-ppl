@@ -94,8 +94,7 @@ Run(int in_RegionID)
       methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
 
   //perform query
-  ClockClass QueryClock;
-  QueryClock.StartClock("Query");
+  pStatClass->StartClock("Query");
    
   if(query.PerformQuery(rdmp, *pStatClass, 
                         &m_ConnectMap, 
@@ -110,9 +109,9 @@ Run(int in_RegionID)
   {
     cout << endl << "UNSUCCESSFUL query";
   }
-  QueryClock.StopClock();
+  pStatClass->StopClock("Query");
 
-  cout << ":" << QueryClock.GetSeconds() << " sec (ie, " << QueryClock.GetUSeconds() << " usec)";
+  cout << ":" << pStatClass->GetSeconds("Query") << " sec (ie, " << pStatClass->GetUSeconds("Query") << " usec)";
   cout << endl;
 }
 

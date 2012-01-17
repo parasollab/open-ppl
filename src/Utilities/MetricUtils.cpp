@@ -31,6 +31,7 @@ const int StatClass::ALL= -1;
 StatClass::
 StatClass() {
   ClearStats();
+ 
 };
 
 // StatClass Class Deconstructor
@@ -239,6 +240,71 @@ IncNodesAttempted(){
   m_nodesAttempted++;
 };
 
+void
+StatClass::
+StartClock(string _name) {
+  if(_name != "") {
+    m_clockMap[_name].StartClock(_name);
+  }
+  else  
+    cerr<<"Error::Attempting to start a non-existing clock"<< endl; 
+};
+
+void
+StatClass::
+StopClock(string _name) {
+  if(_name != "") {
+    m_clockMap[_name].StopClock(); 
+  }
+  else 
+    cerr<<"Error::Attempting to stop a non-existing clock"<< _name << endl; 
+};
+ 
+void 
+StatClass::
+StopPrintClock(string _name) {
+  if(_name != "")
+    m_clockMap[_name].StopPrintClock();
+  else 
+    cerr<<"Error::Attempting to stop and print a non-existing clock"<< _name << endl; 
+};
+ 
+void 
+StatClass::
+PrintClock(string _name) {
+  if(_name !="")
+    m_clockMap[_name].PrintClock();
+  else 
+    cerr<<"Error::Attempting to print a non-existing clock"<< _name << endl; 
+};
+
+void
+StatClass::
+ClearClock(string _name) {
+  if(_name!= "")
+    m_clockMap[_name].ClearClock();
+  else 
+    cerr<<"Error::Attempting to clear a non-existing clock"<< _name << endl; 
+};
+
+double
+StatClass::
+GetSeconds(string _name) {
+  if(_name !="")
+    m_clockMap[_name].GetSeconds();
+  else 
+    cerr<<"Attempting to GetSeconds for a non-existing clock:: "<< _name << endl; 
+};
+
+int 
+StatClass::
+GetUSeconds(string _name) {
+  if(_name != "")
+    m_clockMap[_name].GetUSeconds();
+  else 
+    cerr<<"Attempting to GetUSeconds for a non-existing clock::"<< _name << endl; 
+};
+
 /////////////////////////////////////////////////////////////////////
 //
 //  ClockClass
@@ -317,24 +383,6 @@ PrintClock() {
   cout << m_clockName << ": " << GetSeconds() << " sec" <<endl;
 };
 
-//----------------------------------------
-// Retrieve the current value of the clock
-//----------------------------------------
-int
-ClockClass::
-GetClock() {
-  return m_uTime;
-};
-
-//----------------------------------------
-// Print the name of the clock provided in the
-// call to StartClock
-//----------------------------------------
-void
-ClockClass::
-PrintName() {
-    cout << m_clockName;
-};
 
 //----------------------------------------
 // Retrieve the seconds on the clock

@@ -84,8 +84,7 @@ Run(int in_RegionID)
 
 
   //perform query
-  ClockClass QueryClock;
-  QueryClock.StartClock("Query");
+  pStatClass->StartClock("Query");
 
   bool query_result = query.PerformQuery(rdmp, *pStatClass, 
                        &m_ConnectMap, 
@@ -93,7 +92,7 @@ Run(int in_RegionID)
                        GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
                        GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
                                          
-  QueryClock.StopPrintClock();
+  pStatClass->StopPrintClock("Query");
   
   if(query_result)
   {
@@ -111,8 +110,7 @@ Run(int in_RegionID)
         methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
 
     //redo connection among nodes in path
-    ClockClass SmoothClock;
-    SmoothClock.StartClock("Smooth Path");
+    pStatClass->StartClock("Smooth Path");
     vector<VID> path_vids;
     for(vector<CfgType>::iterator I = query.path.begin(); I != query.path.end(); ++I)
       if(rdmp->m_pRoadmap->IsVertex(*I))
@@ -127,18 +125,17 @@ Run(int in_RegionID)
                            path_vids.begin(), path_vids.end(),
                            path_vids.begin(), path_vids.end());
     }
-    SmoothClock.StopPrintClock();
+    pStatClass->StopPrintClock("Smooth Path");
 
     //reperform query
-    ClockClass SmoothQueryClock;
-    SmoothQueryClock.StartClock("Query Smoothed Path");
+    pStatClass->StartClock("Query Smoothed Path");
     query.path.clear();
     bool smooth_query_result = query.PerformQuery(rdmp, *pStatClass,
                                                   &m_ConnectMap,
                                                   &methods,
                                                   GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
                                                   GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
-    SmoothQueryClock.StopPrintClock();
+    pStatClass->StopPrintClock("Query Smoothed Path");
 
     //output smoothed path
     if(smooth_query_result)

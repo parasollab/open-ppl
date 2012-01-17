@@ -42,7 +42,7 @@ class TogglePRMStrategy : public MPStrategyMethod
       OutputIterator thisIterationOut, OutputIterator allCollisionOut, OutputIterator
       thisIterationCollisionOut, deque<pair<string, CfgType> >& queue);
 
-   ClockClass MapGenClock;
+ 
 };
 
 #endif

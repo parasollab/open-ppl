@@ -6,7 +6,116 @@
 #include "NeighborhoodFinder.h"
 #include <string>
 
+/**Provide timing information.
+  *This class is used to measure the running time between StartClock and 
+  *StopClock. Client side could provide clock name, when StopClock is called 
+  *the name will be print out, and running time as well.
+  */
+class ClockClass {
+public:
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Constructors and Destructor
+  //
+  //
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  //-----------------------------------------------------------
+  /**@name Constructors and Destructor.*/
+  //-----------------------------------------------------------
+  //@{
+  ///Default constructor. Set every thing to zero
+  ClockClass();
+
+  ///Destructor. Do nothing
+  ~ClockClass();
+  //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Clock methods
+  //
+  //
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  //----------------------------------------------------------
+  /**@name Clock Methods.*/
+  //-----------------------------------------------------------
+  //@{
+  ///Set every thing to zero
+  void ClearClock();
+
+  ///Start the clock and the name is identity of this clock.
+  void StartClock(string _name);
+
+  ///Stop the clock and calculate the total running time.
+  void StopClock();
+
+  ///Call StopClock and PrintClock.
+  void StopPrintClock();
+  //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    I/O
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+
+  //-----------------------------------------------------------
+  /**@name Input and Output Methods.*/
+  //-----------------------------------------------------------
+  //@{
+  /**Output the clock name given in StartClock and running time accosited with this name
+    *to the standard output.
+    */
+  void PrintClock();
+
+  ///Output the clock name given in StartClock to the standard output
+  void PrintName();
+  //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Access Methods
+  //
+  //
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  //-----------------------------------------------------------
+  /**@name Access Methods.*/
+  //-----------------------------------------------------------
+  //@{
+  ///Get how many seconds of running time are. (integer, without fraction part!!)
+  int GetClock();
+
+  ///Get how many seconds of running time are.
+  double GetSeconds();
+
+  ///Get how many 1e-6 seconds of running time are.
+  int GetUSeconds();
+  //@}
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //    Private Data Members and MEmber Methods Methods (Undocumented)
+  //
+  //
+  ///////////////////////////////////////////////////////////////////////////////////////////
+private:
+  int m_sTime, m_uTime;
+  int m_suTime, m_uuTime;
+  string m_clockName;
+};
+
 class StatClass {
+
 public:
   StatClass();
   ~StatClass();
@@ -41,7 +150,17 @@ public:
   void PrintFeatures(ostream& _os);
   void IncNodesGenerated();
   void IncNodesAttempted();
-
+  
+  //Clock Accessors
+  void ClearClock(string _name);
+  void StartClock(string _name);
+  void StopClock(string _name);
+  void StopPrintClock(string _name);
+  void PrintClock(string _name);
+  double GetSeconds(string _name);
+  int GetUSeconds(string _name);
+  
+  //LP Statistics Accessors/Modifiers
   double GetLPStat(string _s){return m_lpStats[_s];}
   void SetLPStat(string _s, double _v) {m_lpStats[_s]=_v;}
   void IncLPStat(string _s, double _v) {m_lpStats[_s]+=_v;}
@@ -58,6 +177,8 @@ public:
   map<string, unsigned long int> m_lpAttempts;
   map<string, unsigned long int> m_lpCollDetCalls;
   map<string, unsigned long int> m_collDetCountByName;
+  
+  map<string, ClockClass> m_clockMap;
 
   ///IsColl simply counts the number of times a Cfg is tested for Collision.
   ///\see Cfg::isCollision
@@ -206,6 +327,14 @@ PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
     _os << i << ") " << iter->second << " " << iter->first << endl;;
   }
   _os << "Total Cfg::isCollision() = " << m_isCollTotal << endl << endl;
+  
+  //Output Clock Statistics.
+  _os << "Clocks " << endl << endl;
+  typedef map<string, ClockClass>::iterator CIT;
+  for(CIT cit =m_clockMap.begin(); cit!= m_clockMap.end(); cit++) {
+    _os << setw(40) << cit->first << setw(40) << cit->second.GetSeconds() << endl;
+  }
+  
   #endif
 
 }
@@ -579,113 +708,7 @@ DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1) 
   #endif
 }
 
-/**Provide timing information.
-  *This class is used to measure the running time between StartClock and 
-  *StopClock. Client side could provide clock name, when StopClock is called 
-  *the name will be print out, and running time as well.
-  */
-class ClockClass {
-public:
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////
-
-  //-----------------------------------------------------------
-  /**@name Constructors and Destructor.*/
-  //-----------------------------------------------------------
-  //@{
-  ///Default constructor. Set every thing to zero
-  ClockClass();
-
-  ///Destructor. Do nothing
-  ~ClockClass();
-  //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Clock methods
-  //
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////
-
-  //----------------------------------------------------------
-  /**@name Clock Methods.*/
-  //-----------------------------------------------------------
-  //@{
-  ///Set every thing to zero
-  void ClearClock();
-
-  ///Start the clock and the name is identity of this clock.
-  void StartClock(string _name);
-
-  ///Stop the clock and calculate the total running time.
-  void StopClock();
-
-  ///Call StopClock and PrintClock.
-  void StopPrintClock();
-  //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    I/O
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-  //-----------------------------------------------------------
-  /**@name Input and Output Methods.*/
-  //-----------------------------------------------------------
-  //@{
-  /**Output the clock name given in StartClock and running time accosited with this name
-    *to the standard output.
-    */
-  void PrintClock();
-
-  ///Output the clock name given in StartClock to the standard output
-  void PrintName();
-  //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Access Methods
-  //
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////
-
-  //-----------------------------------------------------------
-  /**@name Access Methods.*/
-  //-----------------------------------------------------------
-  //@{
-  ///Get how many seconds of running time are. (integer, without fraction part!!)
-  int GetClock();
-
-  ///Get how many seconds of running time are.
-  double GetSeconds();
-
-  ///Get how many 1e-6 seconds of running time are.
-  int GetUSeconds();
-  //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Private Data Members and MEmber Methods Methods (Undocumented)
-  //
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////
-private:
-  int m_sTime, m_uTime;
-  int m_suTime, m_uuTime;
-  string m_clockName;
-};
 
 
 #ifndef _H_UTILITY

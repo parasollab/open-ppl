@@ -299,8 +299,6 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 {
   cout << "PreferentialAttachment<CFG,WEIGHT>::ConnectNodes() - 1 pairs InputIterator" << endl << flush;
 
-  ClockClass KClosestClock;
-  
   int total_success = 0;
   int total_failure = 0;
 
@@ -313,7 +311,7 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
     }
     int attempts = 0;
 
-    KClosestClock.StartClock("kClosest");
+    Stats.StartClock("kClosest");
     while (attempts < min(m_k, n-1)) {
       for (size_t i = 0; i < n-1; i++) {
         double drand = DRand();
@@ -324,11 +322,11 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
           vector<VID> candidate;
           candidate.push_back(input_vertices[i]);
 
-          KClosestClock.StopClock();
+          Stats.StopClock("kClosest");
           if (m_debug) cout << "\tAttempting connections: VID = " << input_vertices[n] << "  --> " << candidate[0] << endl;
           ConnectNeighbors(_rm, Stats, addAllEdges, total_success, total_failure,
                            input_vertices[n], candidate, collision);
-          KClosestClock.StartClock("kClosest");
+          Stats.StartClock("kClosest");
 
           attempts += 1;
         }
@@ -337,10 +335,10 @@ ConnectNodes(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
         }
       }
     }  
-    KClosestClock.StopClock();
+    Stats.StopClock("kClosest");
   }
 
-  if (m_debug) cout << "*** kClosest Time = " << KClosestClock.GetSeconds() << endl;
+  if (m_debug) cout << "*** kClosest Time = " << Stats.GetSeconds("kClosest") << endl;
   if (m_debug) cout << "*** total_success = " << total_success << endl;
   if (m_debug) cout << "*** total_failure = " << total_failure << endl;
 }
