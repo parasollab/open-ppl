@@ -3,9 +3,11 @@
 \usepackage[top=0.5in,left=0.5in,right=0.5in, bottom=0.5in]{geometry}
 \usepackage{amssymb}
 \usepackage{algorithm,algorithmic}
+\newcommand{\EXCISE}[1]{}
+
 
 \title{\Large \bf Standards and Procedures of PMPL}
-\author{Jory Denny}
+\author{Jory Denny and Shawna Thomas and Nancy M. Amato}
 
 \begin{document}
 \thispagestyle{empty}
@@ -15,6 +17,10 @@
 This document outlines the standards for all procedures within PMPL. This ranges from coding standards, to testing
 standards, to documentation standards, etc. Everyone will be expected to adhere to these standards.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PMPL Check-in procedure 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Check-in Procedure}
 The following procedure will occur anytime a check-in will take place within PMPL.
 \begin{algorithmic}[1]
@@ -23,6 +29,10 @@ The following procedure will occur anytime a check-in will take place within PMP
 \STATE Back up validation shall occur during the PMPL nightly tests, person who checks in the code is responsible for
 fixing warnings and errors caused by the check-in
 \end{algorithmic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PMPL Coding Standards 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Coding Standards}
 
@@ -72,10 +82,95 @@ checked-in code).
 \subsection{Example Class}
 Example class is located in ExampleClass.h/.cpp within this same folder.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PMPL Class Structure 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Class Structure}
+All algorithmic groups will be structured in a similar way. There are two basic classes. The first is the algorithmic
+base (e.g., LocalPlannerMethod, SamplerMethod, or DistanceMetricMethod) and the second is the container class (e.g.,
+LocalPlanners, Samplers, or DistanceMetrics). This section outlines standards for this coding structure.
+
+\subsection{Container Class}
+The container class should implement the following standards:
+
+\begin{itemize}
+\item The container class must extend private ElementSet and public MPBaseObject.
+\item The container class shall contain no functions to perform computations, i.e., LocalPlanners should not make any
+calls to LocalPlannerMethods to check node connectivity.
+\item The container class shall contain a method GetMethod(string \_s), which calls \\ElementSet::GetElement(\_s).
+\item Any access to a specific algorithmic method will be made through GetMethod, e.g., \\
+GetMPProblem()$\rightarrow$GetDistanceMetrics()$\rightarrow$GetMethod(s).
+\item The pointer to the container class shall be stored in MPProblem.
+\end{itemize}
+
+\subsection{Algorithmic Base Class}
+The algorithmic base class should implement the following standards:
+
+\begin{itemize}
+\item The base class must extend public MPBaseObject.
+\item The base class shall have at minimum one purely virtual function reserved for algorithmic purposes, i.e., distance
+metric methods have the function Distance.
+\item If more than one way to call the purely virtual function exists, the base class shall contain the overloaded
+functions to lead all computations to the one purely virtual function, e.g., in the SamplerMethod base class there are
+many overloaded Sample functions, but all of these eventually converge to calling the single purely virtual function
+Sampler.
+\item Only attributes shared among all algorithmic extensions should be stored in this class and loaded in through the
+xml constructor/ParseXML function (and non-xml constructor).
+\end{itemize}
+
+\subsection{Algorithmic Extensions}
+All algorithmic extensions and class hierarchies should be constructed in such a way to MAXIMIZE code reuse. If the
+functionality can be used in a separate part of the code as well this is a good candidate for a utility function, i.e.,
+calculating the clearance of a node.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Statistics 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Statistics, Metrics, and Evaluators}
+
+\subsection{StatClass}
+In general the StatClass is reserved as only a record keeper. It is used to aid in access and modifying of statistics
+for the user. The StatClass therefore has two functions, record keeping and easy output of statistics. Any calculations
+shall be done in Metric calculations stored in MetricUtils.h/.cpp and shall not explicitly be contained in the
+StatClass.
+
+\subsubsection{Generalized Statistics}
+Statistics general to all algorithmic methods in an algorithmic set should be handled in the Algorithmic base class,
+when possible, and these statistics warrant their own variable, e.g., collision detection calls, local planner method
+attempts/successes. The StatClass aids in this output as well.
+
+\subsubsection{Specialized Maps}
+The StatClass shall contain map$<$string, double$>$ for each separate part of the code for use of specific metrics related
+to the specific algorithms, i.e., ToggleLP has specific statistics a user might be interested in. The StatClass shall
+aid in the output of such statistics as well.
+
+\subsubsection{Use of clocks}
+Although the ClockClass is a separate class, the StatClass provides nice access to and automatic output of timing
+statistics. Thus, if a clock is to be used, a programmer should go through the StatClass, i.e., \_stats.StartClock("my
+timer") instead of ClockClass c("my timer); c.StartClock(). 
+
+\subsection{Metrics}
+Metric calculations will be stored in MetricUtils.h/.cpp. These should be items which are usuable by any part of the
+code, and generalized in such a manner. 
+
+\subsection{Evaluators}
+Evaluators exist for the purpose of comparing a metric to a user defined value, i.e. is the number of edges in my
+roadmap greater than 100?
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DOCUMENTATION AND TESTING STANDARDS NOT SET
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\EXCISE{
+
 \section{Documentation}
 All documentation should be done with DOxygen. DOxygen standards used within PMPL are not decided upon yet.
 
 \section{Testing}
 Currently only nightly compilation testing occurs nightly. This should be expanded in the future.
+
+}
 
 \end{document}
