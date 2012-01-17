@@ -158,7 +158,7 @@ IsConnectedOneWay(Environment *_env, StatClass& Stats,
 		  double positionRes, double orientationRes,
 		  bool checkCollision, 
 		  bool savePath, bool saveFailedPath) {
-  Stats.IncLPAttempts( "AStar" );
+  Stats.IncLPAttempts( this->GetName() );
   int cd_cntr = 0;
   
   CFG p;
@@ -245,10 +245,10 @@ IsConnectedOneWay(Environment *_env, StatClass& Stats,
   lpOutput->edge.first.SetWeight(lpOutput->edge.first.GetWeight() + nTicks);
   lpOutput->edge.second.SetWeight(lpOutput->edge.second.GetWeight() + nTicks);
     
-  Stats.IncLPCollDetCalls("AStar", cd_cntr );
+  Stats.IncLPCollDetCalls(this->GetName(), cd_cntr );
   
   if(connected)
-    Stats.IncLPConnections( "AStar" );
+    Stats.IncLPConnections(this->GetName() );
   
   for(size_t i=0; i<neighbors.size();i++) {
       if (neighbors[i] != NULL)
@@ -283,14 +283,14 @@ class AStarDistance: public AStar<CFG, WEIGHT> {
 template <class CFG, class WEIGHT>
 AStarDistance<CFG, WEIGHT>::
 AStarDistance(cd_predefined _cdtype) : AStar<CFG, WEIGHT>(_cdtype) {
-  this->SetName("a_star_distance");
+  this->SetName("AStarDistance");
   AStar<CFG, WEIGHT>::SetDefault();
 }
 
 template <class CFG, class WEIGHT>
 AStarDistance<CFG, WEIGHT>::
  AStarDistance(cd_predefined _cdtype,int n_tries,int n_neighbors):AStar<CFG,WEIGHT>( _cdtype, n_tries,n_neighbors) {
-  this->SetName("a_star_distance");
+  this->SetName("AStarDistance");
 }
 
 template <class CFG, class WEIGHT>
@@ -298,7 +298,7 @@ AStarDistance<CFG, WEIGHT>::
 AStarDistance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml ):
      AStar<CFG,WEIGHT>(_cdtype,in_Node,in_pProblem,false)
 {
-  this->SetName("a_star_distance");
+  this->SetName("AStarDistance");
   this->cdtype= _cdtype;
   if(warnUnrequestedXml)
     in_Node.warnUnrequestedAttributes();
@@ -369,13 +369,13 @@ class AStarClearance: public AStar<CFG, WEIGHT> {
 template <class CFG, class WEIGHT>
 AStarClearance<CFG, WEIGHT>::
 AStarClearance(cd_predefined _cdtype) : AStar<CFG, WEIGHT>(_cdtype) {
-  this->SetName("aStarClearance");
+  this->SetName("AStarClearance");
 }
 
 template <class CFG, class WEIGHT>
 AStarClearance<CFG, WEIGHT>::
  AStarClearance(cd_predefined _cdtype,int n_tries,int n_neighbors):AStar<CFG,WEIGHT>( _cdtype, n_tries,n_neighbors) {
-  this->SetName("aStarClearance");
+  this->SetName("AStarClearance");
 }
 
 template <class CFG, class WEIGHT>
@@ -383,10 +383,10 @@ AStarClearance<CFG, WEIGHT>::
 AStarClearance(cd_predefined _cdtype, XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warnUnrequestedXml ):
      AStar<CFG,WEIGHT>(_cdtype,in_Node,in_pProblem,false)
 {
-  this->SetName("aStarClearance");
+  this->SetName("AStarClearance");
   this->cdtype= _cdtype;
   dm_label = in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
-  vcMethod = in_Node.stringXMLParameter(string("vc_method"), true, string(""), string("Validity Test Method"));
+  vcMethod = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
   penetration = in_Node.numberXMLParameter("penetration", false, 5, 0, 1000, "Penetration Number");
   if(warnUnrequestedXml)
     in_Node.warnUnrequestedAttributes();

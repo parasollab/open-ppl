@@ -206,13 +206,13 @@ _IsConnected(Environment *_env, StatClass& Stats,
          bool savePath, bool saveFailedPath,
  	 typename boost::disable_if<IsClosedChain<Enable> >::type* dummy) 
 { 
-  Stats.IncLPAttempts("Straightline");
+  Stats.IncLPAttempts(this->GetName());
   int cd_cntr = 0; 
  
   ///\todo fix this bug ... CD count not right.
   ///\todo fix lineSegment implementation!  very poor for counting stats, etc.
   if(lineSegmentLength) {
-    Stats.IncLPCollDetCalls("Straightline", cd_cntr );
+    Stats.IncLPCollDetCalls(this->GetName(), cd_cntr);
     if( lineSegmentInCollision(_env, Stats, dm, _c1, _c2, lpOutput, cd_cntr, positionRes)) {
        return false;  //not connected
     }
@@ -227,9 +227,9 @@ _IsConnected(Environment *_env, StatClass& Stats,
                                            cd_cntr, positionRes, orientationRes, 
                                            checkCollision, savePath, saveFailedPath);
     if(connected)
-      Stats.IncLPConnections("Straightline");
+      Stats.IncLPConnections(this->GetName());
 
-    Stats.IncLPCollDetCalls("Straightline", cd_cntr );
+    Stats.IncLPCollDetCalls(this->GetName(), cd_cntr );
     return connected;
 }
 
@@ -254,7 +254,7 @@ _IsConnected(Environment *_env, StatClass& Stats,
   CDInfo cdInfo;
   Callee=Callee+Method;
   
-  Stats.IncLPAttempts("Straightline");
+  Stats.IncLPAttempts(this->GetName());
   int cd_cntr = 0; 
   
   bool connected;
@@ -350,8 +350,9 @@ _IsConnected(Environment *_env, StatClass& Stats,
     }
   }
   if(connected)
-    Stats.IncLPConnections( "Straightline" );
-  Stats.IncLPCollDetCalls( "Straightline", cd_cntr );
+    Stats.IncLPConnections(this->GetName());
+
+  Stats.IncLPCollDetCalls( this->GetName(), cd_cntr );
   return connected;
 }
 

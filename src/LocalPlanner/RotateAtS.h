@@ -100,8 +100,8 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->m_vcMethod);
 
-  char RatS[50] = "Rotate_at_s";
-  sprintf(RatS,"%s=%3.1f",RatS, s_values[0]);
+  char RatS[50];
+  sprintf(RatS,"%s=%3.1f",this->GetName().c_str(), s_values[0]);
   for(size_t i=1; i<s_values.size(); ++i) 
     sprintf(RatS,"%s,%3.1f",RatS, s_values[i]);
   _stats.IncLPAttempts( RatS );

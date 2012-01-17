@@ -179,8 +179,8 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
     }
   }
 
-  if ( connected ) _stats.IncLPConnections("Transform_At_S");
-  _stats.IncLPCollDetCalls("Transform_At_Se", cd_cntr);
+  if ( connected ) _stats.IncLPConnections(this->GetName());
+  _stats.IncLPCollDetCalls(this->GetName(), cd_cntr);
 
   for(size_t i=0; i<sequence.size(); ++i)
     if(sequence[i] != NULL)
@@ -291,8 +291,8 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
     }
   }
 
-  if ( connected ) _stats.IncLPConnections("Transform_At_S");
-  _stats.IncLPCollDetCalls("Transform_At_S", cd_cntr);
+  if ( connected ) _stats.IncLPConnections(this->GetName());
+  _stats.IncLPCollDetCalls(this->GetName(), cd_cntr);
 
   for(size_t i=0; i<sequence.size(); ++i)
     if(sequence[i] != NULL)

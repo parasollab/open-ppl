@@ -91,7 +91,7 @@ template <class CFG, class WEIGHT>
 char*
 ApproxSpheres<CFG, WEIGHT>::
 GetName() const {
-  return "approx_spheres";
+  return "ApproxSpheres";
 }
 
 
@@ -150,7 +150,7 @@ IsConnected(Environment *_env, StatClass& Stats,
   lpOutput->edge.first.SetWeight(0);
   lpOutput->edge.second.SetWeight(0);
   lpOutput->savedEdge.clear();
-  Stats.IncLPAttempts( "ApproxSpheres" );
+  Stats.IncLPAttempts( this->GetName() );
   int cd_cntr = 0;
 
   double dist, c1_clearance, c2_clearance;
@@ -169,9 +169,9 @@ IsConnected(Environment *_env, StatClass& Stats,
     c2_clearance = _c2.ApproxCSpaceClearance(_env,Stats,cd,*this->cdInfo,
 					     dm,n,false);
   
-  Stats.IncLPCollDetCalls("ApproxSpheres", cd_cntr);
+  Stats.IncLPCollDetCalls(this->GetName(), cd_cntr);
   if (c1_clearance + c2_clearance >= dist) {
-    Stats.IncLPConnections("ApproxSpheres");
+    Stats.IncLPConnections(this->GetName());
     return true;
   } else {
     return false;
