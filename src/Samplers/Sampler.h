@@ -21,7 +21,6 @@
 #include "GaussianSampler.h"
 #include "BridgeTestSampler.h"
 #include "ObstacleBasedSamplers.h"
-#include "WorkspaceObstacleBasedSamplers.h"
 #include "NegateSampler.h"
 #include "GridSampler.h"
 #include "CfgTypes.h"
@@ -45,7 +44,6 @@ namespace pmpl_detail { //hide SamplerMethodList in pmpl_detail namespace
     GaussianSampler<CfgType>,
     BridgeTestSampler<CfgType>,
     ObstacleBasedSampler<CfgType>,
-    WorkspaceObstacleBasedSampler<CfgType>,
     MedialAxisSampler<CfgType>,
     NegateSampler<CfgType>,
     GridSampler<CfgType>
