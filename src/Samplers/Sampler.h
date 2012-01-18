@@ -20,7 +20,7 @@
 #include "MedialAxisSamplers.h"
 #include "GaussianSampler.h"
 #include "BridgeTestSampler.h"
-#include "ObstacleBasedSamplers.h"
+#include "ObstacleBasedSampler.h"
 #include "NegateSampler.h"
 #include "GridSampler.h"
 #include "CfgTypes.h"
