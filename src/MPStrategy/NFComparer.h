@@ -985,7 +985,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
 
         //pStatClass->PrintAllStats(region->GetRoadmap());
         //NodeGenClock.PrintClock();
-        pStatClass->PrintClock("Node Generation");
+        pStatClass->PrintClock("Node Generation", cout);
         //Allstuff.StopPrintClock();
 
 

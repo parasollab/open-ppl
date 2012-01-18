@@ -373,7 +373,7 @@ void HybridPRM::Finalize(int in_RegionID){
   std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later
   std::cout.rdbuf(stat_ofstream.rdbuf());   // redirect destination of std::cout
   cout << "Node Gen = " << NodeGenTotalTime << endl;
-  pStatClass->StopPrintClock("Everything");
+  pStatClass->StopPrintClock("Everything", cout);
   /*
   cout << "Query Stats" << endl;
   m_query_stat.PrintAllStats(region->GetRoadmap());
@@ -761,7 +761,7 @@ evaluate_map(int in_RegionID)
       mapPassedEvaluation = pEvaluator->operator()(in_RegionID);
 
       cout << "\t";
-      stats->StopPrintClock(pEvaluator->GetName());
+      stats->StopPrintClock(pEvaluator->GetName(), cout);
       if(mapPassedEvaluation)
         cout << "\t  (passed)\n";
       else
@@ -769,7 +769,7 @@ evaluate_map(int in_RegionID)
       if(!mapPassedEvaluation)
         break;
     }
-    stats->StopPrintClock("Map Evaluation");
+    stats->StopPrintClock("Map Evaluation", cout);
     return mapPassedEvaluation;
   }
 }

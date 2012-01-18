@@ -183,7 +183,7 @@ void BasicPRM::Run(int _regionID){
   }
 
   stats->StopClock("Map Generation");
-  if (m_debug) stats->PrintClock("Map Generation");
+  if (m_debug) stats->PrintClock("Map Generation", cout);
 
   if (m_debug) cout<<"\nEnd Running BasicPRM::"<<_regionID<<endl;
 }
@@ -208,11 +208,7 @@ void BasicPRM::Finalize(int _regionID){
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
   stats->PrintAllStats(osStat, region->GetRoadmap());
-  
-  streambuf* sbuf = cout.rdbuf(); // to be restored later
-  cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
-  stats->PrintClock("Map Generation");
-  cout.rdbuf(sbuf);  // restore original stream buffer
+  stats->PrintClock("Map Generation", osStat);
   
   osStat.close();
 
@@ -223,8 +219,8 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
     vector<VID>& allNodesVID, vector<VID>& thisIterationNodesVID)
 {
   StatClass* stats = _region->GetStatClass();
-  stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Node Connection";
-  stats->StartClock(clockName.str());
+  string connectorClockName = "Total Node Connection";
+  stats->StartClock(connectorClockName);
   stapl::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
 
   for(vector<string>::iterator I = m_nodeConnectionLabels.begin(); 
@@ -233,8 +229,8 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
     ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
     pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I);    
 
-    stringstream connectorClockName; connectorClockName << "Iteration " << m_currentIteration << ", " << pConnection->GetName();
-    stats->StartClock(connectorClockName.str());
+    string connectorSubClockName = "Node Connection::" + pConnection->GetName();
+    stats->StartClock(connectorSubClockName);
 
     if(m_debug) cout << "\n\t";
     vector<VID> nodesVID(thisIterationNodesVID.begin(), thisIterationNodesVID.end());
@@ -253,17 +249,17 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
       cout << "\t";
     }
 
-    stats->StopClock(connectorClockName.str());
-    if (m_debug) stats->PrintClock(connectorClockName.str());
+    stats->StopClock(connectorSubClockName);
+    if (m_debug) stats->PrintClock(connectorSubClockName, cout);
   }
-  stats->StopClock(clockName.str());
-  if (m_debug) stats->PrintClock(clockName.str());
+  stats->StopClock(connectorClockName);
+  if (m_debug) stats->PrintClock(connectorClockName, cout);
 }
 
 void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
   StatClass* stats = _region->GetStatClass();
-  stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Component Connection";
-  stats->StartClock(clockName.str());
+  string clockName = "Total Connect Components";
+  stats->StartClock(clockName);
   stapl::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
 
   for(vector<string>::iterator I = m_componentConnectionLabels.begin(); 
@@ -271,8 +267,8 @@ void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
     ConnectMap<CfgType, WeightType>::ComponentConnectionPointer pConnection;
     pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
 
-    stringstream connectorClockName; connectorClockName << "Iteration " << m_currentIteration << ", " << pConnection->GetName();
-    stats->StartClock(connectorClockName.str());
+    string connectorClockName = "Connect Component::" + pConnection->GetName();
+    stats->StartClock(connectorClockName);
 
     if(m_debug) cout << "\n\t";
     GetMPProblem()->GetMPStrategy()->
@@ -288,11 +284,11 @@ void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
       << get_cc_count(*(_region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"<< endl;
       cout << "\t";
     }
-    stats->StopClock(connectorClockName.str());
-    if (m_debug) stats->PrintClock(connectorClockName.str());
+    stats->StopClock(connectorClockName);
+    if (m_debug) stats->PrintClock(connectorClockName, cout);
   }
-   stats->StopClock(clockName.str());
-  if(m_debug) stats->PrintClock(clockName.str());
+   stats->StopClock(clockName);
+  if(m_debug) stats->PrintClock(clockName, cout);
 }
 
 
@@ -301,23 +297,24 @@ bool BasicPRM::EvaluateMap(int _regionID)
   bool mapPassedEvaluation = false;
   if(!m_evaluatorLabels.empty()){
     StatClass* stats = GetMPProblem()->GetMPRegion(_regionID)->GetStatClass();
-    stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Map Evaluation"; 
-    stats->StartClock(clockName.str());
+    string clockName = "Total Evaluation Time";
+    stats->StartClock(clockName);
 
     mapPassedEvaluation = true;
     for(vector<string>::iterator I = m_evaluatorLabels.begin(); 
         I != m_evaluatorLabels.end(); ++I){
       MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator;
       pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_currentIteration << ", " << pEvaluator->GetName();
-      stats->StartClock(evaluatorClockName.str());
+
+      string evaluatorClockName = "Evaluator::" + pEvaluator->GetName();
+      stats->StartClock(evaluatorClockName);
 
       if(m_debug) cout << "\n\t";
       mapPassedEvaluation = pEvaluator->operator()(_regionID);
 
       if(m_debug) cout << "\t";
-      stats->StopClock(evaluatorClockName.str());
-      if(m_debug) stats->PrintClock(evaluatorClockName.str());
+      stats->StopClock(evaluatorClockName);
+      if(m_debug) stats->PrintClock(evaluatorClockName, cout);
       if(mapPassedEvaluation){
         if (m_debug) cout << "\t  (passed)\n";
       }
@@ -327,8 +324,8 @@ bool BasicPRM::EvaluateMap(int _regionID)
       if(!mapPassedEvaluation)
         break;
     }
-    stats->StopClock(clockName.str());
-    if(m_debug) stats->PrintClock(clockName.str());
+    stats->StopClock(clockName);
+    if(m_debug) stats->PrintClock(clockName, cout);
   }
   else{mapPassedEvaluation=true;}//avoid the infinite loop
   return mapPassedEvaluation;
@@ -357,9 +354,8 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
     OutputIterator _allOut, OutputIterator _thisIterationOut){
   CDInfo cdInfo;
   StatClass * pStatClass = _region->GetStatClass();
-  stringstream clockName; 
-  clockName << "Iteration " << m_currentIteration << ", Node Generation"; 
-  pStatClass->StartClock(clockName.str());
+  string clockName = "Total Node Generation"; 
+  pStatClass->StartClock(clockName);
   string Callee("BasicPRM::GenerateNodes");
 
   typedef map<string, pair<int, int> >::iterator GIT;
@@ -371,9 +367,8 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
       vector<CfgType> inNodes(git->second.first);
 
       //generate nodes for this node generator method
-      stringstream generatorClockName; 
-      generatorClockName << "Iteration " << m_currentIteration << ", " << git->first;
-      pStatClass->StartClock(generatorClockName.str());
+      string generatorClockName = "Sampler::" + git->first; 
+      pStatClass->StartClock(generatorClockName);
 
       if(m_debug) cout << "\n\t";
 
@@ -386,8 +381,8 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
         cout << _region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
         cout << "\n\t";
       }
-      pStatClass->StopClock(generatorClockName.str());
-      if(m_debug) pStatClass->PrintClock(generatorClockName.str());
+      pStatClass->StopClock(generatorClockName);
+      if(m_debug) pStatClass->PrintClock(generatorClockName, cout);
 
     }
   }
@@ -399,9 +394,8 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
     vector<CfgType> inNodes(1);
 
     //generate nodes for this node generator method
-    stringstream generatorClockName; 
-    generatorClockName << "Iteration " << m_currentIteration << ", " << NextNodeGen;
-    pStatClass->StartClock(generatorClockName.str());
+    string generatorClockName = "Sampler::" + pNodeGenerator->GetName(); 
+    pStatClass->StartClock(generatorClockName);
 
     if(m_debug) cout << "\n\t";
     pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),m_boundary,*pStatClass,inNodes.begin(),inNodes.end(),m_probGenerationLabels[NextNodeGen].second, back_inserter(outNodes));
@@ -410,8 +404,8 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
       cout << _region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
       cout << "\n\t";
     }
-    pStatClass->StopClock(generatorClockName.str());
-    if(m_debug) pStatClass->PrintClock(generatorClockName.str());
+    pStatClass->StopClock(generatorClockName);
+    if(m_debug) pStatClass->PrintClock(generatorClockName, cout);
   }
   //add valid nodes to roadmap
   typedef vector<CfgType>::iterator CIT;
@@ -429,7 +423,7 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
       }
     }
   }
-  pStatClass->StopClock(clockName.str());
-  if(m_debug) pStatClass->PrintClock(clockName.str());
+  pStatClass->StopClock(clockName);
+  if(m_debug) pStatClass->PrintClock(clockName, cout);
 }
 

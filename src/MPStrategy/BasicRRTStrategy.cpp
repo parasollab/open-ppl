@@ -203,7 +203,7 @@ void BasicRRTStrategy::Run(int _regionID) {
 
   regionStats->StopClock("RRT Generation");
   if(m_debug) {
-    regionStats->PrintClock("RRT Generation");
+    regionStats->PrintClock("RRT Generation", cout);
     cout<<"\nEnd Running BasicRRTStrategy::" << _regionID << endl;  
   }
 }
@@ -228,10 +228,7 @@ void BasicRRTStrategy::Finalize(int _regionID) {
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
-  streambuf* sbuf = cout.rdbuf(); // to be restored later
-  cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
-  regionStats->PrintClock("RRT Generation");
-  cout.rdbuf(sbuf);  // restore original stream buffer
+  regionStats->PrintClock("RRT Generation", osStat);
   osStat.close();
 
   if(m_debug) cout<<"\nEnd Finalizing BasicRRTStrategy"<<_regionID<<endl;
@@ -266,10 +263,10 @@ void BasicRRTStrategy::ConnectComponents(int _regionID) {
         << "\n\t";
 
     stats->StopClock(connectorClockName.str());
-    if(m_debug) stats->PrintClock(connectorClockName.str());
+    if(m_debug) stats->PrintClock(connectorClockName.str(), cout);
   }
   stats->StopClock(clockName.str());
-  if(m_debug) stats->PrintClock(clockName.str());
+  if(m_debug) stats->PrintClock(clockName.str(), cout);
 }
 
 bool BasicRRTStrategy::EvaluateMap(int _regionID) {
@@ -294,7 +291,7 @@ bool BasicRRTStrategy::EvaluateMap(int _regionID) {
       mapPassedEvaluation = evaluator->operator()(_regionID);
       if(m_debug) cout << "\t";
       stats->StopClock(evaluatorClockName.str());
-      if(m_debug) stats->PrintClock(evaluatorClockName.str());
+      if(m_debug) stats->PrintClock(evaluatorClockName.str(), cout);
       if(mapPassedEvaluation){
         if(m_debug) cout << "\t  (passed)\n";
       }
@@ -305,7 +302,7 @@ bool BasicRRTStrategy::EvaluateMap(int _regionID) {
         break;
     }
     stats->StopClock(clockName.str());
-    if(m_debug) stats->PrintClock(clockName.str());
+    if(m_debug) stats->PrintClock(clockName.str(), cout);
     return mapPassedEvaluation;
   } 
 }

@@ -411,12 +411,12 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
         pStatClass->StopClock("Stats Output");
 
-        pStatClass->PrintClock("Node Generation");
-        pStatClass->PrintClock("Node Connection");
-        pStatClass->PrintClock("Query Time");
-        pStatClass->PrintClock("Stats Output");
-        pStatClass->PrintClock("Iteration");
-        pStatClass->StopPrintClock("Everything");
+        pStatClass->PrintClock("Node Generation", cout);
+        pStatClass->PrintClock("Node Connection", cout);
+        pStatClass->PrintClock("Query Time", cout);
+        pStatClass->PrintClock("Stats Output", cout);
+        pStatClass->PrintClock("Iteration", cout);
+        pStatClass->StopPrintClock("Everything", cout);
 
 
         iteration++;

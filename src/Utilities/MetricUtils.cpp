@@ -8,33 +8,25 @@ struct rusage buf;
 
 #include "MetricUtils.h"
 #include "GraphAlgo.h"
+
 /////////////////////////////////////////////////////////////////////
 //
-//  StatClass.c
+//  StatClass.cpp
 //
 //  General Description
 //      This class lets you keep statistics on various aspects of
 //      the program (ie. number of collision detection calls,
 //      number of calls to each local planner, etc).
-//
-//  Created
-//     1/27/99  Chris Jones
-//
 /////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////
-// Static Data Member init
 
 const int StatClass::ALL= -1;
 
-// StatClass Class Constructor
 StatClass::
 StatClass() {
   ClearStats();
- 
+
 };
 
-// StatClass Class Deconstructor
 StatClass::
 ~StatClass() {
 };
@@ -96,15 +88,15 @@ ClearStats() {
 //----------------------------------------
 int
 StatClass::
-IncNumCollDetCalls( string _cdName, string *_pCallName){
+IncNumCollDetCalls( string _cdName, string* _callName){
   m_numCollDetCalls[_cdName]++;
 
   // If a caller's name was provided
   // then increment the verification counter
   // with that name.
-         
-  if( _pCallName )
-  { m_collDetCountByName[*_pCallName]++; }
+
+  if( _callName )
+  { m_collDetCountByName[*_callName]++; }
 
   return m_numCollDetCalls[_cdName];
 };
@@ -115,10 +107,10 @@ IncNumCollDetCalls( string _cdName, string *_pCallName){
 //---------------------------------------- 
 void
 StatClass::
-IncCfgIsColl( string *_pCallName) {
+IncCfgIsColl(string *_callName) {
 
-  if( _pCallName )
-  { m_isCollByName[*_pCallName]++; }
+  if( _callName )
+  { m_isCollByName[*_callName]++; }
   else { m_isCollByName["UNKNOWN"]++; }
 
   m_isCollTotal++;
@@ -132,7 +124,7 @@ IncCfgIsColl( string *_pCallName) {
 //----------------------------------------
 int
 StatClass::
-IncLPConnections( string _lpName ,int _incr) {
+IncLPConnections( string _lpName, int _incr) {
   m_lpConnections[_lpName] += _incr;
   return m_lpConnections[_lpName];
 };
@@ -155,7 +147,7 @@ SetLPConnections(string _lpName, int _connections) {
 //----------------------------------------
 int
 StatClass::
-IncLPAttempts(string _lpName , int _incr) {
+IncLPAttempts(string _lpName, int _incr) {
   m_lpAttempts[_lpName] += _incr;
   return m_lpAttempts[_lpName];
 };
@@ -184,7 +176,6 @@ IncLPCollDetCalls(string _lpName, int _incr) {
   return m_lpCollDetCalls[_lpName];
 };
 
-
 void
 StatClass::
 PrintFeatures(ostream& _os) {
@@ -194,7 +185,7 @@ PrintFeatures(ostream& _os) {
     connectionsMade += sumIter->second;
   for(sumIter=m_lpAttempts.begin();sumIter!=m_lpAttempts.end();sumIter++)
     connectionsAttempted += sumIter->second;
-  
+
 
   _os << "General features:" << endl;
   _os << "\tm_ccNumber: " << m_ccNumber << endl;
@@ -244,7 +235,9 @@ void
 StatClass::
 StartClock(string _name) {
   if(_name != "") {
-    m_clockMap[_name].StartClock(_name);
+    if(m_clockMap.find(_name)==m_clockMap.end())
+      m_clockMap[_name].SetName(_name);
+    m_clockMap[_name].StartClock();
   }
   else  
     cerr<<"Error::Attempting to start a non-existing clock"<< endl; 
@@ -259,21 +252,21 @@ StopClock(string _name) {
   else 
     cerr<<"Error::Attempting to stop a non-existing clock"<< _name << endl; 
 };
- 
+
 void 
 StatClass::
-StopPrintClock(string _name) {
+StopPrintClock(string _name, ostream& _os) {
   if(_name != "")
-    m_clockMap[_name].StopPrintClock();
+    m_clockMap[_name].StopPrintClock(_os);
   else 
     cerr<<"Error::Attempting to stop and print a non-existing clock"<< _name << endl; 
 };
- 
+
 void 
 StatClass::
-PrintClock(string _name) {
+PrintClock(string _name, ostream& _os) {
   if(_name !="")
-    m_clockMap[_name].PrintClock();
+    m_clockMap[_name].PrintClock(_os);
   else 
     cerr<<"Error::Attempting to print a non-existing clock"<< _name << endl; 
 };
@@ -291,18 +284,22 @@ double
 StatClass::
 GetSeconds(string _name) {
   if(_name !="")
-    m_clockMap[_name].GetSeconds();
-  else 
+    return m_clockMap[_name].GetSeconds();
+  else {
     cerr<<"Attempting to GetSeconds for a non-existing clock:: "<< _name << endl; 
+    return 0;
+  }
 };
 
 int 
 StatClass::
 GetUSeconds(string _name) {
   if(_name != "")
-    m_clockMap[_name].GetUSeconds();
-  else 
+    return m_clockMap[_name].GetUSeconds();
+  else {
     cerr<<"Attempting to GetUSeconds for a non-existing clock::"<< _name << endl; 
+    return 0;
+  }
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -329,16 +326,19 @@ ClockClass::
 ~ClockClass() {
 };
 
+void 
+ClockClass::
+SetName(string _name){
+  m_clockName = _name;
+};
+
 //----------------------------------------
 // Clear the clock
 //----------------------------------------
 void
 ClockClass::
 ClearClock() {
-  m_sTime=0;
-  m_uTime=0;
-  m_suTime=0;
-  m_uuTime=0;
+  m_sTime=m_uTime=m_suTime=m_uuTime=0;
 };
 
 //----------------------------------------
@@ -346,11 +346,10 @@ ClearClock() {
 //----------------------------------------
 void
 ClockClass::
-StartClock(string _name) {
+StartClock() {
   getrusage(RUSAGE_SELF, &buf);
   m_suTime = buf.ru_utime.tv_usec;
   m_sTime = buf.ru_utime.tv_sec;
-  m_clockName = _name;
 };
 
 //----------------------------------------
@@ -360,8 +359,8 @@ void
 ClockClass::
 StopClock() {
   getrusage(RUSAGE_SELF, &buf);
-  m_uuTime = buf.ru_utime.tv_usec - m_suTime;
-  m_uTime = buf.ru_utime.tv_sec - m_sTime;
+  m_uuTime += buf.ru_utime.tv_usec - m_suTime;
+  m_uTime += buf.ru_utime.tv_sec - m_sTime;
 };
 
 //----------------------------------------
@@ -369,9 +368,9 @@ StopClock() {
 //----------------------------------------
 void
 ClockClass::
-StopPrintClock() {
+StopPrintClock(ostream& _os) {
   StopClock();
-  PrintClock();
+  PrintClock(_os);
 };
 
 //----------------------------------------
@@ -379,8 +378,8 @@ StopPrintClock() {
 //----------------------------------------
 void
 ClockClass::
-PrintClock() {
-  cout << m_clockName << ": " << GetSeconds() << " sec" <<endl;
+PrintClock(ostream& _os) {
+  _os << m_clockName << ": " << GetSeconds() << " sec" <<endl;
 };
 
 

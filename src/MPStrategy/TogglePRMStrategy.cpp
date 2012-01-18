@@ -142,7 +142,7 @@ void TogglePRMStrategy::Run(int in_RegionID){
     }
   }
 
-  stats->StopPrintClock("Map Generation");
+  stats->StopPrintClock("Map Generation", cout);
 
   cout<<"\nEnd Running TogglePRMStrategy::"<<in_RegionID<<endl;
 }
@@ -172,10 +172,7 @@ void TogglePRMStrategy::Finalize(int in_RegionID){
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
-  streambuf* sbuf = cout.rdbuf(); // to be restored later
-  cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
-  regionStats->PrintClock("Map Generation");
-  cout.rdbuf(sbuf);  // restore original stream buffer
+  regionStats->PrintClock("Map Generation", osStat);
   osStat.close();
 
   cout<<"\nEnd Finalizing TogglePRMStrategy"<<endl;
@@ -214,7 +211,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
 
     cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
     cout << "\n\t";
-    pStatClass->StopPrintClock(generatorClockName.str());
+    pStatClass->StopPrintClock(generatorClockName.str(), cout);
 
     //add nodes to queue
     typedef vector<CfgType>::iterator CIT;
@@ -253,7 +250,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
       }  
     }
   }
- pStatClass->StopPrintClock(clockName.str());
+ pStatClass->StopPrintClock(clockName.str(), cout);
 }
 
 void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<string, VID> pvid, 
@@ -318,9 +315,9 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
       << endl;
 
     cout << "\t";
-    pStatClass->StopPrintClock(connectorClockName.str());
+    pStatClass->StopPrintClock(connectorClockName.str(), cout);
   }
-  pStatClass->StopPrintClock(clockName.str());
+  pStatClass->StopPrintClock(clockName.str(), cout);
 }
 
 bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
@@ -343,7 +340,7 @@ bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
       mapPassedEvaluation = pEvaluator->operator()(in_RegionID);
 
       cout << "\t";
-      stats->StopPrintClock(evaluatorClockName.str());
+      stats->StopPrintClock(evaluatorClockName.str(), cout);
       if(mapPassedEvaluation){
         return true;
         cout << "\t  (passed)\n";
@@ -353,7 +350,7 @@ bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
       //if(!mapPassedEvaluation)
         //break;
     }
-    stats->StopPrintClock(clockName.str());
+    stats->StopPrintClock(clockName.str(), cout);
   }
   else{mapPassedEvaluation=true;}//avoid the infinite loop
   return mapPassedEvaluation;

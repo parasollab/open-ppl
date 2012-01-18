@@ -7,226 +7,160 @@
 #include <string>
 
 /**Provide timing information.
-  *This class is used to measure the running time between StartClock and 
-  *StopClock. Client side could provide clock name, when StopClock is called 
-  *the name will be print out, and running time as well.
-  */
+ *This class is used to measure the running time between StartClock and 
+ *StopClock. Client side could provide clock name, when StopClock is called 
+ *the name will be print out, and running time as well.
+ */
 class ClockClass {
-public:
+  public:
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////
+    ClockClass();
+    ~ClockClass();
 
-  //-----------------------------------------------------------
-  /**@name Constructors and Destructor.*/
-  //-----------------------------------------------------------
-  //@{
-  ///Default constructor. Set every thing to zero
-  ClockClass();
+    void SetName(string _name);
 
-  ///Destructor. Do nothing
-  ~ClockClass();
-  //@}
+    ///Set every thing to zero
+    void ClearClock();
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Clock methods
-  //
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////
+    ///Start the clock and the name is identity of this clock.
+    void StartClock();
 
-  //----------------------------------------------------------
-  /**@name Clock Methods.*/
-  //-----------------------------------------------------------
-  //@{
-  ///Set every thing to zero
-  void ClearClock();
+    ///Stop the clock and calculate the total running time.
+    void StopClock();
 
-  ///Start the clock and the name is identity of this clock.
-  void StartClock(string _name);
+    ///Call StopClock and PrintClock.
+    void StopPrintClock(ostream& _os);
 
-  ///Stop the clock and calculate the total running time.
-  void StopClock();
+    /**Output the clock name given in StartClock and running time accosited with this name
+     *to the standard output.
+     */
+    void PrintClock(ostream& _os);
 
-  ///Call StopClock and PrintClock.
-  void StopPrintClock();
-  //@}
+    ///Get how many seconds of running time are.
+    double GetSeconds();
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    I/O
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    ///Get how many 1e-6 seconds of running time are.
+    int GetUSeconds();
 
-  //-----------------------------------------------------------
-  /**@name Input and Output Methods.*/
-  //-----------------------------------------------------------
-  //@{
-  /**Output the clock name given in StartClock and running time accosited with this name
-    *to the standard output.
-    */
-  void PrintClock();
-
-  ///Output the clock name given in StartClock to the standard output
-  void PrintName();
-  //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Access Methods
-  //
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////
-
-  //-----------------------------------------------------------
-  /**@name Access Methods.*/
-  //-----------------------------------------------------------
-  //@{
-  ///Get how many seconds of running time are. (integer, without fraction part!!)
-  int GetClock();
-
-  ///Get how many seconds of running time are.
-  double GetSeconds();
-
-  ///Get how many 1e-6 seconds of running time are.
-  int GetUSeconds();
-  //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Private Data Members and MEmber Methods Methods (Undocumented)
-  //
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////
-private:
-  int m_sTime, m_uTime;
-  int m_suTime, m_uuTime;
-  string m_clockName;
+  private:
+    int m_sTime, m_uTime;
+    int m_suTime, m_uuTime;
+    string m_clockName;
 };
 
 class StatClass {
 
-public:
-  StatClass();
-  ~StatClass();
+  public:
+    StatClass();
+    ~StatClass();
 
-  void ClearStats();
+    void ClearStats();
 
-  int IncNumCollDetCalls( string _cdName , string *_pCallName = NULL);
-  unsigned long int GetIsCollTotal() { return m_isCollTotal; }
+    int IncNumCollDetCalls( string _cdName , string *_callName = NULL);
+    unsigned long int GetIsCollTotal() { return m_isCollTotal; }
 
-  void IncCfgIsColl( std::string *_pCallName = NULL);
+    void IncCfgIsColl( string *_callName = NULL);
 
-  int IncLPConnections( string _lpName , int _incr=1);
-  int SetLPConnections( string _lpName, int _connections );
-  int IncLPAttempts( string _lpName, int _incr=1 );
-  int SetLPAttempts( string _lpName, int _attempts );
-  int IncLPCollDetCalls( string _lpName, int _incr=1);
+    int IncLPConnections( string _lpName , int _incr=1);
+    int SetLPConnections( string _lpName, int _connections );
+    int IncLPAttempts( string _lpName, int _incr=1 );
+    int SetLPAttempts( string _lpName, int _attempts );
+    int IncLPCollDetCalls( string _lpName, int _incr=1);
 
-  static const int ALL;
-  template <class CFG, class WEIGHT>
-  void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT> *_rmap);
-  template <class CFG, class WEIGHT>
-  void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT> *_rmap, int _numCCs);
+    static const int ALL;
+    template <class CFG, class WEIGHT>
+      void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT> *_rmap);
+    template <class CFG, class WEIGHT>
+      void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT> *_rmap, int _numCCs);
 
-  template <class CFG, class WEIGHT>
-  void PrintDataLine(ostream&, Roadmap<CFG, WEIGHT>* , int _showColumnHeaders=0);
+    template <class CFG, class WEIGHT>
+      void PrintDataLine(ostream&, Roadmap<CFG, WEIGHT>* , int _showColumnHeaders=0);
 
-  template <class CFG, class WEIGHT>
-  void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> *_rdmp, shared_ptr<DistanceMetricMethod> _dm);
+    template <class CFG, class WEIGHT>
+      void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> *_rdmp, shared_ptr<DistanceMetricMethod> _dm);
 
-  template <class CFG, class WEIGHT>
-  void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *_rdmp, NeighborhoodFinder* _nf, string _nfMethod);
-  void PrintFeatures(ostream& _os);
-  void IncNodesGenerated();
-  void IncNodesAttempted();
-  
-  //Clock Accessors
-  void ClearClock(string _name);
-  void StartClock(string _name);
-  void StopClock(string _name);
-  void StopPrintClock(string _name);
-  void PrintClock(string _name);
-  double GetSeconds(string _name);
-  int GetUSeconds(string _name);
-  
-  //LP Statistics Accessors/Modifiers
-  double GetLPStat(string _s){return m_lpStats[_s];}
-  void SetLPStat(string _s, double _v) {m_lpStats[_s]=_v;}
-  void IncLPStat(string _s, double _v) {m_lpStats[_s]+=_v;}
+    template <class CFG, class WEIGHT>
+      void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *_rdmp, NeighborhoodFinder* _nf, string _nfMethod);
+    void PrintFeatures(ostream& _os);
+    void IncNodesGenerated();
+    void IncNodesAttempted();
 
-  vector<double>& GetHistory(string _s){return m_histories[_s];}
-  void AddToHistory(string _s, double _v){m_histories[_s].push_back(_v);}
-  void SetAuxDest(string _s) {m_auxFileDest = _s;}
+    //Clock Accessors
+    void ClearClock(string _name);
+    void StartClock(string _name);
+    void StopClock(string _name);
+    void StopPrintClock(string _name, ostream& _os);
+    void PrintClock(string _name, ostream& _os);
+    double GetSeconds(string _name);
+    int GetUSeconds(string _name);
 
-  //help
-  template <class CFG, class WEIGHT>
-  void DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>&, int);
+    //LP Statistics Accessors/Modifiers
+    double GetLPStat(string _s){return m_lpStats[_s];}
+    void SetLPStat(string _s, double _v) {m_lpStats[_s]=_v;}
+    void IncLPStat(string _s, double _v) {m_lpStats[_s]+=_v;}
 
-  map<string, unsigned long int> m_lpConnections;
-  map<string, unsigned long int> m_lpAttempts;
-  map<string, unsigned long int> m_lpCollDetCalls;
-  map<string, unsigned long int> m_collDetCountByName;
-  
-  map<string, ClockClass> m_clockMap;
+    vector<double>& GetHistory(string _s){return m_histories[_s];}
+    void AddToHistory(string _s, double _v){m_histories[_s].push_back(_v);}
+    void SetAuxDest(string _s) {m_auxFileDest = _s;}
 
-  ///IsColl simply counts the number of times a Cfg is tested for Collision.
-  ///\see Cfg::isCollision
-  std::map<string, unsigned long int> m_isCollByName;
-  unsigned long int m_isCollTotal;
+    //help
+    template <class CFG, class WEIGHT>
+      void DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>&, int);
 
-  //features
-  int m_connectionsAttempted;
-  int m_connectionsMade;
-  int m_nodesAttempted;
-  int m_nodesGenerated;
-  int m_ccNumber;
+    map<string, unsigned long int> m_lpConnections;
+    map<string, unsigned long int> m_lpAttempts;
+    map<string, unsigned long int> m_lpCollDetCalls;
+    map<string, unsigned long int> m_collDetCountByName;
 
-  //Intra-CC features:
-  double m_avgMinIntraCCDist;
-  double m_avgMaxIntraCCDist;
-  double m_avgMeanIntraCCDist;
-  double m_avgSigmaIntraCCDist;
-  
-  double m_avgMinIntraCCEdge;
-  double m_avgMaxIntraCCEdge;
-  double m_avgMeanIntraCCEdge;
-  double m_avgSigmaIntraCCEdge;
-  
-  double m_avgMaxIntraCCDistToCm;
-  double m_avgMinIntraCCDistToCm;
-  double m_avgMeanIntraCCDistToCm;
-  double m_avgSigmaIntraCCDistToCm;
-  
-  //Inter-CC features:
-  double m_maxInterCCDist;
-  double m_avgInterCCDist;
-  double m_sigmaInterCCDist;
-  double m_minInterCCDist;
-  
-  double m_maxCCSize;
-  double m_minCCSize;
-  double m_avgCCSize;
-  double m_sigmaCCSize;
-  
-protected:
-  map<string, unsigned long int> m_numCollDetCalls;
+    map<string, ClockClass> m_clockMap;
 
-private:
-  //LP Statistics
-  map<string, double> m_lpStats;
-  map<string, vector<double> > m_histories;
-  string m_auxFileDest;
+    ///IsColl simply counts the number of times a Cfg is tested for Collision.
+    ///\see Cfg::isCollision
+    std::map<string, unsigned long int> m_isCollByName;
+    unsigned long int m_isCollTotal;
+
+    //features
+    int m_connectionsAttempted;
+    int m_connectionsMade;
+    int m_nodesAttempted;
+    int m_nodesGenerated;
+    int m_ccNumber;
+
+    //Intra-CC features:
+    double m_avgMinIntraCCDist;
+    double m_avgMaxIntraCCDist;
+    double m_avgMeanIntraCCDist;
+    double m_avgSigmaIntraCCDist;
+
+    double m_avgMinIntraCCEdge;
+    double m_avgMaxIntraCCEdge;
+    double m_avgMeanIntraCCEdge;
+    double m_avgSigmaIntraCCEdge;
+
+    double m_avgMaxIntraCCDistToCm;
+    double m_avgMinIntraCCDistToCm;
+    double m_avgMeanIntraCCDistToCm;
+    double m_avgSigmaIntraCCDistToCm;
+
+    //Inter-CC features:
+    double m_maxInterCCDist;
+    double m_avgInterCCDist;
+    double m_sigmaInterCCDist;
+    double m_minInterCCDist;
+
+    double m_maxCCSize;
+    double m_minCCSize;
+    double m_avgCCSize;
+    double m_sigmaCCSize;
+
+  protected:
+    map<string, unsigned long int> m_numCollDetCalls;
+
+  private:
+    //LP Statistics
+    map<string, double> m_lpStats;
+    map<string, vector<double> > m_histories;
+    string m_auxFileDest;
 
 };
 
@@ -242,16 +176,16 @@ template <class CFG, class WEIGHT>
 void
 StatClass::
 PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
-        #ifndef _PARALLEL
+#ifndef _PARALLEL
   size_t i;
   std::map<string, unsigned long int>::const_iterator iter;
   //int total=0;
 
   _os << endl << endl << "Local Planners:" << endl;
   _os << setw(20) << "Name"
-  <<setw(15) << "Connections"
-  <<setw(15) << "Attempts"
-  <<setw(15) << "Coll Det Calls" << endl;
+    <<setw(15) << "Connections"
+    <<setw(15) << "Attempts"
+    <<setw(15) << "Coll Det Calls" << endl;
 
   std::map<string, unsigned long int>::const_iterator iter1, iter2, iter3;
   for(iter1 = m_lpConnections.begin(), iter2 = m_lpAttempts.begin(), iter3 = m_lpCollDetCalls.begin(); 
@@ -289,13 +223,13 @@ PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
   _os << endl << endl;
   _os << "Number of Nodes: " << _rmap->m_pRoadmap->get_num_vertices() << endl;
   _os << "Number of Edges: " << _rmap->m_pRoadmap->get_num_edges() << endl;
-/*  Removed by Roger for reasons given below
-  _os << "Number of Collision Detection Calls: " << endl;
-  for(i=0;i<MaxCD;i++)
-    if (strcmp(CDNameList[i],"empty")!=0)
+  /*  Removed by Roger for reasons given below
+      _os << "Number of Collision Detection Calls: " << endl;
+      for(i=0;i<MaxCD;i++)
+      if (strcmp(CDNameList[i],"empty")!=0)
       _os << setw(20) << CDNameList[i] 
-        << setw(15) << NumCollDetCalls[i] << endl;
-*/
+      << setw(15) << NumCollDetCalls[i] << endl;
+   */
 
   _os << endl;
 
@@ -308,34 +242,35 @@ PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
   ///to only keep Total times Cfg::isCollision is called.  This makes the 'price' for a 
   ///free node the same as a collision node.  Will be added back after collision detection
   ///counting is properly fixed     --Roger 9/17/2005
-/*
-  _os << endl << endl << "Collision Detection Exact Counts:" << endl;
-  for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++) 
-  {
-    total+=iter->second;
-    _os << i << ") " << iter->second << " ";
-    _os << flush;
-    printf("%s\n", iter->first.data()); //K2 does not have the << operator defined for string
-    fflush(stdout);
-  }
-  
-  _os << "total " << total << endl;
-*/
-  
+  /*
+     _os << endl << endl << "Collision Detection Exact Counts:" << endl;
+     for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++) 
+     {
+     total+=iter->second;
+     _os << i << ") " << iter->second << " ";
+     _os << flush;
+     printf("%s\n", iter->first.data()); //K2 does not have the << operator defined for string
+     fflush(stdout);
+     }
+
+     _os << "total " << total << endl;
+   */
+
   _os << endl << endl << "Cfg::isCollision() Exact Counts:" << endl;
   for (i=0, iter=m_isCollByName.begin(); iter != m_isCollByName.end(); iter++, i++) {
     _os << i << ") " << iter->second << " " << iter->first << endl;;
   }
   _os << "Total Cfg::isCollision() = " << m_isCollTotal << endl << endl;
-  
+
   //Output Clock Statistics.
   _os << "Clocks " << endl << endl;
+  _os << setw(40) << "Name" << setw(40) << "Time (Seconds)" << endl << endl;
   typedef map<string, ClockClass>::iterator CIT;
   for(CIT cit =m_clockMap.begin(); cit!= m_clockMap.end(); cit++) {
     _os << setw(40) << cit->first << setw(40) << cit->second.GetSeconds() << endl;
   }
-  
-  #endif
+
+#endif
 
 }
 
@@ -343,12 +278,12 @@ template <class CFG, class WEIGHT>
 void
 StatClass::
 PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *_rmap, int _showColumnHeaders) {
-  #ifndef _PARALLEL
+#ifndef _PARALLEL
   // Default is to NOT print out column headers
   if (_showColumnHeaders) {
     _myostream <<"\nV  E #CC 1 2 3 4 5 6 7 8 9 10 #iso CD  LPattSum LPcdSum\n";
   }//endif
-  
+
   _myostream << _rmap->m_pRoadmap->get_num_vertices() << " ";
   _myostream << _rmap->m_pRoadmap->get_num_edges()   << " ";
 
@@ -386,7 +321,7 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *_rmap, int _showColumnH
   _myostream << sumAtt << " ";
   _myostream << sumCD  << " ";
   ccStats.clear();
-   #endif
+#endif
 }
 
 // Compute intra-connected-component statistics
@@ -394,7 +329,7 @@ template <class CFG, class WEIGHT>
 void
 StatClass::
 ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, shared_ptr<DistanceMetricMethod> _dm) {
-  #ifndef _PARALLEL
+#ifndef _PARALLEL
   m_avgMinIntraCCDist = 0;
   m_avgMaxIntraCCDist = 0;
   m_avgMeanIntraCCDist = 0;
@@ -424,8 +359,8 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, shared_ptr<DistanceMetricMet
       cciCfgs.push_back((*(_rdmp->m_pRoadmap->find_vertex(*itr))).property());
 
     if (cciCfgs.size() > 1) {
-     //compute shortest, longest, mean, and std-dev (sigma) distances 
-     //between nodes for cci
+      //compute shortest, longest, mean, and std-dev (sigma) distances 
+      //between nodes for cci
 
       double cciMinIntraCCDist = 0;
       double cciMaxIntraCCDist = 0;
@@ -556,7 +491,7 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, shared_ptr<DistanceMetricMet
   double norm = _rdmp->GetEnvironment()->Getminmax_BodyAxisRange()*tcfg.DOF();
   cout << "norm value = " << norm << endl;
 
-  #endif
+#endif
 }
 
 // Compute inter-connected-component statistics
@@ -566,7 +501,7 @@ template <class CFG, class WEIGHT>
 void
 StatClass::
 ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, NeighborhoodFinder* _nf, string _nfMethod) {
-  #ifndef _PARALLEL
+#ifndef _PARALLEL
   shared_ptr<DistanceMetricMethod> dm = _nf->GetNFMethod(_nfMethod)->GetDMMethod();
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
   stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
@@ -645,9 +580,9 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, NeighborhoodFinder* _nf, str
 
         vector< pair<VID,VID> > pairs;
         _nf->KClosestPairs(_nf->GetNFMethod(_nfMethod), _rdmp,
-        cciCfgs.begin(), cciCfgs.end(), ccjCfgs.begin(), ccjCfgs.end(), 1, back_inserter(pairs));
+            cciCfgs.begin(), cciCfgs.end(), ccjCfgs.begin(), ccjCfgs.end(), 1, back_inserter(pairs));
         double tmpDist = dm->Distance(_rdmp->GetEnvironment(), (*(_rdmp->m_pRoadmap->find_vertex(pairs[0].first))).property(),
-                         (*(_rdmp->m_pRoadmap->find_vertex(pairs[0].second))).property() );
+            (*(_rdmp->m_pRoadmap->find_vertex(pairs[0].second))).property() );
         if(tmpDist > m_maxInterCCDist)
           m_maxInterCCDist = tmpDist;
         if(m_minInterCCDist == 0.0 || tmpDist < m_minInterCCDist)
@@ -668,9 +603,9 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, NeighborhoodFinder* _nf, str
 
   CFG tcfg;
   double norm = _rdmp->GetEnvironment()->Getminmax_BodyAxisRange()
-  *_rdmp->GetEnvironment()->GetBoundingBox()->GetDOFs();
+    *_rdmp->GetEnvironment()->GetBoundingBox()->GetDOFs();
   cout << "norm value = " << norm << endl;
-  #endif
+#endif
 }
 
 /**Output Connected Component information in graph _G.
@@ -686,7 +621,7 @@ DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1) 
 
   ///Modified for VC
   //temporary ifdef because of color map and get_cc_stats, we need a pDisplayCCStats
-  #ifndef _PARALLEL
+#ifndef _PARALLEL
 
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
   stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
@@ -705,7 +640,7 @@ DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1) 
     ccNum++;
     if (ccNum > _maxCCPrint) return;
   }
-  #endif
+#endif
 }
 
 
@@ -728,5 +663,5 @@ inline double sqr(double _a) {
 }
 #endif
 
-      
+
 #endif

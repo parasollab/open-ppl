@@ -582,7 +582,7 @@ bool UAStrategy::EvaluateMap(int in_RegionID){
          mapPassedEvaluation = pEvaluator->operator()(in_RegionID);
          
          cout << "\t";
-         stats->StopPrintClock(evaluatorClockName.str());
+         stats->StopPrintClock(evaluatorClockName.str(), cout);
          if(mapPassedEvaluation){
             cout << "\t  (passed)\n";
             return true;
@@ -592,7 +592,7 @@ bool UAStrategy::EvaluateMap(int in_RegionID){
          //if(!mapPassedEvaluation)
             //break;
       }
-      stats->StopPrintClock(clockName.str());
+      stats->StopPrintClock(clockName.str(), cout);
    }
    else{mapPassedEvaluation=true;}//avoid the infinite loop
    return mapPassedEvaluation;

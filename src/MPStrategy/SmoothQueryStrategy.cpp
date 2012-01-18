@@ -92,7 +92,7 @@ Run(int in_RegionID)
                        GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
                        GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
                                          
-  pStatClass->StopPrintClock("Query");
+  pStatClass->StopPrintClock("Query", cout);
   
   if(query_result)
   {
@@ -125,7 +125,7 @@ Run(int in_RegionID)
                            path_vids.begin(), path_vids.end(),
                            path_vids.begin(), path_vids.end());
     }
-    pStatClass->StopPrintClock("Smooth Path");
+    pStatClass->StopPrintClock("Smooth Path", cout);
 
     //reperform query
     pStatClass->StartClock("Query Smoothed Path");
@@ -135,7 +135,7 @@ Run(int in_RegionID)
                                                   &methods,
                                                   GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
                                                   GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
-    pStatClass->StopPrintClock("Query Smoothed Path");
+    pStatClass->StopPrintClock("Query Smoothed Path", cout);
 
     //output smoothed path
     if(smooth_query_result)

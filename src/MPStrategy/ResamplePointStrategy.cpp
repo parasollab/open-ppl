@@ -251,7 +251,7 @@ Run(int in_RegionID)
    index++;
    opath_cfgs.push_back(*C);
        
-    pStatClass->StopPrintClock("Resampling started"); 
+    pStatClass->StopPrintClock("Resampling started", cout); 
    
    cout << endl;
    cout<<"newsmoothingvalues:"<<endl;
