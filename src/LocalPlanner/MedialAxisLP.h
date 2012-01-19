@@ -19,7 +19,7 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public StraightLine<CFG, 
  public:
 
   MedialAxisLP();
-  MedialAxisLP(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+  MedialAxisLP(XMLNodeReader& in_Node, MPProblem* _in_pProblem);
   virtual ~MedialAxisLP();
 
   virtual void PrintOptions(ostream& out_os);
@@ -58,7 +58,6 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public StraightLine<CFG, 
                      double _posRes, double _oriRes);
 
   int binarySearch;///<Mantain certain amount of clearance of Robot duing connection time.
-  cd_predefined cdtype;
 	LocalPlannerPointer m_maLPMethod, m_envLPMethod;
 };
 
@@ -99,8 +98,8 @@ template <class CFG, class WEIGHT> MedialAxisLP<CFG, WEIGHT>::
 	for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
     if (citr->getName() == "lp_methods") {
       LocalPlanners<CFG, WEIGHT>* lp = new LocalPlanners<CFG, WEIGHT>(*citr, in_pProblem);
-      m_maLPMethod = lp->GetLocalPlannerMethod(m_maStrLP);
-      m_envLPMethod = lp->GetLocalPlannerMethod(m_envStrLP);
+      m_maLPMethod = lp->GetMethod(m_maStrLP);
+      m_envLPMethod = lp->GetMethod(m_envStrLP);
     } else {
         citr->warnUnknownNode();
     }
