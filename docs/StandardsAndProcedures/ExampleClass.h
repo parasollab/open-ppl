@@ -14,6 +14,8 @@ class ExampleClass : public BaseClass {
 
   private:
     int m_value;
+    ExampleClass* m_self;
+    ExampleClass& m_myFriend;
 }
 
 #endif

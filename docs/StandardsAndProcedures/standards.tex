@@ -5,6 +5,19 @@
 \usepackage{algorithm,algorithmic}
 \newcommand{\EXCISE}[1]{}
 
+\usepackage[usenames]{color}
+\usepackage{listings}
+\definecolor{LightGrey}{rgb}{0.9,0.9,0.9} 
+\lstdefinestyle{C++}{language=C++,%
+  backgroundcolor=\color{LightGrey},
+  showstringspaces=false,
+  columns=fullflexible,
+  escapechar=@,
+  basicstyle=\sffamily,
+  moredelim=**[is][\color{white}]{~}{~},
+  literate={=>}{{$\Rightarrow\;$}}1 {->}{{$\rightarrow{}$}}1 %
+  {<-}{{$\leftarrow$}}1 {<:}{{$\subtype{}\ $}}1,
+}
 
 \title{\Large \bf Standards and Procedures of PMPL}
 \author{Jory Denny and Shawna Thomas and Nancy M. Amato}
@@ -13,6 +26,7 @@
 \thispagestyle{empty}
 \pagestyle{empty}
 \maketitle
+\lstset{style=C++}
 
 This document outlines the standards for all procedures within PMPL. This ranges from coding standards, to testing
 standards, to documentation standards, etc. Everyone will be expected to adhere to these standards.
@@ -41,46 +55,133 @@ All classes and files will be split between .h/.cpp format when possible. Except
 classes (avoided when possible). All .h files should have \#define guards with the name of the file in all caps with
 \_H\_ at the end (e.g., for ExampleClass.h -- EXAMPLECLASS\_H\_).
 
+\begin{lstlisting}
+#ifndef CLASS_H_
+#define CLASS_H_
+
+class Class;
+
+#endif
+\end{lstlisting}
+
 \subsection{Classes}
 \subsubsection{Class Names}
-All class names will begin with a capitol letter and each successive word will be capitalized. Ex. class MyPMPLClass.
+All class names will begin with a capital letter and each successive word will be capitalized.
+
+\begin{lstlisting}
+class MyClass;
+\end{lstlisting}
 
 \subsubsection{Class Variables}
 Class variables should be indicated with m\_ (e.g., m\_variableName). No type specification is necessary (i.e.,
 m\_pVariable for a pointer).
 
+\begin{lstlisting}
+m_myVariableName;
+\end{lstlisting}
+
 \subsubsection{Function Parameter Names}
 Function parameters should be indicated with an \_ (e.g., \_variableName).
 
+\begin{lstlisting}
+void MyFunction(int _a);
+\end{lstlisting}
+
 \subsection{All variable/function/class names}
-All variables will be named in CamelCasing. Class names and function names should begin with a capitol letter (i.e.,
+All variables will be named in \emph{CamelCasing}. Class names and function names should begin with a capital letter (i.e.,
 MyClass or MyFunction) while variables should begin with a lower case letter (i.e., m\_classVariable,
 \_functionParameter, or tempVar).
+
+\begin{lstlisting}
+class MyClass;
+void MyFunction(int _a);
+int myVariableName;
+\end{lstlisting}
+
+\subsection{XML variable names}
+Similarly to the class and variable names, within the XML and XML loading, names should be camel cased. Thus a class
+name in XML such as RotateAtS should begin with a capital letter. Variable names will begin with lower case letter,
+e.g., vcMethod or lpMethod.
+
+\begin{lstlisting}
+<XMLClassName label="label" myVariable="false"/>
+\end{lstlisting}
+
+\subsection{Pointer and Reference Type Specification}
+When declaring a variable to be a pointer or reference the * or \& should be adjacent to the type:
+
+\begin{lstlisting}
+Type* pointerName;
+Type& referenceName;
+\end{lstlisting}
 
 \subsection{Spaces/Tabbing}
 All tab characters should be represented by 2 spaces (easy to make default in all editors, vim is recommended).
 
 \subsection{Curly Braces}
 Curly braces used in control flow, function definitions, or class definitions should be placed on the same line as the
-statement (e.g., class MyClass $\{$, void MyFunction()$\{$, while(1)$\{$).
+statement.
+
+\begin{lstlisting}
+class MyClass {
+  void MyFunction(){
+    while(1){
+    }
+  }
+}
+\end{lstlisting}
 
 \subsection{Function Call/Declaration}
 Function calls or declarations which are "long" should be split between multiple lines when necessary to aid in reading
-the code.
+the code. In addition the return type and class/function names should be located on separate lines in the definition,
+see the example class for a general example, or below for the template.
 
-\subsection{m\_Debug}
-There will be a variable, m\_Debug in the PMPL base class which will be used to determine when output occurs. This means
-that there will be no \#Define statements for debug output, all debug output should be surrounded by:
+\begin{lstlisting}
+ReturnClass
+Class::Function(parameter list which may span multiple lines){
+}
+\end{lstlisting}
 
-if(m\_debug) cout$<<$"My debug statement";
+\subsection{MPBaseObject inherited variables/functions}
+\subsubsection{m\_debug}
+There will be a variable, m\_debug in the PMPL base class which will be used to determine when output occurs. This means
+that there will be no \#Define statements for debug output. All debug output will be of the form:
+
+\begin{lstlisting}
+if(m_debug) 
+  cout << "My debug statement";
+\end{lstlisting}
+
+\subsubsection{m\_recordKeep}
+This variable will be used to toggle record keeping with an algorithm. Thus affecting output to the stat class or not.
+
+\begin{lstlisting}
+if(m_recordKeep) 
+  _stats.IncLPStat("TotalIterations", 5);
+\end{lstlisting}
+
+\subsubsection{GetNameAndLabel()}
+This function returns a unique identifier to this class based on XML input. Returns m\_name + "::" + m\_label. This
+should be used in output and record keeping as compared to simply GetName().
+
+\begin{lstlisting}
+string callee = GetNameAndLabel();
+\end{lstlisting}
 
 \subsection{PrintOptions}
 In all classes one function PrintOptions should be implemented which displays the values of the class variables at the
 time of calling. This function can be called after XML initialization, but should not be called else where (at least in
 checked-in code).
 
+\begin{lstlisting}
+void PrintOptions(ostream& _os){
+  _os << GetNameAndLabel() << endl;
+  //output rest of class values
+}
+\end{lstlisting}
+
 \subsection{Example Class}
-Example class is located in ExampleClass.h/.cpp within this same folder.
+Example class is located in ExampleClass.h/.cpp within this same folder. And appended at the end of the file.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PMPL Class Structure 
@@ -172,5 +273,12 @@ All documentation should be done with DOxygen. DOxygen standards used within PMP
 Currently only nightly compilation testing occurs nightly. This should be expanded in the future.
 
 }
+
+\section{Example Class}
+\subsection{ExampleClass.h}
+\lstinputlisting{ExampleClass.h}
+
+\subsection{ExampleClass.cpp}
+\lstinputlisting{ExampleClass.cpp}
 
 \end{document}

@@ -6,10 +6,13 @@ ExampleClass::ExampleClass(int _v) : m_value(_v) {
     for(int i = 0; i<m_value; i++){
       cout<<"Counting::"<<i<<endl;
     }
+    if(m_recordKeep)
+      RecordMyStatistic(m_value);
   }
 }
 
-void ExampleClass::MyFunction(int _v){
+void 
+ExampleClass::MyFunction(int _v){
   //do some fancy stuff
   m_value+=_v;
 }
