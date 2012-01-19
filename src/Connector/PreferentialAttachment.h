@@ -447,7 +447,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 
     // attempt connection with the local planner
     CfgType _col;
-    if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
+    if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp)->
          IsConnected(_rm->GetEnvironment(), Stats, dm,
                      (*(_rm->m_pRoadmap->find_vertex(_vid))).property(),
                      (*(_rm->m_pRoadmap->find_vertex(*itr2))).property(),

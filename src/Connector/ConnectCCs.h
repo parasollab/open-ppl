@@ -243,7 +243,7 @@ ConnectSmallCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       }
       CfgType _col;
       if (!_rm->m_pRoadmap->IsEdge(cc1vec[c1],cc2vec[c2]) 
-          && this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
+          && this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp)->
                IsConnected(_rm->GetEnvironment(),Stats,dm,
                            (*(pMap->find_vertex(cc1vec[c1]))).property(),
                            (*(pMap->find_vertex(cc2vec[c2]))).property(),
@@ -300,7 +300,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
     }
     CfgType _col;
     if(!_rm->m_pRoadmap->IsEdge(kp[i].first,kp[i].second) 
-       && this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_lp)->
+       && this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp)->
             IsConnected(_rm->GetEnvironment(),Stats,dm,
                         (*(pMap->find_vertex(kp[i].first))).property(),
                         (*(pMap->find_vertex(kp[i].second))).property(),

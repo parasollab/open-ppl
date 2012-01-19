@@ -37,7 +37,7 @@ namespace pmpl_detail {
     StraightLine<CfgType,WeightType>,
     RotateAtS<CfgType,WeightType>,
     TransformAtS<CfgType,WeightType>,
-		MedialAxisLP<CfgType,WeightType>,
+    MedialAxisLP<CfgType,WeightType>,
     AStar<CfgType,WeightType>
     > LocalPlannerMethodList;
 }
@@ -49,52 +49,51 @@ class LocalPlanners : private ElementSet<LocalPlannerMethod<CFG,WEIGHT> >, publi
 class LocalPlanners : private ElementSet<LocalPlannerMethod<CFG,WEIGHT> >, public MPBaseObject {
 #endif
  public:
-	typedef typename ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::MethodPointer LocalPlannerPointer;
+  typedef typename ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::MethodPointer LocalPlannerPointer;
 
   template <typename MethodList>
-	LocalPlanners() : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(MethodList()) {}
-	LocalPlanners() : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(pmpl_detail::LocalPlannerMethodList()) {}
+  LocalPlanners() : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(MethodList()) {}
+  LocalPlanners() : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(pmpl_detail::LocalPlannerMethodList()) {}
   virtual ~LocalPlanners() {};
 
   template <typename MethodList>
   LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&)
   : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(MethodList()), MPBaseObject(in_pProblem) {
-    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
-      if(!ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::AddElement(citr->getName(), *citr, in_pProblem))
+    for(XMLNodeReader::childiterator citr = in_Node.children_begin();
+        citr!= in_Node.children_end(); ++citr) {
+      if(!ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::AddElement(citr->getName(),          *citr, in_pProblem)) {
         citr->warnUnknownNode();
+      }
+     }
     PrintOptions(cout);
   }
 
   LocalPlanners(XMLNodeReader& in_Node, MPProblem* in_pProblem)
   : ElementSet<LocalPlannerMethod<CFG,WEIGHT> >(pmpl_detail::LocalPlannerMethodList()), MPBaseObject(in_pProblem) {
-    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
-      if(!ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::AddElement(citr->getName(), *citr, in_pProblem))
+    for(XMLNodeReader::childiterator citr = in_Node.children_begin();
+        citr!= in_Node.children_end(); ++citr) {
+      if(!ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::AddElement(citr->getName(), 
+          *citr, in_pProblem)) {
         citr->warnUnknownNode();
+      }
+    }
     PrintOptions(cout);
   }
 
-  LocalPlannerPointer GetLocalPlannerMethod(string in_strLabel) {
-    return ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::GetElement(in_strLabel);
+  LocalPlannerPointer GetMethod(string _label) {
+    LocalPlannerPointer toReturn;
+    toReturn = ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::GetElement(_label);
+    return toReturn;
   }
 
-  void AddLocalPlannerMethod(string in_strLabel, LocalPlannerPointer in_ptr) {
-    ElementSet<LocalPlannerMethod<CFG,WEIGHT> >::AddElement(in_strLabel, in_ptr);
-  }
-
-  virtual void PrintOptions(ostream& out_os) { 
-    out_os << "  Local Planners" << endl;
+  virtual void PrintOptions(ostream& _os) { 
+    _os << "  Local Planners" << endl;
     for ( typename std::map<string,shared_ptr<LocalPlannerMethod<CFG,WEIGHT> > >::const_iterator M = this->ElementsBegin(); 
           M != this->ElementsEnd(); 
           ++M )
-      out_os <<"\t\"" << M->first << "\" (" << M->second->GetName() << ")" << endl;
+      _os <<"\t\"" << M->first << "\" (" << M->second->GetName() << ")" << endl;
   }
 
- private:
-  CDInfo cdInfo;
-
-  // Swept Volume Friend Classes
-  friend class LPSweptDistance;
-  friend class BinaryLPSweptDistance;
 };
 
 #endif

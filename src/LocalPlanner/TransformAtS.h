@@ -6,33 +6,45 @@
 template <class CFG, class WEIGHT>
 class TransformAtS: public StraightLine<CFG, WEIGHT> {
 
- public:
-  TransformAtS();
-  TransformAtS(XMLNodeReader& in_Node, MPProblem* in_pProblem);
-  virtual ~TransformAtS();
+  public:
+    TransformAtS();
+    TransformAtS(XMLNodeReader& _node, MPProblem* _problem);
+    virtual ~TransformAtS();
 
-  virtual void PrintOptions(ostream& out_os);
-  virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
+    virtual void PrintOptions(ostream& _os);
+    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
-  virtual bool IsConnected(Environment *env, StatClass& Stats,
-    shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
-    LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
-    bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);
+    virtual bool IsConnected(Environment *_env, StatClass& _stats,
+        shared_ptr<DistanceMetricMethod >_dm,
+        const CFG &_c1, const CFG &_c2,
+        CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
+        double _positionRes, double _orientationRes,
+        bool _checkCollision=true,
+        bool _savePath=false,
+        bool _saveFailedPath=false);
 
- protected:
+  protected:
 
-  virtual bool IsConnectedOneWay(Environment *env, StatClass& Stats,
-    shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
-    LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
-    bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);
+    virtual bool IsConnectedOneWay(Environment *_env, StatClass& _stats,
+        shared_ptr<DistanceMetricMethod >_dm,
+        const CFG &_c1, const CFG &_c2, CFG &_col, 
+        LPOutput<CFG, WEIGHT>* _lpOutput,
+        double _positionRes, double _orientationRes,
+        bool _checkCollision=true,
+        bool _savePath=false,
+        bool _saveFailedPath=false);
 
-  virtual bool IsConnectedOtherWay(Environment *env, StatClass& Stats,
-	  shared_ptr<DistanceMetricMethod >dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
-    LPOutput<CFG, WEIGHT>* lpOutput, double positionRes, double orientationRes,
-	  bool checkCollision=true, bool savePath=false, bool saveFailedPath=false);  
+    virtual bool IsConnectedOtherWay(Environment *_env, StatClass& _stats,
+        shared_ptr<DistanceMetricMethod >_dm,
+        const CFG &_c1, const CFG &_c2,
+        CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
+        double _positionRes, double _orientationRes,
+        bool _checkCollision=true,
+        bool _savePath=false,
+        bool _saveFailedPath=false);  
 
-  double s_value;
-  //std::string vcMethod;
+    double m_sValue;
+    //std::string vcMethod;
 };
 
 template <class CFG, class WEIGHT>
@@ -43,9 +55,9 @@ StraightLine<CFG, WEIGHT>(){
 
 template <class CFG, class WEIGHT>
 TransformAtS<CFG, WEIGHT>::
-TransformAtS(XMLNodeReader& in_Node, MPProblem* in_pProblem) : StraightLine<CFG, WEIGHT>(in_Node, in_pProblem) {
+TransformAtS(XMLNodeReader& _node, MPProblem* _problem) : StraightLine<CFG, WEIGHT>(_node, _problem) {
   this->SetName("TransformAtS");
-  s_value = in_Node.numberXMLParameter("s", true, 0.5, 0.0, 1.0,"transform at s value");
+  m_sValue = _node.numberXMLParameter("s", true, 0.5, 0.0, 1.0,"transform at s value");
 }
 
 template <class CFG, class WEIGHT> TransformAtS<CFG, WEIGHT>::~TransformAtS() { }
@@ -53,13 +65,12 @@ template <class CFG, class WEIGHT> TransformAtS<CFG, WEIGHT>::~TransformAtS() { 
 template <class CFG, class WEIGHT>
 void
 TransformAtS<CFG, WEIGHT>::
-PrintOptions(ostream& out_os) {
-  out_os << "    " << this->GetName() << "::  ";
-  out_os << "line segment length = " << " " << this->lineSegmentLength << " ";
-  out_os << "binary search = " << " " << this->binarySearch << " ";
-  out_os << "vcMethod = " << " " << this->m_vcMethod << " ";
-  out_os << "s_value = " << s_value;
-  out_os << endl;
+PrintOptions(ostream& _os) {
+  _os << "    " << this->GetName() << "::  ";
+  _os << "binary search = " << " " << this->m_binarySearch << " ";
+  _os << "vcMethod = " << " " << this->m_vcMethod << " ";
+  _os << "s_value = " << m_sValue;
+  _os << endl;
 }
 
 template <class CFG, class WEIGHT>
@@ -72,32 +83,40 @@ CreateCopy() {
 
 template <class CFG, class WEIGHT> bool
 TransformAtS<CFG, WEIGHT>:: IsConnected(Environment *_env, StatClass& _stats,
-shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
-LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
-bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
+    LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
+    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   //clear _lpOutput
   _lpOutput->path.clear();
   _lpOutput->edge.first.SetWeight(0);
   _lpOutput->edge.second.SetWeight(0);
   _lpOutput->savedEdge.clear();
   bool connected = false;
-  connected = IsConnectedOneWay(_env,_stats,_dm,_c1,_c2,_col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
+  connected = IsConnectedOneWay(_env,_stats,
+                  _dm,_c1,_c2,_col,_lpOutput,
+                  _posRes,_oriRes,_checkCollision,
+                  _savePath,_saveFailedPath);
   return connected;
 }
 
 template <class CFG, class WEIGHT> bool
-TransformAtS<CFG,WEIGHT>:: IsConnectedOneWay(Environment *_env, StatClass& _stats,
-shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
-LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
-bool _checkCollision, bool _savePath, bool _saveFailedPath) {  
+TransformAtS<CFG,WEIGHT>::
+IsConnectedOneWay(Environment *_env, StatClass& _stats,
+    shared_ptr<DistanceMetricMethod > _dm,
+    const CFG &_c1, const CFG &_c2, CFG &_col, 
+    LPOutput<CFG, WEIGHT>* _lpOutput,
+    double _posRes, double _oriRes,
+    bool _checkCollision,
+    bool _savePath,
+    bool _saveFailedPath) {  
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->m_vcMethod);
 
-  int cd_cntr = 0;
-  vector<double> start_data = _c1.GetData();
-  vector<double> goal_data = _c2.GetData();
+  int cdCounter = 0;
+  vector<double> startData = _c1.GetData();
+  vector<double> goalData = _c2.GetData();
   vector<double> tmp = _c1.GetData();
-  vector<double> half_position = _c1.GetData();
+  vector<double> halfPosition = _c1.GetData();
 
   cout << "Start CFG positional DOF: " << _c1.PosDOF() << "\n" << flush; 
 
@@ -105,35 +124,34 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 
   sequence.push_back(_c1.CreateNewCfg());
 
-  vector<double> translate_data = start_data;
+  vector<double> translateData = startData;
   if (_c1.PosDOF() > 0 ) {
     // Translate the robot base s_value way between start and goal, keeping orientation fixed
-    Cfg* cfg_average = _c1.CreateNewCfg();
-    cfg_average->WeightedSum(_c1, _c2, s_value);
-    vector<double> average_data = cfg_average->GetData();
+    Cfg* cfgAverage = _c1.CreateNewCfg();
+    cfgAverage->WeightedSum(_c1, _c2, m_sValue);
+    vector<double> averageData = cfgAverage->GetData();
     for ( int i=0; i<_c1.PosDOF(); ++i )
-      translate_data[i] = average_data[i];
+      translateData[i] = averageData[i];
 
-    Cfg* cfg_translate = _c1.CreateNewCfg(translate_data);
-    sequence.push_back(cfg_translate);
+    Cfg* cfgTranslate = _c1.CreateNewCfg(translateData);
+    sequence.push_back(cfgTranslate);
 
-    half_position = cfg_translate->GetData();
+    halfPosition = cfgTranslate->GetData();
   }
-  translate_data = start_data;
+  translateData = startData;
 
-  for(int i=_c1.PosDOF(); i<_c1.DOF(); ++i)
-  {
+  for(int i=_c1.PosDOF(); i<_c1.DOF(); ++i) {
     //create intermediate cfg, replacing dof i with goal dof
-    vector<double> intermediate_data = translate_data;
-    intermediate_data[0] = half_position[0];
-    intermediate_data[1] = half_position[1];
-    intermediate_data[2] = half_position[2];
-    intermediate_data[i] = goal_data[i];
-    Cfg* cfg_intermediate = _c1.CreateNewCfg(intermediate_data);
-    sequence.push_back(cfg_intermediate);
+    vector<double> intermediateData = translateData;
+    intermediateData[0] = halfPosition[0];
+    intermediateData[1] = halfPosition[1];
+    intermediateData[2] = halfPosition[2];
+    intermediateData[i] = goalData[i];
+    Cfg* cfgIntermediate = _c1.CreateNewCfg(intermediateData);
+    sequence.push_back(cfgIntermediate);
 
-    //save change of dof to translate_data
-    translate_data[i] = goal_data[i];
+    //save change of dof to translateData
+    translateData[i] = goalData[i];
   }
 
   sequence.push_back(_c2.CreateNewCfg());
@@ -147,29 +165,36 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 
   bool connected = true;
 
-  if ( _checkCollision ) {
-    string Callee(this->GetName());
-    string Method("-transform_at_s::IsConnected");
+  if (_checkCollision) {
+    string callee = this->GetName();
+    string method = "-transform_at_s::IsConnected";
     CDInfo cdInfo;
-    Callee = Callee + Method;
+    callee = callee + method;
     for(size_t i=1; i<sequence.size()-1; ++i) {
-      cd_cntr++;
+      cdCounter++;
       if ( (!sequence[i]->InBoundingBox(_env)) || 
-           (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &Callee)))
-        connected = IsConnectedOtherWay(_env,_stats,_dm,_c1,_c2,_col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
+          (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &callee)))
+        connected = IsConnectedOtherWay(_env,_stats,_dm,
+            _c1,_c2,_col,_lpOutput,
+            _posRes,_oriRes,_checkCollision,
+            _savePath,_saveFailedPath);
     }
   }
 
-  if ( connected ) {
+  if (connected) {
     for ( size_t i=0; i<sequence.size()-1; ++i) {
-      if ( this->binarySearch )
-        connected = IsConnectedSLBinary(_env, _stats, _dm, *sequence[i], *sequence[i+1],
-                                        _col, _lpOutput, cd_cntr, _posRes, _oriRes,
-                                        _checkCollision, _savePath, _saveFailedPath);
+      if ( this->m_binarySearch )
+        connected = IsConnectedSLBinary(_env, _stats, _dm,
+            *sequence[i], *sequence[i+1],
+            _col, _lpOutput, cdCounter,
+            _posRes, _oriRes,_checkCollision,
+            _savePath, _saveFailedPath);
       else
-        connected = IsConnectedSLSequential(_env, _stats, _dm, *sequence[i], *sequence[i+1],
-                                            _col, _lpOutput, cd_cntr, _posRes, _oriRes,
-                                            _checkCollision, _savePath, _saveFailedPath);
+        connected = IsConnectedSLSequential(_env, _stats, _dm,
+            *sequence[i], *sequence[i+1],
+            _col, _lpOutput, cdCounter,
+            _posRes, _oriRes,_checkCollision,
+            _savePath, _saveFailedPath);
 
       if ((_savePath || _saveFailedPath) && (i+1 != sequence.size()-1))
         _lpOutput->path.push_back(*sequence[i+1]);
@@ -179,8 +204,10 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
     }
   }
 
-  if ( connected ) _stats.IncLPConnections(this->GetName());
-  _stats.IncLPCollDetCalls(this->GetName(), cd_cntr);
+  if (connected)
+    _stats.IncLPConnections(this->GetName());
+  
+  _stats.IncLPCollDetCalls(this->GetName(), cdCounter);
 
   for(size_t i=0; i<sequence.size(); ++i)
     if(sequence[i] != NULL)
@@ -190,19 +217,24 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 }
 
 template <class CFG, class WEIGHT> bool
-TransformAtS<CFG, WEIGHT>::IsConnectedOtherWay(Environment *_env, StatClass& _stats,
-shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, CFG &_col, 
-LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
-bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+TransformAtS<CFG, WEIGHT>::
+IsConnectedOtherWay(Environment *_env, StatClass& _stats,
+    shared_ptr<DistanceMetricMethod > _dm,
+    const CFG &_c1, const CFG &_c2,
+    CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
+    double _posRes, double _oriRes,
+    bool _checkCollision,
+    bool _savePath,
+    bool _saveFailedPath) {
   cout << "Check the other direction:\n" << flush;
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->m_vcMethod);
 
-  int cd_cntr = 0;
-  vector<double> start_data    = _c1.GetData();
-  vector<double> goal_data     = _c2.GetData();
+  int cdCounter = 0;
+  vector<double> startData    = _c1.GetData();
+  vector<double> goalData     = _c2.GetData();
   vector<double> tmp           = _c1.GetData();
-  vector<double> half_position = _c1.GetData();
+  vector<double> halfPosition = _c1.GetData();
 
   cout << "Start CFG positional DOF: " << _c1.PosDOF() << "\n" << flush;
 
@@ -210,36 +242,35 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 
   sequence.push_back(_c1.CreateNewCfg());
 
-  vector<double> translate_data = start_data;
+  vector<double> translateData = startData;
   if(_c1.PosDOF() > 0) {
     //translate the robot base s_value way between start and goal, keeping orientation fixed
-    Cfg* cfg_average = _c1.CreateNewCfg();
-    cfg_average->WeightedSum(_c1, _c2, s_value);
-    vector<double> average_data = cfg_average->GetData();
+    Cfg* cfgAverage = _c1.CreateNewCfg();
+    cfgAverage->WeightedSum(_c1, _c2, m_sValue);
+    vector<double> averageData = cfgAverage->GetData();
     for(int i=0; i<_c1.PosDOF(); ++i)
-      translate_data[i] = average_data[i];
+      translateData[i] = averageData[i];
 
-    Cfg* cfg_translate = _c1.CreateNewCfg(translate_data);
-    sequence.push_back(cfg_translate);
+    Cfg* cfgTranslate = _c1.CreateNewCfg(translateData);
+    sequence.push_back(cfgTranslate);
 
-    half_position = cfg_translate->GetData();
+    halfPosition = cfgTranslate->GetData();
   }
 
-  translate_data = start_data;
+  translateData = startData;
 
-  for(int i=_c1.DOF()-1; i>_c1.PosDOF()-1; --i)
-  {
+  for(int i=_c1.DOF()-1; i>_c1.PosDOF()-1; --i) {
     //create intermediate cfg, replacing dof i with goal dof
-    vector<double> intermediate_data = translate_data;
-    intermediate_data[0] = half_position[0];
-    intermediate_data[1] = half_position[1];
-    intermediate_data[2] = half_position[2];
-    intermediate_data[i] = goal_data[i];
-    Cfg* cfg_intermediate = _c1.CreateNewCfg(intermediate_data);
-    sequence.push_back(cfg_intermediate);
+    vector<double> intermediateData = translateData;
+    intermediateData[0] = halfPosition[0];
+    intermediateData[1] = halfPosition[1];
+    intermediateData[2] = halfPosition[2];
+    intermediateData[i] = goalData[i];
+    Cfg* cfgIntermediate = _c1.CreateNewCfg(intermediateData);
+    sequence.push_back(cfgIntermediate);
 
     //save change of dof to translate data
-    translate_data[i] = goal_data[i];
+    translateData[i] = goalData[i];
   }
 
   sequence.push_back(_c2.CreateNewCfg());
@@ -253,18 +284,18 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   }
 
   bool connected = true;
-  
-  if ( _checkCollision ) {
-    string Callee(this->GetName());
-    string Method("-transform_at_s::IsConnected");
+
+  if (_checkCollision) {
+    string callee = this->GetName();
+    string method = "-transform_at_s::IsConnected";
     CDInfo cdInfo;
-    Callee = Callee + Method;
+    callee = callee + method;
     for(size_t i=1; i<sequence.size()-1; ++i) {
-      cd_cntr++;
+      cdCounter++;
       if ( (!sequence[i]->InBoundingBox(_env)) || 
-           (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &Callee))) {
+          (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &callee))) {
         if ( (sequence[i]->InBoundingBox(_env)) && 
-             (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &Callee)))
+            (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &callee)))
           _col = *sequence[i];
         connected = false;
         break;
@@ -272,16 +303,20 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
     }
   }
 
-  if ( connected ) {
+  if (connected) {
     for(size_t i=0; i<sequence.size()-1; ++i) {
-      if (this->binarySearch)
-        connected = IsConnectedSLBinary(_env, _stats, _dm, *sequence[i], *sequence[i+1],
-                                        _col, _lpOutput, cd_cntr, _posRes, _oriRes,
-                                        _checkCollision, _savePath, _saveFailedPath);
+      if (this->m_binarySearch)
+        connected = IsConnectedSLBinary(_env, _stats, _dm,
+            *sequence[i], *sequence[i+1],
+            _col, _lpOutput, cdCounter,
+            _posRes, _oriRes, _checkCollision,
+            _savePath, _saveFailedPath);
       else
-        connected = IsConnectedSLSequential(_env, _stats, _dm, *sequence[i], *sequence[i+1],
-                                            _col, _lpOutput, cd_cntr, _posRes, _oriRes,
-                                            _checkCollision, _savePath, _saveFailedPath);
+        connected = IsConnectedSLSequential(_env, _stats, _dm,
+            *sequence[i], *sequence[i+1],
+            _col, _lpOutput, cdCounter,
+            _posRes, _oriRes,_checkCollision,
+            _savePath, _saveFailedPath);
 
       if ((_savePath || _saveFailedPath) && (i+1 != sequence.size()-1))
         _lpOutput->path.push_back(*sequence[i+1]);
@@ -291,8 +326,10 @@ bool _checkCollision, bool _savePath, bool _saveFailedPath) {
     }
   }
 
-  if ( connected ) _stats.IncLPConnections(this->GetName());
-  _stats.IncLPCollDetCalls(this->GetName(), cd_cntr);
+  if (connected)
+    _stats.IncLPConnections(this->GetName());
+  
+  _stats.IncLPCollDetCalls(this->GetName(), cdCounter);
 
   for(size_t i=0; i<sequence.size(); ++i)
     if(sequence[i] != NULL)

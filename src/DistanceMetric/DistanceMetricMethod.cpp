@@ -870,7 +870,7 @@ LPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn) : Dis
   for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
     if(citr->getName() == "lp_methods") {
       LocalPlanners<CfgType, WeightType>* lp = new LocalPlanners<CfgType, WeightType>(*citr, in_pProblem);
-      lp_method = lp->GetLocalPlannerMethod("dm_lp");
+      lp_method = lp->GetMethod("dm_lp");
       
     } else {
       if(warn)
@@ -1002,7 +1002,7 @@ BinaryLPSweptDistance(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool warn)
   for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
     if (citr->getName() == "lp_methods") {
       LocalPlanners<CfgType, WeightType>* lp = new LocalPlanners<CfgType, WeightType>(*citr, in_pProblem);
-      lp_method = lp->GetLocalPlannerMethod("dm_lp");      
+      lp_method = lp->GetMethod("dm_lp");      
     } else {
       if(warn)
         citr->warnUnknownNode();

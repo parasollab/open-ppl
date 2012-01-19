@@ -476,7 +476,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       StatClass _mystat;
       LPOutput<CfgType,WeightType> out_lp_output;
       for ( size_t i=0; i<vec_dist_vid.size(); ++i) {
-        if ( GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(m_strLocalPlannerLabel)->
+        if ( GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_strLocalPlannerLabel)->
             IsConnected ( GetMPProblem()->GetEnvironment(), _mystat, dm, _test, 
               (*(_graph.find_vertex(vec_dist_vid[i].second))).property(), &out_lp_output, 
               GetMPProblem()->GetEnvironment()->GetPositionRes(), 

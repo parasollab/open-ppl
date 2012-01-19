@@ -132,7 +132,7 @@ double GaussianDistribution(double _mean, double _stdev) {
 ///////////////////////////////////////////////////////////////////////////////
 
 boost::shared_ptr<LocalPlannerMethod<CfgType, WeightType> > GetLPMethod(MPProblem* _mp, string _s){
-  return _mp->GetMPStrategy()->GetLocalPlanners()->GetLocalPlannerMethod(_s);
+  return _mp->GetMPStrategy()->GetLocalPlanners()->GetMethod(_s);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

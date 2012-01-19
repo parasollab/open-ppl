@@ -450,7 +450,7 @@ CanRecreatePath(Roadmap<CFG, WEIGHT>* rdmp,
     typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei;
     typename RoadmapGraph<CFG, WEIGHT>::edge_descriptor ed((*(rdmp->m_pRoadmap->find_vertex(*I))).descriptor(),(*(rdmp->m_pRoadmap->find_vertex(*(I+1) ))).descriptor());
     rdmp->m_pRoadmap->find_edge(ed, vi, ei);
-    if(!(lp->GetLocalPlannerMethod(_lp_label)->
+    if(!(lp->GetMethod(_lp_label)->
          IsConnected(rdmp->GetEnvironment(), Stats, dm,
                      (*(rdmp->m_pRoadmap->find_vertex(*I))).property(), 
                      (*(rdmp->m_pRoadmap->find_vertex(*(I+1) ))).property(), 

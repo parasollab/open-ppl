@@ -97,11 +97,11 @@ void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp, MPProble
       newConfigurationWeight=GetValue(c2, mp, env, Stats, m_vc, cdInfo, m_dm, x,bl);
       if((newConfigurationWeight>oldConfigurationWeight && type_name.compare("MAX_CLEARANCE")==0) ||
         (newConfigurationWeight<oldConfigurationWeight && type_name.compare("PROTEIN_ENERGY")==0)) {
-        firstConnectFlag = lp->GetLocalPlannerMethod(m_lp)->
+        firstConnectFlag = lp->GetMethod(m_lp)->
                                IsConnected(env, Stats, dm, previous, c2, &lpOutput, 
                                rdmp->GetEnvironment()->GetPositionRes(),
                                rdmp->GetEnvironment()->GetOrientationRes(),true);
-				secondConnectFlag = lp->GetLocalPlannerMethod(m_lp)->
+				secondConnectFlag = lp->GetMethod(m_lp)->
                                 IsConnected(env, Stats, dm, c2,next, &lpOutput, 
                                 rdmp->GetEnvironment()->GetPositionRes(),
                                 rdmp->GetEnvironment()->GetOrientationRes(), true);

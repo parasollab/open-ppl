@@ -184,7 +184,7 @@ void BasicRRTStrategy::Run(int _regionID) {
         CfgType closest = region->GetRoadmap()->m_pRoadmap->find_vertex(closests[0])->property();
         double dist = dm->Distance(env, goals[i], closest);
         if(m_debug) cout << "Distance to goal::" << dist << endl;
-        if(dist < m_delta && lp->GetLocalPlannerMethod(m_lp)->IsConnected(env, *regionStats, dm, closest, goals[i], col, &lpOutput,
+        if(dist < m_delta && lp->GetMethod(m_lp)->IsConnected(env, *regionStats, dm, closest, goals[i], col, &lpOutput,
               positionRes, orientationRes, checkCollision, savePath, saveFailed)){
           if(m_debug) cout << "Goal found::" << goals[i] << endl;
           region->GetRoadmap()->m_pRoadmap->AddVertex(goals[i]);

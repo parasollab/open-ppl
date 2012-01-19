@@ -65,7 +65,7 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       bool is_expansion = true;
       for(typename vector<VID>::iterator i_n = neighbor_neighbor.begin(); i_n !=neighbor_neighbor.end(); ++i_n)
       {  //test connection to each;
-        if(!(lp->GetLocalPlannerMethod(m_lp)->
+        if(!(lp->GetMethod(m_lp)->
                IsConnected(env, Stats, dm, 
                            (*(pGraph->find_vertex(in_vid))).property(),
                            (*(pGraph->find_vertex(*i_n))).property(),
