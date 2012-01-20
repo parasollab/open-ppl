@@ -134,6 +134,31 @@ double DirectedAngularDistance(double _a, double _b);
 
 double GaussianDistribution(double _mean, double _stdev);
 
+/* This function calculated angle _c1_c2_c3, 
+   as in the angle between the rays _c2, _c1 and _c2, _c3.
+  */
+template<typename CFG>
+double AngleBetween(CFG _c1, CFG _c2, CFG _c3){
+  CFG sub1, sub2;
+  sub1.subtract(_c2, _c1);
+  sub2.subtract(_c2, _c3);
+  vector<double> sub1Data = sub1.GetData();
+  vector<double> sub2Data = sub2.GetData();
+
+  double v1Norm = 0, v2Norm = 0, v1DotV2 = 0;
+  for(size_t i = 0; i<sub1Data.size(); i++){
+    v1Norm += sub1Data[i] * sub1Data[i];
+    v2Norm += sub2Data[i] * sub2Data[i];
+    v1DotV2 += sub1Data[i] * sub2Data[i];
+  }
+
+  v1Norm = sqrt(v1Norm);
+  v2Norm = sqrt(v2Norm);
+
+  double angle = v1DotV2/(v1Norm*v2Norm);
+  angle = acos(angle);
+  return angle;
+}
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -365,6 +390,7 @@ class MPBaseObject {
     virtual void ParseXML(XMLNodeReader& _node) {
       m_label = _node.stringXMLParameter("Label", false, "", "Label Identifier");
       m_debug = _node.boolXMLParameter("debug", false, false, "Run-time debug on(true)/off(false)");
+      m_recordKeep = _node.boolXMLParameter("recordKeep", false, false, "Keeping track of algorithmic statistics, on(true)/off(false)");
     };
 
     MPProblem* GetMPProblem() {return m_problem;}
@@ -381,6 +407,7 @@ class MPBaseObject {
   protected:
     string m_name;
     bool m_debug;
+    bool m_recordKeep;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

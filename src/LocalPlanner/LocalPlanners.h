@@ -14,6 +14,7 @@
 #include "TransformAtS.h"
 #include "MedialAxisLP.h"
 #include "AStar.h"
+#include "ToggleLP.h"
 //#include "ApproxSpheres.h"
 
 #ifdef _PARALLEL
@@ -38,7 +39,8 @@ namespace pmpl_detail {
     RotateAtS<CfgType,WeightType>,
     TransformAtS<CfgType,WeightType>,
     MedialAxisLP<CfgType,WeightType>,
-    AStar<CfgType,WeightType>
+    AStar<CfgType,WeightType>,
+    ToggleLP<CfgType, WeightType>
     > LocalPlannerMethodList;
 }
 
