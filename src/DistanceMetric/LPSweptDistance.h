@@ -9,7 +9,7 @@ class LPSweptDistance : public DistanceMetricMethod {
   public:
     LPSweptDistance();
     LPSweptDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn = true);
-    LPSweptDistance(LocalPlannerPointer _lpMethod, double _positionRes = 0.1, double _orientationRes = 0.1, bool _bbox = false);
+    LPSweptDistance(string _lp, double _positionRes = 0.1, double _orientationRes = 0.1, bool _bbox = false);
     ~LPSweptDistance();
     virtual void PrintOptions(ostream& _os) const;
     virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
@@ -17,10 +17,9 @@ class LPSweptDistance : public DistanceMetricMethod {
     
     
   protected:
-    LocalPlannerPointer m_lpMethod;
+    string m_lp;
     double m_positionRes, m_orientationRes;
     bool m_useBbox;
-    string m_lp;
 };
 
 #endif
