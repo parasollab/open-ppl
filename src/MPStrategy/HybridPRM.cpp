@@ -754,7 +754,7 @@ evaluate_map(int in_RegionID)
     bool mapPassedEvaluation = true;
     for(vector<string>::iterator I = m_evaluator_labels.begin(); I != m_evaluator_labels.end(); ++I)
     {
-      MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
+      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
       stats->StartClock(pEvaluator->GetName());
 
       cout << "\n\t";

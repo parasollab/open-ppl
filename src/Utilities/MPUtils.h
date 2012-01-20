@@ -163,7 +163,7 @@ template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
   bool operator()(InputIterator _first, InputIterator _last, 
       logical_and<bool> _binaryOp, UnaryOperator _op) {
-    if (_first == _last)
+    if (_first == _last) 
       return false;
     else {
       bool result = _op(*_first++);

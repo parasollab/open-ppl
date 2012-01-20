@@ -133,7 +133,7 @@ void BasicPRM::Initialize(int _regionID){
       cout << "\n\tResetting map evaluator states...\n";
     }
     for(vector<string>::iterator I = m_evaluatorLabels.begin(); I != m_evaluatorLabels.end(); ++I) {
-      MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
+      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
       if(pEvaluator->HasState())
         pEvaluator->operator()(_regionID);
     }
@@ -303,7 +303,7 @@ bool BasicPRM::EvaluateMap(int _regionID)
     mapPassedEvaluation = true;
     for(vector<string>::iterator I = m_evaluatorLabels.begin(); 
         I != m_evaluatorLabels.end(); ++I){
-      MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator;
+      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr pEvaluator;
       pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
 
       string evaluatorClockName = "Evaluator::" + pEvaluator->GetName();

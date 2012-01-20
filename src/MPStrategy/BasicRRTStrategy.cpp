@@ -283,7 +283,7 @@ bool BasicRRTStrategy::EvaluateMap(int _regionID) {
     mapPassedEvaluation = true;
 
     for (vector<string>::iterator I = m_evaluators.begin(); I != m_evaluators.end(); ++I) {
-      MapEvaluator<CfgType, WeightType>::conditional_type evaluator;
+      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr evaluator;
       evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
       stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_currentIteration << ", " << evaluator->GetName();
       stats->StartClock(evaluatorClockName.str());

@@ -12,20 +12,22 @@ using boost::shared_ptr;
 #include "PrintMapEvaluation.h"
 #include "CoverageEvaluation.h"
 #include "ConnectivityEvaluation.h"
+#include "ComposeEval.h"
+#include "NegateEvaluation.h"
 
 template <class CFG, class WEIGHT>
 class MapEvaluator : public MPBaseObject 
 {
  public:
-  typedef shared_ptr<MapEvaluationMethod> conditional_type;
-  typedef typename vector<conditional_type>::iterator conditional_iterator;
+  typedef shared_ptr<MapEvaluationMethod> MapEvaluationMethodPtr;
+  typedef typename vector<MapEvaluationMethodPtr>::iterator conditional_iterator;
   
   typedef shared_ptr<MPRegionComparerMethod<CFG, WEIGHT> > comparer_type;
   typedef typename vector<comparer_type>::iterator comparer_iterator;
 
   MapEvaluator() {}
   
-  MapEvaluator(const vector<conditional_type>& e, vector<comparer_type> _m_comparer_evaluators) 
+  MapEvaluator(const vector<MapEvaluationMethodPtr>& e, vector<comparer_type> _m_comparer_evaluators) 
   : m_conditional_evaluators(e), m_comparer_evaluators(_m_comparer_evaluators)
   {}
   
@@ -68,25 +70,29 @@ class MapEvaluator : public MPBaseObject
     for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
     {
       if (citr->getName() == "NumNodesEvaluation")
-        m_conditional_evaluators.push_back(conditional_type(new NumNodesEvaluation(*citr, in_pProblem)));
+        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new NumNodesEvaluation(*citr, in_pProblem)));
       else if (citr->getName() == "NumEdgesEvaluation")
-        m_conditional_evaluators.push_back(conditional_type(new NumEdgesEvaluation(*citr, in_pProblem)));
+        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new NumEdgesEvaluation(*citr, in_pProblem)));
       else if (citr->getName() == "QueryEvaluation")
-        m_conditional_evaluators.push_back(conditional_type(new QueryEvaluation<CFG, WEIGHT>(*citr, in_pProblem))); 
+        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new QueryEvaluation<CFG, WEIGHT>(*citr, in_pProblem))); 
       else if (citr->getName() == "PrintMapEvaluation")
-        m_conditional_evaluators.push_back(conditional_type(new PrintMapEvaluation(*citr, in_pProblem))); 
+        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new PrintMapEvaluation(*citr, in_pProblem))); 
       else if (citr->getName() == "TrueEvaluation")
-         m_conditional_evaluators.push_back(conditional_type(new TrueEvaluation(*citr, in_pProblem)));
+         m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new TrueEvaluation(*citr, in_pProblem)));
       else if (citr->getName() == "CoverageEvaluation")
-        m_conditional_evaluators.push_back(conditional_type(new CoverageEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
+        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new CoverageEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
       else if (citr->getName() == "ConnectivityEvaluation")
-        m_conditional_evaluators.push_back(conditional_type(new ConnectivityEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
+        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new ConnectivityEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
+      else if (citr->getName() == "ComposeEvaluation")
+        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new ComposeEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
+      else if (citr->getName() == "NegateEvaluation")
+        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new NegateEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
       else
         citr->warnUnknownNode();
     }
   }
   
-  void AddEvaluator(conditional_type& e)
+  void AddEvaluator(MapEvaluationMethodPtr& e)
   {
     m_conditional_evaluators.push_back(e);
   }
@@ -112,7 +118,7 @@ class MapEvaluator : public MPBaseObject
     return true;
   }
 
-  conditional_type GetConditionalMethod(const string& in_label)
+  MapEvaluationMethodPtr GetConditionalMethod(const string& in_label)
   {
     for (conditional_iterator I = m_conditional_evaluators.begin(); I != m_conditional_evaluators.end(); ++I)
       if ((*I)->GetLabel() == in_label)
@@ -152,7 +158,7 @@ class MapEvaluator : public MPBaseObject
   //@todo remove when Input class deleted
   void PrintDefaults(ostream& out_os) {}
 
-  vector<conditional_type> m_conditional_evaluators;
+  vector<MapEvaluationMethodPtr> m_conditional_evaluators;
   vector<comparer_type> m_comparer_evaluators;
 };
 

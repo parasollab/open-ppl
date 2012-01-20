@@ -573,7 +573,7 @@ bool UAStrategy::EvaluateMap(int in_RegionID){
       mapPassedEvaluation = true;
       for(vector<string>::iterator I = m_EvaluatorLabels.begin(); 
           I != m_EvaluatorLabels.end(); ++I){
-         MapEvaluator<CfgType, WeightType>::conditional_type pEvaluator;
+         MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr pEvaluator;
          pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
          stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_CurrentIteration << ", " << pEvaluator->GetName();
          stats->StartClock(evaluatorClockName.str());
