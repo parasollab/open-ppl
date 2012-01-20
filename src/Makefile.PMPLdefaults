@@ -227,7 +227,7 @@ PMPL_OBJS = \
 	DistanceMetric/ManhattanDistance.o \
 	DistanceMetric/MinkowskiDistance.o \
 	DistanceMetric/MinkowskiDistance.o \
-	DistanceMetric/RSMDDistance.o \
+	DistanceMetric/RMSDDistance.o \
 	DistanceMetric/ReachableDistance.o \
 	DistanceMetric/LPSweptDistance.o \
 	DistanceMetric/BinaryLPSweptDistance.o \
