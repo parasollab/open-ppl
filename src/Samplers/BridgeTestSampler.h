@@ -58,7 +58,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
       int attempts = 0;
 
       do {
-        _stats.IncNodesAttempted();
+        _stats.IncNodesAttempted(this->GetNameAndLabel());
         attempts++;
         CFG tmp = _cfgIn;
         if (tmp == blankCfg) {
@@ -76,11 +76,10 @@ class BridgeTestSampler : public SamplerMethod<CFG>
               cfg2.add(mid, incr);
               if(!cfg2.InBoundingBox(_env,_bb) || 
                  !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
-                _stats.IncNodesGenerated();
+                _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 _cfgOut.push_back(tmp);
                 _cfgCol = cfg1;
-                //_cfgCol = cfg2;
               }
             }
           } else {
@@ -93,11 +92,10 @@ class BridgeTestSampler : public SamplerMethod<CFG>
               mid.WeightedSum(cfg1, cfg2, 0.5);
               if ( mid.InBoundingBox(_env,_bb) && 
                   (vc->IsValid(vc->GetVCMethod(m_vcLabel), mid, _env, _stats, cdInfo, true, &callee))) {
-                _stats.IncNodesGenerated();
+                _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 _cfgOut.push_back(mid);
                 _cfgCol = cfg1;
-                //_cfgCol = cfg2;
               }
             }
           }
@@ -110,11 +108,10 @@ class BridgeTestSampler : public SamplerMethod<CFG>
               CFG cfg2;
               cfg2.add(mid, incr);
               if( !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
-                _stats.IncNodesGenerated();
+                _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 _cfgOut.push_back(tmp);
                 _cfgCol = cfg1;
-                //_cfgCol = cfg2;
               }
             }
           } else {
@@ -125,11 +122,10 @@ class BridgeTestSampler : public SamplerMethod<CFG>
               CFG mid;
               mid.WeightedSum(cfg1, cfg2, 0.5);
               if( (vc->IsValid(vc->GetVCMethod(m_vcLabel), mid, _env, _stats, cdInfo, true, &callee)) ) {
-                _stats.IncNodesGenerated();
+                _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 _cfgOut.push_back(mid);
                 _cfgCol = cfg1;
-                //cfgCol = cfg2;
               }
             }
           }	

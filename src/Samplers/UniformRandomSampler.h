@@ -47,14 +47,14 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
       int attempts = 0;
 
       do {
-        _stats.IncNodesAttempted();
+        _stats.IncNodesAttempted(this->GetNameAndLabel());
         attempts++;
         CFG tmp;
         tmp.GetRandomCfg(_env,_bb);
         if(tmp.InBoundingBox(_env,_bb)) {
           if(vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, 
                          _stats, cdInfo, true, &callee)) {
-            _stats.IncNodesGenerated();
+            _stats.IncNodesGenerated(this->GetNameAndLabel());
             generated = true;
             _cfgOut.push_back(tmp);
           } else {

@@ -56,34 +56,32 @@ class StatClass {
 
     void ClearStats();
 
-    int IncNumCollDetCalls( string _cdName , string *_callName = NULL);
+    int IncNumCollDetCalls(string _cdName , string* _callName = NULL);
     unsigned long int GetIsCollTotal() { return m_isCollTotal; }
+    void IncCfgIsColl(string* _callName = NULL);
 
-    void IncCfgIsColl( string *_callName = NULL);
-
-    int IncLPConnections( string _lpName , int _incr=1);
-    int SetLPConnections( string _lpName, int _connections );
-    int IncLPAttempts( string _lpName, int _incr=1 );
-    int SetLPAttempts( string _lpName, int _attempts );
-    int IncLPCollDetCalls( string _lpName, int _incr=1);
+    int IncLPConnections(string _lpName , int _incr=1);
+    int IncLPAttempts(string _lpName, int _incr=1 );
+    int IncLPCollDetCalls(string _lpName, int _incr=1);
 
     static const int ALL;
     template <class CFG, class WEIGHT>
-      void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT> *_rmap);
+      void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap);
     template <class CFG, class WEIGHT>
-      void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT> *_rmap, int _numCCs);
+      void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs);
 
     template <class CFG, class WEIGHT>
-      void PrintDataLine(ostream&, Roadmap<CFG, WEIGHT>* , int _showColumnHeaders=0);
+      void PrintDataLine(ostream&, Roadmap<CFG, WEIGHT>*, int _showColumnHeaders=0);
 
     template <class CFG, class WEIGHT>
-      void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> *_rdmp, shared_ptr<DistanceMetricMethod> _dm);
+      void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<DistanceMetricMethod> _dm);
 
     template <class CFG, class WEIGHT>
-      void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> *_rdmp, NeighborhoodFinder* _nf, string _nfMethod);
+      void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, NeighborhoodFinder* _nf, string _nfMethod);
+      
     void PrintFeatures(ostream& _os);
-    void IncNodesGenerated();
-    void IncNodesAttempted();
+    int IncNodesGenerated(string _samplerName, int _incr=1);
+    int IncNodesAttempted(string _samplerName, int _incr=1);
 
     //Clock Accessors
     void ClearClock(string _name);
@@ -107,9 +105,13 @@ class StatClass {
     template <class CFG, class WEIGHT>
       void DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>&, int);
 
-    map<string, unsigned long int> m_lpConnections;
-    map<string, unsigned long int> m_lpAttempts;
-    map<string, unsigned long int> m_lpCollDetCalls;
+    //m_lpInfo represents information about the Local Planners, referenced by name
+    //  m_lpInfo.first is the name of the Local Planner
+    //  m_lpInfo.second.get<0>() is the # of LP attempts
+    //  m_lpInfo.second.get<1>() is the # of LP connections (successes)
+    //  m_lpInfo.second.get<2>() is the # of LP collision detection calls
+    map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> > m_lpInfo;
+
     map<string, unsigned long int> m_collDetCountByName;
 
     map<string, ClockClass> m_clockMap;
@@ -120,10 +122,13 @@ class StatClass {
     unsigned long int m_isCollTotal;
 
     //features
-    int m_connectionsAttempted;
-    int m_connectionsMade;
-    int m_nodesAttempted;
-    int m_nodesGenerated;
+    
+    //m_samplerInfo represents sampler nodes attempted and generated
+    //  map<string, pair<int, int> > represents a mapping between the sampler name
+    //  and first the # of attempted samples, then the number of generated samples
+    //  that is, pair.first = attempts, pair.second = generated (successful attempts)
+    map<string, pair<unsigned long int, unsigned long int> > m_samplerInfo;
+
     int m_ccNumber;
 
     //Intra-CC features:
@@ -167,41 +172,56 @@ class StatClass {
 //definitions of templated functions
 template <class CFG, class WEIGHT>
 void
-StatClass::
-PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap) {
+StatClass::PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap) {
   PrintAllStats(_os, _rmap, ALL);
 }
 
 template <class CFG, class WEIGHT>
 void
-StatClass::
-PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
+StatClass::PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
 #ifndef _PARALLEL
+
+  //output Sampler Statistics
+  //only output if any nodes were attempted to be generated
+  if (m_samplerInfo.size()>0) {
+    int totalAttempts=0, totalGenerated=0;
+    _os << "\n\nSamplers Statistics:\n";
+    _os << setw(40) << "Name" << setw(20) << "Attempts" << setw(20) << "Successes\n\n";
+    map<string, pair<unsigned long int, unsigned long int> >::iterator nodeIter;
+    for(nodeIter=m_samplerInfo.begin();nodeIter!=m_samplerInfo.end();nodeIter++) {
+      _os << setw(40) << nodeIter->first << setw(20) << nodeIter->second.first 
+        << setw(20) << nodeIter->second.second << endl;
+      totalAttempts += nodeIter->second.first;
+      totalGenerated += nodeIter->second.second;
+    }//end for loop
+
+    _os << "  Total Sampler Attempts: " << totalAttempts << "\n  Total Succeeded: " 
+      << totalGenerated << "\n  Success %: "
+      << ((double)totalGenerated)/totalAttempts * 100.0 << endl;
+  }//end check on attempted nodes generated
+
   size_t i;
   std::map<string, unsigned long int>::const_iterator iter;
-  //int total=0;
 
   _os << endl << endl << "Local Planners:" << endl;
   _os << setw(20) << "Name"
-    <<setw(15) << "Connections"
     <<setw(15) << "Attempts"
+    <<setw(15) << "Connections"
     <<setw(15) << "Coll Det Calls" << endl;
 
-  std::map<string, unsigned long int>::const_iterator iter1, iter2, iter3;
-  for(iter1 = m_lpConnections.begin(), iter2 = m_lpAttempts.begin(), iter3 = m_lpCollDetCalls.begin(); 
-      iter1 != m_lpConnections.end() || iter2 !=m_lpAttempts.end() || iter3 != m_lpCollDetCalls.end(); 
-      ++iter1, ++iter2, ++iter3) {
-    _os << setw(20) << iter1->first;
-    _os << setw(15) << iter1->second;
-    _os << setw(15) << iter2->second;
-    _os << setw(15) << iter3->second << endl;
+  std::map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator lpIter;
+  for(lpIter = m_lpInfo.begin(); lpIter != m_lpInfo.end(); ++lpIter) {
+    _os << setw(20) << lpIter->first;
+    _os << setw(15) << lpIter->second.get<0>();
+    _os << setw(15) << lpIter->second.get<1>();
+    _os << setw(15) << lpIter->second.get<2>() << endl;
   }
 
   //output for local planner statistics. Only output if map is populated
   if(m_lpStats.size()>0){
     _os<<"\n\n Local Planner Statistics:\n\n";
     _os<< setw(40) << "Statistic"
-      << setw(40) << "Value" << endl << endl;;
+      << setw(40) << "Value" << endl << endl;
     typedef map<string, double>::iterator LPSIT;
     for(LPSIT lpsit=m_lpStats.begin(); lpsit!=m_lpStats.end(); lpsit++){
       _os << setw(40) << lpsit->first
@@ -219,6 +239,7 @@ PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
     }
     ofs.close();
   }
+
 
   _os << endl << endl;
   _os << "Number of Nodes: " << _rmap->m_pRoadmap->get_num_vertices() << endl;
@@ -275,9 +296,8 @@ PrintAllStats( ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
 }
 
 template <class CFG, class WEIGHT>
-void
-StatClass::
-PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *_rmap, int _showColumnHeaders) {
+void StatClass::
+PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT>* _rmap, int _showColumnHeaders) {
 #ifndef _PARALLEL
   // Default is to NOT print out column headers
   if (_showColumnHeaders) {
@@ -311,11 +331,11 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *_rmap, int _showColumnH
 
   int sumAtt=0;
   int sumCD =0;
-
-  std::map<string, unsigned long int>::const_iterator iter1, iter2;
-  for(iter1 = m_lpAttempts.begin(), iter2 = m_lpCollDetCalls.begin(); iter1 != m_lpAttempts.end() || iter2 != m_lpCollDetCalls.end(); ++iter1, ++iter2) {
-    sumAtt += iter1->second;
-    sumCD += iter2->second;
+  
+  std::map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator iter1;
+  for(iter1 = m_lpInfo.begin(); iter1 != m_lpInfo.end(); ++iter1) {
+    sumAtt += iter1->second.get<0>();
+    sumCD += iter1->second.get<2>();
   }
 
   _myostream << sumAtt << " ";
@@ -327,8 +347,7 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT> *_rmap, int _showColumnH
 // Compute intra-connected-component statistics
 template <class CFG, class WEIGHT>
 void
-StatClass::
-ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, shared_ptr<DistanceMetricMethod> _dm) {
+StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<DistanceMetricMethod> _dm) {
 #ifndef _PARALLEL
   m_avgMinIntraCCDist = 0;
   m_avgMaxIntraCCDist = 0;
@@ -499,8 +518,7 @@ ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, shared_ptr<DistanceMetricMet
 // between the closest pairs of ccs
 template <class CFG, class WEIGHT>
 void
-StatClass::
-ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, NeighborhoodFinder* _nf, string _nfMethod) {
+StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, NeighborhoodFinder* _nf, string _nfMethod) {
 #ifndef _PARALLEL
   shared_ptr<DistanceMetricMethod> dm = _nf->GetNFMethod(_nfMethod)->GetDMMethod();
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
@@ -616,8 +634,7 @@ ComputeInterCCFeatures(Roadmap<CFG,WEIGHT> * _rdmp, NeighborhoodFinder* _nf, str
  */
 template <class CFG, class WEIGHT>
 void
-StatClass::
-DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1)  {
+StatClass::DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1)  {
 
   ///Modified for VC
   //temporary ifdef because of color map and get_cc_stats, we need a pDisplayCCStats
@@ -644,15 +661,13 @@ DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1) 
 }
 
 
-
-
 #ifndef _H_UTILITY
-///Return minimun between a and b.
+///Return minimum between a and b.
 inline double min(double _a, double _b) {
   return _a < _b ? _a : _b;
 }
 
-///Return maximun between a and b.
+///Return maximum between a and b.
 inline double max(double _a, double _b) {
   return _a > _b ? _a : _b;
 }
@@ -662,6 +677,5 @@ inline double sqr(double _a) {
   return _a*_a;
 }
 #endif
-
 
 #endif

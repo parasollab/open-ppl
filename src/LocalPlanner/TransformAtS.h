@@ -205,9 +205,9 @@ IsConnectedOneWay(Environment *_env, StatClass& _stats,
   }
 
   if (connected)
-    _stats.IncLPConnections(this->GetName());
+    _stats.IncLPConnections(this->GetNameAndLabel());
   
-  _stats.IncLPCollDetCalls(this->GetName(), cdCounter);
+  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
 
   for(size_t i=0; i<sequence.size(); ++i)
     if(sequence[i] != NULL)
@@ -327,9 +327,9 @@ IsConnectedOtherWay(Environment *_env, StatClass& _stats,
   }
 
   if (connected)
-    _stats.IncLPConnections(this->GetName());
+    _stats.IncLPConnections(this->GetNameAndLabel());
   
-  _stats.IncLPCollDetCalls(this->GetName(), cdCounter);
+  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
 
   for(size_t i=0; i<sequence.size(); ++i)
     if(sequence[i] != NULL)

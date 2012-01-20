@@ -177,7 +177,7 @@ IsConnectedOneWay(Environment *_env, StatClass& _stats,
     double _positionRes, double _orientationRes,
     bool _checkCollision, 
     bool _savePath, bool _saveFailedPath) {
-  _stats.IncLPAttempts( this->GetName() );
+  _stats.IncLPAttempts( this->GetNameAndLabel() );
   int cdCounter = 0;
 
   CFG p;
@@ -260,10 +260,10 @@ IsConnectedOneWay(Environment *_env, StatClass& _stats,
   _lpOutput->edge.first.SetWeight(_lpOutput->edge.first.GetWeight() + nIter);
   _lpOutput->edge.second.SetWeight(_lpOutput->edge.second.GetWeight() + nIter);
 
-  _stats.IncLPCollDetCalls(this->GetName(), cdCounter );
+  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter );
 
   if(connected)
-    _stats.IncLPConnections(this->GetName() );
+    _stats.IncLPConnections(this->GetNameAndLabel() );
 
   for(size_t i=0; i<neighbors.size();i++) {
     if (neighbors[i] != NULL)

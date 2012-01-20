@@ -137,7 +137,7 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
 
   bool connected = false;
   savePath = true;
-  Stats.IncLPAttempts(this->GetName());
+  Stats.IncLPAttempts(this->GetNameAndLabel());
   VDComment("Initial CFGs");
   VDAddTempCfg(_c1,true);
   VDAddTempCfg(_c2,true);
@@ -156,7 +156,7 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
 	// **** END Edge.path Print  ****
 
   if ( connected )
-    Stats.IncLPConnections(this->GetName() );  
+    Stats.IncLPConnections(this->GetNameAndLabel() );  
   VDClearLastTemp();
   VDClearLastTemp();
   return connected;
@@ -238,7 +238,7 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
   _lpOutput->path.push_back(_c2);
 
   VDClearLastTemp();
-  _stats.IncLPCollDetCalls( this->GetName(), cd_cntr );  
+  _stats.IncLPCollDetCalls( this->GetNameAndLabel(), cd_cntr );  
   return true;
 };
 

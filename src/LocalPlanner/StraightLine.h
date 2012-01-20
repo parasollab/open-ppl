@@ -182,7 +182,7 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
     bool _savePath, bool _saveFailedPath,
     typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy) { 
 
-  _stats.IncLPAttempts(this->GetName());
+  _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0; 
 
   ///\todo fix this bug ... CD count not right.
@@ -200,9 +200,9 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
         cdCounter, _positionRes, _orientationRes, 
         _checkCollision, _savePath, _saveFailedPath);
   if(connected)
-    _stats.IncLPConnections(this->GetName());
+    _stats.IncLPConnections(this->GetNameAndLabel());
 
-  _stats.IncLPCollDetCalls(this->GetName(), cdCounter );
+  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter );
   return connected;
 }
 
@@ -227,7 +227,7 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
   CDInfo cdInfo;
   callee=callee+method;
 
-  _stats.IncLPAttempts(this->GetName());
+  _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0; 
 
   bool connected;
@@ -291,9 +291,9 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
     }
   }
   if(connected)
-    _stats.IncLPConnections(this->GetName());
+    _stats.IncLPConnections(this->GetNameAndLabel());
 
-  _stats.IncLPCollDetCalls( this->GetName(), cdCounter );
+  _stats.IncLPCollDetCalls( this->GetNameAndLabel(), cdCounter );
   return connected;
 }
 

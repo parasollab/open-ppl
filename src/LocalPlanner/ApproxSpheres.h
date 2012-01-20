@@ -150,7 +150,7 @@ IsConnected(Environment *_env, StatClass& _stats,
   _lpOutput->edge.first.SetWeight(0);
   _lpOutput->edge.second.SetWeight(0);
   _lpOutput->savedEdge.clear();
-  _stats.IncLPAttempts( this->GetName() );
+  _stats.IncLPAttempts( this->GetNameAndLabel() );
   int cdCounter = 0;
 
   double dist, c1Clearance, c2Clearance;
@@ -169,9 +169,9 @@ IsConnected(Environment *_env, StatClass& _stats,
     c2Clearance = _c2.ApproxCSpaceClearance(_env,_stats,_cd,*this->cdInfo,
         _dm,m_numAttempts,false);
 
-  _stats.IncLPCollDetCalls(this->GetName(), cdCounter);
+  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
   if (c1Clearance + c2Clearance >= dist) {
-    _stats.IncLPConnections(this->GetName());
+    _stats.IncLPConnections(this->GetNameAndLabel());
     return true;
   } else {
     return false;

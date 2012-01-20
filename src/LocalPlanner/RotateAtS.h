@@ -117,7 +117,7 @@ RotateAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment *_env, StatClass& _stats,
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->m_vcMethod);
 
   char RatS[50];
-  sprintf(RatS,"%s=%3.1f",this->GetName().c_str(), m_sValues[0]);
+  sprintf(RatS,"%s=%3.1f",this->GetNameAndLabel().c_str(), m_sValues[0]);
   for(size_t i=1; i<m_sValues.size(); ++i) 
     sprintf(RatS,"%s,%3.1f",RatS, m_sValues[i]);
   _stats.IncLPAttempts( RatS );

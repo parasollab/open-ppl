@@ -85,7 +85,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
           if(_cFree.InBoundingBox(_env, _bb) && 
               vc->IsValid(vc->GetVCMethod(m_vcMethod), _cFree, _env, 
                 _stats, cdInfo, true, &callee)) {
-            _stats.IncNodesGenerated();
+            _stats.IncNodesGenerated(this->GetNameAndLabel());
             *_result = _cFree;
             _result++;
           }
@@ -99,7 +99,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
           if(_cColl.InBoundingBox(_env, _bb) && 
               !vc->IsValid(vc->GetVCMethod(m_vcMethod), _cColl, _env, 
                 _stats, cdInfo, true, &callee)){
-            _stats.IncNodesGenerated();
+            _stats.IncNodesGenerated(this->GetNameAndLabel());
             *_result = _cColl;
             _result++;
           }
@@ -118,7 +118,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
 
       int attempts = 0;
       do {
-        _stats.IncNodesAttempted();
+        _stats.IncNodesAttempted(this->GetNameAndLabel());
         attempts++;
 
         CFG c1 ;

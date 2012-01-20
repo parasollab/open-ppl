@@ -1037,7 +1037,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         double diameter = ComponentDiameter(*region->GetRoadmap()->m_pRoadmap, far_vid,&far_vid2);
         stat_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices() - 2
           << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
-          << "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
+          //<< "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
           << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
           << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
           pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
@@ -1061,7 +1061,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
           ofstream total_out((basefname.str() + ".total").c_str());
           total_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2 
             << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
-            << "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
+            //<< "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
             << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
             << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
             pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
