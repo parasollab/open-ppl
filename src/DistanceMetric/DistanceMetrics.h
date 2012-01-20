@@ -38,7 +38,7 @@ namespace pmpl_detail { //hide DistanceMetricMethodList in pmpl_detail namespace
     MinkowskiDistance,
     ManhattanDistance,
     CenterOfMassDistance,
-    RSMDDistance,
+    RMSDDistance,
     LPSweptDistance,
     BinaryLPSweptDistance,
     #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
