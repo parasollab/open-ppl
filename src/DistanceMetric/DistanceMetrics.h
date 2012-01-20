@@ -18,7 +18,7 @@
 #include "MinkowskiDistance.h"
 #include "ManhattanDistance.h"
 #include "CenterOfMassDistance.h"
-#include "RSMDDistance.h"
+#include "RMSDDistance.h"
 #include "LPSweptDistance.h"
 #include "BinaryLPSweptDistance.h"
 #include "KnotTheoryDistance.h"
