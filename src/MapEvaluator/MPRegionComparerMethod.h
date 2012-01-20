@@ -48,7 +48,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     string filename = in_Node.stringXMLParameter("witness_file",false,"","Witness Filename");
     string dm_label = in_Node.stringXMLParameter("dm_method", false, "default", "Distance Metric Method");
     string m_lp     = in_Node.stringXMLParameter("lp_method", true, "", "Local Planner Method");
-    dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
+    dm = in_pProblem->GetDistanceMetric()->GetMethod(dm_label);
 
     if (filename.length() > 0) {
       Roadmap< CFG, WEIGHT > tmp_roadmap;

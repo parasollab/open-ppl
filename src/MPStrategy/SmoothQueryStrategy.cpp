@@ -90,7 +90,7 @@ Run(int in_RegionID)
                        &m_ConnectMap, 
                        &methods,
                        GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
-                       GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
+                       GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));
                                          
   pStatClass->StopPrintClock("Query", cout);
   
@@ -134,7 +134,7 @@ Run(int in_RegionID)
                                                   &m_ConnectMap,
                                                   &methods,
                                                   GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
-                                                  GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
+                                                  GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));
     pStatClass->StopPrintClock("Query Smoothed Path", cout);
 
     //output smoothed path

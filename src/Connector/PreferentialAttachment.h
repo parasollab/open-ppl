@@ -388,7 +388,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
             VID _vid, vector<VID> closest, OutputIterator collision)
 { 
   LPOutput<CFG,WEIGHT> lpOutput;
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label);
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label);
   
   // connect the found k-closest to the current iteration's CFG
   for(typename vector<VID>::iterator itr2 = closest.begin(); itr2!= closest.end(); ++itr2) {

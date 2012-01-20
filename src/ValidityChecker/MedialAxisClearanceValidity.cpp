@@ -29,7 +29,7 @@ MedialAxisClearanceValidity::MedialAxisClearanceValidity(XMLNodeReader& _node, M
 bool MedialAxisClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
   CDInfo& _cdInfo, bool _enablePenetration, string * _callName) {
 
-    DistanceMetric::DistanceMetricPointer dm = GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dmLabel);
+    DistanceMetric::DistanceMetricPointer dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel);
 		bool _cExact = (m_cType.compare("exact")==0)?true:false;
 		bool _pExact = (m_pType.compare("exact")==0)?true:false;
 

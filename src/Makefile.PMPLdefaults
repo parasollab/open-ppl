@@ -218,6 +218,19 @@ PMPL_OBJS = \
         Utilities/MPUtils.o \
 	DistanceMetric/DistanceMetricMethod.o \
 	DistanceMetric/DistanceMetrics.o \
+	DistanceMetric/EuclideanDistance.o \
+	DistanceMetric/ScaledEuclideanDistance.o \
+	DistanceMetric/UniformEuclideanDistance.o \
+	DistanceMetric/PureEuclideanDistance.o \
+	DistanceMetric/KnotTheoryDistance.o \
+	DistanceMetric/CenterOfMassDistance.o \
+	DistanceMetric/ManhattanDistance.o \
+	DistanceMetric/MinkowskiDistance.o \
+	DistanceMetric/MinkowskiDistance.o \
+	DistanceMetric/RSMDDistance.o \
+	DistanceMetric/ReachableDistance.o \
+	DistanceMetric/LPSweptDistance.o \
+	DistanceMetric/BinaryLPSweptDistance.o \
 	ValidityChecker/CollisionDetection.o \
 	ValidityChecker/NodeClearanceValidity.o \
         ValidityChecker/MedialAxisClearanceValidity.o \

@@ -211,7 +211,7 @@ Run(int in_RegionID)
          CfgType current=*C;
          CfgType next=*nxt;
          findNeighbour(type_name, rdmp,GetMPProblem(),rdmp->GetEnvironment(), lp,
-                       GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dm),*pStatClass,
+                       GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm),*pStatClass,
                        GetMPProblem()->GetCollisionDetection(), cdInfo, m_vc, m_dm, m_lp,
                        5000, false, previous, current, next, step_size, user_value,
                        max_attempts, m_num_resamples, sampledNeighbors); 

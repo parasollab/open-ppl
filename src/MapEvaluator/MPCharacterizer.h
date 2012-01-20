@@ -34,7 +34,7 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       string dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
       m_lp = in_Node.stringXMLParameter(string("lp_method"), false, string("default"), string("Local Planner"));
-      dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
+      dm = in_pProblem->GetDistanceMetric()->GetMethod(dm_label);
     };
     
     virtual void ParseXML(XMLNodeReader& in_Node) { };
@@ -100,7 +100,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       ParseXML(in_Node);    
       string dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
-      dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
+      dm = in_pProblem->GetDistanceMetric()->GetMethod(dm_label);
     };
     
     virtual void ParseXML(XMLNodeReader& in_Node) {

@@ -164,7 +164,7 @@ bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _
   MPRegion<CfgType,WeightType>*      region = _mp->GetMPRegion(_regionID);
   StatClass*                        regionStats = region->GetStatClass();
   Environment*                       env = region->GetRoadmap()->GetEnvironment();
-  shared_ptr <DistanceMetricMethod>  dm = _mp->GetDistanceMetric()->GetDMMethod(_dm);
+  shared_ptr <DistanceMetricMethod>  dm = _mp->GetDistanceMetric()->GetMethod(_dm);
   ValidityChecker<CfgType>*          vc = _mp->GetValidityChecker();
   CDInfo                             cdInfo;
   string callee("RRTUtility::RRTExpand");
@@ -264,7 +264,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
   // Initialization
   string call("MedialAxisUtility::PushFromInsideObstacle");
   if (_debug) cout << call << endl << " CfgType: " << _cfg << endl;
-  shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetDMMethod(_dm);
+  shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetMethod(_dm);
   ValidityChecker<CfgType>*             vc  = _mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(_vc);
 
@@ -344,7 +344,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
   // Initialization
   string call("MedialAxisUtility::PushCfgToMedialAxis");
   if (_debug) cout << call << endl << "CfgType: " << _cfg << " eps: " << _eps << endl;
-  shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetDMMethod(_dm);
+  shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetMethod(_dm);
   ValidityChecker<CfgType>*             vc  = _mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(_vc);
 
@@ -752,7 +752,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
 
   // Initialization
   string call = "MedialAxisUtility::getApproxCollisionInfo";
-  shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetDMMethod(_dm);
+  shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetMethod(_dm);
   ValidityChecker<CfgType>*         vc  = _mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(_vc);
 

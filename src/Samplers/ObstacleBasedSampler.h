@@ -137,7 +137,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
 
         CFG r;
 
-	shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dmMethod);
+	shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmMethod);
 
 	r.GetRandomRay(m_stepSize, _env, dm);
 

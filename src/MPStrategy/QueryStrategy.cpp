@@ -100,7 +100,7 @@ Run(int in_RegionID)
                         &m_ConnectMap, 
                         &methods,
                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
-                        GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)))
+                        GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label)))
   {
     query.WritePath(rdmp);
     cout << endl << "SUCCESSFUL query";

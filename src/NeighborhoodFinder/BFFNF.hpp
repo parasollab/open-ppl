@@ -21,7 +21,7 @@ public:
     NeighborhoodFinderMethod(_node,_problem) {
     m_scale = _node.numberXMLParameter("k_2", true, 0, 0, 100, "K value for BFFNF");
     string dm2_label = _node.stringXMLParameter("dm2_method",true,"","Distance Metric Method the second one");
-    dmm2 = _problem->GetDistanceMetric()->GetDMMethod(dm2_label);
+    dmm2 = _problem->GetDistanceMetric()->GetMethod(dm2_label);
     
       nf1 = new BFNF<CFG,WEIGHT>(dmm);
       nf2 = new BFNF<CFG,WEIGHT>(dmm2);

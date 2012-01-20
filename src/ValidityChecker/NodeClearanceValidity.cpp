@@ -21,7 +21,7 @@ bool NodeClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _st
     CDInfo& _cdInfo, bool _enablePenetration, string * _callName){
   typedef RoadmapGraph<CfgType, WeightType>::VID VID; 
   
-  DistanceMetric::DistanceMetricPointer dm = GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dmLabel);
+  DistanceMetric::DistanceMetricPointer dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel);
   vector<VID> KClosest;
 
   GetMPProblem()->GetNeighborhoodFinder()->KClosest(GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod( m_nfLabel),

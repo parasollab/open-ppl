@@ -54,7 +54,7 @@ class GaussianSampler : public SamplerMethod<CFG>
       int attempts = 0;
       ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
       CDInfo cdInfo;
-      shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetDMMethod(m_dmLabel); 
+      shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel); 
 
       CFG cfg1 = _cfgIn;
       if(cfg1 == CFG())

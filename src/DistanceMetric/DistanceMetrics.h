@@ -7,146 +7,78 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef DistanceMetrics_h
-#define DistanceMetrics_h
+#ifndef DISTANCEMETRICS_H
+#define DISTANCEMETRICS_H
 
-#include "DistanceMetricMethod.h"
+
+#include <boost/mpl/list.hpp>
 #include "MPUtils.h"
+#include "EuclideanDistance.h"
+#include "ScaledEuclideanDistance.h"
+#include "MinkowskiDistance.h"
+#include "ManhattanDistance.h"
+#include "CenterOfMassDistance.h"
+#include "RSMDDistance.h"
+#include "LPSweptDistance.h"
+#include "BinaryLPSweptDistance.h"
+#include "KnotTheoryDistance.h"
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+#include "ReachableDistance.h"
+#endif
+#include "DistanceMetricMethod.h"
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
-
-class EuclideanDistance;
-class ScaledEuclideanDistance;
-class MinkowskiDistance;
-class ManhattanDistance;
-class CenterOfMassDistance;
-class RmsdDistance;
-class LPSweptDistance;
-class BinaryLPSweptDistance;
-class KnotTheoryDistance;
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-class ReachableDistance;
-#endif
 
 
 namespace pmpl_detail { //hide DistanceMetricMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
-   EuclideanDistance,
-   ScaledEuclideanDistance,
-   MinkowskiDistance,
-   ManhattanDistance,
-   CenterOfMassDistance,
-   RmsdDistance,
-   LPSweptDistance,
-   BinaryLPSweptDistance,
-   #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-   ReachableDistance, 
-  #endif
-   KnotTheoryDistance
+    EuclideanDistance,
+    ScaledEuclideanDistance,
+    MinkowskiDistance,
+    ManhattanDistance,
+    CenterOfMassDistance,
+    RSMDDistance,
+    LPSweptDistance,
+    BinaryLPSweptDistance,
+    #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+    ReachableDistance, 
+    #endif
+    KnotTheoryDistance
     > DistanceMetricMethodList;
 }
 
 
-class DistanceMetric : private ElementSet<DistanceMetricMethod>, public MPBaseObject 
-{
+class DistanceMetric : private ElementSet<DistanceMetricMethod>, public MPBaseObject {
  public:
-  typedef MethodPointer DistanceMetricPointer;
+   typedef ElementSet<DistanceMetricMethod>::MethodPointer DistanceMetricPointer;
+   
+   template<typename MethodList>
+   DistanceMetric() : ElementSet<DistanceMetricMethod>(MethodList()) {}
 
- public:
-
-  template<typename MethodList>
-  DistanceMetric() : ElementSet<DistanceMetricMethod>(MethodList()) {}
-
-  DistanceMetric() : ElementSet<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()) {}
+   DistanceMetric() : ElementSet<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()) {}
   
-  template <typename MethodList>
-  DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, MethodList const&, bool parse_xml = true)
-   : ElementSet<DistanceMetricMethod>(MethodList()), MPBaseObject(in_pProblem) 
-  {
-    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
-      if(!AddElement(citr->getName(), *citr, in_pProblem))
+   template <typename MethodList>
+   DistanceMetric(XMLNodeReader& _node, MPProblem* _problem, MethodList const&)
+     : ElementSet<DistanceMetricMethod>(MethodList()), MPBaseObject(_problem) {
+     for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr)
+       if(!AddElement(citr->getName(), *citr, _problem))
         citr->warnUnknownNode();
-  }
-  DistanceMetric(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true)
-   : ElementSet<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()), MPBaseObject(in_pProblem) 
-  {
-    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
-      if(!AddElement(citr->getName(), *citr, in_pProblem))
+   }
+   
+   DistanceMetric(XMLNodeReader& _node, MPProblem* _problem)
+     : ElementSet<DistanceMetricMethod>(pmpl_detail::DistanceMetricMethodList()), MPBaseObject(_problem) {
+     for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
+       if(!AddElement(citr->getName(), *citr, _problem))
         citr->warnUnknownNode();
     }
-  }
-  virtual ~DistanceMetric();
+   }
+   virtual ~DistanceMetric();
 
-  DistanceMetricPointer GetDMMethod(string in_strLabel);
-  void AddDMMethod(string in_strLabel, DistanceMetricPointer in_ptr);
-
-  void PrintOptions(ostream& _os) const;
+   DistanceMetricPointer GetMethod(string _label);
+   
+   void PrintOptions(ostream& _os) const;
 
 };
-
-
-/*
-#include "Roadmap.h"
-template <class CFG, class WEIGHT>
- vector<typename RoadmapGraph<CFG, WEIGHT>::VID> DistanceMetricMethod::
-RangeQuery(Roadmap<CFG, WEIGHT>* rm, typename RoadmapGraph<CFG, WEIGHT>::VID in_query, double in_radius) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  vector<VID> returnVec;
-  RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
-  Environment* _env = rm->GetEnvironment();
-
-
-  Clock_Class distance_time;
-  distance_time.StartClock("distance_time");
-
-  vector<VID> vec_vids;
-  pMap->GetVerticesVID(vec_vids);
-  typename vector<VID>::iterator itr;
-  for(itr = vec_vids.begin(); itr != vec_vids.end(); ++itr)
-  {
-    if(in_query == *itr) continue;
-  double dist = this->Distance(_env, (*(pMap->find_vertex(in_query))).property(), (*(pMap->find_vertex(*itr))).property());
-    //cout << "Distance = " << dist << " Radius = " << in_radius << endl;
-    if( dist< in_radius) {
-      returnVec.push_back(*itr);
-    }
-  }
-  distance_time.StopClock();
-  m_distance_time += distance_time.GetClock_SEC();
-
-  return returnVec;
-}
-
-
-template <class CFG, class WEIGHT>
-vector<typename RoadmapGraph<CFG, WEIGHT>::VID> DistanceMetricMethod::
-RangeQuery(Roadmap<CFG, WEIGHT>* rm, CFG in_query, double in_radius) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  vector<VID> returnVec;
-  RoadmapGraph<CFG,WEIGHT>* pMap = rm->m_pRoadmap;
-  Environment* _env = rm->GetEnvironment();
-  
-  Clock_Class distance_time;
-  distance_time.StartClock("distance_time");
-  
-
-
-  vector<VID> vec_vids;
-  pMap->GetVerticesVID(vec_vids);
-  typename vector<VID>::iterator itr;
-
-  for(itr = vec_vids.begin(); itr != vec_vids.end(); ++itr)
-  {
-    if(in_query == (*(pMap->find_vertex(*itr))).property()) continue;
-    if(this->Distance(_env, in_query, (*(pMap->find_vertex(*itr))).property()) < in_radius) {
-      returnVec.push_back(*itr);
-    }
-  }
-  distance_time.StopClock();
-  m_distance_time += distance_time.GetClock_SEC();
-
-  return returnVec;
-}
-*/
 
 #endif

@@ -46,7 +46,7 @@ class QueryEvaluation
     
     string dm_label = in_Node.stringXMLParameter("dm_method", false, "default", "Distance Metric Method");
     m_lp_label = in_Node.stringXMLParameter("lp_method", true, "", "Local Planner Method");
-    dm = in_pProblem->GetDistanceMetric()->GetDMMethod(dm_label);
+    dm = in_pProblem->GetDistanceMetric()->GetMethod(dm_label);
 
     intermediateFiles = in_Node.boolXMLParameter("intermediate_files", false, false, "Determines output of intermediate file mapnodes.path");
 

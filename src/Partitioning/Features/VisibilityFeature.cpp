@@ -55,7 +55,7 @@ vector<double> VisibilityFeature::Collect(vector<VID>& vids){
          CfgType _col;
          if(is_same_cc(*rdmp, cmap, *vit, allVIDs[*vit2]))visibility+=1;
          else if(lp->GetMethod(m_lpLabel)->
-                   IsConnected(env, *pStatClass,GetMPProblem()->GetDistanceMetric()->GetDMMethod(dmLabel),
+                   IsConnected(env, *pStatClass,GetMPProblem()->GetDistanceMetric()->GetMethod(dmLabel),
                                rdmp->find_vertex(*vit)->property(), rdmp->find_vertex(allVIDs[*vit2])->property(),
                                _col, &lpOutput, .1, .1))
             visibility+=1;

@@ -649,7 +649,7 @@ class NFRoadmapCompare : public MPStrategyMethod {
       //cout<<"getting DMM"<<endl;
       //DistanceMetric* dmm=GetMPProblem()->GetDistanceMetric();
       //cout<<"getting Distance"<<endl;
-      double dist=GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)->Distance(GetMPProblem()->GetEnvironment(),cfg1,cfg2);
+      double dist=GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label)->Distance(GetMPProblem()->GetEnvironment(),cfg1,cfg2);
       //cout<<"got Distance"<<endl;     
       return dist;
       //return dmm->Distance(rmp.GetEnvironment(), cfg1, cfg2);
@@ -1134,7 +1134,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       vec_dist_vid.reserve(vec_cc.size());
 
       for(size_t i=0; i<vec_cc.size(); ++i) {
-        double dist = GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label)->Distance(GetMPProblem()->GetEnvironment(),
+        double dist = GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label)->Distance(GetMPProblem()->GetEnvironment(),
             _test, (*(_graph.find_vertex(vec_cc[i]))).property());
         vec_dist_vid.push_back(make_pair(dist, vec_cc[i]));
       }
@@ -1145,7 +1145,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       for ( size_t i=0; i<vec_dist_vid.size(); ++i) {
         if ( GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_strLocalPlannerLabel)->
             IsConnected ( GetMPProblem()->GetEnvironment(), _mystat, 
-              GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label), _test, 
+              GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label), _test, 
               (*(_graph.find_vertex(vec_dist_vid[i].second))).property(), &out_lp_output, 
               GetMPProblem()->GetEnvironment()->GetPositionRes(), 
               GetMPProblem()->GetEnvironment()->GetOrientationRes(),
@@ -1312,7 +1312,7 @@ class NFTester : public MPStrategyMethod {
           double ede = nf->EDE(region->GetRoadmap(),
               query_point,baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(), 
-              GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
+              GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));
           //      cout << "EDE between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << ede << endl;
 
 
@@ -1320,20 +1320,20 @@ class NFTester : public MPStrategyMethod {
           double rde = nf->RDE(region->GetRoadmap(),
               query_point, baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(), 
-              GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));
+              GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));
           //      cout << "RDE between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << rde << endl;
 
 
           double rfd = nf->RFD(region->GetRoadmap(),
               query_point, baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(), 
-              GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label), 0.001);
+              GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label), 0.001);
           //      cout << "RFD between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << rfd << endl;
 
           double oeps = nf->OEPS(region->GetRoadmap(),
               query_point, baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(),
-              GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label));      
+              GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));      
           //      cout << "OEPS between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << oeps << endl;
 
           m_map_nfp_RDE[(*nfitr)].AddData(rde);
@@ -1373,7 +1373,7 @@ class NFTester : public MPStrategyMethod {
         cout << "Number of Nodes: " << roadmap_vids.size() << endl;
         cout << "Number of Queries: " << m_BaselineNF->GetNumQueries() << endl;
         cout << "KClosest: " << m_kclosest << endl;
-        cout << "DistanceMetric: "; GetMPProblem()->GetDistanceMetric()->GetDMMethod(dm_label);
+        cout << "DistanceMetric: "; GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label);
         cout << "Baseline NF: "; m_BaselineNF->PrintOptions(cout);
         cout << "Test NF: "; (*nfitr)->PrintOptions(cout);
         /*  cout << "#AveBaseTotalTime, AveBaseQryTime, AveNFTotalTime, AveNFQryTime, MinEDE, MaxEDE, AveEDE, StdEDE, MinRDE, MaxRDE, "
