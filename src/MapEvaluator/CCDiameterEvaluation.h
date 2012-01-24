@@ -30,7 +30,7 @@ class CCDiameterEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
     
     //get ccs
     vector<pair<size_t,VID> > CCs;
-    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+    stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     get_cc_stats(*p_map,cmap, CCs);
     
     //filter out singletons

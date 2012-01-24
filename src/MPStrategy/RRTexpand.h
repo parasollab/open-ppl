@@ -457,7 +457,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 #if defined(_WIN32)
 	using namespace std;
 #endif
-  stapl::vector_property_map< GRAPH,size_t > cmap;
+  stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
   vector< pair<size_t,VID> > ccvec;
   get_cc_stats(*(_rm->m_pRoadmap),cmap, ccvec);
   vector< pair<size_t,VID> >::iterator cc1=ccvec.begin();

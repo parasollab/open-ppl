@@ -587,7 +587,7 @@ ReadRoadmapGRAPHONLY(const char* _fname) {
     for(int i=0; i<count-1; ++i)
       myifstream2 >> tagstring;
     //m_pRoadmap->ReadGraph(myifstream2);
-    stapl::read_graph(*m_pRoadmap, myifstream2);
+    stapl::sequential::read_graph(*m_pRoadmap, myifstream2);
     myifstream2.close();
   }
   else

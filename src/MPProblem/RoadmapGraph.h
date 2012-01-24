@@ -62,9 +62,9 @@ template<class VERTEX, class WEIGHT>
 class EdgeInfo {
 public:
 #ifdef _PARALLEL
-typedef typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
-#else 
 typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
+#else 
+typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 #endif 
 typedef typename GRAPH::vertex_descriptor VID;
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -233,19 +233,19 @@ class vertex_descriptor_iterator
 #ifdef _PARALLEL
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : 
-public stapl::p_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> {
+public stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> {
 #else 
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : 
-public stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> {
+public stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> {
 #endif 
 
 public:
 
 #ifdef _PARALLEL
-typedef stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
-#else 
 typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
+#else 
+typedef stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 #endif 
 typedef typename GRAPH::vertex_descriptor VID;
 typedef typename GRAPH::edge_descriptor EID;
@@ -879,7 +879,7 @@ double DijkstraSSSP(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, typena
   typename GRAPH::edge_property _w_;
   typename GRAPH::const_vertex_iterator cv1;
   typename GRAPH::vertex_iterator v;
-  stapl::vector_property_map<GRAPH,size_t> cmap;
+  stapl::sequential::vector_property_map<GRAPH,size_t> cmap;
 
 
   vector<VID> vec_cc;
@@ -970,7 +970,7 @@ double ComponentDiameter(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, t
   typename GRAPH::edge_descriptor _w_;
   typename GRAPH::const_vertex_iterator cv1;
   typename GRAPH::vertex_iterator v1;
-  stapl::vector_property_map<GRAPH,size_t> cmap;
+  stapl::sequential::vector_property_map<GRAPH,size_t> cmap;
 
   vector<VID> vec_cc;
   double  maxdist = 0;//g.get_num_vertices() * _w_.MaxWeight(); fix_lantao

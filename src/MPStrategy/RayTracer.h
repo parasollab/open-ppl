@@ -706,7 +706,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
   cd_counts = 0;
 
   vector< pair<size_t,VID> > ccs; //list of CCs in the roadmap
-  stapl::vector_property_map< GRAPH,size_t > cmap;
+  stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
   get_cc_stats(*(rdmp->m_pRoadmap), cmap, ccs);//get the CCs
   
   bool path_found = false;

@@ -149,7 +149,7 @@ class HybridPRM : public MPStrategyMethod
  private:
    string base_filename;
    ofstream char_ofstream;
-   stapl::vector_property_map< GRAPH,size_t > cmap;
+   stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
    map<VID, Visibility> vis_map;
    NodeTypeCounts node_types;
   int totalSamples;

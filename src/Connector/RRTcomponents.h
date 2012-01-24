@@ -97,7 +97,7 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 
   vector< pair<int,VID> >::iterator cc2=ccvec.begin();
 
-  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+  stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   vector<VID> vidvec;
 
   get_cc(*(rm->m_pRoadmap),(*cc2).second ,cmap, vidvec);
@@ -204,7 +204,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 #endif
 
   // process components from smallest to biggest
-  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+  stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   vector< pair<size_t,VID> > ccvec;
   get_cc_stats(*(_rm->m_pRoadmap),cmap, ccvec);
 

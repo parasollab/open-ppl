@@ -661,7 +661,7 @@ ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, Weig
 {
   int small_cc_size = 0;
   
-  stapl::vector_property_map<stapl::stapl_color<size_t> > cmap;
+  stapl::sequential::vector_property_map<stapl::stapl_color<size_t> > cmap;
   cmap.reset();
   vector<pair<size_t, VID> > cc;
   get_cc_stats(*(rdmp->m_pRoadmap), cmap, cc);

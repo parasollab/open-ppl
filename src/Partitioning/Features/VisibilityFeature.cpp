@@ -48,7 +48,7 @@ vector<double> VisibilityFeature::Collect(vector<VID>& vids){
       
       nf->KClosest(nf->GetNFMethod(nfLabel), GetMPProblem()->GetMPRegion(0)->GetRoadmap(), *vit, k, back_insert_iterator<vector<VID> >(kclosest));
       vector< pair<size_t,VID> > ccs;
-      stapl::vector_property_map< RoadmapGraph<CfgType, WeightType>,size_t > cmap;
+      stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>,size_t > cmap;
       get_cc_stats(*(rdmp),cmap,ccs);
       typedef vector<VID>::iterator IIT;
       for(IIT vit2 = kclosest.begin(); vit2!=kclosest.end(); vit2++){

@@ -1201,7 +1201,7 @@ PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
   vector<BoundingBox> subregion_boundaries;
   // Get free nodes
   vector< pair<size_t,VID> > ccs1;
-  stapl::vector_property_map< RoadmapGraph<CFG, WEIGHT>,size_t > cmap;
+  stapl::sequential::vector_property_map< RoadmapGraph<CFG, WEIGHT>,size_t > cmap;
   get_cc_stats(*(region->roadmap.m_pRoadmap), cmap, ccs1);
   cout << " CCS1 (size) " << ccs1.size() << endl;
   vector<CFG> free_nodes;

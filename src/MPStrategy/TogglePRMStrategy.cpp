@@ -259,7 +259,7 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
   StatClass* pStatClass = region->GetStatClass();
   stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Node Connection";
   pStatClass->StartClock(clockName.str());
-  stapl::vector_property_map< GRAPH,size_t > cmap;
+  stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
   vector<string> NodeConnectionLabels;
   if(pvid.first=="valid")
     NodeConnectionLabels = m_NodeConnectionLabels;

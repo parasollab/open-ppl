@@ -15,17 +15,14 @@
 
 #include <vector>
 #include <iostream>
-//#include <pair>
 
-//using stapl::VID;
 using namespace std;
 
 template<typename CFG, typename WEIGHT>
 class RoadmapChangeEvent {
   
   public:
-    typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CFG, WEIGHT>::vertex_descriptor VID;
-    
+    typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CFG, WEIGHT>::vertex_descriptor VID;
     enum ChangeType { ADD_VERTEX, REMOVE_VERTEX };
     
     class BaseChangeEvent {

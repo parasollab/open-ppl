@@ -121,7 +121,7 @@ class MPRegionComparerMethod: public MPBaseObject {
     int b_small_cc_size =0;
     
     vector < pair< size_t, VID > > cc_a;
-    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+    stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     get_cc_stats(*(rdmp_a->m_pRoadmap),cmap, cc_a);
     a_small_cc_size = int(double(cc_a[0].first) * double(0.01));
     cout << " Components in Roadmap A " << cc_a.size() << " small_cc_size " << a_small_cc_size << endl;
@@ -180,7 +180,7 @@ class MPRegionComparerMethod: public MPBaseObject {
   ConnectionsWitnessToRoadmap(vector < CFG > & witness_cfgs, Roadmap< CFG, WEIGHT > *rdmp) {
     int small_cc_size =0;
     vector < pair< size_t, VID > > cc;
-    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+    stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     get_cc_stats(*(rdmp->m_pRoadmap), cmap, cc);
     small_cc_size = int(double(cc[0].first) * double(0.01));
     vector < vector< unsigned int > > connected_to_cc;
@@ -360,7 +360,7 @@ public:
     int a_small_cc_size =0;
     int b_small_cc_size =0;
     
-    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+    stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     vector< pair <size_t,VID > > a_cc_stats;
     get_cc_stats (*(rdmp_a->m_pRoadmap),cmap, a_cc_stats);
     vector< pair <size_t,VID > > b_cc_stats;
@@ -446,7 +446,7 @@ public:
     int b_small_cc_size =0;
     
     vector< pair <size_t,VID > > a_cc_stats;
-    stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+    stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
     get_cc_stats(*(rdmp_a->m_pRoadmap), cmap, a_cc_stats);
     vector< pair <size_t,VID > > b_cc_stats;
     cmap.reset();

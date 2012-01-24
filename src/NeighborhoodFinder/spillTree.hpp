@@ -70,7 +70,7 @@ template<typename CFGTYPE, typename WEIGHT>
 class spillTree{
   
  public:
-  typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, spillTreeNode<CFGTYPE, WEIGHT>* > graphType;
+  typedef stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, spillTreeNode<CFGTYPE, WEIGHT>* > graphType;
   typedef typename RoadmapGraph<CFGTYPE, WEIGHT>::VID VID;
   
   int maxLeafSize;

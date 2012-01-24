@@ -425,7 +425,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
   
   // for each "real" cfg in roadmap
   LPOutput<CFG,WEIGHT> lpOutput;
-  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+  stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   for (typename vector<CFG>::iterator v=newV.begin();v<newV.end();++v) {
     // Find k closest cfgs in the roadmap
     bool midpt_approx_of_closestPt = false;

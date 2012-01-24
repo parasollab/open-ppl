@@ -24,7 +24,7 @@ class CoverageMetric
 
       m_connections = vector<vector<VID> >(m_samples.size());
 
-      stapl::vector_property_map< RoadmapGraph<CFG, WEIGHT>,size_t > cmap;
+      stapl::sequential::vector_property_map< RoadmapGraph<CFG, WEIGHT>,size_t > cmap;
       vector<pair<size_t,VID> > ccs;
       typename vector<pair<size_t,VID> >::iterator CC;
       get_cc_stats(*pMap, cmap, ccs);

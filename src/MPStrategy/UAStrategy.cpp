@@ -283,7 +283,7 @@ void UAStrategy::OverlapBBX(){
    }
    else if(m_OverlapMethod=="MSTOverlap"||m_OverlapMethod=="MSTNewRegions"){
       //calculate mst of region graph//
-      typedef stapl::graph<stapl::UNDIRECTED, stapl::NONMULTIEDGES, int, double> Graph;
+      typedef stapl::sequential::graph<stapl::UNDIRECTED, stapl::NONMULTIEDGES, int, double> Graph;
       Graph g;
       Roadmap < CfgType, WeightType > * rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap();
       vector< vector< VID >* > Clusters = GetPartitionsVID();
@@ -324,7 +324,7 @@ void UAStrategy::OverlapBBX(){
       }
       
       Graph mst_g;
-      stapl::mst_kruskals(g, mst_g, 0);
+      stapl::sequential::mst_kruskals(g, mst_g, 0);
       //perform swapping//
       if(m_OverlapMethod=="MSTOverlap"){
          for(size_t j = 0; j<mst_g.get_num_vertices(); j++){

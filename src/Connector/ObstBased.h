@@ -377,7 +377,7 @@ ConnectVVectorsByKClosest(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 	return;
 
       LPOutput<CFG,WEIGHT> lpOutput;
-      stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+      stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
       // get closest pairs of nodes on obst to (possibly) another obstacle
 //Old Interface
 //      vector<pair<VID,VID> > kp = dm->FindKClosestPairs(_rm, body[i], 

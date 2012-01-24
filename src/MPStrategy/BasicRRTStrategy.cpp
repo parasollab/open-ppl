@@ -240,7 +240,7 @@ void BasicRRTStrategy::ConnectComponents(int _regionID) {
   MPStrategy* mps = GetMPProblem()->GetMPStrategy();
   stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Component Connection";
   stats->StartClock(clockName.str());
-  stapl::vector_property_map< GRAPH,size_t > cmap;
+  stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
 
   for(vector<string>::iterator I = m_componentConnectors.begin(); I != m_componentConnectors.end(); ++I) {
     ConnectMap<CfgType, WeightType>::ComponentConnectionPointer connector;

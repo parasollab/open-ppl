@@ -221,7 +221,7 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
   StatClass* stats = _region->GetStatClass();
   string connectorClockName = "Total Node Connection";
   stats->StartClock(connectorClockName);
-  stapl::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
+  stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
 
   for(vector<string>::iterator I = m_nodeConnectionLabels.begin(); 
       I != m_nodeConnectionLabels.end(); ++I){
@@ -260,7 +260,7 @@ void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
   StatClass* stats = _region->GetStatClass();
   string clockName = "Total Connect Components";
   stats->StartClock(clockName);
-  stapl::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
+  stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
 
   for(vector<string>::iterator I = m_componentConnectionLabels.begin(); 
       I != m_componentConnectionLabels.end(); ++I){

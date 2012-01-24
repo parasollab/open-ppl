@@ -581,7 +581,7 @@ Connect(Roadmap<CFG,WEIGHT>* rm, Stat_Class& Stats,
 		     addPartialEdge, addAllEdges,
 		     Rvids, Rvids);
   */
-  stapl::vector_property_map< stapl::stapl_color<size_t> > cmap; 
+  stapl::sequential::vector_property_map< stapl::stapl_color<size_t> > cmap; 
   for(regionset_iterator R = cmodel.region_map.begin(); 
       R != cmodel.region_map.end(); ++R) 
     ConnectWithinRegion(R->data, k_in_region.GetValue(), 

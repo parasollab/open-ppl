@@ -432,7 +432,7 @@ ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
     
     if (this->m_CheckIfSameCC) {
       // the nodes are in the same connected component
-      stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+      stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
       if (is_same_cc(*(_rm->m_pRoadmap), cmap, _vid, *itr2)) {
         // if we're not in "unconnected" mode, count this as a success
         if (m_debug) cout << " | nodes in the same connected component";

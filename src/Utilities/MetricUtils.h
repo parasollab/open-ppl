@@ -308,7 +308,7 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT>* _rmap, int _showColumnH
   _myostream << _rmap->m_pRoadmap->get_num_edges()   << " ";
 
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
-  stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
+  stapl::sequential::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
   vector< pair<size_t,VID> > ccStats;
   get_cc_stats(*(_rmap->m_pRoadmap), cMap, ccStats);
   _myostream << ccStats.size() << "  ";
@@ -363,8 +363,8 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
 
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
   vector< pair<size_t,VID> > ccs; //vector of connected components in the roadmap
-  stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
-  stapl::get_cc_stats(*(_rdmp->m_pRoadmap),cMap, ccs);//fill ccs from the roadmap
+  stapl::sequential::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
+  stapl::sequential::get_cc_stats(*(_rdmp->m_pRoadmap),cMap, ccs);//fill ccs from the roadmap
   cout << "in intra ccs portion" << endl;
 
   typename vector< pair<size_t, VID> >::iterator cci; // cci is CC[i] hereafter
@@ -522,7 +522,7 @@ StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, NeighborhoodFinder
 #ifndef _PARALLEL
   shared_ptr<DistanceMetricMethod> dm = _nf->GetNFMethod(_nfMethod)->GetDMMethod();
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
-  stapl::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
+  stapl::sequential::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
   vector< pair<size_t,VID> > ccs; //connected components in the roadmap
   cout << "in inter ccs portion" << endl;
   get_cc_stats(*(_rdmp->m_pRoadmap), cMap, ccs);//fill ccs
@@ -641,10 +641,10 @@ StatClass::DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>& _g, int _maxC
 #ifndef _PARALLEL
 
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
-  stapl::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
+  stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
 
   vector< pair<size_t,VID> > ccStats;
-  stapl::get_cc_stats(_g, cMap, ccStats);
+  stapl::sequential::get_cc_stats(_g, cMap, ccStats);
   if (_maxCCPrint == -1) {
     _maxCCPrint = ccStats.size();
   }

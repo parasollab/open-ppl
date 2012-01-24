@@ -328,7 +328,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats
 
   //  vector<VID> cc; 
   vector< pair<size_t,VID> > ccs;
-  stapl::vector_property_map< RoadmapGraph<CFG, WEIGHT>,size_t > cmap;
+  stapl::sequential::vector_property_map< RoadmapGraph<CFG, WEIGHT>,size_t > cmap;
   get_cc_stats(*(rdmp->m_pRoadmap),cmap,ccs);  
   
   VID svid;
