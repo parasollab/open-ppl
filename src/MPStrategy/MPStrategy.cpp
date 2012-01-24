@@ -6,6 +6,7 @@
 #include "MPRegionComparerMethod.h"
 #include "BasicPRM.h"
 #include "BasicRRTStrategy.h"
+#include "MARRTStrategy.h"
 #include "TogglePRMStrategy.h"
 #include "RoadmapToolsStrategy.h"
 #include "HybridPRM.h"
@@ -116,8 +117,10 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
   if(citr.getName() == "BasicPRM"){
     mpsm = new BasicPRM(citr, GetMPProblem());
   } else if(citr.getName() == "BasicRRTStrategy"){
-    mpsm = new BasicRRTStrategy(citr, GetMPProblem());
-  } else if(citr.getName() == "TogglePRMStrategy") {
+    mpsm = new BasicRRTStrategy(citr, GetMPProblem()); 
+  }  else if(citr.getName() == "MARRTStrategy"){
+    mpsm = new MARRTStrategy(citr, GetMPProblem());
+  }  else if(citr.getName() == "TogglePRMStrategy") {
     mpsm = new TogglePRMStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "Compare") {
     mpsm = new MPComparer(citr,GetMPProblem());

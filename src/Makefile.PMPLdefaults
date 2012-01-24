@@ -246,6 +246,7 @@ ifeq (${parallel}, 0)
 	PMPL_OBJS+= \
 	MPStrategy/BasicPRM.o \
 	MPStrategy/BasicRRTStrategy.o \
+        MPStrategy/MARRTStrategy.o \
 	MPStrategy/TogglePRMStrategy.o \
 	MPStrategy/HybridPRM.o \
 	MPStrategy/QueryStrategy.o \
