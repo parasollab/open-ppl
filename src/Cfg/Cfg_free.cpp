@@ -140,7 +140,7 @@ void Cfg_free::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMe
     m_v.push_back(2.0*DRand()-1.0);
 
   //scale to appropriate length
-  Cfg_free origin;
+  CfgType origin;
   dm->ScaleCfg(env, incr, origin, *this);
 
   NormalizeOrientation();
