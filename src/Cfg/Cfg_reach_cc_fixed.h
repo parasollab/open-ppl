@@ -23,7 +23,9 @@ class Cfg_reach_cc_fixed : public Cfg_reach_cc {
   virtual void GetRandomCfg(Environment* _env,shared_ptr<BoundingBox> _bb) {
     Cfg_reach_cc::GetRandomCfg(_env,_bb);
   }
-  virtual void GetRandomCfg(Environment* _env); 
+  virtual void GetRandomCfg(Environment* _env){
+    Cfg_reach_cc::GetRandomCfg(_env);
+  }
   /*
   virtual void GetRandomCfg(Environment* env, DistanceMetric* _dm, 
                             double length);
