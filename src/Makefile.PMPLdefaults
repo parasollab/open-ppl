@@ -45,6 +45,20 @@ ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc on 64 bit machine
 	DEPS = -MMD -MF $*.d
 endif
 
+ifeq (${platform}, LINUX_gcc_brazos) 	#linux/gcc on brazos(brazos.tamu.edu)
+	UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
+	UTILS_INCL =  ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
+	UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
+	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
+	#use same boost as used in STAPL
+        BOOST_ROOT = /home/ipapadop/usr
+        BOOST_INCL = -I$(BOOST_ROOT)/include
+        Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
+	BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+
+	DEPS = -MMD -MF $*.d
+endif
+
 ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
