@@ -1,8 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <motion_planning>
+  <VizmoDebug filename="Basic"/>
+  
   <MPProblem>
     <environment input_env="serial.env">
-      <robot Cfg_name="Cfg_free" num_joints="3" pos_dof="3" dofs="9"> 
+      <robot Cfg_name="Cfg_free_tree" num_joints="3" pos_dof="3" dofs="9"> 
         <boundary type="bbox" translational_scale="1">
           <parameter id="0" Label="x" type="translational" min="0" max="4" />
           <parameter id="1" Label="y" type="translational" min="0" max="4" />
@@ -10,37 +12,56 @@
         </boundary>
       </robot>
     </environment>
+
     <distance_metrics>
        <euclidean Label="euclidean"/>
     </distance_metrics>    
+
     <validity_test>    
       <CollisionDetection Label="cd" method="RAPID" />
     </validity_test>
+
     <NeighborhoodFinder>
       <BFNF Label="BFNF" dm_method="euclidean"/>
     </NeighborhoodFinder>
-  <MPRegions/>
+
+    <MPRegions/>
   </MPProblem>
+  
   <MPStrategy>  
     <node_generation_methods>
-      <UniformRandomSampler Label="UniformRandom" vc_method="cd"/>
+      <UniformRandomSampler Label="UniformRandomFree" vc_method="cd"/>
+      <ObstacleBasedSampler Label="OBPRM" vc_method="cd" usebbx="false" point_selection="cspace" dm_method="euclidean" n_shells_free="3" n_shells_coll="0" step_size="0.05"/>
     </node_generation_methods>
+
     <connection_methods>
       <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
+      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" nf="BFNF" lp_method="sl"/>
+      <NeighborhoodConnection Label="ConnectFirst" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
     </connection_methods>
+
     <lp_methods>
       <StraightLine Label="sl" length="0" binary_search="1" vc_method="cd"/>
     </lp_methods>
+
     <MPEvaluator_methods>
       <MPRegionConditionalEvaluators>
-        <NumNodesEvaluation Label="NodesEval" size="100" dm_method="euclidean" lp_method="sl"/>
+        <NumNodesEvaluation Label="NodesEval" size="100"/>
+        <QueryEvaluation Label="Query" filename="serial.query" dm_method="euclidean" outpath="Basic" lp_method="sl">
+          <node_connection_method Method="ConnectFirst"/>
+        </QueryEvaluation>
+        <PrintMapEvaluation Label="PrintMap" base_name="Basic" />
       </MPRegionConditionalEvaluators>
     </MPEvaluator_methods>
+
     <MPStrategyMethod Controller="BasicPRM">
-      <BasicPRM Label="BasicPRM" seed="1234567" filename="Basic" iterations="1" num_samples="10" dm_method="euclidean">
-        <node_generation_method Method="UniformRandom" Number="10"/>
+      <BasicPRM Label="BasicPRM" seed="1234567" filename="Basic" iterations="1" dm_method="euclidean">
+        <node_generation_method Method="UniformRandomFree" Number="10"/>
+        <node_generation_method Method="OBPRM" Number="10"/>
         <node_connection_method Method="Closest"/>
-        <evaluation_method Method="NodesEval"/>
+        <component_connection_method Method="ConnectCCs"/>
+        <evaluation_method Method="PrintMap"/>
+        <evaluation_method Method="Query"/>
       </BasicPRM>
     </MPStrategyMethod>
   </MPStrategy>
