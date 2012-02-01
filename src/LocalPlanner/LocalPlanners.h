@@ -39,7 +39,8 @@ namespace pmpl_detail {
     RotateAtS<CfgType,WeightType>,
     TransformAtS<CfgType,WeightType>,
     MedialAxisLP<CfgType,WeightType>,
-    AStar<CfgType,WeightType>,
+    AStarDistance<CfgType,WeightType>,
+    AStarClearance<CfgType, WeightType>,
     ToggleLP<CfgType, WeightType>
     > LocalPlannerMethodList;
 }
