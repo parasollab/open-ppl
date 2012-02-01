@@ -1,8 +1,0 @@
-The env and query files are just simple examples to validate the 
-performance of the new code.
-
-You can use the env file I provides in this directory to do 
-raw experiments. 
-
-For better experiments/results, you may change the env file, 
-i.e. let the distance between two blocks become more larger. 
