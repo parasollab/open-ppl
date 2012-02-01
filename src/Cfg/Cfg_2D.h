@@ -51,7 +51,7 @@ public:
   #ifdef _PARALLEL
     void define_type(stapl::typer &t)  
     {
-      Cfg_free::define_type(t);
+      Cfg::define_type(t);
       
     }
   #endif

@@ -62,7 +62,7 @@ template<class VERTEX, class WEIGHT>
 class EdgeInfo {
 public:
 #ifdef _PARALLEL
-typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
+typedef typename stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 #else 
 typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 #endif 
@@ -233,7 +233,7 @@ class vertex_descriptor_iterator
 #ifdef _PARALLEL
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : 
-public stapl::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> {
+public stapl::p_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> {
 #else 
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : 
@@ -243,7 +243,7 @@ public stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIG
 public:
 
 #ifdef _PARALLEL
-typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
+typedef stapl::p_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 #else 
 typedef stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 #endif 

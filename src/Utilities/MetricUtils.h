@@ -5,6 +5,7 @@
 #include "DistanceMetricMethod.h"
 #include "NeighborhoodFinder.h"
 #include <string>
+#include "boost/tuple/tuple.hpp"
 
 /**Provide timing information.
  *This class is used to measure the running time between StartClock and 
@@ -111,7 +112,6 @@ class StatClass {
     //  m_lpInfo.second.get<1>() is the # of LP connections (successes)
     //  m_lpInfo.second.get<2>() is the # of LP collision detection calls
     map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> > m_lpInfo;
-
     map<string, unsigned long int> m_collDetCountByName;
 
     map<string, ClockClass> m_clockMap;
