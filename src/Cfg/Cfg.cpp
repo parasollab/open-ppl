@@ -445,81 +445,13 @@ void Cfg::ClosestPtOnLineSegment(const Cfg& _current, const Cfg& _pt1, const Cfg
   delete C;
 }
 
-
-void Cfg::FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats, 
-      const Cfg& _increment, string _vcMethod, int _noNeighbors, CDInfo& _cdInfo, vector<Cfg*>& _ret) {  
-  vector<Cfg*> nList;
-  vector<double> posOnly, oriOnly;
-
-  std::string Callee(GetName());
-  {std::string Method("Cfg::FindNeighbors(1)");Callee=Callee+Method;}
-  
-  /////////////////////////////////////////////////////////////////////
-  //Push 2 cfgs into nList whose position or orientation is the same 
-  //as _increment
-  Cfg* tmp = _increment.CreateNewCfg();
-  nList.push_back(tmp); 
-  for(int i=0; i<m_dof; ++i) {
-    if(i<m_posDof) {
-      posOnly.push_back(_increment.m_v[i]);
-      oriOnly.push_back(0.0);
-    } else {
-      posOnly.push_back(0.0);
-      oriOnly.push_back(_increment.m_v[i]);
-    }
-  }
-  Cfg* posCfg = this->CreateNewCfg(posOnly);
-  Cfg* oriCfg = this->CreateNewCfg(oriOnly);
-  nList.push_back(posCfg);
-  nList.push_back(oriCfg);
-  
-  /////////////////////////////////////////////////////////////////////
-  //Push m_dof cfgs into nList whose value in each dimension is the same
-  //as or complement of _increment
-  
-  // find close neighbour in every dimension.
-  vector<double> oneDim;
-  for(int i=0; i< m_dof; i++)
-    oneDim.push_back(0.0);
-  
-  Cfg* oneDimCfg, *oneDimCfgNegative;
-  for(int i=0; i< m_dof; i++) { 
-    oneDim[i] = _increment.m_v[i];
-
-    oneDimCfg = this->CreateNewCfg(oneDim);
-    nList.push_back(oneDimCfg);
-
-    oneDimCfgNegative = this->CreateNewCfg();
-    oneDimCfgNegative->negative(*oneDimCfg);
-    nList.push_back(oneDimCfgNegative);
-
-    oneDim[i] = 0.0;  // reset to 0.0
-  }
-  
-  /////////////////////////////////////////////////////////////////////
-  //Validate Neighbors
-  if(_noNeighbors > (int)nList.size()) 
-    _noNeighbors = nList.size();
-  for(int i=0;i<(_noNeighbors);i++) {
-    Cfg* tmp = this->CreateNewCfg();
-    tmp->add(*this, *(nList[i]));
-    
-    if(!this->AlmostEqual(*tmp) && 
-       _mp->GetValidityChecker()->IsValid(_mp->GetValidityChecker()->GetVCMethod(_vcMethod), *tmp, _env, _stats, _cdInfo, true, &Callee) )
-      _ret.push_back(tmp);
-    else
-      delete tmp;
-  }
-}
-
-
 void Cfg::FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats, const Cfg& _goal, const Cfg& _increment, string _vcMethod,
       int _noNeighbors, CDInfo& _cdInfo, vector<Cfg*>& _ret) {
    vector<Cfg*> nList;  
    vector<double> posOnly, oriOnly;
 
   std::string Callee(GetName());
-  {std::string Method("Cfg::FindNeighbors(2)");Callee=Callee+Method;}
+  {std::string Method("Cfg::FindNeighbors");Callee=Callee+Method;}
   
    /////////////////////////////////////////////////////////////////////
    //Push 2 cfgs into nList whose position or orientation is the same 
@@ -565,19 +497,18 @@ void Cfg::FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats, co
 
    /////////////////////////////////////////////////////////////////////
    //Validate Neighbors
-
-   /* Need to modify following code for the future cfgs */
-   if(_noNeighbors > (int)nList.size()) 
-     _noNeighbors = nList.size();
-   for(int i=0;i<_noNeighbors;++i) {
+   for(int i=0;i<nList.size();++i) {
      Cfg* tmp = this->CreateNewCfg();
      
-     tmp->IncrementTowardsGoal(_goal, *nList[i]); //The only difference~
+     tmp->IncrementTowardsGoal(_goal, *nList[i]);
      if(!this->AlmostEqual(*tmp) && 
 	_mp->GetValidityChecker()->IsValid(_mp->GetValidityChecker()->GetVCMethod(_vcMethod), *tmp, _env, _stats, _cdInfo, true, &Callee) ) {
        _ret.push_back(tmp);
      } else 
        delete tmp;
+
+     if(_ret.size() >= _noNeighbors)
+       break;
    }
 
    for(vector<Cfg*>::iterator I = nList.begin(); I != nList.end(); ++I)
@@ -611,10 +542,10 @@ void Cfg::IncrementTowardsGoal(const Cfg &_goal, const Cfg &_increment) {
       double orientationIncr = _increment.m_v[i] < 0.5 ? _increment.m_v[i] : 1-_increment.m_v[i];
       tmp = DirectedAngularDistance(m_v[i], _goal.m_v[i]);
       if(fabs(tmp) < orientationIncr) {
-  m_v[i]=_goal.m_v[i];
+        m_v[i]=_goal.m_v[i];
       } else {
-  m_v[i] += _increment.m_v[i];
-  m_v[i] = m_v[i] - floor(m_v[i]);
+        m_v[i] += _increment.m_v[i];
+        m_v[i] = m_v[i] - floor(m_v[i]);
       }
     }
   }

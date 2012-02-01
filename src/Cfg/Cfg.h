@@ -269,14 +269,7 @@ class Cfg {
    */
   void ClosestPtOnLineSegment(const Cfg&, const Cfg&, const Cfg&);
 
-  /// methods for nodes connection. 
-  virtual void FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats,
-           const Cfg& _increment,
-           string _vcMethod,
-           int _noNeighbors, 
-           CDInfo& _cdInfo,
-           vector<Cfg*>& _cfgs);
-  /// methods for nodes connection. 
+  /// method for a-star lp. 
   virtual void FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats,
            const Cfg& _goal, const Cfg& _increment, 
            string _vcMethod,
