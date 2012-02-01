@@ -26,6 +26,10 @@ ifndef STAPL_DIR
   STAPL_DIR = ${UTILS_DIR}/stapl_release
 endif
 
+ifndef STL_LIB
+  STL_LIB = 4.4.4
+endif 
+
 # include makefile defaults
 include ${UTILS_DIR}/makefile_includes/Makefile.defaults
 include ${PMPL_DIR}/Makefile.PMPLdefaults

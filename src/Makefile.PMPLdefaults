@@ -36,12 +36,16 @@ ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc on 64 bit machine
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
-	#use same boost as used in STAPL
 	BOOST_ROOT = /usr
 	BOOST_INCL = -I$(BOOST_ROOT)/include
-	Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib64
-	BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
-
+	ifeq (${parallel}, 1)
+	  #uses latest version of boost (use module avail to check)
+	  Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
+	  BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+	else
+	  Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib64
+	  BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+	endif
 	DEPS = -MMD -MF $*.d
 endif
 
@@ -163,7 +167,7 @@ KMEANS_LIBFILE = ${KMEANS_DIR}/libkmeans.a
 ifeq (${parallel}, 0)
 	STAPL_INCL  = -I${STAPL_DIR}/include 
 else
-	STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools  -I${STAPL_DIR}/tools/libstdc++/4.4.4/
+	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/include -I${STAPL_DIR}/tools  -I${STAPL_DIR}/tools/libstdc++/${STL_LIB}/ -I${STAPL_DIR}/tools/icl
         STAPL_DEF = -D_PARALLEL -D_STAPL -D_STAPL_MPI -D_PGRAPH -DDYNAMIC_GRAPH
         STAPL_LIB = ${STAPL_DIR}/lib/runtime.o -lrt $(BOOST_LIB)
 endif
