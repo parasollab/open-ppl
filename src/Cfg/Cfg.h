@@ -206,6 +206,7 @@ class Cfg {
   //@{
   ///Get internal storage of configuration
   const vector<double>& GetData() const;
+  void SetData(vector<double>& _data);
   virtual Vector3D GetRobotCenterPosition() const = 0;
 
   /// Return the number of degrees of freedom for the configuration class
@@ -269,14 +270,6 @@ class Cfg {
    */
   void ClosestPtOnLineSegment(const Cfg&, const Cfg&, const Cfg&);
 
-  /// method for a-star lp. 
-  virtual void FindNeighbors(MPProblem* _mp, Environment* _env, StatClass& _stats,
-           const Cfg& _goal, const Cfg& _increment, 
-           string _vcMethod,
-           int _noNeighbors, 
-           CDInfo& _cdInfo,
-           vector<Cfg*>& _cfgs);
-               
   ///Increase every value in this instance in each dimention by the value in _increment
   virtual void Increment(const Cfg& _increment);
   virtual void IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment);

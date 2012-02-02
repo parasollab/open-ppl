@@ -38,7 +38,10 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
 
     virtual size_t ChooseOptimalNeighbor(Environment* _env, StatClass& _stats,
         CFG& _col, shared_ptr<DistanceMetricMethod> _dm,
-        const CFG& _c1, const CFG& _c2, vector<Cfg*>& _neighbors) = 0;
+        const CFG& _c1, const CFG& _c2, vector<CFG>& _neighbors) = 0;
+
+    virtual vector<CFG> FindNeighbors(Environment* _env, StatClass& _stats, 
+        const CFG& _current, const CFG& _goal, const CFG& _increment);
 
     string m_vcMethod;
     size_t m_maxTries;     // How many time will be tried to connect to goal. (not used!?)
@@ -133,14 +136,11 @@ AStar<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, share
 
   CFG p = _c1;
   CFG incr;
-  vector<Cfg*> neighbors;
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
+  vector<CFG> neighbors;
   int nTicks;
   bool connected = true;
   size_t tries = 0;
   size_t iter = 0;
-  CDInfo cdInfo;
   deque<CFG> hist; //hist for detecting cycles
 
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
@@ -154,7 +154,7 @@ AStar<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, share
     if(hist.size() > m_histLength) hist.pop_back();
 
     //find neighbors
-    p.FindNeighbors(this->GetMPProblem(), _env, _stats, _c2, incr, m_vcMethod, m_numNeighbors, cdInfo, neighbors);    
+    neighbors = FindNeighbors(_env, _stats, p, _c2, incr);    
     //neighbors all in collision
     if (neighbors.size()==0) {
       connected = SetLPOutputFail(_c1, p, _lpOutput, "Found 0 Neighbors");
@@ -162,15 +162,7 @@ AStar<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, share
     }
 
     //choose the optimal neighbor. Pure virtual function.
-    p = *(neighbors[ ChooseOptimalNeighbor(_env, _stats,_col, _dm, _c1, _c2, neighbors) ]);
-
-    //release memory
-    for(size_t i=0; i<neighbors.size();i++) {
-      if (neighbors[i] != NULL){
-        delete neighbors[i];
-        neighbors[i] = NULL;
-      }
-    }
+    p = neighbors[ChooseOptimalNeighbor(_env, _stats,_col, _dm, _c1, _c2, neighbors)];
     neighbors.clear();
     
     //chose new p so we need to detect cycles
@@ -210,6 +202,77 @@ AStar<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, share
   return connected;
 };
 
+template <class CFG, class WEIGHT>
+vector<CFG> 
+AStar<CFG, WEIGHT>::FindNeighbors(Environment* _env, StatClass& _stats, const CFG& _current, const CFG& _goal, const CFG& _increment) {
+  vector<CFG> neighbors, ret;  
+  vector<double> posOnly, oriOnly;
+  string callee = this->GetNameAndLabel()+"::FindNeighbors";
+  CDInfo cdInfo;
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
+  /////////////////////////////////////////////////////////////////////
+  //Push 2 cfgs into neighbors whose position or orientation is the same 
+  //as _increment
+  CFG tmp = _increment;
+  neighbors.push_back(tmp);
+  int i;
+  for(i=0; i<_current.DOF(); ++i) {
+    if(i<_current.PosDOF()) {
+      posOnly.push_back(_increment.GetData()[i]);
+      oriOnly.push_back(0.0);
+    } 
+    else {
+      posOnly.push_back(0.0);
+      oriOnly.push_back(_increment.GetData()[i]);
+    }
+  }
+  CFG posCfg; 
+  posCfg.SetData(posOnly);
+  CFG oriCfg;
+  oriCfg.SetData(oriOnly);
+  neighbors.push_back(posCfg);
+  neighbors.push_back(oriCfg);
+
+  /////////////////////////////////////////////////////////////////////
+  //Push m_dof cfgs into neighbors whose value in each dimension is the same
+  //as or complement of _increment
+
+  // find close neighbour in every dimension.
+  vector<double> oneDim;
+  for(i=0; i< _current.DOF(); i++)
+    oneDim.push_back(0.0);
+  CFG oneDimCfg, oneDimCfgNegative;
+  for(i=0; i< _current.DOF(); i++) {
+    oneDim[i] = _increment.GetData()[i];
+
+    oneDimCfg.SetData(oneDim);
+    neighbors.push_back(oneDimCfg);
+
+    oneDimCfgNegative.negative(oneDimCfg);
+    neighbors.push_back(oneDimCfgNegative);
+
+    oneDim[i] = 0.0;  // reset to 0.0
+  }
+
+  /////////////////////////////////////////////////////////////////////
+  //Validate Neighbors
+  int cdCounter = 0;
+  for(size_t i=0;i<neighbors.size();++i) {
+    CFG tmp = _current;
+    tmp.IncrementTowardsGoal(_goal, neighbors[i]);
+    if(_current==tmp) continue;
+    cdCounter++;
+    if(vc->IsValid(vcm, tmp, _env, _stats, cdInfo, true, &callee) ) {
+      ret.push_back(tmp);
+    }
+    if(ret.size() >= m_numNeighbors)
+      break;
+  }
+  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
+  return ret;
+}
+
 //////////////////////////////////////////////////////////////////
 // AStarDistance
 //////////////////////////////////////////////////////////////////
@@ -225,7 +288,7 @@ class AStarDistance: public AStar<CFG, WEIGHT> {
 
     virtual size_t ChooseOptimalNeighbor(Environment* _env, StatClass& _stats,
         CFG& _col, shared_ptr<DistanceMetricMethod> _dm,
-        const CFG& _c1, const CFG& _c2, vector<Cfg*>& _neighbors); 
+        const CFG& _c1, const CFG& _c2, vector<CFG>& _neighbors); 
 };
 
 template <class CFG, class WEIGHT>
@@ -255,12 +318,12 @@ template <class CFG, class WEIGHT>
 size_t
 AStarDistance<CFG, WEIGHT>::ChooseOptimalNeighbor(Environment* _env, StatClass& _stats,
     CFG& _col, shared_ptr<DistanceMetricMethod> _dm,
-    const CFG& _c1, const CFG& _c2, vector<Cfg*>& _neighbors) {
-  double minDistance=MAXFLOAT;
-  size_t retPosition=0;
+    const CFG& _c1, const CFG& _c2, vector<CFG>& _neighbors) {
+  double minDistance = MAXFLOAT;
+  size_t retPosition = 0;
   double value = 0;
   for(size_t i=0;i<_neighbors.size();i++) {
-    value=_dm->Distance(_env,*_neighbors[i],_c2);
+    value = _dm->Distance(_env, _neighbors[i], _c2);
     if (value<minDistance) {
       retPosition=i;
       minDistance=value;
@@ -285,7 +348,7 @@ class AStarClearance: public AStar<CFG, WEIGHT> {
 
     virtual size_t ChooseOptimalNeighbor(Environment* _env, StatClass& _stats,
         CFG& _col, shared_ptr<DistanceMetricMethod> _dm, 
-        const CFG& _c1, const CFG& _c2, vector<Cfg*>& _neighbors); 
+        const CFG& _c1, const CFG& _c2, vector<CFG>& _neighbors); 
 
   private:
     size_t m_penetration;
@@ -320,18 +383,18 @@ template <class CFG, class WEIGHT>
 size_t
 AStarClearance<CFG, WEIGHT>::ChooseOptimalNeighbor(Environment* _env, StatClass& _stats,
     CFG& _col, shared_ptr<DistanceMetricMethod> _dm,
-    const CFG& _c1, const CFG& _c2, vector<Cfg*>& _neighbors) {
-  double maxClearance=-MAXFLOAT;
-  size_t retPosition=0;
+    const CFG& _c1, const CFG& _c2, vector<CFG>& _neighbors) {
+  double maxClearance = -MAXFLOAT;
+  size_t retPosition = 0;
   double value = 0;
   MPProblem* mp = this->GetMPProblem();
   CDInfo tmpInfo;
-  for(size_t i=0;i<_neighbors.size();i++) {
-    GetApproxCollisionInfo(mp,*((CfgType*)_neighbors[i]),_env,_stats,tmpInfo,this->m_vcMethod, _dm->GetLabel(), m_penetration, m_penetration, true);
+  for(size_t i = 0; i < _neighbors.size(); i++) {
+    GetApproxCollisionInfo(mp,_neighbors[i],_env,_stats,tmpInfo,this->m_vcMethod, _dm->GetLabel(), m_penetration, m_penetration, true);
     value = tmpInfo.min_dist;
-    if (value>maxClearance) {
-      retPosition=i;
-      maxClearance=value;
+    if (value > maxClearance) {
+      retPosition = i;
+      maxClearance = value;
     }   
   }
   return retPosition;
