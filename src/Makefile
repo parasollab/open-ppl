@@ -34,12 +34,6 @@ endif
 include ${UTILS_DIR}/makefile_includes/Makefile.defaults
 include ${PMPL_DIR}/Makefile.PMPLdefaults
 
-
-# set default CHECKIFSAMECC
-#ifndef CHECKIFSAMECC
-#  CHECKIFSAMECC = 0
-#endif
-
 ifndef ROBOT_DEF
   # define robot type
   ROBOT_DEF = -DPMPRigid
@@ -54,7 +48,7 @@ ifndef ROBOT_DEF
 endif
 
 # macros
-DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF} #-DVERBOSE=0 
+DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF} 
 INCL = -I. ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MPNN_INCL}
 LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 
@@ -86,7 +80,7 @@ ${PMPL_LIBFILE}: objs
 
 
 # clean targets
-CLEAN = obprm query pmpl metaplanner
+CLEAN = pmpl
 
 reallyclean:
 	@${MAKE} clean

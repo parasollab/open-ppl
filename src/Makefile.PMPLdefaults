@@ -161,8 +161,6 @@ ${KMEANS_DIR}/libkmeans.a:
 KMEANS_LIBFILE = ${KMEANS_DIR}/libkmeans.a
 
 # stapl macros
-#STAPL_INCL  = -I${STAPL_DIR}/include -I${STAPL_DIR}/tools 
-#STAPL_INCL  = -I${STAPL_DIR}/include 
 #set parallel PRM options
 ifeq (${parallel}, 0)
 	STAPL_INCL  = -I${STAPL_DIR}/include 
