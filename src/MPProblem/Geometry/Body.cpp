@@ -539,14 +539,20 @@ bool Body::isWithinIHelper(Body* body1, Body* body2, int i, Body* prevBody){
   if(i==0){
     return false;
   }
-  for(vector<Connection>::iterator C = body1->forwardConnection.begin(); C != body1->forwardConnection.end(); ++C)
+  typedef vector<Connection>::iterator CIT;
+  for(CIT C = body1->forwardConnection.begin(); C != body1->forwardConnection.end(); ++C)
     //if(*(C->GetNextBody().get())==*prevBody)
       if(isWithinIHelper(C->GetNextBody().get(), body2, i-1, body1) )
         return true;
-  for(vector<Connection>::iterator C =body1->backwardConnection.begin(); C != body1->backwardConnection.end(); ++C)
+  for(CIT C =body1->backwardConnection.begin(); C != body1->backwardConnection.end(); ++C){
+    for(CIT C2 = C->GetPreviousBody()->forwardConnection.begin(); C2!=C->GetPreviousBody()->forwardConnection.end(); C2++){
+      if(*(C2->GetNextBody()) == *body2)
+        return true;
+    }
     //if(*(C->GetPreviousBody().get())==*prevBody)
       if(isWithinIHelper(C->GetPreviousBody().get(),body2,i-1, body1) )
         return true;
+  }
   
   return false;
 }
