@@ -104,7 +104,7 @@ void Cfg_fixed_tree::GetRandomCfg(double R, double rStep){
 }
 
 
-void Cfg_fixed_tree::GetRandomCfg(Environment* _env,shared_ptr<BoundingBox> _bb) {
+void Cfg_fixed_tree::GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
     Cfg::GetRandomCfg(_env,_bb);
 }
 
@@ -126,7 +126,7 @@ void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<Dist
   NormalizeOrientation();
 }
 
-void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *_env,shared_ptr<BoundingBox> _bb) {
+void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *_env,shared_ptr<Boundary> _bb) {
   // Why following comments are here? This method suppose will generate
   // Cfg whose center of mass will inside a given bounding box....
   
@@ -135,8 +135,13 @@ void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *_env,shared_ptr<Boun
   // but here only the base link is taken care of. It is almost fine since
   // a little 'bigger' BB will contain all links. 
   m_v.clear();
-  for(int i=0; i<m_dof; ++i) 
-    m_v.push_back(_bb->GetRandomValueInParameter(i));
+  Point3d p = _bb->GetRandomPoint();
+  for(int i=0 ;i<m_posDof;i++){
+    m_v.push_back(p[i]);
+  }
+
+  for(int i=m_posDof; i<m_dof; ++i) 
+    m_v.push_back(_bb->GetRandomValueInParameter(i-m_posDof));
 }
 
 void Cfg_fixed_tree::GetRandomCfg_CenterOfMass(Environment *_env) {

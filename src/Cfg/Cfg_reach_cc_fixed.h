@@ -20,7 +20,7 @@ class Cfg_reach_cc_fixed : public Cfg_reach_cc {
   virtual const char* GetName() const { return "Cfg_reach_cc_fixed"; }
 
   virtual void GetRandomCfg(double R, double rStep);
-  virtual void GetRandomCfg(Environment* _env,shared_ptr<BoundingBox> _bb) {
+  virtual void GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
     Cfg_reach_cc::GetRandomCfg(_env,_bb);
   }
   virtual void GetRandomCfg(Environment* _env){

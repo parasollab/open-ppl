@@ -1,5 +1,5 @@
-#ifndef _Boundary_h_
-#define _Boundary_h_
+#ifndef BOUNDARY_H_
+#define BOUNDARY_H_
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include mathtool vec
@@ -7,6 +7,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "MPUtils.h"
+#include "Point.h"
+using namespace mathtool;
 
 ///\todo add MPBaseObject defautl constructor
 class Boundary : public MPBaseObject{
@@ -14,52 +16,18 @@ class Boundary : public MPBaseObject{
   Boundary();
   Boundary(XMLNodeReader& in_Node,MPProblem* in_pproblem);
   virtual ~Boundary();
- private:
+  virtual double GetClearance(Vector3D _point3d) const = 0;
+  virtual bool IfSatisfiesConstraints(Vector3D _point3d) const =0;
+  virtual bool InBoundary(const Cfg& _cfg) = 0; 
+  virtual Point3d GetRandomPoint() = 0; 
+  double GetRandomValueInParameter(int _par);
+  virtual bool IsInterSect(Boundary* _b){ return true;}//not implemented yet
+  virtual Boundary* GetIntersect(Boundary* _b){return _b;}//not implemented yet
+  virtual bool IsOverlap(Boundary* _b){return true;}//not implemented yet
+  virtual Boundary* GetOverlap(Boundary* _b){return _b;}//not implemented yet
+  virtual void Print(std::ostream& _os, char range_sep=':', char par_sep=';') const=0 ;
+ protected:
+ vector< std::pair<double,double> > m_jointLimits; 
 };
-
-///\todo add MPBaseObject defautl constructor
-class BoundingBox : public Boundary {
- public:
-  enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};
-  BoundingBox(int i_dofs, int i_pos_dofs);
-  BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem);
-  BoundingBox(const BoundingBox &from_bbox);
-  virtual ~BoundingBox();
-
-  bool operator==(const BoundingBox& bb) const;
-
-  void SetParameter(int par, double p_first, double p_second);
-  std::vector<BoundingBox> Partition(int par, double p_point, double epsilon);
-
-  int FindSplitParameter(BoundingBox &o_bounding_box);
-
-  BoundingBox GetCombination(BoundingBox &o_bounding_box);
-  double GetRandomValueInParameter(int par);
-  int GetDOFs() const;
-  int GetPosDOFs() const;
-  const std::pair<double,double> GetRange(int par) const;
-  double GetClearance(Vector3D point3d) const;
-  parameter_type GetType(int par) const;
-  
-  void TranslationalScale(double scale_factor);
-
-  void SetRanges(std::vector<double> &ranges);
-
-  void Print(std::ostream& _os, char range_sep=':', char par_sep=';') const;
-
-  //void Parse(std::stringstream &i_bbox);
-
-  bool IfWrap(int par);
-  bool IfEnoughRoom(int par, double room);
-  bool IfSatisfiesConstraints(Vector3D point3d) const;
-  bool IfSatisfiesConstraints(vector<double> cfg) const;
-
- private:
-  std::vector< std::pair<double,double> > bounding_box; // bb size is the dof
-  std::vector<parameter_type> par_type;
-  int pos_dofs;
-  int dofs;
-};
-
 
 #endif /*_Boundary_h_*/

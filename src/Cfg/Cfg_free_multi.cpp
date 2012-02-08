@@ -102,7 +102,7 @@ bool Cfg_free_multi::ConfigEnvironment(Environment* env) const {
 }
 
 
-void Cfg_free_multi::GetRandomCfg(Environment* _env,shared_ptr<BoundingBox> _bb) {
+void Cfg_free_multi::GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
   Cfg::GetRandomCfg(_env,_bb);
 }
 

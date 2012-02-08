@@ -85,7 +85,7 @@ class Cfg_fixed_tree : public Cfg {
   virtual void GetRandomCfg(double R, double rStep);
 
   virtual void GetRandomCfg(Environment* env);
-  virtual void GetRandomCfg(Environment *env,shared_ptr<BoundingBox> bb);
+  virtual void GetRandomCfg(Environment *_env,shared_ptr<Boundary> _bb);
   ///Get a random vector. incr will always be reset to 0.005.
   virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm);
   //@}
@@ -134,7 +134,7 @@ protected:
 
   ///Just like GetRandomCfg.
   virtual void GetRandomCfg_CenterOfMass(Environment *env);
-  virtual void GetRandomCfg_CenterOfMass(Environment* env,shared_ptr<BoundingBox> bb);
+  virtual void GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
   static int m_numOfJoints;  ///< # of Joints
 ///////////////////////////////////////////////////////////////////////////////////////////
 //

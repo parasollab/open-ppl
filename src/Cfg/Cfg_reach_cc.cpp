@@ -395,10 +395,14 @@ GetRandomCfg(double R, double rStep) {
 }
 
 void 
-Cfg_reach_cc::
-GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<BoundingBox> _bb) {
-  for(int i=0; i<6; ++i)
-    m_v[i] = _bb->GetRandomValueInParameter(i);
+Cfg_reach_cc::GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb) {
+  Point3d p = _bb->GetRandomPoint();
+  for(int i=0 ;i<3;i++){
+    m_v.push_back(p[i]);
+  }
+
+  for(int i=3; i<6; ++i)
+    m_v[i] = _bb->GetRandomValueInParameter(i-3);
   //fix to xz plane:
   //m_v[1] = 0;
   //m_v[3] = 0;

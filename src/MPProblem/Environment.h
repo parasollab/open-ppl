@@ -3,7 +3,7 @@
 
 ////////////////////////////////////////////////////////////////
 #include "Boundary.h"
-
+#include "BoundingBox.h"
 
 #include "MultiBody.h"
 #include <string>

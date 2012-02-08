@@ -393,7 +393,7 @@ class MPBaseObject {
       m_recordKeep = _node.boolXMLParameter("recordKeep", false, false, "Keeping track of algorithmic statistics, on(true)/off(false)");
     };
 
-    MPProblem* GetMPProblem() {return m_problem;}
+    MPProblem* GetMPProblem() const {return m_problem;}
     void SetMPProblem(MPProblem* _m){m_problem = _m;}
     virtual void PrintOptions(ostream& _os) {};
     string GetLabel() const {return m_label;}

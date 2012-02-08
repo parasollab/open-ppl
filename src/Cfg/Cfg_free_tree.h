@@ -63,12 +63,12 @@ class Cfg_free_tree : public Cfg_free {
   //  Other Methods
   //===================================================================
   virtual void GetRandomCfg(double R, double rStep);
-  virtual void GetRandomCfg(Environment* env);
-  virtual void GetRandomCfg(Environment *env,shared_ptr<BoundingBox> bb);
+  virtual void GetRandomCfg(Environment* _env);
+  virtual void GetRandomCfg(Environment *_env,shared_ptr<Boundary> _bb);
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
-  virtual void GetRandomCfg_CenterOfMass(Environment* env);
-  virtual void GetRandomCfg_CenterOfMass(Environment* env,shared_ptr<BoundingBox> bb);
+  virtual void GetRandomCfg_CenterOfMass(Environment* _env);
+  virtual void GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
   static int m_numOfJoints;
 
  private:
