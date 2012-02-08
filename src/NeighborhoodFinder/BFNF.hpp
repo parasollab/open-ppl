@@ -19,7 +19,7 @@ public:
     NeighborhoodFinderMethod(in_Node, in_pProblem) {
 }
   
-  BFNF(shared_ptr<DistanceMetricMethod>_dmm): NeighborhoodFinderMethod(_dmm) {}
+  BFNF(shared_ptr<DistanceMetricMethod>_dmm,string _label="",MPProblem* in_pProblem=NULL): NeighborhoodFinderMethod(_dmm,_label, in_pProblem) {}
 
   virtual ~BFNF() {}
 

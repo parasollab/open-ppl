@@ -23,13 +23,13 @@ public:
     string dm2_label = _node.stringXMLParameter("dm2_method",true,"","Distance Metric Method the second one");
     dmm2 = _problem->GetDistanceMetric()->GetMethod(dm2_label);
     
-      nf1 = new BFNF<CFG,WEIGHT>(dmm);
-      nf2 = new BFNF<CFG,WEIGHT>(dmm2);
+      nf1 = new BFNF<CFG,WEIGHT>(dmm,"",_problem);
+      nf2 = new BFNF<CFG,WEIGHT>(dmm2,"",_problem);
   }
-  BFFNF(shared_ptr<DistanceMetricMethod> _dmm,shared_ptr<DistanceMetricMethod>_dmm2,int _k2) : NeighborhoodFinderMethod(_dmm) {
+  BFFNF(shared_ptr<DistanceMetricMethod> _dmm,shared_ptr<DistanceMetricMethod>_dmm2,int _k2,MPProblem* _problem ) : NeighborhoodFinderMethod(_dmm,"",_problem) {
 
-    nf1 = new BFNF<CFG,WEIGHT>(_dmm);
-    nf2 = new BFNF<CFG,WEIGHT>(_dmm2);
+    nf1 = new BFNF<CFG,WEIGHT>(_dmm,"",_problem);
+    nf2 = new BFNF<CFG,WEIGHT>(_dmm2,"",_problem);
 
     m_scale=_k2;
     dmm2=_dmm2;
