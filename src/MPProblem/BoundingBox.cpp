@@ -79,6 +79,9 @@ BoundingBox(const BoundingBox &from_bbox)  {
 }
 
 BoundingBox::
+BoundingBox() { }
+
+BoundingBox::
 ~BoundingBox() {
   //cout << " ~BoundingBox(). TODO ALL " << endl;
 }

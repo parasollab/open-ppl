@@ -14,6 +14,7 @@ class BoundingBox : public Boundary {
   BoundingBox(int i_dofs, int i_pos_dofs);
   BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem);
   BoundingBox(const BoundingBox &from_bbox);
+  BoundingBox();
   virtual ~BoundingBox();
 
   bool operator==(const BoundingBox& bb) const;
@@ -49,6 +50,16 @@ class BoundingBox : public Boundary {
   std::vector<parameter_type> par_type;
   int pos_dofs;
   int dofs;
+  public:
+  #ifdef _PARALLEL
+  void define_type(stapl::typer &t)
+  {
+	  t.member(bounding_box);
+	  t.member(par_type);
+	  t.member(pos_dofs);
+	  t.member(dofs);
+  }
+  #endif
 };
 
 #endif /*BOUNDINGBOX_H_*/
