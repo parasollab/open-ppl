@@ -215,11 +215,13 @@ bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _
 //***********************************//
 // Main Push To Medial Axis Function //
 //***********************************//
-bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox> _bb, CfgType& _cfg, StatClass& _stats, string _vc, string _dm, 
-    bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, int _hLen, bool _debug) {
+bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox> _bb, CfgType& _cfg, 
+    StatClass& _stats, string _vc, string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, 
+		bool _useBBX, double _eps, int _hLen, bool _debug, bool _positional) {
+
   // Initialization
   string call("MedialAxisUtility::PushToMedialAxis()");
-  if (_debug) cout << endl << call << endl << "CfgType: " << _cfg;
+  if (_debug) cout << endl << call << endl << "Being Pushed: " << _cfg;
   ValidityChecker<CfgType>* vc = _mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(_vc);
   bool inside, inCollision, found, pushed=true;
@@ -232,12 +234,12 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox>
   inCollision = !(vc->IsValid(vcm, _cfg, _env, _stats,tmpInfo,true,&call));
   if (_debug) cout << " Inside/In-Collision: " << inside << "/" << inCollision << endl;
   if (inside || inCollision)
-    pushed = PushFromInsideObstacle(_mp,_cfg,_env,_bb,_stats,_vc,_dm,_pExact,_penetration,_debug);
+    pushed = PushFromInsideObstacle(_mp,_cfg,_env,_bb,_stats,_vc,_dm,_pExact,_penetration,_debug,_positional);
   if ( !pushed ) 
     return false;
 
   // Cfg is free, find medial axis
-  found = PushCfgToMedialAxis(_mp,_cfg,_env,_bb,_stats,_vc,_dm,_cExact,_clearance,_useBBX,_eps,_hLen,_debug);
+  found = PushCfgToMedialAxis(_mp,_cfg,_env,_bb,_stats,_vc,_dm,_cExact,_clearance,_useBBX,_eps,_hLen,_debug,_positional);
   if ( !found )  { 
     if (_debug) cout << "Not found!! ERR in pushtomedialaxis" << endl; 
     return false; 
@@ -247,10 +249,12 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox>
   return true;
 } // END pushToMedialAxis
 
-bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClass& _stats, string _vc, string _dm, 
-    bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, int _hLen, bool _debug) {
+
+bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClass& _stats, string _vc, 
+    string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, 
+    int _hLen, bool _debug, bool _positional) {
   return PushToMedialAxis( _mp,  _env, _env->GetBoundingBox(), _cfg, _stats, _vc, _dm, 
-    _cExact, _clearance, _pExact, _penetration, _useBBX, _eps, _hLen, _debug);
+    _cExact, _clearance, _pExact, _penetration, _useBBX, _eps, _hLen, _debug, _positional);
 }
 
 //***************************************************************//
@@ -259,65 +263,73 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClas
 // A direction is determined to move the cfg outside of the      //
 // obstacle and is pushed till outside.                          //
 //***************************************************************//
-bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
-    string _vc, string _dm, bool _pExact, int _penetration, bool _debug) {	
+bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+    StatClass& _stats,string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional) {	
   // Initialization
   string call("MedialAxisUtility::PushFromInsideObstacle");
   if (_debug) cout << call << endl << " CfgType: " << _cfg << endl;
   shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetMethod(_dm);
-  ValidityChecker<CfgType>*             vc  = _mp->GetValidityChecker();
+  ValidityChecker<CfgType>*         vc  = _mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(_vc);
 
   // Variables
   CDInfo   tmpInfo;
   Vector3D transDir, dif;
-  vector<double> gDif;
-  bool     valid, inBBX;
-  CfgType      endCfg=_cfg, tmpCfg=_cfg, heldCfg=_cfg, transCfg=_cfg;
-  double   stepSize=1.0, res=_env->GetPositionRes(), factor; // TODO: ori_res=env->GetOrientationRes()
-  bool     initValidity = vc->IsValid(vcm,_cfg,_env,_stats,tmpInfo,true,&call);
-  bool     tmpValidity = false, prevValidity = false;
+  bool     inBBX;
+  CfgType  endCfg=_cfg, tmpCfg=_cfg, heldCfg=_cfg, transCfg=_cfg;
+  double   stepSize=1.0, posRes=_env->GetPositionRes(), oriRes=_env->GetOrientationRes(), factor;
+  bool     initValidity=vc->IsValid(vcm,_cfg,_env,_stats,tmpInfo,true,&call);
+  bool     tmpValidity=false, prevValidity=false;
+  int      nTicks;
 
   // If in collision (using the exact case), must use approx
   if ( initValidity == false )
     _pExact = false;
 
-  // Get Collision info, if not computable, exit
+  // Determine direction to move
   tmpInfo.ResetVars();
   tmpInfo.ret_all_info = true;
-  valid = CalculateCollisionInfo(_mp,_cfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_pExact,0,_penetration,true);
-  if (!valid)	return false;
 
-  // Determine direction to move
-  transDir = tmpInfo.object_point - tmpInfo.robot_point;
-  for (int i=0; i<transCfg.DOF(); i++) {
-    if ( i < transCfg.PosDOF() ) 
-      transCfg.SetSingleParam(i, transDir[i]);
-    else                          
-      transCfg.SetSingleParam(i, 0.0);
-  }
-  dif[0] = transCfg.GetSingleParam(0);
-  dif[1] = transCfg.GetSingleParam(1);
-  dif[2] = transCfg.GetSingleParam(2);
-  factor = res/sqrt(dif[0]*dif[0] + dif[1]*dif[1] + dif[2]*dif[2]);
-  transCfg.multiply(transCfg,factor);
-  if (_debug) cout << "TRANS CfgType: " << transCfg << endl;
+  if ( CalculateCollisionInfo(_mp,_cfg,transCfg,_env,_stats,tmpInfo,_vc,_dm,_pExact,0,_penetration,true,_positional) ) {
+    if ( _pExact ) {
+      Vector3D transDir = tmpInfo.object_point - tmpInfo.robot_point;
+      for (int i=0; i<transCfg.DOF(); i++) {
+        if ( i < transCfg.PosDOF() ) {
+          transCfg.SetSingleParam(i, transDir[i]);
+          factor += pow(transDir[i],2);
+        } else transCfg.SetSingleParam(i, 0.0);
+      }
+      transCfg.multiply(transCfg,posRes/sqrt(factor));
+    } else {
+      if (_debug) cout << "CLEARANCE CFG: " << transCfg << endl;
+      transCfg.FindIncrement(_cfg,transCfg,&nTicks,posRes,oriRes);
+      for (int i=transCfg.PosDOF(); i<transCfg.DOF(); i++) {
+        if ( transCfg.GetSingleParam(i) > 0.5 )
+          transCfg.SetSingleParam(i,transCfg.GetSingleParam(i)-1.0, false);
+      }
+    }
+  if (_debug) cout << "TRANS CFG: " << transCfg << endl;
+  } else return false;
 
   // Check if valid and outside obstacle
   while ( !tmpValidity ) {
+    tmpInfo.ResetVars();
+    tmpInfo.ret_all_info = true;
+
     heldCfg = tmpCfg;
     tmpCfg.multiply(transCfg,stepSize);
     tmpCfg.add(_cfg, tmpCfg);
+
     tmpValidity = vc->IsValid(vcm,tmpCfg,_env,_stats,tmpInfo,true,&call);
     tmpValidity = tmpValidity && !vcm->isInsideObstacle(tmpCfg,_env,tmpInfo);
     if ( tmpValidity ) {
       tmpValidity = tmpValidity && prevValidity;
-      if ( !prevValidity )
+      if ( !prevValidity ) // Extra Step TODO: Test if necessary
         prevValidity = true;
     }
     inBBX = tmpCfg.InBoundingBox(_env,_bb);
     if ( !inBBX ) { 
-      if (_debug) cout << "Fell out of BBX, error out... " << endl;
+      if (_debug) cout << "ERROR: Fell out of BBX, error out... " << endl;
       return false;
     }
     stepSize += 1.0;
@@ -328,9 +340,9 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
 }
 
 bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
-    string _vc, string _dm, bool _pExact, int _penetration, bool _debug) {
+    string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional) {
   return PushFromInsideObstacle(_mp, _cfg, _env, _env->GetBoundingBox(), _stats,
-    _vc, _dm, _pExact, _penetration, _debug);
+    _vc, _dm, _pExact, _penetration, _debug, _positional);
 } 
 
 //***************************************************************//
@@ -339,22 +351,26 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
 // algorithm stepping out at the resolution till the medial axis //
 // is found, determined by the clearance.                        //
 //***************************************************************//
-bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
-    string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, bool _debug) {
+bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+    StatClass& _stats, string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, 
+    int _hLen, bool _debug, bool _positional) {
   // Initialization
   string call("MedialAxisUtility::PushCfgToMedialAxis");
-  if (_debug) cout << call << endl << "CfgType: " << _cfg << " eps: " << _eps << endl;
-  shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetMethod(_dm);
-  ValidityChecker<CfgType>*             vc  = _mp->GetValidityChecker();
-  shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(_vc);
+  if (_debug) cout << call << endl << "Cfg: " << _cfg << " eps: " << _eps << endl;
+  shared_ptr<DistanceMetricMethod>    dm    = _mp->GetDistanceMetric()->GetMethod(_dm);
+  ValidityChecker<CfgType>*           vc    = _mp->GetValidityChecker();
+  shared_ptr<ValidityCheckerMethod>   vcm   = vc->GetVCMethod(_vc);
+  shared_ptr<MultiBody>               robot = _env->GetMultiBody(_env->GetRobotIndex());
 
   // Variables
   Vector3D transDir, dif;
-  vector<double> gDif;
-  CDInfo   tmpInfo;
-  CfgType  transCfg, tmpCfg, heldCfg;
-  double   stepSize=0.0, cbStepSize=0.0, factor=0.0, res=_env->GetPositionRes();// TODO: ori_res=env->GetOrientationRes();
-  bool     inBBX=true, goodTmp=true, valid, inside=vcm->isInsideObstacle(_cfg,_env,tmpInfo);
+  CDInfo   tmpInfo,prevInfo;
+  CfgType  transCfg, tmpCfg, heldCfg, tmpTransCfg;
+  double   stepSize=0.0, cbStepSize=0.0, factor=0.0, posRes=_env->GetPositionRes(), oriRes=_env->GetOrientationRes();
+  bool     inBBX=true, goodTmp=true, inside=vcm->isInsideObstacle(_cfg,_env,tmpInfo);
+  int      nTicks;
+
+  // Should already be in free space
   if ( inside ) 
     return false;
 
@@ -363,68 +379,92 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
   tmpInfo.ret_all_info = true;
   tmpCfg = _cfg;
 
-  // Determine direction to move and clearance
-  valid = CalculateCollisionInfo(_mp,_cfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX);
-  if ( !valid ) 
-    return false;
-
-  transDir = tmpInfo.robot_point - tmpInfo.object_point;
-  for (int i=0; i<transCfg.DOF(); i++) {
-    if ( i < transCfg.PosDOF() ) 
-      transCfg.SetSingleParam(i, transDir[i]);
-    else                          
-      transCfg.SetSingleParam(i, 0.0);
-  }
-  dif[0] = transCfg.GetSingleParam(0);
-  dif[1] = transCfg.GetSingleParam(1);
-  dif[2] = transCfg.GetSingleParam(2);
-  factor = res/sqrt(dif[0]*dif[0] + dif[1]*dif[1] + dif[2]*dif[2]);
-  transCfg.multiply(transCfg,factor);
-  if (_debug) cout << "TRANS CfgType: " << transCfg << endl;
+  // Determine positional direction to move
+  if ( CalculateCollisionInfo(_mp,_cfg,transCfg,_env,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX,_positional) ) {
+    prevInfo = tmpInfo;
+    if ( _cExact ) { // Exact uses workspace witness point for transDir
+      Vector3D transDir = tmpInfo.robot_point - tmpInfo.object_point;
+      for (int i=0; i<transCfg.DOF(); i++) {
+        if ( i < transCfg.PosDOF() ) {
+          transCfg.SetSingleParam(i, transDir[i]);
+          factor += pow(transDir[i],2);
+        } else transCfg.SetSingleParam(i, 0.0);
+      }
+      transCfg.multiply(transCfg,posRes/sqrt(factor));
+    } else { // Approx uses clearance CFG for transDir
+      if (_debug) cout << "CLEARANCE CFG: " << transCfg << endl;
+      transCfg.FindIncrement(_cfg,transCfg,&nTicks,posRes,oriRes);
+      transCfg.negative(transCfg);
+      for (int i=transCfg.PosDOF(); i<transCfg.DOF(); i++) {
+        if ( transCfg.GetSingleParam(i) > 0.5 )
+          transCfg.SetSingleParam(i,transCfg.GetSingleParam(i) - 1.0, false);
+      }
+    }
+    if (_debug) cout << "TRANS CFG: " << transCfg << endl;
+  } else return false;
 
   // Initialize temp Info
-  int segLen=_hLen, posCnt=0, negCnt=0, zroCnt=0, stepsTaken, tcc=0;
-  bool peakFound = false, broke=false, checkBack=false;
-  //vector<double> segDists(segLen,0), seg_deltas(segLen-1,0);
+  int posCnt=0, negCnt=0, zroCnt=0, stepsTaken, tcc=0;
+  bool peakFound=false, wpMoved=false, checkBack=false, fellOut=false;;
   deque<double> segDists;
   deque<CfgType> segCfgs;
-  double maxDist=0.0;
+  double maxDist=0.0, errEps=0.00000001; // Arbitrary Value for errEps
 
   // Determine gap for medial axis
-  while ( !peakFound ) {
+  while ( !peakFound && !wpMoved) {
 
     // Increment
-		if ( checkBack ) tmpCfg.multiply(transCfg,cbStepSize);
+    heldCfg = tmpCfg;
+    if ( checkBack ) tmpCfg.multiply(transCfg,cbStepSize);
     else             tmpCfg.multiply(transCfg,stepSize);
     tmpCfg.add(_cfg, tmpCfg);
+
+    // Test for in BBX and inside obstacle
     inside = vcm->isInsideObstacle(tmpCfg,_env,tmpInfo);
     inBBX = tmpCfg.InBoundingBox(_env,_bb);
-
     bool tmpVal = (inside || !inBBX);
-    VDAddTempCfg(tmpCfg, tmpVal);
+    if (_debug) VDAddTempCfg(tmpCfg, tmpVal);
+    if (_debug) VDClearLastTemp();
     tcc++;
 
     // If inside obstacle or out of the bbx, step back
     if ( inside || !inBBX) {
       if ( !inBBX && !_useBBX ) 
         return false;
-      if ( segCfgs.size() > 0 ) 
+      if ( segCfgs.size() > 0 ) {
+        fellOut = true;
         break;
-      else                       
+      } else                       
         return false;
-    } 
-    else {
-      // If tmp is valid, move gap on to next step
+    } else {
+      tmpInfo.ResetVars();
+      tmpInfo.ret_all_info = true;
+
+      // If tmp is valid, move on to next step
       if ( vc->IsValid(vcm,tmpCfg,_env,_stats,tmpInfo,true,&call) ) {
-        if (_debug) cout << "TMP CfgType: " << tmpCfg;
-        goodTmp = CalculateCollisionInfo(_mp,tmpCfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX);
-        if ( !goodTmp && broke ) 
-          return false; // If can't compute twice in a row, error out.
-        broke = !goodTmp;
+        if (_debug) cout << "TMP Cfg: " << tmpCfg;
+        goodTmp = CalculateCollisionInfo(_mp,tmpCfg,tmpTransCfg,_env,_stats,tmpInfo,_vc,
+                                         _dm,_cExact,_clearance,0,_useBBX,_positional);
         if ( goodTmp ) {
-          if (_debug) cout << "  clearance: " << tmpInfo.min_dist;
+          if ( _cExact ) { // If exact, check witness points
+            Vector3D transDir = tmpInfo.object_point - prevInfo.object_point;
+            if (_debug) cout << " obst: " << tmpInfo.nearest_obst_index;
+            double tmpDist = 0.0;
+            for (int i=0; i<transCfg.PosDOF(); i++)
+              tmpDist += pow(transDir[i],2);
+            tmpDist = sqrt(tmpDist);
+            if (tmpDist > robot->GetBoundingSphereRadius()*2.0 ) { // TODO: might be better value
+              if (_debug) cout << " WP moved: " << tmpDist;
+              peakFound = true; 
+              wpMoved=true;
+            }
+          }
+          prevInfo = tmpInfo;
+          if (_debug) cout << " clearance: " << tmpInfo.min_dist;
           ++stepsTaken;
-          if ( int(segDists.size()) > segLen ) {
+
+          // Update clearance history distances
+          if ( int(segDists.size()) > _hLen ) {
             segDists.erase(segDists.begin());
             segCfgs.erase(segCfgs.begin());
           }
@@ -436,89 +476,114 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
             segCfgs.push_back(tmpCfg);
             checkBack=false;
           }
-        } 
-        else {
+        }
+        else { // Couldn't calculate clearance info
           if (_debug) cout << "BROKE!" << endl;
           return false;
         }
-        stepSize += 1.0;
 
-        maxDist = segDists[0]; posCnt=0; negCnt=0; zroCnt=0;
-        for ( int i=0; i<int(segDists.size())-1; i++ ) {
-          double tmp = segDists[i+1] - segDists[i];
-
-          if      ( tmp > 0.0 ) ++posCnt;
-          else if ( tmp < 0.0 ) ++negCnt;
-          else                  ++zroCnt;
-          maxDist = (maxDist>segDists[i+1])?maxDist:segDists[i+1];
-        }
-        if (_debug) cout << "  Pos/Zero/Neg counts: " << posCnt << "/" << zroCnt << "/" << negCnt << endl;
-        if ( (negCnt > 0) && (negCnt >= posCnt) ) {
-          if (posCnt < 1 && zroCnt < 1) { // Only see negative, check back
-            --cbStepSize;
-            checkBack = true;
-          } else {
-            peakFound = true;
-            if (_debug) {
-              cout << "Found peak!  Dists: ";
-              for (int i=0; i<int(segDists.size()); i++)
-                cout << segDists[i] << " ";
-              cout << endl;
-            }
+        if ( !peakFound ) { // If no witness point success or approx, enumerate deltas to find peak
+          maxDist = segDists[0]; posCnt=0; negCnt=0; zroCnt=0;
+          for ( int i=0; i<int(segDists.size())-1; i++ ) {
+            double tmp = segDists[i+1] - segDists[i];
+            if      ( tmp >  errEps ) ++posCnt;
+            else if ( tmp < -errEps ) ++negCnt;
+            else                      ++zroCnt;
+            maxDist = (maxDist>segDists[i+1])?maxDist:segDists[i+1];
           }
-        } else if ( (zroCnt > 0) && (zroCnt >= posCnt) ) {
-          if (posCnt < 1 && zroCnt < 1) { // Only see zeros, check back
-            --cbStepSize;
-            checkBack = true;
-          } else {
-            peakFound = true;
-            if (_debug) {
-              cout << "Found peak!  Dists: ";
-              for (int i=0; i<int(segDists.size()); i++)
-                cout << segDists[i] << " ";
-              cout << endl;
+          if (_debug) cout << "  Pos/Zero/Neg counts: " << posCnt << "/" << zroCnt << "/" << negCnt << endl;
+          if ( ( (negCnt > 0) && (negCnt > posCnt) ) || 
+               ( (zroCnt > 0) && (zroCnt > posCnt) ) ) {
+            if ( (posCnt < 1 && zroCnt < 1) ||
+                 (posCnt < 1 && negCnt < 1) ){ // Only see negatives or zeros, check back
+              --cbStepSize;
+              --stepSize;
+              checkBack = true;
+            } else {
+              peakFound = true;
+              if (_debug) {
+                cout << "Found peak!  Dists: ";
+                for (int i=0; i<int(segDists.size()); i++)
+                  cout << segDists[i] << " ";
+                cout << endl;
+              }
             }
+          } else { // No peak found
+            checkBack = false;
           }
-        } else {
-          checkBack = false;
-        }
-
-      } 
+				}
+        // Increment step size
+        if ( !wpMoved && !peakFound )
+          stepSize += 1.0;
+      }
       else { // Else reduce step size or fall out of the loop
         return false;
       }
     }
   }
 
-  for (int i=0; i<tcc; i++)
-    VDClearLastTemp();
+  // Check if there are enough cfgs
+  if ( segCfgs.size() < 2 )
+    return false;
 
   // Variables for modified binary search
   CfgType startCfg, midSCfg, midMCfg, midECfg, endingCfg;
-  Cfg* difCfg = _cfg.CreateNewCfg();
-  double gapDist, prevGap;
+  double gapDist, prevGap, lBound, uBound, middle, middleS, middleE;
   int attempts=0, maxAttempts=20, badPeaks=0, maxBadPeaks=10, peak;
-  bool peaked=false;
-  vector<double> dists(5,0), deltas(4,0);
+  bool passed=false, peaked=false;
+  vector<double> dists(5,0), deltas(4,0), distsFromMax(5,0);
 
   // Setup start, middle and end CfgTypes  
-  startCfg = segCfgs[0];
-  endingCfg = segCfgs[segCfgs.size()-1];
-  midMCfg.add(startCfg, endingCfg);
-  midMCfg.divide(midMCfg,2);
-  CalculateCollisionInfo(_mp,startCfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX);
-  dists[0] = tmpInfo.min_dist;
-  CalculateCollisionInfo(_mp,midMCfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX);
-  dists[2] = tmpInfo.min_dist;
-  CalculateCollisionInfo(_mp,endingCfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX);
-  dists[4] = tmpInfo.min_dist;
+  startCfg  = (wpMoved)?(heldCfg):(segCfgs[0]);
+  endingCfg = (wpMoved)?(tmpCfg):(segCfgs[segCfgs.size()-1]);
+  ostringstream strng;
+  strng << "Binary Cfgs: ";
+  if (_debug) {
+    VDComment(strng.str());
+    VDAddTempCfg(startCfg, true);
+    VDAddTempCfg(endingCfg, true);
+  }
 
+  if (_debug) cout << "Calculating Mid... stepSize/cbStepSize: " << stepSize << "/" << cbStepSize << endl;
+  uBound = (fellOut)?(stepSize-1.0):(stepSize);
+  if (wpMoved || fellOut) {
+    lBound = uBound-1.0;
+	} else {
+    if (segCfgs.size() < (stepSize - cbStepSize))
+      lBound = stepSize - segCfgs.size();
+    else
+      lBound = cbStepSize;
+  }
+  middle = (lBound+uBound)/2.0;
+  if (_debug) cout << "Lower and upper bounds: " << lBound << "/" << middle << "/" << uBound  << endl;
+  midMCfg.multiply(transCfg,middle);
+  midMCfg.add(_cfg,midMCfg);
+  
+  if (_debug) VDClearComments();
   if (_debug) cout << "start/mid/end: " << endl << startCfg << endl << midMCfg << endl << endingCfg << endl;
 
-  midSCfg.add(startCfg, midMCfg);
-  midSCfg.divide(midSCfg,2);
-  midECfg.add(midMCfg, endingCfg);
-  midECfg.divide(midECfg,2);
+  passed = CalculateCollisionInfo(_mp,startCfg,tmpTransCfg,_env,_stats,tmpInfo,_vc,
+                                  _dm,_cExact,_clearance,0,_useBBX,_positional);
+  if ( !passed ) return false;
+  dists[0] = tmpInfo.min_dist;
+
+  passed = CalculateCollisionInfo(_mp,midMCfg,tmpTransCfg,_env,_stats,tmpInfo,_vc,
+                                  _dm,_cExact,_clearance,0,_useBBX,_positional);
+  if ( !passed ) return false;
+  dists[2] = tmpInfo.min_dist;
+
+  passed = CalculateCollisionInfo(_mp,endingCfg,tmpTransCfg,_env,_stats,tmpInfo,_vc,
+                                  _dm,_cExact,_clearance,0,_useBBX,_positional);
+  if ( !passed ) return false;
+  dists[4] = tmpInfo.min_dist;
+
+  middleS = (lBound+middle)/2.0;
+  midSCfg.multiply(transCfg,middleS);
+  midSCfg.add(_cfg,midSCfg);
+
+  middleE = (middle+uBound)/2.0;
+  midECfg.multiply(transCfg,middleE);
+  midECfg.add(_cfg,midECfg);  
 
   if (_debug) {
     cout << "dists: ";
@@ -527,135 +592,149 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
     cout << endl;
   }
 
-  // TODO: Update to DIST, not GAP
-  // Get collision info and gap distance
-  difCfg->subtract(startCfg,endingCfg);
-  gDif.clear();
-  for(int i=0; i<startCfg.DOF(); ++i) {
-    if ( i < startCfg.PosDOF() ) 
-      gapDist += (startCfg.GetSingleParam(i) - endingCfg.GetSingleParam(i))*
-        (startCfg.GetSingleParam(i) - endingCfg.GetSingleParam(i));
-    else                          
-      gapDist += (DirectedAngularDistance(startCfg.GetSingleParam(i), endingCfg.GetSingleParam(i)))*
-        (DirectedAngularDistance(startCfg.GetSingleParam(i), endingCfg.GetSingleParam(i)));
-  }
-  gapDist = sqrt(gapDist);
+  gapDist = dm->Distance(_env,startCfg,endingCfg);
   prevGap = gapDist;
 
+  if (_debug) cout << "start/mids/end: " << endl << startCfg << endl << midSCfg 
+                   << endl << midMCfg << endl << midECfg << endl << endingCfg << endl;
+
   do { // Modified Binomial search to find peaks
-    ostringstream strs;
-    strs << "Peak Clearance: " << dists[2];
-    VDComment(strs.str());
-    VDAddTempCfg(midMCfg, true);
-    VDClearLastTemp();
-    VDClearComments();
 
+    if (_debug) {
+      VDAddTempCfg(midMCfg, true);
+      VDClearLastTemp();
+    }
+
+    // Update Cfgs
     attempts++;
-    midSCfg.add(startCfg, midMCfg); 
-    midSCfg.divide(midSCfg,2);
-    midECfg.add(midMCfg, endingCfg); 
-    midECfg.divide(midECfg,2);
+    middle  = (lBound+uBound)/2.0;
+    middleS = (lBound+middle)/2.0;
+    middleE = (middle+uBound)/2.0;
+    if (_debug) cout << "Bounds: " << lBound << "/" << middleS << "/" << middle << "/" << middleE << "/" << uBound << endl;
+    midSCfg.multiply(transCfg,middleS);
+    midSCfg.add(_cfg,midSCfg);
+    midECfg.multiply(transCfg,middleE);
+    midECfg.add(_cfg,midECfg);  
 
-    CalculateCollisionInfo(_mp,midSCfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX);
+    passed = CalculateCollisionInfo(_mp,midSCfg,tmpTransCfg,_env,_stats,tmpInfo,_vc,
+                                    _dm,_cExact,_clearance,0,_useBBX,_positional);
+    if ( !passed ) return false;
     dists[1] = tmpInfo.min_dist;
-    CalculateCollisionInfo(_mp,midECfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX);
+
+    passed = CalculateCollisionInfo(_mp,midECfg,tmpTransCfg,_env,_stats,tmpInfo,_vc,
+                                    _dm,_cExact,_clearance,0,_useBBX,_positional); 
+    if ( !passed ) return false;
     dists[3] = tmpInfo.min_dist;
 
     // Compute Deltas and Max Distance
     deltas.clear();
+    distsFromMax.clear();
     maxDist = (dists[0]);
     if (_debug) cout << "Deltas: ";
     for ( int i=0; i<int(dists.size())-1; i++ ) {
       double tmp = dists[i+1] - dists[i];
-      if (_debug) cout << tmp << " ";
+      if (_debug) cout << " " << tmp;
       deltas.push_back(tmp);
       maxDist = (maxDist>dists[i+1])?maxDist:dists[i+1];
     } 
+    for ( int i=0; i<int(dists.size()); i++ )
+      distsFromMax.push_back(maxDist-dists[i]);
+
     if (_debug) cout << endl;
 
     // Determine Peak
-    if ( deltas[0] > 0 && deltas[1] <= 0 && dists[1] == maxDist) {
+    if ( deltas[0] > errEps && deltas[1] <= errEps && distsFromMax[1] < errEps) {
       peak = 1;
       endingCfg = midMCfg;
       midMCfg = midSCfg;
       dists[4] = dists[2];
       dists[2] = dists[1];
+      uBound = middle;
     } 
-    else if ( deltas[1] > 0 && deltas[2] <= 0 && dists[2] == maxDist) {
+    else if ( deltas[1] > errEps && deltas[2] <= errEps && distsFromMax[2] < errEps) {
       peak = 2;
       startCfg = midSCfg;
       endingCfg = midECfg;
       dists[0] = dists[1];
       dists[4] = dists[3];
+      lBound = middleS;
+      uBound = middleE;
     } 
-    else if ( deltas[2] > 0 && deltas[3] <= 0 && dists[3] == maxDist) {
+    else if ( deltas[2] > errEps && deltas[3] <= errEps && distsFromMax[3] < errEps) {
       peak = 3;
       startCfg = midMCfg;
       midMCfg = midECfg;
       dists[0] = dists[2];
       dists[2] = dists[3];
+      lBound = middle;
     } 
     else {
-      if ( deltas[0] > 0 && deltas[1] > 0 && deltas[2] > 0 && deltas[3] > 0) {
+      if ( deltas[0] > errEps && deltas[1] > errEps && deltas[2] > errEps && deltas[3] > errEps) {
         peak = 3;
         startCfg = midMCfg;
         midMCfg = midECfg;
         dists[0] = dists[2];
         dists[2] = dists[3];
+        lBound = middle;
       } 
-      else if ( deltas[0] < 0 && deltas[1] < 0 && deltas[2] < 0 && deltas[3] < 0) {
+      else if ( deltas[0] < -errEps && deltas[1] < -errEps && deltas[2] < -errEps && deltas[3] < -errEps) {
         peak = 1;
         endingCfg = midMCfg;
         midMCfg = midSCfg;
         dists[4] = dists[2];
         dists[2] = dists[1];
+        uBound = middle;
       } 
       else {
         // No peak found, recalculate old, mid and new clearance
         badPeaks++;
         peak = -1;
-        if ( CalculateCollisionInfo(_mp,startCfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX) 
+
+        if ( CalculateCollisionInfo(_mp,startCfg,tmpTransCfg,_env,_stats,tmpInfo,_vc,
+                                    _dm,_cExact,_clearance,0,_useBBX,_positional) 
              && dists[0] >= tmpInfo.min_dist )
           dists[0] = tmpInfo.min_dist;
-        if ( CalculateCollisionInfo(_mp,midMCfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX) 
+
+        if ( CalculateCollisionInfo(_mp,midMCfg,tmpTransCfg,_env,_stats,tmpInfo,_vc,
+                                    _dm,_cExact,_clearance,0,_useBBX,_positional) 
              && dists[2] >= tmpInfo.min_dist )
           dists[2] = tmpInfo.min_dist;
-        if ( CalculateCollisionInfo(_mp,endingCfg,_env,_bb,_stats,tmpInfo,_vc,_dm,_cExact,_clearance,0,_useBBX) 
+
+        if ( CalculateCollisionInfo(_mp,endingCfg,tmpTransCfg,_env,_stats,tmpInfo,_vc,
+                                    _dm,_cExact,_clearance,0,_useBBX,_positional) 
              && dists[4] >= tmpInfo.min_dist )
           dists[4] = tmpInfo.min_dist;
       }
     }
     if (_debug) cout << " peak: " << peak << "  cfg: " << midMCfg;
-
-    // TODO: Update to DIST, not GAP
-    // Check if minimum gap distance has been acheived
-    difCfg->subtract(startCfg,endingCfg);
-    gDif.clear(); 
-    gapDist = 0.0;
-    for(int i=0; i<startCfg.DOF(); ++i) {
-      if ( i < startCfg.PosDOF() ) gapDist += (startCfg.GetSingleParam(i) - endingCfg.GetSingleParam(i))*
-        (startCfg.GetSingleParam(i) - endingCfg.GetSingleParam(i));
-      else                          
-        gapDist += (DirectedAngularDistance(startCfg.GetSingleParam(i), endingCfg.GetSingleParam(i)))*
-          (DirectedAngularDistance(startCfg.GetSingleParam(i), endingCfg.GetSingleParam(i)));
-    }
-
-    gapDist = sqrt(gapDist);
+    gapDist = dm->Distance(_env,startCfg,endingCfg);
     if (_debug) cout << " gap: " << gapDist << endl;
     if ( _eps >= gapDist )
       peaked = true;
 
   } while ( !peaked && attempts < maxAttempts && badPeaks < maxBadPeaks );
 
+  if (_debug) {
+    ostringstream strs;
+    strs << "Final CFG";
+    VDComment(strs.str());
+    VDAddTempCfg(midMCfg, true);
+    VDClearLastTemp();
+    VDClearComments();
+    VDClearLastTemp();
+    VDClearLastTemp();
+  }
+
   _cfg = midMCfg;
-  if (_debug) cout << "FINAL CfgType: " << _cfg << " steps: " << stepSize << endl;
+  if (_debug) cout << "FINAL Cfg: " << _cfg << " steps: " << stepSize << endl;
   return true;
 }
 
 bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
-    string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, bool _debug) {
+    string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, 
+    int _hLen, bool _debug, bool _positional) {
   return PushCfgToMedialAxis(_mp, _cfg, _env, _env->GetBoundingBox(), _stats,
-    _vc, _dm, _cExact, _clearance, _useBBX, _eps, _hLen, _debug);
+    _vc, _dm, _cExact, _clearance, _useBBX, _eps, _hLen, _debug, _positional);
 }
 
 //*********************************************************************//
@@ -663,18 +742,21 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatC
 //   This is a wrapper function for getting the collision information  //
 // for the medial axis computation, calls either approx or exact       //
 //*********************************************************************//
-bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, 
-    string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX) {
+bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
+    shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
+    bool _exact, int _clearance, int _penetration, bool _useBBX, bool _positional) {
   if ( _exact ) 
     return GetExactCollisionInfo(_mp,_cfg,_env,_bb,_stats,_cdInfo,_vc,_useBBX);
-  else         
-    return GetApproxCollisionInfo(_mp,_cfg,_env,_bb,_stats,_cdInfo,_vc,_dm,_clearance,_penetration,_useBBX);
+  else
+    return GetApproxCollisionInfo(_mp,_cfg,_clrCfg,_env,_bb,_stats,_cdInfo,_vc,
+                                  _dm,_clearance,_penetration,_useBBX,_positional);
 }
 
-bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
-    string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX) {
-  return CalculateCollisionInfo(_mp, _cfg, _env, _env->GetBoundingBox(), _stats, _cdInfo, 
-    _vc, _dm, _exact, _clearance, _penetration, _useBBX);
+bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats, 
+    CDInfo& _cdInfo, string _vc, string _dm, bool _exact, int _clearance, int _penetration, 
+    bool _useBBX, bool _positional) {
+  return CalculateCollisionInfo(_mp, _cfg, _clrCfg, _env, _env->GetBoundingBox(), _stats, _cdInfo, 
+    _vc, _dm, _exact, _clearance, _penetration, _useBBX,_positional);
 }
 
 //*********************************************************************//
@@ -704,7 +786,6 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
   boost::shared_ptr<MultiBody> robot = _env->GetMultiBody(_env->GetRobotIndex());
   std::pair<double,double> bbxRange;
 
-  // TODO: Update to use DIST, not literal
   // Find closest point between robot and bbx, set if less than min dist from obstacles
   for(int m=0; m < robot->GetFreeBodyCount(); m++) {
     GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
@@ -718,7 +799,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
           }
           _cdInfo.object_point[k] = bbxRange.first; // Lower Bound
           _cdInfo.min_dist = poly.vertexList[j][k]-bbxRange.first;
-          _cdInfo.nearest_obst_index = -(k+1); // Different bbx face
+          _cdInfo.nearest_obst_index = -(k*2);
         }
         if ( (bbxRange.second-poly.vertexList[j][k]) < _cdInfo.min_dist ) {
           for (int l=0; l<_cfg.PosDOF(); l++) {// Save new closest point
@@ -727,7 +808,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
           }
           _cdInfo.object_point[k] = bbxRange.second; // Upper Bound
           _cdInfo.min_dist = bbxRange.second-poly.vertexList[j][k];
-          _cdInfo.nearest_obst_index = -(k+1);
+          _cdInfo.nearest_obst_index = -(k*2+1);
         }
       }
     }
@@ -747,36 +828,44 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Sta
 // specified number of rays are sent out till they change in validity. //
 // The shortest ray is then considered the best calididate.            //
 //*********************************************************************//
-bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
-    CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX) {
+bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
+    shared_ptr<BoundingBox> _bb, StatClass& _stats,CDInfo& _cdInfo, string _vc, string _dm, 
+    int _clearance, int _penetration, bool _useBBX, bool _positional) {
 
   // Initialization
-  string call = "MedialAxisUtility::getApproxCollisionInfo";
+  string call = "MedialAxisUtility::GetApproxCollisionInfo";
   shared_ptr<DistanceMetricMethod>  dm  = _mp->GetDistanceMetric()->GetMethod(_dm);
   ValidityChecker<CfgType>*         vc  = _mp->GetValidityChecker();
   shared_ptr<ValidityCheckerMethod> vcm = vc->GetVCMethod(_vc);
 
+
+  // Calculate MaxRange for dist calc
+  double maxRange(0.0);
+  for(int i=0; i< _cfg.PosDOF(); ++i) {
+		std::pair<double,double> range = _env->GetBoundingBox()->GetRange(i);
+    double tmpRange = range.second-range.first;
+    if(tmpRange > maxRange) maxRange = tmpRange;
+  }
+
   // If in BBX, check validity to get _cdInfo, return false if not valid
-  if ( !_cfg.InBoundingBox(_env,_bb) ) 
+  if ( !_cfg.InBoundingBox(_env,_bb) )
     return false;
+
   _cdInfo.ResetVars();
   _cdInfo.ret_all_info = true;	
-  bool initInside   = vcm->isInsideObstacle(_cfg,_env,_cdInfo);                  // Initially Inside Obst
-  bool initValidity = vc->IsValid(vcm,_cfg,_env,_stats,_cdInfo,true,&call);       // Initial Validity
-  bool initInBBX    = _cfg.InBoundingBox(_env,_bb);
+
+  bool initInside   = vcm->isInsideObstacle(_cfg,_env,_cdInfo);             // Initially Inside Obst
+  bool initValidity = vc->IsValid(vcm,_cfg,_env,_stats,_cdInfo,true,&call); // Initial Validity
+  bool initInBBX    = true; // _cfg.InBoundingBox(_env); Already Tested Above
   initValidity = initValidity && !initInside;
   if ( _useBBX ) 
     initValidity = (initValidity && initInBBX);
-
-  // Set Robot point in positional space // TODO: Higher DOF
-  for (int i=0; i<_cfg.PosDOF(); i++)
-    _cdInfo.robot_point[i] = _cfg.GetSingleParam(i);
 
   // Setup Major Variables and Constants:
   CDInfo tmpInfo;
   Vector3D dif;
   int numRays;
-  double res=_env->GetPositionRes();// TODO: ori_res=env->GetOrientationRes();
+  double posRes=_env->GetPositionRes(), oriRes=_env->GetOrientationRes();
 
   // Generate 'numRays' random directions at a distance 'dist' away from 'cfg'
   if ( initValidity ) 
@@ -784,24 +873,44 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
   else                 
     numRays = _penetration;    
 
-  vector<Cfg*> directions, candIn, candOut;
+  vector<Cfg*> directions, candIn;
   vector<Cfg*> tick;
   vector<pair<Cfg*,double> > incr;
+  vector<int> candTick;
+  int nTicks;
+  candIn.clear();
 
   // Setup translation rays
   for(int i=0; i<numRays; i++) {
     Cfg* tmp1 = _cfg.CreateNewCfg();
     tick.push_back(tmp1);
     Cfg* tmp2 = _cfg.CreateNewCfg();
-    tmp2->GetRandomRayPos(res, _env);
-    incr.push_back(make_pair(tmp2, tmp2->OrientationMagnitude() +
-          tmp2->PositionMagnitude()));
+    tmp2->GetRandomRay(posRes/maxRange, _env, dm, false);
+    if ( _positional ) { // Use only positional dofs
+      double factor=0.0;
+      for (int i=0; i<tmp2->DOF(); i++) {
+        if ( i < tmp2->PosDOF() ) {
+          factor += pow(tmp2->GetSingleParam(i), 2);
+        } else tmp2->SetSingleParam(i, 0.0);
+      }
+      tmp2->multiply(*tmp2, posRes/sqrt(factor), false);
+    }
+    tmp2->add(*tmp1,*tmp2);
+    Cfg* tmp3 = _cfg.CreateNewCfg();
+    tmp3->FindIncrement(*tmp1,*tmp2,&nTicks,posRes,oriRes);
+    for (int i=tmp3->PosDOF(); i<tmp3->DOF(); i++) {
+      if ( tmp3->GetSingleParam(i) > 0.5 )
+        tmp3->SetSingleParam(i,tmp3->GetSingleParam(i) - 1.0, false);
+    }
+    incr.push_back(make_pair(tmp3, tmp3->OrientationMagnitude() +
+          tmp3->PositionMagnitude()));
   }
 
   // Setup to step out along each direction:
   bool stateChangedFlag = false, currValidity, currInside, currInBBX;
   size_t lastLapIndex = -1, endIndex = -1;
-  int iterations = 0, maxIterations=1000, maxNumSteps = 25; // Arbitrary //TODO: Smarter number
+  int iterations = 0, maxIterations=10000; // Arbitrary TODO: Smarter maxIter number
+  CfgType tmpCfg;
 
   // Shoot out each ray to determine the candidates
   while ( !stateChangedFlag && iterations < maxIterations ) {
@@ -809,98 +918,111 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
     // For Each Ray
     for ( size_t i=0; i<incr.size(); ++i ) {
       tick[i]->Increment(*incr[i].first);
-      currInside   = vcm->isInsideObstacle(*tick[i],_env,_cdInfo);
+      currInside   = vcm->isInsideObstacle(*tick[i],_env,tmpInfo);
       currValidity = vc->IsValid(vcm,*tick[i],_env,_stats,tmpInfo,true,&call);
       currInBBX    = tick[i]->InBoundingBox(_env,_bb);
       currValidity = currValidity && !currInside;
+
+      tmpCfg = *tick[i];
+
       if ( _useBBX ) 
         currValidity = (currValidity && currInBBX);
       if ( currValidity != initValidity ) { // If Validity State has changed
         if ( lastLapIndex != i ) {
-          Cfg* candO = tick[i]->CreateNewCfg();
           Cfg* candI = tick[i]->CreateNewCfg();
           candI->subtract(*candI,*incr[i].first);
-          candOut.push_back(candO);
           candIn.push_back(candI);
+          candTick.push_back(i);
         } 
-        else
-          stateChangedFlag = true; // lastLapIndex == i, made full pass
         if ( lastLapIndex == endIndex )  // Set lastLapIndex to first ray changing state
-          lastLapIndex = i;
+          lastLapIndex = (i==0)?(incr.size()-1):(i-1);
       }
+      if (lastLapIndex == i)
+        stateChangedFlag = true; // lastLapIndex == i, made full pass
       if ( stateChangedFlag ) break; // Once validity changes, exit loop
     } // End for
   } // End while
 
-  if ( candIn.size() == 0 ) 
+  if ( candIn.size() == 0)
     return false;
 
-  // Refine each candidate to find the best one
-  _cdInfo.min_dist = MAX_DBL;
-  bool midValidity;
+  double low=0.0, mid=0.5, high=1.0;
+  Cfg* middleCfg = candIn[0]->CreateNewCfg();
+  bool midInside, midValidity, midInBBX, foundOne;
+  vector<bool> remove;
 
-  Cfg* innerCfg = candIn[0]->CreateNewCfg();
-  Cfg* outerCfg = candOut[0]->CreateNewCfg();
-  Cfg* midCfg = _cfg.CreateNewCfg();
-  Cfg* difCfg  = _cfg.CreateNewCfg();
-  double tmpDist;
+  // Binary search on candidates to find the best result
+  while (candIn.size() > 1) {
+    mid=(low+high)/2.0;
+    remove.clear();
+    foundOne=false;
+    for ( size_t i=0; i<candIn.size(); i++ ) {
 
-  for ( size_t i=0; i<candOut.size(); i++ ) {
-    innerCfg = candIn[i]->CreateNewCfg();
-    outerCfg = candOut[i]->CreateNewCfg();
-    midCfg   = _cfg.CreateNewCfg();
-    int j=0;
+      middleCfg->multiply(*incr[candTick[i]].first,mid);
+      middleCfg->add(*candIn[i],*middleCfg);
 
-    do {
-      // Calculate new midpoint
-      midCfg->add(*innerCfg,*outerCfg);
-      midCfg->divide(*midCfg,2);
-      midValidity = vc->IsValid(vcm,*midCfg,_env,_stats,tmpInfo,true,&call);
+      midInside   = vcm->isInsideObstacle(*middleCfg,_env,tmpInfo);
+      midValidity = vc->IsValid(vcm,*middleCfg,_env,_stats,tmpInfo,true,&call);
+      midInBBX    = middleCfg->InBoundingBox(_env,_bb);
+      midValidity = midValidity && !midInside;
+      if ( _useBBX ) 
+        midValidity = (midValidity && midInBBX);
 
-      if ( !(midCfg->InBoundingBox(_env,_bb)) || (midValidity != initValidity) ) { // If Outside BBX or Validity has changed
-        if ( initValidity ) 
-          *outerCfg = *midCfg;
-        else                 
-          *innerCfg = *midCfg;
+      if ( midValidity != initValidity ) { // If Validity State has changed
+        remove.push_back(false);
+        foundOne = true;
       } else {
-        if ( initValidity ) 
-          *innerCfg = *midCfg;
-        else                 
-          *outerCfg = *midCfg;
+        remove.push_back(true);
       }
-
-      // TODO: Update to use DIST, not literal
-      // Compute Real Dist
-      difCfg->subtract(*innerCfg,*outerCfg);
-      tmpDist = 0.0;
-      for (int j=0; j<_cfg.PosDOF(); j++)
-        tmpDist += difCfg->GetSingleParam(j)*difCfg->GetSingleParam(j);
-      tmpDist = sqrt(tmpDist);
-    } while ((tmpDist > res/100.0) && (++j <= maxNumSteps));
-
-    *midCfg = (initValidity)?*innerCfg:*outerCfg;
-    difCfg->subtract(*midCfg,_cfg);
-    tmpDist = 0.0;
-    for (int j=0; j<_cfg.PosDOF(); j++)
-      tmpDist += difCfg->GetSingleParam(j)*difCfg->GetSingleParam(j);
-    tmpDist = sqrt(tmpDist);
-
-    // Determine if new clearance is better than existing solution
-    if ( _cdInfo.min_dist > tmpDist ) {
-      if ( midCfg->InBoundingBox(_env,_bb) ) {
-        _cdInfo.min_dist = tmpDist;
-        for (int j=0; j<midCfg->PosDOF();j++)
-          _cdInfo.object_point[j] = midCfg->GetSingleParam(j);
-      } 
-      else 
-        _cdInfo.min_dist = 0;
+    }
+    
+    // If at least one good candidate is found, remove all known bad ones
+    if ( foundOne ) {
+      int offset=0;
+      for ( size_t i=0; i<remove.size(); i++ ) {
+        if ( remove[i] ) {
+					candIn.erase(candIn.begin() + ((int)i-offset));
+          candTick.erase(candTick.begin() + ((int)i-offset));
+          offset++;
+        }
+      }
+      high=mid;
+    } else {
+      low=mid;
     }
   }
-  return (_cdInfo.min_dist == 0)?false:true;
+
+  if ( initValidity ) { // Low may be initial cfg so keep looking
+    while (low == 0.0) {
+      mid=(low+high)/2.0;
+      middleCfg->multiply(*incr[candTick[0]].first,mid);
+      middleCfg->add(*candIn[0],*middleCfg);
+
+      midInside   = vcm->isInsideObstacle(*middleCfg,_env,tmpInfo);
+      midValidity = vc->IsValid(vcm,*middleCfg,_env,_stats,tmpInfo,true,&call);
+      midInBBX    = middleCfg->InBoundingBox(_env,_bb);
+      midValidity = midValidity && !midInside;
+      if ( _useBBX ) 
+        midValidity = (midValidity && midInBBX);
+      if ( midValidity != initValidity ) // If Validity State has changed
+        high=mid;
+      else
+        low=mid;
+    }
+    mid=low;
+  } else { // Pushed out, high is all we need
+    mid=high;
+  }
+  middleCfg->multiply(*incr[candTick[0]].first,mid);
+  middleCfg->add(*candIn[0],*middleCfg);
+  _clrCfg = *middleCfg;
+  _cdInfo.min_dist = dm->Distance(_env,*middleCfg,_cfg);
+
+  return (_cdInfo.min_dist < 0)?false:true;
 } // END getApproxCollisionInfo
 
-bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
-    CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX) {
-  return GetApproxCollisionInfo(_mp, _cfg, _env, _env->GetBoundingBox(), _stats,
-    _cdInfo, _vc, _dm, _clearance, _penetration, _useBBX);
+bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats,
+    CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional) {
+  return GetApproxCollisionInfo(_mp, _cfg, _clrCfg, _env, _env->GetBoundingBox(), _stats,
+    _cdInfo, _vc, _dm, _clearance, _penetration, _useBBX, _positional);
 }

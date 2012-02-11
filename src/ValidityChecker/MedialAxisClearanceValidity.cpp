@@ -22,6 +22,7 @@ MedialAxisClearanceValidity::MedialAxisClearanceValidity(XMLNodeReader& _node, M
 		m_historyLen = _node.numberXMLParameter("history_len", false, 5, 3, 1000, "History Length");
 		m_epsilon    = _node.numberXMLParameter("epsilon", false, 0.1, 0.0, 100.0, "Epsilon-Close to the MA");
 		m_clearance  = _node.numberXMLParameter("ma_clearance", false, 0.1, 0.0, 100.0, "Medial Axis Validity Clearance");
+		m_positional = _node.boolXMLParameter("positional", false, true, "Use only positional DOFs");
     m_history.clear();
 
   }
@@ -36,30 +37,21 @@ bool MedialAxisClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClas
     CfgType origCfg,tmpCfg;
     origCfg = _cfg;
     tmpCfg = _cfg;
-    PushToMedialAxis(GetMPProblem(),_env,tmpCfg,_stats,m_vcLabel,m_dmLabel,
-                     _cExact,m_cRay,_pExact,m_pRay,m_useBBX,m_epsilon,m_historyLen,false);
+    if ( !PushToMedialAxis(GetMPProblem(),_env,tmpCfg,_stats,m_vcLabel,m_dmLabel,_cExact,
+                           m_cRay,_pExact,m_pRay,m_useBBX,m_epsilon,m_historyLen,this->m_debug,m_positional) ) {
+      _cfg.SetLabel("VALID", false);
+      return false;
+    }
 
     m_history.push_back( make_pair(origCfg,tmpCfg) );
 
-    double gap = 0.0;
-		for(int i=0; i<_cfg.DOF(); ++i) {
-			if ( i < _cfg.PosDOF() ) gap += pow((tmpCfg.GetSingleParam(i)-_cfg.GetSingleParam(i)),2);
-			else                    gap += pow((DirectedAngularDistance(tmpCfg.GetSingleParam(i),_cfg.GetSingleParam(i))),2);
-		}
-
-    //double dist = dm->Distance(_env, tmpCfg, _cfg);
-    //bool result = dist < m_clearance;
-
-    bool result = sqrt(gap) < m_clearance;
+    double dist = dm->Distance(_env, tmpCfg, _cfg);
+    bool result = dist < m_clearance;
     _cfg.SetLabel("VALID", result);
     return result;
-
   }
 
-vector< pair<CfgType,CfgType> > MedialAxisClearanceValidity::GetHistory() {
-  return m_history;
-}
+vector< pair<CfgType,CfgType> > 
+MedialAxisClearanceValidity::GetHistory() { return m_history; }
 
-void MedialAxisClearanceValidity::ClearHistory() {
-  m_history.clear();
-}
+void MedialAxisClearanceValidity::ClearHistory() { m_history.clear(); }

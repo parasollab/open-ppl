@@ -18,15 +18,13 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod {
       IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
           CDInfo& _cdInfo, bool _enablePenetration, string *_callName);
 
-    virtual vector< pair<CfgType,CfgType> > GetHistory();
-    virtual void ClearHistory();
-
-    vector< pair<CfgType,CfgType> > m_history;
+    vector< pair<CfgType,CfgType> > GetHistory();
+    void ClearHistory();
 
   private:
     string m_dmLabel;
     string m_vcLabel;
-    bool m_useBBX;
+    bool m_useBBX,m_positional;
     string m_cType;
     string m_pType;
     int m_cRay;
@@ -34,6 +32,7 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod {
     int m_historyLen;
     double m_epsilon;
     double m_clearance;
+    vector< pair<CfgType,CfgType> > m_history;
 };
 
 #endif

@@ -218,6 +218,7 @@ class CollisionDetection : public  MPBaseObject {
   vector<cd_predefined> GetSelectedCDTypes() const;
   CollisionDetectionMethod* GetRAPID();
   CollisionDetectionMethod* GetPQP();
+  CollisionDetectionMethod* GetPQP_SOLID();
   CollisionDetectionMethod* GetVCLIP();
   CollisionDetectionMethod* GetSOLID();
  protected:
@@ -367,7 +368,7 @@ class Pqp : public CollisionDetectionMethod {
 
 class Pqp_Solid : public Pqp {
  public:
-  Pqp_Solid() : Pqp() {name = "PQP_solid";}
+  Pqp_Solid() : Pqp() {name = "PQP_SOLID";}
   virtual ~Pqp_Solid() {}
   virtual CollisionDetectionMethod* CreateCopy();
   virtual bool IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,

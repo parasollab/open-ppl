@@ -13,7 +13,7 @@ class EuclideanDistance : public DistanceMetricMethod {
     virtual ~EuclideanDistance();
     virtual void PrintOptions(ostream& _os) const;
     virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
-    virtual void ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg& _c);
+    virtual void ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg& _c, bool _norm=true);
     
   protected:
     virtual double ScaledDistance(Environment* _env, const Cfg& _c1, const Cfg& _c2, double _sValue);

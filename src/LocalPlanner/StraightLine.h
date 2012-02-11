@@ -26,7 +26,6 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
     // @}
 
     virtual void PrintOptions(ostream& _os);
-    virtual string GetVCMethod();
     virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
     /**
@@ -154,11 +153,6 @@ StraightLine<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << "binary search = " << " " << m_binarySearch << " ";
   _os << "vcMethod = " << " " << m_vcMethod << " ";
   _os << endl;
-}
-
-template <class CFG, class WEIGHT> string
-StraightLine<CFG, WEIGHT>::GetVCMethod() {
-  return m_vcMethod;
 }
 
 template <class CFG, class WEIGHT>
@@ -394,14 +388,6 @@ IsConnectedSLBinary(Environment *_env, StatClass& _stats,
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
 #endif
 
-  if(_savePath || _saveFailedPath) {
-    CFG tick = _c1;
-    for(int n=1; n<nTicks; ++n) {
-      tick.Increment(incr);
-      _lpOutput->path.push_back(tick);
-    }
-  }
-
   deque<pair<int,int> > Q;
   Q.push_back(make_pair(0, nTicks));
 
@@ -428,8 +414,11 @@ IsConnectedSLBinary(Environment *_env, StatClass& _stats,
 
     _cdCounter++;
     if(!midCfg.InBoundingBox(_env) ||
-        !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee) ) {
+       !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee) ) {
       _col=midCfg;
+      if(midCfg.InBoundingBox(_env) &&
+         !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee))
+        _col=midCfg;
       return false;
     } else {
       if(i+1 != mid) 
@@ -439,6 +428,13 @@ IsConnectedSLBinary(Environment *_env, StatClass& _stats,
     }
   }
 
+  if(_savePath || _saveFailedPath) {
+    CFG tick = _c1;
+    for(int n=1; n<nTicks; ++n) {
+      tick.Increment(incr);
+      _lpOutput->path.push_back(tick);
+    }
+  }
   _lpOutput->edge.first.SetWeight(_lpOutput->edge.first.GetWeight() + nTicks-1);
   _lpOutput->edge.second.SetWeight(_lpOutput->edge.second.GetWeight() + nTicks-1);
 

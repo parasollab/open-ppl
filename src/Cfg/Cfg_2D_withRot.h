@@ -93,7 +93,7 @@ public:
   virtual void GetRandomCfg(Environment *_env,shared_ptr<Boundary> _bb);
 
   ///Get a random vector whose magnitude is incr (note. the orienatation of of this Cfg is 0)
-  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm);
+  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm=true);
   //@}
   ///////////////////////////////////////////////////////////////////////////////////////////
   //

@@ -162,7 +162,7 @@ void Cfg_2D_withRot::GetRandomCfg(Environment* _env) {
 }
 
 
-void Cfg_2D_withRot::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
+void Cfg_2D_withRot::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
   //randomly sample params
   m_v.clear();
   for(int i=0; i<m_dof; ++i)
@@ -170,11 +170,11 @@ void Cfg_2D_withRot::GetRandomRay(double incr, Environment* env, shared_ptr<Dist
 
   //scale to appropriate length
   Cfg_2D_withRot origin;
-  dm->ScaleCfg(env, incr, origin, *this);
+  dm->ScaleCfg(env, incr, origin, *this, _norm);
 
   setPos(Point2d(m_v[0], m_v[1]));
-  
-  NormalizeOrientation();
+  if ( _norm )
+    NormalizeOrientation();
 }
 
 void Cfg_2D_withRot::GetRandomCfg_CenterOfMass(Environment *_env, shared_ptr<Boundary> _bb) {

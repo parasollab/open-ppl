@@ -53,12 +53,12 @@ double EuclideanDistance::ScaledDistanceImpl(Environment* _env,const Cfg& _c1, c
   return dReturn;
 }
 
-void EuclideanDistance::ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg& _c) {
+void EuclideanDistance::ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg& _c, bool _norm) {
   double originalLength = this->Distance(_env, _o, _c);
   double diff;
   do {
     for(int i=0; i<_c.DOF(); ++i)
-      _c.SetSingleParam(i, (_length/originalLength)*_c.GetSingleParam(i));
+      _c.SetSingleParam(i, (_length/originalLength)*_c.GetSingleParam(i),_norm);
     originalLength = this->Distance(_env, _o, _c);
     diff = _length - originalLength;
   } while((diff > 0.1) || (diff < -0.1)); 

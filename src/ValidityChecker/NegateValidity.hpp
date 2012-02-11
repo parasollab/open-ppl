@@ -23,10 +23,6 @@ public:
   IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, 
 	  CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName);
 
-  virtual vector< pair<CfgType,CfgType> > GetHistory();
-  virtual void ClearHistory();
-
-  
 private:
   string m_vcLabel;
   vector<typename ValidityChecker<CFG>::VCMethodPtr> m_vec_vcMethod;
@@ -36,8 +32,6 @@ private:
 template<typename CFG>
 NegateValidity<CFG>::
 NegateValidity(string label, std::vector<typename ValidityChecker<CFG>::VCMethodPtr> vec, ComposeNegate<InputIterator, ComposeFunctor<CFG> > _com_neg) : m_vcLabel(label), m_vec_vcMethod(vec), com_neg(_com_neg) {}
-
-
 
 template<typename CFG>
 NegateValidity<CFG>::
@@ -64,17 +58,5 @@ IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, CDInfo& _cdInfo,
   
   return com_neg(m_vec_vcMethod.begin(), com_func);
 }
-
-template<typename CFG>
-vector< pair<CfgType,CfgType> > 
-NegateValidity<CFG>::GetHistory() {
-  vector< pair<CfgType,CfgType> > empty;
-  return empty;
-}
-
-template<typename CFG>
-void 
-NegateValidity<CFG>::ClearHistory() { }
-
 
 #endif// #ifndef _NEGATE_VALIDITY_HPP_

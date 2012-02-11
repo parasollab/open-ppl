@@ -67,8 +67,8 @@ vector<double> CSpaceClearanceFeature::Collect(vector<VID>& vids) {
   for(VIT vit = vids.begin(); vit!=vids.end(); vit++){
     CDInfo _cdInfo;
     _cdInfo.ret_all_info=true;
-    CfgType cfg=rdmp->find_vertex(*vit)->property();
-		GetApproxCollisionInfo(GetMPProblem(),cfg,env,*pStatClass,_cdInfo,m_vc,m_dm,20,20,true);
+    CfgType cfg=rdmp->find_vertex(*vit)->property(), tmp;
+		GetApproxCollisionInfo(GetMPProblem(),cfg,tmp,env,*pStatClass,_cdInfo,m_vc,m_dm,20,20,true,true);
 		clearance.push_back(_cdInfo.min_dist);
   }
   return clearance;

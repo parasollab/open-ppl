@@ -93,12 +93,13 @@ void Cfg::negative(const Cfg& _c) {
 }
 
 
-void Cfg::multiply(const Cfg& _c, double _s) {
+void Cfg::multiply(const Cfg& _c, double _s, bool _norm) {
   vector<double> v;
   for(vector<double>::const_iterator V = _c.m_v.begin(); V != _c.m_v.end(); ++V)
     v.push_back((*V)*_s);
   m_v = v;
-  NormalizeOrientation();
+  if ( _norm )
+    NormalizeOrientation();
 }
 
 
@@ -230,10 +231,11 @@ int Cfg::PosDOF() const {
 // Set a single parameter in the configuration (i.e., x,y,z,roll...)
 // _param = the parameter number to set
 // _value = the value to set the parameter as
-int Cfg::SetSingleParam(int _param, double _value) {    
+int Cfg::SetSingleParam(int _param, double _value, bool _norm) {    
   if ((_param>=0) && (_param<m_dof)) {
     m_v[_param]=_value;
-    NormalizeOrientation(_param);
+    if ( _norm )
+      NormalizeOrientation(_param);
     return 1;
   } else {
     return 0;
@@ -547,18 +549,6 @@ void Cfg::GetRandomCfg(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
   NormalizeOrientation();
 }
 
-void Cfg::GetRandomRayPos(double _incr, Environment* _env) {
-  // Create random positional ray and scale
-  double length=abs(_incr), dist=0.0;
-  m_v.clear();
-  for(int i=0; i<m_dof; ++i)
-    if (i < m_posDof) {
-      m_v.push_back( 2.0*DRand() - 1.0 );
-      dist += pow(m_v[i],2);
-    } else m_v.push_back( 0.0 );
-  this->multiply(*this,length/sqrt(dist));
-}
-
 Cfg* Cfg::CreateNewCfg() const{
   Cfg* tmp = new CfgType();
   *tmp = *this;
@@ -674,6 +664,7 @@ vector<Vector3D> Cfg::PolyApprox(Environment* _env) const {
 
 double Cfg::GetSmoothingValue(MPProblem* _mp, Environment *_env,StatClass& _stats,
     string _vc, CDInfo& _cdInfo, string _dm, int _n, bool _bl ){
-  GetApproxCollisionInfo(_mp, *((CfgType*)this), _env, _stats, _cdInfo, _vc, _dm, _n, _n, true);
+  CfgType tmp;
+  GetApproxCollisionInfo(_mp, *((CfgType*)this), tmp, _env, _stats, _cdInfo, _vc, _dm, _n, _n, true, true);
   return _cdInfo.min_dist;
 }

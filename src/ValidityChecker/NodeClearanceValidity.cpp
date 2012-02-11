@@ -9,7 +9,6 @@ NodeClearanceValidity::NodeClearanceValidity(double _delta, string _dmLabel, str
   m_delta(_delta), m_dmLabel(_dmLabel), m_nfLabel(_nfLabel) {
   }
 
-
 NodeClearanceValidity::NodeClearanceValidity (XMLNodeReader& _node, MPProblem* _problem) :
   ValidityCheckerMethod(_node, _problem) {
     m_delta = _node.numberXMLParameter("delta", true, 1.0, 0.0, 1.0, "Clearance from every other node");
@@ -39,11 +38,3 @@ bool NodeClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _st
   _cfg.SetLabel("VALID", result);
   return result;
 }
-
-vector< pair<CfgType,CfgType> > 
-NodeClearanceValidity::GetHistory() {
-  vector< pair<CfgType,CfgType> > empty;
-  return empty;
-}
-
-void NodeClearanceValidity::ClearHistory() { }

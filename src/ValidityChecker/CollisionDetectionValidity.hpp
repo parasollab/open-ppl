@@ -43,9 +43,6 @@ private:
   bool IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 		     shared_ptr<MultiBody> lineRobot, bool enablePenetration, std::string *pCallName);
 
-  virtual vector< pair<CfgType,CfgType> > GetHistory();
-  virtual void ClearHistory();
-
   int ignore_i_adjacent_links;
 
 };
@@ -72,6 +69,8 @@ ignoreSelfCollision = in_Node.boolXMLParameter("ignoreSelfCollision", false, fal
     m_selected.push_back(cd->GetRAPID());	    
   } else if (cd_label == "PQP") {
     m_selected.push_back(cd->GetPQP());
+  } else if (cd_label == "PQP_SOLID") {
+    m_selected.push_back(cd->GetPQP_SOLID());
   } else if (cd_label == "VCLIP") {
     m_selected.push_back(cd->GetVCLIP());
   } else if (cd_label == "SOLID") {
@@ -268,17 +267,5 @@ isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo)
   exit(1);
 #endif
 }
-
-template<typename CFG>
-vector< pair<CfgType,CfgType> >
-CollisionDetectionValidity<CFG>::GetHistory() {
-  vector< pair<CfgType,CfgType> > empty;
-  return empty;
-}
-
-template<typename CFG>
-void
-CollisionDetectionValidity<CFG>::ClearHistory() { }
-
 
 #endif // #ifndef _COLLISION_DETECTION_VALIDITY_HPP_

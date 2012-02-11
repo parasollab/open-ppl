@@ -97,8 +97,8 @@ void Cfg_2D::negative(const Cfg& c) {
   setPos(Point2d(m_v[0],m_v[1]));
 }
 
-void Cfg_2D::multiply(const Cfg& c, double s) {
-  Cfg::multiply(c, s);
+void Cfg_2D::multiply(const Cfg& c, double s, bool _norm) {
+  Cfg::multiply(c, s, _norm);
   setPos(Point2d(m_v[0],m_v[1]));
 }
 
@@ -115,9 +115,9 @@ void Cfg_2D::WeightedSum(const Cfg& first, const Cfg& second, double weight) {
 // Set a single parameter in the configuration (i.e., x,y,z,roll...)
 // param = the parameter number to set
 // value = the value to set the parameter as
-int Cfg_2D::SetSingleParam(int param, double value) {    
+int Cfg_2D::SetSingleParam(int param, double value, bool _norm) {    
   if ((param>=0) && (param<m_dof)) {
-    Cfg::SetSingleParam(param, value);
+    Cfg::SetSingleParam(param, value, _norm);
     if(param<m_posDof)
       p[param] = value;
     return 1;
@@ -196,16 +196,18 @@ void Cfg_2D::GetRandomCfg(Environment* _env) {
   GetRandomCfg(_env, _env->GetBoundingBox());
 }
 
-void Cfg_2D::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
+void Cfg_2D::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
   //randomly sample params
+  double dist=0.0;
   m_v.clear();
-  for(int i=0; i<m_dof; ++i)
+  for(int i=0; i<m_dof; ++i) {
     m_v.push_back( double(2.0)*DRand() - double(1.0) );
+    dist += pow(m_v[i],2);
+  }
 
   //scale to appropriate length
   Cfg_2D origin;
-  dm->ScaleCfg(env, incr, origin, *this);
-
+  dm->ScaleCfg(env, incr, origin, *this, _norm);
   setPos(Point2d(m_v[0], m_v[1]));
 }
 

@@ -472,10 +472,12 @@ bool RRTExpand(MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _s
 //***********************************//
 // Main Push To Medial Axis Function //
 //***********************************//
-bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClass& _stats, string _vc, string _dm, 
-    bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, int _hLen, bool _debug); 
-bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox> _bb, CfgType& _cfg, StatClass& _stats, string _vc, string _dm, 
-    bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, int _hLen, bool _debug); 
+bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClass& _stats, string _vc, 
+    string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, 
+    int _hLen, bool _debug, bool _positional); 
+bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox> _bb, CfgType& _cfg, StatClass& _stats, 
+    string _vc, string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, 
+    bool _useBBX, double _eps, int _hLen, bool _debug, bool _positional); 
 
 //***************************************************************//
 // Push From Inside Obstacle                                     //
@@ -484,9 +486,9 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox>
 // obstacle and is pushed till outside.                          //
 //***************************************************************//
 bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
-    string _vc, string _dm, bool _pExact, int _penetration, bool _debug);	
-bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
-    string _vc, string _dm, bool _pExact, int _penetration, bool _debug);
+    string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional);	
+bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+    StatClass& _stats, string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional);
 
 //***************************************************************//
 // Push Cfg To Medial Axis                                       //
@@ -495,19 +497,22 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
 // is found, determined by the clearance.                        //
 //***************************************************************//
 bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, StatClass& _stats,
-    string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, bool _debug);
-bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
-    string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, bool _debug);
+    string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, 
+    bool _debug, bool _positional);
+bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+    StatClass& _stats, string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, 
+    int _hLen, bool _debug, bool _positional);
 
 //*********************************************************************//
 // Calculate Collision Information                                     //
 //   This is a wrapper function for getting the collision information  //
 // for the medial axis computation, calls either approx or exact       //
 //*********************************************************************//
-bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
-    string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX);
-bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, 
-    string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX);
+bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats, 
+    CDInfo& _cdInfo, string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX, bool _positional);
+bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
+    shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
+    bool _exact, int _clearance, int _penetration, bool _useBBX, bool _positional);
 
 //*********************************************************************//
 // Get Exact Collision Information Function                            //
@@ -515,10 +520,10 @@ bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
 // checker results against obstacles to the bounding box to get a      //
 // complete solution                                                   //
 //*********************************************************************//
-bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
-    CDInfo& _cdInfo, string _vc, bool _useBBX);
-bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
-    CDInfo& _cdInfo, string _vc, bool _useBBX);
+bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, 
+    StatClass& _stats, CDInfo& _cdInfo, string _vc, bool _useBBX);
+bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+    StatClass& _stats, CDInfo& _cdInfo, string _vc, bool _useBBX);
 
 //*********************************************************************//
 // Get Approximate Collision Information Function                      //
@@ -526,10 +531,11 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
 // specified number of rays are sent out till they change in validity. //
 // The shortest ray is then considered the best calididate.            //
 //*********************************************************************//
-bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
-    CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX);	
-bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
-    CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX);
+bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats,
+    CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional);	
+bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
+    shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
+    int _clearance, int _penetration, bool _useBBX, bool _positional);
 
 #endif
 

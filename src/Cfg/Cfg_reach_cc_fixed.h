@@ -26,12 +26,13 @@ class Cfg_reach_cc_fixed : public Cfg_reach_cc {
   virtual void GetRandomCfg(Environment* _env){
     Cfg_reach_cc::GetRandomCfg(_env);
   }
+
   /*
   virtual void GetRandomCfg(Environment* env, DistanceMetric* _dm, 
                             double length);
   */
   virtual void GetRandomCfg_CenterOfMass(Environment* env);
-  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm);
+  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool norm=true);
 
  protected:
 };

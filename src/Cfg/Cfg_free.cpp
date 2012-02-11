@@ -133,7 +133,7 @@ void Cfg_free::GetRandomCfg(Environment* _env) {
 }
 
 
-void Cfg_free::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm) {
+void Cfg_free::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
   //randomly sample params
   m_v.clear();
   for(int i=0; i<DOF(); ++i)
@@ -141,9 +141,9 @@ void Cfg_free::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMe
 
   //scale to appropriate length
   CfgType origin;
-  dm->ScaleCfg(env, incr, origin, *this);
-
-  NormalizeOrientation();
+  dm->ScaleCfg(env, incr, origin, *this, _norm);
+  if ( _norm )
+    NormalizeOrientation();
 }
 
 void 

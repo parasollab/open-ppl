@@ -15,7 +15,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
 {
   public:
     string m_vcLabel, m_dmLabel;
-    bool m_useBBX, m_exactClearance, m_exactPenetration;
+    bool m_useBBX, m_exactClearance, m_exactPenetration, m_positional;
     int m_clearanceRays, m_penetrationRays, m_historyLength;
     double m_epsilon;
 
@@ -55,6 +55,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       m_epsilon = _node.numberXMLParameter("epsilon", false, 0.1, 0.0, 1.0, "Epsilon-Close to the MA (fraction of the resolution)");
       m_historyLength = _node.numberXMLParameter("history_len", false, 5, 3, 100, "History Length");
       m_useBBX = _node.boolXMLParameter("use_bbx", false, true, "Use the Bounding Box as an Obstacle");
+      m_positional = _node.boolXMLParameter("positional", false, true, "Use only positional DOFs");
 
       _node.warnUnrequestedAttributes();
     }
@@ -98,8 +99,9 @@ class MedialAxisSampler : public SamplerMethod<CFG>
           tmpCfg.GetRandomCfg(_env,_bb);
 
         // If pushed properly, increment generated
-        if(PushToMedialAxis(this->GetMPProblem(), _env, _bb, tmpCfg, _stats, m_vcLabel, m_dmLabel, m_exactClearance, m_clearanceRays, 
-                            m_exactPenetration, m_penetrationRays, m_useBBX, m_epsilon, m_historyLength, this->m_debug)) {
+        if(PushToMedialAxis(this->GetMPProblem(), _env, _bb, tmpCfg, _stats, m_vcLabel, m_dmLabel, 
+                            m_exactClearance, m_clearanceRays, m_exactPenetration, m_penetrationRays, 
+                            m_useBBX, m_epsilon, m_historyLength, this->m_debug, m_positional)) {
           if(vc->IsValid(vc->GetVCMethod(m_vcLabel), tmpCfg, _env, _stats, cdInfo, true, &call)) {
             _stats.IncNodesGenerated(this->GetNameAndLabel());
             generated = true;

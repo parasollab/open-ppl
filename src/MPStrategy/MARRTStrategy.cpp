@@ -180,7 +180,7 @@ void MARRTStrategy::Run(int _regionID) {
     CfgType tempCfg = newCfg;
     VDAddTempCfg(tempCfg, true);
     StatClass stats; 
-    if (!PushToMedialAxis(GetMPProblem(), env, newCfg, stats, m_vc, m_dm, true, 20, false, 5, true, .0001, 5, m_debug)){
+    if (!PushToMedialAxis(GetMPProblem(), env, newCfg, stats, m_vc, m_dm, true, 20, false, 5, true, .0001, 5, m_debug, true)){
       continue;
     }
     kClosest.clear();

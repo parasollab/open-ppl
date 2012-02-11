@@ -11,11 +11,12 @@
 #ifndef MALP_H_
 #define MALP_H_
 
-#include "StraightLine.h"
+#include "boost/pointer_cast.hpp"
+
 typedef ElementSet<LocalPlannerMethod<CfgType,WeightType> >::MethodPointer LocalPlannerPointer;
 template <class CFG, class WEIGHT> class LocalPlanners;
 
-template <class CFG, class WEIGHT> class MedialAxisLP: public StraightLine<CFG, WEIGHT> {
+template <class CFG, class WEIGHT> class MedialAxisLP: public LocalPlannerMethod<CFG, WEIGHT> {
  public:
 
   MedialAxisLP();
@@ -32,9 +33,9 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public StraightLine<CFG, 
     bool savePath=false, bool saveFailedPath=false);
 
 	MPProblem* mp;
-  bool use_bbx,bi_search,m_cExact,m_pExact;
+  bool use_bbx,bi_search,m_cExact,m_pExact,m_positional;
   int clearance,penetration,history_len,m_maxItr;
-  string str_dm,str_vcm,m_maStrLP,m_envStrLP,m_macStrVC;
+  string m_strDM,m_strVCM,m_maStrLP,m_envStrLP,m_macStrVC;
   double m_epsilon, m_sampleEpsilon;
 
  protected:
@@ -64,18 +65,18 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public StraightLine<CFG, 
 // Definitions for Constructors and Destructor
 template <class CFG, class WEIGHT>
   MedialAxisLP<CFG, WEIGHT>::
-  MedialAxisLP() : StraightLine<CFG, WEIGHT>() {
+  MedialAxisLP() : LocalPlannerMethod<CFG, WEIGHT>() {
     this->SetName("MedialAxisLP");
 }
 
 template <class CFG, class WEIGHT> MedialAxisLP<CFG, WEIGHT>::
  MedialAxisLP(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
- StraightLine<CFG, WEIGHT>(in_Node, in_pProblem) {
+ LocalPlannerMethod<CFG, WEIGHT>(in_Node, in_pProblem) {
   this->SetName("MedialAxisLP");
 
 	mp              = in_pProblem;
-	str_vcm         = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
-	str_dm          = in_Node.stringXMLParameter("dm_method", true, "", "Distance Metric Method");
+	m_strVCM         = in_Node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
+	m_strDM          = in_Node.stringXMLParameter("dm_method", true, "", "Distance Metric Method");
 	m_maStrLP       = in_Node.stringXMLParameter("ma_lp_method", true, "", "Local Planner Method");
 	m_envStrLP      = in_Node.stringXMLParameter("env_lp_method", true, "", "Local Planner Method");
   m_macStrVC      = in_Node.stringXMLParameter("mac_vc_method", true, "", "Local Planner Method");
@@ -93,8 +94,8 @@ template <class CFG, class WEIGHT> MedialAxisLP<CFG, WEIGHT>::
 	m_maxItr        = in_Node.numberXMLParameter("max_itr", false, 2, 1, 1000, "Max Number of Recursive Iterations");
   bi_search       = in_Node.boolXMLParameter("bi_search", false, true, "Binary Search Straightline");
 	use_bbx         = in_Node.boolXMLParameter("use_bbx", false, true, "Use the Bounding Box as an Obstacle");
+	m_positional    = in_Node.boolXMLParameter("positional", false, true, "Use only positional DOFs");
 
-  this->m_vcMethod = str_vcm;
 	for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
     if (citr->getName() == "lp_methods") {
       LocalPlanners<CFG, WEIGHT>* lp = new LocalPlanners<CFG, WEIGHT>(*citr, in_pProblem);
@@ -112,7 +113,7 @@ template <class CFG, class WEIGHT> MedialAxisLP<CFG, WEIGHT>::~MedialAxisLP() { 
 template <class CFG, class WEIGHT> void MedialAxisLP<CFG, WEIGHT>::PrintOptions(ostream& out_os) {
   out_os << "    " << this->GetName() << "::  ";
   out_os << "binary search = " << " " << bi_search << " ";
-  out_os << "vcMethod = " << " " << this->m_vcMethod << " ";
+  out_os << "vcMethod = " << " " << m_strVCM << " ";
   out_os << endl;
 }
 
@@ -120,7 +121,6 @@ template <class CFG, class WEIGHT> LocalPlannerMethod<CFG, WEIGHT>* MedialAxisLP
   LocalPlannerMethod<CFG, WEIGHT>* _copy = new MedialAxisLP<CFG, WEIGHT>(*this);
   return _copy;
 }
-
 
 // Main IsConnected Function
 template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
@@ -131,34 +131,50 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
              bool checkCollision, 
              bool savePath, bool saveFailedPath) {  
 
-  //cout << "\nMedialAxisLP::IsConnected" << endl;
-  //cout << "Start: " << _c1 << endl;
-  //cout << "End  : " << _c2 << endl;
+  if (this->m_debug) {
+    cout << "\nMedialAxisLP::IsConnected" << endl
+         << "Start: " << _c1 << endl
+         << "End  : " << _c2 << endl;
+  }
 
   bool connected = false;
   savePath = true;
   Stats.IncLPAttempts(this->GetNameAndLabel());
-  VDComment("Initial CFGs");
-  VDAddTempCfg(_c1,true);
-  VDAddTempCfg(_c2,true);
-  VDClearComments();
+  if (this->m_debug) {
+    VDComment("Initial CFGs");
+    VDAddTempCfg(_c1,true);
+    VDAddTempCfg(_c2,true);
+    VDClearComments();
+  }
 
-  lpOutput->path.clear();
+	//clear lpOutput                                                                                                       
+	lpOutput->path.clear();
+	lpOutput->edge.first.SetWeight(0);
+	lpOutput->edge.second.SetWeight(0);
+	lpOutput->savedEdge.clear();
+
   connected = IsConnectedRec(_env, Stats, dm, _c1, _c2, _col, lpOutput, positionRes, orientationRes, 1);
 
-	//**** Print Edge.path File ****
-  //if ( connected ) {
+	// **** Print Edge.path File ****
+  //if ( connected && this->m_debug) {
 	//  stringstream f_out;
 	//  f_out << "MALP_Edge." << rand()%1000+1 << ".path";
 	//  cout << "MALP Edge Path File: " << f_out.str() << endl << endl << flush;
 	//  WritePathConfigurations( f_out.str().c_str(), lpOutput->path, _env);
-  //}
+	//}
 	// **** END Edge.path Print  ****
 
-  if ( connected )
+  if ( connected ) {
     Stats.IncLPConnections(this->GetNameAndLabel() );  
-  VDClearLastTemp();
-  VDClearLastTemp();
+		lpOutput->edge.first.SetWeight(lpOutput->path.size());
+		lpOutput->edge.second.SetWeight(lpOutput->path.size());
+  }
+
+  if (this->m_debug) {
+    VDClearLastTemp();
+    VDClearLastTemp();
+  }
+
   return connected;
 }
 
@@ -176,27 +192,26 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
                 const CFG &_c1, const CFG &_c2, CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
                 double _posRes, double _oriRes, int _itr) {
 
-  //cout << "  MedialAxisLP::IsConnectedRec" << endl;
-  //cout << "  Start  : " << _c1 << endl;
-  //cout << "  End    : " << _c2 << endl;
+  if (this->m_debug) {
+    cout << "  MedialAxisLP::IsConnectedRec" << endl
+         << "  Start  : " << _c1 << endl
+         << "  End    : " << _c2 << endl;
+  }
 
   if ( _itr > m_maxItr ) return false;
 
   ValidityChecker<CFG>*                      vc = mp->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->m_vcMethod);
+  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_strVCM);
   LPOutput<CFG, WEIGHT> maLPOutput, tmpLPOutput;
-  bool passed=true;
-  int cd_cntr=0;
+  int cd_cntr=0, nTicks=0;
   CFG mid;
 
-  // TODO: Update to use DIST, not GAP
-  double gap=0.0, dist=_dm->Distance(_env,_c1,_c2);
-  for(int i=0; i<_c1.DOF(); ++i) {
-    if ( i < _c1.PosDOF() ) gap += pow((_c2.GetSingleParam(i)-_c1.GetSingleParam(i)),2);
-	  else                    gap += pow((DirectedAngularDistance(_c2.GetSingleParam(i),_c1.GetSingleParam(i))),2);
-  }
+  Cfg* diff = _c1.CreateNewCfg();
+  diff->subtract(_c1, _c2);
+  nTicks = (int)max(diff->PositionMagnitude()/_posRes,
+                    diff->OrientationMagnitude()/_oriRes);
 
-  if ( sqrt(gap) < _env->GetPositionRes() ) {
+  if ( nTicks <= 1 ) {
 	  if ( m_envLPMethod->IsConnected(_env,_stats,_dm,_c1,_c2,_col,
                                     &tmpLPOutput,_posRes,_oriRes,true,true,true) ) {
       for ( size_t j=0; j<tmpLPOutput.path.size(); ++j)
@@ -215,16 +230,16 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
 	}
 
   // Failed epsilon close, recurse
-  //cout << "  New Mid: " << mid << endl;
-  VDAddTempCfg(mid,true);
+  if (this->m_debug) cout << "  New Mid: " << mid << endl;
+  if (this->m_debug) VDAddTempCfg(mid,true);
   LPOutput<CFG, WEIGHT> lpOutputS, lpOutputE;
 
   if ( !IsConnectedRec(_env,_stats,_dm,_c1,mid,_col,&lpOutputS,_posRes,_oriRes,_itr+1) ) {
-    VDClearLastTemp();
+    if (this->m_debug) VDClearLastTemp();
     return false;
 	}
   if ( !IsConnectedRec(_env,_stats,_dm,mid,_c2,_col,&lpOutputE,_posRes,_oriRes,_itr+1) ) {
-    VDClearLastTemp();
+    if (this->m_debug) VDClearLastTemp();
     return false;
 	}
 
@@ -247,68 +262,96 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
                    const CFG &_c1, const CFG &_c2, CFG &_mid, LPOutput<CFG, WEIGHT>* _lpOutput,
                    double _posRes, double _oriRes) {
 
-  ValidityChecker<CFG>*                      vc = mp->GetValidityChecker();
+  if (this->m_debug) cout << "MedialAxisLP::EpsilonClosePath()" << endl;
+  ValidityChecker<CFG>*                       vc = mp->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_macStrVC);
-  LPOutput<CFG, WEIGHT> maLPOutput, tmpLPOutput;
-  CFG col;
-  bool passed = true;
 
-  // TODO: Convert to use DIST, no GAP
-  double gap = 0.0, dist = _dm->Distance(_env,_c1,_c2);
-  for(int i=0; i<_c1.DOF(); ++i) {
-    if ( i < _c1.PosDOF() ) gap += pow((_c2.GetSingleParam(i)-_c1.GetSingleParam(i)),2);
-	  else                    gap += pow((DirectedAngularDistance(_c2.GetSingleParam(i),_c1.GetSingleParam(i))),2);
-  }
-  //cout << "MedialAxisLP::EpsilonClosePath::Gap/Dist: " << sqrt(gap) << "/" << dist << endl;
+  shared_ptr<MedialAxisClearanceValidity> macVCM = boost::dynamic_pointer_cast<MedialAxisClearanceValidity>(vcm);
+
+  LPOutput<CFG, WEIGHT> maLPOutput, tmpLPOutput, testLPOutput;
+  CFG col, tmp;
+  int nTicks;
+  bool passed=true, found=false;
 
   // Closer than epsilon so calc pushed mid and test at env res
-  if ( sqrt(gap) < m_epsilon ) {
-    _mid.add(_c1,_c2);
-    _mid.divide(_mid,2);
-    PushToMedialAxis(mp,_env,_mid,_stats,str_vcm,str_dm,m_cExact,clearance,
-                     m_pExact,penetration,use_bbx,m_sampleEpsilon,history_len,false);
+  if ( _dm->Distance(_env,_c1,_c2) < m_epsilon ) {
+    if (this->m_debug) cout << "Segment is shorter than epsilon..." << endl;
+
+		_mid.FindIncrement(_c1,_c2,&nTicks,_posRes,_oriRes);
+		for (int i=_mid.PosDOF(); i<_mid.DOF(); i++) {
+			if ( _mid.GetSingleParam(i) > 0.5 )
+				_mid.SetSingleParam(i,_mid.GetSingleParam(i) - 1.0, false);
+		}
+    _mid.multiply(_mid,((double)nTicks)/2.0);
+    _mid.add(_c1,_mid);
+
+    PushToMedialAxis(mp,_env,_mid,_stats,m_strVCM,m_strDM,m_cExact,clearance,
+                     m_pExact,penetration,use_bbx,m_sampleEpsilon,history_len,this->m_debug, m_positional);
 	  return ( m_envLPMethod->IsConnected(_env,_stats,_dm,_c1,_c2,col,_lpOutput,
                                         _posRes,_oriRes,true,true,true) );
 	}
 
-  // Check if path is epsilon close
+  // Calculate relationship between resolution and m_epsilon
+  double rEpsilon = _dm->Distance(_env,_c1,_c2)/m_epsilon;
+
+  if (this->m_debug) cout << " Ticks wanted: " << rEpsilon << endl;
+
+	tmp.FindIncrement(_c1,_c2,&nTicks,_posRes,_oriRes);
+  rEpsilon = (double)nTicks/rEpsilon;
+  double posEps = rEpsilon*_posRes;
+  double oriEps = rEpsilon*_oriRes;
+
+  if (this->m_debug) cout << " Ticks calculated: " << nTicks << endl;
+
+  // Check if path is epsilon close, call again without collision checking for LPOuput if failed
   maLPOutput.path.push_back(_c1);
-  passed = m_maLPMethod->IsConnected(_env,_stats,_dm,_c1,_c2,col,&maLPOutput,m_epsilon,m_epsilon,true,true,true);
+  passed  =  m_maLPMethod->IsConnected(_env,_stats,_dm,_c1,_c2,col,&testLPOutput,posEps,oriEps,true,true,true);
+  if ( passed ) {
+    for ( size_t j=0; j<testLPOutput.path.size(); ++j)
+      maLPOutput.path.push_back(testLPOutput.path[j]);
+  } else {
+    m_maLPMethod->IsConnected(_env,_stats,_dm,_c1,_c2,col,&maLPOutput,posEps,oriEps,false,true,true);
+  }
   maLPOutput.path.push_back(_c2);
 
   // Save pushed mid
-  vector< pair<CfgType,CfgType> > history = vcm->GetHistory();
-  //cout << "History.size() = " << history.size() << "   maLPOutput.size() = " << maLPOutput.path.size() << endl;
+  vector< pair<CfgType,CfgType> > history = macVCM->GetHistory();
+
   if (history.size() <= 1) {
     if (history.size() == 1 &&
         !(history[0].first == history[0].second) ) { // Validity Checker didn't push properly
 	    _mid = history[0].second;
 		} else {
-      //cout << "Manually set mid" << endl;
       _mid = maLPOutput.path[maLPOutput.path.size()/2];
-      PushToMedialAxis(mp,_env,_mid,_stats,str_vcm,str_dm,m_cExact,clearance,
-                       m_pExact,penetration,use_bbx,m_sampleEpsilon,history_len,false);
+      PushToMedialAxis(mp,_env,_mid,_stats,m_strVCM,m_strDM,m_cExact,clearance,
+                       m_pExact,penetration,use_bbx,m_sampleEpsilon,history_len,this->m_debug,m_positional);
     }
   } else {
-    for (int i=0; i<history.size(); ++i) {
+    for (size_t i=0; i<history.size(); ++i) {
       if (history[i].first == maLPOutput.path[maLPOutput.path.size()/2] ||
           history[i].first == maLPOutput.path[maLPOutput.path.size()/2-1]) {
-				//cout << "Found mid in history" << endl;
 	  		  _mid = history[i].second;
+          found = true;
 		  	  break;
 			}
 		}
+    if ( !found ) {
+      _mid = maLPOutput.path[maLPOutput.path.size()/2];
+      PushToMedialAxis(mp,_env,_mid,_stats,m_strVCM,m_strDM,m_cExact,clearance,
+                       m_pExact,penetration,use_bbx,m_sampleEpsilon,history_len,this->m_debug,m_positional);
+    }
   }
-  vcm->ClearHistory();
+  macVCM->ClearHistory();
 
   // If epsilon close, test at env res
 	if ( passed ) {
-    //cout << "maLPMethod->IsConnected Passed" << endl;
-
+    if (this->m_debug) cout << "maLPMethod->IsConnected Passed: maLPOutput.size: " << maLPOutput.path.size() << endl;
     // Test individual segments
-    for (int i=0; i<maLPOutput.path.size()-1; ++i) {
+    for (size_t i=0; i<maLPOutput.path.size()-1; ++i) {
 	    if ( m_envLPMethod->IsConnected(_env,_stats,_dm,maLPOutput.path[i],maLPOutput.path[i+1],col,
-                                      &tmpLPOutput,_posRes,_oriRes,true,true,true) ) {
+                                      &testLPOutput,_posRes,_oriRes,true,true,true) ) {
+        for ( size_t j=0; j<testLPOutput.path.size(); ++j)
+          tmpLPOutput.path.push_back(testLPOutput.path[j]);
         if (i != maLPOutput.path.size()-2)
           tmpLPOutput.path.push_back(maLPOutput.path[i+1]);
       } else {
@@ -318,7 +361,7 @@ template <class CFG, class WEIGHT> bool MedialAxisLP<CFG,WEIGHT>::
 		}
     // If passed, save path and exit
     if (passed == true) {
-      //cout << "envLPMethod->IsConnected Passed" << endl;
+      if (this->m_debug) cout << "envLPMethod->IsConnected Passed: tmpLPOutput.size: " << tmpLPOutput.path.size() << endl;
       for ( size_t j=0; j<tmpLPOutput.path.size(); ++j)
         _lpOutput->path.push_back(tmpLPOutput.path[j]);
       return true;

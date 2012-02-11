@@ -190,6 +190,7 @@ CollisionDetection(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 #endif
 #ifdef USE_PQP
   selected.push_back(pqp);
+  selected.push_back(pqp_solid);
 #endif
 #ifdef USE_VCLIP
   selected.push_back(vclip);
@@ -279,6 +280,17 @@ GetPQP() {
   vector<CollisionDetectionMethod*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); ++I)
     if ((*I)->GetName() == "PQP")
+      return *I;	
+  cerr << "\n\nERROR in CollisionDetectin::GetPQP(): PQP not found in selected vector\n\n";
+  exit(-1);
+}
+
+CollisionDetectionMethod* 
+CollisionDetection::
+GetPQP_SOLID() {
+  vector<CollisionDetectionMethod*>::iterator I;
+  for(I=selected.begin(); I!=selected.end(); ++I)
+    if ((*I)->GetName() == "PQP_Solid")
       return *I;	
   cerr << "\n\nERROR in CollisionDetectin::GetPQP(): PQP not found in selected vector\n\n";
   exit(-1);

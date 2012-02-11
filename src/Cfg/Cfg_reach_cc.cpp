@@ -264,7 +264,7 @@ negative(const Cfg& c) {
 
 void 
 Cfg_reach_cc::
-multiply(const Cfg&, double) {
+multiply(const Cfg&, double, bool _norm) {
   cerr << "Warning, multiply not implemented yet\n";
   exit(-1);
 }
@@ -426,7 +426,7 @@ void Cfg_reach_cc::GetRandomCfg_CenterOfMass(Environment *_env) {
 
 void
 Cfg_reach_cc::
-GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm)
+GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm)
 {
 
   int n_ticks= 0;

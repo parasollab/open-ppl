@@ -46,7 +46,7 @@ class DistanceMetricMethod  : public MPBaseObject {
                          CFG _query, double _radius); 
 
   virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) = 0;
-  virtual void ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg& _c);
+  virtual void ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg& _c, bool _norm=true);
 
 public:
     double m_distanceTime;

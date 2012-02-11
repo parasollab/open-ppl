@@ -36,7 +36,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
   virtual void add(const Cfg&, const Cfg&);
   virtual void subtract(const Cfg&, const Cfg&);
   virtual void negative(const Cfg&);
-  virtual void multiply(const Cfg&, double);
+  virtual void multiply(const Cfg&, double, bool _norm=true);
   virtual void divide(const Cfg&, double);
   virtual Cfg& operator=(const Cfg&);
   virtual void WeightedSum(const Cfg&, const Cfg&, double weight = 0.5); 
@@ -61,7 +61,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
   */
   virtual void GetRandomCfg_CenterOfMass(Environment* _env);
   virtual void GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
-  virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm);
+  virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm, bool _norm=true);
 
   /*
   virtual void MAPRMfree(Environment* _env, StatClass& Stats,

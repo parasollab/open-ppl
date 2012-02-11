@@ -156,7 +156,7 @@ class Cfg {
   virtual void add(const Cfg&, const Cfg&);
   virtual void subtract(const Cfg&, const Cfg&);
   virtual void negative(const Cfg&);
-  virtual void multiply(const Cfg&, double);
+  virtual void multiply(const Cfg&, double, bool _norm=true);
   virtual void divide(const Cfg&, double);
 
   virtual Cfg& operator=(const Cfg&);
@@ -220,7 +220,7 @@ class Cfg {
    * @param param the parameter number to set.
    * @param value the value to set the parameter as
    */
-  virtual int SetSingleParam(int _param, double _value);    
+  virtual int SetSingleParam(int _param, double _value, bool _norm=true);    
   /** Increment a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to set.
    * @param value the value to increment the parameter by.
@@ -310,8 +310,7 @@ guration where workspace robot's EVERY VERTEX
   /// Generates a random configuration with approximate length
   virtual void GetRandomCfg(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, double _length);
   
-  virtual void GetRandomRay(double _incr, Environment* _env,  shared_ptr<DistanceMetricMethod> _dm) = 0;
-  virtual void GetRandomRayPos(double _incr, Environment* _env);
+  virtual void GetRandomRay(double _incr, Environment* _env,  shared_ptr<DistanceMetricMethod> _dm, bool _norm=true) = 0;
   virtual double GetSmoothingValue(MPProblem* _mp, Environment *_env,StatClass& _stats,
 	    string _vc, CDInfo& _cdInfo, string _dm, int _n, bool _bl );
 

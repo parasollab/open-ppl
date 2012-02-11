@@ -72,12 +72,12 @@ public:
   virtual void GetRandomCfg(Environment *_env);
   virtual void GetRandomCfg(Environment *_env,shared_ptr<Boundary> _bb);
 
-  virtual void GetRandomRay(double incr, Environment* env, shared_ptr< DistanceMetricMethod> dm);
-  
+  virtual void GetRandomRay(double incr, Environment* env, shared_ptr< DistanceMetricMethod> dm, bool norm=true);
+
   virtual void add(const Cfg&, const Cfg&);
   virtual void subtract(const Cfg&, const Cfg&);
   virtual void negative(const Cfg&);
-  virtual void multiply(const Cfg&, double);
+  virtual void multiply(const Cfg&, double, bool _norm=true);
   virtual void divide(const Cfg&, double);
    
   virtual Cfg& operator=(const Cfg&);
@@ -87,8 +87,9 @@ public:
   /** Set a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to set.
    * @param value the value to set the parameter as
+   * Note: norm is a dummy value in 2d
    */
-  virtual int SetSingleParam(int param, double value);    
+  virtual int SetSingleParam(int param, double value, bool norm=true);
   
   /** Increment a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to set.

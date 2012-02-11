@@ -6,9 +6,10 @@
 #include "CfgTypes.h"
 
 
-class ValidityCheckerMethod : public MPBaseObject 
-{
+class ValidityCheckerMethod : public MPBaseObject {
+
 public:
+
   ValidityCheckerMethod() { }
   ValidityCheckerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem) { }
   virtual ~ValidityCheckerMethod() { }
@@ -19,9 +20,6 @@ public:
     cerr << "error: isInsideObstacle() not defined." << endl;
 		exit(-1);
   };
-
-  virtual vector< pair<CfgType,CfgType> > GetHistory() = 0;
-  virtual void ClearHistory() = 0;
 	
 };
 #endif // End #ifndef _VALIDITY_CHECKER_METHOD_HPP_
