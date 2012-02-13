@@ -2,6 +2,10 @@
 #define EUCLIDEANDISTANCE_H_
 
 #include "DistanceMetricMethod.h"
+#include "CfgTypes.h"
+#include "Cfg_free_tree.h"
+#include "MPProblem.h"
+#include "boost/utility/enable_if.hpp"
 
 /**This computes the euclidean distance between two cfgs.  This class is 
   *derived off of DistanceMetricMethod.
@@ -14,11 +18,28 @@ class EuclideanDistance : public DistanceMetricMethod {
     virtual void PrintOptions(ostream& _os) const;
     virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
     virtual void ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg& _c, bool _norm=true);
-    
+
   protected:
-    virtual double ScaledDistance(Environment* _env, const Cfg& _c1, const Cfg& _c2, double _sValue);
-    double ScaledDistanceImpl(Environment* _env, const Cfg& _c1, const Cfg& _c2, double _sValue);
-  
+    //default implementation
+    template<typename Enable>
+      double ScaledDistance(Environment* _env, const Cfg& _c1, const Cfg& _c2, double _sValue,
+          typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy = 0){
+        CfgType tmp;
+        return ScaledDistanceImpl(_env, _c1, _c2, _sValue, tmp);
+      }
+
+    //reachable distance implementation
+    template<typename Enable>
+      double ScaledDistance(Environment* _env, const Cfg& _c1, const Cfg& _c2, double _sValue,
+          typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0){
+        Cfg_free_tree c1Linkage(_c1.GetData());
+        Cfg_free_tree c2Linkage(_c2.GetData());
+        Cfg_free_tree tmp;
+        return ScaledDistanceImpl(_env, c1Linkage, c2Linkage, _sValue, tmp);
+      }
+
+  private:
+    double ScaledDistanceImpl(Environment* _env, const Cfg& _c1, const Cfg& _c2, double _sValue, Cfg& tmp);
 };
 
 #endif

@@ -36,6 +36,6 @@ void ScaledEuclideanDistance::PrintOptions(ostream& _os) const {
 
 double ScaledEuclideanDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
   double dist;
-  dist = ScaledDistance(_env, _c1, _c2, m_sValue);
+  dist = ScaledDistance<CfgType>(_env, _c1, _c2, m_sValue);
   return dist;
 }
