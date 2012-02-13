@@ -142,14 +142,12 @@ GetType(int par) const {
 
 Point3d
 BoundingBox::GetRandomPoint(){
-Point3d p;
-double v;
-for(int i=0;i<pos_dofs;i++){
-  p[i] = bounding_box[i].first +
-         (bounding_box[i].second - bounding_box[i].first)*DRand();
-}
-return p;
-
+  Point3d p;
+  for(int i=0;i<pos_dofs;i++){
+    p[i] = bounding_box[i].first +
+      (bounding_box[i].second - bounding_box[i].first)*DRand();
+  }
+  return p;
 }
 
 void 
