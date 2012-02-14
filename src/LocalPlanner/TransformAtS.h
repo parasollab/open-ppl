@@ -23,6 +23,8 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
         bool _savePath=false,
         bool _saveFailedPath=false);
 
+    virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes);
   protected:
 
     virtual bool IsConnectedOneWay(Environment *_env, StatClass& _stats,
@@ -44,7 +46,7 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
         bool _saveFailedPath=false);  
 
     double m_sValue;
-    //std::string vcMethod;
+    bool m_isSymmetric;
 };
 
 template <class CFG, class WEIGHT>
@@ -89,10 +91,15 @@ TransformAtS<CFG, WEIGHT>:: IsConnected(Environment *_env, StatClass& _stats,
   //clear _lpOutput
   _lpOutput->Clear();
   bool connected = false;
-  connected = IsConnectedOneWay(_env,_stats,
-                  _dm,_c1,_c2,_col,_lpOutput,
-                  _posRes,_oriRes,_checkCollision,
-                  _savePath,_saveFailedPath);
+  connected = IsConnectedOneWay(_env,_stats,_dm,_c1,_c2,_col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
+  if (!connected && !m_isSymmetric) { // Try the other way
+    connected = IsConnectedOtherWay(_env,_stats,_dm,_c2,_c1,_col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
+    if (_savePath)
+      reverse(_lpOutput->path.begin(), _lpOutput->path.end());
+    reverse(_lpOutput->intermediates.begin(), _lpOutput->intermediates.end());
+  }
+  if(connected) 
+    _lpOutput->AddIntermediatesToWeights();
   return connected;
 }
 
@@ -170,11 +177,13 @@ IsConnectedOneWay(Environment *_env, StatClass& _stats,
     for(size_t i=1; i<sequence.size()-1; ++i) {
       cdCounter++;
       if ( (!sequence[i]->InBoundingBox(_env)) || 
-          (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &callee)))
-        connected = IsConnectedOtherWay(_env,_stats,_dm,
-            _c1,_c2,_col,_lpOutput,
-            _posRes,_oriRes,_checkCollision,
-            _savePath,_saveFailedPath);
+          (!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, true, &callee))){
+        if ( sequence[i]->InBoundingBox(_env) &&
+            !vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, false, &callee))
+          _col = *sequence[i];
+        connected = false;
+        break;
+      }
     }
   }
 
@@ -201,6 +210,12 @@ IsConnectedOneWay(Environment *_env, StatClass& _stats,
     }
   }
 
+  if(connected){
+    for(size_t i = 0; i<sequence.size()-1; ++i){
+      _lpOutput->intermediates.push_back(*sequence[i+1]);
+    }
+  }
+  
   if (connected)
     _stats.IncLPConnections(this->GetNameAndLabel());
   
@@ -323,6 +338,12 @@ IsConnectedOtherWay(Environment *_env, StatClass& _stats,
     }
   }
 
+  if(connected){
+    for(size_t i = 0; i<sequence.size()-1; ++i){
+      _lpOutput->intermediates.push_back(*sequence[i+1]);
+    }
+  }
+  
   if (connected)
     _stats.IncLPConnections(this->GetNameAndLabel());
   
@@ -334,4 +355,33 @@ IsConnectedOtherWay(Environment *_env, StatClass& _stats,
 
   return connected;
 };
+
+template <class CFG, class WEIGHT>
+vector<CFG> 
+TransformAtS<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes){
+  StatClass dummyStats;
+  LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
+  CFG col;
+  int dummyCntr;
+  if(this->m_binarySearch)
+    IsConnectedSLBinary(_env, dummyStats, _dm, _c1, _intermediates[0], col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  else
+    IsConnectedSLSequential(_env, dummyStats, _dm, _c1, _intermediates[0], col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  for(size_t i = 0; i<_intermediates.size()-1; i++){
+    lpOutput->path.push_back(_intermediates[i]);
+    if(this->m_binarySearch)
+      IsConnectedSLBinary(_env, dummyStats, _dm, _intermediates[i], _intermediates[i+1], col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+    else
+      IsConnectedSLSequential(_env, dummyStats, _dm, _intermediates[i], _intermediates[i+1], col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  }
+  lpOutput->path.push_back(_intermediates[_intermediates.size()-1]);
+  if(this->m_binarySearch)
+    IsConnectedSLBinary(_env, dummyStats, _dm, _intermediates[_intermediates.size()-1], _c2, col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  else
+    IsConnectedSLSequential(_env, dummyStats, _dm, _intermediates[_intermediates.size()-1], _c2, col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  vector<CFG> path = lpOutput->path;
+  delete lpOutput;
+  return path;
+}
 #endif

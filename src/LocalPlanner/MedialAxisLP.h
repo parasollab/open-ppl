@@ -32,14 +32,9 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public LocalPlannerMethod
         double _orientationRes, bool _checkCollision=true, 
         bool _savePath=false, bool _saveFailedPath=false);
 
+    virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes);
   protected:
-    virtual bool IsConnectedOneWay(Environment* _env, StatClass& _stats,
-          shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, 
-          CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
-          double _positionRes, double _orientationRes,
-          bool _checkCollision=true, bool _savePath=false, 
-          bool _saveFailedPath=false);
-
     virtual bool IsConnectedRec(Environment* _env, StatClass& _stats,
           shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, 
           CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
@@ -158,14 +153,6 @@ MedialAxisLP<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
   return connected;
 }
 
-template <class CFG, class WEIGHT> 
-bool 
-MedialAxisLP<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm,
-    const CFG& _c1, const CFG& _c2, CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
-    double _positionRes, double _orientationRes, bool _checkCollision, bool _savePath, bool _saveFailedPath) {
-  return IsConnectedRec(_env, _stats, _dm, _c1, _c2, _col, _lpOutput, _positionRes, _orientationRes, 1);
-};
-
 // Recursive IsConnected function
 template <class CFG, class WEIGHT> 
 bool 
@@ -223,6 +210,14 @@ MedialAxisLP<CFG,WEIGHT>::IsConnectedRec(Environment* _env, StatClass& _stats, s
   if ( !IsConnectedRec(_env,_stats,_dm,mid,_c2,_col,&lpOutputE,_posRes,_oriRes,_itr+1) ) {
     if (this->m_debug) VDClearLastTemp();
     return false;
+  }
+
+  for(int i = 0; i<lpOutputS.intermediates.size(); i++){
+    _lpOutput->intermediates.push_back(lpOutputS.intermediates[i]);
+  }
+  _lpOutput->intermediates.push_back(mid);
+  for(int i = 0; i<lpOutputE.intermediates.size(); i++){
+    _lpOutput->intermediates.push_back(lpOutputE.intermediates[i]);
   }
 
   // Push path onto local planner output
@@ -356,4 +351,40 @@ EpsilonClosePath( Environment *_env, StatClass& _stats, shared_ptr<DistanceMetri
     return false;
 }
 
+template <class CFG, class WEIGHT>
+vector<CFG> 
+MedialAxisLP<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes){
+  StatClass dummyStats;
+  LocalPlannerPointer envLPMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_envLP);
+  LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
+  LPOutput<CFG, WEIGHT>* dummyLPOutput = new LPOutput<CFG, WEIGHT>();
+  CFG col;
+  int dummyCntr;
+  if(_intermediates.size()>0){
+    envLPMethod->IsConnected(_env, dummyStats, _dm, _c1, _intermediates[0], col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+    for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
+      lpOutput->path.push_back(dummyLPOutput->path[j]);
+    for(size_t i = 0; i<_intermediates.size()-1; i++){
+      lpOutput->path.push_back(_intermediates[i]);
+      envLPMethod->IsConnected(_env, dummyStats, _dm, _intermediates[i], _intermediates[i+1], col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+      for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
+        lpOutput->path.push_back(dummyLPOutput->path[j]);
+    }
+    lpOutput->path.push_back(_intermediates[_intermediates.size()-1]);
+    cout << "\tc2::" << _c2 << endl;
+    envLPMethod->IsConnected(_env, dummyStats, _dm, _intermediates[_intermediates.size()-1], _c2, col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+    for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
+      lpOutput->path.push_back(dummyLPOutput->path[j]);
+  }
+  else {
+    envLPMethod->IsConnected(_env, dummyStats, _dm, _c1, _c2, col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+    for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
+      lpOutput->path.push_back(dummyLPOutput->path[j]);
+  }
+  vector<CFG> path = lpOutput->path;
+  delete lpOutput;
+  delete dummyLPOutput;
+  return path;
+}
 #endif
