@@ -28,11 +28,27 @@ class ToggleLP: public LocalPlannerMethod<CFG, WEIGHT> {
         bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
 
   protected:
+
+    // Default for non closed chains - alters midpoint to a distance delta away on a random ray
+    template <typename Enable>
+      CFG ChooseAlteredCfg(Environment* _env, StatClass& _stats,
+          shared_ptr<DistanceMetricMethod> _dm,
+          const CFG& _c1, const CFG& _c2,
+          typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy = 0
+          );
+
+    // Specialization for closed chains - choose random point
+    template <typename Enable>
+      CFG ChooseAlteredCfg(Environment* _env, StatClass& _stats,
+          shared_ptr<DistanceMetricMethod> _dm,
+          const CFG& _c1, const CFG& _c2,
+          typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0
+          );
+
     bool IsConnectedToggle(Environment* _env, StatClass& _stats,
-        shared_ptr<DistanceMetricMethod > _dm, const CFG& _c1, const CFG& _c2, CFG& _col,
+        shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, CFG& _col,
         LPOutput<CFG,WEIGHT>* _lpOutput, int& _cdCounter, double _positionRes, double _orientationRes,
         bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
-
 
     bool ToggleConnect(Environment* _env, StatClass& _stats, 
         shared_ptr<DistanceMetricMethod> _dm, const CFG& _s, const CFG& _g, const CFG& _n1, const CFG& _n2, bool _toggle,
@@ -43,7 +59,7 @@ class ToggleLP: public LocalPlannerMethod<CFG, WEIGHT> {
     string m_vc, m_lp;
     int m_maxIter;
 
-    //needed vals
+    //needed variables for record keeping and cycle detection
     double m_iterations;
     bool m_degeneracyReached;
     deque<CFG> m_colHist;
@@ -96,7 +112,6 @@ ToggleLP<CFG, WEIGHT>::CreateCopy() {
   return copy;
 }
 
-//// default implementation for non closed chains
 template <class CFG, class WEIGHT>
 bool 
 ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
@@ -116,6 +131,43 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
 
   _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
   return connected;
+}
+
+// Default for non closed chains - alters midpoint to a distance delta away on a random ray
+template <class CFG, class WEIGHT>
+template <typename Enable>
+CFG ToggleLP<CFG, WEIGHT>::ChooseAlteredCfg(Environment* _env, StatClass& _stats,
+    shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2,
+    typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy){
+  size_t attempts = 0;
+  CFG mid, temp;
+  mid.add(_c1, _c2);
+  mid.divide(_c1, 2.0);
+  do{
+    CFG incr;
+    double dist = _dm->Distance(_env, _c1, _c2) * sqrt(2.0)/2.0;
+    incr.GetRandomRay(dist, _env, _dm);
+    temp.add(incr, mid);
+  }while(!temp.InBoundingBox(_env) && attempts++<10);
+  if(attempts==10){ 
+    _stats.IncLPStat("Toggle::MaxAttemptsForRay", 1);
+    return CFG();
+  }
+  return temp;
+}
+
+// Specialization for closed chains - choose random point
+template <class CFG, class WEIGHT>
+template <typename Enable>
+CFG ToggleLP<CFG, WEIGHT>::ChooseAlteredCfg(Environment* _env, StatClass& _stats,
+    shared_ptr<DistanceMetricMethod> _dm, 
+    const CFG& _c1, const CFG& _c2,
+    typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy){
+  CFG temp;
+  do{
+    temp.GetRandomCfg(_env);
+  }while(!temp.InBoundingBox(_env));
+  return temp;
 }
 
 template <class CFG, class WEIGHT>
@@ -150,18 +202,11 @@ ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
 
   if(this->m_recordKeep) _stats.IncLPStat("Toggle::TotalCalls", 1);
 
-  CFG n = _col, temp = _col;
   CDInfo cdInfo;
-  do{
-    //temp.GetRandomCfg(_env);
-    CFG incr;
-    temp = n;
-    incr.GetRandomRay(min(_positionRes, _orientationRes), _env, _dm);
-    while(fabs(AngleBetween(_c1, temp, _c2)) > PI/2.0){
-      temp.Increment(incr);
-    }
-  }while(!temp.InBoundingBox(_env));
-  n = temp;
+  CFG temp = ChooseAlteredCfg<CFG>(_env, _stats, _dm, _c1, _c2);
+  CFG n = temp;
+  if(n == CFG())
+    return false;
 
   bool isValid = vc->IsValid(vcm, n, _env, _stats, cdInfo, true, &Callee);
   _cdCounter++;

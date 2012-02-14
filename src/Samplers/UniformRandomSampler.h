@@ -45,7 +45,7 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
       CDInfo cdInfo;
       bool generated = false;
       int attempts = 0;
-
+      if(this->m_debug) VDClearAll();
       do {
         _stats.IncNodesAttempted(this->GetNameAndLabel());
         attempts++;
@@ -56,13 +56,15 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
                          _stats, cdInfo, true, &callee)) {
             _stats.IncNodesGenerated(this->GetNameAndLabel());
             generated = true;
+            if(this->m_debug) cout << "Generated::" << tmp << endl;
             _cfgOut.push_back(tmp);
           } else {
             _cfgCol = tmp;
+            if(this->m_debug) VDAddTempCfg(tmp, false);
           }
         }
       } while (!generated && (attempts < _maxAttempts));
-
+      if(!generated && this->m_debug) cout << "Maximum attempts reached." << endl;
       return generated;
     }  
 };
