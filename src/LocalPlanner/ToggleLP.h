@@ -128,8 +128,10 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
   connected = IsConnectedToggle(_env, _stats, _dm, _c1, _c2, _col, 
       _lpOutput, cdCounter, _positionRes, _orientationRes, 
       _checkCollision, _savePath, _saveFailedPath);
-  if(connected)
+  if(connected){
     _stats.IncLPConnections(this->GetNameAndLabel());
+    _lpOutput->SetLPLabel(this->GetNameAndLabel());
+  }
 
   _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
   return connected;

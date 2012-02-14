@@ -41,9 +41,12 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
         bool _savePath=false, bool _saveFailedPath=false) {
       //clear lpOutput
       _lpOutput->Clear();
-      return IsConnectedFunc<CFG>(_env, _stats, _dm, _c1, _c2, _col,
+      bool connected = IsConnectedFunc<CFG>(_env, _stats, _dm, _c1, _c2, _col,
           _lpOutput, _positionRes, _orientationRes,
           _checkCollision, _savePath, _saveFailedPath);
+      if(connected)
+        _lpOutput->SetLPLabel(this->GetNameAndLabel());
+      return connected;
     }
     
     // Default for non closed chains

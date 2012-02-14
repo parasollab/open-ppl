@@ -101,8 +101,10 @@ RotateAtS<CFG,WEIGHT>::IsConnected(Environment *_env, StatClass& _stats,
       reverse(_lpOutput->path.begin(), _lpOutput->path.end());
     reverse(_lpOutput->intermediates.begin(), _lpOutput->intermediates.end());
   }
-  if(connected) 
+  if(connected){
+    _lpOutput->SetLPLabel(this->GetNameAndLabel());
     _lpOutput->AddIntermediatesToWeights();
+  }
   return connected;
 }
 

@@ -38,6 +38,12 @@ struct LPOutput {
     edge.second.SetWeight(0);
     savedEdge.clear();
   }
+  
+  void SetLPLabel(string _l){
+    edge.first.SetLPLabel(_l);
+    edge.second.SetLPLabel(_l);
+  }
+
   void AddIntermediatesToWeights(){
     edge.first.SetIntermediates(intermediates);
     vector<CFG> tmp = intermediates;

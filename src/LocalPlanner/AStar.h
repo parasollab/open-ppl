@@ -102,6 +102,9 @@ AStar<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats, shared_ptr<
     if (_savePath)
       reverse(_lpOutput->path.begin(), _lpOutput->path.end());
   }
+  if(connected){
+    _lpOutput->SetLPLabel(this->GetNameAndLabel());
+  }
   return connected;
 }
 
