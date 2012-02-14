@@ -10,13 +10,12 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod {
   public:
     MedialAxisClearanceValidity() { }
     MedialAxisClearanceValidity(string _dmLabel, string _vcLabel, bool _useBBX, string _cType, string _pType, 
-      int _cRay, int _pRay, int historyLen, double _epsilon, double _clearance);
+        int _cRay, int _pRay, int _historyLen, double _epsilon, double _clearance);
     MedialAxisClearanceValidity(XMLNodeReader& _node, MPProblem* _problem);
     ~MedialAxisClearanceValidity() { }
 
-    virtual bool 
-      IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
-          CDInfo& _cdInfo, bool _enablePenetration, string *_callName);
+    virtual bool IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+        CDInfo& _cdInfo, bool _enablePenetration, string *_callName);
 
     vector< pair<CfgType,CfgType> > GetHistory();
     void ClearHistory();

@@ -64,7 +64,7 @@ GetRandomCfg_CenterOfMass(Environment* env) {
 
 void 
 Cfg_reach_cc_fixed::
-GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool norm) {
+GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
   cerr << "Warning GetRandomRay not implemented yet\n";
 }
 

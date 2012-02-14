@@ -113,7 +113,7 @@ void Cfg_fixed_tree::GetRandomCfg(Environment* _env) {
 }
 
 
-void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool norm) {
+void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
   //randomly sample params
   m_v.clear();
   for(int i=0; i<m_dof; ++i)
@@ -121,8 +121,8 @@ void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<Dist
   
   //scale to appropriate length
   Cfg_fixed_tree origin;
-  dm->ScaleCfg(env, incr, origin, *this, norm);
-  if ( norm )
+  dm->ScaleCfg(env, incr, origin, *this, _norm);
+  if ( _norm )
     NormalizeOrientation();
 }
 

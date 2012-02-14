@@ -32,7 +32,7 @@ class Cfg_reach_cc_fixed : public Cfg_reach_cc {
                             double length);
   */
   virtual void GetRandomCfg_CenterOfMass(Environment* env);
-  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool norm=true);
+  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm=true);
 
  protected:
 };
