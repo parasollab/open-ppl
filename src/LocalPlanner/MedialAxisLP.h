@@ -114,6 +114,8 @@ MedialAxisLP<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
     const CFG& _c1, const CFG& _c2, CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {  
+  //clear lpOutput
+  _lpOutput->Clear();
 
   if (this->m_debug) {
     cout << "\nMedialAxisLP::IsConnected" << endl
@@ -130,12 +132,6 @@ MedialAxisLP<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
     VDAddTempCfg(_c2,true);
     VDClearComments();
   }
-
-  //clear _lpOutput                                                                                                       
-  _lpOutput->path.clear();
-  _lpOutput->edge.first.SetWeight(0);
-  _lpOutput->edge.second.SetWeight(0);
-  _lpOutput->savedEdge.clear();
 
   connected = IsConnectedRec(_env, _stats, _dm, _c1, _c2, _col, _lpOutput, _positionRes, _orientationRes, 1);
 

@@ -118,6 +118,8 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
     shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, CFG& _col, 
     LPOutput<CFG, WEIGHT>* _lpOutput, double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) { 
+  //clear lpOutput
+  _lpOutput->Clear();
 
   _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0; 

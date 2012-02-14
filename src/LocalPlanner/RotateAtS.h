@@ -33,6 +33,8 @@ public StraightLine<CFG, WEIGHT> {
         bool _savePath=false,
         bool _saveFailedPath=false);
 
+    virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes);
   protected:
     virtual bool IsConnectedOneWay(Environment *_env, StatClass& _stats,
         shared_ptr<DistanceMetricMethod >_dm,
@@ -90,17 +92,17 @@ RotateAtS<CFG,WEIGHT>::IsConnected(Environment *_env, StatClass& _stats,
     bool _savePath,
     bool _saveFailedPath) { 
   //clear _lpOutput
-  _lpOutput->path.clear();
-  _lpOutput->edge.first.SetWeight(0);
-  _lpOutput->edge.second.SetWeight(0);
-  _lpOutput->savedEdge.clear();
+  _lpOutput->Clear();
   bool connected = false;
   connected = IsConnectedOneWay(_env,_stats,_dm,_c1,_c2,_col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
   if (!connected && !m_isSymmetric) { // Try the other way
     connected = IsConnectedOneWay(_env,_stats,_dm,_c2,_c1,_col,_lpOutput,_posRes,_oriRes,_checkCollision,_savePath,_saveFailedPath);
     if (_savePath)
       reverse(_lpOutput->path.begin(), _lpOutput->path.end());
+    reverse(_lpOutput->intermediates.begin(), _lpOutput->intermediates.end());
   }
+  if(connected) 
+    _lpOutput->AddIntermediatesToWeights();
   return connected;
 }
 
@@ -167,7 +169,13 @@ RotateAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment *_env, StatClass& _stats,
     }
   }
 
-  if ( connected ) _stats.IncLPConnections( RatS );  
+  if(connected){
+    _lpOutput->intermediates.push_back(*sequence[1]);
+    _lpOutput->intermediates.push_back(*sequence[2]);
+  }
+
+  if (connected) 
+    _stats.IncLPConnections( RatS );  
   _stats.IncLPCollDetCalls( RatS, cdCounter );
 
   // Since we use vector<Cfg*>, we need to delete it
@@ -177,4 +185,31 @@ RotateAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment *_env, StatClass& _stats,
 
   return connected;
 };
+
+template <class CFG, class WEIGHT>
+vector<CFG> 
+RotateAtS<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes){
+  StatClass dummyStats;
+  LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
+  CFG col;
+  int dummyCntr;
+  if(this->m_binarySearch)
+    IsConnectedSLBinary(_env, dummyStats, _dm, _c1, _intermediates[0], col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  else
+    IsConnectedSLSequential(_env, dummyStats, _dm, _c1, _intermediates[0], col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  lpOutput->path.push_back(_intermediates[0]);
+  if(this->m_binarySearch)
+    IsConnectedSLBinary(_env, dummyStats, _dm, _intermediates[0], _intermediates[1], col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  else
+    IsConnectedSLSequential(_env, dummyStats, _dm, _intermediates[0], _intermediates[1], col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  lpOutput->path.push_back(_intermediates[1]);
+  if(this->m_binarySearch)
+    IsConnectedSLBinary(_env, dummyStats, _dm, _intermediates[1], _c2, col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  else
+    IsConnectedSLSequential(_env, dummyStats, _dm, _intermediates[1], _c2, col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
+  vector<CFG> path = lpOutput->path;
+  delete lpOutput;
+  return path;
+}
 #endif

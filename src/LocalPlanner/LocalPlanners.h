@@ -28,8 +28,22 @@ class DistanceMetricMethod;
 template <class CFG, class WEIGHT>
 struct LPOutput {
   vector<CFG> path;          // Path found by local planner.
+  vector<CFG> intermediates;
   pair<WEIGHT, WEIGHT> edge; // Contains weights of edges defined in path.
   vector< pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > > savedEdge;  // Failed Edge: savedEdge.second -> position failed.
+  void Clear(){
+    path.clear();
+    intermediates.clear();
+    edge.first.SetWeight(0);
+    edge.second.SetWeight(0);
+    savedEdge.clear();
+  }
+  void AddIntermediatesToWeights(){
+    edge.first.SetIntermediates(intermediates);
+    vector<CFG> tmp = intermediates;
+    reverse(tmp.begin(), tmp.end());
+    edge.second.SetIntermediates(tmp);
+  }
 };
 
 // Hide LocalPlannerMethod List in pmpl_detail namespace

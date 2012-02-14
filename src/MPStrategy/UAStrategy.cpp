@@ -620,7 +620,7 @@ void UAStrategy::WriteRegionsSeparate(){
       for(unsigned int k = 0; k<vi.size()-1; k++){
          CfgType cfg1 = rg->find_vertex(vi[k])->property();
          CfgType cfg2 = rg->find_vertex(vi[k+1])->property();
-         eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg1,cfg2,0);
+         eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg1,cfg2, WeightType());
          //eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg2,cfg1,0);
       }
       CfgType cfg1 = rg->find_vertex(vi[0])->property();

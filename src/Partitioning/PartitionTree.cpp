@@ -184,9 +184,9 @@ min, vector<vector<double> >& max){
          newVIDS.push_back(eachRgn.GetRoadmap()->m_pRoadmap->AddVertex(cfg));
       }
       for(unsigned int k = 0; k<newVIDS.size(); k++){
-         eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(newVIDS[k],newVIDS[k+1],0);
+         eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(newVIDS[k],newVIDS[k+1], WeightType());
       }
-      eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(newVIDS[newVIDS.size()-1],newVIDS[0],0);
+      eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(newVIDS[newVIDS.size()-1],newVIDS[0], WeightType());
    }
    vector<shared_ptr<BoundingBox> >* bboxes = new vector<shared_ptr<BoundingBox> >();
    for(unsigned int i = 0; i<min.size(); i++){

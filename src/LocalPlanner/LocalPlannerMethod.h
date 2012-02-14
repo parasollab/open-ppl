@@ -51,6 +51,15 @@ template <class CFG, class WEIGHT> class LocalPlannerMethod : public MPBaseObjec
           _savePath,_saveFailedPath);
     }
 
+    virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes) {
+      StatClass dummyStats;
+      LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
+      IsConnected(_env, dummyStats, _dm, _c1, _c2, lpOutput, _posRes, _oriRes, false, true, false);
+      vector<CFG> path = lpOutput->path;
+      delete lpOutput;
+      return path;
+    }
 };
 
 template <class CFG, class WEIGHT> 

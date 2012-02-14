@@ -13,8 +13,11 @@
 
 #ifndef WEIGHT_H_
 #define WEIGHT_H_
-using namespace std;
+
+#include "CfgTypes.h"
 #include <iostream>
+using namespace std;
+
 #ifdef _PARALLEL
 #include "views/proxy.h"
 #endif
@@ -25,43 +28,44 @@ using namespace std;
 //
 /////////////////////////////////////////////////////////////
 
+static vector<CfgType> EMPTY = vector<CfgType>();
+
 class DefaultWeight {
   public:
 
     // Constructors and Destructor
-    DefaultWeight();
-    DefaultWeight(int lpID);
-    DefaultWeight(int lpID, double w);
+    DefaultWeight(string _lpLabel="", double _w=1, vector<CfgType>& _intermediates = EMPTY);
     virtual ~DefaultWeight();
 
     // Graph.h Interface
     static double InvalidWeight();
     static DefaultWeight MaxWeight(); // For Dijkstra's Alg
 
-    virtual bool operator== (const DefaultWeight& tmp) const;
-    virtual const DefaultWeight& operator= (const DefaultWeight& w);
+    virtual bool operator== (const DefaultWeight& _tmp) const;
+    virtual const DefaultWeight& operator= (const DefaultWeight& _w);
 
     virtual DefaultWeight operator+(const DefaultWeight& _other) const ;
     virtual bool operator<(const DefaultWeight& _other) const ;
 
     // Read/Write values of datamember to given input/output stream.
-    virtual inline void Output(ostream& out) const;
-    friend ostream& operator<< (ostream& _os, const DefaultWeight& w);
-    virtual inline void Input(istream& in);
-    friend istream& operator>> (istream& _is, DefaultWeight& w);
+    friend ostream& operator<< (ostream& _os, const DefaultWeight& _w);
+    friend istream& operator>> (istream& _is, DefaultWeight& _w);
 
     // Access Methods
-    int GetLP() const { return lp; }
-    void SetLP(int lpID){ lp = lpID; }
+    string GetLPLabel() const { return m_lpLabel; }
+    void SetLPLabel(string _lpLabel){ m_lpLabel = _lpLabel; }
+    const vector<CfgType>& GetIntermediates() const { return m_intermediates; }
+    void SetIntermediates(vector<CfgType>& _intermediates){ m_intermediates = _intermediates;}
 
-    double GetWeight() const { return weight; }
+    double GetWeight() const { return m_weight; }
     double Weight() const { return GetWeight(); } //for GraphAlgo interface
-    void SetWeight(double w){ weight = w; }
+    void SetWeight(double _w){ m_weight = _w; }
 
     // Data
   protected:
-    int lp;
-    double weight;
+    string m_lpLabel;
+    double m_weight;
+    vector<CfgType> m_intermediates;
 
     static double MAX_WEIGHT;
 
@@ -70,8 +74,9 @@ class DefaultWeight {
 #ifdef _PARALLEL
     void define_type(stapl::typer &t)  
     {
-      t.member(weight);
-      t.member(lp);
+      t.member(m_weight);
+      t.member(m_lpLabel);
+      t.member(m_intermediates);
     }
 #endif
 };

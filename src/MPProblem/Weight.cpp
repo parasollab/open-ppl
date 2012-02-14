@@ -6,11 +6,12 @@
  *@file Weight.cpp
  *@author Shawna Thomas
  *
- * Weight class for edge weights.  Other weight classes should be 
+ * Weight class for edge weights.  Other m_weight classes should be 
  * derived off of this class.
  *@date   12/28/02
  *********************************************************************/
 
+#include "CfgTypes.h"
 #include <Weight.h>
 #include <MPUtils.h>
 
@@ -20,22 +21,9 @@
 
 double DefaultWeight::MAX_WEIGHT = MAX_DBL;
 
-DefaultWeight::DefaultWeight(){
-  lp = INVALID_LP;
-  //weight = INVALID_DBL;
-  weight = 1;
-}
-
-DefaultWeight::DefaultWeight(int lpID){
-  lp = lpID;
-  //weight = INVALID_DBL;
-  weight = 1;
-}
-
-DefaultWeight::DefaultWeight(int lpID, double w){
-  lp = lpID;
-  weight = w;
-}
+DefaultWeight::DefaultWeight(string _lpLabel, double _w, vector<CfgType>& _intermediates):
+  m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates){
+  }
 
 DefaultWeight::~DefaultWeight(){}
 
@@ -46,47 +34,50 @@ DefaultWeight::InvalidWeight(){
 
 DefaultWeight 
 DefaultWeight::MaxWeight(){
-  return DefaultWeight(INVALID_LP,MAX_WEIGHT);
+  return DefaultWeight("INVALID", MAX_WEIGHT);
 }
 
 bool 
-DefaultWeight::operator== (const DefaultWeight& tmp) const{
-  return ( (lp==tmp.GetLP()) && (weight==tmp.GetWeight()) );
+DefaultWeight::operator==(const DefaultWeight& _tmp) const{
+  return ( (m_lpLabel==_tmp.GetLPLabel()) && (m_weight==_tmp.GetWeight()) );
 }
 
 const DefaultWeight& 
-DefaultWeight::operator= (const DefaultWeight& w){
-  lp = w.GetLP();
-  weight = w.GetWeight();
+DefaultWeight::operator=(const DefaultWeight& _w){
+  m_lpLabel = _w.GetLPLabel();
+  m_weight = _w.GetWeight();
+  m_intermediates = _w.GetIntermediates();
   return *this;
 }
 
-ostream& operator<< (ostream& _os, const DefaultWeight& w){
-  w.Output(_os);
+ostream& 
+operator<<(ostream& _os, const DefaultWeight& _w){
+  /*_os << _w.m_intermediates.size() << " ";
+  for(vector<CfgType>::const_iterator cit = _w.m_intermediates.begin(); cit!= _w.m_intermediates.end(); cit++){
+    _os << *cit << " ";
+  }
+  */
+  //TODO::FIX::for now output 0 for number of intermediates, util vizmo gets updated. Then replace with the above code.
+  _os << "0 ";
+  _os << _w.m_weight;
   return _os;
 }
 
-void
-DefaultWeight::Output(ostream& out) const {
-  out << lp << " " << weight;
-}
-
-istream& operator>> (istream& _is, DefaultWeight& w){
-  w.Input(_is);
+istream& 
+operator>>(istream& _is, DefaultWeight& _w){
+  int tmp;
+  _is >> tmp >> _w.m_weight;
   return _is;
 }
 
 DefaultWeight 
 DefaultWeight::operator+(const DefaultWeight& _other) const {
-    return DefaultWeight(weight+_other.weight);
-  }
-  bool DefaultWeight::operator<(const DefaultWeight& _other) const {
-	  return weight < _other.weight;
-  }
+  return DefaultWeight(m_lpLabel, m_weight+_other.m_weight);
+}
 
-void
-DefaultWeight::Input(istream& in){
-  in >> lp >> weight;
+bool 
+DefaultWeight::operator<(const DefaultWeight& _other) const {
+  return m_weight < _other.m_weight;
 }
 
 
