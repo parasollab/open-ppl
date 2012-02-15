@@ -29,6 +29,14 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
         const CFG& _c1, const CFG& _c2, CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
         double _positionRes, double _orientationRes, bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
 
+    virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes) {
+      vector<CFG> tmp = _intermediates;
+      ostringstream oss;
+      oss << "ReconstructedPath." << _c1.PositionMagnitude() << "." << _c2.PositionMagnitude() << ".path";
+      WritePathConfigurations(oss.str(), tmp, _env);
+      return tmp;
+    }
   protected:
     bool SetLPOutputFail(const CFG& _c, const CFG& _p, LPOutput<CFG, WEIGHT>* _lpOutput, string _debugMsg);
 
@@ -87,10 +95,7 @@ AStar<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats, shared_ptr<
     const CFG& _c1, const CFG& _c2, CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
     double _positionRes, double _orientationRes, bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   //clear _lpOutput
-  _lpOutput->path.clear();
-  _lpOutput->edge.first.SetWeight(0);
-  _lpOutput->edge.second.SetWeight(0);
-  _lpOutput->savedEdge.clear();
+  _lpOutput->Clear();
   bool connected = false;
 
   connected = IsConnectedOneWay(_env, _stats, _dm, _c1, _c2,_col, _lpOutput,
@@ -103,6 +108,7 @@ AStar<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats, shared_ptr<
       reverse(_lpOutput->path.begin(), _lpOutput->path.end());
   }
   if(connected){
+    _lpOutput->AddIntermediatesToWeights();
     _lpOutput->SetLPLabel(this->GetNameAndLabel());
   }
   return connected;
@@ -187,6 +193,7 @@ AStar<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, share
     if(_savePath || _saveFailedPath) {
       _lpOutput->path.push_back(p);
     }
+    _lpOutput->intermediates.push_back(p);
 
     //too many tries have been attempted
     if ((++tries> m_maxTries * nTicks)) {
@@ -196,6 +203,7 @@ AStar<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, share
   } while(p!=_c2);
 
   _lpOutput->path.push_back(p);
+  _lpOutput->intermediates.push_back(p);
   _lpOutput->edge.first.SetWeight(_lpOutput->edge.first.GetWeight() + iter);
   _lpOutput->edge.second.SetWeight(_lpOutput->edge.second.GetWeight() + iter);
 
