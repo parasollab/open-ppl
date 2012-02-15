@@ -32,9 +32,6 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
     virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
         const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes) {
       vector<CFG> tmp = _intermediates;
-      ostringstream oss;
-      oss << "ReconstructedPath." << _c1.PositionMagnitude() << "." << _c2.PositionMagnitude() << ".path";
-      WritePathConfigurations(oss.str(), tmp, _env);
       return tmp;
     }
   protected:
