@@ -9,7 +9,7 @@ using namespace std;
 class MedialAxisClearanceValidity : public ValidityCheckerMethod {
   public:
     MedialAxisClearanceValidity() { }
-    MedialAxisClearanceValidity(string _dmLabel, string _vcLabel, bool _useBBX, string _cType, string _pType, 
+    MedialAxisClearanceValidity(string _dmLabel, string _vcLabel, bool _useBBX, bool _cExact, bool _pExact, 
         int _cRay, int _pRay, int _historyLen, double _epsilon, double _clearance);
     MedialAxisClearanceValidity(XMLNodeReader& _node, MPProblem* _problem);
     ~MedialAxisClearanceValidity() { }
@@ -24,8 +24,7 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod {
     string m_dmLabel;
     string m_vcLabel;
     bool m_useBBX,m_positional;
-    string m_cType;
-    string m_pType;
+    bool m_cExact, m_pExact;
     int m_cRay;
     int m_pRay;
     int m_historyLen;
