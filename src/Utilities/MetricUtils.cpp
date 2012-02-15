@@ -4,9 +4,12 @@
 #include <unistd.h>
 #include "GraphAlgo.h"
 #include "MetricUtils.h"
+#include "LocalPlannerMethod.h"
+#include "LocalPlanners.h"
+#include "MPStrategy.h"
+
 
 struct rusage buf;
-
 /////////////////////////////////////////////////////////////////////
 //
 //  StatClass.cpp
@@ -339,3 +342,49 @@ int
 ClockClass::GetUSeconds() {
   return (int)(m_uTime*1e6+m_uuTime);
 }
+
+double 
+minRoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType, WeightType> _g, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional){
+
+  double minClearance = 1e6;
+
+  RoadmapGraph<CfgType, WeightType>* graph = _g.m_pRoadmap;
+  for(RoadmapGraph<CfgType, WeightType>::edge_iterator it = graph->edges_begin(); it != graph->edges_end(); it++){
+    double currentClearance = minEdgeClearance(_mp, _exact, _env, (*graph->find_vertex((*it).source())).property(), (*graph->find_vertex((*it).target())).property(), (*it).property(), _vc, _dm, _clearance, _penetration, _useBBX, _positional);
+    if(currentClearance < minClearance){
+      minClearance = currentClearance;
+    }
+  }
+  return minClearance;
+}
+
+double 
+minEdgeClearance(MPProblem* _mp, bool _exact, Environment* _env, const CfgType& _c1, const CfgType& _c2, const WeightType& _weight, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional){
+  double minClearance = 1e6;
+  shared_ptr<DistanceMetricMethod> dummy; //Currently not used
+  //Reconstruct the path given the two nodes
+  vector<CfgType> intermediates = _weight.GetIntermediates();
+  LocalPlanners<CfgType, WeightType>* lp = _mp->GetMPStrategy()->GetLocalPlanners();
+  vector<CfgType> reconEdge = lp->GetMethod(_weight.GetLPLabel())->ReconstructPath(_env, dummy, _c1, _c2, intermediates, _env->GetPositionRes(), _env->GetOrientationRes());  
+  for(vector<CfgType>::iterator it = reconEdge.begin(); it != reconEdge.end(); it++){
+    CDInfo collInfo;
+    StatClass dummyStats; //Not used
+    CfgType clrCfg;
+    //Decide which collision info function to use
+    double currentClearance;
+    if(_exact){
+      GetExactCollisionInfo(_mp, *it, _env, _env->GetBoundingBox(), dummyStats, collInfo, _vc, _useBBX);
+      currentClearance = collInfo.min_dist;
+    }
+    else{
+      GetApproxCollisionInfo(_mp, *it, clrCfg, _env, dummyStats, collInfo, _vc, _dm, _clearance, _penetration, _useBBX, _positional);
+      currentClearance = collInfo.min_dist;
+    }
+    //If newly computed clearance is less than the previous minimum, it becomes the minimum
+    if(currentClearance < minClearance){
+      minClearance = currentClearance;
+    }
+  }
+  return minClearance;
+}
+
