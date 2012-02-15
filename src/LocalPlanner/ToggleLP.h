@@ -245,7 +245,7 @@ ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
     VDAddTempCfg(_col, false);
   }
   if(isValid){
-    typename GRAPH::VID nvid = pathGraph.AddVertex(n);
+    pathGraph.AddVertex(n);
     CFG c2, c3;
     bool b1 = lpMethod->IsConnected(_env, _stats, _dm, _c1, n, c2, _lpOutput, _positionRes, _orientationRes, true, false, false);
     if(b1){
@@ -429,7 +429,6 @@ ToggleLP<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMet
   LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
   LPOutput<CFG, WEIGHT>* dummyLPOutput = new LPOutput<CFG, WEIGHT>();
   CFG col;
-  int dummyCntr;
   if(_intermediates.size()>0){
     lpMethod->IsConnected(_env, dummyStats, _dm, _c1, _intermediates[0], col, dummyLPOutput, _posRes, _oriRes, false, true, false);
     for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
