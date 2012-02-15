@@ -374,7 +374,6 @@ MedialAxisLP<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<Distanc
         lpOutput->path.push_back(dummyLPOutput->path[j]);
     }
     lpOutput->path.push_back(_intermediates[_intermediates.size()-1]);
-    cout << "\tc2::" << _c2 << endl;
     envLPMethod->IsConnected(_env, dummyStats, _dm, _intermediates[_intermediates.size()-1], _c2, col, dummyLPOutput, _posRes, _oriRes, false, true, false);
     for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
       lpOutput->path.push_back(dummyLPOutput->path[j]);

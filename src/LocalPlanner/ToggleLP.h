@@ -5,6 +5,7 @@
 #include "LocalPlannerMethod.h"
 #include "LocalPlanners.h"
 #include "MPStrategy.h"
+#include "RoadmapGraph.h"
 
 template<class CFG, class WEIGHT>
 class LocalPlanners;
@@ -27,6 +28,8 @@ class ToggleLP: public LocalPlannerMethod<CFG, WEIGHT> {
         LPOutput<CFG, WEIGHT>* _lpOutput, double _positionRes, double _orientationRes,
         bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
 
+    virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes);
   protected:
 
     // Default for non closed chains - alters midpoint to a distance delta away on a random ray
@@ -63,6 +66,8 @@ class ToggleLP: public LocalPlannerMethod<CFG, WEIGHT> {
     double m_iterations;
     bool m_degeneracyReached;
     deque<CFG> m_colHist;
+    typedef RoadmapGraph<CFG, WEIGHT> GRAPH;
+    GRAPH pathGraph;
 };
 
 template <class CFG, class WEIGHT>
@@ -120,6 +125,10 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) { 
   //clear lpOutput
   _lpOutput->Clear();
+  pathGraph.clear();
+  CFG c1 = _c1, c2 = _c2;
+  typename GRAPH::vertex_descriptor svid = pathGraph.AddVertex(c1);
+  typename GRAPH::vertex_descriptor gvid = pathGraph.AddVertex(c2);
 
   _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0; 
@@ -130,6 +139,15 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
       _checkCollision, _savePath, _saveFailedPath);
   if(connected){
     _stats.IncLPConnections(this->GetNameAndLabel());
+    //find path in pathGraph
+    vector<typename GRAPH::vertex_descriptor> path;
+    find_path_dijkstra(pathGraph, svid, gvid, path, WEIGHT::MaxWeight());
+    if(path.size()>0){
+      for(size_t i = 1; i<path.size()-1; i++){
+        _lpOutput->intermediates.push_back(pathGraph.find_vertex(path[i])->property());
+      }
+    }
+    _lpOutput->AddIntermediatesToWeights();
     _lpOutput->SetLPLabel(this->GetNameAndLabel());
   }
 
@@ -227,9 +245,20 @@ ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
     VDAddTempCfg(_col, false);
   }
   if(isValid){
+    typename GRAPH::VID nvid = pathGraph.AddVertex(n);
     CFG c2, c3;
     bool b1 = lpMethod->IsConnected(_env, _stats, _dm, _c1, n, c2, _lpOutput, _positionRes, _orientationRes, true, false, false);
+    if(b1){
+      CFG c1 = _c1;
+      pathGraph.AddEdge(c1, n, WEIGHT());
+      pathGraph.AddEdge(n, c1, WEIGHT());
+    }
     bool b2 = lpMethod->IsConnected(_env, _stats, _dm, _c2, n, c3, _lpOutput, _positionRes, _orientationRes, true, false, false);
+    if(b2){
+      CFG c2 = _c2;
+      pathGraph.AddEdge(c2, n, WEIGHT());
+      pathGraph.AddEdge(n, c2, WEIGHT());
+    }
     if(this->m_debug) {
       VDAddNode(n);
       VDAddTempEdge(_c1, n);
@@ -350,9 +379,18 @@ ToggleLP<CFG, WEIGHT>::ToggleConnect(Environment* _env, StatClass& _stats, share
 
   //successful conntection, add the edge and return validity state
   if(connect){
+    if(_toggle){
+      CFG s = _s, g = _g;
+      pathGraph.AddEdge(s, g, WEIGHT());
+      pathGraph.AddEdge(g, s, WEIGHT());
+    }
     if(this->m_debug && _toggle)
       VDAddEdge(_s, _g);
     return _toggle;
+  }
+
+  if(!_toggle){
+    pathGraph.AddVertex(c);
   }
 
   if(this->m_debug) VDAddTempCfg(c, !_toggle);
@@ -382,4 +420,39 @@ ToggleLP<CFG, WEIGHT>::ToggleConnect(Environment* _env, StatClass& _stats, share
       ToggleConnect(_env, _stats, _dm, _n2, c, _s, _g, !_toggle, _lpOutput, _positionRes, _orientationRes, _depth+1);
 } 
 
+template <class CFG, class WEIGHT>
+vector<CFG> 
+ToggleLP<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes){
+  StatClass dummyStats;
+  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
+  LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
+  LPOutput<CFG, WEIGHT>* dummyLPOutput = new LPOutput<CFG, WEIGHT>();
+  CFG col;
+  int dummyCntr;
+  if(_intermediates.size()>0){
+    lpMethod->IsConnected(_env, dummyStats, _dm, _c1, _intermediates[0], col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+    for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
+      lpOutput->path.push_back(dummyLPOutput->path[j]);
+    for(size_t i = 0; i<_intermediates.size()-1; i++){
+      lpOutput->path.push_back(_intermediates[i]);
+      lpMethod->IsConnected(_env, dummyStats, _dm, _intermediates[i], _intermediates[i+1], col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+      for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
+        lpOutput->path.push_back(dummyLPOutput->path[j]);
+    }
+    lpOutput->path.push_back(_intermediates[_intermediates.size()-1]);
+    lpMethod->IsConnected(_env, dummyStats, _dm, _intermediates[_intermediates.size()-1], _c2, col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+    for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
+      lpOutput->path.push_back(dummyLPOutput->path[j]);
+  }
+  else {
+    lpMethod->IsConnected(_env, dummyStats, _dm, _c1, _c2, col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+    for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
+      lpOutput->path.push_back(dummyLPOutput->path[j]);
+  }
+  vector<CFG> path = lpOutput->path;
+  delete lpOutput;
+  delete dummyLPOutput;
+  return path;
+}
 #endif
