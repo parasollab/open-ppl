@@ -30,7 +30,7 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public LocalPlannerMethod
         shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, 
         CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput, double _positionRes, 
         double _orientationRes, bool _checkCollision=true, 
-        bool _savePath=false, bool _saveFailedPath=false);
+        bool _savePath=true, bool _saveFailedPath=true);
 
     virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
         const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes);
@@ -52,7 +52,11 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public LocalPlannerMethod
 // Definitions for Constructors and Destructor
 template <class CFG, class WEIGHT>
 MedialAxisLP<CFG, WEIGHT>::
-MedialAxisLP() : LocalPlannerMethod<CFG, WEIGHT>() {
+MedialAxisLP() : LocalPlannerMethod<CFG, WEIGHT>(), 
+        m_useBBX(true), m_cExact(false), m_pExact(false), m_positional(true), 
+        m_clearance(10), m_penetration(10), m_historyLength(5), m_maxItr(2), 
+        m_dm(""), m_vcm(""), m_maLP(""), m_envLP(""), m_macVC(""), 
+        m_epsilon(0.1), m_sampleEpsilon(0.1) {
   this->SetName("MedialAxisLP");
 }
 
@@ -61,25 +65,27 @@ MedialAxisLP(XMLNodeReader& _node, MPProblem* in_pProblem) :
   LocalPlannerMethod<CFG, WEIGHT>(_node, in_pProblem) {
     this->SetName("MedialAxisLP");
 
-    m_vcm         = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
-    m_dm          = _node.stringXMLParameter("dmMethod", true, "", "Distance Metric Method");
-    m_maLP       = _node.stringXMLParameter("maLPMethod", true, "", "Local Planner Method");
-    m_envLP      = _node.stringXMLParameter("envLPMethod", true, "", "Local Planner Method");
-    m_macVC      = _node.stringXMLParameter("macVCMethod", true, "", "Local Planner Method");
-    string strC     = _node.stringXMLParameter("clearanceType", true, "", "Clearance Computation (exact or approx)");
-    string strP     = _node.stringXMLParameter("penetrationType", true, "", "Penetration Computation (exact or approx)");
+    m_vcm   = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
+    m_dm    = _node.stringXMLParameter("dmMethod", true, "", "Distance Metric Method");
+    m_maLP  = _node.stringXMLParameter("maLPMethod", true, "", "Local Planner Method");
+    m_envLP = _node.stringXMLParameter("envLPMethod", true, "", "Local Planner Method");
+    m_macVC = _node.stringXMLParameter("macVCMethod", true, "", "Local Planner Method");
+    string strC = _node.stringXMLParameter("clearanceType", true, "", "Clearance Computation (exact or approx)");
+    string strP = _node.stringXMLParameter("penetrationType", true, "", "Penetration Computation (exact or approx)");
     m_cExact = (strC.compare("exact")==0)?true:false;
     m_pExact = (strP.compare("exact")==0)?true:false;
-    m_clearance       = _node.numberXMLParameter("clearanceRays", false, 10, 1, 1000, "Clearance Number");
-    m_penetration     = _node.numberXMLParameter("penetrationRays", false, 10, 1, 1000, "Penetration Number");
+    m_clearance   = _node.numberXMLParameter("clearanceRays", false, 10, 1, 1000, "Clearance Number");
+    m_penetration = _node.numberXMLParameter("penetrationRays", false, 10, 1, 1000, "Penetration Number");
     m_epsilon       = _node.numberXMLParameter("epsilon", false, 0.1, 0.0, 100.0, 
         "Epsilon-Close to the MA (fraction of the resolution)");
     m_sampleEpsilon = _node.numberXMLParameter("sampleEpsilon", false, 0.1, 0.0, 100.0, 
         "Epsilon-Close to the MA (fraction of the resolution)");
-    m_historyLength     = _node.numberXMLParameter("historyLength", false, 5, 3, 1000, "History Length");
-    m_maxItr        = _node.numberXMLParameter("maxItr", false, 2, 1, 1000, "Max Number of Recursive Iterations");
-    m_useBBX         = _node.boolXMLParameter("useBBX", false, true, "Use the Bounding Box as an Obstacle");
-    m_positional    = _node.boolXMLParameter("positional", false, true, "Use only positional DOFs");
+    m_historyLength = _node.numberXMLParameter("historyLength", false, 5, 3, 1000, "History Length");
+    m_maxItr = _node.numberXMLParameter("maxItr", false, 2, 1, 1000, "Max Number of Recursive Iterations");
+    m_useBBX = _node.boolXMLParameter("useBBX", false, true, "Use the Bounding Box as an Obstacle");
+    m_positional = _node.boolXMLParameter("positional", false, true, "Use only positional DOFs");
+
+    _node.warnUnrequestedAttributes();
   }
 
 template <class CFG, class WEIGHT> 
@@ -89,9 +95,25 @@ MedialAxisLP<CFG, WEIGHT>::~MedialAxisLP() { }
 template <class CFG, class WEIGHT> 
 void 
 MedialAxisLP<CFG, WEIGHT>::PrintOptions(ostream& _os) {
-  _os << "    " << this->GetName() << "::  ";
-  _os << "vcMethod = " << " " << m_vcm << " ";
-  _os << endl;
+  LocalPlannerMethod<CFG, WEIGHT>::PrintOptions(_os);
+  _os << "\tvcMethod = " << m_vcm << "\tmacVCMethod = " << m_macVC << endl;
+  _os << "\tdmMethod = " << m_dm << endl;
+  _os << "\tmaLPMethod = " << m_maLP << "\tenvLPMethod = " << m_envLP << endl;
+  _os << "\tclearance type = ";
+  if(m_cExact)
+    _os << "exact" << endl;
+  else
+    _os << "approx, rays = " << m_clearance << endl;
+  _os << "\tpenetration type = ";
+  if(m_pExact)
+    _os << "exact" << endl;
+  else
+    _os << "approx, rays = " << m_penetration << endl;
+  _os << "\tepsilon = " << m_epsilon << "\tsampleEpsilon = " << m_sampleEpsilon << endl;
+  _os << "\thistoryLength = " << m_historyLength << endl;
+  _os << "\tmaxItr = " << m_maxItr << endl;
+  _os << "\tuseBBX = " << m_useBBX << endl;
+  _os << "\tpositional = " << m_positional << endl;
 }
 
 template <class CFG, class WEIGHT> 
@@ -109,6 +131,20 @@ MedialAxisLP<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
     const CFG& _c1, const CFG& _c2, CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {  
+  //check that appropriate save path variables are set
+  if(!_checkCollision) {
+    if(this->m_debug) cerr << "WARNING, in MedialAxisLP::IsConnected: checkCollision should be set to true (false is not applicable for this local planner), setting to true.\n";
+    _checkCollision = true;
+  }
+  if(!_savePath) {
+    if(this->m_debug) cerr << "WARNING, in MedialAxisLP::IsConnected: savePath should be set to true (false is not applicable for this local planner), setting to true.\n";
+    _savePath = true;
+  }
+  if(!_saveFailedPath) {
+    if(this->m_debug) cerr << "WARNING, in MedialAxisLP::IsConnected: saveFailedPath should be set to true (false is not applicable for this local planner), setting to true.\n";
+    _saveFailedPath = true;
+  }
+
   //clear lpOutput
   _lpOutput->Clear();
 
@@ -119,7 +155,6 @@ MedialAxisLP<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
   }
 
   bool connected = false;
-  _savePath = true;
   _stats.IncLPAttempts(this->GetNameAndLabel());
   if (this->m_debug) {
     VDComment("Initial CFGs");
@@ -170,7 +205,7 @@ MedialAxisLP<CFG,WEIGHT>::IsConnectedRec(Environment* _env, StatClass& _stats, s
 
   if ( _itr > m_maxItr ) return false;
 
-  ValidityChecker<CFG>*                      vc = this->GetMPProblem()->GetValidityChecker();
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcm);
   LocalPlannerPointer envLPMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_envLP);
   LPOutput<CFG, WEIGHT> maLPOutput, tmpLPOutput;
@@ -214,11 +249,11 @@ MedialAxisLP<CFG,WEIGHT>::IsConnectedRec(Environment* _env, StatClass& _stats, s
     return false;
   }
 
-  for(int i = 0; i<lpOutputS.intermediates.size(); i++){
+  for(size_t i = 0; i<lpOutputS.intermediates.size(); i++){
     _lpOutput->intermediates.push_back(lpOutputS.intermediates[i]);
   }
   _lpOutput->intermediates.push_back(mid);
-  for(int i = 0; i<lpOutputE.intermediates.size(); i++){
+  for(size_t i = 0; i<lpOutputE.intermediates.size(); i++){
     _lpOutput->intermediates.push_back(lpOutputE.intermediates[i]);
   }
 
@@ -242,7 +277,7 @@ EpsilonClosePath( Environment *_env, StatClass& _stats, shared_ptr<DistanceMetri
     double _posRes, double _oriRes) {
 
   if (this->m_debug) cout << "MedialAxisLP::EpsilonClosePath()" << endl;
-  ValidityChecker<CFG>*                       vc = this->GetMPProblem()->GetValidityChecker();
+  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_macVC);
   LocalPlannerPointer envLPMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_envLP);
 
@@ -362,7 +397,6 @@ MedialAxisLP<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<Distanc
   LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
   LPOutput<CFG, WEIGHT>* dummyLPOutput = new LPOutput<CFG, WEIGHT>();
   CFG col;
-  int dummyCntr;
   if(_intermediates.size()>0){
     envLPMethod->IsConnected(_env, dummyStats, _dm, _c1, _intermediates[0], col, dummyLPOutput, _posRes, _oriRes, false, true, false);
     for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
