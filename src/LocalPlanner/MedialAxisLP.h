@@ -179,7 +179,7 @@ MedialAxisLP<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
     _lpOutput->edge.first.SetWeight(_lpOutput->path.size());
     _lpOutput->edge.second.SetWeight(_lpOutput->path.size());
     _lpOutput->AddIntermediatesToWeights();
-    _lpOutput->SetLPLabel(this->GetNameAndLabel());
+    _lpOutput->SetLPLabel(this->GetLabel());
   }
 
   if (this->m_debug) {

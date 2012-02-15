@@ -45,7 +45,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
           _lpOutput, _positionRes, _orientationRes,
           _checkCollision, _savePath, _saveFailedPath);
       if(connected)
-        _lpOutput->SetLPLabel(this->GetNameAndLabel());
+        _lpOutput->SetLPLabel(this->GetLabel());
       return connected;
     }
     

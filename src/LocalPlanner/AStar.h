@@ -106,7 +106,7 @@ AStar<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats, shared_ptr<
   }
   if(connected){
     _lpOutput->AddIntermediatesToWeights();
-    _lpOutput->SetLPLabel(this->GetNameAndLabel());
+    _lpOutput->SetLPLabel(this->GetLabel());
   }
   return connected;
 }

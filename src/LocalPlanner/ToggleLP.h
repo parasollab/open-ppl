@@ -148,7 +148,7 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
       }
     }
     _lpOutput->AddIntermediatesToWeights();
-    _lpOutput->SetLPLabel(this->GetNameAndLabel());
+    _lpOutput->SetLPLabel(this->GetLabel());
   }
 
   _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
