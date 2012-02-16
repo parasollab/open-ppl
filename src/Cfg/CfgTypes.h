@@ -48,7 +48,6 @@ typedef Cfg_free_multi CfgType;
 
 #ifdef PMPProtein
 #include "CfgProtein.h"
-#include "BioWeight.h"
 typedef CfgProtein CfgType;
 #endif
 
