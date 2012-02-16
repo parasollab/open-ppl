@@ -12,6 +12,7 @@
 #include "NodeConnectionMethod.h"
 #include "NeighborhoodConnection.h"
 #include "PreferentialAttachment.h"
+#include "OptimalConnection.h"
 
 // look these over before updating
 //#include "ModifiedLM.h"
@@ -45,7 +46,8 @@
 namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
       NeighborhoodConnection<CfgType,WeightType>,
-      PreferentialAttachment<CfgType,WeightType>
+      PreferentialAttachment<CfgType,WeightType>,
+			OptimalConnection<CfgType,WeightType>
     > NodeConnectorMethodList;
 
   typedef boost::mpl::list<
@@ -507,6 +509,14 @@ ParseXML(XMLNodeReader& in_Node) {
       prefconn->cdInfo = &cdInfo;
       prefconn->connectionPosRes = connectionPosRes;
       prefconn->connectionOriRes = connectionOriRes;
+    } if(citr->getName() == "OptimalConnection") {
+      cout << "ConnectMap found OptimalConnection" << endl;
+      OptimalConnection<CFG,WEIGHT>*optimalConnection 
+											= new OptimalConnection<CFG,WEIGHT>(*citr,GetMPProblem());
+      AddNodeMethod(optimalConnection->GetLabel(),NodeConnectionPointer(optimalConnection));
+      optimalConnection->cdInfo = &cdInfo;
+      optimalConnection->connectionPosRes = connectionPosRes;
+      optimalConnection->connectionOriRes = connectionOriRes;
     } else if(citr->getName() == "ConnectCCs") {
       cout << "ConnectMap found ConnectCCs" << endl;
       ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>(*citr,GetMPProblem());
@@ -514,8 +524,8 @@ ParseXML(XMLNodeReader& in_Node) {
       connectccs->cdInfo = &cdInfo;
       connectccs->connectionPosRes = connectionPosRes;
       connectccs->connectionOriRes = connectionOriRes; 
-    } 
-  }
+		}
+	}
 }
 
 template <class CFG, class WEIGHT>
