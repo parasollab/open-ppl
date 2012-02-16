@@ -678,8 +678,8 @@ inline double sqr(double _a) {
 }
 #endif
 
-double MinRoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType, WeightType> _g, string _vc, string _dm, int _clearance = 10, int _penetration = 10, bool _useBBX = true, bool _positional = true);
+pair<double, double> RoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType, WeightType> _g, string _vc, string _dm, int _clearance = 10, int _penetration = 10, bool _useBBX = true, bool _positional = true);
 
-double MinEdgeClearance(MPProblem* _mp, bool _exact, Environment* _env, const CfgType& _c1, const CfgType& _c2, const WeightType& _weight, string _vc, string _dm, int _clearance = 10, int _penetration = 10, bool _useBBX = true, bool _positional = true);
+double MinEdgeClearance(MPProblem* _mp, bool _exact, Environment* _env, const CfgType& _c3, const CfgType& _c2, const WeightType& _weight, string _vc, string _dm, int _clearance = 10, int _penetration = 10, bool _useBBX = true, bool _positional = true);
 
 #endif

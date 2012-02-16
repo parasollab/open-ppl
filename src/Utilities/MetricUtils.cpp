@@ -343,19 +343,24 @@ ClockClass::GetUSeconds() {
   return (int)(m_uTime*1e6+m_uuTime);
 }
 
-double 
-MinRoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType, WeightType> _g, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional){
-
+//Roadmap Clearance
+//Returns pair of doubles.  output.first is the min clearance; output.second is the average clearance
+pair<double, double> 
+RoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType, WeightType> _g, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional){
+  pair<double, double> output;
   double minClearance = 1e6;
-
+  double runningTotal = 0;
   RoadmapGraph<CfgType, WeightType>* graph = _g.m_pRoadmap;
   for(RoadmapGraph<CfgType, WeightType>::edge_iterator it = graph->edges_begin(); it != graph->edges_end(); it++){
     double currentClearance = MinEdgeClearance(_mp, _exact, _env, (*graph->find_vertex((*it).source())).property(), (*graph->find_vertex((*it).target())).property(), (*it).property(), _vc, _dm, _clearance, _penetration, _useBBX, _positional);
+    runningTotal+=currentClearance;
     if(currentClearance < minClearance){
       minClearance = currentClearance;
     }
   }
-  return minClearance;
+  output.first = minClearance;
+  output.second = runningTotal / graph->get_num_edges();
+  return output;
 }
 
 double 
