@@ -30,11 +30,14 @@ class BasicRRTStrategy : public MPStrategyMethod {
 
   protected:
     // Helper functions
-    void ConnectComponents(int _regionID);
+    CfgType GoalBiasedDirection(int _regionID);
+    CfgType SelectDirection(int _regionID);
+    VID ExpandTree(int _regionID, CfgType& _dir);
+    void ConnectTrees(int _regionID, VID _recentlyGrown);
+    void EvaluateGoals(int _regionID);
     bool EvaluateMap(int _regionID);
 
   private:
-    vector<string> m_componentConnectors;
     vector<string> m_evaluators;
     string m_sampler;
     string m_lp;
@@ -43,7 +46,9 @@ class BasicRRTStrategy : public MPStrategyMethod {
     string m_vc;
     string m_query;
     double m_delta, m_minDist, m_growthFocus;
-    int m_roots, m_currentIteration;
+    int m_numRoots, m_currentIteration;
+    vector<CfgType> m_goals, m_roots;
+    vector<size_t> m_goalsNotFound;
 };
 
 #endif
