@@ -1,4 +1,5 @@
 #include "Cfg_reach_cc_fixed.h"
+#include "Environment.h"
 #include <numeric>
 
 #define TWO_PI 6.2831853072
@@ -45,8 +46,13 @@ GetRandomCfg(double R, double rStep) {
 }
 
 void 
+Cfg_reach_cc_fixed::GetRandomCfg_CenterOfMass(Environment *_env) {
+  GetRandomCfg_CenterOfMass(_env, _env->GetBoundingBox());
+}
+
+void 
 Cfg_reach_cc_fixed::
-GetRandomCfg_CenterOfMass(Environment* env) {
+GetRandomCfg_CenterOfMass(Environment* env, shared_ptr<Boundary> _bb) {
   for(int i=0; i<6; ++i)
     m_v[i] = 0;
 
