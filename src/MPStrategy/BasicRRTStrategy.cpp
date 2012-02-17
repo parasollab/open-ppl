@@ -236,7 +236,6 @@ BasicRRTStrategy::ConnectTrees(int _regionID, VID _recentlyGrown) {
   Environment* env = GetMPProblem()->GetEnvironment();
   StatClass* regionStats = region->GetStatClass();
   Roadmap<CfgType, WeightType>* rdmp = region->GetRoadmap();
-  MPStrategy* mps = GetMPProblem()->GetMPStrategy();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
   shared_ptr<LocalPlannerMethod<CfgType, WeightType> > lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
