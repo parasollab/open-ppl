@@ -55,28 +55,9 @@ class Cfg_reach_cc : public Cfg_free_tree {
   virtual void GetRandomCfg(Environment* _env){
     Cfg_free_tree::GetRandomCfg(_env);
   } 
-  /*
-  virtual void GetRandomCfg(Environment* env, DistanceMetric* _dm, 
-                            double length);
-  */
   virtual void GetRandomCfg_CenterOfMass(Environment* _env);
   virtual void GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
   virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm, bool _norm=true);
-
-  /*
-  virtual void MAPRMfree(Environment* _env, StatClass& Stats,
-			 CollisionDetection* cd, CDInfo& cdInfo, 
-			 DistanceMetric* dm, int n);
-
-  virtual bool GenerateOverlapCfg(Environment* env, int robot,
-				  Vector3D robot_start, Vector3D robot_goal, 
-				  Cfg* resultCfg);
-  virtual void GenSurfaceCfgs4ObstNORMAL(Environment* env, StatClass& Stats,
-					 CollisionDetection*,
-					 int obstacle, int nCfgs,
-					 CDInfo& _cdInfo,
-					 vector<Cfg*>& nodes) const;
-  */
 
   virtual void FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats,
 			     const Cfg& increment,
@@ -99,7 +80,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
   virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks);
 
   ostream& print(ostream& os) const;
-  ostream& print_base(ostream& os) const;
+  virtual ostream& print_base(ostream& os) const;
   ostream& print_len(ostream& os) const;
   ostream& print_ori(ostream& os) const;
 

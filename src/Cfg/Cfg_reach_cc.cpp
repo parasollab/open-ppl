@@ -35,7 +35,26 @@ Cfg_reach_cc(const vector<double>& _v) : Cfg_free_tree(_v) {
 }
 
 Cfg_reach_cc::
-Cfg_reach_cc(const Cfg& c) : Cfg_free_tree(c) {
+Cfg_reach_cc(const Cfg& c) {
+  if(c.DOF() == m_numOfJoints) {
+    m_dof = m_numOfJoints;
+    m_posDof = 0;
+  } else {
+    m_dof = 6 + m_numOfJoints;
+    m_posDof = 3;
+  }
+  vector<double> _v = c.GetData();
+  if((int)_v.size() < m_dof) {
+    cout << "\n\nERROR in Cfg_reach_cc::Cfg_reach_cc(Cfg&), ";
+    cout << "size of cfg data less than m_dof\n";
+    cout << "\tm_dof = " << m_dof << "\tdata size = " << _v.size() << endl;
+    exit(-1);
+  }
+  m_v.clear();
+  for(int i=0; i<m_dof; ++i)
+    m_v.push_back(_v[i]);
+  NormalizeOrientation();
+
   link_lengths = ((Cfg_reach_cc&)c).link_lengths;
   link_orientations = ((Cfg_reach_cc&)c).link_orientations;
 }
@@ -152,8 +171,9 @@ add(const Cfg& c1, const Cfg& c2) {
   
   vector<double> _v1 = c1.GetData();
   vector<double> _v2 = c2.GetData();
-  for(int i=0; i<6; ++i)
-    m_v[i] = _v1[i] + _v2[i];
+  if(m_dof != m_numOfJoints)
+    for(int i=0; i<6; ++i)
+      m_v[i] = _v1[i] + _v2[i];
 
   link_lengths.clear();
  
@@ -203,8 +223,9 @@ subtract(const Cfg& c1, const Cfg& c2) {
   
   vector<double> _v1 = c1.GetData();
   vector<double> _v2 = c2.GetData();
-  for(int i=0; i<6; ++i)
-    m_v[i] = _v1[i] - _v2[i];
+  if(m_dof != m_numOfJoints)
+    for(int i=0; i<6; ++i)
+      m_v[i] = _v1[i] - _v2[i];
 
   link_lengths.clear();
   transform(((Cfg_reach_cc&)c1).link_lengths.begin(), ((Cfg_reach_cc&)c1).link_lengths.end(),
@@ -248,8 +269,9 @@ negative(const Cfg& c) {
   }
 
   vector<double> _v = c.GetData();
-  for(int i=0; i<6; ++i)
-    m_v[i] = -1*_v[i];
+  if(m_dof != m_numOfJoints)
+    for(int i=0; i<6; ++i)
+      m_v[i] = -1*_v[i];
 
   link_lengths.clear();
   transform(((Cfg_reach_cc&)c).link_lengths.begin(), ((Cfg_reach_cc&)c).link_lengths.end(),
@@ -304,8 +326,9 @@ WeightedSum(const Cfg& c1, const Cfg& c2, double weight) {
 
   vector<double> _v1 = c1.GetData();
   vector<double> _v2 = c2.GetData();
-  for(int i=0; i<6; ++i)
-    m_v[i] = _v1[i]*(1-weight) + _v2[i]*weight;
+  if(m_dof != m_numOfJoints)
+    for(int i=0; i<6; ++i)
+      m_v[i] = _v1[i]*(1-weight) + _v2[i]*weight;
 
   //compute link lengths
   link_lengths.clear();
@@ -396,17 +419,14 @@ GetRandomCfg(double R, double rStep) {
 
 void 
 Cfg_reach_cc::GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb) {
-  Point3d p = _bb->GetRandomPoint();
-  for(int i=0 ;i<3;i++){
-    m_v.push_back(p[i]);
+  if(m_dof != m_numOfJoints) {
+    Point3d p = _bb->GetRandomPoint();
+    for(int i=0 ;i<3;i++){
+      m_v[i] = p[i];
+    }
+    for(int i=3; i<6; ++i)
+      m_v[i] = _bb->GetRandomValueInParameter(i-3);
   }
-
-  for(int i=3; i<6; ++i)
-    m_v[i] = _bb->GetRandomValueInParameter(i-3);
-  //fix to xz plane:
-  //m_v[1] = 0;
-  //m_v[3] = 0;
-  //m_v[5] = 0;
 
   link_tree->ResetTree();
   if(is_closed_chain)
@@ -517,8 +537,9 @@ Increment(const Cfg& _increment) {
   }
 
   vector<double> _v = _increment.GetData();
-  for(int i=0; i<6; ++i)
-    m_v[i] += _v[i];
+  if(m_dof != m_numOfJoints)
+    for(int i=0; i<6; ++i)
+      m_v[i] += _v[i];
   transform(link_lengths.begin(), link_lengths.end(),
 	    ((Cfg_reach_cc&)_increment).link_lengths.begin(),
 	    link_lengths.begin(), 
@@ -570,8 +591,9 @@ Cfg_reach_cc::
 FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks) {
   vector<double> v_start = _start.GetData();
   vector<double> v_goal = _goal.GetData();
-  for(int i=0; i<6; ++i)
-    m_v[i] = (v_goal[i]-v_start[i])/n_ticks;
+  if(m_dof != m_numOfJoints)
+    for(int i=0; i<6; ++i)
+      m_v[i] = (v_goal[i]-v_start[i])/n_ticks;
 
   link_lengths.clear();
   Link::FindIncrement(((Cfg_reach_cc&)_start).link_lengths,
@@ -605,7 +627,10 @@ StoreData() {
 
   if(link_tree->CanRecursiveClose()) 
   {
-    m_v.resize(6);
+    if(m_dof != m_numOfJoints)
+      m_v.resize(6);
+    else
+      m_v.resize(0);
 
     //compute joint angles
     double sumExtAng = 0;
@@ -673,8 +698,9 @@ GetIntermediate(const Cfg_reach_cc& c1,
   else {
     vector<double> v1 = c1.GetData();
     vector<double> v2 = c2.GetData();
-    for(int i=0; i<6; ++i)
-      m_v[i] = (v1[i] + v2[i]) / 2;
+    if(m_dof != m_numOfJoints)
+      for(int i=0; i<6; ++i)
+        m_v[i] = (v1[i] + v2[i]) / 2;
     link_lengths.clear();
     link_orientations.clear();
     link_tree->ExportTreeLinkLength(link_lengths, link_orientations);
