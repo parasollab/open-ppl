@@ -12,6 +12,7 @@
 #include "NodeConnectionMethod.h"
 #include "NeighborhoodConnection.h"
 #include "PreferentialAttachment.h"
+#include "OptimalConnection.h"
 
 // look these over before updating
 //#include "ModifiedLM.h"
@@ -45,7 +46,8 @@
 namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
       NeighborhoodConnection<CfgType,WeightType>,
-      PreferentialAttachment<CfgType,WeightType>
+      PreferentialAttachment<CfgType,WeightType>,
+			OptimalConnection<CfgType,WeightType>
     > NodeConnectorMethodList;
 
   typedef boost::mpl::list<
@@ -62,15 +64,16 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
               public ContainerBase< ComponentConnectionMethod<CFG,WEIGHT>, 
                     pmpl_detail::ComponentConnectorMethodList >, 
               public MPBaseObject{
-  private:
+							
+private:
   typedef ContainerBase< NodeConnectionMethod<CFG,WEIGHT>, 
        pmpl_detail::NodeConnectorMethodList> NodeConnectionContainer;
   typedef ContainerBase< ComponentConnectionMethod<CFG,WEIGHT>, 
        pmpl_detail::ComponentConnectorMethodList > ComponentConnectionContainer;
- typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  public:
-    typedef typename NodeConnectionContainer::MethodPointer NodeConnectionPointer;
-    typedef typename ComponentConnectionContainer::MethodPointer ComponentConnectionPointer;
+	typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+public:
+  typedef typename NodeConnectionContainer::MethodPointer NodeConnectionPointer;
+  typedef typename ComponentConnectionContainer::MethodPointer ComponentConnectionPointer;
 
   
 
@@ -156,7 +159,7 @@ class ConnectMap : public ContainerBase< NodeConnectionMethod<CFG,WEIGHT>,
     _ConnectNodes(selected, _rm, Stats,
                   addPartialEdge,addAllEdges,
                    _itr1_first, _itr1_last, collision,
-                   typename NodeConnectionContainer::MethodTypesBegin(), 
+									 typename NodeConnectionContainer::MethodTypesBegin(), 
                    typename NodeConnectionContainer::MethodTypesEnd());
   }
 
@@ -507,6 +510,12 @@ ParseXML(XMLNodeReader& in_Node) {
       prefconn->cdInfo = &cdInfo;
       prefconn->connectionPosRes = connectionPosRes;
       prefconn->connectionOriRes = connectionOriRes;
+    } if(citr->getName() == "OptimalConnection") {
+      OptimalConnection<CFG,WEIGHT>*optimalConnection = new OptimalConnection<CFG,WEIGHT>(*citr,GetMPProblem());
+      AddNodeMethod(optimalConnection->GetLabel(),NodeConnectionPointer(optimalConnection));
+      optimalConnection->cdInfo = &cdInfo;
+      optimalConnection->connectionPosRes = connectionPosRes;
+      optimalConnection->connectionOriRes = connectionOriRes;
     } else if(citr->getName() == "ConnectCCs") {
       cout << "ConnectMap found ConnectCCs" << endl;
       ConnectCCs<CFG,WEIGHT>* connectccs = new ConnectCCs<CFG,WEIGHT>(*citr,GetMPProblem());
@@ -514,8 +523,8 @@ ParseXML(XMLNodeReader& in_Node) {
       connectccs->cdInfo = &cdInfo;
       connectccs->connectionPosRes = connectionPosRes;
       connectccs->connectionOriRes = connectionOriRes; 
-    } 
-  }
+		}
+	}
 }
 
 template <class CFG, class WEIGHT>
