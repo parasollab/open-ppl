@@ -280,8 +280,8 @@ void MARRTStrategy::Finalize(int _regionID) {
   if(m_debug) cout << "NodeGen+Connection Stats" << endl;
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
   regionStats->PrintClock("RRT Generation", osStat);
-  pair<double, double> clearanceData = RoadmapClearance(GetMPProblem(), m_exact, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
-  osStat << endl <<  "Min Roadmap Clearance: " << clearanceData.first <<  " Avg Roadmap Clearance: " << clearanceData.second << endl;
+  RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), m_exact, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
+  osStat << endl <<  "Min Roadmap Clearance: " << clearanceStats.m_minClearance <<  " Avg Roadmap Clearance: " << clearanceStats.m_avgClearance << " Roadmap Variance: " << clearanceStats.m_clearanceVariance << endl;
   //regionStats->PrintFeatures();
   osStat.close();
 

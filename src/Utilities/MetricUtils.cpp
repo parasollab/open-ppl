@@ -343,23 +343,31 @@ ClockClass::GetUSeconds() {
   return (int)(m_uTime*1e6+m_uuTime);
 }
 
-//Roadmap Clearance
-//Returns pair of doubles.  output.first is the min clearance; output.second is the average clearance
-pair<double, double> 
+//Roadmap Clearance returns a RoadmapClearanceStats structure that includes information regarding the clearance of a
+//roadmap
+RoadmapClearanceStats
 RoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType, WeightType> _g, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional){
-  pair<double, double> output;
+  RoadmapClearanceStats output;
   double minClearance = 1e6;
   double runningTotal = 0;
   RoadmapGraph<CfgType, WeightType>* graph = _g.m_pRoadmap;
+  vector<double> clearanceVec;
   for(RoadmapGraph<CfgType, WeightType>::edge_iterator it = graph->edges_begin(); it != graph->edges_end(); it++){
     double currentClearance = MinEdgeClearance(_mp, _exact, _env, (*graph->find_vertex((*it).source())).property(), (*graph->find_vertex((*it).target())).property(), (*it).property(), _vc, _dm, _clearance, _penetration, _useBBX, _positional);
+    clearanceVec.push_back(currentClearance);//Save this value for variance computation later
     runningTotal+=currentClearance;
-    if(currentClearance < minClearance){
+    if(currentClearance < minClearance){//Did we find a new minimum clearance value?
       minClearance = currentClearance;
     }
   }
-  output.first = minClearance;
-  output.second = runningTotal / graph->get_num_edges();
+  output.m_minClearance = minClearance;
+  double average = runningTotal / graph->get_num_edges();
+  output.m_avgClearance = average;
+  double varSum = 0;
+  for(vector<double>::iterator it = clearanceVec.begin(); it != clearanceVec.end(); it++){
+    varSum+=pow(((*it) - average), 2);
+  }
+  output.m_clearanceVariance = varSum / clearanceVec.size();
   return output;
 }
 
