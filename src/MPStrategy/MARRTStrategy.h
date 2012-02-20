@@ -43,6 +43,12 @@ class MARRTStrategy : public MPStrategyMethod {
     string m_nf;
     string m_vc;
     string m_query;
+    bool m_exact;
+    int m_rayCount;
+    int m_penetration;
+    bool m_useBbx;
+    int m_hLen;
+    bool m_positional;
     double m_delta, m_minDist, m_growthFocus;
     int m_roots, m_currentIteration;
 };

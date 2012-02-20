@@ -46,6 +46,12 @@ void MARRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_dm = _node.stringXMLParameter("dm",true,"","Distance Metric");
   m_lp = _node.stringXMLParameter("lp", true, "", "Local Planning Method");
   m_query = _node.stringXMLParameter("query", false, "", "Query Filename");
+  m_exact = _node.boolXMLParameter("exact", false, "", "Exact Medial Axis Calculation");
+  m_rayCount = _node.numberXMLParameter("rays", false, 20, 0, 50, "Number of Clearance Rays");
+  m_penetration = _node.numberXMLParameter("penetration", false, 5, 0, 50, "Pentration");
+  m_useBbx = _node.boolXMLParameter("useBBX", true, "", "Use Bounding Box");
+  m_hLen = _node.numberXMLParameter("hLen", false, 5, 0, 20, "History Length");
+  m_positional = _node.boolXMLParameter("positional", true, "", "Use Position in MA Calculations");
   _node.warnUnrequestedAttributes();
 
   if(m_debug) PrintOptions(cout);
@@ -73,12 +79,12 @@ void MARRTStrategy::PrintOptions(ostream& _os) {
 
 void MARRTStrategy::Initialize(int _regionID){
   if(m_debug) cout<<"\nInitializing MARRTStrategy::"<<_regionID<<endl;
+  m_debug = true;
   if(m_debug) cout<<"\nEnding Initializing MARRTStrategy"<<endl;
 }
 
 void MARRTStrategy::Run(int _regionID) {
   if(m_debug) cout << "\nRunning MARRTStrategy::" << _regionID << endl;
-  m_debug = false;
   // Setup MP Variables
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
   StatClass* regionStats = region->GetStatClass();
@@ -106,6 +112,7 @@ void MARRTStrategy::Run(int _regionID) {
     roots.push_back(tmp);
     tmp.Read(ifs);
     goals.push_back(tmp);
+    if(m_debug) cout << "New Goal: " << tmp << endl;
   }
   if(m_query==""){
     // Add root vertex/vertices
@@ -126,6 +133,8 @@ void MARRTStrategy::Run(int _regionID) {
   }
 
   bool mapPassedEvaluation = false;
+  CfgType currentClosest = roots[0];
+  int numSampled=0;
   while(!mapPassedEvaluation){
     // Determine direction, make sure goal not found
     tmp.GetRandomCfg(env);
@@ -180,7 +189,7 @@ void MARRTStrategy::Run(int _regionID) {
     CfgType tempCfg = newCfg;
     VDAddTempCfg(tempCfg, true);
     StatClass stats; 
-    if (!PushToMedialAxis(GetMPProblem(), env, newCfg, stats, m_vc, m_dm, true, 20, false, 5, true, .0001, 5, m_debug, true)){
+    if (!PushToMedialAxis(GetMPProblem(), env, newCfg, stats, m_vc, m_dm, m_exact, m_rayCount, m_exact, m_penetration, m_useBbx, .0001, m_hLen, m_debug, m_positional)){
       continue;
     }
     kClosest.clear();
@@ -189,10 +198,14 @@ void MARRTStrategy::Run(int _regionID) {
     nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
     // If good to go, add to roadmap
     CfgType col;
+    bool newConnectionFound = false;
     if(dm->Distance(env, newCfg, nearest) >= m_minDist && (lp->GetMethod(m_lp)->IsConnected(env,
-      *regionStats, dm, nearest, newCfg, col, &lpOutput,
-              positionRes, orientationRes, checkCollision, savePath, saveFailed))) {
-      cout << "Found Connection.  Nearest: " << nearest << " newCfg: " << newCfg << endl;
+            *regionStats, dm, nearest, newCfg, col, &lpOutput,
+            positionRes, orientationRes, checkCollision, savePath, saveFailed))) {
+      newConnectionFound=true;
+      if(m_debug) cout << "Found Connection.  Nearest: " << nearest << " newCfg: " << newCfg << endl;
+      numSampled++;
+      if(m_debug) cout << "Number of nodes sampled thus far: " << numSampled << endl;
       VDClearAll();
       region->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
       region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, lpOutput.edge);
@@ -203,23 +216,34 @@ void MARRTStrategy::Run(int _regionID) {
 
     // Check if goals have been found
     bool done = true;
-    for(size_t i = 0; i<found.size(); i++){
-      if(!found[i]){
-        vector<VID> closests;
-        nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), goals[i], 1, back_inserter(closests));     
-        CfgType closest = region->GetRoadmap()->m_pRoadmap->find_vertex(closests[0])->property();
-        double dist = dm->Distance(env, goals[i], closest);
-        if(m_debug) cout << "Distance to goal::" << dist << endl;
-        if(dist < m_delta && lp->GetMethod(m_lp)->IsConnected(env, *regionStats, dm, closest, goals[i], col, &lpOutput,
-              positionRes, orientationRes, checkCollision, savePath, saveFailed)){
-          if(m_debug) cout << "Goal found::" << goals[i] << endl;
-          region->GetRoadmap()->m_pRoadmap->AddVertex(goals[i]);
-          region->GetRoadmap()->m_pRoadmap->AddEdge(closest, goals[i], lpOutput.edge);
-          found[i]=true;
+    if(newConnectionFound) {
+      for(size_t i = 0; i<found.size(); i++){
+        if(!found[i]){
+          vector<VID> closests;
+          nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), goals[i], 1, back_inserter(closests));     
+          CfgType closest = region->GetRoadmap()->m_pRoadmap->find_vertex(closests[0])->property();
+          if(closest != currentClosest){
+            currentClosest = closest; //Currently closest to goal.  No need to check for connectivity if we're no closer to the goal
+            double dist = dm->Distance(env, goals[i], closest);
+            if (m_debug) cout << "Distance to goal::" << dist << endl;
+            if(lp->GetMethod(m_lp)->IsConnected(env, *regionStats, dm, closest, goals[i], col, &lpOutput,
+                  positionRes, orientationRes, false, savePath, saveFailed)){
+              if(m_debug) cout << "Goal found::" << goals[i] << endl;
+              region->GetRoadmap()->m_pRoadmap->AddVertex(goals[i]);
+              region->GetRoadmap()->m_pRoadmap->AddEdge(closest, goals[i], lpOutput.edge);
+              found[i]=true;
+            }
+            else
+              done = false;
+          }
+          else{
+            done=false;
+          }
         }
-        else
-          done = false;
       }
+    }
+    else{
+      done = false; //No new connection, can't find goal, not done.
     }
     if(done){
       if(m_debug) cout << "MARRT FOUND ALL GOALS" << endl;
@@ -230,7 +254,7 @@ void MARRTStrategy::Run(int _regionID) {
   regionStats->StopClock("RRT Generation");
   if(m_debug) {
     regionStats->PrintClock("RRT Generation", cout);
-    cout<<"\nEnd Running MARRTStrategy::" << _regionID << endl;  
+    if(m_debug) cout<<"\nEnd Running MARRTStrategy::" << _regionID << endl;  
   }
 }
 
@@ -253,9 +277,11 @@ void MARRTStrategy::Finalize(int _regionID) {
   str = GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
-  cout << "NodeGen+Connection Stats" << endl;
+  if(m_debug) cout << "NodeGen+Connection Stats" << endl;
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
   regionStats->PrintClock("RRT Generation", osStat);
+  pair<double, double> clearanceData = RoadmapClearance(GetMPProblem(), m_exact, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
+  osStat << endl <<  "Min Roadmap Clearance: " << clearanceData.first <<  " Avg Roadmap Clearance: " << clearanceData.second << endl;
   //regionStats->PrintFeatures();
   osStat.close();
 
