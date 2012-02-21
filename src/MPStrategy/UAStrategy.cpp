@@ -351,7 +351,7 @@ void UAStrategy::OverlapBBX(){
                   regionDists.push_back(pair<VID, double>(*svit, weight));
                }
                sort(regionDists.begin(), regionDists.end(), sortRegionFunc);
-               int top10 = (float)regionDists.size()/10.0;
+               int top10 = regionDists.size()/10;
                //int indx = rand()%top10;
                Clusters[i]->push_back(regionDists[top10].first);
             }
@@ -400,8 +400,8 @@ void UAStrategy::OverlapBBX(){
             }
             sort(regionDistsA.begin(), regionDistsA.end(), sortRegionFunc);
             sort(regionDistsB.begin(), regionDistsB.end(), sortRegionFunc);
-            int top10A = (float)regionDistsA.size()/10.0;
-            int top10B = (float)regionDistsB.size()/10.0;
+            int top10A = regionDistsA.size()/10;
+            int top10B = regionDistsB.size()/10;
             vector<VID> vecVID;
             vecVID.push_back(regionDistsA[top10A].first);
             vecVID.push_back(regionDistsB[top10B].first);
