@@ -32,7 +32,7 @@ class BasicRRTStrategy : public MPStrategyMethod {
     // Helper functions
     CfgType GoalBiasedDirection(int _regionID);
     CfgType SelectDirection(int _regionID);
-    VID ExpandTree(int _regionID, CfgType& _dir);
+    virtual VID ExpandTree(int _regionID, CfgType& _dir);
     void ConnectTrees(int _regionID, VID _recentlyGrown);
     void EvaluateGoals(int _regionID);
     bool EvaluateMap(int _regionID);

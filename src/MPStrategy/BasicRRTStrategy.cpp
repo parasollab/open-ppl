@@ -207,6 +207,7 @@ BasicRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
   VID recentVID = INVALID_VID;
+  CDInfo  cdInfo;
   // Find closest Cfg in map
   vector<VID> kClosest;
   vector<CfgType> cfgs;
@@ -215,7 +216,7 @@ BasicRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   CfgType nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
   CfgType newCfg;
 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, nearest, _dir, newCfg, m_delta)) {
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, nearest, _dir, newCfg, m_delta, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
     return recentVID;
   }

@@ -121,7 +121,10 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
     mpsm = new BasicRRTStrategy(citr, GetMPProblem()); 
   }  else if(citr.getName() == "MARRTStrategy"){
     mpsm = new MARRTStrategy(citr, GetMPProblem());
-  }  else if(citr.getName() == "TogglePRMStrategy") {
+  }  else if(citr.getName() == "OBRRTStrategy"){
+    mpsm = new OBRRTStrategy(citr, GetMPProblem());
+  }   
+  else if(citr.getName() == "TogglePRMStrategy") {
     mpsm = new TogglePRMStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "Compare") {
     mpsm = new MPComparer(citr,GetMPProblem());

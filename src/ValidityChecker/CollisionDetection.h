@@ -96,6 +96,10 @@ class CDInfo {
   double min_dist;            ///< Distance between Robot and closet obstacle
   Vector3D robot_point;       ///< Cloest point on Robot to closet obstacle
   Vector3D object_point;      ///< Cloest point on closet obstacle to Robot
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //for obrrt need contact information
+  int rapid_contact_id1;
+  int rapid_contact_id2;
 };
 
 

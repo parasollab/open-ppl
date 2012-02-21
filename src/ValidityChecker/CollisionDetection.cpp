@@ -55,6 +55,8 @@ void CDInfo::ResetVars() {
   min_dist = MaxDist;      // =  1e10 by CollisionDetection.h
   robot_point = 0;         // hope Vector3D class defined well
   object_point = 0;
+  rapid_contact_id1=-1;
+  rapid_contact_id2=-1;
 } // end ResetVars
 
 
@@ -1056,6 +1058,8 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle,
 	  exit(1);
 	}
 	if(RAPID_num_contacts) {
+	  _cdInfo.rapid_contact_id1 = RAPID_contact[0].id1;
+	  _cdInfo.rapid_contact_id2 = RAPID_contact[0].id2;
 	  return true;
 	}
 	
