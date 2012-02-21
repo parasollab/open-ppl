@@ -281,7 +281,7 @@ ConnectBigCCs(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 	      bool addPartialEdge, bool addAllEdges, OutputIterator collision) { 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   
-  size_t k = min(kpairs, cc2vec.size());
+  size_t k = min((size_t)kpairs, cc2vec.size());
 
   vector<pair<VID,VID> > kp(k);
   typename vector<pair<VID,VID> >::iterator kp_iter = kp.begin();
