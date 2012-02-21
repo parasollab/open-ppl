@@ -233,7 +233,8 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
       if(!intermediate.InBoundingBox(_env) || 
           !vc->IsValid(vcm, intermediate, _env, _stats, cdInfo, true, &callee)
         ) {
-        _col = intermediate;
+        if(intermediate.InBoundingBox(_env))
+          _col = intermediate;
         return false;
       }
     }
@@ -269,7 +270,6 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
 
     }
   } else {
-    //cout << "orientations same\n";
     if(m_binarySearch) {
       connected = IsConnectedSLBinary(_env, _stats, _dm,
           _c1, _c2,
@@ -301,7 +301,7 @@ IsConnectedSLSequential(Environment *_env, StatClass& _stats,
     LPOutput<CFG,WEIGHT>* _lpOutput, int &_cdCounter,
     double _positionRes, double _orientationRes,
     bool _checkCollision, 
-    bool _savePath, bool _saveFailedPath) { 
+    bool _savePath, bool _saveFailedPath) {
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
   int nTicks;
@@ -327,8 +327,7 @@ IsConnectedSLSequential(Environment *_env, StatClass& _stats,
       if(!tick.InBoundingBox(_env) || 
           !vc->IsValid(vcm, tick, _env, _stats, cdInfo, true, &callee)
         ) {
-        if(tick.InBoundingBox(_env) && 
-            !vc->IsValid(vcm, tick, _env, _stats, cdInfo, true, &callee))   
+        if(tick.InBoundingBox(_env))   
           _col = tick;
         CFG negIncr;
         negIncr = incr; 
@@ -416,8 +415,7 @@ IsConnectedSLBinary(Environment *_env, StatClass& _stats,
     if(!midCfg.InBoundingBox(_env) ||
        !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee) ) {
       _col=midCfg;
-      if(midCfg.InBoundingBox(_env) &&
-         !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee))
+      if(midCfg.InBoundingBox(_env))
         _col=midCfg;
       return false;
     } else {
