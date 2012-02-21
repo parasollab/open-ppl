@@ -1,4 +1,5 @@
 #include "ScaledEuclideanDistance.h"
+#include "Cfg_reach_cc.h"
 
 
 ScaledEuclideanDistance::ScaledEuclideanDistance() : EuclideanDistance(), m_sValue(0.5){

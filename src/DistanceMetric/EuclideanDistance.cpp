@@ -1,4 +1,5 @@
 #include "EuclideanDistance.h"
+#include "Cfg_reach_cc.h"
 
 EuclideanDistance::EuclideanDistance() : DistanceMetricMethod() {
   m_name = "euclidean";
