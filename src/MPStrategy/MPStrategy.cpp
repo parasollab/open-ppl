@@ -7,6 +7,7 @@
 #include "BasicPRM.h"
 #include "BasicRRTStrategy.h"
 #include "MARRTStrategy.h"
+#include "OBRRTStrategy.h"
 #include "TogglePRMStrategy.h"
 #include "RoadmapToolsStrategy.h"
 #include "HybridPRM.h"
