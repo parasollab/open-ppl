@@ -11,6 +11,7 @@
 #define BasicRRTStrategy_h
 
 #include "IOUtils.h"
+#include "MetricUtils.h"
 #include "CfgTypes.h"
 #include "MPStrategyMethod.h"
 
@@ -36,7 +37,7 @@ class BasicRRTStrategy : public MPStrategyMethod {
     void ConnectTrees(int _regionID, VID _recentlyGrown);
     void EvaluateGoals(int _regionID);
     bool EvaluateMap(int _regionID);
-
+    RoadmapClearanceStats PathClearance(int _regionID);  
   private:
     vector<string> m_evaluators;
     string m_sampler;

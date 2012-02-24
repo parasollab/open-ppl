@@ -33,10 +33,12 @@ class MARRTStrategy : public MPStrategyMethod {
     // Helper functions
     void ConnectComponents(int _regionID);
     bool EvaluateMap(int _regionID);
-
+    RoadmapClearanceStats PathClearance(int _regionID);
   private:
+    bool m_queryFound;
     vector<string> m_componentConnectors;
     vector<string> m_evaluators;
+    bool m_findQuery;
     string m_sampler;
     string m_lp;
     string m_dm;
@@ -51,6 +53,8 @@ class MARRTStrategy : public MPStrategyMethod {
     bool m_positional;
     double m_delta, m_minDist, m_growthFocus;
     int m_roots, m_currentIteration;
+    vector<CfgType> m_goals;
+    vector<CfgType> m_root;
 };
 
 #endif

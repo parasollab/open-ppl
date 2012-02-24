@@ -35,7 +35,6 @@ void MARRTStrategy::ParseXML(XMLNodeReader& _node) {
     else
       citr->warnUnknownNode();
   }
-
   m_delta = _node.numberXMLParameter("delta", false, 0.05, 0.0, 1.0, "Delta Distance");
   m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, 1.0, "Minimum Distance");
   m_roots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
@@ -52,6 +51,8 @@ void MARRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_useBbx = _node.boolXMLParameter("useBBX", true, "", "Use Bounding Box");
   m_hLen = _node.numberXMLParameter("hLen", false, 5, 0, 20, "History Length");
   m_positional = _node.boolXMLParameter("positional", true, "", "Use Position in MA Calculations");
+  m_debug = _node.boolXMLParameter("debug", false, "", "Debug Mode");
+  m_findQuery = _node.boolXMLParameter("findQuery", true, "", "Find Query or Explore Space");
   _node.warnUnrequestedAttributes();
 
   if(m_debug) PrintOptions(cout);
@@ -79,7 +80,6 @@ void MARRTStrategy::PrintOptions(ostream& _os) {
 
 void MARRTStrategy::Initialize(int _regionID){
   if(m_debug) cout<<"\nInitializing MARRTStrategy::"<<_regionID<<endl;
-  m_debug = true;
   if(m_debug) cout<<"\nEnding Initializing MARRTStrategy"<<endl;
 }
 
@@ -102,16 +102,14 @@ void MARRTStrategy::Run(int _regionID) {
 
   // Setup RRT Variables
   CfgType tmp, dir;
-  vector<CfgType> goals;
-  vector<CfgType> roots;
 
   ifstream ifs(m_query.c_str());
   while(1){
     tmp.Read(ifs);
     if(!ifs) break;
-    roots.push_back(tmp);
+    m_root.push_back(tmp);
     tmp.Read(ifs);
-    goals.push_back(tmp);
+    m_goals.push_back(tmp);
     if(m_debug) cout << "New Goal: " << tmp << endl;
   }
   if(m_query==""){
@@ -120,20 +118,20 @@ void MARRTStrategy::Run(int _regionID) {
       tmp.GetRandomCfg(env);
       if (tmp.InBoundingBox(env)
           && vc->IsValid(vc->GetVCMethod(m_vc), tmp, env, *regionStats, cdInfo, true, &callee)){
-        roots.push_back(tmp);
+        m_root.push_back(tmp);
       }
       else 
         --i;
     }
   }
   vector<bool> found;
-  for(vector<CfgType>::iterator C = roots.begin(); C!=roots.end(); C++){
+  for(vector<CfgType>::iterator C = m_root.begin(); C!=m_root.end(); C++){
     region->GetRoadmap()->m_pRoadmap->AddVertex(*C);
     found.push_back(false);
   }
 
   bool mapPassedEvaluation = false;
-  CfgType currentClosest = roots[0];
+  CfgType currentClosest = m_root[0];
   int numSampled=0;
   while(!mapPassedEvaluation){
     // Determine direction, make sure goal not found
@@ -142,18 +140,18 @@ void MARRTStrategy::Run(int _regionID) {
     bool usingQueue = false;
     int goalNum = 0;
 
-    if (goals.size() == 0)
+    if (m_goals.size() == 0)
       goalNum = -1;
-    else if(goals.size()>1);
-    goalNum = LRand()%goals.size();
-    if (goals.size()>0 && randomRatio<m_growthFocus) {
+    else if(m_goals.size()>1);
+    goalNum = LRand()%m_goals.size();
+    if (m_goals.size()>0 && randomRatio<m_growthFocus) {
       if ( found[goalNum] ) {
         for (size_t i=0; i<found.size(); i++) {
           if ( !(found[i]))
             goalNum = i;
         }
       }
-      dir = goals[goalNum];
+      dir = m_goals[goalNum];
       usingQueue = true;
     } 
     else
@@ -170,28 +168,32 @@ void MARRTStrategy::Run(int _regionID) {
     CfgType newCfg;
     double positionRes    = env->GetPositionRes();
     double orientationRes = env->GetOrientationRes();
-    /*if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, nearest, dir, newCfg, m_delta)) {
+
+    newCfg = nearest;
+    CDInfo dummyCD;
+    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, newCfg, dir, newCfg, m_delta, dummyCD)) {
       if(m_debug) cout << "RRT could not expand!" << endl;  
       continue;
-      }*/
+    }
     //Step out a distance delta towards dir cfg
 
-    newCfg = nearest; //Start at closest node, and increment towards dir
-    if(dm -> Distance(env, newCfg, dir) > m_delta){
+    /*newCfg = nearest; //Start at closest node, and increment towards dir
+      if(dm -> Distance(env, newCfg, dir) > m_delta){
       CfgType incr;
       incr.subtract(dir, newCfg);
       dm -> DistanceMetricMethod::ScaleCfg(env, m_delta, dir, incr);
       newCfg.Increment(incr);
-    }
-    else {
+      }
+      else {
       newCfg = dir; //Node is already within delta, may as well use it  
-    }
+      }*/
     CfgType tempCfg = newCfg;
     VDAddTempCfg(tempCfg, true);
     StatClass stats; 
     if (!PushToMedialAxis(GetMPProblem(), env, newCfg, stats, m_vc, m_dm, m_exact, m_rayCount, m_exact, m_penetration, m_useBbx, .0001, m_hLen, m_debug, m_positional)){
       continue;
     }
+    VDAddTempCfg(newCfg, true);
     kClosest.clear();
     //recalculate nearest Cfg; may have changed after push
     nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), newCfg, 1, back_inserter(kClosest));     
@@ -199,13 +201,13 @@ void MARRTStrategy::Run(int _regionID) {
     // If good to go, add to roadmap
     CfgType col;
     bool newConnectionFound = false;
-    if(dm->Distance(env, newCfg, nearest) >= m_minDist && (lp->GetMethod(m_lp)->IsConnected(env,
-            *regionStats, dm, nearest, newCfg, col, &lpOutput,
+    if((lp->GetMethod(m_lp)->IsConnected(env,
+            *regionStats, dm, newCfg, nearest, col, &lpOutput,
             positionRes, orientationRes, checkCollision, savePath, saveFailed))) {
       newConnectionFound=true;
-      if(m_debug) cout << "Found Connection.  Nearest: " << nearest << " newCfg: " << newCfg << endl;
+      cout << "Found Connection.  Nearest: " << nearest << " newCfg: " << newCfg << endl;
       numSampled++;
-      if(m_debug) cout << "Number of nodes sampled thus far: " << numSampled << endl;
+      cout << "Number of nodes sampled thus far: " << numSampled << endl;
       VDClearAll();
       region->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
       region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, lpOutput.edge);
@@ -216,38 +218,41 @@ void MARRTStrategy::Run(int _regionID) {
 
     // Check if goals have been found
     bool done = true;
-    if(newConnectionFound) {
-      for(size_t i = 0; i<found.size(); i++){
-        if(!found[i]){
-          vector<VID> closests;
-          nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), goals[i], 1, back_inserter(closests));     
-          CfgType closest = region->GetRoadmap()->m_pRoadmap->find_vertex(closests[0])->property();
-          if(closest != currentClosest){
-            currentClosest = closest; //Currently closest to goal.  No need to check for connectivity if we're no closer to the goal
-            double dist = dm->Distance(env, goals[i], closest);
-            if (m_debug) cout << "Distance to goal::" << dist << endl;
-            if(lp->GetMethod(m_lp)->IsConnected(env, *regionStats, dm, closest, goals[i], col, &lpOutput,
-                  positionRes, orientationRes, false, savePath, saveFailed)){
-              if(m_debug) cout << "Goal found::" << goals[i] << endl;
-              region->GetRoadmap()->m_pRoadmap->AddVertex(goals[i]);
-              region->GetRoadmap()->m_pRoadmap->AddEdge(closest, goals[i], lpOutput.edge);
-              found[i]=true;
+    if(m_findQuery){
+      if(newConnectionFound) {
+        for(size_t i = 0; i<found.size(); i++){
+          if(!found[i]){
+            vector<VID> closests;
+            nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), m_goals[i], 1, back_inserter(closests));     
+            CfgType closest = region->GetRoadmap()->m_pRoadmap->find_vertex(closests[0])->property();
+            if(closest != currentClosest){
+              currentClosest = closest; //Currently closest to goal.  No need to check for connectivity if we're no closer to the goal
+              double dist = dm->Distance(env, m_goals[i], closest);
+              cout << "Distance to goal::" << dist << endl;
+              if(lp->GetMethod(m_lp)->IsConnected(env, *regionStats, dm, closest, m_goals[i], col, &lpOutput,
+                    positionRes, orientationRes, false, savePath, saveFailed)){
+                if(m_debug) cout << "Goal found::" << m_goals[i] << endl;
+                region->GetRoadmap()->m_pRoadmap->AddVertex(m_goals[i]);
+                region->GetRoadmap()->m_pRoadmap->AddEdge(closest, m_goals[i], lpOutput.edge);
+                found[i]=true;
+              }
+              else
+                done = false;
             }
-            else
-              done = false;
-          }
-          else{
-            done=false;
+            else{
+              done=false;
+            }
           }
         }
       }
-    }
-    else{
-      done = false; //No new connection, can't find goal, not done.
-    }
-    if(done){
-      if(m_debug) cout << "MARRT FOUND ALL GOALS" << endl;
-      mapPassedEvaluation = true;
+      else{
+        done = false; //No new connection, can't find goal, not done.
+      }
+      if(done){
+        if(m_debug) cout << "MARRT FOUND ALL GOALS" << endl;
+        mapPassedEvaluation = true;
+        m_queryFound = true;
+      }
     }
   }
 
@@ -280,9 +285,14 @@ void MARRTStrategy::Finalize(int _regionID) {
   if(m_debug) cout << "NodeGen+Connection Stats" << endl;
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
   regionStats->PrintClock("RRT Generation", osStat);
-  RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), m_exact, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
-  osStat << endl <<  "Min Roadmap Clearance: " << clearanceStats.m_minClearance <<  " Avg Roadmap Clearance: " << clearanceStats.m_avgClearance << " Roadmap Variance: " << clearanceStats.m_clearanceVariance << endl;
+  RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
+  osStat << endl <<  "Min Roadmap Clearance: " << clearanceStats.m_minClearance << endl <<  " Avg Roadmap Clearance: " << clearanceStats.m_avgClearance << endl << " Roadmap Variance: " << clearanceStats.m_clearanceVariance << endl;
   //regionStats->PrintFeatures();
+  if(m_queryFound){
+  RoadmapClearanceStats pathStats = PathClearance(_regionID);
+  osStat << endl << "Path Length: " << pathStats.m_pathLength << endl << "Min Path Clearance: " << pathStats.m_minClearance << endl << " Avg Path Clearance: " << pathStats.m_avgClearance << endl << " Path Variance: " << pathStats.m_clearanceVariance << endl;
+  }
+
   osStat.close();
 
   if(m_debug) cout<<"\nEnd Finalizing MARRTStrategy"<<_regionID<<endl;
@@ -363,4 +373,54 @@ bool MARRTStrategy::EvaluateMap(int _regionID) {
     return mapPassedEvaluation;
   } 
 }
+
+RoadmapClearanceStats 
+MARRTStrategy::PathClearance(int _regionID){
+  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
+  StatClass* regionStats = region->GetStatClass();
+  RoadmapGraph<CfgType, WeightType>* graph = region->GetRoadmap()->m_pRoadmap;
+  int svid = graph->GetVID(m_root[0]);
+  int gvid = graph->GetVID(m_goals[0]);
+  vector<VID> path;
+  int res = find_path_dijkstra(*(graph), svid, gvid, path, WeightType::MaxWeight());
+  RoadmapClearanceStats stats;
+  typedef RoadmapGraph<CfgType, WeightType>::EI EI;
+  typedef RoadmapGraph<CfgType, WeightType>::VI VI;
+  typedef RoadmapGraph<CfgType, WeightType>::EID EID;
+  double runningTotal = 0;
+  double minClearance = 1e6;
+  double pathLength = 0;
+  vector<double> clearanceVec;
+  for(int i = 0; i < path.size() - 1; i++){
+    EI ei;
+    VI vi;
+    EID ed(path[i], path[i+1]);
+    graph->find_edge(ed, vi, ei);
+    WeightType weight = (*ei).property();
+    pathLength += weight.Weight();
+    double currentClearance = MinEdgeClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), (*graph->find_vertex((*ei).source())).property(), (*graph->find_vertex((*ei).target())).property(), weight, m_vc, m_dm); 
+    clearanceVec.push_back(currentClearance);
+    runningTotal += currentClearance;
+    if(currentClearance < minClearance){
+      minClearance = currentClearance;    
+    }
+  }
+  stats.m_minClearance = minClearance;
+  double average = runningTotal / (path.size()/2);
+  stats.m_avgClearance = average;
+  double varSum = 0;
+  for(vector<double>::iterator it = clearanceVec.begin(); it != clearanceVec.end(); it++){
+    varSum+=pow(((*it) - average), 2);  
+  }
+  stats.m_clearanceVariance = varSum / clearanceVec.size();
+  stats.m_pathLength = pathLength;
+  return stats;
+
+//RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
+  
+  
+  
+}
+
+
 

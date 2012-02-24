@@ -173,6 +173,13 @@ void BasicRRTStrategy::Finalize(int _regionID) {
   osStat << "NodeGen+Connection Stats" << endl;
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
   regionStats->PrintClock("RRT Generation", osStat);
+  
+  RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
+  osStat << endl <<  "Min Roadmap Clearance: " << clearanceStats.m_minClearance << endl <<  " Avg Roadmap Clearance: " << clearanceStats.m_avgClearance << endl << " Roadmap Variance: " << clearanceStats.m_clearanceVariance << endl;
+  if(m_goalsNotFound.size() == 0){
+  RoadmapClearanceStats pathStats = PathClearance(_regionID);
+  osStat << endl << "Path Length: " << endl << "Min Path Clearance: " << pathStats.m_minClearance << endl << " Avg Path Clearance: " << pathStats.m_avgClearance << endl << " Path Variance: " << pathStats.m_clearanceVariance << endl;
+}
   osStat.close();
 
   if(m_debug) cout<<"\nEnd Finalizing BasicRRTStrategy"<<_regionID<<endl;
@@ -351,4 +358,53 @@ BasicRRTStrategy::EvaluateMap(int _regionID) {
     return mapPassedEvaluation;
   } 
 }
+
+RoadmapClearanceStats 
+BasicRRTStrategy::PathClearance(int _regionID){
+  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
+  StatClass* regionStats = region->GetStatClass();
+  RoadmapGraph<CfgType, WeightType>* graph = region->GetRoadmap()->m_pRoadmap;
+  int svid = graph->GetVID(m_roots[0]);
+  int gvid = graph->GetVID(m_goals[0]);
+  vector<VID> path;
+  int res = find_path_dijkstra(*(graph), svid, gvid, path, WeightType::MaxWeight());
+  RoadmapClearanceStats stats;
+  typedef RoadmapGraph<CfgType, WeightType>::EI EI;
+  typedef RoadmapGraph<CfgType, WeightType>::VI VI;
+  typedef RoadmapGraph<CfgType, WeightType>::EID EID;
+  double runningTotal = 0;
+  double minClearance = 1e6;
+  double pathLength = 0;
+  vector<double> clearanceVec;
+  for(int i = 0; i < path.size() - 1; i++){
+    EI ei;
+    VI vi;
+    EID ed(path[i], path[i+1]);
+    graph->find_edge(ed, vi, ei);
+    WeightType weight = (*ei).property();
+    pathLength += weight.Weight();
+    double currentClearance = MinEdgeClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), (*graph->find_vertex((*ei).source())).property(), (*graph->find_vertex((*ei).target())).property(), weight, m_vc, m_dm); 
+    clearanceVec.push_back(currentClearance);
+    runningTotal += currentClearance;
+    if(currentClearance < minClearance){
+      minClearance = currentClearance;    
+    }
+  }
+  stats.m_minClearance = minClearance;
+  double average = runningTotal / (path.size()/2);
+  stats.m_avgClearance = average;
+  double varSum = 0;
+  for(vector<double>::iterator it = clearanceVec.begin(); it != clearanceVec.end(); it++){
+    varSum+=pow(((*it) - average), 2);  
+  }
+  stats.m_clearanceVariance = varSum / clearanceVec.size();
+  stats.m_pathLength = pathLength;
+  return stats;
+
+//RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
+  
+  
+  
+}
+
 
