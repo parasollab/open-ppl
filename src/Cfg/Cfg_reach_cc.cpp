@@ -35,26 +35,7 @@ Cfg_reach_cc(const vector<double>& _v) : Cfg_free_tree(_v) {
 }
 
 Cfg_reach_cc::
-Cfg_reach_cc(const Cfg& c) {
-  if(c.DOF() == m_numOfJoints) {
-    m_dof = m_numOfJoints;
-    m_posDof = 0;
-  } else {
-    m_dof = 6 + m_numOfJoints;
-    m_posDof = 3;
-  }
-  vector<double> _v = c.GetData();
-  if((int)_v.size() < m_dof) {
-    cout << "\n\nERROR in Cfg_reach_cc::Cfg_reach_cc(Cfg&), ";
-    cout << "size of cfg data less than m_dof\n";
-    cout << "\tm_dof = " << m_dof << "\tdata size = " << _v.size() << endl;
-    exit(-1);
-  }
-  m_v.clear();
-  for(int i=0; i<m_dof; ++i)
-    m_v.push_back(_v[i]);
-  NormalizeOrientation();
-
+Cfg_reach_cc(const Cfg& c) : Cfg_free_tree(c) {
   link_lengths = ((Cfg_reach_cc&)c).link_lengths;
   link_orientations = ((Cfg_reach_cc&)c).link_orientations;
 }

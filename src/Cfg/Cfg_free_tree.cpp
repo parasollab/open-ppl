@@ -18,13 +18,8 @@
 int Cfg_free_tree::m_numOfJoints;
 
 Cfg_free_tree::Cfg_free_tree(){
-#ifdef PMPReachDistCCFixed
-  m_dof = m_numOfJoints;
-  m_posDof = 0;
-#else
   m_dof = 6 + m_numOfJoints;
   m_posDof = 3;
-#endif
   m_v.clear();
   for(int i=0; i<m_dof; i++)
     m_v.push_back(0);
@@ -38,13 +33,8 @@ Cfg_free_tree::Cfg_free_tree(int _numofJoints) {
     exit(-1);
   }
   
-#ifdef PMPReachDistCCFixed
-  m_dof = m_numOfJoints;
-  m_posDof = 0;
-#else
   m_dof = 6 + m_numOfJoints;
   m_posDof = 3;
-#endif
   
   m_v.clear();
   for(int i=0; i<m_dof; i++)
@@ -65,13 +55,8 @@ Cfg_free_tree::Cfg_free_tree(const Vector6D& _v) {
 }
 
 Cfg_free_tree::Cfg_free_tree(const vector<double> &_v){
-#ifdef PMPReachDistCCFixed
-  m_dof = m_numOfJoints;
-  m_posDof = 0;
-#else
   m_dof = 6 + m_numOfJoints;
   m_posDof = 3;
-#endif
   if((int)_v.size() < m_dof) {
     cout << "\n\nERROR in Cfg_free_tree::Cfg_free_tree(vector<double>), ";
     cout << "size of vector less than m_dof\n";
@@ -85,13 +70,8 @@ Cfg_free_tree::Cfg_free_tree(const vector<double> &_v){
 };
 
 Cfg_free_tree::Cfg_free_tree(const Cfg& _c) {
-#ifdef PMPReachDistCCFixed
-  m_dof = m_numOfJoints;
-  m_posDof = 0;
-#else
   m_dof = 6 + m_numOfJoints;
   m_posDof = 3;
-#endif
   vector<double> _v;
   _v = _c.GetData();
   if((int)_v.size() < m_dof) {
