@@ -178,7 +178,7 @@ void BasicRRTStrategy::Finalize(int _regionID) {
   osStat << endl <<  "Min Roadmap Clearance: " << clearanceStats.m_minClearance << endl <<  " Avg Roadmap Clearance: " << clearanceStats.m_avgClearance << endl << " Roadmap Variance: " << clearanceStats.m_clearanceVariance << endl;
   if(m_goalsNotFound.size() == 0){
   RoadmapClearanceStats pathStats = PathClearance(_regionID);
-  osStat << endl << "Path Length: " << endl << "Min Path Clearance: " << pathStats.m_minClearance << endl << " Avg Path Clearance: " << pathStats.m_avgClearance << endl << " Path Variance: " << pathStats.m_clearanceVariance << endl;
+  osStat << endl << "Path Length: " << pathStats.m_pathLength << endl << "Min Path Clearance: " << pathStats.m_minClearance << endl << " Avg Path Clearance: " << pathStats.m_avgClearance << endl << " Path Variance: " << pathStats.m_clearanceVariance << endl;
 }
   osStat.close();
 
