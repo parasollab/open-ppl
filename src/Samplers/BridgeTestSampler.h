@@ -47,7 +47,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
       _out << "\tdmLabel = " << m_dmLabel << endl; 
     }
 
-    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::sampler()";
       ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
@@ -79,7 +79,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
                 _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 _cfgOut.push_back(tmp);
-                _cfgCol = cfg1;
+		_cfgCol.push_back(tmp);
               }
             }
           } else {
@@ -95,7 +95,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
                 _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 _cfgOut.push_back(mid);
-                _cfgCol = cfg1;
+		_cfgCol.push_back(tmp);
               }
             }
           }
@@ -111,7 +111,7 @@ class BridgeTestSampler : public SamplerMethod<CFG>
                 _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 _cfgOut.push_back(tmp);
-                _cfgCol = cfg1;
+		_cfgCol.push_back(tmp);
               }
             }
           } else {
@@ -125,7 +125,8 @@ class BridgeTestSampler : public SamplerMethod<CFG>
                 _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 _cfgOut.push_back(mid);
-                _cfgCol = cfg1;
+               // _cfgCol = cfg1;
+	       _cfgCol.push_back(tmp);
               }
             }
           }	

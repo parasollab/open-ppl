@@ -121,10 +121,9 @@ Cfg& Cfg::operator=(const Cfg& _c){
   m_posDof=_c.PosDOF();
   m_v.clear();
   m_v = _c.GetData();
-#ifndef _PARALLEL
   m_labelMap = _c.m_labelMap;
   m_statMap = _c.m_statMap;
-#endif
+
   return *this;
 }
 
@@ -585,7 +584,6 @@ void Cfg::SetNumOfJoints(int _numOfJoints) {
 }
 
 bool Cfg::GetLabel(string _label) {
-  #ifndef _PARALLEL
   if(IsLabel(_label))
   {
     return m_labelMap[_label];
@@ -594,34 +592,25 @@ bool Cfg::GetLabel(string _label) {
   {
     cout << "Cfg::GetLabel -- I cannot find Label =  " << _label << endl;
     exit(-1);
-  }
-  #else 
-   cout << "Cfg::GetLabel -- Map define type not implemented yet"<< endl;
-   exit(-1);
-  #endif
-  
+  } 
 }
 
 bool Cfg::IsLabel(string _label) {
    bool label = false;
-   #ifndef _PARALLEL
    if(m_labelMap.count(_label) > 0)
     { label= true ; }
    else
     { label= false; }
-   #endif
    return label;
 }
  
 void Cfg::SetLabel(string _label, bool _value) {
-  #ifndef _PARALLEL
   m_labelMap[_label] = _value;
-  #endif
+
 }
 
 
 double Cfg::GetStat(string _stat) {
-  #ifndef _PARALLEL
   if(IsStat(_stat))
   {
     return m_statMap[_stat];
@@ -631,28 +620,19 @@ double Cfg::GetStat(string _stat) {
     cout << "Cfg::GetStat -- I cannot find Stat =  " << _stat << endl;
     exit(-1);
   }
-  #else 
-  cout << "Cfg::GetStat -- Map define type not implemented yet"<< endl;
-    exit(-1);
-  #endif
-  
 }
 
 bool Cfg::IsStat(string _stat) {
    bool stat = false;
-   #ifndef _PARALLEL
    if(m_statMap.count(_stat) > 0)
     { stat= true ; }
    else
     { stat=false; }
-   #endif
    return stat;
 }
  
 void Cfg::SetStat(string _stat,double _value) {
-  #ifndef _PARALLEL
   m_statMap[_stat] = _value;
-  #endif  
 }
 
 vector<Vector3D> Cfg::PolyApprox(Environment* _env) const {

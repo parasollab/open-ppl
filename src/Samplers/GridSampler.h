@@ -52,7 +52,7 @@ class GridSampler : public SamplerMethod<CFG> {
     _os << endl;
   }
 
-  virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+  virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) {
     // When using grid sampler, set the TestEval to a number 
     // that is a no more than 70-80% of the total number of 
     // possible grid points. Otherwise a very long time may pass

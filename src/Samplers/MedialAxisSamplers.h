@@ -81,7 +81,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       _os << "\thistoryLength = " << m_historyLength << endl;
     }
 
-    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) {
       string call("MedialAxisSampler::sampler()");
       bool generated = false;
       int attempts = 0;

@@ -374,13 +374,10 @@ guration where workspace robot's EVERY VERTEX
   std::vector<double> m_v;   
   int m_dof;
   int m_posDof;
-/** @To do- there is still problem with (un)packing map
-   *uncomment the ifdef after fix
-   */
-  #ifndef _PARALLEL
+
   std::map<string,bool> m_labelMap;
   std::map<string,double> m_statMap;
-  #endif
+
 
  protected:
   static int m_numOfJoints;

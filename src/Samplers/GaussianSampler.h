@@ -47,7 +47,7 @@ class GaussianSampler : public SamplerMethod<CFG>
       _out << "\tdmLabel = " << m_dmLabel << endl; 
     }
 
-    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::sampler()";
       bool generated = false;
@@ -103,11 +103,11 @@ class GaussianSampler : public SamplerMethod<CFG>
           if(cfg1Free) {
             oss << "Gaussian node generated: " << cfg1;
             _cfgOut.push_back(cfg1);
-            _cfgCol = cfg2;
+	    _cfgCol.push_back(cfg2);
           } else {
             oss << "Gaussian node generated: " << cfg2;
             _cfgOut.push_back(cfg2);
-            _cfgCol = cfg1;
+	    _cfgCol.push_back(cfg1);
           }
           VDComment(oss.str());
         }

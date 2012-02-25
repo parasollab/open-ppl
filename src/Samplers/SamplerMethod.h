@@ -178,14 +178,14 @@ class SamplerMethod : public MPBaseObject {
             OutputIterator _result, OutputIterator _collision) {
       CFG myCfg;
       vector<CFG> out1;
-      CFG collisionOut;
+      vector<CFG> collisionOut;
       for (int i =0; i< _numNodes; i++) {
         myCfg.GetRandomCfg(_env,_bb);
         while(!this->Sampler(_env, _bb, _stats, myCfg, out1, collisionOut, _maxAttempts))
           myCfg.GetRandomCfg(_env,_bb);
       }
       _result = copy(out1.begin(), out1.end(), _result);
-      *_collision++ = collisionOut;
+      _collision = copy(collisionOut.begin(), collisionOut.end(), _collision);
       return _result;
     }
 
@@ -196,10 +196,10 @@ class SamplerMethod : public MPBaseObject {
     {
       while(_first != _last) {
         vector<CFG> resultCfg; 
-        CFG collisionCfg;
+        vector<CFG> collisionCfg;
         if(this->Sampler(_env, _bb, _stats, *_first, resultCfg, collisionCfg, _maxAttempts)){
           _result = copy(resultCfg.begin(), resultCfg.end(), _result);
-          *_collision++ = collisionCfg;
+	  _collision = copy(collisionCfg.begin(), collisionCfg.end(), _collision);
         }
         _first++;
       }
@@ -207,7 +207,7 @@ class SamplerMethod : public MPBaseObject {
     }  
   
   protected:
-    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) = 0;
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) = 0;
 };
 
 #endif

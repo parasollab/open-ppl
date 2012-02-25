@@ -110,7 +110,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       }
 
     virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, 
-        CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+        CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::sampler()";
       CDInfo cdInfo;
@@ -160,11 +160,11 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
             CFG tmp;
             r.subtract(tmp, r);
             GenerateShells(_env, _bb, _stats,c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
-            _cfgCol = c2;
+	    _cfgCol.push_back(c2);
           }
           else {
             GenerateShells(_env, _bb, _stats,c2, c1, r,back_insert_iterator<vector<CFG> >(_cfgOut));
-            _cfgCol = c1;
+	    _cfgCol.push_back(c1);
           }
         }
         else if(c1BBox && m_useBBX && c1Free && !c2BBox){
@@ -172,7 +172,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
           CFG tmp;
           r.subtract(tmp, r);
           GenerateShells(_env, _bb, _stats,c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
-          _cfgCol = c2;
+	  _cfgCol.push_back(c2);
         }
       } while (!generated && (attempts < _maxAttempts));
 

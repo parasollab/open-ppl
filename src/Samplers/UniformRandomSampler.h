@@ -38,7 +38,7 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
     }
 
   protected:
-    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, CFG& _cfgCol, int _maxAttempts) {
+    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) {
       string callee(this->GetName());
       callee += "::SampleImpl()";
       ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
@@ -59,14 +59,15 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
             if(this->m_debug) cout << "Generated::" << tmp << endl;
             _cfgOut.push_back(tmp);
           } else {
-            _cfgCol = tmp;
+	    _cfgCol.push_back(tmp);
             if(this->m_debug) VDAddTempCfg(tmp, false);
           }
         }
       } while (!generated && (attempts < _maxAttempts));
       if(!generated && this->m_debug) cout << "Maximum attempts reached." << endl;
       return generated;
-    }  
+    } 
+    
 };
 
 #endif

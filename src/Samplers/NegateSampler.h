@@ -31,7 +31,7 @@ class NegateSampler : public SamplerMethod<CFG> {
     }
   
     virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, 
-                         CFG& _cfgCol, int _maxAttempts) {
+                         vector<CFG>& _cfgCol, int _maxAttempts) {
       this->GetMPProblem()->GetValidityChecker()->ToggleValidity();
       bool result = this->GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(samplingMethod)->Sampler(_env, _bb, _stats, _cfgIn, _cfgOut, _cfgCol, _maxAttempts);
       this->GetMPProblem()->GetValidityChecker()->ToggleValidity();
