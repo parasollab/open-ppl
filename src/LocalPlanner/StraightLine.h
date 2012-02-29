@@ -414,7 +414,6 @@ IsConnectedSLBinary(Environment *_env, StatClass& _stats,
     _cdCounter++;
     if(!midCfg.InBoundingBox(_env) ||
        !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee) ) {
-      _col=midCfg;
       if(midCfg.InBoundingBox(_env))
         _col=midCfg;
       return false;
