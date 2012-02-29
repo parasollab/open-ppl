@@ -20,6 +20,7 @@
 #include "ResamplePointStrategy.h"
 #include "EvaluateMapStrategy.h"
 #include "UAStrategy.h"
+#include "RRGStrategy.h"
 #endif
 
 #include "Sampler.h"
@@ -157,7 +158,9 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
   } else if(citr.getName() == "ResamplePointStrategy") {
     mpsm = new ResamplePointStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "UAStrategy") {
-    mpsm = new UAStrategy(citr, GetMPProblem());
+    mpsm = new UAStrategy(citr, GetMPProblem()); 
+  } else if(citr.getName() == "RRGStrategy") {
+    mpsm = new RRGStrategy(citr, GetMPProblem());
   } 
 #endif
   else {

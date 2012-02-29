@@ -14,9 +14,11 @@
 #include "MapEvaluator.h"
 #include "Sampler.h"
 
-BasicRRTStrategy::BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem) :
+BasicRRTStrategy::BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem, bool _warnXML) :
   MPStrategyMethod(_node, _problem), m_currentIteration(0){
     ParseXML(_node);
+		if (_warnXML) _node.warnUnrequestedAttributes();
+		if(m_debug && _warnXML) PrintOptions(cout);
   }
 
 void BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
@@ -26,8 +28,8 @@ void BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
       m_evaluators.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
     } 
-    else
-      citr->warnUnknownNode();
+		else
+			citr->warnUnknownNode();
   }
 
   m_delta = _node.numberXMLParameter("delta", false, 0.05, 0.0, 1.0, "Delta Distance");
@@ -40,9 +42,6 @@ void BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_dm = _node.stringXMLParameter("dm",true,"","Distance Metric");
   m_lp = _node.stringXMLParameter("lp", true, "", "Local Planning Method");
   m_query = _node.stringXMLParameter("query", false, "", "Query Filename");
-  _node.warnUnrequestedAttributes();
-
-  if(m_debug) PrintOptions(cout);
 }
 
 void BasicRRTStrategy::PrintOptions(ostream& _os) {
@@ -173,13 +172,13 @@ void BasicRRTStrategy::Finalize(int _regionID) {
   osStat << "NodeGen+Connection Stats" << endl;
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
   regionStats->PrintClock("RRT Generation", osStat);
-  
+ /* 
   RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
   osStat << endl <<  "Min Roadmap Clearance: " << clearanceStats.m_minClearance << endl <<  " Avg Roadmap Clearance: " << clearanceStats.m_avgClearance << endl << " Roadmap Variance: " << clearanceStats.m_clearanceVariance << endl;
   if(m_goalsNotFound.size() == 0){
   RoadmapClearanceStats pathStats = PathClearance(_regionID);
   osStat << endl << "Path Length: " << pathStats.m_pathLength << endl << "Min Path Clearance: " << pathStats.m_minClearance << endl << " Avg Path Clearance: " << pathStats.m_avgClearance << endl << " Path Variance: " << pathStats.m_clearanceVariance << endl;
-}
+}*/
   osStat.close();
 
   if(m_debug) cout<<"\nEnd Finalizing BasicRRTStrategy"<<_regionID<<endl;

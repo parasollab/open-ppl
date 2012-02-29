@@ -273,6 +273,7 @@ ifeq (${parallel}, 0)
 	MPStrategy/EvaluateMapStrategy.o \
 	MPStrategy/ClosedChainStrategy.o \
 	MPStrategy/UAStrategy.o \
+	MPStrategy/RRGStrategy.o \
 	MapEvaluator/NumNodesEvaluation.o \
 	MapEvaluator/NumEdgesEvaluation.o \
 	MapEvaluator/PrintMapEvaluation.o \

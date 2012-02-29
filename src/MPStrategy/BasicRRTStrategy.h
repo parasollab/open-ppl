@@ -19,7 +19,7 @@ template<typename CFG, typename WEIGHT> class MPRegion;
 
 class BasicRRTStrategy : public MPStrategyMethod {
   public:
-    BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem);
+    BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem, bool _warnXML = true);
     virtual ~BasicRRTStrategy() {}
     
     virtual void ParseXML(XMLNodeReader& _node);
@@ -38,7 +38,6 @@ class BasicRRTStrategy : public MPStrategyMethod {
     void EvaluateGoals(int _regionID);
     bool EvaluateMap(int _regionID);
     RoadmapClearanceStats PathClearance(int _regionID);  
-  private:
     vector<string> m_evaluators;
     string m_sampler;
     string m_lp;
