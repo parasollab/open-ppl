@@ -377,12 +377,11 @@ bool MARRTStrategy::EvaluateMap(int _regionID) {
 RoadmapClearanceStats 
 MARRTStrategy::PathClearance(int _regionID){
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  StatClass* regionStats = region->GetStatClass();
   RoadmapGraph<CfgType, WeightType>* graph = region->GetRoadmap()->m_pRoadmap;
   int svid = graph->GetVID(m_root[0]);
   int gvid = graph->GetVID(m_goals[0]);
   vector<VID> path;
-  int res = find_path_dijkstra(*(graph), svid, gvid, path, WeightType::MaxWeight());
+  find_path_dijkstra(*(graph), svid, gvid, path, WeightType::MaxWeight());
   RoadmapClearanceStats stats;
   typedef RoadmapGraph<CfgType, WeightType>::EI EI;
   typedef RoadmapGraph<CfgType, WeightType>::VI VI;
@@ -391,7 +390,7 @@ MARRTStrategy::PathClearance(int _regionID){
   double minClearance = 1e6;
   double pathLength = 0;
   vector<double> clearanceVec;
-  for(int i = 0; i < path.size() - 1; i++){
+  for(size_t i = 0; i < path.size() - 1; i++){
     EI ei;
     VI vi;
     EID ed(path[i], path[i+1]);

@@ -17,8 +17,8 @@
 BasicRRTStrategy::BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem, bool _warnXML) :
   MPStrategyMethod(_node, _problem), m_currentIteration(0){
     ParseXML(_node);
-		if (_warnXML) _node.warnUnrequestedAttributes();
-		if(m_debug && _warnXML) PrintOptions(cout);
+    if (_warnXML) _node.warnUnrequestedAttributes();
+    if(m_debug && _warnXML) PrintOptions(cout);
   }
 
 void BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
@@ -28,8 +28,8 @@ void BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
       m_evaluators.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
     } 
-		else
-			citr->warnUnknownNode();
+    else
+      citr->warnUnknownNode();
   }
 
   m_delta = _node.numberXMLParameter("delta", false, 0.05, 0.0, 1.0, "Delta Distance");
@@ -64,7 +64,7 @@ void BasicRRTStrategy::PrintOptions(ostream& _os) {
 void 
 BasicRRTStrategy::Initialize(int _regionID){
   if(m_debug) cout<<"\nInitializing BasicRRTStrategy::"<<_regionID<<endl;
-  
+
   // Setup MP variables
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
   StatClass* regionStats = region->GetStatClass();
@@ -126,7 +126,7 @@ void BasicRRTStrategy::Run(int _regionID) {
     else{
       dir = this->SelectDirection(_regionID);
     }
-    
+
     //grow towards the direction
     VID recent = this->ExpandTree(_regionID, dir);
     if(recent != INVALID_VID){
@@ -142,7 +142,7 @@ void BasicRRTStrategy::Run(int _regionID) {
       if(m_debug) cout << "RRT FOUND ALL GOALS" << endl;
       mapPassedEvaluation = true;
     }
- }
+  }
 
   regionStats->StopClock("RRT Generation");
   if(m_debug) {
@@ -172,13 +172,13 @@ void BasicRRTStrategy::Finalize(int _regionID) {
   osStat << "NodeGen+Connection Stats" << endl;
   regionStats->PrintAllStats(osStat, region->GetRoadmap());
   regionStats->PrintClock("RRT Generation", osStat);
- /* 
-  RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
-  osStat << endl <<  "Min Roadmap Clearance: " << clearanceStats.m_minClearance << endl <<  " Avg Roadmap Clearance: " << clearanceStats.m_avgClearance << endl << " Roadmap Variance: " << clearanceStats.m_clearanceVariance << endl;
-  if(m_goalsNotFound.size() == 0){
-  RoadmapClearanceStats pathStats = PathClearance(_regionID);
-  osStat << endl << "Path Length: " << pathStats.m_pathLength << endl << "Min Path Clearance: " << pathStats.m_minClearance << endl << " Avg Path Clearance: " << pathStats.m_avgClearance << endl << " Path Variance: " << pathStats.m_clearanceVariance << endl;
-}*/
+  /* 
+     RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
+     osStat << endl <<  "Min Roadmap Clearance: " << clearanceStats.m_minClearance << endl <<  " Avg Roadmap Clearance: " << clearanceStats.m_avgClearance << endl << " Roadmap Variance: " << clearanceStats.m_clearanceVariance << endl;
+     if(m_goalsNotFound.size() == 0){
+     RoadmapClearanceStats pathStats = PathClearance(_regionID);
+     osStat << endl << "Path Length: " << pathStats.m_pathLength << endl << "Min Path Clearance: " << pathStats.m_minClearance << endl << " Avg Path Clearance: " << pathStats.m_avgClearance << endl << " Path Variance: " << pathStats.m_clearanceVariance << endl;
+     }*/
   osStat.close();
 
   if(m_debug) cout<<"\nEnd Finalizing BasicRRTStrategy"<<_regionID<<endl;
@@ -204,7 +204,7 @@ BasicRRTStrategy::SelectDirection(int _regionID){
   dir.GetRandomCfg(env);
   return dir;
 }
-    
+
 BasicRRTStrategy::VID 
 BasicRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   // Setup MP Variables
@@ -327,7 +327,7 @@ BasicRRTStrategy::EvaluateMap(int _regionID) {
   else{
     MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
     StatClass* stats = region->GetStatClass();
-    
+
     bool mapPassedEvaluation = false;
     stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Map Evaluation"; 
     stats->StartClock(clockName.str());
@@ -361,12 +361,11 @@ BasicRRTStrategy::EvaluateMap(int _regionID) {
 RoadmapClearanceStats 
 BasicRRTStrategy::PathClearance(int _regionID){
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  StatClass* regionStats = region->GetStatClass();
   RoadmapGraph<CfgType, WeightType>* graph = region->GetRoadmap()->m_pRoadmap;
   int svid = graph->GetVID(m_roots[0]);
   int gvid = graph->GetVID(m_goals[0]);
   vector<VID> path;
-  int res = find_path_dijkstra(*(graph), svid, gvid, path, WeightType::MaxWeight());
+  find_path_dijkstra(*(graph), svid, gvid, path, WeightType::MaxWeight());
   RoadmapClearanceStats stats;
   typedef RoadmapGraph<CfgType, WeightType>::EI EI;
   typedef RoadmapGraph<CfgType, WeightType>::VI VI;
@@ -375,7 +374,7 @@ BasicRRTStrategy::PathClearance(int _regionID){
   double minClearance = 1e6;
   double pathLength = 0;
   vector<double> clearanceVec;
-  for(int i = 0; i < path.size() - 1; i++){
+  for(size_t i = 0; i < path.size() - 1; i++){
     EI ei;
     VI vi;
     EID ed(path[i], path[i+1]);
@@ -400,10 +399,10 @@ BasicRRTStrategy::PathClearance(int _regionID){
   stats.m_pathLength = pathLength;
   return stats;
 
-//RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
-  
-  
-  
+  //RoadmapClearanceStats clearanceStats = RoadmapClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), *region->GetRoadmap(), m_vc, m_dm);
+
+
+
 }
 
 
