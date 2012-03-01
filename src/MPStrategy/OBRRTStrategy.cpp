@@ -299,7 +299,6 @@ CfgType OBRRTStrategy::g3(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 //4. rotation followed by extension
 CfgType OBRRTStrategy::g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
-  Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   CDInfo  cdInfo;
   CfgType newCfg1, newCfg2;
