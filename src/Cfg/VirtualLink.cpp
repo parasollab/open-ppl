@@ -513,9 +513,26 @@ Link::FindIncrement(const vector<double> &start,
               vector<double> &increment, 
               int nSteps)
 {
-  increment.resize(start.size());
+   increment.resize(start.size());
   for(size_t i=0; i<start.size(); ++i)
+  {
+    if(i<6) 
      increment[i] = (goal[i] - start[i]) / nSteps; 
+   else if(i>=start.size()-CfgType::GetNumOfJoints()){
+  
+            double a = start[i];
+             double b = goal[i];
+ 
+             a = a - floor(a);
+             b = b - floor(b);
+  
+             if(a>=0.5)a-=1.0;
+             if(b>=0.5)b-=1.0;
+	     increment[i]=((b-a)/nSteps);
+   }
+	     
+ 
+  }
 }
 
 void Link::RecursiveBuildAvailableRange(bool bFlat)

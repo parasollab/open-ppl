@@ -612,14 +612,16 @@ StoreData() {
       m_v.resize(6);
     else
       m_v.resize(0);
-
     //compute joint angles
     double sumExtAng = 0;
     for(size_t i=1; i<actual_links.size(); ++i) {
       double extAng = PI - Link::CalculateJointAngle(actual_links[i-1], actual_links[i]);
       sumExtAng += extAng;
-      m_v.push_back(extAng/TWO_PI);
-    }
+        double a = extAng;
+      a= a - floor(a);
+      if(a>=0.5)a-=1.0;
+      m_v.push_back(a/TWO_PI);
+     }
     if(is_closed_chain)
       m_v.push_back((TWO_PI-sumExtAng)/TWO_PI);
 
