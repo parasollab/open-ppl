@@ -13,7 +13,7 @@ ostream& operator<<(ostream &o, const Range& r)
 
 
 int Link::IDCount = 0;
- 
+
 Link::Link(double rmin, double rmax)
 {
   ID = IDCount++;
@@ -52,7 +52,7 @@ void Link::InitializeFromRange(double rmin, double rmax)
 
   leftChild = NULL;  
   rightChild = NULL;
-  
+
   reachableRange.min = rmin;
   reachableRange.max = rmax;
   availableRange = reachableRange;
@@ -94,7 +94,7 @@ void Link::UpdateARange(Link *parent, Link *sibling, bool bSampleConvex)
   cout << "availableRange:" << availableRange << endl;
 #endif 
 }
-  
+
 double Link::SampleLength(bool bSampleConvex, double gama)
 {
   //Randomly select a length within availableRange;
@@ -108,7 +108,7 @@ double Link::SampleLength(bool bSampleConvex, double gama)
     cerr << "[" << availableRange.min << "," << availableRange.max << "]" << endl;
     return -1;
   }
-  
+
   SetLength(availableRange.min + (availableRange.max - availableRange.min)*DRand());
 #ifdef XINYU_DEBUG
   cout << "length:" << length << endl;
@@ -121,13 +121,13 @@ double Link::SampleLength(bool bSampleConvex, double gama)
     double dSample = DRand(); //todoInfo
     convexity = dSample < gama ? 1: -1; //todoInfo
   }
-  
+
   return length;
 }
 
 double Link::SampleLength(boost::variate_generator<boost::rand48&, 
-			                           boost::uniform_real<> 
-			                          >& rand) 
+    boost::uniform_real<> 
+    >& rand) 
 {
   for(vector<FamilyInfo>::iterator itrF = families.begin(); itrF != families.end(); itrF++)
   {
@@ -148,10 +148,10 @@ double Link::SampleLength(boost::variate_generator<boost::rand48&,
 void Link::ExportTreeLinkLength(vector<double> &lengths)
 {
   lengths.push_back(length);
-  
+
   if(leftChild)
     leftChild->ExportTreeLinkLength(lengths);
-  
+
   if(rightChild)
     rightChild->ExportTreeLinkLength(lengths);
 }
@@ -159,13 +159,13 @@ void Link::ExportTreeLinkLength(vector<double> &lengths)
 int Link::ImportTreeLinkLength(const vector<double> &lengths, int index)
 {
   length = lengths[index++];
-  
+
   if(leftChild)
     index = leftChild->ImportTreeLinkLength(lengths, index);
-  
+
   if(rightChild)
-     index = rightChild->ImportTreeLinkLength(lengths, index);
-  
+    index = rightChild->ImportTreeLinkLength(lengths, index);
+
   return index;  
 }
 
@@ -181,10 +181,10 @@ void Link::ExportTreeLinkReachableRange(vector<Range>& ranges) const {
 void Link::ExportTreeLinkAvailableRange(vector<Range> &ranges)
 {
   ranges.push_back(availableRange);
-  
+
   if(leftChild)
     leftChild->ExportTreeLinkAvailableRange(ranges);
-  
+
   if(rightChild)
     rightChild->ExportTreeLinkAvailableRange(ranges);
 }
@@ -192,38 +192,38 @@ void Link::ExportTreeLinkAvailableRange(vector<Range> &ranges)
 int Link::ImportTreeLinkAvailableRange(const vector<Range> &ranges, int index)
 {
   availableRange = ranges[index++];
-  
+
   if(leftChild)
     index = leftChild->ImportTreeLinkAvailableRange(ranges, index);
-  
+
   if(rightChild)
-     index = rightChild->ImportTreeLinkAvailableRange(ranges, index);
-  
+    index = rightChild->ImportTreeLinkAvailableRange(ranges, index);
+
   return index;  
 }
 
 void Link::ExportTreeLinkConvexity(vector<int> &convexities)
 {
   convexities.push_back(convexity);
-  
+
   if(leftChild)
     leftChild->ExportTreeLinkConvexity(convexities);
-  
+
   if(rightChild)
     rightChild->ExportTreeLinkConvexity(convexities);
 }
 
-int
+  int
 Link::ImportTreeLinkConvexity(const vector<int> &convexities, int index)
 {
   convexity = convexities[index++];
-  
+
   if(leftChild)
     index = leftChild->ImportTreeLinkConvexity(convexities, index);
-  
+
   if(rightChild)
     index = rightChild->ImportTreeLinkConvexity(convexities, index);
-  
+
   return index;  
 }
 
@@ -231,10 +231,10 @@ void Link::ExportTreeLinkLength(vector<double> &lengths, vector<int> &convexitie
 {
   lengths.push_back(length);
   convexities.push_back(convexity);//todoInfo
-  
+
   if(leftChild)
     leftChild->ExportTreeLinkLength(lengths, convexities);
-  
+
   if(rightChild)
     rightChild->ExportTreeLinkLength(lengths, convexities);
 }
@@ -243,13 +243,13 @@ int Link::ImportTreeLinkLength(const vector<double> &lengths, const vector<int> 
 {
   availableRange.min = availableRange.max = length = lengths[index];
   convexity = convexities[index++];
-  
+
   if(leftChild)
     index = leftChild->ImportTreeLinkLength(lengths, convexities, index);
-  
+
   if(rightChild)
     index = rightChild->ImportTreeLinkLength(lengths, convexities, index);
-  
+
   return index;  
 }
 
@@ -257,18 +257,18 @@ int Link::ImportTreeLinkLength(const vector<double> &lengths, const vector<int> 
 void Link::FindRootPathways(Link *leaf, vector<Link*> &curPathway, vector<vector<Link*> > &pathwayEnsemble)
 {
   curPathway.push_back(leaf);
-  
+
   if(leaf->families.empty()) // the root
     pathwayEnsemble.push_back(curPathway);
   else
     for(size_t i=0; i<leaf->families.size(); ++i)
       FindRootPathways(leaf->families[i].parent, curPathway, pathwayEnsemble);
-  
+
   curPathway.pop_back();    
 }
 
 bool Link::MatchPathways(const vector<vector<Link *> > &pathEnsembleLeft, const vector<vector<Link *> > &pathEnsembleRight,
-                         vector<Link *> &leftPath, vector<Link *> &rightPath)
+    vector<Link *> &leftPath, vector<Link *> &rightPath)
 {
   for(size_t i=0; i<pathEnsembleLeft.size(); ++i)
     for(size_t j=0; j<pathEnsembleRight.size(); ++j)
@@ -301,13 +301,13 @@ double Link::CalculateJointAngle(Link *left, Link *right)
   }
   Link *ancestor = NULL;
   while(!leftAncestors.empty() && !rightAncestors.empty() &&
-        leftAncestors.back() == rightAncestors.back())
+      leftAncestors.back() == rightAncestors.back())
   {
     ancestor = leftAncestors.back();
     leftAncestors.pop_back();
     rightAncestors.pop_back();
   }
- 
+
   double topJointAngle = CosineAngle(leftAncestors.back()->GetLength(), rightAncestors.back()->GetLength(), ancestor->GetLength());
   if (ancestor->leftChild == rightAncestors.back())
     topJointAngle *= -1;
@@ -381,9 +381,9 @@ bool Link::RecursiveSample(double l, bool bSampleConvex, double gama)
 }
 
 bool Link::RecursiveSample(boost::variate_generator<boost::rand48&,
-			                            boost::uniform_real<>
-			                           >& rand, 
-			   double l) 
+    boost::uniform_real<>
+    >& rand, 
+    double l) 
 {
   if(l < -EPS_ZERO)
   {
@@ -435,7 +435,7 @@ void Link::PrintLink(ostream& os)
 void Link::PrintTree(ostream& os)
 {
   PrintLink(os);
-  
+
   if(leftChild != NULL)
     leftChild->PrintTree(os);
   if(rightChild != NULL)
@@ -446,7 +446,7 @@ void Link::ResetTree()
 {
   availableRange = reachableRange;
   convexity = 1;
-  
+
   if(leftChild)
     leftChild->ResetTree();
   if(rightChild)
@@ -456,7 +456,7 @@ void Link::ResetTree()
 bool Link::CanClose() 
 {
   if(!leftChild && !rightChild)
-     return true;
+    return true;
   Range r = RangeUnion(leftChild->availableRange, rightChild->availableRange);
   if(availableRange.HasIntersection(r))
     return true;
@@ -484,54 +484,54 @@ void Link::FindBreachesRecursive(list<Link*> &breaches)
   rightChild->FindBreachesRecursive(breaches);
 }
 
-void
+  void
 Link::InterpolateLinkLength(const vector<double> &start, 
-                            const vector<double> &increment, 
-                            vector<double> &intermediate, 
-                            int index)
+    const vector<double> &increment, 
+    vector<double> &intermediate, 
+    int index)
 {
   intermediate.resize(start.size());
   for(size_t i=0; i<start.size(); ++i)
-     intermediate[i] = start[i] + increment[i]*index; 
+    intermediate[i] = start[i] + increment[i]*index; 
 }
 
-void
+  void
 Link::InterpolateLinkLength(const vector<double> &start, 
-                            const vector<double> &goal, 
-                            vector<double> &intermediate, 
-                            int nSteps,
-                            int index)
+    const vector<double> &goal, 
+    vector<double> &intermediate, 
+    int nSteps,
+    int index)
 {
   intermediate.resize(start.size());
   for(size_t i=0; i<start.size(); ++i)
-     intermediate[i] = start[i] + (goal[i]-start[i])*index/nSteps; 
+    intermediate[i] = start[i] + (goal[i]-start[i])*index/nSteps; 
 }
 
-void
+  void
 Link::FindIncrement(const vector<double> &start, 
-              const vector<double> &goal, 
-              vector<double> &increment, 
-              int nSteps)
+    const vector<double> &goal, 
+    vector<double> &increment, 
+    int nSteps)
 {
-   increment.resize(start.size());
+  increment.resize(start.size());
   for(size_t i=0; i<start.size(); ++i)
   {
     if(i<6) 
-     increment[i] = (goal[i] - start[i]) / nSteps; 
-   else if(i>=start.size()-CfgType::GetNumOfJoints()){
-  
-            double a = start[i];
-             double b = goal[i];
- 
-             a = a - floor(a);
-             b = b - floor(b);
-  
-             if(a>=0.5)a-=1.0;
-             if(b>=0.5)b-=1.0;
-	     increment[i]=((b-a)/nSteps);
-   }
-	     
- 
+      increment[i] = (goal[i] - start[i]) / nSteps; 
+    else if(i>=start.size()-CfgType::GetNumOfJoints()){
+
+      double a = start[i];
+      double b = goal[i];
+
+      a = a - floor(a);
+      b = b - floor(b);
+
+      if(a>=0.5)a-=1.0;
+      if(b>=0.5)b-=1.0;
+      increment[i]=((b-a)/nSteps);
+    }
+
+
   }
 }
 
@@ -542,7 +542,7 @@ void Link::RecursiveBuildAvailableRange(bool bFlat)
     availableRange = reachableRange;
     return;
   }
-  
+
   leftChild->RecursiveBuildAvailableRange(bFlat);
   rightChild->RecursiveBuildAvailableRange(bFlat);
 
@@ -569,7 +569,7 @@ Link *BuildTree(int i, int j, vector<Link *>& baseLinks)
 {
   Link *root;
   int numLinks = j-i+1;
-  
+
   if(numLinks >=2)
   {
     int numLeftLinks = numLinks/2;
@@ -585,7 +585,7 @@ Link *BuildTree(int i, int j, vector<Link *>& baseLinks)
   {
     root = NULL;
   }
-  
+
   return root;
 }
 
@@ -657,7 +657,7 @@ void get_actual_links_of(Link* link, vector<int>& ids)
     ids.push_back(link->GetID());
 }
 
-Link*
+  Link*
 get_parent_of(Link* link, const vector<int>& ear)
 {
   vector<int> actual_links;
@@ -683,14 +683,14 @@ get_parent_of(Link* link, const vector<int>& ear)
   return NULL;
 }
 
-void
+  void
 seen_both_children(Link* link, set<Link*>& seen, set<Link*>& implied)
 {
   if(link->leftChild == NULL || link->rightChild == NULL)
     return;
 
   if(find(seen.begin(), seen.end(), link->leftChild) != seen.end() &&
-     find(seen.begin(), seen.end(), link->rightChild) != seen.end())
+      find(seen.begin(), seen.end(), link->rightChild) != seen.end())
     implied.insert(link);
 
   seen.insert(link->leftChild);
@@ -700,7 +700,7 @@ seen_both_children(Link* link, set<Link*>& seen, set<Link*>& implied)
   seen_both_children(link->rightChild, seen, implied);
 }
 
-void
+  void
 partition_loop(Link* link, set<Link*>& links_seen, vector<int>& seen, vector<int>& unseen)
 {
   if(link->leftChild == NULL && link->rightChild == NULL) //actual_link
@@ -709,8 +709,8 @@ partition_loop(Link* link, set<Link*>& links_seen, vector<int>& seen, vector<int
       seen.push_back(link->GetID());
     else
       unseen.push_back(link->GetID());
-   
-   links_seen.insert(link);
+
+    links_seen.insert(link);
   }
 
   if(link->leftChild != NULL)
@@ -719,4 +719,4 @@ partition_loop(Link* link, set<Link*>& links_seen, vector<int>& seen, vector<int
   if(link->rightChild != NULL)
     partition_loop(link->rightChild, links_seen, seen, unseen);
 }
- 
+

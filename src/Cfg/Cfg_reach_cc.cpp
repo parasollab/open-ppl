@@ -42,24 +42,24 @@ Cfg_reach_cc(const Cfg& c) : Cfg_free_tree(c) {
 
 Cfg_reach_cc::
 Cfg_reach_cc(double x, double y, double z, 
-	     double roll, double pitch, double yaw) 
-  : Cfg_free_tree(x, y, z, roll, pitch, yaw) {
+    double roll, double pitch, double yaw) 
+: Cfg_free_tree(x, y, z, roll, pitch, yaw) {
 }
 
 Cfg_reach_cc::
 Cfg_reach_cc(const Vector6D& base,
-	     const vector<double>& len, 
-	     const vector<int>& ori) :
+    const vector<double>& len, 
+    const vector<int>& ori) :
   link_lengths(len), link_orientations(ori) {
-  m_v.clear();
-  m_v.push_back(base.getX());
-  m_v.push_back(base.getY());
-  m_v.push_back(base.getZ());
-  m_v.push_back(base.getRoll());
-  m_v.push_back(base.getPitch());
-  m_v.push_back(base.getYaw());
-  StoreData();
-}
+    m_v.clear();
+    m_v.push_back(base.getX());
+    m_v.push_back(base.getY());
+    m_v.push_back(base.getZ());
+    m_v.push_back(base.getRoll());
+    m_v.push_back(base.getPitch());
+    m_v.push_back(base.getYaw());
+    StoreData();
+  }
 
 Cfg_reach_cc::
 ~Cfg_reach_cc() {
@@ -83,7 +83,7 @@ initialize_link_tree(const char* filename) {
     cerr << "Error while reading link values: can't read num_links\n";
     exit(-1);
   }
-  
+
   for(int i=0; i<num_links; ++i) {
     if(!(ifs >> strData)) {
       cerr << "Error while reading link " << i << " lengths\n";
@@ -134,7 +134,7 @@ operator=(const Cfg& _c) {
 void 
 Cfg_reach_cc::
 add(const Cfg& c1, const Cfg& c2) {
-  
+
   if(OrientationsDifferent((Cfg_reach_cc&)c1, (Cfg_reach_cc&)c2))
   {
 
@@ -149,7 +149,7 @@ add(const Cfg& c1, const Cfg& c2) {
         exit(-1);
       }
   }
-  
+
   vector<double> _v1 = c1.GetData();
   vector<double> _v2 = c2.GetData();
   if(m_dof != m_numOfJoints)
@@ -157,25 +157,25 @@ add(const Cfg& c1, const Cfg& c2) {
       m_v[i] = _v1[i] + _v2[i];
 
   link_lengths.clear();
- 
+
   transform(((Cfg_reach_cc&)c1).link_lengths.begin(), ((Cfg_reach_cc&)c1).link_lengths.end(),
-	    ((Cfg_reach_cc&)c2).link_lengths.begin(),
-	    back_insert_iterator<vector<double> >(link_lengths),
-	    plus<double>());
+      ((Cfg_reach_cc&)c2).link_lengths.begin(),
+      back_insert_iterator<vector<double> >(link_lengths),
+      plus<double>());
 
   link_orientations.clear();
- 
 
-    for(size_t i=0; i<min(((Cfg_reach_cc&)c1).link_orientations.size(),
-((Cfg_reach_cc&)c2).link_orientations.size()); ++i)
-      {
-           if(  ((Cfg_reach_cc&)c1).link_orientations[i] == ((Cfg_reach_cc&)c2).link_orientations[i] )
-           link_orientations.push_back(  ( (Cfg_reach_cc&)c1).link_orientations[i] );
-           else if ( ((Cfg_reach_cc&)c1).link_orientations[i]!=0)
-           link_orientations.push_back(  ( (Cfg_reach_cc&)c1).link_orientations[i] );   
-           else 
-           link_orientations.push_back(  ( (Cfg_reach_cc&)c2).link_orientations[i] );
-      }
+
+  for(size_t i=0; i<min(((Cfg_reach_cc&)c1).link_orientations.size(),
+        ((Cfg_reach_cc&)c2).link_orientations.size()); ++i)
+  {
+    if(  ((Cfg_reach_cc&)c1).link_orientations[i] == ((Cfg_reach_cc&)c2).link_orientations[i] )
+      link_orientations.push_back(  ( (Cfg_reach_cc&)c1).link_orientations[i] );
+    else if ( ((Cfg_reach_cc&)c1).link_orientations[i]!=0)
+      link_orientations.push_back(  ( (Cfg_reach_cc&)c1).link_orientations[i] );   
+    else 
+      link_orientations.push_back(  ( (Cfg_reach_cc&)c2).link_orientations[i] );
+  }
 
   StoreData();  
 
@@ -201,7 +201,7 @@ subtract(const Cfg& c1, const Cfg& c2) {
         exit(-1);
       }
   }
-  
+
   vector<double> _v1 = c1.GetData();
   vector<double> _v2 = c2.GetData();
   if(m_dof != m_numOfJoints)
@@ -210,18 +210,18 @@ subtract(const Cfg& c1, const Cfg& c2) {
 
   link_lengths.clear();
   transform(((Cfg_reach_cc&)c1).link_lengths.begin(), ((Cfg_reach_cc&)c1).link_lengths.end(),
-	    ((Cfg_reach_cc&)c2).link_lengths.begin(),
-	    back_insert_iterator<vector<double> >(link_lengths),
-	    minus<double>());
+      ((Cfg_reach_cc&)c2).link_lengths.begin(),
+      back_insert_iterator<vector<double> >(link_lengths),
+      minus<double>());
 
   //not sure what to do here...used for Increment in lp, so setting ori equal to c1 is probably ok
   link_orientations.clear();
   /*
-  transform(((Cfg_reach_cc&)c1).link_orientations.begin(), ((Cfg_reach_cc&)c1).link_orientations.end(),
-	    ((Cfg_reach_cc&)c2).link_orientations.begin(),
-	    back_insert_iterator<vector<double> >(link_orientations),
-	    minus<int>());
-  */
+     transform(((Cfg_reach_cc&)c1).link_orientations.begin(), ((Cfg_reach_cc&)c1).link_orientations.end(),
+     ((Cfg_reach_cc&)c2).link_orientations.begin(),
+     back_insert_iterator<vector<double> >(link_orientations),
+     minus<int>());
+   */
   link_orientations = ((Cfg_reach_cc&)c1).link_orientations;
 
   StoreData();  
@@ -256,8 +256,8 @@ negative(const Cfg& c) {
 
   link_lengths.clear();
   transform(((Cfg_reach_cc&)c).link_lengths.begin(), ((Cfg_reach_cc&)c).link_lengths.end(),
-	    back_insert_iterator<vector<double> >(link_lengths),
-	    bind1st(multiplies<double>(), -1));
+      back_insert_iterator<vector<double> >(link_lengths),
+      bind1st(multiplies<double>(), -1));
 
   //not sure what to do here...used for lp failed path, so setting ori equal ok
   link_orientations = ((Cfg_reach_cc&)c).link_orientations;
@@ -348,8 +348,8 @@ c1_towards_c2(const Cfg& cfg1, const Cfg& cfg2, double d) {
 bool 
 Cfg_reach_cc::
 isWithinResolution(const Cfg &c, 
-		   double positionRes, 
-		   double orientationRes) const {
+    double positionRes, 
+    double orientationRes) const {
   //if orienation difference is 2 or -2, return false
   for(size_t i=0; i<link_orientations.size(); ++i)
     if(abs(link_orientations[i]-((Cfg_reach_cc&)c).link_orientations[i]) > 1)
@@ -364,23 +364,23 @@ bool
 Cfg_reach_cc::
 ConfigEnvironment(Environment* _env) const {
   int robot = _env->GetRobotIndex();
-  
+
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
   Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
-						 m_v[5]*TWOPI, 
-						 m_v[4]*TWOPI, 
-						 m_v[3]*TWOPI), // RPY
-				     Vector3D(m_v[0],m_v[1],m_v[2]));
-  
-  
+        m_v[5]*TWOPI, 
+        m_v[4]*TWOPI, 
+        m_v[3]*TWOPI), // RPY
+      Vector3D(m_v[0],m_v[1],m_v[2]));
+
+
   _env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);  // update link 1.
   for(int i=0; i<m_numOfJoints; i++) {
     _env->GetMultiBody(robot)->GetFreeBody(i+1)
       ->GetBackwardConnection(0).GetDHparameters().theta = m_v[i+6]*360.0;
-     
+
   }  // config the robot
-  
+
   vector<int> link_ids;
   for(int i=0; i<_env->GetMultiBody(robot)->GetFreeBodyCount(); ++i)
     link_ids.push_back( _env->GetMultiBody(robot)->GetFreeBodyIndex( _env->GetMultiBody(robot)->GetFreeBody(i) ) );
@@ -431,58 +431,58 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm,
 {
 
   int n_ticks= 0;
- double positionRes=env->GetPositionRes();
- double orientationRes=env->GetOrientationRes();
+  double positionRes=env->GetPositionRes();
+  double orientationRes=env->GetOrientationRes();
 
   vector<int>origin_link_orientations;
-   Cfg_reach_cc c1;
-   c1.GetRandomCfg(env);
- // link_orientations = ((Cfg_reach_cc&)c1).link_orientations;
-   Cfg_reach_cc c1_origin;
-   
+  Cfg_reach_cc c1;
+  c1.GetRandomCfg(env);
+  // link_orientations = ((Cfg_reach_cc&)c1).link_orientations;
+  Cfg_reach_cc c1_origin;
+
   //StoreData();
-        vector<Range> ranges;
-        vector<double>origin_link_lengths;
+  vector<Range> ranges;
+  vector<double>origin_link_lengths;
   link_tree->ExportTreeLinkReachableRange(ranges);
 
   for(size_t i=0; i<ranges.size(); ++i)
   {
-        origin_link_lengths.push_back((ranges[i].min + ranges[i].max)*0.5);
-        origin_link_orientations.push_back(0);
-        
-  }
-    Cfg_reach_cc origin(Vector6D(0,0,0,0,0,0),origin_link_lengths,origin_link_orientations);
-    Cfg_reach_cc incr2;
-   
-    c1_origin.GetIntermediate(origin,c1);
+    origin_link_lengths.push_back((ranges[i].min + ranges[i].max)*0.5);
+    origin_link_orientations.push_back(0);
 
-   incr2.FindIncrement(origin,c1_origin,&n_ticks,positionRes,orientationRes);
-    
-        Cfg_reach_cc tick =origin;
-        while(dm->Distance(env,origin,tick)< incr)
+  }
+  Cfg_reach_cc origin(Vector6D(0,0,0,0,0,0),origin_link_lengths,origin_link_orientations);
+  Cfg_reach_cc incr2;
+
+  c1_origin.GetIntermediate(origin,c1);
+
+  incr2.FindIncrement(origin,c1_origin,&n_ticks,positionRes,orientationRes);
+
+  Cfg_reach_cc tick =origin;
+  while(dm->Distance(env,origin,tick)< incr)
   {
-  // if(dm->Distance(env,origin,tick) > 0.3)
+    // if(dm->Distance(env,origin,tick) > 0.3)
     //{
-     //incr2.GetIntermediate(origin,c1);
+    //incr2.GetIntermediate(origin,c1);
     //tick.Increment(incr2);
     // }
-      //else
-      tick.Increment(incr2);
-   
+    //else
+    tick.Increment(incr2);
+
   }
 
-   // dm->ScaleCfg(env, incr, origin, tick);
+  // dm->ScaleCfg(env, incr, origin, tick);
   *this=tick;
-   
- }
+
+}
 
 
 
 void 
 Cfg_reach_cc::
 FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats, const Cfg& increment,
-	      string vc_method, int noNeighbors, CDInfo& _cdInfo,
-	      vector<Cfg*>& cfgs) {
+    string vc_method, int noNeighbors, CDInfo& _cdInfo,
+    vector<Cfg*>& cfgs) {
   cerr << "Warning, FindNeighbors not implemented yet\n";
   exit(-1);
 }
@@ -490,8 +490,8 @@ FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats, const Cfg& incr
 void 
 Cfg_reach_cc::
 FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats, const Cfg& goal, 
-	      const Cfg& increment, string vc_method, int noNeighbors, 
-	      CDInfo& _cdInfo, vector<Cfg*>& cfgs) {
+    const Cfg& increment, string vc_method, int noNeighbors, 
+    CDInfo& _cdInfo, vector<Cfg*>& cfgs) {
   cerr << "Warning, FindNeighbors not implemented yet\n";
   exit(-1);
 }
@@ -522,11 +522,11 @@ Increment(const Cfg& _increment) {
     for(int i=0; i<6; ++i)
       m_v[i] += _v[i];
   transform(link_lengths.begin(), link_lengths.end(),
-	    ((Cfg_reach_cc&)_increment).link_lengths.begin(),
-	    link_lengths.begin(), 
-	    plus<double>());
+      ((Cfg_reach_cc&)_increment).link_lengths.begin(),
+      link_lengths.begin(), 
+      plus<double>());
   link_orientations = ((Cfg_reach_cc&)_increment).link_orientations;
-  
+
   StoreData();
 }
 
@@ -540,18 +540,18 @@ IncrementTowardsGoal(const Cfg &goal, const Cfg &increment) {
 void 
 Cfg_reach_cc::
 FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks, 
-	      double positionRes, double orientationRes, double rd_res) {
+    double positionRes, double orientationRes, double rd_res) {
   //length_diff = _start.link_lengths - _goal.link_lengths
   vector<double> length_diff;
   transform(((Cfg_reach_cc&)_start).link_lengths.begin(), 
-	    ((Cfg_reach_cc&)_start).link_lengths.end(),
-	    ((Cfg_reach_cc&)_goal).link_lengths.begin(),
-	    back_insert_iterator<vector<double> >(length_diff),
-	    minus<double>());
+      ((Cfg_reach_cc&)_start).link_lengths.end(),
+      ((Cfg_reach_cc&)_goal).link_lengths.begin(),
+      back_insert_iterator<vector<double> >(length_diff),
+      minus<double>());
   //mag = sqrt(sum of length_diff sqrs)
   double mag = sqrt(inner_product(length_diff.begin(), length_diff.end(),
-				  length_diff.begin(), 0.0,
-				  plus<double>(), multiplies<double>()));
+        length_diff.begin(), 0.0,
+        plus<double>(), multiplies<double>()));
   int rd_ticks = (int)(mag/rd_res) + 2; //adding two makdes a rough ceiling...
 
   vector<double> v_g = _goal.GetData();
@@ -560,7 +560,7 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks,
   Cfg_free s(v_s[0],v_s[1],v_s[2],v_s[3],v_s[4],v_s[5]);
   g.subtract(g, s);
   int base_ticks = (int)max(g.PositionMagnitude()/positionRes,
-			    g.OrientationMagnitude()/orientationRes) + 2;
+      g.OrientationMagnitude()/orientationRes) + 2;
 
   *n_ticks = max(rd_ticks, base_ticks);
 
@@ -578,8 +578,8 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks) {
 
   link_lengths.clear();
   Link::FindIncrement(((Cfg_reach_cc&)_start).link_lengths,
-		      ((Cfg_reach_cc&)_goal).link_lengths,
-		      link_lengths, n_ticks);
+      ((Cfg_reach_cc&)_goal).link_lengths,
+      link_lengths, n_ticks);
 
   link_orientations = ((Cfg_reach_cc&)_goal).link_orientations;
   for(size_t i=0; i<link_orientations.size(); ++i) {
@@ -587,13 +587,13 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks) {
     int _goal_ori = ((Cfg_reach_cc&)_goal).link_orientations[i];
     if(_start_ori != _goal_ori) {
       if((_start_ori != 0) && (_goal_ori != 0)) {
-	cerr << "Warning in FindIncrement: orientations too far apart, use GetIntermediate first\n";
-	exit(-1);
+        cerr << "Warning in FindIncrement: orientations too far apart, use GetIntermediate first\n";
+        exit(-1);
       }
       if(_start_ori != 0)
-	link_orientations[i] = _start_ori;
+        link_orientations[i] = _start_ori;
       else
-	link_orientations[i] = _goal_ori;
+        link_orientations[i] = _goal_ori;
     }
   }
 
@@ -617,16 +617,16 @@ StoreData() {
     for(size_t i=1; i<actual_links.size(); ++i) {
       double extAng = PI - Link::CalculateJointAngle(actual_links[i-1], actual_links[i]);
       sumExtAng += extAng;
-        double a = extAng;
+      double a = extAng;
       a= a - floor(a);
       if(a>=0.5)a-=1.0;
       m_v.push_back(a/TWO_PI);
-     }
+    }
     if(is_closed_chain)
       m_v.push_back((TWO_PI-sumExtAng)/TWO_PI);
 
   } else {
-  //  cerr << "\n\n\tWARNING: Loop is broken!\n";
+    //  cerr << "\n\n\tWARNING: Loop is broken!\n";
     m_v.resize(m_dof, 0);
   }
 
@@ -637,7 +637,7 @@ StoreData() {
 bool 
 Cfg_reach_cc::
 GetIntermediate(const Cfg_reach_cc& c1,
-		const Cfg_reach_cc& c2) {
+    const Cfg_reach_cc& c2) {
   link_tree->ResetTree();
 
   vector<Range> ranges;
@@ -651,9 +651,9 @@ GetIntermediate(const Cfg_reach_cc& c1,
   using boost::lambda::_2;
   vector<int> avg_orientations;
   transform(c1.link_orientations.begin(), c1.link_orientations.end(),
-	    c2.link_orientations.begin(),
-	    back_insert_iterator<vector<int> >(avg_orientations),
-	    ((_1 + _2)/2));
+      c2.link_orientations.begin(),
+      back_insert_iterator<vector<int> >(avg_orientations),
+      ((_1 + _2)/2));
   link_tree->ImportTreeLinkConvexity(avg_orientations, 0);
 
   link_tree->RecursiveBuildAvailableRange(true);
@@ -669,7 +669,7 @@ GetIntermediate(const Cfg_reach_cc& c1,
   boost::uniform_real<> distribution(0,1);
   boost::variate_generator<boost::rand48&, boost::uniform_real<> >
     rand(generator, distribution);
-  
+
   bool can_recursive_sample = true;
   if(is_closed_chain)
     can_recursive_sample = link_tree->RecursiveSample(rand, 0);
@@ -697,15 +697,15 @@ Cfg_reach_cc::
 LengthDistance(const Cfg_reach_cc& c2) const {
   //cout<<"in lenght dist "<<c2.link_lengths.size()<<"__"<<endl;
   vector<Range> ranges;
- 
+
   link_tree->ExportTreeLinkReachableRange(ranges);
 
 
- /*cout << "ranges:";
-  for(vector<Range>::const_iterator R = ranges.begin(); R != ranges.end(); ++R) 
+  /*cout << "ranges:";
+    for(vector<Range>::const_iterator R = ranges.begin(); R != ranges.end(); ++R) 
     cout << " " << R->Size();
-  cout << endl;*/
- 
+    cout << endl;*/
+
   if(link_lengths.size() != c2.link_lengths.size())
   {
     cerr << "\n\nERROR in Cfg_reach_cc::LengthDistance, link_lengths.size (" << link_lengths.size() << ") != c2.link_lengths.size (" << c2.link_lengths.size() << ", exiting.\n";
@@ -714,24 +714,24 @@ LengthDistance(const Cfg_reach_cc& c2) const {
 
   vector<double> length_difference;
   for(size_t i=0; i<link_lengths.size(); ++i) {
-  
+
     if(ranges[i].Size() == 0){
-   
+
       length_difference.push_back(0);
     }else{
-     
+
       length_difference.push_back(fabs(link_lengths[i]-c2.link_lengths[i])/ranges[i].Size());
     }
-    
+
   }
- /*cout << "length_difference: ";
-  copy(length_difference.begin(), length_difference.end(), ostream_iterator<double>(cout, " "));
-  cout << endl; */
-  
-  
+  /*cout << "length_difference: ";
+    copy(length_difference.begin(), length_difference.end(), ostream_iterator<double>(cout, " "));
+    cout << endl; */
+
+
   return sqrt(inner_product(length_difference.begin(), length_difference.end(),
-			    length_difference.begin(),
-			    0.0, plus<double>(), multiplies<double>()));
+        length_difference.begin(),
+        0.0, plus<double>(), multiplies<double>()));
 }
 
 double
@@ -740,10 +740,10 @@ OrientationDistance(const Cfg_reach_cc& c2) const {
   vector<double> ori_difference;
   for(size_t i=0; i<link_orientations.size(); ++i)
     ori_difference.push_back((double)(abs(link_orientations[i]-c2.link_orientations[i]))/2.0);
-  
+
   return sqrt(inner_product(ori_difference.begin(), ori_difference.end(),
-			    ori_difference.begin(),
-			    0.0, plus<double>(), multiplies<double>()));
+        ori_difference.begin(),
+        0.0, plus<double>(), multiplies<double>()));
 }
 
 ostream&
