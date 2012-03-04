@@ -227,8 +227,9 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       int nodes_added = 0;
 
       //for (int step = 0; step < m_iterations; step++)
-      region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[0]);
-      region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[1]);
+      for(int i=0; i<m_vecWitnessNodes.size();i++){
+	region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[i]);
+      }
       while(iteration < m_iterations) {
         cout << "--------------" << endl << "iter " << iteration << " of " << m_iterations << endl;
         cout << "defined clocks" << endl;
