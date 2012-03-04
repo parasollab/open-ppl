@@ -210,7 +210,6 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
       //write output file format
       stat_out << " #num_nodes \t num_edges \t lp_attempts \t lp_succ \t lp_cd  \t ng_time \t ng_cd \t con_time"
-        //             << "\t nf_qry_time \t nf_const_time"
         << "\t num_ccs "
         << "\t max_cc_size \t min_cc_size"
         << "\t solve_qry \t min_edge_len \t max_edge_len \t ave_edge_len \t std_edge_len"
@@ -221,7 +220,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
       pStatClass->StartClock("Everything");
 
-      double elappsed_ng(0.0), ellapsed_con(0.0);
+      double elapsed_ng(0.0), elapsed_con(0.0);
       bool querySucceeded = false;
       bool queryFirstSucceeded = false;
       int iteration = 0;
@@ -266,7 +265,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         }
 
         pStatClass->StopClock("Node Generation");
-        elappsed_ng += pStatClass->GetSeconds("Node Generation");
+        elapsed_ng += pStatClass->GetSeconds("Node Generation");
 
         //---------------------------
         // Connect roadmap nodes
@@ -297,7 +296,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           ResizeBbox(std::cout,0.5);
         }
         pStatClass->StopClock("Node Connection");
-        ellapsed_con += pStatClass->GetSeconds("Node Generation");
+        elapsed_con += pStatClass->GetSeconds("Node Generation");
 
 
 
@@ -353,15 +352,17 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         //ComponentDiameter(*region->GetRoadmap()->m_pRoadmap,CCStats[0].second, &far_vid);
         //double diameter = ComponentDiameter(*region->GetRoadmap()->m_pRoadmap, far_vid,&far_vid2);
         // stat_out << basefname.str()
+
+        // NOTE: this assumes we use the first local planner defined
+        int lp_attempts = pStatClass->m_lpInfo.begin()->second.get<0>();
+        int lp_connections = pStatClass->m_lpInfo.begin()->second.get<1>();
+        int lp_cdcalls = pStatClass->m_lpInfo.begin()->second.get<2>();
+        double lp_succ = double(lp_connections) / double(lp_attempts);
+
         stat_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices() - 2
           << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
-          //<< "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
-          << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
-          << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
-          pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
-          << "\t" << ellapsed_con
-          //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()- 2)
-          //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+          << "\t" << lp_attempts << "\t" << lp_succ << "\t" << lp_cdcalls
+          << "\t" << elapsed_ng << "\t" <<  "-1" << "\t" << elapsed_con
           << "\t" << CCStats.size()
           << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
           << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
@@ -377,15 +378,16 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         ///////////////////
         // Output Total info
         if(querySucceeded && !queryFirstSucceeded) {
+          /*
           ofstream total_out((basefname.str() + ".total").c_str());
           //total_out << basefname.str()
           total_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2 
             << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
             //<< "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
             << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
-            << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
+            << "\t" << elapsed_ng << "\t" <<  pStatClass->m_isCollTotal -
             pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
-            << "\t" << ellapsed_con
+            << "\t" << elapsed_con
             //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
             //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
             << "\t" << CCStats.size()
@@ -402,6 +404,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
             cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
             exit(-1);
           }
+          */
 
           queryFirstSucceeded = true;
           cout << "Solved query! " << endl;
@@ -1079,6 +1082,13 @@ class BandsStats : public MPStrategyMethod {
 
 
     void operator()(){
+    }
+
+
+    virtual void PrintOptions(ostream& out_os) { }
+    virtual void operator()(int in_RegionID) { }
+    virtual void Initialize(int in_RegionID){}
+    virtual void Run(int in_RegionID) { 
       cout << "BandsStats::BandsStats()" << endl;
 
       // do dist/num_neighbors work if flag is set from xml
@@ -1103,12 +1113,6 @@ class BandsStats : public MPStrategyMethod {
       exit(-1);	
       //(*ExpanderStatsClass)();
     }
-
-
-    virtual void PrintOptions(ostream& out_os) { }
-    virtual void operator()(int in_RegionID) { }
-    virtual void Initialize(int in_RegionID){}
-    virtual void Run(int in_RegionID){}
     virtual void Finalize(int in_RegionID){}
 
 
