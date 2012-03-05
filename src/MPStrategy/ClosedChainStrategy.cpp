@@ -2,6 +2,7 @@
 #define ClosedChainStrategy_cpp
 
 #include "ClosedChainStrategy.h"
+
 ClosedChainStrategy::ClosedChainStrategy(XMLNodeReader& in_Node, ClosedChainProblem* in_pProblem) : MPStrategy(in_Node, in_pProblem)
 {
   CCProblem=in_pProblem;
@@ -20,7 +21,7 @@ void ClosedChainStrategy::ParseXML(XMLNodeReader& in_Node){
   gamma = in_Node.numberXMLParameter("gamma", false, double(0.0),
 					       double(0.0), double(1.0),
 					       "gamma used by reachable code");
-
+  CfgType::gamma = gamma;
 }
 
 /*
