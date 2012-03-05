@@ -227,7 +227,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       int nodes_added = 0;
 
       //for (int step = 0; step < m_iterations; step++)
-      for(int i=0; i<m_vecWitnessNodes.size();i++){
+      for(size_t i=0; i<m_vecWitnessNodes.size();i++){
 	region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[i]);
       }
       while(iteration < m_iterations) {
