@@ -786,9 +786,11 @@ class BandsStats : public MPStrategyMethod {
          cout << " (vid=" << size_t(vi->second) << ")";
          ccnum++;
          }*/
-      VID far_vid(-1), far_vid2(-1); 
-      ComponentDiameter(*(rmp.m_pRoadmap),CCStats[0].second, &far_vid);
-      double diameter = ComponentDiameter(*(rmp.m_pRoadmap), far_vid,&far_vid2);
+	 /* with the useEdgeWeight flag set to true, this version of  diameter
+	 computation from STAPL graph algo returns diameter computed from actual
+	 edge weight. If the flag is set to false, we use the number of edges
+	 along the path to determine the diameter*/
+      double diameter = stapl::sequential::diameter(*(rmp.m_pRoadmap), CCStats[0].second,true);
       return diameter;
     }
 
