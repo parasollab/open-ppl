@@ -11,6 +11,7 @@
 #include "ConnectMap.h"
 #include "DistanceMetricMethod.h"
 #include "LocalPlanners.h"
+#include <graph/algorithms/diameter.h>
 
 
 //extern vector< vector< double > > g_Min, g_Max;
