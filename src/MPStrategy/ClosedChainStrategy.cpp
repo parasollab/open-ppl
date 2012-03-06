@@ -21,7 +21,9 @@ void ClosedChainStrategy::ParseXML(XMLNodeReader& in_Node){
   gamma = in_Node.numberXMLParameter("gamma", false, double(0.0),
 					       double(0.0), double(1.0),
 					       "gamma used by reachable code");
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   CfgType::gamma = gamma;
+#endif
 }
 
 /*

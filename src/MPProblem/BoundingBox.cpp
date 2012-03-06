@@ -239,7 +239,7 @@ bool BoundingBox::InBoundary(const Cfg& _cfg){
     _cfg.ConfigEnvironment(_env); // Config the Environment(robot indeed).
 
     for(int m=0; m<robot->GetFreeBodyCount(); ++m) {
-      Transformation &worldTransformation = robot->GetFreeBody(m)->GetWorldTransformation();
+      Transformation &worldTransformation = robot->GetFreeBody(m)->WorldTransformation();
       
       GMSPolyhedron &bb_poly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
       bool bbox_check = true;
