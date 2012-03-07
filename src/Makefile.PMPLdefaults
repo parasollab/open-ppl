@@ -1,8 +1,8 @@
 #set platform specific variables
 ifeq (${platform}, LINUX_gcc) 	#linux/gcc on 32 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
-	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -14,8 +14,8 @@ endif
 ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
 	#temporarily remove VCLIP - does not compile because of hash map
 	UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
-	UTILS_INCL =   ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB =   ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB}${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_INCL =   ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
+	UTILS_LIB =   ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -30,9 +30,11 @@ ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
 endif
 
 ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc on 64 bit machine
+	#UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
-	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	#UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
+	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -51,8 +53,8 @@ endif
 
 ifeq (${platform}, LINUX_gcc_brazos) 	#linux/gcc on brazos(brazos.tamu.edu)
 	UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
-	UTILS_INCL =  ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
+	UTILS_INCL =  ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
+	UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} #${SOLID_LIB}
 	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 	#use same boost as used in STAPL
         BOOST_ROOT = /home/ipapadop/usr
@@ -65,8 +67,8 @@ endif
 
 ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
-	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -77,8 +79,8 @@ endif
 
 ifeq (${platform}, AIX_64_xlC)	#aix/64-bit/native compiler (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
-	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
+	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 
 	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -86,6 +88,27 @@ ifeq (${platform}, AIX_64_xlC)	#aix/64-bit/native compiler (e.g., hydra.tamu.edu
 
 	DEPS = -M -MF $*.d
 endif
+
+ifeq (${platform}, MACOS_gcc) 	#fink/gcc on 64 bit machine
+	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
+	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	
+	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
+
+	BOOST_ROOT = /sw
+	BOOST_INCL = -I$(BOOST_ROOT)/include
+	ifeq (${parallel}, 1)
+	  #uses latest version of boost (use module avail to check)
+	  Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
+	  BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+	else
+	  Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib64
+	  BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+	endif
+	DEPS = -MMD -MF $*.d
+endif
+
 
 
 #set debug specific variables
@@ -150,6 +173,15 @@ ${MATHTOOL_DIR}/libmathtool.a:
 	cd ${MATHTOOL_DIR}; ${MAKE} platform=${platform} debug=${debug}
 
 MATHTOOL_LIBFILE = ${MATHTOOL_DIR}/libmathtool.a
+
+# modelloader
+MODELLOADER_DIR = ${UTILS_DIR}/modelloader
+MODELLOADER_LIB = -L${MODELLOADER_DIR} -lmodloader
+MODELLOADER_INCL = -I${MODELLOADER_DIR}
+${MODELLOADER_DIR}/libmodloader.a: 
+	cd ${MODELLOADER_DIR}; ${MAKE} platform=${platform} debug=${debug}
+
+MODELLOADER_LIBFILE = ${MODELLOADER_DIR}/libmodloader.a
 
 #kmeans
 KMEANS_DIR = ${UTILS_DIR}/Kmeans

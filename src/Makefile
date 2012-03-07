@@ -55,11 +55,12 @@ LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 # targets
 default_target: libs
 
-utils: cd_libs xml_libs nn_libs mathtool_lib kmeans_lib
+utils: cd_libs xml_libs nn_libs mathtool_lib modelloader_lib kmeans_lib
 cd_libs: ${CD_LIBFILE}
 xml_libs: ${XML_LIBFILE}
 nn_libs: ${MPNN_LIBFILE}
 mathtool_lib: ${MATHTOOL_LIBFILE}
+modelloader_lib: ${MODELLOADER_LIBFILE}
 kmeans_lib: ${KMEANS_LIBFILE}
 
 objs: utils ${PMPL_OBJS}
@@ -94,6 +95,7 @@ reallyreallyclean:
 	cd ${TINYXML_DIR}; ${MAKE} clean
 	cd ${MPNN_SRC}; ${MAKE} clean
 	cd ${MATHTOOL_DIR}; ${MAKE} clean
+	cd ${MODELLOADER_DIR}; ${MAKE} clean
 	cd ${KMEANS_DIR}; ${MAKE} clean
 
 
