@@ -49,8 +49,8 @@ double KnotTheoryDistance ::Distance(Environment* _env, const Cfg& _c1, const Cf
     sign =(n1.crossProduct(n2)).dotProduct(unitVect[i]); 
     sum += nn; 
   }
-  sign2 = sign/fabs(sign);
-  return  fabs((sum/(4.0))*sign2); 
+ sign2 = sign/fabs(sign);
+  return  sum/(4.0); 
 }
 
 void KnotTheoryDistance::PrintOptions(ostream& _os) const {
