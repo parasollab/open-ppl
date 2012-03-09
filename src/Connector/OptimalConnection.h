@@ -73,6 +73,7 @@ OptimalConnection<CFG,WEIGHT>::~OptimalConnection() {
 template <class CFG, class WEIGHT>
 void 
 OptimalConnection<CFG, WEIGHT>::PrintOptions (ostream& _os) {
+  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
   _os << "OptimalConnection::PrintOptions" << endl;
   _os << "Neighborhood Finder: " << this->m_nfMethod << endl;
   _os << "Local Planner: " << this->m_lpMethod << endl;
@@ -81,7 +82,6 @@ OptimalConnection<CFG, WEIGHT>::PrintOptions (ostream& _os) {
     _os << "Radius" << endl << endl;
   else
     _os << "K-based" << endl << endl;
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
 }
 
 template <class CFG, class WEIGHT>

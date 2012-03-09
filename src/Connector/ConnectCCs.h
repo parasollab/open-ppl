@@ -126,10 +126,10 @@ ConnectCCs<CFG,WEIGHT>::~ConnectCCs(){}
 template <class CFG, class WEIGHT>
 void
 ConnectCCs<CFG, WEIGHT>::PrintOptions(ostream& _os){
+  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  m_kPairs = ";
   _os << m_kPairs << "  m_smallcc = " << m_smallcc ;
   _os << endl;
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

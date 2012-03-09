@@ -143,13 +143,13 @@ void NeighborhoodConnection<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
 ///////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 void NeighborhoodConnection<CFG, WEIGHT>::PrintOptions(ostream& _os){
+  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  k = ";
   _os << m_k << "  fail = " << m_fail ;
   _os << "  count_failures = " << this->m_countFailures;
   _os << "  unconnected = " << m_unconnected;
   _os << "  random = " << m_random;
   _os << endl;
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

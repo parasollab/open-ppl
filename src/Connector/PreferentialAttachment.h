@@ -174,10 +174,10 @@ template <class CFG, class WEIGHT>
 void
 PreferentialAttachment<CFG, WEIGHT>::
 PrintOptions(ostream& _os){
+  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  k = ";
   _os << m_k << "  fail = " << m_fail ;
   _os << endl;
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
 }
 
 // ConnectNodes
