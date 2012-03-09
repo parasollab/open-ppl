@@ -18,7 +18,7 @@ class CoverageMetric
     virtual double operator()(int _regionID, MPProblem* _mp, vector<string>& _nodeConnectionLabels){
       Roadmap<CFG, WEIGHT>* rmap = _mp->GetMPRegion(_regionID)->GetRoadmap();
       RoadmapGraph<CFG,WEIGHT>* pMap = rmap->m_pRoadmap;
-      ConnectMap<CFG, WEIGHT>* cm = _mp->GetMPStrategy()->GetConnectMap();
+      Connector<CFG, WEIGHT>* cm = _mp->GetMPStrategy()->GetConnector();
 
       //VID backupVID = rmap->m_pRoadmap->getVertIDs();
 
@@ -44,12 +44,8 @@ class CoverageMetric
           size_t degreeBefore = pMap->get_out_degree(sampleVID);
 
           for(vector<string>::iterator I = _nodeConnectionLabels.begin(); I != _nodeConnectionLabels.end(); ++I){
-            typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer connectionMethod = cm->GetNodeMethod(*I);
-            cm->ConnectNodes(connectionMethod,
-                rmap, Stats, false,
-                false, sampleList.begin(),
-                sampleList.end(),
-                cc.begin(), cc.end());
+            typename Connector<CFG, WEIGHT>::ConnectionPointer connectionMethod = cm->GetMethod(*I);
+            cm->Connect(connectionMethod, rmap, Stats, sampleList.begin(), sampleList.end(), cc.begin(), cc.end());
           }
 
           if(pMap->get_out_degree(sampleVID)

@@ -17,7 +17,7 @@ class QueryEvaluation
   //LocalPlanners<CFG, WEIGHT>* _lp,
   string _m_lp_label,
   vector<string> vecStrNodes,
-  ConnectMap<CFG, WEIGHT> ConnectMap,
+  Connector<CFG, WEIGHT> connector,
   shared_ptr<DistanceMetricMethod> _dm) : 
   MapEvaluationMethod(),
   m_query_filename(filename),
@@ -27,7 +27,7 @@ class QueryEvaluation
 		//lp(_lp),
   m_lp_label(_m_lp_label),
   m_vecStrNodeConnectionLabels(vecStrNodes),
-  m_ConnectMap(ConnectMap),
+  m_Connector(connector),
   dm(_dm),
   intermediateFiles(false)
   {
@@ -77,7 +77,7 @@ class QueryEvaluation
   //LocalPlanners<CFG, WEIGHT>* lp;
   string m_lp_label;
   vector<string> m_vecStrNodeConnectionLabels;
-  ConnectMap<CFG, WEIGHT> m_ConnectMap;
+  Connector<CFG, WEIGHT> m_Connector;
   shared_ptr<DistanceMetricMethod >dm;
   bool intermediateFiles;
 };
@@ -103,14 +103,14 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
 {
   PrintOptions(cout);
 
-  vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer > methods;
+  vector< Connector<CfgType, WeightType>::ConnectionPointer > methods;
     
   if(m_vecStrNodeConnectionLabels.empty()) {
-    methods.push_back(ConnectMap<CfgType, WeightType>::NodeConnectionPointer(new NeighborhoodConnection<CfgType, WeightType>("", 1, 1, false, true, false)));
+    methods.push_back(Connector<CfgType, WeightType>::ConnectionPointer(new NeighborhoodConnection<CfgType, WeightType>("", 1, 1, false, true, false)));
   }
   else
     for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)
-      methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
+      methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*I));
 
 
   Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
@@ -123,7 +123,7 @@ QueryEvaluation<CFG, WEIGHT>::operator() (int in_RegionID)
     already_in_roadmap.push_back(rmap->m_pRoadmap->IsVertex(*I));
 
   bool queryResult = m_query.PerformQuery(rmap, m_stats, 
-                        &m_ConnectMap, &methods,
+                        &m_Connector, &methods,
 											 GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), 
                        m_lp_label,
                        dm, intermediateFiles);
