@@ -267,8 +267,8 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
     NodeConnectionLabels = m_ColNodeConnectionLabels;
   for(vector<string>::iterator I = NodeConnectionLabels.begin(); I != NodeConnectionLabels.end(); ++I){
 
-    ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
-    pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I);    
+    Connector<CfgType, WeightType>::ConnectionPointer pConnection;
+    pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*I);    
 
     stringstream connectorClockName; 
     connectorClockName<<"Iteration "<<m_CurrentIteration<<", "<<pConnection->GetName();
@@ -279,18 +279,14 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
     nodesVID.push_back(pvid.second);
     vector<CfgType> collision, valid;
     if(pvid.first=="valid")
-      GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectNodes(pConnection,
+      GetMPProblem()->GetMPStrategy()->GetConnector()->Connect(pConnection,
           region->GetRoadmap(), *(region->GetStatClass()),
-          GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-          GetMPProblem()->GetMPStrategy()->addAllEdges,
           nodesVID.begin(), nodesVID.end(), 
           allVID.begin(), allVID.end(),
           back_inserter(collision));
     else
-      GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectNodes(pConnection,
+      GetMPProblem()->GetMPStrategy()->GetConnector()->Connect(pConnection,
           region->GetBlockRoadmap(), *(region->GetStatClass()),
-          GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-          GetMPProblem()->GetMPStrategy()->addAllEdges,
           nodesVID.begin(), nodesVID.end(), 
           allVID.begin(), allVID.end(),
           back_inserter(collision));
