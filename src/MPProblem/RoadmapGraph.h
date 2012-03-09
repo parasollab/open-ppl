@@ -1052,6 +1052,92 @@ double ComponentDiameter(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, t
   return max_shortest_path_length;
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+/// Helper Functions for getting Cfgs from the RoadmapGraph
+////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace pmpl_detail
+{
+  //helper function to call dereferece on an iterator whose
+  //value_type is VID and convert to CfgType
+  template <typename T>
+    struct GetCfg
+    : public unary_function<T, CfgType&>
+    {
+      const RoadmapGraph<CfgType, WeightType>* m_pMap;
+
+      GetCfg(const RoadmapGraph<CfgType, WeightType>* _pMap) : m_pMap(_pMap) {}
+      ~GetCfg() {}
+
+      CfgType operator()(const T& t) const
+      {
+        return (*(m_pMap->find_vertex(*t))).property();
+      }
+    };
+
+  //specialization for a roadmap graph iterator, calls property()
+  template <>
+    struct GetCfg<RoadmapGraph<CfgType, WeightType>::VI>
+    : public unary_function<RoadmapGraph<CfgType, WeightType>::VI, CfgType&>
+    {
+      const RoadmapGraph<CfgType, WeightType>* m_pMap;
+
+      GetCfg(const RoadmapGraph<CfgType, WeightType>* _pMap) : m_pMap(_pMap) {}
+      ~GetCfg() {}
+      CfgType operator()(const RoadmapGraph<CfgType, WeightType>::VI& t) const
+      {
+        //return t->property();
+        return (*(t)).property();
+      }
+    };
+
+  //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
+  //calls find_vertex(..) on VID to call property()
+  template <>
+    struct GetCfg<RoadmapGraph<CfgType, WeightType>::VID>
+    : public unary_function<RoadmapGraph<CfgType, WeightType>::VID, CfgType&>
+    {
+      const RoadmapGraph<CfgType, WeightType>* m_pMap;
+
+      GetCfg(const RoadmapGraph<CfgType, WeightType>* _pMap) : m_pMap(_pMap) {}
+      ~GetCfg() {}
+      CfgType operator()(const RoadmapGraph<CfgType, WeightType>::VID& t) const
+      {
+        return (*(m_pMap->find_vertex(t))).property();
+      }
+    };
+
+  //helper function to call dereferece on an iterator whose value_type is VID
+  //needed to get around the fact that a roadmap graph iterator
+  //requires an extra descriptor() call
+  template <typename T>
+    struct GetVid
+    : public unary_function<T, RoadmapGraph<CfgType,WeightType>::vertex_descriptor>
+    {
+      RoadmapGraph<CfgType, WeightType>::vertex_descriptor
+        operator()(const T& t) const
+        {
+          return *t;
+        }
+    };
+  //specialization for a roadmap graph iterator, calls descriptor()
+  template <>
+    struct GetVid<RoadmapGraph<CfgType, WeightType>::VI>
+    : public unary_function<RoadmapGraph<CfgType, WeightType>::VI,RoadmapGraph<CfgType, WeightType>::vertex_descriptor>
+    {
+      RoadmapGraph<CfgType, WeightType>::vertex_descriptor
+        operator()(const RoadmapGraph<CfgType, WeightType>::VI& t) const
+        {
+          //return t->descriptor();
+          return (*(t)).descriptor();
+
+        }
+    };
+}
+
 #endif
 
 #endif
+
