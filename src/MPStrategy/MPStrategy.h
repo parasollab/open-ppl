@@ -7,7 +7,7 @@
 class MPProblem;
 template <class CFG, class WEIGHT> class LocalPlanners;
 template <class CFG> class Sampler;
-template <class CFG, class WEIGHT> class ConnectMap;
+template <class CFG, class WEIGHT> class Connector;
 #ifndef _PARALLEL
 template <class CFG, class WEIGHT> class MPCharacterizer;
 template <class CFG, class WEIGHT> class MapEvaluator;
@@ -20,7 +20,7 @@ class MPStrategyMethod;
 class MPStrategy : public MPBaseObject
 {
 public:
-/*  MPStrategy(Sampler<CfgType> _m_pNodeGeneration, ConnectMap<CfgType, WeightType> _m_pConnection, LocalPlanners<CfgType, WeightType> _m_pLocalPlanners, MapEvaluator<CfgType, WeightType> _m_Evaluator, MPCharacterizer<CfgType, WeightType> _m_pCharacterizer, Features* _m_Features, PartitioningMethods* _m_PartitioningMethods, PartitioningEvaluators* _m_PartitioningEvaluators);
+/*  MPStrategy(Sampler<CfgType> _m_pNodeGeneration, Connector<CfgType, WeightType> _m_pConnection, LocalPlanners<CfgType, WeightType> _m_pLocalPlanners, MapEvaluator<CfgType, WeightType> _m_Evaluator, MPCharacterizer<CfgType, WeightType> _m_pCharacterizer, Features* _m_Features, PartitioningMethods* _m_PartitioningMethods, PartitioningEvaluators* _m_PartitioningEvaluators);
  */
   MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
   virtual ~MPStrategy () {}
@@ -30,7 +30,7 @@ public:
 
   LocalPlanners<CfgType, WeightType>* GetLocalPlanners() {return m_pLocalPlanners;};
   Sampler<CfgType>* GetSampler() {return m_pNodeGeneration;};
-  ConnectMap<CfgType, WeightType>* GetConnectMap(){return m_pConnection;};
+  Connector<CfgType, WeightType>* GetConnector(){return m_pConnection;};
   #ifndef _PARALLEL
   MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
   MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_Evaluator;}; 
@@ -45,10 +45,10 @@ public:
   void PrintOptions(ostream& out_os);
   virtual void Solve(); 
   MPStrategyMethod* GetMPStrategyMethod(string& );////////////////////////
-  ///@ToDo Move addPartialEdge, addAllEdges to ConnectMap
+  ///@ToDo Move addPartialEdge, addAllEdges to Connector
  protected:
   Sampler<CfgType>* m_pNodeGeneration;
-  ConnectMap<CfgType, WeightType>* m_pConnection;
+  Connector<CfgType, WeightType>* m_pConnection;
   LocalPlanners<CfgType, WeightType>* m_pLocalPlanners;
   
   //Characterization and Filtering

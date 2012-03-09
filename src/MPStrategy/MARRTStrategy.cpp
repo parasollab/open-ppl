@@ -308,20 +308,17 @@ void MARRTStrategy::ConnectComponents(int _regionID) {
   stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
 
   for(vector<string>::iterator I = m_componentConnectors.begin(); I != m_componentConnectors.end(); ++I) {
-    ConnectMap<CfgType, WeightType>::ComponentConnectionPointer connector;
-    connector = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
+    Connector<CfgType, WeightType>::ConnectionPointer connector;
+    connector = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*I);
 
     ClockClass componentConnSubClock;
     string connectorClockName = connector->GetName();
     stats->StartClock(connectorClockName);
 
     if(m_debug) cout << "\n\t";
-    mps->GetConnectMap()->ConnectComponents(connector, 
+    mps->GetConnector()->Connect(connector, 
         region->GetRoadmap(), 
-        *(region->GetStatClass()), 
-        mps->addPartialEdge, 
-        mps->addAllEdges);
-
+        *(region->GetStatClass()));
     cmap.reset();
     if(m_debug)
       cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 

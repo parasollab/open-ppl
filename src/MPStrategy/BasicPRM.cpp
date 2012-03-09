@@ -3,7 +3,7 @@
 #include "MPStrategy.h"
 #include "MapEvaluator.h"
 #include "Sampler.h"
-#include "ConnectMap.h"
+#include "Connector.h"
 #include "Roadmap.h"
 #include "RoadmapGraph.h"
 #include "MetricUtils.h"
@@ -101,16 +101,18 @@ void BasicPRM::PrintOptions(ostream& _os) {
       GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(pit->first)->PrintOptions(_os);
     }
   }
+
   _os<<"\nNodeConnectors\n";
   for(SIT sit=m_nodeConnectionLabels.begin(); sit!=m_nodeConnectionLabels.end(); sit++){
     _os<<"\t"<<*sit<<"\tOptions:\n";
-    GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*sit)->PrintOptions(_os);
+    GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*sit)->PrintOptions(_os);
   }
   _os<<"\nComponentConnectors\n";
   for(SIT sit=m_componentConnectionLabels.begin(); sit!=m_componentConnectionLabels.end(); sit++){
     _os<<"\t"<<*sit<<"\tOptions:\n";
-    GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*sit)->PrintOptions(_os);
+    GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*sit)->PrintOptions(_os);
   }
+
   _os<<"\nMapEvaluators\n";
   for(SIT sit=m_evaluatorLabels.begin(); sit!=m_evaluatorLabels.end(); sit++){
     _os<<"\t"<<*sit<<"\tOptions:\n";
@@ -226,21 +228,20 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
   for(vector<string>::iterator I = m_nodeConnectionLabels.begin(); 
       I != m_nodeConnectionLabels.end(); ++I){
 
-    ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
-    pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I);    
+    Connector<CfgType, WeightType>::ConnectionPointer pConnection;
+    pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*I);    
 
     string connectorSubClockName = "Node Connection::" + pConnection->GetName();
     stats->StartClock(connectorSubClockName);
 
     if(m_debug) cout << "\n\t";
     vector<VID> nodesVID(thisIterationNodesVID.begin(), thisIterationNodesVID.end());
-    GetMPProblem()->GetMPStrategy()->
-      GetConnectMap()->ConnectNodes(pConnection,
-          _region->GetRoadmap(), *(_region->GetStatClass()),
-          GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-          GetMPProblem()->GetMPStrategy()->addAllEdges,
-          nodesVID.begin(), nodesVID.end(), 
-          allNodesVID.begin(), allNodesVID.end());
+    GetMPProblem()->GetMPStrategy()->GetConnector()->
+    Connect(pConnection,
+            _region->GetRoadmap(), 
+            *(_region->GetStatClass()),
+            nodesVID.begin(), nodesVID.end(), 
+            allNodesVID.begin(), allNodesVID.end());
     cmap.reset();
     if (m_debug) {
       cout << _region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
@@ -264,19 +265,20 @@ void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
 
   for(vector<string>::iterator I = m_componentConnectionLabels.begin(); 
       I != m_componentConnectionLabels.end(); ++I){
-    ConnectMap<CfgType, WeightType>::ComponentConnectionPointer pConnection;
-    pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetComponentMethod(*I);
+    Connector<CfgType, WeightType>::ConnectionPointer pConnection;
+    pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*I);
 
     string connectorClockName = "Connect Component::" + pConnection->GetName();
     stats->StartClock(connectorClockName);
 
+    vector<CfgType> collision;
+
     if(m_debug) cout << "\n\t";
     GetMPProblem()->GetMPStrategy()->
-      GetConnectMap()->ConnectComponents(pConnection,
+      GetConnector()->Connect(pConnection,
           _region->GetRoadmap(), 
           *(_region->GetStatClass()),
-          GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-          GetMPProblem()->GetMPStrategy()->addAllEdges);
+          back_inserter(collision));
 
     cmap.reset();
     if (m_debug){

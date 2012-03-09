@@ -26,7 +26,7 @@
 
 #include "MetricUtils.h"
 #include "CollisionDetection.h"
-#include "ConnectMap.h"
+#include "Connector.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
 #include "GenerateMapNodes.h"
@@ -145,7 +145,7 @@ class CSpaceCharacterizer {
  public: //make private as soon as I make colliding nodes available to partitioner in a different way
   int number_of_samples;
   GenerateMapNodes<CFG> gn_features;
-  ConnectMap<CFG,WEIGHT> cm_features;
+  Connector<CFG,WEIGHT> cm_features;
   LocalPlanners<CFG,WEIGHT> lp_features;
   DistanceMetric &dm;
   CollisionDetection &cd; /*ValidityTest &vt*/
@@ -208,12 +208,12 @@ class MetaPlanner {
  protected:
  public:
   GenerateMapNodes<CFG> gn_map; //@todo replace by MPStrategy::m_pNodeGeneration
-  ConnectMap<CFG, WEIGHT> cm_map; //@todo replace by MPStrategy::m_pConnection
-  ConnectMap<CFG, WEIGHT> cm_combine; 
+  Connector<CFG, WEIGHT> cm_map; //@todo replace by MPStrategy::m_pConnection
+  Connector<CFG, WEIGHT> cm_combine; 
   LocalPlanners<CFG, WEIGHT> lp_map; //@todo replace by MPStrategy::m_pLocalPlanners
   DistanceMetric     dm; //@todo replace by MPProblem::m_pProblem::...
 
-  bool addPartialEdge, addAllEdges; //@todo replace by MPStrategy::... (which will be moved to ConnectMap
+  bool addPartialEdge, addAllEdges; //@todo replace by MPStrategy::... (which will be moved to Connector
 
   //ValidityTest vt;
   CollisionDetection cd; //@todo replace by MPProblem::m_pProblem::...

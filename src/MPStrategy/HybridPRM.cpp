@@ -2,7 +2,7 @@
 #include "MPRegion.h"
 #include "MPStrategy.h"
 #include "Sampler.h"
-#include "ConnectMap.h"
+#include "Connector.h"
 #include "MapEvaluator.h"
 #include "MetricUtils.h"
 
@@ -199,16 +199,15 @@ void HybridPRM::Run(int in_RegionID){
             vector<VID> map_vids;
 	    region->roadmap.m_pRoadmap->GetVerticesVID(map_vids);
 
-            ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
-            connectmap->GetNodeMethod(*itr)->clear_connection_attempts();
-            connectmap->ConnectNodes(connectmap->GetNodeMethod(*itr), region->GetRoadmap(), *pStatClass, 
-                                     GetMPProblem()->GetMPStrategy()->addPartialEdge,
-                                     GetMPProblem()->GetMPStrategy()->addAllEdges,
+            Connector<CfgType, WeightType>* connector = GetMPProblem()->GetMPStrategy()->GetConnector();
+            connector->GetMethod(*itr)->ClearConnectionAttempts();
+            connector->Connect(connector->GetMethod(*itr), region->GetRoadmap(), *pStatClass, 
                                      new_free_vid.begin(), new_free_vid.end(),
                                      map_vids.begin(), map_vids.end()); 
             connection_attempts.insert(connection_attempts.end(), 
-                                       connectmap->GetNodeMethod(*itr)->connection_attempts_begin(), 
-                                       connectmap->GetNodeMethod(*itr)->connection_attempts_end());
+                                       connector->GetMethod(*itr)->ConnectionAttemptsBegin(),
+                                       connector->GetMethod(*itr)->ConnectionAttemptsEnd());
+            
     	  }
           unsigned long int num_cd_after_conn = pStatClass->GetIsCollTotal();
           

@@ -3,7 +3,7 @@
 
 #include "MetricUtils.h"
 #include "GenerateMapNodes.h"
-#include "ConnectMap.h"
+#include "Connector.h"
 #include "MapEvaluator.h"
 
 /////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 /////////////////////////////////////////////////////////////
 
 template <class CFG, class WEIGHT, 
-          class GMN = GenerateMapNodes<CFG>, class CM = ConnectMap<CFG,WEIGHT>, 
+          class GMN = GenerateMapNodes<CFG>, class CM = Connector<CFG,WEIGHT>, 
           class ME = MapEvaluator<CFG,WEIGHT> >
 class MapGenerator {
  public:
@@ -343,18 +343,18 @@ GenerateIncrementalMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
 
 	//do connection only using nodes in this chunk
 	conClock.StartClock(conClockName);
-	cm.ConnectNodes(rmap, Stats, cd, dm, lp,
-			//addPartialEdge, addAllEdges, sub_nodesVID, sub_nodesVID);
-			addPartialEdge, addAllEdges, sub_nodesVID, all_nodesVID);
-			     
+	cm.Connect(rmap, Stats, sub_nodesVID, all_nodesVID);
+
 	//component connection
 	//if it is the first chunk, we do component connection among all CCs
 	//otherwise, we group CCs into two sets and do component connection between them
+
         if(isFirstChunk) {
-	  cm.ConnectComponents(rmap, Stats, cd, dm, lp,
+          /* Attempting to connect components
+	  cm.Connect(rmap, Stats, cd, dm, lp,
 		     addPartialEdge, addAllEdges);
-	}
-	else {
+          */ // TODO :: This call is no longer supported by the current framework, it needs to be updated!
+	} else {
 	  //get VID sets that represent CCs in the roadmap
 	  //all newly generated VID will be put to vids2
 	  int numVertex = rmap->m_pRoadmap->get_num_vertices();

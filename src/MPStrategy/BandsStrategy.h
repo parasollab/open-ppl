@@ -8,7 +8,7 @@
 #include "MPProblem.h"
 #include "Roadmap.h"
 #include "MetricUtils.h"
-#include "ConnectMap.h"
+#include "Connector.h"
 #include "DistanceMetricMethod.h"
 #include "LocalPlanners.h"
 #include <graph/algorithms/diameter.h>
@@ -277,18 +277,16 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         cout << "CONNECT ROADMAP NODES" << endl;   
 
         pStatClass->StartClock("Node Connection");
-        ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
+        Connector<CfgType, WeightType>* connector = GetMPProblem()->GetMPStrategy()->GetConnector();
         typedef vector<string>::iterator J;
         for(J itr = m_vecStrNodeConnectionLabels.begin(); 
-            itr != m_vecStrNodeConnectionLabels.end(); ++itr)
+             itr != m_vecStrNodeConnectionLabels.end(); ++itr)
         {
 
-          ConnectMap<CfgType,WeightType>::NodeConnectionPointer pConnection;
-          pConnection = connectmap->GetNodeMethod(*itr);
+          Connector<CfgType,WeightType>::ConnectionPointer pConnection;
+          pConnection = connector->GetMethod(*itr);
           //cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
-          connectmap->ConnectNodes(pConnection, region->GetRoadmap(), *pStatClass, 
-              GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-              GetMPProblem()->GetMPStrategy()->addAllEdges,
+          connector->Connect(pConnection, region->GetRoadmap(), *pStatClass, 
               newVids.begin(), newVids.end());
         }
 

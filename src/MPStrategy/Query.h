@@ -19,7 +19,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 #include "Roadmap.h"     
 
-#include "ConnectMap.h"
+#include "Connector.h"
 
 template <class CFG, class WEIGHT>
 class Query {
@@ -112,8 +112,8 @@ public:
         virtual bool PerformQuery(
             Roadmap<CFG, WEIGHT>* rdmp, 
             StatClass& Stats, 
-            ConnectMap<CFG, WEIGHT> *cn, 
-            vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
+            Connector<CFG, WEIGHT> *cn, 
+            vector<typename Connector<CFG, WEIGHT>::ConnectionPointer >* pConnections,
             LocalPlanners<CFG,WEIGHT> * lp, 
             string _lp_label,
             shared_ptr< DistanceMetricMethod > dm,
@@ -150,8 +150,8 @@ public:
             CFG _goal,
             Roadmap<CFG, WEIGHT>* rdmp,
             StatClass& Stats,
-            ConnectMap<CFG, WEIGHT>*, 
-            vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
+            Connector<CFG, WEIGHT>*, 
+            vector<typename Connector<CFG, WEIGHT>::ConnectionPointer >* pConnections,
             LocalPlanners<CFG,WEIGHT>*, 
             string _lp_label,
             shared_ptr<DistanceMetricMethod>, 
@@ -201,12 +201,12 @@ public:
 
 
 template <class CFG, class WEIGHT>
-class QueryConnect : public ConnectMap<CFG,WEIGHT> {
+class QueryConnect : public Connector<CFG,WEIGHT> {
  public:
-  QueryConnect() : ConnectMap<CFG,WEIGHT>() {}
+  QueryConnect() : Connector<CFG,WEIGHT>() {}
   QueryConnect(Roadmap<CFG,WEIGHT>* rm,
                shared_ptr< DistanceMetricMethod> dm) ://, LocalPlanners<CFG,WEIGHT>* lp) :
-    ConnectMap<CFG,WEIGHT>() {}
+    Connector<CFG,WEIGHT>() {}
   ~QueryConnect() {
     this->selected_node_methods.clear();
     this->all_node_methods.clear();
@@ -218,15 +218,8 @@ class QueryConnect : public ConnectMap<CFG,WEIGHT> {
     //this->all_roadmap_methods.clear();
   }
 
-  virtual vector<NodeConnectionMethod<CFG,WEIGHT>*> GetNodeDefault() {
-    vector<NodeConnectionMethod<CFG,WEIGHT>*> tmp;
-    NeighborhoodConnection<CFG,WEIGHT>* connectFirst = new NeighborhoodConnection<CFG,WEIGHT>(1, 1, false, true, false);
-    tmp.push_back(connectFirst);
-    return tmp;
-  }
-
-  virtual vector<ComponentConnectionMethod<CFG,WEIGHT>*> GetComponentDefault() {
-    vector<ComponentConnectionMethod<CFG,WEIGHT>*> tmp;
+  virtual vector<ConnectionMethod<CFG,WEIGHT>*> GetMethodDefault(){
+    vector<ConnectionMethod<CFG,WEIGHT>*> tmp;
     return tmp;
   }
 
@@ -294,7 +287,7 @@ template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
 PerformQuery(Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats, 
-        ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections,
+        Connector<CFG, WEIGHT>* cn, vector<typename Connector<CFG, WEIGHT>::ConnectionPointer >* pConnections,
 				LocalPlanners<CFG,WEIGHT>* lp, 
         string _lp_label, shared_ptr<DistanceMetricMethod> dm, bool intermediateFiles) {
   for(typename vector<CFG>::iterator Q = query.begin(); 
@@ -320,7 +313,7 @@ template <class CFG, class WEIGHT>
 bool 
 Query<CFG, WEIGHT>::
 PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats, 
-	     ConnectMap<CFG, WEIGHT>* cn, vector<typename ConnectMap<CFG, WEIGHT>::NodeConnectionPointer >* pConnections, 
+	     Connector<CFG, WEIGHT>* cn, vector<typename Connector<CFG, WEIGHT>::ConnectionPointer >* pConnections, 
 			 LocalPlanners<CFG,WEIGHT>* lp, 
        string _lp_label, shared_ptr<DistanceMetricMethod> dm, vector<CFG>* _path, bool intermediateFiles) {
   VDComment("Begin Query");
@@ -360,10 +353,8 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats
       vector<VID> verticesList(1, svid);
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
 
-      for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
-        cn->ConnectNodes(*itr, rdmp, Stats, //lp, 
-                         false, false, 
-                        verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
+      for (typename vector<typename Connector<CFG,WEIGHT>::ConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
+        cn->Connect(*itr, rdmp, Stats, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
     }
 
@@ -378,10 +369,8 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats
       cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
       vector<VID> verticesList(1, gvid);
       
-      for (typename vector<typename ConnectMap<CFG,WEIGHT>::NodeConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
-        cn->ConnectNodes(*itr, rdmp, Stats,  
-                         false, false, 
-                        verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
+      for (typename vector<typename Connector<CFG,WEIGHT>::ConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
+        cn->Connect(*itr, rdmp, Stats, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
     }
     

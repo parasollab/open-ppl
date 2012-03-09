@@ -49,7 +49,7 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPB
         // m_pNodeGeneration = new GenerateMapNodes<CfgType>(*citr, GetMPProblem());
         m_pNodeGeneration = new Sampler<CfgType>(*citr, GetMPProblem());
       } else if(citr->getName() == "connection_methods") {
-        m_pConnection = new ConnectMap<CfgType, WeightType>(*citr, GetMPProblem());
+        m_pConnection = new Connector<CfgType, WeightType>(*citr, GetMPProblem());
       } else if(citr->getName() == "lp_methods") {
         m_pLocalPlanners = new LocalPlanners<CfgType, WeightType>(*citr, GetMPProblem());
       } else if(citr->getName() == "MPStrategyMethod") {

@@ -6,7 +6,7 @@
 #include "MPStrategyMethod.h"
 #include "LocalPlanners.h"
 #include "MPProblem.h"
-#include "ConnectMap.h"
+#include "Connector.h"
 #include "DistanceMetrics.h"
 #include "MetricUtils.h"
 #include "Roadmap.h"
@@ -952,18 +952,16 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         cout << "CONNECT ROADMAP NODES" << endl;
 
         pStatClass->StartClock("Node Connection");
-        ConnectMap<CfgType, WeightType>* connectmap = GetMPProblem()->GetMPStrategy()->GetConnectMap();
+        Connector<CfgType, WeightType>* connector = GetMPProblem()->GetMPStrategy()->GetConnector();
         typedef vector<string>::iterator J;
         for(J itr = m_vecStrNodeConnectionLabels.begin(); 
             itr != m_vecStrNodeConnectionLabels.end(); ++itr)
         {
-          ConnectMap<CfgType,WeightType>::NodeConnectionPointer pConnection;
-          pConnection = connectmap->GetNodeMethod(*itr);
+          Connector<CfgType,WeightType>::ConnectionPointer pConnection;
+          pConnection = connector->GetMethod(*itr);
           cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
-          connectmap->ConnectNodes(pConnection, region->GetRoadmap(), *pStatClass, 
+          connector->Connect(pConnection, region->GetRoadmap(), *pStatClass, 
               //GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-              GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-              GetMPProblem()->GetMPStrategy()->addAllEdges,
               newVids.begin(), newVids.end());
         }
 
@@ -1005,8 +1003,8 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
           region->GetRoadmap(),
           query_stats,
           GetMPProblem()->GetCollisionDetection(),
-          connectmap, 
-          connectmap->GetNodeMethod(bfnf),
+          connector, 
+          connector->GetMethod(bfnf),
           GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), 
           GetMPProblem()->GetDistanceMetric(), 
           &result_path);

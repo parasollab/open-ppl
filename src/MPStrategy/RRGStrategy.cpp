@@ -1,5 +1,5 @@
 #include "RRGStrategy.h"
-#include "ConnectMap.h"
+#include "Connector.h"
 #include "MPProblem.h"
 #include "MPRegion.h"
 #include "MPStrategy.h"
@@ -35,14 +35,14 @@ RRGStrategy::ExpandTree(int _regionID, CfgType& _dir) {
     currentVID.push_back(vid);
 
     region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allVIDs);
-    ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
-    pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(m_nc);    
+    Connector<CfgType, WeightType>::ConnectionPointer pConnection;
+    pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(m_nc);    
 
     // Calling Connect Method and connecting nodes
-    GetMPProblem()->GetMPStrategy()->GetConnectMap()->ConnectNodes(pConnection, region->GetRoadmap(), 
-        *(region->GetStatClass()), GetMPProblem()->GetMPStrategy()->addPartialEdge, 
-        GetMPProblem()->GetMPStrategy()->addAllEdges, currentVID.begin(), 
-        currentVID.end(), allVIDs.begin(), allVIDs.end());
+    GetMPProblem()->GetMPStrategy()->GetConnector()->Connect(pConnection, region->GetRoadmap(), 
+        *(region->GetStatClass()), 
+        currentVID.begin(), currentVID.end(), 
+        allVIDs.begin(), allVIDs.end());
   }
   return vid;
 }

@@ -15,7 +15,7 @@ public:
   string m_lp_label;
   string dm_label;
   Query<CfgType, WeightType> query;
-  ConnectMap<CfgType, WeightType> m_ConnectMap;
+  Connector<CfgType, WeightType> m_Connector;
   MPSMContainer parent;
 
 };
@@ -32,7 +32,7 @@ class QueryStrategy : public MPStrategyMethod
   m_lp_label = cont.m_lp_label;
   dm_label = cont.dm_label;
   query = cont.query;
-  m_ConnectMap = cont.m_ConnectMap;
+  m_Connector = cont.m_Connector;
 }
 
   QueryStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
@@ -58,7 +58,7 @@ protected:
   string m_lp_label;
   string dm_label;
   Query<CfgType, WeightType> query;
-  ConnectMap<CfgType, WeightType> m_ConnectMap;
+  Connector<CfgType, WeightType> m_Connector;
 };
 
 #endif

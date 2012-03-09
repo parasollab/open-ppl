@@ -84,20 +84,20 @@ Run(int in_RegionID)
   Roadmap<CfgType,WeightType>* rdmp = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
   StatClass* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
 
-  vector< ConnectMap<CfgType, WeightType>::NodeConnectionPointer > methods;
+  vector< Connector<CfgType, WeightType>::ConnectionPointer > methods;
     
   if(m_vecStrNodeConnectionLabels.empty()) {
-    methods.push_back(ConnectMap<CfgType, WeightType>::NodeConnectionPointer(new NeighborhoodConnection<CfgType, WeightType>("", 1, 1, false, true, false)));
+    methods.push_back(Connector<CfgType, WeightType>::ConnectionPointer(new NeighborhoodConnection<CfgType, WeightType>("", 1, 1, false, true, false)));
   }
   else
     for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)
-      methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*I));
+      methods.push_back(GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*I));
 
   //perform query
   pStatClass->StartClock("Query");
    
   if(query.PerformQuery(rdmp, *pStatClass, 
-                        &m_ConnectMap, 
+                        &m_Connector, 
                         &methods,
                         GetMPProblem()->GetMPStrategy()->GetLocalPlanners(), m_lp_label,
                         GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label)))

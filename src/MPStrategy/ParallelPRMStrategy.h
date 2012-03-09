@@ -7,7 +7,7 @@
 
 #include "MetricUtils.h"
 #include "CollisionDetection.h"
-#include "ConnectMap.h"
+#include "Connector.h"
 #include "LocalPlanners.h"
 #include "Sampler.h"
 #include "MPProblem.h"
@@ -87,7 +87,7 @@ class sample_wf
 class connect_wf {
 	private:
 	typedef MPRegion<CfgType,WeightType>  MPR_type;
-	typedef ConnectMap<CfgType, WeightType>::NodeConnectionPointer NCM_type;
+	typedef Connector<CfgType, WeightType>::ConnectionPointer NCM_type;
 	typedef LocalPlanners<CfgType,WeightType> LP_type;
 	MPR_type* region;
 	NCM_type pNodeCon;
@@ -117,11 +117,9 @@ class connect_wf {
 		LocalPlanners<CfgType,WeightType>* __lp = const_cast<LocalPlanners<CfgType,WeightType>*>(lp);
 		
 		
-		pNodeCon->GetConnectMap()->pConnectNodes(pNodeCon,
+		pNodeCon->GetConnector()->Connect(NodeCon,
 			region->GetRoadmap(),
 			*(region->GetStatClass()),
-			lp,
-			false,false,
 			pv_first,pv_last,
 			ov_first, ov_last);
 		
@@ -145,7 +143,7 @@ void p_sample(View& view, Sampler<CfgType>::SamplerPointer _ng, MPRegion<CfgType
 
 
 template<typename PartitionedView, typename OverlapView>
-void p_connect(PartitionedView& v1,OverlapView& v2, ConnectMap<CfgType, WeightType>::NodeConnectionPointer _ncm, MPRegion<CfgType,WeightType>* _region, 
+void p_connect(PartitionedView& v1,OverlapView& v2, Connector<CfgType, WeightType>::ConnectionPointer _ncm, MPRegion<CfgType,WeightType>* _region, 
 	LocalPlanners<CfgType, WeightType>* _lp)
 {
 	connect_wf wf(_ncm,_region,_lp);
@@ -266,8 +264,8 @@ class ParallelPRMRoadmap : public MPStrategyMethod {
 			{      
 				LOG_DEBUG_MSG("ParallelPRMStrategy::graph size " << rmg->size());
 				
-				ConnectMap<CfgType, WeightType>::NodeConnectionPointer pConnection;
-				pConnection = GetMPProblem()->GetMPStrategy()->GetConnectMap()->GetNodeMethod(*itr);
+				Connector<CfgType, WeightType>::ConnectionPointer pConnection;
+				pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*itr);
 				typedef stapl::p_graph_view_base<RoadmapGraph<CfgType,WeightType> >   VType;
 				VType g_view(*rmg);
 				stapl::replicated_view<stapl::replicated_container<VType> > voverlap =

@@ -10,7 +10,7 @@ public:
   vector<string> m_vecStrSmoothNodeConnectionLabels;
   string dm_label;
   string m_lp_label;
-  ConnectMap<CfgType, WeightType> m_SmoothConnectMap;
+  Connector<CfgType, WeightType> m_SmoothConnector;
   MPSMContainer parent;
 
 };
@@ -23,7 +23,7 @@ class SmoothQueryStrategy : public QueryStrategy
   m_strSmoothPathFileLabel = cont.m_strSmoothPathFileLabel;
   m_vecStrSmoothNodeConnectionLabels = cont.m_vecStrSmoothNodeConnectionLabels;
   dm_label = cont.dm_label;
-  m_SmoothConnectMap = cont.m_SmoothConnectMap;
+  m_SmoothConnector = cont.m_SmoothConnector;
 
 }
   SmoothQueryStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem); 
@@ -42,7 +42,7 @@ class SmoothQueryStrategy : public QueryStrategy
   vector<string> m_vecStrSmoothNodeConnectionLabels;
   string dm_label;
   string m_lp_label;
-  ConnectMap<CfgType, WeightType> m_SmoothConnectMap;
+  Connector<CfgType, WeightType> m_SmoothConnector;
 };
 
 #endif
