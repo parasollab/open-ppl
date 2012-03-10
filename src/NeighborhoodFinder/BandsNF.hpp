@@ -371,6 +371,10 @@ public:
     // note: A temporary fix (hack) until distance metric is properly fixed. This picks the second listed
     // distance metric from the xml file.
       
+    std::string dm_label = _inNode.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
+    dmm = _inProblem->GetDistanceMetric()->GetMethod(dm_label);
+
+
     m_min = _inNode.numberXMLParameter("min", false, 0.0, 0.0, 100000.0, "min");
     m_max = _inNode.numberXMLParameter("max", false, DBL_MAX, 0.0, DBL_MAX, "max");
     m_usePercent = _inNode.boolXMLParameter("usePercent", false, false,
@@ -472,9 +476,7 @@ protected:
 
       if(v1 == _cfg)
         continue; //don't connect same
-
       double dist = dmm->Distance(_env, _cfg, v1);
-      
       pair<VID, double> p = make_pair(*V1, dist);
       dist_list.push_back(p);
     }
@@ -489,7 +491,7 @@ protected:
   double m_min;
   double m_max;
   string m_type;
-shared_ptr<DistanceMetricMethod> dmm;
+  shared_ptr<DistanceMetricMethod> dmm;
   Policy* m_policy;
 };
 
