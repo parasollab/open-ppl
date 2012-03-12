@@ -74,4 +74,22 @@ class Cfg_free_tree : public Cfg_free {
  private:
 };
 
+#ifdef _PARALLEL
+namespace stapl {
+template <typename Accessor>
+class proxy<Cfg_free_tree, Accessor> 
+: public Accessor {
+private:
+  friend class proxy_core_access;
+  typedef Cfg_free_tree target_t;
+  
+public:
+  explicit proxy(Accessor const& acc) : Accessor(acc) { }
+  operator target_t() const { return Accessor::read(); }
+  proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
+  proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
+}; //struct proxy
+}
+#endif
+
 #endif
