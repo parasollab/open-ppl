@@ -617,10 +617,10 @@ StoreData() {
     for(size_t i=1; i<actual_links.size(); ++i) {
       double extAng = PI - Link::CalculateJointAngle(actual_links[i-1], actual_links[i]);
       sumExtAng += extAng;
-      double a = extAng;
+      double a = extAng/TWO_PI;
       a= a - floor(a);
       if(a>=0.5)a-=1.0;
-      m_v.push_back(a/TWO_PI);
+      m_v.push_back(a);
     }
     if(is_closed_chain)
       m_v.push_back((TWO_PI-sumExtAng)/TWO_PI);
