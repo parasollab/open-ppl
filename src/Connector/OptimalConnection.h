@@ -133,7 +133,8 @@ OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _s
     OutputIterator _collision) {
 
   if (this->m_debug) { cout << endl; PrintOptions (cout); }
-
+  ///To do - uncomment after const vertex iter problem  in STAPL pGraph is fixed
+  #ifndef _PARALLEL
   for (InputIterator iter1 = _iter1First; iter1 != _iter1Last; ++iter1) {
     CFG cfg = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(iter1);
     if (this->m_debug) {
@@ -144,6 +145,9 @@ OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _s
     FindNeighbors(_rm, cfg, _iter2First, _iter2Last, iterBegin);
     ConnectNeighbors(_rm, _stats, *iter1, closest, _collision);
   }
+  #else 
+  stapl_assert(false,"Optimal Connection using const VIT");
+  #endif
 }
 
 // Will connect the neighbors contained in the vector with the current node 

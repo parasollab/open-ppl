@@ -359,7 +359,8 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
   // create local roadmap to hold [_in2_first ... _in2_last]
   //
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  int dim = (*(pMap->find_vertex(*_in1_first))).property().DOF(); 
+  CFG dimCfg = (*(pMap->find_vertex(*_in1_first))).property();
+  int dim = dimCfg.DOF(); 
   
   // NOTE: everything after the 3rd DOF is rotational.
   vector<int> topology(dim);

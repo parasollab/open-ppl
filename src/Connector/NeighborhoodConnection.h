@@ -305,7 +305,8 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
       }
     }
 
-    // the edge already exists
+    // the edge already exists :: no need for this, it is already done in STAPL
+    #ifndef _PARALLEL
     if(_rm->m_pRoadmap->IsEdge(_vid, *itr2)){
       // if we're not in "unconnected" mode, count this as a success
       if(this->m_debug) cout << " | edge already exists in roadmap";
@@ -331,6 +332,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
         continue;
       }
     }
+    #endif
 
     // attempt connection with the local planner
     CfgType col;
@@ -344,7 +346,6 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
       // if connection was made, add edge and record the successful connection
       if(this->m_debug) cout << " | connection was successful";
       _rm->m_pRoadmap->AddEdge(_vid, *itr2, lpOutput.edge);
-
       // mark the successful connection in the roadmap's cache
       if(this->m_debug) cout << " | success incremented" << endl;
       _rm->SetCache(_vid,*itr2,true);
@@ -408,7 +409,7 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
   } 
 #else
   // find k-closest using just brute force
-  BFNF<CFG,WEIGHT>* bf_finder = new BFNF<CFG,WEIGHT>(GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod());
+  BFNF<CFG,WEIGHT>* bf_finder = new BFNF<CFG,WEIGHT>(this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod());
   return bf_finder->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
 #endif
 }            

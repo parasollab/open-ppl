@@ -134,6 +134,8 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
   int cdCounter = 0; 
 
   bool connected;
+  ///To do : fix me-Dijkstra doesn't compile with pGraph!!!!!!
+ #ifndef _PARALLEL
   connected = IsConnectedToggle(_env, _stats, _dm, _c1, _c2, _col, 
       _lpOutput, cdCounter, _positionRes, _orientationRes, 
       _checkCollision, _savePath, _saveFailedPath);
@@ -141,7 +143,7 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
     _stats.IncLPConnections(this->GetNameAndLabel());
     //find path in pathGraph
     vector<typename GRAPH::vertex_descriptor> path;
-    find_path_dijkstra(pathGraph, svid, gvid, path, WEIGHT::MaxWeight());
+    stapl::sequential::find_path_dijkstra(pathGraph, svid, gvid, path, WEIGHT::MaxWeight());
     if(path.size()>0){
       for(size_t i = 1; i<path.size()-1; i++){
         _lpOutput->intermediates.push_back(pathGraph.find_vertex(path[i])->property());
@@ -152,6 +154,9 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
   }
 
   _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
+ #else
+ stapl_assert(false, "ToggleLP calling Dijkstra on pGraph");
+ #endif
   return connected;
 }
 

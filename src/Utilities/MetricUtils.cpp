@@ -348,6 +348,8 @@ ClockClass::GetUSeconds() {
 RoadmapClearanceStats
 RoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType, WeightType> _g, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional){
   RoadmapClearanceStats output;
+  ///temp until edge iterator & operator != in new stapl dynamic graph is fixed
+  #ifndef _PARALLEL
   double minClearance = 1e6;
   double runningTotal = 0;
   RoadmapGraph<CfgType, WeightType>* graph = _g.m_pRoadmap;
@@ -368,6 +370,7 @@ RoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType
     varSum+=pow(((*it) - average), 2);
   }
   output.m_clearanceVariance = varSum / clearanceVec.size();
+  #endif
   return output;
 }
 

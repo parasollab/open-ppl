@@ -18,6 +18,8 @@ NodeClearanceValidity::NodeClearanceValidity (XMLNodeReader& _node, MPProblem* _
 
 bool NodeClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
     CDInfo& _cdInfo, bool _enablePenetration, string * _callName){
+  /* remove ifdef when constness problem in STAPL is fixed*/
+  #ifndef _PARALLEL
   typedef RoadmapGraph<CfgType, WeightType>::VID VID; 
   
   DistanceMetric::DistanceMetricPointer dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel);
@@ -37,4 +39,7 @@ bool NodeClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _st
   bool result = m_delta < dist; 
   _cfg.SetLabel("VALID", result);
   return result;
+  #else
+  stapl_assert(false,"NodeClearanceValidity");
+  #endif
 }

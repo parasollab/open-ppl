@@ -492,7 +492,8 @@ class spillTree{
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
     CFGTYPE center;
     for(typename std::vector<VID>::iterator iter = verticies.begin(); iter != verticies.end(); ++iter) {
-      center.add(center,(*(pMap->find_vertex(*iter))).property());
+      CFGTYPE tmp = (*(pMap->find_vertex(*iter))).property();
+      center.add(center,tmp);
     }
     center.divide(center, verticies.size());
     return center;

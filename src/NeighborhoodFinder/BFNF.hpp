@@ -3,7 +3,6 @@
 
 #include "NeighborhoodFinderMethod.hpp"
 #include "Environment.h"
-
 #include <vector>
 #include <functional>
 using namespace std;
@@ -90,7 +89,6 @@ BFNF<CFG,WEIGHT>::
 KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
   InputIterator _input_first, InputIterator _input_last, CFG _cfg, 
   int k, OutputIterator _out) {
-  //cout << stapl::get_location_id() << "> " << "KClosest k: " << k  << endl;
   IncrementNumQueries();
   StartTotalTime();
   StartQueryTime();
@@ -106,11 +104,8 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   int count = 0;
   for(InputIterator V1 = _input_first; V1 != _input_last; ++V1) {
     count++;
-    #ifdef _PARALLEL 
-    CFG v1 = (*(V1)).property();
-    #else
-    CFG v1 = (*(pMap->find_vertex(*V1))).property();
-    #endif
+    CFG v1 = pmpl_detail::GetCfg<InputIterator>(pMap)(V1);
+    
     
     if(v1 == _cfg)
       continue; //don't connect same
@@ -118,11 +113,8 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     double dist = dmm->Distance(_env, _cfg, v1);
    
     if(dist < closest[max_index].second) { 
-      #ifdef _PARALLEL
-      closest[max_index] = make_pair((*V1).descriptor(), dist);
-      #else
+      
       closest[max_index] = make_pair(*V1, dist);
-      #endif
       max_value = dist;
   
       //search for new max_index (faster O(k) than sort O(k log k) )
@@ -192,13 +184,13 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
     // initialize w/ k elements each with huge distance...                        
     vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(-999,-999),
     max_value));
-    CFG v1 = (*(pMap->find_vertex(*V1))).property();
+    CFG v1 = pmpl_detail::GetCfg<InputIterator>(pMap)(V1);
     for(V2 = _in2_first; V2 != _in2_last; ++V2) {
       //marcom/08nov03 check if results in other functions is same                      
       if(*V1 == *V2)
         continue; //don't connect same                                                  
-    
-      double dist = dmm->Distance(_env, v1, (*(pMap->find_vertex(*V2))).property());
+    CFG v2 = pmpl_detail::GetCfg<InputIterator>(pMap)(V2);
+      double dist = dmm->Distance(_env, v1, v2);
       if(dist < kp[max_index].second) {
         kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
         max_value = dist;

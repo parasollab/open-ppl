@@ -1038,13 +1038,13 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _in1_first, InputIterato
     // initialize w/ k elements each with huge distance...                        
     vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(INVALID_VID,INVALID_VID),
     max_value));
-    CFG v1 = (*(pMap->find_vertex(*V1))).property();
+   CFG v1 = pmpl_detail::GetCfg<InputIterator>(pMap)(V1);
     for(V2 = _in2_first; V2 != _in2_last; ++V2) {
       //marcom/08nov03 check if results in other functions is same                      
       if(*V1 == *V2)
         continue; //don't connect same                                                  
-    
-      double dist = dmm->Distance(_env, v1, (*(pMap->find_vertex(*V2))).property());
+      CFG v2 = pmpl_detail::GetCfg<InputIterator>(pMap)(V2);
+      double dist = dmm->Distance(_env, v1, v2);
       if(dist < kp[max_index].second) {
         kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
         max_value = dist;
