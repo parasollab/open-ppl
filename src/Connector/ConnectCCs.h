@@ -349,7 +349,7 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
       for (InputIterator itr2 = _itr2First; itr2 != _itr2Last; ++itr2) {
         cmap.reset();
         // if V1 & V2 not already connected, try to connect them 
-        if ( !is_same_cc(*pMap,cmap,*itr1,*itr2) ) {
+        if ( !stapl::sequential::is_same_cc(*pMap,cmap,*itr1,*itr2) ) {
           vector<VID> cc1,cc2;
 
           cmap.reset();
