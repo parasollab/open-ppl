@@ -1,7 +1,8 @@
 #include "MPStrategy.h"
 
 #ifdef _PARALLEL
-#include "ParallelPRMStrategy.h"
+#include "RegularSubdivisionMethod.h"
+#include "Connector.h"
 #else
 #include "MPRegionComparerMethod.h"
 #include "BasicPRM.h"
@@ -111,9 +112,10 @@ ParseStrategyMethod(XMLNodeReader& in_Node) {
 
 MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
   MPStrategyMethod* mpsm = NULL;
+  cout << "MPStrategy Method get name:" << citr.getName() << endl; 
 #ifdef _PARALLEL
-  if(citr.getName() == "ParallelPRMRoadmap"){
-    mpsm = new ParallelPRMRoadmap(citr, GetMPProblem());
+  if(citr.getName() == "RegularSubdivisionMethod"){
+    mpsm = new RegularSubdivisionMethod(citr, GetMPProblem());
   }
 #else
   if(citr.getName() == "BasicPRM"){
@@ -171,6 +173,7 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
 
 MPStrategyMethod* MPStrategy::
 GetMPStrategyMethod(string& in_strLabel) {
+	cout << "GetMPStrategyMethod label:" << in_strLabel << endl; 
   vector<pair<MPStrategyMethod*, XMLNodeReader*> >::iterator I;
   for(I = all_MPStrategyMethod.begin(); 
       I != all_MPStrategyMethod.end(); ++I) {

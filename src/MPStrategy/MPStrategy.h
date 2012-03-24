@@ -37,9 +37,9 @@ public:
   PartitioningMethods* GetPartitioningMethods(){return m_PartitioningMethods;}
   PartitioningEvaluators* GetPartitioningEvaluators(){return m_PartitioningEvaluators;}
   Features* GetFeatures(){return m_Features;}
-
-  XMLNodeReader* GetXMLNodeForStrategy(string& s);
   #endif
+  XMLNodeReader* GetXMLNodeForStrategy(string& s);
+  
 
   bool addPartialEdge, addAllEdges; //move to connect map class
   void PrintOptions(ostream& out_os);

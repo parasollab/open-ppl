@@ -90,8 +90,16 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   InputIterator _input_first, InputIterator _input_last, CFG _cfg, 
   int k, OutputIterator _out) {
   IncrementNumQueries();
+  //TO DO NOTE: A temporary fix to support parallel runtime. The problem here is that is the way
+  // we pass pointer around which is a bit ugly with parallelism. In this particular case
+  // the pointer to GetMPProblem became invalid because of the way BFNF is called from
+  //Connector, thus call to timing stats below seg fault. One fix is to call BFNF(_node, _problem)
+  //constructor and this will be done when parallel code supports all NF. What this means is 
+  // that I can not just support BFNF by itself.
+  #ifndef _PARALLEL
   StartTotalTime();
   StartQueryTime();
+  #endif
 
   Environment* _env = _rmp->GetEnvironment();
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
@@ -136,9 +144,10 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
       ++_out;
     }
   }
-  
+  #ifndef _PARALLEL
   EndQueryTime();
   EndTotalTime();
+  #endif
   return _out;
 }
 

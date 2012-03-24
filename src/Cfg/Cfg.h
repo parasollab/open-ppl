@@ -247,6 +247,7 @@ class Cfg {
    */    
   bool InBoundingBox(Environment* _env) const;
   bool InBoundingBox(Environment* _env,shared_ptr<Boundary> _bb) const;
+  
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -383,18 +384,49 @@ guration where workspace robot's EVERY VERTEX
   static int m_numOfJoints;
   
   public:
-//changed local to member
   #ifdef _PARALLEL
     void define_type(stapl::typer &_t)  
     {
       _t.member(m_v);
       _t.member(m_dof);
       _t.member(m_posDof);
+      _t.member(m_labelMap);
+      _t.member(m_statMap);
     }
-  #endif
-
+ #endif
 
 }; // class Cfg
+#ifdef _PARALLEL
+namespace stapl {
+template <typename Accessor>
+class proxy<Cfg, Accessor> 
+: public Accessor {
+private:
+  friend class proxy_core_access;
+  typedef Cfg target_t;
+  
+public:
+  //typedef target_t::parameter_type  parameter_type;
+  explicit proxy(Accessor const& acc) : Accessor(acc) { }
+  //operator target_t() const { return Accessor::read(); }
+  proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
+  proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
+  int DOF() const { return Accessor::const_invoke(&target_t::DOF);}
+  int PosDOF() const { return Accessor::const_invoke(&target_t::PosDOF);}
+  void Write(ostream& _os) const { return Accessor::const_invoke(&target_t::Write, _os);}
+  void Read(istream& _is){ return Accessor::const_invoke(&target_t::Read, _is);}
+  const vector<double>& GetData() const { return Accessor::const_invoke(&target_t::GetData);}
+  void SetData(vector<double>& _data) const { return Accessor::const_invoke(&target_t::SetData, _data);}
+  bool GetLabel(string _label) const { return Accessor::const_invoke(&target_t::GetLabel, _label);}
+  bool IsLabel(string _label) const { return Accessor::const_invoke(&target_t::IsLabel, _label);}
+  bool SetLabel(string _label) const { return Accessor::const_invoke(&target_t::SetLabel, _label);}
+  bool GetStat(string _stat) const { return Accessor::const_invoke(&target_t::GetStat, _stat);}
+  bool IsStat(string _stat) const { return Accessor::const_invoke(&target_t::IsStat, _stat);}
+  bool SetStat(string _stat) const { return Accessor::const_invoke(&target_t::SetStat, _stat);}
+  static int GetNumOfJoints()  { return Accessor::const_invoke(&target_t::GetNumOfJoints);}
+  static void SetNumOfJoints(int _numOfJoints)  { return Accessor::const_invoke(&target_t::SetNumOfJoints, _numOfJoints);}
+}; //struct proxy
+}
 
-
+#endif
 #endif

@@ -6,10 +6,10 @@ Boundary::Boundary() {
 }
 
 Boundary::Boundary(XMLNodeReader& in_Node,MPProblem* in_pproblem): MPBaseObject(in_Node, in_pproblem){ }
-
-Boundary::~Boundary() {
-/*     cout << "~Boundary(). TODO ALL " << endl; */
-}
+///Empty destructor- compiler knows how to do this
+/*Boundary::~Boundary() {
+     cout << "~Boundary(). TODO ALL " << endl; 
+}*/
 
 double
 Boundary::GetRandomValueInParameter(int _par) {

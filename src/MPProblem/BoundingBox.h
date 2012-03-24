@@ -15,7 +15,9 @@ class BoundingBox : public Boundary {
   BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem);
   BoundingBox(const BoundingBox &from_bbox);
   BoundingBox();
-  virtual ~BoundingBox();
+  /*virtual ~BoundingBox();*/
+  
+  void Clear();
 
   bool operator==(const BoundingBox& bb) const;
 
@@ -44,7 +46,7 @@ class BoundingBox : public Boundary {
   bool IfEnoughRoom(int par, double room);
   bool IfSatisfiesConstraints(Vector3D point3d) const;
   bool IfSatisfiesConstraints(vector<double> cfg) const;
-  bool InBoundary(const Cfg& cfg);
+  bool InBoundary(const Cfg& cfg, Environment* _env );
  private:
   std::vector< std::pair<double,double> > bounding_box; // bb size is the dof
   std::vector<parameter_type> par_type;
@@ -52,14 +54,39 @@ class BoundingBox : public Boundary {
   int dofs;
   public:
   #ifdef _PARALLEL
-  void define_type(stapl::typer &t)
+  void define_type(stapl::typer &_t)
   {
-	  t.member(bounding_box);
-	  t.member(par_type);
-	  t.member(pos_dofs);
-	  t.member(dofs);
+	  _t.member(bounding_box);
+	  _t.member(par_type);
+	  _t.member(pos_dofs);
+	  _t.member(dofs);
+	 _t.member(m_jointLimits);
   }
   #endif
 };
+
+#ifdef _PARALLEL
+namespace stapl {
+template <typename Accessor>
+class proxy<BoundingBox, Accessor> 
+: public Accessor {
+private:
+  friend class proxy_core_access;
+  typedef BoundingBox target_t;
+  
+public:
+  typedef target_t::parameter_type  parameter_type;
+  explicit proxy(Accessor const& acc) : Accessor(acc) { }
+  operator target_t() const { return Accessor::read(); }
+  proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
+  proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
+  int GetDOFs() const { return Accessor::const_invoke(&target_t::GetDOFs);}
+  int GetPosDOFs() const { return Accessor::const_invoke(&target_t::GetPosDOFs);}
+  Point3d GetRandomPoint() const { return Accessor::const_invoke(&target_t::GetRandomPoint);}
+  parameter_type GetType(int _par) const { return Accessor::const_invoke(&target_t::GetType, _par);}
+ // bool InBoundary(const Cfg& _cfg) { return Accessor::invoke(&target_t::InBoundary, _cfg);}
+};
+}
+#endif
 
 #endif /*BOUNDINGBOX_H_*/

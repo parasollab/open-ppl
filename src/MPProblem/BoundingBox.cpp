@@ -73,18 +73,20 @@ BoundingBox(const BoundingBox &from_bbox)  {
     bounding_box.push_back(from_bbox.GetRange(i));
     par_type.push_back(from_bbox.GetType(i));
   }
+  m_jointLimits.clear();
+  m_jointLimits.reserve((int)(dofs-pos_dofs));
   for (int i = pos_dofs; i < dofs; i++) {
     m_jointLimits.push_back(from_bbox.m_jointLimits[i-pos_dofs]);
   }
 }
-
+///Construct nothing???
 BoundingBox::
 BoundingBox() { }
 
-BoundingBox::
+/*BoundingBox::
 ~BoundingBox() {
   //cout << " ~BoundingBox(). TODO ALL " << endl;
-}
+}*/
 
 bool
 BoundingBox::
@@ -139,6 +141,10 @@ BoundingBox::
 GetType(int par) const {
   return par_type[par];
 }
+
+void
+BoundingBox::
+Clear(){ par_type.clear(); }
 
 Point3d
 BoundingBox::GetRandomPoint(){
@@ -226,9 +232,11 @@ IfWrap(int par) {
   return false;
 }
 
-bool BoundingBox::InBoundary(const Cfg& _cfg){
+bool BoundingBox::InBoundary(const Cfg& _cfg, Environment* _env = NULL ){
  vector <double> m_v= _cfg.GetData();
- Environment *_env=GetMPProblem()->GetEnvironment();
+ if(_env == NULL) {
+     _env = GetMPProblem()->GetEnvironment();
+ }
   if(!IfSatisfiesConstraints(m_v)) 
     return false;
   

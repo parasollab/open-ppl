@@ -144,7 +144,7 @@ bool Cfg::IsWithinResolution(const Cfg& _c, double _positionRes, double _orienta
        (diff->OrientationMagnitude() <= _orientationRes));
     delete diff;
     return result;
-}
+}	
 
 
 //---------------------------------------------
@@ -305,7 +305,7 @@ double Cfg::OrientationMagnitude() const {
 // tests whether or not robot in this configuration has every vertex inside
 // the environment specified bounding box
 bool Cfg::InBoundingBox(Environment* _env,shared_ptr<Boundary> _bb) const {
-  return _bb->InBoundary(*this);  
+  return _bb->InBoundary(*this, _env); 
 }
 
 bool Cfg::InBoundingBox(Environment* _env) const {

@@ -5,6 +5,10 @@
 #include "Environment.h"
 #include "MetricUtils.h"
 
+#ifdef _PARALLEL
+#include <stapl/containers/graph/algorithms/graph_io.hpp>
+#endif
+
 ///Design info.  Each MPRegion should be a self contained
 ///MP solution.  It will have its own roadmaps, stats, etc.
 ///In the future, it will be able to construct its own SubRegions.
@@ -246,11 +250,14 @@ WriteRoadmapForVizmo(ostream& myofstream, vector<shared_ptr<BoundingBox> >* bbox
   GetRoadmap()->WriteRNGseed(myofstream);
   myofstream << endl;
 
-  //GetRoadmap()->m_pRoadmap->WriteGraph(myofstream);         // writes verts & adj lists
+  #ifndef _PARALLEL
   if(!block)
-   write_graph(*(GetRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
+    stapl::sequential::write_graph(*(GetRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
   else 
-   write_graph(*(GetBlockRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
+    stapl::sequential::write_graph(*(GetBlockRoadmap()->m_pRoadmap), myofstream);        // writes verts & adj lists
+  #else
+  stapl::write_graph(*(GetRoadmap()->m_pRoadmap),myofstream);
+  #endif
 }
 
 

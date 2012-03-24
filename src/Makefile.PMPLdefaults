@@ -234,7 +234,10 @@ PMPL_INCL = \
 	-I${PMPL_DIR}/NeighborhoodFinder \
 	-I${PMPL_DIR}/Partitioning \
 	-I${PMPL_DIR}/Partitioning/Features \
-	-I${PMPL_DIR}/Partitioning/PartitioningEvaluators
+	-I${PMPL_DIR}/Partitioning/PartitioningEvaluators \
+	-I${PMPL_DIR}/RegionDecomposition \
+	-I${PMPL_DIR}/ParallelMethods \
+	-I${PMPL_DIR}/ParallelMethods/WorkFunctions
 
 PMPL_OBJS = \
 	MPProblem/Geometry/FreeBody.o \
@@ -289,6 +292,7 @@ PMPL_OBJS = \
 	NeighborhoodFinder/NeighborhoodFinderMethod.o \
 	MPProblem/MPProblem.o \
 	NeighborhoodFinder/MPNNWrapper.o \
+	RegionDecomposition/Region.o \
 
 ifeq (${parallel}, 0)
 	PMPL_OBJS+= \
@@ -324,5 +328,10 @@ ifeq (${parallel}, 0)
 	Partitioning/PartitioningEvaluators/PartitioningEvaluators.o \
 	Partitioning/PartitioningEvaluators/STDEvaluator.o \
 	Partitioning/PartitioningEvaluators/AVGEvaluator.o
+endif
+
+ifeq (${parallel}, 1)
+        PMPL_OBJS+= \
+	ParallelMethods/RegularSubdivisionMethod.o 
 endif
 
