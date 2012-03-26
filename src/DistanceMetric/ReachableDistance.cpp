@@ -1,3 +1,5 @@
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+
 #include "ReachableDistance.h"
 #include "CfgTypes.h"
 
@@ -36,3 +38,5 @@ double ReachableDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg&
   double dOri = ((CfgType)_c1).OrientationDistance((CfgType)_c2);
   return (s1*dPosition + s2*dLength + (1-s1-s2)*dOri);
 }
+
+#endif
