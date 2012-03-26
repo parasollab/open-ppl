@@ -4,6 +4,7 @@
 #include "DistanceMetricMethod.h"
 #include "CfgTypes.h"
 #include "Cfg_free_tree.h"
+#include "Cfg_fixed_tree.h"
 #include "MPProblem.h"
 #include "boost/utility/enable_if.hpp"
 
@@ -33,15 +34,23 @@ class EuclideanDistance : public DistanceMetricMethod {
       double ScaledDistance(Environment* _env, const Cfg& _c1, const Cfg& _c2, double _sValue,
           typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0){
         vector<double> _v1 = _c1.GetData();
-        if((int)_v1.size() == CfgType::GetNumOfJoints()) 
-          _v1.insert(_v1.begin(), 6, 0);
         vector<double> _v2 = _c2.GetData();
-        if((int)_v2.size() == CfgType::GetNumOfJoints()) 
-          _v2.insert(_v2.begin(), 6, 0);
-        Cfg_free_tree c1Linkage(_v1);
-        Cfg_free_tree c2Linkage(_v2);
-        Cfg_free_tree tmp;
-        return ScaledDistanceImpl(_env, c1Linkage, c2Linkage, _sValue, tmp);
+        if(_v1.size() != _v2.size())
+        {
+          cout << "ERROR in EuclideanDistance::ScaledDistance, _c1 dofs (" << _v1.size() << ") != _c2 dofs (" << _v2.size() << ")\n";
+          exit(-1);
+        }
+        if((int)_v1.size() == CfgType::GetNumOfJoints()) {
+          Cfg_fixed_tree c1Linkage(_v1);
+          Cfg_fixed_tree c2Linkage(_v2);
+          Cfg_fixed_tree tmp;
+          return ScaledDistanceImpl(_env, c1Linkage, c2Linkage, _sValue, tmp);
+        } else {
+          Cfg_free_tree c1Linkage(_v1);
+          Cfg_free_tree c2Linkage(_v2);
+          Cfg_free_tree tmp;
+          return ScaledDistanceImpl(_env, c1Linkage, c2Linkage, _sValue, tmp);
+        }
       }
 
   private:

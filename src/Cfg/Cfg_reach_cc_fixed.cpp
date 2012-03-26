@@ -33,10 +33,23 @@ Cfg_reach_cc_fixed(const vector<double>& _v) : Cfg_reach_cc(_v) {
 }
 
 Cfg_reach_cc_fixed::
-Cfg_reach_cc_fixed(const Cfg& c) : Cfg_reach_cc(c) {
+Cfg_reach_cc_fixed(const Cfg& c) {
   m_posDof = 0;
   m_dof = m_numOfJoints;
-  m_v.resize(m_dof);
+ 
+  vector<double> _v = c.GetData();
+  if((int)_v.size() < m_dof) {
+    cout << "\n\nERROR in Cfg_reach_cc_fixed::Cfg_reach_cc_fixed(Cfg&), ";
+    cout << "size of cfg data less than m_dof\n";
+    exit(-1);
+  }
+  m_v.clear();
+  for(int i=0; i<m_dof; i++)
+    m_v.push_back(_v[i]);
+  NormalizeOrientation();
+  
+  link_lengths = ((Cfg_reach_cc_fixed&)c).link_lengths;
+  link_orientations = ((Cfg_reach_cc_fixed&)c).link_orientations;
 }
 
 Cfg_reach_cc_fixed::
