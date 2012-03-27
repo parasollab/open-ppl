@@ -11,6 +11,52 @@ using namespace psbmp;
 using namespace stapl;
 
 
+/// General Framework for roadmap construction, calls MPStrategy method (i.e. BasicPRM, Basic RRT) directly
+/// to be called if region migration is not needed
+class ConstructRoadmap
+{
+  private:
+    typedef MPRegion<CfgType,WeightType>  MPR_type;
+    
+    MPR_type* m_region;
+    MPStrategyMethod* m_strategyMethod;
+    int m_regionId;
+  
+  public:
+
+  ConstructRoadmap(MPR_type* _mpr, MPStrategyMethod* _mpsm, int _id ):m_region(_mpr),m_strategyMethod(_mpsm),m_regionId(_id){ }
+                
+
+  void define_type(stapl::typer &_t){
+        _t.member(m_region);
+  }
+
+  ConstructRoadmap(const ConstructRoadmap& _wf, std::size_t offset)  {}
+
+  template<typename View, typename bbView>
+  void operator()(const View& _view,  bbView _bbview) const 
+  {
+    int sample_size = _view.size()/_bbview.size();
+    
+    for(int i =0; i<_bbview.size(); ++i){
+       int index = i + (_bbview.size()*stapl::get_location_id());
+       cout << "Setting up BBX with index " << index << " with param = ";
+       BoundingBox bb = _bbview[index];
+       shared_ptr<BoundingBox> boundary = shared_ptr<BoundingBox>(new BoundingBox(bb));
+       boundary->Print(cout);
+       cout << "\n\n" << endl;
+       m_strategyMethod->SetBoundary(boundary);
+       //m_strategyMethod->SetBoundaryIndex(index);
+       //add support to set num nodes in MPStrategy method 
+       //m_strategyMethod->SetNumNodes(sample_size);
+       m_strategyMethod->Run(m_regionId);
+    }
+  }
+  
+};
+                                                                                                                                
+
+
 class NodeGenerator 
 {
   private:
@@ -97,9 +143,9 @@ class NodeConnector
     m_region = _mpr;
   }
   
-  void define_type(stapl::typer &t)  
+  void define_type(stapl::typer &_t)  
   {
-    t.member(m_region);
+    _t.member(m_region);
   }
   
   template<typename regionView> 
@@ -131,14 +177,12 @@ class RegionConnector
  
   public:
 
-  RegionConnector(MPR* _mpr, RRGraph* _g, NC* _nc, int _k) :m_k(_k),m_g(_g){
-    m_nc = _nc;
-    m_region = _mpr;
-  }
+  RegionConnector(MPR* _mpr, RRGraph* _g, NC* _nc, int _k) :m_region(_mpr),m_nc(_nc),m_k(_k),m_g(_g){ }
   
-  void define_type(stapl::typer &t)  
+  
+  void define_type(stapl::typer &_t)  
   {
-    t.member(m_region);
+    _t.member(m_region);
   }
   
   template<typename regionView> 
