@@ -441,7 +441,8 @@ void MultiBody::Read(istream& _is, int action, const char* descDir, bool _debug)
   //get body info
   char string[32];
   ReadField(_is, &string); //read "MultiBody"
-  ReadField(_is, &string); //read "Active/Passive"
+  ReadField(_is, &string); //read "Active/Passive/Surface"
+  std::string t_type(string); 
 
   char cPeek = _is.peek();
   while((cPeek == ' ') || (cPeek == '\n')) {
@@ -450,10 +451,15 @@ void MultiBody::Read(istream& _is, int action, const char* descDir, bool _debug)
   }
 
   bInternal = false;    
+  m_isSurface = false;
   if(cPeek =='I') {
     ReadField(_is, &string);
     if (!strncmp(string, "Internal", 8)) 
       bInternal = true;
+  }
+  if( t_type == "Surface" ) { 
+     cout << "setting is surface to true." << endl;
+     m_isSurface = true; 
   }
 
   int bodyCount;

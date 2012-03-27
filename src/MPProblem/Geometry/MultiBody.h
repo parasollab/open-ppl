@@ -84,6 +84,8 @@ public:
       return bInternal;
     } 
 
+    bool IsSurface() { return m_isSurface; }
+
     ///Return a free body accroding to the given index. the index should be in [0,GetFreeBodyCount())
     shared_ptr<FreeBody> GetFreeBody(int _index) const;
     ///Number of free body in this mutilbody.
@@ -327,6 +329,9 @@ private:
   //added by Xinyu Tang
   // to say whether this multibody is Internal(fake obsbacle);
   bool bInternal;
+  
+  // to say whether this multibody is a navigable surface
+  bool m_isSurface;
 
   vector<shared_ptr<FixedBody> > fixedBody;
   vector<shared_ptr<FreeBody> > freeBody;

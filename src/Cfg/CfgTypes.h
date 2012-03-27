@@ -26,6 +26,11 @@ typedef Cfg_2D CfgType;
 typedef Cfg_2D_withRot CfgType;
 #endif
 
+#ifdef PMPCfgSurface
+#include "Cfg_surface.h"
+typedef Cfg_surface CfgType;
+#endif
+
 #ifdef PMPReachDistCC
 #include "Cfg_reach_cc.h"
 typedef Cfg_reach_cc CfgType;

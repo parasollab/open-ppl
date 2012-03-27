@@ -10,6 +10,7 @@
 #include "ComposeVC.hpp"
 #include "NegateValidity.hpp"
 #include "AlwaysTrueValidity.h"
+#include "SurfaceValidity.h"
 #include "boost/shared_ptr.hpp"
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +52,9 @@ public:
         AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "AlwaysTrueValidity") {
         VCMethodPtr vc(new AlwaysTrueValidity<CFG>(*citr, in_pProblem));
+        AddVCMethod(vc->GetLabel(), vc);
+      } else if(citr->getName() == "SurfaceValidity") {
+        VCMethodPtr vc(new SurfaceValidity<CFG>(*citr, in_pProblem));
         AddVCMethod(vc->GetLabel(), vc);
       } else {
         citr->warnUnknownNode();

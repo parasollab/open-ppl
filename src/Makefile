@@ -42,6 +42,7 @@ ifndef ROBOT_DEF
   #ROBOT_DEF = -DPMPFixedTree
   #ROBOT_DEF = -DPMPCfg2D
   #ROBOT_DEF = -DPMPCfg2DWithRot
+  #ROBOT_DEF = -DPMPCfgSurface
   #ROBOT_DEF = -DPMPReachDistCC
   #ROBOT_DEF = -DPMPReachDistCCFixed
   #ROBOT_DEF = -DPMPRigidMulti

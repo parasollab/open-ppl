@@ -15,6 +15,9 @@
 #include "boost/mpl/end.hpp"
 #include "boost/mpl/next_prior.hpp"
 
+#include "Vector.h"
+#include "Point.h"
+using namespace mathtool;
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -511,6 +514,35 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
 bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
     shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
     int _clearance, int _penetration, bool _useBBX, bool _positional);
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+// Geometry Utils
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+//----------------------------------------------------------------------------
+//PtInTriangle: determine if point _P is in triange defined by (_A,_B,_C)
+//----------------------------------------------------------------------------
+bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const Point2d & _P);
+
+//----------------------------------------------------------------------------
+// CHECKS IF 2D POINT P IS IN TRIANGLE ABC. RETURNS 1 IF IN, 0 IF OUT
+//   uses barycentric coordinated to compute this and return the uv-coords
+//   for potential usage later
+//----------------------------------------------------------------------------
+bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const Point2d & _P,
+      double& _u, double& _v);
+
+//----------------------------------------------------------------------------
+// GetPtFromBarycentricCoords: given triange defined by _A,_B,_C, return the
+// point inside triangle defined by barycentric coords. _u,_v
+//----------------------------------------------------------------------------
+Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& _C, double _u, double _v); 
 
 #endif
 

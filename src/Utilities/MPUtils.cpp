@@ -1025,3 +1025,69 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
   return GetApproxCollisionInfo(_mp, _cfg, _clrCfg, _env, _env->GetBoundingBox(), _stats,
     _cdInfo, _vc, _dm, _clearance, _penetration, _useBBX, _positional);
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+bool PtInTriangle 
+(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point2d & _P)
+{
+  // FIRST CHECK THE SIGN OF THE Z-COMPONENT OF THE NORMAL BY CALCULATING
+  // THE CROSS-PRODUCT (ABxBC). THIS WILL DETERMINE THE ORDERING OF THE
+  // VERTICES. IF NEGATIVE, VERTICES ARE CLOCKWISE ORDER; OTHERWISE CCW.
+  // THEN EVALUATE SIGN OF Z-COMPONENTS FOR ABxAP, BCxBP, and CAxCP TO
+  // DETERMINE IF P IS IN "INSIDE" HALF-SPACE FOR EACH EDGE IN TURN ("INSIDE"
+  // IS DETERMINED BY SIGN OF Z OF NORMAL (VERTEX ORDERING).
+  // NOTE: FULL CROSS-PRODS ARE NOT REQUIRED; ONLY THE Z-COMPONENTS
+  Vector2d dAB=_B-_A, dBC=_C-_B;  // "REPEATS"
+  if ((dAB[0]*dBC[1]-dAB[1]*dBC[0]) < 0) // CW
+  {
+    if (dAB[0]*(_P[1]-_A[1]) >= dAB[1]*(_P[0]-_A[0])) return false;           // ABxAP
+    if (dBC[0]*(_P[1]-_B[1]) >= dBC[1]*(_P[0]-_B[0])) return false;           // BCxBP
+    if ((_A[0]-_C[0])*(_P[1]-_C[1]) >= (_A[1]-_C[1])*(_P[0]-_C[0])) return false; // CAxCP
+  }
+  else // CCW
+  {
+    if (dAB[0]*(_P[1]-_A[1]) < dAB[1]*(_P[0]-_A[0])) return false;           // ABxAP
+    if (dBC[0]*(_P[1]-_B[1]) < dBC[1]*(_P[0]-_B[0])) return false;           // BCxBP
+    if ((_A[0]-_C[0])*(_P[1]-_C[1]) < (_A[1]-_C[1])*(_P[0]-_C[0])) return false; // CAxCP
+  }
+  return true; // "INSIDE" EACH EDGE'S IN-HALF-SPACE (PT P IS INSIDE TRIANGLE)
+}
+
+//----------------------------------------------------------------------------
+// CHECKS IF 2D POINT P IS IN TRIANGLE ABC. RETURNS 1 IF IN, 0 IF OUT
+//   uses barycentric coordinated to compute this and return the uv-coords
+//   for potential usage later
+//----------------------------------------------------------------------------
+bool PtInTriangle
+(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point2d & _P,
+ double& _u, double& _v) {
+  // Compute vectors        
+  Vector2d v0 = _C - _A;
+  Vector2d v1 = _B - _A;
+  Vector2d v2 = _P - _A;
+
+  // Compute dot products
+  double dot00 = v0*v0;
+  double dot01 = v0*v1;
+  double dot02 = v0*v2;
+  double dot11 = v1*v1;
+  double dot12 = v1*v2;
+
+  // Compute barycentric coordinates
+  double invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+  _u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+  _v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+  // Check if point is in triangle
+  return (_u > 0) && (_v > 0) && (_u + _v < 1);
+}
+Point3d GetPtFromBarycentricCoords 
+(const Point3d& _A, const Point3d& _B, const Point3d& _C, double _u, double _v) {
+  // P = A + u * (C - A) + v * (B - A)
+  Point3d p = _A + (_u*(_C - _A)) + (_v*(_B - _A));
+  return p;
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////

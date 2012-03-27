@@ -15,6 +15,9 @@
 #include "MedialAxisLP.h"
 #include "AStar.h"
 #include "ToggleLP.h"
+#if defined(PMPCfgSurface)
+#include "SurfaceLP.h"
+#endif
 //#include "ApproxSpheres.h"
 
 #ifdef _PARALLEL
@@ -59,6 +62,9 @@ namespace pmpl_detail {
     RotateAtS<CfgType,WeightType>,
     TransformAtS<CfgType,WeightType>,
     MedialAxisLP<CfgType,WeightType>,
+    #if defined(PMPCfgSurface)
+    SurfaceLP<CfgType,WeightType>,
+    #endif
     AStarDistance<CfgType,WeightType>,
     AStarClearance<CfgType, WeightType>,
     ToggleLP<CfgType, WeightType>

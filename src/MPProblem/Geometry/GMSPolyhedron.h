@@ -14,6 +14,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include mathtool vec
 #include "Vector.h"
+#include "Point.h"
+using namespace mathtool;
 /////////////////////////////////////////////////////////////////////////////////////////
 //Include OBPRM headers
 #include "MPUtils.h"
@@ -99,6 +101,13 @@ class GMSPolyhedron {
 
     /// Write in BYU format
     void WriteBYU(ostream & _os);
+
+    /// get a point on the surface of the polyhedron
+    Point3d GetRandPtOnSurface(); 
+    /// is the specified point on the surface of the polyhedron
+    bool IsOnSurface(Point2d& _pt, double _h);
+    double HeightAtPt(Point2d _pt, bool& _valid); 
+
 
     vector<Vector3D> vertexList; ///< 3D Vector stores vertex location info.
     vector<GMSPolygon> polygonList; ///< An array of GMSPolygon

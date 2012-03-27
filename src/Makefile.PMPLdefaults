@@ -272,6 +272,7 @@ PMPL_OBJS = \
 	Cfg/Cfg_fixed_tree.o \
 	Cfg/Cfg_2D.o \
 	Cfg/Cfg_2D_withRot.o \
+	Cfg/Cfg_surface.o \
 	Cfg/VirtualLink.o \
 	Cfg/Cfg_reach_cc.o \
 	Cfg/Cfg_reach_cc_fixed.o \

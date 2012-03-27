@@ -115,6 +115,10 @@ Environment(const Environment &from_env) :
     multibody.push_back(from_env.GetMultiBody(i));
     //usable_multibody.push_back(from_env.GetMultiBody(i));
   }
+  // copy of surfaces 
+  for (int i = 0; i < from_env.GetNavigableSurfacesCount(); i++) {
+    m_navigableSurfaces.push_back(from_env.GetNavigableSurface(i));
+  }
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=from_env.GetRdRes();
 #endif
@@ -148,6 +152,10 @@ Environment(MPProblem* in_pProblem) :
     multibody.push_back(from_env.GetMultiBody(i));
     //usable_multibody.push_back(from_env.GetMultiBody(i));
   }
+  // copy of surfaces 
+  for (int i = 0; i < from_env.GetNavigableSurfacesCount(); i++) {
+    m_navigableSurfaces.push_back(from_env.GetNavigableSurface(i));
+  }
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=from_env.GetRdRes();
 #endif
@@ -175,6 +183,10 @@ Environment(const Environment &from_env, const BoundingBox &i_boundaries) :
 
   for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
     multibody.push_back(from_env.GetMultiBody(i));
+  }
+  // copy of surfaces 
+  for (int i = 0; i < from_env.GetNavigableSurfacesCount(); i++) {
+    m_navigableSurfaces.push_back(from_env.GetNavigableSurface(i));
   }
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=from_env.GetRdRes();
@@ -454,26 +466,36 @@ FindBoundingBox(){
   const double * tmp;
   double minx, miny, minz, maxx, maxy, maxz;
   minx = miny = minz = maxx = maxy = maxz = 0;
+  //loop over multibody vec
   for(size_t i = 0 ; i < multibody.size() ; i++){
     if((int)i != robotIndex){
       if(first){
-  multibody[i]->FindBoundingBox();
-  tmp = multibody[i]->GetBoundingBox();
-  minx = tmp[0]; maxx = tmp[1];
-  miny = tmp[2]; maxy = tmp[3];
-  minz = tmp[4]; maxz = tmp[5];
-  first = false;
-  bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+	multibody[i]->FindBoundingBox();
+	tmp = multibody[i]->GetBoundingBox();
+	minx = tmp[0]; maxx = tmp[1];
+	miny = tmp[2]; maxy = tmp[3];
+	minz = tmp[4]; maxz = tmp[5];
+	first = false;
+	bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
       }
       else{
-  multibody[i]->FindBoundingBox();
-  tmp = multibody[i]->GetBoundingBox();
-  minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
-  miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
-  minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
-  bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+	multibody[i]->FindBoundingBox();
+	tmp = multibody[i]->GetBoundingBox();
+	minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
+	miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
+	minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
+	bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
       }
     }
+  }
+  //loop over nav surfaces
+  for(size_t i = 0 ; i < m_navigableSurfaces.size() ; i++){
+    m_navigableSurfaces[i]->FindBoundingBox();
+    tmp = m_navigableSurfaces[i]->GetBoundingBox();
+    minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
+    miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
+    minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
+    bodies_min_span = min(bodies_min_span,m_navigableSurfaces[i]->GetMaxAxisRange());
   }
   
   double min_clearance = robot_span/3.0;
@@ -575,7 +597,10 @@ Read(istream & _is, int envFormatVersion, int action, const char* descDir) {
   for (int m=0; m<multibodyCount; m++) {    
     shared_ptr<MultiBody> mb(new MultiBody());
     mb->Read(_is, action, descDir, m_debug);
-    multibody.push_back(mb);
+    if( !mb->IsSurface() )
+      multibody.push_back(mb);
+    else
+      m_navigableSurfaces.push_back(mb);
   }
 }
 
@@ -612,4 +637,17 @@ operator==(const Environment& e) const
          (positionRes == e.positionRes) &&
          (orientationRes == e.orientationRes) &&
          (minmax_BodyAxisRange == e.minmax_BodyAxisRange);
+}
+
+
+//-------------------------------------------------------------------
+///  GetRandomNavigableSurfaceIndex
+///  Output: An index between -1 and m_navigableSurfaces.size()-1
+///          -1 means base index 
+//-------------------------------------------------------------------
+int Environment::
+GetRandomNavigableSurfaceIndex()  {
+  int num_surfaces = GetNavigableSurfacesCount();
+  int rindex = (LRand() % (num_surfaces+1)) - 1;
+  return rindex;
 }

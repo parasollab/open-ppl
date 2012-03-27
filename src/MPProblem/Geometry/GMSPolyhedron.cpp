@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "GMSPolyhedron.h"
+#include "MPUtils.h"
 #include <fstream>
 #include <cstring>
 
@@ -327,3 +328,88 @@ void GMSPolyhedron::WriteBYU(ostream & _os)
   _os << endl;
 }
 
+//=========================================================================
+//  GetRandPtOnSurface
+//  This function will return a point that lies on the surface of the 
+//  polyhedron. Function taken from GB code.
+//=========================================================================
+Point3d GMSPolyhedron::GetRandPtOnSurface() {
+  //using vertices in ptsSurface
+  int size=polygonList.size();
+  int it;
+  bool validIndex=false;
+  while( !validIndex ) {
+    it=lrand48() % size;
+    GMSPolygon& tv=polygonList[it];
+    if( tv.vertexList[0]==tv.vertexList[1] || tv.vertexList[1]==tv.vertexList[2] || tv.vertexList[0]==tv.vertexList[2] ) continue;
+    else validIndex=true;
+  }
+  GMSPolygon& tv=polygonList[it];
+  double u,v;
+  //double offset=0.3;
+  u = drand48(); //anything from 0-1 should work for these coords
+  v = drand48(); //anything from 0-1 should work for these coords
+  if( (u+v)>= 1 ) {
+    u = 1-u;
+    v = 1-v;
+  }
+  Vector3d p0 = vertexList[ tv.vertexList[0] ];
+  Vector3d p1 = vertexList[ tv.vertexList[1] ];
+  Vector3d p2 = vertexList[ tv.vertexList[2] ];
+  Vector3d AB = p1 - p0;
+  Vector3d AC = p2 - p0;
+  Vector3d pt3d = p0 + (u * AB) + (v * AC);
+  Point3d rtrnPt(pt3d[0], pt3d[1], pt3d[2]);
+  return rtrnPt;
+}
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+/// next two functions adapted from GB code as well 
+bool GMSPolyhedron::IsOnSurface(Point2d& _pt, double _h) {
+  //using vertices in m_ProjectedPts
+  int size=polygonList.size();
+  for( int it=0;it<size;it++ ){
+    GMSPolygon& poly = polygonList[it];
+    if( poly.vertexList[0]==poly.vertexList[1] || poly.vertexList[1]==poly.vertexList[2] || poly.vertexList[0]==poly.vertexList[2] ) continue;
+    Vector3D& v0 = vertexList[ poly.vertexList[0] ]; // get vertices of triangle
+    Vector3D& v1 = vertexList[ poly.vertexList[1] ];
+    Vector3D& v2 = vertexList[ poly.vertexList[2] ];
+    Point2d   p0(v0[0], v0[2]);//v0 in xyz, p0 ignores y component
+    Point2d   p1(v1[0], v1[2]);//v0 in xyz, p0 ignores y component
+    Point2d   p2(v2[0], v2[2]);//v0 in xyz, p0 ignores y component
+    if( PtInTriangle( p0, p1, p2, _pt ) ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+double GMSPolyhedron::HeightAtPt(Point2d _pt, bool& _valid) {
+  //using vertices in ptsSurface
+  int size=polygonList.size();
+  for( int it=0;it<size;it++ ){
+    GMSPolygon& poly = polygonList[it];
+    if( poly.vertexList[0]==poly.vertexList[1] || poly.vertexList[1]==poly.vertexList[2] || poly.vertexList[0]==poly.vertexList[2] ) continue;
+    Vector3D& v0 = vertexList[ poly.vertexList[0] ]; // get vertices of triangle
+    Vector3D& v1 = vertexList[ poly.vertexList[1] ];
+    Vector3D& v2 = vertexList[ poly.vertexList[2] ];
+    Point2d   p0(v0[0], v0[2]);//v0 in xyz, p0 ignores y component
+    Point2d   p1(v1[0], v1[2]);//v0 in xyz, p0 ignores y component
+    Point2d   p2(v2[0], v2[2]);//v0 in xyz, p0 ignores y component
+    Point3d   p03d(v0[0], v0[1], v0[2]);
+    Point3d   p13d(v1[0], v1[1], v1[2]);
+    Point3d   p23d(v2[0], v2[1], v2[2]);
+    double u,v;
+    if( PtInTriangle( p0, p1, p2, _pt, u, v ) ) {
+      _valid = true;
+      Point3d pt3d = GetPtFromBarycentricCoords( p03d, p13d, p23d, u, v ); 
+      return pt3d[1];
+    }
+  }
+  _valid = false;
+  return -19999.0; //went through all of the triangles and inconsistency found in iscollision check
+}
