@@ -228,10 +228,11 @@ void Cfg_surface::WeightedSum(const Cfg& _first, const Cfg& _second, double _wei
 int Cfg_surface::SetSingleParam(int _param, double _value, bool _norm) {    
   if ((_param>=0) && (_param<m_dof)) {
     Cfg::SetSingleParam(_param, _value, _norm);
-    if(_param<m_posDof)
+    if(_param<m_posDof){
       if(_param==0) m_p[_param] += _value;
       else if(_param==1) m_H += _value;
       else if(_param==2) m_p[1] += _value;
+    }
     return 1;
   } else {
     return 0;
@@ -244,10 +245,11 @@ int Cfg_surface::SetSingleParam(int _param, double _value, bool _norm) {
 int Cfg_surface::IncSingleParam(int _param, double _value) {    
   if ((_param>=0) && (_param<m_dof)) {
     Cfg::IncSingleParam(_param, _value);
-    if(_param<m_posDof)
+    if(_param<m_posDof){
       if(_param==0) m_p[_param] += _value;
       else if(_param==1) m_H += _value;
       else if(_param==2) m_p[1] += _value;
+    }
     return 1;
   } else {
     return 0;
