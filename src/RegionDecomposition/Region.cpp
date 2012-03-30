@@ -83,7 +83,7 @@ ostream& operator<< (ostream& _s, const Region& _r) {
 
 
 void
-Region::SetCCs(vector <pair<size_t, RVID> >& _ccs){
+Region::SetCCs(std::vector<pair<size_t, RVID> >& _ccs){
   m_ccs=_ccs;
 }
 
