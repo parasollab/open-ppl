@@ -1,0 +1,70 @@
+\documentclass[12pt]{article}
+%%%%%%%%WARNING :: Not fully latex, so do not use latex
+\usepackage[top=0.5in,left=0.5in,right=0.5in, bottom=0.5in]{geometry}
+\usepackage{amssymb}
+\usepackage{algorithm,algorithmic}
+\newcommand{\EXCISE}[1]{}
+
+\usepackage[usenames]{color}
+\usepackage{listings}
+\definecolor{LightGrey}{rgb}{0.9,0.9,0.9} 
+\lstdefinestyle{C++}{language=C++,%
+  backgroundcolor=\color{LightGrey},
+  showstringspaces=false,
+  columns=fullflexible,
+  escapechar=@,
+  basicstyle=\sffamily,
+  moredelim=**[is][\color{white}]{~}{~},
+  literate={=>}{{$\Rightarrow\;$}}1 {->}{{$\rightarrow{}$}}1 %
+  {<-}{{$\leftarrow$}}1 {<:}{{$\subtype{}\ $}}1,
+}
+
+\title{\Large \bf User Guide for Parallel Sampling-Based Motion Planning}
+\author{Sam Ade Jacobs}
+
+\begin{document}
+\thispagestyle{empty}
+\pagestyle{empty}
+\maketitle
+\lstset{style=C++}
+
+This user guide outlines the necessary steps require to compile and run parallel code.
+It is a living document and expected to be modified as we make progress with parallel motion planning
+research. The primary objective is to streamline the compilation and execution process for users.
+A separate file (to be called developer's guide) will outline what developers need to do to write a 
+STAPL-based parallel SBMP code. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% COMPILATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{COMPILATION}
+The parallel code heavily depends on STAPL framework for many of its components and STAPL also depends on
+Boost and C++ STL. For this reason users need to have both BOOST and STL set up. Since STAPL is usually
+ahead of PMPL in terms of compiler, STL and BOOST, it is important that the user have most recent versions of
+these libraries and C++ compiler ( with OpenMPI/MPI wrapper). Here are the outlines of steps involved:
+\begin{algorithmic}[1]
+\STATE Compile STAPL first with appropriate platform and STL specified
+\STATE Return to PMPL src directory and try to compile after you have set parallel=1 flag and appropriate STL LIB. 
+       This can be done in src/Makefile
+\STATE NOTE: If you are developing for initial testing, then use any of Parasol Lab quad-core 64-bits machines 
+       (i.e. columbo, agate, newdelhi etc)
+\STATE NOTE: You can load appropriate gcc compiler, OpenMPI library, BOOST library etc by using the module system
+       available on many parallel machines. Do module avail to check available module and then module load xxxxx
+       where xxxxx is module of interest (i.e. module load openmpi-x86_64 )
+\end{algorithmic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% EXECUTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{EXECUTION}
+Having successfully compiled the code, the next step is to run:
+\begin{algorithmic}[1]
+\STATE cd to the TestRigid directory ( for now, support for other motion planning probelm/environments are on the way
+\STATE The test file in TestRigid dir is ParallelPMPLExamples.xml, this will file will be merged with PMPLExamples.xml soon
+\STATE The command to run is mpirun -np p ../pmpl -f ParallelPMPLExamples.xml where p is the number of processors
+\STATE NOTE: Provided you compile in debug mode, totalview is a great debugger for parallel code, detail on how
+to use this will be provided in developer's guide.
+\end{algorithmic}
+
+\end{document}
