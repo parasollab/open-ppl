@@ -194,7 +194,6 @@ class RegionConnector
     vector<VID> sCand;
     sCand.resize(m_k);
     //TO DO: rewrite copy to optimize space complexity
-    PrintValue("source size", sVids.size());
     copy(sVids.begin(), sVids.begin() + std::min(static_cast<int>(sVids.size()), m_k), sCand.begin());
     typedef typename regionView::adj_edges_type ADJV;
     ADJV  edges = _view.edges();
@@ -202,7 +201,6 @@ class RegionConnector
       Region tBBI = (*(m_g->find_vertex((*ei).target()))).property();
       vector<VID> tVids = tBBI.RegionVIDs();
       random_shuffle(tVids.begin(), tVids.end());
-      PrintValue("target size", tVids.size());
       vector<VID> tCand;
       tCand.resize(m_k);
       copy(tVids.begin(), tVids.begin() + std::min(static_cast<int>(tVids.size()), m_k), tCand.begin());
