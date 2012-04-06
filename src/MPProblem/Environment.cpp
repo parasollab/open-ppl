@@ -273,8 +273,10 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   if ( ori_res != -1.0 ) orientationRes = ori_res;
   else                   orientationRes = 0.05;
   
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   //make sure to calculate the rdRes based upon the DOF of the robot
   rd_res = num_joints * rd_res;
+#endif
   
   minmax_BodyAxisRange = bodies_min_span;
  
@@ -337,7 +339,9 @@ PrintOptions(ostream& out_os) {
   out_os << "  Environment" << endl;
   out_os << "    positionRes = " << positionRes << "; orientationRes = " << orientationRes << endl;
   out_os << "    positionResFactor = " << positionResFactor << "; orientationResFactor = " << orientationResFactor << endl;
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   out_os << "    rd_res= " << rd_res << "; rd_res=" <<rd_res << endl;
+#endif
   out_os << "    bbox = ";
   boundaries->Print(out_os);
   out_os << endl;
