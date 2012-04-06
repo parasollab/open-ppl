@@ -171,7 +171,8 @@ void MARRTStrategy::Run(int _regionID) {
 
     newCfg = nearest;
     CDInfo dummyCD;
-    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, newCfg, dir, newCfg, m_delta, dummyCD)) {
+    int weight;
+    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, newCfg, dir, newCfg, m_delta, weight, dummyCD)) {
       if(m_debug) cout << "RRT could not expand!" << endl;  
       continue;
     }

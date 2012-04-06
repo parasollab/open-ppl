@@ -151,8 +151,9 @@ void BasicRRTStrategy::Run(int _regionID) {
   }
 }
 
-void BasicRRTStrategy::Finalize(int _regionID) {
 
+void BasicRRTStrategy::Finalize(int _regionID) {
+ 
   if(m_debug) cout<<"\nFinalizing BasicRRTStrategy::"<<_regionID<<endl;
 
   //setup region variables
@@ -214,8 +215,9 @@ BasicRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
   CfgType nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
   CfgType newCfg;
+  int weight;
 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, nearest, _dir, newCfg, m_delta, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, nearest, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
     return recentVID;
   }
@@ -223,8 +225,9 @@ BasicRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   if(dm->Distance(env, newCfg, nearest) >= m_minDist) {
     recentVID = region->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
     //TODO fix weight
-    pair<WeightType, WeightType> weights = make_pair(WeightType(), WeightType());
+    pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
     region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
+    region->GetRoadmap()->m_pRoadmap->find_vertex(recentVID)->property().SetStat("Parent", kClosest[0]);
   } 
   return recentVID;
 }
@@ -263,7 +266,8 @@ BasicRRTStrategy::ConnectTrees(int _regionID, VID _recentlyGrown) {
     cmap.reset();
     vector<VID> closest;
     nf->KClosest(nf->GetNFMethod(m_nf), rdmp, cc.begin(), cc.end(), _recentlyGrown, 1, back_inserter(closest));
-    closestNodesOtherCCs.push_back(closest[0]);
+    if (closest.size() != 0) 
+      closestNodesOtherCCs.push_back(closest[0]);
   }
 
   //find closest VID from other CCS reps

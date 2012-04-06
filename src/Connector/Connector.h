@@ -15,6 +15,7 @@
 #include "NeighborhoodConnection.h"
 #include "PreferentialAttachment.h"
 #include "OptimalConnection.h"
+#include "OptimalRewire.h"
 //#include "ClosestVE.h"
 //#include "RRTcomponents.h"
 //#include "RayTracer.h"
@@ -27,7 +28,8 @@ namespace pmpl_detail { //hide NeighborhoodFinde_rmethodList in pmpl_detail name
   typedef boost::mpl::list< NeighborhoodConnection<CfgType,WeightType>, 
           ConnectCCs<CfgType,WeightType>,
           PreferentialAttachment<CfgType,WeightType>,
-          OptimalConnection<CfgType,WeightType>
+          OptimalConnection<CfgType,WeightType>,
+          OptimalRewire<CfgType,WeightType>
             //ClosestVE<CfgType,WeightType>
             > ConnectorMethodList;
 }
@@ -202,6 +204,10 @@ void Connector<CFG,WEIGHT>::Connect(ConnectionPointer _selected,
   }
   else if(name == "OptimalConnection"){
     dynamic_cast<OptimalConnection<CFG,WEIGHT>* >(_selected.get())->
+      Connect(_rm, _stats, _itr1First, _itr1Last, _itr2First, _itr2Last, _collision);
+  }
+  else if(name == "OptimalRewire"){
+    dynamic_cast<OptimalRewire<CFG,WEIGHT>* >(_selected.get())->
       Connect(_rm, _stats, _itr1First, _itr1Last, _itr2First, _itr2Last, _collision);
   }
 }

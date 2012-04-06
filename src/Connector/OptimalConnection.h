@@ -17,6 +17,7 @@ class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
     typedef typename vector<typename RoadmapGraph<CFG,WEIGHT>::VID>::iterator VIDIT;
     virtual void PrintOptions(ostream& _os); 
     virtual void ParseXML(XMLNodeReader& _node);
+    bool CheckEdge(VID _vid1, VID _vid2, Roadmap<CFG, WEIGHT>* _rm);
 
     // Connection Methods
     void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats);
@@ -43,7 +44,7 @@ class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
       void FindNeighbors( Roadmap<CFG, WEIGHT>* _rm, CFG _cfg, 
           InputIterator _iter2First, InputIterator _iter2Last, 
           OutputIterator _closestIterator);
-  private:
+  protected:
     bool m_radius; /* will determine which type of NF to use. In case is true, 
                       a radius based NF will be used to find the neighbors */
 };
@@ -142,8 +143,8 @@ OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _s
     }
     vector<VID> closest;
     back_insert_iterator< vector<VID> > iterBegin(closest);
-    FindNeighbors(_rm, cfg, _iter2First, _iter2Last, iterBegin);
-    ConnectNeighbors(_rm, _stats, *iter1, closest, _collision);
+    FindNeighbors(_rm, cfg, _iter2First, _iter2Last, iterBegin); 
+    this->ConnectNeighbors(_rm, _stats, *iter1, closest, _collision);
   }
   #else 
   stapl_assert(false,"Optimal Connection using const VIT");
@@ -159,36 +160,13 @@ OptimalConnection<CFG,WEIGHT>::ConnectNeighbors ( Roadmap<CFG, WEIGHT>* _rm, Sta
     vector<VID>& _closest, 
     OutputIterator _collision) {
 
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
   LPOutput <CFG, WEIGHT> lpOutput;
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
 
   for (VIDIT iter2 = _closest.begin(); iter2 != _closest.end(); ++iter2) {
     // Stopping Conditions
-    if (*iter2 == INVALID_VID) { 
-      if (this->m_debug) {
-        cout << "Skipping... Invalid node" << endl;
-      }
+    if ( !CheckEdge(_vid, *iter2, _rm) )
       continue;
-    }
-    if (_vid == *iter2) {
-      if (this->m_debug) {
-        cout << "Skipping... Same nodes" << endl;
-      }
-      continue;  // don't attempt between the same node
-    }
-    if (_rm->IsCached(_vid, *iter2)) {
-      if ( !_rm->GetCache(_vid, *iter2) )
-        if (this->m_debug) {
-          cout << "Skipping... Already attempted connection" << endl;
-        }
-      continue;  // don't attempt if already exists
-    }
-    if ( _rm->m_pRoadmap->IsEdge(_vid, *iter2) ) {
-      if (this->m_debug) {
-        cout << "Skipping... Edge already exists" << endl;
-      }
-      continue;
-    }
     CfgType col;
 
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
@@ -249,4 +227,28 @@ OptimalConnection<CFG, WEIGHT>::FindNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG _cf
   }
 }
 
+
+template <class CFG, class WEIGHT>
+bool
+OptimalConnection<CFG, WEIGHT>::CheckEdge(VID _vid1, VID _vid2, Roadmap<CFG, WEIGHT>* _rm) {
+    
+    if (_vid2 == INVALID_VID) { 
+      if (this->m_debug) cout << "Skipping... Invalid node" << endl;
+      return false;
+    }
+    if (_vid1 == _vid2) {
+      if (this->m_debug) cout << "Skipping... Same nodes" << endl;
+      return false;  // don't attempt between the same node
+    }
+    if (_rm->IsCached(_vid1, _vid2)) {
+      if ( !_rm->GetCache(_vid1, _vid2) )
+        if (this->m_debug) cout << "Skipping... Already attempted connection" << endl;
+      return false;  // don't attempt if already exists
+    }
+    if ( _rm->m_pRoadmap->IsEdge(_vid1, _vid2) ) {
+      if (this->m_debug) cout << "Skipping... Edge already exists" << endl;
+      return false;
+    }
+    return true;
+}
 #endif

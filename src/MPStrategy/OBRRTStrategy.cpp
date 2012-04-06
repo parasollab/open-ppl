@@ -167,8 +167,8 @@ CfgType OBRRTStrategy::g0(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   CDInfo  cdInfo;
   CfgType newCfg;
-
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, cdInfo)) {
+  int weight;
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -189,8 +189,8 @@ CfgType OBRRTStrategy::g1(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   for(int i = _dir.PosDOF(); i < _dir.DOF(); i++){
     _dir.SetSingleParam(i, _near.GetData()[i]);
   }
-
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, cdInfo)) {
+  int weight;
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -234,8 +234,8 @@ CfgType OBRRTStrategy::g2(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     for(int i = 0; i < _dir.PosDOF(); i++){
       _dir.SetSingleParam(i, _near.GetSingleParam(i) + OV[i]);
     }
-
-    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, cdInfo)) {
+    int weight;
+    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else {
@@ -283,8 +283,8 @@ CfgType OBRRTStrategy::g3(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     for(int i = _dir.PosDOF(); i < _dir.DOF(); i++){
       _dir.SetSingleParam(i, _near.GetSingleParam(i) );
     }
-
-    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, cdInfo)) {
+    int weight;
+    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else {
@@ -308,9 +308,9 @@ CfgType OBRRTStrategy::g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   for(int i = 0; i < _dir.PosDOF(); i++){
     _dir.SetSingleParam(i, _near.GetSingleParam(i) );
   }
-
+  int weight;
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg1, m_delta, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -322,7 +322,7 @@ CfgType OBRRTStrategy::g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     for(int i = 0; i < newDir.PosDOF(); i++){
       newDir.SetSingleParam(i, dirOrig.GetSingleParam(i) );
     }
-    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, newNear, newDir, newCfg2, m_delta, cdInfo)) {
+    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, newNear, newDir, newCfg2, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else return newCfg2;
@@ -341,9 +341,9 @@ CfgType OBRRTStrategy::g5(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   CfgType newCfg1, newCfg2;
   CfgType dirOrig = _dir;
 
-
+  int weight;
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg1, m_delta, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
@@ -393,7 +393,7 @@ CfgType OBRRTStrategy::g5(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   }
 
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg1, m_delta, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -419,14 +419,14 @@ CfgType OBRRTStrategy::g7(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   dir2.GetRandomCfg( vscale, 1.0 );
   //dir2.GetRandomCfg( env );
 
-
+  int weight;
   // expand to c1  
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, dir1, newCfg1, m_delta, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, dir1, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
   // expand to c2 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, dir2, newCfg2, m_delta, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, dir2, newCfg2, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
@@ -442,7 +442,7 @@ CfgType OBRRTStrategy::g7(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   dm->ScaleCfg(env, vscale, _near, _dir, true);
 
   // final expand
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg3, m_delta, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg3, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -473,7 +473,8 @@ CfgType OBRRTStrategy::g8(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     return newCfg;// CfgType(); //Error out   
   }
   else{ //pushed to medial axis, now check RRTexpand
-    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, newCfg, newCfg2, m_delta, cdInfo)) {
+    int weight;
+    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, newCfg, newCfg2, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else {

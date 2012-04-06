@@ -159,7 +159,7 @@ boost::shared_ptr<LocalPlannerMethod<CfgType, WeightType> > GetLPMethod(MPProble
   obsDist -> Distance away from object the new node neads to at least be
  */
 
-bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta, CDInfo& _cdInfo){
+bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta, int& _weight, CDInfo& _cdInfo){
   //Setup...primarily for collision checks that occur later on
   MPRegion<CfgType,WeightType>*      region = _mp->GetMPRegion(_regionID);
   StatClass*                        regionStats = region->GetStatClass();
@@ -176,6 +176,7 @@ bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _
   int nTicks, ticker = 0;
 
   incr.FindIncrement(tick,_dir,&nTicks,positionRes,orientationRes);
+  _weight = nTicks;
 
   //Move out from start towards dir, bounded by number of ticks allowed at a given resolution.  Delta + obsDist are
   //given to the function, and are user defined.
