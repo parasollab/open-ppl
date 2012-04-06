@@ -215,7 +215,7 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
 
   double pos_res = -1.0, ori_res=-1.0l;
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  rd_res=.15;
+  rd_res = 0.005;
 #endif
   ///\todo fix hack.  This hack gets env_filename from environment xml tag
   //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
@@ -226,9 +226,10 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   //FindBoundingBox();
 
   XMLNodeReader::childiterator citr;
+  int num_joints;
   for ( citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr ) {
     if ( citr->getName() == "robot") {
-      int num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
+      num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
       in_pProblem->SetNumOfJoints(num_joints);
 
       XMLNodeReader::childiterator citr2;
@@ -244,8 +245,7 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
       pos_res = citr->numberXMLParameter("pos_res", false, -1.0, -1.0, MAX_DBL, "position resolution");
       ori_res = citr->numberXMLParameter("ori_res", false, -1.0, -1.0, MAX_DBL, "orientation resolution");
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-      rd_res = citr->numberXMLParameter("rd_res", false, .05, .001, MAX_DBL, "reachable distance resolution");
-      cout<<"rd_res = "<<rd_res<<endl;
+      rd_res = citr->numberXMLParameter("rd_res", false, .005, .00001, MAX_DBL, "reachable distance resolution");
 #endif
       positionResFactor    = citr->numberXMLParameter("pos_res_factor", false, 0.05, 0.0, MAX_DBL, "position resolution factor");
       orientationResFactor = citr->numberXMLParameter("ori_res_factor", false, 0.05, 0.0, MAX_DBL, "orientation resolution factor");
@@ -256,29 +256,30 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
  
   // Compute RESOLUTION
   // NOTE: orientationResFactor is valid input, but not used.
-
   multibody[robotIndex]->FindBoundingBox();
   double robot_span = multibody[robotIndex]->GetMaxAxisRange();
   double bodies_min_span = robot_span;
-    
   for(size_t i = 0 ; i < multibody.size() ; i++){
     if((int)i != robotIndex){
       multibody[i]->FindBoundingBox();
       bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
     }
   }
-
+ 
   // Set to XML input resolution if specified, else compute resolution factor
   if ( pos_res != -1.0 ) positionRes = pos_res;
   else                   positionRes = bodies_min_span * positionResFactor;
 
   if ( ori_res != -1.0 ) orientationRes = ori_res;
-
+  else                   orientationRes = 0.05;
+  
+  //make sure to calculate the rdRes based upon the DOF of the robot
+  rd_res = num_joints * rd_res;
+  
   minmax_BodyAxisRange = bodies_min_span;
  
   // END Compute RESOLUTION
- 
-  cout << "Position Resolution = " << positionRes << endl;
+  PrintOptions(cout);
     
   SelectUsableMultibodies();
 }
@@ -336,6 +337,7 @@ PrintOptions(ostream& out_os) {
   out_os << "  Environment" << endl;
   out_os << "    positionRes = " << positionRes << "; orientationRes = " << orientationRes << endl;
   out_os << "    positionResFactor = " << positionResFactor << "; orientationResFactor = " << orientationResFactor << endl;
+  out_os << "    rd_res= " << rd_res << "; rd_res=" <<rd_res << endl;
   out_os << "    bbox = ";
   boundaries->Print(out_os);
   out_os << endl;
