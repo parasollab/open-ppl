@@ -62,7 +62,7 @@ OptimalRewire<CFG, WEIGHT>::GetShortestPath(VID _root, VID _vid, Roadmap<CFG, WE
   double totalWeight = 0;
 
   if (shortest.size() > 0) {
-    for (int i = 0; i < shortest.size() - 1; i++) { 
+    for (size_t i = 0; i < shortest.size() - 1; i++) { 
       totalWeight += GetDistance(shortest[i], shortest[i+1], _rm);
     }
   }
@@ -121,7 +121,7 @@ OptimalRewire<CFG,WEIGHT>::ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClas
   VID vmin = parent;    // initialize min to current vid
 
   double currentMin = GetShortestPath(root, _vid, _rm);
-  for (int i = 0; i < _closest.size(); i++) {
+  for (size_t i = 0; i < _closest.size(); i++) {
     VID neighbor = _closest[i];
     CFG col;
     double neighborCost = GetShortestPath(root, neighbor, _rm);
@@ -154,7 +154,7 @@ OptimalRewire<CFG,WEIGHT>::ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClas
   if (this->m_debug) cout << "Connected to Optimal Neighbor" << endl;
 
   double vidCost = GetShortestPath(root, _vid, _rm);
-  for (int i = 0; i < _closest.size(); i++) {
+  for (size_t i = 0; i < _closest.size(); i++) {
     VID neighbor = _closest[i];
     CFG col;
     double neighborCost = GetShortestPath(root, neighbor, _rm);
