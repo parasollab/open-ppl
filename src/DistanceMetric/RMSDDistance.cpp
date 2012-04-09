@@ -110,7 +110,7 @@ double RMSDDistance::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim) {
     return 0;
 
   // since E = 1/2 * sum_of[(Uxn - yn)^2], so rmsd is:
-  double rmsd = sqrt(e*2/_dim);
+  double rmsd = sqrt(ee*2/_dim);
 
   return rmsd;
 }
