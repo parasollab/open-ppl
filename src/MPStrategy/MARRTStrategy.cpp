@@ -48,6 +48,7 @@ void MARRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_exact = _node.boolXMLParameter("exact", false, "", "Exact Medial Axis Calculation");
   m_rayCount = _node.numberXMLParameter("rays", false, 20, 0, 50, "Number of Clearance Rays");
   m_penetration = _node.numberXMLParameter("penetration", false, 5, 0, 50, "Pentration");
+  m_eps = _node.numberXMLParameter("MAepsilon", false, 0.01, 0.0, 1.0, "Medial Axis Push Epsilon");
   m_useBbx = _node.boolXMLParameter("useBBX", true, "", "Use Bounding Box");
   m_hLen = _node.numberXMLParameter("hLen", false, 5, 0, 20, "History Length");
   m_positional = _node.boolXMLParameter("positional", true, "", "Use Position in MA Calculations");
@@ -191,7 +192,7 @@ void MARRTStrategy::Run(int _regionID) {
     CfgType tempCfg = newCfg;
     VDAddTempCfg(tempCfg, true);
     StatClass stats; 
-    if (!PushToMedialAxis(GetMPProblem(), env, newCfg, stats, m_vc, m_dm, m_exact, m_rayCount, m_exact, m_penetration, m_useBbx, .0001, m_hLen, m_debug, m_positional)){
+    if (!PushToMedialAxis(GetMPProblem(), env, newCfg, stats, m_vc, m_dm, m_exact, m_rayCount, m_exact, m_penetration, m_useBbx, m_eps, m_hLen, m_debug, m_positional)){
       continue;
     }
     VDAddTempCfg(newCfg, true);

@@ -48,6 +48,7 @@ class MARRTStrategy : public MPStrategyMethod {
     bool m_exact;
     int m_rayCount;
     int m_penetration;
+    double m_eps;
     bool m_useBbx;
     int m_hLen;
     bool m_positional;
