@@ -32,6 +32,12 @@ double RMSDDistance::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim) {
     cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors" << endl;
     exit(101);
   }
+  
+  //rmsd = sqrt( sum_of[(U*xn - yn)^2]/N )
+  //where U is the rotation that minimizes rmsd
+  //reference: B.Kabsch '78. Acta Cryst. (1978) A34 page 827-828
+
+  //first step, remove any translation between x and y.
   int n;
   Vector3D sumx(0,0,0), sumy(0,0,0);
   for(n=0; n<_dim; ++n) {
@@ -43,7 +49,7 @@ double RMSDDistance::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim) {
     _y[n] = _y[n] - sumy/_dim;
   }
 
-  // now calc. E0 = 1/2*sum_of[xn^2 + yn^2]
+  // now calc. e0 = 1/2*sum_of[xn^2 + yn^2]
   double e0 = 0.0;
   double r[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
   for(n=0; n<_dim; ++n) {
@@ -54,11 +60,12 @@ double RMSDDistance::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim) {
     }
   }
   e0 /= 2;
-  //let matrix R~*R = { a[0]   d    e
+
+  //let matrix r~*r = { a[0]   d    e
   //                     d    a[1]  f
   //                     e     f    a[2] };
   //Now, decide this parameters.
-  //using a matrix here would be clearer, simply S = r.transpose()*R;
+  //using a matrix here would be clearer, simply s = r.transpose()*R;
   Vector3D col[3];
   double a[3], d, e, f;
   double detR; // determinant of r, we need its sign later.
@@ -92,7 +99,7 @@ double RMSDDistance::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim) {
   double z1, z2, z3;
   if(q == 0) { // which means three identical roots,
     z1 = z2 = z3 = -a2/3;
-  } else { // Q < 0
+  } else { // q < 0
     double rootmq = sqrt(-q);
     double ceta = acos(-rr/q/rootmq);
     double cc3 = cos(ceta/3);      // = cos(ceta/3)
@@ -109,7 +116,7 @@ double RMSDDistance::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim) {
   if(ee<0) // small numercal error
     return 0;
 
-  // since E = 1/2 * sum_of[(Uxn - yn)^2], so rmsd is:
+  // since ee = 1/2 * sum_of[(Uxn - yn)^2], so rmsd is:
   double rmsd = sqrt(ee*2/_dim);
 
   return rmsd;
