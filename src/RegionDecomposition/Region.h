@@ -32,9 +32,9 @@ class Region {
   
   std::vector<RVID> GetCCVIDs() const; //returns all the vids from all the CCs of the region
 
-  std::vector<pair<size_t, RVID> > GetCCs() const; //returns the vector of pair (size of cc, vid of cc representative)
+  std::vector<pair<RVID, size_t> > GetCCs() const; //returns the vector of pair (vid of cc representative, size of cc)
   
-  void SetCCs(std::vector<pair<size_t, RVID> > _ccs);
+  void SetCCs(std::vector<pair<RVID, size_t> > _ccs);
   
   std::vector<RVID> RegionVIDs() const;
   
@@ -47,7 +47,7 @@ class Region {
   protected:
      
   shared_ptr<BoundingBox> m_bb;
-  vector<pair<size_t, RVID> > m_ccs;//vector of pair (cc size, vid of cc representative)
+  vector<pair<RVID, size_t> > m_ccs;//vector of pair (cc size, vid of cc representative)
   vector<RVID> m_vids;
   
  public:
@@ -80,7 +80,8 @@ public:
   size_t RegionWeight() const{ return Accessor::const_invoke(&target_t::RegionWeight);}
   shared_ptr<BoundingBox> GetBoundingBox() const { return Accessor::const_invoke(&target_t::GetBoundingBox);}
   void SetVIDs(std::vector<RVID> &_ids) { Accessor::invoke(&target_t::SetVIDs, _ids); }
-  void SetCCs(std::vector<pair<size_t, RVID> > _ccs) { Accessor::invoke(&target_t::SetCCs, _ccs); }
+  void SetCCs(std::vector<pair<RVID, size_t> > _ccs) { Accessor::invoke(&target_t::SetCCs, _ccs); }
+   vector<pair<RVID, size_t> > GetCCs() const{ return Accessor::const_invoke(&target_t::GetCCs);}
 }; //struct proxy
 }
 #endif

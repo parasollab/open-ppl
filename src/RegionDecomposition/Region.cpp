@@ -29,7 +29,7 @@ Region::GetBoundingBox() const{
   return m_bb;
 }
 
-std::vector<pair<size_t, RVID>  > Region::GetCCs() const{
+std::vector<pair<RVID, size_t>  > Region::GetCCs() const{
   return m_ccs;
 }
 
@@ -83,9 +83,10 @@ ostream& operator<< (ostream& _s, const Region& _r) {
 
 
 void
-Region::SetCCs(std::vector<pair<size_t, RVID> > _ccs){
+Region::SetCCs(std::vector<pair<RVID, size_t> > _ccs){
   m_ccs=_ccs;
 }
+
 
 void
 Region::

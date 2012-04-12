@@ -104,7 +104,6 @@ class NodeGenerator
       m_sp->Sample(env, boundary, *(m_region->GetStatClass()),m_attempts,10, 
 	         back_inserter(outNodes),back_inserter(colNodes));
     
-    
       typedef vector<CfgType>::iterator VIT;
       for(VIT vit = outNodes.begin(); vit  != outNodes.end(); ++vit) {
         CfgType tmp = *vit;
@@ -163,6 +162,19 @@ class NodeConnector
 };
 
 
+struct SetRegionCC{
+  template <typename RGView, typename CCView>
+  void operator()(RGView _v1, CCView _v2) {
+     std::vector<pair<VID,size_t> > ccVec;
+     for(typename CCView::iterator ccit = _v2.begin(); ccit != _v2.end(); ++ccit){
+       ccVec.push_back(*ccit);
+     }
+    _v1.property().SetCCs(ccVec);
+ }
+};
+
+
+template<typename RGType, typename RType>
 class RegionConnector 
 {
   private:
@@ -170,14 +182,15 @@ class RegionConnector
   typedef NC::ConnectionPointer NCP;
   typedef MPRegion<CfgType,WeightType>  MPR;
   
-  NC* m_nc;
+  
   MPR* m_region;
+  NC* m_nc;
   int m_k;
-  RRGraph* m_g;
+  RGType* m_g;
  
   public:
 
-  RegionConnector(MPR* _mpr, RRGraph* _g, NC* _nc, int _k) :m_region(_mpr),m_nc(_nc),m_k(_k),m_g(_g){ }
+  RegionConnector(MPR* _mpr, RGType* _g, NC* _nc, int _k) :m_region(_mpr),m_nc(_nc),m_k(_k),m_g(_g){ }
   
   
   void define_type(stapl::typer &_t)  
@@ -190,6 +203,7 @@ class RegionConnector
   {
     NCP ncp = m_nc->GetMethod("Closest");
     vector<VID> sVids = _view.property().RegionVIDs();
+    //PrintValue("Region Connector - sVid size: ", sVids.size());
     random_shuffle(sVids.begin(), sVids.end());
     vector<VID> sCand;
     sCand.resize(m_k);
@@ -198,8 +212,9 @@ class RegionConnector
     typedef typename regionView::adj_edges_type ADJV;
     ADJV  edges = _view.edges();
     for(typename regionView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
-      Region tBBI = (*(m_g->find_vertex((*ei).target()))).property();
+      RType tBBI = (*(m_g->find_vertex((*ei).target()))).property();
       vector<VID> tVids = tBBI.RegionVIDs();
+      //PrintValue("Region Connector - tVid size: ", tVids.size());
       random_shuffle(tVids.begin(), tVids.end());
       vector<VID> tCand;
       tCand.resize(m_k);

@@ -8,6 +8,53 @@ using namespace std;
 using namespace stapl;
 using namespace psbmp;
 
+/**
+ * Custom vertex property that implements coloring should extend Cfg class 
+   for internal coloring
+ */
+ struct cc_color_property {
+  size_t color, cc;
+  cc_color_property() : color(0), cc(0) { }
+  cc_color_property(size_t c, size_t q) : color(c), cc(q) { }
+  void set_color(size_t c) { color = c; }
+  void set_cc(size_t c) { cc = c; }
+  size_t get_color() const { return color; }
+  size_t get_cc() const { return cc; }
+  void define_type(typer& t) { t.member(cc); t.member(color); }
+};
+
+namespace stapl {
+template <typename Accessor>
+class proxy<cc_color_property, Accessor> 
+  : public Accessor
+{ 
+private:
+  friend class proxy_core_access;
+  typedef cc_color_property   target_t;
+
+public:
+  explicit proxy(Accessor const& acc) 
+    : Accessor(acc) { }
+
+  operator target_t() const { return Accessor::read(); }
+
+  proxy const& operator=(proxy const& rhs) { 
+    Accessor::write(rhs);
+    return *this;
+  }
+
+  proxy const& operator=(target_t const& rhs) { 
+    Accessor::write(rhs); 
+    return *this; 
+  }
+
+  void set_color(size_t _c) { Accessor::invoke(&target_t::set_color, _c); }
+  size_t get_color() const { return Accessor::const_invoke(&target_t::get_color); }
+  void set_cc(size_t _c) { Accessor::invoke(&target_t::set_cc, _c); }
+  size_t get_cc() const { return Accessor::const_invoke(&target_t::get_cc); }
+};
+};
+
 
 RegularSubdivisionMethod::RegularSubdivisionMethod(XMLNodeReader& _node, MPProblem* _problem) : MPStrategyMethod(_node, _problem) {
   ////PMPLPrintString("RegularSubdivisionMethod::(XMLNodeReader,MPProblem)");
@@ -97,7 +144,6 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   Environment * env = GetMPProblem()->GetEnvironment();
   RoadmapGraph<CfgType,WeightType> * rmg = m_region->GetRoadmap()->m_pRoadmap; 
   BasicDecomposition* decomposer = new BasicDecomposition();
-  //WorkspaceDecomposition* decomposer = new WorkspaceDecomposition();
   shared_ptr<DistanceMetricMethod> dmm = GetMPProblem()->GetDistanceMetric()->GetMethod("scaledEuclidean");
   shared_ptr<ValidityCheckerMethod> vcm = GetMPProblem()->GetValidityChecker()->GetVCMethod("cd1");
   Connector<CfgType, WeightType>* nc = GetMPProblem()->GetMPStrategy()->GetConnector();
@@ -132,17 +178,18 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   
   viewBbox arrView(pArrayBbox);
   
-  
-  
+  int num_samples;
   typedef vector<pair<string, int> >::iterator I;
    
   ////GENERATE NODES IN REGIONS
   for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr){
     Sampler<CfgType>::SamplerPointer sp = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(itr->first);
     NodeGenerator nodeGen(m_region,env,sp,vcm,itr->second);
+    num_samples = itr->second;
     map_func(nodeGen,arrView,regionView);
   }
   rmi_fence();
+  
   
   
   ///REDISTRIBUTE/MIGRATE - based on RegionVIDs and RegionWeight() 
@@ -154,14 +201,46 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   rmi_fence();
   
   ///DEBUG
+  PrintOnce("RUN::# of regions ", regularRegion.num_vertices());
+  PrintOnce("RUN::# of region edges: ", regularRegion.num_edges());
   PrintOnce("RUN::roadmap graph size ", rmg->num_vertices());
   PrintOnce("RUN::roadmap graph edges before: ", rmg->num_edges());
   rmi_fence();
+  
+  /// COMPUTE CCs AND SET REGION CCs
+  typedef graph_view<RoadmapGraph<CfgType,WeightType> >  view_type;
+  view_type rmView(*rmg);
+  rmi_fence();
+  typedef static_array<cc_color_property>           property_storage_type;
+  typedef graph_external_property_map<view_type,
+                                      cc_color_property,
+                                      property_storage_type> property_map_type;
+				      
+  ///TODO: proper fix by making cc_color_property derived from cfg class
+  /// and then use internal_property_map
+  property_storage_type prop_storage(2*num_samples*mesh_size);
+  property_map_type     map(rmView, &prop_storage);
+  
+  
+  connected_components(rmView, map);
+  rmi_fence();
+  
+  
+  std::vector<pair<VID,size_t> > ccVec1 = cc_stats(rmView,map);
+  rmi_fence();
+  
+  PrintOnce("cc count before region con:", ccVec1.size());
+  rmi_fence();
+ 
+  array_view<std::vector<pair<VID,size_t> > > ccView1(ccVec1);
+  map_func(SetRegionCC(), regionView, balance_view(ccView1,regionView.size()));
+  rmi_fence();
+  
    
   
   ///CONNECT REGIONS ROADMAP
  // edge_set_view<RRGraph> regionEdgeView(*regularRegion); // edge set view not available in new container
-  RegionConnector regionCon(m_region,&regularRegion, nc,m_k1);
+  RegionConnector<RRGraph,Region> regionCon(m_region,&regularRegion, nc,m_k1);
   new_algorithms::for_each(regionView,regionCon);
   rmi_fence();
   
@@ -169,6 +248,15 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   PrintOnce("RUN::roadmap graph edges after: ", rmg->num_edges());
   rmi_fence();
   
+  map.reset();
+  connected_components(rmView, map);
+  rmi_fence();
+  std::vector<pair<VID,size_t> > ccVec2 = cc_stats(rmView,map);
+  rmi_fence();
+  
+  PrintOnce("cc count after region con: ", ccVec2.size());
+  rmi_fence();
+   
   ///WRITE REGION GRAPH :: DEBUG
   write_graph(regionView,"rgFile.out");
   rmi_fence();
