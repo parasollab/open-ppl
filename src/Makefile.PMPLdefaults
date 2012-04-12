@@ -56,7 +56,7 @@ ifeq (${platform}, LINUX_gcc_brazos) 	#linux/gcc on brazos(brazos.tamu.edu)
 	UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} #${SOLID_LIB}
 	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 	#use same boost as used in STAPL
-        BOOST_ROOT = /home/ipapadop/usr
+        BOOST_ROOT = /home/ipapadop/usr/boost_1_48
         BOOST_INCL = -I$(BOOST_ROOT)/include
         Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
 	BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
