@@ -25,7 +25,7 @@
  *@see RoadmapGraph::AddEdge and LocalPlanners::IsConnected
  */
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
   public:
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
@@ -53,31 +53,32 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
     //
 
     // operates over all nodes in a roadmap
-    void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats);
+    template <typename ColorMap>
+    void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap);
 
-    template<typename OutputIterator>
-      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+    template<typename OutputIterator, typename ColorMap>
+      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
           OutputIterator _collision);
 
-    template<typename InputIterator, typename OutputIterator>
-      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+    template<typename InputIterator, typename OutputIterator, typename ColorMap>
+      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
           InputIterator _itr1First, InputIterator _itr1Last, 
           OutputIterator _collision);
 
 
-    template<typename InputIterator, typename OutputIterator>
+    template<typename InputIterator, typename OutputIterator, typename ColorMap>
       void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+          ColorMap& cmap,
           InputIterator _itr1First, InputIterator _itr1Last,
           InputIterator _itr2First, InputIterator _itr2Last, 
           OutputIterator _collision); 
 
-    template<typename InputIterator, typename OutputIterator>
-      void ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+  protected:
+    template<typename InputIterator, typename OutputIterator, typename ColorMap>
+      void ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
           VID _vid, 
           InputIterator _closestFirst, InputIterator _closestLast,
           OutputIterator _collision);
-
-  private:
 
     //////////////////////
     // Probability function
@@ -102,7 +103,7 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
 };
 
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment():ConnectionMethod<CFG,WEIGHT>() { 
   this->SetName("PreferentialAttachment"); 
   m_k = KCLOSEST;
@@ -110,7 +111,7 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment():ConnectionMethod<CF
   m_checkIfSameCC = true;
 }
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNodeReader& _node, MPProblem* _problem) : 
   ConnectionMethod<CFG,WEIGHT>(_node, _problem) { 
     this->SetName("PreferentialAttachment"); 
@@ -122,7 +123,7 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNodeReader& _node,
 
 //this is backward support for function call from other class
 //to be cleaned
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k) : 
   ConnectionMethod<CFG,WEIGHT>() { 
     this->SetName("PreferentialAttachment"); 
@@ -133,7 +134,7 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k) :
     m_debug = false;
   }
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k, int _m) : 
   ConnectionMethod<CFG,WEIGHT>() { 
     this->SetName("PreferentialAttachment"); 
@@ -145,11 +146,11 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k, int _m) :
   }
 
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::~PreferentialAttachment() { 
 }
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node) { 
   m_checkIfSameCC = _node.boolXMLParameter("CheckIfSameCC",false,true,"If true, do not connect if edges are in the same CC");
   m_k = _node.numberXMLParameter("k", true, 0, 0, 10000, "k-value (max neighbors to find). k = 0 --> all-pairs");
@@ -170,7 +171,7 @@ void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node) {
 
 }
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 void
 PreferentialAttachment<CFG, WEIGHT>::
 PrintOptions(ostream& _os){
@@ -185,15 +186,16 @@ PrintOptions(ostream& _os){
 //    the special case where we want to perform connections over all nodes
 //    in the roadmap.
 
-template <class CFG, class WEIGHT>
-void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats){
+template <typename CFG, typename WEIGHT>
+template <typename ColorMap>
+void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap){
   vector<CFG> collision;
-  Connect(_rm, _stats, back_inserter(collision));
+  Connect(_rm, _stats, cmap, back_inserter(collision));
 }
 
-template <class CFG, class WEIGHT>
-template <typename OutputIterator>
-void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+template <typename CFG, typename WEIGHT>
+template <typename OutputIterator, typename ColorMap>
+void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
     OutputIterator _collision) {
   if(m_debug) cout << "PreferentialAttachment<CFG,WEIGHT>::ConnectNodes() - Roadmap Only" << endl;
   if(m_debug) cout << "Connecting CCs with method: closest k="<< m_k << endl;
@@ -203,7 +205,7 @@ void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, Sta
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   vector<VID> vertices;
   pMap->GetVerticesVID(vertices);
-  Connect(_rm, _stats, vertices.begin(), vertices.end(), _collision);
+  Connect(_rm, _stats, cmap, vertices.begin(), vertices.end(), _collision);
 }
 
 /**
@@ -225,9 +227,9 @@ void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, Sta
  *      endfor
  * endfor
  */
-template <class CFG, class WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+template <typename CFG, typename WEIGHT>
+template<typename InputIterator, typename OutputIterator, typename ColorMap>
+void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
     InputIterator _itr1First, InputIterator _itr1Last, 
     OutputIterator _collision) {
   if(m_debug) cout << "PreferentialAttachment<CFG,WEIGHT>::ConnectNodes() - 1 pairs InputIterator" << endl;
@@ -281,9 +283,9 @@ void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, Sta
  *   attempt connection
  * }
  */
-template <class CFG, class WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+template <typename CFG, typename WEIGHT>
+template<typename InputIterator, typename OutputIterator, typename ColorMap>
+void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
     InputIterator _itr1First, InputIterator _itr1Last,
     InputIterator _itr2First, InputIterator _itr2Last, 
     OutputIterator _collision){   
@@ -292,9 +294,10 @@ void PreferentialAttachment<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, Sta
   exit(-1);
 }
 
-template <class CFG, class WEIGHT>
-template <typename InputIterator, typename OutputIterator>
-void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+template <typename CFG, typename WEIGHT>
+template <typename InputIterator, typename OutputIterator, typename ColorMap>
+void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+    ColorMap& cmap,
     VID _vid, 
     InputIterator _closestFirst, InputIterator _closestLast, 
     OutputIterator _collision){ 
@@ -343,7 +346,7 @@ void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* 
 
     if (m_checkIfSameCC) {
       // the nodes are in the same connected component
-      stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+      cmap.reset();
       if (is_same_cc(*(_rm->m_pRoadmap), cmap, _vid, *itr2)) {
         // if we're not in "unconnected" mode, count this as a success
         if (m_debug) cout << " | nodes in the same connected component";

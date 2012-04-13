@@ -117,10 +117,12 @@ Run(int in_RegionID)
         path_vids.push_back(rdmp->m_pRoadmap->GetVID(*I));
         
     vector< Connector<CfgType, WeightType>::ConnectionPointer >::iterator itr;
+    stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
+    cmap.reset();
     for (itr = methods.begin(); itr != methods.end(); itr++){
       m_SmoothConnector.Connect(
                            *itr,
-                           rdmp, *pStatClass,
+                           rdmp, *pStatClass, cmap,
                            path_vids.begin(), path_vids.end(),
                            path_vids.begin(), path_vids.end());
     }

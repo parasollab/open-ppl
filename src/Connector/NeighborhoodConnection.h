@@ -29,7 +29,7 @@
 #define KCLOSEST 5 
 #define MFAILURE 5 
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
   public:
     //////////////////////
@@ -52,29 +52,30 @@ class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
 
     //////////////////////
     // Core: Connection method
-    void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats);
+    template <typename ColorMap>
+    void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap);
 
-    template <typename OutputIterator>
-      void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+    template <typename OutputIterator, typename ColorMap>
+      void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
           OutputIterator _collision);
 
-    template<typename InputIterator, typename OutputIterator>
+    template<typename InputIterator, typename OutputIterator, typename ColorMap>
       void Connect(
-          Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+          Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
           InputIterator _itr1First, InputIterator _itr1Last,
           OutputIterator _collision) ;
 
-    template<typename InputIterator, typename OutputIterator>
+    template<typename InputIterator, typename OutputIterator, typename ColorMap>
       void Connect(
-          Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+          Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
           InputIterator _itr1First, InputIterator _itr1Last,
           InputIterator _itr2First, InputIterator _itr2Last, 
           OutputIterator _collision) ;
 
   protected:
-    template<typename InputIterator, typename OutputIterator>
+    template<typename InputIterator, typename OutputIterator, typename ColorMap>
       void ConnectNeighbors(
-          Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+          Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
           VID _vid,
           InputIterator _closestFirst, InputIterator _closestLast,
           OutputIterator _collision);
@@ -105,7 +106,7 @@ class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-  template <class CFG, class WEIGHT>
+  template <typename CFG, typename WEIGHT>
 NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(string _nf, int _k, int _m, bool _countFailures, bool _unconnected, bool _random) 
   : ConnectionMethod<CFG,WEIGHT>(), m_k(_k), m_fail(_m), 
   m_countFailures(_countFailures), m_unconnected(_unconnected), m_random(_random){
@@ -115,7 +116,7 @@ NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(string _nf, int _k, i
   }
 
 ///////////////////////////////////////////////////////////////////////////////
-  template <class CFG, class WEIGHT>
+  template <typename CFG, typename WEIGHT>
 NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(XMLNodeReader& _node, MPProblem* _problem) 
   : ConnectionMethod<CFG,WEIGHT>(_node, _problem), 
   m_k(KCLOSEST), m_fail(MFAILURE), m_countFailures(false), m_unconnected(false), m_random(false){
@@ -123,12 +124,12 @@ NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(XMLNodeReader& _node,
   }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 NeighborhoodConnection<CFG,WEIGHT>::~NeighborhoodConnection(){ 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 void NeighborhoodConnection<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
   this->SetName("NeighborhoodConnection"); 
   m_checkIfSameCC = _node.boolXMLParameter("CheckIfSameCC",false,true,"If true, do not connect if edges are in the same CC");
@@ -141,7 +142,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 void NeighborhoodConnection<CFG, WEIGHT>::PrintOptions(ostream& _os){
   ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  k = ";
@@ -153,30 +154,31 @@ void NeighborhoodConnection<CFG, WEIGHT>::PrintOptions(ostream& _os){
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats){
+template <typename CFG, typename WEIGHT>
+template <typename ColorMap>
+void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap){
   vector<CFG> collision;
-  Connect(_rm, _stats, back_inserter(collision));
+  Connect(_rm, _stats, cmap, back_inserter(collision));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-template <typename OutputIterator>
-void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+template <typename CFG, typename WEIGHT>
+template <typename OutputIterator, typename ColorMap>
+void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
     OutputIterator _collision){
   vector<VID> verts;
   _rm->m_pRoadmap->GetVerticesVID(verts);
-  Connect(_rm, _stats, verts.begin(), verts.end(), verts.begin(), verts.end(), _collision);
+  Connect(_rm, _stats, cmap, verts.begin(), verts.end(), verts.begin(), verts.end(), _collision);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-template<typename InputIterator, typename OutputIterator>
+template <typename CFG, typename WEIGHT>
+template<typename InputIterator, typename OutputIterator, typename ColorMap>
 void NeighborhoodConnection<CFG,WEIGHT>::Connect(
-    Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+    Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
     InputIterator _itr1First, InputIterator _itr1Last,
     OutputIterator _collision){
-  Connect(_rm,_stats,_itr1First,_itr1Last,_itr1First,_itr1Last,_collision);
+  Connect(_rm, _stats, cmap,_itr1First,_itr1Last,_itr1First,_itr1Last,_collision);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -188,10 +190,10 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(
  * }
  */
 ///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-template<typename InputIterator, typename OutputIterator>
+template <typename CFG, typename WEIGHT>
+template<typename InputIterator, typename OutputIterator, typename ColorMap>
 void NeighborhoodConnection<CFG,WEIGHT>::Connect(
-    Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+    Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
     InputIterator _itr1First, InputIterator _itr1Last,
     InputIterator _itr2First, InputIterator _itr2Last, 
     OutputIterator _collision){
@@ -237,7 +239,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(
 
       if(this->m_debug) copy(closest.begin(), closest.end(), ostream_iterator<VID>(cout, " "));
 
-      ConnectNeighbors(_rm, _stats, *itr1, closest.begin(), closest.end(), _collision);
+      ConnectNeighbors(_rm, _stats, cmap, *itr1, closest.begin(), closest.end(), _collision);
       enoughConnected = true;
 
       if(m_iterSuccess < m_k){
@@ -251,13 +253,15 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(
   if(this->m_debug) cout << "*** kClosest Time = " << _stats.GetSeconds("kClosest") << endl;
   if(this->m_debug) cout << "*** m_totalSuccess = " << m_totalSuccess << endl;
   if(this->m_debug) cout << "*** m_totalFailure = " << m_totalFailure << endl;
+  _stats.ComputeIntraCCFeatures(_rm,this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-template <typename InputIterator, typename OutputIterator>
+template <typename CFG, typename WEIGHT>
+template <typename InputIterator, typename OutputIterator, typename ColorMap>
 void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
-    Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+    Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+    ColorMap& cmap,
     VID _vid,
     InputIterator _closestFirst, InputIterator _closestLast,
     OutputIterator _collision){
@@ -306,7 +310,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
     }
 
     // the edge already exists :: no need for this, it is already done in STAPL
-    #ifndef _PARALLEL
+#ifndef _PARALLEL
     if(_rm->m_pRoadmap->IsEdge(_vid, *itr2)){
       // if we're not in "unconnected" mode, count this as a success
       if(this->m_debug) cout << " | edge already exists in roadmap";
@@ -320,7 +324,6 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
 
     if(m_checkIfSameCC){
       // the nodes are in the same connected component
-      stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
       if(stapl::sequential::is_same_cc(*(_rm->m_pRoadmap), cmap, _vid, *itr2)){
         // if we're not in "unconnected" mode, count this as a success
         if(this->m_debug) cout << " | nodes in the same connected component";
@@ -332,7 +335,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
         continue;
       }
     }
-    #endif
+#endif
 
     // attempt connection with the local planner
     CfgType col;
@@ -371,7 +374,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator NeighborhoodConnection<CFG, WEIGHT>::
 FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg, 

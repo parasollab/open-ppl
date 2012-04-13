@@ -117,9 +117,12 @@ class connect_wf {
 		LocalPlanners<CfgType,WeightType>* __lp = const_cast<LocalPlanners<CfgType,WeightType>*>(lp);
 		
 		
+                stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
+                cmap.reset();
 		pNodeCon->GetConnector()->Connect(NodeCon,
 			region->GetRoadmap(),
 			*(region->GetStatClass()),
+                        cmap,
 			pv_first,pv_last,
 			ov_first, ov_last);
 		

@@ -45,7 +45,8 @@ class CoverageMetric
 
           for(vector<string>::iterator I = _nodeConnectionLabels.begin(); I != _nodeConnectionLabels.end(); ++I){
             typename Connector<CFG, WEIGHT>::ConnectionPointer connectionMethod = cm->GetMethod(*I);
-            cm->Connect(connectionMethod, rmap, Stats, sampleList.begin(), sampleList.end(), cc.begin(), cc.end());
+            cmap.reset();
+            cm->Connect(connectionMethod, rmap, Stats, cmap, sampleList.begin(), sampleList.end(), cc.begin(), cc.end());
           }
 
           if(pMap->get_out_degree(sampleVID)

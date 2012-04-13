@@ -236,10 +236,12 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
 
     if(m_debug) cout << "\n\t";
     vector<VID> nodesVID(thisIterationNodesVID.begin(), thisIterationNodesVID.end());
+    cmap.reset();
     GetMPProblem()->GetMPStrategy()->GetConnector()->
     Connect(pConnection,
             _region->GetRoadmap(), 
             *(_region->GetStatClass()),
+            cmap,
             nodesVID.begin(), nodesVID.end(), 
             allNodesVID.begin(), allNodesVID.end());
     cmap.reset();
@@ -274,10 +276,12 @@ void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
     vector<CfgType> collision;
 
     if(m_debug) cout << "\n\t";
+    cmap.reset();
     GetMPProblem()->GetMPStrategy()->
       GetConnector()->Connect(pConnection,
           _region->GetRoadmap(), 
           *(_region->GetStatClass()),
+          cmap,
           back_inserter(collision));
 
     cmap.reset();

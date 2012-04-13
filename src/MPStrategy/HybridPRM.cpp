@@ -201,7 +201,8 @@ void HybridPRM::Run(int in_RegionID){
 
             Connector<CfgType, WeightType>* connector = GetMPProblem()->GetMPStrategy()->GetConnector();
             connector->GetMethod(*itr)->ClearConnectionAttempts();
-            connector->Connect(connector->GetMethod(*itr), region->GetRoadmap(), *pStatClass, 
+            cmap.reset();
+            connector->Connect(connector->GetMethod(*itr), region->GetRoadmap(), *pStatClass, cmap,
                                      new_free_vid.begin(), new_free_vid.end(),
                                      map_vids.begin(), map_vids.end()); 
             connection_attempts.insert(connection_attempts.end(), 

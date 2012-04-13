@@ -954,13 +954,16 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         pStatClass->StartClock("Node Connection");
         Connector<CfgType, WeightType>* connector = GetMPProblem()->GetMPStrategy()->GetConnector();
         typedef vector<string>::iterator J;
+        stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
         for(J itr = m_vecStrNodeConnectionLabels.begin(); 
             itr != m_vecStrNodeConnectionLabels.end(); ++itr)
         {
           Connector<CfgType,WeightType>::ConnectionPointer pConnection;
           pConnection = connector->GetMethod(*itr);
           cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
+          cmap.reset();
           connector->Connect(pConnection, region->GetRoadmap(), *pStatClass, 
+              cmap,
               //GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
               newVids.begin(), newVids.end());
         }
@@ -1018,7 +1021,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
           region->GetRoadmap()->m_pRoadmap->DeleteVertex(vid_goal);
           region->GetRoadmap()->m_pRoadmap->setVertIDs(oriVertID);
          */
-        stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
+        cmap.reset();
         querySucceeded = is_same_cc(*region->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
         //CanSolveQuery(*region->GetRoadmap()->m_pRoadmap, m_vecWitnessNodes[0], m_vecWitnessNodes[1]);
 

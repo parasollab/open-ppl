@@ -279,6 +279,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         pStatClass->StartClock("Node Connection");
         Connector<CfgType, WeightType>* connector = GetMPProblem()->GetMPStrategy()->GetConnector();
         typedef vector<string>::iterator J;
+        stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
         for(J itr = m_vecStrNodeConnectionLabels.begin(); 
              itr != m_vecStrNodeConnectionLabels.end(); ++itr)
         {
@@ -286,7 +287,8 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           Connector<CfgType,WeightType>::ConnectionPointer pConnection;
           pConnection = connector->GetMethod(*itr);
           //cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
-          connector->Connect(pConnection, region->GetRoadmap(), *pStatClass, 
+          cmap.reset();
+          connector->Connect(pConnection, region->GetRoadmap(), *pStatClass, cmap,
               newVids.begin(), newVids.end());
         }
 
@@ -318,7 +320,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
         pStatClass->StartClock("Query");
         cout << "BEGIN isSameCCC" << endl <<flush;  
-        stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
+        cmap.reset();
         querySucceeded = is_same_cc(*region->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
 
         pStatClass->StopClock("Query");

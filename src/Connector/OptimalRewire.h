@@ -3,7 +3,7 @@
 
 #include "OptimalConnection.h"
 
-template <class CFG, class WEIGHT>	
+template <typename CFG, typename WEIGHT>	
 class OptimalRewire : public OptimalConnection<CFG, WEIGHT> {
   public:
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
@@ -17,8 +17,8 @@ class OptimalRewire : public OptimalConnection<CFG, WEIGHT> {
       void ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
           VID _vid, vector<VID>& _closest, OutputIterator _collision);
 
-    template<typename InputIterator, typename OutputIterator>
-      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+    template<typename InputIterator, typename OutputIterator, typename ColorMap>
+      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
           InputIterator _iter1First, InputIterator _iter1Last,
           InputIterator _iter2First, InputIterator _iter2Last, OutputIterator _collision);
 
@@ -28,7 +28,7 @@ class OptimalRewire : public OptimalConnection<CFG, WEIGHT> {
     string m_dm;
 };
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 OptimalRewire<CFG,WEIGHT>::OptimalRewire(string _nf, bool _radius, string _dm) : 
   OptimalConnection<CFG,WEIGHT>(_nf, _radius) {
     this->SetName("OptimalRewire");
@@ -39,14 +39,14 @@ OptimalRewire<CFG,WEIGHT>::OptimalRewire(string _nf, bool _radius, string _dm) :
     }
   }
 
-  template <class CFG, class WEIGHT>
+  template <typename CFG, typename WEIGHT>
 OptimalRewire<CFG,WEIGHT>::OptimalRewire(XMLNodeReader& _node, MPProblem* _problem) 
   : OptimalConnection<CFG,WEIGHT>(_node, _problem) {
     this->SetName("OptimalRewire");
     m_dm = _node.stringXMLParameter("dm", true, "", "Distance Metric Label"); 
   }
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 void 
 OptimalRewire<CFG, WEIGHT>::PrintOptions (ostream& _os) {
   OptimalConnection<CFG,WEIGHT>::PrintOptions(_os);
@@ -54,7 +54,7 @@ OptimalRewire<CFG, WEIGHT>::PrintOptions (ostream& _os) {
   _os << "DistanceMetric::" << m_dm << endl << endl;
 }
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 double
 OptimalRewire<CFG, WEIGHT>::GetShortestPath(VID _root, VID _vid, Roadmap<CFG, WEIGHT>* _rm) {
   vector<VID> shortest;
@@ -69,7 +69,7 @@ OptimalRewire<CFG, WEIGHT>::GetShortestPath(VID _root, VID _vid, Roadmap<CFG, WE
   return totalWeight; 
 }
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 double
 OptimalRewire<CFG, WEIGHT>::GetDistance(VID _vid1, VID _vid2, Roadmap<CFG, WEIGHT>* _rm) {
 
@@ -81,10 +81,11 @@ OptimalRewire<CFG, WEIGHT>::GetDistance(VID _vid1, VID _vid2, Roadmap<CFG, WEIGH
   return distance;
 }
 
-template <class CFG, class WEIGHT>
-template<typename InputIterator, typename OutputIterator>
+template <typename CFG, typename WEIGHT>
+template<typename InputIterator, typename OutputIterator, typename ColorMap>
 void 
 OptimalRewire<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+    ColorMap& cmap,
     InputIterator _iter1First, InputIterator _iter1Last,
     InputIterator _iter2First, InputIterator _iter2Last, 
     OutputIterator _collision) {
@@ -107,7 +108,7 @@ OptimalRewire<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats
 #endif
 }
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 template<typename OutputIterator>
 void 
 OptimalRewire<CFG,WEIGHT>::ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,

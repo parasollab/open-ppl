@@ -309,9 +309,11 @@ void MARRTStrategy::ConnectComponents(int _regionID) {
     stats->StartClock(connectorClockName);
 
     if(m_debug) cout << "\n\t";
+    cmap.reset();
     mps->GetConnector()->Connect(connector, 
         region->GetRoadmap(), 
-        *(region->GetStatClass()));
+        *(region->GetStatClass()),
+        cmap);
     cmap.reset();
     if(m_debug)
       cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
