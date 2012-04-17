@@ -3,7 +3,7 @@
 
 #include "ConnectionMethod.h"
 
-template <typename CFG, typename WEIGHT>	
+template <class CFG, class WEIGHT>	
 class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
   public:
 
@@ -20,20 +20,9 @@ class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
     bool CheckEdge(VID _vid1, VID _vid2, Roadmap<CFG, WEIGHT>* _rm);
 
     // Connection Methods
-    template <typename ColorMap>
-    void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap);
-
-    template <typename OutputIterator, typename ColorMap>
-      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
-          OutputIterator _collision) ;
-
-    template<typename InputIterator, typename OutputIterator, typename ColorMap>
-      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
-          InputIterator _iterFirst, InputIterator _iterLast, OutputIterator _collision) ;
-
-    template<typename InputIterator, typename OutputIterator, typename ColorMap>
-      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
-          InputIterator _iter1First, InputIterator _iter1Last,
+    template<typename ColorMap, typename InputIterator, typename OutputIterator>
+      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+          ColorMap& _cmap, InputIterator _iter1First, InputIterator _iter1Last,
           InputIterator _iter2First, InputIterator _iter2Last, OutputIterator _collision);
 
   protected:
@@ -45,12 +34,12 @@ class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
       void FindNeighbors( Roadmap<CFG, WEIGHT>* _rm, CFG _cfg, 
           InputIterator _iter2First, InputIterator _iter2Last, 
           OutputIterator _closestIterator);
-
+  protected:
     bool m_radius; /* will determine which type of NF to use. In case is true, 
                       a radius based NF will be used to find the neighbors */
 };
 
-  template <typename CFG, typename WEIGHT>
+  template <class CFG, class WEIGHT>
 OptimalConnection<CFG,WEIGHT>::OptimalConnection(string _nf, bool _radius)
   : ConnectionMethod<CFG,WEIGHT>(), m_radius(_radius) {
     this->m_nfMethod = _nf;
@@ -61,18 +50,18 @@ OptimalConnection<CFG,WEIGHT>::OptimalConnection(string _nf, bool _radius)
     }
   }
 
-  template <typename CFG, typename WEIGHT>
+  template <class CFG, class WEIGHT>
 OptimalConnection<CFG,WEIGHT>::OptimalConnection(XMLNodeReader& _node, MPProblem* _problem)
   : ConnectionMethod<CFG,WEIGHT>(_node, _problem) {
     this->SetName("OptimalConnection");
     ParseXML(_node);
   }
 
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 OptimalConnection<CFG,WEIGHT>::~OptimalConnection() { 
 }
 
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 void 
 OptimalConnection<CFG, WEIGHT>::PrintOptions (ostream& _os) {
   ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
@@ -86,7 +75,7 @@ OptimalConnection<CFG, WEIGHT>::PrintOptions (ostream& _os) {
     _os << "K-based" << endl << endl;
 }
 
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 void 
 OptimalConnection<CFG, WEIGHT>::ParseXML (XMLNodeReader& _node) {  
   m_radius = _node.boolXMLParameter("radius", true, false, "If true, use radius-based NF, otherwise use k-based NF"); 
@@ -96,45 +85,14 @@ OptimalConnection<CFG, WEIGHT>::ParseXML (XMLNodeReader& _node) {
   }
 }
 
-template <typename CFG, typename WEIGHT>
-template <typename ColorMap>
-void OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap){
-  vector<CFG> collision;
-  Connect(_rm, _stats, cmap, back_inserter(collision));
-}
-
-template <typename CFG, typename WEIGHT>
-template<typename OutputIterator, typename ColorMap>
-void 
-OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
-    OutputIterator _collision) {
-  vector<VID> vertices;
-  _rm->m_pRoadmap->GetVerticesVID(vertices);
-  Connect(_rm, _stats, cmap, vertices.begin(), vertices.end(), vertices.begin(), vertices.end(), _collision);
-}
-
-template <typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator, typename ColorMap>
-void 
-OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
-    InputIterator _iter1First, InputIterator _iter1Last, 
-    OutputIterator _collision) {
-  vector<VID> vertices;
-  _rm->m_pRoadmap->GetVerticesVID(vertices);
-  Connect(_rm, _stats, cmap, _iter1First, _iter1Last, vertices.begin(), vertices.end(), _collision);
-}
-
-
 // Will iterate through the map and find each nodes closest neighbors 
 // and call ConnectNeighbors to connect them
-template <typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator, typename ColorMap>
+template <class CFG, class WEIGHT>
+template<typename ColorMap, typename InputIterator, typename OutputIterator>
 void 
 OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
-    ColorMap& cmap,
-    InputIterator _iter1First, InputIterator _iter1Last,
-    InputIterator _iter2First, InputIterator _iter2Last, 
-    OutputIterator _collision) {
+    ColorMap& _cmap, InputIterator _iter1First, InputIterator _iter1Last,
+    InputIterator _iter2First, InputIterator _iter2Last, OutputIterator _collision) {
 
   if (this->m_debug) { cout << endl; PrintOptions (cout); }
   ///To do - uncomment after const vertex iter problem  in STAPL pGraph is fixed
@@ -155,13 +113,11 @@ OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _s
 }
 
 // Will connect the neighbors contained in the vector with the current node 
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 template<typename OutputIterator>
 void 
-OptimalConnection<CFG,WEIGHT>::ConnectNeighbors ( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
-    VID _vid, 
-    vector<VID>& _closest, 
-    OutputIterator _collision) {
+OptimalConnection<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+    VID _vid, vector<VID>& _closest, OutputIterator _collision) {
 
   LPOutput <CFG, WEIGHT> lpOutput;
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
@@ -205,7 +161,7 @@ OptimalConnection<CFG,WEIGHT>::ConnectNeighbors ( Roadmap<CFG, WEIGHT>* _rm, Sta
 // Find the neighbors of current node. There are two cases:
 // If it is radius based, find neighbors within that area
 // If it is k based, find the k-closest neighbor
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 template <typename InputIterator, typename OutputIterator>
 void 
 OptimalConnection<CFG, WEIGHT>::FindNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG _cfg, 
@@ -231,7 +187,7 @@ OptimalConnection<CFG, WEIGHT>::FindNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG _cf
 }
 
 
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 bool
 OptimalConnection<CFG, WEIGHT>::CheckEdge(VID _vid1, VID _vid2, Roadmap<CFG, WEIGHT>* _rm) {
     

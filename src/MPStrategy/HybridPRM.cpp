@@ -201,13 +201,13 @@ void HybridPRM::Run(int in_RegionID){
 
             Connector<CfgType, WeightType>* connector = GetMPProblem()->GetMPStrategy()->GetConnector();
             connector->GetMethod(*itr)->ClearConnectionAttempts();
-            cmap.reset();
-            connector->Connect(connector->GetMethod(*itr), region->GetRoadmap(), *pStatClass, cmap,
-                                     new_free_vid.begin(), new_free_vid.end(),
-                                     map_vids.begin(), map_vids.end()); 
+            connector->GetMethod(*itr)->Connect(
+                region->GetRoadmap(), *pStatClass, cmap,
+                new_free_vid.begin(), new_free_vid.end(),
+                map_vids.begin(), map_vids.end()); 
             connection_attempts.insert(connection_attempts.end(), 
-                                       connector->GetMethod(*itr)->ConnectionAttemptsBegin(),
-                                       connector->GetMethod(*itr)->ConnectionAttemptsEnd());
+                connector->GetMethod(*itr)->ConnectionAttemptsBegin(),
+                connector->GetMethod(*itr)->ConnectionAttemptsEnd());
             
     	  }
           unsigned long int num_cd_after_conn = pStatClass->GetIsCollTotal();

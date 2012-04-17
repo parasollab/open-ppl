@@ -40,10 +40,8 @@ RRGStrategy::ExpandTree(int _regionID, CfgType& _dir) {
 
     // Calling Connect Method and connecting nodes
     stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
-    cmap.reset();
-    GetMPProblem()->GetMPStrategy()->GetConnector()->Connect(pConnection, region->GetRoadmap(), 
-        *(region->GetStatClass()), 
-        cmap,
+    pConnection->Connect(region->GetRoadmap(), 
+        *(region->GetStatClass()), cmap,
         currentVID.begin(), currentVID.end(), 
         allVIDs.begin(), allVIDs.end());
   }

@@ -280,13 +280,13 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
     vector<CfgType> collision, valid;
     cmap.reset();
     if(pvid.first=="valid")
-      GetMPProblem()->GetMPStrategy()->GetConnector()->Connect(pConnection,
+      pConnection->Connect(
           region->GetRoadmap(), *(region->GetStatClass()), cmap,
           nodesVID.begin(), nodesVID.end(), 
           allVID.begin(), allVID.end(),
           back_inserter(collision));
     else
-      GetMPProblem()->GetMPStrategy()->GetConnector()->Connect(pConnection,
+      pConnection->Connect(
           region->GetBlockRoadmap(), *(region->GetStatClass()), cmap,
           nodesVID.begin(), nodesVID.end(), 
           allVID.begin(), allVID.end(),

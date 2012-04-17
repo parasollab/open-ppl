@@ -17,7 +17,7 @@ class OptimalRewire : public OptimalConnection<CFG, WEIGHT> {
       void ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
           VID _vid, vector<VID>& _closest, OutputIterator _collision);
 
-    template<typename InputIterator, typename OutputIterator, typename ColorMap>
+    template<typename ColorMap, typename InputIterator, typename OutputIterator>
       void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
           InputIterator _iter1First, InputIterator _iter1Last,
           InputIterator _iter2First, InputIterator _iter2Last, OutputIterator _collision);
@@ -82,7 +82,7 @@ OptimalRewire<CFG, WEIGHT>::GetDistance(VID _vid1, VID _vid2, Roadmap<CFG, WEIGH
 }
 
 template <typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator, typename ColorMap>
+template<typename ColorMap, typename InputIterator, typename OutputIterator>
 void 
 OptimalRewire<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
     ColorMap& cmap,

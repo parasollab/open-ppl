@@ -236,16 +236,12 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
 
     if(m_debug) cout << "\n\t";
     vector<VID> nodesVID(thisIterationNodesVID.begin(), thisIterationNodesVID.end());
-    cmap.reset();
-    GetMPProblem()->GetMPStrategy()->GetConnector()->
-    Connect(pConnection,
-            _region->GetRoadmap(), 
-            *(_region->GetStatClass()),
-            cmap,
-            nodesVID.begin(), nodesVID.end(), 
-            allNodesVID.begin(), allNodesVID.end());
-    cmap.reset();
+    pConnection->Connect(
+        _region->GetRoadmap(), *(_region->GetStatClass()), cmap,
+        nodesVID.begin(), nodesVID.end(), 
+        allNodesVID.begin(), allNodesVID.end());
     if (m_debug) {
+      cmap.reset();
       cout << _region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
         << get_cc_count(*(_region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
         << endl;
@@ -273,19 +269,11 @@ void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
     string connectorClockName = "Connect Component::" + pConnection->GetName();
     stats->StartClock(connectorClockName);
 
-    vector<CfgType> collision;
-
     if(m_debug) cout << "\n\t";
-    cmap.reset();
-    GetMPProblem()->GetMPStrategy()->
-      GetConnector()->Connect(pConnection,
-          _region->GetRoadmap(), 
-          *(_region->GetStatClass()),
-          cmap,
-          back_inserter(collision));
+    pConnection->Connect(_region->GetRoadmap(), *(_region->GetStatClass()), cmap);
 
-    cmap.reset();
     if (m_debug){
+      cmap.reset();
       cout << _region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
       << get_cc_count(*(_region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"<< endl;
       cout << "\t";

@@ -294,7 +294,6 @@ void MARRTStrategy::Finalize(int _regionID) {
 void MARRTStrategy::ConnectComponents(int _regionID) {
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
   StatClass* stats = region->GetStatClass();
-  MPStrategy* mps = GetMPProblem()->GetMPStrategy();
   ClockClass componentConnClock;
   string clockName = "component connection"; 
   stats->StartClock(clockName);
@@ -309,16 +308,13 @@ void MARRTStrategy::ConnectComponents(int _regionID) {
     stats->StartClock(connectorClockName);
 
     if(m_debug) cout << "\n\t";
-    cmap.reset();
-    mps->GetConnector()->Connect(connector, 
-        region->GetRoadmap(), 
-        *(region->GetStatClass()),
-        cmap);
-    cmap.reset();
-    if(m_debug)
+    connector->Connect(region->GetRoadmap(), *(region->GetStatClass()), cmap);
+    if(m_debug){
+      cmap.reset();
       cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
         << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
         << "\n\t";
+    }
 
     stats->StopClock(connectorClockName);
     if(m_debug) stats->PrintClock(connectorClockName, cout);

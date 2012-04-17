@@ -354,8 +354,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
 
       for (typename vector<typename Connector<CFG,WEIGHT>::ConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
-        cmap.reset();
-        cn->Connect(*itr, rdmp, Stats, cmap, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
+        (*itr)->Connect(rdmp, Stats, cmap, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
     }
 
@@ -372,7 +371,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats
       
       for (typename vector<typename Connector<CFG,WEIGHT>::ConnectionPointer>::iterator itr = pConnections->begin(); itr != pConnections->end(); itr++) {
         cmap.reset();
-        cn->Connect(*itr, rdmp, Stats, cmap, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
+        (*itr)->Connect(rdmp, Stats, cmap, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
       }
     }
     

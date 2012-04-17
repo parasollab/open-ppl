@@ -21,7 +21,7 @@
 #define SMALL_CC      3       // default for connectCCs: all-pairs connection between CCs
 #define K2_CLOSEST    0       // m_k2 closest CCs, default 0 means connect all CCs
 
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
   public:
     //////////////////////
@@ -40,35 +40,22 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
     virtual void PrintOptions(ostream& _os);
     virtual void ParseXML(XMLNodeReader& _node);
 
-    template <typename ColorMap>
-    void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap);
+    template <typename ColorMap, typename InputIterator, typename OutputIterator>
+      void Connect(Roadmap<CFG, WEIGHT>*, StatClass& _stats,
+          ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
+          InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision);
 
-    template <typename OutputIterator, typename ColorMap>
-      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
-          OutputIterator _collision);
-
-    template <typename InputIterator, typename OutputIterator, typename ColorMap>
-      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap, 
-          InputIterator _itr1First, InputIterator _itr1Last,
-          OutputIterator _collision);
-
-    template <typename InputIterator, typename OutputIterator, typename ColorMap>
-      void Connect(Roadmap<CFG, WEIGHT>*, StatClass& _stats, ColorMap& cmap,
-          InputIterator _itr1First, InputIterator _itr1Last,
-          InputIterator _itr2First, InputIterator _itr2Last, 
-          OutputIterator _collision);
-
-  protected:
-    template<typename OutputIterator, typename ColorMap>
-      void ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap,
+    template<typename OutputIterator>
+      void ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
           vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
           OutputIterator _collision);  
 
+  protected:
     // compute all pair distance between ccs.
     // approximated using coms of ccs
-    template <typename InputIterator, typename ColorMap>
-      void ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm, ColorMap& cmap,
-          InputIterator _ccs1First, InputIterator _ccs1Last,
+    template<typename ColorMap, typename InputIterator>
+      void ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm,
+          ColorMap& _cmap, InputIterator _ccs1First, InputIterator _ccs1Last,
           InputIterator _ccs2First, InputIterator _ccs2Last);
 
     //get k closest pairs
@@ -90,24 +77,22 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
 
 ///////////////////////////////////////////////////////////////////////////////
 //   Connection Method:  ConnectCCs
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::ConnectCCs() : ConnectionMethod<CFG,WEIGHT>() { 
   this->SetName("ConnectCCs"); 
-  cerr << "ConnectCCs default constructor" << endl;
   m_kPairs = KPAIRS;
   m_smallcc = SMALL_CC;
   m_k2 = K2_CLOSEST;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::ConnectCCs(XMLNodeReader& _node, MPProblem* _problem) : ConnectionMethod<CFG,WEIGHT>(_node, _problem) { 
-  cerr << "ConnectCCs secondary constructor" << endl;
   ParseXML(_node);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 void ConnectCCs<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
   this->SetName("ConnectCCs"); 
 
@@ -122,11 +107,11 @@ void ConnectCCs<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 ConnectCCs<CFG,WEIGHT>::~ConnectCCs(){}
 
 ///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 void
 ConnectCCs<CFG, WEIGHT>::PrintOptions(ostream& _os){
   ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
@@ -137,9 +122,9 @@ ConnectCCs<CFG, WEIGHT>::PrintOptions(ostream& _os){
 
 ///////////////////////////////////////////////////////////////////////////////
 template <typename CFG, typename WEIGHT>
-template <typename InputIterator, typename ColorMap>
-void ConnectCCs<CFG,WEIGHT>::ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm, ColorMap& cmap,
-    InputIterator _ccs1First, InputIterator _ccs1Last,
+template <typename ColorMap, typename InputIterator>
+void ConnectCCs<CFG,WEIGHT>::ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm,
+    ColorMap& _cmap, InputIterator _ccs1First, InputIterator _ccs1Last,
     InputIterator _ccs2First, InputIterator _ccs2Last){
 
   shared_ptr<DistanceMetricMethod> dm = 
@@ -147,21 +132,21 @@ void ConnectCCs<CFG,WEIGHT>::ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm, Co
 
   RoadmapGraph<CFG,WEIGHT>* rmapG=_rm->m_pRoadmap;
   Environment* env=_rm->GetEnvironment();
-  cmap.reset();
+  _cmap.reset();
 
   //compute com of ccs
   vector<CFG> com1,com2;
   vector<VID> ccvids;
   for (InputIterator i = _ccs1First; i != _ccs1Last; i++){
-    cmap.reset();
+    _cmap.reset();
     ccvids.clear();
-    get_cc(*rmapG, cmap, *i, ccvids);
+    get_cc(*rmapG, _cmap, *i, ccvids);
     com1.push_back(GetCentroid(rmapG, ccvids));
   }
   for (InputIterator i = _ccs2First; i != _ccs2Last; i++){
-    cmap.reset();
+    _cmap.reset();
     ccvids.clear();
-    get_cc(*rmapG, cmap, *i, ccvids);
+    get_cc(*rmapG, _cmap, *i, ccvids);
     com2.push_back(GetCentroid(rmapG, ccvids));
   }
 
@@ -186,7 +171,7 @@ void ConnectCCs<CFG,WEIGHT>::ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm, Co
 
 ///////////////////////////////////////////////////////////////////////////////
 //get m_k2 closest pairs of CCs
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 void ConnectCCs<CFG,WEIGHT>::GetK2Pairs(int _ccid, vector<VID>& _k2CCID){
   typedef pair<double,int> CCD; //dist to cc
   typedef vector<double>::iterator IT;
@@ -223,7 +208,7 @@ void ConnectCCs<CFG,WEIGHT>::GetK2Pairs(int _ccid, vector<VID>& _k2CCID){
 
 ///////////////////////////////////////////////////////////////////////////////
 // Find the closest inter CC distance
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 double ConnectCCs<CFG,WEIGHT>::ClosestInterCCDist(Roadmap<CFG, WEIGHT>* _rm, 
     vector<VID>& _cc1, vector<VID>& _cc2){
   shared_ptr<DistanceMetricMethod> dm = 
@@ -250,134 +235,96 @@ double ConnectCCs<CFG,WEIGHT>::ClosestInterCCDist(Roadmap<CFG, WEIGHT>* _rm,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
-template <typename ColorMap>
-void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap){
-  vector<CFG> collision;
-  Connect(_rm, _stats, cmap, back_inserter(collision));
-}
-
-///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
-template <typename OutputIterator, typename ColorMap>
-void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap, 
-    OutputIterator _collision) {
+template <class CFG, class WEIGHT>
+template<typename ColorMap, typename InputIterator, typename OutputIterator>
+void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+    ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
+    InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision) {
 
   if(this->m_debug){
     cout << "components(m_kPairs="<< m_kPairs ;
     cout << ", m_smallcc="<<m_smallcc <<"): "<<flush;
   }
 
-  cmap.reset();
+  _cmap.reset();
   vector< pair<size_t,VID> > ccs1;
-  get_cc_stats(*(_rm->m_pRoadmap),cmap,ccs1);
+  get_cc_stats(*(_rm->m_pRoadmap),_cmap,ccs1);
 
   vector<VID> ccs(ccs1.size());
 
   for(size_t i = 0; i < ccs1.size(); ++i){
     ccs[i]=ccs1[i].second;
   }
-
-  if(ccs1.size() > 1){
-    Connect(_rm, _stats, cmap, ccs.rbegin(), ccs.rend(), _collision);
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
-template <typename InputIterator, typename OutputIterator, typename ColorMap>
-void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap, 
-    InputIterator _itr1First, InputIterator _itr1Last,
-    OutputIterator _collision) {
-
-  if(this->m_debug){
-    cout << "components(m_kPairs="<< m_kPairs ;
-    cout << ", m_smallcc="<<m_smallcc <<"): "<<flush;
+  
+  InputIterator itr1First = ccs.begin();
+  InputIterator itr1Last = ccs.end();
+  
+  if(itr1Last - itr1First < 2){
+    return;
   }
 
-  if(_itr1Last - _itr1First > 1){
-    Connect(_rm, _stats, cmap, _itr1First, _itr1Last, _itr1First+1, _itr1Last, _collision);
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator, typename ColorMap>
-void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& cmap, 
-    InputIterator _itr1First, InputIterator _itr1Last,
-    InputIterator _itr2First, InputIterator _itr2Last, 
-    OutputIterator _collision) {
-
-  if(this->m_debug){
-    cout << "components(m_kPairs="<< m_kPairs ;
-    cout << ", m_smallcc="<<m_smallcc <<"): "<<flush;
-  }
-
+  InputIterator itr2First = itr1First+1;
+  InputIterator itr2Last = itr1Last;
+  
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  cmap.reset();
-
-  if(_itr1Last - _itr1First <= 1) return;
+  _cmap.reset();
 
   if(m_k2 != 0){ // Attempt to Connect K2-Closest CCs
     vector< vector<VID> > ccset1, ccset2;
 
     for(int j = 0; j < 2; ++j){
-      InputIterator vidsFirst = (j==0) ? _itr1First : _itr2First;
-      InputIterator vidsLast = (j==0) ? _itr1Last : _itr2Last;
+      InputIterator vidsFirst = (j==0) ? itr1First : itr2First;
+      InputIterator vidsLast = (j==0) ? itr1Last : itr2Last;
       vector< vector<VID> >& ccset = (j==0) ? ccset1 : ccset2;
       for(InputIterator i = vidsFirst; i != vidsLast; ++i){
         ccset.push_back(vector<VID>());  
-        cmap.reset();
-        get_cc(*pMap, cmap, *i, ccset.back());
+        _cmap.reset();
+        get_cc(*pMap, _cmap, *i, ccset.back());
       }//end for i
     }//end for j
 
-    ComputeAllPairsCCDist(_rm, cmap, _itr1First, _itr1Last, _itr2First, _itr2Last);
+    ComputeAllPairsCCDist(_rm, _cmap, itr1First, itr1Last, itr2First, itr2Last);
 
-    for(InputIterator itr1 = _itr1Last; itr1 != _itr1First; --itr1) {
-      int id = itr1 - _itr1First - 1;
+    for(InputIterator itr1 = itr1Last; itr1 != itr1First; --itr1) {
+      int id = itr1 - itr1First - 1;
       vector<VID> k2CCID;
       GetK2Pairs(id,k2CCID);
       for(VIDIT v2=k2CCID.begin();v2!=k2CCID.end();v2++){
-        ConnectNeighbors(_rm, _stats, cmap, ccset1[id], ccset2[*v2], _collision);
+        ConnectNeighbors(_rm, _stats, ccset1[id], ccset2[*v2], _collision);
       }
     }/*endfor V1*/
   } 
 
   else { // Attempt to Connect CCs, All-Pairs for both CCs
     // process components from smallest to biggest  
-    for (InputIterator itr1 = _itr1First; itr1 != _itr1Last; ++itr1) {
-      for (InputIterator itr2 = _itr2First; itr2 != _itr2Last; ++itr2) {
-        cmap.reset();
+    for (InputIterator itr1 = itr1First; itr1 != itr1Last; ++itr1) {
+      for (InputIterator itr2 = itr2First; itr2 != itr2Last; ++itr2) {
+        _cmap.reset();
         // if V1 & V2 not already connected, try to connect them 
-        if ( !stapl::sequential::is_same_cc(*pMap,cmap,*itr1,*itr2) ) {
+        if ( !stapl::sequential::is_same_cc(*pMap,_cmap,*itr1,*itr2) ) {
           vector<VID> cc1,cc2;
 
-          cmap.reset();
-          get_cc(*pMap,cmap,*itr1,cc1);
+          _cmap.reset();
+          get_cc(*pMap,_cmap,*itr1,cc1);
 
-          cmap.reset();
-          get_cc(*pMap,cmap,*itr2,cc2);
+          _cmap.reset();
+          get_cc(*pMap,_cmap,*itr2,cc2);
 
           if(cc1.size() <= cc2.size())
-            ConnectNeighbors(_rm, _stats, cmap, cc1, cc2, _collision);
+            ConnectNeighbors(_rm, _stats, cc1, cc2, _collision);
           else
-            ConnectNeighbors(_rm, _stats, cmap, cc2, cc1, _collision);
+            ConnectNeighbors(_rm, _stats, cc2, cc1, _collision);
         } 
       }/*endfor V2*/ 
     }/*endfor V1*/
   }
-  _stats.ComputeIntraCCFeatures(_rm,this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
-template <typename OutputIterator, typename ColorMap>
+template <class CFG, class WEIGHT>
+template <typename OutputIterator>
 void ConnectCCs<CFG, WEIGHT>::ConnectNeighbors( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
-    ColorMap& cmap,
-    vector<VID>& _cc1Vec, 
-    vector<VID>& _cc2Vec,
-    OutputIterator _collision) {
+    vector<VID>& _cc1Vec, vector<VID>& _cc2Vec, OutputIterator _collision) {
 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   LPOutput<CFG, WEIGHT> lpOutput;

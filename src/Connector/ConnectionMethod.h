@@ -1,6 +1,8 @@
 #ifndef CONNECTIONMETHOD_H_
 #define CONNECTIONMETHOD_H_
 
+#include <boost/mpl/list.hpp>
+#include <boost/mpl/for_each.hpp>
 #include "RoadmapGraph.h"
 #include "LocalPlanners.h"
 #include "MetricUtils.h"
@@ -9,8 +11,57 @@
 #include "MPStrategy.h"
 #include "MPUtils.h"
 #include <cmath>
+#include "Connector.h"
 
-template <typename CFG, typename WEIGHT>
+template<class CFG, class WEIGHT>
+class NeighborhoodConnection;
+template<class CFG, class WEIGHT>
+class ConnectCCs;
+template<class CFG, class WEIGHT>
+class PreferentialAttachment;
+template<class CFG, class WEIGHT>
+class OptimalConnection;
+template<class CFG, class WEIGHT>
+class OptimalRewire;
+
+namespace pmpl_detail{
+  typedef boost::mpl::list<NeighborhoodConnection<CfgType,WeightType>, 
+          ConnectCCs<CfgType,WeightType>, 
+          PreferentialAttachment<CfgType,WeightType>, 
+          OptimalConnection<CfgType,WeightType>,
+          OptimalRewire<CfgType,WeightType>
+            > ConnectorMethodList;
+
+  template<typename CM, typename RDMP, typename STATS, typename CMAP,
+    typename I, typename O>
+      struct VirtualConnect{
+        public:
+          VirtualConnect(CM* _v, RDMP* _r, STATS& _s, CMAP& _c,
+              I _i1f, I _i1l, I _i2f, I _i2l, O _o) : 
+            m_memory(_v), m_rdmp(_r), m_stats(_s), m_cmap(_c), m_i1first(_i1f),
+            m_i1last(_i1l), m_i2first(_i2f), m_i2last(_i2l), m_output(_o){
+            }
+
+          template<typename T>
+            void operator()(T& _t) {
+              T* tptr = dynamic_cast<T*>(m_memory);
+              if(tptr != NULL){
+                tptr->Connect(m_rdmp, m_stats, m_cmap, m_i1first, m_i1last, 
+                    m_i2first, m_i2last, m_output);
+              }
+            }
+        private:
+          CM* m_memory;
+          RDMP* m_rdmp;
+          STATS& m_stats;
+          CMAP& m_cmap; 
+          I m_i1first, m_i1last, m_i2first, m_i2last;
+          O m_output;
+      };
+}
+
+
+template <class CFG, class WEIGHT>
 class ConnectionMethod : public MPBaseObject {
   public:
     /////////////////////////////////////////////
@@ -24,32 +75,40 @@ class ConnectionMethod : public MPBaseObject {
 
     /////////////////////////////////////////////
     // Connection Methods
-    template<typename OutputIterator, typename ColorMap>
-      void Connect( Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap cmap,
+    template<typename ColorMap>
+    void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap){
+      vector<CFG> collision;
+      Connect(_rm, _stats, _cmap, back_inserter(collision));
+    }
+    
+    template<typename ColorMap, typename OutputIterator>
+      void Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap,
           OutputIterator _collision){
-        cout << "ConnectionMethod<CFG,WEIGHT>::Connect(..) base method is not available!" << endl;
-        exit(-1);
+        vector<VID> vertices;
+        _rm->m_pRoadmap->GetVerticesVID(vertices);
+        Connect(_rm, _stats, _cmap, vertices.begin(), vertices.end(), vertices.begin(), vertices.end(), _collision);
       }
 
-    template<typename InputIterator, typename OutputIterator, typename ColorMap>
-      void Connect( Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap cmap,
+    template<typename ColorMap, typename InputIterator>
+      void Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator _itr1First, InputIterator _itr1Last, 
-          OutputIterator _collision){
-        cout << "ConnectionMethod<CFG,WEIGHT>::Connect(..) base method is not available!" << endl;
-        exit(-1);
-
+          InputIterator _itr2First, InputIterator _itr2Last){
+        vector<CFG> collision;
+        Connect(_rm, _stats, _cmap, _itr1First, _itr1Last, _itr2First, _itr2Last, back_inserter(collision));
       }
 
-    template<typename InputIterator, typename OutputIterator, typename ColorMap>
-      void Connect( Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap cmap,
+    template<typename ColorMap, typename InputIterator, typename OutputIterator>
+      void Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator _itr1First, InputIterator _itr1Last, 
           InputIterator _itr2First, InputIterator _itr2Last, 
           OutputIterator _collision){
-        cout << "ConnectionMethod<CFG,WEIGHT>::Connect(..) base method is not available!" << endl;
-        exit(-1);
+        typedef pmpl_detail::ConnectorMethodList MethodList;
+        boost::mpl::for_each<MethodList>(pmpl_detail::VirtualConnect<
+            ConnectionMethod<CFG, WEIGHT>, Roadmap<CFG, WEIGHT>, StatClass, ColorMap,
+            InputIterator, OutputIterator>(this, _rm, _stats, _cmap, _itr1First, _itr1Last,
+              _itr2First, _itr2Last, _collision));
       }
 
-  public:
     /////////////////////////////////////////////
     // Utility Methods
     typedef typename RoadmapGraph<CFG, WEIGHT>::vertex_descriptor VID; 
@@ -68,29 +127,16 @@ class ConnectionMethod : public MPBaseObject {
 
   protected:
     vector<pair<pair<VID, VID>, bool> > m_connectionAttempts;
+    CDInfo* m_cdInfo;
     string  m_lpMethod;
     string  m_nfMethod;
     bool    m_addPartialEdge;
     bool    m_addAllEdges; 
     double  m_connectionPosRes;
     double  m_connectionOriRes;
-
 };
 
-/* MOVE THIS TO THE MPUtils.h
-
-/////////////////////////////////////////////
-// Utility Comparison Struct
-template <typename CFG>
-struct CfgDistCompare : public binary_function<pair<CFG,double>, pair<CFG,double>, bool> {
-bool operator()(const pair<CFG,double>& _p1,
-const pair<CFG,double>& _p2) const {
-return (_p1.second < _p2.second);
-}
-};
- */
-
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 ConnectionMethod<CFG,WEIGHT>::
 ConnectionMethod(){
   this->SetName("ConnectionMethod");
@@ -98,7 +144,7 @@ ConnectionMethod(){
   m_connectionOriRes = 0.05;
 }
 
-template <typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 ConnectionMethod<CFG,WEIGHT>::
 ConnectionMethod(XMLNodeReader& _node, MPProblem* _problem) : MPBaseObject(_node,_problem){
   this->SetName("ConnectionMethod");

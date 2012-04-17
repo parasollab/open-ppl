@@ -961,11 +961,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
           Connector<CfgType,WeightType>::ConnectionPointer pConnection;
           pConnection = connector->GetMethod(*itr);
           cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
-          cmap.reset();
-          connector->Connect(pConnection, region->GetRoadmap(), *pStatClass, 
-              cmap,
-              //GetMPProblem()->GetMPStrategy()->GetLocalPlanners(),
-              newVids.begin(), newVids.end());
+          pConnection->Connect(region->GetRoadmap(), *pStatClass, cmap, newVids.begin(), newVids.end(), newVids.begin(), newVids.end());
         }
 
         pStatClass->StopClock("Node Generation");

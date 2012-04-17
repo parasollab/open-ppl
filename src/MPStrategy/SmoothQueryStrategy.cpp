@@ -120,11 +120,9 @@ Run(int in_RegionID)
     stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
     cmap.reset();
     for (itr = methods.begin(); itr != methods.end(); itr++){
-      m_SmoothConnector.Connect(
-                           *itr,
-                           rdmp, *pStatClass, cmap,
-                           path_vids.begin(), path_vids.end(),
-                           path_vids.begin(), path_vids.end());
+      (*itr)->Connect(rdmp, *pStatClass, cmap,
+          path_vids.begin(), path_vids.end(),
+          path_vids.begin(), path_vids.end());
     }
     pStatClass->StopPrintClock("Smooth Path", cout);
 

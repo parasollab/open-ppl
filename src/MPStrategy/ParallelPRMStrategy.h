@@ -119,7 +119,7 @@ class connect_wf {
 		
                 stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
                 cmap.reset();
-		pNodeCon->GetConnector()->Connect(NodeCon,
+		NodeCon->Connect(
 			region->GetRoadmap(),
 			*(region->GetStatClass()),
                         cmap,
