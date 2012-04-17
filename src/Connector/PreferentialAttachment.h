@@ -265,7 +265,7 @@ void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* 
         continue;
       }
     }
-
+    #ifndef _PARALLEL
     // the edge already exists
     if (_rm->m_pRoadmap->IsEdge(_vid, *itr2)) {
       // if we're not in "unconnected" mode, count this as a success
@@ -277,7 +277,6 @@ void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* 
       if (m_debug) cout << endl;
       continue;
     }
-
     if (m_checkIfSameCC) {
       // the nodes are in the same connected component
       _cmap.reset();
@@ -292,7 +291,7 @@ void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* 
         continue;
       }
     }
-
+    #endif
     // attempt connection with the local planner
     CfgType _col;
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->

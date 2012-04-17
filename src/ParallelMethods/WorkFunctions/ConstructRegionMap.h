@@ -155,8 +155,10 @@ class NodeConnector
     //TODO: pass as string from strategy
     NCP ncp = m_nc->GetMethod("Closest");
     
-    m_nc->Connect(ncp, m_region->GetRoadmap(),*(m_region->GetStatClass()), 
-	         regionVIDs.begin(), regionVIDs.end());
+    // temporary fix for Parallel code to compile
+    stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
+    ncp->Connect( m_region->GetRoadmap(),*(m_region->GetStatClass()), cmap, 
+	         regionVIDs.begin(), regionVIDs.end(), regionVIDs.begin(), regionVIDs.end() );
   }
         
 };
@@ -219,7 +221,10 @@ class RegionConnector
       vector<VID> tCand;
       tCand.resize(m_k);
       copy(tVids.begin(), tVids.begin() + std::min(static_cast<int>(tVids.size()), m_k), tCand.begin());
-      m_nc->Connect(ncp, m_region->GetRoadmap(),*(m_region->GetStatClass()), 
+      
+      // temporary fix for Parallel code to compile
+      stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
+      ncp->Connect(m_region->GetRoadmap(),*(m_region->GetStatClass()), cmap,
 	         sCand.begin(),sCand.end(),
 	         tCand.begin(),tCand.end());
       
