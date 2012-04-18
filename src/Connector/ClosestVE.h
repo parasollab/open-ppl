@@ -215,7 +215,7 @@ ClosestVE<CFG,WEIGHT>::ClosestVE(XMLNodeReader& _node, MPProblem* _problem):Conn
   m_kClosest = KCLOSESTVE;
   m_tag = -999;                            ///< Nodes can be marked by user
   m_dupeNodes = 0;
-  m__dupeEdges = 0; 
+  m_dupeEdges = 0; 
   ParseXML(_node);
 }
 
