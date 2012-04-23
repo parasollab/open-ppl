@@ -300,6 +300,7 @@ class ElementSet {
     }
 
     bool AddElement(string const& _str, boost::shared_ptr<Element> _e) {
+      _e->SetLabel(_str);
       if(m_elements.empty())
         m_default = _str;
       if(m_elements.find(_str) == m_elements.end())
