@@ -115,6 +115,10 @@ class LocalPlanners : private ElementSet<LocalPlannerMethod<CFG,WEIGHT> >, publi
     return toReturn;
   }
 
+  void AddMethod(string const& _label, LocalPlannerPointer _lpp){
+    ElementSet<LocalPlannerMethod<CFG, WEIGHT> >::AddElement(_label, _lpp);
+  }
+
   virtual void PrintOptions(ostream& _os) { 
     _os << "  Local Planners" << endl;
     for ( typename std::map<string,shared_ptr<LocalPlannerMethod<CFG,WEIGHT> > >::const_iterator M = this->ElementsBegin(); 

@@ -8,6 +8,10 @@ shared_ptr<DistanceMetricMethod> DistanceMetric::GetMethod(string _label) {
   return ElementSet<DistanceMetricMethod>::GetElement(_label);
 }
 
+void 
+DistanceMetric::AddMethod(string const& _label, DistanceMetricPointer _dmm){
+  ElementSet<DistanceMetricMethod>::AddElement(_label, _dmm);
+}
 
 void DistanceMetric::PrintOptions(ostream& _os) const { 
 	_os << "  Distance Metrics methods available:" << endl;

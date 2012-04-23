@@ -20,16 +20,14 @@ class ValidityChecker : public MPBaseObject
 public:
   typedef boost::shared_ptr<ValidityCheckerMethod> VCMethodPtr;
   
-  ValidityChecker() { }
-  ValidityChecker(std::map<std::string, VCMethodPtr> _map) : m_map_vcmethods(_map) {};
+  ValidityChecker() : m_Validity(true) { }
+  ValidityChecker(std::map<std::string, VCMethodPtr> _map) : m_map_vcmethods(_map), m_Validity(true) {};
 
 
-  ValidityChecker(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem) { 
+  ValidityChecker(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem), m_Validity(true) { 
     if(m_debug) cout << "ValidityChecker::ValidityChecker()" << endl;
     in_Node.verifyName(std::string("validity_test"));
 
-    m_Validity=true;
-    
     XMLNodeReader::childiterator citr;
     for(citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr) {    
       if(citr->getName() == "CollisionDetection") {

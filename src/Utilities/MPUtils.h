@@ -302,10 +302,10 @@ class ElementSet {
     bool AddElement(string const& _str, boost::shared_ptr<Element> _e) {
       if(m_elements.empty())
         m_default = _str;
-      if(m_elements.find(_e->GetLabel()) == m_elements.end())
-        m_elements[_e->GetLabel()] = _e;
+      if(m_elements.find(_str) == m_elements.end())
+        m_elements[_str] = _e;
       else
-        cerr << "\nWarning, method list already has a pointer associated with \"" << _e->GetLabel() << "\", not added\n";
+        cerr << "\nWarning, method list already has a pointer associated with \"" << _str << "\", not added\n";
       return true;
     }
 

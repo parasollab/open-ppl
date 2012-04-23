@@ -22,6 +22,7 @@ class MPStrategy : public MPBaseObject
 public:
 /*  MPStrategy(Sampler<CfgType> _m_pNodeGeneration, Connector<CfgType, WeightType> _m_pConnection, LocalPlanners<CfgType, WeightType> _m_pLocalPlanners, MapEvaluator<CfgType, WeightType> _m_Evaluator, MPCharacterizer<CfgType, WeightType> _m_pCharacterizer, Features* _m_Features, PartitioningMethods* _m_PartitioningMethods, PartitioningEvaluators* _m_PartitioningEvaluators);
  */
+  MPStrategy(){}
   MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
   virtual ~MPStrategy () {}
   
@@ -29,6 +30,7 @@ public:
    MPStrategyMethod* CreateMPStrategyMethod(XMLNodeReader& citr);
 
   LocalPlanners<CfgType, WeightType>* GetLocalPlanners() {return m_pLocalPlanners;};
+  void SetLocalPlanners(LocalPlanners<CfgType, WeightType>* _lp) {m_pLocalPlanners = _lp;};
   Sampler<CfgType>* GetSampler() {return m_pNodeGeneration;};
   Connector<CfgType, WeightType>* GetConnector(){return m_pConnection;};
   #ifndef _PARALLEL

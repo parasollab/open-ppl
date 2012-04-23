@@ -76,7 +76,8 @@ Run(int in_RegionID)
   vector< Connector<CfgType, WeightType>::ConnectionPointer > methods;
     
   if(m_vecStrNodeConnectionLabels.empty()) {
-    methods.push_back(Connector<CfgType, WeightType>::ConnectionPointer(new NeighborhoodConnection<CfgType, WeightType>("", 1, 1, false, true, false)));
+    methods.push_back(Connector<CfgType, WeightType>::ConnectionPointer(
+          new NeighborhoodConnection<CfgType, WeightType>("", "", 1, 1, false, true, false)));
   }
   else
     for(vector<string>::iterator I = m_vecStrNodeConnectionLabels.begin(); I != m_vecStrNodeConnectionLabels.end(); ++I)
@@ -103,7 +104,8 @@ Run(int in_RegionID)
 
     if(m_vecStrSmoothNodeConnectionLabels.empty()) {
       // all pairs
-      methods.push_back(Connector<CfgType, WeightType>::ConnectionPointer(new NeighborhoodConnection<CfgType, WeightType>(0)));
+      methods.push_back(Connector<CfgType, WeightType>::ConnectionPointer(
+            new NeighborhoodConnection<CfgType, WeightType>()));
     }
     else
       for(vector<string>::iterator I = m_vecStrSmoothNodeConnectionLabels.begin(); I != m_vecStrSmoothNodeConnectionLabels.end(); ++I)

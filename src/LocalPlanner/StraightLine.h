@@ -20,7 +20,7 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 
     /** @name Constructors and Destructor */
     // @{
-    StraightLine();
+    StraightLine(string _vcMethod = "", bool _search = false);
     StraightLine(XMLNodeReader& _node, MPProblem* _problem);
     virtual ~StraightLine();
     // @}
@@ -130,8 +130,8 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
 //
 /////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
-StraightLine<CFG, WEIGHT>::StraightLine() : 
-  LocalPlannerMethod<CFG, WEIGHT>() {
+StraightLine<CFG, WEIGHT>::StraightLine(string _vcMethod, bool _search) : 
+  LocalPlannerMethod<CFG, WEIGHT>(), m_vcMethod(_vcMethod), m_binarySearch(_search) {
     this->SetName("StraightLine");
   }
 
