@@ -33,13 +33,18 @@ public:
   ///\todo Finish these interfaces.
  // void WriteRoadmap();
  
-  void SetMPStrategy(MPStrategy* in_pStrategy) {m_pMPStrategy = in_pStrategy;};
-  inline DistanceMetric* GetDistanceMetric() {return m_pDistanceMetric; };
-  inline NeighborhoodFinder* GetNeighborhoodFinder() {return m_pNeighborhoodFinder; };
-  inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection; };
-  inline ValidityChecker<CfgType>* GetValidityChecker() {return m_pValidityChecker; };
-  inline Environment* GetEnvironment() {return m_pEnvironment; };
   inline MPStrategy* GetMPStrategy() {return m_pMPStrategy;};
+  inline void SetMPStrategy(MPStrategy* in_pStrategy) {m_pMPStrategy = in_pStrategy;};
+  inline DistanceMetric* GetDistanceMetric() {return m_pDistanceMetric;};
+  inline void SetDistanceMetric(DistanceMetric* _dm){m_pDistanceMetric = _dm;};
+  inline NeighborhoodFinder* GetNeighborhoodFinder() {return m_pNeighborhoodFinder;};
+  inline void SetNeighborhoodFinder(NeighborhoodFinder* _nf) {m_pNeighborhoodFinder = _nf;};
+  inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection;};
+  inline void SetCollisionDetection(CollisionDetection* _cd) {m_pCollisionDetection = _cd;};
+  inline ValidityChecker<CfgType>* GetValidityChecker() {return m_pValidityChecker;};
+  inline void SetValidityChecker(ValidityChecker<CfgType>* _vc) {m_pValidityChecker = _vc;};
+  inline Environment* GetEnvironment() {return m_pEnvironment;};
+  inline void SetEnvironment(Environment* _e) {m_pEnvironment = _e;};
   
   
   //inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
@@ -58,7 +63,8 @@ public:
   //void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
   void PrintOptions(ostream& out_os);
   //ostream& GetFileStreamByLabel(string& in_strLabel);
-  
+ 
+  void SetMPProblem();
 ////////////
 //
 //Data

@@ -251,6 +251,13 @@ class ContainerBase {
 
     boost::shared_ptr<Method> GetMethod(const string _name) {return m_methods[_name];}
 
+    void SetMPProblem(MPProblem* _mp){
+      typedef typename map<string, boost::shared_ptr<Method> >::iterator MIT;
+      for(MIT mit = m_methods.begin(); mit!=m_methods.end(); mit++){
+        mit->second->SetMPProblem(_mp);
+      }
+    }
+
   protected:
     //MethodTypes: sorted list of method types class will use, puts most derived first
     typedef typename boost::mpl::sort<TypeList, boost::is_base_of<boost::mpl::_2, boost::mpl::_1> >::type MethodTypes;
@@ -328,6 +335,13 @@ class ElementSet {
       return element;
     }
 
+    void SetMPProblem(MPProblem* _mp){
+      typedef typename map<string, boost::shared_ptr<Element> >::iterator MIT;
+      for(MIT mit = m_elements.begin(); mit!=m_elements.end(); mit++){
+        mit->second->SetMPProblem(_mp);
+      }
+    }
+
     typename map<string, boost::shared_ptr<Element> >::const_iterator ElementsBegin() const { return m_elements.begin(); }
     typename map<string, boost::shared_ptr<Element> >::const_iterator ElementsEnd() const { return m_elements.end(); }
 
@@ -373,12 +387,13 @@ class MPBaseObject {
     };
 
     MPProblem* GetMPProblem() const {return m_problem;}
-    void SetMPProblem(MPProblem* _m){m_problem = _m;}
+    virtual void SetMPProblem(MPProblem* _m){m_problem = _m;}
     virtual void PrintOptions(ostream& _os) {};
     string GetLabel() const {return m_label;}
+    void SetLabel(string _s) {m_label = _s;}
     string GetName()  const {return m_name;}
-    string GetNameAndLabel() const {return m_name + "::" + m_label;}
     void SetName (string _s) {m_name  = _s;}
+    string GetNameAndLabel() const {return m_name + "::" + m_label;}
 
   private:
     MPProblem* m_problem;

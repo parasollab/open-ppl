@@ -78,7 +78,9 @@ class DistanceMetric : private ElementSet<DistanceMetricMethod>, public MPBaseOb
    DistanceMetricPointer GetMethod(string _label);
 
    void AddMethod(string const& _label, DistanceMetricPointer _dmm);
-   
+  
+   virtual void SetMPProblem(MPProblem* _mp);
+
    void PrintOptions(ostream& _os) const;
 
 };

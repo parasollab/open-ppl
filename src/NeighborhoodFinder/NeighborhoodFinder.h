@@ -125,6 +125,11 @@ private:
   void AddNFMethod(string in_strLabel, NeighborhoodFinderPointer in_ptr) {
           NeighborhoodFinderContainer::AddMethod(in_strLabel, in_ptr);
   }
+
+  virtual void SetMPProblem(MPProblem* _mp){
+    MPBaseObject::SetMPProblem(_mp);
+    NeighborhoodFinderContainer::SetMPProblem(_mp);
+  }
   //@}
   
 /*

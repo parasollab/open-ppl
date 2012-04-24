@@ -13,6 +13,12 @@ DistanceMetric::AddMethod(string const& _label, DistanceMetricPointer _dmm){
   ElementSet<DistanceMetricMethod>::AddElement(_label, _dmm);
 }
 
+void 
+DistanceMetric::SetMPProblem(MPProblem* _mp){
+  MPBaseObject::SetMPProblem(_mp);
+  ElementSet<DistanceMetricMethod>::SetMPProblem(_mp);
+}
+
 void DistanceMetric::PrintOptions(ostream& _os) const { 
 	_os << "  Distance Metrics methods available:" << endl;
   for(map<string, shared_ptr<DistanceMetricMethod> >::const_iterator M = ElementsBegin(); M != ElementsEnd(); ++M)

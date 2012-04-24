@@ -52,12 +52,16 @@ class Connector :  private ElementSet< ConnectionMethod<CFG,WEIGHT> >,
       /* ACCESS METHODS */
       ////////////////////////////////////////////////////////////////////////////////////
       ConnectionPointer GetMethod(const string& _label){
-        ConnectionPointer toReturn = ElementSet<ConnectionMethod<CFG,WEIGHT> >::GetElement(_label);
-        if(toReturn.get() == NULL){
-          cerr << "Connector::GetMethod(..) - Error: " << _label << " not found!" << endl;
-          exit(-1);
-        }
-        return toReturn;
+        return ElementSet<ConnectionMethod<CFG,WEIGHT> >::GetElement(_label);
+      }
+    
+      void AddMethod(string const& _label, ConnectionPointer _cp){
+        ElementSet<ConnectionMethod<CFG, WEIGHT> >::AddElement(_label, _cp);
+      }
+
+      virtual void SetMPProblem(MPProblem* _mp){
+        MPBaseObject::SetMPProblem(_mp);
+        ElementSet<ConnectionMethod<CFG, WEIGHT> >::SetMPProblem(_mp);
       }
 
       ////////////////////////////////////////////////////////////////////////////////////

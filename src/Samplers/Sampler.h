@@ -81,7 +81,16 @@ class Sampler : private ElementSet<SamplerMethod<CFG> >, public MPBaseObject {
     SamplerPointer GetMethod(string _label) {
       return ElementSet<SamplerMethod<CFG> >::GetElement(_label);
     }
-  
+
+    void AddMethod(string const& _label, SamplerPointer _sp){
+      ElementSet<SamplerMethod<CFG> >::AddElement(_label, _sp);
+    }
+
+    virtual void SetMPProblem(MPProblem* _mp){
+      MPBaseObject::SetMPProblem(_mp);
+      ElementSet<SamplerMethod<CFG> >::SetMPProblem(_mp);
+    }
+
     virtual void PrintOptions(ostream& _out) {
       _out << "Sampler methods available:\n";
       for(typename map<string, boost::shared_ptr<SamplerMethod<CFG> > >::const_iterator S = ElementSet<SamplerMethod<CFG> >::ElementsBegin(); 

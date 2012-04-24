@@ -32,7 +32,9 @@ public:
   LocalPlanners<CfgType, WeightType>* GetLocalPlanners() {return m_pLocalPlanners;};
   void SetLocalPlanners(LocalPlanners<CfgType, WeightType>* _lp) {m_pLocalPlanners = _lp;};
   Sampler<CfgType>* GetSampler() {return m_pNodeGeneration;};
+  void SetSamplers(Sampler<CfgType>* _s){m_pNodeGeneration = _s;};
   Connector<CfgType, WeightType>* GetConnector(){return m_pConnection;};
+  void SetConnectors(Connector<CfgType, WeightType>* _c){m_pConnection = _c;};
   #ifndef _PARALLEL
   MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
   MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_Evaluator;}; 
@@ -48,7 +50,9 @@ public:
   virtual void Solve(); 
   MPStrategyMethod* GetMPStrategyMethod(string& );////////////////////////
   ///@ToDo Move addPartialEdge, addAllEdges to Connector
- protected:
+
+  virtual void SetMPProblem(MPProblem* _mp);
+protected:
   Sampler<CfgType>* m_pNodeGeneration;
   Connector<CfgType, WeightType>* m_pConnection;
   LocalPlanners<CfgType, WeightType>* m_pLocalPlanners;

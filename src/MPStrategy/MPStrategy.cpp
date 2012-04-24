@@ -184,6 +184,33 @@ GetMPStrategyMethod(string& in_strLabel) {
   return NULL;
 }
 
+void 
+MPStrategy::SetMPProblem(MPProblem* _mp){
+  MPBaseObject::SetMPProblem(_mp);
+
+  m_pNodeGeneration->SetMPProblem(_mp);
+  m_pConnection->SetMPProblem(_mp);
+  m_pLocalPlanners->SetMPProblem(_mp);
+  
+  //Characterization and Filtering
+#ifndef _PARALLEL
+  //m_pCharacterizer->SetMPProblem(_mp);
+  
+  //Map_Evaluation
+  //m_Evaluator->SetMPProblem(_mp);
+  
+  //UAS items
+  //m_PartitioningMethods->SetMPProblem(_mp);
+  //m_PartitioningEvaluators->SetMPProblem(_mp);
+  //m_Features->SetMPProblem(_mp);
+#endif
+
+  typedef vector< pair<MPStrategyMethod*, XMLNodeReader*> >::iterator MPSIT;
+  for(MPSIT mpsit = all_MPStrategyMethod.begin(); mpsit!=all_MPStrategyMethod.end(); mpsit++){
+    mpsit->first->SetMPProblem(_mp);
+  }
+}
+
 XMLNodeReader* MPStrategy::
 GetXMLNodeForStrategy(string& in_strLabel) {
   vector<pair<MPStrategyMethod*, XMLNodeReader*> >::iterator I;

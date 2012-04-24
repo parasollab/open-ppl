@@ -87,6 +87,19 @@ GetMPRegion(int in_RegionId) {
   return (m_vecMPRegions[in_RegionId]);
 }
 
+void 
+MPProblem::SetMPProblem(){
+  m_pMPStrategy->SetMPProblem(this);
+  m_pEnvironment->SetMPProblem(this);
+  m_pDistanceMetric->SetMPProblem(this);
+  m_pCollisionDetection->SetMPProblem(this);
+  m_pValidityChecker->SetMPProblem(this);
+  m_pNeighborhoodFinder->SetMPProblem(this);
+
+  typedef vector<MPRegion<CfgType, WeightType>*>::iterator RIT;
+  for(RIT rit = m_vecMPRegions.begin(); rit!=m_vecMPRegions.end(); rit++)
+    (*rit)->SetMPProblem(this);
+}
 
 /*
 void MPProblem::
