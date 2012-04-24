@@ -41,7 +41,8 @@ class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
     // Constructors and Destructor
     NeighborhoodConnection(string _lp = "", string _nf = "", 
         int _k = KCLOSEST, int _m = MFAILURE, 
-        bool _countFailures = false, bool _unconnected = false, bool _random = false);
+        bool _countFailures = false, bool _unconnected = false, 
+        bool _random = false, bool _checkIfSameCC = false);
     NeighborhoodConnection(XMLNodeReader& _node, MPProblem* _problem);
     virtual ~NeighborhoodConnection();
 
@@ -93,13 +94,13 @@ class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
 ///////////////////////////////////////////////////////////////////////////////
   template <class CFG, class WEIGHT>
 NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(string _lp, string _nf, int _k, int _m, bool _countFailures, bool
-    _unconnected, bool _random) 
+    _unconnected, bool _random, bool _checkIfSameCC) 
   : ConnectionMethod<CFG,WEIGHT>(), m_k(_k), m_fail(_m), 
-  m_countFailures(_countFailures), m_unconnected(_unconnected), m_random(_random){
+  m_countFailures(_countFailures), m_unconnected(_unconnected),
+  m_random(_random), m_checkIfSameCC(_checkIfSameCC){
     this->SetName("NeighborhoodConnection"); 
     this->m_lpMethod = _lp;
     this->m_nfMethod = _nf;
-    m_checkIfSameCC = true;
   }
 
 ///////////////////////////////////////////////////////////////////////////////
