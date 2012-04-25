@@ -11,6 +11,7 @@ using namespace psbmp;
 using namespace stapl;
 
 
+
 /// General Framework for roadmap construction, calls MPStrategy method (i.e. BasicPRM, Basic RRT) directly
 /// to be called if region migration is not needed
 class ConstructRoadmap
@@ -163,76 +164,6 @@ class NodeConnector
         
 };
 
-
-struct SetRegionCC{
-  template <typename RGView, typename CCView>
-  void operator()(RGView _v1, CCView _v2) {
-     std::vector<pair<VID,size_t> > ccVec;
-     for(typename CCView::iterator ccit = _v2.begin(); ccit != _v2.end(); ++ccit){
-       ccVec.push_back(*ccit);
-     }
-    _v1.property().SetCCs(ccVec);
- }
-};
-
-
-template<typename RGType, typename RType>
-class RegionConnector 
-{
-  private:
-  typedef Connector<CfgType, WeightType> NC;
-  typedef NC::ConnectionPointer NCP;
-  typedef MPRegion<CfgType,WeightType>  MPR;
-  
-  
-  MPR* m_region;
-  NC* m_nc;
-  int m_k;
-  RGType* m_g;
- 
-  public:
-
-  RegionConnector(MPR* _mpr, RGType* _g, NC* _nc, int _k) :m_region(_mpr),m_nc(_nc),m_k(_k),m_g(_g){ }
-  
-  
-  void define_type(stapl::typer &_t)  
-  {
-    _t.member(m_region);
-  }
-  
-  template<typename regionView> 
-  void operator()(regionView _view) const
-  {
-    NCP ncp = m_nc->GetMethod("Closest");
-    vector<VID> sVids = _view.property().RegionVIDs();
-    //PrintValue("Region Connector - sVid size: ", sVids.size());
-    random_shuffle(sVids.begin(), sVids.end());
-    vector<VID> sCand;
-    sCand.resize(m_k);
-    //TO DO: rewrite copy to optimize space complexity
-    copy(sVids.begin(), sVids.begin() + std::min(static_cast<int>(sVids.size()), m_k), sCand.begin());
-    typedef typename regionView::adj_edges_type ADJV;
-    ADJV  edges = _view.edges();
-    for(typename regionView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
-      RType tBBI = (*(m_g->find_vertex((*ei).target()))).property();
-      vector<VID> tVids = tBBI.RegionVIDs();
-      //PrintValue("Region Connector - tVid size: ", tVids.size());
-      random_shuffle(tVids.begin(), tVids.end());
-      vector<VID> tCand;
-      tCand.resize(m_k);
-      copy(tVids.begin(), tVids.begin() + std::min(static_cast<int>(tVids.size()), m_k), tCand.begin());
-      
-      // temporary fix for Parallel code to compile
-      stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
-      ncp->Connect(m_region->GetRoadmap(),*(m_region->GetStatClass()), cmap,
-	         sCand.begin(),sCand.end(),
-	         tCand.begin(),tCand.end());
-      
-   }
-	   
-  }
-        
-};
 
 
 

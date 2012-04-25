@@ -1,59 +1,7 @@
 #include "RegularSubdivisionMethod.h"
-#include "ConstructRegionMap.h"
 #include "BasicDecomposition.h"
-
-
-
-using namespace std;
-using namespace stapl;
-using namespace psbmp;
-
-/**
- * Custom vertex property that implements coloring should extend Cfg class 
-   for internal coloring
- */
- struct cc_color_property {
-  size_t color, cc;
-  cc_color_property() : color(0), cc(0) { }
-  cc_color_property(size_t c, size_t q) : color(c), cc(q) { }
-  void set_color(size_t c) { color = c; }
-  void set_cc(size_t c) { cc = c; }
-  size_t get_color() const { return color; }
-  size_t get_cc() const { return cc; }
-  void define_type(typer& t) { t.member(cc); t.member(color); }
-};
-
-namespace stapl {
-template <typename Accessor>
-class proxy<cc_color_property, Accessor> 
-  : public Accessor
-{ 
-private:
-  friend class proxy_core_access;
-  typedef cc_color_property   target_t;
-
-public:
-  explicit proxy(Accessor const& acc) 
-    : Accessor(acc) { }
-
-  operator target_t() const { return Accessor::read(); }
-
-  proxy const& operator=(proxy const& rhs) { 
-    Accessor::write(rhs);
-    return *this;
-  }
-
-  proxy const& operator=(target_t const& rhs) { 
-    Accessor::write(rhs); 
-    return *this; 
-  }
-
-  void set_color(size_t _c) { Accessor::invoke(&target_t::set_color, _c); }
-  size_t get_color() const { return Accessor::const_invoke(&target_t::get_color); }
-  void set_cc(size_t _c) { Accessor::invoke(&target_t::set_cc, _c); }
-  size_t get_cc() const { return Accessor::const_invoke(&target_t::get_cc); }
-};
-};
+#include "ConstructRegionMap.h"
+#include "RegionMapConnect.h"
 
 
 RegularSubdivisionMethod::RegularSubdivisionMethod(XMLNodeReader& _node, MPProblem* _problem) : MPStrategyMethod(_node, _problem) {
@@ -83,10 +31,10 @@ void RegularSubdivisionMethod::ParseXML(XMLNodeReader& _node){
 			  string(""), string("Node Connection Method"));
 	  m_vecStrNodeConnectionLabels.push_back(connect_method);
 	  citr->warnUnrequestedAttributes();
-	}else if(citr->getName() == "component_connection_method"){
-		string connectCCMethod = citr->stringXMLParameter(string("Method"), true, 
-			string(""), string("Component Connection Method"));
-		m_ComponentConnectionLabels.push_back(connectCCMethod);
+	}else if(citr->getName() == "region_connection_method"){
+		string connectRegionMethod = citr->stringXMLParameter(string("Method"), true, 
+			string(""), string("Region Connection Method"));
+		m_RegionConnectionLabels.push_back(connectRegionMethod);
 		citr->warnUnrequestedAttributes();
 	}else if(citr->getName() == "num_row") {
 		 m_row = citr->numberXMLParameter(string("nRow"), true, 
@@ -116,13 +64,6 @@ void RegularSubdivisionMethod::ParseXML(XMLNodeReader& _node){
 		 m_ccc = citr->stringXMLParameter("type", true,
 			"", "CC connection strategy option");
 
-		 if(m_ccc != "closest" && m_ccc != "largest")
-		 {
-		    cerr << "ERROR::Please choose an existing k_closest_cc connection type" << endl;
-		    cerr << "Reference this error on line " << __LINE__ << " of file " << __FILE__ <<
-		    endl;
-		    exit(-1);
-		 }
 		 citr->warnUnrequestedAttributes();
 	} else {
 		citr->warnUnknownNode();
@@ -148,12 +89,19 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   shared_ptr<ValidityCheckerMethod> vcm = GetMPProblem()->GetValidityChecker()->GetVCMethod("cd1");
   Connector<CfgType, WeightType>* nc = GetMPProblem()->GetMPStrategy()->GetConnector();
   
+  
+  typedef vector<pair<string, int> >::iterator I;
+  typedef vector<string>::iterator J;
+  typedef std::tr1::tuple<string,string, int> connectParam;
+  typedef array<BoundingBox> arrayBbox;
+  typedef array_view <arrayBbox> viewBbox;
+  
   int mesh_size = m_row * m_col;
+  int num_samples;
   
   shared_ptr<BoundingBox> bbox = env->GetBoundingBox();
   
-  typedef array<BoundingBox> arrayBbox;
-  typedef array_view <arrayBbox> viewBbox;
+  
   arrayBbox pArrayBbox(mesh_size,*bbox);
   
   
@@ -177,15 +125,15 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   rmi_fence();
   
   viewBbox arrView(pArrayBbox);
+  rmi_fence();
   
-  int num_samples;
-  typedef vector<pair<string, int> >::iterator I;
+  
    
   ////GENERATE NODES IN REGIONS
   for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr){
+    num_samples = itr->second;  
     Sampler<CfgType>::SamplerPointer sp = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(itr->first);
-    NodeGenerator nodeGen(m_region,env,sp,vcm,itr->second);
-    num_samples = itr->second;
+    NodeGenerator nodeGen(m_region,env,sp,vcm,num_samples);
     map_func(nodeGen,arrView,regionView);
   }
   rmi_fence();
@@ -238,11 +186,14 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   
    
   
-  ///CONNECT REGIONS ROADMAP
+  ///CONNECT REGIONS ROADMAP 
  // edge_set_view<RRGraph> regionEdgeView(*regularRegion); // edge set view not available in new container
-  RegionConnector<RRGraph,Region> regionCon(m_region,&regularRegion, nc,m_k1);
-  new_algorithms::for_each(regionView,regionCon);
-  rmi_fence();
+ for(J itr2 = m_RegionConnectionLabels.begin(); itr2 != m_RegionConnectionLabels.end(); ++itr2){
+   connectParam conParam = std::tr1::make_tuple(*itr2,m_ccc,m_k1);
+   RegionConnector<RRGraph,Region,property_map_type> regionCon(m_region,&regularRegion,map, nc,conParam);
+   new_algorithms::for_each(regionView,regionCon);
+ }
+ // rmi_fence();
   
   ///DEBUG
   PrintOnce("RUN::roadmap graph edges after: ", rmg->num_edges());

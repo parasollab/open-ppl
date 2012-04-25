@@ -7,6 +7,7 @@
 
 
 
+
 typedef typename stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Region, WeightType> RRGraph;
 typedef typename RRGraph::vertex_descriptor RVID; 
 typedef typename RRGraph::vertex_iterator RVI;
@@ -30,7 +31,7 @@ class RegularSubdivisionMethod : public MPStrategyMethod {
     virtual void PrintOptions(ostream& _os);
 
   private:
-    vector<string> m_ComponentConnectionLabels;
+    vector<string> m_RegionConnectionLabels;
     MPRegion<CfgType,WeightType>* m_region;
     vector<pair<string, int> > m_vecStrNodeGenLabels;
     vector<string> m_vecStrNodeConnectionLabels;
@@ -38,6 +39,7 @@ class RegularSubdivisionMethod : public MPStrategyMethod {
     int m_row,m_col,m_runs, m_k1, m_k2;
     double m_xepsilon, m_yepsilon, m_zepsilon;
     string m_nf, m_ccc;
+   
 };
 
 #endif 
