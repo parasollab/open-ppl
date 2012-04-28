@@ -190,8 +190,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, Stat
 
       vector<VID> closest;
       back_insert_iterator<vector<VID> > iterBegin(closest);
-      back_insert_iterator<vector<VID> > iterEnd = FindKNeighbors(_rm, vCfg, _itr2First, _itr2Last, kToFind,
-          iterNeighbors, iterBegin);   
+      FindKNeighbors(_rm, vCfg, _itr2First, _itr2Last, kToFind, iterNeighbors, iterBegin);   
 
       _stats.StopClock("kClosest");
 

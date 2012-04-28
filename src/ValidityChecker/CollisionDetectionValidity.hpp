@@ -228,11 +228,7 @@ template<typename CFG>
 bool
 CollisionDetectionValidity<CFG>::
 IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo,
-	      shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obst, std::string *pCallName) 
-{
-  int nFreeRobot;
-  nFreeRobot = rob->GetFreeBodyCount();
-  
+    shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obst, std::string *pCallName) {
   std::vector<CollisionDetectionMethod*>::iterator I;
   for(I=m_selected.begin(); I!=m_selected.end(); I++) {
     int tp = (*I)->GetType();
@@ -240,18 +236,18 @@ IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo,
     if((tp == Out) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName, ignore_i_adjacent_links) == false)) {
       return false;
     }
-    
+
     // Type In: no collision unsure; collision sure.
     if ((tp == In) && ((*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName, ignore_i_adjacent_links) == true)) {
       return true;
     }
-    
+
     // Type Exact: no collision sure; collision sure.
     if(tp == Exact) {
       return (*I)->IsInCollision(rob, obst, Stats, _cdInfo, pCallName, ignore_i_adjacent_links);
     }
   }
-  
+
   return true;
 }
 

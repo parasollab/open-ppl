@@ -844,7 +844,7 @@ IsEdge(VERTEX& v1, VERTEX& v2){
 VID vid1, vid2;
 vid1= GetVID(v1);
 vid2= GetVID(v2);
-return IsEdge(v1, v2);
+return IsEdge(vid1, vid2);
 }
 
 
