@@ -117,6 +117,7 @@ ConnectCCs<CFG, WEIGHT>::PrintOptions(ostream& _os){
   ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  m_kPairs = ";
   _os << m_kPairs << "  m_smallcc = " << m_smallcc ;
+  _os << "  m_k2 = " << m_k2;
   _os << endl;
 }
 
@@ -243,7 +244,9 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
 
   if(this->m_debug){
     cout << "components(m_kPairs="<< m_kPairs ;
-    cout << ", m_smallcc="<<m_smallcc <<"): "<<flush;
+    cout << ", m_smallcc="<<m_smallcc <<", m_k2=" << m_k2 << "): "<<flush;
+    _stats.DisplayCCStats(cout, *(_rm->m_pRoadmap)); 
+    cout << endl;
   }
 
   _cmap.reset();
@@ -290,17 +293,23 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
       vector<VID> k2CCID;
       GetK2Pairs(id,k2CCID);
       for(VIDIT v2=k2CCID.begin();v2!=k2CCID.end();v2++){
+        if(this->m_debug)
+          cout << "connecting cc " << id+1 << " to cc " << (*v2)+1 << "... ";
         ConnectNeighbors(_rm, _stats, ccset1[id], ccset2[*v2], _collision);
+        if(this->m_debug)
+          cout << " ...done\n";
       }
     }/*endfor V1*/
   } 
 
   else { // Attempt to Connect CCs, All-Pairs for both CCs
     // process components from smallest to biggest  
-    for (InputIterator itr1 = itr1First; itr1 != itr1Last; ++itr1) {
-      for (InputIterator itr2 = itr2First; itr2 != itr2Last; ++itr2) {
+    for (InputIterator itr1 = itr1First; itr1+1 != itr1Last; ++itr1) {
+      for (InputIterator itr2 = itr1+1; itr2 != itr2Last; ++itr2) {
         _cmap.reset();
         // if V1 & V2 not already connected, try to connect them 
+        if(this->m_debug) 
+          cout << "connecting cc " << distance(ccs.begin(), itr1)+1 << " to cc " << distance(ccs.begin(), itr2)+1 << "... ";
         if ( !stapl::sequential::is_same_cc(*pMap,_cmap,*itr1,*itr2) ) {
           vector<VID> cc1,cc2;
 
@@ -314,9 +323,17 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
             ConnectNeighbors(_rm, _stats, cc1, cc2, _collision);
           else
             ConnectNeighbors(_rm, _stats, cc2, cc1, _collision);
-        } 
+        }
+        if(this->m_debug)
+          cout << " ...done\n";
       }/*endfor V2*/ 
     }/*endfor V1*/
+  }
+
+
+  if(this->m_debug) {
+    _stats.DisplayCCStats(cout, *(_rm->m_pRoadmap)); 
+    cout << endl;
   }
 }
 
