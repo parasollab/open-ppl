@@ -2,6 +2,7 @@
 
 #ifdef _PARALLEL
 #include "RegularSubdivisionMethod.h"
+#include "BasicParallelPRM.h"
 #include "Connector.h"
 #else
 #include "MPRegionComparerMethod.h"
@@ -116,6 +117,9 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
 #ifdef _PARALLEL
   if(citr.getName() == "RegularSubdivisionMethod"){
     mpsm = new RegularSubdivisionMethod(citr, GetMPProblem());
+  }
+  else if(citr.getName() == "BasicParallelPRM"){
+    mpsm = new BasicParallelPRM(citr, GetMPProblem());
   }
 #else
   if(citr.getName() == "BasicPRM"){
