@@ -110,8 +110,8 @@ class connect_wf {
     }
     template <typename PartitionedView, typename OverlapView>
       void operator()(PartitionedView v1, OverlapView v2) const {
-        //if(m_debug) cout << "ParallelPRMStrategy::connect_wf- native view.size= " << v1.size() << endl;
-        //if(m_debug) cout << "ParallelPRMStrategy::connect_wf- overlap view.size= " << v2.size() << endl;
+        cout << "ParallelPRMStrategy::connect_wf- native view.size= " << v1.size() << endl;
+        cout << "ParallelPRMStrategy::connect_wf- overlap view.size= " << v2.size() << endl;
 
         typename PartitionedView::vertex_iterator pv_first = v1.begin();
         typename PartitionedView::vertex_iterator pv_last = v1.end();
@@ -123,13 +123,13 @@ class connect_wf {
       //  ######## PGRAPH used to be GRAPH #########
         stapl::sequential::vector_property_map< PGRAPH,size_t > cmap;
         cmap.reset();
-/*        
+        vector<VID> dummyVec;
         m_nodeCon->Connect(
             m_region->GetRoadmap(),
             *(m_region->GetStatClass()),
-            cmap,
-            pv_first,pv_last,
-            ov_first, ov_last);
+            cmap); /*
+            ov_first,ov_last,
+            ov_first, ov_last, back_inserter(dummyVec));
 */
       }
 
@@ -138,7 +138,7 @@ class connect_wf {
 
 
 
-  template<typename View>
+template<typename View>
 void p_sample(View& view, Sampler<CfgType>::SamplerPointer _ng, MPRegion<CfgType,WeightType>* _region, Environment * _env)
 {
   sample_wf wf(_ng,_region,_env);	
@@ -150,14 +150,13 @@ void p_sample(View& view, Sampler<CfgType>::SamplerPointer _ng, MPRegion<CfgType
 
 
 
-  template<typename PartitionedView, typename OverlapView>
+template<typename PartitionedView, typename OverlapView>
 void p_connect(PartitionedView& v1,OverlapView& v2, Connector<CfgType, WeightType>::ConnectionPointer _ncm, MPRegion<CfgType,WeightType>* _region, 
     LocalPlanners<CfgType, WeightType>* _lp)
 {
   connect_wf wf(_ncm,_region,_lp);
 
-  //##########LOG_DEBUG_MSG("ParallelPRMStrategy::p_connect()");
-  //stapl::map_func(wf, v1, v2);
+  stapl::map_func(wf, v1, v2);
 
 
 
