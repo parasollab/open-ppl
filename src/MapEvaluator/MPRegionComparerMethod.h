@@ -61,6 +61,8 @@ class MPRegionComparerMethod: public MPBaseObject {
   virtual ~MPRegionComparerMethod() {}
   
   bool CfgIsVisible(CFG& in_cfg, vector< CFG >& in_vec_cfg) {
+    //TODO - revisit
+    #ifndef _PARALLEL
     LocalPlanners < CFG, WEIGHT > * lp = m_pProblem->GetMPStrategy()->GetLocalPlanners();
     LPOutput< CFG, WEIGHT > lp_output; 
     Environment * env = m_pProblem->GetEnvironment();
@@ -87,6 +89,7 @@ class MPRegionComparerMethod: public MPBaseObject {
 	return true; // 	stop as soon in_cfg can connect to one cfg in in_vec_cfg
       }
    }
+   #endif
     return false;  //in_cfg is not visible to anything in_vec_cfg
   }
   
@@ -352,6 +355,8 @@ public:
   }
 
   virtual void Compare(int in_region_a, int in_region_b) {
+   ///TODO - temporarily disable - revisit if needed
+   #ifndef _PARALLEL
 
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
     Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
@@ -416,6 +421,7 @@ public:
     cout << "RegionCoverageComparer::Compare: a_trapped_node: " << a_trapped_node << endl;
     cout << "RegionCoverageComparer::Compare: b_revealing_node: " << b_revealing_node << endl;
     cout << "RegionCoverageComparer::Compare: b_trapped_node: " << b_trapped_node << endl;
+    #endif
 
   }
 
@@ -437,7 +443,9 @@ public:
   }
 
   virtual void Compare(int in_region_a, int in_region_b) {
-
+    ///TODO - not compiling in parallel, may have to do with constness problem in pgraph
+    /// Revisit after we've decided on what to do with this class- seems not being used anywhere
+    #ifndef _PARALLEL
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
     Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
 
@@ -636,6 +644,7 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
 
   cout << "edge_b_visible_in_a = " << edge_b_visible_in_a << endl;
   cout << "edge_b_not_visible_in_a = " << edge_b_not_visible_in_a << endl;
+  #endif
   
   }
 

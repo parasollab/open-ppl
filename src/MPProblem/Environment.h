@@ -16,9 +16,6 @@
 #include <fstream>
 #include "boost/shared_ptr.hpp"
 
-#ifdef _PARALLEL
-#include "runtime.h"
-#endif
 
 using boost::shared_ptr;
 class MPProblem;
@@ -37,11 +34,8 @@ class MPProblem;
 //@}
 
 
-#ifdef _PARALLEL 
-class Environment : public stapl::p_object, public MPBaseObject{
-#else 
-  class Environment : public MPBaseObject{
-#endif
+
+class Environment : public MPBaseObject{
 public:
 
   ///////////////////////////////////////////////////////////////////////////////////////////

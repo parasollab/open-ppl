@@ -47,7 +47,7 @@ class Region {
   protected:
      
   shared_ptr<BoundingBox> m_bb;
-  vector<pair<RVID, size_t> > m_ccs;//vector of pair (cc size, vid of cc representative)
+  vector<pair<RVID, size_t> > m_ccs;//vector of pair (vid of cc representative,size)
   vector<RVID> m_vids;
   
  public:

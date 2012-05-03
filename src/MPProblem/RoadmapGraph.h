@@ -407,6 +407,13 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
     //else return 0;
     //return 0;
   }
+  size_t get_out_degree(const VID& _vd){
+	  return this->get_degree(_vd);
+  }
+  
+  void delete_vertex(const VID& _vd){
+	  cout << "WARNING- Delete vertex not working pgraph" << endl;
+  }
   
   void AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w){
 	  GRAPH::add_edge_async(_v1,_v2,_w.first);
@@ -504,6 +511,9 @@ AddVertex(VERTEX& _v1) {
         //return (v1->vid); // return vertex id 
         return ((*v1).descriptor()); // return vertex id 
     }
+   #else 
+        VID vertex_id = GRAPH::add_vertex(_v1);
+        return vertex_id;
     #endif
 };
 
@@ -738,6 +748,7 @@ GetVID(VERTEX& _v1) {
     }
     #else 
     cout << "WARNING::STAPL working on fixing problem with const iterators";
+    return INVALID_VID;
     #endif
 }
 
@@ -745,12 +756,12 @@ template<class VERTEX, class WEIGHT>
 bool
 RoadmapGraph<VERTEX,WEIGHT>::
 IsVertex(VERTEX& _v1){
-    #ifndef _PARALLEL
+    #ifndef _PARALLEL ////implement parallel version as map reduce
     CVI v1;
     return ( IsVertex(_v1,&v1) );
     #else
-    cout << "WARNING::STAPL working on fixing problem with const iterators";
-    return true;
+   // cout << "WARNING::STAPL working on fixing problem with const iterators";
+    return false;
     #endif
 }
 
@@ -1120,7 +1131,7 @@ namespace pmpl_detail
     {
       ///fix me::  after constness in STAPL is resolved
       RoadmapGraph<CfgType, WeightType>* m_pMap;
-
+      
       GetCfg(RoadmapGraph<CfgType, WeightType>* _pMap) : m_pMap(_pMap) {}
       ~GetCfg() {}
 
@@ -1145,6 +1156,7 @@ namespace pmpl_detail
         return (*(t)).property();
       }
     };
+    
 
   //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
   //calls find_vertex(..) on VID to call property()

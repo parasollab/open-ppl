@@ -383,9 +383,11 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats
       //get DSSP path
       _rp.clear();
       cmap.reset();
-      find_path_dijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, WEIGHT::MaxWeight()); 
+      //TO DO:: fix compilation issue in parallel
+      #ifndef _PARALLEL
+      stapl::sequential::find_path_dijkstra(*(rdmp->m_pRoadmap), svid, gvid, _rp, WEIGHT::MaxWeight()); 
       //cout << "FindPathDijkstra:: size of vector<VID>" << _rp.size() << endl ;
-
+      #endif 
       cout << "\nStart(" << size_t(_rp[1]) 
 	   << ") and Goal(" << size_t(_rp[_rp.size()-2]) 
 	   << ") seem connected to same CC[" << distance(ccsBegin, CC)+1 

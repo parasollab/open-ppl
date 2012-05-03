@@ -552,11 +552,12 @@ GetEnvironment() {
 //========================================================================
 //read_graph not implemented in parallel yet, the ifdef will be removed when we have
 //read_graph algo for p_graph
-#ifndef _PARALLEL
+
 template <class CFG, class WEIGHT>
 void 
 Roadmap<CFG, WEIGHT>::
 ReadRoadmapGRAPHONLY(const char* _fname) {
+  #ifndef _PARALLEL
   cout << endl << "getting nodes from Read: " << _fname << endl;
 
   ifstream  myifstream(_fname);
@@ -595,9 +596,10 @@ ReadRoadmapGRAPHONLY(const char* _fname) {
     cout << endl  << "In ReadRoadmap: didn't read GRAPHSTART tag right";
     return;
   }
+  #endif
 }
 
-#endif
+
 
 
 //
