@@ -40,6 +40,14 @@ ClearanceInfo::
 }
 
 ////////////////////////////////////////////////////////////////////
+Cfg::Cfg(const Cfg& _other){
+  m_v = _other.m_v;
+  m_dof = _other.m_dof;
+  m_posDof = _other.m_posDof;
+  m_labelMap = _other.m_labelMap;
+  m_statMap = _other.m_statMap;
+}
+
 
 bool Cfg::operator==(const Cfg &_tmp) const {
   return AlmostEqual(_tmp);

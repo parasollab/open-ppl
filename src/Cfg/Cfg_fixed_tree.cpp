@@ -83,6 +83,17 @@ Cfg_fixed_tree::Cfg_fixed_tree(const Cfg& _c) {
   NormalizeOrientation();
 } 
 
+Cfg_fixed_tree::Cfg_fixed_tree(const Cfg_fixed_tree& _c) { 
+  vector<double> _v;
+  _v = _c.GetData();
+  m_dof = _v.size();
+  m_posDof = 0;
+  m_v.clear();
+  for(int i=0; i<m_dof; i++)
+    m_v.push_back(_v[i]);
+  NormalizeOrientation();
+} 
+
 Cfg_fixed_tree::~Cfg_fixed_tree() {}
 	
 Vector3D Cfg_fixed_tree::GetRobotCenterPosition() const {

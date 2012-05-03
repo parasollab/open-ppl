@@ -46,6 +46,7 @@ class Cfg_fixed_tree : public Cfg {
   Cfg_fixed_tree(int _numofJoints);
   Cfg_fixed_tree(const vector<double>& _data);
   Cfg_fixed_tree(const Cfg& _c);
+  Cfg_fixed_tree(const Cfg_fixed_tree& _c);
 
   ///Do nothing
   virtual ~Cfg_fixed_tree();

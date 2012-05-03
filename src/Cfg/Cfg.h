@@ -135,6 +135,10 @@ class Cfg {
   Cfg() {};
   virtual ~Cfg() {};
   
+  /**@name Copy Constructor*/
+  
+  Cfg(const Cfg& _other);
+  
   //@}
     
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +148,7 @@ class Cfg {
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Operators*/
+  /*@name Operators*/
   //@{
     
   ///Return true if this and other Cfg instance have same configuration
