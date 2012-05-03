@@ -6,7 +6,7 @@
 class Cfg_free_multi : public Cfg_free {
 public:
   //class for multiple rigid body robots
-  //v: translational dofs for all robots then postional dofs for all robots
+  //v: translational dofs for all robots then rotational dofs for all robots
 
   //===================================================================
   // Constructors and Destructor
@@ -35,8 +35,13 @@ public:
 
   virtual bool ConfigEnvironment(Environment*) const;
 
+  virtual void GetRandomCfg(double _r, double _rStep);
   virtual void GetRandomCfg(Environment* _env);
-  virtual void GetRandomCfg(Environment *_env,shared_ptr<Boundary> _bb);
+  virtual void GetRandomCfg(Environment *_env, shared_ptr<Boundary> _bb);
+
+  virtual void GetRandomCfg_CenterOfMass(Environment* _env);
+  virtual void GetRandomCfg_CenterOfMass(Environment* _env, shared_ptr<Boundary> _bb);
+
  protected:
   static int NumofRobots;
   

@@ -149,7 +149,7 @@ Clear(){ par_type.clear(); }
 Point3d
 BoundingBox::GetRandomPoint(){
   Point3d p;
-  for(int i=0;i<pos_dofs;i++){
+  for(int i=0;i<min(3, pos_dofs);i++){
     p[i] = bounding_box[i].first +
       (bounding_box[i].second - bounding_box[i].first)*DRand();
   }
@@ -262,7 +262,7 @@ bool BoundingBox::InBoundary(const Cfg& _cfg, Environment* _env = NULL ){
       GMSPolyhedron &poly = robot->GetFreeBody(m)->GetPolyhedron();
       for(vector<Vector3D>::const_iterator V = poly.vertexList.begin(); V != poly.vertexList.end(); ++V)
         if(!IfSatisfiesConstraints(worldTransformation * (*V)))
-	  return false;      
+          return false;      
     }
   }
   return true; 
@@ -378,11 +378,11 @@ IfSatisfiesConstraints(vector<double> point) const {
       }
       if (bounding_box[i].first > bounding_box[i].second) { // wrap around parameter
 	if (point[i] > bounding_box[i].second && point[i] < bounding_box[i].first)
-	  return false;
+          return false;
       }
     } else { //no wrap around in other kinds of parameters
       if (point[i] < bounding_box[i].first || point[i] > bounding_box[i].second)
-	return false;
+        return false;
       // may still need to consider physical constraints not explicitely set by the bounding box
     }
   }

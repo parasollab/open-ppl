@@ -101,6 +101,28 @@ bool Cfg_free_multi::ConfigEnvironment(Environment* env) const {
   return true;
 }
 
+void Cfg_free_multi::GetRandomCfg(double _r, double _rStep) {
+  m_v = vector<double>(m_dof, 0);
+  
+  for(int i=0; i<NumofRobots; ++i) {
+    double alpha = 2.0*M_PI*DRand();
+    double beta  = 2.0*M_PI*DRand();
+    double z = _r*cos(beta);
+    double z1 = _r*sin(beta);
+
+    double roll = (2.0*_rStep)*DRand() - _rStep;
+    double pitch = (2.0*_rStep)*DRand() - _rStep;
+    double yaw = (2.0*_rStep)*DRand() - _rStep;
+
+    m_v[i*3+0] = z1*cos(alpha);
+    m_v[i*3+1] = z1*sin(alpha);
+    m_v[i*3+2] = z;
+    m_v[m_posDof+i*3+0] = roll;
+    m_v[m_posDof+i*3+1] = pitch;
+    m_v[m_posDof+i*3+2] = yaw;
+  }
+}
+
 
 void Cfg_free_multi::GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
   Cfg::GetRandomCfg(_env,_bb);
@@ -108,5 +130,36 @@ void Cfg_free_multi::GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
 
 void Cfg_free_multi::GetRandomCfg(Environment* _env) {
   GetRandomCfg(_env, _env->GetBoundingBox());
+}
+
+void
+Cfg_free_multi::GetRandomCfg_CenterOfMass(Environment *_env, shared_ptr<Boundary> _bb) {
+  m_v = vector<double>(m_dof, 0);
+  
+  for(int r=0; r<NumofRobots; ++r) {
+    Point3d p;
+    if(BoundingBox* bbox = dynamic_cast<BoundingBox*>(_bb.get()))
+    {
+      BoundingBox singleRobotBB(3, 3);
+      for(int i=0; i<3; ++i) {
+        pair<double, double> range = bbox->GetRange(r*3+i);
+        singleRobotBB.SetParameter(i, range.first, range.second);
+      }
+      p = singleRobotBB.GetRandomPoint();
+    } else {
+      if(r > 0)
+        cerr << "WARNING:: In Cfg_free_multi::GetRandomCfg_CenterOfMass: using boundary type other than bounding box, GetRandomPoint() may be incorrect for robot " << r << ".\n";
+      p = _bb->GetRandomPoint();
+    }
+    for(int i=0; i<3; ++i)
+      m_v[r*3+i] = p[i];
+  }
+
+  for(int i=m_posDof; i<m_dof; ++i)
+    m_v[i] = _bb->GetRandomValueInParameter(i-m_posDof);
+}
+
+void Cfg_free_multi::GetRandomCfg_CenterOfMass(Environment *_env) {
+  GetRandomCfg_CenterOfMass(_env, _env->GetBoundingBox());
 }
 

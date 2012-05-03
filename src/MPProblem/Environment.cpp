@@ -229,6 +229,12 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   int num_joints;
   for ( citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr ) {
     if ( citr->getName() == "robot") {
+      string cfg_type = citr->stringXMLParameter("Cfg_name", true, "", "type of robot");
+      if(cfg_type == "Cfg_free_multi") {
+        int num_robots = citr->numberXMLParameter("num_robots", true, 1, 1, MAX_INT, "number of robots");
+        CfgType::setNumofRobots(num_robots);
+      }
+
       num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
       in_pProblem->SetNumOfJoints(num_joints);
 
