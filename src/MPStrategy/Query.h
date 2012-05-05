@@ -344,12 +344,12 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats
 
     //attempt to connect start and goal to cc
     cmap.reset();
-    if(is_same_cc(*(rdmp->m_pRoadmap),cmap, svid, CC->second)) 
+    if(stapl::sequential::is_same_cc(*(rdmp->m_pRoadmap),cmap, svid, CC->second)) 
       cout << "start already connected to CC[" << distance(ccsBegin,CC)+1 << "]\n";
     else
     {
       cmap.reset();
-      get_cc(*(rdmp->m_pRoadmap), cmap, CC->second, cc);
+      stapl::sequential::get_cc(*(rdmp->m_pRoadmap), cmap, CC->second, cc);
       vector<VID> verticesList(1, svid);
       cout << "connecting start to CC[" << distance(ccsBegin,CC)+1 << "]";
 
@@ -359,13 +359,13 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats
     }
 
    cmap.reset();
-    if(is_same_cc(*(rdmp->m_pRoadmap),cmap, gvid, CC->second))
+    if(stapl::sequential::is_same_cc(*(rdmp->m_pRoadmap),cmap, gvid, CC->second))
       cout << "goal already connected to CC[" << distance(ccsBegin,CC)+1 << "]\n";
     else
     {
       if(cc.empty()){
 	cmap.reset();
-        get_cc(*(rdmp->m_pRoadmap), cmap, CC->second, cc);}
+        stapl::sequential::get_cc(*(rdmp->m_pRoadmap), cmap, CC->second, cc);}
       cout << "connecting goal to CC[" << distance(ccsBegin,CC)+1 << "]";
       vector<VID> verticesList(1, gvid);
       
@@ -379,7 +379,7 @@ PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* rdmp, StatClass& Stats
     connected = false;
     vector<VID> _rp;
     cmap.reset();
-    while(is_same_cc(*(rdmp->m_pRoadmap), cmap, svid, gvid)) {
+    while(stapl::sequential::is_same_cc(*(rdmp->m_pRoadmap), cmap, svid, gvid)) {
       //get DSSP path
       _rp.clear();
       cmap.reset();
