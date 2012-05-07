@@ -1,28 +1,5 @@
 #ifndef BASICPARALLELPRM_H
 #define BASICPARALLELPRM_H
-/*
-#include "Roadmap.h"
-
-
-
-#include "MetricUtils.h"
-#include "CollisionDetection.h"
-#include "Connector.h"
-#include "LocalPlanners.h"
-#include "Sampler.h"
-#include "MPProblem.h"
-#include "MPStrategy/MPStrategyMethod.h"
-#include "runtime.h"
-#include "runtime/counter/default_counters.h"
-#include "pRange.h"
-#include "p_array.h"
-#include "views/view_base.hpp"
-#include "views/balance_view.hpp"
-#include "RoadmapGraph.h"
-#include "pContainers/pgraph/view/p_graph_view.h"
-#include "views/native_view.hpp"
-#include "views/replicated_view.hpp"
-*/
 
 #include "ParallelSBMPHeader.h"
 using namespace std;
