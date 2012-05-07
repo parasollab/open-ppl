@@ -1,27 +1,3 @@
-/*
-#include "Roadmap.h"
-
-
-
-#include "MetricUtils.h"
-#include "CollisionDetection.h"
-#include "Connector.h"
-#include "LocalPlanners.h"
-#include "Sampler.h"
-#include "MPProblem.h"
-#include "MPStrategy/MPStrategyMethod.h"
-#include "runtime.h"
-#include "runtime/counter/default_counters.h"
-#include "pRange.h"
-#include "p_array.h"
-#include "views/view_base.hpp"
-#include "views/balance_view.hpp"
-#include "RoadmapGraph.h"
-#include "pContainers/pgraph/view/p_graph_view.h"
-#include "views/native_view.hpp"
-#include "views/replicated_view.hpp"
-*/
-
 #include "BasicParallelPRM.h"
 #include <stapl/views/repeated_view.hpp>
 using namespace std;
@@ -76,9 +52,7 @@ BasicParallelPRM::Run(int in_RegionID) {
   if (m_debug) cout << "BasicParallelPRM::Run()" << endl;
   region = GetMPProblem()->GetMPRegion(in_RegionID);
   pStatClass = region->GetStatClass();
-  CollisionDetection *  pCd = GetMPProblem()->GetCollisionDetection();
   Environment * pEnv = GetMPProblem()->GetEnvironment();
-  LocalPlanners<CfgType, WeightType>* pLp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
 
   RoadmapGraph<CfgType,WeightType> * rmg = region->GetRoadmap()->m_pRoadmap; 
 
@@ -102,13 +76,12 @@ BasicParallelPRM::Run(int in_RegionID) {
       Sampler<CfgType>::SamplerPointer pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(itr->first);
       typedef stapl::array<CfgType> cfgArray;
       typedef stapl::array_view<cfgArray> viewCfgArray;
-      cfgArray PA(itr->second); // ########
-      //####stapl::array_1D_view<stapl::p_array<CfgType> > v(PA);
+      cfgArray PA(itr->second); 
       viewCfgArray v(PA);
 
       t1.start();
-      p_sample(v,pNodeGen,region,pEnv);
-      cout << "P_sample" << endl;
+      sample_wf sampleWf(pNodeGen,region,pEnv);
+      stapl::map_func(sampleWf,stapl::balance_view(v,stapl::get_num_locations()));
       sample_timer = t1.stop();
 
       if (m_debug) 
@@ -129,17 +102,12 @@ BasicParallelPRM::Run(int in_RegionID) {
       typedef stapl::graph_view<RoadmapGraph<CfgType,WeightType> >   VType;
       VType g_view(*rmg);
       
-      //stapl::repeat_view<stapl::replicated_container<VType> > voverlap = stapl::repeat_view(g_view);
-      //stapl::repeat_view<stapl::replicated_container<VType> > voverlap = stapl::repeat_view(g_view);
-
       t2.start();
-      //p_connect(vnative,voverlap,pConnection,region,pLp);
-      connect_wf connWf(pConnection,region,pLp);
+      connect_wf connWf(pConnection,region);
       stapl::map_func(connWf, stapl::native_view(g_view), stapl::repeat_view(g_view));
       connect_timer = t2.stop();
       if (m_debug) {
-        //for (VI vi=region->GetRoadmap()->m_pRoadmap->begin(); vi!= region->GetRoadmap()->m_pRoadmap->end(); ++vi){  
-          //cout<<"\n processor #["<<stapl::get_location_id()<<"] NodeConnection time  = "  << connect_timer << endl; 
+          cout<<"\n processor #["<<stapl::get_location_id()<<"] NodeConnection time  = "  << connect_timer << endl; 
         
       }
     }

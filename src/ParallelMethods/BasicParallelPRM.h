@@ -26,9 +26,7 @@
 
 #include "ParallelSBMPHeader.h"
 using namespace std;
-typedef stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType, WeightType> PGRAPH;
-typedef PGRAPH::vertex_descriptor VID; 
-typedef PGRAPH::vertex_iterator VI;
+
 
 class sample_wf 
 {
@@ -78,7 +76,7 @@ class sample_wf
         for(VIT vit = outNodes.begin(); vit  != outNodes.end(); ++vit, j++) {
 
           CfgType tmp = *vit;
-          VID NEW = region->GetRoadmap()->m_pRoadmap->add_vertex(tmp);
+          region->GetRoadmap()->m_pRoadmap->add_vertex(tmp);
 
         }
 
@@ -92,75 +90,51 @@ class connect_wf {
   private:
     typedef MPRegion<CfgType,WeightType>  MPR_type;
     typedef Connector<CfgType, WeightType>::ConnectionPointer NCM_type;
-    typedef LocalPlanners<CfgType,WeightType> LP_type;
     MPR_type* m_region;
     NCM_type m_nodeCon;
-    LP_type*  m_lp;
 
   public:
-    connect_wf(NCM_type _ncm, MPR_type* _mpr,LP_type* _lp) {
+    connect_wf(NCM_type _ncm, MPR_type* _mpr) {
       m_nodeCon = _ncm;
       m_region = _mpr;
-      m_lp = _lp;
     }
     void define_type(stapl::typer &t)  
     {
 
       t.member(m_region);
     }
-    template <typename PartitionedView, typename OverlapView>
-      void operator()(PartitionedView v1, OverlapView v2) const {
-        cout << "ParallelPRMStrategy::connect_wf- native view.size= " << v1.size() << endl;
-        cout << "ParallelPRMStrategy::connect_wf- overlap view.size= " << v2.size() << endl;
+    template <typename NativeView, typename RepeatView>
+      void operator()(NativeView vw1, RepeatView vw2) const {
+	
+	PrintValue("Basic Parallel- Native View : " , vw1.size());
+	PrintValue("Basic Parallel - Repeat View : " , vw2.size());
 
-        typename PartitionedView::vertex_iterator pv_first = v1.begin();
-        typename PartitionedView::vertex_iterator pv_last = v1.end();
-        typename OverlapView::vertex_iterator ov_first = v2.begin();
-        typename OverlapView::vertex_iterator ov_last = v2.end();
+        
+	vector<VID> v1;
+	vector<VID> v2; 
+	
+	///ass views directly to connect
+	for(typename NativeView::vertex_iterator vit1 = vw1.begin(); vit1!= vw1.end(); ++vit1){
+	  v1.push_back((*vit1).descriptor());
+	}
+	
+	for(typename RepeatView::vertex_iterator vit2 = vw2.begin(); vit2!= vw2.end(); ++vit2){
+	  v2.push_back((*vit2).descriptor());
+	}
 
-        LocalPlanners<CfgType,WeightType>* __lp = const_cast<LocalPlanners<CfgType,WeightType>*>(m_lp);
-
-      //  ######## PGRAPH used to be GRAPH #########
-        stapl::sequential::vector_property_map< PGRAPH,size_t > cmap;
+        stapl::sequential::vector_property_map<RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
         cmap.reset();
         vector<VID> dummyVec;
-        m_nodeCon->Connect(
-            m_region->GetRoadmap(),
-            *(m_region->GetStatClass()),
-            cmap); /*
-            ov_first,ov_last,
-            ov_first, ov_last, back_inserter(dummyVec));
-*/
+        m_nodeCon->Connect(m_region->GetRoadmap(),
+                           *(m_region->GetStatClass()),
+			   cmap,
+                           v1.begin(),v1.end(),
+                           v2.begin(), v2.end());
+
       }
 
 };
 
-
-
-
-template<typename View>
-void p_sample(View& view, Sampler<CfgType>::SamplerPointer _ng, MPRegion<CfgType,WeightType>* _region, Environment * _env)
-{
-  sample_wf wf(_ng,_region,_env);	
-  stapl::map_func(wf,stapl::balance_view(view,stapl::get_num_locations()));
-
-
-
-}
-
-
-
-template<typename PartitionedView, typename OverlapView>
-void p_connect(PartitionedView& v1,OverlapView& v2, Connector<CfgType, WeightType>::ConnectionPointer _ncm, MPRegion<CfgType,WeightType>* _region, 
-    LocalPlanners<CfgType, WeightType>* _lp)
-{
-  connect_wf wf(_ncm,_region,_lp);
-
-  stapl::map_func(wf, v1, v2);
-
-
-
-}
 
 class BasicParallelPRM : public MPStrategyMethod {
   public:
