@@ -68,7 +68,7 @@ double BinaryLPSweptDistance::DistanceCalc(Environment* _env, const Cfg& _c1, co
   LPOutput<CfgType, WeightType> lpOutput;
   LocalPlannerPointer lpMethod = GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
   CfgType col;
-  lpMethod->IsConnected(_env, stats, dm, _c1, _c2, col, &lpOutput, m_positionRes, m_orientationRes, false, true);
+  lpMethod->IsConnected(_env, stats, dm, _c1, _c2, col, &lpOutput, posRes, oriRes, false, true);
   //lpPath does not include _c1 and _c2, so adding them manually
   vector<CfgType> cfgs(1, _c1);
   cfgs.insert(cfgs.end(), lpOutput.path.begin(), lpOutput.path.end());
