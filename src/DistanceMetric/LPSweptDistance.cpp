@@ -37,7 +37,6 @@ void LPSweptDistance::PrintOptions(ostream& _os) const {
 
 double LPSweptDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
   StatClass stats;
-  CollisionDetection cd;
   shared_ptr<DistanceMetricMethod > dm;
   LPOutput<CfgType, WeightType> lpOutput;
   LocalPlannerPointer lpMethod = GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
