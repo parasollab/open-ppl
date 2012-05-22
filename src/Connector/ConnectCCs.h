@@ -46,7 +46,12 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
           InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision);
 
     template<typename OutputIterator>
-      void ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+      void ConnectSmallCC(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+          vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
+          OutputIterator _collision);  
+
+    template<typename OutputIterator>
+      void ConnectBigCC(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
           vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
           OutputIterator _collision);  
 
@@ -70,6 +75,7 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
     size_t m_kPairs;
     size_t m_smallcc;
     size_t m_k2;
+
     // Data from ConnectkCCs
     vector< vector<double> > m_ccDist;
 };
@@ -200,6 +206,7 @@ void ConnectCCs<CFG,WEIGHT>::GetK2Pairs(int _ccid, vector<VID>& _k2CCID){
   }//end for it
 
   //copy
+  _k2CCID.clear();
   _k2CCID.reserve(m_k2);
   for(vector<CCD>::iterator i=_ccids.begin();i!=_ccids.end();++i){
     _k2CCID.push_back(i->second);
@@ -236,6 +243,7 @@ double ConnectCCs<CFG,WEIGHT>::ClosestInterCCDist(Roadmap<CFG, WEIGHT>* _rm,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 template<typename ColorMap, typename InputIterator, typename OutputIterator>
 void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
@@ -249,88 +257,86 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
     cout << endl;
   }
 
-  _cmap.reset();
-  vector< pair<size_t,VID> > ccs1;
-  get_cc_stats(*(_rm->m_pRoadmap),_cmap,ccs1);
-
-  vector<VID> ccs(ccs1.size());
-
-  for(size_t i = 0; i < ccs1.size(); ++i){
-    ccs[i]=ccs1[i].second;
-  }
-  
-  InputIterator itr1First = ccs.begin();
-  InputIterator itr1Last = ccs.end();
-  
-  if(itr1Last - itr1First < 2){
-    return;
-  }
-
-  InputIterator itr2First = itr1First+1;
-  InputIterator itr2Last = itr1Last;
-  
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
-  _cmap.reset();
+  vector< pair<size_t,VID> > ccs1;
+  vector<VID> ccid,cc1,cc2;
 
+  stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
+  get_cc_stats(*(_rm->m_pRoadmap),cmap,ccs1);
+  cout << "Size of VID vector = " << ccs1.size() << endl;
+  if(ccs1.size() <= 1) return;
+
+  VIDIT itr1,itr2;
+  for(int i = 0; i < ccs1.size(); ++i){
+    ccid.push_back(ccs1[i].second);
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////
+  /// ConnectkCCs
+  ///////////////////////////////////////////////////////////////////////////////////
   if(m_k2 != 0){ // Attempt to Connect K2-Closest CCs
-    vector< vector<VID> > ccset1, ccset2;
 
-    for(int j = 0; j < 2; ++j){
-      InputIterator vidsFirst = (j==0) ? itr1First : itr2First;
-      InputIterator vidsLast = (j==0) ? itr1Last : itr2Last;
-      vector< vector<VID> >& ccset = (j==0) ? ccset1 : ccset2;
-      for(InputIterator i = vidsFirst; i != vidsLast; ++i){
-        ccset.push_back(vector<VID>());  
+    cout << "Connecting " << m_k2 << "-closest CCs" << endl;
+    vector<VID> k2CCID;
+    ComputeAllPairsCCDist(_rm, _cmap, ccid.begin(), ccid.end(), ccid.begin(), ccid.end());
+
+    for (itr1 = ccid.begin(); itr1 != ccid.end(); ++itr1) {
+      GetK2Pairs(*itr1,k2CCID);
+      for (VIDIT itr2 = k2CCID.begin(); itr2 != k2CCID.end(); ++itr2) {
         _cmap.reset();
-        get_cc(*pMap, _cmap, *i, ccset.back());
-      }//end for i
-    }//end for j
-
-    ComputeAllPairsCCDist(_rm, _cmap, itr1First, itr1Last, itr2First, itr2Last);
-
-    for(InputIterator itr1 = itr1Last; itr1 != itr1First; --itr1) {
-      int id = itr1 - itr1First - 1;
-      vector<VID> k2CCID;
-      GetK2Pairs(id,k2CCID);
-      for(VIDIT v2=k2CCID.begin();v2!=k2CCID.end();v2++){
-        if(this->m_debug)
-          cout << "connecting cc " << id+1 << " to cc " << (*v2)+1 << "... ";
-        ConnectNeighbors(_rm, _stats, ccset1[id], ccset2[*v2], _collision);
-        if(this->m_debug)
-          cout << " ...done\n";
-      }
-    }/*endfor V1*/
-  } 
-
-  else { // Attempt to Connect CCs, All-Pairs for both CCs
-    // process components from smallest to biggest  
-    for (InputIterator itr1 = itr1First; itr1+1 != itr1Last; ++itr1) {
-      for (InputIterator itr2 = itr1+1; itr2 != itr2Last; ++itr2) {
-        _cmap.reset();
-        // if V1 & V2 not already connected, try to connect them 
-        if(this->m_debug) 
-          cout << "connecting cc " << distance(ccs.begin(), itr1)+1 << " to cc " << distance(ccs.begin(), itr2)+1 << "... ";
         if ( !stapl::sequential::is_same_cc(*pMap,_cmap,*itr1,*itr2) ) {
-          vector<VID> cc1,cc2;
 
           _cmap.reset();
           get_cc(*pMap,_cmap,*itr1,cc1);
-
           _cmap.reset();
           get_cc(*pMap,_cmap,*itr2,cc2);
 
-          if(cc1.size() <= cc2.size())
-            ConnectNeighbors(_rm, _stats, cc1, cc2, _collision);
-          else
-            ConnectNeighbors(_rm, _stats, cc2, cc1, _collision);
+          if(cc1.size() < m_smallcc && cc2.size() < m_smallcc){
+            ConnectSmallCC(_rm, _stats, cc1, cc2, _collision);
+          }
+          else if(cc1.size() <= cc2.size()){
+            ConnectBigCC(_rm, _stats, cc1, cc2, _collision);
+          }
+          else{
+            ConnectBigCC(_rm, _stats, cc2, cc1, _collision);
+          }
         }
         if(this->m_debug)
           cout << " ...done\n";
-      }/*endfor V2*/ 
-    }/*endfor V1*/
+      }
+    }
+  } 
+
+  ///////////////////////////////////////////////////////////////////////////////////
+  /// ConnectCCs
+  ///////////////////////////////////////////////////////////////////////////////////
+  else { // Attempt to Connect CCs, All-Pairs for all CCs
+    cout << "Connecting CCs" << endl;
+    for (itr1 = ccid.begin(); itr1 != ccid.end(); ++itr1) {
+      for (itr2 = itr1+1; itr2 != ccid.end(); ++itr2) {
+        _cmap.reset();
+        if ( !stapl::sequential::is_same_cc(*pMap,_cmap,*itr1,*itr2) ) {
+
+          _cmap.reset();
+          get_cc(*pMap,_cmap,*itr1,cc1);
+          _cmap.reset();
+          get_cc(*pMap,_cmap,*itr2,cc2);
+
+          if(cc1.size() < m_smallcc && cc2.size() < m_smallcc){
+            ConnectSmallCC(_rm, _stats, cc1, cc2, _collision);
+          }
+          else if(cc1.size() <= cc2.size()){
+            ConnectBigCC(_rm, _stats, cc1, cc2, _collision);
+          }
+          else{
+            ConnectBigCC(_rm, _stats, cc2, cc1, _collision);
+          }
+        }
+        if(this->m_debug)
+          cout << " ...done\n";
+      }
+    }
   }
-
-
   if(this->m_debug) {
     _stats.DisplayCCStats(cout, *(_rm->m_pRoadmap)); 
     cout << endl;
@@ -340,54 +346,21 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
 ///////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 template <typename OutputIterator>
-void ConnectCCs<CFG, WEIGHT>::ConnectNeighbors( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+void ConnectCCs<CFG, WEIGHT>::ConnectSmallCC( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
     vector<VID>& _cc1Vec, vector<VID>& _cc2Vec, OutputIterator _collision) {
 
   RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
   LPOutput<CFG, WEIGHT> lpOutput;
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
 
-  size_t cc1Size = _cc1Vec.size();
-  size_t cc2Size = _cc2Vec.size();
-  size_t k = min(m_kPairs, cc2Size); // for connecting k-closest pairs of nodes between CCs
-  bool smallCCs = ( (cc1Size < m_smallcc) && (cc2Size < m_smallcc) );
-
-  vector<pair<VID,VID> > kp(k);
-  typename vector<pair<VID,VID> >::iterator kpIter = kp.begin();
-
-  VID cc1Elem, cc2Elem;
-  size_t count1, count2;
-
-  if(smallCCs) { // If Connecting Small CCs, attempt an all-pairs connection between nodes in both CCs
-    count1 = cc1Size;
-    count2 = cc2Size;
-  } 
-  else { // Else, find the k-nearest nodes in both CCs and attempt connections between them
-    this->GetMPProblem()->GetNeighborhoodFinder()->KClosestPairs(
-        this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod),
-        _rm, 
-        _cc1Vec.begin(), _cc1Vec.end(), 
-        _cc2Vec.begin(), _cc2Vec.end(), 
-        k, kpIter);
-    count1 = count2 = k;
-  }
-
   // Begin the connection attempts
-  for (size_t i = 0; i != count1; ++i){
-    for (size_t j = 0; j != count2; ++j){
-      if(smallCCs){ // grab the appropriate nodes if we are doing all-pairs between nodes
-        cc1Elem = _cc1Vec[i];
-        cc2Elem = _cc2Vec[j];
-      }
-      else{ // Only attempting to connect k-nearest pairs of nodes, this handles double forloop
-        j = i;
-        cc1Elem = kp[i].first;
-        cc2Elem = kp[j].second;
-      }
-      //_stats.IncConnections_Attempted();
+  VID cc1Elem, cc2Elem;
+  for (size_t i = 0; i < _cc1Vec.size(); ++i){
+    cc1Elem = _cc1Vec[i];
+    for (size_t j = 0; j < _cc2Vec.size(); ++j){
+      cc2Elem = _cc2Vec[j];
       if(_rm->IsCached(cc1Elem, cc2Elem) && !_rm->GetCache(cc1Elem, cc2Elem)) {
-        if(!smallCCs) {break;}
-        else {continue;}
+        continue;
       }
       CfgType _col;
       if (!_rm->m_pRoadmap->IsEdge(cc1Elem,cc2Elem) 
@@ -397,7 +370,6 @@ void ConnectCCs<CFG, WEIGHT>::ConnectNeighbors( Roadmap<CFG, WEIGHT>* _rm, StatC
             pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(cc2Elem),
             _col, &lpOutput, this->m_connectionPosRes, 
             this->m_connectionOriRes, !this->m_addAllEdges) ) {
-        //_stats.IncConnections_Made();
         pMap->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
         return;
       }
@@ -411,19 +383,71 @@ void ConnectCCs<CFG, WEIGHT>::ConnectNeighbors( Roadmap<CFG, WEIGHT>* _rm, StatC
           }
         }
       }
-
       if(_col != CfgType()){
         *_collision++ = _col;
       }
-
-      // Recall, if not smallCCs, we are attempting connections between k-nearest.
-      // Hence, we must exit the inner loop every time we reach the end.
-      if(!smallCCs) {
-        break;
-      }
-
     }//end for c2
   }//end for c1
+}
+
+///////////////////////////////////////////////////////////////////////////////
+template <class CFG, class WEIGHT>
+template <typename OutputIterator>
+void ConnectCCs<CFG, WEIGHT>::ConnectBigCC( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+    vector<VID>& _cc1Vec, vector<VID>& _cc2Vec, OutputIterator _collision) {
+
+  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
+  LPOutput<CFG, WEIGHT> lpOutput;
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
+
+  size_t k = min(m_kPairs, _cc2Vec.size()); // for connecting k-closest pairs of nodes between CCs
+
+  vector<pair<VID,VID> > kp(k);
+  typename vector<pair<VID,VID> >::iterator kpIter = kp.begin();
+
+  this->GetMPProblem()->GetNeighborhoodFinder()->KClosestPairs(
+      this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod),
+      _rm, 
+      _cc1Vec.begin(), _cc1Vec.end(), 
+      _cc2Vec.begin(), _cc2Vec.end(), 
+      k, kpIter);
+
+  // Begin the connection attempts
+  VID cc1Elem, cc2Elem;
+  for (size_t i = 0; i < kp.size(); ++i){
+
+    cc1Elem = kp[i].first;
+    cc2Elem = kp[i].second;
+
+    //_stats.IncConnections_Attempted();
+    if(_rm->IsCached(cc1Elem, cc2Elem) && !_rm->GetCache(cc1Elem, cc2Elem)) {
+      continue;
+    }
+    CfgType _col;
+    if (!_rm->m_pRoadmap->IsEdge(cc1Elem,cc2Elem) 
+        && this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
+        IsConnected( _rm->GetEnvironment(),_stats,dm,
+          pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(cc1Elem),
+          pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(cc2Elem),
+          _col, &lpOutput, this->m_connectionPosRes, 
+          this->m_connectionOriRes, !this->m_addAllEdges) ) {
+      pMap->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
+      return;
+    }
+    else if(this->m_addPartialEdge) {
+      typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
+      for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
+        CFG tmp = I->first.second;
+        if(!tmp.AlmostEqual(pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(cc1Elem))){
+          VID tmpVID = pMap->AddVertex(tmp);
+          pMap->AddEdge(cc1Elem, tmpVID, I->second);
+        }
+      }
+    }
+    if(_col != CfgType()){
+      *_collision++ = _col;
+    }
+  }
 }
 
 #endif
