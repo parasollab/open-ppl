@@ -77,7 +77,7 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
     size_t m_k2;
 
     // Data from ConnectkCCs
-    vector< vector<double> > m_ccDist;
+    map<VID, vector<pair<VID,double> > > m_ccDist;
 };
 
 
@@ -142,35 +142,32 @@ void ConnectCCs<CFG,WEIGHT>::ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm,
   _cmap.reset();
 
   //compute com of ccs
-  vector<CFG> com1,com2;
+  map<VID, CFG> com1,com2;
   vector<VID> ccvids;
   for (InputIterator i = _ccs1First; i != _ccs1Last; i++){
     _cmap.reset();
     ccvids.clear();
     get_cc(*rmapG, _cmap, *i, ccvids);
-    com1.push_back(GetCentroid(rmapG, ccvids));
+    com1[*i] = GetCentroid(rmapG, ccvids);
   }
   for (InputIterator i = _ccs2First; i != _ccs2Last; i++){
     _cmap.reset();
     ccvids.clear();
     get_cc(*rmapG, _cmap, *i, ccvids);
-    com2.push_back(GetCentroid(rmapG, ccvids));
+    com2[*i] = GetCentroid(rmapG, ccvids);
   }
 
   //dist between ccs
   m_ccDist.clear();
 
-  typedef typename vector<CFG>::iterator IT;
+  typedef typename map<VID, CFG>::iterator IT;
   for(IT i = com1.begin(); i != com1.end(); ++i){
-    m_ccDist.push_back(vector<double>());
-    int id1 = i - com1.begin();
     for(IT j = com2.begin(); j != com2.end(); ++j){
-      int id2=j-com2.begin();
-      if (*(_ccs1First + id1) != *(_ccs2First + id2)){
-        m_ccDist.back().push_back(dm->Distance(env,*i,*j));
+      if (i->first != j->first){
+        m_ccDist[i->first].push_back(make_pair(j->first, dm->Distance(env,i->second,j->second)));
       }
       else{ //same cc
-        m_ccDist.back().push_back(1e20);
+        m_ccDist[i->first].push_back(make_pair(j->first, MAX_DBL));
       }
     }
   }//end for i
@@ -180,35 +177,15 @@ void ConnectCCs<CFG,WEIGHT>::ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm,
 //get m_k2 closest pairs of CCs
 template <class CFG, class WEIGHT>
 void ConnectCCs<CFG,WEIGHT>::GetK2Pairs(int _ccid, vector<VID>& _k2CCID){
-  typedef pair<double,int> CCD; //dist to cc
   typedef vector<double>::iterator IT;
 
-  vector<double>& dis2CCs = m_ccDist[_ccid];
-  vector<CCD> _ccids;
-  _ccids.reserve(m_k2);
-
-  // go through each cc
-  for(IT it = dis2CCs.begin(); it != dis2CCs.end(); it++){
-    int id = it - dis2CCs.begin();
-    if(_ccids.size() < m_k2){ //not yet enough
-      _ccids.push_back(CCD(*it,id));
-      push_heap(_ccids.begin(),_ccids.end());
-    } 
-    else { //start to check
-      pop_heap(_ccids.begin(),_ccids.end());
-      CCD& back=_ccids.back();
-      if(back.first>*it){
-        back.first=*it;
-        back.second=id;
-      }  
-      push_heap(_ccids.begin(),_ccids.end());
-    }
-  }//end for it
+  vector<pair<VID, double> >& dis2CCs = m_ccDist[_ccid];
+  partial_sort(dis2CCs.begin(), dis2CCs.begin()+m_k2, dis2CCs.end(),
+      compare_second<VID, double>());  
 
   //copy
   _k2CCID.clear();
-  _k2CCID.reserve(m_k2);
-  for(vector<CCD>::iterator i=_ccids.begin();i!=_ccids.end();++i){
+  for(typename vector<pair<VID, double> >::iterator i=dis2CCs.begin(); i != (dis2CCs.begin() + m_k2); i++){
     _k2CCID.push_back(i->second);
   }
 }
@@ -263,7 +240,7 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
 
   stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
   get_cc_stats(*(_rm->m_pRoadmap),cmap,ccs1);
-  cout << "Size of VID vector = " << ccs1.size() << endl;
+  
   if(ccs1.size() <= 1) return;
 
   VIDIT itr1,itr2;
@@ -276,11 +253,12 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
   ///////////////////////////////////////////////////////////////////////////////////
   if(m_k2 != 0){ // Attempt to Connect K2-Closest CCs
 
-    cout << "Connecting " << m_k2 << "-closest CCs" << endl;
-    vector<VID> k2CCID;
+    if(this->m_debug) 
+      cout << "Connecting " << m_k2 << "-closest CCs" << endl;
     ComputeAllPairsCCDist(_rm, _cmap, ccid.begin(), ccid.end(), ccid.begin(), ccid.end());
 
     for (itr1 = ccid.begin(); itr1 != ccid.end(); ++itr1) {
+      vector<VID> k2CCID;
       GetK2Pairs(*itr1,k2CCID);
       for (VIDIT itr2 = k2CCID.begin(); itr2 != k2CCID.end(); ++itr2) {
         _cmap.reset();
@@ -311,7 +289,8 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
   /// ConnectCCs
   ///////////////////////////////////////////////////////////////////////////////////
   else { // Attempt to Connect CCs, All-Pairs for all CCs
-    cout << "Connecting CCs" << endl;
+    if(this->m_debug) 
+      cout << "Connecting CCs" << endl;
     for (itr1 = ccid.begin(); itr1 != ccid.end(); ++itr1) {
       for (itr2 = itr1+1; itr2 != ccid.end(); ++itr2) {
         _cmap.reset();
