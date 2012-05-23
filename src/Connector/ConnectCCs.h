@@ -267,7 +267,7 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
   if(ccs1.size() <= 1) return;
 
   VIDIT itr1,itr2;
-  for(int i = 0; i < ccs1.size(); ++i){
+  for(size_t i = 0; i < ccs1.size(); ++i){
     ccid.push_back(ccs1[i].second);
   }
 
