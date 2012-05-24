@@ -23,24 +23,12 @@
 
 // for safety & compatiaility, use 6 elements for cfg.
 Cfg_2D::Cfg_2D():p(0,0){
-  m_dof = 2;
-  m_posDof = 2;
   m_v.clear();
   for(int i=0; i<2; i++)
     m_v.push_back(0);
 }
 
-Cfg_2D::Cfg_2D(double x, double y):p(x,y){
-  m_dof = 2;
-  m_posDof = 2;
-  m_v.clear();
-  m_v.push_back(x);
-  m_v.push_back(y);
-}
-
 Cfg_2D::Cfg_2D(const Cfg& _c){
-  m_dof = 2;
-  m_posDof = 2;
   vector<double> _v;
   _v = _c.GetData();
   m_v.clear();
@@ -49,18 +37,7 @@ Cfg_2D::Cfg_2D(const Cfg& _c){
   p = Point2d(_v[0], _v[1]);
 }
 
-Cfg_2D::Cfg_2D(const Vector2d& _v){
-  m_dof = 2;
-  m_posDof = 2;
-  m_v.clear();
-  for (int i = 0; i < 2; i ++)
-    m_v.push_back(_v[i]);
-  p = Point2d(_v[0], _v[1]);
-}
-
 Cfg_2D::Cfg_2D(const Point2d _p){
-  m_dof = 2;
-  m_posDof = 2;
   m_v.clear();
   m_v.push_back(_p[0]);
   m_v.push_back(_p[1]);
@@ -68,6 +45,12 @@ Cfg_2D::Cfg_2D(const Point2d _p){
 }
 
 Cfg_2D::~Cfg_2D() {}
+
+vector<Robot> Cfg_2D::GetRobots(int _numJoints){
+  vector<Robot> robots;
+  robots.push_back(Robot(Robot::PLANAR, Robot::TRANSLATIONAL, Robot::JointMap(), 0));
+  return robots;
+}
 
 void Cfg_2D::Read(istream& is){
   double x, y, tmp;
@@ -115,11 +98,10 @@ void Cfg_2D::WeightedSum(const Cfg& first, const Cfg& second, double weight) {
 // Set a single parameter in the configuration (i.e., x,y,z,roll...)
 // param = the parameter number to set
 // value = the value to set the parameter as
-int Cfg_2D::SetSingleParam(int param, double value, bool _norm) {    
+int Cfg_2D::SetSingleParam(size_t param, double value, bool _norm) {    
   if ((param>=0) && (param<m_dof)) {
     Cfg::SetSingleParam(param, value, _norm);
-    if(param<m_posDof)
-      p[param] = value;
+    p[param] = value;
     return 1;
   } else {
     return 0;
@@ -129,11 +111,10 @@ int Cfg_2D::SetSingleParam(int param, double value, bool _norm) {
 // Increment a single parameter in the configuration (i.e., x,y,z,roll...)
 // param = the parameter number to set
 // value = the value to increment the parameter by
-int Cfg_2D::IncSingleParam(int param, double value) {    
+int Cfg_2D::IncSingleParam(size_t param, double value) {    
   if ((param>=0) && (param<m_dof)) {
     Cfg::IncSingleParam(param, value);
-    if(param<m_posDof)
-      p[param] += value;
+    p[param] += value;
     return 1;
   } else {
     return 0;
@@ -164,7 +145,7 @@ Cfg& Cfg_2D::operator=(const Cfg& _c) {
   return Cfg::operator=(_c);
 }
 
-const char* Cfg_2D::GetName() const {
+const string Cfg_2D::GetName() const {
   return "Cfg_2D";
 }
 
@@ -188,19 +169,11 @@ bool Cfg_2D::ConfigEnvironment(Environment* env) const {
   return true;
 }
 
-void Cfg_2D::GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
-  Cfg::GetRandomCfg(_env,_bb);
-}
-
-void Cfg_2D::GetRandomCfg(Environment* _env) {
-  GetRandomCfg(_env, _env->GetBoundingBox());
-}
-
 void Cfg_2D::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
   //randomly sample params
   double dist=0.0;
   m_v.clear();
-  for(int i=0; i<m_dof; ++i) {
+  for(size_t i=0; i<m_dof; ++i) {
     m_v.push_back( double(2.0)*DRand() - double(1.0) );
     dist += pow(m_v[i],2);
   }
@@ -211,34 +184,12 @@ void Cfg_2D::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetr
   setPos(Point2d(m_v[0], m_v[1]));
 }
 
-void Cfg_2D::GetRandomCfg(double R, double rStep){
-  double alpha, beta, z1;
-  
-  alpha = 2.0*M_PI*DRand();
-  beta  = 2.0*M_PI*DRand();
-  z1 = R*sin(beta);
-  
-  m_v.clear();
-  m_v.push_back(z1*cos(alpha));
-  m_v.push_back(z1*sin(alpha));
-
-  setPos(Point2d(m_v[0], m_v[1]));
-}
-
-void Cfg_2D::GetRandomCfg_CenterOfMass(Environment *_env, shared_ptr<Boundary> _bb) {
+void Cfg_2D::GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundary> _bb) {
   m_v.clear();
   Point3d p = _bb->GetRandomPoint();
-  for(int i=0 ;i<m_posDof;i++){
+  for(size_t i=0 ;i<m_dof;i++){
     m_v.push_back(p[i]);
   }
-  
-  for(int i=m_posDof; i<m_dof; ++i)
-    m_v.push_back(_bb->GetRandomValueInParameter(i-m_posDof));
-
   setPos(Point2d(m_v[0], m_v[1]));
-}
-
-void Cfg_2D::GetRandomCfg_CenterOfMass(Environment *_env) {
-  GetRandomCfg_CenterOfMass(_env, _env->GetBoundingBox());
 }
 

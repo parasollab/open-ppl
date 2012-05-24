@@ -5,11 +5,13 @@
 #include "Boundary.h"
 #include "BoundingBox.h"
 
+#include "Robot.h"
 #include "MultiBody.h"
 #include <string>
 
 #include "MPUtils.h"
-
+#include "Graph.h"
+#include "GraphAlgo.h"
 
 #include <sstream>
 #include <iostream>
@@ -18,6 +20,8 @@
 
 
 using boost::shared_ptr;
+
+class MultiBody;
 class MPProblem;
 ////////////////////////////////////////////////////////////////
 
@@ -34,335 +38,333 @@ class MPProblem;
 //@}
 
 
-
 class Environment : public MPBaseObject{
-public:
+  public:
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //    Constructors and Destructor
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //    Constructors and Destructor
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-  //===================================================================
-  /**@name  Constructors and Destructor*/
-  //===================================================================
-  //@{
+    //===================================================================
+    /**@name  Constructors and Destructor*/
+    //===================================================================
+    //@{
 
-  /** Constructor. 
-   * Set pathversion as newest path file version ID (hard coded),
-   * initialize other data member to 0, NULL, and false. sets
-   * default boundaries with passed number of dofs and pos_dofs.
-   */
-  Environment(int dofs = 0, int pos_dofs = 0);
+    /** Constructor. 
+     * Set pathversion as newest path file version ID (hard coded),
+     * initialize other data member to 0, NULL, and false. sets
+     * default boundaries with passed number of dofs and pos_dofs.
+     */
+    Environment(int dofs = 0, int pos_dofs = 0);
 
-  /** 
-   * Copy Constructor.
-   * copies multibodies from usable_multibodies of from_env and
-   * updates usable_multibodies accordingly.
-   */
-  Environment(const Environment &from_env);
+    /** 
+     * Copy Constructor.
+     * copies multibodies from usable_multibodies of from_env and
+     * updates usable_multibodies accordingly.
+     */
+    Environment(const Environment &from_env);
 
-  /** 
-   * Copy Constructor. COPIES FROM MPPRoblem's Environment
-   * copies multibodies from usable_multibodies of from_env and
-   * updates usable_multibodies accordingly.
-   */
-  Environment(MPProblem* in_pProblem);
+    /** 
+     * Copy Constructor. COPIES FROM MPPRoblem's Environment
+     * copies multibodies from usable_multibodies of from_env and
+     * updates usable_multibodies accordingly.
+     */
+    Environment(MPProblem* in_pProblem);
 
-  /** 
-   * Copy Constructor.
-   * uses i_boundaries instead of boundaries in from_env
-   */
-  Environment(const Environment &from_env, const BoundingBox &i_boundaries);
+    /** 
+     * Copy Constructor.
+     * uses i_boundaries instead of boundaries in from_env
+     */
+    Environment(const Environment &from_env, const BoundingBox &i_boundaries);
 
-  ///\brief Constructor taking in an XML object
-  Environment(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+    ///\brief Constructor taking in an XML object
+    Environment(XMLNodeReader& in_Node, MPProblem* in_pProblem);
 
-  Environment(const Environment &from_env, string filename);
+    Environment(const Environment &from_env, string filename);
 
-  /**
-   * Destructor.
-   * Free memory for every added MultiBody instance if this instance
-   * was not copied from another one.	
-   */
-  virtual ~Environment();
-  //@}
+    /**
+     * Destructor.
+     * Free memory for every added MultiBody instance if this instance
+     * was not copied from another one.	
+     */
+    virtual ~Environment();
+    //@}
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Access Methods : Retrive and set related information of this class
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Access Methods*/
-  //@{
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Access Methods : Retrive and set related information of this class
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
+    /**@name Access Methods*/
+    //@{
 
-  string& GetEnvFileName() { return input_filename; }
+    string& GetEnvFileName() { return m_filename; }
 
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //  Path Version
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  Path Version
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-  ///Return format version for path files
-  virtual int GetPathVersion();
+    ///Return format version for path files
+    virtual int GetPathVersion();
 
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //  MultiBody
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  MultiBody
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-  ///Return the number of MultiBody's in the environment
-  virtual int GetMultiBodyCount() const;
+    ///Return the number of MultiBody's in the environment
+    virtual int GetMultiBodyCount() const;
 
-  ///Return the number of External Body's in the environment;
-  virtual int GetExternalBodyCount() const;
+    ///Return the number of External Body's in the environment;
+    virtual int GetExternalBodyCount() const;
 
-  /**Return a pointer to MultiBody according to this given index.
-   *If this index is out of the boundary of list, NULL will be returned.
-   *@param _index the index for target, a MultiBody pointer
-   */
-  virtual shared_ptr<MultiBody> GetMultiBody(size_t _index) const;
+    /**Return a pointer to MultiBody according to this given index.
+     *If this index is out of the boundary of list, NULL will be returned.
+     *@param _index the index for target, a MultiBody pointer
+     */
+    virtual shared_ptr<MultiBody> GetMultiBody(size_t _index) const;
 
-  ///Return the number of navigable surfaces in the environment;
-  virtual int GetNavigableSurfacesCount() const;
-  virtual int GetRandomNavigableSurfaceIndex();
-  /**Return a pointer to MultiBody in m_navigableSurfaces given index.
-   *If this index is out of the boundary of list, NULL will be returned.
-   *@param _index the index for target, a MultiBody pointer
-   */
-  virtual shared_ptr<MultiBody> GetNavigableSurface(size_t _index) const;
+    ///Return the number of navigable surfaces in the environment;
+    virtual int GetNavigableSurfacesCount() const;
+    virtual int GetRandomNavigableSurfaceIndex();
+    /**Return a pointer to MultiBody in m_navigableSurfaces given index.
+     *If this index is out of the boundary of list, NULL will be returned.
+     *@param _index the index for target, a MultiBody pointer
+     */
+    virtual shared_ptr<MultiBody> GetNavigableSurface(size_t _index) const;
 
-  void PrintOptions(ostream& out_os);
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //  Resolution.
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    void PrintOptions(ostream& out_os);
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  Resolution.
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-  /**Return the resolution for translation.
-   *This tells client how fine this workspace is descretized about translation.
-   *@see Get, this function reads this value from Input instance.
-   *@note FindBoundingBox also calculates defalut Position Resolution. If there is no
-   *user input to overwrite this default value, default value will be returned. 
-   */
-  inline double GetPositionRes() const { return positionRes; }
-  inline void SetPositionRes(const double pRes) {positionRes=pRes;}
+    /**Return the resolution for translation.
+     *This tells client how fine this workspace is descretized about translation.
+     *@see Get, this function reads this value from Input instance.
+     *@note FindBoundingBox also calculates defalut Position Resolution. If there is no
+     *user input to overwrite this default value, default value will be returned. 
+     */
+    inline double GetPositionRes() const { return positionRes; }
+    inline void SetPositionRes(const double pRes) {positionRes=pRes;}
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  inline double GetRdRes() const {return rd_res;} 
+    inline double GetRdRes() const {return rd_res;} 
 #endif
-  /**Return the resolution for rotation.
-   *This tells client how fine this workspace is descretized about rotation.
-   *@see Get, this function reads this value from Input instance.
-   */
-  inline double GetOrientationRes() const { return orientationRes; }
-  inline void SetOrientationRes(const double rRes) {orientationRes=rRes;}
+    /**Return the resolution for rotation.
+     *This tells client how fine this workspace is descretized about rotation.
+     *@see Get, this function reads this value from Input instance.
+     */
+    inline double GetOrientationRes() const { return orientationRes; }
+    inline void SetOrientationRes(const double rRes) {orientationRes=rRes;}
 
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //  Robot Index.
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  Robot Index.
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-  /**Return the Index for Robot in environment. This index is the index for MultiBody list in
-   *this Environment instance.
-   */
-  virtual int GetRobotIndex() const { return robotIndex; }
+    /**Return the Index for Robot in environment. This index is the index for MultiBody list in
+     *this Environment instance.
+     */
+    virtual int GetRobotIndex() const { return robotIndex; }
 
-  //@}
+    //@}
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Sort External obstacles operations
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //============================================
-  //SortBodies so that the external bodies appear first in the array
-  //============================================
-  void SortMultiBodies();
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Sort External obstacles operations
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //============================================
+    //SortBodies so that the external bodies appear first in the array
+    //============================================
+    void SortMultiBodies();
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Bounding Box operations
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Bounding Box Methods*/
-  //@{
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Bounding Box operations
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
+    /**@name Bounding Box Methods*/
+    //@{
 
-  /**Calculate a Bounding Box that encloses all MultiBodys added to this instance.
-   *Calculate a Bounding Box that encloses all MultiBodys added to this instance except
-   *Robot. Moreover, minmax_BodyAxisRange and resolution for postion are also calculated.
-   *@see MultiBody::GetBoundingBox and MultiBody::GetMaxAxisRange
-   */
-  virtual void FindBoundingBox();
+    /**Calculate a Bounding Box that encloses all MultiBodys added to this instance.
+     *Calculate a Bounding Box that encloses all MultiBodys added to this instance except
+     *Robot. Moreover, minmax_BodyAxisRange and resolution for postion are also calculated.
+     *@see MultiBody::GetBoundingBox and MultiBody::GetMaxAxisRange
+     */
+    virtual void FindBoundingBox();
 
-  /**Return a Bounding Box that encloses all MultiBodys added to this instance.
-   *@see FindBoundingBox, Input::bbox_scale, and Input::bbox
-   */
-  virtual shared_ptr<BoundingBox> GetBoundingBox() const;
-  virtual void SetBoundingBox(shared_ptr<BoundingBox> b);
+    /**Return a Bounding Box that encloses all MultiBodys added to this instance.
+     *@see FindBoundingBox, Input::bbox_scale, and Input::bbox
+     */
+    virtual shared_ptr<BoundingBox> GetBoundingBox() const;
+    virtual void SetBoundingBox(shared_ptr<BoundingBox> _b);
 
-  /**Return manximu axis range of bounding box.
-   *This value is calculated in FindBoundingBox.
-   */
-  virtual double Getminmax_BodyAxisRange();
-  //@}
+    /**Return manximu axis range of bounding box.
+     *This value is calculated in FindBoundingBox.
+     */
+    virtual double Getminmax_BodyAxisRange();
+    //@}
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    IO functions
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name I/O Methods*/
-  //@{
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    IO functions
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
+    /**@name I/O Methods*/
+    //@{
 
+    /**Read data from Environment file and check version.
+     */
+    void Read(string _filename);
+    void buildCDstructure(cd_predefined cdtype);
+    void BuildRobotStructure(); 
+    
+    /**Write the Input data for an environment into a given output stream.
+     *2 things are output, Number of MultiBodys, and information about MultiBodys.
+     *@see MultiBody::Write
+     */
+    virtual void Write(ostream & _os);
 
-  /**Read data from Environment file and check version.
-   */
-  void Read(const char* in_filename, int action, const char* descDir);
-  void Read(istream & _is, int envFormatVersion,int action, const char* descDir);
-  void buildCDstructure(cd_predefined cdtype);
+    //@}
 
-  /**Write the Input data for an environment into a given output stream.
-   *2 things are output, Number of MultiBodys, and information about MultiBodys.
-   *@see MultiBody::Write
-   */
-  virtual void Write(ostream & _os);
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Helper functions
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-  //@}
+    //@todo make private
+    virtual void SelectUsableMultibodies();
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Helper functions
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    bool operator==(const Environment& e) const;
+    bool operator!=(const Environment& e) const { return !(*this == e); }
 
-  //@todo make private
-  virtual void SelectUsableMultibodies();
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Protected Data member and member methods
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-  bool operator==(const Environment& e) const;
-  bool operator!=(const Environment& e) const { return !(*this == e); }
+  protected:
+    //---------------------------------------------------------------
+    /// @name  Data
+    //---------------------------------------------------------------
+    int pathVersion;          /// Format version for path files
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Protected Data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    vector<shared_ptr<MultiBody> > multibody;
+    vector<shared_ptr<MultiBody> > usable_multibody;
+    int usable_externalbody_count;
 
-    protected:
-  //---------------------------------------------------------------
-  /// @name  Data
-  //---------------------------------------------------------------
-  int pathVersion;          /// Format version for path files
+    vector<shared_ptr<MultiBody> > m_navigableSurfaces;
 
-  vector<shared_ptr<MultiBody> > multibody;
-  vector<shared_ptr<MultiBody> > usable_multibody;
-  int usable_externalbody_count;
-
-  vector<shared_ptr<MultiBody> > m_navigableSurfaces;
-
-  int robotIndex; //index of the robot in the usable_multibody vector
-  shared_ptr<BoundingBox> boundaries;
+    int robotIndex; //index of the robot in the usable_multibody vector
+    shared_ptr<BoundingBox> boundaries;
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  double rd_res;
+    double rd_res;
 #endif
-  double positionRes;
-  double orientationRes;
-  double positionResFactor;
-  double orientationResFactor;
-  double minmax_BodyAxisRange;    
+    double positionRes;
+    double orientationRes;
+    double positionResFactor;
+    double orientationResFactor;
+    double minmax_BodyAxisRange;    
+    typedef stapl::sequential::graph<stapl::UNDIRECTED, stapl::NONMULTIEDGES, size_t> RobotGraph;
+    RobotGraph m_robotGraph;
+    vector<Robot> robotVec;
+    string m_filename;
+};
 
-  string input_filename;
-  };
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+//  implemetation of Environment
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //  implemetation of Environment
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+//===================================================================
+///  Inline functions
+//===================================================================
 
-  //===================================================================
-  ///  Inline functions
-  //===================================================================
+/// Format version for path files
+inline int 
+Environment::
+GetPathVersion() {
+  return pathVersion;
+}
 
-  /// Format version for path files
-  inline int 
-    Environment::
-    GetPathVersion() {
-      return pathVersion;
-    }
+//-------------------------------------------------------------------
+///  GetMultiBodyCount
+///  Output: the number of MultiBody's in the environment
+//-------------------------------------------------------------------
 
-  //-------------------------------------------------------------------
-  ///  GetMultiBodyCount
-  ///  Output: the number of MultiBody's in the environment
-  //-------------------------------------------------------------------
-
-  inline int 
-    Environment::
-    GetExternalBodyCount() const {
-      return usable_externalbody_count;
-    }
+inline int 
+Environment::
+GetExternalBodyCount() const {
+  return usable_externalbody_count;
+}
 
 
-  //-------------------------------------------------------------------
-  ///  GetMultiBodyCount
-  ///  Output: the number of MultiBody's in the environment
-  //-------------------------------------------------------------------
-  inline int 
-    Environment::
-    GetMultiBodyCount() const {
-      return usable_multibody.size();
-    }
+//-------------------------------------------------------------------
+///  GetMultiBodyCount
+///  Output: the number of MultiBody's in the environment
+//-------------------------------------------------------------------
+inline int 
+Environment::
+GetMultiBodyCount() const {
+  return usable_multibody.size();
+}
 
-  //-------------------------------------------------------------------
-  ///  GetMultiBody
-  ///  Output: A pointer to a MultiBody in the environment
-  //-------------------------------------------------------------------
-  inline shared_ptr<MultiBody>
-    Environment::
-    GetMultiBody(size_t _index) const {
-      if(_index < usable_multibody.size())
-	return usable_multibody[_index];
-      else
-	return shared_ptr<MultiBody>();
-    }
+//-------------------------------------------------------------------
+///  GetMultiBody
+///  Output: A pointer to a MultiBody in the environment
+//-------------------------------------------------------------------
+inline shared_ptr<MultiBody>
+Environment::
+  GetMultiBody(size_t _index) const {
+    if(_index < usable_multibody.size())
+      return usable_multibody[_index];
+    else
+      return shared_ptr<MultiBody>();
+  }
 
-  //-------------------------------------------------------------------
-  ///  GetNavigableSurfaces
-  ///  Output: A pointer to a MultiBody in the environment
-  //-------------------------------------------------------------------
-  inline int 
-    Environment::
-    GetNavigableSurfacesCount() const {
-      return m_navigableSurfaces.size();
-    }
+//-------------------------------------------------------------------
+///  GetNavigableSurfaces
+///  Output: A pointer to a MultiBody in the environment
+//-------------------------------------------------------------------
+inline int 
+Environment::GetNavigableSurfacesCount() const {
+  return m_navigableSurfaces.size();
+}
 
-  //-------------------------------------------------------------------
-  ///  GetMultiBody
-  ///  Output: A pointer to a MultiBody in the environment
-  //-------------------------------------------------------------------
-  inline shared_ptr<MultiBody>
-    Environment::
-    GetNavigableSurface(size_t _index) const {
-      if(_index < m_navigableSurfaces.size() && _index >= 0)
-	return m_navigableSurfaces[_index];
-      else
-	return shared_ptr<MultiBody>();
-    }
+//-------------------------------------------------------------------
+///  GetMultiBody
+///  Output: A pointer to a MultiBody in the environment
+//-------------------------------------------------------------------
+inline shared_ptr<MultiBody>
+  Environment::GetNavigableSurface(size_t _index) const {
+    if(_index < m_navigableSurfaces.size() && _index >= 0)
+      return m_navigableSurfaces[_index];
+    else
+      return shared_ptr<MultiBody>();
+  }
 
 #endif

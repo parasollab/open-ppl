@@ -90,14 +90,14 @@ void GMSPolyhedron::ComputeNormals()
 //      this version of the "Read" method will distinguish which file
 //      file format body should request polyhedron to read
 //=========================================================================
-Vector3D GMSPolyhedron::Read(char* _fileName) 
+Vector3D GMSPolyhedron::Read(string _fileName) 
 {
   Vector3D com;	//Center of Mass
 
   //---------------------------------------------------------------
   // Get polyhedron file name and try to open the file
   //---------------------------------------------------------------
-  ifstream _is(_fileName);
+  ifstream _is(_fileName.c_str());
   if (!_is) {
     cout << "Can't open \"" << _fileName << "\"." << endl;
     exit(1);
@@ -106,23 +106,18 @@ Vector3D GMSPolyhedron::Read(char* _fileName)
   //---------------------------------------------------------------
   // Read polyhedron
   //---------------------------------------------------------------
-  int fileLength = strlen(_fileName);
-  if (!strncmp(_fileName+fileLength-4,".dat",4)) 
-  {
+  int fileLength = _fileName.length();
+  if (_fileName.substr(fileLength-4) == ".dat") {
     com = Read(_is);
   } 
-  else if (!strncmp(_fileName+fileLength-2,".g",2) || 
-           !strncmp(_fileName+fileLength-4,".obj",4)) 
-  {
+  else if (_fileName.substr(fileLength-2) == ".g" || 
+           _fileName.substr(fileLength-4) == ".obj") {
     com = ReadModel(_fileName); 
   } 
-  else 
-  {
-    cout << "ERROR: \"" << _fileName << "\" format is unrecognized.";
-    cout << "\n\n       Formats are recognized by file suffixes:"
-      "\n\t    GMS(*.dat)"
-      "\n\t    BYU(*.g)"
-      "\n\t    OBJ(*.obj)";
+  else {
+    cerr << "ERROR: \"" << _fileName << "\" format is unrecognized.";
+    cerr << "Formats are recognized by file suffixes: GMS(*.dat), BYU(*.g), and OBJ(*.obj)" << endl;
+    exit(1);
   }
 
   //---------------------------------------------------------------
@@ -277,10 +272,9 @@ void GMSPolyhedron::LoadFromIModel(IModel* _imodel, Vector3D& _com) {
   }
 }
 
-Vector3D GMSPolyhedron::ReadModel(char* _fileName) 
+Vector3D GMSPolyhedron::ReadModel(string _fileName) 
 {  
-  string file(_fileName); 
-  IModel* imodel = CreateModelLoader( file, false);
+  IModel* imodel = CreateModelLoader(_fileName, false);
   Vector3D com;
   LoadFromIModel( imodel, com );
   ComputeNormals();

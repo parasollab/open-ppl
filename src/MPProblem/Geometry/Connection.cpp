@@ -19,7 +19,6 @@ Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _
 {
   body[0] = _body1;
   body[1] = _body2;
-  //type = ???
 }
 
 Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2, 
@@ -32,7 +31,6 @@ Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _
 {
   body[0] = _body1;
   body[1] = _body2;
-  type = Revolute;
 }
 
 Connection::~Connection() 
@@ -68,7 +66,7 @@ shared_ptr<Body> Connection::GetNextBody()
 //-------------------------------------------------------------------
 //  GetConnectionType
 //-------------------------------------------------------------------
-Connection::ConnectionType Connection::GetConnectionType() const
+Robot::JointType Connection::GetConnectionType() const
 {
   return type;
 }
@@ -106,7 +104,7 @@ Transformation & Connection::GetTransformationToDHFrame()
 void Connection::Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
 		      const Vector3D& transformPosition, const Orientation& transformOrientation,
 		      const Vector3D& positionToDHFrame, const Orientation& orientationToDHFrame,
-		      const DHparameters& _dhparameters, const ConnectionType& connectionType,
+		      const DHparameters& _dhparameters, const Robot::JointType& connectionType,
                       bool _debug) 
 {
   body[0] = body1;
@@ -153,7 +151,7 @@ void Connection::Write(ostream & _os)
     _os << body[1]->GetMultiBody()->GetFreeBodyIndex(*(FreeBody*)(body[1].get())) << endl;
   }
   transformationToBody2.Write(_os);
-  dhparameters.Write(_os);
+  _os << dhparameters;
   _os << (int)type << endl;
 }
 

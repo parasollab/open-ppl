@@ -19,9 +19,6 @@
 
 
 Cfg_surface::Cfg_surface(){
-  m_dof = 3;
-  m_posDof = 3;
-
   m_v.clear();
   for(int i=0; i<m_dof; i++)
     m_v.push_back(0);
@@ -33,9 +30,6 @@ Cfg_surface::Cfg_surface(){
 
 
 Cfg_surface::Cfg_surface(double _x, double _y, double _h, int _sid) {
-  m_dof = 3;
-  m_posDof = 3;
-
   m_v.clear();
   m_v.push_back(_x);
   m_v.push_back(_h);
@@ -49,8 +43,6 @@ Cfg_surface::Cfg_surface(double _x, double _y, double _h, int _sid) {
 
 
 Cfg_surface::Cfg_surface(const Vector3d& _v) {
-  m_dof = 3;
-  m_posDof = 3;
   m_v.clear();
   for(int i=0; i<m_dof; i++)
     m_v.push_back(_v[i]);
@@ -62,8 +54,6 @@ Cfg_surface::Cfg_surface(const Vector3d& _v) {
 
 
 Cfg_surface::Cfg_surface(const Cfg& _c) {
-  m_dof = 3;
-  m_posDof = 3;
   vector<double> _v;
   _v = _c.GetData();
   if((int)_v.size() < m_dof) {
@@ -81,8 +71,6 @@ Cfg_surface::Cfg_surface(const Cfg& _c) {
 }
 
 Cfg_surface::Cfg_surface(const Point2d _p, double _h, int _sid){
-  m_dof = 3;
-  m_posDof = 3;
   m_v.clear();
   m_v.push_back(_p[0]);
   m_v.push_back(_h);
@@ -161,13 +149,11 @@ void Cfg_surface::GetRandomRay(double _incr, Environment* _env, shared_ptr<Dista
 
 
 Cfg_surface& Cfg_surface::operator=(const Cfg_surface& _c){
-  if(_c.DOF() != m_dof || _c.PosDOF()!= m_posDof) {
+  if(_c.DOF() != m_dof) {
     cout << "\n\nERROR in Cfg_surface::operator=(Cfg_surface&), ";
-    cout << "DOF of Cfgs are not equal " << _c.DOF() << "\t!=\t" << m_dof 
-         << "\nor posDOF are not equal " << _c.PosDOF() << "\t!=\t" << m_posDof << endl;
+    cout << "DOF of Cfgs are not equal " << _c.DOF() << "\t!=\t" << m_dof << endl; 
     exit(-1);
   }
-  m_posDof=_c.PosDOF();
   m_v.clear();
   m_v = _c.GetData();
   setPos( _c.getPos() );
@@ -228,7 +214,7 @@ void Cfg_surface::WeightedSum(const Cfg& _first, const Cfg& _second, double _wei
 int Cfg_surface::SetSingleParam(int _param, double _value, bool _norm) {    
   if ((_param>=0) && (_param<m_dof)) {
     Cfg::SetSingleParam(_param, _value, _norm);
-    if(_param<m_posDof){
+    if(_param<3){
       if(_param==0) m_p[_param] += _value;
       else if(_param==1) m_H += _value;
       else if(_param==2) m_p[1] += _value;
@@ -245,7 +231,7 @@ int Cfg_surface::SetSingleParam(int _param, double _value, bool _norm) {
 int Cfg_surface::IncSingleParam(int _param, double _value) {    
   if ((_param>=0) && (_param<m_dof)) {
     Cfg::IncSingleParam(_param, _value);
-    if(_param<m_posDof){
+    if(_param<3){
       if(_param==0) m_p[_param] += _value;
       else if(_param==1) m_H += _value;
       else if(_param==2) m_p[1] += _value;
@@ -285,7 +271,7 @@ Vector3D Cfg_surface::GetRobotCenterPosition() const {
 }
 
 
-const char* Cfg_surface::GetName() const {
+const string Cfg_surface::GetName() const {
   return "Cfg_surface";
 }
 
@@ -321,7 +307,7 @@ Cfg* Cfg_surface::CreateNewCfg(vector<double>& _data) const {
   return tmp;
 }
 
-void Cfg_surface::GetRandomCfg_CenterOfMass(Environment *_env, shared_ptr<Boundary> _bb) {
+void Cfg_surface::GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundary> _bb) {
   
   if( m_SurfaceID < -1 ) { // need to set appropriate surface id
     int rindex = _env->GetRandomNavigableSurfaceIndex();
@@ -355,7 +341,6 @@ void Cfg_surface::GetRandomCfg_CenterOfMass(Environment *_env, shared_ptr<Bounda
   setHeight( m_v[1] );
 }
 
-void Cfg_surface::GetRandomCfg_CenterOfMass(Environment *_env) {
-   cout << "SAMR-- Cfg_surface::GetRandomCfg *env" << endl;
-  GetRandomCfg_CenterOfMass(_env, _env->GetBoundingBox());
+void Cfg_surface::GetRandomCfgCenterOfMass(Environment *_env) {
+  GetRandomCfgCenterOfMass(_env, _env->GetBoundingBox());
 }

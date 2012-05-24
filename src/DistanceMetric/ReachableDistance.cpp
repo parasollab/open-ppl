@@ -27,7 +27,7 @@ double ReachableDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg&
   double dPosition = 0.0;
   vector<double> v1 = _c1.GetData();
   vector<double> v2 = _c2.GetData();
-  for(int i=0; i<_c1.PosDOF(); ++i) {
+  for(size_t i=0; i<_c1.PosDOF(); ++i) {
     pair<double,double> range = _env->GetBoundingBox()->GetRange(i);
     dPosition += sqr(fabs(v1[i] - v2[i])/(range.second-range.first));
   }

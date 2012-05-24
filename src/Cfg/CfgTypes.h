@@ -51,6 +51,11 @@ typedef Cfg_free_tree_2dof CfgType;
 typedef Cfg_free_multi CfgType;
 #endif
 
+#ifdef PMPManifold
+#include "ManifoldCfg.h"
+typedef ManifoldCfg CfgType;
+#endif
+
 #ifdef PMPProtein
 #include "CfgProtein.h"
 typedef CfgProtein CfgType;

@@ -80,7 +80,7 @@ class GMSPolyhedron {
      *file format body should request polyhedron to read. If format is not recognized
      *, exit will be called.
      */
-    Vector3D Read(char* fileName);
+    Vector3D Read(string fileName);
 
     /// read GMS format and caluate maxRadius and minRadius
     Vector3D Read(istream & _is);
@@ -93,7 +93,7 @@ class GMSPolyhedron {
 
     /// read BYU/OBJ format and caluate maxRadius and minRadius
     /// calls model loader lib
-    Vector3D ReadModel(char* _fileName);
+    Vector3D ReadModel(string _fileName);
 
 
     /// Write in "original" GMS format

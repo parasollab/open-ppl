@@ -12,11 +12,10 @@ public:
   // Constructors and Destructor
   //===================================================================
   Cfg_free_multi();
-  Cfg_free_multi(double x, double y, double z, double roll, double pitch, double yaw);
-  Cfg_free_multi(const Vector6D& _v);
-  Cfg_free_multi(const vector<double>& _v);
   Cfg_free_multi(const Cfg& c);
   virtual ~Cfg_free_multi();
+  
+  virtual vector<Robot> GetRobots(int _numRobots);
   
   #ifdef _PARALLEL
     void define_type(stapl::typer &t)  
@@ -29,7 +28,7 @@ public:
   static int getNumofRobots() { return NumofRobots; }
   static void setNumofRobots(int robots) { NumofRobots = robots; }
 
-  virtual const char* GetName() const;
+  virtual const string GetName() const;
 
   virtual Vector3D GetRobotCenterPosition() const;
 
@@ -44,8 +43,6 @@ public:
 
  protected:
   static int NumofRobots;
-  
- private:
 };
 
 #endif

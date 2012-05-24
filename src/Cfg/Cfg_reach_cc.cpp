@@ -10,7 +10,6 @@
 #include "MPProblem.h"
 #include "ValidityChecker.hpp"
 
-int Cfg_reach_cc::m_numOfJoints;
 Link* Cfg_reach_cc::link_tree = NULL;
 vector<Link*> Cfg_reach_cc::actual_links;
 double Cfg_reach_cc::rdres = 0.05;
@@ -22,34 +21,8 @@ Cfg_reach_cc::
 Cfg_reach_cc() : Cfg_free_tree() {
 }
 
-Cfg_reach_cc::
-Cfg_reach_cc(int _numofjoints) : Cfg_free_tree(_numofjoints) {
-}
-
-Cfg_reach_cc::
-Cfg_reach_cc(const Vector6D& _v) : Cfg_free_tree(_v) {
-}
-
-Cfg_reach_cc::
-Cfg_reach_cc(const vector<double>& _v) : Cfg_free_tree(_v) {
-}
-
-Cfg_reach_cc::
-Cfg_reach_cc(const Cfg& c) : Cfg_free_tree(c) {
-  link_lengths = ((Cfg_reach_cc&)c).link_lengths;
-  link_orientations = ((Cfg_reach_cc&)c).link_orientations;
-}
-
-Cfg_reach_cc::
-Cfg_reach_cc(double x, double y, double z, 
-    double roll, double pitch, double yaw) 
-: Cfg_free_tree(x, y, z, roll, pitch, yaw) {
-}
-
-Cfg_reach_cc::
-Cfg_reach_cc(const Vector6D& base,
-    const vector<double>& len, 
-    const vector<int>& ori) :
+Cfg_reach_cc::Cfg_reach_cc(const Vector6D& base, 
+    const vector<double>& len, const vector<int>& ori) :
   link_lengths(len), link_orientations(ori) {
     m_v.clear();
     m_v.push_back(base.getX());
@@ -60,6 +33,12 @@ Cfg_reach_cc(const Vector6D& base,
     m_v.push_back(base.getYaw());
     StoreData();
   }
+
+Cfg_reach_cc::
+Cfg_reach_cc(const Cfg& c) : Cfg_free_tree(c) {
+  link_lengths = ((Cfg_reach_cc&)c).link_lengths;
+  link_orientations = ((Cfg_reach_cc&)c).link_orientations;
+}
 
 Cfg_reach_cc::
 ~Cfg_reach_cc() {
@@ -114,13 +93,6 @@ initialize_link_tree(const char* filename) {
 
   link_tree = BuildTree(0, actual_links.size()-1, actual_links);
   link_tree->PrintTree(cout);
-}
-
-void 
-Cfg_reach_cc::
-SetNumOfJoints(int _numofjoints) { 
-  m_numOfJoints = _numofjoints; 
-  Cfg_free_tree::SetNumOfJoints(_numofjoints);
 }
 
 Cfg& 
@@ -364,42 +336,18 @@ bool
 Cfg_reach_cc::
 ConfigEnvironment(Environment* _env) const {
   int robot = _env->GetRobotIndex();
-
-  // configure the robot according to current Cfg: joint parameters
-  // (and base locations/orientations for free flying robots.)
-  Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
-        m_v[5]*TWOPI, 
-        m_v[4]*TWOPI, 
-        m_v[3]*TWOPI), // RPY
-      Vector3D(m_v[0],m_v[1],m_v[2]));
-
-
-  _env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);  // update link 1.
-  for(int i=0; i<m_numOfJoints; i++) {
-    _env->GetMultiBody(robot)->GetFreeBody(i+1)
-      ->GetBackwardConnection(0).GetDHparameters().theta = m_v[i+6]*360.0;
-
-  }  // config the robot
-
+  Cfg_free_tree::ConfigEnvironment(_env);
   vector<int> link_ids;
   for(int i=0; i<_env->GetMultiBody(robot)->GetFreeBodyCount(); ++i)
     link_ids.push_back( _env->GetMultiBody(robot)->GetFreeBodyIndex( _env->GetMultiBody(robot)->GetFreeBody(i) ) );
   set<int> visited;
   for(vector<int>::const_iterator L = link_ids.begin(); L != link_ids.end(); ++L)
     _env->GetMultiBody(robot)->GetFreeBody(*L)->ComputeWorldTransformation(visited);
-
   return true;
 }
 
 void 
-Cfg_reach_cc::
-GetRandomCfg(double R, double rStep) {
-  cerr << "Warning GetRandomCfg(double, double) not implemented yet\n";
-  exit(-1);
-}
-
-void 
-Cfg_reach_cc::GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb) {
+Cfg_reach_cc::GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boundary> _bb) {
   if(m_dof != m_numOfJoints) {
     Point3d p = _bb->GetRandomPoint();
     for(int i=0 ;i<3;i++){
@@ -419,10 +367,6 @@ Cfg_reach_cc::GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _
   link_tree->ExportTreeLinkLength(link_lengths, link_orientations);
 
   StoreData();
-}
-
-void Cfg_reach_cc::GetRandomCfg_CenterOfMass(Environment *_env) {
-  GetRandomCfg_CenterOfMass(_env, _env->GetBoundingBox());
 }
 
 void
@@ -474,26 +418,6 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm,
   // dm->ScaleCfg(env, incr, origin, tick);
   *this=tick;
 
-}
-
-
-
-void 
-Cfg_reach_cc::
-FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats, const Cfg& increment,
-    string vc_method, int noNeighbors, CDInfo& _cdInfo,
-    vector<Cfg*>& cfgs) {
-  cerr << "Warning, FindNeighbors not implemented yet\n";
-  exit(-1);
-}
-
-void 
-Cfg_reach_cc::
-FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats, const Cfg& goal, 
-    const Cfg& increment, string vc_method, int noNeighbors, 
-    CDInfo& _cdInfo, vector<Cfg*>& cfgs) {
-  cerr << "Warning, FindNeighbors not implemented yet\n";
-  exit(-1);
 }
 
 void 
@@ -554,11 +478,8 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks,
         plus<double>(), multiplies<double>()));
   int rd_ticks = (int)(mag/rd_res) + 2; //adding two makdes a rough ceiling...
 
-  vector<double> v_g = _goal.GetData();
-  Cfg_free g(v_g[0],v_g[1],v_g[2],v_g[3],v_g[4],v_g[5]);
-  vector<double> v_s = _start.GetData();
-  Cfg_free s(v_s[0],v_s[1],v_s[2],v_s[3],v_s[4],v_s[5]);
-  g.subtract(g, s);
+  CfgType g;
+  g.subtract(_goal, _start);
   int base_ticks = (int)max(g.PositionMagnitude()/positionRes,
       g.OrientationMagnitude()/orientationRes) + 2;
 

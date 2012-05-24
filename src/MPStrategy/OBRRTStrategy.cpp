@@ -186,7 +186,7 @@ CfgType OBRRTStrategy::g1(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   CDInfo  cdInfo;
   CfgType newCfg;
 
-  for(int i = _dir.PosDOF(); i < _dir.DOF(); i++){
+  for(size_t i = _dir.PosDOF(); i < _dir.DOF(); i++){
     _dir.SetSingleParam(i, _near.GetData()[i]);
   }
   int weight;
@@ -231,7 +231,7 @@ CfgType OBRRTStrategy::g2(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 
     //apply this obstacle vector
-    for(int i = 0; i < _dir.PosDOF(); i++){
+    for(size_t i = 0; i < _dir.PosDOF(); i++){
       _dir.SetSingleParam(i, _near.GetSingleParam(i) + OV[i]);
     }
     int weight;
@@ -277,10 +277,10 @@ CfgType OBRRTStrategy::g3(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 
     //apply this obstacle vector
-    for(int i = 0; i < _dir.PosDOF(); i++){
+    for(size_t i = 0; i < _dir.PosDOF(); i++){
       _dir.SetSingleParam(i, _near.GetSingleParam(i) + OV[i]);
     }
-    for(int i = _dir.PosDOF(); i < _dir.DOF(); i++){
+    for(size_t i = _dir.PosDOF(); i < _dir.DOF(); i++){
       _dir.SetSingleParam(i, _near.GetSingleParam(i) );
     }
     int weight;
@@ -305,7 +305,7 @@ CfgType OBRRTStrategy::g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   CfgType dirOrig = _dir;
 
   // setup cfg1 rotation component
-  for(int i = 0; i < _dir.PosDOF(); i++){
+  for(size_t i = 0; i < _dir.PosDOF(); i++){
     _dir.SetSingleParam(i, _near.GetSingleParam(i) );
   }
   int weight;
@@ -319,7 +319,7 @@ CfgType OBRRTStrategy::g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     CfgType newNear = newCfg1;
     CfgType newDir  = newCfg1;
     // setup cfg2 translational component
-    for(int i = 0; i < newDir.PosDOF(); i++){
+    for(size_t i = 0; i < newDir.PosDOF(); i++){
       newDir.SetSingleParam(i, dirOrig.GetSingleParam(i) );
     }
     if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, newNear, newDir, newCfg2, m_delta, weight, cdInfo)) {
@@ -383,11 +383,11 @@ CfgType OBRRTStrategy::g5(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 
   //apply this obstacle vector
-  for(int i = 0; i < _dir.PosDOF(); i++){
+  for(size_t i = 0; i < _dir.PosDOF(); i++){
     _dir.SetSingleParam(i, _near.GetSingleParam(i) + OV[i]);
   }
   if( _maintainSrcOri ) {
-    for(int i = _dir.PosDOF(); i < _dir.DOF(); i++){
+    for(size_t i = _dir.PosDOF(); i < _dir.DOF(); i++){
       _dir.SetSingleParam(i, _near.GetSingleParam(i));
     }
   }
@@ -416,7 +416,8 @@ CfgType OBRRTStrategy::g7(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   CfgType dir2 = _dir;
   //VECTOR SCALE - THIS WILL BE HARD CODED BUT SHOULD PROBABLY BE MADE AN OPTION
   double vscale = 1;
-  dir2.GetRandomCfg( vscale, 1.0 );
+  dir2.GetRandomRay(vscale, env, dm);
+  //dir2.GetRandomCfg( vscale, 1.0 );
   //dir2.GetRandomCfg( env );
 
   int weight;
@@ -435,7 +436,7 @@ CfgType OBRRTStrategy::g7(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   if( DRand() < 0.5 ) cspaceDir.subtract( newCfg2, newCfg1 );
   else                cspaceDir.subtract( newCfg1, newCfg2 );
 
-  for(int i = 0; i < _dir.DOF(); i++){
+  for(size_t i = 0; i < _dir.DOF(); i++){
     _dir.SetSingleParam(i, _near.GetSingleParam(i) + cspaceDir.GetSingleParam(i));
   }
 

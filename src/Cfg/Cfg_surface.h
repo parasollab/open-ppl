@@ -120,7 +120,7 @@ public:
   ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition() const;
 
-  virtual const char* GetName() const;
+  virtual const string GetName() const;
 
   ///Move the (the first link of)  robot in enviroment to the given configuration.
   virtual bool ConfigEnvironment(Environment*) const;
@@ -154,8 +154,8 @@ public:
 
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
-  virtual void GetRandomCfg_CenterOfMass(Environment* env);
-  virtual void GetRandomCfg_CenterOfMass(Environment* env,shared_ptr<Boundary> bb);
+  virtual void GetRandomCfgCenterOfMass(Environment* env);
+  virtual void GetRandomCfgCenterOfMass(Environment* env,shared_ptr<Boundary> bb);
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //

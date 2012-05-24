@@ -2,28 +2,9 @@
 #include "MPProblem.h"
 #include <fstream>
 #include <iostream>
+#include "boost/pointer_cast.hpp"
 
-
-//////////////////////////////////////////////////////////////////////////////////
-/**@name Format version for environment (*.env) files
-  *      The number breaks down as YearMonthDay so numerical
-  *      comparisons can be more easily made.
-  *@warning Be consistent.  It should be YYYYMMDD
-  *      Inconsistent conversions can be misleading.
-  *      For example, comparing 200083  to 20000604.
-  */
-//@{
-
-//defined by Xinyu Tang, 03/27/2002
-//Objective: To enable the obprm to distinguish the external & internal obstacles, 
-//           so it would not try to generate nodes on the surfaces of the internal
-//           obstacles, which might save a lot of time for obprm;
-#define ENV_VER_20020327                   20020327
-#define ENV_VER_20001022                   20001022
-#define ENV_VER_LEGACY                     0
 #define ENV_RES_DEFAULT                    0.05
-//@}
-
 
 //===================================================================
 //  Constructors
@@ -39,7 +20,7 @@ Environment(int dofs, int pos_dofs) :
   positionResFactor(ENV_RES_DEFAULT),
   orientationResFactor(ENV_RES_DEFAULT),
   minmax_BodyAxisRange(0),
-  input_filename("")
+  m_filename("")
 {
   boundaries = shared_ptr<BoundingBox>(new BoundingBox(dofs, pos_dofs));
 }
@@ -54,7 +35,7 @@ Environment(int dofs, int pos_dofs, Input * _input) :
   positionRes(POSITION_RES_FACTOR),
   orientationRes(ORIENTATION_RES),
   minmax_BodyAxisRange(0),
-  input_filename("")
+  m_filename("")
 {
   boundaries = new BoundingBox(dofs, pos_dofs);
 
@@ -104,7 +85,7 @@ Environment(const Environment &from_env) :
   positionResFactor(from_env.positionResFactor),
   orientationResFactor(from_env.orientationResFactor),
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
-  input_filename(from_env.input_filename)
+  m_filename(from_env.m_filename)
 {
   boundaries = shared_ptr<BoundingBox>(new BoundingBox(*(from_env.GetBoundingBox())));
   if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
@@ -140,7 +121,7 @@ Environment(MPProblem* in_pProblem) :
   positionResFactor(in_pProblem->GetEnvironment()->positionResFactor),
   orientationResFactor(in_pProblem->GetEnvironment()->orientationResFactor),
   minmax_BodyAxisRange(in_pProblem->GetEnvironment()->minmax_BodyAxisRange),
-  input_filename(in_pProblem->GetEnvironment()->input_filename)
+  m_filename(in_pProblem->GetEnvironment()->m_filename)
 {
   Environment& from_env = *(in_pProblem->GetEnvironment());
   
@@ -177,7 +158,7 @@ Environment(const Environment &from_env, const BoundingBox &i_boundaries) :
   positionResFactor(from_env.positionResFactor),
   orientationResFactor(from_env.orientationResFactor),
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
-  input_filename(from_env.input_filename)
+  m_filename(from_env.m_filename)
 {
   boundaries = shared_ptr<BoundingBox>(new BoundingBox(i_boundaries));
 
@@ -209,7 +190,7 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   positionResFactor(ENV_RES_DEFAULT),
   orientationResFactor(ENV_RES_DEFAULT),
   minmax_BodyAxisRange(0),
-  input_filename("")
+  m_filename("")
 {
   in_Node.verifyName(string("environment"));
 
@@ -217,13 +198,9 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res = 0.005;
 #endif
-  ///\todo fix hack.  This hack gets env_filename from environment xml tag
-  //const char* env_filename = in_pNode->ToElement()->Attribute("input_env");
-  //const char* env_filename = GetMPProblem()->GetEnvFileName().c_str();
-  //Read(env_filename, PMPL_EXIT, "", RAPID, 1);
-  ///\todo fix hack. This hack assigns RAPID as the cd library and the main directory as "".
-  Read(in_Node.stringXMLParameter("input_env", true, "", "env filename").c_str(), PMPL_EXIT, "");
-  //FindBoundingBox();
+ 
+  m_filename = in_Node.stringXMLParameter("input_env", true, "", "env filename");
+  Read(m_filename);
 
   XMLNodeReader::childiterator citr;
   int num_joints;
@@ -238,7 +215,14 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
 #endif
 
       num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
-      in_pProblem->SetNumOfJoints(num_joints);
+      CfgType tmp;
+#ifndef PMPManifold
+      vector<Robot> robots = tmp.GetRobots(num_joints);
+#else
+      vector<Robot> robots = robotVec;
+#endif
+      Cfg::InitRobots(robots);
+      //in_pProblem->SetNumOfJoints(num_joints);
 
       XMLNodeReader::childiterator citr2;
       for ( citr2 = citr->children_begin(); citr2!= citr->children_end(); ++citr2 ) {
@@ -308,13 +292,13 @@ Environment(const Environment& from_env, string filename) :
   positionResFactor(from_env.positionResFactor),
   orientationResFactor(from_env.orientationResFactor),
   minmax_BodyAxisRange(0),
-  input_filename(filename)
+  m_filename(filename)
 {
   boundaries = shared_ptr<BoundingBox>(new BoundingBox(*(from_env.GetBoundingBox())));
   if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
     cout << "FOUND EMPTY BBOX! (Environment copy constructor, with filename)\n";
          
-  Read(filename.c_str(), PMPL_EXIT, "");
+  Read(filename);
   FindBoundingBox();
 
   //compute RESOLUTION
@@ -407,7 +391,7 @@ SelectUsableMultibodies() {
     usable_externalbody_count++;
   }
 
-  if((boundaries->GetPosDOFs() < CfgType().PosDOF()) || (boundaries->GetDOFs() < CfgType().DOF()))
+  if((boundaries->GetPosDOFs() < (int)CfgType().PosDOF()) || (boundaries->GetDOFs() < (int)CfgType().DOF()))
     return;
 
   // get workspace bounding box
@@ -543,81 +527,32 @@ Environment::GetBoundingBox() const {
   return boundaries;
 }
 
-void Environment::SetBoundingBox(shared_ptr<BoundingBox> b){
-  boundaries = b;
+void Environment::SetBoundingBox(shared_ptr<BoundingBox> _b){
+  boundaries = _b;
 }
 
-
 void 
-Environment:: 
-Read(const char* in_filename, int action, const char* descDir) {  
-  input_filename = string(in_filename);
-  VerifyFileExists(in_filename,action);
+Environment::Read(string _filename) {  
+  VerifyFileExists(_filename);
   
   // open file and read first field
-  ifstream is(in_filename);
-  
-#define LINEMAX 256
-  // if first field is a comment delimiter
-  char t;
-  int envFormatVersion = ENV_VER_LEGACY;
-  while((t = is.peek()) == '#') {
-    char line[LINEMAX];
-    is.getline(line,LINEMAX,'\n');
-    char string1[32];
-    char string2[32];
-    char string3[32];
-    if(strstr(line, "Environment")) {
-      sscanf(&line[1],"%s %s %d",string2,string3,&envFormatVersion);
-      if(!strstr(string3, "Version")) {
-	cerr << "\nREAD ERROR: bad file format in \""
-	     << in_filename << "\"";
-	cerr << "\n            something is wrong w/ the following\n"
-	     << "\n            "<<string1<<" "<<string2<<" "<<string3
-	     <<"\n\n";
-	if(action==PMPL_EXIT)
-	  exit(-1);
-      }
-    } 
-  }
-  Read(is, envFormatVersion, action, descDir);
-  is.close();
-}
-
-
-void 
-Environment::
-Read(istream & _is, int envFormatVersion, int action, const char* descDir) {  
-  switch(envFormatVersion) {
-  case ENV_VER_20020327:
-    break;
-  case ENV_VER_20001022:
-    // put in whatever may be specific to the format
-    // ENV_VER_20001022 is equivalent to ENV_VER_LEGACY
-    // so nothing is specific here
-    break;
-  case ENV_VER_LEGACY:
-    break;
-  default:
-    cerr << "\nREAD ERROR: Unrecognized Environment Version \""
-	 << envFormatVersion << "\""
-	 <<"\n\n";
-    exit(-1);
-    break;
-  }
+  ifstream ifs(_filename.c_str());
  
-  int multibodyCount; 
-  _is >> multibodyCount;      // # of MultiBodys'
+  int multibodyCount = ReadField<int>(ifs, "Number of Multibodies");
+  
   for (int m=0; m<multibodyCount; m++) {    
     shared_ptr<MultiBody> mb(new MultiBody());
-    mb->Read(_is, action, descDir, m_debug);
+    mb->Read(ifs, m_debug);
     if( !mb->IsSurface() )
       multibody.push_back(mb);
     else
       m_navigableSurfaces.push_back(mb);
   }
-}
+  
+  ifs.close();
 
+  BuildRobotStructure();
+}
 
 void
 Environment::
@@ -627,6 +562,80 @@ buildCDstructure(cd_predefined cdtype)
     (*M)->buildCDstructure(cdtype);
 }
 
+void
+Environment::BuildRobotStructure()
+{
+    shared_ptr<MultiBody> robot = multibody[robotIndex];
+    int fixedBodyCount = robot -> GetFixedBodyCount();
+    int freeBodyCount = robot->GetFreeBodyCount();
+    for (int i = 0; i < fixedBodyCount; i++) {
+      m_robotGraph.add_vertex(i);
+    }
+    for (int i = 0; i < freeBodyCount; i++) {
+        m_robotGraph.add_vertex(i + fixedBodyCount); //Need to account for FixedBodies added above
+      }
+    //Total amount of bodies in environment: free + fixed
+    for (int i = 0; i < freeBodyCount + fixedBodyCount; i++){
+      shared_ptr<Body> body = robot -> GetBody(i);  
+      //For each body, find forward connections and connect them 
+      for (int j = 0; j < body->ForwardConnectionCount(); j++) {
+        shared_ptr<Body> forward = body -> GetForwardConnection(j).GetNextBody();
+        if (forward -> IsFixedBody()) {
+          //Quick hack to avoid programming ability to determine subclass
+          shared_ptr<FixedBody> castFixedBody = boost::dynamic_pointer_cast<FixedBody>(forward);
+          int nextIndex = robot -> GetFixedBodyIndex(castFixedBody);
+          m_robotGraph.add_edge(i, nextIndex);
+        }
+        else {
+          shared_ptr<FreeBody> castFreeBody = boost::dynamic_pointer_cast<FreeBody>(forward);
+          int nextIndex = robot -> GetFreeBodyIndex(castFreeBody);
+          m_robotGraph.add_edge(i, nextIndex);
+        }
+      } 
+    }
+
+  write_vertices_edges_graph(m_robotGraph,cout); 
+  //Robot ID typedef
+  typedef RobotGraph::vertex_descriptor RID; 
+  vector< pair<size_t,RID> > ccs;
+  stapl::sequential::vector_property_map< RobotGraph,size_t > cmap;
+  //Initialize CC information
+  get_cc_stats(m_robotGraph,cmap,ccs);
+  if(ccs.size()>0)
+    robot->SetMultirobot(true);
+  for (size_t i = 0; i < ccs.size(); i++) {
+    cmap.reset();
+    vector<RID> cc;
+    //Find CCs, construct robot objects
+    get_cc(m_robotGraph, cmap, ccs[i].second, cc);
+    size_t baseIndx = -1;
+    for(size_t j = 0; j<cc.size(); j++){
+      size_t index = m_robotGraph.find_vertex(cc[j])->property();
+      if(robot->GetFreeBody(index)->IsBase()){
+        baseIndx = index;
+        break;
+      }
+    }
+    if(baseIndx == size_t(-1)){
+      cerr << "Each robot must have at least one base. Please fix .env file." << endl;
+      exit(1);
+    }
+    
+    Robot::Base bt = robot->GetFreeBody(baseIndx)->GetBase();
+    Robot::BaseMovement bm = robot->GetFreeBody(baseIndx)->GetBaseMovement();
+    Robot::JointMap jm;
+    for(size_t j = 0; j<cc.size(); j++){
+      size_t index = m_robotGraph.find_vertex(cc[j])->property();
+      typedef Robot::JointMap::iterator MIT;
+      for(MIT mit = robot->GetJointMap().begin(); mit!=robot->GetJointMap().end(); mit++){
+        if(mit->first.first == index){
+          jm.push_back(*mit);
+        }
+      }
+    }
+    robotVec.push_back(Robot(bt, bm, jm, baseIndx));
+  }
+}
 
 bool
 Environment::

@@ -13,7 +13,7 @@
 #include "FixedBody.h"
 #include "FreeBody.h"
 #include "Graph.h"
- 
+#include "Robot.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 class Environment;
@@ -33,6 +33,7 @@ class Transformation;
   */
 class MultiBody {
 public:
+
     //-----------------------------------------------------------
     //  Static Methods
     //-----------------------------------------------------------
@@ -231,7 +232,8 @@ public:
       *@see FreeBody::Read, FixedBody::Read, Connection, FreeBody::Link, Connection::Read,
       *FixedBody::Link ,FindBoundingBox, and ComputeCenterOfMass
       */
-    virtual void Read(istream& is, int action, const char* descDir, bool _debug = false);
+    virtual void Read(istream& is, bool _debug = false);
+    
     void buildCDstructure(cd_predefined cdtype);
 
     //@}
@@ -297,6 +299,8 @@ public:
     bool operator==(const MultiBody& mb) const;
     bool operator!=(const MultiBody& mb) const { return !(*this == mb); }
 
+    Robot::JointMap& GetJointMap() {return jointMap;}
+    void SetMultirobot(bool _m){m_multirobot = _m;}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -333,6 +337,9 @@ private:
   // to say whether this multibody is a navigable surface
   bool m_isSurface;
 
+  //does the multibody contain more than one robot
+  bool m_multirobot;
+
   vector<shared_ptr<FixedBody> > fixedBody;
   vector<shared_ptr<FreeBody> > freeBody;
   
@@ -341,6 +348,8 @@ private:
   
   double boundingBox[6];
   double maxAxisRange;
+
+  Robot::JointMap jointMap;
 };
 
 #endif

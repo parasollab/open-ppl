@@ -136,7 +136,7 @@ IsConnectedOneWay(Environment *_env, StatClass& _stats,
     Cfg* cfgAverage = _c1.CreateNewCfg();
     cfgAverage->WeightedSum(_c1, _c2, m_sValue);
     vector<double> averageData = cfgAverage->GetData();
-    for ( int i=0; i<_c1.PosDOF(); ++i )
+    for ( size_t i=0; i<_c1.PosDOF(); ++i )
       translateData[i] = averageData[i];
 
     Cfg* cfgTranslate = _c1.CreateNewCfg(translateData);
@@ -146,7 +146,7 @@ IsConnectedOneWay(Environment *_env, StatClass& _stats,
   }
   translateData = startData;
 
-  for(int i=_c1.PosDOF(); i<_c1.DOF(); ++i) {
+  for(size_t i=_c1.PosDOF(); i<_c1.DOF(); ++i) {
     //create intermediate cfg, replacing dof i with goal dof
     vector<double> intermediateData = translateData;
     intermediateData[0] = halfPosition[0];
@@ -262,7 +262,7 @@ IsConnectedOtherWay(Environment *_env, StatClass& _stats,
     Cfg* cfgAverage = _c1.CreateNewCfg();
     cfgAverage->WeightedSum(_c1, _c2, m_sValue);
     vector<double> averageData = cfgAverage->GetData();
-    for(int i=0; i<_c1.PosDOF(); ++i)
+    for(size_t i=0; i<_c1.PosDOF(); ++i)
       translateData[i] = averageData[i];
 
     Cfg* cfgTranslate = _c1.CreateNewCfg(translateData);
@@ -273,7 +273,7 @@ IsConnectedOtherWay(Environment *_env, StatClass& _stats,
 
   translateData = startData;
 
-  for(int i=_c1.DOF()-1; i>_c1.PosDOF()-1; --i) {
+  for(size_t i=_c1.DOF()-1; i>_c1.PosDOF()-1; --i) {
     //create intermediate cfg, replacing dof i with goal dof
     vector<double> intermediateData = translateData;
     intermediateData[0] = halfPosition[0];
@@ -386,4 +386,5 @@ TransformAtS<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<Distanc
   delete lpOutput;
   return path;
 }
+
 #endif

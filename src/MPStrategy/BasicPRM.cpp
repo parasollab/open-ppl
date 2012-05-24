@@ -157,6 +157,24 @@ void BasicPRM::Run(int _regionID){
 
   stats->StartClock("Map Generation");
 
+  /*CfgType cfg1;
+  vector<double> d1;
+  d1.push_back(5);
+  d1.push_back(5);
+  d1.push_back(-5);
+  d1.push_back(-5);
+  cfg1.SetData(d1);
+  CfgType cfg2;
+  vector<double> d2;
+  d2.push_back(10.8901);
+  d2.push_back(1.06208);
+  d2.push_back(-3.43535);
+  d2.push_back(14.9035);
+  cfg2.SetData(d2);
+  shared_ptr<Boundary> bounds = GetMPProblem()->GetEnvironment()->GetBoundingBox();
+  cout << "Cfg1::" << cfg1 << "\t InBounds" << bounds->InBoundary(cfg1) << endl;
+  cout << "Cfg2::" << cfg2 << "\t InBounds" << bounds->InBoundary(cfg2) << endl;
+  */
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation){
     m_currentIteration++;

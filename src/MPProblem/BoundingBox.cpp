@@ -21,19 +21,15 @@ BoundingBox::BoundingBox(int _iDofs, int _iPosDofs ) :
 BoundingBox::
 BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem): Boundary(in_Node, in_pproblem) { 
 
-  pos_dofs = in_pproblem->GetPosDOFs();
-  dofs = in_pproblem->GetDOFs();
+  pos_dofs = Cfg::PosDOF();
+  dofs = Cfg::DOF();
   in_Node.verifyName(string("boundary"));
   bounding_box.clear();
-  for (int i = 0; i < dofs; i++) {
-    bounding_box.push_back(pair<double,double>(0.0,1.0));
-    if (i < pos_dofs)
-      par_type.push_back(TRANSLATIONAL);
-    else
-      par_type.push_back(REVOLUTE);
-  }
-  for (int i = pos_dofs; i < dofs; i++) {    
+  cout << "DOF::" << Cfg::DOF() << endl;
+  for (int i = 0; i < dofs; i++) {    
     m_jointLimits.push_back(pair<double,double>(0.0,1.0));
+    bounding_box.push_back(pair<double,double>(0.0,1.0));
+    par_type.push_back(REVOLUTE);
   }
 
   XMLNodeReader::childiterator citr;
@@ -58,7 +54,8 @@ BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem): Boundary(in_Node, in
       citr->warnUnknownNode();
     }
   }
-  double translational_scale = in_Node.numberXMLParameter(string("translational_scale"),true,double(0),double(-1*MAX_INT),double(MAX_INT),string("translational_scale"));
+  double translational_scale =
+    in_Node.numberXMLParameter(string("translational_scale"),true,0.0,-MAX_DBL,MAX_DBL,string("translational_scale"));
 
   TranslationalScale(translational_scale);
 }
@@ -241,28 +238,32 @@ bool BoundingBox::InBoundary(const Cfg& _cfg, Environment* _env = NULL ){
     return false;
   
    // @todo: if there are multiple robots, this needs to be changed.
-  shared_ptr<MultiBody> robot = _env->GetMultiBody(_env->GetRobotIndex());  
+  shared_ptr<MultiBody> robot = _env->GetMultiBody(_env->GetRobotIndex()); 
   if (GetClearance(_cfg.GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
     _cfg.ConfigEnvironment(_env); // Config the Environment(robot indeed).
 
     for(int m=0; m<robot->GetFreeBodyCount(); ++m) {
       Transformation &worldTransformation = robot->GetFreeBody(m)->WorldTransformation();
-      
       GMSPolyhedron &bb_poly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
+      
       bool bbox_check = true;
-      for(vector<Vector3D>::const_iterator V = bb_poly.vertexList.begin(); V != bb_poly.vertexList.end(); ++V)
+      for(vector<Vector3D>::const_iterator V = bb_poly.vertexList.begin(); V !=
+          bb_poly.vertexList.end(); ++V){
 	if(!IfSatisfiesConstraints(worldTransformation * (*V))) {
 	  bbox_check = false;
 	  break;
 	}
+      }
       if(bbox_check) 
 	continue;
       
       GMSPolyhedron &poly = robot->GetFreeBody(m)->GetPolyhedron();
-      for(vector<Vector3D>::const_iterator V = poly.vertexList.begin(); V != poly.vertexList.end(); ++V)
+      for(vector<Vector3D>::const_iterator V = poly.vertexList.begin(); V !=
+          poly.vertexList.end(); ++V){
         if(!IfSatisfiesConstraints(worldTransformation * (*V)))
           return false;      
+      }
     }
   }
   return true; 

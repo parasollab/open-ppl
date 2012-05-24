@@ -224,7 +224,7 @@ AStar<CFG, WEIGHT>::FindNeighbors(Environment* _env, StatClass& _stats, const CF
   //as _increment
   CFG tmp = _increment;
   neighbors.push_back(tmp);
-  int i;
+  size_t i;
   for(i=0; i<_current.DOF(); ++i) {
     if(i<_current.PosDOF()) {
       posOnly.push_back(_increment.GetData()[i]);

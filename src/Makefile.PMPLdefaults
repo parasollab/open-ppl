@@ -266,6 +266,7 @@ PMPL_OBJS = \
 	MPProblem/Geometry/Body.o \
 	MPProblem/Geometry/MultiBody.o \
 	Cfg/Cfg.o \
+	Cfg/ManifoldCfg.o \
 	Cfg/Cfg_free.o \
 	Cfg/Cfg_free_tree.o \
 	Cfg/Cfg_free_tree_2dof.o \
@@ -277,6 +278,7 @@ PMPL_OBJS = \
 	Cfg/Cfg_reach_cc.o \
 	Cfg/Cfg_reach_cc_fixed.o \
 	Cfg/Cfg_free_multi.o \
+	MPProblem/Robot.o \
 	MPProblem/Environment.o \
 	MPProblem/ClosedChainProblem.o \
         Utilities/MetricUtils.o \

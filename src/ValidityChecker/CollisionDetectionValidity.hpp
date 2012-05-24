@@ -95,7 +95,7 @@ IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, CDInfo& _cdInfo,
       _cfg.SetLabel("VALID",!true);
       //return true;
       return false;
-    } 
+    }
   bool Clear = (pCallName) ? false : true; 
   if( !pCallName )
     pCallName = new std::string("isColl(e,s,cd,cdi,ep)");
@@ -156,60 +156,58 @@ IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo,
       // Note that the below call sets _cdInfo as needed
       collision_found = IsInCollision(env, Stats, _cdInfo, rob, env->GetMultiBody(i), pCallName);
       if ( (collision_found) && ( ! _cdInfo.ret_all_info) ) {
-	_cdInfo.colliding_obst_index = i;
-	return true;
+        _cdInfo.colliding_obst_index = i;
+        return true;
       } else  if (_cdInfo.ret_all_info) {  // store more info
-	if ((collision_found) && (!ret_val)) {
-	  // colliding_obst_index is always the FIRST obstacle found in collision
-	  // nearest_obst_index is 'nearest' obstacle (colliding or not)
-	  local_cd_info.colliding_obst_index = i;
-	  ret_val = true;
-	}
-	
-	// Be certain that IsInCollision set _cdInfo.min_dist
-	// Check new mins against old, reset *_points if needed
-	// Store everything in local_cd_info, copy back to _cdInfo at end of function.
-  
-	if (_cdInfo.min_dist < local_cd_info.min_dist) {
-	  local_cd_info.nearest_obst_index = i;
-	  local_cd_info.min_dist = _cdInfo.min_dist;
-	  local_cd_info.robot_point = _cdInfo.robot_point;
-	  local_cd_info.object_point = _cdInfo.object_point;
-	} // end updating local_cd_info
+        if ((collision_found) && (!ret_val)) {
+          // colliding_obst_index is always the FIRST obstacle found in collision
+          // nearest_obst_index is 'nearest' obstacle (colliding or not)
+          local_cd_info.colliding_obst_index = i;
+          ret_val = true;
+        }
+
+        // Be certain that IsInCollision set _cdInfo.min_dist
+        // Check new mins against old, reset *_points if needed
+        // Store everything in local_cd_info, copy back to _cdInfo at end of function.
+
+        if (_cdInfo.min_dist < local_cd_info.min_dist) {
+          local_cd_info.nearest_obst_index = i;
+          local_cd_info.min_dist = _cdInfo.min_dist;
+          local_cd_info.robot_point = _cdInfo.robot_point;
+          local_cd_info.object_point = _cdInfo.object_point;
+        } // end updating local_cd_info
       }
     } else {
-if(ignoreSelfCollision){
-	//robot self checking turned off
-	if (_cdInfo.ret_all_info) {
-    // local_cd_info should contain "all the info" across all objects
-    // _cdInfo only contains info for the last one processed above
-    _cdInfo = local_cd_info;
-  }
-	 
-	 ret_val =false;
-}
-	  
-      //}
+      if(ignoreSelfCollision){
+        //robot self checking turned off
+        if (_cdInfo.ret_all_info) {
+          // local_cd_info should contain "all the info" across all objects
+          // _cdInfo only contains info for the last one processed above
+          _cdInfo = local_cd_info;
+        }
+
+        ret_val =false;
+      }
       else {
 
-      // robot self checking. Warning: rob and env->GetMultiBody(robot) may NOT be the same.
-      if ( (rob->GetBodyCount() > 1) && 
-	   (IsInCollision(env, Stats, _cdInfo, rob, rob, pCallName)) ) {
-	if (_cdInfo.ret_all_info) {
-	  // set stuff to indicate odd happenning
-	  _cdInfo.colliding_obst_index = -1;
-	  _cdInfo.min_dist = MaxDist;
-	  _cdInfo.nearest_obst_index = -1;
-	  _cdInfo.robot_point[0] = _cdInfo.robot_point[1] = _cdInfo.robot_point[2] = 0;
-	  _cdInfo.object_point[0] = _cdInfo.object_point[1] = _cdInfo.object_point[2] = 0;
-	}
-	
-	return true;
-      
+        // robot self checking. Warning: rob and env->GetMultiBody(robot) may NOT be the same.
+        if ( (rob->GetBodyCount() > 1) && 
+            (IsInCollision(env, Stats, _cdInfo, rob, rob, pCallName)) ) {
+          if (_cdInfo.ret_all_info) {
+            // set stuff to indicate odd happenning
+            _cdInfo.colliding_obst_index = -1;
+            _cdInfo.min_dist = MaxDist;
+            _cdInfo.nearest_obst_index = -1;
+            _cdInfo.robot_point[0] = _cdInfo.robot_point[1] = _cdInfo.robot_point[2] = 0;
+            _cdInfo.object_point[0] = _cdInfo.object_point[1] = _cdInfo.object_point[2] = 0;
+          }
+
+          return true;
+
+        }
       }
-  }
     } // end  if-else i == robot
-    
+
   } // end for i
   
   if (_cdInfo.ret_all_info) {

@@ -6,45 +6,22 @@
 
 Cfg_reach_cc_fixed::
 Cfg_reach_cc_fixed() : Cfg_reach_cc() {
-  m_posDof = 0;
-  m_dof = m_numOfJoints;
-  m_v.resize(m_dof);
-}
-
-Cfg_reach_cc_fixed::
-Cfg_reach_cc_fixed(int _numofjoints) : Cfg_reach_cc(_numofjoints) {
-  m_posDof = 0;
-  m_dof = m_numOfJoints;
-  m_v.resize(m_dof);
-}
-
-Cfg_reach_cc_fixed::
-Cfg_reach_cc_fixed(const Vector6D& _v) : Cfg_reach_cc(_v) {
-  m_posDof = 0;
-  m_dof = m_numOfJoints;
-  m_v.resize(m_dof);
-}
-
-Cfg_reach_cc_fixed::
-Cfg_reach_cc_fixed(const vector<double>& _v) : Cfg_reach_cc(_v) {
-  m_posDof = 0;
   m_dof = m_numOfJoints;
   m_v.resize(m_dof);
 }
 
 Cfg_reach_cc_fixed::
 Cfg_reach_cc_fixed(const Cfg& c) {
-  m_posDof = 0;
   m_dof = m_numOfJoints;
  
   vector<double> _v = c.GetData();
-  if((int)_v.size() < m_dof) {
+  if(_v.size() < m_dof) {
     cout << "\n\nERROR in Cfg_reach_cc_fixed::Cfg_reach_cc_fixed(Cfg&), ";
     cout << "size of cfg data less than m_dof\n";
     exit(-1);
   }
   m_v.clear();
-  for(int i=0; i<m_dof; i++)
+  for(size_t i=0; i<m_dof; i++)
     m_v.push_back(_v[i]);
   NormalizeOrientation();
   
@@ -53,25 +30,17 @@ Cfg_reach_cc_fixed(const Cfg& c) {
 }
 
 Cfg_reach_cc_fixed::
-Cfg_reach_cc_fixed(double x, double y, double z, 
-	     double roll, double pitch, double yaw) 
-  : Cfg_reach_cc(x, y, z, roll, pitch, yaw) {
-  m_posDof = 0;
-  m_dof = m_numOfJoints;
-  m_v.resize(m_dof);
-}
-
-Cfg_reach_cc_fixed::
 ~Cfg_reach_cc_fixed() {
 }
 
-bool
+/*bool
 Cfg_reach_cc_fixed::
 ConfigEnvironment(Environment* _env) const {
   int robot = _env->GetRobotIndex();
 
   for(int i=0; i<m_numOfJoints; ++i) {
-    _env->GetMultiBody(robot)->GetFreeBody(i)->GetBackwardConnection(0).GetDHparameters().theta = m_v[i]*360.0;
+    _env->GetMultiBody(robot)->GetFreeBody(i)->GetBackwardConnection(0).GetDHparameters().theta
+    = m_v[i]*TWOPI;
   } //config the robot
 
   vector<int> link_ids;
@@ -83,7 +52,7 @@ ConfigEnvironment(Environment* _env) const {
 
   return true;
 }
-
+*/
 void 
 Cfg_reach_cc_fixed::
 GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {

@@ -40,13 +40,13 @@ public:
   ///Degree of freedom is 6 and Degree of freedom for position part is 3.
   Cfg_2D();
   Cfg_2D(const Cfg&c);
-  Cfg_2D(const Vector2d& _v);
-  Cfg_2D(double, double);
   Cfg_2D(const Point2d _p);
 
   ///Do nothing
   virtual ~Cfg_2D();
   //@}
+  
+  virtual vector<Robot> GetRobots(int _numJoints);
   
   #ifdef _PARALLEL
     void define_type(stapl::typer &t)  
@@ -68,10 +68,6 @@ public:
   ///Read configuration from input stream
   virtual void Read(istream& is);
 
-  virtual void GetRandomCfg(double R, double rStep);
-  virtual void GetRandomCfg(Environment *_env);
-  virtual void GetRandomCfg(Environment *_env,shared_ptr<Boundary> _bb);
-
   virtual void GetRandomRay(double incr, Environment* env, shared_ptr< DistanceMetricMethod> dm, bool norm=true);
 
   virtual void add(const Cfg&, const Cfg&);
@@ -89,13 +85,13 @@ public:
    * @param value the value to set the parameter as
    * Note: norm is a dummy value in 2d
    */
-  virtual int SetSingleParam(int param, double value, bool norm=true);
+  virtual int SetSingleParam(size_t param, double value, bool norm=true);    
   
   /** Increment a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to set.
    * @param value the value to increment the parameter by.
    */
-  virtual int IncSingleParam(int param, double value);  
+  virtual int IncSingleParam(size_t param, double value);  
  
   ///Increase every value in this instance in each dimention by the value in _increment
   virtual void Increment(const Cfg& _increment);
@@ -107,7 +103,7 @@ public:
   ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition() const;
 
-  virtual const char* GetName() const;
+  virtual const string GetName() const;
 
   ///Move the (the first link of)  robot in enviroment to the given configuration.
   virtual bool ConfigEnvironment(Environment*) const;
@@ -125,12 +121,10 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
-  virtual void GetRandomCfg_CenterOfMass(Environment* _env);
-  virtual void GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
+  virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
 
  private:
   Point2d p;
-
 };
 
 #endif

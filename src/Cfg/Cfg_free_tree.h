@@ -20,13 +20,10 @@ class Cfg_free_tree : public Cfg_free {
   //===================================================================
 
   Cfg_free_tree();
-  Cfg_free_tree(int _numofjoints);
-  Cfg_free_tree(const Vector6D& _v);
-  Cfg_free_tree(const vector<double>& _v);
   Cfg_free_tree(const Cfg&c);
-  Cfg_free_tree(double x, double y, double z, 
-		double roll, double pitch, double yaw);
   virtual ~Cfg_free_tree();
+  
+  virtual vector<Robot> GetRobots(int _numJoints);
   
   #ifdef _PARALLEL
     void define_type(stapl::typer &t)  
@@ -36,10 +33,7 @@ class Cfg_free_tree : public Cfg_free {
     }
 #endif
 
-  static int  GetNumOfJoints() { return m_numOfJoints; }
-
-  // setNumofJoints should be consistent in every class
-  static void SetNumOfJoints(int _numofjoints) { m_numOfJoints = _numofjoints; }
+  static size_t  GetNumOfJoints() { return m_numOfJoints; }
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -53,9 +47,8 @@ class Cfg_free_tree : public Cfg_free {
 
   ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition() const;
-  virtual Vector3D GetRobotCenterofMass(Environment* env) const;
 
-  virtual const char* GetName() const;
+  virtual const string GetName() const;
 
   ///Move the (the first link of)  robot in enviroment to the given configuration.
   virtual bool ConfigEnvironment(Environment*) const;
@@ -67,9 +60,8 @@ class Cfg_free_tree : public Cfg_free {
   virtual void GetRandomCfg(Environment *_env,shared_ptr<Boundary> _bb);
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
-  virtual void GetRandomCfg_CenterOfMass(Environment* _env);
-  virtual void GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
-  static int m_numOfJoints;
+  virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
+  static size_t m_numOfJoints;
 
  private:
 };

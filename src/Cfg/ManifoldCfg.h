@@ -1,30 +1,27 @@
-// $Id: Cfg_2D_withRot.h 2836 2011-06-02 15:58:23Z sthomas $
+/////////////////////////////////////////////////////////////////////
+//
+//  ManifoldCfg.cpp
+//
+//  General Description
+//	A derived class from Cfg. It provides for a generalized 
+//      d-dimension configuration space and any robot system
+//	should be representable within it.
+//
+/////////////////////////////////////////////////////////////////////
 
-/**@file Cfg_2D_withRot.h
-  *A derived class from CfgManager. It provides some specific
-  *implementation for a 6-dof rigid-body moving in a 3-D work space.
-  *
-  *@date 08/31/99
-  *@author Guang Song
-  */
-////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifndef Cfg_2D_withRot_h
-#define Cfg_2D_withRot_h
+#ifndef ManifoldCfg_h
+#define ManifoldCfg_h
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include obprm headers
-#include "Cfg_2D.h"
-
-////////////////////////////////////////////////////////////////////////////////////////////
-class GMSPolyhedron;
+#include "Cfg.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /**
   *A derived class from CfgManager. It provides some specific
   *implementation for a 6-dof rigid-body moving in a 3-D work space.
   */
-class Cfg_2D_withRot : public Cfg_2D {
+class ManifoldCfg : public Cfg {
 public:
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -35,24 +32,12 @@ public:
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   
-  //===================================================================
-  /**@name  Constructors and Destructor*/
-  //===================================================================
-  //@{
-  ///Degree of freedom is 6 and Degree of freedom for position part is 3.
-  Cfg_2D_withRot();
-  Cfg_2D_withRot(const Cfg& c);
-  Cfg_2D_withRot(const Point2d _p, double theta);
+  ManifoldCfg();
+  ManifoldCfg(const Cfg& c);
+  virtual ~ManifoldCfg();
   
-  ///Do nothing
-  virtual ~Cfg_2D_withRot();
-  //@}
-  
-  virtual vector<Robot> GetRobots(int _numJoints);
-  
-  #ifdef _PARALLEL
-    void define_type(stapl::typer &t)  
-    {
+#ifdef _PARALLEL
+    void define_type(stapl::typer &t) {
       Cfg::define_type(t);
     }
 #endif
@@ -64,14 +49,6 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-  ///Write configuration to output stream
-  virtual void Write(ostream& os) const;
-  ///Read configuration from input stream
-  virtual void Read(istream& is);
- 
-  double GetRot() const {return m_v[2];}
-  void SetRot(double d) {m_v[2]=d;}
-
   /**@name Access Methods*/
   //@{
 
@@ -79,13 +56,15 @@ public:
   virtual Vector3D GetRobotCenterPosition() const;
 
   virtual const string GetName() const;
+  virtual vector<Robot> GetRobots(int) {return vector<Robot>();};
 
   ///Move the (the first link of)  robot in enviroment to the given configuration.
   virtual bool ConfigEnvironment(Environment*) const;
 
   ///Get a random vector whose magnitude is incr (note. the orienatation of of this Cfg is 0)
-  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm=true);
+  virtual void GetRandomRay(double _incr, Environment* _env, shared_ptr<DistanceMetricMethod> _dm, bool _norm=true);
   //@}
+  
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -96,7 +75,8 @@ public:
 
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
-  virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
+  virtual void GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boundary> _bb);
+
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -105,6 +85,7 @@ public:
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   private:
+
 };
 
 #endif

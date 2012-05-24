@@ -403,16 +403,20 @@ WritePathConfigurations(const string _outputFile,
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-bool
-VerifyFileExists(const string _name, int _action) {
+void
+VerifyFileExists(const string _name) {
   ifstream is(_name.c_str());
-  char ch;
-  if (!is.get(ch)) {
-    cout << "\nERROR: Can't open \"" << _name << "\"" << endl;
-    if(_action==PMPL_EXIT)
-      exit(1);
-    else return false;
+  if (!is.is_open()) {
+    cerr << "\nERROR: Can't open \"" << _name << "\"" << endl;
+    exit(1);
   }                                                                             
   is.close();
-  return true;
 }
+
+string 
+ReadFieldString(istream& _is, string _error, bool _toUpper){
+  string s = ReadField<string>(_is, _error);
+  if(_toUpper)
+    transform(s.begin(), s.end(), s.begin(), ::toupper);
+  return s;
+};

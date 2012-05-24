@@ -1,11 +1,11 @@
-// $Id$
-////////////////////////////////////////////////////////////////////
-/**@file  Connection.h
-  *
-  *@author Aaron Michalk
-  *date  2/25/98 
-  */
-/////////////////////////////////////////////////////////////////////
+/*This class stores information about connection from one body to another one.
+ *The information stored in this class includes:
+ * Connection type
+ * 2 Body instances
+ * _transformationToDHFrame Transform from frame of body1 to DH-Frame
+ * _dhparameters DHParameter
+ * _transformationToBody2 Transform from DH-Frame to frame of body2
+ */
 
 #ifndef Connection_h
 #define Connection_h
@@ -14,7 +14,7 @@
 //include OBPRM headers
 #include "DHparameters.h"
 #include "Transformation.h"
-
+#include "Robot.h"
 #include "boost/shared_ptr.hpp"
 using boost::shared_ptr;
 
@@ -23,24 +23,8 @@ using boost::shared_ptr;
 class Body;
 
 
-/**This class stores information about connection from one body to another one.
-  *The information stored in this class includes:
-  * - Connection type
-  * - 2 Body instances
-  * - Tansformation instances
-  * - DHparameters
-  */
 class Connection {
 public:
-    //---------------------------------------------------------------
-    //  Enumerations
-    //---------------------------------------------------------------
-    enum ConnectionType {
-        Revolute,
-        Prismatic
-    };
-
-
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -115,7 +99,7 @@ public:
     /**Get the type of connection used in this Connection instance.
       *@see ConnectionType
       */
-    ConnectionType GetConnectionType() const;
+    Robot::JointType GetConnectionType() const;
 
     ///Get a refecence of DHparameters used in this Connection instance.   
     DHparameters & GetDHparameters();
@@ -131,7 +115,7 @@ public:
     void Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
 	      const Vector3D& transformPosition, const Orientation& transformOrientation,
 	      const Vector3D& positionToDHFrame, const Orientation& orientationToDHFrame,
-	      const DHparameters& _dhparameters, const ConnectionType& connectionType,
+	      const DHparameters& _dhparameters, const Robot::JointType& connectionType,
               bool _debug = false);
     //@}
 
@@ -181,7 +165,7 @@ private:
     Transformation transformationToBody2;
     Transformation transformationToDHFrame;
     DHparameters dhparameters;
-    ConnectionType type;
+    Robot::JointType type;
 };
 
 #endif

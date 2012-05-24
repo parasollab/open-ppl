@@ -28,10 +28,9 @@ using namespace mathtool;
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef PI
-#define PI              3.141592653589793
-#endif
 #define TWOPI           (PI*2.0)
+#define DEGTORAD (PI/180.0)
+
 
 #define NULL_WT_INFO -999               ///< to pad weight fields for graph conversions
 #define INVALID_LP -999                 ///< invalid local planner id

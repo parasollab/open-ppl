@@ -26,6 +26,9 @@ Body::Body(MultiBody* _owner, GMSPolyhedron & _polyhedron) :
 Body::Body(const Body& b) :
   multibody(b.multibody),
   worldTransformation(b.worldTransformation),
+  isBase(b.isBase),
+  baseType(b.baseType),
+  baseMovementType(b.baseMovementType),
   polyhedron(b.polyhedron),
   worldPolyhedron(b.worldPolyhedron),
   CenterOfMassAvailable(b.CenterOfMassAvailable),
@@ -359,7 +362,7 @@ void Body::UpdateVertexBase(){
 }
 #endif
 
-void Body::Read(char * _fileName) {
+void Body::Read(string _fileName) {
     //---------------------------------------------------------------
     // Read polyhedron
     //---------------------------------------------------------------

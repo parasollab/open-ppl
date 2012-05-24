@@ -2,78 +2,37 @@
 #include "MultiBody.h"
 #include "Environment.h"
 
-int Cfg_free_tree_2dof::m_numOfJoints;
+size_t Cfg_free_tree::m_numOfJoints;
 
 Cfg_free_tree_2dof::Cfg_free_tree_2dof(){
-  m_dof = 6 + m_numOfJoints;
-  m_posDof = 3;
   m_v.clear();
-  for(int i=0; i<m_dof; i++)
+  for(size_t i=0; i<m_dof; i++)
     m_v.push_back(0);
 };
 
 Cfg_free_tree_2dof::~Cfg_free_tree_2dof(){}
 
-Cfg_free_tree_2dof::Cfg_free_tree_2dof(int _numofJoints) {
-  if(m_numOfJoints != _numofJoints ) {
-    cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(int), cannot change numofJoints\n";
-    exit(-1);
-  }
-  
-  m_dof = 6 + m_numOfJoints;
-  m_posDof = 3;
-  
-  m_v.clear();
-  for(int i=0; i<m_dof; i++)
-    m_v.push_back(0);
-  
-  NormalizeOrientation(); 
-}
-
-Cfg_free_tree_2dof::Cfg_free_tree_2dof(double x, double y, double z, 
-		   double roll, double pitch, double yaw) {
-  cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(double,double,double,double,double,double), not implement yet.\n";
-  exit(-1);
-}
-
-Cfg_free_tree_2dof::Cfg_free_tree_2dof(const Vector6D& _v) {
-  cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(Vector6D), not implement yet.\n";
-  exit(-1);
-}
-
-Cfg_free_tree_2dof::Cfg_free_tree_2dof(const vector<double> &_v){
-  m_dof = 6 + m_numOfJoints;
-  m_posDof = 3;
-  if((int)_v.size() < m_dof) {
-    cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(vector<double>), ";
-    cout << "size of vector less than m_dof\n";
-    exit(-1);
-  }
-  m_v.clear();
-  for(int i=0; i<m_dof; i++)
-    m_v.push_back(_v[i]);
-  NormalizeOrientation();
-
-};
-
 Cfg_free_tree_2dof::Cfg_free_tree_2dof(const Cfg& _c) {
-  m_dof = 6 + m_numOfJoints;
-  m_posDof = 3;
   vector<double> _v;
   _v = _c.GetData();
-  if((int)_v.size() < m_dof) {
-    cout << "\n\nERROR in Cfg_free_tree_2dof::Cfg_free_tree_2dof(Cfg&), ";
-    cout << "size of cfg data less than m_dof\n";
-    exit(-1);
-  }
   m_v.clear();
-  for(int i=0; i<m_dof; i++)
+  for(size_t i=0; i<m_dof; i++)
     m_v.push_back(_v[i]);
   NormalizeOrientation();
 }
 
+vector<Robot> Cfg_free_tree::GetRobots(int _numJoints){
+  m_numOfJoints = _numJoints;
+  vector<Robot> robots;
+  Robot::JointMap joints;
+  for(int i = 0; i<_numJoints-1; i++){
+    joints.push_back(make_pair(make_pair(i, i+1), Robot::SPHERICAL));
+  }
+  robots.push_back(Robot(Robot::VOLUMETRIC, Robot::ROTATIONAL, joints, 0));
+  return robots;
+}
 
-const char* Cfg_free_tree_2dof::GetName() const {
+const string Cfg_free_tree_2dof::GetName() const {
   return "Cfg_free_tree_2dof";
 }
 
@@ -89,11 +48,11 @@ bool Cfg_free_tree_2dof::ConfigEnvironment(Environment *_env) const {
 				     Vector3D(m_v[0],m_v[1],m_v[2]));
   
   _env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);  // update link 1.
-  for(int i=0; i<m_numOfJoints; i+=2) {
+  for(size_t i=0; i<m_numOfJoints; i+=2) {
     _env->GetMultiBody(robot)->GetFreeBody(i/2+1)
-      ->GetBackwardConnection(0).GetDHparameters().alpha = m_v[i+6]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().alpha = m_v[i+6]*TWOPI;
     _env->GetMultiBody(robot)->GetFreeBody(i/2+1)
-      ->GetBackwardConnection(0).GetDHparameters().theta = m_v[i+1+6]*360.0;
+      ->GetBackwardConnection(0).GetDHparameters().theta = m_v[i+1+6]*TWOPI;
   }  // config the robot
   
   

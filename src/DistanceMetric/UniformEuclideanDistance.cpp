@@ -20,12 +20,12 @@ void UniformEuclideanDistance::PrintOptions(ostream& _os) const {
 double UniformEuclideanDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
   double dist(0.0);
   double maxRange(0.0);
-  for(int i=0; i< _c1.PosDOF(); ++i) {
+  for(size_t i=0; i< _c1.PosDOF(); ++i) {
     std::pair<double,double> range = _env->GetBoundingBox()->GetRange(i);
     double tmpRange = range.second-range.first;
     if(tmpRange > maxRange) maxRange = tmpRange;
   }
-  for(int i=0; i<_c1.DOF(); ++i) {
+  for(size_t i=0; i<_c1.DOF(); ++i) {
     // calculate distance for positional coordinate
     if (i < _c1.PosDOF()) {
       double diff = (_c1.GetSingleParam(i) - _c2.GetSingleParam(i))/maxRange;

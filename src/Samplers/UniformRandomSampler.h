@@ -51,9 +51,14 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
         attempts++;
         CFG tmp;
         tmp.GetRandomCfg(_env,_bb);
-        if(tmp.InBoundingBox(_env,_bb)) {
-          if(vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, 
-                         _stats, cdInfo, true, &callee)) {
+        bool inBBX = tmp.InBoundingBox(_env, _bb);
+        if(this->m_debug) cout << "tmp::" << tmp << endl;
+        if(this->m_debug) cout << "InBoudary::" << inBBX << endl;
+        if(inBBX) {
+          bool isValid = vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, 
+                         _stats, cdInfo, true, &callee);
+          if(this->m_debug) cout << "IsValid::" << isValid << endl;
+          if(isValid) {
             _stats.IncNodesGenerated(this->GetNameAndLabel());
             generated = true;
             if(this->m_debug) cout << "Generated::" << tmp << endl;

@@ -39,15 +39,11 @@ class Cfg_fixed_tree : public Cfg {
   //@{
 
   Cfg_fixed_tree();
-  Cfg_fixed_tree(double x, double y, double z, double roll, double pitch, double yaw);
-  /**Creae an instance of Cfg_fixed_tree.
-    *Degree of freedom is _numofJoints and Degree of freedom for position part is 0.
-    */
-  Cfg_fixed_tree(int _numofJoints);
-  Cfg_fixed_tree(const vector<double>& _data);
   Cfg_fixed_tree(const Cfg& _c);
   Cfg_fixed_tree(const Cfg_fixed_tree& _c);
 
+  virtual vector<Robot> GetRobots(int _numJoints);
+  
   ///Do nothing
   virtual ~Cfg_fixed_tree();
 
@@ -62,7 +58,6 @@ class Cfg_fixed_tree : public Cfg {
 #endif
 
   static int  GetNumOfJoints() {return m_numOfJoints;};
-  static void SetNumOfJoints(int _numofjoints) {m_numOfJoints = _numofjoints;}
     
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -77,16 +72,8 @@ class Cfg_fixed_tree : public Cfg {
   ///The center position is (0, 0, 0)
   virtual Vector3D GetRobotCenterPosition() const;
 
-  virtual const char* GetName() const;
+  virtual const string GetName() const;
   
-  /**Randomly generate all joint angles for this new Cfg. (No bounding box is concerned)
-    *@param R Not used here.
-    *@param rStep
-    */
-  virtual void GetRandomCfg(double R, double rStep);
-
-  virtual void GetRandomCfg(Environment* env);
-  virtual void GetRandomCfg(Environment *_env,shared_ptr<Boundary> _bb);
   ///Get a random vector. incr will always be reset to 0.005.
   virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm=true);
   //@}
@@ -134,18 +121,8 @@ class Cfg_fixed_tree : public Cfg {
 protected:
 
   ///Just like GetRandomCfg.
-  virtual void GetRandomCfg_CenterOfMass(Environment *env);
-  virtual void GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
-  static int m_numOfJoints;  ///< # of Joints
-///////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//    private Data member and member methods
-//
-//    
-//////////////////////////////////////////////////////////////////////////////////////////
-		       
-private:
+  virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
+  static size_t m_numOfJoints;  ///< # of Joints
 		         
 }; 
 

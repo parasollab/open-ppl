@@ -25,72 +25,94 @@
 #include "ValidityChecker.hpp"
 #include "MPProblem.h"
 
-int Cfg::m_numOfJoints;
-
-#ifdef COLLISIONCFG
-extern  vector < vector < vector <  double > > > CollisionConfiguration;
-#endif
-
 #define EQ(a,b)  (fabs(a-b)<0.0001)
 
 ClearanceInfo::
-~ClearanceInfo() {
-  if(m_direction != NULL)
-    delete m_direction;
-}
+  ~ClearanceInfo() {
+    if(m_direction != NULL)
+      delete m_direction;
+  }
 
 ////////////////////////////////////////////////////////////////////
+size_t Cfg::m_dof;
+vector<Cfg::DofType> Cfg::m_dofTypes;
+vector<Robot> Cfg::m_robots;
+
 Cfg::Cfg(const Cfg& _other){
   m_v = _other.m_v;
   m_dof = _other.m_dof;
-  m_posDof = _other.m_posDof;
   m_labelMap = _other.m_labelMap;
   m_statMap = _other.m_statMap;
 }
 
+void Cfg::InitRobots(vector<Robot>& _robots){
+  m_robots=_robots;
+  for(vector<Robot>::iterator rit = m_robots.begin(); rit!=m_robots.end(); rit++){
+    if(rit->m_base==Robot::PLANAR){
+      m_dofTypes.push_back(POS);
+      m_dofTypes.push_back(POS);
+      if(rit->m_baseMovement == Robot::ROTATIONAL)
+        m_dofTypes.push_back(ROT);
+    }
+    if(rit->m_base==Robot::VOLUMETRIC){
+      m_dofTypes.push_back(POS);
+      m_dofTypes.push_back(POS);
+      m_dofTypes.push_back(POS);
+      if(rit->m_baseMovement == Robot::ROTATIONAL){
+        m_dofTypes.push_back(ROT);
+        m_dofTypes.push_back(ROT);
+        m_dofTypes.push_back(ROT);
+      }
+    }
+    for(Robot::JointIT jit = rit->m_joints.begin(); jit!=rit->m_joints.end(); jit++){
+      if(jit->second==Robot::REVOLUTE){
+        m_dofTypes.push_back(JOINT);
+      }
+      else if(jit->second==Robot::SPHERICAL){
+        m_dofTypes.push_back(JOINT);
+        m_dofTypes.push_back(JOINT);
+      }
+    }
+  }
+  m_dof = m_dofTypes.size();
+}
 
 bool Cfg::operator==(const Cfg &_tmp) const {
   return AlmostEqual(_tmp);
 }
 
-
 bool Cfg::operator!=( const Cfg& _tmp) const {
   return !(*this==_tmp);
 }
 
-
 bool Cfg::AlmostEqual(const Cfg& _c) const {
-  for(int i=0; i<m_dof; ++i) {
-    if(i<m_posDof) {
+  for(size_t i=0; i<m_dof; ++i) {
+    if(m_dofTypes[i]==POS || m_dofTypes[i]==JOINT) {
       if(!EQ(m_v[i], _c.m_v[i]))
-  return false;
+        return false;
     } else {
       if(!EQ(DirectedAngularDistance(m_v[i], _c.m_v[i]), 0.0)) 
-  return false;
+        return false;
     }
   }
-  
   return true;
 }
 
-
 void Cfg::add(const Cfg& _c1, const Cfg& _c2) {
   vector<double> v;
-  for(size_t i=0; i<_c1.m_v.size(); ++i)
+  for(size_t i=0; i<m_dof; ++i)
     v.push_back(_c1.m_v[i]+_c2.m_v[i]);
   m_v = v;
   NormalizeOrientation();
 }
 
-
 void Cfg::subtract(const Cfg& _c1, const Cfg& _c2) {
   vector<double> v;
-  for(size_t i=0; i<_c1.m_v.size(); ++i)
+  for(size_t i=0; i<m_dof; ++i)
     v.push_back(_c1.m_v[i]-_c2.m_v[i]);
   m_v = v;
   NormalizeOrientation();
 }
-
 
 void Cfg::negative(const Cfg& _c) {
   vector<double> v;    
@@ -99,7 +121,6 @@ void Cfg::negative(const Cfg& _c) {
   m_v = v;
   NormalizeOrientation();
 }
-
 
 void Cfg::multiply(const Cfg& _c, double _s, bool _norm) {
   vector<double> v;
@@ -110,7 +131,6 @@ void Cfg::multiply(const Cfg& _c, double _s, bool _norm) {
     NormalizeOrientation();
 }
 
-
 void Cfg::divide(const Cfg& _c, double _s) {
   vector<double> v;
   for(vector<double>::const_iterator V = _c.m_v.begin(); V != _c.m_v.end(); ++V)
@@ -120,13 +140,6 @@ void Cfg::divide(const Cfg& _c, double _s) {
 }
 
 Cfg& Cfg::operator=(const Cfg& _c){
-  if(_c.DOF() != m_dof || _c.PosDOF()!= m_posDof) {
-    cout << "\n\nERROR in Cfg::operator=(Cfg&), ";
-    cout << "DOF of Cfgs are not equal " << _c.DOF() << "\t!=\t" << m_dof 
-         << "\nor posDOF are not equal " << _c.PosDOF() << "\t!=\t" << m_posDof << endl;
-    exit(-1);
-  }
-  m_posDof=_c.PosDOF();
   m_v.clear();
   m_v = _c.GetData();
   m_labelMap = _c.m_labelMap;
@@ -137,37 +150,33 @@ Cfg& Cfg::operator=(const Cfg& _c){
 
 void Cfg::WeightedSum(const Cfg& _first, const Cfg& _second, double _weight) {
   vector<double> v;
-  for(size_t i=0; i<_first.m_v.size(); ++i)
+  for(size_t i=0; i<m_dof; ++i)
     v.push_back(_first.m_v[i]*(1.-_weight) + _second.m_v[i]*_weight);
   m_v = v;
   NormalizeOrientation();
 }
 
-
 bool Cfg::IsWithinResolution(const Cfg& _c, double _positionRes, double _orientationRes) const {
-    Cfg* diff = this->CreateNewCfg();
-    diff->subtract(*this, _c);
-    
-    bool result = ((diff->PositionMagnitude() <= _positionRes) &&
-       (diff->OrientationMagnitude() <= _orientationRes));
-    delete diff;
-    return result;
-}	
+  Cfg* diff = this->CreateNewCfg();
+  diff->subtract(*this, _c);
 
+  bool result = ((diff->PositionMagnitude() <= _positionRes) &&
+      (diff->OrientationMagnitude() <= _orientationRes));
+  delete diff;
+  return result;
+}	
 
 //---------------------------------------------
 // Input/Output operators for Cfg
 //---------------------------------------------
 istream& operator>> (istream& _s, Cfg& _pt) {
   _pt.Read(_s);
-  _pt.ReadInfo(_s);
   return _s;
 }
 
 
 ostream& operator<< (ostream& _s, const Cfg& _pt) {
   _pt.Write(_s);
-  _pt.WriteInfo(_s);
   return _s;
 }
 
@@ -177,48 +186,49 @@ void Cfg::Write(ostream& _os) const {
     _os << setw(4)<<*V<<' ';
 }
 
-//after vizmo no longer requires this function, remove
-void Cfg::WriteInfo(ostream& _os) const {
-  _os << "-1 -1 -1 ";
-}
-
-
 void Cfg::Read(istream &_is) {
   for(vector<double>::iterator V = m_v.begin(); V != m_v.end(); ++V)
     _is >> (*V);
-}
-
-
-//after vizmo no longer requires this function, remove
-void Cfg::ReadInfo(istream& _is) {
-  int tmp;
-  _is >> tmp >> tmp >> tmp;
 }
 
 void Cfg::PrintLinkConfigurations(Environment* _env, vector<Vector6D>& _cfigs) const {
   ConfigEnvironment(_env);
   int robot = _env->GetRobotIndex();
   int numOfLink = _env->GetMultiBody(robot)->GetFreeBodyCount();
-  
+
   _cfigs.erase(_cfigs.begin(), _cfigs.end());
   for(int i=0; i<numOfLink; i++) {
     Transformation tmp = _env->GetMultiBody(robot)->GetFreeBody(i)->WorldTransformation();
     Orientation ori = tmp.orientation;
     ori.ConvertType(Orientation::FixedXYZ);
     Vector6D v6 = Vector6D(tmp.position[0], tmp.position[1], tmp.position[2],
-         ori.gamma/TWOPI, ori.beta/TWOPI, ori.alpha/TWOPI);
+        ori.gamma/TWOPI, ori.beta/TWOPI, ori.alpha/TWOPI);
     _cfigs.push_back(v6);        
   }
 }
-
 
 const vector<double>& Cfg::GetData() const {
   return m_v;
 }
 
+size_t Cfg::DOF(){
+  return m_dof;
+}
+
+size_t Cfg::PosDOF(){
+  size_t posDof = 0;
+  for(vector<Robot>::const_iterator rit = m_robots.begin(); rit!=m_robots.end(); rit++){
+    if(rit->m_base==Robot::PLANAR)
+      posDof+=2;
+    else if (rit->m_base==Robot::VOLUMETRIC)
+      posDof+=3;
+  }
+  return posDof;
+}
+
 void 
 Cfg::SetData(vector<double>& _data) {
-  if((int)_data.size() != m_dof) {
+  if(_data.size() != m_dof) {
     cout << "\n\nERROR in Cfg::SetData, ";
     cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl; 
     exit(-1);
@@ -226,19 +236,10 @@ Cfg::SetData(vector<double>& _data) {
   m_v = _data;
 }
 
-int Cfg::DOF() const {
-  return m_dof;
-}
-
-
-int Cfg::PosDOF() const {
-  return m_posDof;
-}
-
 // Set a single parameter in the configuration (i.e., x,y,z,roll...)
 // _param = the parameter number to set
 // _value = the value to set the parameter as
-int Cfg::SetSingleParam(int _param, double _value, bool _norm) {    
+int Cfg::SetSingleParam(size_t _param, double _value, bool _norm) {    
   if ((_param>=0) && (_param<m_dof)) {
     m_v[_param]=_value;
     if ( _norm )
@@ -249,11 +250,10 @@ int Cfg::SetSingleParam(int _param, double _value, bool _norm) {
   } 
 }
 
-
 // Increment a single parameter in the configuration (i.e., x,y,z,roll...)
 // _param = the parameter number to set
 // _value = the value to increment the parameter by
-int Cfg::IncSingleParam(int _param, double _value) {    
+int Cfg::IncSingleParam(size_t _param, double _value) {    
   if ((_param>=0) && (_param<m_dof)) {
     m_v[_param]+=_value;
     NormalizeOrientation(_param);
@@ -263,10 +263,9 @@ int Cfg::IncSingleParam(int _param, double _value) {
   } 
 }
 
-
 // Retreive a single parameter in the configuration (i.e., x,y,z,roll...)
 // _param = the parameter number to retreive
-double Cfg::GetSingleParam(int _param) const {
+double Cfg::GetSingleParam(size_t _param) const {
   if ((_param>=0) && (_param<m_dof)) {
     return m_v[_param];
   } else {
@@ -274,41 +273,40 @@ double Cfg::GetSingleParam(int _param) const {
   }
 }
 
-
 vector<double> Cfg::GetPosition() const {
   vector<double> ret;  
-  for(int i=0; i<m_posDof; ++i) {
-    ret.push_back(m_v[i]);
+  for(size_t i=0; i<m_dof; ++i) {
+    if(m_dofTypes[i]==POS)
+      ret.push_back(m_v[i]);
   }
   return ret;
 }
 
-
 vector<double> Cfg::GetOrientation() const {
   vector<double> ret;
-  for(int i=m_posDof; i<m_dof; ++i) {
-    ret.push_back(m_v[i]);
+  for(size_t i=0; i<m_dof; ++i) {
+    if(m_dofTypes[i]!=POS)
+      ret.push_back(m_v[i]);
   }     
   return ret;
 }
 
-
 double Cfg::PositionMagnitude() const {
   double result = 0.0;
-  for(int i=0; i<m_posDof; ++i) 
-    result += sqr(m_v[i]);
+  for(size_t i=0; i<m_dof; ++i) 
+    if(m_dofTypes[i]==POS)
+      result += sqr(m_v[i]);
   return sqrt(result);
 }
-
 
 double Cfg::OrientationMagnitude() const {
   double result = 0.0;
-  for(int i=m_posDof; i<m_dof; ++i) {
-    result += m_v[i] > 0.5 ? sqr(1.0 - m_v[i]) : sqr(m_v[i]);
+  for(size_t i=0; i<m_dof; ++i) {
+    if(m_dofTypes[i]!=POS)
+      result += m_v[i] > 0.5 ? sqr(1.0 - m_v[i]) : sqr(m_v[i]);
   }
   return sqrt(result);
 }
-
 
 // tests whether or not robot in this configuration has every vertex inside
 // the environment specified bounding box
@@ -324,9 +322,9 @@ void Cfg::GetResolutionCfg(Environment* _env) {
   m_v.clear();
   double posRes = _env->GetPositionRes();
   double oriRes = _env->GetOrientationRes();
-  
-  for(int i=0;i<m_dof;i++)
-    if(i<m_posDof) 
+
+  for(size_t i=0;i<m_dof;i++)
+    if(m_dofTypes[i]==POS) 
       m_v.push_back(posRes);
     else 
       m_v.push_back(oriRes);
@@ -337,8 +335,8 @@ void Cfg::GetResolutionCfg(Environment* _env) {
 
 void Cfg::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
   vector<double> v;
-  for(int i=0; i<m_dof; ++i) {
-    if(i<m_posDof)
+  for(size_t i=0; i<m_dof; ++i) {
+    if(m_dofTypes[i]==POS)
       v.push_back(_c1.m_v[i]);
     else
       v.push_back(_c2.m_v[i]);
@@ -400,7 +398,7 @@ void Cfg::GetMovingSequenceNodes(const Cfg& _other, double _s, vector<Cfg*>& _re
 // find the closest point to the current cfg on that line segment
 // it could be one of the two endpoints of course
 void Cfg::ClosestPtOnLineSegment(const Cfg& _current, const Cfg& _pt1, const Cfg& _pt2) {
-    
+
   Cfg* B = _pt2.CreateNewCfg();
   B->subtract(_pt2, _pt1);
 
@@ -409,13 +407,13 @@ void Cfg::ClosestPtOnLineSegment(const Cfg& _current, const Cfg& _pt1, const Cfg
 
   double B_dot_C = 0;
   double B_squared = 0;
-    
+
   vector<double>::const_iterator b, c;
   for (b = B->m_v.begin(), c = C->m_v.begin(); b < B->m_v.end(); ++b, ++c) {
     B_dot_C += (*b)*(*c);
     B_squared += (*b)*(*b);
   }
-  
+
   if (B_dot_C <= 0) {
     //return pt1;
     *this = _pt1;
@@ -432,59 +430,61 @@ void Cfg::ClosestPtOnLineSegment(const Cfg& _current, const Cfg& _pt1, const Cfg
 }
 
 void Cfg::Increment(const Cfg& _increment) {
-  for(size_t i=0; i<m_v.size(); ++i)
+  for(size_t i=0; i<m_dof; ++i)
     m_v[i] += _increment.m_v[i];
   NormalizeOrientation();
 }
 
 void Cfg::IncrementTowardsGoal(const Cfg &_goal, const Cfg &_increment) {
   double tmp;
-  int i;
+  size_t i;
 
-  ///For Posiotn
-  for(i=0; i<m_posDof; ++i) {
-    //If the diff between _goal and c is smaller than _increment
-    if( fabs(_goal.m_v[i]-m_v[i]) < fabs(_increment.m_v[i]))
-      m_v[i] = _goal.m_v[i];
-    else
-      m_v[i] += _increment.m_v[i];
+  ///For Position
+  for(i=0; i<m_dof; ++i) {
+    if(m_dofTypes[i]==POS || m_dofTypes[i]==JOINT){
+      //If the diff between _goal and c is smaller than _increment
+      if( fabs(_goal.m_v[i]-m_v[i]) < fabs(_increment.m_v[i]))
+        m_v[i] = _goal.m_v[i];
+      else
+        m_v[i] += _increment.m_v[i];
+    }
   }
 
   ///For Oirentation
-  for(i=m_posDof; i<m_dof; ++i) {
-    if(m_v[i] != _goal.m_v[i]) {
-      double orientationIncr = _increment.m_v[i] < 0.5 ? _increment.m_v[i] : 1-_increment.m_v[i];
-      tmp = DirectedAngularDistance(m_v[i], _goal.m_v[i]);
-      if(fabs(tmp) < orientationIncr) {
-        m_v[i]=_goal.m_v[i];
-      } else {
-        m_v[i] += _increment.m_v[i];
-        m_v[i] = m_v[i] - floor(m_v[i]);
+  for(i=0; i<m_dof; ++i) {
+    if(m_dofTypes[i]==ROT){
+      if(m_v[i] != _goal.m_v[i]) {
+        double orientationIncr = _increment.m_v[i] < 0.5 ? _increment.m_v[i] : 1-_increment.m_v[i];
+        tmp = DirectedAngularDistance(m_v[i], _goal.m_v[i]);
+        if(fabs(tmp) < orientationIncr) {
+          m_v[i]=_goal.m_v[i];
+        } else {
+          m_v[i] += _increment.m_v[i];
+          m_v[i] = m_v[i] - floor(m_v[i]);
+        }
       }
     }
   }
 }
-
 
 void Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _positionRes, double _orientationRes) {
   Cfg* diff = _goal.CreateNewCfg();
   diff->subtract(_goal, _start);
 
   // adding two basically makes this a rough ceiling...
-  *_nTicks = (int)max(diff->PositionMagnitude()/_positionRes, 
-          diff->OrientationMagnitude()/_orientationRes) + 2;
+  *_nTicks = max(diff->PositionMagnitude()/_positionRes, 
+      diff->OrientationMagnitude()/_orientationRes) + 2;
   delete diff;
 
   this->FindIncrement(_start, _goal, *_nTicks);
 }
 
-
 void Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
   vector<double> incr;
-  for(int i=0; i<m_dof; ++i) {
-    if(i<m_posDof) 
+  for(size_t i=0; i<m_dof; ++i) {
+    if(m_dofTypes[i]==POS) 
       incr.push_back((_goal.m_v[i] - _start.m_v[i])/_nTicks);
-    else if(i>=m_dof-CfgType::GetNumOfJoints()){
+    else if(m_dofTypes[i]==JOINT){
       double a = _start.m_v[i];
       double b = _goal.m_v[i];
       // normalize both a and b to [0, 1)
@@ -494,65 +494,51 @@ void Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
       if(b>=0.5)b-=1.0;
       incr.push_back((b-a)/_nTicks);
     }
-    else
+    else if(m_dofTypes[i]==ROT){
       incr.push_back(DirectedAngularDistance(_start.m_v[i], _goal.m_v[i])/_nTicks);
+    }
   }
-  
+
   m_v = incr;
   NormalizeOrientation();
 }
 
-
 // generates random configuration where workspace robot's EVERY VERTEX
 // is guaranteed to lie within the environment specified bounding box
-void Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb, int _maxTries) {
+void Cfg::GetRandomCfg(Environment* _env) {
+  GetRandomCfg(_env, _env->GetBoundingBox());
+}
+
+void Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   
   // Probably should do something smarter than 3 strikes and exit.
   // eg, if it fails once, check size of bounding box vs robot radius
   // and see if user has an impossibly small (for this robot) bounding
   // box specified
-  
-  while (_maxTries-- > 0) {
-    this->GetRandomCfg_CenterOfMass(_env,_bb);
+  size_t tries = 100;
+  while ( tries-- > 0) {
+    this->GetRandomCfgCenterOfMass(_env, _bb);
    
     if (this->InBoundingBox(_env,_bb))
       return;
   }//endwhile
-  
-  
+
   // Print error message and some helpful (I hope!) statistics and exit...
   cout << "\n\nERROR: GetRandomCfg not able to find anything in bounding box."
-       <<   "\n       robot radius is "
-       << _env->GetMultiBody(_env->GetRobotIndex())->GetBoundingSphereRadius();
+    <<   "\n       robot radius is "
+    << _env->GetMultiBody(_env->GetRobotIndex())->GetBoundingSphereRadius();
   _bb->Print(cout);
   exit(-1);
 }
 
-void Cfg::GetRandomCfg(Environment* _env, int _maxTries) {
-  GetRandomCfg( _env, _env->GetBoundingBox(), _maxTries);
-}
-
-
-
-// ditto, but with a default number of tries (100)
-void Cfg::GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
-  int default_maxTries = 100;
-  this->GetRandomCfg(_env, _bb, default_maxTries);
-}
-
-void Cfg::GetRandomCfg(Environment* _env) {
-  GetRandomCfg(_env,_env->GetBoundingBox());
-}
-
-	
 // generates a random cfg with a given length 
 void Cfg::GetRandomCfg(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, double _length) {
   m_v = vector<double>(m_dof, 0);
   Cfg* origin = this->CreateNewCfg();
 
-  GetRandomCfg(_env,1000);
+  GetRandomCfg(_env);
   _dm->ScaleCfg(_env, _length, *origin, *this);
-  
+
   NormalizeOrientation();
 }
 
@@ -563,7 +549,7 @@ Cfg* Cfg::CreateNewCfg() const{
 }
 
 Cfg* Cfg::CreateNewCfg(vector<double>& _data) const {
-  if((int)_data.size() != m_dof) {
+  if(_data.size() != m_dof) {
     cout << "\n\nERROR in Cfg::CreateNewCfg(vector<double>), ";
     cout << "size of vector does not equal dof " << _data.size() << "\t!=\t" << m_dof << endl;
     exit(-1);
@@ -576,69 +562,60 @@ Cfg* Cfg::CreateNewCfg(vector<double>& _data) const {
 // Normalize the orientation to the some range.
 void Cfg::NormalizeOrientation(int _index) {
   if(_index == -1) {
-    for(size_t i=m_posDof; i<m_v.size(); ++i)
-      m_v[i] = m_v[i] - floor(m_v[i]);
-  } else if(_index >= m_posDof && _index < m_dof) {  // orientation index
+    for(size_t i=0; i<m_dof; ++i){
+      if(m_dofTypes[i]!=POS){
+        m_v[i] = m_v[i] - floor(m_v[i]);
+      }
+    }
+  } 
+  else if(m_dofTypes[_index]!=POS) {  // orientation index
     m_v[_index] = m_v[_index] - floor(m_v[_index]);
   } 
 }
 
-int Cfg::GetNumOfJoints() {
-  return m_numOfJoints;
-}
-
-void Cfg::SetNumOfJoints(int _numOfJoints) {
-  m_numOfJoints = _numOfJoints;
-}
-
 bool Cfg::GetLabel(string _label) {
-  if(IsLabel(_label))
-  {
+  if(IsLabel(_label)){
     return m_labelMap[_label];
   }
-  else
-  {
+  else{
     cout << "Cfg::GetLabel -- I cannot find Label =  " << _label << endl;
     exit(-1);
   } 
 }
 
 bool Cfg::IsLabel(string _label) {
-   bool label = false;
-   if(m_labelMap.count(_label) > 0)
-    { label= true ; }
-   else
-    { label= false; }
-   return label;
+  bool label = false;
+  if(m_labelMap.count(_label) > 0)
+    label = true;
+  else
+    label= false;
+  return label;
 }
- 
+
 void Cfg::SetLabel(string _label, bool _value) {
   m_labelMap[_label] = _value;
-
 }
 
 
 double Cfg::GetStat(string _stat) {
-  if(IsStat(_stat))
-  {
+  if(IsStat(_stat)) {
     return m_statMap[_stat];
   }
-  else
-  {
+  else {
     cout << "Cfg::GetStat -- I cannot find Stat =  " << _stat << endl;
     exit(-1);
   }
 }
 
 bool Cfg::IsStat(string _stat) {
-   bool stat = false;
-   if(m_statMap.count(_stat) > 0)
-    { stat= true ; }
-   else
-    { stat=false; }
-   return stat;
+  bool stat = false;
+  if(m_statMap.count(_stat) > 0)
+    stat= true ;
+  else
+    stat=false;
+  return stat;
 }
- 
+
 void Cfg::SetStat(string _stat,double _value) {
   m_statMap[_stat] = _value;
 }

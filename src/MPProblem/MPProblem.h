@@ -52,14 +52,6 @@ public:
   virtual int CreateMPRegion();
   MPRegion<CfgType,WeightType>* GetMPRegion(int);
 
-  void SetNumOfJoints(int num_of_joints) {
-    CfgType::SetNumOfJoints(num_of_joints);
-    CfgType robot_cfg;
-    m_dof = robot_cfg.DOF();
-    m_posDof = robot_cfg.PosDOF();
-  }
-  int GetDOFs() {return m_dof; } 
-  int GetPosDOFs() {return m_posDof; }
   //void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
   void PrintOptions(ostream& out_os);
   //ostream& GetFileStreamByLabel(string& in_strLabel);
@@ -82,7 +74,6 @@ public:
   vector< MPRegion<CfgType,WeightType>* > m_vecMPRegions; 
   //map<string,MPFileIO> m_mapLabelFile;
   // temporary variable to deal with posDOFs() and DOFs()
-  int m_dof, m_posDof;
 };
 
 

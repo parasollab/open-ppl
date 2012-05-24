@@ -352,17 +352,8 @@ void WritePathConfigurations(const string _outputFile,
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#define PMPL_EXIT 1      ///< Actions for VerifyFileExists
-/**Check if or not this given filename exists.
- *@param _fname File name that is going to be checked.
- *@action What should be done if file not found.
- *Its value should be PMPL_EXIT or RETURN.
- *
- *@return true if file exists. If file dosen't exist 
- *and action is PMPL_EXIT, process will be terminated.
- *Otherwise false will be returned.
- */
-bool VerifyFileExists(const string _name, int _action);
+//Make sure this file exists.
+void VerifyFileExists(const string _name);
 
 /**Read data for element from input stream.
  *This method throws away comments starting from "#", and
@@ -379,34 +370,33 @@ bool VerifyFileExists(const string _name, int _action);
 //The maximum number of characters in each line.
 #define LINEMAX 256
 
-template <class T> bool ReadField(istream& _is, T* _element, vector<char*>& _comment) {
+template <class T> 
+T 
+ReadField(istream& _is, string _error) {
   char c;
-  char ThrowAwayLine[LINEMAX];
-
-  while ( _is.get(c) ) {
+  string line;
+  T element;
+  while (_is.get(c)) {
     if (c == '#') {
-      _is.getline(ThrowAwayLine,LINEMAX,'\n');
-      _comment.push_back(strdup(ThrowAwayLine));
+      getline(_is, line);
     }
-    else if (! isspace(c) ) {
+    else if (!isspace(c)) {
       _is.putback(c);
-      if (_is >> *_element) {
-        return true;
-      } else {
-        break;
+      if (!(_is >> element)) {
+        cerr << "Error in Reading Field::" << _error << endl;
+        exit(1);
       }
+      else
+        break;
     }
   }
-  // could not read correctly ...
-  cout << "Error in reading!!! at util::readfield. " << endl;
-  return false;
-}
+  if(_is.eof()){
+    cerr << "Error end of file reached in Reading Field::" << _error << endl;
+    exit(1);
+  }
+  return element;
+};
 
-template <class T> bool ReadField(istream& _is, T* _element){
-  vector <char*> comment;
-  bool ret=ReadField(_is,_element,comment);
-  comment.clear();
-  return ret;
-}
+string ReadFieldString(istream& _is, string _error, bool _toUpper = true);
 
 #endif 

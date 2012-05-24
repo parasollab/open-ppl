@@ -293,7 +293,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
   if ( CalculateCollisionInfo(_mp,_cfg,transCfg,_env,_stats,tmpInfo,_vc,_dm,_pExact,0,_penetration,true,_positional) ) {
     if ( _pExact ) {
       Vector3D transDir = tmpInfo.object_point - tmpInfo.robot_point;
-      for (int i=0; i<transCfg.DOF(); i++) {
+      for (size_t i=0; i<transCfg.DOF(); i++) {
         if ( i < transCfg.PosDOF() ) {
           transCfg.SetSingleParam(i, transDir[i]);
           factor += pow(transDir[i],2);
@@ -303,7 +303,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
     } else {
       if (_debug) cout << "CLEARANCE CFG: " << transCfg << endl;
       transCfg.FindIncrement(_cfg,transCfg,&nTicks,posRes,oriRes);
-      for (int i=transCfg.PosDOF(); i<transCfg.DOF(); i++) {
+      for (size_t i=transCfg.PosDOF(); i<transCfg.DOF(); i++) {
         if ( transCfg.GetSingleParam(i) > 0.5 )
           transCfg.SetSingleParam(i,transCfg.GetSingleParam(i)-1.0, false);
       }
@@ -384,7 +384,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
     prevInfo = tmpInfo;
     if ( _cExact ) { // Exact uses workspace witness point for transDir
       Vector3D transDir = tmpInfo.robot_point - tmpInfo.object_point;
-      for (int i=0; i<transCfg.DOF(); i++) {
+      for (size_t i=0; i<transCfg.DOF(); i++) {
         if ( i < transCfg.PosDOF() ) {
           transCfg.SetSingleParam(i, transDir[i]);
           factor += pow(transDir[i],2);
@@ -395,7 +395,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
       if (_debug) cout << "CLEARANCE CFG: " << transCfg << endl;
       transCfg.FindIncrement(_cfg,transCfg,&nTicks,posRes,oriRes);
       transCfg.negative(transCfg);
-      for (int i=transCfg.PosDOF(); i<transCfg.DOF(); i++) {
+      for (size_t i=transCfg.PosDOF(); i<transCfg.DOF(); i++) {
         if ( transCfg.GetSingleParam(i) > 0.5 )
           transCfg.SetSingleParam(i,transCfg.GetSingleParam(i) - 1.0, false);
       }
@@ -450,7 +450,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
             Vector3D transDir = tmpInfo.object_point - prevInfo.object_point;
             if (_debug) cout << " obst: " << tmpInfo.nearest_obst_index;
             double tmpDist = 0.0;
-            for (int i=0; i<transCfg.PosDOF(); i++)
+            for (size_t i=0; i<transCfg.PosDOF(); i++)
               tmpDist += pow(transDir[i],2);
             tmpDist = sqrt(tmpDist);
             if (tmpDist > robot->GetBoundingSphereRadius()*2.0 ) { // TODO: might be better value
@@ -790,10 +790,10 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
   for(int m=0; m < robot->GetFreeBodyCount(); m++) {
     GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
     for(size_t j = 0 ; j < poly.vertexList.size() ; j++){
-      for (int k=0; k<_cfg.PosDOF(); k++) { // For all positional DOFs
+      for (size_t k=0; k<_cfg.PosDOF(); k++) { // For all positional DOFs
         bbxRange = _bb->GetRange(k);
         if ( (poly.vertexList[j][k]-bbxRange.first) < _cdInfo.min_dist ) {
-          for (int l=0; l<_cfg.PosDOF(); l++) {// Save new closest point
+          for (size_t l=0; l<_cfg.PosDOF(); l++) {// Save new closest point
             _cdInfo.robot_point[l]  = poly.vertexList[j][l];
             _cdInfo.object_point[l] = poly.vertexList[j][l];
           }
@@ -802,7 +802,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
           _cdInfo.nearest_obst_index = -(k*2);
         }
         if ( (bbxRange.second-poly.vertexList[j][k]) < _cdInfo.min_dist ) {
-          for (int l=0; l<_cfg.PosDOF(); l++) {// Save new closest point
+          for (size_t l=0; l<_cfg.PosDOF(); l++) {// Save new closest point
             _cdInfo.robot_point[l]  = poly.vertexList[j][l];
             _cdInfo.object_point[l] = poly.vertexList[j][l];
           }
@@ -841,7 +841,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
 
   // Calculate MaxRange for dist calc
   double maxRange(0.0);
-  for(int i=0; i< _cfg.PosDOF(); ++i) {
+  for(size_t i=0; i< _cfg.PosDOF(); ++i) {
 		std::pair<double,double> range = _env->GetBoundingBox()->GetRange(i);
     double tmpRange = range.second-range.first;
     if(tmpRange > maxRange) maxRange = tmpRange;
@@ -888,7 +888,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
     tmp2->GetRandomRay(posRes/maxRange, _env, dm, false);
     if ( _positional ) { // Use only positional dofs
       double factor=0.0;
-      for (int i=0; i<tmp2->DOF(); i++) {
+      for (size_t i=0; i<tmp2->DOF(); i++) {
         if ( i < tmp2->PosDOF() ) {
           factor += pow(tmp2->GetSingleParam(i), 2);
         } else tmp2->SetSingleParam(i, 0.0);
@@ -898,7 +898,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
     tmp2->add(*tmp1,*tmp2);
     Cfg* tmp3 = _cfg.CreateNewCfg();
     tmp3->FindIncrement(*tmp1,*tmp2,&nTicks,posRes,oriRes);
-    for (int i=tmp3->PosDOF(); i<tmp3->DOF(); i++) {
+    for (size_t i=tmp3->PosDOF(); i<tmp3->DOF(); i++) {
       if ( tmp3->GetSingleParam(i) > 0.5 )
         tmp3->SetSingleParam(i,tmp3->GetSingleParam(i) - 1.0, false);
     }

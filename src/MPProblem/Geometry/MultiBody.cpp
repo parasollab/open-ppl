@@ -124,7 +124,7 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
 //  Constructors and Destructor
 //===================================================================
 MultiBody::MultiBody() 
-  : bInternal(false), CenterOfMassAvailable(false) 
+  : bInternal(false), m_multirobot(false), CenterOfMassAvailable(false) 
 {}
 
 MultiBody::~MultiBody() 
@@ -343,6 +343,8 @@ const double * MultiBody::GetBoundingBox() const
 //===================================================================
 double MultiBody::GetBoundingSphereRadius() const
 {
+  if(m_multirobot)
+    return MAX_DBL;
   double result = GetBody(0)->GetPolyhedron().maxRadius;
   for(int i=1; i<GetBodyCount(); ++i)
     result += GetBody(i)->GetPolyhedron().maxRadius * 2.0;
@@ -434,159 +436,190 @@ void MultiBody::CalculateArea()
 //===================================================================
 //  Read
 //===================================================================
-void MultiBody::Read(istream& _is, int action, const char* descDir, bool _debug) 
-{
-  static const int FILENAME_LENGTH = 80;
-
-  //get body info
-  char string[32];
-  ReadField(_is, &string); //read "MultiBody"
-  ReadField(_is, &string); //read "Active/Passive/Surface"
-  std::string t_type(string); 
-
-  char cPeek = _is.peek();
-  while((cPeek == ' ') || (cPeek == '\n')) {
-    _is.get();
-    cPeek = _is.peek();
-  }
+void 
+MultiBody::Read(istream& _is, bool _debug) {
+  if(_debug) cout << "In MultiBody::Read" << endl;
+  
+  string multibodyType = ReadFieldString(_is, 
+      "Multibody Type (Active, Passive, Internal, Surface)");
 
   bInternal = false;    
   m_isSurface = false;
-  if(cPeek =='I') {
-    ReadField(_is, &string);
-    if (!strncmp(string, "Internal", 8)) 
-      bInternal = true;
+  if(multibodyType == "INTERNAL") {
+    bInternal = true;
   }
-  if( t_type == "Surface" ) { 
-     cout << "setting is surface to true." << endl;
-     m_isSurface = true; 
+  else if(multibodyType == "SURFACE") { 
+    m_isSurface = true; 
   }
-
-  int bodyCount;
-  ReadField(_is, &bodyCount);
-  vector<bool> isFree;
 
   double fixSum = 0;
   double freeSum = 0;
-  for(int i=0; i<bodyCount; ++i) {
-    vector<char*> comments;
-    ReadField(_is, &string, comments); //Tag FixedBody or FreeBody
-    int BodyIndex;
-    _is >> BodyIndex;
+  
+  if(multibodyType == "ACTIVE"){
+    if(_debug) cout << "Reading Active Body" << endl;
+   
+    int bodyCount = ReadField<int>(_is, "Body Count");
+    
+    vector<bool> isFree;
 
-    char tmpFilename[FILENAME_LENGTH*2], bodyFileName[FILENAME_LENGTH];
-    _is >> tmpFilename;
-    strcpy(bodyFileName, descDir);
-    strcat(bodyFileName, tmpFilename);
-    VerifyFileExists(bodyFileName, action);
+    bool isBase = false;
+    Robot::Base baseType;
+    Robot::BaseMovement baseMovementType;
 
-    if(!strncmp(string, "FixedBody", 10)) {
-      isFree.push_back(false);
-      
-      Vector3D bodyPosition(_is);
-      Vector3D origbodyOrientation(_is);
-      Orientation bodyOrientation(Orientation::FixedXYZ,
-				  origbodyOrientation[2]*TWOPI/360.0,
-				  origbodyOrientation[1]*TWOPI/360.0,
-				  origbodyOrientation[0]*TWOPI/360.0);
-      Transformation transformation(bodyOrientation, bodyPosition);
-      
-      FixedBody fix(this);
-      fix.Read(bodyFileName);
-      fix.PutWorldTransformation(transformation);
-      fixAreas.push_back(fix.GetPolyhedron().area);
-      fixSum += fix.GetPolyhedron().area;
-      AddBody(fix);      
-    } else { // FreeBody
+    for(int i=0; i<bodyCount; ++i) {
+      string bodyFilename = ReadFieldString(_is, 
+          "Body Filename (geometry file)", false);
+
+      VerifyFileExists(bodyFilename);
+
       isFree.push_back(true);
 
-      if(i==0) {
-	Vector3D bodyPosition(_is);
-	Vector3D origbodyOrientation(_is);
-	Orientation bodyOrientation(Orientation::FixedXYZ,
-				    origbodyOrientation[2]*TWOPI/360.0,
-				    origbodyOrientation[1]*TWOPI/360.0,
-				    origbodyOrientation[0]*TWOPI/360.0);
-	Transformation transformation(bodyOrientation, bodyPosition);
+      //Read for Base Type.  If Planar or Volumetric, read in two more strings
+      //If Joint skip this stuff. If Fixed read in positions like an obstacle
+      string baseTag = ReadFieldString(_is, 
+          "Base Tag (Planar, Volumetric, Fixed, Joint");
+      baseType = Robot::GetBaseFromTag(baseTag);
+
+      Vector3D bodyPosition;
+      Vector3D bodyRotation;
+
+      if(baseType == Robot::VOLUMETRIC || baseType == Robot::PLANAR){
+        isBase = true;
+        string rotationalTag = ReadFieldString(_is, 
+            "Rotation Tag (Rotational, Translational");
+        baseMovementType = Robot::GetMovementFromTag(rotationalTag);
+      }
+      else if(baseType == Robot::FIXED){
+        isBase = true;
+        bodyPosition = ReadField<Vector3D>(_is, "Body Position");
+        bodyRotation = ReadField<Vector3D>(_is, "Body Orientation");
       }
 
+      Orientation bodyOrientation(Orientation::FixedXYZ,
+          bodyRotation[2]*TWOPI/360.0,
+          bodyRotation[1]*TWOPI/360.0,
+          bodyRotation[0]*TWOPI/360.0);
+      Transformation transformation(bodyOrientation, bodyPosition);
+
       FreeBody free(this);
-      free.Read(bodyFileName);
+      free.Read(bodyFilename);
+      free.isBase = isBase;
+      free.SetBase(baseType);
+      if (isBase) {
+        free.SetBaseMovement(baseMovementType);
+      }
       freeAreas.push_back(free.GetPolyhedron().area);
       freeSum += free.GetPolyhedron().area;
       AddBody(free);
-    } // endelse FreeBody    
-  } //endfor i
+    }
+
+    //get connection info
+    string connectionTag = ReadFieldString(_is, "Connections tag");
+    int connectionCount = ReadField<int>(_is, "Number of Connections");
+
+    for(int i=0; i<connectionCount; i++) {
+      //body indices
+      int previousBodyIndex = ReadField<int>(_is, "Previous Body Index");
+      int nextBodyIndex = ReadField<int>(_is, "Next Body Index");
+
+      //grab the joint type
+      string connectionTypeTag = ReadFieldString(_is, "Connection Type");
+      Robot::JointType connectionType =
+        Robot::GetJointTypeFromTag(connectionTypeTag);
+
+      jointMap.push_back(make_pair(
+            make_pair(previousBodyIndex, nextBodyIndex), connectionType));
+      
+      //transformation to DHFrame
+      Vector3D positionToDHFrame = ReadField<Vector3D>(_is, "Translation to DHFrame");
+      Vector3D rotationToDHFrame = ReadField<Vector3D>(_is, "Rotation to DHFrame");
+
+      Orientation orientationToDHFrame = Orientation(Orientation::FixedXYZ,
+          rotationToDHFrame[2]*TWOPI/360.0, 
+          rotationToDHFrame[1]*TWOPI/360.0, 
+          rotationToDHFrame[0]*TWOPI/360.0);
+
+      //DH parameters
+      DHparameters dhparameters = ReadField<DHparameters>(_is, "DH Parameters");
+
+      //transformation to next body
+      Vector3D positionToNextBody = ReadField<Vector3D>(_is, "Translation to Next Body");
+      Vector3D rotationToNextBody = ReadField<Vector3D>(_is, "Rotation to Next Body");
+
+      Orientation orientationToNextBody = Orientation(Orientation::FixedXYZ,
+          rotationToNextBody[2]*TWOPI/360.0, 
+          rotationToNextBody[1]*TWOPI/360.0, 
+          rotationToNextBody[0]*TWOPI/360.0);
+
+      //grab the shared_ptr to bodies
+      shared_ptr<Body> prevBody;
+      if(isFree[previousBodyIndex]) {
+        int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
+        prevBody = GetFreeBody(numFreeBeforeIndex);
+      } else {
+        int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
+        prevBody = GetFixedBody(previousBodyIndex - numFreeBeforeIndex);
+      }
+
+      shared_ptr<Body> nextBody;
+      if(isFree[nextBodyIndex]) {
+        int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
+        nextBody = GetFreeBody(numFreeBeforeIndex);
+      } else {
+        int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
+        nextBody = GetFixedBody(nextBodyIndex - numFreeBeforeIndex);
+      }
+
+      //make the connection
+      Connection c(prevBody, nextBody);
+      c.Read(prevBody, nextBody,
+          positionToNextBody, orientationToNextBody,
+          positionToDHFrame, orientationToDHFrame,
+          dhparameters, connectionType, _debug);
+
+      prevBody->Link(c);
+    } //endfor i
+  }
+  else if(multibodyType == "INTERNAL" || multibodyType == "SURFACE" ||
+      multibodyType == "PASSIVE"){
+    if(_debug) cout << "Reading Other Body" << endl;
+
+    string bodyFilename = ReadFieldString(_is, 
+        "Body Filename (geometry file)", false);
+
+    VerifyFileExists(bodyFilename);
+
+    Vector3D bodyPosition = ReadField<Vector3D>(_is, "Body Position");
+    Vector3D bodyRotation = ReadField<Vector3D>(_is, "Body Orientation");
+
+    Orientation bodyOrientation(Orientation::FixedXYZ,
+        bodyRotation[2]*TWOPI/360.0,
+        bodyRotation[1]*TWOPI/360.0,
+        bodyRotation[0]*TWOPI/360.0);
+    Transformation transformation(bodyOrientation, bodyPosition);
+
+    FixedBody fix(this);
+    if(_debug){
+      cout << "FixedBody filename: " << bodyFilename << endl;
+      cout << "bodyPosition: " << bodyPosition << endl;
+      cout << "bodyRotation: " << bodyRotation << endl;
+    }
+    fix.Read(bodyFilename);
+    fix.PutWorldTransformation(transformation);
+    fixAreas.push_back(fix.GetPolyhedron().area);
+    fixSum += fix.GetPolyhedron().area;
+    AddBody(fix);      
+  }
+  else{
+    cerr << "Error:: Unsupported body type" << endl;
+    cerr << "Choices are Active, Passive, Internal, or Surface" << endl;
+    exit(1);
+  }
 
   fixArea = fixSum;
   freeArea = freeSum;
   area = fixArea + freeArea;
 
-  //get connection info
-  ReadField(_is, &string);     // Tag, "Connection"
-  int connectionCount;
-  _is >> connectionCount;   // # of connections
-
-  for(int i=0; i<connectionCount; i++) {
-    int previousBodyIndex, nextBodyIndex;
-    _is >> previousBodyIndex;              // first body
-    _is >> nextBodyIndex;                  // second body
-
-    ReadField(_is, &string);             // Tag, "Actuated/NonActuated"
-      
-    Vector3D transformPosition(_is);
-    Vector3D angles(_is);
-    Orientation transformOrientation = Orientation(Orientation::FixedXYZ,
-						   angles[2]*TWOPI/360.0, 
-						   angles[1]*TWOPI/360.0, 
-						   angles[0]*TWOPI/360.0);
-    
-    DHparameters dhparameters;
-    _is >> dhparameters.alpha;          // DH parameter, alpha
-    _is >> dhparameters.a;              // DH parameter, a
-    _is >> dhparameters.d;              // DH parameter, d
-    _is >> dhparameters.theta;          // DH parameter, theta
-    
-    ReadField(_is, &string);   // Tag, "Revolute" or "Prismatic"
-    int connectionType;
-    if (!strncmp(string, "Revolute", 9))
-      connectionType = 0;              // Revolute type
-    else
-      connectionType = 1;              // Prismatic type
-    
-    Vector3D positionToDHFrame(_is);
-    angles = Vector3D(_is);
-    Orientation orientationToDHFrame = Orientation(Orientation::FixedXYZ,
-						   angles[2]*TWOPI/360.0, 
-						   angles[1]*TWOPI/360.0, 
-						   angles[0]*TWOPI/360.0);
-    
-    shared_ptr<Body> prevBody;
-    if(isFree[previousBodyIndex]) {
-      int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
-      prevBody = GetFreeBody(numFreeBeforeIndex);
-    } else {
-      int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
-      prevBody = GetFixedBody(previousBodyIndex - numFreeBeforeIndex);
-    }
-    
-    shared_ptr<Body> nextBody;
-    if(isFree[nextBodyIndex]) {
-      int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
-      nextBody = GetFreeBody(numFreeBeforeIndex);
-    } else {
-      int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
-      nextBody = GetFixedBody(nextBodyIndex - numFreeBeforeIndex);
-    }
-    
-    Connection c(prevBody, nextBody);
-    c.Read(prevBody, nextBody,
-	    transformPosition, transformOrientation,
-	    positionToDHFrame, orientationToDHFrame,
-	    dhparameters, Connection::ConnectionType(connectionType), _debug);
-
-    prevBody->Link(c);
-  } //endfor i
 
   FindBoundingBox();
   ComputeCenterOfMass();

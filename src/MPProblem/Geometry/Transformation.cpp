@@ -9,8 +9,6 @@
 #include "DHparameters.h"
 #include <math.h>
 
-#define DEGTORAD 3.1415926535/180.0
-
 //===================================================================
 //  Static member initialization
 //===================================================================
@@ -37,18 +35,18 @@ Transformation::Transformation(const Orientation & _orientation, const Vector3D 
 // Refer Craig Eq 3.6 (page 84)
 //==============================================================================
 Transformation::Transformation(const DHparameters & _dh) :
-    position(_dh.a, -sin(_dh.alpha*DEGTORAD)*_dh.d, cos(_dh.alpha*DEGTORAD)*_dh.d),
+    position(_dh.a, -sin(_dh.alpha)*_dh.d, cos(_dh.alpha)*_dh.d),
     orientation(Orientation::Matrix)
 {
-    orientation.matrix[0][0] = cos(_dh.theta*DEGTORAD);
-    orientation.matrix[0][1] = -sin(_dh.theta*DEGTORAD);
+    orientation.matrix[0][0] = cos(_dh.theta);
+    orientation.matrix[0][1] = -sin(_dh.theta);
     orientation.matrix[0][2] = 0.0;
-    orientation.matrix[1][0] = sin(_dh.theta*DEGTORAD)*cos(_dh.alpha*DEGTORAD);
-    orientation.matrix[1][1] = cos(_dh.theta*DEGTORAD)*cos(_dh.alpha*DEGTORAD);
-    orientation.matrix[1][2] = -sin(_dh.alpha*DEGTORAD);
-    orientation.matrix[2][0] = sin(_dh.theta*DEGTORAD)*sin(_dh.alpha*DEGTORAD);
-    orientation.matrix[2][1] = cos(_dh.theta*DEGTORAD)*sin(_dh.alpha*DEGTORAD);
-    orientation.matrix[2][2] = cos(_dh.alpha*DEGTORAD);
+    orientation.matrix[1][0] = sin(_dh.theta)*cos(_dh.alpha);
+    orientation.matrix[1][1] = cos(_dh.theta)*cos(_dh.alpha);
+    orientation.matrix[1][2] = -sin(_dh.alpha);
+    orientation.matrix[2][0] = sin(_dh.theta)*sin(_dh.alpha);
+    orientation.matrix[2][1] = cos(_dh.theta)*sin(_dh.alpha);
+    orientation.matrix[2][2] = cos(_dh.alpha);
 }
 
 Transformation::Transformation(const Transformation & _t) :

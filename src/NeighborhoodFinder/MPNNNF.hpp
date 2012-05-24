@@ -59,7 +59,7 @@ public:
     // NOTE: everything after the 3rd DOF is rotational.
     vector<int> topology(dim);
     for (size_t i = 0; i < topology.size(); i++) {
-      if (i < (size_t)temp.PosDOF())
+      if (i < temp.PosDOF())
         topology[i] = 1;
       else
         if (m_use_rotational)
@@ -73,7 +73,7 @@ public:
     m_cur_roadmap_version = -1;
 
     m_max_bbox_range = 0.0;
-    for(int i=0; i< temp.PosDOF(); ++i) {
+    for(size_t i=0; i< temp.PosDOF(); ++i) {
       std::pair<double,double> range = _problem->GetEnvironment()->GetBoundingBox()->GetRange(i);
       double tmp_range = range.second-range.first;
       if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;

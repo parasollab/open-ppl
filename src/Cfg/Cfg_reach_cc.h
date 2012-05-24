@@ -7,14 +7,8 @@
 class Cfg_reach_cc : public Cfg_free_tree {
  public:
   Cfg_reach_cc();
-  Cfg_reach_cc(int _numofjoints);
-  Cfg_reach_cc(const Vector6D& _v);
-  Cfg_reach_cc(const vector<double>& _v);
+  Cfg_reach_cc(const Vector6D& base, const vector<double>& len, const vector<int>& ori);
   Cfg_reach_cc(const Cfg&c);
-  Cfg_reach_cc(double x, double y, double z, 
-	       double roll, double pitch, double yaw);
-  Cfg_reach_cc(const Vector6D& base,
-	       const vector<double>& len, const vector<int>& ori);
   virtual ~Cfg_reach_cc();
   
   #ifdef _PARALLEL
@@ -27,12 +21,10 @@ class Cfg_reach_cc : public Cfg_free_tree {
     }
  #endif
 
-  static int GetNumOfJoints() { return m_numOfJoints; }
-  static void SetNumOfJoints(int _numofjoints);
   static void initialize_link_tree(const char* filename);
 
-  virtual const char* GetName() const { return "Cfg_reach_cc"; }
-
+  virtual const string GetName() const { return "Cfg_reach_cc"; }
+  static size_t GetNumOfJoints() { return m_dof-6; }
   virtual void add(const Cfg&, const Cfg&);
   virtual void subtract(const Cfg&, const Cfg&);
   virtual void negative(const Cfg&);
@@ -48,15 +40,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
 
   virtual bool ConfigEnvironment(Environment*) const;
 
-  virtual void GetRandomCfg(double R, double rStep);
-  virtual void GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
-    Cfg_free_tree::GetRandomCfg(_env,_bb);
-  }
-  virtual void GetRandomCfg(Environment* _env){
-    Cfg_free_tree::GetRandomCfg(_env);
-  } 
-  virtual void GetRandomCfg_CenterOfMass(Environment* _env);
-  virtual void GetRandomCfg_CenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
+  virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
   virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm, bool _norm=true);
 
   virtual void FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats,
@@ -105,8 +89,6 @@ class Cfg_reach_cc : public Cfg_free_tree {
 
  protected:
   void StoreData();
-
-  static int m_numOfJoints;
 
   vector<double> link_lengths;
   vector<int> link_orientations;

@@ -293,7 +293,7 @@ EpsilonClosePath( Environment *_env, StatClass& _stats, shared_ptr<DistanceMetri
     if (this->m_debug) cout << "Segment is shorter than epsilon..." << endl;
 
     _mid.FindIncrement(_c1,_c2,&nTicks,_posRes,_oriRes);
-    for (int i=_mid.PosDOF(); i<_mid.DOF(); i++) {
+    for (size_t i=_mid.PosDOF(); i<_mid.DOF(); i++) {
       if ( _mid.GetSingleParam(i) > 0.5 )
         _mid.SetSingleParam(i,_mid.GetSingleParam(i) - 1.0, false);
     }

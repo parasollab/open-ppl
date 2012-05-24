@@ -34,7 +34,7 @@
 //include OBPRM headers
 #include "GMSPolyhedron.h"
 #include "Connection.h"
-
+#include "Robot.h"
 #include "boost/shared_ptr.hpp"
 using boost::shared_ptr;
 
@@ -133,6 +133,12 @@ public:
           */
         Vector3D GetCenterOfMass();
 
+        bool IsBase() { return isBase; };
+        Robot::Base GetBase() { return baseType; };
+        Robot::BaseMovement GetBaseMovement() { return baseMovementType; };
+        void SetBase(Robot::Base _baseType) { baseType = _baseType; };
+        void SetBaseMovement(Robot::BaseMovement _baseMovementType) { baseMovementType = _baseMovementType; };
+
     //@}
     
 
@@ -152,7 +158,7 @@ public:
     /**Read data from given filename. Call GMSPolyhedron::Read and calculate the bounding box.
       *@see GMSPolyhedron::Read, FindBoundingBox
       */
-    void Read(char * _fileName);
+    void Read(string _fileName);
 
     /**Read BYU format data from given inpustream. 
       *Call GMSPolyhedron::ReadBYU, calculate the bounding box, and then call buildCDstructure
@@ -291,7 +297,9 @@ protected:
 
     MultiBody* multibody;                  ///<Owner of this Body
     Transformation worldTransformation;     ///<World Transformation
-
+    bool isBase;                           ///<Is this a base?
+    Robot::Base baseType;                  ///<If its a base, this needs to be set later
+    Robot::BaseMovement baseMovementType;  ///<If its a base, this also needs to be set
     /*@name Geometry Related Data*/
     //@{
     GMSPolyhedron polyhedron;               ///<Geometry of this Body defined in local coordinate system.
