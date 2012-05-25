@@ -43,19 +43,6 @@ class Cfg_reach_cc : public Cfg_free_tree {
   virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
   virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm, bool _norm=true);
 
-  virtual void FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats,
-			     const Cfg& increment,
-			     string vc_method,
-			     int noNeighbors, 
-			     CDInfo& _cdInfo,
-			     vector<Cfg*>& cfgs);
-  virtual void FindNeighbors(MPProblem* mp, Environment* env, StatClass& Stats,
-			     const Cfg& goal, const Cfg& increment, 
-			     string vc_method,
-			     int noNeighbors, 
-			     CDInfo& _cdInfo,
-			     vector<Cfg*>& cfgs);
-
   virtual void Increment(const Cfg& _increment);
   virtual void IncrementTowardsGoal(const Cfg &goal, const Cfg &increment);
   virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, 
