@@ -601,7 +601,7 @@ Environment::BuildRobotStructure()
   stapl::sequential::vector_property_map< RobotGraph,size_t > cmap;
   //Initialize CC information
   get_cc_stats(m_robotGraph,cmap,ccs);
-  if(ccs.size()>0)
+  if(ccs.size()>1)
     robot->SetMultirobot(true);
   for (size_t i = 0; i < ccs.size(); i++) {
     cmap.reset();

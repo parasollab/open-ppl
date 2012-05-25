@@ -25,7 +25,7 @@
       <UniformRandomSampler Label="UniformRandom" vc_method="cd"/>
     </node_generation_methods>
     <connection_methods>
-      <NeighborhoodConnection Label="Closest" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl"/>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
     </connection_methods>
     <lp_methods>
       <StraightLine Label="sl" length="0" binary_search="1" vc_method="cd"/>
