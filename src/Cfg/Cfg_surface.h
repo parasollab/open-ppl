@@ -102,13 +102,13 @@ public:
    * @param value the value to set the parameter as
    * Note: norm is a dummy value in 2d
    */
-  virtual int SetSingleParam(int _param, double _value, bool _norm=true);
+  virtual int SetSingleParam(size_t _param, double _value, bool _norm=true);
   
   /** Increment a single parameter in the configuration (i.e., x,y,z,roll...)
    * @param param the parameter number to set.
    * @param value the value to increment the parameter by.
    */
-  virtual int IncSingleParam(int _param, double _value);  
+  virtual int IncSingleParam(size_t _param, double _value);  
  
   ///Increase every value in this instance in each dimention by the value in _increment
   virtual void Increment(const Cfg& _increment);

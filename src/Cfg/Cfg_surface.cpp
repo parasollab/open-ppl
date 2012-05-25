@@ -20,7 +20,7 @@
 
 Cfg_surface::Cfg_surface(){
   m_v.clear();
-  for(int i=0; i<m_dof; i++)
+  for(size_t i=0; i<m_dof; i++)
     m_v.push_back(0);
 
   setPos(Point2d(-999,-999));
@@ -44,7 +44,7 @@ Cfg_surface::Cfg_surface(double _x, double _y, double _h, int _sid) {
 
 Cfg_surface::Cfg_surface(const Vector3d& _v) {
   m_v.clear();
-  for(int i=0; i<m_dof; i++)
+  for(size_t i=0; i<m_dof; i++)
     m_v.push_back(_v[i]);
   
   setPos(Point2d(_v[0],_v[2]));
@@ -56,13 +56,13 @@ Cfg_surface::Cfg_surface(const Vector3d& _v) {
 Cfg_surface::Cfg_surface(const Cfg& _c) {
   vector<double> _v;
   _v = _c.GetData();
-  if((int)_v.size() < m_dof) {
+  if(_v.size() < m_dof) {
     cout << "\n\nERROR in Cfg_surface::Cfg_surface(Cfg&), ";
     cout << "size of vector is less than " << m_dof << endl;
     exit(-1);
   }
   m_v.clear();
-  for(int i=0; i<m_dof; i++)
+  for(size_t i=0; i<m_dof; i++)
     m_v.push_back(_v[i]);
 
   setPos(Point2d(m_v[0], m_v[2]));
@@ -211,7 +211,7 @@ void Cfg_surface::WeightedSum(const Cfg& _first, const Cfg& _second, double _wei
 // Set a single parameter in the configuration (i.e., x,y,z,roll...)
 // param = the parameter number to set
 // value = the value to set the parameter as
-int Cfg_surface::SetSingleParam(int _param, double _value, bool _norm) {    
+int Cfg_surface::SetSingleParam(size_t _param, double _value, bool _norm) {    
   if ((_param>=0) && (_param<m_dof)) {
     Cfg::SetSingleParam(_param, _value, _norm);
     if(_param<3){
@@ -228,7 +228,7 @@ int Cfg_surface::SetSingleParam(int _param, double _value, bool _norm) {
 // Increment a single parameter in the configuration (i.e., x,y,z,roll...)
 // param = the parameter number to set
 // value = the value to increment the parameter by
-int Cfg_surface::IncSingleParam(int _param, double _value) {    
+int Cfg_surface::IncSingleParam(size_t _param, double _value) {    
   if ((_param>=0) && (_param<m_dof)) {
     Cfg::IncSingleParam(_param, _value);
     if(_param<3){
@@ -318,7 +318,7 @@ void Cfg_surface::GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundar
   m_v.clear();
   if( m_SurfaceID == -1 ) {
     Point3d rpt = _bb->GetRandomPoint();
-    for(int i=0; i<m_dof; ++i)
+    for(size_t i=0; i<m_dof; ++i)
       if( i== 1 )
 	m_v.push_back(0.0);
       else {
@@ -332,7 +332,7 @@ void Cfg_surface::GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundar
     GMSPolyhedron & polyhedron = fb->GetWorldPolyhedron();
     Point3d surfPt3d = polyhedron.GetRandPtOnSurface();
    // cout << " surfaceid: " << m_SurfaceID << " computed pt: " << surfPt3d << endl;
-    for(int i=0; i<m_dof; ++i)
+    for(size_t i=0; i<m_dof; ++i)
       m_v.push_back( surfPt3d[i] );
     //////////////////////////////////////////////////////////////////////////////
   }

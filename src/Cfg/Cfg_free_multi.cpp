@@ -122,7 +122,7 @@ Cfg_free_multi::GetRandomCfg_CenterOfMass(Environment *_env, shared_ptr<Boundary
       m_v[r*3+i] = p[i];
   }
 
-  for(int i=NumofRobots*3; i<m_dof; ++i)
+  for(size_t i=NumofRobots*3; i<m_dof; ++i)
     m_v[i] = _bb->GetRandomValueInParameter(i-NumofRobots*3);
 }
 
