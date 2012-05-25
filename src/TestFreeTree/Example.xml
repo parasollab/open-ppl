@@ -36,7 +36,7 @@
 
     <connection_methods>
       <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
-      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" nf="BFNF" lp_method="sl"/>
+      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" kclosest="0" nf="BFNF" lp_method="sl"/>
       <NeighborhoodConnection Label="ConnectFirst" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
     </connection_methods>
 
@@ -60,7 +60,6 @@
         <node_generation_method Method="OBPRM" Number="10"/>
         <node_connection_method Method="Closest"/>
         <component_connection_method Method="ConnectCCs"/>
-        <evaluation_method Method="PrintMap"/>
         <evaluation_method Method="Query"/>
       </BasicPRM>
     </MPStrategyMethod>
