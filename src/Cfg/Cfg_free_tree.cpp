@@ -53,33 +53,6 @@ Vector3D Cfg_free_tree::GetRobotCenterPosition() const {
   return Vector3D(m_v[0], m_v[1], m_v[2]);
 }
 
-void Cfg_free_tree::GetRandomCfg(double R, double rStep){
-  double alpha,beta,z, z1;
-  double jointAngle;
-  
-  alpha = 2.0*M_PI*DRand();
-  beta  = 2.0*M_PI*DRand();
-  z = R*cos(beta);
-  z1 = R*sin(beta);
-
-  double roll, pitch, yaw;
-  roll = (2.0*rStep)*DRand() - rStep;
-  pitch = (2.0*rStep)*DRand() - rStep;
-  yaw = (2.0*rStep)*DRand() - rStep;
-  
-  Vector6D base(z1*cos(alpha),z1*sin(alpha),z,roll,pitch,yaw);
-  
-  size_t i;
-  m_v.clear();
-  for( i=0; i<6; ++i)
-    m_v.push_back(base[i]);
-  for(i=0; i<m_numOfJoints; i++) {
-    jointAngle = (2.0*rStep)*DRand() - rStep;
-    // or: jointAngle = 0.0; I am not sure which is more reasonable now. Guang
-    m_v.push_back(jointAngle);
-  }
-}
-
 void Cfg_free_tree::GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boundary> _bb) {
   // this is not EXACTLY accurate, ok with most cases ... TO DO
   // To be accurate, one has to make sure every link is inside the given BB,
