@@ -125,41 +125,28 @@ void ManifoldCfg::GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boundar
   size_t index = 0;
   typedef vector<Robot>::iterator RIT;
   for(RIT rit = m_robots.begin(); rit!=m_robots.end(); rit++){
-    //cout << "Robot::" << rit->m_bodyIndex <<endl << flush;
-    if(rit->m_base != Robot::FIXED){
+    if(rit->m_base == Robot::PLANAR || rit->m_base == Robot::VOLUMETRIC){
       Point3d p = _bb->GetRandomPoint();
-      //p = NULL;
-      //p = new Point3d();//_bb->GetRandomPoint();
-      //if(p == NULL) exit(1);
-      //cout << "Robot is not fixed, sample point::" << p << endl << flush;
       size_t posDOF = rit->m_base == Robot::VOLUMETRIC ? 3 : 2;
       for(size_t i=0 ;i<posDOF;i++){
-        //cout << "Pushing " << p[i] << endl << flush;
         m_v.push_back(p[i]); 
       }
-      //delete p;
-    }
-    //else{
-      //cout << "Robot is fixed, do not sample point" << endl;
-    //}
-    if(rit->m_baseMovement == Robot::ROTATIONAL){
-      size_t oriDOF = rit->m_base == Robot::VOLUMETRIC ? 3 : 1;
-      for(size_t i=0 ;i<oriDOF;i++){
-        //cout << "Pushing " << p[i] << endl << flush;
-        m_v.push_back(DRand()); 
+      if(rit->m_baseMovement == Robot::ROTATIONAL){
+        size_t oriDOF = rit->m_base == Robot::VOLUMETRIC ? 3 : 1;
+        for(size_t i=0 ;i<oriDOF;i++){
+          m_v.push_back(DRand()); 
+        }
       }
     }
-    //cout << "Sample Joints:" << m_joints.size()<< endl << flush;
     for(Robot::JointIT i=rit->m_joints.begin(); i!=rit->m_joints.end(); ++i){
       if(i->second == Robot::REVOLUTE){
         //double angle = _bb->GetRandomValueInParameter(i+index);
-        //cout << "Pushing " << angle << endl << flush;
-        m_v.push_back(DRand());//angle);
+        m_v.push_back(DRand());
         index++;
       }
       else if(i->second == Robot::SPHERICAL){
-        m_v.push_back(DRand());//angle);
-        m_v.push_back(DRand());//angle);
+        m_v.push_back(DRand());
+        m_v.push_back(DRand());
         index++;
       }
     }
