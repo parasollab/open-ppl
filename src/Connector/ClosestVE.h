@@ -1,12 +1,7 @@
-#ifndef ClosestVE_h
-#define ClosestVE_h
-#include "ConnectionMethod.h"
-#include "LocalPlanners.h"
-#include "MetricUtils.h"
-#include "GraphAlgo.h"
-#include "NeighborhoodFinder.h"
-#include "MPStrategy.h"
+#ifndef CLOSESTVE_H
+#define CLOSESTVE_H
 
+#include "ConnectionMethod.h"
 
 /**Connect nodes in map to their k closest neighbors, which
  *could be vertex or point on edges in roadmap.
@@ -26,8 +21,11 @@
 /**Cfg VE Type.
  *@todo Not well documented. I don't know what this class for.
  */
-template <class CFG>
+template <typename CFG, typename WEIGHT>
 class CfgVEType {
+  private:
+    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+
   public:
 
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -41,26 +39,12 @@ class CfgVEType {
     //@{
 
     /**Default Constructor.
-     *   -# #cfg1 = Cfg::InvalidData
-     *   -# #cfg2 = Cfg::InvalidData
-     *   -# #cfg2IsOnEdge = false
-     */
+    */
     CfgVEType();
 
-    /**Constructor.
-     *   -# #cfg1 = m_cfg1
-     *   -# #cfg2 = m_cfg2
-     *   -# #cfg2IsOnEdge = false
-     */
-    CfgVEType(CFG& _cfg1, CFG& _cfg2);
+    CfgVEType(VID _vid1, VID _vid2);
 
-    /**Constructor.
-     *   -# #cfg1 = m_cfg1
-     *   -# #cfg2 = m_cfg2
-     *   -# #cfg2IsOnEdge = true
-     *   -# #endpt = (_endpt1,_endpt2)
-     */
-    CfgVEType(CFG& _cfg1, CFG& _cfg2, CFG& _endpt1, CFG& _endpt2);
+    CfgVEType(VID _vid1, VID _vid2, VID _endpt1, VID _endpt2, CFG _cfgOnEdge);
 
     ///Destructor. Do nothing.
     ~CfgVEType();
@@ -75,25 +59,69 @@ class CfgVEType {
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    CFG         m_cfg1, ///< Start of an edge
-                m_cfg2; ///< End of an edge
-    ///True if cfg2 is on line segment defined by #endpt.
     bool        m_cfg2IsOnEdge;
-    ///Defines a line segment where cfg2 is. (Defined only if #cfg2IsOnEdge is true.)
-    vector<CFG> m_endpt;
-
+    CFG         m_cfgOnEdge;
+    VID         m_vid1, m_vid2; // VIDs for cfgs belonging to a potential new edge
+    VID         m_endpt1, m_endpt2; // VIDs for cfgs along existing edge
 }; //End of CfgVEType
 
+// ------------------------------------------------------------------
+// CfgVEType is a private class used by ConnectMapNodes class
+// to store information about connecting to what may either be
+// another Cfg _OR_ a new Cfg generated in the "middle" of an existing
+// edge in the map.  
+//
+// In order to keep the same structure (for sorting by distance) and 
+// yet not allocate space for endpoints when they are not needed
+// (ie, connecting to another existing map node--aka,Cfg), endpoints
+// are stored as a vector.
+// ------------------------------------------------------------------
+
+template <typename CFG, typename WEIGHT>
+CfgVEType<CFG,WEIGHT>::
+CfgVEType(){
+  m_vid1 = INVALID_VID;
+  m_vid2 = INVALID_VID;
+  m_cfgOnEdge = CFG();
+  m_cfg2IsOnEdge = false;
+}
+
+template <typename CFG, typename WEIGHT>
+CfgVEType<CFG,WEIGHT>::
+CfgVEType(VID _vid1, VID _vid2){
+  m_vid1 = _vid1;
+  m_vid2 = _vid2;
+  m_cfgOnEdge = CFG();
+  m_cfg2IsOnEdge = false;
+}
+
+template <typename CFG, typename WEIGHT>
+CfgVEType<CFG,WEIGHT>::
+CfgVEType(VID _vid1, VID _vid2, VID _endpt1, VID _endpt2, CFG _cfgOnEdge){
+  m_vid1 = _vid1;
+  m_vid2 = _vid2;
+  m_endpt1 = _endpt1;
+  m_endpt2 = _endpt2;
+  m_cfgOnEdge = _cfgOnEdge;
+  m_cfg2IsOnEdge = true;
+}
+
+template <typename CFG, typename WEIGHT>
+CfgVEType<CFG,WEIGHT>::
+~CfgVEType(){
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+
 #define KCLOSESTVE 5 
 
-template <class CFG, class WEIGHT>
-class ClosestVE: public ConnectionMethod<CFG,WEIGHT>{ //public ConnectionMethod<CFG,WEIGHT> {
+template <typename CFG, typename WEIGHT>
+class ClosestVE: public ConnectionMethod<CFG,WEIGHT>{
   private:
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-    typedef typename vector<typename RoadmapGraph<CFG,WEIGHT>::VID>::iterator VIDIT;
 
   public:
     //////////////////////
@@ -109,44 +137,16 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT>{ //public ConnectionMethod<
     virtual void PrintOptions(ostream& _os);
     //////////////////////
     // Core: Connection method
-    static bool VE_DIST_Compare(const pair<CfgVEType<CFG>,double> _cc1, const pair<CfgVEType<CFG>,double> _cc2);
     /**Find k pairs of closest Cfgs from a given Cfg to Cfgs in a Cfg vector
      *or on the edges in edge vector.
-     *
-     *This method check distances from given Cfg to every Cfg in verts
-     *and distances from given Cfg to every edge in edges.
-     *
-     *The first k cloeset pair will be returned among all pairs.
-     *
-     *Following is short Alg for calculating result list:
-     *   -# for every Cfg, c1, in Cfg vector
-     *       -# if distance(cfg,c1)< largest distance in return list.
-     *           -# then replace largest distance by this path (cfg->c1)
-     *           -# sort return list.
-     *       -# end if
-     *   -# end for
-     *   -# for every edge, e1, in edge vector
-     *       -# if distance(cfg,e1)< largest distance in return list.
-     *           -# then let e1_c be closest point on e1 to cfg.
-     *           -# replace largest distance by this path (cfg->e1_c)
-     *           -# sort return list.
-     *   -# end for
-     *
-     *@param verts A list of Cfgs.
-     *@param edges A list of edge with eight.
-     *@param cfg Distances are calculated from this cfg.
-     *@param k Find k pairs.
-     *@param midpoint Not used currently.
-     *
-     *@return A (k-elemet) list of CfgVEType.
-     *@see VE_DIST_Compare for sorting.
      */
-    vector<CfgVEType<CFG> > FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm, 
-        CFG _cfg, vector<CFG>& _verts,
-        vector<pair<pair<VID,VID>,WEIGHT> >& _edges, 
-        int _k, bool _midPoint);
+    template <typename InputIterator>
+      vector<CfgVEType<CFG,WEIGHT> > FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm, 
+          VID _vid,
+          InputIterator _verts1,
+          InputIterator _verts2,
+          vector<pair<pair<VID,VID>,WEIGHT> >& _edges);
 
-    //@}
     /**For each Cfg in newV, find the k closest Cfgs
      *(which could be Cfgs in oldV and/or points on edges of roadmap)
      *and try to connect with them.
@@ -174,156 +174,129 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT>{ //public ConnectionMethod<
      */
     //@}
 
-void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats);
-
-template <typename OutputIterator>
-void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
-    OutputIterator _collision);
-
-template <typename InputIterator, typename OutputIterator>
+template <typename ColorMap, typename InputIterator, typename OutputIterator>
 void Connect( Roadmap<CFG,WEIGHT>* rm, StatClass& _stats,
-    InputIterator _itr1First, InputIterator _itr1Last,
+    ColorMap& _cmap,
+    InputIterator _oldV1, InputIterator _oldV2,
+    InputIterator _newV1, InputIterator _newV2,
     OutputIterator _collision);
 
-template <typename InputIterator, typename OutputIterator>
-void Connect( Roadmap<CFG,WEIGHT>* rm, StatClass& _stats,
-    InputIterator _itr1First, InputIterator _itr1Last,
-    InputIterator _itr2First, InputIterator _itr2Last,
-    OutputIterator _collision);
-
-private:
 //////////////////////
 // Data
-int m_tag;                            ///< Nodes can be marked by user
-int m_dupeNodes, m_dupeEdges;            ///< used for acct'ing w/ closestVE
 int m_kClosest;
 };
 
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
-template <class CFG, class WEIGHT>
+template <typename CFG, typename WEIGHT>
 ClosestVE<CFG,WEIGHT>::ClosestVE():ConnectionMethod<CFG,WEIGHT>() { 
   this->SetName("ClosestVE"); 
   m_kClosest = KCLOSESTVE;
-  m_tag = -999;                            ///< Nodes can be marked by user
-  m_dupeNodes = 0;
-  m_dupeEdges = 0; 
 }
 
-template <class CFG, class WEIGHT>
-ClosestVE<CFG,WEIGHT>::ClosestVE(XMLNodeReader& _node, MPProblem* _problem):ConnectionMethod<CFG,WEIGHT>() { 
-  this->SetName("ClosestVE"); 
-  m_kClosest = KCLOSESTVE;
-  m_tag = -999;                            ///< Nodes can be marked by user
-  m_dupeNodes = 0;
-  m_dupeEdges = 0; 
-  ParseXML(_node);
-}
+/////////////////////////////////////////////////////////////////////////////
 
-template <class CFG, class WEIGHT>
+  template <typename CFG, typename WEIGHT>
+ClosestVE<CFG,WEIGHT>::ClosestVE(XMLNodeReader& _node, MPProblem* _problem)
+  :ConnectionMethod<CFG,WEIGHT>(_node, _problem) { 
+    this->SetName("ClosestVE"); 
+    m_kClosest = KCLOSESTVE;
+    ParseXML(_node);
+  }
+
+/////////////////////////////////////////////////////////////////////////////
+
+template <typename CFG, typename WEIGHT>
 ClosestVE<CFG,WEIGHT>::~ClosestVE() { 
 }
 
+/////////////////////////////////////////////////////////////////////////////
+
 template <typename CFG, typename WEIGHT>
-void ClosestVE<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
-  // Do something...
-  cout << "ClosestVE<CFG,WEIGHT>::ParseXML(..) does nothing at the moment!" << endl;
-  exit(-1);
+void 
+ClosestVE<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
+  m_kClosest = _node.numberXMLParameter("kClosest", true, 5,1,1000, "K Closest Connections"); 
 }
 
-template <class CFG, class WEIGHT>
+/////////////////////////////////////////////////////////////////////////////
+
+template <typename CFG, typename WEIGHT>
 void
 ClosestVE<CFG, WEIGHT>::
 PrintOptions(ostream& _os){
-  _os << "\n" << this->GetName() << " kclosest = ";
-  _os << kclosest;
+  _os << "    " << this->GetName() << "::  m_kClosest = ";
+  _os << m_kClosest;
   _os << endl;
 }
 
 
-//
-// used to "sort" by distance
-//
-template <class CFG, class WEIGHT>
-bool
-ClosestVE<CFG, WEIGHT>::
-VE_DIST_Compare (const pair<CfgVEType<CFG>,double> _cc1, const pair<CfgVEType<CFG>,double> _cc2) {
-  return (_cc1.second < _cc2.second ) ;
-}
-
+/////////////////////////////////////////////////////////////////////////////
 
 //----------------------------------------------------------------------
 // Given: k, ONE Cfg and ONE vector of vertices and ONE vector of edges
 // Find : find k pairs of closest cfg from "cfg" to "vector"
 //----------------------------------------------------------------------
-template <class CFG, class WEIGHT>
-vector<CfgVEType<CFG> > 
+template <typename CFG, typename WEIGHT>
+template <typename InputIterator>
+vector<CfgVEType<CFG,WEIGHT> > 
 ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
-    CFG _cfg, vector<CFG>& _verts, 
-    vector< pair<pair<VID,VID>,WEIGHT> >& _edges, 
-    int _k, bool _midPoint) {  
+    VID _vid,
+    InputIterator _verts1,
+    InputIterator _verts2,
+    vector< pair<pair<VID,VID>,WEIGHT> >& _edges) {  
 
-  vector<CfgVEType<CFG> > pairs;
-  pair<CfgVEType<CFG>,double> tmp2;
-
-  // if valid number of pairs requested
-  if (_k<=0) return pairs;
-
-  // initialize w/ _k elements each with huge distance...
-  vector<pair<CfgVEType<CFG>,double> > kp;
-  for (int i=0; i < _k; i++) {
-    tmp2.first = CfgVEType<CFG>();
-    tmp2.second = MAX_DIST;
-    kp.push_back(tmp2);
+  vector<CfgVEType<CFG,WEIGHT> > pairs;
+  if (m_kClosest<=0) {
+    return pairs;
   }
+
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
+  CFG cfg = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid);
+  vector<pair<CfgVEType<CFG,WEIGHT>,double> > kp;
+  pair<CfgVEType<CFG,WEIGHT>,double> tmp2;
 
   //-- VERTICES:
   //   Note: need to keep the distances so can't just call one of 
   //         the other versions of vertices compatable FindKClosestPairs
 
-  // now go through all kp and find closest _k
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label);
-  for (int c1 = 0; c1 < _verts.size(); c1++) {
-    if (_cfg != _verts[c1] ) { 
-      double dist = dm->Distance(_rm->GetEnvironment(), _cfg, _verts[c1]);
-      if ( dist < kp[_k-1].second) {
-        tmp2.first = CfgVEType<CFG>(_cfg,_verts[c1]);
-        tmp2.second = dist;
-        kp[_k-1] = tmp2;
-        sort (kp.begin(), kp.end(), ptr_fun(VE_DIST_Compare) );
-      }
-    }// if (_cfg != _verts[c1])
-  }//endfor c1
+  // now go through all kp and find closest m_kClosest
+  for (InputIterator v1 = _verts1; v1 != _verts2; v1++) {
+    CFG c1 = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(v1);
+    if (cfg != c1 ) { 
+      tmp2.first = CfgVEType<CFG,WEIGHT>(_vid, *v1);
+      tmp2.second = dm->Distance(_rm->GetEnvironment(), cfg, c1);
+      kp.push_back(tmp2);
+    }
+  }
 
   //-- EDGES:
-  for (int e1 = 0; e1 < _edges.size(); e1++) {    
+  for (size_t e1 = 0; e1 < _edges.size(); e1++) {    
+    VID vd1 = _edges[e1].first.first;
+    VID vd2 = _edges[e1].first.second;
 
-    pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(itr1);
-
-    CFG endpt1 = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(_edges[e1].first.first);
-    CFG endpt2 = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(_edges[e1].first.second);
+    CFG endpt1 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(vd1);
+    CFG endpt2 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(vd2);
     CFG tmp;
-    tmp.ClosestPtOnLineSegment(_cfg,endpt1,endpt2);
+    tmp.ClosestPtOnLineSegment(cfg,endpt1,endpt2);
 
-    if (tmp != endpt1 && tmp != endpt2){
-      double dist = dm->Distance(_rm->GetEnvironment(), _cfg, tmp);
+    if(tmp == endpt1 || tmp == endpt2){
+      continue;
+    }
 
-      if ( dist < kp[_k-1].second) {
-        tmp2.first = CfgVEType<CFG>(_cfg, tmp, endpt1, endpt2);
-        tmp2.second = dist;
-        kp[_k-1] = tmp2;
-        sort (kp.begin(), kp.end(), ptr_fun(VE_DIST_Compare) );
-      } //endif dist
+    tmp2.first = CfgVEType<CFG,WEIGHT>(_vid, INVALID_VID, vd1, vd2, tmp);
+    tmp2.second = dm->Distance(_rm->GetEnvironment(), cfg, tmp);
+    kp.push_back(tmp2);
+  }
 
-    } // endif (tmp != endpt1 && tmp != endpt2)
-  } //endfor e1
+  int vSize = _verts2 - _verts1;
+  int k = (int)min(m_kClosest, vSize+_edges.size());
+  partial_sort(kp.begin(), kp.begin()+k, kp.end(), compare_second<CfgVEType<CFG,WEIGHT>,double>());
 
-  // now construct vector of _k pairs to return (don't need distances...)
-  CFG invalid;
-  invalid.InvalidData();
-  for (int p=0; p < _k && p<kp.size(); p++)
-    if (kp[p].first.m_cfg1 != invalid && 
-        kp[p].first.m_cfg2 != invalid)
-      pairs.push_back( kp[p].first );
+  for (size_t p = 0; p < k; p++){
+    pairs.push_back( kp[p].first );
+  }
 
   return pairs;
 }
@@ -337,61 +310,44 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
 //
 // ------------------------------------------------------------------
 
-template <class CFG, class WEIGHT>
-void ClosestVE<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats){
-  vector<CFG> collision;
-  Connect(_rm, _stats, back_inserter(collision));
-}
+/////////////////////////////////////////////////////////////////////////////
 
-template <class CFG, class WEIGHT>
-template <typename OutputIterator>
-void ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+template <typename CFG, typename WEIGHT>
+template <typename ColorMap, typename InputIterator, typename OutputIterator>
+void 
+ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats,
+    ColorMap& _cmap,
+    InputIterator _oldV1, InputIterator _oldV2,
+    InputIterator _newV1, InputIterator _newV2,
     OutputIterator _collision){
 
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label);
-  LocalPlanners<CFG,WEIGHT>* lp = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
+  typename LocalPlanners<CFG, WEIGHT>::LocalPlannerPointer lp =
+    this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod);
 
-  cout << "closestVE(k="<< kclosest <<"): "<<flush;
-  if (lp->UsesPlannerOtherThan("straightline")){
-    cout <<"\n\nWARNING: Skipping call to ClosestVE."
-      <<  "\n         'straightline' ONLY local planner "
-      <<"for which ClosestVE works.\n\n";
+  if(this->m_debug){
+    cout << "closestVE(k="<< m_kClosest <<"): "<<flush;
+  }
+
+  if(this->m_lpMethod != "sl"){
+    if(this->m_debug){
+      cout <<"\n\nWARNING: Skipping call to ClosestVE .. only 'sl' lp allowed!" << endl;
+    }
     return;
   }
 
-  vector<CFG> oldV,newV,verts;
-  _rm->m_pRoadmap->GetVerticesData(verts);
-  // if separation of vertices into two sets is desired
-  if (tag != -1) {
-    // separate on tag values
-    for( int iV=0;iV<verts.size();++iV ) {
-      if(verts[iV].tag == tag) 
-        newV.push_back(verts[iV]);
-      else                         
-        oldV.push_back(verts[iV]);
-    }
-  }
-  // only one set desired
-  else { oldV = newV = verts; }
-
-  // Get edges	 
-  // reserve extra space ...will update local copy for efficiency
+  size_t oldVSize = _oldV2 - _oldV1;
+  size_t newVSize = _newV2 - _newV1;
   vector< pair<pair<VID,VID>,WEIGHT> > edges;
-  //vector<GRAPH::edge_descriptor> v_ed;
-  edges.reserve(_rm->m_pRoadmap->get_num_edges() + newV.size()*kclosest);
-  //_rm->m_pRoadmap->GetEdges(edges); //replace it with following loop fix_lantao
-  for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei = _rm->m_pRoadmap.edges_begin(); 
-      ei != _rm->m_pRoadmap.edges_end(); ++ei){
-    //all_edges_a.push_back(ei_a.property()); 
+  typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei; 
+
+  for(ei = _rm->m_pRoadmap->edges_begin(); ei != _rm->m_pRoadmap->edges_end(); ++ei){
     pair<pair<VID,VID>,WEIGHT> single_edge;
     single_edge.first.first = (*ei).source();
     single_edge.first.second = (*ei).target();
-    single_edge.second = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(ei);
+    single_edge.second = (*ei).property();
     edges.push_back(single_edge);
   }
-
-  // May have to adjust user's desired k wrt what is actually possible
-  int k = (int)min(kclosest, oldV.size()+edges.size());  
 
   ///Modified for VC
 #if defined(_WIN32)
@@ -400,126 +356,57 @@ void ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats
 
   // for each "real" cfg in roadmap
   LPOutput<CFG,WEIGHT> lpOutput;
-  stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
-  for (typename vector<CFG>::iterator v=newV.begin();v<newV.end();++v) {
+  for (InputIterator v = _newV1; v != _newV2; ++v) {
     // Find k closest cfgs in the roadmap
-    bool midpt_approx_of_closestPt = false;
-    vector<CfgVEType<CFG> > KP = FindKClosestPairs(_rm,
-        *v, oldV, edges,
-        k, midpt_approx_of_closestPt);
+    vector<CfgVEType<CFG,WEIGHT> > KP = FindKClosestPairs(_rm, *v, _oldV1, _oldV2, edges);
+
     // for each pair identified	
-    for (typename vector<CfgVEType<CFG> >::iterator kp=KP.begin();kp<KP.end();++kp){
-      cmap.reset();
-      if(this->m_CheckIfSameCC && is_same_cc(*(_rm->m_pRoadmap), cmap, kp->m_cfg1,kp->m_cfg2)) continue;
-      //-- if new edge is collision free
-      CFG _col;
-      if (!_rm->m_pRoadmap->IsEdge(kp->m_cfg1,kp->m_cfg2) 
-          //          && lp->IsConnected(_rm->GetEnvironment(),_stats, cd,dm, 
-        && lp->IsConnected(_rm->GetEnvironment(),_stats, dm, 
-            kp->m_cfg1,kp->m_cfg2, _col,
-            &lpOutput,
-            this->m_connectionPosRes, this->m_connectionOriRes, 
-            (!this->m_addAllEdges) )) {
-          //-- may have to add a new node in "middle" of existing edge
-          if ( kp->m_cfg2IsOnEdge ) {
-          _rm->m_pRoadmap->AddVertex(kp->m_cfg2);
+    typename vector<CfgVEType<CFG,WEIGHT> >::iterator kp;
+    for (kp=KP.begin();kp<KP.end();++kp){
+      if(kp->m_vid1 != INVALID_VID || kp->m_vid2 != INVALID_VID){
+        _cmap.reset();
+        if(stapl::sequential::is_same_cc(*(_rm->m_pRoadmap), _cmap, kp->m_vid1, kp->m_vid2)){
+          continue;
+        }
+      }
 
-          ++dupeNodes;  // keep count of duplicated nodes
-          }//endif cfg2IsOnEdge
+      CFG cfg1 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(kp->m_vid1);
+      CFG cfg2;
 
-          //-- add new edge to map
-          _rm->m_pRoadmap->AddEdge(kp->m_cfg1, kp->m_cfg2, lpOutput.edge);
+      if ( kp->m_cfg2IsOnEdge ) {
+        cfg2 = kp->m_cfgOnEdge;
+      }
+      else{
+        cfg2 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(kp->m_vid2);
+      }
 
-          //-- if did add an explicit interior node to edge(endpt0,endpt1)
-          if ( kp->m_cfg2IsOnEdge ) {
-          _rm->m_pRoadmap->AddEdge(kp->_endpt[0],kp->m_cfg2,lpOutput.edge);
-          _rm->m_pRoadmap->AddEdge(kp->m_cfg2,kp->_endpt[1],lpOutput.edge);
+      bool test1 = !_rm->m_pRoadmap->IsEdge(cfg1, cfg2);
+      bool test2 = lp->IsConnected(_rm->GetEnvironment(), _stats, dm, cfg1, cfg2, 
+          &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, !this->m_addAllEdges);
 
-          m_dupeEdges += 2;  // keep count of duplicated edges <--for what??
-          }//endif cfg2IsOnEdge
-            } //endif lp->IsConnected
-      if(_col != CfgType()){
-        *_collision++ = _col;
+      if(test1 && test2){
+        //-- may have to add a new node in "middle" of existing edge
+        if ( kp->m_cfg2IsOnEdge ) {
+          kp->m_vid2 = _rm->m_pRoadmap->AddVertex(cfg2);
+        }
+
+        //-- add new edge to map
+        _rm->m_pRoadmap->AddEdge(kp->m_vid1, kp->m_vid2, lpOutput.edge);
+
+        //-- if did add an explicit interior node to edge(endpt0,endpt1)
+        if ( kp->m_cfg2IsOnEdge ) {
+          // Add edges from endpt nodes to new node on the edge
+          _rm->m_pRoadmap->AddEdge(kp->m_endpt1, kp->m_vid2, lpOutput.edge);
+          _rm->m_pRoadmap->AddEdge(kp->m_endpt2, kp->m_vid2, lpOutput.edge);
+
+          // Remove original edge connecting endpt nodes
+          _rm->m_pRoadmap->delete_edge(kp->m_endpt1, kp->m_endpt2);
+          _rm->m_pRoadmap->delete_edge(kp->m_endpt2, kp->m_endpt1);
+        }
       }
     } //endfor kp
   } //endfor v
-
 }
-
-
-template <class CFG, class WEIGHT>
-template <typename InputIterator, typename OutputIterator>
-void ClosestVE<CFG,WEIGHT>::
-Connect(Roadmap<CFG,WEIGHT>* rm, StatClass& _stats,
-    InputIterator _itr1First, InputIterator _itr1Last,
-    OutputIterator _collision){
-
-  // Original Author: Left empty because I didn't know how to implement it...
-  cout << "ClosestVE<CFG,WEIGHT>::Connect() - 1 pair InputIterator" << endl;
-  cout << "*** ClosestVE for 1 pair InputIterator isn't supported. ***" << endl;
-  exit(-1);
-
-}
-
-template <class CFG, class WEIGHT>
-template <typename InputIterator, typename OutputIterator>
-void ClosestVE<CFG,WEIGHT>::
-Connect(Roadmap<CFG,WEIGHT>* rm, StatClass& _stats,
-    InputIterator _itr1First, InputIterator _itr1Last,
-    InputIterator _itr2First, InputIterator _itr2Last,
-    OutputIterator _collision){
-
-  cout << "ClosestVE<CFG,WEIGHT>::Connect() - 2 pairs InputIterator" << endl;
-  cout << "*** ClosestVE for 2 pairs InputIterator isn't supported. ***" << endl;
-  exit(-1);
-
-}
-// ------------------------------------------------------------------
-// CfgVEType is a private class used by ConnectMapNodes class
-// to store information about connecting to what may either be
-// another Cfg _OR_ a new Cfg generated in the "middle" of an existing
-// edge in the map.  
-//
-// In order to keep the same structure (for sorting by distance) and 
-// yet not allocate space for endpoints when they are not needed
-// (ie, connecting to another existing map node--aka,Cfg), endpoints
-// are stored as a vector.
-// ------------------------------------------------------------------
-template <class CFG>
-CfgVEType<CFG>::
-~CfgVEType() {
-}
-
-
-template <class CFG>
-CfgVEType<CFG>::
-CfgVEType() {
-  CFG invalid;
-  invalid.InvalidData();
-  m_cfg1 = invalid;
-  m_cfg2 = invalid;
-  m_cfg2IsOnEdge = false;
-}
-
-
-template <class CFG>
-CfgVEType<CFG>::
-CfgVEType(CFG& _cfg1, CFG& _cfg2){
-  m_cfg1 = m_cfg1;
-  m_cfg2 = m_cfg2;
-  m_cfg2IsOnEdge = false;
-}
-
-
-template <class CFG>
-CfgVEType<CFG>::
-CfgVEType(CFG& _cfg1, CFG& _cfg2, CFG& _endpt1, CFG& _endpt2){
-  m_cfg1   = _cfg1;
-  m_cfg2   = _cfg2;
-  m_cfg2IsOnEdge = true;
-  _endpt.push_back(_endpt1);
-  _endpt.push_back(_endpt2);
-}
-
 
 #endif
+
