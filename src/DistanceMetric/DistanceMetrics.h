@@ -13,13 +13,12 @@
 
 #include <boost/mpl/list.hpp>
 #include "MPUtils.h"
-#include "EuclideanDistance.h"
-#include "ScaledEuclideanDistance.h"
-#include "MinkowskiDistance.h"
 #include "ManhattanDistance.h"
+#include "ScaledEuclideanDistance.h"
+#include "MPNNEuclideanDistance.h"
+#include "CGALEuclideanDistance.h"
 #include "CenterOfMassDistance.h"
 #include "RMSDDistance.h"
-#include "LPSweptDistance.h"
 #include "BinaryLPSweptDistance.h"
 #include "KnotTheoryDistance.h"
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
@@ -33,10 +32,12 @@
 
 namespace pmpl_detail { //hide DistanceMetricMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
-    EuclideanDistance,
-    ScaledEuclideanDistance,
     MinkowskiDistance,
     ManhattanDistance,
+    EuclideanDistance,
+    ScaledEuclideanDistance,
+    MPNNEuclideanDistance,
+    CGALEuclideanDistance,
     CenterOfMassDistance,
     RMSDDistance,
     LPSweptDistance,

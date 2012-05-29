@@ -1,12 +1,12 @@
 #include "RMSDDistance.h"
 
 
-RMSDDistance::RMSDDistance() : EuclideanDistance() {
+RMSDDistance::RMSDDistance() : DistanceMetricMethod() {
   m_name = "rmsd";
 }
 
 RMSDDistance::
-RMSDDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : EuclideanDistance(_node, _problem, _warn) {
+RMSDDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : DistanceMetricMethod(_node, _problem, _warn) {
   m_name = "rmsd";
 }
 
@@ -16,7 +16,7 @@ RMSDDistance::~RMSDDistance() {
 vector<Vector3D> RMSDDistance::GetCoordinatesForRMSD(const Cfg& _c, Environment* _env) {
   _c.ConfigEnvironment(_env);
   vector<Vector3D> coordinates;
-  for(int i=0 ; i< _env->GetMultiBody(_env->GetRobotIndex())->GetFreeBodyCount(); i++)
+  for(int i=0; i< _env->GetMultiBody(_env->GetRobotIndex())->GetFreeBodyCount(); ++i)
     coordinates.push_back(_env->GetMultiBody(_env->GetRobotIndex())->GetFreeBody(i)->WorldTransformation().position); 
   return coordinates;
 }

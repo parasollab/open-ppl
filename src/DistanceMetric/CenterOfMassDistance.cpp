@@ -11,15 +11,10 @@ CenterOfMassDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : Di
 
 CenterOfMassDistance::~CenterOfMassDistance() {}
 
-void CenterOfMassDistance::PrintOptions(ostream& _os) const {
-  _os << "    " << GetName() << "::  " << endl;
-}
-
-double CenterOfMassDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2){
+double CenterOfMassDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
   return Distance(_c1, _c2);
 }
     
 double CenterOfMassDistance::Distance(const Cfg& _c1, const Cfg& _c2) {
-  Vector3D d = _c1.GetRobotCenterPosition()-_c2.GetRobotCenterPosition();
-  return d.magnitude();
+  return (_c1.GetRobotCenterPosition() - _c2.GetRobotCenterPosition()).magnitude();
 }

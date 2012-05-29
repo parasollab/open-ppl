@@ -24,7 +24,6 @@ const int WS = 1;   ///< Type WS: Workspace distance metric
 class DistanceMetricMethod  : public MPBaseObject {
  public:
   DistanceMetricMethod();
-  DistanceMetricMethod(double _time, int _t) : m_distanceTime(_time) {};
   DistanceMetricMethod(XMLNodeReader& _node, MPProblem* _problem, bool _warn = true);
   virtual ~DistanceMetricMethod();
 
@@ -32,9 +31,7 @@ class DistanceMetricMethod  : public MPBaseObject {
 
   string GetName() const {return m_name;}
   
-  virtual bool operator==(const DistanceMetricMethod& _dm) const;
-
-  virtual void PrintOptions(ostream& _os) const = 0;
+  virtual void PrintOptions(ostream& _os) const;
   
   template <class CFG, class WEIGHT>
   vector<typename RoadmapGraph<CFG, WEIGHT>::VID> RangeQuery(Roadmap<CFG, WEIGHT>* _rm,
@@ -47,9 +44,6 @@ class DistanceMetricMethod  : public MPBaseObject {
 
   virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) = 0;
   virtual void ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg& _c, bool _norm=true);
-
-public:
-    double m_distanceTime;
 
  protected:
   string m_name;

@@ -243,6 +243,7 @@ PMPL_INCL = \
 	-I${PMPL_DIR}/MPStrategy/Entropy \
 	-I${PMPL_DIR}/MPProblem/Geometry \
 	-I${PMPL_DIR}/MPStrategy \
+	-I${PMPL_DIR}/MPStrategy/UnitTest \
 	-I${PMPL_DIR}/Samplers \
 	-I${PMPL_DIR}/Utilities \
 	-I${PMPL_DIR}/ValidityChecker \
@@ -286,19 +287,18 @@ PMPL_OBJS = \
         Utilities/MPUtils.o \
 	DistanceMetric/DistanceMetricMethod.o \
 	DistanceMetric/DistanceMetrics.o \
+	DistanceMetric/MinkowskiDistance.o \
+	DistanceMetric/ManhattanDistance.o \
 	DistanceMetric/EuclideanDistance.o \
 	DistanceMetric/ScaledEuclideanDistance.o \
-	DistanceMetric/UniformEuclideanDistance.o \
-	DistanceMetric/PureEuclideanDistance.o \
-	DistanceMetric/KnotTheoryDistance.o \
+	DistanceMetric/MPNNEuclideanDistance.o \
+	DistanceMetric/CGALEuclideanDistance.o \
 	DistanceMetric/CenterOfMassDistance.o \
-	DistanceMetric/ManhattanDistance.o \
-	DistanceMetric/MinkowskiDistance.o \
-	DistanceMetric/MinkowskiDistance.o \
-	DistanceMetric/RMSDDistance.o \
-	DistanceMetric/ReachableDistance.o \
 	DistanceMetric/LPSweptDistance.o \
 	DistanceMetric/BinaryLPSweptDistance.o \
+	DistanceMetric/RMSDDistance.o \
+	DistanceMetric/KnotTheoryDistance.o \
+	DistanceMetric/ReachableDistance.o \
 	ValidityChecker/CollisionDetection.o \
 	ValidityChecker/NodeClearanceValidity.o \
         ValidityChecker/MedialAxisClearanceValidity.o \
@@ -327,6 +327,7 @@ ifeq (${parallel}, 0)
 	MPStrategy/ClosedChainStrategy.o \
 	MPStrategy/UAStrategy.o \
 	MPStrategy/RRGStrategy.o \
+	MPStrategy/UnitTest/DMTestStrategy.o \
 	MapEvaluator/NumNodesEvaluation.o \
 	MapEvaluator/NumEdgesEvaluation.o \
 	MapEvaluator/PrintMapEvaluation.o \

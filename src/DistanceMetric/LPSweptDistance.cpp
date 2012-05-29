@@ -15,6 +15,7 @@ LPSweptDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : Distanc
   m_orientationRes = _node.numberXMLParameter("ori_res", false, _problem->GetEnvironment()->GetOrientationRes(), 0.0, 1000.0, "orientation resolution");
   m_useBbox = _node.boolXMLParameter("use_bbox", false, false, "use bbox instead of robot vertices");
   m_lp = _node.stringXMLParameter("lp_method", true, "", "Local Planner");
+  
   if(_warn)
     _node.warnUnrequestedAttributes();
 }
@@ -27,12 +28,11 @@ LPSweptDistance(string _lp, double _posRes, double _oriRes, bool _bbox) :
 LPSweptDistance::~LPSweptDistance() {}
 
 void LPSweptDistance::PrintOptions(ostream& _os) const {
-  _os << "    " << this->GetName() << "::  ";
+  DistanceMetricMethod::PrintOptions(_os);
   _os << "\tlp_method = " << m_lp; 
   _os << "\tpositionRes = " << m_positionRes;
   _os << "\torientationRes = " << m_orientationRes;
   _os << "\tuse_bbox = " << m_useBbox;
-  _os << endl;
 }
 
 double LPSweptDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {

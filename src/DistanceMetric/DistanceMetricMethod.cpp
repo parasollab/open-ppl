@@ -20,8 +20,8 @@ DistanceMetricMethod(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : MP
 DistanceMetricMethod::~DistanceMetricMethod() {
 }
 
-bool DistanceMetricMethod::operator==(const DistanceMetricMethod& _dm) const {
-  return GetName() == _dm.GetName();
+void DistanceMetricMethod::PrintOptions(ostream& _os) const {
+  _os << "    " << this->GetName() << "::  ";
 }
 
 void DistanceMetricMethod::ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg& _c, bool _norm) {

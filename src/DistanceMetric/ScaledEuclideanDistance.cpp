@@ -1,15 +1,15 @@
 #include "ScaledEuclideanDistance.h"
-#include "Cfg_reach_cc.h"
 
-
-ScaledEuclideanDistance::ScaledEuclideanDistance() : EuclideanDistance(), m_sValue(0.5){
+ScaledEuclideanDistance::ScaledEuclideanDistance(double _scale, bool _normalize) : EuclideanDistance(_normalize) {
   m_name = "scaledEuclidean";
 }
 
 ScaledEuclideanDistance::
-ScaledEuclideanDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : EuclideanDistance(_node, _problem, false){
+ScaledEuclideanDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : EuclideanDistance(_node, _problem, false) {
   m_name = "scaledEuclidean";
-  m_sValue = _node.numberXMLParameter("scale", false, 0.5, 0.0, 1.0, "Scale Factor");
+  
+  m_scale = _node.numberXMLParameter("scale", false, 0.5, 0.0, 1.0, "scale factor");
+
   if(_warn)
     _node.warnUnrequestedAttributes();
 }
@@ -17,26 +17,14 @@ ScaledEuclideanDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) :
 ScaledEuclideanDistance::~ScaledEuclideanDistance() {
 }
 
-double ScaledEuclideanDistance::GetS() const { 
-  return m_sValue; 
-}
-
-bool ScaledEuclideanDistance::operator==(const ScaledEuclideanDistance& _dm) const {
-  if(GetName() != _dm.GetName()) {
-    return false;
-  } else {
-    return ((m_sValue-_dm.GetS() < 0.000000001) && (m_sValue-_dm.GetS() > -0.000000001));
-  }
-}
-
 void ScaledEuclideanDistance::PrintOptions(ostream& _os) const {
-  _os << "    " << GetName() << "::  ";
-  _os << "scale = " << m_sValue;
-  _os << endl;
+  EuclideanDistance::PrintOptions(_os);
+  _os << " scale=" << m_scale;
 }
 
 double ScaledEuclideanDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
-  double dist;
-  dist = ScaledDistance<CfgType>(_env, _c1, _c2, m_sValue);
-  return dist;
+  Cfg* c = DifferenceCfg<CfgType>(_c1, _c2);
+  double result = pow(m_scale*PositionDistance(_env, *c) + (1-m_scale)*OrientationDistance(*c), m_r3);
+  delete c;
+  return result;
 }

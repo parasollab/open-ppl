@@ -23,6 +23,7 @@
 #include "EvaluateMapStrategy.h"
 #include "UAStrategy.h"
 #include "RRGStrategy.h"
+#include "DMTestStrategy.h"
 #endif
 
 #include "Sampler.h"
@@ -167,6 +168,8 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
     mpsm = new UAStrategy(citr, GetMPProblem()); 
   } else if(citr.getName() == "RRGStrategy") {
     mpsm = new RRGStrategy(citr, GetMPProblem());
+  } else if(citr.getName() == "DMTestStrategy") {
+    mpsm = new DMTestStrategy(citr, GetMPProblem());
   } 
 #endif
   else {

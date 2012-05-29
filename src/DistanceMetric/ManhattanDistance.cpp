@@ -1,34 +1,22 @@
 #include "ManhattanDistance.h"
 
-
-
-ManhattanDistance::ManhattanDistance() : DistanceMetricMethod() {
+ManhattanDistance::ManhattanDistance(bool _normalize) : MinkowskiDistance(1, 1, 1, _normalize) {
   m_name = "manhattan";
 }
 
 ManhattanDistance::
-ManhattanDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : DistanceMetricMethod(_node, _problem, _warn) {
+ManhattanDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : MinkowskiDistance(_node, _problem, false, false) {
   m_name = "manhattan";
+
+  this->m_r1 = 1;
+  this->m_r2 = 1;
+  this->m_r3 = 1;
+  this->m_normalize = _node.boolXMLParameter("normalize", false, false, "flag if position dof should be normalized by environment diagonal");
+
+  if(_warn)
+    _node.warnUnrequestedAttributes();
 }
 
 ManhattanDistance::~ManhattanDistance() {
 }
 
-void ManhattanDistance::PrintOptions(ostream& _os) const {
-  _os << "    " << GetName() << "::  " << endl;
-}
-
-double ManhattanDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
-  double dist = 0;
-  Cfg *pC = _c1.CreateNewCfg();
-  pC->subtract(_c1,_c2);
-  vector<double> dt = pC->GetData(); // position values
-  for(size_t i=0; i < dt.size(); i++) {
-    if(dt[i] < 0) 
-      dist = dist-dt[i];
-    else
-      dist += dt[i];
-  }
-  delete pC;
-  return dist;
-}
