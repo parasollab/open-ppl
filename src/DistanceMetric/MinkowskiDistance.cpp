@@ -38,7 +38,7 @@ void MinkowskiDistance::ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg
   double originalLength = this->Distance(_env, _o, _c);
   double diff = _length - originalLength;
   do {
-    for(int i=0; i<_c.DOF(); ++i)
+    for(size_t i=0; i<_c.DOF(); ++i)
       _c.SetSingleParam(i, (_length/originalLength)*_c.GetSingleParam(i), _normalizeOrientation);
     originalLength = this->Distance(_env, _o, _c);
     diff = _length - originalLength;
@@ -47,7 +47,7 @@ void MinkowskiDistance::ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg
 
 double MinkowskiDistance::PositionDistance(Environment* _env, const Cfg& _c) {
   double diagonal = 0;
-  for(int i=0; i<_c.PosDOF(); ++i) {
+  for(size_t i=0; i<_c.PosDOF(); ++i) {
     std::pair<double,double> range = _env->GetBoundingBox()->GetRange(i);
     diagonal += pow(fabs(range.second-range.first), m_r1);
   }

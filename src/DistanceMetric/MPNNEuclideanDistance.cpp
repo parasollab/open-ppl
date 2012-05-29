@@ -13,13 +13,13 @@ MPNNEuclideanDistance::~MPNNEuclideanDistance() {}
 
 double MPNNEuclideanDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
   double maxRange = 0.0;
-  for(int i=0; i< _c1.PosDOF(); ++i) {
+  for(size_t i=0; i< _c1.PosDOF(); ++i) {
     std::pair<double,double> range = _env->GetBoundingBox()->GetRange(i);
     maxRange = max(maxRange, range.second-range.first);
   }
   
   double dist = 0.0;
-  for(int i=0; i<_c1.DOF(); ++i) {
+  for(size_t i=0; i<_c1.DOF(); ++i) {
     // calculate distance for positional coordinate
     if (i < _c1.PosDOF()) {
       double diff = 2*PI*(_c1.GetSingleParam(i) - _c2.GetSingleParam(i))/maxRange;

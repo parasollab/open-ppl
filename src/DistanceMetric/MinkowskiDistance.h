@@ -38,15 +38,19 @@ class MinkowskiDistance : public DistanceMetricMethod {
         cout << "ERROR in MinkowskiDistance::DifferenceCfg, _c1 dofs (" << _v1.size() << ") != _c2 dofs (" << _v2.size() << ")\n";
         exit(-1);
       }
-      if((int)_v1.size() == CfgType::GetNumOfJoints()) {
-        Cfg_fixed_tree c1Linkage(_v1);
-        Cfg_fixed_tree c2Linkage(_v2);
+      if(_v1.size() == CfgType::GetNumOfJoints()) {
+        Cfg_fixed_tree c1Linkage;
+        c1Linkage.SetData(_v1);
+        Cfg_fixed_tree c2Linkage;
+        c2Linkage.SetData(_v2);
         Cfg* c = c1Linkage.CreateNewCfg();
         c->subtract(c1Linkage, c2Linkage);
         return c;
       } else {
-        Cfg_free_tree c1Linkage(_v1);
-        Cfg_free_tree c2Linkage(_v2);
+        Cfg_free_tree c1Linkage;
+        c1Linkage.SetData(_v1);
+        Cfg_free_tree c2Linkage;
+        c2Linkage.SetData(_v2);
         Cfg* c = c1Linkage.CreateNewCfg();
         c->subtract(c1Linkage, c2Linkage);
         return c;
