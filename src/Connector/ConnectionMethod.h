@@ -23,14 +23,18 @@ template<class CFG, class WEIGHT>
 class OptimalConnection;
 template<class CFG, class WEIGHT>
 class OptimalRewire;
+template<class CFG, class WEIGHT>
+class ClosestVE;
 
 namespace pmpl_detail{
-  typedef boost::mpl::list<NeighborhoodConnection<CfgType,WeightType>, 
-          ConnectCCs<CfgType,WeightType>, 
-          PreferentialAttachment<CfgType,WeightType>, 
-          OptimalConnection<CfgType,WeightType>,
-          OptimalRewire<CfgType,WeightType>
-            > ConnectorMethodList;
+  typedef boost::mpl::list<
+    NeighborhoodConnection<CfgType,WeightType>, 
+    ConnectCCs<CfgType,WeightType>, 
+    PreferentialAttachment<CfgType,WeightType>, 
+    OptimalConnection<CfgType,WeightType>,
+    OptimalRewire<CfgType,WeightType>,
+    ClosestVE<CfgType,WeightType>
+      > ConnectorMethodList;
 
   template<typename CM, typename RDMP, typename STATS, typename CMAP,
     typename I, typename O>
@@ -76,11 +80,11 @@ class ConnectionMethod : public MPBaseObject {
     /////////////////////////////////////////////
     // Connection Methods
     template<typename ColorMap>
-    void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap){
-      vector<CFG> collision;
-      Connect(_rm, _stats, _cmap, back_inserter(collision));
-    }
-    
+      void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap){
+        vector<CFG> collision;
+        Connect(_rm, _stats, _cmap, back_inserter(collision));
+      }
+
     template<typename ColorMap, typename OutputIterator>
       void Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap,
           OutputIterator _collision){

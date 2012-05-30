@@ -16,7 +16,7 @@
 #include "PreferentialAttachment.h"
 #include "OptimalConnection.h"
 #include "OptimalRewire.h"
-//#include "ClosestVE.h"
+#include "ClosestVE.h"
 //#include "RRTcomponents.h"
 //#include "RayTracer.h"
 
