@@ -290,7 +290,7 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
     kp.push_back(tmp2);
   }
 
-  int k = (int)min(m_kClosest, kp.size()-1);
+  size_t k = min(m_kClosest, kp.size()-1);
   partial_sort(kp.begin(), kp.begin()+k, kp.end(), compare_second<CfgVEType<CFG,WEIGHT>,double>());
 
   for (size_t p = 0; p < k; p++){
@@ -335,8 +335,6 @@ ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats,
     return;
   }
 
-  size_t oldVSize = _oldV2 - _oldV1;
-  size_t newVSize = _newV2 - _newV1;
   vector< pair<pair<VID,VID>,WEIGHT> > edges;
   typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei; 
 
