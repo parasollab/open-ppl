@@ -290,7 +290,6 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
     kp.push_back(tmp2);
   }
 
-  int vSize = _verts2 - _verts1;
   int k = (int)min(m_kClosest, kp.size()-1);
   partial_sort(kp.begin(), kp.begin()+k, kp.end(), compare_second<CfgVEType<CFG,WEIGHT>,double>());
 
