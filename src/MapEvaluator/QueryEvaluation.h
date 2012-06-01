@@ -58,6 +58,11 @@ class QueryEvaluation
         citr->warnUnrequestedAttributes();
       } else
         citr->warnUnknownNode();
+  
+    if(m_vecStrNodeConnectionLabels.empty()) {
+      cerr << "\n\nError in QueryEvaluation XML constructor:: no node connection methods specified.\n\tUntil NeighborhoodFinder class can support a default/empty string as input, node connection methods must be explicitly specified.\n\tExiting.\n";
+      exit(-1);
+    }
   }
   virtual ~QueryEvaluation() {}
 
