@@ -235,7 +235,7 @@ class Environment : public MPBaseObject{
     void Read(string _filename);
     void buildCDstructure(cd_predefined cdtype);
     void BuildRobotStructure(); 
-    
+    vector<Robot>& GetRobots(){return robotVec;} 
     /**Write the Input data for an environment into a given output stream.
      *2 things are output, Number of MultiBodys, and information about MultiBodys.
      *@see MultiBody::Write
