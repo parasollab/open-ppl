@@ -108,8 +108,12 @@ void Cfg::add(const Cfg& _c1, const Cfg& _c2) {
 
 void Cfg::subtract(const Cfg& _c1, const Cfg& _c2) {
   vector<double> v;
-  for(size_t i=0; i<m_dof; ++i)
-    v.push_back(_c1.m_v[i]-_c2.m_v[i]);
+  for(size_t i=0; i<m_dof; ++i){
+    if(m_dofTypes[i] == POS || m_dofTypes[i]== JOINT)
+      v.push_back(_c1.m_v[i]-_c2.m_v[i]);
+    else
+      v.push_back(DirectedAngularDistance(_c1.m_v[i], _c2.m_v[i]));
+  }
   m_v = v;
   NormalizeOrientation();
 }
