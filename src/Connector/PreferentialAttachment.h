@@ -33,7 +33,7 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
 
     //////////////////////
     // Constructors and Destructor
-    PreferentialAttachment();
+    PreferentialAttachment(string _lp = "", string _nf = "", MPProblem* _problem = NULL); 
     PreferentialAttachment(XMLNodeReader& _node, MPProblem* _problem);
     PreferentialAttachment(int _k); // constructor for preferential attachment
     PreferentialAttachment(int _k, int _m); // constructor for preferential attachment
@@ -83,8 +83,11 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
 
 
 template <class CFG, class WEIGHT>
-PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment():ConnectionMethod<CFG,WEIGHT>() { 
+PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(string _lp, string _nf, MPProblem* _problem){
   this->SetName("PreferentialAttachment"); 
+  this->m_lpMethod = _lp;
+  this->m_nfMethod = _nf;
+  this->SetMPProblem(_problem);
   m_k = KCLOSEST;
   m_fail = MFAILURE;
   m_checkIfSameCC = true;
@@ -265,7 +268,7 @@ void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* 
         continue;
       }
     }
-    #ifndef _PARALLEL
+#ifndef _PARALLEL
     // the edge already exists
     if (_rm->m_pRoadmap->IsEdge(_vid, *itr2)) {
       // if we're not in "unconnected" mode, count this as a success
@@ -291,7 +294,7 @@ void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* 
         continue;
       }
     }
-    #endif
+#endif
     // attempt connection with the local planner
     CfgType _col;
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->

@@ -31,7 +31,7 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
 
     //////////////////////
     // Constructors and Destructor
-    ConnectCCs();
+    ConnectCCs(string _lp = "", string _nf = "", MPProblem* _problem = NULL); 
     ConnectCCs(XMLNodeReader& _node, MPProblem* _problem);
     virtual ~ConnectCCs();
 
@@ -84,8 +84,12 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
 ///////////////////////////////////////////////////////////////////////////////
 //   Connection Method:  ConnectCCs
 template <class CFG, class WEIGHT>
-ConnectCCs<CFG,WEIGHT>::ConnectCCs() : ConnectionMethod<CFG,WEIGHT>() { 
+ConnectCCs<CFG,WEIGHT>::ConnectCCs(string _lp, string _nf, MPProblem* _problem)
+: ConnectionMethod<CFG,WEIGHT>() { 
   this->SetName("ConnectCCs"); 
+  this->m_lpMethod = _lp;
+  this->m_nfMethod = _nf;
+  this->SetMPProblem(_problem);
   m_kPairs = KPAIRS;
   m_smallcc = SMALL_CC;
   m_k2 = K2_CLOSEST;
@@ -101,10 +105,6 @@ ConnectCCs<CFG,WEIGHT>::ConnectCCs(XMLNodeReader& _node, MPProblem* _problem) : 
 template <class CFG, class WEIGHT>
 void ConnectCCs<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
   this->SetName("ConnectCCs"); 
-
-  m_kPairs = KPAIRS;
-  m_smallcc = SMALL_CC;
-  m_k2 = K2_CLOSEST;
 
   m_kPairs = _node.numberXMLParameter("kpairs", true, 5,1,1000, "kpairs value"); 
   m_smallcc = _node.numberXMLParameter("smallcc", true, 5,1,1000,  "smallcc value"); 

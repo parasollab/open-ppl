@@ -8,7 +8,7 @@ class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
   public:
 
     // Constructors
-    OptimalConnection(string _nf = "", bool _radius = true); 
+    OptimalConnection(string _lp = "", string _nf = "", MPProblem* _problem = NULL, bool _radius = true);
     OptimalConnection(XMLNodeReader& _node, MPProblem* _problem); 
     ~OptimalConnection();
 
@@ -40,10 +40,12 @@ class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
 };
 
   template <class CFG, class WEIGHT>
-OptimalConnection<CFG,WEIGHT>::OptimalConnection(string _nf, bool _radius)
+  OptimalConnection<CFG,WEIGHT>::OptimalConnection(string _lp, string _nf, MPProblem* _problem, bool _radius)
   : ConnectionMethod<CFG,WEIGHT>(), m_radius(_radius) {
-    this->m_nfMethod = _nf;
     this->SetName("OptimalConnection");
+    this->m_lpMethod = _lp;
+    this->m_nfMethod = _nf;
+    this->SetMPProblem(_problem);
     if (m_radius) {
       if(this->m_debug) cout << "Error, radius-based feature not available, defaulting to k-based"<<endl;
       m_radius = false; 

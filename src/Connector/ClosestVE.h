@@ -126,7 +126,7 @@ class ClosestVE: public ConnectionMethod<CFG,WEIGHT>{
   public:
     //////////////////////
     // Constructors and Destructor
-    ClosestVE();
+    ClosestVE(string _lp = "", string _nf = "", MPProblem* _problem = NULL);
     ClosestVE(XMLNodeReader& _node, MPProblem* _problem);
     ~ClosestVE();
 
@@ -191,9 +191,13 @@ int m_kClosest;
 /////////////////////////////////////////////////////////////////////////////
 
 template <typename CFG, typename WEIGHT>
-ClosestVE<CFG,WEIGHT>::ClosestVE():ConnectionMethod<CFG,WEIGHT>() { 
+ClosestVE<CFG,WEIGHT>::ClosestVE(string _lp, string _nf, MPProblem* _problem)
+  :ConnectionMethod<CFG,WEIGHT>() { 
   this->SetName("ClosestVE"); 
   m_kClosest = KCLOSESTVE;
+  this->m_lpMethod = _lp;
+  this->m_nfMethod = _nf;
+  this->SetMPProblem(_problem);
 }
 
 /////////////////////////////////////////////////////////////////////////////

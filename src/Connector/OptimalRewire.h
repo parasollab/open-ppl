@@ -7,7 +7,7 @@ template <typename CFG, typename WEIGHT>
 class OptimalRewire : public OptimalConnection<CFG, WEIGHT> {
   public:
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-    OptimalRewire(string _nf = "", bool _radius = false, string _dm = ""); 
+    OptimalRewire(string _lp = "", string _nf = "", MPProblem* _problem = NULL, bool _radius = false, string _dm = ""); 
     OptimalRewire(XMLNodeReader& _node, MPProblem* _problem); 
     ~OptimalRewire() {}
 
@@ -29,9 +29,12 @@ class OptimalRewire : public OptimalConnection<CFG, WEIGHT> {
 };
 
 template <typename CFG, typename WEIGHT>
-OptimalRewire<CFG,WEIGHT>::OptimalRewire(string _nf, bool _radius, string _dm) : 
-  OptimalConnection<CFG,WEIGHT>(_nf, _radius) {
+OptimalRewire<CFG,WEIGHT>::OptimalRewire(string _lp, string _nf, MPProblem* _problem, bool _radius, string _dm)
+  : OptimalConnection<CFG,WEIGHT>(_lp,_nf,_problem,_radius) {
     this->SetName("OptimalRewire");
+    this->m_lpMethod = _lp;
+    this->m_nfMethod = _nf;
+    this->SetMPProblem(_problem);
     m_dm = _dm;
     if (this->m_radius) {
       cout << "Error, radius-based feature not available, defaulting to k-based"<<endl;
