@@ -42,7 +42,8 @@ class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
     NeighborhoodConnection(string _lp = "", string _nf = "", 
         int _k = KCLOSEST, int _m = MFAILURE, 
         bool _countFailures = false, bool _unconnected = false, 
-        bool _random = false, bool _checkIfSameCC = false);
+        bool _random = false, bool _checkIfSameCC = false,
+        MPProblem* _problem = NULL);
     NeighborhoodConnection(XMLNodeReader& _node, MPProblem* _problem);
     virtual ~NeighborhoodConnection();
 
@@ -94,13 +95,14 @@ class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
 ///////////////////////////////////////////////////////////////////////////////
   template <class CFG, class WEIGHT>
 NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(string _lp, string _nf, int _k, int _m, bool _countFailures, bool
-    _unconnected, bool _random, bool _checkIfSameCC) 
+    _unconnected, bool _random, bool _checkIfSameCC, MPProblem* _problem) 
   : ConnectionMethod<CFG,WEIGHT>(), m_k(_k), m_fail(_m), 
   m_countFailures(_countFailures), m_unconnected(_unconnected),
   m_random(_random), m_checkIfSameCC(_checkIfSameCC){
     this->SetName("NeighborhoodConnection"); 
     this->m_lpMethod = _lp;
     this->m_nfMethod = _nf;
+    this->SetMPProblem(_problem);
   }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -156,7 +158,10 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, Stat
     ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
     InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){
 
-  if(this->m_debug){ cout << endl; PrintOptions(cout); }
+  if(this->m_debug){
+    cout << endl; 
+    PrintOptions(cout);
+  }
   // the vertices in this iteration are the source for the connection operation
 
   int iterSize = _itr2Last - _itr2First;
@@ -176,7 +181,9 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, Stat
 
     // find cfg pointed to by itr1
     CFG vCfg = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(itr1);
-    if(this->m_debug) cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << *itr1 << "  --> " << vCfg << endl;
+    if(this->m_debug){
+      cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << *itr1 << "  --> " << vCfg << endl;
+    }
 
     bool enoughConnected = true;
     m_iterSuccess = m_iterFailure = 0;
@@ -265,7 +272,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
     }
 
     // the edge already exists :: no need for this, it is already done in STAPL
-    #ifndef _PARALLEL
+#ifndef _PARALLEL
     if(_rm->m_pRoadmap->IsEdge(_vid, *itr2)){
       // if we're not in "unconnected" mode, count this as a success
       if(this->m_debug) cout << " | edge already exists in roadmap";
@@ -291,7 +298,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
         continue;
       }
     }
-    #endif
+#endif
 
     // attempt connection with the local planner
     CfgType col;
