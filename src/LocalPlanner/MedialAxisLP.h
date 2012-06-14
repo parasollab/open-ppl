@@ -24,7 +24,6 @@ template <class CFG, class WEIGHT> class MedialAxisLP: public LocalPlannerMethod
     virtual ~MedialAxisLP();
 
     virtual void PrintOptions(ostream& _os);
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
         shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, 
@@ -114,13 +113,6 @@ MedialAxisLP<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << "\tmaxItr = " << m_maxItr << endl;
   _os << "\tuseBBX = " << m_useBBX << endl;
   _os << "\tpositional = " << m_positional << endl;
-}
-
-template <class CFG, class WEIGHT> 
-LocalPlannerMethod<CFG, WEIGHT>* 
-MedialAxisLP<CFG, WEIGHT>::CreateCopy() {
-  LocalPlannerMethod<CFG, WEIGHT>* copy = new MedialAxisLP<CFG, WEIGHT>(*this);
-  return copy;
 }
 
 // Main IsConnected Function

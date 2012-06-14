@@ -33,7 +33,6 @@ class ApproxSpheres: public LocalPlannerMethod<CFG, WEIGHT> {
     // I/O methods
     virtual void PrintUsage(ostream& _os);
     virtual void PrintValues(ostream& _os);
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
     /**Roughly check if two Cfgs could be connected using clearance.
      *Algorithm is given here:
      *   -# set clearance1 as clearance for _c1
@@ -124,15 +123,6 @@ PrintValues(ostream& _os) {
   _os  << GetName() << " ";
   _os << "m_numAttempts" << " " << m_numAttempts << " ";
   _os << endl;
-}
-
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>* 
-ApproxSpheres<CFG, WEIGHT>::
-CreateCopy() {
-  LocalPlannerMethod<CFG, WEIGHT> * _copy = new ApproxSpheres<CFG, WEIGHT>(*this);
-  return _copy;
 }
 
 

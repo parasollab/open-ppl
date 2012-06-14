@@ -23,7 +23,6 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
     virtual ~AStar();
 
     virtual void PrintOptions(ostream& _os);
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy() = 0;
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm,
         const CFG& _c1, const CFG& _c2, CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
@@ -292,8 +291,6 @@ class AStarDistance: public AStar<CFG, WEIGHT> {
     AStarDistance(XMLNodeReader& _node, MPProblem* _problem);
     virtual ~AStarDistance();
 
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
-
     virtual size_t ChooseOptimalNeighbor(Environment* _env, StatClass& _stats,
         CFG& _col, shared_ptr<DistanceMetricMethod> _dm,
         const CFG& _c1, const CFG& _c2, vector<CFG>& _neighbors); 
@@ -313,13 +310,6 @@ AStarDistance<CFG, WEIGHT>::AStarDistance(XMLNodeReader& _node, MPProblem* _prob
 
 template <class CFG, class WEIGHT>
 AStarDistance<CFG, WEIGHT>::~AStarDistance() {}
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>* 
-AStarDistance<CFG, WEIGHT>::CreateCopy() {
-  LocalPlannerMethod<CFG, WEIGHT>* copy = new AStarDistance<CFG, WEIGHT>(*this);
-  return copy;
-}
 
 //find Cfg closest to goal. ASTAR_DISTANCE
 template <class CFG, class WEIGHT>
@@ -352,8 +342,6 @@ class AStarClearance: public AStar<CFG, WEIGHT> {
 
     virtual ~AStarClearance();
 
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
-
     virtual size_t ChooseOptimalNeighbor(Environment* _env, StatClass& _stats,
         CFG& _col, shared_ptr<DistanceMetricMethod> _dm, 
         const CFG& _c1, const CFG& _c2, vector<CFG>& _neighbors); 
@@ -378,13 +366,6 @@ AStarClearance<CFG, WEIGHT>::AStarClearance(XMLNodeReader& _node, MPProblem* _pr
 
 template <class CFG, class WEIGHT>
 AStarClearance<CFG, WEIGHT>::~AStarClearance() {}
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>* 
-AStarClearance<CFG, WEIGHT>::CreateCopy() {
-  LocalPlannerMethod<CFG, WEIGHT>* copy = new AStarClearance<CFG, WEIGHT>(*this);
-  return copy;
-}
 
 //find Cfg with largest clearance. ASTAR_CLEARANCE
 template <class CFG, class WEIGHT>

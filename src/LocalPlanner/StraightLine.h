@@ -26,7 +26,6 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
     // @}
 
     virtual void PrintOptions(ostream& _os);
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
     /**
      * Check if two Cfgs could be connected by straight line.
@@ -153,14 +152,6 @@ StraightLine<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << "binary search = " << " " << m_binarySearch << " ";
   _os << "vcMethod = " << " " << m_vcMethod << " ";
   _os << endl;
-}
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>* 
-StraightLine<CFG, WEIGHT>::
-CreateCopy() {
-  LocalPlannerMethod<CFG, WEIGHT> * _copy = new StraightLine<CFG, WEIGHT>(*this);
-  return _copy;
 }
 
 //// default implementation for non closed chains

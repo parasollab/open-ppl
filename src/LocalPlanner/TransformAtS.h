@@ -12,7 +12,6 @@ class TransformAtS: public StraightLine<CFG, WEIGHT> {
     virtual ~TransformAtS();
 
     virtual void PrintOptions(ostream& _os);
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
     virtual bool IsConnected(Environment *_env, StatClass& _stats,
         shared_ptr<DistanceMetricMethod >_dm,
@@ -73,14 +72,6 @@ PrintOptions(ostream& _os) {
   _os << "vcMethod = " << " " << this->m_vcMethod << " ";
   _os << "s_value = " << m_sValue;
   _os << endl;
-}
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>* 
-TransformAtS<CFG, WEIGHT>::
-CreateCopy() {
-  LocalPlannerMethod<CFG, WEIGHT> * _copy = new TransformAtS<CFG, WEIGHT>(*this);
-  return _copy;
 }
 
 template <class CFG, class WEIGHT> bool

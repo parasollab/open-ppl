@@ -26,7 +26,7 @@ template <class CFG, class WEIGHT> class LocalPlannerMethod : public MPBaseObjec
     virtual ~LocalPlannerMethod();
 
     virtual void PrintOptions(ostream& out_os) { };
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy() = 0;
+    
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
         shared_ptr<DistanceMetricMethod> _dm,
         const CFG &_c1, const CFG &_c2,

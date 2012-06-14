@@ -21,7 +21,6 @@ class ToggleLP: public LocalPlannerMethod<CFG, WEIGHT> {
 
     void CalcStats(StatClass& _stats, bool _var, bool _toggle);
     virtual void PrintOptions(ostream& _os);
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
         shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, CFG& _col, 
@@ -108,13 +107,6 @@ ToggleLP<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << "vc =  " << m_vc << " ";
   _os << "lp =  " << m_lp << " ";
   _os << endl;
-}
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>* 
-ToggleLP<CFG, WEIGHT>::CreateCopy() {
-  LocalPlannerMethod<CFG, WEIGHT> * copy = new ToggleLP<CFG, WEIGHT>(*this);
-  return copy;
 }
 
 template <class CFG, class WEIGHT>

@@ -22,7 +22,6 @@ public StraightLine<CFG, WEIGHT> {
     virtual ~RotateAtS();
 
     virtual void PrintOptions(ostream& _os);
-    virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
     virtual bool IsConnected(Environment *_env, StatClass& _stats,
         shared_ptr<DistanceMetricMethod > _dm,
@@ -72,14 +71,6 @@ RotateAtS<CFG, WEIGHT>::PrintOptions(ostream& _os) {
     << " m_binary_search=" << this->m_binarySearch
     << " m_vcMethod=" << this->m_vcMethod
     << " m_sValue=" << m_sValues[0] << endl;
-}
-
-template <class CFG, class WEIGHT>
-LocalPlannerMethod<CFG, WEIGHT>* 
-RotateAtS<CFG, WEIGHT>::
-CreateCopy() {
-  LocalPlannerMethod<CFG, WEIGHT> * _copy = new RotateAtS<CFG, WEIGHT>(*this);
-  return _copy;
 }
 
 template <class CFG, class WEIGHT> bool

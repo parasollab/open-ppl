@@ -24,7 +24,6 @@ public:
   virtual ~SurfaceLP();
 
   virtual void PrintOptions(ostream& _outOs);
-  virtual LocalPlannerMethod<CFG, WEIGHT>* CreateCopy();
 
   virtual bool IsConnected(Environment *_env, StatClass& _stats,
       shared_ptr<DistanceMetricMethod > _dm, const CFG & _c1, const CFG & _c2, 
@@ -62,14 +61,6 @@ PrintOptions(ostream& _outOs) {
   _outOs << "vcMethod = " << " " << this->m_vcMethod << " ";
   _outOs << endl;
 }
-
-template <class CFG, class WEIGHT> 
-LocalPlannerMethod<CFG, WEIGHT>* 
-SurfaceLP<CFG, WEIGHT>::CreateCopy() {
-  LocalPlannerMethod<CFG, WEIGHT>* _copy = new SurfaceLP<CFG, WEIGHT>(*this);
-  return _copy;
-}
-
 
 // Main IsConnected Function
 template <class CFG, class WEIGHT> bool SurfaceLP<CFG,WEIGHT>::
