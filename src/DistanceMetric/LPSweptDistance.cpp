@@ -39,6 +39,7 @@ double LPSweptDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _
   StatClass stats;
   shared_ptr<DistanceMetricMethod > dm;
   LPOutput<CfgType, WeightType> lpOutput;
+  typedef ElementSet<LocalPlannerMethod<CfgType,WeightType> >::MethodPointer LocalPlannerPointer;
   LocalPlannerPointer lpMethod = GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
   CfgType dummy;
   lpMethod->IsConnected(_env, stats, dm, _c1, _c2, dummy, &lpOutput, m_positionRes, m_orientationRes, false, true);

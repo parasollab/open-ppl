@@ -1,15 +1,10 @@
 #ifndef DISTANCEMETRICMETHOD_h
 #define DISTANCEMETRICMETHOD_h
 
-#include "MPUtils.h"
 #include "Roadmap.h"
-#include "CfgTypes.h"
 #include <boost/mpl/list.hpp>
 using namespace std;
 
-template <class CFG, class WEIGHT> class LocalPlanners;
-template <class CFG, class WEIGHT> class LocalPlannerMethod;
-class GMSPolyhedron;
 class MPProblem;
 
 const double MAX_DIST =  1e10;
@@ -26,8 +21,6 @@ class DistanceMetricMethod  : public MPBaseObject {
   DistanceMetricMethod();
   DistanceMetricMethod(XMLNodeReader& _node, MPProblem* _problem, bool _warn = true);
   virtual ~DistanceMetricMethod();
-
-  typedef ElementSet<LocalPlannerMethod<CfgType,WeightType> >::MethodPointer LocalPlannerPointer;
 
   string GetName() const {return m_name;}
   

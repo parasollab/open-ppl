@@ -1,14 +1,11 @@
 #include "DistanceMetricMethod.h"
 #include "Cfg.h"
-#include "Environment.h"
-#include "MetricUtils.h"
-#include "MPProblem.h"
-#include "CollisionDetection.h"
-#include "LocalPlanners.h"
+
+class MPProblem;
+class Environment;
 
 DistanceMetricMethod::
 DistanceMetricMethod() {}
-
 
 DistanceMetricMethod::
 DistanceMetricMethod(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : MPBaseObject(_node, _problem) {
