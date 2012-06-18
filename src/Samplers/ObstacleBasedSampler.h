@@ -196,7 +196,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         polyhedron = _mBody->GetBody(0)->GetPolyhedron();
       else           
         polyhedron = _mBody->GetBody(0)->GetWorldPolyhedron();
-      Vector3D x =polyhedron.vertexList[(int)(DRand()*polyhedron.vertexList.size())];
+      Vector3D x =polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
 
       CFG tmp;
       for(int i=0;i<3;i++)
@@ -226,30 +226,30 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         polyhedron = _mBody->GetBody(0)->GetPolyhedron();
       else 
         polyhedron = _mBody->GetBody(0)->GetWorldPolyhedron();
-      double area;
-      area = _mBody->GetBody(0)->GetPolyhedron().area;
+      double m_area;
+      m_area = _mBody->GetBody(0)->GetPolyhedron().m_area;
 
-      double targetArea = area * DRand();
+      double targetArea = m_area * DRand();
 
       int index, i;
       double sum;
       index = 0; 
       i = 1;
-      sum = _mBody->GetBody(0)->GetPolyhedron().polygonList[0].area;
+      sum = _mBody->GetBody(0)->GetPolyhedron().m_polygonList[0].m_area;
       while(targetArea > sum) {
-        sum += _mBody->GetBody(0)->GetPolyhedron().polygonList[i].area;
+        sum += _mBody->GetBody(0)->GetPolyhedron().m_polygonList[i].m_area;
         index++;
         i++;
       }
 
       // We choose the triangle of the _mBody with that index
-      GMSPolygon *poly = &polyhedron.polygonList[index];
+      GMSPolygon *poly = &polyhedron.m_polygonList[index];
 
       // We choose a random point in that triangle
       Vector3D p, q, r;
-      p = polyhedron.vertexList[poly->vertexList[0]];
-      q = polyhedron.vertexList[poly->vertexList[1]];
-      r = polyhedron.vertexList[poly->vertexList[2]];
+      p = polyhedron.m_vertexList[poly->m_vertexList[0]];
+      q = polyhedron.m_vertexList[poly->m_vertexList[1]];
+      r = polyhedron.m_vertexList[poly->m_vertexList[2]];
 
       Vector3D x;
       x = ChoosePointOnTriangle(p, q, r);
@@ -267,11 +267,11 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         polyhedron = _mBody->GetBody(0)->GetPolyhedron();
       else 
         polyhedron = _mBody->GetBody(0)->GetWorldPolyhedron();
-      GMSPolygon *poly = &polyhedron.polygonList[(int)(DRand()*polyhedron.polygonList.size())];
+      GMSPolygon *poly = &polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
       Vector3D p, q, r;
-      p = polyhedron.vertexList[poly->vertexList[0]];
-      q = polyhedron.vertexList[poly->vertexList[1]];
-      r = polyhedron.vertexList[poly->vertexList[2]];
+      p = polyhedron.m_vertexList[poly->m_vertexList[0]];
+      q = polyhedron.m_vertexList[poly->m_vertexList[1]];
+      r = polyhedron.m_vertexList[poly->m_vertexList[2]];
       Vector3D x;
       x = ChoosePointOnTriangle(p, q, r);
       CFG tmp;
@@ -294,35 +294,35 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       for(int j = 0 ; j < 6 ; j++)
         indexVert[j] = 0;
 
-      for(size_t i = 1 ; i < polyhedron.vertexList.size() ; i++) {
+      for(size_t i = 1 ; i < polyhedron.m_vertexList.size() ; i++) {
         //MAX X
-        if(polyhedron.vertexList[i][0] < polyhedron.vertexList[indexVert[0]][0])
+        if(polyhedron.m_vertexList[i][0] < polyhedron.m_vertexList[indexVert[0]][0])
           indexVert[0] = i;
 
         //MIN X
-        if(polyhedron.vertexList[i][0] > polyhedron.vertexList[indexVert[1]][0])
+        if(polyhedron.m_vertexList[i][0] > polyhedron.m_vertexList[indexVert[1]][0])
           indexVert[1] = i;
 
         //MAX Y
-        if(polyhedron.vertexList[i][1] < polyhedron.vertexList[indexVert[2]][1])
+        if(polyhedron.m_vertexList[i][1] < polyhedron.m_vertexList[indexVert[2]][1])
           indexVert[2] = i;
 
         //MIN Y
-        if(polyhedron.vertexList[i][1] > polyhedron.vertexList[indexVert[3]][1])
+        if(polyhedron.m_vertexList[i][1] > polyhedron.m_vertexList[indexVert[3]][1])
           indexVert[3] = i;
 
         //MAX Z
-        if(polyhedron.vertexList[i][2] < polyhedron.vertexList[indexVert[4]][2])
+        if(polyhedron.m_vertexList[i][2] < polyhedron.m_vertexList[indexVert[4]][2])
           indexVert[4] = i;
 
         //<MIN Z
-        if(polyhedron.vertexList[i][2] > polyhedron.vertexList[indexVert[5]][2])
+        if(polyhedron.m_vertexList[i][2] > polyhedron.m_vertexList[indexVert[5]][2])
           indexVert[5] = i;
       }
 
       // Choose an extreme random vertex at random
       int index = LRand() % 6;
-      Vector3D x= polyhedron.vertexList[indexVert[index]];
+      Vector3D x= polyhedron.m_vertexList[indexVert[index]];
       CFG tmp;
       for(int i=0;i<3;i++)
         tmp.SetSingleParam(i, x[i]);
