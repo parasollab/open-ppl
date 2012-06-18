@@ -107,7 +107,7 @@ void TogglePRMStrategy::Run(int in_RegionID){
 
   bool done=false;
 
-  while(!EvaluateMap(in_RegionID)&&!done){
+  while(!EvaluateMap(in_RegionID, m_EvaluatorLabels)&&!done){
     m_CurrentIteration++;
     cout << "\ngenerating nodes: ";
     GenerateNodes(region, 
@@ -117,7 +117,7 @@ void TogglePRMStrategy::Run(int in_RegionID){
         back_insert_iterator<vector<VID> >(thisIterationCollisionNodesVID),
         queue);
 
-    while(!EvaluateMap(in_RegionID) && queue.size()>0 && !done){
+    while(!EvaluateMap(in_RegionID, m_EvaluatorLabels) && queue.size()>0 && !done){
       //if(region->GetRoadmap()->m_pRoadmap->get_num_vertices()+
         //region->GetBlockRoadmap()->m_pRoadmap->get_num_vertices()>=1000){done=true;continue;}
       pair<string, CfgType> p = queue.front();
@@ -317,39 +317,4 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
   pStatClass->StopPrintClock(clockName.str(), cout);
 }
 
-bool TogglePRMStrategy::EvaluateMap(int in_RegionID)
-{
-  bool mapPassedEvaluation = false;
-  if(!m_EvaluatorLabels.empty()){
-    stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation";
-   StatClass* stats = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
-   stats->StartClock(clockName.str());
-
-    mapPassedEvaluation = true;
-    for(vector<string>::iterator I = m_EvaluatorLabels.begin(); I != m_EvaluatorLabels.end(); ++I){
-      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr pEvaluator;
-      pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      stringstream evaluatorClockName; 
-      evaluatorClockName << "Iteration " << m_CurrentIteration << ", " << pEvaluator->GetName();
-      stats->StartClock(evaluatorClockName.str());
-
-      cout << "\n\t";
-      mapPassedEvaluation = pEvaluator->operator()(in_RegionID);
-
-      cout << "\t";
-      stats->StopPrintClock(evaluatorClockName.str(), cout);
-      if(mapPassedEvaluation){
-        return true;
-        cout << "\t  (passed)\n";
-      }
-      else
-        cout << "\t  (failed)\n";
-      //if(!mapPassedEvaluation)
-        //break;
-    }
-    stats->StopPrintClock(clockName.str(), cout);
-  }
-  else{mapPassedEvaluation=true;}//avoid the infinite loop
-  return mapPassedEvaluation;
-}
 

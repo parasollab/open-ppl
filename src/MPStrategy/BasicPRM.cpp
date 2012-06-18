@@ -197,7 +197,7 @@ void BasicPRM::Run(int _regionID){
     }
     if(m_startAt <= MAP_EVALUATION) {
       if (m_debug) cout << "\nevaluating roadmap: ";
-      mapPassedEvaluation = EvaluateMap(_regionID);
+      mapPassedEvaluation = EvaluateMap(_regionID,m_evaluatorLabels);
     }
     m_startAt = NODE_GENERATION;
   }
@@ -301,46 +301,6 @@ void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
   }
    stats->StopClock(clockName);
   if(m_debug) stats->PrintClock(clockName, cout);
-}
-
-
-bool BasicPRM::EvaluateMap(int _regionID)
-{
-  bool mapPassedEvaluation = false;
-  if(!m_evaluatorLabels.empty()){
-    StatClass* stats = GetMPProblem()->GetMPRegion(_regionID)->GetStatClass();
-    string clockName = "Total Evaluation Time";
-    stats->StartClock(clockName);
-
-    mapPassedEvaluation = true;
-    for(vector<string>::iterator I = m_evaluatorLabels.begin(); 
-        I != m_evaluatorLabels.end(); ++I){
-      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr pEvaluator;
-      pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-
-      string evaluatorClockName = "Evaluator::" + pEvaluator->GetName();
-      stats->StartClock(evaluatorClockName);
-
-      if(m_debug) cout << "\n\t";
-      mapPassedEvaluation = pEvaluator->operator()(_regionID);
-
-      if(m_debug) cout << "\t";
-      stats->StopClock(evaluatorClockName);
-      if(m_debug) stats->PrintClock(evaluatorClockName, cout);
-      if(mapPassedEvaluation){
-        if (m_debug) cout << "\t  (passed)\n";
-      }
-      else {
-        if (m_debug) cout << "\t  (failed)\n";
-      }
-      if(!mapPassedEvaluation)
-        break;
-    }
-    stats->StopClock(clockName);
-    if(m_debug) stats->PrintClock(clockName, cout);
-  }
-  else{mapPassedEvaluation=true;}//avoid the infinite loop
-  return mapPassedEvaluation;
 }
 
 string BasicPRM::PickNextSampler(){

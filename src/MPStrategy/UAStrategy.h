@@ -64,8 +64,6 @@ class UAStrategy : public MPStrategyMethod {
    vector<Partition*> GetPartitions();
    vector<vector<VID>* > GetPartitionsVID();
    void EvaluatePartitions();
-   bool EvaluateMap(int in_RegionID);
-   
    void WriteRegionsSeparate();
 
  private:

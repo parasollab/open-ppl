@@ -96,7 +96,7 @@ void UAStrategy::Run(int in_RegionID){
       //restore bounding box values
       RestoreBB();
 
-      mapPassedEvaluation = EvaluateMap(in_RegionID); 
+      mapPassedEvaluation = EvaluateMap(in_RegionID, m_EvaluatorLabels); 
    } 
 
    //finalize the region solvers
@@ -560,42 +560,6 @@ vector<vector<VID>* > UAStrategy::GetPartitionsVID(){
 void UAStrategy::EvaluatePartitions(){   
    string filename=GetBaseFilename()+".partitions";
    vector<vector<double> > eval=GetMPProblem()->GetMPStrategy()->GetPartitioningEvaluators()->Evaluate(filename, GetPartitions());
-}
-
-bool UAStrategy::EvaluateMap(int in_RegionID){
-   bool mapPassedEvaluation = false;
-   if(!m_EvaluatorLabels.empty()){
-     // Stat_Class EvalClock;
-      stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation";
-      StatClass* stats = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
-      stats->StartClock(clockName.str());
-      
-      mapPassedEvaluation = true;
-      for(vector<string>::iterator I = m_EvaluatorLabels.begin(); 
-          I != m_EvaluatorLabels.end(); ++I){
-         MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr pEvaluator;
-         pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-         stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_CurrentIteration << ", " << pEvaluator->GetName();
-         stats->StartClock(evaluatorClockName.str());
-         
-         cout << "\n\t";
-         mapPassedEvaluation = pEvaluator->operator()(in_RegionID);
-         
-         cout << "\t";
-         stats->StopPrintClock(evaluatorClockName.str(), cout);
-         if(mapPassedEvaluation){
-            cout << "\t  (passed)\n";
-            return true;
-         }
-         else
-            cout << "\t  (failed)\n";
-         //if(!mapPassedEvaluation)
-            //break;
-      }
-      stats->StopPrintClock(clockName.str(), cout);
-   }
-   else{mapPassedEvaluation=true;}//avoid the infinite loop
-   return mapPassedEvaluation;
 }
 
 void UAStrategy::WriteRegionsSeparate(){

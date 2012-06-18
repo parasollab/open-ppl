@@ -1,5 +1,5 @@
-#ifndef MPSTRATEGYMETHOD_H
-#define MPSTRATEGYMETHOD_H
+#ifndef MPSTRATEGYMETHOD_H_
+#define MPSTRATEGYMETHOD_H_
 
 #include "MetricUtils.h"
 #include "CfgTypes.h"
@@ -33,6 +33,8 @@ class MPStrategyMethod : public MPBaseObject {
     void SetBoundary(shared_ptr<BoundingBox> bb){m_boundary=bb;};
     long GetBaseSeed() {return m_baseSeed;} 
 
+    bool EvaluateMap(int _regionID, vector<string> _evaluators);
+  
   protected:
     typedef RoadmapGraph<CfgType, WeightType>::GRAPH GRAPH;
     typedef RoadmapGraph<CfgType, WeightType>::VID VID; 

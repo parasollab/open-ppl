@@ -1,11 +1,8 @@
-/**
- * BasicRRTStrategy.cpp
- *
- * Description: Main RRT Strategy, contains RRT method used in RRTconnect
- *
- * Author: Kasra Manavi
- * Last Edited: 04/08/2011
- */
+//////////////////////////
+//BasicRRTStrategy cpp file
+//
+//Description: Main RRt Strategy, contain RRT method used in RRTconnect
+/////////////////////////
 
 #include "BasicRRTStrategy.h"
 #include "MPProblem.h"
@@ -14,6 +11,9 @@
 #include "MapEvaluator.h"
 #include "Sampler.h"
 
+///////////////////////
+//Constructors
+//////////////////////
 BasicRRTStrategy::BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem, bool _warnXML) :
   MPStrategyMethod(_node, _problem), m_currentIteration(0){
     ParseXML(_node);
@@ -61,6 +61,9 @@ void BasicRRTStrategy::PrintOptions(ostream& _os) {
   _os << "\tgrowth focus:: " << m_growthFocus << endl;
 }
 
+//////////////////////
+//Initialization Phase
+/////////////////////
 void 
 BasicRRTStrategy::Initialize(int _regionID){
   if(m_debug) cout<<"\nInitializing BasicRRTStrategy::"<<_regionID<<endl;
@@ -106,6 +109,9 @@ BasicRRTStrategy::Initialize(int _regionID){
   if(m_debug) cout<<"\nEnding Initializing BasicRRTStrategy"<<endl;
 }
 
+////////////////
+//Run/Start Phase
+////////////////
 void BasicRRTStrategy::Run(int _regionID) {
   if(m_debug) cout << "\nRunning BasicRRTStrategy::" << _regionID << endl;
 
@@ -135,8 +141,9 @@ void BasicRRTStrategy::Run(int _regionID) {
       //see if tree is connected to goals
       EvaluateGoals(_regionID);
     }
+    
     //evaluate the roadmap
-    mapPassedEvaluation = EvaluateMap(_regionID);
+    mapPassedEvaluation = EvaluateMap(_regionID, m_evaluators);
 
     if(m_goalsNotFound.size()==0){
       if(m_debug) cout << "RRT FOUND ALL GOALS" << endl;
@@ -151,7 +158,9 @@ void BasicRRTStrategy::Run(int _regionID) {
   }
 }
 
-
+/////////////////////
+//Finalization phase
+////////////////////
 void BasicRRTStrategy::Finalize(int _regionID) {
  
   if(m_debug) cout<<"\nFinalizing BasicRRTStrategy::"<<_regionID<<endl;
@@ -177,6 +186,7 @@ void BasicRRTStrategy::Finalize(int _regionID) {
 
   if(m_debug) cout<<"\nEnd Finalizing BasicRRTStrategy"<<_regionID<<endl;
 }
+
 
 CfgType
 BasicRRTStrategy::GoalBiasedDirection(int _regionID){
@@ -314,45 +324,6 @@ BasicRRTStrategy::EvaluateGoals(int _regionID){
       i--;
     }
   }
-}
-
-bool 
-BasicRRTStrategy::EvaluateMap(int _regionID) {
-  if (m_evaluators.empty()) {
-    return true;
-  }
-  else{
-    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-    StatClass* stats = region->GetStatClass();
-
-    bool mapPassedEvaluation = false;
-    stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Map Evaluation"; 
-    stats->StartClock(clockName.str());
-    mapPassedEvaluation = true;
-
-    for (vector<string>::iterator I = m_evaluators.begin(); I != m_evaluators.end(); ++I) {
-      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr evaluator;
-      evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      stringstream evaluatorClockName; evaluatorClockName << "Iteration " << m_currentIteration << ", " << evaluator->GetName();
-      stats->StartClock(evaluatorClockName.str());
-      if(m_debug) cout << "\n\t";
-      mapPassedEvaluation = evaluator->operator()(_regionID);
-      if(m_debug) cout << "\t";
-      stats->StopClock(evaluatorClockName.str());
-      if(m_debug) stats->PrintClock(evaluatorClockName.str(), cout);
-      if(mapPassedEvaluation){
-        if(m_debug) cout << "\t  (passed)\n";
-      }
-      else{
-        if(m_debug) cout << "\t  (failed)\n";
-      }
-      if(!mapPassedEvaluation)
-        break;
-    }
-    stats->StopClock(clockName.str());
-    if(m_debug) stats->PrintClock(clockName.str(), cout);
-    return mapPassedEvaluation;
-  } 
 }
 
 RoadmapClearanceStats 

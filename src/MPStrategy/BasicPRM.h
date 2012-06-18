@@ -45,7 +45,6 @@ class BasicPRM : public MPStrategyMethod
    //helper functions for operator()
    void ConnectNodes(MPRegion<CfgType, WeightType>* _region, vector<VID>& _allNodesVID, vector<VID>& _thisIterationNodesVID);
    void ConnectComponents(MPRegion<CfgType, WeightType>* _region);
-   bool EvaluateMap(int _regionID);
 
    //data
    map<string, pair<int, int> > m_nodeGenerationLabels;

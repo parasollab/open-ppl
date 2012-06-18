@@ -32,7 +32,6 @@ class MARRTStrategy : public MPStrategyMethod {
   protected:
     // Helper functions
     void ConnectComponents(int _regionID);
-    bool EvaluateMap(int _regionID);
     RoadmapClearanceStats PathClearance(int _regionID);
   private:
     bool m_queryFound;

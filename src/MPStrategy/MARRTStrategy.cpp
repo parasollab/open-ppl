@@ -216,7 +216,7 @@ void MARRTStrategy::Run(int _regionID) {
     }
 
     ConnectComponents(_regionID);
-    mapPassedEvaluation = EvaluateMap(_regionID);
+    mapPassedEvaluation = EvaluateMap(_regionID, m_evaluators);
 
     // Check if goals have been found
     bool done = true;
@@ -321,45 +321,6 @@ void MARRTStrategy::ConnectComponents(int _regionID) {
   }
   stats->StopClock(clockName);
   if(m_debug) stats->PrintClock(clockName, cout);
-}
-
-bool MARRTStrategy::EvaluateMap(int _regionID) {
-  if (m_evaluators.empty()) {
-    return true;
-  }
-  else{
-    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-    StatClass* stats = region->GetStatClass();
-    bool mapPassedEvaluation = false;
-    ClockClass evalClock;
-    string clockName = "Map Evaluation"; 
-    stats->StartClock(clockName);
-    mapPassedEvaluation = true;
-
-    for (vector<string>::iterator I = m_evaluators.begin(); I != m_evaluators.end(); ++I) {
-      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr evaluator;
-      evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      ClockClass evalSubClock;
-      string evaluatorClockName = evaluator->GetName();
-      stats->StartClock(evaluatorClockName);
-      if(m_debug) cout << "\n\t";
-      mapPassedEvaluation = evaluator->operator()(_regionID);
-      if(m_debug) cout << "\t";
-      stats->StopClock(evaluatorClockName);
-      if(m_debug) stats->PrintClock(evaluatorClockName, cout);
-      if(mapPassedEvaluation){
-        if(m_debug) cout << "\t  (passed)\n";
-      }
-      else{
-        if(m_debug) cout << "\t  (failed)\n";
-      }
-      if(!mapPassedEvaluation)
-        break;
-    }
-    stats->StopClock(clockName);
-    if(m_debug) stats->PrintClock(clockName, cout);
-    return mapPassedEvaluation;
-  } 
 }
 
 RoadmapClearanceStats 

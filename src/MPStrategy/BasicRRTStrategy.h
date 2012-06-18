@@ -1,14 +1,9 @@
-/**
- * BasicRRTStrategy.h
- * 
- * Description: RRT Strategy header file
- *
- * Author: Kasra Manavi
- * Last Edited: 04/04/2011
- */
+/////////////////////////
+//Class BasicRRTStrategy
+////////////////////////
 
-#ifndef BasicRRTStrategy_h
-#define BasicRRTStrategy_h
+#ifndef BASICRRTSTRATEGY_H_
+#define BASICRRTSTRATEGY_H_
 
 #include "IOUtils.h"
 #include "MetricUtils.h"
@@ -19,6 +14,10 @@ template<typename CFG, typename WEIGHT> class MPRegion;
 
 class BasicRRTStrategy : public MPStrategyMethod {
   public:
+    
+    ////////////////
+    //Constructors
+    ///////////////
     BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem, bool _warnXML = true);
     virtual ~BasicRRTStrategy() {}
     
@@ -36,7 +35,6 @@ class BasicRRTStrategy : public MPStrategyMethod {
     virtual VID ExpandTree(int _regionID, CfgType& _dir);
     void ConnectTrees(int _regionID, VID _recentlyGrown);
     void EvaluateGoals(int _regionID);
-    bool EvaluateMap(int _regionID);
     RoadmapClearanceStats PathClearance(int _regionID);  
     vector<string> m_evaluators;
     string m_sampler;

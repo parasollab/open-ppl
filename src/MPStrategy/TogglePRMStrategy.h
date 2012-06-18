@@ -23,7 +23,6 @@ class TogglePRMStrategy : public MPStrategyMethod
    //helper functions for operator()
    void Connect(MPRegion<CfgType, WeightType>* region, pair<string, VID> vid, vector<VID>& allVID, vector<VID>& allNodesVID,
           vector<VID>& allCollisionNodesVID, deque<pair<string, CfgType> >& queue);
-   bool EvaluateMap(int in_RegionID);
 
    //data
    map<string, pair<int,int> > m_NodeGenerationLabels;
