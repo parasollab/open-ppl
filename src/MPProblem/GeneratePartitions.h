@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 /**@file GeneratePartitions.h
   *This set of classes supports Partitioning of Bounding Box into pieces.
   *Generate Partitions from existing bounding box.
@@ -180,7 +180,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
   int partition_par;
   double partition_point;
   vector<BoundingBox> subregions;
-  double r_radius = _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().maxRadius;
+  double r_radius = _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().m_maxRadius;
   bool done = false;
   for (int i = 0; !done && i < tries; i++) {
     partition_par = 2;//lrand48()%dims; Just for tests (fix later)
@@ -294,7 +294,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 		vector<CFG>& coll_nodes) {
   BoundingBox *boundingBox = _env->GetBoundingBox();
   double r_radius = 
-    _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().maxRadius;
+    _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().m_maxRadius;
 
 
   if(this->dims==-1)
@@ -745,7 +745,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
   double partition_point;
   double epsilon_save;
   double r_radius = 
-    _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().maxRadius;
+    _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().m_maxRadius;
   for(int i=0; i< ppoints_info_gain.size(); i++) {
     if( i < 3 ) 
       this->epsilon = r_radius;
@@ -784,7 +784,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
     //Environment * env = _rm->GetEnvironment();
     //vector<double> ndboundingBox = env->GetNDBoundingBox(0);
     r_radius = 
-      _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().maxRadius;
+      _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().m_maxRadius;
     int x;
     x = boundingBox->GetDOFs();
     cout << " radius of robot: " << r_radius << endl;

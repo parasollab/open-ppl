@@ -253,7 +253,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   GMSPolyhedron& link1_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link1->GetID())->GetWorldPolyhedron();
   Vector3D joint1; //end of link1_poly
   for(int i=0; i<4; ++i) 
-    joint1 = joint1 + link1_poly.vertexList[i];
+    joint1 = joint1 + link1_poly.m_vertexList[i];
   joint1 = joint1 / 4;
   //cout << "\t\tjoint1 = " << joint1 << endl;
 
@@ -261,7 +261,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   GMSPolyhedron& link2_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link2->GetID())->GetWorldPolyhedron();
   Vector3D end_link2; //end of link2_poly
   for(int i=0; i<4; ++i) 
-    end_link2 = end_link2 + link2_poly.vertexList[i];
+    end_link2 = end_link2 + link2_poly.m_vertexList[i];
   end_link2 = end_link2 / 4;
   //cout << "\t\tend_link2 = " << end_link2 << endl;
 */
@@ -278,7 +278,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   GMSPolyhedron& link3_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link3_id)->GetWorldPolyhedron();
   Vector3D end_link3; //end of link3_poly
   for(int i=0; i<4; ++i) 
-    end_link3 = end_link3 + link3_poly.vertexList[i];
+    end_link3 = end_link3 + link3_poly.m_vertexList[i];
   end_link3 = end_link3 / 4;
   //cout << "\t\tend_link3 = " << end_link3 << endl;
 
@@ -298,7 +298,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   GMSPolyhedron& link4_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link4_id)->GetWorldPolyhedron();
   Vector3D joint2; //start of link4_poly
   for(int i=4; i<8; ++i) 
-    joint2 = joint2 + link4_poly.vertexList[i];
+    joint2 = joint2 + link4_poly.m_vertexList[i];
   joint2 = joint2 / 4;
   //cout << "\t\tjoint2 = " << joint2 << endl;
 
@@ -687,12 +687,12 @@ void ClosedChainProblem::PrintEarJointCoords(Environment* env, Link* ear_root)
 
     Vector3D endpoint2;
     for(int i=0; i<4; ++i)
-      endpoint2 = endpoint2 + link_poly.vertexList[i];
+      endpoint2 = endpoint2 + link_poly.m_vertexList[i];
     endpoint2 = endpoint2 / 4;
 
     Vector3D endpoint1;
     for(int i=4; i<8; ++i)
-      endpoint1 = endpoint1 + link_poly.vertexList[i];
+      endpoint1 = endpoint1 + link_poly.m_vertexList[i];
     endpoint1 = endpoint1 / 4;
 
     cout << "\tendpoints of link " << *L << ":\t" << endpoint1 << "\t" << endpoint2 << endl;

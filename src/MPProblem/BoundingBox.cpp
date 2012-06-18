@@ -248,8 +248,8 @@ bool BoundingBox::InBoundary(const Cfg& _cfg, Environment* _env = NULL ){
       GMSPolyhedron &bb_poly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
       
       bool bbox_check = true;
-      for(vector<Vector3D>::const_iterator V = bb_poly.vertexList.begin(); V !=
-          bb_poly.vertexList.end(); ++V){
+      for(vector<Vector3D>::const_iterator V = bb_poly.m_vertexList.begin(); V !=
+          bb_poly.m_vertexList.end(); ++V){
 	if(!IfSatisfiesConstraints(worldTransformation * (*V))) {
 	  bbox_check = false;
 	  break;
@@ -259,8 +259,8 @@ bool BoundingBox::InBoundary(const Cfg& _cfg, Environment* _env = NULL ){
 	continue;
       
       GMSPolyhedron &poly = robot->GetFreeBody(m)->GetPolyhedron();
-      for(vector<Vector3D>::const_iterator V = poly.vertexList.begin(); V !=
-          poly.vertexList.end(); ++V){
+      for(vector<Vector3D>::const_iterator V = poly.m_vertexList.begin(); V !=
+          poly.m_vertexList.end(); ++V){
         if(!IfSatisfiesConstraints(worldTransformation * (*V)))
           return false;      
       }
