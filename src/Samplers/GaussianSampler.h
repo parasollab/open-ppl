@@ -23,10 +23,6 @@ class GaussianSampler : public SamplerMethod<CFG>
         if(m_d == 0){
           if(_env != NULL)
             m_d = (_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange();
-          else{
-            cerr << "Error::Environment set to NULL in Gaussian Non-XML constructor. Exiting." << endl;
-            exit(1);
-          }
         }
         if(this->m_debug)
           PrintOptions(cout); 
