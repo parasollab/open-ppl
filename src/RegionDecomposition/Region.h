@@ -40,10 +40,10 @@ class Region {
     std::vector<VID> GetCCVIDs() const; 
     //returns the vid of cc representative and size of cc for all CCs in the
     //region
-    std::vector<pair<VID, size_t> >& GetCCs() const; 
+    const std::vector<pair<VID, size_t> >& GetCCs() const; 
     void SetCCs(std::vector<pair<VID, size_t> >& _ccs);
 
-    std::vector<VID>& RegionVIDs() const;
+    const std::vector<VID>& RegionVIDs() const;
     void SetVIDs(std::vector<VID>& _ids);
     
     //number of valid nodes in a region, needed for region migration

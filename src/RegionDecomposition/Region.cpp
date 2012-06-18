@@ -33,7 +33,7 @@ Region::GetBoundingBox() const{
   return m_bb;
 }
 
-std::vector<pair<VID, size_t> >& 
+const std::vector<pair<VID, size_t> >& 
 Region::GetCCs() const{
   return m_ccs;
 }
@@ -44,7 +44,7 @@ Region::GetRegionInfo() const{
   return infoPair;
 }
 
-std::vector<VID>&
+const std::vector<VID>&
 Region::RegionVIDs() const {
   return m_vids;
 }
