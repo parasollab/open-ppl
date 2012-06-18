@@ -18,7 +18,7 @@
 template <class CFG, class WEIGHT>
 class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
   public:
-    AStar(string m_vcMethod = "", size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5);
+    AStar(string _vcMethod = "", size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5);
     AStar(XMLNodeReader& _node, MPProblem* _problem, bool _warnUnrequestedXML = false);
     virtual ~AStar();
 
@@ -26,19 +26,23 @@ class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm,
         const CFG& _c1, const CFG& _c2, CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
-        double _positionRes, double _orientationRes, bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
+        double _positionRes, double _orientationRes, bool _checkCollision = true, 
+        bool _savePath = false, bool _saveFailedPath = false);
 
     virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
-        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes) {
+        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, 
+        double _posRes, double _oriRes) {
       vector<CFG> tmp = _intermediates;
       return tmp;
     }
+
   protected:
     bool SetLPOutputFail(const CFG& _c, const CFG& _p, LPOutput<CFG, WEIGHT>* _lpOutput, string _debugMsg);
 
     virtual bool IsConnectedOneWay(Environment* _env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm,
         const CFG& _c1, const CFG& _c2, CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
-        double _positionRes, double _orientationRes, bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
+        double _positionRes, double _orientationRes, bool _checkCollision = true, 
+        bool _savePath = false, bool _saveFailedPath = false);
 
     virtual size_t ChooseOptimalNeighbor(Environment* _env, StatClass& _stats,
         CFG& _col, shared_ptr<DistanceMetricMethod> _dm,
@@ -96,6 +100,7 @@ AStar<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats, shared_ptr<
 
   connected = IsConnectedOneWay(_env, _stats, _dm, _c1, _c2,_col, _lpOutput,
       _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+
   if (!connected) { //try the other way
     connected = IsConnectedOneWay(_env, _stats, _dm, _c2, _c1,_col, _lpOutput,
         _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
@@ -160,6 +165,7 @@ AStar<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, share
 
     //find neighbors
     neighbors = FindNeighbors(_env, _stats, p, _c2, incr);    
+    
     //neighbors all in collision
     if (neighbors.size()==0) {
       connected = SetLPOutputFail(_c1, p, _lpOutput, "Found 0 Neighbors");
@@ -169,7 +175,7 @@ AStar<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, share
     //choose the optimal neighbor. Pure virtual function.
     p = neighbors[ChooseOptimalNeighbor(_env, _stats,_col, _dm, _c1, _c2, neighbors)];
     neighbors.clear();
-    
+
     //chose new p so we need to detect cycles
     bool hasCycle = false;
     for(typename deque<CFG>::iterator cit = hist.begin(); cit!=hist.end(); cit++){
@@ -218,7 +224,7 @@ AStar<CFG, WEIGHT>::FindNeighbors(Environment* _env, StatClass& _stats, const CF
   CDInfo cdInfo;
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
-  /////////////////////////////////////////////////////////////////////
+  
   //Push 2 cfgs into neighbors whose position or orientation is the same 
   //as _increment
   CFG tmp = _increment;
@@ -382,7 +388,7 @@ AStarClearance<CFG, WEIGHT>::ChooseOptimalNeighbor(Environment* _env, StatClass&
   CfgType tmp;
   for(size_t i = 0; i < _neighbors.size(); i++) {
     GetApproxCollisionInfo(mp,_neighbors[i],tmp,_env,_stats,tmpInfo,this->m_vcMethod,
-                           _dm->GetLabel(), m_penetration, m_penetration, true, true);
+        _dm->GetLabel(), m_penetration, m_penetration, true, true);
 
     value = tmpInfo.min_dist;
     if (value > maxClearance) {

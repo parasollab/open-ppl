@@ -1,11 +1,10 @@
 /**
  * StraightLine.h
+ *
  * This class performs straight line local planning which is used by a variety of computations,
  * including other local planners.
- *
- * Last Updated : 1/18/12
- * Update Author: Aditya Mahadevan
  */
+
 #ifndef STRAIGHTLINE_H_
 #define STRAIGHTLINE_H_
 
@@ -18,12 +17,12 @@ template <class CFG, class WEIGHT>
 class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
   public:
 
-    /** @name Constructors and Destructor */
-    // @{
+    //////////////////////////////
+    //Constructors and Destructor 
+    //////////////////////////////
     StraightLine(string _vcMethod = "", bool _search = false);
     StraightLine(XMLNodeReader& _node, MPProblem* _problem);
     virtual ~StraightLine();
-    // @}
 
     virtual void PrintOptions(ostream& _os);
 
@@ -31,13 +30,13 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
      * Check if two Cfgs could be connected by straight line.
      */
     // Wrapper function to call appropriate impl IsConnectedFunc based on CFG type
-    virtual bool IsConnected(Environment *_env, StatClass& _stats,
-        shared_ptr<DistanceMetricMethod >_dm,
-        const CFG &_c1, const CFG &_c2, CFG &_col, 
+    virtual bool IsConnected(Environment* _env, StatClass& _stats,
+        shared_ptr<DistanceMetricMethod>_dm,
+        const CFG& _c1, const CFG& _c2, CFG& _col, 
         LPOutput<CFG, WEIGHT>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision=true, 
-        bool _savePath=false, bool _saveFailedPath=false) {
+        bool _checkCollision = true, 
+        bool _savePath = false, bool _saveFailedPath = false) {
       //clear lpOutput
       _lpOutput->Clear();
       bool connected = IsConnectedFunc<CFG>(_env, _stats, _dm, _c1, _c2, _col,
@@ -47,28 +46,28 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
         _lpOutput->SetLPLabel(this->GetLabel());
       return connected;
     }
-    
+
     // Default for non closed chains
     template <typename Enable>
-      bool IsConnectedFunc(Environment *_env, StatClass& _stats,
-          shared_ptr<DistanceMetricMethod >_dm,
-          const CFG &_c1, const CFG &_c2, CFG &_col,
+      bool IsConnectedFunc(Environment* _env, StatClass& _stats,
+          shared_ptr<DistanceMetricMethod>_dm,
+          const CFG& _c1, const CFG& _c2, CFG& _col,
           LPOutput<CFG, WEIGHT>* _lpOutput,
           double _positionRes, double _orientationRes,
-          bool _checkCollision=true, 
-          bool _savePath=false, bool _saveFailedPath=false,
+          bool _checkCollision = true, 
+          bool _savePath = false, bool _saveFailedPath = false,
           typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy = 0
           );
-    
+
     // Specialization for closed chains
     template <typename Enable>
-      bool IsConnectedFunc(Environment *_env, StatClass& _stats,
+      bool IsConnectedFunc(Environment* _env, StatClass& _stats,
           shared_ptr<DistanceMetricMethod>_dm, 
-          const CFG &_c1, const CFG &_c2, CFG &_col,
+          const CFG& _c1, const CFG& _c2, CFG& _col,
           LPOutput<CFG, WEIGHT>* _lpOutput,
           double _positionRes, double _orientationRes,
-          bool _checkCollision=true, 
-          bool _savePath=false, bool _saveFailedPath=false,
+          bool _checkCollision = true, 
+          bool _savePath = false, bool _saveFailedPath = false,
           typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0
           );
 
@@ -81,43 +80,28 @@ class StraightLine: public LocalPlannerMethod<CFG, WEIGHT> {
      * by checking collision of each Cfg along the line.
      * If the is any Cfg causes Robot collides with any obstacle,
      * false will be returned.
-     *
-     * @note if usingClearance is true, then the call will
-     *       be redirect to IsConnected_SLclearance
-     *
-     * @param env Used for isCollision
-     * @param dm Used for IsConnected_SLclearance
-     * @param _c1 start Cfg
-     * @param _c2 goal Cfg
-     * @param _lp Used for IsConnected_SLclearance 
-     * @param lpOutput Used to record path information, such as length of path...
-     *
-     * @return true if all Cfg are collision free.
-     * @see IsConnected_straightline and Cfg::FindIncrement.
      */
     virtual bool 
-      IsConnectedSLSequential(Environment *_env, StatClass& _stats,
-          shared_ptr<DistanceMetricMethod > _dm, 
-          const CFG &_c1, const CFG &_c2, CFG &_col,
-          LPOutput<CFG,WEIGHT>* _lpOutput, int &_cdCounter,
+      IsConnectedSLSequential(Environment* _env, StatClass& _stats,
+          shared_ptr<DistanceMetricMethod> _dm, 
+          const CFG& _c1, const CFG& _c2, CFG& _col,
+          LPOutput<CFG,WEIGHT>* _lpOutput, int& _cdCounter,
           double _positionRes, double _orientationRes,
-          bool _checkCollision=true, 
-          bool _savePath=false, bool _saveFailedPath=false);
+          bool _checkCollision = true, 
+          bool _savePath = false, bool _saveFailedPath = false);
 
     /**
-     * Check if two Cfgs could be connected by straight line with certain cleanrance.
+     * Check if two Cfgs could be connected by straight line 
      * This method uses binary search to check clearances of Cfgs between _c1 and 
      * _c2. If any Cfg with clearance less than 0.001 was found, false will be returned.
-     *
-     * @return true if no Cfg whose cleanrance is less than 0.001. Otherwise, false will be returned.
      */
     virtual bool 
-      IsConnectedSLBinary(Environment *_env, StatClass& _stats, 
-          shared_ptr<DistanceMetricMethod> _dm, const CFG &_c1, const CFG &_c2, 
-          CFG &_col, LPOutput<CFG,WEIGHT>* _lpOutput, int &_cdCounter,
+      IsConnectedSLBinary(Environment* _env, StatClass& _stats, 
+          shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, 
+          CFG& _col, LPOutput<CFG,WEIGHT>* _lpOutput, int& _cdCounter,
           double _positionRes, double _orientationRes,  
-          bool _checkCollision=true, 
-          bool _savePath=false, bool _saveFailedPath=false);
+          bool _checkCollision = true, 
+          bool _savePath = false, bool _saveFailedPath = false);
 
     int m_binarySearch;
 };
@@ -135,18 +119,18 @@ StraightLine<CFG, WEIGHT>::StraightLine(string _vcMethod, bool _search) :
   }
 
 template <class CFG, class WEIGHT>
-StraightLine<CFG, WEIGHT>::
-StraightLine(XMLNodeReader& _node, MPProblem* _problem) :
-LocalPlannerMethod<CFG, WEIGHT>(_node,_problem) {
-  this->SetName("StraightLine");
-  m_binarySearch = _node.numberXMLParameter("binary_search", false, 0, 0, 1, "binary search"); 
-  m_vcMethod = _node.stringXMLParameter("vc_method", false, "", "Validity Test Method");
-}
+StraightLine<CFG, WEIGHT>::StraightLine(XMLNodeReader& _node, MPProblem* _problem) :
+  LocalPlannerMethod<CFG, WEIGHT>(_node,_problem) {
+    this->SetName("StraightLine");
+    m_binarySearch = _node.numberXMLParameter("binary_search", false, 0, 0, 1, "binary search"); 
+    m_vcMethod = _node.stringXMLParameter("vc_method", false, "", "Validity Test Method");
+  }
 
 template <class CFG, class WEIGHT> 
 StraightLine<CFG, WEIGHT>::~StraightLine() { }
 
-template <class CFG, class WEIGHT> void
+template <class CFG, class WEIGHT> 
+void
 StraightLine<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << "    " << this->GetName() << "::  ";
   _os << "binary search = " << " " << m_binarySearch << " ";
@@ -158,10 +142,9 @@ StraightLine<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 template <class CFG, class WEIGHT>
 template <typename Enable>
 bool 
-StraightLine<CFG, WEIGHT>::
-IsConnectedFunc(Environment *_env, StatClass& _stats,
-    shared_ptr<DistanceMetricMethod >_dm, const CFG &_c1, const CFG &_c2, 
-    CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
+StraightLine<CFG, WEIGHT>::IsConnectedFunc(Environment* _env, StatClass& _stats,
+    shared_ptr<DistanceMetricMethod >_dm, const CFG& _c1, const CFG& _c2, 
+    CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, 
     bool _savePath, bool _saveFailedPath,
@@ -169,9 +152,6 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
 
   _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0; 
-
-  ///\todo fix this bug ... CD count not right.
-  ///\todo fix lineSegment implementation!  very poor for counting stats, etc.
 
   bool connected;
   if(m_binarySearch) 
@@ -187,7 +167,7 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
   if(connected)
     _stats.IncLPConnections(this->GetNameAndLabel());
 
-  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter );
+  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
   return connected;
 }
 
@@ -197,9 +177,9 @@ template <class CFG, class WEIGHT>
 template <typename Enable>
 bool 
 StraightLine<CFG, WEIGHT>::
-IsConnectedFunc(Environment *_env, StatClass& _stats,
-    shared_ptr<DistanceMetricMethod > _dm, const CFG &_c1, const CFG &_c2, 
-    CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
+IsConnectedFunc(Environment* _env, StatClass& _stats,
+    shared_ptr<DistanceMetricMethod > _dm, const CFG& _c1, const CFG& _c2, 
+    CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, 
     bool _savePath, bool _saveFailedPath,
@@ -207,8 +187,7 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
 
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
-  string callee = this->GetName();
-  string method = "-straightline::IsConnectedSLSequential";
+  string callee = this->GetName() + "::IsConnectedSLSequential";
   CDInfo cdInfo;
   callee=callee+method;
 
@@ -286,10 +265,10 @@ IsConnectedFunc(Environment *_env, StatClass& _stats,
 template <class CFG, class WEIGHT>
 bool
 StraightLine<CFG, WEIGHT>::
-IsConnectedSLSequential(Environment *_env, StatClass& _stats,
+IsConnectedSLSequential(Environment* _env, StatClass& _stats,
     shared_ptr< DistanceMetricMethod > _dm, 
-    const CFG &_c1, const CFG &_c2, CFG &_col,
-    LPOutput<CFG,WEIGHT>* _lpOutput, int &_cdCounter,
+    const CFG& _c1, const CFG& _c2, CFG& _col,
+    LPOutput<CFG,WEIGHT>* _lpOutput, int& _cdCounter,
     double _positionRes, double _orientationRes,
     bool _checkCollision, 
     bool _savePath, bool _saveFailedPath) {
@@ -304,10 +283,8 @@ IsConnectedSLSequential(Environment *_env, StatClass& _stats,
 #else
   incr.FindIncrement(_c1,_c2,&nTicks,_positionRes,_orientationRes);
 #endif
-  string callee = this->GetName();
-  string method = "-straightline::IsConnectedSLSequential";
+  string callee = this->GetName() + "::IsConnectedSLSequential";
   CDInfo cdInfo;
-  callee=callee+method;
 
 
   int nIter = 0;
@@ -350,9 +327,9 @@ IsConnectedSLSequential(Environment *_env, StatClass& _stats,
 template <class CFG, class WEIGHT>
 bool 
 StraightLine<CFG, WEIGHT>::
-IsConnectedSLBinary(Environment *_env, StatClass& _stats, 
-    shared_ptr<DistanceMetricMethod >_dm, const CFG &_c1, const CFG &_c2, 
-    CFG &_col, LPOutput<CFG,WEIGHT>* _lpOutput, int &_cdCounter,
+IsConnectedSLBinary(Environment* _env, StatClass& _stats, 
+    shared_ptr<DistanceMetricMethod>_dm, const CFG& _c1, const CFG& _c2, 
+    CFG& _col, LPOutput<CFG,WEIGHT>* _lpOutput, int& _cdCounter,
     double _positionRes, double _orientationRes,  
     bool _checkCollision, 
     bool _savePath, bool _saveFailedPath) {
@@ -365,10 +342,8 @@ IsConnectedSLBinary(Environment *_env, StatClass& _stats,
         _positionRes, _orientationRes,
         _checkCollision, _savePath, _saveFailedPath);
 
-  string callee = this->GetName();
-  string method = "-straightline::IsConnectedSLBinary";
+  string callee = this->GetName() + "::IsConnectedSLBinary";
   CDInfo cdInfo;
-  callee=callee+method;
 
   int nTicks;
   CFG incr;
@@ -394,7 +369,7 @@ IsConnectedSLBinary(Environment *_env, StatClass& _stats,
     // version (no roundoff errors), but it is slow
     for(int z=0; z<mid; ++z)
     midCfg.Increment(incr);
-     */
+    */
     // this produces almost the same intermediate cfgs as the sequential
     // version, but there may be some roundoff errors; it is much faster
     // than the above solution; the error should be much smaller than the
@@ -404,7 +379,7 @@ IsConnectedSLBinary(Environment *_env, StatClass& _stats,
 
     _cdCounter++;
     if(!midCfg.InBoundingBox(_env) ||
-       !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee) ) {
+        !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee) ) {
       if(midCfg.InBoundingBox(_env))
         _col=midCfg;
       return false;
@@ -428,6 +403,5 @@ IsConnectedSLBinary(Environment *_env, StatClass& _stats,
 
   return true;
 }
-
 
 #endif
