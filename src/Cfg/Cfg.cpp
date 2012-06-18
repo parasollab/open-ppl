@@ -203,9 +203,9 @@ void Cfg::PrintLinkConfigurations(Environment* _env, vector<Vector6D>& _cfigs) c
   _cfigs.erase(_cfigs.begin(), _cfigs.end());
   for(int i=0; i<numOfLink; i++) {
     Transformation tmp = _env->GetMultiBody(robot)->GetFreeBody(i)->WorldTransformation();
-    Orientation ori = tmp.orientation;
+    Orientation ori = tmp.m_orientation;
     ori.ConvertType(Orientation::FixedXYZ);
-    Vector6D v6 = Vector6D(tmp.position[0], tmp.position[1], tmp.position[2],
+    Vector6D v6 = Vector6D(tmp.m_position[0], tmp.m_position[1], tmp.m_position[2],
         ori.gamma/TWOPI, ori.beta/TWOPI, ori.alpha/TWOPI);
     _cfigs.push_back(v6);        
   }
