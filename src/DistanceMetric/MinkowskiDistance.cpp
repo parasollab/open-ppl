@@ -1,20 +1,21 @@
 #include "MinkowskiDistance.h"
 
-MinkowskiDistance::MinkowskiDistance(double _r1, double _r2, double _r3, bool _normalize) : DistanceMetricMethod(), m_r1(_r1), m_r2(_r2), m_r3(_r3), m_normalize(_normalize) {
-  m_name = "minkowski";
-}
+MinkowskiDistance::MinkowskiDistance(double _r1, double _r2, double _r3, bool _normalize) : 
+  DistanceMetricMethod(), m_r1(_r1), m_r2(_r2), m_r3(_r3), m_normalize(_normalize) {
+    m_name = "minkowski";
+  }
 
 MinkowskiDistance::
 MinkowskiDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn, bool _parse) : DistanceMetricMethod(_node, _problem, false) {
   m_name = "minkowski";
-  
+
   if(_parse) {
     m_r1 = _node.numberXMLParameter("r1", false, 3.0, 0.0, 1000.0, "r1");
     m_r2 = _node.numberXMLParameter("r2", false, 3.0, 0.0, 1000.0, "r2");
     m_r3 = _node.numberXMLParameter("r3", false, 1.0/3.0, 0.0, 1000.0, "r3");
     m_normalize = _node.boolXMLParameter("normalize", false, false, "flag if position dof should be normalized by environment diagonal");
   }
-  
+
   if(_warn)
     _node.warnUnrequestedAttributes();
 }
