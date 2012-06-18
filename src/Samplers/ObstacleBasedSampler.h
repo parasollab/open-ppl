@@ -1,3 +1,6 @@
+// OBPRM samples by pushing random configurations along a random ray
+// until they change validity, keeping the best free configuration
+
 #ifndef OBSTACLEBASEDSAMPLER_H_
 #define OBSTACLEBASEDSAMPLER_H_
 
@@ -10,54 +13,75 @@ class DistanceMetric;
 
 template <typename CFG>
 class ObstacleBasedSampler : public SamplerMethod<CFG> {
-  private:
-    string m_vcMethod, m_dmMethod;
-    int m_nShellsFree, m_nShellsColl;
-    double m_stepSize;
-    bool m_useBBX;
-    string m_pointSelection;		// This member variable is needed for the WOBPRM
 
-  public:
-    ObstacleBasedSampler() {
-      this->SetName("ObstacleBasedSampler");
+  private:
+    
+    string m_vcMethod, m_dmMethod; // Validity checker method, distance metric method
+    int m_nShellsFree, m_nShellsColl; // Number of free and collision shells
+    double m_stepSize; // Step size along the random ray
+    bool m_useBBX; // Is the bounding box an obstacle?
+    string m_pointSelection; // Needed for the WOBPRM
+
+    // Returns a CFG with the coordinates specified in the vector and no rotation
+    CFG GetCfgWithParams(Vector3D& _v) {
+      CFG tmp;
+      for(int i = 0; i < 3; i++)
+        tmp.SetSingleParam(i, _v[i]);
+      for(int i = 3; i < 6; i++)
+        tmp.SetSingleParam(i, 0.0);
+      return tmp;
+    }
+ 
+    // Returns an appropriate polygon: for a robot, the _mBody frame; for an obstacle, the world frame
+    GMSPolyhedron GetPolyhedron(shared_ptr<MultiBody>& _mBody, bool _isFreeBody) {
+      if(_isFreeBody)
+        return _mBody->GetBody(0)->GetPolyhedron();
+      else
+        return _mBody->GetBody(0)->GetWorldPolyhedron();
     }
 
-    ObstacleBasedSampler(Environment* _env, int _free = 1, int _coll = 0, 
-        double _step = 0, bool _useBBX=true, string _pointSelection="cspace")
-      : m_nShellsFree(_free), m_nShellsColl(_coll), m_stepSize(_step), m_useBBX(_useBBX), m_pointSelection(_pointSelection){ 
-        this->SetName("ObstacleBasedSampler");
-        if(m_stepSize <= 0)
+  public:
+
+    ObstacleBasedSampler(Environment* _env = NULL, int _free = 1, int _coll = 0, 
+        double _step = 0, bool _useBBX = true, string _pointSelection = "cspace")
+      : m_nShellsFree(_free), m_nShellsColl(_coll), m_stepSize(_step), m_useBBX(_useBBX), m_pointSelection(_pointSelection) { 
+      this->SetName("ObstacleBasedSampler");
+      // If the step size is unreasonable, set it to the minimum
+      if(m_stepSize <= 0.0)
+        if(_env != NULL)
           m_stepSize = min(_env->GetPositionRes(), _env->GetOrientationRes());
-      }
+    }
 
     ObstacleBasedSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
       this->SetName("ObstacleBasedSampler");
       ParseXML(_node);
       Environment* env = _problem->GetEnvironment(); 
+      // If the step size is unreasonable, set it to the minimum
       if(m_stepSize <= 0.0)
         m_stepSize = min(env->GetPositionRes(), env->GetOrientationRes());
-      if(this->m_debug) PrintOptions(cout);
+      if(this->m_debug)
+        PrintOptions(cout);
     }
 
     ~ObstacleBasedSampler() {}
 
-    void  ParseXML(XMLNodeReader& _node){
-      XMLNodeReader::childiterator citr;
-      m_useBBX = _node.boolXMLParameter("usebbx", true, false, "Use bounding box as obstacle");
-      m_vcMethod = _node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
-      m_dmMethod =_node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
-      m_pointSelection = _node.stringXMLParameter("point_selection", false, "cspace", "point selection strategy");
-      m_nShellsColl = _node.numberXMLParameter("n_shells_coll",true, 3,0,10, "Number of Col Shells");
-      m_nShellsFree = _node.numberXMLParameter("n_shells_free",true, 3,0,10, "Number of Free Shells");
-      m_stepSize = _node.numberXMLParameter("step_size",true, 0.0,0.0,10.0,
-          "step size used in increment of cfg position towards or away from obstacles");
-      
-      // Checking if the read point_selection is valid or not
-      if(!( m_pointSelection.compare("cspace")==0 || 
-            m_pointSelection.compare("cM")==0 || m_pointSelection.compare("rV")==0 || m_pointSelection.compare("rT")==0 || 
-            m_pointSelection.compare("rW")==0 || m_pointSelection.compare("eV")==0 || m_pointSelection.compare("rV_rT")==0 || 
-            m_pointSelection.compare("rV_rW")==0 || m_pointSelection.compare("all")==0 )) {
-        cerr << "Select a valid point selection type first. cspace, cM, rV ,rT, rW, eV, rV_rT, rV_rW, all are valid selection types. exiting.\n";
+    void ParseXML(XMLNodeReader& _node) {
+      m_useBBX = _node.boolXMLParameter("useBBX", true, false, "Use bounding box as obstacle");
+      m_vcMethod = _node.stringXMLParameter("vcMethod", true, "", "Validity test method");
+      m_dmMethod =_node.stringXMLParameter("dmMethod", true, "default", "Distance metric method");
+      m_pointSelection = _node.stringXMLParameter("pointSelection", false, "cspace", "Point selection strategy");
+      m_nShellsColl = _node.numberXMLParameter("nShellsColl", true, 3, 0, 10, "Number of collision shells");
+      m_nShellsFree = _node.numberXMLParameter("nShellsFree", true, 3, 0, 10, "Number of free shells");
+      m_stepSize = _node.numberXMLParameter("stepSize", true, 0.0, 0.0, 10.0,
+          "Step size used in increment of cfg position towards or away from obstacles");
+      _node.warnUnrequestedAttributes();
+
+      // Check if the read point_selection is valid
+      if(m_pointSelection != "cspace" && m_pointSelection != "cM" && m_pointSelection != "rV" &&
+             m_pointSelection != "rT" && m_pointSelection != "rW" && m_pointSelection != "eV" &&
+             m_pointSelection != "rV_rT" && m_pointSelection != "rV_rW" && m_pointSelection != "all") {
+        cerr << "Select a valid point selection type first.\
+          cspace, cM, rV ,rT, rW, eV, rV_rT, rV_rW, and all are valid selection types. Exiting." << endl;
         exit(-1);
       }
     }
@@ -73,334 +97,274 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       _os << "\tpointSelectionStrategy = " << m_pointSelection << endl;
     }
 
+    // Generates and adds shells to their containers
     template <typename OutputIterator>
-      OutputIterator GenerateShells(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
+    OutputIterator GenerateShells(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
           CFG _cFree, CFG _cColl, CFG _incr, OutputIterator _result) {
-        CDInfo cdInfo;
-        string callee(this->GetName());
-        callee += "::GenerateShells";
-				ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-        // if(this->m_debug) cout << "m_nShellsColl = " << m_nShellsColl << endl;
-        for(int i=0; i<m_nShellsFree; ++i) {
-          if(_cFree.InBoundingBox(_env, _bb) && 
-              vc->IsValid(vc->GetVCMethod(m_vcMethod), _cFree, _env, 
-                _stats, cdInfo, true, &callee)) {
+      
+      string callee = this->GetNameAndLabel() + "::GenerateShells()";
+      ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+      CDInfo cdInfo;
+      if(this->m_debug)
+        cout << "nShellsColl = " << m_nShellsColl << endl;
+    
+      // Add free shells
+      for(int i = 0; i < m_nShellsFree; i++) {
+        // If the shell is valid
+        if(_cFree.InBoundingBox(_env, _bb) && 
+            vc->IsValid(vc->GetVCMethod(m_vcMethod), _cFree, _env, _stats, cdInfo, true, &callee)) {
+          if(this->m_recordKeep)
             _stats.IncNodesGenerated(this->GetNameAndLabel());
-            *_result = _cFree;
-            _result++;
-          }
-          _cFree.Increment(_incr);
+          // Add shell
+          *_result = _cFree;
+          _result++;
         }
-
-        CFG tmp;
-        // if(this->m_debug) cout << "m_nShellsColl = " << m_nShellsColl << endl;
-        _incr.subtract(tmp, _incr);
-        for(int i=0; i<m_nShellsColl; ++i) {
-          if(_cColl.InBoundingBox(_env, _bb) && 
-              !vc->IsValid(vc->GetVCMethod(m_vcMethod), _cColl, _env, 
-                _stats, cdInfo, true, &callee)){
-            _stats.IncNodesGenerated(this->GetNameAndLabel());
-            *_result = _cColl;
-            _result++;
-          }
-          _cColl.Increment(_incr);
-        }
-
-        return _result;
+        // Get next shell
+        _cFree.Increment(_incr);
       }
 
+      // Reverse direction of _incr
+      CFG tmp;
+      _incr.subtract(tmp, _incr);
+      
+      // Add collision shells
+      for(int i = 0; i < m_nShellsColl; i++) {
+        // If the shell is valid
+        if(_cColl.InBoundingBox(_env, _bb) && 
+            !vc->IsValid(vc->GetVCMethod(m_vcMethod), _cColl, _env, _stats, cdInfo, true, &callee)) {
+          if(this->m_recordKeep)
+            _stats.IncNodesGenerated(this->GetNameAndLabel());
+          // Add shell
+          *_result = _cColl;
+          _result++;
+        }
+        // Get next shell
+        _cColl.Increment(_incr);
+      }
+      return _result;
+    }
+
+    // Attempts to sample, returns true if successful
     virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, 
         CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) {
-      string callee(this->GetName());
-      callee += "::sampler()";
+
+      string callee = this->GetNameAndLabel() + "::Sampler()";
+      ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+      shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmMethod);
       CDInfo cdInfo;
-      bool generated = false;
 
-      int attempts = 0;
-      do {
-        _stats.IncNodesAttempted(this->GetNameAndLabel());
-        attempts++;
-
-        CFG c1 ;
-        c1=ChooseASample( _cfgIn, _env, _bb);
-
-        bool c1BBox = c1.InBoundingBox(_env, _bb);
-				
-        ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-        
-	bool c1Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c1, _env, 
-            _stats, cdInfo, true, &callee);
-
+      // Loop until successful or max attempts reached
+      for(int attempts = 1; attempts <= _maxAttempts; attempts++) {
+        if(this->m_recordKeep)
+          _stats.IncNodesAttempted(this->GetNameAndLabel());
+        // Old state
+        CFG c1 = ChooseASample(_cfgIn, _env, _bb);
+        bool c1BBox = c1.InBoundingBox(_env, _bb);  
+	bool c1Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c1, _env, _stats, cdInfo, true, &callee);
+        // New state
         CFG c2 = c1;
         bool c2BBox = c1BBox;
         bool c2Free = c1Free;
-
+        
+        // Create a random ray
         CFG r;
-
-	shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmMethod);
-
 	r.GetRandomRay(m_stepSize, _env, dm);
+        if(r == CFG()) {
+          if(this->m_debug)
+            cerr << "Random ray in OBPRM Sampler is 0-valued! Continuing with loop." << endl;
+          continue;
+        }
 
+        // Loop until the new state is outside the bounds or the validity changes
         while(c2BBox && (c1Free == c2Free)) { 
+          // Copy new data to old state
           c1 = c2;
           c1BBox = c2BBox;
           c1Free = c2Free;
-
+          // Update new state
           c2.Increment(r);
           c2BBox = c2.InBoundingBox(_env, _bb);
-
-          c2Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c2, _env, 
-              _stats, cdInfo, true, &callee);
-
+          c2Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c2, _env, _stats, cdInfo, true, &callee);
         }
-        if(c2BBox) {
-          generated = true;
 
-          if(c1Free){
+        // If new state is in BBox (there must be a validity change)
+        if(c2BBox) {
+          if(c1Free) { // Old state (c1) is free
+            // Reverse direction of r
             CFG tmp;
             r.subtract(tmp, r);
-            GenerateShells(_env, _bb, _stats,c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
+            // Process configurations
+            GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
 	    _cfgCol.push_back(c2);
           }
-          else {
-            GenerateShells(_env, _bb, _stats,c2, c1, r,back_insert_iterator<vector<CFG> >(_cfgOut));
+          else { // New state (c2) is free
+            // Process configurations
+            GenerateShells(_env, _bb, _stats, c2, c1, r,back_insert_iterator<vector<CFG> >(_cfgOut));
 	    _cfgCol.push_back(c1);
           }
+          return true;
         }
-        else if(c1BBox && m_useBBX && c1Free && !c2BBox){
-          generated = true;
+        else if(m_useBBX && c1BBox && c1Free) {
+          // Reverse direction of r
           CFG tmp;
           r.subtract(tmp, r);
-          GenerateShells(_env, _bb, _stats,c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
+          // Process configurations
+          GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
 	  _cfgCol.push_back(c2);
+          return true;
         }
-      } while (!generated && (attempts < _maxAttempts));
-
-      return generated;
+      }
+      return false;
     }
 
-    // Following is added after unification with WOPRM code
+    ////////////////////////////////////////////////////////////////
+    // The following was added after unification with WOBPRM code //
+    ////////////////////////////////////////////////////////////////
+
+    // Returns a CFG at the center of mass of the MultiBody
     CFG ChooseCenterOfMass(shared_ptr<MultiBody> _mBody) {
       Vector3D x = _mBody->GetCenterOfMass();
-      CFG tmp;
-      for(int i=0;i<3;i++)
-        tmp.SetSingleParam(i, x[i]);
-      for(int i=3;i<6;i++)
-        tmp.SetSingleParam(i, 0.0);
-      return tmp;
+      return GetCfgWithParams(x);
     }
 
-    CFG ChooseRandomVertex(shared_ptr<MultiBody> _mBody,bool _isFreeBody) {
-      GMSPolyhedron polyhedron;
-      if(_isFreeBody) 
-        polyhedron = _mBody->GetBody(0)->GetPolyhedron();
-      else           
-        polyhedron = _mBody->GetBody(0)->GetWorldPolyhedron();
-      Vector3D x =polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
-
-      CFG tmp;
-      for(int i=0;i<3;i++)
-        tmp.SetSingleParam(i, x[i]);
-      for(int i=3;i<6;i++)
-        tmp.SetSingleParam(i, 0.0);
-
-      return tmp;
+    // Returns a CFG at a random vertex of the MultiBody
+    CFG ChooseRandomVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) { 
+      GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+      Vector3D x = polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
+      return GetCfgWithParams(x);
     }
 
+    // Returns a point inside the triangle determined by the vectors
     Vector3D ChoosePointOnTriangle(Vector3D _p, Vector3D _q, Vector3D _r) {
-      Vector3D u, v;
-      u = _q - _p;
-      v = _r - _p;
-
+      Vector3D u = _q - _p; // From _p to _q
+      Vector3D v = _r - _p; // From _p to _r
       double s = DRand(); 
       double t = DRand();
+      // Keep point inside the triangle
       while(s + t > 1) {
+        s = DRand();
         t = DRand();
       }
       return (_p + u*s + v*t);
     }
 
+    // Chooses a random point on a random triangle (weighted by area) in the MultiBody
     CFG ChooseRandomWeightedTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
-      GMSPolyhedron polyhedron;
-      if(_isFreeBody)
-        polyhedron = _mBody->GetBody(0)->GetPolyhedron();
-      else 
-        polyhedron = _mBody->GetBody(0)->GetWorldPolyhedron();
-      double m_area;
-      m_area = _mBody->GetBody(0)->GetPolyhedron().m_area;
-
-      double targetArea = m_area * DRand();
-
-      int index, i;
-      double sum;
-      index = 0; 
-      i = 1;
-      sum = _mBody->GetBody(0)->GetPolyhedron().m_polygonList[0].m_area;
-      while(targetArea > sum) {
-        sum += _mBody->GetBody(0)->GetPolyhedron().m_polygonList[i].m_area;
-        index++;
-        i++;
-      }
-
-      // We choose the triangle of the _mBody with that index
+      GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+      // A random fraction of the area
+      double targetArea = _mBody->GetBody(0)->GetPolyhedron().m_area * DRand();
+      double sum = 0.0;
+      int index;
+      
+      // Choose index as the triangle that first makes sum > targetArea
+      for(index = -1; sum <= targetArea; index++)
+        sum += _mBody->GetBody(0)->GetPolyhedron().m_polygonList[index + 1].m_area;
+      // Choose the triangle of the MultiBody with that index
       GMSPolygon *poly = &polyhedron.m_polygonList[index];
-
-      // We choose a random point in that triangle
-      Vector3D p, q, r;
-      p = polyhedron.m_vertexList[poly->m_vertexList[0]];
-      q = polyhedron.m_vertexList[poly->m_vertexList[1]];
-      r = polyhedron.m_vertexList[poly->m_vertexList[2]];
-
-      Vector3D x;
-      x = ChoosePointOnTriangle(p, q, r);
-      CFG tmp;
-      for(int i=0;i<3;i++)
-        tmp.SetSingleParam(i, x[i]);
-      for(int i=3;i<6;i++)
-        tmp.SetSingleParam(i, 0.0);
-      return tmp;
+      // Choose a random point in that triangle
+      Vector3D p = polyhedron.m_vertexList[poly->m_vertexList[0]];
+      Vector3D q = polyhedron.m_vertexList[poly->m_vertexList[1]];
+      Vector3D r = polyhedron.m_vertexList[poly->m_vertexList[2]];
+      Vector3D x = ChoosePointOnTriangle(p, q, r);
+      return GetCfgWithParams(x);
     }
 
+    // Chooses a random point in a random triangle in the MultiBody
     CFG ChooseRandomTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
-      GMSPolyhedron polyhedron;
-      if(_isFreeBody)
-        polyhedron = _mBody->GetBody(0)->GetPolyhedron();
-      else 
-        polyhedron = _mBody->GetBody(0)->GetWorldPolyhedron();
+      GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+      // Choose a random triangle
       GMSPolygon *poly = &polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
-      Vector3D p, q, r;
-      p = polyhedron.m_vertexList[poly->m_vertexList[0]];
-      q = polyhedron.m_vertexList[poly->m_vertexList[1]];
-      r = polyhedron.m_vertexList[poly->m_vertexList[2]];
-      Vector3D x;
-      x = ChoosePointOnTriangle(p, q, r);
-      CFG tmp;
-      for(int i=0;i<3;i++)
-        tmp.SetSingleParam(i, x[i]);
-      for(int i=3;i<6;i++)
-        tmp.SetSingleParam(i, 0.0);
-      return tmp;
+      Vector3D p = polyhedron.m_vertexList[poly->m_vertexList[0]];
+      Vector3D q = polyhedron.m_vertexList[poly->m_vertexList[1]];
+      Vector3D r = polyhedron.m_vertexList[poly->m_vertexList[2]];
+      Vector3D x = ChoosePointOnTriangle(p, q, r);
+      return GetCfgWithParams(x);
     }
 
-    CFG ChooseExtremeVertex(shared_ptr<MultiBody> _mBody,bool _isFreeBody) {
-      GMSPolyhedron polyhedron;
-      // for robot, choose _mBody frame; for obstacle, choose world frame
-      if(_isFreeBody)
-        polyhedron = _mBody->GetBody(0)->GetPolyhedron();
-      else 
-        polyhedron = _mBody->GetBody(0)->GetWorldPolyhedron();
-
-      int indexVert[6];
-      for(int j = 0 ; j < 6 ; j++)
-        indexVert[j] = 0;
-
-      for(size_t i = 1 ; i < polyhedron.m_vertexList.size() ; i++) {
-        //MAX X
-        if(polyhedron.m_vertexList[i][0] < polyhedron.m_vertexList[indexVert[0]][0])
-          indexVert[0] = i;
-
-        //MIN X
-        if(polyhedron.m_vertexList[i][0] > polyhedron.m_vertexList[indexVert[1]][0])
-          indexVert[1] = i;
-
-        //MAX Y
-        if(polyhedron.m_vertexList[i][1] < polyhedron.m_vertexList[indexVert[2]][1])
-          indexVert[2] = i;
-
-        //MIN Y
-        if(polyhedron.m_vertexList[i][1] > polyhedron.m_vertexList[indexVert[3]][1])
-          indexVert[3] = i;
-
-        //MAX Z
-        if(polyhedron.m_vertexList[i][2] < polyhedron.m_vertexList[indexVert[4]][2])
-          indexVert[4] = i;
-
-        //<MIN Z
-        if(polyhedron.m_vertexList[i][2] > polyhedron.m_vertexList[indexVert[5]][2])
-          indexVert[5] = i;
-      }
-
-      // Choose an extreme random vertex at random
-      int index = LRand() % 6;
-      Vector3D x= polyhedron.m_vertexList[indexVert[index]];
-      CFG tmp;
-      for(int i=0;i<3;i++)
-        tmp.SetSingleParam(i, x[i]);
-      for(int i=3;i<6;i++)
-        tmp.SetSingleParam(i, 0.0);
-      return tmp;
+    // Chooses a random extreme vertex of the MultiBody
+    CFG ChooseExtremeVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
+      GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+      int xyz = LRand() % 3; // 0: x, 1: y, 2: z
+      int minMax = LRand() % 2; // 0: min, 1: max
+      int x = 0; // Index of extreme value
+      
+      // Find extreme value
+      for(size_t i = 1; i < polyhedron.m_vertexList.size(); i++)
+        if(((polyhedron.m_vertexList[i][xyz] < polyhedron.m_vertexList[x][xyz]) + minMax) % 2) // minMax is an optional negation
+          x = i;
+      return GetCfgWithParams(polyhedron.m_vertexList[x]);
     }
 
+    // Chooses an obstacle MultiBody randomly
     shared_ptr<MultiBody> InitializeBody(Environment* _env) {
-      int N =_env->GetMultiBodyCount();
-      int roboindex = _env->GetRobotIndex(); 
+      int N = _env->GetMultiBodyCount();
+      int roboIndex = _env->GetRobotIndex(); 
       int obstacleIndex;
+      
+      if(this->m_debug && N == 1)
+        cout << "Infinite loop in InitializeBody() of ObstacleBasedSampler.h because N == 1" << endl;
       do {
-        obstacleIndex=LRand() % N;   
-      } while(obstacleIndex==roboindex);
-      return _env->GetMultiBody(obstacleIndex);// choose a multiBody randomly
+        obstacleIndex = LRand() % N;   
+      } while(obstacleIndex == roboIndex);
+      return _env->GetMultiBody(obstacleIndex);
     }
 
+    // Checks m_pointSelection and returns an appropriate CFG
     virtual CFG ChooseASample(CFG _cfgIn, Environment* _env, shared_ptr<BoundingBox> _bb) {
       shared_ptr<MultiBody> mBody = InitializeBody(_env);
-      bool isFreeBody = false;
-
-      CFG temp;
-      if(m_pointSelection.compare("cspace")==0 ){  // cspace is for Configuration space (This is for unifying OBPRM and WOBRM)
-        temp =_cfgIn;
-        if(temp == CFG())
-          temp.GetRandomCfg(_env, _bb);//random configurations taken inside bounding box
+      // cspace is for Configuration space (This is for unifying OBPRM and WOBPRM)
+      if(m_pointSelection == "cspace") {  
+        if(_cfgIn == CFG())
+          // Get random configuration inside bounding box
+          _cfgIn.GetRandomCfg(_env, _bb);
+        return _cfgIn;
       }
-      else if(m_pointSelection.compare("cM")==0 )
-        temp  = ChooseCenterOfMass(mBody);
-      else if(m_pointSelection.compare("rV")==0 )
-        temp  = ChooseRandomVertex(mBody,isFreeBody);
-      else if(m_pointSelection.compare("rT")==0 )
-        temp  = ChooseRandomTriangle(mBody,isFreeBody);
-      else if(m_pointSelection.compare("rW")==0 )
-        temp  = ChooseRandomWeightedTriangle(mBody,isFreeBody);
-      else if(m_pointSelection.compare("eV")==0 )
-        temp  = ChooseExtremeVertex(mBody,isFreeBody);
-      else if(m_pointSelection.compare("cM_rV")==0 ) { 
-        int opt = LRand() % 2;
-        if(opt == 0)
-          temp  = ChooseCenterOfMass(mBody);
+      else if(m_pointSelection == "cM")
+        return ChooseCenterOfMass(mBody);
+      else if(m_pointSelection == "rV")
+        return ChooseRandomVertex(mBody, false);
+      else if(m_pointSelection == "rT")
+        return ChooseRandomTriangle(mBody, false);
+      else if(m_pointSelection == "rW")
+        return ChooseRandomWeightedTriangle(mBody, false);
+      else if(m_pointSelection == "eV")
+        return ChooseExtremeVertex(mBody, false);
+      else if(m_pointSelection == "cM_rV") { 
+        if(LRand() % 2)
+          return ChooseCenterOfMass(mBody);
         else 
-          temp  = ChooseRandomVertex(mBody,isFreeBody);
+          return ChooseRandomVertex(mBody, false);
       }
-      else if(m_pointSelection.compare("rV_rT")==0 ) {
-        int opt = LRand() % 2;
-        if(opt == 0)
-          temp  = ChooseRandomTriangle(mBody,isFreeBody);
+      else if(m_pointSelection == "rV_rT") {  
+        if(LRand() % 2)
+          return ChooseRandomVertex(mBody, false);
         else 
-          temp  = ChooseRandomVertex(mBody,isFreeBody);
+          return ChooseRandomTriangle(mBody, false);
       }
-      else if(m_pointSelection.compare("rV_rW")==0 ) {
-        int opt = LRand() % 2;
-        if(opt == 0)
-          temp  = ChooseRandomVertex(mBody,isFreeBody);
+      else if(m_pointSelection == "rV_rW") {
+        if(LRand() % 2)
+          return ChooseRandomVertex(mBody, false);
         else
-          temp  = ChooseRandomWeightedTriangle(mBody,isFreeBody);
-      }
-      else if(m_pointSelection.compare("all")==0 ) {
-        int opt = LRand() % 5;
-        if(opt == 0)
-          temp  = ChooseCenterOfMass(mBody);
-        else if(opt == 1)
-          temp  = ChooseRandomVertex(mBody,isFreeBody);
-        else if(opt == 2)
-          temp  = ChooseRandomTriangle(mBody,isFreeBody);
-        else if(opt == 3)
-          temp  = ChooseRandomWeightedTriangle(mBody,isFreeBody);
-        else 
-          temp  = ChooseExtremeVertex(mBody,isFreeBody);
-      }
+          return ChooseRandomWeightedTriangle(mBody, false);
+      } 
+      else if(m_pointSelection == "all") {
+        switch(LRand() % 5) {
+          case 0:
+            return ChooseCenterOfMass(mBody);
+          case 1:
+            return ChooseRandomVertex(mBody, false);
+          case 2:
+            return ChooseRandomTriangle(mBody, false);
+          case 3:
+            return ChooseRandomWeightedTriangle(mBody, false);
+          default:
+            return ChooseExtremeVertex(mBody, false);
+        }
+      } 
       else {
-        cerr << "Select a valid point selection type first.exiting.\n";
+        cerr << "Select a valid point selection type first. Exiting." << endl;
         exit(-1);
       }
-
-      return temp;
     }
 };
 

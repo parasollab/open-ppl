@@ -116,9 +116,9 @@ class GridSampler : public SamplerMethod<CFG> {
 
         // If the bounding box is an obstacle, move gridVal further inside bounding box (if necessary) 
         if(m_useBBX) {
-          if(abs(bbMax - gridVal) <= delta/10)
+          if(fabs(bbMax - gridVal) <= delta/10)
             gridVal = bbMax - delta;
-          if(abs(bbMin - gridVal) <= delta/10)
+          if(fabs(bbMin - gridVal) <= delta/10)
             gridVal = bbMin + delta;
         }
 
