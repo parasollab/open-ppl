@@ -1,24 +1,19 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //  FreeBody.cpp
-//
-//  Created   3/ 1/98 Aaron Michalk
 /////////////////////////////////////////////////////////////////////
 
 #include "FreeBody.h"
+#include "MultiBody.h"
 
 //===================================================================
 //  Constructors and Destructor
 //===================================================================
-FreeBody::FreeBody(MultiBody * _owner) :
-    Body(_owner)
-{
+FreeBody::FreeBody(MultiBody* _owner) : Body(_owner){
 }
 
-FreeBody::FreeBody(MultiBody * _owner, GMSPolyhedron & _polyhedron) :
-    Body(_owner, _polyhedron)
-{
-}
+FreeBody::FreeBody(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
+  Body(_owner, _polyhedron){
+  }
 
 FreeBody::~FreeBody() {
 }
@@ -26,16 +21,17 @@ FreeBody::~FreeBody() {
 //===================================================================
 //  GetWorldPolyhedron
 //===================================================================
-GMSPolyhedron & FreeBody::GetWorldPolyhedron() { 
-    // Perform a transformation w.r.t. the world frame, and put into the data field
-    // of "this" body's instance
-//    GetWorldTransformation();
+GMSPolyhedron&
+FreeBody::GetWorldPolyhedron() { 
+  // Perform a transformation w.r.t. the world frame, and put into the data field
+  // of "this" body's instance
+  // GetWorldTransformation();
 
-    // Compute the world-transformed polyhedron and put into the data field
-    // of "this" body's instance
-    Body::GetWorldPolyhedron();
+  // Compute the world-transformed polyhedron and put into the data field
+  // of "this" body's instance
+  Body::GetWorldPolyhedron();
 
-    return worldPolyhedron;
+  return worldPolyhedron;
 }
 
 
@@ -47,12 +43,12 @@ GMSPolyhedron & FreeBody::GetWorldPolyhedron() {
 //  For a single free body, there is only one transformation that need to be 
 //  taken care of
 //===================================================================
-void FreeBody::Configure(Transformation & _transformation){
-    // new transformation (position and orientation) for the reconfiguration
-    worldTransformation = _transformation;
+void
+FreeBody::Configure(Transformation& _transformation){
+  // new transformation (position and orientation) for the reconfiguration
+  worldTransformation = _transformation;
 }
 
-#include "MultiBody.h"
 //===================================================================
 //  GetWorldTransformation
 //
@@ -65,18 +61,21 @@ void FreeBody::Configure(Transformation & _transformation){
 //  
 //  Output: The transformation transformed w.r.t the world frame
 //
-//  Refer to a seperate digram for the transformation structure
+//  Refer to a seperate diagram for the transformation structure
 //
 //===================================================================
 Transformation& 
-FreeBody::
-GetWorldTransformation() {
+FreeBody::GetWorldTransformation() {
   std::set<int, less<int> > visited;
   return this->ComputeWorldTransformation(visited);
 }
+
+//this will search the vector of the set of all visited nodes, 
+//if "this" is not the last object in visited, then it will return
+//worldTransFormation.
+//else it will insert "this" into the set of visited.
 Transformation& 
-FreeBody::
-ComputeWorldTransformation(std::set<int, less<int> >& visited) {
+FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited) {
   if(visited.find(multibody->GetFreeBodyIndex(*this)) != visited.end()) {
     return worldTransformation;
 
@@ -85,31 +84,14 @@ ComputeWorldTransformation(std::set<int, less<int> >& visited) {
 
     //for the case when the base is a freebody.
     if(backwardConnection.empty()) //base link
-	return worldTransformation;
-    
-    ///////////////////////////////////////////////////////////////////////// 
-/*
-    Connection * lastconn = backwardConnection[0]->GetPreviousBody()->GetBackwardConnection(0);
-    Transformation tlastbody;
-    if (lastconn)
-        tlastbody = lastconn->GetTransformationToBody2().Inverse();
-    else
-        tlastbody = Transformation::Identity;
-
-    Transformation dh(backwardConnection[0]->GetDHparameters());
-    worldTransformation = 
-        ((FreeBody*)(backwardConnection[0]->GetPreviousBody()))->ComputeWorldTransformation(visited)
-        * tlastbody
-        * dh
-        * backwardConnection[0]->GetTransformationToBody2();
-*/
+      return worldTransformation;
 
     Transformation dh(backwardConnection[0].GetDHparameters());
     worldTransformation =
-        ((FreeBody*)(backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited)
-        * backwardConnection[0].GetTransformationToDHFrame()
-        * dh
-        * backwardConnection[0].GetTransformationToBody2();
+      ((FreeBody*)(backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited)
+      * backwardConnection[0].GetTransformationToDHFrame()
+      * dh
+      * backwardConnection[0].GetTransformationToBody2();
 
     return worldTransformation;
   }
@@ -119,10 +101,11 @@ ComputeWorldTransformation(std::set<int, less<int> >& visited) {
 //===================================================================
 //  Write               
 //===================================================================
-void FreeBody::Write(ostream & _os) {
-    _os << "FreeBody 0 " << endl;
-    Body::Write(_os);
-    worldTransformation.Write(_os);
-    _os << endl;
+void
+FreeBody::Write(ostream& _os) {
+  _os << "FreeBody 0 " << endl;
+  Body::Write(_os);
+  worldTransformation.Write(_os);
+  _os << endl;
 }
 

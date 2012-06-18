@@ -1,7 +1,5 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
-//  Connection.c
-//
+//  Connection.cpp
 //  Created   3/ 1/98 Aaron Michalk
 /////////////////////////////////////////////////////////////////////
 
@@ -117,12 +115,12 @@ void Connection::Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
   
   if(_debug) {
     cout << "transformationToBody2 = (" 
-         << transformationToBody2.position.getX() << ", " 
-         << transformationToBody2.position.getY() << ", " 
-         << transformationToBody2.position.getZ() << ", " 
-         << transformationToBody2.orientation.alpha << ", " 
-         << transformationToBody2.orientation.beta << ", " 
-         << transformationToBody2.orientation.gamma << ")" << endl;
+         << transformationToBody2.m_position.getX() << ", " 
+         << transformationToBody2.m_position.getY() << ", " 
+         << transformationToBody2.m_position.getZ() << ", " 
+         << transformationToBody2.m_orientation.alpha << ", " 
+         << transformationToBody2.m_orientation.beta << ", " 
+         << transformationToBody2.m_orientation.gamma << ")" << endl;
     
     cout << "dhparameters = (" 
          << dhparameters.alpha << ", " 

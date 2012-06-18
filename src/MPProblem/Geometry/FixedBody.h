@@ -1,133 +1,54 @@
-// $Id$
+//FixedBody.h
+/* Class FreeBody is a stationary Body in workspace.
+ * This class provide more specifice methods for manipulate fixed object. */
 
-/**@file FixedBody.h
-   @date 2/25/98
-   @author Aaron Michalk
-*/
+#ifndef FIXEDBODY_H_
+#define FIXEDBODY_H_
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifndef FixedBody_h
-#define FixedBody_h
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//include OBPRM headers
 #include "Body.h"
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/* Class FreeBody is a stationary Body in workspace.
- * This class provide more specifice methods for manipulate fixed object.
- */
 class FixedBody : public Body {
-public:
+  public:
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Constructors and Destructor*/
-    //@{
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Constructors and Destructor
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
+    FixedBody(MultiBody* _owner);
+    FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron);
 
-    /**Condtructor. Construct a FixedBody and set its owner as _owner.
-      *@see Body::Body(MultiBody * _owner)
-      */
-    FixedBody(MultiBody * _owner);
-    /**Constructor. Set owner and geometric information of this instance of FixedBody.
-      *@see Body::Body(MultiBody * , GMSPolyhedron & )
-      */
-    FixedBody(MultiBody * _owner, GMSPolyhedron & _polyhedron);
-
-    ///Do nothing
     virtual ~FixedBody();
 
-    //@}
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Access Methods
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Access Methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Access Methods. Use these method to acess or change internal state*/
-    //@{
-
-    ///YES!! This is a FIXED Body.
-    virtual int IsFixedBody();
+    virtual int IsFixedBody(){return true;}
 
     /**This function returns a Polyhedron whose vertices and normals are represented in 
-      *world coordinate.
-      *@see Body::GetWorldPolyhedron
-      */
-    virtual GMSPolyhedron & GetWorldPolyhedron();
+     *world coordinate.
+     */
+    virtual GMSPolyhedron& GetWorldPolyhedron();
 
     ///Return transformation of this body in world coordinate
-    virtual Transformation & GetWorldTransformation();
+    virtual Transformation& GetWorldTransformation();
 
-    //@}
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    I/O
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    I/O
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name I/O Methods. Use these method to read in/write out internal state*/
-    
-    //@{
-    /**Write string "FixedBody", and call Body and world transformation's output method.
-      *@see Body::Write, Transformation::Write
-      */
-    virtual void Write(ostream & _os);
-    //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Protected data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-protected:
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Private data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-private:
+    virtual void Write(ostream& _os);
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-//
-//  Implementation of FixedBody
-//
-//
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////////
-
-//===============================================================
-// Inline Functions
-//===============================================================
-
-//---------------------------------------------------------------
-// IsFixedBody
-//---------------------------------------------------------------
-inline int FixedBody::IsFixedBody() {
-    return 1;
-}
-
 #endif
-

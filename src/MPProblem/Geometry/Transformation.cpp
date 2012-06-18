@@ -1,8 +1,5 @@
-// $Id$
 /////////////////////////////////////////////////////////////////////
 //  Transformation.c
-//
-//  Created   3/ 1/98 Aaron Michalk
 /////////////////////////////////////////////////////////////////////
 
 #include "Transformation.h"
@@ -18,42 +15,37 @@ const Transformation Transformation::Identity = Transformation(Orientation(Ident
 //  Constructors and Destructor
 //===================================================================
 Transformation::Transformation() :
-    position(0.0, 0.0, 0.0),
-    orientation(Orientation::Matrix)
-{
-}
+  m_position(0.0, 0.0, 0.0),
+  m_orientation(Orientation::Matrix){
+  }
 
-Transformation::Transformation(const Orientation & _orientation, const Vector3D & _position) :
-    position(_position),
-    orientation(_orientation)
-{
-}
+Transformation::Transformation(const Orientation& _orientation, const Vector3D& _position) :
+  m_position(_position),
+  m_orientation(_orientation){
+  }
 
 //==============================================================================
-// Function: Create a transformation corresponding to the given DH parameters
-//
-// Refer Craig Eq 3.6 (page 84)
+// Function: Create a transformation corresponding to the given DH parameters by
+// shuffling around number in the matrix appropriately.
 //==============================================================================
-Transformation::Transformation(const DHparameters & _dh) :
-    position(_dh.a, -sin(_dh.alpha)*_dh.d, cos(_dh.alpha)*_dh.d),
-    orientation(Orientation::Matrix)
-{
-    orientation.matrix[0][0] = cos(_dh.theta);
-    orientation.matrix[0][1] = -sin(_dh.theta);
-    orientation.matrix[0][2] = 0.0;
-    orientation.matrix[1][0] = sin(_dh.theta)*cos(_dh.alpha);
-    orientation.matrix[1][1] = cos(_dh.theta)*cos(_dh.alpha);
-    orientation.matrix[1][2] = -sin(_dh.alpha);
-    orientation.matrix[2][0] = sin(_dh.theta)*sin(_dh.alpha);
-    orientation.matrix[2][1] = cos(_dh.theta)*sin(_dh.alpha);
-    orientation.matrix[2][2] = cos(_dh.alpha);
-}
+Transformation::Transformation(const DHparameters& _dh) :
+  m_position(_dh.a, -sin(_dh.alpha)*_dh.d, cos(_dh.alpha)*_dh.d),
+  m_orientation(Orientation::Matrix){
+    m_orientation.matrix[0][0] = cos(_dh.theta);
+    m_orientation.matrix[0][1] = -sin(_dh.theta);
+    m_orientation.matrix[0][2] = 0.0;
+    m_orientation.matrix[1][0] = sin(_dh.theta)*cos(_dh.alpha);
+    m_orientation.matrix[1][1] = cos(_dh.theta)*cos(_dh.alpha);
+    m_orientation.matrix[1][2] = -sin(_dh.alpha);
+    m_orientation.matrix[2][0] = sin(_dh.theta)*sin(_dh.alpha);
+    m_orientation.matrix[2][1] = cos(_dh.theta)*sin(_dh.alpha);
+    m_orientation.matrix[2][2] = cos(_dh.alpha);
+  }
 
-Transformation::Transformation(const Transformation & _t) :
-    position(_t.position),
-    orientation(_t.orientation)
-{
-}
+Transformation::Transformation(const Transformation& _t) :
+  m_position(_t.m_position),
+  m_orientation(_t.m_orientation){
+  }
 
 Transformation::~Transformation() {
 }
@@ -61,41 +53,54 @@ Transformation::~Transformation() {
 //===================================================================
 //  Operators
 //===================================================================
-Transformation & Transformation::operator+(const Transformation & _transformation) {
-    orientation = orientation + _transformation.orientation;
-    position = position + _transformation.position;
+//this will take the existing transformation of the object we are operating on
+//and add the transformation algebraically of the object specified in the
+//parameter.
+Transformation&
+Transformation::operator+(const Transformation& _transformation) {
+  m_orientation = m_orientation + _transformation.m_orientation;
+  m_position = m_position + _transformation.m_position;
 
-    return *this;
+  return *this;
 }
 
-Transformation Transformation::operator-(const Transformation & _transformation) {
-    orientation = orientation - _transformation.orientation;
-    position = position - _transformation.position;
+//this does the same thing as the operator above, but with subtraction.
+Transformation&
+Transformation::operator-(const Transformation& _transformation) {
+  m_orientation = m_orientation - _transformation.m_orientation;
+  m_position = m_position - _transformation.m_position;
 
-    return *this;
+  return *this;
 }
 
-Vector3D Transformation::operator*(const Vector3D & _vector) {
-    return orientation * _vector + position;
+//similar to the + operator, but adding position and orientation form a Vector3D
+//object instead.
+Vector3D
+Transformation::operator*(const Vector3D& _vector) {
+  return m_orientation * _vector + m_position;
 }
 
-Transformation & Transformation::operator=(const Transformation & _t) {
-    position = _t.position;
-    orientation = _t.orientation;
-    return *this;
+//Does the same thing as the copy constructor.
+Transformation&
+Transformation::operator=(const Transformation& _t) {
+  m_position = _t.m_position;
+  m_orientation = _t.m_orientation;
+  return *this;
 }
 
 //===================================================================
 //  Refer to Craig Eq 2.45 
 //===================================================================
-Transformation Transformation::operator*(const Transformation & _t) {
-    return Transformation(orientation * _t.orientation, orientation * _t.position + position);
+//copy position and orientation from parameter.
+Transformation
+Transformation::operator*(const Transformation& _t) {
+  return Transformation(m_orientation * _t.m_orientation, m_orientation * _t.m_position + m_position);
 }
 
-bool Transformation::operator==(const Transformation& t) const {
-  return position == t.position && orientation == t.orientation;
+bool
+Transformation::operator==(const Transformation& t) const {
+  return m_position == t.m_position && m_orientation == t.m_orientation;
 }
-
 
 //===================================================================
 //  Inverse
@@ -108,7 +113,7 @@ bool Transformation::operator==(const Transformation& t) const {
 //  Refer to Craig Eq 2.45 
 //===================================================================
 Transformation Transformation::Inverse() {
-    return Transformation(orientation.Inverse(), -(orientation.Inverse() * position));
+  return Transformation(m_orientation.Inverse(), -(m_orientation.Inverse() * m_position));
 }
 
 //===================================================================
@@ -116,25 +121,28 @@ Transformation Transformation::Inverse() {
 //
 //  Inverts this transformation
 //===================================================================
-void Transformation::Invert() {
-    orientation.Invert();
-    position = -(orientation * position);
+void
+Transformation::Invert() {
+  m_orientation.Invert();
+  m_position = -(m_orientation * m_position);
 }
 
 
 //===================================================================
 //  Read
 //===================================================================
-void Transformation::Read(ifstream & _is) {
-    position.Read(_is);
-    orientation.Read(_is);
+void
+Transformation::Read(ifstream& _is) {
+  m_position.Read(_is);
+  m_orientation.Read(_is);
 }
 
 //===================================================================
 //  Write
 //===================================================================
-void Transformation::Write(ostream & _os) {
-    position.Write(_os);
-    orientation.Write(_os);
+void
+Transformation::Write(ostream& _os) {
+  m_position.Write(_os);
+  m_orientation.Write(_os);
 }
 

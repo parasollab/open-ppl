@@ -1,155 +1,86 @@
-// $Id$
-
-/**@file FreeBody.h
-  *@date 2/25/98
-  *@author Aaron Michalk
-  */
-////////////////////////////////////////////////////////////////////////////////////////////
+/* Class FreeBody is a movable Body in workspace.
+ * This class provide more specific methods for manipulate movable object.
+ */
 
 #ifndef FreeBody_h
 #define FreeBody_h
 
-////////////////////////////////////////////////////////////////////////////////////////////
-//include OBPRM headers
 #include "Body.h"
 #include <set>
 
-/* Class FreeBody is a movable Body in workspace.
- * This class provide more specifice methods for manipulate movable object.
- */
 class FreeBody : public Body {
-public:
+  public:
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Constructors and Destructor*/
-    //@{
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Constructors and Destructor
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-    /**Condtructor. Construct a FreeBody and set its owner as _owner.
-      *@see Body::Body(MultiBody * _owner)
-      */
-    FreeBody(MultiBody * _owner);
+    //Condtructor. Construct a FreeBody and set its owner as _owner.
+    //a free body can be a smaller component of a group.  
+
+    FreeBody(MultiBody* _owner);
 
     /**Constructor. Set owner and geometric information of this instance of FreeBody.
-      *@see Body::Body(MultiBody * , GMSPolyhedron & )
-      */
-    FreeBody(MultiBody * _owner, GMSPolyhedron & _polyhedron);
+     *@see Body::Body(MultiBody * , GMSPolyhedron & )
+     */
+    FreeBody(MultiBody* _owner, GMSPolyhedron& _polyhedron);
 
-    ///Do nothing
     virtual ~FreeBody();
 
-    //@}
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Access Methods
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //These following virtual functions can be overridden in inheriting classes
+    //by a function with the same signature.
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Access Methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Access Methods. Use these method to acess or change internal state*/
-    //@{
-
-    ///NO!! This is a FREE Body.
-    virtual int IsFixedBody();
+    //programer can use this to check if this object is free or fixed body.
+    virtual int IsFixedBody(){return false;}
 
     ///Call Body::GetWorldPolyhedron 
-    virtual GMSPolyhedron & GetWorldPolyhedron();
+    virtual GMSPolyhedron& GetWorldPolyhedron();
 
     /**Get world transforamtion of this free body.
-      *Transformation "this" body w.r.t the world frame in a 
-      *recursive manner; multiply the world transformation
-      *of the previous body with the transformation from the
-      *proximal joint to the center of gravity of "this" body
-      *(Need a generalization for the connectionship, since
-      *currently it handles only one backward connection).
-      */
-    virtual Transformation & GetWorldTransformation();
+     *Transformation "this" body w.r.t the world frame in a 
+     *recursive manner; multiply the world transformation
+     *of the previous body with the transformation from the
+     *proximal joint to the center of gravity of "this" body
+     *(Need a generalization for the connectionship, since
+     *currently it handles only one backward connection).
+     */
+    virtual Transformation& GetWorldTransformation();
 
-    //@}
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    I/O
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name I/O Methods. Use these method to read in/write out internal state*/
-    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    I/O
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //Write string "FixedBody", and call Body and world transformation's output method.
+    virtual void Write(ostream& _os);
 
-    //@{
-    /**Write string "FixedBody", and call Body and world transformation's output method.
-      *@see Body::Write, Transformation::Write
-      */
-    virtual void Write(ostream & _os);
-    //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Helpers
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Help Methods*/
-    //@{
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Helpers
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
     ///Configure "this" body with the given transformation
-    void Configure(Transformation & _transformation);
+    void Configure(Transformation& _transformation);
 
-    //@}
+    Transformation& ComputeWorldTransformation(std::set<int, less<int> >& visited);
 
-    Transformation & ComputeWorldTransformation(std::set<int, less<int> >& visited);
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Protected data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-protected:
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Private data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-private:
 };
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-//
-//  Implementation of FreeBody
-//
-//
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////////
-
-
-//===============================================================
-// Inline Functions
-//===============================================================
-
-//---------------------------------------------------------------
-// IsFixedBody
-//---------------------------------------------------------------
-inline int FreeBody::IsFixedBody() {
-    return 0;
-}
 
 #endif
