@@ -217,16 +217,16 @@ CfgType OBRRTStrategy::g2(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
     int randIndex = (LRand() % (numBodies-1)) + 1;
     GMSPolyhedron& poly = env->GetMultiBody(randIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-    vector<Vector3D>& vertexList    = poly.vertexList; 
-    vector<GMSPolygon>& polygonList = poly.polygonList; 
+    vector<Vector3D>& m_vertexList    = poly.m_vertexList; 
+    vector<GMSPolygon>& m_polygonList = poly.m_polygonList; 
     //random polygon
-    int randPolyInd = LRand() % polygonList.size();
+    int randPolyInd = LRand() % m_polygonList.size();
     int randEdgeInd = LRand() % 3;
-    int v1Ind= polygonList[randPolyInd].vertexList[randEdgeInd];
+    int v1Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
     randEdgeInd = (randEdgeInd+1)%3;
-    int v2Ind= polygonList[randPolyInd].vertexList[randEdgeInd];
-    Vector3D vertex1 = vertexList[v1Ind];
-    Vector3D vertex2 = vertexList[v2Ind];
+    int v2Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
+    Vector3D vertex1 = m_vertexList[v1Ind];
+    Vector3D vertex2 = m_vertexList[v2Ind];
     Vector3D OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
     if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 
@@ -263,16 +263,16 @@ CfgType OBRRTStrategy::g3(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
     int randIndex = (LRand() % (numBodies-1)) + 1;
     GMSPolyhedron& poly = env->GetMultiBody(randIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-    vector<Vector3D>& vertexList    = poly.vertexList; 
-    vector<GMSPolygon>& polygonList = poly.polygonList; 
+    vector<Vector3D>& m_vertexList    = poly.m_vertexList; 
+    vector<GMSPolygon>& m_polygonList = poly.m_polygonList; 
     //random polygon
-    int randPolyInd = LRand() % polygonList.size();
+    int randPolyInd = LRand() % m_polygonList.size();
     int randEdgeInd = LRand() % 3;
-    int v1Ind= polygonList[randPolyInd].vertexList[randEdgeInd];
+    int v1Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
     randEdgeInd = (randEdgeInd+1)%3;
-    int v2Ind= polygonList[randPolyInd].vertexList[randEdgeInd];
-    Vector3D vertex1 = vertexList[v1Ind];
-    Vector3D vertex2 = vertexList[v2Ind];
+    int v2Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
+    Vector3D vertex1 = m_vertexList[v1Ind];
+    Vector3D vertex2 = m_vertexList[v2Ind];
     Vector3D OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
     if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 
@@ -368,17 +368,17 @@ CfgType OBRRTStrategy::g5(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     }
   }
   GMSPolyhedron& poly = env->GetMultiBody(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-  vector<Vector3D>& vertexList    = poly.vertexList; 
-  vector<GMSPolygon>& polygonList = poly.polygonList; 
+  vector<Vector3D>& m_vertexList    = poly.m_vertexList; 
+  vector<GMSPolygon>& m_polygonList = poly.m_polygonList; 
   //random polygon
-  int randPolyInd = LRand() % polygonList.size();
+  int randPolyInd = LRand() % m_polygonList.size();
   if( obsContactIndex != -1 ) randPolyInd = obsContactIndex;
   int randEdgeInd = LRand() % 3;
-  int v1Ind= polygonList[randPolyInd].vertexList[randEdgeInd];
+  int v1Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
   randEdgeInd = (randEdgeInd+1)%3;
-  int v2Ind= polygonList[randPolyInd].vertexList[randEdgeInd];
-  Vector3D vertex1 = vertexList[v1Ind];
-  Vector3D vertex2 = vertexList[v2Ind];
+  int v2Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
+  Vector3D vertex1 = m_vertexList[v1Ind];
+  Vector3D vertex2 = m_vertexList[v2Ind];
   Vector3D OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
   if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 

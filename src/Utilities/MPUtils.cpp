@@ -789,25 +789,25 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
   // Find closest point between robot and bbx, set if less than min dist from obstacles
   for(int m=0; m < robot->GetFreeBodyCount(); m++) {
     GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
-    for(size_t j = 0 ; j < poly.vertexList.size() ; j++){
+    for(size_t j = 0 ; j < poly.m_vertexList.size() ; j++){
       for (size_t k=0; k<_cfg.PosDOF(); k++) { // For all positional DOFs
         bbxRange = _bb->GetRange(k);
-        if ( (poly.vertexList[j][k]-bbxRange.first) < _cdInfo.min_dist ) {
+        if ( (poly.m_vertexList[j][k]-bbxRange.first) < _cdInfo.min_dist ) {
           for (size_t l=0; l<_cfg.PosDOF(); l++) {// Save new closest point
-            _cdInfo.robot_point[l]  = poly.vertexList[j][l];
-            _cdInfo.object_point[l] = poly.vertexList[j][l];
+            _cdInfo.robot_point[l]  = poly.m_vertexList[j][l];
+            _cdInfo.object_point[l] = poly.m_vertexList[j][l];
           }
           _cdInfo.object_point[k] = bbxRange.first; // Lower Bound
-          _cdInfo.min_dist = poly.vertexList[j][k]-bbxRange.first;
+          _cdInfo.min_dist = poly.m_vertexList[j][k]-bbxRange.first;
           _cdInfo.nearest_obst_index = -(k*2);
         }
-        if ( (bbxRange.second-poly.vertexList[j][k]) < _cdInfo.min_dist ) {
+        if ( (bbxRange.second-poly.m_vertexList[j][k]) < _cdInfo.min_dist ) {
           for (size_t l=0; l<_cfg.PosDOF(); l++) {// Save new closest point
-            _cdInfo.robot_point[l]  = poly.vertexList[j][l];
-            _cdInfo.object_point[l] = poly.vertexList[j][l];
+            _cdInfo.robot_point[l]  = poly.m_vertexList[j][l];
+            _cdInfo.object_point[l] = poly.m_vertexList[j][l];
           }
           _cdInfo.object_point[k] = bbxRange.second; // Upper Bound
-          _cdInfo.min_dist = bbxRange.second-poly.vertexList[j][k];
+          _cdInfo.min_dist = bbxRange.second-poly.m_vertexList[j][k];
           _cdInfo.nearest_obst_index = -(k*2+1);
         }
       }
