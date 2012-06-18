@@ -189,7 +189,6 @@ IsConnectedFunc(Environment* _env, StatClass& _stats,
   typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
   string callee = this->GetName() + "::IsConnectedSLSequential";
   CDInfo cdInfo;
-  callee=callee+method;
 
   _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0; 
