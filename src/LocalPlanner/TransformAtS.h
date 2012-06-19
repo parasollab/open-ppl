@@ -127,7 +127,7 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
 
     // Change all orientation DoF back to those of _c1
     translateData = _c1.GetData();
-    for(int i = 0; i < _c1.PosDOF(); i++)
+    for(size_t i = 0; i < _c1.PosDOF(); i++)
       translateData[i] = cfgTranslate->GetData()[i];
   }
 
