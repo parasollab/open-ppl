@@ -108,15 +108,18 @@ long MRand();
 // when reset is 1, it reset the internal static variable and return 0.0
 double GRand(bool _reset = false);
 
+//Same as GRand, but one can specify the mean and stdev of the distribution
+double GaussianDistribution(double _mean, double _stdev);
+
 /* use seedval as the seed
- */
+*/
 long SRand(long _seed = 0x1234ABCD);
 
 /* "baseSeed" is a static variable in this function
    we use baseSeed, methodName and nextNodeIndex to generate a deterministic seed,
    then call seed48()
    when reset is 1, baseSeed will be reset
- */
+   */
 long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool _reset = false);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -133,8 +136,6 @@ long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool
  *between two angles normalized to 1.0 
  */
 double DirectedAngularDistance(double _a, double _b);
-
-double GaussianDistribution(double _mean, double _stdev);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -237,7 +238,7 @@ template <typename Method, typename TypeList>
 class ContainerBase {
   public:
     typedef boost::shared_ptr<Method> MethodPointer;
-    
+
     ContainerBase() {} 
     virtual ~ContainerBase() {}
 
@@ -551,7 +552,8 @@ bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const
 //   for potential usage later
 //----------------------------------------------------------------------------
 bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const Point2d & _P,
-      double& _u, double& _v);
+    double& _u, double& _v);
+
 
 //----------------------------------------------------------------------------
 // GetPtFromBarycentricCoords: given triange defined by _A,_B,_C, return the
