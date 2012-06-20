@@ -42,7 +42,7 @@
 
   <MPStrategy>  
     <node_generation_methods>
-      <UniformRandomSampler Label="UniformRandomFree" vc_method="cd1"
+      <UniformRandomSampler Label="UniformRandomFree" vcMethod="cd1"
         debug="false"/>
     </node_generation_methods>
 
