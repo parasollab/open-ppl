@@ -1,7 +1,13 @@
-#ifndef _COMPOSE_VC_HPP_
-#define _COMPOSE_VC_HPP_
+//////////////////////////////////////////////
+//ComposeVC.hpp
+//
+//This class composes one or more validity 
+//checker methods.
+/////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////////////////
+#ifndef COMPOSEVC_HPP_
+#define COMPOSEVC_HPP_
+
 #include "ValidityChecker.hpp"
 #include "ValidityCheckerMethod.hpp"
 #include "MPUtils.h"
@@ -10,74 +16,68 @@
 #include <string>
 #include <functional>
 #include <algorithm>
-//////////////////////////////////////////////////////////////////////////////////////////
-
 
 template<typename CFG> class ValidityChecker;
 template<typename CFG> struct ComposeFunctor;
 
-
 template<typename CFG>
-class ComposeValidity : public ValidityCheckerMethod 
-{  
-public:
-  enum en_logical_operator { AND, OR };
-  typedef ComposeValidity<CFG> this_type;
-  typedef typename std::vector<typename ValidityChecker<CFG>::VCMethodPtr>::iterator InputIterator;
-  
-  ComposeValidity() { }
-  ComposeValidity(en_logical_operator _m_logical_operator,
-  std::vector<std::string> _m_vec_vcLabel,
-  std::vector<typename ValidityChecker<CFG>::VCMethodPtr> _m_vec_vcMethod,
-  Compose<InputIterator, logical_and<bool>, ComposeFunctor<CFG> > _com_and,
-  Compose<InputIterator, logical_or<bool>,  ComposeFunctor<CFG> > _com_or);
+class ComposeValidity : public ValidityCheckerMethod {  
+  public:
+    enum LogicalOperator { AND, OR };
+    typedef typename std::vector<typename ValidityChecker<CFG>::VCMethodPtr>::iterator InputIterator;
 
-  ComposeValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem);   
-  ~ComposeValidity() { }
-  
-  virtual bool 
-  IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, 
-	  CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName);
+    ComposeValidity() { }
+    ComposeValidity(LogicalOperator _logicalOperator,
+        std::vector<string> _vcLabel,
+        std::vector<typename ValidityChecker<CFG>::VCMethodPtr> _vcMethod,
+        Compose<InputIterator, logical_and<bool>, ComposeFunctor<CFG> > _and,
+        Compose<InputIterator, logical_or<bool>,  ComposeFunctor<CFG> > _or);
 
-private:
-  en_logical_operator m_logical_operator;
-  std::vector<std::string> m_vec_vcLabel;
-  std::vector<typename ValidityChecker<CFG>::VCMethodPtr> m_vec_vcMethod;
-  Compose<InputIterator, logical_and<bool>, ComposeFunctor<CFG> > com_and;
-  Compose<InputIterator, logical_or<bool>,  ComposeFunctor<CFG> > com_or;
+    ComposeValidity(XMLNodeReader& _node, MPProblem* _problem);   
+    ~ComposeValidity() { }
+
+    virtual bool 
+      IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+          CDInfo& _cdInfo, bool _enablePenetration, string* _callName);
+
+  private:
+    LogicalOperator m_logicalOperator;
+    std::vector<string> m_label;
+    std::vector<typename ValidityChecker<CFG>::VCMethodPtr> m_vcMethod;
+    Compose<InputIterator, logical_and<bool>, ComposeFunctor<CFG> > m_and;
+    Compose<InputIterator, logical_or<bool>,  ComposeFunctor<CFG> > m_or;
 };
 
 template<typename CFG>
 ComposeValidity<CFG>::
-ComposeValidity(en_logical_operator _m_logical_operator,
-  std::vector<std::string> _m_vec_vcLabel,
-  std::vector<typename ValidityChecker<CFG>::VCMethodPtr> _m_vec_vcMethod,
-  Compose<InputIterator, logical_and<bool>, ComposeFunctor<CFG> > _com_and,
-  Compose<InputIterator, logical_or<bool>,  ComposeFunctor<CFG> > _com_or) : ValidityCheckerMethod(), m_logical_operator(_m_logical_operator), m_vec_vcLabel(_m_vec_vcLabel), com_and(_com_and), com_or(_com_or) {};
+ComposeValidity(LogicalOperator _operator,
+    std::vector<string> _vcLabel,
+    std::vector<typename ValidityChecker<CFG>::VCMethodPtr> _vcMethod,
+    Compose<InputIterator, logical_and<bool>, ComposeFunctor<CFG> > _and,
+    Compose<InputIterator, logical_or<bool>,  ComposeFunctor<CFG> > _or) : ValidityCheckerMethod(), m_logicalOperator(_operator), m_label(_vcLabel), m_and(_and), m_or(_or) {}
 
 
 template<typename CFG>
 ComposeValidity<CFG>::
-ComposeValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-  ValidityCheckerMethod(in_Node, in_pProblem) 
-{
-  in_Node.verifyName("ComposeValidity");
-  
-  string logical_operator = in_Node.stringXMLParameter("operator",true,"","operator");    
-  if (logical_operator == "AND" || logical_operator == "and") {
-    m_logical_operator = AND;
-  } else if (logical_operator == "OR" || logical_operator == "or") {
-    m_logical_operator = OR;
+ComposeValidity(XMLNodeReader& _node, MPProblem* _problem) :
+  ValidityCheckerMethod(_node, _problem) {
+  _node.verifyName("ComposeValidity");
+
+  string logicalOperator = _node.stringXMLParameter("operator",true,"","operator");    
+  if (logicalOperator == "AND" || logicalOperator == "and") {
+    m_logicalOperator = AND;
+  } else if (logicalOperator == "OR" || logicalOperator == "or") {
+    m_logicalOperator = OR;
   } else {
     std::cout << "unknown logical operator label is read " << std::endl;
     exit(-1);
   }
-  
+
   XMLNodeReader::childiterator citr;
-  for (citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr) {
+  for (citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
     if (citr->getName() == "vc_method") {
-      std::string method_label = citr->stringXMLParameter("method", true, "", "method");
-      m_vec_vcLabel.push_back(method_label);
+      string methodLabel = citr->stringXMLParameter("method", true, "", "method");
+      m_label.push_back(methodLabel);
     }
     else {
       citr->warnUnknownNode();
@@ -89,54 +89,52 @@ ComposeValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
 template<typename CFG>
 bool
 ComposeValidity<CFG>::
-IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
-	bool enablePenetration, std::string *pCallName = NULL) 
-{
+IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
+    bool _enablePenetration, string* _callName = NULL) {
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  
-  if (m_vec_vcMethod.size() != m_vec_vcLabel.size()) {
-    for(std::vector<std::string>::iterator it = m_vec_vcLabel.begin(); it != m_vec_vcLabel.end(); ++it) {
-      m_vec_vcMethod.push_back(vc->GetVCMethod(*it));
+
+  if (m_vcMethod.size() != m_label.size()) {
+    for(std::vector<string>::iterator it = m_label.begin(); it != m_label.end(); ++it) {
+      m_vcMethod.push_back(vc->GetVCMethod(*it));
     }
   }
-  
-  ComposeFunctor<CFG> com_func(vc, _cfg, env, Stats, _cdInfo, enablePenetration, pCallName); 
-  
-  if (m_logical_operator == AND) {
-    return com_and(m_vec_vcMethod.begin(), m_vec_vcMethod.end(), logical_and<bool>(), com_func);
-  } else if (m_logical_operator == OR) {
-    return com_or(m_vec_vcMethod.begin(), m_vec_vcMethod.end(), logical_or<bool>(), com_func);
+
+  ComposeFunctor<CFG> comFunc(vc, _cfg, _env, _stats, _cdInfo, _enablePenetration, _callName); 
+
+  if (m_logicalOperator == AND) {
+    return m_and(m_vcMethod.begin(), m_vcMethod.end(), logical_and<bool>(), comFunc);
+  } else if (m_logicalOperator == OR) {
+    return m_or(m_vcMethod.begin(), m_vcMethod.end(), logical_or<bool>(), comFunc);
   } else { 
-    std::cout << "unknown label is read " << std::endl;
+    std::cout << "read unknown label" << std::endl;
     return false;
   }        
 }
 
 template<typename CFG>
-class ComposeFunctor 
-{	    
-public:
-  ComposeFunctor(ValidityChecker<CFG>* vc, Cfg& _cfg, Environment* env, StatClass& Stats, 
-		 CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName) : 
-    m_vc(vc), m_cfg(_cfg), m_env(env), m_Stats(Stats), m_cdInfo(_cdInfo), 
-    m_enablePenetration(enablePenetration), m_pCallName(pCallName) { }
-  
-  ~ComposeFunctor() {}
-  
-  bool operator()(typename ValidityChecker<CFG>::VCMethodPtr vcMethodPtr) {
-    return m_vc->IsValid(vcMethodPtr, m_cfg, m_env, m_Stats, 
-			 m_cdInfo, m_enablePenetration, m_pCallName);
-  }
-  
-private:
-  ValidityChecker<CFG>* m_vc;  
-  Cfg& m_cfg; 
-  Environment* m_env; 
-  StatClass& m_Stats; 
-  CDInfo& m_cdInfo; 
-  bool m_enablePenetration; 
-  std::string * m_pCallName;
+class ComposeFunctor {	    
+  public:
+    ComposeFunctor(ValidityChecker<CFG>* _vc, Cfg& _cfg, Environment* _env, StatClass& _stats, 
+        CDInfo& _cdInfo, bool _enablePenetration, string* _callName) : 
+      m_vc(_vc), m_cfg(_cfg), m_env(_env), m_stats(_stats), m_cdInfo(_cdInfo), 
+      m_enablePenetration(_enablePenetration), m_callName(_callName) { }
+
+    ~ComposeFunctor() {}
+
+    bool operator()(typename ValidityChecker<CFG>::VCMethodPtr vcMethodPtr) {
+      return m_vc->IsValid(vcMethodPtr, m_cfg, m_env, m_stats, 
+          m_cdInfo, m_enablePenetration, m_callName);
+    }
+
+  private:
+    ValidityChecker<CFG>* m_vc;  
+    Cfg& m_cfg; 
+    Environment* m_env; 
+    StatClass& m_stats; 
+    CDInfo& m_cdInfo; 
+    bool m_enablePenetration; 
+    string * m_callName;
 };
 
 
-#endif// #ifndef _COMPOSE_VC_HPP_
+#endif

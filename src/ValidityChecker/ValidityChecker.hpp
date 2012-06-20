@@ -39,7 +39,7 @@ public:
       } else if(citr->getName() == "ComposeValidity") {
         VCMethodPtr vc(new ComposeValidity<CFG>(*citr, in_pProblem));
         AddVCMethod(vc->GetLabel(), vc);
-      } else if(citr->getName() == "NodeClearance") {
+      } else if(citr->getName() == "NodeClearanceValidity") {
         VCMethodPtr vc(new NodeClearanceValidity(*citr, in_pProblem));
         AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "MedialAxisClearance") {
