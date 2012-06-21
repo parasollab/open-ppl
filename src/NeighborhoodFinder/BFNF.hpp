@@ -99,7 +99,7 @@ OutputIterator BFNF<CFG, WEIGHT>::KClosest(Roadmap<CFG, WEIGHT>* _rmp,
    
     if(node == _cfg) // Don't connect to self
       continue;
-    if(pq.size() < _k)
+    if(pq.size() < (size_t)_k)
       pq.push(make_pair(*it, dist));
     // If better than the worst so far, replace worst so far
     else if(dist < pq.top().second) {
@@ -162,7 +162,7 @@ OutputIterator BFNF<CFG, WEIGHT>::KClosestPairs(Roadmap<CFG, WEIGHT>* _rmp,
       
       CFG node2 = pmpl_detail::GetCfg<InputIterator>(pMap)(it2);
       double dist = dmm->Distance(env, node1, node2);
-      if(pq.size() < _k)
+      if(pq.size() < (size_t)_k)
         pq.push(make_pair(make_pair(*it1, *it2), dist));
       // If better than worst so far, replace worst so far
       else if(dist < pq.top().second) {

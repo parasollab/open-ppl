@@ -66,10 +66,10 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       _os << "\tdmLabel = " << m_dmLabel << endl;
       _os << "\tuseBBX = " << m_useBBX << endl;
       _os << "\tclearance = ";
-      _os <<(m_exactClearance)?"exact, ":"approx, ";
+      _os << ((m_exactClearance)?"exact, ":"approx, ");
       _os << m_clearanceRays << " rays\n";
       _os << "\tpenetration = ";
-      _os << (m_exactPenetration)?"exact, ":"approx, ";
+      _os << ((m_exactPenetration)?"exact, ":"approx, ");
       _os << m_penetrationRays << " rays\n";
       _os << "\tepsilon = " << m_epsilon << endl;
       _os << "\thistoryLength = " << m_historyLength << endl;
