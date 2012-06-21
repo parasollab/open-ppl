@@ -109,7 +109,7 @@ AStar<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats, shared_ptr<
       reverse(_lpOutput->path.begin(), _lpOutput->path.end());
   }
   if(connected){
-    _lpOutput->AddIntermediatesToWeights();
+    _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
     _lpOutput->SetLPLabel(this->GetLabel());
   }
   return connected;
@@ -196,12 +196,11 @@ AStar<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats, share
       _lpOutput->path.push_back(p);
     }
     _lpOutput->intermediates.push_back(p);
-
     //too many tries have been attempted
     if ((++tries> m_maxTries * nTicks)) {
       connected = SetLPOutputFail(_c1, p, _lpOutput, "Max Tries Reached");
       break;
-    }
+    } ;
   } while(p!=_c2);
 
   _lpOutput->path.push_back(p);

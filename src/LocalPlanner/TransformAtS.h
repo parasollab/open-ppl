@@ -89,7 +89,7 @@ TransformAtS<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
   // Output any good results
   if(connected) {
     _lpOutput->SetLPLabel(this->GetLabel());
-    _lpOutput->AddIntermediatesToWeights();
+    _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
   }
   return connected;
 }
@@ -193,8 +193,9 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
 
   // Output any good results
   if(connected)
-    for(size_t i = 0; i < sequence.size() - 1; i++)
+    for(size_t i = 0; i < sequence.size() - 1; i++) {
       _lpOutput->intermediates.push_back(*sequence[i+1]);
+    }
   if(this->m_recordKeep) {
     if(connected)
       _stats.IncLPConnections(this->GetNameAndLabel());

@@ -97,7 +97,7 @@ RotateAtS<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
   // Output any good results
   if(connected) {
     _lpOutput->SetLPLabel(this->GetLabel());
-    _lpOutput->AddIntermediatesToWeights();
+    _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
   }
   return connected;
 }
@@ -159,6 +159,7 @@ RotateAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats,
   }
 
   // Output any good results
+
   if(connected) {
     _lpOutput->intermediates.push_back(*sequence[1]);
     _lpOutput->intermediates.push_back(*sequence[2]);

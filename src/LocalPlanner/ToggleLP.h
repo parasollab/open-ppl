@@ -141,7 +141,7 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
         _lpOutput->intermediates.push_back(pathGraph.find_vertex(path[i])->property());
       }
     }
-    _lpOutput->AddIntermediatesToWeights();
+    _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
     _lpOutput->SetLPLabel(this->GetLabel());
   }
 

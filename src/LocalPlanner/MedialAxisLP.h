@@ -170,7 +170,7 @@ MedialAxisLP<CFG,WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
     _stats.IncLPConnections(this->GetNameAndLabel() );  
     _lpOutput->edge.first.SetWeight(_lpOutput->path.size());
     _lpOutput->edge.second.SetWeight(_lpOutput->path.size());
-    _lpOutput->AddIntermediatesToWeights();
+    _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
     _lpOutput->SetLPLabel(this->GetLabel());
   }
 
@@ -240,7 +240,6 @@ MedialAxisLP<CFG,WEIGHT>::IsConnectedRec(Environment* _env, StatClass& _stats, s
     if (this->m_debug) VDClearLastTemp();
     return false;
   }
-
   for(size_t i = 0; i<lpOutputS.intermediates.size(); i++){
     _lpOutput->intermediates.push_back(lpOutputS.intermediates[i]);
   }
@@ -248,7 +247,7 @@ MedialAxisLP<CFG,WEIGHT>::IsConnectedRec(Environment* _env, StatClass& _stats, s
   for(size_t i = 0; i<lpOutputE.intermediates.size(); i++){
     _lpOutput->intermediates.push_back(lpOutputE.intermediates[i]);
   }
-
+  
   // Push path onto local planner output
   _lpOutput->path.push_back(_c1);
   for ( size_t i=0; i<lpOutputS.path.size(); ++i)
@@ -383,7 +382,7 @@ EpsilonClosePath( Environment *_env, StatClass& _stats, shared_ptr<DistanceMetri
 template <class CFG, class WEIGHT>
 vector<CFG> 
 MedialAxisLP<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
-        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes){
+    const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes){
   StatClass dummyStats;
   LocalPlannerPointer envLPMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_envLP);
   LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();

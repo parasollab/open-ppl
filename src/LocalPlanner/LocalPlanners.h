@@ -47,11 +47,13 @@ struct LPOutput {
     edge.second.SetLPLabel(_l);
   }
 
-  void AddIntermediatesToWeights(){
-    edge.first.SetIntermediates(intermediates);
-    vector<CFG> tmp = intermediates;
-    reverse(tmp.begin(), tmp.end());
-    edge.second.SetIntermediates(tmp);
+  void AddIntermediatesToWeights(bool _saveIntermediates){
+    if(_saveIntermediates){
+      edge.first.SetIntermediates(intermediates);
+      vector<CFG> tmp = intermediates;
+      reverse(tmp.begin(), tmp.end());
+      edge.second.SetIntermediates(tmp);
+    }
   }
 };
 

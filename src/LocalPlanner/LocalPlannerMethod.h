@@ -21,12 +21,19 @@ template <class CFG, class WEIGHT> struct LPOutput;
 template <class CFG, class WEIGHT> class LocalPlannerMethod : public MPBaseObject {
   public:
 
-    LocalPlannerMethod() { }
-    LocalPlannerMethod(XMLNodeReader& _node, MPProblem* _problem):MPBaseObject(_node, _problem) { }
+    LocalPlannerMethod(bool _saveIntermediates = false) :
+      m_saveIntermediates(_saveIntermediates){ 
+      }
+
+    LocalPlannerMethod(XMLNodeReader& _node, MPProblem* _problem):MPBaseObject(_node, _problem) {
+      m_saveIntermediates = _node.boolXMLParameter("saveIntermediates",
+          false, false, "Save intermediate nodes");
+    }
+
     virtual ~LocalPlannerMethod();
 
     virtual void PrintOptions(ostream& out_os) { };
-    
+
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
         shared_ptr<DistanceMetricMethod> _dm,
         const CFG &_c1, const CFG &_c2,
@@ -60,6 +67,9 @@ template <class CFG, class WEIGHT> class LocalPlannerMethod : public MPBaseObjec
       delete lpOutput;
       return path;
     }
+
+  protected:
+    bool m_saveIntermediates; 
 };
 
 template <class CFG, class WEIGHT> 
