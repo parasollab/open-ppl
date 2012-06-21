@@ -1,82 +1,78 @@
-#ifndef BASICDECOMPOSITION_H
-#define BASICDECOMPOSITION_H
-
+////////////////////////////
+//HEADER BasicDecompostion.h
+////////////////////////////
+#ifndef BASICDECOMPOSITION_H_
+#define BASICDECOMPOSITION_H_
 
 #include <sstream>
 using namespace std;
-
 
 class Environment;
 class Body;
 class BoundingBox;
 
-
-class BasicDecomposition 
-{
-  public:
+class BasicDecomposition {
+public:
   
   //TO DO : Need to support more constructors so parameters can be passed through xml etc
-  
+  ///////////////////
+  //CONSTRUCTORS  
+  //////////////////
   BasicDecomposition() {};
 	
   ~BasicDecomposition() {}
 	
   template <typename OutputIterator>
   void
-  DecomposeWS(Environment * _env, BoundingBox & c_boundary, unsigned int nx, unsigned int ny, unsigned int nz, OutputIterator _out, 
-                double x_overlap_percentage, double y_overlap_percentage, double z_overlap_percentage);
-	
-	
-	
+  DecomposeWS(Environment* _env, BoundingBox& _cBoundary, unsigned int _nx, unsigned int _ny, unsigned int _nz, OutputIterator _out, 
+    double _xOverlapPercentage, double _yOverlapPercentage, double _zOverlapPercentage);	
 };
-
-
 
 template<typename OutputIterator>
 void
 BasicDecomposition::
-DecomposeWS(Environment * _env, BoundingBox & c_boundary,unsigned int nx, unsigned int ny, unsigned int nz, OutputIterator _out, 
-	    double x_overlap_percentage = 0, double y_overlap_percentage = 0, double z_overlap_percentage = 0)
-{
+DecomposeWS(Environment* _env, BoundingBox& _cBoundary,unsigned int _nx, unsigned int _ny, unsigned int _nz, OutputIterator _out, 
+  double _xOverlapPercentage = 0, double _yOverlapPercentage = 0, double _zOverlapPercentage = 0) {
+  
   // TO DO: Set some of these parameters in constructor
-  double xwidth = (c_boundary.GetRange(0).second - c_boundary.GetRange(0).first)/nx;
-  double ywidth = (c_boundary.GetRange(1).second - c_boundary.GetRange(1).first)/ny;
-  double zwidth = (c_boundary.GetRange(2).second - c_boundary.GetRange(2).first)/nz;
+  double xwidth = (_cBoundary.GetRange(0).second - _cBoundary.GetRange(0).first)/_nx;
+  double ywidth = (_cBoundary.GetRange(1).second - _cBoundary.GetRange(1).first)/_ny;
+  double zwidth = (_cBoundary.GetRange(2).second - _cBoundary.GetRange(2).first)/_nz;
 
   double robotradius = _env->GetMultiBody(_env->GetRobotIndex())->GetMaxAxisRange();
 
-  double xoverlap = xwidth * x_overlap_percentage + robotradius;
-  double yoverlap = ywidth * y_overlap_percentage + robotradius;
-  double zoverlap = zwidth * z_overlap_percentage + robotradius;
+  double xoverlap = xwidth * _xOverlapPercentage + robotradius;
+  double yoverlap = ywidth * _yOverlapPercentage + robotradius;
+  double zoverlap = zwidth * _zOverlapPercentage + robotradius;
 
   double xmin,xmax;
   double ymin,ymax;
   double zmin,zmax;
 
-  BoundingBox tmp(c_boundary.GetDOFs(), c_boundary.GetPosDOFs());
+  BoundingBox tmp(_cBoundary.GetDOFs(), _cBoundary.GetPosDOFs());
   //BoundingBox tmp(c_boundary);
 
-  for(unsigned int i = 0; i < nx; ++i){	
-    xmin = c_boundary.GetRange(0).first + xwidth*i;
+  for(unsigned int i = 0; i < _nx; ++i){	
+    xmin = _cBoundary.GetRange(0).first + xwidth*i;
     xmax = xmin + xwidth;
     // Change for overlap region in x-axis
-    xmin = (xmin-xoverlap > c_boundary.GetRange(0).first) ? xmin-xoverlap : xmin;
-    xmax = (xmax+xoverlap < c_boundary.GetRange(0).second) ? xmax+xoverlap : xmax;
+    xmin = (xmin-xoverlap > _cBoundary.GetRange(0).first) ? xmin-xoverlap : xmin;
+    xmax = (xmax+xoverlap < _cBoundary.GetRange(0).second) ? xmax+xoverlap : xmax;
 
-    for(unsigned int j = 0; j < ny; ++j){
-      ymin = c_boundary.GetRange(1).first + ywidth*j;
+    for(unsigned int j = 0; j < _ny; ++j){
+      ymin = _cBoundary.GetRange(1).first + ywidth*j;
       ymax = ymin + ywidth;	
       // Change for overlap region y-axis
-      ymin = (ymin-yoverlap > c_boundary.GetRange(1).first) ? ymin-yoverlap : ymin;
-      ymax = (ymax+yoverlap < c_boundary.GetRange(1).second) ? ymax+yoverlap : ymax;
+      ymin = (ymin-yoverlap > _cBoundary.GetRange(1).first) ? ymin-yoverlap : ymin;
+      ymax = (ymax+yoverlap < _cBoundary.GetRange(1).second) ? ymax+yoverlap : ymax;
       
-      for(unsigned int k = 0; k < nz; ++k){
-        zmin = c_boundary.GetRange(2).first + zwidth*k;
+      for(unsigned int k = 0; k < _nz; ++k){
+        zmin = _cBoundary.GetRange(2).first + zwidth*k;
 	zmax = zmin + zwidth;
 	
 	// Change for overlap region z-axis
-	zmin = (zmin-zoverlap > c_boundary.GetRange(2).first) ? zmin-zoverlap : zmin;
-	zmax = (zmax+zoverlap < c_boundary.GetRange(2).second) ? zmax+zoverlap : zmax;
+	zmin = (zmin-zoverlap > _cBoundary.GetRange(2).first) ? zmin-zoverlap : zmin;
+	zmax = (zmax+zoverlap < _cBoundary.GetRange(2).second) ? zmax+zoverlap : zmax;
 	tmp.SetParameter(0,xmin,xmax);
 	tmp.SetParameter(1,ymin,ymax);
 	tmp.SetParameter(2,zmin,zmax);
@@ -85,7 +81,5 @@ DecomposeWS(Environment * _env, BoundingBox & c_boundary,unsigned int nx, unsign
     }
   }
 }
-
-
 
 #endif
