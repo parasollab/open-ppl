@@ -144,75 +144,73 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       return _result;
     }
 
-    // Attempts to sample, returns true if successful
     virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, 
-        CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) {
+        CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
       string callee = this->GetNameAndLabel() + "::Sampler()";
       ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
       shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmMethod);
       CDInfo cdInfo;
 
-      // Loop until successful or max attempts reached
-      for(int attempts = 1; attempts <= _maxAttempts; attempts++) {
-        if(this->m_recordKeep)
-          _stats.IncNodesAttempted(this->GetNameAndLabel());
-        // Old state
-        CFG c1 = ChooseASample(_cfgIn, _env, _bb);
-        bool c1BBox = c1.InBoundingBox(_env, _bb);  
-	bool c1Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c1, _env, _stats, cdInfo, true, &callee);
-        // New state
-        CFG c2 = c1;
-        bool c2BBox = c1BBox;
-        bool c2Free = c1Free;
-        
-        // Create a random ray
-        CFG r;
-	r.GetRandomRay(m_stepSize, _env, dm);
-        if(r == CFG()) {
-          if(this->m_debug)
-            cerr << "Random ray in OBPRM Sampler is 0-valued! Continuing with loop." << endl;
-          continue;
-        }
+      if(this->m_recordKeep)
+        _stats.IncNodesAttempted(this->GetNameAndLabel());
 
-        // Loop until the new state is outside the bounds or the validity changes
-        while(c2BBox && (c1Free == c2Free)) { 
-          // Copy new data to old state
-          c1 = c2;
-          c1BBox = c2BBox;
-          c1Free = c2Free;
-          // Update new state
-          c2.Increment(r);
-          c2BBox = c2.InBoundingBox(_env, _bb);
-          c2Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c2, _env, _stats, cdInfo, true, &callee);
-        }
+      // Old state
+      CFG c1 = ChooseASample(_cfgIn, _env, _bb);
+      bool c1BBox = c1.InBoundingBox(_env, _bb);  
+      bool c1Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c1, _env, _stats, cdInfo, true, &callee);
 
-        // If new state is in BBox (there must be a validity change)
-        if(c2BBox) {
-          if(c1Free) { // Old state (c1) is free
-            // Reverse direction of r
-            CFG tmp;
-            r.subtract(tmp, r);
-            // Process configurations
-            GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
-	    _cfgCol.push_back(c2);
-          }
-          else { // New state (c2) is free
-            // Process configurations
-            GenerateShells(_env, _bb, _stats, c2, c1, r,back_insert_iterator<vector<CFG> >(_cfgOut));
-	    _cfgCol.push_back(c1);
-          }
-          return true;
-        }
-        else if(m_useBBX && c1BBox && c1Free) {
+      // New state
+      CFG c2 = c1;
+      bool c2BBox = c1BBox;
+      bool c2Free = c1Free;
+
+      // Create a random ray
+      CFG r;
+      r.GetRandomRay(m_stepSize, _env, dm);
+      if(r == CFG()) {
+        if(this->m_debug)
+          cerr << "Random ray in OBPRM Sampler is 0-valued! Continuing with loop." << endl;
+        return false;
+      }
+
+      // Loop until the new state is outside the bounds or the validity changes
+      while(c2BBox && (c1Free == c2Free)) { 
+        // Copy new data to old state
+        c1 = c2;
+        c1BBox = c2BBox;
+        c1Free = c2Free;
+        // Update new state
+        c2.Increment(r);
+        c2BBox = c2.InBoundingBox(_env, _bb);
+        c2Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c2, _env, _stats, cdInfo, true, &callee);
+      }
+
+      // If new state is in BBox (there must be a validity change)
+      if(c2BBox) {
+        if(c1Free) { // Old state (c1) is free
           // Reverse direction of r
           CFG tmp;
           r.subtract(tmp, r);
           // Process configurations
           GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
-	  _cfgCol.push_back(c2);
-          return true;
+          _cfgCol.push_back(c2);
         }
+        else { // New state (c2) is free
+          // Process configurations
+          GenerateShells(_env, _bb, _stats, c2, c1, r,back_insert_iterator<vector<CFG> >(_cfgOut));
+          _cfgCol.push_back(c1);
+        }
+        return true;
+      }
+      else if(m_useBBX && c1BBox && c1Free) {
+        // Reverse direction of r
+        CFG tmp;
+        r.subtract(tmp, r);
+        // Process configurations
+        GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
+        _cfgCol.push_back(c2);
+        return true;
       }
       return false;
     }

@@ -50,56 +50,62 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
     virtual bool 
       Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, 
           StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, 
-          vector<CFG>& _cfgCol, int _maxAttempts) { 
+          vector<CFG>& _cfgCol) { 
 
         string callee(this->GetName() + "::SampleImpl()");
         ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
         CDInfo cdInfo;
-        bool generated = false;
-        int attempts = 0;
+
         if(this->m_debug) 
           VDClearAll();
-        //Attempt to generate node while not at max attempts 
-        do {                                   
-          _stats.IncNodesAttempted(this->GetNameAndLabel());
-          attempts++;
-          CFG tmp;
-          //Obtain a random configuration 
-          tmp.GetRandomCfg(_env,_bb);     
-          //Is configuration within bounding box? 
-          bool inBBX = tmp.InBoundingBox(_env, _bb);          
-          if(this->m_debug) 
-            cout << "tmp::" << tmp << endl;
-          if(this->m_debug) 
-            cout << "InBoudary::" << inBBX << endl;
-          //Good. Now determine validity. 
-          if(inBBX) { 
-            bool isValid = vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env,   
-                _stats, cdInfo, true, &callee);                      
-            if(this->m_debug) 
-              cout << "IsValid::" << isValid << endl;
-            //Record valid node and confirm successful generation. 
-            if(isValid) {                                        
-              _stats.IncNodesGenerated(this->GetNameAndLabel());          
-              generated = true;
-              if(this->m_debug) 
-                cout << "Generated::" << tmp << endl;     
-              _cfgOut.push_back(tmp);
-              //Otherwise, node generation unsuccessful. 
-            } else {                                                    
-              _cfgCol.push_back(tmp);                         
-              if(this->m_debug) 
-                VDAddTempCfg(tmp, false);
-            }  
+
+        _stats.IncNodesAttempted(this->GetNameAndLabel());
+
+        //Obtain a random configuration 
+        CFG tmp;
+        tmp.GetRandomCfg(_env,_bb);     
+
+        //Is configuration within bounding box? 
+        bool inBBX = tmp.InBoundingBox(_env, _bb);          
+        if(this->m_debug){ 
+          cout << "tmp::" << tmp << endl;
+          cout << "InBoudary::" << inBBX << endl;
+        }
+
+        //Good. Now determine validity. 
+        if(inBBX) { 
+          bool isValid = vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env,   
+              _stats, cdInfo, true, &callee);                      
+          if(this->m_debug){ 
+            cout << "IsValid::" << isValid << endl;
+            VDAddTempCfg(tmp, isValid); 
+            if(isValid) 
+              VDComment("UniformSampling::Cfg valid");   
+            else
+              VDComment("UniformSampling::Cfg invalid"); 
           }
-        } while (!generated && (attempts < _maxAttempts));       
-
-        //Unsuccessful after max number of tries. 
-        if(!generated && this->m_debug) 
-          cout << "Maximum attempts reached." << endl;
-        return generated;
+          //Record valid node and confirm successful generation. 
+          if(isValid) {                                        
+            _stats.IncNodesGenerated(this->GetNameAndLabel());          
+            if(this->m_debug) 
+              cout << "Generated::" << tmp << endl; 
+            _cfgOut.push_back(tmp);
+            return true;
+          }
+          //Otherwise, unsuccessful. 
+          else {
+            _cfgCol.push_back(tmp);
+            return false;
+          }  
+        } 
+        //Sampled outside of boundary
+        else if(this->m_debug){
+          cout << "Attempt outside of boundary" << endl;
+          VDAddTempCfg(tmp, false);
+          VDComment("UniformSampling::Cfg outside of boundary");
+        }
+        return false;
       } 
-
 };
 
 #endif

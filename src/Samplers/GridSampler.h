@@ -66,77 +66,98 @@ class GridSampler : public SamplerMethod<CFG> {
   }
 
   // Attempts to sample, returns true if successful
-  virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, 
-      CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol, int _maxAttempts) {
 
-    // When using grid sampler, set the TestEval to a number 
-    // that is a no more than 70-80% of the total number of 
-    // possible grid points. Otherwise a very long time may pass
-    // before enough unique points are generated
+ virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, 
+     CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
-    string callee = this->GetNameAndLabel() + "::Sampler()";
-    ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-    CDInfo cdInfo;
+   // When using grid sampler, set the TestEval to a number 
+   // that is a no more than 70-80% of the total number of 
+   // possible grid points. Otherwise a very long time may pass
+   // before enough unique points are generated
 
-    // Loop until successful or max attempts reached 
-    for(int attempts = 1; attempts <= _maxAttempts; attempts++) {
+   string callee = this->GetNameAndLabel() + "::Sampler()";
+   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+   CDInfo cdInfo;
 
-      if(this->m_debug)
-        cout << callee << " attempt #" << attempts << endl;
+   // Set tmp to _cfgIn or a random configuration
+   CFG tmp = _cfgIn;
+   if(tmp == CFG())
+     tmp.GetRandomCfg(_env,_bb);
+   
+   if(this->m_debug){
+     VDClearAll();  
+     VDAddTempCfg(tmp, true);
+   }
 
-      // Set tmp to _cfgIn or a random configuration
-      CFG tmp = _cfgIn;
-      if(tmp == CFG())
-        tmp.GetRandomCfg(_env,_bb);
+   // Loop through each dimension index
+   for(map<size_t, size_t>::iterator it = m_numPoints.begin(); it != m_numPoints.end(); it++) {
+     int index = it->first;
+     int numPoints = it->second;
 
-      // Loop through each dimension index
-      for(map<size_t, size_t>::iterator it = m_numPoints.begin(); it != m_numPoints.end(); it++) {
-        int index = it->first;
-        int numPoints = it->second;
+     // Get bounding box min and max (for this dimension)
+     double bbMin = _bb->GetRange(index).first;
+     double bbMax = _bb->GetRange(index).second;
 
-        // Get bounding box min and max (for this dimension)
-        double bbMin = _bb->GetRange(index).first;
-        double bbMax = _bb->GetRange(index).second;
+     // Get starting point (for this dimension)
+     double dofVal = tmp.GetSingleParam(index);
 
-        // Get starting point (for this dimension)
-        double dofVal = tmp.GetSingleParam(index);
+     // Resolution of grid
+     double delta = (bbMax - bbMin) / (numPoints + 1);
 
-        // Resolution of grid
-        double delta = (bbMax - bbMin) / (numPoints + 1);
+     // Number of grid cells from bounding box min
+     double steps = floor(((dofVal - bbMin) / delta) + 0.5);
 
-        // Number of grid cells from bounding box min
-        double steps = floor(((dofVal - bbMin) / delta) + 0.5);
+     // The grid location closest to dofVal
+     double gridVal = steps*delta + bbMin;
 
-        // The grid location closest to dofVal
-        double gridVal = steps*delta + bbMin;
+     // Push gridVal inside bounding box (if necessary)
+     gridVal = min(bbMax, gridVal);
+     gridVal = max(bbMin, gridVal);
 
-        // Push gridVal inside bounding box (if necessary)
-        gridVal = min(bbMax, gridVal);
-        gridVal = max(bbMin, gridVal);
+     // If the bounding box is an obstacle, move gridVal further inside bounding box (if necessary) 
+     if(m_useBBX) {
+       if(fabs(bbMax - gridVal) <= delta/10)
+         gridVal = bbMax - delta;
+       if(fabs(bbMin - gridVal) <= delta/10)
+         gridVal = bbMin + delta;
+     }
 
-        // If the bounding box is an obstacle, move gridVal further inside bounding box (if necessary) 
-        if(m_useBBX) {
-          if(fabs(bbMax - gridVal) <= delta/10)
-            gridVal = bbMax - delta;
-          if(fabs(bbMin - gridVal) <= delta/10)
-            gridVal = bbMin + delta;
-        }
+     // Set the parameter at index
+     tmp.SetSingleParam(index, gridVal);
+     if(this->m_debug){
+       ostringstream oss; 
+       oss << "GridSampler::Dim::" << dofVal << "::grid value::" << gridVal; 
+       VDComment(oss.str());
+       VDClearLastTemp();
+       VDAddTempCfg(tmp, true);
+     }
+   }
 
-        // Set the parameter at index
-        tmp.SetSingleParam(index, gridVal);
-      }
+   // Is tmp a valid configuration?
+   if(tmp.InBoundingBox(_env,_bb) && 
+       vc->IsValid(vc->GetVCMethod(m_vcm), tmp, _env, _stats, cdInfo, true, &callee)) {
+     // Yes (sampler successful)
+     _cfgOut.push_back(tmp);
+     
+     if(this->m_debug){
+       VDClearLastTemp();
+       VDAddTempCfg(tmp, true);
+       ostringstream oss; 
+       oss << "GridSampler::Successful";
+       VDComment(oss.str()); 
+     } 
+     return true;
+   }
+   else if(this->m_debug){
+     VDClearLastTemp();
+     VDAddTempCfg(tmp, false);
+     ostringstream oss; 
+     oss << "GridSampler::failure";
+     VDComment(oss.str()); 
+   }
 
-      // Is tmp a valid configuration?
-      if(tmp.InBoundingBox(_env,_bb) && 
-          vc->IsValid(vc->GetVCMethod(m_vcm), tmp, _env, _stats, cdInfo, true, &callee)) {
-        // Yes (sampler successful)
-        _cfgOut.push_back(tmp);
-        return true;
-      }
-    }
-
-    return false;
-  }
+   return false;
+ }
 };
 
 #endif

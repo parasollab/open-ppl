@@ -62,9 +62,9 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
       }
 
     virtual bool 
-      Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, 
-          StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, 
-          vector<CFG>& _cfgCol, int _maxAttempts) {
+     Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, 
+         StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut,
+         vector<CFG>& _cfgCol){ 
 
         string callee(this->GetName() + "::SampleImpl()");
         ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
@@ -77,9 +77,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
         if(this->m_debug) 
           VDClearAll(); 
 
-        do {
           _stats.IncNodesAttempted(this->GetNameAndLabel());
-          attempts++;  
 
           ///Acquire first Cfg.
           CFG tmp = _cfgIn;
@@ -207,7 +205,6 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
               }
             }	
           }
-        } while (!generated && (attempts < _maxAttempts));
         return generated;
       }
 };
