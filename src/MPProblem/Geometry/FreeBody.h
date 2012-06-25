@@ -65,8 +65,8 @@ class FreeBody : public Body {
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-    //Write string "FixedBody", and call Body and world transformation's output method.
-    virtual void Write(ostream& _os);
+    friend istream& operator>>(istream& _is, FreeBody& _fb);
+    friend ostream& operator<<(ostream& _os, FreeBody& _fb);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

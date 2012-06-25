@@ -97,15 +97,48 @@ FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited) {
   }
 }
 
+istream&
+operator>>(istream& _is, FreeBody& _fb){
+  _fb.m_filename = ReadFieldString(_is, "FreeBody filename (geometry file)", false);
 
-//===================================================================
-//  Write               
-//===================================================================
-void
-FreeBody::Write(ostream& _os) {
-  _os << "FreeBody 0 " << endl;
-  Body::Write(_os);
-  worldTransformation.Write(_os);
-  _os << endl;
+  VerifyFileExists(_fb.m_filename);
+  _fb.Read(_fb.m_filename);
+
+  //Read for Base Type.  If Planar or Volumetric, read in two more strings
+  //If Joint skip this stuff. If Fixed read in positions like an obstacle
+  string baseTag = ReadFieldString(_is, 
+      "Base Tag (Planar, Volumetric, Fixed, Joint");
+  _fb.baseType = Robot::GetBaseFromTag(baseTag);
+
+
+  if(_fb.baseType == Robot::VOLUMETRIC ||_fb. baseType == Robot::PLANAR){
+    _fb.isBase = true;
+    string baseMovementTag = ReadFieldString(_is, 
+        "Rotation Tag (Rotational, Translational)");
+   _fb.baseMovementType = Robot::GetMovementFromTag(baseMovementTag);
+  }
+  else if(_fb.baseType == Robot::FIXED){
+    _fb.isBase = true;
+    _fb.worldTransformation = 
+      ReadField<Transformation>(_is, "FreeBody Transformation");
+  }
+
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, FreeBody& _fb){
+  _os << _fb.m_filename << " ";
+  
+  _os << Robot::GetTagFromBase(_fb.baseType) << " ";
+
+  if(_fb.baseType == Robot::VOLUMETRIC || _fb.baseType == Robot::PLANAR){
+    _os << Robot::GetTagFromMovement(_fb.baseMovementType);   
+  }
+  else if(_fb.baseType == Robot::FIXED){
+    _os << _fb.worldTransformation;   
+  }
+
+  return _os;
 }
 

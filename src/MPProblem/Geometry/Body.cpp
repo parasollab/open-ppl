@@ -21,6 +21,7 @@ Body::Body(MultiBody* _owner, GMSPolyhedron & _polyhedron) :
 {}
 
 Body::Body(const Body& b) :
+  m_filename(b.m_filename),
   multibody(b.multibody),
   worldTransformation(b.worldTransformation),
   isBase(b.isBase),

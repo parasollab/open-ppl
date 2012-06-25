@@ -10,6 +10,10 @@
 //===================================================================
 //  Constructors and Destructor
 //===================================================================
+Connection::Connection(MultiBody* _owner)
+  : m_multibody(_owner) {
+}
+
 Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2)
   : transformationToBody2(Transformation::Identity),
     transformationToDHFrame(Transformation::Identity),
@@ -95,64 +99,50 @@ Transformation & Connection::GetTransformationToDHFrame()
   return transformationToDHFrame;
 }
 
+//===================================================================
+//  Write
+//===================================================================
+ostream&
+operator<<(ostream& _os, const Connection& _c){
+  return _os << _c.m_prevBodyIdx << " " << _c.m_nextBodyIdx << " "
+    << Robot::GetTagFromJointType(_c.type) << endl 
+    << _c.transformationToDHFrame << " " << _c.dhparameters << " "
+    << _c.transformationToBody2;
+}
 
 //===================================================================
 //  Read
 //===================================================================
-void Connection::Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
-		      const Vector3D& transformPosition, const Orientation& transformOrientation,
-		      const Vector3D& positionToDHFrame, const Orientation& orientationToDHFrame,
-		      const DHparameters& _dhparameters, const Robot::JointType& connectionType,
-                      bool _debug) 
-{
-  body[0] = body1;
-  body[1] = body2;
+istream&
+operator>>(istream& _is, Connection& _c){
+  //body indices
+  _c.m_prevBodyIdx = ReadField<int>(_is, "Previous Body Index");
+  _c.m_nextBodyIdx = ReadField<int>(_is, "Next Body Index");
   
-  transformationToBody2 = Transformation(transformOrientation, transformPosition);
-  transformationToDHFrame = Transformation(orientationToDHFrame, positionToDHFrame);
-  dhparameters = _dhparameters;  
-  type = connectionType;
-  
-  if(_debug) {
-    cout << "transformationToBody2 = (" 
-         << transformationToBody2.m_position.getX() << ", " 
-         << transformationToBody2.m_position.getY() << ", " 
-         << transformationToBody2.m_position.getZ() << ", " 
-         << transformationToBody2.m_orientation.alpha << ", " 
-         << transformationToBody2.m_orientation.beta << ", " 
-         << transformationToBody2.m_orientation.gamma << ")" << endl;
-    
-    cout << "dhparameters = (" 
-         << dhparameters.alpha << ", " 
-         << dhparameters.a << ", " 
-         << dhparameters.d << ", " 
-         << dhparameters.theta << ")" 
-         << endl;
-  }
+  //grab the shared_ptr to bodies
+  _c.body[0] = _c.m_multibody->GetFreeBody(_c.m_prevBodyIdx);
+  _c.body[1] = _c.m_multibody->GetFreeBody(_c.m_nextBodyIdx);
+
+  //grab the joint type
+  string connectionTypeTag = ReadFieldString(_is, "Connection Type");
+  _c.type = Robot::GetJointTypeFromTag(connectionTypeTag);
+
+  //transformation to DHFrame
+  _c.transformationToDHFrame = 
+    ReadField<Transformation>(_is, "Transformation to DH frame");
+
+  //DH parameters
+  _c.dhparameters = ReadField<DHparameters>(_is, "DH Parameters");
+
+  //transformation to next body
+  _c.transformationToBody2 =
+    ReadField<Transformation>(_is, "Transform to next body");
+
+  //make the connection
+  _c.body[0]->Link(_c);
+
+  return _is;
 }
-
-
-//===================================================================
-//  Write
-//===================================================================
-void Connection::Write(ostream & _os) 
-{
-  _os << "Connection" << endl;
-  if(body[1]->IsFixedBody()) 
-  {
-    _os << (int)0 << " ";
-    _os << body[1]->GetMultiBody()->GetFixedBodyIndex(*(FixedBody*)(body[1].get())) << endl;
-  } 
-  else 
-  {
-    _os << (int)1 << " ";
-    _os << body[1]->GetMultiBody()->GetFreeBodyIndex(*(FreeBody*)(body[1].get())) << endl;
-  }
-  transformationToBody2.Write(_os);
-  _os << dhparameters;
-  _os << (int)type << endl;
-}
-
 
 bool Connection::operator==(const Connection& c) const 
 {

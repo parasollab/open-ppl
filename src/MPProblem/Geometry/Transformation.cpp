@@ -127,22 +127,11 @@ Transformation::Invert() {
   m_position = -(m_orientation * m_position);
 }
 
-
-//===================================================================
-//  Read
-//===================================================================
-void
-Transformation::Read(ifstream& _is) {
-  m_position.Read(_is);
-  m_orientation.Read(_is);
+istream& 
+operator>>(istream& _is, Transformation& _t){
+  return _is >> _t.m_position >> _t.m_orientation;
 }
 
-//===================================================================
-//  Write
-//===================================================================
-void
-Transformation::Write(ostream& _os) {
-  m_position.Write(_os);
-  m_orientation.Write(_os);
+ostream& operator<<(ostream& _os, const Transformation& _t){
+  return _os << _t.m_position << _t.m_orientation;
 }
-

@@ -21,6 +21,7 @@ using boost::shared_ptr;
 
 /////////////////////////////////////////////////////////////////////
 class Body;
+class MultiBody;
 
 
 class Connection {
@@ -46,6 +47,7 @@ public:
       *@param _body1 One of this _body1's end joints is this connection.
       *@param _body2 One of this _body2's start joints is this connection.
       */
+    Connection(MultiBody* _owner);//_body1, const shared_ptr<Body>& _body2 = shared_ptr<Body>());  // Second argument is optional
     Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2 = shared_ptr<Body>());  // Second argument is optional
     
     /**You need to provide all information for Constructor.
@@ -110,14 +112,6 @@ public:
     ///Get a refecence of transformation which is a transformation from body1 to DHFrame of body2. (Not sure)
     Transformation & GetTransformationToDHFrame();
     
-    /** Set values for data member
-      */
-    void Read(shared_ptr<Body>& body1, shared_ptr<Body>& body2,
-	      const Vector3D& transformPosition, const Orientation& transformOrientation,
-	      const Vector3D& positionToDHFrame, const Orientation& orientationToDHFrame,
-	      const DHparameters& _dhparameters, const Robot::JointType& connectionType,
-              bool _debug = false);
-    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -126,17 +120,12 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name I/O Methods. Use these method to read in/write out internal state*/
-    //@{
+    friend ostream& operator<<(ostream& _os, const Connection& _c);
+    friend istream& operator>>(istream& _is, Connection& _c);
 
-    /**Write inforamtion about Body2, transformationToBody2, and transformationToDHFrame 
-      *to output stream.
-      */
-    virtual void Write(ostream & _os);
-
-    //@}
-   
   bool operator==(const Connection& c) const;
+
+  friend class MultiBody;
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -161,11 +150,13 @@ private:
     //---------------------------------------------------------------
     //  Data
     //---------------------------------------------------------------
+    MultiBody* m_multibody;                  ///<Owner of this Connection
     shared_ptr<Body> body[2];
     Transformation transformationToBody2;
     Transformation transformationToDHFrame;
     DHparameters dhparameters;
     Robot::JointType type;
+    size_t m_prevBodyIdx, m_nextBodyIdx;
 };
 
 #endif

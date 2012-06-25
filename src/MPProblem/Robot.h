@@ -26,6 +26,11 @@ struct Robot{
   static Base GetBaseFromTag(const string _tag);      
   static BaseMovement GetMovementFromTag(const string _tag);  
   static JointType GetJointTypeFromTag(const string _tag);
+
+  static string GetTagFromBase(const Base& _b);
+  static string GetTagFromMovement(const BaseMovement& _bm);
+  static string GetTagFromJointType(const JointType& _jt);
+
 };
 
 #endif

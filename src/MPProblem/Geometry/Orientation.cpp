@@ -1,11 +1,5 @@
-// $Id$
-/////////////////////////////////////////////////////////////////////
-//  Orientation.c
-//
-//  Created   3/ 1/98 Aaron Michalk
-/////////////////////////////////////////////////////////////////////
-
 #include "Orientation.h"
+#include "MPUtils.h"
 
 #define EPSILON  1.0e-6
 
@@ -400,28 +394,20 @@ void Orientation::ConvertType(OrientationType _newType) {
     type = _newType;
 }
 
-
-//===================================================================
-//  Read
-//===================================================================
-void Orientation::Read(istream & _is) {
-    type = EulerXYZ;
-    _is >> alpha;
-    _is >> beta;
-    _is >> gamma;
-
-    ConvertType(Matrix);
+istream& 
+operator>>(istream& _is, Orientation& _o){
+  _o.type = Orientation::EulerXYZ;
+  _is >> _o.alpha >> _o.beta >> _o.gamma;
+  _o.alpha*=DEGTORAD;
+  _o.beta*=DEGTORAD;
+  _o.gamma*=DEGTORAD;
+  _o.ConvertType(Orientation::Matrix);
+  return _is;
 }
 
-//===================================================================
-//  Write
-//===================================================================
-void Orientation::Write(ostream & _os) {
-    ConvertType(EulerZYX);
-
-    _os << setprecision(4) << fixed << gamma*360.0/TWOPI << " ";
-    _os << setprecision(4) << fixed << beta*360.0/TWOPI << " ";
-    _os << setprecision(4) << fixed << alpha*360.0/TWOPI << " ";
-    _os.unsetf(ios_base::fixed);
+ostream& 
+operator<<(ostream& _os, const Orientation& _o){
+  return _os << setprecision(4) << fixed << _o.alpha*RADTODEG << " " 
+    << setprecision(4) << fixed << _o.beta*RADTODEG << " "
+    << setprecision(4) << fixed << _o.gamma*RADTODEG << " ";
 }
-

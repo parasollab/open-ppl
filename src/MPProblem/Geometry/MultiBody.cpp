@@ -459,57 +459,19 @@ MultiBody::Read(istream& _is, bool _debug) {
     if(_debug) cout << "Reading Active Body" << endl;
    
     int bodyCount = ReadField<int>(_is, "Body Count");
-    
-    vector<bool> isFree;
-
-    bool isBase = false;
-    Robot::Base baseType;
-    Robot::BaseMovement baseMovementType;
 
     for(int i=0; i<bodyCount; ++i) {
-      string bodyFilename = ReadFieldString(_is, 
-          "Body Filename (geometry file)", false);
-
-      VerifyFileExists(bodyFilename);
-
-      isFree.push_back(true);
-
-      //Read for Base Type.  If Planar or Volumetric, read in two more strings
-      //If Joint skip this stuff. If Fixed read in positions like an obstacle
-      string baseTag = ReadFieldString(_is, 
-          "Base Tag (Planar, Volumetric, Fixed, Joint");
-      baseType = Robot::GetBaseFromTag(baseTag);
-
-      Vector3D bodyPosition;
-      Vector3D bodyRotation;
-
-      if(baseType == Robot::VOLUMETRIC || baseType == Robot::PLANAR){
-        isBase = true;
-        string rotationalTag = ReadFieldString(_is, 
-            "Rotation Tag (Rotational, Translational");
-        baseMovementType = Robot::GetMovementFromTag(rotationalTag);
-      }
-      else if(baseType == Robot::FIXED){
-        isBase = true;
-        bodyPosition = ReadField<Vector3D>(_is, "Body Position");
-        bodyRotation = ReadField<Vector3D>(_is, "Body Orientation");
-      }
-
-      Orientation bodyOrientation(Orientation::FixedXYZ,
-          bodyRotation[2]*TWOPI/360.0,
-          bodyRotation[1]*TWOPI/360.0,
-          bodyRotation[0]*TWOPI/360.0);
-      Transformation transformation(bodyOrientation, bodyPosition);
-
+      //read the free body
       FreeBody free(this);
-      free.Read(bodyFilename);
-      free.isBase = isBase;
-      free.SetBase(baseType);
-      if (isBase) {
-        free.SetBaseMovement(baseMovementType);
-      }
+      _is >> free;
+      if(_debug)
+      cout << free << endl;
+      
+      //calculate areas on geometry
       freeAreas.push_back(free.GetPolyhedron().m_area);
       freeSum += free.GetPolyhedron().m_area;
+      
+      //add object to multibody
       AddBody(free);
     }
 
@@ -518,96 +480,32 @@ MultiBody::Read(istream& _is, bool _debug) {
     int connectionCount = ReadField<int>(_is, "Number of Connections");
 
     for(int i=0; i<connectionCount; i++) {
-      //body indices
-      int previousBodyIndex = ReadField<int>(_is, "Previous Body Index");
-      int nextBodyIndex = ReadField<int>(_is, "Next Body Index");
-
-      //grab the joint type
-      string connectionTypeTag = ReadFieldString(_is, "Connection Type");
-      Robot::JointType connectionType =
-        Robot::GetJointTypeFromTag(connectionTypeTag);
-
-      jointMap.push_back(make_pair(
-            make_pair(previousBodyIndex, nextBodyIndex), connectionType));
+      Connection c(this);
+      _is >> c;
+      if(_debug)
+        cout << c << endl;
       
-      //transformation to DHFrame
-      Vector3D positionToDHFrame = ReadField<Vector3D>(_is, "Translation to DHFrame");
-      Vector3D rotationToDHFrame = ReadField<Vector3D>(_is, "Rotation to DHFrame");
+      //add connection info to multibody connection map
+      jointMap.push_back(make_pair(
+            make_pair(c.m_prevBodyIdx, c.m_nextBodyIdx), c.type));
 
-      Orientation orientationToDHFrame = Orientation(Orientation::FixedXYZ,
-          rotationToDHFrame[2]*TWOPI/360.0, 
-          rotationToDHFrame[1]*TWOPI/360.0, 
-          rotationToDHFrame[0]*TWOPI/360.0);
-
-      //DH parameters
-      DHparameters dhparameters = ReadField<DHparameters>(_is, "DH Parameters");
-
-      //transformation to next body
-      Vector3D positionToNextBody = ReadField<Vector3D>(_is, "Translation to Next Body");
-      Vector3D rotationToNextBody = ReadField<Vector3D>(_is, "Rotation to Next Body");
-
-      Orientation orientationToNextBody = Orientation(Orientation::FixedXYZ,
-          rotationToNextBody[2]*TWOPI/360.0, 
-          rotationToNextBody[1]*TWOPI/360.0, 
-          rotationToNextBody[0]*TWOPI/360.0);
-
-      //grab the shared_ptr to bodies
-      shared_ptr<Body> prevBody;
-      if(isFree[previousBodyIndex]) {
-        int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
-        prevBody = GetFreeBody(numFreeBeforeIndex);
-      } else {
-        int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+previousBodyIndex, 0);
-        prevBody = GetFixedBody(previousBodyIndex - numFreeBeforeIndex);
-      }
-
-      shared_ptr<Body> nextBody;
-      if(isFree[nextBodyIndex]) {
-        int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
-        nextBody = GetFreeBody(numFreeBeforeIndex);
-      } else {
-        int numFreeBeforeIndex = accumulate(isFree.begin(), isFree.begin()+nextBodyIndex, 0);
-        nextBody = GetFixedBody(nextBodyIndex - numFreeBeforeIndex);
-      }
-
-      //make the connection
-      Connection c(prevBody, nextBody);
-      c.Read(prevBody, nextBody,
-          positionToNextBody, orientationToNextBody,
-          positionToDHFrame, orientationToDHFrame,
-          dhparameters, connectionType, _debug);
-
-      prevBody->Link(c);
     } //endfor i
   }
   else if(multibodyType == "INTERNAL" || multibodyType == "SURFACE" ||
       multibodyType == "PASSIVE"){
     if(_debug) cout << "Reading Other Body" << endl;
 
-    string bodyFilename = ReadFieldString(_is, 
-        "Body Filename (geometry file)", false);
-
-    VerifyFileExists(bodyFilename);
-
-    Vector3D bodyPosition = ReadField<Vector3D>(_is, "Body Position");
-    Vector3D bodyRotation = ReadField<Vector3D>(_is, "Body Orientation");
-
-    Orientation bodyOrientation(Orientation::FixedXYZ,
-        bodyRotation[2]*TWOPI/360.0,
-        bodyRotation[1]*TWOPI/360.0,
-        bodyRotation[0]*TWOPI/360.0);
-    Transformation transformation(bodyOrientation, bodyPosition);
-
+    //all are same type, namely fixed body
     FixedBody fix(this);
-    if(_debug){
-      cout << "FixedBody filename: " << bodyFilename << endl;
-      cout << "bodyPosition: " << bodyPosition << endl;
-      cout << "bodyRotation: " << bodyRotation << endl;
-    }
-    fix.Read(bodyFilename);
-    fix.PutWorldTransformation(transformation);
+    _is >> fix;
+    if(_debug)
+      cout << fix << endl;
+    
+    //calculating area for multibody
     fixAreas.push_back(fix.GetPolyhedron().m_area);
     fixSum += fix.GetPolyhedron().m_area;
+    
+    //add fixed body to multibody
     AddBody(fix);      
   }
   else{
@@ -619,7 +517,6 @@ MultiBody::Read(istream& _is, bool _debug) {
   fixArea = fixSum;
   freeArea = freeSum;
   area = fixArea + freeArea;
-
 
   FindBoundingBox();
   ComputeCenterOfMass();
@@ -640,43 +537,33 @@ void MultiBody::buildCDstructure(cd_predefined cdtype)
 //===================================================================
 void MultiBody::Write(ostream & _os) 
 {
-  //---------------------------------------------------------------
-  // Write tag
-  //---------------------------------------------------------------
-  _os << "MultiBody ";
-  if(freeBody.size()>0)
-    _os << "Active"<<endl;
-  else
-    _os << "Passive"<<endl;
-
-  //---------------------------------------------------------------
-  // Write bodies
-  //---------------------------------------------------------------
-  if(fixedBody.size()>0){
-    _os << fixedBody.size() << endl;
+  if(fixedBody.size() > 0){
+    if(bInternal)
+      _os << "INTERNAL" << endl;
+    else if(m_isSurface)
+      _os << "SURFACE" << endl;
+    else
+      _os << "PASSIVE" << endl;
     for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I){
-      (*I)->Write(_os);
+      _os << **I << endl;
     }
   }
-  if(freeBody.size()>0){
+  else if(freeBody.size() > 0){
+    _os << "ACTIVE" << endl;
     _os << freeBody.size() << endl;
     for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I){
-      (*I)->Write(_os);
+      _os << **I << endl;
     }
-  }
-  _os << "Connection" << endl;
-  //---------------------------------------------------------------
-  // Write links
-  //---------------------------------------------------------------
-  for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I) {
-    _os << (*I)->ForwardConnectionCount() << endl;
-    for(int j=0; j < (*I)->ForwardConnectionCount(); j++)
-      (*I)->GetForwardConnection(j).Write(_os);
-  }
-  for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I) {
-    _os << (*I)->ForwardConnectionCount() << endl;
-    for(int j=0; j < (*I)->ForwardConnectionCount(); j++)
-      (*I)->GetForwardConnection(j).Write(_os);
+    _os << "Connection" << endl;
+    size_t numConnection = 0;
+    for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I) {
+      numConnection += (*I)->ForwardConnectionCount();
+    }
+    _os << numConnection << endl;
+    for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I) {
+      for(int j=0; j < (*I)->ForwardConnectionCount(); j++)
+        _os << (*I)->GetForwardConnection(j);
+    }
   }
 }
 

@@ -47,3 +47,45 @@ Robot::JointType Robot::GetJointTypeFromTag(const string _tag){
     exit(1);
   }
 }
+
+//Begin section getTag
+
+string
+Robot::GetTagFromBase(const Robot::Base& _b){
+  switch(_b){
+    case PLANAR:
+      return "PLANAR";
+    case VOLUMETRIC:
+      return "VOLUMETRIC";
+    case FIXED:
+      return "FIXED";
+    case JOINT:
+      return "JOINT";
+    default:
+      return "Unknown Base Type";
+  }
+}
+
+string
+Robot::GetTagFromMovement(const Robot::BaseMovement& _bm){
+  switch(_bm){
+    case ROTATIONAL:
+      return "ROTATIONAL";
+    case TRANSLATIONAL:
+      return "TRANSLATIONAL";
+    default:
+      return "Unknown Base Movement";
+  }
+}
+
+string
+Robot::GetTagFromJointType(const Robot::JointType& _jt){
+  switch(_jt){
+    case REVOLUTE:
+      return "REVOLUTE";
+    case SPHERICAL:
+      return "SPHERICAL";
+    default:
+      return "Unknown Joint Type";
+  }
+} 

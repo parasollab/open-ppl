@@ -34,14 +34,18 @@ FixedBody::GetWorldTransformation() {
   return worldTransformation;
 }
 
-//===================================================================
-//  Write               
-//===================================================================
-void
-FixedBody::Write(ostream& _os) {
-  _os << "FixedBody 0 " << endl;
-  Body::Write(_os);
-  worldTransformation.Write(_os);
-  _os << endl;
+ostream& 
+operator<<(ostream& _os, const FixedBody& _fb){
+  return _os << _fb.m_filename << " " << _fb.worldTransformation;
 }
 
+istream& 
+operator>>(istream& _is, FixedBody& _fb){
+  _fb.m_filename = ReadFieldString(_is, 
+      "FixedBody Filename (geometry file)", false);
+  VerifyFileExists(_fb.m_filename);
+  _fb.Read(_fb.m_filename);
+  _fb.worldTransformation = 
+    ReadField<Transformation>(_is, "FixedBody Transformation");
+  return _is;
+}

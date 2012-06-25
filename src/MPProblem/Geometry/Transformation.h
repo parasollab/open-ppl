@@ -1,8 +1,8 @@
-/** This class contains transformational information and operations.
- * Orientation and position of object are stored in the instance of this class.
- * Position of object are stored as instance of Vector3D.
- */
-
+/** This class contains transformational information and operations
+* Orientation and position of object are stored in the instance of this class.
+* Position of object are stored as instance of Vector3D.
+*/
+               
 #ifndef TRANSFORMATION_H_
 #define TRANSFORMATION_H_
 
@@ -91,8 +91,8 @@ class Transformation {
     ///Create a new Transformation which is inverse of this Transformation.
     Transformation Inverse();
 
-    void Read(ifstream& _is);  ///<Read position and orientation from _is
-    void Write(ostream& _os);  ///<Write position and orientation to _os
+    friend istream& operator>>(istream& _is, Transformation& _t);
+    friend ostream& operator<<(ostream& _os, const Transformation& _t);
 
     //-----------------------------------------------------------
     //  Data

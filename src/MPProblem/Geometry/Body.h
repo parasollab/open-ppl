@@ -295,6 +295,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////
 protected:
 
+    string m_filename;
     MultiBody* multibody;                  ///<Owner of this Body
     Transformation worldTransformation;     ///<World Transformation
     bool isBase;                           ///<Is this a base?

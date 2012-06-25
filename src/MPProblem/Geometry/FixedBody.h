@@ -48,7 +48,8 @@ class FixedBody : public Body {
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    virtual void Write(ostream& _os);
+    friend ostream& operator<<(ostream& _os, const FixedBody& _fb);
+    friend istream& operator>>(istream& _is, FixedBody& _fb);
 };
 
 #endif
