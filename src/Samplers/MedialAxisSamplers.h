@@ -80,7 +80,6 @@ class MedialAxisSampler : public SamplerMethod<CFG>
 
       string call = "MedialAxisSampler::sampler()";
       bool generated = false;
-      int attempts = 0;
       ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
       CDInfo cdInfo;
 

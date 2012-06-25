@@ -72,7 +72,6 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
         shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel); 
         CFG blankCfg;         
         bool generated = false;
-        int attempts = 0;
 
         if(this->m_debug) 
           VDClearAll(); 
