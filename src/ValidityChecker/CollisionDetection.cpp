@@ -292,7 +292,7 @@ CollisionDetection::
 GetPQP_SOLID() {
   vector<CollisionDetectionMethod*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); ++I)
-    if ((*I)->GetName() == "PQP_Solid")
+    if ((*I)->GetName() == "PQP_SOLID")
       return *I;	
   cerr << "\n\nERROR in CollisionDetectin::GetPQP(): PQP not found in selected vector\n\n";
   exit(-1);
@@ -1366,7 +1366,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, StatC
         if(PQP_Distance(&res,t1.m_orientation.matrix,p1,rob.get(),
                         t2.m_orientation.matrix,p2,obst.get(),0.0,0.0))
         {
-          cout << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"<<endl;
+          cerr << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"<<endl;
           exit(1);
         }
 
@@ -1426,7 +1426,7 @@ IsInCollision(shared_ptr<MultiBody> robot, shared_ptr<MultiBody> obstacle, StatC
   
         if(PQP_Collide(&result, t1.m_orientation.matrix, p1, rob.get(),
                        t2.m_orientation.matrix, p2, obst.get(), PQP_FIRST_CONTACT)) {
-          cout << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"
+          cerr << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"
                << PQP_Collide(&result, t1.m_orientation.matrix, p1, rob.get(), t2.m_orientation.matrix, p2, obst.get(), PQP_FIRST_CONTACT) << endl;
           exit(1);
         }

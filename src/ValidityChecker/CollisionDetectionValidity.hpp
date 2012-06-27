@@ -76,7 +76,8 @@ ignoreSelfCollision = in_Node.boolXMLParameter("ignoreSelfCollision", false, fal
   } else if (cd_label == "SOLID") {
     m_selected.push_back(cd->GetSOLID());
   } else {
-    std::cerr << "Unknown Label" << std::endl;
+    std::cerr << "Unknown Collision Detection Library Label" << std::endl;
+    exit(1);
   }
   m_cd = new CollisionDetection(m_selected);
 }
