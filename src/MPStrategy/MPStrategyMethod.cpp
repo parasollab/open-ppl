@@ -49,8 +49,8 @@ bool MPStrategyMethod::EvaluateMap(int _regionID, vector<string> _evaluators) {
     mapPassedEvaluation = true;
 
     for(vector<string>::iterator I = _evaluators.begin(); I != _evaluators.end(); ++I) {
-      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr evaluator;
-      evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
+      MapEvaluator<CfgType, WeightType>::MapEvaluationPointer evaluator;
+      evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetMethod(*I);
       stringstream evaluatorClockName; 
       evaluatorClockName << clockName << "::" << evaluator->GetName();
       stats->StartClock(evaluatorClockName.str());

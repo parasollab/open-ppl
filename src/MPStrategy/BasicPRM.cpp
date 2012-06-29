@@ -116,7 +116,7 @@ void BasicPRM::PrintOptions(ostream& _os) {
   _os<<"\nMapEvaluators\n";
   for(SIT sit=m_evaluatorLabels.begin(); sit!=m_evaluatorLabels.end(); sit++){
     _os<<"\t"<<*sit<<"\tOptions:\n";
-    GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*sit)->PrintOptions(_os);
+    GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetMethod(*sit)->PrintOptions(_os);
   }
 }
 
@@ -135,9 +135,9 @@ void BasicPRM::Initialize(int _regionID){
       cout << "\n\tResetting map evaluator states...\n";
     }
     for(vector<string>::iterator I = m_evaluatorLabels.begin(); I != m_evaluatorLabels.end(); ++I) {
-      MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
-      if(pEvaluator->HasState())
-        pEvaluator->operator()(_regionID);
+      MapEvaluator<CfgType, WeightType>::MapEvaluationPointer evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetMethod(*I);
+      if(evaluator->HasState())
+        evaluator->operator()(_regionID);
     }
     if (m_debug) cout << "\tdone.\n";
   }

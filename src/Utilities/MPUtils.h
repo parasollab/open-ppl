@@ -309,11 +309,11 @@ class ElementSet {
 
     bool AddElement(string const& _str, boost::shared_ptr<Element> _e) {
       _e->SetLabel(_str);
-      if(m_elements.empty())
+      if(m_elements.empty()) 
         m_default = _str;
-      if(m_elements.find(_str) == m_elements.end())
+      if(m_elements.find(_str) == m_elements.end()) 
         m_elements[_str] = _e;
-      else
+      else 
         cerr << "\nWarning, method list already has a pointer associated with \"" << _str << "\", not added\n";
       return true;
     }
@@ -322,7 +322,7 @@ class ElementSet {
       boost::shared_ptr<Element> element;
       if(_name == "") 
         element = m_elements[m_default];
-      else
+      else 
         element = m_elements[_name];
       if(element.get() == NULL) {
         cerr << "\n\tError, requesting element with name \"" << _name << "\" which does not exist in the element list.\n";

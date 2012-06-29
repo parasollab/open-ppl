@@ -1,26 +1,21 @@
 #ifndef COMPOSEEVALUATION_H_
 #define COMPOSEEVALUATION_H_
 
-#include "MapEvaluator.h"
 #include "MapEvaluationMethod.h"
-#include "MPUtils.h"
-#include <vector>
-#include <string>
-#include <functional>
-#include <algorithm>
-template <typename CFG, typename WEIGHT> class MapEvaluator;
-template <typename CFG, typename WEIGHT> struct ComposeEvalFunctor;
+template <class CFG, class WEIGHT> class MapEvaluator;
+template <class CFG, class WEIGHT> struct ComposeEvalFunctor;
 
-template<typename CFG, typename WEIGHT>
+template <class CFG, class WEIGHT>
 class ComposeEvaluation : public MapEvaluationMethod {
 public:
+
   enum LogicalOperator { AND, OR };
   typedef typename std::vector<typename MapEvaluator<CFG, WEIGHT>::MapEvaluationMethodPtr>::iterator InputIterator;
 
-  ComposeEvaluation() { }
+  ComposeEvaluation();
   ComposeEvaluation(LogicalOperator _logicalOperator,
-  std::vector<std::string> _evalLabels,
-  std::vector<typename MapEvaluator<CFG, WEIGHT>::MapEvaluationMethodPtr> _evalMethods);
+  		    std::vector<std::string> _evalLabels,
+  		    std::vector<typename MapEvaluator<CFG, WEIGHT>::MapEvaluationMethodPtr> _evalMethods);
 
   ComposeEvaluation(XMLNodeReader& _node, MPProblem* _problem);
   ~ComposeEvaluation() { }
@@ -38,19 +33,22 @@ private:
   std::vector<typename MapEvaluator<CFG, WEIGHT>::MapEvaluationMethodPtr> m_evalMethods;
 };
 
-template<typename CFG, typename WEIGHT>
-ComposeEvaluation<CFG, WEIGHT>::
-ComposeEvaluation(LogicalOperator _logicalOperator,
-  std::vector<std::string> _evalLabels,
-  std::vector<typename MapEvaluator<CFG, WEIGHT>::MapEvaluationMethodPtr> _evalMethods)
+template <class CFG, class WEIGHT>
+ComposeEvaluation<CFG, WEIGHT>::ComposeEvaluation() {
+  this->SetName("ComposeEvaluation");
+}
+
+template<class CFG, class WEIGHT>
+ComposeEvaluation<CFG, WEIGHT>::ComposeEvaluation(LogicalOperator _logicalOperator,
+  		 				  std::vector<std::string> _evalLabels,
+				                  std::vector<typename MapEvaluator<CFG, WEIGHT>::MapEvaluationMethodPtr> _evalMethods)
   : MapEvaluationMethod(), m_logicalOperator(_logicalOperator), m_evalLabels(_evalLabels) {
   this->SetName("ComposeEvaluation");
-};
+}
 
-template<typename CFG, typename WEIGHT>
-ComposeEvaluation<CFG, WEIGHT>::
-ComposeEvaluation(XMLNodeReader& _node, MPProblem* _problem) :
-  MapEvaluationMethod(_node, _problem) {
+template<class CFG, class WEIGHT>
+ComposeEvaluation<CFG, WEIGHT>::ComposeEvaluation(XMLNodeReader& _node, MPProblem* _problem) 
+  : MapEvaluationMethod(_node, _problem) {
   this->SetName("ComposeEvaluation");
 
   string logicalOperator = _node.stringXMLParameter("operator",true,"","operator");
@@ -73,26 +71,24 @@ ComposeEvaluation(XMLNodeReader& _node, MPProblem* _problem) :
       citr->warnUnknownNode();
     }
   }
+  if(m_debug) PrintOptions(cout);
 }
 
-template<typename CFG, typename WEIGHT>
-void
-ComposeEvaluation<CFG, WEIGHT>::PrintOptions(ostream& _os) {
+template<class CFG, class WEIGHT>
+void ComposeEvaluation<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << this->GetName() << "::" ;
   for(vector<std::string>::iterator it = m_evalLabels.begin(); it != m_evalLabels.end(); it++)
     _os << "\n\t evaluation method = \'" << *it << "\'";
   _os << "\n\t operator = " << m_logicalOperator << endl;
 }
 
-
-template<typename CFG, typename WEIGHT>
-bool
-ComposeEvaluation<CFG, WEIGHT>::operator()(int _regionID) {
+template<class CFG, class WEIGHT>
+bool ComposeEvaluation<CFG, WEIGHT>::operator()(int _regionID) {
   MapEvaluator<CFG, WEIGHT>* eval = this->GetMPProblem()->GetMPStrategy()->GetMapEvaluator();
 
   if (m_evalMethods.size() != m_evalLabels.size()) {
     for(std::vector<std::string>::iterator it = m_evalLabels.begin(); it != m_evalLabels.end(); ++it) {
-      m_evalMethods.push_back(eval->GetConditionalMethod(*it));
+      m_evalMethods.push_back(eval->GetMethod(*it));
     }
   }
 
@@ -110,7 +106,7 @@ ComposeEvaluation<CFG, WEIGHT>::operator()(int _regionID) {
   }
 }
 
-template<typename CFG, typename WEIGHT>
+template<class CFG, class WEIGHT>
 class ComposeEvalFunctor {
 public:
   ComposeEvalFunctor(MapEvaluator<CFG, WEIGHT>* _eval, int _regionID) :
@@ -128,4 +124,4 @@ private:
 };
 
 
-#endif// #ifndef COMPOSEEVALUATION_H_
+#endif

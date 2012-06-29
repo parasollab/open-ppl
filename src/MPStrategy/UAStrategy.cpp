@@ -156,7 +156,7 @@ void UAStrategy::PrintOptions(ostream& out_os){
    out_os<<"\tEvaluators:"<<endl;
    for(vector<string>::iterator sit = m_EvaluatorLabels.begin(); sit!=m_EvaluatorLabels.end(); sit++){
       out_os<<"\t\tEvaluator:"<<*sit<<endl;
-      GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*sit)->PrintOptions(out_os);
+      GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetMethod(*sit)->PrintOptions(out_os);
    }
    out_os<<endl;
 }

@@ -1,165 +1,77 @@
-#ifndef _MAP_EVALUATOR_H
-#define _MAP_EVALUATOR_H
+#ifndef MAPEVALUATOR_H
+#define MAPEVALUATOR_H
 
-#include "boost/shared_ptr.hpp"
-using boost::shared_ptr;
-
-#include "MapEvaluationMethod.h"
-#include "MPRegionComparerMethod.h"
-#include "NumNodesEvaluation.h"
-#include "NumEdgesEvaluation.h"
-#include "QueryEvaluation.h"
+#include <boost/mpl/list.hpp>
+#include "MPUtils.h"
+#include "TrueEvaluation.h"
 #include "PrintMapEvaluation.h"
-#include "CoverageEvaluation.h"
-#include "ConnectivityEvaluation.h"
+#include "QueryEvaluation.h"
 #include "ComposeEval.h"
 #include "NegateEvaluation.h"
+#include "ConditionalEvaluation.h"
+
+namespace pmpl_detail {
+  typedef boost::mpl::list<
+    TrueEvaluation,
+    PrintMapEvaluation, 
+    QueryEvaluation<CfgType, WeightType>,
+    ComposeEvaluation<CfgType, WeightType>,
+    NegateEvaluation<CfgType, WeightType>,
+    ConditionalEvaluation<CfgType, WeightType>
+    > MapEvaluationMethodList;
+}
 
 template <class CFG, class WEIGHT>
-class MapEvaluator : public MPBaseObject 
-{
- public:
-  typedef shared_ptr<MapEvaluationMethod> MapEvaluationMethodPtr;
-  typedef typename vector<MapEvaluationMethodPtr>::iterator conditional_iterator;
-  
-  typedef shared_ptr<MPRegionComparerMethod<CFG, WEIGHT> > comparer_type;
-  typedef typename vector<comparer_type>::iterator comparer_iterator;
+class MapEvaluator : private ElementSet<MapEvaluationMethod>, public MPBaseObject {
+  public:
+    typedef shared_ptr<MapEvaluationMethod> MapEvaluationMethodPtr;
+    typedef ElementSet<MapEvaluationMethod>::MethodPointer MapEvaluationPointer;
 
-  MapEvaluator() {}
+    template<typename MethodList>
+    MapEvaluator() : ElementSet<MapEvaluationMethod>(MethodList()) {}
   
-  MapEvaluator(const vector<MapEvaluationMethodPtr>& e, vector<comparer_type> _m_comparer_evaluators) 
-  : m_conditional_evaluators(e), m_comparer_evaluators(_m_comparer_evaluators)
-  {}
-  
-  MapEvaluator(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
-  {
-    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
-    {
-      if (citr->getName() == "MPRegionComparers")
-        ParseXMLComparers(*citr, in_pProblem);
-      else if (citr->getName() == "MPRegionConditionalEvaluators") 
-        ParseXMLConditionalEvaluators(*citr, in_pProblem);
-      else
-        citr->warnUnknownNode();
-    }
-  }
-  
-  virtual ~MapEvaluator() {}
-  
-  void ParseXMLComparers(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
-  {
-    m_comparer_evaluators.clear();
-    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
-    {
-      if (citr->getName() == "ConnectableComponentComparer") 
-        m_comparer_evaluators.push_back(comparer_type(new ConnectableComponentComparer<CFG, WEIGHT>(*citr, in_pProblem)));
-      else if (citr->getName() == "RandomConnectComparer") 
-        m_comparer_evaluators.push_back(comparer_type(new RandomConnectComparer<CFG, WEIGHT>(*citr, in_pProblem)));
-      else if (citr->getName() == "RegionCoverageComparer")
-        m_comparer_evaluators.push_back(comparer_type(new RegionCoverageComparer<CFG, WEIGHT>(*citr, in_pProblem)));
-      else if (citr->getName() == "RegionSimilarity")
-        m_comparer_evaluators.push_back(comparer_type(new RegionSimilarity<CFG, WEIGHT>(*citr, in_pProblem)));
-      else
-        citr->warnUnknownNode();
-    }
-  }
-  
-  virtual void ParseXMLConditionalEvaluators(XMLNodeReader& in_Node, MPProblem *in_pProblem) 
-  {
-    m_conditional_evaluators.clear();
-    for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr)
-    {
-      if (citr->getName() == "NumNodesEvaluation")
-        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new NumNodesEvaluation(*citr, in_pProblem)));
-      else if (citr->getName() == "NumEdgesEvaluation")
-        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new NumEdgesEvaluation(*citr, in_pProblem)));
-      else if (citr->getName() == "QueryEvaluation")
-        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new QueryEvaluation<CFG, WEIGHT>(*citr, in_pProblem))); 
-      else if (citr->getName() == "PrintMapEvaluation")
-        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new PrintMapEvaluation(*citr, in_pProblem))); 
-      else if (citr->getName() == "TrueEvaluation")
-         m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new TrueEvaluation(*citr, in_pProblem)));
-      else if (citr->getName() == "CoverageEvaluation")
-        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new CoverageEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
-      else if (citr->getName() == "ConnectivityEvaluation")
-        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new ConnectivityEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
-      else if (citr->getName() == "ComposeEvaluation")
-        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new ComposeEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
-      else if (citr->getName() == "NegateEvaluation")
-        m_conditional_evaluators.push_back(MapEvaluationMethodPtr(new NegateEvaluation<CFG, WEIGHT>(*citr, in_pProblem)));
-      else
-        citr->warnUnknownNode();
-    }
-  }
-  
-  void AddEvaluator(MapEvaluationMethodPtr& e)
-  {
-    m_conditional_evaluators.push_back(e);
-  }
-  
-  bool operator()() 
-  {
-    return (*this)(GetMPProblem->CreateMPRegion());
-  }
-  
-  bool operator()(int in_RegionID)
-  {
-    for (conditional_iterator E = m_conditional_evaluators.begin(); E != m_conditional_evaluators.end(); ++E)
-      if (!((**E)(in_RegionID)))
-        return false;
-    return true;
-  }
-  
-  bool operator()(MPRegion<CFG,WEIGHT>* region_a, MPRegion<CFG,WEIGHT>* region_b) 
-  {
-    for (comparer_iterator E = m_comparer_evaluators.begin(); E != m_comparer_evaluators.end(); ++E)
-      (*E)->compare(region_a, region_b);
-    //@todo operator() should return meaningful comparison, not just a boolean
-    return true;
-  }
+    MapEvaluator() : ElementSet<MapEvaluationMethod>(pmpl_detail::MapEvaluationMethodList()) {}
 
-  MapEvaluationMethodPtr GetConditionalMethod(const string& in_label)
-  {
-    for (conditional_iterator I = m_conditional_evaluators.begin(); I != m_conditional_evaluators.end(); ++I)
-      if ((*I)->GetLabel() == in_label)
-        return *I;
-
-    cerr << "MapEvaluator:: cannot find ConditionalMethod = " << in_label << endl;
-    exit(-1);
-  }
-
-  comparer_type GetComparerMethod(const string& in_label) 
-  {
-    for (comparer_iterator I = m_comparer_evaluators.begin(); I != m_comparer_evaluators.end(); ++I) 
-      if ((*I)->GetLabel() == in_label)
-        return *I;
-      
-    cerr << "MapEvaluator:: cannot find ComparerMethod = " << in_label << endl;
-    exit(-1);
-  }
-  
-  void PrintOptions(ostream& out_os) 
-  {
-    out_os << "  Map Evaluation: " << m_conditional_evaluators.size() << " Conditional Methods" << endl;
-    for (conditional_iterator I = m_conditional_evaluators.begin(); I != m_conditional_evaluators.end(); ++I)
-    {
-      out_os << "    ";
-      (*I)->PrintOptions(out_os);
+    template <typename MethodList>
+    MapEvaluator(XMLNodeReader& _node, MPProblem* _problem, MethodList const&)
+      : ElementSet<MapEvaluationMethod>(MethodList()), MPBaseObject(_problem) {
+      for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
+        if(!ElementSet<MapEvaluationMethod>::AddElement(citr->getName(), *citr, _problem))
+	  citr->warnUnknownNode();
+      }
+      PrintOptions(cout);
     }
 
-    out_os << "  Map Evaluation: " << m_comparer_evaluators.size() << " Comparer Methods" << endl;
-    for (comparer_iterator I = m_comparer_evaluators.begin(); I != m_comparer_evaluators.end(); ++I)
-    {
-      out_os << "    ";
-      (*I)->PrintOptions(out_os);
+    MapEvaluator(XMLNodeReader& _node, MPProblem* _problem)
+      : ElementSet<MapEvaluationMethod>(pmpl_detail::MapEvaluationMethodList()), MPBaseObject(_problem) {
+      for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) 
+	if(!ElementSet<MapEvaluationMethod>::AddElement(citr->getName(), *citr, _problem)) {
+	  citr->warnUnknownNode();
+   	}
+      PrintOptions(cout);
     }
-  }
 
-  //@todo remove when Input class deleted
-  void PrintDefaults(ostream& out_os) {}
+    virtual ~MapEvaluator() {}
 
-  vector<MapEvaluationMethodPtr> m_conditional_evaluators;
-  vector<comparer_type> m_comparer_evaluators;
+    MapEvaluationPointer GetMethod(string _label) {
+      return ElementSet<MapEvaluationMethod>::GetElement(_label);
+    }
+
+    void AddMethod(string const& _label, MapEvaluationPointer _eval) {
+      ElementSet<MapEvaluationMethod>::AddElement(_label, _eval);
+    }
+
+    virtual void SetMPProblem(MPProblem* _mp) {
+      MPBaseObject::SetMPProblem(_mp);
+      ElementSet<MapEvaluationMethod>::SetMPProblem(_mp);
+    }
+
+    void PrintOptions(ostream& _os) const {
+      _os << "Map Evaluators methods available : " << endl;
+      for(map<string, shared_ptr<MapEvaluationMethod> >::const_iterator M = ElementsBegin(); M != ElementsEnd(); ++M)
+        _os << "\t\"" << M->first << "\" (" << M->second->GetName() << ")" << endl;
+
+    }
 };
 
 #endif

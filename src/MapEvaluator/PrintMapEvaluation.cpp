@@ -1,53 +1,48 @@
 #include "PrintMapEvaluation.h"
 #include "MPRegion.h"
 
-
-PrintMapEvaluation::
-PrintMapEvaluation(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
- : MapEvaluationMethod(in_Node, in_pProblem) 
-{
-  this->SetName("PrintMapEvaluator");
-  base_name = in_Node.stringXMLParameter("base_name", true, "", "base filename for map output");
+PrintMapEvaluation::PrintMapEvaluation() {
+  this->SetName("PrintMapEvaluation");
 }
 
-
-PrintMapEvaluation::
-~PrintMapEvaluation() 
-{}
-
-
-void
-PrintMapEvaluation::
-PrintOptions(ostream& out_os)
-{
-  out_os << this->GetName() << "::  base_name = " << base_name << endl;
+PrintMapEvaluation::PrintMapEvaluation(string _baseName)
+  : m_baseName(_baseName) {
+  this->SetName("PrintMapEvaluation");
 }
-  
 
-bool
-PrintMapEvaluation::
-operator() (int in_RegionID) 
-{
-  PrintOptions(cout);
-  //REVISIT WriteMap in parallel
-  #ifndef _PARALLEL
-  int num_nodes = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->m_pRoadmap->get_num_vertices();
-  int num_edges = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->m_pRoadmap->get_num_edges();
-  int num_coll_nodes = GetMPProblem()->GetMPRegion(in_RegionID)->GetBlockRoadmap()->m_pRoadmap->get_num_vertices();
-  int num_coll_edges = GetMPProblem()->GetMPRegion(in_RegionID)->GetBlockRoadmap()->m_pRoadmap->get_num_edges();
-  
-  ostringstream os_name;
-  os_name << base_name << "." << num_nodes << "." << num_edges << ".map";
-  ostringstream os_coll_name;
-  os_coll_name << base_name << "." << num_coll_nodes << "." << num_coll_edges << ".block.map";
-  
-  ofstream os_map(os_name.str().c_str());
-  GetMPProblem()->GetMPRegion(in_RegionID)->WriteRoadmapForVizmo(os_map);
-  os_map.close();
-  ofstream os_coll_map(os_coll_name.str().c_str());
-  GetMPProblem()->GetMPRegion(in_RegionID)->WriteRoadmapForVizmo(os_coll_map, NULL, true);
-  os_coll_map.close();
-  #endif 
+PrintMapEvaluation::PrintMapEvaluation(XMLNodeReader& _node, MPProblem* _problem)
+  : MapEvaluationMethod(_node, _problem) {
+  this->SetName("PrintMapEvaluation");
+  m_baseName = _node.stringXMLParameter("base_name", true, "", "base filename for map output");
+
+  if(m_debug) PrintOptions(cout);
+}
+
+PrintMapEvaluation::~PrintMapEvaluation() {
+}
+
+void PrintMapEvaluation::PrintOptions(ostream& _os) {
+  _os << "PrintMapEvalaution" << endl;
+  _os << "\tbase filename = " << m_baseName << endl;
+}
+
+bool PrintMapEvaluation::operator()(int _regionID) {
+  int numNodes = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap()->m_pRoadmap->get_num_vertices();
+  int numEdges = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap()->m_pRoadmap->get_num_edges();
+  int numCollNodes = GetMPProblem()->GetMPRegion(_regionID)->GetBlockRoadmap()->m_pRoadmap->get_num_vertices();
+  int numCollEdges = GetMPProblem()->GetMPRegion(_regionID)->GetBlockRoadmap()->m_pRoadmap->get_num_edges();
+
+  ostringstream osName;
+  osName << m_baseName << "." << numNodes << "." << numEdges << ".map";
+  ostringstream osCollName;
+  osCollName << m_baseName << "." << numCollNodes << "." << numCollEdges << ".block.map";
+
+  ofstream osMap(osName.str().c_str());
+  GetMPProblem()->GetMPRegion(_regionID)->WriteRoadmapForVizmo(osMap);
+  osMap.close();
+  ofstream osCollMap(osCollName.str().c_str());
+  GetMPProblem()->GetMPRegion(_regionID)->WriteRoadmapForVizmo(osCollMap, NULL, true);
+  osCollMap.close();
+
   return true;
 }
-

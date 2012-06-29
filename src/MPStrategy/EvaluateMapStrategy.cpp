@@ -61,7 +61,7 @@ Run(int region_id)
   
   for(vector<string>::const_iterator I = evaluator_labels.begin(); I != evaluator_labels.end(); ++I)
   {
-    shared_ptr<MapEvaluationMethod> evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
+    MapEvaluator<CfgType, WeightType>::MapEvaluationPointer evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetMethod(*I);
     cout << "\n\t";
     bool passed = evaluator->operator()(region_id);
     if(passed)

@@ -11,6 +11,7 @@ template <class CFG, class WEIGHT> class Connector;
 #ifndef _PARALLEL
 template <class CFG, class WEIGHT> class MPCharacterizer;
 template <class CFG, class WEIGHT> class MapEvaluator;
+class Metric;
 class PartitioningMethods;
 class PartitioningEvaluators;
 class Features;
@@ -19,12 +20,10 @@ class MPStrategyMethod;
 
 class MPStrategy : public MPBaseObject {
   public:
-    /*  MPStrategy(Sampler<CfgType> _m_pNodeGeneration, Connector<CfgType, WeightType> _m_pConnection, LocalPlanners<CfgType, WeightType> _m_pLocalPlanners, MapEvaluator<CfgType, WeightType> _m_Evaluator, MPCharacterizer<CfgType, WeightType> _m_pCharacterizer, Features* _m_Features, PartitioningMethods* _m_PartitioningMethods, PartitioningEvaluators* _m_PartitioningEvaluators);
-     */
     MPStrategy(){}
     MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml = true);
     virtual ~MPStrategy () {}
-
+  
     virtual void ParseStrategyMethod(XMLNodeReader& in_Node);
     MPStrategyMethod* CreateMPStrategyMethod(XMLNodeReader& citr);
 
@@ -34,15 +33,15 @@ class MPStrategy : public MPBaseObject {
     void SetSamplers(Sampler<CfgType>* _s){m_pNodeGeneration = _s;};
     Connector<CfgType, WeightType>* GetConnector(){return m_pConnection;};
     void SetConnectors(Connector<CfgType, WeightType>* _c){m_pConnection = _c;};
-#ifndef _PARALLEL
+    #ifndef _PARALLEL
     MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
-    MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_Evaluator;}; 
+    MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_evaluator;}; 
+    Metric* GetMetric() {return m_metric;};
     PartitioningMethods* GetPartitioningMethods(){return m_PartitioningMethods;}
     PartitioningEvaluators* GetPartitioningEvaluators(){return m_PartitioningEvaluators;}
     Features* GetFeatures(){return m_Features;}
-#endif
+    #endif
     XMLNodeReader* GetXMLNodeForStrategy(string& s);
-
 
     bool addPartialEdge, addAllEdges; //move to connect map class
     void PrintOptions(ostream& out_os);
@@ -59,10 +58,11 @@ class MPStrategy : public MPBaseObject {
     //Characterization and Filtering
 #ifndef _PARALLEL
     MPCharacterizer<CfgType, WeightType>* m_pCharacterizer;
-
+  
     //Map_Evaluation
-    MapEvaluator<CfgType, WeightType>* m_Evaluator;
-
+    MapEvaluator<CfgType, WeightType>* m_evaluator;
+    Metric* m_metric;
+  
     //UAS items
     PartitioningMethods* m_PartitioningMethods;
     PartitioningEvaluators* m_PartitioningEvaluators;

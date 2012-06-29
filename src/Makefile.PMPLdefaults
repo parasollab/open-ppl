@@ -246,6 +246,7 @@ PMPL_INCL = \
 	-I${PMPL_DIR}/MPStrategy/UnitTest \
 	-I${PMPL_DIR}/Samplers \
 	-I${PMPL_DIR}/Utilities \
+	-I${PMPL_DIR}/Metrics \
 	-I${PMPL_DIR}/ValidityChecker \
 	-I${PMPL_DIR}/NeighborhoodFinder \
 	-I${PMPL_DIR}/Partitioning \
@@ -302,6 +303,11 @@ PMPL_OBJS = \
 	ValidityChecker/CollisionDetection.o \
 	ValidityChecker/NodeClearanceValidity.o \
         ValidityChecker/MedialAxisClearanceValidity.o \
+	Metrics/Metrics.o \
+        Metrics/NumNodesMetric.o \
+        Metrics/NumEdgesMetric.o \
+        MapEvaluator/TrueEvaluation.o \
+        MapEvaluator/PrintMapEvaluation.o \
 	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
         MPProblem/BoundingBox.o \
@@ -328,9 +334,6 @@ ifeq (${parallel}, 0)
 	MPStrategy/UAStrategy.o \
 	MPStrategy/RRGStrategy.o \
 	MPStrategy/UnitTest/DMTestStrategy.o \
-	MapEvaluator/NumNodesEvaluation.o \
-	MapEvaluator/NumEdgesEvaluation.o \
-	MapEvaluator/PrintMapEvaluation.o \
 	Partitioning/Partition.o \
 	Partitioning/PartitioningMethod.o \
 	Partitioning/KMeans.o \
