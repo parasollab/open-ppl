@@ -20,7 +20,6 @@ void MPStrategyMethod::ParseXML(XMLNodeReader& _node){
   gettimeofday(&tv,NULL);
   m_baseSeed = _node.numberXMLParameter("seed", false, (int)tv.tv_usec, 0, MAX_INT, "Random Seed Value"); 
   m_baseFilename = _node.stringXMLParameter("filename", true, "", "Base output filename");
-  SRand(m_baseSeed); 
 };
 
 void MPStrategyMethod::operator()(){
@@ -28,6 +27,7 @@ void MPStrategyMethod::operator()(){
 }
 
 void MPStrategyMethod::operator()(int _regionID){
+  SRand(m_baseSeed); 
   GetMPProblem()->GetMPRegion(_regionID)->GetStatClass()->SetAuxDest(GetBaseFilename());
 
   Initialize(_regionID);
