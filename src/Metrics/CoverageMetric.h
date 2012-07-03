@@ -58,7 +58,7 @@ CoverageMetric<CFG, WEIGHT>::CoverageMetric(XMLNodeReader& _node, MPProblem* _pr
     m_nodeConnectionLabels.clear();
     for(XMLNodeReader::childiterator I = _node.children_begin(); I != _node.children_end(); ++I) {
       if(I->getName() == "NodeConnectionMethod") {
-        m_nodeConnectionLabels.push_back(I->stringXMLParameter("Method", true, "", "connection method label"));
+        m_nodeConnectionLabels.push_back(I->stringXMLParameter("method", true, "", "connection method label"));
         I->warnUnrequestedAttributes();
       }
       else {
