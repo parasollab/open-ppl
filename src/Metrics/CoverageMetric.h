@@ -53,11 +53,11 @@ CoverageMetric<CFG, WEIGHT>::CoverageMetric(XMLNodeReader& _node, MPProblem* _pr
     copy(istream_iterator<CFG>(is), istream_iterator<CFG>(), back_insert_iterator<vector<CFG> >(m_samples));
     is.close();
 
-    m_allData = _node.boolXMLParameter("compute_all_ccs", false, _computeAllCCs, "flag when set to true computes coverage to all ccs, not just the first connectable cc");
+    m_allData = _node.boolXMLParameter("computeAllCCs", false, _computeAllCCs, "flag when set to true computes coverage to all ccs, not just the first connectable cc");
 
     m_nodeConnectionLabels.clear();
     for(XMLNodeReader::childiterator I = _node.children_begin(); I != _node.children_end(); ++I) {
-      if(I->getName() == "node_connection_method") {
+      if(I->getName() == "NodeConnectionMethod") {
         m_nodeConnectionLabels.push_back(I->stringXMLParameter("Method", true, "", "connection method label"));
         I->warnUnrequestedAttributes();
       }

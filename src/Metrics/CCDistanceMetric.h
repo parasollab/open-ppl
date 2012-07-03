@@ -41,8 +41,8 @@ CCDistanceMetric<CFG, WEIGHT>::CCDistanceMetric(XMLNodeReader& _node, MPProblem*
   : MetricsMethod(_node, _problem) {
     this->SetName("CCDistanceMetric");
 
-    m_dm = _node.stringXMLParameter("dm_method", true, "", "distance metric method");
-    m_nf = _node.stringXMLParameter("nf_method", true, "", "neighborhood finder method");
+    m_dm = _node.stringXMLParameter("dmMethod", true, "", "distance metric method");
+    m_nf = _node.stringXMLParameter("nfMethod", true, "", "neighborhood finder method");
 
     if(m_debug) PrintOptions(cout);
 }

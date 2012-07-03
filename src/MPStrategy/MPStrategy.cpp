@@ -59,7 +59,7 @@ MPStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool parse_xml) : MPB
 #ifndef _PARALLEL
       } else if (citr->getName() == "MPEvaluator_methods") {
         m_evaluator = new MapEvaluator<CfgType, WeightType>(*citr, GetMPProblem());
-    } else if(citr->getName() == "metric_methods") {
+    } else if(citr->getName() == "MetricMethods") {
       m_metric = new Metric(*citr, GetMPProblem());
     } else if(citr->getName() == "MPCharacterizer") {
       m_pCharacterizer = new MPCharacterizer<CfgType, WeightType>(*citr, GetMPProblem());
