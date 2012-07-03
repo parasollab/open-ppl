@@ -78,58 +78,53 @@ void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp, MPProble
                    CollisionDetection* cd, CDInfo& cdInfo, string m_vc, string m_dm, string m_lp,
                    int x, int bl, CfgType previous, CfgType c, CfgType next, double step_size,
                    double user_value, int max_attempt, int numOfSamples, vector< pair<CfgType,double> > &result) {
-     
-   typedef RoadmapGraph<CfgType, WeightType>::VID VID;   
-   double newConfigurationWeight;
-   double oldConfigurationWeight;
-   bool firstConnectFlag;
-   bool secondConnectFlag;
-   VID vid1;
-   VID vid2;
-   string strVcmethod;
-   string callee;
-   LPOutput<CfgType,WeightType> lpOutput;
-   oldConfigurationWeight= GetValue( c, mp, env, Stats, m_vc, cdInfo, m_dm, x,bl);
-   for(int k=0;k<max_attempt && numOfSamples>0;k++) {  
-      CfgType r,c2 ;
-      r.GetRandomRay(step_size, env, dm );
-      c2.add(r,c); 
-      newConfigurationWeight=GetValue(c2, mp, env, Stats, m_vc, cdInfo, m_dm, x,bl);
-      if((newConfigurationWeight>oldConfigurationWeight && type_name.compare("MAX_CLEARANCE")==0) ||
+
+  typedef RoadmapGraph<CfgType, WeightType>::VID VID;   
+  double newConfigurationWeight;
+  double oldConfigurationWeight;
+  bool firstConnectFlag;
+  bool secondConnectFlag;
+  VID vid2;
+  string strVcmethod;
+  string callee;
+  LPOutput<CfgType,WeightType> lpOutput;
+  oldConfigurationWeight= GetValue( c, mp, env, Stats, m_vc, cdInfo, m_dm, x,bl);
+  for(int k=0;k<max_attempt && numOfSamples>0;k++) {  
+    CfgType r,c2 ;
+    r.GetRandomRay(step_size, env, dm );
+    c2.add(r,c); 
+    newConfigurationWeight=GetValue(c2, mp, env, Stats, m_vc, cdInfo, m_dm, x,bl);
+    if((newConfigurationWeight>oldConfigurationWeight && type_name.compare("MAX_CLEARANCE")==0) ||
         (newConfigurationWeight<oldConfigurationWeight && type_name.compare("PROTEIN_ENERGY")==0)) {
-        firstConnectFlag = lp->GetMethod(m_lp)->
-                               IsConnected(env, Stats, dm, previous, c2, &lpOutput, 
-                               rdmp->GetEnvironment()->GetPositionRes(),
-                               rdmp->GetEnvironment()->GetOrientationRes(),true);
-				secondConnectFlag = lp->GetMethod(m_lp)->
-                                IsConnected(env, Stats, dm, c2,next, &lpOutput, 
-                                rdmp->GetEnvironment()->GetPositionRes(),
-                                rdmp->GetEnvironment()->GetOrientationRes(), true);
+      firstConnectFlag = lp->GetMethod(m_lp)->
+        IsConnected(env, Stats, dm, previous, c2, &lpOutput, 
+            rdmp->GetEnvironment()->GetPositionRes(),
+            rdmp->GetEnvironment()->GetOrientationRes(),true);
+      secondConnectFlag = lp->GetMethod(m_lp)->
+        IsConnected(env, Stats, dm, c2,next, &lpOutput, 
+            rdmp->GetEnvironment()->GetPositionRes(),
+            rdmp->GetEnvironment()->GetOrientationRes(), true);
 
-	 vid1=rdmp->m_pRoadmap->GetVID(previous);
-         vid2=rdmp->m_pRoadmap->GetVID(c2);
-	 if(vid2 == INVALID_VID) {
-            rdmp->m_pRoadmap->AddVertex(c2);// the vertex did not exist 
-            vid1=rdmp->m_pRoadmap->GetVID(next);
-         } 
-	 else              	
-	    vid1=rdmp->m_pRoadmap->GetVID(next);
-	 if(firstConnectFlag && secondConnectFlag) {
-   	    rdmp->m_pRoadmap->AddEdge(previous,c2,lpOutput.edge); 
-            rdmp->m_pRoadmap->AddEdge(c2,next,lpOutput.edge);  
-            result.push_back( pair<CfgType,double>(c2,newConfigurationWeight));
-	    numOfSamples--;
-           
-         }
-             
-         }
-   
-}//for
+      vid2=rdmp->m_pRoadmap->GetVID(c2);
+      if(vid2 == INVALID_VID) {
+        rdmp->m_pRoadmap->AddVertex(c2);// the vertex did not exist 
+      } 
+      if(firstConnectFlag && secondConnectFlag) {
+        rdmp->m_pRoadmap->AddEdge(previous,c2,lpOutput.edge); 
+        rdmp->m_pRoadmap->AddEdge(c2,next,lpOutput.edge);  
+        result.push_back( pair<CfgType,double>(c2,newConfigurationWeight));
+        numOfSamples--;
 
-if(type_name.compare("MAX_CLEARANCE")==0 ) 
-  std::sort(result.begin(), result.end(), sort_descend());
-else
-  std::sort(result.begin(), result.end(), sort_ascend());
+      }
+
+    }
+
+  }//for
+
+  if(type_name.compare("MAX_CLEARANCE")==0 ) 
+    std::sort(result.begin(), result.end(), sort_descend());
+  else
+    std::sort(result.begin(), result.end(), sort_ascend());
 
 }
 

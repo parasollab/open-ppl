@@ -291,10 +291,10 @@ public:
     Roadmap< CFG, WEIGHT >* rdmp_a = this->m_pProblem->GetMPRegion(in_region_a)->GetRoadmap(); // get rdmp_a from region_a
     Roadmap< CFG, WEIGHT >* rdmp_b = this->m_pProblem->GetMPRegion(in_region_b)->GetRoadmap(); // get rdmp_b from region_b
     
-    pair< unsigned int, unsigned int > spanning_a = ComponentsASpanningInB(rdmp_a, rdmp_b);
+    pair< unsigned int, unsigned int > spanning_a = this->ComponentsASpanningInB(rdmp_a, rdmp_b);
     cout << "ConnectableComponentComparer::Compare: Not small ccs in A " << spanning_a.second << "; Span more than 1 in B: " << spanning_a.first << " = " << 100*spanning_a.first/spanning_a.second << "%" << endl;
 
-    pair< unsigned int, unsigned int > spanning_b = ComponentsASpanningInB(rdmp_b, rdmp_a);
+    pair< unsigned int, unsigned int > spanning_b = this->ComponentsASpanningInB(rdmp_b, rdmp_a);
     cout << "ConnectableComponentComparer::Compare: Not small ccs in B " << spanning_b.second << "; Span more than 1 in A: " << spanning_b.first << " = " << 100*spanning_b.first/spanning_b.second << "%" << endl;
   
 
@@ -324,13 +324,13 @@ public:
     unsigned int witness_queries = this->m_witness_cfgs.size()*(this->m_witness_cfgs.size()-1)/2;
     cout << "RandomConnectComparer::Compare: Witness size: " << this->m_witness_cfgs.size() << "; Witness queries: " << witness_queries << endl;
 
-    pair< unsigned int, unsigned int > witness_to_a = ConnectionsWitnessToRoadmap(this->m_witness_cfgs, rdmp_a);
+    pair< unsigned int, unsigned int > witness_to_a = this->ConnectionsWitnessToRoadmap(this->m_witness_cfgs, rdmp_a);
     double witness_to_a_connections_percent = 100*witness_to_a.first/this->m_witness_cfgs.size();
     double witness_to_a_succ_queries_percent = 100*witness_to_a.second/witness_queries;
     cout << "RandomConnectComparer::Compare: Witness nodes connected to non-small ccs in A: " << witness_to_a.first << " = " << witness_to_a_connections_percent << "%" << endl;
     cout << "RandomConnectComparer::Compare: Witness queries succesful in non-small ccs in A: " << witness_to_a.second << " = " << witness_to_a_succ_queries_percent << "%" << endl;
 
-    pair< unsigned int, unsigned int > witness_to_b = ConnectionsWitnessToRoadmap(this->m_witness_cfgs, rdmp_b);
+    pair< unsigned int, unsigned int > witness_to_b = this->ConnectionsWitnessToRoadmap(this->m_witness_cfgs, rdmp_b);
     double witness_to_b_connections_percent = 100*witness_to_b.first/this->m_witness_cfgs.size();
     double witness_to_b_succ_queries_percent = 100*witness_to_b.second/witness_queries;
     cout << "RandomConnectComparer::Compare: Witness nodes connected to non-small ccs in B: " << witness_to_b.first << " = " << witness_to_b_connections_percent << "%" << endl;
@@ -391,7 +391,7 @@ public:
 
     typename vector<VID>::iterator a_vid_itr;
     for(a_vid_itr = rdmp_a_vids.begin(); a_vid_itr!=rdmp_a_vids.end(); ++a_vid_itr) {
-      if(!CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex(*a_vid_itr))).property()), rdmp_b_cfg)) {
+      if(!this->CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex(*a_vid_itr))).property()), rdmp_b_cfg)) {
          // found a potential revealing/trapped node
         vector<VID> tmp_cc;
 	cmap.reset();
@@ -405,7 +405,7 @@ public:
 
     typename vector<VID>::iterator b_vid_itr;
     for(b_vid_itr = rdmp_b_vids.begin(); b_vid_itr!=rdmp_b_vids.end(); ++b_vid_itr) {
-     if(!CfgIsVisible(((*(rdmp_b->m_pRoadmap->find_vertex(*b_vid_itr))).property()), rdmp_a_cfg)) {
+     if(!this->CfgIsVisible(((*(rdmp_b->m_pRoadmap->find_vertex(*b_vid_itr))).property()), rdmp_a_cfg)) {
         // found a potential revealing/trapped node
         vector<VID> tmp_cc;
 	cmap.reset();
@@ -510,7 +510,7 @@ public:
         cmap.reset();
         get_cc(*(rdmp_a->m_pRoadmap),cmap, (*usable_a_vid_itr), tmp_cc);
         if( (int)tmp_cc.size() >= a_small_cc_size) {  // Make sure its a "usable" node
-          if(CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex(*usable_a_vid_itr))).property()), usable_rdmp_b_cfg)) {
+          if(this->CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex(*usable_a_vid_itr))).property()), usable_rdmp_b_cfg)) {
             ++node_a_visible_in_b;
           } else { ++node_a_not_visible_in_b; }
       }
@@ -523,7 +523,7 @@ public:
   	cmap.reset();
         get_cc(*(rdmp_b->m_pRoadmap), cmap, (*usable_b_vid_itr), tmp_cc);
         if( (int)tmp_cc.size() >= b_small_cc_size) {  // Make sure its a "usable" node
-          if(CfgIsVisible(((*(rdmp_b->m_pRoadmap->find_vertex(*usable_b_vid_itr))).property()), usable_rdmp_a_cfg)) {
+          if(this->CfgIsVisible(((*(rdmp_b->m_pRoadmap->find_vertex(*usable_b_vid_itr))).property()), usable_rdmp_a_cfg)) {
             ++node_b_visible_in_a;
           } else { ++node_b_not_visible_in_a; }
       }
@@ -580,9 +580,9 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
 		usable_cc_in_b.push_back((*(rdmp_b->m_pRoadmap->find_vertex(*itr))).property());
 
         //if(CfgIsVisible((rdmp_a->m_pRoadmap->find_vertex((*all_edges_a_itr).first).property()), 
-        if(CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex((*(all_edges_a_itr)).source()))).property()), 
+        if(this->CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex((*(all_edges_a_itr)).source()))).property()), 
                         usable_cc_in_b)) {
-          if(CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex((*(all_edges_a_itr)).target()))).property()), 
+          if(this->CfgIsVisible(((*(rdmp_a->m_pRoadmap->find_vertex((*(all_edges_a_itr)).target()))).property()), 
                         usable_cc_in_b)) {
             ++edge_a_visible_in_b;
             found_edge_a_visible_in_b = true;
@@ -620,9 +620,9 @@ for(typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei_a = ga.edges_begin(); e
       for(typename vector<VID>::iterator itr=usable_cc_in_a_aux.begin(); itr!=usable_cc_in_a_aux.end(); ++itr)
                 usable_cc_in_a.push_back((*(rdmp_a->m_pRoadmap->find_vertex(*itr))).property());
 
-      if(CfgIsVisible((*(rdmp_b->m_pRoadmap->find_vertex((*(all_edges_b_itr)).source()))).property(), 
+      if(this->CfgIsVisible((*(rdmp_b->m_pRoadmap->find_vertex((*(all_edges_b_itr)).source()))).property(), 
                       usable_cc_in_a)) {
-        if(CfgIsVisible((*(rdmp_b->m_pRoadmap->find_vertex((*(all_edges_b_itr)).target()))).property(), 
+        if(this->CfgIsVisible((*(rdmp_b->m_pRoadmap->find_vertex((*(all_edges_b_itr)).target()))).property(), 
                       usable_cc_in_a)) {
           ++edge_b_visible_in_a;
           found_edge_b_visible_in_a = true;

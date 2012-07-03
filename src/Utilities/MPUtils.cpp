@@ -525,7 +525,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
 
   // Variables for modified binary search
   CfgType startCfg, midSCfg, midMCfg, midECfg, endingCfg;
-  double gapDist, prevGap, lBound, uBound, middle, middleS, middleE;
+  double gapDist, lBound, uBound, middle, middleS, middleE;
   int attempts=0, maxAttempts=20, badPeaks=0, maxBadPeaks=10, peak;
   bool passed=false, peaked=false;
   vector<double> dists(5,0), deltas(4,0), distsFromMax(5,0);
@@ -591,7 +591,6 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
   }
 
   gapDist = dm->Distance(_env,startCfg,endingCfg);
-  prevGap = gapDist;
 
   if (_debug) cout << "start/mids/end: " << endl << startCfg << endl << midSCfg 
     << endl << midMCfg << endl << midECfg << endl << endingCfg << endl;

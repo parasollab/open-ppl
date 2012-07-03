@@ -144,12 +144,12 @@ RotateAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats,
   // Check between sequence nodes
   for(size_t i = 0; connected && i < sequence.size() - 1; i++) {
     if(this->m_binarySearch)
-      connected = IsConnectedSLBinary(_env, _stats, _dm, *sequence[i], 
+      connected = this->IsConnectedSLBinary(_env, _stats, _dm, *sequence[i], 
           *sequence[i+1], _col, _lpOutput, cdCounter,
           _posRes, _oriRes, _checkCollision,
           _savePath, _saveFailedPath);
     else
-      connected = IsConnectedSLSequential(_env, _stats, _dm, *sequence[i],
+      connected = this->IsConnectedSLSequential(_env, _stats, _dm, *sequence[i],
           *sequence[i+1], _col, _lpOutput, cdCounter,
           _posRes, _oriRes, _checkCollision,
           _savePath, _saveFailedPath);
@@ -192,10 +192,10 @@ RotateAtS<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMe
   // Generate the path between each pair of important configurations
   for(int i = 0; i < 3; i++) {
     if(this->m_binarySearch)
-      IsConnectedSLBinary(_env, dummyStats, _dm, *cfgArr[i], *cfgArr[i+1],
+      this->IsConnectedSLBinary(_env, dummyStats, _dm, *cfgArr[i], *cfgArr[i+1],
           col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
     else
-      IsConnectedSLSequential(_env, dummyStats, _dm, *cfgArr[i], *cfgArr[i+1],
+      this->IsConnectedSLSequential(_env, dummyStats, _dm, *cfgArr[i], *cfgArr[i+1],
           col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
     // The intermediate configurations haven't been added yet; do so now
     if(i < 2)

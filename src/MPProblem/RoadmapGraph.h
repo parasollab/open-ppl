@@ -552,8 +552,8 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddEdges( vector<EdgeInfo<VERTEX, WEIGHT> >& _e) {
     for (unsigned int i=0; i < _e.size(); i++){
         GRAPH::add_edge(_e[i].v1, _e[i].v2, _e[i].edgewt);
-	VERTEX data1 = find_vertex(_e[i].v1)->property();
-	VERTEX data2 = find_vertex(_e[i].v2)->property();
+	VERTEX data1 = this->find_vertex(_e[i].v1)->property();
+	VERTEX data2 = this->find_vertex(_e[i].v2)->property();
 	VDAddEdge(data1, data2);
         //VDAddEdge(find_vertex(_e[i].v1)->property(), find_vertex(_e[i].v2)->property());
     }
@@ -566,7 +566,7 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VID _v1, VID _v2, WEIGHT _w) {
   //return GRAPH::add_edge(_v1,_v2,_w);
   GRAPH::add_edge(_v1,_v2,_w);
-  VDAddEdge(find_vertex(_v1)->property(), find_vertex(_v2)->property());
+  VDAddEdge(this->find_vertex(_v1)->property(), this->find_vertex(_v2)->property());
   return 0;  //fix_lantao  the return type and the following AddEdge funcs.
 }
 
@@ -577,7 +577,7 @@ AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w) {
   GRAPH::add_edge(_v1,_v2,_w.first);
   //return GRAPH::add_edge(_v2,_v1,_w.second);
   GRAPH::add_edge(_v2,_v1,_w.second);
-  VDAddEdge(find_vertex(_v1)->property(), find_vertex(_v2)->property());
+  VDAddEdge(this->find_vertex(_v1)->property(), this->find_vertex(_v2)->property());
   return 0;
 }
 
@@ -844,7 +844,7 @@ bool is_edge;
 typename RoadmapGraph<VERTEX, WEIGHT>::VI vi;
 typename RoadmapGraph<VERTEX, WEIGHT>::EI ei;
 typename RoadmapGraph<VERTEX, WEIGHT>::EID ed(vid1,vid2);
-is_edge=find_edge(ed, vi, ei);
+is_edge=this->find_edge(ed, vi, ei);
 return is_edge;
 }
 

@@ -177,12 +177,12 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
   // Check between sequence nodes
   for(size_t i = 0; connected && i < sequence.size() - 1; i++) {
     if(this->m_binarySearch)
-      connected = IsConnectedSLBinary(_env, _stats, _dm, *sequence[i],
+      connected = this->IsConnectedSLBinary(_env, _stats, _dm, *sequence[i],
           *sequence[i+1], _col, _lpOutput, cdCounter,
           _posRes, _oriRes,_checkCollision,
           _savePath, _saveFailedPath);
     else
-      connected = IsConnectedSLSequential(_env, _stats, _dm, *sequence[i],
+      connected = this->IsConnectedSLSequential(_env, _stats, _dm, *sequence[i],
           *sequence[i+1], _col, _lpOutput, cdCounter,
           _posRes, _oriRes,_checkCollision,
           _savePath, _saveFailedPath);
@@ -227,10 +227,10 @@ TransformAtS<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<Distanc
 
   for(size_t i = 0; i < cfgList.size() - 1; i++) {
     if(this->m_binarySearch)
-      IsConnectedSLBinary(_env, dummyStats, _dm, cfgList[i], cfgList[i+1],
+      this->IsConnectedSLBinary(_env, dummyStats, _dm, cfgList[i], cfgList[i+1],
           col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
     else
-      IsConnectedSLSequential(_env, dummyStats, _dm, cfgList[i], cfgList[i+1], 
+      this->IsConnectedSLSequential(_env, dummyStats, _dm, cfgList[i], cfgList[i+1], 
           col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
     if(i != cfgList.size() - 2)
       lpOutput->path.push_back(cfgList[i+1]);

@@ -693,9 +693,7 @@ bool
 CollisionDetection::
 IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo,
 	      shared_ptr<MultiBody> rob, shared_ptr<MultiBody> obst, std::string *pCallName) {
-  int nFreeRobot;
-  nFreeRobot = rob->GetFreeBodyCount();
-
+  
   vector<CollisionDetectionMethod*>::iterator I;
   for(I=selected.begin(); I!=selected.end(); I++) {
     int tp = (*I)->GetType();

@@ -103,7 +103,7 @@ OptimalRewire<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats
     }
     vector<VID> closest;
     back_insert_iterator< vector<VID> > iterBegin(closest);
-    FindNeighbors(_rm, cfg, _iter2First, _iter2Last, iterBegin); 
+    this->FindNeighbors(_rm, cfg, _iter2First, _iter2Last, iterBegin); 
     this->ConnectNeighbors(_rm, _stats, *iter1, closest, _collision);
   }
 #else 

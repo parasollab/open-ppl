@@ -138,7 +138,6 @@ void MARRTStrategy::Run(int _regionID) {
     // Determine direction, make sure goal not found
     tmp.GetRandomCfg(env);
     double randomRatio = DRand();
-    bool usingQueue = false;
     int goalNum = 0;
 
     if (m_goals.size() == 0)
@@ -153,7 +152,6 @@ void MARRTStrategy::Run(int _regionID) {
         }
       }
       dir = m_goals[goalNum];
-      usingQueue = true;
     } 
     else
       dir.GetRandomCfg(env);
