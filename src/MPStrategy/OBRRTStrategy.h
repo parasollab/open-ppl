@@ -19,7 +19,7 @@ template<typename CFG, typename WEIGHT> class MPRegion;
 class OBRRTStrategy : public BasicRRTStrategy {
   public:
     OBRRTStrategy(XMLNodeReader& _node, MPProblem* _problem) : 
-        BasicRRTStrategy(_node, _problem){
+        BasicRRTStrategy(_node, _problem, false){
 	   ParseXML(_node);
 	};
     virtual ~OBRRTStrategy() {}
