@@ -32,12 +32,12 @@
 
   <MPStrategy>  
     <node_generation_methods>
-      <UniformRandomSampler Label="UniformRandomFree" vc_method="cd_rapid"/>
+      <UniformRandomSampler Label="UniformRandomFree" vcMethod="cd_rapid"/>
     </node_generation_methods>
 
     <connection_methods>
-      <NeighborhoodConnection Label="Closest" nf="BFNF" k="10" CheckIfSameCC="true" lp_method="sl"/>
-      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" kclosest="0" nf="BFNF" lp_method="sl"/>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="10" CheckIfSameCC="true" lp_method="sl" unconnected="true"/>
+      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" kclosest="0" nf="BFNF" lp_method="sl" dm_method="euclidean"/>
       <NeighborhoodConnection Label="ConnectFirst" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
     </connection_methods>
 
@@ -46,27 +46,25 @@
     </lp_methods>
 
     <MPEvaluator_methods>
-      <MPRegionConditionalEvaluators>
-        <NumNodesEvaluation Label="NodesEval" size="1000" />
-        <NumEdgesEvaluation Label="EdgesEval" size="1000" />
-        <QueryEvaluation Label="Query" filename="narrow.query" dm_method="euclidean" outpath="Basic" lp_method="sl">
-          <node_connection_method Method="ConnectFirst"/>
-        </QueryEvaluation>
-        <PrintMapEvaluation Label="PrintMap" base_name="Basic" />
-      </MPRegionConditionalEvaluators>
+      <ConditionalEvaluation Label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+      <QueryEvaluation Label="Query" filename="narrow.query" dm_method="euclidean" outpath="Basic" lp_method="sl">
+        <node_connection_method Method="ConnectFirst"/>
+      </QueryEvaluation>
+      <PrintMapEvaluation Label="PrintMap" base_name="Basic" />
     </MPEvaluator_methods>
 
+    <MetricMethods>
+      <NumNodesMetric Label="NumNodes" />
+    </MetricMethods>
 
     <MPStrategyMethod Controller="BasicPRM1">
-
-
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM Label="BasicPRM1" seed="1234567" filename="Basic" iterations="1" dm_method="euclidean">
+      <BasicPRM Label="BasicPRM1" seed="1234567" filename="Basic">
         <node_generation_method Method="UniformRandomFree" Number="100" Attempts="10"/>
         <node_connection_method Method="Closest"/>
         <component_connection_method Method="ConnectCCs"/>
         <evaluation_method Method="PrintMap"/>
-        <evaluation_method Method="Query"/>
+        <evaluation_method Method="NodesEval"/>
       </BasicPRM>
 
     </MPStrategyMethod> 

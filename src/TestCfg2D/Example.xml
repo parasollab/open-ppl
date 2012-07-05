@@ -22,22 +22,23 @@
   </MPProblem>
   <MPStrategy>  
     <node_generation_methods>
-      <UniformRandomSampler Label="UniformRandom" vc_method="cd"/>
+      <UniformRandomSampler Label="UniformRandom" vcMethod="cd"/>
     </node_generation_methods>
     <connection_methods>
-      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
     </connection_methods>
     <lp_methods>
       <StraightLine Label="sl" length="0" binary_search="1" vc_method="cd"/>
     </lp_methods>
     <MPEvaluator_methods>
-      <MPRegionConditionalEvaluators>
-        <NumNodesEvaluation Label="NodesEval" size="100"/>
-      </MPRegionConditionalEvaluators>
+      <ConditionalEvaluation Label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
     </MPEvaluator_methods>
+    <MetricMethods>
+      <NumNodesMetric Label="NumNodes" />
+    </MetricMethods>
     <MPStrategyMethod Controller="BasicPRM">
-      <BasicPRM Label="BasicPRM" seed="1234567" filename="Basic" iterations="1" num_samples="10" dm_method="euclidean">
-        <node_generation_method Method="UniformRandom" Number="1"/>
+      <BasicPRM Label="BasicPRM" seed="1234567" filename="Basic">
+        <node_generation_method Method="UniformRandom" Number="10" Attempts="10"/>
         <node_connection_method Method="Closest"/>
         <evaluation_method Method="NodesEval"/>
       </BasicPRM>
