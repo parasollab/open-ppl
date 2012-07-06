@@ -42,9 +42,9 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
 
   public:
 
-    ObstacleBasedSampler(Environment* _env = NULL, int _free = 1, int _coll = 0, 
-        double _step = 0, bool _useBBX = true, string _pointSelection = "cspace")
-      : m_nShellsFree(_free), m_nShellsColl(_coll), m_stepSize(_step), m_useBBX(_useBBX), m_pointSelection(_pointSelection) { 
+    ObstacleBasedSampler(Environment* _env = NULL, string _vcMethod = "", string _dmMethod = "",
+        int _free = 1, int _coll = 0, double _step = 0, bool _useBBX = true, string _pointSelection = "cspace")
+      : m_vcMethod(_vcMethod), m_dmMethod(_dmMethod), m_nShellsFree(_free), m_nShellsColl(_coll), m_stepSize(_step), m_useBBX(_useBBX), m_pointSelection(_pointSelection) { 
       this->SetName("ObstacleBasedSampler");
       // If the step size is unreasonable, set it to the minimum
       if(m_stepSize <= 0.0)
