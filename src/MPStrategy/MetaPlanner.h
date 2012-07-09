@@ -321,7 +321,7 @@ MakeGlobalRoadmap(/* Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, */
   cout << "MakeGlobalRoadmap() main function to create subdivision tree. TODO ALL" << endl;
   
   //make a new environment region (be careful with the pointer
-  MPRegion<CFG,WEIGHT> whole_problem(env, *(env.GetBoundingBox()), 0, NULL);
+  MPRegion<CFG,WEIGHT> whole_problem(env, *(env.GetBoundary()), 0, NULL);
 
   //make a global feature-sensitive roadmap
   cout << "\t Start of feature sensitive roadmap generation \n\t\tglobal_roadmap = feature_sensitive_map(environment,global_bb,region_characterization,region_features,map_of_region_features,\"no-parent-characterization\",subdivision_limit,node_height=0,maximum_tree_height,epsilon,characterization_samples)" << endl;

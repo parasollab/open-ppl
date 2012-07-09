@@ -161,7 +161,7 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
   if(_checkCollision) {
     for(size_t i = 1; i < sequence.size() - 1; i++) { // _c1 and _c2 not double checked
       cdCounter++;
-      if(sequence[i]->InBoundingBox(_env)) {
+      if(sequence[i]->InBoundary(_env)) {
         if(!vc->IsValid(vcm, *sequence[i], _env, _stats, cdInfo, false, &callee)) {
           _col = *sequence[i];
           connected = false;

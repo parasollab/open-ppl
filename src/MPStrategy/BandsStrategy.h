@@ -512,7 +512,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
     void ResizeBbox(ostream& out_os, double scale_factor){
       cout<<"BandsStrategy::Resize Bounding box"<<endl<<flush;
-      shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
+      shared_ptr<Boundary> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundary();
       pBoundBox->Print(out_os);
       pBoundBox->TranslationalScale(scale_factor);
       cout<<"BandsStrategy::After Resize Bounding Box"<<endl<<flush;

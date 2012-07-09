@@ -198,8 +198,8 @@ class Cfg {
     virtual double OrientationMagnitude() const;
     virtual double PositionMagnitude() const;
 
-    bool InBoundingBox(Environment* _env) const;
-    bool InBoundingBox(Environment* _env, shared_ptr<Boundary> _bb) const;
+    bool InBoundary(Environment* _env) const;
+    bool InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const;
 
     ///Increase every value in this instance in each dimention by the value in _increment
     virtual void Increment(const Cfg& _increment);

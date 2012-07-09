@@ -292,7 +292,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 		BoundingBox &c_boundary,
 		vector<CFG>& free_nodes,
 		vector<CFG>& coll_nodes) {
-  BoundingBox *boundingBox = _env->GetBoundingBox();
+  BoundingBox *boundingBox = _env->GetBoundary();
   double r_radius = 
     _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().m_maxRadius;
 
@@ -717,7 +717,7 @@ vector<BoundingBox> InformationGainPartitioning<CFG>::
 PlaceBoundaries(Environment* _env, StatClass& Stats,
 		BoundingBox &c_boundary,
 		vector<CFG>& free_nodes, vector<CFG>& coll_nodes) {
-  BoundingBox * boundingBox = _env->GetBoundingBox();
+  BoundingBox * boundingBox = _env->GetBoundary();
   vector< pair<double,double> > ppoints_info_gain;
   string p_type = "InformationGain";
   if( this->dims == -1 ) {
@@ -815,7 +815,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 
       }//end for
       BoundingBox * p_bbox = new BoundingBox(*boundingBox);
-      p_bbox->SetRanges(pee);
+      p_bbox->SetRange(pee);
       partitions.push_back( p_bbox );
     }//end for z
     this->DisplayDetails(p_type, boundingBox->GetDOFs(), this->dims, 2);

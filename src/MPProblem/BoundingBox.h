@@ -19,7 +19,7 @@ class BoundingBox : public Boundary {
   
   void Clear();
 
-  bool operator==(const BoundingBox& bb) const;
+  bool operator==(const Boundary& bb) const;
 
   void SetParameter(int par, double p_first, double p_second);
   std::vector<BoundingBox> Partition(int par, double p_point, double epsilon);
@@ -27,16 +27,12 @@ class BoundingBox : public Boundary {
   int FindSplitParameter(BoundingBox &o_bounding_box);
 
   BoundingBox GetCombination(BoundingBox &o_bounding_box);
-  int GetDOFs() const;
-  int GetPosDOFs() const;
-  const std::pair<double,double> GetRange(int par) const;
   double GetClearance(Vector3D point3d) const;
   parameter_type GetType(int par) const;
   Point3d GetRandomPoint();
 
   void TranslationalScale(double scale_factor);
 
-  void SetRanges(std::vector<double> &ranges);
 
   void Print(std::ostream& _os, char range_sep=':', char par_sep=';') const;
 
@@ -46,21 +42,14 @@ class BoundingBox : public Boundary {
   bool IfEnoughRoom(int par, double room);
   bool IfSatisfiesConstraints(Vector3D point3d) const;
   bool IfSatisfiesConstraints(vector<double> cfg) const;
-  bool InBoundary(const Cfg& cfg, Environment* _env );
+  bool InBoundary(const Cfg& cfg);
  private:
-  std::vector< std::pair<double,double> > bounding_box; // bb size is the dof
   std::vector<parameter_type> par_type;
-  int pos_dofs;
-  int dofs;
   public:
   #ifdef _PARALLEL
   void define_type(stapl::typer &_t)
   {
-	  _t.member(bounding_box);
 	  _t.member(par_type);
-	  _t.member(pos_dofs);
-	  _t.member(dofs);
-	 _t.member(m_jointLimits);
   }
   #endif
 };
@@ -80,11 +69,8 @@ public:
   operator target_t() const { return Accessor::read(); }
   proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
   proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
-  int GetDOFs() const { return Accessor::const_invoke(&target_t::GetDOFs);}
-  int GetPosDOFs() const { return Accessor::const_invoke(&target_t::GetPosDOFs);}
   Point3d GetRandomPoint() const { return Accessor::const_invoke(&target_t::GetRandomPoint);}
   parameter_type GetType(int _par) const { return Accessor::const_invoke(&target_t::GetType, _par);}
- // bool InBoundary(const Cfg& _cfg) { return Accessor::invoke(&target_t::InBoundary, _cfg);}
 };
 }
 #endif

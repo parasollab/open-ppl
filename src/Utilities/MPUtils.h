@@ -470,7 +470,7 @@ bool RRTExpand(MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _s
 bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClass& _stats, string _vc, 
     string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, 
     int _hLen, bool _debug, bool _positional); 
-bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox> _bb, CfgType& _cfg, StatClass& _stats, 
+bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<Boundary> _bb, CfgType& _cfg, StatClass& _stats, 
     string _vc, string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, 
     bool _useBBX, double _eps, int _hLen, bool _debug, bool _positional); 
 
@@ -482,7 +482,7 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox>
 //***************************************************************//
 bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional);	
-bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<Boundary> _bb, 
     StatClass& _stats, string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional);
 
 //***************************************************************//
@@ -494,7 +494,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
 bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, StatClass& _stats,
     string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, 
     bool _debug, bool _positional);
-bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, shared_ptr<Boundary> _bb, 
     StatClass& _stats, string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, 
     int _hLen, bool _debug, bool _positional);
 
@@ -506,7 +506,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, shared
 bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats, 
     CDInfo& _cdInfo, string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX, bool _positional);
 bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
-    shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
+    shared_ptr<Boundary> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
     bool _exact, int _clearance, int _penetration, bool _useBBX, bool _positional);
 
 //*********************************************************************//
@@ -517,7 +517,7 @@ bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
 //*********************************************************************//
 bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, 
     StatClass& _stats, CDInfo& _cdInfo, string _vc, bool _useBBX);
-bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<Boundary> _bb, 
     StatClass& _stats, CDInfo& _cdInfo, string _vc, bool _useBBX);
 
 //*********************************************************************//
@@ -529,7 +529,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
 bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats,
     CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional);	
 bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
-    shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
+    shared_ptr<Boundary> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
     int _clearance, int _penetration, bool _useBBX, bool _positional);
 
 

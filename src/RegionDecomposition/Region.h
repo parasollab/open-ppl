@@ -22,17 +22,17 @@ class Region {
     Region();
     Region(const Region& _r);
     //second input: vector of pair (cc size, vid of cc representative)
-    Region(shared_ptr<BoundingBox> _bbox, std::vector<pair<size_t, VID> >& _pairIds); 
-    Region(shared_ptr<BoundingBox> _bbox, std::vector<VID>& _ids); 
+    Region(shared_ptr<Boundary> _bbox, std::vector<pair<size_t, VID> >& _pairIds); 
+    Region(shared_ptr<Boundary> _bbox, std::vector<VID>& _ids); 
     ~Region();
     
     //////////////////////////
     //Accessors
     //////////////////////////
-    shared_ptr<BoundingBox> GetBoundingBox() const;
-    void SetBoundingBox(shared_ptr<BoundingBox> _bb);
+    shared_ptr<Boundary> GetBoundary() const;
+    void SetBoundary(shared_ptr<Boundary> _bb);
 
-    pair<shared_ptr<BoundingBox>, vector<pair<size_t, VID> > > GetRegionInfo() const;
+    pair<shared_ptr<Boundary>, vector<pair<size_t, VID> > > GetRegionInfo() const;
     
     //returns all the vids contained in the region
     std::vector<VID> GetAllVIDs() const;
@@ -56,7 +56,7 @@ class Region {
 
   protected:
 
-    shared_ptr<BoundingBox> m_bb;
+    shared_ptr<Boundary> m_bb;
     vector<pair<VID, size_t> > m_ccs;//vector of pair (vid of cc representative,size)
     vector<VID> m_vids;
 
@@ -89,7 +89,7 @@ namespace stapl {
         void Print(ostream& _os) const { return Accessor::const_invoke(&m_targetT::Print, _os);}
         std::vector<VID> RegionVIDs() const{ return Accessor::const_invoke(&m_targetT::RegionVIDs);}
         size_t RegionWeight() const{ return Accessor::const_invoke(&m_targetT::RegionWeight);}
-        shared_ptr<BoundingBox> GetBoundingBox() const { return Accessor::const_invoke(&m_targetT::GetBoundingBox);}
+        shared_ptr<Boundary> GetBoundary() const { return Accessor::const_invoke(&m_targetT::GetBoundary);}
         void SetVIDs(std::vector<VID>& _ids) { Accessor::invoke(&m_targetT::SetVIDs, _ids); }
         void SetCCs(std::vector<pair<VID, size_t> > _ccs) { Accessor::invoke(&m_targetT::SetCCs, _ccs); }
         vector<pair<VID, size_t> > GetCCs() const{ return Accessor::const_invoke(&m_targetT::GetCCs);}

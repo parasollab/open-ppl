@@ -521,9 +521,9 @@ GenNearCFG(Environment* _env, DistanceMetric *dm, CFG& ret_cfg) const {
     ret_cfg.GetRandomRay(drand48()*radius/1.1, _env, dm); //since ray is only approx
     ret_cfg.add(center, ret_cfg);
   } while((dm->Distance(_env, center, ret_cfg) > radius) ||
-          !(ret_cfg.InBoundingBox(_env)));
+          !(ret_cfg.InBoundary(_env)));
 
-  if(!ret_cfg.InBoundingBox(_env))
+  if(!ret_cfg.InBoundary(_env))
     cout << " generated node outside bbox " << endl;
 
   /*

@@ -7,7 +7,7 @@ template <typename CFG>
 class BridgeTestSampler : public SamplerMethod<CFG> {
   private:
     double m_d;  //Gaussian d-value obtained from distribution 
-    bool m_useBBX;   //use Bbox as obstacle? 
+    bool m_useBoundary;   //use Bbox as obstacle? 
     string m_vcLabel, m_dmLabel;
 
   public:
@@ -17,8 +17,8 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
     ////////////////////
 
     BridgeTestSampler(Environment* _env = NULL, string _vcLabel = "", string _dmLabel = "", 
-        double _d = 0, bool _useBoundingBox = false)
-      : m_d(_d), m_useBBX(_useBoundingBox), m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
+        double _d = 0, bool _useBoundary = false)
+      : m_d(_d), m_useBoundary(_useBoundary), m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
         this->SetName("BridgeTestSampler");
         if(m_d == 0){
           if(_env != NULL)   
@@ -44,7 +44,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
     void  
       ParseXML(XMLNodeReader& _node) {
         m_d = _node.numberXMLParameter("d",true, 0.0, 0.0,100.0,"bridge_d"); 
-        m_useBBX = _node.boolXMLParameter("useBBX", false, true, "Use the Bounding Box as an Obstacle");
+        m_useBoundary = _node.boolXMLParameter("useBBX", false, true, "Use the Boundary as an Obstacle");
         m_vcLabel = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
         m_dmLabel = _node.stringXMLParameter("dmMethod", true, "default", "Distance Metric Method");
 
@@ -56,13 +56,13 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
       PrintOptions(ostream& _out) const {
         SamplerMethod<CFG>::PrintOptions(_out);
         _out << "\td = " << m_d << endl; 
-        _out << "\tuseBoundingBox = " << m_useBBX << endl; 
+        _out << "\tuseBoundary = " << m_useBoundary << endl; 
         _out << "\tvcLabel = " << m_vcLabel << endl; 
         _out << "\tdmLabel = " << m_dmLabel << endl; 
       }
 
     virtual bool 
-     Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, 
+     Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
          StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut,
          vector<CFG>& _cfgCol){ 
 
@@ -86,10 +86,10 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
             cout << "tmp::" << tmp << endl;  
 
           //If using Bbox as obstacle  
-          if ( m_useBBX ) {
+          if ( m_useBoundary ) {
             //If tmp is valid configuration extend rays in opposite directions
             //at length Gaussian d/2
-            if ( tmp.InBoundingBox(_env,_bb) && 
+            if ( tmp.InBoundary(_env,_bb) && 
                 vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, _stats, cdInfo, true, &callee)) {  
               CFG mid = tmp, incr, cfg1;
               incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
@@ -98,7 +98,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
                 cout << "cfg1::" << cfg1 << endl;  
 
               //If cfg1 is invalid (including Bbox) after adjustment, create cfg2 
-              if ( !cfg1.InBoundingBox(_env,_bb) || 
+              if ( !cfg1.InBoundary(_env,_bb) || 
                   !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env, _stats, cdInfo, true, &callee)) {
                 CFG cfg2;
                 cfg2.add(mid, incr);
@@ -106,7 +106,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
                   cout << "cfg2::" << cfg2 << endl;  
 
                 //If cfg2 also invalid, node generation successful 
-                if(!cfg2.InBoundingBox(_env,_bb) || 
+                if(!cfg2.InBoundary(_env,_bb) || 
                     !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
                   _stats.IncNodesGenerated(this->GetNameAndLabel());
                   generated = true;
@@ -129,11 +129,11 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
               }
               //If both cfg1 and cfg2 invalid, create mid and generate node
               //successfully if mid is valid 
-              if ( !cfg2.InBoundingBox(_env,_bb) || 
+              if ( !cfg2.InBoundary(_env,_bb) || 
                   !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
                 CFG mid;
                 mid.WeightedSum(cfg1, cfg2, 0.5);
-                if ( mid.InBoundingBox(_env,_bb) && (vc->IsValid(vc->GetVCMethod(m_vcLabel), 
+                if ( mid.InBoundary(_env,_bb) && (vc->IsValid(vc->GetVCMethod(m_vcLabel), 
                         mid, _env, _stats, cdInfo, true, &callee))) {
                   _stats.IncNodesGenerated(this->GetNameAndLabel());
                   generated = true;

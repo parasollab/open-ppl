@@ -29,7 +29,7 @@ class MPRegion : public Environment {
 /* 	   LocalPlanners<CFG,WEIGHT> &i_lp_features,  */
 /* 	   DistanceMetric &i_dm,  */
 /* 	   CollisionDetection &i_cd/\*,ValidityTest &i_vt*\/, */
-	   BoundingBox &i_bb, int index,
+	   Boundary &i_bb, int index,
 	   MPRegion<CFG,WEIGHT>* i_parent);
   
   MPRegion(int in_RegionId, MPProblem* in_pProblem);
@@ -40,7 +40,7 @@ class MPRegion : public Environment {
   vector<VID> AddToRoadmap(vector<CFG >& in_Cfgs);
   vector<VID> AddToBlockRoadmap(vector<CFG >& in_Cfgs);
   void WriteRoadmapForVizmo();
-  void WriteRoadmapForVizmo(ostream& out_os, vector<shared_ptr<BoundingBox> >* bboxes, bool block);
+  void WriteRoadmapForVizmo(ostream& out_os, vector<shared_ptr<Boundary> >* boundaries, bool block);
   
   ~MPRegion();
 
@@ -73,7 +73,7 @@ class MPRegion : public Environment {
 template <class CFG, class WEIGHT>
 MPRegion<CFG,WEIGHT>::
   MPRegion(Environment &i_env, 
-	   BoundingBox &i_boundaries, int index,
+	   Boundary &i_boundaries, int index,
 	   MPRegion<CFG,WEIGHT>* i_parent) :
   Environment(i_env, i_boundaries), 
   parent(i_parent) {
@@ -154,7 +154,7 @@ void
 MPRegion<CFG,WEIGHT>::
 PrintValues(ostream& _os) {
   _os << "MPRegion::PrintValues ID(" << region_tag << "): ";
-  boundaries->Print(_os);
+  m_boundaries->Print(_os);
 }
 
 
@@ -220,23 +220,23 @@ WriteRoadmapForVizmo() {
 };
 template <class CFG, class WEIGHT>
 void MPRegion<CFG,WEIGHT>::
-WriteRoadmapForVizmo(ostream& myofstream, vector<shared_ptr<BoundingBox> >* bboxes = NULL, bool block = false) {
-  myofstream << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
-  myofstream << endl << "#####PREAMBLESTART#####";
-  myofstream << endl << "../obprm -f " << GetMPProblem()->GetEnvironment()->GetEnvFileName() << " ";//commandLine;
-  myofstream << " -bbox "; GetBoundingBox()->Print(myofstream, ',', ',');
-  if(bboxes!=NULL){
-     typedef vector<shared_ptr<BoundingBox> >::iterator BIT;
-     for(BIT bit = bboxes->begin(); bit!=bboxes->end(); bit++){
-        myofstream << " -bbox "; (*bit)->Print(myofstream, ',', ',');
+WriteRoadmapForVizmo(ostream& _myofstream, vector<shared_ptr<Boundary> >* _bboxes = NULL, bool _block = false) {
+  _myofstream << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
+  _myofstream << endl << "#####PREAMBLESTART#####";
+  _myofstream << endl << "../obprm -f " << GetMPProblem()->GetEnvironment()->GetEnvFileName() << " ";//commandLine;
+  _myofstream << " -bbox "; GetBoundary()->Print(_myofstream, ',', ',');
+  if(_bboxes!=NULL){
+     typedef vector<shared_ptr<Boundary> >::iterator BIT;
+     for(BIT bit = _bboxes->begin(); bit!=_bboxes->end(); bit++){
+        _myofstream << " -bbox "; (*bit)->Print(_myofstream, ',', ',');
      }
   }
-  myofstream << endl << "#####PREAMBLESTOP#####";
+  _myofstream << endl << "#####PREAMBLESTOP#####";
   
-  myofstream << endl << "#####ENVFILESTART#####";
-  myofstream << endl << GetMPProblem()->GetEnvironment()->GetEnvFileName();
-  myofstream << endl << "#####ENVFILESTOP#####";
-  myofstream << endl;
+  _myofstream << endl << "#####ENVFILESTART#####";
+  _myofstream << endl << GetMPProblem()->GetEnvironment()->GetEnvFileName();
+  _myofstream << endl << "#####ENVFILESTOP#####";
+  _myofstream << endl;
 
   ///TODO: fix so vizmo can understand the following 3 lines instead of the explicit printouts below
   /*
@@ -244,19 +244,19 @@ WriteRoadmapForVizmo(ostream& myofstream, vector<shared_ptr<BoundingBox> >* bbox
   GetMPProblem()->GetCollisionDetection()->WriteCDsForVizmo(myofstream);
   GetMPProblem()->GetDistanceMetric()->WriteDMsForVizmo(myofstream);
   */
-  myofstream << "#####LPSTART#####" << endl << "0" << endl << "#####LPSTOP#####" << endl;
-  myofstream << "#####CDSTART#####" << endl << "0" << endl << "#####CDSTOP#####" << endl;
-  myofstream << "#####DMSTART#####" << endl << "0" << endl << "#####DMSTOP#####";
-  GetRoadmap()->WriteRNGseed(myofstream);
-  myofstream << endl;
+  _myofstream << "#####LPSTART#####" << endl << "0" << endl << "#####LPSTOP#####" << endl;
+  _myofstream << "#####CDSTART#####" << endl << "0" << endl << "#####CDSTOP#####" << endl;
+  _myofstream << "#####DMSTART#####" << endl << "0" << endl << "#####DMSTOP#####";
+  GetRoadmap()->WriteRNGseed(_myofstream);
+  _myofstream << endl;
 
   #ifndef _PARALLEL
-  if(!block)
-    stapl::sequential::write_graph(*(GetRoadmap()->m_pRoadmap), myofstream);         // writes verts & adj lists
+  if(!_block)
+    stapl::sequential::write_graph(*(GetRoadmap()->m_pRoadmap), _myofstream);         // writes verts & adj lists
   else 
-    stapl::sequential::write_graph(*(GetBlockRoadmap()->m_pRoadmap), myofstream);        // writes verts & adj lists
+    stapl::sequential::write_graph(*(GetBlockRoadmap()->m_pRoadmap), _myofstream);        // writes verts & adj lists
   #else
-  stapl::write_graph(*(GetRoadmap()->m_pRoadmap),myofstream);
+  stapl::write_graph(*(GetRoadmap()->m_pRoadmap),_myofstream);
   #endif
 }
 

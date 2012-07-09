@@ -8,7 +8,7 @@ class GaussianSampler : public SamplerMethod<CFG>
 {
   private:
     double m_d;  //Gaussian d-value obtained from distribution 
-    bool m_useBBX;  //Use Bbox as an obstacle? 
+    bool m_useBoundary;  //Use Bbox as an obstacle? 
     string m_vcLabel, m_dmLabel;
 
   public: 
@@ -17,8 +17,8 @@ class GaussianSampler : public SamplerMethod<CFG>
     //Constructors
     //////////////////////
 
-    GaussianSampler(Environment* _env = NULL, string _vcLabel = "", string _dmLabel = "", double _d = 0, bool _useBoundingBox = false)
-      : m_d(_d), m_useBBX(_useBoundingBox), m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
+    GaussianSampler(Environment* _env = NULL, string _vcLabel = "", string _dmLabel = "", double _d = 0, bool _useBoundary = false)
+      : m_d(_d), m_useBoundary(_useBoundary), m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
         this->SetName("GaussianSampler");
         if(m_d == 0){
           if(_env != NULL)
@@ -44,7 +44,7 @@ class GaussianSampler : public SamplerMethod<CFG>
     void  
       ParseXML(XMLNodeReader& _node) {
         m_d = _node.numberXMLParameter("d", true, 0.0, 0.0, MAX_DBL, "Gaussian D value");
-        m_useBBX = _node.boolXMLParameter("useBBX", true, false, "Use bounding box as obstacle");
+        m_useBoundary = _node.boolXMLParameter("useBBX", true, false, "Use bounding box as obstacle");
         m_vcLabel = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
         m_dmLabel =_node.stringXMLParameter("dmMethod", true, "default", "Distance Metric Method");
 
@@ -56,14 +56,14 @@ class GaussianSampler : public SamplerMethod<CFG>
       PrintOptions(ostream& _out) const {
         SamplerMethod<CFG>::PrintOptions(_out);
         _out << "\td = " << m_d << endl; 
-        _out << "\tuseBoundingBox = " << m_useBBX << endl; 
+        _out << "\tuseBoundary = " << m_useBoundary << endl; 
         _out << "\tvcLabel = " << m_vcLabel << endl; 
         _out << "\tdmLabel = " << m_dmLabel << endl; 
       }
 
     virtual bool 
 
-      Sampler(Environment* _env, shared_ptr<BoundingBox> _bb,
+      Sampler(Environment* _env, shared_ptr<Boundary> _bb,
           StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, 
           vector<CFG>& _cfgCol){ 
 
@@ -83,8 +83,8 @@ class GaussianSampler : public SamplerMethod<CFG>
         //First define validity of first CFG. If useBBX, require it to be in BBX
         //and only check validity with obstacles. Otherwise have both conditions.
         bool cfg1Free;
-        if(!m_useBBX) {
-          if(!cfg1.InBoundingBox(_env,_bb)){
+        if(!m_useBoundary) {
+          if(!cfg1.InBoundary(_env,_bb)){
             if(this->m_debug){
               VDAddTempCfg(cfg1, false); 
               VDComment("GaussianSampler::Attempt out of bounds."); 
@@ -96,7 +96,7 @@ class GaussianSampler : public SamplerMethod<CFG>
               _stats, cdInfo, true, &callee);
         }
         else { 
-          cfg1Free = cfg1.InBoundingBox(_env,_bb) && 
+          cfg1Free = cfg1.InBoundary(_env,_bb) && 
             vc->IsValid(vc->GetVCMethod(m_vcLabel), 
                 cfg1, _env, _stats, cdInfo, true, &callee);
         } 
@@ -118,11 +118,11 @@ class GaussianSampler : public SamplerMethod<CFG>
         CFG cfg2;
         bool cfg2Free;   
         CFG incr;
-        if(!m_useBBX) {
+        if(!m_useBoundary) {
           do {
             incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
             cfg2.add(cfg1, incr);
-          } while(!cfg2.InBoundingBox(_env,_bb));
+          } while(!cfg2.InBoundary(_env,_bb));
 
           cfg2Free = vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, 
               _stats, cdInfo, true, &callee);
@@ -131,7 +131,7 @@ class GaussianSampler : public SamplerMethod<CFG>
           incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
           cfg2.add(cfg1, incr);
 
-          cfg2Free = cfg2.InBoundingBox(_env,_bb) && 
+          cfg2Free = cfg2.InBoundary(_env,_bb) && 
             vc->IsValid(vc->GetVCMethod(m_vcLabel), 
                 cfg2, _env, _stats, cdInfo, true, &callee);
         }

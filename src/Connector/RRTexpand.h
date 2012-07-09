@@ -354,7 +354,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
                }
             tick.Increment(incr); //next configuration to check
 
-            if( (tick.isCollision(env,Stats,cd,*this->cdInfo)) || !(tick.InBoundingBox(env)) ) {
+            if( (tick.isCollision(env,Stats,cd,*this->cdInfo)) || !(tick.InBoundary(env)) ) {
                collisionDistance = dm->Distance(env, cfg, tick);
                collision = true;
                }
@@ -383,7 +383,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
 	 //DisplayCCStats(*(rm->m_pRoadmap),-1);
 
 	 LPOutput<CFG,WEIGHT> lpOutput;
-	 if (x_new.InBoundingBox(env) && attemptConnection
+	 if (x_new.InBoundary(env) && attemptConnection
 	     && !x_new.isCollision(env,Stats,cd,*this->cdInfo)
 	     && !rm->m_pRoadmap->IsEdge(x_near,x_new)
 	     && lp->IsConnected(rm->GetEnvironment(),Stats,cd,dm,x_near,x_new,&lpOutput,this->connectionPosRes, this->connectionOriRes, (!addAllEdges))) {
@@ -394,7 +394,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
                 if (x_new == u && connecting && toConnect) {
                    x_new = u; 
                    settoConnect = TRUE;
-                   if (x_new.InBoundingBox(env) && attemptConnection
+                   if (x_new.InBoundary(env) && attemptConnection
                        && !x_new.isCollision(env,Stats,cd,*this->cdInfo)
 		       && !rm->m_pRoadmap->IsEdge(x_near,x_new)
 		       && lp->IsConnected(rm->GetEnvironment(),Stats,cd,dm,x_near,x_new,&lpOutput,this->connectionPosRes, this->connectionOriRes, (!addAllEdges))) {

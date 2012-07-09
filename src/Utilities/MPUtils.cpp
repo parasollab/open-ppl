@@ -180,7 +180,7 @@ bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _
   //given to the function, and are user defined.
   while(!collision && dm->Distance(env,_start,tick) <= _delta) {
     tick.Increment(incr); //Increment tick
-    if(!(tick.InBoundingBox(env)) || !(vc->IsValid(vc->GetVCMethod(_vc), tick, env, *regionStats, _cdInfo, true, &callee))){
+    if(!(tick.InBoundary(env)) || !(vc->IsValid(vc->GetVCMethod(_vc), tick, env, *regionStats, _cdInfo, true, &callee))){
       collision = true; //Found a collision; return previous tick, as it is collision-free
     }
     else{
@@ -213,7 +213,7 @@ bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _
 //***********************************//
 // Main Push To Medial Axis Function //
 //***********************************//
-bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox> _bb, CfgType& _cfg, 
+bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<Boundary> _bb, CfgType& _cfg, 
     StatClass& _stats, string _vc, string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, 
     bool _useBBX, double _eps, int _hLen, bool _debug, bool _positional) {
 
@@ -251,7 +251,7 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<BoundingBox>
 bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClass& _stats, string _vc, 
     string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, 
     int _hLen, bool _debug, bool _positional) {
-  return PushToMedialAxis( _mp,  _env, _env->GetBoundingBox(), _cfg, _stats, _vc, _dm, 
+  return PushToMedialAxis( _mp,  _env, _env->GetBoundary(), _cfg, _stats, _vc, _dm, 
       _cExact, _clearance, _pExact, _penetration, _useBBX, _eps, _hLen, _debug, _positional);
 }
 
@@ -261,7 +261,7 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClas
 // A direction is determined to move the cfg outside of the      //
 // obstacle and is pushed till outside.                          //
 //***************************************************************//
-bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<Boundary> _bb, 
     StatClass& _stats,string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional) {	
   // Initialization
   string call("MedialAxisUtility::PushFromInsideObstacle");
@@ -324,7 +324,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
       if ( !prevValidity ) // Extra Step TODO: Test if necessary
         prevValidity = true;
     }
-    inBBX = tmpCfg.InBoundingBox(_env,_bb);
+    inBBX = tmpCfg.InBoundary(_env,_bb);
     if ( !inBBX ) { 
       if (_debug) cout << "ERROR: Fell out of BBX, error out... " << endl;
       return false;
@@ -338,7 +338,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
 
 bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional) {
-  return PushFromInsideObstacle(_mp, _cfg, _env, _env->GetBoundingBox(), _stats,
+  return PushFromInsideObstacle(_mp, _cfg, _env, _env->GetBoundary(), _stats,
       _vc, _dm, _pExact, _penetration, _debug, _positional);
 } 
 
@@ -348,7 +348,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, St
 // algorithm stepping out at the resolution till the medial axis //
 // is found, determined by the clearance.                        //
 //***************************************************************//
-bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, 
+bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<Boundary> _bb, 
     StatClass& _stats, string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, 
     int _hLen, bool _debug, bool _positional) {
   // Initialization
@@ -418,7 +418,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
 
     // Test for in BBX and inside obstacle
     inside = vcm->isInsideObstacle(tmpCfg,_env,tmpInfo);
-    inBBX = tmpCfg.InBoundingBox(_env,_bb);
+    inBBX = tmpCfg.InBoundary(_env,_bb);
     bool tmpVal = (inside || !inBBX);
     if (_debug) VDAddTempCfg(tmpCfg, tmpVal);
     if (_debug) VDClearLastTemp();
@@ -730,7 +730,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
 bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, 
     int _hLen, bool _debug, bool _positional) {
-  return PushCfgToMedialAxis(_mp, _cfg, _env, _env->GetBoundingBox(), _stats,
+  return PushCfgToMedialAxis(_mp, _cfg, _env, _env->GetBoundary(), _stats,
       _vc, _dm, _cExact, _clearance, _useBBX, _eps, _hLen, _debug, _positional);
 }
 
@@ -740,7 +740,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatC
 // for the medial axis computation, calls either approx or exact       //
 //*********************************************************************//
 bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
-    shared_ptr<BoundingBox> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
+    shared_ptr<Boundary> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
     bool _exact, int _clearance, int _penetration, bool _useBBX, bool _positional) {
   if ( _exact ) 
     return GetExactCollisionInfo(_mp,_cfg,_env,_bb,_stats,_cdInfo,_vc,_useBBX);
@@ -752,7 +752,7 @@ bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
 bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats, 
     CDInfo& _cdInfo, string _vc, string _dm, bool _exact, int _clearance, int _penetration, 
     bool _useBBX, bool _positional) {
-  return CalculateCollisionInfo(_mp, _cfg, _clrCfg, _env, _env->GetBoundingBox(), _stats, _cdInfo, 
+  return CalculateCollisionInfo(_mp, _cfg, _clrCfg, _env, _env->GetBoundary(), _stats, _cdInfo, 
       _vc, _dm, _exact, _clearance, _penetration, _useBBX,_positional);
 }
 
@@ -762,7 +762,7 @@ bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
 // checker results against obstacles to the bounding box to get a      //
 // complete solution                                                   //
 //*********************************************************************//
-bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
+bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
     CDInfo& _cdInfo, string _vc, bool _useBBX) {
   // Setup Validity Checker
   string call("MedialAxisUtility::getExactCollisionInfo");
@@ -772,7 +772,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
   _cdInfo.ret_all_info = true;
 
   // If not in BBX or valid, return false (IsValid gets _cdInfo)
-  if ( !_cfg.InBoundingBox(_env,_bb) || !(vc->IsValid(vcm,_cfg,_env,_stats,_cdInfo,true,&call)) ) 
+  if ( !_cfg.InBoundary(_env,_bb) || !(vc->IsValid(vcm,_cfg,_env,_stats,_cdInfo,true,&call)) ) 
     return false;
 
   // If not using the bbx, done
@@ -815,7 +815,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
 
 bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
     CDInfo& _cdInfo, string _vc, bool _useBBX) {
-  return GetExactCollisionInfo(_mp, _cfg, _env, _env->GetBoundingBox(), _stats,
+  return GetExactCollisionInfo(_mp, _cfg, _env, _env->GetBoundary(), _stats,
       _cdInfo, _vc, _useBBX);
 }
 
@@ -826,7 +826,7 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, Sta
 // The shortest ray is then considered the best calididate.            //
 //*********************************************************************//
 bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
-    shared_ptr<BoundingBox> _bb, StatClass& _stats,CDInfo& _cdInfo, string _vc, string _dm, 
+    shared_ptr<Boundary> _bb, StatClass& _stats,CDInfo& _cdInfo, string _vc, string _dm, 
     int _clearance, int _penetration, bool _useBBX, bool _positional) {
 
   // Initialization
@@ -839,13 +839,13 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
   // Calculate MaxRange for dist calc
   double maxRange(0.0);
   for(size_t i=0; i< _cfg.PosDOF(); ++i) {
-    std::pair<double,double> range = _env->GetBoundingBox()->GetRange(i);
+    std::pair<double,double> range = _env->GetBoundary()->GetRange(i);
     double tmpRange = range.second-range.first;
     if(tmpRange > maxRange) maxRange = tmpRange;
   }
 
   // If in BBX, check validity to get _cdInfo, return false if not valid
-  if ( !_cfg.InBoundingBox(_env,_bb) )
+  if ( !_cfg.InBoundary(_env,_bb) )
     return false;
 
   _cdInfo.ResetVars();
@@ -917,7 +917,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
       tick[i]->Increment(*incr[i].first);
       currInside   = vcm->isInsideObstacle(*tick[i],_env,tmpInfo);
       currValidity = vc->IsValid(vcm,*tick[i],_env,_stats,tmpInfo,true,&call);
-      currInBBX    = tick[i]->InBoundingBox(_env,_bb);
+      currInBBX    = tick[i]->InBoundary(_env,_bb);
       currValidity = currValidity && !currInside;
 
       tmpCfg = *tick[i];
@@ -960,7 +960,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
 
       midInside   = vcm->isInsideObstacle(*middleCfg,_env,tmpInfo);
       midValidity = vc->IsValid(vcm,*middleCfg,_env,_stats,tmpInfo,true,&call);
-      midInBBX    = middleCfg->InBoundingBox(_env,_bb);
+      midInBBX    = middleCfg->InBoundary(_env,_bb);
       midValidity = midValidity && !midInside;
       if ( _useBBX ) 
         midValidity = (midValidity && midInBBX);
@@ -997,7 +997,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
 
       midInside   = vcm->isInsideObstacle(*middleCfg,_env,tmpInfo);
       midValidity = vc->IsValid(vcm,*middleCfg,_env,_stats,tmpInfo,true,&call);
-      midInBBX    = middleCfg->InBoundingBox(_env,_bb);
+      midInBBX    = middleCfg->InBoundary(_env,_bb);
       midValidity = midValidity && !midInside;
       if ( _useBBX ) 
         midValidity = (midValidity && midInBBX);
@@ -1020,7 +1020,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
 
 bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats,
     CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional) {
-  return GetApproxCollisionInfo(_mp, _cfg, _clrCfg, _env, _env->GetBoundingBox(), _stats,
+  return GetApproxCollisionInfo(_mp, _cfg, _clrCfg, _env, _env->GetBoundary(), _stats,
       _cdInfo, _vc, _dm, _clearance, _penetration, _useBBX, _positional);
 }
 

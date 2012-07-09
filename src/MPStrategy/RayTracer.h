@@ -146,7 +146,7 @@ bool RayCSpace<CFG>::collide(Environment *env, StatClass& Stats,
     tick.Increment(incr); //next configuration to check
     Callee= tick.GetName();
     if( (tick.isCollision(env,Stats,cd,cdInfo,true,&tmpStr)) || 
-	!(tick.InBoundingBox(env)) ) {
+	!(tick.InBoundary(env)) ) {
       collisionConfiguration = tick;
       collisionDistance = dm->Distance(env, cfg, tick);
       collision = true;
@@ -206,7 +206,7 @@ bool RayCSpace<CFG>::connectTarget(Environment *env, StatClass& Stats,
     tick.Increment(incr); //next configuration to check
     Callee = tick.GetName();
     if( (tick.isCollision(env,Stats,cd,cdInfo,true,&tmpStr)) || 
-	!(tick.InBoundingBox(env)) ) {
+	!(tick.InBoundary(env)) ) {
       tmpDist = dm->Distance(env, cfg, tick);//distance % the ticks
       collisionConfiguration = tick;
       collisionDistance = dm->Distance(env, cfg, tick);

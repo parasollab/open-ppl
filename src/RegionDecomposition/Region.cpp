@@ -13,13 +13,13 @@ Region::Region(const Region& _r){
   m_vids = _r.m_vids;
 }
 
-Region::Region(shared_ptr<BoundingBox> _bbox, std::vector<pair<size_t, VID> >& _pairIds ){
+Region::Region(shared_ptr<Boundary> _bbox, std::vector<pair<size_t, VID> >& _pairIds ){
   m_bb=_bbox;
   m_ccs.clear();
   m_ccs=_pairIds;
 }
 
-Region::Region(shared_ptr<BoundingBox> _bbox, std::vector<VID>& _ids ){
+Region::Region(shared_ptr<Boundary> _bbox, std::vector<VID>& _ids ){
   m_bb=_bbox;
   m_vids.clear();
   typedef std::vector<VID>::iterator itr;
@@ -28,8 +28,8 @@ Region::Region(shared_ptr<BoundingBox> _bbox, std::vector<VID>& _ids ){
   }
 }
 
-shared_ptr<BoundingBox> 
-Region::GetBoundingBox() const{
+shared_ptr<Boundary> 
+Region::GetBoundary() const{
   return m_bb;
 }
 
@@ -38,9 +38,9 @@ Region::GetCCs() const{
   return m_ccs;
 }
 
-pair<shared_ptr<BoundingBox>, vector<pair<size_t, VID> > >
+pair<shared_ptr<Boundary>, vector<pair<size_t, VID> > >
 Region::GetRegionInfo() const{
-  pair<shared_ptr<BoundingBox>, vector<pair<size_t, VID> > > infoPair = make_pair(m_bb, m_ccs);
+  pair<shared_ptr<Boundary>, vector<pair<size_t, VID> > > infoPair = make_pair(m_bb, m_ccs);
   return infoPair;
 }
 
@@ -63,7 +63,7 @@ Region::RegionWeight() const {
 }
 
 void
-Region::SetBoundingBox(shared_ptr<BoundingBox> _bb){
+Region::SetBoundary(shared_ptr<Boundary> _bb){
   m_bb=_bb;
 }
 

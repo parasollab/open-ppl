@@ -2,9 +2,10 @@
 #include "MPProblem.h"
 
 
-BoundingBox::BoundingBox(int _iDofs, int _iPosDofs ) :
-  pos_dofs(_iPosDofs),
-  dofs(_iDofs) { 
+BoundingBox::BoundingBox(int _iDofs, int _iPosDofs ) 
+  { 
+  pos_dofs = _iPosDofs;
+  dofs=_iDofs ;
   bounding_box.clear();
   for (int i = 0; i < dofs; i++) {
     bounding_box.push_back(pair<double,double>(0.0,1.0));
@@ -87,36 +88,13 @@ BoundingBox() { }
 
 bool
 BoundingBox::
-operator==(const BoundingBox& bb) const
+operator==(const Boundary& _b) const
 {
-  return (bounding_box == bb.bounding_box) &&
-         (par_type == bb.par_type) &&
-         (pos_dofs == bb.pos_dofs) &&
-         (dofs == bb.dofs);
-}
-
-int 
-BoundingBox::
-GetDOFs() const {
-  return dofs;//bounding_box.size();
-}
-
-int 
-BoundingBox::
-GetPosDOFs() const {
-  return pos_dofs;//bounding_box.size();
-  ///\note This was a bug earlier?  why?  Roger 2008.04.28
-}
-
-const std::pair<double,double> 
-BoundingBox::
-GetRange(int par) const {
-  if(par >= (int)bounding_box.size())
-  {
-    cerr << "\n\n\tERROR in BoundingBox::GetRange(): attempting to get range of parameter " << par << ", but bounding_box is of size " << bounding_box.size() << ", exiting.\n\n";
-    exit(-1);
-  }
-  return bounding_box[par];
+  const BoundingBox* bbox = dynamic_cast<const BoundingBox*>(&_b);
+  return (bounding_box == bbox->bounding_box) &&
+         (par_type == bbox->par_type) &&
+         (pos_dofs == bbox->pos_dofs) &&
+         (dofs == bbox->dofs);
 }
 
 double 
@@ -159,17 +137,6 @@ SetParameter(int par, double p_first, double p_second) {
   bounding_box[par].first = p_first;
   bounding_box[par].second = p_second;
 }
-
-void
-BoundingBox::
-SetRanges(std::vector<double> &ranges) {
-  std::vector<double>::iterator itr;
-  int i = 0;
-  for (itr = ranges.begin(); itr < ranges.end() && i < dofs; itr = itr+2, i++) {
-    SetParameter(i,*itr,*(itr+1));
-  }
-}
-
 
 std::vector<BoundingBox > 
 BoundingBox::
@@ -229,11 +196,9 @@ IfWrap(int par) {
   return false;
 }
 
-bool BoundingBox::InBoundary(const Cfg& _cfg, Environment* _env = NULL ){
+bool BoundingBox::InBoundary(const Cfg& _cfg ){
  vector <double> m_v= _cfg.GetData();
- if(_env == NULL) {
-     _env = GetMPProblem()->GetEnvironment();
- }
+ Environment* _env = GetMPProblem()->GetEnvironment();
   if(!IfSatisfiesConstraints(m_v)) 
     return false;
   
@@ -324,7 +289,7 @@ Parse(std::stringstream &i_bbox) {
   cout << "BoundingBox:Parse: Err in BoundingBox parameters...expecting even number parameters...no letters...etc" << endl;
   exit(-1);
 }
-  SetRanges(boundingBox);
+  SetRange(boundingBox);
 }
 */
 void

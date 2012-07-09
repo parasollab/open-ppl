@@ -30,7 +30,7 @@ class MPStrategyMethod : public MPBaseObject {
     virtual void PrintOptions(ostream& _os)=0;
 
     string GetBaseFilename(){return m_baseFilename;}
-    void SetBoundary(shared_ptr<BoundingBox> bb){m_boundary=bb;};
+    void SetBoundary(shared_ptr<Boundary> bb){m_boundary=bb;};
     long GetBaseSeed() {return m_baseSeed;} 
 
     bool EvaluateMap(int _regionID, vector<string> _evaluators);
@@ -38,7 +38,7 @@ class MPStrategyMethod : public MPBaseObject {
   protected:
     typedef RoadmapGraph<CfgType, WeightType>::GRAPH GRAPH;
     typedef RoadmapGraph<CfgType, WeightType>::VID VID; 
-    shared_ptr<BoundingBox> m_boundary; 
+    shared_ptr<Boundary> m_boundary; 
 
   private:
     long m_baseSeed;

@@ -96,7 +96,7 @@ void Cfg_free_multi::GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
 }
 
 void Cfg_free_multi::GetRandomCfg(Environment* _env) {
-  GetRandomCfg(_env, _env->GetBoundingBox());
+  GetRandomCfg(_env, _env->GetBoundary());
 }
 
 void
@@ -127,6 +127,6 @@ Cfg_free_multi::GetRandomCfg_CenterOfMass(Environment *_env, shared_ptr<Boundary
 }
 
 void Cfg_free_multi::GetRandomCfg_CenterOfMass(Environment *_env) {
-  GetRandomCfg_CenterOfMass(_env, _env->GetBoundingBox());
+  GetRandomCfg_CenterOfMass(_env, _env->GetBoundary());
 }
 

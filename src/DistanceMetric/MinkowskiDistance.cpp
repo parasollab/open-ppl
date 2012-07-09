@@ -49,7 +49,7 @@ void MinkowskiDistance::ScaleCfg(Environment* _env, double _length, Cfg& _o, Cfg
 double MinkowskiDistance::PositionDistance(Environment* _env, const Cfg& _c) {
   double diagonal = 0;
   for(size_t i=0; i<_c.PosDOF(); ++i) {
-    std::pair<double,double> range = _env->GetBoundingBox()->GetRange(i);
+    std::pair<double,double> range = _env->GetBoundary()->GetRange(i);
     diagonal += pow(fabs(range.second-range.first), m_r1);
   }
   diagonal = pow(diagonal, m_r3);

@@ -44,7 +44,7 @@ class NegateSampler : public SamplerMethod<CFG> {
       }
     
     virtual bool 
-        Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, 
+        Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
           CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
         //make invalid "valid" and vice-versa to collect collision nodes

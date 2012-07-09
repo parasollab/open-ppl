@@ -314,12 +314,12 @@ double Cfg::OrientationMagnitude() const {
 
 // tests whether or not robot in this configuration has every vertex inside
 // the environment specified bounding box
-bool Cfg::InBoundingBox(Environment* _env,shared_ptr<Boundary> _bb) const {
-  return _bb->InBoundary(*this, _env); 
+bool Cfg::InBoundary(Environment* _env,shared_ptr<Boundary> _bb) const {
+  return _bb->InBoundary(*this); 
 }
 
-bool Cfg::InBoundingBox(Environment* _env) const {
-  return InBoundingBox(_env,_env->GetBoundingBox());
+bool Cfg::InBoundary(Environment* _env) const {
+  return InBoundary(_env,_env->GetBoundary());
 }
 
 void Cfg::GetResolutionCfg(Environment* _env) {
@@ -510,7 +510,7 @@ void Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
 // generates random configuration where workspace robot's EVERY VERTEX
 // is guaranteed to lie within the environment specified bounding box
 void Cfg::GetRandomCfg(Environment* _env) {
-  GetRandomCfg(_env, _env->GetBoundingBox());
+  GetRandomCfg(_env, _env->GetBoundary());
 }
 
 void Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
@@ -523,7 +523,7 @@ void Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   while ( tries-- > 0) {
     this->GetRandomCfgCenterOfMass(_env, _bb);
    
-    if (this->InBoundingBox(_env,_bb))
+    if (this->InBoundary(_env,_bb))
       return;
   }//endwhile
 

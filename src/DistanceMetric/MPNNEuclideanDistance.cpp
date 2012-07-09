@@ -14,7 +14,7 @@ MPNNEuclideanDistance::~MPNNEuclideanDistance() {}
 double MPNNEuclideanDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
   double maxRange = 0.0;
   for(size_t i=0; i< _c1.PosDOF(); ++i) {
-    std::pair<double,double> range = _env->GetBoundingBox()->GetRange(i);
+    std::pair<double,double> range = _env->GetBoundary()->GetRange(i);
     maxRange = max(maxRange, range.second-range.first);
   }
   

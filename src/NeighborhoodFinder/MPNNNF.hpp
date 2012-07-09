@@ -74,7 +74,7 @@ public:
 
     m_max_bbox_range = 0.0;
     for(size_t i=0; i< temp.PosDOF(); ++i) {
-      std::pair<double,double> range = _problem->GetEnvironment()->GetBoundingBox()->GetRange(i);
+      std::pair<double,double> range = _problem->GetEnvironment()->GetBoundary()->GetRange(i);
       double tmp_range = range.second-range.first;
       if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;
     }

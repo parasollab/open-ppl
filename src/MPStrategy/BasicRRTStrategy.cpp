@@ -92,7 +92,7 @@ BasicRRTStrategy::Initialize(int _regionID){
     // Add root vertex/vertices
     for (int i=0; i<m_numRoots; ++i) {
       tmp.GetRandomCfg(env);
-      if (tmp.InBoundingBox(env)
+      if (tmp.InBoundary(env)
           && vc->IsValid(vc->GetVCMethod(m_vc), tmp, env, *regionStats, cdInfo, true, &callee)){
         m_roots.push_back(tmp);
         m_goals.push_back(tmp);

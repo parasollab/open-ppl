@@ -126,7 +126,7 @@ void Cfg_surface::GetRandomCfg(double _r, double _rStep) {
 
 
 void Cfg_surface::GetRandomCfg(Environment* _env) {
-  GetRandomCfg(_env, _env->GetBoundingBox());
+  GetRandomCfg(_env, _env->GetBoundary());
 }
 
 void Cfg_surface::GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
@@ -342,5 +342,5 @@ void Cfg_surface::GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundar
 }
 
 void Cfg_surface::GetRandomCfgCenterOfMass(Environment *_env) {
-  GetRandomCfgCenterOfMass(_env, _env->GetBoundingBox());
+  GetRandomCfgCenterOfMass(_env, _env->GetBoundary());
 }

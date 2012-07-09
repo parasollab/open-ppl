@@ -621,7 +621,7 @@ StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, NeighborhoodFinder
 
   CFG tcfg;
   double norm = _rdmp->GetEnvironment()->Getminmax_BodyAxisRange()
-    *_rdmp->GetEnvironment()->GetBoundingBox()->GetDOFs();
+    *_rdmp->GetEnvironment()->GetBoundary()->GetDOFs();
   cout << "norm value = " << norm << endl;
 #endif
 }

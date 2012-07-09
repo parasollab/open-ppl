@@ -329,7 +329,7 @@ GenerateMap(Roadmap<CFG, WEIGHT>* rmap, StatClass& Stats,
 
     //add the sample to the model and roadmap (if free)
     string callee("UtilityGuidedGenerator::NodeGeneration");
-    bool isColl = !q.InBoundingBox(rmap->GetEnvironment()) || 
+    bool isColl = !q.InBoundary(rmap->GetEnvironment()) || 
       q.isCollision(rmap->GetEnvironment(), Stats, cd, cdInfo, true, &callee);
     cout << "isColl = " << isColl;
     if(!isColl) {

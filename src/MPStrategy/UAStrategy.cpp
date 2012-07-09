@@ -246,7 +246,7 @@ bool sortRegionFunc(pair<VID, double> p1, pair<VID, double> p2){return p1.second
 
 void UAStrategy::OverlapBBX(){
    Environment *env = GetMPProblem()->GetEnvironment();
-   boost::shared_ptr<BoundingBox> bb = GetMPProblem()->GetMPRegion(0)->GetBoundingBox();
+   boost::shared_ptr<Boundary> bb = GetMPProblem()->GetMPRegion(0)->GetBoundary();
    double robot_radius = 1.25*env->GetMultiBody(env->GetRobotIndex())->GetBoundingSphereRadius();
    
    if(m_OverlapMethod=="default"){ 
@@ -501,8 +501,8 @@ vector<double> UAStrategy::GetProbabilities(){
 void UAStrategy::UpdateBBToRange(size_t region){
   m_hold.clear();
   if( region >=0 && region < m_min.size() ){
-    boost::shared_ptr<BoundingBox> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
-    boost::shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
+    boost::shared_ptr<Boundary> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundary();
+    boost::shared_ptr<Boundary> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundary();
 
     int size = (m_min.at(region)).size();
     for(int i=0; i < size;i++){
@@ -524,8 +524,8 @@ void UAStrategy::UpdateBBToRange(size_t region){
 }
 
 void UAStrategy::RestoreBB(){
-  boost::shared_ptr<BoundingBox> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundingBox();
-  boost::shared_ptr<BoundingBox> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundingBox();
+  boost::shared_ptr<Boundary> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundary();
+  boost::shared_ptr<Boundary> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundary();
   size_t i=0;
   for(i=0; i<m_hold.size();i++){
     pBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);

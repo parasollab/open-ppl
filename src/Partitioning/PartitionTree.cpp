@@ -161,7 +161,7 @@ inline void IntToStr(int myInt, string &myString) {
 void PartitionTree::WritePartitions(MPProblem* pMPProblem, string base, vector<vector<double> >&
 min, vector<vector<double> >& max){
    string baseFileName = base;
-   MPRegion<CfgType,WeightType> eachRgn(*(pMPProblem->GetEnvironment()), *(pMPProblem->GetEnvironment()->GetBoundingBox()), 10, NULL);
+   MPRegion<CfgType,WeightType> eachRgn(*(pMPProblem->GetEnvironment()), *(pMPProblem->GetEnvironment()->GetBoundary()), 10, NULL);
    eachRgn.SetMPProblem(pMPProblem);
    RoadmapGraph<CfgType,WeightType>* rg = pMPProblem->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
    vector<PartitionNode*> pnodes = m_Root->GetChildren();
@@ -188,9 +188,9 @@ min, vector<vector<double> >& max){
       }
       eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(newVIDS[newVIDS.size()-1],newVIDS[0], WeightType());
    }
-   vector<shared_ptr<BoundingBox> >* bboxes = new vector<shared_ptr<BoundingBox> >();
+   vector<shared_ptr<Boundary> >* bboxes = new vector<shared_ptr<Boundary> >();
    for(unsigned int i = 0; i<min.size(); i++){
-      shared_ptr<BoundingBox> bb;
+      shared_ptr<Boundary> bb;
       bb->SetParameter(0, min[i][0], max[i][0]);
       bb->SetParameter(1, min[i][1], max[i][1]);
       bb->SetParameter(2, min[i][2], max[i][2]);

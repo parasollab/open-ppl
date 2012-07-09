@@ -22,7 +22,9 @@ Environment(int dofs, int pos_dofs) :
   minmax_BodyAxisRange(0),
   m_filename("")
 {
-  boundaries = shared_ptr<BoundingBox>(new BoundingBox(dofs, pos_dofs));
+  cerr<<"Environment(dof,pos_dof) not implemented"<<endl;
+  exit(-1);
+
 }
 
 
@@ -87,8 +89,8 @@ Environment(const Environment &from_env) :
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
   m_filename(from_env.m_filename)
 {
-  boundaries = shared_ptr<BoundingBox>(new BoundingBox(*(from_env.GetBoundingBox())));
-  if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
+  m_boundaries=from_env.m_boundaries;
+  if(m_boundaries->GetDOFs() + m_boundaries->GetPosDOFs() == 0)
     cout << "FOUND EMPTY BBOX! (Environment copy constructor)\n";
 
   // only usable bodies in from_env will be copied
@@ -124,9 +126,8 @@ Environment(MPProblem* in_pProblem) :
   m_filename(in_pProblem->GetEnvironment()->m_filename)
 {
   Environment& from_env = *(in_pProblem->GetEnvironment());
-  
-  boundaries = shared_ptr<BoundingBox>(new BoundingBox(*(from_env.GetBoundingBox())));
-  if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
+  m_boundaries=from_env.m_boundaries; 
+  if(m_boundaries->GetDOFs() + m_boundaries->GetPosDOFs() == 0)
     cout << "FOUND EMPTY BBOX! (MPProblem constructor) \n";
 
   for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
@@ -150,7 +151,7 @@ Environment(MPProblem* in_pProblem) :
  * environment
  */
 Environment::
-Environment(const Environment &from_env, const BoundingBox &i_boundaries) :
+Environment(const Environment &from_env, const Boundary &i_boundaries) :
   pathVersion(PATHVER_20001125),
   robotIndex(from_env.robotIndex),
   positionRes(from_env.positionRes),
@@ -160,8 +161,7 @@ Environment(const Environment &from_env, const BoundingBox &i_boundaries) :
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
   m_filename(from_env.m_filename)
 {
-  boundaries = shared_ptr<BoundingBox>(new BoundingBox(i_boundaries));
-
+  m_boundaries=from_env.m_boundaries;
   for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
     multibody.push_back(from_env.GetMultiBody(i));
   }
@@ -227,8 +227,17 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
       XMLNodeReader::childiterator citr2;
       for ( citr2 = citr->children_begin(); citr2!= citr->children_end(); ++citr2 ) {
         if ( citr2->getName() == "boundary" ) {
-          boundaries = shared_ptr<BoundingBox>(new BoundingBox(*citr2,in_pProblem)); 
-          //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
+          string type = citr2->stringXMLParameter("type",true,"","type");
+          boundaryType = type;
+          if(type == "bbox"){
+            m_boundaries = shared_ptr<BoundingBox>(new BoundingBox(*citr2,in_pProblem));
+          }
+          else if(type == "bshpere") {
+            m_boundaries = shared_ptr<BoundingSphere>(new BoundingSphere(*citr2,in_pProblem));
+          }
+
+          //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox() 
+         //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
         } else {
           citr2->warnUnknownNode();
         }
@@ -294,8 +303,8 @@ Environment(const Environment& from_env, string filename) :
   minmax_BodyAxisRange(0),
   m_filename(filename)
 {
-  boundaries = shared_ptr<BoundingBox>(new BoundingBox(*(from_env.GetBoundingBox())));
-  if(boundaries->GetDOFs() + boundaries->GetPosDOFs() == 0)
+  m_boundaries=from_env.m_boundaries;
+  if(m_boundaries->GetDOFs() + m_boundaries->GetPosDOFs() == 0)
     cout << "FOUND EMPTY BBOX! (Environment copy constructor, with filename)\n";
          
   Read(filename);
@@ -335,7 +344,7 @@ PrintOptions(ostream& out_os) {
   out_os << "    rd_res= " << rd_res << "; rd_res=" <<rd_res << endl;
 #endif
   out_os << "    bbox = ";
-  boundaries->Print(out_os);
+  m_boundaries->Print(out_os);
   out_os << endl;
 }
 
@@ -391,24 +400,24 @@ SelectUsableMultibodies() {
     usable_externalbody_count++;
   }
 
-  if((boundaries->GetPosDOFs() < (int)CfgType().PosDOF()) || (boundaries->GetDOFs() < (int)CfgType().DOF()))
+  if((m_boundaries->GetPosDOFs() < (int)CfgType().PosDOF()) || (m_boundaries->GetDOFs() < (int)CfgType().DOF()))
     return;
 
   // get workspace bounding box
   double minx, maxx, miny, maxy, minz, maxz;
 
-  minx = boundaries->GetRange(0).first; 
-  maxx = boundaries->GetRange(0).second;
-  miny = boundaries->GetRange(1).first; 
-  maxy = boundaries->GetRange(1).second;
+  minx = m_boundaries->GetRange(0).first; 
+  maxx = m_boundaries->GetRange(0).second;
+  miny = m_boundaries->GetRange(1).first; 
+  maxy = m_boundaries->GetRange(1).second;
   
-  if(boundaries->GetPosDOFs() < 3){
+  if(m_boundaries->GetPosDOFs() < 3){
     minz = 0;
     maxz = 0;
   }
   else{
-    minz = boundaries->GetRange(2).first; 
-    maxz = boundaries->GetRange(2).second;
+    minz = m_boundaries->GetRange(2).first; 
+    maxz = m_boundaries->GetRange(2).second;
   }
 
   for (size_t i = 0; i < multibody.size(); i++) 
@@ -505,8 +514,8 @@ FindBoundingBox(){
   boundingBox.push_back(minz-min_clearance); 
   boundingBox.push_back(maxz+min_clearance);
   
-  boundaries->SetRanges(boundingBox);
-  boundaries->TranslationalScale(2); ///\todo fix this default.
+  m_boundaries->SetRange(boundingBox);
+  m_boundaries->TranslationalScale(2); ///\todo fix this default.
   //defaults bbox_scale to 2 when no bbox is defined.
 
   positionRes = bodies_min_span * positionResFactor;
@@ -522,13 +531,13 @@ Getminmax_BodyAxisRange(){
     return minmax_BodyAxisRange;
 }
 
-shared_ptr<BoundingBox>
-Environment::GetBoundingBox() const {
-  return boundaries;
+shared_ptr<Boundary>
+Environment::GetBoundary() const {
+  return m_boundaries;
 }
 
-void Environment::SetBoundingBox(shared_ptr<BoundingBox> _b){
-  boundaries = _b;
+void Environment::SetBoundary(shared_ptr<Boundary> _b){
+  m_boundaries = _b;
 }
 
 void 
@@ -656,7 +665,7 @@ operator==(const Environment& e) const
   return (pathVersion == e.pathVersion) &&
          (usable_externalbody_count == e.usable_externalbody_count) &&
          (robotIndex == e.robotIndex) &&
-         (*boundaries == *e.boundaries) &&
+         (*m_boundaries == *e.m_boundaries) &&
          (positionRes == e.positionRes) &&
          (orientationRes == e.orientationRes) &&
          (minmax_BodyAxisRange == e.minmax_BodyAxisRange);

@@ -4,6 +4,7 @@
 ////////////////////////////////////////////////////////////////
 #include "Boundary.h"
 #include "BoundingBox.h"
+#include "BoundingSphere.h"
 
 #include "Robot.h"
 #include "MultiBody.h"
@@ -77,7 +78,7 @@ class Environment : public MPBaseObject{
      * Copy Constructor.
      * uses i_boundaries instead of boundaries in from_env
      */
-    Environment(const Environment &from_env, const BoundingBox &i_boundaries);
+    Environment(const Environment &from_env, const Boundary &i_boundaries);
 
     ///\brief Constructor taking in an XML object
     Environment(XMLNodeReader& in_Node, MPProblem* in_pProblem);
@@ -211,8 +212,8 @@ class Environment : public MPBaseObject{
     /**Return a Bounding Box that encloses all MultiBodys added to this instance.
      *@see FindBoundingBox, Input::bbox_scale, and Input::bbox
      */
-    virtual shared_ptr<BoundingBox> GetBoundingBox() const;
-    virtual void SetBoundingBox(shared_ptr<BoundingBox> _b);
+    virtual shared_ptr<Boundary> GetBoundary() const;
+    virtual void SetBoundary(shared_ptr<Boundary> _b);
 
     /**Return manximu axis range of bounding box.
      *This value is calculated in FindBoundingBox.
@@ -271,6 +272,7 @@ class Environment : public MPBaseObject{
     /// @name  Data
     //---------------------------------------------------------------
     int pathVersion;          /// Format version for path files
+    string boundaryType; //type of the boundary
 
     vector<shared_ptr<MultiBody> > multibody;
     vector<shared_ptr<MultiBody> > usable_multibody;
@@ -279,7 +281,7 @@ class Environment : public MPBaseObject{
     vector<shared_ptr<MultiBody> > m_navigableSurfaces;
 
     int robotIndex; //index of the robot in the usable_multibody vector
-    shared_ptr<BoundingBox> boundaries;
+    shared_ptr<Boundary> m_boundaries;
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     double rd_res;
 #endif

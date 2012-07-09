@@ -311,6 +311,7 @@ PMPL_OBJS = \
 	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
         MPProblem/BoundingBox.o \
+	MPProblem/BoundingSphere.o\
 	MPStrategy/MPStrategyMethod.o \
 	MPStrategy/MPStrategy.o \
 	NeighborhoodFinder/NeighborhoodFinderMethod.o \

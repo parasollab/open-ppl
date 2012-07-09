@@ -7,9 +7,8 @@ Boundary::Boundary() {
 
 Boundary::Boundary(XMLNodeReader& in_Node,MPProblem* in_pproblem): MPBaseObject(in_Node, in_pproblem){ }
 ///Empty destructor- compiler knows how to do this
-/*Boundary::~Boundary() {
-     cout << "~Boundary(). TODO ALL " << endl; 
-}*/
+Boundary::~Boundary() {
+}
 
 double
 Boundary::GetRandomValueInParameter(int _par) {
@@ -37,5 +36,59 @@ Boundary::GetRandomValueInParameter(int _par) {
   return v;
 }
 
+const std::pair<double,double>
+Boundary::
+GetRange(int _par) const {
+  if(_par >= (int)bounding_box.size())
+          {
+                cerr << "\n\n\tERROR in Boundary::GetRange(): attempting to get range of parameter " << _par << ", but bounding_box is of size " << bounding_box.size() << ", exiting.\n\n";
+          exit(-1);
+          }
+   return bounding_box[_par];
+  }
 
+void
+Boundary::
+SetRange(std::vector<double> &_ranges) {
+ std::vector<double>::iterator itr;
+  int i = 0;
+  for (itr = _ranges.begin(); itr < _ranges.end() && i < dofs; itr = itr+2, i++) {
+    SetParameter(i,*itr,*(itr+1));
+    }
+}
+
+void
+Boundary::
+TranslationalScale(double _scaleFactor) {
+ double center, new_first, new_second;
+ if (_scaleFactor != 1.0) {
+   for (int i = 0; i < pos_dofs; i++) {
+     center = (bounding_box[i].first+bounding_box[i].second)/2;
+     new_first = (bounding_box[i].first-center)*_scaleFactor+center;
+     new_second = (bounding_box[i].second-center)*_scaleFactor+center;
+     SetParameter(i,new_first,new_second);
+   }
+ }
+}
+
+
+int
+Boundary::
+GetDOFs() const {
+    return dofs;//bounding_box.size();
+}
+
+int
+Boundary::
+GetPosDOFs() const {
+    return pos_dofs;//bounding_box.size();
+      ///\note This was a bug earlier?  why?  Roger 2008.04.28
+}
+
+void
+Boundary::
+SetParameter(int _par, double _pFirst, double _pSecond) {
+   bounding_box[_par].first = _pFirst;
+   bounding_box[_par].second = _pSecond;
+}
 

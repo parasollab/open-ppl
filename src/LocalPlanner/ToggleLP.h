@@ -167,7 +167,7 @@ CFG ToggleLP<CFG, WEIGHT>::ChooseAlteredCfg(Environment* _env, StatClass& _stats
     double dist = _dm->Distance(_env, _c1, _c2) * sqrt(2.0)/2.0;
     incr.GetRandomRay(dist, _env, _dm);
     temp.add(incr, mid);
-  }while(!temp.InBoundingBox(_env) && attempts++<10);
+  }while(!temp.InBoundary(_env) && attempts++<10);
   if(attempts==10){ 
     _stats.IncLPStat("Toggle::MaxAttemptsForRay", 1);
     return CFG();
@@ -185,7 +185,7 @@ CFG ToggleLP<CFG, WEIGHT>::ChooseAlteredCfg(Environment* _env, StatClass& _stats
   CFG temp;
   do{
     temp.GetRandomCfg(_env);
-  }while(!temp.InBoundingBox(_env));
+  }while(!temp.InBoundary(_env));
   return temp;
 }
 

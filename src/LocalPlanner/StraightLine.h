@@ -291,10 +291,10 @@ IsConnectedSLSequential(Environment* _env, StatClass& _stats,
     tick.Increment(incr);
     _cdCounter++;
     if(_checkCollision){
-      if(!tick.InBoundingBox(_env) || 
+      if(!tick.InBoundary(_env) || 
           !vc->IsValid(vcm, tick, _env, _stats, cdInfo, true, &callee)
         ) {
-        if(tick.InBoundingBox(_env))   
+        if(tick.InBoundary(_env))   
           _col = tick;
         CFG negIncr;
         negIncr = incr; 
@@ -377,9 +377,9 @@ IsConnectedSLBinary(Environment* _env, StatClass& _stats,
     midCfg.add(_c1, midCfg);
 
     _cdCounter++;
-    if(!midCfg.InBoundingBox(_env) ||
+    if(!midCfg.InBoundary(_env) ||
         !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee) ) {
-      if(midCfg.InBoundingBox(_env))
+      if(midCfg.InBoundary(_env))
         _col=midCfg;
       return false;
     } else {

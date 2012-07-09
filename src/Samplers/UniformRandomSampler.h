@@ -48,7 +48,7 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
 
   protected:
     virtual bool 
-      Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, 
+      Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
           StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, 
           vector<CFG>& _cfgCol) { 
 
@@ -65,8 +65,8 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
         CFG tmp;
         tmp.GetRandomCfg(_env,_bb);     
 
-        //Is configuration within bounding box? 
-        bool inBBX = tmp.InBoundingBox(_env, _bb);          
+        //Is configuration within boundary? 
+        bool inBBX = tmp.InBoundary(_env, _bb);          
         if(this->m_debug){ 
           cout << "tmp::" << tmp << endl;
           cout << "InBoudary::" << inBBX << endl;

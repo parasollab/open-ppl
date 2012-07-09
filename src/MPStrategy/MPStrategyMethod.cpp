@@ -8,7 +8,7 @@ MPStrategyMethod::MPStrategyMethod(MPSMContainer& _cont) : m_baseSeed(_cont.m_se
 
 MPStrategyMethod::MPStrategyMethod(XMLNodeReader& _node, MPProblem* _problem) : MPBaseObject(_node, _problem) {
   if(m_boundary==NULL)
-    m_boundary = GetMPProblem()->GetEnvironment()->GetBoundingBox();
+    m_boundary = GetMPProblem()->GetEnvironment()->GetBoundary();
   ParseXML(_node);
 }
 

@@ -11,7 +11,7 @@ class GridSampler : public SamplerMethod<CFG> {
 
   string m_vcm; // Validity checker method 
   map<size_t, size_t> m_numPoints; // Map of dimension to number of grid points
-  bool m_useBBX; // Is the bounding box an obstacle?
+  bool m_useBoundary; // Is the bounding box an obstacle?
 
   public:
 
@@ -19,8 +19,8 @@ class GridSampler : public SamplerMethod<CFG> {
   //Constructors
   ////////////////////////////
   
-  GridSampler(string _vcm = "", map<size_t, size_t> _numPoints = map<size_t, size_t>(), bool _useBBX = false) 
-    : m_vcm(_vcm), m_numPoints(_numPoints), m_useBBX(_useBBX) {
+  GridSampler(string _vcm = "", map<size_t, size_t> _numPoints = map<size_t, size_t>(), bool _useBoundary = false) 
+    : m_vcm(_vcm), m_numPoints(_numPoints), m_useBoundary(_useBoundary) {
       this->SetName("GridSampler");
     }
 
@@ -50,7 +50,7 @@ class GridSampler : public SamplerMethod<CFG> {
 
     // Read data to m_vcm and m_useBBX
     m_vcm = _node.stringXMLParameter("vcMethod", true, "", "Validity test method");
-    m_useBBX = _node.boolXMLParameter("useBBX", true, false, "Use bounding box as obstacle");
+    m_useBoundary = _node.boolXMLParameter("useBBX", true, false, "Use bounding box as obstacle");
 
     _node.warnUnrequestedAttributes();
   }
@@ -59,7 +59,7 @@ class GridSampler : public SamplerMethod<CFG> {
   virtual void PrintOptions(ostream& _os) const {
     SamplerMethod<CFG>::PrintOptions(_os);
     _os << "\tm_vcm = " << m_vcm << endl;
-    _os << "\tm_useBBX = " << m_useBBX << endl;
+    _os << "\tm_useBoundary = " << m_useBoundary << endl;
     _os << "\tm_numPoints (index, points):" << endl;
     for(map<size_t, size_t>::const_iterator it = m_numPoints.begin(); it != m_numPoints.end(); it++) 
       _os << "\t\t" << it->first << ", " << it->second << endl;
@@ -67,7 +67,7 @@ class GridSampler : public SamplerMethod<CFG> {
 
   // Attempts to sample, returns true if successful
 
- virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, 
+ virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
      CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
    // When using grid sampler, set the TestEval to a number 
@@ -115,7 +115,7 @@ class GridSampler : public SamplerMethod<CFG> {
      gridVal = max(bbMin, gridVal);
 
      // If the bounding box is an obstacle, move gridVal further inside bounding box (if necessary) 
-     if(m_useBBX) {
+     if(m_useBoundary) {
        if(fabs(bbMax - gridVal) <= delta/10)
          gridVal = bbMax - delta;
        if(fabs(bbMin - gridVal) <= delta/10)
@@ -134,7 +134,7 @@ class GridSampler : public SamplerMethod<CFG> {
    }
 
    // Is tmp a valid configuration?
-   if(tmp.InBoundingBox(_env,_bb) && 
+   if(tmp.InBoundary(_env,_bb) && 
        vc->IsValid(vc->GetVCMethod(m_vcm), tmp, _env, _stats, cdInfo, true, &callee)) {
      // Yes (sampler successful)
      _cfgOut.push_back(tmp);
