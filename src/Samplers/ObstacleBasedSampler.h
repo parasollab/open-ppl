@@ -99,7 +99,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
 
     // Generates and adds shells to their containers
     template <typename OutputIterator>
-    OutputIterator GenerateShells(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats,
+    OutputIterator GenerateShells(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
           CFG _cFree, CFG _cColl, CFG _incr, OutputIterator _result) {
       
       string callee = this->GetNameAndLabel() + "::GenerateShells()";
@@ -111,7 +111,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       // Add free shells
       for(int i = 0; i < m_nShellsFree; i++) {
         // If the shell is valid
-        if(_cFree.InBoundingBox(_env, _bb) && 
+        if(_cFree.InBoundary(_env, _bb) && 
             vc->IsValid(vc->GetVCMethod(m_vcMethod), _cFree, _env, _stats, cdInfo, true, &callee)) {
           if(this->m_recordKeep)
             _stats.IncNodesGenerated(this->GetNameAndLabel());
@@ -130,7 +130,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       // Add collision shells
       for(int i = 0; i < m_nShellsColl; i++) {
         // If the shell is valid
-        if(_cColl.InBoundingBox(_env, _bb) && 
+        if(_cColl.InBoundary(_env, _bb) && 
             !vc->IsValid(vc->GetVCMethod(m_vcMethod), _cColl, _env, _stats, cdInfo, true, &callee)) {
           if(this->m_recordKeep)
             _stats.IncNodesGenerated(this->GetNameAndLabel());
@@ -144,7 +144,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       return _result;
     }
 
-    virtual bool Sampler(Environment* _env, shared_ptr<BoundingBox> _bb, StatClass& _stats, 
+    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
         CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
       string callee = this->GetNameAndLabel() + "::Sampler()";
@@ -157,7 +157,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
 
       // Old state
       CFG c1 = ChooseASample(_cfgIn, _env, _bb);
-      bool c1BBox = c1.InBoundingBox(_env, _bb);  
+      bool c1BBox = c1.InBoundary(_env, _bb);  
       bool c1Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c1, _env, _stats, cdInfo, true, &callee);
 
       // New state
@@ -182,7 +182,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         c1Free = c2Free;
         // Update new state
         c2.Increment(r);
-        c2BBox = c2.InBoundingBox(_env, _bb);
+        c2BBox = c2.InBoundary(_env, _bb);
         c2Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c2, _env, _stats, cdInfo, true, &callee);
       }
 
@@ -308,7 +308,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
     }
 
     // Checks m_pointSelection and returns an appropriate CFG
-    virtual CFG ChooseASample(CFG _cfgIn, Environment* _env, shared_ptr<BoundingBox> _bb) {
+    virtual CFG ChooseASample(CFG _cfgIn, Environment* _env, shared_ptr<Boundary> _bb) {
       shared_ptr<MultiBody> mBody = InitializeBody(_env);
       // cspace is for Configuration space (This is for unifying OBPRM and WOBPRM)
       if(m_pointSelection == "cspace") {  
