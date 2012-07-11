@@ -91,6 +91,7 @@ void
 MPProblem::SetMPProblem(){
   m_pMPStrategy->SetMPProblem(this);
   m_pEnvironment->SetMPProblem(this);
+  m_pEnvironment->GetBoundary()->SetMPProblem(this);
   m_pDistanceMetric->SetMPProblem(this);
   m_pCollisionDetection->SetMPProblem(this);
   m_pValidityChecker->SetMPProblem(this);

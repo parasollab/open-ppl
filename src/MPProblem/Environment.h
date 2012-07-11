@@ -55,10 +55,13 @@ class Environment : public MPBaseObject{
 
     /** Constructor. 
      * Set pathversion as newest path file version ID (hard coded),
-     * initialize other data member to 0, NULL, and false. sets
-     * default boundaries with passed number of dofs and pos_dofs.
+     * initialize other data members. m_boundaries must be set later
      */
-    Environment(int dofs = 0, int pos_dofs = 0);
+    Environment();
+
+    //This version of the constructor is the same as the default, except
+    //m_boundaries will also be set to _bb
+    Environment(shared_ptr<Boundary> _bb);
 
     /** 
      * Copy Constructor.

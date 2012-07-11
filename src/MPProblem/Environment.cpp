@@ -10,8 +10,10 @@
 //  Constructors
 //===================================================================
 
+
 Environment::
-Environment(int dofs, int pos_dofs) :
+Environment(shared_ptr<Boundary> _bb):
+  m_boundaries(_bb),
   pathVersion(PATHVER_20001125),
   usable_externalbody_count(0),
   robotIndex(0),
@@ -21,11 +23,20 @@ Environment(int dofs, int pos_dofs) :
   orientationResFactor(ENV_RES_DEFAULT),
   minmax_BodyAxisRange(0),
   m_filename("")
-{
-  cerr<<"Environment(dof,pos_dof) not implemented"<<endl;
-  exit(-1);
+{}
 
-}
+Environment::
+Environment():
+  pathVersion(PATHVER_20001125),
+  usable_externalbody_count(0),
+  robotIndex(0),
+  positionRes(ENV_RES_DEFAULT),
+  orientationRes(ENV_RES_DEFAULT),
+  positionResFactor(ENV_RES_DEFAULT),
+  orientationResFactor(ENV_RES_DEFAULT),
+  minmax_BodyAxisRange(0),
+  m_filename("")
+{}
 
 
 /*
