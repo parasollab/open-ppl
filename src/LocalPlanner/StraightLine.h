@@ -199,10 +199,10 @@ IsConnectedFunc(Environment* _env, StatClass& _stats,
     bool success = intermediate.GetIntermediate(_c1, _c2); 
     if(_checkCollision){
       cdCounter++;
-      if(!intermediate.InBoundingBox(_env) || 
+      if(!intermediate.InBoundary(_env) || 
           !vc->IsValid(vcm, intermediate, _env, _stats, cdInfo, true, &callee)
         ) {
-        if(intermediate.InBoundingBox(_env))
+        if(intermediate.InBoundary(_env))
           _col = intermediate;
         return false;
       }
