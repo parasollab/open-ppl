@@ -10,7 +10,8 @@
 #include "ValidityChecker.hpp"
 
 BasicPRM::BasicPRM(XMLNodeReader& _node, MPProblem* _problem) :
-  MPStrategyMethod(_node, _problem), m_currentIteration(0), m_useProbability(false), m_inputMapFilename(""), m_startAt(NODE_GENERATION) {
+  MPStrategyMethod(_node, _problem), m_currentIteration(0), 
+  m_useProbability(false), m_inputMapFilename(""), m_startAt(NODE_GENERATION){
     //read input
     ParseXML(_node);
 }
@@ -18,8 +19,10 @@ BasicPRM::~BasicPRM(){
 }
 
 void BasicPRM::ParseXML(XMLNodeReader& _node) {
-  m_inputMapFilename = _node.stringXMLParameter("inputMap", false, "", "filename of roadmap to start from");
-  string startAt = _node.stringXMLParameter("startAt", false, "node generation", "point of algorithm where to begin at: \"node generation\" (default), \"node connection\", \"component connection\", \"map evaluation\"");
+  m_inputMapFilename = _node.stringXMLParameter("inputMap", false, "", 
+    "filename of roadmap to start from");
+  string startAt = _node.stringXMLParameter("startAt", false, "node generation", 
+"point of algorithm where to begin at: \"node generation\" (default), \"node connection\", \"component connection\", \"map evaluation\"");
   if(startAt == "node generation")
     m_startAt = NODE_GENERATION;
   else if(startAt == "node connection")
@@ -29,41 +32,53 @@ void BasicPRM::ParseXML(XMLNodeReader& _node) {
   else if(startAt == "map evaluation")
     m_startAt = MAP_EVALUATION;
   else  {
-    cerr << "\n\ndo not understand m_startAt = \"" << startAt << "\", choices are: 'node generation', 'node connection', 'component connection', and 'map evaluation', exiting.\n";
+    cerr << "\n\ndo not understand m_startAt = \"" << startAt 
+         << "\", choices are: 'node generation', 'node connection', 'component connection', and 'map evaluation', exiting.\n";
     exit(-1);
   }
 
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr){
+  for(XMLNodeReader::childiterator citr = _node.children_begin(); 
+      citr != _node.children_end(); ++citr){
     if(citr->getName() == "node_generation_method") {
-      string generationMethod = citr->stringXMLParameter("Method", true, "", "Node Connection Method");
-      int numPerIteration = citr->numberXMLParameter("Number", true, 1, 0, MAX_INT, "Number of samples");
-      int attemptsPerIteration = citr->numberXMLParameter("Attempts", false, 1, 0, MAX_INT, "Number of attempts per sample");
+      string generationMethod = citr->stringXMLParameter("Method", true, "", 
+        "Node Connection Method");
+      int numPerIteration = citr->numberXMLParameter("Number", true, 1, 0, 
+        MAX_INT, "Number of samples");
+      int attemptsPerIteration = citr->numberXMLParameter("Attempts", false, 
+        1, 0, MAX_INT, "Number of attempts per sample");
       double probPerIteration = 0;
       if(numPerIteration == 0){
-        probPerIteration = citr->numberXMLParameter("Probability", true, 0.0, 0.0, 1.0, "Number of samples");
+        probPerIteration = citr->numberXMLParameter("Probability", true, 0.0, 
+          0.0, 1.0, "Number of samples");
         m_useProbability = true;
       }
-      m_nodeGenerationLabels[generationMethod] = make_pair(numPerIteration, attemptsPerIteration);
-      m_probGenerationLabels[generationMethod] = make_pair(probPerIteration, attemptsPerIteration);
+      m_nodeGenerationLabels[generationMethod] = make_pair(numPerIteration, 
+        attemptsPerIteration);
+      m_probGenerationLabels[generationMethod] = make_pair(probPerIteration, 
+        attemptsPerIteration);
       citr->warnUnrequestedAttributes();
     } 
     else if(citr->getName() == "node_connection_method"){
-      string connectMethod = citr->stringXMLParameter("Method", true, "", "Node Connection Method");
+      string connectMethod = citr->stringXMLParameter("Method", true, "", 
+        "Node Connection Method");
       m_nodeConnectionLabels.push_back(connectMethod);
       citr->warnUnrequestedAttributes();
     } 
     else if(citr->getName() == "component_connection_method"){
-      string connectMethod = citr->stringXMLParameter("Method", true, "", "Component Connection Method");
+      string connectMethod = citr->stringXMLParameter("Method", true, "", 
+        "Component Connection Method");
       m_componentConnectionLabels.push_back(connectMethod);
       citr->warnUnrequestedAttributes();
     } 
     else if(citr->getName() == "evaluation_method"){
-      string evalMethod = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
+      string evalMethod = citr->stringXMLParameter("Method", true, "", 
+        "Evaluation Method");
       m_evaluatorLabels.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
     }
     else if(citr->getName()=="vc_method"){
-      m_vcMethod =citr->stringXMLParameter("Method",true,"","ValidityCheckerMethod");
+      m_vcMethod =citr->stringXMLParameter("Method",true,"",
+        "ValidityCheckerMethod");
       citr->warnUnrequestedAttributes();
     }
     else
@@ -77,12 +92,12 @@ void BasicPRM::PrintOptions(ostream& _os) {
   _os << "\tValidity Checker: " << m_vcMethod << endl;
   _os << "\tInput Map Filename: " << m_inputMapFilename << endl;
   _os << "\tm_startAt: ";
-  switch(m_startAt)
-  {
-    case NODE_GENERATION: cout << "node generation\n"; break;
-    case NODE_CONNECTION: cout << "node connection\n"; break;
-    case COMPONENT_CONNECTION: cout << "component connection\n"; break;
-    case MAP_EVALUATION: cout << "map evaluation\n"; break;
+  
+  switch(m_startAt){
+    case NODE_GENERATION: _os << "node generation\n"; break;
+    case NODE_CONNECTION: _os << "node connection\n"; break;
+    case COMPONENT_CONNECTION: _os << "component connection\n"; break;
+    case MAP_EVALUATION: _os << "map evaluation\n"; break;
   }
 
   typedef map<string, pair<double,int> >::iterator PIT;
@@ -90,14 +105,18 @@ void BasicPRM::PrintOptions(ostream& _os) {
   typedef vector<string>::iterator SIT;
   _os<<"\nNodeGenerators\n";
   if(!m_useProbability){
-    for(MIT mit=m_nodeGenerationLabels.begin(); mit!=m_nodeGenerationLabels.end(); mit++){
-      _os<<"\t"<<mit->first<<"\tNumber:"<<mit->second.first<<"\tAttempts:"<<mit->second.second<<"\tOptions:\n";
+    for(MIT mit=m_nodeGenerationLabels.begin(); 
+        mit!=m_nodeGenerationLabels.end(); mit++){
+      _os<<"\t"<<mit->first<<"\tNumber:"<<mit->second.first
+         <<"\tAttempts:"<<mit->second.second<<"\tOptions:\n";
       GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(mit->first)->PrintOptions(_os);
     }
   }
   else{
-    for(PIT pit=m_probGenerationLabels.begin(); pit!=m_probGenerationLabels.end(); pit++){
-      _os<<"\t"<<pit->first<<"\tProbability:"<<pit->second.first<<"\tAttempts:"<<pit->second.second<<"\tOptions:\n";
+    for(PIT pit=m_probGenerationLabels.begin(); 
+        pit!=m_probGenerationLabels.end(); pit++){
+      _os<<"\t"<<pit->first<<"\tProbability:"<<pit->second.first
+      <<"\tAttempts:"<<pit->second.second<<"\tOptions:\n";
       GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(pit->first)->PrintOptions(_os);
     }
   }
@@ -150,31 +169,13 @@ void BasicPRM::Run(int _regionID){
   if (m_debug) cout<<"\nRunning BasicPRM::"<<_regionID<<endl;
 
   //setup region variables
-   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-   StatClass* stats = region->GetStatClass();
+  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
+  StatClass* stats = region->GetStatClass();
   vector<VID> allNodesVID;
   region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
 
   stats->StartClock("Map Generation");
-
-  /*CfgType cfg1;
-  vector<double> d1;
-  d1.push_back(5);
-  d1.push_back(5);
-  d1.push_back(-5);
-  d1.push_back(-5);
-  cfg1.SetData(d1);
-  CfgType cfg2;
-  vector<double> d2;
-  d2.push_back(10.8901);
-  d2.push_back(1.06208);
-  d2.push_back(-3.43535);
-  d2.push_back(14.9035);
-  cfg2.SetData(d2);
-  shared_ptr<Boundary> bounds = GetMPProblem()->GetEnvironment()->GetBoundingBox();
-  cout << "Cfg1::" << cfg1 << "\t InBounds" << bounds->InBoundary(cfg1) << endl;
-  cout << "Cfg2::" << cfg2 << "\t InBounds" << bounds->InBoundary(cfg2) << endl;
-  */
+  
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation){
     m_currentIteration++;
@@ -235,9 +236,9 @@ void BasicPRM::Finalize(int _regionID){
   if (m_debug) cout<<"\nEnd Finalizing BasicPRM"<<endl;
 }
 
-void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region, 
-    vector<VID>& allNodesVID, vector<VID>& thisIterationNodesVID)
-{
+void 
+BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region, 
+    vector<VID>& allNodesVID, vector<VID>& thisIterationNodesVID) {
   StatClass* stats = _region->GetStatClass();
   string connectorClockName = "Total Node Connection";
   stats->StartClock(connectorClockName);
@@ -254,10 +255,8 @@ void BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
 
     if(m_debug) cout << "\n\t";
     vector<VID> nodesVID(thisIterationNodesVID.begin(), thisIterationNodesVID.end());
-    pConnection->Connect(
-        _region->GetRoadmap(), *(_region->GetStatClass()), cmap,
-        nodesVID.begin(), nodesVID.end(), 
-        allNodesVID.begin(), allNodesVID.end());
+    pConnection->Connect(_region->GetRoadmap(), *(_region->GetStatClass()), cmap,
+        nodesVID.begin(), nodesVID.end(), allNodesVID.begin(), allNodesVID.end());
     if (m_debug) {
       cmap.reset();
       cout << _region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
@@ -321,14 +320,14 @@ string BasicPRM::PickNextSampler(){
   return index;
 }
 
-template <typename OutputIterator>
-void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region, 
+template <typename OutputIterator> void 
+BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region, 
     OutputIterator _allOut, OutputIterator _thisIterationOut){
   CDInfo cdInfo;
-  StatClass * pStatClass = _region->GetStatClass();
+  StatClass* pStatClass = _region->GetStatClass();
   string clockName = "Total Node Generation"; 
   pStatClass->StartClock(clockName);
-  string Callee("BasicPRM::GenerateNodes");
+  string callee("BasicPRM::GenerateNodes");
 
   typedef map<string, pair<int, int> >::iterator GIT;
   vector<CfgType> outNodes;
@@ -359,9 +358,9 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
     }
   }
   else{
-    string NextNodeGen = PickNextSampler();
+    string nextNodeGen = PickNextSampler();
     Sampler<CfgType>::SamplerPointer pNodeGenerator; 
-    pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(NextNodeGen);
+    pNodeGenerator = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(nextNodeGen);
     if(m_debug) pNodeGenerator->PrintOptions(cout);
     vector<CfgType> inNodes(1);
 
@@ -370,7 +369,8 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
     pStatClass->StartClock(generatorClockName);
 
     if(m_debug) cout << "\n\t";
-    pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),m_boundary,*pStatClass,inNodes.begin(),inNodes.end(),m_probGenerationLabels[NextNodeGen].second, back_inserter(outNodes));
+    pNodeGenerator->Sample(GetMPProblem()->GetEnvironment(),m_boundary,
+      *pStatClass,inNodes.begin(),inNodes.end(),m_probGenerationLabels[nextNodeGen].second, back_inserter(outNodes));
 
     if (m_debug) {
       cout << _region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
@@ -384,7 +384,7 @@ void BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
   for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
     if(!(*cit).IsLabel("VALID")){
       !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vcMethod),
-            *cit, GetMPProblem()->GetEnvironment(), *(_region->GetStatClass()), cdInfo, true, &Callee));
+            *cit, GetMPProblem()->GetEnvironment(), *(_region->GetStatClass()), cdInfo, true, &callee));
     }
     if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
       if(!_region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
