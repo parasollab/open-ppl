@@ -227,7 +227,6 @@ Print(std::ostream& _os, char range_sep, char par_sep) const {
 void
 BoundingSphere::
 TranslationalScale(double scale_factor) {
-  double center, new_first, new_second;
   if(scale_factor != 1.0) {    	
     SetParameter(pos_dofs, scale_factor * boundingSphere[pos_dofs]);
     
