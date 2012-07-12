@@ -12,8 +12,7 @@
 
 
 Environment::
-Environment(shared_ptr<Boundary> _bb):
-  m_boundaries(_bb),
+Environment():
   pathVersion(PATHVER_20001125),
   usable_externalbody_count(0),
   robotIndex(0),
@@ -26,10 +25,11 @@ Environment(shared_ptr<Boundary> _bb):
 {}
 
 Environment::
-Environment():
+Environment(shared_ptr<Boundary> _bb):
   pathVersion(PATHVER_20001125),
   usable_externalbody_count(0),
   robotIndex(0),
+  m_boundaries(_bb),
   positionRes(ENV_RES_DEFAULT),
   orientationRes(ENV_RES_DEFAULT),
   positionResFactor(ENV_RES_DEFAULT),
@@ -37,6 +37,7 @@ Environment():
   minmax_BodyAxisRange(0),
   m_filename("")
 {}
+
 
 
 /*
