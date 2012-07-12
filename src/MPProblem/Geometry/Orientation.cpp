@@ -214,181 +214,181 @@ void Orientation::ConvertType(OrientationType _newType) {
     switch (type) {
       case Matrix:
         switch (_newType) {
-	  case Quaternion: {
-            double  w, x, y, z;
+          case Quaternion: {
+                             double  w, x, y, z;
 
-            double wSquare = 0.25*(1.0 + matrix[0][0] + matrix[1][1] + matrix[2][2]);
-            if (wSquare > EPSILON){
-               w = sqrt(wSquare);
-               x = (matrix[1][2] - matrix[2][1]) / 4.0*w;
-               y = (matrix[2][0] - matrix[0][3]) / 4.0*w;
-               z = (matrix[0][1] - matrix[1][0]) / 4.0*w;
-            }
-            else {
-               w = 0.0;
-               double xSquare = -0.5*(matrix[1][1] + matrix[2][2]);
-               if (xSquare > EPSILON){
-                  x = sqrt(xSquare);
-                  y = matrix[0][1] / 2.0*x;
-                  z = matrix[0][2] / 2.0*x;
-               }
-               else{
-                  x = 0.0;
-                  double ySquare = 0.5*(1.0 - matrix[2][2]);
-                  if (ySquare > EPSILON){
-                     y = sqrt(ySquare);
-                     z = matrix[1][2] / 2.0*y;
-                  }
-                  else{
-                     y = 0.0;
-                     z = 1.0;
-                  }
-               }
-            }
+                             double wSquare = 0.25*(1.0 + matrix[0][0] + matrix[1][1] + matrix[2][2]);
+                             if (wSquare > EPSILON){
+                               w = sqrt(wSquare);
+                               x = (matrix[1][2] - matrix[2][1]) / 4.0*w;
+                               y = (matrix[2][0] - matrix[0][3]) / 4.0*w;
+                               z = (matrix[0][1] - matrix[1][0]) / 4.0*w;
+                             }
+                             else {
+                               w = 0.0;
+                               double xSquare = -0.5*(matrix[1][1] + matrix[2][2]);
+                               if (xSquare > EPSILON){
+                                 x = sqrt(xSquare);
+                                 y = matrix[0][1] / 2.0*x;
+                                 z = matrix[0][2] / 2.0*x;
+                               }
+                               else{
+                                 x = 0.0;
+                                 double ySquare = 0.5*(1.0 - matrix[2][2]);
+                                 if (ySquare > EPSILON){
+                                   y = sqrt(ySquare);
+                                   z = matrix[1][2] / 2.0*y;
+                                 }
+                                 else{
+                                   y = 0.0;
+                                   z = 1.0;
+                                 }
+                               }
+                             }
 
-            rotationAngle = w;
-            rotationAxis = Vector3D(x,y,z);
-	    break;
-          }
-	  case EulerXYZ:
-	    beta = atan2(matrix[0][2], sqrt(matrix[1][2]*matrix[1][2] + matrix[2][2]*matrix[2][2]));
-	    if(cos(beta) > 0) {
-	        alpha = atan2(-matrix[1][2], matrix[2][2]);
-		gamma = atan2(-matrix[0][1], matrix[0][0]);
-	    } else {
-	        alpha = atan2(matrix[1][2], -matrix[2][2]);
-		gamma = atan2(matrix[0][1], -matrix[0][0]);
-	    }		    
-	    break;
-	  case EulerZYX: // FixedXYZ:
-            beta = atan2(-matrix[2][0], sqrt(matrix[2][1]*matrix[2][1] + matrix[2][2]*matrix[2][2]));
-	    if(cos(beta) > 0) {
-	    	alpha = atan2(matrix[1][0], matrix[0][0]);
-		gamma = atan2(matrix[2][1], matrix[2][2]);
-	    } else {	
-                alpha = atan2(-matrix[1][0], -matrix[0][0]);
-                gamma = atan2(-matrix[2][1], -matrix[2][2]);
-	    }
-	  case EulerXZY:
-	    // TODO
-	    break;
-	  // etc.
-		default: //shouldnt be here, Compiler warns without a default
-			break;
-	}
-	break;
+                             rotationAngle = w;
+                             rotationAxis = Vector3D(x,y,z);
+                             break;
+                           }
+          case EulerXYZ:
+                           beta = atan2(matrix[0][2], sqrt(matrix[1][2]*matrix[1][2] + matrix[2][2]*matrix[2][2]));
+                           if(cos(beta) > 0) {
+                             alpha = atan2(-matrix[1][2], matrix[2][2]);
+                             gamma = atan2(-matrix[0][1], matrix[0][0]);
+                           } else {
+                             alpha = atan2(matrix[1][2], -matrix[2][2]);
+                             gamma = atan2(matrix[0][1], -matrix[0][0]);
+                           }		    
+                           break;
+          case EulerZYX: // FixedXYZ:
+                           beta = atan2(-matrix[2][0], sqrt(matrix[2][1]*matrix[2][1] + matrix[2][2]*matrix[2][2]));
+                           if(cos(beta) > 0) {
+                             alpha = atan2(matrix[1][0], matrix[0][0]);
+                             gamma = atan2(matrix[2][1], matrix[2][2]);
+                           } else {	
+                             alpha = atan2(-matrix[1][0], -matrix[0][0]);
+                             gamma = atan2(-matrix[2][1], -matrix[2][2]);
+                           }
+          case EulerXZY:
+                           // TODO
+                           break;
+                           // etc.
+          default: //shouldnt be here, Compiler warns without a default
+                           break;
+        }
+        break;
 
       case Quaternion:
         switch (_newType) {
-	  case Matrix: {
-            double  w = rotationAngle;
-            double  x = rotationAxis.getX();
-            double  y = rotationAxis.getY();
-            double  z = rotationAxis.getZ();
+          case Matrix: {
+                         double  w = rotationAngle;
+                         double  x = rotationAxis.getX();
+                         double  y = rotationAxis.getY();
+                         double  z = rotationAxis.getZ();
 
-            matrix[0][0] = 1.0 - 2.0*y*y - 2.0*z*z;
-            matrix[1][0] = 2.0*x*y - 2.0*w*z;
-            matrix[2][0] = 2.0*x*z + 2.0*w*y;
+                         matrix[0][0] = 1.0 - 2.0*y*y - 2.0*z*z;
+                         matrix[1][0] = 2.0*x*y - 2.0*w*z;
+                         matrix[2][0] = 2.0*x*z + 2.0*w*y;
 
-            matrix[0][1] = 2.0*x*y + 2.0*w*z;
-            matrix[1][1] = 1.0 - 2.0*x*x - 2.0*z*z;
-            matrix[2][1] = 2.0*y*z - 2.0*w*x;
+                         matrix[0][1] = 2.0*x*y + 2.0*w*z;
+                         matrix[1][1] = 1.0 - 2.0*x*x - 2.0*z*z;
+                         matrix[2][1] = 2.0*y*z - 2.0*w*x;
 
-            matrix[0][2] = 2.0*x*z - 2.0*w*y;
-            matrix[1][2] = 2.0*y*z + 2.0*w*x;
-            matrix[2][2] = 1.0 - 2.0*x*x - 2.0*y*y;
-	    break;
-          }
-	  case EulerXYZ:
-	    ConvertType(Matrix);
-	    ConvertType(EulerXYZ);
-	    break;
-	  case EulerZYX: // or FixedXYZ
-	    ConvertType(Matrix);
-            ConvertType(EulerZYX);
-	    break;
-	  case EulerXZY:
-	    // TODO
-	    break;
-	  // etc.
-		default: //shouldnt be here, Compiler warns without a default
-			break;
-	}
-	break;
+                         matrix[0][2] = 2.0*x*z - 2.0*w*y;
+                         matrix[1][2] = 2.0*y*z + 2.0*w*x;
+                         matrix[2][2] = 1.0 - 2.0*x*x - 2.0*y*y;
+                         break;
+                       }
+          case EulerXYZ:
+                       ConvertType(Matrix);
+                       ConvertType(EulerXYZ);
+                       break;
+          case EulerZYX: // or FixedXYZ
+                       ConvertType(Matrix);
+                       ConvertType(EulerZYX);
+                       break;
+          case EulerXZY:
+                       // TODO
+                       break;
+                       // etc.
+          default: //shouldnt be here, Compiler warns without a default
+                       break;
+        }
+        break;
 
-      //-------------------------------------------------------------
-      //  If none of the above, then must be Euler/Fixed angle type
-      //-------------------------------------------------------------
+        //-------------------------------------------------------------
+        //  If none of the above, then must be Euler/Fixed angle type
+        //-------------------------------------------------------------
       default:
-	switch (_newType) {
-	  case Matrix:
-	    sa = sin(alpha);
-	    ca = cos(alpha);
-	    sb = sin(beta);
-	    cb = cos(beta);
-	    sg = sin(gamma);
-	    cg = cos(gamma);
-	    switch (type) {
-	      case EulerXYZ:
-	        matrix[0][0] = cb*cg;
-		matrix[0][1] = -cb*sg;
-		matrix[0][2] = sb;
-		matrix[1][0] = sa*sb*cg + ca*sg;
-		matrix[1][1] = -sa*sb*sg + ca*cg;
-		matrix[1][2] = -sa*cb;
-		matrix[2][0] = -ca*sb*cg + sa*sg;
-		matrix[2][1] = ca*sb*sg + sa*cg;
-		matrix[2][2] = ca*cb;
-		break;
-	      case EulerZYX: // or FixedXYZ
-		matrix[0][0] = ca*cb;
-		matrix[0][1] = ca*sb*sg - sa*cg;
-		matrix[0][2] = ca*sb*cg + sa*sg;
-		matrix[1][0] = sa*cb;
-		matrix[1][1] = sa*sb*sg + ca*cg;
-		matrix[1][2] = sa*sb*cg - ca*sg;
-		matrix[2][0] = -sb;
-		matrix[2][1] = cb*sg;
-		matrix[2][2] = cb*cg;
-		break;
-	      case EulerXZY:
-	        // TODO
-		break;
-	      //
-	      // etc.
-	      //
-   default: //shouldnt be here, Compiler warns without a default
-			break;
-	    }
-	    break;
-	  case EulerXYZ:
-	    switch (type) {
-	     case EulerZYX:
-		ConvertType(Matrix);
-		ConvertType(EulerXYZ);
-		break;
-			default: //shouldnt be here, Compiler warns without a default
-			break;
-	    }
-	    break;
-	  case EulerZYX:
-	    switch (type) {
-	     case EulerXYZ:
-		ConvertType(Matrix);
-		ConvertType(EulerZYX);
-		break;
-			default: //shouldnt be here, Compiler warns without a default
-			break;
-	    }
-	    break;
-	  case Quaternion:
-	    // TODO
-	    break;
-	  default:
-	    // TODO
-	    break;
-	}
-		
+        switch (_newType) {
+          case Matrix:
+            sa = sin(alpha);
+            ca = cos(alpha);
+            sb = sin(beta);
+            cb = cos(beta);
+            sg = sin(gamma);
+            cg = cos(gamma);
+            switch (type) {
+              case EulerXYZ:
+                matrix[0][0] = cb*cg;
+                matrix[0][1] = -cb*sg;
+                matrix[0][2] = sb;
+                matrix[1][0] = sa*sb*cg + ca*sg;
+                matrix[1][1] = -sa*sb*sg + ca*cg;
+                matrix[1][2] = -sa*cb;
+                matrix[2][0] = -ca*sb*cg + sa*sg;
+                matrix[2][1] = ca*sb*sg + sa*cg;
+                matrix[2][2] = ca*cb;
+                break;
+              case EulerZYX: // or FixedXYZ
+                matrix[0][0] = ca*cb;
+                matrix[0][1] = ca*sb*sg - sa*cg;
+                matrix[0][2] = ca*sb*cg + sa*sg;
+                matrix[1][0] = sa*cb;
+                matrix[1][1] = sa*sb*sg + ca*cg;
+                matrix[1][2] = sa*sb*cg - ca*sg;
+                matrix[2][0] = -sb;
+                matrix[2][1] = cb*sg;
+                matrix[2][2] = cb*cg;
+                break;
+              case EulerXZY:
+                // TODO
+                break;
+                //
+                // etc.
+                //
+              default: //shouldnt be here, Compiler warns without a default
+                break;
+            }
+            break;
+          case EulerXYZ:
+            switch (type) {
+              case EulerZYX:
+                ConvertType(Matrix);
+                ConvertType(EulerXYZ);
+                break;
+              default: //shouldnt be here, Compiler warns without a default
+                break;
+            }
+            break;
+          case EulerZYX:
+            switch (type) {
+              case EulerXYZ:
+                ConvertType(Matrix);
+                ConvertType(EulerZYX);
+                break;
+              default: //shouldnt be here, Compiler warns without a default
+                break;
+            }
+            break;
+          case Quaternion:
+            // TODO
+            break;
+          default:
+            // TODO
+            break;
+        }
+
     }
 
     type = _newType;
@@ -396,12 +396,11 @@ void Orientation::ConvertType(OrientationType _newType) {
 
 istream& 
 operator>>(istream& _is, Orientation& _o){
-  _o.type = Orientation::EulerXYZ;
-  _is >> _o.alpha >> _o.beta >> _o.gamma;
+  _o.type = Orientation::FixedXYZ;
+  _is >> _o.gamma >> _o.beta >> _o.alpha;
   _o.alpha*=DEGTORAD;
   _o.beta*=DEGTORAD;
   _o.gamma*=DEGTORAD;
-  _o.ConvertType(Orientation::Matrix);
   return _is;
 }
 
