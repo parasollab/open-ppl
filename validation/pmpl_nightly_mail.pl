@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 
-use Switch;
 use List::Util qw(min max);
 
 # stapl_nightly_mail.pl
@@ -54,19 +53,18 @@ $errcode = max($errcode, &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc
 # Send out e-mail
 #
 $subject = "Subject: PMPL nightly ";
-switch ($errcode) {
-  case SUCCESS {
-    $subject = $subject."passed\n";
-  }
-  case WARNINGS {
-    $subject = $subject."had warnings\n";
-  }
-  case ERRORS {
-    $subject = $subject."had errors\n";
-  }
-  case INCOMPLETE {
-    $subject = $subject."did not complete\n";
-  }
+
+if($errcode == SUCCESS) {
+  $subject = $subject."passed\n";
+}
+elsif($errcode == WARNINGS){
+  $subject = $subject."had warnings\n";
+}
+elsif($errcode == ERRORS){
+  $subject = $subject."had errors\n";
+}
+elsif($errcode == INCOMPLETE){
+  $subject = $subject."did not complete\n";
 }
 
 #for debugging:
@@ -127,19 +125,17 @@ sub get_error_code {
     $error_code = INCOMPLETE;
   }
 
-  switch ($error_code) {
-    case SUCCESS {
-      $message = $message.$config." passed\n";
-    }
-    case WARNINGS {
-      $message = $message.$config." had warnings\n";
-    }
-    case ERRORS {
-      $message = $message.$config." had errors\n";
-    }
-    case INCOMPLETE {
-      $message = $message.$config." did not complete successfully tonight\n";
-    }
+  if($errcode == SUCCESS) {
+    $message = $message.$config." passed\n";
+  }
+  elsif($errcode == WARNINGS){
+    $message = $message.$config." had warnings\n";
+  }
+  elsif($errcode == ERRORS){
+    $message = $message.$config." had errors\n";
+  }
+  elsif($errcode == INCOMPLETE){
+    $message = $message.$config." did not complete successfully tonight\n";
   }
   if (!($passed_tests eq '')) {
     $message = $message."===== Passed Tests =====\n".$passed_tests."===== Passed Tests =====\n\n";

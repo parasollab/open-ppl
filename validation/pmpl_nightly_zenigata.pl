@@ -69,7 +69,7 @@ $OUTPUT = $OUTPUT."Started at ".`date 2>&1`;
 $OUTPUT = $OUTPUT."g++ path: ".`which g++ 2>&1`;
 $OUTPUT = $OUTPUT."g++ details:\n".`g++ -c -v 2>&1`;
 $OUTPUT = $OUTPUT.`gmake platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL reallyreallyclean 2>&1`;
-$OUTPUT = $OUTPUT.`gmake platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL pmpl 2>&1`;
+$OUTPUT = $OUTPUT.`gmake platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL pmpl -j4 2>&1`;
 if (-e "$workdir/$pmpldir/src/pmpl") {
   $OUTPUT = $OUTPUT."=====\nPassed: pmpl compilation\n=====\n";
 } else {
