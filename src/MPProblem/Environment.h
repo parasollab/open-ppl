@@ -107,6 +107,7 @@ class Environment : public MPBaseObject{
     //@{
 
     string& GetEnvFileName() { return m_filename; }
+    void SetEnvFileName(string _newFileName){m_filename = _newFileName;}
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //

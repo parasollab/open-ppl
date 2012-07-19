@@ -21,15 +21,15 @@ class MedialAxisSampler : public SamplerMethod<CFG>
 
     MedialAxisSampler()
       : m_vcLabel(""), m_dmLabel(""), m_useBoundary(true), m_exactClearance(false), m_exactPenetration(false),
-      m_clearanceRays(1), m_penetrationRays(10), m_historyLength(5), m_epsilon(0.1) {
+       m_positional(true), m_clearanceRays(10), m_penetrationRays(10), m_historyLength(5), m_epsilon(0.1) {
         this->SetName("MedialAxisSampler");
       }
 
     MedialAxisSampler(string _vcLabel, string _dmLabel, bool _exactClearance, bool _exactPenetration, 
-        int _c = 1, int _p = 10, bool _useBoundary = true, double _e = 0.1, int _h = 5)
+        bool _pos = true, int _c = 1, int _p = 10, bool _useBoundary = true, double _e = 0.1, int _h = 5)
       : m_vcLabel(_vcLabel), m_dmLabel(_dmLabel), m_useBoundary(_useBoundary), 
       m_exactClearance(_exactClearance), m_exactPenetration(_exactPenetration),
-      m_clearanceRays(_c), m_penetrationRays(_p), m_historyLength(_h), m_epsilon(_e) {
+      m_positional(_pos), m_clearanceRays(_c), m_penetrationRays(_p), m_historyLength(_h), m_epsilon(_e) {
         this->SetName("MedialAxisSampler");
       }
 
