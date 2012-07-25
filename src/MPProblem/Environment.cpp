@@ -268,32 +268,8 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   }
  
   // Compute RESOLUTION
-  // NOTE: orientationResFactor is valid input, but not used.
-  multibody[robotIndex]->FindBoundingBox();
-  double robot_span = multibody[robotIndex]->GetMaxAxisRange();
-  double bodies_min_span = robot_span;
-  for(size_t i = 0 ; i < multibody.size() ; i++){
-    if((int)i != robotIndex){
-      multibody[i]->FindBoundingBox();
-      bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
-    }
-  }
- 
-  // Set to XML input resolution if specified, else compute resolution factor
-  if ( pos_res != -1.0 ) positionRes = pos_res;
-  else                   positionRes = bodies_min_span * positionResFactor;
-
-  if ( ori_res != -1.0 ) orientationRes = ori_res;
-  else                   orientationRes = 0.05;
+  ComputeResolution(pos_res, ori_res, positionResFactor, orientationResFactor);
   
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  //make sure to calculate the rdRes based upon the DOF of the robot
-  rd_res = num_joints * rd_res;
-#endif
-  
-  minmax_BodyAxisRange = bodies_min_span;
- 
-  // END Compute RESOLUTION
   PrintOptions(cout);
     
   SelectUsableMultibodies();
@@ -360,6 +336,38 @@ PrintOptions(ostream& out_os) {
   out_os << endl;
 }
 
+//===================================================================
+//  ComputeResolution, if _posRes and _oriRes are <0, auto compute
+//  the resolutions based on min_max body spans.
+//===================================================================
+void 
+Environment::ComputeResolution(double _posRes, double _oriRes, 
+    double _posResFactor, double _oriResFactor){
+  // NOTE: orientationResFactor is valid input, but not used.
+  multibody[robotIndex]->FindBoundingBox();
+  double robot_span = multibody[robotIndex]->GetMaxAxisRange();
+  double bodies_min_span = robot_span;
+  for(size_t i = 0 ; i < multibody.size() ; i++){
+    if((int)i != robotIndex){
+      multibody[i]->FindBoundingBox();
+      bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
+    }
+  }
+ 
+  // Set to XML input resolution if specified, else compute resolution factor
+  if ( _posRes > 0 ) positionRes = _posRes;
+  else                   positionRes = bodies_min_span * _posResFactor;
+
+  if ( _oriRes > 0 ) orientationRes = _oriRes;
+  else                   orientationRes = 0.05;
+  
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+  //make sure to calculate the rdRes based upon the DOF of the robot
+  rd_res = num_joints * rd_res;
+#endif
+  
+  minmax_BodyAxisRange = bodies_min_span;
+}
 
 //===================================================================
 //  Destructor

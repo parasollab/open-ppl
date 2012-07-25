@@ -395,6 +395,7 @@ class MPBaseObject {
     string GetName()  const {return m_name;}
     void SetName (string _s) {m_name  = _s;}
     string GetNameAndLabel() const {return m_name + "::" + m_label;}
+    void SetDebug(bool _d) {m_debug = _d;}
 
   private:
     MPProblem* m_problem;

@@ -171,6 +171,9 @@ class Environment : public MPBaseObject{
     inline double GetOrientationRes() const { return orientationRes; }
     inline void SetOrientationRes(const double rRes) {orientationRes=rRes;}
 
+    void ComputeResolution(double _posRes, double _oriRes, 
+        double _posResFactor, double _oriResFactor);
+
     //////////////////////////////////////////////////////////////////////////////////////////
     //
     //  Robot Index.

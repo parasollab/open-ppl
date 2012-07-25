@@ -13,7 +13,9 @@ class CollisionDetectionValidity : public ValidityCheckerMethod
 {
 public:
   CollisionDetectionValidity() { }
-  CollisionDetectionValidity(vector<CollisionDetectionMethod*> selected, CollisionDetection* cd) : m_selected(selected), m_cd(cd) {}
+  CollisionDetectionValidity(vector<CollisionDetectionMethod*> selected,
+      CollisionDetection* cd, bool _ignoreSelfColl = false) 
+    : m_selected(selected), m_cd(cd), ignoreSelfCollision(_ignoreSelfColl) {}
   CollisionDetectionValidity(XMLNodeReader& in_Node, MPProblem* in_pProblem);   
   virtual ~CollisionDetectionValidity() 
   {
@@ -135,7 +137,7 @@ bool
 CollisionDetectionValidity<CFG>::
 IsInCollision(Environment* env, StatClass& Stats, CDInfo& _cdInfo, 
 	      shared_ptr<MultiBody> lineRobot, bool enablePenetration, std::string *pCallName) 
-{  
+{
   int nmulti, robot;
   bool ret_val, collision_found; // needed to go thru ALL obstacles to get ALL info
   CDInfo local_cd_info;
