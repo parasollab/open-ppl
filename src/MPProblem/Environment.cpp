@@ -215,7 +215,7 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   Read(m_filename);
 
   XMLNodeReader::childiterator citr;
-  int num_joints;
+  size_t num_joints = 0;
   for ( citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr ) {
     if ( citr->getName() == "robot") {
       string cfg_type = citr->stringXMLParameter("Cfg_name", true, "", "type of robot");
@@ -268,7 +268,7 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   }
  
   // Compute RESOLUTION
-  ComputeResolution(pos_res, ori_res, positionResFactor, orientationResFactor);
+  ComputeResolution(pos_res, ori_res, positionResFactor, orientationResFactor, num_joints);
   
   PrintOptions(cout);
     
@@ -342,7 +342,7 @@ PrintOptions(ostream& out_os) {
 //===================================================================
 void 
 Environment::ComputeResolution(double _posRes, double _oriRes, 
-    double _posResFactor, double _oriResFactor){
+    double _posResFactor, double _oriResFactor, size_t _numJoints){
   // NOTE: orientationResFactor is valid input, but not used.
   multibody[robotIndex]->FindBoundingBox();
   double robot_span = multibody[robotIndex]->GetMaxAxisRange();
@@ -363,7 +363,7 @@ Environment::ComputeResolution(double _posRes, double _oriRes,
   
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   //make sure to calculate the rdRes based upon the DOF of the robot
-  rd_res = num_joints * rd_res;
+  rd_res = _numJoints * rd_res;
 #endif
   
   minmax_BodyAxisRange = bodies_min_span;
