@@ -844,7 +844,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         } else if(citr->getName() == "NeighborhoodFinder") {
           string nf_method = citr->stringXMLParameter(string("Method"),true,
               string(""),string("NeighborhoodFinder Method"));
-          m_NF = GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_method);
+          m_NF = GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_method);
           citr->warnUnrequestedAttributes();
         } else {
           citr->warnUnknownNode();
@@ -1039,8 +1039,8 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
           << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
           pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
           << "\t" << ellapsed_con
-          << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()- 2)
-          << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+          << "\t" << double(nf->GetMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()- 2)
+          << "\t" << double(nf->GetMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
           << "\t" << CCStats.size() << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
           << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
           << "\t" << querySucceeded 
@@ -1063,8 +1063,8 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
             << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
             pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
             << "\t" << ellapsed_con
-            << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-            << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+            << "\t" << double(nf->GetMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+            << "\t" << double(nf->GetMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
             << "\t" << CCStats.size() << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
             << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
             << "\t" << querySucceeded 
@@ -1180,6 +1180,162 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
     int m_iterations;
 };
 
+template <typename InputIterator, typename CFG, typename WEIGHT, typename VID>
+double
+RFD(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
+    InputIterator _KNN_first, InputIterator _KNN_last,
+    InputIterator _ANN_first, InputIterator _ANN_last,
+    shared_ptr<DistanceMetricMethod> dmm, double _epsilon){
+  /*cout << "NeighborhoodFinder::RFD()" << endl;
+    cout << "KNN = ";
+    for(InputIterator k_itr = _KNN_first; k_itr != _KNN_last; ++k_itr) {
+    cout << *k_itr << " ";
+    if(!_rmp->m_pRoadmap->IsVertex(*k_itr)) {
+    cout << "ERROR:::: " << *k_itr << " is not in graph ::::"; 
+    }
+    }
+    cout << endl;
+    cout << "ANN = ";
+    for(InputIterator a_itr = _ANN_first; a_itr != _ANN_last; ++a_itr) {
+    cout << *a_itr << " ";
+    if(!_rmp->m_pRoadmap->IsVertex(*a_itr)) {
+    cout << "ERROR:::: " << *a_itr << " is not in graph ::::"; 
+    }
+    }
+    cout << endl;
+    cout << "Computing RFD 1 !!" << endl;*/
+  Environment* _env = _rmp->GetEnvironment();
+  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;   
+
+  double rfd = 0.0, dist_a, dist_k;  
+  int k = 0;     
+  InputIterator V2 = _KNN_last;
+  --V2;
+
+  CFG k_cfg = (*(pMap->find_vertex(*V2))).property();
+  CFG q_cfg = (*(pMap->find_vertex(in_query))).property();
+
+  dist_k = dmm->Distance(_env, q_cfg, k_cfg);
+  dist_k = (1 + _epsilon)*dist_k;
+  //cout << "epsilon is " << _epsilon << endl;
+
+  InputIterator V1;
+  for(V1 = _ANN_first; V1 != _ANN_last; ++V1){     
+    CFG a_cfg = (*(pMap->find_vertex(*V1))).property();
+    dist_a = dmm->Distance(_env, q_cfg, a_cfg);
+    if(dist_a > dist_k){
+      ++rfd; 
+    }     
+    ++k;
+  }
+
+  rfd = rfd / k;
+  return rfd;
+}
+
+
+template <typename InputIterator, typename CFG, typename WEIGHT, typename VID>
+double
+RDE(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
+    InputIterator _KNN_first, InputIterator _KNN_last,
+    InputIterator _ANN_first, InputIterator _ANN_last,
+    shared_ptr<DistanceMetricMethod> dmm){
+
+  Environment* _env = _rmp->GetEnvironment();
+  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;  
+
+  double rde = 0.0, dist_a = 0.0, dist_k = 0.0;  
+  CFG q_cfg = (*(pMap->find_vertex(in_query))).property();
+
+  InputIterator V1;
+  for(V1 = _ANN_first; V1 != _ANN_last; ++V1){
+    CFG a_cfg = (*(pMap->find_vertex(*V1))).property();
+    dist_a += dmm->Distance(_env, q_cfg, a_cfg);
+  }  
+
+  InputIterator V2;
+  for(V2 = _KNN_first; V2 != _KNN_last; ++V2){
+    CFG k_cfg = (*(pMap->find_vertex(*V2))).property();
+    dist_k += dmm->Distance(_env, q_cfg, k_cfg);
+  }
+
+  rde = 1 - dist_k / dist_a;
+  return rde;
+
+}
+
+
+template <typename InputIterator, typename CFG, typename WEIGHT, typename VID>
+double
+EDE(Roadmap<CFG,WEIGHT>* _rmp, VID in_query,
+    InputIterator _KNN_first, InputIterator _KNN_last,
+    InputIterator _ANN_first, InputIterator _ANN_last,
+    shared_ptr<DistanceMetricMethod> dmm){
+
+  Environment* _env = _rmp->GetEnvironment();
+  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;  
+
+  double ede = 0.0, dist_a = 0.0, dist_k = 0.0;  
+  int k = 0;
+  CFG q_cfg = (*(pMap->find_vertex(in_query))).property();
+
+  InputIterator V1, V2;   
+  for(V1 = _KNN_first, V2 = _ANN_first; V1 != _KNN_last, V2 != _ANN_last; ++V1, ++V2){
+    CFG k_cfg = (*(pMap->find_vertex(*V1))).property();
+    CFG a_cfg = (*(pMap->find_vertex(*V2))).property();
+
+    dist_a += dmm->Distance(_env, q_cfg, a_cfg);
+    dist_k += dmm->Distance(_env, q_cfg, k_cfg);
+
+    ede += dist_a / dist_k;
+    ++k;
+
+    //    cout << "dist_a for ede is \t" << dist_a << endl;
+    //    cout << "dist_k for ede is \t" << dist_k << endl;
+  }
+
+  ede = ede / k - 1;
+
+  return ede;
+
+}
+
+template <typename InputIterator, typename CFG, typename WEIGHT, typename VID>
+double
+OEPS(Roadmap<CFG, WEIGHT>* _rmp, VID in_query,
+    InputIterator _KNN_first, InputIterator _KNN_last,
+    InputIterator _ANN_first, InputIterator _ANN_last,
+    shared_ptr< DistanceMetricMethod> dmm){
+
+  Environment* _env = _rmp->GetEnvironment();
+  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;  
+
+  double oeps = 0.0, max_a = 0.0, max_k = 0.0;  
+  CFG q_cfg = (*(pMap->find_vertex(in_query))).property();  
+
+  InputIterator V1, V2;   
+  for(V1 = _KNN_first, V2 = _ANN_first; V1 != _KNN_last, V2 != _ANN_last; ++V1, ++V2){
+    CFG k_cfg = (*(pMap->find_vertex(*V1))).property();
+    CFG a_cfg = (*(pMap->find_vertex(*V2))).property();
+
+    double dist_a = dmm->Distance(_env, q_cfg, a_cfg);
+    double dist_k = dmm->Distance(_env, q_cfg, k_cfg);
+
+    if (dist_a > max_a)
+      max_a = dist_a;
+    if (dist_k > max_k)
+      max_k = dist_k;
+
+    //cout << "dist_a for oeps is \t" << dist_a << endl;
+    //cout << "dist_k for oeps is \t" << dist_k << endl;
+  }
+
+  //cout << endl << "max_a for oeps is \t" << max_a << endl;
+  //cout <<         "max_k for oeps is \t" << max_k << endl;
+  oeps = (max_a / max_k) - 1;
+
+  return oeps;
+}
 
 class NFTester : public MPStrategyMethod {
   public:
@@ -1205,7 +1361,7 @@ class NFTester : public MPStrategyMethod {
         } else if(citr->getName() == "NeighborhoodFinder") {
           string nf_method = citr->stringXMLParameter(string("Method"),true,
               string(""),string("NeighborhoodFinder Method"));
-          m_vecNF.push_back(GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_method));
+          m_vecNF.push_back(GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_method));
           citr->warnUnrequestedAttributes();
         } else {
           citr->warnUnknownNode();
@@ -1215,7 +1371,7 @@ class NFTester : public MPStrategyMethod {
       //get baseline nf method
       string nf_method = in_Node.stringXMLParameter(string("BaselineNFMethod"),true,
           string(""),string("BaselineNeighborhoodFinder Method"));
-      m_BaselineNF = GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_method);
+      m_BaselineNF = GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_method);
       m_kclosest = in_Node.numberXMLParameter("kclosest", true, int(10), int(0), int(MAX_INT), 
           "Number of K-Closest");
       m_numNodes = in_Node.numberXMLParameter("num_samples", true, 1,1, 1, "Number of Samples");
@@ -1224,7 +1380,6 @@ class NFTester : public MPStrategyMethod {
     virtual void Initialize(int in_RegionID){}
     virtual void Run(int in_RegionID){
       MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-      NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
       StatClass * pStatClass = region->GetStatClass();
       pStatClass->ClearStats(); 
       //---------------------------
@@ -1264,10 +1419,7 @@ class NFTester : public MPStrategyMethod {
         cout << "Query point = VID: " << query_point << endl;
         cout << "CALLING:: Baseline NF-Method = " << m_BaselineNF->GetLabel() << endl;
 
-        nf->KClosest(m_BaselineNF, region->GetRoadmap(), 
-            //roadmap_vids.begin(), roadmap_vids.end(), 
-            query_point,
-            m_kclosest, baseline_closest.begin());
+        m_BaselineNF->KClosest(region->GetRoadmap(), query_point, m_kclosest, baseline_closest.begin());
 
         //    cout << "TIME ELAPSED FOR cur_total_time " << m_BaselineNF->GetLabel() << " : " << m_BaselineNF->GetTotalTime() << " CALCULATED BY NEW TIMER " << endl;
         //    cout << "TIME ELAPSED FOR cur_query_time " << m_BaselineNF->GetLabel() << " : " << m_BaselineNF->GetQueryTime() << " CALCULATED BY NEW TIMER " << endl;
@@ -1285,10 +1437,7 @@ class NFTester : public MPStrategyMethod {
           //     cout << "CALLING:: NF-method = " << (*nfitr)->GetLabel() << endl;
           //start
 
-          nf->KClosest(*nfitr, region->GetRoadmap(), 
-              //roadmap_vids.begin(), roadmap_vids.end(), 
-              query_point,
-              m_kclosest, nf_vids.begin());
+          (*nfitr)->KClosest(region->GetRoadmap(), query_point, m_kclosest, nf_vids.begin());
 
           //      cout << "TIME ELAPSED FOR cur_total_time " << (*nfitr)->GetLabel() << " : " << (*nfitr)->GetTotalTime() << " CALCULATED BY NEW TIMER " << endl;
           //      cout << "TIME ELAPSED FOR cur_query_time " << (*nfitr)->GetLabel() << " : " << (*nfitr)->GetQueryTime() << " CALCULATED BY NEW TIMER " << endl;
@@ -1306,7 +1455,7 @@ class NFTester : public MPStrategyMethod {
           // to use the NeighborhoodFinder use pointer "nf" nf->RFD(....)
           // query point = *(roadmap_vids.begin())
 
-          double ede = nf->EDE(region->GetRoadmap(),
+          double ede = EDE(region->GetRoadmap(),
               query_point,baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(), 
               GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));
@@ -1314,20 +1463,20 @@ class NFTester : public MPStrategyMethod {
 
 
 
-          double rde = nf->RDE(region->GetRoadmap(),
+          double rde = RDE(region->GetRoadmap(),
               query_point, baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(), 
               GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));
           //      cout << "RDE between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << rde << endl;
 
 
-          double rfd = nf->RFD(region->GetRoadmap(),
+          double rfd = RFD(region->GetRoadmap(),
               query_point, baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(), 
               GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label), 0.001);
           //      cout << "RFD between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << rfd << endl;
 
-          double oeps = nf->OEPS(region->GetRoadmap(),
+          double oeps = OEPS(region->GetRoadmap(),
               query_point, baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(),
               GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));      

@@ -4,6 +4,7 @@
 #include "MapEvaluationMethod.h"
 #include "Query.h"
 #include "boost/lambda/lambda.hpp"
+#include "DistanceMetrics.h"
 
 template <class CFG, class WEIGHT>
 class QueryEvaluation : public MapEvaluationMethod {

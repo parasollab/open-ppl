@@ -1,5 +1,5 @@
-#ifndef _Connector_h_
-#define _Connector_h_
+#ifndef CONNECTOR_H_
+#define CONNECTOR_H_
 
 // Standard Headers
 #include <sstream>
@@ -27,78 +27,56 @@
 // A collection of connection methods
 //#############################################################################
 template <class CFG, class WEIGHT>
-class Connector :  private ElementSet< ConnectionMethod<CFG,WEIGHT> >,
-  public MPBaseObject{
+class Connector :  private ElementSet< ConnectionMethod<CFG,WEIGHT> >, public MPBaseObject{
 
-    private:
-      typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+  private:
+    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
-    public:
-      typedef typename ElementSet<ConnectionMethod<CFG,WEIGHT> >::MethodPointer ConnectionPointer;
+  public:
+    typedef ElementSet<ConnectionMethod<CFG, WEIGHT> > ConnectionSet;
+    typedef typename ConnectionSet::MethodPointer ConnectionPointer;
 
-      ////////////////////////////////////////////////////////////////////////////////////
-      /* CONSTRUCTORS AND DESTRUCTORS */
-      ////////////////////////////////////////////////////////////////////////////////////
-      Connector() : ElementSet< ConnectionMethod<CFG,WEIGHT> >(pmpl_detail::ConnectorMethodList()){}
+    ////////////////////////////////////////////////////////////////////////////////////
+    /* CONSTRUCTORS AND DESTRUCTORS */
+    ////////////////////////////////////////////////////////////////////////////////////
+    Connector() : ConnectionSet(pmpl_detail::ConnectorMethodList()){}
 
-      Connector(XMLNodeReader& inNode, MPProblem* in_pProblem) 
-        : ElementSet< ConnectionMethod<CFG,WEIGHT> >(pmpl_detail::ConnectorMethodList()), MPBaseObject(inNode, in_pProblem){
-          ParseXML(inNode);
-        }
-
-      ~Connector(){}
-
-      ////////////////////////////////////////////////////////////////////////////////////
-      /* ACCESS METHODS */
-      ////////////////////////////////////////////////////////////////////////////////////
-      ConnectionPointer GetMethod(const string& _label){
-        return ElementSet<ConnectionMethod<CFG,WEIGHT> >::GetElement(_label);
-      }
-    
-      void AddMethod(string const& _label, ConnectionPointer _cp){
-        ElementSet<ConnectionMethod<CFG, WEIGHT> >::AddElement(_label, _cp);
+    Connector(XMLNodeReader& _node, MPProblem* _problem) 
+      : ConnectionSet(pmpl_detail::ConnectorMethodList()), MPBaseObject(_node, _problem){
+        ConnectionSet::ParseXML(_node, _problem);
+        PrintOptions(cout);
       }
 
-      virtual void SetMPProblem(MPProblem* _mp){
-        MPBaseObject::SetMPProblem(_mp);
-        ElementSet<ConnectionMethod<CFG, WEIGHT> >::SetMPProblem(_mp);
-      }
+    ~Connector(){}
 
-      ////////////////////////////////////////////////////////////////////////////////////
-      /* DEBUG METHODS */
-      ////////////////////////////////////////////////////////////////////////////////////
-      void PrintOptions(ostream& _os);
-
-    protected:
-      void ParseXML(XMLNodeReader& _node);
-  };
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-void Connector<CFG,WEIGHT>::PrintOptions(ostream& _os){
-  _os << "  Connection Methods" << endl;
-  typename map<string, ConnectionPointer>::const_iterator Conn;
-  for(Conn = ElementSet<ConnectionMethod<CFG,WEIGHT> >::ElementsBegin(); 
-      Conn != ElementSet<ConnectionMethod<CFG,WEIGHT> >::ElementsEnd(); 
-      ++Conn){
-    _os << "  " << Conn->first << "::\t";
-    Conn->second->PrintOptions(_os);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-void Connector<CFG,WEIGHT>::ParseXML(XMLNodeReader& inNode) {
-  XMLNodeReader::childiterator citr;
-  //Iterate over child nodes
-  for(citr = inNode.children_begin(); citr!= inNode.children_end(); ++citr) {
-    if (!ElementSet<ConnectionMethod<CFG,WEIGHT> >::AddElement(citr->getName(), *citr, GetMPProblem())){
-      citr->warnUnknownNode();
-      exit(-1);
+    ////////////////////////////////////////////////////////////////////////////////////
+    /* ACCESS METHODS */
+    ////////////////////////////////////////////////////////////////////////////////////
+    ConnectionPointer GetMethod(const string& _label){
+      return this->GetElement(_label);
     }
-  }
-  PrintOptions(cout);
-}
+
+    void AddMethod(string const& _label, ConnectionPointer _cp){
+      this->AddElement(_label, _cp);
+    }
+
+    virtual void SetMPProblem(MPProblem* _mp){
+      MPBaseObject::SetMPProblem(_mp);
+      ConnectionSet::SetMPProblem(_mp);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    /* DEBUG METHODS */
+    ////////////////////////////////////////////////////////////////////////////////////
+    void PrintOptions(ostream& _os){
+      _os << "  Connection Methods" << endl;
+      typename map<string, ConnectionPointer>::const_iterator Conn;
+      for(Conn = this->ElementsBegin(); Conn != this->ElementsEnd(); ++Conn){
+        _os << "  " << Conn->first << "::\t";
+        Conn->second->PrintOptions(_os);
+      }
+    }
+};
 
 #endif /*_Connector_h_*/
 

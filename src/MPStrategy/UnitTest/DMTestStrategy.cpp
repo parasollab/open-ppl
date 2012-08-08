@@ -1,6 +1,6 @@
 #include "DMTestStrategy.h"
 #include "MPRegion.h"
-
+#include "DistanceMetrics.h"
 
 DMTestStrategy::
 DMTestStrategy(XMLNodeReader& _node, MPProblem* _problem)

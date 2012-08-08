@@ -127,7 +127,7 @@ long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool
 ///////////////////////////////////////////////////////////////////////////////
 //
 //
-// Simple Utilities (Angular Distance and Gaussian Distribution)
+// Simple Utilities (Angular Distance and Compare Second)
 //
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -137,6 +137,15 @@ long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool
  *between two angles normalized to 1.0 
  */
 double DirectedAngularDistance(double _a, double _b);
+
+/* Compare the second of a pair */
+template <typename T, typename U>
+class CompareSecond {
+ public:
+  bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
+    return _a.second < _b.second;
+  }
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -298,6 +307,16 @@ class ElementSet {
       ElementSet(ElementTypeList const& _etl) : m_default("") {
         AddToUniverse(typename boost::mpl::begin<ElementTypeList>::type(), typename boost::mpl::end<ElementTypeList>::type());
       }
+
+    void ParseXML(XMLNodeReader& _node, MPProblem* _problem){
+      XMLNodeReader::childiterator citr;
+      for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
+        if (!AddElement(citr->getName(), *citr, _problem)){
+          citr->warnUnknownNode();
+          exit(-1);
+        }
+      }
+    }
 
     bool AddElement(string const& _str, XMLNodeReader& _node, MPProblem* _problem) {
       if(m_universe.find(_str) != m_universe.end()) {

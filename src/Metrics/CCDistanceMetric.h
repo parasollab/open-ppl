@@ -56,12 +56,16 @@ void CCDistanceMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 
 template <class CFG, class WEIGHT>
 double CCDistanceMetric<CFG, WEIGHT>::operator()(int _regionID) {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef typename RoadmapGraphType::VID VID;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
   vector<double> distance;
   double ccDistance;
   Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap();
-  RoadmapGraph<CFG, WEIGHT>* pMap = rmap->m_pRoadmap;
+  RoadmapGraphType* pMap = rmap->m_pRoadmap;
+  NeighborhoodFinder::NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(m_nf);
 
   Environment* pEnv = rmap->GetEnvironment();
 
@@ -90,11 +94,10 @@ double CCDistanceMetric<CFG, WEIGHT>::operator()(int _regionID) {
       get_cc(*pMap, cmap, ccj->second, ccjVids);
 
       vector<pair<VID, VID> > pairs;
-      this->GetMPProblem()->GetNeighborhoodFinder()->KClosestPairs(this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(m_nf),
-								   rmap, cciVids.begin(), cciVids.end(), ccjVids.begin(), ccjVids.end(), 1, back_inserter(pairs));
+      nf->KClosestPairs(rmap, cciVids.begin(), cciVids.end(), ccjVids.begin(), ccjVids.end(), 1, back_inserter(pairs));
       distance.push_back(this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm)->Distance(pEnv,
-                                                                                              pmpl_detail::GetCfg<VID>(pMap)(pairs[0].first),
-                                                                                              pmpl_detail::GetCfg<VID>(pMap)(pairs[0].second)));
+                                                                                              GetCfg()(pMap, pairs[0].first),
+                                                                                              GetCfg()(pMap, pairs[0].second)));
     }
   }
   ccDistance = *(distance.begin());

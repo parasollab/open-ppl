@@ -3,6 +3,7 @@
 #include "MPRegion.h"
 #include "MPStrategy.h"
 #include "LocalPlanners.h"
+#include "DistanceMetrics.h"
 
 VisibilityFeature::VisibilityFeature():MPFeature(){
 }
@@ -46,7 +47,7 @@ vector<double> VisibilityFeature::Collect(vector<VID>& vids){
       
       CfgType cfg = rdmp->find_vertex(*vit)->property();
       
-      nf->KClosest(nf->GetNFMethod(nfLabel), GetMPProblem()->GetMPRegion(0)->GetRoadmap(), *vit, k, back_insert_iterator<vector<VID> >(kclosest));
+      nf->GetMethod(nfLabel)->KClosest(GetMPProblem()->GetMPRegion(0)->GetRoadmap(), *vit, k, back_insert_iterator<vector<VID> >(kclosest));
       vector< pair<size_t,VID> > ccs;
       stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>,size_t > cmap;
       get_cc_stats(*(rdmp),cmap,ccs);

@@ -145,7 +145,10 @@
 template <class CFG, class WEIGHT>
 class Roadmap {
 public:
-typedef typename RoadmapGraph<CFG, WEIGHT>::vertex_descriptor VID;  
+  typedef CFG CfgType;
+  typedef WEIGHT WeightType;
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef typename RoadmapGraphType::vertex_descriptor VID;  
   /////////////////////////////////////////////////////////////////////
   //
   //

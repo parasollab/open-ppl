@@ -78,7 +78,7 @@ class StatClass {
       void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<DistanceMetricMethod> _dm);
 
     template <class CFG, class WEIGHT>
-      void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, NeighborhoodFinder* _nf, string _nfMethod);
+      void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, string _nfMethod, string _dmMethod);
       
     void PrintFeatures(ostream& _os);
     int IncNodesGenerated(string _samplerName, int _incr=1);
@@ -93,11 +93,17 @@ class StatClass {
     double GetSeconds(string _name);
     int GetUSeconds(string _name);
 
-    //LP Statistics Accessors/Modifiers
+    //Local Planner Statistics Accessors/Modifiers
     double GetLPStat(string _s){return m_lpStats[_s];}
     void SetLPStat(string _s, double _v) {m_lpStats[_s]=_v;}
-    void IncLPStat(string _s, double _v) {m_lpStats[_s]+=_v;}
+    void IncLPStat(string _s, double _v = 1.0) {m_lpStats[_s]+=_v;}
 
+    //Neighborhood Finder Statistics Accessors/Modifiers
+    double GetNFStat(string _s){return m_nfStats[_s];}
+    void SetNFStat(string _s, double _v) {m_nfStats[_s]=_v;}
+    void IncNFStat(string _s, double _v = 1.0) {m_nfStats[_s]+=_v;}
+
+    //histories of numbers
     vector<double>& GetHistory(string _s){return m_histories[_s];}
     void AddToHistory(string _s, double _v){m_histories[_s].push_back(_v);}
     void SetAuxDest(string _s) {m_auxFileDest = _s;}
@@ -163,7 +169,7 @@ class StatClass {
 
   private:
     //LP Statistics
-    map<string, double> m_lpStats;
+    map<string, double> m_lpStats, m_nfStats;
     map<string, vector<double> > m_histories;
     string m_auxFileDest;
 
@@ -226,6 +232,18 @@ StatClass::PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs)
     for(LPSIT lpsit=m_lpStats.begin(); lpsit!=m_lpStats.end(); lpsit++){
       _os << setw(40) << lpsit->first
         << setw(40) << lpsit->second << endl;
+    }
+  }
+
+  //output for neighborhood finder statistics. Only output if map is populated
+  if(m_nfStats.size()>0){
+    _os<<"\n\n Neighborhood Finder Statistics:\n\n";
+    _os<< setw(40) << "Statistic"
+      << setw(40) << "Value" << endl << endl;
+    typedef map<string, double>::iterator NFSIT;
+    for(NFSIT nfsit=m_nfStats.begin(); nfsit!=m_nfStats.end(); nfsit++){
+      _os << setw(40) << nfsit->first
+        << setw(40) << nfsit->second << endl;
     }
   }
 
@@ -518,9 +536,10 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
 // between the closest pairs of ccs
 template <class CFG, class WEIGHT>
 void
-StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, NeighborhoodFinder* _nf, string _nfMethod) {
+StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, string _nfMethod, string _dmMethod) {
 #ifndef _PARALLEL
-  shared_ptr<DistanceMetricMethod> dm = _nf->GetNFMethod(_nfMethod)->GetDMMethod();
+  shared_ptr<DistanceMetricMethod> dm = _rdmp->GetEnvironment()->GetMPProblem()->GetDistanceMetric()->GetMethod(_dmMethod);
+  NeighborhoodFinder::NeighborhoodFinderPointer nf = _rdmp->GetEnvironment()->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(_nfMethod);
   typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
   stapl::sequential::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
   vector< pair<size_t,VID> > ccs; //connected components in the roadmap
@@ -597,7 +616,7 @@ StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, NeighborhoodFinder
         get_cc(*(_rdmp->m_pRoadmap),cMap, ccj->second, ccjCfgs); //fill ccjCfgs
 
         vector< pair<VID,VID> > pairs;
-        _nf->KClosestPairs(_nf->GetNFMethod(_nfMethod), _rdmp,
+        nf->KClosestPairs(_rdmp,
             cciCfgs.begin(), cciCfgs.end(), ccjCfgs.begin(), ccjCfgs.end(), 1, back_inserter(pairs));
         double tmpDist = dm->Distance(_rdmp->GetEnvironment(), (*(_rdmp->m_pRoadmap->find_vertex(pairs[0].first))).property(),
             (*(_rdmp->m_pRoadmap->find_vertex(pairs[0].second))).property() );

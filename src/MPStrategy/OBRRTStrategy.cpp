@@ -1,6 +1,7 @@
 #include "OBRRTStrategy.h"
 #include "MPRegion.h"
 #include "CollisionDetection.h"
+#include "DistanceMetrics.h"
 
 void
 OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
@@ -103,7 +104,7 @@ OBRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   vector<VID> kClosest;
   vector<CfgType> cfgs;
 
-  nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
+  nf->GetMethod(m_nf)->KClosest(region->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
   CfgType nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
   CfgType newCfg;
   bool verifiedValid = false;

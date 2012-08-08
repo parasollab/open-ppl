@@ -3,61 +3,72 @@
 #include "MetricUtils.h"
 #include "MPProblem.h"
 #include "MPRegion.h"
-NeighborhoodFinderMethod::
-NeighborhoodFinderMethod(shared_ptr<DistanceMetricMethod> _dm, string _label, MPProblem* _problem) : MPBaseObject(_problem, _label),
-                                                  m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0), dmm(_dm) {}
+
+NeighborhoodFinderMethod::NeighborhoodFinderMethod(string _dmLabel, string _label, MPProblem* _problem) 
+  : MPBaseObject(_problem, _label), m_dmLabel(_dmLabel), m_fromRDMPVersion(false) {}
 
 
-NeighborhoodFinderMethod::
-NeighborhoodFinderMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
- : MPBaseObject(in_Node, in_pProblem), m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) 
-{ 
-  std::string dm_label = in_Node.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
-  dmm = in_pProblem->GetDistanceMetric()->GetMethod(dm_label);
+NeighborhoodFinderMethod::NeighborhoodFinderMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) 
+  : MPBaseObject(in_Node, in_pProblem), m_fromRDMPVersion(false){ 
+    m_dmLabel = in_Node.stringXMLParameter("dmMethod", true, "default", "Distance Metric Method");
+  }
+
+shared_ptr<DistanceMetricMethod> 
+NeighborhoodFinderMethod::GetDMMethod() const {
+  return GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel);
 }
 
+double
+NeighborhoodFinderMethod::GetTotalTime() const{
+  return GetMPProblem()->GetMPRegion(0)->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Total");
+}
 
-NeighborhoodFinderMethod::
-NeighborhoodFinderMethod() : m_total_time(0.0), m_query_time(0.0), m_construction_time(0.0), m_num_queries(0) { };
+double 
+NeighborhoodFinderMethod::GetQueryTime() const{
+  return GetMPProblem()->GetMPRegion(0)->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Query");
+}
 
-void 
-NeighborhoodFinderMethod::
-StartTotalTime(){  
-    GetMPProblem()->GetMPRegion(0)->GetStatClass()->ClearClock(this->GetName());
-    GetMPProblem()->GetMPRegion(0)->GetStatClass()->StartClock(this->GetName());    
+double 
+NeighborhoodFinderMethod::GetConstructionTime() const{
+  return GetMPProblem()->GetMPRegion(0)->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Construction");
 }
- 
-void 
-NeighborhoodFinderMethod::
-EndTotalTime(){
-    GetMPProblem()->GetMPRegion(0)->GetStatClass()->StopClock(this->GetName());
-    m_total_time += GetMPProblem()->GetMPRegion(0)->GetStatClass()->GetSeconds(this->GetName());
-}
-  
-void 
-NeighborhoodFinderMethod::
-StartQueryTime(){
-    GetMPProblem()->GetMPRegion(0)->GetStatClass()->ClearClock(this->GetName());
-    GetMPProblem()->GetMPRegion(0)->GetStatClass()->StartClock(this->GetName()); 
-}
-  
-void 
-NeighborhoodFinderMethod::
-EndQueryTime(){
-    GetMPProblem()->GetMPRegion(0)->GetStatClass()->StopClock(this->GetName());
-    m_query_time +=GetMPProblem()->GetMPRegion(0)->GetStatClass()->GetSeconds(this->GetName());
+
+size_t 
+NeighborhoodFinderMethod::GetNumQueries() const{
+  return GetMPProblem()->GetMPRegion(0)->GetStatClass()->GetNFStat(this->GetNameAndLabel()+"::NumQueries");
 }
 
 void 
-NeighborhoodFinderMethod::
-StartConstructionTime(){  
-    GetMPProblem()->GetMPRegion(0)->GetStatClass()->ClearClock(this->GetName());
-    GetMPProblem()->GetMPRegion(0)->GetStatClass()->StartClock(this->GetName());    
+NeighborhoodFinderMethod::StartTotalTime(){  
+  GetMPProblem()->GetMPRegion(0)->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Total");    
 }
-  
+
 void 
-NeighborhoodFinderMethod::
-EndConstructionTime(){
-    GetMPProblem()->GetMPRegion(0)->GetStatClass()->StopClock(this->GetName());
-    m_construction_time += GetMPProblem()->GetMPRegion(0)->GetStatClass()->GetSeconds(this->GetName());
+NeighborhoodFinderMethod::EndTotalTime(){
+  GetMPProblem()->GetMPRegion(0)->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Total");
+}
+
+void 
+NeighborhoodFinderMethod::StartQueryTime(){
+  GetMPProblem()->GetMPRegion(0)->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Query");    
+}
+
+void 
+NeighborhoodFinderMethod::EndQueryTime(){
+  GetMPProblem()->GetMPRegion(0)->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Query");
+}
+
+void 
+NeighborhoodFinderMethod::StartConstructionTime(){
+  GetMPProblem()->GetMPRegion(0)->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Construction");    
+}
+
+void 
+NeighborhoodFinderMethod::EndConstructionTime(){
+  GetMPProblem()->GetMPRegion(0)->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Construction");
+}
+
+void 
+NeighborhoodFinderMethod::IncrementNumQueries(){
+  GetMPProblem()->GetMPRegion(0)->GetStatClass()->IncNFStat(this->GetNameAndLabel()+"::NumQueries");
 }

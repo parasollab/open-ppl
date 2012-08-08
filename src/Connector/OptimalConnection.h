@@ -96,11 +96,14 @@ OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _s
     ColorMap& _cmap, InputIterator _iter1First, InputIterator _iter1Last,
     InputIterator _iter2First, InputIterator _iter2Last, OutputIterator _collision) {
 
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
   if (this->m_debug) { cout << endl; PrintOptions (cout); }
   ///To do - uncomment after const vertex iter problem  in STAPL pGraph is fixed
   #ifndef _PARALLEL
   for (InputIterator iter1 = _iter1First; iter1 != _iter1Last; ++iter1) {
-    CFG cfg = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(iter1);
+    CFG cfg = GetCfg()(_rm->m_pRoadmap, iter1);
     if (this->m_debug) {
       cout << "Attempting connection from " << *iter1 << "--> " << cfg << endl;
     }
@@ -121,8 +124,11 @@ void
 OptimalConnection<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
     VID _vid, vector<VID>& _closest, OutputIterator _collision) {
 
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
   LPOutput <CFG, WEIGHT> lpOutput;
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
 
   for (VIDIT iter2 = _closest.begin(); iter2 != _closest.end(); ++iter2) {
     // Stopping Conditions
@@ -132,8 +138,8 @@ OptimalConnection<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatC
 
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
         IsConnected(_rm->GetEnvironment(), _stats, dm,
-          pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid),
-          pmpl_detail::GetCfg<VIDIT>(_rm->m_pRoadmap)(iter2),
+          GetCfg()(_rm->m_pRoadmap, _vid),
+          GetCfg()(_rm->m_pRoadmap, iter2),
           col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, (!this->m_addAllEdges) )) {  
 
       _rm->m_pRoadmap->AddEdge(_vid, *iter2, lpOutput.edge);
@@ -180,11 +186,11 @@ OptimalConnection<CFG, WEIGHT>::FindNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG _cf
   else {
 
     int k = (int)ceil( 2*2.71828 * log ( _rm->m_pRoadmap->get_num_vertices() ) ) ;  // Rounding up
-    NeighborhoodFinder::NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod);
+    NeighborhoodFinder::NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod);
     if (this->m_debug) {
       cout << "Finding closest neighbors with k = " << k << endl; 
     }
-    this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, _iter2First, _iter2Last, _cfg, k, _closestIter);
+    nfptr->KClosest(_rm, _iter2First, _iter2Last, _cfg, k, _closestIter);
   }
 }
 

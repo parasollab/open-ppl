@@ -162,7 +162,7 @@ void MARRTStrategy::Run(int _regionID) {
     vector<CfgType> cfgs;
     vector<CfgType>::iterator startCIterator;
 
-    nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), dir, 1, back_inserter(kClosest));     
+    nf->GetMethod(m_nf)->KClosest(region->GetRoadmap(), dir, 1, back_inserter(kClosest));     
     CfgType nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
     CfgType newCfg;
     double positionRes    = env->GetPositionRes();
@@ -196,7 +196,7 @@ void MARRTStrategy::Run(int _regionID) {
     VDAddTempCfg(newCfg, true);
     kClosest.clear();
     //recalculate nearest Cfg; may have changed after push
-    nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), newCfg, 1, back_inserter(kClosest));     
+    nf->GetMethod(m_nf)->KClosest(region->GetRoadmap(), newCfg, 1, back_inserter(kClosest));     
     nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
     // If good to go, add to roadmap
     CfgType col;
@@ -223,7 +223,7 @@ void MARRTStrategy::Run(int _regionID) {
         for(size_t i = 0; i<found.size(); i++){
           if(!found[i]){
             vector<VID> closests;
-            nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), m_goals[i], 1, back_inserter(closests));     
+            nf->GetMethod(m_nf)->KClosest(region->GetRoadmap(), m_goals[i], 1, back_inserter(closests));     
             CfgType closest = region->GetRoadmap()->m_pRoadmap->find_vertex(closests[0])->property();
             if(closest != currentClosest){
               currentClosest = closest; //Currently closest to goal.  No need to check for connectivity if we're no closer to the goal

@@ -1,6 +1,5 @@
-#ifndef _CGAL_NEIGHBORHOOD_FINDER_H_
-#define _CGAL_NEIGHBORHOOD_FINDER_H_
-
+#ifndef CGALNF_H_
+#define CGALNF_H_
 
 #include <CGAL/Cartesian_d.h>
 #include <CGAL/Search_traits.h>
@@ -10,294 +9,216 @@
 #include "MPProblem.h"
 
 #include <vector>
-#include <functional>
+#include <algorithm>
+
 using namespace std;
 
 
 typedef CGAL::Cartesian_d<double> K;
 
+class PMPLPointD : public K::Point_d {
+  public:
+    template<typename InputIterator>
+      PMPLPointD (size_t d, InputIterator first, InputIterator last)
+      : K::Point_d (d, first, last), m_it(-1) {
+      }
 
-class PMPL_Point_d : public K::Point_d {
- public:
-  
-  template <class InputIterator>
-    PMPL_Point_d (int d, InputIterator first, InputIterator last)
-    : K::Point_d (d, first, last) {vid=-1;}
-  template <class InputIterator>
-    PMPL_Point_d (int d, int _vid, InputIterator first, InputIterator last)
-    : K::Point_d (d, first, last) {vid=_vid;}
+    template<typename InputIterator>
+      PMPLPointD (unsigned long long _it, size_t d, InputIterator first, InputIterator last)
+      : K::Point_d (d, first, last), m_it(_it) {
+      }
 
-    int vid;
-}; //class PMPL_Point_d
+    unsigned long long m_it;
+}; //class PMPLPointD
 
+typedef CGAL::Search_traits<K::FT, PMPLPointD, K::Cartesian_const_iterator_d, K::Construct_cartesian_const_iterator_d> TreeTraits;
+typedef CGAL::Orthogonal_k_neighbor_search<TreeTraits> NeighborSearch;
+typedef NeighborSearch::Tree Tree;
+typedef PMPLPointD PointD;
 
-typedef CGAL::Search_traits<K::FT, PMPL_Point_d, K::Cartesian_const_iterator_d, K::Construct_cartesian_const_iterator_d> TreeTraits;
-typedef CGAL::Orthogonal_k_neighbor_search<TreeTraits> Neighbor_search;
-typedef Neighbor_search::Tree Tree;
-typedef PMPL_Point_d Point_d;
-
-
-template<typename CFG, typename WEIGHT>
 class CGALNF: public NeighborhoodFinderMethod {
+  public:
+    CGALNF(string _dmm = "", double _epsilon = 0.0, bool _useScaling = false, string _label = "", MPProblem* _mp = NULL) :
+      NeighborhoodFinderMethod(_dmm, _label, _mp), m_epsilon(_epsilon), m_useScaling(_useScaling), m_tmpTree(NULL), m_curRoadmapVersion(-1) {
+        SetName("CGALNF");
+      }
 
-public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  
-  CGALNF(XMLNodeReader& _node, MPProblem* _problem) :
-    NeighborhoodFinderMethod(_node, _problem) {
+    CGALNF(XMLNodeReader& _node, MPProblem* _problem) :
+      NeighborhoodFinderMethod(_node, _problem), m_tmpTree(NULL) {
+        SetName("CGALNF");
+        m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for CGAL");
+        m_useScaling = _node.boolXMLParameter("useScaling", false, false, "Bounding-box scaling used on pos DOFs");
+        m_curRoadmapVersion = -1;
 
-    
-    m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for CGAL");
-    m_use_scaling = _node.numberXMLParameter("use_scaling",false,0, 0,1, "Bounding-box scaling used on pos DOFs");
-    
-    m_cur_roadmap_version = -1;
-    CFG temp;
-    m_max_bbox_range = 0.0;
-    for(size_t i=0; i< temp.PosDOF(); ++i) {
-      std::pair<double,double> range = _problem->GetEnvironment()->GetBoundary()->GetRange(i);
-      double tmp_range = range.second-range.first;
-      if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;
+        shared_ptr<Boundary> b = _problem->GetEnvironment()->GetBoundary();
+        m_maxBBXRange = 0.0;
+        for(size_t i = 0; i < (size_t)b->GetPosDOFs(); ++i) {
+          std::pair<double,double> range = b->GetRange(i);
+          double tmpRange = range.second-range.first;
+          if(tmpRange > m_maxBBXRange) m_maxBBXRange = tmpRange;
+        }
+        
+        if(this->m_debug)
+          PrintOptions(cout);
+      }
+
+    virtual ~CGALNF() {
+      delete m_tmpTree;
     }
-  }
 
-  CGALNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
-    NeighborhoodFinderMethod(_dmm, _label) {
-    m_epsilon = 0.0;
-    m_use_scaling = 0;
-    m_cur_roadmap_version = -1;
-  }
+    virtual void PrintOptions(std::ostream& _os) const {
+      NeighborhoodFinderMethod::PrintOptions(_os);
+      _os << "epsilon: " << m_epsilon << " "
+        << "use_scaling: " << m_useScaling << " ";
+    }
 
-  virtual ~CGALNF() {}
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      OutputIterator KClosest(RDMP* _rmp, 
+          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out);
 
-  virtual const std::string GetName () const {
-    return CGALNF::GetClassName();
-  }
-  static const std::string GetClassName() {
-    return "CGALNF";
-  }
-  virtual void PrintOptions(std::ostream& out_os) const {
-    out_os << this->GetClassName() << ":: epsilon = " << m_epsilon << ", use_scaling = " << m_use_scaling << std::endl;
-  }
+    // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
+    // represent the _kclosest pairs of VIDs between the two ranges.
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      OutputIterator KClosestPairs(RDMP* _rmp,
+          InputIterator _first1, InputIterator _last1, 
+          InputIterator _first2, InputIterator _last2, 
+          size_t _k, OutputIterator _out);
 
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    InputIterator _input_first, InputIterator _input_last, VID _v, int k,
-    OutputIterator _out);
-  
-  // do the work here, and have the function above obtain the CFG and call this one
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k,
-    OutputIterator _out);
-  
-  
-  // KClosest that operate over the entire roadmap to find the kclosest to a VID or CFG
-  //
-  // NOTE: These are the prefered methods for kClosest computations
-  template <typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    VID _v, int k, OutputIterator _out);
-  
-  template <typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    CFG _cfg, int k, OutputIterator _out);
-  
+    template<typename RDMP, typename InputIterator>
+      void UpdateInternalModel(RDMP* _rmp, InputIterator _first, InputIterator _last);
 
-  // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-  // represent the kclosest pairs of VIDs between the two ranges.
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _in1_first, InputIterator _in1_last, 
-    InputIterator _in2_first, InputIterator _in2_last, 
-    int k, OutputIterator _out);
-
-  void UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp );
-    
-    
-private:
-  double m_epsilon; // appr
-  int m_use_scaling;
-  Tree m_tree;
-  int m_cur_roadmap_version; // used when updating internal model
-  double m_max_bbox_range;
+  private:
+    double m_epsilon; // appr
+    int m_useScaling;
+    Tree m_tree;
+    Tree* m_queryTree;
+    Tree* m_tmpTree;
+    int m_curRoadmapVersion; // used when updating internal model
+    double m_maxBBXRange;
 
 };
 
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-CGALNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    InputIterator _input_first, InputIterator _input_last, VID _v,
-    int k, OutputIterator _out) {
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
-  return KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
-}
-
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-CGALNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-  InputIterator _input_first, InputIterator _input_last, CFG _cfg, 
-  int k, OutputIterator _out) {
-  StartTotalTime();
-  IncrementNumQueries();
-  Tree temptree;
-	InputIterator V1;
-	VID _v = 0;
-  int dim = _cfg.DOF();
-	for(V1 = _input_first; V1 != _input_last; ++V1){
-    CFG _v_cfg = (*(_rmp->m_pRoadmap->find_vertex(*V1))).property();
-    temptree.insert(Point_d(dim, _v, _v_cfg.GetData().begin(),_v_cfg.GetData().end()));
-    ++_v;
-	}
-	Point_d query(Point_d(dim, _cfg.GetData().begin(),_cfg.GetData().end()));
-
-  StartQueryTime();
-	Neighbor_search search(temptree, query, k+1, m_epsilon);
-  EndQueryTime();
-
-	for(Neighbor_search::iterator it = search.begin(); it != search.end(); ++it){
-    if((*(_rmp->m_pRoadmap->find_vertex(it->first.vid))).property() == _cfg) continue;
-//    cout << std::sqrt(it->second) << " - VID = " << it->first.vid << endl;
-	  *_out++ = it->first.vid;
-	}
+// Returns all nodes within radius from _cfg
+template<typename RDMP, typename InputIterator, typename OutputIterator>
+OutputIterator 
+CGALNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last, 
+    typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out) {
   
-  EndTotalTime();
-	return _out;
+  typedef typename RDMP::VID VID;
+  typedef typename RDMP::CfgType CFG;
+  typedef typename RDMP::RoadmapGraphType RoadmapGraphType;
+  typedef typename pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
+  RoadmapGraphType* map = _roadmap->m_pRoadmap;
 
-}
-
-
-template<typename CFG, typename WEIGHT>
-template<typename OutputIterator>
-OutputIterator
-CGALNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-  VID _v, int k, OutputIterator _out) {
-
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = (*(pMap->find_vertex(_v))).property(); 
-  return KClosest(_rmp, _v_cfg, k, _out);
-}
-
-template<typename CFG, typename WEIGHT>
-template<typename OutputIterator>
-OutputIterator
-CGALNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-  CFG _cfg, int k, OutputIterator _out) {
-  //cout << "CGALNF::KClosest() - For entire roadmap" << endl;
   StartTotalTime();
-
+  
   StartConstructionTime();
-  UpdateInternalModel(_rmp);
+  UpdateInternalModel(_roadmap, _first, _last);
   EndConstructionTime();
 
   IncrementNumQueries();
   
-  int dim = _cfg.DOF();
-  
+  size_t dim = _cfg.DOF();
+
   // insert scaled query (copy of original CFG)
-  vector<double> query_cfg(dim);
-  copy(_cfg.GetData().begin(), _cfg.GetData().end(), query_cfg.begin());
-  if (m_use_scaling) {
-    query_cfg[0] /= m_max_bbox_range;
-    query_cfg[1] /= m_max_bbox_range;
-    query_cfg[2] /= m_max_bbox_range;
+  vector<double> queryCfg(dim);
+  copy(_cfg.GetData().begin(), _cfg.GetData().end(), queryCfg.begin());
+  if (m_useScaling) {
+    queryCfg[0] /= m_maxBBXRange;
+    queryCfg[1] /= m_maxBBXRange;
+    queryCfg[2] /= m_maxBBXRange;
   }
-	Point_d query(Point_d(dim, query_cfg.begin(), query_cfg.end()));
+  PointD query(PointD(dim, queryCfg.begin(), queryCfg.end()));
 
   StartQueryTime();
-	Neighbor_search search(m_tree, query, k+1, m_epsilon);
+  NeighborSearch search(*m_queryTree, query, _k+1, m_epsilon);
   EndQueryTime();
 
-  for(Neighbor_search::iterator it = search.begin(); it != search.end(); ++it){
-    if((*(_rmp->m_pRoadmap->find_vertex(it->first.vid))).property() == _cfg) continue;
-    //cout << std::sqrt(it->second) << " - VID = " << it->first.vid << endl;
-	  *_out++ = it->first.vid;
-	}
-	
-	EndTotalTime();
-	return _out;
+  for(NeighborSearch::iterator it = search.begin(); it != search.end(); ++it){
+    VID vid = it->first.m_it;
+    CFG node = GetCfg()(map, vid);
+    if(node == _cfg) continue;
+    *_out++ = vid;
+  }
 
-}
-
-
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-CGALNF<CFG,WEIGHT>::
-KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _in1_first, InputIterator _in1_last, 
-  InputIterator _in2_first, InputIterator _in2_last, 
-  int k, OutputIterator _out) {
- 
+  EndTotalTime();
   return _out;
 }
 
-template<typename CFG, typename WEIGHT>
+// Returns all pairs within radius
+template<typename RDMP, typename InputIterator, typename OutputIterator>
+OutputIterator 
+CGALNF::KClosestPairs(RDMP* _roadmap,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    size_t _k, OutputIterator _out) {
+  cerr << "ERROR:: CGALNF::KClosestPairs is not yet implemented. Exiting" << endl;
+  exit(1);
+}
+
+template<typename RDMP, typename InputIterator>
 void
-CGALNF<CFG,WEIGHT>::
-UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
-{  
-  int new_version = _rmp->m_pRoadmap->roadmapVCS.get_version_number();
-  if (this->m_cur_roadmap_version == new_version)
+CGALNF::UpdateInternalModel(RDMP* _rmp, InputIterator _first, InputIterator _last){  
+  typedef typename RDMP::VID VID;
+  typedef typename RDMP::CfgType CFG;
+  typedef typename RDMP::RoadmapGraphType RoadmapGraphType;
+  typedef typename RoadmapGraphType::RoadmapVCSType RoadmapVCSType;
+  typedef typename pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
+  RoadmapGraphType* map = _rmp->m_pRoadmap;
+
+  int newVersion = map->roadmapVCS.get_version_number();
+  if (this->m_curRoadmapVersion == newVersion)
     return;
-  
-  //cout << "Updating internal model from version " << this->m_cur_roadmap_version << " to " << new_version << endl;
-  
-  typename RoadmapVCS<CFG, WEIGHT>::cce_iter start;
-  if(this->m_cur_roadmap_version == -1) {
-    start = _rmp->m_pRoadmap->roadmapVCS.begin();
+
+  typename RoadmapVCSType::cce_iter start;
+  if(this->m_curRoadmapVersion == -1) {
+    start = map->roadmapVCS.begin();
   } else {
-    start = _rmp->m_pRoadmap->roadmapVCS.iter_at(m_cur_roadmap_version);
+    start = map->roadmapVCS.iter_at(m_curRoadmapVersion);
   }
-  typename RoadmapVCS<CFG, WEIGHT>::cce_iter end = _rmp->m_pRoadmap->roadmapVCS.end();
-  typename RoadmapVCS<CFG, WEIGHT>::cce_iter iter;
-  
-  CFG temp_cfg;
-  int dim = temp_cfg.DOF();
- // cout << "CGALNF::UpdateInternalModel - dim = " << dim << endl;
-  //VID _v = 0;
+  typename RoadmapVCSType::cce_iter end = map->roadmapVCS.end();
+  typename RoadmapVCSType::cce_iter iter;
+
+  size_t dim = CFG().DOF();
+ 
   for (iter = start; iter != end; iter++) {
     if ((*iter).second.IsTypeAddVertex()) {
-      //cout << "Add vertex event found... VID = " << (*iter).second.GetAddVertexEvent()->GetVID() << endl;
-      
-      VID vid_to_add = (*iter).second.GetAddVertexEvent()->GetVID();
-      CFG cfg_to_add;
-      
+
+      VID vidToAdd = (*iter).second.GetAddVertexEvent()->GetVID();
+
       // scale roadmap CFGs
-      cfg_to_add = (*(_rmp->m_pRoadmap->find_vertex(vid_to_add))).property();
-      
-      //cout << "Adding VID = " << vid_to_add << " CFG = " << (*iter).second.GetAddVertexEvent()->GetCFG() << endl;
-      //cout << "CFG: 0 " << cfg_to_add.GetSingleParam(0) << " -> " << cfg_data[0] << " ?=? " << cfg_to_add.GetSingleParam(0)/m_max_bbox_range << endl;
-      //cout << "CFG: 1 " << cfg_to_add.GetSingleParam(1) << " -> " << cfg_data[1] << " ?=? " << cfg_to_add.GetSingleParam(1)/m_max_bbox_range << endl;
-      //cout << "CFG: 2 " << cfg_to_add.GetSingleParam(2) << " -> " << cfg_data[2] << " ?=? " << cfg_to_add.GetSingleParam(2)/m_max_bbox_range << endl;
-      if (m_use_scaling) {
-        cfg_to_add.SetSingleParam(0, cfg_to_add.GetSingleParam(0)/m_max_bbox_range);
-        cfg_to_add.SetSingleParam(1, cfg_to_add.GetSingleParam(1)/m_max_bbox_range);
-        cfg_to_add.SetSingleParam(2, cfg_to_add.GetSingleParam(2)/m_max_bbox_range);
+      CFG cfgToAdd = GetCfg()(map, vidToAdd);
+
+      if (m_useScaling) {
+        cfgToAdd.SetSingleParam(0, cfgToAdd.GetSingleParam(0)/m_maxBBXRange);
+        cfgToAdd.SetSingleParam(1, cfgToAdd.GetSingleParam(1)/m_maxBBXRange);
+        cfgToAdd.SetSingleParam(2, cfgToAdd.GetSingleParam(2)/m_maxBBXRange);
       }
-      m_tree.insert(Point_d(dim, vid_to_add, cfg_to_add.GetData().begin(), cfg_to_add.GetData().end()));
       
-      //cout << "CGALNF::UpdateInternalModel :: adding point: " << (*iter).second.GetAddVertexEvent()->GetVID();
-      //for(vector<double>::const_iterator it = (*iter).second.GetAddVertexEvent()->GetCFG().GetData().begin();
-      //  it != (*iter).second.GetAddVertexEvent()->GetCFG().GetData().end(); ++it) {
-      //    cout << " " << *it;
-      //  }
-      //  cout << endl;
+      m_tree.insert(PointD(vidToAdd, dim, cfgToAdd.GetData().begin(), cfgToAdd.GetData().end()));
     }
   }
-  
-  m_cur_roadmap_version = new_version;  
+
+  //should not be included if using the roadmap version
+  if(!m_fromRDMPVersion){
+    delete m_tmpTree;
+    m_tmpTree = new Tree();
+    InputIterator V1;
+    for(V1 = _first; V1 != _last; ++V1){
+      CFG node = GetCfg()(map, V1);
+      m_tmpTree->insert(PointD(*V1, dim, node.GetData().begin(), node.GetData().end()));
+    }
+    m_queryTree = m_tmpTree;
+  }
+  else{
+    m_fromRDMPVersion = false;
+    //if(m_queryTree != NULL)
+    m_queryTree = &m_tree;
+  }
+
+  m_curRoadmapVersion = newVersion;  
 }
 
 #endif //end ifndef _CGAL_NEIGHBORHOOD_FINDER_H_

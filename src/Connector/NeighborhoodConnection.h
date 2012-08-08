@@ -158,6 +158,9 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, Stat
     ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
     InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){
 
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+
   if(this->m_debug){
     cout << endl; 
     PrintOptions(cout);
@@ -180,7 +183,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, Stat
   for(InputIterator itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
 
     // find cfg pointed to by itr1
-    CFG vCfg = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(itr1);
+    CFG vCfg = GetCfg()(_rm->m_pRoadmap, itr1);
     if(this->m_debug){
       cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << *itr1 << "  --> " << vCfg << endl;
     }
@@ -227,8 +230,11 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
     ColorMap& _cmap, VID _vid,
     InputIterator _closestFirst, InputIterator _closestLast,
     OutputIterator _collision){
+  
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
 
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
   LPOutput<CFG,WEIGHT> lpOutput;
   int success(m_iterSuccess);
   int failure(m_iterFailure);
@@ -241,8 +247,8 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
     if(this->m_debug) cout << " | VID = " << *itr2;
     if(this->m_debug) cout << " | dist = " << 
       dm->Distance( _rm->GetEnvironment(), 
-          pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid),
-          pmpl_detail::GetCfg<VIDIT>(_rm->m_pRoadmap)(itr2));
+          GetCfg()(_rm->m_pRoadmap, _vid),
+          GetCfg()(_rm->m_pRoadmap, itr2));
 
     // stopping conditions
     if(this->m_countFailures && failure >= m_fail){
@@ -304,8 +310,8 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
     CfgType col;
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
         IsConnected( _rm->GetEnvironment(), _stats, dm,
-          pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid),
-          pmpl_detail::GetCfg<VIDIT>(_rm->m_pRoadmap)(itr2),
+          GetCfg()(_rm->m_pRoadmap, _vid),
+          GetCfg()(_rm->m_pRoadmap, itr2),
           col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, 
           (!this->m_addAllEdges) )){
 
@@ -367,15 +373,15 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
   }
   else {
     // find the k-closest neighbors
-    NeighborhoodFinder::NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod);
+    NeighborhoodFinder::NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod);
     if(_itrLast - _itrFirst == (int)_rm->m_pRoadmap->get_num_vertices()) 
-      return this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, cfg, _k, _closestIter);
+      return nfptr->KClosest(_rm, cfg, _k, _closestIter);
     else 
-      return this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, _rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
+      return nfptr->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
   } 
 #else
   // find k-closest using just brute force
-  BFNF<CFG,WEIGHT>* bf_finder = new BFNF<CFG,WEIGHT>(this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod());
+  BFNF<CFG,WEIGHT>* bf_finder = new BFNF<CFG,WEIGHT>(this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod());
   return bf_finder->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
 #endif
 }            

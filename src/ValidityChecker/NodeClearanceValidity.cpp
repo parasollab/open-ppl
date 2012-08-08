@@ -25,7 +25,7 @@ bool NodeClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _st
   DistanceMetric::DistanceMetricPointer dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel);
   vector<VID> KClosest;
 
-  GetMPProblem()->GetNeighborhoodFinder()->KClosest(GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod( m_nfLabel),
+  GetMPProblem()->GetNeighborhoodFinder()->GetMethod(m_nfLabel)->KClosest(
       GetMPProblem()->GetMPRegion(0)->GetRoadmap(), static_cast<CfgType>(_cfg) , 1, back_inserter(KClosest) );
 
   if ( KClosest.empty() ){

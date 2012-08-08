@@ -422,7 +422,9 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
 
    #endif
 
-   RoadmapVCS<VERTEX, WEIGHT> roadmapVCS;
+  typedef RoadmapVCS<VERTEX, WEIGHT> RoadmapVCSType;
+
+  RoadmapVCSType roadmapVCS;
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -1125,57 +1127,30 @@ namespace pmpl_detail
 {
   //helper function to call dereferece on an iterator whose
   //value_type is VID and convert to CfgType
-  template <typename T>
-    struct GetCfg
-    : public unary_function<T, CfgType&>
-    {
-      ///fix me::  after constness in STAPL is resolved
-      RoadmapGraph<CfgType, WeightType>* m_pMap;
-      
-      GetCfg(RoadmapGraph<CfgType, WeightType>* _pMap) : m_pMap(_pMap) {}
-      ~GetCfg() {}
+  template<typename RDMP>
+    struct GetCfg {
+      GetCfg(){}
+      ~GetCfg(){}
 
-      CfgType operator()(T& t) const
-      {
-        return (*(m_pMap->find_vertex(*t))).property();
+      template<typename T>
+        typename RDMP::vertex_property operator()(const RDMP* _map, T& _t) const {
+          return (*(_map->find_vertex(*_t))).property();
+        }
+
+      //specialization for a roadmap graph iterator, calls property()
+      //template<typename RDMP::VI>
+      typename RDMP::vertex_property operator()(const RDMP* _map, const typename RDMP::VI& _t) const {
+        return (*_t).property();
+      }
+
+      //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
+      //calls find_vertex(..) on VID to call property()
+      //To do:what is the purpose for this, how is it diffrent from above
+      typename RDMP::vertex_property operator()(const RDMP* _map, typename RDMP::VID _t) const {
+        return (*_map->find_vertex(_t)).property();
       }
     };
 
-  //specialization for a roadmap graph iterator, calls property()
-  template <>
-    struct GetCfg<RoadmapGraph<CfgType, WeightType>::VI>
-    : public unary_function<RoadmapGraph<CfgType, WeightType>::VI, CfgType&>
-    {
-      const RoadmapGraph<CfgType, WeightType>* m_pMap;
-
-      GetCfg(const RoadmapGraph<CfgType, WeightType>* _pMap) : m_pMap(_pMap) {}
-      ~GetCfg() {}
-      CfgType operator()(const RoadmapGraph<CfgType, WeightType>::VI& t) const
-      {
-        //return t->property();
-        return (*(t)).property();
-      }
-    };
-    
-
-  //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
-  //calls find_vertex(..) on VID to call property()
-  //To do:what is the purpose for this, how is it diffrent from above
-
-  template <>
-    struct GetCfg<RoadmapGraph<CfgType, WeightType>::VID>
-    : public unary_function<RoadmapGraph<CfgType, WeightType>::VID, CfgType&>
-    {
-       RoadmapGraph<CfgType, WeightType>* m_pMap;
-
-      GetCfg( RoadmapGraph<CfgType, WeightType>* _pMap) : m_pMap(_pMap) {}
-      ~GetCfg() {}
-      CfgType operator()(const RoadmapGraph<CfgType, WeightType>::VID& t) const
-      {
-        return (*(m_pMap->find_vertex(t))).property();
-      }
-    };
- 
   //helper function to call dereferece on an iterator whose value_type is VID
   //needed to get around the fact that a roadmap graph iterator
   //requires an extra descriptor() call

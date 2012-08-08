@@ -256,8 +256,11 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
     return pairs;
   }
 
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
-  CFG cfg = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid);
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
+  CFG cfg = GetCfg()(_rm->m_pRoadmap, _vid);
   vector<pair<CfgVEType<CFG,WEIGHT>,double> > kp;
   pair<CfgVEType<CFG,WEIGHT>,double> tmp2;
 
@@ -267,7 +270,7 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
 
   // now go through all kp and find closest m_kClosest
   for (InputIterator v1 = _verts1; v1 != _verts2; v1++) {
-    CFG c1 = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(v1);
+    CFG c1 = GetCfg()(_rm->m_pRoadmap, v1);
     if (cfg != c1 ) { 
       tmp2.first = CfgVEType<CFG,WEIGHT>(_vid, *v1);
       tmp2.second = dm->Distance(_rm->GetEnvironment(), cfg, c1);
@@ -280,8 +283,8 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
     VID vd1 = _edges[e1].first.first;
     VID vd2 = _edges[e1].first.second;
 
-    CFG endpt1 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(vd1);
-    CFG endpt2 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(vd2);
+    CFG endpt1 = GetCfg()(_rm->m_pRoadmap, vd1);
+    CFG endpt2 = GetCfg()(_rm->m_pRoadmap, vd2);
     CFG tmp;
     tmp.ClosestPtOnLineSegment(cfg,endpt1,endpt2);
 
@@ -295,7 +298,7 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
   }
 
   size_t k = min(m_kClosest, kp.size()-1);
-  partial_sort(kp.begin(), kp.begin()+k, kp.end(), compare_second<CfgVEType<CFG,WEIGHT>,double>());
+  partial_sort(kp.begin(), kp.begin()+k, kp.end(), CompareSecond<CfgVEType<CFG,WEIGHT>,double>());
 
   for (size_t p = 0; p < k; p++){
     pairs.push_back( kp[p].first );
@@ -324,7 +327,10 @@ ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats,
     InputIterator _newV1, InputIterator _newV2,
     OutputIterator _collision){
 
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(this->m_nfMethod)->GetDMMethod();
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
+  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
   typename LocalPlanners<CFG, WEIGHT>::LocalPlannerPointer lp =
     this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod);
 
@@ -350,11 +356,6 @@ ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats,
     edges.push_back(single_edge);
   }
 
-  ///Modified for VC
-#if defined(_WIN32)
-  using namespace std;
-#endif
-
   // for each "real" cfg in roadmap
   LPOutput<CFG,WEIGHT> lpOutput;
   for (InputIterator v = _newV1; v != _newV2; ++v) {
@@ -371,14 +372,14 @@ ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats,
         }
       }
 
-      CFG cfg1 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(kp->m_vid1);
+      CFG cfg1 = GetCfg()(_rm->m_pRoadmap, kp->m_vid1);
       CFG cfg2;
 
       if ( kp->m_cfg2IsOnEdge ) {
         cfg2 = kp->m_cfgOnEdge;
       }
       else{
-        cfg2 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(kp->m_vid2);
+        cfg2 = GetCfg()(_rm->m_pRoadmap, kp->m_vid2);
       }
 
       bool test1 = !_rm->m_pRoadmap->IsEdge(cfg1, cfg2);

@@ -2,6 +2,7 @@
 #define OPTIMALREWIRE_H_
 
 #include "OptimalConnection.h"
+#include "DistanceMetrics.h"
 
 template <typename CFG, typename WEIGHT>	
 class OptimalRewire : public OptimalConnection<CFG, WEIGHT> {
@@ -76,8 +77,11 @@ template <typename CFG, typename WEIGHT>
 double
 OptimalRewire<CFG, WEIGHT>::GetDistance(VID _vid1, VID _vid2, Roadmap<CFG, WEIGHT>* _rm) {
 
-  CFG cfg1 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid1);
-  CFG cfg2 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid2);
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
+  CFG cfg1 = GetCfg()(_rm->m_pRoadmap, _vid1);
+  CFG cfg2 = GetCfg()(_rm->m_pRoadmap, _vid2);
 
   double distance = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm)->
     Distance(this->GetMPProblem()->GetEnvironment(), cfg1, cfg2);
@@ -93,11 +97,14 @@ OptimalRewire<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats
     InputIterator _iter2First, InputIterator _iter2Last, 
     OutputIterator _collision) {
 
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
   if (this->m_debug) { cout << endl; this->PrintOptions (cout); }
   ///To do - uncomment after const vertex iter problem  in STAPL pGraph is fixed
 #ifndef _PARALLEL
   for (InputIterator iter1 = _iter1First; iter1 != _iter1Last; ++iter1) {
-    CFG cfg = pmpl_detail::GetCfg<InputIterator>(_rm->m_pRoadmap)(iter1);
+    CFG cfg = GetCfg()(_rm->m_pRoadmap, iter1);
     if (this->m_debug) {
       cout << "Attempting connection from " << *iter1 << "--> " << cfg << endl;
     }
@@ -116,6 +123,10 @@ template<typename OutputIterator>
 void 
 OptimalRewire<CFG,WEIGHT>::ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
     VID _vid, vector<VID>& _closest, OutputIterator _collision) {
+  
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   LPOutput <CFG, WEIGHT> lpOutput, minlpOutput;
   typename RoadmapGraph<CFG, WEIGHT>::vertex_iterator vi = _rm->m_pRoadmap->find_vertex(_vid);
@@ -134,7 +145,7 @@ OptimalRewire<CFG,WEIGHT>::ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClas
       if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
           IsConnected(_rm->GetEnvironment(), _stats, dm,
             vi->property(),
-            pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(neighbor),
+            GetCfg()(_rm->m_pRoadmap, neighbor),
             col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, true )) {
         vmin = neighbor;
         currentMin = neighborCost + GetDistance(_vid, neighbor, _rm);
@@ -146,8 +157,8 @@ OptimalRewire<CFG,WEIGHT>::ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClas
   if (vmin != parent) {
     _rm->m_pRoadmap->AddEdge(_vid, vmin, minlpOutput.edge);
     vi->property().SetStat("Parent", vmin);
-    CFG cfg1 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(parent);
-    CFG cfg2 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid);
+    CFG cfg1 = GetCfg()(_rm->m_pRoadmap, parent);
+    CFG cfg2 = GetCfg()(_rm->m_pRoadmap, _vid);
     _rm->m_pRoadmap->delete_edge(parent, _vid);
     _rm->m_pRoadmap->delete_edge(_vid, parent);
     VDRemoveEdge(cfg1, cfg2);     // for vizmo
@@ -165,8 +176,8 @@ OptimalRewire<CFG,WEIGHT>::ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClas
     if( ( vidCost + GetDistance(neighbor, _vid, _rm)) < neighborCost ) {
       if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
           IsConnected(_rm->GetEnvironment(), _stats, dm,
-            pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid),
-            pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(neighbor),
+            GetCfg()(_rm->m_pRoadmap, _vid),
+            GetCfg()(_rm->m_pRoadmap, neighbor),
             col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, true )) {
         // Getting the parent
         vi = _rm->m_pRoadmap->find_vertex(neighbor);
@@ -176,8 +187,8 @@ OptimalRewire<CFG,WEIGHT>::ConnectNeighbors (Roadmap<CFG, WEIGHT>* _rm, StatClas
           parent = vi->property().GetStat("Parent");
         }
         // Removing the parent-child edge
-        CFG cfg1 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(parent);
-        CFG cfg2 = pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(neighbor);
+        CFG cfg1 = GetCfg()(_rm->m_pRoadmap, parent);
+        CFG cfg2 = GetCfg()(_rm->m_pRoadmap, neighbor);
         _rm->m_pRoadmap->delete_edge(parent, neighbor);
         VDRemoveEdge(cfg1, cfg2);
         _rm->m_pRoadmap->delete_edge(neighbor, parent);

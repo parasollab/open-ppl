@@ -10,87 +10,57 @@ using namespace std;
 
 class Environment;
 
-template<typename CFG, typename WEIGHT>
 class RadiusNF: public NeighborhoodFinderMethod {
-
-  protected:
-  
-    double m_radius;
-
   public:
-
-    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  
-    RadiusNF(XMLNodeReader& _node, MPProblem* _problem) : NeighborhoodFinderMethod(_node, _problem) {
-      ParseXML(_node);
-      if(this->m_debug)
-        PrintOptions(cout);
-    }
+    RadiusNF(string _dmm = "", double _r = 1.0, string _label = "", MPProblem* _problem = NULL) 
+      : NeighborhoodFinderMethod(_dmm, _label, _problem), m_radius(_r) {
+        SetName("RadiusNF");
+      }
     
-    RadiusNF(shared_ptr<DistanceMetricMethod> _dmm, string _label = "",
-        MPProblem* _problem = NULL) : NeighborhoodFinderMethod(_dmm, _label, _problem) {}
-    
-    void ParseXML(XMLNodeReader& _node) {
-      m_radius = _node.numberXMLParameter("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
-      _node.warnUnrequestedAttributes();
-    }
+    RadiusNF(XMLNodeReader& _node, MPProblem* _problem) 
+      : NeighborhoodFinderMethod(_node, _problem) {
+        SetName("RadiusNF");
+        m_radius = _node.numberXMLParameter("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
+        _node.warnUnrequestedAttributes();
+        
+        if(this->m_debug)
+          PrintOptions(cout);
+      }
     
     virtual ~RadiusNF() {}
     
-    virtual const string GetName () const {
-      return RadiusNF::GetClassName();
-    }
-    
-    static const string GetClassName() {
-      return "RadiusNF";
-    }
-    
     virtual void PrintOptions(ostream& _os) const {
-      _os << this->GetClassName() << endl;
-      _os << "\tradius = " << m_radius << endl;
+      NeighborhoodFinderMethod::PrintOptions(_os);
+      _os << "radius: " << m_radius << " ";
     }
     
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator KClosest(Roadmap<CFG, WEIGHT>* _roadmap, InputIterator _inFirst,
-        InputIterator _inLast, VID _v, int _k, OutputIterator _out);
-    
-    // The main worker, all other KClosest() methods call this one
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator KClosest(Roadmap<CFG, WEIGHT>* _roadmap, InputIterator _inFirst,
-        InputIterator _inLast, CFG _cfg, int _k, OutputIterator _out);
-    
-    // Operates over an entire roadmap to find nodes within radius to a VID or CFG
-    // NOTE: These are the preferred methods for kClosest computations
-    template <typename OutputIterator>
-    OutputIterator KClosest(Roadmap<CFG, WEIGHT>* _roadmap, 
-        VID _v, int _k, OutputIterator _out);
-    
-    template <typename OutputIterator>
-    OutputIterator KClosest(Roadmap<CFG, WEIGHT>* _roadmap, 
-        CFG _cfg, int _k, OutputIterator _out);
-    
-    // KClosest that operate over two ranges of VIDS
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator KClosestPairs(Roadmap<CFG, WEIGHT>* _roadmap,
-        InputIterator _in1First, InputIterator _in1Last, 
-        InputIterator _in2First, InputIterator _in2Last, 
-        int _k, OutputIterator _out);
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      OutputIterator KClosest(RDMP* _rmp, 
+          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out);
+
+    // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
+    // represent the _kclosest pairs of VIDs between the two ranges.
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      OutputIterator KClosestPairs(RDMP* _rmp,
+          InputIterator _first1, InputIterator _last1, 
+          InputIterator _first2, InputIterator _last2, 
+          size_t _k, OutputIterator _out);
+
+  private:
+    double m_radius;
 };
 
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator RadiusNF<CFG, WEIGHT>::KClosest(Roadmap<CFG, WEIGHT>* _roadmap, 
-    InputIterator _inFirst, InputIterator _inLast, VID _v, int _k, OutputIterator _out) {
-  return KClosest(_roadmap, _inFirst, _inLast,
-      (_roadmap->m_pRoadmap->find_vertex(_v))->property(), _k, _out);
-}
-
 // Returns all nodes within radius from _cfg
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator RadiusNF<CFG, WEIGHT>::KClosest(Roadmap<CFG, WEIGHT>* _roadmap, 
-    InputIterator _inFirst, InputIterator _inLast, CFG _cfg, int _k, OutputIterator _out) {
+template<typename RDMP, typename InputIterator, typename OutputIterator>
+OutputIterator 
+RadiusNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last, 
+    typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out) {
   
+  typedef typename RDMP::VID VID;
+  typedef typename RDMP::CfgType CFG;
+  typedef typename RDMP::RoadmapGraphType RoadmapGraphType;
+  typedef typename pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+
   // TO DO NOTE: A temporary fix to support parallel runtime. The problem here is that is the way
   // we pass pointer around which is a bit ugly with parallelism. In this particular case
   // the pointer to GetMPProblem became invalid because of the way RadiusNF is called from
@@ -105,23 +75,23 @@ OutputIterator RadiusNF<CFG, WEIGHT>::KClosest(Roadmap<CFG, WEIGHT>* _roadmap,
   IncrementNumQueries();
   
   Environment* env = _roadmap->GetEnvironment();
-  RoadmapGraph<CFG, WEIGHT>* map = _roadmap->m_pRoadmap;
+  RoadmapGraphType* map = _roadmap->m_pRoadmap;
 
   vector<pair<VID, double> > inRadius;
 
   // Find all nodes within radius
-  for(InputIterator it = _inFirst; it != _inLast; it++) {
-    CFG node = pmpl_detail::GetCfg<InputIterator>(map)(it);
+  for(InputIterator it = _first; it != _last; it++) {
+    CFG node = GetCfg()(map, it);
     if(node == _cfg) // Don't connect to itself
       continue;
 
     // If within radius, add to list
-    double dist = dmm->Distance(env, _cfg, node);
+    double dist = GetDMMethod()->Distance(env, _cfg, node);
     if(dist <= m_radius)
       inRadius.push_back(make_pair(*it, dist));
   }
  
-  sort(inRadius.begin(), inRadius.end(), compare_second<VID, double>());
+  sort(inRadius.begin(), inRadius.end(), CompareSecond<VID, double>());
   
   // Output results
   for(size_t i = 0; i < inRadius.size(); i++)
@@ -135,51 +105,40 @@ OutputIterator RadiusNF<CFG, WEIGHT>::KClosest(Roadmap<CFG, WEIGHT>* _roadmap,
   return _out;
 }
 
-template<typename CFG, typename WEIGHT>
-template<typename OutputIterator>
-OutputIterator RadiusNF<CFG, WEIGHT>::KClosest(Roadmap<CFG, WEIGHT>* _roadmap, 
-    VID _v, int _k, OutputIterator _out) { 
-  return KClosest(_roadmap, 
-      (_roadmap->m_pRoadmap->find_vertex(_v))->property(), _k, _out);
-}
-
-template<typename CFG, typename WEIGHT>
-template<typename OutputIterator>
-OutputIterator RadiusNF<CFG,WEIGHT>::KClosest(Roadmap<CFG, WEIGHT>* _roadmap, 
-    CFG _cfg, int _k, OutputIterator _out) {
-  return KClosest(_roadmap, _roadmap->m_pRoadmap->descriptor_begin(),
-      _roadmap->m_pRoadmap->descriptor_end(), _cfg, _k, _out);
-}
-
 // Returns all pairs within radius
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator RadiusNF<CFG, WEIGHT>::KClosestPairs(Roadmap<CFG, WEIGHT>* _roadmap,
-    InputIterator _in1First, InputIterator _in1Last,
-    InputIterator _in2First, InputIterator _in2Last,
-    int _k, OutputIterator _out) {
+template<typename RDMP, typename InputIterator, typename OutputIterator>
+OutputIterator 
+RadiusNF::KClosestPairs(RDMP* _roadmap,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    size_t _k, OutputIterator _out) {
    
+  typedef typename RDMP::VID VID;
+  typedef typename RDMP::CfgType CFG;
+  typedef typename RDMP::RoadmapGraphType RoadmapGraphType;
+  typedef typename pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+
   Environment* env = _roadmap->GetEnvironment();
-  RoadmapGraph<CFG, WEIGHT>* map = _roadmap->m_pRoadmap;
+  RoadmapGraphType* map = _roadmap->m_pRoadmap;
   vector<pair<pair<VID, VID >, double> > inRadius;
  
   // Find all pairs within radius
-  for(InputIterator it1 = _in1First; it1 != _in1Last; it1++) {
-    CFG node1 = pmpl_detail::GetCfg<InputIterator>(map)(it1);
-    for(InputIterator it2 = _in2First; it2 != _in2Last; it2++) {
+  for(InputIterator it1 = _first1; it1 != _last1; it1++) {
+    CFG node1 = GetCfg()(map, it1);
+    for(InputIterator it2 = _first2; it2 != _last2; it2++) {
       if(*it1 == *it2) // Don't connect to itself
         continue;
-      CFG node2 = pmpl_detail::GetCfg<InputIterator>(map)(it2);
+      CFG node2 = GetCfg()(map, it2);
       
       // If within radius, add to list
-      double dist = dmm->Distance(env, node1, node2);
+      double dist = GetDMMethod()->Distance(env, node1, node2);
       if(dist <= m_radius)
         inRadius.push_back(make_pair(make_pair(*it1, *it2), dist));
     }
   }
  
   // Sort pairs by increasing distance
-  sort(inRadius.begin(), inRadius.end(), compare_second<pair<VID, VID>, double>());
+  sort(inRadius.begin(), inRadius.end(), CompareSecond<pair<VID, VID>, double>());
   
   // Output results
   for(size_t i = 0; i < inRadius.size(); i++)

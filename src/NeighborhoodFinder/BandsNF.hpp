@@ -1,1076 +1,672 @@
-#ifndef _BANDS_NEIGHBORHOOD_FINDER_H_
-#define _BANDS_NEIGHBORHOOD_FINDER_H_
+#ifndef BANDSNF_H_
+#define BANDSNF_H_
 
 #include "NeighborhoodFinderMethod.hpp"
 #include "MPProblem.h"
 
 #include <vector>
-#include <functional>
 using namespace std;
 
+class Policy;
+class ClosestPolicy;
+class RandomPolicy;
+class PreferentialPolicy;
+class RankWeightedRandomPolicy;
+class DistanceWeightedRandomPolicy;
+
+namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
+  typedef boost::mpl::list<
+    ClosestPolicy,
+    RandomPolicy,
+    PreferentialPolicy,
+    RankWeightedRandomPolicy,
+    DistanceWeightedRandomPolicy
+    > PolicyList;
+  
+  template<typename P, typename RDMP, typename I, typename O>
+      struct VirtualSelectNeighbors{
+        public:
+          VirtualSelectNeighbors(P* _v, RDMP* _r, I _f, I _l, O _o) : 
+            m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l), m_output(_o){}
+
+          template<typename T>
+            void operator()(T& _t) {
+              T* tptr = dynamic_cast<T*>(m_memory);
+              if(tptr != NULL){
+                tptr->SelectNeighbors(m_rdmp, m_first, m_last, m_output);
+              }
+            }
+        private:
+          P* m_memory;
+          RDMP* m_rdmp;
+          I m_first, m_last;
+          O m_output;
+      };
+}
 
 /////// Policy definitions
 class Policy {
+  public:
+    Policy(size_t _k = 0, bool _debug = false) : m_k(_k), m_debug(_debug) {}
+    virtual ~Policy() {}
 
-public:
-  typedef RoadmapGraph<CfgType, WeightType>::VID VID;
-  typedef vector< pair<VID, double> >::iterator VEC_ITR;
-  
-  Policy() { m_k = 0; }
-  
-  Policy(int k, bool debug) {
-    m_k = k;
-    m_debug = debug;
-  }
-  
-  virtual ~Policy() {}
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
+        typedef pmpl_detail::PolicyList PolicyList;
+        boost::mpl::for_each<PolicyList>(pmpl_detail::VirtualSelectNeighbors<
+            Policy, RDMP, InputIterator, OutputIterator>(this, _rmp, _first, _last, _out));
+      }
 
-  virtual vector< pair<VID, double> >
-    SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last) = 0;
-  
-  int getK() { return m_k; }
-  
-protected:
-  int m_k;
-  bool m_debug;
+  protected:
+    size_t m_k;
+    bool m_debug;
 };
 
 class ClosestPolicy : public Policy {
+  public:
+    ClosestPolicy(size_t _k = 0, bool _debug = false) : Policy(_k, _debug) { }
+    virtual ~ClosestPolicy() {}
 
-public:
-  ClosestPolicy() : Policy() { }
-  ClosestPolicy(int k, bool debug) : Policy(k, debug) { }
-  virtual ~ClosestPolicy() {}
-
-  vector< pair<VID, double> >
-  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
-  {
-    if (m_debug) cout << "ClosestPolicy::SelectNeighbors()" << endl;
-    
-    int max_index = 0;
-    double max_value = MAX_DIST;
-    vector< pair<VID, double> > neighbors;
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
         
-    for (VEC_ITR itr = _candidates_first; itr != _candidates_last; ++itr) {
-      
-      double dist = (*itr).second;
-      if((int) neighbors.size()< getK()){
-        for(vector< pair<VID, double> >::iterator iter2 = neighbors.begin(); iter2!=neighbors.end();iter2++){
-	  if((*iter2).second > (*itr).second) {
-	    swap(*itr,*iter2);
-	  }
-	}
-	neighbors.push_back(*itr);
-      }else{
-        // if this distance is less than the existing max, we'll replace it 
-        if(dist < neighbors[max_index].second) { 
-          neighbors[max_index] = *itr;
-          max_value = dist;
+        if(m_debug) cout << "ClosestPolicy::SelectNeighbors()" << endl;
 
-          //search for new max_index (faster O(k) than sort O(k log k) )
-          for (int p = 0; p < getK(); ++p) {
-            if (max_value < neighbors[p].second) {
-              max_value = neighbors[p].second;
-              max_index = p;
-            }
+        typedef typename RDMP::VID VID;
+        priority_queue<pair<VID, double>, vector<pair<VID, double> >, CompareSecond<VID, double> > pq;
+        for(InputIterator it = _first; it != _last; it++) {
+          if(pq.size() < m_k)
+            pq.push(*it);
+          // If better than the worst so far, replace worst so far
+          else if(it->second < pq.top().second) {
+            pq.pop();
+            pq.push(*it);
           }
         }
+        
+        // Transfer k closest to vector, sorted greatest to least dist
+        vector<pair<VID, double> > closest;
+        while(!pq.empty()) {
+          closest.push_back(pq.top());
+          pq.pop();
+        }
+        // Reverse order
+        for(typename vector<pair<VID, double> >::reverse_iterator it = closest.rbegin(); it < closest.rend(); it++) {
+          *_out++ = *it;
+        }
       }
-    }
-    
-    return neighbors;
-  }
-  
+
 };
 
 class RandomPolicy : public Policy {
+  public:
+    RandomPolicy(size_t _k = 0, bool _debug = false) : Policy(_k, _debug) { }
+    virtual ~RandomPolicy() {}
 
-public:
-  RandomPolicy() : Policy() { }
-  RandomPolicy(int k, bool debug) : Policy(k, debug) { }
-  virtual ~RandomPolicy() {}
-
-  vector< pair<VID, double> >
-  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
-  {
-    if (m_debug) cout << "RandomPolicy::SelectNeighbors()" << endl;
-    
-    vector< pair<VID, double> > neighbors;
-    
-    int max_iter = getK();
-    if (_candidates_last - _candidates_first < max_iter)
-      max_iter = _candidates_last - _candidates_first;
-      
-    for (int i = 0; i < max_iter; i++) {
-      
-      pair<VID, double> p;
-      
-      // select random candidate that hasn't been added yet
-      bool done = false;
-      while (!done) {
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
         
-        int id = (int)(LRand()%(_candidates_last - _candidates_first));
-        p = *(_candidates_first + id);
+        if(m_debug) cout << "RandomPolicy::SelectNeighbors()" << endl;
 
-        VID v = p.first;        
-        if (m_debug) cout << "\tchecking id = " << id << ", VID = " << v;
-        
-        // check to see if this has been added
-        done = true;
-        for (VEC_ITR n_itr = neighbors.begin(); n_itr != neighbors.end(); ++n_itr)
-          if ((*n_itr).first == v) {
-            if (m_debug) cout << " | already added" << endl;
-            done = false;
+        vector<typename RDMP::VID> neighbors;
+
+        size_t maxIter = m_k;
+        if(_last - _first < (int)maxIter)
+          maxIter = _last - _first;
+
+        for(size_t i = 0; i < maxIter; i++) {
+          InputIterator p;
+
+          // select random candidate that hasn't been added yet
+          bool done = false;
+          while(!done) {
+            
+            size_t id = (size_t)(LRand()%(_last - _first));
+            p = _first + id;
+
+            typename RDMP::VID v = p->first;        
+            if(m_debug) cout << "\tchecking id = " << id << ", VID = " << v;
+
+            // check to see if this has been added
+            if(find(neighbors.begin(), neighbors.end(), v) == neighbors.end()){
+              if(m_debug) cout << " | added!" << endl;
+              neighbors.push_back(v);
+              *_out++ = *p;
+              break;
+            }
           }
+        }
       }
-      neighbors.push_back(p);
-      if (m_debug) cout << " | added!" << endl;
-    }
-  
-    return neighbors;
-  }
-  
+
 };
 
 class PreferentialPolicy : public Policy {
+  public:
+    PreferentialPolicy(size_t _k = 0, bool _debug = false) : Policy(_k, _debug) {}
+    virtual ~PreferentialPolicy() {}
 
-public:
-  PreferentialPolicy() : Policy() { }
-  PreferentialPolicy(int k, bool debug) : Policy(k, debug) { }
-  virtual ~PreferentialPolicy() {}
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
 
-  vector< pair<VID, double> >
-  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
-  {
-    if (m_debug) cout << "PreferentialPolicy::SelectNeighbors()" << endl;
-    
-    vector< pair<VID, double> > neighbors;
-   
-    int found = 0;
-    int max_iter = getK();
-    if (_candidates_last - _candidates_first < max_iter)
-      max_iter = _candidates_last - _candidates_first;
+        if(m_debug) cout << "PreferentialPolicy::SelectNeighbors()" << endl;
 
-    int set_degree = candidate_set_degree(_rmp, _candidates_first, _candidates_last);
-      
-    while (found < max_iter) {
-      // iterate through candidate set, adding as neighbor with probability = pref_prob(_rmp, v, n)
-      for (VEC_ITR itr = _candidates_first; itr != _candidates_last; ++itr) {
-        double drand = DRand();
-        pair<VID, double> p = *itr;
-        VID v = p.first;
-        double prob = pref_prob(_rmp, v, _candidates_last - _candidates_first, set_degree);
-        if (m_debug) cout << "found = " << found << ", VID = " << v << ", drand = " << drand << ", prob = " << prob;
-        if (drand < prob) {
-          if (m_debug) cout << " ||| ";
+        vector<typename RDMP::VID> neighbors;
 
-          bool exists = false;
-          for (VEC_ITR n_itr = neighbors.begin(); n_itr != neighbors.end(); ++n_itr) {
-            if ((*n_itr).first == v) {
-              if (m_debug) cout << " already in set...";
-              exists = true;
+        size_t found = 0;
+        size_t maxIter = m_k;
+        if(_last - _first < (int)maxIter)
+          maxIter = _last - _first;
+
+        size_t setDegree = CandidateSetDegree(_rmp, _first, _last);
+
+        while(found < maxIter) {
+          // iterate through candidate set, adding as neighbor with probability = PrefProb(_rmp, v, n)
+          for(InputIterator itr = _first; itr != _last; ++itr) {
+            double drand = DRand();
+            pair<typename RDMP::VID, double> p = *itr;
+            typename RDMP::VID v = p.first;
+            double prob = PrefProb(_rmp, v, _last - _first, setDegree);
+            if(m_debug) cout << "found = " << found << ", VID = " << v << ", drand = " << drand << ", prob = " << prob;
+            if(drand < prob) {
+              if(m_debug) cout << " ||| ";
+
+              if(find(neighbors.begin(), neighbors.end(), v) == neighbors.end()){
+                neighbors.push_back(v);
+                *_out++ = p;
+                if (m_debug) cout << " added!";
+                found++;
+              }
             }
-          } 
-
-          if (!exists) {
-            neighbors.push_back(p);
-            if (m_debug) cout << " added!";
-            found++;
+            if(m_debug) cout << endl;
+            if(found == maxIter)
+              break;
           }
-        }
-        if (m_debug) cout << endl;
-        if (found == max_iter) {
-          break;
-        }
+        }  
       }
-    }  
-  
-    return neighbors;
-  }
-  
-  //////////////////////
-  // Probability function
-  double pref_prob(
-          Roadmap<CfgType, WeightType>* _rm, VID _vid, int _n, int _tot_degree) {
-    int candidate_degree = _rm->m_pRoadmap->get_degree(_vid);
-    int total_degree = _tot_degree;
-    if (_tot_degree == -1) total_degree = _rm->m_pRoadmap->get_num_edges(); 
-    if (m_debug) cout << "pref_prob(" << _vid << ", " << _n << ") = " << 1 + candidate_degree << " / " << _n + total_degree << endl;
-    return ((double)(1 + candidate_degree) / (double)(_n + total_degree));
-  }
 
-  //////////////////////
-  // Get the total degree of the candidate set
-  int candidate_set_degree(
-          Roadmap<CfgType, WeightType>* _rm, VEC_ITR _candidates_first, VEC_ITR _candidates_last) {
-    int total_degree = 0;
-    for (VEC_ITR itr = _candidates_first; itr != _candidates_last; ++itr) {
-      pair<VID, double> p = *itr;
-      int candidate_degree = _rm->m_pRoadmap->get_degree(p.first);
-      total_degree += candidate_degree;
-      if (m_debug) cout << "candidate_set_degree += " << candidate_degree << endl;
-    }
-    return total_degree;
-  }
+    //////////////////////
+    // Probability function
+    template<typename RDMP>
+      double PrefProb(RDMP* _rm, typename RDMP::VID _vid, size_t _n, size_t _totDegree) {
+        size_t candidateDegree = _rm->m_pRoadmap->get_degree(_vid);
+        size_t totalDegree = _totDegree;
+        if (_totDegree == (size_t)-1) totalDegree = _rm->m_pRoadmap->get_num_edges(); 
+        if (m_debug) cout << "PrefProb(" << _vid << ", " << _n << ") = " << 1 + candidateDegree << " / " << _n + totalDegree << endl;
+        return ((double)(1 + candidateDegree) / (double)(_n + totalDegree));
+      }
+
+    //////////////////////
+    // Get the total degree of the candidate set
+    template<typename RDMP, typename InputIterator>
+      size_t CandidateSetDegree(RDMP* _rm, InputIterator _first, InputIterator _last) {
+        size_t totalDegree = 0;
+        for (InputIterator itr = _first; itr != _last; ++itr) {
+          size_t candidateDegree = _rm->m_pRoadmap->get_degree(itr->first);
+          totalDegree += candidateDegree;
+          if (m_debug) cout << "CandidateSetDegree += " << candidateDegree << endl;
+        }
+        return totalDegree;
+      }
 };
 
 class RankWeightedRandomPolicy : public Policy {
+  public:  
+    RankWeightedRandomPolicy(size_t _k = 0, double _alpha = 0.0, bool _debug = false) : Policy(_k, _debug) { m_alpha = _alpha; }
+    virtual ~RankWeightedRandomPolicy() {}
 
-public:  
-  RankWeightedRandomPolicy() : Policy() { }
-  RankWeightedRandomPolicy(int k, double alpha, bool debug) : Policy(k, debug) { m_alpha = alpha; }
-  virtual ~RankWeightedRandomPolicy() {}
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
 
-  vector< pair<VID, double> >
-  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
-  {
-    if (m_debug) cout << "RankWeightedRandomPolicy::SelectNeighbors()" << endl;
-    
-    vector< pair<VID, double> > neighbors;
-    
-    int max_iter = getK();
-    if (_candidates_last - _candidates_first < max_iter)
-      max_iter = _candidates_last - _candidates_first;
-      
-    double max_rank = (_candidates_last - _candidates_first);
-    
-    if (m_debug) cout << "\t\tmax_rank = " << max_rank << endl;
-    
-    for (int i = 0; i < max_iter; i++) {
-      pair<VID, double> p;
-      
-      // select random candidate that hasn't been added yet
-      bool done = false;
-      while (!done) {
-        
-        int id = (int)(LRand()%(_candidates_last - _candidates_first));
-        p = *(_candidates_first + id);
-        
-        // check to see if this VID has been added
-        done = true;
-        for (VEC_ITR n_itr = neighbors.begin(); n_itr != neighbors.end(); ++n_itr)
-          if ((*n_itr).first == p.first)
-            done = false;
-            
-        if (done == true) {
-          // if it hasn't been added, add it with some probability
-          double prob = pow((max_rank - id) / (max_rank), m_alpha);
-          double roll = DRand();
+        if (m_debug) cout << "RankWeightedRandomPolicy::SelectNeighbors()" << endl;
 
-          // if we are taking less than K (every neighbor in the candidate set), set prob to 1
-          if (max_iter < getK()) {
-            prob = 1.0;
-          }
+        vector<typename RDMP::VID> neighbors;
 
-          if (m_debug) cout << "\t\t\trank = " << id << ", prob = " << prob << ", alpha = " << m_alpha << ", roll = " << roll;
-          
-          if (roll < prob) {
-            neighbors.push_back(p);
-            if (m_debug) cout << " | added";
-          }
-          else
-            done = false;
-            
-          if (m_debug) cout << endl;
+        size_t maxIter = m_k;
+        if (_last - _first < (int)maxIter)
+          maxIter = _last - _first;
+
+        double maxRank = (_last - _first);
+
+        if (m_debug) cout << "\t\tmaxRank = " << maxRank << endl;
+
+        for (size_t i = 0; i < maxIter; i++) {
+          pair<typename RDMP::VID, double> p;
+
+          // select random candidate that hasn't been added yet
+          bool done = false;
+          while (!done) {
+
+            size_t id = (size_t)(LRand()%(_last - _first));
+            p = *(_first + id);
+
+            // check to see if this VID has been added
+            if(find(neighbors.begin(), neighbors.end(), p.first) == neighbors.end()){
+              // if it hasn't been added, add it with some probability
+              double prob = pow((maxRank - id) / (maxRank), m_alpha);
+              double roll = DRand();
+
+              // if we are taking less than K (every neighbor in the candidate set), set prob to 1
+              if (maxIter < m_k) {
+                prob = 1.0;
+              }
+
+              if (m_debug) cout << "\t\t\trank = " << id << ", prob = " << prob << ", alpha = " << m_alpha << ", roll = " << roll;
+
+              if (roll < prob) {
+                neighbors.push_back(p.first);
+                *_out++ = p;
+                if (m_debug) cout << " | added";
+              }
+              else
+                done = false;
+
+              if (m_debug) cout << endl;
+            }
+          }  
         }
-      }  
-    }
-    
-    return neighbors;
-  }
-  
-  double m_alpha;
+      }
 
+  private:
+    double m_alpha;
 };
 
 class DistanceWeightedRandomPolicy : public Policy {
+  public:
+    DistanceWeightedRandomPolicy(size_t _k = 0, double _alpha = 0, bool _debug = false) : Policy(_k, _debug) { m_alpha = _alpha; }
+    virtual ~DistanceWeightedRandomPolicy() {}
 
-public:
-  DistanceWeightedRandomPolicy() : Policy() { }
-  DistanceWeightedRandomPolicy(int k, double alpha, bool debug) : Policy(k, debug) { m_alpha = alpha; }
-  virtual ~DistanceWeightedRandomPolicy() {}
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
 
-  vector< pair<VID, double> >
-  SelectNeighbors(Roadmap<CfgType, WeightType>* _rmp, VEC_ITR _candidates_first, VEC_ITR _candidates_last)
-  {
-    if (m_debug) cout << "DistanceWeightedRandomPolicy::SelectNeighbors()" << endl;
-    
-    vector< pair<VID, double> > neighbors;
-    
-    int max_iter = getK();
-    if (_candidates_last - _candidates_first < max_iter)
-      max_iter = _candidates_last - _candidates_first;
-      
-    reverse_iterator<VEC_ITR> riter = reverse_iterator<VEC_ITR>(_candidates_last);
-    double max_dist = (*riter).second;
-    double min_dist = (*_candidates_first).second;
-    
-    if (m_debug) cout << "\t\tmin_dist = " << min_dist << ", max_dist = " << max_dist << endl;
-    
-    for (int i = 0; i < max_iter; i++) {
-      
-      pair<VID, double> p;
-      
-      // select random candidate that hasn't been added yet
-      bool done = false;
-      while (!done) {
-        
-        int id = (int)(LRand()%(_candidates_last - _candidates_first));
-        p = *(_candidates_first + id);
-        
-        // check to see if this VID has been added
-        done = true;
-        for (VEC_ITR n_itr = neighbors.begin(); n_itr != neighbors.end(); ++n_itr)
-          if ((*n_itr).first == p.first)
-            done = false;
-            
-        if (done == true) {
-          // if it hasn't been added, add it with some probability
-          double prob = pow((max_dist - p.second) / (max_dist - min_dist), m_alpha);
-          double roll = DRand();
-          
-          // if we are taking less than K (every neighbor in the candidate set), set prob to 1
-          if (max_iter < getK()) {
-            prob = 1.0;
-          }
-          
-          if (m_debug) cout << "\t\t\tdist = " << p.second << ", prob = " << prob << ", roll = " << roll;
+        if (m_debug) cout << "DistanceWeightedRandomPolicy::SelectNeighbors()" << endl;
 
-          if (roll < prob) {
-            neighbors.push_back(p);
-            if (m_debug) cout << " | added";
-          }
-          else
-            done = false;
-            
-          if (m_debug) cout << endl;
+        vector<typename RDMP::VID> neighbors;
+
+        size_t maxIter = m_k;
+        if (_last - _first < (int)maxIter)
+          maxIter = _last - _first;
+
+        reverse_iterator<InputIterator> riter = reverse_iterator<InputIterator>(_last);
+        double maxDist = (*riter).second;
+        double minDist = (*_first).second;
+
+        if (m_debug) cout << "\t\tminDist = " << minDist << ", maxDist = " << maxDist << endl;
+
+        for (size_t i = 0; i < maxIter; i++) {
+
+          pair<typename RDMP::VID, double> p;
+
+          // select random candidate that hasn't been added yet
+          bool done = false;
+          while (!done) {
+
+            size_t id = (size_t)(LRand()%(_last - _first));
+            p = *(_first + id);
+
+            // check to see if this VID has been added
+            if(find(neighbors.begin(), neighbors.end(), p.first) == neighbors.end()){
+              // if it hasn't been added, add it with some probability
+              double prob = pow((maxDist - p.second) / (maxDist - minDist), m_alpha);
+              double roll = DRand();
+
+              // if we are taking less than K (every neighbor in the candidate set), set prob to 1
+              if (maxIter < m_k) {
+                prob = 1.0;
+              }
+
+              if (m_debug) cout << "\t\t\tdist = " << p.second << ", prob = " << prob << ", roll = " << roll;
+
+              if (roll < prob) {
+                neighbors.push_back(p.first);
+                *_out++ = p;
+                if (m_debug) cout << " | added";
+              }
+              else
+                done = false;
+
+              if (m_debug) cout << endl;
+            }
+          }  
         }
-      }  
-    }
-    
-    return neighbors;
-  }
-  
-  double m_alpha;
+      }
 
+  private:
+    double m_alpha;
 };
 
 
 /////// Band definitions
-template<typename CFG, typename WEIGHT>
-class Band : public NeighborhoodFinderMethod {
-
-public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
- 
-  Band(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) : NeighborhoodFinderMethod(_dmm, _label) {}
- 
-  Band(XMLNodeReader& _inNode, MPProblem* _inProblem, bool _debug): NeighborhoodFinderMethod(_inNode, _inProblem)
-  {  
-    m_debug = _debug;
-    // note: A temporary fix (hack) until distance metric is properly fixed. This picks the second listed
-    // distance metric from the xml file.
-      
-    std::string dm_label = _inNode.stringXMLParameter("dm_method", true, "default", "Distance Metric Method");
-    dmm = _inProblem->GetDistanceMetric()->GetMethod(dm_label);
-
-
-    m_min = _inNode.numberXMLParameter("min", false, 0.0, 0.0, 100000.0, "min");
-    m_max = _inNode.numberXMLParameter("max", false, DBL_MAX, 0.0, DBL_MAX, "max");
-    m_usePercent = _inNode.boolXMLParameter("usePercent", false, false,
-                          "treat min and max as a percentage of the total number of vertices in the roadmap");
-    
-    double alpha = _inNode.numberXMLParameter("alpha", false, 1.0, 0.0, 100.0, "alpha");
-
-    string policy = _inNode.stringXMLParameter("policy", true, "closest", "selection policy");
-    int k = _inNode.numberXMLParameter("k", true, 1, 0, 10000, "k");
-    
-    cout << "Band : Params found - min = " << m_min << " | max = " << m_max << " | k = " << k << " | policy = " << policy << endl;
-    
-    if (policy == "closest") {
-      m_policy = new ClosestPolicy(k, _debug);
-    } else
-    if (policy == "random") {
-      m_policy = new RandomPolicy(k, _debug);
-    } else
-    if (policy == "RWR") {
-      m_policy = new RankWeightedRandomPolicy(k, alpha, _debug);
-    } else
-    if (policy == "DWR") {
-      m_policy = new DistanceWeightedRandomPolicy(k, alpha, _debug);
-    } else
-    if (policy == "preferential") {
-      m_policy = new PreferentialPolicy(k, _debug);
-    } else {
-		cout << "policy \"" << policy << "\" is not a valid option.  Exiting..." << endl;
-		exit(-1);
-	}
-    
-    m_type = "";
-  }
-
-  virtual const std::string GetName() const {
-    return Band::GetClassName();
-  }
-  
-  static const std::string GetClassName() {
-    return "Band";
-  }
-
-  virtual void PrintOptions(std::ostream& _os) const {
-    //Andy G: I'm not sure what should be printed, so TODO will be placed here
-    _os << this->GetClassName() << ":: TODO" << std::endl;
-  }
-  
-  // given initial set V (_input_first --> _input_last), and CFG v1, return V_n.
-  template <typename InputIterator>
-  vector< pair<VID, double> >
-  GetNeighbors(Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _input_first, InputIterator _input_last, CFG _cfg);
-  // { 
-  //     if (m_debug) cout << "Band::GetNeighbors()" << endl;
-  //     
-  //     // this will be overwritten by extending classes
-  //     vector< pair<VID, double> > neighbors;
-  //     return neighbors;
-  //   }
-  
-  double getMin() { return m_min; }
-  double getMax() { return m_max; }
-  bool getDebug() { return m_debug; }
-  bool getUsePercent() { return m_usePercent; }
-  string getType() { return m_type; }
-  
-protected:
-  
-  template <typename InputIterator>
-  vector< pair<VID, double> >
-  GetCandidateSet(Roadmap<CFG,WEIGHT>* _rmp, 
-      InputIterator _input_first, InputIterator _input_last, CFG _cfg)
-  {
-    if (m_debug) cout << "Band::GetCandidateSet()" << endl;
-    
-    // this will be overwritten by extending classes
-    vector< pair<VID, double> > candidates;
-    return candidates;
-  }
-  
-  
-  template <typename InputIterator>
-  vector< pair<VID, double> >
-  GetDistList(Roadmap<CFG,WEIGHT>* _rmp,
-      InputIterator _input_first, InputIterator _input_last, CFG _cfg)
-  {  
-    if (m_debug) cout << "Band::GetDistList()" << endl;
-    
-    Environment* _env = _rmp->GetEnvironment();
-    RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-        
-    vector< pair<VID, double> > dist_list;
-    
-    InputIterator V1;
-    
-    // compute sorted neighbor list
-    for (V1 = _input_first; V1 != _input_last; ++V1) {
-      CFG v1 = (*(pMap->find_vertex(*V1))).property();
-
-      if(v1 == _cfg)
-        continue; //don't connect same
-      double dist = dmm->Distance(_env, _cfg, v1);
-      pair<VID, double> p = make_pair(*V1, dist);
-      dist_list.push_back(p);
+class Band : public MPBaseObject {
+  public:
+    Band(string _dmm = "", string _label = "", MPProblem* _mp = NULL) : MPBaseObject(_mp, _label), m_dmLabel(_dmm) {
+      SetName("Band");
     }
-    
-    sort(dist_list.begin(), dist_list.end(), compare_second<VID, double>());
-    
-    return dist_list;
-  }
-  
-  bool m_debug;
-  bool m_usePercent;
-  double m_min;
-  double m_max;
-  string m_type;
-  shared_ptr<DistanceMetricMethod> dmm;
-  Policy* m_policy;
-};
 
-template<typename CFG, typename WEIGHT>
-class DBand : public Band<CfgType, WeightType> {
-  
-public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  
-  DBand(XMLNodeReader& _node, MPProblem* _problem, bool debug)
-    : Band<CfgType, WeightType>(_node, _problem, debug)
-  { 
-    if (debug) cout << "DBand::DBand()" << endl; 
-    m_type = "DBand";
-  }
-    
-  template <typename InputIterator>
-  vector< pair<VID, double> >
-  GetNeighbors(Roadmap<CFG,WEIGHT>* _rmp, InputIterator _input_first, InputIterator _input_last, CFG _cfg)
-  {
-    if (m_debug) cout << "DBand::GetNeighbors()" << endl;
-    // get candidate set
-    vector< pair<VID, double> > candidate_set = GetCandidateSet(_rmp, _input_first, _input_last, _cfg);
-    if (m_debug) cout << "  num_candidates = " << candidate_set.size() << endl;
-    
-    // get neighbors from candidate set using policy
-    vector< pair<VID, double> > neighbors = m_policy->SelectNeighbors(_rmp, candidate_set.begin(), candidate_set.end());
-    return neighbors; 
-  }
+    Band(XMLNodeReader& _node, MPProblem* _problem): MPBaseObject(_node, _problem) {  
+      SetName("Band");
+      m_dmLabel = _node.stringXMLParameter("dmMethod", true, "default", "Distance Metric Method");
 
-  virtual const std::string GetName() const {
-    return DBand::GetClassName();
-  }
-  
-  static const std::string GetClassName() {
-    return "DBand";
-  }
+      m_min = _node.numberXMLParameter("min", false, 0.0, 0.0, 100000.0, "min");
+      m_max = _node.numberXMLParameter("max", false, DBL_MAX, 0.0, DBL_MAX, "max");
+      m_usePercent = _node.boolXMLParameter("usePercent", false, false,
+          "treat min and max as a percentage of the total number of vertices in the roadmap");
 
-  virtual void PrintOptions(std::ostream& _os) const {
-    //Andy G: I'm not sure what should be printed, so TODO will be placed here
-    _os << this->GetClassName() << ":: TODO" << std::endl;
-  }
+      double alpha = _node.numberXMLParameter("alpha", false, 1.0, 0.0, 100.0, "alpha");
 
-private:
-  
-  template <typename InputIterator>
-  vector< pair<VID, double> >
-  GetCandidateSet(Roadmap<CFG,WEIGHT>* _rmp, 
-      InputIterator _input_first, InputIterator _input_last, CFG _cfg)
-  {
-    if (getDebug()) cout << "DBand::GetCandidateSet()" << endl;
-    
-    // obtain sorted distance list
-    vector< pair<VID, double> > dist_list = GetDistList(_rmp, _input_first, _input_last, _cfg);
-    vector< pair<VID, double> > candidates;
-    
-    double min, max;
-    
-    min = getMin();
-    max = getMax();
-    
-    // iterate through list, return all (VID, dist) pairs that are between min and max
-    typename vector< pair<VID, double> >::iterator V1;
-    if (getDebug()) cout << "\tchecking candidates (min = " << min << ", max = " << max << ") for CFG = " << _cfg << ": " << endl;
-    for (V1 = dist_list.begin(); V1 != dist_list.end(); ++V1) {
-      double dist = (*V1).second;
-      if (getDebug()) cout << "\t\t(" << (*V1).first << ", " << (*V1).second << ") ";
-      if (min <= dist && dist < max) {
-        if (getDebug()) cout << "added";
-        candidates.push_back(*V1);
-      }
-      if (getDebug()) cout << endl;
-      if (getDebug()) cout << "Candidate: VID = " << (*V1).first << " | dist = " << (*V1).second << endl;
-    }
-    
-    return candidates;
-  }
-  
-};
+      string policy = _node.stringXMLParameter("policy", true, "closest", "selection policy");
+      size_t k = _node.numberXMLParameter("k", true, 1, 0, 10000, "k");
 
-template<typename CFG, typename WEIGHT>
-class RBand : public Band<CfgType, WeightType> {
-  
-public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  
-  RBand(XMLNodeReader& _node, MPProblem* _problem, bool debug)
-    : Band<CfgType, WeightType>(_node, _problem, debug)
-  { 
-    if (debug) cout << "RBand::RBand()" << endl; 
-    m_type = "RBand";
-  }
-    
-  template <typename InputIterator>
-  vector< pair<VID, double> >
-  GetNeighbors(Roadmap<CFG,WEIGHT>* _rmp, InputIterator _input_first, InputIterator _input_last, CFG _cfg)
-  {
-    if (m_debug) cout << "RBand::GetNeighbors()" << endl;
-    // get candidate set
-    vector< pair<VID, double> > candidate_set = GetCandidateSet(_rmp, _input_first, _input_last, _cfg);
-    if (m_debug) cout << "  num_candidates = " << candidate_set.size() << endl;
-    
-    // get neighbors from candidate set using policy
-    vector< pair<VID, double> > neighbors = m_policy->SelectNeighbors(_rmp, candidate_set.begin(), candidate_set.end());
-    return neighbors; 
-  }
-
-  virtual const std::string GetName() const {
-    return RBand::GetClassName();
-  }
-  
-  static const std::string GetClassName() {
-    return "RBand";
-  }
-
-  virtual void PrintOptions(std::ostream& _os) const {
-    //Andy G: I'm not sure what should be printed, so TODO will be placed here
-    _os << this->GetClassName() << ":: TODO" << std::endl;
-  }
-
-private:
-  
-  template <typename InputIterator>
-  vector< pair<VID, double> >
-  GetCandidateSet(Roadmap<CFG,WEIGHT>* _rmp, 
-      InputIterator _input_first, InputIterator _input_last, CFG _cfg)
-  {
-    if (getDebug()) cout << "RBand::GetCandidateSet()" << endl;
-    
-    // obtain sorted distance list
-    vector< pair<VID, double> > dist_list = GetDistList(_rmp, _input_first, _input_last, _cfg);
-    vector< pair<VID, double> > candidates;
-
-    double min, max;
-    
-    if (getUsePercent()) {
-      min = getMin() * (_input_last - _input_first);
-      max = getMax() * (_input_last - _input_first);
-    } else {
-      min = getMin();
-      max = getMax();
-    }
-    
-    // iterate through list, return all (VID, dist) pairs that are between min and max
-    double rank = 0;
-    typename vector< pair<VID, double> >::iterator V1;
-    if (getDebug()) cout << "\tchecking candidates (min = " << min << ", max = " << max << ") for CFG = " << _cfg << ": " << endl;
-    for (V1 = dist_list.begin(); V1 != dist_list.end(); ++V1) {
-      if (getDebug()) cout << "\t\t(" << (*V1).first << ", " << (*V1).second << ") ";
-      if (min <= rank && rank < max) {
-        if (getDebug()) cout << "added";
-        candidates.push_back(*V1);
-      }
-      if (getDebug()) cout << endl;
-      rank++;
-    }
-    
-    return candidates;
-  }
-  
-};
-
-
-template<typename CFG, typename WEIGHT>
-class BandsNF: public NeighborhoodFinderMethod {
-
-public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  
-  BandsNF(XMLNodeReader& _node, MPProblem* _problem) : NeighborhoodFinderMethod(_node, _problem) {
-
-    m_debug = _node.boolXMLParameter("debug", false, false, "");
-    
-    XMLNodeReader::childiterator citr;
-    for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-      if (citr->getName() == "DBand") {
-        cout << "DBand found" << endl;
-        Band<CFG,WEIGHT>* dband = new DBand<CFG,WEIGHT>(*citr, _problem, m_debug);
-        m_bands.push_back(dband);
-      } else if(citr->getName() == "RBand") {
-        cout << "RBand found" << endl;
-        Band<CFG,WEIGHT>* rband = new RBand<CFG,WEIGHT>(*citr, _problem, m_debug);
-        m_bands.push_back(rband);
+      if (policy == "closest") {
+        m_policy = new ClosestPolicy(k, m_debug);
       } 
+      else if (policy == "random") {
+        m_policy = new RandomPolicy(k, m_debug);
+      } 
+      else if (policy == "RWR") {
+        m_policy = new RankWeightedRandomPolicy(k, alpha, m_debug);
+      } 
+      else if (policy == "DWR") {
+        m_policy = new DistanceWeightedRandomPolicy(k, alpha, m_debug);
+      } 
+      else if (policy == "preferential") {
+        m_policy = new PreferentialPolicy(k, m_debug);
+      } 
+      else {
+        cout << "policy \"" << policy << "\" is not a valid option.  Exiting..." << endl;
+        exit(-1);
+      }
     }
-  }
 
-  BandsNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) : NeighborhoodFinderMethod(_dmm,_label) {
-    m_debug = false;
-  }
+    virtual void PrintOptions(ostream& _os) const {
+      _os << this->GetName() << ":: TODO" << std::endl;
+    }
 
-  virtual const std::string GetName () const {
-    return BandsNF::GetClassName();
-  }
-  static const std::string GetClassName() {
-    return "BandsNF";
-  }
-  virtual void PrintOptions(std::ostream& out_os) const {
-    out_os << this->GetClassName() << std::endl;
-  }
+    // given initial set V (_first --> _last), and CFG v1, return V_n.
+    template<typename RDMP, typename InputIterator>
+      vector< pair<typename RDMP::VID, double> >
+      GetNeighbors(RDMP* _rmp,
+          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg);
 
+  protected:
+    template<typename RDMP, typename InputIterator>
+      vector< pair<typename RDMP::VID, double> >
+      GetCandidateSet(RDMP* _rmp, 
+          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg){
+        if (m_debug) cout << "Band::GetCandidateSet()" << endl;
 
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    InputIterator _input_first, InputIterator _input_last, VID _v, int k,
-    OutputIterator _out);
-  
-  // do the work here, and have the function above obtain the CFG and call this one
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k,
-    OutputIterator _out);
-  
-  
-  // KClosest that operate over the entire roadmap to find the kclosest to a VID or CFG
-  //
-  // NOTE: These are the prefered methods for kClosest computations
-  template <typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    VID _v, int k, OutputIterator _out);
-  
-  template <typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    CFG _cfg, int k, OutputIterator _out);
-  
-
-  // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-  // represent the kclosest pairs of VIDs between the two ranges.
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _in1_first, InputIterator _in1_last, 
-    InputIterator _in2_first, InputIterator _in2_last, 
-    int k, OutputIterator _out);
+        // this will be overwritten by extending classes
+        vector< pair<typename RDMP::VID, double> > candidates;
+        return candidates;
+      }
 
 
-private:
-  
-  bool m_debug;
-  vector<Band<CFG, WEIGHT>* > m_bands;
-  
+    template<typename RDMP, typename InputIterator>
+      vector< pair<typename RDMP::VID, double> >
+      GetDistList(RDMP* _rmp,
+          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg) {  
+        if (m_debug) cout << "Band::GetDistList()" << endl;
+
+        typedef typename RDMP::VID VID;
+        typedef typename RDMP::CfgType CFG;
+        typedef typename RDMP::RoadmapGraphType RoadmapGraphType;
+        typedef typename pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+
+        Environment* env = _rmp->GetEnvironment();
+        DistanceMetric::DistanceMetricPointer dmm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel);
+        RoadmapGraphType* map = _rmp->m_pRoadmap;
+
+        vector< pair<VID, double> > distList;
+
+        InputIterator V1;
+
+        // compute sorted neighbor list
+        for (V1 = _first; V1 != _last; ++V1) {
+          CFG v1 = GetCfg()(map, V1);
+
+          if(v1 == _cfg)
+            continue; //don't connect same
+
+          double dist = dmm->Distance(env, _cfg, v1);
+          pair<VID, double> p = make_pair(*V1, dist);
+          distList.push_back(p);
+        }
+
+        sort(distList.begin(), distList.end(), CompareSecond<VID, double>());
+
+        return distList;
+      }
+
+    bool m_debug;
+    bool m_usePercent;
+    double m_min;
+    double m_max;
+    string m_type;
+    string m_dmLabel;
+    Policy* m_policy;
 };
 
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-BandsNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _input_first, InputIterator _input_last, 
-  VID _v, int k, OutputIterator _out) 
-{
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
-  return KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
-}
+class DBand : public Band {
+  public:
+    DBand(XMLNodeReader& _node, MPProblem* _problem) : Band(_node, _problem){ 
+      SetName("DBand");
+    }
 
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-BandsNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-  InputIterator _input_first, InputIterator _input_last, CFG _cfg, 
-  int k, OutputIterator _out)
-{
+    template<typename RDMP, typename InputIterator>
+      vector<pair<typename RDMP::VID, double> >
+      GetNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg){
+        if (m_debug) cout << "DBand::GetNeighbors()" << endl;
+        // get candidate set
+        vector< pair<typename RDMP::VID, double> > candidateSet = GetCandidateSet(_rmp, _first, _last, _cfg);
+        if (m_debug) cout << "  num_candidates = " << candidateSet.size() << endl;
+
+        // get neighbors from candidate set using policy
+        vector<pair<typename RDMP::VID, double> > neighborSet;
+        m_policy->SelectNeighbors(_rmp, candidateSet.begin(), candidateSet.end(), back_inserter(neighborSet));
+        return neighborSet;
+      }
+
+  private:
+    template <typename RDMP, typename InputIterator>
+      vector< pair<typename RDMP::VID, double> >
+      GetCandidateSet(RDMP* _rmp, 
+          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg) {
+        if (m_debug) cout << "DBand::GetCandidateSet()" << endl;
+
+        // obtain sorted distance list
+        vector< pair<typename RDMP::VID, double> > distList = GetDistList(_rmp, _first, _last, _cfg);
+        vector< pair<typename RDMP::VID, double> > candidates;
+
+        double min, max;
+
+        min = m_min;
+        max = m_max;
+
+        // iterate through list, return all (VID, dist) pairs that are between min and max
+        typename vector< pair<typename RDMP::VID, double> >::iterator V1;
+        if (m_debug) cout << "\tchecking candidates (min = " << min << ", max = " << max << ") for CFG = " << _cfg << ": " << endl;
+        for (V1 = distList.begin(); V1 != distList.end(); ++V1) {
+          double dist = (*V1).second;
+          if (m_debug) cout << "\t\t(" << (*V1).first << ", " << (*V1).second << ") ";
+          if (min <= dist && dist < max) {
+            if (m_debug) cout << "added";
+            candidates.push_back(*V1);
+          }
+          if (m_debug) cout << endl;
+          if (m_debug) cout << "Candidate: VID = " << (*V1).first << " | dist = " << (*V1).second << endl;
+        }
+
+        return candidates;
+      }
+};
+
+class RBand : public Band {
+  public:
+    RBand(XMLNodeReader& _node, MPProblem* _problem) : Band(_node, _problem) { 
+      SetName("RBand");
+    }
+
+    template<typename RDMP, typename InputIterator>
+      vector< pair<typename RDMP::VID, double> >
+      GetNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg) {
+        if (m_debug) cout << "RBand::GetNeighbors()" << endl;
+        // get candidate set
+        vector<pair<typename RDMP::VID, double> > candidateSet = GetCandidateSet(_rmp, _first, _last, _cfg);
+        if (m_debug) cout << "  num_candidates = " << candidateSet.size() << endl;
+
+        // get neighbors from candidate set using policy
+        vector<pair<typename RDMP::VID, double> > neighborSet;
+        m_policy->SelectNeighbors(_rmp, candidateSet.begin(), candidateSet.end(), back_inserter(neighborSet));
+        return neighborSet;
+      }
+
+  private:
+    template<typename RDMP, typename InputIterator>
+      vector< pair<typename RDMP::VID, double> >
+      GetCandidateSet(RDMP* _rmp, 
+          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg) {
+        if (m_debug) cout << "RBand::GetCandidateSet()" << endl;
+
+        // obtain sorted distance list
+        vector< pair<typename RDMP::VID, double> > distList = GetDistList(_rmp, _first, _last, _cfg);
+        vector< pair<typename RDMP::VID, double> > candidates;
+
+        double min, max;
+
+        if (m_usePercent) {
+          min = m_min * (_last - _first);
+          max = m_max * (_last - _first);
+        } else {
+          min = m_min;
+          max = m_max;
+        }
+
+        // iterate through list, return all (VID, dist) pairs that are between min and max
+        double rank = 0;
+        typename vector< pair<typename RDMP::VID, double> >::iterator V1;
+        if (m_debug) cout << "\tchecking candidates (min = " << min << ", max = " << max << ") for CFG = " << _cfg << ": " << endl;
+        for (V1 = distList.begin(); V1 != distList.end(); ++V1) {
+          if (m_debug) cout << "\t\t(" << (*V1).first << ", " << (*V1).second << ") ";
+          if (min <= rank && rank < max) {
+            if (m_debug) cout << "added";
+            candidates.push_back(*V1);
+          }
+          if (m_debug) cout << endl;
+          rank++;
+        }
+
+        return candidates;
+      }
+};
+
+
+class BandsNF: public NeighborhoodFinderMethod {
+  public:
+    BandsNF(string _dmm = "", string _label = "", MPProblem* _mp = NULL) : NeighborhoodFinderMethod(_dmm, _label, _mp) {
+      SetName("BandsNF");
+    }
+
+    BandsNF(XMLNodeReader& _node, MPProblem* _problem) : NeighborhoodFinderMethod(_node, _problem) {
+      SetName("BandsNF");
+      XMLNodeReader::childiterator citr;
+      for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
+        if (citr->getName() == "DBand") {
+          Band* dband = new DBand(*citr, _problem);
+          m_bands.push_back(dband);
+        } 
+        else if(citr->getName() == "RBand") {
+          Band* rband = new RBand(*citr, _problem);
+          m_bands.push_back(rband);
+        } 
+      }
+    }
+
+    virtual void PrintOptions(std::ostream& _os) const {
+      NeighborhoodFinderMethod::PrintOptions(_os);
+    }
+
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      OutputIterator KClosest(RDMP* _rmp, 
+          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out);
+
+    // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
+    // represent the _kclosest pairs of VIDs between the two ranges.
+    template<typename RDMP, typename InputIterator, typename OutputIterator>
+      OutputIterator KClosestPairs(RDMP* _rmp,
+          InputIterator _first1, InputIterator _last1, 
+          InputIterator _first2, InputIterator _last2, 
+          size_t _k, OutputIterator _out);
+
+  private:
+    vector<Band*> m_bands;
+};
+
+// Returns all nodes within radius from _cfg
+template<typename RDMP, typename InputIterator, typename OutputIterator>
+OutputIterator 
+BandsNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last, 
+    typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out) {
   
-  
- 
-  
+  typedef typename RDMP::VID VID;
+  typedef typename RDMP::CfgType CFG;
+  typedef typename RDMP::RoadmapGraphType RoadmapGraphType;
+  typedef typename pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+
   IncrementNumQueries();
   StartTotalTime();
   StartQueryTime();
-  
+
   vector< pair<VID, double> > neighbors;
-    
+
   // iterate through bands
-  typename vector<Band<CFG, WEIGHT>* >::iterator band_itr;
-  for (band_itr = m_bands.begin(); band_itr != m_bands.end(); ++band_itr) {
+  typename vector<Band*>::iterator bandIT;
+  for (bandIT = m_bands.begin(); bandIT != m_bands.end(); ++bandIT) {
     if (m_debug) cout << "Finding Neighbors for Band" << endl;
-    
-    vector< pair<VID, double> > band_neighbors;
-    
-    if ((*band_itr)->getType() == "DBand") {
-      DBand<CFG, WEIGHT>* band = (DBand<CFG, WEIGHT>*)(*band_itr);
-      band_neighbors = band->GetNeighbors(_rmp, _input_first, _input_last, _cfg);
+
+    vector< pair<VID, double> > bandNeighbors;
+
+    if((*bandIT)->GetName() == "DBand"){
+      bandNeighbors = ((DBand*)*bandIT)->GetNeighbors(_roadmap, _first, _last, _cfg);
     }
-    if ((*band_itr)->getType() == "RBand") {
-      RBand<CFG, WEIGHT>* band = (RBand<CFG, WEIGHT>*)(*band_itr);
-      band_neighbors = band->GetNeighbors(_rmp, _input_first, _input_last, _cfg);
+    else if((*bandIT)->GetName() == "RBand"){
+      bandNeighbors = ((RBand*)*bandIT)->GetNeighbors(_roadmap, _first, _last, _cfg);
     }
     
     typename vector< pair<VID, double> >::iterator itr;
-    for (itr = band_neighbors.begin(); itr != band_neighbors.end(); ++itr) {
+    for (itr = bandNeighbors.begin(); itr != bandNeighbors.end(); ++itr) {
       if ((*itr).first != INVALID_VID) {
         if (m_debug) cout << "neighbor: VID = " << (*itr).first << " | dist = " << (*itr).second << endl;
         neighbors.push_back(*itr);
       }
     }
   }
-   
-  sort(neighbors.begin(), neighbors.end(), compare_second<VID, double>());
+
+  sort(neighbors.begin(), neighbors.end(), CompareSecond<VID, double>());
+  
   // now add VIDs from neighbors to output
   for (size_t p = 0; p < neighbors.size(); p++) {
     if (neighbors[p].first != INVALID_VID) {
       if (m_debug) cout << "\tVID = " << neighbors[p].first << " | dist = " << neighbors[p].second << endl;
-     
+
       *_out = neighbors[p].first;
       ++_out;
     }
   }
-  
+
   EndQueryTime();
   EndTotalTime();
-  return _out;
-}
-/*
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator>
-void
-BandsNF<CFG,WEIGHT>::
-ClosestBand( Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _input_first, InputIterator _input_last, CFG _cfg,  
-  int index_first, int index_last,
-  double min_dist, double max_dist,
-  vector< pair< VID, double > >& closest)
-{
-  Environment* _env = _rmp->GetEnvironment();
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-
-  int max_index = index_first; 
-  double max_value = MAX_DIST;
   
-  for (InputIterator V1 = _input_first; V1 != _input_last; ++V1) {
-    CFG v1 = pMap->find_vertex(*V1).property();
-
-    if(v1 == _cfg)
-      continue; //don't connect same
-
-    double dist = dmm->Distance(_env, _cfg, v1);
-
-    if(dist < closest[max_index].second && dist > min_dist && dist <= max_dist) { 
-      closest[max_index] = make_pair(*V1,dist);
-      max_value = dist;
-
-      //search for new max_index (faster O(k) than sort O(k log k) )
-      for (size_t p = index_first; p < index_last; ++p) {
-        if (max_value < closest[p].second) {
-          max_value = closest[p].second;
-          max_index = p;
-        }
-      }
-    }
-  }
-}
-
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator>
-void
-BandsNF<CFG,WEIGHT>::
-RandomBand( Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _input_first, InputIterator _input_last, CFG _cfg,  
-  int index_first, int index_last,
-  double min_dist, double max_dist,
-  vector< pair< VID, double > >& closest)
-{
-  Environment* _env = _rmp->GetEnvironment();
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  
-  for (size_t p = index_first; p < index_last; ++p) {
-    bool found = false;
-    while (!found) {
-      int id = (int)(OBPRM_lrand()%(_input_last - _input_first));
-      InputIterator V1 = _input_first + id;
-      double dist = dmm->Distance(_env, _cfg, pMap->find_vertex(*V1).property());
-      pair<VID, double> entry = make_pair(*V1, dist);
-
-      // if this node is in a valid distance, and doesn't already exist in closest, add it
-      if (dist > min_dist && dist <= max_dist && find(closest.begin(), closest.end(), entry) == closest.end()) {
-        closest[p] = entry;
-        found = true;
-      }
-    }
-  }
-}
-
-// alpha = parameter to bias distance component of probability of selection
-//    ... higher alpha takes longer to compute, but produces overall closer candidates
-//    ... alpha = 0 gives an even probability distribution
-//    ... default alpha should be 1
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator>
-void
-BandsNF<CFG,WEIGHT>::
-WeightedRandomBand( Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _input_first, InputIterator _input_last, CFG _cfg,  
-  int index_first, int index_last,
-  double min_dist, double max_dist,
-  vector< pair< VID, double > >& closest)
-{
-  Environment* _env = _rmp->GetEnvironment();
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  
-  // if max_dist is arbitrary, set to be the farthest node in the roadmap (O(n) operation)
-  if (max_dist == MAX_DIST) {
-    max_dist = 0;
-    for (InputIterator V1 = _input_first; V1 != _input_last; ++V1) {
-      double dist = dmm->Distance(_env, _cfg, pMap->find_vertex(*V1).property());
-      if (dist > max_dist)
-        max_dist = dist;
-    }
-    max_dist += 0.01;
-  }
-  
-  // for each slot in closest, select with computed probability
-  for (size_t p = index_first; p < index_last; ++p) {
-    bool found = false;
-    while (!found) {
-      int id = (int)(OBPRM_lrand()%(_input_last - _input_first));
-      InputIterator V1 = _input_first + id;
-      double dist = dmm->Distance(_env, _cfg, pMap->find_vertex(*V1).property());
-      pair<VID, double> entry = make_pair(*V1, dist);
-      
-      // if this node is in a valid distance, and doesn't already exist in closest, compute the probability of adding
-      if (dist > min_dist && dist <= max_dist && find(closest.begin(), closest.end(), entry) == closest.end()) {
-        double prob = pow((max_dist - dist) / (max_dist - min_dist), 1.0);
-        double roll = OBPRM_drand();    
-        if (m_debug) cout << "\t\tcandidate VID = " << *V1 << " | dist = " << dist 
-                          << " | alpha = 1.0 | P = " << prob << " | roll = " << roll << endl;
-    
-        if (roll < prob) {
-          if (m_debug) cout << "\t\t\tSELECTED" << endl;
-          closest[p] = entry;
-          found = true;
-        }
-      }
-    }
-  }
-}
-*/
-template<typename CFG, typename WEIGHT>
-template<typename OutputIterator>
-OutputIterator
-BandsNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, VID _v, int k, OutputIterator _out)
-{
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
-  return KClosest(_rmp, _v_cfg, k, _out);
-}
-
-template<typename CFG, typename WEIGHT>
-template<typename OutputIterator>
-OutputIterator
-BandsNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-  CFG _cfg, int k, OutputIterator _out) 
-{
-  RoadmapGraph<CFG, WEIGHT>* pMap = _rmp->m_pRoadmap;
-  vector<VID> rmp_vertices;
-  pMap->GetVerticesVID(rmp_vertices);
-  
-  KClosest(_rmp, rmp_vertices.begin(), rmp_vertices.end(), _cfg, k, _out);
-  return _out;
-  /*
-  StartTotalTime();
-  IncrementNumQueries();
-  StartConstructionTime();
-  StartQueryTime();
-
-  Environment* _env = _rmp->GetEnvironment();
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-
-  std::vector<VID> input;
-  pMap->GetVerticesVID(input);
-  
-  int max_index = 0;
-  double max_value = MAX_DIST;
-  vector< pair< VID, double > > closest(k, make_pair(INVALID_VID, max_value));
-
-  // iterate and find closest k
-  typename RoadmapGraph<CFG,WEIGHT>::VI V1;
-  
-  int count = 0;
-  for(V1 = pMap->begin(); V1 != pMap->end(); ++V1) {
-    count++;
-    CFG& v1 = V1.property();
-    
-    if(v1 == _cfg)
-      continue; //don't connect same
-
-    double dist = dmm->Distance(_env, _cfg, v1);
-    
-    if(dist < closest[max_index].second) { 
-      closest[max_index] = make_pair(V1.descriptor(), dist);
-      max_value = dist;
-  
-      //search for new max_index (faster O(k) than sort O(k log k) )
-      for (int p = 0; p < closest.size(); ++p) {
-        if (max_value < closest[p].second) {
-          max_value = closest[p].second;
-          max_index = p;
-        }
-      }
-
-    }
-  }
- 
-  sort(closest.begin(), closest.end(), compare_second<VID, double>());
-  EndQueryTime(); 
-  EndConstructionTime();
-  // now add VIDs from closest to
-  for (int p = 0; p < closest.size(); p++) {
-    if (closest[p].first != INVALID_VID) {
-      *_out = closest[p].first;
-      ++_out;
-    }
-  }
-  EndTotalTime();
-  */
   return _out;
 }
 
-
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-BandsNF<CFG,WEIGHT>::
-KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _in1_first, InputIterator _in1_last, 
-  InputIterator _in2_first, InputIterator _in2_last,
-  int k, OutputIterator _out)
-{
-   
-  Environment* _env = _rmp->GetEnvironment();
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  int max_index = 0;
-  double max_value = MAX_DIST;
-  vector< pair< pair< VID, VID >, double > > kall;
- 
-  // now go through all kp and find closest k                                     
-  InputIterator V1, V2;
-  for(V1 = _in1_first; V1 != _in1_last; ++V1) {
-    // initialize w/ k elements each with huge distance...                        
-    vector<pair<pair<VID,VID>,double> > kp(k, make_pair(make_pair(INVALID_VID,INVALID_VID),
-    max_value));
-   CFG v1 = pmpl_detail::GetCfg<InputIterator>(pMap)(V1);
-    for(V2 = _in2_first; V2 != _in2_last; ++V2) {
-      //marcom/08nov03 check if results in other functions is same                      
-      if(*V1 == *V2)
-        continue; //don't connect same                                                  
-      CFG v2 = pmpl_detail::GetCfg<InputIterator>(pMap)(V2);
-      double dist = dmm->Distance(_env, v1, v2);
-      if(dist < kp[max_index].second) {
-        kp[max_index] = make_pair(make_pair(*V1,*V2),dist);
-        max_value = dist;
-      
-        //search for new max_index (faster O(k) than sort O(k log k) )                  
-        for (size_t p = 0; p < kp.size(); ++p) {
-          if (max_value < kp[p].second) {
-            max_value = kp[p].second;
-            max_index = p;
-          }
-        }
-      }
-    }//endfor c2                                                                  
-    kall.insert(kall.end(),kp.begin(),kp.end());
-  }//endfor c1                                                                    
- 
-  sort(kall.begin(), kall.end(), compare_second<pair<VID, VID>, double>());
-  
-  for (int p = 0; p < k; ++p) {
-    if (kall[p].first.first != INVALID_VID && kall[p].first.second != INVALID_VID){
-      *_out = kall[p].first;
-      ++_out;
-    }
-  }
-  return _out;
+// Returns all pairs within radius
+template<typename RDMP, typename InputIterator, typename OutputIterator>
+OutputIterator 
+BandsNF::KClosestPairs(RDMP* _roadmap,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    size_t _k, OutputIterator _out) {
+  cerr << "ERROR:: BandsNF::KClosestPairs is not yet implemented. Exiting" << endl;
+  exit(1);
 }
 
-
-#endif //end #ifndef _BANDS_NEIGHBORHOOD_FINDER_H_
+#endif //end #ifndef

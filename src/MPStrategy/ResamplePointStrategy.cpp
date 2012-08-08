@@ -1,8 +1,9 @@
 #include "ResamplePointStrategy.h"
 #include "MPRegion.h"
 #include "SamplerMethod.h"
-#include "MPStrategy/MPStrategy.h"
+#include "MPStrategy.h"
 #include <algorithm>
+#include "DistanceMetrics.h"
 
 class DistanceMetricMethod;
 

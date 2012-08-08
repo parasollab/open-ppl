@@ -241,14 +241,17 @@ void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* 
   LPOutput<CFG,WEIGHT> lpOutput;
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
 
+  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
+  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  
   // connect the found k-closest to the current iteration's CFG
   for(typename vector<VID>::iterator itr2 = _closestFirst; itr2!= _closestLast; ++itr2) {
 
     if (m_debug) cout << "\t(s,f) = (" << m_totalSuccess << "," << m_totalFailure << ")";
     if (m_debug) cout << " | VID = " << *itr2;
     if (m_debug) cout << " | dist = " << dm->Distance(_rm->GetEnvironment(),
-        pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid), 
-        pmpl_detail::GetCfg<VIDIT>(_rm->m_pRoadmap)(itr2));
+        GetCfg()(_rm->m_pRoadmap, _vid), 
+        GetCfg()(_rm->m_pRoadmap, itr2));
 
     // don't attempt an edge between the same nodes
     if (_vid == *itr2) {
@@ -299,8 +302,8 @@ void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* 
     CfgType _col;
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
         IsConnected(_rm->GetEnvironment(), _stats, dm,
-          pmpl_detail::GetCfg<VID>(_rm->m_pRoadmap)(_vid), 
-          pmpl_detail::GetCfg<VIDIT>(_rm->m_pRoadmap)(itr2), 
+          GetCfg()(_rm->m_pRoadmap, _vid), 
+          GetCfg()(_rm->m_pRoadmap, itr2), 
           _col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, 
           (!this->m_addAllEdges) )){
       // if connection was made, add edge and record the successful connection

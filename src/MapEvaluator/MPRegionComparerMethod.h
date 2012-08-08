@@ -7,6 +7,7 @@ class MPProblem;
 #include "MetricUtils.h"
 #include "LocalPlanners.h"
 #include "MPStrategy.h"
+#include "DistanceMetrics.h"
 
 template <class CFG>
 class compare_distance : public binary_function<const CFG, const CFG, bool>

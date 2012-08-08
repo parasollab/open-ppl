@@ -155,7 +155,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         } else if(citr->getName() == "NeighborhoodFinder") {
           string nf_method = citr->stringXMLParameter(string("Method"),true,
               string(""),string("NeighborhoodFinder Method"));
-          m_NF = GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_method);
+          m_NF = GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_method);
           citr->warnUnrequestedAttributes();
         } else {
           citr->warnUnknownNode();
@@ -1010,7 +1010,7 @@ class BandsStats : public MPStrategyMethod {
 
       // note: BFNF neighborhood finder must be specified in XML file
       NeighborhoodFinder::NeighborhoodFinderPointer nfptr;
-      nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod("BFNF");
+      nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod("BFNF");
       shared_ptr<DistanceMetricMethod> dmm = nfptr->GetDMMethod();
 
       Environment* _env = this->GetMPProblem()->GetEnvironment();
@@ -1034,7 +1034,7 @@ class BandsStats : public MPStrategyMethod {
           if (ind % 100 == 0) cout << ind << endl;
           vector<VID> neighbors(k);
 
-          this->GetMPProblem()->GetNeighborhoodFinder()->KClosest(nfptr, rmp, (*vitr).descriptor(), k, neighbors.begin());
+          nfptr->KClosest(rmp, (*vitr).descriptor(), k, neighbors.begin());
           double k_dist = dmm->Distance(_env, (*vitr).property(), (*(pMap->find_vertex(neighbors.back()))).property());
           dist_list.push_back(k_dist);
 
@@ -1139,7 +1139,7 @@ class BandsStats : public MPStrategyMethod {
           RoadmapGraph<CfgType,WeightType>* pMap = rmp.m_pRoadmap;
           CfgType cfg1 = (pMap->find_vertex(*iter))->property();
           CfgType cfg2 = (pMap->find_vertex(*iter2))->property();
-          shared_ptr<DistanceMetricMethod>dmm = this->GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod("BFNF")->GetDMMethod();
+          shared_ptr<DistanceMetricMethod> dmm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod("")->GetDMMethod();
           double dist=dmm->Distance(rmp.GetEnvironment(), cfg1, cfg2);
           count++;
           max_dist=max(max_dist,dist);

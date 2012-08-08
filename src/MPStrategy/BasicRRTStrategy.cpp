@@ -222,7 +222,7 @@ BasicRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   vector<VID> kClosest;
   vector<CfgType> cfgs;
 
-  nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
+  nf->GetMethod(m_nf)->KClosest(region->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
   CfgType nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
   CfgType newCfg;
   int weight;
@@ -275,14 +275,14 @@ BasicRRTStrategy::ConnectTrees(int _regionID, VID _recentlyGrown) {
     get_cc(*(rdmp->m_pRoadmap),cmap,ccsit->second,cc);
     cmap.reset();
     vector<VID> closest;
-    nf->KClosest(nf->GetNFMethod(m_nf), rdmp, cc.begin(), cc.end(), _recentlyGrown, 1, back_inserter(closest));
+    nf->GetMethod(m_nf)->KClosest(rdmp, cc.begin(), cc.end(), _recentlyGrown, 1, back_inserter(closest));
     if (closest.size() != 0) 
       closestNodesOtherCCs.push_back(closest[0]);
   }
 
   //find closest VID from other CCS reps
   vector<VID> closestNode;
-  nf->KClosest(nf->GetNFMethod(m_nf), rdmp, closestNodesOtherCCs.begin(), 
+  nf->GetMethod(m_nf)->KClosest(rdmp, closestNodesOtherCCs.begin(), 
       closestNodesOtherCCs.end(), _recentlyGrown, 1, back_inserter(closestNode));
 
   //attempt connection
@@ -310,7 +310,7 @@ BasicRRTStrategy::EvaluateGoals(int _regionID){
   // Check if goals have been found
   for(vector<size_t>::iterator i = m_goalsNotFound.begin(); i!=m_goalsNotFound.end(); i++){
     vector<VID> closests;
-    nf->KClosest(nf->GetNFMethod(m_nf), region->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));     
+    nf->GetMethod(m_nf)->KClosest(region->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));     
     CfgType closest = region->GetRoadmap()->m_pRoadmap->find_vertex(closests[0])->property();
     double dist = dm->Distance(env, m_goals[*i], closest);
     if(m_debug) cout << "Distance to goal::" << dist << endl;

@@ -364,8 +364,8 @@ void HybridPRM::Finalize(int in_RegionID){
   myofstream.close();
 
   //output stats
-  pStatClass->ComputeInterCCFeatures(region->GetRoadmap(), GetMPProblem()->GetNeighborhoodFinder(), nf_label);
-  pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(), GetMPProblem()->GetNeighborhoodFinder()->GetNFMethod(nf_label)->GetDMMethod());
+  pStatClass->ComputeInterCCFeatures(region->GetRoadmap(), nf_label, GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_label)->GetDMMethod()->GetLabel());
+  pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(), GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_label)->GetDMMethod());
   string outStatname = base_filename+ ".stat";
   std::ofstream  stat_ofstream(outStatname.c_str());
   stat_ofstream << "NodeGen+Connection Stats" << endl;
