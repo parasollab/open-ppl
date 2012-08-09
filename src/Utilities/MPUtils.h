@@ -229,59 +229,16 @@ struct ComposeNegate {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//defines basic method container class to derive from
-//  (for classes like DistanceMetric, LocalPlanner, NeighborhoodFinder,NodeGenerator etc)
+///////////////////////////////////////////////////////////////////////////////////////////
+//ElementSet defines basic method container class to derive from
+//  (for classes like DistanceMetric, LocalPlanner, NeighborhoodFinder, Sampler etc)
 //
-//derived class must specify the Method type and MethodTypeList it contains
+//derived class must specify the Method type and MethodTypeList
 //  e.g., NeighborhoodFinder: Method = NeighborhoodFinderMethod
-//                            MethodTypeList = boost::mpl::list<BruteForce,ANN,...>
+//                            MethodTypeList = boost::mpl::list<BruteForceNF,BandsNF,...>
 //  e.g., LocalPlanner: Method = LocalPlannerMethod
 //                      MethodTypeList = boost::mpl::list<Straightline,RotateAtS,...>
-//  e.g., GenerateMapNodes: Method = NodeGenerationMethod
-//                      MethodTypeList = boost::mpl::list<UniformSampler,ObstacleBasedSampler,...>
-//
-//MethodTypeList stores the available method types in 1 place 
-//  used in dynamic_cast generation for dispatching 
-
-//base pmpl container class that holds a list available method objects
-template <typename Method, typename TypeList>
-class ContainerBase {
-  public:
-    typedef boost::shared_ptr<Method> MethodPointer;
-
-    ContainerBase() {} 
-    virtual ~ContainerBase() {}
-
-    void AddMethod(string _name, boost::shared_ptr<Method> _m) {
-      if(m_methods.find(_name) != m_methods.end())
-        cerr << "\nWarning, method list already has a method pointer associated with \"" << _name << "\", not added\n";
-      else
-        m_methods[_name] = _m;
-    }
-
-    boost::shared_ptr<Method> GetMethod(const string _name) {return m_methods[_name];}
-
-    void SetMPProblem(MPProblem* _mp){
-      typedef typename map<string, boost::shared_ptr<Method> >::iterator MIT;
-      for(MIT mit = m_methods.begin(); mit!=m_methods.end(); mit++){
-        mit->second->SetMPProblem(_mp);
-      }
-    }
-
-  protected:
-    //MethodTypes: sorted list of method types class will use, puts most derived first
-    typedef typename boost::mpl::sort<TypeList, boost::is_base_of<boost::mpl::_2, boost::mpl::_1> >::type MethodTypes;
-
-    //MethodTypes_begin, MethodTypes_end: used for iteration over type lists
-    typedef typename boost::mpl::begin<MethodTypes>::type MethodTypesBegin;
-    typedef typename boost::mpl::end<MethodTypes>::type MethodTypesEnd;
-
-    //shared_ptr used instead of regular pointer to handle memory 
-    //  allocation/release automatically
-    map<string, boost::shared_ptr<Method> > m_methods;
-};
-
-//example: Element = SamplerMethod, ElementTypeList is mpl list of available sampler methods
+///////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename Element>
 struct ElementFactory {
