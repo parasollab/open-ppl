@@ -92,15 +92,14 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 {
   public: 
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-    LocalNodeInfoCharacterizer(shared_ptr<DistanceMetricMethod> _dm, double dRadius) : NodeCharacterizerMethod<CFG,WEIGHT>(), dm(_dm), m_dRadius(dRadius)  {}
+    LocalNodeInfoCharacterizer(string _dm, double dRadius) : NodeCharacterizerMethod<CFG,WEIGHT>(), m_dmLabel(_dm), m_dRadius(dRadius)  {}
     LocalNodeInfoCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) : 
       NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
       
       m_dRadius = 0;
       ParseXML(in_Node);    
-      string dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
+      m_dmLabel =in_Node.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
-      dm = in_pProblem->GetDistanceMetric()->GetMethod(dm_label);
     };
     
     virtual void ParseXML(XMLNodeReader& in_Node) {
@@ -115,6 +114,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       
     virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion) {
       cout << "*********LocalNodeInfoCharacterizer:: m_dRadius = " << m_dRadius << endl;
+      NeighborhoodFinderMethod* rnf = new RadiusNF(m_dmLabel, m_dRadius, "", this->GetMPProblem()); 
       Roadmap<CFG,WEIGHT>* pRoadmap = inout_pRegion->GetRoadmap();
       Roadmap<CFG,WEIGHT>* pColRoadmap = inout_pRegion->GetColRoadmap();
       RoadmapGraph<CFG,WEIGHT>* pGraph = pRoadmap->m_pRoadmap;
@@ -129,8 +129,10 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       typename vector<VID>::iterator itr;
       for(itr = vids.begin(); itr != vids.end(); ++itr)
       {
-        vector<VID> vids = dm->RangeQuery(pRoadmap,*itr,m_dRadius);
-        vector<VID> col_vids = dm->RangeQuery(pColRoadmap,(*(pGraph->find_vertex(*itr))).property(),m_dRadius);
+        vector<VID> vid;//s = dm->RangeQuery(pRoadmap,*itr,m_dRadius);
+        vector<VID> col_vids;// = dm->RangeQuery(pColRoadmap,(*(pGraph->find_vertex(*itr))).property(),m_dRadius);
+        rnf->KClosest(pRoadmap, *itr, 1, back_inserter(vid));
+        rnf->KClosest(pColRoadmap, (*(pGraph->find_vertex(*itr))).property(), 1, back_inserter(col_vids));
         //cout << "VID = " << *itr << " has " << vids.size() 
         //<< "nodes in radius in Free Map and " 
         //<< col_vids.size() << " in Col Map " << endl;
@@ -152,13 +154,13 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
           (*(pGraph->find_vertex(*itr))).property().SetLabel("BetterThanBridge",true);
         }
       }
+      delete rnf;
     };
     
     virtual void PrintOptions(ostream& out_os) {};
   private:
-    shared_ptr< DistanceMetricMethod> dm;
-    
     bool IsBridgeLike(CFG free_cfg,vector<CFG> vec_col) {
+      DistanceMetric::DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel);
       typename vector<CFG>::iterator I,J;
       for(I=vec_col.begin(); I!=vec_col.end(); ++I) {
         for(J=I; J!=vec_col.end(); ++J) {
@@ -177,6 +179,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
     };
     
     double m_dRadius;
+    string m_dmLabel;
 };
 
 
