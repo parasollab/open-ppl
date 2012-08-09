@@ -1,7 +1,7 @@
 #ifndef BANDSNF_H_
 #define BANDSNF_H_
 
-#include "NeighborhoodFinderMethod.hpp"
+#include "NeighborhoodFinderMethod.h"
 #include "MPProblem.h"
 
 #include <vector>

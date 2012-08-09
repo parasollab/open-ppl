@@ -1,4 +1,4 @@
-#include "NeighborhoodFinderMethod.hpp"
+#include "NeighborhoodFinderMethod.h"
 #include "DistanceMetrics.h"
 #include "MetricUtils.h"
 #include "MPProblem.h"

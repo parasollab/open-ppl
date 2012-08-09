@@ -1,34 +1,34 @@
-#ifndef BFFNF_H_
-#define BFFNF_H_
+#ifndef HierarchicalNF_H_
+#define HierarchicalNF_H_
 
-#include "NeighborhoodFinderMethod.hpp"
+#include "NeighborhoodFinderMethod.h"
 #include "DistanceMetrics.h"
 #include <vector>
 
-class BFFNF: public NeighborhoodFinderMethod {
+class HierarchicalNF: public NeighborhoodFinderMethod {
   public:
-    BFFNF(string _dmm = "", string _dmm2 = "", size_t _k2 = 5, string _label = "", MPProblem* _problem = NULL) 
+    HierarchicalNF(string _dmm = "", string _dmm2 = "", size_t _k2 = 5, string _label = "", MPProblem* _problem = NULL) 
       : NeighborhoodFinderMethod(_dmm, _label, _problem), m_dmLabel2(_dmm2), m_k2(_k2) {
-        SetName("BFFNF");
-        m_nf1 = new BFNF(_dmm,"",_problem);
-        m_nf2 = new BFNF(_dmm2,"",_problem);
+        SetName("HierarchicalNF");
+        m_nf1 = new BruteForceNF(_dmm,"",_problem);
+        m_nf2 = new BruteForceNF(_dmm2,"",_problem);
       }
 
-    BFFNF(XMLNodeReader& _node, MPProblem* _problem) 
+    HierarchicalNF(XMLNodeReader& _node, MPProblem* _problem) 
       : NeighborhoodFinderMethod(_node,_problem) {
-        SetName("BFFNF");
+        SetName("HierarchicalNF");
 
-        m_k2 = _node.numberXMLParameter("k2", true, 5, 0, MAX_INT, "K value for BFFNF");
+        m_k2 = _node.numberXMLParameter("k2", true, 5, 0, MAX_INT, "K value for HierarchicalNF");
         m_dmLabel2 = _node.stringXMLParameter("dmMethod2",true,"","Distance Metric Method the second one");
 
-        m_nf1 = new BFNF(m_dmLabel,"",_problem);
-        m_nf2 = new BFNF(m_dmLabel2,"",_problem);
+        m_nf1 = new BruteForceNF(m_dmLabel,"",_problem);
+        m_nf2 = new BruteForceNF(m_dmLabel2,"",_problem);
 
         if(this->m_debug)
           PrintOptions(cout);
       }
 
-    virtual ~BFFNF(){
+    virtual ~HierarchicalNF(){
       delete m_nf1;
       delete m_nf2;
     }
@@ -54,14 +54,14 @@ class BFFNF: public NeighborhoodFinderMethod {
           InputIterator _first1, InputIterator _last1, 
           InputIterator _first2, InputIterator _last2, 
           size_t _k, OutputIterator _out){
-        cerr << "ERROR:: BFFNF::KClosestPairs is not yet implemented. Exiting" << endl;
+        cerr << "ERROR:: HierarchicalNF::KClosestPairs is not yet implemented. Exiting" << endl;
         exit(1);
       }
 
   private:
     string m_dmLabel2;
-    BFNF *m_nf1;
-    BFNF *m_nf2;
+    BruteForceNF *m_nf1;
+    BruteForceNF *m_nf2;
     size_t m_k2;
 };
 

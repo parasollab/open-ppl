@@ -1,7 +1,7 @@
 #ifndef _MPNN_NEIGHBORHOOD_FINDER_H_
 #define _MPNN_NEIGHBORHOOD_FINDER_H_
 
-#include "NeighborhoodFinderMethod.hpp"
+#include "NeighborhoodFinderMethod.h"
 #include "MPProblem.h"
 #include "MPNNWrapper.h"
 

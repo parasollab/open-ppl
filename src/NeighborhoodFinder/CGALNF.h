@@ -5,7 +5,7 @@
 #include <CGAL/Search_traits.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 
-#include "NeighborhoodFinderMethod.hpp"
+#include "NeighborhoodFinderMethod.h"
 #include "MPProblem.h"
 
 #include <vector>

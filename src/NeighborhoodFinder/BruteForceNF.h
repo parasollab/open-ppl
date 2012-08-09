@@ -1,28 +1,28 @@
-#ifndef BFNF_H_
-#define BFNF_H_
+#ifndef BRUTEFORCENF_H_
+#define BRUTEFORCENF_H_
 
-#include "NeighborhoodFinderMethod.hpp"
+#include "NeighborhoodFinderMethod.h"
 #include <vector>
 
 using namespace std;
 
 class Environment;
 
-class BFNF: public NeighborhoodFinderMethod {
+class BruteForceNF: public NeighborhoodFinderMethod {
   public:
-    BFNF(string _dmLabel = "", string _label = "", MPProblem* _problem = NULL) :
+    BruteForceNF(string _dmLabel = "", string _label = "", MPProblem* _problem = NULL) :
       NeighborhoodFinderMethod(_dmLabel, _label, _problem) {
-        this->SetName("BFNF");
+        this->SetName("BruteForceNF");
       }
 
-    BFNF(XMLNodeReader& _node, MPProblem* _problem) :
+    BruteForceNF(XMLNodeReader& _node, MPProblem* _problem) :
       NeighborhoodFinderMethod(_node, _problem) {
-        this->SetName("BFNF");
+        this->SetName("BruteForceNF");
         if(this->m_debug)
           PrintOptions(cout);
       }
 
-    virtual ~BFNF() {}
+    virtual ~BruteForceNF() {}
 
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       OutputIterator KClosest(RDMP* _rmp, 
@@ -39,7 +39,7 @@ class BFNF: public NeighborhoodFinderMethod {
 
 template<typename RDMP, typename InputIterator, typename OutputIterator>
 OutputIterator 
-BFNF::KClosest(RDMP* _rmp, InputIterator _first, InputIterator _last, 
+BruteForceNF::KClosest(RDMP* _rmp, InputIterator _first, InputIterator _last, 
     typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out) {
 
   typedef typename RDMP::VID VID;
@@ -51,10 +51,10 @@ BFNF::KClosest(RDMP* _rmp, InputIterator _first, InputIterator _last,
 
   // TO DO NOTE: A temporary fix to support parallel runtime. The problem here is that is the way
   // we pass pointer around which is a bit ugly with parallelism. In this particular case
-  // the pointer to GetMPProblem became invalid because of the way BFNF is called from
-  // Connector, thus call to timing stats below seg fault. One fix is to call BFNF(_node, _problem)
+  // the pointer to GetMPProblem became invalid because of the way BruteForceNF is called from
+  // Connector, thus call to timing stats below seg fault. One fix is to call BruteForceNF(_node, _problem)
   // constructor and this will be done when parallel code supports all NF. What this means is 
-  // that I can not just support BFNF by itself.
+  // that I can not just support BruteForceNF by itself.
 #ifndef _PARALLEL
   StartTotalTime();
   StartQueryTime();
@@ -99,7 +99,7 @@ BFNF::KClosest(RDMP* _rmp, InputIterator _first, InputIterator _last,
 
 template<typename RDMP, typename InputIterator, typename OutputIterator>
 OutputIterator 
-BFNF::KClosestPairs(RDMP* _rmp,
+BruteForceNF::KClosestPairs(RDMP* _rmp,
     InputIterator _first1, InputIterator _last1, 
     InputIterator _first2, InputIterator _last2, size_t _k, OutputIterator _out) {
 

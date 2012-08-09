@@ -4,15 +4,15 @@
 #include "MPUtils.h"
 #include "MetricUtils.h"
 
-#include "BFNF.hpp"
-#include "BFFNF.hpp"
-#include "RadiusNF.hpp"
-//#include "DPESNF.hpp"
-//#include "MPNNNF.hpp"
-#include "CGALNF.hpp"
-//#include "STNF.hpp"
-//#include "MTNF.hpp"
-#include "BandsNF.hpp"
+#include "BruteForceNF.h"
+#include "HierarchicalNF.h"
+#include "RadiusNF.h"
+//#include "DPESNF.h"
+//#include "MPNNNF.h"
+#include "CGALNF.h"
+//#include "SpillTreeNF.h"
+//#include "MetricTreeNF.h"
+#include "BandsNF.h"
 
 /**This is the main distance metric class.  It contains two vectors: all 
   *and selected.  all contains all of the different types of distance 

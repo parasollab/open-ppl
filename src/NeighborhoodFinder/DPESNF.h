@@ -1,7 +1,7 @@
 #ifndef _DPES_NEIGHBORHOOD_FINDER_H_
 #define _DPES_NEIGHBORHOOD_FINDER_H_
 
-#include "NeighborhoodFinderMethod.hpp"
+#include "NeighborhoodFinderMethod.h"
 #include "MPProblem.h"
 #include "DPES.h"
 

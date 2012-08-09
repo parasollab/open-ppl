@@ -3,7 +3,7 @@
 #ifndef RADIUSNF_H_
 #define RADIUSNF_H_
 
-#include "NeighborhoodFinderMethod.hpp"
+#include "NeighborhoodFinderMethod.h"
 #include <vector>
 
 using namespace std;

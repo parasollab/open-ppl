@@ -8,8 +8,8 @@
 #include "MPUtils.h"
 #include "MPProblem.h"
 
-class BFNF;
-class BFFNF;
+class BruteForceNF;
+class HierarchicalNF;
 class RadiusNF;
 //template<class CFG, class WEIGHT>
 //class DPESNF;
@@ -17,21 +17,21 @@ class RadiusNF;
 //class MPNNNF;
 class CGALNF;
 //template<class CFG, class WEIGHT>
-//class STNF;
+//class SpillTreeNF;
 //template<class CFG, class WEIGHT>
-//class MTNF;
+//class MetricTreeNF;
 class BandsNF;
 
 namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
   typedef boost::mpl::list<
-    BFNF,
-    BFFNF,
+    BruteForceNF,
+    HierarchicalNF,
     RadiusNF,
     //DPESNF<CfgType,WeightType>,
     //MPNNNF<CfgType,WeightType>,
     CGALNF,
-    //STNF<CfgType,WeightType>, 
-    //MTNF<CfgType,WeightType>,
+    //SpillTreeNF<CfgType,WeightType>, 
+    //MetricTreeNF<CfgType,WeightType>,
     BandsNF
     > NeighborhoodFinderMethodList;
   

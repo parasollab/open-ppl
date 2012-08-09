@@ -1,57 +1,44 @@
 
-#ifndef _MT_NEIGHBORHOOD_FINDER_H_
-#define _MT_NEIGHBORHOOD_FINDER_H_
+#ifndef METRICTREENF_H_
+#define METRICTREENF_H_
 
-#include "NeighborhoodFinderMethod.hpp"
-#include "util.h"
+#include "NeighborhoodFinderMethod.h"
 #include "MPProblem.h"
 
-#include "MetricUtils.h"
-#include <vector>
-#include <functional>
-#include <spillTree.hpp>
-#include "Graph.h"
+#include <SpillTree.h>
 #include <math.h>
 
-
-class Cfg;
-class MultiBody;
-class Input;
-class Environment;
-class n_str_param;
-class MPProblem;
-template <class CFG, class WEIGHT> class Roadmap;
-
+#include <vector>
+#include <functional>
 using namespace std;
 
 
 template<typename CFG, typename WEIGHT>
-class MTNF: public NeighborhoodFinderMethod {
+class MetricTreeNF: public NeighborhoodFinderMethod {
 public:
+  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
-  MTNF(XMLNodeReader& _node, MPProblem* _problem) :
-    NeighborhoodFinderMethod(_node, _problem) {
+  MetricTreeNF(XMLNodeReader& _node, MPProblem* _problem) :
+    NeighborhoodFinderMethod(_node,_problem) {
     m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for CGAL");
     m_cur_roadmap_version = -1;
     spillTreeNotCreated=true;
   }
 
-  MTNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
+  MetricTreeNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
     NeighborhoodFinderMethod(_dmm, _label) {
     m_epsilon = 0.0;
     m_cur_roadmap_version = -1;
     spillTreeNotCreated=true;
-    //spillTree<CFG, WEIGHT> sTree(5000,.1,.6,true,false);
-    //spillTreePtr=&sTree;
   }
 
-  
+  virtual ~MetricTreeNF() {}  
 
   virtual const std::string GetName () const {
-    return MTNF::GetClassName();
+    return MetricTreeNF::GetClassName();
   }
   static const std::string GetClassName() {
-    return "MTNF";
+    return "MetricTreeNF";
   }
   virtual void PrintOptions(std::ostream& out_os) const {
     out_os << this->GetClassName() << ":: epsilon = " << m_epsilon << std::endl;
@@ -113,13 +100,13 @@ private:
 template<typename CFG, typename WEIGHT>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-MTNF<CFG,WEIGHT>::
+MetricTreeNF<CFG,WEIGHT>::
 KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
     InputIterator _input_first, InputIterator _input_last, VID _v,
     int k, OutputIterator _out) {
   //cout<<"in spill tree k closest fun"<<endl;
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->GetData(_v);
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
   return KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
 }
 
@@ -128,8 +115,8 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
 template<typename CFG, typename WEIGHT>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-MTNF<CFG,WEIGHT>::KClosest( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k, OutputIterator _out) {
-  list<VID> verticies;    
+MetricTreeNF<CFG,WEIGHT>::KClosest( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k, OutputIterator _out) {
+  vector<VID> verticies;    
   InputIterator v1;
   StartTotalTime();
   for(v1 = _input_first; v1 != _input_last; ++v1) {
@@ -146,7 +133,7 @@ MTNF<CFG,WEIGHT>::KClosest( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _input_firs
   StartQueryTime();
   closest=sTreePtr->query(_cfg, k);
   EndQueryTime();
-  for(std::vector<VID>::iterator iter = closest->begin(); iter != closest->end(); ++iter) {
+  for(typename std::vector<VID>::iterator iter = closest->begin(); iter != closest->end(); ++iter) {
     //cout<<"closest="<<*iter<<endl;
     *_out = *iter;
     ++_out;
@@ -159,19 +146,19 @@ MTNF<CFG,WEIGHT>::KClosest( Roadmap<CFG,WEIGHT>* _rmp, InputIterator _input_firs
 template<typename CFG, typename WEIGHT>
 template<typename OutputIterator>
 OutputIterator
-MTNF<CFG,WEIGHT>::
+MetricTreeNF<CFG,WEIGHT>::
 KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
   VID _v, int k, OutputIterator _out) {
 
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = pMap->GetData(_v); 
+  CFG _v_cfg = (*(pMap->find_vertex(_v))).property(); 
   return KClosest(_rmp, _v_cfg, k, _out);
 }
 
 template<typename CFG, typename WEIGHT>
 template<typename OutputIterator>
 OutputIterator
-MTNF<CFG,WEIGHT>::
+MetricTreeNF<CFG,WEIGHT>::
 KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
   CFG _cfg, int k, OutputIterator _out) {
   
@@ -180,19 +167,20 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   //StartConstructionTime();
   if(spillTreeNotCreated){
     m_cur_roadmap_version = _rmp->m_pRoadmap->roadmapVCS.get_version_number();
+    StartConstructionTime();
     RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
     vector<VID> vec_vids;
     pMap->GetVerticesVID(vec_vids);
-    list<VID> verticies;
-    for(std::vector<VID>::iterator iter = vec_vids.begin(); iter != vec_vids.end(); ++iter) {
-      VID vid=*iter;
-      verticies.push_back(vid);
-    }
+    //list<VID> verticies;
+    //for(std::vector<VID>::iterator iter = vec_vids.begin(); iter != vec_vids.end(); ++iter) {
+    //  VID vid=*iter;
+    //  verticies.push_back(vid);
+    //}
     StartConstructionTime();
     spillTreePtr = new spillTree<CFG, WEIGHT>(200,1,.7,false,false, true);
     spillTreePtr->setDistanceMetric(dmm);
     spillTreePtr->setRoadmap(_rmp);
-    spillTreePtr->create(verticies);
+    spillTreePtr->create(vec_vids);
     EndConstructionTime();
     spillTreeNotCreated=false;
   }else{
@@ -208,7 +196,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   closest=spillTreePtr->query(_cfg, k);
   EndQueryTime();
   //EndTotalTime();
-  for(std::vector<VID>::iterator iter = closest->begin(); iter != closest->end(); ++iter) {
+  for(typename std::vector<VID>::iterator iter = closest->begin(); iter != closest->end(); ++iter) {
     *_out = *iter;
     ++_out;
   }
@@ -222,7 +210,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
 template<typename CFG, typename WEIGHT>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-MTNF<CFG,WEIGHT>::
+MetricTreeNF<CFG,WEIGHT>::
 KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
   InputIterator _in1_first, InputIterator _in1_last, 
   InputIterator _in2_first, InputIterator _in2_last, 
@@ -233,7 +221,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
 
 template<typename CFG, typename WEIGHT>
 void
-MTNF<CFG,WEIGHT>::
+MetricTreeNF<CFG,WEIGHT>::
 UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
 {  
   int new_version = _rmp->m_pRoadmap->roadmapVCS.get_version_number();
@@ -252,7 +240,7 @@ UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
   typename RoadmapVCS<CFG, WEIGHT>::cce_iter iter;
   
   CFG temp_cfg;
-  int dim = temp_cfg.DOF();
+  //int dim = temp_cfg.DOF();
  // cout << "CGALNF::UpdateInternalModel - dim = " << dim << endl;
   //VID _v = 0;
   for (iter = start; iter != end; iter++) {
