@@ -22,7 +22,7 @@
     </validity_test>
 
     <NeighborhoodFinder>
-      <BFNF Label="BFNF" dm_method="euclidean"/>
+      <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
     </NeighborhoodFinder>
 
     <MPRegions/>

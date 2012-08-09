@@ -592,38 +592,36 @@ buildCDstructure(cd_predefined cdtype)
 }
 
 void
-Environment::BuildRobotStructure()
-{
-    shared_ptr<MultiBody> robot = multibody[robotIndex];
-    int fixedBodyCount = robot -> GetFixedBodyCount();
-    int freeBodyCount = robot->GetFreeBodyCount();
-    for (int i = 0; i < fixedBodyCount; i++) {
-      m_robotGraph.add_vertex(i);
-    }
-    for (int i = 0; i < freeBodyCount; i++) {
-        m_robotGraph.add_vertex(i + fixedBodyCount); //Need to account for FixedBodies added above
+Environment::BuildRobotStructure() {
+  shared_ptr<MultiBody> robot = multibody[robotIndex];
+  int fixedBodyCount = robot -> GetFixedBodyCount();
+  int freeBodyCount = robot->GetFreeBodyCount();
+  for (int i = 0; i < fixedBodyCount; i++) {
+    m_robotGraph.add_vertex(i);
+  }
+  for (int i = 0; i < freeBodyCount; i++) {
+    m_robotGraph.add_vertex(i + fixedBodyCount); //Need to account for FixedBodies added above
+  }
+  //Total amount of bodies in environment: free + fixed
+  for (int i = 0; i < freeBodyCount + fixedBodyCount; i++){
+    shared_ptr<Body> body = robot -> GetBody(i);  
+    //For each body, find forward connections and connect them 
+    for (int j = 0; j < body->ForwardConnectionCount(); j++) {
+      shared_ptr<Body> forward = body -> GetForwardConnection(j).GetNextBody();
+      if (forward -> IsFixedBody()) {
+        //Quick hack to avoid programming ability to determine subclass
+        shared_ptr<FixedBody> castFixedBody = boost::dynamic_pointer_cast<FixedBody>(forward);
+        int nextIndex = robot -> GetFixedBodyIndex(castFixedBody);
+        m_robotGraph.add_edge(i, nextIndex);
       }
-    //Total amount of bodies in environment: free + fixed
-    for (int i = 0; i < freeBodyCount + fixedBodyCount; i++){
-      shared_ptr<Body> body = robot -> GetBody(i);  
-      //For each body, find forward connections and connect them 
-      for (int j = 0; j < body->ForwardConnectionCount(); j++) {
-        shared_ptr<Body> forward = body -> GetForwardConnection(j).GetNextBody();
-        if (forward -> IsFixedBody()) {
-          //Quick hack to avoid programming ability to determine subclass
-          shared_ptr<FixedBody> castFixedBody = boost::dynamic_pointer_cast<FixedBody>(forward);
-          int nextIndex = robot -> GetFixedBodyIndex(castFixedBody);
-          m_robotGraph.add_edge(i, nextIndex);
-        }
-        else {
-          shared_ptr<FreeBody> castFreeBody = boost::dynamic_pointer_cast<FreeBody>(forward);
-          int nextIndex = robot -> GetFreeBodyIndex(castFreeBody);
-          m_robotGraph.add_edge(i, nextIndex);
-        }
-      } 
-    }
+      else {
+        shared_ptr<FreeBody> castFreeBody = boost::dynamic_pointer_cast<FreeBody>(forward);
+        int nextIndex = robot -> GetFreeBodyIndex(castFreeBody);
+        m_robotGraph.add_edge(i, nextIndex);
+      }
+    } 
+  }
 
-  write_vertices_edges_graph(m_robotGraph,cout); 
   //Robot ID typedef
   typedef RobotGraph::vertex_descriptor RID; 
   vector< pair<size_t,RID> > ccs;
@@ -649,7 +647,7 @@ Environment::BuildRobotStructure()
       cerr << "Each robot must have at least one base. Please fix .env file." << endl;
       exit(1);
     }
-    
+
     Robot::Base bt = robot->GetFreeBody(baseIndx)->GetBase();
     Robot::BaseMovement bm = robot->GetFreeBody(baseIndx)->GetBaseMovement();
     Robot::JointMap jm;

@@ -16,7 +16,7 @@
       <CollisionDetection Label="cd" method="RAPID" />
     </validity_test>
     <NeighborhoodFinder>
-      <BFNF Label="BFNF" dm_method="euclidean"/>
+      <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
     </NeighborhoodFinder>
   <MPRegions/>
   </MPProblem>
@@ -28,7 +28,7 @@
       <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
     </connection_methods>
     <lp_methods>
-      <StraightLine Label="sl" length="0" binary_search="1" vc_method="cd"/>
+      <StraightLine Label="sl" binary_search="1" vc_method="cd"/>
     </lp_methods>
     <MPEvaluator_methods>
       <ConditionalEvaluation Label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />

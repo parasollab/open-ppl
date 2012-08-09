@@ -23,7 +23,7 @@
     </validity_test>
 
     <NeighborhoodFinder>
-      <BFNF Label="BFNF" dm_method="euclidean"/>
+      <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
     </NeighborhoodFinder>
     
     <MPRegions/>
@@ -42,7 +42,7 @@
     </connection_methods>
 
     <lp_methods>
-      <StraightLine Label="sl" length="0" binary_search="1" vc_method="cd_rapid"/>
+      <StraightLine Label="sl" binary_search="1" vc_method="cd_rapid"/>
     </lp_methods>
 
     <MPEvaluator_methods>

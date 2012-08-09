@@ -35,7 +35,7 @@
     </validity_test>
 
     <NeighborhoodFinder>
-      <BFNF Label="BFNF" dm_method="euclidean"/>
+      <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
     </NeighborhoodFinder>
     <MPRegions/>
   </MPProblem>
@@ -53,15 +53,17 @@
     </connection_methods>
 
     <lp_methods>
-      <StraightLine Label="sl" length="0" binary_search="1" vc_method="cd1"/>
+      <StraightLine Label="sl" binary_search="1" vc_method="cd1"/>
     </lp_methods>
 
     <MPEvaluator_methods>
-      <MPRegionConditionalEvaluators>
-        <NumNodesEvaluation Label="NodesEval" size="100" />
-        <PrintMapEvaluation Label="PrintMap" base_name="Basic" />
-      </MPRegionConditionalEvaluators>
+      <PrintMapEvaluation Label="PrintMap" base_name="Basic"/>
+      <ConditionalEvaluation Label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
     </MPEvaluator_methods>
+
+    <MetricMethods>
+      <NumNodesMetric Label="NumNodes" />
+    </MetricMethods>
 
     <MPStrategyMethod Controller="BasicPRM1">
       <!-- Basic PRM where num samples is based on Number -->
