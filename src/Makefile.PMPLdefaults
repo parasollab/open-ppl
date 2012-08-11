@@ -303,6 +303,7 @@ PMPL_OBJS = \
 	ValidityChecker/CollisionDetection.o \
 	ValidityChecker/NodeClearanceValidity.o \
         ValidityChecker/MedialAxisClearanceValidity.o \
+        ValidityChecker/ObstacleClearanceValidity.o \
 	Metrics/Metrics.o \
         Metrics/NumNodesMetric.o \
         Metrics/NumEdgesMetric.o \

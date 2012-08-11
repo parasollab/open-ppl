@@ -7,6 +7,7 @@
 #include "CollisionDetectionValidity.hpp"
 #include "NodeClearanceValidity.h"
 #include "MedialAxisClearanceValidity.h"
+#include "ObstacleClearanceValidity.h"
 #include "ComposeVC.hpp"
 #include "NegateValidity.hpp"
 #include "AlwaysTrueValidity.h"
@@ -50,6 +51,9 @@ public:
         AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "AlwaysTrueValidity") {
         VCMethodPtr vc(new AlwaysTrueValidity<CFG>(*citr, in_pProblem));
+        AddVCMethod(vc->GetLabel(), vc);
+      } else if(citr->getName() == "ObstacleClearance") {
+        VCMethodPtr vc(new ObstacleClearanceValidity(*citr, in_pProblem));
         AddVCMethod(vc->GetLabel(), vc);
       } else if(citr->getName() == "SurfaceValidity") {
         VCMethodPtr vc(new SurfaceValidity<CFG>(*citr, in_pProblem));
