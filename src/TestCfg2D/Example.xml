@@ -14,10 +14,6 @@
     </distance_metrics>    
     <validity_test>    
       <CollisionDetection Label="cd" method="RAPID" />
-      <CollisionDetection Label="cd2" method="VCLIP" />
-      <ObstacleClearance Label="oc" vc_method="cd2" dm_method="euclidean"
-        clearance_type="exact" clearance_rays="20"
-        use_bbx="true" obst_clearance="2.5" positional="true"/>
     </validity_test>
     <NeighborhoodFinder>
       <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
