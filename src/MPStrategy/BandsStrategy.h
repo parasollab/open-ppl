@@ -338,8 +338,9 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         // diameter computed in BandStats
         double hop_diameter = 0.0;
         double weight_diameter = 0.0;
-        hop_diameter = stapl::sequential::diameter(*(region->GetRoadmap()->m_pRoadmap), CCStats[0].second, false);
-        weight_diameter = stapl::sequential::diameter(*(region->GetRoadmap()->m_pRoadmap), CCStats[0].second, true);
+        //TODO: Note- diameter as computed by STAPL now is hop_diameer, discussion is on going as to whether STAPL will support both diamter compuation on user will provide it as part of edge property
+        hop_diameter = stapl::sequential::diameter(*(region->GetRoadmap()->m_pRoadmap), CCStats[0].second);
+        weight_diameter = stapl::sequential::diameter(*(region->GetRoadmap()->m_pRoadmap), CCStats[0].second);
         // std::sort (CCStats.begin(),  CCStats.end(), __CCVID_Compare<std::pair<int,VID> >() );
         // cout << "Begin run dia twice, start from largest component" << endl;
         //cout << "CCStats.size" << CCStats.size()<< endl ;
@@ -793,7 +794,7 @@ class BandsStats : public MPStrategyMethod {
 	 computation from STAPL graph algo returns diameter computed from actual
 	 edge weight. If the flag is set to false, we use the number of edges
 	 along the path to determine the diameter*/
-      double diameter = stapl::sequential::diameter(*(rmp.m_pRoadmap), CCStats[0].second,true);
+      double diameter = stapl::sequential::diameter(*(rmp.m_pRoadmap), CCStats[0].second);
       return diameter;
     }
 

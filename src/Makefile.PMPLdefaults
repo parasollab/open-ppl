@@ -209,7 +209,7 @@ KMEANS_LIBFILE = ${KMEANS_DIR}/libkmeans.a
 # stapl macros
 #set parallel PRM options
 ifeq (${parallel}, 0)
-	STAPL_INCL  = -I${STAPL_DIR}/include 
+	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/stapl -I${STAPL_DIR}/include
 else
 	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/stapl -I${STAPL_DIR}/include -I${STAPL_DIR}/tools  -I${STAPL_DIR}/tools/libstdc++/${STL_LIB}/ -I${STAPL_DIR}/tools/icl
         STAPL_DEF = -D_PARALLEL -D_STAPL -D_STAPL_MPI -D_PGRAPH -DDYNAMIC_GRAPH -DSTAPL_RUNTIME_ENABLE_NO_COMM_GUARD

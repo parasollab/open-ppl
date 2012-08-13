@@ -72,8 +72,8 @@ double DiameterMetric<CFG, WEIGHT>::operator()(int _regionID) {
     get_cc(*pMap, cmap, CC->second, cc_vids);
     for(V = cc_vids.begin(); V != cc_vids.end(); ++V)
       cc_data.push_back((*(pMap->find_vertex(*V))).property());
-
-    diameter.push_back(stapl::sequential::diameter(*pMap, CC->second, true));
+// Beware- this diameter is hop count (weight =1), proper fix is needed
+    diameter.push_back(stapl::sequential::diameter(*pMap, CC->second));
   }
 
   ccDiameter = *(diameter.begin());
