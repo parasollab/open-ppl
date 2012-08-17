@@ -14,6 +14,7 @@
 #include "CfgTypes.h"
 #include <Weight.h>
 #include <MPUtils.h>
+#include <MetricUtils.h>
 
 /////////////////////////////////////////////////////////////
 //	Weight
@@ -22,7 +23,7 @@
 double DefaultWeight::MAX_WEIGHT = MAX_DBL;
 
 DefaultWeight::DefaultWeight(string _lpLabel, double _w, vector<CfgType>& _intermediates):
-  m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates){
+  m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates), m_checkedMult(MAXINT){
   }
 
 DefaultWeight::~DefaultWeight(){}
@@ -47,6 +48,7 @@ DefaultWeight::operator=(const DefaultWeight& _w){
   m_lpLabel = _w.GetLPLabel();
   m_weight = _w.GetWeight();
   m_intermediates = _w.GetIntermediates();
+  m_checkedMult = _w.GetChecked();
   return *this;
 }
 

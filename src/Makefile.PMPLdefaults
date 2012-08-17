@@ -328,8 +328,6 @@ ifeq (${parallel}, 0)
 	MPStrategy/OBRRTStrategy.o \
 	MPStrategy/TogglePRMStrategy.o \
 	MPStrategy/HybridPRM.o \
-	MPStrategy/QueryStrategy.o \
-	MPStrategy/SmoothQueryStrategy.o \
         MPStrategy/ResamplePointStrategy.o \
 	MPStrategy/EvaluateMapStrategy.o \
 	MPStrategy/ClosedChainStrategy.o \

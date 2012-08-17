@@ -178,6 +178,12 @@ void BasicPRM::Run(int _regionID){
   
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation){
+    if(allNodesVID.size() != region->GetRoadmap()->m_pRoadmap->get_num_vertices()){
+      allNodesVID.clear();
+      region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
+      if(m_debug)
+        cout << "\nMy roadmap is not equal to my vids.\nnum nodes = " << allNodesVID.size() << endl;
+    }
     m_currentIteration++;
     vector<VID> thisIterationNodesVID;
     if(m_startAt <= NODE_GENERATION) {
@@ -382,16 +388,26 @@ BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
   //add valid nodes to roadmap
   typedef vector<CfgType>::iterator CIT;
   for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
-    if(!(*cit).IsLabel("VALID")){
-      !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vcMethod),
-            *cit, GetMPProblem()->GetEnvironment(), *(_region->GetStatClass()), cdInfo, true, &callee));
-    }
-    if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
+    if(cit->IsLabel("Lazy") && cit->GetLabel("Lazy")){
       if(!_region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
         VID vid = _region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
         //store value and increment iterator
         *_thisIterationOut++ = vid;
         *_allOut++ = vid;
+      }
+    }
+    else{ 
+      if(!cit->IsLabel("VALID")){
+        !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vcMethod),
+              *cit, GetMPProblem()->GetEnvironment(), *(_region->GetStatClass()), cdInfo, true, &callee));
+      }
+      if(cit->IsLabel("VALID") && cit->GetLabel("VALID")) {
+        if(!_region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+          VID vid = _region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
+          //store value and increment iterator
+          *_thisIterationOut++ = vid;
+          *_allOut++ = vid;
+        }
       }
     }
   }

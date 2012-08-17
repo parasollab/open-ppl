@@ -61,6 +61,10 @@ class DefaultWeight {
     double Weight() const { return GetWeight(); } //for GraphAlgo interface
     void SetWeight(double _w){ m_weight = _w; }
 
+    bool IsChecked(int _mult) const { return m_checkedMult <= _mult; }
+    void SetChecked(int _mult) { m_checkedMult = min(m_checkedMult, _mult); }
+    int GetChecked() const { return m_checkedMult; }
+
     // Data
   protected:
     string m_lpLabel;
@@ -68,6 +72,7 @@ class DefaultWeight {
     vector<CfgType> m_intermediates;
 
     static double MAX_WEIGHT;
+    int m_checkedMult;
 
   public:
     //changed local to member

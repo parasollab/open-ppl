@@ -26,6 +26,7 @@ class AlwaysTrueValidity : public ValidityCheckerMethod {
     virtual bool 
       IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
           CDInfo& _cdInfo, bool _enablePenetration, string *_callName) {
+        _cfg.SetLabel("Lazy", true);
         return true;
       }
 

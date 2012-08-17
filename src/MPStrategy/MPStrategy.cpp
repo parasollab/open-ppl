@@ -17,8 +17,6 @@
 #include "TimingStats.h"
 #include "NFComparer.h"
 #include "BandsStrategy.h"
-#include "QueryStrategy.h"
-#include "SmoothQueryStrategy.h"
 #include "ResamplePointStrategy.h"
 #include "EvaluateMapStrategy.h"
 #include "UAStrategy.h"
@@ -155,10 +153,6 @@ MPStrategyMethod* MPStrategy::CreateMPStrategyMethod(XMLNodeReader& citr){
     mpsm = new BandsIncrementalRoadmap(citr, GetMPProblem());
   } else if(citr.getName() == "BandsStats") {
     mpsm = new BandsStats(citr, GetMPProblem());
-  } else if(citr.getName() == "QueryStrategy") {
-    mpsm = new QueryStrategy(citr,GetMPProblem());
-  } else if(citr.getName() == "SmoothQueryStrategy") {
-    mpsm = new SmoothQueryStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "EvaluateMapStrategy") {
     mpsm = new EvaluateMapStrategy(citr,GetMPProblem());
   } else if(citr.getName() == "ResamplePointStrategy") {

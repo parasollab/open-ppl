@@ -412,7 +412,7 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
   }
   
   void delete_vertex(const VID& _vd){
-	  cout << "WARNING- Delete vertex not working pgraph" << endl;
+    cout << "WARNING- Delete vertex not working pgraph" << endl;   
   }
   
   void AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w){
