@@ -165,23 +165,6 @@ LazyPRMQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClas
 
   // Path all valid, now recreate the path
   return Query<CFG, WEIGHT>::CanRecreatePath(_rdmp, _stats, _attemptedPath, _recreatedPath);
-
-/*  _recreatedPath.push_back(_rdmp->m_pRoadmap->find_vertex(_attemptedPath[0])->property());
-  for(typename vector<VID>::iterator it = _attemptedPath.begin(); (it+1) != _attemptedPath.end(); it++) {
-    LPOutput<CFG, WEIGHT> lpOut;
-    this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpLabel)->IsConnected(
-        _rdmp->GetEnvironment(), stats, this->GetMPProblem()->GetDistanceMetric()->GetMethod(this->m_dmLabel),
-        _rdmp->m_pRoadmap->find_vertex(*it)->property(),
-        _rdmp->m_pRoadmap->find_vertex(*(it+1))->property(), 
-        &lpOut, _rdmp->GetEnvironment()->GetPositionRes(),
-        _rdmp->GetEnvironment()->GetOrientationRes(), false, true, false);
-    _recreatedPath.insert(_recreatedPath.end(), lpOut.path.begin(), lpOut.path.end());
-    _recreatedPath.push_back(_rdmp->m_pRoadmap->find_vertex(*(it+1))->property());
-  }
-
-  if(this->m_debug)
-    cout << " PASSED\n*** LAZY: Can recreate path, SUCCESS" << endl;
-  return true;*/
 }
 
 #endif
