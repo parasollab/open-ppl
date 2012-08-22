@@ -508,7 +508,7 @@ AddVertex(VERTEX& _v1) {
         return vertex_id;
     } else {
 #ifndef QUIETGRAPH
-        cout << "\nIn AddVertex: vertex already in graph, not added";
+        cout << "\nIn AddVertex: vertex already in graph, not added" << endl;
 #endif
         //return (v1->vid); // return vertex id 
         return ((*v1).descriptor()); // return vertex id 

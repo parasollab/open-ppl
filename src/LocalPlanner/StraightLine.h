@@ -316,8 +316,8 @@ IsConnectedSLSequential(Environment* _env, StatClass& _stats,
     }
     nIter++;
   }
-  _lpOutput->edge.first.SetWeight(_lpOutput->edge.first.GetWeight() + nIter);
-  _lpOutput->edge.second.SetWeight(_lpOutput->edge.second.GetWeight() + nIter);
+  _lpOutput->edge.first.SetWeight(_lpOutput->edge.first.GetWeight() + nTicks);
+  _lpOutput->edge.second.SetWeight(_lpOutput->edge.second.GetWeight() + nTicks);
 
   return true;
 };
@@ -397,8 +397,8 @@ IsConnectedSLBinary(Environment* _env, StatClass& _stats,
       _lpOutput->path.push_back(tick);
     }
   }
-  _lpOutput->edge.first.SetWeight(_lpOutput->edge.first.GetWeight() + nTicks-1);
-  _lpOutput->edge.second.SetWeight(_lpOutput->edge.second.GetWeight() + nTicks-1);
+  _lpOutput->edge.first.SetWeight(_lpOutput->edge.first.GetWeight() + nTicks);
+  _lpOutput->edge.second.SetWeight(_lpOutput->edge.second.GetWeight() + nTicks);
 
   return true;
 }

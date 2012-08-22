@@ -1,5 +1,5 @@
-// Contains data and methods to manipulate the environment with specified moving bodies
-// (ie, robot(s)) and the corresponding roadmap.
+// A map evaluator that runs a query. Stops running when query returns a valid path.
+// If no path is found, returns to sampling again.
 
 #ifndef Query_H_
 #define Query_H_
@@ -8,11 +8,12 @@
 #include "Connector.h"
 #include "Environment.h"
 #include "GraphAlgo.h"
+#include "MapEvaluationMethod.h"
+#include "DistanceMetrics.h"
 #include <algorithm>
 
-
 template <class CFG, class WEIGHT>
-class Query : public MPBaseObject {
+class Query : public MapEvaluationMethod {
 
   public:
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
@@ -20,14 +21,14 @@ class Query : public MPBaseObject {
     Query();
     Query(string _queryFileName);
     Query(CFG _start, CFG _goal);
-    Query(XMLNodeReader& _node, MPProblem* _problem, bool _warn);
-    virtual ~Query();
-    
-    void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    Query(XMLNodeReader& _node, MPProblem* _problem, bool _warn = true);
+    virtual ~Query() { }
+
+    void ParseXML(XMLNodeReader& _node, bool _warn);
+    virtual void PrintOptions(ostream& _os); 
     vector<CFG>& GetQuery() { return m_query; }
     vector<CFG>& GetPath() { return m_path; }
-
+    
     // Reads a query and calls the other PerformQuery(), then calls Smooth() if desired
     virtual bool PerformQuery(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats);
     
@@ -43,9 +44,13 @@ class Query : public MPBaseObject {
 
     virtual void ReadQuery(string _filename);
     virtual void WritePath(Roadmap<CFG, WEIGHT>* _rdmp, string _filename);
-   
+ 
+    virtual bool operator()() { return operator()(GetMPProblem()->CreateMPRegion()); }
+    virtual bool operator()(int _regionID); 
+  
   protected:
     enum GraphSearchAlg {DIJKSTRAS, ASTAR};
+    StatClass m_stats;          // Stats
     vector<CFG> m_query;        // Holds the start and goal CFGs
     vector<CFG> m_path;         // The path found
     string m_queryFile;         // Where to read in the query
@@ -56,6 +61,7 @@ class Query : public MPBaseObject {
     GraphSearchAlg m_searchAlg; // Shortest-path graph search algorithm
     bool m_intermediateFiles;   // Store the intermediate CFGs?
     bool m_smooth;              // Perform smoothing operation?
+    bool m_deleteNodes;         // Delete any added nodes?
     vector<string> m_nodeConnectionLabels;   // List of connection methods for query
     vector<string> m_smoothConnectionLabels; // List of connection methods for smoothing
 
@@ -84,14 +90,14 @@ struct Heuristic {
     double m_oriRes;
 };
 
-// Default constructor, sets everything to NULL
+// Default constructor
 template <class CFG, class WEIGHT>
 Query<CFG, WEIGHT>::Query() {
   this->SetName("Query");
   m_doneSmoothing = false;
 }
 
-// Reads in query from a file, sets everything else to NULL
+// Reads in query from a file
 template <class CFG, class WEIGHT>
 Query<CFG, WEIGHT>::Query(string _queryFileName) {
   this->SetName("Query");
@@ -99,7 +105,7 @@ Query<CFG, WEIGHT>::Query(string _queryFileName) {
   ReadQuery(_queryFileName);
 }
 
-// Uses start/goal to set up query, sets everything else to NULL
+// Uses start/goal to set up query
 template <class CFG, class WEIGHT>     
 Query<CFG, WEIGHT>::Query(CFG _start, CFG _goal) {
   this->SetName("Query");
@@ -110,23 +116,23 @@ Query<CFG, WEIGHT>::Query(CFG _start, CFG _goal) {
 
 // Constructor with XML
 template <class CFG, class WEIGHT>
-Query<CFG, WEIGHT>::Query(XMLNodeReader& _node, MPProblem* _problem, bool _warn = true) : MPBaseObject(_node, _problem) {
+Query<CFG, WEIGHT>::Query(XMLNodeReader& _node, MPProblem* _problem, bool _warn) :
+    MapEvaluationMethod(_node, _problem) {
   this->SetName("Query");
   m_doneSmoothing = false;
-  ParseXML(_node);
+  ParseXML(_node, _warn);
+  if(_warn) {
+    cout << "Warning in Query" << endl;
+    _node.warnUnrequestedAttributes();
+  }
   if(m_debug)
     PrintOptions(cout);
-  if(_warn)
-    _node.warnUnrequestedAttributes();
   ReadQuery(m_queryFile);
 }
   
 template <class CFG, class WEIGHT>
-Query<CFG, WEIGHT>::~Query() {}
-
-template <class CFG, class WEIGHT>
 void
-Query<CFG, WEIGHT>::ParseXML(XMLNodeReader& _node) {
+Query<CFG, WEIGHT>::ParseXML(XMLNodeReader& _node, bool _warn) {
   m_queryFile = _node.stringXMLParameter("queryFile", true, "", "Query filename");
   m_pathFile = _node.stringXMLParameter("pathFile", false, "", "Query output path filename");
   m_smoothFile = _node.stringXMLParameter("smoothFile", false, "", "Smoothed path filename");
@@ -135,19 +141,21 @@ Query<CFG, WEIGHT>::ParseXML(XMLNodeReader& _node) {
   string searchAlg = _node.stringXMLParameter("graphSearchAlg", false, "dijkstras", "Graph search algorithm");
   m_intermediateFiles = _node.boolXMLParameter("intermediateFiles", false, false, "Determines output of intermediate file mapnodes.path");
   m_smooth = _node.boolXMLParameter("smooth", false, false, "Whether or not to smooth the path");
+  m_deleteNodes = _node.boolXMLParameter("deleteNodes", false, false, "Whether or not to delete start and goal from roadmap");
 
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
     if(citr->getName() == "NodeConnectionMethod") {
       m_nodeConnectionLabels.push_back(citr->stringXMLParameter("method", true, "", "Node connection method"));
       citr->warnUnrequestedAttributes();
-    } else if(citr->getName() == "SmoothConnectionMethod") {
+    }
+    else if(citr->getName() == "SmoothConnectionMethod") {
       m_smoothConnectionLabels.push_back(citr->stringXMLParameter("method", true, "", "Smooth node connection method"));
       citr->warnUnrequestedAttributes();
     }
   }
   
   if(m_nodeConnectionLabels.empty()) {
-    cerr << "\n\nError in QueryEvaluation XML constructor:: no node connection methods specified."
+    cerr << "\n\nError in Query XML constructor:: no node connection methods specified."
          << "\nUntil NeighborhoodFinder class can support a default/empty string as input, "
          << "node connection methods must be explicitly specified.\n\tExiting." << endl;
     exit(-1);
@@ -167,7 +175,7 @@ Query<CFG, WEIGHT>::ParseXML(XMLNodeReader& _node) {
 
 template <class CFG, class WEIGHT>
 void
-Query<CFG, WEIGHT>::PrintOptions(ostream& _os) const {
+Query<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << this->GetNameAndLabel() << "::";
   _os << "\n\tquery file = \"" << m_queryFile << "\"";
   _os << "\n\tpath file = \"" << m_pathFile << "\"";
@@ -177,6 +185,24 @@ Query<CFG, WEIGHT>::PrintOptions(ostream& _os) const {
   _os << "\n\tsearch alg = " << m_searchAlg;
   _os << "\n\tintermediate files = " << m_intermediateFiles;
   _os << "\n\tsmooth = " << m_smooth << endl;
+  _os << "\n\tdeleteNodes = " << m_deleteNodes << endl;
+}
+
+// Runs the query
+template <class CFG, class WEIGHT>
+bool
+Query<CFG, WEIGHT>::operator()(int _regionID) {
+  
+  Roadmap<CFG, WEIGHT>* rdmp = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap();  
+
+  // Perform query
+  return PerformQuery(rdmp, m_stats);
+
+  // Delete added nodes (such as start and goal) if desired
+  if(m_deleteNodes)
+    for(typename vector<CFG>::iterator it = m_query.begin(); it != m_query.end(); it++)
+      if(rdmp->m_pRoadmap->IsVertex(*it))
+        rdmp->m_pRoadmap->delete_vertex(rdmp->m_pRoadmap->GetVID(*it));
 }
 
 // Reads the query and calls the other PerformQuery method
@@ -190,20 +216,20 @@ Query<CFG, WEIGHT>::PerformQuery(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats)
 
   for(typename vector<CFG>::iterator it = m_query.begin(); it+1 != m_query.end(); it++) {
     if(this->m_debug) {
-      cout << "\nquery is ...     ";
+      cout << "\n*Q* query is ...     ";
       it->Write(cout);
-      cout << "\n                 ";
+      cout << "\n*Q*                  ";
       (it+1)->Write(cout);
-      cout << "\nworking  ..." << endl;
+      cout << "\n*Q* working  ..." << endl;
     }
 
     if(!PerformQuery(*it, *(it+1), _rdmp, _stats)) {
       if(this->m_debug)
-        cout << endl << "In PerformQuery(): didn't connect";
+        cout << endl << "*Q* In Query::PerformQuery(): didn't connect";
       return false;
     } 
   }
-
+  
   if(!m_doneSmoothing) {
     if(m_pathFile == "") {
       cout << "Warning: no path file specified. Outputting path to \"Basic.path\"." << endl;
@@ -224,15 +250,18 @@ bool
 Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats) {
 
   if(this->m_debug)
-    cout << "*** Begin query" << endl;  
+    cout << "*Q* Begin query" << endl;  
   VDComment("Begin Query");
 
   static int graphSearchCount = 0;
   LPOutput<CFG,WEIGHT> sci, gci; // Connection info for start, goal nodes
   vector<pair<size_t, VID> > ccs;
   stapl::sequential::vector_property_map<RoadmapGraph<CFG, WEIGHT>, size_t> cmap;
-  get_cc_stats(*(_rdmp->m_pRoadmap), cmap, ccs);  
+  get_cc_stats(*(_rdmp->m_pRoadmap), cmap, ccs);
   bool connected = false;
+
+  if(this->m_debug)
+    cout << "*Q* There are " << ccs.size() << " CCs." << endl;
 
   // Process node connection labels
   vector<typename Connector<CFG, WEIGHT>::ConnectionPointer> connectionMethods;
@@ -264,14 +293,14 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
     cmap.reset();
     if(stapl::sequential::is_same_cc(*(_rdmp->m_pRoadmap), cmap, sVID, ccIt->second)) {
       if(this->m_debug)
-        cout << "start already connected to ccIt[" << distance(ccsBegin, ccIt)+1 << "]\n";
+        cout << "*Q* Start already connected to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
     }
     else {
       cmap.reset();
       stapl::sequential::get_cc(*(_rdmp->m_pRoadmap), cmap, ccIt->second, cc);
       vector<VID> verticesList(1, sVID);
       if(this->m_debug)
-        cout << "connecting start to ccIt[" << distance(ccsBegin, ccIt)+1 << "]";
+        cout << "*Q* Connecting start to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
       for(typename vector<typename Connector<CFG,WEIGHT>::ConnectionPointer>::iterator
           itr = connectionMethods.begin(); itr != connectionMethods.end(); itr++) {
@@ -284,7 +313,7 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
     cmap.reset();
     if(stapl::sequential::is_same_cc(*(_rdmp->m_pRoadmap), cmap, gVID, ccIt->second)) {
       if(this->m_debug)
-        cout << "goal already connected to ccIt[" << distance(ccsBegin, ccIt)+1 << "]\n";
+        cout << "*Q* Goal already connected to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
     }
     else {
       if(cc.empty()) {
@@ -293,7 +322,7 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
       }
       vector<VID> verticesList(1, gVID);
       if(this->m_debug)
-        cout << "connecting goal to ccIt[" << distance(ccsBegin, ccIt)+1 << "]";
+        cout << "*Q* Connecting goal to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
       for(typename vector<typename Connector<CFG,WEIGHT>::ConnectionPointer>::iterator
           itr = connectionMethods.begin(); itr != connectionMethods.end(); itr++) {
@@ -329,7 +358,7 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
         stats->StopClock("Query Graph Search");
 #endif 
       if(this->m_debug)
-        cout << "\nStart(" << shortestPath[1] << ") and Goal(" << shortestPath[shortestPath.size()-2] 
+        cout << "\n*Q* Start(" << shortestPath[1] << ") and Goal(" << shortestPath[shortestPath.size()-2] 
           << ") seem connected to same ccIt[" << distance(ccsBegin, ccIt)+1  << "]!" << endl;
 
       // Attempt to recreate path
@@ -342,7 +371,7 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
         break;
       }
       else if(this->m_debug)
-        cout << endl << "Failed to recreate path\n";
+        cout << endl << "*Q* Failed to recreate path\n";
     }
 
     if(connected) {
@@ -357,7 +386,7 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
     }
   }
   if(this->m_debug)
-    cout << "Ending query with: " << _rdmp->m_pRoadmap->get_num_vertices() << " vertices, "
+    cout << "*Q* Ending query with: " << _rdmp->m_pRoadmap->get_num_vertices() << " vertices, "
          << _rdmp->m_pRoadmap->get_num_edges()/2 << " edges."
          << " graphSearchCount = " << graphSearchCount << ". Returning connected = " << connected << endl;
   VDComment("End Query");
@@ -374,7 +403,7 @@ Query<CFG, WEIGHT>::Smooth() {
   vector<typename Connector<CFG, WEIGHT>::ConnectionPointer> methods;
 
   if(this->m_debug)
-    cout << "\n=== Performing Query::Smooth()" << endl;
+    cout << "\n*S* Performing Query::Smooth()" << endl;
   if(this->m_recordKeep)
     stats->StartClock("Query::Smooth");
 
@@ -388,7 +417,7 @@ Query<CFG, WEIGHT>::Smooth() {
   
   // Redo connection among nodes in path
   if(this->m_debug)
-    cout << "=== Starting connection among path nodes" << endl;
+    cout << "*S* Starting connection among path nodes" << endl;
   stapl::sequential::vector_property_map<typename RoadmapGraph<CFG, WEIGHT>::GRAPH, size_t> cmap;
   cmap.reset();
   for(typename vector<typename Connector<CFG, WEIGHT>::ConnectionPointer>::iterator itr = methods.begin();
@@ -398,11 +427,11 @@ Query<CFG, WEIGHT>::Smooth() {
 
   // Rerun query
   if(this->m_debug)
-    cout << "=== Rerunning query" << endl;
+    cout << "*S* Rerunning query" << endl;
   m_path.clear();
   bool smoothQueryResult = PerformQuery(rdmp, *stats);
   if(this->m_debug)
-    cout << "=== Smooth query success = " << smoothQueryResult << endl;
+    cout << "*S* Smooth query success = " << smoothQueryResult << endl;
 
   // Output smoothed path
   if(smoothQueryResult) {
@@ -414,7 +443,7 @@ Query<CFG, WEIGHT>::Smooth() {
       WritePath(rdmp, m_smoothFile);
   }
   else if(this->m_debug)
-    cout << "=== Smooth query failed! (This should not happen.)" << endl;
+    cout << "*S* Smooth query failed! (This should not happen.)" << endl;
   if(this->m_recordKeep)
     stats->StopClock("Query::Smooth");
 }
@@ -432,7 +461,7 @@ Query<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _sta
     typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei;
     typename RoadmapGraph<CFG, WEIGHT>::edge_descriptor ed(*it, *(it+1));
     _rdmp->m_pRoadmap->find_edge(ed, vi, ei);
-    
+   
     if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lpLabel)->IsConnected(
           _rdmp->GetEnvironment(), _stats, GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel),
           _rdmp->m_pRoadmap->find_vertex(*it)->property(), _rdmp->m_pRoadmap->find_vertex(*(it+1))->property(),
@@ -464,7 +493,7 @@ Query<CFG, WEIGHT>::ReadQuery(string _filename) {
   in.close();
 }
 
-// Write path to file
+// Writes path to file
 template <class CFG, class WEIGHT>
 void
 Query<CFG, WEIGHT>::WritePath(Roadmap<CFG, WEIGHT>* _rdmp, string _filename) {

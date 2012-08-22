@@ -1,11 +1,12 @@
-#ifndef MAPEVALUATOR_H
-#define MAPEVALUATOR_H
+#ifndef MAPEVALUATOR_H_
+#define MAPEVALUATOR_H_
 
 #include <boost/mpl/list.hpp>
 #include "MPUtils.h"
 #include "TrueEvaluation.h"
 #include "PrintMapEvaluation.h"
-#include "QueryEvaluation.h"
+#include "Query.h"
+#include "LazyQuery.h"
 #include "ComposeEval.h"
 #include "NegateEvaluation.h"
 #include "ConditionalEvaluation.h"
@@ -14,7 +15,8 @@ namespace pmpl_detail {
   typedef boost::mpl::list<
     TrueEvaluation,
     PrintMapEvaluation, 
-    QueryEvaluation<CfgType, WeightType>,
+    Query<CfgType, WeightType>,
+    LazyQuery<CfgType, WeightType>,
     ComposeEvaluation<CfgType, WeightType>,
     NegateEvaluation<CfgType, WeightType>,
     ConditionalEvaluation<CfgType, WeightType>
