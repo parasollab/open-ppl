@@ -88,12 +88,14 @@ GMSPolyhedron::Read(string _fileName){
   //---------------------------------------------------------------
   // Read polyhedron
   //---------------------------------------------------------------
-  int fileLength = _fileName.length();
-  if (_fileName.substr(fileLength-4) == ".dat"){
+  string ext = "";
+  size_t pos = _fileName.rfind(".");
+  if(pos != string::npos)
+    ext = _fileName.substr(pos+1);
+  if (ext == "dat"){
     com = Read(_is);
   } 
-  else if (_fileName.substr(fileLength-2) == ".g" || 
-      _fileName.substr(fileLength-4) == ".obj"){
+  else if (ext == "g" || ext == "obj"){
     com = ReadModel(_fileName); 
   } 
   else{ 
