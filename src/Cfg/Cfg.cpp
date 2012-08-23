@@ -349,55 +349,6 @@ void Cfg::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
   NormalizeOrientation();
 }
 
-void Cfg::GetMovingSequenceNodes(const Cfg& _other, vector<double> _sValue, vector<Cfg*>& _result) const {
-  Cfg* thisCopy = this->CreateNewCfg();
-  _result.push_back(thisCopy);
-
-  Cfg* weightedSum = this->CreateNewCfg();
-  double oWeight = 0.0;
-  for(vector<double>::const_iterator S = _sValue.begin(); S != _sValue.end(); ++S) {
-    weightedSum->WeightedSum(*this, _other, *S);
-
-    Cfg* s1 = this->CreateNewCfg();
-    s1->GetPositionOrientationFrom2Cfg(*weightedSum, *_result.back());
-    _result.push_back(s1);
-
-    oWeight += 1.0 / _sValue.size();
-    weightedSum->WeightedSum(*this, _other, oWeight);
-
-    Cfg* s2 = this->CreateNewCfg();
-    s2->GetPositionOrientationFrom2Cfg(*s1, *weightedSum);
-    _result.push_back(s2);
-  }
-
-  Cfg* otherCopy = _other.CreateNewCfg();
-  _result.push_back(otherCopy);
-
-  delete weightedSum;
-} 
-
-void Cfg::GetMovingSequenceNodes(const Cfg& _other, double _s, vector<Cfg*>& _result) const {
-  Cfg* thisCopy = this->CreateNewCfg();
-  _result.push_back(thisCopy);
-
-  Cfg* weightedSum = this->CreateNewCfg();
-  weightedSum->WeightedSum(*this, _other, _s);
-
-  Cfg* s1 = this->CreateNewCfg();
-  s1->GetPositionOrientationFrom2Cfg(*weightedSum, *this);
-  _result.push_back(s1);
-
-  Cfg* s2 = this->CreateNewCfg();
-  s2->GetPositionOrientationFrom2Cfg(*weightedSum, _other);
-  _result.push_back(s2);
-
-  Cfg* otherCopy = _other.CreateNewCfg();
-  _result.push_back(otherCopy);
-
-  delete weightedSum;
-}
-
-
 // _pt1 & _pt2 are two endpts of a line segment
 // find the closest point to the current cfg on that line segment
 // it could be one of the two endpoints of course

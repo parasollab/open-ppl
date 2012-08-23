@@ -248,10 +248,6 @@ class Cfg {
     void GetResolutionCfg(Environment*);
 
     virtual void GetPositionOrientationFrom2Cfg(const Cfg&, const Cfg&);
-    /// for rotate-at-s Local Planner. 
-    virtual void GetMovingSequenceNodes(const Cfg& _other, vector<double> _sValue, vector<Cfg*>& _cfgs) const;
-
-    virtual void GetMovingSequenceNodes(const Cfg& _other, double _s, vector<Cfg*>& _cfgs) const;
 
     /** pt1 & pt2 are two endpts of a line segment
      * find the closest point to the current cfg on that line segment
