@@ -21,11 +21,11 @@ Cfg_free_tree_2dof::Cfg_free_tree_2dof(const Cfg& _c) {
   NormalizeOrientation();
 }
 
-vector<Robot> Cfg_free_tree::GetRobots(int _numJoints){
+vector<Robot> Cfg_free_tree_2dof::GetRobots(int _numJoints){
   m_numOfJoints = _numJoints;
   vector<Robot> robots;
   Robot::JointMap joints;
-  for(int i = 0; i<_numJoints-1; i++){
+  for(int i = 0; i<_numJoints; i++){
     joints.push_back(make_pair(make_pair(i, i+1), Robot::SPHERICAL));
   }
   robots.push_back(Robot(Robot::VOLUMETRIC, Robot::ROTATIONAL, joints, 0));
