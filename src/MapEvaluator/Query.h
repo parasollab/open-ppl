@@ -95,6 +95,7 @@ template <class CFG, class WEIGHT>
 Query<CFG, WEIGHT>::Query() {
   this->SetName("Query");
   m_doneSmoothing = false;
+  m_searchAlg = ASTAR;
 }
 
 // Reads in query from a file
@@ -102,6 +103,7 @@ template <class CFG, class WEIGHT>
 Query<CFG, WEIGHT>::Query(string _queryFileName) {
   this->SetName("Query");
   m_doneSmoothing = false;
+  m_searchAlg = ASTAR;
   ReadQuery(_queryFileName);
 }
 
@@ -110,6 +112,7 @@ template <class CFG, class WEIGHT>
 Query<CFG, WEIGHT>::Query(CFG _start, CFG _goal) {
   this->SetName("Query");
   m_doneSmoothing = false;
+  m_searchAlg = ASTAR;
   m_query.push_back(_start);
   m_query.push_back(_goal);
 }
@@ -265,9 +268,11 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
 
   // Process node connection labels
   vector<typename Connector<CFG, WEIGHT>::ConnectionPointer> connectionMethods;
-  if(m_nodeConnectionLabels.empty())
+  if(m_nodeConnectionLabels.empty()){
     connectionMethods.push_back(typename Connector<CFG, WEIGHT>::ConnectionPointer(
         new NeighborhoodConnection<CFG, WEIGHT>("", "", 1, 1, false, true, false)));
+    connectionMethods.back()->SetMPProblem(GetMPProblem());
+  }
   else
     for(vector<string>::iterator it = m_nodeConnectionLabels.begin(); it != m_nodeConnectionLabels.end(); it++)
       connectionMethods.push_back(GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*it));
