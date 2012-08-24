@@ -204,7 +204,7 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
           _posRes, _oriRes,_checkCollision,
           _savePath, _saveFailedPath);
     // Save path if desired
-    if((_savePath || _saveFailedPath) && (distance(sequence.begin(), I)+1 != sequence.size() - 1)) //Don't put _c2 on end
+    if((_savePath || _saveFailedPath) && (distance(sequence.begin(), I)+1 != (int)sequence.size() - 1)) //Don't put _c2 on end
       _lpOutput->path.push_back(*(I+1));
   }
 
@@ -246,7 +246,7 @@ TransformAtS<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<Distanc
     else
       this->IsConnectedSLSequential(_env, dummyStats, _dm, *I, *(I+1),
           col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
-    if(distance(cfgList.begin(), I) != cfgList.size() - 2)
+    if(distance(cfgList.begin(), I) != (int)cfgList.size() - 2)
       lpOutput->path.push_back(*(I+1));
   }
 
