@@ -1,6 +1,6 @@
 #include "MedialAxisClearanceValidity.h"
 #include "DistanceMetrics.h"
-#include "MPProblem/MPRegion.h"
+#include "MPProblem.h"
 
 using namespace std;
 

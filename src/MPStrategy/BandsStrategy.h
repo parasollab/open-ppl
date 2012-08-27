@@ -87,7 +87,6 @@ class BIRContainer : public MPSMContainer {
     string m_queryFilename;
     int m_stepSize;
     double m_posRes;
-    int m_RegionNdx;
     bool resize_bbox;
     shared_ptr<DistanceMetricMethod> dm;
     MPSMContainer parent;
@@ -111,7 +110,6 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       m_queryFilename = cont.m_queryFilename;
       m_stepSize = cont.m_stepSize;
       m_posRes = cont.m_posRes;
-      m_RegionNdx = cont.m_RegionNdx;
       resize_bbox = cont.resize_bbox;
       dm = cont.dm;
 
@@ -192,11 +190,10 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       cout << "leaving BandsIncrementalRoadmap" << endl;
     };
 
-    virtual void Initialize(int in_RegionID){}
-    virtual void Run(int in_RegionID){
+    virtual void Initialize(){}
+    virtual void Run(){
 
-      MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-      StatClass * pStatClass = region->GetStatClass();
+      StatClass * pStatClass = GetMPProblem()->GetStatClass();
 
       pStatClass->ClearStats();
 
@@ -229,7 +226,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
       //for (int step = 0; step < m_iterations; step++)
       for(size_t i=0; i<m_vecWitnessNodes.size();i++){
-	region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[i]);
+	GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[i]);
       }
       while(iteration < m_iterations) {
         cout << "--------------" << endl << "iter " << iteration << " of " << m_iterations << endl;
@@ -254,7 +251,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
               back_inserter(vectorCfgs));  
 
           cout << "Finished : " << vectorCfgs.size();
-          vector<VID> vids =  region->AddToRoadmap(vectorCfgs);
+          vector<VID> vids =  GetMPProblem()->AddToRoadmap(vectorCfgs);
           nodes_added += vids.size();
           cout << " - total VIDS: " << nodes_added << endl;
           for(size_t i=0; i<vids.size(); ++i) {
@@ -288,7 +285,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           Connector<CfgType,WeightType>::ConnectionPointer pConnection;
           pConnection = connector->GetMethod(*itr);
           //cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
-          pConnection->Connect(region->GetRoadmap(), *pStatClass, cmap, newVids.begin(), newVids.end(), newVids.begin(), newVids.end());
+          pConnection->Connect(GetMPProblem()->GetRoadmap(), *pStatClass, cmap, newVids.begin(), newVids.end(), newVids.begin(), newVids.end());
         }
 
         //Now Restore bounding box
@@ -306,21 +303,21 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           ofstream  myofstream(outputFilename.c_str());
 
           if (!myofstream) {
-          LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
+          LOG_ERROR_MSG("Run: can't open outfile: ");
           exit(-1);
           }
-          region->WriteRoadmapForVizmo(myofstream);
+          GetMPProblem()->WriteRoadmapForVizmo(myofstream);
           myofstream.close();
          */
 
         pStatClass->StopClock("Iteration");
 
-        //pStatClass->PrintAllStats(region->GetRoadmap());
+        //pStatClass->PrintAllStats(GetMPProblem()->GetRoadmap());
 
         pStatClass->StartClock("Query");
         cout << "BEGIN isSameCCC" << endl <<flush; 
         cmap.reset();
-        querySucceeded = is_same_cc(*region->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
+        querySucceeded = is_same_cc(*GetMPProblem()->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
 
         pStatClass->StopClock("Query");
 
@@ -330,17 +327,17 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         ///////////////////
         //Output stat info
         //NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
-        OnlineStats degree = calcDegreeStats(*region->GetRoadmap()->m_pRoadmap);
-        OnlineStats edges = calcEdgeStats(*region->GetRoadmap()->m_pRoadmap);
+        OnlineStats degree = calcDegreeStats(*GetMPProblem()->GetRoadmap()->m_pRoadmap);
+        OnlineStats edges = calcEdgeStats(*GetMPProblem()->GetRoadmap()->m_pRoadmap);
         vector<pair<size_t, VID> > CCStats;
         cmap.reset();
-        get_cc_stats (*region->GetRoadmap()->m_pRoadmap, cmap, CCStats);
+        get_cc_stats (*GetMPProblem()->GetRoadmap()->m_pRoadmap, cmap, CCStats);
         // diameter computed in BandStats
         double hop_diameter = 0.0;
         double weight_diameter = 0.0;
         //TODO: Note- diameter as computed by STAPL now is hop_diameer, discussion is on going as to whether STAPL will support both diamter compuation on user will provide it as part of edge property
-        hop_diameter = stapl::sequential::diameter(*(region->GetRoadmap()->m_pRoadmap), CCStats[0].second);
-        weight_diameter = stapl::sequential::diameter(*(region->GetRoadmap()->m_pRoadmap), CCStats[0].second);
+        hop_diameter = stapl::sequential::diameter(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), CCStats[0].second);
+        weight_diameter = stapl::sequential::diameter(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), CCStats[0].second);
         // std::sort (CCStats.begin(),  CCStats.end(), __CCVID_Compare<std::pair<int,VID> >() );
         // cout << "Begin run dia twice, start from largest component" << endl;
         //cout << "CCStats.size" << CCStats.size()<< endl ;
@@ -354,8 +351,8 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           }*/
         // VID far_vid(-1), far_vid2(-1); 
 
-        //ComponentDiameter(*region->GetRoadmap()->m_pRoadmap,CCStats[0].second, &far_vid);
-        //double diameter = ComponentDiameter(*region->GetRoadmap()->m_pRoadmap, far_vid,&far_vid2);
+        //ComponentDiameter(*GetMPProblem()->GetRoadmap()->m_pRoadmap,CCStats[0].second, &far_vid);
+        //double diameter = ComponentDiameter(*GetMPProblem()->GetRoadmap()->m_pRoadmap, far_vid,&far_vid2);
         // stat_out << basefname.str()
 
         // NOTE: this assumes we use the first local planner defined
@@ -364,13 +361,13 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         int lp_cdcalls = pStatClass->m_lpInfo.begin()->second.get<2>();
         double lp_succ = double(lp_connections) / double(lp_attempts);
 
-        stat_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices() - 2
-          << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
+        stat_out << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices() - 2
+          << "\t" << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
           << "\t" << lp_attempts << "\t" << lp_succ << "\t" << lp_cdcalls
           << "\t" << elapsed_ng << "\t" <<  "-1" << "\t" << elapsed_con
           << "\t" << CCStats.size()
-          << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-          << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
+          << "\t" << double(CCStats[0].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+          << "\t" << double(CCStats[CCStats.size()-1].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
           << "\t" << querySucceeded 
           << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
           << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
@@ -386,18 +383,18 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           /*
           ofstream total_out((basefname.str() + ".total").c_str());
           //total_out << basefname.str()
-          total_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2 
-            << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
+          total_out << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2 
+            << "\t" << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
             //<< "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
             << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
             << "\t" << elapsed_ng << "\t" <<  pStatClass->m_isCollTotal -
             pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
             << "\t" << elapsed_con
-            //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-            //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+            //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetQueryTime()) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+            //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
             << "\t" << CCStats.size()
-            << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-            << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
+            << "\t" << double(CCStats[0].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+            << "\t" << double(CCStats[CCStats.size()-1].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
             << "\t" << querySucceeded
             << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
             << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
@@ -406,7 +403,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
             << endl;
 
           if (!map_out) {
-            cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
+            cerr << "Run: can't open outfile: " << endl;
             exit(-1);
           }
           */
@@ -434,11 +431,11 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       cout << "Finished map " << endl;
       cout << "~BandsIncrementalRoadmap::()" << endl;
 
-      region->WriteRoadmapForVizmo(map_out);
+      GetMPProblem()->WriteRoadmapForVizmo(map_out);
       map_out.close();
     }
 
-    virtual void Finalize(int in_RegionID){}
+    virtual void Finalize(){}
 
   private:
 
@@ -513,7 +510,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
     void ResizeBbox(ostream& out_os, double scale_factor){
       cout<<"BandsStrategy::Resize Bounding box"<<endl<<flush;
-      shared_ptr<Boundary> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundary();
+      shared_ptr<Boundary> pBoundBox = GetMPProblem()->GetEnvironment()->GetBoundary();
       pBoundBox->Print(out_os);
       pBoundBox->TranslationalScale(scale_factor);
       cout<<"BandsStrategy::After Resize Bounding Box"<<endl<<flush;
@@ -533,7 +530,6 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
     string m_queryFilename;
     int m_stepSize;
     double m_posRes;
-    int m_RegionNdx;
     bool resize_bbox;
     shared_ptr<DistanceMetricMethod> dm;
     int m_numNodes;
@@ -1087,15 +1083,10 @@ class BandsStats : public MPStrategyMethod {
       }
     }
 
-
-    void operator()(){
-    }
-
-
     virtual void PrintOptions(ostream& out_os) { }
-    virtual void operator()(int in_RegionID) { }
-    virtual void Initialize(int in_RegionID){}
-    virtual void Run(int in_RegionID) { 
+    virtual void operator()() { }
+    virtual void Initialize(){}
+    virtual void Run() { 
       cout << "BandsStats::BandsStats()" << endl;
 
       // do dist/num_neighbors work if flag is set from xml
@@ -1110,8 +1101,7 @@ class BandsStats : public MPStrategyMethod {
       input_rmp.ReadRoadmapGRAPHONLY(input_map_filename.c_str());
       ideal_rmp.ReadRoadmapGRAPHONLY(ideal_map_filename.c_str());
 
-      MPRegion<CfgType,WeightType> region(0, GetMPProblem());
-      region.roadmap = ideal_rmp;
+      GetMPProblem()->SetRoadmap(new Roadmap<CfgType,WeightType>(ideal_rmp));
       ideal_rmp.SetEnvironment(GetMPProblem()->GetEnvironment());
       input_rmp.SetEnvironment(GetMPProblem()->GetEnvironment());
       //cout<<"printing all pairs"<<endl;
@@ -1120,7 +1110,7 @@ class BandsStats : public MPStrategyMethod {
       exit(-1);	
       //(*ExpanderStatsClass)();
     }
-    virtual void Finalize(int in_RegionID){}
+    virtual void Finalize(){}
 
 
     void computeEdgeLengthFromdm(Roadmap<CfgType, WeightType> rmp,double &avg_dist, double &max_dist, double &avg_max_dist){

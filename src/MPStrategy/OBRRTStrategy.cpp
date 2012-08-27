@@ -1,5 +1,4 @@
 #include "OBRRTStrategy.h"
-#include "MPRegion.h"
 #include "CollisionDetection.h"
 #include "DistanceMetrics.h"
 
@@ -92,10 +91,9 @@ OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
 }
 
 OBRRTStrategy::VID
-OBRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
+OBRRTStrategy::ExpandTree(CfgType& _dir){
   cout << " OBRRTStrategy::ExpandTree -- in expand call" << endl;
   // Setup MP Variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
@@ -104,8 +102,8 @@ OBRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   vector<VID> kClosest;
   vector<CfgType> cfgs;
 
-  nf->GetMethod(m_nf)->KClosest(region->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
-  CfgType nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
+  nf->GetMethod(m_nf)->KClosest(GetMPProblem()->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
+  CfgType nearest = GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
   CfgType newCfg;
   bool verifiedValid = false;
 
@@ -114,47 +112,47 @@ OBRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   double growth_prob = DRand();
   if( growth_prob < m_g0N ) {
     cout << " calling g0: standard" << endl;
-    newCfg = g0( _regionID, nearest, _dir, verifiedValid );
+    newCfg = g0( nearest, _dir, verifiedValid );
   }
   else if( growth_prob < m_g1N ) {
     cout << " calling g1: random pos, same ori" << endl;
-    newCfg = g1( _regionID, nearest, _dir, verifiedValid );
+    newCfg = g1( nearest, _dir, verifiedValid );
   }
   else if( growth_prob < m_g2N ) {
     cout << " calling g2: rand obst. vec, rand ori" << endl;
-    newCfg = g2( _regionID, nearest, _dir, verifiedValid );
+    newCfg = g2( nearest, _dir, verifiedValid );
   }
   else if( growth_prob < m_g3N ) {
     cout << " calling g3: rand obst. vec, same ori" << endl;
-    newCfg = g3( _regionID, nearest, _dir, verifiedValid );
+    newCfg = g3( nearest, _dir, verifiedValid );
   }
   else if( growth_prob < m_g4N ) {
     cout << " calling g4: rotation, followed by extension" << endl;
-    newCfg = g4( _regionID, nearest, _dir, verifiedValid );
+    newCfg = g4( nearest, _dir, verifiedValid );
   }
   else if( growth_prob < m_g5N ) {
     cout << " calling g5: trace obstacle, random ori." << endl;
-    newCfg = g5( _regionID, nearest, _dir, verifiedValid, false );
+    newCfg = g5( nearest, _dir, verifiedValid, false );
   }
   else if( growth_prob < m_g6N ) {
     cout << " calling g6: trace obstacle, same" << endl;
-    newCfg = g5( _regionID, nearest, _dir, verifiedValid, true );
+    newCfg = g5( nearest, _dir, verifiedValid, true );
   }
   else if( growth_prob < m_g7N ) {
     cout << " calling g7: trace c-space obst" << endl;
-    newCfg = g7( _regionID, nearest, _dir, verifiedValid );
+    newCfg = g7( nearest, _dir, verifiedValid );
   }
   else { //g8
     cout << " calling g8" << endl;
-    newCfg = g8( _regionID, nearest, _dir, verifiedValid );
+    newCfg = g8( nearest, _dir, verifiedValid );
   }
 
   // If good to go, add to roadmap
   if(verifiedValid && dm->Distance(env, newCfg, nearest) >= m_minDist) {
-    recentVID = region->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
+    recentVID = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
     //TODO fix weight
     pair<WeightType, WeightType> weights = make_pair(WeightType(), WeightType());
-    region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
+    GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
   } 
 
   cout << " OBRRTStrategy::ExpandTree -- done call" << endl;
@@ -163,13 +161,13 @@ OBRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //0.Standard RRT Expand
-CfgType OBRRTStrategy::g0(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType OBRRTStrategy::g0(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   CDInfo  cdInfo;
   CfgType newCfg;
   int weight;
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -181,7 +179,7 @@ CfgType OBRRTStrategy::g0(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //1.Random position, same orientation
-CfgType OBRRTStrategy::g1(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType OBRRTStrategy::g1(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   CDInfo  cdInfo;
@@ -191,7 +189,7 @@ CfgType OBRRTStrategy::g1(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     _dir.SetSingleParam(i, _near.GetData()[i]);
   }
   int weight;
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -203,7 +201,7 @@ CfgType OBRRTStrategy::g1(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //2. Obstacle Vector, random orientation
-CfgType OBRRTStrategy::g2(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType OBRRTStrategy::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
@@ -236,7 +234,7 @@ CfgType OBRRTStrategy::g2(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
       _dir.SetSingleParam(i, _near.GetSingleParam(i) + OV[i]);
     }
     int weight;
-    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
+    if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else {
@@ -249,7 +247,7 @@ CfgType OBRRTStrategy::g2(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //3. Obstacle Vector, same orientation
-CfgType OBRRTStrategy::g3(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType OBRRTStrategy::g3(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
@@ -285,7 +283,7 @@ CfgType OBRRTStrategy::g3(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
       _dir.SetSingleParam(i, _near.GetSingleParam(i) );
     }
     int weight;
-    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
+    if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else {
@@ -298,7 +296,7 @@ CfgType OBRRTStrategy::g3(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //4. rotation followed by extension
-CfgType OBRRTStrategy::g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType OBRRTStrategy::g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   CDInfo  cdInfo;
@@ -311,7 +309,7 @@ CfgType OBRRTStrategy::g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   }
   int weight;
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -323,7 +321,7 @@ CfgType OBRRTStrategy::g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
     for(size_t i = 0; i < newDir.PosDOF(); i++){
       newDir.SetSingleParam(i, dirOrig.GetSingleParam(i) );
     }
-    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, newNear, newDir, newCfg2, m_delta, weight, cdInfo)) {
+    if(!RRTExpand(GetMPProblem(), m_vc, m_dm, newNear, newDir, newCfg2, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else return newCfg2;
@@ -334,7 +332,7 @@ CfgType OBRRTStrategy::g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //5&6. Trace Obstacle, rand ori
-CfgType OBRRTStrategy::g5(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri){
+CfgType OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
@@ -344,7 +342,7 @@ CfgType OBRRTStrategy::g5(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
   int weight;
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
@@ -394,7 +392,7 @@ CfgType OBRRTStrategy::g5(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   }
 
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -407,7 +405,7 @@ CfgType OBRRTStrategy::g5(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //7. C-space Obstacle
-CfgType OBRRTStrategy::g7(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType OBRRTStrategy::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
@@ -423,12 +421,12 @@ CfgType OBRRTStrategy::g7(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
   int weight;
   // expand to c1  
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, dir1, newCfg1, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, dir1, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
   // expand to c2 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, dir2, newCfg2, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, dir2, newCfg2, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
@@ -444,7 +442,7 @@ CfgType OBRRTStrategy::g7(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   dm->ScaleCfg(env, vscale, _near, _dir, true);
 
   // final expand
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, _dir, newCfg3, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg3, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -456,19 +454,18 @@ CfgType OBRRTStrategy::g7(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //8. Medial Axis push
-CfgType OBRRTStrategy::g8(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType OBRRTStrategy::g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
-  StatClass* stats = region->GetStatClass();
+  StatClass* stats = GetMPProblem()->GetStatClass();
   CDInfo cdInfo;
   CfgType newCfg, newCfg2;
   bool vv = false;
 
   CfgType tNear(_near);
   CfgType tDir(_dir);
-  newCfg = g5( _regionID, tNear, tDir, vv, false );
+  newCfg = g5( tNear, tDir, vv, false );
 
 
   if(!PushToMedialAxis(GetMPProblem(), env, newCfg, *stats, m_vc, m_dm, m_exact, m_rayCount, m_exact, m_penetration, m_useBbx, .0001, m_hLen, m_debug, m_positional)){
@@ -476,7 +473,7 @@ CfgType OBRRTStrategy::g8(int _regionID, CfgType& _near, CfgType& _dir, bool& _v
   }
   else{ //pushed to medial axis, now check RRTexpand
     int weight;
-    if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, _near, newCfg, newCfg2, m_delta, weight, cdInfo)) {
+    if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, newCfg, newCfg2, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else {

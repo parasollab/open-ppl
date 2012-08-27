@@ -13,10 +13,7 @@ class PrintMapEvaluation : public MapEvaluationMethod {
   
     virtual void PrintOptions(ostream& _os);
   
-    virtual bool operator()() {
-      return operator()(GetMPProblem()->CreateMPRegion()); 
-    }
-    virtual bool operator() (int _regionID); 
+    virtual bool operator()(); 
 
   protected:
     string m_baseName;

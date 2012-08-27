@@ -16,10 +16,7 @@ class CoverageMetric : public MetricsMethod {
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual double operator()() {
-      return operator()(GetMPProblem()->CreateMPRegion());
-    }
-    virtual double operator()(int _regionID);
+    virtual double operator()();
 
   protected:
     //input
@@ -85,8 +82,8 @@ void CoverageMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 }
 
 template <class CFG, class WEIGHT>
-double CoverageMetric<CFG, WEIGHT>::operator()(int _regionID) {
-  Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap();
+double CoverageMetric<CFG, WEIGHT>::operator()() {
+  Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetRoadmap();
   RoadmapGraph<CFG, WEIGHT>* pMap = rmap->m_pRoadmap;
   Connector<CFG, WEIGHT>* cn = GetMPProblem()->GetMPStrategy()->GetConnector();
 

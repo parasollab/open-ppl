@@ -4,7 +4,6 @@
 #include "MPProblem/RoadmapGraph.h" //for VID typedef
 #include "MetricUtils.h"
 #include "MPStrategy/MPStrategyMethod.h"
-#include "MPRegion.h"
 
 class TogglePRMStrategy : public MPStrategyMethod 
 {
@@ -15,13 +14,13 @@ class TogglePRMStrategy : public MPStrategyMethod
    virtual void ParseXML(XMLNodeReader& in_Node);
    virtual void PrintOptions(ostream& out_os);
 
-   virtual void Initialize(int in_RegionID);
-   virtual void Run(int in_RegionID);
-   virtual void Finalize(int in_RegionID);
+   virtual void Initialize();
+   virtual void Run();
+   virtual void Finalize();
 
  protected:
    //helper functions for operator()
-   void Connect(MPRegion<CfgType, WeightType>* region, pair<string, VID> vid, vector<VID>& allVID, vector<VID>& allNodesVID,
+   void Connect(pair<string, VID> vid, vector<VID>& allVID, vector<VID>& allNodesVID,
           vector<VID>& allCollisionNodesVID, deque<pair<string, CfgType> >& queue);
 
    //data
@@ -37,7 +36,7 @@ class TogglePRMStrategy : public MPStrategyMethod
 
  private:
    template <typename OutputIterator>
-      void GenerateNodes(MPRegion<CfgType, WeightType>* region, OutputIterator allOut,
+      void GenerateNodes(OutputIterator allOut,
       OutputIterator thisIterationOut, OutputIterator allCollisionOut, OutputIterator
       thisIterationCollisionOut, deque<pair<string, CfgType> >& queue);
 

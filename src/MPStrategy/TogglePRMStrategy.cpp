@@ -1,5 +1,4 @@
 #include "TogglePRMStrategy.h"
-#include "MPRegion.h"
 #include "MPStrategy.h"
 #include "MapEvaluator.h"
 #include "Sampler.h"
@@ -84,21 +83,20 @@ void TogglePRMStrategy::PrintOptions(ostream& out_os) {
   out_os << endl;
 }
 
-void TogglePRMStrategy::Initialize(int in_RegionID){
-  cout<<"\nInitializing TogglePRMStrategy::"<<in_RegionID<<endl;
+void TogglePRMStrategy::Initialize(){
+  cout<<"\nInitializing TogglePRMStrategy::"<<endl;
 
   cout<<"\nEnding Initializing TogglePRMStrategy"<<endl;
 }
 
-void TogglePRMStrategy::Run(int in_RegionID){
-  cout<<"\nRunning TogglePRMStrategy::"<<in_RegionID<<endl;
+void TogglePRMStrategy::Run(){
+  cout<<"\nRunning TogglePRMStrategy::"<<endl;
 
-  //setup region variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-  StatClass* stats = region->GetStatClass();
+  //setup variables
+  StatClass* stats = GetMPProblem()->GetStatClass();
 
   vector<VID> allNodesVID, allCollisionNodesVID;
-  region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
+  GetMPProblem()->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
   vector<VID> thisIterationNodesVID, thisIterationCollisionNodesVID;
 
   deque<pair<string, CfgType> > queue;
@@ -107,36 +105,35 @@ void TogglePRMStrategy::Run(int in_RegionID){
 
   bool done=false;
 
-  while(!EvaluateMap(in_RegionID, m_EvaluatorLabels)&&!done){
+  while(!EvaluateMap(m_EvaluatorLabels)&&!done){
     m_CurrentIteration++;
     cout << "\ngenerating nodes: ";
-    GenerateNodes(region, 
-        back_insert_iterator<vector<VID> >(allNodesVID), 
+    GenerateNodes(back_insert_iterator<vector<VID> >(allNodesVID), 
         back_insert_iterator<vector<VID> >(thisIterationNodesVID),
         back_insert_iterator<vector<VID> >(allCollisionNodesVID),
         back_insert_iterator<vector<VID> >(thisIterationCollisionNodesVID),
         queue);
 
-    while(!EvaluateMap(in_RegionID, m_EvaluatorLabels) && queue.size()>0 && !done){
-      //if(region->GetRoadmap()->m_pRoadmap->get_num_vertices()+
-        //region->GetBlockRoadmap()->m_pRoadmap->get_num_vertices()>=1000){done=true;continue;}
+    while(!EvaluateMap(m_EvaluatorLabels) && queue.size()>0 && !done){
+      //if(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()+
+        //GetMPProblem()->GetBlockRoadmap()->m_pRoadmap->get_num_vertices()>=1000){done=true;continue;}
       pair<string, CfgType> p = queue.front();
       queue.pop_front();
       string validity = p.first;
       CfgType cfg = p.second;
       cout<<"validity - " << validity<<endl;
       if(validity=="valid"){
-        VID vid = region->GetRoadmap()->m_pRoadmap->AddVertex(cfg);
+        VID vid = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(cfg);
         allNodesVID.push_back(vid);
         thisIterationNodesVID.push_back(vid);
-        Connect(region, make_pair("valid", vid), allNodesVID, allNodesVID, allCollisionNodesVID, queue);
+        Connect(make_pair("valid", vid), allNodesVID, allNodesVID, allCollisionNodesVID, queue);
       }
       else if(validity=="invalid"){
-        VID vid = region->GetBlockRoadmap()->m_pRoadmap->AddVertex(cfg);
+        VID vid = GetMPProblem()->GetBlockRoadmap()->m_pRoadmap->AddVertex(cfg);
         allCollisionNodesVID.push_back(vid);
         thisIterationCollisionNodesVID.push_back(vid);
         GetMPProblem()->GetValidityChecker()->ToggleValidity();
-        Connect(region, make_pair("invalid", vid), allCollisionNodesVID, allNodesVID, allCollisionNodesVID, queue);
+        Connect(make_pair("invalid", vid), allCollisionNodesVID, allNodesVID, allCollisionNodesVID, queue);
         GetMPProblem()->GetValidityChecker()->ToggleValidity();
       }
     }
@@ -144,47 +141,45 @@ void TogglePRMStrategy::Run(int in_RegionID){
 
   stats->StopPrintClock("Map Generation", cout);
 
-  cout<<"\nEnd Running TogglePRMStrategy::"<<in_RegionID<<endl;
+  cout<<"\nEnd Running TogglePRMStrategy::"<<endl;
 }
 
-void TogglePRMStrategy::Finalize(int in_RegionID){
-  cout<<"\nFinalizing TogglePRMStrategy::"<<in_RegionID<<endl;
+void TogglePRMStrategy::Finalize(){
+  cout<<"\nFinalizing TogglePRMStrategy::"<<endl;
 
-  //setup region variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-  StatClass* regionStats = region->GetStatClass();
+  //setup variables
+  StatClass* stats = GetMPProblem()->GetStatClass();
 
   string str;
 
   //output final map
   str = GetBaseFilename() + ".map";
   ofstream osMap(str.c_str());
-  region->WriteRoadmapForVizmo(osMap);
+  GetMPProblem()->WriteRoadmapForVizmo(osMap);
   osMap.close();
 
   str = GetBaseFilename() + ".block.map";
   ofstream osMap2(str.c_str());
-  region->WriteRoadmapForVizmo(osMap2, NULL, true);
+  GetMPProblem()->WriteRoadmapForVizmo(osMap2, NULL, true);
   osMap2.close();
 
   //output stats
   str = GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
-  regionStats->PrintAllStats(osStat, region->GetRoadmap());
-  regionStats->PrintClock("Map Generation", osStat);
+  stats->PrintAllStats(osStat, GetMPProblem()->GetRoadmap());
+  stats->PrintClock("Map Generation", osStat);
   osStat.close();
 
   cout<<"\nEnd Finalizing TogglePRMStrategy"<<endl;
 }
 
 template <typename OutputIterator>
-void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region, 
-    OutputIterator allOut, OutputIterator thisIterationOut,
+void TogglePRMStrategy::GenerateNodes(OutputIterator allOut, OutputIterator thisIterationOut,
     OutputIterator allCollisionOut, OutputIterator thisIterationCollisionOut,
     deque<pair<string, CfgType> >& queue){
   CDInfo cdInfo;
-  StatClass * pStatClass = region->GetStatClass();
+  StatClass * pStatClass = GetMPProblem()->GetStatClass();
   stringstream clockName; 
   clockName << "Iteration " << m_CurrentIteration << ", Node Generation"; 
   pStatClass->StartClock(clockName.str());
@@ -209,7 +204,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
           back_inserter(outNodes), back_inserter(outCollisionNodes));
     }while(outNodes.size()<=0&&m_CurrentIteration==1);
 
-    cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
+    cout << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
     cout << "\n\t";
     pStatClass->StopPrintClock(generatorClockName.str(), cout);
 
@@ -218,7 +213,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
     for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
       if(!(*cit).IsLabel("VALID")){
         !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), 
-              *cit, GetMPProblem()->GetEnvironment(), *(region->GetStatClass()), cdInfo, true, &Callee));
+              *cit, GetMPProblem()->GetEnvironment(), *(GetMPProblem()->GetStatClass()), cdInfo, true, &Callee));
       }
       //out nodes mean valid then add them to the real roadmap
       if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
@@ -235,7 +230,7 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
     for(CIT cit=outCollisionNodes.begin(); cit!=outCollisionNodes.end(); ++cit){
       if(!(*cit).IsLabel("VALID")){
         !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), 
-              *cit, GetMPProblem()->GetEnvironment(), *(region->GetStatClass()), cdInfo, true, &Callee));
+              *cit, GetMPProblem()->GetEnvironment(), *(GetMPProblem()->GetStatClass()), cdInfo, true, &Callee));
       }
       //outCollisionNodes mean INVALID then add to block map
       if((*cit).IsLabel("VALID") && !((*cit).GetLabel("VALID"))) {
@@ -253,10 +248,10 @@ void TogglePRMStrategy::GenerateNodes(MPRegion<CfgType, WeightType>* region,
  pStatClass->StopPrintClock(clockName.str(), cout);
 }
 
-void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<string, VID> pvid, 
+void TogglePRMStrategy::Connect(pair<string, VID> pvid, 
     vector<VID>& allVID, vector<VID>& allNodesVID, vector<VID>&
     allCollisionNodesVID, deque<pair<string, CfgType> >& queue){
-  StatClass* pStatClass = region->GetStatClass();
+  StatClass* pStatClass = GetMPProblem()->GetStatClass();
   stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Node Connection";
   pStatClass->StartClock(clockName.str());
   stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
@@ -281,13 +276,13 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
     cmap.reset();
     if(pvid.first=="valid")
       pConnection->Connect(
-          region->GetRoadmap(), *(region->GetStatClass()), cmap,
+          GetMPProblem()->GetRoadmap(), *(GetMPProblem()->GetStatClass()), cmap,
           nodesVID.begin(), nodesVID.end(), 
           allVID.begin(), allVID.end(),
           back_inserter(collision));
     else
       pConnection->Connect(
-          region->GetBlockRoadmap(), *(region->GetStatClass()), cmap,
+          GetMPProblem()->GetBlockRoadmap(), *(GetMPProblem()->GetStatClass()), cmap,
           nodesVID.begin(), nodesVID.end(), 
           allVID.begin(), allVID.end(),
           back_inserter(collision));
@@ -307,8 +302,8 @@ void TogglePRMStrategy::Connect(MPRegion<CfgType, WeightType>* region, pair<stri
       }
     }
     cmap.reset();
-    cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
-      << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
+    cout << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
+      << get_cc_count(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
       << endl;
 
     cout << "\t";

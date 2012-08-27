@@ -1,7 +1,6 @@
 #include "ObstacleClearanceValidity.h"
 #include "CollisionDetectionValidity.hpp"
 #include "DistanceMetrics.h"
-#include "MPProblem/MPRegion.h"
 
 ObstacleClearanceValidity::ObstacleClearanceValidity(
     string _dmLabel, string _vcLabel, 

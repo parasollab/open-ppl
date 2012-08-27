@@ -92,9 +92,9 @@ class HybridPRM : public MPStrategyMethod
   virtual void PrintOptions(ostream& out_os);
   virtual void ParseXML(XMLNodeReader& in_Node);
 
-   virtual void Initialize(int in_RegionID);
-   virtual void Run(int in_RegionID);
-   virtual void Finalize(int in_RegionID);
+   virtual void Initialize();
+   virtual void Run();
+   virtual void Finalize();
 
   void initialize_weights_probabilities_costs();
   void copy_learned_prob_to_prob_use();
@@ -113,7 +113,7 @@ class HybridPRM : public MPStrategyMethod
 
   //double cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc);
 
-  bool evaluate_map(int in_RegionID);
+  bool evaluate_map();
 
  protected:
   vector<string> m_node_gen_labels;

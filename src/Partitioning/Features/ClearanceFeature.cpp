@@ -2,7 +2,6 @@
 #include "MPProblem.h"
 #include "Roadmap.h"
 #include "CfgTypes.h"
-#include "MPRegion.h"
 #include "ValidityChecker.hpp"
 #include "MPUtils.h"
 
@@ -22,8 +21,8 @@ void ClearanceFeature::ParseXML(XMLNodeReader& in_Node){
 vector<double> ClearanceFeature::Collect(vector<VID>& vids) {
   vector<double> clearance;
 
-  RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
-  StatClass* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
+  RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap()->m_pRoadmap;
+  StatClass* pStatClass = GetMPProblem()->GetStatClass();
   Environment *env = GetMPProblem()->GetEnvironment();
   ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
 
@@ -58,8 +57,8 @@ vector<double> CSpaceClearanceFeature::Collect(vector<VID>& vids) {
 
   vector<double> clearance;
 	CDInfo tmp_info;
-  RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
-  StatClass* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
+  RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap()->m_pRoadmap;
+  StatClass* pStatClass = GetMPProblem()->GetStatClass();
   Environment *env = GetMPProblem()->GetEnvironment();
   ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
   typedef vector<VID>::iterator VIT;

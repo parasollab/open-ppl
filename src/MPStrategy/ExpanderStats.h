@@ -349,8 +349,8 @@ class EdgeExpanderStats : public MPStrategyMethod {
     
   virtual void PrintOptions(ostream& out_os) { }
 
-   virtual void Initialize(int in_RegionID){}
-   virtual void Run(int in_RegionID){    
+   virtual void Initialize(){}
+   virtual void Run(){    
       cout<<"*************in operator()***********************"<<endl;
       if(files.size()==0){
          cout<<"no files"<<endl;
@@ -371,7 +371,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
       myofstream.close();
 
    }
-   virtual void Finalize(int in_RegionID){}
+   virtual void Finalize(){}
 
 };
 

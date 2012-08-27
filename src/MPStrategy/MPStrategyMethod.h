@@ -22,18 +22,17 @@ class MPStrategyMethod : public MPBaseObject {
     virtual void ParseXML(XMLNodeReader& _node);
 
     void operator()();
-    void operator()(int _regionID);
 
-    virtual void Initialize(int _regionID)=0;
-    virtual void Run(int _regionID)=0;
-    virtual void Finalize(int _regionID)=0;
+    virtual void Initialize()=0;
+    virtual void Run()=0;
+    virtual void Finalize()=0;
     virtual void PrintOptions(ostream& _os)=0;
 
     string GetBaseFilename(){return m_baseFilename;}
     void SetBoundary(shared_ptr<Boundary> bb){m_boundary=bb;};
     long GetBaseSeed() {return m_baseSeed;} 
 
-    bool EvaluateMap(int _regionID, vector<string> _evaluators);
+    bool EvaluateMap(vector<string> _evaluators);
   
   protected:
     typedef RoadmapGraph<CfgType, WeightType>::GRAPH GRAPH;

@@ -2,8 +2,8 @@
 #define MINKOWSKIDISTANCE_H_
 
 #include "DistanceMetricMethod.h"
-#include "boost/utility/enable_if.hpp"
-#include "MPProblem.h"
+//#include "boost/utility/enable_if.hpp"
+#include "IsClosedChain.h"
 #include "Cfg_free_tree.h"
 #include "Cfg_fixed_tree.h"
 

@@ -13,8 +13,8 @@ class NodeCharacterizerMethod : public MPBaseObject
     NodeCharacterizerMethod() {};
     virtual ~NodeCharacterizerMethod() {}
     virtual void ParseXML(XMLNodeReader& in_Node)=0;
-    virtual void Characterize(MPRegion<CFG,WEIGHT>*)=0;
-    virtual void Characterize(MPRegion<CFG,WEIGHT>*, VID) {};
+    virtual void Characterize()=0;
+    virtual void Characterize(VID) {};
     virtual void PrintOptions(ostream& out_os)=0;
 };
 
@@ -39,13 +39,13 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
     
     virtual void ParseXML(XMLNodeReader& in_Node) { };
       
-    virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion) {
-      cout << "CCExpandCharacterizer::Characterize(MPRegion*) Not implemented" << endl;
+    virtual void Characterize() {
+      cout << "CCExpandCharacterizer::Characterize() Not implemented" << endl;
       exit(-1);
     };
     
-    virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion, VID in_vid) {
-      Roadmap<CFG,WEIGHT>* pRoadmap = inout_pRegion->GetRoadmap();
+    virtual void Characterize(VID in_vid) {
+      Roadmap<CFG,WEIGHT>* pRoadmap = this->GetMPProblem()->GetRoadmap();
       RoadmapGraph<CFG,WEIGHT>* pGraph = pRoadmap->m_pRoadmap;
       LocalPlanners < CFG, WEIGHT > * lp = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
       LPOutput< CFG, WEIGHT > lp_output; 
@@ -112,11 +112,11 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       
     };
       
-    virtual void Characterize(MPRegion<CFG,WEIGHT>* inout_pRegion) {
+    virtual void Characterize() {
       cout << "*********LocalNodeInfoCharacterizer:: m_dRadius = " << m_dRadius << endl;
       NeighborhoodFinderMethod* rnf = new RadiusNF(m_dmLabel, m_dRadius, "", this->GetMPProblem()); 
-      Roadmap<CFG,WEIGHT>* pRoadmap = inout_pRegion->GetRoadmap();
-      Roadmap<CFG,WEIGHT>* pColRoadmap = inout_pRegion->GetColRoadmap();
+      Roadmap<CFG,WEIGHT>* pRoadmap = this->GetMPProblem()->GetRoadmap();
+      Roadmap<CFG,WEIGHT>* pColRoadmap = this->GetMPProblem()->GetColRoadmap();
       RoadmapGraph<CFG,WEIGHT>* pGraph = pRoadmap->m_pRoadmap;
       RoadmapGraph<CFG,WEIGHT>* pColGraph = pColRoadmap->m_pRoadmap;
       vector<VID> vids;

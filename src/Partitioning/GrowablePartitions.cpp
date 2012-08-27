@@ -1,6 +1,5 @@
 #include "GrowablePartitions.h"
 #include "MPStrategy.h"
-#include "MPRegion.h"
 #include "Features.h"
 #include "Partition.h"
 
@@ -108,7 +107,7 @@ int GrowablePartitions::FindClosestPartition(vector<pair<double, Partition*> > &
    typedef vector<pair<double, Partition*> >::iterator PIT;
    typedef vector<VID>::iterator VIT;
 
-   Roadmap<CfgType, WeightType> *rdmp= GetMPProblem()->GetMPRegion(0)->GetRoadmap();
+   Roadmap<CfgType, WeightType> *rdmp= GetMPProblem()->GetRoadmap();
    vector< pair<size_t,VID> > ccs;
    stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>,size_t > cmap;
    get_cc_stats(*(rdmp->m_pRoadmap),cmap,ccs);  

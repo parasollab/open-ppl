@@ -1,5 +1,4 @@
 #include "ResamplePointStrategy.h"
-#include "MPRegion.h"
 #include "SamplerMethod.h"
 #include "MPStrategy.h"
 #include <algorithm>
@@ -132,7 +131,7 @@ void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp, MPProble
 
 void
 ResamplePointStrategy::
-Run(int in_RegionID) 
+Run() 
 {
    PrintOptions(cout);
    double currentConfigurationWeight=0.0;
@@ -147,8 +146,8 @@ Run(int in_RegionID)
    
      
    //load input map
-   GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap()->ReadRoadmapGRAPHONLY(m_input_map_filename.c_str());
-   Roadmap<CfgType,WeightType>* rdmp = GetMPProblem()->GetMPRegion(in_RegionID)->GetRoadmap();
+   GetMPProblem()->GetRoadmap()->ReadRoadmapGRAPHONLY(m_input_map_filename.c_str());
+   Roadmap<CfgType,WeightType>* rdmp = GetMPProblem()->GetRoadmap();
 
    //load input path
    vector<CfgType> path_cfgs;
@@ -174,7 +173,7 @@ Run(int in_RegionID)
    vector<VID> path_vids;
    double smoothingValues[10000];
    int index =0;
-   StatClass* pStatClass = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
+   StatClass* pStatClass = GetMPProblem()->GetStatClass();
    CDInfo cdInfo;
    LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
    vector<CfgType>::iterator C = path_cfgs.begin();
@@ -263,7 +262,7 @@ Run(int in_RegionID)
    WritePathConfigurations(buff, opath_cfgs, rdmp->GetEnvironment()); 
   //write output map
   ofstream os_map(m_output_map_filename.c_str());
-  GetMPProblem()->GetMPRegion(in_RegionID)->WriteRoadmapForVizmo(os_map);
+  GetMPProblem()->WriteRoadmapForVizmo(os_map);
   os_map.close();
 }
 

@@ -36,9 +36,9 @@ class EvaluateMapStrategy : public MPStrategyMethod
   }
   virtual void ParseXML(XMLNodeReader& in_Node, bool warn_unknown); 
    
-  virtual void Initialize(int region_id) {}
-  virtual void Run(int region_id);
-  virtual void Finalize(int region_id) {}
+  virtual void Initialize() {}
+  virtual void Run();
+  virtual void Finalize() {}
 
 protected:
   string map_filename;

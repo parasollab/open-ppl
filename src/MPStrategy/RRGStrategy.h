@@ -10,7 +10,7 @@ class RRGStrategy : public BasicRRTStrategy {
 
     virtual void ParseXML(XMLNodeReader& _node);
     virtual void PrintOptions(ostream& _os);
-    virtual VID ExpandTree(int _regionID, CfgType& _dir);
+    virtual VID ExpandTree(CfgType& _dir);
 
   private:
     string m_nc;  // Contains the Node Connection Method string

@@ -37,22 +37,22 @@ void UAStrategy::ParseXML(XMLNodeReader& in_Node){
    }
 }
 
-void UAStrategy::Initialize(int in_RegionID){
-   cout<<"\nInitializing UAStrategy::"<<in_RegionID<<endl;
+void UAStrategy::Initialize(){
+   cout<<"\nInitializing UAStrategy::"<<endl;
 
 
 
    cout<<"\nEnd Initializing UAStrategy"<<endl;
 }
 
-void UAStrategy::Run(int in_RegionID){
-   cout<<"\nRunning UAStrategy::"<<in_RegionID<<endl;
+void UAStrategy::Run(){
+   cout<<"\nRunning UAStrategy::"<<endl;
 
    MPProblem* mp = GetMPProblem();
    MPStrategy* ms = mp->GetMPStrategy();
 
    //create training roadmap
-   ms->GetMPStrategyMethod(m_TrainingStrategy)->operator()(in_RegionID);
+   ms->GetMPStrategyMethod(m_TrainingStrategy)->operator()();
    
    //identify regions
    IdentifyRegions();
@@ -73,7 +73,7 @@ void UAStrategy::Run(int in_RegionID){
       vector<MPStrategyMethod*> tmp;
       for(SIT sit = m_RegionStrategies.begin(); sit!=m_RegionStrategies.end(); sit++){
          tmp.push_back(ms->CreateMPStrategyMethod(*(ms->GetXMLNodeForStrategy(*sit))));
-         tmp[tmp.size()-1]->Initialize(0);
+         tmp[tmp.size()-1]->Initialize();
       }
       regionStrategyMethods.push_back(tmp);
    }
@@ -90,13 +90,13 @@ void UAStrategy::Run(int in_RegionID){
       //Do an iteration in a region
       typedef vector<MPStrategyMethod*>::iterator MIT;
       for(MIT mit = regionStrategyMethods[region].begin();mit!=regionStrategyMethods[region].end(); mit++){
-         (*mit)->Run(0);
+         (*mit)->Run();
       }
 
       //restore bounding box values
       RestoreBB();
 
-      mapPassedEvaluation = EvaluateMap(in_RegionID, m_EvaluatorLabels); 
+      mapPassedEvaluation = EvaluateMap(m_EvaluatorLabels); 
    } 
 
    //finalize the region solvers
@@ -104,36 +104,35 @@ void UAStrategy::Run(int in_RegionID){
    typedef vector<MPStrategyMethod*>::iterator MIT;
    for(VIT vit=regionStrategyMethods.begin(); vit!=regionStrategyMethods.end(); vit++){
       for(MIT mit=vit->begin(); mit!=vit->end(); mit++){
-         (*mit)->Finalize(0);
+         (*mit)->Finalize();
       }
    }
 
    cout<<"\nEnd Running UAStrategy"<<endl;
 }
 
-void UAStrategy::Finalize(int in_RegionID){
-   cout<<"\nFinalizing UAStrategy::"<<in_RegionID<<endl;
+void UAStrategy::Finalize(){
+   cout<<"\nFinalizing UAStrategy::"<<endl;
  
-   //setup region variables
-   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-   StatClass* regionStats = region->GetStatClass();
+   //setup variables
+   StatClass* stats = GetMPProblem()->GetStatClass();
  
    string str;
   
    //output final map
    str = GetBaseFilename() + ".map";
    ofstream osMap(str.c_str());
-   region->WriteRoadmapForVizmo(osMap);
+   GetMPProblem()->WriteRoadmapForVizmo(osMap);
    osMap.close();
   
    //output stats
    str = GetBaseFilename() + ".stat";
    ofstream  osStat(str.c_str());
    osStat << "NodeGen+Connection Stats" << endl;
-   regionStats->PrintAllStats(osStat, region->GetRoadmap());
+   stats->PrintAllStats(osStat, GetMPProblem()->GetRoadmap());
    streambuf* sbuf = cout.rdbuf(); // to be restored later
    cout.rdbuf(osStat.rdbuf());   // redirect destination of std::cout
-   //regionStats->PrintFeatures();
+   //stats->PrintFeatures();
    cout.rdbuf(sbuf);  // restore original stream buffer
    osStat.close();
 
@@ -162,7 +161,7 @@ void UAStrategy::PrintOptions(ostream& out_os){
 }
 
 void UAStrategy::IdentifyRegions(){   
-   Partition* p=new Partition(GetMPProblem()->GetMPRegion(0)->GetRoadmap(), 0);
+   Partition* p=new Partition(GetMPProblem()->GetRoadmap(), 0);
    LeafPartitionNode lp(p);
    m_pt = new PartitionTree(lp);
    cout<<GetMPProblem()->GetMPStrategy()->GetPartitioningMethods()->GetPartitioningMethod(m_PartitioningMethod)->GetName()<<endl<<flush;
@@ -177,7 +176,7 @@ void UAStrategy::CollectMinMaxBBX(){
    typedef vector< vector< VID >* >::iterator CIT;
    typedef vector< VID >::iterator NIT;
 
-   Roadmap < CfgType, WeightType > * rm = GetMPProblem()->GetMPRegion(0)->GetRoadmap();
+   Roadmap < CfgType, WeightType > * rm = GetMPProblem()->GetRoadmap();
    vector< double > CurrPos;
    double dtmp;
    CfgType NodeData; 
@@ -246,7 +245,7 @@ bool sortRegionFunc(pair<VID, double> p1, pair<VID, double> p2){return p1.second
 
 void UAStrategy::OverlapBBX(){
    Environment *env = GetMPProblem()->GetEnvironment();
-   boost::shared_ptr<Boundary> bb = GetMPProblem()->GetMPRegion(0)->GetBoundary();
+   boost::shared_ptr<Boundary> bb = GetMPProblem()->GetEnvironment()->GetBoundary();
    double robot_radius = 1.25*env->GetMultiBody(env->GetRobotIndex())->GetBoundingSphereRadius();
    
    if(m_OverlapMethod=="default"){ 
@@ -285,7 +284,7 @@ void UAStrategy::OverlapBBX(){
       //calculate mst of region graph//
       typedef stapl::sequential::graph<stapl::UNDIRECTED, stapl::NONMULTIEDGES, int, double> Graph;
       Graph g;
-      Roadmap < CfgType, WeightType > * rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap();
+      Roadmap < CfgType, WeightType > * rdmp = GetMPProblem()->GetRoadmap();
       vector< vector< VID >* > Clusters = GetPartitionsVID();
       typedef vector<vector<VID>* >::iterator VIT;
       typedef vector<VID>::iterator VVIT;
@@ -502,7 +501,7 @@ void UAStrategy::UpdateBBToRange(size_t region){
   m_hold.clear();
   if( region >=0 && region < m_min.size() ){
     boost::shared_ptr<Boundary> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundary();
-    boost::shared_ptr<Boundary> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundary();
+    boost::shared_ptr<Boundary> pBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundary();
 
     int size = (m_min.at(region)).size();
     for(int i=0; i < size;i++){
@@ -525,7 +524,7 @@ void UAStrategy::UpdateBBToRange(size_t region){
 
 void UAStrategy::RestoreBB(){
   boost::shared_ptr<Boundary> pMPEBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundary();
-  boost::shared_ptr<Boundary> pBoundBox = (GetMPProblem()->GetMPRegion(0))->GetBoundary();
+  boost::shared_ptr<Boundary> pBoundBox = (GetMPProblem()->GetEnvironment())->GetBoundary();
   size_t i=0;
   for(i=0; i<m_hold.size();i++){
     pBoundBox->SetParameter(i, m_hold[i].first, m_hold[i].second);
@@ -565,7 +564,7 @@ void UAStrategy::EvaluatePartitions(){
 void UAStrategy::WriteRegionsSeparate(){
    string baseFileName = GetBaseFilename();
    int count=0;
-   RoadmapGraph<CfgType,WeightType>* rg = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
+   RoadmapGraph<CfgType,WeightType>* rg = GetMPProblem()->GetRoadmap()->m_pRoadmap;
    vector<PartitionNode*> pnodes = m_pt->GetRoot()->GetChildren();
    typedef vector<PartitionNode*>::iterator PIT;
    for (PIT pit=pnodes.begin(); pit!=pnodes.end(); pit++, count++) {
@@ -574,23 +573,22 @@ void UAStrategy::WriteRegionsSeparate(){
       for(int i = 0; i <3; i++){
          bb.SetParameter(i, m_min[count][i], m_max[count][i]);
       }
-      MPRegion<CfgType,WeightType> eachRgn(*(GetMPProblem()->GetEnvironment()), bb, count+10, NULL);
-      eachRgn.SetMPProblem(GetMPProblem());
+      MPProblem regionProblem(GetMPProblem()->GetEnvironment(), GetMPProblem()->GetDistanceMetric(), GetMPProblem()->GetCollisionDetection(), GetMPProblem()->GetValidityChecker(), GetMPProblem()->GetNeighborhoodFinder());
       typedef vector<VID>::iterator VIT;
       for(VIT vit = vi.begin(); vit!=vi.end(); vit++){
          CfgType cfg = rg->find_vertex(*vit)->property();
-         eachRgn.GetRoadmap()->m_pRoadmap->AddVertex(cfg);
+         regionProblem.GetRoadmap()->m_pRoadmap->AddVertex(cfg);
       }
       for(unsigned int k = 0; k<vi.size()-1; k++){
          CfgType cfg1 = rg->find_vertex(vi[k])->property();
          CfgType cfg2 = rg->find_vertex(vi[k+1])->property();
-         eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg1,cfg2, WeightType());
-         //eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg2,cfg1,0);
+         regionProblem.GetRoadmap()->m_pRoadmap->AddEdge(cfg1,cfg2, WeightType());
+         //regionProblem.GetRoadmap()->m_pRoadmap->AddEdge(cfg2,cfg1,0);
       }
       CfgType cfg1 = rg->find_vertex(vi[0])->property();
       CfgType cfg2 = rg->find_vertex(vi[vi.size()-1])->property();
-      //eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg1,cfg2,0);
-      //eachRgn.GetRoadmap()->m_pRoadmap->AddEdge(cfg2,cfg1,0);
+      //regionProblem.GetRoadmap()->m_pRoadmap->AddEdge(cfg1,cfg2,0);
+      //regionProblem.GetRoadmap()->m_pRoadmap->AddEdge(cfg2,cfg1,0);
       ostringstream oss;
       oss<<baseFileName<<"."<<count<<".map";
       ofstream  myofstream(oss.str().c_str());    
@@ -598,7 +596,7 @@ void UAStrategy::WriteRegionsSeparate(){
          cerr << "print_feature_maps::WriteRoadmapForVizmo: can't open outfile: " << endl;
          exit(-1);
       } 
-      eachRgn.WriteRoadmapForVizmo(myofstream);
+      regionProblem.WriteRoadmapForVizmo(myofstream);
       myofstream.close();
    }
 };

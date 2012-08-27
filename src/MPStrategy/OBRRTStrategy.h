@@ -28,16 +28,16 @@ class OBRRTStrategy : public BasicRRTStrategy {
 
   protected:
     // Helper functions
-    VID ExpandTree(int _regionID, CfgType& _dir);
-    CfgType g0(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid);
-    CfgType g1(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid);
-    CfgType g2(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid);
-    CfgType g3(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid);
-    CfgType g4(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid);
-    CfgType g5(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri);
+    VID ExpandTree(CfgType& _dir);
+    CfgType g0(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
+    CfgType g1(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
+    CfgType g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
+    CfgType g3(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
+    CfgType g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
+    CfgType g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri);
     //g6 is the same as g5 but with ori changes
-    CfgType g7(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid);
-    CfgType g8(int _regionID, CfgType& _near, CfgType& _dir, bool& _verifiedValid);
+    CfgType g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
+    CfgType g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
   private:
     vector<string> m_componentConnectors;
     vector<string> m_evaluators;

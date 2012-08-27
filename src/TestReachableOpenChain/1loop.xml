@@ -24,9 +24,6 @@
     <NeighborhoodFinder>
       <BFNF Label="BFNF" dm_method="ReachableDistance"/>
     </NeighborhoodFinder>
-    
-    <MPRegions/>
-      
   </MPProblem>
   
   <MPStrategy iterations=1 gamma=0>  

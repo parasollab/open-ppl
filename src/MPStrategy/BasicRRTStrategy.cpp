@@ -6,7 +6,6 @@
 
 #include "BasicRRTStrategy.h"
 #include "MPProblem.h"
-#include "MPRegion.h"
 #include "MPStrategy.h"
 #include "MapEvaluator.h"
 #include "Sampler.h"
@@ -65,13 +64,12 @@ void BasicRRTStrategy::PrintOptions(ostream& _os) {
 //Initialization Phase
 /////////////////////
 void 
-BasicRRTStrategy::Initialize(int _regionID){
-  if(m_debug) cout<<"\nInitializing BasicRRTStrategy::"<<_regionID<<endl;
+BasicRRTStrategy::Initialize(){
+  if(m_debug) cout<<"\nInitializing BasicRRTStrategy::"<<endl;
 
   // Setup MP variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  StatClass* regionStats = region->GetStatClass();
-  Environment* env = region->GetRoadmap()->GetEnvironment();
+  StatClass* stats = GetMPProblem()->GetStatClass();
+  Environment* env = GetMPProblem()->GetRoadmap()->GetEnvironment();
   ValidityChecker<CfgType>* vc = GetMPProblem()->GetValidityChecker();
   CDInfo cdInfo;
   string callee = "BasicRRTStrategy::RRT";
@@ -93,7 +91,7 @@ BasicRRTStrategy::Initialize(int _regionID){
     for (int i=0; i<m_numRoots; ++i) {
       tmp.GetRandomCfg(env);
       if (tmp.InBoundary(env)
-          && vc->IsValid(vc->GetVCMethod(m_vc), tmp, env, *regionStats, cdInfo, true, &callee)){
+          && vc->IsValid(vc->GetVCMethod(m_vc), tmp, env, *stats, cdInfo, true, &callee)){
         m_roots.push_back(tmp);
         m_goals.push_back(tmp);
         m_goalsNotFound.push_back(m_goals.size()-1);
@@ -103,7 +101,7 @@ BasicRRTStrategy::Initialize(int _regionID){
     }
   }
   for(vector<CfgType>::iterator C = m_roots.begin(); C!=m_roots.end(); C++){
-    region->GetRoadmap()->m_pRoadmap->AddVertex(*C);
+    GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(*C);
   }
 
   if(m_debug) cout<<"\nEnding Initializing BasicRRTStrategy"<<endl;
@@ -112,14 +110,13 @@ BasicRRTStrategy::Initialize(int _regionID){
 ////////////////
 //Run/Start Phase
 ////////////////
-void BasicRRTStrategy::Run(int _regionID) {
-  if(m_debug) cout << "\nRunning BasicRRTStrategy::" << _regionID << endl;
+void BasicRRTStrategy::Run() {
+  if(m_debug) cout << "\nRunning BasicRRTStrategy::" << endl;
 
   // Setup MP Variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  StatClass* regionStats = region->GetStatClass();
+  StatClass* stats = GetMPProblem()->GetStatClass();
 
-  regionStats->StartClock("RRT Generation");
+  stats->StartClock("RRT Generation");
 
   CfgType dir;
   bool mapPassedEvaluation = false;
@@ -127,23 +124,23 @@ void BasicRRTStrategy::Run(int _regionID) {
     //find my growth direction. Default is too randomly select node or bias towards a goal
     double randomRatio = DRand();
     if(randomRatio<m_growthFocus){
-      dir = GoalBiasedDirection(_regionID);
+      dir = GoalBiasedDirection();
     }
     else{
-      dir = this->SelectDirection(_regionID);
+      dir = this->SelectDirection();
     }
 
     //grow towards the direction
-    VID recent = this->ExpandTree(_regionID, dir);
+    VID recent = this->ExpandTree(dir);
     if(recent != INVALID_VID){
       //conntect various trees together
-      ConnectTrees(_regionID, recent);
+      ConnectTrees(recent);
       //see if tree is connected to goals
-      EvaluateGoals(_regionID);
+      EvaluateGoals();
     }
     
     //evaluate the roadmap
-    mapPassedEvaluation = EvaluateMap(_regionID, m_evaluators);
+    mapPassedEvaluation = EvaluateMap(m_evaluators);
 
     if(m_goalsNotFound.size()==0){
       if(m_debug) cout << "RRT FOUND ALL GOALS" << endl;
@@ -151,45 +148,44 @@ void BasicRRTStrategy::Run(int _regionID) {
     }
   }
 
-  regionStats->StopClock("RRT Generation");
+  stats->StopClock("RRT Generation");
   if(m_debug) {
-    regionStats->PrintClock("RRT Generation", cout);
-    cout<<"\nEnd Running BasicRRTStrategy::" << _regionID << endl;  
+    stats->PrintClock("RRT Generation", cout);
+    cout<<"\nEnd Running BasicRRTStrategy::" << endl;  
   }
 }
 
 /////////////////////
 //Finalization phase
 ////////////////////
-void BasicRRTStrategy::Finalize(int _regionID) {
+void BasicRRTStrategy::Finalize() {
  
-  if(m_debug) cout<<"\nFinalizing BasicRRTStrategy::"<<_regionID<<endl;
+  if(m_debug) cout<<"\nFinalizing BasicRRTStrategy::"<<endl;
 
-  //setup region variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  StatClass* regionStats = region->GetStatClass();
+  //setup variables
+  StatClass* stats = GetMPProblem()->GetStatClass();
   string str;
 
   //output final map
   str = GetBaseFilename() + ".map";
   ofstream osMap(str.c_str());
-  region->WriteRoadmapForVizmo(osMap);
+  GetMPProblem()->WriteRoadmapForVizmo(osMap);
   osMap.close();
 
   //output stats
   str = GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
-  regionStats->PrintAllStats(osStat, region->GetRoadmap());
-  regionStats->PrintClock("RRT Generation", osStat);
+  stats->PrintAllStats(osStat, GetMPProblem()->GetRoadmap());
+  stats->PrintClock("RRT Generation", osStat);
   osStat.close();
 
-  if(m_debug) cout<<"\nEnd Finalizing BasicRRTStrategy"<<_regionID<<endl;
+  if(m_debug) cout<<"\nEnd Finalizing BasicRRTStrategy"<<endl;
 }
 
 
 CfgType
-BasicRRTStrategy::GoalBiasedDirection(int _regionID){
+BasicRRTStrategy::GoalBiasedDirection(){
   // Determine direction, make sure goal not found
   if (m_goalsNotFound.size() == 0){
     return CfgType(); 
@@ -201,18 +197,16 @@ BasicRRTStrategy::GoalBiasedDirection(int _regionID){
 }
 
 CfgType 
-BasicRRTStrategy::SelectDirection(int _regionID){
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  Environment* env = region->GetRoadmap()->GetEnvironment();
+BasicRRTStrategy::SelectDirection(){
+  Environment* env = GetMPProblem()->GetRoadmap()->GetEnvironment();
   CfgType dir;
   dir.GetRandomCfg(env);
   return dir;
 }
 
 BasicRRTStrategy::VID 
-BasicRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
+BasicRRTStrategy::ExpandTree(CfgType& _dir){
   // Setup MP Variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
@@ -222,40 +216,39 @@ BasicRRTStrategy::ExpandTree(int _regionID, CfgType& _dir){
   vector<VID> kClosest;
   vector<CfgType> cfgs;
 
-  nf->GetMethod(m_nf)->KClosest(region->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
-  CfgType nearest = region->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
+  nf->GetMethod(m_nf)->KClosest(GetMPProblem()->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
+  CfgType nearest = GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
   CfgType newCfg;
   int weight;
 
-  if(!RRTExpand(GetMPProblem(), _regionID, m_vc, m_dm, nearest, _dir, newCfg, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, nearest, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
     return recentVID;
   }
   // If good to go, add to roadmap
   if(dm->Distance(env, newCfg, nearest) >= m_minDist) {
-    recentVID = region->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
+    recentVID = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
     //TODO fix weight
     pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
-    region->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
-    region->GetRoadmap()->m_pRoadmap->find_vertex(recentVID)->property().SetStat("Parent", kClosest[0]);
+    GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
+    GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(recentVID)->property().SetStat("Parent", kClosest[0]);
   } 
   return recentVID;
 }
 
 void 
-BasicRRTStrategy::ConnectTrees(int _regionID, VID _recentlyGrown) {
+BasicRRTStrategy::ConnectTrees(VID _recentlyGrown) {
   //Setup MP variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
   Environment* env = GetMPProblem()->GetEnvironment();
-  StatClass* regionStats = region->GetStatClass();
-  Roadmap<CfgType, WeightType>* rdmp = region->GetRoadmap();
+  StatClass* stats = GetMPProblem()->GetStatClass();
+  Roadmap<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
   shared_ptr<LocalPlannerMethod<CfgType, WeightType> > lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
   LPOutput<CfgType, WeightType> lpOutput;
 
   stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Component Connection";
-  regionStats->StartClock(clockName.str());
+  stats->StartClock(clockName.str());
 
   stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
   vector< pair<size_t,VID> > ccs;
@@ -290,7 +283,7 @@ BasicRRTStrategy::ConnectTrees(int _regionID, VID _recentlyGrown) {
   if(m_debug) cout << "Attempt Connection " << c1 << "\t" << c2 << endl;
   CfgType col;
   if(dm->Distance(env, c1, c2)<m_delta &&
-      lp->IsConnected(env, *regionStats, dm, c1, c2, col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes())){
+      lp->IsConnected(env, *stats, dm, c1, c2, col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes())){
 
     if(m_debug) cout << "Connected" << endl;
     rdmp->m_pRoadmap->AddEdge(_recentlyGrown, closestNode[0], lpOutput.edge);
@@ -298,11 +291,10 @@ BasicRRTStrategy::ConnectTrees(int _regionID, VID _recentlyGrown) {
 }
 
 void
-BasicRRTStrategy::EvaluateGoals(int _regionID){
+BasicRRTStrategy::EvaluateGoals(){
   // Setup MP Variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  StatClass* regionStats = region->GetStatClass();
-  Environment* env = region->GetRoadmap()->GetEnvironment();
+  StatClass* stats = GetMPProblem()->GetStatClass();
+  Environment* env = GetMPProblem()->GetRoadmap()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
@@ -310,16 +302,16 @@ BasicRRTStrategy::EvaluateGoals(int _regionID){
   // Check if goals have been found
   for(vector<size_t>::iterator i = m_goalsNotFound.begin(); i!=m_goalsNotFound.end(); i++){
     vector<VID> closests;
-    nf->GetMethod(m_nf)->KClosest(region->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));     
-    CfgType closest = region->GetRoadmap()->m_pRoadmap->find_vertex(closests[0])->property();
+    nf->GetMethod(m_nf)->KClosest(GetMPProblem()->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));     
+    CfgType closest = GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(closests[0])->property();
     double dist = dm->Distance(env, m_goals[*i], closest);
     if(m_debug) cout << "Distance to goal::" << dist << endl;
     CfgType col;
-    if(dist < m_delta && lp->GetMethod(m_lp)->IsConnected(env, *regionStats, dm, closest, m_goals[*i], col, &lpOutput,
+    if(dist < m_delta && lp->GetMethod(m_lp)->IsConnected(env, *stats, dm, closest, m_goals[*i], col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true, false, false)){
       if(m_debug) cout << "Goal found::" << m_goals[*i] << endl;
-      region->GetRoadmap()->m_pRoadmap->AddVertex(m_goals[*i]);
-      region->GetRoadmap()->m_pRoadmap->AddEdge(closest, m_goals[*i], lpOutput.edge);
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(m_goals[*i]);
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(closest, m_goals[*i], lpOutput.edge);
       m_goalsNotFound.erase(i);
       i--;
     }
@@ -327,9 +319,8 @@ BasicRRTStrategy::EvaluateGoals(int _regionID){
 }
 
 RoadmapClearanceStats 
-BasicRRTStrategy::PathClearance(int _regionID){
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  RoadmapGraph<CfgType, WeightType>* graph = region->GetRoadmap()->m_pRoadmap;
+BasicRRTStrategy::PathClearance(){
+  RoadmapGraph<CfgType, WeightType>* graph = GetMPProblem()->GetRoadmap()->m_pRoadmap;
   int svid = graph->GetVID(m_roots[0]);
   int gvid = graph->GetVID(m_goals[0]);
   vector<VID> path;
@@ -349,7 +340,7 @@ BasicRRTStrategy::PathClearance(int _regionID){
     graph->find_edge(ed, vi, ei);
     WeightType weight = (*ei).property();
     pathLength += weight.Weight();
-    double currentClearance = MinEdgeClearance(GetMPProblem(), false, region->GetRoadmap()->GetEnvironment(), (*graph->find_vertex((*ei).source())).property(), (*graph->find_vertex((*ei).target())).property(), weight, m_vc, m_dm); 
+    double currentClearance = MinEdgeClearance(GetMPProblem(), false, GetMPProblem()->GetRoadmap()->GetEnvironment(), (*graph->find_vertex((*ei).source())).property(), (*graph->find_vertex((*ei).target())).property(), weight, m_vc, m_dm); 
     clearanceVec.push_back(currentClearance);
     runningTotal += currentClearance;
     if(currentClearance < minClearance){

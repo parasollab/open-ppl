@@ -3,7 +3,7 @@
 
 #include "MPUtils.h"
 #include "CfgTypes.h"
-//#include "NeighborhoodFinder.h"
+#include "RoadmapGraph.h"
 
 class MPStrategy;
 class DistanceMetric;
@@ -11,7 +11,7 @@ class NeighborhoodFinder;
 class CollisionDetection;
 template<typename CFG> class ValidityChecker;
 class Environment;
-template <class CFG, class WEIGHT> class MPRegion;
+template <typename CFG, typename WEIGHT> class Roadmap;
 
 class MPProblem : public MPBaseObject
 {
@@ -26,7 +26,7 @@ protected:
   bool ParseChild(XMLNodeReader::childiterator citr);
   
 private:
-  ///\todo Create constructors for distance_metrics, collision_detection, MPRegions
+  ///\todo Create constructors for distance_metrics, collision_detection
   virtual void ParseXML(XMLNodeReader& in_Node); 
   
 public:
@@ -45,16 +45,19 @@ public:
   inline void SetValidityChecker(ValidityChecker<CfgType>* _vc) {m_pValidityChecker = _vc;};
   inline Environment* GetEnvironment() {return m_pEnvironment;};
   inline void SetEnvironment(Environment* _e) {m_pEnvironment = _e;};
+  inline Roadmap<CfgType,WeightType>* GetRoadmap() { return m_roadmap; }
+  inline void SetRoadmap(Roadmap<CfgType,WeightType>* _r) { m_roadmap = _r; }
+  inline Roadmap<CfgType,WeightType>* GetBlockRoadmap() { return m_blockRoadmap; }
+  inline Roadmap<CfgType,WeightType>* GetColRoadmap() { return m_colRoadmap; }
+  inline StatClass* GetStatClass() { return m_stats; }
   
-  
-  //inline Roadmap<CfgType,WeightType>* GetRoadmap() {return &rmp;};
-  //inline Roadmap<CfgType,WeightType>* GetColRoadmap() {return &rmp_col;};
-  virtual int CreateMPRegion();
-  MPRegion<CfgType,WeightType>* GetMPRegion(int);
-
-  //void AddToRoadmap(vector<Cfg_free >& in_Cfgs);
   void PrintOptions(ostream& out_os);
   //ostream& GetFileStreamByLabel(string& in_strLabel);
+  
+  vector<RoadmapGraph<CfgType,WeightType>::VID> AddToRoadmap(vector<CfgType>& _cfgs);
+
+  void WriteRoadmapForVizmo(ostream& _os, vector<shared_ptr<Boundary> >* _boundaries = NULL, bool _block = false);
+
  
   void SetMPProblem();
 ////////////
@@ -69,25 +72,10 @@ public:
   CollisionDetection* m_pCollisionDetection;
   ValidityChecker<CfgType>* m_pValidityChecker;
   NeighborhoodFinder* m_pNeighborhoodFinder;
-  //Roadmap<CfgType,WeightType> rmp;
-  //Roadmap<CfgType,WeightType> rmp_col;
-  vector< MPRegion<CfgType,WeightType>* > m_vecMPRegions; 
+  Roadmap<CfgType,WeightType>* m_roadmap, * m_blockRoadmap, * m_colRoadmap;
+  StatClass* m_stats;
   //map<string,MPFileIO> m_mapLabelFile;
   // temporary variable to deal with posDOFs() and DOFs()
-};
-
-
-class Cfg_reach_cc;
-#include "boost/utility/enable_if.hpp"
-#include "boost/type_traits/is_same.hpp"
-#include "boost/type_traits/is_base_of.hpp"
-#include "boost/mpl/or.hpp"
-
-template <typename T>
-struct IsClosedChain : boost::mpl::or_<
-                                       boost::is_same<Cfg_reach_cc, T>,
-                                       boost::is_base_of<Cfg_reach_cc, T>
-                                      >::type {
 };
 
 #endif

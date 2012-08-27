@@ -1,5 +1,5 @@
 #include "NumEdgesMetric.h"
-#include "MPRegion.h"
+#include "Roadmap.h"
 
 NumEdgesMetric::NumEdgesMetric() {
   this->SetName("NumEdgesMetric");
@@ -18,6 +18,6 @@ void NumEdgesMetric::PrintOptions(ostream& _os) {
   _os << "Number of edges in roadmap." << endl;
 }
 
-double NumEdgesMetric::operator()(int _regionID) {
-  return (double)(GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap()->m_pRoadmap->get_num_edges());
+double NumEdgesMetric::operator()() {
+  return (double)(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges());
 }

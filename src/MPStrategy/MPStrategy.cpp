@@ -264,44 +264,8 @@ ParseXML(XMLNodeReader& in_Node) {
 
 void 
 MPComparer::
-operator()(int in_RegionID) { 
+operator()() { 
 }
-
-// @todo make the parameter be a vector<int> in_region_ids and loop through it to map regions
-
-void 
-MPComparer::
-operator()(int in_RegionID_1, int in_RegionID_2) { 
-
-#ifndef _PARALLEL
-  // mapping region 1
-  MPStrategyMethod* input1 = GetMPProblem()->GetMPStrategy()->
-    GetMPStrategyMethod(m_input_methods[0]);
-  (*input1)(in_RegionID_1);
-
-  // mapping region 2
-  MPStrategyMethod* input2 = GetMPProblem()->GetMPStrategy()->
-    GetMPStrategyMethod(m_input_methods[1]);
-  (*input2)(in_RegionID_2); 
-
-  // comparing region 1 to region 2 with each comparer
-  typedef vector<string>::iterator Itrtr;
-  for (Itrtr itrtr = m_comparer_methods.begin(); itrtr < m_comparer_methods.end(); itrtr++) {
-    //GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetComparerMethod(*itrtr)->Compare(in_RegionID_1, in_RegionID_2);
-  } 
-#endif
-}
-
-
-void 
-MPComparer::
-operator()() {
-  int Input1RegionId = GetMPProblem()->CreateMPRegion();
-  int Input2RegionId = GetMPProblem()->CreateMPRegion();
-
-  (*this)(Input1RegionId, Input2RegionId);
-}
-
 
 MPMultiStrategy::
 MPMultiStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
@@ -330,20 +294,14 @@ ParseXML(XMLNodeReader& in_Node) {
 
 void 
 MPMultiStrategy::
-operator()(int in_RegionID) { 
-  // initializing region from input
+operator()() { 
+  // initializing from input
   typedef vector< string >::iterator VITRTR;
   for (VITRTR s_itrtr = m_strategy_methods.begin(); s_itrtr < m_strategy_methods.end(); s_itrtr++) { 
     MPStrategyMethod* strategy = GetMPProblem()->GetMPStrategy()->
       GetMPStrategyMethod(*s_itrtr);
-    (*strategy)(in_RegionID);
+    (*strategy)();
   }
 }
 
-void 
-MPMultiStrategy::
-operator()() {
-  int RegionId = GetMPProblem()->CreateMPRegion();    
-  (*this)(RegionId);
-}
 

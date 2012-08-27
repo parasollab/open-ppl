@@ -1,6 +1,5 @@
 #include "VisibilityFeature.h"
 #include "MPProblem.h"
-#include "MPRegion.h"
 #include "MPStrategy.h"
 #include "LocalPlanners.h"
 #include "DistanceMetrics.h"
@@ -24,10 +23,10 @@ void VisibilityFeature::ParseXML(XMLNodeReader& in_Node){
 }
 
 vector<double> VisibilityFeature::Collect(vector<VID>& vids){
-   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
+   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap()->m_pRoadmap;
    typedef vector<VID>::iterator VIT;
    LocalPlanners<CfgType, WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
-   StatClass* pStatClass = GetMPProblem()->GetMPRegion(0)->GetStatClass();
+   StatClass* pStatClass = GetMPProblem()->GetStatClass();
    Environment *env = GetMPProblem()->GetEnvironment();
    NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
    LPOutput<CfgType, WeightType> lpOutput;
@@ -47,7 +46,7 @@ vector<double> VisibilityFeature::Collect(vector<VID>& vids){
       
       CfgType cfg = rdmp->find_vertex(*vit)->property();
       
-      nf->GetMethod(nfLabel)->KClosest(GetMPProblem()->GetMPRegion(0)->GetRoadmap(), *vit, k, back_insert_iterator<vector<VID> >(kclosest));
+      nf->GetMethod(nfLabel)->KClosest(GetMPProblem()->GetRoadmap(), *vit, k, back_insert_iterator<vector<VID> >(kclosest));
       vector< pair<size_t,VID> > ccs;
       stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>,size_t > cmap;
       get_cc_stats(*(rdmp),cmap,ccs);

@@ -480,8 +480,8 @@ class NFUnionRoadmap : public MPStrategyMethod {
 
     virtual void PrintOptions(ostream& out_os) { }
 
-    virtual void Initialize(int in_RegionID){}
-    virtual void Run(int in_RegionID){
+    virtual void Initialize(){}
+    virtual void Run(){
       cout<<"entering ()() union function"<<endl;
       if(files.size()==0){
         cout<<"no files"<<endl;
@@ -515,16 +515,15 @@ class NFUnionRoadmap : public MPStrategyMethod {
           //maps.push_back(rmp);
         }
       }
-      MPRegion<CfgType,WeightType> region(0, GetMPProblem());
-      region.roadmap=union_rmp;
-      //string outputFilename = GetMPProblem()->GetOutputRoadmap() + "RegionId" + str_index + ".map";
+      GetMPProblem()->SetRoadmap(new Roadmap<CfgType,WeightType>(union_rmp));
+      //string outputFilename = GetMPProblem()->GetOutputRoadmap() + ".map";
       ofstream  myofstream(outfile.c_str());
 
       if (!myofstream) {
-        cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
+        cerr << "NFComparer::Run: can't open outfile: " << endl;
         exit(-1);
       }
-      region.WriteRoadmapForVizmo(myofstream);
+      GetMPProblem()->WriteRoadmapForVizmo(myofstream);
       myofstream.close();
       //cout<<"printing all pairs"<<endl;
       printAllPairs(union_rmp, files);
@@ -553,7 +552,7 @@ class NFUnionRoadmap : public MPStrategyMethod {
       exit(-1);
 
     }
-    virtual void Finalize(int in_RegionID){}
+    virtual void Finalize(){}
 
 };
 class NFRCContainer : public MPSMContainer {
@@ -768,8 +767,8 @@ class NFRoadmapCompare : public MPStrategyMethod {
 
     virtual void PrintOptions(ostream& out_os) { }
 
-    virtual void Initialize(int in_RegionID){}
-    virtual void Run(int in_RegionID){
+    virtual void Initialize(){}
+    virtual void Run(){
       cout<<"*************in operator()***********************"<<endl;
       if(files.size()==0){
         cout<<"no files"<<endl;
@@ -796,7 +795,7 @@ class NFRoadmapCompare : public MPStrategyMethod {
       }
 
     }
-    virtual void Finalize(int in_RegionID){}
+    virtual void Finalize(){}
 };
 
 
@@ -876,12 +875,11 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       cout << "leaving NFIncrementalRoadmap" << endl;
     };
 
-    virtual void Initialize(int in_RegionID){}
-    virtual void Run(int in_RegionID){
+    virtual void Initialize(){}
+    virtual void Run(){
       cout << "NFIncrementalRoadmap::()" << endl;
 
-      MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-      StatClass * pStatClass = region->GetStatClass();
+      StatClass * pStatClass = GetMPProblem()->GetStatClass();
 
       ///\todo why this is here?
       //if (m_reset_stats)
@@ -914,8 +912,8 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
       int nodes_added = 0;
 
       //for (int step = 0; step < m_iterations; step++)
-      region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[0]);
-      region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[1]);
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[0]);
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[1]);
       while(iteration < m_iterations) {
         cout << "Iteration #" << iteration << " of " << m_iterations << endl;
         //---------------------------
@@ -935,7 +933,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
               2*m_numNodes, back_inserter(vectorCfgs));  
 
           cout << "Finished ... I did this many : " << vectorCfgs.size();
-          vector<VID> vids =  region->AddToRoadmap(vectorCfgs);
+          vector<VID> vids =  GetMPProblem()->AddToRoadmap(vectorCfgs);
           nodes_added += vids.size();
           cout << " - total VIDS: " << nodes_added << endl;
           for(size_t i=0; i<vids.size(); ++i) {
@@ -961,7 +959,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
           Connector<CfgType,WeightType>::ConnectionPointer pConnection;
           pConnection = connector->GetMethod(*itr);
           cout << "Calling connection method:: " << pConnection->GetLabel() << endl;
-          pConnection->Connect(region->GetRoadmap(), *pStatClass, cmap, newVids.begin(), newVids.end(), newVids.begin(), newVids.end());
+          pConnection->Connect(GetMPProblem()->GetRoadmap(), *pStatClass, cmap, newVids.begin(), newVids.end(), newVids.begin(), newVids.end());
         }
 
         pStatClass->StopClock("Node Generation");
@@ -971,16 +969,16 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
           ofstream  myofstream(outputFilename.c_str());
 
           if (!myofstream) {
-          LOG_ERROR_MSG("MPRegion::WriteRoadmapForVizmo: can't open outfile: ");
+          LOG_ERROR_MSG("Run: can't open outfile: ");
           exit(-1);
           }
-          region->WriteRoadmapForVizmo(myofstream);
+          GetMPProblem()->WriteRoadmapForVizmo(myofstream);
           myofstream.close();
          */
 
 
 
-        //pStatClass->PrintAllStats(region->GetRoadmap());
+        //pStatClass->PrintAllStats(GetMPProblem()->GetRoadmap());
         //NodeGenClock.PrintClock();
         pStatClass->PrintClock("Node Generation", cout);
         //Allstuff.StopPrintClock();
@@ -991,15 +989,15 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         //////////
         /*Query<CfgType, WeightType> query;
 
-          int oriVertID = region->GetRoadmap()->m_pRoadmap->getVertIDs(); 
-          VID vid_start = region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[0]);
-          VID vid_goal = region->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[1]);
+          int oriVertID = GetMPProblem()->GetRoadmap()->m_pRoadmap->getVertIDs(); 
+          VID vid_start = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[0]);
+          VID vid_goal = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(m_vecWitnessNodes[1]);
 
           vector<CfgType> result_path;
           Stat_Class query_stats;
           string bfnf("queryconnect");
           bool querySucceeded = query.PerformQuery(m_vecWitnessNodes[0], m_vecWitnessNodes[1],
-          region->GetRoadmap(),
+          GetMPProblem()->GetRoadmap(),
           query_stats,
           GetMPProblem()->GetCollisionDetection(),
           connector, 
@@ -1013,36 +1011,36 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
           else
           cout << "The query failed..." << endl;
 
-          region->GetRoadmap()->m_pRoadmap->DeleteVertex(vid_start);
-          region->GetRoadmap()->m_pRoadmap->DeleteVertex(vid_goal);
-          region->GetRoadmap()->m_pRoadmap->setVertIDs(oriVertID);
+          GetMPProblem()->GetRoadmap()->m_pRoadmap->DeleteVertex(vid_start);
+          GetMPProblem()->GetRoadmap()->m_pRoadmap->DeleteVertex(vid_goal);
+          GetMPProblem()->GetRoadmap()->m_pRoadmap->setVertIDs(oriVertID);
          */
         cmap.reset();
-        querySucceeded = is_same_cc(*region->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
-        //CanSolveQuery(*region->GetRoadmap()->m_pRoadmap, m_vecWitnessNodes[0], m_vecWitnessNodes[1]);
+        querySucceeded = is_same_cc(*GetMPProblem()->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
+        //CanSolveQuery(*GetMPProblem()->GetRoadmap()->m_pRoadmap, m_vecWitnessNodes[0], m_vecWitnessNodes[1]);
 
         ///////////////////
         //Output stat info
         NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
-        OnlineStats degree = calcDegreeStats(*region->GetRoadmap()->m_pRoadmap);
-        OnlineStats edges = calcEdgeStats(*region->GetRoadmap()->m_pRoadmap);
+        OnlineStats degree = calcDegreeStats(*GetMPProblem()->GetRoadmap()->m_pRoadmap);
+        OnlineStats edges = calcEdgeStats(*GetMPProblem()->GetRoadmap()->m_pRoadmap);
         vector<pair<size_t, VID> > CCStats;
-        get_cc_stats (*region->GetRoadmap()->m_pRoadmap, cmap, CCStats);
+        get_cc_stats (*GetMPProblem()->GetRoadmap()->m_pRoadmap, cmap, CCStats);
         // run dia twice, start from largest component
         VID far_vid(-1), far_vid2(-1); 
-        ComponentDiameter(*region->GetRoadmap()->m_pRoadmap,CCStats[0].second, &far_vid);
-        double diameter = ComponentDiameter(*region->GetRoadmap()->m_pRoadmap, far_vid,&far_vid2);
-        stat_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices() - 2
-          << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
+        ComponentDiameter(*GetMPProblem()->GetRoadmap()->m_pRoadmap,CCStats[0].second, &far_vid);
+        double diameter = ComponentDiameter(*GetMPProblem()->GetRoadmap()->m_pRoadmap, far_vid,&far_vid2);
+        stat_out << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices() - 2
+          << "\t" << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
           //<< "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
           << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
           << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
           pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
           << "\t" << ellapsed_con
-          << "\t" << double(nf->GetMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()- 2)
-          << "\t" << double(nf->GetMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-          << "\t" << CCStats.size() << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-          << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
+          << "\t" << double(nf->GetMethod(m_nfStats)->GetQueryTime()) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()- 2)
+          << "\t" << double(nf->GetMethod(m_nfStats)->GetConstructionTime()) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+          << "\t" << CCStats.size() << "\t" << double(CCStats[0].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+          << "\t" << double(CCStats[CCStats.size()-1].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
           << "\t" << querySucceeded 
           << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
           << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
@@ -1056,17 +1054,17 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
         // Output Total info
         if(querySucceeded && !queryFirstSucceeded) {
           ofstream total_out((basefname.str() + ".total").c_str());
-          total_out << region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2 
-            << "\t" << region->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
+          total_out << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2 
+            << "\t" << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
             //<< "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
             << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
             << "\t" << elappsed_ng << "\t" <<  pStatClass->m_isCollTotal -
             pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
             << "\t" << ellapsed_con
-            << "\t" << double(nf->GetMethod(m_nfStats)->GetQueryTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-            << "\t" << double(nf->GetMethod(m_nfStats)->GetConstructionTime()) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-            << "\t" << CCStats.size() << "\t" << double(CCStats[0].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-            << "\t" << double(CCStats[CCStats.size()-1].first) / double(region->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
+            << "\t" << double(nf->GetMethod(m_nfStats)->GetQueryTime()) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+            << "\t" << double(nf->GetMethod(m_nfStats)->GetConstructionTime()) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+            << "\t" << CCStats.size() << "\t" << double(CCStats[0].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+            << "\t" << double(CCStats[CCStats.size()-1].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
             << "\t" << querySucceeded 
             << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
             << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
@@ -1075,7 +1073,7 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
             << endl;
 
           if (!map_out) {
-            cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
+            cerr << "Run: can't open outfile: " << endl;
             exit(-1);
           }
 
@@ -1090,10 +1088,10 @@ class NFIncrementalRoadmap : public MPStrategyMethod {
 
       cout << "Finished map " << endl;
 
-      region->WriteRoadmapForVizmo(map_out);
+      GetMPProblem()->WriteRoadmapForVizmo(map_out);
       map_out.close();
     }
-    virtual void Finalize(int in_RegionID){}
+    virtual void Finalize(){}
 
   private:
     string dm_label;
@@ -1377,10 +1375,9 @@ class NFTester : public MPStrategyMethod {
       m_numNodes = in_Node.numberXMLParameter("num_samples", true, 1,1, 1, "Number of Samples");
     };
 
-    virtual void Initialize(int in_RegionID){}
-    virtual void Run(int in_RegionID){
-      MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-      StatClass * pStatClass = region->GetStatClass();
+    virtual void Initialize(){}
+    virtual void Run(){
+      StatClass * pStatClass = GetMPProblem()->GetStatClass();
       pStatClass->ClearStats(); 
       //---------------------------
       // Generate roadmap nodes
@@ -1400,12 +1397,12 @@ class NFTester : public MPStrategyMethod {
         //for (int i = 0; i < vectorCfgs.size(); i++) {
         //  
         //}
-        region->AddToRoadmap(vectorCfgs);
+        GetMPProblem()->AddToRoadmap(vectorCfgs);
       }
 
       pStatClass->StopClock("Node Generation");
       vector< VID > roadmap_vids;
-      region->GetRoadmap()->m_pRoadmap->GetVerticesVID(roadmap_vids);
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->GetVerticesVID(roadmap_vids);
       cout << "Finished ... I did this many : " << roadmap_vids.size() << endl; 
       for (size_t i = 0; i < roadmap_vids.size(); i++) {
         cout << "\t" << roadmap_vids[i] << endl;
@@ -1419,7 +1416,7 @@ class NFTester : public MPStrategyMethod {
         cout << "Query point = VID: " << query_point << endl;
         cout << "CALLING:: Baseline NF-Method = " << m_BaselineNF->GetLabel() << endl;
 
-        m_BaselineNF->KClosest(region->GetRoadmap(), query_point, m_kclosest, baseline_closest.begin());
+        m_BaselineNF->KClosest(GetMPProblem()->GetRoadmap(), query_point, m_kclosest, baseline_closest.begin());
 
         //    cout << "TIME ELAPSED FOR cur_total_time " << m_BaselineNF->GetLabel() << " : " << m_BaselineNF->GetTotalTime() << " CALCULATED BY NEW TIMER " << endl;
         //    cout << "TIME ELAPSED FOR cur_query_time " << m_BaselineNF->GetLabel() << " : " << m_BaselineNF->GetQueryTime() << " CALCULATED BY NEW TIMER " << endl;
@@ -1437,7 +1434,7 @@ class NFTester : public MPStrategyMethod {
           //     cout << "CALLING:: NF-method = " << (*nfitr)->GetLabel() << endl;
           //start
 
-          (*nfitr)->KClosest(region->GetRoadmap(), query_point, m_kclosest, nf_vids.begin());
+          (*nfitr)->KClosest(GetMPProblem()->GetRoadmap(), query_point, m_kclosest, nf_vids.begin());
 
           //      cout << "TIME ELAPSED FOR cur_total_time " << (*nfitr)->GetLabel() << " : " << (*nfitr)->GetTotalTime() << " CALCULATED BY NEW TIMER " << endl;
           //      cout << "TIME ELAPSED FOR cur_query_time " << (*nfitr)->GetLabel() << " : " << (*nfitr)->GetQueryTime() << " CALCULATED BY NEW TIMER " << endl;
@@ -1455,7 +1452,7 @@ class NFTester : public MPStrategyMethod {
           // to use the NeighborhoodFinder use pointer "nf" nf->RFD(....)
           // query point = *(roadmap_vids.begin())
 
-          double ede = EDE(region->GetRoadmap(),
+          double ede = EDE(GetMPProblem()->GetRoadmap(),
               query_point,baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(), 
               GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));
@@ -1463,20 +1460,20 @@ class NFTester : public MPStrategyMethod {
 
 
 
-          double rde = RDE(region->GetRoadmap(),
+          double rde = RDE(GetMPProblem()->GetRoadmap(),
               query_point, baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(), 
               GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));
           //      cout << "RDE between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << rde << endl;
 
 
-          double rfd = RFD(region->GetRoadmap(),
+          double rfd = RFD(GetMPProblem()->GetRoadmap(),
               query_point, baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(), 
               GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label), 0.001);
           //      cout << "RFD between " << (*nfitr)->GetLabel() << " & " << m_BaselineNF->GetLabel() << " = " << rfd << endl;
 
-          double oeps = OEPS(region->GetRoadmap(),
+          double oeps = OEPS(GetMPProblem()->GetRoadmap(),
               query_point, baseline_closest.begin(), baseline_closest.end(),
               nf_vids.begin(), nf_vids.end(),
               GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label));      
@@ -1569,7 +1566,7 @@ class NFTester : public MPStrategyMethod {
 
       cout << "Finished!!" << endl;
     }
-    virtual void Finalize(int in_RegionID){}
+    virtual void Finalize(){}
 
   private:
     string dm_label;

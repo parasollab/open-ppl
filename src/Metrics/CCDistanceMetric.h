@@ -15,10 +15,7 @@ class CCDistanceMetric : public MetricsMethod {
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual double operator()() {
-      return operator()(GetMPProblem()->CreateMPRegion());
-    }
-    virtual double operator()(int _regionID);
+    virtual double operator()();
 
   protected:
     string m_dm;
@@ -55,7 +52,7 @@ void CCDistanceMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 }
 
 template <class CFG, class WEIGHT>
-double CCDistanceMetric<CFG, WEIGHT>::operator()(int _regionID) {
+double CCDistanceMetric<CFG, WEIGHT>::operator()() {
 
   typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
   typedef typename RoadmapGraphType::VID VID;
@@ -63,7 +60,7 @@ double CCDistanceMetric<CFG, WEIGHT>::operator()(int _regionID) {
   
   vector<double> distance;
   double ccDistance;
-  Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap();
+  Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetRoadmap();
   RoadmapGraphType* pMap = rmap->m_pRoadmap;
   NeighborhoodFinder::NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(m_nf);
 

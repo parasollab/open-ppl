@@ -18,7 +18,6 @@
     <NeighborhoodFinder>
       <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
     </NeighborhoodFinder>
-  <MPRegions/>
   </MPProblem>
   <MPStrategy>  
     <node_generation_methods>

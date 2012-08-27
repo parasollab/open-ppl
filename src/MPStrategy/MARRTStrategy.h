@@ -15,8 +15,6 @@
 #include "CfgTypes.h"
 #include "MPStrategyMethod.h"
 
-template<typename CFG, typename WEIGHT> class MPRegion;
-
 class MARRTStrategy : public MPStrategyMethod {
   public:
     MARRTStrategy(XMLNodeReader& _node, MPProblem* _problem);
@@ -24,15 +22,15 @@ class MARRTStrategy : public MPStrategyMethod {
     
     virtual void ParseXML(XMLNodeReader& _node);
 
-    virtual void Initialize(int _regionID);
-    virtual void Run(int _regionID);
-    virtual void Finalize(int _regionID);
+    virtual void Initialize();
+    virtual void Run();
+    virtual void Finalize();
     virtual void PrintOptions(ostream& _os);
 
   protected:
     // Helper functions
-    void ConnectComponents(int _regionID);
-    RoadmapClearanceStats PathClearance(int _regionID);
+    void ConnectComponents();
+    RoadmapClearanceStats PathClearance();
   private:
     bool m_queryFound;
     vector<string> m_componentConnectors;

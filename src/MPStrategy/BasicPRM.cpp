@@ -1,5 +1,4 @@
 #include "BasicPRM.h"
-#include "MPRegion.h"
 #include "MPStrategy.h"
 #include "MapEvaluator.h"
 #include "Sampler.h"
@@ -139,12 +138,12 @@ void BasicPRM::PrintOptions(ostream& _os) {
   }
 }
 
-void BasicPRM::Initialize(int _regionID){
-  if (m_debug) cout<<"\nInitializing BasicPRM::"<<_regionID<<endl;
+void BasicPRM::Initialize(){
+  if (m_debug) cout<<"\nInitializing BasicPRM::"<<endl;
 
   //read in and reload roadmap and evaluators
   if(m_inputMapFilename != "") {
-    Roadmap<CfgType, WeightType>* rmap = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap();
+    Roadmap<CfgType, WeightType>* rmap = GetMPProblem()->GetRoadmap();
     if (m_debug) cout << "\tLoading roadmap from \"" << m_inputMapFilename << "\"...";
     rmap->ReadRoadmapGRAPHONLY(m_inputMapFilename.c_str());
     for(RoadmapGraph<CfgType, WeightType>::VI vi = rmap->m_pRoadmap->begin(); vi != rmap->m_pRoadmap->end(); ++vi)
@@ -156,7 +155,7 @@ void BasicPRM::Initialize(int _regionID){
     for(vector<string>::iterator I = m_evaluatorLabels.begin(); I != m_evaluatorLabels.end(); ++I) {
       MapEvaluator<CfgType, WeightType>::MapEvaluationPointer evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetMethod(*I);
       if(evaluator->HasState())
-        evaluator->operator()(_regionID);
+        evaluator->operator()();
     }
     if (m_debug) cout << "\tdone.\n";
   }
@@ -164,23 +163,22 @@ void BasicPRM::Initialize(int _regionID){
   if (m_debug) cout<<"\nEnding Initializing BasicPRM"<<endl;
 }
 
-void BasicPRM::Run(int _regionID){
+void BasicPRM::Run(){
  
-  if (m_debug) cout<<"\nRunning BasicPRM::"<<_regionID<<endl;
+  if (m_debug) cout<<"\nRunning BasicPRM::"<<endl;
 
-  //setup region variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  StatClass* stats = region->GetStatClass();
+  //setup variables
+  StatClass* stats = GetMPProblem()->GetStatClass();
   vector<VID> allNodesVID;
-  region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
+  GetMPProblem()->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
 
   stats->StartClock("Map Generation");
   
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation){
-    if(allNodesVID.size() != region->GetRoadmap()->m_pRoadmap->get_num_vertices()){
+    if(allNodesVID.size() != GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()){
       allNodesVID.clear();
-      region->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->GetVerticesVID(allNodesVID);
       if(m_debug)
         cout << "\nMy roadmap is not equal to my vids.\nnum nodes = " << allNodesVID.size() << endl;
     }
@@ -188,23 +186,22 @@ void BasicPRM::Run(int _regionID){
     vector<VID> thisIterationNodesVID;
     if(m_startAt <= NODE_GENERATION) {
       if (m_debug) cout << "\ngenerating nodes: ";
-      GenerateNodes(region, 
-          back_insert_iterator<vector<VID> >(allNodesVID), 
+      GenerateNodes(back_insert_iterator<vector<VID> >(allNodesVID), 
           back_insert_iterator<vector<VID> >(thisIterationNodesVID));
     }
     else
-      region->GetRoadmap()->m_pRoadmap->GetVerticesVID(thisIterationNodesVID);
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->GetVerticesVID(thisIterationNodesVID);
     if(m_startAt <= NODE_CONNECTION) {
       if (m_debug) cout << "\nconnecting nodes: ";
-      ConnectNodes(region, allNodesVID, thisIterationNodesVID);
+      ConnectNodes(allNodesVID, thisIterationNodesVID);
     }
     if(m_startAt <= COMPONENT_CONNECTION) {
       if (m_debug) cout << "\nconnecting components: ";
-      ConnectComponents(region);
+      ConnectComponents();
     }
     if(m_startAt <= MAP_EVALUATION) {
       if (m_debug) cout << "\nevaluating roadmap: ";
-      mapPassedEvaluation = EvaluateMap(_regionID,m_evaluatorLabels);
+      mapPassedEvaluation = EvaluateMap(m_evaluatorLabels);
     }
     m_startAt = NODE_GENERATION;
   }
@@ -212,29 +209,28 @@ void BasicPRM::Run(int _regionID){
   stats->StopClock("Map Generation");
   if (m_debug) stats->PrintClock("Map Generation", cout);
 
-  if (m_debug) cout<<"\nEnd Running BasicPRM::"<<_regionID<<endl;
+  if (m_debug) cout<<"\nEnd Running BasicPRM::"<<endl;
 }
 
-void BasicPRM::Finalize(int _regionID){
-  if (m_debug) cout<<"\nFinalizing BasicPRM::"<<_regionID<<endl;
+void BasicPRM::Finalize(){
+  if (m_debug) cout<<"\nFinalizing BasicPRM::"<<endl;
 
-  //setup region variables
-  MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-  StatClass* stats = region->GetStatClass();
+  //setup variables
+  StatClass* stats = GetMPProblem()->GetStatClass();
 
   string str;
 
   //output final map
   str = GetBaseFilename() + ".map";
   ofstream osMap(str.c_str());
-  region->WriteRoadmapForVizmo(osMap);
+  GetMPProblem()->WriteRoadmapForVizmo(osMap);
   osMap.close();
 
   //output stats
   str = GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
-  stats->PrintAllStats(osStat, region->GetRoadmap());
+  stats->PrintAllStats(osStat, GetMPProblem()->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
   
   osStat.close();
@@ -243,9 +239,8 @@ void BasicPRM::Finalize(int _regionID){
 }
 
 void 
-BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region, 
-    vector<VID>& allNodesVID, vector<VID>& thisIterationNodesVID) {
-  StatClass* stats = _region->GetStatClass();
+BasicPRM::ConnectNodes(vector<VID>& allNodesVID, vector<VID>& thisIterationNodesVID) {
+  StatClass* stats = GetMPProblem()->GetStatClass();
   string connectorClockName = "Total Node Connection";
   stats->StartClock(connectorClockName);
   stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
@@ -261,12 +256,12 @@ BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
 
     if(m_debug) cout << "\n\t";
     vector<VID> nodesVID(thisIterationNodesVID.begin(), thisIterationNodesVID.end());
-    pConnection->Connect(_region->GetRoadmap(), *(_region->GetStatClass()), cmap,
+    pConnection->Connect(GetMPProblem()->GetRoadmap(), *(GetMPProblem()->GetStatClass()), cmap,
         nodesVID.begin(), nodesVID.end(), allNodesVID.begin(), allNodesVID.end());
     if (m_debug) {
       cmap.reset();
-      cout << _region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
-        << get_cc_count(*(_region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
+      cout << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
+        << get_cc_count(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
         << endl;
       cout << "\t";
     }
@@ -278,8 +273,8 @@ BasicPRM::ConnectNodes(MPRegion<CfgType, WeightType>* _region,
   if (m_debug) stats->PrintClock(connectorClockName, cout);
 }
 
-void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
-  StatClass* stats = _region->GetStatClass();
+void BasicPRM::ConnectComponents() {
+  StatClass* stats = GetMPProblem()->GetStatClass();
   string clockName = "Total Connect Components";
   stats->StartClock(clockName);
   stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
@@ -293,12 +288,12 @@ void BasicPRM::ConnectComponents(MPRegion<CfgType, WeightType>* _region) {
     stats->StartClock(connectorClockName);
 
     if(m_debug) cout << "\n\t";
-    pConnection->Connect(_region->GetRoadmap(), *(_region->GetStatClass()), cmap);
+    pConnection->Connect(GetMPProblem()->GetRoadmap(), *(GetMPProblem()->GetStatClass()), cmap);
 
     if (m_debug){
       cmap.reset();
-      cout << _region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
-      << get_cc_count(*(_region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"<< endl;
+      cout << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
+      << get_cc_count(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap) << " connected components"<< endl;
       cout << "\t";
     }
     stats->StopClock(connectorClockName);
@@ -327,10 +322,9 @@ string BasicPRM::PickNextSampler(){
 }
 
 template <typename OutputIterator> void 
-BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region, 
-    OutputIterator _allOut, OutputIterator _thisIterationOut){
+BasicPRM::GenerateNodes(OutputIterator _allOut, OutputIterator _thisIterationOut){
   CDInfo cdInfo;
-  StatClass* pStatClass = _region->GetStatClass();
+  StatClass* pStatClass = GetMPProblem()->GetStatClass();
   string clockName = "Total Node Generation"; 
   pStatClass->StartClock(clockName);
   string callee("BasicPRM::GenerateNodes");
@@ -355,7 +349,7 @@ BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
       }while(outNodes.size()<=0&&m_currentIteration==1);
 
       if (m_debug) {
-        cout << _region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
+        cout << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
         cout << "\n\t";
       }
       pStatClass->StopClock(generatorClockName);
@@ -379,7 +373,7 @@ BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
       *pStatClass,inNodes.begin(),inNodes.end(),m_probGenerationLabels[nextNodeGen].second, back_inserter(outNodes));
 
     if (m_debug) {
-      cout << _region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
+      cout << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices() << " vertices " << endl;
       cout << "\n\t";
     }
     pStatClass->StopClock(generatorClockName);
@@ -389,8 +383,8 @@ BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
   typedef vector<CfgType>::iterator CIT;
   for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
     if(cit->IsLabel("Lazy") && cit->GetLabel("Lazy")){
-      if(!_region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
-        VID vid = _region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
+      if(!GetMPProblem()->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+        VID vid = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
         //store value and increment iterator
         *_thisIterationOut++ = vid;
         *_allOut++ = vid;
@@ -399,11 +393,11 @@ BasicPRM::GenerateNodes(MPRegion<CfgType, WeightType>* _region,
     else{ 
       if(!cit->IsLabel("VALID")){
         !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vcMethod),
-              *cit, GetMPProblem()->GetEnvironment(), *(_region->GetStatClass()), cdInfo, true, &callee));
+              *cit, GetMPProblem()->GetEnvironment(), *(GetMPProblem()->GetStatClass()), cdInfo, true, &callee));
       }
       if(cit->IsLabel("VALID") && cit->GetLabel("VALID")) {
-        if(!_region->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
-          VID vid = _region->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
+        if(!GetMPProblem()->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {
+          VID vid = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(*cit);
           //store value and increment iterator
           *_thisIterationOut++ = vid;
           *_allOut++ = vid;

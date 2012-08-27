@@ -1,5 +1,4 @@
 #include "DMTestStrategy.h"
-#include "MPRegion.h"
 #include "DistanceMetrics.h"
 
 DMTestStrategy::
@@ -40,12 +39,12 @@ struct less_second : public binary_function<pair<size_t, double>, pair<size_t, d
 
 void
 DMTestStrategy::
-Run(int _regionID)
+Run()
 {
   PrintOptions(cout);
 
   if(m_inputRoadmapFilename == "") {
-    m_rdmp = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap();
+    m_rdmp = GetMPProblem()->GetRoadmap();
   } else {
     m_rdmp = new Roadmap<CfgType, WeightType>();
     m_rdmp->SetEnvironment(GetMPProblem()->GetEnvironment());
@@ -53,7 +52,7 @@ Run(int _regionID)
   }
 
   ClockClass clock;
-  StatClass *stats = GetMPProblem()->GetMPRegion(_regionID)->GetStatClass();
+  StatClass *stats = GetMPProblem()->GetStatClass();
   stats->StartClock("Distance Metric");
 
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmMethod);

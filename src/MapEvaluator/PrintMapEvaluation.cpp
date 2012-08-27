@@ -1,5 +1,5 @@
 #include "PrintMapEvaluation.h"
-#include "MPRegion.h"
+#include "Roadmap.h"
 
 PrintMapEvaluation::PrintMapEvaluation() {
   this->SetName("PrintMapEvaluation");
@@ -26,11 +26,11 @@ void PrintMapEvaluation::PrintOptions(ostream& _os) {
   _os << "\tbase filename = " << m_baseName << endl;
 }
 
-bool PrintMapEvaluation::operator()(int _regionID) {
-  int numNodes = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap()->m_pRoadmap->get_num_vertices();
-  int numEdges = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap()->m_pRoadmap->get_num_edges();
-  int numCollNodes = GetMPProblem()->GetMPRegion(_regionID)->GetBlockRoadmap()->m_pRoadmap->get_num_vertices();
-  int numCollEdges = GetMPProblem()->GetMPRegion(_regionID)->GetBlockRoadmap()->m_pRoadmap->get_num_edges();
+bool PrintMapEvaluation::operator()() {
+  int numNodes = GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices();
+  int numEdges = GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges();
+  int numCollNodes = GetMPProblem()->GetBlockRoadmap()->m_pRoadmap->get_num_vertices();
+  int numCollEdges = GetMPProblem()->GetBlockRoadmap()->m_pRoadmap->get_num_edges();
 
   ostringstream osName;
   osName << m_baseName << "." << numNodes << "." << numEdges << ".map";
@@ -38,10 +38,10 @@ bool PrintMapEvaluation::operator()(int _regionID) {
   osCollName << m_baseName << "." << numCollNodes << "." << numCollEdges << ".block.map";
 
   ofstream osMap(osName.str().c_str());
-  GetMPProblem()->GetMPRegion(_regionID)->WriteRoadmapForVizmo(osMap);
+  GetMPProblem()->WriteRoadmapForVizmo(osMap);
   osMap.close();
   ofstream osCollMap(osCollName.str().c_str());
-  GetMPProblem()->GetMPRegion(_regionID)->WriteRoadmapForVizmo(osCollMap, NULL, true);
+  GetMPProblem()->WriteRoadmapForVizmo(osCollMap, NULL, true);
   osCollMap.close();
 
   return true;

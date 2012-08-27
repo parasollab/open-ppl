@@ -14,10 +14,7 @@ class MetricsMethod : public MPBaseObject {
 
     virtual void PrintOptions(ostream& _os) = 0;
 
-    virtual double operator()() {
-      return operator()(GetMPProblem()->CreateMPRegion());
-    }
-    virtual double operator()(int _regionID) = 0;
+    virtual double operator()() = 0;
 };
 
 #endif

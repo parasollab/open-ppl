@@ -22,10 +22,7 @@ public:
 
   virtual void PrintOptions(ostream& _os);
 
-  virtual bool operator()() {
-    return operator()(GetMPProblem()->CreateMPRegion());
-  }
-  virtual bool operator()(int _regionID);
+  virtual bool operator()();
 
 private:
   LogicalOperator m_logicalOperator;
@@ -83,7 +80,7 @@ void ComposeEvaluation<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 }
 
 template<class CFG, class WEIGHT>
-bool ComposeEvaluation<CFG, WEIGHT>::operator()(int _regionID) {
+bool ComposeEvaluation<CFG, WEIGHT>::operator()() {
   MapEvaluator<CFG, WEIGHT>* eval = this->GetMPProblem()->GetMPStrategy()->GetMapEvaluator();
 
   if (m_evalMethods.size() != m_evalLabels.size()) {
@@ -92,7 +89,7 @@ bool ComposeEvaluation<CFG, WEIGHT>::operator()(int _regionID) {
     }
   }
 
-  ComposeEvalFunctor<CFG, WEIGHT> comFunc(eval, _regionID);
+  ComposeEvalFunctor<CFG, WEIGHT> comFunc(eval);
 
   if (m_logicalOperator == AND) {
     Compose<InputIterator, logical_and<bool>, ComposeEvalFunctor<CFG, WEIGHT> > m_comAnd;
@@ -109,18 +106,17 @@ bool ComposeEvaluation<CFG, WEIGHT>::operator()(int _regionID) {
 template<class CFG, class WEIGHT>
 class ComposeEvalFunctor {
 public:
-  ComposeEvalFunctor(MapEvaluator<CFG, WEIGHT>* _eval, int _regionID) :
-    m_eval(_eval), m_regionID(_regionID) {}
+  ComposeEvalFunctor(MapEvaluator<CFG, WEIGHT>* _eval) :
+    m_eval(_eval) {}
 
   ~ComposeEvalFunctor() {}
 
   bool operator()(typename MapEvaluator<CFG, WEIGHT>::MapEvaluationMethodPtr _conditionalType) {
-    return _conditionalType->operator()(m_regionID);
+    return _conditionalType->operator()();
   }
 
 private:
   MapEvaluator<CFG, WEIGHT>* m_eval;
-  int m_regionID;
 };
 
 

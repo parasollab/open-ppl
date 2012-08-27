@@ -24,8 +24,6 @@
     <NeighborhoodFinder>
       <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
     </NeighborhoodFinder>
-
-    <MPRegions/>
   </MPProblem>
   
   <MPStrategy>  

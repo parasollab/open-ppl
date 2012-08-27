@@ -14,10 +14,7 @@ class ConnectivityMetric : public CoverageMetric<CFG, WEIGHT> {
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual double operator()() {
-      return operator()(this->GetMPProblem()->CreateMPRegion());
-    }
-    virtual double operator()(int _regionID);
+    virtual double operator()();
 };
 
 template <class CFG, class WEIGHT>
@@ -44,7 +41,7 @@ void ConnectivityMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 }
 
 template <class CFG, class WEIGHT>
-double ConnectivityMetric<CFG, WEIGHT>::operator()(int _regionID) {
+double ConnectivityMetric<CFG, WEIGHT>::operator()() {
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
   int numQueries = 0;

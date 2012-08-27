@@ -45,8 +45,7 @@ class Query : public MapEvaluationMethod {
     virtual void ReadQuery(string _filename);
     virtual void WritePath(Roadmap<CFG, WEIGHT>* _rdmp, string _filename);
  
-    virtual bool operator()() { return operator()(GetMPProblem()->CreateMPRegion()); }
-    virtual bool operator()(int _regionID); 
+    virtual bool operator()(); 
   
   protected:
     enum GraphSearchAlg {DIJKSTRAS, ASTAR};
@@ -194,9 +193,9 @@ Query<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 // Runs the query
 template <class CFG, class WEIGHT>
 bool
-Query<CFG, WEIGHT>::operator()(int _regionID) {
+Query<CFG, WEIGHT>::operator()() {
   
-  Roadmap<CFG, WEIGHT>* rdmp = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap();  
+  Roadmap<CFG, WEIGHT>* rdmp = GetMPProblem()->GetRoadmap();  
 
   // Perform query
   return PerformQuery(rdmp, m_stats);
@@ -345,7 +344,7 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
       //TO DO:: fix compilation issue in parallel
 #ifndef _PARALLEL
       // Run a graph search
-      StatClass* stats = _rdmp->GetEnvironment()->GetMPProblem()->GetMPRegion(0)->GetStatClass();
+      StatClass* stats = _rdmp->GetEnvironment()->GetMPProblem()->GetStatClass();
       graphSearchCount++;
       if(this->m_recordKeep)
         stats->StartClock("Query Graph Search");
@@ -403,8 +402,8 @@ template <class CFG, class WEIGHT>
 void
 Query<CFG, WEIGHT>::Smooth() {
 
-  Roadmap<CFG, WEIGHT>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap();
-  StatClass* stats = GetMPProblem()->GetMPRegion(0)->GetStatClass();
+  Roadmap<CFG, WEIGHT>* rdmp = GetMPProblem()->GetRoadmap();
+  StatClass* stats = GetMPProblem()->GetStatClass();
   vector<typename Connector<CFG, WEIGHT>::ConnectionPointer> methods;
 
   if(this->m_debug)

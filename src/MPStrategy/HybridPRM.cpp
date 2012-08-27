@@ -1,5 +1,4 @@
 #include "HybridPRM.h"
-#include "MPRegion.h"
 #include "MPStrategy.h"
 #include "Sampler.h"
 #include "Connector.h"
@@ -99,7 +98,7 @@ PrintOptions(ostream& out_os)
   //out_os << "\twitness_queries:\n"; for_each(m_witness_nodes.begin(), m_witness_nodes.end(), out_os << constant("\t\t") << _1 << " "); out_os << endl;
 }
 
-void HybridPRM::Initialize(int in_RegionID){
+void HybridPRM::Initialize(){
    PrintOptions(cout);
 
    //set up base_filename for output filese
@@ -126,7 +125,7 @@ void HybridPRM::Initialize(int in_RegionID){
   for_each(m_node_gen_labels.begin(), m_node_gen_labels.end(), char_ofstream << constant(":") << _1 << "_num_cc_oversample");
   char_ofstream << endl;
 
-  GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass()->StartClock("Everything");
+  GetMPProblem()->GetStatClass()->StartClock("Everything");
   
    //initialize weights, probabilities, costs, set m_node_gen_probabilities_use = m_node_gen_probabilities
    initialize_weights_probabilities_costs();
@@ -145,9 +144,8 @@ void HybridPRM::Initialize(int in_RegionID){
   //unsigned int witness_queries = m_witness_nodes.size()*(m_witness_nodes.size()-1)/2;
 }
 
-void HybridPRM::Run(int in_RegionID){
-   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-   StatClass* pStatClass = region->GetStatClass();
+void HybridPRM::Run(){
+   StatClass* pStatClass = GetMPProblem()->GetStatClass();
    totalSamples = 0;
    map_passed_evaluation = false;
    NodeGenTotalTime = 0;
@@ -185,10 +183,10 @@ void HybridPRM::Run(int in_RegionID){
         if(C->IsLabel("VALID") && C->GetLabel("VALID")) 
         {
           cmap.reset();
-          int nNumPrevCCs = get_cc_count(*(region->roadmap.m_pRoadmap), cmap);
+          int nNumPrevCCs = get_cc_count(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap);
 	          
           //add node to roadmap
-          VID newVID = region->roadmap.m_pRoadmap->AddVertex(*C);
+          VID newVID = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(*C);
 	    
           //connect node to roadmap
           unsigned long int num_cd_before_conn = pStatClass->GetIsCollTotal();
@@ -197,12 +195,12 @@ void HybridPRM::Run(int in_RegionID){
           {
             vector<VID> new_free_vid(1, newVID);
             vector<VID> map_vids;
-	    region->roadmap.m_pRoadmap->GetVerticesVID(map_vids);
+	    GetMPProblem()->GetRoadmap()->m_pRoadmap->GetVerticesVID(map_vids);
 
             Connector<CfgType, WeightType>* connector = GetMPProblem()->GetMPStrategy()->GetConnector();
             connector->GetMethod(*itr)->ClearConnectionAttempts();
             connector->GetMethod(*itr)->Connect(
-                region->GetRoadmap(), *pStatClass, cmap,
+                GetMPProblem()->GetRoadmap(), *pStatClass, cmap,
                 new_free_vid.begin(), new_free_vid.end(),
                 map_vids.begin(), map_vids.end()); 
             connection_attempts.insert(connection_attempts.end(), 
@@ -244,7 +242,7 @@ void HybridPRM::Run(int in_RegionID){
 
           //compute reward
           cmap.reset();
-          int nNumCurrCCs = get_cc_count(*(region->roadmap.m_pRoadmap), cmap);
+          int nNumCurrCCs = get_cc_count(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap);
           double reward = compute_visibility_reward(next_node_gen, vis_map[newVID].ratio(), 0.3, nNumPrevCCs, nNumCurrCCs, node_types);
           cout << "reward = " << reward << endl;
 
@@ -286,7 +284,7 @@ void HybridPRM::Run(int in_RegionID){
           query_time.StartClock("query_time");
           if(witness_connectivity != 100) 
           { //all queries not already solved
-            pair<unsigned int, unsigned int> witness_qry = ConnectionsWitnessToRoadmap(m_witness_nodes,&(region->roadmap),m_query_stat);
+            pair<unsigned int, unsigned int> witness_qry = ConnectionsWitnessToRoadmap(m_witness_nodes,&(GetMPProblem()->GetRoadmap()),m_query_stat);
             witness_coverage = 100*witness_qry.first/m_witness_nodes.size();
             witness_connectivity = 100*witness_qry.second/witness_queries;
           }
@@ -304,11 +302,11 @@ void HybridPRM::Run(int in_RegionID){
           { //only every 50 samples
             vector<pair<size_t, VID> > cc;
             cmap.reset();
-            get_cc_stats(*(region->roadmap.m_pRoadmap), cmap, cc);
+            get_cc_stats(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap, cc);
             largest_cc_dia = sum_cc_dia = 0;
             for(vector<pair<size_t, VID> >::const_iterator CC = cc.begin(); CC != cc.end(); ++CC) 
             {
-              double _cc_dia = cc_diamater(region->roadmap.m_pRoadmap, CC->second);
+              double _cc_dia = cc_diamater(GetMPProblem()->GetRoadmap()->m_pRoadmap, CC->second);
               sum_cc_dia += _cc_dia;
               largest_cc_dia = max(largest_cc_dia, _cc_dia);
     	    }
@@ -321,7 +319,7 @@ void HybridPRM::Run(int in_RegionID){
           cmap.reset();
           char_ofstream << totalSamples
                         << ":" << pStatClass->GetIsCollTotal()
-                        << ":" << get_cc_count(*(region->roadmap.m_pRoadmap), cmap) 
+                        << ":" << get_cc_count(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap) 
                         //<< ":" << largest_cc_dia << ":" << sum_cc_dia
                         << node_types
                         //<< ":" << witness_connectivity
@@ -344,39 +342,38 @@ void HybridPRM::Run(int in_RegionID){
 
     } while((totalSamples % m_bin_size) > 0); // (totalSamples % m_bin_size) > (m_bin_size * m_window_percent));
 
-    map_passed_evaluation = evaluate_map(in_RegionID);
+    map_passed_evaluation = evaluate_map();
   } //end while !map_passed_evaluation
 }
 
-void HybridPRM::Finalize(int in_RegionID){
+void HybridPRM::Finalize(){
    char_ofstream.close();
-   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-   StatClass* pStatClass = region->GetStatClass();
+   StatClass* pStatClass = GetMPProblem()->GetStatClass();
 
    //output map
   string outputFilename = base_filename+ ".map";
   ofstream myofstream(outputFilename.c_str());
   if(!myofstream) {
-    cerr << "MPRegion::WriteRoadmapForVizmo: can't open outfile: " << endl;
+    cerr << "HybridPRM::Finalize: can't open outfile: " << endl;
     exit(-1);
   }
-  region->WriteRoadmapForVizmo(myofstream);
+  GetMPProblem()->WriteRoadmapForVizmo(myofstream);
   myofstream.close();
 
   //output stats
-  pStatClass->ComputeInterCCFeatures(region->GetRoadmap(), nf_label, GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_label)->GetDMMethod()->GetLabel());
-  pStatClass->ComputeIntraCCFeatures(region->GetRoadmap(), GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_label)->GetDMMethod());
+  pStatClass->ComputeInterCCFeatures(GetMPProblem()->GetRoadmap(), nf_label, GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_label)->GetDMMethod()->GetLabel());
+  pStatClass->ComputeIntraCCFeatures(GetMPProblem()->GetRoadmap(), GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_label)->GetDMMethod());
   string outStatname = base_filename+ ".stat";
   std::ofstream  stat_ofstream(outStatname.c_str());
   stat_ofstream << "NodeGen+Connection Stats" << endl;
-  pStatClass->PrintAllStats(stat_ofstream, region->GetRoadmap());
+  pStatClass->PrintAllStats(stat_ofstream, GetMPProblem()->GetRoadmap());
   std::streambuf* sbuf = std::cout.rdbuf(); // to be restored later
   std::cout.rdbuf(stat_ofstream.rdbuf());   // redirect destination of std::cout
   cout << "Node Gen = " << NodeGenTotalTime << endl;
   pStatClass->StopPrintClock("Everything", cout);
   /*
   cout << "Query Stats" << endl;
-  m_query_stat.PrintAllStats(region->GetRoadmap());
+  m_query_stat.PrintAllStats(GetMPProblem()->GetRoadmap());
   */
   std::cout.rdbuf(sbuf);  // restore original stream buffer 
   pStatClass->PrintFeatures(stat_ofstream);
@@ -742,13 +739,13 @@ ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, Weig
 
 bool 
 HybridPRM::
-evaluate_map(int in_RegionID)
+evaluate_map()
 {
   if(m_evaluator_labels.empty())
     return true;
   else
   {
-    StatClass* stats = GetMPProblem()->GetMPRegion(in_RegionID)->GetStatClass();
+    StatClass* stats = GetMPProblem()->GetStatClass();
     stats->StartClock("Map Evaluation");
 
     bool mapPassedEvaluation = true;
@@ -757,7 +754,7 @@ evaluate_map(int in_RegionID)
       stats->StartClock(evaluator->GetName());
 
       cout << "\n\t";
-      mapPassedEvaluation = evaluator->operator()(in_RegionID);
+      mapPassedEvaluation = evaluator->operator()();
 
       cout << "\t";
       stats->StopPrintClock(evaluator->GetName(), cout);

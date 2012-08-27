@@ -6,7 +6,6 @@
 
 // Roadmap Headers
 #include "Roadmap.h"
-#include "MPRegion.h"
 #include "MPProblem.h"
 
 // Connector Headers

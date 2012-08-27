@@ -2,7 +2,6 @@
 #include "MPStrategy.h"
 #include "DistanceMetrics.h"
 #include "ValidityChecker.hpp"
-#include "MPRegion.h"
 
 
 MPProblem::
@@ -12,7 +11,14 @@ MPProblem(XMLNodeReader& in_Node, bool parse_xml) : MPBaseObject(in_Node, this) 
 }
 
 MPProblem::
-MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, CollisionDetection* _m_pCollisionDetection, ValidityChecker<CfgType>* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder) : m_pEnvironment(_m_pEnvironment), m_pDistanceMetric(_m_pDistanceMetric), m_pCollisionDetection(_m_pCollisionDetection), m_pValidityChecker(_m_pValidityChecker), m_pNeighborhoodFinder(_m_pNeighborhoodFinder) {};
+MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, CollisionDetection* _m_pCollisionDetection, ValidityChecker<CfgType>* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder) : m_pEnvironment(_m_pEnvironment), m_pDistanceMetric(_m_pDistanceMetric), m_pCollisionDetection(_m_pCollisionDetection), m_pValidityChecker(_m_pValidityChecker), m_pNeighborhoodFinder(_m_pNeighborhoodFinder) {
+  m_roadmap = new Roadmap<CfgType, WeightType>();
+  m_roadmap->SetEnvironment(m_pEnvironment);
+  m_blockRoadmap = new Roadmap<CfgType, WeightType>();
+  m_blockRoadmap->SetEnvironment(m_pEnvironment);
+  m_colRoadmap = new Roadmap<CfgType, WeightType>();
+  m_colRoadmap->SetEnvironment(m_pEnvironment);
+};
 
 
 bool MPProblem::
@@ -30,9 +36,6 @@ ParseChild(XMLNodeReader::childiterator citr)
   } else  if(citr->getName() == "validity_test") {
     m_pCollisionDetection = new CollisionDetection(*citr, this);
     m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
-    return true;
-  } else  if(citr->getName() == "MPRegions") {
-    ///\Todo Parse MPRegions
     return true;
   } else  if(citr->getName() == "NeighborhoodFinder") {
     m_pNeighborhoodFinder = new NeighborhoodFinder(*citr,this);
@@ -54,6 +57,15 @@ ParseXML(XMLNodeReader& in_Node) {
   vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();
   for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
     m_pEnvironment->buildCDstructure(*C);
+
+  m_roadmap = new Roadmap<CfgType, WeightType>();
+  m_roadmap->SetEnvironment(m_pEnvironment);
+  m_blockRoadmap = new Roadmap<CfgType, WeightType>();
+  m_blockRoadmap->SetEnvironment(m_pEnvironment);
+  m_colRoadmap = new Roadmap<CfgType, WeightType>();
+  m_colRoadmap->SetEnvironment(m_pEnvironment);
+
+  m_stats = new StatClass();
 }
 
 
@@ -68,23 +80,68 @@ PrintOptions(ostream& out_os)
 }
 
 
-int MPProblem::
-CreateMPRegion() {
-  int returnVal = m_vecMPRegions.size();
-  m_vecMPRegions.push_back(new MPRegion<CfgType,WeightType>(returnVal,this));
-  return returnVal;
+vector<RoadmapGraph<CfgType, WeightType>::VID>
+MPProblem::
+AddToRoadmap(vector<CfgType>& _cfgs) {
+  vector<RoadmapGraph<CfgType, WeightType>::VID> returnVec;
+  for(vector<CfgType>::iterator I = _cfgs.begin(); I != _cfgs.end(); I++) {
+    if((*I).IsLabel("VALID")) {
+      if((*I).GetLabel("VALID")) {//Add to Free roadmap
+        returnVec.push_back(m_roadmap->m_pRoadmap->AddVertex((*I)));
+      } else {  //Add to Coll Roadmap 
+        //LOG_DEBUG_MSG("MPRegion::AddToRoadmap() -- Adding Coll CfgType");
+        
+        // commented by Bryan on 5/4/08, we only want one roadmap
+        //col_roadmap.m_pRoadmap->AddVertex((*I));
+      }
+    } else {
+      if(m_debug) 
+        cout << "MPRegion::AddToRoadmap() -- UNLABELED!!!!!!!" << endl;
+    }
+  }
+  return returnVec;
 }
 
 
-MPRegion<CfgType,WeightType>* 
-MPProblem::
-GetMPRegion(int in_RegionId) {
-  if( in_RegionId >= (int)m_vecMPRegions.size()) {  
-    cerr << "MPProblem:: I dont have region id = " << in_RegionId << endl;
-    exit(-1);
+void MPProblem::
+WriteRoadmapForVizmo(ostream& _os, vector<shared_ptr<Boundary> >* _boundaries, bool _block) {
+  _os << "Roadmap Version Number " << RDMPVER_CURRENT_STR;
+  _os << endl << "#####PREAMBLESTART#####";
+  _os << endl << "../obprm -f " << GetEnvironment()->GetEnvFileName() << " ";//commandLine;
+  _os << " -bbox "; GetEnvironment()->GetBoundary()->Print(_os, ',', ',');
+  if(_boundaries != NULL) {
+    typedef vector<shared_ptr<Boundary> >::iterator BIT;
+    for(BIT bit = _boundaries->begin(); bit!=_boundaries->end(); bit++) {
+      _os << " -bbox "; (*bit)->Print(_os, ',', ',');
+    }
   }
+  _os << endl << "#####PREAMBLESTOP#####";
+
+  _os << endl << "#####ENVFILESTART#####";
+  _os << endl << GetEnvironment()->GetEnvFileName();
+  _os << endl << "#####ENVFILESTOP#####";
+  _os << endl;
+
+  ///TODO: fix so vizmo can understand the following 3 lines instead of the explicit printouts below
+  /*
+  GetMPStrategy()->GetLocalPlanners()->WriteLPsForVizmo(myofstream);
+  GetCollisionDetection()->WriteCDsForVizmo(myofstream);
+  GetDistanceMetric()->WriteDMsForVizmo(myofstream);
+  */
+  _os << "#####LPSTART#####" << endl << "0" << endl << "#####LPSTOP#####" << endl;
+  _os << "#####CDSTART#####" << endl << "0" << endl << "#####CDSTOP#####" << endl;
+  _os << "#####DMSTART#####" << endl << "0" << endl << "#####DMSTOP#####";
+  GetRoadmap()->WriteRNGseed(_os);
+  _os << endl;
   
-  return (m_vecMPRegions[in_RegionId]);
+  #ifndef _PARALLEL
+  if(!_block)
+    stapl::sequential::write_graph(*(GetRoadmap()->m_pRoadmap), _os);         // writes verts & adj lists
+  else
+    stapl::sequential::write_graph(*(GetBlockRoadmap()->m_pRoadmap), _os);        // writes verts & adj lists
+  #else
+  stapl::write_graph(*(GetRoadmap()->m_pRoadmap), _os);
+  #endif
 }
 
 void 
@@ -96,26 +153,5 @@ MPProblem::SetMPProblem(){
   m_pCollisionDetection->SetMPProblem(this);
   m_pValidityChecker->SetMPProblem(this);
   m_pNeighborhoodFinder->SetMPProblem(this);
-
-  typedef vector<MPRegion<CfgType, WeightType>*>::iterator RIT;
-  for(RIT rit = m_vecMPRegions.begin(); rit!=m_vecMPRegions.end(); rit++)
-    (*rit)->SetMPProblem(this);
 }
-
-/*
-void MPProblem::
-AddToRoadmap(vector<Cfg_free >& in_Cfgs) {
-
-  vector< Cfg_free >::iterator I;
-  for(I=in_Cfgs.begin(); I!=in_Cfgs.end(); I++) {
-    if((*I).IsLabel("VALID")) {  
-      if((*I).GetLabel("VALID")) {//Add to Free roadmap
-        rmp.m_pRoadmap->AddVertex((*I));
-      } else {  //Add to Coll Roadmap 
-      rmp_col.m_pRoadmap->AddVertex((*I));
-    }
-   }
-  }
-}
-*/
 

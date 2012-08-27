@@ -46,9 +46,9 @@ class UAStrategy : public MPStrategyMethod {
    
    virtual void ParseXML(XMLNodeReader& in_Node);
    
-   virtual void Initialize(int in_RegionID);
-   virtual void Run(int in_RegionID);
-   virtual void Finalize(int in_RegionID);
+   virtual void Initialize();
+   virtual void Run();
+   virtual void Finalize();
 
    virtual void PrintOptions(ostream& out_os);
 

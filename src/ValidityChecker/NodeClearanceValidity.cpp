@@ -1,6 +1,5 @@
 #include "NodeClearanceValidity.h"
 #include "DistanceMetrics.h"
-#include "MPProblem/MPRegion.h"
 #include "NeighborhoodFinder.h"
 
 using namespace std;
@@ -26,14 +25,14 @@ bool NodeClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _st
   vector<VID> KClosest;
 
   GetMPProblem()->GetNeighborhoodFinder()->GetMethod(m_nfLabel)->KClosest(
-      GetMPProblem()->GetMPRegion(0)->GetRoadmap(), static_cast<CfgType>(_cfg) , 1, back_inserter(KClosest) );
+      GetMPProblem()->GetRoadmap(), static_cast<CfgType>(_cfg) , 1, back_inserter(KClosest) );
 
   if ( KClosest.empty() ){
     _cfg.SetLabel("VALID", true);
     return true;
   }
 
-  CfgType nearest = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap->find_vertex(KClosest[0])->property();
+  CfgType nearest = GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(KClosest[0])->property();
 
   double dist = dm->Distance(_env, nearest, _cfg);
   bool result = m_delta < dist; 

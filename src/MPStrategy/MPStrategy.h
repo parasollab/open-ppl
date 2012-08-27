@@ -99,13 +99,11 @@ class MPComparer : public MPStrategyMethod {
     virtual void PrintOptions(ostream& out_os);  
     virtual void ParseXML(XMLNodeReader& in_Node);
 
-    virtual void operator()(int in_RegionID);
-    virtual void operator()(int in_RegionID_1, int in_RegionID_2);
-
     virtual void operator()();
-    virtual void Initialize(int in_RegionID){}
-    virtual void Run(int in_RegionID){}
-    virtual void Finalize(int in_RegionID){}
+
+    virtual void Initialize(){}
+    virtual void Run(){}
+    virtual void Finalize(){}
 
   private:
     vector<string> m_input_methods;
@@ -132,11 +130,10 @@ class MPMultiStrategy : public MPStrategyMethod {
     virtual void PrintOptions(ostream& out_os);  
     virtual void ParseXML(XMLNodeReader& in_Node);
 
-    virtual void operator()(int in_RegionID);
     virtual void operator()();
-    virtual void Initialize(int in_RegionID){}
-    virtual void Run(int in_RegionID){}
-    virtual void Finalize(int in_RegionID){}
+    virtual void Initialize(){}
+    virtual void Run(){}
+    virtual void Finalize(){}
 
 
   private:

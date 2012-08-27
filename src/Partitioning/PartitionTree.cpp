@@ -1,6 +1,6 @@
 #include "PartitionTree.h"
 #include "Partition.h"
-#include "MPRegion.h"
+#include "MPProblem.h"
 
 
 PartitionNode::PartitionNode(){
@@ -161,9 +161,8 @@ inline void IntToStr(int myInt, string &myString) {
 void PartitionTree::WritePartitions(MPProblem* pMPProblem, string base, vector<vector<double> >&
 min, vector<vector<double> >& max){
    string baseFileName = base;
-   MPRegion<CfgType,WeightType> eachRgn(*(pMPProblem->GetEnvironment()), *(pMPProblem->GetEnvironment()->GetBoundary()), 10, NULL);
-   eachRgn.SetMPProblem(pMPProblem);
-   RoadmapGraph<CfgType,WeightType>* rg = pMPProblem->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
+   MPProblem eachRgn(pMPProblem->GetEnvironment(), pMPProblem->GetDistanceMetric(), pMPProblem->GetCollisionDetection(), pMPProblem->GetValidityChecker(), pMPProblem->GetNeighborhoodFinder());
+   RoadmapGraph<CfgType,WeightType>* rg = pMPProblem->GetRoadmap()->m_pRoadmap;
    vector<PartitionNode*> pnodes = m_Root->GetChildren();
    vector<VID> allVIDS;
    typedef vector<PartitionNode*>::iterator PIT;

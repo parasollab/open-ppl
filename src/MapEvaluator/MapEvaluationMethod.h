@@ -21,7 +21,6 @@ class MapEvaluationMethod : public MPBaseObject {
     virtual bool HasState() const {return false;}
 
     virtual bool operator ()() = 0;
-    virtual bool operator()(int _regionID) = 0;
 };
 
 #endif

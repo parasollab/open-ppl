@@ -22,10 +22,7 @@ public:
  
   virtual void PrintOptions(ostream& _os);
 
-  virtual bool operator()() {
-    return operator()(GetMPProblem()->CreateMPRegion());
-  }
-  virtual bool operator()(int _regionID);
+  virtual bool operator()();
   
 private:
   string m_evalLabel;
@@ -60,13 +57,13 @@ void NegateEvaluation<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 }
 
 template <class CFG, class WEIGHT>
-bool NegateEvaluation<CFG, WEIGHT>::operator()(int _regionID) {
+bool NegateEvaluation<CFG, WEIGHT>::operator()() {
   MapEvaluator<CFG, WEIGHT>* eval = this->GetMPProblem()->GetMPStrategy()->GetMapEvaluator();
   
   if (m_evalMethods.size() == 0) 
     m_evalMethods.push_back(eval->GetMethod(m_evalLabel));
   
-  ComposeEvalFunctor<CFG, WEIGHT> comFunc(eval, _regionID);
+  ComposeEvalFunctor<CFG, WEIGHT> comFunc(eval);
   
   return m_comNeg(m_evalMethods.begin(), comFunc);
 }

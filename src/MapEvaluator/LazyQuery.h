@@ -98,7 +98,7 @@ LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& 
 
   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass& stats = *(this->GetMPProblem()->GetMPRegion(0)->GetStatClass());
+  StatClass& stats = *(this->GetMPProblem()->GetStatClass());
   string callee = "LazyQuery::CanRecreatePath()";
   CDInfo cdInfo;
   vector<VID> neighbors;

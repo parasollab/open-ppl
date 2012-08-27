@@ -2,7 +2,6 @@
 #define NEIGHBORHOODFINDER_H_
 
 #include "MPUtils.h"
-#include "MetricUtils.h"
 
 #include "BruteForceNF.h"
 #include "HierarchicalNF.h"

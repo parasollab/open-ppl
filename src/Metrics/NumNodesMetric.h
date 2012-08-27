@@ -12,10 +12,7 @@ class NumNodesMetric : public MetricsMethod {
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual double operator()() {
-      return operator()(GetMPProblem()->CreateMPRegion());
-    }
-    virtual double operator()(int _regionID);
+    virtual double operator()();
 };
 
 #endif

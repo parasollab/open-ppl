@@ -12,7 +12,6 @@
 #include "MetricsMethod.h"
 #include "MPStrategy.h"
 #include "MPProblem.h"
-#include "MPRegion.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -157,11 +156,10 @@ boost::shared_ptr<LocalPlannerMethod<CfgType, WeightType> > GetLPMethod(MPProble
   obsDist -> Distance away from object the new node neads to at least be
   */
 
-bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta, int& _weight, CDInfo& _cdInfo){
+bool RRTExpand( MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta, int& _weight, CDInfo& _cdInfo){
   //Setup...primarily for collision checks that occur later on
-  MPRegion<CfgType,WeightType>*      region = _mp->GetMPRegion(_regionID);
-  StatClass*                        regionStats = region->GetStatClass();
-  Environment*                       env = region->GetRoadmap()->GetEnvironment();
+  StatClass*                         stats = _mp->GetStatClass();
+  Environment*                       env = _mp->GetRoadmap()->GetEnvironment();
   shared_ptr <DistanceMetricMethod>  dm = _mp->GetDistanceMetric()->GetMethod(_dm);
   ValidityChecker<CfgType>*          vc = _mp->GetValidityChecker();
   string callee("RRTUtility::RRTExpand");
@@ -180,7 +178,7 @@ bool RRTExpand( MPProblem* _mp, int _regionID, string _vc, string _dm, CfgType _
   //given to the function, and are user defined.
   while(!collision && dm->Distance(env,_start,tick) <= _delta) {
     tick.Increment(incr); //Increment tick
-    if(!(tick.InBoundary(env)) || !(vc->IsValid(vc->GetVCMethod(_vc), tick, env, *regionStats, _cdInfo, true, &callee))){
+    if(!(tick.InBoundary(env)) || !(vc->IsValid(vc->GetVCMethod(_vc), tick, env, *stats, _cdInfo, true, &callee))){
       collision = true; //Found a collision; return previous tick, as it is collision-free
     }
     else{

@@ -1,5 +1,5 @@
 #include "NumNodesMetric.h"
-#include "MPRegion.h"
+#include "Roadmap.h"
 
 NumNodesMetric::NumNodesMetric() {
   this->SetName("NumNodesMetric");
@@ -18,6 +18,6 @@ void NumNodesMetric::PrintOptions(ostream& _os) {
   _os << "Number of nodes in roadmap." << endl;
 }
 
-double NumNodesMetric::operator()(int _regionID) {
-  return (double)(GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap()->m_pRoadmap->get_num_vertices());
+double NumNodesMetric::operator()() {
+  return (double)(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices());
 }

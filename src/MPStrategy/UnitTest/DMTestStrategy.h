@@ -15,9 +15,9 @@ class DMTestStrategy : public MPStrategyMethod
   virtual void ParseXML(XMLNodeReader& _node);
   virtual void PrintOptions(ostream& _out);
 
-  virtual void Initialize(int _regionID){}
-  virtual void Run(int _regionID);
-  virtual void Finalize(int _regionID){}
+  virtual void Initialize(){}
+  virtual void Run();
+  virtual void Finalize(){}
 
  private:
   string m_inputRoadmapFilename;

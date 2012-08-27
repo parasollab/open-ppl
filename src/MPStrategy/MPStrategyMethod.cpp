@@ -1,7 +1,6 @@
 #include "MPStrategyMethod.h"
 #include <sys/time.h>
 #include "MPProblem.h"
-#include "MPRegion.h"
 #include "MapEvaluator.h"
 MPStrategyMethod::MPStrategyMethod(MPSMContainer& _cont) : m_baseSeed(_cont.m_seed), m_baseFilename(_cont.m_baseFilename) {
 }
@@ -23,25 +22,20 @@ void MPStrategyMethod::ParseXML(XMLNodeReader& _node){
 };
 
 void MPStrategyMethod::operator()(){
-  (*this)(GetMPProblem()->CreateMPRegion());
-}
-
-void MPStrategyMethod::operator()(int _regionID){
   SRand(m_baseSeed); 
-  GetMPProblem()->GetMPRegion(_regionID)->GetStatClass()->SetAuxDest(GetBaseFilename());
+  GetMPProblem()->GetStatClass()->SetAuxDest(GetBaseFilename());
 
-  Initialize(_regionID);
-  Run(_regionID);
-  Finalize(_regionID);
+  Initialize();
+  Run();
+  Finalize();
 }
 
-bool MPStrategyMethod::EvaluateMap(int _regionID, vector<string> _evaluators) {
+bool MPStrategyMethod::EvaluateMap(vector<string> _evaluators) {
   if(_evaluators.empty()) {
     return true;
   }
   else {
-    MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(_regionID);
-    StatClass* stats = region->GetStatClass();
+    StatClass* stats = GetMPProblem()->GetStatClass();
 
     bool mapPassedEvaluation = false;
     string clockName = this->GetNameAndLabel() + "::EvaluateMap()"; 
@@ -55,7 +49,7 @@ bool MPStrategyMethod::EvaluateMap(int _regionID, vector<string> _evaluators) {
       evaluatorClockName << clockName << "::" << evaluator->GetName();
       stats->StartClock(evaluatorClockName.str());
       if(m_debug) cout << "\n\t";
-      mapPassedEvaluation = evaluator->operator()(_regionID);
+      mapPassedEvaluation = evaluator->operator()();
       if(m_debug) cout << "\t";
       stats->StopClock(evaluatorClockName.str());
       if(m_debug){

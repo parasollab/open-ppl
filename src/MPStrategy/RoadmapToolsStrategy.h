@@ -50,10 +50,9 @@ class RoadmapInput : public MPStrategyMethod {
       m_strInputFileName = in_Node.stringXMLParameter("input_map", true, "", "Input roadmap file");
     };
    
-   virtual void Initialize(int in_RegionID){}
-   virtual void Run(int in_RegionID){
-    }
-   virtual void Finalize(int in_RegionID){}
+   virtual void Initialize(){}
+   virtual void Run(){}
+   virtual void Finalize(){}
 
   private:
     string m_strInputFileName;
@@ -75,13 +74,12 @@ class RoadmapClear : public MPStrategyMethod {
   
     virtual void ParseXML(XMLNodeReader& in_Node) {};
    
-   virtual void Initialize(int in_RegionID){}
-   virtual void Run(int in_RegionID){
-      MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
-      region->GetRoadmap()->m_pRoadmap->clear();
-      region->GetStatClass()->ClearStats();
+   virtual void Initialize(){}
+   virtual void Run(){
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->clear();
+      GetMPProblem()->GetStatClass()->ClearStats();
     }
-   virtual void Finalize(int in_RegionID){}
+   virtual void Finalize(){}
 
 
   private:

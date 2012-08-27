@@ -1,6 +1,5 @@
 #include "CfgFeature.h"
 #include "MPProblem.h"
-#include "MPRegion.h"
 
 CfgFeature::CfgFeature():MPFeature(){
    m_index = 0;
@@ -18,7 +17,7 @@ void CfgFeature::ParseXML(XMLNodeReader& in_Node){
 }
 
 vector<double> CfgFeature::Collect(vector<VID>& vids){
-   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetMPRegion(0)->GetRoadmap()->m_pRoadmap;
+   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap()->m_pRoadmap;
    vector<double> data;
    
    typedef vector<VID>::iterator VIT;

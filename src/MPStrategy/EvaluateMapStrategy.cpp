@@ -1,6 +1,5 @@
 #include "EvaluateMapStrategy.h"
 #include "boost/lambda/lambda.hpp"
-#include "MPRegion.h"
 #include "MapEvaluator.h"
 #include "MPStrategy.h"
 
@@ -53,17 +52,17 @@ ParseXML(XMLNodeReader& in_Node, bool warn_unknown)
 
 void 
 EvaluateMapStrategy::
-Run(int region_id) 
+Run() 
 {
   PrintOptions(cout);
   
-  GetMPProblem()->GetMPRegion(region_id)->GetRoadmap()->ReadRoadmapGRAPHONLY(map_filename.c_str());
+  GetMPProblem()->GetRoadmap()->ReadRoadmapGRAPHONLY(map_filename.c_str());
   
   for(vector<string>::const_iterator I = evaluator_labels.begin(); I != evaluator_labels.end(); ++I)
   {
     MapEvaluator<CfgType, WeightType>::MapEvaluationPointer evaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetMethod(*I);
     cout << "\n\t";
-    bool passed = evaluator->operator()(region_id);
+    bool passed = evaluator->operator()();
     if(passed)
       cout << "\t  (passed)\n";
     else

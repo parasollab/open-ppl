@@ -1,9 +1,9 @@
 #ifndef METRICUTILS_H_
 #define METRICUTILS_H_
 
+#include "NeighborhoodFinder.h"
 #include "Roadmap.h"
 #include "DistanceMetricMethod.h"
-#include "NeighborhoodFinder.h"
 #include <string>
 #include "boost/tuple/tuple.hpp"
 

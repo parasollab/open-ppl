@@ -2,6 +2,8 @@
 #define BRUTEFORCENF_H_
 
 #include "NeighborhoodFinderMethod.h"
+#include "RoadmapGraph.h"
+#include "DistanceMetricMethod.h"
 #include <vector>
 
 using namespace std;

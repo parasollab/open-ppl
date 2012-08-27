@@ -14,10 +14,7 @@ class DiameterMetric : public MetricsMethod {
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual double operator()() {
-      return operator()(GetMPProblem()->CreateMPRegion());
-    }
-    virtual double operator()(int _regionID);
+    virtual double operator()();
 };
 
 template <class CFG, class WEIGHT>
@@ -39,13 +36,13 @@ void DiameterMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 }
 
 template <class CFG, class WEIGHT>
-double DiameterMetric<CFG, WEIGHT>::operator()(int _regionID) {
+double DiameterMetric<CFG, WEIGHT>::operator()() {
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
   //vector<double> prev_diameter, new_diameter;
   vector<double> diameter;
   double ccDiameter;
-  Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetMPRegion(_regionID)->GetRoadmap();
+  Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetRoadmap();
   RoadmapGraph<CFG, WEIGHT>* pMap = rmap->m_pRoadmap;
 
   //get ccs

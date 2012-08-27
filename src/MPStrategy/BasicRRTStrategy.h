@@ -10,8 +10,6 @@
 #include "CfgTypes.h"
 #include "MPStrategyMethod.h"
 
-template<typename CFG, typename WEIGHT> class MPRegion;
-
 class BasicRRTStrategy : public MPStrategyMethod {
   public:
     
@@ -23,19 +21,19 @@ class BasicRRTStrategy : public MPStrategyMethod {
     
     virtual void ParseXML(XMLNodeReader& _node);
 
-    virtual void Initialize(int _regionID);
-    virtual void Run(int _regionID);
-    virtual void Finalize(int _regionID);
+    virtual void Initialize();
+    virtual void Run();
+    virtual void Finalize();
     virtual void PrintOptions(ostream& _os);
 
   protected:
     // Helper functions
-    CfgType GoalBiasedDirection(int _regionID);
-    CfgType SelectDirection(int _regionID);
-    virtual VID ExpandTree(int _regionID, CfgType& _dir);
-    void ConnectTrees(int _regionID, VID _recentlyGrown);
-    void EvaluateGoals(int _regionID);
-    RoadmapClearanceStats PathClearance(int _regionID);  
+    CfgType GoalBiasedDirection();
+    CfgType SelectDirection();
+    virtual VID ExpandTree(CfgType& _dir);
+    void ConnectTrees(VID _recentlyGrown);
+    void EvaluateGoals();
+    RoadmapClearanceStats PathClearance();  
     vector<string> m_evaluators;
     string m_sampler;
     string m_lp;

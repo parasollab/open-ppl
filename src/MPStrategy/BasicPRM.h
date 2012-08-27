@@ -5,7 +5,6 @@
 
 class XMLNodeReader;
 class MPProblem;
-template<class CFG, class WEIGHT> class MPRegion;
 
 struct BPSContainer : public MPSMContainer {
   BPSContainer () : MPSMContainer() {}
@@ -35,16 +34,15 @@ class BasicPRM : public MPStrategyMethod{
    virtual void ParseXML(XMLNodeReader& _node);
    virtual void PrintOptions(ostream& _os);
 
-   virtual void Initialize(int _regionID);
-   virtual void Run(int _regionID);
-   virtual void Finalize(int _regionID);
+   virtual void Initialize();
+   virtual void Run();
+   virtual void Finalize();
 
 
  protected:
    //helper functions for operator()
-   void ConnectNodes(MPRegion<CfgType, WeightType>* _region, 
-     vector<VID>& _allNodesVID, vector<VID>& _thisIterationNodesVID);
-   void ConnectComponents(MPRegion<CfgType, WeightType>* _region);
+   void ConnectNodes(vector<VID>& _allNodesVID, vector<VID>& _thisIterationNodesVID);
+   void ConnectComponents();
 
    //data
    map<string, pair<int, int> > m_nodeGenerationLabels;
@@ -61,8 +59,7 @@ class BasicPRM : public MPStrategyMethod{
 
  private:
    template <typename OutputIterator>
-     void GenerateNodes(MPRegion<CfgType, WeightType>* _region, 
-       OutputIterator _allOut, OutputIterator _thisIterationOut);
+     void GenerateNodes(OutputIterator _allOut, OutputIterator _thisIterationOut);
 
    string PickNextSampler();
 
