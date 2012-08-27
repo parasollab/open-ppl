@@ -17,10 +17,7 @@ class ConditionalEvaluation : public MapEvaluationMethod {
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual bool operator()() {
-      return operator()(GetMPProblem()->CreateMPRegion());
-    }
-    virtual bool operator()(int _regionID);
+    virtual bool operator()();
 
   protected:
     RelationalOperator m_relationalOperator;
@@ -73,8 +70,8 @@ void ConditionalEvaluation<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 }
 
 template <class CFG, class WEIGHT>
-bool ConditionalEvaluation<CFG, WEIGHT>::operator()(int _regionID) {
-  double metric_value = this->GetMPProblem()->GetMPStrategy()->GetMetric()->GetMethod(m_metric)->operator()(_regionID);
+bool ConditionalEvaluation<CFG, WEIGHT>::operator()() {
+  double metric_value = this->GetMPProblem()->GetMPStrategy()->GetMetric()->GetMethod(m_metric)->operator()();
 
   if (m_relationalOperator == LT) {
     return metric_value < m_value;
