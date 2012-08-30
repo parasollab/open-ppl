@@ -18,6 +18,8 @@ MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, Coll
   m_blockRoadmap->SetEnvironment(m_pEnvironment);
   m_colRoadmap = new Roadmap<CfgType, WeightType>();
   m_colRoadmap->SetEnvironment(m_pEnvironment);
+
+  m_stats = new StatClass();
 };
 
 
