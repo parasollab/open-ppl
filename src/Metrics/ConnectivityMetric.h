@@ -10,11 +10,15 @@ class ConnectivityMetric : public CoverageMetric<CFG, WEIGHT> {
     ConnectivityMetric();
     ConnectivityMetric(vector<CFG>& _samples, vector<string> _nodeConnection, bool _computeAllCCs = false);
     ConnectivityMetric(XMLNodeReader& _node, MPProblem* _problem, bool _computeAllCCs = false);
+    
     virtual ~ConnectivityMetric() {}
 
     virtual void PrintOptions(ostream& _os);
 
     virtual double operator()();
+    
+  private:
+    ofstream output;
 };
 
 template <class CFG, class WEIGHT>
@@ -32,6 +36,9 @@ template <class CFG, class WEIGHT>
 ConnectivityMetric<CFG, WEIGHT>::ConnectivityMetric(XMLNodeReader& _node, MPProblem* _problem, bool _computeAllCCs)
   : CoverageMetric<CFG, WEIGHT>(_node, _problem, _computeAllCCs) {
     this->SetName("ConnectivityMetric");
+
+    output.open((this->m_outFileName+".connectivity").c_str());
+
     if(this->m_debug) PrintOptions(cout);
 }
 
@@ -42,13 +49,17 @@ void ConnectivityMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 
 template <class CFG, class WEIGHT>
 double ConnectivityMetric<CFG, WEIGHT>::operator()() {
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+  CoverageMetric<CFG, WEIGHT>::operator()(); // Call CoverageMetric first
 
+  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+  static size_t numcalls = 0;
   int numQueries = 0;
-  for(size_t i=0; i<this->m_connections.size(); ++i)
+  size_t sz = this->m_connections.size();
+
+  for(size_t i=0; i<sz; ++i)
     sort(this->m_connections[i].begin(), this->m_connections[i].end());
-  for(size_t i=0; i<this->m_connections.size(); ++i) {
-    for(size_t j=i+1; j<this->m_connections.size(); ++j) {
+  for(size_t i=0; i<sz; ++i) {
+    for(size_t j=i+1; j<sz; ++j) {
       vector<VID> intersection;
       set_intersection(this->m_connections[i].begin(), this->m_connections[i].end(),
                        this->m_connections[j].begin(), this->m_connections[j].end(),
@@ -57,7 +68,11 @@ double ConnectivityMetric<CFG, WEIGHT>::operator()() {
         numQueries++;
     }
   }
-  return (((double)numQueries)/((double)(this->m_connections.size()*(this->m_connections.size()-1))/2.0));
+
+  double connectivityAmt = (double(numQueries))/(double(sz*(sz-1))/2.0);
+  output << numcalls++ << "\t" << connectivityAmt << endl;
+
+  return connectivityAmt;
 }
 
 #endif

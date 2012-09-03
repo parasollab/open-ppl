@@ -23,8 +23,9 @@ class CoverageMetric : public MetricsMethod {
     vector<CFG> m_samples;
     vector<string> m_nodeConnectionLabels;
     bool m_allData;
-    string m_filename;
+    string m_filename, m_outFileName;
     vector<vector<VID> > m_connections;
+    ofstream output;
 };
 
 template <class CFG, class WEIGHT>
@@ -44,11 +45,14 @@ CoverageMetric<CFG, WEIGHT>::CoverageMetric(XMLNodeReader& _node, MPProblem* _pr
     this->SetName("CoverageMetric");
 
     m_filename = _node.stringXMLParameter("filename", true, "", "filename containing witness samples");
+    m_outFileName = _node.stringXMLParameter("outfilename", true, "", "filename for recording results");
     //read in samples
     m_samples.clear();
     ifstream is(m_filename.c_str());
     copy(istream_iterator<CFG>(is), istream_iterator<CFG>(), back_insert_iterator<vector<CFG> >(m_samples));
     is.close();
+
+    output.open((m_outFileName+".coverage").c_str());
 
     m_allData = _node.boolXMLParameter("computeAllCCs", false, _computeAllCCs, "flag when set to true computes coverage to all ccs, not just the first connectable cc");
 
@@ -83,6 +87,8 @@ void CoverageMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
 
 template <class CFG, class WEIGHT>
 double CoverageMetric<CFG, WEIGHT>::operator()() {
+  static size_t numcalls = 0;
+
   Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetRoadmap();
   RoadmapGraph<CFG, WEIGHT>* pMap = rmap->m_pRoadmap;
   Connector<CFG, WEIGHT>* cn = GetMPProblem()->GetMPStrategy()->GetConnector();
@@ -96,6 +102,7 @@ double CoverageMetric<CFG, WEIGHT>::operator()() {
 
   vector<VID> sampleList, cc;
   StatClass Stats;
+
   for(size_t i=0; i<m_samples.size(); ++i) {
     VID sampleVID = rmap->m_pRoadmap->AddVertex(m_samples[i]);
     sampleList.clear();
@@ -125,7 +132,12 @@ double CoverageMetric<CFG, WEIGHT>::operator()() {
     if(!(m_connections[i].empty()))
       numConnections++;
   }
-  return(((double)numConnections)/((double)m_connections.size()));
+
+  double coverageAmt = ((double)numConnections)/((double)m_connections.size());
+  output << numcalls++ << "\t" << coverageAmt << endl;
+
+  return coverageAmt;
 }
 
 #endif
+
