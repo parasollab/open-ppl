@@ -46,6 +46,8 @@ class GridSampler : public SamplerMethod<CFG> {
 
         citr->warnUnrequestedAttributes();
       }
+      else
+        citr->warnUnknownNode();
     }
 
     // Read data to m_vcm and m_useBBX

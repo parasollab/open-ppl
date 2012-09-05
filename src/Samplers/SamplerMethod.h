@@ -14,9 +14,9 @@ class CollisionDetection;
 class CDInfo;
 class DistanceMetric;
 template <class CFG> class Sampler;
-template <class CFG, class WEIGHT> class MPRegion;
 class MPProblem;
 template <class CFG> class NegateSampler;
+template <class CFG> class MixSampler;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -36,7 +36,8 @@ class SamplerMethod : public MPBaseObject {
 #endif
   public:
     friend class NegateSampler<CFG>;
-    
+    friend class MixSampler<CFG>;
+
     //////////////////////////////////////////////////////////////////////////////////////////
     //
     //

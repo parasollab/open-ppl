@@ -93,6 +93,11 @@ class StatClass {
     double GetSeconds(string _name);
     int GetUSeconds(string _name);
 
+    // Graph Operation Statistics Accessors/Modifiers
+    int GetGOStat(string _s) {return m_goStats[_s];}
+    void SetGOStat(string _s, int _v) {m_goStats[_s]=_v;}
+    void IncGOStat(string _s, double _v=1) {m_goStats[_s]+=_v;}
+
     //Local Planner Statistics Accessors/Modifiers
     double GetLPStat(string _s){return m_lpStats[_s];}
     void SetLPStat(string _s, double _v) {m_lpStats[_s]=_v;}
@@ -169,6 +174,7 @@ class StatClass {
 
   private:
     //LP Statistics
+    map<string, int> m_goStats;
     map<string, double> m_lpStats, m_nfStats;
     map<string, vector<double> > m_histories;
     string m_auxFileDest;
@@ -223,6 +229,17 @@ StatClass::PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs)
     _os << setw(15) << lpIter->second.get<2>() << endl;
   }
 
+  //output for graph operation statistics.
+  if(m_goStats.size()>0){
+    _os<<"\n\n Graph Operation Statistics:\n\n";
+    _os<< setw(40) << "Statistic"
+      << setw(40) << "Value" << endl << endl;
+    typedef map<string, int>::iterator GOSIT;
+    for(GOSIT gosit=m_goStats.begin(); gosit!=m_goStats.end(); gosit++){
+      _os << setw(40) << gosit->first
+        << setw(40) << gosit->second << endl;
+    }
+  }
   //output for local planner statistics. Only output if map is populated
   if(m_lpStats.size()>0){
     _os<<"\n\n Local Planner Statistics:\n\n";

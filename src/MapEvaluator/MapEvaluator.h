@@ -7,6 +7,7 @@
 #include "PrintMapEvaluation.h"
 #include "Query.h"
 #include "LazyQuery.h"
+#include "LazyToggleQuery.h"
 #include "ComposeEval.h"
 #include "NegateEvaluation.h"
 #include "ConditionalEvaluation.h"
@@ -17,6 +18,7 @@ namespace pmpl_detail {
     PrintMapEvaluation, 
     Query<CfgType, WeightType>,
     LazyQuery<CfgType, WeightType>,
+    LazyToggleQuery<CfgType, WeightType>,
     ComposeEvaluation<CfgType, WeightType>,
     NegateEvaluation<CfgType, WeightType>,
     ConditionalEvaluation<CfgType, WeightType>
