@@ -38,16 +38,8 @@ class OBRRTStrategy : public BasicRRTStrategy {
     //g6 is the same as g5 but with ori changes
     CfgType g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
     CfgType g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
+  
   private:
-    vector<string> m_componentConnectors;
-    vector<string> m_evaluators;
-    int m_numRoots;  
-    string m_sampler;
-    string m_lp;
-    string m_dm;
-    string m_nf;
-    string m_vc;
-    string m_query;
     //MAPRM information
     bool m_exact;
     int m_rayCount;
@@ -56,8 +48,6 @@ class OBRRTStrategy : public BasicRRTStrategy {
     int m_hLen;
     bool m_positional;
  
-    double m_delta, m_minDist, m_growthFocus;
-    int m_roots, m_currentIteration;
     double m_g0, m_g1, m_g2, m_g3, m_g4, m_g5, m_g6, m_g7, m_g8; //Growth method probabilities; can be found in OBRRT paper/TR
     double m_g0N, m_g1N, m_g2N, m_g3N, m_g4N, m_g5N, m_g6N, m_g7N, m_g8N; 
 };

@@ -4,26 +4,6 @@
 
 void
 OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr){
-    if(citr->getName() == "evaluation_method"){
-      string evalMethod = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
-      m_evaluators.push_back(evalMethod);
-      citr->warnUnrequestedAttributes();
-    } 
-    else
-      citr->warnUnknownNode();
-  }
-
-  m_delta = _node.numberXMLParameter("delta", false, 0.05, 0.0, 1.0, "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, 1.0, "Minimum Distance");
-  m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
-  m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
-  m_sampler = _node.stringXMLParameter("sampler", true, "", "Sampler Method");
-  m_vc = _node.stringXMLParameter("vc", true, "", "Validity Test Method");
-  m_nf = _node.stringXMLParameter("nf", true, "", "Neighborhood Finder");
-  m_dm = _node.stringXMLParameter("dm",true,"","Distance Metric");
-  m_lp = _node.stringXMLParameter("lp", true, "", "Local Planning Method");
-  m_query = _node.stringXMLParameter("query", false, "", "Query Filename"); 
   m_g0 = _node.numberXMLParameter("g0", false, 0.1, 0.0, 1.0, "g0 Growth Method");
   m_g1 = _node.numberXMLParameter("g1", false, 0.0, 0.0, 1.0, "g1 Growth Method");
   m_g2 = _node.numberXMLParameter("g2", false, 0.0, 0.0, 1.0, "g2 Growth Method");
@@ -58,14 +38,14 @@ OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_g8 = m_g8/total;
 
   m_g0N  = m_g0;
-  m_g1N += m_g0N + m_g1;
-  m_g2N += m_g1N + m_g2;
-  m_g3N += m_g2N + m_g3;
-  m_g4N += m_g3N + m_g4;
-  m_g5N += m_g4N + m_g5;
-  m_g6N += m_g5N + m_g6;
-  m_g7N += m_g6N + m_g7;
-  m_g8N += m_g7N + m_g8;
+  m_g1N = m_g0N + m_g1;
+  m_g2N = m_g1N + m_g2;
+  m_g3N = m_g2N + m_g3;
+  m_g4N = m_g3N + m_g4;
+  m_g5N = m_g4N + m_g5;
+  m_g6N = m_g5N + m_g6;
+  m_g7N = m_g6N + m_g7;
+  m_g8N = m_g7N + m_g8;
   cout << " growth prob norms: ["
     << m_g0 << ","
     << m_g1 << ","
@@ -337,12 +317,11 @@ CfgType OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, b
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   CDInfo cdInfo;
-  CfgType newCfg1, newCfg2;
-  CfgType dirOrig = _dir;
+  CfgType newCfg;
 
   int weight;
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
@@ -392,7 +371,7 @@ CfgType OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, b
   }
 
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -400,7 +379,7 @@ CfgType OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, b
   }
 
 
-  return newCfg1;
+  return newCfg;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
