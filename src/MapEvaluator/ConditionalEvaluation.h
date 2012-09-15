@@ -42,7 +42,7 @@ ConditionalEvaluation<CFG, WEIGHT>::ConditionalEvaluation(XMLNodeReader& _node, 
   this->SetName("ConditionalEvaluation");
 
   m_metric = _node.stringXMLParameter("metric_method", true, "", "Metric Method");
-  m_value = _node.numberXMLParameter("value", true, 1.0, 0.0, MAX_DOUBLE, "the value of the metric");
+  m_value = _node.numberXMLParameter("value", true, 1.0, 0.0, std::numeric_limits<double>::max(), "the value of the metric");
 
   string relationalOperator = _node.stringXMLParameter("operator", true, "", "operator");
   if (relationalOperator == "<")
