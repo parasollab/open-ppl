@@ -11,7 +11,7 @@ class ConditionalEvaluation : public MapEvaluationMethod {
     enum RelationalOperator { LT , LEQ, GT, GEQ };
 
     ConditionalEvaluation();
-    ConditionalEvaluation(RelationalOperator _relationalOperator, string _metric, size_t _value);
+    ConditionalEvaluation(RelationalOperator _relationalOperator, string _metric, double _value);
     ConditionalEvaluation(XMLNodeReader& _node, MPProblem* _problem);
     virtual ~ConditionalEvaluation() {}
 
@@ -22,7 +22,7 @@ class ConditionalEvaluation : public MapEvaluationMethod {
   protected:
     RelationalOperator m_relationalOperator;
     string m_metric;
-    size_t m_value;
+    double m_value;
 };
 
 template <class CFG, class WEIGHT>
@@ -31,7 +31,7 @@ ConditionalEvaluation<CFG, WEIGHT>::ConditionalEvaluation() {
 }
 
 template <class CFG, class WEIGHT>
-ConditionalEvaluation<CFG, WEIGHT>::ConditionalEvaluation(RelationalOperator _relationalOperator, string _metric, size_t _value)
+ConditionalEvaluation<CFG, WEIGHT>::ConditionalEvaluation(RelationalOperator _relationalOperator, string _metric, double _value)
   : MapEvaluationMethod(), m_relationalOperator(_relationalOperator), m_metric(_metric), m_value(_value) {
   this->SetName("ConditionalEvaluation");
 }
