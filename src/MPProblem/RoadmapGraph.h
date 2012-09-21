@@ -710,9 +710,8 @@ RoadmapGraph<VERTEX,WEIGHT>::
 GetVerticesData(vector<VERTEX>& v_vp) const{
   #ifndef _PARALLEL
   v_vp.clear();
-  GRAPH g = *this; 
   //verts.reserve( g.size() ); //g has no member size();
-    for (CVI vi = g.begin(); vi!= g.end(); vi++) {
+    for (CVI vi = (*this).begin(); vi!= (*this).end(); vi++) {
         v_vp.push_back((*vi).property());
     }
     #endif
@@ -725,9 +724,8 @@ RoadmapGraph<VERTEX,WEIGHT>::
 GetVerticesVID(vector<VID>& v_vd) const{
   #ifndef _PARALLEL
   v_vd.clear();
-   GRAPH g = *this; 
   //verts.reserve( g.size() ); //g has no member size();
-    for (CVI vi = g.begin(); vi!= g.end(); vi++) {
+    for (CVI vi = (*this).begin(); vi!= (*this).end(); vi++) {
         v_vd.push_back((*vi).descriptor());
     }
     #endif
