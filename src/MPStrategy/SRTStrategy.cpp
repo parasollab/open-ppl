@@ -154,7 +154,6 @@ void SRTStrategy::RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue,
   shared_ptr <DistanceMetricMethod>  _dm = GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label);
   LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
   ValidityChecker<CfgType>*          vc = GetMPProblem()->GetValidityChecker();
-  CollisionDetection*                cd = GetMPProblem()->GetCollisionDetection();
   LPOutput<CfgType,WeightType>       lpOutput;
   CDInfo                             cdInfo;
   cdInfo.ret_all_info = false;
@@ -182,8 +181,7 @@ void SRTStrategy::RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue,
       do {
 	tmp.GetRandomCfg(env,m_boundary);
       } while( !tmp.InBoundingBox(env, m_boundary) ||
-               !this->GetMPProblem()->GetValidityChecker()->IsValid(this->GetMPProblem()->GetValidityChecker()->GetVCMethod(strVcmethod), 
-								    tmp, env, *regionStats, cdInfo, true, &callee));      
+               !this->GetMPProblem()->GetValidityChecker()->GetMethod(strVcmethod)->IsValid(tmp, env, *regionStats, cdInfo, true, &callee));      
       
       CfgType root = CfgType(tmp);//, cent = CfgType(tmp);
       CfgType centroidCFG = CfgType(tmp);

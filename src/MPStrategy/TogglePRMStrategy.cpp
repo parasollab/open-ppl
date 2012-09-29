@@ -132,9 +132,9 @@ void TogglePRMStrategy::Run(){
         VID vid = GetMPProblem()->GetBlockRoadmap()->m_pRoadmap->AddVertex(cfg);
         allCollisionNodesVID.push_back(vid);
         thisIterationCollisionNodesVID.push_back(vid);
-        GetMPProblem()->GetValidityChecker()->ToggleValidity();
+        GetMPProblem()->GetValidityChecker()->GetMethod(vcMethod)->ToggleValidity();
         Connect(make_pair("invalid", vid), allCollisionNodesVID, allNodesVID, allCollisionNodesVID, queue);
-        GetMPProblem()->GetValidityChecker()->ToggleValidity();
+        GetMPProblem()->GetValidityChecker()->GetMethod(vcMethod)->ToggleValidity();
       }
     }
   }
@@ -212,8 +212,8 @@ void TogglePRMStrategy::GenerateNodes(OutputIterator allOut, OutputIterator this
     typedef vector<CfgType>::iterator CIT;
     for(CIT cit=outNodes.begin(); cit!=outNodes.end(); ++cit){
       if(!(*cit).IsLabel("VALID")){
-        !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), 
-              *cit, GetMPProblem()->GetEnvironment(), *(GetMPProblem()->GetStatClass()), cdInfo, true, &Callee));
+        !(GetMPProblem()->GetValidityChecker()->GetMethod(vcMethod)->IsValid( 
+              *cit, GetMPProblem()->GetEnvironment(), *(GetMPProblem()->GetStatClass()), cdInfo, &Callee));
       }
       //out nodes mean valid then add them to the real roadmap
       if((*cit).IsLabel("VALID") && ((*cit).GetLabel("VALID"))) {
@@ -229,8 +229,8 @@ void TogglePRMStrategy::GenerateNodes(OutputIterator allOut, OutputIterator this
     }
     for(CIT cit=outCollisionNodes.begin(); cit!=outCollisionNodes.end(); ++cit){
       if(!(*cit).IsLabel("VALID")){
-        !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(vcMethod), 
-              *cit, GetMPProblem()->GetEnvironment(), *(GetMPProblem()->GetStatClass()), cdInfo, true, &Callee));
+        !(GetMPProblem()->GetValidityChecker()->GetMethod(vcMethod)->IsValid( 
+              *cit, GetMPProblem()->GetEnvironment(), *(GetMPProblem()->GetStatClass()), cdInfo, &Callee));
       }
       //outCollisionNodes mean INVALID then add to block map
       if((*cit).IsLabel("VALID") && !((*cit).GetLabel("VALID"))) {

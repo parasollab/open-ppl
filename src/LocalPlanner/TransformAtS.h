@@ -154,8 +154,7 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
     LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath, bool _forward) {
   string callee = this->GetNameAndLabel() + "::IsConnectedOneWay()";
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(this->m_vcMethod);
+  typename ValidityChecker::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker()->GetMethod(this->m_vcMethod);
   CDInfo cdInfo;
 
   if(this->m_debug)
@@ -179,7 +178,7 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
     for(typename vector<CFG>::iterator I = sequence.begin()+1; I != sequence.end()-1; I++) { // _c1 and _c2 not double checked
       cdCounter++;
       if((*I).InBoundary(_env)) {
-        if(!vc->IsValid(vcm, *I, _env, _stats, cdInfo, false, &callee)) {
+        if(!vcm->IsValid(*I, _env, _stats, cdInfo, &callee)) {
           _col = *I;
           connected = false;
           break;

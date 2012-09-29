@@ -90,7 +90,7 @@ void MARRTStrategy::Run() {
   Environment* env = GetMPProblem()->GetRoadmap()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
-  ValidityChecker<CfgType>* vc = GetMPProblem()->GetValidityChecker();
+  ValidityChecker* vc = GetMPProblem()->GetValidityChecker();
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
   LPOutput<CfgType,WeightType> lpOutput;
   CDInfo cdInfo;
@@ -116,7 +116,7 @@ void MARRTStrategy::Run() {
     for (int i=0; i<m_roots; ++i) {
       tmp.GetRandomCfg(env);
       if (tmp.InBoundary(env)
-          && vc->IsValid(vc->GetVCMethod(m_vc), tmp, env, *stats, cdInfo, true, &callee)){
+          && vc->GetMethod(m_vc)->IsValid(tmp, env, *stats, cdInfo, &callee)){
         m_root.push_back(tmp);
       }
       else 

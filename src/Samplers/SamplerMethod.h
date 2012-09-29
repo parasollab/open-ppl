@@ -68,6 +68,8 @@ class SamplerMethod : public MPBaseObject {
       _out << this->GetName() << endl; 
     }
 
+    virtual string GetValidityMethod() const { return ""; }
+
     //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
     virtual back_insert_iterator<vector<CFG> > 
     Sample(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts, 

@@ -75,12 +75,14 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       _os << "\thistoryLength = " << m_historyLength << endl;
     }
 
+    virtual string GetValidityMethod() const { return m_vcLabel; }
+    
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
         StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
       string call = "MedialAxisSampler::sampler()";
       bool generated = false;
-      ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+      ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
       CDInfo cdInfo;
 
       _stats.IncNodesAttempted(this->GetNameAndLabel());
@@ -94,7 +96,7 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       if(PushToMedialAxis(this->GetMPProblem(), _env, _bb, tmpCfg, _stats, m_vcLabel, m_dmLabel, 
             m_exactClearance, m_clearanceRays, m_exactPenetration, m_penetrationRays, 
             m_useBoundary, m_epsilon, m_historyLength, this->m_debug, m_positional)) {
-        if(vc->IsValid(vc->GetVCMethod(m_vcLabel), tmpCfg, _env, _stats, cdInfo, true, &call)) {
+        if(vc->GetMethod(m_vcLabel)->IsValid(tmpCfg, _env, _stats, cdInfo, &call)) {
           _stats.IncNodesGenerated(this->GetNameAndLabel());
           generated = true;
           _cfgOut.push_back(tmpCfg);

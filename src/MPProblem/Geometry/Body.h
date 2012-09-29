@@ -228,13 +228,13 @@ public:
     void buildCDstructure(cd_predefined cdtype);
 
 #ifdef USE_VCLIP
-        shared_ptr<PolyTree> GetVclipBody();  ///<Return VCLIP internal model
+        shared_ptr<PolyTree> GetVClipBody();  ///<Return VCLIP internal model
 #endif
 #ifdef USE_RAPID
         shared_ptr<RAPID_model> GetRapidBody(); ///<Return RAPID internal model
 #endif
 #ifdef USE_PQP
-        shared_ptr<PQP_Model> GetPqpBody(); ///<Return PQP internal model
+        shared_ptr<PQP_Model> GetPQPBody(); ///<Return PQP internal model
 #endif
 #ifdef USE_SOLID
 	shared_ptr<DT_ObjectHandle> GetSolidBody(); ///<Return SOLID internal model

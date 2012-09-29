@@ -61,6 +61,8 @@ class GaussianSampler : public SamplerMethod<CFG>
         _out << "\tdmLabel = " << m_dmLabel << endl; 
       }
 
+    virtual string GetValidityMethod() const { return m_vcLabel; }
+    
     virtual bool 
 
       Sampler(Environment* _env, shared_ptr<Boundary> _bb,
@@ -68,7 +70,7 @@ class GaussianSampler : public SamplerMethod<CFG>
           vector<CFG>& _cfgCol){ 
 
         string callee(this->GetName() + "::SampleImpl()");
-        ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+        ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
         CDInfo cdInfo; 
         shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel); 
 
@@ -92,13 +94,11 @@ class GaussianSampler : public SamplerMethod<CFG>
             return false;
           }
           //We are in the box 
-          cfg1Free = vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env,
-              _stats, cdInfo, true, &callee);
+          cfg1Free = vc->GetMethod(m_vcLabel)->IsValid(cfg1, _env, _stats, cdInfo, &callee);
         }
         else { 
           cfg1Free = cfg1.InBoundary(_env,_bb) && 
-            vc->IsValid(vc->GetVCMethod(m_vcLabel), 
-                cfg1, _env, _stats, cdInfo, true, &callee);
+            vc->GetMethod(m_vcLabel)->IsValid(cfg1, _env, _stats, cdInfo, &callee);
         } 
 
         if(this->m_debug){  
@@ -124,16 +124,14 @@ class GaussianSampler : public SamplerMethod<CFG>
             cfg2.add(cfg1, incr);
           } while(!cfg2.InBoundary(_env,_bb));
 
-          cfg2Free = vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, 
-              _stats, cdInfo, true, &callee);
+          cfg2Free = vc->GetMethod(m_vcLabel)->IsValid(cfg2, _env, _stats, cdInfo, &callee);
         } 
         else {
           incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
           cfg2.add(cfg1, incr);
 
           cfg2Free = cfg2.InBoundary(_env,_bb) && 
-            vc->IsValid(vc->GetVCMethod(m_vcLabel), 
-                cfg2, _env, _stats, cdInfo, true, &callee);
+            vc->GetMethod(m_vcLabel)->IsValid(cfg2, _env, _stats, cdInfo, &callee);
         }
 
         if(this->m_debug){

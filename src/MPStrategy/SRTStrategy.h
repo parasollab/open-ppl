@@ -15,7 +15,6 @@
 #include "MetricUtils.h"
 //#include "Clock_Class.h"
 //#include "Stat_Class.h"
-#include "CollisionDetection.h"
 #include "ValidityChecker.hpp"
 #include "Connector.h"
 #include "LocalPlanners.h"

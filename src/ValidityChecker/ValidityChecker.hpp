@@ -1,95 +1,69 @@
-#ifndef _VALIDITY_CHECKER_HPP_
-#define _VALIDITY_CHECKER_HPP_
+#ifndef VALIDITYCHECKER_H
+#define VALIDITYCHECKER_H
 
 //////////////////////////////////////////////////////////////////////////////////////////
-#include "CollisionDetection.h"
-#include "ValidityCheckerMethod.hpp"
-#include "CollisionDetectionValidity.hpp"
+
+#include "SurfaceValidity.h"
+#include "AlwaysTrueValidity.h"
 #include "NodeClearanceValidity.h"
 #include "MedialAxisClearanceValidity.h"
 #include "ObstacleClearanceValidity.h"
 #include "ComposeVC.hpp"
 #include "NegateValidity.hpp"
-#include "AlwaysTrueValidity.h"
-#include "SurfaceValidity.h"
-#include "boost/shared_ptr.hpp"
+#include "CollisionDetectionValidity.hpp"
+
 //////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename CFG>
-class ValidityChecker : public MPBaseObject
-{   
-public:
-  typedef boost::shared_ptr<ValidityCheckerMethod> VCMethodPtr;
-  
-  ValidityChecker() : m_Validity(true) { }
-  ValidityChecker(std::map<std::string, VCMethodPtr> _map) : m_map_vcmethods(_map), m_Validity(true) {};
+namespace pmpl_detail { //hide ValidityCheckerMethodList in pmpl_detail namespace
+  typedef boost::mpl::list<
+#ifdef PMPCfgSurface
+    SurfaceValidity,
+#endif
+    AlwaysTrueValidity,
+    NodeClearanceValidity,
+    MedialAxisClearanceValidity,
+    ObstacleClearanceValidity,
+    ComposeValidity,
+    NegateValidity,
+    CollisionDetectionValidity
+    > ValidityCheckerMethodList;
+}
 
-
-  ValidityChecker(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem), m_Validity(true) { 
-    if(m_debug) cout << "ValidityChecker::ValidityChecker()" << endl;
-    in_Node.verifyName(std::string("validity_test"));
-
-    XMLNodeReader::childiterator citr;
-    for(citr = in_Node.children_begin(); citr != in_Node.children_end(); ++citr) {    
-      if(citr->getName() == "CollisionDetection") {
-        VCMethodPtr vc(new CollisionDetectionValidity<CFG>(*citr, in_pProblem));
-        AddVCMethod(vc->GetLabel(), vc);
-      } else if(citr->getName() == "JointLimit") {
-	//VCMethodPtr vc(new JointLimit<CFG>(*citr, in_pProblem));
-        //AddVCMethod(vc->GetLabel(), vc);
-      } else if(citr->getName() == "ComposeValidity") {
-        VCMethodPtr vc(new ComposeValidity<CFG>(*citr, in_pProblem));
-        AddVCMethod(vc->GetLabel(), vc);
-      } else if(citr->getName() == "NodeClearanceValidity") {
-        VCMethodPtr vc(new NodeClearanceValidity(*citr, in_pProblem));
-        AddVCMethod(vc->GetLabel(), vc);
-      } else if(citr->getName() == "MedialAxisClearance") {
-        VCMethodPtr vc(new MedialAxisClearanceValidity(*citr, in_pProblem));
-        AddVCMethod(vc->GetLabel(), vc);
-      } else if(citr->getName() == "NegateValidity") {
-        VCMethodPtr vc(new NegateValidity<CFG>(*citr, in_pProblem));
-        AddVCMethod(vc->GetLabel(), vc);
-      } else if(citr->getName() == "AlwaysTrueValidity") {
-        VCMethodPtr vc(new AlwaysTrueValidity<CFG>(*citr, in_pProblem));
-        AddVCMethod(vc->GetLabel(), vc);
-      } else if(citr->getName() == "ObstacleClearance") {
-        VCMethodPtr vc(new ObstacleClearanceValidity(*citr, in_pProblem));
-        AddVCMethod(vc->GetLabel(), vc);
-      } else if(citr->getName() == "SurfaceValidity") {
-        VCMethodPtr vc(new SurfaceValidity<CFG>(*citr, in_pProblem));
-        AddVCMethod(vc->GetLabel(), vc);
-      } else {
-        citr->warnUnknownNode();
-      }
-    }    
-    if(m_debug) cout << "~ValidityChecker::ValidityChecker()" << endl;
-  }
-  
-  ~ValidityChecker() {}
+class ValidityChecker : private ElementSet<ValidityCheckerMethod>, public MPBaseObject {
+ public:
+   typedef ElementSet<ValidityCheckerMethod>::MethodPointer ValidityCheckerPointer;
    
-   bool GetValidity(){return m_Validity;}
-  void ToggleValidity(){m_Validity=!m_Validity;}
+   template<typename MethodList>
+   ValidityChecker() : ElementSet<ValidityCheckerMethod>(MethodList()) {}
+
+   ValidityChecker() : ElementSet<ValidityCheckerMethod>(pmpl_detail::ValidityCheckerMethodList()) {}
   
-  inline bool IsValid(VCMethodPtr _vc, Cfg& _cfg, Environment* env, StatClass& Stats, 
-		      CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName = NULL) {
-      if(m_Validity)
-         return _vc->IsValid(_cfg, env, Stats, _cdInfo, enablePenetration, pCallName);
-      else
-         return !_vc->IsValid(_cfg, env, Stats, _cdInfo, enablePenetration, pCallName);
-  }
+   template <typename MethodList>
+   ValidityChecker(XMLNodeReader& _node, MPProblem* _problem, MethodList const&)
+     : ElementSet<ValidityCheckerMethod>(MethodList()), MPBaseObject(_problem) {
+     for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr)
+       if(!AddElement(citr->getName(), *citr, _problem))
+        citr->warnUnknownNode();
+   }
+   
+   ValidityChecker(XMLNodeReader& _node, MPProblem* _problem)
+     : ElementSet<ValidityCheckerMethod>(pmpl_detail::ValidityCheckerMethodList()), MPBaseObject(_problem) {
+     for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
+       if(!AddElement(citr->getName(), *citr, _problem))
+        citr->warnUnknownNode();
+    }
+   }
+   virtual ~ValidityChecker();
+
+   ValidityCheckerPointer GetMethod(string _label);
+
+   void AddMethod(string const& _label, ValidityCheckerPointer _dmm);
   
-  inline void AddVCMethod(std::string name, VCMethodPtr m) {
-    m_map_vcmethods[name] = m;
-  }
-  
-  inline VCMethodPtr GetVCMethod(std::string name) {
-    return m_map_vcmethods[name]; 
-  }
-  
-protected:
-  std::map<std::string, VCMethodPtr> m_map_vcmethods;
-  bool m_Validity;
+   virtual void SetMPProblem(MPProblem* _mp);
+
+   void PrintOptions(ostream& _os) const;
+
+   vector<cd_predefined> GetSelectedCDTypes() const;
 };
 
-
-#endif // #ifndef _VALIDITY_CHECKER_HPP
+#endif // #ifndef VALIDITYCHECKER_H

@@ -4,7 +4,7 @@
 #include "SamplerMethod.h"
 #include "MPUtils.h"
 
-template <typename CFG> class ValidityChecker;
+class ValidityChecker;
 
 template <typename CFG>
 class NegateSampler : public SamplerMethod<CFG> {
@@ -43,17 +43,22 @@ class NegateSampler : public SamplerMethod<CFG> {
         _out << "\tsampling method = " << m_samplingMethod << endl;
       }
     
+    virtual string GetValidityMethod() const { return this->GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(m_samplingMethod)->GetValidityMethod(); }
+    
     virtual bool 
         Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
           CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
         //make invalid "valid" and vice-versa to collect collision nodes
-        this->GetMPProblem()->GetValidityChecker()->ToggleValidity();  
+        string vcLabel = this->GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(m_samplingMethod)->GetValidityMethod();
+        if(vcLabel != "")
+          this->GetMPProblem()->GetValidityChecker()->GetMethod(vcLabel)->ToggleValidity();  
     
         bool result = this->GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(m_samplingMethod)
           ->Sampler(_env, _bb, _stats, _cfgIn, _cfgOut, _cfgCol);
-        
-        this->GetMPProblem()->GetValidityChecker()->ToggleValidity();
+       
+        if(vcLabel != "")
+          this->GetMPProblem()->GetValidityChecker()->GetMethod(vcLabel)->ToggleValidity();
         
         return result;
       }

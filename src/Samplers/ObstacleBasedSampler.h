@@ -96,6 +96,8 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       _os << "\tuseBBX = " << m_useBBX << endl; 
       _os << "\tpointSelectionStrategy = " << m_pointSelection << endl;
     }
+    
+    virtual string GetValidityMethod() const { return m_vcMethod; }
 
     // Generates and adds shells to their containers
     template <typename OutputIterator>
@@ -103,7 +105,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
           CFG _cFree, CFG _cColl, CFG _incr, OutputIterator _result) {
       
       string callee = this->GetNameAndLabel() + "::GenerateShells()";
-      ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+      ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
       CDInfo cdInfo;
       if(this->m_debug)
         cout << "nShellsColl = " << m_nShellsColl << endl;
@@ -112,7 +114,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       for(int i = 0; i < m_nShellsFree; i++) {
         // If the shell is valid
         if(_cFree.InBoundary(_env, _bb) && 
-            vc->IsValid(vc->GetVCMethod(m_vcMethod), _cFree, _env, _stats, cdInfo, true, &callee)) {
+            vc->GetMethod(m_vcMethod)->IsValid(_cFree, _env, _stats, cdInfo, &callee)) {
           if(this->m_recordKeep)
             _stats.IncNodesGenerated(this->GetNameAndLabel());
           // Add shell
@@ -131,7 +133,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       for(int i = 0; i < m_nShellsColl; i++) {
         // If the shell is valid
         if(_cColl.InBoundary(_env, _bb) && 
-            !vc->IsValid(vc->GetVCMethod(m_vcMethod), _cColl, _env, _stats, cdInfo, true, &callee)) {
+            !vc->GetMethod(m_vcMethod)->IsValid(_cColl, _env, _stats, cdInfo, &callee)) {
           if(this->m_recordKeep)
             _stats.IncNodesGenerated(this->GetNameAndLabel());
           // Add shell
@@ -148,7 +150,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
       string callee = this->GetNameAndLabel() + "::Sampler()";
-      ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+      ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
       shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmMethod);
       CDInfo cdInfo;
 
@@ -158,7 +160,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       // Old state
       CFG c1 = ChooseASample(_cfgIn, _env, _bb);
       bool c1BBox = c1.InBoundary(_env, _bb);  
-      bool c1Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c1, _env, _stats, cdInfo, true, &callee);
+      bool c1Free = vc->GetMethod(m_vcMethod)->IsValid(c1, _env, _stats, cdInfo, &callee);
 
       // New state
       CFG c2 = c1;
@@ -183,7 +185,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         // Update new state
         c2.Increment(r);
         c2BBox = c2.InBoundary(_env, _bb);
-        c2Free = vc->IsValid(vc->GetVCMethod(m_vcMethod), c2, _env, _stats, cdInfo, true, &callee);
+        c2Free = vc->GetMethod(m_vcMethod)->IsValid(c2, _env, _stats, cdInfo, &callee);
       }
 
       // If new state is in BBox (there must be a validity change)

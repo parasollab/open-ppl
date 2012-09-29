@@ -104,7 +104,7 @@ bool
 LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats,
     vector<VID>& _attemptedPath, vector<CFG>& _recreatedPath) {
 
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+  ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
   Environment* env = this->GetMPProblem()->GetEnvironment();
   StatClass& stats = *(this->GetMPProblem()->GetStatClass());
   string callee = "LazyQuery::CanRecreatePath()";
@@ -125,7 +125,7 @@ LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& 
     CFG node = pmpl_detail::GetCfg<RoadmapGraph<CFG, WEIGHT> >()(_rdmp->m_pRoadmap, _attemptedPath[index]);
     if(node.IsLabel("VALID") && node.GetLabel("VALID"))
       continue;
-    if(!vc->IsValid(vc->GetVCMethod(m_vcLabel), node, env, stats, cdInfo, true, &callee)) {
+    if(!vc->GetMethod(m_vcLabel)->IsValid(node, env, stats, cdInfo, &callee)) {
       // Add invalid edges to list
       if(m_numEnhance && !node.IsLabel("Enhance")) {
         typename RoadmapGraph<CFG, WEIGHT>::vertex_reference v1 = *(_rdmp->m_pRoadmap->find_vertex(_attemptedPath[index]));

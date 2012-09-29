@@ -3,7 +3,6 @@
 
 #include <boost/mpl/list.hpp>
 #include "MPUtils.h"
-#include "CollisionDetection.h"
 #include "ValidityChecker.hpp"
 #include "Weight.h"
 #include "LocalPlannerMethod.h"

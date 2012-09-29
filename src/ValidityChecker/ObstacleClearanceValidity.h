@@ -10,10 +10,10 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod {
         size_t _clearanceRays = 20, bool _positional = true);
     ObstacleClearanceValidity(XMLNodeReader& _node, MPProblem* _problem);
 
-    ~ObstacleClearanceValidity() { }
+    virtual ~ObstacleClearanceValidity() { }
 
-    virtual bool IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
-        CDInfo& _cdInfo, bool _enablePenetration, string* _callName);
+    virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+        CDInfo& _cdInfo, string* _callName);
 
   private:
     string m_dmLabel;

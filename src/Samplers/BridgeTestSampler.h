@@ -61,13 +61,15 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
         _out << "\tdmLabel = " << m_dmLabel << endl; 
       }
 
+    virtual string GetValidityMethod() const { return m_vcLabel; }
+
     virtual bool 
      Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
          StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut,
          vector<CFG>& _cfgCol){ 
 
         string callee(this->GetName() + "::SampleImpl()");
-        ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+        ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
         CDInfo cdInfo;
         shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel); 
         CFG blankCfg;         
@@ -90,7 +92,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
             //If tmp is valid configuration extend rays in opposite directions
             //at length Gaussian d/2
             if ( tmp.InBoundary(_env,_bb) && 
-                vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, _stats, cdInfo, true, &callee)) {  
+                vc->GetMethod(m_vcLabel)->IsValid(tmp, _env, _stats, cdInfo, &callee)) {  
               CFG mid = tmp, incr, cfg1;
               incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
               cfg1.subtract(mid, incr); 
@@ -99,7 +101,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
 
               //If cfg1 is invalid (including Bbox) after adjustment, create cfg2 
               if ( !cfg1.InBoundary(_env,_bb) || 
-                  !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env, _stats, cdInfo, true, &callee)) {
+                  !vc->GetMethod(m_vcLabel)->IsValid(cfg1, _env, _stats, cdInfo, &callee)) {
                 CFG cfg2;
                 cfg2.add(mid, incr);
                 if(this->m_debug)
@@ -107,7 +109,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
 
                 //If cfg2 also invalid, node generation successful 
                 if(!cfg2.InBoundary(_env,_bb) || 
-                    !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
+                    !vc->GetMethod(m_vcLabel)->IsValid(cfg2, _env, _stats, cdInfo, &callee)) {
                   _stats.IncNodesGenerated(this->GetNameAndLabel());
                   generated = true;
                   if(this->m_debug) 
@@ -130,11 +132,10 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
               //If both cfg1 and cfg2 invalid, create mid and generate node
               //successfully if mid is valid 
               if ( !cfg2.InBoundary(_env,_bb) || 
-                  !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
+                  !vc->GetMethod(m_vcLabel)->IsValid(cfg2, _env, _stats, cdInfo, &callee)) {
                 CFG mid;
                 mid.WeightedSum(cfg1, cfg2, 0.5);
-                if ( mid.InBoundary(_env,_bb) && (vc->IsValid(vc->GetVCMethod(m_vcLabel), 
-                        mid, _env, _stats, cdInfo, true, &callee))) {
+                if ( mid.InBoundary(_env,_bb) && (vc->GetMethod(m_vcLabel)->IsValid(mid, _env, _stats, cdInfo, &callee))) {
                   _stats.IncNodesGenerated(this->GetNameAndLabel());
                   generated = true;
                   if(this->m_debug)         
@@ -150,7 +151,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
           else {
             //If tmp is valid configuration extend rays in opposite directions
             //at length Gaussian d/2
-            if ( vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env, _stats, cdInfo, true, &callee) ) { 
+            if ( vc->GetMethod(m_vcLabel)->IsValid(tmp, _env, _stats, cdInfo, &callee) ) { 
               CFG mid = tmp, incr, cfg1;
               incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
               cfg1.subtract(mid, incr);
@@ -158,7 +159,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
                 cout << "cfg1::" << cfg1 << endl;  
 
               //If invalid cfg1, create cfg2. Want both invalid. 
-              if( !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg1, _env, _stats, cdInfo, true, &callee) ) {
+              if( !vc->GetMethod(m_vcLabel)->IsValid(cfg1, _env, _stats, cdInfo, &callee) ) {
                 CFG cfg2;
                 cfg2.add(mid, incr);
                 if(this->m_debug)
@@ -166,7 +167,7 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
 
                 //If both cfg1 and cfg2 invalid; valid tmp is successfully generated
                 //midpoint node
-                if( !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
+                if( !vc->GetMethod(m_vcLabel)->IsValid(cfg2, _env, _stats, cdInfo, &callee)) {
                   _stats.IncNodesGenerated(this->GetNameAndLabel());
                   generated = true;
                   if(this->m_debug)
@@ -188,12 +189,12 @@ class BridgeTestSampler : public SamplerMethod<CFG> {
               } 
 
               //If both cfg1 and cfg2 invalid, get midpoint 
-              if ( !vc->IsValid(vc->GetVCMethod(m_vcLabel), cfg2, _env, _stats, cdInfo, true, &callee)) {
+              if ( !vc->GetMethod(m_vcLabel)->IsValid(cfg2, _env, _stats, cdInfo, &callee)) {
                 CFG mid;
                 mid.WeightedSum(cfg1, cfg2, 0.5);
 
                 //If valid midpoint, successful node is generated 
-                if( (vc->IsValid(vc->GetVCMethod(m_vcLabel), mid, _env, _stats, cdInfo, true, &callee)) ) {
+                if( (vc->GetMethod(m_vcLabel)->IsValid(mid, _env, _stats, cdInfo, &callee)) ) {
                   _stats.IncNodesGenerated(this->GetNameAndLabel());
                   generated = true;
                   if(this->m_debug)

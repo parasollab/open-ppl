@@ -25,7 +25,6 @@
 #include "Roadmap.h"
 
 #include "MetricUtils.h"
-#include "CollisionDetection.h"
 #include "Connector.h"
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"

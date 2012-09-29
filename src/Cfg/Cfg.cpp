@@ -20,10 +20,10 @@
 #include "MultiBody.h"
 #include "Environment.h"
 #include "DistanceMetrics.h"
-#include "CollisionDetection.h"
 #include "MetricUtils.h"
 #include "ValidityChecker.hpp"
 #include "MPProblem.h"
+#include "CDInfo.h"
 
 #define EQ(a,b)  (fabs(a-b)<0.0001)
 
@@ -586,5 +586,5 @@ double Cfg::GetSmoothingValue(MPProblem* _mp, Environment *_env,StatClass& _stat
     string _vc, CDInfo& _cdInfo, string _dm, int _n, bool _bl ){
   CfgType tmp;
   GetApproxCollisionInfo(_mp, *((CfgType*)this), tmp, _env, _stats, _cdInfo, _vc, _dm, _n, _n, true, true);
-  return _cdInfo.min_dist;
+  return _cdInfo.m_minDist;
 }

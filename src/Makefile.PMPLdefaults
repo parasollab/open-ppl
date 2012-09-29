@@ -248,6 +248,7 @@ PMPL_INCL = \
 	-I${PMPL_DIR}/Utilities \
 	-I${PMPL_DIR}/Metrics \
 	-I${PMPL_DIR}/ValidityChecker \
+	-I${PMPL_DIR}/ValidityChecker/CollisionDetection \
 	-I${PMPL_DIR}/NeighborhoodFinder \
 	-I${PMPL_DIR}/Partitioning \
 	-I${PMPL_DIR}/Partitioning/Features \
@@ -257,6 +258,24 @@ PMPL_INCL = \
 	-I${PMPL_DIR}/ParallelMethods/WorkFunctions
 
 PMPL_OBJS = \
+	ValidityChecker/ValidityCheckerMethod.o \
+	ValidityChecker/SurfaceValidity.o \
+	ValidityChecker/AlwaysTrueValidity.o \
+	ValidityChecker/NodeClearanceValidity.o \
+	ValidityChecker/MedialAxisClearanceValidity.o \
+	ValidityChecker/ObstacleClearanceValidity.o \
+	ValidityChecker/ComposeFunctor.o \
+	ValidityChecker/ComposeVC.o \
+	ValidityChecker/NegateValidity.o \
+	ValidityChecker/CollisionDetection/CDInfo.o \
+	ValidityChecker/CollisionDetection/CollisionDetectionMethod.o \
+	ValidityChecker/CollisionDetection/RapidCollisionDetection.o \
+	ValidityChecker/CollisionDetection/PQPCollisionDetection.o \
+	ValidityChecker/CollisionDetection/SolidCollisionDetection.o \
+	ValidityChecker/CollisionDetection/VClipCollisionDetection.o \
+	ValidityChecker/CollisionDetection/SpheresCollisionDetection.o \
+	ValidityChecker/CollisionDetectionValidity.o \
+	ValidityChecker/ValidityChecker.o \
 	MPProblem/Geometry/FreeBody.o \
 	MPProblem/Geometry/FixedBody.o \
 	MPProblem/Geometry/Connection.o \
@@ -300,10 +319,6 @@ PMPL_OBJS = \
 	DistanceMetric/RMSDDistance.o \
 	DistanceMetric/KnotTheoryDistance.o \
 	DistanceMetric/ReachableDistance.o \
-	ValidityChecker/CollisionDetection.o \
-	ValidityChecker/NodeClearanceValidity.o \
-        ValidityChecker/MedialAxisClearanceValidity.o \
-        ValidityChecker/ObstacleClearanceValidity.o \
 	Metrics/Metrics.o \
         Metrics/NumNodesMetric.o \
         Metrics/NumEdgesMetric.o \

@@ -573,7 +573,7 @@ void UAStrategy::WriteRegionsSeparate(){
       for(int i = 0; i <3; i++){
          bb.SetParameter(i, m_min[count][i], m_max[count][i]);
       }
-      MPProblem regionProblem(GetMPProblem()->GetEnvironment(), GetMPProblem()->GetDistanceMetric(), GetMPProblem()->GetCollisionDetection(), GetMPProblem()->GetValidityChecker(), GetMPProblem()->GetNeighborhoodFinder());
+      MPProblem regionProblem(GetMPProblem()->GetEnvironment(), GetMPProblem()->GetDistanceMetric(), GetMPProblem()->GetValidityChecker(), GetMPProblem()->GetNeighborhoodFinder());
       typedef vector<VID>::iterator VIT;
       for(VIT vit = vi.begin(); vit!=vi.end(); vit++){
          CfgType cfg = rg->find_vertex(*vit)->property();

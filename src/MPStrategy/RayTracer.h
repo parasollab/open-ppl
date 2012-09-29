@@ -15,7 +15,6 @@ enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTH
 //#include <string>
 
 #include "Environment.h"
-#include "CollisionDetection.h"
 #include "GraphAlgo.h"
 
 #include "RRTcomponents.h"

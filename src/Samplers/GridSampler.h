@@ -67,8 +67,9 @@ class GridSampler : public SamplerMethod<CFG> {
       _os << "\t\t" << it->first << ", " << it->second << endl;
   }
 
-  // Attempts to sample, returns true if successful
+  virtual string GetValidityMethod() const { return m_vcm; }
 
+ // Attempts to sample, returns true if successful
  virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
      CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
@@ -78,7 +79,7 @@ class GridSampler : public SamplerMethod<CFG> {
    // before enough unique points are generated
 
    string callee = this->GetNameAndLabel() + "::Sampler()";
-   ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+   ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
    CDInfo cdInfo;
 
    // Set tmp to _cfgIn or a random configuration
@@ -137,7 +138,7 @@ class GridSampler : public SamplerMethod<CFG> {
 
    // Is tmp a valid configuration?
    if(tmp.InBoundary(_env,_bb) && 
-       vc->IsValid(vc->GetVCMethod(m_vcm), tmp, _env, _stats, cdInfo, true, &callee)) {
+       vc->GetMethod(m_vcm)->IsValid(tmp, _env, _stats, cdInfo, &callee)) {
      // Yes (sampler successful)
      _cfgOut.push_back(tmp);
      

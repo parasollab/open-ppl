@@ -1,6 +1,7 @@
 #include "ObstacleClearanceValidity.h"
-#include "CollisionDetectionValidity.hpp"
-#include "DistanceMetrics.h"
+#include "Environment.h"
+#include "CDInfo.h"
+
 
 ObstacleClearanceValidity::ObstacleClearanceValidity(
     string _dmLabel, string _vcLabel, 
@@ -8,10 +9,13 @@ ObstacleClearanceValidity::ObstacleClearanceValidity(
     bool _cExact, size_t _clearanceRays, bool _positional) : 
   m_dmLabel(_dmLabel), m_vcLabel(_vcLabel), m_clearance(_clearance), 
   m_useBBX(_useBBX), m_cExact(_cExact), 
-  m_clearanceRays(_clearanceRays), m_positional(_positional) { }
+  m_clearanceRays(_clearanceRays), m_positional(_positional) { 
+    m_name = "ObstacleClearance";
+  }
 
 ObstacleClearanceValidity::ObstacleClearanceValidity(XMLNodeReader& _node, MPProblem* _problem) 
   : ValidityCheckerMethod(_node, _problem) {
+    m_name = "ObstacleClearance";
     m_dmLabel = _node.stringXMLParameter("dmMethod", true, "euclidean", "Distance Metric Method");
     m_vcLabel = _node.stringXMLParameter("vcMethod", true, "cd2", "Validity Checker Method");
     m_clearance = _node.numberXMLParameter("obstClearance", true, 0.05, 0.0, MAX_DBL, "Obstacle Validity Clearance");
@@ -24,12 +28,12 @@ ObstacleClearanceValidity::ObstacleClearanceValidity(XMLNodeReader& _node, MPPro
   }
 
 bool 
-ObstacleClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
-    CDInfo& _cdInfo, bool _enablePenetration, string* _callName) {
+ObstacleClearanceValidity::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+    CDInfo& _cdInfo, string* _callName) {
 
   shared_ptr<Boundary> bb = _env->GetBoundary();
   _cdInfo.ResetVars();
-  _cdInfo.ret_all_info = true;
+  _cdInfo.m_retAllInfo = true;
 
   CfgType cfg = _cfg;
   CfgType dummy;
@@ -42,10 +46,10 @@ ObstacleClearanceValidity::IsValid(Cfg& _cfg, Environment* _env, StatClass& _sta
     cout << "CFG::" << _cfg << endl;
     cout << "ClrCfg::" << dummy << endl;
     cout << "VALID::" << valid << endl;
-    cout << "Dist::" << _cdInfo.min_dist << endl;
+    cout << "Dist::" << _cdInfo.m_minDist << endl;
   }
 
-  if (!valid || _cdInfo.min_dist < m_clearance){
+  if (!valid || _cdInfo.m_minDist < m_clearance){
     _cfg.SetLabel("VALID", false);
     return false;
   }

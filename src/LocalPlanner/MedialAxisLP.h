@@ -197,8 +197,8 @@ MedialAxisLP<CFG,WEIGHT>::IsConnectedRec(Environment* _env, StatClass& _stats, s
 
   if ( _itr > m_maxItr ) return false;
 
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcm);
+  ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker::ValidityCheckerPointer vcm = vc->GetMethod(m_vcm);
   LocalPlannerPointer envLPMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_envLP);
   LPOutput<CFG, WEIGHT> maLPOutput, tmpLPOutput;
   int cdCounter=0, nTicks=0;
@@ -268,8 +268,8 @@ EpsilonClosePath( Environment *_env, StatClass& _stats, shared_ptr<DistanceMetri
     double _posRes, double _oriRes) {
 
   if (this->m_debug) cout << "MedialAxisLP::EpsilonClosePath()" << endl;
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_macVC);
+  ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
+  typename ValidityChecker::ValidityCheckerPointer vcm = vc->GetMethod(m_macVC);
   LocalPlannerPointer envLPMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_envLP);
 
   shared_ptr<MedialAxisClearanceValidity> macVCM = boost::dynamic_pointer_cast<MedialAxisClearanceValidity>(vcm);

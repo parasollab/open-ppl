@@ -1,6 +1,6 @@
 #include "OBRRTStrategy.h"
-#include "CollisionDetection.h"
 #include "DistanceMetrics.h"
+#include "CDInfo.h"
 
 void
 OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
@@ -326,17 +326,17 @@ CfgType OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, b
   }
 
   //cout << " expand succeeded...check out cdInfo. "<<endl;
-  //cout << "-- obst index: " << cdInfo.colliding_obst_index <<endl;
-  //cout << "-- rapid contact1: " << cdInfo.rapid_contact_id1 <<endl;
-  //cout << "-- rapid contact2: " << cdInfo.rapid_contact_id2 <<endl;
+  //cout << "-- obst index: " << cdInfo.m_collidingObstIndex <<endl;
+  //cout << "-- rapid contact1: " << cdInfo.m_rapidContactID1 <<endl;
+  //cout << "-- rapid contact2: " << cdInfo.m_rapidContactID2 <<endl;
 
   //VECTOR SCALE - THIS WILL BE HARD CODED BUT SHOULD PROBABLY BE MADE AN OPTION
   double vecScale = 10.0;
 
   //this kind of assumes cdInfo has values set which currently only RAPID does
   //correctly 
-  int cIndex = cdInfo.colliding_obst_index;
-  int obsContactIndex = cdInfo.rapid_contact_id2; 
+  int cIndex = cdInfo.m_collidingObstIndex;
+  int obsContactIndex = cdInfo.m_rapidContactID2; 
   int numBodies = env->GetMultiBodyCount();
 
   if( cIndex == -1 || obsContactIndex == -1 ) {

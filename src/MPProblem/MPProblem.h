@@ -8,15 +8,14 @@
 class MPStrategy;
 class DistanceMetric;
 class NeighborhoodFinder;
-class CollisionDetection;
-template<typename CFG> class ValidityChecker;
+class ValidityChecker;
 class Environment;
 template <typename CFG, typename WEIGHT> class Roadmap;
 
 class MPProblem : public MPBaseObject
 {
 public:
-MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, CollisionDetection* _m_pCollisionDetection, ValidityChecker<CfgType>* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder);
+MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, ValidityChecker* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder);
   MPProblem(XMLNodeReader& in_Node, bool parse_xml = true);
   virtual ~MPProblem() {}
   
@@ -39,10 +38,8 @@ public:
   inline void SetDistanceMetric(DistanceMetric* _dm){m_pDistanceMetric = _dm;};
   inline NeighborhoodFinder* GetNeighborhoodFinder() {return m_pNeighborhoodFinder;};
   inline void SetNeighborhoodFinder(NeighborhoodFinder* _nf) {m_pNeighborhoodFinder = _nf;};
-  inline CollisionDetection* GetCollisionDetection() {return m_pCollisionDetection;};
-  inline void SetCollisionDetection(CollisionDetection* _cd) {m_pCollisionDetection = _cd;};
-  inline ValidityChecker<CfgType>* GetValidityChecker() {return m_pValidityChecker;};
-  inline void SetValidityChecker(ValidityChecker<CfgType>* _vc) {m_pValidityChecker = _vc;};
+  inline ValidityChecker* GetValidityChecker() {return m_pValidityChecker;};
+  inline void SetValidityChecker(ValidityChecker* _vc) {m_pValidityChecker = _vc;};
   inline Environment* GetEnvironment() {return m_pEnvironment;};
   inline void SetEnvironment(Environment* _e) {m_pEnvironment = _e;};
   inline Roadmap<CfgType,WeightType>* GetRoadmap() { return m_roadmap; }
@@ -69,8 +66,7 @@ public:
   MPStrategy* m_pMPStrategy;
   Environment* m_pEnvironment;
   DistanceMetric*     m_pDistanceMetric;
-  CollisionDetection* m_pCollisionDetection;
-  ValidityChecker<CfgType>* m_pValidityChecker;
+  ValidityChecker* m_pValidityChecker;
   NeighborhoodFinder* m_pNeighborhoodFinder;
   Roadmap<CfgType,WeightType>* m_roadmap, * m_blockRoadmap, * m_colRoadmap;
   StatClass* m_stats;

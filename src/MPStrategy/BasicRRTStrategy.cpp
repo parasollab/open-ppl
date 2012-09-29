@@ -70,7 +70,7 @@ BasicRRTStrategy::Initialize(){
   // Setup MP variables
   StatClass* stats = GetMPProblem()->GetStatClass();
   Environment* env = GetMPProblem()->GetRoadmap()->GetEnvironment();
-  ValidityChecker<CfgType>* vc = GetMPProblem()->GetValidityChecker();
+  ValidityChecker* vc = GetMPProblem()->GetValidityChecker();
   CDInfo cdInfo;
   string callee = "BasicRRTStrategy::RRT";
   // Setup RRT Variables
@@ -91,7 +91,7 @@ BasicRRTStrategy::Initialize(){
     for (int i=0; i<m_numRoots; ++i) {
       tmp.GetRandomCfg(env);
       if (tmp.InBoundary(env)
-          && vc->IsValid(vc->GetVCMethod(m_vc), tmp, env, *stats, cdInfo, true, &callee)){
+          && vc->GetMethod(m_vc)->IsValid(tmp, env, *stats, cdInfo, &callee)){
         m_roots.push_back(tmp);
         m_goals.push_back(tmp);
         m_goalsNotFound.push_back(m_goals.size()-1);

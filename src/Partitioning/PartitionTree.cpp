@@ -161,7 +161,7 @@ inline void IntToStr(int myInt, string &myString) {
 void PartitionTree::WritePartitions(MPProblem* pMPProblem, string base, vector<vector<double> >&
 min, vector<vector<double> >& max){
    string baseFileName = base;
-   MPProblem eachRgn(pMPProblem->GetEnvironment(), pMPProblem->GetDistanceMetric(), pMPProblem->GetCollisionDetection(), pMPProblem->GetValidityChecker(), pMPProblem->GetNeighborhoodFinder());
+   MPProblem eachRgn(pMPProblem->GetEnvironment(), pMPProblem->GetDistanceMetric(), pMPProblem->GetValidityChecker(), pMPProblem->GetNeighborhoodFinder());
    RoadmapGraph<CfgType,WeightType>* rg = pMPProblem->GetRoadmap()->m_pRoadmap;
    vector<PartitionNode*> pnodes = m_Root->GetChildren();
    vector<VID> allVIDS;

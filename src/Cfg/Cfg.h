@@ -33,7 +33,6 @@ using boost::shared_ptr;
 class Cfg;
 class StatClass;
 class Environment;
-class CollisionDetection;
 class DistanceMetricMethod;
 class CDInfo;
 class MultiBody;

@@ -1,25 +1,33 @@
-#ifndef _VALIDITY_CHECKER_METHOD_HPP_
-#define _VALIDITY_CHECKER_METHOD_HPP_
+#ifndef VALIDITYCHECKERMETHOD_H
+#define VALIDITYCHECKERMETHOD_H
 
 #include <string>
 #include "MPUtils.h"
-#include "CfgTypes.h"
 
 
 class ValidityCheckerMethod : public MPBaseObject {
-
-public:
-
-  ValidityCheckerMethod() { }
-  ValidityCheckerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem) { }
-  virtual ~ValidityCheckerMethod() { }
+ public:
+  ValidityCheckerMethod();
+  ValidityCheckerMethod(XMLNodeReader& _node, MPProblem* _problem);
+  virtual ~ValidityCheckerMethod();
   
-  virtual bool IsValid(Cfg& _cfg, Environment* env, StatClass& Stats, 
-		       CDInfo& _cdInfo, bool enablePenetration, std::string *pCallName) = 0; 
-  virtual bool isInsideObstacle(const Cfg& cfg, Environment* env, CDInfo& _cdInfo) {
-    cerr << "error: isInsideObstacle() not defined." << endl;
-		exit(-1);
-  };
-	
+  bool IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+	       CDInfo& _cdInfo, std::string *_callName) {
+    if(m_validity)
+      return IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
+    else
+      return !IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
+  }
+ protected:
+  virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+                           CDInfo& _cdInfo, std::string *_callName) = 0; 
+
+ public:
+  virtual bool isInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo);
+
+  bool GetValidity() const { return m_validity; }
+  void ToggleValidity() { m_validity = !m_validity; }
+ 
+  bool m_validity;
 };
-#endif // End #ifndef _VALIDITY_CHECKER_METHOD_HPP_
+#endif // End #ifndef VALIDITYCHECKERMETHOD_H

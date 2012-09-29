@@ -2,11 +2,11 @@
 #define UNIFORMRANDOMSAMPLER_H_
 
 #include "SamplerMethod.h"
+#include "ValidityChecker.hpp"
 
 class Environment;
 class StatClass;
 class CDInfo;
-template <typename CFG> class ValidityChecker;
 
 template <typename CFG>
 class UniformRandomSampler : public SamplerMethod<CFG> {
@@ -46,6 +46,8 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
         _out << "\tvcLabel = " << m_vcLabel << endl;
       }
 
+    virtual string GetValidityMethod() const { return m_vcLabel; }
+
   protected:
     virtual bool 
       Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
@@ -53,7 +55,7 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
           vector<CFG>& _cfgCol) { 
 
         string callee(this->GetName() + "::SampleImpl()");
-        ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
+        ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
         CDInfo cdInfo;
 
         if(this->m_debug) 
@@ -74,8 +76,7 @@ class UniformRandomSampler : public SamplerMethod<CFG> {
 
         //Good. Now determine validity. 
         if(inBBX) { 
-          bool isValid = vc->IsValid(vc->GetVCMethod(m_vcLabel), tmp, _env,   
-              _stats, cdInfo, true, &callee);                      
+          bool isValid = vc->GetMethod(m_vcLabel)->IsValid(tmp, _env, _stats, cdInfo, &callee);                      
           if(this->m_debug){ 
             cout << "IsValid::" << isValid << endl;
             VDAddTempCfg(tmp, isValid); 

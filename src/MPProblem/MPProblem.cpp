@@ -3,7 +3,6 @@
 #include "DistanceMetrics.h"
 #include "ValidityChecker.hpp"
 
-
 MPProblem::
 MPProblem(XMLNodeReader& in_Node, bool parse_xml) : MPBaseObject(in_Node, this) {
   if(parse_xml)
@@ -11,7 +10,7 @@ MPProblem(XMLNodeReader& in_Node, bool parse_xml) : MPBaseObject(in_Node, this) 
 }
 
 MPProblem::
-MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, CollisionDetection* _m_pCollisionDetection, ValidityChecker<CfgType>* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder) : m_pEnvironment(_m_pEnvironment), m_pDistanceMetric(_m_pDistanceMetric), m_pCollisionDetection(_m_pCollisionDetection), m_pValidityChecker(_m_pValidityChecker), m_pNeighborhoodFinder(_m_pNeighborhoodFinder) {
+MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, ValidityChecker* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder) : m_pEnvironment(_m_pEnvironment), m_pDistanceMetric(_m_pDistanceMetric), m_pValidityChecker(_m_pValidityChecker), m_pNeighborhoodFinder(_m_pNeighborhoodFinder) {
   m_roadmap = new Roadmap<CfgType, WeightType>();
   m_roadmap->SetEnvironment(m_pEnvironment);
   m_blockRoadmap = new Roadmap<CfgType, WeightType>();
@@ -32,12 +31,8 @@ ParseChild(XMLNodeReader::childiterator citr)
   } else  if(citr->getName() == "distance_metrics") {
     m_pDistanceMetric = new DistanceMetric(*citr, this);
     return true;
-  } else  if(citr->getName() == "collision_detection") {
-    m_pCollisionDetection = new CollisionDetection(*citr, this);
-    return true;
   } else  if(citr->getName() == "validity_test") {
-    m_pCollisionDetection = new CollisionDetection(*citr, this);
-    m_pValidityChecker = new ValidityChecker<CfgType>(*citr, this);
+    m_pValidityChecker = new ValidityChecker(*citr, this);
     return true;
   } else  if(citr->getName() == "NeighborhoodFinder") {
     m_pNeighborhoodFinder = new NeighborhoodFinder(*citr,this);
@@ -56,7 +51,7 @@ ParseXML(XMLNodeReader& in_Node) {
       citr->warnUnknownNode();
   }
 
-  vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();
+  vector<cd_predefined> cdtypes = m_pValidityChecker->GetSelectedCDTypes();
   for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
     m_pEnvironment->buildCDstructure(*C);
 
@@ -77,7 +72,7 @@ PrintOptions(ostream& out_os)
   out_os << "MPProblem" << endl;
   m_pMPStrategy->PrintOptions(out_os);
   m_pDistanceMetric->PrintOptions(out_os);
-  m_pCollisionDetection->PrintOptions(out_os);
+  m_pValidityChecker->PrintOptions(out_os);
   m_pEnvironment->PrintOptions(out_os);
 }
 
@@ -152,7 +147,6 @@ MPProblem::SetMPProblem(){
   m_pEnvironment->SetMPProblem(this);
   m_pEnvironment->GetBoundary()->SetMPProblem(this);
   m_pDistanceMetric->SetMPProblem(this);
-  m_pCollisionDetection->SetMPProblem(this);
   m_pValidityChecker->SetMPProblem(this);
   m_pNeighborhoodFinder->SetMPProblem(this);
 }

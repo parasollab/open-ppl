@@ -208,8 +208,7 @@ ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
   }
 
   string Callee(this->GetNameAndLabel()+"::IsConnectedToggle");
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vc);
+  typename ValidityChecker::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vc);
   typename LocalPlanners<CFG, WEIGHT>::LocalPlannerPointer lpMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
 
   if(lpMethod->IsConnected(_env, _stats, _dm, _c1, _c2, _col, _lpOutput, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath)){
@@ -227,7 +226,7 @@ ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
   if(n == CFG())
     return false;
 
-  bool isValid = vc->IsValid(vcm, n, _env, _stats, cdInfo, true, &Callee);
+  bool isValid = vcm->IsValid(n, _env, _stats, cdInfo, &Callee);
   _cdCounter++;
 
   if(this->m_debug){
@@ -358,16 +357,15 @@ ToggleLP<CFG, WEIGHT>::ToggleConnect(Environment* _env, StatClass& _stats, share
   if(this->m_debug) cout<<"ToggleConnect::"<<_toggle<<"\n\ts::"<<_s<<"\n\tg::"<<_g<<"\n\tn1::"<<_n1<<"\n\tn2::"<<_n2<<endl;
 
   //set up variables for VC and LP
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
   typename LocalPlanners<CFG, WEIGHT>::LocalPlannerPointer lpMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
 
   if(this->m_debug) VDAddTempEdge(_s, _g);
 
   //check connection between source and goal
   CFG c; // collision CFG
-  if(!_toggle) vc->ToggleValidity();
+  if(!_toggle) this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vc)->ToggleValidity();
   bool connect = lpMethod->IsConnected(_env, _stats, _dm, _s, _g, c, _lpOutput, _positionRes, _orientationRes, true, false, false);
-  if(!_toggle) vc->ToggleValidity();
+  if(!_toggle) this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vc)->ToggleValidity();
 
   if(this->m_debug) cout<<"connect::"<<connect<<"\n\tc::"<<c<<endl;
 

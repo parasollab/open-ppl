@@ -75,7 +75,7 @@ double GetValue(CfgType C, MPProblem* mp, Environment* env, StatClass& Stats,
 void findNeighbour(string type_name, Roadmap<CfgType,WeightType>* rdmp, MPProblem* mp,
                    Environment *env, LocalPlanners<CfgType,WeightType>* lp, 
                    shared_ptr <DistanceMetricMethod> dm, StatClass& Stats, 
-                   CollisionDetection* cd, CDInfo& cdInfo, string m_vc, string m_dm, string m_lp,
+                   CDInfo& cdInfo, string m_vc, string m_dm, string m_lp,
                    int x, int bl, CfgType previous, CfgType c, CfgType next, double step_size,
                    double user_value, int max_attempt, int numOfSamples, vector< pair<CfgType,double> > &result) {
 
@@ -207,7 +207,7 @@ Run()
          CfgType next=*nxt;
          findNeighbour(type_name, rdmp,GetMPProblem(),rdmp->GetEnvironment(), lp,
                        GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm),*pStatClass,
-                       GetMPProblem()->GetCollisionDetection(), cdInfo, m_vc, m_dm, m_lp,
+                       cdInfo, m_vc, m_dm, m_lp,
                        5000, false, previous, current, next, step_size, user_value,
                        max_attempts, m_num_resamples, sampledNeighbors); 
         

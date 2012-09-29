@@ -392,8 +392,8 @@ BasicPRM::GenerateNodes(OutputIterator _allOut, OutputIterator _thisIterationOut
     }
     else{ 
       if(!cit->IsLabel("VALID")){
-        !(GetMPProblem()->GetValidityChecker()->IsValid(GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vcMethod),
-              *cit, GetMPProblem()->GetEnvironment(), *(GetMPProblem()->GetStatClass()), cdInfo, true, &callee));
+        !(GetMPProblem()->GetValidityChecker()->GetMethod(m_vcMethod)->IsValid(
+              *cit, GetMPProblem()->GetEnvironment(), *(GetMPProblem()->GetStatClass()), cdInfo, &callee));
       }
       if(cit->IsLabel("VALID") && cit->GetLabel("VALID")) {
         if(!GetMPProblem()->GetRoadmap()->m_pRoadmap->IsVertex(*cit)) {

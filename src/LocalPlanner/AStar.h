@@ -14,6 +14,7 @@
 
 #include "LocalPlannerMethod.h"
 #include "MPUtils.h"
+#include "CDInfo.h"
 
 template <class CFG, class WEIGHT>
 class AStar: public LocalPlannerMethod<CFG, WEIGHT> {
@@ -221,8 +222,7 @@ AStar<CFG, WEIGHT>::FindNeighbors(Environment* _env, StatClass& _stats, const CF
   vector<double> posOnly, oriOnly;
   string callee = this->GetNameAndLabel()+"::FindNeighbors";
   CDInfo cdInfo;
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
+  typename ValidityChecker::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vcMethod);
   
   //Push 2 cfgs into neighbors whose position or orientation is the same 
   //as _increment
@@ -275,7 +275,7 @@ AStar<CFG, WEIGHT>::FindNeighbors(Environment* _env, StatClass& _stats, const CF
     tmp.IncrementTowardsGoal(_goal, neighbors[i]);
     if(_current==tmp) continue;
     cdCounter++;
-    if(vc->IsValid(vcm, tmp, _env, _stats, cdInfo, true, &callee) ) {
+    if(vcm->IsValid(tmp, _env, _stats, cdInfo, &callee) ) {
       ret.push_back(tmp);
     }
     if(ret.size() >= m_numNeighbors)
@@ -389,7 +389,7 @@ AStarClearance<CFG, WEIGHT>::ChooseOptimalNeighbor(Environment* _env, StatClass&
     GetApproxCollisionInfo(mp,_neighbors[i],tmp,_env,_stats,tmpInfo,this->m_vcMethod,
         _dm->GetLabel(), m_penetration, m_penetration, true, true);
 
-    value = tmpInfo.min_dist;
+    value = tmpInfo.m_minDist;
     if (value > maxClearance) {
       retPosition = i;
       maxClearance = value;

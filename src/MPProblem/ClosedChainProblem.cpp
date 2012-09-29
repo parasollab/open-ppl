@@ -2,14 +2,14 @@
 #define ClosedChainProblem_cpp
 
 #include "ClosedChainProblem.h"
-#include "CollisionDetection.h"
+#include "ValidityChecker.hpp"
 
 ClosedChainProblem::
 ClosedChainProblem(XMLNodeReader& in_Node) : MPProblem(in_Node, false)
 {
   ParseXML(in_Node);
 
-  vector<cd_predefined> cdtypes = m_pCollisionDetection->GetSelectedCDTypes();
+  vector<cd_predefined> cdtypes = m_pValidityChecker->GetSelectedCDTypes();
   for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
     m_pEnvironment->buildCDstructure(*C);
 }

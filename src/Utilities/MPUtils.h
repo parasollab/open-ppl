@@ -76,12 +76,14 @@ enum cd_predefined {
 #endif
   /// Proximity Query Package
 #ifdef USE_PQP
-  PQP,
+  PROXIMITYQUERYPACKAGE,
 #endif
   /// SOLID
 #ifdef USE_SOLID
   SOLID,
 #endif
+  INSIDE_SPHERES,
+  BOUNDING_SPHERES,
   CD_USER1
 };    
 

@@ -237,7 +237,7 @@ void Body::buildCDstructure(cd_predefined cdtype) {
     } else
 #endif
 #ifdef USE_PQP
-      if (cdtype == PQP){
+      if (cdtype == PROXIMITYQUERYPACKAGE){
 	GMSPolyhedron poly = GetPolyhedron();
 
 	pqpBody = shared_ptr<PQP_Model>(new PQP_Model);
@@ -322,7 +322,7 @@ void Body::buildCDstructure(cd_predefined cdtype) {
 	cout <<"\n\nbut RAPID = " << RAPID;
 #endif
 #ifdef USE_PQP
-	cout <<"\n\nbut RAPID = " << PQP;
+	cout <<"\n\nbut PQP = " << PROXIMITYQUERYPACKAGE;
 #endif
 #ifdef USE_SOLID
 	cout <<"\n\nbut SOLID = " << SOLID;
@@ -474,7 +474,7 @@ void Body::FindBoundingBox(){
 
 
 #ifdef USE_VCLIP
-shared_ptr<PolyTree> Body::GetVclipBody(){
+shared_ptr<PolyTree> Body::GetVClipBody(){
     return vclipBody;
 }
 #endif
@@ -487,7 +487,7 @@ shared_ptr<RAPID_model> Body::GetRapidBody() {
 #endif
 
 #ifdef USE_PQP
-shared_ptr<PQP_Model> Body::GetPqpBody() {
+shared_ptr<PQP_Model> Body::GetPQPBody() {
     return pqpBody;
 }
 #endif

@@ -7,7 +7,6 @@
 #include "Roadmap.h"
 
 #include "MetricUtils.h"
-#include "CollisionDetection.h"
 #include "Connector.h"
 #include "LocalPlanners.h"
 #include "Sampler.h"
@@ -165,7 +164,6 @@ virtual void Run(int _inRegionID) {
   SRand(getSeed()); 
   m_region = GetMPProblem()->GetMPRegion(_inRegionID);
   pStatClass = m_region->GetStatClass();
-  CollisionDetection*  pCd = GetMPProblem()->GetCollisionDetection();
   Environment* pEnv = GetMPProblem()->GetEnvironment();
   LocalPlanners<CfgType, WeightType>* pLp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
 		

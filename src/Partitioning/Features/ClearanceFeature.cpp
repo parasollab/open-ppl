@@ -4,6 +4,7 @@
 #include "CfgTypes.h"
 #include "ValidityChecker.hpp"
 #include "MPUtils.h"
+#include "CDInfo.h"
 
 ClearanceFeature::ClearanceFeature():MPFeature(){}
 
@@ -24,16 +25,16 @@ vector<double> ClearanceFeature::Collect(vector<VID>& vids) {
   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap()->m_pRoadmap;
   StatClass* pStatClass = GetMPProblem()->GetStatClass();
   Environment *env = GetMPProblem()->GetEnvironment();
-  ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
+  ValidityChecker::ValidityCheckerPointer vc=GetMPProblem()->GetValidityChecker()->GetMethod(m_vc);
 
   typedef vector<VID>::iterator VIT;
   for(VIT vit = vids.begin(); vit!=vids.end(); vit++){
     CDInfo _cdInfo;
-    _cdInfo.ret_all_info=true;
+    _cdInfo.m_retAllInfo=true;
     CfgType cfg=rdmp->find_vertex(*vit)->property();
     string callee = "ClearanceFeature::Collect";
-    vc->IsValid(cfg, env, *pStatClass, _cdInfo, true, &callee);
-    clearance.push_back(_cdInfo.min_dist);
+    vc->IsValid(cfg, env, *pStatClass, _cdInfo, &callee);
+    clearance.push_back(_cdInfo.m_minDist);
   }
 
   return clearance;
@@ -60,15 +61,15 @@ vector<double> CSpaceClearanceFeature::Collect(vector<VID>& vids) {
   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap()->m_pRoadmap;
   StatClass* pStatClass = GetMPProblem()->GetStatClass();
   Environment *env = GetMPProblem()->GetEnvironment();
-  ValidityChecker<CfgType>::VCMethodPtr vc=GetMPProblem()->GetValidityChecker()->GetVCMethod(m_vc);
+  ValidityChecker::ValidityCheckerPointer vc=GetMPProblem()->GetValidityChecker()->GetMethod(m_vc);
   typedef vector<VID>::iterator VIT;
 
   for(VIT vit = vids.begin(); vit!=vids.end(); vit++){
     CDInfo _cdInfo;
-    _cdInfo.ret_all_info=true;
+    _cdInfo.m_retAllInfo=true;
     CfgType cfg=rdmp->find_vertex(*vit)->property(), tmp;
 		GetApproxCollisionInfo(GetMPProblem(),cfg,tmp,env,*pStatClass,_cdInfo,m_vc,m_dm,20,20,true,true);
-		clearance.push_back(_cdInfo.min_dist);
+		clearance.push_back(_cdInfo.m_minDist);
   }
   return clearance;
 }

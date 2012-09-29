@@ -1,5 +1,4 @@
 #include "LPSweptDistance.h"
-#include "CollisionDetection.h"
 #include "LocalPlanners.h"
 #include "MPStrategy.h"
 

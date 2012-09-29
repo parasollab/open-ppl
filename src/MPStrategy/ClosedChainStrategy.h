@@ -4,8 +4,7 @@
 #include "MPStrategy/MPStrategy.h"
 #include "MPProblem/ClosedChainProblem.h"
 #include "MetricUtils.h"
-#include "CollisionDetection.h"
-
+#include "CDInfo.h"
 
 class ClosedChainStrategy : public MPStrategy
 {

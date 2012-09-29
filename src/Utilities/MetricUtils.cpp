@@ -390,11 +390,11 @@ MinEdgeClearance(MPProblem* _mp, bool _exact, Environment* _env, const CfgType& 
     double currentClearance;
     if(_exact){
       GetExactCollisionInfo(_mp, *it, _env, _env->GetBoundary(), dummyStats, collInfo, _vc, _useBBX);
-      currentClearance = collInfo.min_dist;
+      currentClearance = collInfo.m_minDist;
     }
     else{
       GetApproxCollisionInfo(_mp, *it, clrCfg, _env, dummyStats, collInfo, _vc, _dm, _clearance, _penetration, _useBBX, _positional);
-      currentClearance = collInfo.min_dist;
+      currentClearance = collInfo.m_minDist;
     }
     //If newly computed clearance is less than the previous minimum, it becomes the minimum
     if(currentClearance < minClearance){

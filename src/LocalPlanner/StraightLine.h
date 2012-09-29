@@ -185,8 +185,7 @@ IsConnectedFunc(Environment* _env, StatClass& _stats,
     bool _savePath, bool _saveFailedPath,
     typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy) {
 
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
+  typename ValidityChecker::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vcMethod);
   string callee = this->GetName() + "::IsConnectedSLSequential";
   CDInfo cdInfo;
 
@@ -200,7 +199,7 @@ IsConnectedFunc(Environment* _env, StatClass& _stats,
     if(_checkCollision){
       cdCounter++;
       if(!intermediate.InBoundary(_env) || 
-          !vc->IsValid(vcm, intermediate, _env, _stats, cdInfo, true, &callee)
+          !vcm->IsValid(intermediate, _env, _stats, cdInfo, &callee)
         ) {
         if(intermediate.InBoundary(_env))
           _col = intermediate;
@@ -271,8 +270,7 @@ IsConnectedSLSequential(Environment* _env, StatClass& _stats,
     double _positionRes, double _orientationRes,
     bool _checkCollision, 
     bool _savePath, bool _saveFailedPath) {
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
+  typename ValidityChecker::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vcMethod);
   int nTicks;
   CFG tick;
   tick = _c1; 
@@ -292,7 +290,7 @@ IsConnectedSLSequential(Environment* _env, StatClass& _stats,
     _cdCounter++;
     if(_checkCollision){
       if(!tick.InBoundary(_env) || 
-          !vc->IsValid(vcm, tick, _env, _stats, cdInfo, true, &callee)
+          !vcm->IsValid(tick, _env, _stats, cdInfo, &callee)
         ) {
         if(tick.InBoundary(_env))   
           _col = tick;
@@ -332,8 +330,7 @@ IsConnectedSLBinary(Environment* _env, StatClass& _stats,
     double _positionRes, double _orientationRes,  
     bool _checkCollision, 
     bool _savePath, bool _saveFailedPath) {
-  ValidityChecker<CFG>* vc = this->GetMPProblem()->GetValidityChecker();
-  typename ValidityChecker<CFG>::VCMethodPtr vcm = vc->GetVCMethod(m_vcMethod);
+  typename ValidityChecker::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vcMethod);
 
   if(!_checkCollision)
     return IsConnectedSLSequential(_env, _stats, _dm, _c1, _c2,
@@ -378,7 +375,7 @@ IsConnectedSLBinary(Environment* _env, StatClass& _stats,
 
     _cdCounter++;
     if(!midCfg.InBoundary(_env) ||
-        !vc->IsValid(vcm, midCfg, _env, _stats, cdInfo, true, &callee) ) {
+        !vcm->IsValid(midCfg, _env, _stats, cdInfo, &callee) ) {
       if(midCfg.InBoundary(_env))
         _col=midCfg;
       return false;

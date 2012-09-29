@@ -153,7 +153,7 @@ LazyToggleQuery<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, W
         if(this->m_debug)
           cout << "*T* Adding a blocked node to roadmap: " << node << ", VID = " << newVID[0] << endl;
         size_t size = q.size();
-        this->GetMPProblem()->GetValidityChecker()->ToggleValidity();
+        this->GetMPProblem()->GetValidityChecker()->GetMethod(this->m_vcLabel)->ToggleValidity();
         if(m_iterative)
           this->GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(m_toggleConnect)->Connect(bRdmp, _stats,
               cmap, newVID.begin(), newVID.end(), blockVIDs.begin(), blockVIDs.end(), front_inserter(q));
@@ -163,7 +163,7 @@ LazyToggleQuery<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, W
         if(this->m_debug)
           for(size_t i = 0; i < q.size()-size; i++)
             cout << "*T* Pushing free node into queue: " << q[i] << endl;
-        this->GetMPProblem()->GetValidityChecker()->ToggleValidity();
+        this->GetMPProblem()->GetValidityChecker()->GetMethod(this->m_vcLabel)->ToggleValidity();
         blockVIDs.push_back(newVID[0]);
       }
     }
