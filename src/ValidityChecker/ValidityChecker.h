@@ -8,9 +8,9 @@
 #include "NodeClearanceValidity.h"
 #include "MedialAxisClearanceValidity.h"
 #include "ObstacleClearanceValidity.h"
-#include "ComposeVC.hpp"
-#include "NegateValidity.hpp"
-#include "CollisionDetectionValidity.hpp"
+#include "ComposeVC.h"
+#include "NegateValidity.h"
+#include "CollisionDetectionValidity.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

@@ -6,7 +6,7 @@
 #include "Roadmap.h"
 #include "RoadmapGraph.h"
 #include "MetricUtils.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 
 BasicPRM::BasicPRM(XMLNodeReader& _node, MPProblem* _problem) :
   MPStrategyMethod(_node, _problem), m_currentIteration(0), 

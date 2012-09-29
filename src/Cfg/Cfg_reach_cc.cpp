@@ -8,7 +8,7 @@
 #include "boost/random.hpp"
 #include "DistanceMetricMethod.h"
 #include "MPProblem.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 
 Link* Cfg_reach_cc::link_tree = NULL;
 vector<Link*> Cfg_reach_cc::actual_links;

@@ -1,7 +1,7 @@
 #ifndef MEDIALAXISCLEARANCEVALIDITY_H_
 #define MEDIALAXISCLEARANCEVALIDITY_H_
 
-#include "ValidityCheckerMethod.hpp"
+#include "ValidityCheckerMethod.h"
 
 class MedialAxisClearanceValidity : public ValidityCheckerMethod {
   public:

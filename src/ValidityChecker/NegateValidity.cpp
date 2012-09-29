@@ -1,6 +1,6 @@
-#include "NegateValidity.hpp"
+#include "NegateValidity.h"
 #include "MPProblem.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 
 NegateValidity::
 NegateValidity() : ValidityCheckerMethod() {

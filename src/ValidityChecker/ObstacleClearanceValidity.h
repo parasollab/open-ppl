@@ -1,7 +1,7 @@
 #ifndef OBSTACLECLEARANCEVALIDITY_H_
 #define OBSTACLECLEARANCEVALIDITY_H_
 
-#include "ValidityCheckerMethod.hpp"
+#include "ValidityCheckerMethod.h"
 
 class ObstacleClearanceValidity : public ValidityCheckerMethod {
   public:

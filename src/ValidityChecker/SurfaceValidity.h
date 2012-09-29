@@ -1,7 +1,7 @@
 #ifndef SURFACEVALIDITY_H_
 #define SURFACEVALIDITY_H_
 
-#include "ValidityCheckerMethod.hpp"
+#include "ValidityCheckerMethod.h"
 
 
 class SurfaceValidity : public ValidityCheckerMethod {

@@ -1,4 +1,4 @@
-#include "CollisionDetectionValidity.hpp"
+#include "CollisionDetectionValidity.h"
 #include "MPProblem.h"
 #include "Metrics.h"
 #include "RapidCollisionDetection.h"

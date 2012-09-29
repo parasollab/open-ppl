@@ -2,7 +2,7 @@
 #define ClosedChainProblem_cpp
 
 #include "ClosedChainProblem.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 
 ClosedChainProblem::
 ClosedChainProblem(XMLNodeReader& in_Node) : MPProblem(in_Node, false)

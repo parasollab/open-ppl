@@ -21,7 +21,7 @@
 #include "Environment.h"
 #include "DistanceMetrics.h"
 #include "MetricUtils.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 #include "MPProblem.h"
 #include "CDInfo.h"
 

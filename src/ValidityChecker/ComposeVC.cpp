@@ -1,6 +1,6 @@
-#include "ComposeVC.hpp"
+#include "ComposeVC.h"
 #include "MPProblem.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 
 ComposeValidity::
 ComposeValidity() : ValidityCheckerMethod() {

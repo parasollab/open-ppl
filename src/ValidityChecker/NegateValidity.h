@@ -1,7 +1,7 @@
 #ifndef NEGATEVALIDITY_H
 #define NEGATEVALIDITY_H
 
-#include "ValidityCheckerMethod.hpp"
+#include "ValidityCheckerMethod.h"
 #include "ComposeFunctor.h"
 
 class NegateValidity : public ValidityCheckerMethod {

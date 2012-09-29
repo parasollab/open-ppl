@@ -1,7 +1,7 @@
 #ifndef COLLISIONDETECTIONVALIDITY_H_
 #define COLLISIONDETECTIONVALIDITY_H_
 
-#include "ValidityCheckerMethod.hpp"
+#include "ValidityCheckerMethod.h"
 #include "CollisionDetectionMethod.h"
 
 class CollisionDetectionValidity : public ValidityCheckerMethod 

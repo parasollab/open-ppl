@@ -2,7 +2,7 @@
 #define UNIFORMRANDOMSAMPLER_H_
 
 #include "SamplerMethod.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 
 class Environment;
 class StatClass;

@@ -1,5 +1,5 @@
 //////////////////////////////////////////////
-//ComposeVC.hpp
+//ComposeVC.h
 //
 //This class composes one or more validity 
 //checker methods.
@@ -8,7 +8,7 @@
 #ifndef COMPOSEVC_H
 #define COMPOSEVC_H
 
-#include "ValidityCheckerMethod.hpp"
+#include "ValidityCheckerMethod.h"
 #include "ComposeFunctor.h"
 
 class ComposeValidity : public ValidityCheckerMethod {  

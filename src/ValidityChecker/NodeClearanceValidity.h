@@ -1,7 +1,7 @@
 #ifndef NODECLEARANCEVALIDITY_H
 #define NODECLEARANCEVALIDITY_H
 
-#include "ValidityCheckerMethod.hpp" 
+#include "ValidityCheckerMethod.h" 
 
 class NodeClearanceValidity : public ValidityCheckerMethod {
   public:

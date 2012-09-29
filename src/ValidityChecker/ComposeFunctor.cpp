@@ -1,5 +1,5 @@
 #include "ComposeFunctor.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 
 ComposeFunctor::
 ComposeFunctor(Cfg& _cfg, Environment* _env, StatClass& _stats, 

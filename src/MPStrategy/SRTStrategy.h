@@ -15,7 +15,7 @@
 #include "MetricUtils.h"
 //#include "Clock_Class.h"
 //#include "Stat_Class.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 #include "Connector.h"
 #include "LocalPlanners.h"
 #include "MPStrategy/MPStrategyMethod.h"

@@ -7,7 +7,7 @@
 
 #include "Query.h"
 #include "StraightLine.h"
-#include "ValidityCheckerMethod.hpp"
+#include "ValidityCheckerMethod.h"
 #include <functional>
 #include <algorithm>
 

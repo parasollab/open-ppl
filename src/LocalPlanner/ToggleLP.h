@@ -1,7 +1,7 @@
 #ifndef Toggle_h
 #define Toggle_h
 
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 #include "LocalPlannerMethod.h"
 #include "LocalPlanners.h"
 #include "MPStrategy.h"

@@ -10,7 +10,7 @@
 
 #include <deque>
 #include "LocalPlannerMethod.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 #include "Cfg_reach_cc.h"
 
 template <class CFG, class WEIGHT>

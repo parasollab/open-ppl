@@ -9,7 +9,7 @@
 #ifndef ALWAYSTRUEVALIDITY_H
 #define ALWAYSTRUEVALIDITY_H
 
-#include "ValidityCheckerMethod.hpp"
+#include "ValidityCheckerMethod.h"
 
 class AlwaysTrueValidity : public ValidityCheckerMethod {
   public:

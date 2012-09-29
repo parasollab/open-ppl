@@ -13,7 +13,7 @@
 #include "MultiBody.h"
 #include "MetricUtils.h"
 #include "MPUtils.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 
 class DistanceMetricMethod;
 template <class CFG, class WEIGHT> struct LPOutput;

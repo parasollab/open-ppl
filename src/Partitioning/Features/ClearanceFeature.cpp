@@ -2,7 +2,7 @@
 #include "MPProblem.h"
 #include "Roadmap.h"
 #include "CfgTypes.h"
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 #include "MPUtils.h"
 #include "CDInfo.h"
 

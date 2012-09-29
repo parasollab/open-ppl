@@ -1,4 +1,4 @@
-#include "ValidityChecker.hpp"
+#include "ValidityChecker.h"
 
 ValidityChecker::
 ~ValidityChecker() {}
