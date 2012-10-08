@@ -41,9 +41,11 @@ Robot::JointType Robot::GetJointTypeFromTag(const string _tag){
     return Robot::REVOLUTE;
   else if (_tag == "SPHERICAL")
     return Robot::SPHERICAL;
+  else if(_tag == "NONACTUATED")
+    return Robot::NONACTUATED;
   else {
     cerr << "Error::Incorrect Joint Type Specified::" << _tag << endl;
-    cerr << "Choices are:: Revolute or Spherical" << endl;
+    cerr << "Choices are:: Revolute, Spherical or Nonactuated" << endl;
     exit(1);
   }
 }

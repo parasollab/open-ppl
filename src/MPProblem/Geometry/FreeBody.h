@@ -55,7 +55,8 @@ class FreeBody : public Body {
      *(Need a generalization for the connectionship, since
      *currently it handles only one backward connection).
      */
-    virtual Transformation& GetWorldTransformation();
+    virtual Transformation& GetWorldTransformation() { return GetWorldTransformation(false); }
+    virtual Transformation& GetWorldTransformation(bool _debug);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +80,7 @@ class FreeBody : public Body {
     ///Configure "this" body with the given transformation
     void Configure(Transformation& _transformation);
 
-    Transformation& ComputeWorldTransformation(std::set<int, less<int> >& visited);
+    Transformation& ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _debug = false);
 
 };
 

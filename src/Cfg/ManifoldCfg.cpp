@@ -81,22 +81,23 @@ bool ManifoldCfg::ConfigEnvironment(Environment* _env) const {
           gamma = m_v[posIndex+5];
         }
       }
+      // configure the robot according to current Cfg: joint parameters
+      // (and base locations/orientations for free flying robots.)
+      Transformation t1 = Transformation(Orientation(Orientation::FixedXYZ, gamma*TWOPI, beta*TWOPI, alpha*TWOPI), Vector3D(x,y,z));
+      // update link i
+      mb->GetFreeBody(rit->m_bodyIndex)->Configure(t1);
     }
-    // configure the robot according to current Cfg: joint parameters
-    // (and base locations/orientations for free flying robots.)
-    Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
-          gamma*TWOPI, beta*TWOPI, alpha*TWOPI), Vector3D(x,y,z));
-    // update link i
-    mb->GetFreeBody(rit->m_bodyIndex)->Configure(T1);
     typedef Robot::JointMap::iterator MIT;
     for(MIT mit = rit->m_joints.begin(); mit!=rit->m_joints.end(); mit++){
-      size_t second = mit->first.second;
-      mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().theta = m_v[index]*TWOPI;
-      index++;
-      if(mit->second==Robot::SPHERICAL){
-        mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().alpha = m_v[index]*TWOPI;
+      if(mit->second!=Robot::NONACTUATED) {
+        size_t second = mit->first.second;
+        mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().theta = m_v[index]*TWOPI;
         index++;
-      }
+        if(mit->second==Robot::SPHERICAL){
+          mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().alpha = m_v[index]*TWOPI;
+          index++;
+        }
+      } 
     }  // config the robot
   }
   for(int i=0; i<mb->GetFreeBodyCount(); i++) {

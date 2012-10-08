@@ -279,7 +279,6 @@ class Environment : public MPBaseObject{
     /// @name  Data
     //---------------------------------------------------------------
     int pathVersion;          /// Format version for path files
-    string boundaryType; //type of the boundary
 
     vector<shared_ptr<MultiBody> > multibody;
     vector<shared_ptr<MultiBody> > usable_multibody;

@@ -24,6 +24,7 @@ Environment():
   m_filename("")
 {}
 
+
 Environment::
 Environment(shared_ptr<Boundary> _bb):
   pathVersion(PATHVER_20001125),
@@ -39,53 +40,6 @@ Environment(shared_ptr<Boundary> _bb):
 {}
 
 
-
-/*
-Environment::
-Environment(int dofs, int pos_dofs, Input * _input) :
-  pathVersion(PATHVER_20001125),
-  usable_externalbody_count(0),
-  robotIndex(0),
-  positionRes(POSITION_RES_FACTOR),
-  orientationRes(ORIENTATION_RES),
-  minmax_BodyAxisRange(0),
-  m_filename("")
-{
-  boundaries = new BoundingBox(dofs, pos_dofs);
-
-  if (_input != NULL) {
-    Read(_input->envFile.GetValue(), PMPL_EXIT,
-	 _input->descDir.GetValue(), _input->cdtype);
-    FindBoundingBox();
-    
-    //   if user supplied a bounding box, use it instead
-    if (_input->bbox.IsActivated()) {
-      std::stringstream i_bbox;
-      i_bbox << _input->bbox.GetValue();
-      boundaries->Parse(i_bbox);  
-    }
-
-    // if user supplied a positional resolution, use it instead
-    if ( _input->posres.IsActivated() )
-      positionRes = _input->posres.GetValue();
-    
-    // orientational resolution may be user supplied but at this time
-    // is not calculated
-    if ( _input->orires.IsActivated() )
-      orientationRes = _input->orires.GetValue(); 
-    
-    // scale boundary
-    if ( _input->bbox_scale.IsActivated() )
-      boundaries->TranslationalScale(_input->bbox_scale.GetValue());  
-
-    // activate objects inside the bounding box and deactivate other
-    // objects
-    SelectUsableMultibodies();  
-  }
-}
-*/
-
-
 /**
  * Copy Constructor
  */
@@ -99,11 +53,12 @@ Environment(const Environment &from_env) :
   positionResFactor(from_env.positionResFactor),
   orientationResFactor(from_env.orientationResFactor),
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
+  m_robotGraph(from_env.m_robotGraph),
+  robotVec(from_env.robotVec),
   m_filename(from_env.m_filename)
 {
-  m_boundaries=from_env.m_boundaries;
-  if(m_boundaries->GetDOFs() + m_boundaries->GetPosDOFs() == 0)
-    cout << "FOUND EMPTY BBOX! (Environment copy constructor)\n";
+  if(from_env.m_boundaries) 
+    m_boundaries=from_env.m_boundaries;
 
   // only usable bodies in from_env will be copied
   for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
@@ -135,12 +90,13 @@ Environment(MPProblem* in_pProblem) :
   positionResFactor(in_pProblem->GetEnvironment()->positionResFactor),
   orientationResFactor(in_pProblem->GetEnvironment()->orientationResFactor),
   minmax_BodyAxisRange(in_pProblem->GetEnvironment()->minmax_BodyAxisRange),
+  m_robotGraph(in_pProblem->GetEnvironment()->m_robotGraph),
+  robotVec(in_pProblem->GetEnvironment()->robotVec),
   m_filename(in_pProblem->GetEnvironment()->m_filename)
 {
   Environment& from_env = *(in_pProblem->GetEnvironment());
-  m_boundaries=from_env.m_boundaries; 
-  if(m_boundaries->GetDOFs() + m_boundaries->GetPosDOFs() == 0)
-    cout << "FOUND EMPTY BBOX! (MPProblem constructor) \n";
+  if(from_env.m_boundaries) 
+    m_boundaries=from_env.m_boundaries;
 
   for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
     multibody.push_back(from_env.GetMultiBody(i));
@@ -171,9 +127,12 @@ Environment(const Environment &from_env, const Boundary &i_boundaries) :
   positionResFactor(from_env.positionResFactor),
   orientationResFactor(from_env.orientationResFactor),
   minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
+  m_robotGraph(from_env.m_robotGraph),
+  robotVec(from_env.robotVec),
   m_filename(from_env.m_filename)
 {
-  m_boundaries=from_env.m_boundaries;
+  if(from_env.m_boundaries) 
+    m_boundaries=from_env.m_boundaries;
   for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
     multibody.push_back(from_env.GetMultiBody(i));
   }
@@ -228,7 +187,7 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
 
       num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
       CfgType tmp;
-#ifndef PMPManifold
+#if !(defined(PMPManifold) || defined(PMPProtein ) )
       vector<Robot> robots = tmp.GetRobots(num_joints);
 #else
       vector<Robot> robots = robotVec;
@@ -240,7 +199,6 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
       for ( citr2 = citr->children_begin(); citr2!= citr->children_end(); ++citr2 ) {
         if ( citr2->getName() == "boundary" ) {
           string type = citr2->stringXMLParameter("type",true,"","type");
-          boundaryType = type;
           if(type == "bbox"){
             m_boundaries = shared_ptr<BoundingBox>(new BoundingBox(*citr2,in_pProblem));
           }
@@ -291,10 +249,9 @@ Environment(const Environment& from_env, string filename) :
   minmax_BodyAxisRange(0),
   m_filename(filename)
 {
-  m_boundaries=from_env.m_boundaries;
-  if(m_boundaries->GetDOFs() + m_boundaries->GetPosDOFs() == 0)
-    cout << "FOUND EMPTY BBOX! (Environment copy constructor, with filename)\n";
-         
+  if(from_env.m_boundaries) 
+    m_boundaries=from_env.m_boundaries;
+
   Read(filename);
   FindBoundingBox();
 
@@ -420,7 +377,7 @@ SelectUsableMultibodies() {
     usable_externalbody_count++;
   }
 
-  if((m_boundaries->GetPosDOFs() < (int)CfgType().PosDOF()) || (m_boundaries->GetDOFs() < (int)CfgType().DOF()))
+  if(!m_boundaries || (m_boundaries->GetPosDOFs() < (int)CfgType().PosDOF()) || (m_boundaries->GetDOFs() < (int)CfgType().DOF()))
     return;
 
   // get workspace bounding box

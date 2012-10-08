@@ -32,7 +32,7 @@ class MapEvaluator : private ElementSet<MapEvaluationMethod>, public MPBaseObjec
     typedef ElementSet<MapEvaluationMethod>::MethodPointer MapEvaluationPointer;
 
     template<typename MethodList>
-    MapEvaluator() : ElementSet<MapEvaluationMethod>(MethodList()) {}
+    MapEvaluator(MethodList const& _m = MethodList()) : ElementSet<MapEvaluationMethod>(MethodList()) {}
   
     MapEvaluator() : ElementSet<MapEvaluationMethod>(pmpl_detail::MapEvaluationMethodList()) {}
 

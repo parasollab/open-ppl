@@ -65,9 +65,9 @@ FreeBody::Configure(Transformation& _transformation){
 //
 //===================================================================
 Transformation& 
-FreeBody::GetWorldTransformation() {
+FreeBody::GetWorldTransformation(bool _debug) {
   std::set<int, less<int> > visited;
-  return this->ComputeWorldTransformation(visited);
+  return this->ComputeWorldTransformation(visited, _debug);
 }
 
 //this will search the vector of the set of all visited nodes, 
@@ -75,23 +75,47 @@ FreeBody::GetWorldTransformation() {
 //worldTransFormation.
 //else it will insert "this" into the set of visited.
 Transformation& 
-FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited) {
+FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _debug) {
+  if(_debug) {
+    cout << "ComputeWorldTransformation::visited =";
+    for(std::set<int, less<int> >::const_iterator V = visited.begin(); V != visited.end(); ++V)
+      cout << " " << *V;
+    cout << endl;
+  }
   if(visited.find(multibody->GetFreeBodyIndex(*this)) != visited.end()) {
+    if(_debug) {
+    cout << "index " << multibody->GetFreeBodyIndex(*this) << " already visited, transformation is " << worldTransformation << ", returning\n";
+    }
     return worldTransformation;
 
   } else {
+    if(_debug) {
+    cout << "index " << multibody->GetFreeBodyIndex(*this) << " not visited yet.\n";
+    }
     visited.insert(multibody->GetFreeBodyIndex(*this));
 
     //for the case when the base is a freebody.
-    if(backwardConnection.empty()) //base link
+    if(backwardConnection.empty()) {//base link
+      if(_debug) {
+        cout << "base link, no transformation change, transformation is " << worldTransformation << ", returning\n";
+      }
       return worldTransformation;
-
+    }
+      
     Transformation dh(backwardConnection[0].GetDHparameters());
     worldTransformation =
-      ((FreeBody*)(backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited)
+      ((FreeBody*)(backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, _debug)
       * backwardConnection[0].GetTransformationToDHFrame()
       * dh
       * backwardConnection[0].GetTransformationToBody2();
+    if(_debug) {
+      cout << "computing new transformation by:\n\tprior transformation: " << ((FreeBody*)(backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, false) << endl;
+      cout << "\ttransformation to DH frame: " << backwardConnection[0].GetTransformationToDHFrame() << endl;
+      cout << "\t\tdh from connection: " << backwardConnection[0].GetDHparameters() << endl;
+      cout << "\tdh: " << dh << endl;
+      cout << "\ttransformation to body 2: " << backwardConnection[0].GetTransformationToBody2() << endl;
+      cout << "new transformation = " << worldTransformation << ", returning\n";
+    }
 
     return worldTransformation;
   }

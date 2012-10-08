@@ -9,7 +9,7 @@ using namespace std;
 struct Robot{
   enum Base {PLANAR, VOLUMETRIC, FIXED, JOINT}; //2D plane vs 3D
   enum BaseMovement {ROTATIONAL, TRANSLATIONAL}; //rotation+translation, just translation, no movement
-  enum JointType {REVOLUTE, SPHERICAL}; //1dof vs 2dof rotational joints
+  enum JointType {REVOLUTE, SPHERICAL, NONACTUATED}; //1dof vs 2dof rotational joints
   typedef vector<pair<pair<size_t, size_t>, JointType> > JointMap; //size_t is Joint
                                                           //index of next body, 
                                                           //joint type

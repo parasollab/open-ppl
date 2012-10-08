@@ -72,6 +72,9 @@ void Cfg::InitRobots(vector<Robot>& _robots){
         m_dofTypes.push_back(JOINT);
         m_dofTypes.push_back(JOINT);
       }
+      else if(jit->second == Robot::NONACTUATED){
+        //skip, do nothing
+      }
     }
   }
   m_dof = m_dofTypes.size();
