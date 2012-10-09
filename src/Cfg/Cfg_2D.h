@@ -49,9 +49,10 @@ public:
   virtual vector<Robot> GetRobots(int _numJoints);
   
   #ifdef _PARALLEL
-    void define_type(stapl::typer &t)  
+    void define_type(stapl::typer &_t)  
     {
-      Cfg::define_type(t);
+      Cfg::define_type(_t);
+      _t.member(p);
       
     }
   #endif
