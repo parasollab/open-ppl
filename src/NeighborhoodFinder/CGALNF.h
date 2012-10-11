@@ -88,7 +88,7 @@ class CGALNF: public NeighborhoodFinderMethod {
       void UpdateInternalModel(RDMP* _rmp, InputIterator _first, InputIterator _last);
 
   private:
-    double m_epsilon; // appr
+    double m_epsilon; // approximation
     int m_useScaling;
     Tree m_tree;
     Tree* m_queryTree;
@@ -125,6 +125,7 @@ CGALNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last,
   vector<double> queryCfg(dim);
   copy(_cfg.GetData().begin(), _cfg.GetData().end(), queryCfg.begin());
   if (m_useScaling) {
+    //normalize x,y,z components to [0,1]
     queryCfg[0] /= m_maxBBXRange;
     queryCfg[1] /= m_maxBBXRange;
     queryCfg[2] /= m_maxBBXRange;
