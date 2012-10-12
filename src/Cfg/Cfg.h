@@ -10,8 +10,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef Cfg_h
-#define Cfg_h
+#ifndef CFG_H_ 
+#define CFG_H_
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include standard headers
@@ -65,8 +65,8 @@ class ClearanceInfo {
     Cfg* GetDirection() {return m_direction;};
     void SetDirection(Cfg* _direction) {m_direction = _direction;};
 
-    int GetObstacleId() { return m_obstacleId;};
-    void SetObstacleId(int _id) { m_obstacleId = _id;};
+    int GetObstacleId() {return m_obstacleId;};
+    void SetObstacleId(int _id) {m_obstacleId = _id;};
 };
 
 
@@ -113,16 +113,15 @@ class Cfg {
     //@{
 
     ///Return true if this and other Cfg instance have same configuration
-    virtual bool operator== (const Cfg&) const;
+    virtual bool operator==(const Cfg&) const;
     ///Return true if this and other Cfg instance have different configuration
-    virtual bool operator!= (const Cfg&) const;
+    virtual bool operator!=(const Cfg&) const;
     virtual bool AlmostEqual(const Cfg& _c) const;
     virtual void add(const Cfg&, const Cfg&);
     virtual void subtract(const Cfg&, const Cfg&);
     virtual void negative(const Cfg&);
     virtual void multiply(const Cfg&, double, bool _norm=true);
     virtual void divide(const Cfg&, double);
-
     static void InitRobots(vector<Robot>& _robots);
     virtual vector<Robot> GetRobots(int) = 0;
     virtual Cfg& operator=(const Cfg&);
@@ -130,7 +129,7 @@ class Cfg {
     /**create a new Cfg instance whose configuration is weighted summation of the
      *first and the second Cfg.
      *The summation is done in every dimension in CSpace.
-     *@param weight should between [0,1]. this weight is for thesecond Cfg. 
+     *@param weight should between [0,1]. this weight is for the second Cfg.
      * The weight for the first Cfg is (1-weight)
      */
     virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);       
@@ -147,8 +146,8 @@ class Cfg {
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-    friend ostream& operator<< (ostream&, const Cfg&);
-    friend istream& operator>> (istream&, Cfg&);
+    friend ostream& operator<<(ostream&, const Cfg&);
+    friend istream& operator>>(istream&, Cfg&);
     ///Write configuration to output stream
     virtual void Write(ostream& _os) const;
     ///Read configuration from input stream
@@ -174,7 +173,7 @@ class Cfg {
     static size_t DOF();
     static size_t PosDOF();
     virtual const string GetName() const = 0;
-    static size_t GetNumOfJoints() { return 0; }
+    static size_t GetNumOfJoints() {return 0;}
 
     /** Set a single parameter in the configuration (i.e., x,y,z,roll...)
      * @param param the parameter number to set.
@@ -200,7 +199,7 @@ class Cfg {
     bool InBoundary(Environment* _env) const;
     bool InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const;
 
-    ///Increase every value in this instance in each dimention by the value in _increment
+    ///Increase every value in this instance in each dimension by the value in _increment
     virtual void Increment(const Cfg& _increment);
     virtual void IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment);
     virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _positionRes, double _orientationRes);
@@ -216,7 +215,7 @@ class Cfg {
     //
     //////////////////////////////////////////////////////////////////////////////////////////
     /** 
-     * generates random confiasking Jory and Shawna to oversee/advise him on this.
+     * generates random configuration asking Jory and Shawna to oversee/advise him on this.
      guration where workspace robot's EVERY VERTEX
      * is guaranteed to lie within the environment specified bounding box
      * @param _maxTries Try _maxTries time to rondomly generate Cfg and check if
@@ -228,9 +227,10 @@ class Cfg {
     virtual void GetRandomCfg(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, double _length);
     virtual void GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundary> bb) = 0;
 
-    virtual void GetRandomRay(double _incr, Environment* _env,  shared_ptr<DistanceMetricMethod> _dm, bool _norm=true) = 0;
-    virtual double GetSmoothingValue(MPProblem* _mp, Environment *_env,StatClass& _stats,
-        string _vc, CDInfo& _cdInfo, string _dm, int _n, bool _bl );
+    virtual void GetRandomRay(double _incr, Environment* _env, shared_ptr<DistanceMetricMethod> _dm, bool _norm = true) = 0;
+
+    virtual double GetSmoothingValue(MPProblem* _mp, Environment *_env, StatClass& _stats, string _vc,
+        CDInfo& _cdInfo, string _dm, int _n, bool _bl);
 
     virtual bool ConfigEnvironment(Environment* _env) const = 0;
 
@@ -271,7 +271,7 @@ class Cfg {
 
     bool GetLabel(string _label);
     bool IsLabel(string _label);
-    void SetLabel(string _label,bool _value);
+    void SetLabel(string _label, bool _value);
 
     double GetStat(string _stat);
     bool IsStat(string _stat);
@@ -291,7 +291,7 @@ class Cfg {
     /** generates random configuration where workspace robot's CENTER OF MASS
      * is guaranteed to lie within the environment specified bounding box
      */
-    /** Normalize the orientation to the some range.
+    /** Normalize the orientation to the same range.
      * call CfgManager's NormalizeOrientation.
      */
     virtual void NormalizeOrientation(int _index = -1);
@@ -307,21 +307,21 @@ class Cfg {
      *uncomment the ifdef after fix
      */
 #ifndef _PARALLEL
-    map<string,bool> m_labelMap;
-    map<string,double> m_statMap;
+    map<string, bool> m_labelMap;
+    map<string, double> m_statMap;
 #endif
 
   public:
 #ifdef _PARALLEL
-    void define_type(stapl::typer &_t)  
-    {
-      _t.member(m_v);
-      _t.member(m_dof);
-      _t.member(m_dofTypes);
-      _t.member(m_robots);
-      _t.member(m_labelMap);
-      _t.member(m_statMap);
-    }
+    void
+      define_type(stapl::typer& _t) {
+        _t.member(m_v);
+        _t.member(m_dof);
+        _t.member(m_dofTypes);
+        _t.member(m_robots);
+        _t.member(m_labelMap);
+        _t.member(m_statMap);
+      }
 #endif
 
 }; // class Cfg
@@ -329,32 +329,31 @@ class Cfg {
 #ifdef _PARALLEL
 namespace stapl {
   template <typename Accessor>
-    class proxy<Cfg, Accessor> 
-    : public Accessor {
+    class proxy<Cfg, Accessor> : public Accessor {
       private:
         friend class proxy_core_access;
-        typedef Cfg target_t;
+        typedef Cfg TARGET;
 
       public:
-        //typedef target_t::parameter_type  parameter_type;
-        explicit proxy(Accessor const& acc) : Accessor(acc) { }
-        //operator target_t() const { return Accessor::read(); }
-        proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
-        proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
-        int DOF() const { return Accessor::const_invoke(&target_t::DOF);}
-        int PosDOF() const { return Accessor::const_invoke(&target_t::PosDOF);}
-        void Write(ostream& _os) const { return Accessor::const_invoke(&target_t::Write, _os);}
-        void Read(istream& _is){ return Accessor::const_invoke(&target_t::Read, _is);}
-        const vector<double>& GetData() const { return Accessor::const_invoke(&target_t::GetData);}
-        void SetData(vector<double>& _data) const { return Accessor::const_invoke(&target_t::SetData, _data);}
-        bool GetLabel(string _label) const { return Accessor::const_invoke(&target_t::GetLabel, _label);}
-        bool IsLabel(string _label) const { return Accessor::const_invoke(&target_t::IsLabel, _label);}
-        bool SetLabel(string _label) const { return Accessor::const_invoke(&target_t::SetLabel, _label);}
-        bool GetStat(string _stat) const { return Accessor::const_invoke(&target_t::GetStat, _stat);}
-        bool IsStat(string _stat) const { return Accessor::const_invoke(&target_t::IsStat, _stat);}
-        bool SetStat(string _stat) const { return Accessor::const_invoke(&target_t::SetStat, _stat);}
-        static int GetNumOfJoints()  { return Accessor::const_invoke(&target_t::GetNumOfJoints);}
-        static void SetNumOfJoints(int _numOfJoints)  { return Accessor::const_invoke(&target_t::SetNumOfJoints, _numOfJoints);}
+        //typedef TARGET::parameter_type  parameter_type;
+        explicit proxy(Accessor const& _acc) : Accessor(_acc) {}
+        //operator TARGET() const { return Accessor::read(); }
+        proxy const& operator=(proxy const& _rhs) {Accessor::write(_rhs); return *this;}
+        proxy const& operator=(TARGET const& _rhs) {Accessor::write(_rhs); return *this;}
+        int DOF() const {return Accessor::const_invoke(&TARGET::DOF);}
+        int PosDOF() const {return Accessor::const_invoke(&TARGET::PosDOF);}
+        void Write(ostream& _os) const {return Accessor::const_invoke(&TARGET::Write, _os);}
+        void Read(istream& _is) {return Accessor::const_invoke(&TARGET::Read, _is);}
+        const vector<double>& GetData() const {return Accessor::const_invoke(&TARGET::GetData);}
+        void SetData(vector<double>& _data) const {return Accessor::const_invoke(&TARGET::SetData, _data);}
+        bool GetLabel(string _label) const {return Accessor::const_invoke(&TARGET::GetLabel, _label);}
+        bool IsLabel(string _label) const {return Accessor::const_invoke(&TARGET::IsLabel, _label);}
+        bool SetLabel(string _label) const {return Accessor::const_invoke(&TARGET::SetLabel, _label);}
+        bool GetStat(string _stat) const {return Accessor::const_invoke(&TARGET::GetStat, _stat);}
+        bool IsStat(string _stat) const {return Accessor::const_invoke(&TARGET::IsStat, _stat);}
+        bool SetStat(string _stat) const {return Accessor::const_invoke(&TARGET::SetStat, _stat);}
+        static int GetNumOfJoints() {return Accessor::const_invoke(&TARGET::GetNumOfJoints);}
+        static void SetNumOfJoints(int _numOfJoints) {return Accessor::const_invoke(&TARGET::SetNumOfJoints, _numOfJoints);}
     }; //struct proxy
 }
 #endif
