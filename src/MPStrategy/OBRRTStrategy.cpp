@@ -2,6 +2,11 @@
 #include "DistanceMetrics.h"
 #include "CDInfo.h"
 
+OBRRTStrategy::OBRRTStrategy(XMLNodeReader& _node, MPProblem* _problem) : 
+  BasicRRTStrategy(_node, _problem, false){
+    ParseXML(_node);
+  };
+
 void
 OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_g0 = _node.numberXMLParameter("g0", false, 0.1, 0.0, 1.0, "g0 Growth Method");
@@ -21,7 +26,6 @@ OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_useBbx = _node.boolXMLParameter("useBBX", true, "", "Use Bounding Box");
   m_hLen = _node.numberXMLParameter("hLen", false, 5, 0, 20, "History Length");
   m_positional = _node.boolXMLParameter("positional", true, "", "Use Position in MA Calculations");
-  m_debug = _node.boolXMLParameter("debug", false, "", "Debug Mode");
 
   _node.warnUnrequestedAttributes();
 
@@ -46,7 +50,7 @@ OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_g6N = m_g5N + m_g6;
   m_g7N = m_g6N + m_g7;
   m_g8N = m_g7N + m_g8;
-  cout << " growth prob norms: ["
+  if(m_debug) cout << " growth prob: ["
     << m_g0 << ","
     << m_g1 << ","
     << m_g2 << ","
@@ -56,7 +60,7 @@ OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
     << m_g6 << ","
     << m_g7 << ","
     << m_g8 << "]" << endl;
-  cout << " growth prob norms: ["
+  if(m_debug) cout << " growth prob norms: ["
     << m_g0N << ","
     << m_g1N << ","
     << m_g2N << ","
@@ -72,7 +76,7 @@ OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
 
 OBRRTStrategy::VID
 OBRRTStrategy::ExpandTree(CfgType& _dir){
-  cout << " OBRRTStrategy::ExpandTree -- in expand call" << endl;
+  if(m_debug) cout << " OBRRTStrategy::ExpandTree -- in expand call" << endl;
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
@@ -89,41 +93,41 @@ OBRRTStrategy::ExpandTree(CfgType& _dir){
 
   // Next, find expansion method and apply
   // inside each growth method, the expansion is also checked
-  double growth_prob = DRand();
-  if( growth_prob < m_g0N ) {
-    cout << " calling g0: standard" << endl;
+  double growthProb = DRand();
+  if( growthProb < m_g0N ) {
+    if(m_debug) cout << " calling g0: standard" << endl;
     newCfg = g0( nearest, _dir, verifiedValid );
   }
-  else if( growth_prob < m_g1N ) {
-    cout << " calling g1: random pos, same ori" << endl;
+  else if( growthProb < m_g1N ) {
+    if(m_debug) cout << " calling g1: random pos, same ori" << endl;
     newCfg = g1( nearest, _dir, verifiedValid );
   }
-  else if( growth_prob < m_g2N ) {
-    cout << " calling g2: rand obst. vec, rand ori" << endl;
-    newCfg = g2( nearest, _dir, verifiedValid );
+  else if( growthProb < m_g2N ) {
+    if(m_debug) cout << " calling g2: rand obst. vec, rand ori" << endl;
+    newCfg = g2( nearest, _dir, verifiedValid, false );
   }
-  else if( growth_prob < m_g3N ) {
-    cout << " calling g3: rand obst. vec, same ori" << endl;
-    newCfg = g3( nearest, _dir, verifiedValid );
+  else if( growthProb < m_g3N ) {
+    if(m_debug) cout << " calling g3: rand obst. vec, same ori" << endl;
+    newCfg = g2( nearest, _dir, verifiedValid, true );
   }
-  else if( growth_prob < m_g4N ) {
-    cout << " calling g4: rotation, followed by extension" << endl;
+  else if( growthProb < m_g4N ) {
+    if(m_debug) cout << " calling g4: rotation, followed by extension" << endl;
     newCfg = g4( nearest, _dir, verifiedValid );
   }
-  else if( growth_prob < m_g5N ) {
-    cout << " calling g5: trace obstacle, random ori." << endl;
+  else if( growthProb < m_g5N ) {
+    if(m_debug) cout << " calling g5: trace obstacle, random ori." << endl;
     newCfg = g5( nearest, _dir, verifiedValid, false );
   }
-  else if( growth_prob < m_g6N ) {
-    cout << " calling g6: trace obstacle, same" << endl;
+  else if( growthProb < m_g6N ) {
+    if(m_debug) cout << " calling g6: trace obstacle, same" << endl;
     newCfg = g5( nearest, _dir, verifiedValid, true );
   }
-  else if( growth_prob < m_g7N ) {
-    cout << " calling g7: trace c-space obst" << endl;
+  else if( growthProb < m_g7N ) {
+    if(m_debug) cout << " calling g7: trace c-space obst" << endl;
     newCfg = g7( nearest, _dir, verifiedValid );
   }
   else { //g8
-    cout << " calling g8" << endl;
+    if(m_debug) cout << " calling g8" << endl;
     newCfg = g8( nearest, _dir, verifiedValid );
   }
 
@@ -135,13 +139,14 @@ OBRRTStrategy::ExpandTree(CfgType& _dir){
     GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
   } 
 
-  cout << " OBRRTStrategy::ExpandTree -- done call" << endl;
+  if(m_debug) cout << " OBRRTStrategy::ExpandTree -- done call" << endl;
   return recentVID;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //0.Standard RRT Expand
-CfgType OBRRTStrategy::g0(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType
+OBRRTStrategy::g0(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   CDInfo  cdInfo;
@@ -159,7 +164,8 @@ CfgType OBRRTStrategy::g0(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //1.Random position, same orientation
-CfgType OBRRTStrategy::g1(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType
+OBRRTStrategy::g1(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   CDInfo  cdInfo;
@@ -180,8 +186,9 @@ CfgType OBRRTStrategy::g1(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//2. Obstacle Vector, random orientation
-CfgType OBRRTStrategy::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+//2&3. Obstacle Vector, random orientation if _maintainSrcOri=false, otherwise same orientation
+CfgType
+OBRRTStrategy::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
@@ -196,16 +203,16 @@ CfgType OBRRTStrategy::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
 
     int randIndex = (LRand() % (numBodies-1)) + 1;
     GMSPolyhedron& poly = env->GetMultiBody(randIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-    vector<Vector3D>& m_vertexList    = poly.m_vertexList; 
-    vector<GMSPolygon>& m_polygonList = poly.m_polygonList; 
+    vector<Vector3D>& vertexList    = poly.m_vertexList; 
+    vector<GMSPolygon>& polygonList = poly.m_polygonList; 
     //random polygon
-    int randPolyInd = LRand() % m_polygonList.size();
+    int randPolyInd = LRand() % polygonList.size();
     int randEdgeInd = LRand() % 3;
-    int v1Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
+    int v1Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
     randEdgeInd = (randEdgeInd+1)%3;
-    int v2Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
-    Vector3D vertex1 = m_vertexList[v1Ind];
-    Vector3D vertex2 = m_vertexList[v2Ind];
+    int v2Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
+    Vector3D vertex1 = vertexList[v1Ind];
+    Vector3D vertex2 = vertexList[v2Ind];
     Vector3D OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
     if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 
@@ -213,54 +220,10 @@ CfgType OBRRTStrategy::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
     for(size_t i = 0; i < _dir.PosDOF(); i++){
       _dir.SetSingleParam(i, _near.GetSingleParam(i) + OV[i]);
     }
-    int weight;
-    if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
-      if(m_debug) cout << "RRT could not expand!" << endl; 
-    }
-    else {
-      _verifiedValid = true;
-    }
-  }
-
-  return newCfg;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//3. Obstacle Vector, same orientation
-CfgType OBRRTStrategy::g3(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
-  // Setup MP Variables
-  Environment* env = GetMPProblem()->GetEnvironment();
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
-  CDInfo  cdInfo;
-  CfgType newCfg;
-  //VECTOR SCALE - THIS WILL BE HARD CODED BUT SHOULD PROBABLY BE MADE AN OPTION
-  double vecScale = 10.0;
-
-  //get an obstacle vector from env
-  int numBodies = env->GetMultiBodyCount();
-  if( numBodies > 1 ) {//this growth method only works with obstacles (need 2 multibodies)
-
-    int randIndex = (LRand() % (numBodies-1)) + 1;
-    GMSPolyhedron& poly = env->GetMultiBody(randIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-    vector<Vector3D>& m_vertexList    = poly.m_vertexList; 
-    vector<GMSPolygon>& m_polygonList = poly.m_polygonList; 
-    //random polygon
-    int randPolyInd = LRand() % m_polygonList.size();
-    int randEdgeInd = LRand() % 3;
-    int v1Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
-    randEdgeInd = (randEdgeInd+1)%3;
-    int v2Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
-    Vector3D vertex1 = m_vertexList[v1Ind];
-    Vector3D vertex2 = m_vertexList[v2Ind];
-    Vector3D OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
-    if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
-
-    //apply this obstacle vector
-    for(size_t i = 0; i < _dir.PosDOF(); i++){
-      _dir.SetSingleParam(i, _near.GetSingleParam(i) + OV[i]);
-    }
-    for(size_t i = _dir.PosDOF(); i < _dir.DOF(); i++){
-      _dir.SetSingleParam(i, _near.GetSingleParam(i) );
+    if( _maintainSrcOri ) {
+      for(size_t i = _dir.PosDOF(); i < _dir.DOF(); i++){
+        _dir.SetSingleParam(i, _near.GetSingleParam(i) );
+      }
     }
     int weight;
     if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
@@ -276,7 +239,8 @@ CfgType OBRRTStrategy::g3(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //4. rotation followed by extension
-CfgType OBRRTStrategy::g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType
+OBRRTStrategy::g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   CDInfo  cdInfo;
@@ -311,8 +275,9 @@ CfgType OBRRTStrategy::g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//5&6. Trace Obstacle, rand ori
-CfgType OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri){
+//5&6. Trace Obstacle, random orientation if _maintainSrcOri=false, otherwise same orientation
+CfgType
+OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
@@ -346,17 +311,17 @@ CfgType OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, b
     }
   }
   GMSPolyhedron& poly = env->GetMultiBody(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-  vector<Vector3D>& m_vertexList    = poly.m_vertexList; 
-  vector<GMSPolygon>& m_polygonList = poly.m_polygonList; 
+  vector<Vector3D>& vertexList    = poly.m_vertexList; 
+  vector<GMSPolygon>& polygonList = poly.m_polygonList; 
   //random polygon
-  int randPolyInd = LRand() % m_polygonList.size();
+  int randPolyInd = LRand() % polygonList.size();
   if( obsContactIndex != -1 ) randPolyInd = obsContactIndex;
   int randEdgeInd = LRand() % 3;
-  int v1Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
+  int v1Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
   randEdgeInd = (randEdgeInd+1)%3;
-  int v2Ind= m_polygonList[randPolyInd].m_vertexList[randEdgeInd];
-  Vector3D vertex1 = m_vertexList[v1Ind];
-  Vector3D vertex2 = m_vertexList[v2Ind];
+  int v2Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
+  Vector3D vertex1 = vertexList[v1Ind];
+  Vector3D vertex2 = vertexList[v2Ind];
   Vector3D OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
   if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 
@@ -384,7 +349,8 @@ CfgType OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, b
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //7. C-space Obstacle
-CfgType OBRRTStrategy::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType
+OBRRTStrategy::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
@@ -433,7 +399,8 @@ CfgType OBRRTStrategy::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //8. Medial Axis push
-CfgType OBRRTStrategy::g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
+CfgType
+OBRRTStrategy::g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
@@ -447,7 +414,9 @@ CfgType OBRRTStrategy::g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   newCfg = g5( tNear, tDir, vv, false );
 
 
-  if(!PushToMedialAxis(GetMPProblem(), env, newCfg, *stats, m_vc, m_dm, m_exact, m_rayCount, m_exact, m_penetration, m_useBbx, .0001, m_hLen, m_debug, m_positional)){
+  if(!PushToMedialAxis(GetMPProblem(), env, newCfg, *stats, m_vc, m_dm, 
+        m_exact, m_rayCount, m_exact, m_penetration, m_useBbx, .0001, 
+        m_hLen, m_debug, m_positional)){
     return newCfg;// CfgType(); //Error out   
   }
   else{ //pushed to medial axis, now check RRTexpand

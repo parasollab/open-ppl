@@ -20,7 +20,8 @@ BasicRRTStrategy::BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem, bo
     if(m_debug && _warnXML) PrintOptions(cout);
   }
 
-void BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
+void
+BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr){
     if(citr->getName() == "evaluation_method"){
       string evalMethod = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
@@ -43,7 +44,8 @@ void BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_query = _node.stringXMLParameter("query", false, "", "Query Filename");
 }
 
-void BasicRRTStrategy::PrintOptions(ostream& _os) {
+void
+BasicRRTStrategy::PrintOptions(ostream& _os) {
   typedef vector<string>::iterator SIT;
   _os << "BasicRRTStrategy::PrintOptions" << endl;
   _os << "\tSampler:: " << m_sampler << endl;
@@ -110,7 +112,8 @@ BasicRRTStrategy::Initialize(){
 ////////////////
 //Run/Start Phase
 ////////////////
-void BasicRRTStrategy::Run() {
+void
+BasicRRTStrategy::Run() {
   if(m_debug) cout << "\nRunning BasicRRTStrategy::" << endl;
 
   // Setup MP Variables
@@ -158,7 +161,8 @@ void BasicRRTStrategy::Run() {
 /////////////////////
 //Finalization phase
 ////////////////////
-void BasicRRTStrategy::Finalize() {
+void
+BasicRRTStrategy::Finalize() {
  
   if(m_debug) cout<<"\nFinalizing BasicRRTStrategy::"<<endl;
 
@@ -228,7 +232,6 @@ BasicRRTStrategy::ExpandTree(CfgType& _dir){
   // If good to go, add to roadmap
   if(dm->Distance(env, newCfg, nearest) >= m_minDist) {
     recentVID = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
-    //TODO fix weight
     pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
     GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
     GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(recentVID)->property().SetStat("Parent", kClosest[0]);
@@ -340,7 +343,11 @@ BasicRRTStrategy::PathClearance(){
     graph->find_edge(ed, vi, ei);
     WeightType weight = (*ei).property();
     pathLength += weight.Weight();
-    double currentClearance = MinEdgeClearance(GetMPProblem(), false, GetMPProblem()->GetRoadmap()->GetEnvironment(), (*graph->find_vertex((*ei).source())).property(), (*graph->find_vertex((*ei).target())).property(), weight, m_vc, m_dm); 
+    double currentClearance = MinEdgeClearance(GetMPProblem(), false, 
+        GetMPProblem()->GetRoadmap()->GetEnvironment(), 
+        (*graph->find_vertex((*ei).source())).property(), 
+        (*graph->find_vertex((*ei).target())).property(), 
+        weight, m_vc, m_dm); 
     clearanceVec.push_back(currentClearance);
     runningTotal += currentClearance;
     if(currentClearance < minClearance){
@@ -357,7 +364,6 @@ BasicRRTStrategy::PathClearance(){
   stats.m_clearanceVariance = varSum / clearanceVec.size();
   stats.m_pathLength = pathLength;
   return stats;
-
 }
 
 

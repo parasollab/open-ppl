@@ -18,10 +18,7 @@ template<typename CFG, typename WEIGHT> class MPRegion;
 
 class OBRRTStrategy : public BasicRRTStrategy {
   public:
-    OBRRTStrategy(XMLNodeReader& _node, MPProblem* _problem) : 
-        BasicRRTStrategy(_node, _problem, false){
-	   ParseXML(_node);
-	};
+    OBRRTStrategy(XMLNodeReader& _node, MPProblem* _problem);
     virtual ~OBRRTStrategy() {}
     
     virtual void ParseXML(XMLNodeReader& _node);
@@ -31,11 +28,11 @@ class OBRRTStrategy : public BasicRRTStrategy {
     VID ExpandTree(CfgType& _dir);
     CfgType g0(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
     CfgType g1(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
-    CfgType g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
-    CfgType g3(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
+    CfgType g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri=false);
+    //g3 is the same as g2 but with same orientation
     CfgType g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
-    CfgType g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri);
-    //g6 is the same as g5 but with ori changes
+    CfgType g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri=false);
+    //g6 is the same as g5 but with same orientation
     CfgType g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
     CfgType g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
   
