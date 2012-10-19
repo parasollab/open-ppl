@@ -9,11 +9,13 @@
 #include "ConnectivityMetric.h"
 #include "DiameterMetric.h"
 #include "CCDistanceMetric.h"
+#include "TimeMetric.h"
 
 namespace pmpl_detail {
   typedef boost::mpl::list<
     NumNodesMetric,
     NumEdgesMetric,
+    TimeMetric,
     CoverageMetric<CfgType, WeightType>,
     ConnectivityMetric<CfgType, WeightType>,
     DiameterMetric<CfgType, WeightType>,

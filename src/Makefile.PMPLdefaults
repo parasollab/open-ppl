@@ -322,6 +322,7 @@ PMPL_OBJS = \
 	Metrics/Metrics.o \
         Metrics/NumNodesMetric.o \
         Metrics/NumEdgesMetric.o \
+	Metrics/TimeMetric.o \
         MapEvaluator/TrueEvaluation.o \
         MapEvaluator/PrintMapEvaluation.o \
 	MPProblem/Weight.o \
