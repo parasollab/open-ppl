@@ -62,6 +62,7 @@
 
     <MetricMethods>
       <NumNodesMetric Label="NumNodes" />
+      <TimeMetric Label="TimeInSec"/>
     </MetricMethods>
 
     <MPStrategyMethod Controller="BasicPRM1">
