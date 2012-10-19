@@ -18,7 +18,8 @@ void TimeMetric::PrintOptions(ostream& _os){
 }
 
 
-double TimeMetric::operator()() {
+double
+TimeMetric::operator()() {
   StatClass * timeStatClass = GetMPProblem()->GetStatClass();
   static int flag=0;
   string timeClockName = "Total running time";
