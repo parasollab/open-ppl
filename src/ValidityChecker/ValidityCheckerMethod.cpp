@@ -14,8 +14,8 @@ ValidityCheckerMethod::
   
 bool
 ValidityCheckerMethod::
-isInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) {
-  cerr << "error: isInsideObstacle() not defined." << endl;
+IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) {
+  cerr << "error: IsInsideObstacle() not defined." << endl;
   exit(-1);
 }
 

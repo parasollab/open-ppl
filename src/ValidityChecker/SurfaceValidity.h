@@ -15,7 +15,7 @@ class SurfaceValidity : public ValidityCheckerMethod {
     IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
 	CDInfo& _cdInfo, string *_callName);
 
-  virtual bool isInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo); 
+  virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo); 
 
  private:
   string m_vcLabel;

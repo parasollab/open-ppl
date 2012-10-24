@@ -23,7 +23,7 @@ class ValidityCheckerMethod : public MPBaseObject {
                            CDInfo& _cdInfo, std::string *_callName) = 0; 
 
  public:
-  virtual bool isInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo);
+  virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo);
 
   bool GetValidity() const { return m_validity; }
   void ToggleValidity() { m_validity = !m_validity; }

@@ -227,7 +227,7 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<Boundary> _b
   tmpInfo.m_retAllInfo = true;
 
   // If invalid, push to the outside of the obstacle
-  inside = vcm->isInsideObstacle(_cfg, _env, tmpInfo);
+  inside = vcm->IsInsideObstacle(_cfg, _env, tmpInfo);
   inCollision = !(vcm->IsValid(_cfg, _env, _stats,tmpInfo,&call));
   if (_debug) cout << " Inside/In-Collision: " << inside << "/" << inCollision << endl;
   if (inside || inCollision)
@@ -318,7 +318,7 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
     tmpCfg.add(_cfg, tmpCfg);
 
     tmpValidity = vcm->IsValid(tmpCfg,_env,_stats,tmpInfo,&call);
-    tmpValidity = tmpValidity && !vcm->isInsideObstacle(tmpCfg,_env,tmpInfo);
+    tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg,_env,tmpInfo);
     if ( tmpValidity ) {
       tmpValidity = tmpValidity && prevValidity;
       if ( !prevValidity ) // Extra Step TODO: Test if necessary
@@ -365,7 +365,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
   CDInfo   tmpInfo,prevInfo;
   CfgType  transCfg, tmpCfg, heldCfg, tmpTransCfg;
   double   stepSize=0.0, cbStepSize=0.0, factor=0.0, posRes=_env->GetPositionRes(), oriRes=_env->GetOrientationRes();
-  bool     inBBX=true, goodTmp=true, inside=vcm->isInsideObstacle(_cfg,_env,tmpInfo);
+  bool     inBBX=true, goodTmp=true, inside=vcm->IsInsideObstacle(_cfg,_env,tmpInfo);
   int      nTicks;
 
   // Should already be in free space
@@ -418,7 +418,7 @@ bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& _cfg, Environment* _env, share
     tmpCfg.add(_cfg, tmpCfg);
 
     // Test for in BBX and inside obstacle
-    inside = vcm->isInsideObstacle(tmpCfg,_env,tmpInfo);
+    inside = vcm->IsInsideObstacle(tmpCfg,_env,tmpInfo);
     inBBX = tmpCfg.InBoundary(_env,_bb);
     bool tmpVal = (inside || !inBBX);
     if (_debug) VDAddTempCfg(tmpCfg, tmpVal);
@@ -852,7 +852,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;	
 
-  bool initInside   = vcm->isInsideObstacle(_cfg,_env,_cdInfo);             // Initially Inside Obst
+  bool initInside   = vcm->IsInsideObstacle(_cfg,_env,_cdInfo);             // Initially Inside Obst
   bool initValidity = vcm->IsValid(_cfg,_env,_stats,_cdInfo,&call); // Initial Validity
   initValidity = initValidity && !initInside;
 
@@ -914,7 +914,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
     for (CIT incrIT = incr.begin(), tickIT = tick.begin(); 
         incrIT!=incr.end() || tickIT!=tick.end(); ++incrIT, ++tickIT) {
       tickIT->Increment(*incrIT);
-      currInside   = vcm->isInsideObstacle(*tickIT,_env,tmpInfo);
+      currInside   = vcm->IsInsideObstacle(*tickIT,_env,tmpInfo);
       currValidity = vcm->IsValid(*tickIT,_env,_stats,tmpInfo,&call);
       currInBBX    = tickIT->InBoundary(_env,_bb);
       currValidity = currValidity && !currInside;
@@ -957,7 +957,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
     for ( size_t i=0; i<candIn.size(); i++ ) {
       middleCfg.multiply(incr[candTick[i]], mid);
       middleCfg.add(candIn[i], middleCfg);
-      midInside   = vcm->isInsideObstacle(middleCfg,_env,tmpInfo);
+      midInside   = vcm->IsInsideObstacle(middleCfg,_env,tmpInfo);
       midValidity = vcm->IsValid(middleCfg,_env,_stats,tmpInfo,&call);
       midInBBX    = middleCfg.InBoundary(_env,_bb);
       midValidity = midValidity && !midInside;
@@ -996,7 +996,7 @@ bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
       middleCfg.multiply(incr[candTick[0]],mid);
       middleCfg.add(candIn[0], middleCfg);
 
-      midInside   = vcm->isInsideObstacle(middleCfg,_env,tmpInfo);
+      midInside   = vcm->IsInsideObstacle(middleCfg,_env,tmpInfo);
       midValidity = vcm->IsValid(middleCfg,_env,_stats,tmpInfo,&call);
       midInBBX    = middleCfg.InBoundary(_env,_bb);
       midValidity = midValidity && !midInside;

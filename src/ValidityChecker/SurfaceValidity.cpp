@@ -59,9 +59,9 @@ SurfaceValidity::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats,
 }
 
 bool SurfaceValidity::
-isInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) { 
+IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) { 
 #ifndef PMPCfgSurface
-  cerr << " Calling SurfaceValidity::isInsideObstacle with wrong cfg type: " << _cfg.GetName() << endl;
+  cerr << " Calling SurfaceValidity::IsInsideObstacle with wrong cfg type: " << _cfg.GetName() << endl;
   exit(0);
 #endif
 
@@ -72,7 +72,7 @@ isInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) {
   //_stats
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(0);//using 0 by default
   StatClass* stats = region->GetStatClass();
-  string callee="SurfaceValidity::isInsideObstacle";
+  string callee="SurfaceValidity::IsInsideObstacle";
 
   if( sid == -1 ) { 
     //call default validity checker specified
