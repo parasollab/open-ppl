@@ -1131,7 +1131,7 @@ namespace pmpl_detail
       ~GetCfg(){}
 
       template<typename T>
-        typename RDMP::vertex_property operator()(const RDMP* _map, T& _t) const {
+        typename RDMP::vertex_property operator()(RDMP* _map, T& _t) const {
           return (*(_map->find_vertex(*_t))).property();
         }
 
@@ -1144,7 +1144,7 @@ namespace pmpl_detail
       //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
       //calls find_vertex(..) on VID to call property()
       //To do:what is the purpose for this, how is it diffrent from above
-      typename RDMP::vertex_property operator()(const RDMP* _map, typename RDMP::VID _t) const {
+      typename RDMP::vertex_property operator()(RDMP* _map, typename RDMP::VID _t) const {
         return (*_map->find_vertex(_t)).property();
       }
     };

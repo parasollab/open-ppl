@@ -11,6 +11,7 @@
 //#include <stapl/algorithms/algorithm.hpp>
 
 RegularSubdivisionMethod::RegularSubdivisionMethod(XMLNodeReader& _node, MPProblem* _problem) : MPStrategyMethod(_node, _problem) {
+  m_problem = _problem;
   ParseXML(_node);
 }
 
@@ -79,20 +80,19 @@ void RegularSubdivisionMethod::ParseXML(XMLNodeReader& _node){
 };
 
 
-void RegularSubdivisionMethod::Initialize(int _regionID) {
+void RegularSubdivisionMethod::Initialize() {
   cout << "RegularSubdivisionMethod::Initialize()" <<endl;
 }
 
-void RegularSubdivisionMethod::Run(int _regionID) {
+void RegularSubdivisionMethod::Run() {
   
   cout << "RegularSubdivisionMethod:: Run()" << endl;
   
-  m_region = GetMPProblem()->GetMPRegion(_regionID);
   Environment* env = GetMPProblem()->GetEnvironment();
-  RoadmapGraph<CfgType,WeightType>* rmg = m_region->GetRoadmap()->m_pRoadmap; 
+  RoadmapGraph<CfgType,WeightType>* rmg = GetMPProblem()->GetRoadmap()->m_pRoadmap; 
   BasicDecomposition* decomposer = new BasicDecomposition();
   shared_ptr<DistanceMetricMethod> dmm = GetMPProblem()->GetDistanceMetric()->GetMethod("scaledEuclidean");
-  shared_ptr<ValidityCheckerMethod> vcm = GetMPProblem()->GetValidityChecker()->GetVCMethod("cd1");
+  shared_ptr<ValidityCheckerMethod> vcm = GetMPProblem()->GetValidityChecker()->GetMethod("cd1");
   typedef Connector<CfgType, WeightType> NC;
   typedef NC::ConnectionPointer NCP;
   NC* nc = GetMPProblem()->GetMPStrategy()->GetConnector();
@@ -110,19 +110,19 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   typedef ConnectCCs<CfgType, WeightType>* CCP;
   typedef std::tr1::tuple<CCP,string, int> ccConnectParam;
   typedef std::tr1::tuple<NCP,string, int> ncConnectParam;
-  typedef array<BoundingBox> arrayBbox;
+  typedef array< BoundingBox > arrayBbox;
   typedef array_view <arrayBbox> viewBbox;
   
   int mesh_size = m_row * m_col;
   int num_samples;
   
-  shared_ptr<BoundingBox> bbox = env->GetBoundingBox();
+  BoundingBox* bbox = dynamic_cast<BoundingBox*>(&*env->GetBoundary());
   
-  arrayBbox pArrayBbox(mesh_size,*bbox);
+  arrayBbox pArrayBbox(mesh_size, *bbox);
   
   ///MAKE A MESH GRAPH
   RRGraph regularRegion;
-  add_edges_mesh<RRGraph> meshGraph(regularRegion,m_row, m_col);
+  stapl::generators::mesh<RRGraph> meshGraph(regularRegion,m_row, m_col);
   meshGraph.add_vertices();
   rmi_fence();
   meshGraph.add_edges();
@@ -134,7 +134,7 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   
   ////DECOMPOSE SPACE TO REGIONS
   if( stapl::get_location_id() == 0){
-    decomposer->DecomposeWS(env,*bbox,m_row, m_col,1, pArrayBbox.begin(), m_xEpsilon,m_yEpsilon, m_zEpsilon);
+    decomposer->DecomposeWS(env,bbox, m_row, m_col,1, pArrayBbox.begin(), m_xEpsilon,m_yEpsilon, m_zEpsilon);
   }
   rmi_fence();
   
@@ -152,7 +152,7 @@ void RegularSubdivisionMethod::Run(int _regionID) {
     for(J itr1 = m_strategiesLabels.begin(); itr1 != m_strategiesLabels.end(); ++itr1) {
     PrintValue("View size " , regionView.size());
     MPStrategyMethod* strategy = GetMPProblem()->GetMPStrategy()->GetMPStrategyMethod(*itr1); 
-    ConstructRoadmap constrRegionMap(m_region,strategy,_regionID);
+    ConstructRoadmap constrRegionMap(strategy);
     map_func(constrRegionMap, regionView,arrView);
     }
   }else {
@@ -162,7 +162,7 @@ void RegularSubdivisionMethod::Run(int _regionID) {
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr){
       num_samples = itr->second;  
       Sampler<CfgType>::SamplerPointer sp = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(itr->first);
-      NodeGenerator nodeGen(m_region,env,sp,vcm,num_samples);
+      NodeGenerator nodeGen(env,sp,vcm,num_samples);
       map_func(nodeGen,arrView,regionView);
     }
   
@@ -171,7 +171,7 @@ void RegularSubdivisionMethod::Run(int _regionID) {
     ///CONNECT NODES IN REGIONS
     for(J itr1 = m_vecStrNodeConnectionLabels.begin(); itr1 != m_vecStrNodeConnectionLabels.end(); ++itr1){
       NCP cp = nc->GetMethod(*itr1);  
-      NodeConnector nodeCon(m_region,cp);
+      NodeConnector nodeCon(cp, env);
       new_algorithms::for_each(regionView,nodeCon);
     }
   }
@@ -214,14 +214,14 @@ void RegularSubdivisionMethod::Run(int _regionID) {
     ///CONNECT REGIONS ROADMAP 
        ccConnectParam conParam1 = std::tr1::make_tuple(m_ccConnector,m_ccc,m_k1);
    
-    RegionCCConnector<RRGraph, Region, property_map_type> regionCCCon(m_region, &regularRegion, map, conParam1);  
+    RegionCCConnector<RRGraph, Region<BoundingBox>, property_map_type> regionCCCon(m_problem, &regularRegion, map, conParam1);  
     new_algorithms::for_each(regionView,regionCCCon);
   }else if(m_ccc== "random") { 
     for(J itr2 = m_regionConnectionLabels.begin(); itr2 != m_regionConnectionLabels.end(); ++itr2) {
       NCP ncp = nc->GetMethod(*itr2); 
       ncConnectParam conParam2 = std::tr1::make_tuple(ncp,m_ccc,m_k1);
 
-      RegionRandomConnector<RRGraph, Region> regionRandomCon(m_region, &regularRegion, conParam2);
+      RegionRandomConnector<RRGraph, Region<BoundingBox> > regionRandomCon(m_problem, &regularRegion, conParam2);
       new_algorithms::for_each(regionView,regionRandomCon);
     }
   }else {
@@ -246,13 +246,14 @@ void RegularSubdivisionMethod::Run(int _regionID) {
   rmi_fence();
    
   ///WRITE REGION GRAPH :: DEBUG
-  write_graph(regionView,"rgFile.out");
+  //TODO write_graph(regionView,"rgFile.out");
+  
   rmi_fence();
   
   //bbox->Clear();
 }
 
-void RegularSubdivisionMethod::Finalize(int _regionID){
+void RegularSubdivisionMethod::Finalize(){
   ///Write graph here :: DEBUG
   string str;
   stringstream basefname;
@@ -262,7 +263,7 @@ void RegularSubdivisionMethod::Finalize(int _regionID){
      cout << "RegularSubdivisionMethod::Finalize(): can't open outfile: ";
      exit(-1);
   }else{
-     m_region->WriteRoadmapForVizmo(osMap);
+     m_problem->WriteRoadmapForVizmo(osMap);
      osMap.close();
   }
   rmi_fence();

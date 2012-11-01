@@ -1,77 +1,79 @@
 #ifndef BOUNDINGBOX_H_
 #define BOUNDINGBOX_H_
 #include "Boundary.h"
+#include "MPUtils.h"
 #include "Environment.h"
 class Environment;
 
 class MultiBody;
-using namespace mathtool;
+//using namespace mathtool;
 
 ///\todo add MPBaseObject defautl constructor
-class BoundingBox : public Boundary {
- public:
-  enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};
-  BoundingBox(int i_dofs, int i_pos_dofs);
-  BoundingBox(XMLNodeReader& in_Node,MPProblem* in_pproblem);
-  BoundingBox(const BoundingBox &from_bbox);
-  BoundingBox();
-  /*virtual ~BoundingBox();*/
-  
-  void Clear();
-
-  bool operator==(const Boundary& bb) const;
-
-  void SetParameter(int par, double p_first, double p_second);
-  std::vector<BoundingBox> Partition(int par, double p_point, double epsilon);
-
-  int FindSplitParameter(BoundingBox &o_bounding_box);
-
-  BoundingBox GetCombination(BoundingBox &o_bounding_box);
-  double GetClearance(Vector3D point3d) const;
-  parameter_type GetType(int par) const;
-  Point3d GetRandomPoint();
-
-  void TranslationalScale(double scale_factor);
-
-
-  void Print(std::ostream& _os, char range_sep=':', char par_sep=';') const;
-
-  //void Parse(std::stringstream &i_bbox);
-
-  bool IfWrap(int par);
-  bool IfEnoughRoom(int par, double room);
-  bool IfSatisfiesConstraints(Vector3D point3d) const;
-  bool IfSatisfiesConstraints(vector<double> cfg) const;
-  bool InBoundary(const Cfg& cfg);
- private:
-  std::vector<parameter_type> par_type;
+class BoundingBox :  public Boundary {
   public:
-  #ifdef _PARALLEL
-  void define_type(stapl::typer &_t)
-  {
-	  _t.member(par_type);
-  }
-  #endif
+    BoundingBox(int _DOFs, int _posDOFs);
+    BoundingBox(XMLNodeReader& _node,MPProblem* _problem);
+    BoundingBox(const BoundingBox& _bbox);
+    BoundingBox();
+    /*virtual ~BoundingBox();*/
+
+    void Clear();
+    bool operator==(const Boundary& _bb) const;
+
+    void SetParameter(int _par, double _first, double _second);
+    std::vector<BoundingBox> Partition(int _par, double _point, double _epsilon);
+
+    int FindSplitParameter(BoundingBox& _boundingBox);
+
+    BoundingBox GetCombination(BoundingBox& _boundingBox);
+    double GetClearance(Vector3D _point3d) const;
+    Point3d GetRandomPoint();
+
+    void TranslationalScale(double _scaleFactor);
+
+
+    void Print(std::ostream& _os, char _rangeSep=':', char _parSep=';') const;
+
+    //void Parse(std::stringstream &i_bbox);
+
+    bool IfWrap(int _par);
+    bool IfEnoughRoom(int _par, double _room);
+    bool IfSatisfiesConstraints(Vector3D _point3d) const;
+    bool IfSatisfiesConstraints(vector<double> _cfg) const;
+    bool InBoundary(const Cfg& _cfg);
+
+  public:
+#ifdef _PARALLEL
+
+    void define_type(stapl::typer &_t)
+    {
+      _t.member(m_jointLimits);
+      _t.member(m_boundingBox);
+      _t.member(m_posDOFs);
+      _t.member(m_DOFs);
+      _t.member(m_parType);
+    }
+#endif
 };
 
 #ifdef _PARALLEL
 namespace stapl {
-template <typename Accessor>
-class proxy<BoundingBox, Accessor> 
-: public Accessor {
-private:
-  friend class proxy_core_access;
-  typedef BoundingBox target_t;
-  
-public:
-  typedef target_t::parameter_type  parameter_type;
-  explicit proxy(Accessor const& acc) : Accessor(acc) { }
-  operator target_t() const { return Accessor::read(); }
-  proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
-  proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
-  Point3d GetRandomPoint() const { return Accessor::const_invoke(&target_t::GetRandomPoint);}
-  parameter_type GetType(int _par) const { return Accessor::const_invoke(&target_t::GetType, _par);}
-};
+  template <typename Accessor>
+    class proxy<BoundingBox, Accessor> 
+    : public Accessor {
+      private:
+        friend class proxy_core_access;
+        typedef BoundingBox target_t;
+
+      public:
+        typedef target_t::parameter_type  parameter_type;
+        explicit proxy(Accessor const& acc) : Accessor(acc) { }
+        operator target_t() const { return Accessor::read(); }
+        proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
+        proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
+        Point3d GetRandomPoint() const { return Accessor::const_invoke(&target_t::GetRandomPoint);}
+        parameter_type GetType(int _par) const { return Accessor::const_invoke(&target_t::GetType, _par);}
+    };
 }
 #endif
 

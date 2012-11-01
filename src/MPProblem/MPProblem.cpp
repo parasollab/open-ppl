@@ -2,6 +2,9 @@
 #include "MPStrategy.h"
 #include "DistanceMetrics.h"
 #include "ValidityChecker.h"
+#ifdef _PARALLEL
+#include <stapl/containers/graph/algorithms/graph_io.hpp>
+#endif
 
 MPProblem::
 MPProblem(XMLNodeReader& in_Node, bool parse_xml) : MPBaseObject(in_Node, this) {

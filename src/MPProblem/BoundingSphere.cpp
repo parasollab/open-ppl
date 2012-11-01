@@ -2,80 +2,80 @@
 #include "MPProblem.h"
 
 
-BoundingSphere::BoundingSphere(int _iDofs, int _iPosDofs ) 
-  { 
-  pos_dofs=_iPosDofs;
-  dofs=_iDofs;
-  boundingSphere.clear();
-  for (int i = 0; i < dofs; i++) {
-    if (i < pos_dofs)
-      parType.push_back(TRANSLATIONAL);
+BoundingSphere::BoundingSphere(int _DOFs, int _posDOFs ) 
+{ 
+  m_posDOFs=_posDOFs;
+  m_DOFs=_DOFs;
+  m_boundingSphere.clear();
+  for (int i = 0; i < m_DOFs; i++) {
+    if (i < m_posDOFs)
+      m_parType.push_back(TRANSLATIONAL);
     else
-      parType.push_back(REVOLUTE);
+      m_parType.push_back(REVOLUTE);
   }
-  for (int i = pos_dofs; i < dofs; i++) {    
+  for (int i = m_posDOFs; i < m_DOFs; i++) {    
     m_jointLimits.push_back(pair<double,double>(0.0,1.0));
   }
 }
 
 BoundingSphere::
-BoundingSphere(XMLNodeReader& _inNode,MPProblem* _inPproblem): Boundary(_inNode, _inPproblem) { 
+BoundingSphere(XMLNodeReader& _node,MPProblem* _problem): Boundary(_node, _problem) { 
 
-  pos_dofs = Cfg::PosDOF();
-  dofs = Cfg::DOF();
-  _inNode.verifyName(string("boundary"));
-  boundingSphere.clear();
-  for (int i = 0; i < dofs; i++) {
-    
-    if (i < pos_dofs)
-      parType.push_back(TRANSLATIONAL);
+  m_posDOFs = Cfg::PosDOF();
+  m_DOFs = Cfg::DOF();
+  _node.verifyName(string("boundary"));
+  m_boundingSphere.clear();
+  for (int i = 0; i < m_DOFs; i++) {
+
+    if (i < m_posDOFs)
+      m_parType.push_back(TRANSLATIONAL);
     else
-      parType.push_back(REVOLUTE);
+      m_parType.push_back(REVOLUTE);
   }
-  for (int i = pos_dofs; i < dofs; i++) {    
+  for (int i = m_posDOFs; i < m_DOFs; i++) {    
     m_jointLimits.push_back(pair<double,double>(0.0,1.0));
   }
 
   XMLNodeReader::childiterator citr;
-  for(citr = _inNode.children_begin(); citr!= _inNode.children_end(); ++citr) {
+  for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
     if (citr->getName() == "parameter") {
-     
+
       int par_id = citr->numberXMLParameter("id",true,0,0,MAX_INT,"id");
       string par_label = citr->stringXMLParameter("Label",true,"","Label");
-          //@todo par_label is not used in bSphere parameters, may want to use it
+      //@todo par_label is not used in bSphere parameters, may want to use it
       double val = citr->numberXMLParameter("value",true,0.0,-1.0*MAX_DBL,MAX_DBL,"value");
-    
-      
+
+
       if(m_debug) cout<<"BoundingSphere:: setting parameter par_id="<<par_id<<" value=" <<val;
-      
+
       SetParameter(par_id,val);
       string type = citr->stringXMLParameter("type",true,"","type");
       if (type == "translational")
-        parType[par_id] = TRANSLATIONAL;
+        m_parType[par_id] = TRANSLATIONAL;
       else
-        parType[par_id] = REVOLUTE;
+        m_parType[par_id] = REVOLUTE;
     } else {
       citr->warnUnknownNode();
     }
   }
-  double translational_scale = _inNode.numberXMLParameter(string("translational_scale"),true,double(0),double(-1*MAX_INT),double(MAX_INT),string("translational_scale"));
+  double translational_scale = _node.numberXMLParameter(string("translational_scale"),true,double(0),double(-1*MAX_INT),double(MAX_INT),string("translational_scale"));
 
   TranslationalScale(translational_scale);
 }
 
 BoundingSphere::
-BoundingSphere(const BoundingSphere &from_bSphere)  {
-  dofs = from_bSphere.GetDOFs();
-  pos_dofs = from_bSphere.GetPosDOFs();
-  boundingSphere.clear();
-  SetMPProblem(from_bSphere.GetMPProblem());
-  for (int i = 0; i < dofs; i++) {
-    if(i<=pos_dofs)
-      boundingSphere.push_back(from_bSphere.GetParameter(i));
-    parType.push_back(from_bSphere.GetType(i));
+BoundingSphere(const BoundingSphere& _bSphere)  {
+  m_DOFs = _bSphere.GetDOFs();
+  m_posDOFs = _bSphere.GetPosDOFs();
+  m_boundingSphere.clear();
+  SetMPProblem(_bSphere.GetMPProblem());
+  for (int i = 0; i < m_DOFs; i++) {
+    if(i<=m_posDOFs)
+      m_boundingSphere.push_back(_bSphere.GetParameter(i));
+    m_parType.push_back(_bSphere.GetType(i));
   }
-  for (int i = pos_dofs; i < dofs; i++) {
-    m_jointLimits.push_back(from_bSphere.m_jointLimits[i-pos_dofs]);
+  for (int i = m_posDOFs; i < m_DOFs; i++) {
+    m_jointLimits.push_back(_bSphere.m_jointLimits[i-m_posDOFs]);
   }
 }
 
@@ -89,7 +89,7 @@ BoundingSphere::
 
 bool
 BoundingSphere::
-operator==(const Boundary& bb) const
+operator==(const Boundary& _bb) const
 {
   cerr<<"BoundingSphere::== not implemented"<<endl;
   exit(-1);
@@ -97,25 +97,25 @@ operator==(const Boundary& bb) const
 
 Point3d
 BoundingSphere::GetRandomPoint(){
-Point3d p;
-double radius = boundingSphere[pos_dofs];
-for(int i=0;i<pos_dofs;i++){
-  p[i] = (boundingSphere[i] - radius) +
-         (2 * radius)*DRand();
-}
-return p;
+  Point3d p;
+  double radius = m_boundingSphere[m_posDOFs];
+  for(int i=0;i<m_posDOFs;i++){
+    p[i] = (m_boundingSphere[i] - radius) +
+      (2 * radius)*DRand();
+  }
+  return p;
 
 }
 
 void 
 BoundingSphere::
-SetParameter(int par, double p_value) {
-  boundingSphere[par] =p_value;
+SetParameter(int _par, double _value) {
+  m_boundingSphere[_par] =_value;
 }
 
 std::vector<BoundingSphere > 
 BoundingSphere::
-Partition(int par, double p_point, double epsilon) {
+Partition(int _par, double _point, double _epsilon) {
   std::vector<BoundingSphere > result;
   cerr<<"BoundingSphere:: Partition not implemented as bsphere may not have partitions.";
   exit(-1);
@@ -124,15 +124,15 @@ Partition(int par, double p_point, double epsilon) {
 
 BoundingSphere
 BoundingSphere::
-GetCombination(BoundingSphere &o_bounding_sphere) {
+GetCombination(BoundingSphere& _boundingSphere) {
   cout<<"BoundingSphere:: GetCombinationnot not implemented. none call this function.";
   exit(-1);
-  return o_bounding_sphere;
+  return _boundingSphere;
 }
 
 int
 BoundingSphere::
-FindSplitParameter(BoundingSphere &o_bounding_sphere) {
+FindSplitParameter(BoundingSphere& _boundingSphere) {
   cout<<"BoundingSphere:: FindSplitParameter not implemented. don't know the use"<<endl;
   exit(-1);
   return 0; 
@@ -141,7 +141,7 @@ FindSplitParameter(BoundingSphere &o_bounding_sphere) {
 const double
 BoundingSphere::
 GetParameter(int _par) const{
- return boundingSphere[_par];
+  return m_boundingSphere[_par];
 }
 
 double
@@ -149,40 +149,33 @@ BoundingSphere::
 GetClearance(Vector3D _point3d) const {
   double minClearance = -1;
   double clearance = 0;
-  double radius = boundingSphere[pos_dofs];
-  for (int i = 0; i < pos_dofs; ++i) {
-    clearance = min((_point3d[i] - (boundingSphere[i] -radius) ),
-                      ((boundingSphere[i] + radius) - _point3d[i]));
+  double radius = m_boundingSphere[m_posDOFs];
+  for (int i = 0; i < m_posDOFs; ++i) {
+    clearance = min((_point3d[i] - (m_boundingSphere[i] -radius) ),
+        ((m_boundingSphere[i] + radius) - _point3d[i]));
     if (clearance < minClearance || i == 0)
-     minClearance = clearance;
+      minClearance = clearance;
   }
   return minClearance;
 }
 
-BoundingSphere::parameter_type
-BoundingSphere::
-GetType(int _par) const {
-  return parType[_par];
-}
-
-
 bool
 BoundingSphere::
-IfWrap(int par) {
-  if(parType[par] == REVOLUTE) { // orientation angle
+IfWrap(int _par) {
+  if(m_parType[_par] == REVOLUTE) { // orientation angle
     return true;   
-  //may need to consider other cases of second < first ?
+    //may need to consider other cases of second < first ?
   }
   return false;
 }
 
 bool BoundingSphere::InBoundary(const Cfg& _cfg){
- vector <double> m_v= _cfg.GetData();
- Environment *_env=GetMPProblem()->GetEnvironment();
+  vector <double> m_v= _cfg.GetData();
+  Environment *_env=GetMPProblem()->GetEnvironment();
   if(!IfSatisfiesConstraints(m_v)) 
     return false;
-  
-   // @todo: if there are multiple robots, this needs to be changed.
+
+  // @todo: if there are multiple robots, this needs to be changed.
   shared_ptr<MultiBody> robot = _env->GetMultiBody(_env->GetRobotIndex());  
   if (GetClearance(_cfg.GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
@@ -190,21 +183,21 @@ bool BoundingSphere::InBoundary(const Cfg& _cfg){
 
     for(int m=0; m<robot->GetFreeBodyCount(); ++m) {
       Transformation &worldTransformation = robot->GetFreeBody(m)->GetWorldTransformation();
-      
+
       GMSPolyhedron &bb_poly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
       bool bSphere_check = true;
       for(vector<Vector3D>::const_iterator V = bb_poly.m_vertexList.begin(); V != bb_poly.m_vertexList.end(); ++V)
-	if(!IfSatisfiesConstraints(worldTransformation * (*V))) {
-	  bSphere_check = false;
-	  break;
-	}
+        if(!IfSatisfiesConstraints(worldTransformation * (*V))) {
+          bSphere_check = false;
+          break;
+        }
       if(bSphere_check) 
-	continue;
-      
+        continue;
+
       GMSPolyhedron &poly = robot->GetFreeBody(m)->GetPolyhedron();
       for(vector<Vector3D>::const_iterator V = poly.m_vertexList.begin(); V != poly.m_vertexList.end(); ++V)
         if(!IfSatisfiesConstraints(worldTransformation * (*V)))
-	  return false;      
+          return false;      
     }
   }
   return true; 
@@ -212,12 +205,12 @@ bool BoundingSphere::InBoundary(const Cfg& _cfg){
 
 void
 BoundingSphere::
-Print(std::ostream& _os, char range_sep, char par_sep) const {
+Print(std::ostream& _os, char _rangeSep, char _parSep) const {
   std::vector< double >::const_iterator itrb;
   _os << "[ " ;
-  for (itrb = boundingSphere.begin(); itrb < boundingSphere.end(); ++itrb) {
-    if (itrb+1 != boundingSphere.end())
-      _os << *itrb << par_sep << " ";
+  for (itrb = m_boundingSphere.begin(); itrb < m_boundingSphere.end(); ++itrb) {
+    if (itrb+1 != m_boundingSphere.end())
+      _os << *itrb << _parSep << " ";
     else
       _os << *itrb << "";
   }
@@ -226,19 +219,19 @@ Print(std::ostream& _os, char range_sep, char par_sep) const {
 
 void
 BoundingSphere::
-TranslationalScale(double scale_factor) {
-  if(scale_factor != 1.0) {    	
-    SetParameter(pos_dofs, scale_factor * boundingSphere[pos_dofs]);
-    
+TranslationalScale(double _scaleFactor) {
+  if(_scaleFactor != 1.0) {    	
+    SetParameter(m_posDOFs, _scaleFactor * m_boundingSphere[m_posDOFs]);
+
   }
 }
 
 bool 
 BoundingSphere::
-IfEnoughRoom(int par, double room) {
-  int radius =  boundingSphere[pos_dofs]; 
+IfEnoughRoom(int _par, double _room) {
+  int radius =  m_boundingSphere[m_posDOFs]; 
   if ( radius > 0) { // regularly
-    if ((2* radius) >= room)
+    if ((2* radius) >= _room)
       return true;
     else
       return false;
@@ -249,10 +242,10 @@ IfEnoughRoom(int par, double room) {
 
 bool
 BoundingSphere::
-IfSatisfiesConstraints(Vector3D point3d) const {
-  double radius =  boundingSphere[pos_dofs];
-  for (int i = 0; i < pos_dofs; i++) {
-    if ( point3d[i] < boundingSphere[i] - radius || point3d[i] > boundingSphere[i] + radius)
+IfSatisfiesConstraints(Vector3D _point3d) const {
+  double radius =  m_boundingSphere[m_posDOFs];
+  for (int i = 0; i < m_posDOFs; i++) {
+    if ( _point3d[i] < m_boundingSphere[i] - radius || _point3d[i] > m_boundingSphere[i] + radius)
       return false;
   }
   return true;
@@ -260,20 +253,20 @@ IfSatisfiesConstraints(Vector3D point3d) const {
 
 bool
 BoundingSphere::
-IfSatisfiesConstraints(vector<double> point) const {
+IfSatisfiesConstraints(vector<double> _point) const {
   cout<<"IfSatisfiesConstraints not implemented\n";
-  double radius =  boundingSphere[pos_dofs];
-  for (size_t i = 0; i < point.size() && i < boundingSphere.size(); i++) {
-    if (parType[i] == REVOLUTE) {
-      if (point[i] < 0 || point[i] > 1) {
-	cout << "Invalid range on REVOLUTE dof." << endl;
-	exit(-1);
-	return false;
+  double radius =  m_boundingSphere[m_posDOFs];
+  for (size_t i = 0; i < _point.size() && i < m_boundingSphere.size(); i++) {
+    if (m_parType[i] == REVOLUTE) {
+      if (_point[i] < 0 || _point[i] > 1) {
+        cout << "Invalid range on REVOLUTE dof." << endl;
+        exit(-1);
+        return false;
       }
-   }
-   else { //no wrap around in other kinds of parameters
-     if (point[i] < boundingSphere[i] - radius || point[i] > boundingSphere[i] + radius)
-       return false;
+    }
+    else { //no wrap around in other kinds of parameters
+      if (_point[i] < m_boundingSphere[i] - radius || _point[i] > m_boundingSphere[i] + radius)
+        return false;
       // may still need to consider physical constraints not explicitely set by the bounding Sphere
     }
   }

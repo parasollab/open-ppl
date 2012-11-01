@@ -30,6 +30,7 @@ void MPStrategyMethod::operator()(){
   Finalize();
 }
 
+// #ifndef _PARALLEL
 bool MPStrategyMethod::EvaluateMap(vector<string> _evaluators) {
   if(_evaluators.empty()) {
     return true;
@@ -69,3 +70,4 @@ bool MPStrategyMethod::EvaluateMap(vector<string> _evaluators) {
     return mapPassedEvaluation;
   } 
 }
+// #endif

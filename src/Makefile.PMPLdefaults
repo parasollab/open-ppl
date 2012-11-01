@@ -30,16 +30,16 @@ ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
 endif
 
 ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc on 64 bit machine
-	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
-	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL -DUSE_VCLIP# -DUSE_SOLID 
+	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${VCLIP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL} 
+	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${VCLIP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB} 
 	
-	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
+	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a ${VCLIP_DIR}/lib/libvclip.a #${SOLID_DIR}/lib/libsolid.a 
 
 	ifeq (${parallel}, 1)
-	  BOOST_ROOT = /usr/local/boost/boost_1.48
+	  BOOST_ROOT = /usr
 	  BOOST_INCL = -I$(BOOST_ROOT)/include
-	  Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
+	  Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib64
 	  BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
 	else
 	  BOOST_ROOT = /usr
@@ -209,9 +209,9 @@ KMEANS_LIBFILE = ${KMEANS_DIR}/libkmeans.a
 # stapl macros
 #set parallel PRM options
 ifeq (${parallel}, 0)
-	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/stapl -I${STAPL_DIR}/include
+	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/include -I${STAPL_DIR}/stapl 
 else
-	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/stapl -I${STAPL_DIR}/include -I${STAPL_DIR}/tools  -I${STAPL_DIR}/tools/libstdc++/${STL_LIB}/ -I${STAPL_DIR}/tools/icl
+	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/include -I${STAPL_DIR}/stapl -I${STAPL_DIR}/tools  -I${STAPL_DIR}/tools/libstdc++/${STL_LIB}/ -I${STAPL_DIR}/tools/icl
         STAPL_DEF = -D_PARALLEL -D_STAPL -D_STAPL_MPI -D_PGRAPH -DDYNAMIC_GRAPH -DSTAPL_RUNTIME_ENABLE_NO_COMM_GUARD
         STAPL_LIB = ${STAPL_DIR}/lib/libstapl.a ${STAPL_DIR}/lib/libstapl_rt.a -lrt $(BOOST_LIB)
 endif
@@ -333,8 +333,7 @@ PMPL_OBJS = \
 	MPStrategy/MPStrategy.o \
 	MPProblem/MPProblem.o \
 	NeighborhoodFinder/NeighborhoodFinderMethod.o \
-	NeighborhoodFinder/MPNNWrapper.o \
-	RegionDecomposition/Region.o \
+	NeighborhoodFinder/MPNNWrapper.o 
 
 ifeq (${parallel}, 0)
 	PMPL_OBJS+= \
@@ -370,6 +369,7 @@ endif
 
 ifeq (${parallel}, 1)
         PMPL_OBJS+= \
+	ParallelMethods/BasicParallelPRM.o \
 	ParallelMethods/RegularSubdivisionMethod.o 
 endif
 

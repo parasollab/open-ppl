@@ -350,7 +350,7 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
     InputIterator _itrFirst, InputIterator _itrLast, 
     int _k, 
     const vector<VID>& _iterNeighbors, OutputIterator _closestIter){
-#ifndef _PARALLEL 
+ #ifndef _PARALLEL 
   if(m_random){
     // find k random (unique) neighbors
     set<int> ids(_iterNeighbors.begin(), _iterNeighbors.end());
@@ -379,11 +379,11 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
     else 
       return nfptr->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
   } 
-#else
+ #else
   // find k-closest using just brute force
-  BFNF<CFG,WEIGHT>* bf_finder = new BFNF<CFG,WEIGHT>(this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod());
-  return bf_finder->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
-#endif
+  NeighborhoodFinder::NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod);
+  return nf->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
+ #endif 
 }            
 
 ///////////////////////////////////////////////////////////////////////////////

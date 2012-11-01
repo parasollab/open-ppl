@@ -8,9 +8,9 @@ class MPProblem;
 template <class CFG, class WEIGHT> class LocalPlanners;
 template <class CFG> class Sampler;
 template <class CFG, class WEIGHT> class Connector;
+template <class CFG, class WEIGHT> class MapEvaluator;
 #ifndef _PARALLEL
 template <class CFG, class WEIGHT> class MPCharacterizer;
-template <class CFG, class WEIGHT> class MapEvaluator;
 class Metric;
 class PartitioningMethods;
 class PartitioningEvaluators;
@@ -33,9 +33,9 @@ class MPStrategy : public MPBaseObject {
     void SetSamplers(Sampler<CfgType>* _s){m_pNodeGeneration = _s;};
     Connector<CfgType, WeightType>* GetConnector(){return m_pConnection;};
     void SetConnectors(Connector<CfgType, WeightType>* _c){m_pConnection = _c;};
+    MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_evaluator;}; 
     #ifndef _PARALLEL
     MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
-    MapEvaluator< CfgType, WeightType > * GetMapEvaluator() { return m_evaluator;}; 
     Metric* GetMetric() {return m_metric;};
     PartitioningMethods* GetPartitioningMethods(){return m_PartitioningMethods;}
     PartitioningEvaluators* GetPartitioningEvaluators(){return m_PartitioningEvaluators;}
@@ -54,13 +54,15 @@ class MPStrategy : public MPBaseObject {
     Sampler<CfgType>* m_pNodeGeneration;
     Connector<CfgType, WeightType>* m_pConnection;
     LocalPlanners<CfgType, WeightType>* m_pLocalPlanners;
+    
+    //Map_Evaluation
+    MapEvaluator<CfgType, WeightType>* m_evaluator;
 
     //Characterization and Filtering
 #ifndef _PARALLEL
     MPCharacterizer<CfgType, WeightType>* m_pCharacterizer;
   
     //Map_Evaluation
-    MapEvaluator<CfgType, WeightType>* m_evaluator;
     Metric* m_metric;
   
     //UAS items

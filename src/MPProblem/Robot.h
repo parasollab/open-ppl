@@ -6,7 +6,7 @@
 
 using namespace std;
 
-struct Robot{
+struct Robot {
   enum Base {PLANAR, VOLUMETRIC, FIXED, JOINT}; //2D plane vs 3D
   enum BaseMovement {ROTATIONAL, TRANSLATIONAL}; //rotation+translation, just translation, no movement
   enum JointType {REVOLUTE, SPHERICAL, NONACTUATED}; //1dof vs 2dof rotational joints
@@ -30,6 +30,18 @@ struct Robot{
   static string GetTagFromBase(const Base& _b);
   static string GetTagFromMovement(const BaseMovement& _bm);
   static string GetTagFromJointType(const JointType& _jt);
+
+  public:
+#ifdef _PARALLEL
+    void define_type(stapl::typer &_t)  
+    {
+      _t.member(m_base);
+      _t.member(m_baseMovement);
+      _t.member(m_joints);
+      _t.member(m_bodyIndex);
+    }
+#endif
+    
 
 };
 

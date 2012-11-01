@@ -32,8 +32,10 @@ class MPStrategyMethod : public MPBaseObject {
     void SetBoundary(shared_ptr<Boundary> bb){m_boundary=bb;};
     long GetBaseSeed() {return m_baseSeed;} 
 
+// #ifndef _PARALLEL
     bool EvaluateMap(vector<string> _evaluators);
-  
+// #endif
+
   protected:
     typedef RoadmapGraph<CfgType, WeightType>::GRAPH GRAPH;
     typedef RoadmapGraph<CfgType, WeightType>::VID VID; 

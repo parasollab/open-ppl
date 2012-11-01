@@ -66,7 +66,11 @@ namespace pmpl_detail{
 
 
 template <class CFG, class WEIGHT>
-class ConnectionMethod : public MPBaseObject {
+#ifdef _PARALLEL
+class ConnectionMethod : public MPBaseObject, public stapl::p_object{
+#else
+class ConnectionMethod : public MPBaseObject{
+#endif
   public:
     /////////////////////////////////////////////
     // Constructors

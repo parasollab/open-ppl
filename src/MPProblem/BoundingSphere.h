@@ -4,16 +4,15 @@
 #include "Environment.h"
 class Environment;
 
-class MultiBody;
 using namespace mathtool;
+class MultiBody;
 
 ///\todo add MPBaseObject defautl constructor
 class BoundingSphere : public Boundary {
  public:
-  enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};
   BoundingSphere(int _dofs, int _posDofs);
-  BoundingSphere(XMLNodeReader& _inNode,MPProblem* _inPproblem);
-  BoundingSphere(const BoundingSphere &_fromBsphere);
+  BoundingSphere(XMLNodeReader& _node,MPProblem* _problem);
+  BoundingSphere(const BoundingSphere& _fromBsphere);
   BoundingSphere();
   virtual ~BoundingSphere();
 
@@ -24,17 +23,16 @@ class BoundingSphere : public Boundary {
   void SetParameter(int _par, double _pFirst, double _pSecond);
   std::vector<BoundingSphere> Partition(int _par, double _pPoint, double _epsilon);
 
-  int FindSplitParameter(BoundingSphere &_oBoundingSphere);
+  int FindSplitParameter(BoundingSphere& _boundingSphere);
 
-  BoundingSphere GetCombination(BoundingSphere &_oBoundingSphere);
+  BoundingSphere GetCombination(BoundingSphere& _boundingSphere);
   double GetClearance(Vector3D _point3d) const;
-  parameter_type GetType(int _par) const;
   Point3d GetRandomPoint();
 
   void TranslationalScale(double _scaleFactor);
 
 
-  void Print(std::ostream& _os, char range_sep=':', char par_sep=';') const;
+  void Print(std::ostream& _os, char _rangeSep=':', char _parSep=';') const;
 
   //void Parse(std::stringstream &i_bbox);
 
@@ -43,17 +41,51 @@ class BoundingSphere : public Boundary {
   bool IfSatisfiesConstraints(Vector3D _point3d) const;
   bool IfSatisfiesConstraints(vector<double> _cfg) const;
   bool InBoundary(const Cfg& _cfg);
- private:
-  std::vector<double> boundingSphere; // bb size is the dof
-  std::vector<parameter_type> parType;
-  public:
-  #ifdef _PARALLEL
-  void define_type(stapl::typer &t)
+
+  private:
+    std::vector< double > m_boundingSphere;
+public:
+#ifdef _PARALLEL
+  
+  void define_type(stapl::typer &_t)
   {
-	  t.member(boundingSphere);
-	  t.member(parType);
+    _t.member(m_jointLimits);
+    _t.member(m_boundingSphere);
+    _t.member(m_posDOFs);
+    _t.member(m_DOFs);
+    _t.member(m_parType);
   }
-  #endif
+#endif
 };
+
+#ifdef _PARALLEL
+namespace stapl {
+
+  template <typename Accessor>
+    class proxy<BoundingSphere, Accessor> 
+    : public Accessor {
+      private:
+        friend class proxy_core_access;
+        typedef BoundingSphere target_t;
+
+      public:
+        //enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};
+        typedef target_t::parameter_type  parameter_type;
+        explicit proxy(Accessor const& acc) : Accessor(acc) { }
+        operator target_t() const { return Accessor::read(); }
+        proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
+        proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
+        Point3d GetRandomPoint() const { return Accessor::const_invoke(&target_t::GetRandomPoint);}
+        parameter_type GetType(int _par) const { return Accessor::const_invoke(&target_t::GetType, _par);}
+    };
+
+template<>
+struct rmi_call_traits<Boundary> {
+    typedef callable_types_list<BoundingBox, BoundingSphere> polymorphic_callable;
+};
+
+
+}
+#endif
 
 #endif /*BOUNDINGSPHERE_H_*/

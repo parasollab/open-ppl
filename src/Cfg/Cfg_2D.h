@@ -52,7 +52,7 @@ public:
     void define_type(stapl::typer &_t)  
     {
       Cfg::define_type(_t);
-      _t.member(p);
+      _t.member(m_point);
       
     }
   #endif
@@ -110,8 +110,8 @@ public:
   virtual bool ConfigEnvironment(Environment*) const;
 
   //Get position in the form of Point2d
-  Point2d getPos() const {return p;}
-  void setPos(Point2d _p){ m_v[0]=_p[0]; m_v[1]=_p[1]; p=_p;}
+  Point2d getPos() const {return m_point;}
+  void setPos(Point2d _p){ m_v[0]=_p[0]; m_v[1]=_p[1]; m_point=_p;}
  
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -125,7 +125,7 @@ public:
   virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
 
  private:
-  Point2d p;
+  Point2d m_point;
 };
 
 #endif

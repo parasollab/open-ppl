@@ -22,7 +22,7 @@
 
 
 // for safety & compatiaility, use 6 elements for cfg.
-Cfg_2D::Cfg_2D():p(0,0){
+Cfg_2D::Cfg_2D():m_point(0,0){
   m_v.clear();
   for(int i=0; i<2; i++)
     m_v.push_back(0);
@@ -34,14 +34,14 @@ Cfg_2D::Cfg_2D(const Cfg& _c){
   m_v.clear();
   for (int i = 0; i < 2; i ++)
     m_v.push_back(_v[i]);
-  p = Point2d(_v[0], _v[1]);
+  m_point = Point2d(_v[0], _v[1]);
 }
 
 Cfg_2D::Cfg_2D(const Point2d _p){
   m_v.clear();
   m_v.push_back(_p[0]);
   m_v.push_back(_p[1]);
-  p = _p;
+  m_point = _p;
 }
 
 Cfg_2D::~Cfg_2D() {}
@@ -58,7 +58,7 @@ void Cfg_2D::Read(istream& is){
   m_v.clear();
   m_v.push_back(x);
   m_v.push_back(y);
-  p = Point2d(x,y);
+  m_point = Point2d(x,y);
 }
 
 void Cfg_2D::Write(ostream& os) const{
@@ -101,7 +101,7 @@ void Cfg_2D::WeightedSum(const Cfg& first, const Cfg& second, double weight) {
 int Cfg_2D::SetSingleParam(size_t param, double value, bool _norm) {    
   if ((param>=0) && (param<m_dof)) {
     Cfg::SetSingleParam(param, value, _norm);
-    p[param] = value;
+    m_point[param] = value;
     return 1;
   } else {
     return 0;
@@ -114,7 +114,7 @@ int Cfg_2D::SetSingleParam(size_t param, double value, bool _norm) {
 int Cfg_2D::IncSingleParam(size_t param, double value) {    
   if ((param>=0) && (param<m_dof)) {
     Cfg::IncSingleParam(param, value);
-    p[param] += value;
+    m_point[param] += value;
     return 1;
   } else {
     return 0;

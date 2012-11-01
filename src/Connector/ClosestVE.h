@@ -344,10 +344,10 @@ ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats,
     }
     return;
   }
-
+  
   vector< pair<pair<VID,VID>,WEIGHT> > edges;
+  /*
   typename RoadmapGraph<CFG, WEIGHT>::edge_iterator ei; 
-
   for(ei = _rm->m_pRoadmap->edges_begin(); ei != _rm->m_pRoadmap->edges_end(); ++ei){
     pair<pair<VID,VID>,WEIGHT> single_edge;
     single_edge.first.first = (*ei).source();
@@ -355,6 +355,27 @@ ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats,
     single_edge.second = (*ei).property();
     edges.push_back(single_edge);
   }
+*/
+  
+   vector< VID > vids;
+  _rm->m_pRoadmap->GetVerticesVID(vids);
+  
+  typename RoadmapGraph<CFG, WEIGHT>::vertex_iterator vi; 
+  typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei;
+  
+  for(size_t i = 0; i < vids.size(); i++) {
+    vi = _rm->m_pRoadmap->find_vertex(vids[i]);
+    ei = (*vi).begin();
+    while (ei != (*vi).end()){
+      pair<pair<VID,VID>,WEIGHT> single_edge;
+      single_edge.first.first = (*ei).source();
+      single_edge.first.second = (*ei).target();
+      single_edge.second = (*ei).property();
+      edges.push_back(single_edge);
+    }
+  }/**/
+
+
 
   // for each "real" cfg in roadmap
   LPOutput<CFG,WEIGHT> lpOutput;

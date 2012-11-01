@@ -12,21 +12,19 @@ using namespace std;
 class SampleWF {
   private:
     typedef Sampler<CfgType>::SamplerPointer NGM_type;
-    typedef MPRegion<CfgType,WeightType>  MPR_type;
 
-    NGM_type m_pNodeGen;
-    MPR_type* m_region;
-    Environment* m_env;
+    NGM_type m_nodeGen;
+    MPProblem* m_problem;
 
   public:
-    SampleWF(NGM_type _ngm, MPR_type* _mpr, Environment* _pEnv) {
-      m_pNodeGen = _ngm;
-      m_region = _mpr;
-      m_env = _pEnv;
+    SampleWF(NGM_type _ngm, MPProblem* _problem) {
+      m_nodeGen = _ngm;
+      m_problem = _problem;
 
     }
     void define_type(stapl::typer& _t) { 
-      _t.member(m_region);
+      //_t.member(m_nodeGen);
+      // _t.member(m_problem);
     }
 
     SampleWF(const SampleWF& _wf, std::size_t _offset) {} 
@@ -40,10 +38,8 @@ class SampleWF {
       vector<CfgType> inNodes(num_nodes);
       //if(m_debug) cout << "ParallelPRMStrategy::SampleWF- view.size= " << view.size() << endl;
 
-      Environment* _env = const_cast<Environment*>(m_env);
-
-      m_pNodeGen->Sample(_env,*(m_region->GetStatClass()),inNodes.begin(),inNodes.end(), 100, 
-        back_inserter(outNodes));
+      StatClass* stat = m_problem->GetStatClass();
+      m_nodeGen->Sample(m_problem->GetEnvironment(),*stat,inNodes.begin(),inNodes.end(), 100, back_inserter(outNodes));
 
       cout << "Sampled something" << endl;
       size_t j(0);
@@ -51,7 +47,7 @@ class SampleWF {
       for(VIT vit = outNodes.begin(); vit  != outNodes.end(); ++vit, j++) {
           
         CfgType tmp = *vit;
-        m_region->GetRoadmap()->m_pRoadmap->add_vertex(tmp);
+        m_problem->GetRoadmap()->m_pRoadmap->add_vertex(tmp);
 
       }
     }
@@ -59,24 +55,25 @@ class SampleWF {
 
 class ConnectWF {
   private:
-    typedef MPRegion<CfgType,WeightType>  MPR_type;
     typedef Connector<CfgType, WeightType>::ConnectionPointer NCM_type;
-    MPR_type* m_region;
+    typedef typename RoadmapGraph<CfgType, WeightType>::VID VID;
     NCM_type m_nodeCon;
+    MPProblem* m_problem;
 
   public:
-    ConnectWF(NCM_type _ncm, MPR_type* _mpr) {
+    ConnectWF(NCM_type _ncm, MPProblem* _problem) {
       m_nodeCon = _ncm;
-      m_region = _mpr;
+      m_problem = _problem;
     }
     void define_type(stapl::typer& _t) {
-      _t.member(m_region);
+       _t.member(m_problem);
+       _t.member(m_nodeCon);
     }
     template <typename NativeView, typename RepeatView>
     void operator()(NativeView _vw1, RepeatView _vw2) const {
 	
-      PrintValue("Basic Parallel- Native View : " , _vw1.size());
-      PrintValue("Basic Parallel - Repeat View : " , _vw2.size());
+      psbmp::PrintValue("Basic Parallel- Native View : " , _vw1.size());
+      psbmp::PrintValue("Basic Parallel - Repeat View : " , _vw2.size());
         
       vector<VID> v1;
       vector<VID> v2; 
@@ -93,8 +90,8 @@ class ConnectWF {
       stapl::sequential::vector_property_map<RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
       cmap.reset();
       vector<VID> dummyVec;
-      m_nodeCon->Connect(m_region->GetRoadmap(),
-        *(m_region->GetStatClass()), cmap, v1.begin(),v1.end(), v2.begin(), v2.end());
+      m_nodeCon->Connect(m_problem->GetRoadmap(),
+        *(m_problem->GetStatClass()), cmap, v1.begin(),v1.end(), v2.begin(), v2.end());
     }
 };
 
@@ -107,14 +104,13 @@ class BasicParallelPRM : public MPStrategyMethod {
     virtual void PrintOptions(ostream& _outOs) {};
     virtual void ParseXML(XMLNodeReader& _inPNode); 
 
-    virtual void Initialize(int _inRegionID) {};
-    virtual void Run(int _inRegionID); 
-    virtual void Finalize(int _inRegionID);
+    virtual void Initialize() {};
+    virtual void Run(); 
+    virtual void Finalize();
 
   private:
     vector<pair<string, int> > m_vecStrNodeGenLabels;
     vector<string> m_vecStrNodeConnectionLabels;
-    MPRegion<CfgType,WeightType>* m_region;
     StatClass* m_statClass;
     string m_nodeGen;
     int m_numIterations;

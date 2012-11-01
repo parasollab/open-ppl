@@ -12,7 +12,11 @@ class ValidityChecker;
 class Environment;
 template <typename CFG, typename WEIGHT> class Roadmap;
 
+#ifdef _PARALLEL
+class MPProblem : public MPBaseObject, public stapl::p_object
+#else
 class MPProblem : public MPBaseObject
+#endif
 {
 public:
 MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, ValidityChecker* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder);

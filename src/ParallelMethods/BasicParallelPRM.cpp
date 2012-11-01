@@ -48,13 +48,10 @@ BasicParallelPRM::ParseXML(XMLNodeReader& _node) {
 }
 
 void 
-BasicParallelPRM::Run(int _inRegionID) {
+BasicParallelPRM::Run() {
   if (m_debug) cout << "BasicParallelPRM::Run()" << endl;
-  m_region = GetMPProblem()->GetMPRegion(_inRegionID);
-  m_statClass = m_region->GetStatClass();
-  Environment* pEnv = GetMPProblem()->GetEnvironment();
 
-  RoadmapGraph<CfgType,WeightType>* rmg = m_region->GetRoadmap()->m_pRoadmap; 
+  RoadmapGraph<CfgType,WeightType>* rmg = GetMPProblem()->GetRoadmap()->m_pRoadmap; 
 
   stapl::counter<stapl::default_timer> t1,t2;
 
@@ -68,14 +65,14 @@ BasicParallelPRM::Run(int _inRegionID) {
 
     cout << "Generation Phase" << endl;
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr) {
-      Sampler<CfgType>::SamplerPointer pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(itr->first);
+      Sampler<CfgType>::SamplerPointer nodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(itr->first);
       typedef stapl::array<CfgType> cfgArray;
       typedef stapl::array_view<cfgArray> viewCfgArray;
       cfgArray PA(itr->second); 
       viewCfgArray v(PA);
 
       t1.start();
-      SampleWF SampleWF(pNodeGen,m_region,pEnv);
+      SampleWF SampleWF(nodeGen, GetMPProblem());
       stapl::map_func(SampleWF,stapl::balance_view(v,stapl::get_num_locations()));
       sample_timer = t1.stop();
 
@@ -91,13 +88,13 @@ BasicParallelPRM::Run(int _inRegionID) {
     for(J itr = m_vecStrNodeConnectionLabels.begin(); itr != m_vecStrNodeConnectionLabels.end(); ++itr) {      
       if (m_debug) cout << "ParallelPRMStrategy::graph size " << rmg->size() << endl;
 
-      Connector<CfgType, WeightType>::ConnectionPointer pConnection;
-      pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*itr);
+      Connector<CfgType, WeightType>::ConnectionPointer connector;
+      connector = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*itr);
       typedef stapl::graph_view<RoadmapGraph<CfgType,WeightType> >   VType;
       VType g_view(*rmg);
       
       t2.start();
-      ConnectWF connWf(pConnection, m_region);
+      ConnectWF connWf(connector, GetMPProblem());
       stapl::map_func(connWf, stapl::native_view(g_view), stapl::repeat_view(g_view));
       connect_timer = t2.stop();
       if (m_debug) {
@@ -109,7 +106,7 @@ BasicParallelPRM::Run(int _inRegionID) {
 }
 
 void 
-BasicParallelPRM::Finalize(int _inRegionID) {
+BasicParallelPRM::Finalize() {
   if (m_debug) cout << "ParallelPRMStrategy::Finalize()";
   //---------------------------
   // Write roadmap to file
@@ -129,7 +126,7 @@ BasicParallelPRM::Finalize(int _inRegionID) {
       exit(-1);
 
     }else {
-      m_region->WriteRoadmapForVizmo(osMap);
+      GetMPProblem()->WriteRoadmapForVizmo(osMap);
       osMap.close();
     }
   }
