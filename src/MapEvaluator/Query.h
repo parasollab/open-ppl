@@ -489,16 +489,23 @@ Query<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _sta
     typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei;
     typename RoadmapGraph<CFG, WEIGHT>::edge_descriptor ed(*it, *(it+1));
     _rdmp->m_pRoadmap->find_edge(ed, vi, ei);
+    CFG col;
 
     if(GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lpLabel)->IsConnected(
           _rdmp->GetEnvironment(), _stats, GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel),
           _rdmp->m_pRoadmap->find_vertex(*it)->property(), _rdmp->m_pRoadmap->find_vertex(*(it+1))->property(),
-          &ci, _rdmp->GetEnvironment()->GetPositionRes(), _rdmp->GetEnvironment()->GetOrientationRes(), true, true)) {
+          col, &ci, _rdmp->GetEnvironment()->GetPositionRes(), _rdmp->GetEnvironment()->GetOrientationRes(), true, true, true)) {
       _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
       _recreatedPath.push_back(_rdmp->m_pRoadmap->find_vertex(*(it+1))->property());
     }
-    else
-      return false;
+    else{
+      cerr << "Error::When querying, invalid edge of graph was found between vid pair (" 
+        << *it << ", " << *(it+1) << ")" << " outputing error path in error.path and exiting." << endl;
+      _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
+      _recreatedPath.push_back(col);
+      WritePathConfigurations("error.path", _recreatedPath, _rdmp->GetEnvironment());
+      exit(1);
+    }
   }
   return true;
 }
