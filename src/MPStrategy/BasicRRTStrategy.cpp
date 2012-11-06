@@ -14,11 +14,16 @@
 //Constructors
 //////////////////////
 BasicRRTStrategy::BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem, bool _warnXML) :
-  MPStrategyMethod(_node, _problem), m_currentIteration(0){
+  MPStrategyMethod(_node, _problem), m_query(NULL){
     ParseXML(_node);
     if (_warnXML) _node.warnUnrequestedAttributes();
     if(m_debug && _warnXML) PrintOptions(cout);
   }
+
+BasicRRTStrategy::~BasicRRTStrategy(){
+  if(m_query != NULL)
+    delete m_query;
+}
 
 void
 BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
@@ -32,8 +37,8 @@ BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
       citr->warnUnknownNode();
   }
 
-  m_delta = _node.numberXMLParameter("delta", false, 0.05, 0.0, 1.0, "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, 1.0, "Minimum Distance");
+  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
+  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
   m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
   m_sampler = _node.stringXMLParameter("sampler", true, "", "Sampler Method");
@@ -41,7 +46,14 @@ BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_nf = _node.stringXMLParameter("nf", true, "", "Neighborhood Finder");
   m_dm = _node.stringXMLParameter("dm",true,"","Distance Metric");
   m_lp = _node.stringXMLParameter("lp", true, "", "Local Planning Method");
-  m_query = _node.stringXMLParameter("query", false, "", "Query Filename");
+  
+  //optionally read in a query and create a Query object.
+  string query = _node.stringXMLParameter("query", false, "", "Query Filename");
+  if(query != ""){
+    m_query = new Query<CfgType, WeightType>(query);
+    m_query->SetMPProblem(GetMPProblem());
+    m_query->SetDebug(m_debug);
+  }
 }
 
 void
@@ -77,31 +89,29 @@ BasicRRTStrategy::Initialize(){
   string callee = "BasicRRTStrategy::RRT";
   // Setup RRT Variables
   CfgType tmp;
-  if(m_query != ""){
-    ifstream ifs(m_query.c_str());
-    while(1){
-      tmp.Read(ifs);
-      if(!ifs) break;
-      m_roots.push_back(tmp);
-      tmp.Read(ifs);
-      m_goals.push_back(tmp);
+  if(m_query != NULL){
+    vector<CfgType>& queryCfgs = m_query->GetQuery();
+    typedef vector<CfgType>::iterator CIT;
+    for(CIT cit1 = queryCfgs.begin(), cit2 = cit1+1; cit2!=queryCfgs.end(); cit1++, cit2++){
+      m_roots.push_back(*cit1);
+      m_goals.push_back(*cit2);
       m_goalsNotFound.push_back(m_goals.size()-1);
     }
   }
   else{
     // Add root vertex/vertices
-    for (int i=0; i<m_numRoots; ++i) {
+    int i = 0;
+    while(i < m_numRoots){
       tmp.GetRandomCfg(env);
       if (tmp.InBoundary(env)
           && vc->GetMethod(m_vc)->IsValid(tmp, env, *stats, cdInfo, &callee)){
         m_roots.push_back(tmp);
         m_goals.push_back(tmp);
-        m_goalsNotFound.push_back(m_goals.size()-1);
+        m_goalsNotFound.push_back(i++);
       }
-      else 
-        --i;
     }
   }
+  
   for(vector<CfgType>::iterator C = m_roots.begin(); C!=m_roots.end(); C++){
     GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(*C);
   }
@@ -143,12 +153,10 @@ BasicRRTStrategy::Run() {
     }
     
     //evaluate the roadmap
-    mapPassedEvaluation = EvaluateMap(m_evaluators);
+    mapPassedEvaluation = EvaluateMap(m_evaluators) && m_goalsNotFound.size()==0;
 
-    if(m_goalsNotFound.size()==0){
-      if(m_debug) cout << "RRT FOUND ALL GOALS" << endl;
-      mapPassedEvaluation = true;
-    }
+    if(m_debug && m_goalsNotFound.size()==0)
+      cout << "RRT FOUND ALL GOALS" << endl;
   }
 
   stats->StopClock("RRT Generation");
@@ -169,6 +177,18 @@ BasicRRTStrategy::Finalize() {
   //setup variables
   StatClass* stats = GetMPProblem()->GetStatClass();
   string str;
+
+  //perform query if query was given as input
+  if(m_query != NULL){
+    str = GetBaseFilename() + ".path";
+    m_query->SetPathFile(str);
+    if(m_query->PerformQuery(GetMPProblem()->GetRoadmap(), *stats)){
+      if(m_debug) cout << "Query successful! Output written to " << str << "." << endl;
+    }
+    else{
+      if(m_debug) cout << "Query unsuccessful." << endl;
+    }
+  }
 
   //output final map
   str = GetBaseFilename() + ".map";
@@ -250,7 +270,7 @@ BasicRRTStrategy::ConnectTrees(VID _recentlyGrown) {
   shared_ptr<LocalPlannerMethod<CfgType, WeightType> > lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
   LPOutput<CfgType, WeightType> lpOutput;
 
-  stringstream clockName; clockName << "Iteration " << m_currentIteration << ", Component Connection";
+  stringstream clockName; clockName << "Component Connection";
   stats->StartClock(clockName.str());
 
   stapl::sequential::vector_property_map< GRAPH,size_t > cmap;

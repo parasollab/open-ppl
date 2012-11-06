@@ -28,6 +28,7 @@ class Query : public MapEvaluationMethod {
     virtual void PrintOptions(ostream& _os); 
     vector<CFG>& GetQuery() { return m_query; }
     vector<CFG>& GetPath() { return m_path; }
+    void SetPathFile(string _filename) {m_pathFile = _filename;}
 
     // Reads a query and calls the other PerformQuery(), then calls Smooth() if desired
     virtual bool PerformQuery(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats);
@@ -58,18 +59,22 @@ class Query : public MapEvaluationMethod {
     string m_queryFile;         // Where to read in the query
     string m_pathFile;          // Where to write the initial unsmoothed path
     string m_smoothFile;        // Where to write the smoothed path
+    string m_intermediateFile;  // Where to output the intermediate CFGs along the path if != ""
     string m_lpLabel;           // Local planner
     string m_dmLabel;           // Distance metric
-    GraphSearchAlg m_searchAlg; // Shortest-path graph search algorithm
-    bool m_intermediateFiles;   // Store the intermediate CFGs?
-    bool m_smooth;              // Perform smoothing operation?
     bool m_deleteNodes;         // Delete any added nodes?
+    bool m_smooth;              // Perform smoothing operation?
+    GraphSearchAlg m_searchAlg; // Shortest-path graph search algorithm
     vector<string> m_nodeConnectionLabels;   // List of connection methods for query
     vector<string> m_smoothConnectionLabels; // List of connection methods for smoothing
 
   private:
+    //initialize variable defaults
+    void Initialize();
+
     vector<VID> m_pathVIDs; // Stores path nodes for easy reference during smoothing
     bool m_doneSmoothing;   // Flag to prevent infinite recursion
+    vector<VID> m_toBeDeleted; //nodes to be deleted if m_deleteNodes is enabled.
 };
 
 // Heuristic for A* graph search
@@ -92,29 +97,22 @@ struct Heuristic {
     double m_oriRes;
 };
 
-// Default constructor
 template <class CFG, class WEIGHT>
 Query<CFG, WEIGHT>::Query() {
-  this->SetName("Query");
-  m_doneSmoothing = false;
-  m_searchAlg = ASTAR;
+  Initialize();
 }
 
 // Reads in query from a file
 template <class CFG, class WEIGHT>
 Query<CFG, WEIGHT>::Query(string _queryFileName) {
-  this->SetName("Query");
-  m_doneSmoothing = false;
-  m_searchAlg = ASTAR;
+  Initialize();
   ReadQuery(_queryFileName);
 }
 
 // Uses start/goal to set up query
 template <class CFG, class WEIGHT>     
 Query<CFG, WEIGHT>::Query(CFG _start, CFG _goal) {
-  this->SetName("Query");
-  m_doneSmoothing = false;
-  m_searchAlg = ASTAR;
+  Initialize();
   m_query.push_back(_start);
   m_query.push_back(_goal);
 }
@@ -123,8 +121,7 @@ Query<CFG, WEIGHT>::Query(CFG _start, CFG _goal) {
 template <class CFG, class WEIGHT>
 Query<CFG, WEIGHT>::Query(XMLNodeReader& _node, MPProblem* _problem, bool _warn) :
   MapEvaluationMethod(_node, _problem) {
-    this->SetName("Query");
-    m_doneSmoothing = false;
+    Initialize();
     ParseXML(_node, _warn);
     if(_warn)
       _node.warnUnrequestedAttributes();
@@ -142,7 +139,7 @@ Query<CFG, WEIGHT>::ParseXML(XMLNodeReader& _node, bool _warn) {
   m_lpLabel = _node.stringXMLParameter("lpMethod", true, "", "Local planner method");
   m_dmLabel = _node.stringXMLParameter("dmMethod", false, "default", "Distance metric method");
   string searchAlg = _node.stringXMLParameter("graphSearchAlg", false, "dijkstras", "Graph search algorithm");
-  m_intermediateFiles = _node.boolXMLParameter("intermediateFiles", false, false, "Determines output of intermediate file mapnodes.path");
+  m_intermediateFile = _node.stringXMLParameter("intermediateFiles", false, "", "Determines output location of intermediate nodes.");
   m_smooth = _node.boolXMLParameter("smooth", false, false, "Whether or not to smooth the path");
   m_deleteNodes = _node.boolXMLParameter("deleteNodes", false, false, "Whether or not to delete start and goal from roadmap");
 
@@ -183,10 +180,10 @@ Query<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << "\n\tquery file = \"" << m_queryFile << "\"";
   _os << "\n\tpath file = \"" << m_pathFile << "\"";
   _os << "\n\tsmooth path file = \"" << m_smoothFile << "\"";
+  _os << "\n\tintermediate file = \"" << m_intermediateFile << "\"";
   _os << "\n\tdistance metric = " << m_dmLabel;
   _os << "\n\tlocal planner = " << m_lpLabel;
   _os << "\n\tsearch alg = " << m_searchAlg;
-  _os << "\n\tintermediate files = " << m_intermediateFiles;
   _os << "\n\tsmooth = " << m_smooth << endl;
   _os << "\n\tdeleteNodes = " << m_deleteNodes << endl;
 }
@@ -202,10 +199,12 @@ Query<CFG, WEIGHT>::operator()() {
   bool ans = PerformQuery(rdmp, m_stats);
 
   // Delete added nodes (such as start and goal) if desired
-  if(m_deleteNodes)
-    for(typename vector<CFG>::iterator it = m_query.begin(); it != m_query.end(); it++)
-      if(rdmp->m_pRoadmap->IsVertex(*it))
-        rdmp->m_pRoadmap->delete_vertex(rdmp->m_pRoadmap->GetVID(*it));
+  if(m_deleteNodes){
+    for(typename vector<VID>::iterator it = m_toBeDeleted.begin(); it != m_toBeDeleted.end(); it++){
+      rdmp->m_pRoadmap->delete_vertex(*it);
+    }
+    m_toBeDeleted.clear();
+  }
 
   return ans;
 }
@@ -237,7 +236,7 @@ Query<CFG, WEIGHT>::PerformQuery(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats)
 
   if(!m_doneSmoothing) {
     if(m_pathFile == "") {
-      cout << "Warning: no path file specified. Outputting path to \"Basic.path\"." << endl;
+      cerr << "Warning: no path file specified. Outputting path to \"Basic.path\"." << endl;
       WritePath(_rdmp, "Basic.path");
     }
     else
@@ -286,12 +285,16 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
   VID sVID, gVID;
   if(_rdmp->m_pRoadmap->IsVertex(_start))
     sVID = _rdmp->m_pRoadmap->GetVID(_start);
-  else
+  else{
     sVID = _rdmp->m_pRoadmap->AddVertex(_start);
+    m_toBeDeleted.push_back(sVID);
+  }
   if(_rdmp->m_pRoadmap->IsVertex(_goal))
     gVID = _rdmp->m_pRoadmap->GetVID(_goal);
-  else
+  else{
     gVID = _rdmp->m_pRoadmap->AddVertex(_goal);
+    m_toBeDeleted.push_back(gVID);
+  }
 
   // Loop through connected components
   typename vector<pair<size_t, VID> >::const_iterator ccIt, ccsBegin = ccs.begin();
@@ -399,12 +402,12 @@ Query<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _r
       stats->IncGOStat("CC Operations");
 
     if(connected) {
-      if(m_intermediateFiles) {
+      if(m_intermediateFile != "") {
         // Print out all start, all graph nodes, and goal; no "ticks" from local planners
         vector<CFG> mapCFGs;
         for(typename vector<VID>::iterator it = shortestPath.begin(); it != shortestPath.end(); it++)
           mapCFGs.push_back(_rdmp->m_pRoadmap->find_vertex(*it)->property());
-        WritePathConfigurations("mapnodes.path", mapCFGs, _rdmp->GetEnvironment());
+        WritePathConfigurations(m_intermediateFile, mapCFGs, _rdmp->GetEnvironment());
       }
       break;
     }
@@ -463,12 +466,9 @@ Query<CFG, WEIGHT>::Smooth() {
 
   // Output smoothed path
   if(smoothQueryResult) {
-    if(m_smoothFile == "") {
-      cout << "Warning: no smooth path file specified. Outputting smoothed path to \"smooth.path\"." << endl;
-      WritePath(rdmp, "smooth.path");
-    }
-    else
-      WritePath(rdmp, m_smoothFile);
+    if(m_smoothFile == "")
+      cerr << "Warning: no smooth path file specified. Outputting smoothed path to \"Basic.smooth.path\"." << endl;
+    WritePath(rdmp, m_smoothFile);
   }
   else if(this->m_debug)
     cout << "*S* Smooth query failed! (This should not happen.)" << endl;
@@ -536,6 +536,22 @@ Query<CFG, WEIGHT>::WritePath(Roadmap<CFG, WEIGHT>* _rdmp, string _filename) {
   for(size_t i = 0; i < m_path.size(); i++)
     pPath.push_back(&m_path[i]);
   WritePathConfigurations(_filename, pPath, _rdmp->GetEnvironment());
+}
+
+//initialize variable defaults
+template<class CFG, class WEIGHT>
+void 
+Query<CFG, WEIGHT>::Initialize(){
+  this->SetName("Query");
+  m_doneSmoothing = false;
+  m_searchAlg = ASTAR;
+  m_pathFile = "Basic.path";
+  m_smoothFile = "Basic.smooth.path";
+  m_intermediateFile = "";
+  m_lpLabel = "";
+  m_dmLabel = "";
+  m_deleteNodes = false;
+  m_smooth = false;
 }
 
 #endif

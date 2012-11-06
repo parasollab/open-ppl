@@ -10,6 +10,9 @@
 #include "CfgTypes.h"
 #include "MPStrategyMethod.h"
 
+template<class CFG, class WEIGHT>
+class Query;
+
 class BasicRRTStrategy : public MPStrategyMethod {
   public:
     
@@ -17,7 +20,7 @@ class BasicRRTStrategy : public MPStrategyMethod {
     //Constructors
     ///////////////
     BasicRRTStrategy(XMLNodeReader& _node, MPProblem* _problem, bool _warnXML = true);
-    virtual ~BasicRRTStrategy() {}
+    virtual ~BasicRRTStrategy();
     
     virtual void ParseXML(XMLNodeReader& _node);
 
@@ -40,9 +43,9 @@ class BasicRRTStrategy : public MPStrategyMethod {
     string m_dm;
     string m_nf;
     string m_vc;
-    string m_query;
+    Query<CfgType, WeightType>* m_query;
     double m_delta, m_minDist, m_growthFocus;
-    int m_numRoots, m_currentIteration;
+    int m_numRoots;
     vector<CfgType> m_goals, m_roots;
     vector<size_t> m_goalsNotFound;
 };
