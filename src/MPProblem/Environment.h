@@ -215,6 +215,8 @@ class Environment : public MPBaseObject{
      *@see MultiBody::GetBoundingBox and MultiBody::GetMaxAxisRange
      */
     virtual void FindBoundingBox();
+    virtual void ResetBoundingBox(double _d);
+    virtual void ConstrainBoundingBox(double _d, int _start, int _goal);
 
     /**Return a Bounding Box that encloses all MultiBodys added to this instance.
      *@see FindBoundingBox, Input::bbox_scale, and Input::bbox

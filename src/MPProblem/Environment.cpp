@@ -499,6 +499,122 @@ FindBoundingBox(){
   minmax_BodyAxisRange = bodies_min_span;
 }
 
+void
+Environment::
+ResetBoundingBox(double _d){
+  bool first = true;
+  const double * tmp;
+  double minx, miny, minz, maxx, maxy, maxz;
+  double origin_minx, origin_miny, origin_minz, origin_maxx, origin_maxy, origin_maxz;
+
+  double robot_radius = GetMultiBody(GetRobotIndex())->GetBody(0)->GetPolyhedron().m_maxRadius;
+  _d += robot_radius;
+
+  origin_minx = m_boundaries->GetRange(0).first;
+  origin_maxx = m_boundaries->GetRange(0).second;
+  origin_miny = m_boundaries->GetRange(1).first;
+  origin_maxy = m_boundaries->GetRange(1).second;
+  origin_minz = m_boundaries->GetRange(2).first;
+  origin_maxz = m_boundaries->GetRange(2).second;
+  minx = miny = minz = maxx = maxy = maxz = 0;
+
+  for(size_t i=0; i<multibody.size(); i++) {
+    if((int)i != robotIndex) {
+      if(first){
+        multibody[i]->FindBoundingBox();
+        tmp = multibody[i]->GetBoundingBox();
+        minx = tmp[0];  maxx = tmp[1];
+        miny = tmp[2];  maxy = tmp[3];
+        minz = tmp[4];  maxz = tmp[5];
+        first = false;
+      } else {
+        multibody[i]->FindBoundingBox();
+        tmp = multibody[i]->GetBoundingBox();
+        minx = min(minx, tmp[0]);  maxx = max(maxx, tmp[1]);
+        miny = min(miny, tmp[2]);  maxy = max(maxy, tmp[3]);
+        minz = min(minz, tmp[4]);  maxz = max(maxz, tmp[5]);
+      }
+    }
+  }
+
+  minx = max(minx-_d, origin_minx);
+  maxx = min(maxx+_d, origin_maxx);
+  miny = max(miny-_d, origin_miny);
+  maxy = min(maxy+_d, origin_maxy);
+  minz = max(minz-_d, origin_minz);
+  maxz = min(maxz+_d, origin_maxz);
+
+  vector<double> boundingBox;
+  boundingBox.push_back(minx);
+  boundingBox.push_back(maxx);
+  boundingBox.push_back(miny);
+  boundingBox.push_back(maxy);
+  boundingBox.push_back(minz);
+  boundingBox.push_back(maxz);
+
+  m_boundaries->SetRange(boundingBox);
+}
+
+void
+Environment::
+ConstrainBoundingBox(double _d, int _start, int _goal) {
+  bool first = true;
+  const double * tmp;
+  double minx, miny, minz, maxx, maxy, maxz;
+  double origin_minx, origin_miny, origin_minz, origin_maxx, origin_maxy, origin_maxz;
+  int count = 0;
+
+  double robot_radius = GetMultiBody(GetRobotIndex())->GetBody(0)->GetPolyhedron().m_maxRadius;
+  _d = 2*robot_radius;
+
+  origin_minx = m_boundaries->GetRange(0).first;
+  origin_maxx = m_boundaries->GetRange(0).second;
+  origin_miny = m_boundaries->GetRange(1).first;
+  origin_maxy = m_boundaries->GetRange(1).second;
+  origin_minz = m_boundaries->GetRange(2).first;
+  origin_maxz = m_boundaries->GetRange(2).second;
+  minx = miny = minz = maxx = maxy = maxz = 0;
+
+  for(size_t i=0; i<multibody.size(); i++){
+    if((int)i != robotIndex) {
+      count++;
+      if((((_start-1)*3+1) <= count) && ((_goal*3) >= count)) {
+        if(first) {
+          multibody[count]->FindBoundingBox();
+          tmp = multibody[count]->GetBoundingBox();
+          minx = tmp[0];  maxx = tmp[1];
+          miny = tmp[2];  maxy = tmp[3];
+          minz = tmp[4];  maxz = tmp[5];
+          first = false;
+        } else {
+          multibody[count]->FindBoundingBox();
+          tmp = multibody[count]->GetBoundingBox();
+          minx = min(minx, tmp[0]);  maxx = max(maxx, tmp[1]);
+          miny = min(miny, tmp[2]);  maxy = max(maxy, tmp[3]);
+          minz = min(minz, tmp[4]);  maxz = max(maxz, tmp[5]);
+        }
+      }
+    }
+  }
+
+  minx = max(minx-_d, origin_minx);
+  maxx = min(maxx+_d, origin_maxx);
+  miny = max(miny-_d, origin_miny);
+  maxy = min(maxy+_d, origin_maxy);
+  minz = max(minz-_d, origin_minz);
+  maxz = min(maxz+_d, origin_maxz);
+
+  vector<double> boundingBox;
+  boundingBox.push_back(minx);
+  boundingBox.push_back(maxx);
+  boundingBox.push_back(miny);
+  boundingBox.push_back(maxy);
+  boundingBox.push_back(minz);
+  boundingBox.push_back(maxz);
+
+  m_boundaries->SetRange(boundingBox);
+}
+
 //===================================================================
 //  Get_minmax_BodyAxisRange
 //===================================================================
