@@ -346,7 +346,7 @@ ClockClass::GetUSeconds() {
 //Roadmap Clearance returns a RoadmapClearanceStats structure that includes information regarding the clearance of a
 //roadmap
 RoadmapClearanceStats
-RoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType, WeightType> _g, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional){
+RoadmapClearance(Roadmap<CfgType, WeightType> _g, const ClearanceParams& _cParams){
   RoadmapClearanceStats output;
   ///temp until edge iterator & operator != in new stapl dynamic graph is fixed
   #ifndef _PARALLEL
@@ -355,7 +355,8 @@ RoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType
   RoadmapGraph<CfgType, WeightType>* graph = _g.m_pRoadmap;
   vector<double> clearanceVec;
   for(RoadmapGraph<CfgType, WeightType>::edge_iterator it = graph->edges_begin(); it != graph->edges_end(); it++){
-    double currentClearance = MinEdgeClearance(_mp, _exact, _env, (*graph->find_vertex((*it).source())).property(), (*graph->find_vertex((*it).target())).property(), (*it).property(), _vc, _dm, _clearance, _penetration, _useBBX, _positional);
+    double currentClearance = MinEdgeClearance((*graph->find_vertex((*it).source())).property(),
+      (*graph->find_vertex((*it).target())).property(), (*it).property(), _cParams);
     clearanceVec.push_back(currentClearance);//Save this value for variance computation later
     runningTotal+=currentClearance;
     if(currentClearance < minClearance){//Did we find a new minimum clearance value?
@@ -374,26 +375,28 @@ RoadmapClearance(MPProblem* _mp, bool _exact, Environment* _env, Roadmap<CfgType
   return output;
 }
 
-double 
-MinEdgeClearance(MPProblem* _mp, bool _exact, Environment* _env, const CfgType& _c1, const CfgType& _c2, const WeightType& _weight, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional){
+double
+MinEdgeClearance(const CfgType& _c1, const CfgType& _c2, const WeightType& _weight, const ClearanceParams& _cParams){
+  MPProblem* mp = _cParams.GetMPProblem();
+  Environment* env = mp->GetEnvironment();
   double minClearance = 1e6;
   shared_ptr<DistanceMetricMethod> dummy; //Currently not used
   //Reconstruct the path given the two nodes
   vector<CfgType> intermediates = _weight.GetIntermediates();
-  LocalPlanners<CfgType, WeightType>* lp = _mp->GetMPStrategy()->GetLocalPlanners();
-  vector<CfgType> reconEdge = lp->GetMethod(_weight.GetLPLabel())->ReconstructPath(_env, dummy, _c1, _c2, intermediates, _env->GetPositionRes(), _env->GetOrientationRes());  
+  LocalPlanners<CfgType, WeightType>* lp = mp->GetMPStrategy()->GetLocalPlanners();
+  vector<CfgType> reconEdge = lp->GetMethod(_weight.GetLPLabel())->ReconstructPath(env, dummy, _c1, _c2, intermediates, env->GetPositionRes(), env->GetOrientationRes());  
   for(vector<CfgType>::iterator it = reconEdge.begin(); it != reconEdge.end(); it++){
     CDInfo collInfo;
     StatClass dummyStats; //Not used
     CfgType clrCfg;
     //Decide which collision info function to use
     double currentClearance;
-    if(_exact){
-      GetExactCollisionInfo(_mp, *it, _env, _env->GetBoundary(), dummyStats, collInfo, _vc, _useBBX);
+    if(_cParams.m_exactClearance){
+      GetExactCollisionInfo(*it, dummyStats, collInfo, _cParams);
       currentClearance = collInfo.m_minDist;
     }
     else{
-      GetApproxCollisionInfo(_mp, *it, clrCfg, _env, dummyStats, collInfo, _vc, _dm, _clearance, _penetration, _useBBX, _positional);
+      GetApproxCollisionInfo(*it, clrCfg, dummyStats, collInfo, _cParams);
       currentClearance = collInfo.m_minDist;
     }
     //If newly computed clearance is less than the previous minimum, it becomes the minimum
@@ -403,4 +406,3 @@ MinEdgeClearance(MPProblem* _mp, bool _exact, Environment* _env, const CfgType& 
   }
   return minClearance;
 }
-

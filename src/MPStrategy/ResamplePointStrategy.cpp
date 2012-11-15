@@ -65,8 +65,8 @@ ParseXML(XMLNodeReader& in_Node)
 double GetValue(CfgType C, MPProblem* mp, Environment* env, StatClass& Stats,
      string m_vc, CDInfo& cdInfo, string m_dm, int x,int bl){
  
-    return C.GetSmoothingValue(mp, env, Stats,
-     m_vc, cdInfo, m_dm, x,bl );
+    ClearanceParams cParams(mp, m_vc, m_dm, false, false, x, x);
+    return C.GetSmoothingValue(Stats, cdInfo, cParams);
  
    
 }

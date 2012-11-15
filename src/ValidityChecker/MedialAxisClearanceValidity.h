@@ -5,9 +5,8 @@
 
 class MedialAxisClearanceValidity : public ValidityCheckerMethod {
   public:
-    MedialAxisClearanceValidity();
-    MedialAxisClearanceValidity(string _dmLabel, string _vcLabel, bool _useBBX, bool _cExact, bool _pExact, 
-        int _cRay, int _pRay, int _historyLen, double _epsilon, double _clearance);
+    MedialAxisClearanceValidity(const ClearanceParams& cParams = ClearanceParams(),
+      int _historyLen = 5 , double _epsilon = 0.1, double _clearance = 0.0);
     MedialAxisClearanceValidity(XMLNodeReader& _node, MPProblem* _problem);
     virtual ~MedialAxisClearanceValidity() {}
 
@@ -16,18 +15,15 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod {
 
     vector< pair<CfgType,CfgType> > GetHistory();
     void ClearHistory();
-
-  private:
-    string m_dmLabel;
-    string m_vcLabel;
-    bool m_useBBX,m_positional;
-    bool m_cExact, m_pExact;
-    int m_cRay;
-    int m_pRay;
-    int m_historyLen;
+    void ParseXML(XMLNodeReader& _node);
+  
+  private:  
+    ClearanceParams m_cParams;
+    int m_historyLength;
     double m_epsilon;
     double m_clearance;
     vector< pair<CfgType,CfgType> > m_history;
+
 };
 
 #endif

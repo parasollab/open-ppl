@@ -14,68 +14,33 @@ template <typename CFG>
 class MedialAxisSampler : public SamplerMethod<CFG>
 {
   public:
-    string m_vcLabel, m_dmLabel;
-    bool m_useBoundary, m_exactClearance, m_exactPenetration, m_positional;
-    int m_clearanceRays, m_penetrationRays, m_historyLength;
-    double m_epsilon;
-
-    MedialAxisSampler()
-      : m_vcLabel(""), m_dmLabel(""), m_useBoundary(true), m_exactClearance(false), m_exactPenetration(false),
-       m_positional(true), m_clearanceRays(10), m_penetrationRays(10), m_historyLength(5), m_epsilon(0.1) {
+    MedialAxisSampler(const ClearanceParams& _cParams = ClearanceParams(), double _epsilon = 0.1, int _historyLength = 5):
+      m_cParams(_cParams), m_epsilon(_epsilon), m_historyLength(_historyLength){
         this->SetName("MedialAxisSampler");
       }
 
-    MedialAxisSampler(string _vcLabel, string _dmLabel, bool _exactClearance, bool _exactPenetration, 
-        bool _pos = true, int _c = 1, int _p = 10, bool _useBoundary = true, double _e = 0.1, int _h = 5)
-      : m_vcLabel(_vcLabel), m_dmLabel(_dmLabel), m_useBoundary(_useBoundary), 
-      m_exactClearance(_exactClearance), m_exactPenetration(_exactPenetration),
-      m_positional(_pos), m_clearanceRays(_c), m_penetrationRays(_p), m_historyLength(_h), m_epsilon(_e) {
+    MedialAxisSampler(XMLNodeReader& _node, MPProblem* _problem):
+      SamplerMethod<CFG>(_node, _problem),m_cParams(_node,_problem){
         this->SetName("MedialAxisSampler");
+        ParseXML(_node);
       }
-
-    MedialAxisSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
-      this->SetName("MedialAxisSampler");
-      ParseXML(_node);
-    }
 
     ~MedialAxisSampler() {}
 
-    void ParseXML(XMLNodeReader& _node) {
-      m_vcLabel = _node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
-      m_dmLabel = _node.stringXMLParameter("dm_method", true, "", "Distance metric");
-
-      m_clearanceRays = _node.numberXMLParameter("clearance_rays", false, 10, 1, 1000, "Clearance Number");
-      string clearanceType = _node.stringXMLParameter("clearance_type", true, "", "Clearance Computation (exact or approx)");
-      m_exactClearance = clearanceType.compare("exact")==0;
-
-      m_penetrationRays = _node.numberXMLParameter("penetration_rays", false, 10, 1, 1000, "Penetration Number");
-      string penetrationType = _node.stringXMLParameter("penetration_type", true, "", "Penetration Computation (exact or approx)");
-      m_exactPenetration = penetrationType.compare("exact")==0;
-
+    void ParseXML(XMLNodeReader& _node){
       m_epsilon = _node.numberXMLParameter("epsilon", false, 0.1, 0.0, 1.0, "Epsilon-Close to the MA (fraction of the resolution)");
-      m_historyLength = _node.numberXMLParameter("history_len", false, 5, 3, 100, "History Length");
-      m_useBoundary = _node.boolXMLParameter("use_bbx", false, true, "Use the Bounding Box as an Obstacle");
-      m_positional = _node.boolXMLParameter("positional", false, true, "Use only positional DOFs");
-
+      m_historyLength = _node.numberXMLParameter("historyLength", false, 5, 3, 100,"History Length");
       _node.warnUnrequestedAttributes();
     }
 
     virtual void PrintOptions(ostream& _os) const {
       SamplerMethod<CFG>::PrintOptions(_os);
-      _os << "\tvcLabel = " << m_vcLabel << endl;
-      _os << "\tdmLabel = " << m_dmLabel << endl;
-      _os << "\tuseBoundary = " << m_useBoundary << endl;
-      _os << "\tclearance = ";
-      _os << ((m_exactClearance)?"exact, ":"approx, ");
-      _os << m_clearanceRays << " rays\n";
-      _os << "\tpenetration = ";
-      _os << ((m_exactPenetration)?"exact, ":"approx, ");
-      _os << m_penetrationRays << " rays\n";
+      m_cParams.PrintOptions(_os);
       _os << "\tepsilon = " << m_epsilon << endl;
       _os << "\thistoryLength = " << m_historyLength << endl;
     }
 
-    virtual string GetValidityMethod() const { return m_vcLabel; }
+    virtual string GetValidityMethod() const { return m_cParams.m_vcLabel; }
     
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
         StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
@@ -93,10 +58,8 @@ class MedialAxisSampler : public SamplerMethod<CFG>
         tmpCfg.GetRandomCfg(_env,_bb);
 
       // If pushed properly and the new CFG is valid, increment generated
-      if(PushToMedialAxis(this->GetMPProblem(), _env, _bb, tmpCfg, _stats, m_vcLabel, m_dmLabel, 
-            m_exactClearance, m_clearanceRays, m_exactPenetration, m_penetrationRays, 
-            m_useBoundary, m_epsilon, m_historyLength, this->m_debug, m_positional)) {
-        if(vc->GetMethod(m_vcLabel)->IsValid(tmpCfg, _env, _stats, cdInfo, &call)) {
+      if(PushToMedialAxis(tmpCfg, _stats, m_cParams, m_epsilon, m_historyLength, _bb)){
+        if(vc->GetMethod(m_cParams.m_vcLabel)->IsValid(tmpCfg, _env, _stats, cdInfo, &call)) {
           _stats.IncNodesGenerated(this->GetNameAndLabel());
           generated = true;
           _cfgOut.push_back(tmpCfg);
@@ -105,6 +68,10 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       return generated;
     }
 
+  private:
+    ClearanceParams m_cParams;
+    double m_epsilon;
+    int m_historyLength;
 };
 
 #endif

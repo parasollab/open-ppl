@@ -37,13 +37,8 @@ class OBRRTStrategy : public BasicRRTStrategy {
     CfgType g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid);
   
   private:
-    //MAPRM information
-    bool m_exact;
-    int m_rayCount;
-    int m_penetration;
-    bool m_useBbx;
     int m_hLen;
-    bool m_positional;
+    ClearanceParams m_cParams;
  
     double m_g0, m_g1, m_g2, m_g3, m_g4, m_g5, m_g6, m_g7, m_g8; //Growth method probabilities; can be found in OBRRT paper/TR
     double m_g0N, m_g1N, m_g2N, m_g3N, m_g4N, m_g5N, m_g6N, m_g7N, m_g8N; 

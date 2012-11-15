@@ -60,7 +60,6 @@ vector<double> CSpaceClearanceFeature::Collect(vector<VID>& vids) {
 	CDInfo tmp_info;
   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap()->m_pRoadmap;
   StatClass* pStatClass = GetMPProblem()->GetStatClass();
-  Environment *env = GetMPProblem()->GetEnvironment();
   ValidityChecker::ValidityCheckerPointer vc=GetMPProblem()->GetValidityChecker()->GetMethod(m_vc);
   typedef vector<VID>::iterator VIT;
 
@@ -68,7 +67,8 @@ vector<double> CSpaceClearanceFeature::Collect(vector<VID>& vids) {
     CDInfo _cdInfo;
     _cdInfo.m_retAllInfo=true;
     CfgType cfg=rdmp->find_vertex(*vit)->property(), tmp;
-		GetApproxCollisionInfo(GetMPProblem(),cfg,tmp,env,*pStatClass,_cdInfo,m_vc,m_dm,20,20,true,true);
+    ClearanceParams cParams(GetMPProblem(), m_vc, m_dm, false, false, 20, 20, true, true);
+		GetApproxCollisionInfo(cfg,tmp,*pStatClass,_cdInfo,cParams);
 		clearance.push_back(_cdInfo.m_minDist);
   }
   return clearance;

@@ -381,13 +381,12 @@ AStarClearance<CFG, WEIGHT>::ChooseOptimalNeighbor(Environment* _env, StatClass&
   double maxClearance = -MAXFLOAT;
   size_t retPosition = 0;
   double value = 0;
-  MPProblem* mp = this->GetMPProblem();
 
   CDInfo tmpInfo;
   CfgType tmp;
+  ClearanceParams cParams(this->GetMPProblem(), this->m_vcMethod, _dm->GetLabel(), false, false, m_penetration, m_penetration, true, true);
   for(size_t i = 0; i < _neighbors.size(); i++) {
-    GetApproxCollisionInfo(mp,_neighbors[i],tmp,_env,_stats,tmpInfo,this->m_vcMethod,
-        _dm->GetLabel(), m_penetration, m_penetration, true, true);
+    GetApproxCollisionInfo(_neighbors[i], tmp, _stats, tmpInfo, cParams);
 
     value = tmpInfo.m_minDist;
     if (value > maxClearance) {

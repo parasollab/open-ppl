@@ -42,9 +42,9 @@ BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
   m_sampler = _node.stringXMLParameter("sampler", true, "", "Sampler Method");
-  m_vc = _node.stringXMLParameter("vc", true, "", "Validity Test Method");
+  m_vc = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
   m_nf = _node.stringXMLParameter("nf", true, "", "Neighborhood Finder");
-  m_dm = _node.stringXMLParameter("dm",true,"","Distance Metric");
+  m_dm = _node.stringXMLParameter("dmMethod",true,"","Distance Metric");
   m_lp = _node.stringXMLParameter("lp", true, "", "Local Planning Method");
   
   //optionally read in a query and create a Query object.
@@ -363,11 +363,10 @@ BasicRRTStrategy::PathClearance(){
     graph->find_edge(ed, vi, ei);
     WeightType weight = (*ei).property();
     pathLength += weight.Weight();
-    double currentClearance = MinEdgeClearance(GetMPProblem(), false, 
-        GetMPProblem()->GetRoadmap()->GetEnvironment(), 
-        (*graph->find_vertex((*ei).source())).property(), 
-        (*graph->find_vertex((*ei).target())).property(), 
-        weight, m_vc, m_dm); 
+    ClearanceParams cParams(GetMPProblem(), m_vc, m_dm, false);
+    double currentClearance = MinEdgeClearance((*graph->find_vertex((*ei).source())).property(),
+      (*graph->find_vertex((*ei).target())).property(), 
+      weight, cParams); 
     clearanceVec.push_back(currentClearance);
     runningTotal += currentClearance;
     if(currentClearance < minClearance){

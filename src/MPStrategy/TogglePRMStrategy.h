@@ -11,8 +11,8 @@ class TogglePRMStrategy : public MPStrategyMethod
    TogglePRMStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem);
    virtual ~TogglePRMStrategy();
 
-   virtual void ParseXML(XMLNodeReader& in_Node);
-   virtual void PrintOptions(ostream& out_os);
+   virtual void ParseXML(XMLNodeReader& _node);
+   virtual void PrintOptions(ostream& _os);
 
    virtual void Initialize();
    virtual void Run();

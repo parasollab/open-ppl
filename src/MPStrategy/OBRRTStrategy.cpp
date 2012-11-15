@@ -3,7 +3,7 @@
 #include "CDInfo.h"
 
 OBRRTStrategy::OBRRTStrategy(XMLNodeReader& _node, MPProblem* _problem) : 
-  BasicRRTStrategy(_node, _problem, false){
+  BasicRRTStrategy(_node, _problem, false), m_cParams(_node, _problem){
     ParseXML(_node);
   };
 
@@ -19,14 +19,7 @@ OBRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_g7 = _node.numberXMLParameter("g7", false, 0.0, 0.0, 1.0, "g7 Growth Method"); 
   m_g8 = _node.numberXMLParameter("g8", false, 0.0, 0.0, 1.0, "g8 Growth Method");
 
-  //MAPRM values
-  m_exact = _node.boolXMLParameter("exact", false, "", "Exact Medial Axis Calculation");
-  m_rayCount = _node.numberXMLParameter("rays", false, 20, 0, 50, "Number of Clearance Rays");
-  m_penetration = _node.numberXMLParameter("penetration", false, 5, 0, 50, "Pentration");
-  m_useBbx = _node.boolXMLParameter("useBBX", true, "", "Use Bounding Box");
   m_hLen = _node.numberXMLParameter("hLen", false, 5, 0, 20, "History Length");
-  m_positional = _node.boolXMLParameter("positional", true, "", "Use Position in MA Calculations");
-
   _node.warnUnrequestedAttributes();
 
   //Normalize probabilities
@@ -79,7 +72,7 @@ OBRRTStrategy::ExpandTree(CfgType& _dir){
   if(m_debug) cout << " OBRRTStrategy::ExpandTree -- in expand call" << endl;
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
+  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_cParams.m_dmLabel);
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
   VID recentVID = INVALID_VID;
   // Find closest Cfg in map
@@ -148,11 +141,11 @@ OBRRTStrategy::ExpandTree(CfgType& _dir){
 CfgType
 OBRRTStrategy::g0(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
+  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_cParams.m_dmLabel);
   CDInfo  cdInfo;
   CfgType newCfg;
   int weight;
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -167,7 +160,7 @@ OBRRTStrategy::g0(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
 CfgType
 OBRRTStrategy::g1(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
+  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_cParams.m_dmLabel);
   CDInfo  cdInfo;
   CfgType newCfg;
 
@@ -175,7 +168,7 @@ OBRRTStrategy::g1(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
     _dir.SetSingleParam(i, _near.GetData()[i]);
   }
   int weight;
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -191,7 +184,7 @@ CfgType
 OBRRTStrategy::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
+  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_cParams.m_dmLabel);
   CDInfo  cdInfo;
   CfgType newCfg;
   //VECTOR SCALE - THIS WILL BE HARD CODED BUT SHOULD PROBABLY BE MADE AN OPTION
@@ -226,7 +219,7 @@ OBRRTStrategy::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _mai
       }
     }
     int weight;
-    if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
+    if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else {
@@ -242,7 +235,7 @@ OBRRTStrategy::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _mai
 CfgType
 OBRRTStrategy::g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
+  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_cParams.m_dmLabel);
   CDInfo  cdInfo;
   CfgType newCfg1, newCfg2;
   CfgType dirOrig = _dir;
@@ -253,7 +246,7 @@ OBRRTStrategy::g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   }
   int weight;
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, _dir, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -265,7 +258,7 @@ OBRRTStrategy::g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
     for(size_t i = 0; i < newDir.PosDOF(); i++){
       newDir.SetSingleParam(i, dirOrig.GetSingleParam(i) );
     }
-    if(!RRTExpand(GetMPProblem(), m_vc, m_dm, newNear, newDir, newCfg2, m_delta, weight, cdInfo)) {
+    if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, newNear, newDir, newCfg2, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else return newCfg2;
@@ -280,13 +273,13 @@ CfgType
 OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _maintainSrcOri){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
+  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_cParams.m_dmLabel);
   CDInfo cdInfo;
   CfgType newCfg;
 
   int weight;
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
@@ -336,7 +329,7 @@ OBRRTStrategy::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid, bool _mai
   }
 
   // rotation first 
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -353,7 +346,7 @@ CfgType
 OBRRTStrategy::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
+  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_cParams.m_dmLabel);
   CDInfo cdInfo;
   CfgType newCfg1, newCfg2, newCfg3;
   CfgType dir1 = _dir;
@@ -366,12 +359,12 @@ OBRRTStrategy::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
 
   int weight;
   // expand to c1  
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, dir1, newCfg1, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, dir1, newCfg1, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
   // expand to c2 
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, dir2, newCfg2, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, dir2, newCfg2, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
 
@@ -387,7 +380,7 @@ OBRRTStrategy::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   dm->ScaleCfg(env, vscale, _near, _dir, true);
 
   // final expand
-  if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, _dir, newCfg3, m_delta, weight, cdInfo)) {
+  if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, _dir, newCfg3, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
   }
   else {
@@ -402,8 +395,7 @@ OBRRTStrategy::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
 CfgType
 OBRRTStrategy::g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   // Setup MP Variables
-  Environment* env = GetMPProblem()->GetEnvironment();
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
+  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_cParams.m_dmLabel);
   StatClass* stats = GetMPProblem()->GetStatClass();
   CDInfo cdInfo;
   CfgType newCfg, newCfg2;
@@ -414,14 +406,12 @@ OBRRTStrategy::g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid){
   newCfg = g5( tNear, tDir, vv, false );
 
 
-  if(!PushToMedialAxis(GetMPProblem(), env, newCfg, *stats, m_vc, m_dm, 
-        m_exact, m_rayCount, m_exact, m_penetration, m_useBbx, .0001, 
-        m_hLen, m_debug, m_positional)){
+  if(!PushToMedialAxis(newCfg, *stats, m_cParams, .0001, m_hLen)){
     return newCfg;// CfgType(); //Error out   
   }
   else{ //pushed to medial axis, now check RRTexpand
     int weight;
-    if(!RRTExpand(GetMPProblem(), m_vc, m_dm, _near, newCfg, newCfg2, m_delta, weight, cdInfo)) {
+    if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, _near, newCfg, newCfg2, m_delta, weight, cdInfo)) {
       if(m_debug) cout << "RRT could not expand!" << endl; 
     }
     else {

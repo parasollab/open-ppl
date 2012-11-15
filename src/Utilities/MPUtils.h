@@ -336,6 +336,8 @@ class ElementSet {
       }
 };
 
+
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -373,6 +375,7 @@ class MPBaseObject {
     string GetName()  const {return m_name;}
     void SetName (string _s) {m_name  = _s;}
     string GetNameAndLabel() const {return m_name + "::" + m_label;}
+    bool GetDebug() const {return m_debug;}
     void SetDebug(bool _d) {m_debug = _d;}
 
   private:
@@ -437,6 +440,89 @@ bool RRTExpand(MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType _
 ///////////////////////////////////////////////////////////////////////////////
 //
 //
+// ClearanceParams
+//
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+//used to encapsulate all the fields necessary for clearance and penetration calculations
+class ClearanceParams : public MPBaseObject {
+  public:
+    string m_vcLabel;                //validity checker method label
+    string m_dmLabel;                //distance metric method label
+    bool m_exactClearance;           //use exact clearance calculations
+    bool m_exactPenetration;         //use exact penetration calculations
+    unsigned int  m_clearanceRays;   //number of rays used to approximate clearance
+    unsigned int  m_penetrationRays; //number of rays used to approximate penetration
+    bool m_useBBX;                   //use bounding box as obstacle
+    bool m_positional;               //use only positional dofs
+
+    ClearanceParams(MPProblem* mp = NULL,
+      string _vcLabel = "", string _dmLabel = "",
+      bool _exactClearance = false, bool _exactPenetration = false,
+      int _clearanceRays = 10, int _penetrationRays = 10,
+      bool _useBBX = true, bool _positional = true, bool _debug = false):
+      MPBaseObject(), 
+      m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
+      m_exactClearance(_exactClearance), m_exactPenetration(_exactPenetration),
+      m_clearanceRays(_clearanceRays), m_penetrationRays(_penetrationRays),
+      m_useBBX(_useBBX), m_positional(_positional){
+        SetMPProblem(mp);
+        m_debug = _debug;
+      }
+
+    //see ParseXML for usage of the callee argument 
+    ClearanceParams(XMLNodeReader& _node, MPProblem* _mp, string callee = "", bool _debug = false):
+      MPBaseObject(_mp, "ClearanceParams,Clearance Parameters"){//don't use node
+      ParseXML(_node, callee);
+      m_debug = _debug;
+    }
+
+    //The callee argument so far is used for:
+    //MARRT to provide its own "exact" XML parameter for future usage of this struct in MARRT.
+    //ApproxSpheres as penetration is not necessary for it
+    void ParseXML(XMLNodeReader& _node, string callee = ""){
+      bool parseCType = callee.compare("MARRTStrategy") != 0;//is clearanceType applicable for the callee?
+      bool parsePType = parseCType && (callee.compare("ApproxSpheres") != 0);//is penetrationType applicable?
+      m_vcLabel = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
+      m_dmLabel = _node.stringXMLParameter("dmMethod", true, "", "Distance metric");
+      m_clearanceRays = _node.numberXMLParameter("clearanceRays", false, 10, 1, 1000, "Number of Clearance Rays");
+      m_penetrationRays = _node.numberXMLParameter("penetrationRays", false, 10, 1, 1000, "Number of Penetration Rays");
+      if(parseCType){    
+        string clearanceType = _node.stringXMLParameter("clearanceType", true, "", "Clearance Computation (exact or approx)");
+        m_exactClearance = clearanceType.compare("exact")==0;
+      }
+      if(parsePType){
+        string penetrationType = _node.stringXMLParameter("penetrationType",true, "", "Penetration Computation (exact or approx)");
+        m_exactPenetration = penetrationType.compare("exact")==0;
+      }
+      m_useBBX = _node.boolXMLParameter("useBBX", false, true, "Use the Bounding Box as an Obstacle");
+      m_positional = _node.boolXMLParameter("positional", false, true, "Use only positional DOFs");
+    }
+
+    friend ostream& operator<<(ostream& _out, const ClearanceParams& _c){
+      _c.PrintOptions(_out);
+      return _out;
+    }
+
+    virtual void PrintOptions(ostream& _os) const{
+      _os << "\tvcLabel = " << m_vcLabel << endl;
+      _os << "\tdmLabel = " << m_dmLabel << endl;
+      _os << "\tuseBBX = " << m_useBBX << endl;
+      _os << "\tclearance = ";
+      _os << ((m_exactClearance) ? "exact, " : "approx, ");
+      _os << m_clearanceRays << " rays\n";
+      _os << "\tpenetration = ";
+      _os << ((m_exactPenetration) ? "exact, " : "approx, ");
+      _os << m_penetrationRays << " rays\n";
+    }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+//
 // Medial Axis Utility
 //
 //
@@ -446,12 +532,10 @@ bool RRTExpand(MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType _
 //***********************************//
 // Main Push To Medial Axis Function //
 //***********************************//
-bool PushToMedialAxis(MPProblem* _mp, Environment* _env, CfgType& _cfg, StatClass& _stats, string _vc, 
-    string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, bool _useBBX, double _eps, 
-    int _hLen, bool _debug, bool _positional); 
-bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<Boundary> _bb, CfgType& _cfg, StatClass& _stats, 
-    string _vc, string _dm, bool _cExact, int _clearance, bool _pExact, int _penetration, 
-    bool _useBBX, double _eps, int _hLen, bool _debug, bool _positional); 
+bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats,
+  const ClearanceParams& _cParams, double _epsilon, int _historyLen);
+bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats,
+  const ClearanceParams& _cParams, double _epsilon, int _historyLen, shared_ptr<Boundary> _bb);
 
 //***************************************************************//
 // Push From Inside Obstacle                                     //
@@ -459,10 +543,10 @@ bool PushToMedialAxis(MPProblem* _mp, Environment* _env, shared_ptr<Boundary> _b
 // A direction is determined to move the cfg outside of the      //
 // obstacle and is pushed till outside.                          //
 //***************************************************************//
-bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, StatClass& _stats,
-    string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional);	
-bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<Boundary> _bb, 
-    StatClass& _stats, string _vc, string _dm, bool _pExact, int _penetration, bool _debug, bool _positional);
+bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
+  const ClearanceParams& _cParams);
+bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
+  const ClearanceParams& _cParams, shared_ptr<Boundary> _bb);
 
 //***************************************************************//
 // Push Cfg To Medial Axis                                       //
@@ -470,23 +554,20 @@ bool PushFromInsideObstacle(MPProblem* _mp, CfgType& _cfg, Environment* _env, sh
 // algorithm stepping out at the resolution till the medial axis //
 // is found, determined by the clearance.                        //
 //***************************************************************//
-bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, StatClass& _stats,
-    string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, int _hLen, 
-    bool _debug, bool _positional);
-bool PushCfgToMedialAxis(MPProblem* _mp, CfgType& cfg, Environment* _env, shared_ptr<Boundary> _bb, 
-    StatClass& _stats, string _vc, string _dm, bool _cExact, int _clearance, bool _useBBX, double _eps, 
-    int _hLen, bool _debug, bool _positional);
+bool PushCfgToMedialAxis(CfgType& _cfg, StatClass& _stats,
+  const ClearanceParams& _cParams, double _epsilon, int _historyLength);
+bool PushCfgToMedialAxis(CfgType& _cfg, StatClass& _stats,
+  const ClearanceParams& _cParams, double _epsilon, int _historyLength, shared_ptr<Boundary> _bb);
 
 //*********************************************************************//
 // Calculate Collision Information                                     //
 //   This is a wrapper function for getting the collision information  //
 // for the medial axis computation, calls either approx or exact       //
 //*********************************************************************//
-bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats, 
-    CDInfo& _cdInfo, string _vc, string _dm, bool _exact, int _clearance, int _penetration, bool _useBBX, bool _positional);
-bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
-    shared_ptr<Boundary> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
-    bool _exact, int _clearance, int _penetration, bool _useBBX, bool _positional);
+bool CalculateCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
+  StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams); 
+bool CalculateCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
+  StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams, shared_ptr<Boundary> _bb);
 
 //*********************************************************************//
 // Get Exact Collision Information Function                            //
@@ -494,10 +575,10 @@ bool CalculateCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Env
 // checker results against obstacles to the bounding box to get a      //
 // complete solution                                                   //
 //*********************************************************************//
-bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, 
-    StatClass& _stats, CDInfo& _cdInfo, string _vc, bool _useBBX);
-bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, shared_ptr<Boundary> _bb, 
-    StatClass& _stats, CDInfo& _cdInfo, string _vc, bool _useBBX);
+bool GetExactCollisionInfo(CfgType& _cfg, StatClass& _stats, CDInfo& _cdInfo,
+  const ClearanceParams& _cParams);
+bool GetExactCollisionInfo(CfgType& _cfg, StatClass& _stats, CDInfo& _cdInfo,
+  const ClearanceParams& _cParams, shared_ptr<Boundary> _bb);
 
 //*********************************************************************//
 // Get Approximate Collision Information Function                      //
@@ -505,13 +586,10 @@ bool GetExactCollisionInfo(MPProblem* _mp, CfgType& _cfg, Environment* _env, sha
 // specified number of rays are sent out till they change in validity. //
 // The shortest ray is then considered the best calididate.            //
 //*********************************************************************//
-bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, StatClass& _stats,
-    CDInfo& _cdInfo, string _vc, string _dm, int _clearance, int _penetration, bool _useBBX, bool _positional);	
-bool GetApproxCollisionInfo(MPProblem* _mp, CfgType& _cfg, CfgType& _clrCfg, Environment* _env, 
-    shared_ptr<Boundary> _bb, StatClass& _stats, CDInfo& _cdInfo, string _vc, string _dm, 
-    int _clearance, int _penetration, bool _useBBX, bool _positional);
-
-
+bool GetApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
+  StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams);
+bool GetApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
+  StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams, shared_ptr<Boundary> _bb);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

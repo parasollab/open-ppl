@@ -15,7 +15,7 @@
 #include "IOUtils.h"
 
 MARRTStrategy::MARRTStrategy(XMLNodeReader& _node, MPProblem* _problem) :
-  MPStrategyMethod(_node, _problem), m_currentIteration(0){
+  MPStrategyMethod(_node, _problem), m_currentIteration(0), m_cParams(_node, _problem){
     ParseXML(_node);
   }
 
@@ -39,18 +39,11 @@ void MARRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_roots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
   m_sampler = _node.stringXMLParameter("sampler", true, "", "Sampler Method");
-  m_vc = _node.stringXMLParameter("vc", true, "", "Validity Test Method");
   m_nf = _node.stringXMLParameter("nf", true, "", "Neighborhood Finder");
-  m_dm = _node.stringXMLParameter("dm",true,"","Distance Metric");
   m_lp = _node.stringXMLParameter("lp", true, "", "Local Planning Method");
   m_query = _node.stringXMLParameter("query", false, "", "Query Filename");
-  m_exact = _node.boolXMLParameter("exact", false, "", "Exact Medial Axis Calculation");
-  m_rayCount = _node.numberXMLParameter("rays", false, 20, 0, 50, "Number of Clearance Rays");
-  m_penetration = _node.numberXMLParameter("penetration", false, 5, 0, 50, "Pentration");
-  m_eps = _node.numberXMLParameter("MAepsilon", false, 0.01, 0.0, 1.0, "Medial Axis Push Epsilon");
-  m_useBbx = _node.boolXMLParameter("useBBX", true, "", "Use Bounding Box");
-  m_hLen = _node.numberXMLParameter("hLen", false, 5, 0, 20, "History Length");
-  m_positional = _node.boolXMLParameter("positional", true, "", "Use Position in MA Calculations");
+  m_eps = _node.numberXMLParameter("epsilon", false, 0.01, 0.0, 1.0, "Medial Axis Push Epsilon");
+  m_hLen = _node.numberXMLParameter("historyLength", false, 5, 0, 20, "History Length");
   m_debug = _node.boolXMLParameter("debug", false, "", "Debug Mode");
   m_findQuery = _node.boolXMLParameter("findQuery", true, "", "Find Query or Explore Space");
   _node.warnUnrequestedAttributes();
@@ -63,8 +56,8 @@ void MARRTStrategy::PrintOptions(ostream& _os) {
   _os << "MARRTStrategy::PrintOptions" << endl;
   _os << "\tSampler:: " << m_sampler << endl;
   _os << "\tNeighorhood Finder:: " << m_nf << endl;
-  _os << "\tDistance Metric:: " << m_dm << endl;
-  _os << "\tValidity Checker:: " << m_vc << endl;
+  _os << "\tDistance Metric:: " << m_cParams.m_dmLabel << endl;
+  _os << "\tValidity Checker:: " << m_cParams.m_vcLabel << endl;
   _os << "\tLocal Planner:: " << m_lp << endl;
   _os << "\tComponent Connectors:: " << endl;
   for(SIT sit = m_componentConnectors.begin(); sit!=m_componentConnectors.end(); sit++)
@@ -88,7 +81,7 @@ void MARRTStrategy::Run() {
   // Setup MP Variables
   StatClass* stats = GetMPProblem()->GetStatClass();
   Environment* env = GetMPProblem()->GetRoadmap()->GetEnvironment();
-  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
+  shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_cParams.m_dmLabel);
   LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
   ValidityChecker* vc = GetMPProblem()->GetValidityChecker();
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
@@ -116,7 +109,7 @@ void MARRTStrategy::Run() {
     for (int i=0; i<m_roots; ++i) {
       tmp.GetRandomCfg(env);
       if (tmp.InBoundary(env)
-          && vc->GetMethod(m_vc)->IsValid(tmp, env, *stats, cdInfo, &callee)){
+          && vc->GetMethod(m_cParams.m_vcLabel)->IsValid(tmp, env, *stats, cdInfo, &callee)){
         m_root.push_back(tmp);
       }
       else 
@@ -169,7 +162,7 @@ void MARRTStrategy::Run() {
     newCfg = nearest;
     CDInfo dummyCD;
     int weight;
-    if(!RRTExpand(GetMPProblem(), m_vc, m_dm, newCfg, dir, newCfg, m_delta, weight, dummyCD)) {
+    if(!RRTExpand(GetMPProblem(), m_cParams.m_vcLabel, m_cParams.m_dmLabel, newCfg, dir, newCfg, m_delta, weight, dummyCD)) {
       if(m_debug) cout << "RRT could not expand!" << endl;  
       continue;
     }
@@ -188,7 +181,7 @@ void MARRTStrategy::Run() {
     CfgType tempCfg = newCfg;
     VDAddTempCfg(tempCfg, true);
     StatClass stats; 
-    if (!PushToMedialAxis(GetMPProblem(), env, newCfg, stats, m_vc, m_dm, m_exact, m_rayCount, m_exact, m_penetration, m_useBbx, m_eps, m_hLen, m_debug, m_positional)){
+    if (!PushToMedialAxis(newCfg, stats, m_cParams, m_eps, m_hLen)){
       continue;
     }
     VDAddTempCfg(newCfg, true);
@@ -339,7 +332,8 @@ MARRTStrategy::PathClearance(){
     graph->find_edge(ed, vi, ei);
     WeightType weight = (*ei).property();
     pathLength += weight.Weight();
-    double currentClearance = MinEdgeClearance(GetMPProblem(), false, GetMPProblem()->GetRoadmap()->GetEnvironment(), (*graph->find_vertex((*ei).source())).property(), (*graph->find_vertex((*ei).target())).property(), weight, m_vc, m_dm); 
+    double currentClearance = MinEdgeClearance((*graph->find_vertex((*ei).source())).property(),
+      (*graph->find_vertex((*ei).target())).property(), weight, m_cParams); 
     clearanceVec.push_back(currentClearance);
     runningTotal += currentClearance;
     if(currentClearance < minClearance){

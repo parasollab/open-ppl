@@ -39,6 +39,7 @@ class MultiBody;
 class MPProblem;
 class BoundingBox;
 class Boundary;
+class ClearanceParams;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -229,8 +230,7 @@ class Cfg {
     virtual void GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundary> bb) = 0;
 
     virtual void GetRandomRay(double _incr, Environment* _env,  shared_ptr<DistanceMetricMethod> _dm, bool _norm=true) = 0;
-    virtual double GetSmoothingValue(MPProblem* _mp, Environment *_env,StatClass& _stats,
-        string _vc, CDInfo& _cdInfo, string _dm, int _n, bool _bl );
+    virtual double GetSmoothingValue(StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams);
 
     virtual bool ConfigEnvironment(Environment* _env) const = 0;
 
