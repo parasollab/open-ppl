@@ -45,7 +45,7 @@ CoverageDistanceMetric<CFG, WEIGHT>::CoverageDistanceMetric(XMLNodeReader& _node
   : MetricsMethod(_node, _problem) {
   this->SetName("CoverageDistanceMetric");
   string coveragefilename = _node.stringXMLParameter("filename", true, "", "roadmap filename containing witness samples");
-  m_dmLabel = _node.stringXMLParameter("dm_method", false, "default", "Distance Metric Method");
+  m_dmLabel = _node.stringXMLParameter("dmLabel", false, "default", "Distance Metric Method");
   //read in samples
   Roadmap<CFG, WEIGHT> covRdmp;
   m_samples.clear();
@@ -55,15 +55,16 @@ CoverageDistanceMetric<CFG, WEIGHT>::CoverageDistanceMetric(XMLNodeReader& _node
 }
 
 template <class CFG, class WEIGHT>
-void CoverageDistanceMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
+void
+CoverageDistanceMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << "Distance Metric:" <<m_dmLabel<< endl;
   _os << "Coverage set size:" <<m_samples.size() <<endl;
 }
 
 template <class CFG, class WEIGHT>
-double CoverageDistanceMetric<CFG, WEIGHT>::operator()() {
+double
+CoverageDistanceMetric<CFG, WEIGHT>::operator()() {
   Environment* env = GetMPProblem()->GetRoadmap()->GetEnvironment();
-  NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
   int i;
   vector <double> disVec;
   //from each sample in the coverage set, distance to the nearest nodes in the roadmap is calculated
