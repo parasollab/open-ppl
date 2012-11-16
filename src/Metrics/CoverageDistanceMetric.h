@@ -65,7 +65,7 @@ template <class CFG, class WEIGHT>
 double
 CoverageDistanceMetric<CFG, WEIGHT>::operator()() {
   Environment* env = GetMPProblem()->GetRoadmap()->GetEnvironment();
-  int i;
+  unsigned int i;
   vector <double> disVec;
   //from each sample in the coverage set, distance to the nearest nodes in the roadmap is calculated
   for( typename vector<CFG>::iterator cfgit = m_samples.begin(); cfgit!=m_samples.end(); ++cfgit){
