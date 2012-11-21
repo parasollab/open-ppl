@@ -9,6 +9,8 @@
 #include "MPStrategy.h"
 #include "MapEvaluator.h"
 #include "Sampler.h"
+#include "GraphAlgo.h"
+#include "graph/algorithms/count_hop_pairs.h"
 
 ///////////////////////
 //Constructors
@@ -41,12 +43,17 @@ BasicRRTStrategy::ParseXML(XMLNodeReader& _node) {
   m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
   m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
+  m_h = _node.numberXMLParameter("h", false, 0, 1, MAX_INT, "Hop Limit");
   m_sampler = _node.stringXMLParameter("sampler", true, "", "Sampler Method");
   m_vc = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
   m_nf = _node.stringXMLParameter("nf", true, "", "Neighborhood Finder");
   m_dm = _node.stringXMLParameter("dmMethod",true,"","Distance Metric");
   m_lp = _node.stringXMLParameter("lp", true, "", "Local Planning Method");
-  
+  m_m= _node.numberXMLParameter("m", false, 1.0, 1.0, 1000.0, "Number of directions to extend");
+  m_nc = _node.stringXMLParameter("connectionMethod",false,"","Node Connection Method");
+  m_gt = _node.stringXMLParameter("gtype",true,"","Graph type dir/undirected tree/graph");
+  m_evaluateGoal = _node.boolXMLParameter("evaluateGoal", false, false, "");
+
   //optionally read in a query and create a Query object.
   string query = _node.stringXMLParameter("query", false, "", "Query Filename");
   if(query != ""){
@@ -65,6 +72,10 @@ BasicRRTStrategy::PrintOptions(ostream& _os) {
   _os << "\tDistance Metric:: " << m_dm << endl;
   _os << "\tValidity Checker:: " << m_vc << endl;
   _os << "\tLocal Planner:: " << m_lp << endl;
+  _os << "\tConnection Method:: " << m_nc << endl;
+  _os << "\tGraph Type:: " << m_gt << endl;
+  _os << "\tHop Limit:: " << m_h << endl;
+  _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
   for(SIT sit = m_evaluators.begin(); sit!=m_evaluators.end(); sit++)
     _os << "\t\t" << *sit << endl;
@@ -72,6 +83,7 @@ BasicRRTStrategy::PrintOptions(ostream& _os) {
   _os << "\tminimum distance:: " << m_minDist << endl;
   _os << "\tnumber of roots:: " << m_numRoots << endl;
   _os << "\tgrowth focus:: " << m_growthFocus << endl;
+  _os << "\tnumber of expansion directions:: " << m_m << endl;
 }
 
 //////////////////////
@@ -149,11 +161,13 @@ BasicRRTStrategy::Run() {
       //conntect various trees together
       ConnectTrees(recent);
       //see if tree is connected to goals
-      EvaluateGoals();
+      if(m_evaluateGoal)
+        EvaluateGoals();
     }
     
     //evaluate the roadmap
-    mapPassedEvaluation = EvaluateMap(m_evaluators) && m_goalsNotFound.size()==0;
+    bool evalMap = EvaluateMap(m_evaluators);
+    mapPassedEvaluation = evalMap && ( m_evaluateGoal && m_goalsNotFound.size()==0 || !m_evaluateGoal);
 
     if(m_debug && m_goalsNotFound.size()==0)
       cout << "RRT FOUND ALL GOALS" << endl;
@@ -182,11 +196,13 @@ BasicRRTStrategy::Finalize() {
   if(m_query != NULL){
     str = GetBaseFilename() + ".path";
     m_query->SetPathFile(str);
-    if(m_query->PerformQuery(GetMPProblem()->GetRoadmap(), *stats)){
-      if(m_debug) cout << "Query successful! Output written to " << str << "." << endl;
-    }
-    else{
-      if(m_debug) cout << "Query unsuccessful." << endl;
+    if(m_evaluateGoal){
+      if(m_query->PerformQuery(GetMPProblem()->GetRoadmap(), *stats)){
+        if(m_debug) cout << "Query successful! Output written to " << str << "." << endl;
+      }
+      else{
+        if(m_debug) cout << "Query unsuccessful." << endl;
+      }
     }
   }
 
@@ -228,36 +244,140 @@ BasicRRTStrategy::SelectDirection(){
   return dir;
 }
 
+void
+BasicRRTStrategy::ConnectNeighbors(VID _newVID, VID _nearVID){
+  if (_newVID != INVALID_VID) {
+    vector<VID> allVIDs;
+    vector<VID> currentVID;
+    currentVID.push_back(_newVID);
+    vector <VID> vRes;
+    if( m_h>0){
+      StatClass * hopStatClass = GetMPProblem()->GetStatClass();
+      string hopClockName = "Total bfs time ";
+      hopStatClass->StartClock(hopClockName);
+
+      stapl::sequential::map_property_map<GRAPH, size_t> hopmap;
+      hopmap.put(_nearVID, 0);
+      stapl::sequential::map_property_map<GRAPH, size_t> colormap;
+      RoadmapGraph<CfgType,WeightType>* rmapG=GetMPProblem()->GetRoadmap()->m_pRoadmap;
+      stapl::sequential::hops_detail::hops_visitor<GRAPH > vis(*rmapG,hopmap,m_h);
+      breadth_first_search_early_quit(*rmapG,_nearVID,vis,colormap);
+      vRes= vis.get_res();
+      hopStatClass->StopClock(hopClockName);
+    }
+    for(GRAPH::const_vertex_iterator vi = GetMPProblem()->GetRoadmap()->m_pRoadmap->begin(); vi!= GetMPProblem()->GetRoadmap()->m_pRoadmap->end(); vi++){
+        allVIDs.push_back((*vi).descriptor());
+    }
+    Connector<CfgType, WeightType>::ConnectionPointer pConnection;
+    pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(m_nc);
+    stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
+
+    StatClass* conStatClass = GetMPProblem()->GetStatClass();
+    string conClockName = "Total Connection time ";
+    conStatClass->StartClock(conClockName);
+
+    if(m_h==0) //full roadmap
+      pConnection->Connect(GetMPProblem()->GetRoadmap(),
+        *(GetMPProblem()->GetStatClass()), cmap,
+        currentVID.begin(), currentVID.end(),
+        allVIDs.begin(), allVIDs.end());
+    else {
+      pConnection->Connect(GetMPProblem()->GetRoadmap(),
+        *(GetMPProblem()->GetStatClass()), cmap,
+        currentVID.begin(), currentVID.end(),
+        vRes.begin(), vRes.end());
+    }
+    conStatClass->StopClock(conClockName);
+  }
+}
+
+
 BasicRRTStrategy::VID 
 BasicRRTStrategy::ExpandTree(CfgType& _dir){
   // Setup MP Variables
   Environment* env = GetMPProblem()->GetEnvironment();
   shared_ptr<DistanceMetricMethod> dm = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
   NeighborhoodFinder* nf = GetMPProblem()->GetNeighborhoodFinder();
+  shared_ptr<LocalPlannerMethod<CfgType, WeightType> > lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
+  LPOutput<CfgType, WeightType> lpOutput;
   VID recentVID = INVALID_VID;
   CDInfo  cdInfo;
   // Find closest Cfg in map
   vector<VID> kClosest;
   vector<CfgType> cfgs;
 
-  nf->GetMethod(m_nf)->KClosest(GetMPProblem()->GetRoadmap(), _dir, 1, back_inserter(kClosest));     
+  StatClass* kcloseStatClass = GetMPProblem()->GetStatClass();
+  string kcloseClockName = "kclosest time ";
+  kcloseStatClass->StartClock(kcloseClockName);
+  nf->GetMethod(m_nf)->KClosest(GetMPProblem()->GetRoadmap(), _dir, 1, back_inserter(kClosest));
+  kcloseStatClass->StopClock(kcloseClockName);
+  
+
   CfgType nearest = GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
   CfgType newCfg;
   int weight;
+
+  StatClass* expandStatClass = GetMPProblem()->GetStatClass();
+  string expandClockName = "RRTExpand time ";
+  expandStatClass->StartClock(expandClockName);
 
   if(!RRTExpand(GetMPProblem(), m_vc, m_dm, nearest, _dir, newCfg, m_delta, weight, cdInfo)) {
     if(m_debug) cout << "RRT could not expand!" << endl; 
     return recentVID;
   }
+  cout<<"RRT expanded"<<endl;
+  expandStatClass->StopClock(expandClockName);
   // If good to go, add to roadmap
-  if(dm->Distance(env, newCfg, nearest) >= m_minDist) {
+  if(dm->Distance(env, newCfg, nearest) >= m_minDist ) {
     recentVID = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
-    pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
-    GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
+    if(std::string::npos!=m_gt.find("UNDIRECTED")){
+      pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
+    }
+    else
+      GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, WeightType("RRTExpand", weight));
     GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(recentVID)->property().SetStat("Parent", kClosest[0]);
-  } 
-  return recentVID;
+
+    if(std::string::npos!=m_gt.find("GRAPH")){
+      VID newCfgVID = GetMPProblem()->GetRoadmap()->m_pRoadmap->GetVID(newCfg);
+      ConnectNeighbors(newCfgVID, kClosest[0]);
+    }
+
+    for( int i=2 ;i<=m_m; i++){//expansion to other m-1 directions
+      CfgType randdir =BasicRRTStrategy::SelectDirection();
+      expandStatClass->StartClock(expandClockName);
+      bool expandFlag = RRTExpand(GetMPProblem(), m_vc, m_dm, nearest, randdir, newCfg, m_delta, weight, cdInfo);
+
+      expandStatClass->StopClock(expandClockName);
+      StatClass* conStatClass = GetMPProblem()->GetStatClass();
+      string conClockName = "Connection time ";
+      conStatClass->StartClock(conClockName);
+    
+      if(!expandFlag) {
+        if(m_debug) cout << "RRT could not expand to additional directions!" << endl;
+      }  
+      else if(dm->Distance(env, newCfg, nearest) >= m_minDist ) {
+        VID otherVID;
+        otherVID = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(newCfg);
+        if(std::string::npos!=m_gt.find("UNDIRECTED")){
+          pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
+          GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, weights);
+        }
+        else
+          GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(nearest, newCfg, WeightType("RRTExpand", weight));        
+
+        GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(otherVID)->property().SetStat("Parent", kClosest[0]);
+        if(std::string::npos!=m_gt.find("GRAPH")){
+          ConnectNeighbors( otherVID, kClosest[0]);
+        }
+      }
+      conStatClass->StopClock(conClockName);
+    }
+  }
+ 
+ return recentVID;
 }
+
 
 void 
 BasicRRTStrategy::ConnectTrees(VID _recentlyGrown) {
@@ -333,7 +453,8 @@ BasicRRTStrategy::EvaluateGoals(){
     if(dist < m_delta && lp->GetMethod(m_lp)->IsConnected(env, *stats, dm, closest, m_goals[*i], col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true, false, false)){
       if(m_debug) cout << "Goal found::" << m_goals[*i] << endl;
-      GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(m_goals[*i]);
+      if(!(GetMPProblem()->GetRoadmap()->m_pRoadmap->IsVertex( m_goals[*i])))
+        GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(m_goals[*i]);
       GetMPProblem()->GetRoadmap()->m_pRoadmap->AddEdge(closest, m_goals[*i], lpOutput.edge);
       m_goalsNotFound.erase(i);
       i--;

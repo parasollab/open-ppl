@@ -35,6 +35,7 @@ class BasicRRTStrategy : public MPStrategyMethod {
     CfgType SelectDirection();
     virtual VID ExpandTree(CfgType& _dir);
     void ConnectTrees(VID _recentlyGrown);
+    void ConnectNeighbors(VID _newVID, VID _nearVID);
     void EvaluateGoals();
     RoadmapClearanceStats PathClearance();  
     vector<string> m_evaluators;
@@ -44,8 +45,12 @@ class BasicRRTStrategy : public MPStrategyMethod {
     string m_nf;
     string m_vc;
     Query<CfgType, WeightType>* m_query;
+    string m_nc;
+    string m_gt;
     double m_delta, m_minDist, m_growthFocus;
+    bool m_evaluateGoal;
     int m_numRoots;
+    int m_m,m_h;
     vector<CfgType> m_goals, m_roots;
     vector<size_t> m_goalsNotFound;
 };
