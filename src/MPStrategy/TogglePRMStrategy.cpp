@@ -103,9 +103,7 @@ void TogglePRMStrategy::Run(){
 
   stats->StartClock("Map Generation");
 
-  bool done=false;
-
-  while(!EvaluateMap(m_EvaluatorLabels)&&!done){
+  while(!EvaluateMap(m_EvaluatorLabels)){
     m_CurrentIteration++;
     cout << "\ngenerating nodes: ";
     GenerateNodes(back_insert_iterator<vector<VID> >(allNodesVID), 
@@ -113,10 +111,9 @@ void TogglePRMStrategy::Run(){
         back_insert_iterator<vector<VID> >(allCollisionNodesVID),
         back_insert_iterator<vector<VID> >(thisIterationCollisionNodesVID),
         queue);
-
-    while(!EvaluateMap(m_EvaluatorLabels) && queue.size()>0 && !done){
-      //if(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()+
-        //GetMPProblem()->GetBlockRoadmap()->m_pRoadmap->get_num_vertices()>=1000){done=true;continue;}
+  
+    bool validMap;
+    while(!(validMap = EvaluateMap(m_EvaluatorLabels)) && queue.size()>0){
       pair<string, CfgType> p = queue.front();
       queue.pop_front();
       string validity = p.first;
@@ -137,6 +134,9 @@ void TogglePRMStrategy::Run(){
         GetMPProblem()->GetValidityChecker()->GetMethod(vcMethod)->ToggleValidity();
       }
     }
+
+    if(validMap)
+      break;
   }
 
   stats->StopPrintClock("Map Generation", cout);
