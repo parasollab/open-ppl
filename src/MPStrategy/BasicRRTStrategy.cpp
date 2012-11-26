@@ -167,7 +167,7 @@ BasicRRTStrategy::Run() {
     
     //evaluate the roadmap
     bool evalMap = EvaluateMap(m_evaluators);
-    mapPassedEvaluation = evalMap && ( m_evaluateGoal && m_goalsNotFound.size()==0 || !m_evaluateGoal);
+    mapPassedEvaluation = evalMap && ((m_evaluateGoal && m_goalsNotFound.size()==0) || !m_evaluateGoal);
 
     if(m_debug && m_goalsNotFound.size()==0)
       cout << "RRT FOUND ALL GOALS" << endl;
