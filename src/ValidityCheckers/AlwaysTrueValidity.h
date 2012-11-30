@@ -11,14 +11,26 @@
 
 #include "ValidityCheckerMethod.h"
 
-class AlwaysTrueValidity : public ValidityCheckerMethod {
+template<class MPTraits>
+class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
   public:
-    AlwaysTrueValidity();
-    AlwaysTrueValidity(XMLNodeReader& _node, MPProblem* _problem);
-    virtual ~AlwaysTrueValidity();
+    AlwaysTrueValidity(){
+      this->m_name = "AlwaysTrueValidity";
+    }
+
+    AlwaysTrueValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) 
+      : ValidityCheckerMethod<MPTraits>(_problem, _node){
+        _node.verifyName("AlwaysTrueValidity");
+        this->m_name = "AlwaysTrueValidity";
+      }
+
+    virtual ~AlwaysTrueValidity(){}
 
     virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
-                             CDInfo& _cdInfo, string *_callName);
+        CDInfo& _cdInfo, string *_callName){
+      _cfg.SetLabel("Lazy", true);
+      return true;
+    }
 };
 
 #endif
