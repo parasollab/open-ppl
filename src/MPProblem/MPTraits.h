@@ -29,10 +29,12 @@
 #include "Metrics/NumNodesMetric.h"
 
 //map evaluator includes
+#include "MapEvaluators/Query.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
 
 //map evaluator includes
 #include "MPStrategies/BasicPRM.h"
+#include "MPStrategies/BasicRRTStrategy.h"
 
 template<class C, class W = DefaultWeight<C> >
 struct MPTraits{
@@ -135,19 +137,20 @@ struct MPTraits{
   
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    ConditionalEvaluator<MPTraits>/*,
-    TrueEvaluation<MPTraits>,
-    PrintMapEvaluation<MPTraits>, 
-    Query<MPTraits>,
-    LazyQuery<MPTraits>,
-    LazyToggleQuery<MPTraits>,
-    ComposeEvaluation<MPTraits>,
-    NegateEvaluation<MPTraits>*/
+    ConditionalEvaluator<MPTraits>,
+    //TrueEvaluation<MPTraits>,
+    //PrintMapEvaluation<MPTraits>, 
+    Query<MPTraits>//,
+    //LazyQuery<MPTraits>,
+    //LazyToggleQuery<MPTraits>,
+    //ComposeEvaluation<MPTraits>,
+    //NegateEvaluation<MPTraits>*/
     > MapEvaluatorMethodList;
   
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    BasicPRM<MPTraits>
+    BasicPRM<MPTraits>,
+    BasicRRTStrategy<MPTraits>
     > MPStrategyMethodList;
 };
 

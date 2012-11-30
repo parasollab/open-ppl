@@ -20,9 +20,10 @@ using boost::shared_ptr;
 using namespace mathtool;
 
 #include "IOUtils.h"
+#include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 //forward declarations
-template<class MPTraits> class Roadmap;
+class StatClass;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -436,7 +437,69 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//bool RRTExpand(MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta, int& _weight, CDInfo& cdInfo);
+/*Basic utility for "growing" a RRT tree.  Assumed to be given a start node, and he goal node to grow towards.
+  Resulting node extended towards the goal is passed by reference and modified.  Returned boolean relays whether the
+  growth was succesful or not.
+
+  _mp -> Used to obtain information about the problem at hand
+  strVcmethod -> Used for VC calls
+  dm_label -> Used to extract DistanceMetricMethod pointer
+  start -> Location of Cfg on tree to grow from
+  dir -> Direction to grow towards
+  new_cfg -> New Cfg to be added to the tree; passed by reference
+  delta -> Maximum distance to grow
+  obsDist -> Distance away from object the new node neads to at least be
+  */
+
+template<class MPTraits>
+bool
+RRTExpand(typename MPTraits::MPProblemType* _mp, 
+    string _vc, string _dm, 
+    typename MPTraits::CfgType _start, 
+    typename MPTraits::CfgType _dir, 
+    typename MPTraits::CfgType& _newCfg, 
+    double _delta, int& _weight, CDInfo& _cdInfo,
+    double _posRes, double _oriRes){
+  
+  //Setup...primarily for collision checks that occur later on
+  StatClass* stats = _mp->GetStatClass();
+  Environment* env = _mp->GetEnvironment();
+  typename MPTraits::MPProblemType::DistanceMetricPointer dm = _mp->GetDistanceMetric(_dm);
+  typename MPTraits::MPProblemType::ValidityCheckerPointer vc = _mp->GetValidityChecker(_vc);
+  string callee("RRTUtility::RRTExpand");
+
+  typename vector<typename MPTraits::CfgType>::iterator startCIterator;
+  typename MPTraits::CfgType incr, tick = _start, previous = _start;
+  bool collision = false;
+  int nTicks, ticker = 0;
+
+  incr.FindIncrement(tick,_dir,&nTicks, _posRes, _oriRes);
+  _weight = nTicks;
+
+  //Move out from start towards dir, bounded by number of ticks allowed at a given resolution.  Delta + obsDist are
+  //given to the function, and are user defined.
+  while(!collision && dm->Distance(env,_start,tick) <= _delta) {
+    tick.Increment(incr); //Increment tick
+    if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, _cdInfo, &callee))){
+      collision = true; //Found a collision; return previous tick, as it is collision-free
+    }
+    else{
+      previous = tick;
+    }
+    ++ticker;
+    if (ticker == nTicks){ //Have we reached the max amount of increments?
+      break;
+    }
+  }
+  if(previous != _start){ //Did we go anywhere?
+    _newCfg = previous;//Last Cfg pushed back is the final tick allowed
+    return true;     
+  }
+  //Didn't find a place to go :(
+  else
+    return false;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
