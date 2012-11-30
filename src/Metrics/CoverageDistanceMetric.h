@@ -20,7 +20,8 @@ class CoverageDistanceMetric : public MetricsMethod {
   protected:
     //input
     vector<CFG> m_samples;
-    string m_dmLabel;
+    string m_dmLabel, m_outFileName;
+    ofstream output;
 };
 
 template <class CFG, class WEIGHT>
@@ -45,7 +46,9 @@ CoverageDistanceMetric<CFG, WEIGHT>::CoverageDistanceMetric(XMLNodeReader& _node
   : MetricsMethod(_node, _problem) {
   this->SetName("CoverageDistanceMetric");
   string coveragefilename = _node.stringXMLParameter("filename", true, "", "roadmap filename containing witness samples");
-  m_dmLabel = _node.stringXMLParameter("dmLabel", false, "default", "Distance Metric Method");
+  m_outFileName = _node.stringXMLParameter("outfilename", true, "", "filename for recording results");
+  m_dmLabel = _node.stringXMLParameter("dmMethod", false, "default", "Distance Metric Method");
+  output.open((m_outFileName+".coverage").c_str());
   //read in samples
   Roadmap<CFG, WEIGHT> covRdmp;
   m_samples.clear();
@@ -88,10 +91,8 @@ CoverageDistanceMetric<CFG, WEIGHT>::operator()() {
   }
   stdDev = stdDev/disVec.size();
   stdDev = sqrt(stdDev);
-  if(m_debug){ 
-    cout<<"Average of distances:"<<avgSum<<endl;
-    cout<<"Standard Dev of distances:"<<stdDev<<endl;
-  }
+  output<<"Average of distances:"<<avgSum<<endl;
+  output<<"Standard Dev of distances:"<<stdDev<<endl;
   return avgSum;
 }
 
