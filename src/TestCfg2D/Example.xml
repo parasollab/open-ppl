@@ -1,47 +1,56 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<motion_planning>
+<MotionPlanning>
   <MPProblem>
-    <environment input_env="narrow.env">
+    <Environment input_env="narrow.env">
       <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
         <boundary type="bbox" translational_scale="1">
-      	 <parameter id="0" Label="x" type="translational" min="-15" max="15" />
-      	 <parameter id="1" Label="y" type="translational" min="-15" max="15" />
+          <parameter id="0" label="x" type="translational" min="-15" max="15" />
+          <parameter id="1" label="y" type="translational" min="-15" max="15" />
         </boundary>
       </robot>
-    </environment>
-    <distance_metrics>
-       <euclidean Label="euclidean"/>
-    </distance_metrics>    
-    <validity_test>    
-      <CollisionDetection Label="cd" method="RAPID" />
-    </validity_test>
-    <NeighborhoodFinder>
-      <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
-    </NeighborhoodFinder>
-  </MPProblem>
-  <MPStrategy>  
-    <node_generation_methods>
-      <UniformRandomSampler Label="UniformRandom" vcMethod="cd"/>
-    </node_generation_methods>
-    <connection_methods>
-      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
-    </connection_methods>
-    <lp_methods>
-      <StraightLine Label="sl" binary_search="1" vc_method="cd"/>
-    </lp_methods>
-    <MPEvaluator_methods>
-      <ConditionalEvaluation Label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
-    </MPEvaluator_methods>
-    <MetricMethods>
-      <NumNodesMetric Label="NumNodes" />
-    </MetricMethods>
-    <MPStrategyMethod Controller="BasicPRM">
-      <BasicPRM Label="BasicPRM" seed="1234567" filename="Basic">
+    </Environment>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics> 
+
+    <ValidityCheckers>    
+      <CollisionDetection label="cd" method="RAPID" />
+    </ValidityCheckers>
+    
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmMethod="euclidean"/>
+    </NeighborhoodFinders>
+    
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcMethod="cd"/>
+    </Samplers>
+    
+    <Connectors>
+      <NeighborhoodConnector label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
+    </Connectors>
+    
+    <LocalPlanners>
+      <StraightLine label="sl" binary_search="0" vc_method="cd"/>
+    </LocalPlanners>
+    
+    <MapEvaluators>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+    </MapEvaluators>
+    
+    <Metrics>
+      <NumNodesMetric label="NumNodes" />
+    </Metrics>
+    
+    <MPStrategies>  
+      <BasicPRM label="BasicPRM">
         <node_generation_method Method="UniformRandom" Number="10" Attempts="10"/>
         <node_connection_method Method="Closest"/>
         <evaluation_method Method="NodesEval"/>
       </BasicPRM>
-    </MPStrategyMethod>
-  </MPStrategy>
-</motion_planning>
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="BasicPRM" seed="1234567" baseFilename="Basic"/>
+  </MPProblem>
+</MotionPlanning>
 
