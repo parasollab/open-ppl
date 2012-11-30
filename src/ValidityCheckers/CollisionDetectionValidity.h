@@ -5,13 +5,13 @@
 #include "Cfg/Cfg.h"
 #include "Utilities/MetricUtils.h"
 #include "ValidityCheckerMethod.h"
-#include "ValidityChecker/CollisionDetection/CDInfo.h"
-#include "ValidityChecker/CollisionDetection/CollisionDetectionMethod.h"
-#include "ValidityChecker/CollisionDetection/RapidCollisionDetection.h"
-#include "ValidityChecker/CollisionDetection/PQPCollisionDetection.h"
-#include "ValidityChecker/CollisionDetection/VClipCollisionDetection.h"
-#include "ValidityChecker/CollisionDetection/SolidCollisionDetection.h"
-#include "ValidityChecker/CollisionDetection/SpheresCollisionDetection.h"
+#include "ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h"
+#include "ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
+#include "ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
+#include "ValidityCheckers/CollisionDetection/VClipCollisionDetection.h"
+#include "ValidityCheckers/CollisionDetection/SolidCollisionDetection.h"
+#include "ValidityCheckers/CollisionDetection/SpheresCollisionDetection.h"
 
 template<class MPTraits>
 class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {

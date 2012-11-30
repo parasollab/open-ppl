@@ -17,7 +17,7 @@
 #include "MPProblem/Geometry/MultiBody.h"
 #include "MPProblem/Environment.h"
 #include "Utilities/MetricUtils.h"
-#include "ValidityChecker/CollisionDetection/CDInfo.h"
+#include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 #define EQ(a,b)  (fabs(a-b)<0.0001)
 

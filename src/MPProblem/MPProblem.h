@@ -6,17 +6,17 @@
 #include "MPProblem/Environment.h"
 #include "MPProblem/Roadmap.h"
 
-#include "DistanceMetric/DistanceMetricMethod.h"
-#include "ValidityChecker/ValidityCheckerMethod.h"
-#include "NeighborhoodFinder/NeighborhoodFinderMethod.h"
+#include "DistanceMetrics/DistanceMetricMethod.h"
+#include "ValidityCheckers/ValidityCheckerMethod.h"
+#include "NeighborhoodFinders/NeighborhoodFinderMethod.h"
 #include "Samplers/SamplerMethod.h"
-#include "LocalPlanner/LocalPlannerMethod.h"
-#include "Connector/ConnectionMethod.h"
-#include "Metrics/MetricsMethod.h"
-#include "MapEvaluator/MapEvaluationMethod.h"
-#include "MPStrategy/MPStrategyMethod.h"
+#include "LocalPlanners/LocalPlannerMethod.h"
+#include "Connectors/ConnectorMethod.h"
+#include "Metrics/MetricMethod.h"
+#include "MapEvaluators/MapEvaluatorMethod.h"
+#include "MPStrategies/MPStrategyMethod.h"
 
-#include "ValidityChecker/CollisionDetectionValidity.h"
+#include "ValidityCheckers/CollisionDetectionValidity.h"
 
 template<class MPTraits>
 #ifdef _PARALLEL
@@ -69,17 +69,17 @@ class MPProblem
     LocalPlannerPointer GetLocalPlanner(const string& _l){return m_localPlanners->GetMethod(_l);}
     void AddLocalPlanner(LocalPlannerPointer _lp, const string& _l){m_localPlanners->AddMethod(_lp, _l);}
     
-    typedef MethodSet<MPTraits, ConnectionMethod<MPTraits> > ConnectorSet;
+    typedef MethodSet<MPTraits, ConnectorMethod<MPTraits> > ConnectorSet;
     typedef typename ConnectorSet::MethodPointer ConnectorPointer;
     ConnectorPointer GetConnector(const string& _l){return m_connectors->GetMethod(_l);}
     void AddConnector(ConnectorPointer _c, const string& _l){m_connectors->AddMethod(_c, _l);}
     
-    typedef MethodSet<MPTraits, MetricsMethod<MPTraits> > MetricSet;
+    typedef MethodSet<MPTraits, MetricMethod<MPTraits> > MetricSet;
     typedef typename MetricSet::MethodPointer MetricPointer;
     MetricPointer GetMetric(const string& _l){return m_metrics->GetMethod(_l);}
     void AddMetric(MetricPointer _m, const string& _l){m_metrics->AddMethod(_m, _l);}
     
-    typedef MethodSet<MPTraits, MapEvaluationMethod<MPTraits> > MapEvaluatorSet;
+    typedef MethodSet<MPTraits, MapEvaluatorMethod<MPTraits> > MapEvaluatorSet;
     typedef typename MapEvaluatorSet::MethodPointer MapEvaluatorPointer;
     MapEvaluatorPointer GetMapEvaluator(const string& _l){return m_mapEvaluators->GetMethod(_l);}
     void AddMapEvaluator(MapEvaluatorPointer _me, const string& _l){m_mapEvaluators->AddMethod(_me, _l);}

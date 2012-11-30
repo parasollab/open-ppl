@@ -7,32 +7,32 @@
 #include "Weight.h"
 
 //distance metric includes
-#include "DistanceMetric/EuclideanDistance.h"
+#include "DistanceMetrics/EuclideanDistance.h"
 
 //validity checker includes
-#include "ValidityChecker/CollisionDetectionValidity.h"
+#include "ValidityCheckers/CollisionDetectionValidity.h"
 
 //neighborhood finder includes
-#include "NeighborhoodFinder/BruteForceNF.h"
+#include "NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
 #include "Samplers/UniformRandomSampler.h"
 #include "Samplers/ObstacleBasedSampler.h"
 
 //local planner includes
-#include "LocalPlanner/StraightLine.h"
+#include "LocalPlanners/StraightLine.h"
 
 //connector includes
-#include "Connector/NeighborhoodConnection.h"
+#include "Connectors/NeighborhoodConnector.h"
 
 //metric includes
 #include "Metrics/NumNodesMetric.h"
 
 //map evaluator includes
-#include "MapEvaluator/ConditionalEvaluation.h"
+#include "MapEvaluators/ConditionalEvaluator.h"
 
 //map evaluator includes
-#include "MPStrategy/BasicPRM.h"
+#include "MPStrategies/BasicPRM.h"
 
 template<class C, class W = DefaultWeight<C> >
 struct MPTraits{
@@ -114,7 +114,7 @@ struct MPTraits{
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    NeighborhoodConnection<MPTraits>/*, 
+    NeighborhoodConnector<MPTraits>/*, 
     ConnectCCs<MPTraits>, 
     PreferentialAttachment<MPTraits>, 
     OptimalConnection<MPTraits>,
@@ -135,7 +135,7 @@ struct MPTraits{
   
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    ConditionalEvaluation<MPTraits>/*,
+    ConditionalEvaluator<MPTraits>/*,
     TrueEvaluation<MPTraits>,
     PrintMapEvaluation<MPTraits>, 
     Query<MPTraits>,

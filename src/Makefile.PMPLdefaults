@@ -251,13 +251,13 @@ PMPL_OBJS = \
 	MPProblem/Boundary.o \
         MPProblem/BoundingBox.o \
 	MPProblem/BoundingSphere.o\
-	ValidityChecker/CollisionDetection/CDInfo.o \
-	ValidityChecker/CollisionDetection/CollisionDetectionMethod.o \
-	ValidityChecker/CollisionDetection/RapidCollisionDetection.o \
-	ValidityChecker/CollisionDetection/PQPCollisionDetection.o \
-	ValidityChecker/CollisionDetection/SolidCollisionDetection.o \
-	ValidityChecker/CollisionDetection/VClipCollisionDetection.o \
-	ValidityChecker/CollisionDetection/SpheresCollisionDetection.o \
+	ValidityCheckers/CollisionDetection/CDInfo.o \
+	ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
+	ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
+	ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
+	ValidityCheckers/CollisionDetection/SolidCollisionDetection.o \
+	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o \
+	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
 	Cfg/Cfg.o \
 	Cfg/ManifoldCfg.o \
 	Cfg/Cfg_2D.o \

@@ -1,16 +1,16 @@
 #ifndef NUMNODESMETRIC_H
 #define NUMNODESMETRIC_H
 
-#include "MetricsMethod.h"
+#include "MetricMethod.h"
 
 template<class MPTraits>
-class NumNodesMetric : public MetricsMethod<MPTraits> {
+class NumNodesMetric : public MetricMethod<MPTraits> {
   public:
     NumNodesMetric(){
       this->SetName("NumNodesMetric");
     }
 
-    NumNodesMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MetricsMethod<MPTraits>(_problem, _node){
+    NumNodesMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MetricMethod<MPTraits>(_problem, _node){
       this->SetName("NumNodesMetric");
     }
 

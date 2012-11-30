@@ -3,7 +3,7 @@
 
 #include <string>
 #include "Utilities/MPUtils.h"
-#include "ValidityChecker/CollisionDetection/CDInfo.h"
+#include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 template<class MPTraits>
 class ValidityCheckerMethod : public MPBaseObject<MPTraits> {

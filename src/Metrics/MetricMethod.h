@@ -4,11 +4,11 @@
 #include "Utilities/MPUtils.h"
 
 template<class MPTraits>
-class MetricsMethod : public MPBaseObject<MPTraits> {
+class MetricMethod : public MPBaseObject<MPTraits> {
   public:
-    MetricsMethod() {}
-    MetricsMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {}
-    virtual ~MetricsMethod(){}
+    MetricMethod() {}
+    MetricMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {}
+    virtual ~MetricMethod(){}
 
     virtual void PrintOptions(ostream& _os){
       _os << this->GetName() << endl; 

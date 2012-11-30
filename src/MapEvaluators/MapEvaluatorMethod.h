@@ -4,12 +4,12 @@
 #include "Utilities/MPUtils.h"
 
 template<class MPTraits>
-class MapEvaluationMethod : public MPBaseObject<MPTraits> {
+class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
   public:
-    MapEvaluationMethod() {}
-    MapEvaluationMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+    MapEvaluatorMethod() {}
+    MapEvaluatorMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
       : MPBaseObject<MPTraits>(_problem, _node) {}
-    virtual ~MapEvaluationMethod() {}
+    virtual ~MapEvaluatorMethod() {}
 
     virtual void PrintOptions(ostream& _os){
       _os << this->GetName() << endl; 

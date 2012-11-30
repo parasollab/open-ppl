@@ -1,17 +1,17 @@
 #ifndef CONDITIONALEVALUATION_H
 #define CONDITIONALEVALUATION_H
 
-#include "MapEvaluationMethod.h"
+#include "MapEvaluatorMethod.h"
 
 template<class MPTraits>
-class ConditionalEvaluation : public MapEvaluationMethod<MPTraits> {
+class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
   public:
 
     enum RelationalOperator { LT , LEQ, GT, GEQ };
 
-    ConditionalEvaluation(RelationalOperator _relationalOperator = LT, string _metric = "", double _value = 1.0);
-    ConditionalEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~ConditionalEvaluation() {}
+    ConditionalEvaluator(RelationalOperator _relationalOperator = LT, string _metric = "", double _value = 1.0);
+    ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~ConditionalEvaluator() {}
 
     virtual void PrintOptions(ostream& _os);
 
@@ -24,15 +24,15 @@ class ConditionalEvaluation : public MapEvaluationMethod<MPTraits> {
 };
 
 template<class MPTraits>
-ConditionalEvaluation<MPTraits>::ConditionalEvaluation(RelationalOperator _relationalOperator, string _metric, double _value)
-  : MapEvaluationMethod<MPTraits>(), m_relationalOperator(_relationalOperator), m_metric(_metric), m_value(_value) {
-  this->SetName("ConditionalEvaluation");
+ConditionalEvaluator<MPTraits>::ConditionalEvaluator(RelationalOperator _relationalOperator, string _metric, double _value)
+  : MapEvaluatorMethod<MPTraits>(), m_relationalOperator(_relationalOperator), m_metric(_metric), m_value(_value) {
+  this->SetName("ConditionalEvaluator");
 }
 
 template<class MPTraits>
-ConditionalEvaluation<MPTraits>::ConditionalEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
-  : MapEvaluationMethod<MPTraits>(_problem, _node) {
-  this->SetName("ConditionalEvaluation");
+ConditionalEvaluator<MPTraits>::ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+  : MapEvaluatorMethod<MPTraits>(_problem, _node) {
+  this->SetName("ConditionalEvaluator");
 
   m_metric = _node.stringXMLParameter("metric_method", true, "", "Metric Method");
   m_value = _node.numberXMLParameter("value", true, 1.0, 0.0, std::numeric_limits<double>::max(), "the value of the metric");
@@ -53,8 +53,8 @@ ConditionalEvaluation<MPTraits>::ConditionalEvaluation(typename MPTraits::MPProb
 }
 
 template<class MPTraits>
-void ConditionalEvaluation<MPTraits>::PrintOptions(ostream& _os) {
-  MapEvaluationMethod<MPTraits>::PrintOptions(_os);
+void ConditionalEvaluator<MPTraits>::PrintOptions(ostream& _os) {
+  MapEvaluatorMethod<MPTraits>::PrintOptions(_os);
   _os << "\tmetric method: " << m_metric << endl;
   _os << "\tvalue: " << m_value << endl;
   _os << "\toperator: ";
@@ -68,7 +68,7 @@ void ConditionalEvaluation<MPTraits>::PrintOptions(ostream& _os) {
 }
 
 template<class MPTraits>
-bool ConditionalEvaluation<MPTraits>::operator()() {
+bool ConditionalEvaluator<MPTraits>::operator()() {
   double metric_value = this->GetMPProblem()->GetMetric(m_metric)->operator()();
 
   switch(m_relationalOperator){

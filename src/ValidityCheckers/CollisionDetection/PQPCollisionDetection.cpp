@@ -1,5 +1,5 @@
 #include "PQPCollisionDetection.h"
-#include "ValidityChecker/CollisionDetection/CDInfo.h"
+#include "ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "Cfg/Cfg.h"
 #include "MPProblem/Environment.h"
 

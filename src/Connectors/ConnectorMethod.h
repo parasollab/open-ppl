@@ -37,9 +37,9 @@ namespace pmpl_detail{
 
 template<class MPTraits>
 #ifdef _PARALLEL
-class ConnectionMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
+class ConnectorMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
 #else
-class ConnectionMethod : public MPBaseObject<MPTraits> {
+class ConnectorMethod : public MPBaseObject<MPTraits> {
 #endif
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -47,9 +47,9 @@ class ConnectionMethod : public MPBaseObject<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID; 
 
-    ConnectionMethod();
-    ConnectionMethod(MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~ConnectionMethod(){}
+    ConnectorMethod();
+    ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~ConnectorMethod(){}
 
     /////////////////////////////////////////////
     // Connection Methods
@@ -82,7 +82,7 @@ class ConnectionMethod : public MPBaseObject<MPTraits> {
           OutputIterator _collision){
         typedef typename MPTraits::ConnectorMethodList MethodList;
         boost::mpl::for_each<MethodList>(pmpl_detail::VirtualConnect<
-            ConnectionMethod<MPTraits>, RoadmapType, StatClass, ColorMap,
+            ConnectorMethod<MPTraits>, RoadmapType, StatClass, ColorMap,
             InputIterator, OutputIterator>(this, _rm, _stats, _cmap, _itr1First, _itr1Last,
               _itr2First, _itr2Last, _collision));
       }
@@ -115,8 +115,8 @@ class ConnectionMethod : public MPBaseObject<MPTraits> {
 };
 
 template<class MPTraits>
-ConnectionMethod<MPTraits>::ConnectionMethod(){
-  this->SetName("ConnectionMethod");
+ConnectorMethod<MPTraits>::ConnectorMethod(){
+  this->SetName("ConnectorMethod");
   m_connectionPosRes = 0.05;
   m_connectionOriRes = 0.05;
   m_addPartialEdge = false;
@@ -124,9 +124,9 @@ ConnectionMethod<MPTraits>::ConnectionMethod(){
 }
 
 template<class MPTraits>
-ConnectionMethod<MPTraits>::ConnectionMethod(MPProblemType* _problem, XMLNodeReader& _node) 
+ConnectorMethod<MPTraits>::ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node) 
   : MPBaseObject<MPTraits>(_problem, _node){
-    this->SetName("ConnectionMethod");
+    this->SetName("ConnectorMethod");
     m_connectionPosRes = _problem->GetEnvironment()->GetPositionRes();
     m_connectionOriRes = _problem->GetEnvironment()->GetOrientationRes();     
     m_nfMethod = _node.stringXMLParameter("nf", true, "", "nf");

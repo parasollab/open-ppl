@@ -1,7 +1,7 @@
-#ifndef NeighborhoodConnection_h
-#define NeighborhoodConnection_h
+#ifndef NEIGHBORHOODCONNECTOR_H
+#define NEIGHBORHOODCONNECTOR_H
 
-#include "ConnectionMethod.h"
+#include "ConnectorMethod.h"
 
 //Connect K Closest only allowed M failures
 //If M is not specified in command line, it is set as same as K
@@ -30,7 +30,7 @@
 #define MFAILURE 5 
 
 template<class MPTraits>
-class NeighborhoodConnection: public ConnectionMethod<MPTraits> {
+class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -40,12 +40,12 @@ class NeighborhoodConnection: public ConnectionMethod<MPTraits> {
 
     //////////////////////
     // Constructors and Destructor
-    NeighborhoodConnection(string _lp = "", string _nf = "", 
+    NeighborhoodConnector(string _lp = "", string _nf = "", 
         int _k = KCLOSEST, int _m = MFAILURE, 
         bool _countFailures = false, bool _unconnected = false, 
         bool _random = false, bool _checkIfSameCC = false);
-    NeighborhoodConnection(MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~NeighborhoodConnection();
+    NeighborhoodConnector(MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~NeighborhoodConnector();
 
     //////////////////////
     // Used in new MPProblem framework.
@@ -93,31 +93,31 @@ class NeighborhoodConnection: public ConnectionMethod<MPTraits> {
 };
 
 template<class MPTraits>
-NeighborhoodConnection<MPTraits>::NeighborhoodConnection(string _lp, string _nf, int _k, int _m, 
+NeighborhoodConnector<MPTraits>::NeighborhoodConnector(string _lp, string _nf, int _k, int _m, 
     bool _countFailures, bool _unconnected, bool _random, bool _checkIfSameCC) 
-  : ConnectionMethod<MPTraits>(), m_k(_k), m_fail(_m), 
+  : ConnectorMethod<MPTraits>(), m_k(_k), m_fail(_m), 
   m_countFailures(_countFailures), m_unconnected(_unconnected),
   m_random(_random), m_checkIfSameCC(_checkIfSameCC){
-    this->SetName("NeighborhoodConnection"); 
+    this->SetName("NeighborhoodConnector"); 
     this->m_lpMethod = _lp;
     this->m_nfMethod = _nf;
   }
 
 template<class MPTraits>
-NeighborhoodConnection<MPTraits>::NeighborhoodConnection(MPProblemType* _problem, XMLNodeReader& _node) 
-  : ConnectionMethod<MPTraits>(_problem, _node), 
+NeighborhoodConnector<MPTraits>::NeighborhoodConnector(MPProblemType* _problem, XMLNodeReader& _node) 
+  : ConnectorMethod<MPTraits>(_problem, _node), 
   m_k(KCLOSEST), m_fail(MFAILURE), m_countFailures(false), m_unconnected(false), m_random(false){
     ParseXML(_node);
   }
 
 template<class MPTraits>
-NeighborhoodConnection<MPTraits>::~NeighborhoodConnection(){ 
+NeighborhoodConnector<MPTraits>::~NeighborhoodConnector(){ 
 }
 
 template<class MPTraits>
 void
-NeighborhoodConnection<MPTraits>::ParseXML(XMLNodeReader& _node){
-  this->SetName("NeighborhoodConnection"); 
+NeighborhoodConnector<MPTraits>::ParseXML(XMLNodeReader& _node){
+  this->SetName("NeighborhoodConnector"); 
   m_checkIfSameCC = _node.boolXMLParameter("CheckIfSameCC",false,true,"If true, do not connect if edges are in the same CC");
   m_countFailures = _node.boolXMLParameter("count_failures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
   m_k = _node.numberXMLParameter("k", true, 0, 0, 10000, "k-value (max neighbors to find). k = 0 --> all-pairs");
@@ -129,8 +129,8 @@ NeighborhoodConnection<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-NeighborhoodConnection<MPTraits>::PrintOptions(ostream& _os){
-  ConnectionMethod<MPTraits>::PrintOptions(_os);
+NeighborhoodConnector<MPTraits>::PrintOptions(ostream& _os){
+  ConnectorMethod<MPTraits>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  k = ";
   _os << m_k << "  fail = " << m_fail ;
   _os << "  count_failures = " << this->m_countFailures;
@@ -142,7 +142,7 @@ NeighborhoodConnection<MPTraits>::PrintOptions(ostream& _os){
 template<class MPTraits>
 template<typename ColorMap, typename InputIterator, typename OutputIterator>
 void
-NeighborhoodConnection<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, 
+NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, 
     ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
     InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){
 
@@ -210,7 +210,7 @@ NeighborhoodConnection<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
 template<class MPTraits>
 template <typename ColorMap, typename InputIterator, typename OutputIterator>
 void
-NeighborhoodConnection<MPTraits>::ConnectNeighbors(
+NeighborhoodConnector<MPTraits>::ConnectNeighbors(
     RoadmapType* _rm, StatClass& _stats, 
     ColorMap& _cmap, VID _vid,
     InputIterator _closestFirst, InputIterator _closestLast,
@@ -327,7 +327,7 @@ NeighborhoodConnection<MPTraits>::ConnectNeighbors(
 template<class MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
-NeighborhoodConnection<MPTraits>::FindKNeighbors(RoadmapType* _rm, CfgType cfg, 
+NeighborhoodConnector<MPTraits>::FindKNeighbors(RoadmapType* _rm, CfgType cfg, 
     InputIterator _itrFirst, InputIterator _itrLast, int _k, 
     const vector<VID>& _iterNeighbors, OutputIterator _closestIter){
   typedef typename MPTraits::MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
