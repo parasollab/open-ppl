@@ -1,6 +1,6 @@
 #include "SpheresCollisionDetection.h"
-#include "MetricUtils.h"
-#include "MultiBody.h"
+#include "Utilities/MetricUtils.h"
+#include "MPProblem/Geometry/MultiBody.h"
 
 BoundingSpheres::
 BoundingSpheres() : CollisionDetectionMethod() {

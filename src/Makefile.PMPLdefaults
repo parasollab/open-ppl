@@ -234,48 +234,8 @@ PMPL_LIB = -L${PMPL_DIR} -lobprm
 PMPL_LIBFILE =${PMPL_DIR}/libobprm.a
 PMPL_INCL = \
 	-I${PMPL_DIR} \
-	-I${PMPL_DIR}/Cfg \
-	-I${PMPL_DIR}/Connector \
-	-I${PMPL_DIR}/DistanceMetric \
-	-I${PMPL_DIR}/LocalPlanner \
-	-I${PMPL_DIR}/MapEvaluator \
-	-I${PMPL_DIR}/MPProblem \
-	-I${PMPL_DIR}/MPStrategy/Entropy \
-	-I${PMPL_DIR}/MPProblem/Geometry \
-	-I${PMPL_DIR}/MPStrategy \
-	-I${PMPL_DIR}/MPStrategy/UnitTest \
-	-I${PMPL_DIR}/Samplers \
-	-I${PMPL_DIR}/Utilities \
-	-I${PMPL_DIR}/Metrics \
-	-I${PMPL_DIR}/ValidityChecker \
-	-I${PMPL_DIR}/ValidityChecker/CollisionDetection \
-	-I${PMPL_DIR}/NeighborhoodFinder \
-	-I${PMPL_DIR}/Partitioning \
-	-I${PMPL_DIR}/Partitioning/Features \
-	-I${PMPL_DIR}/Partitioning/PartitioningEvaluators \
-	-I${PMPL_DIR}/RegionDecomposition \
-	-I${PMPL_DIR}/ParallelMethods \
-	-I${PMPL_DIR}/ParallelMethods/WorkFunctions
 
 PMPL_OBJS = \
-	ValidityChecker/ValidityCheckerMethod.o \
-	ValidityChecker/SurfaceValidity.o \
-	ValidityChecker/AlwaysTrueValidity.o \
-	ValidityChecker/NodeClearanceValidity.o \
-	ValidityChecker/MedialAxisClearanceValidity.o \
-	ValidityChecker/ObstacleClearanceValidity.o \
-	ValidityChecker/ComposeFunctor.o \
-	ValidityChecker/ComposeVC.o \
-	ValidityChecker/NegateValidity.o \
-	ValidityChecker/CollisionDetection/CDInfo.o \
-	ValidityChecker/CollisionDetection/CollisionDetectionMethod.o \
-	ValidityChecker/CollisionDetection/RapidCollisionDetection.o \
-	ValidityChecker/CollisionDetection/PQPCollisionDetection.o \
-	ValidityChecker/CollisionDetection/SolidCollisionDetection.o \
-	ValidityChecker/CollisionDetection/VClipCollisionDetection.o \
-	ValidityChecker/CollisionDetection/SpheresCollisionDetection.o \
-	ValidityChecker/CollisionDetectionValidity.o \
-	ValidityChecker/ValidityChecker.o \
 	MPProblem/Geometry/FreeBody.o \
 	MPProblem/Geometry/FixedBody.o \
 	MPProblem/Geometry/Connection.o \
@@ -286,90 +246,24 @@ PMPL_OBJS = \
 	MPProblem/Geometry/GMSPolyhedron.o \
 	MPProblem/Geometry/Body.o \
 	MPProblem/Geometry/MultiBody.o \
-	Cfg/Cfg.o \
-	Cfg/ManifoldCfg.o \
-	Cfg/Cfg_free.o \
-	Cfg/Cfg_free_tree.o \
-	Cfg/Cfg_free_tree_2dof.o \
-	Cfg/Cfg_fixed_tree.o \
-	Cfg/Cfg_2D.o \
-	Cfg/Cfg_2D_withRot.o \
-	Cfg/Cfg_surface.o \
-	Cfg/VirtualLink.o \
-	Cfg/Cfg_reach_cc.o \
-	Cfg/Cfg_reach_cc_fixed.o \
-	Cfg/Cfg_free_multi.o \
 	MPProblem/Robot.o \
 	MPProblem/Environment.o \
-	MPProblem/ClosedChainProblem.o \
-        Utilities/MetricUtils.o \
-        Utilities/IOUtils.o \
-        Utilities/MPUtils.o \
-	DistanceMetric/DistanceMetricMethod.o \
-	DistanceMetric/DistanceMetrics.o \
-	DistanceMetric/MinkowskiDistance.o \
-	DistanceMetric/ManhattanDistance.o \
-	DistanceMetric/EuclideanDistance.o \
-	DistanceMetric/ScaledEuclideanDistance.o \
-	DistanceMetric/MPNNEuclideanDistance.o \
-	DistanceMetric/CGALEuclideanDistance.o \
-	DistanceMetric/CenterOfMassDistance.o \
-	DistanceMetric/LPSweptDistance.o \
-	DistanceMetric/BinaryLPSweptDistance.o \
-	DistanceMetric/RMSDDistance.o \
-	DistanceMetric/KnotTheoryDistance.o \
-	DistanceMetric/ReachableDistance.o \
-	Metrics/Metrics.o \
-        Metrics/NumNodesMetric.o \
-        Metrics/NumEdgesMetric.o \
-	Metrics/TimeMetric.o \
-        MapEvaluator/TrueEvaluation.o \
-        MapEvaluator/PrintMapEvaluation.o \
-	MPProblem/Weight.o \
 	MPProblem/Boundary.o \
         MPProblem/BoundingBox.o \
 	MPProblem/BoundingSphere.o\
-	MPStrategy/MPStrategyMethod.o \
-	MPStrategy/MPStrategy.o \
-	MPProblem/MPProblem.o \
-	NeighborhoodFinder/NeighborhoodFinderMethod.o \
-	NeighborhoodFinder/MPNNWrapper.o 
-
-ifeq (${parallel}, 0)
-	PMPL_OBJS+= \
-	MPStrategy/BasicPRM.o \
-	MPStrategy/BasicRRTStrategy.o \
-	MPStrategy/MARRTStrategy.o \
-	MPStrategy/OBRRTStrategy.o \
-	MPStrategy/TogglePRMStrategy.o \
-	MPStrategy/HybridPRM.o \
-        MPStrategy/ResamplePointStrategy.o \
-	MPStrategy/EvaluateMapStrategy.o \
-	MPStrategy/ClosedChainStrategy.o \
-	MPStrategy/UAStrategy.o \
-	MPStrategy/RRGStrategy.o \
-	MPStrategy/UnitTest/DMTestStrategy.o \
-	Partitioning/Partition.o \
-	Partitioning/PartitioningMethod.o \
-	Partitioning/KMeans.o \
-	Partitioning/GrowablePartitions.o \
-	Partitioning/HierarchicalClustering.o \
-	Partitioning/PGMeansClustering.o \
-	Partitioning/SuccessiveClustering.o \
-	Partitioning/PartitioningMethods.o \
-	Partitioning/PartitionTree.o \
-	Partitioning/Features/Features.o \
-	Partitioning/Features/CfgFeature.o \
-	Partitioning/Features/VisibilityFeature.o \
-	Partitioning/Features/ClearanceFeature.o \
-	Partitioning/PartitioningEvaluators/PartitioningEvaluators.o \
-	Partitioning/PartitioningEvaluators/STDEvaluator.o \
-	Partitioning/PartitioningEvaluators/AVGEvaluator.o
-endif
-
-ifeq (${parallel}, 1)
-        PMPL_OBJS+= \
-	ParallelMethods/BasicParallelPRM.o \
-	ParallelMethods/RegularSubdivisionMethod.o 
-endif
+	ValidityChecker/CollisionDetection/CDInfo.o \
+	ValidityChecker/CollisionDetection/CollisionDetectionMethod.o \
+	ValidityChecker/CollisionDetection/RapidCollisionDetection.o \
+	ValidityChecker/CollisionDetection/PQPCollisionDetection.o \
+	ValidityChecker/CollisionDetection/SolidCollisionDetection.o \
+	ValidityChecker/CollisionDetection/VClipCollisionDetection.o \
+	ValidityChecker/CollisionDetection/SpheresCollisionDetection.o \
+	Cfg/Cfg.o \
+	Cfg/ManifoldCfg.o \
+	Cfg/Cfg_2D.o \
+	Cfg/Cfg_2D_withRot.o \
+	Cfg/Cfg_surface.o \
+        Utilities/MetricUtils.o \
+        Utilities/IOUtils.o \
+        Utilities/MPUtils.o 
 

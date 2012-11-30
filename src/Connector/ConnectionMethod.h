@@ -1,41 +1,12 @@
 #ifndef CONNECTIONMETHOD_H_
 #define CONNECTIONMETHOD_H_
 
-#include <boost/mpl/list.hpp>
 #include <boost/mpl/for_each.hpp>
-#include "RoadmapGraph.h"
-#include "LocalPlanners.h"
-#include "MetricUtils.h"
-#include "GraphAlgo.h"
-#include "NeighborhoodFinder.h"
-#include "MPStrategy.h"
-#include "MPUtils.h"
-#include <cmath>
-#include "Connector.h"
-
-template<class CFG, class WEIGHT>
-class NeighborhoodConnection;
-template<class CFG, class WEIGHT>
-class ConnectCCs;
-template<class CFG, class WEIGHT>
-class PreferentialAttachment;
-template<class CFG, class WEIGHT>
-class OptimalConnection;
-template<class CFG, class WEIGHT>
-class OptimalRewire;
-template<class CFG, class WEIGHT>
-class ClosestVE;
+#include "Utilities/MPUtils.h"
+#include "Utilities/MetricUtils.h"
+#include "MPProblem/RoadmapGraph.h"
 
 namespace pmpl_detail{
-  typedef boost::mpl::list<
-    NeighborhoodConnection<CfgType,WeightType>, 
-    ConnectCCs<CfgType,WeightType>, 
-    PreferentialAttachment<CfgType,WeightType>, 
-    OptimalConnection<CfgType,WeightType>,
-    OptimalRewire<CfgType,WeightType>,
-    ClosestVE<CfgType,WeightType>
-      > ConnectorMethodList;
-
   template<typename CM, typename RDMP, typename STATS, typename CMAP,
     typename I, typename O>
       struct VirtualConnect{
@@ -64,65 +35,64 @@ namespace pmpl_detail{
       };
 }
 
-
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 #ifdef _PARALLEL
-class ConnectionMethod : public MPBaseObject, public stapl::p_object{
+class ConnectionMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
 #else
-class ConnectionMethod : public MPBaseObject{
+class ConnectionMethod : public MPBaseObject<MPTraits> {
 #endif
   public:
-    /////////////////////////////////////////////
-    // Constructors
-    ConnectionMethod();
-    ConnectionMethod(XMLNodeReader& _node, MPProblem* _problem);
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::VID VID; 
 
-    /////////////////////////////////////////////
-    // Destructor
+    ConnectionMethod();
+    ConnectionMethod(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ConnectionMethod(){}
 
     /////////////////////////////////////////////
     // Connection Methods
     template<typename ColorMap>
-      void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap){
-        vector<CFG> collision;
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap){
+        vector<CfgType> collision;
         Connect(_rm, _stats, _cmap, back_inserter(collision));
       }
 
     template<typename ColorMap, typename OutputIterator>
-      void Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap,
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           OutputIterator _collision){
         vector<VID> vertices;
-        _rm->m_pRoadmap->GetVerticesVID(vertices);
+        _rm->GetGraph()->GetVerticesVID(vertices);
         Connect(_rm, _stats, _cmap, vertices.begin(), vertices.end(), vertices.begin(), vertices.end(), _collision);
       }
 
     template<typename ColorMap, typename InputIterator>
-      void Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap,
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator _itr1First, InputIterator _itr1Last, 
           InputIterator _itr2First, InputIterator _itr2Last){
-        vector<CFG> collision;
+        vector<CfgType> collision;
         Connect(_rm, _stats, _cmap, _itr1First, _itr1Last, _itr2First, _itr2Last, back_inserter(collision));
       }
 
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
-      void Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats, ColorMap& _cmap,
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator _itr1First, InputIterator _itr1Last, 
           InputIterator _itr2First, InputIterator _itr2Last, 
           OutputIterator _collision){
-        typedef pmpl_detail::ConnectorMethodList MethodList;
+        typedef typename MPTraits::ConnectorMethodList MethodList;
         boost::mpl::for_each<MethodList>(pmpl_detail::VirtualConnect<
-            ConnectionMethod<CFG, WEIGHT>, Roadmap<CFG, WEIGHT>, StatClass, ColorMap,
+            ConnectionMethod<MPTraits>, RoadmapType, StatClass, ColorMap,
             InputIterator, OutputIterator>(this, _rm, _stats, _cmap, _itr1First, _itr1Last,
               _itr2First, _itr2Last, _collision));
       }
 
     /////////////////////////////////////////////
     // Utility Methods
-    typedef typename RoadmapGraph<CFG, WEIGHT>::vertex_descriptor VID; 
     typename vector<pair<pair<VID, VID>, bool> >::const_iterator ConnectionAttemptsBegin() const { return m_connectionAttempts.begin(); }
     typename vector<pair<pair<VID, VID>, bool> >::const_iterator ConnectionAttemptsEnd() const { return m_connectionAttempts.end(); }
     void ClearConnectionAttempts() { m_connectionAttempts.clear(); }
+    
     virtual void PrintOptions(ostream& _os){
       _os << "Name: " << this->GetName() << " ";
       _os << "connPosRes: " << m_connectionPosRes << " ";
@@ -144,23 +114,26 @@ class ConnectionMethod : public MPBaseObject{
     double  m_connectionOriRes;
 };
 
-template <class CFG, class WEIGHT>
-ConnectionMethod<CFG,WEIGHT>::
-ConnectionMethod(){
+template<class MPTraits>
+ConnectionMethod<MPTraits>::ConnectionMethod(){
   this->SetName("ConnectionMethod");
   m_connectionPosRes = 0.05;
   m_connectionOriRes = 0.05;
+  m_addPartialEdge = false;
+  m_addAllEdges = false;
 }
 
-template <class CFG, class WEIGHT>
-ConnectionMethod<CFG,WEIGHT>::
-ConnectionMethod(XMLNodeReader& _node, MPProblem* _problem) : MPBaseObject(_node,_problem){
-  this->SetName("ConnectionMethod");
-  m_connectionPosRes = _problem->GetEnvironment()->GetPositionRes();
-  m_connectionOriRes = _problem->GetEnvironment()->GetOrientationRes();     
-  m_nfMethod = _node.stringXMLParameter("nf", true, "", "nf");
-  m_lpMethod = _node.stringXMLParameter("lp_method", true, "", "Local Planner");
-}
+template<class MPTraits>
+ConnectionMethod<MPTraits>::ConnectionMethod(MPProblemType* _problem, XMLNodeReader& _node) 
+  : MPBaseObject<MPTraits>(_problem, _node){
+    this->SetName("ConnectionMethod");
+    m_connectionPosRes = _problem->GetEnvironment()->GetPositionRes();
+    m_connectionOriRes = _problem->GetEnvironment()->GetOrientationRes();     
+    m_nfMethod = _node.stringXMLParameter("nf", true, "", "nf");
+    m_lpMethod = _node.stringXMLParameter("lp_method", true, "", "Local Planner");
+    m_addPartialEdge = false;
+    m_addAllEdges = false;
+  }
 
 #endif 
 

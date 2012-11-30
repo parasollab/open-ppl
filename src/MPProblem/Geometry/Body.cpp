@@ -173,9 +173,6 @@ void Body::ReadBYU(istream & _is) {
     FindBoundingBox();
 }
 
-#ifdef USE_VCLIP
-#include "CfgTypes.h"
-#endif
 void Body::buildCDstructure(cd_predefined cdtype) {
 
 #ifdef USE_VCLIP
@@ -183,7 +180,7 @@ void Body::buildCDstructure(cd_predefined cdtype) {
     GMSPolyhedron poly = GetPolyhedron();
     Polyhedron* vpoly = new Polyhedron;
 
-    if(CfgType().PosDOF()==2){
+    /*if(CfgType().PosDOF()==2){
       for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
         vpoly->addVertex("",
             Vect3(poly.m_vertexList[v].getX(),
@@ -199,7 +196,7 @@ void Body::buildCDstructure(cd_predefined cdtype) {
               ));
       }
     }
-    else{
+    else{*/
       for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
         vpoly->addVertex("",
             Vect3(poly.m_vertexList[v].getX(),
@@ -207,7 +204,7 @@ void Body::buildCDstructure(cd_predefined cdtype) {
               poly.m_vertexList[v].getZ()
               ));
       }
-    }
+    //}
 
     vpoly->buildHull();
     vclipBody = shared_ptr<PolyTree>(new PolyTree);

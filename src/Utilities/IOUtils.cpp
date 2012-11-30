@@ -1,7 +1,7 @@
 #include "IOUtils.h"
 
-#include "CfgTypes.h"
-#include "Environment.h"
+#include "Cfg/Cfg.h"
+#include "MPProblem/Environment.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -351,7 +351,7 @@ WritePathLinkConfigurations(const string _outputFile,
 			     Environment* _env) { 
   ofstream ofs(_outputFile.c_str());
   
-  ofs << "VIZMO_PATH_FILE   Path Version " << PATHVER_20001022 << endl;
+  ofs << "VIZMO_PATH_FILE   Path Version " << 2012 << endl;
   int numofLink = _env->GetMultiBody(_env->GetRobotIndex())->GetFreeBodyCount();
   ofs << numofLink << endl;
   ofs << _path.size() << endl;
@@ -382,7 +382,7 @@ WritePathConfigurations(const string _outputFile,
 			 Environment* _env ) {
   ofstream ofs(_outputFile.c_str());
   
-  ofs << "VIZMO_PATH_FILE   Path Version " << PATHVER_20001125 << endl;
+  ofs << "VIZMO_PATH_FILE   Path Version " << 2012 << endl;
   ofs << "1" <<endl;
   ofs << _path.size() << endl;
   

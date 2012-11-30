@@ -1,29 +1,25 @@
 #ifndef BOUNDARY_H_
 #define BOUNDARY_H_
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//Include mathtool vec
 #include "Vector.h"
-/////////////////////////////////////////////////////////////////////////////////////////
-//Include OBPRM headers
-#include "MPUtils.h"
 #include "Point.h"
-#include "CfgTypes.h"
-class MPProblem;
+
+#include "Utilities/IOUtils.h"
+
 class Environment;
 
 using namespace mathtool;
 
 ///\todo add MPBaseObject defautl constructor
-class Boundary : public MPBaseObject{
+class Boundary {
   public:
     enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};
     Boundary();
-    Boundary(XMLNodeReader& _node,MPProblem* _problem);
+    Boundary(XMLNodeReader& _node);
     virtual ~Boundary();
     virtual double GetClearance(Vector3D _point3d) const = 0;
     virtual bool IfSatisfiesConstraints(Vector3D _point3d) const =0;
-    virtual bool InBoundary(const Cfg& _cfg) = 0;
+    virtual bool InBoundary(const Cfg& _cfg, Environment* _env) = 0;
     virtual bool operator==(const Boundary& _bb) const =0; 
     virtual Point3d GetRandomPoint() = 0; 
     double GetRandomValueInParameter(int _par);

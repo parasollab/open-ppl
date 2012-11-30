@@ -1,92 +1,47 @@
-#ifndef Environment_h
-#define Environment_h
-
-////////////////////////////////////////////////////////////////
-#include "Boundary.h"
-#include "BoundingBox.h"
-#include "BoundingSphere.h"
-
-#include "Robot.h"
-#include "MultiBody.h"
-#include <string>
-
-#include "MPUtils.h"
-#include "Graph.h"
-#include "GraphAlgo.h"
+#ifndef ENVIRONMENT_H_
+#define ENVIRONMENT_H_
 
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <string>
+
 #include "boost/shared_ptr.hpp"
 
+#include "MPProblem/Boundary.h"
+#include "MPProblem/Robot.h"
+#include "MPProblem/Geometry/MultiBody.h"
+#include "Utilities/MPUtils.h"
+#include "Graph.h"
+#include "GraphAlgo.h"
 
 using boost::shared_ptr;
 
 class MultiBody;
-class MPProblem;
-////////////////////////////////////////////////////////////////
 
-/**@name Format version for path files
- *
- *      The number breaks down as YearMonthDay (YYYYMMDD) so numerical
- *      comparisons can be made.
- * Warning: Be consistent.  It should be YYYYMMDD
- */
-//@{
-#define PATHVER_LEGACY                     20001025
-#define PATHVER_20001022                   20001022
-#define PATHVER_20001125                   20001125
-//@}
-
-
-class Environment : public MPBaseObject{
+class Environment {
   public:
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //    Constructors and Destructor
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    //===================================================================
-    /**@name  Constructors and Destructor*/
-    //===================================================================
-    //@{
-
-    /** Constructor. 
-     * Set pathversion as newest path file version ID (hard coded),
-     * initialize other data members. m_boundaries must be set later
-     */
+    //m_booundary must be set later
     Environment();
 
-    //This version of the constructor is the same as the default, except
-    //m_boundaries will also be set to _bb
+    //m_boundary will also be set to _bb
     Environment(shared_ptr<Boundary> _bb);
 
     /** 
      * Copy Constructor.
-     * copies multibodies from usable_multibodies of from_env and
+     * copies multibodies from usable_multibodies of _env and
      * updates usable_multibodies accordingly.
      */
-    Environment(const Environment &from_env);
-
-    /** 
-     * Copy Constructor. COPIES FROM MPPRoblem's Environment
-     * copies multibodies from usable_multibodies of from_env and
-     * updates usable_multibodies accordingly.
-     */
-    Environment(MPProblem* in_pProblem);
+    Environment(const Environment &_env);
 
     /** 
      * Copy Constructor.
-     * uses i_boundaries instead of boundaries in from_env
+     * uses _boundary instead of boundaries in _env
      */
-    Environment(const Environment &from_env, const Boundary &i_boundaries);
+    Environment(const Environment &_env, const Boundary &_boundary);
 
     ///\brief Constructor taking in an XML object
-    Environment(XMLNodeReader& in_Node, MPProblem* in_pProblem);
-
-    Environment(const Environment &from_env, string filename);
+    Environment(XMLNodeReader& _node);
 
     /**
      * Destructor.
@@ -94,7 +49,6 @@ class Environment : public MPBaseObject{
      * was not copied from another one.	
      */
     virtual ~Environment();
-    //@}
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -106,17 +60,8 @@ class Environment : public MPBaseObject{
     /**@name Access Methods*/
     //@{
 
-    string& GetEnvFileName() { return m_filename; }
-    void SetEnvFileName(string _newFileName){m_filename = _newFileName;}
-
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //  Path Version
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    ///Return format version for path files
-    virtual int GetPathVersion();
+    string& GetEnvFileName(){return m_filename;}
+    void SetEnvFileName(string _filename){m_filename = _filename;}
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -277,11 +222,6 @@ class Environment : public MPBaseObject{
     //////////////////////////////////////////////////////////////////////////////////////////
 
   protected:
-    //---------------------------------------------------------------
-    /// @name  Data
-    //---------------------------------------------------------------
-    int pathVersion;          /// Format version for path files
-
     vector<shared_ptr<MultiBody> > multibody;
     vector<shared_ptr<MultiBody> > usable_multibody;
     int usable_externalbody_count;
@@ -290,6 +230,7 @@ class Environment : public MPBaseObject{
 
     int robotIndex; //index of the robot in the usable_multibody vector
     shared_ptr<Boundary> m_boundaries;
+
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     double rd_res;
 #endif
@@ -313,13 +254,6 @@ class Environment : public MPBaseObject{
 //===================================================================
 ///  Inline functions
 //===================================================================
-
-/// Format version for path files
-inline int 
-Environment::
-GetPathVersion() {
-  return pathVersion;
-}
 
 //-------------------------------------------------------------------
 ///  GetMultiBodyCount

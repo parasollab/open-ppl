@@ -41,6 +41,8 @@ public:
   virtual void GetRandomCfg_CenterOfMass(Environment* _env);
   virtual void GetRandomCfg_CenterOfMass(Environment* _env, shared_ptr<Boundary> _bb);
 
+  virtual Cfg* CreateNewCfg() const;
+
  protected:
   static int NumofRobots;
 };

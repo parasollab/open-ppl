@@ -1,21 +1,17 @@
 #ifndef BOUNDINGBOX_H_
 #define BOUNDINGBOX_H_
+
 #include "Boundary.h"
-#include "MPUtils.h"
-#include "Environment.h"
+//#include "MPUtils.h"
+
 class Environment;
 
-class MultiBody;
-//using namespace mathtool;
-
-///\todo add MPBaseObject defautl constructor
 class BoundingBox :  public Boundary {
   public:
-    BoundingBox(int _DOFs, int _posDOFs);
-    BoundingBox(XMLNodeReader& _node,MPProblem* _problem);
+    BoundingBox(int _DOFs = 0, int _posDOFs = 0);
+    BoundingBox(XMLNodeReader& _node);
     BoundingBox(const BoundingBox& _bbox);
-    BoundingBox();
-    /*virtual ~BoundingBox();*/
+    ~BoundingBox();
 
     void Clear();
     bool operator==(const Boundary& _bb) const;
@@ -34,13 +30,11 @@ class BoundingBox :  public Boundary {
 
     void Print(std::ostream& _os, char _rangeSep=':', char _parSep=';') const;
 
-    //void Parse(std::stringstream &i_bbox);
-
     bool IfWrap(int _par);
     bool IfEnoughRoom(int _par, double _room);
     bool IfSatisfiesConstraints(Vector3D _point3d) const;
     bool IfSatisfiesConstraints(vector<double> _cfg) const;
-    bool InBoundary(const Cfg& _cfg);
+    bool InBoundary(const Cfg& _cfg, Environment* _env);
 
   public:
 #ifdef _PARALLEL

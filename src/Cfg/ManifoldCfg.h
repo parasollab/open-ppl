@@ -12,26 +12,10 @@
 #ifndef MANIFOLDCFG_H_
 #define MANIFOLDCFG_H_
 
-////////////////////////////////////////////////////////////////////////////////////////////
-//Include obprm headers
 #include "Cfg.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////
-/**
- *A derived class from CfgManager. It provides some specific
- *implementation for a 6-dof rigid-body moving in a 3-D work space.
- */
 class ManifoldCfg : public Cfg {
   public:
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Constructors and Destructor
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
     ManifoldCfg();
     ManifoldCfg(const Cfg& _c);
     virtual ~ManifoldCfg();
@@ -43,16 +27,6 @@ class ManifoldCfg : public Cfg {
       }
 #endif
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Access Methods : Retrive and set related information of this class
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Access Methods*/
-    //@{
-
     ///The center position is get from param, c, configuration. (The position part of c)
     virtual Vector3D GetRobotCenterPosition() const;
 
@@ -63,30 +37,30 @@ class ManifoldCfg : public Cfg {
     virtual bool ConfigEnvironment(Environment*) const;
 
     ///Get a random vector whose magnitude is incr (note. the orienatation of this Cfg is 0)
-    virtual void GetRandomRay(double _incr, Environment* _env, shared_ptr<DistanceMetricMethod> _dm, bool _norm = true);
-    //@}
+    template<class DistanceMetricPointer>
+    void GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm = true);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    protected Data member and member methods
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
+    virtual Cfg* CreateNewCfg() const;
 
   protected:
     ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
     virtual void GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boundary> _bb);
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    private Data member and member methods
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-  private:
-
 };
+
+///Get a random vector whose magnitude is incr (note. the orienatation of this Cfg is 0)
+template<class DistanceMetricPointer>
+void
+ManifoldCfg::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm) {
+  //randomly sample params
+  m_v.clear();
+  for(size_t i = 0; i < DOF(); ++i)
+    m_v.push_back(2.0*DRand() - 1.0);
+
+  //scale to appropriate length
+  ManifoldCfg origin;
+  _dm->ScaleCfg(_env, _incr, origin, *this);
+  if(_norm)
+    NormalizeOrientation();
+}
 
 #endif

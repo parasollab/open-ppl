@@ -13,17 +13,11 @@
 //
 /////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////
-//Include OBPRM headers
-#include "CfgTypes.h"
 #include "Cfg.h"
-#include "MultiBody.h"
-#include "Environment.h"
-#include "DistanceMetrics.h"
-#include "MetricUtils.h"
-#include "ValidityChecker.h"
-#include "MPProblem.h"
-#include "CDInfo.h"
+#include "MPProblem/Geometry/MultiBody.h"
+#include "MPProblem/Environment.h"
+#include "Utilities/MetricUtils.h"
+#include "ValidityChecker/CollisionDetection/CDInfo.h"
 
 #define EQ(a,b)  (fabs(a-b)<0.0001)
 
@@ -349,7 +343,7 @@ Cfg::OrientationMagnitude() const {
 // the environment specified bounding box
 bool
 Cfg::InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const {
-  return _bb->InBoundary(*this); 
+  return _bb->InBoundary(*this, _env); 
 }
 
 bool
@@ -532,25 +526,6 @@ Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   exit(-1);
 }
 
-// generates a random cfg with a given length 
-void
-Cfg::GetRandomCfg(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, double _length) {
-  m_v = vector<double>(m_dof, 0);
-  Cfg* origin = this->CreateNewCfg();
-
-  GetRandomCfg(_env);
-  _dm->ScaleCfg(_env, _length, *origin, *this);
-
-  NormalizeOrientation();
-}
-
-Cfg*
-Cfg::CreateNewCfg() const {
-  Cfg* tmp = new CfgType();
-  *tmp = *this;
-  return tmp;
-}
-
 Cfg*
 Cfg::CreateNewCfg(vector<double>& _data) const {
   if(_data.size() != m_dof) {
@@ -639,9 +614,9 @@ Cfg::PolyApprox(Environment* _env) const {
   return result;
 }
 
-double
+/*double
 Cfg::GetSmoothingValue(StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams) {
   CfgType tmp;
   GetApproxCollisionInfo(*((CfgType*)this), tmp, _stats, _cdInfo, _cParams);
   return _cdInfo.m_minDist;
-}
+}*/

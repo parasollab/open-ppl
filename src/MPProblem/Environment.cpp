@@ -1,8 +1,12 @@
 #include "Environment.h"
-#include "MPProblem.h"
 #include <fstream>
 #include <iostream>
+
 #include "boost/pointer_cast.hpp"
+
+#include "MPProblem/BoundingBox.h"
+#include "MPProblem/BoundingSphere.h"
+#include "Cfg/Cfg.h"
 
 #define ENV_RES_DEFAULT                    0.05
 
@@ -13,7 +17,6 @@
 
 Environment::
 Environment():
-  pathVersion(PATHVER_20001125),
   usable_externalbody_count(0),
   robotIndex(0),
   positionRes(ENV_RES_DEFAULT),
@@ -27,7 +30,6 @@ Environment():
 
 Environment::
 Environment(shared_ptr<Boundary> _bb):
-  pathVersion(PATHVER_20001125),
   usable_externalbody_count(0),
   robotIndex(0),
   m_boundaries(_bb),
@@ -44,74 +46,35 @@ Environment(shared_ptr<Boundary> _bb):
  * Copy Constructor
  */
 Environment::
-Environment(const Environment &from_env) :
-  pathVersion(PATHVER_20001125),
-  usable_externalbody_count(from_env.usable_externalbody_count),
-  robotIndex(from_env.robotIndex),
-  positionRes(from_env.positionRes),
-  orientationRes(from_env.orientationRes),
-  positionResFactor(from_env.positionResFactor),
-  orientationResFactor(from_env.orientationResFactor),
-  minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
-  m_robotGraph(from_env.m_robotGraph),
-  robotVec(from_env.robotVec),
-  m_filename(from_env.m_filename)
+Environment(const Environment &_env) :
+  usable_externalbody_count(_env.usable_externalbody_count),
+  robotIndex(_env.robotIndex),
+  positionRes(_env.positionRes),
+  orientationRes(_env.orientationRes),
+  positionResFactor(_env.positionResFactor),
+  orientationResFactor(_env.orientationResFactor),
+  minmax_BodyAxisRange(_env.minmax_BodyAxisRange),
+  m_robotGraph(_env.m_robotGraph),
+  robotVec(_env.robotVec),
+  m_filename(_env.m_filename)
 {
-  if(from_env.m_boundaries) 
-    m_boundaries=from_env.m_boundaries;
+  if(_env.m_boundaries) 
+    m_boundaries=_env.m_boundaries;
 
-  // only usable bodies in from_env will be copied
-  for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
-    multibody.push_back(from_env.GetMultiBody(i));
-    //usable_multibody.push_back(from_env.GetMultiBody(i));
+  // only usable bodies in _env will be copied
+  for (int i = 0; i < _env.GetMultiBodyCount(); i++) {
+    multibody.push_back(_env.GetMultiBody(i));
+    //usable_multibody.push_back(_env.GetMultiBody(i));
   }
   // copy of surfaces 
-  for (int i = 0; i < from_env.GetNavigableSurfacesCount(); i++) {
-    m_navigableSurfaces.push_back(from_env.GetNavigableSurface(i));
+  for (int i = 0; i < _env.GetNavigableSurfacesCount(); i++) {
+    m_navigableSurfaces.push_back(_env.GetNavigableSurface(i));
   }
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  rd_res=from_env.GetRdRes();
+  rd_res=_env.GetRdRes();
 #endif
   SelectUsableMultibodies();
 }
-
-
-/**
- * Copy Constructor, copies from MPProblem's environemnt
- */
-Environment::
-Environment(MPProblem* in_pProblem) : 
-  MPBaseObject(in_pProblem),
-  pathVersion(PATHVER_20001125),
-  usable_externalbody_count(in_pProblem->GetEnvironment()->usable_externalbody_count),
-  robotIndex(in_pProblem->GetEnvironment()->robotIndex),
-  positionRes(in_pProblem->GetEnvironment()->positionRes),
-  orientationRes(in_pProblem->GetEnvironment()->orientationRes),
-  positionResFactor(in_pProblem->GetEnvironment()->positionResFactor),
-  orientationResFactor(in_pProblem->GetEnvironment()->orientationResFactor),
-  minmax_BodyAxisRange(in_pProblem->GetEnvironment()->minmax_BodyAxisRange),
-  m_robotGraph(in_pProblem->GetEnvironment()->m_robotGraph),
-  robotVec(in_pProblem->GetEnvironment()->robotVec),
-  m_filename(in_pProblem->GetEnvironment()->m_filename)
-{
-  Environment& from_env = *(in_pProblem->GetEnvironment());
-  if(from_env.m_boundaries) 
-    m_boundaries=from_env.m_boundaries;
-
-  for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
-    multibody.push_back(from_env.GetMultiBody(i));
-    //usable_multibody.push_back(from_env.GetMultiBody(i));
-  }
-  // copy of surfaces 
-  for (int i = 0; i < from_env.GetNavigableSurfacesCount(); i++) {
-    m_navigableSurfaces.push_back(from_env.GetNavigableSurface(i));
-  }
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  rd_res=from_env.GetRdRes();
-#endif
-  SelectUsableMultibodies();
-}
-
 
 /**
  * Copy Constructor
@@ -119,29 +82,28 @@ Environment(MPProblem* in_pProblem) :
  * environment
  */
 Environment::
-Environment(const Environment &from_env, const Boundary &i_boundaries) :
-  pathVersion(PATHVER_20001125),
-  robotIndex(from_env.robotIndex),
-  positionRes(from_env.positionRes),
-  orientationRes(from_env.orientationRes),
-  positionResFactor(from_env.positionResFactor),
-  orientationResFactor(from_env.orientationResFactor),
-  minmax_BodyAxisRange(from_env.minmax_BodyAxisRange),
-  m_robotGraph(from_env.m_robotGraph),
-  robotVec(from_env.robotVec),
-  m_filename(from_env.m_filename)
+Environment(const Environment &_env, const Boundary &_boundary) :
+  robotIndex(_env.robotIndex),
+  positionRes(_env.positionRes),
+  orientationRes(_env.orientationRes),
+  positionResFactor(_env.positionResFactor),
+  orientationResFactor(_env.orientationResFactor),
+  minmax_BodyAxisRange(_env.minmax_BodyAxisRange),
+  m_robotGraph(_env.m_robotGraph),
+  robotVec(_env.robotVec),
+  m_filename(_env.m_filename)
 {
-  if(from_env.m_boundaries) 
-    m_boundaries=from_env.m_boundaries;
-  for (int i = 0; i < from_env.GetMultiBodyCount(); i++) {
-    multibody.push_back(from_env.GetMultiBody(i));
+  if(_env.m_boundaries) 
+    m_boundaries=_env.m_boundaries;
+  for (int i = 0; i < _env.GetMultiBodyCount(); i++) {
+    multibody.push_back(_env.GetMultiBody(i));
   }
   // copy of surfaces 
-  for (int i = 0; i < from_env.GetNavigableSurfacesCount(); i++) {
-    m_navigableSurfaces.push_back(from_env.GetNavigableSurface(i));
+  for (int i = 0; i < _env.GetNavigableSurfacesCount(); i++) {
+    m_navigableSurfaces.push_back(_env.GetNavigableSurface(i));
   }
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  rd_res=from_env.GetRdRes();
+  rd_res=_env.GetRdRes();
 #endif
   SelectUsableMultibodies(); // select usable multibodies
 }
@@ -151,9 +113,7 @@ Environment(const Environment &from_env, const Boundary &i_boundaries) :
 ///\todo Fix boundaries init
 
 Environment::
-Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) : 
-  MPBaseObject(in_Node, in_pProblem),
-  pathVersion(PATHVER_20001125),
+Environment(XMLNodeReader& _node) : 
   usable_externalbody_count(0),
   robotIndex(0),
   positionRes(ENV_RES_DEFAULT),
@@ -163,47 +123,46 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   minmax_BodyAxisRange(0),
   m_filename("")
 {
-  in_Node.verifyName(string("environment"));
+  _node.verifyName(string("Environment"));
 
   double pos_res = -1.0, ori_res=-1.0l;
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res = 0.005;
 #endif
  
-  m_filename = in_Node.stringXMLParameter("input_env", true, "", "env filename");
+  m_filename = _node.stringXMLParameter("input_env", true, "", "env filename");
   Read(m_filename);
 
   XMLNodeReader::childiterator citr;
   size_t num_joints = 0;
-  for ( citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr ) {
+  for ( citr = _node.children_begin(); citr!= _node.children_end(); ++citr ) {
     if ( citr->getName() == "robot") {
       string cfg_type = citr->stringXMLParameter("Cfg_name", true, "", "type of robot");
-#ifdef PMPRigidMulti
-      if(cfg_type == "Cfg_free_multi") {
-        int num_robots = citr->numberXMLParameter("num_robots", true, 1, 1, MAX_INT, "number of robots");
-        CfgType::setNumofRobots(num_robots);
-      }
-#endif
+//#ifdef PMPRigidMulti
+//      if(cfg_type == "Cfg_free_multi") {
+//        int num_robots = citr->numberXMLParameter("num_robots", true, 1, 1, MAX_INT, "number of robots");
+//        CfgType::setNumofRobots(num_robots);
+//      }
+//#endif
 
       num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
-      CfgType tmp;
-#if !(defined(PMPManifold) || defined(PMPProtein ) )
-      vector<Robot> robots = tmp.GetRobots(num_joints);
-#else
+//#if !(defined(PMPManifold) || defined(PMPProtein ) )
+//      CfgType tmp;
+//      vector<Robot> robots = tmp.GetRobots(num_joints);
+//#else
       vector<Robot> robots = robotVec;
-#endif
+//#endif
       Cfg::InitRobots(robots);
-      //in_pProblem->SetNumOfJoints(num_joints);
 
       XMLNodeReader::childiterator citr2;
       for ( citr2 = citr->children_begin(); citr2!= citr->children_end(); ++citr2 ) {
         if ( citr2->getName() == "boundary" ) {
           string type = citr2->stringXMLParameter("type",true,"","type");
           if(type == "bbox"){
-            m_boundaries = shared_ptr<BoundingBox>(new BoundingBox(*citr2,in_pProblem));
+            m_boundaries = shared_ptr<BoundingBox>(new BoundingBox(*citr2));
           }
           else if(type == "bshpere") {
-            m_boundaries = shared_ptr<BoundingSphere>(new BoundingSphere(*citr2,in_pProblem));
+            m_boundaries = shared_ptr<BoundingSphere>(new BoundingSphere(*citr2));
           }
 
           //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox() 
@@ -228,57 +187,12 @@ Environment(XMLNodeReader& in_Node,  MPProblem* in_pProblem) :
   // Compute RESOLUTION
   ComputeResolution(pos_res, ori_res, positionResFactor, orientationResFactor, num_joints);
   
-  PrintOptions(cout);
-    
   SelectUsableMultibodies();
 }
 
 
 
 ///////////////////////////////
-
-Environment::
-Environment(const Environment& from_env, string filename) : 
-  pathVersion(PATHVER_20001125),
-  usable_externalbody_count(0),
-  robotIndex(0),
-  positionRes(from_env.positionRes),
-  orientationRes(from_env.orientationRes),
-  positionResFactor(from_env.positionResFactor),
-  orientationResFactor(from_env.orientationResFactor),
-  minmax_BodyAxisRange(0),
-  m_filename(filename)
-{
-  if(from_env.m_boundaries) 
-    m_boundaries=from_env.m_boundaries;
-
-  Read(filename);
-  FindBoundingBox();
-
-  //compute RESOLUTION
-  multibody[robotIndex]->FindBoundingBox();
-  double bodies_min_span = multibody[robotIndex]->GetMaxAxisRange();
-    
-  bool first = true;
-  for(size_t i = 0 ; i < multibody.size() ; i++){
-    if((int)i != robotIndex){
-      if(first){
-        multibody[i]->FindBoundingBox();
-        first = false;
-        bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
-      }
-      else{
-        multibody[i]->FindBoundingBox();
-        bodies_min_span = min(bodies_min_span,multibody[i]->GetMaxAxisRange());
-      } 
-    }
-  }
-  minmax_BodyAxisRange = bodies_min_span;
-  // END compute RESOLUTION
-
-  SelectUsableMultibodies();
-}
-
 
 void Environment::
 PrintOptions(ostream& out_os) {
@@ -377,8 +291,8 @@ SelectUsableMultibodies() {
     usable_externalbody_count++;
   }
 
-  if(!m_boundaries || (m_boundaries->GetPosDOFs() < (int)CfgType().PosDOF()) || (m_boundaries->GetDOFs() < (int)CfgType().DOF()))
-    return;
+  //if(!m_boundaries || (m_boundaries->GetPosDOFs() < (int)CfgType().PosDOF()) || (m_boundaries->GetDOFs() < (int)CfgType().DOF()))
+  //  return;
 
   // get workspace bounding box
   double minx, maxx, miny, maxy, minz, maxz;
@@ -644,7 +558,7 @@ Environment::Read(string _filename) {
   
   for (int m=0; m<multibodyCount; m++) {    
     shared_ptr<MultiBody> mb(new MultiBody());
-    mb->Read(ifs, m_debug);
+    mb->Read(ifs, false/*m_debug*/);
     if( !mb->IsSurface() )
       multibody.push_back(mb);
     else
@@ -753,8 +667,7 @@ operator==(const Environment& e) const
     if(*(usable_multibody[i]) != (*(e.usable_multibody[i])))
       return false;
 
-  return (pathVersion == e.pathVersion) &&
-         (usable_externalbody_count == e.usable_externalbody_count) &&
+  return (usable_externalbody_count == e.usable_externalbody_count) &&
          (robotIndex == e.robotIndex) &&
          (*m_boundaries == *e.m_boundaries) &&
          (positionRes == e.positionRes) &&

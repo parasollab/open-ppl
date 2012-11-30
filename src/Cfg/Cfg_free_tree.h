@@ -53,6 +53,9 @@ class Cfg_free_tree : public Cfg_free {
   ///Move the (the first link of)  robot in enviroment to the given configuration.
   virtual bool ConfigEnvironment(Environment*) const;
  
+  Cfg* CreateNewCfg() const;
+  Cfg* CreateNewCfg(vector<double>&) const;
+
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
   virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);

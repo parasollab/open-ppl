@@ -10,9 +10,8 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "ManifoldCfg.h"
-#include "MultiBody.h"
-#include "Environment.h"
-#include "DistanceMetricMethod.h"
+#include "MPProblem/Geometry/MultiBody.h"
+#include "MPProblem/Environment.h"
 
 ManifoldCfg::ManifoldCfg() {
   m_v.clear();
@@ -111,18 +110,11 @@ ManifoldCfg::ConfigEnvironment(Environment* _env) const {
   return true;
 }
 
-void
-ManifoldCfg::GetRandomRay(double _incr, Environment* _env, shared_ptr<DistanceMetricMethod> _dm, bool _norm) {
-  //randomly sample params
-  m_v.clear();
-  for(size_t i = 0; i < DOF(); ++i)
-    m_v.push_back(2.0*DRand() - 1.0);
-
-  //scale to appropriate length
-  ManifoldCfg origin;
-  _dm->ScaleCfg(_env, _incr, origin, *this);
-  if(_norm)
-    NormalizeOrientation();
+Cfg*
+ManifoldCfg::CreateNewCfg() const {
+  Cfg* tmp = new ManifoldCfg();
+  *tmp = *this;
+  return tmp;
 }
 
 void

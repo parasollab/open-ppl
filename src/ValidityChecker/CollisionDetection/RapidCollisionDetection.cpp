@@ -1,5 +1,4 @@
 #include "RapidCollisionDetection.h"
-#include "Metrics.h"
 #include "CDInfo.h"
 
 #ifdef USE_RAPID

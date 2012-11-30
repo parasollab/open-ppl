@@ -29,22 +29,22 @@
 #define KCLOSEST 5 
 #define MFAILURE 5 
 
-template <class CFG, class WEIGHT>
-class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
+template<class MPTraits>
+class NeighborhoodConnection: public ConnectionMethod<MPTraits> {
   public:
-    //////////////////////
-    // Typedef from RoadmapGraph
-    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-    typedef typename vector<typename RoadmapGraph<CFG,WEIGHT>::VID>::iterator VIDIT;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::VID VID; 
+    typedef typename vector<VID>::iterator VIDIT;
 
     //////////////////////
     // Constructors and Destructor
     NeighborhoodConnection(string _lp = "", string _nf = "", 
         int _k = KCLOSEST, int _m = MFAILURE, 
         bool _countFailures = false, bool _unconnected = false, 
-        bool _random = false, bool _checkIfSameCC = false,
-        MPProblem* _problem = NULL);
-    NeighborhoodConnection(XMLNodeReader& _node, MPProblem* _problem);
+        bool _random = false, bool _checkIfSameCC = false);
+    NeighborhoodConnection(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~NeighborhoodConnection();
 
     //////////////////////
@@ -55,14 +55,14 @@ class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
     //////////////////////
     // Core: Connection method
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
-      void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+      void Connect(RoadmapType* _rm, StatClass& _stats,
           ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
           InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision) ;
 
   protected:
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
       void ConnectNeighbors(
-          Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+          RoadmapType* _rm, StatClass& _stats, 
           ColorMap& _cmap, VID _vid,
           InputIterator _closestFirst, InputIterator _closestLast,
           OutputIterator _collision);
@@ -71,7 +71,7 @@ class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
     // Utility Method
     template <typename InputIterator, typename OutputIterator>
       OutputIterator FindKNeighbors(
-          Roadmap<CFG, WEIGHT>* _rm, CFG _cfg, 
+          RoadmapType* _rm, CfgType _cfg, 
           InputIterator _itrFirst, InputIterator _itrLast, 
           int _k,
           const vector<VID>& _iterNeighbors, 
@@ -92,35 +92,31 @@ class NeighborhoodConnection: public ConnectionMethod<CFG,WEIGHT> {
     bool m_checkIfSameCC;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-  template <class CFG, class WEIGHT>
-NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(string _lp, string _nf, int _k, int _m, bool _countFailures, bool
-    _unconnected, bool _random, bool _checkIfSameCC, MPProblem* _problem) 
-  : ConnectionMethod<CFG,WEIGHT>(), m_k(_k), m_fail(_m), 
+template<class MPTraits>
+NeighborhoodConnection<MPTraits>::NeighborhoodConnection(string _lp, string _nf, int _k, int _m, 
+    bool _countFailures, bool _unconnected, bool _random, bool _checkIfSameCC) 
+  : ConnectionMethod<MPTraits>(), m_k(_k), m_fail(_m), 
   m_countFailures(_countFailures), m_unconnected(_unconnected),
   m_random(_random), m_checkIfSameCC(_checkIfSameCC){
     this->SetName("NeighborhoodConnection"); 
     this->m_lpMethod = _lp;
     this->m_nfMethod = _nf;
-    this->SetMPProblem(_problem);
   }
 
-///////////////////////////////////////////////////////////////////////////////
-  template <class CFG, class WEIGHT>
-NeighborhoodConnection<CFG,WEIGHT>::NeighborhoodConnection(XMLNodeReader& _node, MPProblem* _problem) 
-  : ConnectionMethod<CFG,WEIGHT>(_node, _problem), 
+template<class MPTraits>
+NeighborhoodConnection<MPTraits>::NeighborhoodConnection(MPProblemType* _problem, XMLNodeReader& _node) 
+  : ConnectionMethod<MPTraits>(_problem, _node), 
   m_k(KCLOSEST), m_fail(MFAILURE), m_countFailures(false), m_unconnected(false), m_random(false){
     ParseXML(_node);
   }
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-NeighborhoodConnection<CFG,WEIGHT>::~NeighborhoodConnection(){ 
+template<class MPTraits>
+NeighborhoodConnection<MPTraits>::~NeighborhoodConnection(){ 
 }
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-void NeighborhoodConnection<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
+template<class MPTraits>
+void
+NeighborhoodConnection<MPTraits>::ParseXML(XMLNodeReader& _node){
   this->SetName("NeighborhoodConnection"); 
   m_checkIfSameCC = _node.boolXMLParameter("CheckIfSameCC",false,true,"If true, do not connect if edges are in the same CC");
   m_countFailures = _node.boolXMLParameter("count_failures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
@@ -131,10 +127,10 @@ void NeighborhoodConnection<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
   _node.warnUnrequestedAttributes();
 }
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-void NeighborhoodConnection<CFG, WEIGHT>::PrintOptions(ostream& _os){
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
+template<class MPTraits>
+void
+NeighborhoodConnection<MPTraits>::PrintOptions(ostream& _os){
+  ConnectionMethod<MPTraits>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  k = ";
   _os << m_k << "  fail = " << m_fail ;
   _os << "  count_failures = " << this->m_countFailures;
@@ -143,23 +139,12 @@ void NeighborhoodConnection<CFG, WEIGHT>::PrintOptions(ostream& _os){
   _os << endl;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// ConnectNodes
-/*
- * for each node in v1 {
- *   find k closest nodes in v2
- *   attempt connection
- * }
- */
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 template<typename ColorMap, typename InputIterator, typename OutputIterator>
-void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+void
+NeighborhoodConnection<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, 
     ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
     InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){
-
-  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
 
   if(this->m_debug){
     cout << endl; 
@@ -183,7 +168,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, Stat
   for(InputIterator itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
 
     // find cfg pointed to by itr1
-    CFG vCfg = GetCfg()(_rm->m_pRoadmap, itr1);
+    CfgType vCfg = _rm->GetGraph()->GetCfg(itr1);
     if(this->m_debug){
       cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << *itr1 << "  --> " << vCfg << endl;
     }
@@ -222,33 +207,30 @@ void NeighborhoodConnection<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, Stat
   if(this->m_debug) cout << "*** m_totalFailure = " << m_totalFailure << endl;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 template <typename ColorMap, typename InputIterator, typename OutputIterator>
-void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
-    Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+void
+NeighborhoodConnection<MPTraits>::ConnectNeighbors(
+    RoadmapType* _rm, StatClass& _stats, 
     ColorMap& _cmap, VID _vid,
     InputIterator _closestFirst, InputIterator _closestLast,
     OutputIterator _collision){
   
-  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
-
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
-  LPOutput<CFG,WEIGHT> lpOutput;
+  typename MPProblemType::DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
+  LPOutput<MPTraits> lpOutput;
   int success(m_iterSuccess);
   int failure(m_iterFailure);
 
-  // connect the found k-closest to the current iteration's CFG
+  // connect the found k-closest to the current iteration's CfgType
   for(typename vector<VID>::iterator itr2 = _closestFirst; itr2 != _closestLast; ++itr2){
     if(*itr2==INVALID_VID)
       continue;
     if(this->m_debug) cout << "\t(s,f) = (" << success << "," << failure << ")";
     if(this->m_debug) cout << " | VID = " << *itr2;
     if(this->m_debug) cout << " | dist = " << 
-      dm->Distance( _rm->GetEnvironment(), 
-          GetCfg()(_rm->m_pRoadmap, _vid),
-          GetCfg()(_rm->m_pRoadmap, itr2));
+      dm->Distance(this->GetMPProblem()->GetEnvironment(), 
+          _rm->GetGraph()->GetCfg(_vid),
+          _rm->GetGraph()->GetCfg(itr2));
 
     // stopping conditions
     if(this->m_countFailures && failure >= m_fail){
@@ -268,7 +250,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
 
     // don't attempt the connection if it already failed once before
     if(_rm->IsCached(_vid,*itr2)){
-      if(!_rm->GetCache(_vid,*itr2)){
+      if(!_rm->IsCached(_vid,*itr2)){
         if(this->m_debug) cout << " | skipping... this connection already failed once";
         if(this->m_debug) cout << " | failure incremented";
         ++failure;
@@ -279,7 +261,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
 
     // the edge already exists :: no need for this, it is already done in STAPL
 #ifndef _PARALLEL
-    if(_rm->m_pRoadmap->IsEdge(_vid, *itr2)){
+    if(_rm->GetGraph()->IsEdge(_vid, *itr2)){
       // if we're not in "unconnected" mode, count this as a success
       if(this->m_debug) cout << " | edge already exists in roadmap";
       if(!m_unconnected){
@@ -293,7 +275,7 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
     if(m_checkIfSameCC){
       // the nodes are in the same connected component
       _cmap.reset();
-      if(stapl::sequential::is_same_cc(*(_rm->m_pRoadmap), _cmap, _vid, *itr2)){
+      if(stapl::sequential::is_same_cc(*(_rm->GetGraph()), _cmap, _vid, *itr2)){
         // if we're not in "unconnected" mode, count this as a success
         if(this->m_debug) cout << " | nodes in the same connected component";
         if(!m_unconnected){
@@ -308,16 +290,16 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
 
     // attempt connection with the local planner
     CfgType col;
-    if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
-        IsConnected( _rm->GetEnvironment(), _stats, dm,
-          GetCfg()(_rm->m_pRoadmap, _vid),
-          GetCfg()(_rm->m_pRoadmap, itr2),
+    if(this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
+        IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm,
+          _rm->GetGraph()->GetCfg(_vid),
+          _rm->GetGraph()->GetCfg(itr2),
           col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, 
           (!this->m_addAllEdges) )){
 
       // if connection was made, add edge and record the successful connection
       if(this->m_debug) cout << " | connection was successful";
-      _rm->m_pRoadmap->AddEdge(_vid, *itr2, lpOutput.edge);
+      _rm->GetGraph()->AddEdge(_vid, *itr2, lpOutput.edge);
       // mark the successful connection in the roadmap's cache
       if(this->m_debug) cout << " | success incremented" << endl;
       _rm->SetCache(_vid,*itr2,true);
@@ -342,21 +324,20 @@ void NeighborhoodConnection<CFG,WEIGHT>::ConnectNeighbors(
   m_iterFailure = failure;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 template <typename InputIterator, typename OutputIterator>
-OutputIterator NeighborhoodConnection<CFG, WEIGHT>::
-FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg, 
-    InputIterator _itrFirst, InputIterator _itrLast, 
-    int _k, 
+OutputIterator
+NeighborhoodConnection<MPTraits>::FindKNeighbors(RoadmapType* _rm, CfgType cfg, 
+    InputIterator _itrFirst, InputIterator _itrLast, int _k, 
     const vector<VID>& _iterNeighbors, OutputIterator _closestIter){
+  typedef typename MPTraits::MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
  #ifndef _PARALLEL 
   if(m_random){
     // find k random (unique) neighbors
     set<int> ids(_iterNeighbors.begin(), _iterNeighbors.end());
     if(!m_unconnected && m_k != 0)
     {
-      ids.insert(_rm->m_pRoadmap->GetVID(cfg));
+      ids.insert(_rm->GetGraph()->GetVID(cfg));
       _k++;
     }
     for(int i = ids.size(); i < _k && i<(_itrLast-_itrFirst); i++){
@@ -373,15 +354,15 @@ FindKNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG cfg,
   }
   else {
     // find the k-closest neighbors
-    NeighborhoodFinder::NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod);
-    if(_itrLast - _itrFirst == (int)_rm->m_pRoadmap->get_num_vertices()) 
+    NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod);
+    if(_itrLast - _itrFirst == (int)_rm->GetGraph()->get_num_vertices()) 
       return nfptr->KClosest(_rm, cfg, _k, _closestIter);
     else 
       return nfptr->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
   } 
  #else
   // find k-closest using just brute force
-  NeighborhoodFinder::NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod);
+  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod);
   return nf->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
  #endif 
 }            

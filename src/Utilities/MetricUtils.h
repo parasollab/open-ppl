@@ -1,11 +1,16 @@
 #ifndef METRICUTILS_H_
 #define METRICUTILS_H_
 
-#include "NeighborhoodFinder.h"
-#include "Roadmap.h"
-#include "DistanceMetricMethod.h"
+#include <vector>
+#include <map>
 #include <string>
+#include <iostream>
+#include <iomanip>
 #include "boost/tuple/tuple.hpp"
+#include "GraphAlgo.h"
+#include "MPProblem/Environment.h"
+
+using namespace std;
 
 /**Provide timing information.
  *This class is used to measure the running time between StartClock and 
@@ -66,19 +71,19 @@ class StatClass {
     int IncLPCollDetCalls(string _lpName, int _incr=1);
 
     static const int ALL;
-    template <class CFG, class WEIGHT>
-      void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap);
-    template <class CFG, class WEIGHT>
-      void PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs);
+    template<class RoadmapType>
+      void PrintAllStats(ostream& _os, RoadmapType* _rmap);
+    template<class RoadmapType>
+      void PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs);
 
-    template <class CFG, class WEIGHT>
-      void PrintDataLine(ostream&, Roadmap<CFG, WEIGHT>*, int _showColumnHeaders=0);
+    template<class RoadmapType>
+      void PrintDataLine(ostream&, RoadmapType*, int _showColumnHeaders=0);
 
-    template <class CFG, class WEIGHT>
-      void ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<DistanceMetricMethod> _dm);
+    template<class RoadmapType, class DistanceMetricPointer>
+      void ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, DistanceMetricPointer _dm);
 
-    template <class CFG, class WEIGHT>
-      void ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, string _nfMethod, string _dmMethod);
+    template<class MPProblemType, class RoadmapType>
+      void ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, string _nfMethod, string _dmMethod);
       
     void PrintFeatures(ostream& _os);
     int IncNodesGenerated(string _samplerName, int _incr=1);
@@ -114,8 +119,8 @@ class StatClass {
     void SetAuxDest(string _s) {m_auxFileDest = _s;}
 
     //help
-    template <class CFG, class WEIGHT>
-      void DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>&, int);
+    template<class GraphType>
+      void DisplayCCStats(ostream& _os, GraphType&, int);
 
     //m_lpInfo represents information about the Local Planners, referenced by name
     //  m_lpInfo.first is the name of the Local Planner
@@ -182,15 +187,15 @@ class StatClass {
 };
 
 //definitions of templated functions
-template <class CFG, class WEIGHT>
+template<class RoadmapType>
 void
-StatClass::PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap) {
+StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap) {
   PrintAllStats(_os, _rmap, ALL);
 }
 
-template <class CFG, class WEIGHT>
+template<class RoadmapType>
 void
-StatClass::PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs) {
+StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
 #ifndef _PARALLEL
 
   //output Sampler Statistics
@@ -277,8 +282,8 @@ StatClass::PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs)
 
 
   _os << endl << endl;
-  _os << "Number of Nodes: " << _rmap->m_pRoadmap->get_num_vertices() << endl;
-  _os << "Number of Edges: " << _rmap->m_pRoadmap->get_num_edges() << endl;
+  _os << "Number of Nodes: " << _rmap->GetGraph()->get_num_vertices() << endl;
+  _os << "Number of Edges: " << _rmap->GetGraph()->get_num_edges() << endl;
   /*  Removed by Roger for reasons given below
       _os << "Number of Collision Detection Calls: " << endl;
       for(i=0;i<MaxCD;i++)
@@ -289,9 +294,9 @@ StatClass::PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs)
 
   _os << endl;
 
-  if (_numCCs==ALL)    {DisplayCCStats(_os, *(_rmap->m_pRoadmap));      }
-  else if (_numCCs==0) {DisplayCCStats(_os, *(_rmap->m_pRoadmap),0);     }
-  else                {DisplayCCStats(_os, *(_rmap->m_pRoadmap),_numCCs);}
+  if (_numCCs==ALL)    {DisplayCCStats(_os, *(_rmap->GetGraph()));      }
+  else if (_numCCs==0) {DisplayCCStats(_os, *(_rmap->GetGraph()),0);     }
+  else                {DisplayCCStats(_os, *(_rmap->GetGraph()),_numCCs);}
 
 
   ///Below removed b/c it counts Coll Detection too fine grained.  We have decided 
@@ -330,22 +335,23 @@ StatClass::PrintAllStats(ostream& _os, Roadmap<CFG, WEIGHT>* _rmap, int _numCCs)
 
 }
 
-template <class CFG, class WEIGHT>
+template<class RoadmapType>
 void StatClass::
-PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT>* _rmap, int _showColumnHeaders) {
+PrintDataLine(ostream& _myostream, RoadmapType* _rmap, int _showColumnHeaders) {
 #ifndef _PARALLEL
   // Default is to NOT print out column headers
   if (_showColumnHeaders) {
     _myostream <<"\nV  E #CC 1 2 3 4 5 6 7 8 9 10 #iso CD  LPattSum LPcdSum\n";
   }//endif
 
-  _myostream << _rmap->m_pRoadmap->get_num_vertices() << " ";
-  _myostream << _rmap->m_pRoadmap->get_num_edges()   << " ";
+  _myostream << _rmap->GetGraph()->get_num_vertices() << " ";
+  _myostream << _rmap->GetGraph()->get_num_edges()   << " ";
 
-  typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
-  stapl::sequential::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
+  typedef typename RoadmapType::GraphType GraphType;
+  typedef typename GraphType::vertex_descriptor VID;
+  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
   vector< pair<size_t,VID> > ccStats;
-  get_cc_stats(*(_rmap->m_pRoadmap), cMap, ccStats);
+  get_cc_stats(*(_rmap->GetGraph()), cMap, ccStats);
   _myostream << ccStats.size() << "  ";
 
   for (size_t i=0;i<10;++i)
@@ -379,10 +385,11 @@ PrintDataLine(ostream& _myostream, Roadmap<CFG, WEIGHT>* _rmap, int _showColumnH
 #endif
 }
 
+
 // Compute intra-connected-component statistics
-template <class CFG, class WEIGHT>
+template<class RoadmapType, class DistanceMetricPointer>
 void
-StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<DistanceMetricMethod> _dm) {
+StatClass::ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, DistanceMetricPointer _dm) {
 #ifndef _PARALLEL
   m_avgMinIntraCCDist = 0;
   m_avgMaxIntraCCDist = 0;
@@ -396,21 +403,23 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
 
   m_avgMeanIntraCCDistToCm = 0;
 
-  typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
+  typedef typename RoadmapType::CfgType CfgType;
+  typedef typename RoadmapType::GraphType GraphType;
+  typedef typename GraphType::vertex_descriptor VID;
   vector< pair<size_t,VID> > ccs; //vector of connected components in the roadmap
-  stapl::sequential::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
-  stapl::sequential::get_cc_stats(*(_rdmp->m_pRoadmap),cMap, ccs);//fill ccs from the roadmap
+  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
+  stapl::sequential::get_cc_stats(*(_rdmp->GetGraph()),cMap, ccs);//fill ccs from the roadmap
   cout << "in intra ccs portion" << endl;
 
   typename vector< pair<size_t, VID> >::iterator cci; // cci is CC[i] hereafter
   for (cci = ccs.begin(); cci < ccs.end(); cci++) {
-    vector<VID> cciCfgsAux; //use this auxiliary vec to convert between VID and CFG
-    vector<CFG> cciCfgs; //configurations in cci
-    VID cci_tmp = (*(_rdmp->m_pRoadmap->find_vertex(cci->second))).descriptor();//cci->second: vertex ID of first node in cci
+    vector<VID> cciCfgsAux; //use this auxiliary vec to convert between VID and CfgType
+    vector<CfgType> cciCfgs; //configurations in cci
+    VID cci_tmp = (*(_rdmp->GetGraph()->find_vertex(cci->second))).descriptor();//cci->second: vertex ID of first node in cci
     cMap.reset();
-    get_cc(*(_rdmp->m_pRoadmap), cMap, cci_tmp, cciCfgsAux); //fill cci_cfgs
+    get_cc(*(_rdmp->GetGraph()), cMap, cci_tmp, cciCfgsAux); //fill cci_cfgs
     for(typename vector<VID>::iterator itr = cciCfgsAux.begin(); itr!=cciCfgsAux.end(); itr++)
-      cciCfgs.push_back((*(_rdmp->m_pRoadmap->find_vertex(*itr))).property());
+      cciCfgs.push_back((*(_rdmp->GetGraph()->find_vertex(*itr))).property());
 
     if (cciCfgs.size() > 1) {
       //compute shortest, longest, mean, and std-dev (sigma) distances 
@@ -420,11 +429,11 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
       double cciMaxIntraCCDist = 0;
       double cciMeanIntraCCDist = 0;
       double nPairs = 0;
-      typename vector<CFG>::iterator cci_i;
-      typename vector<CFG>::iterator cci_j;
+      typename vector<CfgType>::iterator cci_i;
+      typename vector<CfgType>::iterator cci_j;
       for (cci_i=cciCfgs.begin(); cci_i < cciCfgs.end(); cci_i++) {
         for (cci_j = cci_i+1; cci_j < cciCfgs.end(); cci_j++) {
-          double c_dist = _dm->Distance(_rdmp->GetEnvironment(), *cci_i, *cci_j);
+          double c_dist = _dm->Distance(_env, *cci_i, *cci_j);
           if (c_dist > cciMaxIntraCCDist)
             cciMaxIntraCCDist = c_dist;
           if (cciMinIntraCCDist == 0 || c_dist < cciMinIntraCCDist)
@@ -439,7 +448,7 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
       double cciSigmaIntraCCDist = 0;
       for (cci_i=cciCfgs.begin(); cci_i < cciCfgs.end(); cci_i++) {
         for (cci_j = cci_i+1; cci_j < cciCfgs.end(); cci_j++) {
-          cciSigmaIntraCCDist += pow(_dm->Distance(_rdmp->GetEnvironment(), *cci_i, *cci_j)-cciMeanIntraCCDist, 2);
+          cciSigmaIntraCCDist += pow(_dm->Distance(_env, *cci_i, *cci_j)-cciMeanIntraCCDist, 2);
         }
       }
       if (nPairs > 1)
@@ -450,15 +459,15 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
       //in the component
       vector<pair<VID,VID> > cciEdges;
       cMap.reset();
-      get_cc_edges(*(_rdmp->m_pRoadmap),cMap, cciEdges, cci->second);
+      get_cc_edges(*(_rdmp->GetGraph()),cMap, cciEdges, cci->second);
       double cciMaxIntraCCEdge = 0;
       double cciMinIntraCCEdge = 0;
       double cciMeanIntraCCEdge = 0;
       double cciSigmaIntraCCEdge = 0;
       for (typename vector< pair<VID,VID> >::iterator eIter = cciEdges.begin(); eIter < cciEdges.end(); eIter++) {
-        CFG e_v1 = (*(_rdmp->m_pRoadmap->find_vertex(eIter->first))).property();
-        CFG e_v2 = (*(_rdmp->m_pRoadmap->find_vertex(eIter->second))).property();
-        double eDist = _dm->Distance(_rdmp->GetEnvironment(), e_v1, e_v2);
+        CfgType e_v1 = (*(_rdmp->GetGraph()->find_vertex(eIter->first))).property();
+        CfgType e_v2 = (*(_rdmp->GetGraph()->find_vertex(eIter->second))).property();
+        double eDist = _dm->Distance(_env, e_v1, e_v2);
         if (eDist > cciMaxIntraCCEdge)
           cciMaxIntraCCEdge = eDist;
         if (cciMinIntraCCEdge == 0 || eDist < cciMinIntraCCEdge)
@@ -468,9 +477,9 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
       if (cciEdges.size() > 0)
         cciMeanIntraCCEdge /= cciEdges.size();
       for (typename vector< pair<VID,VID> >::iterator eIter = cciEdges.begin(); eIter < cciEdges.end(); eIter++) {
-        CFG e_v1 = (*(_rdmp->m_pRoadmap->find_vertex(eIter->first))).property();
-        CFG e_v2 = (*(_rdmp->m_pRoadmap->find_vertex(eIter->second))).property();
-        double eDist = _dm->Distance(_rdmp->GetEnvironment(), e_v1, e_v2);
+        CfgType e_v1 = (*(_rdmp->GetGraph()->find_vertex(eIter->first))).property();
+        CfgType e_v2 = (*(_rdmp->GetGraph()->find_vertex(eIter->second))).property();
+        double eDist = _dm->Distance(_env, e_v1, e_v2);
         cciSigmaIntraCCEdge += pow(eDist-cciMeanIntraCCEdge, 2);
       }
       if (cciEdges.size() > 1)
@@ -478,7 +487,7 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
       cciSigmaIntraCCEdge = sqrt(cciSigmaIntraCCEdge);
 
       //get center of mass of all Cfgs in current CC
-      CFG center_of_mass = cciCfgs[0];
+      CfgType center_of_mass = cciCfgs[0];
       for (size_t j = 1; j < cciCfgs.size(); ++j)
         center_of_mass.add(center_of_mass, cciCfgs[j]);
       center_of_mass.divide(center_of_mass, cciCfgs.size());
@@ -489,8 +498,8 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
       double cciMeanIntraCCDistToCm = 0;
       double cciSigmaIntraCCDistToCm = 0;
       for (size_t j = 0; j < cciCfgs.size(); ++j) {
-        CFG tmp = cciCfgs[j];
-        double eDist = _dm->Distance(_rdmp->GetEnvironment(), center_of_mass, tmp);
+        CfgType tmp = cciCfgs[j];
+        double eDist = _dm->Distance(_env, center_of_mass, tmp);
         if (eDist > cciMaxIntraCCDistToCm)
           cciMaxIntraCCDistToCm = eDist;
         if (cciMinIntraCCDistToCm == 0 || eDist < cciMinIntraCCDistToCm)
@@ -500,8 +509,8 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
       if (cciCfgs.size() > 0 )
         cciMeanIntraCCDistToCm /= cciCfgs.size();
       for (size_t j = 0; j < cciCfgs.size(); ++j) {
-        CFG tmp = cciCfgs[j];
-        double eDist = _dm->Distance(_rdmp->GetEnvironment(), center_of_mass, tmp);
+        CfgType tmp = cciCfgs[j];
+        double eDist = _dm->Distance(_env, center_of_mass, tmp);
         cciSigmaIntraCCDistToCm += pow(eDist-cciMeanIntraCCDistToCm, 2);
       }
       if (cciCfgs.size() > 1)
@@ -541,8 +550,8 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
     m_avgSigmaIntraCCDistToCm /= ccs.size();
   }
 
-  CFG tcfg;
-  double norm = _rdmp->GetEnvironment()->Getminmax_BodyAxisRange()*tcfg.DOF();
+  CfgType tcfg;
+  double norm = _env->Getminmax_BodyAxisRange()*tcfg.DOF();
   cout << "norm value = " << norm << endl;
 
 #endif
@@ -551,14 +560,16 @@ StatClass::ComputeIntraCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, shared_ptr<Distanc
 // Compute inter-connected-component statistics
 // Find Closest nodes between two ccs and find distance
 // between the closest pairs of ccs
-template <class CFG, class WEIGHT>
+template<class MPProblemType, class RoadmapType>
 void
-StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, string _nfMethod, string _dmMethod) {
+StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, string _nfMethod, string _dmMethod) {
 #ifndef _PARALLEL
-  shared_ptr<DistanceMetricMethod> dm = _rdmp->GetEnvironment()->GetMPProblem()->GetDistanceMetric()->GetMethod(_dmMethod);
-  NeighborhoodFinder::NeighborhoodFinderPointer nf = _rdmp->GetEnvironment()->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(_nfMethod);
-  typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
-  stapl::sequential::vector_property_map<RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
+  typename MPProblemType::DistanceMetricPointer dm = _problem->GetDistanceMetric(_dmMethod);
+  typename MPProblemType::NeighborhoodFinderPointer nf = _problem->GetNeighborhoodFinder(_nfMethod);
+  typedef typename MPProblemType::CfgType CfgType;
+  typedef typename RoadmapType::GraphType GraphType;
+  typedef typename GraphType::vertex_descriptor VID;
+  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
   vector< pair<size_t,VID> > ccs; //connected components in the roadmap
   cout << "in inter ccs portion" << endl;
   get_cc_stats(*(_rdmp->m_pRoadmap), cMap, ccs);//fill ccs
@@ -583,13 +594,13 @@ StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, string _nfMethod, 
   double totalComponentsDist = 0;
   for(typename vector< pair<size_t,VID> >::iterator cce=ccs.begin(); cce < ccs.end(); cce++){
     cMap.reset();
-    get_cc_edges(*(_rdmp->m_pRoadmap),cMap,ccEdges,cce->second);
+    get_cc_edges(*(_rdmp->GetGraph()),cMap,ccEdges,cce->second);
     double totalSize = 0.0;
     cout << "size of edge list for cc:" << cce->second << " "<< ccEdges.size() << endl;
     for(typename vector< pair<VID,VID> >::iterator ccIter=ccEdges.begin(); ccIter<ccEdges.end();ccIter++) {
-      CFG ccIterA = (*(_rdmp->m_pRoadmap->find_vertex(ccIter->first))).property();
-      CFG ccIterB = (*(_rdmp->m_pRoadmap->find_vertex(ccIter->second))).property();
-      double dist = dm->Distance(_rdmp->GetEnvironment(), ccIterA, ccIterB);
+      CfgType ccIterA = (*(_rdmp->GetGraph()->find_vertex(ccIter->first))).property();
+      CfgType ccIterB = (*(_rdmp->GetGraph()->find_vertex(ccIter->second))).property();
+      double dist = dm->Distance(_problem->GetEnvironment(), ccIterA, ccIterB);
       totalSize += dist;
     }
     ccEdges.clear();
@@ -628,15 +639,15 @@ StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, string _nfMethod, 
         vector<VID> ccjCfgs; //configurations in ccj
 
         cMap.reset();
-        get_cc(*(_rdmp->m_pRoadmap),cMap, cci->second, cciCfgs); //fill cciCfgs
+        get_cc(*(_rdmp->GetGraph()),cMap, cci->second, cciCfgs); //fill cciCfgs
         cMap.reset();
-        get_cc(*(_rdmp->m_pRoadmap),cMap, ccj->second, ccjCfgs); //fill ccjCfgs
+        get_cc(*(_rdmp->GetGraph()),cMap, ccj->second, ccjCfgs); //fill ccjCfgs
 
         vector< pair<VID,VID> > pairs;
         nf->KClosestPairs(_rdmp,
             cciCfgs.begin(), cciCfgs.end(), ccjCfgs.begin(), ccjCfgs.end(), 1, back_inserter(pairs));
-        double tmpDist = dm->Distance(_rdmp->GetEnvironment(), (*(_rdmp->m_pRoadmap->find_vertex(pairs[0].first))).property(),
-            (*(_rdmp->m_pRoadmap->find_vertex(pairs[0].second))).property() );
+        double tmpDist = dm->Distance(_problem->GetEnvironment(), (*(_rdmp->GetGraph()->find_vertex(pairs[0].first))).property(),
+            (*(_rdmp->GetGraph()->find_vertex(pairs[0].second))).property() );
         if(tmpDist > m_maxInterCCDist)
           m_maxInterCCDist = tmpDist;
         if(m_minInterCCDist == 0.0 || tmpDist < m_minInterCCDist)
@@ -655,9 +666,9 @@ StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, string _nfMethod, 
     m_sigmaInterCCDist /= minCCDistanceBetweenClosestPairs.size() - 1;
   m_sigmaInterCCDist = sqrt(m_sigmaInterCCDist);
 
-  CFG tcfg;
-  double norm = _rdmp->GetEnvironment()->Getminmax_BodyAxisRange()
-    *_rdmp->GetEnvironment()->GetBoundary()->GetDOFs();
+  CfgType tcfg;
+  double norm = _problem->GetEnvironment()->Getminmax_BodyAxisRange()
+    *_problem->GetEnvironment()->GetBoundary()->GetDOFs();
   cout << "norm value = " << norm << endl;
 #endif
 }
@@ -668,18 +679,18 @@ StatClass::ComputeInterCCFeatures(Roadmap<CFG,WEIGHT>* _rdmp, string _nfMethod, 
  *@param _g the graph
  *@param _maxCCprint the number of connected components to print.
  */
-template <class CFG, class WEIGHT>
+template<class GraphType>
 void
-StatClass::DisplayCCStats(ostream& _os, RoadmapGraph<CFG, WEIGHT>& _g, int _maxCCPrint=-1)  {
+StatClass::DisplayCCStats(ostream& _os, GraphType& _g, int _maxCCPrint=-1)  {
 
   ///Modified for VC
   //temporary ifdef because of color map and get_cc_stats, we need a pDisplayCCStats
 #ifndef _PARALLEL
 
-  typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
-  stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cMap;
+  typedef typename GraphType::vertex_descriptor VID;
+  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
 
-  vector< pair<size_t,VID> > ccStats;
+  vector<pair<size_t, VID> > ccStats;
   stapl::sequential::get_cc_stats(_g, cMap, ccStats);
   if (_maxCCPrint == -1) {
     _maxCCPrint = ccStats.size();
@@ -714,7 +725,7 @@ inline double sqr(double _a) {
 }
 #endif
 
-struct RoadmapClearanceStats{
+/*struct RoadmapClearanceStats{
   double m_avgClearance;
   double m_minClearance;
   double m_clearanceVariance;
@@ -724,5 +735,6 @@ struct RoadmapClearanceStats{
 RoadmapClearanceStats RoadmapClearance(Roadmap<CfgType, WeightType> _g, const ClearanceParams& _cParams);
 
 double MinEdgeClearance(const CfgType& _c3, const CfgType& _c2, const WeightType& _weight, const ClearanceParams& _cParams);
+*/
 
 #endif

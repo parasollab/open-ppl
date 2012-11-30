@@ -1,5 +1,7 @@
 #include "PQPCollisionDetection.h"
-#include "Metrics.h"
+#include "ValidityChecker/CollisionDetection/CDInfo.h"
+#include "Cfg/Cfg.h"
+#include "MPProblem/Environment.h"
 
 #ifdef USE_PQP
 PQP::

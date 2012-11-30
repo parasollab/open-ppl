@@ -1,14 +1,9 @@
 #include "Boundary.h"
-#include "MPProblem.h"
+#include "Utilities/MPUtils.h"
 
-Boundary::Boundary() {
-  /*     cout << "Boundary(). TODO ALL " << endl; */
-}
-
-Boundary::Boundary(XMLNodeReader& _node,MPProblem* _problem): MPBaseObject(_node, _problem){ }
-///Empty destructor- compiler knows how to do this
-Boundary::~Boundary() {
-}
+Boundary::Boundary(){}
+Boundary::Boundary(XMLNodeReader& _node){}
+Boundary::~Boundary(){}
 
 double
 Boundary::GetRandomValueInParameter(int _par) {
@@ -37,8 +32,7 @@ Boundary::GetRandomValueInParameter(int _par) {
 }
 
 const std::pair<double,double>
-Boundary::
-GetRange(int _par) const {
+Boundary::GetRange(int _par) const {
   if(_par >= (int)m_boundingBox.size())
   {
     cerr << "\n\n\tERROR in Boundary::GetRange(): attempting to get range of parameter " << _par << ", but bounding_box is of size " << m_boundingBox.size() << ", exiting.\n\n";
@@ -48,8 +42,7 @@ GetRange(int _par) const {
 }
 
 void
-Boundary::
-SetRange(std::vector<double>& _ranges) {
+Boundary::SetRange(std::vector<double>& _ranges) {
   std::vector<double>::iterator itr;
   int i = 0;
   for (itr = _ranges.begin(); itr < _ranges.end() && i < m_DOFs; itr = itr+2, i++) {
@@ -58,8 +51,7 @@ SetRange(std::vector<double>& _ranges) {
 }
 
 void
-Boundary::
-TranslationalScale(double _scaleFactor) {
+Boundary::TranslationalScale(double _scaleFactor) {
   double center, new_first, new_second;
   if (_scaleFactor != 1.0) {
     for (int i = 0; i < m_posDOFs; i++) {
@@ -72,27 +64,23 @@ TranslationalScale(double _scaleFactor) {
 }
 
 Boundary::parameter_type 
-Boundary::
-GetType(int _par) const {
+Boundary::GetType(int _par) const {
   return m_parType[_par];
 }
 
 int
-Boundary::
-GetDOFs() const {
+Boundary::GetDOFs() const {
   return m_DOFs;//bounding_box.size();
 }
 
 int
-Boundary::
-GetPosDOFs() const {
+Boundary::GetPosDOFs() const {
   return m_posDOFs;//bounding_box.size();
   ///\note This was a bug earlier?  why?  Roger 2008.04.28
 }
 
 void
-Boundary::
-SetParameter(int _par, double _pFirst, double _pSecond) {
+Boundary::SetParameter(int _par, double _pFirst, double _pSecond) {
   m_boundingBox[_par].first = _pFirst;
   m_boundingBox[_par].second = _pSecond;
 }

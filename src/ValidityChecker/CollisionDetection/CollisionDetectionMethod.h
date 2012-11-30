@@ -1,7 +1,10 @@
 #ifndef COLLISIONDETECTIONMETHOD_H
 #define COLLISIONDETECTIONMETHOD_H
 
-#include "MPUtils.h"
+#include "Utilities/MPUtils.h"
+#include "Utilities/MetricUtils.h"
+#include "ValidityChecker/CollisionDetection/CDInfo.h"
+#include "MPProblem/Geometry/MultiBody.h"
 
 const int Out = 0;      ///<Type Out: no collision sure; collision unsure.
 const int In = 1;       ///<Type In: no collision unsure; collision sure.

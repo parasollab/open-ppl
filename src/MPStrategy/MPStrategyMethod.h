@@ -1,22 +1,18 @@
 #ifndef MPSTRATEGYMETHOD_H_
 #define MPSTRATEGYMETHOD_H_
 
-#include "MetricUtils.h"
-#include "CfgTypes.h"
-#include "MPUtils.h"
-#include "MPProblem/RoadmapGraph.h"
+#include "Utilities/MPUtils.h"
+#include "Utilities/MetricUtils.h"
 
-struct MPSMContainer {
-  long m_seed;
-  string m_baseFilename;
-};
-
-class MPProblem;
-
-class MPStrategyMethod : public MPBaseObject {
+template<class MPTraits>
+class MPStrategyMethod : public MPBaseObject<MPTraits> {
   public:
-    MPStrategyMethod(MPSMContainer& _cont);
-    MPStrategyMethod(XMLNodeReader& _node, MPProblem* _problem);
+   
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
+
+    MPStrategyMethod();
+    MPStrategyMethod(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~MPStrategyMethod();
 
     virtual void ParseXML(XMLNodeReader& _node);
@@ -26,24 +22,96 @@ class MPStrategyMethod : public MPBaseObject {
     virtual void Initialize()=0;
     virtual void Run()=0;
     virtual void Finalize()=0;
-    virtual void PrintOptions(ostream& _os)=0;
+    virtual void PrintOptions(ostream& _os);
 
     string GetBaseFilename(){return m_baseFilename;}
+    void SetBaseFilename(string _s){m_baseFilename = _s;}
     void SetBoundary(shared_ptr<Boundary> bb){m_boundary=bb;};
-    long GetBaseSeed() {return m_baseSeed;} 
 
-// #ifndef _PARALLEL
     bool EvaluateMap(vector<string> _evaluators);
-// #endif
 
   protected:
-    typedef RoadmapGraph<CfgType, WeightType>::GRAPH GRAPH;
-    typedef RoadmapGraph<CfgType, WeightType>::VID VID; 
-    shared_ptr<Boundary> m_boundary; 
+    shared_ptr<Boundary> m_boundary;
 
   private:
-    long m_baseSeed;
     string m_baseFilename;
 };
+
+template<class MPTraits>
+MPStrategyMethod<MPTraits>::MPStrategyMethod() {
+}
+
+template<class MPTraits>
+MPStrategyMethod<MPTraits>::MPStrategyMethod(MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {
+  ParseXML(_node);
+  if(m_boundary==NULL)
+    m_boundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
+}
+
+template<class MPTraits>
+MPStrategyMethod<MPTraits>::~MPStrategyMethod() {
+}
+
+template<class MPTraits>
+void
+MPStrategyMethod<MPTraits>::ParseXML(XMLNodeReader& _node){
+};
+
+template<class MPTraits>
+void
+MPStrategyMethod<MPTraits>::PrintOptions(ostream& _os){
+  _os << this->GetName() << endl;
+}
+
+template<class MPTraits>
+void
+MPStrategyMethod<MPTraits>::operator()(){
+  this->GetMPProblem()->GetStatClass()->SetAuxDest(GetBaseFilename());
+
+  Initialize();
+  Run();
+  Finalize();
+}
+
+template<class MPTraits>
+bool
+MPStrategyMethod<MPTraits>::EvaluateMap(vector<string> _evaluators) {
+  if(_evaluators.empty()) {
+    return true;
+  }
+  else {
+    StatClass* stats = this->GetMPProblem()->GetStatClass();
+
+    bool mapPassedEvaluation = false;
+    string clockName = this->GetNameAndLabel() + "::EvaluateMap()"; 
+    stats->StartClock(clockName);
+    mapPassedEvaluation = true;
+
+    for(vector<string>::iterator I = _evaluators.begin(); I != _evaluators.end(); ++I) {
+      MapEvaluatorPointer evaluator = this->GetMPProblem()->GetMapEvaluator(*I);
+      stringstream evaluatorClockName; 
+      evaluatorClockName << clockName << "::" << evaluator->GetName();
+      stats->StartClock(evaluatorClockName.str());
+      if(this->m_debug) cout << "\n\t";
+      mapPassedEvaluation = evaluator->operator()();
+      if(this->m_debug) cout << "\t";
+      stats->StopClock(evaluatorClockName.str());
+      if(this->m_debug){
+        stats->PrintClock(evaluatorClockName.str(), cout);
+      }
+      if(mapPassedEvaluation){
+        if(this->m_debug) cout << "\t  (passed)\n";
+      }
+      else{
+        if(this->m_debug) cout << "\t  (failed)\n";
+      }
+      if(!mapPassedEvaluation)
+        break;
+    }
+    stats->StopClock(clockName);
+    if(this->m_debug) stats->PrintClock(clockName, cout);
+    return mapPassedEvaluation;
+  } 
+}
 
 #endif 

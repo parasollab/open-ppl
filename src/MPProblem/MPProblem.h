@@ -1,81 +1,392 @@
-#ifndef MPProblem_h
-#define MPProblem_h
+#ifndef MPPROBLEM_H_
+#define MPPROBLEM_H_
 
-#include "MPUtils.h"
-#include "CfgTypes.h"
-#include "RoadmapGraph.h"
+#include "Utilities/MPUtils.h"
+#include "Utilities/MetricUtils.h"
+#include "MPProblem/Environment.h"
+#include "MPProblem/Roadmap.h"
 
-class MPStrategy;
-class DistanceMetric;
-class NeighborhoodFinder;
-class ValidityChecker;
-class Environment;
-template <typename CFG, typename WEIGHT> class Roadmap;
+#include "DistanceMetric/DistanceMetricMethod.h"
+#include "ValidityChecker/ValidityCheckerMethod.h"
+#include "NeighborhoodFinder/NeighborhoodFinderMethod.h"
+#include "Samplers/SamplerMethod.h"
+#include "LocalPlanner/LocalPlannerMethod.h"
+#include "Connector/ConnectionMethod.h"
+#include "Metrics/MetricsMethod.h"
+#include "MapEvaluator/MapEvaluationMethod.h"
+#include "MPStrategy/MPStrategyMethod.h"
 
+#include "ValidityChecker/CollisionDetectionValidity.h"
+
+template<class MPTraits>
 #ifdef _PARALLEL
-class MPProblem : public MPBaseObject, public stapl::p_object
+class MPProblem : public stapl::p_object
 #else
-class MPProblem : public MPBaseObject
+class MPProblem
 #endif
 {
-public:
-MPProblem(Environment* _m_pEnvironment, DistanceMetric* _m_pDistanceMetric, ValidityChecker* _m_pValidityChecker, NeighborhoodFinder* _m_pNeighborhoodFinder);
-  MPProblem(XMLNodeReader& in_Node, bool parse_xml = true);
-  virtual ~MPProblem() {}
-  
-  void PrintOptions();
- 
-protected:
-  bool ParseChild(XMLNodeReader::childiterator citr);
-  
-private:
-  ///\todo Create constructors for distance_metrics, collision_detection
-  virtual void ParseXML(XMLNodeReader& in_Node); 
-  
-public:
-  ///\todo Finish these interfaces.
- // void WriteRoadmap();
- 
-  inline MPStrategy* GetMPStrategy() {return m_pMPStrategy;};
-  inline void SetMPStrategy(MPStrategy* in_pStrategy) {m_pMPStrategy = in_pStrategy;};
-  inline DistanceMetric* GetDistanceMetric() {return m_pDistanceMetric;};
-  inline void SetDistanceMetric(DistanceMetric* _dm){m_pDistanceMetric = _dm;};
-  inline NeighborhoodFinder* GetNeighborhoodFinder() {return m_pNeighborhoodFinder;};
-  inline void SetNeighborhoodFinder(NeighborhoodFinder* _nf) {m_pNeighborhoodFinder = _nf;};
-  inline ValidityChecker* GetValidityChecker() {return m_pValidityChecker;};
-  inline void SetValidityChecker(ValidityChecker* _vc) {m_pValidityChecker = _vc;};
-  inline Environment* GetEnvironment() {return m_pEnvironment;};
-  inline void SetEnvironment(Environment* _e) {m_pEnvironment = _e;};
-  inline Roadmap<CfgType,WeightType>* GetRoadmap() { return m_roadmap; }
-  inline void SetRoadmap(Roadmap<CfgType,WeightType>* _r) { m_roadmap = _r; }
-  inline Roadmap<CfgType,WeightType>* GetBlockRoadmap() { return m_blockRoadmap; }
-  inline Roadmap<CfgType,WeightType>* GetColRoadmap() { return m_colRoadmap; }
-  inline StatClass* GetStatClass() { return m_stats; }
-  
-  void PrintOptions(ostream& out_os);
-  //ostream& GetFileStreamByLabel(string& in_strLabel);
-  
-  vector<RoadmapGraph<CfgType,WeightType>::VID> AddToRoadmap(vector<CfgType>& _cfgs);
+  public:
+    typedef Roadmap<MPTraits> RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename GraphType::vertex_descriptor VID;
 
-  void WriteRoadmapForVizmo(ostream& _os, vector<shared_ptr<Boundary> >* _boundaries = NULL, bool _block = false);
+    MPProblem();
+    MPProblem(const string& _filename);
+    MPProblem(XMLNodeReader& _node, bool _parse = true);
+    virtual ~MPProblem();
 
+    Environment* GetEnvironment() {return m_environment;};
+    void SetEnvironment(Environment* _e) {m_environment = _e;};
+    
+    RoadmapType* GetRoadmap() { return m_roadmap; }
+    RoadmapType* GetBlockRoadmap() { return m_blockRoadmap; }
+    RoadmapType* GetColRoadmap() { return m_colRoadmap; }
+    
+    StatClass* GetStatClass() { return m_stats; }
+
+    typedef MethodSet<MPTraits, DistanceMetricMethod<MPTraits> > DistanceMetricSet;
+    typedef typename DistanceMetricSet::MethodPointer DistanceMetricPointer;
+    DistanceMetricPointer GetDistanceMetric(const string& _l){return m_distanceMetrics->GetMethod(_l);}
+    void AddDistanceMetric(DistanceMetricPointer _dm, const string& _l){m_distanceMetrics->AddMethod(_dm, _l);}
+    
+    typedef MethodSet<MPTraits, ValidityCheckerMethod<MPTraits> > ValidityCheckerSet;
+    typedef typename ValidityCheckerSet::MethodPointer ValidityCheckerPointer;
+    ValidityCheckerPointer GetValidityChecker(const string& _l){return m_validityCheckers->GetMethod(_l);}
+    void AddValidityChecker(ValidityCheckerPointer _vc, const string& _l){m_validityCheckers->AddMethod(_vc, _l);}
+    
+    typedef MethodSet<MPTraits, NeighborhoodFinderMethod<MPTraits> > NeighborhoodFinderSet;
+    typedef typename NeighborhoodFinderSet::MethodPointer NeighborhoodFinderPointer;
+    NeighborhoodFinderPointer GetNeighborhoodFinder(const string& _l){return m_neighborhoodFinders->GetMethod(_l);}
+    void AddNeighborhoodFinder(NeighborhoodFinderPointer _nf, const string& _l){m_neighborhoodFinders->AddMethod(_nf, _l);}
+    
+    typedef MethodSet<MPTraits, SamplerMethod<MPTraits> > SamplerSet;
+    typedef typename SamplerSet::MethodPointer SamplerPointer;
+    SamplerPointer GetSampler(const string& _l){return m_samplers->GetMethod(_l);}
+    void AddSampler(SamplerPointer _s, const string& _l){m_samplers->AddMethod(_s, _l);}
+    
+    typedef MethodSet<MPTraits, LocalPlannerMethod<MPTraits> > LocalPlannerSet;
+    typedef typename LocalPlannerSet::MethodPointer LocalPlannerPointer;
+    LocalPlannerPointer GetLocalPlanner(const string& _l){return m_localPlanners->GetMethod(_l);}
+    void AddLocalPlanner(LocalPlannerPointer _lp, const string& _l){m_localPlanners->AddMethod(_lp, _l);}
+    
+    typedef MethodSet<MPTraits, ConnectionMethod<MPTraits> > ConnectorSet;
+    typedef typename ConnectorSet::MethodPointer ConnectorPointer;
+    ConnectorPointer GetConnector(const string& _l){return m_connectors->GetMethod(_l);}
+    void AddConnector(ConnectorPointer _c, const string& _l){m_connectors->AddMethod(_c, _l);}
+    
+    typedef MethodSet<MPTraits, MetricsMethod<MPTraits> > MetricSet;
+    typedef typename MetricSet::MethodPointer MetricPointer;
+    MetricPointer GetMetric(const string& _l){return m_metrics->GetMethod(_l);}
+    void AddMetric(MetricPointer _m, const string& _l){m_metrics->AddMethod(_m, _l);}
+    
+    typedef MethodSet<MPTraits, MapEvaluationMethod<MPTraits> > MapEvaluatorSet;
+    typedef typename MapEvaluatorSet::MethodPointer MapEvaluatorPointer;
+    MapEvaluatorPointer GetMapEvaluator(const string& _l){return m_mapEvaluators->GetMethod(_l);}
+    void AddMapEvaluator(MapEvaluatorPointer _me, const string& _l){m_mapEvaluators->AddMethod(_me, _l);}
+    
+    //#ifndef _PARALLEL
+    //MPCharacterizer<CfgType, WeightType>* GetCharacterizer(){return m_pCharacterizer;};
+    
+    //PartitioningMethods* GetPartitioningMethods(){return m_PartitioningMethods;}
+    
+    //PartitioningEvaluators* GetPartitioningEvaluators(){return m_PartitioningEvaluators;}
+    
+    //Features* GetFeatures(){return m_Features;}
+    //#endif
+    
+    typedef MethodSet<MPTraits, MPStrategyMethod<MPTraits> > MPStrategySet;
+    typedef typename MPStrategySet::MethodPointer MPStrategyPointer;
+    MPStrategyPointer GetMPStrategy(const string& _l){return m_mpStrategies->GetMethod(_l);}
+    void AddMPStrategy(MPStrategyPointer _mps, const string& _l){m_mpStrategies->AddMethod(_mps, _l);}
+
+    void PrintOptions(ostream& _os);
+
+    void SetMPProblem();
+  
+    void Solve();
  
-  void SetMPProblem();
-////////////
-//
-//Data
-//
-//////////////
+    void BuildCDStructures();
+
   protected:
-  MPStrategy* m_pMPStrategy;
-  Environment* m_pEnvironment;
-  DistanceMetric*     m_pDistanceMetric;
-  ValidityChecker* m_pValidityChecker;
-  NeighborhoodFinder* m_pNeighborhoodFinder;
-  Roadmap<CfgType,WeightType>* m_roadmap, * m_blockRoadmap, * m_colRoadmap;
-  StatClass* m_stats;
-  //map<string,MPFileIO> m_mapLabelFile;
-  // temporary variable to deal with posDOFs() and DOFs()
+    void Initialize();
+    bool ParseChild(XMLNodeReader::childiterator citr);
+    virtual void ParseXML(XMLNodeReader& _node); 
+
+    vector<cd_predefined> GetSelectedCDTypes() const;
+
+    Environment* m_environment;
+    RoadmapType* m_roadmap, * m_blockRoadmap, * m_colRoadmap;
+    StatClass* m_stats;
+    
+    DistanceMetricSet* m_distanceMetrics;
+    ValidityCheckerSet* m_validityCheckers;
+    NeighborhoodFinderSet* m_neighborhoodFinders;
+    SamplerSet* m_samplers;
+    LocalPlannerSet* m_localPlanners;
+    ConnectorSet* m_connectors;
+    MetricSet* m_metrics;
+    MapEvaluatorSet* m_mapEvaluators;
+//    //Characterization and Filtering
+//#ifndef _PARALLEL
+//    MPCharacterizer<CfgType, WeightType>* m_pCharacterizer;
+//  
+//    //UAS items
+//    PartitioningMethods* m_PartitioningMethods;
+//    PartitioningEvaluators* m_PartitioningEvaluators;
+//    Features* m_Features;
+//#endif
+    MPStrategySet* m_mpStrategies;
+
+    string m_solver;
+    long m_solverSeed;
+    string m_solverBaseName;
+    string m_solverVizmoDebug;
+
+  private:
+    bool m_cdBuilt;
 };
+
+template<class MPTraits>
+MPProblem<MPTraits>::MPProblem() {
+  Initialize();
+};
+
+template<class MPTraits>
+MPProblem<MPTraits>::MPProblem(const string& _filename){
+  Initialize();
+
+  TiXmlDocument doc(_filename);
+  bool loadOkay = doc.LoadFile();
+
+  if (!loadOkay){
+    cerr << "Error::Could not load test file " << _filename << ". XMLError=" << doc.ErrorDesc() << ". Exiting." << endl;
+    exit(1);
+  }
+
+  XMLNodeReader mpNode(_filename, doc, "MotionPlanning");
+  
+  //Iterate over child nodes in search of MPProblem node within MotionPlanning
+  //MotionPlanning should be removed in the future
+  bool found = false;
+  for(XMLNodeReader::childiterator citr = mpNode.children_begin(); citr != mpNode.children_end(); ++citr){
+    if(citr->getName() == "MPProblem"){
+      ParseXML(*citr);
+      found = true;
+      break;
+    } 
+  }
+      
+  if(!found){
+    cerr << "Error::Cannot find MPProblem XML node. Exiting." << endl;
+    exit(1);
+  }
+}
+
+template<class MPTraits>
+MPProblem<MPTraits>::MPProblem(XMLNodeReader& _node, bool _parse) {
+  Initialize();
+
+  if(_parse)
+    ParseXML(_node);
+}
+
+template<class MPTraits>
+MPProblem<MPTraits>::~MPProblem(){
+  delete m_roadmap;
+  delete m_blockRoadmap;
+  delete m_colRoadmap;
+  delete m_stats;
+  delete m_environment;
+  delete m_distanceMetrics;
+  delete m_validityCheckers;
+  delete m_neighborhoodFinders;
+  delete m_samplers;
+  delete m_localPlanners;
+  delete m_connectors;
+  delete m_metrics;
+  delete m_mapEvaluators;
+  delete m_mpStrategies;
+
+  VDClose();
+}
+
+template<class MPTraits>
+void
+MPProblem<MPTraits>::Initialize(){
+  m_roadmap = new RoadmapType();
+  m_blockRoadmap = new RoadmapType();
+  m_colRoadmap = new RoadmapType();
+  m_stats = new StatClass();
+ 
+  m_distanceMetrics = new DistanceMetricSet(typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
+  m_validityCheckers = new ValidityCheckerSet(typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
+  m_neighborhoodFinders = new NeighborhoodFinderSet(typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
+  m_samplers = new SamplerSet(typename MPTraits::SamplerMethodList(), "Samplers");
+  m_localPlanners = new LocalPlannerSet(typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
+  m_connectors = new ConnectorSet(typename MPTraits::ConnectorMethodList(), "Connectors");
+  m_metrics = new MetricSet(typename MPTraits::MetricMethodList(), "Metrics");
+  m_mapEvaluators = new MapEvaluatorSet(typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
+  m_mpStrategies = new MPStrategySet(typename MPTraits::MPStrategyMethodList(), "MPStragies");
+
+  m_solver = "";
+  m_solverSeed = 1;
+  m_solverBaseName = "PMPLOutput";
+  m_solverVizmoDebug = "";
+
+  m_cdBuilt = false;
+}
+
+template<class MPTraits>
+bool
+MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr) {
+  if(citr->getName() == "Environment") {
+    m_environment = new Environment(*citr);
+    return true;
+  } 
+  else if(citr->getName() == "DistanceMetrics") {
+    m_distanceMetrics->ParseXML(this, *citr);
+    return true;
+  } 
+  else if(citr->getName() == "ValidityCheckers") {
+    m_validityCheckers->ParseXML(this, *citr);
+    return true;
+  }
+  else if(citr->getName() == "NeighborhoodFinders") {
+    m_neighborhoodFinders->ParseXML(this, *citr);
+    return true;
+  }
+  else if(citr->getName() == "Samplers") {
+    m_samplers->ParseXML(this, *citr);
+    return true;
+  }
+  else if(citr->getName() == "LocalPlanners") {
+    m_localPlanners->ParseXML(this, *citr);
+    return true;
+  }
+  else if(citr->getName() == "Connectors") {
+    m_connectors->ParseXML(this, *citr);
+    return true;
+  }
+  else if(citr->getName() == "Metrics") {
+    m_metrics->ParseXML(this, *citr);
+    return true;
+  }
+  else if(citr->getName() == "MapEvaluators") {
+    m_mapEvaluators->ParseXML(this, *citr);
+    return true;
+  }
+  else if(citr->getName() == "MPStrategies") {
+    m_mpStrategies->ParseXML(this, *citr);
+    return true;
+  }
+  else if(citr->getName() == "Solver") {
+    m_solver = citr->stringXMLParameter("mpStrategyLabel", true, "", "The strategy pointed to by this label will be used to solve the problem");
+    m_solverSeed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT, "The random number generator seed for the solver.");
+    m_solverBaseName = citr->stringXMLParameter("baseFilename", true, "", "BaseFilename for the solver.");
+    ostringstream oss;
+    oss << m_solverBaseName << "." << m_solverSeed;
+    m_solverBaseName = oss.str();
+    bool vdOutput = citr->boolXMLParameter("vizmoDebug", false, "", "True yields VizmoDebug output for the solver.");
+    if(vdOutput)
+      m_solverVizmoDebug = m_solverBaseName + ".vd";
+    return true;
+  }
+  else
+    return false;
+}
+
+template<class MPTraits>
+void
+MPProblem<MPTraits>::ParseXML(XMLNodeReader& _node) { 
+  _node.verifyName("MPProblem");
+
+  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
+    if(!ParseChild(citr))
+      citr->warnUnknownNode();
+  }
+  
+  BuildCDStructures();
+  
+  if(m_solver == ""){
+    cerr << "Error::Must define a solver within the XML. Exiting." << endl;
+    exit(1);
+  }
+}
+
+template<class MPTraits>
+void 
+MPProblem<MPTraits>::PrintOptions(ostream& _os) {
+  _os << "MPProblem" << endl;
+  m_environment->PrintOptions(_os);
+  m_distanceMetrics->PrintOptions(_os);
+  m_validityCheckers->PrintOptions(_os);
+  m_neighborhoodFinders->PrintOptions(_os);
+  m_samplers->PrintOptions(_os);
+  m_localPlanners->PrintOptions(_os);
+  m_connectors->PrintOptions(_os);
+  m_metrics->PrintOptions(_os);
+  m_mapEvaluators->PrintOptions(_os);
+  m_mpStrategies->PrintOptions(_os);
+}
+
+template<class MPTraits>
+void 
+MPProblem<MPTraits>::SetMPProblem(){
+  m_distanceMetrics->SetMPProblem(this);
+  m_validityCheckers->SetMPProblem(this);
+  m_neighborhoodFinders->SetMPProblem(this);
+  m_samplers->SetMPProblem(this);
+  m_localPlanners->SetMPProblem(this);
+  m_connectors->SetMPProblem(this);
+  m_metrics->SetMPProblem(this);
+  m_mapEvaluators->SetMPProblem(this);
+  m_mpStrategies->SetMPProblem(this);
+}
+
+template<class MPTraits>
+void
+MPProblem<MPTraits>::Solve() {
+  if(!m_cdBuilt)
+    BuildCDStructures();
+
+  if(m_solverVizmoDebug != ""){
+    VDInit(m_solverVizmoDebug);
+  }
+
+  cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << m_solver << "." << endl;
+  SRand(m_solverSeed);
+  GetMPStrategy(m_solver)->SetBaseFilename(m_solverBaseName);
+  GetMPStrategy(m_solver)->operator()();
+
+  if(m_solverVizmoDebug != ""){
+    VDClose();
+  }
+};
+
+template<class MPTraits>
+void
+MPProblem<MPTraits>::BuildCDStructures(){
+  if(m_environment != NULL){
+    vector<cd_predefined> cdtypes = GetSelectedCDTypes();
+    for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
+      m_environment->buildCDstructure(*C);
+  }
+  else{
+    cerr << "Error::Cannot BuildCDStructures. Must define an environment. Exiting." << endl;
+    exit(1);
+  }
+  m_cdBuilt = true;
+}
+
+template<class MPTraits>
+vector<cd_predefined>
+MPProblem<MPTraits>::GetSelectedCDTypes() const{
+  vector<cd_predefined> cdTypes;
+  typedef typename map<string, ValidityCheckerPointer>::const_iterator MIT;
+  for(MIT mit = m_validityCheckers->MethodsBegin(); mit != m_validityCheckers->MethodsEnd(); ++mit) 
+    if(CollisionDetectionValidity<MPTraits>* method = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(mit->second.get()))   
+      cdTypes.push_back(method->GetCDType());
+  return cdTypes;
+}
 
 #endif

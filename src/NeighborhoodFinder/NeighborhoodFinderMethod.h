@@ -5,35 +5,11 @@
 #include <boost/mpl/for_each.hpp>
 #include <string>
 #include <iostream>
-#include "MPUtils.h"
-#include "MPProblem.h"
+#include "Utilities/MPUtils.h"
 
-class BruteForceNF;
-class HierarchicalNF;
-class RadiusNF;
-//template<class CFG, class WEIGHT>
-//class DPESNF;
-//template<class CFG, class WEIGHT>
-//class MPNNNF;
-class CGALNF;
-//template<class CFG, class WEIGHT>
-//class SpillTreeNF;
-//template<class CFG, class WEIGHT>
-//class MetricTreeNF;
-class BandsNF;
-
-namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
-  typedef boost::mpl::list<
-    BruteForceNF,
-    HierarchicalNF,
-    RadiusNF,
-    //DPESNF<CfgType,WeightType>,
-    //MPNNNF<CfgType,WeightType>,
-    CGALNF,
-    //SpillTreeNF<CfgType,WeightType>, 
-    //MetricTreeNF<CfgType,WeightType>,
-    BandsNF
-    > NeighborhoodFinderMethodList;
+//these methods allow for dynamic dispatch for the templated functions within
+//these neighborhood finder classes
+namespace pmpl_detail {
   
   template<typename NF, typename RDMP, typename I, typename CFG, typename O>
       struct VirtualKClosest{
@@ -81,13 +57,19 @@ namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail names
       };
 }
 
-class NeighborhoodFinderMethod : public MPBaseObject {
+template<class MPTraits>
+class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
   public:
-    NeighborhoodFinderMethod(string _dmLabel = "", string _label = "",  MPProblem* _problem = NULL);
-    NeighborhoodFinderMethod(XMLNodeReader& _node, MPProblem* _problem);
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::VID VID;
+
+    NeighborhoodFinderMethod(MPProblemType* _problem, string _dmLabel = "", string _label = "");
+    NeighborhoodFinderMethod(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~NeighborhoodFinderMethod() {}
 
-    shared_ptr<DistanceMetricMethod> GetDMMethod() const;
+    typename MPProblemType::DistanceMetricPointer GetDMMethod() const;
 
     virtual void PrintOptions(ostream& _os) const{
       _os << "Name: " << this->GetName() << " "
@@ -106,46 +88,46 @@ class NeighborhoodFinderMethod : public MPBaseObject {
     //   implemented in base classes
     ////////////////////////////////////////////////////////////////////////////////////
     
-    template<typename RDMP, typename InputIterator, typename OutputIterator>
-      OutputIterator KClosest(RDMP* _rmp, 
-          InputIterator _first, InputIterator _last, typename RDMP::VID _v, size_t _k, OutputIterator _out) {
-        return KClosest(_rmp, _first, _last, (_rmp->m_pRoadmap->find_vertex(_v))->property(), _k, _out);
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator KClosest(RoadmapType* _rmp, 
+          InputIterator _first, InputIterator _last, VID _v, size_t _k, OutputIterator _out) {
+        return KClosest(_rmp, _first, _last, (_rmp->Graph()->find_vertex(_v))->property(), _k, _out);
       }
 
     // KClosest that operate over the entire roadmap to find the _kclosest to a VID or CFG
     // NOTE: These are the prefered methods for _kClosest computations
-    template<typename RDMP, typename OutputIterator>
-      OutputIterator KClosest(RDMP* _rmp, typename RDMP::VID _v, size_t _k, OutputIterator _out){
-        return KClosest(_rmp, (_rmp->m_pRoadmap->find_vertex(_v))->property(), _k, _out);
+    template<typename OutputIterator>
+      OutputIterator KClosest(RoadmapType* _rmp, VID _v, size_t _k, OutputIterator _out){
+        return KClosest(_rmp, (_rmp->Graph()->find_vertex(_v))->property(), _k, _out);
       }
 
-    template<typename RDMP, typename OutputIterator>
-      OutputIterator KClosest(RDMP* _rmp, typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out){
+    template<typename OutputIterator>
+      OutputIterator KClosest(RoadmapType* _rmp, CfgType _cfg, size_t _k, OutputIterator _out){
         m_fromRDMPVersion = true;
-        return KClosest(_rmp, _rmp->m_pRoadmap->descriptor_begin(), _rmp->m_pRoadmap->descriptor_end(), _cfg, _k, _out);
+        return KClosest(_rmp, _rmp->GetGraph()->descriptor_begin(), _rmp->GetGraph()->descriptor_end(), _cfg, _k, _out);
       }
 
     // do the work here, and have the function above obtain the CFG and call this one
-    template<typename RDMP, typename InputIterator, typename OutputIterator>
-      OutputIterator KClosest(RDMP* _rmp, 
-          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out){
-        typedef pmpl_detail::NeighborhoodFinderMethodList MethodList;
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator KClosest(RoadmapType* _rmp, 
+          InputIterator _first, InputIterator _last, CfgType _cfg, size_t _k, OutputIterator _out){
+        typedef typename MPTraits::NeighborhoodFinderMethodList MethodList;
         boost::mpl::for_each<MethodList>(pmpl_detail::VirtualKClosest<
-            NeighborhoodFinderMethod, RDMP, 
-            InputIterator, typename RDMP::CfgType, OutputIterator>(this, _rmp, _first, _last, _cfg, _k, _out));
+            NeighborhoodFinderMethod, RoadmapType, 
+            InputIterator, CfgType, OutputIterator>(this, _rmp, _first, _last, _cfg, _k, _out));
         return _out;
       }
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
-    template<typename RDMP, typename InputIterator, typename OutputIterator>
-      OutputIterator KClosestPairs(RDMP* _rmp,
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator KClosestPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1, 
           InputIterator _first2, InputIterator _last2, 
           size_t _k, OutputIterator _out){
-        typedef pmpl_detail::NeighborhoodFinderMethodList MethodList;
+        typedef typename MPTraits::NeighborhoodFinderMethodList MethodList;
         boost::mpl::for_each<MethodList>(pmpl_detail::VirtualKClosestPairs<
-            NeighborhoodFinderMethod, RDMP, 
+            NeighborhoodFinderMethod, RoadmapType, 
             InputIterator, OutputIterator>(this, _rmp, _first1, _last1, _first2, _last2, _k, _out));
         return _out;
       }
@@ -163,4 +145,86 @@ class NeighborhoodFinderMethod : public MPBaseObject {
     bool m_fromRDMPVersion;
 };
 
-#endif //end #ifndef
+template<class MPTraits>
+NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(MPProblemType* _problem, string _dmLabel, string _label) 
+  : MPBaseObject<MPTraits>(_problem, _label), m_dmLabel(_dmLabel), m_fromRDMPVersion(false) {}
+
+template<class MPTraits>
+NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(MPProblemType* _problem, XMLNodeReader& _node) 
+  : MPBaseObject<MPTraits>(_problem, _node), m_fromRDMPVersion(false){ 
+    m_dmLabel = _node.stringXMLParameter("dmMethod", true, "default", "Distance Metric Method");
+  }
+
+template<class MPTraits>
+typename MPTraits::MPProblemType::DistanceMetricPointer 
+NeighborhoodFinderMethod<MPTraits>::GetDMMethod() const {
+  return this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+}
+
+template<class MPTraits>
+double
+NeighborhoodFinderMethod<MPTraits>::GetTotalTime() const{
+  return this->GetMPProblem()->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Total");
+}
+
+template<class MPTraits>
+double 
+NeighborhoodFinderMethod<MPTraits>::GetQueryTime() const{
+  return this->GetMPProblem()->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Query");
+}
+
+template<class MPTraits>
+double 
+NeighborhoodFinderMethod<MPTraits>::GetConstructionTime() const{
+  return this->GetMPProblem()->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Construction");
+}
+
+template<class MPTraits>
+size_t 
+NeighborhoodFinderMethod<MPTraits>::GetNumQueries() const{
+  return this->GetMPProblem()->GetStatClass()->GetNFStat(this->GetNameAndLabel()+"::NumQueries");
+}
+
+template<class MPTraits>
+void 
+NeighborhoodFinderMethod<MPTraits>::StartTotalTime(){  
+  this->GetMPProblem()->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Total");    
+}
+
+template<class MPTraits>
+void 
+NeighborhoodFinderMethod<MPTraits>::EndTotalTime(){
+  this->GetMPProblem()->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Total");
+}
+
+template<class MPTraits>
+void 
+NeighborhoodFinderMethod<MPTraits>::StartQueryTime(){
+  this->GetMPProblem()->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Query");    
+}
+
+template<class MPTraits>
+void 
+NeighborhoodFinderMethod<MPTraits>::EndQueryTime(){
+  this->GetMPProblem()->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Query");
+}
+
+template<class MPTraits>
+void 
+NeighborhoodFinderMethod<MPTraits>::StartConstructionTime(){
+  this->GetMPProblem()->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Construction");    
+}
+
+template<class MPTraits>
+void 
+NeighborhoodFinderMethod<MPTraits>::EndConstructionTime(){
+  this->GetMPProblem()->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Construction");
+}
+
+template<class MPTraits>
+void 
+NeighborhoodFinderMethod<MPTraits>::IncrementNumQueries(){
+  this->GetMPProblem()->GetStatClass()->IncNFStat(this->GetNameAndLabel()+"::NumQueries");
+}
+
+#endif

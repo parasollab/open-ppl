@@ -3,174 +3,134 @@
 
 #include <string>
 #include <iostream>
-#include "MetricUtils.h"
-#include "CfgTypes.h"
+#include "Utilities/MetricUtils.h"
 #ifdef _PARALLEL
 #include "runtime.h"
 #endif
 
 class Environment;
-class CollisionDetection;
-class CDInfo;
-class DistanceMetric;
-template <class CFG> class Sampler;
-class MPProblem;
-template <class CFG> class NegateSampler;
-template <class CFG> class MixSampler;
+template<class MPTraits> class MPProblem;
 
-//////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//  class SamplerMethod
-//  Author @sjacobs May 5, 2009
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////////
-/**This is the interface for all node generation methods (prm, obprm, maprm, etc.).
- */
-template< typename CFG>
+template<class MPTraits>
 #ifdef _PARALLEL
-class SamplerMethod : public MPBaseObject,public stapl::p_object {
+class SamplerMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
 #else
-class SamplerMethod : public MPBaseObject {
+class SamplerMethod : public MPBaseObject<MPTraits> {
 #endif
   public:
-    friend class NegateSampler<CFG>;
-    friend class MixSampler<CFG>;
-
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Constructors and Destructor
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Constructors and Destructor*/
-    //@{
-
-    ///Default Constructor.
-    SamplerMethod() : MPBaseObject() {}
-    SamplerMethod(XMLNodeReader& _node, MPProblem* _problem) : MPBaseObject(_node, _problem) {}
+    typedef typename MPTraits::CfgType CfgType;
     
-    ///Destructor.
+    SamplerMethod() : MPBaseObject<MPTraits>() {}
+    SamplerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {}
     virtual ~SamplerMethod() { };
-
-    //@}
-
-    /**Generate nodes according to method type, abstract.
-     *@param nodes New created nodes are stored here.
-     *the name for this function was: GenerateNodes
-     * GenerateNodes has been replaced wiith sample() is no longer needed here, but all classes derived from SamplerMethod must implement the 
-     * method for the code to compile
-     */
-
-    virtual void PrintOptions(ostream& _out) const { 
-      _out << this->GetName() << endl; 
+    
+    virtual void PrintOptions(ostream& _os) const { 
+      _os << this->GetName() << endl; 
     }
 
     virtual string GetValidityMethod() const { return ""; }
 
-    //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = back_insert_iterator<vector<CFG> >
-    virtual back_insert_iterator<vector<CFG> > 
+    //implementation for InputIterator = vector<CfgType>::iterator and OutputIterator = back_insert_iterator<vector<CfgType> >
+    virtual back_insert_iterator<vector<CfgType> > 
     Sample(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts, 
-           back_insert_iterator<vector<CFG> > _result, back_insert_iterator<vector<CFG> > _collision) {
+           back_insert_iterator<vector<CfgType> > _result, back_insert_iterator<vector<CfgType> > _collision) {
       return Sample(_env, _env->GetBoundary(), _stats, _numNodes, _maxAttempts, _result, _collision);
     }
 
-    virtual back_insert_iterator<vector<CFG> > 
+    virtual back_insert_iterator<vector<CfgType> > 
     Sample(Environment* _env, shared_ptr<Boundary> _bb,  StatClass& _stats, int _numNodes, int _maxAttempts, 
-           back_insert_iterator<vector<CFG> > _result, back_insert_iterator<vector<CFG> > _collision) {
+           back_insert_iterator<vector<CfgType> > _result, back_insert_iterator<vector<CfgType> > _collision) {
       return SampleImpl(_env, _bb, _stats, _numNodes, _maxAttempts, _result, _collision);
     }
 
-    virtual back_insert_iterator<vector<CFG> > 
-    Sample(Environment* _env, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
-           back_insert_iterator<vector<CFG> > _result, back_insert_iterator<vector<CFG> > _collision) {
+    virtual back_insert_iterator<vector<CfgType> > 
+    Sample(Environment* _env, StatClass& _stats, typename vector<CfgType>::iterator _first, typename vector<CfgType>::iterator _last, int _maxAttempts,
+           back_insert_iterator<vector<CfgType> > _result, back_insert_iterator<vector<CfgType> > _collision) {
       return Sample(_env, _env->GetBoundary(), _stats, _first, _last, _maxAttempts, _result, _collision);
     }
 
-    virtual back_insert_iterator<vector<CFG> > 
-    Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
-           back_insert_iterator<vector<CFG> > _result, back_insert_iterator<vector<CFG> > _collision) {
+    virtual back_insert_iterator<vector<CfgType> > 
+    Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, typename vector<CfgType>::iterator _first, typename vector<CfgType>::iterator _last, int _maxAttempts,
+           back_insert_iterator<vector<CfgType> > _result, back_insert_iterator<vector<CfgType> > _collision) {
       return SampleImpl(_env, _bb, _stats, _first, _last, _maxAttempts, _result, _collision);
     }  
 
-   virtual back_insert_iterator<vector<CFG> > 
+   virtual back_insert_iterator<vector<CfgType> > 
     Sample(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts, 
-           back_insert_iterator<vector<CFG> > _result) { 
+           back_insert_iterator<vector<CfgType> > _result) { 
       return Sample(_env, _env->GetBoundary(), _stats, _numNodes, _maxAttempts, _result);
     }
 
-    virtual back_insert_iterator<vector<CFG> > 
+    virtual back_insert_iterator<vector<CfgType> > 
     Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, int _numNodes, int _maxAttempts, 
-           back_insert_iterator<vector<CFG> > _result) {
-      vector<CFG> _collision;
+           back_insert_iterator<vector<CfgType> > _result) {
+      vector<CfgType> _collision;
       return SampleImpl(_env, _bb, _stats, _numNodes, _maxAttempts, _result, back_inserter(_collision));
     }
 
-    virtual back_insert_iterator<vector<CFG> > 
-    Sample(Environment* _env, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
-           back_insert_iterator<vector<CFG> > _result) {
+    virtual back_insert_iterator<vector<CfgType> > 
+    Sample(Environment* _env, StatClass& _stats, typename vector<CfgType>::iterator _first, typename vector<CfgType>::iterator _last, int _maxAttempts,
+           back_insert_iterator<vector<CfgType> > _result) {
       return Sample(_env, _env->GetBoundary(), _stats, _first, _last, _maxAttempts, _result);
      }
 
-    virtual back_insert_iterator<vector<CFG> > 
-    Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
-           back_insert_iterator<vector<CFG> > _result) {
-      vector<CFG> _collision;
+    virtual back_insert_iterator<vector<CfgType> > 
+    Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, typename vector<CfgType>::iterator _first, typename vector<CfgType>::iterator _last, int _maxAttempts,
+           back_insert_iterator<vector<CfgType> > _result) {
+      vector<CfgType> _collision;
       return SampleImpl(_env, _bb, _stats, _first, _last, _maxAttempts, _result, back_inserter(_collision));
     }   
 
-    //implementation for InputIterator = vector<CFG>::iterator and OutputIterator = vector<CFG>::iterator
-    virtual typename vector<CFG>::iterator 
+    //implementation for InputIterator = vector<CfgType>::iterator and OutputIterator = vector<CfgType>::iterator
+    virtual typename vector<CfgType>::iterator 
     Sample(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts,
-           typename vector<CFG>::iterator _result, typename vector<CFG>::iterator _collision) {
+           typename vector<CfgType>::iterator _result, typename vector<CfgType>::iterator _collision) {
       return Sample(_env, _env->GetBoundary(), _stats, _numNodes, _maxAttempts, _result, _collision);
     }
 
-   virtual typename vector<CFG>::iterator 
+   virtual typename vector<CfgType>::iterator 
     Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, int _numNodes, int _maxAttempts,
-           typename vector<CFG>::iterator _result, typename vector<CFG>::iterator _collision) {
+           typename vector<CfgType>::iterator _result, typename vector<CfgType>::iterator _collision) {
       return SampleImpl(_env, _bb, _stats, _numNodes, _maxAttempts, _result, _collision);
     }
 
-    virtual typename vector<CFG>::iterator 
-    Sample(Environment* _env, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
-           typename vector<CFG>::iterator _result, typename vector<CFG>::iterator _collision) {
+    virtual typename vector<CfgType>::iterator 
+    Sample(Environment* _env, StatClass& _stats, typename vector<CfgType>::iterator _first, typename vector<CfgType>::iterator _last, int _maxAttempts,
+           typename vector<CfgType>::iterator _result, typename vector<CfgType>::iterator _collision) {
       return Sample(_env, _env->GetBoundary(), _stats, _first, _last, _maxAttempts, _result, _collision);
     }
 
-    virtual typename vector<CFG>::iterator 
-    Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, typename vector<CFG>::iterator _first,
-           typename vector<CFG>::iterator _last,   int _maxAttempts,
-           typename vector<CFG>::iterator _result, typename vector<CFG>::iterator _collision) {
+    virtual typename vector<CfgType>::iterator 
+    Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, typename vector<CfgType>::iterator _first,
+           typename vector<CfgType>::iterator _last,   int _maxAttempts,
+           typename vector<CfgType>::iterator _result, typename vector<CfgType>::iterator _collision) {
       return SampleImpl(_env, _bb, _stats, _first, _last, _maxAttempts, _result, _collision);
     }
 
-    virtual typename vector<CFG>::iterator 
+    virtual typename vector<CfgType>::iterator 
     Sample(Environment* _env, StatClass& _stats, int _numNodes, int _maxAttempts,
-           typename vector<CFG>::iterator _result) {      
+           typename vector<CfgType>::iterator _result) {      
       return Sample(_env, _env->GetBoundary(), _stats, _numNodes, _maxAttempts, _result);
     }
 
-    virtual typename vector<CFG>::iterator 
+    virtual typename vector<CfgType>::iterator 
     Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, int _numNodes, int _maxAttempts,
-           typename vector<CFG>::iterator _result) {
-      vector<CFG> _collision(_maxAttempts * _numNodes);
+           typename vector<CfgType>::iterator _result) {
+      vector<CfgType> _collision(_maxAttempts * _numNodes);
       return SampleImpl(_env, _bb, _stats, _numNodes, _maxAttempts, _result, _collision.begin());
     }
 
-    virtual typename vector<CFG>::iterator 
-    Sample(Environment* _env, StatClass& _stats, typename vector<CFG>::iterator _first, typename vector<CFG>::iterator _last, int _maxAttempts,
-           typename vector<CFG>::iterator _result) {      
+    virtual typename vector<CfgType>::iterator 
+    Sample(Environment* _env, StatClass& _stats, typename vector<CfgType>::iterator _first, typename vector<CfgType>::iterator _last, int _maxAttempts,
+           typename vector<CfgType>::iterator _result) {      
       return Sample(_env, _env->GetBoundary(), _stats, _first, _last, _maxAttempts, _result);
     }
 
-    virtual typename vector<CFG>::iterator 
-    Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, typename vector<CFG>::iterator _first,
-           typename vector<CFG>::iterator _last, int _maxAttempts,
-           typename vector<CFG>::iterator _result) {
-      vector<CFG> _collision(_maxAttempts * distance(_first, _last));
+    virtual typename vector<CfgType>::iterator 
+    Sample(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, typename vector<CfgType>::iterator _first,
+           typename vector<CfgType>::iterator _last, int _maxAttempts,
+           typename vector<CfgType>::iterator _result) {
+      vector<CfgType> _collision(_maxAttempts * distance(_first, _last));
       return SampleImpl(_env, _bb, _stats, _first, _last, _maxAttempts, _result, _collision.begin());
     }
 
@@ -180,9 +140,9 @@ class SamplerMethod : public MPBaseObject {
       SampleImpl(Environment* _env, shared_ptr<Boundary> _bb, StatClass&
           _stats, int _numNodes, size_t _maxAttempts, 
           OutputIterator _result, OutputIterator _collision) { 
-        CFG myCfg;
-        vector<CFG> out1;
-        vector<CFG> collisionOut;
+        CfgType myCfg;
+        vector<CfgType> out1;
+        vector<CfgType> collisionOut;
         for (int i =0; i< _numNodes; i++) {
           myCfg.GetRandomCfg(_env,_bb);
 
@@ -205,8 +165,8 @@ class SamplerMethod : public MPBaseObject {
           _stats, InputIterator _first, InputIterator _last, size_t _maxAttempts,
           OutputIterator _result, OutputIterator _collision) {
         while(_first != _last) {
-          vector<CFG> resultCfg; 
-          vector<CFG> collisionCfg;
+          vector<CfgType> resultCfg; 
+          vector<CfgType> collisionCfg;
           for(size_t attempts = 0; attempts < _maxAttempts; attempts++){ 
             if(this->Sampler(_env, _bb, _stats, *_first, resultCfg, collisionCfg)){
               break;
@@ -224,8 +184,7 @@ class SamplerMethod : public MPBaseObject {
   protected:
       
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
-          CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) = 0;
-
+          CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) = 0;
 };
 
 #endif

@@ -5,42 +5,18 @@
 #define OBSTACLEBASEDSAMPLER_H_
 
 #include "SamplerMethod.h"
-#include "Environment.h"
+
 class Environment;
 class StatClass;
 class CDInfo;
-class DistanceMetric;
 
-template <typename CFG>
-class ObstacleBasedSampler : public SamplerMethod<CFG> {
-
-  private:
-    
-    string m_vcMethod, m_dmMethod; // Validity checker method, distance metric method
-    int m_nShellsFree, m_nShellsColl; // Number of free and collision shells
-    double m_stepSize; // Step size along the random ray
-    bool m_useBBX; // Is the bounding box an obstacle?
-    string m_pointSelection; // Needed for the WOBPRM
-
-    // Returns a CFG with the coordinates specified in the vector and no rotation
-    CFG GetCfgWithParams(Vector3D& _v) {
-      CFG tmp;
-      for(int i = 0; i < 3; i++)
-        tmp.SetSingleParam(i, _v[i]);
-      for(int i = 3; i < 6; i++)
-        tmp.SetSingleParam(i, 0.0);
-      return tmp;
-    }
- 
-    // Returns an appropriate polygon: for a robot, the _mBody frame; for an obstacle, the world frame
-    GMSPolyhedron GetPolyhedron(shared_ptr<MultiBody>& _mBody, bool _isFreeBody) {
-      if(_isFreeBody)
-        return _mBody->GetBody(0)->GetPolyhedron();
-      else
-        return _mBody->GetBody(0)->GetWorldPolyhedron();
-    }
-
+template <typename MPTraits>
+class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     ObstacleBasedSampler(Environment* _env = NULL, string _vcMethod = "", string _dmMethod = "",
         int _free = 1, int _coll = 0, double _step = 0, bool _useBBX = true, string _pointSelection = "cspace")
@@ -52,15 +28,13 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
           m_stepSize = min(_env->GetPositionRes(), _env->GetOrientationRes());
     }
 
-    ObstacleBasedSampler(XMLNodeReader& _node, MPProblem* _problem) : SamplerMethod<CFG>(_node, _problem) {
+    ObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node) : SamplerMethod<MPTraits>(_problem, _node) {
       this->SetName("ObstacleBasedSampler");
       ParseXML(_node);
       Environment* env = _problem->GetEnvironment(); 
       // If the step size is unreasonable, set it to the minimum
       if(m_stepSize <= 0.0)
         m_stepSize = min(env->GetPositionRes(), env->GetOrientationRes());
-      if(this->m_debug)
-        PrintOptions(cout);
     }
 
     ~ObstacleBasedSampler() {}
@@ -87,7 +61,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
     }
 
     virtual void PrintOptions(ostream& _os) const {
-      SamplerMethod<CFG>::PrintOptions(_os);
+      SamplerMethod<MPTraits>::PrintOptions(_os);
       _os << "\tnShellsFree = " << m_nShellsFree << endl; 
       _os << "\tnShellsColl = " << m_nShellsColl << endl; 
       _os << "\tstepSize = " << m_stepSize << endl; 
@@ -97,15 +71,13 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       _os << "\tpointSelectionStrategy = " << m_pointSelection << endl;
     }
     
-    virtual string GetValidityMethod() const { return m_vcMethod; }
-
     // Generates and adds shells to their containers
-    template <typename OutputIterator>
+    template<typename OutputIterator>
     OutputIterator GenerateShells(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
-          CFG _cFree, CFG _cColl, CFG _incr, OutputIterator _result) {
+          CfgType _cFree, CfgType _cColl, CfgType _incr, OutputIterator _result) {
       
       string callee = this->GetNameAndLabel() + "::GenerateShells()";
-      ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
+      ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcMethod);
       CDInfo cdInfo;
       if(this->m_debug)
         cout << "nShellsColl = " << m_nShellsColl << endl;
@@ -114,7 +86,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       for(int i = 0; i < m_nShellsFree; i++) {
         // If the shell is valid
         if(_cFree.InBoundary(_env, _bb) && 
-            vc->GetMethod(m_vcMethod)->IsValid(_cFree, _env, _stats, cdInfo, &callee)) {
+            vcm->IsValid(_cFree, _env, _stats, cdInfo, &callee)) {
           if(this->m_recordKeep)
             _stats.IncNodesGenerated(this->GetNameAndLabel());
           // Add shell
@@ -126,14 +98,14 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       }
 
       // Reverse direction of _incr
-      CFG tmp;
+      CfgType tmp;
       _incr.subtract(tmp, _incr);
       
       // Add collision shells
       for(int i = 0; i < m_nShellsColl; i++) {
         // If the shell is valid
         if(_cColl.InBoundary(_env, _bb) && 
-            !vc->GetMethod(m_vcMethod)->IsValid(_cColl, _env, _stats, cdInfo, &callee)) {
+            !vcm->IsValid(_cColl, _env, _stats, cdInfo, &callee)) {
           if(this->m_recordKeep)
             _stats.IncNodesGenerated(this->GetNameAndLabel());
           // Add shell
@@ -147,30 +119,30 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
     }
 
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
-        CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
+        CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
 
       string callee = this->GetNameAndLabel() + "::Sampler()";
-      ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
-      shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmMethod);
+      ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcMethod);
+      DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmMethod);
       CDInfo cdInfo;
 
       if(this->m_recordKeep)
         _stats.IncNodesAttempted(this->GetNameAndLabel());
 
       // Old state
-      CFG c1 = ChooseASample(_cfgIn, _env, _bb);
+      CfgType c1 = ChooseASample(_cfgIn, _env, _bb);
       bool c1BBox = c1.InBoundary(_env, _bb);  
-      bool c1Free = vc->GetMethod(m_vcMethod)->IsValid(c1, _env, _stats, cdInfo, &callee);
+      bool c1Free = vcm->IsValid(c1, _env, _stats, cdInfo, &callee);
 
       // New state
-      CFG c2 = c1;
+      CfgType c2 = c1;
       bool c2BBox = c1BBox;
       bool c2Free = c1Free;
 
       // Create a random ray
-      CFG r;
+      CfgType r;
       r.GetRandomRay(m_stepSize, _env, dm);
-      if(r == CFG()) {
+      if(r == CfgType()) {
         if(this->m_debug)
           cerr << "Random ray in OBPRM Sampler is 0-valued! Continuing with loop." << endl;
         return false;
@@ -185,32 +157,32 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         // Update new state
         c2.Increment(r);
         c2BBox = c2.InBoundary(_env, _bb);
-        c2Free = vc->GetMethod(m_vcMethod)->IsValid(c2, _env, _stats, cdInfo, &callee);
+        c2Free = vcm->IsValid(c2, _env, _stats, cdInfo, &callee);
       }
 
       // If new state is in BBox (there must be a validity change)
       if(c2BBox) {
         if(c1Free) { // Old state (c1) is free
           // Reverse direction of r
-          CFG tmp;
+          CfgType tmp;
           r.subtract(tmp, r);
           // Process configurations
-          GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
+          GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CfgType> >(_cfgOut));
           _cfgCol.push_back(c2);
         }
         else { // New state (c2) is free
           // Process configurations
-          GenerateShells(_env, _bb, _stats, c2, c1, r,back_insert_iterator<vector<CFG> >(_cfgOut));
+          GenerateShells(_env, _bb, _stats, c2, c1, r,back_insert_iterator<vector<CfgType> >(_cfgOut));
           _cfgCol.push_back(c1);
         }
         return true;
       }
       else if(m_useBBX && c1BBox && c1Free) {
         // Reverse direction of r
-        CFG tmp;
+        CfgType tmp;
         r.subtract(tmp, r);
         // Process configurations
-        GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CFG> >(_cfgOut));
+        GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CfgType> >(_cfgOut));
         _cfgCol.push_back(c2);
         return true;
       }
@@ -221,14 +193,14 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
     // The following was added after unification with WOBPRM code //
     ////////////////////////////////////////////////////////////////
 
-    // Returns a CFG at the center of mass of the MultiBody
-    CFG ChooseCenterOfMass(shared_ptr<MultiBody> _mBody) {
+    // Returns a CfgType at the center of mass of the MultiBody
+    CfgType ChooseCenterOfMass(shared_ptr<MultiBody> _mBody) {
       Vector3D x = _mBody->GetCenterOfMass();
       return GetCfgWithParams(x);
     }
 
-    // Returns a CFG at a random vertex of the MultiBody
-    CFG ChooseRandomVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) { 
+    // Returns a CfgType at a random vertex of the MultiBody
+    CfgType ChooseRandomVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) { 
       GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
       Vector3D x = polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
       return GetCfgWithParams(x);
@@ -249,7 +221,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
     }
 
     // Chooses a random point on a random triangle (weighted by area) in the MultiBody
-    CFG ChooseRandomWeightedTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
+    CfgType ChooseRandomWeightedTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
       GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
       // A random fraction of the area
       double targetArea = _mBody->GetBody(0)->GetPolyhedron().m_area * DRand();
@@ -270,7 +242,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
     }
 
     // Chooses a random point in a random triangle in the MultiBody
-    CFG ChooseRandomTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
+    CfgType ChooseRandomTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
       GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
       // Choose a random triangle
       GMSPolygon *poly = &polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
@@ -282,7 +254,7 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
     }
 
     // Chooses a random extreme vertex of the MultiBody
-    CFG ChooseExtremeVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
+    CfgType ChooseExtremeVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
       GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
       int xyz = LRand() % 3; // 0: x, 1: y, 2: z
       int minMax = LRand() % 2; // 0: min, 1: max
@@ -309,12 +281,12 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
       return _env->GetMultiBody(obstacleIndex);
     }
 
-    // Checks m_pointSelection and returns an appropriate CFG
-    virtual CFG ChooseASample(CFG _cfgIn, Environment* _env, shared_ptr<Boundary> _bb) {
+    // Checks m_pointSelection and returns an appropriate CfgType
+    virtual CfgType ChooseASample(CfgType _cfgIn, Environment* _env, shared_ptr<Boundary> _bb) {
       shared_ptr<MultiBody> mBody = InitializeBody(_env);
       // cspace is for Configuration space (This is for unifying OBPRM and WOBPRM)
       if(m_pointSelection == "cspace") {  
-        if(_cfgIn == CFG())
+        if(_cfgIn == CfgType())
           // Get random configuration inside bounding box
           _cfgIn.GetRandomCfg(_env, _bb);
         return _cfgIn;
@@ -366,6 +338,32 @@ class ObstacleBasedSampler : public SamplerMethod<CFG> {
         exit(-1);
       }
     }
+  
+  private:
+    
+    // Returns a CfgType with the coordinates specified in the vector and no rotation
+    CfgType GetCfgWithParams(Vector3D& _v) {
+      CfgType tmp;
+      for(int i = 0; i < 3; i++)
+        tmp.SetSingleParam(i, _v[i]);
+      for(int i = 3; i < 6; i++)
+        tmp.SetSingleParam(i, 0.0);
+      return tmp;
+    }
+ 
+    // Returns an appropriate polygon: for a robot, the _mBody frame; for an obstacle, the world frame
+    GMSPolyhedron GetPolyhedron(shared_ptr<MultiBody>& _mBody, bool _isFreeBody) {
+      if(_isFreeBody)
+        return _mBody->GetBody(0)->GetPolyhedron();
+      else
+        return _mBody->GetBody(0)->GetWorldPolyhedron();
+    }
+    
+    string m_vcMethod, m_dmMethod; // Validity checker method, distance metric method
+    int m_nShellsFree, m_nShellsColl; // Number of free and collision shells
+    double m_stepSize; // Step size along the random ray
+    bool m_useBBX; // Is the bounding box an obstacle?
+    string m_pointSelection; // Needed for the WOBPRM
 };
 
 #endif

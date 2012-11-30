@@ -18,7 +18,6 @@
 #include "Cfg_fixed_tree.h"
 #include "MultiBody.h"
 #include "Environment.h"
-#include "DistanceMetricMethod.h"
 
 size_t Cfg_fixed_tree::m_numOfJoints;
 
@@ -71,19 +70,6 @@ const string Cfg_fixed_tree::GetName() const {
   return "Cfg_fixed_tree";
 }
 
-void Cfg_fixed_tree::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
-  //randomly sample params
-  m_v.clear();
-  for(size_t i=0; i<m_dof; ++i)
-    m_v.push_back( double(2.0)*DRand() - double(1.0) );
-  
-  //scale to appropriate length
-  Cfg_fixed_tree origin;
-  dm->ScaleCfg(env, incr, origin, *this, _norm);
-  if ( _norm )
-    NormalizeOrientation();
-}
-
 void Cfg_fixed_tree::GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boundary> _bb) {
   // Why following comments are here? This method suppose will generate
   // Cfg whose center of mass will inside a given bounding box....
@@ -108,14 +94,20 @@ void Cfg_fixed_tree::GetMovingSequenceNodes(const Cfg& other, vector<double> s, 
     else
       _data.push_back(other.GetData()[i]);
   }
-  Cfg* tmp = CreateNewCfg(_data);
+  Cfg* tmp = Cfg::CreateNewCfg(_data);
   result.push_back(tmp);
   
   _data2 = other.GetData();
-  Cfg* c2 = CreateNewCfg(_data2);
+  Cfg* c2 = Cfg::CreateNewCfg(_data2);
   result.push_back(c2);
 }
 
+Cfg*
+Cfg_fixed_tree::CreateNewCfg() const {
+  Cfg* tmp = new Cfg_fixed_tree();
+  *tmp = *this;
+  return tmp;
+}
 
 bool Cfg_fixed_tree::ConfigEnvironment(Environment *_env) const {
   int robot = _env->GetRobotIndex();

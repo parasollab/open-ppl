@@ -3,16 +3,22 @@
 
 #include "MetricsMethod.h"
 
-class NumNodesMetric : public MetricsMethod {
+template<class MPTraits>
+class NumNodesMetric : public MetricsMethod<MPTraits> {
   public:
+    NumNodesMetric(){
+      this->SetName("NumNodesMetric");
+    }
 
-    NumNodesMetric();
-    NumNodesMetric(XMLNodeReader& _node, MPProblem* _problem);
-    virtual ~NumNodesMetric();
+    NumNodesMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MetricsMethod<MPTraits>(_problem, _node){
+      this->SetName("NumNodesMetric");
+    }
 
-    virtual void PrintOptions(ostream& _os);
+    virtual ~NumNodesMetric(){}
 
-    virtual double operator()();
+    virtual double operator()(){
+      return this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices();
+    }
 };
 
 #endif

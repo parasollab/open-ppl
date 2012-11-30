@@ -15,7 +15,6 @@
 #include "Cfg_free.h"
 #include "MultiBody.h"
 #include "Environment.h"
-#include "DistanceMetricMethod.h"
 
 Cfg_free::Cfg_free() {
   m_v.clear();
@@ -71,17 +70,11 @@ bool Cfg_free::ConfigEnvironment(Environment* env) const {
   return true;
 }
 
-void Cfg_free::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
-  //randomly sample params
-  m_v.clear();
-  for(size_t i=0; i<m_dof; ++i)
-    m_v.push_back(2.0*DRand()-1.0);
-
-  //scale to appropriate length
-  CfgType origin;
-  dm->ScaleCfg(env, incr, origin, *this, _norm);
-  if ( _norm )
-    NormalizeOrientation();
+Cfg*
+Cfg_free::CreateNewCfg() const {
+  Cfg* tmp = new Cfg_free();
+  *tmp = *this;
+  return tmp;
 }
 
 void 

@@ -1,5 +1,4 @@
 #include "VClipCollisionDetection.h"
-#include "Metrics.h"
 
 #ifdef USE_VCLIP
 VClip::

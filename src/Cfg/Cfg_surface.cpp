@@ -6,17 +6,11 @@
 //	A derived class from Cfg. It provides some specific
 //	implementation for a 3-dof rigid-body moving in a 3-D
 //	work space on surfaces.
-//
-//  Created
-//	A long time ago, in a galaxy far, far away.
-//
 /////////////////////////////////////////////////////////////////////
 
 #include "Cfg_surface.h"
-#include "MultiBody.h"
-#include "Environment.h"
-#include "DistanceMetricMethod.h"
-
+#include "MPProblem/Geometry/MultiBody.h"
+#include "MPProblem/Environment.h"
 
 Cfg_surface::Cfg_surface(){
   m_v.clear();
@@ -132,21 +126,6 @@ void Cfg_surface::GetRandomCfg(Environment* _env) {
 void Cfg_surface::GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb) {
   Cfg::GetRandomCfg(_env,_bb);
 }
-
-void Cfg_surface::GetRandomRay(double _incr, Environment* _env, shared_ptr<DistanceMetricMethod> _dm, bool _norm) {
-  //randomly sample params
-  m_v.clear();
-  Vector2d v( DRand(), DRand() );
-  v = v.normalize();
-  m_v.push_back( v[0] ); //for now just create a ray in the plane (not so great for terrain)
-  m_v.push_back( 0.0  );
-  m_v.push_back( v[1] );
-
-  setPos(Point2d(m_v[0], m_v[2]));
-  setHeight( m_v[1] );
-  //how to handle surface id 
-}
-
 
 Cfg_surface& Cfg_surface::operator=(const Cfg_surface& _c){
   if(_c.DOF() != m_dof) {
@@ -291,16 +270,9 @@ bool Cfg_surface::ConfigEnvironment(Environment* _env) const {
   return true;
 }
 
-Cfg* Cfg_surface::CreateNewCfg() const{
-  Cfg* tmp = Cfg::CreateNewCfg();
-  ((Cfg_surface*)tmp)->setPos( this->getPos() );
-  ((Cfg_surface*)tmp)->setHeight( this->getHeight() );
-  ((Cfg_surface*)tmp)->setSurfaceID( this->getSurfaceID() );
-  return tmp;
-}
-
-Cfg* Cfg_surface::CreateNewCfg(vector<double>& _data) const {
-  Cfg* tmp = Cfg::CreateNewCfg(_data);
+Cfg* 
+Cfg_surface::CreateNewCfg() const{
+  Cfg* tmp = new Cfg_surface();
   ((Cfg_surface*)tmp)->setPos( this->getPos() );
   ((Cfg_surface*)tmp)->setHeight( this->getHeight() );
   ((Cfg_surface*)tmp)->setSurfaceID( this->getSurfaceID() );

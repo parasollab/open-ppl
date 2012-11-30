@@ -12,9 +12,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include OBPRM headers
-#include "DHparameters.h"
-#include "Transformation.h"
-#include "Robot.h"
+#include "MPProblem/Geometry/DHparameters.h"
+#include "MPProblem/Geometry/Transformation.h"
+#include "MPProblem/Robot.h"
 #include "boost/shared_ptr.hpp"
 using boost::shared_ptr;
 

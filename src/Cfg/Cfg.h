@@ -13,30 +13,27 @@
 #ifndef CFG_H_
 #define CFG_H_
 
-////////////////////////////////////////////////////////////////////////////////////////////
-//Include standard headers
 #ifdef _PARALLEL
 #include "views/proxy.h"
 #endif 
 #include <vector>
 #include <map>
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//Include mathtool vec
-#include "Vector.h"
-#include "Robot.h"
-
 #include "boost/shared_ptr.hpp"
 #include "boost/serialization/map.hpp"
 using boost::shared_ptr;
 
+#include "Vector.h"
+
+#include "MPProblem/Robot.h"
+#include "Utilities/MPUtils.h"
+
 class Cfg;
 class StatClass;
 class Environment;
-class DistanceMetricMethod;
 class CDInfo;
 class MultiBody;
-class MPProblem;
+//class MPProblem;
 class BoundingBox;
 class Boundary;
 class ClearanceParams;
@@ -226,11 +223,14 @@ class Cfg {
      */
     virtual void GetRandomCfg(Environment* _env);
     virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
-    virtual void GetRandomCfg(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, double _length);
     virtual void GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundary> bb) = 0;
 
-    virtual void GetRandomRay(double _incr, Environment* _env,  shared_ptr<DistanceMetricMethod> _dm, bool _norm=true) = 0;
-    virtual double GetSmoothingValue(StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams);
+    template<class DistanceMetricPointer>
+    void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true){
+      cerr << "Error::Get Random Ray not implemented in Cfg derived class, exitting." << endl;
+      exit(1);
+    }
+    //virtual double GetSmoothingValue(StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams);
 
     virtual bool ConfigEnvironment(Environment* _env) const = 0;
 
@@ -266,8 +266,8 @@ class Cfg {
 
     //@}
 
-    virtual Cfg* CreateNewCfg() const;
-    virtual Cfg* CreateNewCfg(vector<double>&) const;
+    virtual Cfg* CreateNewCfg() const = 0;
+    Cfg* CreateNewCfg(vector<double>&) const;
 
     bool GetLabel(string _label);
     bool IsLabel(string _label);

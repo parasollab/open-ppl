@@ -1,9 +1,8 @@
 #include "BoundingBox.h"
-#include "MPProblem.h"
+#include "MPProblem/Environment.h"
+#include "Cfg/Cfg.h"
 
-
-BoundingBox::BoundingBox(int _DOFs, int _posDOFs ) 
-{ 
+BoundingBox::BoundingBox(int _DOFs, int _posDOFs ) { 
   m_posDOFs = _posDOFs;
   m_DOFs=_DOFs ;
   m_boundingBox.clear();
@@ -19,14 +18,12 @@ BoundingBox::BoundingBox(int _DOFs, int _posDOFs )
   }
 }
 
-BoundingBox::
-BoundingBox(XMLNodeReader& _node,MPProblem* _problem): Boundary(_node, _problem) { 
+BoundingBox::BoundingBox(XMLNodeReader& _node) { 
 
   m_posDOFs = Cfg::PosDOF();
   m_DOFs = Cfg::DOF();
   _node.verifyName(string("boundary"));
   m_boundingBox.clear();
-  cout << "DOF::" << Cfg::DOF() << endl;
   for (int i = 0; i < m_DOFs; i++) {    
     m_jointLimits.push_back(pair<double,double>(0.0,1.0));
     m_boundingBox.push_back(pair<double,double>(0.0,1.0));
@@ -38,12 +35,12 @@ BoundingBox(XMLNodeReader& _node,MPProblem* _problem): Boundary(_node, _problem)
     if (citr->getName() == "parameter") {
 
       int par_id = citr->numberXMLParameter("id",true,0,0,MAX_INT,"id");
-      string par_label = citr->stringXMLParameter("Label",true,"","Label");
+      string par_label = citr->stringXMLParameter("label",true,"","Label");
       //@todo par_label is not used in bbox parameters, may want to use it
       double par_min = citr->numberXMLParameter("min",true,0.0,-1.0*MAX_DBL,MAX_DBL,"min");
       double par_max = citr->numberXMLParameter("max",true,0.0,-1.0*MAX_DBL,MAX_DBL,"max");
 
-      if(m_debug) cout<<"BoundingBox:: setting parameter par_id="<<par_id<<" par_min=" <<par_min<<" par_max="<<par_max;
+      //if(m_debug) cout<<"BoundingBox:: setting parameter par_id="<<par_id<<" par_min=" <<par_min<<" par_max="<<par_max;
 
       SetParameter(par_id,par_min,par_max);
       string type = citr->stringXMLParameter("type",true,"","type");
@@ -66,7 +63,6 @@ BoundingBox(const BoundingBox& _bbox)  {
   m_DOFs = _bbox.GetDOFs();
   m_posDOFs = _bbox.GetPosDOFs();
   m_boundingBox.clear();
-  SetMPProblem(_bbox.GetMPProblem());
   for (int i = 0; i < m_DOFs; i++) {
     m_boundingBox.push_back(_bbox.GetRange(i));
     m_parType.push_back(_bbox.GetType(i));
@@ -77,14 +73,9 @@ BoundingBox(const BoundingBox& _bbox)  {
     m_jointLimits.push_back(_bbox.m_jointLimits[i-m_posDOFs]);
   }
 }
-///Construct nothing???
-BoundingBox::
-BoundingBox() { }
 
-/*BoundingBox::
-  ~BoundingBox() {
-//cout << " ~BoundingBox(). TODO ALL " << endl;
-}*/
+BoundingBox::~BoundingBox() {
+}
 
 bool
 BoundingBox::
@@ -191,9 +182,8 @@ IfWrap(int _par) {
 }
 
 bool 
-BoundingBox::InBoundary(const Cfg& _cfg ){
+BoundingBox::InBoundary(const Cfg& _cfg, Environment* _env){
   vector <double> m_v= _cfg.GetData();
-  Environment* _env = GetMPProblem()->GetEnvironment();
   if(!IfSatisfiesConstraints(m_v)) 
     return false;
 

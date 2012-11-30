@@ -1,69 +1,63 @@
-/**
- * LocalPlannerMethod.h
+/* LocalPlannerMethod.h
  * This class is a base class for all local planner methods
- * 
- * Last Updated      : 1/18/12
- * Last Update Author: Aditya Mahadevan
  */
+
 #ifndef LOCALPLANNERMETHOD_H_
 #define LOCALPLANNERMETHOD_H_
 
-#include "Roadmap.h"
-#include "Environment.h"
-#include "MultiBody.h"
-#include "MetricUtils.h"
-#include "MPUtils.h"
-#include "ValidityChecker.h"
+#include "MPProblem/Environment.h"
+#include "Utilities/MetricUtils.h"
+#include "Utilities/MPUtils.h"
 
-class DistanceMetricMethod;
-template <class CFG, class WEIGHT> struct LPOutput;
+template<class MPTraits> struct LPOutput;
 
-template <class CFG, class WEIGHT> class LocalPlannerMethod : public MPBaseObject {
+template<class MPTraits> 
+class LocalPlannerMethod : public MPBaseObject<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    LocalPlannerMethod(bool _saveIntermediates = false) :
-      m_saveIntermediates(_saveIntermediates){ 
-      }
+    LocalPlannerMethod(bool _saveIntermediates = false) : m_saveIntermediates(_saveIntermediates){}
 
-    LocalPlannerMethod(XMLNodeReader& _node, MPProblem* _problem):MPBaseObject(_node, _problem) {
-      m_saveIntermediates = _node.boolXMLParameter("saveIntermediates",
-          false, false, "Save intermediate nodes");
+    LocalPlannerMethod(MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {
+      m_saveIntermediates = _node.boolXMLParameter("saveIntermediates", false, false, "Save intermediate nodes");
     }
 
-    virtual ~LocalPlannerMethod();
+    virtual ~LocalPlannerMethod(){}
 
-    virtual void PrintOptions(ostream& out_os) { };
+    virtual void PrintOptions(ostream& _os){};
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
-        shared_ptr<DistanceMetricMethod> _dm,
-        const CFG &_c1, const CFG &_c2,
-        CFG &_col, LPOutput<CFG, WEIGHT>* _lpOutput,
+        DistanceMetricPointer _dm,
+        const CfgType& _c1, const CfgType& _c2,
+        CfgType& _col, LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes,
         bool _checkCollision=true,
         bool _savePath=false,
         bool _saveFailedPath=false) = 0;
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
-        shared_ptr<DistanceMetricMethod> _dm,
-        const CFG &_c1, const CFG &_c2,
-        LPOutput<CFG, WEIGHT>* _lpOutput,
+        DistanceMetricPointer _dm,
+        const CfgType& _c1, const CfgType& _c2,
+        LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes,
         bool _checkCollision=true,
         bool _savePath=false,
         bool _saveFailedPath=false) {
-      CFG col;
+      CfgType col;
       return IsConnected(_env,_stats,_dm,
           _c1,_c2,col,_lpOutput,
           _posRes,_oriRes,_checkCollision,
           _savePath,_saveFailedPath);
     }
 
-    virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
-        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes) {
+    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
+        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes) {
       StatClass dummyStats;
-      LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
+      LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
       IsConnected(_env, dummyStats, _dm, _c1, _c2, lpOutput, _posRes, _oriRes, false, true, false);
-      vector<CFG> path = lpOutput->path;
+      vector<CfgType> path = lpOutput->path;
       delete lpOutput;
       return path;
     }
@@ -71,8 +65,5 @@ template <class CFG, class WEIGHT> class LocalPlannerMethod : public MPBaseObjec
   protected:
     bool m_saveIntermediates; 
 };
-
-template <class CFG, class WEIGHT> 
-LocalPlannerMethod<CFG, WEIGHT>::~LocalPlannerMethod() { }
 
 #endif

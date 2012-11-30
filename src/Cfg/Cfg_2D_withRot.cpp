@@ -13,10 +13,8 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "Cfg_2D_withRot.h"
-#include "MultiBody.h"
-#include "Environment.h"
-#include "DistanceMetricMethod.h"
-
+#include "MPProblem/Geometry/MultiBody.h"
+#include "MPProblem/Environment.h"
 
 Cfg_2D_withRot::Cfg_2D_withRot(){
   m_v.clear();
@@ -99,19 +97,11 @@ bool Cfg_2D_withRot::ConfigEnvironment(Environment* env) const {
   return true;
 }
 
-void Cfg_2D_withRot::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
-  //randomly sample params
-  m_v.clear();
-  for(size_t i=0; i<m_dof; ++i)
-    m_v.push_back( double(2.0)*DRand() - double(1.0) );
-
-  //scale to appropriate length
-  Cfg_2D_withRot origin;
-  dm->ScaleCfg(env, incr, origin, *this, _norm);
-
-  setPos(Point2d(m_v[0], m_v[1]));
-  if ( _norm )
-    NormalizeOrientation();
+Cfg*
+Cfg_2D_withRot::CreateNewCfg() const {
+  Cfg* tmp = new Cfg_2D_withRot();
+  *tmp = *this;
+  return tmp;
 }
 
 void Cfg_2D_withRot::GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boundary> _bb) {

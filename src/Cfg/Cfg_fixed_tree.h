@@ -75,7 +75,8 @@ class Cfg_fixed_tree : public Cfg {
   virtual const string GetName() const;
   
   ///Get a random vector. incr will always be reset to 0.005.
-  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm=true);
+  template<class DistanceMetricPointer>
+  void GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm=true);
   //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -110,6 +111,8 @@ class Cfg_fixed_tree : public Cfg {
   /// methods for Cfg generation and collision checking.
   virtual bool ConfigEnvironment(Environment *env) const;
 
+  virtual Cfg* CreateNewCfg() const;
+
 ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -125,6 +128,21 @@ protected:
   static size_t m_numOfJoints;  ///< # of Joints
 		         
 }; 
+
+template<class DistanceMetricPointer>
+void
+Cfg_fixed_tree::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm) {
+  //randomly sample params
+  m_v.clear();
+  for(size_t i=0; i<m_dof; ++i)
+    m_v.push_back( double(2.0)*DRand() - double(1.0) );
+  
+  //scale to appropriate length
+  Cfg_fixed_tree origin;
+  _dm->ScaleCfg(_env, _incr, origin, *this, _norm);
+  if(_norm)
+    NormalizeOrientation();
+}
 
 #ifdef _PARALLEL
 namespace stapl {

@@ -1,6 +1,5 @@
 #include "BoundingSphere.h"
-#include "MPProblem.h"
-
+#include "Cfg/Cfg.h"
 
 BoundingSphere::BoundingSphere(int _DOFs, int _posDOFs ) 
 { 
@@ -19,7 +18,7 @@ BoundingSphere::BoundingSphere(int _DOFs, int _posDOFs )
 }
 
 BoundingSphere::
-BoundingSphere(XMLNodeReader& _node,MPProblem* _problem): Boundary(_node, _problem) { 
+BoundingSphere(XMLNodeReader& _node): Boundary(_node) { 
 
   m_posDOFs = Cfg::PosDOF();
   m_DOFs = Cfg::DOF();
@@ -41,12 +40,12 @@ BoundingSphere(XMLNodeReader& _node,MPProblem* _problem): Boundary(_node, _probl
     if (citr->getName() == "parameter") {
 
       int par_id = citr->numberXMLParameter("id",true,0,0,MAX_INT,"id");
-      string par_label = citr->stringXMLParameter("Label",true,"","Label");
+      string par_label = citr->stringXMLParameter("label",true,"","Label");
       //@todo par_label is not used in bSphere parameters, may want to use it
       double val = citr->numberXMLParameter("value",true,0.0,-1.0*MAX_DBL,MAX_DBL,"value");
 
 
-      if(m_debug) cout<<"BoundingSphere:: setting parameter par_id="<<par_id<<" value=" <<val;
+      //if(m_debug) cout<<"BoundingSphere:: setting parameter par_id="<<par_id<<" value=" <<val;
 
       SetParameter(par_id,val);
       string type = citr->stringXMLParameter("type",true,"","type");
@@ -68,7 +67,6 @@ BoundingSphere(const BoundingSphere& _bSphere)  {
   m_DOFs = _bSphere.GetDOFs();
   m_posDOFs = _bSphere.GetPosDOFs();
   m_boundingSphere.clear();
-  SetMPProblem(_bSphere.GetMPProblem());
   for (int i = 0; i < m_DOFs; i++) {
     if(i<=m_posDOFs)
       m_boundingSphere.push_back(_bSphere.GetParameter(i));
@@ -169,9 +167,8 @@ IfWrap(int _par) {
   return false;
 }
 
-bool BoundingSphere::InBoundary(const Cfg& _cfg){
+bool BoundingSphere::InBoundary(const Cfg& _cfg, Environment* _env){
   vector <double> m_v= _cfg.GetData();
-  Environment *_env=GetMPProblem()->GetEnvironment();
   if(!IfSatisfiesConstraints(m_v)) 
     return false;
 

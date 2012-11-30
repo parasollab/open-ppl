@@ -11,7 +11,7 @@ class MultiBody;
 class BoundingSphere : public Boundary {
  public:
   BoundingSphere(int _dofs, int _posDofs);
-  BoundingSphere(XMLNodeReader& _node,MPProblem* _problem);
+  BoundingSphere(XMLNodeReader& _node);
   BoundingSphere(const BoundingSphere& _fromBsphere);
   BoundingSphere();
   virtual ~BoundingSphere();
@@ -40,7 +40,7 @@ class BoundingSphere : public Boundary {
   bool IfEnoughRoom(int _par, double _room);
   bool IfSatisfiesConstraints(Vector3D _point3d) const;
   bool IfSatisfiesConstraints(vector<double> _cfg) const;
-  bool InBoundary(const Cfg& _cfg);
+  bool InBoundary(const Cfg& _cfg, Environment* _env);
 
   private:
     std::vector< double > m_boundingSphere;

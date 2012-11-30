@@ -2,32 +2,37 @@
 #define VALIDITYCHECKERMETHOD_H
 
 #include <string>
-#include "MPUtils.h"
+#include "Utilities/MPUtils.h"
+#include "ValidityChecker/CollisionDetection/CDInfo.h"
 
+template<class MPTraits>
+class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
+  public:
+    ValidityCheckerMethod() : MPBaseObject<MPTraits>(), m_validity(true) {}
+    ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node), m_validity(true){} 
+    virtual ~ValidityCheckerMethod(){}
 
-class ValidityCheckerMethod : public MPBaseObject {
- public:
-  ValidityCheckerMethod();
-  ValidityCheckerMethod(XMLNodeReader& _node, MPProblem* _problem);
-  virtual ~ValidityCheckerMethod();
-  
-  bool IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
-	       CDInfo& _cdInfo, std::string *_callName) {
-    if(m_validity)
-      return IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
-    else
-      return !IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
-  }
- protected:
-  virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
-                           CDInfo& _cdInfo, std::string *_callName) = 0; 
+    bool IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+        CDInfo& _cdInfo, std::string *_callName) {
+      if(m_validity)
+        return IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
+      else
+        return !IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
+    }
 
- public:
-  virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo);
+    virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo){
+      cerr << "error: IsInsideObstacle() not defined." << endl;
+      exit(-1);
+    }
 
-  bool GetValidity() const { return m_validity; }
-  void ToggleValidity() { m_validity = !m_validity; }
- 
-  bool m_validity;
+    bool GetValidity() const { return m_validity; }
+    void ToggleValidity() { m_validity = !m_validity; }
+
+    bool m_validity;
+
+  protected:
+    virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+        CDInfo& _cdInfo, std::string *_callName) = 0; 
 };
-#endif // End #ifndef VALIDITYCHECKERMETHOD_H
+
+#endif

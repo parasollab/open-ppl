@@ -74,9 +74,12 @@ public:
   virtual bool ConfigEnvironment(Environment*) const;
   
   ///Get a random vector whose magnitude is incr (note. the orienatation of of this Cfg is 0)
-  virtual void GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm=true);
+  template<class DistanceMetricPointer>
+  void GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm=true);
   //@}
   
+  virtual Cfg* CreateNewCfg() const;
+
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -98,6 +101,21 @@ public:
   private:
 
 };
+
+template<class DistanceMetricPointer>
+void
+Cfg_free::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm) {
+  //randomly sample params
+  m_v.clear();
+  for(size_t i=0; i<m_dof; ++i)
+    m_v.push_back(2.0*DRand()-1.0);
+
+  //scale to appropriate length
+  Cfg_free origin;
+  _dm->ScaleCfg(_env, _incr, origin, *this, _norm);
+  if(_norm)
+    NormalizeOrientation();
+}
 
 #ifdef _PARALLEL
 namespace stapl {

@@ -3,9 +3,7 @@
 
 #include <map>
 #include <string>
-#include "CfgTypes.h"
-#include "IOUtils.h"
-//boost includes
+
 #include <boost/function.hpp>
 #include "boost/shared_ptr.hpp"
 #include "boost/mpl/list.hpp"
@@ -15,9 +13,17 @@
 #include "boost/mpl/end.hpp"
 #include "boost/mpl/next_prior.hpp"
 
+using boost::shared_ptr;
+
 #include "Vector.h"
 #include "Point.h"
 using namespace mathtool;
+
+#include "IOUtils.h"
+
+//forward declarations
+template<class MPTraits> class Roadmap;
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -232,7 +238,7 @@ struct ComposeNegate {
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-//ElementSet defines basic method container class to derive from
+//MethodSet defines basic method container class to derive from
 //  (for classes like DistanceMetric, LocalPlanner, NeighborhoodFinder, Sampler etc)
 //
 //derived class must specify the Method type and MethodTypeList
@@ -242,98 +248,107 @@ struct ComposeNegate {
 //                      MethodTypeList = boost::mpl::list<Straightline,RotateAtS,...>
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename Element>
-struct ElementFactory {
-  boost::shared_ptr<Element> operator()(XMLNodeReader& _node, MPProblem* _problem) const {
-    return boost::shared_ptr<Element>(new Element(_node, _problem));
+template<typename MPTraits, typename Method>
+struct MethodFactory {
+  boost::shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) const {
+    return boost::shared_ptr<Method>(new Method(_problem, _node));
   }
 };
 
-
-template<typename Element>
-class ElementSet {
-  protected:
-    typedef boost::function<boost::shared_ptr<Element> (XMLNodeReader&, MPProblem*)> FactoryType;
-
-    map<string, FactoryType> m_universe;
-    map<string, boost::shared_ptr<Element> > m_elements;
-    string m_default;
-
+template<typename MPTraits, typename Method>
+class MethodSet {
   public:
-    typedef boost::shared_ptr<Element> MethodPointer;
+    typedef boost::shared_ptr<Method> MethodPointer;
 
-    template <typename ElementTypeList>
-      ElementSet(ElementTypeList const& _etl) : m_default("") {
-        AddToUniverse(typename boost::mpl::begin<ElementTypeList>::type(), typename boost::mpl::end<ElementTypeList>::type());
+    template<typename MethodTypeList>
+      MethodSet(const MethodTypeList& _etl, const string& _name = "MethodSet") : m_default(""), m_name(_name) {
+        AddToUniverse(typename boost::mpl::begin<MethodTypeList>::type(), typename boost::mpl::end<MethodTypeList>::type());
       }
 
-    void ParseXML(XMLNodeReader& _node, MPProblem* _problem){
+    void ParseXML(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node){
       XMLNodeReader::childiterator citr;
       for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-        if (!AddElement(citr->getName(), *citr, _problem)){
+        if (!AddMethod(_problem, *citr, citr->getName())){
           citr->warnUnknownNode();
-          exit(-1);
         }
       }
     }
 
-    bool AddElement(string const& _str, XMLNodeReader& _node, MPProblem* _problem) {
-      if(m_universe.find(_str) != m_universe.end()) {
-        boost::shared_ptr<Element> e = m_universe[_str](_node, _problem);
-        return AddElement(e->GetLabel(), e);
+    bool AddMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, const string& _label) {
+      if(m_universe.find(_label) != m_universe.end()) {
+        boost::shared_ptr<Method> e = m_universe[_label](_problem, _node);
+        return AddMethod(e, e->GetLabel());
       }
       return false;
     }
 
-    bool AddElement(string const& _str, boost::shared_ptr<Element> _e) {
-      _e->SetLabel(_str);
+    bool AddMethod(boost::shared_ptr<Method> _e, const string& _label) {
+      _e->SetLabel(_label);
       if(m_elements.empty()) 
-        m_default = _str;
-      if(m_elements.find(_str) == m_elements.end()) 
-        m_elements[_str] = _e;
+        m_default = _label;
+      if(m_elements.find(_label) == m_elements.end()) 
+        m_elements[_label] = _e;
       else 
-        cerr << "\nWarning, method list already has a pointer associated with \"" << _str << "\", not added\n";
+        cerr << "\nWarning, method list already has a pointer associated with \"" << _label << "\", not added\n";
       return true;
     }
 
-    boost::shared_ptr<Element> GetElement(string const& _name) {
-      boost::shared_ptr<Element> element;
-      if(_name == "") 
+    MethodPointer GetMethod(const string& _label) {
+      MethodPointer element;
+      if(_label == "") 
         element = m_elements[m_default];
       else 
-        element = m_elements[_name];
+        element = m_elements[_label];
       if(element.get() == NULL) {
-        cerr << "\n\tError, requesting element with name \"" << _name << "\" which does not exist in the element list.\n";
-        cerr << "\t\tPossible choices are:";
-        for(typename map<string, boost::shared_ptr<Element> >::const_iterator E = m_elements.begin(); E != m_elements.end(); ++E)
-          if(E->second.get() != NULL)
-            cerr << " \"" << E->first << "\"";
+        cerr << "\n\tError, requesting element with name \"" << _label << "\" which does not exist in " << m_name << ".\n";
+        typedef typename map<string, MethodPointer>::const_iterator MIT;
+        for(MIT mit = MethodsBegin(); mit != MethodsEnd(); ++mit)
+          if(mit->second.get() != NULL)
+            cerr << " \"" << mit->first << "\"";
         cerr << "\n\texiting.\n";
         exit(-1);
       }
       return element;
     }
 
-    void SetMPProblem(MPProblem* _mp){
-      typedef typename map<string, boost::shared_ptr<Element> >::iterator MIT;
+    void SetMPProblem(typename MPTraits::MPProblemType* _problem){
+      typedef typename map<string, MethodPointer>::iterator MIT;
       for(MIT mit = m_elements.begin(); mit!=m_elements.end(); mit++){
-        mit->second->SetMPProblem(_mp);
+        mit->second->SetMPProblem(_problem);
       }
     }
 
-    typename map<string, boost::shared_ptr<Element> >::const_iterator ElementsBegin() const { return m_elements.begin(); }
-    typename map<string, boost::shared_ptr<Element> >::const_iterator ElementsEnd() const { return m_elements.end(); }
+    void PrintOptions(ostream& _os) const {
+      size_t count = 0;
+      _os << endl << m_name << " has these methods available::" << endl << endl;
+      typedef typename map<string, MethodPointer>::const_iterator MIT;
+      for(MIT mit = MethodsBegin(); mit != MethodsEnd(); ++mit){
+        _os << ++count << ") \"" << mit->first << "\" (" << mit->second->GetName() << ")" << endl;
+        mit->second->PrintOptions(_os);
+        _os << endl;
+      }
+      _os << endl;
+    }
+
+    typename map<string, MethodPointer>::const_iterator MethodsBegin() const { return m_elements.begin(); }
+    typename map<string, MethodPointer>::const_iterator MethodsEnd() const { return m_elements.end(); }
 
   protected:
-    template <typename Last>
+    typedef boost::function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
+    
+    template <typename Last> 
       void AddToUniverse(Last, Last){}
 
     template <typename First, typename Last>
       void AddToUniverse(First, Last) {
         typename boost::mpl::deref<First>::type first;
-        m_universe[first.GetName()] = ElementFactory<typename boost::mpl::deref<First>::type>();
+        m_universe[first.GetName()] = MethodFactory<MPTraits, typename boost::mpl::deref<First>::type>();
         AddToUniverse(typename boost::mpl::next<First>::type(), Last());
       }
+
+    string m_default, m_name;
+    map<string, FactoryType> m_universe;
+    map<string, MethodPointer> m_elements;
 };
 
 
@@ -348,13 +363,13 @@ class ElementSet {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-class MPProblem;
+template<class MPTraits>
 class MPBaseObject {
-  public: 
-    MPBaseObject():m_problem(NULL), m_label(""), m_name(""), m_debug(false){};
-    MPBaseObject(MPProblem* _problem, string _label="", string _name="", bool _debug=false) :
+  public:
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    MPBaseObject(MPProblemType* _problem = NULL, string _label = "", string _name = "", bool _debug = false) :
       m_problem(_problem), m_label(_label), m_name(_name), m_debug(_debug) {};
-    MPBaseObject(XMLNodeReader& _node, MPProblem* _problem, string _name="") : 
+    MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") : 
       m_problem(_problem), m_label(""), m_name(_name), m_debug(false) { 
         ParseXML(_node); 
       };
@@ -362,13 +377,13 @@ class MPBaseObject {
     virtual ~MPBaseObject() {}
 
     virtual void ParseXML(XMLNodeReader& _node) {
-      m_label = _node.stringXMLParameter("Label", false, "", "Label Identifier");
+      m_label = _node.stringXMLParameter("label", false, "", "Label Identifier");
       m_debug = _node.boolXMLParameter("debug", false, false, "Run-time debug on(true)/off(false)");
       m_recordKeep = _node.boolXMLParameter("recordKeep", false, false, "Keeping track of algorithmic statistics, on(true)/off(false)");
     };
 
-    MPProblem* GetMPProblem() const {return m_problem;}
-    virtual void SetMPProblem(MPProblem* _m){m_problem = _m;}
+    MPProblemType* GetMPProblem() const {return m_problem;}
+    virtual void SetMPProblem(MPProblemType* _m){m_problem = _m;}
     virtual void PrintOptions(ostream& _os) {};
     string GetLabel() const {return m_label;}
     void SetLabel(string _s) {m_label = _s;}
@@ -379,8 +394,9 @@ class MPBaseObject {
     void SetDebug(bool _d) {m_debug = _d;}
 
   private:
-    MPProblem* m_problem;
+    MPProblemType* m_problem;
     string m_label;
+
   protected:
     string m_name;
     bool m_debug;
@@ -414,27 +430,13 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
 ///////////////////////////////////////////////////////////////////////////////
 //
 //
-// MPProblem Access Helpers
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-template<class CFG> class SamplerMethod;
-template<class CFG, class WEIGHT> class LocalPlannerMethod;
-
-boost::shared_ptr<LocalPlannerMethod<CfgType, WeightType> > GetLPMethod(MPProblem* _mp, string _s);
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // RRTExpand
 //
 //
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-bool RRTExpand(MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta, int& _weight, CDInfo& cdInfo);
+//bool RRTExpand(MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta, int& _weight, CDInfo& cdInfo);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -447,7 +449,7 @@ bool RRTExpand(MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType _
 ///////////////////////////////////////////////////////////////////////////////
 
 //used to encapsulate all the fields necessary for clearance and penetration calculations
-class ClearanceParams : public MPBaseObject {
+/*class ClearanceParams : public MPBaseObject {
   public:
     string m_vcLabel;                //validity checker method label
     string m_dmLabel;                //distance metric method label
@@ -517,7 +519,7 @@ class ClearanceParams : public MPBaseObject {
       _os << ((m_exactPenetration) ? "exact, " : "approx, ");
       _os << m_penetrationRays << " rays\n";
     }
-};
+};*/
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -532,10 +534,11 @@ class ClearanceParams : public MPBaseObject {
 //***********************************//
 // Main Push To Medial Axis Function //
 //***********************************//
-bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats,
+/*bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats,
   const ClearanceParams& _cParams, double _epsilon, int _historyLen);
 bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats,
   const ClearanceParams& _cParams, double _epsilon, int _historyLen, shared_ptr<Boundary> _bb);
+*/
 
 //***************************************************************//
 // Push From Inside Obstacle                                     //
@@ -543,10 +546,11 @@ bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats,
 // A direction is determined to move the cfg outside of the      //
 // obstacle and is pushed till outside.                          //
 //***************************************************************//
-bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
+/*bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
   const ClearanceParams& _cParams);
 bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
   const ClearanceParams& _cParams, shared_ptr<Boundary> _bb);
+*/
 
 //***************************************************************//
 // Push Cfg To Medial Axis                                       //
@@ -554,20 +558,22 @@ bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
 // algorithm stepping out at the resolution till the medial axis //
 // is found, determined by the clearance.                        //
 //***************************************************************//
-bool PushCfgToMedialAxis(CfgType& _cfg, StatClass& _stats,
+/*bool PushCfgToMedialAxis(CfgType& _cfg, StatClass& _stats,
   const ClearanceParams& _cParams, double _epsilon, int _historyLength);
 bool PushCfgToMedialAxis(CfgType& _cfg, StatClass& _stats,
   const ClearanceParams& _cParams, double _epsilon, int _historyLength, shared_ptr<Boundary> _bb);
+*/
 
 //*********************************************************************//
 // Calculate Collision Information                                     //
 //   This is a wrapper function for getting the collision information  //
 // for the medial axis computation, calls either approx or exact       //
 //*********************************************************************//
-bool CalculateCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
+/*bool CalculateCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams); 
 bool CalculateCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams, shared_ptr<Boundary> _bb);
+*/
 
 //*********************************************************************//
 // Get Exact Collision Information Function                            //
@@ -575,10 +581,11 @@ bool CalculateCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 // checker results against obstacles to the bounding box to get a      //
 // complete solution                                                   //
 //*********************************************************************//
-bool GetExactCollisionInfo(CfgType& _cfg, StatClass& _stats, CDInfo& _cdInfo,
+/*bool GetExactCollisionInfo(CfgType& _cfg, StatClass& _stats, CDInfo& _cdInfo,
   const ClearanceParams& _cParams);
 bool GetExactCollisionInfo(CfgType& _cfg, StatClass& _stats, CDInfo& _cdInfo,
   const ClearanceParams& _cParams, shared_ptr<Boundary> _bb);
+*/
 
 //*********************************************************************//
 // Get Approximate Collision Information Function                      //
@@ -586,10 +593,11 @@ bool GetExactCollisionInfo(CfgType& _cfg, StatClass& _stats, CDInfo& _cdInfo,
 // specified number of rays are sent out till they change in validity. //
 // The shortest ray is then considered the best calididate.            //
 //*********************************************************************//
-bool GetApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
+/*bool GetApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams);
 bool GetApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams, shared_ptr<Boundary> _bb);
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

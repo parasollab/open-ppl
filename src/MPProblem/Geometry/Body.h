@@ -32,9 +32,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //include OBPRM headers
-#include "GMSPolyhedron.h"
-#include "Connection.h"
-#include "Robot.h"
+#include "Utilities/MPUtils.h"
+#include "MPProblem/Geometry/GMSPolyhedron.h"
+#include "MPProblem/Geometry/Connection.h"
+#include "MPProblem/Robot.h"
 #include "boost/shared_ptr.hpp"
 using boost::shared_ptr;
 

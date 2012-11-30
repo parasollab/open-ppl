@@ -2,7 +2,6 @@
 
 #include "MultiBody.h"
 #include "Environment.h"
-#include "DistanceMetricMethod.h"
 
 int Cfg_free_multi::NumofRobots;
 
@@ -130,3 +129,9 @@ void Cfg_free_multi::GetRandomCfg_CenterOfMass(Environment *_env) {
   GetRandomCfg_CenterOfMass(_env, _env->GetBoundary());
 }
 
+Cfg*
+Cfg_free_multi::CreateNewCfg() const {
+  Cfg* tmp = new Cfg_free_multi();
+  *tmp = *this;
+  return tmp;
+}

@@ -27,6 +27,10 @@ class Cfg_free_tree_2dof : public Cfg_free_tree {
   virtual const string GetName() const;
 
   virtual bool ConfigEnvironment(Environment*) const;
+    
+  Cfg* CreateNewCfg() const;
+  Cfg* CreateNewCfg(vector<double>&) const;
+
 };
 
 #endif

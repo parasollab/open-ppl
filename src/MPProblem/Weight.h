@@ -1,40 +1,26 @@
-// $Id$
-// Weight.h: interface for the Weight class.
-//
-//////////////////////////////////////////////////////////////////////
-/*********************************************************************
- *@file Weight.h
- *@author Shawna Thomas
- *
- * Weight class used for edge weights.  Other weight classes should be
+/* Weight class used for edge weights.  Other weight classes should be
  * derived off of this class.
- *@date   12/28/02
- *********************************************************************/
+ */
 
 #ifndef WEIGHT_H_
 #define WEIGHT_H_
 
-#include "CfgTypes.h"
 #include <iostream>
+#include <numeric>
 using namespace std;
 
 #ifdef _PARALLEL
 #include "views/proxy.h"
 #endif
 
-/////////////////////////////////////////////////////////////
-//
-//	Weight
-//
-/////////////////////////////////////////////////////////////
+#include "Utilities/MPUtils.h"
 
-static vector<CfgType> EMPTY = vector<CfgType>();
-
+template<class CfgType>
 class DefaultWeight {
   public:
 
     // Constructors and Destructor
-    DefaultWeight(string _lpLabel="", double _w=1, vector<CfgType>& _intermediates = EMPTY);
+    DefaultWeight(string _lpLabel="", double _w=1, const vector<CfgType>& _intermediates = vector<CfgType>());
     virtual ~DefaultWeight();
 
     // Graph.h Interface
@@ -48,8 +34,10 @@ class DefaultWeight {
     virtual bool operator<(const DefaultWeight& _other) const ;
 
     // Read/Write values of datamember to given input/output stream.
-    friend ostream& operator<< (ostream& _os, const DefaultWeight& _w);
-    friend istream& operator>> (istream& _is, DefaultWeight& _w);
+    template<class CfgType2>
+    friend ostream& operator<< (ostream& _os, const DefaultWeight<CfgType2>& _w);
+    template<class CfgType2>
+    friend istream& operator>> (istream& _is, DefaultWeight<CfgType2>& _w);
 
     // Access Methods
     string GetLPLabel() const { return m_lpLabel; }
@@ -85,6 +73,80 @@ class DefaultWeight {
     }
 #endif
 };
+
+template<class CfgType>
+double DefaultWeight<CfgType>::MAX_WEIGHT = numeric_limits<double>::max();
+
+template<class CfgType>
+DefaultWeight<CfgType>::DefaultWeight(string _lpLabel, double _w, const vector<CfgType>& _intermediates):
+  m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates), m_checkedMult(numeric_limits<int>::max()){
+  }
+
+template<class CfgType>
+DefaultWeight<CfgType>::~DefaultWeight(){}
+
+template<class CfgType>
+double
+DefaultWeight<CfgType>::InvalidWeight(){
+  return INVALID_DBL;
+}
+
+template<class CfgType>
+DefaultWeight<CfgType> 
+DefaultWeight<CfgType>::MaxWeight(){
+  return DefaultWeight<CfgType>("INVALID", MAX_WEIGHT);
+}
+
+template<class CfgType>
+bool 
+DefaultWeight<CfgType>::operator==(const DefaultWeight<CfgType>& _tmp) const{
+  return ( (m_lpLabel==_tmp.GetLPLabel()) && (m_weight==_tmp.GetWeight()) );
+}
+
+template<class CfgType>
+const DefaultWeight<CfgType>& 
+DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
+  m_lpLabel = _w.GetLPLabel();
+  m_weight = _w.GetWeight();
+  m_intermediates = _w.GetIntermediates();
+  m_checkedMult = _w.GetChecked();
+  return *this;
+}
+
+template<class CfgType>
+ostream& 
+operator<<(ostream& _os, const DefaultWeight<CfgType>& _w){
+  /*_os << _w.m_intermediates.size() << " ";
+  for(vector<CfgType>::const_iterator cit = _w.m_intermediates.begin(); cit!= _w.m_intermediates.end(); cit++){
+    _os << *cit << " ";
+  }
+  */
+  //TODO::FIX::for now output 0 for number of intermediates, util vizmo gets updated. Then replace with the above code.
+  _os << "0 ";
+  _os << _w.m_weight;
+  return _os;
+}
+
+template<class CfgType>
+istream& 
+operator>>(istream& _is, DefaultWeight<CfgType>& _w){
+  int tmp;
+  _is >> tmp >> _w.m_weight;
+  return _is;
+}
+
+template<class CfgType>
+DefaultWeight<CfgType> 
+DefaultWeight<CfgType>::operator+(const DefaultWeight<CfgType>& _other) const {
+  return DefaultWeight<CfgType>(m_lpLabel, m_weight+_other.m_weight);
+}
+
+template<class CfgType>
+bool 
+DefaultWeight<CfgType>::operator<(const DefaultWeight<CfgType>& _other) const {
+  return m_weight < _other.m_weight;
+}
+
 
 
 #endif

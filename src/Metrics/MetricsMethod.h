@@ -1,18 +1,18 @@
 #ifndef METRICSMETHOD_H_
 #define METRICSMETHOD_H_
 
-#include "MPUtils.h"
-#include "MPProblem.h"
+#include "Utilities/MPUtils.h"
 
-class MetricsMethod : public MPBaseObject {
+template<class MPTraits>
+class MetricsMethod : public MPBaseObject<MPTraits> {
   public:
-
     MetricsMethod() {}
-    MetricsMethod(XMLNodeReader& _node, MPProblem* _problem)
-      : MPBaseObject(_node, _problem) {}
-    virtual ~MetricsMethod() {}
+    MetricsMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {}
+    virtual ~MetricsMethod(){}
 
-    virtual void PrintOptions(ostream& _os) = 0;
+    virtual void PrintOptions(ostream& _os){
+      _os << this->GetName() << endl; 
+    }
 
     virtual double operator()() = 0;
 };

@@ -34,9 +34,6 @@
 #include "Graph.h"
 #endif
 #include "GraphAlgo.h"
-#include "MPUtils.h"
-#include "Weight.h"
-#include "IOUtils.h"
 
 #include "RoadmapVCS.h"
 
@@ -342,7 +339,7 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
          *was created, otherwise (no new vertex) INVALID_VID will be returned.
          *@see WeightedMultiDiGraph::AddVertex(VERTEX&)
          */
-       virtual VID  AddVertex(vector<VERTEX>&);
+       virtual vector<VID>  AddVertex(vector<VERTEX>&);
 
        /**Add edges by a list of EdgeInfo<WEIGHT>.
          *@return always return OK.
@@ -368,7 +365,20 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
        virtual bool IsEdge(VERTEX& v1, VERTEX& v2);
        virtual bool IsEdge(VID vid1, VID vid2);
        
-       
+       //helper function to call dereferece on an iterator whose
+       //value_type is VID and convert to CfgType
+       template<typename T>
+       VERTEX GetCfg(T& _t) const;
+
+       //specialization for a roadmap graph iterator, calls property()
+       //template<typename RDMP::VI>
+       VERTEX GetCfg(VI& _t) const;
+
+       //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
+       //calls find_vertex(..) on VID to call property()
+       //To do:what is the purpose for this, how is it diffrent from above
+       VERTEX GetCfg(VID _t) const;
+
     //@}
 
     /**@name Adding Vertices & Edges from other RoadmapGraph's*/
@@ -521,28 +531,13 @@ AddVertex(VERTEX& _v1) {
 
 // require that VERTEX data (configuration) is unique
 template<class VERTEX, class WEIGHT>
-typename RoadmapGraph<VERTEX,WEIGHT>::VID
-RoadmapGraph<VERTEX,WEIGHT>::
-AddVertex(vector<VERTEX>& _v) {
-    bool added=false;
-    VID vertex_id = INVALID_VID; //=this->GetNextVID(); fix_lantao
+vector<typename RoadmapGraph<VERTEX,WEIGHT>::VID>
+RoadmapGraph<VERTEX,WEIGHT>::AddVertex(vector<VERTEX>& _v) {
+    vector<VID> vids;
     for (size_t i = 0; i < _v.size(); i++){
-        if (!IsVertex(_v[i])){
-          VID v_id = GRAPH::add_vertex(_v[i]);
-          VDAddNode(_v[i]);
-          ChangeEvent event(ChangeEvent::ADD_VERTEX, _v[i], v_id);
-          //cout << "Adding through vector" << endl;
-          roadmapVCS.addEvent(event);
-          added=true;
-          vertex_id = v_id;
-        } else {
-#ifndef QUIETGRAPH
-            cout << "\nIn AddVertex: vertex already in graph, not added";
-#endif
-        }
+      vids.push_back(AddVertex(_v[i]));
     }
-    if (added)  return vertex_id;
-    else        return INVALID_VID;
+    return vids;
 }
 
 //fix_lantao does this really in need? EdgeInfo?
@@ -858,6 +853,31 @@ vid2= GetVID(v2);
 return IsEdge(vid1, vid2);
 }
 
+//helper function to call dereferece on an iterator whose
+//value_type is VID and convert to CfgType
+template<class VERTEX, class WEIGHT>
+template<typename T>
+VERTEX
+RoadmapGraph<VERTEX, WEIGHT>::GetCfg(T& _t) const {
+  return (*(this->find_vertex(*_t))).property();
+}
+
+//specialization for a roadmap graph iterator, calls property()
+//template<typename RDMP::VI>
+template<class VERTEX, class WEIGHT>
+VERTEX
+RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) const {
+  return (*_t).property();
+}
+
+//specialization for a RoadmapGraph<CFG, WEIGHT>::VID
+//calls find_vertex(..) on VID to call property()
+//To do:what is the purpose for this, how is it diffrent from above
+template<class VERTEX, class WEIGHT>
+VERTEX
+RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VID _t) const {
+  return (*this->find_vertex(_t)).property();
+}
 
 /*****************************************************************************/
 //Dijkstra related.
@@ -1120,7 +1140,7 @@ double ComponentDiameter(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, t
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// Helper Functions for getting Cfgs from the RoadmapGraph
 ////////////////////////////////////////////////////////////////////////////////////////////
-
+/*
 namespace pmpl_detail
 {
   //helper function to call dereferece on an iterator whose
@@ -1176,7 +1196,7 @@ namespace pmpl_detail
         }
     };
 }
-
+*/
 
 
 #endif

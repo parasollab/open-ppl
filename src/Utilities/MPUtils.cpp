@@ -1,17 +1,17 @@
 #include "MPUtils.h"
 #include "MetricUtils.h"
-#include "CollisionDetectionValidity.h"
-#include "ValidityChecker.h"
-#include "Sampler.h"
-#include "SamplerMethod.h"
-#include "LocalPlanners.h"
-#include "LocalPlannerMethod.h"
-#include "MapEvaluator.h"
-#include "MapEvaluationMethod.h"
-#include "Metrics.h"
-#include "MetricsMethod.h"
-#include "MPStrategy.h"
-#include "MPProblem.h"
+//#include "CollisionDetectionValidity.h"
+//#include "ValidityChecker.h"
+//#include "Sampler.h"
+//#include "SamplerMethod.h"
+//#include "LocalPlanners.h"
+//#include "LocalPlannerMethod.h"
+//#include "MapEvaluator.h"
+//#include "MapEvaluationMethod.h"
+//#include "Metrics.h"
+//#include "MetricsMethod.h"
+//#include "MPStrategy.h"
+//#include "MPProblem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -122,20 +122,6 @@ double DirectedAngularDistance(double _a,double _b) {
 ///////////////////////////////////////////////////////////////////////////////
 //
 //
-// MPProblem Access Helpers
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-boost::shared_ptr<LocalPlannerMethod<CfgType, WeightType> > GetLPMethod(MPProblem* _mp, string _s){
-  return _mp->GetMPStrategy()->GetLocalPlanners()->GetMethod(_s);
-};
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // RRTExpand
 //
 //
@@ -156,7 +142,7 @@ boost::shared_ptr<LocalPlannerMethod<CfgType, WeightType> > GetLPMethod(MPProble
   obsDist -> Distance away from object the new node neads to at least be
   */
 
-bool RRTExpand( MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta, int& _weight, CDInfo& _cdInfo){
+/*bool RRTExpand( MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType _dir, CfgType& _newCfg, double _delta, int& _weight, CDInfo& _cdInfo){
   //Setup...primarily for collision checks that occur later on
   StatClass*                         stats = _mp->GetStatClass();
   Environment*                       env = _mp->GetRoadmap()->GetEnvironment();
@@ -197,7 +183,7 @@ bool RRTExpand( MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType 
   else
     return false;
 }
-
+*/
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -212,7 +198,7 @@ bool RRTExpand( MPProblem* _mp, string _vc, string _dm, CfgType _start, CfgType 
 // Main Push To Medial Axis Function //
 //***********************************//
 
-bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats, const ClearanceParams& _cParams,
+/*bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats, const ClearanceParams& _cParams,
   double _epsilon, int _historyLength, shared_ptr<Boundary> _bb){
 
   // Initialization
@@ -255,7 +241,7 @@ bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats, const ClearanceParams& _
   return PushToMedialAxis(_cfg, _stats, _cParams, _epsilon, _historyLength,
     _cParams.GetMPProblem()->GetEnvironment()->GetBoundary());
 }
-
+*/
 //***************************************************************//
 // Push From Inside Obstacle                                     //
 //   In this function, a cfg is known to be inside an obstacle.  //
@@ -263,7 +249,7 @@ bool PushToMedialAxis(CfgType& _cfg, StatClass& _stats, const ClearanceParams& _
 // obstacle and is pushed till outside.                          //
 //***************************************************************//
 
-bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
+/*bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
   const ClearanceParams& _cParams, shared_ptr<Boundary> _bb){
 
   // Initialization
@@ -353,7 +339,7 @@ bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
   return PushFromInsideObstacle(_cfg, _stats, _cParams,
     _cParams.GetMPProblem()->GetEnvironment()->GetBoundary());
 }
-
+*/
 //***************************************************************//
 // Push Cfg To Medial Axis                                       //
 //   This function is to perform a regular push to medial axis   //
@@ -361,7 +347,8 @@ bool PushFromInsideObstacle(CfgType& _cfg, StatClass& _stats,
 // is found, determined by the clearance.                        //
 //***************************************************************//
 
-bool PushCfgToMedialAxis(CfgType& _cfg, StatClass& _stats,
+
+/*bool PushCfgToMedialAxis(CfgType& _cfg, StatClass& _stats,
   const ClearanceParams& _cParams, double _epsilon, int _historyLength, shared_ptr<Boundary> _bb){
   // Initialization
   string call("MedialAxisUtility::PushCfgToMedialAxis");
@@ -743,13 +730,13 @@ bool PushCfgToMedialAxis(CfgType& _cfg, StatClass& _stats,
   return PushCfgToMedialAxis(_cfg, _stats, _cParams, _epsilon, _historyLength,
     _cParams.GetMPProblem()->GetEnvironment()->GetBoundary());
 }
-
+*/
 //*********************************************************************//
 // Calculate Collision Information                                     //
 //   This is a wrapper function for getting the collision information  //
 // for the medial axis computation, calls either approx or exact       //
 //*********************************************************************//
-bool CalculateCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
+/*bool CalculateCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams, shared_ptr<Boundary> _bb){
   if ( _cParams.m_exactClearance ) 
     return GetExactCollisionInfo(_cfg,_stats,_cdInfo,_cParams,_bb);
@@ -762,14 +749,14 @@ bool CalculateCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   return CalculateCollisionInfo(_cfg,_clrCfg,_stats,_cdInfo,_cParams,
     _cParams.GetMPProblem()->GetEnvironment()->GetBoundary());
 }
-
+*/
 //*********************************************************************//
 // Get Exact Collision Information Function                            //
 //   Determines the exact collision information by taking the validity //
 // checker results against obstacles to the bounding box to get a      //
 // complete solution                                                   //
 //*********************************************************************//
-bool GetExactCollisionInfo(CfgType& _cfg, StatClass& _stats, CDInfo& _cdInfo,
+/*bool GetExactCollisionInfo(CfgType& _cfg, StatClass& _stats, CDInfo& _cdInfo,
   const ClearanceParams& _cParams, shared_ptr<Boundary> _bb){
 
   // ClearanceParams variables
@@ -831,14 +818,14 @@ bool GetExactCollisionInfo(CfgType& _cfg, StatClass& _stats, CDInfo& _cdInfo,
   return GetExactCollisionInfo(_cfg,_stats,_cdInfo,_cParams,
     _cParams.GetMPProblem()->GetEnvironment()->GetBoundary());
 }
-
+*/
 //*********************************************************************//
 // Get Approximate Collision Information Function                      //
 //   Calculate the approximate clearance using a series of rays. The   //
 // specified number of rays are sent out till they change in validity. //
 // The shortest ray is then considered the best calididate.            //
 //*********************************************************************//
-bool GetApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
+/*bool GetApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams, shared_ptr<Boundary> _bb){
 
   // ClearanceParams variables
@@ -1046,7 +1033,7 @@ bool GetApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   return GetApproxCollisionInfo(_cfg,_clrCfg,_stats,_cdInfo,_cParams,
     _cParams.GetMPProblem()->GetEnvironment()->GetBoundary());
 }
-
+*/
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
   bool PtInTriangle 

@@ -4,10 +4,6 @@
 #include <unistd.h>
 #include "GraphAlgo.h"
 #include "MetricUtils.h"
-#include "LocalPlannerMethod.h"
-#include "LocalPlanners.h"
-#include "MPStrategy.h"
-
 
 struct rusage buf;
 /////////////////////////////////////////////////////////////////////
@@ -345,7 +341,7 @@ ClockClass::GetUSeconds() {
 
 //Roadmap Clearance returns a RoadmapClearanceStats structure that includes information regarding the clearance of a
 //roadmap
-RoadmapClearanceStats
+/*RoadmapClearanceStats
 RoadmapClearance(Roadmap<CfgType, WeightType> _g, const ClearanceParams& _cParams){
   RoadmapClearanceStats output;
   ///temp until edge iterator & operator != in new stapl dynamic graph is fixed
@@ -406,3 +402,4 @@ MinEdgeClearance(const CfgType& _c1, const CfgType& _c2, const WeightType& _weig
   }
   return minClearance;
 }
+*/

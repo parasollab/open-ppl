@@ -69,7 +69,8 @@ public:
   ///Read configuration from input stream
   virtual void Read(istream& is);
 
-  virtual void GetRandomRay(double incr, Environment* env, shared_ptr< DistanceMetricMethod> dm, bool norm=true);
+  template<class DistanceMetricPointer>
+  void GetRandomRay(double incr, Environment* env, DistanceMetricPointer dm, bool norm=true);
 
   virtual void add(const Cfg&, const Cfg&);
   virtual void subtract(const Cfg&, const Cfg&);
@@ -113,6 +114,8 @@ public:
   Point2d getPos() const {return m_point;}
   void setPos(Point2d _p){ m_v[0]=_p[0]; m_v[1]=_p[1]; m_point=_p;}
  
+  virtual Cfg* CreateNewCfg() const;
+
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -127,5 +130,22 @@ public:
  private:
   Point2d m_point;
 };
+
+template<class DistanceMetricPointer>
+void 
+Cfg_2D::GetRandomRay(double incr, Environment* env, DistanceMetricPointer dm, bool _norm) {
+  //randomly sample params
+  double dist=0.0;
+  m_v.clear();
+  for(size_t i=0; i<m_dof; ++i) {
+    m_v.push_back( double(2.0)*DRand() - double(1.0) );
+    dist += pow(m_v[i],2);
+  }
+
+  //scale to appropriate length
+  Cfg_2D origin;
+  dm->ScaleCfg(env, incr, origin, *this, _norm);
+  setPos(Point2d(m_v[0], m_v[1]));
+}
 
 #endif

@@ -16,10 +16,8 @@
 
 
 #include "Cfg_2D.h"
-#include "MultiBody.h"
-#include "Environment.h"
-#include "DistanceMetricMethod.h"
-
+#include "MPProblem/Geometry/MultiBody.h"
+#include "MPProblem/Environment.h"
 
 // for safety & compatiaility, use 6 elements for cfg.
 Cfg_2D::Cfg_2D():m_point(0,0){
@@ -169,19 +167,11 @@ bool Cfg_2D::ConfigEnvironment(Environment* env) const {
   return true;
 }
 
-void Cfg_2D::GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm, bool _norm) {
-  //randomly sample params
-  double dist=0.0;
-  m_v.clear();
-  for(size_t i=0; i<m_dof; ++i) {
-    m_v.push_back( double(2.0)*DRand() - double(1.0) );
-    dist += pow(m_v[i],2);
-  }
-
-  //scale to appropriate length
-  Cfg_2D origin;
-  dm->ScaleCfg(env, incr, origin, *this, _norm);
-  setPos(Point2d(m_v[0], m_v[1]));
+Cfg*
+Cfg_2D::CreateNewCfg() const {
+  Cfg* tmp = new Cfg_2D();
+  *tmp = *this;
+  return tmp;
 }
 
 void Cfg_2D::GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundary> _bb) {

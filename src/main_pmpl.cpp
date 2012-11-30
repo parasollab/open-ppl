@@ -1,91 +1,62 @@
-/** @file main_pmp.cpp
- * @brief main function to use the feature sensitive meta-planner
+/* PMPL main function. Instantiates a problem from an input xml
+ * filename. Then solves based upon the problem.
  */
 
-#include "ClosedChainProblem.h"
-#include "ClosedChainStrategy.h"
+#include "MPProblem/MPTraits.h"
+#include "MPProblem/MPProblem.h"
+
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+#include "MPProblem/ClosedChainProblem.h"
+#include "MPStrategy/ClosedChainStrategy.h"
+#endif
+
+#if (defined(PMPManifold))
+#include "Cfg/ManifoldCfg.h"
+typedef ManifoldCfg PMPLCfgType;
+#elif (defined(PMPCfg2D))
+#include "Cfg/Cfg_2D.h"
+typedef Cfg_2D PMPLCfgType;
+#elif (defined(PMPCfg2DWithRot))
+#include "Cfg/Cfg_2D_withRot.h"
+typedef Cfg_2D_withRot PMPLCfgType;
+#elif (defined(PMPCfgSurface))
+#include "Cfg/Cfg_surface.h"
+typedef Cfg_surface PMPLCfgType;
+#elif (defined(PMPReachDistCC))
+#include "Cfg/Cfg_reach_cc.h"
+typedef Cfg_reach_cc PMPLCfgType;
+#elif (defined(PMPReachDistCCFixed))
+#include "Cfg/Cfg_reach_cc_fixed.h"
+typedef Cfg_reach_cc_fixed PMPLCfgType;
+#else
+#error "Error, must define a RobotType for PMPL application"
+#endif
 
 using namespace std;
 
-
-//========================================================================
-//  main
-//========================================================================
-
-
-
 #ifdef _PARALLEL
-void stapl_main(int argc, char *argv[])
+void stapl_main(int _argc, char *_argv[])
 #else 
-int main(int argc, char** argv)
+int main(int _argc, char** _argv)
 #endif
 {
-  
-  
-  if(argc < 3) { cout << "Usage ... -f options.xml" << endl; exit(-1);}
-  
-  if(!(string(argv[1]) == "-f"))
-  { cout << "Usage ... -f options.xml" << endl; exit(-1);}
-  
-  TiXmlDocument doc( argv[2] );
-  bool loadOkay = doc.LoadFile();
-
-  if ( !loadOkay ) {
-    cout << "Could not load test file " << string(argv[2]) << ". Error=" << doc.ErrorDesc() <<". Exiting.\n";
-    exit( 1 );
+  if(_argc < 3){ 
+    cerr << "Error: Incorrect usage. Usage: -f options.xml" << endl;
+    exit(1);
   }
 
-  XMLNodeReader mp_node(std::string(argv[2]),doc, string("motion_planning"));
-  MPProblem* problem;
-  MPStrategy* strategy;
-  string vdFilename = "";
-  //Iterate over child nodes
-  
-  for(XMLNodeReader::childiterator citr = mp_node.children_begin(); citr != mp_node.children_end(); ++citr) {
-    if(citr->getName() == "MPProblem") {
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-          problem = new ClosedChainProblem(*citr);
-#else
-          problem = new MPProblem(*citr);
-#endif
-    } else if(citr->getName() == "MPStrategy") {
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-        strategy = new ClosedChainStrategy(*citr,(ClosedChainProblem*)problem);
-#else
-        strategy = new MPStrategy(*citr,problem);
-	
-#endif
-        problem->SetMPStrategy(strategy);
-    } else if(citr->getName() == "VizmoDebug"){
-      vdFilename = citr->stringXMLParameter("filename", true, "vizmodebug", "Vizmo Debug Output File");
-      vdFilename += ".vd";
-    }
-    else {
-      citr->warnUnknownNode();
-    } 
-  }
-      
-  VDInit(vdFilename);
-  
-  //Output whats about to go on
-  if(problem != NULL) {
-    problem->PrintOptions(cout);
-  } else {
-    cerr << "I don't have a MPProblem" << endl << flush;
-  }
-  
-  //Start generating!
-  if(strategy != NULL) {
-    strategy->Solve();
-  } else {
-    cerr << "I don't have a MPStrategy" << endl << flush;
+  if(!(string(_argv[1]) == "-f")){
+    cerr << "Error: Incorrect usage. Usage: -f options.xml" << endl;
+    exit(1);
   }
 
-  VDClose();
+  typedef MPTraits<PMPLCfgType> Traits;
+  typedef typename Traits::MPProblemType MPProblemType;
+  MPProblemType* problem = new MPProblemType(_argv[2]);
+  problem->PrintOptions(cout);
+  problem->Solve();
 
-   #ifndef _PARALLEL
-    return 0;
-    #endif
+  return 0;
 }
 
 

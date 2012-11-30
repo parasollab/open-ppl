@@ -2,17 +2,15 @@
 #define CONDITIONALEVALUATION_H
 
 #include "MapEvaluationMethod.h"
-#include "Metrics.h"
 
-template <class CFG, class WEIGHT>
-class ConditionalEvaluation : public MapEvaluationMethod {
+template<class MPTraits>
+class ConditionalEvaluation : public MapEvaluationMethod<MPTraits> {
   public:
 
     enum RelationalOperator { LT , LEQ, GT, GEQ };
 
-    ConditionalEvaluation();
-    ConditionalEvaluation(RelationalOperator _relationalOperator, string _metric, double _value);
-    ConditionalEvaluation(XMLNodeReader& _node, MPProblem* _problem);
+    ConditionalEvaluation(RelationalOperator _relationalOperator = LT, string _metric = "", double _value = 1.0);
+    ConditionalEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ConditionalEvaluation() {}
 
     virtual void PrintOptions(ostream& _os);
@@ -25,20 +23,15 @@ class ConditionalEvaluation : public MapEvaluationMethod {
     double m_value;
 };
 
-template <class CFG, class WEIGHT>
-ConditionalEvaluation<CFG, WEIGHT>::ConditionalEvaluation() {
+template<class MPTraits>
+ConditionalEvaluation<MPTraits>::ConditionalEvaluation(RelationalOperator _relationalOperator, string _metric, double _value)
+  : MapEvaluationMethod<MPTraits>(), m_relationalOperator(_relationalOperator), m_metric(_metric), m_value(_value) {
   this->SetName("ConditionalEvaluation");
 }
 
-template <class CFG, class WEIGHT>
-ConditionalEvaluation<CFG, WEIGHT>::ConditionalEvaluation(RelationalOperator _relationalOperator, string _metric, double _value)
-  : MapEvaluationMethod(), m_relationalOperator(_relationalOperator), m_metric(_metric), m_value(_value) {
-  this->SetName("ConditionalEvaluation");
-}
-
-template <class CFG, class WEIGHT>
-ConditionalEvaluation<CFG, WEIGHT>::ConditionalEvaluation(XMLNodeReader& _node, MPProblem* _problem)
-  : MapEvaluationMethod(_node, _problem) {
+template<class MPTraits>
+ConditionalEvaluation<MPTraits>::ConditionalEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+  : MapEvaluationMethod<MPTraits>(_problem, _node) {
   this->SetName("ConditionalEvaluation");
 
   m_metric = _node.stringXMLParameter("metric_method", true, "", "Metric Method");
@@ -54,36 +47,38 @@ ConditionalEvaluation<CFG, WEIGHT>::ConditionalEvaluation(XMLNodeReader& _node, 
   else if (relationalOperator == ">=")
     m_relationalOperator = GEQ;
   else {
-    cout << "unknown relational operator label read" << endl;
-    exit(-1);
+    cerr << "Error::Unknown relational operator label read in " << this->GetNameAndLabel() << ". Exiting." << endl;
+    exit(1);
   }
-
-  if(m_debug) PrintOptions(cout);
 }
 
-template <class CFG, class WEIGHT>
-void ConditionalEvaluation<CFG, WEIGHT>::PrintOptions(ostream& _os) {
-  _os << this->GetName() << "::";
-  _os << "\n\tmetric method = \'" << m_metric << "\'";
-  _os << "\n\tvalue = \'" << m_value << "\'";
-  _os << "\n\toperator = " << m_relationalOperator << endl; 
+template<class MPTraits>
+void ConditionalEvaluation<MPTraits>::PrintOptions(ostream& _os) {
+  MapEvaluationMethod<MPTraits>::PrintOptions(_os);
+  _os << "\tmetric method: " << m_metric << endl;
+  _os << "\tvalue: " << m_value << endl;
+  _os << "\toperator: ";
+  switch(m_relationalOperator){
+    case LT: cout << "<"; break;
+    case LEQ: cout << "<="; break;
+    case GT: cout << ">"; break;
+    case GEQ: cout << ">="; break;
+  }
+  _os << endl; 
 }
 
-template <class CFG, class WEIGHT>
-bool ConditionalEvaluation<CFG, WEIGHT>::operator()() {
-  double metric_value = this->GetMPProblem()->GetMPStrategy()->GetMetric()->GetMethod(m_metric)->operator()();
+template<class MPTraits>
+bool ConditionalEvaluation<MPTraits>::operator()() {
+  double metric_value = this->GetMPProblem()->GetMetric(m_metric)->operator()();
 
-  if (m_relationalOperator == LT) {
-    return metric_value < m_value;
-  } else if (m_relationalOperator == LEQ) {
-    return metric_value <= m_value;
-  } else if (m_relationalOperator == GT) {
-    return metric_value > m_value;
-  } else if (m_relationalOperator == GEQ) {
-    return metric_value >= m_value;
-  } else {
-    cout << "unknown label is read" << endl;
-    return false;
+  switch(m_relationalOperator){
+    case LT: return metric_value < m_value;
+    case LEQ: return metric_value <= m_value;
+    case GT: return metric_value > m_value;
+    case GEQ: return metric_value >= m_value;
+    default:
+      cout << "unknown label is read" << endl;
+      return false;
   }
 }
 

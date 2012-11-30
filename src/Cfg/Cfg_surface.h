@@ -54,6 +54,8 @@ public:
   virtual ~Cfg_surface();
   //@}
   
+  virtual vector<Robot> GetRobots(int){return vector<Robot>();};
+
 #ifdef _PARALLEL
     void define_type(stapl::typer &t)  
     {
@@ -82,7 +84,8 @@ public:
   virtual void GetRandomCfg(Environment* _env);
 
   ///Get a random vector whose magnitude is incr (note. the orienatation of of this Cfg is 0)
-  virtual void GetRandomRay(double _incr, Environment* _env, shared_ptr<DistanceMetricMethod> _dm, bool _norm=true);
+  template<class DistanceMetricPointer>
+  void GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm=true);
   //void GetRandomRayPos(double _incr, Environment* _env);
   
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +153,6 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////
   
   virtual Cfg* CreateNewCfg() const;
-  virtual Cfg* CreateNewCfg(vector<double>&) const;
 
  protected:
   ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
@@ -169,5 +171,21 @@ public:
   double m_H; // height component to complement position
   int    m_SurfaceID; //surface id that this cfg is associated with 
 };
+
+template<class DistanceMetricPointer>
+void
+Cfg_surface::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm) {
+  //randomly sample params
+  m_v.clear();
+  Vector2d v( DRand(), DRand() );
+  v = v.normalize();
+  m_v.push_back( v[0] ); //for now just create a ray in the plane (not so great for terrain)
+  m_v.push_back( 0.0  );
+  m_v.push_back( v[1] );
+
+  setPos(Point2d(m_v[0], m_v[2]));
+  setHeight( m_v[1] );
+  //how to handle surface id 
+}
 
 #endif
