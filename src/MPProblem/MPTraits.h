@@ -8,6 +8,7 @@
 
 //distance metric includes
 #include "DistanceMetrics/EuclideanDistance.h"
+#include "DistanceMetrics/RMSDDistance.h"
 
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
@@ -28,6 +29,7 @@
 
 //metric includes
 #include "Metrics/NumNodesMetric.h"
+#include "Metrics/TimeMetric.h"
 
 //map evaluator includes
 #include "MapEvaluators/Query.h"
@@ -48,18 +50,18 @@ struct MPTraits{
   typedef boost::mpl::list<
     MinkowskiDistance<MPTraits>,
     //ManhattanDistance,
-    EuclideanDistance<MPTraits>/*,
-    ScaledEuclideanDistance<MPTraits>,
-    MPNNEuclideanDistance<MPTraits>,
-    CGALEuclideanDistance<MPTraits>,
-    CenterOfMassDistance<MPTraits>,
-    RMSDDistance<MPTraits>,
-    LPSweptDistance<MPTraits>,
-    BinaryLPSweptDistance<MPTraits>,
-    #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-    ReachableDistance<MPTraits>, 
-    #endif
-    KnotTheoryDistance<MPTraits>*/
+    EuclideanDistance<MPTraits>,
+    //ScaledEuclideanDistance<MPTraits>,
+    //MPNNEuclideanDistance<MPTraits>,
+    //CGALEuclideanDistance<MPTraits>,
+    //CenterOfMassDistance<MPTraits>,
+    RMSDDistance<MPTraits>//,
+    //LPSweptDistance<MPTraits>,
+    //BinaryLPSweptDistance<MPTraits>,
+    //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+    //ReachableDistance<MPTraits>, 
+    //#endif
+    //KnotTheoryDistance<MPTraits>
     > DistanceMetricMethodList;
   
   //types of validity checkers available in our world
@@ -127,13 +129,13 @@ struct MPTraits{
   
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>/*,
-    NumEdgesMetric<MPTraits>,
-    TimeMetric<MPTraits>,
-    CoverageMetric<MPTraits>,
-    ConnectivityMetric<MPTraits>,
-    DiameterMetric<MPTraits>,
-    CCDistanceMetric<MPTraits>*/
+    NumNodesMetric<MPTraits>,
+    //NumEdgesMetric<MPTraits>,
+    TimeMetric<MPTraits>//,
+    //CoverageMetric<MPTraits>,
+    //ConnectivityMetric<MPTraits>,
+    //DiameterMetric<MPTraits>,
+    //CCDistanceMetric<MPTraits>
     > MetricMethodList;
   
   //types of map evaluators available in our world

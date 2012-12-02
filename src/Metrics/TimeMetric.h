@@ -1,14 +1,15 @@
 #ifndef TIMEMETRIC_H
 #define TIMEMETRIC_H
 
-#include "MetricsMethod.h"
+#include "MetricMethod.h"
 #include "Utilities/MetricUtils.h"
 
-class TimeMetric : public MetricsMethod {
+template<class MPTraits>
+class TimeMetric : public MetricMethod<MPTraits> {
   public:
 
     TimeMetric();
-    TimeMetric(XMLNodeReader& _node, MPProblem* _problem);
+    TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~TimeMetric();
 
     virtual void PrintOptions(ostream& _os);
@@ -16,5 +17,42 @@ class TimeMetric : public MetricsMethod {
     double operator()();
    
 };
+
+template<class MPTraits>
+TimeMetric<MPTraits>::TimeMetric() {
+  this->SetName("TimeMetric");
+}
+
+template<class MPTraits>
+TimeMetric<MPTraits>::TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+  : MetricMethod<MPTraits>(_problem, _node) {
+    this->SetName("TimeMetric");
+}
+
+template<class MPTraits>
+TimeMetric<MPTraits>::~TimeMetric() {
+}
+
+template<class MPTraits>
+void
+TimeMetric<MPTraits>::PrintOptions(ostream& _os){
+  _os << "Time allowed" << endl;
+}
+
+
+template<class MPTraits>
+double
+TimeMetric<MPTraits>::operator()() {
+  StatClass * timeStatClass = this->GetMPProblem()->GetStatClass();
+  static int flag=0;
+  string timeClockName = "Total running time";
+  if(flag==0){
+    timeStatClass->StartClock(timeClockName);
+    flag=1;
+  }
+  timeStatClass->StopClock(timeClockName);
+  timeStatClass->StartClock(timeClockName);
+  return (double)timeStatClass->GetSeconds(timeClockName);
+}
 
 #endif
