@@ -34,6 +34,8 @@
 //map evaluator includes
 #include "MapEvaluators/Query.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
+#include "MapEvaluators/PrintMapEvaluation.h"
+#include "MapEvaluators/TrueEvaluation.h"
 
 //map evaluator includes
 #include "MPStrategies/BasicPRM.h"
@@ -141,8 +143,8 @@ struct MPTraits{
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ConditionalEvaluator<MPTraits>,
-    //TrueEvaluation<MPTraits>,
-    //PrintMapEvaluation<MPTraits>, 
+    TrueEvaluation<MPTraits>,
+    PrintMapEvaluation<MPTraits>, 
     Query<MPTraits>//,
     //LazyQuery<MPTraits>,
     //LazyToggleQuery<MPTraits>,
