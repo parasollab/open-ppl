@@ -24,6 +24,7 @@
 
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
+#include "LocalPlanners/ToggleLP.h"
 
 //connector includes
 #include "Connectors/NeighborhoodConnector.h"
@@ -107,16 +108,16 @@ struct MPTraits{
   
   //types of local planners available in our world
   typedef boost::mpl::list<
-    StraightLine<MPTraits>/*,
-    RotateAtS<MPTraits>
-    TransformAtS<MPTraits>
-    MedialAxisLP<MPTraits>
+    StraightLine<MPTraits>,
+    //RotateAtS<MPTraits>,
+    //TransformAtS<MPTraits>,
+    //MedialAxisLP<MPTraits>,
     #if defined(PMPCfgSurface)
-    SurfaceLP<MPTraits>
+    //SurfaceLP<MPTraits>,
     #endif
-    AStarDistance<MPTraits>
-    AStarClearance<MPTraits>,
-    ToggleLP<MPTraits>*/
+    //AStarDistance<MPTraits>,
+    //AStarClearance<MPTraits>,
+    ToggleLP<MPTraits>
     > LocalPlannerMethodList;
 
   //types of connectors available in our world

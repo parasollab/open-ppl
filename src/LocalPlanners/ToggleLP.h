@@ -1,21 +1,22 @@
-#ifndef Toggle_h
-#define Toggle_h
+#ifndef TOGGLELP_H_
+#define TOGGLELP_H_
 
-#include "ValidityChecker.h"
 #include "LocalPlannerMethod.h"
-#include "LocalPlanners.h"
-#include "MPStrategy.h"
-#include "RoadmapGraph.h"
 
-template<class CFG, class WEIGHT>
-class LocalPlanners;
-
-template <class CFG, class WEIGHT>
-class ToggleLP: public LocalPlannerMethod<CFG, WEIGHT> {
+template<class MPTraits>
+class ToggleLP: public LocalPlannerMethod<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::WeightType WeightType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
+    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
     ToggleLP(string _vc = "", string _lp = "", int _maxIter = 0);
-    ToggleLP(XMLNodeReader& _node, MPProblem* _problem);
+    ToggleLP(MPProblemType* _problem, XMLNodeReader& _node);
     void InitVars();
     virtual ~ToggleLP();
 
@@ -23,38 +24,38 @@ class ToggleLP: public LocalPlannerMethod<CFG, WEIGHT> {
     virtual void PrintOptions(ostream& _os);
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
-        shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, CFG& _col, 
-        LPOutput<CFG, WEIGHT>* _lpOutput, double _positionRes, double _orientationRes,
+        DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+        LPOutput<MPTraits>* _lpOutput, double _positionRes, double _orientationRes,
         bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
 
-    virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
-        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes);
+    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
+        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes);
   protected:
 
     // Default for non closed chains - alters midpoint to a distance delta away on a random ray
     template <typename Enable>
-      CFG ChooseAlteredCfg(Environment* _env, StatClass& _stats,
-          shared_ptr<DistanceMetricMethod> _dm,
-          const CFG& _c1, const CFG& _c2,
+      CfgType ChooseAlteredCfg(Environment* _env, StatClass& _stats,
+          DistanceMetricPointer _dm,
+          const CfgType& _c1, const CfgType& _c2,
           typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy = 0
           );
 
     // Specialization for closed chains - choose random point
     template <typename Enable>
-      CFG ChooseAlteredCfg(Environment* _env, StatClass& _stats,
-          shared_ptr<DistanceMetricMethod> _dm,
-          const CFG& _c1, const CFG& _c2,
+      CfgType ChooseAlteredCfg(Environment* _env, StatClass& _stats,
+          DistanceMetricPointer _dm,
+          const CfgType& _c1, const CfgType& _c2,
           typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0
           );
 
     bool IsConnectedToggle(Environment* _env, StatClass& _stats,
-        shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, CFG& _col,
-        LPOutput<CFG,WEIGHT>* _lpOutput, int& _cdCounter, double _positionRes, double _orientationRes,
+        DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col,
+        LPOutput<MPTraits>* _lpOutput, int& _cdCounter, double _positionRes, double _orientationRes,
         bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
 
     bool ToggleConnect(Environment* _env, StatClass& _stats, 
-        shared_ptr<DistanceMetricMethod> _dm, const CFG& _s, const CFG& _g, const CFG& _n1, const CFG& _n2, bool _toggle,
-        LPOutput<CFG, WEIGHT>* _lpOutput, double _positionRes, double _orientationRes, int _depth=0);
+        DistanceMetricPointer _dm, const CfgType& _s, const CfgType& _g, const CfgType& _n1, const CfgType& _n2, bool _toggle,
+        LPOutput<MPTraits>* _lpOutput, double _positionRes, double _orientationRes, int _depth=0);
 
   private:
     //input
@@ -64,44 +65,41 @@ class ToggleLP: public LocalPlannerMethod<CFG, WEIGHT> {
     //needed variables for record keeping and cycle detection
     double m_iterations;
     bool m_degeneracyReached;
-    deque<CFG> m_colHist;
-    typedef RoadmapGraph<CFG, WEIGHT> GRAPH;
-    GRAPH pathGraph;
+    deque<CfgType> m_colHist;
+    GraphType pathGraph;
 };
 
-template <class CFG, class WEIGHT>
-ToggleLP<CFG, WEIGHT>::ToggleLP(string _vc, string _lp, int _maxIter) : 
+template<class MPTraits>
+ToggleLP<MPTraits>::ToggleLP(string _vc, string _lp, int _maxIter) : 
   m_vc(_vc), m_lp(_lp), m_maxIter(_maxIter) {
     InitVars();
   }
 
-template <class CFG, class WEIGHT>
-ToggleLP<CFG, WEIGHT>::ToggleLP(XMLNodeReader& _node, MPProblem* _problem) : LocalPlannerMethod<CFG, WEIGHT>(_node,_problem) {
+template<class MPTraits>
+ToggleLP<MPTraits>::ToggleLP(MPProblemType* _problem, XMLNodeReader& _node) : LocalPlannerMethod<MPTraits>(_problem, _node) {
   InitVars();
-  if(this->m_debug) cout<<this->GetNameAndLabel()<<endl;
+  
   m_vc = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
   m_lp = _node.stringXMLParameter("lpMethod", true, "", "Local Planner Method");
   m_maxIter = _node.numberXMLParameter("maxIter", false, 10, 0, MAX_INT, "Maximum number of m_iterations");
 
   _node.warnUnrequestedAttributes();
-
-  if(this->m_debug) cout<<"~"<<this->GetNameAndLabel()<<endl;
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void 
-ToggleLP<CFG, WEIGHT>::InitVars(){
+ToggleLP<MPTraits>::InitVars(){
   this->SetName("ToggleLP");
   m_iterations = 0;
 }
 
-template <class CFG, class WEIGHT>
-ToggleLP<CFG, WEIGHT>::~ToggleLP() {
+template<class MPTraits>
+ToggleLP<MPTraits>::~ToggleLP() {
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void
-ToggleLP<CFG, WEIGHT>::PrintOptions(ostream& _os) {
+ToggleLP<MPTraits>::PrintOptions(ostream& _os) {
   _os << "    " << this->GetName() << "::  ";
   _os << "maxIter =  " << m_maxIter << " ";
   _os << "vc =  " << m_vc << " ";
@@ -109,18 +107,18 @@ ToggleLP<CFG, WEIGHT>::PrintOptions(ostream& _os) {
   _os << endl;
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 bool 
-ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
-    shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, CFG& _col, 
-    LPOutput<CFG, WEIGHT>* _lpOutput, double _positionRes, double _orientationRes,
+ToggleLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
+    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+    LPOutput<MPTraits>* _lpOutput, double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) { 
   //clear lpOutput
   _lpOutput->Clear();
   pathGraph.clear();
-  CFG c1 = _c1, c2 = _c2;
-  typename GRAPH::vertex_descriptor svid = pathGraph.AddVertex(c1);
-  typename GRAPH::vertex_descriptor gvid = pathGraph.AddVertex(c2);
+  CfgType c1 = _c1, c2 = _c2;
+  VID svid = pathGraph.AddVertex(c1);
+  VID gvid = pathGraph.AddVertex(c2);
 
   _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0; 
@@ -134,8 +132,8 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
   if(connected){
     _stats.IncLPConnections(this->GetNameAndLabel());
     //find path in pathGraph
-    vector<typename GRAPH::vertex_descriptor> path;
-    stapl::sequential::find_path_dijkstra(pathGraph, svid, gvid, path, WEIGHT::MaxWeight());
+    vector<VID> path;
+    stapl::sequential::find_path_dijkstra(pathGraph, svid, gvid, path, WeightType::MaxWeight());
     if(path.size()>0){
       for(size_t i = 1; i<path.size()-1; i++){
         _lpOutput->intermediates.push_back(pathGraph.find_vertex(path[i])->property());
@@ -153,47 +151,49 @@ ToggleLP<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
 }
 
 // Default for non closed chains - alters midpoint to a distance delta away on a random ray
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 template <typename Enable>
-CFG ToggleLP<CFG, WEIGHT>::ChooseAlteredCfg(Environment* _env, StatClass& _stats,
-    shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2,
+typename MPTraits::CfgType
+ToggleLP<MPTraits>::ChooseAlteredCfg(Environment* _env, StatClass& _stats,
+    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2,
     typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy){
   size_t attempts = 0;
-  CFG mid, temp;
+  CfgType mid, temp;
   mid.add(_c1, _c2);
   mid.divide(_c1, 2.0);
   do{
-    CFG incr;
+    CfgType incr;
     double dist = _dm->Distance(_env, _c1, _c2) * sqrt(2.0)/2.0;
     incr.GetRandomRay(dist, _env, _dm);
     temp.add(incr, mid);
   }while(!temp.InBoundary(_env) && attempts++<10);
   if(attempts==10){ 
     _stats.IncLPStat("Toggle::MaxAttemptsForRay", 1);
-    return CFG();
+    return CfgType();
   }
   return temp;
 }
 
 // Specialization for closed chains - choose random point
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 template <typename Enable>
-CFG ToggleLP<CFG, WEIGHT>::ChooseAlteredCfg(Environment* _env, StatClass& _stats,
-    shared_ptr<DistanceMetricMethod> _dm, 
-    const CFG& _c1, const CFG& _c2,
+typename MPTraits::CfgType
+ToggleLP<MPTraits>::ChooseAlteredCfg(Environment* _env, StatClass& _stats,
+    DistanceMetricPointer _dm, 
+    const CfgType& _c1, const CfgType& _c2,
     typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy){
-  CFG temp;
+  CfgType temp;
   do{
     temp.GetRandomCfg(_env);
   }while(!temp.InBoundary(_env));
   return temp;
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 bool
-ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
-    shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, CFG& _col,
-    LPOutput<CFG,WEIGHT>* _lpOutput, int& _cdCounter, double _positionRes, double _orientationRes,
+ToggleLP<MPTraits>::IsConnectedToggle(Environment* _env, StatClass& _stats,
+    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col,
+    LPOutput<MPTraits>* _lpOutput, int& _cdCounter, double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) { 
 
   m_iterations=0;
@@ -208,22 +208,22 @@ ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
   }
 
   string Callee(this->GetNameAndLabel()+"::IsConnectedToggle");
-  typename ValidityChecker::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vc);
-  typename LocalPlanners<CFG, WEIGHT>::LocalPlannerPointer lpMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
+  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vc);
+  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lp);
 
   if(lpMethod->IsConnected(_env, _stats, _dm, _c1, _c2, _col, _lpOutput, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath)){
     return true;
   }
-  if(_col == CFG())
+  if(_col == CfgType())
     return false;
   if(this->m_debug) cout<<"col::"<<_col<<endl;
 
   if(this->m_recordKeep) _stats.IncLPStat("Toggle::TotalCalls", 1);
 
   CDInfo cdInfo;
-  CFG temp = ChooseAlteredCfg<CFG>(_env, _stats, _dm, _c1, _c2);
-  CFG n = temp;
-  if(n == CFG())
+  CfgType temp = ChooseAlteredCfg<CfgType>(_env, _stats, _dm, _c1, _c2);
+  CfgType n = temp;
+  if(n == CfgType())
     return false;
 
   bool isValid = vcm->IsValid(n, _env, _stats, cdInfo, &Callee);
@@ -242,18 +242,18 @@ ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
   }
   if(isValid){
     pathGraph.AddVertex(n);
-    CFG c2, c3;
+    CfgType c2, c3;
     bool b1 = lpMethod->IsConnected(_env, _stats, _dm, _c1, n, c2, _lpOutput, _positionRes, _orientationRes, true, false, false);
     if(b1){
-      CFG c1 = _c1;
-      pathGraph.AddEdge(c1, n, WEIGHT());
-      pathGraph.AddEdge(n, c1, WEIGHT());
+      CfgType c1 = _c1;
+      pathGraph.AddEdge(c1, n, WeightType());
+      pathGraph.AddEdge(n, c1, WeightType());
     }
     bool b2 = lpMethod->IsConnected(_env, _stats, _dm, _c2, n, c3, _lpOutput, _positionRes, _orientationRes, true, false, false);
     if(b2){
-      CFG c2 = _c2;
-      pathGraph.AddEdge(c2, n, WEIGHT());
-      pathGraph.AddEdge(n, c2, WEIGHT());
+      CfgType c2 = _c2;
+      pathGraph.AddEdge(c2, n, WeightType());
+      pathGraph.AddEdge(n, c2, WeightType());
     }
     if(this->m_debug) {
       VDAddNode(n);
@@ -264,11 +264,11 @@ ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
       cout<<"n-c2::"<<b1<<"::"<<c2<<endl;
       cout<<"n-c3::"<<b2<<"::"<<c3<<endl;
     }
-    if(!b1 && c2!=CFG())
+    if(!b1 && c2!=CfgType())
       b1 = ToggleConnect(_env, _stats, _dm, _col, c2, _c1, n, false, _lpOutput, _positionRes, _orientationRes);
     else if(this->m_debug && b1)
       VDAddEdge(_c1, n);
-    if(!b2 && c3!=CFG() && b1)
+    if(!b2 && c3!=CfgType() && b1)
       b2 = ToggleConnect(_env, _stats, _dm, _col, c3, _c2, n, false, _lpOutput, _positionRes, _orientationRes);
     else if(this->m_debug && b2)
       VDAddEdge(_c2, n);
@@ -298,9 +298,9 @@ ToggleLP<CFG, WEIGHT>::IsConnectedToggle(Environment* _env, StatClass& _stats,
   }
 };
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void
-ToggleLP<CFG, WEIGHT>::CalcStats(StatClass& _stats, bool _val, bool _toggle){
+ToggleLP<MPTraits>::CalcStats(StatClass& _stats, bool _val, bool _toggle){
   if(_val){
     if(_toggle)
       _stats.IncLPStat("Toggle::FreeSuccess", 1);
@@ -344,11 +344,11 @@ ToggleLP<CFG, WEIGHT>::CalcStats(StatClass& _stats, bool _val, bool _toggle){
   _stats.SetLPStat("Toggle::BlockingIterAvg", _stats.GetLPStat("Toggle::BlockingFailureIter")/blockingFailure); 
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 bool
-ToggleLP<CFG, WEIGHT>::ToggleConnect(Environment* _env, StatClass& _stats, shared_ptr<DistanceMetricMethod> _dm, 
-    const CFG& _s, const CFG& _g, const CFG& _n1, const CFG& _n2, bool _toggle,
-    LPOutput<CFG,WEIGHT>* _lpOutput, double _positionRes, double _orientationRes, int _depth) {
+ToggleLP<MPTraits>::ToggleConnect(Environment* _env, StatClass& _stats, DistanceMetricPointer _dm, 
+    const CfgType& _s, const CfgType& _g, const CfgType& _n1, const CfgType& _n2, bool _toggle,
+    LPOutput<MPTraits>* _lpOutput, double _positionRes, double _orientationRes, int _depth) {
 
   if(_depth>m_maxIter) return false;
 
@@ -357,27 +357,27 @@ ToggleLP<CFG, WEIGHT>::ToggleConnect(Environment* _env, StatClass& _stats, share
   if(this->m_debug) cout<<"ToggleConnect::"<<_toggle<<"\n\ts::"<<_s<<"\n\tg::"<<_g<<"\n\tn1::"<<_n1<<"\n\tn2::"<<_n2<<endl;
 
   //set up variables for VC and LP
-  typename LocalPlanners<CFG, WEIGHT>::LocalPlannerPointer lpMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
+  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lp);
 
   if(this->m_debug) VDAddTempEdge(_s, _g);
 
   //check connection between source and goal
-  CFG c; // collision CFG
-  if(!_toggle) this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vc)->ToggleValidity();
+  CfgType c; // collision CfgType
+  if(!_toggle) this->GetMPProblem()->GetValidityChecker(m_vc)->ToggleValidity();
   bool connect = lpMethod->IsConnected(_env, _stats, _dm, _s, _g, c, _lpOutput, _positionRes, _orientationRes, true, false, false);
-  if(!_toggle) this->GetMPProblem()->GetValidityChecker()->GetMethod(m_vc)->ToggleValidity();
+  if(!_toggle) this->GetMPProblem()->GetValidityChecker(m_vc)->ToggleValidity();
 
   if(this->m_debug) cout<<"connect::"<<connect<<"\n\tc::"<<c<<endl;
 
   //c is outside of the bounding box, degenerate case
-  if(!connect && c == CFG()) return false;
+  if(!connect && c == CfgType()) return false;
 
   //successful conntection, add the edge and return validity state
   if(connect){
     if(_toggle){
-      CFG s = _s, g = _g;
-      pathGraph.AddEdge(s, g, WEIGHT());
-      pathGraph.AddEdge(g, s, WEIGHT());
+      CfgType s = _s, g = _g;
+      pathGraph.AddEdge(s, g, WeightType());
+      pathGraph.AddEdge(g, s, WeightType());
     }
     if(this->m_debug && _toggle)
       VDAddEdge(_s, _g);
@@ -396,7 +396,7 @@ ToggleLP<CFG, WEIGHT>::ToggleConnect(Environment* _env, StatClass& _stats, share
     m_degeneracyReached=true; 
     return false;
   }
-  typedef typename deque<CFG>::iterator CIT;
+  typedef typename deque<CfgType>::iterator CIT;
   for(CIT cit = m_colHist.begin(); cit!=m_colHist.end(); cit++){
     if(c==*cit){
       m_degeneracyReached=true; 
@@ -415,15 +415,15 @@ ToggleLP<CFG, WEIGHT>::ToggleConnect(Environment* _env, StatClass& _stats, share
       ToggleConnect(_env, _stats, _dm, _n2, c, _s, _g, !_toggle, _lpOutput, _positionRes, _orientationRes, _depth+1);
 } 
 
-template <class CFG, class WEIGHT>
-vector<CFG> 
-ToggleLP<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
-        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes){
+template<class MPTraits>
+vector<typename MPTraits::CfgType> 
+ToggleLP<MPTraits>::ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
+        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes){
   StatClass dummyStats;
-  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_lp);
-  LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
-  LPOutput<CFG, WEIGHT>* dummyLPOutput = new LPOutput<CFG, WEIGHT>();
-  CFG col;
+  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lp);
+  LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
+  LPOutput<MPTraits>* dummyLPOutput = new LPOutput<MPTraits>();
+  CfgType col;
   if(_intermediates.size()>0){
     lpMethod->IsConnected(_env, dummyStats, _dm, _c1, _intermediates[0], col, dummyLPOutput, _posRes, _oriRes, false, true, false);
     for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
@@ -444,9 +444,10 @@ ToggleLP<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMet
     for(size_t j = 0; j<dummyLPOutput->path.size(); j++)
       lpOutput->path.push_back(dummyLPOutput->path[j]);
   }
-  vector<CFG> path = lpOutput->path;
+  vector<CfgType> path = lpOutput->path;
   delete lpOutput;
   delete dummyLPOutput;
   return path;
 }
+
 #endif
