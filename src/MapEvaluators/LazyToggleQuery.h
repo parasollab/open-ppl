@@ -1,57 +1,59 @@
 // A mix of Toggle PRM and Lazy PRM
 
-#ifndef LazyToggleQuery_H_
-#define LazyToggleQuery_H_
+#ifndef LAZYTOGGLEQUERY_H_
+#define LAZYTOGGLEQUERY_H_
 
 #include "LazyQuery.h"
 #include <deque>
 
 using namespace std;
 
-template <class CFG, class WEIGHT>
-class LazyToggleQuery : public LazyQuery<CFG, WEIGHT> {
+template<class MPTraits>
+class LazyToggleQuery : public LazyQuery<MPTraits> {
 
   public:
-    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename MPProblemType::VID VID;
 
     LazyToggleQuery(const char* _queryFileName = "", string _vcLabel = "") :
-      LazyQuery<CFG, WEIGHT>(_queryFileName, _vcLabel) { this->SetName("LazyToggleQuery"); }
-    LazyToggleQuery(CFG _start, CFG _goal, string _vcLabel) :
-      LazyQuery<CFG, WEIGHT>(_start, _goal, _vcLabel) { this->SetName("LazyToggleQuery"); }
-    LazyToggleQuery(XMLNodeReader& _node, MPProblem* _problem, bool _warn = true);
+      LazyQuery<MPTraits>(_queryFileName, _vcLabel) { this->SetName("LazyToggleQuery"); }
+    LazyToggleQuery(CfgType _start, CfgType _goal, string _vcLabel) :
+      LazyQuery<MPTraits>(_start, _goal, _vcLabel) { this->SetName("LazyToggleQuery"); }
+    LazyToggleQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~LazyToggleQuery() {};
 
     void ParseXML(XMLNodeReader& _node, bool _warn);
     virtual void PrintOptions(ostream& _os);
 
     // Overrides PerformQuery in Query, calls Query::PerformQuery() and adds Toggle functionality
-    virtual bool PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats);
+    virtual bool PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp, StatClass& _stats);
 
     // Overrides LazyQuery::ProcessInvalidNode, called in LazyQuery::CanRecreatePath()
-    virtual void ProcessInvalidNode(CFG node);
+    virtual void ProcessInvalidNode(CfgType node);
 
   protected:
     string m_toggleConnect;   // Connection method for blocked nodes
     bool m_iterative;         // Process the queue in an interative fashion?
 
   private:
-    deque<CFG> q;             // A list of both free and blocked witness nodes
+    deque<CfgType> q;             // A list of both free and blocked witness nodes
 };
 
-template <class CFG, class WEIGHT>
-LazyToggleQuery<CFG, WEIGHT>::LazyToggleQuery(XMLNodeReader& _node, MPProblem* _problem, bool _warn) :
-    LazyQuery<CFG, WEIGHT>(_node, _problem, false) {
+template<class MPTraits>
+LazyToggleQuery<MPTraits>::LazyToggleQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
+    LazyQuery<MPTraits>(_problem, _node, false) {
   this->SetName("LazyToggleQuery");
   ParseXML(_node, _warn);
-  if(this->m_debug)
-    PrintOptions(cout);
   if(_warn)
     _node.warnUnrequestedAttributes();
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void
-LazyToggleQuery<CFG, WEIGHT>::ParseXML(XMLNodeReader& _node, bool _warn) {
+LazyToggleQuery<MPTraits>::ParseXML(XMLNodeReader& _node, bool _warn) {
   m_iterative = _node.boolXMLParameter("iterative", false, true, "Process queue in either iterative or grouped method");
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); citr++) {
     if(citr->getName() == "ToggleConnectionMethod") {
@@ -61,44 +63,44 @@ LazyToggleQuery<CFG, WEIGHT>::ParseXML(XMLNodeReader& _node, bool _warn) {
   }
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void
-LazyToggleQuery<CFG, WEIGHT>::PrintOptions(ostream& _os) {
-  LazyQuery<CFG, WEIGHT>::PrintOptions(_os);
+LazyToggleQuery<MPTraits>::PrintOptions(ostream& _os) {
+  LazyQuery<MPTraits>::PrintOptions(_os);
   _os << "\ttoggleConnect = " << m_toggleConnect << endl;
   _os << "\titerative = " << m_iterative << endl;
 }
 
 // Overrides LazyQuery::ProcessInvalidNode, called in LazyQuery::CanRecreatePath()
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void
-LazyToggleQuery<CFG, WEIGHT>::ProcessInvalidNode(CFG node) {
+LazyToggleQuery<MPTraits>::ProcessInvalidNode(CfgType node) {
   if(this->m_debug)
     cout << "*T* Pushing blocked node into queue: " << node << endl;
   q.push_back(node);
 }
 
 // Overrides PerformQuery in Query, calls Query::PerformQuery() and adds Toggle functionality
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 bool
-LazyToggleQuery<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats) {
+LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp, StatClass& _stats) {
 
   if(this->m_debug)
     cout << "*T* in LazyToggleQuery::PerformQuery" << endl;
 
-  StatClass* stats = _rdmp->GetEnvironment()->GetMPProblem()->GetStatClass();
-  stapl::sequential::vector_property_map<RoadmapGraph<CFG, WEIGHT>, size_t> cmap;
-  Roadmap<CFG, WEIGHT>* bRdmp = this->GetMPProblem()->GetBlockRoadmap();
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+  RoadmapType* bRdmp = this->GetMPProblem()->GetBlockRoadmap();
   VID sVID, gVID = INVALID_VID;
 
   // If not just started and start/goal aren't connected, go back and sample more
-  if(_rdmp->m_pRoadmap->IsVertex(_start)) {
-    sVID = _rdmp->m_pRoadmap->GetVID(_start);
-    gVID = _rdmp->m_pRoadmap->GetVID(_goal);
+  if(_rdmp->GetGraph()->IsVertex(_start)) {
+    sVID = _rdmp->GetGraph()->GetVID(_start);
+    gVID = _rdmp->GetGraph()->GetVID(_goal);
     cmap.reset();
     if(this->m_recordKeep)
       stats->IncGOStat("CC Operations");
-    if(!stapl::sequential::is_same_cc(*(_rdmp->m_pRoadmap), cmap, sVID, gVID)) {
+    if(!stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, sVID, gVID)) {
       if(this->m_debug)
         cout << "*T* After sampling, start and goal still not connected. Sampling again" << endl;
       return false;
@@ -109,33 +111,33 @@ LazyToggleQuery<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, W
     // Extract paths until start and goal not connected
     if(this->m_debug)
       cout << "*T* Calling Query::PerformQuery" << endl;
-    if(Query<CFG, WEIGHT>::PerformQuery(_start, _goal, _rdmp, _stats))
+    if(Query<MPTraits>::PerformQuery(_start, _goal, _rdmp, _stats))
       return true; // Found a path
 
     vector<VID> freeVIDs, blockVIDs;
-    _rdmp->m_pRoadmap->GetVerticesVID(freeVIDs);
-    bRdmp->m_pRoadmap->GetVerticesVID(blockVIDs);
+    _rdmp->GetGraph()->GetVerticesVID(freeVIDs);
+    bRdmp->GetGraph()->GetVerticesVID(blockVIDs);
 
     if(gVID == INVALID_VID) {
-      sVID = _rdmp->m_pRoadmap->GetVID(_start);
-      gVID = _rdmp->m_pRoadmap->GetVID(_goal);
+      sVID = _rdmp->GetGraph()->GetVID(_start);
+      gVID = _rdmp->GetGraph()->GetVID(_goal);
     }
 
     // Process the queue
     if(this->m_debug)
       cout << "*T* Processing the queue" << endl;
     while(!q.empty()) {
-      CFG node = q.front();
+      CfgType node = q.front();
       q.pop_front();
 
       if(node.GetLabel("VALID")) { // Lazy-connect
-        vector<VID> newVID(1, _rdmp->m_pRoadmap->AddVertex(node));
+        vector<VID> newVID(1, _rdmp->GetGraph()->AddVertex(node));
         if(this->m_debug)
           cout << "*T* Adding a free node to roadmap: " << node << ", VID = " << newVID[0] << endl;
         for(vector<string>::iterator label = this->m_nodeConnectionLabels.begin();
             label != this->m_nodeConnectionLabels.end(); label++) {
           cmap.reset();
-          this->GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*label)->Connect(_rdmp, _stats,
+          this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, _stats,
               cmap, newVID.begin(), newVID.end(), freeVIDs.begin(), freeVIDs.end());
         }
         freeVIDs.push_back(newVID[0]);
@@ -143,27 +145,27 @@ LazyToggleQuery<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, W
           cmap.reset();
           if(this->m_recordKeep)
             stats->IncGOStat("CC Operations");
-          if(stapl::sequential::is_same_cc(*(_rdmp->m_pRoadmap), cmap, sVID, gVID))
+          if(stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, sVID, gVID))
             break;
         }
       }
 
       else { // Toggle-connect
-        vector<VID> newVID(1, bRdmp->m_pRoadmap->AddVertex(node));
+        vector<VID> newVID(1, bRdmp->GetGraph()->AddVertex(node));
         if(this->m_debug)
           cout << "*T* Adding a blocked node to roadmap: " << node << ", VID = " << newVID[0] << endl;
         size_t size = q.size();
-        this->GetMPProblem()->GetValidityChecker()->GetMethod(this->m_vcLabel)->ToggleValidity();
+        this->GetMPProblem()->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
         if(m_iterative)
-          this->GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(m_toggleConnect)->Connect(bRdmp, _stats,
+          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, _stats,
               cmap, newVID.begin(), newVID.end(), blockVIDs.begin(), blockVIDs.end(), front_inserter(q));
         else
-          this->GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(m_toggleConnect)->Connect(bRdmp, _stats,
+          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, _stats,
               cmap, newVID.begin(), newVID.end(), blockVIDs.begin(), blockVIDs.end(), back_inserter(q));
         if(this->m_debug)
           for(size_t i = 0; i < q.size()-size; i++)
             cout << "*T* Pushing free node into queue: " << q[i] << endl;
-        this->GetMPProblem()->GetValidityChecker()->GetMethod(this->m_vcLabel)->ToggleValidity();
+        this->GetMPProblem()->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
         blockVIDs.push_back(newVID[0]);
       }
     }
@@ -172,7 +174,7 @@ LazyToggleQuery<CFG, WEIGHT>::PerformQuery(CFG _start, CFG _goal, Roadmap<CFG, W
     cmap.reset();
     if(this->m_recordKeep)
       stats->IncGOStat("CC Operations");
-  } while(stapl::sequential::is_same_cc(*(_rdmp->m_pRoadmap), cmap, sVID, gVID));
+  } while(stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, sVID, gVID));
   if(this->m_recordKeep)
     stats->IncGOStat("CC Operations");
 

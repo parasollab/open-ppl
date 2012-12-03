@@ -35,6 +35,8 @@
 
 //map evaluator includes
 #include "MapEvaluators/Query.h"
+#include "MapEvaluators/LazyQuery.h"
+#include "MapEvaluators/LazyToggleQuery.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
 #include "MapEvaluators/PrintMapEvaluation.h"
 #include "MapEvaluators/TrueEvaluation.h"
@@ -146,11 +148,11 @@ struct MPTraits{
     ConditionalEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>,
     PrintMapEvaluation<MPTraits>, 
-    Query<MPTraits>//,
-    //LazyQuery<MPTraits>,
-    //LazyToggleQuery<MPTraits>,
+    Query<MPTraits>,
+    LazyQuery<MPTraits>,
+    LazyToggleQuery<MPTraits>//,
     //ComposeEvaluation<MPTraits>,
-    //NegateEvaluation<MPTraits>*/
+    //NegateEvaluation<MPTraits>
     > MapEvaluatorMethodList;
   
   //types of motion planning strategies available in our world

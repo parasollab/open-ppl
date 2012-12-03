@@ -2,65 +2,67 @@
 // then checks for validity in the query phase
 // and deletes nodes and edges found to be invalid
 
-#ifndef LazyQuery_H_
-#define LazyQuery_H_
+#ifndef LAZYQUERY_H_
+#define LAZYQUERY_H_
 
 #include "Query.h"
-#include "StraightLine.h"
-#include "ValidityCheckerMethod.h"
 #include <functional>
 #include <algorithm>
 
 using namespace std;
 
-template <class CFG, class WEIGHT>
-class LazyQuery : public Query<CFG, WEIGHT> {
+template<class MPTraits>
+class LazyQuery : public Query<MPTraits> {
   
   public:
-    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     
     LazyQuery(const char* _queryFileName = "", string _vcLabel = "") :
-      Query<CFG, WEIGHT>(_queryFileName), m_vcLabel(_vcLabel) { this->SetName("LazyQuery"); }
-    LazyQuery(CFG _start, CFG _goal, string _vcLabel) :
-      Query<CFG, WEIGHT>(_start, _goal), m_vcLabel(_vcLabel) { this->SetName("LazyQuery"); }
-    LazyQuery(XMLNodeReader& _node, MPProblem* _problem, bool _warn = true);
+      Query<MPTraits>(_queryFileName), m_vcLabel(_vcLabel) { this->SetName("LazyQuery"); }
+    LazyQuery(CfgType _start, CfgType _goal, string _vcLabel) :
+      Query<MPTraits>(_start, _goal), m_vcLabel(_vcLabel) { this->SetName("LazyQuery"); }
+    LazyQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~LazyQuery() {};
 
     void ParseXML(XMLNodeReader& _node, bool _warn);
     virtual void PrintOptions(ostream& _os);
    
     // Checks validity of nodes and edges and deletes any invalid ones. Recreates path if valid
-    virtual bool CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats,
-        vector<VID>& _attemptedPath, vector<CFG>& _recreatedPath);
+    virtual bool CanRecreatePath(RoadmapType* _rdmp, StatClass& _stats,
+        vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath);
 
     // Does nothing in LazyQuery; used in LazyToggle, for example
-    virtual void ProcessInvalidNode(CFG node) { }
+    virtual void ProcessInvalidNode(CfgType node) { }
 
     // Node enhancement step
-    virtual void NodeEnhance(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats);
+    virtual void NodeEnhance(RoadmapType* _rdmp, StatClass& _stats);
 
   protected:
     string m_vcLabel;                // Validity checker
     vector<int> m_resolutions;       // List of resolution multiples to check
     int m_numEnhance;                // How many nodes to generate in node enhancement step
     double m_d;                      // Gaussian distance d
-    vector<pair<CFG, CFG> > m_edges; // List of removed edges, used in node enhancement
+    vector<pair<CfgType, CfgType> > m_edges; // List of removed edges, used in node enhancement
 };
 
-template <class CFG, class WEIGHT>
-LazyQuery<CFG, WEIGHT>::LazyQuery(XMLNodeReader& _node, MPProblem* _problem, bool _warn) :
-    Query<CFG, WEIGHT>(_node, _problem, false) {
+template<class MPTraits>
+LazyQuery<MPTraits>::LazyQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
+    Query<MPTraits>(_problem, _node, false) {
   this->SetName("LazyQuery");
   ParseXML(_node, _warn);
   if(_warn)
     _node.warnUnrequestedAttributes();
-  if(this->m_debug)
-    PrintOptions(cout);
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void
-LazyQuery<CFG, WEIGHT>::ParseXML(XMLNodeReader& _node, bool _warn) {
+LazyQuery<MPTraits>::ParseXML(XMLNodeReader& _node, bool _warn) {
   m_vcLabel = _node.stringXMLParameter("vcMethod", false, "default", "Validity checker method");
   m_numEnhance = _node.numberXMLParameter("numEnhance", false, 0, 0, MAX_INT, "Number of nodes to generate in node enhancement");
   m_d = _node.numberXMLParameter("d", false, 0.0, 0.0, MAX_DBL, "Gaussian d value for node enhancement");
@@ -85,26 +87,26 @@ LazyQuery<CFG, WEIGHT>::ParseXML(XMLNodeReader& _node, bool _warn) {
   }
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void
-LazyQuery<CFG, WEIGHT>::PrintOptions(ostream& _os) {
-  Query<CFG, WEIGHT>::PrintOptions(_os);
+LazyQuery<MPTraits>::PrintOptions(ostream& _os) {
+  Query<MPTraits>::PrintOptions(_os);
   _os << "\tvc label = " << m_vcLabel;
   _os << "\n\tnumEnhance = " << m_numEnhance;
   _os << "\n\td = " << m_d;
   _os << "\n\tresolutions =";
-  for(typename vector<int>::iterator it = m_resolutions.begin(); it != m_resolutions.end(); it++)
+  for(vector<int>::iterator it = m_resolutions.begin(); it != m_resolutions.end(); it++)
     cout << " " << *it;
   cout << endl;
 }
 
 // Checks validity of nodes and edges and deletes any invalid ones. Recreates path if valid
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 bool
-LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats,
-    vector<VID>& _attemptedPath, vector<CFG>& _recreatedPath) {
+LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, StatClass& _stats,
+    vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
 
-  ValidityChecker* vc = this->GetMPProblem()->GetValidityChecker();
+  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   Environment* env = this->GetMPProblem()->GetEnvironment();
   StatClass& stats = *(this->GetMPProblem()->GetStatClass());
   string callee = "LazyQuery::CanRecreatePath()";
@@ -113,8 +115,8 @@ LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& 
   size_t size = _attemptedPath.size();
 
   if(this->m_debug) {
-    cout << "*L* Starting LAZY with: " << _rdmp->m_pRoadmap->get_num_vertices() << " vertices, "
-      << _rdmp->m_pRoadmap->get_num_edges()/2 << " edges\n*L* Start vertex checking...\n";
+    cout << "*L* Starting LAZY with: " << _rdmp->GetGraph()->get_num_vertices() << " vertices, "
+      << _rdmp->GetGraph()->get_num_edges()/2 << " edges\n*L* Start vertex checking...\n";
   }
 
   // Check vertices for validity
@@ -122,15 +124,15 @@ LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& 
     // Check from outside to middle
     size_t index = (i%2 ? size - i/2 - 1 : i/2);
     // Skip checks if already checked and valid
-    CFG node = pmpl_detail::GetCfg<RoadmapGraph<CFG, WEIGHT> >()(_rdmp->m_pRoadmap, _attemptedPath[index]);
+    CfgType node = _rdmp->GetGraph()->GetCfg(_attemptedPath[index]);
     if(node.IsLabel("VALID") && node.GetLabel("VALID"))
       continue;
-    if(!vc->GetMethod(m_vcLabel)->IsValid(node, env, stats, cdInfo, &callee)) {
+    if(!vcm->IsValid(node, env, stats, cdInfo, &callee)) {
       // Add invalid edges to list
       if(m_numEnhance && !node.IsLabel("Enhance")) {
-        typename RoadmapGraph<CFG, WEIGHT>::vertex_reference v1 = *(_rdmp->m_pRoadmap->find_vertex(_attemptedPath[index]));
-        for(typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator aei = v1.begin(); aei != v1.end(); aei++) {
-          CFG target = pmpl_detail::GetCfg<RoadmapGraph<CFG, WEIGHT> >()(_rdmp->m_pRoadmap, (*aei).target());
+        typename GraphType::vertex_reference v1 = *(_rdmp->GetGraph()->find_vertex(_attemptedPath[index]));
+        for(typename GraphType::adj_edge_iterator aei = v1.begin(); aei != v1.end(); aei++) {
+          CfgType target = _rdmp->GetGraph()->GetCfg((*aei).target());
           if(!target.IsLabel("Enhance")) {
             if(this->m_debug)
               cout << "*E* Storing node enhancement edge, VIDs = " << _attemptedPath[index] << ", " << (*aei).target() << endl;
@@ -140,11 +142,11 @@ LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& 
       }
       // Delete invalid vertex
       ProcessInvalidNode(node);
-      _rdmp->m_pRoadmap->delete_vertex(_attemptedPath[index]);
+      _rdmp->GetGraph()->delete_vertex(_attemptedPath[index]);
       if(this->m_debug)
         cout << "*L* Vertex FAILED: " << _attemptedPath[index] << "\n*L* Ending LAZY with: "
-          << _rdmp->m_pRoadmap->get_num_vertices() << " vertices, "
-          << _rdmp->m_pRoadmap->get_num_edges()/2 << " edges." << endl;
+          << _rdmp->GetGraph()->get_num_vertices() << " vertices, "
+          << _rdmp->GetGraph()->get_num_edges()/2 << " edges." << endl;
       return false;
     }
   }
@@ -158,29 +160,29 @@ LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& 
       // Check from outside to middle
       size_t index = (i%2 ? size - i/2 - 2 : i/2);
 
-      CFG witness;
-      LPOutput<CFG, WEIGHT> ci;
-      typename RoadmapGraph<CFG, WEIGHT>::vertex_iterator vi;
-      typename RoadmapGraph<CFG, WEIGHT>::adj_edge_iterator ei;
-      typename RoadmapGraph<CFG, WEIGHT>::edge_descriptor ed(_attemptedPath[index], _attemptedPath[index+1]);
-      _rdmp->m_pRoadmap->find_edge(ed, vi, ei);
+      CfgType witness;
+      LPOutput<MPTraits> ci;
+      typename GraphType::vertex_iterator vi;
+      typename GraphType::adj_edge_iterator ei;
+      typename GraphType::edge_descriptor ed(_attemptedPath[index], _attemptedPath[index+1]);
+      _rdmp->GetGraph()->find_edge(ed, vi, ei);
 
       // Skip checks if already checked and valid
       if((*ei).property().IsChecked(*resIt))
         continue;
 
-      if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpLabel)->IsConnected(
-            _rdmp->GetEnvironment(), stats, this->GetMPProblem()->GetDistanceMetric()->GetMethod(this->m_dmLabel),
-            _rdmp->m_pRoadmap->find_vertex(_attemptedPath[index])->property(),
-            _rdmp->m_pRoadmap->find_vertex(_attemptedPath[index+1])->property(), 
-            witness, &ci, _rdmp->GetEnvironment()->GetPositionRes() * *resIt,
-            _rdmp->GetEnvironment()->GetOrientationRes() * *resIt, true, false))
+      if(this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->IsConnected(
+            this->GetMPProblem()->GetEnvironment(), stats, this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel),
+            _rdmp->GetGraph()->GetCfg(_attemptedPath[index]),
+            _rdmp->GetGraph()->GetCfg(_attemptedPath[index+1]), 
+            witness, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes() * *resIt,
+            this->GetMPProblem()->GetEnvironment()->GetOrientationRes() * *resIt, true, false))
         (*ei).property().SetChecked(*resIt);
       else {
         // Add invalid edge to list
         if(m_numEnhance) {
-          CFG cfg1 = pmpl_detail::GetCfg<RoadmapGraph<CFG, WEIGHT> >()(_rdmp->m_pRoadmap, _attemptedPath[index]);
-          CFG cfg2 = pmpl_detail::GetCfg<RoadmapGraph<CFG, WEIGHT> >()(_rdmp->m_pRoadmap, _attemptedPath[index+1]);
+          CfgType cfg1 = _rdmp->GetGraph()->GetCfg(_attemptedPath[index]);
+          CfgType cfg2 = _rdmp->GetGraph()->GetCfg(_attemptedPath[index+1]);
           if(!cfg1.IsLabel("Enhance") && !cfg2.IsLabel("Enhance")) {
             if(this->m_debug)
               cout << "*E* Storing node enhancement edge, VIDs = " << _attemptedPath[index] << ", " <<
@@ -190,29 +192,29 @@ LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& 
         }
         // Delete invalid (bidirectional) edge
         ProcessInvalidNode(witness);
-        _rdmp->m_pRoadmap->delete_edge(_attemptedPath[index], _attemptedPath[index+1]);
-        _rdmp->m_pRoadmap->delete_edge(_attemptedPath[index+1], _attemptedPath[index]);
+        _rdmp->GetGraph()->delete_edge(_attemptedPath[index], _attemptedPath[index+1]);
+        _rdmp->GetGraph()->delete_edge(_attemptedPath[index+1], _attemptedPath[index]);
         if(this->m_debug)
           cout << "*L* Edge FAILED: " << _attemptedPath[index] << ", " << _attemptedPath[index+1]
-            << "\n*L* Ending LAZY with: " << _rdmp->m_pRoadmap->get_num_vertices() << " vertices, "
-            << _rdmp->m_pRoadmap->get_num_edges()/2 << " edges." << endl;
+            << "\n*L* Ending LAZY with: " << _rdmp->GetGraph()->get_num_vertices() << " vertices, "
+            << _rdmp->GetGraph()->get_num_edges()/2 << " edges." << endl;
         return false;
       }
     }
   }
 
   // Path all valid, now recreate the path
-  _recreatedPath.push_back(_rdmp->m_pRoadmap->find_vertex(_attemptedPath[0])->property());
+  _recreatedPath.push_back(_rdmp->GetGraph()->GetCfg(_attemptedPath[0]));
   for(typename vector<VID>::iterator it = _attemptedPath.begin(); (it+1) != _attemptedPath.end(); it++) {
-    LPOutput<CFG, WEIGHT> lpOut;
-    this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpLabel)->IsConnected(
-        _rdmp->GetEnvironment(), stats, this->GetMPProblem()->GetDistanceMetric()->GetMethod(this->m_dmLabel),
-        _rdmp->m_pRoadmap->find_vertex(*it)->property(),
-        _rdmp->m_pRoadmap->find_vertex(*(it+1))->property(), 
-        &lpOut, _rdmp->GetEnvironment()->GetPositionRes(),
-        _rdmp->GetEnvironment()->GetOrientationRes(), false, true, false);
+    LPOutput<MPTraits> lpOut;
+    this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->IsConnected(
+        this->GetMPProblem()->GetEnvironment(), stats, this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel),
+        _rdmp->GetGraph()->GetCfg(*it),
+        _rdmp->GetGraph()->GetCfg(*(it+1)), 
+        &lpOut, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
+        this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), false, true, false);
     _recreatedPath.insert(_recreatedPath.end(), lpOut.path.begin(), lpOut.path.end());
-    _recreatedPath.push_back(_rdmp->m_pRoadmap->find_vertex(*(it+1))->property());
+    _recreatedPath.push_back(_rdmp->GetGraph()->GetCfg(*(it+1)));
   }
 
   if(this->m_debug)
@@ -222,24 +224,24 @@ LazyQuery<CFG, WEIGHT>::CanRecreatePath(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& 
 
 // Node enhancement step: choose a random deleted edge and generate nodes with a
 // gaussian distribution around the edge's midpoint
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void
-LazyQuery<CFG, WEIGHT>::NodeEnhance(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _stats) {
+LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp, StatClass& _stats) {
   if(!m_numEnhance || !m_edges.size())
     return;
 
   if(this->m_debug)
     cout << "*E* In LazyQuery::NodeEnhance. Generated these VIDs:";
-  stapl::sequential::vector_property_map<RoadmapGraph<CFG, WEIGHT>, size_t> cmap;
+  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
   vector<VID> allVIDs;
-  _rdmp->m_pRoadmap->GetVerticesVID(allVIDs);
+  _rdmp->GetGraph()->GetVerticesVID(allVIDs);
 
   for(int i = 0; i < m_numEnhance; i++) {
     size_t index = LRand() % m_edges.size(); // do I need a typecast?
-    CFG seed, incr, enhance;
+    CfgType seed, incr, enhance;
     seed.add(m_edges[index].first, m_edges[index].second);
     seed.divide(seed, 2.0);
-    shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(this->m_dmLabel); 
+    DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel); 
     incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), this->GetMPProblem()->GetEnvironment(), dm);
     enhance.add(seed, incr);
     enhance.SetLabel("Enhance", true);
@@ -248,11 +250,11 @@ LazyQuery<CFG, WEIGHT>::NodeEnhance(Roadmap<CFG, WEIGHT>* _rdmp, StatClass& _sta
       continue;
 
     // Add enhance to roadmap and connect
-    vector<VID> newVID(1, _rdmp->m_pRoadmap->AddVertex(enhance));
+    vector<VID> newVID(1, _rdmp->GetGraph()->AddVertex(enhance));
     for(vector<string>::iterator label = this->m_nodeConnectionLabels.begin();
             label != this->m_nodeConnectionLabels.end(); label++) {
       cmap.reset();
-      this->GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*label)->Connect(_rdmp, _stats,
+      this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, _stats,
           cmap, newVID.begin(), newVID.end(), allVIDs.begin(), allVIDs.end());
     }
     allVIDs.push_back(newVID[0]);
