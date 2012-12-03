@@ -1,5 +1,5 @@
 #set platform specific variables
-ifeq (${platform}, LINUX_gcc) 	#linux/gcc on 32 bit machine
+ifeq (${platform}, LINUX_32_gcc) 	#linux/gcc on 32 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
 	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
@@ -29,7 +29,7 @@ ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
 	DEPS = -MMD -MF $*.d
 endif
 
-ifeq (${platform}, LINUX_64_gcc) 	#linux/gcc on 64 bit machine
+ifeq (${platform}, LINUX_gcc) 	#linux/gcc on 64 bit machine
 	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL -DUSE_VCLIP# -DUSE_SOLID 
 	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${VCLIP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL} 
 	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${VCLIP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB} 
