@@ -10,6 +10,8 @@
 
 class Environment;
 template<class MPTraits> class MPProblem;
+template<class MPTraits> class NegateSampler;
+template<class MPTraits> class MixSampler;
 
 template<class MPTraits>
 #ifdef _PARALLEL
@@ -27,8 +29,6 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     virtual void PrintOptions(ostream& _os) const { 
       _os << this->GetName() << endl; 
     }
-
-    virtual string GetValidityMethod() const { return ""; }
 
     //implementation for InputIterator = vector<CfgType>::iterator and OutputIterator = back_insert_iterator<vector<CfgType> >
     virtual back_insert_iterator<vector<CfgType> > 
@@ -185,6 +185,9 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
       
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
           CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) = 0;
+
+    friend class NegateSampler<MPTraits>;
+    friend class MixSampler<MPTraits>;
 };
 
 #endif

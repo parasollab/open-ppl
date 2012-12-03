@@ -67,8 +67,6 @@ class GridSampler : public SamplerMethod<CFG> {
       _os << "\t\t" << it->first << ", " << it->second << endl;
   }
 
-  virtual string GetValidityMethod() const { return m_vcm; }
-
  // Attempts to sample, returns true if successful
  virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
      CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {

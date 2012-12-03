@@ -61,8 +61,6 @@ class GaussianSampler : public SamplerMethod<CFG>
         _out << "\tdmLabel = " << m_dmLabel << endl; 
       }
 
-    virtual string GetValidityMethod() const { return m_vcLabel; }
-    
     virtual bool 
 
       Sampler(Environment* _env, shared_ptr<Boundary> _bb,

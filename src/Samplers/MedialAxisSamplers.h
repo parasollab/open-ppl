@@ -40,8 +40,6 @@ class MedialAxisSampler : public SamplerMethod<CFG>
       _os << "\thistoryLength = " << m_historyLength << endl;
     }
 
-    virtual string GetValidityMethod() const { return m_cParams.m_vcLabel; }
-    
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
         StatClass& _stats, CFG& _cfgIn, vector<CFG>& _cfgOut, vector<CFG>& _cfgCol) {
 
