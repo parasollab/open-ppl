@@ -108,18 +108,18 @@ Cfg_free_tree::GetRobotCenterofMass(Environment* _env) const {
 
   Vector3D com(0,0,0);
   shared_ptr<MultiBody> mb =
-_env->GetMultiBody(env->GetRobotIndex());
+    _env->GetMultiBody(env->GetRobotIndex());
   GMSPolyhedron poly = mb->GetFreeBody(0)->GetWorldPolyhedron();
   for(vector<Vector3D>::const_iterator vit = poly.m_vertexList.begin(); vit
-!= poly.m_vertexList.end(); ++vit)
+      != poly.m_vertexList.end(); ++vit)
     com = com + (*vit);
   com = com / poly.m_vertexList.size();
 
   for(int i=0; i<m_numOfJoints; ++i) {
     GMSPolyhedron poly = mb->GetFreeBody(i)->GetWorldPolyhedron();
-    Vector3D poly_com(0,0,0);
+    Vector3D polycom(0,0,0);
     for(vector<Vector3D>::const_iterator vit = poly.m_vertexList.begin(); vit
-!= poly.m_vertexList.end(); ++vit)
+        != poly.m_vertexList.end(); ++vit)
       polycom = polycom + (*vit);
     polycom = polycom / poly.m_vertexList.size();
     com = com + polycom;

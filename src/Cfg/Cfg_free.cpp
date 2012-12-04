@@ -95,7 +95,7 @@ Cfg_free::GetRobotCenterofMass(Environment* _env) const {
 
   Vector3D com(0,0,0);
   GMSPolyhedron poly =
-_env->GetMultiBody(_env->GetRobotIndex())->GetFreeBody(0)->GetWorldPolyhedron();
+    _env->GetMultiBody(_env->GetRobotIndex())->GetFreeBody(0)->GetWorldPolyhedron();
   for(vector<Vector3D>::const_iterator vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
     com = com + (*vit);
   com = com / poly.m_vertexList.size();
