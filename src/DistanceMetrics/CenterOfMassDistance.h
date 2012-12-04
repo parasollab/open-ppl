@@ -10,7 +10,7 @@ class CenterOfMassDistance : public DistanceMetricMethod {
     virtual ~CenterOfMassDistance();
 
     virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
-    virtual double Distance(const Cfg& _c1, const Cfg& _c2);
+   
 };
 
 #endif
