@@ -88,3 +88,16 @@ Cfg_free::GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boundary> _bb) 
     m_v.push_back(_bb->GetRandomValueInParameter(i-3));
 }
 
+
+Vector3D 
+Cfg_free::GetRobotCenterofMass(Environment* _env) const {
+  ConfigEnvironment(_env);
+
+  Vector3D com(0,0,0);
+  GMSPolyhedron poly =
+_env->GetMultiBody(_env->GetRobotIndex())->GetFreeBody(0)->GetWorldPolyhedron();
+  for(vector<Vector3D>::const_iterator vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
+    com = com + (*vit);
+  com = com / poly.m_vertexList.size();
+  return com;
+}

@@ -67,6 +67,7 @@ public:
 
   ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition() const;
+  virtual Vector3D GetRobotCenterofMass(Environment*) const;
 
   virtual const string GetName() const;
 

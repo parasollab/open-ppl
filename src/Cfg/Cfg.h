@@ -167,7 +167,7 @@ class Cfg {
     const vector<double>& GetData() const;
     void SetData(vector<double>& _data);
     virtual Vector3D GetRobotCenterPosition() const = 0;
-
+     virtual Vector3D GetRobotCenterofMass(Environment* _env) const=0;
     /// Return the number of degrees of freedom for the configuration class
     static size_t DOF();
     static size_t PosDOF();
@@ -224,7 +224,7 @@ class Cfg {
     virtual void GetRandomCfg(Environment* _env);
     virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
     virtual void GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundary> bb) = 0;
-
+    
     template<class DistanceMetricPointer>
     void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true){
       cerr << "Error::Get Random Ray not implemented in Cfg derived class, exitting." << endl;

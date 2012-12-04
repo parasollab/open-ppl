@@ -50,6 +50,43 @@ ManifoldCfg::GetRobotCenterPosition() const {
   return Vector3D(x/numRobots, y/numRobots, z/numRobots);
 }
 
+
+Vector3D 
+ManifoldCfg::GetRobotCenterofMass(Environment* _env) const {
+  ConfigEnvironment(_env);
+  
+  typedef vector<Robot>::iterator RIT;
+  Vector3D com(0,0,0);
+  int numbodies=0;
+  shared_ptr<MultiBody> mb = _env->GetMultiBody(_env->GetRobotIndex());
+  typedef vector<Robot>::iterator RIT;
+  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+    GMSPolyhedron poly = mb->GetFreeBody(rit->m_bodyIndex)->GetWorldPolyhedron();
+    Vector3D polycom(0,0,0);
+    for(vector<Vector3D>::const_iterator  vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
+      polycom = polycom + (*vit);
+    polycom = polycom / poly.m_vertexList.size();
+    com = com + polycom;
+    numbodies++;  
+
+   for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i){
+     GMSPolyhedron poly1 = mb->GetFreeBody(i->first.second)->GetWorldPolyhedron();
+     Vector3D polycom1(0,0,0);
+   for(vector<Vector3D>::const_iterator vit1 = poly1.m_vertexList.begin(); vit1 != poly1.m_vertexList.end(); ++vit1)
+      polycom1 = polycom1 + (*vit1);
+    polycom1 = polycom1 / poly1.m_vertexList.size();
+    com = com + polycom1;
+    numbodies++;
+
+}
+  }
+
+  com = com/numbodies;
+  return com;
+}
+
+
+
 const string
 ManifoldCfg::GetName() const {
   return "ManifoldCfg";

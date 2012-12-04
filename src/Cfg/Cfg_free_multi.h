@@ -31,6 +31,7 @@ public:
   virtual const string GetName() const;
 
   virtual Vector3D GetRobotCenterPosition() const;
+  virtual Vector3D GetRobotCenterofMass(Environment*) const;
 
   virtual bool ConfigEnvironment(Environment*) const;
 

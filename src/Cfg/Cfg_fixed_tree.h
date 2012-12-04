@@ -71,6 +71,7 @@ class Cfg_fixed_tree : public Cfg {
   
   ///The center position is (0, 0, 0)
   virtual Vector3D GetRobotCenterPosition() const;
+  virtual Vector3D GetRobotCenterofMass(Environment*) const;
 
   virtual const string GetName() const;
   

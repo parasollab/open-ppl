@@ -115,4 +115,3 @@ void Cfg_2D_withRot::GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boun
     m_v.push_back(_bb->GetRandomValueInParameter(i-PosDOF()));
   setPos(Point2d(m_v[0], m_v[1]));
 }
-

@@ -151,8 +151,21 @@ Vector3D Cfg_2D::GetRobotCenterPosition() const {
      return Vector3D(m_v[0], m_v[1], m_v[2]);
 }
 
-bool Cfg_2D::ConfigEnvironment(Environment* env) const {
-  int robot = env->GetRobotIndex();
+Vector3D 
+Cfg_2D::GetRobotCenterofMass(Environment* _env) const {
+  ConfigEnvironment(_env);
+
+  Vector3D com(0,0,0);
+  GMSPolyhedron poly =
+_env->GetMultiBody(_env->GetRobotIndex())->GetFreeBody(0)->GetWorldPolyhedron();
+  for(vector<Vector3D>::const_iterator vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
+    com = com + (*vit);
+  com = com / poly.m_vertexList.size();
+  return com;
+}
+
+bool Cfg_2D::ConfigEnvironment(Environment* _env) const {
+  int robot = _env->GetRobotIndex();
   
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
@@ -162,7 +175,7 @@ bool Cfg_2D::ConfigEnvironment(Environment* env) const {
 						 0),
 				     Vector3D(m_v[0],m_v[1],0));
   // update link 1.
-  env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);
+  _env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);
   
   return true;
 }

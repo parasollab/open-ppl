@@ -129,6 +129,25 @@ void Cfg_free_multi::GetRandomCfg_CenterOfMass(Environment *_env) {
   GetRandomCfg_CenterOfMass(_env, _env->GetBoundary());
 }
 
+Vector3D 
+Cfg_free_multi::GetRobotCenterofMass(Environment* _env) const {
+  ConfigEnvironment(_env);
+
+  Vector3D com(0,0,0);
+  shared_ptr<MultiBody> mb = env->GetMultiBody(_env->GetRobotIndex());
+  for(int i=0; i<NumofRobots; ++i) {
+    GMSPolyhedron poly = mb->GetFreeBody(i)->GetWorldPolyhedron();
+    Vector3D poly_com(0,0,0);
+    for(vector<Vector3D>::const_iterator vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
+      polycom = polycom + (*vit);
+    polycom = polycom / poly.m_vertexList.size();
+    com = com + polycom;
+  }
+  com = com / (NumofRobots);
+
+  return com;
+}
+
 Cfg*
 Cfg_free_multi::CreateNewCfg() const {
   Cfg* tmp = new Cfg_free_multi();

@@ -134,3 +134,23 @@ bool Cfg_fixed_tree::ConfigEnvironment(Environment *_env) const {
   return true;
 }
 
+
+Vector3D
+Cfg_fixed_tree::GetRobotCenterofMass(Environment* _env) const {
+  ConfigEnvironment(_env);
+
+  Vector3D com(0,0,0);
+  shared_ptr<MultiBody> mb = env->GetMultiBody(_env->GetRobotIndex());
+  for(int i=0; i<m_numOfJoints; ++i) {
+    GMSPolyhedron poly = mb->GetFreeBody(i)->GetWorldPolyhedron();
+    Vector3D polycom(0,0,0);
+    for(vector<Vector3D>::const_iterator vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
+      polycom = polycom + (*vit);
+    polycom = polycom / poly.m_vertexList.size();
+    com = com + polycom;
+  }
+  com = com / (m_numOfJoints);
+
+  return com;
+}
+

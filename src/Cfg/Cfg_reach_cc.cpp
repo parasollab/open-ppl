@@ -420,6 +420,12 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm,
 
 }
 
+
+Vector3D Cfg_reach_cc::GetRobotCenterofMass(Environment* env) const {
+ cerr << "Warning, GetRobotCenterofMass not implemented yet\n";
+  exit(-1);
+}
+
 void 
 Cfg_reach_cc::
 Increment(const Cfg& _increment) {
