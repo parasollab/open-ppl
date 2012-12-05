@@ -28,11 +28,11 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     bool GetValidity() const { return m_validity; }
     void ToggleValidity() { m_validity = !m_validity; }
 
-    bool m_validity;
-
   protected:
     virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
         CDInfo& _cdInfo, std::string *_callName) = 0; 
+
+    bool m_validity;
 };
 
 #endif

@@ -267,7 +267,7 @@ BasicRRTStrategy<MPTraits>::Finalize() {
   //output final map
   str = this->GetBaseFilename() + ".map";
   ofstream osMap(str.c_str());
-  this->GetMPProblem()->GetRoadmap()->WriteRoadmap(osMap, this->GetMPProblem()->GetEnvironment());
+  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
   osMap.close();
 
   //output stats

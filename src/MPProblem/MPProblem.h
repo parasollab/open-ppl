@@ -53,7 +53,8 @@ class MPProblem
     typedef typename ValidityCheckerSet::MethodPointer ValidityCheckerPointer;
     ValidityCheckerPointer GetValidityChecker(const string& _l){return m_validityCheckers->GetMethod(_l);}
     void AddValidityChecker(ValidityCheckerPointer _vc, const string& _l){m_validityCheckers->AddMethod(_vc, _l);}
-    
+    void ToggleValidity();
+
     typedef MethodSet<MPTraits, NeighborhoodFinderMethod<MPTraits> > NeighborhoodFinderSet;
     typedef typename NeighborhoodFinderSet::MethodPointer NeighborhoodFinderPointer;
     NeighborhoodFinderPointer GetNeighborhoodFinder(const string& _l){return m_neighborhoodFinders->GetMethod(_l);}
@@ -314,6 +315,15 @@ MPProblem<MPTraits>::ParseXML(XMLNodeReader& _node) {
 }
 
 template<class MPTraits>
+void
+MPProblem<MPTraits>::ToggleValidity(){
+  typedef typename ValidityCheckerSet::MIT MIT;
+  for(MIT mit = m_validityCheckers->Begin(); mit!= m_validityCheckers->End(); ++mit){
+    mit->second->ToggleValidity();
+  }
+}
+
+template<class MPTraits>
 void 
 MPProblem<MPTraits>::PrintOptions(ostream& _os) {
   _os << "MPProblem" << endl;
@@ -382,8 +392,8 @@ template<class MPTraits>
 vector<cd_predefined>
 MPProblem<MPTraits>::GetSelectedCDTypes() const{
   vector<cd_predefined> cdTypes;
-  typedef typename map<string, ValidityCheckerPointer>::const_iterator MIT;
-  for(MIT mit = m_validityCheckers->MethodsBegin(); mit != m_validityCheckers->MethodsEnd(); ++mit) 
+  typedef typename ValidityCheckerSet::MIT MIT;
+  for(MIT mit = m_validityCheckers->Begin(); mit != m_validityCheckers->End(); ++mit) 
     if(CollisionDetectionValidity<MPTraits>* method = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(mit->second.get()))   
       cdTypes.push_back(method->GetCDType());
   return cdTypes;

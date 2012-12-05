@@ -28,8 +28,8 @@ class Roadmap {
     ~Roadmap();
     
     //Read graph information from roadmap file.
-    void ReadRoadmap(string _filename);
-    void WriteRoadmap(ostream& _os, Environment* _env, 
+    void Read(string _filename);
+    void Write(ostream& _os, Environment* _env, 
         const vector<shared_ptr<Boundary> >& _boundaries = vector<shared_ptr<Boundary> >());
 
     //Append nodes and edges from one roadmap (_rdmp) into 
@@ -66,7 +66,7 @@ Roadmap<MPTraits>::~Roadmap(){
 
 template <class MPTraits>
 void 
-Roadmap<MPTraits>::ReadRoadmap(string _filename) {
+Roadmap<MPTraits>::Read(string _filename) {
 #ifndef _PARALLEL
   cout << endl << "getting nodes from Read: " << _filename << endl;
 
@@ -101,7 +101,7 @@ Roadmap<MPTraits>::ReadRoadmap(string _filename) {
 
 template<class MPTraits>
 void 
-Roadmap<MPTraits>::WriteRoadmap(ostream& _os, Environment* _env, 
+Roadmap<MPTraits>::Write(ostream& _os, Environment* _env, 
     const vector<shared_ptr<Boundary> >& _boundaries) {
   _os << "PMPL Roadmap Version 041805";
   _os << endl << "#####PREAMBLESTART#####";

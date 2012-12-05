@@ -50,6 +50,7 @@
 //map evaluator includes
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
+#include "MPStrategies/TogglePRMStrategy.h"
 
 template<class C, class W = DefaultWeight<C> >
 struct MPTraits{
@@ -164,7 +165,8 @@ struct MPTraits{
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,
-    BasicRRTStrategy<MPTraits>
+    BasicRRTStrategy<MPTraits>,
+    TogglePRMStrategy<MPTraits>
     > MPStrategyMethodList;
 };
 

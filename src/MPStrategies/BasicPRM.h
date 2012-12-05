@@ -188,7 +188,7 @@ BasicPRM<MPTraits>::Initialize(){
   if(m_inputMapFilename != "") {
     RoadmapType* rMap = this->GetMPProblem()->GetRoadmap();
     if(this->m_debug) cout << "\tLoading roadmap from \"" << m_inputMapFilename << "\"...";
-    rMap->ReadRoadmap(m_inputMapFilename.c_str());
+    rMap->Read(m_inputMapFilename.c_str());
     for(typename GraphType::VI vi = rMap->GetGraph()->begin(); vi != rMap->GetGraph()->end(); ++vi)
       VDAddNode(vi->property());
     if(this->m_debug) {
@@ -272,7 +272,7 @@ BasicPRM<MPTraits>::Finalize(){
   //output final map
   str = this->GetBaseFilename() + ".map";
   ofstream osMap(str.c_str());
-  this->GetMPProblem()->GetRoadmap()->WriteRoadmap(osMap, this->GetMPProblem()->GetEnvironment());
+  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
   osMap.close();
 
   //output stats

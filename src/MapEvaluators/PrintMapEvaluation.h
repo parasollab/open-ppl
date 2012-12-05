@@ -63,10 +63,10 @@ PrintMapEvaluation<MPTraits>::operator()() {
   osCollName << m_baseName << "." << numCollNodes << "." << numCollEdges << ".block.map";
 
   ofstream osMap(osName.str().c_str());
-  this->GetMPProblem()->GetRoadmap()->WriteRoadmap(osMap, this->GetMPProblem()->GetEnvironment());
+  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
   osMap.close();
   ofstream osCollMap(osCollName.str().c_str());
-  this->GetMPProblem()->GetBlockRoadmap()->WriteRoadmap(osCollMap, this->GetMPProblem()->GetEnvironment());
+  this->GetMPProblem()->GetBlockRoadmap()->Write(osCollMap, this->GetMPProblem()->GetEnvironment());
   osCollMap.close();
 
   return true;

@@ -260,6 +260,8 @@ template<typename MPTraits, typename Method>
 class MethodSet {
   public:
     typedef boost::shared_ptr<Method> MethodPointer;
+    typedef typename map<string, MethodPointer>::iterator MIT;
+    typedef typename map<string, MethodPointer>::const_iterator CMIT;
 
     template<typename MethodTypeList>
       MethodSet(const MethodTypeList& _etl, const string& _name = "MethodSet") : m_default(""), m_name(_name) {
@@ -302,8 +304,7 @@ class MethodSet {
         element = m_elements[_label];
       if(element.get() == NULL) {
         cerr << "\n\tError, requesting element with name \"" << _label << "\" which does not exist in " << m_name << ".\n";
-        typedef typename map<string, MethodPointer>::const_iterator MIT;
-        for(MIT mit = MethodsBegin(); mit != MethodsEnd(); ++mit)
+        for(CMIT mit = Begin(); mit != End(); ++mit)
           if(mit->second.get() != NULL)
             cerr << " \"" << mit->first << "\"";
         cerr << "\n\texiting.\n";
@@ -313,7 +314,6 @@ class MethodSet {
     }
 
     void SetMPProblem(typename MPTraits::MPProblemType* _problem){
-      typedef typename map<string, MethodPointer>::iterator MIT;
       for(MIT mit = m_elements.begin(); mit!=m_elements.end(); mit++){
         mit->second->SetMPProblem(_problem);
       }
@@ -322,8 +322,7 @@ class MethodSet {
     void PrintOptions(ostream& _os) const {
       size_t count = 0;
       _os << endl << m_name << " has these methods available::" << endl << endl;
-      typedef typename map<string, MethodPointer>::const_iterator MIT;
-      for(MIT mit = MethodsBegin(); mit != MethodsEnd(); ++mit){
+      for(CMIT mit = Begin(); mit != End(); ++mit){
         _os << ++count << ") \"" << mit->first << "\" (" << mit->second->GetName() << ")" << endl;
         mit->second->PrintOptions(_os);
         _os << endl;
@@ -331,8 +330,10 @@ class MethodSet {
       _os << endl;
     }
 
-    typename map<string, MethodPointer>::const_iterator MethodsBegin() const { return m_elements.begin(); }
-    typename map<string, MethodPointer>::const_iterator MethodsEnd() const { return m_elements.end(); }
+    CMIT Begin() const { return m_elements.begin(); }
+    CMIT End() const { return m_elements.end(); }
+    MIT Begin() { return m_elements.begin(); }
+    MIT End() { return m_elements.end(); }
 
   protected:
     typedef boost::function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
