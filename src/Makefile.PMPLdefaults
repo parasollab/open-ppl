@@ -262,7 +262,7 @@ PMPL_OBJS = \
 	Cfg/ManifoldCfg.o \
 	Cfg/Cfg_2D.o \
 	Cfg/Cfg_2D_withRot.o \
-	Cfg/Cfg_surface.o \
+	Cfg/CfgSurface.o \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
         Utilities/MPUtils.o 

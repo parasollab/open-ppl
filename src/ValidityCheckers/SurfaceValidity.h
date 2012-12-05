@@ -2,23 +2,103 @@
 #define SURFACEVALIDITY_H_
 
 #include "ValidityCheckerMethod.h"
+#include "Cfg/CfgSurface.h"
+
+template<class MPTraits>
+class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {
+  public:
+    typedef typename MPTraits::CfgType CfgType;
+    SurfaceValidity();
+    SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) ;
+
+    virtual ~SurfaceValidity() {}
+
+    virtual bool 
+      IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName);
+
+    virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo);
+
+  private:
+    string m_vcLabel;
+};//end SurfaceValidity class definition
 
 
-class SurfaceValidity : public ValidityCheckerMethod {
- public:
-  SurfaceValidity();
-  SurfaceValidity(string _vcLabel);
-  SurfaceValidity(XMLNodeReader& _node, MPProblem* _problem);
-  virtual ~SurfaceValidity() {}
+template<class MPTraits>
+SurfaceValidity<MPTraits>::SurfaceValidity() : ValidityCheckerMethod<MPTraits>(){
+  this->m_name = "SurfaceValidity";
+}
 
-  virtual bool 
-    IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
-	CDInfo& _cdInfo, string *_callName);
+template<class MPTraits>
+SurfaceValidity<MPTraits>::SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) 
+  : ValidityCheckerMethod<MPTraits>(_problem, _node){
+    _node.verifyName("SurfaceValidity");
+    this->m_name = "SurfaceValidity";
+    this->m_vcLabel = _node.stringXMLParameter("vc_method", true, "", "Validity Checker Method");
+  }
 
-  virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo); 
+template<class MPTraits>
+bool 
+SurfaceValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName){
+  bool result=false;
+  int sid = ((CfgSurface&) _cfg).GetSurfaceID();
+  if( sid == -1 ) { 
+    //call default validity checker specified
+    result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(_cfg, _env, _stats, _cdInfo, _callName);
 
- private:
-  string m_vcLabel;
-};
+  }
+  else {
+    //do surface validity based on sid
+    //check if on surface
+    Point2d pt = ((CfgSurface&) _cfg).GetPos();
+    double  h  = ((CfgSurface&) _cfg).GetHeight();
+    int numSurfaces = _env->GetNavigableSurfacesCount();
+    if( sid>=0 && sid < numSurfaces ) {
+      shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(sid);
+      shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
+      GMSPolyhedron & polyhedron = fb->GetWorldPolyhedron();
+      bool onSurf = polyhedron.IsOnSurface(pt, h);
+      result = onSurf;
+    }
+  }
+  _cfg.SetLabel("VALID", result);
+
+  return result;
+}
+
+template<class MPTraits>
+bool SurfaceValidity<MPTraits>::IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo){
+  int sid = ((CfgSurface&) _cfg).GetSurfaceID();
+  bool result=false;
+  //_stats
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  string callee="SurfaceValidity::IsInsideObstacle";
+
+  if( sid == -1 ) { 
+    //call default validity checker specified
+    CfgType tmpCfg = (CfgType) _cfg;
+    result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(tmpCfg, _env, *stats, _cdInfo, &callee);
+    return !result;
+  }
+  else {
+    //do surface validity based on sid
+    //check if on surface
+    //////////////////////////////////////////////////////////////////////////////
+    Point2d pt = ((CfgSurface&) _cfg).GetPos();
+    double  h  = ((CfgSurface&) _cfg).GetHeight();
+    int numSurfaces = _env->GetNavigableSurfacesCount();
+    if( sid>=0 && sid < numSurfaces ) {
+      shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(sid);
+      shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
+      GMSPolyhedron & polyhedron = fb->GetWorldPolyhedron();
+      bool onSurf = polyhedron.IsOnSurface(pt, h);
+      result = onSurf;
+    }
+    else { 
+      return false;
+    }
+    return !result;
+    //////////////////////////////////////////////////////////////////////////////
+  }
+}
 
 #endif

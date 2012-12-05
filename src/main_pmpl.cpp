@@ -20,8 +20,8 @@ typedef Cfg_2D PMPLCfgType;
 #include "Cfg/Cfg_2D_withRot.h"
 typedef Cfg_2D_withRot PMPLCfgType;
 #elif (defined(PMPCfgSurface))
-#include "Cfg/Cfg_surface.h"
-typedef Cfg_surface PMPLCfgType;
+#include "Cfg/CfgSurface.h"
+typedef CfgSurface PMPLCfgType;
 #elif (defined(PMPReachDistCC))
 #include "Cfg/Cfg_reach_cc.h"
 typedef Cfg_reach_cc PMPLCfgType;
@@ -40,12 +40,7 @@ void stapl_main(int _argc, char *_argv[])
 int main(int _argc, char** _argv)
 #endif
 {
-  if(_argc < 3){ 
-    cerr << "Error: Incorrect usage. Usage: -f options.xml" << endl;
-    exit(1);
-  }
-
-  if(!(string(_argv[1]) == "-f")){
+  if(_argc < 3 || !(string(_argv[1]) == "-f")){ 
     cerr << "Error: Incorrect usage. Usage: -f options.xml" << endl;
     exit(1);
   }

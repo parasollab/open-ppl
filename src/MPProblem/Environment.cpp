@@ -8,6 +8,10 @@
 #include "MPProblem/BoundingSphere.h"
 #include "Cfg/Cfg.h"
 
+#ifdef PMPCfgSurface
+#include "Cfg/CfgSurface.h"
+#endif
+
 #define ENV_RES_DEFAULT                    0.05
 
 //===================================================================
@@ -146,9 +150,10 @@ Environment(XMLNodeReader& _node) :
 //#endif
 
       num_joints = citr->numberXMLParameter(string("num_joints"),true,0,0,MAX_INT,string("num_joints"));
-//#if !(defined(PMPManifold) || defined(PMPProtein ) )
-//      CfgType tmp;
-//      vector<Robot> robots = tmp.GetRobots(num_joints);
+
+//#ifdef PMPCfgSurface
+      //Cfgtype tmp;
+      //vector<Robot> robots = tmp.GetRobots(num_joints);
 //#else
       vector<Robot> robots = robotVec;
 //#endif
@@ -165,7 +170,6 @@ Environment(XMLNodeReader& _node) :
             m_boundaries = shared_ptr<BoundingSphere>(new BoundingSphere(*citr2));
           }
 
-          //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox() 
          //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
         } else {
           citr2->warnUnknownNode();
@@ -270,7 +274,8 @@ SortMultiBodies(){
       }
     }
     if (i != j+1)
-      cout << "Wrong sorting in void Environment::SortMultiBodies(){}"<<endl;
+      cerr << "Wrong sorting in void Environment::SortMultiBodies(){}"<<endl;
+      exit(-1);
   }
 }
 
@@ -581,7 +586,7 @@ buildCDstructure(cd_predefined cdtype)
 void
 Environment::BuildRobotStructure() {
   shared_ptr<MultiBody> robot = multibody[robotIndex];
-  int fixedBodyCount = robot -> GetFixedBodyCount();
+  int fixedBodyCount = robot->GetFixedBodyCount();
   int freeBodyCount = robot->GetFreeBodyCount();
   for (int i = 0; i < fixedBodyCount; i++) {
     m_robotGraph.add_vertex(i);

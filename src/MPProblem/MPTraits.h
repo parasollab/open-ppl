@@ -13,6 +13,9 @@
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
 #include "ValidityCheckers/CollisionDetectionValidity.h"
+#ifdef PMPCfgSurface
+#include "ValidityCheckers/SurfaceValidity.h"
+#endif
 
 //neighborhood finder includes
 #include "NeighborhoodFinders/BruteForceNF.h"
@@ -25,6 +28,9 @@
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
 #include "LocalPlanners/ToggleLP.h"
+#ifdef PMPCfgSurface
+#include "LocalPlanners/SurfaceLP.h"
+#endif
 
 //connector includes
 #include "Connectors/NeighborhoodConnector.h"
@@ -72,9 +78,9 @@ struct MPTraits{
   
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    //#ifdef PMPCfgSurface
-    //SurfaceValidity<MPTraits>,
-    //#endif
+    #ifdef PMPCfgSurface
+    SurfaceValidity<MPTraits>,
+    #endif
     AlwaysTrueValidity<MPTraits>,
     //NodeClearanceValidity<MPTraits>,
     //MedialAxisClearanceValidity<MPTraits>,
@@ -115,7 +121,7 @@ struct MPTraits{
     //TransformAtS<MPTraits>,
     //MedialAxisLP<MPTraits>,
     #if defined(PMPCfgSurface)
-    //SurfaceLP<MPTraits>,
+    SurfaceLP<MPTraits>,
     #endif
     //AStarDistance<MPTraits>,
     //AStarClearance<MPTraits>,

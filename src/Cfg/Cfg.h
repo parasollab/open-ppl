@@ -214,12 +214,11 @@ class Cfg {
     //
     //////////////////////////////////////////////////////////////////////////////////////////
     /** 
-     * generates random configuration asking Jory and Shawna to oversee/advise him on this.
-     guration where workspace robot's EVERY VERTEX
+     * Confguration where workspace robot's EVERY VERTEX
      * is guaranteed to lie within the environment specified bounding box
-     * @param _maxTries Try _maxTries time to rondomly generate Cfg and check if
-     * every vertex is in environment specified bounding box. If
-     * no this cfg could be found. The program will be abort.
+     * @param _maxTries Try _maxTries times to randomly generate Cfg and check if
+     * every vertex is in environment-specified bounding box. If
+     * not, a cfg couldn't be found in the bbx, and the program will abort.
      */
     virtual void GetRandomCfg(Environment* _env);
     virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
@@ -227,7 +226,7 @@ class Cfg {
     
     template<class DistanceMetricPointer>
     void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true){
-      cerr << "Error::Get Random Ray not implemented in Cfg derived class, exitting." << endl;
+      cerr << "Error::Get Random Ray not implemented in Cfg derived class, exiting." << endl;
       exit(1);
     }
     //virtual double GetSmoothingValue(StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams);

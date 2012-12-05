@@ -50,10 +50,10 @@ class Roadmap {
 
 template <class MPTraits>
 Roadmap<MPTraits>::
-Roadmap() : m_graph(new RoadmapGraph<CfgType, WeightType>()){}
+Roadmap() : m_graph(new GraphType()){}
 
 template <class MPTraits>
-Roadmap<MPTraits>::Roadmap(Roadmap<MPTraits>& _rdmp) : m_graph(new RoadmapGraph<CfgType, WeightType>()) {
+Roadmap<MPTraits>::Roadmap(Roadmap<MPTraits>& _rdmp) : m_graph(new GraphType()) {
   AppendRoadmap(_rdmp);
 }
 

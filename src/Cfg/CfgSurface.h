@@ -1,6 +1,6 @@
-// $Id: Cfg_surface.h 
+// $Id: CfgSurface.h 
 
-/**@file Cfg_surface.h
+/**@file CfgSurface.h
   *A derived class from Cfg
   *implementation for a 3-dof rigidbody moving in a 3-D work space 
   *but restricted to movement either on the default surface or or
@@ -9,8 +9,8 @@
   */
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef Cfg_surface_h
-#define Cfg_surface_h
+#ifndef CfgSurface_h
+#define CfgSurface_h
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //Include obprm headers
@@ -28,7 +28,7 @@ class GMSPolyhedron;
   *positional compontents are xz and height component is y.
   *Will be used in conjunction with group behaviors code.
   */
-class Cfg_surface : public Cfg {
+class CfgSurface : public Cfg {
 public:
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -42,19 +42,16 @@ public:
   //===================================================================
   /**@name  Constructors and Destructor*/
   //===================================================================
-  //@{
-  ///Degree of freedom is 6 and Degree of freedom for position part is 3.
-  Cfg_surface();
-  Cfg_surface(double _x, double _y, double _H, int _sid);
-  Cfg_surface(const Vector3d& _v);
-  Cfg_surface(const Cfg& _c);
-  Cfg_surface(const Point2d _p, double _h, int _sid);
+  CfgSurface();
+  CfgSurface(double _x, double _y, double _h, int _sid);
+  CfgSurface(const Vector3d& _v);
+  CfgSurface(const Cfg& _c);
+  CfgSurface(const Point2d _p, double _h, int _sid);
   
   ///Do nothing
-  virtual ~Cfg_surface();
-  //@}
+  virtual ~CfgSurface();
   
-  virtual vector<Robot> GetRobots(int){return vector<Robot>();};
+  virtual vector<Robot> GetRobots(int){return vector<Robot>();}
 
 #ifdef _PARALLEL
     void define_type(stapl::typer &t)  
@@ -72,21 +69,16 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////
   ///Write configuration to output stream
   virtual void Write(ostream& _os) const;
+
   ///Read configuration from input stream
   virtual void Read(istream& _is);
   
-  /**Randomly generate a Cfg
-    *@param R This new Cfg will have distance (position) R from origin
-    *@param rStep *@todo what is rStep?
-    */
-  virtual void GetRandomCfg(double R, double rStep);
   virtual void GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb);
   virtual void GetRandomCfg(Environment* _env);
 
   ///Get a random vector whose magnitude is incr (note. the orienatation of of this Cfg is 0)
   template<class DistanceMetricPointer>
   void GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm=true);
-  //void GetRandomRayPos(double _incr, Environment* _env);
   
   ///////////////////////////////////////////////////////////////////////////////////////////
   // operations
@@ -96,7 +88,7 @@ public:
   virtual void multiply(const Cfg&, double, bool _norm=true);
   virtual void divide(const Cfg&, double);
 
-  Cfg_surface& operator=(const Cfg_surface& _c);
+  CfgSurface& operator=(const CfgSurface& _c);
   virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);       
   ///////////////////////////////////////////////////////////////////////////////////////////
   
@@ -122,27 +114,21 @@ public:
 
   ///The center position is get from param, c, configuration. (The position part of c)
   virtual Vector3D GetRobotCenterPosition() const;
-   virtual Vector3D GetRobotCenterofMass(Environment*) const;
 
   virtual const string GetName() const;
 
   ///Move the (the first link of)  robot in enviroment to the given configuration.
   virtual bool ConfigEnvironment(Environment*) const;
 
+  //Get position in the form of Point2d
+  Point2d GetPos() const {return m_p;}
+  void SetPos(Point2d _p){ m_v[0]=_p[0]; m_v[2]=_p[1]; m_p=_p;}
 
   //Get position in the form of Point2d
-  Point2d getPos() const {return m_p;}
-  void setPos(Point2d _p){ m_v[0]=_p[0]; m_v[2]=_p[1]; m_p=_p;}
-
-  //Get position in the form of Point2d
-  double getHeight() const {return m_H;}
-  void setHeight(double _h){ m_v[1]=_h; m_H=_h;}
-  int getSurfaceID() const { return m_SurfaceID; }
-  void setSurfaceID(int sid) { m_SurfaceID = sid; }
-  
-  //get rotation - doesn't make sense here yet 
-  double GetRot() const {return 0;} //there is no rot here
-  void SetRot(double d) { cout <<"Setting rot in wrong cfg type!"<<endl; }
+  double GetHeight() const {return m_h;}
+  void SetHeight(double _h){ m_v[1]=_h; m_h=_h;}
+  int GetSurfaceID() const { return m_surfaceID; }
+  void SetSurfaceID(int sid) { m_surfaceID = sid; }
   
   //@}
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +142,8 @@ public:
   virtual Cfg* CreateNewCfg() const;
 
  protected:
-  ///Randomly generate a Cfg whose center positon is inside a given bounding box.(rotation, don't care!)
+  ///Randomly generate a Cfg whose center positon is inside a given bounding box.
+  virtual Vector3D GetRobotCenterofMass(Environment*) const;
   virtual void GetRandomCfgCenterOfMass(Environment* env);
   virtual void GetRandomCfgCenterOfMass(Environment* env,shared_ptr<Boundary> bb);
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -167,15 +154,17 @@ public:
   //
   //////////////////////////////////////////////////////////////////////////////////////////
  private:
-
   Point2d m_p; //positional component
-  double m_H; // height component to complement position
-  int    m_SurfaceID; //surface id that this cfg is associated with 
+  double m_h; // height component to complement position
+  int    m_surfaceID; //surface id that this cfg is associated with 
+
+  //helper function to ensure data integrity (dofs match m_p and m_h)
+  void UpdatePrivateVariables();
 };
 
 template<class DistanceMetricPointer>
 void
-Cfg_surface::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm) {
+CfgSurface::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm) {
   //randomly sample params
   m_v.clear();
   Vector2d v( DRand(), DRand() );
@@ -184,9 +173,9 @@ Cfg_surface::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer
   m_v.push_back( 0.0  );
   m_v.push_back( v[1] );
 
-  setPos(Point2d(m_v[0], m_v[2]));
-  setHeight( m_v[1] );
-  //how to handle surface id 
+  SetPos(Point2d(m_v[0], m_v[2]));
+  SetHeight( m_v[1] );
+  //how to handle surface id?
 }
 
 #endif
