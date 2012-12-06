@@ -24,6 +24,9 @@
 #include "Samplers/UniformRandomSampler.h"
 #include "Samplers/ObstacleBasedSampler.h"
 #include "Samplers/MixSampler.h"
+#include "Samplers/GaussianSampler.h"
+#include "Samplers/GridSampler.h"
+#include "Samplers/BridgeTestSampler.h"
 
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
@@ -107,11 +110,11 @@ struct MPTraits{
   //types of samplers available in our world
   typedef boost::mpl::list<
     UniformRandomSampler<MPTraits>,
-    //GaussianSampler<MPTraits>,
-    //BridgeTestSampler<MPTraits>,
+    GaussianSampler<MPTraits>,
+    BridgeTestSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
     //MedialAxisSampler<MPTraits>,
-    //GridSampler<MPTraits>,
+    GridSampler<MPTraits>,
     MixSampler<MPTraits>
       > SamplerMethodList;
   
