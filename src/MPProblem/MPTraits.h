@@ -49,6 +49,7 @@
 #include "MapEvaluators/ConditionalEvaluator.h"
 #include "MapEvaluators/PrintMapEvaluation.h"
 #include "MapEvaluators/TrueEvaluation.h"
+#include "MapEvaluators/ComposeEvaluator.h"
 
 //map evaluator includes
 #include "MPStrategies/BasicPRM.h"
@@ -160,8 +161,8 @@ struct MPTraits{
     PrintMapEvaluation<MPTraits>, 
     Query<MPTraits>,
     LazyQuery<MPTraits>,
-    LazyToggleQuery<MPTraits>//,
-    //ComposeEvaluation<MPTraits>,
+    LazyToggleQuery<MPTraits>,
+    ComposeEvaluator<MPTraits>//,
     //NegateEvaluation<MPTraits>
     > MapEvaluatorMethodList;
   

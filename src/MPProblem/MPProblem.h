@@ -227,7 +227,7 @@ MPProblem<MPTraits>::Initialize(){
   m_connectors = new ConnectorSet(typename MPTraits::ConnectorMethodList(), "Connectors");
   m_metrics = new MetricSet(typename MPTraits::MetricMethodList(), "Metrics");
   m_mapEvaluators = new MapEvaluatorSet(typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
-  m_mpStrategies = new MPStrategySet(typename MPTraits::MPStrategyMethodList(), "MPStragies");
+  m_mpStrategies = new MPStrategySet(typename MPTraits::MPStrategyMethodList(), "MPStrategies");
 
   m_solver = "";
   m_solverSeed = 1;
