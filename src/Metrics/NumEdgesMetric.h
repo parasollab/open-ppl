@@ -1,18 +1,24 @@
 #ifndef NUMEDGESMETRIC_H
 #define NUMEDGESMETRIC_H
 
-#include "MetricsMethod.h"
+#include "MetricMethod.h"
 
-class NumEdgesMetric : public MetricsMethod {
+template<class MPTraits>
+class NumEdgesMetric : public MetricMethod<MPTraits> {
   public:
+    NumEdgesMetric(){
+      this->SetName("NumEdgesMetric");
+    }
 
-    NumEdgesMetric();
-    NumEdgesMetric(XMLNodeReader& _node, MPProblem* _problem);
-    virtual ~NumEdgesMetric();
+    NumEdgesMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MetricMethod<MPTraits>(_problem, _node) {
+      this->SetName("NumEdgesMetric");
+    }
 
-    virtual void PrintOptions(ostream& _os);
+    virtual ~NumEdgesMetric(){}
 
-    virtual double operator()();
+    virtual double operator()(){
+      return this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_edges();
+    }
 };
 
 #endif

@@ -3,55 +3,57 @@
 
 #include "CoverageMetric.h"
 
-template <class CFG, class WEIGHT>
-class ConnectivityMetric : public CoverageMetric<CFG, WEIGHT> {
+template<class MPTraits>
+class ConnectivityMetric : public CoverageMetric<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::VID VID;
 
-    ConnectivityMetric();
-    ConnectivityMetric(vector<CFG>& _samples, vector<string> _nodeConnection, bool _computeAllCCs = false);
-    ConnectivityMetric(XMLNodeReader& _node, MPProblem* _problem, bool _computeAllCCs = false);
+    ConnectivityMetric(const vector<CfgType>& _samples = vector<CfgType>(), 
+        const vector<string>& _connectorLabels = vector<string>(), 
+        bool _computeAllCCs = false);
+    ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs = false);
     
-    virtual ~ConnectivityMetric() {}
+    virtual ~ConnectivityMetric();
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual double operator()();
+    double operator()();
     
   private:
     ofstream output;
 };
 
-template <class CFG, class WEIGHT>
-ConnectivityMetric<CFG, WEIGHT>::ConnectivityMetric() {
+template<class MPTraits>
+ConnectivityMetric<MPTraits>::ConnectivityMetric(const vector<CfgType>& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
+  : CoverageMetric<MPTraits>(_samples, _connectorLabels, _computeAllCCs){
   this->SetName("ConnectivityMetric");
 }
 
-template <class CFG, class WEIGHT>
-ConnectivityMetric<CFG, WEIGHT>::ConnectivityMetric(vector<CFG>& _samples, vector<string> _nodeConnection, bool _computeAllCCs)
-  : CoverageMetric<CFG, WEIGHT>(_samples, _nodeConnection, _computeAllCCs){
-  this->SetName("ConnectivityMetric");
-}
-
-template <class CFG, class WEIGHT>
-ConnectivityMetric<CFG, WEIGHT>::ConnectivityMetric(XMLNodeReader& _node, MPProblem* _problem, bool _computeAllCCs)
-  : CoverageMetric<CFG, WEIGHT>(_node, _problem, _computeAllCCs) {
+template<class MPTraits>
+ConnectivityMetric<MPTraits>::ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
+  : CoverageMetric<MPTraits>(_problem, _node, _computeAllCCs) {
     this->SetName("ConnectivityMetric");
 
     output.open((this->m_outFileName+".connectivity").c_str());
-
-    if(this->m_debug) PrintOptions(cout);
 }
 
-template <class CFG, class WEIGHT>
-void ConnectivityMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
+template<class MPTraits>
+ConnectivityMetric<MPTraits>::~ConnectivityMetric() {
+}
+
+template<class MPTraits>
+void 
+ConnectivityMetric<MPTraits>::PrintOptions(ostream& _os) {
   _os << "Percentage of queries solved" << endl;
 }
 
-template <class CFG, class WEIGHT>
-double ConnectivityMetric<CFG, WEIGHT>::operator()() {
-  CoverageMetric<CFG, WEIGHT>::operator()(); // Call CoverageMetric first
+template<class MPTraits>
+double 
+ConnectivityMetric<MPTraits>::operator()() {
+  CoverageMetric<MPTraits>::operator()(); // Call CoverageMetric first
 
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   static size_t numcalls = 0;
   int numQueries = 0;
   size_t sz = this->m_connections.size();

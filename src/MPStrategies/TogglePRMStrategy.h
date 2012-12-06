@@ -87,8 +87,6 @@ TogglePRMStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_vcLabel = _node.stringXMLParameter("vcLabel", false, "", "Label of Validity Checker Method");
   m_priority = _node.boolXMLParameter("priority", false, false, "Priority Queue");
   _node.warnUnrequestedAttributes();
-
-  PrintOptions(cout);
 }
 
 template<class MPTraits>

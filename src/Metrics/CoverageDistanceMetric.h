@@ -1,83 +1,89 @@
 #ifndef COVERAGEDISTANCEMETRIC_H
 #define COVERAGEDISTANCEMETRIC_H
 
-#include "MetricsMethod.h"
+#include "MetricMethod.h"
 
-template <class CFG, class WEIGHT>
-class CoverageDistanceMetric : public MetricsMethod {
+template<class MPTraits>
+class CoverageDistanceMetric : public MetricMethod<MPTraits> {
   public:
-    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::WeightType WeightType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename RoadmapGraph<CfgType, WeightType>::VID VID;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
 
-    CoverageDistanceMetric();
-    CoverageDistanceMetric(string _dmLabel, string _fileName);
-    CoverageDistanceMetric(XMLNodeReader& _node, MPProblem* _problem);
-    virtual ~CoverageDistanceMetric() {}
+    CoverageDistanceMetric(string _dmLabel = "", string _fileName = "");
+    CoverageDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~CoverageDistanceMetric();
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual double operator()();
+    double operator()();
 
   protected:
     //input
-    vector<CFG> m_samples;
+    vector<CfgType> m_samples;
     string m_dmLabel, m_outFileName;
     ofstream output;
 };
 
-template <class CFG, class WEIGHT>
-CoverageDistanceMetric<CFG, WEIGHT>::CoverageDistanceMetric() {
-  this->SetName("CoverageDistanceMetric");
-  m_dmLabel = "default";
-}
-
-template <class CFG, class WEIGHT>
-CoverageDistanceMetric<CFG, WEIGHT>::CoverageDistanceMetric(string _dmLabel, string _fileName) {
+template<class MPTraits>
+CoverageDistanceMetric<MPTraits>::CoverageDistanceMetric(string _dmLabel, string _fileName) {
   this->SetName("CoverageDistanceMetric");
   m_dmLabel = _dmLabel;
-  Roadmap<CFG, WEIGHT> covRdmp;
-  m_samples.clear();
-  covRdmp.ReadRoadmapGRAPHONLY(_fileName.c_str());
-  covRdmp.m_pRoadmap->GetVerticesData(m_samples); 
+
+  if(_fileName != ""){
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    RoadmapType* covRdmp = this->GetMPProblem()->GetRoadmap();
+    m_samples.clear();
+    covRdmp->Read(_fileName.c_str());
+    covRdmp->GetGraph()->GetVerticesData(m_samples);
+  }
 }
 
+template<class MPTraits>
+CoverageDistanceMetric<MPTraits>::CoverageDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node)
+  : MetricMethod<MPTraits>(_problem, _node) {
 
-template <class CFG, class WEIGHT>
-CoverageDistanceMetric<CFG, WEIGHT>::CoverageDistanceMetric(XMLNodeReader& _node, MPProblem* _problem)
-  : MetricsMethod(_node, _problem) {
   this->SetName("CoverageDistanceMetric");
   string coveragefilename = _node.stringXMLParameter("filename", true, "", "roadmap filename containing witness samples");
   m_outFileName = _node.stringXMLParameter("outfilename", true, "", "filename for recording results");
-  m_dmLabel = _node.stringXMLParameter("dmMethod", false, "default", "Distance Metric Method");
+  m_dmLabel = _node.stringXMLParameter("dmLabel", false, "default", "Distance Metric Method");
   output.open((m_outFileName+".coverage").c_str());
   //read in samples
-  Roadmap<CFG, WEIGHT> covRdmp;
+  RoadmapType* covRdmp = this->GetMPProblem()->GetRoadmap();
   m_samples.clear();
-  covRdmp.ReadRoadmapGRAPHONLY(coveragefilename.c_str());
-  covRdmp.m_pRoadmap->GetVerticesData(m_samples);
-  if(m_debug) PrintOptions(cout);
+  covRdmp->Read(coveragefilename.c_str());
+  covRdmp->GetGraph()->GetVerticesData(m_samples);
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
+CoverageDistanceMetric<MPTraits>::~CoverageDistanceMetric() {
+}
+
+template<class MPTraits>
 void
-CoverageDistanceMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
-  _os << "Distance Metric:" <<m_dmLabel<< endl;
-  _os << "Coverage set size:" <<m_samples.size() <<endl;
+CoverageDistanceMetric<MPTraits>::PrintOptions(ostream& _os) {
+  _os << "Distance Metric:" << m_dmLabel<< endl;
+  _os << "Coverage set size:" << m_samples.size() << endl;
 }
 
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 double
-CoverageDistanceMetric<CFG, WEIGHT>::operator()() {
-  Environment* env = GetMPProblem()->GetRoadmap()->GetEnvironment();
+CoverageDistanceMetric<MPTraits>::operator()() {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
   unsigned int i;
   vector <double> disVec;
   //from each sample in the coverage set, distance to the nearest nodes in the roadmap is calculated
-  for( typename vector<CFG>::iterator cfgit = m_samples.begin(); cfgit!=m_samples.end(); ++cfgit){
+  for(typename vector<CfgType>::iterator cfgit = m_samples.begin(); cfgit!=m_samples.end(); ++cfgit){
     double distance;
     vector<VID> kClosest;
-    BruteForceNF bfnf(m_dmLabel, "__CoverageDistanceMetricNF", GetMPProblem());
-    bfnf.KClosest(GetMPProblem()->GetRoadmap(), GetMPProblem()->GetRoadmap()->m_pRoadmap->descriptor_begin(), GetMPProblem()->GetRoadmap()->m_pRoadmap->descriptor_end(), *cfgit, 1, back_insert_iterator<vector<VID> >(kClosest));
-    CFG nearest = GetMPProblem()->GetRoadmap()->m_pRoadmap->find_vertex(kClosest[0])->property();
-    distance = GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel)->Distance(env, *cfgit, nearest);
+    BruteForceNF<MPTraits> bfnf(this->GetMPProblem(), m_dmLabel, "__CoverageDistanceMetricNF");
+    bfnf.KClosest(this->GetMPProblem()->GetRoadmap(), this->GetMPProblem()->GetRoadmap()->GetGraph()->descriptor_begin(), 
+                  this->GetMPProblem()->GetRoadmap()->GetGraph()->descriptor_end(), *cfgit, 1, 
+                  back_insert_iterator<vector<VID> >(kClosest));
+    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(kClosest[0])->property();
+    distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *cfgit, nearest);
     disVec.push_back(distance);
   } 
   //average of distance vector and standard deviation is calculated
@@ -91,8 +97,8 @@ CoverageDistanceMetric<CFG, WEIGHT>::operator()() {
   }
   stdDev = stdDev/disVec.size();
   stdDev = sqrt(stdDev);
-  output<<"Average of distances:"<<avgSum<<endl;
-  output<<"Standard Dev of distances:"<<stdDev<<endl;
+  output << "Average of distances:" << avgSum << endl;
+  output << "Standard Dev of distances:" << stdDev << endl;
   return avgSum;
 }
 

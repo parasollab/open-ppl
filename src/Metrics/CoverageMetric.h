@@ -1,47 +1,47 @@
 #ifndef COVERAGEMETRIC_H
 #define COVERAGEMETRIC_H
 
-#include "MetricsMethod.h"
-#include "Connector.h"
+#include "MetricMethod.h"
 
-template <class CFG, class WEIGHT>
-class CoverageMetric : public MetricsMethod {
+template<class MPTraits>
+class CoverageMetric : public MetricMethod<MPTraits> {
   public:
-    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
-    CoverageMetric();
-    CoverageMetric(vector<CFG>& _samples, vector<string> _nodeConnection, bool _computeAllCCs = false);
-    CoverageMetric(XMLNodeReader& _node, MPProblem* _problem, bool _computeAllCCs = false);
-    virtual ~CoverageMetric() {}
+    CoverageMetric(const vector<CfgType>& _samples=vector<CfgType>(), 
+        const vector<string>& _connectorLabels = vector<string>(), 
+        bool _computeAllCCs = false);
+    CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs = false);
+    virtual ~CoverageMetric();
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual double operator()();
+    double operator()();
 
   protected:
     //input
-    vector<CFG> m_samples;
-    vector<string> m_nodeConnectionLabels;
+    vector<CfgType> m_samples;
+    vector<string> m_connectorLabels;
     bool m_allData;
     string m_filename, m_outFileName;
     vector<vector<VID> > m_connections;
     ofstream output;
 };
 
-template <class CFG, class WEIGHT>
-CoverageMetric<CFG, WEIGHT>::CoverageMetric() {
+template<class MPTraits>
+CoverageMetric<MPTraits>::CoverageMetric(const vector<CfgType>& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
+  : m_samples(_samples), m_connectorLabels(_connectorLabels), m_allData(_computeAllCCs) {
   this->SetName("CoverageMetric");
 }
 
-template <class CFG, class WEIGHT>
-CoverageMetric<CFG, WEIGHT>::CoverageMetric(vector<CFG>& _samples, vector<string> _nodeConnection, bool _computeAllCCs)
-  : m_samples(_samples), m_nodeConnectionLabels(_nodeConnection), m_allData(_computeAllCCs) {
-  this->SetName("CoverageMetric");
-}
-
-template <class CFG, class WEIGHT>
-CoverageMetric<CFG, WEIGHT>::CoverageMetric(XMLNodeReader& _node, MPProblem* _problem, bool _computeAllCCs)
-  : MetricsMethod(_node, _problem) {
+template<class MPTraits>
+CoverageMetric<MPTraits>::CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
+  : MetricMethod<MPTraits>(_problem, _node) {
     this->SetName("CoverageMetric");
 
     m_filename = _node.stringXMLParameter("filename", true, "", "filename containing witness samples");
@@ -49,83 +49,87 @@ CoverageMetric<CFG, WEIGHT>::CoverageMetric(XMLNodeReader& _node, MPProblem* _pr
     //read in samples
     m_samples.clear();
     ifstream is(m_filename.c_str());
-    copy(istream_iterator<CFG>(is), istream_iterator<CFG>(), back_insert_iterator<vector<CFG> >(m_samples));
+    copy(istream_iterator<CfgType>(is), istream_iterator<CfgType>(), back_insert_iterator<vector<CfgType> >(m_samples));
     is.close();
 
     output.open((m_outFileName+".coverage").c_str());
 
     m_allData = _node.boolXMLParameter("computeAllCCs", false, _computeAllCCs, "flag when set to true computes coverage to all ccs, not just the first connectable cc");
 
-    m_nodeConnectionLabels.clear();
-    for(XMLNodeReader::childiterator I = _node.children_begin(); I != _node.children_end(); ++I) {
-      if(I->getName() == "NodeConnectionMethod") {
-        m_nodeConnectionLabels.push_back(I->stringXMLParameter("method", true, "", "connection method label"));
-        I->warnUnrequestedAttributes();
+    m_connectorLabels.clear();
+    for(XMLNodeReader::childiterator i = _node.children_begin(); i != _node.children_end(); ++i) {
+      if(i->getName() == "Connector") {
+        m_connectorLabels.push_back(i->stringXMLParameter("label", true, "", "connection method label"));
+        i->warnUnrequestedAttributes();
       }
       else {
-        I->warnUnknownNode();
+        i->warnUnknownNode();
         exit(-1);
       }
     }
-    if(m_nodeConnectionLabels.empty()) {
+    if(m_connectorLabels.empty()) {
       cerr << "CoverageMetric: you must specify at lease one node connection method.\n";
       exit(-1);
     }
-
-    if(m_debug) PrintOptions(cout);
 }
 
-template <class CFG, class WEIGHT>
-void CoverageMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
+template<class MPTraits>
+CoverageMetric<MPTraits>::~CoverageMetric() {
+}
+
+template<class MPTraits>
+void 
+CoverageMetric<MPTraits>::PrintOptions(ostream& _os) {
   _os << "Percentage of connection" << endl;
   _os << "\twitness samples from \"" << m_filename << "\"\n";
   _os << "\tall_data = " << m_allData << endl;
   _os << "\tnode_connection_labels = ";
-  copy(m_nodeConnectionLabels.begin(), m_nodeConnectionLabels.end(), ostream_iterator<string>(_os, " "));
+  copy(m_connectorLabels.begin(), m_connectorLabels.end(), ostream_iterator<string>(_os, " "));
   _os << endl;
 }
 
-template <class CFG, class WEIGHT>
-double CoverageMetric<CFG, WEIGHT>::operator()() {
+template<class MPTraits>
+double 
+CoverageMetric<MPTraits>::operator()() {
+
   static size_t numcalls = 0;
 
-  Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetRoadmap();
-  RoadmapGraph<CFG, WEIGHT>* pMap = rmap->m_pRoadmap;
-  Connector<CFG, WEIGHT>* cn = GetMPProblem()->GetMPStrategy()->GetConnector();
+  RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
+  GraphType* rgraph = rmap->GetGraph();
 
   m_connections = vector<vector<VID> >(m_samples.size());
 
-  stapl::sequential::vector_property_map< RoadmapGraph<CFG, WEIGHT>, size_t > cmap;
+  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
   vector<pair<size_t, VID> > ccs;
-  typename vector<pair<size_t, VID> >::iterator CC;
-  get_cc_stats(*pMap, cmap, ccs);
+  typename vector<pair<size_t, VID> >::iterator ccit;
+  get_cc_stats(*rgraph, cmap, ccs);
 
   vector<VID> sampleList, cc;
-  StatClass Stats;
+  StatClass stats;
 
   for(size_t i=0; i<m_samples.size(); ++i) {
-    VID sampleVID = rmap->m_pRoadmap->AddVertex(m_samples[i]);
+    VID sampleVID = rgraph->AddVertex(m_samples[i]);
     sampleList.clear();
     sampleList.push_back(sampleVID);
 
-    for(CC = ccs.begin(); CC != ccs.end(); ++CC) {
+    for(ccit = ccs.begin(); ccit != ccs.end(); ++ccit) {
       cc.clear();
       cmap.reset();
-      get_cc(*pMap, cmap, CC->second, cc);
+      get_cc(*rgraph, cmap, ccit->second, cc);
 
-      size_t degreeBefore = pMap->get_out_degree(sampleVID);
+      size_t degreeBefore = rgraph->get_out_degree(sampleVID);
 
-      for(vector<string>::iterator I = m_nodeConnectionLabels.begin(); I != m_nodeConnectionLabels.end(); ++I) {
-   	cn->GetMethod(*I)->Connect(rmap, Stats, cmap, sampleList.begin(), sampleList.end(), cc.begin(), cc.end());
+      for(vector<string>::iterator i = m_connectorLabels.begin(); i != m_connectorLabels.end(); ++i) {
+        this->GetMPProblem()->GetConnector(*i)->Connect(rmap, stats, cmap, sampleList.begin(), sampleList.end(), cc.begin(), cc.end());
       }
 
-      if((pMap->get_out_degree(sampleVID)) > degreeBefore) {
-        m_connections[i].push_back(CC->second);
+      if((rgraph->get_out_degree(sampleVID)) > degreeBefore) {
+        m_connections[i].push_back(ccit->second);
         if(!m_allData)
           break;
       }
     }
-    rmap->m_pRoadmap->delete_vertex(sampleVID);
+    rgraph->delete_vertex(sampleVID);
   }
   int numConnections = 0;
   for(size_t i=0; i<m_connections.size(); ++i) {

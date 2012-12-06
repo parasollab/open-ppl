@@ -1,74 +1,67 @@
 #ifndef CCDISTANCEMETRIC_H
 #define CCDISTANCEMETRIC_H
 
-#include "MetricsMethod.h"
-#include "DistanceMetrics.h"
+#include "MetricMethod.h"
 
-template <class CFG, class WEIGHT>
-class CCDistanceMetric : public MetricsMethod {
+template<class MPTraits>
+class CCDistanceMetric : public MetricMethod<MPTraits> {
   public:
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::GraphType GraphType;
 
-    CCDistanceMetric();
-    CCDistanceMetric(string _dm, string _nf);
-    CCDistanceMetric(XMLNodeReader& _node, MPProblem* _problem);
-    virtual ~CCDistanceMetric() {}
+    CCDistanceMetric(string _dm="");
+    CCDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~CCDistanceMetric();
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual double operator()();
+    double operator()();
 
   protected:
-    string m_dm;
-    string m_nf;
+    string m_dmLabel;
 };
 
-template <class CFG, class WEIGHT>
-CCDistanceMetric<CFG, WEIGHT>::CCDistanceMetric() {
-  this->SetName("CCDistanceMetric");
-}
-
-template <class CFG, class WEIGHT>
-CCDistanceMetric<CFG, WEIGHT>::CCDistanceMetric(string _dm, string _nf)
-  : m_dm(_dm), m_nf(_nf) {
+template<class MPTraits>
+CCDistanceMetric<MPTraits>::CCDistanceMetric(string _dm)
+  : m_dmLabel(_dm) {
     this->SetName("CCDistanceMetric");
 }
 
-template <class CFG, class WEIGHT>
-CCDistanceMetric<CFG, WEIGHT>::CCDistanceMetric(XMLNodeReader& _node, MPProblem* _problem)
-  : MetricsMethod(_node, _problem) {
+template<class MPTraits>
+CCDistanceMetric<MPTraits>::CCDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node)
+  : MetricMethod<MPTraits>(_problem, _node) {
     this->SetName("CCDistanceMetric");
 
-    m_dm = _node.stringXMLParameter("dmMethod", true, "", "distance metric method");
-    m_nf = _node.stringXMLParameter("nfMethod", true, "", "neighborhood finder method");
-
-    if(m_debug) PrintOptions(cout);
+    m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "distance metric method");
 }
 
-template <class CFG, class WEIGHT>
-void CCDistanceMetric<CFG, WEIGHT>::PrintOptions(ostream& _os) {
+template<class MPTraits>
+CCDistanceMetric<MPTraits>::~CCDistanceMetric() {
+}
+
+template<class MPTraits>
+void 
+CCDistanceMetric<MPTraits>::PrintOptions(ostream& _os) {
   _os << "CC distance" << endl;
-  _os << "\tdistance metric = " << m_dm << endl;
-  _os << "\tneighborhood finder = " << m_nf << endl;
+  _os << "\tdistance metric = " << m_dmLabel << endl;
 }
 
-template <class CFG, class WEIGHT>
-double CCDistanceMetric<CFG, WEIGHT>::operator()() {
+template<class MPTraits>
+double 
+CCDistanceMetric<MPTraits>::operator()() {
 
-  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
-  typedef typename RoadmapGraphType::VID VID;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
-  
   vector<double> distance;
   double ccDistance;
-  Roadmap<CFG, WEIGHT>* rmap = GetMPProblem()->GetRoadmap();
-  RoadmapGraphType* pMap = rmap->m_pRoadmap;
-  NeighborhoodFinder::NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(m_nf);
+  RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
+  GraphType* pMap = rmap->GetGraph();
 
-  Environment* pEnv = rmap->GetEnvironment();
+  Environment* pEnv = this->GetMPProblem()->GetEnvironment();
 
   //get ccs
   vector<pair<size_t, VID> > ccs;
-  stapl::sequential::vector_property_map< RoadmapGraph<CFG, WEIGHT>, size_t > cmap;
+  stapl::sequential::vector_property_map<GraphType, size_t > cmap;
   get_cc_stats(*pMap, cmap, ccs);
 
   //filter out singletons
@@ -91,10 +84,9 @@ double CCDistanceMetric<CFG, WEIGHT>::operator()() {
       get_cc(*pMap, cmap, ccj->second, ccjVids);
 
       vector<pair<VID, VID> > pairs;
-      nf->KClosestPairs(rmap, cciVids.begin(), cciVids.end(), ccjVids.begin(), ccjVids.end(), 1, back_inserter(pairs));
-      distance.push_back(this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm)->Distance(pEnv,
-                                                                                              GetCfg()(pMap, pairs[0].first),
-                                                                                              GetCfg()(pMap, pairs[0].second)));
+      distance.push_back(this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(pEnv,
+                                                                                 pMap->GetCfg(pairs[0].first),
+                                                                                 pMap->GetCfg(pairs[0].second)));
     }
   }
   ccDistance = *(distance.begin());

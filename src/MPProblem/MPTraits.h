@@ -22,11 +22,12 @@
 
 //sampler includes
 #include "Samplers/UniformRandomSampler.h"
-#include "Samplers/ObstacleBasedSampler.h"
-#include "Samplers/MixSampler.h"
 #include "Samplers/GaussianSampler.h"
-#include "Samplers/GridSampler.h"
 #include "Samplers/BridgeTestSampler.h"
+#include "Samplers/ObstacleBasedSampler.h"
+#include "Samplers/UniformObstacleBasedSamplers.h"
+#include "Samplers/GridSampler.h"
+#include "Samplers/MixSampler.h"
 
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
@@ -41,6 +42,12 @@
 //metric includes
 #include "Metrics/NumNodesMetric.h"
 #include "Metrics/TimeMetric.h"
+#include "Metrics/NumEdgesMetric.h"
+#include "Metrics/DiameterMetric.h"
+#include "Metrics/CCDistanceMetric.h"
+#include "Metrics/CoverageMetric.h"
+#include "Metrics/ConnectivityMetric.h"
+#include "Metrics/CoverageDistanceMetric.h"
 
 //map evaluator includes
 #include "MapEvaluators/Query.h"
@@ -114,6 +121,7 @@ struct MPTraits{
     GaussianSampler<MPTraits>,
     BridgeTestSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
+    UniformObstacleBasedSampler<MPTraits>,
     //MedialAxisSampler<MPTraits>,
     GridSampler<MPTraits>,
     MixSampler<MPTraits>
@@ -146,12 +154,13 @@ struct MPTraits{
   //types of metrics available in our world
   typedef boost::mpl::list<
     NumNodesMetric<MPTraits>,
-    //NumEdgesMetric<MPTraits>,
-    TimeMetric<MPTraits>//,
-    //CoverageMetric<MPTraits>,
-    //ConnectivityMetric<MPTraits>,
-    //DiameterMetric<MPTraits>,
-    //CCDistanceMetric<MPTraits>
+    NumEdgesMetric<MPTraits>,
+    TimeMetric<MPTraits>,
+    CoverageMetric<MPTraits>,
+    ConnectivityMetric<MPTraits>,
+    DiameterMetric<MPTraits>,
+    CCDistanceMetric<MPTraits>,
+    CoverageDistanceMetric<MPTraits>
     > MetricMethodList;
   
   //types of map evaluators available in our world
