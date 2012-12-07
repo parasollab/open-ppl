@@ -3,14 +3,35 @@
 
 #include "DistanceMetricMethod.h"
 
-class CenterOfMassDistance : public DistanceMetricMethod {
+template<class MPTraits>
+class CenterOfMassDistance : public DistanceMetricMethod<MPTraits> {
   public:
     CenterOfMassDistance();
-    CenterOfMassDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn = true);
+    CenterOfMassDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~CenterOfMassDistance();
 
     virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
-   
 };
+
+template<class MPTraits>
+CenterOfMassDistance<MPTraits>::CenterOfMassDistance() : DistanceMetricMethod<MPTraits>() {
+  this->m_name = "CenterOfMass";
+}
+
+template<class MPTraits>
+CenterOfMassDistance<MPTraits>::CenterOfMassDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : 
+  DistanceMetricMethod<MPTraits>(_problem, _node, true) {
+    this->m_name = "CenterOfMass";
+  }
+
+template<class MPTraits>
+CenterOfMassDistance<MPTraits>::~CenterOfMassDistance() {
+}
+
+template<class MPTraits>
+double 
+CenterOfMassDistance<MPTraits>::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
+  return (_c1.GetRobotCenterofMass(_env) - _c2.GetRobotCenterofMass(_env)).magnitude();
+}
 
 #endif
