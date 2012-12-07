@@ -21,7 +21,7 @@ class StraightLine: public LocalPlannerMethod<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    StraightLine(string _vcMethod = "", bool _search = false);
+    StraightLine(string _vcLabel = "", bool _evalation = false);
     StraightLine(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~StraightLine();
 
@@ -102,13 +102,13 @@ class StraightLine: public LocalPlannerMethod<MPTraits> {
           bool _checkCollision = true, 
           bool _savePath = false, bool _saveFailedPath = false);
 
-    string m_vcMethod;
-    int m_binarySearch;
+    string m_vcLabel;
+    bool m_binaryEvaluation;
 };
 
 template<class MPTraits>
-StraightLine<MPTraits>::StraightLine(string _vcMethod, bool _search) : 
-  LocalPlannerMethod<MPTraits>(), m_vcMethod(_vcMethod), m_binarySearch(_search) {
+StraightLine<MPTraits>::StraightLine(string _vcLabel, bool _evalation) : 
+  LocalPlannerMethod<MPTraits>(), m_vcLabel(_vcLabel), m_binaryEvaluation(_evalation) {
     this->SetName("StraightLine");
   }
 
@@ -116,8 +116,8 @@ template<class MPTraits>
 StraightLine<MPTraits>::StraightLine(MPProblemType* _problem, XMLNodeReader& _node) :
   LocalPlannerMethod<MPTraits>(_problem, _node) {
     this->SetName("StraightLine");
-    m_binarySearch = _node.numberXMLParameter("binary_search", false, 0, 0, 1, "binary search"); 
-    m_vcMethod = _node.stringXMLParameter("vc_method", true, "", "Validity Test Method");
+    m_binaryEvaluation = _node.boolXMLParameter("binaryEvaluation", false, false, "binary evalution along the edge"); 
+    m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
   }
 
 template<class MPTraits>
@@ -127,8 +127,8 @@ template<class MPTraits>
 void
 StraightLine<MPTraits>::PrintOptions(ostream& _os) {
   _os << "    " << this->GetName() << "::  ";
-  _os << "binary search = " << " " << m_binarySearch << " ";
-  _os << "vcMethod = " << " " << m_vcMethod << " ";
+  _os << "binary evaluation = " << " " << (m_binaryEvaluation ? "true" : "false") << " ";
+  _os << "vcLabel = " << " " << m_vcLabel << " ";
   _os << endl;
 }
 
@@ -148,7 +148,7 @@ StraightLine<MPTraits>::IsConnectedFunc(Environment* _env, StatClass& _stats,
   int cdCounter = 0; 
 
   bool connected;
-  if(m_binarySearch) 
+  if(m_binaryEvaluation) 
     connected = IsConnectedSLBinary(_env, _stats, _dm,
         _c1, _c2, _col, _lpOutput, 
         cdCounter, _positionRes, _orientationRes, 
@@ -177,7 +177,7 @@ StraightLine<MPTraits>::IsConnectedFunc(Environment* _env, StatClass& _stats,
     bool _savePath, bool _saveFailedPath,
     typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy) {
 
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcMethod);
+  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   string callee = this->GetName() + "::IsConnectedSLSequential";
   CDInfo cdInfo;
 
@@ -201,7 +201,7 @@ StraightLine<MPTraits>::IsConnectedFunc(Environment* _env, StatClass& _stats,
     if(!success)
       return false;
 
-    if(m_binarySearch) {
+    if(m_binaryEvaluation) {
       connected = (IsConnectedSLBinary(_env, _stats, _dm, 
             _c1, intermediate, 
             _col, _lpOutput, cdCounter, 
@@ -230,7 +230,7 @@ StraightLine<MPTraits>::IsConnectedFunc(Environment* _env, StatClass& _stats,
 
     }
   } else {
-    if(m_binarySearch) {
+    if(m_binaryEvaluation) {
       connected = IsConnectedSLBinary(_env, _stats, _dm,
           _c1, _c2,
           _col, _lpOutput, cdCounter, 
@@ -261,7 +261,7 @@ StraightLine<MPTraits>::IsConnectedSLSequential(Environment* _env, StatClass& _s
     bool _checkCollision, 
     bool _savePath, bool _saveFailedPath) {
   
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcMethod);
+  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   
   int nTicks;
   CfgType tick;
@@ -274,7 +274,6 @@ StraightLine<MPTraits>::IsConnectedSLSequential(Environment* _env, StatClass& _s
 #endif
   string callee = this->GetName() + "::IsConnectedSLSequential";
   CDInfo cdInfo;
-
 
   int nIter = 0;
   for(int i = 1; i < nTicks; i++){ //don't need to check the ends, _c1 and _c2
@@ -321,7 +320,7 @@ StraightLine<MPTraits>::IsConnectedSLBinary(Environment* _env, StatClass& _stats
     bool _checkCollision, 
     bool _savePath, bool _saveFailedPath) {
   
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcMethod);
+  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
 
   if(!_checkCollision)
     return IsConnectedSLSequential(_env, _stats, _dm, _c1, _c2,
@@ -341,7 +340,10 @@ StraightLine<MPTraits>::IsConnectedSLBinary(Environment* _env, StatClass& _stats
 #endif
 
   deque<pair<int,int> > Q;
-  Q.push_back(make_pair(0, nTicks));
+
+  //only perform binary evaluation when the nodes are further apart than the resolution
+  if(nTicks > 1)
+    Q.push_back(make_pair(0, nTicks));
 
   while(!Q.empty()) {
     pair<int,int> p = Q.front();
@@ -349,28 +351,21 @@ StraightLine<MPTraits>::IsConnectedSLBinary(Environment* _env, StatClass& _stats
     int j = p.second;
     Q.pop_front();
 
-    int mid = i + (int)floor(((double)(j-i))/2);
+    int mid = i + (j-i)/2;
+    
     CfgType midCfg = _c1;
-    /*
-    // this produces the exact same intermediate cfgs as the sequential 
-    // version (no roundoff errors), but it is slow
-    for(int z=0; z<mid; ++z)
-    midCfg.Increment(incr);
-    */
-    // this produces almost the same intermediate cfgs as the sequential
-    // version, but there may be some roundoff errors; it is much faster
-    // than the above solution; the error should be much smaller than the
-    // resolution so it should not be a problem
     midCfg.multiply(incr, mid);
     midCfg.add(_c1, midCfg);
 
     _cdCounter++;
+    
     if(!midCfg.InBoundary(_env) ||
         !vcm->IsValid(midCfg, _env, _stats, cdInfo, &callee) ) {
       if(midCfg.InBoundary(_env))
         _col=midCfg;
       return false;
-    } else {
+    } 
+    else {
       if(i+1 != mid) 
         Q.push_back(make_pair(i, mid));
       if(mid+1 != j) 

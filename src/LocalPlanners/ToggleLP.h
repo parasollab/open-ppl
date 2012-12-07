@@ -59,7 +59,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
 
   private:
     //input
-    string m_vc, m_lp;
+    string m_vcLabel, m_lpLabel;
     int m_maxIter;
 
     //needed variables for record keeping and cycle detection
@@ -71,7 +71,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
 
 template<class MPTraits>
 ToggleLP<MPTraits>::ToggleLP(string _vc, string _lp, int _maxIter) : 
-  m_vc(_vc), m_lp(_lp), m_maxIter(_maxIter) {
+  m_vcLabel(_vc), m_lpLabel(_lp), m_maxIter(_maxIter) {
     InitVars();
   }
 
@@ -79,8 +79,8 @@ template<class MPTraits>
 ToggleLP<MPTraits>::ToggleLP(MPProblemType* _problem, XMLNodeReader& _node) : LocalPlannerMethod<MPTraits>(_problem, _node) {
   InitVars();
   
-  m_vc = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
-  m_lp = _node.stringXMLParameter("lpMethod", true, "", "Local Planner Method");
+  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
+  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner Method");
   m_maxIter = _node.numberXMLParameter("maxIter", false, 10, 0, MAX_INT, "Maximum number of m_iterations");
 
   _node.warnUnrequestedAttributes();
@@ -102,8 +102,8 @@ void
 ToggleLP<MPTraits>::PrintOptions(ostream& _os) {
   _os << "    " << this->GetName() << "::  ";
   _os << "maxIter =  " << m_maxIter << " ";
-  _os << "vc =  " << m_vc << " ";
-  _os << "lp =  " << m_lp << " ";
+  _os << "vc =  " << m_vcLabel << " ";
+  _os << "lp =  " << m_lpLabel << " ";
   _os << endl;
 }
 
@@ -208,8 +208,8 @@ ToggleLP<MPTraits>::IsConnectedToggle(Environment* _env, StatClass& _stats,
   }
 
   string Callee(this->GetNameAndLabel()+"::IsConnectedToggle");
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vc);
-  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lp);
+  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
 
   if(lpMethod->IsConnected(_env, _stats, _dm, _c1, _c2, _col, _lpOutput, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath)){
     return true;
@@ -357,15 +357,15 @@ ToggleLP<MPTraits>::ToggleConnect(Environment* _env, StatClass& _stats, Distance
   if(this->m_debug) cout<<"ToggleConnect::"<<_toggle<<"\n\ts::"<<_s<<"\n\tg::"<<_g<<"\n\tn1::"<<_n1<<"\n\tn2::"<<_n2<<endl;
 
   //set up variables for VC and LP
-  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lp);
+  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
 
   if(this->m_debug) VDAddTempEdge(_s, _g);
 
   //check connection between source and goal
   CfgType c; // collision CfgType
-  if(!_toggle) this->GetMPProblem()->GetValidityChecker(m_vc)->ToggleValidity();
+  if(!_toggle) this->GetMPProblem()->GetValidityChecker(m_vcLabel)->ToggleValidity();
   bool connect = lpMethod->IsConnected(_env, _stats, _dm, _s, _g, c, _lpOutput, _positionRes, _orientationRes, true, false, false);
-  if(!_toggle) this->GetMPProblem()->GetValidityChecker(m_vc)->ToggleValidity();
+  if(!_toggle) this->GetMPProblem()->GetValidityChecker(m_vcLabel)->ToggleValidity();
 
   if(this->m_debug) cout<<"connect::"<<connect<<"\n\tc::"<<c<<endl;
 
@@ -420,7 +420,7 @@ vector<typename MPTraits::CfgType>
 ToggleLP<MPTraits>::ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
         const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes){
   StatClass dummyStats;
-  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lp);
+  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
   LPOutput<MPTraits>* dummyLPOutput = new LPOutput<MPTraits>();
   CfgType col;

@@ -31,7 +31,7 @@
     </Connectors>
     
     <LocalPlanners>
-      <StraightLine label="sl" binary_search="0" vc_method="cd"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd"/>
     </LocalPlanners>
     
     <MapEvaluators>
