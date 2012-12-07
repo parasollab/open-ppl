@@ -25,9 +25,10 @@
 #include "Samplers/BridgeTestSampler.h"
 #include "Samplers/GaussianSampler.h"
 #include "Samplers/GridSampler.h"
+#include "Samplers/MedialAxisSampler.h"
 #include "Samplers/MixSampler.h"
 #include "Samplers/ObstacleBasedSampler.h"
-#include "Samplers/UniformObstacleBasedSamplers.h"
+#include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
 
 //local planner includes
@@ -122,7 +123,7 @@ struct MPTraits{
     BridgeTestSampler<MPTraits>,
     GaussianSampler<MPTraits>,
     GridSampler<MPTraits>,
-    //MedialAxisSampler<MPTraits>,
+    MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,

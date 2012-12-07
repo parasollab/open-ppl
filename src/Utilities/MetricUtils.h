@@ -707,34 +707,4 @@ StatClass::DisplayCCStats(ostream& _os, GraphType& _g, int _maxCCPrint=-1)  {
 #endif
 }
 
-
-#ifndef _H_UTILITY
-///Return minimum between a and b.
-inline double min(double _a, double _b) {
-  return _a < _b ? _a : _b;
-}
-
-///Return maximum between a and b.
-inline double max(double _a, double _b) {
-  return _a > _b ? _a : _b;
-}
-
-/// Return the square of a.
-inline double sqr(double _a) {
-  return _a*_a;
-}
-#endif
-
-/*struct RoadmapClearanceStats{
-  double m_avgClearance;
-  double m_minClearance;
-  double m_clearanceVariance;
-  double m_pathLength;
-};
-
-RoadmapClearanceStats RoadmapClearance(Roadmap<CfgType, WeightType> _g, const ClearanceParams& _cParams);
-
-double MinEdgeClearance(const CfgType& _c3, const CfgType& _c2, const WeightType& _weight, const ClearanceParams& _cParams);
-*/
-
 #endif

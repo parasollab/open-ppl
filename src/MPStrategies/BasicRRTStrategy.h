@@ -44,7 +44,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     void ConnectTrees(VID _recentlyGrown);
     void ConnectNeighbors(VID _newVID, VID _nearVID);
     void EvaluateGoals();
-    //RoadmapClearanceStats PathClearance();  
+    
     vector<string> m_evaluators;
     string m_sampler;
     string m_lp;
@@ -522,56 +522,5 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
     }
   }
 }
-
-//////////////////////////////////
-///DO NOT DELETE
-///SHOULD BE MOVED OUTSIDE OF CLASS
-///
-/// -Jory 11/30/12
-//////////////////////////////////
-/*template<class MPTraits>
-RoadmapClearanceStats 
-BasicRRTStrategy<MPTraits>::PathClearance(){
-  RoadmapGraph<CfgType, WeightType>* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  int svid = graph->GetVID(m_roots[0]);
-  int gvid = graph->GetVID(m_goals[0]);
-  vector<VID> path;
-  find_path_dijkstra(*(graph), svid, gvid, path, WeightType::MaxWeight());
-  RoadmapClearanceStats stats;
-  typedef RoadmapGraph<CfgType, WeightType>::EI EI;
-  typedef RoadmapGraph<CfgType, WeightType>::VI VI;
-  typedef RoadmapGraph<CfgType, WeightType>::EID EID;
-  double runningTotal = 0;
-  double minClearance = 1e6;
-  double pathLength = 0;
-  vector<double> clearanceVec;
-  for(size_t i = 0; i < path.size() - 1; i++){
-    EI ei;
-    VI vi;
-    EID ed(path[i], path[i+1]);
-    graph->find_edge(ed, vi, ei);
-    WeightType weight = (*ei).property();
-    pathLength += weight.Weight();
-    ClearanceParams cParams(this->GetMPProblem(), m_vc, m_dm, false);
-    double currentClearance = MinEdgeClearance((*graph->find_vertex((*ei).source())).property(),
-      (*graph->find_vertex((*ei).target())).property(), 
-      weight, cParams); 
-    clearanceVec.push_back(currentClearance);
-    runningTotal += currentClearance;
-    if(currentClearance < minClearance){
-      minClearance = currentClearance;    
-    }
-  }
-  stats.m_minClearance = minClearance;
-  double average = runningTotal / (path.size()/2);
-  stats.m_avgClearance = average;
-  double varSum = 0;
-  for(vector<double>::iterator it = clearanceVec.begin(); it != clearanceVec.end(); it++){
-    varSum+=pow(((*it) - average), 2);  
-  }
-  stats.m_clearanceVariance = varSum / clearanceVec.size();
-  stats.m_pathLength = pathLength;
-  return stats;
-}*/
 
 #endif
