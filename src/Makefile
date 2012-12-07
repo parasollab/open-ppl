@@ -37,8 +37,6 @@ include ${PMPL_DIR}/Makefile.PMPLdefaults
 ifndef ROBOT_DEF
   # define robot type
   ROBOT_DEF = -DPMPManifold
-  #ROBOT_DEF = -DPMPCfg2D
-  #ROBOT_DEF = -DPMPCfg2DWithRot
   #ROBOT_DEF = -DPMPCfgSurface
   #ROBOT_DEF = -DPMPReachDistCC
   #ROBOT_DEF = -DPMPReachDistCCFixed

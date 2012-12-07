@@ -13,12 +13,6 @@
 #if (defined(PMPManifold))
 #include "Cfg/ManifoldCfg.h"
 typedef ManifoldCfg PMPLCfgType;
-#elif (defined(PMPCfg2D))
-#include "Cfg/Cfg_2D.h"
-typedef Cfg_2D PMPLCfgType;
-#elif (defined(PMPCfg2DWithRot))
-#include "Cfg/Cfg_2D_withRot.h"
-typedef Cfg_2D_withRot PMPLCfgType;
 #elif (defined(PMPCfgSurface))
 #include "Cfg/CfgSurface.h"
 typedef CfgSurface PMPLCfgType;

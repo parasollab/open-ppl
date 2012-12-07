@@ -260,8 +260,6 @@ PMPL_OBJS = \
 	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
 	Cfg/Cfg.o \
 	Cfg/ManifoldCfg.o \
-	Cfg/Cfg_2D.o \
-	Cfg/Cfg_2D_withRot.o \
 	Cfg/CfgSurface.o \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
