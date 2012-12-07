@@ -614,9 +614,3 @@ Cfg::PolyApprox(Environment* _env) const {
   return result;
 }
 
-/*double
-Cfg::GetSmoothingValue(StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams) {
-  CfgType tmp;
-  GetApproxCollisionInfo(*((CfgType*)this), tmp, _stats, _cdInfo, _cParams);
-  return _cdInfo.m_minDist;
-}*/

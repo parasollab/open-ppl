@@ -2,19 +2,76 @@
 #define OBSTACLECLEARANCEVALIDITY_H_
 
 #include "ValidityCheckerMethod.h"
+#include "Utilities/MedialAxisUtilities.h"
 
-class ObstacleClearanceValidity : public ValidityCheckerMethod {
+template<class MPTraits>
+class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
   public:
-    ObstacleClearanceValidity(const ClearanceParams& _cParams = ClearanceParams());
-    ObstacleClearanceValidity(XMLNodeReader& _node, MPProblem* _problem);
+    typedef typename MPTraits::CfgType CfgType;
+
+    ObstacleClearanceValidity(double _obstClearance = 1.0, const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
+    ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual ~ObstacleClearanceValidity() { }
 
-    virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
-        CDInfo& _cdInfo, string* _callName);
+    virtual void PrintOptions(ostream& _os);
+
+    virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
 
   private:
-    ClearanceParams m_cParams;
+    double m_obstClearance;
+    ClearanceUtility<MPTraits> m_clearanceUtil;
 };
+
+template<class MPTraits>
+ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(double _obstClearance, const ClearanceUtility<MPTraits>& _c) :
+  m_obstClearance(_obstClearance), m_clearanceUtil(_c) {
+    this->m_name = "ObstacleClearance";
+  }
+
+template<class MPTraits>
+ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+  ValidityCheckerMethod<MPTraits>(_problem, _node), m_clearanceUtil(_problem, _node) {
+    this->m_name = "ObstacleClearance";
+    m_obstClearance = _node.numberXMLParameter("obstClearance", true, 1.0, 0.0, MAX_DBL, "Required clearance from obstacles");
+  }
+
+template<class MPTraits>
+void
+ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
+  _os << "\tRequired Clearance::" << m_obstClearance << endl;
+  _os << "\tClearanceUtil::" << endl;
+  m_clearanceUtil.PrintOptions(_os);
+}
+
+template<class MPTraits>
+bool 
+ObstacleClearanceValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName) {
+
+  shared_ptr<Boundary> bb = _env->GetBoundary();
+  _cdInfo.ResetVars();
+  _cdInfo.m_retAllInfo = true;
+
+  CfgType cfg = _cfg;
+  CfgType dummy;
+
+  bool valid = m_clearanceUtil.CollisionInfo(cfg, dummy, bb, _cdInfo);
+
+  if(this->m_debug){
+    cout << "CFG::" << _cfg << endl;
+    cout << "ClrCfg::" << dummy << endl;
+    cout << "VALID::" << valid << endl;
+    cout << "Dist::" << _cdInfo.m_minDist << endl;
+  }
+
+  if (!valid || _cdInfo.m_minDist < m_obstClearance){
+    _cfg.SetLabel("VALID", false);
+    return false;
+  }
+  else{
+    _cfg.SetLabel("VALID", true);
+    return true;
+  }
+}
 
 #endif

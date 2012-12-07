@@ -27,6 +27,7 @@ using boost::shared_ptr;
 
 #include "MPProblem/Robot.h"
 #include "Utilities/MPUtils.h"
+#include "Utilities/MedialAxisUtilities.h"
 
 class Cfg;
 class StatClass;
@@ -225,11 +226,10 @@ class Cfg {
     virtual void GetRandomCfgCenterOfMass(Environment *_env, shared_ptr<Boundary> bb) = 0;
     
     template<class DistanceMetricPointer>
-    void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true){
-      cerr << "Error::Get Random Ray not implemented in Cfg derived class, exiting." << endl;
-      exit(1);
-    }
-    //virtual double GetSmoothingValue(StatClass& _stats, CDInfo& _cdInfo, const ClearanceParams& _cParams);
+      void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true);
+
+    template<class MPTraits>
+      double GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb);
 
     virtual bool ConfigEnvironment(Environment* _env) const = 0;
 
@@ -321,6 +321,22 @@ class Cfg {
 #endif
 
 }; // class Cfg
+
+template<class DistanceMetricPointer>
+void
+Cfg::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm){
+  cerr << "Error::Get Random Ray not implemented in Cfg derived class, exiting." << endl;
+  exit(1);
+}
+
+template<class MPTraits>
+double
+Cfg::GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb){
+  CDInfo cdInfo;
+  typename MPTraits::CfgType tmp;
+  _clearanceUtils.CollisionInfo(*((typename MPTraits::CfgType*)this), tmp, _bb, cdInfo);
+  return cdInfo.m_minDist;
+}
 
 #ifdef _PARALLEL
 namespace stapl {

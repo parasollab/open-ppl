@@ -13,6 +13,7 @@
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
 #include "ValidityCheckers/CollisionDetectionValidity.h"
+#include "ValidityCheckers/ObstacleClearanceValidity.h"
 #ifdef PMPCfgSurface
 #include "ValidityCheckers/SurfaceValidity.h"
 #endif
@@ -21,13 +22,13 @@
 #include "NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
-#include "Samplers/UniformRandomSampler.h"
-#include "Samplers/GaussianSampler.h"
 #include "Samplers/BridgeTestSampler.h"
-#include "Samplers/ObstacleBasedSampler.h"
-#include "Samplers/UniformObstacleBasedSamplers.h"
+#include "Samplers/GaussianSampler.h"
 #include "Samplers/GridSampler.h"
 #include "Samplers/MixSampler.h"
+#include "Samplers/ObstacleBasedSampler.h"
+#include "Samplers/UniformObstacleBasedSamplers.h"
+#include "Samplers/UniformRandomSampler.h"
 
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
@@ -40,14 +41,14 @@
 #include "Connectors/NeighborhoodConnector.h"
 
 //metric includes
-#include "Metrics/NumNodesMetric.h"
-#include "Metrics/TimeMetric.h"
-#include "Metrics/NumEdgesMetric.h"
-#include "Metrics/DiameterMetric.h"
 #include "Metrics/CCDistanceMetric.h"
-#include "Metrics/CoverageMetric.h"
 #include "Metrics/ConnectivityMetric.h"
 #include "Metrics/CoverageDistanceMetric.h"
+#include "Metrics/CoverageMetric.h"
+#include "Metrics/DiameterMetric.h"
+#include "Metrics/NumEdgesMetric.h"
+#include "Metrics/NumNodesMetric.h"
+#include "Metrics/TimeMetric.h"
 
 //map evaluator includes
 #include "MapEvaluators/Query.h"
@@ -61,6 +62,7 @@
 //map evaluator includes
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
+#include "MPStrategies/ResamplePointStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 
 template<class C, class W = DefaultWeight<C> >
@@ -94,12 +96,12 @@ struct MPTraits{
     SurfaceValidity<MPTraits>,
     #endif
     AlwaysTrueValidity<MPTraits>,
+    CollisionDetectionValidity<MPTraits>,
+    ObstacleClearanceValidity<MPTraits>//,
     //NodeClearanceValidity<MPTraits>,
     //MedialAxisClearanceValidity<MPTraits>,
-    //ObstacleClearanceValidity<MPTraits>,
     //ComposeValidity<MPTraits>,
     //NegateValidity<MPTraits>,*/
-    CollisionDetectionValidity<MPTraits>
     > ValidityCheckerMethodList;
 
   //typdes of neighborhood finders available in our world
@@ -117,14 +119,14 @@ struct MPTraits{
   
   //types of samplers available in our world
   typedef boost::mpl::list<
-    UniformRandomSampler<MPTraits>,
-    GaussianSampler<MPTraits>,
     BridgeTestSampler<MPTraits>,
+    GaussianSampler<MPTraits>,
+    GridSampler<MPTraits>,
+    //MedialAxisSampler<MPTraits>,
+    MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
-    //MedialAxisSampler<MPTraits>,
-    GridSampler<MPTraits>,
-    MixSampler<MPTraits>
+    UniformRandomSampler<MPTraits>
       > SamplerMethodList;
   
   //types of local planners available in our world
@@ -153,14 +155,14 @@ struct MPTraits{
   
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>,
-    NumEdgesMetric<MPTraits>,
-    TimeMetric<MPTraits>,
-    CoverageMetric<MPTraits>,
-    ConnectivityMetric<MPTraits>,
-    DiameterMetric<MPTraits>,
     CCDistanceMetric<MPTraits>,
-    CoverageDistanceMetric<MPTraits>
+    ConnectivityMetric<MPTraits>,
+    CoverageDistanceMetric<MPTraits>,
+    CoverageMetric<MPTraits>,
+    DiameterMetric<MPTraits>,
+    NumEdgesMetric<MPTraits>,
+    NumNodesMetric<MPTraits>,
+    TimeMetric<MPTraits>
     > MetricMethodList;
   
   //types of map evaluators available in our world
@@ -179,6 +181,7 @@ struct MPTraits{
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    ResamplePointStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>
     > MPStrategyMethodList;
 };
