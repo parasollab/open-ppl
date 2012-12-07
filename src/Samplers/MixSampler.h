@@ -28,7 +28,7 @@ class MixSampler : public SamplerMethod<MPTraits> {
       double totalP = 0.0;
       for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); citr++) {
         if(citr->getName() == "Sampler") {
-          string method = citr->stringXMLParameter("method", true, "Default", "Sampling method");
+          string method = citr->stringXMLParameter("label", true, "Default", "Sampling method");
           double p = citr->numberXMLParameter("p", true, 0.0, 0.0, 1.0, "Probability");
           if(!p)
             cerr << "Warning: MixSampler sampler method " << method << " has 0 probability." << endl;

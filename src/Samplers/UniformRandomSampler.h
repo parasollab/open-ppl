@@ -29,7 +29,7 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
     ~UniformRandomSampler() {}         
 
     void ParseXML(XMLNodeReader& _node) {
-      m_vcLabel = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
+      m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
     }
 
     virtual void PrintOptions(ostream& _out) const {

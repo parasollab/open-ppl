@@ -18,9 +18,9 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    ObstacleBasedSampler(Environment* _env = NULL, string _vcMethod = "", string _dmMethod = "",
+    ObstacleBasedSampler(Environment* _env = NULL, string _vcLabel = "", string _dmLabel = "",
         int _free = 1, int _coll = 0, double _step = 0, bool _useBBX = true, string _pointSelection = "cspace")
-      : m_vcMethod(_vcMethod), m_dmMethod(_dmMethod), m_nShellsFree(_free), m_nShellsColl(_coll), m_stepSize(_step), m_useBBX(_useBBX), m_pointSelection(_pointSelection) { 
+      : m_vcLabel(_vcLabel), m_dmLabel(_dmLabel), m_nShellsFree(_free), m_nShellsColl(_coll), m_stepSize(_step), m_useBBX(_useBBX), m_pointSelection(_pointSelection) { 
       this->SetName("ObstacleBasedSampler");
       // If the step size is unreasonable, set it to the minimum
       if(m_stepSize <= 0.0)
@@ -41,8 +41,8 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
     void ParseXML(XMLNodeReader& _node) {
       m_useBBX = _node.boolXMLParameter("useBBX", true, false, "Use bounding box as obstacle");
-      m_vcMethod = _node.stringXMLParameter("vcMethod", true, "", "Validity test method");
-      m_dmMethod =_node.stringXMLParameter("dmMethod", true, "default", "Distance metric method");
+      m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity test method");
+      m_dmLabel =_node.stringXMLParameter("dmLabel", true, "default", "Distance metric method");
       m_pointSelection = _node.stringXMLParameter("pointSelection", false, "cspace", "Point selection strategy");
       m_nShellsColl = _node.numberXMLParameter("nShellsColl", true, 3, 0, 10, "Number of collision shells");
       m_nShellsFree = _node.numberXMLParameter("nShellsFree", true, 3, 0, 10, "Number of free shells");
@@ -65,8 +65,8 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       _os << "\tnShellsFree = " << m_nShellsFree << endl; 
       _os << "\tnShellsColl = " << m_nShellsColl << endl; 
       _os << "\tstepSize = " << m_stepSize << endl; 
-      _os << "\tvcMethod = " << m_vcMethod << endl;
-      _os << "\tdmMethod = " << m_dmMethod << endl;
+      _os << "\tvcLabel = " << m_vcLabel << endl;
+      _os << "\tdmLabel = " << m_dmLabel << endl;
       _os << "\tuseBBX = " << m_useBBX << endl; 
       _os << "\tpointSelectionStrategy = " << m_pointSelection << endl;
     }
@@ -77,7 +77,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
           CfgType _cFree, CfgType _cColl, CfgType _incr, OutputIterator _result) {
       
       string callee = this->GetNameAndLabel() + "::GenerateShells()";
-      ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcMethod);
+      ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
       CDInfo cdInfo;
       if(this->m_debug)
         cout << "nShellsColl = " << m_nShellsColl << endl;
@@ -122,8 +122,8 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
 
       string callee = this->GetNameAndLabel() + "::Sampler()";
-      ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcMethod);
-      DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmMethod);
+      ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+      DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
       CDInfo cdInfo;
 
       if(this->m_recordKeep)
@@ -359,7 +359,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         return _mBody->GetBody(0)->GetWorldPolyhedron();
     }
     
-    string m_vcMethod, m_dmMethod; // Validity checker method, distance metric method
+    string m_vcLabel, m_dmLabel; // Validity checker method, distance metric method
     int m_nShellsFree, m_nShellsColl; // Number of free and collision shells
     double m_stepSize; // Step size along the random ray
     bool m_useBBX; // Is the bounding box an obstacle?
