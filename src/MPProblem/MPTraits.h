@@ -7,7 +7,9 @@
 #include "Weight.h"
 
 //distance metric includes
+#include "DistanceMetrics/CenterOfMassDistance.h"
 #include "DistanceMetrics/EuclideanDistance.h"
+#include "DistanceMetrics/KnotTheoryDistance.h"
 #include "DistanceMetrics/RMSDDistance.h"
 
 //validity checker includes
@@ -75,20 +77,20 @@ struct MPTraits{
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    CenterOfMassDistance<MPTraits>,
+    EuclideanDistance<MPTraits>,
+    KnotTheoryDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
     //ManhattanDistance,
-    EuclideanDistance<MPTraits>,
     //ScaledEuclideanDistance<MPTraits>,
     //MPNNEuclideanDistance<MPTraits>,
     //CGALEuclideanDistance<MPTraits>,
-    //CenterOfMassDistance<MPTraits>,
     RMSDDistance<MPTraits>//,
     //LPSweptDistance<MPTraits>,
     //BinaryLPSweptDistance<MPTraits>,
     //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     //ReachableDistance<MPTraits>, 
     //#endif
-    //KnotTheoryDistance<MPTraits>
     > DistanceMetricMethodList;
   
   //types of validity checkers available in our world
