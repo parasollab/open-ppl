@@ -480,12 +480,10 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
   //Move out from start towards dir, bounded by number of ticks allowed at a given resolution.  Delta + obsDist are
   //given to the function, and are user defined.
   while(!collision && dm->Distance(env,_start,tick) <= _delta) {
+    previous = tick;
     tick.Increment(incr); //Increment tick
     if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, _cdInfo, &callee))){
       collision = true; //Found a collision; return previous tick, as it is collision-free
-    }
-    else{
-      previous = tick;
     }
     ++ticker;
     if (ticker == nTicks){ //Have we reached the max amount of increments?
