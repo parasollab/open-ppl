@@ -26,7 +26,7 @@ KnotTheoryDistance<MPTraits>::KnotTheoryDistance() : DistanceMetricMethod<MPTrai
 
 template<class MPTraits>
 KnotTheoryDistance<MPTraits>::
-KnotTheoryDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn) : DistanceMetricMethod<MPTraits>(_problem, _node) {
+KnotTheoryDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : DistanceMetricMethod<MPTraits>(_problem, _node) {
   this->m_name = "KnotTheory"; 
 }
 

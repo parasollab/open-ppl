@@ -59,7 +59,7 @@ template<class MPTraits>
 void SurfaceLP<MPTraits>::
 PrintOptions(ostream& _os) {
   _os << "    " << this->GetName() << "::  ";
-  _os << "vcMethod = " << " " << this->m_vcMethod << " ";
+  _os << "vcLabel = " << " " << this->m_vcLabel << " ";
   _os << endl;
 }
 
@@ -91,7 +91,7 @@ IsConnected(Environment* _env, StatClass& _stats,
     connected = true; //assume it starts connected (the check will negate this)
 
     //build or make an increment (as in SL LP)
-    ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(StraightLine<MPTraits>::m_vcMethod);
+    ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
     double _positionRes = 0.05;
     double _orientationRes = 0.05;
     int nTicks;
