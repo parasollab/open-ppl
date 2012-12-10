@@ -20,18 +20,18 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
   private:
     double m_obstClearance;
-    ClearanceUtility<MPTraits> m_clearanceUtil;
+    ClearanceUtility<MPTraits> m_clearanceUtility;
 };
 
 template<class MPTraits>
 ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(double _obstClearance, const ClearanceUtility<MPTraits>& _c) :
-  m_obstClearance(_obstClearance), m_clearanceUtil(_c) {
+  m_obstClearance(_obstClearance), m_clearanceUtility(_c) {
     this->m_name = "ObstacleClearance";
   }
 
 template<class MPTraits>
 ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
-  ValidityCheckerMethod<MPTraits>(_problem, _node), m_clearanceUtil(_problem, _node) {
+  ValidityCheckerMethod<MPTraits>(_problem, _node), m_clearanceUtility(_problem, _node) {
     this->m_name = "ObstacleClearance";
     m_obstClearance = _node.numberXMLParameter("obstClearance", true, 1.0, 0.0, MAX_DBL, "Required clearance from obstacles");
   }
@@ -39,9 +39,10 @@ ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits
 template<class MPTraits>
 void
 ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
+  ValidityCheckerMethod<MPTraits>::PrintOptions(_os);
   _os << "\tRequired Clearance::" << m_obstClearance << endl;
   _os << "\tClearanceUtil::" << endl;
-  m_clearanceUtil.PrintOptions(_os);
+  m_clearanceUtility.PrintOptions(_os);
 }
 
 template<class MPTraits>
@@ -55,7 +56,7 @@ ObstacleClearanceValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, S
   CfgType cfg = _cfg;
   CfgType dummy;
 
-  bool valid = m_clearanceUtil.CollisionInfo(cfg, dummy, bb, _cdInfo);
+  bool valid = m_clearanceUtility.CollisionInfo(cfg, dummy, bb, _cdInfo);
 
   if(this->m_debug){
     cout << "CFG::" << _cfg << endl;

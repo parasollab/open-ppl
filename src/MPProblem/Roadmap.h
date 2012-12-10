@@ -68,11 +68,9 @@ template <class MPTraits>
 void 
 Roadmap<MPTraits>::Read(string _filename) {
 #ifndef _PARALLEL
-  cout << endl << "getting nodes from Read: " << _filename << endl;
-
   ifstream  ifs(_filename.c_str());
   if(!ifs) {
-    cerr << endl << "In ReadRoadmap: can't open file: " << _filename ;
+    cerr << "Warning::Cannot open file " << _filename << " in Roadmap::Read." << endl;
     return;
   }
   string tag; 
@@ -93,7 +91,7 @@ Roadmap<MPTraits>::Read(string _filename) {
     ifs2.close();
   }
   else {
-    cerr << endl  << "In ReadRoadmap: didn't read GRAPHSTART tag";
+    cerr << "Warning::Did not read GRAPHSTART tag in Roadmap::Read." << endl;
     return;
   }
 #endif

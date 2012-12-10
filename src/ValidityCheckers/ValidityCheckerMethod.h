@@ -12,6 +12,10 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node), m_validity(true){} 
     virtual ~ValidityCheckerMethod(){}
 
+    virtual void PrintOptions(ostream& _os){
+      _os << this->GetName() << endl;
+    }
+
     bool IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
         CDInfo& _cdInfo, std::string *_callName) {
       if(m_validity)

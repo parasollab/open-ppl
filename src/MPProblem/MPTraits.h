@@ -15,6 +15,7 @@
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
 #include "ValidityCheckers/CollisionDetectionValidity.h"
+#include "ValidityCheckers/MedialAxisClearanceValidity.h"
 #include "ValidityCheckers/ObstacleClearanceValidity.h"
 #ifdef PMPCfgSurface
 #include "ValidityCheckers/SurfaceValidity.h"
@@ -95,16 +96,16 @@ struct MPTraits{
   
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    #ifdef PMPCfgSurface
-    SurfaceValidity<MPTraits>,
-    #endif
     AlwaysTrueValidity<MPTraits>,
     CollisionDetectionValidity<MPTraits>,
-    ObstacleClearanceValidity<MPTraits>//,
-    //NodeClearanceValidity<MPTraits>,
-    //MedialAxisClearanceValidity<MPTraits>,
     //ComposeValidity<MPTraits>,
-    //NegateValidity<MPTraits>,*/
+    MedialAxisClearanceValidity<MPTraits>,
+    //NegateValidity<MPTraits>,
+    //NodeClearanceValidity<MPTraits>,
+    ObstacleClearanceValidity<MPTraits>
+    #ifdef PMPCfgSurface
+    , SurfaceValidity<MPTraits>
+    #endif
     > ValidityCheckerMethodList;
 
   //typdes of neighborhood finders available in our world

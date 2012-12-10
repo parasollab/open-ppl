@@ -27,7 +27,6 @@ using boost::shared_ptr;
 
 #include "MPProblem/Robot.h"
 #include "Utilities/MPUtils.h"
-#include "Utilities/MedialAxisUtilities.h"
 
 class Cfg;
 class StatClass;
@@ -228,7 +227,7 @@ class Cfg {
     template<class DistanceMetricPointer>
       void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true);
 
-    template<class MPTraits>
+    template<template<class> class ClearanceUtility, class MPTraits>
       double GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb);
 
     virtual bool ConfigEnvironment(Environment* _env) const = 0;
@@ -329,7 +328,7 @@ Cfg::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, b
   exit(1);
 }
 
-template<class MPTraits>
+template<template<class> class ClearanceUtility, class MPTraits>
 double
 Cfg::GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb){
   CDInfo cdInfo;

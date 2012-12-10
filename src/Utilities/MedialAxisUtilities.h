@@ -35,6 +35,8 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 
     virtual void PrintOptions(ostream& _os) const;
 
+    string GetDistanceMetricLabel() const {return m_dmLabel;}
+
     //*********************************************************************//
     // Calculate Collision Information                                     //
     //   This is a wrapper function for getting the collision information  //
@@ -81,7 +83,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 };
 
 template<class MPTraits>
-class MedialAxisUtility : ClearanceUtility<MPTraits> {
+class MedialAxisUtility : public ClearanceUtility<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
