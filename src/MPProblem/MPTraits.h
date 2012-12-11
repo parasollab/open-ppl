@@ -66,6 +66,7 @@
 //map evaluator includes
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
+#include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/ResamplePointStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 
@@ -185,6 +186,7 @@ struct MPTraits{
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    EvaluateMapStrategy<MPTraits>,
     ResamplePointStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>
     > MPStrategyMethodList;
