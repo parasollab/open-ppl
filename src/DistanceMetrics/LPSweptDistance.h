@@ -61,7 +61,7 @@ void LPSweptDistance<MPTraits>::PrintOptions(ostream& _os) const {
 template<class MPTraits>
 double LPSweptDistance<MPTraits>::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
   StatClass stats;
-  typename MPProblemType::DistanceMetricMethod dm;
+  typename MPProblemType::DistanceMetricPointer dm;
   LPOutput<MPTraits> lpOutput;
   LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
   CfgType dummy;
