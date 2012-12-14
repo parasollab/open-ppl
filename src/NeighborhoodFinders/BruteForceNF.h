@@ -106,7 +106,7 @@ BruteForceNF<MPTraits>::KClosestPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1, 
     InputIterator _first2, InputIterator _last2, size_t _k, OutputIterator _out) {
 
-  Environment* env = _rmp->GetEnvironment();
+  Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
   priority_queue<pair<pair<VID, VID>, double>, vector<pair<pair<VID, VID>, double> >,

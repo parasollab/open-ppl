@@ -24,6 +24,7 @@
 
 //neighborhood finder includes
 #include "NeighborhoodFinders/BruteForceNF.h"
+#include "NeighborhoodFinders/RadiusNF.h"
 
 //sampler includes
 #include "Samplers/BridgeTestSampler.h"
@@ -112,15 +113,15 @@ struct MPTraits{
 
   //typdes of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BruteForceNF<MPTraits>//,
-    //HierarchicalNF<MPTraits>,
-    //RadiusNF<MPTraits>,
-    //DPESNF<MPTraits>,
-    //MPNNNF<MPTraits>,
+    //BandsNF<MPTraits>,
+    BruteForceNF<MPTraits>,
     //CGALNF<MPTraits>,
-    //SpillTreeNF<MPTraits>, 
+    //DPESNF<MPTraits>,
+    //HierarchicalNF<MPTraits>,
     //MetricTreeNF<MPTraits>,
-    //BandsNF<MPTraits>
+    //MPNNNF<MPTraits>,
+    RadiusNF<MPTraits>//,
+    //SpillTreeNF<MPTraits> 
     > NeighborhoodFinderMethodList;
   
   //types of samplers available in our world
