@@ -11,6 +11,7 @@
 #include "DistanceMetrics/EuclideanDistance.h"
 #include "DistanceMetrics/KnotTheoryDistance.h"
 #include "DistanceMetrics/RMSDDistance.h"
+#include "DistanceMetrics/LPSweptDistance.h"
 
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
@@ -87,8 +88,8 @@ struct MPTraits{
     //ScaledEuclideanDistance<MPTraits>,
     //MPNNEuclideanDistance<MPTraits>,
     //CGALEuclideanDistance<MPTraits>,
-    RMSDDistance<MPTraits>//,
-    //LPSweptDistance<MPTraits>,
+    RMSDDistance<MPTraits>,
+    LPSweptDistance<MPTraits>//,
     //BinaryLPSweptDistance<MPTraits>,
     //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     //ReachableDistance<MPTraits>, 
