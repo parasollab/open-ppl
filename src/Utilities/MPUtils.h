@@ -264,7 +264,7 @@ class MethodSet {
     typedef typename map<string, MethodPointer>::const_iterator CMIT;
 
     template<typename MethodTypeList>
-      MethodSet(const MethodTypeList& _etl, const string& _name = "MethodSet") : m_default(""), m_name(_name) {
+      MethodSet(const MethodTypeList& _etl, const string& _name) : m_default(""), m_name(_name) {
         AddToUniverse(typename boost::mpl::begin<MethodTypeList>::type(), typename boost::mpl::end<MethodTypeList>::type());
       }
 
@@ -277,23 +277,29 @@ class MethodSet {
       }
     }
 
-    bool AddMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, const string& _label) {
-      if(m_universe.find(_label) != m_universe.end()) {
-        boost::shared_ptr<Method> e = m_universe[_label](_problem, _node);
+    bool AddMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, const string& _name) {
+      if(m_universe.find(_name) != m_universe.end()) {
+        MethodPointer e = m_universe[_name](_problem, _node);
         return AddMethod(e, e->GetLabel());
       }
       return false;
     }
 
-    bool AddMethod(boost::shared_ptr<Method> _e, const string& _label) {
-      _e->SetLabel(_label);
-      if(m_elements.empty()) 
-        m_default = _label;
-      if(m_elements.find(_label) == m_elements.end()) 
-        m_elements[_label] = _e;
-      else 
-        cerr << "\nWarning, method list already has a pointer associated with \"" << _label << "\", not added\n";
-      return true;
+    bool AddMethod(MethodPointer _e, const string& _label) {
+      if(m_universe.find(_e->GetName()) != m_universe.end()) {
+        _e->SetLabel(_label);
+        if(m_elements.empty()) 
+          m_default = _label;
+        if(m_elements.find(_label) == m_elements.end()) 
+          m_elements[_label] = _e;
+        else 
+          cerr << "\nWarning, method list already has a pointer associated with \"" << _label << "\", not added\n";
+        return true;
+      }
+      else{
+        cerr << "Error. Method " << _e->GetName() << " is not contained within the motion planning universe. Exiting." << endl;
+        exit(1);
+      }
     }
 
     MethodPointer GetMethod(const string& _label) {
