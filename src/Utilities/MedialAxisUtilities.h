@@ -231,8 +231,13 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, shared_ptr<Boundar
   _cdInfo.m_retAllInfo = true;
 
   // If not in BBX or valid, return false (IsValid gets _cdInfo)
-  if(!_cfg.InBoundary(env, _bb) || !(vcm->IsValid(_cfg, env, *stats, _cdInfo, &call))) 
-    return false;
+  bool initInside = vcm->IsInsideObstacle(_cfg, env, _cdInfo);             // Initially Inside Obst
+  bool initValidity = vcm->IsValid(_cfg, env, *stats, _cdInfo, &call); // Initial Validity
+  initValidity = initValidity && !initInside;
+
+  if(!initValidity){
+    _cdInfo.m_minDist = -_cdInfo.m_minDist;
+  }
 
   // If not using the bbx, done
   if(!m_useBBX)
@@ -269,7 +274,8 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, shared_ptr<Boundar
       }
     }
   }
-  return (_cdInfo.m_minDist>=0) ? true : false;
+  
+  return true;
 }
 
 //*********************************************************************//
@@ -319,7 +325,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 
   // Generate 'numRays' random directions at a distance 'dist' away from 'cfg'
   if(initValidity) 
-    numRays = (initInside) ? m_penetrationRays : m_clearanceRays;
+    numRays = m_clearanceRays;
   else                 
     numRays = m_penetrationRays;    
 
@@ -469,9 +475,9 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   middleCfg.multiply(incr[candTick[0]], mid);
   middleCfg.add(candIn[0], middleCfg);
   _clrCfg = middleCfg;
-  _cdInfo.m_minDist = dm->Distance(env, middleCfg, _cfg);
+  _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(env, middleCfg, _cfg);
 
-  return (_cdInfo.m_minDist < 0) ? false : true;
+  return true;
 }
 
 //*********************************************************************//

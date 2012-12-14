@@ -33,7 +33,7 @@ template<class MPTraits>
 ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
   ValidityCheckerMethod<MPTraits>(_problem, _node), m_clearanceUtility(_problem, _node) {
     this->m_name = "ObstacleClearance";
-    m_obstClearance = _node.numberXMLParameter("obstClearance", true, 1.0, 0.0, MAX_DBL, "Required clearance from obstacles");
+    m_obstClearance = _node.numberXMLParameter("obstClearance", true, 1.0, -MAX_DBL, MAX_DBL, "Required clearance from obstacles");
   }
 
 template<class MPTraits>
