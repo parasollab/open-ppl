@@ -8,9 +8,11 @@
 
 //distance metric includes
 #include "DistanceMetrics/CenterOfMassDistance.h"
+#include "DistanceMetrics/CGALEuclideanDistance.h"
 #include "DistanceMetrics/EuclideanDistance.h"
 #include "DistanceMetrics/KnotTheoryDistance.h"
 #include "DistanceMetrics/LPSweptDistance.h"
+#include "DistanceMetrics/MPNNEuclideanDistance.h"
 #include "DistanceMetrics/RMSDDistance.h"
 
 //validity checker includes
@@ -41,16 +43,16 @@
 
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
-#include "LocalPlanners/ToggleLP.h"
 #ifdef PMPCfgSurface
 #include "LocalPlanners/SurfaceLP.h"
 #endif
+#include "LocalPlanners/ToggleLP.h"
 
 //connector includes
-#include "Connectors/NeighborhoodConnector.h"
 #ifdef PMPCfgSurface
 #include "Connectors/ConnectNeighboringSurfaces.h"
 #endif
+#include "Connectors/NeighborhoodConnector.h"
 
 //metric includes
 #include "Metrics/CCDistanceMetric.h"
@@ -89,13 +91,13 @@ struct MPTraits{
   typedef boost::mpl::list<
     //BinaryLPSweptDistance<MPTraits>,
     CenterOfMassDistance<MPTraits>,
-    //CGALEuclideanDistance<MPTraits>,
+    CGALEuclideanDistance<MPTraits>,
     EuclideanDistance<MPTraits>,
     KnotTheoryDistance<MPTraits>,
     LPSweptDistance<MPTraits>,
     //ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
-    //MPNNEuclideanDistance<MPTraits>,
+    MPNNEuclideanDistance<MPTraits>,
     //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     //ReachableDistance<MPTraits>, 
     //#endif
@@ -147,15 +149,15 @@ struct MPTraits{
   
   //types of local planners available in our world
   typedef boost::mpl::list<
-    StraightLine<MPTraits>,
-    //RotateAtS<MPTraits>,
-    //TransformAtS<MPTraits>,
+    //AStarClearance<MPTraits>,
+    //AStarDistance<MPTraits>,
     //MedialAxisLP<MPTraits>,
+    //RotateAtS<MPTraits>,
+    StraightLine<MPTraits>,
+    //TransformAtS<MPTraits>,
     #if defined(PMPCfgSurface)
     SurfaceLP<MPTraits>,
     #endif
-    //AStarDistance<MPTraits>,
-    //AStarClearance<MPTraits>,
     ToggleLP<MPTraits>
     > LocalPlannerMethodList;
 
