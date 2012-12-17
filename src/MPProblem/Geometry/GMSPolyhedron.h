@@ -77,6 +77,18 @@ class GMSPolyhedron {
     /// get a point on the surface of the polyhedron
     Point3d GetRandPtOnSurface(); 
 
+    vector<Vector3D>& GetVertexList() { return m_vertexList; }
+    vector<GMSPolygon>& GetPolygonList() { return m_polygonList; }
+
+    void BuildBoundary();
+    vector< pair<int,int> >& GetBoundaryLines() { 
+       BuildBoundary();
+       return m_boundaryLines; 
+    }; 
+    double GetClearance(Point3d pt, Point3d& closest, int numRays); 
+    double PushToMedialAxis(Point3d& pt); 
+    
+
     /// is the specified point on the surface of the polyhedron
     bool IsOnSurface(Point2d& _pt, double _h);
     double HeightAtPt(Point2d _pt, bool& _valid); 
@@ -88,6 +100,10 @@ class GMSPolyhedron {
     double m_area; //The summation of all area of polygons in this polyhedron.
     double m_maxRadius; // the maximum distance from a vertex to com.
     double m_minRadius; // the minimum distance from a vertex to com.
+    
+    ///////////////////////////////////////////////////////////////////////////
+    vector< pair<int,int> > m_boundaryLines;//store the ids to vertices stored in surface model 
+    bool m_boundaryBuilt;
 };
 
 #endif

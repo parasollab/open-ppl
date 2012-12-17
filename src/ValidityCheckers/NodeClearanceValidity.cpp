@@ -15,7 +15,7 @@ NodeClearanceValidity::NodeClearanceValidity(double _delta, string _dmLabel, str
 NodeClearanceValidity::NodeClearanceValidity (XMLNodeReader& _node, MPProblem* _problem) :
     ValidityCheckerMethod(_node, _problem) {
   m_name = "NodeClearanceValidity";
-  m_delta = _node.numberXMLParameter("delta", true, 1.0, 0.0, 1.0, "Clearance from every other node");
+  m_delta = _node.numberXMLParameter("delta", true, 1.0, 0.0, MAX_DBL, "Clearance from every other node");
   m_dmLabel = _node.stringXMLParameter("dmMethod",true,"","Distance metric to be used");     
   m_nfLabel = _node.stringXMLParameter("nfMethod",true,"","Neighborhood Finder to be used");    
 }

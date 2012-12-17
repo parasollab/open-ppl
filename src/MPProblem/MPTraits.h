@@ -35,6 +35,9 @@
 #include "Samplers/ObstacleBasedSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
+#ifdef PMPCfgSurface
+#include "Samplers/SurfaceSampler.h"
+#endif
 
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
@@ -45,6 +48,9 @@
 
 //connector includes
 #include "Connectors/NeighborhoodConnector.h"
+#ifdef PMPCfgSurface
+#include "Connectors/ConnectNeighboringSurfaces.h"
+#endif
 
 //metric includes
 #include "Metrics/CCDistanceMetric.h"
@@ -132,6 +138,9 @@ struct MPTraits{
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
+#ifdef PMPCfgSurface
+    SurfaceSampler<MPTraits>,
+#endif
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
@@ -152,6 +161,9 @@ struct MPTraits{
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+#if defined(PMPCfgSurface)
+    ConnectNeighboringSurfaces<MPTraits>,
+#endif
     NeighborhoodConnector<MPTraits>/*, 
     ConnectCCs<MPTraits>, 
     PreferentialAttachment<MPTraits>, 

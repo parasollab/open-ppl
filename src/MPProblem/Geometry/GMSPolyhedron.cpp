@@ -27,13 +27,13 @@ GMSPolygon::operator==(const GMSPolygon& _p) const{
 }
 
 //End Polygon begin Polyhedron implementation
-GMSPolyhedron::GMSPolyhedron(): m_area(0), m_maxRadius(0), m_minRadius(0){
+GMSPolyhedron::GMSPolyhedron(): m_area(0), m_maxRadius(0), m_minRadius(0), m_boundaryBuilt(false){
 }
 
 GMSPolyhedron::GMSPolyhedron(const GMSPolyhedron& _p) 
   : m_vertexList(_p.m_vertexList), m_polygonList(_p.m_polygonList), 
-  m_area(_p.m_area), m_maxRadius(_p.m_maxRadius), m_minRadius(_p.m_minRadius){
-  }
+  m_area(_p.m_area), m_maxRadius(_p.m_maxRadius), m_minRadius(_p.m_minRadius), m_boundaryBuilt(false){
+}
 
 GMSPolyhedron::~GMSPolyhedron(){
 }
@@ -389,3 +389,114 @@ GMSPolyhedron::HeightAtPt(Point2d _pt, bool& _valid){
   _valid = false;
   return -19999.0; //went through all of the triangles and inconsistency found in iscollision check
 }
+
+void 
+GMSPolyhedron::BuildBoundary() {
+  if( m_boundaryBuilt ) return; //only allow this to be attempted once
+  if( m_boundaryLines.size() > 0 ) return; // this has been done
+
+  m_boundaryBuilt = true;
+  typedef vector<GMSPolygon>::iterator PIT;
+
+  //build all the lines locally
+  vector< Vector<int,2> > lines; 
+  //TriVector& triP=m_SurfaceModel->GetTriP();
+  //vector<GMSPolygon>& triP = m_polygonList;
+  lines.reserve(m_polygonList.size()*3);
+  for(PIT iT=m_polygonList.begin(); iT!=m_polygonList.end();iT++){
+    const GMSPolygon& tri=*iT;
+    lines.push_back(Vector<int,2>(tri.m_vertexList[0],tri.m_vertexList[1]));
+    lines.push_back(Vector<int,2>(tri.m_vertexList[1],tri.m_vertexList[2]));
+    lines.push_back(Vector<int,2>(tri.m_vertexList[2],tri.m_vertexList[0]));
+  }
+
+  //Get Boundary lines by checking each line per triangle to see if
+  //the line (specified by id) occurs *exactly* once.
+  typedef vector< Vector<int,2> >::iterator LIT;
+  for(PIT iT=m_polygonList.begin(); iT!=m_polygonList.end();iT++){
+    Vector<int,2> line;
+    const GMSPolygon& tri=*iT;
+
+    for( int iD=0; iD<3; iD++ ){
+      switch(iD){
+	case 0: line.set(tri.m_vertexList[0],tri.m_vertexList[1]); break;
+	case 1: line.set(tri.m_vertexList[1],tri.m_vertexList[2]); break;
+	case 2: line.set(tri.m_vertexList[2],tri.m_vertexList[0]); break;
+      }
+      int count=0;
+
+      for( LIT iL=lines.begin(); iL!=lines.end(); iL++ ){
+	Vector<int,2>& l=*iL;
+	if((l[0]==line[0]&&l[1]==line[1])||(l[0]==line[1]&&l[1]==line[0]))
+	  count++;
+      }
+      if( count==1 ) 
+	m_boundaryLines.push_back( make_pair(line[0],line[1]) );
+    }//endfor iD<3
+  }//endfor iT
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//the square of the distance from pos to p1p2
+inline double 
+distsqr3D(const Point3d& _pos, const Point3d& _p1, const Point3d& _p2, Point3d& _cdPt)
+{
+
+  Vector3d n=_p1-_p2;
+  double t=(n*(_pos-_p1))/(n*(_p2-_p1));
+  if( t>=0 && t<=1 ){
+    for(int i=0;i<3;i++) _cdPt[i]=(1-t)*_p1[i]+t*_p2[i];
+    return (_pos-_cdPt).normsqr();
+  }
+  else{ //closest point is end pt
+    double d1=(_p1-_pos).normsqr();
+    double d2=(_p2-_pos).normsqr();
+    if( d1<d2 ){ _cdPt=_p1; return d1; }
+    else { _cdPt=_p2; return d2; }
+  }
+}
+
+double GMSPolyhedron::GetClearance(Point3d _pt, Point3d& _closest, int _numRays) {
+
+  double closestPtDist = 1e10;
+  Point3d closestPt3d;
+  vector< pair<int,int> >& lineIndices = GetBoundaryLines();
+  for( int iL=0; iL<(int)lineIndices.size();iL++ ){ //for each BL
+    int id1 = m_boundaryLines[iL].first;
+    int id2 = m_boundaryLines[iL].second;
+    Vector3D vert13dTmp =  m_vertexList[id1];
+    Vector3D vert23dTmp =  m_vertexList[id2];
+
+    Point3d edge13d(vert13dTmp[0],vert13dTmp[1],vert13dTmp[2]);
+    Point3d edge23d(vert23dTmp[0],vert23dTmp[1],vert23dTmp[2]);
+
+    //find closest pt from p to p1p2
+    Point3d c;
+    double dist=distsqr3D(_pt,edge13d,edge23d,c);
+    if( dist<closestPtDist ) { closestPtDist=dist; closestPt3d=c;}
+  }
+  _closest = closestPt3d;
+
+  return sqrt(closestPtDist);
+}
+
+double GMSPolyhedron::PushToMedialAxis(Point3d& _pt) {
+  Point3d orig = _pt;
+
+  Point3d closest;
+  int rays = 50;
+  double clear=GetClearance(_pt,closest,rays);
+  Vector3d dir=(_pt-closest).normalize();
+  dir[1]=0;
+  dir = dir.normalize()*0.5;
+  Point3d newClosest; 
+  int iteration=0;
+  do{
+    _pt=_pt+dir;
+    clear=GetClearance(_pt,newClosest,rays);
+  }while( (newClosest-closest).normsqr()<0.1 && iteration<1000000 );
+
+return clear;
+}
+

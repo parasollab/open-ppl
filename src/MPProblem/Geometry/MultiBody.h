@@ -302,6 +302,7 @@ public:
     Robot::JointMap& GetJointMap() {return jointMap;}
     void SetMultirobot(bool _m){m_multirobot = _m;}
 
+    string GetLabel() { return m_label; }
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //
@@ -350,6 +351,8 @@ private:
   double maxAxisRange;
 
   Robot::JointMap jointMap;
+
+  string m_label;
 };
 
 #endif

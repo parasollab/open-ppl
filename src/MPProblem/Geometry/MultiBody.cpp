@@ -450,6 +450,8 @@ MultiBody::Read(istream& _is, bool _debug) {
   }
   else if(multibodyType == "SURFACE") { 
     m_isSurface = true; 
+    string multibodyTag = ReadFieldString(_is, "Surface Tag");
+    m_label = multibodyTag;
   }
 
   double fixSum = 0;
