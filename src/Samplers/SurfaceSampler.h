@@ -72,7 +72,6 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       int attempts = 0;
       for(int i=-1; i<numSurfaces; i++) {
 	if( this->m_debug) cout << " Sampling for surface: " << i << endl;
-	bool generated = false;
 	attempts = 0;
 	vector<CfgType> cfgsOnSurface;
 

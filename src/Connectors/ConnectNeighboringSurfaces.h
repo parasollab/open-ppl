@@ -4,6 +4,7 @@
 #include "ConnectorMethod.h"
 
 #define CLOSEDIST 0.4
+#define KATTEMPTS 3
 
 //Connect between surfaces
 //for each s in surfaces
@@ -24,7 +25,7 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
     //////////////////////
     // Constructors and Destructor
     ConnectNeighboringSurfaces(string _lp = "", string _nf = "", 
-        int _k = KCLOSEST);
+        int _k = KATTEMPTS);
     ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ConnectNeighboringSurfaces();
 
@@ -63,7 +64,7 @@ ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(string _lp, str
 template<class MPTraits>
 ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNodeReader& _node) 
   : ConnectorMethod<MPTraits>(_problem, _node), 
-  m_k(KCLOSEST), m_doneOnce(false) {
+  m_k(KATTEMPTS), m_doneOnce(false) {
     ParseXML(_node);
   }
 
@@ -183,7 +184,7 @@ void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& 
 	bool validOtherHeight = false;
 	/////////////////////////////////////////////////////////////////////////////
 	//loop over all surfaces
-	for(size_t j=0; j<(size_t)numSurfaces && !qPtOnSurf; j++) {
+	for(int j=0; j<numSurfaces && !qPtOnSurf; j++) {
 	  if( i==j ) continue;//skip same surface..obvi
 	  shared_ptr<MultiBody> mbSurf2 = env->GetNavigableSurface(j);
 	  if(this->m_debug) cout << "ConnectNeighboringSurfaces::Connect(...) - " << i << "  Processing multibody: " << j << " ::: " << mbSurf2->GetLabel() << endl;
