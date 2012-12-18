@@ -10,7 +10,7 @@ ifndef debug
 endif
 
 ifndef parallel
-  parallel = 0
+  parallel = 0 
 endif 
 
 # set directory paths
@@ -50,7 +50,8 @@ LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 # targets
 default_target: libs
 
-utils: cd_libs xml_libs nn_libs mathtool_lib modelloader_lib kmeans_lib
+utils: stapl_lib cd_libs xml_libs nn_libs mathtool_lib modelloader_lib kmeans_lib 
+stapl_lib: ${STAPL_LIBFILE}
 cd_libs: ${CD_LIBFILE}
 xml_libs: ${XML_LIBFILE}
 nn_libs: ${MPNN_LIBFILE}
@@ -86,6 +87,7 @@ reallyclean:
 
 reallyreallyclean:
 	@${MAKE} reallyclean
+	cd ${STAPL_DIR}; ${MAKE} clean
 	cd ${CD_DIR}; ${MAKE} clean
 	cd ${TINYXML_DIR}; ${MAKE} clean
 	cd ${MPNN_SRC}; ${MAKE} clean

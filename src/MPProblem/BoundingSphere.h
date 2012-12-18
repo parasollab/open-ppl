@@ -6,7 +6,7 @@ class Environment;
 
 using namespace mathtool;
 class MultiBody;
-
+class BoundingBox;
 ///\todo add MPBaseObject defautl constructor
 class BoundingSphere : public Boundary {
  public:

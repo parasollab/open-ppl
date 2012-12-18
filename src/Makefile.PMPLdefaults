@@ -136,7 +136,12 @@ else
 		@echo ""
 	endif
 endif
-
+#cd to STAPL dir and compile STAPL lib
+ifeq (${parallel}, 1)
+${STAPL_DIR}/lib/libstapl.a:
+	cd ${STAPL_DIR}; ${MAKE} platform=${platform} 
+STAPL_LIBFILE = ${STAPL_DIR}/lib/libstapl.a
+endif
 
 # collision detection macros and targets
 CD_DIR = ${UTILS_DIR}/geom/CD-libs
@@ -206,8 +211,9 @@ ${KMEANS_DIR}/libkmeans.a:
 
 KMEANS_LIBFILE = ${KMEANS_DIR}/libkmeans.a
 
+
 # stapl macros
-#set parallel PRM options
+#set parallel options
 ifeq (${parallel}, 0)
 	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/include -I${STAPL_DIR}/stapl 
 else
