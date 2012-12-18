@@ -152,7 +152,7 @@ NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(MPProblemType* _pro
 template<class MPTraits>
 NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(MPProblemType* _problem, XMLNodeReader& _node) 
   : MPBaseObject<MPTraits>(_problem, _node), m_fromRDMPVersion(false){ 
-    m_dmLabel = _node.stringXMLParameter("dmMethod", true, "default", "Distance Metric Method");
+    m_dmLabel = _node.stringXMLParameter("dmLabel", true, "default", "Distance Metric Method");
   }
 
 template<class MPTraits>

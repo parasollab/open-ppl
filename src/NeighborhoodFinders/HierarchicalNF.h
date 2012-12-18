@@ -1,31 +1,35 @@
-#ifndef HierarchicalNF_H_
-#define HierarchicalNF_H_
+#ifndef HIERARCHICALNF_H_
+#define HIERARCHICALNF_H_
 
 #include "NeighborhoodFinderMethod.h"
-#include "DistanceMetrics.h"
+#include "BruteForceNF.h"
 #include <vector>
 
-class HierarchicalNF: public NeighborhoodFinderMethod {
+using namespace std;
+
+template<class MPTraits>
+class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
   public:
-    HierarchicalNF(string _dmm = "", string _dmm2 = "", size_t _k2 = 5, string _label = "", MPProblem* _problem = NULL) 
-      : NeighborhoodFinderMethod(_dmm, _label, _problem), m_dmLabel2(_dmm2), m_k2(_k2) {
-        SetName("HierarchicalNF");
-        m_nf1 = new BruteForceNF(_dmm,"",_problem);
-        m_nf2 = new BruteForceNF(_dmm2,"",_problem);
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::VID VID; 
+
+    HierarchicalNF(MPProblemType* _problem = NULL, string _dmm = "", string _dmm2 = "", size_t _k2 = 5, string _label = "") 
+      : NeighborhoodFinderMethod<MPTraits>(_problem, _dmm, _label), m_dmLabel2(_dmm2), m_k2(_k2) {
+        this->SetName("HierarchicalNF");
+        m_nf1 = new BruteForceNF<MPTraits>(_problem, _dmm,"");
+        m_nf2 = new BruteForceNF<MPTraits>(_problem, _dmm2,"");
       }
 
-    HierarchicalNF(XMLNodeReader& _node, MPProblem* _problem) 
-      : NeighborhoodFinderMethod(_node,_problem) {
-        SetName("HierarchicalNF");
-
+    HierarchicalNF(MPProblemType* _problem, XMLNodeReader& _node) 
+      : NeighborhoodFinderMethod<MPTraits>(_problem,_node) {
+        this->SetName("HierarchicalNF");
         m_k2 = _node.numberXMLParameter("k2", true, 5, 0, MAX_INT, "K value for HierarchicalNF");
-        m_dmLabel2 = _node.stringXMLParameter("dmMethod2",true,"","Distance Metric Method the second one");
+        m_dmLabel2 = _node.stringXMLParameter("dmLabel2",true,"","Distance Metric Method the second one");
 
-        m_nf1 = new BruteForceNF(m_dmLabel,"",_problem);
-        m_nf2 = new BruteForceNF(m_dmLabel2,"",_problem);
-
-        if(this->m_debug)
-          PrintOptions(cout);
+        m_nf1 = new BruteForceNF<MPTraits>(_problem, m_dmLabel,"");
+        m_nf2 = new BruteForceNF<MPTraits>(_problem, m_dmLabel2,"");
       }
 
     virtual ~HierarchicalNF(){
@@ -34,23 +38,24 @@ class HierarchicalNF: public NeighborhoodFinderMethod {
     }
 
     virtual void PrintOptions(ostream& _os) const {
-      NeighborhoodFinderMethod::PrintOptions(_os);
+      PrintOptions(_os);
       _os << "dmMethod2: " << m_dmLabel2 << " "
         << "k2: " << m_k2 << " ";
     }
 
-    template<typename RDMP, typename InputIterator, typename OutputIterator>
-      OutputIterator KClosest(RDMP* _rmp, 
-          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out){
-        vector<typename RDMP::VID> closest;
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator KClosest(RoadmapType* _rmp, 
+          InputIterator _first, InputIterator _last, CfgType _cfg, size_t _k, OutputIterator _out){
+        vector<VID> closest;
         m_nf1->KClosest(_rmp, _first, _last, _cfg, m_k2, back_inserter(closest));
         return m_nf2->KClosest(_rmp, closest.begin(), closest.end(), _cfg, _k, _out);
       }
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
-    template<typename RDMP, typename InputIterator, typename OutputIterator>
-      OutputIterator KClosestPairs(RDMP* _rmp,
+
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator KClosestPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1, 
           InputIterator _first2, InputIterator _last2, 
           size_t _k, OutputIterator _out){
@@ -59,9 +64,10 @@ class HierarchicalNF: public NeighborhoodFinderMethod {
       }
 
   private:
+    string m_dmLabel; 
     string m_dmLabel2;
-    BruteForceNF *m_nf1;
-    BruteForceNF *m_nf2;
+    BruteForceNF<MPTraits> *m_nf1;
+    BruteForceNF<MPTraits> *m_nf2;
     size_t m_k2;
 };
 
