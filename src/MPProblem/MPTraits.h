@@ -8,11 +8,9 @@
 
 //distance metric includes
 #include "DistanceMetrics/CenterOfMassDistance.h"
-#include "DistanceMetrics/CGALEuclideanDistance.h"
 #include "DistanceMetrics/EuclideanDistance.h"
 #include "DistanceMetrics/KnotTheoryDistance.h"
 #include "DistanceMetrics/LPSweptDistance.h"
-#include "DistanceMetrics/MPNNEuclideanDistance.h"
 #include "DistanceMetrics/RMSDDistance.h"
 
 //validity checker includes
@@ -92,13 +90,11 @@ struct MPTraits{
   typedef boost::mpl::list<
     //BinaryLPSweptDistance<MPTraits>,
     CenterOfMassDistance<MPTraits>,
-    CGALEuclideanDistance<MPTraits>,
     EuclideanDistance<MPTraits>,
     KnotTheoryDistance<MPTraits>,
     LPSweptDistance<MPTraits>,
     //ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
-    MPNNEuclideanDistance<MPTraits>,
     //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     //ReachableDistance<MPTraits>, 
     //#endif
