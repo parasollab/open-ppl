@@ -167,15 +167,14 @@ struct dkinfo_compare {
   }
 };
 
-
 template <typename VertexIterator>
 class vertex_descriptor_iterator
   : public boost::iterator_adaptor<
                                    vertex_descriptor_iterator<VertexIterator>   //Derived
                                    , VertexIterator                             //Base
-                                   , typename VertexIterator::vertex_descriptor //Value
+                                   , typename VertexIterator::value_type::vertex_descriptor //Value
                                    , boost::use_default                         //CategoryOrTraversal
-                                   , typename VertexIterator::vertex_descriptor //Reference
+                                   , typename VertexIterator::value_type::vertex_descriptor //Reference
                                   >
 {
  public:
@@ -193,7 +192,7 @@ class vertex_descriptor_iterator
   {}
 
   //overload dereference to call descriptor() instead
-  typename VertexIterator::vertex_descriptor dereference() const
+  typename VertexIterator::value_type::vertex_descriptor dereference() const 
   { 
     return this->base()->descriptor(); 
   }
@@ -249,8 +248,11 @@ typedef typename GRAPH::vertex_descriptor VID;
 typedef typename GRAPH::edge_descriptor EID;
 typedef typename GRAPH::vertex_iterator VI; ///<VI Vertex Iterator
 #ifndef _PARALLEL
-///Not supported in parallel graph at this time because STAPL is being having problem with const
+///TODO: Remove guard after const issue is fixed in STAPL
 typedef typename GRAPH::const_vertex_iterator CVI; ///< not sure CVI Constant Vertex Iterator
+typedef vertex_descriptor_iterator<CVI> CVDI;
+#else
+typedef typename GRAPH::vertex_iterator CVI; 
 typedef vertex_descriptor_iterator<CVI> CVDI;
 #endif 
 typedef typename GRAPH::adj_edge_iterator EI;
@@ -346,7 +348,7 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
          *@see WeightedGraph::AddEdge(VID, VID, pair<WEIGHT,WEIGHT>)
          */
        ///add_edge is broken in new pGraph, remove ifdef after fix
-       #ifndef _PARALLEL
+      // #ifndef _PARALLEL
        virtual int  AddEdges( vector<EdgeInfo<VERTEX, WEIGHT> >& );
        virtual int  AddEdge(VID, VID, WEIGHT);
        virtual int  AddEdge(VID, VID, pair<WEIGHT,WEIGHT>&);
@@ -355,7 +357,7 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
        virtual bool IsVertex(VERTEX&, CVI*) ;
        virtual int  AddEdge(VERTEX&, VERTEX&, WEIGHT); 
        virtual int  AddEdge(VERTEX&, VERTEX&, pair<WEIGHT,WEIGHT>&);
-       #endif
+       //#endif
        virtual int  GetVerticesData(vector<VERTEX>& ) const; //get all vertices data from whole graph
        virtual int  GetVerticesVID(vector<VID>& ) const;     //get all VIDs from whole graph
        virtual vector<VID> ConvertVertices2VIDs(vector<VERTEX>&);  //convert vertices to corresponding VIDs
@@ -368,16 +370,16 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
        //helper function to call dereferece on an iterator whose
        //value_type is VID and convert to CfgType
        template<typename T>
-       VERTEX GetCfg(T& _t) const;
+       VERTEX GetCfg(T& _t);
 
        //specialization for a roadmap graph iterator, calls property()
        //template<typename RDMP::VI>
-       VERTEX GetCfg(VI& _t) const;
+       VERTEX GetCfg(VI& _t);
 
        //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
        //calls find_vertex(..) on VID to call property()
-       //To do:what is the purpose for this, how is it diffrent from above
-       VERTEX GetCfg(VID _t) const;
+       //To do:Temporarily removed constness until it is supported in STAPL
+       VERTEX GetCfg(VID _t) ;
 
     //@}
 
@@ -398,10 +400,8 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
 
    VDI descriptor_begin() { return VDI(this->begin()); }
    VDI descriptor_end() { return VDI(this->end()); }
-   #ifndef _PARALLEL
    CVDI descriptor_begin() const { return CVDI(this->begin()); }
    CVDI descriptor_end() const { return CVDI(this->end()); }
-   #endif
    
    ///Temporarily wrapper for some graph methods
    ///Until full migration and change of names in STAPL is completed
@@ -425,9 +425,9 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
     cout << "WARNING- Delete vertex not working pgraph" << endl;   
   }
   
-  void AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w){
+  /*void AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w){
 	  GRAPH::add_edge_async(_v1,_v2,_w.first);
-  }
+  }*/
 	  
 
    #endif
@@ -542,7 +542,7 @@ RoadmapGraph<VERTEX,WEIGHT>::AddVertex(vector<VERTEX>& _v) {
 
 //fix_lantao does this really in need? EdgeInfo?
 ///add_edge is broken in new pGraph remove ifdef after fix
-#ifndef _PARALLEL
+//#ifndef _PARALLEL
 template<class VERTEX, class WEIGHT>
 int
 RoadmapGraph<VERTEX,WEIGHT>::
@@ -621,7 +621,7 @@ AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT>& _w) {
   VDAddEdge(_v1, _v2);
   return 0;
 }
-#endif
+//#endif
 
 
 template <class VERTEX, class WEIGHT>
@@ -858,7 +858,7 @@ return IsEdge(vid1, vid2);
 template<class VERTEX, class WEIGHT>
 template<typename T>
 VERTEX
-RoadmapGraph<VERTEX, WEIGHT>::GetCfg(T& _t) const {
+RoadmapGraph<VERTEX, WEIGHT>::GetCfg(T& _t) {
   return (*(this->find_vertex(*_t))).property();
 }
 
@@ -866,7 +866,7 @@ RoadmapGraph<VERTEX, WEIGHT>::GetCfg(T& _t) const {
 //template<typename RDMP::VI>
 template<class VERTEX, class WEIGHT>
 VERTEX
-RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) const {
+RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) {
   return (*_t).property();
 }
 
@@ -875,7 +875,7 @@ RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) const {
 //To do:what is the purpose for this, how is it diffrent from above
 template<class VERTEX, class WEIGHT>
 VERTEX
-RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VID _t) const {
+RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VID _t)  {
   return (*this->find_vertex(_t)).property();
 }
 

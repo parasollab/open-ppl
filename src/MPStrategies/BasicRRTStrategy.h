@@ -325,7 +325,7 @@ BasicRRTStrategy<MPTraits>::ConnectNeighbors(VID _newVID, VID _nearVID){
       vRes= vis.get_res();
       hopStatClass->StopClock(hopClockName);
     }
-    for(typename GraphType::GRAPH::const_vertex_iterator vi = this->GetMPProblem()->GetRoadmap()->GetGraph()->begin(); vi!= this->GetMPProblem()->GetRoadmap()->GetGraph()->end(); vi++){
+    for(typename GraphType::CVI vi = this->GetMPProblem()->GetRoadmap()->GetGraph()->begin(); vi!= this->GetMPProblem()->GetRoadmap()->GetGraph()->end(); vi++){
         allVIDs.push_back((*vi).descriptor());
     }
     ConnectorPointer pConnection;
@@ -373,7 +373,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   kcloseStatClass->StopClock(kcloseClockName);
   
 
-  CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(kClosest[0])->property();
+  CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(kClosest[0]);
   CfgType newCfg;
   int weight;
 
@@ -396,7 +396,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
     }
     else
       this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(nearest, newCfg, WeightType("RRTExpand", weight));
-    this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(recentVID)->property().SetStat("Parent", kClosest[0]);
+    this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(recentVID).SetStat("Parent", kClosest[0]);
 
     if(std::string::npos!=m_gt.find("GRAPH")){
       VID newCfgVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVID(newCfg);
@@ -426,7 +426,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
         else
           this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(nearest, newCfg, WeightType("RRTExpand", weight));        
 
-        this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(otherVID)->property().SetStat("Parent", kClosest[0]);
+        this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(otherVID).SetStat("Parent", kClosest[0]);
         if(std::string::npos!=m_gt.find("GRAPH")){
           ConnectNeighbors( otherVID, kClosest[0]);
         }
@@ -507,7 +507,7 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
   for(vector<size_t>::iterator i = m_goalsNotFound.begin(); i!=m_goalsNotFound.end(); i++){
     vector<VID> closests;
     nfp->KClosest(this->GetMPProblem()->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));     
-    CfgType closest = this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(closests[0])->property();
+    CfgType closest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(closests[0]);
     double dist = dmp->Distance(env, m_goals[*i], closest);
     if(this->m_debug) cout << "Distance to goal::" << dist << endl;
     CfgType col;
