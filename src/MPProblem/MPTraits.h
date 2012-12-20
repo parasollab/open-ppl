@@ -17,6 +17,7 @@
 #include "ValidityCheckers/AlwaysTrueValidity.h"
 #include "ValidityCheckers/CollisionDetectionValidity.h"
 #include "ValidityCheckers/MedialAxisClearanceValidity.h"
+#include "ValidityCheckers/NodeClearanceValidity.h"
 #include "ValidityCheckers/ObstacleClearanceValidity.h"
 #ifdef PMPCfgSurface
 #include "ValidityCheckers/SurfaceValidity.h"
@@ -42,6 +43,8 @@
 
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
+#include "LocalPlanners/TransformAtS.h"
+#include "LocalPlanners/RotateAtS.h"
 #ifdef PMPCfgSurface
 #include "LocalPlanners/SurfaceLP.h"
 #endif
@@ -111,7 +114,7 @@ struct MPTraits{
     //ComposeValidity<MPTraits>,
     MedialAxisClearanceValidity<MPTraits>,
     //NegateValidity<MPTraits>,
-    //NodeClearanceValidity<MPTraits>,
+    NodeClearanceValidity<MPTraits>,
     ObstacleClearanceValidity<MPTraits>
     #ifdef PMPCfgSurface
     , SurfaceValidity<MPTraits>
@@ -151,7 +154,8 @@ struct MPTraits{
     //AStarClearance<MPTraits>,
     //AStarDistance<MPTraits>,
     //MedialAxisLP<MPTraits>,
-    //RotateAtS<MPTraits>,
+    TransformAtS<MPTraits>,
+    RotateAtS<MPTraits>,
     StraightLine<MPTraits>,
     //TransformAtS<MPTraits>,
     #if defined(PMPCfgSurface)

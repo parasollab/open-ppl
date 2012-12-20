@@ -6,36 +6,40 @@
 
 #include "StraightLine.h"
 
-template <class CFG, class WEIGHT>
-class TransformAtS : public StraightLine<CFG, WEIGHT> {
-
+template<class MPTraits>
+class TransformAtS : public StraightLine<MPTraits> {
   public:
 
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
+
     TransformAtS(double _s = 0.5);
-    TransformAtS(XMLNodeReader& _node, MPProblem* _problem);
+    TransformAtS(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~TransformAtS();
 
     virtual void PrintOptions(ostream& _os);
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
-        shared_ptr<DistanceMetricMethod> _dm,
-        const CFG& _c1, const CFG& _c2,
-        CFG& _col, LPOutput<CFG, WEIGHT>* _lpOutput,
+        DistanceMetricPointer _dm,
+        const CfgType& _c1, const CfgType& _c2,
+        CfgType& _col, LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
 
-    virtual vector<CFG> ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
-        const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes);
+    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
+        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes);
 
   protected:
 
     virtual bool IsReversible() {return false;}
-    virtual void GetSequenceNodes(const CFG& _c1, const CFG& _c2, double _s,
-        vector<CFG>& _sequence, bool _reverse = true);
+    virtual void GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, double _s,
+        vector<CfgType>& _sequence, bool _reverse = true);
     virtual bool IsConnectedOneWay(Environment* _env, StatClass& _stats,
-        shared_ptr<DistanceMetricMethod> _dm,
-        const CFG& _c1, const CFG& _c2, CFG& _col, 
-        LPOutput<CFG, WEIGHT>* _lpOutput,
+        DistanceMetricPointer _dm,
+        const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+        LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false,
         bool _saveFailedPath = false, bool forward = true);
@@ -43,51 +47,48 @@ class TransformAtS : public StraightLine<CFG, WEIGHT> {
     double m_sValue;
 };
 
-template <class CFG, class WEIGHT>
-TransformAtS<CFG, WEIGHT>::TransformAtS(double _s): 
-  StraightLine<CFG, WEIGHT>(), m_sValue(_s) {
+template <class MPTraits>
+TransformAtS<MPTraits>::TransformAtS(double _s): 
+  StraightLine<MPTraits>(), m_sValue(_s) {
     this->SetName("TransformAtS");
   }
 
-template <class CFG, class WEIGHT>
-TransformAtS<CFG, WEIGHT>::TransformAtS(XMLNodeReader& _node, MPProblem* _problem):
-  StraightLine<CFG, WEIGHT>(_node, _problem) {
+template <class MPTraits>
+TransformAtS<MPTraits>::TransformAtS(MPProblemType* _problem, XMLNodeReader& _node):
+  StraightLine<MPTraits>(_problem, _node) {
     this->SetName("TransformAtS");
-    m_sValue = _node.numberXMLParameter("s", true, 0.5, 0.0, 1.0, "Transform at s value");
+    this->m_sValue = _node.numberXMLParameter("s", true, 0.5, 0.0, 1.0, "Transform at s value");
 
     _node.warnUnrequestedAttributes();
-    if(this->m_debug)
-      PrintOptions(cout);
   }
 
-template <class CFG, class WEIGHT> 
-TransformAtS<CFG, WEIGHT>::~TransformAtS() { }
+template <class MPTraits>
+TransformAtS<MPTraits>::~TransformAtS() { }
 
 // Prints options
-template <class CFG, class WEIGHT>
+template <class MPTraits>
 void
-TransformAtS<CFG, WEIGHT>::PrintOptions(ostream& _os) {
+TransformAtS<MPTraits>::PrintOptions(ostream& _os) {
   _os << this->GetName() <<  endl;
-  _os << "\tbinarySearch = " << this->m_binarySearch << endl;
-  _os << "\tvcMethod = " << this->m_vcMethod << endl;
+  _os << "\tbinaryEvaluation = " << this->m_binaryEvaluation << endl;
   _os << "\tsValue = " << m_sValue << endl;
 }
 
 // Checks if two configurations can be connected, in both directions if necessary
-template <class CFG, class WEIGHT>
+template <class MPTraits>
 bool
-TransformAtS<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
-    shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, CFG& _col, 
-    LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
+TransformAtS<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
+    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+    LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 
   // Clear _lpOutput
   _lpOutput->Clear();
   // Check first direction
-  bool connected = IsConnectedOneWay(_env, _stats, _dm, _c1, _c2, _col,
+  bool connected = this->IsConnectedOneWay(_env, _stats, _dm, _c1, _c2, _col,
       _lpOutput, _posRes, _oriRes, _checkCollision, _savePath, _saveFailedPath, true);
   // Check opposite direction if necessary and applicable
-  if(!connected && !IsReversible())
+  if(!connected && !this->IsReversible())
     connected = IsConnectedOneWay(_env, _stats, _dm, _c2, _c1, _col,
         _lpOutput, _posRes, _oriRes, _checkCollision, _savePath, _saveFailedPath, false);
 
@@ -99,11 +100,11 @@ TransformAtS<CFG, WEIGHT>::IsConnected(Environment* _env, StatClass& _stats,
   return connected;
 }
 
-template <class CFG, class WEIGHT>
+template <class MPTraits>
 void
-TransformAtS<CFG, WEIGHT>::GetSequenceNodes(const CFG& _c1, const CFG& _c2, double _s, 
-    vector<CFG>& _sequence, bool _reverse) {
-  CFG thisCopy;
+TransformAtS<MPTraits>::GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, double _s, 
+    vector<CfgType>& _sequence, bool _reverse) {
+  CfgType thisCopy;
   vector<double> _v1 = _c1.GetData();
   thisCopy.SetData(_v1);
   _sequence.push_back(thisCopy);
@@ -111,12 +112,12 @@ TransformAtS<CFG, WEIGHT>::GetSequenceNodes(const CFG& _c1, const CFG& _c2, doub
 
   if(_c1.PosDOF() > 0) {
     // Translate the robot base s way between start and goal, keeping orientation fixed
-    CFG cfgAverage = thisCopy;
+    CfgType cfgAverage = thisCopy;
     cfgAverage.WeightedSum(_c1, _c2, _s);
     vector<double> averageData = cfgAverage.GetData();
     for(size_t i = 0; i < _c1.PosDOF(); i++)
       translateData[i] = averageData[i];
-    CFG cfgTranslate = thisCopy;
+    CfgType cfgTranslate = thisCopy;
     cfgTranslate.SetData(translateData);
     _sequence.push_back(cfgTranslate);
 
@@ -147,27 +148,27 @@ TransformAtS<CFG, WEIGHT>::GetSequenceNodes(const CFG& _c1, const CFG& _c2, doub
 }
 
 // Checks if two configurations can be connected in one direction
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 bool
-TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats,
-    shared_ptr<DistanceMetricMethod> _dm, const CFG& _c1, const CFG& _c2, CFG& _col, 
-    LPOutput<CFG, WEIGHT>* _lpOutput, double _posRes, double _oriRes,
+TransformAtS<MPTraits>::IsConnectedOneWay(Environment* _env, StatClass& _stats,
+    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+    LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath, bool _forward) {
   string callee = this->GetNameAndLabel() + "::IsConnectedOneWay()";
-  typename ValidityChecker::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker()->GetMethod(this->m_vcMethod);
+  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   CDInfo cdInfo;
 
   if(this->m_debug)
     cout << "Start CFG positional DOF: " << _c1.PosDOF() << endl; 
 
-  vector<CFG> sequence; 
+  vector<CfgType> sequence; 
   bool connected = true;
   int cdCounter = 0;
-  GetSequenceNodes(_c1, _c2, m_sValue, sequence, _forward);
+  GetSequenceNodes(_c1, _c2, this->m_sValue, sequence, _forward);
 
   if(this->m_debug) {
     //vector<double> tmp = _c1.GetData();
-    for(typename vector<CFG>::iterator J = sequence.begin(); J != sequence.end(); J++) {
+    for(typename vector<CfgType>::iterator J = sequence.begin(); J != sequence.end(); J++) {
       cout << "C" << distance(sequence.begin(), J) << ": " << *J;
       cout << "end" << endl;
     }
@@ -175,7 +176,7 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
 
   // Check sequence nodes
   if(_checkCollision) {
-    for(typename vector<CFG>::iterator I = sequence.begin()+1; I != sequence.end()-1; I++) { // _c1 and _c2 not double checked
+    for(typename vector<CfgType>::iterator I = sequence.begin()+1; I != sequence.end()-1; I++) { // _c1 and _c2 not double checked
       cdCounter++;
       if((*I).InBoundary(_env)) {
         if(!vcm->IsValid(*I, _env, _stats, cdInfo, &callee)) {
@@ -191,8 +192,8 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
   }
 
   // Check between sequence nodes
-  for(typename vector<CFG>::iterator I = sequence.begin(); connected && I != sequence.end()-1; I++) {
-    if(this->m_binarySearch)
+  for(typename vector<CfgType>::iterator I = sequence.begin(); connected && I != sequence.end()-1; I++) {
+    if(this->m_binaryEvaluation)
       connected = this->IsConnectedSLBinary(_env, _stats, _dm, *I,
           *(I+1), _col, _lpOutput, cdCounter,
           _posRes, _oriRes,_checkCollision,
@@ -209,7 +210,7 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
 
   // Output any good results
   if(connected)
-    for(typename vector<CFG>::iterator I = sequence.begin(); I != sequence.end()-1; I++) {
+    for(typename vector<CfgType>::iterator I = sequence.begin(); I != sequence.end()-1; I++) {
       _lpOutput->intermediates.push_back(*(I+1));
     }
   if(this->m_recordKeep) {
@@ -222,24 +223,24 @@ TransformAtS<CFG,WEIGHT>::IsConnectedOneWay(Environment* _env, StatClass& _stats
 }
 
 // Returns the path
-template <class CFG, class WEIGHT>
-vector<CFG> 
-TransformAtS<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<DistanceMetricMethod> _dm, 
-    const CFG& _c1, const CFG& _c2, const vector<CFG>& _intermediates, double _posRes, double _oriRes) {
+template<class MPTraits>
+vector<typename TransformAtS<MPTraits>::CfgType> 
+TransformAtS<MPTraits>::ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
+    const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes) {
 
   StatClass dummyStats;
   int dummyCntr;
-  LPOutput<CFG, WEIGHT>* lpOutput = new LPOutput<CFG, WEIGHT>();
-  CFG col;
+  LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
+  CfgType col;
 
   // Generate path between start, intermediates, and goal
-  vector<CFG> cfgList;
+  vector<CfgType> cfgList;
   cfgList.push_back(_c1);
   cfgList.insert(cfgList.end(), _intermediates.begin(), _intermediates.end());
   cfgList.push_back(_c2);
 
-  for(typename vector<CFG>::iterator I = cfgList.begin(); I != cfgList.end()-1; I++) {
-    if(this->m_binarySearch)
+  for(typename vector<CfgType>::iterator I = cfgList.begin(); I != cfgList.end()-1; I++) {
+    if(this->m_binaryEvaluation)
       this->IsConnectedSLBinary(_env, dummyStats, _dm, *I, *(I+1),
           col, lpOutput, dummyCntr, _posRes, _oriRes, false, true, false);
     else
@@ -250,7 +251,7 @@ TransformAtS<CFG, WEIGHT>::ReconstructPath(Environment* _env, shared_ptr<Distanc
   }
 
   // Return final path
-  vector<CFG> path = lpOutput->path;
+  vector<CfgType> path = lpOutput->path;
   delete lpOutput;
   return path;
 }
