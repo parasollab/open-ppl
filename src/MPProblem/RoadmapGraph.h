@@ -787,28 +787,6 @@ bool
 RoadmapGraph<VERTEX,WEIGHT>::
 IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
 
-   //RoadmapGraph<VERTEX, WEIGHT> g = *this; // copying graph-memory problem -
-    //CVI v1 = find_if(g.begin(), g.end(), std::bind2nd(std::equal_to<VERTEX>(), _v1 ));
-    //CVI v1=g.begin() ;//= find_if(g.begin(), g.end(), Vertex_equal_to<VERTEX, WEIGHT>(_v1) ); 
-
-/*
-  //non constant stuff
-    VI v1 = my_find_VDATA_eq(_v1);
-    
-  //definition here
-    my_find_VDATA_eq(const VERTEX& _v)  {
-    VI vi = v.begin();
-    bool found = false;
-    while (vi != v.end() && !found) {
-      if ( vi->data == _v) {
-        found = true;
-      } else {
-        vi++;
-      }
-    }
-    return (vi);
-
-*/
      VI vi = this->begin();
     bool found = false;
     while(vi != this->end() && !found){
@@ -1135,69 +1113,6 @@ double ComponentDiameter(GRAPH &g,typename GRAPH::vertex_descriptor start_vid, t
 
 }
 #endif
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-/// Helper Functions for getting Cfgs from the RoadmapGraph
-////////////////////////////////////////////////////////////////////////////////////////////
-/*
-namespace pmpl_detail
-{
-  //helper function to call dereferece on an iterator whose
-  //value_type is VID and convert to CfgType
-  template<typename RDMP>
-    struct GetCfg {
-      GetCfg(){}
-      ~GetCfg(){}
-
-      template<typename T>
-        typename RDMP::vertex_property operator()(RDMP* _map, T& _t) const {
-          return (*(_map->find_vertex(*_t))).property();
-        }
-
-      //specialization for a roadmap graph iterator, calls property()
-      //template<typename RDMP::VI>
-      typename RDMP::vertex_property operator()(const RDMP* _map, const typename RDMP::VI& _t) const {
-        return (*_t).property();
-      }
-
-      //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
-      //calls find_vertex(..) on VID to call property()
-      //To do:what is the purpose for this, how is it diffrent from above
-      typename RDMP::vertex_property operator()(RDMP* _map, typename RDMP::VID _t) const {
-        return (*_map->find_vertex(_t)).property();
-      }
-    };
-
-  //helper function to call dereferece on an iterator whose value_type is VID
-  //needed to get around the fact that a roadmap graph iterator
-  //requires an extra descriptor() call
-  template <typename T>
-    struct GetVid
-    : public unary_function<T, RoadmapGraph<CfgType,WeightType>::vertex_descriptor>
-    {
-      RoadmapGraph<CfgType, WeightType>::vertex_descriptor
-        operator()(const T& t) const
-        {
-          return *t;
-        }
-    };
-  //specialization for a roadmap graph iterator, calls descriptor()
-  template <>
-    struct GetVid<RoadmapGraph<CfgType, WeightType>::VI>
-    : public unary_function<RoadmapGraph<CfgType, WeightType>::VI,RoadmapGraph<CfgType, WeightType>::vertex_descriptor>
-    {
-      RoadmapGraph<CfgType, WeightType>::vertex_descriptor
-        operator()(const RoadmapGraph<CfgType, WeightType>::VI& t) const
-        {
-          //return t->descriptor();
-          return (*(t)).descriptor();
-
-        }
-    };
-}
-*/
-
 
 #endif
 
