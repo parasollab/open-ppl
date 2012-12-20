@@ -48,6 +48,7 @@
 #include "LocalPlanners/ToggleLP.h"
 
 //connector includes
+#include "Connectors/CCsConnector.h"
 #ifdef PMPCfgSurface
 #include "Connectors/ConnectNeighboringSurfaces.h"
 #endif
@@ -64,13 +65,14 @@
 #include "Metrics/TimeMetric.h"
 
 //map evaluator includes
-#include "MapEvaluators/Query.h"
+#include "MapEvaluators/ComposeEvaluator.h"
+#include "MapEvaluators/ConditionalEvaluator.h"
 #include "MapEvaluators/LazyQuery.h"
 #include "MapEvaluators/LazyToggleQuery.h"
-#include "MapEvaluators/ConditionalEvaluator.h"
+#include "MapEvaluators/NegateEvaluator.h"
 #include "MapEvaluators/PrintMapEvaluation.h"
+#include "MapEvaluators/Query.h"
 #include "MapEvaluators/TrueEvaluation.h"
-#include "MapEvaluators/ComposeEvaluator.h"
 
 //map evaluator includes
 #include "MPStrategies/BasicPRM.h"
@@ -160,11 +162,11 @@ struct MPTraits{
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+    CCsConnector<MPTraits>, 
 #if defined(PMPCfgSurface)
     ConnectNeighboringSurfaces<MPTraits>,
 #endif
     NeighborhoodConnector<MPTraits>/*, 
-    ConnectCCs<MPTraits>, 
     PreferentialAttachment<MPTraits>, 
     OptimalConnection<MPTraits>,
     OptimalRewire<MPTraits>,
@@ -185,14 +187,14 @@ struct MPTraits{
   
   //types of map evaluators available in our world
   typedef boost::mpl::list<
+    ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
-    TrueEvaluation<MPTraits>,
-    PrintMapEvaluation<MPTraits>, 
-    Query<MPTraits>,
     LazyQuery<MPTraits>,
     LazyToggleQuery<MPTraits>,
-    ComposeEvaluator<MPTraits>//,
-    //NegateEvaluation<MPTraits>
+    NegateEvaluator<MPTraits>,
+    PrintMapEvaluation<MPTraits>, 
+    Query<MPTraits>,
+    TrueEvaluation<MPTraits>
     > MapEvaluatorMethodList;
   
   //types of motion planning strategies available in our world

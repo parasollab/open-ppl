@@ -6,7 +6,7 @@ struct LPOutput {
   typedef typename MPTraits::CfgType CfgType;
   typedef typename MPTraits::WeightType WeightType;
   typedef pair<WeightType, WeightType> LPEdge;
-  typedef pair< pair<CfgType, CfgType>, LPEdge> LPSavedEdge;
+  typedef pair<pair<CfgType, CfgType>, LPEdge> LPSavedEdge;
 
   vector<CfgType> path;          // Path found by local planner.
   vector<CfgType> intermediates;

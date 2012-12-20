@@ -1,9 +1,9 @@
-#ifndef CONNECTCCS_H_
-#define CONNECTCCS_H_
+#ifndef CCSCONNECTOR_H_
+#define CCSCONNECTOR_H_
 
-#include "ConnectionMethod.h"
+#include "ConnectorMethod.h"
 
-//ConnectCCs
+//CCsConnector
 /**Try to connect different connected components of the roadmap.
  *We try to connect all pairs of connected components. If both
  *components are small (less than "m_smallcc" nodes), then we try to 
@@ -21,37 +21,38 @@
 #define SMALL_CC      3       // default for connectCCs: all-pairs connection between CCs
 #define K2_CLOSEST    0       // m_k2 closest CCs, default 0 means connect all CCs
 
-template <class CFG, class WEIGHT>
-class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
+template <class MPTraits>
+class CCsConnector: public ConnectorMethod<MPTraits> {
   public:
-    //////////////////////
-    // Typedefs from RoadmapGraph
-    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-    typedef typename vector<typename RoadmapGraph<CFG,WEIGHT>::VID>::iterator VIDIT;
 
-    //////////////////////
-    // Constructors and Destructor
-    ConnectCCs(string _lp = "", string _nf = "", MPProblem* _problem = NULL); 
-    ConnectCCs(XMLNodeReader& _node, MPProblem* _problem);
-    virtual ~ConnectCCs();
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename MPProblemType::VID VID; 
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
+    typedef typename vector<VID>::iterator VIDIT;
 
-    //////////////////////
-    ///Used in new MPProblem framework.
+    CCsConnector(MPProblemType* _problem = NULL, string _lp = "", string _nf = ""); 
+    CCsConnector(MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~CCsConnector();
+
     virtual void PrintOptions(ostream& _os);
     virtual void ParseXML(XMLNodeReader& _node);
 
     template <typename ColorMap, typename InputIterator, typename OutputIterator>
-      void Connect(Roadmap<CFG, WEIGHT>*, StatClass& _stats,
+      void Connect(RoadmapType* _rm, StatClass& _stats,
           ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
           InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision);
 
     template<typename OutputIterator>
-      void ConnectSmallCC(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+      void ConnectSmallCC(RoadmapType* _rm, StatClass& _stats,
           vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
           OutputIterator _collision);  
 
     template<typename OutputIterator>
-      void ConnectBigCC(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+      void ConnectBigCC(RoadmapType* _rm, StatClass& _stats,
           vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
           OutputIterator _collision);  
 
@@ -59,7 +60,7 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
     // compute all pair distance between ccs.
     // approximated using coms of ccs
     template<typename ColorMap, typename InputIterator>
-      void ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm,
+      void ComputeAllPairsCCDist(RoadmapType* _rm,
           ColorMap& _cmap, InputIterator _ccs1First, InputIterator _ccs1Last,
           InputIterator _ccs2First, InputIterator _ccs2Last);
 
@@ -67,104 +68,93 @@ class ConnectCCs: public ConnectionMethod<CFG,WEIGHT> {
     void GetK2Pairs(int _ccid, vector<VID>& _kCCID);
 
     // get closest dist between two given CCs
-    double ClosestInterCCDist(Roadmap<CFG, WEIGHT>* _rm, vector<VID>& _cc1, vector<VID>& _cc2);
+    double ClosestInterCCDist(RoadmapType* _rm, vector<VID>& _cc1, vector<VID>& _cc2);
 
   private:
-    //////////////////////
-    // Data from ConnectCCs
     size_t m_kPairs;
     size_t m_smallcc;
     size_t m_k2;
 
-    // Data from ConnectkCCs
     map<VID, vector<pair<VID,double> > > m_ccDist;
 };
 
+template<class MPTraits>
+CCsConnector<MPTraits>::CCsConnector(MPProblemType* _problem, string _lp, string _nf)
+  : ConnectorMethod<MPTraits>() { 
+    this->SetName("CCsConnector"); 
+    this->m_lpMethod = _lp;
+    this->m_nfMethod = _nf;
+    this->SetMPProblem(_problem);
+    m_kPairs = KPAIRS;
+    m_smallcc = SMALL_CC;
+    m_k2 = K2_CLOSEST;
+  }
 
-///////////////////////////////////////////////////////////////////////////////
-//   Connection Method:  ConnectCCs
-template <class CFG, class WEIGHT>
-ConnectCCs<CFG,WEIGHT>::ConnectCCs(string _lp, string _nf, MPProblem* _problem)
-: ConnectionMethod<CFG,WEIGHT>() { 
-  this->SetName("ConnectCCs"); 
-  this->m_lpMethod = _lp;
-  this->m_nfMethod = _nf;
-  this->SetMPProblem(_problem);
-  m_kPairs = KPAIRS;
-  m_smallcc = SMALL_CC;
-  m_k2 = K2_CLOSEST;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-ConnectCCs<CFG,WEIGHT>::ConnectCCs(XMLNodeReader& _node, MPProblem* _problem) : ConnectionMethod<CFG,WEIGHT>(_node, _problem) { 
+template<class MPTraits>
+CCsConnector<MPTraits>::CCsConnector(MPProblemType* _problem, XMLNodeReader& _node) : ConnectorMethod<MPTraits>(_problem, _node) { 
+  this->SetName("CCsConnector"); 
   ParseXML(_node);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-void ConnectCCs<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node){
-  this->SetName("ConnectCCs"); 
-
+template<class MPTraits>
+void
+CCsConnector<MPTraits>::ParseXML(XMLNodeReader& _node){
   m_kPairs = _node.numberXMLParameter("kpairs", true, 5,1,1000, "kpairs value"); 
   m_smallcc = _node.numberXMLParameter("smallcc", true, 5,1,1000,  "smallcc value"); 
   m_k2 = _node.numberXMLParameter("kclosest", true, 5,0,1000, "k closest CCs");
-
 }
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-ConnectCCs<CFG,WEIGHT>::~ConnectCCs(){}
+template<class MPTraits>
+CCsConnector<MPTraits>::~CCsConnector(){}
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 void
-ConnectCCs<CFG, WEIGHT>::PrintOptions(ostream& _os){
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
+CCsConnector<MPTraits>::PrintOptions(ostream& _os){
+  ConnectorMethod<MPTraits>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  m_kPairs = ";
   _os << m_kPairs << "  m_smallcc = " << m_smallcc ;
   _os << "  m_k2 = " << m_k2;
   _os << endl;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-template <typename CFG, typename WEIGHT>
-template <typename ColorMap, typename InputIterator>
-void ConnectCCs<CFG,WEIGHT>::ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm,
+template<class MPTraits>
+template<typename ColorMap, typename InputIterator>
+void
+CCsConnector<MPTraits>::ComputeAllPairsCCDist(RoadmapType* _rm,
     ColorMap& _cmap, InputIterator _ccs1First, InputIterator _ccs1Last,
     InputIterator _ccs2First, InputIterator _ccs2Last){
+  
+  DistanceMetricPointer dmm; 
+  dmm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
 
-  shared_ptr<DistanceMetricMethod> dm = 
-    this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
-
-  RoadmapGraph<CFG,WEIGHT>* rmapG=_rm->m_pRoadmap;
-  Environment* env=_rm->GetEnvironment();
+  GraphType* rgraph=_rm->GetGraph();
+  Environment* env = this->GetMPProblem()->GetEnvironment();
   _cmap.reset();
 
   //compute com of ccs
-  map<VID, CFG> com1,com2;
+  map<VID, CfgType> com1,com2;
   vector<VID> ccvids;
   for (InputIterator i = _ccs1First; i != _ccs1Last; i++){
     _cmap.reset();
     ccvids.clear();
-    get_cc(*rmapG, _cmap, *i, ccvids);
-    com1[*i] = GetCentroid(rmapG, ccvids);
+    get_cc(*rgraph, _cmap, *i, ccvids);
+    com1[*i] = GetCentroid(rgraph, ccvids);
   }
   for (InputIterator i = _ccs2First; i != _ccs2Last; i++){
     _cmap.reset();
     ccvids.clear();
-    get_cc(*rmapG, _cmap, *i, ccvids);
-    com2[*i] = GetCentroid(rmapG, ccvids);
+    get_cc(*rgraph, _cmap, *i, ccvids);
+    com2[*i] = GetCentroid(rgraph, ccvids);
   }
 
   //dist between ccs
   m_ccDist.clear();
 
-  typedef typename map<VID, CFG>::iterator IT;
+  typedef typename map<VID, CfgType>::iterator IT;
   for(IT i = com1.begin(); i != com1.end(); ++i){
     for(IT j = com2.begin(); j != com2.end(); ++j){
       if (i->first != j->first){
-        m_ccDist[i->first].push_back(make_pair(j->first, dm->Distance(env,i->second,j->second)));
+        m_ccDist[i->first].push_back(make_pair(j->first, dmm->Distance(env,i->second,j->second)));
       }
       else{ //same cc
         m_ccDist[i->first].push_back(make_pair(j->first, MAX_DBL));
@@ -173,10 +163,10 @@ void ConnectCCs<CFG,WEIGHT>::ComputeAllPairsCCDist(Roadmap<CFG, WEIGHT>* _rm,
   }//end for i
 }
 
-///////////////////////////////////////////////////////////////////////////////
 //get m_k2 closest pairs of CCs
-template <class CFG, class WEIGHT>
-void ConnectCCs<CFG,WEIGHT>::GetK2Pairs(int _ccid, vector<VID>& _k2CCID){
+template<class MPTraits>
+void
+CCsConnector<MPTraits>::GetK2Pairs(int _ccid, vector<VID>& _k2CCID){
   typedef vector<double>::iterator IT;
 
   vector<pair<VID, double> >& dis2CCs = m_ccDist[_ccid];
@@ -190,28 +180,24 @@ void ConnectCCs<CFG,WEIGHT>::GetK2Pairs(int _ccid, vector<VID>& _k2CCID){
   }
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
 // Find the closest inter CC distance
-template <class CFG, class WEIGHT>
-double ConnectCCs<CFG,WEIGHT>::ClosestInterCCDist(Roadmap<CFG, WEIGHT>* _rm, 
+template<class MPTraits>
+double
+CCsConnector<MPTraits>::ClosestInterCCDist(RoadmapType* _rm, 
     vector<VID>& _cc1, vector<VID>& _cc2){
-  shared_ptr<DistanceMetricMethod> dm = 
-    this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
-  typedef RoadmapGraph<CFG,WEIGHT> RoadmapGraphType;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
-  RoadmapGraphType* rmapG=_rm->m_pRoadmap;
+  DistanceMetricPointer dmm;
+  dmm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
   Environment * env=_rm->GetEnvironment();
 
   double min_dist=1e20, dist = 0;
-  const CFG& cfg1;
-  const CFG& cfg2;
+  const CfgType& cfg1;
+  const CfgType& cfg2;
 
   for(VIDIT i =_cc1.begin(); i != _cc1.end(); ++i){
-    cfg1 = GetCfg()(_rm->m_pRoadmapm, i);
+    cfg1 = _rm->GetGraph()->GetCfg(*i);
     for(VIDIT j = _cc2.begin(); j != _cc2.end(); ++j){
-      cfg2 = GetCfg()(_rm->m_pRoadmap, j);
-      dist = dm->Distance(env,cfg1,cfg2);
+      cfg2 = _rm->GetGraph()->GetCfg(*j);
+      dist = dmm->Distance(env,cfg1,cfg2);
       if(dist<min_dist){
         min_dist=dist;
       }
@@ -220,28 +206,27 @@ double ConnectCCs<CFG,WEIGHT>::ClosestInterCCDist(Roadmap<CFG, WEIGHT>* _rm,
   return min_dist;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
+template<class MPTraits>
 template<typename ColorMap, typename InputIterator, typename OutputIterator>
-void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+void
+CCsConnector<MPTraits>::Connect( RoadmapType* _rm, StatClass& _stats, 
     ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
     InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision) {
 
   if(this->m_debug){
     cout << "components(m_kPairs="<< m_kPairs ;
     cout << ", m_smallcc="<<m_smallcc <<", m_k2=" << m_k2 << "): "<<flush;
-    _stats.DisplayCCStats(cout, *(_rm->m_pRoadmap)); 
+    _stats.DisplayCCStats(cout, *(_rm->GetGraph())); 
     cout << endl;
   }
 
-  RoadmapGraph<CFG, WEIGHT>* pMap = _rm->m_pRoadmap;
+  GraphType* rgraph = _rm->GetGraph();
   vector< pair<size_t,VID> > ccs1;
   vector<VID> ccid,cc1,cc2;
 
-  stapl::sequential::vector_property_map< RoadmapGraph<CFG,WEIGHT>,size_t > cmap;
-  get_cc_stats(*(_rm->m_pRoadmap),cmap,ccs1);
-  
+  stapl::sequential::vector_property_map< GraphType,size_t > cmap;
+  get_cc_stats(*rgraph,cmap,ccs1);
+
   if(ccs1.size() <= 1) return;
 
   VIDIT itr1,itr2;
@@ -263,12 +248,12 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
       GetK2Pairs(*itr1,k2CCID);
       for (VIDIT itr2 = k2CCID.begin(); itr2 != k2CCID.end(); ++itr2) {
         _cmap.reset();
-        if ( !stapl::sequential::is_same_cc(*pMap,_cmap,*itr1,*itr2) ) {
+        if ( !stapl::sequential::is_same_cc(*rgraph,_cmap,*itr1,*itr2) ) {
 
           _cmap.reset();
-          get_cc(*pMap,_cmap,*itr1,cc1);
+          get_cc(*rgraph,_cmap,*itr1,cc1);
           _cmap.reset();
-          get_cc(*pMap,_cmap,*itr2,cc2);
+          get_cc(*rgraph,_cmap,*itr2,cc2);
 
           if(cc1.size() < m_smallcc && cc2.size() < m_smallcc){
             ConnectSmallCC(_rm, _stats, cc1, cc2, _collision);
@@ -287,7 +272,7 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
   } 
 
   ///////////////////////////////////////////////////////////////////////////////////
-  /// ConnectCCs
+  /// CCsConnector
   ///////////////////////////////////////////////////////////////////////////////////
   else { // Attempt to Connect CCs, All-Pairs for all CCs
     if(this->m_debug) 
@@ -295,12 +280,12 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
     for (itr1 = ccid.begin(); itr1 != ccid.end(); ++itr1) {
       for (itr2 = itr1+1; itr2 != ccid.end(); ++itr2) {
         _cmap.reset();
-        if ( !stapl::sequential::is_same_cc(*pMap,_cmap,*itr1,*itr2) ) {
+        if ( !stapl::sequential::is_same_cc(*rgraph,_cmap,*itr1,*itr2) ) {
 
           _cmap.reset();
-          get_cc(*pMap,_cmap,*itr1,cc1);
+          get_cc(*rgraph,_cmap,*itr1,cc1);
           _cmap.reset();
-          get_cc(*pMap,_cmap,*itr2,cc2);
+          get_cc(*rgraph,_cmap,*itr2,cc2);
 
           if(cc1.size() < m_smallcc && cc2.size() < m_smallcc){
             ConnectSmallCC(_rm, _stats, cc1, cc2, _collision);
@@ -318,23 +303,21 @@ void ConnectCCs<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _sta
     }
   }
   if(this->m_debug) {
-    _stats.DisplayCCStats(cout, *(_rm->m_pRoadmap)); 
+    _stats.DisplayCCStats(cout, *(rgraph)); 
     cout << endl;
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-template <typename OutputIterator>
-void ConnectCCs<CFG, WEIGHT>::ConnectSmallCC( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+template<class MPTraits>
+template<typename OutputIterator>
+void
+CCsConnector<MPTraits>::ConnectSmallCC( RoadmapType* _rm, StatClass& _stats,
     vector<VID>& _cc1Vec, vector<VID>& _cc2Vec, OutputIterator _collision) {
 
-  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
-
-  RoadmapGraphType* pMap = _rm->m_pRoadmap;
-  LPOutput<CFG, WEIGHT> lpOutput;
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
+  GraphType* rgraph = _rm->GetGraph();
+  LPOutput<MPTraits> lpOutput;
+  DistanceMetricPointer dmm;
+  dmm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
 
   // Begin the connection attempts
   VID cc1Elem, cc2Elem;
@@ -342,27 +325,27 @@ void ConnectCCs<CFG, WEIGHT>::ConnectSmallCC( Roadmap<CFG, WEIGHT>* _rm, StatCla
     cc1Elem = _cc1Vec[i];
     for (size_t j = 0; j < _cc2Vec.size(); ++j){
       cc2Elem = _cc2Vec[j];
-      if(_rm->IsCached(cc1Elem, cc2Elem) && !_rm->GetCache(cc1Elem, cc2Elem)) {
+      if(_rm->IsCached(cc1Elem, cc2Elem)) {
         continue;
       }
       CfgType _col;
-      if (!_rm->m_pRoadmap->IsEdge(cc1Elem,cc2Elem) 
-          && this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
-          IsConnected( _rm->GetEnvironment(),_stats,dm,
-            GetCfg()(_rm->m_pRoadmap, cc1Elem),
-            GetCfg()(_rm->m_pRoadmap, cc2Elem),
+      if (!rgraph->IsEdge(cc1Elem, cc2Elem) 
+          && this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
+          IsConnected(this->GetMPProblem()->GetEnvironment(),_stats,dmm,
+            rgraph->GetCfg(cc1Elem),
+            rgraph->GetCfg(cc2Elem),
             _col, &lpOutput, this->m_connectionPosRes, 
-            this->m_connectionOriRes, !this->m_addAllEdges) ) {
-        pMap->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
+            this->m_connectionOriRes, !this->m_addAllEdges)) {
+        rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
         return;
       }
       else if(this->m_addPartialEdge) {
-        typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
-        for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
-          CFG tmp = I->first.second;
-          if(!tmp.AlmostEqual(GetCfg()(_rm->m_pRoadmap, cc1Elem))){
-            VID tmpVID = pMap->AddVertex(tmp);
-            pMap->AddEdge(cc1Elem, tmpVID, I->second);
+        typename vector<typename LPOutput<MPTraits>::LPSavedEdge>::iterator eit;
+        for(eit=lpOutput.savedEdge.begin(); eit!=lpOutput.savedEdge.end(); eit++) {
+          CfgType tmp = eit->first.second;
+          if(!tmp.AlmostEqual(rgraph->GetCfg(cc1Elem))){
+            VID tmpVID = rgraph->AddVertex(tmp);
+            rgraph->AddEdge(cc1Elem, tmpVID, eit->second);
           }
         }
       }
@@ -373,19 +356,16 @@ void ConnectCCs<CFG, WEIGHT>::ConnectSmallCC( Roadmap<CFG, WEIGHT>* _rm, StatCla
   }//end for c1
 }
 
-///////////////////////////////////////////////////////////////////////////////
-template <class CFG, class WEIGHT>
-template <typename OutputIterator>
-void ConnectCCs<CFG, WEIGHT>::ConnectBigCC( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+template<class MPTraits>
+template<typename OutputIterator>
+void
+CCsConnector<MPTraits>::ConnectBigCC( RoadmapType* _rm, StatClass& _stats,
     vector<VID>& _cc1Vec, vector<VID>& _cc2Vec, OutputIterator _collision) {
 
-  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
-
-  RoadmapGraphType* pMap = _rm->m_pRoadmap;
-  LPOutput<CFG, WEIGHT> lpOutput;
-  NeighborhoodFinder::NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod);
-  shared_ptr<DistanceMetricMethod> dm = nf->GetDMMethod();
+  GraphType* rgraph = _rm->GetGraph();
+  LPOutput<MPTraits> lpOutput;
+  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod);
+  DistanceMetricPointer dmm = nf->GetDMMethod();
 
   size_t k = min(m_kPairs, _cc2Vec.size()); // for connecting k-closest pairs of nodes between CCs
 
@@ -402,27 +382,27 @@ void ConnectCCs<CFG, WEIGHT>::ConnectBigCC( Roadmap<CFG, WEIGHT>* _rm, StatClass
     cc2Elem = kp[i].second;
 
     //_stats.IncConnections_Attempted();
-    if(_rm->IsCached(cc1Elem, cc2Elem) && !_rm->GetCache(cc1Elem, cc2Elem)) {
+    if(_rm->IsCached(cc1Elem, cc2Elem)) {
       continue;
     }
     CfgType _col;
-    if (!_rm->m_pRoadmap->IsEdge(cc1Elem,cc2Elem) 
-        && this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
-        IsConnected( _rm->GetEnvironment(),_stats,dm,
-          GetCfg()(_rm->m_pRoadmap, cc1Elem),
-          GetCfg()(_rm->m_pRoadmap, cc2Elem),
+    if (!rgraph->IsEdge(cc1Elem,cc2Elem) 
+        && this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
+        IsConnected(this->GetMPProblem()->GetEnvironment(),_stats,dmm,
+          rgraph->GetCfg(cc1Elem),
+          rgraph->GetCfg(cc2Elem),
           _col, &lpOutput, this->m_connectionPosRes, 
-          this->m_connectionOriRes, !this->m_addAllEdges) ) {
-      pMap->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
+          this->m_connectionOriRes, !this->m_addAllEdges)) {
+      rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
       return;
     }
     else if(this->m_addPartialEdge) {
-      typename vector<pair< pair<CFG,CFG>, pair<WEIGHT,WEIGHT> > >::iterator I;
-      for(I=lpOutput.savedEdge.begin(); I!=lpOutput.savedEdge.end(); I++) {
-        CFG tmp = I->first.second;
-        if(!tmp.AlmostEqual(GetCfg()(_rm->m_pRoadmap, cc1Elem))){
-          VID tmpVID = pMap->AddVertex(tmp);
-          pMap->AddEdge(cc1Elem, tmpVID, I->second);
+      typename vector<typename LPOutput<MPTraits>::LPSavedEdge>::iterator eit;
+      for(eit = lpOutput.savedEdge.begin(); eit != lpOutput.savedEdge.end(); eit++) {
+        CfgType tmp = eit->first.second;
+        if(!tmp.AlmostEqual(rgraph->GetCfg(cc1Elem))){
+          VID tmpVID = rgraph->AddVertex(tmp);
+          rgraph->AddEdge(cc1Elem, tmpVID, eit->second);
         }
       }
     }

@@ -2,19 +2,7 @@
 #define COMPOSEEVALUATION_H_
 
 #include "MapEvaluatorMethod.h"
-
-template<class MPTraits>
-class ComposeEvaluatorFunctor {
-  public:
-    typedef typename MPTraits::MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
-    ComposeEvaluatorFunctor() {}
-
-    ~ComposeEvaluatorFunctor() {}
-
-    bool operator()(MapEvaluatorPointer _conditionalType) {
-      return _conditionalType->operator()();
-    }
-};
+#include "EvaluatorFunctor.h"
 
 template <class MPTraits>
 class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
@@ -23,7 +11,6 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     enum LogicalOperator { AND, OR };
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
-    typedef typename vector<MapEvaluatorPointer>::iterator InputIterator;
 
     ComposeEvaluator(LogicalOperator _logicalOperator = AND,
         const vector<string>& _evalLabels = vector<string>());
@@ -92,17 +79,19 @@ template<class MPTraits>
 bool ComposeEvaluator<MPTraits>::operator()() {
 
   vector<MapEvaluatorPointer> evalMethods;
+  typedef typename vector<MapEvaluatorPointer>::iterator MEIterator;
   for(vector<string>::iterator it = m_evalLabels.begin(); it != m_evalLabels.end(); ++it) {
     evalMethods.push_back(this->GetMPProblem()->GetMapEvaluator(*it));
   }
 
-  ComposeEvaluatorFunctor<MPTraits> comFunc;
+  typedef EvaluatorFunctor<MapEvaluatorPointer> EvalFunctor;
+  EvalFunctor comFunc;
 
   if (m_logicalOperator == AND) {
-    Compose<InputIterator, logical_and<bool>, ComposeEvaluatorFunctor<MPTraits> > comAnd;
+    Compose<MEIterator, logical_and<bool>, EvalFunctor> comAnd;
     return comAnd(evalMethods.begin(), evalMethods.end(), logical_and<bool>(), comFunc);
   } else if (m_logicalOperator == OR) {
-    Compose<InputIterator, logical_or<bool>, ComposeEvaluatorFunctor<MPTraits> > comOr;
+    Compose<MEIterator, logical_or<bool>, EvalFunctor> comOr;
     return comOr(evalMethods.begin(), evalMethods.end(), logical_or<bool>(), comFunc);
   } else {
     cerr << "Warning:: Compose Evaluator unknown operator is stated." << endl;
