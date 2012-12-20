@@ -16,7 +16,9 @@
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
 #include "ValidityCheckers/CollisionDetectionValidity.h"
+#include "ValidityCheckers/ComposeValidity.h"
 #include "ValidityCheckers/MedialAxisClearanceValidity.h"
+#include "ValidityCheckers/NegateValidity.h"
 #include "ValidityCheckers/NodeClearanceValidity.h"
 #include "ValidityCheckers/ObstacleClearanceValidity.h"
 #ifdef PMPCfgSurface
@@ -111,9 +113,9 @@ struct MPTraits{
   typedef boost::mpl::list<
     AlwaysTrueValidity<MPTraits>,
     CollisionDetectionValidity<MPTraits>,
-    //ComposeValidity<MPTraits>,
+    ComposeValidity<MPTraits>,
     MedialAxisClearanceValidity<MPTraits>,
-    //NegateValidity<MPTraits>,
+    NegateValidity<MPTraits>,
     NodeClearanceValidity<MPTraits>,
     ObstacleClearanceValidity<MPTraits>
     #ifdef PMPCfgSurface

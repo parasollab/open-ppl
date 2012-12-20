@@ -2,25 +2,53 @@
 #define NEGATEVALIDITY_H
 
 #include "ValidityCheckerMethod.h"
-#include "ComposeFunctor.h"
+#include "ValidityCheckerFunctor.h"
 
-class NegateValidity : public ValidityCheckerMethod {
- public:
-  typedef vector<ElementSet<ValidityCheckerMethod>::MethodPointer>::iterator InputIterator;
-  
-  NegateValidity();
-  NegateValidity(string _label, vector<ElementSet<ValidityCheckerMethod>::MethodPointer> _vec, ComposeNegate<InputIterator, ComposeFunctor> _m_composeNegate);
-  NegateValidity(XMLNodeReader& _node, MPProblem* _problem);   
-  virtual ~NegateValidity() { }
-  
-  virtual bool 
-  IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
-	  CDInfo& _cdInfo, std::string *_callName);
+template<class MPTraits>
+class NegateValidity : public ValidityCheckerMethod<MPTraits> {
+  public:
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-private:
-  string m_vcLabel;
-  vector<ElementSet<ValidityCheckerMethod>::MethodPointer> m_vcMethods;
-  ComposeNegate<InputIterator, ComposeFunctor> m_composeNegate;
+    NegateValidity(string _label = "");
+    NegateValidity(MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~NegateValidity() { }
+
+    virtual bool 
+      IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+          CDInfo& _cdInfo, string *_callName);
+
+  private:
+    string m_vcLabel;
 };
+
+template<class MPTraits>
+NegateValidity<MPTraits>::NegateValidity(string _label) : 
+  ValidityCheckerMethod<MPTraits>(), m_vcLabel(_label) {
+    this->m_name = "NegateValidity";
+  }
+
+template<class MPTraits>
+NegateValidity<MPTraits>::NegateValidity(MPProblemType* _problem, XMLNodeReader& _node) :
+  ValidityCheckerMethod<MPTraits>(_problem, _node) {
+    _node.verifyName("NegateValidity");
+    this->m_name = "NegateValidity";
+    m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "validity checker method");    
+  }
+
+template<class MPTraits>
+bool
+NegateValidity<MPTraits>::
+IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
+    string *_callName) {
+  vector<ValidityCheckerPointer> vcMethods;
+  typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
+  vcMethods.push_back(this->GetMPProblem()->GetValidityChecker(m_vcLabel));
+
+  ValidityCheckerFunctor comFunc(_cfg, _env, _stats, _cdInfo, _callName); 
+
+  ComposeNegate<VCIterator, ValidityCheckerFunctor> composeNegate;
+  return composeNegate(vcMethods.begin(), comFunc);
+}
 
 #endif// #ifndef NEGATEVALIDITY_H
