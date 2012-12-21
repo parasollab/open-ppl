@@ -112,7 +112,12 @@ bool
 ToggleLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
     DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
     LPOutput<MPTraits>* _lpOutput, double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) { 
+    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+  //Note : Initialize connected to false to avoid compiler warning in parallel code
+  //If I am wrong please correct
+  bool connected = false;
+  ///To do : fix me-Dijkstra doesn't compile with pGraph!!!!!!
+  #ifndef _PARALLEL
   //clear lpOutput
   _lpOutput->Clear();
   pathGraph.clear();
@@ -123,9 +128,6 @@ ToggleLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
   _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0; 
 
-  bool connected;
-  ///To do : fix me-Dijkstra doesn't compile with pGraph!!!!!!
- #ifndef _PARALLEL
   connected = IsConnectedToggle(_env, _stats, _dm, _c1, _c2, _col, 
       _lpOutput, cdCounter, _positionRes, _orientationRes, 
       _checkCollision, _savePath, _saveFailedPath);
@@ -144,9 +146,9 @@ ToggleLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
   }
 
   _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
- #else
- stapl_assert(false, "ToggleLP calling Dijkstra on pGraph");
- #endif
+  #else
+  stapl_assert(false, "ToggleLP calling Dijkstra on pGraph");
+  #endif
   return connected;
 }
 

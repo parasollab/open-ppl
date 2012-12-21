@@ -82,7 +82,7 @@ CoverageDistanceMetric<MPTraits>::operator()() {
     bfnf.KClosest(this->GetMPProblem()->GetRoadmap(), this->GetMPProblem()->GetRoadmap()->GetGraph()->descriptor_begin(), 
                   this->GetMPProblem()->GetRoadmap()->GetGraph()->descriptor_end(), *cfgit, 1, 
                   back_insert_iterator<vector<VID> >(kClosest));
-    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(kClosest[0])->property();
+    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(kClosest[0]);
     distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *cfgit, nearest);
     disVec.push_back(distance);
   } 

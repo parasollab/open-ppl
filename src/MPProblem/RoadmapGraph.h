@@ -419,8 +419,8 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
    #ifdef _PARALLEL
    VI descriptor_begin() { return GRAPH::begin(); }
    VI descriptor_end() { return GRAPH::end(); }
-   int get_num_edges() { return GRAPH::num_edges();}
-   int get_num_vertices() { return GRAPH::num_vertices();}
+   size_t get_num_edges() { return GRAPH::num_edges();}
+   size_t get_num_vertices() { return GRAPH::num_vertices();}
    size_t get_degree(const VID& _vd) {
     VI vi = GRAPH::find_vertex(_vd);
     return (*vi).size();
