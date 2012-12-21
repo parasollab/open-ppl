@@ -2,14 +2,20 @@
 #define DMTESTSTRATEGY_H_
 
 
-#include "MPStrategy/MPStrategyMethod.h"
+#include "MPStrategies/MPStrategyMethod.h"
+/*
 #include "MPProblem/MPProblem.h"
 #include "Roadmap.h"
+*/
 
-class DMTestStrategy : public MPStrategyMethod 
+template <class MPTraits>
+class DMTestStrategy : public MPStrategyMethod<MPTraits>
 {
  public:
-  DMTestStrategy(XMLNodeReader& _node, MPProblem* _problem);
+  typedef typename MPTraits::MPProblemType::RoadmapType RoadmapType;
+
+  DMTestStrategy();
+  DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
   virtual ~DMTestStrategy();
 
   virtual void ParseXML(XMLNodeReader& _node);
@@ -21,9 +27,120 @@ class DMTestStrategy : public MPStrategyMethod
 
  private:
   string m_inputRoadmapFilename;
-  Roadmap<CfgType, WeightType>* m_rdmp;
+  RoadmapType* m_rdmp;
   string m_dmMethod;
   size_t m_numToVerify;
 };
 
+
+template <class MPTraits>
+DMTestStrategy<MPTraits>::
+DMTestStrategy()
+ : MPStrategyMethod<MPTraits>()
+{
+  this->SetName("DMTest");
+}
+
+template <class MPTraits>
+DMTestStrategy<MPTraits>::
+DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+ : MPStrategyMethod<MPTraits>(_problem, _node)
+{
+  this->SetName("DMTest");
+  ParseXML(_node);
+}
+
+template <class MPTraits>
+DMTestStrategy<MPTraits>::
+~DMTestStrategy()
+{}
+
+template <class MPTraits>
+void
+DMTestStrategy<MPTraits>::
+ParseXML(XMLNodeReader& _node)
+{
+  m_inputRoadmapFilename = _node.stringXMLParameter("input_roadmap", false, "", "filename of input roadmap, if none provded, uses current one from MPProblem");
+  m_dmMethod = _node.stringXMLParameter("dm_method", true, "", "distance metric label");
+  m_numToVerify = _node.numberXMLParameter("num_to_verify", false, MAX_INT, 0, MAX_INT, "number of nodes to verify distances");
+  _node.warnUnrequestedAttributes();
+}
+
+template <class MPTraits>
+void
+DMTestStrategy<MPTraits>::
+PrintOptions(ostream& _out)
+{
+  _out << "DMTestStrategy ::  m_inputRoadmapFilename = \"" << m_inputRoadmapFilename 
+    << "\"\tm_dmMethod = " << m_dmMethod 
+    << "\tm_numToVerify = " << m_numToVerify << endl;
+}
+
+struct less_second : public binary_function<pair<size_t, double>, pair<size_t, double>, bool> {
+  bool operator()(const pair<size_t, double>& p1, const pair<size_t, double>& p2) const {
+    return p1.second < p2.second;
+  }
+};
+
+template <class MPTraits>
+void
+DMTestStrategy<MPTraits>::
+Run()
+{
+  PrintOptions(cout);
+
+  if(m_inputRoadmapFilename == "") {
+    m_rdmp = this->GetMPProblem()->GetRoadmap();
+  } else {
+    m_rdmp = new RoadmapType();
+    m_rdmp->Read(m_inputRoadmapFilename.c_str());
+  }
+
+  ClockClass clock;
+  StatClass *stats = this->GetMPProblem()->GetStatClass();
+  stats->StartClock("Distance Metric");
+
+  typename MPTraits::MPProblemType::DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmMethod);
+  dm->PrintOptions(cout);
+  cout << endl;
+
+  vector<typename MPTraits::CfgType> nodes;
+  m_rdmp->GetGraph()->GetVerticesData(nodes);
+
+  m_numToVerify = min(m_numToVerify, nodes.size());
+  for(size_t i=0; i<m_numToVerify; ++i) {
+    stats->StartClock("Iteration");
+    cout << "testing distances to node " << i << ": " << nodes[i] << endl;
+    vector<pair<size_t, double> > d;
+    for(typename vector<typename MPTraits::CfgType>::iterator N = nodes.begin(); N != nodes.end(); ++N) {
+      d.push_back(make_pair(distance(nodes.begin(), N), dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[i], *N)));
+      cout << "\t" << d.back().second << endl;
+    }
+    cout << endl;
+    sort(d.begin(), d.end(), less_second());
+    cout << "sorted indices:";
+    for(vector<pair<size_t, double> >::const_iterator D = d.begin(); D != d.end(); ++D) 
+      cout << " " << D->first;
+    cout << endl;
+    stats->StopPrintClock("Iteration", cout);
+  }
+
+  stats->StopClock("Distance Metric");
+  cout << ":" << stats->GetSeconds("Distance Metric") << " sec (ie, " << stats->GetUSeconds("Distance Metric") << " usec)";
+  cout << endl;
+
+  if(nodes.size() > 1) {
+    typename MPTraits::CfgType origin(nodes[0]);
+    typename MPTraits::CfgType c(nodes[1]);
+    cout << "\nScale Cfg: 1/2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 0.5 << endl;
+    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 0.5, origin, c);
+    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c) << endl;
+    origin = nodes[0];
+    c = nodes[1];
+    cout << "\nScale Cfg: 2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 2 << endl;
+    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 2, origin, c);
+    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c) << endl;
+  }
+}
+ 
 #endif

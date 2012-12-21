@@ -85,6 +85,7 @@
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/ResamplePointStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
+#include "MPStrategies/UnitTest/DMTestStrategy.h"
 
 template<class C, class W = DefaultWeight<C> >
 struct MPTraits{
@@ -207,6 +208,7 @@ struct MPTraits{
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     ResamplePointStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>
