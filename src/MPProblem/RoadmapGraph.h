@@ -192,7 +192,7 @@ class vertex_descriptor_iterator
   {}
 
   //overload dereference to call descriptor() instead
-  typename VertexIterator::value_type::vertex_descriptor dereference() const 
+  typename VertexIterator::value_type::vertex_descriptor dereference() const  
   { 
     return this->base()->descriptor(); 
   }
@@ -381,6 +381,15 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
        //To do:Temporarily removed constness until it is supported in STAPL
        VERTEX GetCfg(VID _t) ;
 
+       //helper function to call dereferece on an iterator whose value_type is VID
+       //needed to get around the fact that a roadmap graph iterator
+       //requires an extra descriptor() call
+       template<typename T>
+       VID GetVid(T& _t);
+
+       //specialization for a roadmap graph iterator, calls descriptor()
+       //template<typename RDMP::VI>
+       VID GetVid(VI& _t);
     //@}
 
     /**@name Adding Vertices & Edges from other RoadmapGraph's*/
@@ -398,24 +407,23 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
      //@}
 
 
+   #ifndef _PARALLEL
    VDI descriptor_begin() { return VDI(this->begin()); }
    VDI descriptor_end() { return VDI(this->end()); }
    CVDI descriptor_begin() const { return CVDI(this->begin()); }
    CVDI descriptor_end() const { return CVDI(this->end()); }
-   
+   #endif
+
    ///Temporarily wrapper for some graph methods
    ///Until full migration and change of names in STAPL is completed
    #ifdef _PARALLEL
+   VI descriptor_begin() { return GRAPH::begin(); }
+   VI descriptor_end() { return GRAPH::end(); }
    int get_num_edges() { return GRAPH::num_edges();}
    int get_num_vertices() { return GRAPH::num_vertices();}
-   //int get_degree(VID _vid) { return (*(this->find_vertex(_vid))).size();}
    size_t get_degree(const VID& _vd) {
-    //const_vertex_iterator cvi = this->find_vertex(_vd);
-    VI cvi = GRAPH::find_vertex(_vd);
-    //if (cvi != this->end()) 
-    return (*cvi).size();
-    //else return 0;
-    //return 0;
+    VI vi = GRAPH::find_vertex(_vd);
+    return (*vi).size();
   }
   size_t get_out_degree(const VID& _vd){
 	  return this->get_degree(_vd);
@@ -549,8 +557,8 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddEdges( vector<EdgeInfo<VERTEX, WEIGHT> >& _e) {
     for (unsigned int i=0; i < _e.size(); i++){
         GRAPH::add_edge(_e[i].v1, _e[i].v2, _e[i].edgewt);
-	VERTEX data1 = this->find_vertex(_e[i].v1)->property();
-	VERTEX data2 = this->find_vertex(_e[i].v2)->property();
+	VERTEX data1 = this->GetCfg(_e[i].v1);
+	VERTEX data2 = this->GetCfg(_e[i].v2);
 	VDAddEdge(data1, data2);
         //VDAddEdge(find_vertex(_e[i].v1)->property(), find_vertex(_e[i].v2)->property());
     }
@@ -561,9 +569,8 @@ template <class VERTEX, class WEIGHT>
 int  
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VID _v1, VID _v2, WEIGHT _w) {
-  //return GRAPH::add_edge(_v1,_v2,_w);
   GRAPH::add_edge(_v1,_v2,_w);
-  VDAddEdge(this->find_vertex(_v1)->property(), this->find_vertex(_v2)->property());
+  VDAddEdge(this->GetCfg(_v1), this->GetCfg(_v2));
   return 0;  //fix_lantao  the return type and the following AddEdge funcs.
 }
 
@@ -572,9 +579,8 @@ int
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VID _v1, VID _v2, pair<WEIGHT,WEIGHT>& _w) {
   GRAPH::add_edge(_v1,_v2,_w.first);
-  //return GRAPH::add_edge(_v2,_v1,_w.second);
   GRAPH::add_edge(_v2,_v1,_w.second);
-  VDAddEdge(this->find_vertex(_v1)->property(), this->find_vertex(_v2)->property());
+  VDAddEdge(this->GetCfg(_v1), this->GetCfg(_v2));
   return 0;
 }
 
@@ -605,7 +611,6 @@ template <class VERTEX, class WEIGHT>
 int  
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VERTEX& _v1, VERTEX& _v2, WEIGHT _w) {
-  //return GRAPH::add_edge(_v1,_v2,_w);
   GRAPH::add_edge(GetVID(_v1),GetVID(_v2),_w);
   VDAddEdge(_v1, _v2);
   return 0;
@@ -616,12 +621,10 @@ int
 RoadmapGraph<VERTEX,WEIGHT>::
 AddEdge(VERTEX& _v1, VERTEX& _v2, pair<WEIGHT,WEIGHT>& _w) {
   GRAPH::add_edge(GetVID(_v1),GetVID(_v2),_w.first);
-  //return GRAPH::add_edge(_v2,_v1,_w.second);
   GRAPH::add_edge(GetVID(_v2),GetVID(_v1),_w.second);
   VDAddEdge(_v1, _v2);
   return 0;
 }
-//#endif
 
 
 template <class VERTEX, class WEIGHT>
@@ -780,7 +783,6 @@ VERTEX v;
 
 };
 */
-#ifndef _PARALLEL
 //added lantao, double check fix_lantao
 template<class VERTEX, class WEIGHT>
 bool
@@ -795,7 +797,6 @@ IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
 	else
 	  vi++;
     }// end while
-    #ifndef _PARALLEL
     if (vi != this->end() ) {
         *_v1ptr = vi;
         //return true;
@@ -803,10 +804,8 @@ IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
     } else {
         found = false;
     }
-    #endif 
     return found;
 }
-#endif
 
 
 template<class VERTEX, class WEIGHT>
@@ -850,11 +849,27 @@ RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) {
 
 //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
 //calls find_vertex(..) on VID to call property()
-//To do:what is the purpose for this, how is it diffrent from above
 template<class VERTEX, class WEIGHT>
 VERTEX
 RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VID _t)  {
   return (*this->find_vertex(_t)).property();
+}
+//helper function to call dereferece on an iterator whose value_type is VID
+//needed to get around the fact that a roadmap graph iterator 
+//requires and extra descriptor() call
+template<class VERTEX, class WEIGHT>
+template<typename T>
+typename RoadmapGraph<VERTEX, WEIGHT>::VID
+RoadmapGraph<VERTEX, WEIGHT>::GetVid(T& _t) {
+  return *_t;
+}
+
+//specialization for a roadmap graph iterator, calls descriptor()
+//template<typename RDMP::VI>
+template<class VERTEX, class WEIGHT>
+typename RoadmapGraph<VERTEX, WEIGHT>::VID
+RoadmapGraph<VERTEX, WEIGHT>::GetVid(VI& _t) {
+  return (*_t).descriptor();
 }
 
 /*****************************************************************************/

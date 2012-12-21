@@ -461,7 +461,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown) {
 
   vector<VID> vidCC;
   vidCC.push_back(_recentlyGrown);
-  CfgType c1 = rdmp->GetGraph()->find_vertex(_recentlyGrown)->property();
+  CfgType c1 = rdmp->GetGraph()->GetCfg(_recentlyGrown);
   typedef typename vector<pair<size_t, VID> >::iterator CCSIT;
   vector<VID> closestNodesOtherCCs;
 
@@ -482,7 +482,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown) {
       closestNodesOtherCCs.end(), _recentlyGrown, 1, back_inserter(closestNode));
 
   //attempt connection
-  CfgType c2 = rdmp->GetGraph()->find_vertex(closestNode[0])->property();
+  CfgType c2 = rdmp->GetGraph()->GetCfg(closestNode[0]);
   if(this->m_debug) cout << "Attempt Connection " << c1 << "\t" << c2 << endl;
   CfgType col;
   if(dm->Distance(env, c1, c2)<m_delta &&

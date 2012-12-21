@@ -88,8 +88,10 @@ RadiusNF<MPTraits>::KClosest(RoadmapType* _roadmap, InputIterator _first, InputI
 
     // If within radius, add to list
     double dist = dmm->Distance(env, _cfg, node);
-    if(dist <= m_radius)
-      inRadius.push_back(make_pair(*it, dist));
+    if(dist <= m_radius){
+      VID vid = map->GetVid(it);
+      inRadius.push_back(make_pair(vid, dist));
+    }
   }
  
   sort(inRadius.begin(), inRadius.end(), CompareSecond<VID, double>());
@@ -130,8 +132,11 @@ RadiusNF<MPTraits>::KClosestPairs(RoadmapType* _roadmap,
       
       // If within radius, add to list
       double dist = dmm->Distance(env, node1, node2);
-      if(dist <= m_radius)
-        inRadius.push_back(make_pair(make_pair(*it1, *it2), dist));
+      if(dist <= m_radius){
+        VID vid1 = map->GetVid(it1);
+        VID vid2 = map->GetVid(it2);
+        inRadius.push_back(make_pair(make_pair(vid1, vid2), dist));
+      }
     }
   }
  

@@ -190,7 +190,7 @@ BasicPRM<MPTraits>::Initialize(){
     if(this->m_debug) cout << "\tLoading roadmap from \"" << m_inputMapFilename << "\"...";
     rMap->Read(m_inputMapFilename.c_str());
     for(typename GraphType::VI vi = rMap->GetGraph()->begin(); vi != rMap->GetGraph()->end(); ++vi)
-      VDAddNode(vi->property());
+      VDAddNode(rMap->GetGraph()->GetCfg(vi));
     if(this->m_debug) {
       cout << "\troadmap has " << rMap->GetGraph()->get_num_vertices() << " nodes and " << rMap->GetGraph()->get_num_edges() << " edges\n";
       cout << "\n\tResetting map evaluator states...\n";

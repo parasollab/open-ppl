@@ -91,14 +91,14 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     template<typename InputIterator, typename OutputIterator>
       OutputIterator KClosest(RoadmapType* _rmp, 
           InputIterator _first, InputIterator _last, VID _v, size_t _k, OutputIterator _out) {
-        return KClosest(_rmp, _first, _last, (_rmp->GetGraph()->find_vertex(_v))->property(), _k, _out);
+        return KClosest(_rmp, _first, _last, _rmp->GetGraph()->GetCfg(_v), _k, _out);
       }
 
     // KClosest that operate over the entire roadmap to find the _kclosest to a VID or CFG
     // NOTE: These are the prefered methods for _kClosest computations
     template<typename OutputIterator>
       OutputIterator KClosest(RoadmapType* _rmp, VID _v, size_t _k, OutputIterator _out){
-        return KClosest(_rmp, (_rmp->Graph()->find_vertex(_v))->property(), _k, _out);
+        return KClosest(_rmp, _rmp->Graph()->GetCfg(_v), _k, _out);
       }
 
     template<typename OutputIterator>

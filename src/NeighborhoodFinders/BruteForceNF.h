@@ -74,12 +74,15 @@ BruteForceNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputI
 
     if(node == _cfg) // Don't connect to self
       continue;
-    if(pq.size() < _k)
-      pq.push(make_pair(*it, dist));
+    if(pq.size() < _k){
+      VID vid = map->GetVid(it);
+      pq.push(make_pair(vid, dist));
+    }
     // If better than the worst so far, replace worst so far
     else if(dist < pq.top().second) {
       pq.pop();
-      pq.push(make_pair(*it, dist));
+      VID vid = map->GetVid(it);
+      pq.push(make_pair(vid, dist));
     }
   }
 
@@ -121,12 +124,16 @@ BruteForceNF<MPTraits>::KClosestPairs(RoadmapType* _rmp,
 
       CfgType node2 = map->GetCfg(it2);
       double dist = dmm->Distance(env, node1, node2);
-      if(pq.size() < _k)
-        pq.push(make_pair(make_pair(*it1, *it2), dist));
+      if(pq.size() < _k){
+        VID vid1 = map->GetVid(it1);
+        VID vid2 = map->GetVid(it2);
+        pq.push(make_pair(make_pair(vid1, vid2), dist));
       // If better than worst so far, replace worst so far
-      else if(dist < pq.top().second) {
+      }else if(dist < pq.top().second) {
         pq.pop();
-        pq.push(make_pair(make_pair(*it1, *it2), dist));
+        VID vid1 = map->GetVid(it1);
+        VID vid2 = map->GetVid(it2);
+        pq.push(make_pair(make_pair(vid1, vid2), dist));
       }
     }
   }
