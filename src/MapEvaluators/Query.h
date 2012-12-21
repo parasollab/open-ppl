@@ -5,6 +5,8 @@
 #define QUERY_H_
 
 #include "MapEvaluatorMethod.h"
+#include "LocalPlanners/LPOutput.h"
+#include "Utilities/MetricUtils.h"
 
 template<class MPTraits>
 class Query : public MapEvaluatorMethod<MPTraits> {

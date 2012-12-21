@@ -2,6 +2,7 @@
 #define RMSDDISTANCE_H_
 
 #include "DistanceMetricMethod.h"
+#include "MPProblem/Environment.h"
 
 template<class MPTraits>
 class RMSDDistance : public DistanceMetricMethod<MPTraits> {

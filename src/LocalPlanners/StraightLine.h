@@ -11,6 +11,7 @@
 #include <deque>
 #include "LocalPlannerMethod.h"
 #include "LPOutput.h"
+#include "MPProblem/IsClosedChain.h"
 
 template <class MPTraits>
 class StraightLine: public LocalPlannerMethod<MPTraits> {
