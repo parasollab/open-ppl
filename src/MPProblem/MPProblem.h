@@ -31,9 +31,7 @@ class MPProblem
     typedef typename GraphType::vertex_descriptor VID;
 
     MPProblem();
-    //MPProblem(const string& _filename) : MPProblem(_filename, this) {}
     MPProblem(const string& _filename, typename MPTraits::MPProblemType* _problem = NULL);
-    //MPProblem(XMLNodeReader& _node, bool _parse = true) : MPProblem(_node, this, _parse) {}
     MPProblem(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem = NULL, bool _parse = true);
     virtual ~MPProblem();
 
