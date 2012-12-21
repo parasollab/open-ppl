@@ -31,8 +31,10 @@ class MPProblem
     typedef typename GraphType::vertex_descriptor VID;
 
     MPProblem();
-    MPProblem(const string& _filename);
-    MPProblem(XMLNodeReader& _node, bool _parse = true);
+    //MPProblem(const string& _filename) : MPProblem(_filename, this) {}
+    MPProblem(const string& _filename, typename MPTraits::MPProblemType* _problem = NULL);
+    //MPProblem(XMLNodeReader& _node, bool _parse = true) : MPProblem(_node, this, _parse) {}
+    MPProblem(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem = NULL, bool _parse = true);
     virtual ~MPProblem();
 
     Environment* GetEnvironment() {return m_environment;};
@@ -110,8 +112,8 @@ class MPProblem
 
   protected:
     void Initialize();
-    bool ParseChild(XMLNodeReader::childiterator citr);
-    virtual void ParseXML(XMLNodeReader& _node); 
+    bool ParseChild(XMLNodeReader::childiterator citr, typename MPTraits::MPProblemType* _problem);
+    virtual void ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem); 
 
     vector<cd_predefined> GetSelectedCDTypes() const;
 
@@ -153,7 +155,10 @@ MPProblem<MPTraits>::MPProblem() {
 };
 
 template<class MPTraits>
-MPProblem<MPTraits>::MPProblem(const string& _filename){
+MPProblem<MPTraits>::MPProblem(const string& _filename, typename MPTraits::MPProblemType* _problem){
+  if(_problem == NULL)
+    _problem = this;
+
   Initialize();
 
   TiXmlDocument doc(_filename);
@@ -171,7 +176,7 @@ MPProblem<MPTraits>::MPProblem(const string& _filename){
   bool found = false;
   for(XMLNodeReader::childiterator citr = mpNode.children_begin(); citr != mpNode.children_end(); ++citr){
     if(citr->getName() == "MPProblem"){
-      ParseXML(*citr);
+      ParseXML(*citr, _problem);
       found = true;
       break;
     } 
@@ -184,11 +189,14 @@ MPProblem<MPTraits>::MPProblem(const string& _filename){
 }
 
 template<class MPTraits>
-MPProblem<MPTraits>::MPProblem(XMLNodeReader& _node, bool _parse) {
+MPProblem<MPTraits>::MPProblem(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem, bool _parse) {
+  if(_problem = NULL)
+    _problem = this;
+
   Initialize();
 
   if(_parse)
-    ParseXML(_node);
+    ParseXML(_node, _problem);
 }
 
 template<class MPTraits>
@@ -239,45 +247,45 @@ MPProblem<MPTraits>::Initialize(){
 
 template<class MPTraits>
 bool
-MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr) {
+MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTraits::MPProblemType* _problem) {
   if(citr->getName() == "Environment") {
     m_environment = new Environment(*citr);
     return true;
   } 
   else if(citr->getName() == "DistanceMetrics") {
-    m_distanceMetrics->ParseXML(this, *citr);
+    m_distanceMetrics->ParseXML(_problem, *citr);
     return true;
   } 
   else if(citr->getName() == "ValidityCheckers") {
-    m_validityCheckers->ParseXML(this, *citr);
+    m_validityCheckers->ParseXML(_problem, *citr);
     return true;
   }
   else if(citr->getName() == "NeighborhoodFinders") {
-    m_neighborhoodFinders->ParseXML(this, *citr);
+    m_neighborhoodFinders->ParseXML(_problem, *citr);
     return true;
   }
   else if(citr->getName() == "Samplers") {
-    m_samplers->ParseXML(this, *citr);
+    m_samplers->ParseXML(_problem, *citr);
     return true;
   }
   else if(citr->getName() == "LocalPlanners") {
-    m_localPlanners->ParseXML(this, *citr);
+    m_localPlanners->ParseXML(_problem, *citr);
     return true;
   }
   else if(citr->getName() == "Connectors") {
-    m_connectors->ParseXML(this, *citr);
+    m_connectors->ParseXML(_problem, *citr);
     return true;
   }
   else if(citr->getName() == "Metrics") {
-    m_metrics->ParseXML(this, *citr);
+    m_metrics->ParseXML(_problem, *citr);
     return true;
   }
   else if(citr->getName() == "MapEvaluators") {
-    m_mapEvaluators->ParseXML(this, *citr);
+    m_mapEvaluators->ParseXML(_problem, *citr);
     return true;
   }
   else if(citr->getName() == "MPStrategies") {
-    m_mpStrategies->ParseXML(this, *citr);
+    m_mpStrategies->ParseXML(_problem, *citr);
     return true;
   }
   else if(citr->getName() == "Solver") {
@@ -298,11 +306,11 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr) {
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::ParseXML(XMLNodeReader& _node) { 
+MPProblem<MPTraits>::ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem) { 
   _node.verifyName("MPProblem");
 
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-    if(!ParseChild(citr))
+    if(!ParseChild(citr, _problem))
       citr->warnUnknownNode();
   }
   
