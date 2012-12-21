@@ -27,7 +27,7 @@ ifndef STAPL_DIR
 endif
 
 ifndef STL_LIB
-  STL_LIB = 4.4.4
+  STL_LIB = 4.7.2
 endif 
 
 # include makefile defaults
