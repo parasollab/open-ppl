@@ -87,7 +87,7 @@ reallyclean:
 
 reallyreallyclean:
 	@${MAKE} reallyclean
-	cd ${STAPL_DIR}; ${MAKE} clean
+	cd ${STAPL_DIR}; ${MAKE} platform=${platform} stl=${STL_LIB} clean
 	cd ${CD_DIR}; ${MAKE} clean
 	cd ${TINYXML_DIR}; ${MAKE} clean
 	cd ${MPNN_SRC}; ${MAKE} clean
