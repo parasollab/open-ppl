@@ -79,13 +79,17 @@
 #include "MapEvaluators/Query.h"
 #include "MapEvaluators/TrueEvaluation.h"
 
-//map evaluator includes
+//mp strategies includes
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/ResamplePointStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
+
+#ifdef _PARALLEL
+#include "ParallelMethods/BasicParallelPRM.h"
+#endif
 
 template<class C, class W = DefaultWeight<C> >
 struct MPTraits{
@@ -212,6 +216,9 @@ struct MPTraits{
     EvaluateMapStrategy<MPTraits>,
     ResamplePointStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>
+    #ifdef _PARALLEL
+    ,BasicParallelPRM<MPTraits>
+    #endif
     > MPStrategyMethodList;
 };
 

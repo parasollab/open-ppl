@@ -6,9 +6,9 @@
 #define PARALLELSBMPHEADER_H_
 
 //#include "MPRegion.h"
-#include "Connector.h"
+//#include "Connector.h"
 #include "runtime.h"
-#include "Sampler.h"
+//#include "Sampler.h"
 #include <iostream>
 #include <stapl/containers/array/array.hpp>
 // TODO
