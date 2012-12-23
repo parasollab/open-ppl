@@ -172,11 +172,6 @@ BasicParallelPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
         string(""), string("Node Connection Method"));
       m_vecStrNodeConnectionLabels.push_back(connect_method);
       citr->warnUnrequestedAttributes();
-    } else if(citr->getName() == "node_connection_method") {
-      string connect_method = citr->stringXMLParameter(string("Method"), true,
-        string(""), string("Node Connection Method"));
-      m_vecStrNodeConnectionLabels.push_back(connect_method);
-      citr->warnUnrequestedAttributes();
     } else {
       citr->warnUnknownNode();
     }
