@@ -213,7 +213,7 @@ BasicParallelPRM<MPTraits>::Run() {
       if (this->m_debug) 
         cout<<"\n processor #----->["<<stapl::get_location_id()<<"] NodeGeneration time  = "  << sample_timer << endl; 
     }
-
+    stapl::rmi_fence();
     //---------------------------
     // Connect roadmap nodes
     //---------------------------
@@ -245,24 +245,20 @@ BasicParallelPRM<MPTraits>::Finalize() {
   //---------------------------
   // Write roadmap to file
   //---------------------------
-
-  if(stapl::get_location_id() == 0) {
-    string str;
-    str = this->GetBaseFilename() + ".map";
-    ofstream osMap(str.c_str());
-    if(!osMap) {
-      if (this->m_debug){
+  stapl::rmi_fence();
+  string str = this->GetBaseFilename() + ".map";
+  ofstream osMap(str.c_str());
+  if(!osMap) {
         
-        cerr << "ERROR::Can't open outfile. "<< endl;
-        cerr << "Reference this error on line "<< __LINE__ << " of file " << __FILE__ << endl;
-      }
-      exit(-1);
-
-    }else {
-      this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-      osMap.close();
-    }
+     cerr << "ERROR::Can't open outfile. "<< endl;
+     cerr << "Reference this error on line "<< __LINE__ << " of file " << __FILE__ << endl;
   }
+  exit(-1);
+  }else {
+     this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
+     osMap.close();
+  }
+  stapl::rmi_fence();
   if (this->m_debug) cout << "!!ALL FINISHED!!"<< endl;
 }
 
