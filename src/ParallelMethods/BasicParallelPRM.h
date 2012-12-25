@@ -252,8 +252,7 @@ BasicParallelPRM<MPTraits>::Finalize() {
         
      cerr << "ERROR::Can't open outfile. "<< endl;
      cerr << "Reference this error on line "<< __LINE__ << " of file " << __FILE__ << endl;
-  }
-  exit(-1);
+     exit(-1);
   }else {
      this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
      osMap.close();
