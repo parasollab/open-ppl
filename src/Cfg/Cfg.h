@@ -311,9 +311,6 @@ class Cfg {
     void define_type(stapl::typer &_t)  
     {
       _t.member(m_v);
-      _t.member(m_dof);
-      _t.member(m_dofTypes);
-      _t.member(m_robots);
       _t.member(m_labelMap);
       _t.member(m_statMap);
     }
