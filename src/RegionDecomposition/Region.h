@@ -7,16 +7,18 @@
 #ifndef REGION_H_
 #define REGION_H_
 
-#include "Roadmap.h"
-#include "CfgTypes.h"
+#include "MPProblem/Roadmap.h"
+//#include "CfgTypes.h"
 //#include "Boundary.h"
-#include "BoundingBox.h"
+#include "MPProblem/BoundingBox.h"
 
-typedef RoadmapGraph<CfgType, WeightType>::VID VID;
-template<class BOUNDARY>
+
+//typedef RoadmapGraph<CfgType, WeightType>::VID VID;
+template<class BOUNDARY, class MPTraits>
 class Region {
   public:
 
+    typedef typename MPTraits::MPProblemType::VID VID;
     typedef BOUNDARY BoundaryType;
     /////////////////////////
     //Constructors
@@ -77,13 +79,14 @@ class Region {
 #ifdef _PARALLEL
 namespace stapl {
   
-  template <typename BoundaryType, typename Accessor>
-    class proxy<Region<BoundaryType>, Accessor> 
+  template <typename BoundaryType, class MPTraits, typename Accessor>
+    class proxy<Region<BoundaryType, MPTraits>, Accessor> 
     : public Accessor {
       private:
         friend class proxy_core_access;
-        typedef Region<BoundaryType> m_targetT;
-
+        typedef Region<BoundaryType, MPTraits> m_targetT;
+        typedef typename MPTraits::MPProblemType::VID VID;
+      
       public:
         explicit proxy(Accessor const& _acc) : Accessor(_acc) { }
         operator m_targetT() const { return Accessor::read(); }
@@ -105,93 +108,93 @@ namespace stapl {
 /////////////////////////
 //Constructors
 ////////////////////////
-template<class BOUNDARY>
-Region<BOUNDARY>::Region(){ }
+template<class BOUNDARY, class MPTraits>
+Region<BOUNDARY, MPTraits>::Region(){ }
 
-template<class BOUNDARY>
-Region<BOUNDARY>::~Region(){ }
+template<class BOUNDARY, class MPTraits>
+Region<BOUNDARY, MPTraits>::~Region(){ }
 
-template<class BOUNDARY>
-Region<BOUNDARY>::Region(const Region& _r){
+template<class BOUNDARY, class MPTraits>
+Region<BOUNDARY, MPTraits>::Region(const Region& _r){
   m_bb=_r.m_bb;
   m_ccs=_r.m_ccs;
   m_vids = _r.m_vids;
 }
 
-template<class BOUNDARY>
-Region<BOUNDARY>::Region(shared_ptr<BOUNDARY> _bbox, std::vector<pair<size_t, VID> >& _pairIds ){
+template<class BOUNDARY, class MPTraits>
+Region<BOUNDARY, MPTraits>::Region(shared_ptr<BOUNDARY> _bbox, std::vector<pair<size_t, VID> >& _pairIds ){
   m_bb=_bbox;
   m_ccs.clear();
   m_ccs=_pairIds;
 }
 
-template<class BOUNDARY>
-Region<BOUNDARY>::Region(shared_ptr<BOUNDARY> _bbox, std::vector<VID>& _ids ){
+template<class BOUNDARY, class MPTraits>
+Region<BOUNDARY, MPTraits>::Region(shared_ptr<BOUNDARY> _bbox, std::vector<VID>& _ids ){
   m_bb=_bbox;
   m_vids.clear();
-  typedef std::vector<VID>::iterator itr;
+  typedef typename  std::vector<VID>::iterator itr;
   for(itr vit = _ids.begin(); vit!=_ids.end(); vit++){
     m_vids.push_back(*vit);
   }
 }
 
-template<class BOUNDARY>
+template<class BOUNDARY, class MPTraits>
 shared_ptr<BOUNDARY> 
-Region<BOUNDARY>::GetBoundary() const{
+Region<BOUNDARY, MPTraits>::GetBoundary() const{
   return m_bb;
 }
 
-template<class BOUNDARY>
-std::vector<pair<VID, size_t> > 
-Region<BOUNDARY>::GetCCs() const{
+template<class BOUNDARY, class MPTraits>
+std::vector<pair<typename MPTraits::MPProblemType::VID, size_t> > 
+Region<BOUNDARY, MPTraits>::GetCCs() const{
   return m_ccs;
 }
 
-template<class BOUNDARY>
-pair<shared_ptr<BOUNDARY>, vector<pair<size_t, VID> > >
-Region<BOUNDARY>::GetRegionInfo() const{
+template<class BOUNDARY, class MPTraits>
+pair<shared_ptr<BOUNDARY>, vector<pair<size_t, typename MPTraits::MPProblemType::VID> > >
+Region<BOUNDARY, MPTraits>::GetRegionInfo() const{
   pair<shared_ptr<BOUNDARY>, vector<pair<size_t, VID> > > infoPair = make_pair(m_bb, m_ccs);
   return infoPair;
 }
 
-template<class BOUNDARY>
-std::vector<VID>
-Region<BOUNDARY>::RegionVIDs() const {
+template<class BOUNDARY, class MPTraits>
+std::vector<typename MPTraits::MPProblemType::VID>
+Region<BOUNDARY, MPTraits>::RegionVIDs() const {
   return m_vids;
 }
 
-template<class BOUNDARY>
+template<class BOUNDARY, class MPTraits>
 void
-Region<BOUNDARY>::SetVIDs(std::vector<VID>& _ids) {
-  std::vector<VID>::iterator itr;
+Region<BOUNDARY, MPTraits>::SetVIDs(std::vector<VID>& _ids) {
+  typename std::vector<VID>::iterator itr;
   for (itr = _ids.begin(); itr != _ids.end(); ++itr) {
     m_vids.push_back(*itr) ;
   }
 }
 
-template<class BOUNDARY>
+template<class BOUNDARY, class MPTraits>
 size_t
-Region<BOUNDARY>::RegionWeight() const {
+Region<BOUNDARY, MPTraits>::RegionWeight() const {
   return m_vids.size();
 }
 
-template<class BOUNDARY>
+template<class BOUNDARY, class MPTraits>
 void
-Region<BOUNDARY>::SetBoundary(shared_ptr<BOUNDARY> _bb){
+Region<BOUNDARY, MPTraits>::SetBoundary(shared_ptr<BOUNDARY> _bb){
   m_bb=_bb;
 }
 
 ///This doesn't make much sense, Shuvra needs to look into it.
-template<class BOUNDARY>
-std::vector<VID>
-Region<BOUNDARY>::GetAllVIDs() const{
+template<class BOUNDARY, class MPTraits>
+std::vector<typename MPTraits::MPProblemType::VID>
+Region<BOUNDARY, MPTraits>::GetAllVIDs() const{
   vector<VID> allVIDs;
   return allVIDs;
 } 
 
-template<class BOUNDARY>
+template<class BOUNDARY, class MPTraits>
 bool 
-Region<BOUNDARY>::operator==(const Region& _a) const{
+Region<BOUNDARY, MPTraits>::operator==(const Region& _a) const{
   return (m_bb == _a.m_bb) &&
     (m_ccs == _a.m_ccs) &&
     (m_vids == _a.m_vids);
@@ -205,17 +208,17 @@ operator<< (ostream& _os, const Region<BOUNDARY>& _r) {
   return _os;
 }
 */
-template<class BOUNDARY>
+template<class BOUNDARY, class MPTraits>
 void
-Region<BOUNDARY>::SetCCs(std::vector<pair<VID, size_t> >& _ccs){
+Region<BOUNDARY,MPTraits>::SetCCs(std::vector<pair<typename MPTraits::MPProblemType::VID, size_t> >& _ccs){
   m_ccs=_ccs;
 }
 
 
-template<class BOUNDARY>
+template<class BOUNDARY, class MPTraits>
 void
-Region<BOUNDARY>::Print(ostream& _os) const  {
-  typedef std::vector<VID>::const_iterator itr;
+Region<BOUNDARY, MPTraits>::Print(ostream& _os) const  {
+  typedef typename std::vector<VID>::const_iterator itr;
   _os << "  " << "Region Weight :" << m_vids.size() << " "; 
   _os << "Region VIDs: ";
   for(itr vit = m_vids.begin(); vit!=m_vids.end(); vit++){

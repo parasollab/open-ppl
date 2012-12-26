@@ -4,11 +4,11 @@
 #ifndef CONSTRUCTREGIONMAP_H_
 #define CONSTRUCTREGIONMAP_H_
 
-#include "ParallelSBMPHeader.h"
-#include "BoundingBox.h"
+#include "ParallelMethods/ParallelSBMPHeader.h"
+#include "MPProblem/BoundingBox.h"
 
-typedef typename stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Region<BoundingBox>, WeightType> RRGraph;
-typedef RoadmapGraph<CfgType, WeightType>::VID VID;
+//typedef typename stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Region<BoundingBox>, WeightType> RRGraph;
+//typedef RoadmapGraph<CfgType, WeightType>::VID VID;
 
 using namespace psbmp;
 using namespace stapl;
@@ -16,14 +16,18 @@ using namespace stapl;
 
 /// General Framework for roadmap construction, calls MPStrategy method (i.e. BasicPRM, Basic RRT) directly
 /// to be called if region migration is not needed
+template<class MPTraits>
 class ConstructRoadmap {
 
 private:
-    
-  MPStrategyMethod* m_strategyMethod;
-  
+  typedef typename MPTraits::MPProblemType MPProblemType;
+  typedef typename MPProblemType::VID VID;
+  typedef typename MPProblemType::MPStrategyPointer MPStrategyPointer;
+
+  MPStrategyPointer m_strategyMethod;
+
 public:
-  ConstructRoadmap(MPStrategyMethod* _mpsm ): m_strategyMethod(_mpsm){ }    
+  ConstructRoadmap(MPStrategyPointer _mpsm ): m_strategyMethod(_mpsm){ }    
   void define_type(stapl::typer& _t){
   }
   ConstructRoadmap(const ConstructRoadmap& _wf, std::size_t offset)  {}
@@ -39,7 +43,7 @@ public:
     BoundingBox bb = _bbview;
     shared_ptr<BoundingBox> boundary = shared_ptr<BoundingBox>(new BoundingBox(bb));
     vector<VID> dummy;
-    Region<BoundingBox> bbInfo(boundary,dummy);
+    Region<BoundingBox, MPTraits> bbInfo(boundary,dummy);
     _view.property() = bbInfo;
     boundary->Print(cout);
     cout << "\n\n" << endl;
@@ -51,26 +55,29 @@ public:
     //}
   }
 };
-                                                                                                                                
+
+template<class MPTraits>
 class NodeGenerator {
 
 private:
-  typedef Sampler<CfgType>::SamplerPointer NGM;
-  typedef shared_ptr<ValidityCheckerMethod> VCM;
+  typedef typename MPTraits::CfgType CfgType;
+  typedef typename MPTraits::MPProblemType MPProblemType;
+  typedef typename MPProblemType::VID VID;
+  typedef typename MPProblemType::SamplerPointer NGM;
+  //typedef typename MPProblemType::ValidityCheckerPointer VCM;
   
+  MPProblemType* m_problem;
   NGM m_sp;
-  Environment* m_env;
-  VCM m_vcm;
+  //VCM m_vcm;
   int m_attempts;
 
 public:
 
-  NodeGenerator(Environment* _env,NGM _ngm, VCM _vcm, int _num):
+  NodeGenerator(MPProblemType* _problem, NGM _ngm, int _num):
     m_attempts(_num){
-    
+    m_problem = _problem;
     m_sp = _ngm;
-    m_env = _env;
-    m_vcm = _vcm;
+   // m_vcm = _vcm;
   
   }
   
@@ -86,44 +93,49 @@ public:
     string callee("Generator");
     BoundingBox bb = _v1;
     shared_ptr<BoundingBox> boundary = shared_ptr<BoundingBox>(new BoundingBox(bb));
-    Environment* env = const_cast<Environment*>(m_env);
     //PrintValue("v2 desc:", _v2.descriptor());
     //boundary->testPrint(2);
     ////Generate Node
     
     
-    StatClass* stat = env->GetMPProblem()->GetStatClass();
-    m_sp->Sample(env, boundary, *stat, m_attempts, 10, back_inserter(outNodes), back_inserter(colNodes));
+    StatClass* stat = m_problem->GetStatClass();
+    m_sp->Sample(m_problem->GetEnvironment(), boundary, *stat, m_attempts, 10, back_inserter(outNodes), back_inserter(colNodes));
     
-    typedef vector<CfgType>::iterator VIT;
+    typedef typename vector<CfgType>::iterator VIT;
     for(VIT vit = outNodes.begin(); vit  != outNodes.end(); ++vit) {
       
       CfgType tmp = *vit;
       ///Add Valid Node Only
-      if(m_vcm->IsValid(tmp, env, *stat,
+      //TODO: Pass validity checker label as string
+      if(m_problem->GetValidityChecker("cd1")->IsValid(tmp, m_problem->GetEnvironment(), *stat,
         cdInfo, &callee)) {
         
-        VID vid = m_env->GetMPProblem()->GetRoadmap()->m_pRoadmap->add_vertex(tmp);
+        VID vid = m_problem->GetRoadmap()->GetGraph()->add_vertex(tmp);
         regionVIDs.push_back(vid); 
       }
     }
-    Region<BoundingBox> bbInfo(boundary,regionVIDs);   
+    Region<BoundingBox, MPTraits> bbInfo(boundary,regionVIDs);   
     _v2.property() = bbInfo;
   }
 };
 
+template<class MPTraits>
 class NodeConnector {
 private:
-  typedef Connector<CfgType, WeightType>::ConnectionPointer NCP;
-  
+  typedef typename MPTraits::CfgType CfgType;
+  typedef typename MPTraits::MPProblemType MPProblemType;
+  typedef typename MPProblemType::VID VID;
+  typedef typename MPProblemType::GraphType GraphType;
+  typedef typename MPProblemType::ConnectorPointer NCP;
+ 
+  MPProblemType* m_problem;
   NCP m_ncp;
-  Environment* m_env;
 
 public:
 
-  NodeConnector(NCP _ncp, Environment* _env) {
+  NodeConnector(MPProblemType* _problem, NCP _ncp) {
+    m_problem = _problem;
     m_ncp = _ncp;
-    m_env = _env;
   }
   
   void define_type(stapl::typer& _t) {
@@ -139,16 +151,16 @@ public:
       //PrintValue("CONNECTOR VID = " , *vit);
     }
     
-    StatClass* stat = m_env->GetMPProblem()->GetStatClass();
+    StatClass* stat = m_problem->GetStatClass();
     
     // temporary fix for Parallel code to compile
-    stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
-    m_ncp->Connect(m_env->GetMPProblem()->GetRoadmap(), *stat, cmap, 
+    stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > cmap;
+    m_ncp->Connect(m_problem->GetRoadmap(), *stat, cmap, 
 	         regionVIDs.begin(), regionVIDs.end(), regionVIDs.begin(), regionVIDs.end() );
   }    
 };
 
-//TO DO- combine with similar class
+/*TO DO- combine with similar class
 class ConstructBioRoadmap {
 private:
     MPStrategyMethod* m_strategyMethod;
@@ -325,6 +337,6 @@ public:
     BioRegion regionData(regionVIDs);
     _view.property() = regionData;
   }
-};
+};*/
 
 #endif

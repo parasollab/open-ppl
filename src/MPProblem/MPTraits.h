@@ -89,6 +89,7 @@
 
 #ifdef _PARALLEL
 #include "ParallelMethods/BasicParallelPRM.h"
+#include "ParallelMethods/RegularSubdivisionMethod.h"
 #endif
 
 template<class C, class W = DefaultWeight<C> >
@@ -218,6 +219,7 @@ struct MPTraits{
     TogglePRMStrategy<MPTraits>
     #ifdef _PARALLEL
     ,BasicParallelPRM<MPTraits>
+    ,RegularSubdivisionMethod<MPTraits>
     #endif
     > MPStrategyMethodList;
 };
