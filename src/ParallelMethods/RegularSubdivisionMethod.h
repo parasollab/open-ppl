@@ -59,7 +59,6 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
     double m_xEpsilon, m_yEpsilon, m_zEpsilon;
     string m_nf, m_ccc, m_lp;
     CCsConnector<MPTraits>* m_ccConnector;
-   // MPProblem* m_problem; 
 };
 
 template<class MPTraits>
@@ -73,8 +72,8 @@ RegularSubdivisionMethod<MPTraits>::RegularSubdivisionMethod(const vector<pair<s
 
 template<class MPTraits>
 RegularSubdivisionMethod<MPTraits>::RegularSubdivisionMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPStrategyMethod<MPTraits>(_problem,_node) {
- // m_problem = _problem;
   ParseXML(_node);
+  this->SetName("RegularSubdivisionMethod");
 }
 
 
