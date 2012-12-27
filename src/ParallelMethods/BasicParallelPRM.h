@@ -119,7 +119,7 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
     
     virtual ~BasicParallelPRM() {};
 
-    virtual void PrintOptions(ostream& _outOs) {};
+    virtual void PrintOptions(ostream& _os);
     virtual void ParseXML(XMLNodeReader& _inPNode); 
 
     virtual void Initialize() {};
@@ -178,6 +178,25 @@ BasicParallelPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
   }
 
   if (this->m_debug) cout << "BasicParallelPRM::ParseXML()" << endl;
+}
+
+template<class MPTraits>
+void
+BasicParallelPRM<MPTraits>::PrintOptions(ostream& _os) {
+  MPStrategyMethod<MPTraits>::PrintOptions(_os);
+  typedef vector<pair<string, int> >::iterator VIter;
+  typedef vector<string>::iterator StringIter;
+  _os<<"\nSamplers\n";
+  for(VIter vIter=m_vecStrNodeGenLabels.begin(); 
+      vIter!=m_vecStrNodeGenLabels.end(); vIter++){
+    _os<<"\t"<<vIter->first<<"\tNumber:"<<vIter->second;
+  }
+
+  _os<<"\nNodeConnectors\n";
+  for(StringIter sIter=m_vecStrNodeConnectionLabels.begin(); sIter!=m_vecStrNodeConnectionLabels.end(); sIter++){
+    _os<<"\t"<<*sIter;
+  }
+
 }
 
 template<class MPTraits>
