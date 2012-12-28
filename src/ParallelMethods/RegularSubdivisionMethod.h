@@ -142,6 +142,35 @@ void RegularSubdivisionMethod<MPTraits>::ParseXML(XMLNodeReader& _node){
 };
 
 
+template<class MPTraits>
+void RegularSubdivisionMethod<MPTraits>::PrintOptions(ostream& _os){
+   _os << "RegularSubdivisionMethod:: PrintOptions \n";
+   _os << "\trows: " << m_row << endl;
+   _os << "\tcols: " << m_col << endl;
+   _os << "\tregion connector type: " << m_ccc << endl;
+   _os << "\tregion k: " << m_k1 << endl;
+  
+   typedef vector<pair<string, int> >::iterator VIter;
+   typedef vector<string>::iterator StringIter;
+
+   _os<<"\nSamplers\n";
+   for(VIter vIter=m_vecStrNodeGenLabels.begin(); 
+      vIter!=m_vecStrNodeGenLabels.end(); vIter++){
+    _os<<"\t"<<vIter->first<<"\tNumber:"<<vIter->second;
+   }
+
+   _os<<"\nNodeConnectors\n";
+   for(StringIter sIter=m_vecStrNodeConnectionLabels.begin(); sIter!=m_vecStrNodeConnectionLabels.end(); sIter++){
+     _os<<"\t"<<*sIter;
+   }
+   
+   _os<<"\nSequential Strategy\n";
+   for(StringIter sIter=m_strategiesLabels.begin(); sIter!=m_strategiesLabels.end(); sIter++){
+     _os<<"\t"<<*sIter;
+   }
+ 
+  
+}
 /*void RegularSubdivisionMethod::Initialize() {
   cout << "RegularSubdivisionMethod::Initialize()" <<endl;
 }*/
@@ -205,7 +234,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   rmi_fence();
   
   t1.start();
-  PrintValue("Region graph size " , regularRegion.size());
+  if(this->m_debug) PrintValue("Region graph size " , regularRegion.size());
   //PrintValue("Mesh Graph size " , meshGraph.size());
   
   
@@ -213,7 +242,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   
     ///CONSTRUCT REGION MAP---COARSE GRAINED -- takes the whole sequential strategy
     for(J itr1 = m_strategiesLabels.begin(); itr1 != m_strategiesLabels.end(); ++itr1) {
-    PrintValue("View size " , regionView.size());
+    if(this->m_debug) PrintValue("View size " , regionView.size());
     MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy(*itr1); 
     ConstructRoadmap<MPTraits> constrRegionMap(strategy);
     map_func(constrRegionMap, regionView,arrView);
@@ -242,11 +271,13 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
 
   ///DEBUG
   constr_tm = t1.stop();
+  if(this->m_debug){
   PrintValue("CNSTR : " , constr_tm);
   PrintOnce("RUN::# of regions ", regularRegion.num_vertices());
   PrintOnce("RUN::# of region edges: ", regularRegion.num_edges());
   PrintOnce("RUN::roadmap graph size ", rmg->num_vertices());
   PrintOnce("RUN::roadmap graph edges before: ", rmg->num_edges());
+  }
   rmi_fence();
   
   /// COMPUTE CCs AND SET REGION CCs
@@ -267,7 +298,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   std::vector<pair<VID,size_t> > ccVec1 = cc_stats(rmView,map);
   rmi_fence();
   
-  PrintOnce("cc count before region con:", ccVec1.size());
+  if(this->m_debug) PrintOnce("cc count before region con:", ccVec1.size());
   rmi_fence();
   if(m_ccc == "largest"){ 
     array_view<std::vector<pair<VID,size_t> > > ccView1(ccVec1);
@@ -296,7 +327,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   }
   
   ///DEBUG
-  PrintOnce("RUN::roadmap graph edges after: ", rmg->num_edges());
+  if(this->m_debug) PrintOnce("RUN::roadmap graph edges after: ", rmg->num_edges());
   rmi_fence();
   
   map.reset();
@@ -305,7 +336,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   std::vector<pair<VID,size_t> > ccVec2 = cc_stats(rmView,map);
   rmi_fence();
   
-  PrintOnce("cc count after region con: ", ccVec2.size());
+  if(this->m_debug) PrintOnce("cc count after region con: ", ccVec2.size());
   rmi_fence();
    
   ///WRITE REGION GRAPH :: DEBUG
@@ -334,9 +365,5 @@ void RegularSubdivisionMethod<MPTraits>::Finalize(){
   cout << "location [" << get_location_id() <<"] ALL FINISHED" << endl;
 }
 
-template<class MPTraits>
-void RegularSubdivisionMethod<MPTraits>::PrintOptions(ostream& _os){
-   _os << "RegularSubdivisionMethod:: PrintOptions \n";
-}
 
 #endif 
