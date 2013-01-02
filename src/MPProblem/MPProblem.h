@@ -112,6 +112,7 @@ class MPProblem
 
   protected:
     void Initialize();
+    void ReadXMLFile(const string& _filename, typename MPTraits::MPProblemType* _problem);
     bool ParseChild(XMLNodeReader::childiterator citr, typename MPTraits::MPProblemType* _problem);
     virtual void ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem); 
 
@@ -155,65 +156,17 @@ MPProblem<MPTraits>::MPProblem() {
 };
 
 template<class MPTraits>
-MPProblem<MPTraits>::MPProblem(const string& _filename){
+MPProblem<MPTraits>::MPProblem(const string& _filename) {
   Initialize();
 
-  TiXmlDocument doc(_filename);
-  bool loadOkay = doc.LoadFile();
-
-  if (!loadOkay){
-    cerr << "Error::Could not load test file " << _filename << ". XMLError=" << doc.ErrorDesc() << ". Exiting." << endl;
-    exit(1);
-  }
-
-  XMLNodeReader mpNode(_filename, doc, "MotionPlanning");
-  
-  //Iterate over child nodes in search of MPProblem node within MotionPlanning
-  //MotionPlanning should be removed in the future
-  bool found = false;
-  for(XMLNodeReader::childiterator citr = mpNode.children_begin(); citr != mpNode.children_end(); ++citr){
-    if(citr->getName() == "MPProblem"){
-      ParseXML(*citr, this);
-      found = true;
-      break;
-    } 
-  }
-      
-  if(!found){
-    cerr << "Error::Cannot find MPProblem XML node. Exiting." << endl;
-    exit(1);
-  }
+  ReadXMLFile(_filename, this);
 }
 
 template<class MPTraits>
-MPProblem<MPTraits>::MPProblem(const string& _filename, typename MPTraits::MPProblemType* _problem){
+MPProblem<MPTraits>::MPProblem(const string& _filename, typename MPTraits::MPProblemType* _problem) {
   Initialize();
 
-  TiXmlDocument doc(_filename);
-  bool loadOkay = doc.LoadFile();
-
-  if (!loadOkay){
-    cerr << "Error::Could not load test file " << _filename << ". XMLError=" << doc.ErrorDesc() << ". Exiting." << endl;
-    exit(1);
-  }
-
-  XMLNodeReader mpNode(_filename, doc, "MotionPlanning");
-  
-  //Iterate over child nodes in search of MPProblem node within MotionPlanning
-  //MotionPlanning should be removed in the future
-  bool found = false;
-  for(XMLNodeReader::childiterator citr = mpNode.children_begin(); citr != mpNode.children_end(); ++citr){
-    if(citr->getName() == "MPProblem"){
-      ParseXML(*citr, _problem);
-      found = true;
-      break;
-    } 
-  }
-      
-  if(!found){
-    cerr << "Error::Cannot find MPProblem XML node. Exiting." << endl;
-    exit(1);
-  }
+  ReadXMLFile(_filename, _problem);
 }
 
 template<class MPTraits>
@@ -276,6 +229,36 @@ MPProblem<MPTraits>::Initialize(){
   m_solverVizmoDebug = "";
 
   m_cdBuilt = false;
+}
+
+template<class MPTraits>
+void
+MPProblem<MPTraits>::ReadXMLFile(const string& _filename, typename MPTraits::MPProblemType* _problem) {
+  TiXmlDocument doc(_filename);
+  bool loadOkay = doc.LoadFile();
+
+  if (!loadOkay){
+    cerr << "Error::Could not load test file " << _filename << ". XMLError=" << doc.ErrorDesc() << ". Exiting." << endl;
+    exit(1);
+  }
+
+  XMLNodeReader mpNode(_filename, doc, "MotionPlanning");
+  
+  //Iterate over child nodes in search of MPProblem node within MotionPlanning
+  //MotionPlanning should be removed in the future
+  bool found = false;
+  for(XMLNodeReader::childiterator citr = mpNode.children_begin(); citr != mpNode.children_end(); ++citr){
+    if(citr->getName() == "MPProblem"){
+      ParseXML(*citr, _problem);
+      found = true;
+      break;
+    } 
+  }
+      
+  if(!found){
+    cerr << "Error::Cannot find MPProblem XML node. Exiting." << endl;
+    exit(1);
+  }
 }
 
 template<class MPTraits>
