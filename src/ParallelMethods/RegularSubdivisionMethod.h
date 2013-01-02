@@ -55,9 +55,9 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
     vector<pair<string, int> > m_vecStrNodeGenLabels;
     vector<string> m_vecStrNodeConnectionLabels;
     vector<string> m_strategiesLabels;
+    string m_nf, m_ccc, m_lp;
     int m_row,m_col,m_runs, m_k1, m_k2;
     double m_xEpsilon, m_yEpsilon, m_zEpsilon;
-    string m_nf, m_ccc, m_lp;
     CCsConnector<MPTraits>* m_ccConnector;
 };
 
@@ -193,9 +193,8 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
  // m_ccConnector->SetMPProblem(this->GetMPProblem());
   
    ///TIMER STUFF
-  
-  stapl::counter<stapl::default_timer> t0,t1,t2,t3;
-  double constr_tm=0.0, cc_tm=0, rg_constr_tm=0.0, total_tm=0.0;
+  stapl::counter<stapl::default_timer> t0;
+  double constr_tm=0.0;
    
   typedef vector<pair<string, int> >::iterator I;
   typedef vector<string>::iterator J;
@@ -233,9 +232,8 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   viewBbox arrView(pArrayBbox);
   rmi_fence();
   
-  t1.start();
+  if (this->m_debug)  t0.start();
   if(this->m_debug) PrintValue("Region graph size " , regularRegion.size());
-  //PrintValue("Mesh Graph size " , meshGraph.size());
   
   
   if (m_strategiesLabels.size() != 0){
@@ -270,13 +268,13 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   rmi_fence();
 
   ///DEBUG
-  constr_tm = t1.stop();
   if(this->m_debug){
-  PrintValue("CNSTR : " , constr_tm);
-  PrintOnce("RUN::# of regions ", regularRegion.num_vertices());
-  PrintOnce("RUN::# of region edges: ", regularRegion.num_edges());
-  PrintOnce("RUN::roadmap graph size ", rmg->num_vertices());
-  PrintOnce("RUN::roadmap graph edges before: ", rmg->num_edges());
+    constr_tm = t0.stop();
+    PrintValue("CNSTR : " , constr_tm);
+    PrintOnce("RUN::# of regions ", regularRegion.num_vertices());
+    PrintOnce("RUN::# of region edges: ", regularRegion.num_edges());
+    PrintOnce("RUN::roadmap graph size ", rmg->num_vertices());
+    PrintOnce("RUN::roadmap graph edges before: ", rmg->num_edges());
   }
   rmi_fence();
   

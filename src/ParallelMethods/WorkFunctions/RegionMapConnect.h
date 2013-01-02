@@ -144,10 +144,10 @@ class RegionCCConnector
   //typedef typename MPProblemType::ConnectorPointer NCP;
   typedef std::tr1::tuple<NCP,string, int> ConnectTuple;
   
+  MPProblemType* m_problem;
   RGType* m_g;
   CMap m_cmap;
   ConnectTuple m_ct;
-  MPProblemType* m_problem;
   
   public:
 
@@ -238,9 +238,9 @@ class RegionRandomConnector
   //typedef Connector<CfgType, WeightType>::ConnectionPointer NCP;
   typedef std::tr1::tuple<NCP,string, int> ConnectTuple;
   
+  MPProblemType* m_problem; 
   RGType* m_g;
   ConnectTuple m_ct;
-  MPProblemType* m_problem; 
  
   public:
 

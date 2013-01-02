@@ -37,7 +37,9 @@ DecomposeWS(Environment* _env, BoundingBox* _cBoundary,unsigned int _nx, unsigne
   // TO DO: Set some of these parameters in constructor
   double xwidth = (_cBoundary->GetRange(0).second - _cBoundary->GetRange(0).first)/_nx;
   double ywidth = (_cBoundary->GetRange(1).second - _cBoundary->GetRange(1).first)/_ny;
-  double zwidth = (_cBoundary->GetRange(2).second - _cBoundary->GetRange(2).first)/_nz;
+  double zwidth = 0.0;
+  if (_cBoundary->GetPosDOFs() > 2) 
+     zwidth = (_cBoundary->GetRange(2).second - _cBoundary->GetRange(2).first)/_nz;
 
   double robotradius = _env->GetMultiBody(_env->GetRobotIndex())->GetMaxAxisRange();
 
@@ -47,7 +49,7 @@ DecomposeWS(Environment* _env, BoundingBox* _cBoundary,unsigned int _nx, unsigne
 
   double xmin,xmax;
   double ymin,ymax;
-  double zmin,zmax;
+  double zmin=0.0,zmax=0.0;
   
   BoundingBox tmp(_cBoundary->GetDOFs(), _cBoundary->GetPosDOFs());
 
@@ -66,12 +68,14 @@ DecomposeWS(Environment* _env, BoundingBox* _cBoundary,unsigned int _nx, unsigne
       ymax = (ymax+yoverlap < _cBoundary->GetRange(1).second) ? ymax+yoverlap : ymax;
       
       for(unsigned int k = 0; k < _nz; ++k){
-        zmin = _cBoundary->GetRange(2).first + zwidth*k;
-	zmax = zmin + zwidth;
+        if (_cBoundary->GetPosDOFs() > 2) {
+          zmin = _cBoundary->GetRange(2).first + zwidth*k;
+	  zmax = zmin + zwidth;
 	
 	// Change for overlap region z-axis
-	zmin = (zmin-zoverlap > _cBoundary->GetRange(2).first) ? zmin-zoverlap : zmin;
-	zmax = (zmax+zoverlap < _cBoundary->GetRange(2).second) ? zmax+zoverlap : zmax;
+	  zmin = (zmin-zoverlap > _cBoundary->GetRange(2).first) ? zmin-zoverlap : zmin;
+	  zmax = (zmax+zoverlap < _cBoundary->GetRange(2).second) ? zmax+zoverlap : zmax;
+        }
 	tmp.SetParameter(0,xmin,xmax);
 	tmp.SetParameter(1,ymin,ymax);
 	tmp.SetParameter(2,zmin,zmax);
