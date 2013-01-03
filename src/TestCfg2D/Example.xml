@@ -19,11 +19,11 @@
     </ValidityCheckers>
     
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmMethod="euclidean"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean"/>
     </NeighborhoodFinders>
     
     <Samplers>
-      <UniformRandomSampler label="UniformRandom" vcMethod="cd"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="cd"/>
     </Samplers>
     
     <Connectors>
