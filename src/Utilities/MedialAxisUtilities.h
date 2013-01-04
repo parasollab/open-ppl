@@ -692,7 +692,7 @@ MedialAxisUtility<MPTraits>::PushToMedialAxis(CfgType& _cfg, shared_ptr<Boundary
   Environment* env = this->GetMPProblem()->GetEnvironment();
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
-  bool inside, inCollision, found, pushed = true;
+  bool inside, inCollision;
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
   tmpInfo.m_retAllInfo = true;
@@ -734,26 +734,10 @@ MedialAxisUtility<MPTraits>::PushFromInsideObstacle(CfgType& _cfg, shared_ptr<Bo
   
   if(this->m_debug) cout << call << endl << " CfgType: " << _cfg << endl;
   
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
-
   // Variables
+  CfgType transCfg = _cfg;
+
   CDInfo tmpInfo;
-  Vector3D transDir, dif;
-  bool inBBX;
-  CfgType endCfg = _cfg, tmpCfg = _cfg, heldCfg = _cfg, transCfg = _cfg;
-  double stepSize=1.0, factor;
-  double posRes = env->GetPositionRes();
-  double oriRes = env->GetOrientationRes(); 
-  bool initValidity = vcm->IsValid(_cfg, env, *stats, tmpInfo, &call);
-  bool tmpValidity=false, prevValidity=false;
-  int nTicks;
-
-  // If in collision (using the exact case), must use approx
-  bool pExact = this->m_exactPenetration/* && initValidity*/; 
-
   tmpInfo.ResetVars();
   tmpInfo.m_retAllInfo = true;
 
@@ -765,13 +749,13 @@ MedialAxisUtility<MPTraits>::PushFromInsideObstacle(CfgType& _cfg, shared_ptr<Bo
     return false;
     
   //bad collision information call might return the current Cfg 
-  //as the clearance Cfg thus making transCfg as the origin.
+  //as the clearance Cfg.
   if(transCfg == _cfg)
     return false;
   
   _cfg = transCfg;
   
-  if(this->m_debug) cout << "FINAL CfgType: " << _cfg << " steps: " << stepSize-1.0 << endl << call << "::END " << endl;
+  if(this->m_debug) cout << "FINAL CfgType: " << _cfg << endl << call << "::END " << endl;
   return true;
 }
 
@@ -790,7 +774,6 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   if(this->m_debug) cout << call << endl << "Cfg: " << _cfg << " eps: " << m_epsilon << endl;
   
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   shared_ptr<MultiBody> robot = env->GetMultiBody(env->GetRobotIndex());
@@ -799,9 +782,8 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   Vector3D transDir, dif;
   CDInfo tmpInfo, prevInfo;
   CfgType transCfg, tmpCfg, heldCfg, tmpTransCfg;
-  double stepSize = 0.0, cbStepSize = 0.0, factor = 0.0, posRes = env->GetPositionRes(), oriRes = env->GetOrientationRes();
+  double stepSize = 0.0, cbStepSize = 0.0, posRes = env->GetPositionRes();
   bool inBBX = true, inside = vcm->IsInsideObstacle(_cfg, env, tmpInfo);
-  int nTicks;
 
   // Should already be in free space
   if(inside){
