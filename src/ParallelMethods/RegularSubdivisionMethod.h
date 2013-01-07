@@ -13,9 +13,6 @@
 #include "ParallelMethods/WorkFunctions/RegionMapConnect.h"
 
 
-/*class XMLNodeReader;
-class MPProblem;
-template<class CFG, class WEIGHT> class ConnectCCs;*/
 
 template<class MPTraits>
 class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
@@ -24,7 +21,6 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::MPStrategyPointer MPStrategyPointer;
-   // typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::SamplerPointer SamplerPointer;
@@ -183,14 +179,8 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* rmg = this->GetMPProblem()->GetRoadmap()->GetGraph(); 
   BasicDecomposition* decomposer = new BasicDecomposition();
-  //shared_ptr<DistanceMetricMethod> dmm = this->GetMPProblem()->GetDistanceMetric()->GetMethod("scaledEuclidean");
-  //shared_ptr<ValidityCheckerMethod> vcm = this->GetMPProblem()->GetValidityChecker()->GetMethod("cd1");
- // typedef typename Connector<MPTraits> NC;
-  //typedef NC::ConnectionPointer NCP;
- // NC* nc = this->GetMPProblem()->GetConnector();
  
   m_ccConnector = new CCsConnector<MPTraits>(this->GetMPProblem(), m_lp,m_nf);
- // m_ccConnector->SetMPProblem(this->GetMPProblem());
   
    ///TIMER STUFF
   stapl::counter<stapl::default_timer> t0;
@@ -287,7 +277,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
 				      
   ///TODO: proper fix by making cc_color_property derived from cfg class
   /// and then use internal_property_map
-  property_storage_type prop_storage(2*num_samples*mesh_size);
+  property_storage_type prop_storage(2*rmg->num_vertices());
   property_map_type     map(rmView, &prop_storage);
   
   connected_components(rmView, map);
@@ -296,6 +286,13 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   std::vector<pair<VID,size_t> > ccVec1 = cc_stats(rmView,map);
   rmi_fence();
   
+  //TODO : Danger, potential to overide region VIDs for fine grained approach, so we check that fine grained is not set 
+  if (m_strategiesLabels.size() != 0 && (m_vecStrNodeGenLabels.size() ==0 || m_vecStrNodeConnectionLabels.size() ==0)){
+    array_view<std::vector<pair<VID,size_t> > > ccView1(ccVec1);
+    map_func(SetRegionCCVIDS<MPTraits>(), regionView, balance_view(ccView1,regionView.size()));
+    rmi_fence();
+  }
+
   if(this->m_debug) PrintOnce("cc count before region con:", ccVec1.size());
   rmi_fence();
   if(m_ccc == "largest"){ 

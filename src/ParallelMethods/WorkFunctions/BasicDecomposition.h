@@ -50,7 +50,6 @@ DecomposeWS(Environment* _env, BoundingBox* _cBoundary,unsigned int _nx, unsigne
   double xmin,xmax;
   double ymin,ymax;
   double zmin=0.0,zmax=0.0;
-  
   BoundingBox tmp(_cBoundary->GetDOFs(), _cBoundary->GetPosDOFs());
 
   for(unsigned int i = 0; i < _nx; ++i){	
@@ -75,10 +74,10 @@ DecomposeWS(Environment* _env, BoundingBox* _cBoundary,unsigned int _nx, unsigne
 	// Change for overlap region z-axis
 	  zmin = (zmin-zoverlap > _cBoundary->GetRange(2).first) ? zmin-zoverlap : zmin;
 	  zmax = (zmax+zoverlap < _cBoundary->GetRange(2).second) ? zmax+zoverlap : zmax;
+	  tmp.SetParameter(2,zmin,zmax);
         }
-	tmp.SetParameter(0,xmin,xmax);
-	tmp.SetParameter(1,ymin,ymax);
-	tmp.SetParameter(2,zmin,zmax);
+	tmp.SetParameter(1,xmin,xmax);
+	tmp.SetParameter(0,ymin,ymax);
 	*(_out++) = tmp;
       }
     }

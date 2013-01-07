@@ -726,7 +726,7 @@ GetVerticesVID(vector<VID>& v_vd) const{
     for (CVI vi = (*this).begin(); vi!= (*this).end(); vi++) {
         v_vd.push_back((*vi).descriptor());
     }
-    #endif
+   #endif
     return v_vd.size();
 }
 
@@ -812,11 +812,13 @@ template<class VERTEX, class WEIGHT>
 bool
 RoadmapGraph<VERTEX,WEIGHT>::
 IsEdge(VID vid1, VID vid2){
-bool is_edge;
+bool is_edge=false;
+#ifndef _PARALLEL //rm guard after find_edge is implemented for pgraph
 typename RoadmapGraph<VERTEX, WEIGHT>::VI vi;
 typename RoadmapGraph<VERTEX, WEIGHT>::EI ei;
 typename RoadmapGraph<VERTEX, WEIGHT>::EID ed(vid1,vid2);
 is_edge=this->find_edge(ed, vi, ei);
+#endif
 return is_edge;
 }
 

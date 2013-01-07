@@ -3,13 +3,14 @@
 
 #include "ParallelMethods/ParallelSBMPHeader.h"
 
+///needed for proxy of pair specialization
+#include <stapl/../tools/libstdc++/proxy/pair.h>
+
 using namespace std;
 using namespace stapl;
 using namespace psbmp;
 
 
-//typedef RoadmapGraph<CfgType, WeightType>::VID VID;
-//typedef typename MPProblemType::VID VID;
 
 
 
@@ -110,7 +111,7 @@ public:
 };
 };
 
-
+//TODO: Combine the two set cc workfunctions
 template<class MPTraits>
 struct SetRegionCC{
   
@@ -122,15 +123,28 @@ struct SetRegionCC{
      std::vector<pair<VID,size_t> > ccVec;
      for(typename CCView::iterator ccit = _v2.begin(); ccit != _v2.end(); ++ccit){
        ccVec.push_back(*ccit);
-      // PrintValue("SetRegionCC::CC VID: " , (*ccit).first);
-      // PrintValue("SetRegionCC::CC size: " , (*ccit).second);
      }
     // TODO vector
-    //_v1.property().SetCCs(ccVec);
-    //PrintValue("SetRegionCC::CCsize: " , ccVec.size());
+    _v1.property().SetCCs(ccVec);
  }
 };
 
+template<class MPTraits>
+struct SetRegionCCVIDS{
+  
+  typedef typename MPTraits::MPProblemType MPProblemType;
+  typedef typename MPProblemType::VID VID;
+  
+  template <typename RGView, typename CCView>
+  void operator()(RGView _v1, CCView _v2) {
+     std::vector<VID> ccVec;
+     for(typename CCView::iterator ccit = _v2.begin(); ccit != _v2.end(); ++ccit){
+       //PrintValue("SetRegionCC::CC VID: " , (*ccit).first);
+       ccVec.push_back((*ccit).second);
+     }
+    _v1.property().SetVIDs(ccVec);
+ }
+};
 
 template<typename RGType, typename RType, typename CMap, class MPTraits>
 class RegionCCConnector 
@@ -141,7 +155,6 @@ class RegionCCConnector
   typedef typename MPProblemType::VID VID;
   typedef typename MPProblemType::GraphType GraphType;
   typedef CCsConnector<MPTraits>* NCP;
-  //typedef typename MPProblemType::ConnectorPointer NCP;
   typedef std::tr1::tuple<NCP,string, int> ConnectTuple;
   
   MPProblemType* m_problem;
@@ -208,14 +221,7 @@ class RegionCCConnector
           ///\TODO : Check whether to connect small or big CCs
 	     
           vector<CfgType> col;
-	  //ncp->ConnectBigCC(m_region->GetRoadmap(),*(m_region->GetStatClass()), sCand, tCand, col);
-	  //stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>::GRAPH,size_t > cmap;
-          /*ncp->Connect(m_region->GetRoadmap(),*(m_region->GetStatClass()), cmap,
-	  sCand.begin(),sCand.end(),
-	  tCand.begin(),tCand.end());*/
-	  // PrintValue("LARGEST - source size : ", sCand.size());
-          // PrintValue("LARGEST - target size : ", tCand.size());
-	  ncp->ConnectBigCC(m_problem->GetRoadmap(),*(m_problem->GetStatClass()),sCand, tCand, col.begin());
+	  ncp->ConnectBigCC(m_problem->GetRoadmap(),*(m_problem->GetStatClass()),sCand, tCand, back_inserter(col));
 	     
         }
     }
@@ -235,7 +241,6 @@ class RegionRandomConnector
   typedef typename MPProblemType::VID VID;
   typedef typename MPProblemType::GraphType GraphType;
   typedef typename MPProblemType::ConnectorPointer NCP;
-  //typedef Connector<CfgType, WeightType>::ConnectionPointer NCP;
   typedef std::tr1::tuple<NCP,string, int> ConnectTuple;
   
   MPProblemType* m_problem; 

@@ -8,12 +8,9 @@
 #define REGION_H_
 
 #include "MPProblem/Roadmap.h"
-//#include "CfgTypes.h"
-//#include "Boundary.h"
 #include "MPProblem/BoundingBox.h"
 
 
-//typedef RoadmapGraph<CfgType, WeightType>::VID VID;
 template<class BOUNDARY, class MPTraits>
 class Region {
   public:
@@ -45,10 +42,10 @@ class Region {
     //returns the vid of cc representative and size of cc for all CCs in the
     //region
     std::vector<pair<VID, size_t> > GetCCs() const; 
-    void SetCCs(std::vector<pair<VID, size_t> >& _ccs);
+    void SetCCs(std::vector<pair<VID, size_t> > _ccs);
 
     std::vector<VID> RegionVIDs() const;
-    void SetVIDs(std::vector<VID>& _ids);
+    void SetVIDs(std::vector<VID> _ids);
     
     //number of valid nodes in a region, needed for region migration
     size_t RegionWeight() const; 
@@ -97,7 +94,7 @@ namespace stapl {
         size_t RegionWeight() const{ return Accessor::const_invoke(&m_targetT::RegionWeight);}
         shared_ptr<BoundaryType> GetBoundary() const { return Accessor::const_invoke(&m_targetT::GetBoundary);}
 //        typename Region<BoundaryType>::ostream& operator<< (ostream& _os, const Region<BoundaryType>& _r) { return Accessor::invoke(&m_targetT::
-        void SetVIDs(std::vector<VID>& _ids) { Accessor::invoke(&m_targetT::SetVIDs, _ids); }
+        void SetVIDs(std::vector<VID> _ids) { Accessor::invoke(&m_targetT::SetVIDs, _ids); }
         void SetCCs(std::vector<pair<VID, size_t> > _ccs) { Accessor::invoke(&m_targetT::SetCCs, _ccs); }
         vector<pair<VID, size_t> > GetCCs() const{ return Accessor::const_invoke(&m_targetT::GetCCs);}
     }; //struct proxy
@@ -165,7 +162,7 @@ Region<BOUNDARY, MPTraits>::RegionVIDs() const {
 
 template<class BOUNDARY, class MPTraits>
 void
-Region<BOUNDARY, MPTraits>::SetVIDs(std::vector<VID>& _ids) {
+Region<BOUNDARY, MPTraits>::SetVIDs(std::vector<VID> _ids) {
   typename std::vector<VID>::iterator itr;
   for (itr = _ids.begin(); itr != _ids.end(); ++itr) {
     m_vids.push_back(*itr) ;
@@ -210,7 +207,7 @@ operator<< (ostream& _os, const Region<BOUNDARY>& _r) {
 */
 template<class BOUNDARY, class MPTraits>
 void
-Region<BOUNDARY,MPTraits>::SetCCs(std::vector<pair<typename MPTraits::MPProblemType::VID, size_t> >& _ccs){
+Region<BOUNDARY,MPTraits>::SetCCs(std::vector<pair<typename MPTraits::MPProblemType::VID, size_t> > _ccs){
   m_ccs=_ccs;
 }
 
