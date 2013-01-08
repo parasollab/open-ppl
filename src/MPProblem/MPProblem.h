@@ -102,7 +102,7 @@ class MPProblem
     MPStrategyPointer GetMPStrategy(const string& _l){return m_mpStrategies->GetMethod(_l);}
     void AddMPStrategy(MPStrategyPointer _mps, const string& _l){m_mpStrategies->AddMethod(_mps, _l);}
 
-    void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os);
 
     void SetMPProblem();
   
@@ -111,7 +111,7 @@ class MPProblem
     void BuildCDStructures();
 
   protected:
-    void Initialize();
+    virtual void Initialize();
     void ReadXMLFile(const string& _filename, typename MPTraits::MPProblemType* _problem);
     bool ParseChild(XMLNodeReader::childiterator citr, typename MPTraits::MPProblemType* _problem);
     virtual void ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem); 
