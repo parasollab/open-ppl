@@ -78,12 +78,12 @@ Roadmap<MPTraits>::Read(string _filename) {
   size_t count = 0;
   while(moreFile && (ifs >> tag)) {
     count++;
-    if(tag.find("GRAPHSTART")) 
+    if(tag.find("GRAPHSTART") != string::npos) 
       moreFile = false;
   }
   ifs.close();
 
-  if(moreFile) {
+  if(!moreFile) {
     ifstream ifs2(_filename.c_str());
     for(size_t i=0; i<count-1; ++i)
       ifs2 >> tag;
