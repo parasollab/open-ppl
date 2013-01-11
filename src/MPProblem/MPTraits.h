@@ -83,6 +83,7 @@
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
+#include "MPStrategies/MedialAxisRRT.h"
 #include "MPStrategies/ResamplePointStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
@@ -215,6 +216,7 @@ struct MPTraits{
     BasicRRTStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
+    MedialAxisRRT<MPTraits>,
     ResamplePointStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>
     #ifdef _PARALLEL

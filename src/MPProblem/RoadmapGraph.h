@@ -370,16 +370,16 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
        //helper function to call dereferece on an iterator whose
        //value_type is VID and convert to CfgType
        template<typename T>
-       VERTEX GetCfg(T& _t);
+       VERTEX& GetCfg(T& _t);
 
        //specialization for a roadmap graph iterator, calls property()
        //template<typename RDMP::VI>
-       VERTEX GetCfg(VI& _t);
+       VERTEX& GetCfg(VI& _t);
 
        //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
        //calls find_vertex(..) on VID to call property()
        //To do:Temporarily removed constness until it is supported in STAPL
-       VERTEX GetCfg(VID _t) ;
+       VERTEX& GetCfg(VID _t) ;
 
        //helper function to call dereferece on an iterator whose value_type is VID
        //needed to get around the fact that a roadmap graph iterator
@@ -557,10 +557,7 @@ RoadmapGraph<VERTEX,WEIGHT>::
 AddEdges( vector<EdgeInfo<VERTEX, WEIGHT> >& _e) {
     for (unsigned int i=0; i < _e.size(); i++){
         GRAPH::add_edge(_e[i].v1, _e[i].v2, _e[i].edgewt);
-	VERTEX data1 = this->GetCfg(_e[i].v1);
-	VERTEX data2 = this->GetCfg(_e[i].v2);
-	VDAddEdge(data1, data2);
-        //VDAddEdge(find_vertex(_e[i].v1)->property(), find_vertex(_e[i].v2)->property());
+	VDAddEdge(this->GetCfg(_e[i].v1), this->GetCfg(_e[i].v2));
     }
     return 0;
 }
@@ -836,7 +833,7 @@ return IsEdge(vid1, vid2);
 //value_type is VID and convert to CfgType
 template<class VERTEX, class WEIGHT>
 template<typename T>
-VERTEX
+VERTEX&
 RoadmapGraph<VERTEX, WEIGHT>::GetCfg(T& _t) {
   return (*(this->find_vertex(*_t))).property();
 }
@@ -844,7 +841,7 @@ RoadmapGraph<VERTEX, WEIGHT>::GetCfg(T& _t) {
 //specialization for a roadmap graph iterator, calls property()
 //template<typename RDMP::VI>
 template<class VERTEX, class WEIGHT>
-VERTEX
+VERTEX&
 RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) {
   return (*_t).property();
 }
@@ -852,7 +849,7 @@ RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) {
 //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
 //calls find_vertex(..) on VID to call property()
 template<class VERTEX, class WEIGHT>
-VERTEX
+VERTEX&
 RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VID _t)  {
   return (*this->find_vertex(_t)).property();
 }

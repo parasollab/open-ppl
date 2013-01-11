@@ -85,8 +85,8 @@ template<class MPTraits>
 void
 BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr){
-    if(citr->getName() == "evaluation_method"){
-      string evalMethod = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
+    if(citr->getName() == "Evaluator"){
+      string evalMethod = citr->stringXMLParameter("label", true, "", "Evaluation Method");
       m_evaluators.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
     } 
@@ -99,13 +99,13 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
   m_h = _node.numberXMLParameter("h", false, 0, 1, MAX_INT, "Hop Limit");
-  m_sampler = _node.stringXMLParameter("sampler", true, "", "Sampler Method");
-  m_vc = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
-  m_nf = _node.stringXMLParameter("nf", true, "", "Neighborhood Finder");
-  m_dm = _node.stringXMLParameter("dmMethod",true,"","Distance Metric");
-  m_lp = _node.stringXMLParameter("lp", true, "", "Local Planning Method");
+  m_sampler = _node.stringXMLParameter("samplerLabel", true, "", "Sampler Method");
+  m_vc = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
+  m_nf = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
+  m_dm = _node.stringXMLParameter("dmLabel",true,"","Distance Metric");
+  m_lp = _node.stringXMLParameter("lpLabel", true, "", "Local Planning Method");
   m_m= _node.numberXMLParameter("m", false, 1.0, 1.0, 1000.0, "Number of directions to extend");
-  m_nc = _node.stringXMLParameter("connectionMethod",false,"","Node Connection Method");
+  m_nc = _node.stringXMLParameter("connectorLabel",false,"","Node Connection Method");
   m_gt = _node.stringXMLParameter("gtype",true,"","Graph type dir/undirected tree/graph");
   m_evaluateGoal = _node.boolXMLParameter("evaluateGoal", false, false, "");
 
