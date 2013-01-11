@@ -27,12 +27,14 @@ GMSPolygon::operator==(const GMSPolygon& _p) const{
 }
 
 //End Polygon begin Polyhedron implementation
-GMSPolyhedron::GMSPolyhedron(): m_area(0), m_maxRadius(0), m_minRadius(0), m_boundaryBuilt(false){
+GMSPolyhedron::GMSPolyhedron(): m_area(0), m_maxRadius(0), m_minRadius(0), m_boundaryBuilt(false), m_force2DBoundary(false){
 }
 
 GMSPolyhedron::GMSPolyhedron(const GMSPolyhedron& _p) 
-  : m_vertexList(_p.m_vertexList), m_polygonList(_p.m_polygonList), 
-  m_area(_p.m_area), m_maxRadius(_p.m_maxRadius), m_minRadius(_p.m_minRadius), m_boundaryBuilt(false){
+  : m_vertexList(_p.m_vertexList), m_polygonList(_p.m_polygonList),
+  m_boundaryLines(_p.m_boundaryLines), m_boundaryBuilt(_p.m_boundaryBuilt), 
+  m_force2DBoundary(_p.m_force2DBoundary), 
+  m_area(_p.m_area), m_maxRadius(_p.m_maxRadius), m_minRadius(_p.m_minRadius){
 }
 
 GMSPolyhedron::~GMSPolyhedron(){
@@ -323,7 +325,6 @@ GMSPolyhedron::GetRandPtOnSurface(){
   }
   GMSPolygon& tv=m_polygonList[it];
   double u,v;
-  //double offset=0.3;
   u = drand48(); //anything from 0-1 should work for these coords
   v = drand48(); //anything from 0-1 should work for these coords
   if( (u+v)>= 1 ){
@@ -391,6 +392,14 @@ GMSPolyhedron::HeightAtPt(Point2d _pt, bool& _valid){
 }
 
 void 
+GMSPolyhedron::BuildBoundary2D() {
+  m_boundaryLines.clear();
+  m_boundaryBuilt=false;
+  m_force2DBoundary=true;
+  BuildBoundary();
+}
+
+void 
 GMSPolyhedron::BuildBoundary() {
   if( m_boundaryBuilt ) return; //only allow this to be attempted once
   if( m_boundaryLines.size() > 0 ) return; // this has been done
@@ -403,8 +412,14 @@ GMSPolyhedron::BuildBoundary() {
   //TriVector& triP=m_SurfaceModel->GetTriP();
   //vector<GMSPolygon>& triP = m_polygonList;
   lines.reserve(m_polygonList.size()*3);
+  double nearZeroPlane=0.3;
   for(PIT iT=m_polygonList.begin(); iT!=m_polygonList.end();iT++){
     const GMSPolygon& tri=*iT;
+    if(m_force2DBoundary) {
+      if( fabs( m_vertexList[tri.m_vertexList[0]][1] ) > nearZeroPlane ||
+	  fabs( m_vertexList[tri.m_vertexList[1]][1] ) > nearZeroPlane ||
+	  fabs( m_vertexList[tri.m_vertexList[2]][1] ) > nearZeroPlane ) continue;
+    }
     lines.push_back(Vector<int,2>(tri.m_vertexList[0],tri.m_vertexList[1]));
     lines.push_back(Vector<int,2>(tri.m_vertexList[1],tri.m_vertexList[2]));
     lines.push_back(Vector<int,2>(tri.m_vertexList[2],tri.m_vertexList[0]));
@@ -416,6 +431,12 @@ GMSPolyhedron::BuildBoundary() {
   for(PIT iT=m_polygonList.begin(); iT!=m_polygonList.end();iT++){
     Vector<int,2> line;
     const GMSPolygon& tri=*iT;
+
+    if(m_force2DBoundary) {
+      if( fabs( m_vertexList[tri.m_vertexList[0]][1] ) > nearZeroPlane ||
+	  fabs( m_vertexList[tri.m_vertexList[1]][1] ) > nearZeroPlane ||
+	  fabs( m_vertexList[tri.m_vertexList[2]][1] ) > nearZeroPlane ) continue;
+    }
 
     for( int iD=0; iD<3; iD++ ){
       switch(iD){
@@ -494,9 +515,17 @@ double GMSPolyhedron::PushToMedialAxis(Point3d& _pt) {
   int iteration=0;
   do{
     _pt=_pt+dir;
+    Point2d newProjPt(_pt[0],_pt[2]);
+    bool stillValid=true;
+    double newH = HeightAtPt(newProjPt,stillValid);
+    if(!stillValid) {
+       _pt=orig;
+       break;
+    }
+    _pt[1]=newH;
     clear=GetClearance(_pt,newClosest,rays);
   }while( (newClosest-closest).normsqr()<0.1 && iteration<1000000 );
 
-return clear;
+  return clear;
 }
 

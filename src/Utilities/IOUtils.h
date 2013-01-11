@@ -399,4 +399,9 @@ ReadField(istream& _is, string _error) {
 
 string ReadFieldString(istream& _is, string _error, bool _toUpper = true);
 
+//----------------------------------------------------------------------------
+// GetTags: split string based on delimiter.
+//----------------------------------------------------------------------------
+vector<string> GetTags(string _stags, string _delim);
+
 #endif 

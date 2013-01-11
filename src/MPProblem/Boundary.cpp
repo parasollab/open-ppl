@@ -85,3 +85,34 @@ Boundary::SetParameter(int _par, double _pFirst, double _pSecond) {
   m_boundingBox[_par].second = _pSecond;
 }
 
+double 
+Boundary::
+GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
+  double minDist=1e10;
+  double CBBX[6]={m_boundingBox[0].first,m_boundingBox[0].second,
+    m_boundingBox[1].first,m_boundingBox[1].second,
+    m_boundingBox[2].first,m_boundingBox[2].second};
+  double dist[4]={_pos[0]-CBBX[0],CBBX[1]-_pos[0],
+    _pos[1]-CBBX[4],CBBX[5]-_pos[1]};
+  if( dist[0]<minDist ){     
+    minDist=dist[0];
+    _cdPt.set(CBBX[0], _pos[1]);
+  }
+  if( dist[1]<minDist ){
+    minDist=dist[1];
+    _cdPt.set(CBBX[1], _pos[1]);
+  }
+  if( dist[2]<minDist ){
+    minDist=dist[2];
+    _cdPt.set(_pos[0], CBBX[4]);
+  }
+  if( dist[3]<minDist ){
+    minDist=dist[3];
+    _cdPt.set(_pos[0], CBBX[5]);
+  }
+
+  if( minDist<0 ) minDist=0;
+
+  return minDist;
+}
+

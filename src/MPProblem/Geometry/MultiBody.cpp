@@ -124,7 +124,7 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
 //  Constructors and Destructor
 //===================================================================
 MultiBody::MultiBody() 
-  : bInternal(false), m_multirobot(false), CenterOfMassAvailable(false) 
+  : bInternal(false), m_multirobot(false), CenterOfMassAvailable(false), m_isSurface(false) 
 {}
 
 MultiBody::~MultiBody() 
@@ -543,7 +543,7 @@ void MultiBody::Write(ostream & _os)
     if(bInternal)
       _os << "INTERNAL" << endl;
     else if(m_isSurface)
-      _os << "SURFACE" << endl;
+      _os << "SURFACE " << m_label << endl;
     else
       _os << "PASSIVE" << endl;
     for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I){

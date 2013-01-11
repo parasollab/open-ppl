@@ -70,7 +70,6 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     ClearanceStats PathClearance(VID _startVID, VID _goalVID);  
 
     double MinEdgeClearance(const CfgType& _c1, const CfgType& _c2, const WeightType& _weight);
-
   protected:
     string m_vcLabel;                //validity checker method label
     string m_dmLabel;                //distance metric method label
@@ -128,6 +127,33 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     double m_epsilon;
     size_t m_historyLength;
 };
+
+#ifdef PMPCfgSurface
+template<class MPTraits>
+class SurfaceMedialAxisUtility : public MedialAxisUtility<MPTraits> {
+  public:
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
+    
+    SurfaceMedialAxisUtility(MPProblemType* _problem = NULL,
+        string _vcLabel = "", string _dmLabel = "");
+    
+    //***************************************************************//
+    //get clearance functions for surface configurations             //
+    //***************************************************************//
+    double GetClearance2DSurf(Environment* _env, const Point2d& _pos, Point2d& _cdPt);
+    double GetClearance2DSurf(shared_ptr<MultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear);
+    //***************************************************************//
+    //2D-Surface version of pushing to MA                            //
+    //  Takes a free cfg (surfacecfg) and pushes to medial axis of   //
+    // environment defined by the boundary lines of the obstacles    //
+    // (multibodies)                                                 //
+    //***************************************************************//
+    double PushCfgToMedialAxis2DSurf(CfgType& _cfg, shared_ptr<Boundary> _bb, bool& _valid);
+};
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -630,6 +656,7 @@ ClearanceUtility<MPTraits>::MinEdgeClearance(const CfgType& _c1, const CfgType& 
   }
   return minClearance;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -1134,5 +1161,136 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   
   return true;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+//
+// Surface Medial Axis Utility
+//
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef PMPCfgSurface
+
+template<class MPTraits>
+SurfaceMedialAxisUtility<MPTraits>::SurfaceMedialAxisUtility(MPProblemType* _problem,
+    string _vcLabel, string _dmLabel) :
+  MedialAxisUtility<MPTraits>(_problem, _vcLabel, _dmLabel){
+    this->m_name = "SurfaceMedialAxisUtility";
+}
+
+//the square of the distance from pos to p1p2
+inline double distsqr
+(const Point2d& _pos, const Point2d& _p1, const Point2d& _p2, Point2d& _cdPt) {
+  Vector2d n=_p1-_p2;
+  double t=(n*(_pos-_p1))/(n*(_p2-_p1));
+  if( t>=0 && t<=1 ){
+    for(int i=0;i<2;i++) _cdPt[i]=(1-t)*_p1[i]+t*_p2[i];
+    return (_pos-_cdPt).normsqr();
+  }
+  else{ //closest point is end pt
+    double d1=(_p1-_pos).normsqr();
+    double d2=(_p2-_pos).normsqr();
+    if( d1<d2 ){ _cdPt=_p1; return d1; }
+    else { _cdPt=_p2; return d2; }
+  }
+}
+
+//get clearance of the point
+template<class MPTraits>
+double 
+SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
+(shared_ptr<MultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear)
+{
+  double minDis=1e10;
+  if(this->m_debug) cout << " GetClearance2DSurf (start call) (mb,pos,cdPt, clear)" << endl;
+  if(this->m_debug) cout << " getting world transformation. num fixed bodies: " << _mb->GetFixedBodyCount() << endl; 
+  Transformation& trans = _mb->GetFixedBody(0)->WorldTransformation();
+  Orientation& orientation = trans.m_orientation;
+  //check roughly <- this optimization should be added!!!
+  //Point2d T(trans.m_position[0],trans.m_position[2]);
+  //if( ((_pos-T).norm()-obst.getRadius())>_clear) return minDis;
+  GMSPolyhedron& gmsPoly = _mb->GetFixedBody(0)->GetWorldPolyhedron();
+  vector<Vector3D>& Geo=gmsPoly.GetVertexList();
+  vector< pair<int,int> >& boundaryLines=gmsPoly.GetBoundaryLines();
+  if(this->m_debug) cout << " boundary lines size: " << boundaryLines.size() << endl;
+  for(int i=0; i<(int)boundaryLines.size(); i++) {
+    int id1 = boundaryLines[i].first;
+    int id2 = boundaryLines[i].second;
+    Vector3D v1 = orientation*Geo[id1];
+    Vector3D v2 = orientation*Geo[id2];
+    Point2d p1(v1[0],v1[2]);
+    Point2d p2(v2[0],v2[2]);
+    Point2d c;
+    double dist=distsqr(_pos,p1,p2,c);
+    if( dist<minDis) { minDis=dist; _cdPt=c;}
+  }//endfor i
+
+  double clearDist = sqrt(minDis);
+  if(this->m_debug) cout << " computed clearance: " << clearDist << endl;
+  return clearDist; 
+
+}
+
+//get clearance of the point
+template<class MPTraits>
+double 
+SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
+(Environment* _env, const Point2d& _pos, Point2d& _cdPt) {
+  if(this->m_debug) cout << "MedialAxisUtility::GetClearance2DSurf" <<endl;
+  if(this->m_debug) cout << "num multibodies: " << _env->GetMultiBodyCount() << endl;
+
+  double minDist=_env->GetBoundary()->GetClearance2DSurf(_pos,_cdPt);
+
+  for(int i=1; i<_env->GetMultiBodyCount(); i++) { //skip 0 (assume it's robot)
+    if(this->m_debug) cout << " getting mb: " << i << endl;
+    shared_ptr<MultiBody> mb = _env->GetMultiBody(i);
+    //find clearance
+    Point2d c;
+    if(this->m_debug) cout << " GetClearance2DSurf (pre-call) (mb,_pos,c,minDist) " << endl;
+    double dist = GetClearance2DSurf(mb,_pos,c,minDist);
+    if( dist<minDist ){ minDist=dist; _cdPt=c; }
+  }//end for i
+  return minDist;   
+}
+
+template<class MPTraits>
+double
+SurfaceMedialAxisUtility<MPTraits>::PushCfgToMedialAxis2DSurf
+(CfgType& _cfg, shared_ptr<Boundary> _bb, bool& _valid) {
+  
+  string call = this->GetName() + "::PushCfgToMedialAxis2DSurf";
+  
+  if(this->m_debug) cout << call << endl << "Cfg: " << _cfg  << endl;
+  
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
+  ////////////////////////////////////////////
+  Point2d closest;
+  Point2d pos=_cfg.GetPos();
+  if(this->m_debug) cout << " Calling GetClearance2DSurf(env,pos,closest)" << endl;
+  double clear=this->GetClearance2DSurf(env,pos,closest);
+  Vector2d dir=(pos-closest).normalize()*0.5;
+  Point2d newClosest; 
+  int iter=0;
+  int maxIter=1000;
+  do{
+    pos=pos+dir;
+    if(this->m_debug) cout << " Calling GetClearance2DSurf(env,pos,closest)" << endl;
+    clear=this->GetClearance2DSurf(env,pos,newClosest);
+    if(this->m_debug) cout << " computed clearance: " << clear << " iteration: " << iter << endl;
+    iter++;
+    if(iter >= maxIter ) break;
+  }while( (newClosest-closest).normsqr()<0.01 );
+  _cfg.SetPos(pos);
+
+  return clear;
+}
+
+#endif
+
 
 #endif

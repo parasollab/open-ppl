@@ -420,3 +420,27 @@ ReadFieldString(istream& _is, string _error, bool _toUpper){
     transform(s.begin(), s.end(), s.begin(), ::toupper);
   return s;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+// GetTags: split string based on delimiter.
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+vector<string> GetTags(string _stags, string _delim) {
+  vector<string> tokens;
+  int cutAt;
+  while( (cutAt = _stags.find_first_of(_delim)) != (int)_stags.npos ) {
+    if(cutAt > 0) {
+      tokens.push_back(_stags.substr(0,cutAt));
+    }
+    _stags = _stags.substr(cutAt+1);
+  }
+  if(_stags.length() > 0){
+    tokens.push_back(_stags);
+  }
+  return tokens; 
+}
+

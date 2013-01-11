@@ -36,6 +36,8 @@ class Boundary {
     virtual bool IfEnoughRoom(int _par, double _room) =0;
     int GetDOFs() const;
     int GetPosDOFs() const;
+    
+    double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
   protected:
     std::vector<parameter_type> m_parType;
     vector< std::pair<double,double> > m_jointLimits; 

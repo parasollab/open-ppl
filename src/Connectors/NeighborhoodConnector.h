@@ -170,7 +170,11 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
     // find cfg pointed to by itr1
     CfgType vCfg = _rm->GetGraph()->GetCfg(itr1);
     if(this->m_debug){
+#ifdef PMPCfgSurface
+      cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << *itr1 << "  --> " << vCfg << " sid: " << vCfg.GetSurfaceID()  << endl;
+#else
       cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << *itr1 << "  --> " << vCfg << endl;
+#endif
     }
 
     bool enoughConnected = true;

@@ -25,7 +25,7 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
     //////////////////////
     // Constructors and Destructor
     ConnectNeighboringSurfaces(string _lp = "", string _nf = "", 
-        int _k = KATTEMPTS);
+        int _k = KATTEMPTS, string _surfacesStrToIgnore="");
     ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ConnectNeighboringSurfaces();
 
@@ -48,16 +48,20 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
     int m_totalFailure;
     int m_k;
     bool m_doneOnce;
+    string m_surfacesStrToIgnore;
+    vector<string> m_surfacesToIgnore;
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(string _lp, string _nf, int _k) 
-  : ConnectorMethod<MPTraits>(), m_k(_k) {
+ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(string _lp, string _nf, int _k, string _surfacesStrToIgnore) 
+  : ConnectorMethod<MPTraits>(), m_k(_k), m_surfacesStrToIgnore(_surfacesStrToIgnore) {
     this->SetName("ConnectNeighboringSurfaces"); 
     this->m_lpMethod = _lp;
     this->m_nfMethod = _nf;
     m_doneOnce = false;
+    m_surfacesToIgnore = GetTags(m_surfacesStrToIgnore,",");
   }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,6 +70,7 @@ ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(MPProblemType* 
   : ConnectorMethod<MPTraits>(_problem, _node), 
   m_k(KATTEMPTS), m_doneOnce(false) {
     ParseXML(_node);
+    m_surfacesToIgnore = GetTags(m_surfacesStrToIgnore,",");
   }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -78,6 +83,7 @@ template<class MPTraits>
 void ConnectNeighboringSurfaces<MPTraits>::ParseXML(XMLNodeReader& _node){
   this->SetName("ConnectNeighboringSurfaces"); 
   m_k = _node.numberXMLParameter("k", true, 0, 0, 10000, "k-value (max neighbors to find). k = 0 --> all-pairs");
+  m_surfacesStrToIgnore = _node.stringXMLParameter("surfacesToIgnore", false, "", "surfaces to ignore (separated by , only [no spaces])");
   _node.warnUnrequestedAttributes();
 }
 
@@ -86,6 +92,12 @@ template<class MPTraits>
 void ConnectNeighboringSurfaces<MPTraits>::PrintOptions(ostream& _os){
   ConnectorMethod<MPTraits>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  k = " << m_k << endl;
+  _os << "\tsurfacesToIgnore = [";
+  for(int i=0; i<(int)m_surfacesToIgnore.size();i++) {
+    _os << m_surfacesToIgnore[i];
+    if( i!=((int)m_surfacesStrToIgnore.size()-1)) _os << ",";
+  }
+  _os << "]" << endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -122,7 +134,11 @@ void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& 
   for(int i=0; i<numSurfaces; i++) {
     int id = i;
     shared_ptr<MultiBody> mbSurf1 = env->GetNavigableSurface(i);
+    string iSurfName="BASE";
+    if( i>=0 )
+      iSurfName=mbSurf1->GetLabel();;
     if(this->m_debug) cout << "ConnectNeighboringSurfaces::Connect(...) - " << i << "  Processing multibody: " << mbSurf1->GetLabel() << endl;
+    if( find(m_surfacesToIgnore.begin(),m_surfacesToIgnore.end(), iSurfName) != m_surfacesToIgnore.end() ) continue;
     GMSPolyhedron& mbPoly1 =  mbSurf1->GetFixedBody(0)->GetWorldPolyhedron();
     vector<Vector3D>& ptsSurface1 = mbPoly1.GetVertexList();
     vector< pair<int,int> >& blines1 =  mbPoly1.GetBoundaryLines();
@@ -163,7 +179,6 @@ void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& 
 	double h = (p13d[1]+p23d[1])/2.0; //surf->heightAtPt(subPt);
 	Point2d queryPt, surfacePt;
 	int qPtSurfID=-999;
-	//int surfacePtID=id;
 
 	if( !mbPoly1.IsOnSurface( subPtT1, h ) ) {
 	  queryPt = subPtT1;
@@ -176,7 +191,10 @@ void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& 
 
 	bool qPtOnSurf=false;
 	//just do a height check
-	if( fabs(h) < CLOSEDIST ) {
+	bool skipBASE=false;
+	string baseName="BASE";
+	if( find(m_surfacesToIgnore.begin(),m_surfacesToIgnore.end(), baseName) != m_surfacesToIgnore.end() ) skipBASE=true;
+	if( !skipBASE && (fabs(h) < CLOSEDIST) ) {
 	  if(this->m_debug) cout << "queryPt: " << queryPt << " is on DEFAULT surface. " << endl;
 	  qPtOnSurf = true;
 	  qPtSurfID=-1;//default surface id
@@ -187,6 +205,10 @@ void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& 
 	for(int j=0; j<numSurfaces && !qPtOnSurf; j++) {
 	  if( i==j ) continue;//skip same surface..obvi
 	  shared_ptr<MultiBody> mbSurf2 = env->GetNavigableSurface(j);
+	  string iSurfName2=mbSurf2->GetLabel();
+	  if( i>=0 )
+	     iSurfName2=mbSurf2->GetLabel();;
+          if( find(m_surfacesToIgnore.begin(),m_surfacesToIgnore.end(), iSurfName2) != m_surfacesToIgnore.end() ) continue;
 	  if(this->m_debug) cout << "ConnectNeighboringSurfaces::Connect(...) - " << i << "  Processing multibody: " << j << " ::: " << mbSurf2->GetLabel() << endl;
 	  GMSPolyhedron& mbPoly2 =  mbSurf2->GetFixedBody(0)->GetWorldPolyhedron();
 	  //////////////////////////////////////////////////////////////////////////

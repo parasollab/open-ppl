@@ -8,7 +8,7 @@ template<class MPTraits>
 class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
-    SurfaceValidity();
+    SurfaceValidity(string _vcLabel="");
     SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) ;
 
     virtual ~SurfaceValidity() {}
@@ -24,8 +24,9 @@ class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {
 
 
 template<class MPTraits>
-SurfaceValidity<MPTraits>::SurfaceValidity() : ValidityCheckerMethod<MPTraits>(){
+SurfaceValidity<MPTraits>::SurfaceValidity(string _vcLabel) : ValidityCheckerMethod<MPTraits>(){
   this->m_name = "SurfaceValidity";
+  this->m_vcLabel = _vcLabel;
 }
 
 template<class MPTraits>
@@ -44,7 +45,6 @@ SurfaceValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& 
   if( sid == -1 ) { 
     //call default validity checker specified
     result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(_cfg, _env, _stats, _cdInfo, _callName);
-
   }
   else {
     //do surface validity based on sid

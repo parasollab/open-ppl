@@ -86,6 +86,7 @@ public:
     } 
 
     bool IsSurface() { return m_isSurface; }
+    void SetIsSurface(bool _is) { m_isSurface=_is; }
 
     ///Return a free body accroding to the given index. the index should be in [0,GetFreeBodyCount())
     shared_ptr<FreeBody> GetFreeBody(int _index) const;
@@ -303,6 +304,7 @@ public:
     void SetMultirobot(bool _m){m_multirobot = _m;}
 
     string GetLabel() { return m_label; }
+    void SetLabel(string _label) { m_label = _label; }
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //

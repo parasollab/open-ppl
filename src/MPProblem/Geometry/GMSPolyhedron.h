@@ -81,6 +81,7 @@ class GMSPolyhedron {
     vector<GMSPolygon>& GetPolygonList() { return m_polygonList; }
 
     void BuildBoundary();
+    void BuildBoundary2D();
     vector< pair<int,int> >& GetBoundaryLines() { 
        BuildBoundary();
        return m_boundaryLines; 
@@ -104,6 +105,7 @@ class GMSPolyhedron {
     ///////////////////////////////////////////////////////////////////////////
     vector< pair<int,int> > m_boundaryLines;//store the ids to vertices stored in surface model 
     bool m_boundaryBuilt;
+    bool m_force2DBoundary;
 };
 
 #endif

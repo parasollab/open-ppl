@@ -34,6 +34,8 @@ class SurfaceLP: public StraightLine<MPTraits>{
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, 
         bool _savePath = true, bool _saveFailedPath = false);
+
+    double m_acceptableHeightDiff;
 };
 
 // Definitions for Constructors and Destructor
@@ -41,6 +43,7 @@ template<class MPTraits>
 SurfaceLP<MPTraits>::
 SurfaceLP() : StraightLine<MPTraits>() {
   this->SetName("SurfaceLP");
+  m_acceptableHeightDiff=1.0;
 }
 
 template<class MPTraits>
@@ -49,6 +52,7 @@ SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node) :
   StraightLine<MPTraits>(_problem, _node) {
     _node.verifyName("SurfaceLP");
     this->SetName("SurfaceLP");
+    m_acceptableHeightDiff=1.0;
   }
 
 template<class MPTraits>
@@ -60,6 +64,7 @@ void SurfaceLP<MPTraits>::
 PrintOptions(ostream& _os) {
   _os << "    " << this->GetName() << "::  ";
   _os << "vcLabel = " << " " << this->m_vcLabel << " ";
+  _os << "acceptableHeightDiff = " << m_acceptableHeightDiff << " ";
   _os << endl;
 }
 
@@ -98,9 +103,9 @@ IsConnected(Environment* _env, StatClass& _stats,
   callee=callee+method;
   string _callee = callee;
 
-  double delta = 0.5;
   bool allOnValidSurface = true;
   vector<int> surfaceIDs;
+
   for(int i = 1; i < nTicks && allOnValidSurface; i++){ //don't need to check the ends, _c1 and _c2
     tick.Increment(incr);
     bool foundValidSurfForTick=false;
@@ -108,35 +113,34 @@ IsConnected(Environment* _env, StatClass& _stats,
     for(int sid=-1; sid<_env->GetNavigableSurfacesCount()&&!foundValidSurfForTick; sid++) {
       CfgType tmpTick = tick;
       ((CfgSurface&) tmpTick).SetSurfaceID(sid);//set SurfaceID to test if 2D collision is okay
-      if( vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, &_callee) ) {
-	if( sid == -1 ) {
-	  if( fabs(tick.GetSingleParam(1))<delta ) {
-	    //this is valid, -1 should have y-value 0
-	    foundValidSurfForTick = true;
-	    surfaceIDs.push_back(sid);
-	  }
-	}
-	else {
-	  ///////////////////////////////////////////////////////////////////////////////
-	  //from 0--numSurfaces-1, check height
-	  shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(sid);
-	  shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
-	  GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
-	  bool isValid=false;
-	  Point2d pt = tick.GetPos();
-	  double tH = polyhedron.HeightAtPt(pt, isValid); 
-	  if( isValid ) {
-	    double hDiff = fabs(tH-tick.GetSingleParam(1));
-	    if( hDiff < delta ) {
-	      foundValidSurfForTick = true;
-	      surfaceIDs.push_back(sid);
+      if( sid == -1 ) {
+	 if( vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, &_callee) ) {
+	    if( fabs(tick.GetSingleParam(1))<m_acceptableHeightDiff ) {
+	       //this is valid, -1 should have y-value 0
+	       foundValidSurfForTick = true;
+	       surfaceIDs.push_back(sid);
 	    }
-	  }
+	 }//endif vcm->IsValid
+      }
+      else {
+	 ///////////////////////////////////////////////////////////////////////////////
+	 //from 0--numSurfaces-1, check height
+	 shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(sid);
+	 shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
+	 GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
+	 bool isValid=false;
+	 Point2d pt = tick.GetPos();
+	 double tH = polyhedron.HeightAtPt(pt, isValid); 
+	 if( isValid ) {
+	    double hDiff = fabs(tH-tick.GetSingleParam(1));
+	    if( hDiff<m_acceptableHeightDiff ) {
+	       foundValidSurfForTick = true;
+	       surfaceIDs.push_back(sid);
+	    }
+	 }
 
-	  ///////////////////////////////////////////////////////////////////////////////
-	}
-      }//endif vcm->IsValid
-
+	 ///////////////////////////////////////////////////////////////////////////////
+      }
     }//endfor j
 
     if( !foundValidSurfForTick ) {

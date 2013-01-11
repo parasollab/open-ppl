@@ -286,7 +286,8 @@ public:
 
     bool operator==(const Body& b) const;
     bool operator!=(const Body& b) const { return !(*this == b); }
-
+    
+    void SetFileName(string _filename) { m_filename=_filename; }
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
   //

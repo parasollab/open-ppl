@@ -277,7 +277,6 @@ class Cfg {
 
     //polygonal approximation
     vector<Vector3D> PolyApprox (Environment* _env) const;
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //

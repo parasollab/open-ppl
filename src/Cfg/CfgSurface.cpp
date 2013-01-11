@@ -80,6 +80,7 @@ CfgSurface::~CfgSurface() { }
 
 //Write configuration to output stream
 void CfgSurface::Write(ostream& _os) const{
+  _os<< m_surfaceID << " ";
   for (size_t i=0; i<m_dof;i++){
     _os<<setw(4)<<m_v[i];
     if (i < m_dof-1)
@@ -89,11 +90,12 @@ void CfgSurface::Write(ostream& _os) const{
 
 //Read configuration from input stream
 void CfgSurface::Read(istream& _is){
-  double x, y, height;
-  _is>>x>>height>>y;
+  double sid, x, y, height;
+  _is>>sid>>x>>height>>y;
   if (_is.fail()){
     cerr << "\n\nError in CfgSurface:: Failed to read configuration from stream" << endl;
   }
+  m_surfaceID=sid;
   m_v.clear();
   m_v.push_back(x);
   m_v.push_back(height);
