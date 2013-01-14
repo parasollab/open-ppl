@@ -456,12 +456,12 @@ ResetBoundingBox(double _d){
     }
   }
 
-  minx = max(minx-_d, origin_minx);
-  maxx = min(maxx+_d, origin_maxx);
-  miny = max(miny-_d, origin_miny);
-  maxy = min(maxy+_d, origin_maxy);
-  minz = max(minz-_d, origin_minz);
-  maxz = min(maxz+_d, origin_maxz);
+  minx = min(minx-_d, origin_minx);
+  maxx = max(maxx+_d, origin_maxx);
+  miny = min(miny-_d, origin_miny);
+  maxy = max(maxy+_d, origin_maxy);
+  minz = min(minz-_d, origin_minz);
+  maxz = max(maxz+_d, origin_maxz);
 
   vector<double> boundingBox;
   boundingBox.push_back(minx);
