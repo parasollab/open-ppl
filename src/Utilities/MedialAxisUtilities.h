@@ -1266,7 +1266,6 @@ SurfaceMedialAxisUtility<MPTraits>::PushCfgToMedialAxis2DSurf
   if(this->m_debug) cout << call << endl << "Cfg: " << _cfg  << endl;
   
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   ////////////////////////////////////////////
   Point2d closest;

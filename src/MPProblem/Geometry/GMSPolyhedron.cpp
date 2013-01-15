@@ -32,9 +32,9 @@ GMSPolyhedron::GMSPolyhedron(): m_area(0), m_maxRadius(0), m_minRadius(0), m_bou
 
 GMSPolyhedron::GMSPolyhedron(const GMSPolyhedron& _p) 
   : m_vertexList(_p.m_vertexList), m_polygonList(_p.m_polygonList),
-  m_boundaryLines(_p.m_boundaryLines), m_boundaryBuilt(_p.m_boundaryBuilt), 
-  m_force2DBoundary(_p.m_force2DBoundary), 
-  m_area(_p.m_area), m_maxRadius(_p.m_maxRadius), m_minRadius(_p.m_minRadius){
+  m_area(_p.m_area), m_maxRadius(_p.m_maxRadius), m_minRadius(_p.m_minRadius), 
+  m_boundaryLines(_p.m_boundaryLines), m_boundaryBuilt(_p.m_boundaryBuilt),
+  m_force2DBoundary(_p.m_force2DBoundary){
 }
 
 GMSPolyhedron::~GMSPolyhedron(){
