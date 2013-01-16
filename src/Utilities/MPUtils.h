@@ -297,7 +297,7 @@ class MethodSet {
         return true;
       }
       else{
-        cerr << "Error. Method " << _e->GetName() << " is not contained within the motion planning universe. Exiting." << endl;
+        cerr << "Error. Method \"" << _e->GetName() << "\" is not contained within the motion planning universe. Exiting." << endl;
         exit(1);
       }
     }
