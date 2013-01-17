@@ -105,7 +105,8 @@ class MPProblem
     virtual void PrintOptions(ostream& _os);
 
     void SetMPProblem();
- 
+
+    void SetSolverSeed(long _ss) { m_solverSeed=_ss; } 
     void SetMPSolver(string _solver) { m_solver=_solver; } 
     void Solve();
  
