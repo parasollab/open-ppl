@@ -37,6 +37,12 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
       delete m_nf2;
     }
 
+    virtual void PrintOptions(ostream& _os) const {
+     NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
+      _os << "dmMethod2: " << m_dmLabel2 << " "
+        << "k2: " << m_k2 << " ";
+    }
+
     template<typename InputIterator, typename OutputIterator>
       OutputIterator KClosest(RoadmapType* _rmp, 
           InputIterator _first, InputIterator _last, CfgType _cfg, size_t _k, OutputIterator _out){
