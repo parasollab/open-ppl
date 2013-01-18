@@ -1,37 +1,43 @@
 #ifndef OPTIMALCONNECTOR_H_
 #define OPTIMALCONNECTOR_H_
 
-#include "ConnectionMethod.h"
+#include "ConnectorMethod.h"
 
-template <class CFG, class WEIGHT>	
-class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
+template <class MPTraits>	
+class OptimalConnection : public ConnectorMethod<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename vector<VID>::iterator VIDIT;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
     // Constructors
-    OptimalConnection(string _lp = "", string _nf = "", MPProblem* _problem = NULL, bool _radius = true);
-    OptimalConnection(XMLNodeReader& _node, MPProblem* _problem); 
+    OptimalConnection(MPProblemType* _problem = NULL, string _lp = "", string _nf = "", bool _radius = true);
+    OptimalConnection(MPProblemType* _problem, XMLNodeReader& _node); 
     ~OptimalConnection();
 
-    // Utility Methods and Typedefs
-    typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-    typedef typename vector<typename RoadmapGraph<CFG,WEIGHT>::VID>::iterator VIDIT;
+    // Utility Methods 
     virtual void PrintOptions(ostream& _os); 
     virtual void ParseXML(XMLNodeReader& _node);
-    bool CheckEdge(VID _vid1, VID _vid2, Roadmap<CFG, WEIGHT>* _rm);
+    bool CheckEdge(VID _vid1, VID _vid2, RoadmapType* _rm);
 
     // Connection Methods
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
-      void Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+      void Connect( RoadmapType* _rm, StatClass& _stats, 
           ColorMap& _cmap, InputIterator _iter1First, InputIterator _iter1Last,
           InputIterator _iter2First, InputIterator _iter2Last, OutputIterator _collision);
 
   protected:
     template <typename OutputIterator>
-      void ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+      void ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
           VID _vid, vector<VID>& _closest, OutputIterator _collision);
 
     template<typename InputIterator, typename OutputIterator>
-      void FindNeighbors( Roadmap<CFG, WEIGHT>* _rm, CFG _cfg, 
+      void FindNeighbors( RoadmapType* _rm, CfgType _cfg, 
           InputIterator _iter2First, InputIterator _iter2Last, 
           OutputIterator _closestIterator);
   protected:
@@ -39,9 +45,9 @@ class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
                       a radius based NF will be used to find the neighbors */
 };
 
-  template <class CFG, class WEIGHT>
-  OptimalConnection<CFG,WEIGHT>::OptimalConnection(string _lp, string _nf, MPProblem* _problem, bool _radius)
-  : ConnectionMethod<CFG,WEIGHT>(), m_radius(_radius) {
+  template <class MPTraits>
+  OptimalConnection<MPTraits>::OptimalConnection( MPProblemType* _problem, string _lp, string _nf, bool _radius)
+  : ConnectorMethod<MPTraits>(), m_radius(_radius) {
     this->SetName("OptimalConnection");
     this->m_lpMethod = _lp;
     this->m_nfMethod = _nf;
@@ -52,21 +58,21 @@ class OptimalConnection : public ConnectionMethod<CFG, WEIGHT> {
     }
   }
 
-  template <class CFG, class WEIGHT>
-OptimalConnection<CFG,WEIGHT>::OptimalConnection(XMLNodeReader& _node, MPProblem* _problem)
-  : ConnectionMethod<CFG,WEIGHT>(_node, _problem) {
+  template <class MPTraits>
+  OptimalConnection<MPTraits>::OptimalConnection(MPProblemType* _problem, XMLNodeReader& _node)
+  : ConnectorMethod<MPTraits>(_problem, _node) {
     this->SetName("OptimalConnection");
     ParseXML(_node);
   }
 
-template <class CFG, class WEIGHT>
-OptimalConnection<CFG,WEIGHT>::~OptimalConnection() { 
+template <class MPTraits>
+OptimalConnection<MPTraits>::~OptimalConnection() { 
 }
 
-template <class CFG, class WEIGHT>
+template <class MPTraits>
 void 
-OptimalConnection<CFG, WEIGHT>::PrintOptions (ostream& _os) {
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
+OptimalConnection<MPTraits>::PrintOptions (ostream& _os) {
+  ConnectorMethod<MPTraits>::PrintOptions(_os);
   _os << "OptimalConnection::PrintOptions" << endl;
   _os << "Neighborhood Finder: " << this->m_nfMethod << endl;
   _os << "Local Planner: " << this->m_lpMethod << endl;
@@ -77,9 +83,9 @@ OptimalConnection<CFG, WEIGHT>::PrintOptions (ostream& _os) {
     _os << "K-based" << endl << endl;
 }
 
-template <class CFG, class WEIGHT>
+template <class MPTraits>
 void 
-OptimalConnection<CFG, WEIGHT>::ParseXML (XMLNodeReader& _node) {  
+OptimalConnection<MPTraits>::ParseXML (XMLNodeReader& _node) {  
   m_radius = _node.boolXMLParameter("radius", true, false, "If true, use radius-based NF, otherwise use k-based NF"); 
   if (m_radius) {
     if(this->m_debug) cout << "Error, radius-based feature not available, defaulting to k-based"<<endl;
@@ -89,21 +95,18 @@ OptimalConnection<CFG, WEIGHT>::ParseXML (XMLNodeReader& _node) {
 
 // Will iterate through the map and find each nodes closest neighbors 
 // and call ConnectNeighbors to connect them
-template <class CFG, class WEIGHT>
+template <class MPTraits>
 template<typename ColorMap, typename InputIterator, typename OutputIterator>
 void 
-OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+OptimalConnection<MPTraits>::Connect( RoadmapType* _rm, StatClass& _stats,
     ColorMap& _cmap, InputIterator _iter1First, InputIterator _iter1Last,
     InputIterator _iter2First, InputIterator _iter2Last, OutputIterator _collision) {
 
-  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
-  
   if (this->m_debug) { cout << endl; PrintOptions (cout); }
   ///To do - uncomment after const vertex iter problem  in STAPL pGraph is fixed
   #ifndef _PARALLEL
   for (InputIterator iter1 = _iter1First; iter1 != _iter1Last; ++iter1) {
-    CFG cfg = GetCfg()(_rm->m_pRoadmap, iter1);
+    CfgType cfg = _rm->GetGraph()->GetCfg(*iter1);
     if (this->m_debug) {
       cout << "Attempting connection from " << *iter1 << "--> " << cfg << endl;
     }
@@ -118,31 +121,27 @@ OptimalConnection<CFG,WEIGHT>::Connect( Roadmap<CFG, WEIGHT>* _rm, StatClass& _s
 }
 
 // Will connect the neighbors contained in the vector with the current node 
-template <class CFG, class WEIGHT>
+template <class MPTraits>
 template<typename OutputIterator>
 void 
-OptimalConnection<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+OptimalConnection<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
     VID _vid, vector<VID>& _closest, OutputIterator _collision) {
 
-  typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
   
-  LPOutput <CFG, WEIGHT> lpOutput;
-  shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
-
+  LPOutput<MPTraits> lpOutput;
+  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
   for (VIDIT iter2 = _closest.begin(); iter2 != _closest.end(); ++iter2) {
     // Stopping Conditions
     if ( !CheckEdge(_vid, *iter2, _rm) )
       continue;
     CfgType col;
-
-    if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
-        IsConnected(_rm->GetEnvironment(), _stats, dm,
-          GetCfg()(_rm->m_pRoadmap, _vid),
-          GetCfg()(_rm->m_pRoadmap, iter2),
+    if(this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
+        IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm,
+          _rm->GetGraph()->GetCfg(_vid),
+          _rm->GetGraph()->GetCfg(*iter2),
           col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, (!this->m_addAllEdges) )) {  
 
-      _rm->m_pRoadmap->AddEdge(_vid, *iter2, lpOutput.edge);
+      _rm->GetGraph()->AddEdge(_vid, *iter2, lpOutput.edge);
 
       _rm->SetCache(_vid, *iter2, true);
 
@@ -169,10 +168,10 @@ OptimalConnection<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatC
 // Find the neighbors of current node. There are two cases:
 // If it is radius based, find neighbors within that area
 // If it is k based, find the k-closest neighbor
-template <class CFG, class WEIGHT>
+template <class MPTraits>
 template <typename InputIterator, typename OutputIterator>
 void 
-OptimalConnection<CFG, WEIGHT>::FindNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG _cfg, 
+OptimalConnection<MPTraits>::FindNeighbors(RoadmapType* _rm, CfgType _cfg, 
     InputIterator _iter2First, InputIterator _iter2Last, OutputIterator _closestIter) {
   // Waiting for radius based NF to complete function
   if (m_radius) {
@@ -185,8 +184,8 @@ OptimalConnection<CFG, WEIGHT>::FindNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG _cf
   }
   else {
 
-    int k = (int)ceil( 2*2.71828 * log ( _rm->m_pRoadmap->get_num_vertices() ) ) ;  // Rounding up
-    NeighborhoodFinder::NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod);
+    int k = (int)ceil( 2*2.71828 * log ( _rm->GetGraph()->get_num_vertices() ) ) ;  // Rounding up
+    NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod);
     if (this->m_debug) {
       cout << "Finding closest neighbors with k = " << k << endl; 
     }
@@ -195,9 +194,9 @@ OptimalConnection<CFG, WEIGHT>::FindNeighbors(Roadmap<CFG, WEIGHT>* _rm, CFG _cf
 }
 
 
-template <class CFG, class WEIGHT>
+template <class MPTraits>
 bool
-OptimalConnection<CFG, WEIGHT>::CheckEdge(VID _vid1, VID _vid2, Roadmap<CFG, WEIGHT>* _rm) {
+OptimalConnection<MPTraits>::CheckEdge(VID _vid1, VID _vid2, RoadmapType* _rm) {
     
     if (_vid2 == INVALID_VID) { 
       if (this->m_debug) cout << "Skipping... Invalid node" << endl;
@@ -208,11 +207,9 @@ OptimalConnection<CFG, WEIGHT>::CheckEdge(VID _vid1, VID _vid2, Roadmap<CFG, WEI
       return false;  // don't attempt between the same node
     }
     if (_rm->IsCached(_vid1, _vid2)) {
-      if ( !_rm->GetCache(_vid1, _vid2) )
-        if (this->m_debug) cout << "Skipping... Already attempted connection" << endl;
       return false;  // don't attempt if already exists
     }
-    if ( _rm->m_pRoadmap->IsEdge(_vid1, _vid2) ) {
+    if ( _rm->GetGraph()->IsEdge(_vid1, _vid2) ) {
       if (this->m_debug) cout << "Skipping... Edge already exists" << endl;
       return false;
     }

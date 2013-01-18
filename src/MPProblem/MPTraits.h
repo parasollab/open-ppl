@@ -54,6 +54,8 @@
 
 //connector includes
 #include "Connectors/CCsConnector.h"
+#include "Connectors/OptimalConnection.h"
+#include "Connectors/OptimalRewire.h"
 #ifdef PMPCfgSurface
 #include "Connectors/ConnectNeighboringSurfaces.h"
 #endif
@@ -175,14 +177,14 @@ struct MPTraits{
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    CCsConnector<MPTraits>, 
+    CCsConnector<MPTraits>,
 #if defined(PMPCfgSurface)
     ConnectNeighboringSurfaces<MPTraits>,
 #endif
-    NeighborhoodConnector<MPTraits>/*, 
-    PreferentialAttachment<MPTraits>, 
+    NeighborhoodConnector<MPTraits>,
     OptimalConnection<MPTraits>,
-    OptimalRewire<MPTraits>,
+    OptimalRewire<MPTraits>/*, 
+    PreferentialAttachment<MPTraits>, 
     ClosestVE<MPTraits>*/
       > ConnectorMethodList;
   
